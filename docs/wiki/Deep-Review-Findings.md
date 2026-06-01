@@ -405,6 +405,25 @@ What actually happens to the AI the HC was simulating: the **engine transfers th
 ### Handoff
 Code owners: treat HC delegation as best-effort with no failover today; if HC stability matters, add re-delegation/rebalancing on HC disconnect/connect. Ledger: AI/Headless JIP/HC cell advanced; round-1 "orphan" hypothesis corrected.
 
+## Round 12 — 2026-06-02 (Claude) — side-supply overspend windfall (DR-22)
+
+Lane `side-supply-delta-verify`. Confirms + sharpens Faraday's "negative side-supply delta" candidate (and my round-1 "inverted guard" note) at source.
+
+### DR-22 — Overspending side supply grants a windfall instead of being floored — **High (economy correctness/exploit)**
+
+The supply clamp (live in `Server/Functions/Server_ChangeSideSupply.sqf`, both the `wfbe_supply_temp_west` and `…_east` handlers; also present but **dead** in `Common/Functions/Common_ChangeSideSupply.sqf`) is:
+```sqf
+_change = _currentSupply + _amount;
+if (_change < 0) then {_change = _currentSupply - _amount};   // intended floor-at-0; actually a windfall
+if (_change >= _maxSupplyLimit) then {_change = _maxSupplyLimit};
+```
+`_amount` is **signed** — deductions are negative. When a deduction would overdraw (`_change < 0`), the "floor" computes `_currentSupply - _amount` = `_currentSupply + |amount|`. Example: supply 100, spend 300 (`_amount = -300`) → `_change = -200` → guard → `100 - (-300) = 400`. **Trying to spend more supply than you have increases your supply by the amount you tried to spend.** Any over-budget supply deduction (e.g. an upgrade/structure costing more than the side holds) flips into a gain — directly exploitable by attempting over-large spends, and it corrupts the economy generally.
+
+**Fix:** floor correctly — `if (_change < 0) then {_change = 0};`. Apply in `Server_ChangeSideSupply.sqf` (both handlers). Note the matching block in `Common_ChangeSideSupply.sqf` is dead code: it computes `_change` but the function sends only `[_side, _amount, _reason]` over `wfbe_supply_temp_<side>` and the server recomputes — so fix the server copy (and optionally delete the dead client computation). Related (round-1, still open): there is **no resistance-side handler** for `wfbe_supply_temp_*`, only west/east.
+
+### Handoff
+Code owners: one-line floor fix in `Server_ChangeSideSupply.sqf` (×2 handlers) — closes the overspend windfall. Ledger: Economy/supply Auth/PV reinforced (confirmed exploit, not just "confusing").
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
