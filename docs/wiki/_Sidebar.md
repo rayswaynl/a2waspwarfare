@@ -38,6 +38,7 @@
 - [AI/performance](AI-Headless-And-Performance)
 - [UI/HUD/menus](Client-UI-HUD-And-Menus)
 - [UI systems atlas](Client-UI-Systems-Atlas)
+- [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas)
 
 ## Ops
 
@@ -55,6 +56,7 @@
 - [Collaboration protocol](Agent-Collaboration-Protocol)
 - [Worklog](Agent-Worklog)
 - [Deep-review findings](Deep-Review-Findings)
+- [External research reports](External-Research-Reports)
 - [Coverage ledger](Codebase-Coverage-Ledger)
 
 ## Claude

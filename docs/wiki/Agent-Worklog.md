@@ -175,6 +175,67 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - **DR-19 (Med, non-dedicated):** `serverFpsGUI.sqf` + `monitorServerFPS.sqf` put `sleep 8` inside `if (isDedicated)`, so on a hosted/listen server `while {true}` busy-loops (two of them). Fix: hoist the sleep / early-exit when not dedicated; also two redundant FPS publishers (`SERVER_FPS_GUI`/`WFBE_VAR_SERVER_FPS`).
 - Advanced ledger Supply JIP/HC. Handoffs to code owners (both one-liners). `ready-for-review`.
 
+## 2026-06-02 - Claude Deep-Review Round 10 (jip-headless-crosscut lane)
+
+- Traced HQ-death detection end-to-end across server / existing clients / JIP. New finding **DR-20**.
+- **DR-20 (High, multiplayer correctness / score exploit):** the HQ `Killed` EH is registered on **every owning-side client** (`set-hq-killed-eh` broadcast from `Construction_HQSite.sqf:91` / `Server_MHQRepair.sqf:43` + the JIP path `Init_Client.sqf:500-503`), but `Server_OnHQKilled.sqf` has **no idempotency guard** → on mobile-HQ death the server runs it once per owning-side client: ~2N× killer score award + N× messages. Fix: per-HQ "processed" flag in `OnHQKilled` (detect redundantly, act once). Keep the redundant EH registration.
+- Verified JIP detection itself is correct (the `!_isDeployed` guard at `Init_Client.sqf:500`; deployed HQ covered by the server-side EH). The defect is downstream duplication, not a JIP miss.
+- Advanced ledger JIP/HC cells (economy/construction). Remaining JIP/HC: attack-wave sync, marker re-init, headless orphan-on-disconnect. `ready-for-review`.
+
+## 2026-06-02 - Claude Deep-Review Round 11 (headless-disconnect-review lane)
+
+- Verified the round-1 HC-disconnect hypothesis at `Server_OnPlayerDisconnected.sqf`. New finding **DR-21** + a **self-correction**.
+- **Correction:** round-1's "HC disconnect orphans units" is wrong — Arma 2 OA migrates a disconnecting machine's local units/groups to the **server** (ownership transfer, no loss). Logged the downgrade explicitly rather than dropping it.
+- **DR-21 (Med, perf/operational):** HC delegation has **no failover** — on HC disconnect the offloaded AI lands back on the server (load spike), the disconnect handler does no re-delegation, and `WFBE_C_AI_DELEGATION` is only evaluated at boot (a reconnecting HC doesn't resume offload). Suggest `setGroupOwner`-based rebalancing on HC connect/disconnect (the mission currently never uses `setGroupOwner`).
+- Advanced ledger AI/Headless JIP/HC cell. `ready-for-review`.
+
+## 2026-06-02 - Claude Deep-Review Round 12 (side-supply-delta-verify lane)
+
+- Confirmed + sharpened Faraday's "negative side-supply delta" candidate (and my round-1 inverted-guard note). New finding **DR-22**.
+- **DR-22 (High, economy exploit):** the supply clamp `if (_change < 0) then {_change = _currentSupply - _amount}` is a broken floor — `_amount` is signed (deductions negative), so overspending yields `_currentSupply + |amount|` (spend 300 from 100 → 400). Live in `Server/Functions/Server_ChangeSideSupply.sqf` (both west/east handlers); the identical block in `Common_ChangeSideSupply.sqf` is **dead** (PV carries `_amount`; server recomputes). Fix: `{_change = 0}`. Resistance-side handler still missing (round-1).
+- Advanced ledger Economy Auth/PV (confirmed exploit). `ready-for-review`.
+
+## 2026-06-02 - Claude Deep-Review Round 13 (upgrade-authority-verify lane)
+
+- Confirmed Faraday's "upgrade authority gap" and closed the economy-authority thread. New finding **DR-23**.
+- **DR-23 (High):** `RequestUpgrade.sqf` = `_this Spawn WFBE_SE_FNC_ProcessUpgrade` (raw payload, no validation); `Server_ProcessUpgrade.sqf` does no commander/funds/sequence/dependency check and **never deducts cost** (client-side only). Forge free upgrades for any side; client-controlled `select _upgrade_id select _upgrade_level` → out-of-range error. Fix: validate + server-side cost.
+- **Synthesis:** with DR-6/14/16/22/23, the **entire WFBE economy is client-authoritative** (build/buy/sell/supply/upgrade). One architectural owner decision (server-PVF validation vs BattlEye `scripts.txt`) covers the class — piecemeal fixes won't.
+- Ledger Economy authority characterized across the board. `ready-for-review`.
+
+## 2026-06-02 - Claude Deep-Review Round 14 (missing-reference-inventory lane)
+
+- Confirmed Curie's dead-dialog candidate. New finding **DR-24 (Low)**: `RscMenu_Upgrade` (`Rsc/Dialogs.hpp:2425`) `onLoad` ExecVMs `Client/GUI/GUI_Menu_Upgrade.sqf` which **doesn't exist** (only `GUI_UpgradeMenu.sqf` does); the dialog is never opened; the live upgrade UI is `GUI_UpgradeMenu.sqf`. Dead/naming-drift reference — inert today. Fix: delete or repoint.
+- Tried an automated "live reference → missing file" scan; its Windows backslash path-normalization was unreliable (false positives), so I confirmed by hand and **handed a reliable missing-reference scanner to Codex/tooling** as a future task.
+- Severity gradient note: the campaign is now in the long tail (Low/cleanup findings), a sign the high-traffic Auth/PV/JIP cells are largely reviewed. Open abandoned-code candidates remain (TaskSystem, blink loops, WASP OnArmor/KeyDown — see WASP-Overlay + Feature-Status).
+
+## 2026-06-02 - Claude Deep-Review Round 15 (ui-followups-verify lane)
+
+- Confirmed Curie's last two UI candidates; closed the UI follow-up items. New findings **DR-25a/b (both Low)**.
+- **DR-25a:** `RscOverlay` (`Titles.hpp:46`) and `OptionsAvailable` (`:165`) share `idd=10200` (title-resource dup; sibling of DR-17). Assign distinct IDDs.
+- **DR-25b:** `RscClickableText.soundPush[] = {, 0.2, 1}` (`Ressources.hpp:556`) is malformed (empty leading element; correct form `{"", 0.2, 1}` as at `:92`); base class so it propagates. Fix the array.
+- Ledger UI candidates closed. `ready-for-review`.
+
+## 2026-06-01 - Codex External PDF Research Intake
+
+- Steff provided three Dutch deep-research PDFs and also handed them to Claude: `Analytisch rapport over rayswaynl_a2waspwarfare.pdf`, `Analyse van rayswaynl_a2waspwarfare.pdf` and `Diepgaande analyse van rayswaynl_a2waspwarfare.pdf`.
+- Spawned three cheap read-only PDF scouts: Sagan, Helmholtz and Parfit. Each produced a compact digest with all claims marked `EXTERNAL_PDF_UNVERIFIED`.
+- Added [External research reports](External-Research-Reports) as the intake ledger. It separates claims already source-backed by the wiki from leads that still need repo verification before promotion.
+- Claude's later Round 16 cross-check found the PDFs are mostly downstream of the wiki/upstream proxy, making them corroboration rather than independent source verification.
+
+## 2026-06-02 - Claude Deep-Review Round 16 (external-research-integration lane)
+
+- Integrated Steff's 3 deep-research PDFs (also sent to Codex). Read two in full; all are the same genre. **Provenance:** their citations are `raw.githubusercontent.com/wiki/rayswaynl/...` — generated FROM our wiki (+ Miksuu upstream proxy), so **downstream corroboration**, not independent source verification.
+- They re-derive our spine (DR-1 call compile, DR-6 construction authority, DR-7 callExtension, UpdateSupplyTruck latent breakage, despawn player-vehicle risk, PR#1 EH leak, MASH broken) and recommend our fixes. **Our source-verified findings are a superset** (reports lack DR-11/15/18/19/20/22/23). Good external validation; nothing higher-severity missed in code.
+- **DR-26 (Low, governance):** resolved the reports' "license unspecified" — `LICENSE.md` is a **custom proprietary-style license** (Spayker 2016 / Miksuu 2025; contributions assigned to owner; reuse restricted), NOT OSI → source-available, not open-source.
+- Confirmed governance/ops asks at source (handoff to Codex/owners): `DiscordBot/preferences_sample.json` ships a real `GuildID` + hardcoded `DataSourcePath`; no CI (only `FUNDING.yml`). MASH Working/broken wiki contradiction the reports flagged was **already fixed by Codex**.
+- `ready-for-review`.
+
+## 2026-06-02 - Claude Deep-Review Round 17 (weather-daynight-review lane)
+
+- Reviewed `Server_DayNightCycle.sqf` + client receiver/animation (`initJIPCompatible.sqf:174-210`, `Client_DayNightCycle.sqf`). **Clean review — no defect.** Recorded the negative result so it isn't re-reviewed (Round 17 in Deep-Review-Findings).
+- Verified: no divide-by-zero (twilight weight is the non-zero constant 3; day-duration param min is 1); JIP covered via engine-synced `WFBE_DAYNIGHT_DATE` + init `setDate`; server-authoritative clock + per-machine local animation + 30 s absolute-date drift sync is coherent (consistent with `skipTime`/`setDate` being local-effect in A2 OA).
+- Ledger weather/day-night cell → **reviewed-clean**. Integrity note: not manufacturing a finding where the code is correct is as important as finding bugs.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

@@ -36,6 +36,7 @@
       "AI-Headless-And-Performance",
       "Client-UI-HUD-And-Menus",
       "Client-UI-Systems-Atlas",
+      "Gear-Loadout-And-EASA-Atlas",
       "Tools-And-Build-Workflow",
       "External-Integrations",
       "Feature-Status-Register",
@@ -46,6 +47,7 @@
       "Agent-Collaboration-Protocol",
       "Agent-Worklog",
       "Deep-Review-Findings",
+      "External-Research-Reports",
       "Codebase-Coverage-Ledger",
       "Documentation-Implementation-Plan",
       "Claude-Goal",
@@ -81,6 +83,7 @@
         "AI-Headless-And-Performance",
         "Client-UI-HUD-And-Menus",
         "Client-UI-Systems-Atlas",
+        "Gear-Loadout-And-EASA-Atlas",
         "Tools-And-Build-Workflow",
         "External-Integrations",
         "Feature-Status-Register",
@@ -91,6 +94,7 @@
         "Agent-Collaboration-Protocol",
         "Agent-Worklog",
         "Deep-Review-Findings",
+        "External-Research-Reports",
         "Codebase-Coverage-Ledger",
         "Documentation-Implementation-Plan",
         "Claude-Goal",
@@ -125,11 +129,13 @@
     "construction": "Commander/repair-truck CoIn flow, structure arrays, HQ deploy/mobilize, server construction workers, defense building, repair and sale flows. See Construction-And-CoIn-Systems-Atlas.md.",
     "ai": "Server town AI, AI commanders, client/headless delegation, player AI watchdog/recovery.",
     "ui": "Rsc resources, Client/GUI dialog controllers, RHUD/FPS HUD, title resources, map/action marker loops, CoIn construction UI and WASP overlays. See Client-UI-Systems-Atlas.md.",
+    "gearLoadoutEasa": "Gear metadata/profile templates and EASA aircraft loadouts; generated EASA/balance output comes from LoadoutManager. See Gear-Loadout-And-EASA-Atlas.md.",
     "tooling": "LoadoutManager for mission generation/packaging; PerformanceAuditAnalyzer for RPT metrics.",
     "integrations": "DiscordBot, a2waspwarfare_Extension, A2WaspDatabase extension, BattlEye publicVariable filter.",
     "waspOverlay": "Project-specific WASP additions include base repair, RPG dropping, marker monitor, HQ recovery action, start vehicles and a server selftest. See WASP-Overlay.md.",
     "factoryPurchase": "Player buy-unit flow is client-local from GUI_Menu_BuyUnits.sqf to Client_BuildUnit.sqf; RequestBuyUnit is not registered and no Server/PVFunctions/RequestBuyUnit.sqf exists. Server_BuyUnit/AIBuyUnit is compiled but no static caller was found. See Factory-And-Purchase-Systems-Atlas.md.",
-    "serverRuntime": "Server gameplay loops are owned by Init_Server.sqf: town capture/SV, town AI activation/despawn, camp manager, resources/economy, victory checks, garbage/vehicle cleanup, server FPS and AntiStack loops. See Server-Gameplay-Runtime-Atlas.md."
+    "serverRuntime": "Server gameplay loops are owned by Init_Server.sqf: town capture/SV, town AI activation/despawn, camp manager, resources/economy, victory checks, garbage/vehicle cleanup, server FPS and AntiStack loops. See Server-Gameplay-Runtime-Atlas.md.",
+    "externalResearch": "Three Steff-provided Dutch PDF reports were digested by Codex scouts and later cross-checked by Claude. Claude found they are downstream corroboration from the wiki/upstream proxy rather than independent source verification. See External-Research-Reports.md and Deep-Review-Findings Round 16."
   },
   "knownRisks": [
     "Autonomous AI supply trucks are config-gated latent breakage: UpdateSupplyTruck compile is disabled, a live call remains under Supply System 0 plus AI commanders, and Server/FSM/supplytruck.fsm is missing.",
@@ -162,7 +168,17 @@
     "DR-11 (Med-High, correctness): server_victory_threeway.sqf merges a lose-test (HQ dead + no factories) and a win-test (holds all towns) into one if and calls WFBE_CO_FNC_LogGameEnd (arg=winner) with the OPPOSITE of _x, so the persisted *_WIN_CHERNARUS profile tally is inverted for all-towns victories. WF_Winner is a dead write. && before || + !WFBE_GameOver guards only the towns branch + no forEach break -> endgame can double-fire. DR-12 threeway victory mode has no detection (WFBE_C_VICTORY_THREEWAY default 0; detection gated if(_victory==0); sole gameOver/failMission setter). DR-13 duplicate buggy Server/PVFunctions/LogGameEnd.sqf. See Deep-Review-Findings Round 6.",
     "DR-14 (High, architectural): player unit purchasing has NO server authority — GUI_Menu_BuyUnits.sqf spawns BuildUnit (client createVehicle/createUnit) and deducts client-side; no RequestBuyUnit PVF. With wfbe_funds broadcast-writable, the player economy is fully client-trusted. This is the ceiling on DR-1/DR-6 hardening; only a BattlEye scripts.txt filter (not a PV filter) can constrain client createVehicle. DR-15 (confirmed): Server_AssignNewCommander.sqf:3 '_side = _this' but sole caller RequestNewCommander.sqf:13 passes [_side,_commander] -> GetSideLogic fails, AI-commander-stop mis-fires; fix _side = _this select 0. See Deep-Review-Findings Round 7.",
     "DR-16 (High): structure sale (GUI_Menu_Economy.sqf:104-152) is fully client-authoritative — client commander check, client refund, client setDammage 1 destruction; no server PVF. With DR-6 (build) and DR-14 (buy), the entire WFBE economy is client-authoritative; only a BattlEye scripts.txt filter or a server-PVF redesign can enforce it. DR-17 (confirms Curie): RscMenu_EASA and RscMenu_Economy share idd=23000 (Rsc/Dialogs.hpp:3211,3289) -> findDisplay 23000 ambiguous. See Deep-Review-Findings Round 8.",
-    "DR-18 (Med, confirms Cicero): supply-cooldown key casing mismatch — Init_Town.sqf:35 seeds 'lastSupplyMissionRun' (lowercase) but supply logic uses 'LastSupplyMissionRun' (capital); setVariable keys are case-sensitive -> 0-seed dead, key nil first check -> isSupplyMissionActiveInTown.sqf:11 nil+interval throws. Fix: align casing or getVariable default 0. DR-19 (Med, non-dedicated, confirms Cicero): serverFpsGUI.sqf + monitorServerFPS.sqf put sleep 8 inside if(isDedicated) -> hosted/listen server busy-loops; hoist sleep/early-exit + consolidate redundant FPS publishers. See Deep-Review-Findings Round 9."
+    "DR-18 (Med, confirms Cicero): supply-cooldown key casing mismatch — Init_Town.sqf:35 seeds 'lastSupplyMissionRun' (lowercase) but supply logic uses 'LastSupplyMissionRun' (capital); setVariable keys are case-sensitive -> 0-seed dead, key nil first check -> isSupplyMissionActiveInTown.sqf:11 nil+interval throws. Fix: align casing or getVariable default 0. DR-19 (Med, non-dedicated, confirms Cicero): serverFpsGUI.sqf + monitorServerFPS.sqf put sleep 8 inside if(isDedicated) -> hosted/listen server busy-loops; hoist sleep/early-exit + consolidate redundant FPS publishers. See Deep-Review-Findings Round 9.",
+    "DR-20 (High, multiplayer correctness): the HQ Killed EH is registered on every owning-side client (set-hq-killed-eh broadcast + Init_Client.sqf:500-503 JIP path), but Server_OnHQKilled.sqf has no idempotency guard -> on mobile-HQ death the server runs it once per owning-side client (~2N x killer score award + N messages; score exploit on populated servers). JIP detection itself is correct. Fix: per-HQ processed flag in OnHQKilled (detect redundantly, act once). See Deep-Review-Findings Round 10.",
+    "DR-21 (Med, perf/operational): HC delegation has no failover. On HC disconnect Arma2 OA migrates its local AI to the server (load spike, NOT orphaned/lost — corrects round-1 hypothesis); Server_OnPlayerDisconnected.sqf does no re-delegation and WFBE_C_AI_DELEGATION is only evaluated at boot, so a reconnecting HC doesn't resume offload. Suggest setGroupOwner-based rebalancing on HC connect/disconnect (mission never uses setGroupOwner). See Deep-Review-Findings Round 11.",
+    "DR-22 (High, economy exploit): Server_ChangeSideSupply.sqf clamp 'if (_change<0) then {_change=_currentSupply-_amount}' is a broken floor — _amount is signed, so overspending yields currentSupply+|amount| (spend 300 from 100 -> 400, a windfall). Live in both west/east handlers; identical block in Common_ChangeSideSupply is dead. Fix: _change=0. Confirms Faraday candidate + round-1 note. No resistance-side handler. See Deep-Review-Findings Round 12.",
+    "DR-23 (High, economy integrity): RequestUpgrade.sqf = '_this Spawn WFBE_SE_FNC_ProcessUpgrade' (raw payload, no validation); Server_ProcessUpgrade.sqf does no commander/funds/sequence/dependency check and never deducts cost (client-side). Forge free upgrades; client-controlled indices -> out-of-range error. SYNTHESIS: with DR-6/14/16/22/23 the entire WFBE economy (build/buy/sell/supply/upgrade) is client-authoritative — one architectural decision (server-PVF validation vs BattlEye scripts.txt) covers the class. See Deep-Review-Findings Round 13.",
+    "DR-24 (Low, dead code): RscMenu_Upgrade (Rsc/Dialogs.hpp:2425) onLoad ExecVMs Client/GUI/GUI_Menu_Upgrade.sqf which does not exist (only GUI_UpgradeMenu.sqf); dialog never opened; live upgrade UI is GUI_UpgradeMenu.sqf. Dead/naming-drift reference. Delete or repoint. See Deep-Review-Findings Round 14.",
+    "DR-25a (Low): RscOverlay (Titles.hpp:46) + OptionsAvailable (Titles.hpp:165) share idd=10200. DR-25b (Low): RscClickableText.soundPush[]={, 0.2, 1} (Ressources.hpp:556) malformed (empty leading element; correct {\"\", 0.2, 1}); base control class. Both confirm Curie candidates; assign distinct IDDs and fix the array. See Deep-Review-Findings Round 15.",
+    "DR-26 (Low, governance): LICENSE.md is a custom/proprietary license (Copyright Spayker 2016 / Miksuu 2025; contributions assigned to the repo owner; reuse/distribution restricted), NOT OSI -> source-available, not open-source. Resolves external deep-research reports' 'license unspecified'. Also: DiscordBot/preferences_sample.json ships a real GuildID + hardcoded DataSourcePath (neutralize); no CI (only FUNDING.yml). See Deep-Review-Findings Round 16.",
+    "Gear/EASA risk: buy-gear and EASA flows are mostly client-authoritative for purchase/deduction/equip decisions; treat them as gameplay-integrity risks until server validation or BattlEye script filtering is designed.",
+    "Gear profile risk: Client_UI_Gear_SaveTemplateProfile.sqf references _u_upgrade in template filtering without a local definition; verify before extending template/profile behavior.",
+    "External deep-research note: the 3 PDFs Steff supplied were generated FROM this wiki (raw.githubusercontent wiki citations) + Miksuu upstream proxy -> downstream corroboration of DR-1/DR-6/DR-7 etc., not independent source verification. Claude's source-verified DR findings are a superset (reports lack DR-11/15/18/19/20/22/23)."
   ],
   "currentPR": {
     "number": 1,
@@ -388,6 +404,122 @@
         "DR-18 confirmed: supply-cooldown key casing mismatch (lowercase seed vs capital readers; case-sensitive keys) -> nil-throw on first check; defeats the 0-seed guard.",
         "DR-19 confirmed: hosted/listen-server FPS publishers busy-loop because sleep 8 is inside if(isDedicated); also two redundant FPS publishers.",
         "Both were Cicero candidates from Server-Gameplay-Runtime-Atlas; verified at source with exact impact and one-line fixes."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 10,
+      "lane": "jip-headless-crosscut",
+      "type": "JIP/multiplayer correctness review",
+      "deepened": ["Deep-Review-Findings", "Codebase-Coverage-Ledger"],
+      "findings": [
+        "DR-20 (High): HQ Killed EH registered on every owning-side client (broadcast + JIP init), but Server_OnHQKilled.sqf has no idempotency guard -> N-fold duplicate processing (score exploit) on mobile-HQ death.",
+        "JIP HQ-death detection itself is correct (Init_Client !_isDeployed guard; deployed HQ has server-side EH).",
+        "Fix: per-HQ processed flag in OnHQKilled; keep redundant EH registration (detect redundantly, act once)."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 11,
+      "lane": "headless-disconnect-review",
+      "type": "verification + self-correction",
+      "deepened": ["Deep-Review-Findings", "Codebase-Coverage-Ledger"],
+      "findings": [
+        "Self-correction: round-1 'HC disconnect orphans units' is wrong — engine migrates local units to server (no loss).",
+        "DR-21 (Med): HC delegation has no failover/rebalancing; disconnect dumps AI on the server and delegation is only evaluated at boot.",
+        "Suggest setGroupOwner-based rebalancing on HC connect/disconnect; mission never uses setGroupOwner."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 12,
+      "lane": "side-supply-delta-verify",
+      "type": "economy exploit confirmation (Faraday candidate)",
+      "deepened": ["Deep-Review-Findings", "Codebase-Coverage-Ledger"],
+      "findings": [
+        "DR-22 (High): Server_ChangeSideSupply.sqf broken floor turns overspend into a windfall (currentSupply+|amount|). Fix: _change=0.",
+        "Same block in Common_ChangeSideSupply is dead (server recomputes from _amount).",
+        "Confirms Faraday's negative-delta candidate + round-1 note; resistance-side handler still missing."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 13,
+      "lane": "upgrade-authority-verify",
+      "type": "economy authority confirmation + synthesis",
+      "deepened": ["Deep-Review-Findings", "Codebase-Coverage-Ledger"],
+      "findings": [
+        "DR-23 (High): upgrade purchasing client-authoritative — RequestUpgrade passes raw payload to ProcessUpgrade; no commander/funds/sequence/dependency check, no server-side cost.",
+        "Synthesis: entire WFBE economy (build/buy/sell/supply/upgrade = DR-6/14/16/22/23) is client-authoritative; one architectural decision (server-PVF vs BattlEye) covers the class.",
+        "Confirms Faraday's upgrade-authority candidate."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 14,
+      "lane": "missing-reference-inventory",
+      "type": "dead-reference confirmation (Curie candidate)",
+      "deepened": ["Deep-Review-Findings", "Codebase-Coverage-Ledger"],
+      "findings": [
+        "DR-24 (Low): RscMenu_Upgrade onLoad ExecVMs missing GUI_Menu_Upgrade.sqf; dialog never opened; live UI is GUI_UpgradeMenu.sqf. Dead/naming-drift.",
+        "Handed a reliable missing-reference scanner to Codex/tooling (my ad-hoc bash scan mishandled Windows backslash paths).",
+        "Severity gradient: campaign now in the long tail (Low/cleanup), indicating high-traffic cells are largely reviewed."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 15,
+      "lane": "ui-followups-verify",
+      "type": "UI config defect confirmation (Curie candidates)",
+      "deepened": ["Deep-Review-Findings", "Codebase-Coverage-Ledger"],
+      "findings": [
+        "DR-25a (Low): RscOverlay + OptionsAvailable share title idd=10200.",
+        "DR-25b (Low): RscClickableText.soundPush[] malformed ({, 0.2, 1}) at Ressources.hpp:556.",
+        "Both confirm Curie's remaining UI candidates; UI follow-ups closed."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 16,
+      "lane": "external-research-integration",
+      "type": "external deep-research integration + corroboration",
+      "deepened": ["Deep-Review-Findings", "Codebase-Coverage-Ledger"],
+      "findings": [
+        "3 deep-research PDFs are downstream of our wiki (corroboration, not independent source verification); they re-derive DR-1/6/7 etc.; our DR findings are a superset.",
+        "DR-26 (Low, governance): LICENSE.md is custom/proprietary (not OSI); resolves reports' 'license unspecified'.",
+        "Governance handoffs to Codex/owner: neutralize DiscordBot sample GuildID/DataSourcePath; add CI (SQF syntax + generated-mission drift + .NET build)."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 17,
+      "lane": "weather-daynight-review",
+      "type": "clean review (no defect)",
+      "deepened": ["Deep-Review-Findings", "Codebase-Coverage-Ledger"],
+      "findings": [
+        "Weather/day-night reviewed clean: no div-by-zero (twilight weight constant=3; day duration min 1), JIP covered (engine-synced WFBE_DAYNIGHT_DATE + init setDate), local-animation + 30s drift-sync design sound.",
+        "Recorded the negative result so future passes don't re-review; ledger weather cell -> reviewed-clean.",
+        "Integrity: not manufacturing a finding where code is correct is as valuable as finding bugs."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Codex",
+      "lane": "gear-loadout-easa-atlas-integration",
+      "type": "source-backed subsystem atlas",
+      "pagesAdded": ["Gear-Loadout-And-EASA-Atlas.md"],
+      "findings": [
+        "Gear catalog arrays, buy-gear templates and EASA aircraft loadouts are split across mission config, client UI and generated LoadoutManager output.",
+        "EASA and balance output are generated by Tools/LoadoutManager and should be edited at the tool data/source layer where possible.",
+        "Gear/EASA purchase and equip decisions remain client-authoritative and should be treated as gameplay-integrity risks."
       ]
     }
   ],

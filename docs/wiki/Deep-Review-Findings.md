@@ -362,6 +362,144 @@ On a **dedicated** server this is fine. On a **hosted/listen server or singlepla
 
 Code owners: (DR-18) align the supply-cooldown key casing (or default the read) — one-line fix; (DR-19) hoist the FPS-loop `sleep` out of the `isDedicated` guard (or early-exit when not dedicated), and consider consolidating the two redundant FPS publishers. Ledger: Supply JIP/HC and server-runtime perf cells advanced.
 
+## Round 10 — 2026-06-02 (Claude) — JIP/headless cross-cut: non-idempotent HQ-killed (DR-20)
+
+Lane `jip-headless-crosscut`. Traced HQ-death detection across server, existing clients and JIP clients.
+
+### DR-20 — HQ-killed is processed once per owning-side client (no idempotency) — **High (multiplayer correctness / score exploit)**
+
+Death detection for the mobile HQ is deliberately redundant (a client-local vehicle's `Killed` EH must run on a client):
+- `Server/Construction/Construction_HQSite.sqf:89` adds a server-side `Killed` EH, then `:91` broadcasts `["set-hq-killed-eh", _mhq]` to the **whole owning side**; `Server_MHQRepair.sqf:37,43` do the same after a repair.
+- `Client/PVFunctions/HandleSpecial.sqf:34` (`set-hq-killed-eh`) makes **every owning-side client** add a `Killed` EH that calls `["RequestSpecial",["process-killed-hq",_this]]`.
+- JIP clients additionally add it themselves at `Client/Init/Init_Client.sqf:500-503` (guarded `!isServer && !_isDeployed`).
+
+So **N owning-side clients each hold the same `Killed` EH**. When the HQ dies, the synced death fires every client's EH → the server receives **N** `process-killed-hq` messages → `Server/Functions/Server_OnHQKilled.sqf` runs **N times**, and it has **no idempotency guard**. Each run:
+- awards the killer score **twice** (`_points = 30000/100*coef` and `_score = 900` via two `RequestChangeScore`), so total killer score ≈ **2N ×** the intended award;
+- broadcasts N× destruction / `HeadHunterReceiveBounty` messages;
+- re-publishes `IS_<side>_HQ_ALIVE` / marker infos N times.
+
+(The dead-MHQ wreck spawn is inside `if (GetSideHQDeployStatus)` and self-limits after the first run flips `wfbe_hq_deployed=false`; the **score/message duplication does not**.) On a populated server (e.g. 20 owning-side players) an HQ kill inflates the killer's score ~40×. **Fix:** make `Server_OnHQKilled.sqf` idempotent — first line `if (_structure getVariable ["wfbe_hq_killed_done", false]) exitWith {}; _structure setVariable ["wfbe_hq_killed_done", true];`. Keep the redundant EH registration (it ensures death is never missed regardless of MHQ locality); guard the **consumer**, not the producers. Pattern: "detect redundantly, act once."
+
+### JIP coverage notes (verified, no change needed)
+- The JIP guard at `Init_Client.sqf:500` (`!_isDeployed`) is correct: a JIP client adds the mobile-HQ EH only when the HQ is currently mobile; a deployed HQ (building) is covered by the server-side EH at `Construction_HQSite.sqf:36` / `Init_Server.sqf:319`. JIP HQ-death *detection* is therefore covered — the defect is downstream duplication (DR-20), not a JIP miss.
+- `set-hq-killed-eh` is side-filtered (`SendToClients [_side, …]`), so only owning-side clients register it — correct.
+
+### Handoff
+Code owners: add the one-line idempotency guard to `Server_OnHQKilled.sqf` (DR-20) — this also fixes the duplicate-score symptom on HQ kills in populated games. Ledger: JIP/HC cells advanced for victory/economy/construction (HQ-death path verified end-to-end).
+
+## Round 11 — 2026-06-02 (Claude) — headless disconnect (DR-21) + a self-correction
+
+Lane `headless-disconnect-review`. Verifies the round-1 hypothesis about HC disconnect at `Server/Functions/Server_OnPlayerDisconnected.sqf`.
+
+### Correction to a round-1 hypothesis (honesty note)
+Round 1 listed, as an unverified gotcha, "HC disconnect orphans units it created." Verified at source, that framing is **wrong** and is hereby downgraded: in Arma 2 OA, when any machine disconnects the engine **migrates its local objects/groups to the server** (ownership transfer, not deletion). HC-delegated AI is therefore **not orphaned or lost** on disconnect. The accurate effects are below (DR-21).
+
+### DR-21 — HC disconnect dumps delegated AI on the server with no re-delegation — **Medium (performance/operational, non-data-loss)**
+
+`Server_OnPlayerDisconnected.sqf` HC handling:
+- If `WFBE_C_AI_DELEGATION == 2` and `WFBE_HEADLESS_<uid>` exists, it removes the HC's group from `WFBE_HEADLESSCLIENTS_ID` and clears `WFBE_HEADLESS_<uid>`.
+- `WFBE_JIP_USER<uid>` is nil for an HC (HCs don't register as players via `RequestJoin`), so the handler `exitWith`s before the player-team/unit logic. (It does also delete any `WFBE_CLIENT_<uid>_OBJECTS` registered to that uid earlier in the handler.)
+
+What actually happens to the AI the HC was simulating: the **engine transfers those units/groups to the server**, so the server's load spikes by exactly the amount the HC was offloading — the opposite of the delegation benefit, precisely when you least want it. There is **no re-delegation**: the disconnect handler does not hand the migrated AI to a surviving HC, and (per the round-1 init finding) `WFBE_C_AI_DELEGATION` is only evaluated/downgraded at boot, so a later HC reconnect does not resume offloading either. **Net:** HC delegation has no failover/rebalancing — a single HC drop silently re-loads the server for the rest of the match. **Suggested handling:** on HC disconnect, if other HCs remain, re-`setGroupOwner` the migrated town-AI groups to a surviving HC (a periodic rebalancer is cleaner than doing it in the disconnect handler); and make delegation re-evaluate when an HC (re)connects rather than only at boot. (Arma 2 OA *does* support `setGroupOwner`; note the mission currently never uses it — see [AI, headless and performance](AI-Headless-And-Performance).)
+
+### Handoff
+Code owners: treat HC delegation as best-effort with no failover today; if HC stability matters, add re-delegation/rebalancing on HC disconnect/connect. Ledger: AI/Headless JIP/HC cell advanced; round-1 "orphan" hypothesis corrected.
+
+## Round 12 — 2026-06-02 (Claude) — side-supply overspend windfall (DR-22)
+
+Lane `side-supply-delta-verify`. Confirms + sharpens Faraday's "negative side-supply delta" candidate (and my round-1 "inverted guard" note) at source.
+
+### DR-22 — Overspending side supply grants a windfall instead of being floored — **High (economy correctness/exploit)**
+
+The supply clamp (live in `Server/Functions/Server_ChangeSideSupply.sqf`, both the `wfbe_supply_temp_west` and `…_east` handlers; also present but **dead** in `Common/Functions/Common_ChangeSideSupply.sqf`) is:
+```sqf
+_change = _currentSupply + _amount;
+if (_change < 0) then {_change = _currentSupply - _amount};   // intended floor-at-0; actually a windfall
+if (_change >= _maxSupplyLimit) then {_change = _maxSupplyLimit};
+```
+`_amount` is **signed** — deductions are negative. When a deduction would overdraw (`_change < 0`), the "floor" computes `_currentSupply - _amount` = `_currentSupply + |amount|`. Example: supply 100, spend 300 (`_amount = -300`) → `_change = -200` → guard → `100 - (-300) = 400`. **Trying to spend more supply than you have increases your supply by the amount you tried to spend.** Any over-budget supply deduction (e.g. an upgrade/structure costing more than the side holds) flips into a gain — directly exploitable by attempting over-large spends, and it corrupts the economy generally.
+
+**Fix:** floor correctly — `if (_change < 0) then {_change = 0};`. Apply in `Server_ChangeSideSupply.sqf` (both handlers). Note the matching block in `Common_ChangeSideSupply.sqf` is dead code: it computes `_change` but the function sends only `[_side, _amount, _reason]` over `wfbe_supply_temp_<side>` and the server recomputes — so fix the server copy (and optionally delete the dead client computation). Related (round-1, still open): there is **no resistance-side handler** for `wfbe_supply_temp_*`, only west/east.
+
+### Handoff
+Code owners: one-line floor fix in `Server_ChangeSideSupply.sqf` (×2 handlers) — closes the overspend windfall. Ledger: Economy/supply Auth/PV reinforced (confirmed exploit, not just "confusing").
+
+## Round 13 — 2026-06-02 (Claude) — upgrade authority (DR-23) + economy synthesis
+
+Lane `upgrade-authority-verify`. Confirms Faraday's "upgrade authority gap" candidate and closes the economy-authority thread.
+
+### DR-23 — Upgrade purchasing is client-authoritative with no server validation — **High (economy integrity)**
+
+`Server/PVFunctions/RequestUpgrade.sqf` is the whole handler: `_this Spawn WFBE_SE_FNC_ProcessUpgrade;` — the raw client payload `[side, upgradeId, level, isPlayer]` goes straight into `Server/Functions/Server_ProcessUpgrade.sqf`, which:
+- reads `_side`/`_upgrade_id`/`_upgrade_level`/`_upgrade_isplayer` from the client with **no checks** (no commander check, no side check, no upgrade-sequence/level check, no dependency/`_LINKS` check);
+- **never deducts a cost** — it only `sleep`s `_upgrade_time` then `_upgrades set [_upgrade_id, current+1]`. The upgrade cost is deducted **client-side** in the upgrade menu before the request, same as the rest of the economy.
+
+So a modified client can forge `["RequestUpgrade",[side, id, level, false]]` to grant any side a **free** upgrade, bypassing commander authority and cost. Secondary: `_upgrade_time = (… select _upgrade_id) select _upgrade_level` uses client-controlled indices → out-of-range error (minor DoS) if forged with bad ids. **Fix:** validate in `RequestUpgrade`/`ProcessUpgrade` — requester is the side's commander, indices in range, dependencies met and the level is the correct next step, and deduct cost server-side (mirror the DR-6 validation shape).
+
+### Economy-authority synthesis (DR-6, DR-14, DR-16, DR-22, DR-23)
+This is the last economic action to review, and it confirms the pattern: **the entire WFBE player economy is client-authoritative** —
+- **build** structures (DR-6), **buy** units (DR-14), **sell** structures (DR-16), **change side supply** (DR-22, plus the overspend-windfall bug), **buy upgrades** (DR-23) — each lets the client decide/deduct, with the server doing at most a class-exists check.
+
+One owner decision covers all of it: either route economic mutations through validated server PVFs (server checks commander/side/funds and applies the debit), or accept client authority and rely on BattlEye `scripts.txt`/PV filters. Piecemeal fixes won't close the class; the decision is architectural.
+
+### Handoff
+Code owners: add commander/funds/index/dependency validation + server-side cost to the upgrade path (DR-23); and make the **economy-authority decision** once for build/buy/sell/supply/upgrade rather than per-finding. Ledger: economy thread fully reviewed (Auth across the board characterized).
+
+## Round 14 — 2026-06-02 (Claude) — dead dialog reference (DR-24)
+
+Lane `missing-reference-inventory`. Confirms Curie's `RscMenu_Upgrade` candidate at source (a representative dead/abandoned reference).
+
+### DR-24 — `RscMenu_Upgrade` dialog points at a missing onLoad script — **Low (dead code / naming drift)**
+
+`Rsc/Dialogs.hpp:2425` `class RscMenu_Upgrade` has `onLoad = "_this ExecVM ""Client\GUI\GUI_Menu_Upgrade.sqf"""` (`:2428`), but **`Client/GUI/GUI_Menu_Upgrade.sqf` does not exist** — only the differently-named `Client/GUI/GUI_UpgradeMenu.sqf` does. `RscMenu_Upgrade` is never opened (`createDialog`/`cutRsc` for it appears nowhere outside `Dialogs.hpp`); the live upgrade UI is `GUI_UpgradeMenu.sqf` (reached via `GUI_Menu.sqf`). So this is a stale dialog whose `onLoad` would `ExecVM` a missing file if it were ever opened — currently inert because nothing opens it. **Fix:** delete `RscMenu_Upgrade` (and its dangling `onLoad`), or repoint it at `GUI_UpgradeMenu.sqf` if it was meant to be the live one. Naming-drift class (`GUI_Menu_Upgrade` vs `GUI_UpgradeMenu`).
+
+> Method note: an automated "live reference → missing file" scan was attempted but its Windows-backslash path normalization was unreliable (false positives); this finding was confirmed by hand. A robust missing-reference inventory is a good future tooling task (resolve `\`-separated `execVM`/`ExecFSM`/`preprocessFile` string targets against the tree, excluding commented lines) — handed to Codex/tooling.
+
+### Handoff
+Code owners: remove or repoint the dead `RscMenu_Upgrade` dialog (DR-24). Tooling (Codex/Meitner lane): build a reliable missing-reference scanner. Ledger: UI dead-reference candidate confirmed; abandoned-code inventory still has open candidates (TaskSystem, old blink loops, WASP OnArmor/KeyDown — see round-1 WASP-Overlay + Feature-Status).
+
+## Round 15 — 2026-06-02 (Claude) — remaining UI config defects (DR-25a/b)
+
+Lane `ui-followups-verify`. Confirms Curie's last two UI candidates at source; closes the UI follow-up items.
+
+### DR-25a — Duplicate title IDD 10200 (`RscOverlay` vs `OptionsAvailable`) — **Low (UI correctness)**
+`Rsc/Titles.hpp`: `class RscOverlay` (`:46`) and `class OptionsAvailable` (`:165`) both declare `idd = 10200`. Titles are shown via `cutRsc`/`titleRsc` (addressed by class name, so the collision is less damaging than the dialog dup in DR-17), but any code that does `findDisplay 10200` / `uiNamespace` lookups on that id is ambiguous. Assign distinct IDDs. (Sibling of DR-17's `idd=23000` dialog dup.)
+
+### DR-25b — Malformed `soundPush[]` in `RscClickableText` — **Low (config defect)**
+`Rsc/Ressources.hpp:556` `class RscClickableText` has `soundPush[] = {, 0.2, 1};` — the first array element (the sound file) is **empty/missing** (a leading comma). The correct empty-sound form is `{"", 0.2, 1}` (as used at `Ressources.hpp:92`); the line-556 form is a malformed config array. `RscClickableText` is a base control class used widely, so the defect propagates to inheritors. **Fix:** `soundPush[] = {"", 0.2, 1};` (or a real sound macro like the adjacent `soundEscape[] = {WFBE_SoundEscape,0.2,1}`).
+
+### Handoff
+Code owners: assign distinct IDDs to `RscOverlay`/`OptionsAvailable` (DR-25a); fix the malformed `RscClickableText.soundPush[]` (DR-25b). Both Low. Ledger: UI follow-up candidates (title 10200, soundPush) now confirmed — UI cell's documented candidates are closed.
+
+## Round 16 — 2026-06-02 (Claude) — external deep-research integration (DR-26) + corroboration
+
+Lane `external-research-integration`. Steff supplied three deep-research PDFs (also given to Codex). I read two in full (*Diepgaande analyse*, *Analyse van*); the third is the same genre. **Provenance check:** their citations are `raw.githubusercontent.com/wiki/rayswaynl/...` pages + Miksuu upstream blobs — i.e. they were generated **from this wiki** (plus upstream as a line-level proxy), so they are *downstream corroboration*, not independent source verification.
+
+### Corroboration (external validation of our findings)
+The reports independently re-derive, and rate as top risks, exactly our spine: the `Call Compile` PVF trust boundary (DR-1) with the BattlEye `kickAFK`-only filter, construction client-authority (DR-6), `callExtension`/external-trust (DR-7), the `UpdateSupplyTruck` config-gated latent breakage (our Feature-Status sharpening), the town-AI despawn player-vehicle risk (our AI/headless note), the PR#1 `Killed`-EH leak, and MASH-marker-broken (DR-3). Their recommended fix order (static allow-list dispatch → server-side validation → reduce broadcast/centralize PV → harden `callExtension`) matches our DR-1/DR-6 playbooks. **Our source-verified findings are a superset** — the reports do not contain DR-11/15/18/19/20/22/23 (victory winner-inversion, commander-assign bug, FPS busy-loop, HQ-killed N-fold, overspend windfall, upgrade-authority), which required reading the actual `.sqf` rather than the wiki. Net: external review confirms the map holds up and surfaces nothing higher-severity that we missed in code.
+
+### DR-26 — License is custom/proprietary, not OSI (resolves both reports' "license unspecified") — **Low (governance)**
+Both reports marked the license "unspecified" (they only had the wiki, not the repo root). Verified at source: `LICENSE.md` is a **custom proprietary-style license** — "Copyright (C) 2016 Spayker / (C) 2025 Miksuu", with contributions becoming the repository owner's property and reuse/distribution restricted to explicitly granted rights. **Not** MIT/GPL/OSI. Implication: third-party reuse or redistribution is **not** permitted by default; treat the repo as source-available, not open-source.
+
+### Governance/ops handoffs (the reports' additive value, source-confirmed)
+- **Discord sample metadata:** `DiscordBot/preferences_sample.json` ships a concrete `GuildID` (`440257265941872660`), `AuthorizedUserIDs`, and `DataSourcePath C:\a2waspwarfare\Data`; `FileConfiguration.cs` has the same hardcoded fallback path. No committed token (good), but neutralize the sample identifiers / move to env-based config. *(Codex/owner lane — DiscordBot is outside the Chernarus mission.)*
+- **No CI/tests:** confirmed earlier (only `.github/FUNDING.yml`). For a heavily `preprocessFile`-dynamic SQF codebase + generated targets, add at least SQF-syntax + generated-mission-drift + .NET build checks. *(Tooling/Codex lane.)*
+
+### Handoff
+Owner: the campaign's code findings (DR-1→DR-25) are the actionable core; the external reports add governance items (license clarity now resolved as DR-26; Discord sample hygiene; CI). Codex: fold the governance asks into `External-Integrations`/`Tools-And-Build-Workflow` as desired (its lane).
+
+## Round 17 — 2026-06-02 (Claude) — weather / day-night: reviewed clean (no defect)
+
+Lane `weather-daynight-review`. Reviewed `Server/Functions/Server_DayNightCycle.sqf` (Marty's hybrid accelerated cycle) + the client receiver/animation in `initJIPCompatible.sqf:174-210` + `Client/Functions/Client_DayNightCycle.sqf` + the constants. **No defect found — the system is well-designed.** Recording the clean result so future passes don't re-review.
+
+Verified:
+- **No divide-by-zero** in the cycle math. `_twilight_hours_per_second = _day_weighted_hours / (_day_duration_real_seconds * _twilight_weight)` — `WFBE_DAYNIGHT_TWILIGHT_WEIGHT` is a **non-zero hardcoded constant** (`= 3`, `Init_CommonConstants.sqf:88`, not a param), and `WFBE_DAY_DURATION`'s parameter values are `{1,30,40,50,60,90,180}` (min 1, never 0), so both divisors are always positive.
+- **Authority model is coherent:** the server runs an authoritative accelerated clock via small per-tick `skipTime` and publishes an absolute `date` (`WFBE_DAYNIGHT_DATE`) every `WFBE_DAYNIGHT_SERVER_SYNC_INTERVAL` (30 s) for drift correction; each non-dedicated machine animates locally (`Client_DayNightCycle.sqf`) — consistent with `skipTime`/`setDate` being local-effect in Arma 2 OA.
+- **JIP is covered:** `WFBE_DAYNIGHT_DATE` is engine-synced to joiners, and the init `[] Spawn { waitUntil time>0; if (!isNil "WFBE_DAYNIGHT_DATE") setDate WFBE_DAYNIGHT_DATE … }` applies the current absolute date on join; live drift resumes on the next 30 s broadcast. Minor, non-defect: a JIP client's `WFBE_DAYNIGHT_DATE` PVEH does not fire for the pre-join value (only the variable is synced), so the first drift-correction waits up to one sync interval — acceptable since the init `setDate` already seeds correct state.
+- The volumetric-clouds force-disable (perf) is documented in [AI, headless and performance](AI-Headless-And-Performance) / [Feature status register](Feature-Status-Register).
+
+**Outcome:** weather/day-night cell → reviewed-clean. No handoff required.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)

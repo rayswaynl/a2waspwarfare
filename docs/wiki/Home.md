@@ -22,7 +22,7 @@ Use these when you want to read the wiki like a connected handbook instead of ju
 | First day in the repo | [Quickstart](Quickstart-For-Humans-And-Agents) -> [Architecture overview](Architecture-Overview) -> [Mission lifecycle](Mission-Entrypoints-And-Lifecycle) -> [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
 | Implement a gameplay change | [Gameplay atlas](Gameplay-Systems-Atlas) -> [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas) -> [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas) -> [Server runtime atlas](Server-Gameplay-Runtime-Atlas) -> [Core systems](Core-Systems-Index) -> [Feature status](Feature-Status-Register) |
 | Trace SQF and networking | [SQF atlas](SQF-Code-Atlas) -> [Function index](Function-And-Module-Index) -> [Networking/PV](Networking-And-Public-Variables) |
-| Work on UI/HUD | [Client UI/HUD/menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) -> [Tools/build](Tools-And-Build-Workflow) |
+| Work on UI/HUD | [Client UI/HUD/menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) -> [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) -> [Tools/build](Tools-And-Build-Workflow) |
 | Coordinate Codex and Claude | [Progress dashboard](Progress-Dashboard) -> [Coordination board](Coordination-Board) -> [Agent collaboration protocol](Agent-Collaboration-Protocol) -> [Agent worklog](Agent-Worklog) |
 
 Every content page now includes a **Continue Reading** block with previous and next links for the main handbook path.
@@ -45,7 +45,7 @@ Every content page now includes a **Continue Reading** block with previous and n
 | Work on networking | [Networking and public variables](Networking-And-Public-Variables) -> [SQF code atlas](SQF-Code-Atlas) |
 | Work on economy or supply | [Economy, towns and supply](Economy-Towns-And-Supply) -> [Supply mission architecture](Supply-Mission-Architecture) -> [Current supply heli PR](Current-Work-Supply-Helicopters-PR1) |
 | Work on AI/performance | [AI, headless and performance](AI-Headless-And-Performance) -> [Feature status register](Feature-Status-Register) |
-| Work on UI/HUD/menus | [Client UI, HUD and menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| Work on UI/HUD/menus | [Client UI, HUD and menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) -> [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
 | Work on core gameplay | [Gameplay systems atlas](Gameplay-Systems-Atlas) -> [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) -> [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) -> [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) -> [Core systems index](Core-Systems-Index) |
 | Check agent progress | [Progress dashboard](Progress-Dashboard) -> [`agent-status.json`](agent-status.json) -> [`agent-events.jsonl`](agent-events.jsonl) |
 | Coordinate agents | [Progress dashboard](Progress-Dashboard) -> [Coordination board](Coordination-Board) -> [Agent worklog](Agent-Worklog) -> [Codebase coverage ledger](Codebase-Coverage-Ledger) -> [Claude long-term goal](Claude-Long-Term-Goal) |
@@ -61,10 +61,10 @@ Every content page now includes a **Continue Reading** block with previous and n
 | Code | [Function and module index](Function-And-Module-Index), [SQF code atlas](SQF-Code-Atlas) |
 | Runtime systems | [Gameplay systems atlas](Gameplay-Systems-Atlas), [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas), [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), [Core systems index](Core-Systems-Index), [Economy, towns and supply](Economy-Towns-And-Supply), [AI, headless and performance](AI-Headless-And-Performance) |
 | Networking | [Networking and public variables](Networking-And-Public-Variables) |
-| UI | [Client UI, HUD and menus](Client-UI-HUD-And-Menus), [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| UI | [Client UI, HUD and menus](Client-UI-HUD-And-Menus), [Client UI systems atlas](Client-UI-Systems-Atlas), [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
 | WASP additions | [WASP overlay](WASP-Overlay) |
 | Operations | [Tools and build workflow](Tools-And-Build-Workflow), [External integrations](External-Integrations) |
-| Risk and future work | [Feature status register](Feature-Status-Register), [Deep-review findings](Deep-Review-Findings), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Documentation implementation plan](Documentation-Implementation-Plan) |
+| Risk and future work | [Feature status register](Feature-Status-Register), [Deep-review findings](Deep-Review-Findings), [External research reports](External-Research-Reports), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Documentation implementation plan](Documentation-Implementation-Plan) |
 | Agent collaboration | [AI assistant developer guide](AI-Assistant-Developer-Guide), [Agent context](Agent-Context), [Progress dashboard](Progress-Dashboard), [Coordination board](Coordination-Board), [Agent collaboration protocol](Agent-Collaboration-Protocol) |
 
 ## Repo Shape

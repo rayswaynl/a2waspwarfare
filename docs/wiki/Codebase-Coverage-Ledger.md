@@ -27,18 +27,19 @@ Legend: ✅ done (source-cited) · 🟡 partial · ⬜ gap.
 | --- | :-: | :-: | :-: | :-: | :-: | :-: | --- |
 | Boot / lifecycle | ✅ | ✅ | ✅ | 🟡 | 🟡 | ✅ | [Lifecycle wait-chain](Lifecycle-Wait-Chain), [Entrypoints](Mission-Entrypoints-And-Lifecycle) |
 | PV / networking dispatch | ✅ | ✅ | ✅ | 🟡 | 🟡 | n/a | [Networking](Networking-And-Public-Variables), DR-1 |
-| Economy / town / supply | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ✅ | [Economy](Economy-Towns-And-Supply), [Gameplay atlas](Gameplay-Systems-Atlas) |
+| Economy / town / supply | ✅ | ✅ | ✅ | 🟡 | 🟡 | ✅ | [Economy](Economy-Towns-And-Supply), [Gameplay atlas](Gameplay-Systems-Atlas); DR-20, DR-22, DR-23. **Economy authority fully characterized: build/buy/sell/supply/upgrade all client-authoritative** |
 | Supply missions | ✅ | 🟡 | ✅ | 🟡 | 🟡 | ✅ | [Supply mission arch](Supply-Mission-Architecture), DR (PR#1), DR-18 (cooldown key casing) |
-| Construction / CoIn | ✅ | ✅ | ✅ | 🟡 | 🟡 | 🟡 | [Construction atlas](Construction-And-CoIn-Systems-Atlas), DR-6 |
+| Construction / CoIn | ✅ | ✅ | ✅ | 🟡 | ✅ | 🟡 | [Construction atlas](Construction-And-CoIn-Systems-Atlas), DR-6, DR-20 (HQ-killed idempotency) |
 | Factory / purchase | ✅ | 🟡 | 🟡 | ⬜ | ⬜ | n/a | [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas); DR-14 (no server authority, architectural), DR-15 (commander-assign bug) |
-| AI / headless / perf | ✅ | 🟡 | 🟡 | ✅ | 🟡 | n/a | [AI/headless](AI-Headless-And-Performance) |
-| UI / HUD / menus | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ⬜ | [UI atlas](Client-UI-Systems-Atlas); DR-16 (client-side sale authority), DR-17 (dup IDD 23000); RscMenu_Upgrade/soundPush still ⬜ |
+| AI / headless / perf | ✅ | 🟡 | 🟡 | ✅ | ✅ | n/a | [AI/headless](AI-Headless-And-Performance); DR-21 (HC disconnect: server load migration, no re-delegation) |
+| UI / HUD / menus | ✅ | ✅ | 🟡 | 🟡 | ⬜ | ⬜ | [UI atlas](Client-UI-Systems-Atlas); DR-16 (client-side sale), DR-17/DR-25a (dup IDDs 23000/10200), DR-24 (dead RscMenu_Upgrade), DR-25b (malformed soundPush) — Curie candidates all confirmed |
+| Gear / loadout / EASA | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ✅ | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas); client-authoritative buy/equip flow, generated EASA/balance output and profile-template risk documented |
 | WASP overlay | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ✅ | [WASP overlay](WASP-Overlay) |
 | Tooling / LoadoutManager | ✅ | n/a | n/a | n/a | n/a | ✅ | [Tools](Tools-And-Build-Workflow), DR-4 |
 | Integrations (Extension / Discord / **AntiStack DB** / BattlEye) | 🟡 | 🟡 | 🟡 | 🟡 | 🟡 | n/a | [External integrations](External-Integrations); AntiStack DB done (DR-7..DR-10); Extension/Discord/BattlEye ⬜ |
 | Victory / endgame | ✅ | 🟡 | 🟡 | 🟡 | 🟡 | n/a | `server_victory_threeway.sqf`; DR-11..DR-13 (winner inversion, threeway no-detection, dup LogGameEnd) |
-| Weather / day-night | 🟡 | n/a | 🟡 | 🟡 | 🟡 | n/a | `Server/Functions/Server_DayNightCycle.sqf` |
-| Modules (Artillery / EASA / ICBM / IRS / CM / UAV) | 🟡 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | scattered; partially in Feature-Status |
+| Weather / day-night | ✅ | n/a | ✅ | ✅ | ✅ | n/a | `Server_DayNightCycle.sqf` — **reviewed clean (Round 17, no defect)**: no div-by-zero, JIP-covered, local-animation+drift-sync design sound |
+| Modules (Artillery / ICBM / IRS / CM / UAV) | 🟡 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | scattered; partially in Feature-Status |
 | Markers / cleaners / restorers | ✅ | n/a | 🟡 | ✅ | 🟡 | n/a | [AI/headless](AI-Headless-And-Performance) |
 
 ## Biggest open cells (self-selection queue, highest value first)
@@ -46,7 +47,7 @@ Legend: ✅ done (source-cited) · 🟡 partial · ⬜ gap.
 1. ~~Integrations — AntiStack DB extension trust path~~ **DONE** (Round 5, DR-7..DR-10): server `call compile`s the external DLL's stdout; blocking poll on join; callExtension length limits; defaults-on against an absent DLL. Remaining integrations sub-targets: in-repo `Extension/` GLOBALGAMESTATS DLL + DiscordBot data path + BattlEye filter posture.
 2. ~~Factory / purchase authority~~ **DONE** (Round 7, DR-14/DR-15): player purchasing is fully client-authoritative (no server PVF; architectural ceiling); `Server_AssignNewCommander` call-shape bug confirmed.
 3. ~~UI / HUD adversarial pass~~ **PARTLY DONE** (Round 8, DR-16/DR-17): economy-menu sale is client-authoritative; dup IDD 23000 confirmed. Remaining: shared title IDD 10200, stale `RscMenu_Upgrade`→missing `GUI_Menu_Upgrade.sqf`, suspect `RscClickableText.soundPush[]`, dialog/EH leaks.
-4. **JIP/HC cross-cut** — one pass dedicated to join-in-progress + dedicated + headless correctness across economy, markers, HQ killed-EH locality, attack-wave sync.
+4. ~~JIP/HC cross-cut~~ **STARTED** (Round 10, DR-20): HQ killed-EH locality traced end-to-end → non-idempotent OnHQKilled fires per owning-side client (score exploit). JIP detection itself is correct. Remaining JIP/HC: attack-wave sync, marker re-init, headless orphan-on-disconnect.
 5. ~~Victory / endgame + DB flush~~ **DONE** (Round 6, DR-11..DR-13): winner-inversion in persisted stats, threeway mode has no detection, duplicate buggy LogGameEnd. Follow-up: `WFBE_CL_FNC_EndGame` payload semantics.
 
 ## How to use this ledger

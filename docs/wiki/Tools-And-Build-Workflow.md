@@ -11,6 +11,8 @@ Responsibilities:
 - adjust terrain-specific map parameters such as Takistan `SET_MAP`;
 - optionally package missions with 7-Zip.
 
+The generated aircraft loadout and balance pipeline is mapped in [Gear, loadout and EASA atlas](Gear-Loadout-And-EASA-Atlas). In short: change aircraft loadouts in `Tools/LoadoutManager/Data/Vehicles/Aircrafts/**`, then inspect generated `Client/Module/EASA/EASA_Init.sqf` and `Common/Functions/Common_BalanceInit.sqf`.
+
 Build configurations:
 
 - `DEBUG`

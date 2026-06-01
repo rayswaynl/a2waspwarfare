@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-01T22:36:29+02:00",
+  "generatedAt": "2026-06-01T23:35:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -14,614 +14,129 @@
   "agents": {
     "Codex": {
       "role": "Integrator, wiki UX owner, source-atlas maintainer, publisher and validation runner.",
-      "currentLane": "victory-endgame-runtime-atlas",
-      "status": "active; orchestrating cheap discovery swarm"
+      "currentLane": "gear-loadout-easa-atlas-integration + external-pdf-research-intake + integration-backlog-batch-a",
+      "status": "active"
     },
     "Claude": {
       "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
-      "currentLane": "factory-purchase-authority",
-      "status": "ready-for-review; autonomous-ready; latest reviews include victory-endgame and factory-purchase authority"
+      "currentLane": "autonomous-claude-research",
+      "status": "ready-for-review; autonomous-ready"
     },
-    "Faraday": {
-      "role": "Cheap read-only Codex discovery scout for economy, gear, loadout, EASA and balance flows.",
-      "currentLane": "gear-loadout-easa-balance-discovery",
-      "status": "active-readonly-scout; prior economy report pending integration"
+    "Sagan": {
+      "role": "Cheap read-only PDF scout.",
+      "currentLane": "external-pdf-analytisch-rapport",
+      "status": "completed"
     },
-    "Mencius": {
-      "role": "Cheap read-only Codex discovery scout for client lifecycle, respawn, MASH, medical and support paths.",
-      "currentLane": "respawn-medical-mash-support-discovery",
-      "status": "active-readonly-scout; prior client-jip report pending integration"
+    "Helmholtz": {
+      "role": "Cheap read-only PDF scout.",
+      "currentLane": "external-pdf-analyse",
+      "status": "completed"
     },
-    "Hilbert": {
-      "role": "Read-only Codex sub-agent; prior PV boundary pass integrated, now scouting server runtime/scheduler behavior.",
-      "currentLane": "server-runtime-scheduler-discovery",
-      "status": "active-readonly-scout"
-    },
-    "Cicero": {
-      "role": "Read-only Codex sub-agent; prior server runtime pass integrated, now scouting AI/headless delegation.",
-      "currentLane": "ai-headless-delegation-discovery",
-      "status": "active-readonly-scout"
-    },
-    "Curie": {
-      "role": "Read-only Codex sub-agent; prior UI pass integrated, now scouting wiki UX/navigation.",
-      "currentLane": "wiki-ux-navigation-discovery",
-      "status": "active-readonly-scout"
-    },
-    "Meitner": {
-      "role": "Read-only Codex sub-agent; prior tooling pass integrated, now scouting content drift and generation rules.",
-      "currentLane": "content-drift-generation-discovery",
-      "status": "active-readonly-scout"
+    "Parfit": {
+      "role": "Cheap read-only PDF scout.",
+      "currentLane": "external-pdf-diepgaande-analyse",
+      "status": "completed"
     }
   },
   "activeClaims": [
     {
-      "lane": "victory-endgame-runtime-atlas",
+      "lane": "gear-loadout-easa-atlas-integration",
       "owner": "Codex",
-      "status": "active",
-      "sourceScope": [
-        "Server/FSM/server_victory_threeway.sqf",
-        "Server/Functions/*GameEnd*.sqf",
-        "Server/Functions/Server_LogGameEnd.sqf",
-        "Server/PVFunctions/LogGameEnd.sqf",
-        "Client/PVFunctions/HandleSpecial.sqf",
-        "Client/GUI/GUI_EndOfGameStats.sqf",
-        "Server/Module/AntiStack/*.sqf",
-        "Server/Init/Init_Server.sqf",
-        "initJIPCompatible.sqf"
-      ],
-      "outputs": [
-        "Victory-And-Endgame-Runtime-Atlas.md",
-        "updated navigation/context/status/worklog"
-      ],
-      "handoff": "Claude's DR-11..DR-13 victory/endgame review is already published; Codex should integrate it into the runtime atlas instead of duplicating the review."
-    },
-    {
-      "lane": "economy-town-factory-upgrade-discovery",
-      "owner": "Faraday",
-      "status": "reported-pending-integration",
-      "sourceScope": [
-        "Server/FSM/updateresources.sqf",
-        "Server/FSM/server_town*.sqf",
-        "Common/Functions/*Supply*.sqf",
-        "Server/Functions/*Supply*.sqf",
-        "Client/GUI/GUI_Menu_Economy.sqf",
-        "Server/Functions/Server_ProcessUpgrade.sqf",
-        "Common/Config/Core_Upgrades/*.sqf"
-      ],
-      "outputs": [
-        "read-only scout report received 2026-06-01T22:36:29+02:00"
-      ],
-      "handoff": "Codex should fold confirmed findings into Economy-Towns-And-Supply, Factory-And-Purchase-Systems-Atlas, Server-Gameplay-Runtime-Atlas, Feature-Status-Register and agent-context.json."
-    },
-    {
-      "lane": "gear-loadout-easa-balance-discovery",
-      "owner": "Faraday",
-      "status": "active-readonly-scout",
+      "status": "integrated-locally; publish-pending",
       "sourceScope": [
         "Client/GUI/GUI_BuyGearMenu.sqf",
         "Client/GUI/GUI_Menu_EASA.sqf",
         "Client/Functions/Client_UI_Gear_*.sqf",
-        "Tools/LoadoutManager/**",
-        "Common/Config/Core_*.sqf",
-        "Client/Module/EASA/EASA_Init.sqf"
+        "Client/Module/EASA/EASA_Init.sqf",
+        "Common/Functions/Common_BalanceInit.sqf",
+        "Tools/LoadoutManager/**"
       ],
       "outputs": [
-        "read-only scout report for Codex integration"
+        "Gear-Loadout-And-EASA-Atlas.md",
+        "navigation/context/status updates"
       ],
-      "handoff": "Codex should fold confirmed findings into Client-UI-Systems-Atlas, Tools-And-Build-Workflow, gear/loadout docs and agent-context.json."
+      "handoff": "Code owners should treat gear/EASA purchase and equip paths as client-authoritative until a hardening design exists."
     },
     {
-      "lane": "client-jip-lifecycle-discovery",
-      "owner": "Mencius",
-      "status": "reported-pending-integration",
+      "lane": "external-pdf-research-intake",
+      "owner": "Codex + Sagan/Helmholtz/Parfit",
+      "status": "captured; source-reconciliation-pending",
       "sourceScope": [
-        "initJIPCompatible.sqf",
-        "Common/Init/Init_Common.sqf",
-        "Server/Init/Init_Server.sqf",
-        "Client/Init/Init_Client.sqf",
-        "Server/Functions/Server_OnPlayerConnected.sqf",
-        "Server/Functions/Server_OnPlayerDisconnected.sqf",
-        "Server/PVFunctions/RequestJoin.sqf",
-        "Client/Functions/Client_OnKilled.sqf",
-        "Client/Functions/Client_OnRespawnHandler.sqf"
+        "C:\\Users\\Steff\\Downloads\\Analytisch rapport over rayswaynl_a2waspwarfare.pdf",
+        "C:\\Users\\Steff\\Downloads\\Analyse van rayswaynl_a2waspwarfare.pdf",
+        "C:\\Users\\Steff\\Downloads\\Diepgaande analyse van rayswaynl_a2waspwarfare.pdf"
       ],
       "outputs": [
-        "read-only scout report received 2026-06-01T22:36:29+02:00"
+        "External-Research-Reports.md"
       ],
-      "handoff": "Codex should integrate duplicated Skill_Init, legacy WASP leftovers, join ACK sensitivity and respawn loop cost into lifecycle/client pages."
+      "handoff": "Claude and future agents should verify PDF leads against repo source before promoting them into subsystem pages."
     },
     {
-      "lane": "respawn-medical-mash-support-discovery",
-      "owner": "Mencius",
-      "status": "active-readonly-scout",
-      "sourceScope": [
-        "Client/Functions/*Respawn*.sqf",
-        "Client/GUI/GUI_RespawnMenu.sqf",
-        "Client/Module/MASH/*.sqf",
-        "Client/GUI/GUI_Menu_Service.sqf",
-        "Server/Module/MASH/*.sqf",
-        "Server/Support/*.sqf"
-      ],
-      "outputs": [
-        "read-only scout report for Codex integration"
-      ],
-      "handoff": "Codex should fold confirmed findings into respawn, MASH/support and feature-status pages."
-    },
-    {
-      "lane": "server-runtime-scheduler-discovery",
-      "owner": "Hilbert",
-      "status": "active-readonly-scout",
-      "sourceScope": [
-        "Server/Init/Init_Server.sqf",
-        "Server/FSM/*.sqf",
-        "Server/GUI/serverFpsGUI.sqf",
-        "Server/Module/serverFPS/*.sqf",
-        "Common/Functions/Common_PerformanceAudit.sqf"
-      ],
-      "outputs": [
-        "read-only scout report for Codex integration"
-      ],
-      "handoff": "Codex should fold confirmed findings into Server-Gameplay-Runtime-Atlas and AI-Headless-And-Performance."
-    },
-    {
-      "lane": "ai-headless-delegation-discovery",
-      "owner": "Cicero",
-      "status": "active-readonly-scout",
-      "sourceScope": [
-        "Server/AI/*.sqf",
-        "Headless/Init/*.sqf",
-        "Headless/**/*.sqf",
-        "Server/FSM/server_town_ai.sqf",
-        "Common/Functions/*Team*.sqf"
-      ],
-      "outputs": [
-        "read-only scout report for Codex integration"
-      ],
-      "handoff": "Codex should fold confirmed findings into AI/headless, server runtime and feature-status pages."
-    },
-    {
-      "lane": "wiki-ux-navigation-discovery",
-      "owner": "Curie",
-      "status": "active-readonly-scout",
-      "sourceScope": [
-        "docs/wiki/*.md",
-        "docs/wiki/agent-*.json",
-        "docs/wiki/agent-events.jsonl"
-      ],
-      "outputs": [
-        "read-only scout report for Codex integration"
-      ],
-      "handoff": "Codex should fold confirmed findings into navigation, Progress-Dashboard, Quickstart and agent-facing context files."
-    },
-    {
-      "lane": "content-drift-generation-discovery",
-      "owner": "Meitner",
-      "status": "active-readonly-scout",
-      "sourceScope": [
-        "Missions/**",
-        "Missions_Vanilla/**",
-        "Modded_Missions/**",
-        "Tools/LoadoutManager/**",
-        "Mods/**"
-      ],
-      "outputs": [
-        "read-only scout report for Codex integration"
-      ],
-      "handoff": "Codex should fold confirmed findings into Content-Structure-And-Maps, Tools-And-Build-Workflow and agent-context.json."
-    },
-    {
-      "lane": "progress-interface",
+      "lane": "integration-backlog-batch-a",
       "owner": "Codex",
-      "status": "integrated",
-      "sourceScope": [
-        "Progress-Dashboard.md",
-        "agent-status.json",
-        "Coordination-Board.md",
-        "Agent-Collaboration-Protocol.md",
-        "Home.md",
-        "_Sidebar.md"
-      ],
-      "outputs": [
-        "Progress-Dashboard.md",
-        "agent-status.json",
-        "updated navigation/protocol/worklog"
-      ],
-      "handoff": "Codex and Claude should update the dashboard/status snapshot whenever visible lane ownership changes."
-    },
-    {
-      "lane": "factory-purchase-atlas",
-      "owner": "Codex",
-      "status": "integrated",
-      "sourceScope": [
-        "Client/GUI/GUI_Menu_BuyUnits.sqf",
-        "Client/Functions/Client_BuildUnit.sqf",
-        "Common/Init/Init_PublicVariables.sqf (no RequestBuyUnit registered)",
-        "Server/Functions/Server_BuyUnit.sqf",
-        "Server/Functions/Server_HandleEmptyVehicle.sqf",
-        "Common/Config/Core_Units/*.sqf",
-        "Common/Config/Core_Squads/*.sqf",
-        "Common/Config/Core_Upgrades/*.sqf",
-        "Common/Functions/Common_CreateVehicle.sqf",
-        "Common/Functions/Common_CreateUnit.sqf"
-      ],
-      "outputs": [
-        "Factory-And-Purchase-Systems-Atlas.md",
-        "updated navigation/context/worklog"
-      ],
-      "handoff": "Claude and Hilbert should review purchase authority boundaries and the missing RequestBuyUnit PVF; Cicero should review whether AIBuyUnit has any dynamic AI commander caller."
-    },
-    {
-      "lane": "network-pv-boundary-deep-index",
-      "owner": "Hilbert",
-      "status": "completed-integrated",
+      "status": "active",
       "sourceScope": [
         "Common/Init/Init_PublicVariables.sqf",
-        "Server/PVFunctions/*.sqf",
-        "Client/PVFunctions/*.sqf",
         "Server/Functions/Server_HandlePVF.sqf",
         "Client/Functions/Client_HandlePVF.sqf",
-        "Common/Functions/Common_SendToServerOptimized.sqf",
-        "Common/Functions/Common_SendToClient.sqf",
-        "BattlEyeFilter/publicvariable.txt"
-      ],
-      "outputs": [
-        "Networking-And-Public-Variables.md",
-        "Feature-Status-Register.md",
-        "agent-context.json"
-      ],
-      "handoff": "Future implementation should validate high-impact registered PVF handlers after the dispatch hardening fix."
-    },
-    {
-      "lane": "server-gameplay-loops-deep-index",
-      "owner": "Cicero",
-      "status": "completed-integrated",
-      "sourceScope": [
-        "Server/Init/*.sqf",
-        "Server/FSM/*.fsm",
-        "Server/Towns/*.sqf",
-        "Server/Functions/*.sqf",
-        "Common/Config/Core_Towns/*.sqf",
-        "Common/Config/Core_Root/*.sqf"
-      ],
-      "outputs": [
-        "Server-Gameplay-Runtime-Atlas.md",
-        "Feature-Status-Register.md",
-        "agent-context.json"
-      ],
-      "handoff": "Future implementation should review commander reassignment, AI commander runtime ownership, supply mission authority and hosted FPS loops."
-    },
-    {
-      "lane": "ui-hud-dialogs-deep-index",
-      "owner": "Curie",
-      "status": "completed-integrated",
-      "sourceScope": [
-        "description.ext",
-        "Rsc/*.hpp",
-        "Client/GUI/*.sqf",
-        "Client/Functions/*UI*.sqf",
-        "Client/HUD/*.sqf",
-        "Client/Module/RHUD/*"
-      ],
-      "outputs": ["Client-UI-Systems-Atlas.md", "Feature-Status-Register.md"],
-      "handoff": "Future UI work should resolve stale RscMenu_Upgrade, duplicate IDDs and suspect RscClickableText soundPush before adding new dialogs."
-    },
-    {
-      "lane": "tooling-integrations-deep-index",
-      "owner": "Meitner",
-      "status": "completed-integrated",
-      "sourceScope": [
-        "Tools/**",
-        "DiscordBot/**",
+        "Server/Module/AntiStack/*.sqf",
         "Extension/**",
-        "BattlEyeFilter/**",
-        "ServerInfo/**",
-        "Missions/**"
+        "DiscordBot/**",
+        "BattlEyeFilter/**"
       ],
       "outputs": [
-        "Tools-And-Build-Workflow.md",
-        "External-Integrations.md",
-        "Content-Structure-And-Maps.md",
-        "agent-context.json"
+        "Networking/PV and External-Integrations integration updates"
       ],
-      "handoff": "Future tooling work should use a correctly named a2waspwarfare checkout before running LoadoutManager."
+      "handoff": "Heisenberg priority order says PV/network trust and external integration/AntiStack land before lower-risk atlas polish."
+    }
+  ],
+  "queuedReports": [
+    {
+      "lane": "pv-matrix-second-pass-v2",
+      "status": "reported-pending-integration",
+      "targets": ["Networking-And-Public-Variables", "Function-And-Module-Index"]
     },
     {
-      "lane": "coordination-protocol",
-      "owner": "Codex",
-      "status": "integrated",
-      "sourceScope": [
-        "docs/wiki/Coordination-Board.md",
-        "docs/wiki/Agent-Collaboration-Protocol.md",
-        "docs/wiki/agent-collaboration.json",
-        "docs/wiki/agent-events.jsonl",
-        "CLAUDE.md"
-      ],
-      "outputs": [
-        "Agent-Collaboration-Protocol.md",
-        "agent-collaboration.json",
-        "agent-events.jsonl",
-        "updated navigation/context/worklog"
-      ],
-      "handoff": "Claude should read Agent-Collaboration-Protocol.md and append claim/finding/complete events for future review passes."
+      "lane": "discord-extension-antistack-integration-discovery",
+      "status": "reported-pending-integration",
+      "targets": ["External-Integrations", "Networking-And-Public-Variables", "Feature-Status-Register"]
     },
     {
-      "lane": "construction-coin-atlas",
-      "owner": "Codex",
-      "status": "integrated",
-      "sourceScope": [
-        "Client/Init/Init_Coin.sqf",
-        "Client/Module/CoIn/coin_interface.sqf",
-        "Client/Action/Action_Build.sqf",
-        "Client/Action/Action_BuildRepair.sqf",
-        "Client/Action/Action_RepairMHQ.sqf",
-        "Server/PVFunctions/RequestStructure.sqf",
-        "Server/PVFunctions/RequestDefense.sqf",
-        "Server/PVFunctions/RequestMHQRepair.sqf",
-        "Server/Construction/*.sqf",
-        "Server/Functions/*HQ*.sqf",
-        "Client/GUI/GUI_Menu_Economy.sqf",
-        "Common/Config/Core_Structures/*.sqf"
-      ],
-      "outputs": [
-        "Construction-And-CoIn-Systems-Atlas.md",
-        "updated navigation/context/worklog"
-      ],
-      "handoff": "Claude should review construction authority boundaries, server-side validation and generated-mission propagation hazards after the atlas lands."
+      "lane": "known-broken-reference-second-pass-v2",
+      "status": "reported-pending-integration",
+      "targets": ["Feature-Status-Register", "Mission-Entrypoints-And-Lifecycle", "Client-UI-Systems-Atlas"]
     },
     {
-      "lane": "deep-review-findings",
-      "owner": "Claude",
-      "status": "integrated",
-      "sourceScope": [
-        "Deep-Review-Findings.md",
-        "Common/Init/Init_PublicVariables.sqf",
-        "Server/Functions/Server_HandlePVF.sqf",
-        "Client/Functions/Client_HandlePVF.sqf",
-        "Server/Support/Support_Paratroopers.sqf",
-        "Client/Module/MASH/receiverMASHmarker.sqf",
-        "Tools/LoadoutManager"
-      ],
-      "outputs": [
-        "Deep-Review-Findings.md",
-        "feature-status/networking/tooling follow-up updates"
-      ],
-      "handoff": "Codex should integrate confirmed findings into owning atlas pages after current coordination pass."
-    },
-    {
-      "lane": "pvf-hardening-review",
-      "owner": "Claude",
-      "status": "ready-for-review",
-      "sourceScope": [
-        "Server/Functions/Server_HandlePVF.sqf",
-        "Client/Functions/Client_HandlePVF.sqf",
-        "Common/Init/Init_PublicVariables.sqf",
-        "Common/Functions/Common_SendToServerOptimized.sqf",
-        "Common/Functions/Common_SendToClient.sqf",
-        "BattlEyeFilter/publicvariable.txt"
-      ],
-      "outputs": [
-        "Deep-Review-Findings.md (PVF hardening implementation playbook section)"
-      ],
-      "handoff": "Code owners: apply the behavior-preserving dispatch validation (resolve SRVFNC/CLTFNC via missionNamespace getVariable instead of Call Compile) in Chernarus source and add a real BattlEye publicvariable.txt; then run LoadoutManager. Codex: optionally link the playbook from Networking/SQF atlas."
-    },
-    {
-      "lane": "construction-authority-review",
-      "owner": "Claude",
-      "status": "ready-for-review",
-      "sourceScope": [
-        "Server/PVFunctions/RequestStructure.sqf",
-        "Server/PVFunctions/RequestDefense.sqf",
-        "Server/PVFunctions/RequestMHQRepair.sqf",
-        "Server/Functions/Server_MHQRepair.sqf",
-        "Construction-And-CoIn-Systems-Atlas.md"
-      ],
-      "outputs": [
-        "Deep-Review-Findings.md (DR-6 construction authority + validation playbook)"
-      ],
-      "handoff": "Code owners: add player to construction request payloads and validate side+commander+funds (and base-area avail) server-side before creating objects; pair with DR-1. Codex: this deepens the Construction-And-CoIn-Systems-Atlas Authority Boundary section — optionally cross-link DR-6 there."
-    },
-    {
-      "lane": "antistack-db-trust",
-      "owner": "Claude",
-      "status": "ready-for-review",
-      "sourceScope": [
-        "Server/Module/AntiStack/callDatabaseStore.sqf",
-        "Server/Module/AntiStack/callDatabaseRetrieve.sqf",
-        "Server/Module/AntiStack/callDatabaseSendPlayerList.sqf",
-        "Server/Module/AntiStack/callDatabaseRequestSideTotalSkill.sqf",
-        "Server/Module/AntiStack/callDatabaseSetMap.sqf",
-        "Server/Module/AntiStack/callDatabaseStoreSide.sqf",
-        "Server/Module/AntiStack/callDatabaseFlushPlayerList.sqf",
-        "Common/Init/Init_CommonConstants.sqf"
-      ],
-      "outputs": [
-        "Deep-Review-Findings.md (DR-7..DR-10 AntiStack DB extension trust)",
-        "Codebase-Coverage-Ledger.md (Integrations row advanced)"
-      ],
-      "handoff": "Code owners: defensive shape-validate the callExtension return before use (no parseSimpleArray in A2 OA), add a DB circuit-breaker, chunk SEND_PLAYERLIST, auto-detect the external DLL. Codex: document the A2WaspDatabase external dependency + call-compile trust contract on External-Integrations (its lane)."
-    },
-    {
-      "lane": "victory-endgame-review",
-      "owner": "Claude",
-      "status": "ready-for-review",
-      "sourceScope": [
-        "Server/FSM/server_victory_threeway.sqf",
-        "Server/Functions/Server_LogGameEnd.sqf",
-        "Server/PVFunctions/LogGameEnd.sqf",
-        "Common/Init/Init_CommonConstants.sqf"
-      ],
-      "outputs": [
-        "Deep-Review-Findings.md (DR-11..DR-13 victory/endgame)",
-        "Codebase-Coverage-Ledger.md (Victory row advanced)"
-      ],
-      "handoff": "Code owners: fix winner-inversion in the persisted win-tally (split win/lose branches, compute winner per branch, guard both branches or break the loop), decide threeway (implement or document non-functional), delete the buggy Server/PVFunctions/LogGameEnd.sqf. Follow-up review item: WFBE_CL_FNC_EndGame payload semantics."
-    },
-    {
-      "lane": "factory-purchase-authority",
-      "owner": "Claude",
-      "status": "ready-for-review",
-      "sourceScope": [
-        "Client/GUI/GUI_Menu_BuyUnits.sqf",
-        "Client/Functions/Client_BuildUnit.sqf",
-        "Server/PVFunctions/RequestNewCommander.sqf",
-        "Server/Functions/Server_AssignNewCommander.sqf",
-        "Server/Init/Init_Server.sqf"
-      ],
-      "outputs": [
-        "Deep-Review-Findings.md (DR-14 economy ceiling, DR-15 commander-assign bug)",
-        "Codebase-Coverage-Ledger.md (Factory/purchase row advanced)"
-      ],
-      "handoff": "Code owners: decide purchase authority approach (validated server PVF vs accept client-authority + BattlEye scripts.txt filter); apply one-line fix _side = _this select 0 in Server_AssignNewCommander.sqf and drop the duplicate new-commander-assigned broadcast. Verified Codex factory-purchase-atlas + Cicero's commander-assign candidate at source."
-    },
-    {
-      "lane": "ui-hud-authority-review",
-      "owner": "Claude",
-      "status": "ready-for-review",
-      "sourceScope": ["Client/GUI/GUI_Menu_Economy.sqf", "Rsc/Dialogs.hpp"],
-      "outputs": [
-        "Deep-Review-Findings.md (DR-16 sale authority, DR-17 dup IDD)",
-        "Codebase-Coverage-Ledger.md (UI/HUD row advanced)"
-      ],
-      "handoff": "Code owners: move structure sale authority/refund/destruction server-side (mirror DR-6 server-PVF) or add a BattlEye scripts.txt filter; assign distinct IDDs to RscMenu_EASA/RscMenu_Economy. Remaining UI follow-ups (Curie): shared title IDD 10200, stale RscMenu_Upgrade, RscClickableText.soundPush."
-    },
-    {
-      "lane": "server-loop-candidates-verify",
-      "owner": "Claude",
-      "status": "ready-for-review",
-      "sourceScope": [
-        "Common/Init/Init_Town.sqf",
-        "Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf",
-        "Server/Module/supplyMission/supplyMissionStarted.sqf",
-        "Server/GUI/serverFpsGUI.sqf",
-        "Server/Module/serverFPS/monitorServerFPS.sqf"
-      ],
-      "outputs": [
-        "Deep-Review-Findings.md (DR-18 cooldown casing, DR-19 hosted FPS busy-loop)",
-        "Codebase-Coverage-Ledger.md (Supply JIP/HC advanced)"
-      ],
-      "handoff": "Code owners: align supply-cooldown key casing or read with default 0 (DR-18); hoist the FPS-loop sleep out of the isDedicated guard or early-exit when not dedicated, and consolidate the two redundant FPS publishers (DR-19). Both confirm Cicero candidates at source."
+      "lane": "supply-mission-authority-matrix-v2",
+      "status": "reported-pending-integration",
+      "targets": ["Supply-Mission-Architecture", "Current-Work-Supply-Helicopters-PR1", "Feature-Status-Register"]
     }
   ],
   "lanes": [
     {
-      "lane": "victory-endgame-runtime-atlas",
+      "lane": "cheap-discovery-swarm-v2",
       "suggestedOwner": "Codex",
-      "status": "active",
-      "summary": "Map victory conditions, endgame broadcast, game-over flags, stats/logging, DB flush and mission termination; integrate Claude DR-11..DR-13."
+      "status": "harvested",
+      "summary": "Cheap scout wave is complete; no active scout slots remain."
     },
     {
-      "lane": "economy-town-factory-upgrade-discovery",
-      "suggestedOwner": "Faraday",
-      "status": "reported-pending-integration",
-      "summary": "Scout report received for economy, towns, factories, upgrades and commander cash/supply flows; Codex integration pending."
-    },
-    {
-      "lane": "gear-loadout-easa-balance-discovery",
-      "suggestedOwner": "Faraday",
-      "status": "active-readonly-scout",
-      "summary": "Cheap read-only discovery of gear templates, EASA, loadout generation, balance configs and dangerous loadout metadata."
-    },
-    {
-      "lane": "client-jip-lifecycle-discovery",
-      "suggestedOwner": "Mencius",
-      "status": "reported-pending-integration",
-      "summary": "Scout report received for client init, JIP, player setup and lifecycle wait-flow; Codex integration pending."
-    },
-    {
-      "lane": "respawn-medical-mash-support-discovery",
-      "suggestedOwner": "Mencius",
-      "status": "active-readonly-scout",
-      "summary": "Cheap read-only discovery of respawn sources, MASH, service/medical/support actions and marker wiring."
-    },
-    {
-      "lane": "server-runtime-scheduler-discovery",
-      "suggestedOwner": "Hilbert",
-      "status": "active-readonly-scout",
-      "summary": "Cheap read-only discovery of server loops, FSMs, scheduler behavior, server FPS, cleanup and town processing."
-    },
-    {
-      "lane": "ai-headless-delegation-discovery",
-      "suggestedOwner": "Cicero",
-      "status": "active-readonly-scout",
-      "summary": "Cheap read-only discovery of AI squads, autonomous teams, AI commander, headless delegation and town AI lifecycle."
-    },
-    {
-      "lane": "wiki-ux-navigation-discovery",
-      "suggestedOwner": "Curie",
-      "status": "active-readonly-scout",
-      "summary": "Cheap read-only review of wiki navigation, click-through usability, page graph and LLM entry points."
-    },
-    {
-      "lane": "content-drift-generation-discovery",
-      "suggestedOwner": "Meitner",
-      "status": "active-readonly-scout",
-      "summary": "Cheap read-only discovery of source/generated/stale mission folders, assets and generation drift."
-    },
-    {
-      "lane": "progress-interface",
-      "suggestedOwner": "Codex",
-      "status": "integrated",
-      "summary": "Human and machine-readable progress dashboard for Codex/Claude lane tracking."
-    },
-    {
-      "lane": "factory-purchase-atlas",
-      "suggestedOwner": "Codex",
-      "status": "integrated",
-      "summary": "Deep-read client buy menus, factory queues, unit config, server AI buying and purchase authority boundaries."
-    },
-    {
-      "lane": "network-pv-boundary-deep-index",
-      "suggestedOwner": "Hilbert",
-      "status": "completed-integrated",
-      "summary": "Sub-agent deep-index of publicVariable/PVF registration, authority boundaries and BattlEye filter risks."
-    },
-    {
-      "lane": "server-gameplay-loops-deep-index",
-      "suggestedOwner": "Cicero",
-      "status": "completed-integrated",
-      "summary": "Sub-agent deep-index of towns, economy, commander, AI teams, supply/value loops and server performance."
-    },
-    {
-      "lane": "ui-hud-dialogs-deep-index",
-      "suggestedOwner": "Curie",
-      "status": "completed-integrated",
-      "summary": "Sub-agent deep-index of Rsc resources, HUD/RHUD, dialogs, menus, gear templates and client UX state."
-    },
-    {
-      "lane": "tooling-integrations-deep-index",
-      "suggestedOwner": "Meitner",
-      "status": "completed-integrated",
-      "summary": "Sub-agent deep-index of tools, generated missions, extensions, DiscordBot, BattlEye and server configs."
-    },
-    {
-      "lane": "construction-coin-atlas",
-      "suggestedOwner": "Codex",
-      "status": "integrated",
-      "summary": "Deep-read construction, CoIn, HQ deployment, repair, sale and server creation flows."
+      "lane": "external-pdf-research-intake",
+      "suggestedOwner": "Codex/Claude",
+      "status": "captured",
+      "summary": "Three Dutch PDF reports are summarized; claims remain external and unverified until source-checked."
     },
     {
       "lane": "autonomous-claude-research",
       "suggestedOwner": "Claude",
       "status": "open",
-      "summary": "Claude may self-select the next bounded, source-backed subsystem or risk review without waiting for Codex assignment."
-    },
-    {
-      "lane": "pvf-hardening-review",
-      "suggestedOwner": "Claude",
-      "status": "ready-for-review",
-      "summary": "Claude published a behavior-preserving PVF dispatch hardening playbook; code owners should review before implementation."
-    },
-    {
-      "lane": "feature-status-reconciliation",
-      "suggestedOwner": "Codex",
-      "status": "open",
-      "summary": "Move Claude deep-review findings into Feature-Status-Register, Networking and Tools pages."
+      "summary": "Claude may self-select the next bounded, source-backed subsystem or PDF-lead verification lane without waiting for Codex assignment."
     }
   ],
   "rules": [
     "Update Progress-Dashboard.md and agent-status.json when visible ownership or lane state changes.",
     "Append, do not overwrite, Agent-Worklog.md and agent-events.jsonl.",
     "Use source-cited evidence for broken/partial-feature claims.",
+    "Treat external PDFs as lead material only until source-file verification.",
     "If a branch is stale, integrate targeted findings instead of merging over newer navigation.",
     "Keep docs/wiki and the GitHub wiki checkout in parity before publishing.",
     "Use Arma 2 OA scripting references only."

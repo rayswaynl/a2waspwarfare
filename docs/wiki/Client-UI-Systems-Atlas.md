@@ -152,6 +152,8 @@ Range booleans such as `barracksInRange`, `gearInRange`, `commandInRange` and `s
 
 ### Buy Gear
 
+For the full source-backed data/runtime/generator map, see [Gear, loadout and EASA atlas](Gear-Loadout-And-EASA-Atlas).
+
 `GUI_BuyGearMenu.sqf` uses `WFBE_MenuAction`, not `MenuAction`, and works across three views:
 
 - `gear`: player/AI equipment.
@@ -171,6 +173,10 @@ The helper functions compiled in `Init_Client.sqf:116-126` own list filling, tem
 `GUI_UpgradeMenu.sqf` reads side upgrade arrays, costs, descriptions, images, labels, levels, links and times from missionNamespace (`:9-18`). Commander-only purchase sends `RequestUpgrade` (`:158-161`) and starts local progress feedback for pure clients (`:168-174`).
 
 `GUI_Menu_Economy.sqf` handles commander income percentage, structure selling and supply-truck respawn. The respawn supply-truck action sends `["RequestSpecial", ["RespawnST", sideJoined]]` (`:90-96`), which ties this UI directly to the partially broken AI/supply-truck feature described in [Feature status register](Feature-Status-Register).
+
+### EASA
+
+EASA opens from `GUI_Menu_Service.sqf` and uses generated arrays from `Client/Module/EASA/EASA_Init.sqf`. Its dialog shares `idd=23000` with Economy, and the detailed runtime is documented in [Gear, loadout and EASA atlas](Gear-Loadout-And-EASA-Atlas).
 
 ### Respawn Menu
 
