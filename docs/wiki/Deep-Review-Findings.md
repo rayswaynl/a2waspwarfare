@@ -673,6 +673,30 @@ But the vehicle branch has an early `if (!_driver && !_gunner && !_commander) ex
 
 **Outcome:** Factory/purchase row — **Perf and JIP/HC cells filled (DR-33)**. The row's remaining 🟡 (Auth/PV) is the DR-14 client-authoritative-purchase architectural ceiling (economy class, owner decision).
 
+## Round 25 — 2026-06-02 (Claude) — respawn / MASH markers (DR-34): MASH map-marker feature is dead on both ends
+
+Lane `respawn-mash-review`. Reviewed the respawn UI (`Client/Functions/Client_UI_Respawn_Selector.sqf`) and the MASH respawn-marker chain (`Server/Module/MASH/MASHMarker.sqf` ↔ `Client/Module/MASH/receiverMASHmarker.sqf`), with wiring confirmed in `Init_Client.sqf` / `Init_Server.sqf`. Extends the earlier DR-2 note ("MASH markers are dead receive-side") to a full both-ends diagnosis.
+
+### DR-34 — MASH map-marker feature is fully dead (send trigger never broadcast + client receiver commented out); the live server PVEH is orphaned — **Low/Medium (broken/abandoned feature; UX)**
+
+MASH tents are a real deployable officer feature (`Client/Module/Skill/Actions/Officer_Undeploy_MASH.sqf` exists), but the **map marker that should show a team its MASH locations does nothing**, because all three links are broken or orphaned:
+
+1. **Client receiver is commented out.** `Init_Client.sqf:132`: `//WFBE_CL_FNC_ReceiverMASHmarker = Call Compile preprocessFileLineNumbers "Client\Module\MASH\receiverMASHmarker.sqf";` — so no client ever registers the `WFBE_SE_MASH_MARKER_SENT` event handler; the receiver in `receiverMASHmarker.sqf` is never installed.
+2. **The trigger PV is never broadcast.** `WFBE_CL_MASH_MARKER_CREATED` appears in the repo **only** as the server's `addPublicVariableEventHandler` registration (`MASHMarker.sqf:1`). No client deploy path ever does `WFBE_CL_MASH_MARKER_CREATED = […]; publicVariable …`, so the server handler can never fire.
+3. **The server handler is live but orphaned.** `Init_Server.sqf:70` actively compiles `WFBE_SE_FNC_MASH_MARKER` (= `MASHMarker.sqf`), registering a PVEH for a PV (`WFBE_CL_MASH_MARKER_CREATED`) that nothing emits — harmless dead weight that *looks* active in a grep but does nothing in composition. (Line 92 is a duplicate, commented.)
+
+Net: deployed MASH tents produce **no map markers** for the owning side. Confirms and extends DR-2.
+
+**Latent JIP gap if revived (note for whoever fixes it).** Even with both ends re-enabled, the marker is delivered by `publicVariable "WFBE_SE_MASH_MARKER_SENT"` — a single global **overwritten on each deploy** (not a list) and **not replayed to join-in-progress clients**. So a revived feature would: (a) show JIP joiners no markers for MASH deployed before they joined, and (b) only ever carry the most-recent MASH in the synced value. A correct revival needs a server-held list + a JIP re-send on join (the same pattern the construction/HQ-killed code uses via `Server_HandleSpecial` "set-…" re-sends).
+
+**Secondary (Low):**
+- **Respawn selector is a ~33 Hz local loop.** `Client_UI_Respawn_Selector.sqf:19-33` runs `while {!isNil 'WFBE_MarkerTracking'} do { sleep 0.03; … }`, animating a pulsing **local** marker (`setMarkerDirLocal`/`SizeLocal`/`PosLocal`) — network-free and bounded to while the respawn UI is open, but `sleep 0.03` cannot be honored by the SQF scheduler so it effectively runs every frame. Acceptable for a transient UI; flagged for completeness.
+- **Non-unique marker name (dead code, DR-33b class).** `receiverMASHmarker.sqf:12` builds the marker name with `round random 50000` (collision-prone) and later deletes a `createMarkerLocal` marker with the global `deleteMarker` (local/global mismatch). Moot while the receiver is disabled; fix if revived.
+
+**Handoff for Codex.** Mark the MASH map-marker feature as **dead/abandoned** in the [Feature status register](Feature-Status-Register) and the relevant marker/respawn docs (Codex's lane), with the revival recipe above (server-held list + JIP re-send + unique names + fix `publicVariable` JIP gap). Owner decision: revive the feature or remove the dead `receiverMASHmarker.sqf` + orphaned `Init_Server.sqf:70` registration.
+
+**Outcome:** Markers/respawn — MASH marker chain reviewed (DR-34): dead both ends + orphaned server PVEH; respawn selector Perf characterized. Markers row PV/JIP-HC cells reference DR-34.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
