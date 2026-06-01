@@ -528,6 +528,25 @@ Handoff for Codex: this belongs in the [Networking](Networking-And-Public-Variab
 
 **Outcome:** modules cell → Auth/PV flipped to the DR-27 finding; rest of `Client/Module/` reviewed as config-gated cosmetic/QoL with the UAV-007 branch confirmed disabled.
 
+## Round 19 — 2026-06-02 (Claude) — gear / EASA / vehicle-service economy (DR-28) — class now complete
+
+Lane `gear-easa-review`. Reviewed the aircraft/vehicle loadout system (`Client/Module/EASA/` + `Client/GUI/GUI_Menu_EASA.sqf`) and the vehicle service point (`Client/GUI/GUI_Menu_Service.sqf`). Result: gear/rearm is the **last untracked tier of the client-authoritative economy class**, plus a minor logic inconsistency.
+
+### DR-28 — Gear/EASA loadouts and vehicle rearm/repair/refuel/heal are client-authoritative; rearm & refuel skip even the client-side affordability guard — **High (economy authority), class-completing**
+
+Source-verified:
+- **No server PVF for gear at all.** `EASA_Equip.sqf` applies the chosen loadout directly to the local vehicle (`addWeapon`/`addMagazine`, or `addWeaponTurret`/`addMagazineTurret` for the `AW159_Lynx_BAF`) and broadcasts only the setup index (`_vehicle setVariable ["WFBE_EASA_Setup", _index, true]`, `:36`). There is no `SendToServer`/`RequestSpecial` anywhere in the EASA or Service flow (grep-confirmed) — the spend and the effect are entirely client-local.
+- **EASA cost is a client-side honor check.** `GUI_Menu_EASA.sqf:46-50`: `if (_funds > (_row select 0)) then { … Call EASA_Equip; -(_row select 0) Call ChangePlayerFunds; … }`. The price lives in the loadout row (`[[Price],[Desc],[Wpn,Ammo]…]`, `EASA_Init.sqf:8`), the affordability test runs on the client, and the debit is the client-authoritative `ChangePlayerFunds` (the DR-16/DR-23 primitive). A modified client equips any loadout without paying.
+- **Service rearm/refuel deduct with NO affordability guard.** `GUI_Menu_Service.sqf`: rearm (`MenuAction==1`, `:196-200`) and refuel (`:217-219`) do `-_price Call ChangePlayerFunds;` *unconditionally*, then `Spawn SupportRearm`/the refuel thread — whereas repair (`:206-211`, `if (_repairPrice > 0)`) and heal (`:228-230`) are guarded. So even a *legit* client can rearm/refuel into negative/clamped funds, and (as with all of the above) the effect threads run client-side with no server check.
+
+**Why it matters.** This completes the economy-authority picture. Every WFBE spend path is now source-confirmed client-authoritative: **build (DR-6) · buy (DR-14) · sell (DR-16) · supply transfer (DR-22) · upgrades (DR-23) · ICBM superweapon (DR-27) · gear/EASA + vehicle rearm/repair/refuel/heal (DR-28).** There is no server-side ledger; `ChangePlayerFunds` and the can-afford tests are all on the honor system. The rearm/refuel missing-guard is a real but secondary inconsistency — moot against the root issue, since a cheat client bypasses the debit regardless.
+
+**Owner decision (same single lever).** The one architectural decision already logged for the economy class covers DR-28 too: either (a) move spend authority server-side — a server-validated funds ledger that PVF handlers debit before applying effects — or (b) accept client-authoritative economy and lean on BattlEye `scripts.txt` to blunt the most trivial money/var edits. No new lever; gear simply joins the list. If (a) is ever scoped, also add the trivial `if (_funds >= price)` guards to Service rearm/refuel for parity with EASA/repair/heal.
+
+Handoff for Codex: fold DR-28 into the [Economy](Economy-Towns-And-Supply) page's "all spend is client-authoritative" note and the gear/loadout atlas; it's the same owner decision, no separate workstream.
+
+**Outcome:** new ledger row **Gear / EASA / vehicle service** → Map ✅, Auth ✅ (characterized as client-authoritative, DR-28), PV/JIP-HC 🟡, Drift ⬜; Economy row note extended to name gear as a class member.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
