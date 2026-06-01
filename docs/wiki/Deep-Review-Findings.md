@@ -247,6 +247,45 @@ _responseCode = _response select 0;
 
 Code owners: apply DR-7 defensive validation (guard empty + shape-check before reading) to all seven `callDatabase*.sqf`; add a circuit-breaker (DR-8); chunk SEND_PLAYERLIST (DR-9); document/auto-detect the external DLL (DR-10). Codex: the `A2WaspDatabase` external dependency + `call compile` trust contract should be called out in the [External integrations](External-Integrations) page (its lane). Ledger: Integrations Auth/PV cells advanced from ⬜ to 🟡 (AntiStack covered; Extension/Discord/BattlEye still pending).
 
+## Round 6 — 2026-06-02 (Claude) — victory / endgame (DR-11..DR-13)
+
+Lane `victory-endgame-review`. Source: `Server/FSM/server_victory_threeway.sqf` (the **only** script that sets `gameOver`/`WFBE_GameOver`/`failMission` — verified by grep across `Server/`), `Server/Functions/Server_LogGameEnd.sqf`, `Server/PVFunctions/LogGameEnd.sqf`, `Common/Init/Init_CommonConstants.sqf:401`.
+
+### DR-11 — Endgame reports the winner inconsistently; persisted win-tally is wrong for the all-towns win — **Medium-High (correctness, persistent side effect)**
+
+The trigger merges a *lose* test and a *win* test into one condition and then handles both identically:
+```sqf
+if (!(alive _hq) && _factories == 0 || _towns == _total && !WFBE_GameOver) then {
+    [nil,"HandleSpecial",["endgame",(_x) Call WFBE_CO_FNC_GetSideID]] Call WFBE_CO_FNC_SendToClients;
+    WF_Logic setVariable ["WF_Winner", _x];
+    gameOver = true; WFBE_GameOver = true;
+    _side = west; if (_x == west) then {_side = east};
+    [_side] call WFBE_CO_FNC_LogGameEnd;   // Server_LogGameEnd: _this select 0 == WINNER
+}
+```
+SQF precedence (`&&` before `||`) parses this as `(!alive _hq && _factories==0) || (_towns==_total && !WFBE_GameOver)`:
+- **Branch A** — `_x` HQ dead **and** no factories → `_x` is the **loser**. `LogGameEnd(_side = opposite of _x)` records the correct winner. ✓
+- **Branch B** — `_x` holds **all** towns → `_x` is the **winner**. But `LogGameEnd` is still called with `_side` = *opposite of _x* → it records the **loser as the winner** in the persisted `%1_WIN_CHERNARUS` profileNamespace tally. ✗
+
+Consequences:
+- The win/loss statistics saved via `WFBE_CO_FNC_LogGameEnd` (→ `profileNamespace`, `saveProfileNamespace`) are **inverted for every all-towns victory**.
+- `WF_Logic setVariable ["WF_Winner", _x]` is a **dead write** — `WF_Winner` has no reader anywhere in the mission (grep). So it can't compensate.
+- The `endgame` client broadcast sends `_x`'s sideID to `WFBE_CL_FNC_EndGame` (`HandleSpecial.sqf:16`) for **both** opposite scenarios, so the player-facing outro shows the same side regardless of who actually won — at least one path is wrong. *(Follow-up: confirm whether EndGame treats the payload sideID as winner or loser.)*
+- **Guard/precedence bug:** `!WFBE_GameOver` guards only the towns branch, and the `forEach` over sides has **no break** after setting `gameOver`. Branch A is unguarded, so if two sides both satisfy "HQ dead + no factories" in the same 80s tick, endgame fires **twice** (double `endgame` broadcast, double `SET_MAP`, double `LogGameEnd`). Fix: guard both branches with `!WFBE_GameOver` (or `exitWith` after the first winner) and split the win/lose logic so the winner is computed correctly per branch.
+
+### DR-12 — "Threeway" victory mode has no detection — **Medium (broken/abandoned feature)**
+
+`WFBE_C_VICTORY_THREEWAY` defaults to `0` (`Init_CommonConstants.sqf:401`, comment "0: Side a vs Side b [supremacy] minus defender"), and the detection block is gated `if (!gameOver && _victory == 0)`. Since `server_victory_threeway.sqf` is the **only** victory/`failMission` setter in `Server/`, selecting any non-zero `WFBE_C_VICTORY_THREEWAY` value disables victory detection entirely — **matches never auto-end** in the mode the file is named for. Either implement the threeway path or document the parameter as non-functional.
+
+### DR-13 — Two divergent `LogGameEnd` implementations, one buggy — **Low (cleanup / latent)**
+
+- `Server/Functions/Server_LogGameEnd.sqf` — clean; wired to `WFBE_CO_FNC_LogGameEnd` (compiled twice, `Init_Server.sqf:64` and `:89`).
+- `Server/PVFunctions/LogGameEnd.sqf` — **buggy** duplicate: `profileNamespace setVariable [(profileNamespace getVariable format ["%1_WIN_CHERNARUS",_winnerTeam]), (...)]` uses a getVariable *result* as the setVariable *key*, and reads `profileNamespace getVariable WEST_WIN_CHERNARUS` (bare global, not the `"WEST_WIN_CHERNARUS"` string). If this variant is ever wired in, win-stat persistence silently corrupts. Recommend deleting the duplicate to prevent future mis-wiring.
+
+### Handoff
+
+Code owners: fix DR-11 (split win/lose branches, compute winner per branch, guard both branches / break the loop) — this corrects permanently-skewed win stats; decide DR-12 (implement or document-as-disabled threeway); delete the buggy `PVFunctions/LogGameEnd.sqf` (DR-13). Follow-up review item: `WFBE_CL_FNC_EndGame` payload semantics (winner vs loser sideID). Ledger: Victory/endgame Map/Auth/PV/Perf cells advanced.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)

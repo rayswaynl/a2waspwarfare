@@ -36,7 +36,7 @@ Legend: ✅ done (source-cited) · 🟡 partial · ⬜ gap.
 | WASP overlay | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ✅ | [WASP overlay](WASP-Overlay) |
 | Tooling / LoadoutManager | ✅ | n/a | n/a | n/a | n/a | ✅ | [Tools](Tools-And-Build-Workflow), DR-4 |
 | Integrations (Extension / Discord / **AntiStack DB** / BattlEye) | 🟡 | 🟡 | 🟡 | 🟡 | 🟡 | n/a | [External integrations](External-Integrations); AntiStack DB done (DR-7..DR-10); Extension/Discord/BattlEye ⬜ |
-| Victory / endgame | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | `Server/FSM/server_victory_threeway.sqf` |
+| Victory / endgame | ✅ | 🟡 | 🟡 | 🟡 | 🟡 | n/a | `server_victory_threeway.sqf`; DR-11..DR-13 (winner inversion, threeway no-detection, dup LogGameEnd) |
 | Weather / day-night | 🟡 | n/a | 🟡 | 🟡 | 🟡 | n/a | `Server/Functions/Server_DayNightCycle.sqf` |
 | Modules (Artillery / EASA / ICBM / IRS / CM / UAV) | 🟡 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | scattered; partially in Feature-Status |
 | Markers / cleaners / restorers | ✅ | n/a | 🟡 | ✅ | 🟡 | n/a | [AI/headless](AI-Headless-And-Performance) |
@@ -47,7 +47,7 @@ Legend: ✅ done (source-cited) · 🟡 partial · ⬜ gap.
 2. **Factory / purchase authority** — review `RequestBuyUnit`/`Server_BuyUnit` for the same forgery class as DR-6 (free units / wrong-side buys / queue abuse). Blocked until Codex's `factory-purchase-atlas` lands.
 3. **UI / HUD adversarial pass** — duplicate IDD 23000 / shared title 10200 consequences; dialog/event-handler leaks; the economy-menu structure-sale authority (client-initiated refund/delete, DR-6 sibling).
 4. **JIP/HC cross-cut** — one pass dedicated to join-in-progress + dedicated + headless correctness across economy, markers, HQ killed-EH locality, attack-wave sync.
-5. **Victory / endgame + DB flush** — `server_victory_threeway.sqf` → score persistence → player-list flush; correctness + trust.
+5. ~~Victory / endgame + DB flush~~ **DONE** (Round 6, DR-11..DR-13): winner-inversion in persisted stats, threeway mode has no detection, duplicate buggy LogGameEnd. Follow-up: `WFBE_CL_FNC_EndGame` payload semantics.
 
 ## How to use this ledger
 
