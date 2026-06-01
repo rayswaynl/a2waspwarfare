@@ -207,6 +207,46 @@ Notes:
 
 Not a crash/RCE (that's DR-1). This is **gameplay-integrity / anti-grief**: on a public server, a modified client can mint free factories/defenses/HQs and bypass the economy. Pair with DR-1 (validate the command) — DR-1 stops *arbitrary code*, DR-6 stops *forged legitimate commands*; both are needed for a hardened public server.
 
+## Round 5 — 2026-06-02 (Claude) — AntiStack DB extension trust (DR-7..DR-10)
+
+Lane `antistack-db-trust`. The AntiStack module persists per-player score/side and team skill to an **external native extension** for team-balancing. Source: `Server/Module/AntiStack/callDatabase*.sqf` (7 `callExtension` sites) + the `A2WaspDatabase` DLL, which is **not in this repo** (only the in-repo `Extension/` GLOBALGAMESTATS DLL is — see [External integrations](External-Integrations)). All claims verified this pass.
+
+### DR-7 — The server `call compile`s the extension's return value on every call — **High (external trust boundary)**
+
+Every one of the seven handlers does, in effect:
+```sqf
+_response = "A2WaspDatabase" callExtension format ["%1,%2", _procedureCode, _parameters];
+_response = call compile _response;          // <-- executes the DLL's stdout as SQF
+_responseCode = _response select 0;
+```
+(`callDatabaseStore.sqf`, `callDatabaseRetrieve.sqf` ×2 incl. the 505 poll, `callDatabaseSendPlayerList.sqf`, `callDatabaseRequestSideTotalSkill.sqf` ×2, `callDatabaseSetMap.sqf`, `callDatabaseStoreSide.sqf`, `callDatabaseFlushPlayerList.sqf`.)
+
+`callExtension` returns a **string from a native DLL**, and the mission compiles+executes it. The server therefore **fully trusts the `A2WaspDatabase` process's stdout as code.** Why this matters:
+- **Compromise/replacement/bug → server RCE.** Any DLL that returns SQF other than the expected numeric array literal runs on the server. The DLL is third-party and absent from the repo, so its behaviour can't be audited here.
+- **Malformed/empty return → error cascade.** If the DB is down/slow/encoding-broken, `callExtension` returns `""` → `call compile ""` is `nil` → `nil select 0` throws. Several handlers only guard `typeName _responseCode == "SCALAR"` *after* the `select 0`, so the select can throw first.
+- **Echo-to-code latent risk.** Only UID/score/side/map round-trip today (all constrained, low risk). But the pattern means *any* future free-text field persisted and echoed back becomes executable.
+
+**Engine caveat (why the pattern exists):** Arma 2 OA 1.64 has **no `parseSimpleArray`** (that is Arma 3), so `call compile` is the idiomatic string→array path for extensions. The A2-correct hardening is defensive validation, not a parser swap:
+1. Guard the raw string first: `if (isNil "_response" || {_response isEqualTo ""}) exitWith { /* neutral fallback + WARNING */ };`
+2. Compile, then **shape-check before use**: `_response = call compile _response; if (typeName _response != "ARRAY") exitWith {...}; if ({ typeName _x != "SCALAR" } count _response > 0) exitWith {...};`
+3. Only then read `_response select 0/1/2`. This keeps the DLL contract (numeric arrays) but refuses to execute anything that isn't one.
+
+### DR-8 — Blocking DB poll on the join / skill-balance path — **Medium (availability/JIP)**
+
+`callDatabaseRetrieve.sqf` polls the 505 procedure up to **120 × 0.10s ≈ 12s**; `callDatabaseRequestSideTotalSkill.sqf` polls 707 up to **9 × 3s = 27s**. These feed player-connect stat retrieval and team-skill balancing (called from `mainLoop.sqf`, `getTeamScoreMonitor.sqf`, `Init_Server.sqf`). They run in spawned scripts so the server tick survives, but a slow/down DB stalls join/balance up to those windows before falling back to neutral (`[1,1]` / `0`). Recommend a shorter ceiling + a circuit-breaker that flips `WFBE_C_ANTISTACK_ENABLED` off after N consecutive timeouts.
+
+### DR-9 — `callExtension` length limits vs full-roster SEND_PLAYERLIST — **Medium (scale)**
+
+`callDatabaseSendPlayerList.sqf` packs **every** player's `guid,side` pair into a single `callExtension` input string (`g1,1,g2,2,…`). Arma 2 OA `callExtension` has input/output length limits (output historically ~10 KB); a 55-slot roster can produce a long argument and an even longer response, risking truncation → `call compile` of a truncated array literal → parse error (compounding DR-7). Recommend chunking the player list across multiple calls and validating each response shape.
+
+### DR-10 — AntiStack defaults ON against a DLL that isn't in the repo — **Medium (ops)**
+
+`WFBE_C_ANTISTACK_ENABLED` defaults to **1** (`Init_CommonConstants.sqf:171`), and the `A2WaspDatabase` DLL is an undocumented external runtime dependency absent from the repo. Any server/dev instance lacking the DLL gets `callExtension`→`""`→`call compile`→error per call unless the param is set to 0. Marty added per-call `if (… == 0) exitWith` disable guards (good), but the **default is on**. Recommend: document the external dependency in [External integrations](External-Integrations), and consider detecting DLL presence (a cheap PING procedure) to auto-disable rather than error.
+
+### Handoff
+
+Code owners: apply DR-7 defensive validation (guard empty + shape-check before reading) to all seven `callDatabase*.sqf`; add a circuit-breaker (DR-8); chunk SEND_PLAYERLIST (DR-9); document/auto-detect the external DLL (DR-10). Codex: the `A2WaspDatabase` external dependency + `call compile` trust contract should be called out in the [External integrations](External-Integrations) page (its lane). Ledger: Integrations Auth/PV cells advanced from ⬜ to 🟡 (AntiStack covered; Extension/Discord/BattlEye still pending).
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)

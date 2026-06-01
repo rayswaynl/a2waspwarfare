@@ -1,0 +1,57 @@
+# Codebase Coverage Ledger
+
+> Claude-owned campaign tracker (source-cited). This page operationalizes a standing long-term goal: **drive every subsystem of the Chernarus source mission to full, source-verified comprehension and implementation-hardening, until there are no dark corners.** It is the backbone that turns ad-hoc review passes into measurable coverage. Codex fills the *Mapped* column with atlases; Claude fills the hardening columns with source-verified [Deep-review findings](Deep-Review-Findings). Paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Arma 2 OA 1.64 only.
+
+## The long-term goal (Claude, self-authored 2026-06-01)
+
+> Get to the bottom of the WASP Warfare mission. Over many bounded passes, take each subsystem from *unmapped* → *source-verified deep-reviewed* → *implementation-hardened*, recording every PV/publicVariable hazard, authority boundary, config-gated landmine, performance trap, JIP/headless edge case, abandoned/half-implemented feature, and generated-mission drift point with `path:line` evidence and a concrete implementation constraint. Each pass: pick the emptiest high-traffic cell in the matrix below, claim the lane in `agent-collaboration.json`, verify against source before claiming anything, publish a small focused commit, and leave Codex an integration-ready handoff. **Done = the matrix is green and the only open items are explicit, owned decisions for code owners.**
+
+This complements [Claude long-term goal](Claude-Long-Term-Goal) (the role) by making the *scope and finish line* explicit.
+
+## Coverage dimensions (the "done" bar per subsystem)
+
+| Dim | Question | Owner emphasis |
+| --- | --- | --- |
+| **Map** | Is the flow + source map documented? | Codex atlases |
+| **Auth** | Are authority/ownership/trust boundaries validated (esp. client→server PVF)? | Claude |
+| **PV** | Are publicVariable/network hazards (forgery, RCE, JIP sync) checked? | Claude |
+| **Perf** | Are hot loops / spawn-delete / marker churn / `Call Compile` checked? | Claude |
+| **JIP/HC** | Are join-in-progress + dedicated + headless edge cases checked? | Claude |
+| **Drift** | Are LoadoutManager skip-list / generated-mission divergences checked? | shared |
+
+Legend: ✅ done (source-cited) · 🟡 partial · ⬜ gap.
+
+## Subsystem matrix (status at 2026-06-01)
+
+| Subsystem | Map | Auth | PV | Perf | JIP/HC | Drift | Anchor docs |
+| --- | :-: | :-: | :-: | :-: | :-: | :-: | --- |
+| Boot / lifecycle | ✅ | ✅ | ✅ | 🟡 | 🟡 | ✅ | [Lifecycle wait-chain](Lifecycle-Wait-Chain), [Entrypoints](Mission-Entrypoints-And-Lifecycle) |
+| PV / networking dispatch | ✅ | ✅ | ✅ | 🟡 | 🟡 | n/a | [Networking](Networking-And-Public-Variables), DR-1 |
+| Economy / town / supply | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ✅ | [Economy](Economy-Towns-And-Supply), [Gameplay atlas](Gameplay-Systems-Atlas) |
+| Supply missions | ✅ | 🟡 | ✅ | 🟡 | ⬜ | ✅ | [Supply mission arch](Supply-Mission-Architecture), DR (PR#1) |
+| Construction / CoIn | ✅ | ✅ | ✅ | 🟡 | 🟡 | 🟡 | [Construction atlas](Construction-And-CoIn-Systems-Atlas), DR-6 |
+| Factory / purchase | 🟡 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Codex `factory-purchase-atlas` (active) — Claude review pending |
+| AI / headless / perf | ✅ | 🟡 | 🟡 | ✅ | 🟡 | n/a | [AI/headless](AI-Headless-And-Performance) |
+| UI / HUD / menus | ✅ | ⬜ | 🟡 | 🟡 | ⬜ | ⬜ | [UI atlas](Client-UI-Systems-Atlas) — Claude review ⬜ |
+| WASP overlay | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ✅ | [WASP overlay](WASP-Overlay) |
+| Tooling / LoadoutManager | ✅ | n/a | n/a | n/a | n/a | ✅ | [Tools](Tools-And-Build-Workflow), DR-4 |
+| Integrations (Extension / Discord / **AntiStack DB** / BattlEye) | 🟡 | 🟡 | 🟡 | 🟡 | 🟡 | n/a | [External integrations](External-Integrations); AntiStack DB done (DR-7..DR-10); Extension/Discord/BattlEye ⬜ |
+| Victory / endgame | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | `Server/FSM/server_victory_threeway.sqf` |
+| Weather / day-night | 🟡 | n/a | 🟡 | 🟡 | 🟡 | n/a | `Server/Functions/Server_DayNightCycle.sqf` |
+| Modules (Artillery / EASA / ICBM / IRS / CM / UAV) | 🟡 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | scattered; partially in Feature-Status |
+| Markers / cleaners / restorers | ✅ | n/a | 🟡 | ✅ | 🟡 | n/a | [AI/headless](AI-Headless-And-Performance) |
+
+## Biggest open cells (self-selection queue, highest value first)
+
+1. ~~Integrations — AntiStack DB extension trust path~~ **DONE** (Round 5, DR-7..DR-10): server `call compile`s the external DLL's stdout; blocking poll on join; callExtension length limits; defaults-on against an absent DLL. Remaining integrations sub-targets: in-repo `Extension/` GLOBALGAMESTATS DLL + DiscordBot data path + BattlEye filter posture.
+2. **Factory / purchase authority** — review `RequestBuyUnit`/`Server_BuyUnit` for the same forgery class as DR-6 (free units / wrong-side buys / queue abuse). Blocked until Codex's `factory-purchase-atlas` lands.
+3. **UI / HUD adversarial pass** — duplicate IDD 23000 / shared title 10200 consequences; dialog/event-handler leaks; the economy-menu structure-sale authority (client-initiated refund/delete, DR-6 sibling).
+4. **JIP/HC cross-cut** — one pass dedicated to join-in-progress + dedicated + headless correctness across economy, markers, HQ killed-EH locality, attack-wave sync.
+5. **Victory / endgame + DB flush** — `server_victory_threeway.sqf` → score persistence → player-list flush; correctness + trust.
+
+## How to use this ledger
+
+- **Before a pass:** pick the top unblocked item; claim the lane (`agent-collaboration.json` + `claim` event).
+- **After a pass:** flip the relevant cell(s) and link the finding; append `complete` event + worklog.
+- **Codex:** when an atlas lands, flip the *Map* cell to ✅ and add the anchor doc; leave the hardening columns for Claude.
+- This is a living scoreboard — the campaign is finished when no high-traffic cell is ⬜/🟡 and the residual list is only owner-decisions.
