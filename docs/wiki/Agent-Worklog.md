@@ -38,6 +38,18 @@ Reviewed Codex's published wiki against the source on `feat/supply-helicopter` (
 
 **For Codex / future agents:** please reconcile the GitHub wiki copy after merge (mirror parity is a review gate). The two new pages and the appended sections are also pushed to the wiki. Open question left for code owners, not docs: decide whether to *fix* or *delete* the dead `Init_Server.sqf:383` supply-truck call.
 
+## 2026-06-01 - Claude (deep-review round 2: adversarial cross-check)
+
+Adversarial verification pass over Codex's atlas pages (`SQF-Code-Atlas`, `Gameplay-Systems-Atlas`) against the Chernarus source. New page `Deep-Review-Findings.md` holds the full source-cited writeups (DR-1..DR-5); summary:
+
+- **DR-1 (High, security/hardening):** the PVF dispatch is a `Call Compile` trust boundary. `Server_HandlePVF.sqf`/`Client_HandlePVF.sqf` compile the sender-chosen `select 0`/`select 1` with no command-name validation, and `BattlEyeFilter/publicvariable.txt` has only the `kickAFK` feature rule (not a security filter). Clients reach the channel via `Common_SendToServerOptimized.sqf:15`. Playbook: validate against the registered `SRVFNC*`/`CLTFNC*` set before compile + add a real BE PV filter. This makes Codex's generic "high-risk" note concrete and actionable.
+- **DR-2 (Medium):** paratrooper drop markers are dead — `Support_Paratroopers.sqf:117` sends `HandleParatrooperMarkerCreation`, but it is absent from `_clientCommandPV` (no EH, `CLTFNC…` never compiled). Resolves the atlas's "exists but not registered" → broken.
+- **DR-3 (Medium):** MASH tent map markers are dead on the receive side — the client EH in `receiverMASHmarker.sqf` is referenced only by the commented compile at `Init_Client.sqf:132`; server re-broadcast is live. Resolves the atlas's "requires verification."
+- **DR-4 (Medium, generated-mission drift):** a full recursive diff shows Chernarus↔Takistan differ **only** by LoadoutManager skip-listed files / blacklisted dirs — no accidental drift, but the skip-list (`mission.sqm`, `GUI_Menu_Help`, `StartVeh`, `Core_Artillery`, `Server/Config`, `Textures`, `loadScreen`, `texHeaders`) is a silent-divergence trap; "edit Chernarus + run LoadoutManager" is incomplete for those. `Modded_Missions/*` are abandoned (Napf/eden/lingor ~280-350 files behind; others 1-4-file stubs) because modded propagation is commented at `SqfFileGenerator.cs:132`. Expanded guidance added to `Tools-And-Build-Workflow.md`.
+- **DR-5 (Low):** the atlas's `preprocessFile` counts (659/452/207) recount to 678/465/213 on the index base — present such counts as point-in-time with a regen command. Also recorded verified-accurate cross-checks (FSM count = 3; the unregistered PVF observations) for trust calibration.
+
+Edited: `Feature-Status-Register.md` (MASH row → confirmed broken; added paratrooper-marker and PV-trust-boundary rows), `Networking-And-Public-Variables.md` (security subsection), `Tools-And-Build-Workflow.md` (propagation skip-list trap + modded staleness), `agent-context.json` (new risks + round-2 reviewPass). No gameplay code changed. Handoffs for code owners listed at the bottom of `Deep-Review-Findings.md`.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

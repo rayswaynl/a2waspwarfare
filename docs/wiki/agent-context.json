@@ -35,7 +35,8 @@
       "Agent-Context",
       "AI-Assistant-Developer-Guide",
       "Lifecycle-Wait-Chain",
-      "WASP-Overlay"
+      "WASP-Overlay",
+      "Deep-Review-Findings"
     ]
   },
   "rules": [
@@ -68,7 +69,10 @@
     "DoNotUse CRV7PG loadout classes can crash the game if used in loadouts.",
     "AntiStack database extension calls are live-server sensitive.",
     "Generated missions can be overwritten by LoadoutManager.",
-    "PublicVariable traffic and client marker/UI loops are performance-sensitive."
+    "PublicVariable traffic and client marker/UI loops are performance-sensitive.",
+    "PV dispatch trust boundary (DR-1): Server_HandlePVF.sqf/Client_HandlePVF.sqf Call Compile the sender-chosen command string with no validation; BattlEyeFilter/publicvariable.txt only has the kickAFK feature rule. Harden via command-set validation + a real BE PV filter before trusting on a public server.",
+    "Paratrooper drop markers (DR-2) and MASH tent markers (DR-3) are confirmed dead: receivers unregistered (HandleParatrooperMarkerCreation not in client PVF list; receiverMASHmarker.sqf only referenced by commented Init_Client.sqf:132).",
+    "Generated-mission drift (DR-4): Chernarus<->Takistan differ only by LoadoutManager skip-list/blacklist (no accidental drift), but skip-listed files (mission.sqm, GUI_Menu_Help, StartVeh, Core_Artillery, Server/Config, Textures, loadScreen, texHeaders) never propagate and must be hand-mirrored. Modded_Missions/* are abandoned (modded propagation commented at SqfFileGenerator.cs:132)."
   ],
   "currentPR": {
     "number": 1,
@@ -103,6 +107,25 @@
         "AI supply-truck call Init_Server.sqf:383 is live but config-gated; errors under WFBE_C_ECONOMY_SUPPLY_SYSTEM==0.",
         "PR #1 stacks Killed event handlers on reused supply vehicles (bounded EH leak; no double-pay).",
         "PR #1 cash run diverts value from side supply to commander team funds by design."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Claude",
+      "round": 2,
+      "type": "adversarial cross-check of Codex atlas",
+      "addedPages": ["Deep-Review-Findings"],
+      "deepened": [
+        "Feature-Status-Register",
+        "Networking-And-Public-Variables",
+        "Tools-And-Build-Workflow"
+      ],
+      "keyFindings": [
+        "DR-1 PV dispatch Call Compile trust boundary unmitigated (no validation + no BE filter).",
+        "DR-2 paratrooper drop markers dead (receiver unregistered).",
+        "DR-3 MASH tent markers dead (client receiver only in commented Init_Client.sqf:132).",
+        "DR-4 Chernarus<->Takistan in sync except skip-list; Modded_Missions abandoned.",
+        "DR-5 atlas preprocessFile counts recount to 678/465/213; FSM count of 3 verified accurate."
       ]
     }
   ]

@@ -22,6 +22,7 @@ Use the Bohemia Interactive Arma 2 OA scripting command reference when checking 
 - [External integrations](External-Integrations)
 - [Content structure and maps](Content-Structure-And-Maps)
 - [Feature status register](Feature-Status-Register)
+- [Deep-review findings](Deep-Review-Findings)
 - [Current work: supply helicopters PR #1](Current-Work-Supply-Helicopters-PR1)
 - [Documentation implementation plan](Documentation-Implementation-Plan)
 - [Coordination board](Coordination-Board)

@@ -109,3 +109,7 @@ When tracing a feature, a single registered command (`WFBE_PVF_HandleSpecial`) c
 - **`Call Compile` per dispatch.** Both dispatchers recompile the function-name string on every message even though the function object already exists in a global — a minor per-message CPU cost on hot paths.
 - **Per-side copy-paste channels.** Some bare-PV channels are duplicated per side rather than parameterized, e.g. `wfbe_supply_temp_west` / `wfbe_supply_temp_east` each get their own event handler in `Server/Functions/Server_ChangeSideSupply.sqf` (no resistance handler).
 
+### Security: the `Call Compile` trust boundary
+
+`Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` run `Call Compile` on the function-name string taken from the **value a remote machine broadcast** (`select 0` / `select 1`), with no check that it names a registered command — and the shipped `BattlEyeFilter/publicvariable.txt` only carries the `kickAFK` feature rule, not a security filter. Validate the command string against the known `SRVFNC*`/`CLTFNC*` set before compiling, and add a real BattlEye PV filter. Full analysis and remediation playbook: [Deep-review findings](Deep-Review-Findings) DR-1.
+
