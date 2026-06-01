@@ -651,6 +651,28 @@ Method: relative-path file-set `comm` + per-file `cmp` of all source `.sqf` agai
 
 **Outcome:** Drift dimension characterized across the whole codebase. Source→vanilla path is faithful (DR findings transfer verbatim); modded missions are out-of-scope forks/stubs flagged here. Ledger Drift cells updated to reference DR-32 (faithful-to-vanilla ✅; modded divergence is an owner decision, not a review gap).
 
+## Round 24 — 2026-06-02 (Claude) — factory/production Perf + JIP/HC (DR-33)
+
+Lane `factory-perf-jip-review`. Filled the two ⬜ cells on the Factory/purchase row by source-reviewing the unit-production path: `Client/GUI/GUI_Menu_BuyUnits.sqf` (queue gate) → `_params Spawn BuildUnit` → `Client/Functions/Client_BuildUnit.sqf` (the production loop), plus the `WFBE_C_QUEUE_*` counters seeded in `Client/Init/Init_Client.sqf`. Production runs entirely on the **buyer's client** (`group player`, local `CreateUnit`/`CreateVehicle`). Two real defects (one JIP/HC, one Perf) plus a network-churn note.
+
+### DR-33a — Empty-vehicle purchase leaks the buyer's `WFBE_C_QUEUE` counter → silent per-factory soft-lock — **Medium (JIP/HC / client-state leak)**
+
+`WFBE_C_QUEUE_<type>` is a **client-local** counter (seeded in `Init_Client.sqf:185+`, e.g. `BARRACKS_MAX=10`, `LIGHT_MAX/HEAVY_MAX=5`). The buy gate increments it before producing and blocks at the cap:
+- `GUI_Menu_BuyUnits.sqf:145-146`: `if (WFBE_C_QUEUE_<type> < WFBE_C_QUEUE_<type>_MAX) then { …+1; _params Spawn BuildUnit }` else `:158` "queue max" hint.
+- `Client_BuildUnit.sqf:469` decrements it **at the normal tail** of the script.
+
+But the vehicle branch has an early `if (!_driver && !_gunner && !_commander) exitWith {}` (`Client_BuildUnit.sqf:365`) — for a **crewless vehicle purchase** (all crew unchecked, a legitimate option) — which returns *before* the tail decrement at `:469`. So each empty-vehicle buy permanently increments the buyer's local queue counter without ever decrementing it. After `_MAX` such purchases (5 for Light/Heavy) the GUI gate at `:145` silently refuses all further production from that factory type for the rest of the match — a slow soft-lock that presents as a mysterious "can't buy / queue full" with nothing actually queued. Reachable in normal play. **Fix:** move the `WFBE_C_QUEUE` (and `unitQueu`, `:467`) decrements before/around the empty-vehicle `exitWith`, or restructure so all exit paths decrement (e.g. a single cleanup block).
+
+### DR-33b — Per-unit `sleep 4` queue poll re-broadcasts the building's queue on every mutation; non-unique queue token — **Low/Medium (Perf / network churn + latent correctness)**
+
+- **Network churn.** Each queued unit gets its own `Spawn BuildUnit`, which busy-waits `while {_unique != _queu select 0 …} { sleep 4; … }` (`:180-199`) and writes `_building setVariable ["queu", _queu, true]` — a **global broadcast** — on every enqueue (`:172`), timeout-advance (`:191`) and completion (`:207`). With several factories producing across a full server, every 4 s tick that advances or cleans a queue broadcasts that building's whole `queu` array to all machines. Bounded but avoidable; consider a server-owned queue or a non-broadcast local timer.
+- **Non-unique token.** The per-item identity is `varQueu = random(10)+random(100)+random(1000)` (`:168`) — a ~0–1110 value space, **not unique**. Two concurrently-queued items can collide on `_unique`, breaking the `_unique != _queu select 0` front-of-queue test (an item may wait forever or two may think they're first). Low probability per pair but non-zero on a busy factory. **Fix:** use a monotonic counter or `diag_tickTime`-seeded id.
+- **Orphan token on disconnect (minor).** Because the loop + the front-token removal (`:206`) run on the buyer's client, a buyer disconnecting mid-production leaves their `_unique` token in the building's broadcast `queu`; it self-heals only if another buyer is queued behind to run the `_ret > _longest` timeout-cleanup (`:187-192`). The local `WFBE_C_QUEUE` counter is not leaked across clients (it dies with the buyer). Stale shared data, low impact.
+
+**Handoff for Codex.** Document the production queue model in the [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas): client-owned per-unit producer, broadcast `queu` token list, per-client `WFBE_C_QUEUE` caps. The two fixes (DR-33a decrement-on-all-paths; DR-33b unique token + reduce broadcast) are concrete code-owner items, not architectural decisions. Note DR-33a propagates to vanilla Takistan verbatim (DR-32) and likely exists in the 3 forks too.
+
+**Outcome:** Factory/purchase row — **Perf and JIP/HC cells filled (DR-33)**. The row's remaining 🟡 (Auth/PV) is the DR-14 client-authoritative-purchase architectural ceiling (economy class, owner decision).
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
