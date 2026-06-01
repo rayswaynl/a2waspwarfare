@@ -471,6 +471,23 @@ Lane `ui-followups-verify`. Confirms Curie's last two UI candidates at source; c
 ### Handoff
 Code owners: assign distinct IDDs to `RscOverlay`/`OptionsAvailable` (DR-25a); fix the malformed `RscClickableText.soundPush[]` (DR-25b). Both Low. Ledger: UI follow-up candidates (title 10200, soundPush) now confirmed — UI cell's documented candidates are closed.
 
+## Round 16 — 2026-06-02 (Claude) — external deep-research integration (DR-26) + corroboration
+
+Lane `external-research-integration`. Steff supplied three deep-research PDFs (also given to Codex). I read two in full (*Diepgaande analyse*, *Analyse van*); the third is the same genre. **Provenance check:** their citations are `raw.githubusercontent.com/wiki/rayswaynl/...` pages + Miksuu upstream blobs — i.e. they were generated **from this wiki** (plus upstream as a line-level proxy), so they are *downstream corroboration*, not independent source verification.
+
+### Corroboration (external validation of our findings)
+The reports independently re-derive, and rate as top risks, exactly our spine: the `Call Compile` PVF trust boundary (DR-1) with the BattlEye `kickAFK`-only filter, construction client-authority (DR-6), `callExtension`/external-trust (DR-7), the `UpdateSupplyTruck` config-gated latent breakage (our Feature-Status sharpening), the town-AI despawn player-vehicle risk (our AI/headless note), the PR#1 `Killed`-EH leak, and MASH-marker-broken (DR-3). Their recommended fix order (static allow-list dispatch → server-side validation → reduce broadcast/centralize PV → harden `callExtension`) matches our DR-1/DR-6 playbooks. **Our source-verified findings are a superset** — the reports do not contain DR-11/15/18/19/20/22/23 (victory winner-inversion, commander-assign bug, FPS busy-loop, HQ-killed N-fold, overspend windfall, upgrade-authority), which required reading the actual `.sqf` rather than the wiki. Net: external review confirms the map holds up and surfaces nothing higher-severity that we missed in code.
+
+### DR-26 — License is custom/proprietary, not OSI (resolves both reports' "license unspecified") — **Low (governance)**
+Both reports marked the license "unspecified" (they only had the wiki, not the repo root). Verified at source: `LICENSE.md` is a **custom proprietary-style license** — "Copyright (C) 2016 Spayker / (C) 2025 Miksuu", with contributions becoming the repository owner's property and reuse/distribution restricted to explicitly granted rights. **Not** MIT/GPL/OSI. Implication: third-party reuse or redistribution is **not** permitted by default; treat the repo as source-available, not open-source.
+
+### Governance/ops handoffs (the reports' additive value, source-confirmed)
+- **Discord sample metadata:** `DiscordBot/preferences_sample.json` ships a concrete `GuildID` (`440257265941872660`), `AuthorizedUserIDs`, and `DataSourcePath C:\a2waspwarfare\Data`; `FileConfiguration.cs` has the same hardcoded fallback path. No committed token (good), but neutralize the sample identifiers / move to env-based config. *(Codex/owner lane — DiscordBot is outside the Chernarus mission.)*
+- **No CI/tests:** confirmed earlier (only `.github/FUNDING.yml`). For a heavily `preprocessFile`-dynamic SQF codebase + generated targets, add at least SQF-syntax + generated-mission-drift + .NET build checks. *(Tooling/Codex lane.)*
+
+### Handoff
+Owner: the campaign's code findings (DR-1→DR-25) are the actionable core; the external reports add governance items (license clarity now resolved as DR-26; Discord sample hygiene; CI). Codex: fold the governance asks into `External-Integrations`/`Tools-And-Build-Workflow` as desired (its lane).
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
