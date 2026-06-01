@@ -718,6 +718,28 @@ Config-side `$STR_` references in `.hpp`/`.ext` (excluding engine `STR_EP1_`/`ST
 
 **Outcome:** parameters/localization reviewed — **clean**; localization integrity verified (no live broken keys), params system confirmed live/wired, 2 dead WASP actions logged. New ledger row **Parameters / localization** → reviewed-clean (DR-35).
 
+## Round 27 — 2026-06-02 (Claude) — victory/endgame Perf + JIP/HC (DR-36); source mechanism for DR-11/DR-13
+
+Lane `victory-perf-jip-review`. Filled the Victory/endgame Perf + JIP/HC cells by reviewing the loop in `Server/FSM/server_victory_threeway.sqf` (the **sole** victory FSM, `execVM`'d unconditionally at `Server/Init/Init_Server.sqf:528`) and the end-of-match DB-flush tail, and traced the win-condition expression to a source-level root cause for the previously-observed DR-11/DR-13.
+
+### DR-36 — Victory loop Perf clean + JIP/HC server-authoritative; the win-condition guard/precedence is the source of DR-11/DR-13 double-fire — **Low (Perf/JIP clean) + Medium (the confirmed correctness bug)**
+
+**Perf — clean.** The detection loop runs every `_loopTimer = 80` seconds (`:6,46`) with cheap per-side work (`GetSideHQ`/`GetSideStructures`/`GetTownsHeld` + 4× `GetFactories`, `:14-21`). No hot loop, no per-frame churn. Minor: `_innerTimer` is incremented (`:47`) but never read (dead variable); `_miniSleep = 0.05` paces only the one-time end-of-match per-player DB `STORE` (`:60-82`). No perf trap.
+
+**JIP/HC — server-authoritative, one narrow gap.** Detection runs server-only on server-authoritative state; headless clients don't participate (correct). Endgame is pushed to clients via `[nil,"HandleSpecial",["endgame", sideID]] Call WFBE_CO_FNC_SendToClients` (`:24`); `gameOver`/`WFBE_GameOver` are set server-side (`:32-33`) and `WFBE_GameOver` is **not** broadcast. The only gap: a player joining in the brief endgame window (between the broadcast and `failMission "END1"` at `:88`) won't receive the outro, because `SendToClients` is not replayed to JIP joiners — moot in practice since the mission is tearing down.
+
+**Confirmed source mechanism for DR-11 (winner inversion) + DR-13 (duplicate LogGameEnd).** The win check (`:23`):
+```
+if (!(alive _hq) && _factories == 0 || _towns == _total && !WFBE_GameOver) then {
+```
+By SQF precedence (`&&` binds tighter than `||`) this is `((!alive _hq) && _factories==0) || (_towns==_total && !WFBE_GameOver)` — so the **`!WFBE_GameOver` guard covers only the "holds-all-towns" clause, not the "HQ-destroyed elimination" clause**. Combined with the enclosing `forEach WFBE_PRESENTSIDES - [WFBE_DEFENDER]` (`:43`) having **no break/exit after a winner is declared**, if two sides are eliminated within the same 80 s tick the elimination clause fires again for the second side: a second `["endgame",…]` broadcast, a second `WFBE_CO_FNC_LogGameEnd` (`:41`), and `WF_Logic setVariable ["WF_Winner", _x]` (`:31`) overwritten with the *opposite* side (the `_side = west; if (_x==west) _side=east` swap at `:35-39` then logs the inverted winner). That is the exact mechanism behind DR-11's inverted persisted winner and DR-13's duplicate game-end. **Fix (one place):** parenthesize and guard both clauses with `!WFBE_GameOver`, and `exitWith`/break the `forEach` (and the `while`) once `gameOver` is set, so only the first-detected winner is recorded.
+
+Also re-confirms **DR-12**: the detection block is gated by `if (_victory == 0)` where `_victory = WFBE_C_VICTORY_THREEWAY` (default 0). When threeway is *enabled* (`_victory != 0`), the entire detection block is skipped and the loop just sleeps — i.e. threeway mode has no victory detection.
+
+**Handoff for Codex.** This is a code-owner fix already tracked under DR-11/DR-13; this round adds the precise `path:line` mechanism + the two-part one-line fix. No new wiki page needed — cross-link from the victory rows of [Feature status register](Feature-Status-Register) to DR-36 for the root cause.
+
+**Outcome:** Victory/endgame row — **Perf and JIP/HC cells filled (DR-36)**: Perf clean, JIP server-authoritative (narrow endgame-join gap noted); DR-11/DR-13 now have a source-level mechanism + fix.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
