@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-01T23:35:00+02:00",
+  "generatedAt": "2026-06-02T10:20:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -14,129 +14,95 @@
   "agents": {
     "Codex": {
       "role": "Integrator, wiki UX owner, source-atlas maintainer, publisher and validation runner.",
-      "currentLane": "gear-loadout-easa-atlas-integration + external-pdf-research-intake + integration-backlog-batch-a",
+      "currentLane": "integration-backlog-batch-a + explorer-wave-c intake",
       "status": "active"
     },
     "Claude": {
       "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
-      "currentLane": "autonomous-claude-research",
+      "currentLane": "discord-datapath-review (DR-31 ready-for-review)",
       "status": "ready-for-review; autonomous-ready"
     },
-    "Sagan": {
-      "role": "Cheap read-only PDF scout.",
-      "currentLane": "external-pdf-analytisch-rapport",
-      "status": "completed"
-    },
-    "Helmholtz": {
-      "role": "Cheap read-only PDF scout.",
-      "currentLane": "external-pdf-analyse",
-      "status": "completed"
-    },
-    "Parfit": {
-      "role": "Cheap read-only PDF scout.",
-      "currentLane": "external-pdf-diepgaande-analyse",
-      "status": "completed"
-    }
+    "Newton": {"role": "Cheap read-only broken-reference explorer.", "currentLane": "known-broken-reference-second-pass-v2", "status": "completed"},
+    "Linnaeus": {"role": "Cheap read-only supply authority explorer.", "currentLane": "supply-mission-authority-matrix-v2", "status": "running-or-pending-report"},
+    "Ampere": {"role": "Cheap read-only server runtime/FSM explorer.", "currentLane": "server-fsm-runtime-orchestration-v2", "status": "completed"},
+    "Pascal": {"role": "Cheap read-only boot/include graph explorer.", "currentLane": "boot-include-parameter-graph-v2", "status": "completed"},
+    "Boyle": {"role": "Cheap read-only AI commander/autonomy explorer.", "currentLane": "ai-commander-autonomy-second-pass-v2", "status": "completed"},
+    "Peirce": {"role": "Cheap read-only hosting/BattlEye explorer.", "currentLane": "server-config-hosting-be-v2", "status": "completed"}
   },
   "activeClaims": [
     {
-      "lane": "gear-loadout-easa-atlas-integration",
-      "owner": "Codex",
-      "status": "integrated-locally; publish-pending",
-      "sourceScope": [
-        "Client/GUI/GUI_BuyGearMenu.sqf",
-        "Client/GUI/GUI_Menu_EASA.sqf",
-        "Client/Functions/Client_UI_Gear_*.sqf",
-        "Client/Module/EASA/EASA_Init.sqf",
-        "Common/Functions/Common_BalanceInit.sqf",
-        "Tools/LoadoutManager/**"
-      ],
-      "outputs": [
-        "Gear-Loadout-And-EASA-Atlas.md",
-        "navigation/context/status updates"
-      ],
-      "handoff": "Code owners should treat gear/EASA purchase and equip paths as client-authoritative until a hardening design exists."
-    },
-    {
-      "lane": "external-pdf-research-intake",
-      "owner": "Codex + Sagan/Helmholtz/Parfit",
-      "status": "captured; source-reconciliation-pending",
-      "sourceScope": [
-        "C:\\Users\\Steff\\Downloads\\Analytisch rapport over rayswaynl_a2waspwarfare.pdf",
-        "C:\\Users\\Steff\\Downloads\\Analyse van rayswaynl_a2waspwarfare.pdf",
-        "C:\\Users\\Steff\\Downloads\\Diepgaande analyse van rayswaynl_a2waspwarfare.pdf"
-      ],
-      "outputs": [
-        "External-Research-Reports.md"
-      ],
-      "handoff": "Claude and future agents should verify PDF leads against repo source before promoting them into subsystem pages."
-    },
-    {
       "lane": "integration-backlog-batch-a",
       "owner": "Codex",
-      "status": "active",
+      "status": "partially-integrated; publishing",
+      "outputs": [
+        "Networking-And-Public-Variables.md",
+        "External-Integrations.md",
+        "Feature-Status-Register.md",
+        "Gear-Loadout-And-EASA-Atlas.md",
+        "Economy-Towns-And-Supply.md"
+      ],
+      "handoff": "PV/direct-channel matrix, external integration trust, DR-27, DR-28, DR-29, DR-30 and DR-31 are folded/cross-linked into owner pages. Continue explorer-wave-c reports after publish."
+    },
+    {
+      "lane": "discord-datapath-review",
+      "owner": "Claude",
+      "status": "ready-for-review; Codex cross-link integrated",
       "sourceScope": [
-        "Common/Init/Init_PublicVariables.sqf",
-        "Server/Functions/Server_HandlePVF.sqf",
-        "Client/Functions/Client_HandlePVF.sqf",
-        "Server/Module/AntiStack/*.sqf",
-        "Extension/**",
-        "DiscordBot/**",
-        "BattlEyeFilter/**"
+        "DiscordBot/src/ExtensionData/GameData/GameData.cs",
+        "DiscordBot/src/ExtensionData/GameData/GameDataDeSerialization.cs",
+        "DiscordBot/src/GameStatus/GameStatusUpdater.cs",
+        "DiscordBot/src/ProgramRuntime.cs",
+        "DiscordBot/src/CommandHandler.cs"
       ],
       "outputs": [
-        "Networking/PV and External-Integrations integration updates"
+        "Deep-Review-Findings.md Round 22 / DR-31",
+        "External-Integrations.md",
+        "Feature-Status-Register.md"
       ],
-      "handoff": "Heisenberg priority order says PV/network trust and external integration/AntiStack land before lower-risk atlas polish."
+      "handoff": "DiscordBot reads GLOBALGAMESTATS database.json on a 60s timer with TypeNameHandling.All. Fix All->None and remove the dead Auto path; command auth and secret hygiene are otherwise documented as good."
+    },
+    {
+      "lane": "battleye-posture-review",
+      "owner": "Claude",
+      "status": "ready-for-review; Codex cross-link integrated",
+      "outputs": [
+        "Deep-Review-Findings.md Round 21 / DR-30",
+        "External-Integrations.md",
+        "Feature-Status-Register.md"
+      ],
+      "handoff": "As shipped, option (b) rely on BattlEye is not present in the repo; production BEpath/server config remains an owner question."
     }
+  ],
+  "integratedReports": [
+    "gear-loadout-easa-balance-discovery",
+    "external-pdf-research-intake",
+    "pv-matrix-second-pass-v2",
+    "common-pv-network-authority-v2",
+    "discord-extension-antistack-integration-discovery",
+    "modules-review-dr27",
+    "gear-easa-review-dr28",
+    "extension-globalgamestats-dr29",
+    "battleye-posture-dr30",
+    "discord-datapath-dr31"
   ],
   "queuedReports": [
-    {
-      "lane": "pv-matrix-second-pass-v2",
-      "status": "reported-pending-integration",
-      "targets": ["Networking-And-Public-Variables", "Function-And-Module-Index"]
-    },
-    {
-      "lane": "discord-extension-antistack-integration-discovery",
-      "status": "reported-pending-integration",
-      "targets": ["External-Integrations", "Networking-And-Public-Variables", "Feature-Status-Register"]
-    },
-    {
-      "lane": "known-broken-reference-second-pass-v2",
-      "status": "reported-pending-integration",
-      "targets": ["Feature-Status-Register", "Mission-Entrypoints-And-Lifecycle", "Client-UI-Systems-Atlas"]
-    },
-    {
-      "lane": "supply-mission-authority-matrix-v2",
-      "status": "reported-pending-integration",
-      "targets": ["Supply-Mission-Architecture", "Current-Work-Supply-Helicopters-PR1", "Feature-Status-Register"]
-    }
+    {"lane": "known-broken-reference-second-pass-v2", "status": "reported-pending-integration", "owner": "Newton", "targets": ["Feature-Status-Register", "Mission-Entrypoints-And-Lifecycle", "Client-UI-Systems-Atlas", "Deep-Review-Findings"]},
+    {"lane": "supply-mission-authority-matrix-v2", "status": "running-or-reported-pending-integration", "owner": "Linnaeus", "targets": ["Supply-Mission-Architecture", "Current-Work-Supply-Helicopters-PR1", "Feature-Status-Register"]},
+    {"lane": "server-fsm-runtime-orchestration-v2", "status": "reported-pending-integration", "owner": "Ampere", "targets": ["Server-Gameplay-Runtime-Atlas", "Lifecycle-Wait-Chain", "Feature-Status-Register"]},
+    {"lane": "boot-include-parameter-graph-v2", "status": "reported-pending-integration", "owner": "Pascal", "targets": ["Mission-Entrypoints-And-Lifecycle", "Lifecycle-Wait-Chain", "SQF-Code-Atlas"]},
+    {"lane": "ai-commander-autonomy-second-pass-v2", "status": "reported-pending-integration", "owner": "Boyle", "targets": ["AI-Headless-And-Performance", "Feature-Status-Register", "Function-And-Module-Index", "Gameplay-Systems-Atlas"]},
+    {"lane": "server-config-hosting-be-v2", "status": "reported-pending-integration", "owner": "Peirce", "targets": ["External-Integrations", "Networking-And-Public-Variables", "Feature-Status-Register", "Tools-And-Build-Workflow"]}
   ],
   "lanes": [
-    {
-      "lane": "cheap-discovery-swarm-v2",
-      "suggestedOwner": "Codex",
-      "status": "harvested",
-      "summary": "Cheap scout wave is complete; no active scout slots remain."
-    },
-    {
-      "lane": "external-pdf-research-intake",
-      "suggestedOwner": "Codex/Claude",
-      "status": "captured",
-      "summary": "Three Dutch PDF reports are summarized; claims remain external and unverified until source-checked."
-    },
-    {
-      "lane": "autonomous-claude-research",
-      "suggestedOwner": "Claude",
-      "status": "open",
-      "summary": "Claude may self-select the next bounded, source-backed subsystem or PDF-lead verification lane without waiting for Codex assignment."
-    }
+    {"lane": "cheap-discovery-swarm-v2", "suggestedOwner": "Codex", "status": "harvested", "summary": "Earlier cheap scout wave is complete."},
+    {"lane": "cheap-explorer-wave-c", "suggestedOwner": "Codex", "status": "reporting", "summary": "Fresh cheap explorer wave is producing focused read-only reports for the next integration batch."},
+    {"lane": "autonomous-claude-research", "suggestedOwner": "Claude", "status": "open", "summary": "Claude may self-select the next bounded, source-backed subsystem or verification lane without waiting for Codex assignment."}
   ],
   "rules": [
     "Update Progress-Dashboard.md and agent-status.json when visible ownership or lane state changes.",
     "Append, do not overwrite, Agent-Worklog.md and agent-events.jsonl.",
     "Use source-cited evidence for broken/partial-feature claims.",
-    "Treat external PDFs as lead material only until source-file verification.",
+    "Treat external PDFs as downstream corroboration unless independently source-checked.",
     "If a branch is stale, integrate targeted findings instead of merging over newer navigation.",
     "Keep docs/wiki and the GitHub wiki checkout in parity before publishing.",
     "Use Arma 2 OA scripting references only."

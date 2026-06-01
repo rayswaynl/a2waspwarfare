@@ -66,6 +66,29 @@ Some systems use explicit public-variable channels outside the generic PVF list:
 | `AFKthresholdExceededName`, `kickAFK` | client -> server/BattlEye | `Client/Module/AFK/monitorAFK.sqf:25`, `Server/Module/AFK/initAFKkickHandler.sqf:9`, `BattlEyeFilter/publicvariable.txt:1-2` | `kickAFK` is intentionally caught by BattlEye because `serverCommand` is unavailable. |
 | `SERVER_FPS_GUI`, `WFBE_VAR_SERVER_FPS` | server -> clients | `Server/Module/serverFPS/serverFpsGUI.sqf:7-8`, `Server/Init/Init_Server.sqf:578,595` | Two server-FPS publication paths exist. |
 
+## Second-Pass Direct PV Inventory
+
+Archimedes/James and Galileo's second-pass reports expanded the direct-channel map. These are not automatically covered by the `WFBE_PVF_*` registration list or a future PVF dispatcher fix, so treat them as separate review targets when hardening the network layer.
+
+| Channel | Direction | Owner / evidence | Trust or lifecycle note |
+| --- | --- | --- | --- |
+| `ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS`, `CLIENT_INIT_READY` | client/common -> server; server/PVEH coordination | `Common/Functions/Common_AttackWaveActivate.sqf`, `Server/Functions/Server_AttackWave.sqf`, `Server/PVFunctions/AttackWave.sqf`, `Client/Init/Init_Client.sqf` | Attack-wave sync is outside the generic PVF list and should be reviewed separately for JIP/order behavior. |
+| `wfbe_supply_temp_west`, `wfbe_supply_temp_east`, `wfbe_supply_<side>` | common/client -> server; server -> clients | `Common/Functions/Common_ChangeSideSupply.sqf`, `Server/Functions/Server_ChangeSideSupply.sqf` | West/east server handlers recompute supply; no resistance handler was found. DR-22 found the overspend windfall in the server clamp. |
+| `WFBE_Client_PV_IsSupplyMissionActiveInTown`, `WFBE_Client_PV_SupplyMissionStarted` | client -> server | `Client/Module/supplyMission/supplyMissionStart.sqf`, `Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf`, `supplyMissionStarted.sqf` | Client starts availability/completion flow. DR-18 found first-use cooldown nil risk; supply reward variables still need server-side recompute. |
+| `WFBE_Server_PV_IsSupplyMissionActiveInTown`, `WFBE_Server_PV_SupplyMissionCompleted`, `WFBE_Server_PV_SupplyMissionCompletedMessage` | server -> clients / server local PVEH | `Server/Module/supplyMission/*.sqf`, `Client/Module/supplyMission/*.sqf` | Completion publication is live-only and intertwined with supply vehicle object variables. |
+| `WFBE_CL_MASH_MARKER_CREATED`, `WFBE_SE_MASH_MARKER_SENT` | client -> server -> clients | `Server/Module/MASH/MASHMarker.sqf`, `Client/Module/MASH/receiverMASHmarker.sqf` | Server relay is live, but the client receiver compile is commented; MASH markers are broken (DR-3). |
+| `IS_WEST_HQ_ALIVE`, `IS_EAST_HQ_ALIVE`, `HQ_WEST_MARKER_INFOS`, `HQ_EAST_MARKER_INFOS` | server -> clients | `Server/Functions/Server_MHQRepair.sqf`, `Server/Functions/Server_OnHQKilled.sqf` | HQ state is broadcast directly; DR-20 found the HQ-killed consumer is not idempotent when multiple clients detect the same death. |
+| `SUPPLY_COMPENSATION_AMOUNT_EAST`, `SUPPLY_COMPENSATION_AMOUNT_WEST` | server -> clients | `Server/Module/AntiStack/skillDiffCompensation.sqf` | AntiStack skill compensation publishes side-specific supply deltas outside PVF; depends on external DB/skill data when AntiStack is enabled. |
+| `TEAM_WEST_TICKS_NO_PLAYERS`, `TEAM_EAST_TICKS_NO_PLAYERS` | common/server -> clients | `Common/Functions/Common_StagnateSupplyIncomeNoPlayers.sqf` | No-player stagnation state is a direct broadcast channel. |
+| `CLIENT_INIT_READY` | client -> server | `Client/Init/Init_Client.sqf`, `Server/PVFunctions/AttackWave.sqf` | Despite the `Server/PVFunctions` path, this is a direct PVEH channel and not part of `_serverCommandPV`. |
+
+### Direct PV Hardening Order
+
+1. Fix PVF dispatcher command resolution first (DR-1), because that closes arbitrary command-string execution.
+2. Harden registered high-impact handlers next: construction, upgrades, score, vehicle lock, commander/team changes.
+3. Review the direct channels above separately, because they will not be protected by a `WFBE_PVF_*` allow-list.
+4. Design BattlEye `publicvariable.txt` from both lists: registered `WFBE_PVF_*` channels plus explicit direct channels such as `kickAFK`, supply mission PVs, day/night, HQ markers, attack waves and AntiStack compensation.
+
 ## Safety Notes
 
 - Keep payloads small and structured; Arma 2 public-variable traffic can be expensive.
@@ -116,6 +139,7 @@ When tracing one feature, grep the string tag as well as the PVF command name.
 - PVF handlers use `Spawn`, so rapid messages that mutate shared state have no strict ordering guarantee.
 - Both dispatchers use `Call Compile` on the generated function-name string per dispatch. Keep command names controlled and avoid turning hot paths into chatty PVF streams.
 - Some bare PV channels are copied per side, such as `wfbe_supply_temp_west` and `wfbe_supply_temp_east`; there is no resistance-side handler in that path.
+- A real BattlEye PV filter must include direct non-PVF channels as well as `WFBE_PVF_*`; the current repo filter only contains `kickAFK`.
 
 ### Security: the `Call Compile` trust boundary
 
@@ -132,7 +156,11 @@ Replacing `Call Compile` with mission-namespace lookup closes arbitrary code exe
 | `RequestUpgrade` | Directly spawns upgrade processing; handler itself does not show commander/funds validation. | `Server/PVFunctions/RequestUpgrade.sqf:5`, `Server/Functions/Server_ProcessUpgrade.sqf:40-43` |
 | `RequestVehicleLock` | Locks the payload vehicle without visible owner/side/range check. | `Server/PVFunctions/RequestVehicleLock.sqf:3-8` |
 | `RequestTeamUpdate` | Accepts array or side and mutates group behavior/combat/formation/speed. | `Server/PVFunctions/RequestTeamUpdate.sqf:3-26` |
-| `RequestSpecial` | Broad router for paratroops, support, ICBM, camp repair, teamleader update and HC registration. | `Server/PVFunctions/RequestSpecial.sqf:1`, `Server/Functions/Server_HandleSpecial.sqf:43-171` |
+| `RequestSpecial` | Broad router for paratroops, support, ICBM, camp repair, teamleader update and HC registration. Claude DR-27 found the `"ICBM"` branch can be forged to server-spawn `NukeDammage` at a client-chosen position with no upgrade/commander/funds validation. | `Client/Module/Nuke/nukeincoming.sqf:23`, `Server/PVFunctions/RequestSpecial.sqf:1`, `Server/Functions/Server_HandleSpecial.sqf:97-112` |
+
+### Highest-Priority Registered Command: ICBM / Nuke
+
+DR-27 makes `RequestSpecial` the highest-priority registered-command hardening target discovered so far. The Tactical menu does client-side ICBM gating and the client sends `["RequestSpecial", ["ICBM", side, baseObj, cruiseObj, team]]`; the server's `HandleSpecial` `"ICBM"` case trusts the payload and spawns nuke damage from it. A forged PV therefore becomes a server-applied map-wide kill. Fixes belong server-side in the `"ICBM"` branch, paired with BattlEye restrictions around `RequestSpecial`.
 
 ## Continue Reading
 

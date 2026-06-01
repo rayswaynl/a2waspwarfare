@@ -500,6 +500,125 @@ Verified:
 
 **Outcome:** weather/day-night cell → reviewed-clean. No handoff required.
 
+## Round 18 — 2026-06-02 (Claude) — modules: forgeable map-wide ICBM nuke (DR-27)
+
+Lane `modules-review`. Reviewed the `Client/Module/` set (AFKkick, AutoFlip, CM, CoIn, EASA, Engines, MASH, Nuke, Skill, UAV, Valhalla, ZetaCargo, supplyMission) and `Server/Module/`. Most are config-gated cosmetic/QoL features (`WFBE_C_MODULE_*` flags; UAV's `_button == 007` branch is `comment 'DISABLED'` in both `uav_interface.sqf:226` and `uav_interface_oa.sqf:100` — confirms the Feature-Status "UAV partial" note). The **Nuke/ICBM** module is the high-stakes one and carries the most severe authority defect found in the campaign.
+
+### DR-27 — ICBM nuke is fully client-authoritative; one forged publicVariable = server-applied map-wide kill — **Critical (network authority / forgery)**
+
+End-to-end chain (all `path:line` in the Chernarus source mission):
+
+1. **Trigger is client-side and client-gated only.** `Client/GUI/GUI_Menu_Tactical.sqf` `MenuAction == 8` (the "ICBM Strike" branch, ~`:463-505`) deducts the fee locally (`-_currentFee Call ChangePlayerFunds` — itself client-authoritative, the DR-16/DR-23 economy class), spawns the strike-marker object locally (`"HeliHEmpty" createVehicle _callPos`), and `Spawn NukeIncoming`. The only ICBM gate is **menu visibility** (`WFBE_C_MODULE_WFBE_ICBM > 0 && !IS_air_war_event`, `GUI_Menu_Tactical.sqf:253`) — module-enable, not the per-side *purchased* `WFBE_upgrade_…_ICBM`, and not a commander check.
+2. **Client asks the server to detonate.** `Client/Module/Nuke/nukeincoming.sqf:23`:
+   `["RequestSpecial", ["ICBM",sideJoined,_target,_cruise,clientTeam]] Call WFBE_CO_FNC_SendToServer;`
+3. **Server dispatches with no validation.** `RequestSpecial` is a registered inbound PVF (`Common/Init/Init_PublicVariables.sqf:18`); its handler `Server/PVFunctions/RequestSpecial.sqf` is literally `_this Spawn HandleSpecial;` → `Server/Functions/Server_HandleSpecial.sqf` `"ICBM"` case (`:97-112`):
+   - `_base = _args select 2` (client-chosen strike-position object), `_target = _args select 3` (client-chosen object).
+   - `if (isNull _target || !alive _target) exitWith {}; waitUntil {!alive _target}; [_base] Spawn NukeDammage;`
+   - `NukeDammage` is server-side (which is *why* the kill propagates to everyone) and is applied **centered on the client-supplied `_base` position** with **no check** that `_side`/`clientTeam` owns the ICBM upgrade, that the sender is the commander, or that funds existed.
+
+**Why the one server-side guard is not a security check.** `waitUntil {!alive _target}` only requires the forger to supply *some* live object and then end its life — spawn any vehicle, pass it as `_target`, delete/kill it; or pass any alive object and kill it. It gates timing, not authority.
+
+**Impact.** Any connected client can hand-craft the publicVariable `RequestSpecial = ["ICBM", <anySide>, <objAtChosenPos>, <liveObjThenKilled>, <anyTeam>]` and the **server** applies a map-wide nuke at coordinates of the attacker's choosing — repeatable, no upgrade, no commander role, no real cost. This is the apex of the client-authoritative class (DR-6 build, DR-14 buy, DR-16 sell, DR-22 supply, DR-23 upgrade): same root cause (server PVF handlers trust payload fields without re-deriving authority server-side), but the blast radius is the entire match rather than one player's wallet.
+
+**Owner decision (same lever as the economy class, higher priority).** Two non-exclusive fixes:
+- *Server-side authority in the `"ICBM"` case:* re-derive the requester from the PV sender, verify `_remoteSender` is the commander of `_side`, verify the side's `WFBE_upgrade_…_ICBM` level > 0 and a server-tracked cooldown/funds ledger, before `Spawn NukeDammage`. (The same `_remoteSender`-vs-payload pattern recommended in DR-1/DR-6.)
+- *BattlEye `scripts.txt`/`publicvariable.txt`:* restrict/snapshot the `RequestSpecial` PV so the `"ICBM"` selector can't be hand-injected. Defense-in-depth, not a substitute for server validation.
+
+Handoff for Codex: this belongs in the [Networking](Networking-And-Public-Variables) PVF-hazard table and a Feature-Status/atlas note on the Nuke module; the actionable fix is an owner decision shared with the economy-authority item already logged (DR-6/14/16/22/23).
+
+**Outcome:** modules cell → Auth/PV flipped to the DR-27 finding; rest of `Client/Module/` reviewed as config-gated cosmetic/QoL with the UAV-007 branch confirmed disabled.
+
+## Round 19 — 2026-06-02 (Claude) — gear / EASA / vehicle-service economy (DR-28) — class now complete
+
+Lane `gear-easa-review`. Reviewed the aircraft/vehicle loadout system (`Client/Module/EASA/` + `Client/GUI/GUI_Menu_EASA.sqf`) and the vehicle service point (`Client/GUI/GUI_Menu_Service.sqf`). Result: gear/rearm is the **last untracked tier of the client-authoritative economy class**, plus a minor logic inconsistency.
+
+### DR-28 — Gear/EASA loadouts and vehicle rearm/repair/refuel/heal are client-authoritative; rearm & refuel skip even the client-side affordability guard — **High (economy authority), class-completing**
+
+Source-verified:
+- **No server PVF for gear at all.** `EASA_Equip.sqf` applies the chosen loadout directly to the local vehicle (`addWeapon`/`addMagazine`, or `addWeaponTurret`/`addMagazineTurret` for the `AW159_Lynx_BAF`) and broadcasts only the setup index (`_vehicle setVariable ["WFBE_EASA_Setup", _index, true]`, `:36`). There is no `SendToServer`/`RequestSpecial` anywhere in the EASA or Service flow (grep-confirmed) — the spend and the effect are entirely client-local.
+- **EASA cost is a client-side honor check.** `GUI_Menu_EASA.sqf:46-50`: `if (_funds > (_row select 0)) then { … Call EASA_Equip; -(_row select 0) Call ChangePlayerFunds; … }`. The price lives in the loadout row (`[[Price],[Desc],[Wpn,Ammo]…]`, `EASA_Init.sqf:8`), the affordability test runs on the client, and the debit is the client-authoritative `ChangePlayerFunds` (the DR-16/DR-23 primitive). A modified client equips any loadout without paying.
+- **Service rearm/refuel deduct with NO affordability guard.** `GUI_Menu_Service.sqf`: rearm (`MenuAction==1`, `:196-200`) and refuel (`:217-219`) do `-_price Call ChangePlayerFunds;` *unconditionally*, then `Spawn SupportRearm`/the refuel thread — whereas repair (`:206-211`, `if (_repairPrice > 0)`) and heal (`:228-230`) are guarded. So even a *legit* client can rearm/refuel into negative/clamped funds, and (as with all of the above) the effect threads run client-side with no server check.
+
+**Why it matters.** This completes the economy-authority picture. Every WFBE spend path is now source-confirmed client-authoritative: **build (DR-6) · buy (DR-14) · sell (DR-16) · supply transfer (DR-22) · upgrades (DR-23) · ICBM superweapon (DR-27) · gear/EASA + vehicle rearm/repair/refuel/heal (DR-28).** There is no server-side ledger; `ChangePlayerFunds` and the can-afford tests are all on the honor system. The rearm/refuel missing-guard is a real but secondary inconsistency — moot against the root issue, since a cheat client bypasses the debit regardless.
+
+**Owner decision (same single lever).** The one architectural decision already logged for the economy class covers DR-28 too: either (a) move spend authority server-side — a server-validated funds ledger that PVF handlers debit before applying effects — or (b) accept client-authoritative economy and lean on BattlEye `scripts.txt` to blunt the most trivial money/var edits. No new lever; gear simply joins the list. If (a) is ever scoped, also add the trivial `if (_funds >= price)` guards to Service rearm/refuel for parity with EASA/repair/heal.
+
+Handoff for Codex: fold DR-28 into the [Economy](Economy-Towns-And-Supply) page's "all spend is client-authoritative" note and the gear/loadout atlas; it's the same owner decision, no separate workstream.
+
+**Outcome:** new ledger row **Gear / EASA / vehicle service** → Map ✅, Auth ✅ (characterized as client-authoritative, DR-28), PV/JIP-HC 🟡, Drift ⬜; Economy row note extended to name gear as a class member.
+
+## Round 20 — 2026-06-02 (Claude) — in-repo GLOBALGAMESTATS extension (DR-29)
+
+Lane `extension-globalgamestats-review`. Reviewed the in-repo .NET `callExtension` DLL (`Extension/src/**`) end-to-end plus its sole SQF caller (`Server/CallExtensions/GlobalGameStats.sqf`). This is the *second* extension trust boundary (distinct from the AntiStack `A2WaspDatabase` DLL reviewed in DR-7..DR-10, which is **not** in the repo). Net: this one is currently the *safe* direction, but carries a dormant RCE landmine and an `async void` reliability bug, and is a write-only/abandoned-refactor stub.
+
+### DR-29 — GLOBALGAMESTATS extension: safe today (output discarded), but a dormant deserialization-RCE landmine + `async void` write race + write-only stub — **Medium (latent Critical)**
+
+What it is: a one-way telemetry exporter. `GlobalGameStats.sqf` loops every 60 s (`while {true} … sleep 60`, `execVM`'d once from `Init_Server.sqf:298`) and calls
+`"a2waspwarfare_Extension" callExtension format ["%1,…,%6","GLOBALGAMESTATS",scoreWest,scoreEast,worldName,uptime,playerCount]`. The DLL (`ExtensionMethods.RvExtension`, the legacy synchronous `_RVExtension@12` ABI — correct for A2 OA 1.64; A3's `RVExtensionArgs` does not exist here) enum-validates the selector, reflection-instantiates `GLOBALGAMESTATS` (`EnumExtensions.GetInstance` → `Type.GetType("GLOBALGAMESTATS")`), stores the args (`GameData.Instance.exportedArgs = _args`) and serializes `GameData` to `C:\a2waspwarfare\Data\database.json`.
+
+Findings (source-cited):
+
+1. **No RCE-into-SQF vector — the safe contrast to DR-7.** `RvExtension`'s `_output` StringBuilder is **never written** (grep-confirmed; only the parameter declaration exists at `ExtensionMethods.cs:12`), and the SQF caller invokes `callExtension` as a **bare statement with no assignment** (`GlobalGameStats.sqf:22`). So the DLL returns an empty string and SQF never `call compile`s anything from it — the exact opposite of the AntiStack DB path (DR-7), where `_response` is captured and compiled. Reflection is also constrained: `Enum.TryParse` (`ExtensionMethods.cs:29`) gates the selector to the `GLOBALGAMESTATS` enum before `Type.GetType`, so SQF cannot instantiate arbitrary CLR types.
+
+2. **Dormant deserialization-RCE landmine (Low now → Critical if load is ever enabled).** The commented-out load path (`SerializationManager.cs:104-130`) uses `settings.TypeNameHandling = TypeNameHandling.Auto;` with `JsonConvert.DeserializeObject<Database>(_json, settings)` — the textbook Newtonsoft `$type` gadget sink. It is inactive today, but **the feature cannot actually persist across restarts without a load path** (see #3), so a future dev is likely to re-enable it. If `database.json` is ever writable by an untrusted process (or replaced), re-enabling load = remote/local code execution on the server host. The active *serializer* is correctly hardened (`TypeNameHandling.None`, `SerializationManager.cs:33`) — the risk is strictly the commented load path. **Recommend: delete the dead load code, or if reinstated use `TypeNameHandling.None` + a fixed expected type.**
+
+3. **Write-only / abandoned-refactor stub.** The active code only ever *serializes*; the entire deserialize/load path is commented out and references a different type graph (`Database`, `Leagues.StoredLeagues`) than the live `GameData` singleton — evidence of a half-finished refactor. Consequence: there is **no cross-restart persistence today** (the DLL never reads the file back), and `GameData`'s only field is `[DataMember] public string[] exportedArgs = new string[2]` (`GameData.cs:29`) — a stale initializer, since the caller now sends **5** data args (the `// Todo: [3] Uptime [4] Player count` comment in `GLOBALGAMESTATS.cs:9-11` is also stale — both are already wired). Any wiki text implying GLOBALGAMESTATS provides durable stat persistence would be too confident; it currently produces a single overwritten JSON snapshot.
+
+4. **`async void` + unawaited file-create race before `File.Replace` (Medium reliability).** `SerializationManager.SerializeDB` is `async void`; it calls the *also* `async void` `FileManager.CheckIfFileAndPathExistsAndCreateItIfNecessary(dbPath, dbFileName)` **without awaiting** (`:52`), then immediately `File.Replace(dbTempPathWithFileName, dbPathWithFileName, null)` (`:55`). `File.Replace` requires the destination to exist — on first run (no `database.json` yet) the fire-and-forget create may not have completed, so `File.Replace` throws `FileNotFoundException`. Per `BaseExtensionClass` (`:18-22`) that is rethrown as `InvalidOperationException` out of the synchronous `_RVExtension@12` call, which can destabilize the calling SQF/game thread; and unobserved `async void` exceptions surface as unhandled exceptions on the .NET threadpool, which can crash the host process. **Recommend: make the I/O methods `async Task` and `await` them, or do the create synchronously before `File.Replace`.**
+
+5. **Minor telemetry data-quality bug (SQF side).** `GlobalGameStats.sqf:20` computes `_playerCount = abs(_playerCount - 1)` ("Exclude headless client"), which assumes exactly one HC is always connected. With 0 HCs it under-reports by 1 (1 real player → reports 0; empty server → `abs(0-1)=1` reports a phantom player); with 2+ HCs it over-subtracts. Two `WFBE_CO_FNC_LogContent` INFORMATION lines per minute (`:11` "Running with old vars …", `:23`) also add steady RPT noise. Cosmetic/telemetry-only.
+
+**Owner decisions / handoff for Codex.** Document GLOBALGAMESTATS in [External integrations](External-Integrations) as a *one-way, output-discarded telemetry exporter* (explicitly NOT an RCE-into-SQF path, unlike the AntiStack DB), with three concrete code asks for the owner: (a) delete or harden (`TypeNameHandling.None`) the dead deserialize path before anyone re-enables load; (b) fix the `async void` create/`File.Replace` race; (c) optional — correct the `abs(playerCount-1)` HC heuristic and the stale `new string[2]`/Todo comments. The Extension DLL is a code artifact, not a wiki page — these are upstream code-owner items, logged here for traceability.
+
+**Outcome:** Integrations row — Extension sub-target reviewed (DR-29). AntiStack DB (DR-7..DR-10) + Extension (DR-29) now both done; **Discord data path + BattlEye `scripts.txt`/`publicvariable.txt` posture remain ⬜** within the bundle.
+
+## Round 21 — 2026-06-02 (Claude) — BattlEye posture (DR-30) — the "rely on BattlEye" half of every economy/forgery owner-decision is not shipped
+
+Lane `battleye-posture-review`. Source-verified the repo's entire BattlEye footprint to close a loop the campaign left open across **eight** prior findings (DR-1 RCE dispatch + DR-6/14/16/22/23/27/28 client-authoritative economy), each of which offered remediation option *(b) "accept client authority and rely on BattlEye filters."* Confirms — and sharpens — the high-level posture the Codex `Gibbs` scout reported (`Progress-Dashboard.md:23,72`), and corroborates the accurate, non-overclaiming wiki text already in place (`External-Integrations.md:60`, `Feature-Status-Register.md:32`, `Networking-And-Public-Variables.md:122`).
+
+### DR-30 — As shipped, the BattlEye mitigation is a 22-byte AFK-kick stub: no security PV filter, no `scripts.txt` at all — option (b) does not exist in the repo — **High (live-server hardening gap, campaign-wide)**
+
+Source facts (full repo sweep):
+- The **only** BattlEye filter file in the repository is `BattlEyeFilter/publicvariable.txt` — **22 bytes**, whose entire content is:
+  ```
+  //new
+  5 "kickAFK"
+  ```
+  This is not a security control. The single rule is the **AFK-kick feature plumbing** itself: `Client/.../updateclient.sqf` intentionally broadcasts `kickAFK` and BattlEye acts on it because `serverCommand` kick paths are unavailable (correctly documented at `External-Integrations.md:58` and `Networking-And-Public-Variables.md:66`). There is **no default-deny catch-all line** (e.g. `5 "" !="legitPV1" !="legitPV2" …`) and therefore **no restriction on any forgery-class PV** — `RequestSpecial` (the DR-27 ICBM vector), `RequestStructure`/`RequestDefense` (DR-6), `RequestUpgrade` (DR-23), `RequestNewCommander` (DR-15), or the raw `Server_HandlePVF`/`Client_HandlePVF` channels (DR-1). Every dangerous PV passes BattlEye unfiltered.
+- **`scripts.txt` is absent** (verified by name across the whole repo), as are `createvehicle.txt`, `remoteexec.txt`, `setvariable.txt`, `setpos.txt`, `mpeventhandler.txt`, etc. `scripts.txt` is the filter that would blunt the **DR-1 `call compile` RCE** and script-command injection (`createVehicle`/`setDamage`/`call compile`), so its absence is the more security-relevant gap of the two.
+- The directory also contains a 716 KB `READ ME FIRST - Using BattlEye filter to auto kick.docx`. Per the project's untrusted-content rule it was **not parsed** (binary Office doc); regardless, the *operative deployed artifact* is the 22-byte stub, and admin documentation is not a control.
+
+**Campaign-wide implication (the point of this pass).** The two-option framing in DR-1/6/14/16/22/23/27/28 is misleading as-shipped: option (b) "rely on BattlEye" is **not a deployed reality** — choosing it means authoring and maintaining a full BE filter set from scratch (a restrictive `publicvariable.txt` default-deny + whitelist of the legitimate `WFBE_PVF_*`/direct channels keeping `kickAFK`, **plus** a `scripts.txt`), which is a non-trivial, error-prone, separate workstream for a Warfare mission with hundreds of PVs and easy to break legitimate play. The realistic remediation for the entire forgery/economy class therefore collapses toward **(a) server-side authority in SQF** (re-derive the requester/role/funds in each PVF handler before applying effects, per DR-1/DR-6), with a real BE filter set as defense-in-depth only if someone owns it.
+
+**Honest caveat (do not overstate).** BattlEye filter files are normally deployed in the **server's** BE working directory (the `BEpath`), *outside* the mission PBO — so their absence from this repo does not prove the production server lacks them. But the repository, as the campaign's source of truth, ships only the stub; whether `ocd-clan.com`/Miksuu's live server maintains a fuller filter set is an **explicit owner question**, not a safe assumption. The wiki should keep stating (as it already does) that PVF spoofing "must not be considered protected by BattlEye."
+
+**Owner decision / handoff for Codex.** No wiki rewrite needed — the existing BattlEye text is accurate and in-lane for Codex. This finding's value is the cross-link: add a one-line note to the DR-1 remediation playbook and the [External integrations](External-Integrations) BattlEye section that *"option (b) requires building the filter set; it is not present in-repo (only the `kickAFK` stub),"* and pose the production-BE-config question to the server owner. Bundle the `scripts.txt`/`server.cfg`/`basic.cfg` absences (also flagged by the `Gibbs` scout) into the same hosting-hardening owner item.
+
+**Outcome:** Integrations row — **BattlEye sub-target reviewed (DR-30)**. AntiStack DB (DR-7..DR-10), Extension (DR-29) and BattlEye (DR-30) now done; only the **Discord data path remains ⬜** within the bundle. Every prior economy/forgery finding's option (b) is now annotated as "not shipped."
+
+## Round 22 — 2026-06-02 (Claude) — Discord data path (DR-31) — the DR-29 deserialization landmine is LIVE in the bot, with `TypeNameHandling.All`
+
+Lane `discord-datapath-review`. Reviewed the in-repo `DiscordBot/` (.NET / Discord.Net) end-to-end — the **consumer** side of the GLOBALGAMESTATS extension (DR-29), closing the last Integrations sub-target. The data path is: Arma server → GLOBALGAMESTATS extension writes `C:\a2waspwarfare\Data\database.json` (DR-29) → DiscordBot reads it on a 60 s timer → posts a game-status embed. Net: secret hygiene is good, the inbound command surface is properly auth-gated, but the deserialization sink I flagged as *dormant* in the extension (DR-29 #2) is **active here, and worse**.
+
+### DR-31 — DiscordBot deserializes `database.json` with `TypeNameHandling.All` on a 60 s timer — live insecure-deserialization gadget sink in the token-holding process — **High (insecure deserialization; local-write-gated RCE)**
+
+Source-verified:
+- **The active load path uses `TypeNameHandling.All`.** `GameData.LoadFromFile()` (`DiscordBot/src/ExtensionData/GameData/GameData.cs:49-56`) builds `new JsonSerializerSettings { … TypeNameHandling = TypeNameHandling.All … }` and `JsonConvert.DeserializeObject<GameData>(json, …)` on the contents of `database.json`. `TypeNameHandling.All` honors `$type` directives for the root **and every nested object/array** — the canonical Newtonsoft gadget sink (e.g. `ObjectDataProvider` → arbitrary `Process.Start`).
+- **It runs automatically every 60 s, no interaction.** `GameStatusUpdater` (`src/GameStatusUpdater.cs:9,19-22,84`) arms a `System.Timers.Timer` at `UPDATE_INTERVAL_SECONDS = 60` with `AutoReset = true` and calls `LoadFromFile()` each tick. Two more live callers: `ProgramRuntime.cs:15` (startup) and `CommandHandler.cs:211` (`CreateGameStatusEmbed`). So the sink is exercised continuously regardless of any auth.
+- **The capability is gratuitous.** `GameData`'s only state is `[DataMember] private string[] exportedArgs` (`GameData.cs:30`) — a flat string-array DTO with no polymorphism. The writer (the extension, DR-29) serializes with `TypeNameHandling.None` and emits no `$type`. The reader therefore needs **`.None`**; requesting `.All` adds nothing but the gadget sink. (A second, *dead* copy `GameDataDeSerialization.HandleGameDataCreationOrLoading` uses `TypeNameHandling.Auto` — no callers, grep-confirmed; should be deleted too.)
+- **Trigger & blast radius.** Not remotely exploitable as-configured: `database.json` is normally written only by the trusted local extension. But any write-primitive to `C:\a2waspwarfare\Data\database.json` — a misconfigured ACL/share on `DataSourcePath`, a malicious mod or compromised Arma process writing there, or a future feature that ingests untrusted data into that file — yields **arbitrary code execution in the DiscordBot process**, which holds the Discord bot token (→ token theft + full bot/guild control). Classic local insecure-deserialization escalation.
+
+**Owner decision / fix (trivial).** Change `GameData.LoadFromFile()` to `TypeNameHandling.None` (the data is a flat DTO; no behavior is lost) and delete the dead `.Auto` method. This also retro-closes DR-29 #2: keep the extension's deserialize path `.None` if it is ever reinstated. Defense-in-depth: lock down the ACL on `C:\a2waspwarfare\Data` so only the Arma service can write it.
+
+**Secondary observations (Low / informational):**
+- **Secret hygiene is good — resolves the external reports' "Discord sample hygiene" item.** `DiscordBot/.gitignore` excludes `token.txt` and `preferences.json`; `preferences_sample.json` contains **no token**. Minor: the sample commits a real-looking `GuildID` (`440257265941872660`) and one `AuthorizedUserIDs` snowflake — these are Discord IDs, not credentials (knowing an admin's user ID grants nothing without being that user), but a sample is cleaner with placeholder zeros.
+- **Inbound command surface is correctly gated.** Slash-command handlers check `Preferences.Instance.IsUserAuthorized(userId)` (`CommandHandler.cs:49,127`) before privileged actions — no missing-authorization finding there.
+- **Three-way `exportedArgs` shape drift (coupling smell).** The array is `new string[2]` in the extension (DR-29), `new string[4]` in the bot (`GameData.cs:30`), while the SQF sender emits **5** data fields and the bot reads index `[4]`. Held together only by wholesale `= _args` replacement on deserialize + bounds-guards (`Length > 4`, added after the commented unguarded `GetGameMapAndPlayerCount` at `GameData.cs:138-145`). Benign today, but the three sides of the contract disagree on the shape — document the canonical 5-field layout (`[0]bluforScore [1]opforScore [2]worldName [3]uptime [4]playerCount`) in one place.
+
+**Handoff for Codex.** Document the Discord data path in [External integrations](External-Integrations): one-way pull (extension writes JSON → bot reads on 60 s timer → status embed), secret hygiene OK, command surface auth-gated; flag the `TypeNameHandling.All` fix as the one actionable code-owner item and cross-link DR-29/DR-31. These are code artifacts, logged here for traceability.
+
+**Outcome:** Integrations row — **Discord sub-target reviewed (DR-31); all four sub-targets (AntiStack DB, Extension, BattlEye, Discord) now done.** Map cell can move to ✅. The DR-29 deserialization concern is now closed end-to-end (dormant in writer, live in reader, one-token fix).
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)

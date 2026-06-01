@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-01T23:35:00+02:00",
+  "generatedAt": "2026-06-02T10:22:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -14,47 +14,77 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "gear-loadout-easa-atlas-integration + external-pdf-research-intake + integration-backlog-batch-a",
-      "currentWork": "Syncing navigation/context/status for the new gear/loadout/EASA atlas and external PDF intake, then continuing PV/network and external integration integration.",
-      "nextExpectedOutput": "Published wiki/docs batch with Gear-Loadout-And-EASA-Atlas.md, External-Research-Reports.md and harvested swarm status."
+      "currentLane": "integration-backlog-batch-a + cheap-explorer-wave-c",
+      "currentWork": "PV/direct-channel matrix, external integration trust docs and Claude DR-27 through DR-31 have landed or are cross-linked in owner pages; fresh explorer reports from Newton/Ampere/Pascal/Boyle/Peirce are queued for the next integration batch.",
+      "nextExpectedOutput": "Next focused integration batch, likely broken-reference register, supply authority matrix or content/tooling drift."
     },
     "Claude": {
       "status": "ready-for-review; autonomous-ready",
-      "currentLane": "autonomous-claude-research",
-      "currentWork": "Latest completed reviews are in Deep-Review-Findings.md; Steff also handed Claude the three external PDFs.",
-      "nextExpectedOutput": "Claude may self-select the next bounded source-backed lane or verify PDF leads against repo source."
-    },
-    "Sagan": {
-      "status": "completed",
-      "currentLane": "external-pdf-analytisch-rapport",
-      "currentWork": "Digested Analytisch rapport over rayswaynl_a2waspwarfare.pdf.",
-      "nextExpectedOutput": "None; digest captured in External-Research-Reports.md."
-    },
-    "Helmholtz": {
-      "status": "completed",
-      "currentLane": "external-pdf-analyse",
-      "currentWork": "Digested Analyse van rayswaynl_a2waspwarfare.pdf.",
-      "nextExpectedOutput": "None; digest captured in External-Research-Reports.md."
-    },
-    "Parfit": {
-      "status": "completed",
-      "currentLane": "external-pdf-diepgaande-analyse",
-      "currentWork": "Digested Diepgaande analyse van rayswaynl_a2waspwarfare.pdf.",
-      "nextExpectedOutput": "None; digest captured in External-Research-Reports.md."
+      "currentLane": "discord-datapath-review / autonomous-claude-research",
+      "currentWork": "Deep-review findings through Round 22 are mirrored in docs/wiki and the GitHub wiki; DR-27 through DR-31 are integrated or cross-linked into owner pages.",
+      "nextExpectedOutput": "Claude may self-select the next bounded source-backed review lane."
     }
   },
   "laneSummary": [
     {
       "lane": "gear-loadout-easa-atlas-integration",
       "owner": "Codex",
-      "status": "integrated-locally; publish-pending",
+      "status": "integrated",
       "output": "Gear-Loadout-And-EASA-Atlas.md"
     },
     {
       "lane": "external-pdf-research-intake",
-      "owner": "Codex + Sagan/Helmholtz/Parfit",
-      "status": "captured; source-reconciliation-pending",
-      "output": "External-Research-Reports.md"
+      "owner": "Codex + Claude",
+      "status": "integrated",
+      "output": "External-Research-Reports.md and Deep-Review-Findings Round 16"
+    },
+    {
+      "lane": "pv-matrix-second-pass-v2",
+      "owner": "Archimedes/James + Codex",
+      "status": "integrated",
+      "output": "Networking-And-Public-Variables.md direct PV inventory"
+    },
+    {
+      "lane": "discord-extension-antistack-integration-discovery",
+      "owner": "Faraday + Codex",
+      "status": "integrated",
+      "output": "External-Integrations.md and Feature-Status-Register.md"
+    },
+    {
+      "lane": "modules-review-dr27",
+      "owner": "Claude + Codex",
+      "status": "integrated",
+      "output": "Deep-Review-Findings.md Round 18, Networking-And-Public-Variables.md and Feature-Status-Register.md"
+    },
+    {
+      "lane": "gear-easa-review-dr28",
+      "owner": "Claude + Codex",
+      "status": "integrated",
+      "output": "Deep-Review-Findings.md Round 19, Economy-Towns-And-Supply.md, Gear-Loadout-And-EASA-Atlas.md and Feature-Status-Register.md"
+    },
+    {
+      "lane": "extension-globalgamestats-dr29",
+      "owner": "Claude + Codex",
+      "status": "integrated",
+      "output": "Deep-Review-Findings.md Round 20, External-Integrations.md and Feature-Status-Register.md"
+    },
+    {
+      "lane": "battleye-posture-dr30",
+      "owner": "Claude + Codex",
+      "status": "integrated",
+      "output": "Deep-Review-Findings.md Round 21, External-Integrations.md and Feature-Status-Register.md"
+    },
+    {
+      "lane": "discord-datapath-dr31",
+      "owner": "Claude + Codex",
+      "status": "integrated",
+      "output": "Deep-Review-Findings.md Round 22, External-Integrations.md and Feature-Status-Register.md"
+    },
+    {
+      "lane": "cheap-explorer-wave-c",
+      "owner": "Codex",
+      "status": "reporting",
+      "output": "Newton, Ampere, Pascal, Boyle and Peirce reports received; Linnaeus pending capture."
     },
     {
       "lane": "cheap-discovery-swarm-v2",
@@ -66,18 +96,16 @@
       "lane": "integration-backlog-batch-a",
       "owner": "Codex",
       "status": "active",
-      "output": "Next target: PV/network trust and external integration/AntiStack."
+      "output": "PV/network, external integration trust and DR-27 through DR-31 integrated; explorer-wave reports remain queued."
     },
     {
       "lane": "autonomous-claude-research",
       "owner": "Claude",
       "status": "open",
-      "output": "Claude may continue with source-backed reviews and PDF lead verification."
+      "output": "Claude may continue with source-backed reviews."
     }
   ],
   "queuedReports": [
-    "pv-matrix-second-pass-v2",
-    "discord-extension-antistack-integration-discovery",
     "known-broken-reference-second-pass-v2",
     "server-fsm-runtime-orchestration-v2",
     "boot-include-parameter-graph-v2",
@@ -92,7 +120,6 @@
     "loadoutmanager-generator-deeper-v2",
     "ai-commander-autonomy-second-pass-v2",
     "wiki-agent-artifact-schema-v2",
-    "known-broken-reference-second-pass-v2",
     "modded-presentation-parity-v2",
     "supply-mission-authority-matrix-v2"
   ],
@@ -107,6 +134,8 @@
     "progressDashboard": "Progress-Dashboard.md",
     "discoverySwarm": "Subagent-Discovery-Swarm.md",
     "externalResearchReports": "External-Research-Reports.md",
+    "networking": "Networking-And-Public-Variables.md",
+    "externalIntegrations": "External-Integrations.md",
     "collaborationProtocol": "Agent-Collaboration-Protocol.md",
     "events": "agent-events.jsonl",
     "worklog": "Agent-Worklog.md"

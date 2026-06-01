@@ -8,11 +8,11 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Agent | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `gear-loadout-easa-atlas-integration` + `external-pdf-research-intake` + `integration-backlog-batch-a` | Publishing gear/loadout/EASA docs, capturing external PDF research, then integrating highest-risk PV/network + external trust pages first. |
+| Codex | Active | `integration-backlog-batch-a` + `cheap-explorer-wave-c` | PV/network, external trust, DR-27 through DR-31 and the first explorer-wave reports are being published/tracked across owner pages. |
 | Sagan | Report received | `external-pdf-analytisch-rapport` | Digested `Analytisch rapport over rayswaynl_a2waspwarfare.pdf`; claims captured in [External research reports](External-Research-Reports). |
 | Helmholtz | Report received | `external-pdf-analyse` | Digested `Analyse van rayswaynl_a2waspwarfare.pdf`; many claims overlap existing source-backed findings. |
 | Parfit | Report received | `external-pdf-diepgaande-analyse` | Digested `Diepgaande analyse van rayswaynl_a2waspwarfare.pdf`; security/network leads captured for verification. |
-| Archimedes | Report received | `pv-matrix-second-pass-v2` | Full PV channel matrix awaits integration into [Networking/PV](Networking-And-Public-Variables). |
+| Archimedes | Integrated | `pv-matrix-second-pass-v2` | Full PV/direct-channel matrix folded into [Networking/PV](Networking-And-Public-Variables). |
 | Wegener | Report received | `ai-commander-autonomy-second-pass-v2` | AI commander scheduler absence and dormant upgrade worker await integration into AI/headless docs. |
 | Rawls | Report received | `wiki-agent-artifact-schema-v2` | Proposed agent-readable artifact schemas await integration into collaboration protocol/context. |
 | Goodall | Report received | `known-broken-reference-second-pass-v2` | Unified broken-reference register awaits integration into feature status and owning atlases. |
@@ -21,6 +21,11 @@ Keep this page open when parallel documentation work is running. It links to the
 | Turing | Report received | `generated-output-parity-check-v2` | Chernarus/Takistan parity is clean except skipped `loadScreen.jpg`; modded trees are stale with uneven file counts. |
 | Dirac | Report received | `assets-audio-textures-identity-v2` | Asset inventory, intro/outro wiring, malformed `soundPush`, shared overlay IDD and naming mismatch await integration. |
 | Gibbs | Report received | `server-config-hosting-be-v2` | Missing `ServerInfo`, absent server.cfg/basic.cfg/scripts.txt, minimal BattlEye filter and external DLL assumptions await integration. |
+| Newton | Report received | `known-broken-reference-second-pass-v2` | Confirmed latent AI supply truck, broken MASH marker listener and stale upgrade-dialog reference. |
+| Ampere | Report received | `server-fsm-runtime-orchestration-v2` | Confirmed server runtime loop roster, duplicate FPS publishers and AI supply truck missing FSM path. |
+| Pascal | Report received | `boot-include-parameter-graph-v2` | Confirmed include/init graph, wait gates, parameter overrides and missing root `version.sqf`. |
+| Boyle | Report received | `ai-commander-autonomy-second-pass-v2` | Confirmed live AI upgrade worker/funds, partial autonomy, commander assignment bug and HC failover gap. |
+| Peirce | Report received | `server-config-hosting-be-v2` | Confirmed no in-repo server config bundle and no shipped BattlEye hardening beyond `kickAFK`. |
 | Plato | Report received | `loadoutmanager-generator-deeper-v2` | Generator outputs, skip rules, Takistan propagation, stale modded path, 7za packaging and CRV7PG warning await integration. |
 | Epicurus | Report received | `towns-camps-depots-economy-v2` | Town/camp capture lifecycle, depot/service role, supply/economy links, cooldown casing and AI supply partials await integration. |
 | Hooke | Report received | `support-artillery-uav-paradrop-v2` | Support matrix, tactical hub, artillery/ICBM/UAV/IRS/CM status and paratrooper marker wiring issue await integration. |
@@ -30,13 +35,13 @@ Keep this page open when parallel documentation work is running. It links to the
 | Galileo | Report received | `common-pv-network-authority-v2` | PVF architecture, thin server request handlers, JIP live-only broadcasts and local funds mutation report awaits integration. |
 | Ptolemy | Report received | `boot-include-parameter-graph-v2` | Boot/include graph, role init order, wait gates and missing root `version.sqf` report awaits integration. |
 | Boole | Report received | `commander-construction-factory-v2` | Commander/CoIn/factory authority split, latent `AIBuyUnit`, commander bug and service menu report awaits integration. |
-| Faraday | Report received | `discord-extension-antistack-integration-discovery` | Extension, DiscordBot, AntiStack DB, BattlEye and external trust report awaits integration. |
+| Faraday | Integrated | `discord-extension-antistack-integration-discovery` | Extension, DiscordBot, AntiStack DB, BattlEye and external trust report folded into [External integrations](External-Integrations). |
 | Mencius | Report received | `parameters-config-localization-discovery` | Parameters/default mismatch, hidden runtime knobs, missing `version.sqf`, partial MASH marker and hardcoded help strings await integration. |
-| Claude | Ready-for-review + autonomous-ready | `factory-purchase-authority` | Latest completed reviews: Victory/endgame DR-11..DR-13 and Factory/purchase DR-14..DR-15 in [Deep-review findings](Deep-Review-Findings). |
 | Hilbert | Report received | `abandoned-code-missing-reference-discovery` | Missing root version include, unregistered paratrooper marker PV, partial MASH marker relay and WASP leftovers await integration. |
 | Cicero | Report received | `ai-headless-delegation-discovery` | AI/headless delegation, partial AI commander, stale AI supply trucks, patrol timestamp issue and HC/client delegation risks await integration. |
 | Curie | Report received | `wiki-ux-phase2-agent-interface-discovery` | Task navigation map, related-page blocks, dashboard mini-panel and artifact schema checklist awaits implementation. |
 | Meitner | Report received | `pr1-supply-helicopter-delta-discovery` | PR #1 supply-helicopter branch delta, handler leak, cooldown casing and propagation-risk report awaits integration. |
+| Claude | Ready-for-review + autonomous-ready | `discord-datapath-review` / DR-31 | DR-27 through DR-31 are folded or cross-linked into owner pages: [Networking/PV](Networking-And-Public-Variables), [External integrations](External-Integrations), [Economy](Economy-Towns-And-Supply), [Gear/EASA](Gear-Loadout-And-EASA-Atlas) and [Feature status](Feature-Status-Register). |
 | Shared docs | Live | `docs/wiki` mirror plus GitHub wiki | Navigation, worklog, event feed and machine files should move together after validation. |
 
 ## One-Link Check
@@ -57,11 +62,12 @@ Keep this page open when parallel documentation work is running. It links to the
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
 | `factory-purchase-atlas` | Codex | Integrated | Codex published [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas). |
-| `gear-loadout-easa-atlas-integration` | Codex | Active locally | Codex added a gear/loadout/EASA atlas and is syncing nav/context/status before publish. |
-| `external-pdf-research-intake` | Codex + Sagan/Helmholtz/Parfit | Captured, pending source reconciliation | Three Steff-provided PDF research reports were digested and summarized in [External research reports](External-Research-Reports). |
+| `gear-loadout-easa-atlas-integration` | Codex | Integrated | Codex published [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) and linked the risk/register updates. |
+| `external-pdf-research-intake` | Codex + Sagan/Helmholtz/Parfit + Claude | Integrated | Three Steff-provided PDF reports were digested, then Claude clarified they are downstream corroboration; see [External research reports](External-Research-Reports). |
 | `cheap-discovery-swarm-v2` | Codex | Harvested | Cheap scout wave is complete; no active scout slots remain. |
-| `integration-backlog-batch-a` | Codex | Active | Integrate Heisenberg priority: PV/network trust and external integration/AntiStack before lower-risk atlas polish. |
-| `pv-matrix-second-pass-v2` | Archimedes/James | Reported, pending integration | Scout reports received: full PV matrix and compact wiki table layout. |
+| `integration-backlog-batch-a` | Codex | Active | PV matrix, external integration trust and DR-27 through DR-31 have landed; next batch should continue explorer-wave reports and lower-risk atlas polish. |
+| `cheap-explorer-wave-c` | Codex | Reporting | Newton, Ampere, Pascal, Boyle and Peirce have reported; Linnaeus supply-mission report is still expected or pending capture. |
+| `pv-matrix-second-pass-v2` | Archimedes/James | Integrated | Full PV matrix and compact wiki table layout folded into [Networking/PV](Networking-And-Public-Variables). |
 | `ai-commander-autonomy-second-pass-v2` | Wegener | Reported, pending integration | Scout report received: autonomous AI commander has scaffolding but no live scheduler and dormant upgrade worker. |
 | `wiki-agent-artifact-schema-v2` | Rawls | Reported, pending integration | Scout report received: JSON/JSONL schemas for findings, lane reports, PV entries, risks, atlas metadata and handoffs. |
 | `known-broken-reference-second-pass-v2` | Goodall | Reported, pending integration | Scout report received: root `version.sqf`, paratrooper/MASH marker wiring, stale dialogs, malformed resources and missing keys. |
@@ -82,7 +88,8 @@ Keep this page open when parallel documentation work is running. It links to the
 | `victory-endgame-runtime-atlas` | Codex | Paused | Victory/endgame mapping is temporarily paused while gear/EASA integration and swarm refresh are published. |
 | `economy-town-factory-upgrade-discovery` | Faraday | Reported, pending integration | Scout report received; Codex should integrate negative supply delta, upgrade authority, resistance supply handler gap and AI supply truck evidence. |
 | `gear-loadout-easa-balance-discovery` | Faraday | Integrated locally, publish pending | Scout report produced the new [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) and linked risk/register updates. |
-| `discord-extension-antistack-integration-discovery` | Faraday | Reported, pending integration | Scout report received: Extension/DiscordBot/AntiStack/BattlEye trust boundaries and callExtension contracts. |
+| `discord-extension-antistack-integration-discovery` | Faraday | Integrated | Extension/DiscordBot/AntiStack/BattlEye trust boundaries and callExtension contracts folded into [External integrations](External-Integrations). |
+| `modules-review-dr27` | Claude + Codex | Integrated | Critical ICBM/Nuke `RequestSpecial` authority finding folded into [Networking/PV](Networking-And-Public-Variables) and [Feature status](Feature-Status-Register). |
 | `client-jip-lifecycle-discovery` | Mencius | Reported, pending integration | Scout report received; Codex should integrate duplicated `Skill_Init`, legacy WASP leftovers, join ACK sensitivity and respawn-loop cost. |
 | `respawn-medical-mash-support-discovery` | Mencius | Reported, pending integration | Scout report received; Codex should integrate respawn source precedence, MASH marker half-wiring and support authority notes. |
 | `parameters-config-localization-discovery` | Mencius | Reported, pending integration | Scout report received for parameters, defaults, includes, version files and localization/string resources. |

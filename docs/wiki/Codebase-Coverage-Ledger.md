@@ -27,19 +27,19 @@ Legend: ✅ done (source-cited) · 🟡 partial · ⬜ gap.
 | --- | :-: | :-: | :-: | :-: | :-: | :-: | --- |
 | Boot / lifecycle | ✅ | ✅ | ✅ | 🟡 | 🟡 | ✅ | [Lifecycle wait-chain](Lifecycle-Wait-Chain), [Entrypoints](Mission-Entrypoints-And-Lifecycle) |
 | PV / networking dispatch | ✅ | ✅ | ✅ | 🟡 | 🟡 | n/a | [Networking](Networking-And-Public-Variables), DR-1 |
-| Economy / town / supply | ✅ | ✅ | ✅ | 🟡 | 🟡 | ✅ | [Economy](Economy-Towns-And-Supply), [Gameplay atlas](Gameplay-Systems-Atlas); DR-20, DR-22, DR-23. **Economy authority fully characterized: build/buy/sell/supply/upgrade all client-authoritative** |
+| Economy / town / supply | ✅ | ✅ | ✅ | 🟡 | 🟡 | ✅ | [Economy](Economy-Towns-And-Supply), [Gameplay atlas](Gameplay-Systems-Atlas); DR-20, DR-22, DR-23, DR-27, DR-28. **Economy authority FULLY characterized — every spend path client-authoritative: build/buy/sell/supply/upgrade/ICBM-superweapon/gear-rearm. One owner decision (server ledger vs BattlEye) covers the whole class** |
 | Supply missions | ✅ | 🟡 | ✅ | 🟡 | 🟡 | ✅ | [Supply mission arch](Supply-Mission-Architecture), DR (PR#1), DR-18 (cooldown key casing) |
 | Construction / CoIn | ✅ | ✅ | ✅ | 🟡 | ✅ | 🟡 | [Construction atlas](Construction-And-CoIn-Systems-Atlas), DR-6, DR-20 (HQ-killed idempotency) |
 | Factory / purchase | ✅ | 🟡 | 🟡 | ⬜ | ⬜ | n/a | [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas); DR-14 (no server authority, architectural), DR-15 (commander-assign bug) |
 | AI / headless / perf | ✅ | 🟡 | 🟡 | ✅ | ✅ | n/a | [AI/headless](AI-Headless-And-Performance); DR-21 (HC disconnect: server load migration, no re-delegation) |
 | UI / HUD / menus | ✅ | ✅ | 🟡 | 🟡 | ⬜ | ⬜ | [UI atlas](Client-UI-Systems-Atlas); DR-16 (client-side sale), DR-17/DR-25a (dup IDDs 23000/10200), DR-24 (dead RscMenu_Upgrade), DR-25b (malformed soundPush) — Curie candidates all confirmed |
-| Gear / loadout / EASA | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ✅ | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas); client-authoritative buy/equip flow, generated EASA/balance output and profile-template risk documented |
+| Gear / loadout / EASA | ✅ | ✅ | 🟡 | 🟡 | 🟡 | ✅ | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas); [Deep-review findings](Deep-Review-Findings) **DR-28 (gear/EASA + vehicle rearm/repair/refuel/heal client-authoritative; rearm & refuel skip even the client-side affordability guard)** — completes the economy-authority class |
 | WASP overlay | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ✅ | [WASP overlay](WASP-Overlay) |
 | Tooling / LoadoutManager | ✅ | n/a | n/a | n/a | n/a | ✅ | [Tools](Tools-And-Build-Workflow), DR-4 |
-| Integrations (Extension / Discord / **AntiStack DB** / BattlEye) | 🟡 | 🟡 | 🟡 | 🟡 | 🟡 | n/a | [External integrations](External-Integrations); AntiStack DB done (DR-7..DR-10); Extension/Discord/BattlEye ⬜ |
+| Integrations (Extension / Discord / **AntiStack DB** / BattlEye) | ✅ | ✅ | ✅ | 🟡 | 🟡 | n/a | [External integrations](External-Integrations); **all four sub-targets reviewed** — AntiStack DB (DR-7..DR-10), GLOBALGAMESTATS extension (DR-29), BattlEye (DR-30 — `kickAFK` stub only, option (b) not shipped), **Discord (DR-31 — `TypeNameHandling.All` deserialization of `database.json` every 60s = live insecure-deser gadget in the token-holding process; secret hygiene OK; commands auth-gated)** |
 | Victory / endgame | ✅ | 🟡 | 🟡 | 🟡 | 🟡 | n/a | `server_victory_threeway.sqf`; DR-11..DR-13 (winner inversion, threeway no-detection, dup LogGameEnd) |
 | Weather / day-night | ✅ | n/a | ✅ | ✅ | ✅ | n/a | `Server_DayNightCycle.sqf` — **reviewed clean (Round 17, no defect)**: no div-by-zero, JIP-covered, local-animation+drift-sync design sound |
-| Modules (Artillery / ICBM / IRS / CM / UAV) | 🟡 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | scattered; partially in Feature-Status |
+| Modules (Artillery / ICBM / IRS / CM / UAV) | ✅ | 🟡 | 🟡 | 🟡 | 🟡 | ⬜ | [Deep-review findings](Deep-Review-Findings) DR-27 (**ICBM nuke fully client-authoritative — forged `RequestSpecial` PV = server-applied map-wide kill, CRITICAL**); UAV-007 branch confirmed disabled; rest config-gated cosmetic/QoL |
 | Markers / cleaners / restorers | ✅ | n/a | 🟡 | ✅ | 🟡 | n/a | [AI/headless](AI-Headless-And-Performance) |
 
 ## Biggest open cells (self-selection queue, highest value first)

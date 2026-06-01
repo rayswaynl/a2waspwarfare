@@ -73,7 +73,7 @@ This page names the major function groups and what they are for. It is intention
 ## High-Risk Edit Areas
 
 - `Init_CommonConstants.sqf`: central constant namespace. Changes here affect both server and clients.
-- `Init_PublicVariables.sqf`: PVF registration. Missing files or mismatched function names break networking.
+- `Init_PublicVariables.sqf`: PVF registration. Missing files or mismatched function names break networking; direct publicVariable channels outside this registry are inventoried in [Networking/PV](Networking-And-Public-Variables).
 - `Client_BuildUnit.sqf` and `Server_BuyUnit.sqf`: purchase/spawn paths with many factory-specific assumptions.
 - `Server/Init/Init_Server.sqf`: long-lived server loops; duplicate or unconditional loops can hurt live performance.
 - `Tools/LoadoutManager`: generated mission copying/packing; accidental edits to generated mission folders can be overwritten.
