@@ -333,6 +333,35 @@ Lane `ui-hud-authority-review`. Cross-checks Codex/Curie's [Client UI systems at
 
 Code owners: (DR-16) move sell authority/refund/destruction server-side (mirror the DR-6 server-PVF validation) or add a BattlEye `scripts.txt` filter; (DR-17) assign distinct IDDs to EASA/Economy dialogs. Ledger: UI/HUD Auth/PV advanced; economy thread (build/buy/sell) now fully characterized.
 
+## Round 9 — 2026-06-02 (Claude) — server-loop candidates verified (DR-18, DR-19)
+
+Lane `server-loop-candidates-verify`. Adversarial verification of two Cicero candidates from the [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas); both confirmed at source with exact impact.
+
+### DR-18 — Supply-mission cooldown key casing mismatch → nil-throw on first check — **Medium (correctness)** — *confirms Cicero*
+
+`setVariable`/`getVariable` keys are **case-sensitive** in Arma 2 OA (unlike SQF identifiers). The seed and the readers disagree by one letter:
+- `Common/Init/Init_Town.sqf:35`: `_town setVariable ["lastSupplyMissionRun", 0];` — **lowercase** `l`.
+- `Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf:8`: `getVariable "LastSupplyMissionRun"` — **capital** `L`. Same capital form is written by `supplyMissionStarted.sqf:8` and `supplyMissionActive.sqf:6`.
+
+So the `0` seed lands in a slot nothing reads, and `"LastSupplyMissionRun"` is **nil** until the first mission completes. The cooldown check then runs:
+```sqf
+if (((_lastActivationTime + WFBE_CO_VAR_SupplyMissionRegenInterval) > time) && (_lastActivationTime != 0)) then {...}
+```
+On a never-run town `_lastActivationTime` is nil → `nil + interval` throws ("Type Nothing, expected Number"), aborting the handler before it publishes `WFBE_Server_PV_IsSupplyMissionActiveInTown` — so the client's cooldown query can get **no response** on first use. The mis-cased seed defeats exactly the `!= 0` guard it was meant to satisfy. **Fix:** make the seed key `"LastSupplyMissionRun"`, or read with a default: `getVariable ["LastSupplyMissionRun", 0]`.
+
+### DR-19 — Hosted/listen-server FPS publishers busy-loop — **Medium (performance, non-dedicated)** — *confirms Cicero*
+
+Both server FPS publishers put `sleep 8` **inside** the `isDedicated` guard:
+```sqf
+// Server/GUI/serverFpsGUI.sqf  AND  Server/Module/serverFPS/monitorServerFPS.sqf
+while {true} do { if (isDedicated) then { …; publicVariable …; sleep 8; } };
+```
+On a **dedicated** server this is fine. On a **hosted/listen server or singleplayer host** (`isServer` true, `isDedicated` false — and both scripts are launched server-side from `Init_Server`), the `if` is false every iteration, so `while {true}` spins **with no sleep** → a tight CPU busy-loop per script (two of them), degrading the host. **Fix:** either `if (!isDedicated) exitWith {}` at the top (don't publish FPS when hosted), or move `sleep 8` outside the `if` so the loop always yields. (Two scripts publishing the same `round diag_fps` under different PV names — `SERVER_FPS_GUI` / `WFBE_VAR_SERVER_FPS` — is also redundant; consolidating would remove one loop entirely.)
+
+### Handoff
+
+Code owners: (DR-18) align the supply-cooldown key casing (or default the read) — one-line fix; (DR-19) hoist the FPS-loop `sleep` out of the `isDedicated` guard (or early-exit when not dedicated), and consider consolidating the two redundant FPS publishers. Ledger: Supply JIP/HC and server-runtime perf cells advanced.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)

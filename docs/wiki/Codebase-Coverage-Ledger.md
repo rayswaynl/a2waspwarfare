@@ -28,7 +28,7 @@ Legend: ✅ done (source-cited) · 🟡 partial · ⬜ gap.
 | Boot / lifecycle | ✅ | ✅ | ✅ | 🟡 | 🟡 | ✅ | [Lifecycle wait-chain](Lifecycle-Wait-Chain), [Entrypoints](Mission-Entrypoints-And-Lifecycle) |
 | PV / networking dispatch | ✅ | ✅ | ✅ | 🟡 | 🟡 | n/a | [Networking](Networking-And-Public-Variables), DR-1 |
 | Economy / town / supply | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ✅ | [Economy](Economy-Towns-And-Supply), [Gameplay atlas](Gameplay-Systems-Atlas) |
-| Supply missions | ✅ | 🟡 | ✅ | 🟡 | ⬜ | ✅ | [Supply mission arch](Supply-Mission-Architecture), DR (PR#1) |
+| Supply missions | ✅ | 🟡 | ✅ | 🟡 | 🟡 | ✅ | [Supply mission arch](Supply-Mission-Architecture), DR (PR#1), DR-18 (cooldown key casing) |
 | Construction / CoIn | ✅ | ✅ | ✅ | 🟡 | 🟡 | 🟡 | [Construction atlas](Construction-And-CoIn-Systems-Atlas), DR-6 |
 | Factory / purchase | ✅ | 🟡 | 🟡 | ⬜ | ⬜ | n/a | [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas); DR-14 (no server authority, architectural), DR-15 (commander-assign bug) |
 | AI / headless / perf | ✅ | 🟡 | 🟡 | ✅ | 🟡 | n/a | [AI/headless](AI-Headless-And-Performance) |
