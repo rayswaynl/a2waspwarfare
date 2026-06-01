@@ -760,6 +760,20 @@ Lane `boot-lifecycle-perf-jip-review`. Filled the Boot/lifecycle Perf + JIP/HC c
 
 **Outcome:** Boot/lifecycle row — **Perf and JIP/HC cells reviewed clean (DR-37)**; role routing + JIP state-sync confirmed correct; timeout-less post-join wait-chain logged as a robustness note.
 
+## Round 29 — 2026-06-02 (Claude) — PV/networking dispatch Perf + JIP/HC (DR-38): the per-message recompile = the DR-1 fix
+
+Lane `pv-dispatch-perf-jip-review`. Filled the PV-dispatch Perf + JIP/HC cells by reviewing the dispatch hot path (`Server/Functions/Server_HandlePVF.sqf`, `Client/Functions/Client_HandlePVF.sqf`) and the registration/precompile in `Common/Init/Init_PublicVariables.sqf`. (Auth/PV/RCE already covered by DR-1.)
+
+### DR-38 — PVF dispatch recompiles the command string per inbound message; the lookup that fixes DR-1's RCE also removes the recompile. JIP/HC clean — **Low/Medium (Perf, converges with DR-1) + JIP reviewed clean**
+
+**Perf.** Both dispatchers end with `_parameters Spawn (Call Compile _script)` (`Server_HandlePVF.sqf:14`, `Client_HandlePVF.sqf:22`), so **every inbound PVF message runtime-compiles the sender-provided command string**. This is per-action (build/buy/construct/upgrade/join/server-pushes), not per-frame, so bounded — but it is **avoidable and redundant**: `Init_PublicVariables.sqf` already **pre-compiles every PVFunction once at init** into `SRVFNC<name>`/`CLTFNC<name>` globals (`:44` `CLTFNC%1 = compile preprocessFileLineNumbers …`, `:49` `SRVFNC%1 = …`), and binds the per-command `WFBE_PVF_<name>` channels to the dispatchers (`:45,50`). The dispatcher discards that precompiled work and recompiles the string each message. Resolving the handler by lookup — `call (missionNamespace getVariable _validatedName)` against the known `SRVFNC*`/`CLTFNC*` set — eliminates the per-message `compile` entirely. **This is the same change as the DR-1 remediation**: validating/looking up a name instead of `compile`-ing a sender-chosen string closes the RCE *and* the recompile in one edit. (Secondary: `Spawn` per message creates a scheduled script per message — justified because handlers use `sleep`/`waitUntil`, but it adds scheduler pressure under PVF floods; lower priority.)
+
+**JIP/HC — clean.** The dispatchers are registered via `addPublicVariableEventHandler` on the `WFBE_PVF_<name>` channels in `Init_PublicVariables.sqf` (`:45` client `if (!isServer || local player)`, `:50` server `if (isServer)`), which runs inside `Init_Common` on **every** machine including JIP clients during their own init — so a joiner installs its PVF handlers on join and processes all subsequent messages. PVFs are **transient events, not state**, so nothing needs replaying to joiners (the only replay burden is the separate broadcast-variable state-sync layer, DR-37). The client destination routing (`Client_HandlePVF.sqf:12-15`: nil = broadcast, `SIDE` = `sideJoined` match, `STRING` = `getPlayerUID player` match) resolves correctly for joiners. No JIP gap in the dispatch layer; no headless-specific dispatch issue beyond the AI-delegation locality already covered in DR-21.
+
+**Handoff for Codex.** No new wiki page; fold the Perf observation into the [Networking](Networking-And-Public-Variables) DR-1 remediation note as "the validated-lookup fix also removes a per-message `compile`," so the owner sees the security fix is free on Perf. JIP-clean result can be stated in the same section.
+
+**Outcome:** PV/networking dispatch row — **Perf and JIP/HC cells filled (DR-38)**: Perf = avoidable per-message recompile (fixed by the DR-1 lookup change); JIP/HC reviewed clean. The row's remaining work is the DR-1 owner decision (validate-before-execute), which now also carries a Perf benefit.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
