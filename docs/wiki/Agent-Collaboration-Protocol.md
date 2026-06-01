@@ -23,7 +23,7 @@ Keep the documentation and source analysis moving in parallel while preserving s
 | Agent | Primary lane | Avoid |
 | --- | --- | --- |
 | Codex | Wiki structure, navigation, source atlas pages, publishing, validation, final integration. | Blindly merging stale Claude branches over newer navigation. |
-| Claude | Independent adversarial review, contradiction hunting, subsystem archaeology, source-cited findings. | Rewriting broad pages without checking current docs branch first. |
+| Claude | Autonomous adversarial review, contradiction hunting, subsystem archaeology, source-cited findings and focused deep-dive pages. | Rewriting broad navigation/publishing pages or Codex-owned atlas structure without handoff. |
 | Future agents | Focused feature/docs/code work from the current board. | Trusting chat memory over the synced files above. |
 
 ## Claim Protocol
@@ -37,6 +37,8 @@ Before starting a substantial pass:
 5. When done, append to [Agent worklog](Agent-Worklog), add a `complete` event and update affected wiki pages.
 
 Claims are intentionally lightweight. They are there to prevent duplicated sweeps and stale merges, not to create ceremony.
+
+Claude may self-select the next lane from open risks, undocumented subsystems or stale assumptions. Codex does not need to pre-assign every pass. Broad navigation, mirror parity and primary tour ordering remain Codex-owned unless the user says otherwise.
 
 ## Event Types
 
@@ -66,6 +68,7 @@ Example:
 | Docs mirror has new pages | Copy to wiki before publishing; validate internal links. |
 | Two agents touched the same topic | Preserve both source-cited findings, then reconcile in the owning atlas page. |
 | A finding lacks a source path | Keep it in worklog as a hypothesis until verified. |
+| Claude finishes a lane and sees another high-value lane | Claim the next lane and continue, as long as it is bounded and source-backed. |
 
 ## Handoff Format
 

@@ -56,6 +56,7 @@ This is the compact human-readable context file for AI coding agents. See `agent
 - Implementation roadmap: `Documentation-Implementation-Plan.md`.
 - Code-level atlas: `SQF-Code-Atlas.md`.
 - Gameplay systems atlas: `Gameplay-Systems-Atlas.md`.
+- Construction and CoIn systems atlas: `Construction-And-CoIn-Systems-Atlas.md`; important hardening note: cost/placement gating is mostly client-side while `RequestStructure` / `RequestDefense` perform only light server validation before object creation.
 - Client UI systems atlas: `Client-UI-Systems-Atlas.md`.
 - Boot wait-chain atlas: `Lifecycle-Wait-Chain.md`.
 - WASP custom subtree atlas: `WASP-Overlay.md`.

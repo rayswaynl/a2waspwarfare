@@ -26,6 +26,7 @@
       "Function-And-Module-Index",
       "Networking-And-Public-Variables",
       "Gameplay-Systems-Atlas",
+      "Construction-And-CoIn-Systems-Atlas",
       "Core-Systems-Index",
       "Economy-Towns-And-Supply",
       "Supply-Mission-Architecture",
@@ -65,6 +66,7 @@
         "Function-And-Module-Index",
         "Networking-And-Public-Variables",
         "Gameplay-Systems-Atlas",
+        "Construction-And-CoIn-Systems-Atlas",
         "Core-Systems-Index",
         "Economy-Towns-And-Supply",
         "Supply-Mission-Architecture",
@@ -110,7 +112,8 @@
   ],
   "systems": {
     "networking": "PVF lists in Common/Init/Init_PublicVariables.sqf plus direct publicVariable channels for supply, anti-stack, day/night, FPS, AFK and markers.",
-    "economy": "Funds and side supply with town SV, commander income, resources FSM and supply missions. See Gameplay-Systems-Atlas for source-backed town/economy/commander/construction/factory flow.",
+    "economy": "Funds and side supply with town SV, commander income, resources FSM and supply missions. See Gameplay-Systems-Atlas for source-backed town/economy/commander/factory flow.",
+    "construction": "Commander/repair-truck CoIn flow, structure arrays, HQ deploy/mobilize, server construction workers, defense building, repair and sale flows. See Construction-And-CoIn-Systems-Atlas.md.",
     "ai": "Server town AI, AI commanders, client/headless delegation, player AI watchdog/recovery.",
     "ui": "Rsc resources, Client/GUI dialog controllers, RHUD/FPS HUD, title resources, map/action marker loops, CoIn construction UI and WASP overlays. See Client-UI-Systems-Atlas.md.",
     "tooling": "LoadoutManager for mission generation/packaging; PerformanceAuditAnalyzer for RPT metrics.",
@@ -130,7 +133,8 @@
     "UI/marker loops are performance-sensitive polling loops; preserve cached writes, map-closed backoff and mission-parameter gates.",
     "DR-1 (High, hardening): Server_HandlePVF.sqf/Client_HandlePVF.sqf Call Compile the sender-chosen command string with no validation, and BattlEyeFilter/publicvariable.txt has only the kickAFK feature rule. Validate the command set before compile and add a real BE PV filter before trusting on a public server.",
     "DR-2/DR-3: paratrooper drop markers and MASH tent markers are confirmed dead receiver-side paths.",
-    "DR-4: Chernarus and Takistan differ only by LoadoutManager skip-list/blacklist, but skip-listed files never propagate and must be hand-mirrored; Modded_Missions/* are abandoned until modded propagation is re-enabled."
+    "DR-4: Chernarus and Takistan differ only by LoadoutManager skip-list/blacklist, but skip-listed files never propagate and must be hand-mirrored; Modded_Missions/* are abandoned until modded propagation is re-enabled.",
+    "Construction hardening gap: coin_interface.sqf performs cost/placement/role checks client-side, then RequestStructure/RequestDefense do only light server class-existence validation before creating server objects."
   ],
   "currentPR": {
     "number": 1,

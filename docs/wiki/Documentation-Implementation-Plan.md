@@ -20,7 +20,7 @@ Status: initial pass complete.
 Next improvements:
 
 - Expand sequence-level details for `initJIPCompatible.sqf`, server init, client init and headless init.
-- Add more exact source references for commander election, construction, factory production, upgrade unlocks and respawn paths.
+- Add more exact source references for commander election, factory production, upgrade unlocks and respawn paths.
 - Add a small call-flow map for town activation, capture, supply value, commander income and resistance defense.
 
 Evidence to use:
@@ -65,7 +65,8 @@ Current high-confidence items:
 
 - Autonomous AI supply logistics is incomplete: `UpdateSupplyTruck` is commented and `Server/FSM/supplytruck.fsm` is missing.
 - Task system is disabled/commented in client init.
-- MASH marker receiver compile is commented.
+- MASH marker receiver and paratrooper marker receiver are confirmed broken receive-side paths.
+- Construction requests need server-side authority hardening; cost, role and placement checks are mostly client-side today.
 - CRV7PG loadout classes are explicitly marked as game-crashing.
 - Some generated/modded mission support in LoadoutManager is marked TODO.
 
@@ -99,6 +100,7 @@ Rules:
 
 - Claude starts from `Claude-Goal.md`.
 - Agents append findings to `Agent-Worklog.md`.
+- Agents claim lanes in `agent-collaboration.json` and append events to `agent-events.jsonl` before substantial parallel work.
 - Agents update `agent-context.json` when high-level architecture facts, risks or page names change.
 - Agents should cite concrete source evidence before adding broken-feature claims.
 - Documentation-only branches should not include gameplay code changes unless explicitly requested.

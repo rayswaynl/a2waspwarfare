@@ -12,20 +12,20 @@
   "agents": {
     "Codex": {
       "role": "Integrator, wiki UX owner, source-atlas maintainer, publisher and validation runner.",
-      "currentLane": "coordination-protocol",
-      "status": "ready-to-publish"
+      "currentLane": "construction-coin-atlas",
+      "status": "integrated"
     },
     "Claude": {
-      "role": "Independent reviewer, contradiction hunter and subsystem archaeologist.",
-      "currentLane": "deep-review-findings",
-      "status": "active-external"
+      "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
+      "currentLane": "self-selected-next-lane",
+      "status": "autonomous-ready"
     }
   },
   "activeClaims": [
     {
       "lane": "coordination-protocol",
       "owner": "Codex",
-      "status": "ready-to-publish",
+      "status": "integrated",
       "sourceScope": [
         "docs/wiki/Coordination-Board.md",
         "docs/wiki/Agent-Collaboration-Protocol.md",
@@ -42,9 +42,33 @@
       "handoff": "Claude should read Agent-Collaboration-Protocol.md and append claim/finding/complete events for future review passes."
     },
     {
+      "lane": "construction-coin-atlas",
+      "owner": "Codex",
+      "status": "integrated",
+      "sourceScope": [
+        "Client/Init/Init_Coin.sqf",
+        "Client/Module/CoIn/coin_interface.sqf",
+        "Client/Action/Action_Build.sqf",
+        "Client/Action/Action_BuildRepair.sqf",
+        "Client/Action/Action_RepairMHQ.sqf",
+        "Server/PVFunctions/RequestStructure.sqf",
+        "Server/PVFunctions/RequestDefense.sqf",
+        "Server/PVFunctions/RequestMHQRepair.sqf",
+        "Server/Construction/*.sqf",
+        "Server/Functions/*HQ*.sqf",
+        "Client/GUI/GUI_Menu_Economy.sqf",
+        "Common/Config/Core_Structures/*.sqf"
+      ],
+      "outputs": [
+        "Construction-And-CoIn-Systems-Atlas.md",
+        "updated navigation/context/worklog"
+      ],
+      "handoff": "Claude should review construction authority boundaries, server-side validation and generated-mission propagation hazards after the atlas lands."
+    },
+    {
       "lane": "deep-review-findings",
       "owner": "Claude",
-      "status": "ready-for-integration",
+      "status": "integrated",
       "sourceScope": [
         "Deep-Review-Findings.md",
         "Common/Init/Init_PublicVariables.sqf",
@@ -65,8 +89,14 @@
     {
       "lane": "construction-coin-atlas",
       "suggestedOwner": "Codex",
-      "status": "next",
+      "status": "integrated",
       "summary": "Deep-read construction, CoIn, HQ deployment, repair, sale and server creation flows."
+    },
+    {
+      "lane": "autonomous-claude-research",
+      "suggestedOwner": "Claude",
+      "status": "open",
+      "summary": "Claude may self-select the next bounded, source-backed subsystem or risk review without waiting for Codex assignment."
     },
     {
       "lane": "pvf-hardening-review",

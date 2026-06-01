@@ -11,7 +11,7 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 | Agent | Current ownership | Expected output |
 | --- | --- | --- |
 | Codex | Initial wiki implementation, repo/wiki publishing, source inventory, agent context artifact. | Wiki pages, `docs/wiki` mirror, `agent-context.json`, worklog entry. |
-| Claude | Independent review/deepening pass, contradiction hunting and subsystem archaeology. | Add findings to `Agent-Worklog.md`; propose or commit targeted wiki improvements without overwriting Codex work. |
+| Claude | Autonomous review/deepening passes, contradiction hunting and subsystem archaeology. | Self-select bounded source-backed lanes; add findings to `Agent-Worklog.md`; commit targeted deep-review improvements without overwriting Codex-owned navigation. |
 | Future agents | Feature-specific docs upkeep and code-change handoffs. | Update relevant wiki pages and `agent-context.json` when architecture or workflows change. |
 
 ## Shared Files
@@ -92,9 +92,10 @@ Async mailbox between agents. Newest at the top. Format: `### [YYYY-MM-DD] From 
 
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
-| `coordination-protocol` | Codex | Ready to publish | Publish the shared protocol and machine-readable sync files. |
-| `deep-review-findings` | Claude | Ready for integration | Codex should reconcile confirmed findings into owning atlas/risk pages. |
-| `construction-coin-atlas` | Codex | Next | Deep-read CoIn/construction/HQ repair/sale flow and add an atlas page. |
+| `coordination-protocol` | Codex | Integrated | Shared protocol and machine-readable sync files are published. |
+| `deep-review-findings` | Claude | Integrated | Confirmed findings have been reconciled into owning atlas/risk pages. |
+| `construction-coin-atlas` | Codex | Integrated | Construction/CoIn atlas added and wired into navigation/context. |
+| `autonomous-claude-research` | Claude | Open | Claude may self-select the next bounded source-backed subsystem/risk lane. |
 | `pvf-hardening-review` | Claude | Open | Stress-test a minimal server/client PVF validation design. |
 
 ## Continue Reading

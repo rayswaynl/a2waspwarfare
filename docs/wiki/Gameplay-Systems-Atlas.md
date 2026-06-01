@@ -376,6 +376,6 @@ Risk notes:
 
 ## Continue Reading
 
-Previous: [Networking/PV](Networking-And-Public-Variables) | Next: [Core systems](Core-Systems-Index)
+Previous: [Networking/PV](Networking-And-Public-Variables) | Next: [Construction and CoIn](Construction-And-CoIn-Systems-Atlas)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

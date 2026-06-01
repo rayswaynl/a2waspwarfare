@@ -35,11 +35,12 @@ Load these first, in order:
 4. [Agent collaboration protocol](Agent-Collaboration-Protocol)
 5. [SQF code atlas](SQF-Code-Atlas)
 6. [Gameplay systems atlas](Gameplay-Systems-Atlas)
-7. [Lifecycle wait-chain](Lifecycle-Wait-Chain)
-8. [WASP overlay](WASP-Overlay)
-9. [Documentation implementation plan](Documentation-Implementation-Plan)
-10. [Feature status register](Feature-Status-Register)
-11. [Agent worklog](Agent-Worklog)
+7. [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas)
+8. [Lifecycle wait-chain](Lifecycle-Wait-Chain)
+9. [WASP overlay](WASP-Overlay)
+10. [Documentation implementation plan](Documentation-Implementation-Plan)
+11. [Feature status register](Feature-Status-Register)
+12. [Agent worklog](Agent-Worklog)
 
 Then inspect source before making claims. Do not infer Arma 3 behavior. If you add high-level facts, update `agent-context.json`.
 
@@ -61,7 +62,7 @@ Then inspect source before making claims. Do not infer Arma 3 behavior. If you a
 | Add or change a PVF command | [SQF code atlas](SQF-Code-Atlas), [Networking and public variables](Networking-And-Public-Variables) |
 | Change supply missions | [Supply mission architecture](Supply-Mission-Architecture), [Economy, towns and supply](Economy-Towns-And-Supply) |
 | Change commander/upgrades | [Core systems index](Core-Systems-Index), [Feature status register](Feature-Status-Register) |
-| Change town capture/economy/construction/factories | [Gameplay systems atlas](Gameplay-Systems-Atlas) |
+| Change town capture/economy/construction/factories | [Gameplay systems atlas](Gameplay-Systems-Atlas), [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) |
 | Change UI or buy menus | [Client UI, HUD and menus](Client-UI-HUD-And-Menus), [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | Change AI/headless behavior | [AI, headless and performance](AI-Headless-And-Performance) |
 | Change WASP custom scripts | [WASP overlay](WASP-Overlay), [Feature status register](Feature-Status-Register) |

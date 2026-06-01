@@ -27,6 +27,7 @@
 ## Gameplay
 
 - [Gameplay atlas](Gameplay-Systems-Atlas)
+- [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas)
 - [Core systems](Core-Systems-Index)
 - [Economy/towns/supply](Economy-Towns-And-Supply)
 - [Supply missions](Supply-Mission-Architecture)
