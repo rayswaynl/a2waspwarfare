@@ -24,7 +24,7 @@ This register separates working systems from partial, deferred or risky systems 
 
 | Area | Evidence | Status |
 | --- | --- | --- |
-| Autonomous AI supply trucks | `UpdateSupplyTruck` compile is commented in `Server/Init/Init_Server.sqf`; `AI_UpdateSupplyTruck.sqf` references missing `Server/FSM/supplytruck.fsm`. | Broken/deferred. Do not build supply heli AI on top of this until the FSM is restored or redesigned. |
+| Autonomous AI supply trucks | `UpdateSupplyTruck` compile is commented at `Server/Init/Init_Server.sqf:36`, but the live call `[_side] Spawn UpdateSupplyTruck;` remains at `:383`, gated by `WFBE_C_ECONOMY_SUPPLY_SYSTEM == 0 && WFBE_C_AI_COMMANDER_ENABLED > 0`. `AI_UpdateSupplyTruck.sqf` also references missing `Server/FSM/supplytruck.fsm`. | Config-gated latent breakage. Default supply system 1 is safe; supply system 0 with AI commanders is broken until the compile and FSM are restored or redesigned. |
 | Task system | `TaskSystem` compile and `TownAddComplete` spawn are commented in `Client/Init/Init_Client.sqf` though `Client_TaskSystem.sqf` still exists. | Disabled/partial. Re-enable only after checking task spam/JIP behavior. |
 | MASH marker receiver | `WFBE_CL_FNC_ReceiverMASHmarker` compile is commented in `Client/Init/Init_Client.sqf` while server/client MASH marker event scripts still exist. | Needs verification. MASH respawn may work, but marker sync path appears partially disabled. |
 | Old map blink loop | `Client_BlinkMapIcons` and `AddUnitToTrack` compiles plus old exec are commented; newer singular `Client_BlinkMapIcon` and bookkeeping are active. | Legacy replacement. Avoid resurrecting old loop without perf review. |
@@ -45,6 +45,12 @@ This register separates working systems from partial, deferred or risky systems 
 
 This is the clearest broken/abandoned feature. `AI_UpdateSupplyTruck.sqf` is present and loops over `wfbe_ai_supplytrucks`, but it cannot run correctly because the compile is disabled and the referenced `supplytruck.fsm` is absent. PR #1 correctly defers autonomous supply helicopters because the AI logistics base is incomplete.
 
+Claude sharpened the status on 2026-06-01: the feature is not cleanly inert. In `Server/Init/Init_Server.sqf`, the compile line is commented, but the per-side init still calls `[_side] Spawn UpdateSupplyTruck;` when supply system 0 and AI commanders are enabled. With current defaults, `WFBE_C_ECONOMY_SUPPLY_SYSTEM` is 1, so normal play does not hit the call. If an admin selects supply system 0 with AI commanders, the server can hit a nil-code spawn error, and restoring the compile would still fail later because `Server/FSM/supplytruck.fsm` is missing.
+
+## Confirmed Defect: Stacked Supply-Vehicle Killed Handlers
+
+PR #1 adds or extends `Server/Module/supplyMission/supplyMissionStarted.sqf` so supply vehicles can award interdiction cash when destroyed. The script adds a `Killed` event handler every time a supply mission starts, with no removal or already-tracked guard. Reusing one vehicle across many missions stacks handlers. Current double-payment risk is bounded because the first handler sets `SupplyAmount` to `0`, but the handler leak is real and future side effects would multiply.
+
 ## Missing Feature Candidates
 
 - Autonomous AI supply trucks/helicopters.
@@ -52,3 +58,8 @@ This is the clearest broken/abandoned feature. `AI_UpdateSupplyTruck.sqf` is pre
 - Automated validation that generated Takistan/modded missions match Chernarus source after docs/code changes.
 - Automated SQF syntax or reference validation in CI.
 
+## Continue Reading
+
+Previous: [External integrations](External-Integrations) | Next: [AI assistant guide](AI-Assistant-Developer-Guide)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

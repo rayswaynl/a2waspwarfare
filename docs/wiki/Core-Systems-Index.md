@@ -46,3 +46,8 @@ Support includes artillery, paratroopers, para ammo, para vehicles, UAV, fast tr
 
 Operational systems include anti-stack, AFK kick through BattlEye publicVariable filters, server FPS publication, performance audit logs, global game stats extension export, and Discord bot status publishing.
 
+## Continue Reading
+
+Previous: [Gameplay atlas](Gameplay-Systems-Atlas) | Next: [Economy/towns/supply](Economy-Towns-And-Supply)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

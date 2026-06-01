@@ -35,3 +35,8 @@ Copy this into Claude as `/goal` when asking it to become a long-running counter
 - Network safety: PVF wrapper functions, direct publicVariable channels and BattlEye-mediated AFK kick behavior.
 - Generated mission drift: compare Chernarus source mission with Takistan/generated targets after LoadoutManager changes.
 
+## Continue Reading
+
+Previous: [Claude focused goal](Claude-Goal) | Next: [Home](Home)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

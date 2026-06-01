@@ -37,3 +37,8 @@ Funds and supply are separate systems unless the mission parameter switches curr
 
 The open PR extends this flow to helicopters. See [Current work: supply helicopters PR #1](Current-Work-Supply-Helicopters-PR1).
 
+## Continue Reading
+
+Previous: [Core systems](Core-Systems-Index) | Next: [Supply mission architecture](Supply-Mission-Architecture)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

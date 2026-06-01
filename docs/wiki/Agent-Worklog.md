@@ -42,11 +42,29 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Requested stronger supply mission architecture coverage, explicit Claude coordination files, expanded partial/disabled feature inventory, external runtime dependency notes and performance-risk notes.
 - Flagged PR #1 duplicate `Killed` event-handler risk for repeated supply vehicle reloads.
 
-## Claude
+## 2026-06-01 - Claude Independent Review
 
-- Pending external Claude review.
+- Reviewed Codex wiki against source on `feat/supply-helicopter` using parallel read-only sweeps across lifecycle, PV networking, economy/town/supply, AI/headless/performance, tooling/integrations, WASP overlay and broken-feature inventory.
+- Added `Lifecycle-Wait-Chain.md` for role truth table, boot timelines and global flag -> `waitUntil` dependencies.
+- Added `WASP-Overlay.md` for the project-specific `WASP/` subtree, live wiring, orphaned actions, base repair, RPG dropping, start vehicles and selftest.
+- Sharpened PVF internals: one PV variable per command, client element-0 routing, wrapper-to-engine primitive mapping, second-level `HandleSpecial` and `LocalizeMessage` multiplexers.
+- Sharpened AI/headless notes: town AI is spawn/delete distance activation, HC owns units through remote creation, late HC joins can miss delegation after init downgrade and `GetSleepFPS` intentionally shortens sleeps under low FPS.
+- Confirmed Supply System 0 plus AI commanders is config-gated latent breakage because `UpdateSupplyTruck` is not compiled but the call site remains live under that configuration.
+- Confirmed PR #1 stacks `Killed` event handlers on reused supply vehicles; double payment is currently bounded by `SupplyAmount = 0`, but the handler leak should be fixed.
+
+## 2026-06-01 - Codex UX + Claude Integration Pass
+
+- Integrated Claude's two new pages and targeted findings into the current wiki/docs branch without merging the older branch wholesale.
+- Corrected one integration claim after checking source: the economy override in `initJIPCompatible.sqf:151-162` is `WF_Debug`-gated in the current source, not unconditional.
+- Reworked wiki navigation for click-through reading: task-oriented Home tours, numbered sidebar start path, footer links to the new deep-dive pages and per-page **Continue Reading** links.
+- Updated `agent-context.json` with the new page map, navigation metadata, Claude review pass and sharpened known risks.
 
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.
 
+## Continue Reading
+
+Previous: [Coordination board](Coordination-Board) | Next: [Implementation plan](Documentation-Implementation-Plan)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

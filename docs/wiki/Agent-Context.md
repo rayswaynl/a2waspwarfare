@@ -34,6 +34,7 @@ This is the compact human-readable context file for AI coding agents. See `agent
 - `Server/Init/Init_Server.sqf`
 - `Client/Init/Init_Client.sqf`
 - `Headless/Init/Init_HC.sqf`
+- `WASP/` overlay scripts documented in `WASP-Overlay.md`
 
 ## High-Risk Systems
 
@@ -46,6 +47,8 @@ This is the compact human-readable context file for AI coding agents. See `agent
 - LoadoutManager-generated mission output.
 - Dangerous loadout classes marked `WARNING_GAME_CRASH_DO_NOT_USE_IN_LOADOUTS`.
 - PowerShell path handling for the Chernarus folder; use `-LiteralPath` because `[55-2hc]` is a wildcard pattern.
+- Supply system 0 with AI commanders can hit disabled `UpdateSupplyTruck` and missing `Server/FSM/supplytruck.fsm`.
+- PR #1 supply vehicles currently stack `Killed` event handlers across repeated mission loads.
 
 ## Current Open Work
 
@@ -53,5 +56,12 @@ This is the compact human-readable context file for AI coding agents. See `agent
 - Implementation roadmap: `Documentation-Implementation-Plan.md`.
 - Code-level atlas: `SQF-Code-Atlas.md`.
 - Gameplay systems atlas: `Gameplay-Systems-Atlas.md`.
+- Boot wait-chain atlas: `Lifecycle-Wait-Chain.md`.
+- WASP custom subtree atlas: `WASP-Overlay.md`.
 - External Claude review: use `Claude-Goal.md` for a focused pass or `Claude-Long-Term-Goal.md` for a long-running counterpart, then update `Agent-Worklog.md`.
 
+## Continue Reading
+
+Previous: [AI assistant guide](AI-Assistant-Developer-Guide) | Next: [Coordination board](Coordination-Board)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

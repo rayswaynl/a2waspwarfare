@@ -38,3 +38,8 @@ The repository is an Arma 2 OA Warfare/CTI mission derived from Benny's Warfare 
 
 This mission values runtime performance and live-server stability. Many systems have explicit audit logging, cached UI writes, deferred loops, and optional switches. Documentation and feature work should preserve those patterns instead of reintroducing large per-frame scans or unconditional global broadcasts.
 
+## Continue Reading
+
+Previous: [Quickstart](Quickstart-For-Humans-And-Agents) | Next: [Mission lifecycle](Mission-Entrypoints-And-Lifecycle)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

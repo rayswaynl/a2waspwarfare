@@ -61,3 +61,8 @@ dotnet run -c SERVER_DEBUG
 powershell -ExecutionPolicy Bypass -File .\Tools\PerformanceAuditAnalyzer\Analyze-PerformanceAudit.ps1 -InputPath ".\logs\arma2oa.rpt" -OutputPath ".\PerformanceAuditResults"
 ```
 
+## Continue Reading
+
+Previous: [Client UI/HUD/menus](Client-UI-HUD-And-Menus) | Next: [External integrations](External-Integrations)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

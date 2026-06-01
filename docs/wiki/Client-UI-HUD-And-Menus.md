@@ -71,3 +71,8 @@ The combat icon blinking feature is guarded by `WFBE_C_MAP_ICON_BLINKING_ENABLED
 - Preserve cached-write patterns in RHUD and marker scripts.
 - Keep action label changes consistent with localized string usage where available.
 
+## Continue Reading
+
+Previous: [AI/headless/performance](AI-Headless-And-Performance) | Next: [Tools/build](Tools-And-Build-Workflow)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

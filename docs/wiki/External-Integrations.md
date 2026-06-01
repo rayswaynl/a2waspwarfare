@@ -48,3 +48,8 @@ The repo README lists:
 - BattleMetrics and GameTracker links
 - Trello board link
 
+## Continue Reading
+
+Previous: [Tools/build](Tools-And-Build-Workflow) | Next: [Feature status](Feature-Status-Register)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

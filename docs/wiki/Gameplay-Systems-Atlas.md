@@ -374,3 +374,8 @@ Risk notes:
 - Verify whether supply-income stagnation is currently called from the active resource loop or only retained as a helper.
 - Map exact dependencies between `Init_BaseStructure.sqf`, range globals like `barracksInRange`, and the buy menu.
 
+## Continue Reading
+
+Previous: [Networking/PV](Networking-And-Public-Variables) | Next: [Core systems](Core-Systems-Index)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

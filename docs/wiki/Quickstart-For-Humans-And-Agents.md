@@ -18,10 +18,12 @@ This page is the low-friction route into the repo. Use it before editing mission
 
 1. Read [Home](Home) for the map.
 2. Read [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) to understand startup.
-3. Read [SQF code atlas](SQF-Code-Atlas) before changing functions, PVF commands or init files.
-4. Read [Gameplay systems atlas](Gameplay-Systems-Atlas) before touching towns, economy, commander, upgrades, construction or factories.
-5. Read [Feature status register](Feature-Status-Register) before reviving old code.
-6. Check [Agent worklog](Agent-Worklog) for the latest Codex/Claude findings.
+3. Read [Lifecycle wait-chain](Lifecycle-Wait-Chain) before reordering init or wait barriers.
+4. Read [SQF code atlas](SQF-Code-Atlas) before changing functions, PVF commands or init files.
+5. Read [Gameplay systems atlas](Gameplay-Systems-Atlas) before touching towns, economy, commander, upgrades, construction or factories.
+6. Read [WASP overlay](WASP-Overlay) before changing project-specific additions under `WASP/`.
+7. Read [Feature status register](Feature-Status-Register) before reviving old code.
+8. Check [Agent worklog](Agent-Worklog) for the latest Codex/Claude findings.
 
 ## If You Are An LLM
 
@@ -31,9 +33,11 @@ Load these first, in order:
 2. [Agent context](Agent-Context)
 3. [SQF code atlas](SQF-Code-Atlas)
 4. [Gameplay systems atlas](Gameplay-Systems-Atlas)
-5. [Documentation implementation plan](Documentation-Implementation-Plan)
-6. [Feature status register](Feature-Status-Register)
-7. [Agent worklog](Agent-Worklog)
+5. [Lifecycle wait-chain](Lifecycle-Wait-Chain)
+6. [WASP overlay](WASP-Overlay)
+7. [Documentation implementation plan](Documentation-Implementation-Plan)
+8. [Feature status register](Feature-Status-Register)
+9. [Agent worklog](Agent-Worklog)
 
 Then inspect source before making claims. Do not infer Arma 3 behavior. If you add high-level facts, update `agent-context.json`.
 
@@ -58,6 +62,7 @@ Then inspect source before making claims. Do not infer Arma 3 behavior. If you a
 | Change town capture/economy/construction/factories | [Gameplay systems atlas](Gameplay-Systems-Atlas) |
 | Change UI or buy menus | [Client UI, HUD and menus](Client-UI-HUD-And-Menus) |
 | Change AI/headless behavior | [AI, headless and performance](AI-Headless-And-Performance) |
+| Change WASP custom scripts | [WASP overlay](WASP-Overlay), [Feature status register](Feature-Status-Register) |
 | Touch generated missions | [Tools and build workflow](Tools-And-Build-Workflow), [Content structure and maps](Content-Structure-And-Maps) |
 
 ## Agent Collaboration
@@ -69,3 +74,9 @@ Then inspect source before making claims. Do not infer Arma 3 behavior. If you a
 | Future agents | Start from `agent-context.json`, inspect source and append findings to `Agent-Worklog.md`. |
 
 Use [Claude long-term goal](Claude-Long-Term-Goal) when spinning up Claude as a persistent counterpart.
+
+## Continue Reading
+
+Previous: [Home](Home) | Next: [Architecture overview](Architecture-Overview)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

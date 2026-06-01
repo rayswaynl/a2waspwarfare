@@ -34,3 +34,8 @@ Mission assets include:
 
 Do not treat differences in generated mission folders as independent source truth until LoadoutManager has been checked. Many changes should be made once in Chernarus and propagated.
 
+## Continue Reading
+
+Previous: [Source inventory](Source-Inventory) | Next: [WASP overlay](WASP-Overlay)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

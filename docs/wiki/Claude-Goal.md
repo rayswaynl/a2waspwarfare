@@ -15,3 +15,8 @@ Copy this into Claude as `/goal` when asking it to collaborate on this documenta
 - Add any new risks, TODOs or missing features to the worklog before editing feature-status pages.
 - Keep `agent-context.json` synchronized if new high-level facts are added.
 
+## Continue Reading
+
+Previous: [Implementation plan](Documentation-Implementation-Plan) | Next: [Claude long-term goal](Claude-Long-Term-Goal)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

@@ -179,3 +179,8 @@ Generated from `git ls-files` in the main repository checkout.
 - `Tools/PerformanceAuditAnalyzer/README.md`: RPT audit parser/report workflow.
 - `Tools/Arma2Warfare_GPT/CustomInstructions.md`: older assistant instructions.
 
+## Continue Reading
+
+Previous: [Lifecycle wait-chain](Lifecycle-Wait-Chain) | Next: [Content/maps](Content-Structure-And-Maps)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

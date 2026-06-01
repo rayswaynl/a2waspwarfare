@@ -67,3 +67,52 @@ Some systems use explicit public-variable channels outside the generic PVF list:
 - When adding a PVF command, update both the registration list and the target `Client/PVFunctions` or `Server/PVFunctions` file.
 - Hosted-server paths often call the handler locally in addition to broadcasting. Preserve those branches when modernizing code.
 
+## PVF Dispatch Internals
+
+Claude independently deep-read the dispatch path and confirmed these runtime details. Paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
+
+### One PV Variable Per Command
+
+`Common/Init/Init_PublicVariables.sqf:43-51` creates one public-variable name per command, such as `WFBE_PVF_RequestJoin` and `WFBE_PVF_TownCaptured`, each with its own `addPublicVariableEventHandler`. This is not one numeric multiplexed protocol channel. Client handlers register under `if (!isServer || local player)`; server handlers register under `if (isServer)`.
+
+### Client-Side Index-0 Routing
+
+`Client/Functions/Client_HandlePVF.sqf` uses payload element 0 as the destination filter:
+
+| Element 0 | Client behavior |
+| --- | --- |
+| `nil` | Run on all clients. |
+| `SIDE` | Run only if `sideJoined == destination`. |
+| `STRING` | Run only if `getPlayerUID player == destination`. |
+
+The actual function name comes from element 1 (`CLTFNC<Command>`) and is executed with `_parameters Spawn (Call Compile _script)`. `Server/Functions/Server_HandlePVF.sqf` is simpler: it resolves `SRVFNC<Command>` and spawns it with no destination filtering.
+
+### Wrapper To Engine Primitive Map
+
+| Wrapper | Direction | Engine primitive | Destination handling |
+| --- | --- | --- | --- |
+| `Common_SendToServer` / optimized variant | client -> server | `publicVariable` or `publicVariableServer` | Server PVF receives command payload. |
+| `Common_SendToClients` | server -> clients | `publicVariable` | Payload element 0 is `nil`, side, or UID. |
+| `Common_SendToClient` | server -> one client | `publicVariableClient` to `owner _player` | Player object is rewritten to UID for the client filter. |
+
+### Second-Level Multiplexers
+
+Some registered commands are broad routers:
+
+- `Client/PVFunctions/HandleSpecial.sqf` switches over tags such as `join-answer`, `attack-wave`, `commander-vote` and `endgame`.
+- `Client/PVFunctions/LocalizeMessage.sqf` switches over message keys such as `Teamkill`, `FundsTransfer` and `AttackModeActivated`.
+
+When tracing one feature, grep the string tag as well as the PVF command name.
+
+### Gotchas
+
+- UID-targeted `SendToClients` still broadcasts to every client and lets non-matching clients discard locally. Use `SendToClient` for true unicast when possible.
+- PVF handlers use `Spawn`, so rapid messages that mutate shared state have no strict ordering guarantee.
+- Both dispatchers use `Call Compile` on the generated function-name string per dispatch. Keep command names controlled and avoid turning hot paths into chatty PVF streams.
+- Some bare PV channels are copied per side, such as `wfbe_supply_temp_west` and `wfbe_supply_temp_east`; there is no resistance-side handler in that path.
+
+## Continue Reading
+
+Previous: [Function/module index](Function-And-Module-Index) | Next: [Gameplay atlas](Gameplay-Systems-Atlas)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

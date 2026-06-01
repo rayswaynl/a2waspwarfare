@@ -49,3 +49,8 @@ Review risk from the independent doc reviewer: the PR adds a `Killed` event hand
 - Split client affordance, server validation and reward calculation into documented helper functions.
 - Redesign autonomous AI logistics separately from the broken `AI_UpdateSupplyTruck` / missing `supplytruck.fsm` path.
 
+## Continue Reading
+
+Previous: [Economy/towns/supply](Economy-Towns-And-Supply) | Next: [Supply heli PR #1](Current-Work-Supply-Helicopters-PR1)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

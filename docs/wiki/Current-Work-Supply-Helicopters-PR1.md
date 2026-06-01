@@ -53,3 +53,29 @@ Autonomous AI-flown supply helicopters are intentionally deferred. The upstream 
 - Confirm action labels and completion messages still make sense for trucks and helicopters.
 - Run LoadoutManager after merge to propagate Chernarus source changes to Takistan/generated targets.
 
+## Claude Review Pass
+
+Claude verified the review questions against the `master..feat/supply-helicopter` diff. Paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
+
+| Question | Verdict | Evidence |
+| --- | --- | --- |
+| Can a non-supply helicopter trigger the action? | No. | `Client/Module/Skill/Skill_Apply.sqf` gates the action by truck class or supply-heli class plus upgrade level, and `supplyMissionStart.sqf` recomputes eligibility before loading. |
+| Do upgrade gates match the class lists? | Yes. | `Init_CommonConstants.sqf` adds T2 light heli classes gated at Supply upgrade >=2 and T3 heavy heli classes gated at >=3. |
+| Can interdiction double-award? | No for one death. | The `Killed` EH awards `round(_amt * 0.25)` and immediately sets `SupplyAmount` to `0`, so later stacked handlers see zero. |
+| Do repeated reloads stack handlers? | Yes. | `Server/Module/supplyMission/supplyMissionStarted.sqf` adds a `Killed` EH every mission start with no guard or removal. This is a real event-handler leak even though double payment is currently prevented. |
+| Do cash-run funds reach the intended account? | Yes. | Heavy-heli cash runs move value to commander team funds through `ChangeTeamFunds`; without a commander, value falls back to side supply. Side supply receives nothing on a successful cash run by design. |
+| Do messages still read sensibly? | Yes. | Labels use `LOAD SUPPLIES`; messages distinguish `"HELI"` and `"truck"` and append `" (cash run)"` where appropriate. |
+
+### New Constants Introduced By PR #1
+
+`Init_CommonConstants.sqf` gains `WFBE_C_SUPPLY_TRUCK_TYPES`, `WFBE_C_SUPPLY_HELI_TYPES_T2`, `WFBE_C_SUPPLY_HELI_TYPES_T3`, `WFBE_C_SUPPLY_HELI_TYPES` and `WFBE_C_SUPPLY_VEHICLE_TYPES`. This centralizes class lists that were previously duplicated in action and mission-start logic.
+
+### Confirmed Follow-Up Defect
+
+Repeatedly loading the same vehicle stacks `Killed` event handlers. Recommended fix: set an object variable such as `wfbe_supply_killed_eh_set`, or remove the previous `Killed` handler before adding a new one. Do not add future side effects to that handler until this is fixed.
+
+## Continue Reading
+
+Previous: [Supply mission architecture](Supply-Mission-Architecture) | Next: [AI/headless/performance](AI-Headless-And-Performance)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

@@ -22,6 +22,8 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 - `docs/wiki/Claude-Long-Term-Goal.md`: complementary long-running Claude goal.
 - `docs/wiki/Documentation-Implementation-Plan.md`: implementation roadmap for future documentation passes.
 - `docs/wiki/SQF-Code-Atlas.md`: source-backed compile registry, PVF contract and direct publicVariable map.
+- `docs/wiki/Lifecycle-Wait-Chain.md`: source-backed boot ordering and wait barrier map.
+- `docs/wiki/WASP-Overlay.md`: source-backed custom WASP feature overlay and dead-reference map.
 - `docs/wiki/Agent-Worklog.md`: append-only agent-visible worklog.
 - `docs/wiki/Feature-Status-Register.md`: open risks, partial features and missing features.
 
@@ -32,6 +34,7 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 - Keep gameplay-code changes out of documentation-only branches unless explicitly requested.
 - If changing mission code later, edit Chernarus source and run LoadoutManager propagation.
 - When an agent finds a contradiction, record it in `Agent-Worklog.md` and update the affected wiki page.
+- If another agent branch is based on an older docs commit, integrate findings selectively instead of merging away newer navigation or atlas pages.
 
 ## Review Gates
 
@@ -41,3 +44,8 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 - Any broken/partial feature claim cites concrete source evidence.
 - No Arma 3-only scripting assumptions are introduced.
 
+## Continue Reading
+
+Previous: [Agent context](Agent-Context) | Next: [Agent worklog](Agent-Worklog)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

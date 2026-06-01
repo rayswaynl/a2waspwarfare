@@ -1,5 +1,7 @@
 # Mission Entrypoints And Lifecycle
 
+> For the machine-role truth table, per-role boot timelines, and global flag -> `waitUntil` dependency graph, read [Lifecycle wait-chain reference](Lifecycle-Wait-Chain) before reordering any init call.
+
 ## `description.ext`
 
 The mission metadata and UI resource graph is assembled from:
@@ -71,3 +73,8 @@ Global gameplay hotkeys are wired here through `findDisplay 46` `KeyDown` handle
 
 Headless support is gated by the OA version check in `initJIPCompatible.sqf`. When supported and configured, `Headless/Init/Init_HC.sqf` loads client PVF handling and common init pieces needed for delegated AI.
 
+## Continue Reading
+
+Previous: [Architecture overview](Architecture-Overview) | Next: [Lifecycle wait-chain](Lifecycle-Wait-Chain)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

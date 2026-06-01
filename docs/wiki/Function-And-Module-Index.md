@@ -78,3 +78,8 @@ This page names the major function groups and what they are for. It is intention
 - `Server/Init/Init_Server.sqf`: long-lived server loops; duplicate or unconditional loops can hurt live performance.
 - `Tools/LoadoutManager`: generated mission copying/packing; accidental edits to generated mission folders can be overwritten.
 
+## Continue Reading
+
+Previous: [SQF code atlas](SQF-Code-Atlas) | Next: [Networking/PV](Networking-And-Public-Variables)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

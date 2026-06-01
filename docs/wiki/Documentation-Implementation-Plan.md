@@ -113,3 +113,9 @@ A documentation pass is complete when:
 - `Agent-Worklog.md` records what changed and who changed it.
 - Source-backed claims include concrete file paths or clearly named runtime scripts.
 - The docs avoid Arma 3 scripting assumptions.
+
+## Continue Reading
+
+Previous: [Agent worklog](Agent-Worklog) | Next: [Claude focused goal](Claude-Goal)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

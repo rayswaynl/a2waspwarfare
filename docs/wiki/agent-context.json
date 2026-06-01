@@ -18,29 +18,66 @@
       "Quickstart-For-Humans-And-Agents",
       "Architecture-Overview",
       "Mission-Entrypoints-And-Lifecycle",
+      "Lifecycle-Wait-Chain",
       "Source-Inventory",
-      "Core-Systems-Index",
-      "Function-And-Module-Index",
+      "Content-Structure-And-Maps",
+      "WASP-Overlay",
       "SQF-Code-Atlas",
+      "Function-And-Module-Index",
       "Networking-And-Public-Variables",
       "Gameplay-Systems-Atlas",
+      "Core-Systems-Index",
       "Economy-Towns-And-Supply",
       "Supply-Mission-Architecture",
+      "Current-Work-Supply-Helicopters-PR1",
       "AI-Headless-And-Performance",
       "Client-UI-HUD-And-Menus",
       "Tools-And-Build-Workflow",
       "External-Integrations",
-      "Content-Structure-And-Maps",
       "Feature-Status-Register",
-      "Current-Work-Supply-Helicopters-PR1",
-      "Documentation-Implementation-Plan",
-      "Coordination-Board",
-      "Claude-Goal",
-      "Claude-Long-Term-Goal",
-      "Agent-Worklog",
+      "AI-Assistant-Developer-Guide",
       "Agent-Context",
-      "AI-Assistant-Developer-Guide"
-    ]
+      "Coordination-Board",
+      "Agent-Worklog",
+      "Documentation-Implementation-Plan",
+      "Claude-Goal",
+      "Claude-Long-Term-Goal"
+    ],
+    "navigation": {
+      "primaryTour": [
+        "Home",
+        "Quickstart-For-Humans-And-Agents",
+        "Architecture-Overview",
+        "Mission-Entrypoints-And-Lifecycle",
+        "Lifecycle-Wait-Chain",
+        "Source-Inventory",
+        "Content-Structure-And-Maps",
+        "WASP-Overlay",
+        "SQF-Code-Atlas",
+        "Function-And-Module-Index",
+        "Networking-And-Public-Variables",
+        "Gameplay-Systems-Atlas",
+        "Core-Systems-Index",
+        "Economy-Towns-And-Supply",
+        "Supply-Mission-Architecture",
+        "Current-Work-Supply-Helicopters-PR1",
+        "AI-Headless-And-Performance",
+        "Client-UI-HUD-And-Menus",
+        "Tools-And-Build-Workflow",
+        "External-Integrations",
+        "Feature-Status-Register",
+        "AI-Assistant-Developer-Guide",
+        "Agent-Context",
+        "Coordination-Board",
+        "Agent-Worklog",
+        "Documentation-Implementation-Plan",
+        "Claude-Goal",
+        "Claude-Long-Term-Goal"
+      ],
+      "hasPerPageContinueReading": true,
+      "sidebar": "_Sidebar.md",
+      "footer": "_Footer.md"
+    }
   },
   "rules": [
     "Use Bohemia Interactive Arma 2 OA scripting docs; avoid Arma 3 assumptions.",
@@ -66,15 +103,17 @@
     "ai": "Server town AI, AI commanders, client/headless delegation, player AI watchdog/recovery.",
     "ui": "Rsc resources, Client/GUI menus, RHUD/FPS HUD, map marker loops.",
     "tooling": "LoadoutManager for mission generation/packaging; PerformanceAuditAnalyzer for RPT metrics.",
-    "integrations": "DiscordBot, a2waspwarfare_Extension, A2WaspDatabase extension, BattlEye publicVariable filter."
+    "integrations": "DiscordBot, a2waspwarfare_Extension, A2WaspDatabase extension, BattlEye publicVariable filter.",
+    "waspOverlay": "Project-specific WASP additions include base repair, RPG dropping, marker monitor, HQ recovery action, start vehicles and a server selftest. See WASP-Overlay.md."
   },
   "knownRisks": [
-    "Autonomous AI supply logistics is incomplete: UpdateSupplyTruck disabled and Server/FSM/supplytruck.fsm missing.",
+    "Autonomous AI supply trucks are config-gated latent breakage: UpdateSupplyTruck compile is disabled, a live call remains under Supply System 0 plus AI commanders, and Server/FSM/supplytruck.fsm is missing.",
     "DoNotUse CRV7PG loadout classes can crash the game if used in loadouts.",
     "AntiStack database extension calls are live-server sensitive.",
     "Generated missions can be overwritten by LoadoutManager.",
     "PublicVariable traffic and client marker/UI loops are performance-sensitive.",
-    "PVF dispatch uses Call Compile on registered function-name strings; keep command names controlled."
+    "PVF dispatch uses Call Compile on registered function-name strings; keep command names controlled.",
+    "PR #1 currently stacks Killed event handlers on reused supply vehicles; current double-payment is bounded, but the event-handler leak should be fixed before adding side effects."
   ],
   "currentPR": {
     "number": 1,
@@ -93,5 +132,27 @@
     "worklog": "Agent-Worklog.md",
     "board": "Coordination-Board.md",
     "codeAtlas": "SQF-Code-Atlas.md"
-  }
+  },
+  "reviewPasses": [
+    {
+      "date": "2026-06-01",
+      "agent": "Claude",
+      "branch": "docs/developer-wiki-claude",
+      "integratedBy": "Codex",
+      "pagesAdded": [
+        "Lifecycle-Wait-Chain.md",
+        "WASP-Overlay.md"
+      ],
+      "findings": [
+        "PVF dispatch uses one PV variable per command with client-side element-0 routing and scheduled Spawn dispatch.",
+        "Town AI performance is based on spawn/delete distance activation, not simulation caching.",
+        "HC delegation works by remote creation and can downgrade at init if no HC is present.",
+        "Supply System 0 plus AI commanders can hit disabled UpdateSupplyTruck and missing supplytruck.fsm.",
+        "PR #1 stacks Killed event handlers on reused supply vehicles."
+      ],
+      "correctionsDuringIntegration": [
+        "Lifecycle economy override is WF_Debug-gated in current source, not unconditional."
+      ]
+    }
+  ]
 }

@@ -51,3 +51,8 @@ rg -n "TODO|FIXME|DoNotUse|GAME_CRASH|disabled|commented" Missions/[55-2hc]warfa
 - For performance changes: collect RPT with Performance Audit and run `Tools/PerformanceAuditAnalyzer`.
 - For network changes: test dedicated-server and hosted/local branches if the code has `isServer`, `isDedicated`, `isHostedServer` or `local player` conditions.
 
+## Continue Reading
+
+Previous: [Feature status](Feature-Status-Register) | Next: [Agent context](Agent-Context)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

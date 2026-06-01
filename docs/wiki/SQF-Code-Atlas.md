@@ -222,3 +222,8 @@ Server-side long-running systems are mostly `.sqf` loop scripts under `Server/FS
 - Avoid `Call Compile` on data strings unless following an established PVF/localization pattern and the source is controlled.
 - For performance-sensitive loops, preserve existing parameter guards and `WF_Debug` logging style.
 
+## Continue Reading
+
+Previous: [WASP overlay](WASP-Overlay) | Next: [Function/module index](Function-And-Module-Index)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

@@ -5,25 +5,32 @@
 [Agent context](Agent-Context)  
 [`agent-context.json`](agent-context.json)
 
-## Architecture
+## Start Here
 
-- [Overview](Architecture-Overview)
-- [Lifecycle](Mission-Entrypoints-And-Lifecycle)
+- [1. Quickstart](Quickstart-For-Humans-And-Agents)
+- [2. Architecture](Architecture-Overview)
+- [3. Mission lifecycle](Mission-Entrypoints-And-Lifecycle)
+- [4. Lifecycle wait-chain](Lifecycle-Wait-Chain)
+
+## Source Map
+
 - [Source inventory](Source-Inventory)
 - [Content/maps](Content-Structure-And-Maps)
+- [WASP overlay](WASP-Overlay)
 
 ## Code
 
-- [Core systems](Core-Systems-Index)
-- [Function index](Function-And-Module-Index)
 - [SQF atlas](SQF-Code-Atlas)
+- [Function index](Function-And-Module-Index)
 - [Networking/PV](Networking-And-Public-Variables)
 
 ## Gameplay
 
 - [Gameplay atlas](Gameplay-Systems-Atlas)
+- [Core systems](Core-Systems-Index)
 - [Economy/towns/supply](Economy-Towns-And-Supply)
 - [Supply missions](Supply-Mission-Architecture)
+- [Supply heli PR #1](Current-Work-Supply-Helicopters-PR1)
 - [AI/performance](AI-Headless-And-Performance)
 - [UI/HUD/menus](Client-UI-HUD-And-Menus)
 
@@ -36,7 +43,6 @@
 
 ## Current Work
 
-- [Supply heli PR #1](Current-Work-Supply-Helicopters-PR1)
 - [Implementation plan](Documentation-Implementation-Plan)
 - [Coordination board](Coordination-Board)
 - [Worklog](Agent-Worklog)
