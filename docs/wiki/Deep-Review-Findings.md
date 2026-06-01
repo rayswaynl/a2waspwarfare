@@ -740,6 +740,26 @@ Also re-confirms **DR-12**: the detection block is gated by `if (_victory == 0)`
 
 **Outcome:** Victory/endgame row — **Perf and JIP/HC cells filled (DR-36)**: Perf clean, JIP server-authoritative (narrow endgame-join gap noted); DR-11/DR-13 now have a source-level mechanism + fix.
 
+## Round 28 — 2026-06-02 (Claude) — boot/lifecycle Perf + JIP/HC (DR-37): reviewed clean, one robustness note
+
+Lane `boot-lifecycle-perf-jip-review`. Filled the Boot/lifecycle Perf + JIP/HC cells by reviewing the role router (`initJIPCompatible.sqf`) and the client boot chain (`Client/Init/Init_Client.sqf`), with the wait-chain cross-referenced against [Lifecycle wait-chain](Lifecycle-Wait-Chain). Result: boot is well-architected for JIP and Perf-clean; one robustness gap worth a defensive fix.
+
+### DR-37 — Boot Perf clean + JIP state-sync comprehensive; the post-join `waitUntil` chain has no timeouts (a never-set synced var hangs the JIP client) — **Low (reviewed clean + robustness note)**
+
+**Perf — clean.** All boot blocking-waits are bare `waitUntil {cond}`, which the A2 OA scheduler evaluates once per frame and yields between (not a CPU busy-spin like a sleepless `while`), and every condition is cheap (`!isNil`, `!isNull player`, `time>0`, `!isNil {logic getVariable …}`). One wait uses the throttle idiom `waitUntil {sleep 0.5; visibleMap}` (`Init_Client.sqf:248`) — deliberately evaluates every 0.5 s instead of per-frame, a good pattern. The `while {true} { sleep 0.1; … exitWith … }` loops at `Init_Client.sqf:419/444` are **not** perpetual 10 Hz loops — they are bounded join-handshake polls (see below) that exit on ACK. No boot perf trap. (The genuinely long-running client loops — RHUD/marker updaters at `:522/:864` — belong to the UI/Markers rows already covered, each with its own internal `sleep`.)
+
+**JIP/HC — comprehensive and correct.** `initJIPCompatible.sqf` routes roles cleanly: server (`isHostedServer || isDedicated`), client part II (`isHostedServer || (!isHeadLessClient && !isDedicated)`), headless (`isHeadLessClient`). A JIP client:
+- syncs time/date via the engine-synced `WFBE_DAYNIGHT_DATE` (or `skipTime (time/3600)` catch-up on the disabled path) — `:189-205`, reviewed clean in Round 17;
+- syncs teams by waiting on the synced `WFBE_PRESENTSIDES` then per-side `wfbe_teams` (`:225-234`);
+- pulls all remaining client state from broadcast logic-object variables via a serial `waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_…"}}` chain (`Init_Client.sqf:367-502`: structures, commander, radio_hq(+id), startpos, hq, hq_deployed, votetime).
+- **Robust join handshake:** the `RequestJoin`→ACK poll (`:416-429`) polls at 10 Hz, **re-sends after a 30 s timeout**, and fails the client back to the lobby on team-stack/swap — a well-defended one-time handshake.
+
+**The one robustness gap.** Unlike the join handshake, the **post-join state-sync `waitUntil` chain has no timeouts**. Each step blocks on a synced `wfbe_*` logic variable; in normal operation all are reliably `setVariable [...,true]` server-side so the chain completes, but if a server-side regression ever fails to set one (e.g. `wfbe_radio_hq_id`, `:397`), the JIP client **hangs forever at that step with no fallback or log past it** — presenting as a "stuck on black screen at join" with no diagnostic. Not a live bug (the variables are set today), but a fragility: consider a `waitUntil {!isNil … || (_t = _t + …; _t > N)}` timeout with a logged warning, mirroring the handshake's own retry discipline.
+
+**Handoff for Codex.** No code defect to fix and no wiki rewrite needed; optionally note in [Lifecycle wait-chain](Lifecycle-Wait-Chain) that the post-join `wfbe_*` waits are timeout-less (a single missed server broadcast = permanent JIP hang) as a known robustness characteristic. Owner decision: add defensive timeouts or accept the current fail-silent behavior.
+
+**Outcome:** Boot/lifecycle row — **Perf and JIP/HC cells reviewed clean (DR-37)**; role routing + JIP state-sync confirmed correct; timeout-less post-join wait-chain logged as a robustness note.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)

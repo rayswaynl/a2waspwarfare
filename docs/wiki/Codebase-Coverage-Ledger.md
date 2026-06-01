@@ -25,7 +25,7 @@ Legend: ✅ done (source-cited) · 🟡 partial · ⬜ gap.
 
 | Subsystem | Map | Auth | PV | Perf | JIP/HC | Drift | Anchor docs |
 | --- | :-: | :-: | :-: | :-: | :-: | :-: | --- |
-| Boot / lifecycle | ✅ | ✅ | ✅ | 🟡 | 🟡 | ✅ | [Lifecycle wait-chain](Lifecycle-Wait-Chain), [Entrypoints](Mission-Entrypoints-And-Lifecycle) |
+| Boot / lifecycle | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | [Lifecycle wait-chain](Lifecycle-Wait-Chain), [Entrypoints](Mission-Entrypoints-And-Lifecycle); **DR-37 (Perf+JIP/HC reviewed clean: frame-throttled cheap waitUntils, robust RequestJoin handshake w/ 30s retry; note: post-join `wfbe_*` waitUntil chain has no timeouts → a never-set synced var hangs JIP client)** |
 | PV / networking dispatch | ✅ | ✅ | ✅ | 🟡 | 🟡 | n/a | [Networking](Networking-And-Public-Variables), DR-1 |
 | Economy / town / supply | ✅ | ✅ | ✅ | 🟡 | 🟡 | ✅ | [Economy](Economy-Towns-And-Supply), [Gameplay atlas](Gameplay-Systems-Atlas); DR-20, DR-22, DR-23, DR-27, DR-28. **Economy authority FULLY characterized — every spend path client-authoritative: build/buy/sell/supply/upgrade/ICBM-superweapon/gear-rearm. One owner decision (server ledger vs BattlEye) covers the whole class** |
 | Supply missions | ✅ | 🟡 | ✅ | 🟡 | 🟡 | ✅ | [Supply mission arch](Supply-Mission-Architecture), DR (PR#1), DR-18 (cooldown key casing) |
