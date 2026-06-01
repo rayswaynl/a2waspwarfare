@@ -596,6 +596,29 @@ Source facts (full repo sweep):
 
 **Outcome:** Integrations row — **BattlEye sub-target reviewed (DR-30)**. AntiStack DB (DR-7..DR-10), Extension (DR-29) and BattlEye (DR-30) now done; only the **Discord data path remains ⬜** within the bundle. Every prior economy/forgery finding's option (b) is now annotated as "not shipped."
 
+## Round 22 — 2026-06-02 (Claude) — Discord data path (DR-31) — the DR-29 deserialization landmine is LIVE in the bot, with `TypeNameHandling.All`
+
+Lane `discord-datapath-review`. Reviewed the in-repo `DiscordBot/` (.NET / Discord.Net) end-to-end — the **consumer** side of the GLOBALGAMESTATS extension (DR-29), closing the last Integrations sub-target. The data path is: Arma server → GLOBALGAMESTATS extension writes `C:\a2waspwarfare\Data\database.json` (DR-29) → DiscordBot reads it on a 60 s timer → posts a game-status embed. Net: secret hygiene is good, the inbound command surface is properly auth-gated, but the deserialization sink I flagged as *dormant* in the extension (DR-29 #2) is **active here, and worse**.
+
+### DR-31 — DiscordBot deserializes `database.json` with `TypeNameHandling.All` on a 60 s timer — live insecure-deserialization gadget sink in the token-holding process — **High (insecure deserialization; local-write-gated RCE)**
+
+Source-verified:
+- **The active load path uses `TypeNameHandling.All`.** `GameData.LoadFromFile()` (`DiscordBot/src/ExtensionData/GameData/GameData.cs:49-56`) builds `new JsonSerializerSettings { … TypeNameHandling = TypeNameHandling.All … }` and `JsonConvert.DeserializeObject<GameData>(json, …)` on the contents of `database.json`. `TypeNameHandling.All` honors `$type` directives for the root **and every nested object/array** — the canonical Newtonsoft gadget sink (e.g. `ObjectDataProvider` → arbitrary `Process.Start`).
+- **It runs automatically every 60 s, no interaction.** `GameStatusUpdater` (`src/GameStatusUpdater.cs:9,19-22,84`) arms a `System.Timers.Timer` at `UPDATE_INTERVAL_SECONDS = 60` with `AutoReset = true` and calls `LoadFromFile()` each tick. Two more live callers: `ProgramRuntime.cs:15` (startup) and `CommandHandler.cs:211` (`CreateGameStatusEmbed`). So the sink is exercised continuously regardless of any auth.
+- **The capability is gratuitous.** `GameData`'s only state is `[DataMember] private string[] exportedArgs` (`GameData.cs:30`) — a flat string-array DTO with no polymorphism. The writer (the extension, DR-29) serializes with `TypeNameHandling.None` and emits no `$type`. The reader therefore needs **`.None`**; requesting `.All` adds nothing but the gadget sink. (A second, *dead* copy `GameDataDeSerialization.HandleGameDataCreationOrLoading` uses `TypeNameHandling.Auto` — no callers, grep-confirmed; should be deleted too.)
+- **Trigger & blast radius.** Not remotely exploitable as-configured: `database.json` is normally written only by the trusted local extension. But any write-primitive to `C:\a2waspwarfare\Data\database.json` — a misconfigured ACL/share on `DataSourcePath`, a malicious mod or compromised Arma process writing there, or a future feature that ingests untrusted data into that file — yields **arbitrary code execution in the DiscordBot process**, which holds the Discord bot token (→ token theft + full bot/guild control). Classic local insecure-deserialization escalation.
+
+**Owner decision / fix (trivial).** Change `GameData.LoadFromFile()` to `TypeNameHandling.None` (the data is a flat DTO; no behavior is lost) and delete the dead `.Auto` method. This also retro-closes DR-29 #2: keep the extension's deserialize path `.None` if it is ever reinstated. Defense-in-depth: lock down the ACL on `C:\a2waspwarfare\Data` so only the Arma service can write it.
+
+**Secondary observations (Low / informational):**
+- **Secret hygiene is good — resolves the external reports' "Discord sample hygiene" item.** `DiscordBot/.gitignore` excludes `token.txt` and `preferences.json`; `preferences_sample.json` contains **no token**. Minor: the sample commits a real-looking `GuildID` (`440257265941872660`) and one `AuthorizedUserIDs` snowflake — these are Discord IDs, not credentials (knowing an admin's user ID grants nothing without being that user), but a sample is cleaner with placeholder zeros.
+- **Inbound command surface is correctly gated.** Slash-command handlers check `Preferences.Instance.IsUserAuthorized(userId)` (`CommandHandler.cs:49,127`) before privileged actions — no missing-authorization finding there.
+- **Three-way `exportedArgs` shape drift (coupling smell).** The array is `new string[2]` in the extension (DR-29), `new string[4]` in the bot (`GameData.cs:30`), while the SQF sender emits **5** data fields and the bot reads index `[4]`. Held together only by wholesale `= _args` replacement on deserialize + bounds-guards (`Length > 4`, added after the commented unguarded `GetGameMapAndPlayerCount` at `GameData.cs:138-145`). Benign today, but the three sides of the contract disagree on the shape — document the canonical 5-field layout (`[0]bluforScore [1]opforScore [2]worldName [3]uptime [4]playerCount`) in one place.
+
+**Handoff for Codex.** Document the Discord data path in [External integrations](External-Integrations): one-way pull (extension writes JSON → bot reads on 60 s timer → status embed), secret hygiene OK, command surface auth-gated; flag the `TypeNameHandling.All` fix as the one actionable code-owner item and cross-link DR-29/DR-31. These are code artifacts, logged here for traceability.
+
+**Outcome:** Integrations row — **Discord sub-target reviewed (DR-31); all four sub-targets (AntiStack DB, Extension, BattlEye, Discord) now done.** Map cell can move to ✅. The DR-29 deserialization concern is now closed end-to-end (dormant in writer, live in reader, one-token fix).
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
