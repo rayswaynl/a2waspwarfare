@@ -18,6 +18,11 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Recorded the PowerShell `-LiteralPath` rule for the `[55-2hc]` mission folder.
 - Added GitHub wiki `_Sidebar.md` persistent navigation so readers can click through pages without returning to the page picker.
 
+## 2026-06-01 - Codex Coordination Pass
+
+- Added `Claude-Long-Term-Goal.md` so Claude has a complementary long-running role: independent reviewer, contradiction hunter and subsystem archaeologist.
+- Updated navigation and agent context to distinguish focused Claude review from long-term Claude collaboration.
+
 ## 2026-06-01 - Codex Background Reviewer
 
 - Reviewed the repo read-only for missing docs before publish.

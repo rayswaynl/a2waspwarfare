@@ -11,7 +11,7 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 | Agent | Current ownership | Expected output |
 | --- | --- | --- |
 | Codex | Initial wiki implementation, repo/wiki publishing, source inventory, agent context artifact. | Wiki pages, `docs/wiki` mirror, `agent-context.json`, worklog entry. |
-| Claude | Independent review/deepening pass after Codex publish. | Add findings to `Agent-Worklog.md`; propose or commit wiki improvements without overwriting Codex work. |
+| Claude | Independent review/deepening pass, contradiction hunting and subsystem archaeology. | Add findings to `Agent-Worklog.md`; propose or commit targeted wiki improvements without overwriting Codex work. |
 | Future agents | Feature-specific docs upkeep and code-change handoffs. | Update relevant wiki pages and `agent-context.json` when architecture or workflows change. |
 
 ## Shared Files
@@ -19,6 +19,7 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 - `docs/wiki/Agent-Context.md`: human-readable AI context.
 - `docs/wiki/agent-context.json`: machine-readable repo map and safe-development facts.
 - `docs/wiki/Claude-Goal.md`: copy/paste `/goal` for Claude.
+- `docs/wiki/Claude-Long-Term-Goal.md`: complementary long-running Claude goal.
 - `docs/wiki/Documentation-Implementation-Plan.md`: implementation roadmap for future documentation passes.
 - `docs/wiki/SQF-Code-Atlas.md`: source-backed compile registry, PVF contract and direct publicVariable map.
 - `docs/wiki/Agent-Worklog.md`: append-only agent-visible worklog.

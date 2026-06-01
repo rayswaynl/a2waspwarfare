@@ -33,6 +33,7 @@
       "Documentation-Implementation-Plan",
       "Coordination-Board",
       "Claude-Goal",
+      "Claude-Long-Term-Goal",
       "Agent-Worklog",
       "Agent-Context",
       "AI-Assistant-Developer-Guide"
@@ -85,6 +86,7 @@
   },
   "coordination": {
     "claudeGoal": "Claude-Goal.md",
+    "claudeLongTermGoal": "Claude-Long-Term-Goal.md",
     "worklog": "Agent-Worklog.md",
     "board": "Coordination-Board.md",
     "codeAtlas": "SQF-Code-Atlas.md"

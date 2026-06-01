@@ -25,6 +25,7 @@ Use the Bohemia Interactive Arma 2 OA scripting command reference when checking 
 - [Documentation implementation plan](Documentation-Implementation-Plan)
 - [Coordination board](Coordination-Board)
 - [Claude goal](Claude-Goal)
+- [Claude long-term goal](Claude-Long-Term-Goal)
 - [Agent worklog](Agent-Worklog)
 - [Agent context](Agent-Context)
 - [AI assistant developer guide](AI-Assistant-Developer-Guide)

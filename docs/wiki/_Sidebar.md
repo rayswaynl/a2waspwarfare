@@ -6,6 +6,7 @@
 - [Agent context](Agent-Context)
 - [Documentation plan](Documentation-Implementation-Plan)
 - [Claude goal](Claude-Goal)
+- [Claude long-term goal](Claude-Long-Term-Goal)
 - [Worklog](Agent-Worklog)
 
 ## Architecture
@@ -41,4 +42,3 @@
 - [Supply helicopters PR #1](Current-Work-Supply-Helicopters-PR1)
 - [Coordination board](Coordination-Board)
 - [agent-context.json](agent-context.json)
-
