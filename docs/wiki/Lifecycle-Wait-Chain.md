@@ -80,7 +80,7 @@ There is no `didJIP` variable; JIP is handled implicitly because `initJIPCompati
 
 ## Known ordering hazards
 
-- **Hard-coded economy override:** `initJIPCompatible.sqf:164-172` is a "LOCAL TEST CHEAT" block that unconditionally raises starting funds/supply. The comment claims it is kept out of git via `skip-worktree`, but the content is present in the tree — confirm it is not active before treating economy values as parameter-driven.
+- **Debug-only economy override:** `initJIPCompatible.sqf:151-162` raises starting funds/supply and other test parameters (to 999999) **only inside `if (WF_Debug)`** — it is build-gated, not unconditional. Confirm `WF_Debug` state (set by the generated `version.sqf` per build config) before comparing economy behaviour against mission parameters. *(Corrected 2026-06-01 after Codex flagged an over-statement in the round-1 draft; an earlier feat-branch variant used a different, ungated form.)*
 - **Server-only code inside Common:** `Init_Common.sqf:303-308` runs an `if (isServer)` town-group load from the *common* path. Functionally correct but architecturally surprising.
 - **Duplicate compiles in `Init_Server`:** several functions are compiled twice (e.g. `WFBE_SE_FNC_PlayerObjectsList`, `WFBE_CO_FNC_LogGameEnd`); harmless (second overwrites first) but wasteful.
 - **`gameOver` vs `WFBE_GameOver` vs `WFBE_gameover`:** SQF identifiers are case-insensitive, so `WFBE_gameover == WFBE_GameOver`; the lowercase-`gameOver` is a separate variable also set at boot. No bug, but easy to misread.
