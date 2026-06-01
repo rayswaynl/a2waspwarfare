@@ -387,6 +387,24 @@ So **N owning-side clients each hold the same `Killed` EH**. When the HQ dies, t
 ### Handoff
 Code owners: add the one-line idempotency guard to `Server_OnHQKilled.sqf` (DR-20) — this also fixes the duplicate-score symptom on HQ kills in populated games. Ledger: JIP/HC cells advanced for victory/economy/construction (HQ-death path verified end-to-end).
 
+## Round 11 — 2026-06-02 (Claude) — headless disconnect (DR-21) + a self-correction
+
+Lane `headless-disconnect-review`. Verifies the round-1 hypothesis about HC disconnect at `Server/Functions/Server_OnPlayerDisconnected.sqf`.
+
+### Correction to a round-1 hypothesis (honesty note)
+Round 1 listed, as an unverified gotcha, "HC disconnect orphans units it created." Verified at source, that framing is **wrong** and is hereby downgraded: in Arma 2 OA, when any machine disconnects the engine **migrates its local objects/groups to the server** (ownership transfer, not deletion). HC-delegated AI is therefore **not orphaned or lost** on disconnect. The accurate effects are below (DR-21).
+
+### DR-21 — HC disconnect dumps delegated AI on the server with no re-delegation — **Medium (performance/operational, non-data-loss)**
+
+`Server_OnPlayerDisconnected.sqf` HC handling:
+- If `WFBE_C_AI_DELEGATION == 2` and `WFBE_HEADLESS_<uid>` exists, it removes the HC's group from `WFBE_HEADLESSCLIENTS_ID` and clears `WFBE_HEADLESS_<uid>`.
+- `WFBE_JIP_USER<uid>` is nil for an HC (HCs don't register as players via `RequestJoin`), so the handler `exitWith`s before the player-team/unit logic. (It does also delete any `WFBE_CLIENT_<uid>_OBJECTS` registered to that uid earlier in the handler.)
+
+What actually happens to the AI the HC was simulating: the **engine transfers those units/groups to the server**, so the server's load spikes by exactly the amount the HC was offloading — the opposite of the delegation benefit, precisely when you least want it. There is **no re-delegation**: the disconnect handler does not hand the migrated AI to a surviving HC, and (per the round-1 init finding) `WFBE_C_AI_DELEGATION` is only evaluated/downgraded at boot, so a later HC reconnect does not resume offloading either. **Net:** HC delegation has no failover/rebalancing — a single HC drop silently re-loads the server for the rest of the match. **Suggested handling:** on HC disconnect, if other HCs remain, re-`setGroupOwner` the migrated town-AI groups to a surviving HC (a periodic rebalancer is cleaner than doing it in the disconnect handler); and make delegation re-evaluate when an HC (re)connects rather than only at boot. (Arma 2 OA *does* support `setGroupOwner`; note the mission currently never uses it — see [AI, headless and performance](AI-Headless-And-Performance).)
+
+### Handoff
+Code owners: treat HC delegation as best-effort with no failover today; if HC stability matters, add re-delegation/rebalancing on HC disconnect/connect. Ledger: AI/Headless JIP/HC cell advanced; round-1 "orphan" hypothesis corrected.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
