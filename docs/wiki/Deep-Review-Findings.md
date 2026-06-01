@@ -619,6 +619,38 @@ Source-verified:
 
 **Outcome:** Integrations row — **Discord sub-target reviewed (DR-31); all four sub-targets (AntiStack DB, Extension, BattlEye, Discord) now done.** Map cell can move to ✅. The DR-29 deserialization concern is now closed end-to-end (dormant in writer, live in reader, one-token fix).
 
+## Round 23 — 2026-06-02 (Claude) — generated-mission drift (DR-32): vanilla faithful, modded forks divergent, 4 modded stubs abandoned
+
+Lane `generated-mission-drift-review`. Cross-cutting Drift pass: file-set + byte-level comparison of the Chernarus **source** mission against every generated mission (1 vanilla + 7 modded), to establish whether the DR-1..DR-31 findings (all verified against Chernarus) propagate, and whether LoadoutManager generation introduces divergence. This is the single highest-leverage Drift result — it characterizes the Drift dimension for **all** subsystems at once.
+
+### DR-32 — Generated missions fall into three fidelity tiers; modded missions are divergent forks or abandoned stubs, so source fixes do not propagate to them — **Medium (maintainability / drift) + abandoned-code inventory**
+
+Method: relative-path file-set `comm` + per-file `cmp` of all source `.sqf` against each generated mission. Results (differing/common `.sqf`):
+
+| Generated mission | differ/common .sqf | Tier |
+| --- | --- | --- |
+| `Missions_Vanilla/…takistan` | **15 / 671** | **Faithful** |
+| `Modded_Missions/…Napf` | 123 / 466 | Divergent fork |
+| `Modded_Missions/…eden` | 119 / 465 | Divergent fork |
+| `Modded_Missions/…lingor` | 104 / 417 | Divergent fork |
+| `Modded_Missions/…smd_sahrani_a2` | 4 / 4 (4 files total) | Abandoned stub |
+| `Modded_Missions/…dingor` | 3 / 3 (20 files total) | Abandoned stub |
+| `Modded_Missions/…tavi` | 2 / 2 (3 files total) | Abandoned stub |
+| `Modded_Missions/…isladuala` | 1 / 1 (1 file total) | Abandoned stub |
+
+1. **Vanilla Takistan is a faithful regeneration.** Only 15 `.sqf` differ, and all are map-config, not logic: the per-faction `Core_Artillery/Artillery_*.sqf`, `Config_GUE.sqf`, `GUI_Menu_Help.sqf`, `WASP/unsort/StartVeh.sqf`, and **`Server/Init/Init_Server.sqf` whose sole diff is one line** — `["SET_MAP", 1]` → `["SET_MAP", 2]` (the AntiStack DB map identifier). Plus textures (US/CDF skins → desert skins) and 3 extra native `Artillery_{TKA,TKGUE,US}.sqf`. **All other 656 logic files are byte-identical.** → **Every DR-1..DR-31 finding propagates verbatim to vanilla Takistan; a fix to the Chernarus source + regen corrects both.** The Drift dimension for the source→vanilla path is clean.
+
+2. **Napf / eden / lingor are heavily divergent full forks.** 104–123 of ~465 logic files differ from source — including security-critical files I reviewed: `Server_HandlePVF.sqf` (DR-1), `Server_HandleSpecial.sqf` (DR-27), `server_victory_threeway.sqf` (DR-11), `Server_ProcessUpgrade.sqf` (DR-23), `Server_OnHQKilled.sqf` (DR-20), `Server_OnPlayerDisconnected.sqf` (DR-21), `Init_PublicVariables.sqf`, `initJIPCompatible.sqf`. The divergence is **hand-customized behavior, not just config**: e.g. Napf's `Server_HandleSpecial.sqf` "ICBM" case additionally spawns three `BO_GBU12_LGB` laser-guided bombs around the target (absent in source). This is consistent with **DR-4** (modded propagation is commented out at `Tools/LoadoutManager/.../SqfFileGenerator.cs:132`) — the modded missions are **not** regenerated from source; they are independent forks. **Consequence:** a fix to the Chernarus source does **not** reach Napf/eden/lingor; the DR vulnerability *classes* almost certainly persist there (same architecture) but at different lines/with different effects, so each fork needs its own review and manual fix propagation.
+
+3. **smd_sahrani_a2 / dingor / tavi / isladuala are abandoned stubs.** 1–20 files each (a real mission is ~786 files / ~671 `.sqf`); they are missing `Server/`, `mission.sqm`, the `WASP/` overlay, `description.ext`, and essentially all logic. They cannot load as functional Warfare missions. These are incomplete scaffolds committed to the repo — an **abandoned-code/inventory** item.
+
+**Owner decisions / handoff.** Three explicit choices for the code owner, all logged for Codex to fold into [Tools and build workflow](Tools-And-Build-Workflow) / a generated-mission status table (Codex's lane):
+- **Stub missions (sahrani/dingor/tavi/isladuala):** complete via regeneration or **remove** them — they are dead weight and misleading as "supported maps."
+- **Divergent forks (Napf/eden/lingor):** pick a maintenance model — (a) re-enable modded propagation (DR-4) and regenerate from the hardened source, accepting loss of the hand-customizations (e.g. Napf's GBU ICBM), or (b) formally treat them as independent forks and apply every DR-1..DR-31 fix to each by hand. Today they silently drift.
+- **All security fixes:** apply to the Chernarus source first (propagates to vanilla Takistan on regen), then deliberately propagate to the 3 forks.
+
+**Outcome:** Drift dimension characterized across the whole codebase. Source→vanilla path is faithful (DR findings transfer verbatim); modded missions are out-of-scope forks/stubs flagged here. Ledger Drift cells updated to reference DR-32 (faithful-to-vanilla ✅; modded divergence is an owner decision, not a review gap).
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
