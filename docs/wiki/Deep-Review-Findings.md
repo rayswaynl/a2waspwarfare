@@ -697,6 +697,27 @@ Net: deployed MASH tents produce **no map markers** for the owning side. Confirm
 
 **Outcome:** Markers/respawn — MASH marker chain reviewed (DR-34): dead both ends + orphaned server PVEH; respawn selector Perf characterized. Markers row PV/JIP-HC cells reference DR-34.
 
+## Round 26 — 2026-06-02 (Claude) — parameters / localization integrity (DR-35): clean, with 2 dead-action confirmations
+
+Lane `params-localization-review`. Reviewed the two never-covered cross-cutting areas: **localization integrity** (do `localize`/`$STR_` references resolve?) and the **mission parameters** system. Result: localization is clean once case-folding and dead-code are accounted for; the params system is live and correctly wired.
+
+### DR-35 — Localization integrity is clean (no live broken strings); parameters system is live and correctly wired; 2 dead WASP actions confirmed — **Informational (reviewed clean + abandoned-code)**
+
+**Method matters (the trap that produces false findings).** Arma 2 OA stringtable lookup is **case-insensitive**, but text-diff tools are not. A naïve case-sensitive set-difference of the 204 static `localize "STR_…"` keys against the 1289 `stringtable.xml` keys reports 4 "missing"; after lowercasing both sides it drops to 3, and after checking each reference site for liveness it drops to **0 live bugs**:
+- `STR_WF_UPGRADE_uav_Desc` — **false positive (casing)**: defined as `STR_WF_UPGRADE_UAV_DESC`; resolves at runtime.
+- `STR_EP1_UAV_action_exit` (`Client/Module/UAV/uav_interface_oa.sqf:25`, live) — **engine-provided**: the `STR_EP1_*` namespace is supplied by the Arma 2 OA base game's global stringtable, not the mission; resolves at runtime.
+- `STR_WASP_actions_OnArmor` and `STR_WF_Gear` — referenced **only in commented-out lines** (`WASP/actions/AddActions.sqf:4,10-12`, the dead "ride-on-armor" and "gear your unit" WASP actions). Dead code; the missing keys are moot.
+
+Config-side `$STR_` references in `.hpp`/`.ext` (excluding engine `STR_EP1_`/`STR_DN_`/`STR_USRACT` prefixes) all resolve. So **no live missing-localization display bug exists.** The stringtable carries ~1085 keys not hit by any static `localize` — a large legacy surface typical of a long-lived WFBE fork, not a defect (some are reached by config `$STR_`, engine, or removed features).
+
+**Parameters system — live and correct.** `Common/Init/Init_Parameters.sqf` iterates `missionConfigFile >> "Params"` and sets each `configName` as a `missionNamespace` variable, taking `paramsArray select _i` in multiplayer and the param's `default` in single-player. Wiring confirmed: `initJIPCompatible.sqf:121` runs it in MP; the parameter-display dialog is loaded via `Rsc/Dialogs.hpp:3136` (`onLoad ExecVM GUI_Display_Parameters.sqf`), defined in `Rsc/Parameters.hpp`. This is the canonical A2 OA pattern. One **fragility note** (not a defect): the `paramsArray select _i` ↔ `Params` iteration is **index-aligned**, so inserting/removing a param without keeping `class Params` order in sync would silently shift every later parameter's value — worth a comment in the config for future editors.
+
+**Abandoned-code inventory (adds to DR-32/DR-34).** `WASP/actions/AddActions.sqf` contains commented-out `OnArmor` (ride-on-tank: `GetOnArmor.sqf`/`GetOnArmorBots.sqf`/`GetOutBots.sqf`) and `GearYourUnit` actions — dead WASP features whose localization keys were never added. Confirms the earlier "WASP OnArmor/KeyDown abandoned" suspicion.
+
+**Handoff for Codex.** Optionally note in the [WASP overlay](WASP-Overlay) page that `AddActions.sqf` carries dead OnArmor/Gear actions, and add a one-line "keep `class Params` order stable (index-aligned to `paramsArray`)" caution to any parameters documentation (Codex's lane). No code defect to fix; the dead WASP actions are an owner cleanup decision (remove vs revive).
+
+**Outcome:** parameters/localization reviewed — **clean**; localization integrity verified (no live broken keys), params system confirmed live/wired, 2 dead WASP actions logged. New ledger row **Parameters / localization** → reviewed-clean (DR-35).
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)

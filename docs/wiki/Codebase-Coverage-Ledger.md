@@ -40,6 +40,7 @@ Legend: ✅ done (source-cited) · 🟡 partial · ⬜ gap.
 | Victory / endgame | ✅ | 🟡 | 🟡 | 🟡 | 🟡 | n/a | `server_victory_threeway.sqf`; DR-11..DR-13 (winner inversion, threeway no-detection, dup LogGameEnd) |
 | Weather / day-night | ✅ | n/a | ✅ | ✅ | ✅ | n/a | `Server_DayNightCycle.sqf` — **reviewed clean (Round 17, no defect)**: no div-by-zero, JIP-covered, local-animation+drift-sync design sound |
 | Modules (Artillery / ICBM / IRS / CM / UAV) | ✅ | 🟡 | 🟡 | 🟡 | 🟡 | ✅ | [Deep-review findings](Deep-Review-Findings) DR-27 (**ICBM nuke fully client-authoritative — forged `RequestSpecial` PV = server-applied map-wide kill, CRITICAL**); UAV-007 branch confirmed disabled; rest config-gated cosmetic/QoL |
+| Parameters / localization | ✅ | n/a | n/a | n/a | ✅ | ✅ | [Deep-review findings](Deep-Review-Findings) **DR-35 — reviewed clean**: no live missing `localize`/`$STR_` keys (3 apparent misses = 1 casing FP, 1 engine `STR_EP1_*`, 2 dead/commented WASP actions); params system live + wired (`Init_Parameters.sqf`, `initJIPCompatible.sqf:121`, `Dialogs.hpp:3136`); `paramsArray` index-aligned (keep `class Params` order) |
 | Markers / cleaners / restorers | ✅ | n/a | ✅ | ✅ | ✅ | n/a | [AI/headless](AI-Headless-And-Performance); [Deep-review findings](Deep-Review-Findings) **DR-34 (MASH map-marker dead both ends — trigger never broadcast + receiver commented at Init_Client.sqf:132 + orphaned live server PVEH; latent `publicVariable` JIP gap if revived; respawn selector is a 33Hz local loop)** |
 
 ### Drift dimension — campaign-wide result (DR-32)
