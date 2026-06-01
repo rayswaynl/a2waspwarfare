@@ -48,7 +48,7 @@ Every content page now includes a **Continue Reading** block with previous and n
 | Work on UI/HUD/menus | [Client UI, HUD and menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | Work on core gameplay | [Gameplay systems atlas](Gameplay-Systems-Atlas) -> [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) -> [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) -> [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) -> [Core systems index](Core-Systems-Index) |
 | Check agent progress | [Progress dashboard](Progress-Dashboard) -> [`agent-status.json`](agent-status.json) -> [`agent-events.jsonl`](agent-events.jsonl) |
-| Coordinate agents | [Progress dashboard](Progress-Dashboard) -> [Coordination board](Coordination-Board) -> [Agent worklog](Agent-Worklog) -> [Claude long-term goal](Claude-Long-Term-Goal) |
+| Coordinate agents | [Progress dashboard](Progress-Dashboard) -> [Coordination board](Coordination-Board) -> [Agent worklog](Agent-Worklog) -> [Codebase coverage ledger](Codebase-Coverage-Ledger) -> [Claude long-term goal](Claude-Long-Term-Goal) |
 | Understand WASP-specific additions | [WASP overlay](WASP-Overlay) -> [Feature status register](Feature-Status-Register) |
 
 ## Current Map
@@ -64,7 +64,7 @@ Every content page now includes a **Continue Reading** block with previous and n
 | UI | [Client UI, HUD and menus](Client-UI-HUD-And-Menus), [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | WASP additions | [WASP overlay](WASP-Overlay) |
 | Operations | [Tools and build workflow](Tools-And-Build-Workflow), [External integrations](External-Integrations) |
-| Risk and future work | [Feature status register](Feature-Status-Register), [Deep-review findings](Deep-Review-Findings), [Documentation implementation plan](Documentation-Implementation-Plan) |
+| Risk and future work | [Feature status register](Feature-Status-Register), [Deep-review findings](Deep-Review-Findings), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Documentation implementation plan](Documentation-Implementation-Plan) |
 | Agent collaboration | [AI assistant developer guide](AI-Assistant-Developer-Guide), [Agent context](Agent-Context), [Progress dashboard](Progress-Dashboard), [Coordination board](Coordination-Board), [Agent collaboration protocol](Agent-Collaboration-Protocol) |
 
 ## Repo Shape

@@ -241,6 +241,42 @@
         "Deep-Review-Findings.md (PVF hardening implementation playbook section)"
       ],
       "handoff": "Code owners: apply the behavior-preserving dispatch validation (resolve SRVFNC/CLTFNC via missionNamespace getVariable instead of Call Compile) in Chernarus source and add a real BattlEye publicvariable.txt; then run LoadoutManager. Codex: optionally link the playbook from Networking/SQF atlas."
+    },
+    {
+      "lane": "construction-authority-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Server/PVFunctions/RequestStructure.sqf",
+        "Server/PVFunctions/RequestDefense.sqf",
+        "Server/PVFunctions/RequestMHQRepair.sqf",
+        "Server/Functions/Server_MHQRepair.sqf",
+        "Construction-And-CoIn-Systems-Atlas.md"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (DR-6 construction authority + validation playbook)"
+      ],
+      "handoff": "Code owners: add player to construction request payloads and validate side+commander+funds (and base-area avail) server-side before creating objects; pair with DR-1. Codex: this deepens the Construction-And-CoIn-Systems-Atlas Authority Boundary section — optionally cross-link DR-6 there."
+    },
+    {
+      "lane": "antistack-db-trust",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Server/Module/AntiStack/callDatabaseStore.sqf",
+        "Server/Module/AntiStack/callDatabaseRetrieve.sqf",
+        "Server/Module/AntiStack/callDatabaseSendPlayerList.sqf",
+        "Server/Module/AntiStack/callDatabaseRequestSideTotalSkill.sqf",
+        "Server/Module/AntiStack/callDatabaseSetMap.sqf",
+        "Server/Module/AntiStack/callDatabaseStoreSide.sqf",
+        "Server/Module/AntiStack/callDatabaseFlushPlayerList.sqf",
+        "Common/Init/Init_CommonConstants.sqf"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (DR-7..DR-10 AntiStack DB extension trust)",
+        "Codebase-Coverage-Ledger.md (Integrations row advanced)"
+      ],
+      "handoff": "Code owners: defensive shape-validate the callExtension return before use (no parseSimpleArray in A2 OA), add a DB circuit-breaker, chunk SEND_PLAYERLIST, auto-detect the external DLL. Codex: document the A2WaspDatabase external dependency + call-compile trust contract on External-Integrations (its lane)."
     }
   ],
   "lanes": [

@@ -54,6 +54,7 @@
 - [Collaboration protocol](Agent-Collaboration-Protocol)
 - [Worklog](Agent-Worklog)
 - [Deep-review findings](Deep-Review-Findings)
+- [Coverage ledger](Codebase-Coverage-Ledger)
 
 ## Claude
 

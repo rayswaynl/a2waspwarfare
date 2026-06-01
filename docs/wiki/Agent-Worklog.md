@@ -108,6 +108,29 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Added `agent-status.json` as a compact machine-readable progress snapshot for agents and external tooling.
 - Updated Home, Quickstart, sidebar, footer, Agent Context, Coordination Board and Collaboration Protocol so status checks route through the new dashboard first.
 
+## 2026-06-01 - Claude Deep-Review Round 4 (construction-authority-review lane)
+
+- Took Codex's handoff from the `construction-coin-atlas` lane and concretized the DR-1 command-forgery residual for the build system. New finding **DR-6** in `Deep-Review-Findings.md`.
+- Verified at source: `RequestStructure.sqf` and `RequestDefense.sqf` take `_side` (and `_manned`) straight from the client payload and only check that the class exists in the side arrays; `RequestMHQRepair.sqf` is literally `[_this] Spawn MHQRepair;` and `Server_MHQRepair.sqf:3` derives everything from the client `_side`. No commander/funds/dead-HQ/base-area checks — those live only in client CoIn/actions.
+- Forgery impact (source-proven, per-handler table in DR-6): a modified client can mint **free** factories, AI-manned defenses/minefields, and HQ repairs for any side, bypassing the economy and base-area `avail` budget.
+- Root cause articulated: payloads omit the requesting player, and Arma 2 OA `addPublicVariableEventHandler` exposes no sender identity (`_this = [varName,value]`), so authority must be reconstructed server-side — which is why DR-1's command-name validation does not, by itself, stop forgery.
+- Wrote a behavior-preserving validation playbook (add player to payload; server validates side+commander+funds; move base-area `avail` server-side; keep client previews/instant UX). Pairs with DR-1: DR-1 stops arbitrary code, DR-6 stops forged legitimate commands.
+- This deepens (does not duplicate) the `Construction-And-CoIn-Systems-Atlas` "Authority Boundary" section. Handoff to code owners; optional cross-link for Codex. `ready-for-review`.
+
+## 2026-06-02 - Claude Self-Authored Long-Term Goal + Coverage Ledger
+
+- Authored a standing long-term goal: drive every subsystem to source-verified comprehension + implementation-hardening until there are no dark corners. Operationalized as **`Codebase-Coverage-Ledger.md`** — a subsystem × dimension (Map/Auth/PV/Perf/JIP-HC/Drift) scoreboard that makes "highest-value next lane" objective (pick the emptiest high-traffic cell).
+- Seeded the matrix from current state: boot/PV/construction are deep+hardened; the biggest open cells are Integrations (AntiStack DB extension trust), Factory/purchase authority (blocked on Codex's atlas), UI/HUD adversarial pass, a JIP/HC cross-cut, and victory/endgame+DB-flush.
+- Claimed the next lane **`antistack-db-trust`** (external `A2WaspDatabase` DLL boundary, `Server/Module/AntiStack/callDatabase*.sqf`) — deep review to follow next pass.
+- **Handoff to Codex (nav is Codex-owned):** please add `Codebase-Coverage-Ledger` to `_Sidebar`/`Home`/`agent-context.json` pages list. Message left in the Coordination Board.
+
+## 2026-06-02 - Claude Deep-Review Round 5 (antistack-db-trust lane)
+
+- First lane executed under the standing Coverage-Ledger goal. Deep-reviewed the AntiStack external DB integration (`Server/Module/AntiStack/callDatabase*.sqf` + the `A2WaspDatabase` DLL, which is NOT in the repo). New findings **DR-7..DR-10** in `Deep-Review-Findings.md`.
+- **DR-7 (High):** all seven handlers `call compile` the `callExtension` return — the server executes the external DLL's stdout as SQF. Empty/garbage return → `call compile ""` → `nil select 0` throws. Arma 2 OA has no `parseSimpleArray`, so the fix is defensive shape-validation (guard empty → compile → assert ARRAY of SCALARs → then read), not a parser swap.
+- **DR-8 (Med):** blocking DB poll on join/skill path (RETRIEVE ≤12s, REQUEST_SIDE_SKILL ≤27s) — add circuit-breaker. **DR-9 (Med):** SEND_PLAYERLIST packs the whole roster into one `callExtension` call vs A2 OA length limits → truncation → compounds DR-7; chunk it. **DR-10 (Med):** `WFBE_C_ANTISTACK_ENABLED` defaults to 1 (`Init_CommonConstants.sqf:171`) against an absent external DLL → error spam unless disabled; auto-detect the DLL.
+- Advanced ledger Integrations row (Auth/PV/Perf/JIP → 🟡; AntiStack covered, Extension/Discord/BattlEye still ⬜). Handoff to code owners (harden the 7 handlers) + Codex (document the external dependency on External-Integrations). `ready-for-review`.
+
 ## 2026-06-01 - Codex Factory/Purchase Systems Pass 1
 
 - Read the buy-unit dialog/controller, client action range FSM, client build worker, common unit/vehicle creation helpers, unit metadata cores, factory unit lists, faction filter builder, attack-wave price path and server `AIBuyUnit` worker.
