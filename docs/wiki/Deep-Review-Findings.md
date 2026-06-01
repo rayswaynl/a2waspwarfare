@@ -362,6 +362,31 @@ On a **dedicated** server this is fine. On a **hosted/listen server or singlepla
 
 Code owners: (DR-18) align the supply-cooldown key casing (or default the read) — one-line fix; (DR-19) hoist the FPS-loop `sleep` out of the `isDedicated` guard (or early-exit when not dedicated), and consider consolidating the two redundant FPS publishers. Ledger: Supply JIP/HC and server-runtime perf cells advanced.
 
+## Round 10 — 2026-06-02 (Claude) — JIP/headless cross-cut: non-idempotent HQ-killed (DR-20)
+
+Lane `jip-headless-crosscut`. Traced HQ-death detection across server, existing clients and JIP clients.
+
+### DR-20 — HQ-killed is processed once per owning-side client (no idempotency) — **High (multiplayer correctness / score exploit)**
+
+Death detection for the mobile HQ is deliberately redundant (a client-local vehicle's `Killed` EH must run on a client):
+- `Server/Construction/Construction_HQSite.sqf:89` adds a server-side `Killed` EH, then `:91` broadcasts `["set-hq-killed-eh", _mhq]` to the **whole owning side**; `Server_MHQRepair.sqf:37,43` do the same after a repair.
+- `Client/PVFunctions/HandleSpecial.sqf:34` (`set-hq-killed-eh`) makes **every owning-side client** add a `Killed` EH that calls `["RequestSpecial",["process-killed-hq",_this]]`.
+- JIP clients additionally add it themselves at `Client/Init/Init_Client.sqf:500-503` (guarded `!isServer && !_isDeployed`).
+
+So **N owning-side clients each hold the same `Killed` EH**. When the HQ dies, the synced death fires every client's EH → the server receives **N** `process-killed-hq` messages → `Server/Functions/Server_OnHQKilled.sqf` runs **N times**, and it has **no idempotency guard**. Each run:
+- awards the killer score **twice** (`_points = 30000/100*coef` and `_score = 900` via two `RequestChangeScore`), so total killer score ≈ **2N ×** the intended award;
+- broadcasts N× destruction / `HeadHunterReceiveBounty` messages;
+- re-publishes `IS_<side>_HQ_ALIVE` / marker infos N times.
+
+(The dead-MHQ wreck spawn is inside `if (GetSideHQDeployStatus)` and self-limits after the first run flips `wfbe_hq_deployed=false`; the **score/message duplication does not**.) On a populated server (e.g. 20 owning-side players) an HQ kill inflates the killer's score ~40×. **Fix:** make `Server_OnHQKilled.sqf` idempotent — first line `if (_structure getVariable ["wfbe_hq_killed_done", false]) exitWith {}; _structure setVariable ["wfbe_hq_killed_done", true];`. Keep the redundant EH registration (it ensures death is never missed regardless of MHQ locality); guard the **consumer**, not the producers. Pattern: "detect redundantly, act once."
+
+### JIP coverage notes (verified, no change needed)
+- The JIP guard at `Init_Client.sqf:500` (`!_isDeployed`) is correct: a JIP client adds the mobile-HQ EH only when the HQ is currently mobile; a deployed HQ (building) is covered by the server-side EH at `Construction_HQSite.sqf:36` / `Init_Server.sqf:319`. JIP HQ-death *detection* is therefore covered — the defect is downstream duplication (DR-20), not a JIP miss.
+- `set-hq-killed-eh` is side-filtered (`SendToClients [_side, …]`), so only owning-side clients register it — correct.
+
+### Handoff
+Code owners: add the one-line idempotency guard to `Server_OnHQKilled.sqf` (DR-20) — this also fixes the duplicate-score symptom on HQ kills in populated games. Ledger: JIP/HC cells advanced for victory/economy/construction (HQ-death path verified end-to-end).
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
