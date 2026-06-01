@@ -111,6 +111,10 @@ When tracing one feature, grep the string tag as well as the PVF command name.
 - Both dispatchers use `Call Compile` on the generated function-name string per dispatch. Keep command names controlled and avoid turning hot paths into chatty PVF streams.
 - Some bare PV channels are copied per side, such as `wfbe_supply_temp_west` and `wfbe_supply_temp_east`; there is no resistance-side handler in that path.
 
+### Security: the `Call Compile` trust boundary
+
+`Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` run `Call Compile` on the function-name string taken from the **value a remote machine broadcast** (`select 0` / `select 1`), with no check that it names a registered command — and the shipped `BattlEyeFilter/publicvariable.txt` only carries the `kickAFK` feature rule, not a security filter. Validate the command string against the known `SRVFNC*`/`CLTFNC*` set before compiling, and add a real BattlEye PV filter (restrictive default + whitelist of `WFBE_PVF_*` and the direct channels, keeping `kickAFK`). Full analysis and remediation playbook: [Deep-review findings](Deep-Review-Findings) DR-1.
+
 ## Continue Reading
 
 Previous: [Function/module index](Function-And-Module-Index) | Next: [Gameplay atlas](Gameplay-Systems-Atlas)

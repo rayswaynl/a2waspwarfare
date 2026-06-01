@@ -5,10 +5,11 @@ This page is written for Codex, Claude and future coding agents.
 ## Always Start Here
 
 1. Read `AGENTS.md`.
-2. Check for `CLAUDE.md` and `JOURNAL.md`; none existed at the time this wiki was generated, but follow them if added later.
-3. Check `git status`, current branch, recent commits and remote.
-4. Treat `Missions/[55-2hc]warfarev2_073v48co.chernarus` as the mission source for gameplay edits.
-5. Use Bohemia Interactive Arma 2 OA scripting docs, not Arma 3 docs.
+2. Read `CLAUDE.md` when present; it is the short launchpad for agent coordination in this repo.
+3. Read `Agent-Collaboration-Protocol.md`, `agent-collaboration.json` and `agent-events.jsonl` before parallel work.
+4. Check `git status`, current branch, recent commits and remote.
+5. Treat `Missions/[55-2hc]warfarev2_073v48co.chernarus` as the mission source for gameplay edits.
+6. Use Bohemia Interactive Arma 2 OA scripting docs, not Arma 3 docs.
 
 ## Safe Edit Rules
 

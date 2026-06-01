@@ -60,6 +60,8 @@ This is the compact human-readable context file for AI coding agents. See `agent
 - Boot wait-chain atlas: `Lifecycle-Wait-Chain.md`.
 - WASP custom subtree atlas: `WASP-Overlay.md`.
 - External Claude review: use `Claude-Goal.md` for a focused pass or `Claude-Long-Term-Goal.md` for a long-running counterpart, then update `Agent-Worklog.md`.
+- Cross-agent coordination: read `Agent-Collaboration-Protocol.md`, `agent-collaboration.json` and `agent-events.jsonl` before starting a parallel pass.
+- Independent review findings: `Deep-Review-Findings.md` records source-cited Claude findings that still need to be reconciled into owning atlas pages.
 
 ## Continue Reading
 

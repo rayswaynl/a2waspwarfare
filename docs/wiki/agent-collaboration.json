@@ -1,0 +1,91 @@
+{
+  "schema": "a2waspwarfare-agent-collaboration-v1",
+  "generatedAt": "2026-06-01T21:23:39+02:00",
+  "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
+  "sourceOfTruth": {
+    "humanBoard": "Coordination-Board.md",
+    "protocol": "Agent-Collaboration-Protocol.md",
+    "worklog": "Agent-Worklog.md",
+    "eventFeed": "agent-events.jsonl",
+    "repoContext": "agent-context.json"
+  },
+  "agents": {
+    "Codex": {
+      "role": "Integrator, wiki UX owner, source-atlas maintainer, publisher and validation runner.",
+      "currentLane": "coordination-protocol",
+      "status": "ready-to-publish"
+    },
+    "Claude": {
+      "role": "Independent reviewer, contradiction hunter and subsystem archaeologist.",
+      "currentLane": "deep-review-findings",
+      "status": "active-external"
+    }
+  },
+  "activeClaims": [
+    {
+      "lane": "coordination-protocol",
+      "owner": "Codex",
+      "status": "ready-to-publish",
+      "sourceScope": [
+        "docs/wiki/Coordination-Board.md",
+        "docs/wiki/Agent-Collaboration-Protocol.md",
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/agent-events.jsonl",
+        "CLAUDE.md"
+      ],
+      "outputs": [
+        "Agent-Collaboration-Protocol.md",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "updated navigation/context/worklog"
+      ],
+      "handoff": "Claude should read Agent-Collaboration-Protocol.md and append claim/finding/complete events for future review passes."
+    },
+    {
+      "lane": "deep-review-findings",
+      "owner": "Claude",
+      "status": "ready-for-integration",
+      "sourceScope": [
+        "Deep-Review-Findings.md",
+        "Common/Init/Init_PublicVariables.sqf",
+        "Server/Functions/Server_HandlePVF.sqf",
+        "Client/Functions/Client_HandlePVF.sqf",
+        "Server/Support/Support_Paratroopers.sqf",
+        "Client/Module/MASH/receiverMASHmarker.sqf",
+        "Tools/LoadoutManager"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md",
+        "feature-status/networking/tooling follow-up updates"
+      ],
+      "handoff": "Codex should integrate confirmed findings into owning atlas pages after current coordination pass."
+    }
+  ],
+  "lanes": [
+    {
+      "lane": "construction-coin-atlas",
+      "suggestedOwner": "Codex",
+      "status": "next",
+      "summary": "Deep-read construction, CoIn, HQ deployment, repair, sale and server creation flows."
+    },
+    {
+      "lane": "pvf-hardening-review",
+      "suggestedOwner": "Claude",
+      "status": "open",
+      "summary": "Review PVF hardening options and propose minimal validation design without changing gameplay behavior."
+    },
+    {
+      "lane": "feature-status-reconciliation",
+      "suggestedOwner": "Codex",
+      "status": "open",
+      "summary": "Move Claude deep-review findings into Feature-Status-Register, Networking and Tools pages."
+    }
+  ],
+  "rules": [
+    "Append, do not overwrite, Agent-Worklog.md and agent-events.jsonl.",
+    "Use source-cited evidence for broken/partial-feature claims.",
+    "If a branch is stale, integrate targeted findings instead of merging over newer navigation.",
+    "Keep docs/wiki and the GitHub wiki checkout in parity before publishing.",
+    "Use Arma 2 OA scripting references only."
+  ]
+}

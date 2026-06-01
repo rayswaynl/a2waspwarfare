@@ -30,14 +30,16 @@ This page is the low-friction route into the repo. Use it before editing mission
 Load these first, in order:
 
 1. [`agent-context.json`](agent-context.json)
-2. [Agent context](Agent-Context)
-3. [SQF code atlas](SQF-Code-Atlas)
-4. [Gameplay systems atlas](Gameplay-Systems-Atlas)
-5. [Lifecycle wait-chain](Lifecycle-Wait-Chain)
-6. [WASP overlay](WASP-Overlay)
-7. [Documentation implementation plan](Documentation-Implementation-Plan)
-8. [Feature status register](Feature-Status-Register)
-9. [Agent worklog](Agent-Worklog)
+2. [`agent-collaboration.json`](agent-collaboration.json)
+3. [Agent context](Agent-Context)
+4. [Agent collaboration protocol](Agent-Collaboration-Protocol)
+5. [SQF code atlas](SQF-Code-Atlas)
+6. [Gameplay systems atlas](Gameplay-Systems-Atlas)
+7. [Lifecycle wait-chain](Lifecycle-Wait-Chain)
+8. [WASP overlay](WASP-Overlay)
+9. [Documentation implementation plan](Documentation-Implementation-Plan)
+10. [Feature status register](Feature-Status-Register)
+11. [Agent worklog](Agent-Worklog)
 
 Then inspect source before making claims. Do not infer Arma 3 behavior. If you add high-level facts, update `agent-context.json`.
 
@@ -69,11 +71,11 @@ Then inspect source before making claims. Do not infer Arma 3 behavior. If you a
 
 | Agent | Best role |
 | --- | --- |
-| Codex | Maintains the living atlas, agent context, publishing flow and implementation handoffs. |
-| Claude | Independently reviews, challenges assumptions, finds hidden coupling and deepens subsystem evidence. |
+| Codex | Maintains the living atlas, agent context, publishing flow, coordination protocol and implementation handoffs. |
+| Claude | Independently reviews, challenges assumptions, finds hidden coupling and records source-backed findings through the collaboration protocol. |
 | Future agents | Start from `agent-context.json`, inspect source and append findings to `Agent-Worklog.md`. |
 
-Use [Claude long-term goal](Claude-Long-Term-Goal) when spinning up Claude as a persistent counterpart.
+Use [Agent collaboration protocol](Agent-Collaboration-Protocol) for claim/handoff rules and [Claude long-term goal](Claude-Long-Term-Goal) when spinning up Claude as a persistent counterpart.
 
 ## Continue Reading
 

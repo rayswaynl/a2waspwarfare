@@ -39,10 +39,17 @@
       "AI-Assistant-Developer-Guide",
       "Agent-Context",
       "Coordination-Board",
+      "Agent-Collaboration-Protocol",
       "Agent-Worklog",
+      "Deep-Review-Findings",
       "Documentation-Implementation-Plan",
       "Claude-Goal",
       "Claude-Long-Term-Goal"
+    ],
+    "machineFiles": [
+      "agent-context.json",
+      "agent-collaboration.json",
+      "agent-events.jsonl"
     ],
     "navigation": {
       "primaryTour": [
@@ -71,7 +78,9 @@
         "AI-Assistant-Developer-Guide",
         "Agent-Context",
         "Coordination-Board",
+        "Agent-Collaboration-Protocol",
         "Agent-Worklog",
+        "Deep-Review-Findings",
         "Documentation-Implementation-Plan",
         "Claude-Goal",
         "Claude-Long-Term-Goal"
@@ -118,7 +127,10 @@
     "PR #1 currently stacks Killed event handlers on reused supply vehicles; current double-payment is bounded, but the event-handler leak should be fixed before adding side effects.",
     "Client UI has duplicate dialog IDD 23000 for EASA and Economy; avoid findDisplay assumptions and use unique IDDs for new dialogs.",
     "OptionsAvailable and RscOverlay share title IDD 10200; use uiNamespace display handles rather than IDD uniqueness.",
-    "UI/marker loops are performance-sensitive polling loops; preserve cached writes, map-closed backoff and mission-parameter gates."
+    "UI/marker loops are performance-sensitive polling loops; preserve cached writes, map-closed backoff and mission-parameter gates.",
+    "DR-1 (High, hardening): Server_HandlePVF.sqf/Client_HandlePVF.sqf Call Compile the sender-chosen command string with no validation, and BattlEyeFilter/publicvariable.txt has only the kickAFK feature rule. Validate the command set before compile and add a real BE PV filter before trusting on a public server.",
+    "DR-2/DR-3: paratrooper drop markers and MASH tent markers are confirmed dead receiver-side paths.",
+    "DR-4: Chernarus and Takistan differ only by LoadoutManager skip-list/blacklist, but skip-listed files never propagate and must be hand-mirrored; Modded_Missions/* are abandoned until modded propagation is re-enabled."
   ],
   "currentPR": {
     "number": 1,
@@ -134,6 +146,10 @@
   "coordination": {
     "claudeGoal": "Claude-Goal.md",
     "claudeLongTermGoal": "Claude-Long-Term-Goal.md",
+    "protocol": "Agent-Collaboration-Protocol.md",
+    "machineState": "agent-collaboration.json",
+    "eventFeed": "agent-events.jsonl",
+    "deepReviewFindings": "Deep-Review-Findings.md",
     "worklog": "Agent-Worklog.md",
     "board": "Coordination-Board.md",
     "codeAtlas": "SQF-Code-Atlas.md"
@@ -157,6 +173,27 @@
       ],
       "correctionsDuringIntegration": [
         "Lifecycle economy override is WF_Debug-gated in current source, not unconditional."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Claude",
+      "round": 2,
+      "type": "adversarial cross-check of Codex atlas",
+      "pagesAdded": [
+        "Deep-Review-Findings.md"
+      ],
+      "deepened": [
+        "Feature-Status-Register",
+        "Networking-And-Public-Variables",
+        "Tools-And-Build-Workflow"
+      ],
+      "findings": [
+        "DR-1 PV dispatch Call Compile trust boundary unmitigated by validation or BattlEye filter.",
+        "DR-2 paratrooper drop markers dead because HandleParatrooperMarkerCreation is not in the client PVF list.",
+        "DR-3 MASH tent markers dead because receiverMASHmarker.sqf is only referenced by a commented client init compile.",
+        "DR-4 Chernarus and Takistan are in sync except skip-list/blacklist differences; Modded_Missions are stale or stubbed.",
+        "DR-5 atlas preprocessFile counts should be treated as point-in-time; FSM count of 3 verified accurate."
       ]
     }
   ]

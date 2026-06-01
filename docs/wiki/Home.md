@@ -10,7 +10,7 @@ This wiki is built for two audiences at once:
 | AI assistant | [Agent context](Agent-Context) and [`agent-context.json`](agent-context.json) | Compact context, page map and high-risk rules. |
 | Reviewer | [Feature status register](Feature-Status-Register) | Broken, partial, deferred and missing features. |
 | Mission implementer | [SQF code atlas](SQF-Code-Atlas) | Compile registry, PVF contract and entrypoint ownership. |
-| Claude collaborator | [Claude long-term goal](Claude-Long-Term-Goal) | Complementary review role and work rhythm. |
+| Claude collaborator | [Agent collaboration protocol](Agent-Collaboration-Protocol) | Shared claim, handoff and event protocol for Codex/Claude work. |
 
 ## Click-Through Tours
 
@@ -22,7 +22,7 @@ Use these when you want to read the wiki like a connected handbook instead of ju
 | Implement a gameplay change | [Gameplay atlas](Gameplay-Systems-Atlas) -> [Core systems](Core-Systems-Index) -> [Economy/towns/supply](Economy-Towns-And-Supply) -> [Feature status](Feature-Status-Register) |
 | Trace SQF and networking | [SQF atlas](SQF-Code-Atlas) -> [Function index](Function-And-Module-Index) -> [Networking/PV](Networking-And-Public-Variables) |
 | Work on UI/HUD | [Client UI/HUD/menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) -> [Tools/build](Tools-And-Build-Workflow) |
-| Coordinate Codex and Claude | [Coordination board](Coordination-Board) -> [Agent worklog](Agent-Worklog) -> [Claude long-term goal](Claude-Long-Term-Goal) |
+| Coordinate Codex and Claude | [Coordination board](Coordination-Board) -> [Agent collaboration protocol](Agent-Collaboration-Protocol) -> [Agent worklog](Agent-Worklog) |
 
 Every content page now includes a **Continue Reading** block with previous and next links for the main handbook path.
 
@@ -62,8 +62,8 @@ Every content page now includes a **Continue Reading** block with previous and n
 | UI | [Client UI, HUD and menus](Client-UI-HUD-And-Menus), [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | WASP additions | [WASP overlay](WASP-Overlay) |
 | Operations | [Tools and build workflow](Tools-And-Build-Workflow), [External integrations](External-Integrations) |
-| Risk and future work | [Feature status register](Feature-Status-Register), [Documentation implementation plan](Documentation-Implementation-Plan) |
-| Agent collaboration | [AI assistant developer guide](AI-Assistant-Developer-Guide), [Agent context](Agent-Context), [Coordination board](Coordination-Board) |
+| Risk and future work | [Feature status register](Feature-Status-Register), [Deep-review findings](Deep-Review-Findings), [Documentation implementation plan](Documentation-Implementation-Plan) |
+| Agent collaboration | [AI assistant developer guide](AI-Assistant-Developer-Guide), [Agent context](Agent-Context), [Coordination board](Coordination-Board), [Agent collaboration protocol](Agent-Collaboration-Protocol) |
 
 ## Repo Shape
 
@@ -83,6 +83,8 @@ Every content page now includes a **Continue Reading** block with previous and n
 
 - Human-readable agent brief: [Agent context](Agent-Context)
 - Machine-readable agent file: [`agent-context.json`](agent-context.json)
+- Machine-readable collaboration file: [`agent-collaboration.json`](agent-collaboration.json)
+- Append-only coordination feed: [`agent-events.jsonl`](agent-events.jsonl)
 - Agent coordination log: [Agent worklog](Agent-Worklog)
 
 Persistent navigation is provided by `_Sidebar.md`; shared bottom navigation is provided by `_Footer.md`.

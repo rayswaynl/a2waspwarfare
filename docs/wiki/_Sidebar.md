@@ -46,7 +46,9 @@
 
 - [Implementation plan](Documentation-Implementation-Plan)
 - [Coordination board](Coordination-Board)
+- [Collaboration protocol](Agent-Collaboration-Protocol)
 - [Worklog](Agent-Worklog)
+- [Deep-review findings](Deep-Review-Findings)
 
 ## Claude
 

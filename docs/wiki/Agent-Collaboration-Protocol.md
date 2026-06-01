@@ -1,0 +1,98 @@
+# Agent Collaboration Protocol
+
+This page is the working agreement for Codex, Claude and future assistants. It exists so parallel review work can stay useful instead of turning into branch archaeology.
+
+## Goal
+
+Keep the documentation and source analysis moving in parallel while preserving source-backed evidence, avoiding duplicate work and making every handoff readable by both humans and LLMs.
+
+## Source Of Truth
+
+| Need | File |
+| --- | --- |
+| Human coordination | [Coordination board](Coordination-Board) |
+| Append-only narrative log | [Agent worklog](Agent-Worklog) |
+| Machine-readable repo context | [`agent-context.json`](agent-context.json) |
+| Machine-readable collaboration state | [`agent-collaboration.json`](agent-collaboration.json) |
+| Append-only event feed | [`agent-events.jsonl`](agent-events.jsonl) |
+| Claude-focused instructions | [Claude long-term goal](Claude-Long-Term-Goal) |
+| Independent review findings | [Deep-review findings](Deep-Review-Findings) |
+
+## Roles
+
+| Agent | Primary lane | Avoid |
+| --- | --- | --- |
+| Codex | Wiki structure, navigation, source atlas pages, publishing, validation, final integration. | Blindly merging stale Claude branches over newer navigation. |
+| Claude | Independent adversarial review, contradiction hunting, subsystem archaeology, source-cited findings. | Rewriting broad pages without checking current docs branch first. |
+| Future agents | Focused feature/docs/code work from the current board. | Trusting chat memory over the synced files above. |
+
+## Claim Protocol
+
+Before starting a substantial pass:
+
+1. Read [Quickstart](Quickstart-For-Humans-And-Agents), [Agent context](Agent-Context), [`agent-context.json`](agent-context.json), this page and [Coordination board](Coordination-Board).
+2. Add or update one claim in [`agent-collaboration.json`](agent-collaboration.json).
+3. Append a `claim` event to [`agent-events.jsonl`](agent-events.jsonl).
+4. Work in a lane that does not overlap another active claim unless the board says it is a review lane.
+5. When done, append to [Agent worklog](Agent-Worklog), add a `complete` event and update affected wiki pages.
+
+Claims are intentionally lightweight. They are there to prevent duplicated sweeps and stale merges, not to create ceremony.
+
+## Event Types
+
+Use one JSON object per line in `agent-events.jsonl`.
+
+| Type | When |
+| --- | --- |
+| `claim` | Agent starts a bounded pass. |
+| `heartbeat` | Agent is still working after a long pass. |
+| `finding` | Agent confirms a source-backed issue or contradiction. |
+| `handoff` | Agent leaves work for another agent. |
+| `complete` | Agent finishes a bounded pass. |
+| `sync` | Codex or Claude integrates another agent's work. |
+
+Example:
+
+```json
+{"ts":"2026-06-01T21:23:39+02:00","agent":"Codex","type":"claim","lane":"construction-coin-atlas","status":"active","summary":"Deep-read construction and CoIn flow; publish atlas and update risks."}
+```
+
+## Branch And Merge Rules
+
+| Situation | Rule |
+| --- | --- |
+| Claude branch is older than `docs/developer-wiki-index` | Cherry-pick findings or copy specific pages; do not merge away newer pages. |
+| Wiki has direct commits not in docs mirror | Copy wiki pages back into `docs/wiki`, then validate parity. |
+| Docs mirror has new pages | Copy to wiki before publishing; validate internal links. |
+| Two agents touched the same topic | Preserve both source-cited findings, then reconcile in the owning atlas page. |
+| A finding lacks a source path | Keep it in worklog as a hypothesis until verified. |
+
+## Handoff Format
+
+Use this shape in `agent-collaboration.json` and summarize it in [Agent worklog](Agent-Worklog):
+
+| Field | Meaning |
+| --- | --- |
+| `lane` | Short stable name, for example `pvf-hardening-review`. |
+| `owner` | `Codex`, `Claude` or another agent name. |
+| `status` | `active`, `blocked`, `ready-for-review`, `integrated`, `deferred`. |
+| `sourceScope` | Paths, pages or branches being reviewed. |
+| `outputs` | Pages/files expected from the pass. |
+| `handoff` | Exact next action for another agent. |
+
+## Review Gates
+
+Before publishing or telling Steff the docs are synced:
+
+- `docs/wiki` and the wiki checkout match for shared files.
+- `agent-context.json` and `agent-collaboration.json` parse as JSON.
+- Internal wiki links resolve to existing pages or files.
+- New broken/partial-feature claims cite concrete source evidence.
+- New scripting claims avoid Arma 3-only behavior.
+- `Agent-Worklog.md` has a dated entry for the pass.
+
+## Continue Reading
+
+Previous: [Coordination board](Coordination-Board) | Next: [Agent worklog](Agent-Worklog)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

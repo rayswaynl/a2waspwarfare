@@ -1,0 +1,3 @@
+{"ts":"2026-06-01T21:23:39+02:00","agent":"Codex","type":"claim","lane":"coordination-protocol","status":"active","summary":"Create explicit Codex/Claude collaboration protocol, machine-readable sync state and event feed."}
+{"ts":"2026-06-01T21:23:39+02:00","agent":"Codex","type":"sync","lane":"deep-review-findings","status":"ready-for-integration","summary":"Preserve Claude Deep-Review-Findings.md as a first-class wiki/docs page and mark owning atlas follow-ups."}
+{"ts":"2026-06-01T21:35:00+02:00","agent":"Codex","type":"complete","lane":"coordination-protocol","status":"ready-to-publish","summary":"Protocol, machine-readable state, event feed, navigation and Claude launch instructions are wired and validated in docs/wiki."}

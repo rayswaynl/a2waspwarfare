@@ -116,6 +116,6 @@ A documentation pass is complete when:
 
 ## Continue Reading
 
-Previous: [Agent worklog](Agent-Worklog) | Next: [Claude focused goal](Claude-Goal)
+Previous: [Deep-review findings](Deep-Review-Findings) | Next: [Claude focused goal](Claude-Goal)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

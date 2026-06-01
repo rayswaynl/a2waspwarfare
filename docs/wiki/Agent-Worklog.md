@@ -65,12 +65,28 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Added `Client-UI-Systems-Atlas.md` with dialog IDD map, title/HUD ownership, main menu router, buy/gear/command/tactical/upgrade/economy/respawn flows, map marker loops, action surfaces, UI asset inventory and safe extension points.
 - Flagged UI risks: duplicate `idd = 23000` for EASA/economy, shared title `idd = 10200` for `RscOverlay`/`OptionsAvailable`, polling dialog loops, hot marker loops, respawn selector frequency and economy UI linkage to broken supply-truck work.
 
+## 2026-06-01 - Claude Deep-Review Round 2
+
+- Added `Deep-Review-Findings.md` with source-cited DR-1 through DR-5.
+- Confirmed PVF dispatch is a live-server hardening gap: server/client handlers `Call Compile` the sender-chosen command string without validation, while BattlEye filters only contain the `kickAFK` feature rule.
+- Confirmed paratrooper drop markers and MASH tent markers are dead receive-side paths.
+- Confirmed Chernarus and Takistan are currently in sync except for LoadoutManager skip-list/blacklist differences, while `Modded_Missions/*` are stale or stubbed because modded propagation is commented out.
+- Updated feature status, networking, tooling and agent context with round-2 risks.
+
+## 2026-06-01 - Codex Collaboration Protocol Pass
+
+- Added `Agent-Collaboration-Protocol.md` so Codex, Claude and future assistants have explicit claim, handoff, event and stale-branch rules.
+- Added `agent-collaboration.json` for machine-readable active lanes and ownership.
+- Added `agent-events.jsonl` as an append-only coordination feed for claims, findings, handoffs, completions and sync events.
+- Promoted Claude's `Deep-Review-Findings.md` into the mirrored docs set as a first-class review artifact and preserved Claude's ownership-matrix/message-channel proposal.
+- Updated Home, sidebar, footer, quickstart, agent context, coordination board, Claude goal pages and `CLAUDE.md` so future Claude/Codex sessions start from the same shared state.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.
 
 ## Continue Reading
 
-Previous: [Coordination board](Coordination-Board) | Next: [Implementation plan](Documentation-Implementation-Plan)
+Previous: [Agent collaboration protocol](Agent-Collaboration-Protocol) | Next: [Deep-review findings](Deep-Review-Findings)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
