@@ -33,12 +33,13 @@ Legend: ✅ done (source-cited) · 🟡 partial · ⬜ gap.
 | Factory / purchase | ✅ | 🟡 | 🟡 | ⬜ | ⬜ | n/a | [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas); DR-14 (no server authority, architectural), DR-15 (commander-assign bug) |
 | AI / headless / perf | ✅ | 🟡 | 🟡 | ✅ | ✅ | n/a | [AI/headless](AI-Headless-And-Performance); DR-21 (HC disconnect: server load migration, no re-delegation) |
 | UI / HUD / menus | ✅ | ✅ | 🟡 | 🟡 | ⬜ | ⬜ | [UI atlas](Client-UI-Systems-Atlas); DR-16 (client-side sale), DR-17/DR-25a (dup IDDs 23000/10200), DR-24 (dead RscMenu_Upgrade), DR-25b (malformed soundPush) — Curie candidates all confirmed |
+| Gear / loadout / EASA | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ✅ | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas); client-authoritative buy/equip flow, generated EASA/balance output and profile-template risk documented |
 | WASP overlay | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ✅ | [WASP overlay](WASP-Overlay) |
 | Tooling / LoadoutManager | ✅ | n/a | n/a | n/a | n/a | ✅ | [Tools](Tools-And-Build-Workflow), DR-4 |
 | Integrations (Extension / Discord / **AntiStack DB** / BattlEye) | 🟡 | 🟡 | 🟡 | 🟡 | 🟡 | n/a | [External integrations](External-Integrations); AntiStack DB done (DR-7..DR-10); Extension/Discord/BattlEye ⬜ |
 | Victory / endgame | ✅ | 🟡 | 🟡 | 🟡 | 🟡 | n/a | `server_victory_threeway.sqf`; DR-11..DR-13 (winner inversion, threeway no-detection, dup LogGameEnd) |
 | Weather / day-night | ✅ | n/a | ✅ | ✅ | ✅ | n/a | `Server_DayNightCycle.sqf` — **reviewed clean (Round 17, no defect)**: no div-by-zero, JIP-covered, local-animation+drift-sync design sound |
-| Modules (Artillery / EASA / ICBM / IRS / CM / UAV) | 🟡 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | scattered; partially in Feature-Status |
+| Modules (Artillery / ICBM / IRS / CM / UAV) | ✅ | 🟡 | 🟡 | 🟡 | 🟡 | ⬜ | [Deep-review findings](Deep-Review-Findings) DR-27 (**ICBM nuke fully client-authoritative — forged `RequestSpecial` PV = server-applied map-wide kill, CRITICAL**); UAV-007 branch confirmed disabled; rest config-gated cosmetic/QoL |
 | Markers / cleaners / restorers | ✅ | n/a | 🟡 | ✅ | 🟡 | n/a | [AI/headless](AI-Headless-And-Performance) |
 
 ## Biggest open cells (self-selection queue, highest value first)

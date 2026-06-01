@@ -500,6 +500,34 @@ Verified:
 
 **Outcome:** weather/day-night cell → reviewed-clean. No handoff required.
 
+## Round 18 — 2026-06-02 (Claude) — modules: forgeable map-wide ICBM nuke (DR-27)
+
+Lane `modules-review`. Reviewed the `Client/Module/` set (AFKkick, AutoFlip, CM, CoIn, EASA, Engines, MASH, Nuke, Skill, UAV, Valhalla, ZetaCargo, supplyMission) and `Server/Module/`. Most are config-gated cosmetic/QoL features (`WFBE_C_MODULE_*` flags; UAV's `_button == 007` branch is `comment 'DISABLED'` in both `uav_interface.sqf:226` and `uav_interface_oa.sqf:100` — confirms the Feature-Status "UAV partial" note). The **Nuke/ICBM** module is the high-stakes one and carries the most severe authority defect found in the campaign.
+
+### DR-27 — ICBM nuke is fully client-authoritative; one forged publicVariable = server-applied map-wide kill — **Critical (network authority / forgery)**
+
+End-to-end chain (all `path:line` in the Chernarus source mission):
+
+1. **Trigger is client-side and client-gated only.** `Client/GUI/GUI_Menu_Tactical.sqf` `MenuAction == 8` (the "ICBM Strike" branch, ~`:463-505`) deducts the fee locally (`-_currentFee Call ChangePlayerFunds` — itself client-authoritative, the DR-16/DR-23 economy class), spawns the strike-marker object locally (`"HeliHEmpty" createVehicle _callPos`), and `Spawn NukeIncoming`. The only ICBM gate is **menu visibility** (`WFBE_C_MODULE_WFBE_ICBM > 0 && !IS_air_war_event`, `GUI_Menu_Tactical.sqf:253`) — module-enable, not the per-side *purchased* `WFBE_upgrade_…_ICBM`, and not a commander check.
+2. **Client asks the server to detonate.** `Client/Module/Nuke/nukeincoming.sqf:23`:
+   `["RequestSpecial", ["ICBM",sideJoined,_target,_cruise,clientTeam]] Call WFBE_CO_FNC_SendToServer;`
+3. **Server dispatches with no validation.** `RequestSpecial` is a registered inbound PVF (`Common/Init/Init_PublicVariables.sqf:18`); its handler `Server/PVFunctions/RequestSpecial.sqf` is literally `_this Spawn HandleSpecial;` → `Server/Functions/Server_HandleSpecial.sqf` `"ICBM"` case (`:97-112`):
+   - `_base = _args select 2` (client-chosen strike-position object), `_target = _args select 3` (client-chosen object).
+   - `if (isNull _target || !alive _target) exitWith {}; waitUntil {!alive _target}; [_base] Spawn NukeDammage;`
+   - `NukeDammage` is server-side (which is *why* the kill propagates to everyone) and is applied **centered on the client-supplied `_base` position** with **no check** that `_side`/`clientTeam` owns the ICBM upgrade, that the sender is the commander, or that funds existed.
+
+**Why the one server-side guard is not a security check.** `waitUntil {!alive _target}` only requires the forger to supply *some* live object and then end its life — spawn any vehicle, pass it as `_target`, delete/kill it; or pass any alive object and kill it. It gates timing, not authority.
+
+**Impact.** Any connected client can hand-craft the publicVariable `RequestSpecial = ["ICBM", <anySide>, <objAtChosenPos>, <liveObjThenKilled>, <anyTeam>]` and the **server** applies a map-wide nuke at coordinates of the attacker's choosing — repeatable, no upgrade, no commander role, no real cost. This is the apex of the client-authoritative class (DR-6 build, DR-14 buy, DR-16 sell, DR-22 supply, DR-23 upgrade): same root cause (server PVF handlers trust payload fields without re-deriving authority server-side), but the blast radius is the entire match rather than one player's wallet.
+
+**Owner decision (same lever as the economy class, higher priority).** Two non-exclusive fixes:
+- *Server-side authority in the `"ICBM"` case:* re-derive the requester from the PV sender, verify `_remoteSender` is the commander of `_side`, verify the side's `WFBE_upgrade_…_ICBM` level > 0 and a server-tracked cooldown/funds ledger, before `Spawn NukeDammage`. (The same `_remoteSender`-vs-payload pattern recommended in DR-1/DR-6.)
+- *BattlEye `scripts.txt`/`publicvariable.txt`:* restrict/snapshot the `RequestSpecial` PV so the `"ICBM"` selector can't be hand-injected. Defense-in-depth, not a substitute for server validation.
+
+Handoff for Codex: this belongs in the [Networking](Networking-And-Public-Variables) PVF-hazard table and a Feature-Status/atlas note on the Nuke module; the actionable fix is an owner decision shared with the economy-authority item already logged (DR-6/14/16/22/23).
+
+**Outcome:** modules cell → Auth/PV flipped to the DR-27 finding; rest of `Client/Module/` reviewed as config-gated cosmetic/QoL with the UAV-007 branch confirmed disabled.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
