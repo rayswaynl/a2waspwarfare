@@ -286,6 +286,34 @@ Consequences:
 
 Code owners: fix DR-11 (split win/lose branches, compute winner per branch, guard both branches / break the loop) — this corrects permanently-skewed win stats; decide DR-12 (implement or document-as-disabled threeway); delete the buggy `PVFunctions/LogGameEnd.sqf` (DR-13). Follow-up review item: `WFBE_CL_FNC_EndGame` payload semantics (winner vs loser sideID). Ledger: Victory/endgame Map/Auth/PV/Perf cells advanced.
 
+## Round 7 — 2026-06-02 (Claude) — factory/purchase authority + commander assignment (DR-14, DR-15)
+
+Lane `factory-purchase-authority`. Builds on Codex's [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) (which noted player buy is client-local with no `RequestBuyUnit` PVF) and adversarially verifies Cicero's flagged `Server_AssignNewCommander` candidate. All claims verified at source.
+
+### DR-14 — Player unit purchasing has no server authority (the economy ceiling) — **High (gameplay integrity), architectural**
+
+The player buy path never contacts the server:
+- `Client/GUI/GUI_Menu_BuyUnits.sqf:102,108` check funds client-side; `:155-156` do `_params Spawn BuildUnit; -(_currentCost) Call ChangePlayerFunds;`.
+- `Client/Functions/Client_BuildUnit.sqf:217/249/…` create the unit/vehicle **directly on the buyer** via `WFBE_CO_FNC_CreateUnit` / `WFBE_CO_FNC_CreateVehicle` (engine `createUnit`/`createVehicle`). There is **no `RequestBuyUnit` PVF** (confirmed: not in `Init_PublicVariables.sqf`, no `Server/PVFunctions/RequestBuyUnit.sqf`).
+- Funds live in `wfbe_funds` on the team group, written by `Common_ChangeTeamFunds` with `setVariable [..., true]` (broadcast, client-writable — see Round 1 / DR-6 root cause).
+
+So a modified client can mint any factory unit for free (skip the deduction, or set `wfbe_funds` directly) — and the created vehicle is globally synced because client `createVehicle` in MP is global. **This is the ceiling on the DR-1/DR-6 hardening thread:** unlike construction (DR-6, which at least routes through a server PVF that *could* be validated), the player economy and unit production are *architecturally* client-authoritative in WFBE's locality model. Fully fixing it = a large redesign (route purchases through a validated server PVF like construction). The realistic live-server defense is a **BattlEye script filter** (`scripts.txt`) constraining client `createVehicle`/`createUnit`, **not** a publicVariable filter. Document this ceiling so future hardening targets the right layer.
+
+> Latent path note (confirms atlas): `Server_BuyUnit.sqf` / `AIBuyUnit` is compiled (`Init_Server.sqf`) but has no proven dynamic caller — the AI-commander production path that *would* use it is itself dormant (the AI commander FSM never starts; see Cicero's server atlas + DR-15 neighbourhood).
+
+### DR-15 — `Server_AssignNewCommander` call-shape bug (confirmed) — **Medium (correctness)**
+
+Adversarial verification of Cicero's candidate — **confirmed live** by tracing compile + sole caller:
+- `Init_Server.sqf:62`: `WFBE_SE_FNC_AssignForCommander = Compile … "Server\Functions\Server_AssignNewCommander.sqf"`.
+- Sole caller `Server/PVFunctions/RequestNewCommander.sqf:13`: `[_side, _assigned_commander] Spawn WFBE_SE_FNC_AssignForCommander;` (a 2-element array).
+- `Server/Functions/Server_AssignNewCommander.sqf:3`: `_side = _this;` — sets `_side` to the **whole array** `[side, commander]` (should be `_this select 0`), then `_commander = _this select 1` (correct). `_logic = (_side) Call WFBE_CO_FNC_GetSideLogic` then receives an array, not a side → wrong/`objNull` logic → the block that stops the AI-commander FSM (`_logic getVariable "wfbe_aicom_running"`) operates on a bad logic and fails.
+
+**Impact:** when a human is assigned commander via `RequestNewCommander`, the AI-commander shutdown path mis-fires (mitigated in practice because the AI-commander FSM is itself dormant — DR-14 note). There's also a **redundant** `new-commander-assigned` broadcast (sent by both `RequestNewCommander.sqf` and `Server_AssignNewCommander.sqf`). **Fix:** `_side = _this select 0;`. One-line change in Chernarus source.
+
+### Handoff
+
+Code owners: (DR-14) decide whether to route player purchases through a validated server PVF (large) or accept client-authority + add a BattlEye `scripts.txt` filter; (DR-15) one-line fix `_side = _this select 0` in `Server_AssignNewCommander.sqf` and drop the duplicate `new-commander-assigned` broadcast. Ledger: Factory/purchase Auth/PV advanced; AI-commander caveat cross-linked.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
