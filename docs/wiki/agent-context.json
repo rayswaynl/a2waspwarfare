@@ -32,6 +32,7 @@
       "Current-Work-Supply-Helicopters-PR1",
       "AI-Headless-And-Performance",
       "Client-UI-HUD-And-Menus",
+      "Client-UI-Systems-Atlas",
       "Tools-And-Build-Workflow",
       "External-Integrations",
       "Feature-Status-Register",
@@ -63,6 +64,7 @@
         "Current-Work-Supply-Helicopters-PR1",
         "AI-Headless-And-Performance",
         "Client-UI-HUD-And-Menus",
+        "Client-UI-Systems-Atlas",
         "Tools-And-Build-Workflow",
         "External-Integrations",
         "Feature-Status-Register",
@@ -101,7 +103,7 @@
     "networking": "PVF lists in Common/Init/Init_PublicVariables.sqf plus direct publicVariable channels for supply, anti-stack, day/night, FPS, AFK and markers.",
     "economy": "Funds and side supply with town SV, commander income, resources FSM and supply missions. See Gameplay-Systems-Atlas for source-backed town/economy/commander/construction/factory flow.",
     "ai": "Server town AI, AI commanders, client/headless delegation, player AI watchdog/recovery.",
-    "ui": "Rsc resources, Client/GUI menus, RHUD/FPS HUD, map marker loops.",
+    "ui": "Rsc resources, Client/GUI dialog controllers, RHUD/FPS HUD, title resources, map/action marker loops, CoIn construction UI and WASP overlays. See Client-UI-Systems-Atlas.md.",
     "tooling": "LoadoutManager for mission generation/packaging; PerformanceAuditAnalyzer for RPT metrics.",
     "integrations": "DiscordBot, a2waspwarfare_Extension, A2WaspDatabase extension, BattlEye publicVariable filter.",
     "waspOverlay": "Project-specific WASP additions include base repair, RPG dropping, marker monitor, HQ recovery action, start vehicles and a server selftest. See WASP-Overlay.md."
@@ -113,7 +115,10 @@
     "Generated missions can be overwritten by LoadoutManager.",
     "PublicVariable traffic and client marker/UI loops are performance-sensitive.",
     "PVF dispatch uses Call Compile on registered function-name strings; keep command names controlled.",
-    "PR #1 currently stacks Killed event handlers on reused supply vehicles; current double-payment is bounded, but the event-handler leak should be fixed before adding side effects."
+    "PR #1 currently stacks Killed event handlers on reused supply vehicles; current double-payment is bounded, but the event-handler leak should be fixed before adding side effects.",
+    "Client UI has duplicate dialog IDD 23000 for EASA and Economy; avoid findDisplay assumptions and use unique IDDs for new dialogs.",
+    "OptionsAvailable and RscOverlay share title IDD 10200; use uiNamespace display handles rather than IDD uniqueness.",
+    "UI/marker loops are performance-sensitive polling loops; preserve cached writes, map-closed backoff and mission-parameter gates."
   ],
   "currentPR": {
     "number": 1,

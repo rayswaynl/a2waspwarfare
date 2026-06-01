@@ -63,6 +63,6 @@ powershell -ExecutionPolicy Bypass -File .\Tools\PerformanceAuditAnalyzer\Analyz
 
 ## Continue Reading
 
-Previous: [Client UI/HUD/menus](Client-UI-HUD-And-Menus) | Next: [External integrations](External-Integrations)
+Previous: [Client UI systems atlas](Client-UI-Systems-Atlas) | Next: [External integrations](External-Integrations)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

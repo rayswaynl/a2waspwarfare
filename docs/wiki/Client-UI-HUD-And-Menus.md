@@ -1,5 +1,7 @@
 # Client UI, HUD And Menus
 
+For the implementation-level map of IDDs, `Rsc` resources, controller loops, HUD ownership, marker/action UI and known UI risks, read [Client UI systems atlas](Client-UI-Systems-Atlas).
+
 ## UI Resource Layer
 
 `description.ext` includes the `Rsc` stack:
@@ -70,9 +72,10 @@ The combat icon blinking feature is guarded by `WFBE_C_MAP_ICON_BLINKING_ENABLED
 - Avoid heavy work in display loops and map marker refresh.
 - Preserve cached-write patterns in RHUD and marker scripts.
 - Keep action label changes consistent with localized string usage where available.
+- Use unique dialog IDDs for new menus; this fork already has IDD reuse that future work should not expand.
 
 ## Continue Reading
 
-Previous: [AI/headless/performance](AI-Headless-And-Performance) | Next: [Tools/build](Tools-And-Build-Workflow)
+Previous: [AI/headless/performance](AI-Headless-And-Performance) | Next: [Client UI systems atlas](Client-UI-Systems-Atlas)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

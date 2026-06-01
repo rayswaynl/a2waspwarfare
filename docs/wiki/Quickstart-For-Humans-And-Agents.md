@@ -60,7 +60,7 @@ Then inspect source before making claims. Do not infer Arma 3 behavior. If you a
 | Change supply missions | [Supply mission architecture](Supply-Mission-Architecture), [Economy, towns and supply](Economy-Towns-And-Supply) |
 | Change commander/upgrades | [Core systems index](Core-Systems-Index), [Feature status register](Feature-Status-Register) |
 | Change town capture/economy/construction/factories | [Gameplay systems atlas](Gameplay-Systems-Atlas) |
-| Change UI or buy menus | [Client UI, HUD and menus](Client-UI-HUD-And-Menus) |
+| Change UI or buy menus | [Client UI, HUD and menus](Client-UI-HUD-And-Menus), [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | Change AI/headless behavior | [AI, headless and performance](AI-Headless-And-Performance) |
 | Change WASP custom scripts | [WASP overlay](WASP-Overlay), [Feature status register](Feature-Status-Register) |
 | Touch generated missions | [Tools and build workflow](Tools-And-Build-Workflow), [Content structure and maps](Content-Structure-And-Maps) |
