@@ -45,10 +45,12 @@ This is the compact human-readable context file for AI coding agents. See `agent
 - Anti-stack database extension calls.
 - LoadoutManager-generated mission output.
 - Dangerous loadout classes marked `WARNING_GAME_CRASH_DO_NOT_USE_IN_LOADOUTS`.
+- PowerShell path handling for the Chernarus folder; use `-LiteralPath` because `[55-2hc]` is a wildcard pattern.
 
 ## Current Open Work
 
 - PR #1 `feat/supply-helicopter`: documents supply helicopters, upgrade gating, cash runs, interdiction reward and deferred AI supply heli work.
 - Implementation roadmap: `Documentation-Implementation-Plan.md`.
+- Code-level atlas: `SQF-Code-Atlas.md`.
 - External Claude review: use `Claude-Goal.md` and update `Agent-Worklog.md`.
 

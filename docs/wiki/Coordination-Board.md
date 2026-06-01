@@ -20,6 +20,7 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 - `docs/wiki/agent-context.json`: machine-readable repo map and safe-development facts.
 - `docs/wiki/Claude-Goal.md`: copy/paste `/goal` for Claude.
 - `docs/wiki/Documentation-Implementation-Plan.md`: implementation roadmap for future documentation passes.
+- `docs/wiki/SQF-Code-Atlas.md`: source-backed compile registry, PVF contract and direct publicVariable map.
 - `docs/wiki/Agent-Worklog.md`: append-only agent-visible worklog.
 - `docs/wiki/Feature-Status-Register.md`: open risks, partial features and missing features.
 

@@ -10,6 +10,14 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Added coordination files for Claude and future agents.
 - Added machine-readable `agent-context.json`.
 
+## 2026-06-01 - Codex Deep-Dive Pass 1
+
+- Synced repo/wiki remotes and confirmed PR #2 still only contains the initial docs mirror commit.
+- Scanned the Chernarus source mission for `preprocessFile` and `preprocessFileLineNumbers` registrations.
+- Added `SQF-Code-Atlas.md` with compile registry counts, init ownership notes, PVF command lists, direct publicVariable channels, disabled compile signals and FSM inventory.
+- Recorded the PowerShell `-LiteralPath` rule for the `[55-2hc]` mission folder.
+- Added GitHub wiki `_Sidebar.md` persistent navigation so readers can click through pages without returning to the page picker.
+
 ## 2026-06-01 - Codex Background Reviewer
 
 - Reviewed the repo read-only for missing docs before publish.

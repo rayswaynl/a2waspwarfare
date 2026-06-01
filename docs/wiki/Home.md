@@ -11,6 +11,7 @@ Use the Bohemia Interactive Arma 2 OA scripting command reference when checking 
 - [Source inventory](Source-Inventory)
 - [Core systems index](Core-Systems-Index)
 - [Function and module index](Function-And-Module-Index)
+- [SQF code atlas](SQF-Code-Atlas)
 - [Networking and public variables](Networking-And-Public-Variables)
 - [Economy, towns and supply](Economy-Towns-And-Supply)
 - [Supply mission architecture](Supply-Mission-Architecture)
@@ -29,6 +30,8 @@ Use the Bohemia Interactive Arma 2 OA scripting command reference when checking 
 - [AI assistant developer guide](AI-Assistant-Developer-Guide)
 
 Machine-readable agent file: [`agent-context.json`](agent-context.json)
+
+Persistent navigation is provided by the wiki `_Sidebar` page. If GitHub does not show it immediately, refresh the wiki page after the latest wiki commit lands.
 
 ## Repo Shape
 

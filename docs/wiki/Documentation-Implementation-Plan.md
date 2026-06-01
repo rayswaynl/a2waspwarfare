@@ -34,13 +34,14 @@ Evidence to use:
 
 ## Workstream 2: Function And Module Indexing
 
-Status: subsystem-level index complete; per-function deep indexing is still ongoing.
+Status: source-backed compile/PVF atlas started in `SQF-Code-Atlas.md`; per-function deep indexing is still ongoing.
 
 Next improvements:
 
 - For each high-use `Compile preprocessFileLineNumbers` registration, document purpose, call ownership and side effects.
 - Build tables for `Client/Functions`, `Common/Functions`, `Server/Functions`, `Client/Module`, `Common/Module` and `Server/Module`.
 - Separate pure helper functions from functions that mutate global mission state or broadcast over the network.
+- Add payload-shape tables for each PVF command documented in `SQF-Code-Atlas.md`.
 
 Evidence to use:
 
@@ -112,4 +113,3 @@ A documentation pass is complete when:
 - `Agent-Worklog.md` records what changed and who changed it.
 - Source-backed claims include concrete file paths or clearly named runtime scripts.
 - The docs avoid Arma 3 scripting assumptions.
-

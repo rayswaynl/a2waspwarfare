@@ -13,11 +13,13 @@
     "mirror": "docs/wiki",
     "pages": [
       "Home",
+      "_Sidebar",
       "Architecture-Overview",
       "Mission-Entrypoints-And-Lifecycle",
       "Source-Inventory",
       "Core-Systems-Index",
       "Function-And-Module-Index",
+      "SQF-Code-Atlas",
       "Networking-And-Public-Variables",
       "Economy-Towns-And-Supply",
       "Supply-Mission-Architecture",
@@ -41,7 +43,8 @@
     "Gameplay mission edits belong in the Chernarus source mission.",
     "Run Tools/LoadoutManager dotnet run after mission edits to propagate generated missions.",
     "Treat missing 7za as packaging-only unless deployment packaging is required.",
-    "Use WF_Debug-gated detailed logs and small always-on INFORMATION/WARNING logs for tester-visible state transitions."
+    "Use WF_Debug-gated detailed logs and small always-on INFORMATION/WARNING logs for tester-visible state transitions.",
+    "Use PowerShell -LiteralPath for mission paths containing [55-2hc]."
   ],
   "entrypoints": [
     "description.ext",
@@ -66,7 +69,8 @@
     "DoNotUse CRV7PG loadout classes can crash the game if used in loadouts.",
     "AntiStack database extension calls are live-server sensitive.",
     "Generated missions can be overwritten by LoadoutManager.",
-    "PublicVariable traffic and client marker/UI loops are performance-sensitive."
+    "PublicVariable traffic and client marker/UI loops are performance-sensitive.",
+    "PVF dispatch uses Call Compile on registered function-name strings; keep command names controlled."
   ],
   "currentPR": {
     "number": 1,
@@ -82,6 +86,7 @@
   "coordination": {
     "claudeGoal": "Claude-Goal.md",
     "worklog": "Agent-Worklog.md",
-    "board": "Coordination-Board.md"
+    "board": "Coordination-Board.md",
+    "codeAtlas": "SQF-Code-Atlas.md"
   }
 }
