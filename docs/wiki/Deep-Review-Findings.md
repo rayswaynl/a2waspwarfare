@@ -572,6 +572,30 @@ Findings (source-cited):
 
 **Outcome:** Integrations row — Extension sub-target reviewed (DR-29). AntiStack DB (DR-7..DR-10) + Extension (DR-29) now both done; **Discord data path + BattlEye `scripts.txt`/`publicvariable.txt` posture remain ⬜** within the bundle.
 
+## Round 21 — 2026-06-02 (Claude) — BattlEye posture (DR-30) — the "rely on BattlEye" half of every economy/forgery owner-decision is not shipped
+
+Lane `battleye-posture-review`. Source-verified the repo's entire BattlEye footprint to close a loop the campaign left open across **eight** prior findings (DR-1 RCE dispatch + DR-6/14/16/22/23/27/28 client-authoritative economy), each of which offered remediation option *(b) "accept client authority and rely on BattlEye filters."* Confirms — and sharpens — the high-level posture the Codex `Gibbs` scout reported (`Progress-Dashboard.md:23,72`), and corroborates the accurate, non-overclaiming wiki text already in place (`External-Integrations.md:60`, `Feature-Status-Register.md:32`, `Networking-And-Public-Variables.md:122`).
+
+### DR-30 — As shipped, the BattlEye mitigation is a 22-byte AFK-kick stub: no security PV filter, no `scripts.txt` at all — option (b) does not exist in the repo — **High (live-server hardening gap, campaign-wide)**
+
+Source facts (full repo sweep):
+- The **only** BattlEye filter file in the repository is `BattlEyeFilter/publicvariable.txt` — **22 bytes**, whose entire content is:
+  ```
+  //new
+  5 "kickAFK"
+  ```
+  This is not a security control. The single rule is the **AFK-kick feature plumbing** itself: `Client/.../updateclient.sqf` intentionally broadcasts `kickAFK` and BattlEye acts on it because `serverCommand` kick paths are unavailable (correctly documented at `External-Integrations.md:58` and `Networking-And-Public-Variables.md:66`). There is **no default-deny catch-all line** (e.g. `5 "" !="legitPV1" !="legitPV2" …`) and therefore **no restriction on any forgery-class PV** — `RequestSpecial` (the DR-27 ICBM vector), `RequestStructure`/`RequestDefense` (DR-6), `RequestUpgrade` (DR-23), `RequestNewCommander` (DR-15), or the raw `Server_HandlePVF`/`Client_HandlePVF` channels (DR-1). Every dangerous PV passes BattlEye unfiltered.
+- **`scripts.txt` is absent** (verified by name across the whole repo), as are `createvehicle.txt`, `remoteexec.txt`, `setvariable.txt`, `setpos.txt`, `mpeventhandler.txt`, etc. `scripts.txt` is the filter that would blunt the **DR-1 `call compile` RCE** and script-command injection (`createVehicle`/`setDamage`/`call compile`), so its absence is the more security-relevant gap of the two.
+- The directory also contains a 716 KB `READ ME FIRST - Using BattlEye filter to auto kick.docx`. Per the project's untrusted-content rule it was **not parsed** (binary Office doc); regardless, the *operative deployed artifact* is the 22-byte stub, and admin documentation is not a control.
+
+**Campaign-wide implication (the point of this pass).** The two-option framing in DR-1/6/14/16/22/23/27/28 is misleading as-shipped: option (b) "rely on BattlEye" is **not a deployed reality** — choosing it means authoring and maintaining a full BE filter set from scratch (a restrictive `publicvariable.txt` default-deny + whitelist of the legitimate `WFBE_PVF_*`/direct channels keeping `kickAFK`, **plus** a `scripts.txt`), which is a non-trivial, error-prone, separate workstream for a Warfare mission with hundreds of PVs and easy to break legitimate play. The realistic remediation for the entire forgery/economy class therefore collapses toward **(a) server-side authority in SQF** (re-derive the requester/role/funds in each PVF handler before applying effects, per DR-1/DR-6), with a real BE filter set as defense-in-depth only if someone owns it.
+
+**Honest caveat (do not overstate).** BattlEye filter files are normally deployed in the **server's** BE working directory (the `BEpath`), *outside* the mission PBO — so their absence from this repo does not prove the production server lacks them. But the repository, as the campaign's source of truth, ships only the stub; whether `ocd-clan.com`/Miksuu's live server maintains a fuller filter set is an **explicit owner question**, not a safe assumption. The wiki should keep stating (as it already does) that PVF spoofing "must not be considered protected by BattlEye."
+
+**Owner decision / handoff for Codex.** No wiki rewrite needed — the existing BattlEye text is accurate and in-lane for Codex. This finding's value is the cross-link: add a one-line note to the DR-1 remediation playbook and the [External integrations](External-Integrations) BattlEye section that *"option (b) requires building the filter set; it is not present in-repo (only the `kickAFK` stub),"* and pose the production-BE-config question to the server owner. Bundle the `scripts.txt`/`server.cfg`/`basic.cfg` absences (also flagged by the `Gibbs` scout) into the same hosting-hardening owner item.
+
+**Outcome:** Integrations row — **BattlEye sub-target reviewed (DR-30)**. AntiStack DB (DR-7..DR-10), Extension (DR-29) and BattlEye (DR-30) now done; only the **Discord data path remains ⬜** within the bundle. Every prior economy/forgery finding's option (b) is now annotated as "not shipped."
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
