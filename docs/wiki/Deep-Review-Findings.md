@@ -159,6 +159,54 @@ Fix 1 stops arbitrary **code execution**, but the PVF model still **trusts clien
 - No registered handler under `Server/PVFunctions/` or `Client/PVFunctions/`, nor `Server_HandleSpecial.sqf`/`HandleSpecial.sqf`/`LocalizeMessage.sqf`, calls `compile` on its parameters — so once the dispatch command name is resolved safely, there is no second-order injection on the PVF path. The other `call compile` sites in the mission compile **files** (`Init_Coin.sqf`, EASA/CM init) or local engine key-strings (`coin_interface.sqf:774-777`), not network data.
 - Handoff: this is a Chernarus-source gameplay change → after applying, run `Tools/LoadoutManager` `dotnet run` to propagate (note `Server_HandlePVF`/`Client_HandlePVF` are not on the skip-list, so they propagate normally; `BattlEyeFilter/` lives outside the mission and is deployed with the server, not via LoadoutManager).
 
+## Round 4 — 2026-06-01 (Claude) — construction PVF authority (DR-6)
+
+Lane `construction-authority-review` (extends [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas), whose "Authority Boundary" section flags this risk generically; this finding adds per-handler forgery proof + a validation design). This is the concrete realization of the **command-forgery residual** scoped in Round 3 (Fix 1 closes code execution, not command forgery).
+
+### DR-6 — Construction request handlers perform no sender/authority/resource validation — **High (gameplay integrity)**
+
+All three construction PVF handlers derive trust from the **client-supplied payload** and never verify the requester. Source (verified this pass):
+
+| Handler | Validation actually performed | Client-controlled inputs | Forgery impact |
+| --- | --- | --- | --- |
+| `Server/PVFunctions/RequestStructure.sqf` | Only: does `_structureType` exist in `WFBE_<side>STRUCTURENAMES`. | `_side` (`select 0`), class, pos, dir — **all from payload**. | Forge `["RequestStructure",[WEST,"US_WarfareBHeavyFactory_EP1",anyPos,dir]]` → server ExecVMs the construction script and builds a **free** factory anywhere for any side. No commander check, no funds debit, no placement/base-area/hostile-town checks (those are client-only, atlas "Placement Rules"). |
+| `Server/PVFunctions/RequestDefense.sqf` | Only: does `_defenseType` exist in `WFBE_<side>DEFENSENAMES`. | `_side`, class, pos, dir, **`_manned`** — all from payload. | Forge unlimited **free** defenses — incl. AI-manned static weapons and minefields (`Sign_Danger`) — anywhere for any side, bypassing the base-area `avail` budget (decremented only client-side in `coin_interface.sqf:724-730`). |
+| `Server/PVFunctions/RequestMHQRepair.sqf` | **None.** Body is `[_this] Spawn MHQRepair;`. | entire payload; `MHQRepair.sqf:3` uses `_side`. | `MHQRepair` rebuilds the side HQ from server state (`GetSideHQ`/`GetCommanderTeam`/position) with **no dead-HQ check, no commander check, and none of the repair count/price gating** that lives only client-side in `Action_RepairMHQ.sqf`. Forge `["RequestMHQRepair",[side]]` → free, unlimited HQ respawn/repair; can also fire while the HQ is alive. |
+
+### Root cause (why "add a check" is non-trivial here)
+
+1. **`_side` is taken from the payload, not derived from the sender.** A client can act on any side's behalf.
+2. **The payloads don't even include the requesting player object**, so the handlers *cannot* identify or authorize the sender as written.
+3. **Arma 2 OA `addPublicVariableEventHandler` provides no sender identity** — `_this` is `[varName, value]` only (unlike Arma 3 `remoteExecutedOwner`/`RE` ownership). So authority must be reconstructed: the payload must carry the player, and the server must validate that player's role/side/funds against **server-side** state. (This is also why DR-1's command-validation fix does not, by itself, stop forgery.)
+
+### Validation playbook (behavior-preserving for legit CoIn UX)
+
+Add the requesting player to each request and validate server-side before creating objects. Example for `RequestStructure` (mirror for `RequestDefense`; for `RequestMHQRepair` validate dead-HQ + commander + repair-count/price server-side):
+
+```sqf
+// client (coin_interface / Action_*): include the player in the payload
+["RequestStructure", [player, sideJoined, _class, _pos, _dir]] Call WFBE_CO_FNC_SendToServer;
+
+// server RequestStructure.sqf (new guards, then existing logic):
+_player = _this select 0; _side = _this select 1; _structureType = _this select 2; ...
+if (isNull _player) exitWith {};
+if (side _player != _side) exitWith {};                                   // can't build for another side
+if (_player != leader ((_side) call WFBE_CO_FNC_GetCommanderTeam)) exitWith {};  // commander-only
+private _cost = /* look up WFBE_<side>STRUCTURECOSTS[index] */;
+if ((_side call WFBE_CO_FNC_GetSideSupply) < _cost) exitWith {};          // server-authoritative funds
+[_side, -_cost, "structure build", false] call WFBE_CO_FNC_ChangeSideSupply;  // debit on server
+// ...then the existing class-exists lookup + ExecVM construction script
+```
+
+Notes:
+- Keep the **client** cost-deduction/preview for instant UX, but make the **server** the final authority on debit and creation (atlas "Cost deduction" risk row agrees). Avoid double-debit by having the client send a *request* and the server be the source of truth (or reconcile on the server-confirmed message).
+- Re-checking full placement/collision server-side is heavier; at minimum validate side+commander+funds+class (cheap, closes the worst abuse). Base-area `avail` should also be decremented/validated **server-side** to stop the unlimited-defense path (trace `RequestBaseArea` + `Construction_StationaryDefense` together, per the atlas, for JIP safety).
+- This is gameplay-code; gate behind review (touches the build hot path) and run LoadoutManager after. `RequestStructure/Defense/MHQRepair.sqf` are not on the skip-list, so they propagate normally.
+
+### Severity framing
+
+Not a crash/RCE (that's DR-1). This is **gameplay-integrity / anti-grief**: on a public server, a modified client can mint free factories/defenses/HQs and bypass the economy. Pair with DR-1 (validate the command) — DR-1 stops *arbitrary code*, DR-6 stops *forged legitimate commands*; both are needed for a hardened public server.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
