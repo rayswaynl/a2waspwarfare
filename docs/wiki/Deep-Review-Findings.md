@@ -424,6 +424,27 @@ if (_change >= _maxSupplyLimit) then {_change = _maxSupplyLimit};
 ### Handoff
 Code owners: one-line floor fix in `Server_ChangeSideSupply.sqf` (×2 handlers) — closes the overspend windfall. Ledger: Economy/supply Auth/PV reinforced (confirmed exploit, not just "confusing").
 
+## Round 13 — 2026-06-02 (Claude) — upgrade authority (DR-23) + economy synthesis
+
+Lane `upgrade-authority-verify`. Confirms Faraday's "upgrade authority gap" candidate and closes the economy-authority thread.
+
+### DR-23 — Upgrade purchasing is client-authoritative with no server validation — **High (economy integrity)**
+
+`Server/PVFunctions/RequestUpgrade.sqf` is the whole handler: `_this Spawn WFBE_SE_FNC_ProcessUpgrade;` — the raw client payload `[side, upgradeId, level, isPlayer]` goes straight into `Server/Functions/Server_ProcessUpgrade.sqf`, which:
+- reads `_side`/`_upgrade_id`/`_upgrade_level`/`_upgrade_isplayer` from the client with **no checks** (no commander check, no side check, no upgrade-sequence/level check, no dependency/`_LINKS` check);
+- **never deducts a cost** — it only `sleep`s `_upgrade_time` then `_upgrades set [_upgrade_id, current+1]`. The upgrade cost is deducted **client-side** in the upgrade menu before the request, same as the rest of the economy.
+
+So a modified client can forge `["RequestUpgrade",[side, id, level, false]]` to grant any side a **free** upgrade, bypassing commander authority and cost. Secondary: `_upgrade_time = (… select _upgrade_id) select _upgrade_level` uses client-controlled indices → out-of-range error (minor DoS) if forged with bad ids. **Fix:** validate in `RequestUpgrade`/`ProcessUpgrade` — requester is the side's commander, indices in range, dependencies met and the level is the correct next step, and deduct cost server-side (mirror the DR-6 validation shape).
+
+### Economy-authority synthesis (DR-6, DR-14, DR-16, DR-22, DR-23)
+This is the last economic action to review, and it confirms the pattern: **the entire WFBE player economy is client-authoritative** —
+- **build** structures (DR-6), **buy** units (DR-14), **sell** structures (DR-16), **change side supply** (DR-22, plus the overspend-windfall bug), **buy upgrades** (DR-23) — each lets the client decide/deduct, with the server doing at most a class-exists check.
+
+One owner decision covers all of it: either route economic mutations through validated server PVFs (server checks commander/side/funds and applies the debit), or accept client authority and rely on BattlEye `scripts.txt`/PV filters. Piecemeal fixes won't close the class; the decision is architectural.
+
+### Handoff
+Code owners: add commander/funds/index/dependency validation + server-side cost to the upgrade path (DR-23); and make the **economy-authority decision** once for build/buy/sell/supply/upgrade rather than per-finding. Ledger: economy thread fully reviewed (Auth across the board characterized).
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
