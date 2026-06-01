@@ -1,0 +1,87 @@
+{
+  "schema": "a2waspwarfare-agent-context-v1",
+  "generatedAt": "2026-06-01",
+  "repository": "rayswaynl/a2waspwarfare",
+  "game": "Arma 2 Operation Arrowhead 1.64",
+  "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+  "generatedMissions": [
+    "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+    "Modded_Missions/*"
+  ],
+  "documentation": {
+    "wiki": "https://github.com/rayswaynl/a2waspwarfare/wiki",
+    "mirror": "docs/wiki",
+    "pages": [
+      "Home",
+      "Architecture-Overview",
+      "Mission-Entrypoints-And-Lifecycle",
+      "Source-Inventory",
+      "Core-Systems-Index",
+      "Function-And-Module-Index",
+      "Networking-And-Public-Variables",
+      "Economy-Towns-And-Supply",
+      "Supply-Mission-Architecture",
+      "AI-Headless-And-Performance",
+      "Client-UI-HUD-And-Menus",
+      "Tools-And-Build-Workflow",
+      "External-Integrations",
+      "Content-Structure-And-Maps",
+      "Feature-Status-Register",
+      "Current-Work-Supply-Helicopters-PR1",
+      "Documentation-Implementation-Plan",
+      "Coordination-Board",
+      "Claude-Goal",
+      "Agent-Worklog",
+      "Agent-Context",
+      "AI-Assistant-Developer-Guide"
+    ]
+  },
+  "rules": [
+    "Use Bohemia Interactive Arma 2 OA scripting docs; avoid Arma 3 assumptions.",
+    "Gameplay mission edits belong in the Chernarus source mission.",
+    "Run Tools/LoadoutManager dotnet run after mission edits to propagate generated missions.",
+    "Treat missing 7za as packaging-only unless deployment packaging is required.",
+    "Use WF_Debug-gated detailed logs and small always-on INFORMATION/WARNING logs for tester-visible state transitions."
+  ],
+  "entrypoints": [
+    "description.ext",
+    "initJIPCompatible.sqf",
+    "Common/Init/Init_Common.sqf",
+    "Common/Init/Init_CommonConstants.sqf",
+    "Common/Init/Init_PublicVariables.sqf",
+    "Server/Init/Init_Server.sqf",
+    "Client/Init/Init_Client.sqf",
+    "Headless/Init/Init_HC.sqf"
+  ],
+  "systems": {
+    "networking": "PVF lists in Common/Init/Init_PublicVariables.sqf plus direct publicVariable channels for supply, anti-stack, day/night, FPS, AFK and markers.",
+    "economy": "Funds and side supply with town SV, commander income, resources FSM and supply missions.",
+    "ai": "Server town AI, AI commanders, client/headless delegation, player AI watchdog/recovery.",
+    "ui": "Rsc resources, Client/GUI menus, RHUD/FPS HUD, map marker loops.",
+    "tooling": "LoadoutManager for mission generation/packaging; PerformanceAuditAnalyzer for RPT metrics.",
+    "integrations": "DiscordBot, a2waspwarfare_Extension, A2WaspDatabase extension, BattlEye publicVariable filter."
+  },
+  "knownRisks": [
+    "Autonomous AI supply logistics is incomplete: UpdateSupplyTruck disabled and Server/FSM/supplytruck.fsm missing.",
+    "DoNotUse CRV7PG loadout classes can crash the game if used in loadouts.",
+    "AntiStack database extension calls are live-server sensitive.",
+    "Generated missions can be overwritten by LoadoutManager.",
+    "PublicVariable traffic and client marker/UI loops are performance-sensitive."
+  ],
+  "currentPR": {
+    "number": 1,
+    "branch": "feat/supply-helicopter",
+    "title": "feat: supply helicopters for both teams",
+    "docsPage": "Current-Work-Supply-Helicopters-PR1.md",
+    "deferred": "Autonomous AI-flown supply helicopters until AI supply logistics is restored/redesigned.",
+    "reviewRisks": [
+      "Repeated supply vehicle reloads must not stack duplicate Killed event handlers.",
+      "PR #1 behavior is pending until merged."
+    ]
+  },
+  "coordination": {
+    "claudeGoal": "Claude-Goal.md",
+    "worklog": "Agent-Worklog.md",
+    "board": "Coordination-Board.md"
+  }
+}
