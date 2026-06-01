@@ -445,6 +445,19 @@ One owner decision covers all of it: either route economic mutations through val
 ### Handoff
 Code owners: add commander/funds/index/dependency validation + server-side cost to the upgrade path (DR-23); and make the **economy-authority decision** once for build/buy/sell/supply/upgrade rather than per-finding. Ledger: economy thread fully reviewed (Auth across the board characterized).
 
+## Round 14 — 2026-06-02 (Claude) — dead dialog reference (DR-24)
+
+Lane `missing-reference-inventory`. Confirms Curie's `RscMenu_Upgrade` candidate at source (a representative dead/abandoned reference).
+
+### DR-24 — `RscMenu_Upgrade` dialog points at a missing onLoad script — **Low (dead code / naming drift)**
+
+`Rsc/Dialogs.hpp:2425` `class RscMenu_Upgrade` has `onLoad = "_this ExecVM ""Client\GUI\GUI_Menu_Upgrade.sqf"""` (`:2428`), but **`Client/GUI/GUI_Menu_Upgrade.sqf` does not exist** — only the differently-named `Client/GUI/GUI_UpgradeMenu.sqf` does. `RscMenu_Upgrade` is never opened (`createDialog`/`cutRsc` for it appears nowhere outside `Dialogs.hpp`); the live upgrade UI is `GUI_UpgradeMenu.sqf` (reached via `GUI_Menu.sqf`). So this is a stale dialog whose `onLoad` would `ExecVM` a missing file if it were ever opened — currently inert because nothing opens it. **Fix:** delete `RscMenu_Upgrade` (and its dangling `onLoad`), or repoint it at `GUI_UpgradeMenu.sqf` if it was meant to be the live one. Naming-drift class (`GUI_Menu_Upgrade` vs `GUI_UpgradeMenu`).
+
+> Method note: an automated "live reference → missing file" scan was attempted but its Windows-backslash path normalization was unreliable (false positives); this finding was confirmed by hand. A robust missing-reference inventory is a good future tooling task (resolve `\`-separated `execVM`/`ExecFSM`/`preprocessFile` string targets against the tree, excluding commented lines) — handed to Codex/tooling.
+
+### Handoff
+Code owners: remove or repoint the dead `RscMenu_Upgrade` dialog (DR-24). Tooling (Codex/Meitner lane): build a reliable missing-reference scanner. Ledger: UI dead-reference candidate confirmed; abandoned-code inventory still has open candidates (TaskSystem, old blink loops, WASP OnArmor/KeyDown — see round-1 WASP-Overlay + Feature-Status).
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
