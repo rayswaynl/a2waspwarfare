@@ -1,0 +1,78 @@
+{
+  "schema": "a2waspwarfare-agent-status-v1",
+  "generatedAt": "2026-06-01T23:05:00+02:00",
+  "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
+  "dashboard": "Progress-Dashboard.md",
+  "sourceOfTruth": {
+    "humanDashboard": "Progress-Dashboard.md",
+    "humanBoard": "Coordination-Board.md",
+    "worklog": "Agent-Worklog.md",
+    "collaborationState": "agent-collaboration.json",
+    "eventFeed": "agent-events.jsonl",
+    "repoContext": "agent-context.json"
+  },
+  "agents": {
+    "Codex": {
+      "status": "active",
+      "currentLane": "factory-purchase-atlas",
+      "currentWork": "Deep-read factory purchase, buy menu, unit spawn, server AI buying and purchase authority boundaries; publish a source-backed atlas.",
+      "nextExpectedOutput": "Factory-And-Purchase-Systems-Atlas.md plus navigation/context/worklog updates."
+    },
+    "Claude": {
+      "status": "ready-for-review; autonomous-ready",
+      "currentLane": "pvf-hardening-review",
+      "currentWork": "PVF hardening implementation playbook is published in Deep-Review-Findings.md; Claude may claim another bounded lane next.",
+      "nextExpectedOutput": "Code-owner review of the PVF playbook, or a new Claude claim event for the next autonomous source-backed lane."
+    }
+  },
+  "lanes": [
+    {
+      "lane": "factory-purchase-atlas",
+      "owner": "Codex",
+      "status": "active",
+      "sourceScope": [
+        "Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Client/Functions/Client_BuildUnit.sqf",
+        "Server/PVFunctions/RequestBuyUnit.sqf",
+        "Server/Functions/Server_BuyUnit.sqf",
+        "Common/Config/Core_Units/*.sqf",
+        "Common/Config/Core_Squads/*.sqf",
+        "Common/Config/Core_Upgrades/*.sqf"
+      ]
+    },
+    {
+      "lane": "autonomous-claude-research",
+      "owner": "Claude",
+      "status": "open",
+      "sourceScope": [
+        "Any bounded source-backed undocumented subsystem, stale assumption or risk register item."
+      ]
+    },
+    {
+      "lane": "pvf-hardening-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Common/Init/Init_PublicVariables.sqf",
+        "Server/Functions/Server_HandlePVF.sqf",
+        "Client/Functions/Client_HandlePVF.sqf",
+        "BattlEyeFilter/publicvariable.txt"
+      ],
+      "output": "Deep-Review-Findings.md Round 3 PVF hardening implementation playbook"
+    }
+  ],
+  "updateProtocol": [
+    "Before substantial work, update agent-collaboration.json and append a claim event to agent-events.jsonl.",
+    "For long work, append heartbeat events with current source scope.",
+    "For source-backed issues, append finding events and add Agent-Worklog.md notes.",
+    "When done, append complete or handoff events and update the dashboard/status files if the visible progress changed."
+  ],
+  "quickLinks": {
+    "wiki": "https://github.com/rayswaynl/a2waspwarfare/wiki",
+    "progressDashboard": "Progress-Dashboard.md",
+    "coordinationBoard": "Coordination-Board.md",
+    "collaborationProtocol": "Agent-Collaboration-Protocol.md",
+    "events": "agent-events.jsonl",
+    "worklog": "Agent-Worklog.md"
+  }
+}

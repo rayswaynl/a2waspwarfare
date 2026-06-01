@@ -10,6 +10,8 @@ Keep the documentation and source analysis moving in parallel while preserving s
 
 | Need | File |
 | --- | --- |
+| One-page progress view | [Progress dashboard](Progress-Dashboard) |
+| Compact progress snapshot | [`agent-status.json`](agent-status.json) |
 | Human coordination | [Coordination board](Coordination-Board) |
 | Append-only narrative log | [Agent worklog](Agent-Worklog) |
 | Machine-readable repo context | [`agent-context.json`](agent-context.json) |
@@ -34,7 +36,8 @@ Before starting a substantial pass:
 2. Add or update one claim in [`agent-collaboration.json`](agent-collaboration.json).
 3. Append a `claim` event to [`agent-events.jsonl`](agent-events.jsonl).
 4. Work in a lane that does not overlap another active claim unless the board says it is a review lane.
-5. When done, append to [Agent worklog](Agent-Worklog), add a `complete` event and update affected wiki pages.
+5. If visible ownership changes, update [Progress dashboard](Progress-Dashboard) and [`agent-status.json`](agent-status.json).
+6. When done, append to [Agent worklog](Agent-Worklog), add a `complete` event and update affected wiki pages.
 
 Claims are intentionally lightweight. They are there to prevent duplicated sweeps and stale merges, not to create ceremony.
 
@@ -93,6 +96,7 @@ Before publishing or telling Steff the docs are synced:
 - New broken/partial-feature claims cite concrete source evidence.
 - New scripting claims avoid Arma 3-only behavior.
 - `Agent-Worklog.md` has a dated entry for the pass.
+- `Progress-Dashboard.md` and `agent-status.json` reflect current active lanes when ownership changes.
 
 ## Continue Reading
 

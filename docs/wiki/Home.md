@@ -11,6 +11,7 @@ This wiki is built for two audiences at once:
 | Reviewer | [Feature status register](Feature-Status-Register) | Broken, partial, deferred and missing features. |
 | Mission implementer | [SQF code atlas](SQF-Code-Atlas) | Compile registry, PVF contract and entrypoint ownership. |
 | Claude collaborator | [Agent collaboration protocol](Agent-Collaboration-Protocol) | Shared claim, handoff and event protocol for Codex/Claude work. |
+| Steff / project owner | [Progress dashboard](Progress-Dashboard) | One page for current Codex/Claude lanes, event feed and status files. |
 
 ## Click-Through Tours
 
@@ -22,7 +23,7 @@ Use these when you want to read the wiki like a connected handbook instead of ju
 | Implement a gameplay change | [Gameplay atlas](Gameplay-Systems-Atlas) -> [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas) -> [Core systems](Core-Systems-Index) -> [Feature status](Feature-Status-Register) |
 | Trace SQF and networking | [SQF atlas](SQF-Code-Atlas) -> [Function index](Function-And-Module-Index) -> [Networking/PV](Networking-And-Public-Variables) |
 | Work on UI/HUD | [Client UI/HUD/menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) -> [Tools/build](Tools-And-Build-Workflow) |
-| Coordinate Codex and Claude | [Coordination board](Coordination-Board) -> [Agent collaboration protocol](Agent-Collaboration-Protocol) -> [Agent worklog](Agent-Worklog) |
+| Coordinate Codex and Claude | [Progress dashboard](Progress-Dashboard) -> [Coordination board](Coordination-Board) -> [Agent collaboration protocol](Agent-Collaboration-Protocol) -> [Agent worklog](Agent-Worklog) |
 
 Every content page now includes a **Continue Reading** block with previous and next links for the main handbook path.
 
@@ -46,7 +47,8 @@ Every content page now includes a **Continue Reading** block with previous and n
 | Work on AI/performance | [AI, headless and performance](AI-Headless-And-Performance) -> [Feature status register](Feature-Status-Register) |
 | Work on UI/HUD/menus | [Client UI, HUD and menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | Work on core gameplay | [Gameplay systems atlas](Gameplay-Systems-Atlas) -> [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) -> [Core systems index](Core-Systems-Index) |
-| Coordinate agents | [Coordination board](Coordination-Board) -> [Agent worklog](Agent-Worklog) -> [Claude long-term goal](Claude-Long-Term-Goal) |
+| Check agent progress | [Progress dashboard](Progress-Dashboard) -> [`agent-status.json`](agent-status.json) -> [`agent-events.jsonl`](agent-events.jsonl) |
+| Coordinate agents | [Progress dashboard](Progress-Dashboard) -> [Coordination board](Coordination-Board) -> [Agent worklog](Agent-Worklog) -> [Claude long-term goal](Claude-Long-Term-Goal) |
 | Understand WASP-specific additions | [WASP overlay](WASP-Overlay) -> [Feature status register](Feature-Status-Register) |
 
 ## Current Map
@@ -63,7 +65,7 @@ Every content page now includes a **Continue Reading** block with previous and n
 | WASP additions | [WASP overlay](WASP-Overlay) |
 | Operations | [Tools and build workflow](Tools-And-Build-Workflow), [External integrations](External-Integrations) |
 | Risk and future work | [Feature status register](Feature-Status-Register), [Deep-review findings](Deep-Review-Findings), [Documentation implementation plan](Documentation-Implementation-Plan) |
-| Agent collaboration | [AI assistant developer guide](AI-Assistant-Developer-Guide), [Agent context](Agent-Context), [Coordination board](Coordination-Board), [Agent collaboration protocol](Agent-Collaboration-Protocol) |
+| Agent collaboration | [AI assistant developer guide](AI-Assistant-Developer-Guide), [Agent context](Agent-Context), [Progress dashboard](Progress-Dashboard), [Coordination board](Coordination-Board), [Agent collaboration protocol](Agent-Collaboration-Protocol) |
 
 ## Repo Shape
 
@@ -83,6 +85,8 @@ Every content page now includes a **Continue Reading** block with previous and n
 
 - Human-readable agent brief: [Agent context](Agent-Context)
 - Machine-readable agent file: [`agent-context.json`](agent-context.json)
+- Human-readable progress dashboard: [Progress dashboard](Progress-Dashboard)
+- Machine-readable progress file: [`agent-status.json`](agent-status.json)
 - Machine-readable collaboration file: [`agent-collaboration.json`](agent-collaboration.json)
 - Append-only coordination feed: [`agent-events.jsonl`](agent-events.jsonl)
 - Agent coordination log: [Agent worklog](Agent-Worklog)

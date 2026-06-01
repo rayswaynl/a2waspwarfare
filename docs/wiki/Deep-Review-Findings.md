@@ -93,6 +93,72 @@ The [SQF code atlas](SQF-Code-Atlas) states "659 `preprocessFile` references (45
 - DR-1 server-side validation is a small, safe gameplay-code change (Chernarus `Server_HandlePVF.sqf`) — gate behind review since it touches the network hot path.
 - Re-confirm DR-4 modded-map decision: regenerate or formally retire `Modded_Missions/*`.
 
+## Round 3 — 2026-06-01 (Claude) — PVF hardening implementation playbook
+
+Lane `pvf-hardening-review`. This turns DR-1 into a concrete, **behavior-preserving** change set a code owner can apply to the Chernarus source. Every claim below was re-verified against source on this pass. Paths relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
+
+### Why the dispatch never actually needs `Call Compile`
+
+The dispatch targets are already-compiled **global variables**, created at registration in `Common/Init/Init_PublicVariables.sqf:44,49`:
+
+```sqf
+Call Compile Format["CLTFNC%1 = compile preprocessFileLineNumbers 'Client\PVFunctions\%1.sqf'", _x];   // :44
+Call Compile Format["SRVFNC%1 = compile preprocessFileLineNumbers 'Server\PVFunctions\%1.sqf'", _x];   // :49
+```
+
+So `SRVFNCRequestJoin`, `CLTFNCTownCaptured`, … are `missionNamespace` variables holding `code`. The dispatch line `Spawn (Call Compile _script)` only compiles the *string* `_script` to perform a variable lookup. That means the same resolution can be done with `getVariable`, which treats `_script` purely as a name and **cannot execute** an arbitrary SQF string a client injected.
+
+### Fix 1 — Primary, behavior-preserving (closes arbitrary code execution)
+
+Replace the compile-the-string dispatch with a name lookup that defaults to a no-op.
+
+`Server/Functions/Server_HandlePVF.sqf` (current `_parameters Spawn (Call Compile _script);`):
+```sqf
+private _fn = missionNamespace getVariable [_script, {}];   // resolve SRVFNC<cmd>; unknown -> {}
+if (_fn isEqualTo {}) exitWith {
+    ["WARNING", format ["Server_HandlePVF: rejected unknown PVF command '%1' from network", _script]] Call WFBE_CO_FNC_LogContent;
+};
+_parameters Spawn _fn;
+```
+`Client/Functions/Client_HandlePVF.sqf` (current `_parameters Spawn (Call Compile _script);`): identical pattern resolving `CLTFNC<cmd>`.
+
+Why this is safe and behavior-identical:
+- Legitimate traffic sets `_script` to exactly `"SRVFNC"+cmd` / `"CLTFNC"+cmd` (see `Common/Functions/Common_SendToServerOptimized.sqf:15`, `Common/Functions/Common_SendToClient.sqf`), which resolves to the compiled function — unchanged.
+- A hostile value such as `"hint 'x'; <server-side effect>"` is not a defined variable, so `getVariable` returns the default `{}` → `Spawn {}` → no-op (plus a WARNING that surfaces probing in the RPT). No `compile` ever runs on attacker text.
+- `isEqualTo {}` is a valid Arma 2 OA `code` comparison; use it (not `isNil`) because the default is empty code, not nil.
+
+### Fix 2 — Optional explicit allow-list (defense-in-depth + clarity)
+
+At the end of `Init_PublicVariables.sqf`, snapshot the legal command set so the handler check is explicit rather than implicit:
+```sqf
+WFBE_SE_PVF_ALLOWED = _serverCommandPV apply {format ["SRVFNC%1", _x]};
+WFBE_CL_PVF_ALLOWED = _clientCommandPV apply {format ["CLTFNC%1", _x]};
+publicVariable "WFBE_SE_PVF_ALLOWED"; // optional; or keep server-local
+```
+Then guard with `if !(_script in WFBE_SE_PVF_ALLOWED) exitWith { ...log... };` before resolving. Fix 1 already covers the same cases; use Fix 2 only if you want a named, auditable whitelist.
+
+### Fix 3 — BattlEye `publicvariable.txt` (defense-in-depth at the network edge)
+
+The shipped `BattlEyeFilter/publicvariable.txt` is a single line, `5 "kickAFK"`, which is the **AFK-kick feature trigger**, not a security filter (see [Networking and public variables](Networking-And-Public-Variables) → Security). A hardened filter uses a restrictive default first line plus explicit allow exceptions:
+
+```text
+5 ""                                  // default: kick on any unlisted PV broadcast
+!="^WFBE_PVF_[A-Za-z]+$"              // allow the dispatch channels
+!="^wfbe_supply_temp_(west|east)$"    // allow the supply request channel
+!="^(ATTACK_WAVE_INIT|CLIENT_INIT_READY|REQUEST_SUPPLY_VALUE|WFBE_CL_MASH_MARKER_CREATED|AFKthresholdExceededName|WFBE_C_PLAYER_OBJECT|WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH)$"
+5 "kickAFK"                           // keep the AFK feature kick
+```
+> ⚠️ Validate the exact client→server channel list against the "Direct Public Variable Channels" table in the [SQF code atlas](SQF-Code-Atlas) before deploying — a too-strict default with a missing exception will kick legitimate players. BattlEye regex/escaping differs from SQF; test on a private server first. This complements, and does not replace, Fix 1 (BE filters the variable *name*, not the payload shape).
+
+### Residual risk this playbook does NOT close (scope honesty)
+
+Fix 1 stops arbitrary **code execution**, but the PVF model still **trusts client-sent commands and parameters**. A malicious client can broadcast a *legitimate* command with chosen arguments — e.g. `RequestChangeScore` (`Server/PVFunctions/RequestChangeScore.sqf` sets a player's score directly from the payload) or `RequestStructure` — because the server handlers largely don't authenticate the sender against the payload. Closing that is a larger, per-handler effort (validate that `owner`/sender matches the acting player, clamp economy/score deltas, range-check structure requests). Treat this as a separate follow-up lane, not part of the dispatch fix. Documented here so the dispatch fix isn't mistaken for full PVF authorization.
+
+### Verification notes (this pass)
+
+- No registered handler under `Server/PVFunctions/` or `Client/PVFunctions/`, nor `Server_HandleSpecial.sqf`/`HandleSpecial.sqf`/`LocalizeMessage.sqf`, calls `compile` on its parameters — so once the dispatch command name is resolved safely, there is no second-order injection on the PVF path. The other `call compile` sites in the mission compile **files** (`Init_Coin.sqf`, EASA/CM init) or local engine key-strings (`coin_interface.sqf:774-777`), not network data.
+- Handoff: this is a Chernarus-source gameplay change → after applying, run `Tools/LoadoutManager` `dotnet run` to propagate (note `Server_HandlePVF`/`Client_HandlePVF` are not on the skip-list, so they propagate normally; `BattlEyeFilter/` lives outside the mission and is deployed with the server, not via LoadoutManager).
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)

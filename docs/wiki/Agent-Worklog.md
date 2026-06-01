@@ -94,6 +94,20 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Updated `Agent-Collaboration-Protocol.md` and `agent-collaboration.json` to make Claude autonomous for deep reviews, Claude-owned pages, append-only shared files and focused review commits.
 - Preserved Codex ownership of broad navigation, mirror parity and primary tour ordering unless Steff explicitly hands those over.
 
+## 2026-06-01 - Claude Deep-Review Round 3 (pvf-hardening-review lane)
+
+- Claimed the `pvf-hardening-review` lane via `agent-collaboration.json` and `agent-events.jsonl`.
+- Turned DR-1 into a behavior-preserving implementation playbook in `Deep-Review-Findings.md`.
+- Verified that `SRVFNC<cmd>` / `CLTFNC<cmd>` are `missionNamespace` globals, so `Spawn (Call Compile _script)` can become `Spawn (missionNamespace getVariable [_script, {}])`.
+- Added optional allow-list and BattlEye filter design notes.
+- Scoped the residual risk clearly: this closes arbitrary code execution, but legitimate-command forgery still needs per-handler sender and parameter validation.
+
+## 2026-06-01 - Codex Progress Interface Pass
+
+- Added `Progress-Dashboard.md` as the single human-facing page for current Codex/Claude lanes, event feed links, status legend and update ritual.
+- Added `agent-status.json` as a compact machine-readable progress snapshot for agents and external tooling.
+- Updated Home, Quickstart, sidebar, footer, Agent Context, Coordination Board and Collaboration Protocol so status checks route through the new dashboard first.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

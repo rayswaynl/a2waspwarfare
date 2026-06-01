@@ -3,6 +3,8 @@
   "generatedAt": "2026-06-01T21:23:39+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
+    "progressDashboard": "Progress-Dashboard.md",
+    "statusFile": "agent-status.json",
     "humanBoard": "Coordination-Board.md",
     "protocol": "Agent-Collaboration-Protocol.md",
     "worklog": "Agent-Worklog.md",
@@ -12,16 +14,57 @@
   "agents": {
     "Codex": {
       "role": "Integrator, wiki UX owner, source-atlas maintainer, publisher and validation runner.",
-      "currentLane": "construction-coin-atlas",
-      "status": "integrated"
+      "currentLane": "factory-purchase-atlas",
+      "status": "active"
     },
     "Claude": {
       "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
-      "currentLane": "self-selected-next-lane",
-      "status": "autonomous-ready"
+      "currentLane": "pvf-hardening-review",
+      "status": "ready-for-review; autonomous-ready"
     }
   },
   "activeClaims": [
+    {
+      "lane": "progress-interface",
+      "owner": "Codex",
+      "status": "integrated",
+      "sourceScope": [
+        "Progress-Dashboard.md",
+        "agent-status.json",
+        "Coordination-Board.md",
+        "Agent-Collaboration-Protocol.md",
+        "Home.md",
+        "_Sidebar.md"
+      ],
+      "outputs": [
+        "Progress-Dashboard.md",
+        "agent-status.json",
+        "updated navigation/protocol/worklog"
+      ],
+      "handoff": "Codex and Claude should update the dashboard/status snapshot whenever visible lane ownership changes."
+    },
+    {
+      "lane": "factory-purchase-atlas",
+      "owner": "Codex",
+      "status": "active",
+      "sourceScope": [
+        "Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Client/Functions/Client_BuildUnit.sqf",
+        "Server/PVFunctions/RequestBuyUnit.sqf",
+        "Server/Functions/Server_BuyUnit.sqf",
+        "Server/Functions/Server_HandleEmptyVehicle.sqf",
+        "Common/Config/Core_Units/*.sqf",
+        "Common/Config/Core_Squads/*.sqf",
+        "Common/Config/Core_Upgrades/*.sqf",
+        "Common/Functions/Common_CreateVehicle.sqf",
+        "Common/Functions/Common_CreateUnit.sqf"
+      ],
+      "outputs": [
+        "Factory-And-Purchase-Systems-Atlas.md",
+        "updated navigation/context/worklog"
+      ],
+      "handoff": "Claude should review purchase authority boundaries, AI commander buying and factory queue edge cases after the atlas lands."
+    },
     {
       "lane": "coordination-protocol",
       "owner": "Codex",
@@ -83,9 +126,38 @@
         "feature-status/networking/tooling follow-up updates"
       ],
       "handoff": "Codex should integrate confirmed findings into owning atlas pages after current coordination pass."
+    },
+    {
+      "lane": "pvf-hardening-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Server/Functions/Server_HandlePVF.sqf",
+        "Client/Functions/Client_HandlePVF.sqf",
+        "Common/Init/Init_PublicVariables.sqf",
+        "Common/Functions/Common_SendToServerOptimized.sqf",
+        "Common/Functions/Common_SendToClient.sqf",
+        "BattlEyeFilter/publicvariable.txt"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (PVF hardening implementation playbook section)"
+      ],
+      "handoff": "Code owners: apply the behavior-preserving dispatch validation (resolve SRVFNC/CLTFNC via missionNamespace getVariable instead of Call Compile) in Chernarus source and add a real BattlEye publicvariable.txt; then run LoadoutManager. Codex: optionally link the playbook from Networking/SQF atlas."
     }
   ],
   "lanes": [
+    {
+      "lane": "progress-interface",
+      "suggestedOwner": "Codex",
+      "status": "integrated",
+      "summary": "Human and machine-readable progress dashboard for Codex/Claude lane tracking."
+    },
+    {
+      "lane": "factory-purchase-atlas",
+      "suggestedOwner": "Codex",
+      "status": "active",
+      "summary": "Deep-read client buy menus, factory queues, unit config, server AI buying and purchase authority boundaries."
+    },
     {
       "lane": "construction-coin-atlas",
       "suggestedOwner": "Codex",
@@ -101,8 +173,8 @@
     {
       "lane": "pvf-hardening-review",
       "suggestedOwner": "Claude",
-      "status": "open",
-      "summary": "Review PVF hardening options and propose minimal validation design without changing gameplay behavior."
+      "status": "ready-for-review",
+      "summary": "Claude published a behavior-preserving PVF dispatch hardening playbook; code owners should review before implementation."
     },
     {
       "lane": "feature-status-reconciliation",
@@ -112,6 +184,7 @@
     }
   ],
   "rules": [
+    "Update Progress-Dashboard.md and agent-status.json when visible ownership or lane state changes.",
     "Append, do not overwrite, Agent-Worklog.md and agent-events.jsonl.",
     "Use source-cited evidence for broken/partial-feature claims.",
     "If a branch is stale, integrate targeted findings instead of merging over newer navigation.",

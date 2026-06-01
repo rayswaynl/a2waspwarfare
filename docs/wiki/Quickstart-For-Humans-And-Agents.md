@@ -13,6 +13,7 @@ This page is the low-friction route into the repo. Use it before editing mission
 | Generated targets | `Missions_Vanilla/*`, `Modded_Missions/*` |
 | Generator | `Tools/LoadoutManager` |
 | AI context | [`agent-context.json`](agent-context.json) |
+| Progress view | [Progress dashboard](Progress-Dashboard), [`agent-status.json`](agent-status.json) |
 
 ## If You Are Human
 
@@ -23,24 +24,27 @@ This page is the low-friction route into the repo. Use it before editing mission
 5. Read [Gameplay systems atlas](Gameplay-Systems-Atlas) before touching towns, economy, commander, upgrades, construction or factories.
 6. Read [WASP overlay](WASP-Overlay) before changing project-specific additions under `WASP/`.
 7. Read [Feature status register](Feature-Status-Register) before reviving old code.
-8. Check [Agent worklog](Agent-Worklog) for the latest Codex/Claude findings.
+8. Check [Progress dashboard](Progress-Dashboard) for current Codex/Claude lanes.
+9. Check [Agent worklog](Agent-Worklog) for the latest Codex/Claude findings.
 
 ## If You Are An LLM
 
 Load these first, in order:
 
 1. [`agent-context.json`](agent-context.json)
-2. [`agent-collaboration.json`](agent-collaboration.json)
-3. [Agent context](Agent-Context)
-4. [Agent collaboration protocol](Agent-Collaboration-Protocol)
-5. [SQF code atlas](SQF-Code-Atlas)
-6. [Gameplay systems atlas](Gameplay-Systems-Atlas)
-7. [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas)
-8. [Lifecycle wait-chain](Lifecycle-Wait-Chain)
-9. [WASP overlay](WASP-Overlay)
-10. [Documentation implementation plan](Documentation-Implementation-Plan)
-11. [Feature status register](Feature-Status-Register)
-12. [Agent worklog](Agent-Worklog)
+2. [`agent-status.json`](agent-status.json)
+3. [`agent-collaboration.json`](agent-collaboration.json)
+4. [Agent context](Agent-Context)
+5. [Progress dashboard](Progress-Dashboard)
+6. [Agent collaboration protocol](Agent-Collaboration-Protocol)
+7. [SQF code atlas](SQF-Code-Atlas)
+8. [Gameplay systems atlas](Gameplay-Systems-Atlas)
+9. [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas)
+10. [Lifecycle wait-chain](Lifecycle-Wait-Chain)
+11. [WASP overlay](WASP-Overlay)
+12. [Documentation implementation plan](Documentation-Implementation-Plan)
+13. [Feature status register](Feature-Status-Register)
+14. [Agent worklog](Agent-Worklog)
 
 Then inspect source before making claims. Do not infer Arma 3 behavior. If you add high-level facts, update `agent-context.json`.
 
@@ -67,6 +71,7 @@ Then inspect source before making claims. Do not infer Arma 3 behavior. If you a
 | Change AI/headless behavior | [AI, headless and performance](AI-Headless-And-Performance) |
 | Change WASP custom scripts | [WASP overlay](WASP-Overlay), [Feature status register](Feature-Status-Register) |
 | Touch generated missions | [Tools and build workflow](Tools-And-Build-Workflow), [Content structure and maps](Content-Structure-And-Maps) |
+| See what Codex and Claude are doing | [Progress dashboard](Progress-Dashboard), [`agent-status.json`](agent-status.json), [`agent-events.jsonl`](agent-events.jsonl) |
 
 ## Agent Collaboration
 
@@ -76,7 +81,7 @@ Then inspect source before making claims. Do not infer Arma 3 behavior. If you a
 | Claude | Independently reviews, challenges assumptions, finds hidden coupling and records source-backed findings through the collaboration protocol. |
 | Future agents | Start from `agent-context.json`, inspect source and append findings to `Agent-Worklog.md`. |
 
-Use [Agent collaboration protocol](Agent-Collaboration-Protocol) for claim/handoff rules and [Claude long-term goal](Claude-Long-Term-Goal) when spinning up Claude as a persistent counterpart.
+Use [Progress dashboard](Progress-Dashboard) for current status, [Agent collaboration protocol](Agent-Collaboration-Protocol) for claim/handoff rules and [Claude long-term goal](Claude-Long-Term-Goal) when spinning up Claude as a persistent counterpart.
 
 ## Continue Reading
 

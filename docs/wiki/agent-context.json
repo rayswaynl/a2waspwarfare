@@ -39,6 +39,7 @@
       "Feature-Status-Register",
       "AI-Assistant-Developer-Guide",
       "Agent-Context",
+      "Progress-Dashboard",
       "Coordination-Board",
       "Agent-Collaboration-Protocol",
       "Agent-Worklog",
@@ -49,6 +50,7 @@
     ],
     "machineFiles": [
       "agent-context.json",
+      "agent-status.json",
       "agent-collaboration.json",
       "agent-events.jsonl"
     ],
@@ -79,6 +81,7 @@
         "Feature-Status-Register",
         "AI-Assistant-Developer-Guide",
         "Agent-Context",
+        "Progress-Dashboard",
         "Coordination-Board",
         "Agent-Collaboration-Protocol",
         "Agent-Worklog",
@@ -132,6 +135,8 @@
     "OptionsAvailable and RscOverlay share title IDD 10200; use uiNamespace display handles rather than IDD uniqueness.",
     "UI/marker loops are performance-sensitive polling loops; preserve cached writes, map-closed backoff and mission-parameter gates.",
     "DR-1 (High, hardening): Server_HandlePVF.sqf/Client_HandlePVF.sqf Call Compile the sender-chosen command string with no validation, and BattlEyeFilter/publicvariable.txt has only the kickAFK feature rule. Validate the command set before compile and add a real BE PV filter before trusting on a public server.",
+    "DR-1 fix (behavior-preserving): replace 'Spawn (Call Compile _script)' with 'Spawn (missionNamespace getVariable [_script, {}])' in both HandlePVF dispatchers; SRVFNC/CLTFNC are globals so legitimate traffic is unchanged and hostile strings no-op. See Deep-Review-Findings Round 3 playbook.",
+    "Residual after DR-1 fix: the PVF model still trusts client-sent commands and params, for example RequestChangeScore sets score from payload. Arbitrary code execution is closed, but legitimate-command forgery needs separate per-handler sender/param validation.",
     "DR-2/DR-3: paratrooper drop markers and MASH tent markers are confirmed dead receiver-side paths.",
     "DR-4: Chernarus and Takistan differ only by LoadoutManager skip-list/blacklist, but skip-listed files never propagate and must be hand-mirrored; Modded_Missions/* are abandoned until modded propagation is re-enabled.",
     "Construction hardening gap: coin_interface.sqf performs cost/placement/role checks client-side, then RequestStructure/RequestDefense do only light server class-existence validation before creating server objects."
@@ -155,6 +160,8 @@
     "eventFeed": "agent-events.jsonl",
     "deepReviewFindings": "Deep-Review-Findings.md",
     "worklog": "Agent-Worklog.md",
+    "progressDashboard": "Progress-Dashboard.md",
+    "statusFile": "agent-status.json",
     "board": "Coordination-Board.md",
     "codeAtlas": "SQF-Code-Atlas.md"
   },
@@ -198,6 +205,21 @@
         "DR-3 MASH tent markers dead because receiverMASHmarker.sqf is only referenced by a commented client init compile.",
         "DR-4 Chernarus and Takistan are in sync except skip-list/blacklist differences; Modded_Missions are stale or stubbed.",
         "DR-5 atlas preprocessFile counts should be treated as point-in-time; FSM count of 3 verified accurate."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Claude",
+      "round": 3,
+      "lane": "pvf-hardening-review",
+      "type": "implementation-readiness playbook",
+      "deepened": [
+        "Deep-Review-Findings"
+      ],
+      "findings": [
+        "DR-1 fix is behavior-preserving: SRVFNC/CLTFNC are missionNamespace globals, so dispatch can resolve via getVariable [_script, {}] instead of Call Compile; hostile strings become no-ops.",
+        "No registered PVF handler compiles its parameters; no second-order injection on the PVF path.",
+        "Residual: legitimate-command forgery, such as RequestChangeScore trusting payload, is not closed by the dispatch fix and needs separate per-handler sender/param validation."
       ]
     }
   ]

@@ -16,6 +16,8 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 
 ## Shared Files
 
+- `docs/wiki/Progress-Dashboard.md`: one-page human view of current Codex/Claude progress.
+- `docs/wiki/agent-status.json`: compact machine-readable progress snapshot.
 - `docs/wiki/Agent-Context.md`: human-readable AI context.
 - `docs/wiki/agent-context.json`: machine-readable repo map and safe-development facts.
 - `docs/wiki/Agent-Collaboration-Protocol.md`: claim, handoff and branch-integration protocol.
@@ -34,6 +36,7 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 
 ## Coordination Rules
 
+- Keep [Progress dashboard](Progress-Dashboard) and [`agent-status.json`](agent-status.json) current when visible ownership or lane state changes.
 - Append worklog entries instead of replacing another agent's notes.
 - Add/update a lightweight claim in `agent-collaboration.json` before starting a substantial pass.
 - Append `claim`, `finding`, `handoff`, `complete` or `sync` events to `agent-events.jsonl` for cross-agent visibility.
@@ -92,11 +95,13 @@ Async mailbox between agents. Newest at the top. Format: `### [YYYY-MM-DD] From 
 
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
+| `progress-interface` | Codex | Integrated | Progress dashboard and `agent-status.json` are published for human/AI status checks. |
 | `coordination-protocol` | Codex | Integrated | Shared protocol and machine-readable sync files are published. |
 | `deep-review-findings` | Claude | Integrated | Confirmed findings have been reconciled into owning atlas/risk pages. |
 | `construction-coin-atlas` | Codex | Integrated | Construction/CoIn atlas added and wired into navigation/context. |
+| `factory-purchase-atlas` | Codex | Active | Source-read buy menus, factory queues, unit config and purchase authority boundaries. |
 | `autonomous-claude-research` | Claude | Open | Claude may self-select the next bounded source-backed subsystem/risk lane. |
-| `pvf-hardening-review` | Claude | Open | Stress-test a minimal server/client PVF validation design. |
+| `pvf-hardening-review` | Claude | Ready-for-review | Claude published a behavior-preserving PVF dispatch hardening playbook; code owners should review before implementation. |
 
 ## Continue Reading
 

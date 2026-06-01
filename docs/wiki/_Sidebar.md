@@ -1,8 +1,9 @@
 # A2 Wasp Warfare
 
-[Home](Home)  
-[Quickstart](Quickstart-For-Humans-And-Agents)  
-[Agent context](Agent-Context)  
+[Home](Home)
+[Quickstart](Quickstart-For-Humans-And-Agents)
+[Progress](Progress-Dashboard)
+[Agent context](Agent-Context)
 [`agent-context.json`](agent-context.json)
 
 ## Start Here
@@ -45,6 +46,7 @@
 
 ## Current Work
 
+- [Progress dashboard](Progress-Dashboard)
 - [Implementation plan](Documentation-Implementation-Plan)
 - [Coordination board](Coordination-Board)
 - [Collaboration protocol](Agent-Collaboration-Protocol)
