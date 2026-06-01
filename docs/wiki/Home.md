@@ -1,38 +1,51 @@
 # A2 Wasp Warfare Developer Wiki
 
-This wiki indexes `rayswaynl/a2waspwarfare` for human developers and AI coding assistants. It focuses on the Arma 2: Operation Arrowhead 1.64 mission/server ecosystem, not Arma 3.
+Developer documentation for `rayswaynl/a2waspwarfare`, an Arma 2: Operation Arrowhead 1.64 Warfare / CTI mission and server ecosystem.
 
-Use the Bohemia Interactive Arma 2 OA scripting command reference when checking engine behavior: <https://community.bistudio.com/wiki/Category:Arma_2:_Operation_Arrowhead:_Scripting_Commands>.
+This wiki is built for two audiences at once:
 
-## Start Here
+| Audience | Start here | Why |
+| --- | --- | --- |
+| Human developer | [Quickstart for humans and agents](Quickstart-For-Humans-And-Agents) | Fast orientation, safe edit rules and reading paths. |
+| AI assistant | [Agent context](Agent-Context) and [`agent-context.json`](agent-context.json) | Compact context, page map and high-risk rules. |
+| Reviewer | [Feature status register](Feature-Status-Register) | Broken, partial, deferred and missing features. |
+| Mission implementer | [SQF code atlas](SQF-Code-Atlas) | Compile registry, PVF contract and entrypoint ownership. |
+| Claude collaborator | [Claude long-term goal](Claude-Long-Term-Goal) | Complementary review role and work rhythm. |
 
-- [Architecture overview](Architecture-Overview)
-- [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle)
-- [Source inventory](Source-Inventory)
-- [Core systems index](Core-Systems-Index)
-- [Function and module index](Function-And-Module-Index)
-- [SQF code atlas](SQF-Code-Atlas)
-- [Networking and public variables](Networking-And-Public-Variables)
-- [Economy, towns and supply](Economy-Towns-And-Supply)
-- [Supply mission architecture](Supply-Mission-Architecture)
-- [AI, headless and performance](AI-Headless-And-Performance)
-- [Client UI, HUD and menus](Client-UI-HUD-And-Menus)
-- [Tools and build workflow](Tools-And-Build-Workflow)
-- [External integrations](External-Integrations)
-- [Content structure and maps](Content-Structure-And-Maps)
-- [Feature status register](Feature-Status-Register)
-- [Current work: supply helicopters PR #1](Current-Work-Supply-Helicopters-PR1)
-- [Documentation implementation plan](Documentation-Implementation-Plan)
-- [Coordination board](Coordination-Board)
-- [Claude goal](Claude-Goal)
-- [Claude long-term goal](Claude-Long-Term-Goal)
-- [Agent worklog](Agent-Worklog)
-- [Agent context](Agent-Context)
-- [AI assistant developer guide](AI-Assistant-Developer-Guide)
+## First Principles
 
-Machine-readable agent file: [`agent-context.json`](agent-context.json)
+| Rule | Details |
+| --- | --- |
+| Source mission | Gameplay edits start in `Missions/[55-2hc]warfarev2_073v48co.chernarus`. |
+| Generated missions | `Missions_Vanilla` and `Modded_Missions` are generated/copied targets managed by `Tools/LoadoutManager`. |
+| Script reference | Use Bohemia Interactive Arma 2 OA scripting docs, not Arma 3 assumptions. |
+| Windows path trap | Use PowerShell `-LiteralPath` for `[55-2hc]` paths because brackets are wildcard syntax. |
+| Current branch docs | Repo mirror lives in PR #2 on `docs/developer-wiki-index`. |
 
-Persistent navigation is provided by the wiki `_Sidebar` page. If GitHub does not show it immediately, refresh the wiki page after the latest wiki commit lands.
+## Reading Paths
+
+| Task | Pages |
+| --- | --- |
+| Understand startup flow | [Architecture overview](Architecture-Overview) -> [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) -> [SQF code atlas](SQF-Code-Atlas) |
+| Work on networking | [Networking and public variables](Networking-And-Public-Variables) -> [SQF code atlas](SQF-Code-Atlas) |
+| Work on economy or supply | [Economy, towns and supply](Economy-Towns-And-Supply) -> [Supply mission architecture](Supply-Mission-Architecture) -> [Current supply heli PR](Current-Work-Supply-Helicopters-PR1) |
+| Work on AI/performance | [AI, headless and performance](AI-Headless-And-Performance) -> [Feature status register](Feature-Status-Register) |
+| Work on UI/HUD/menus | [Client UI, HUD and menus](Client-UI-HUD-And-Menus) -> [Tools and build workflow](Tools-And-Build-Workflow) |
+| Coordinate agents | [Coordination board](Coordination-Board) -> [Agent worklog](Agent-Worklog) -> [Claude long-term goal](Claude-Long-Term-Goal) |
+
+## Current Map
+
+| Area | Page |
+| --- | --- |
+| Architecture | [Architecture overview](Architecture-Overview), [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) |
+| Inventory | [Source inventory](Source-Inventory), [Content structure and maps](Content-Structure-And-Maps) |
+| Code | [Function and module index](Function-And-Module-Index), [SQF code atlas](SQF-Code-Atlas) |
+| Runtime systems | [Core systems index](Core-Systems-Index), [Economy, towns and supply](Economy-Towns-And-Supply), [AI, headless and performance](AI-Headless-And-Performance) |
+| Networking | [Networking and public variables](Networking-And-Public-Variables) |
+| UI | [Client UI, HUD and menus](Client-UI-HUD-And-Menus) |
+| Operations | [Tools and build workflow](Tools-And-Build-Workflow), [External integrations](External-Integrations) |
+| Risk and future work | [Feature status register](Feature-Status-Register), [Documentation implementation plan](Documentation-Implementation-Plan) |
+| Agent collaboration | [AI assistant developer guide](AI-Assistant-Developer-Guide), [Agent context](Agent-Context), [Coordination board](Coordination-Board) |
 
 ## Repo Shape
 
@@ -47,20 +60,12 @@ Persistent navigation is provided by the wiki `_Sidebar` page. If GitHub does no
 | 3 | `Guides` |
 | 3 | `Mods` |
 | 2 | `BattlEyeFilter` |
-| 1 | `.gitattributes` |
-| 1 | `.github` |
-| 1 | `.gitignore` |
-| 1 | `AGENTS.md` |
-| 1 | `LICENSE.md` |
-| 1 | `README.md` |
 
-## Most Important Rule
+## Machine Context
 
-For mission gameplay edits, treat `Missions/[55-2hc]warfarev2_073v48co.chernarus` as the source mission. `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` and modded mission folders are generated/copied targets managed by `Tools/LoadoutManager`.
+- Human-readable agent brief: [Agent context](Agent-Context)
+- Machine-readable agent file: [`agent-context.json`](agent-context.json)
+- Agent coordination log: [Agent worklog](Agent-Worklog)
 
-## Current Documentation Scope
-
-- Stable baseline: `master` at the time of indexing.
-- Current work: PR #1, `feat/supply-helicopter`, documented separately.
-- No gameplay code is changed by this documentation set.
+Persistent navigation is provided by `_Sidebar.md`; shared bottom navigation is provided by `_Footer.md`.
 

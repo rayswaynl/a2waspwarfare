@@ -14,6 +14,8 @@
     "pages": [
       "Home",
       "_Sidebar",
+      "_Footer",
+      "Quickstart-For-Humans-And-Agents",
       "Architecture-Overview",
       "Mission-Entrypoints-And-Lifecycle",
       "Source-Inventory",

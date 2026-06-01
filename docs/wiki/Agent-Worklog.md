@@ -23,6 +23,13 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Added `Claude-Long-Term-Goal.md` so Claude has a complementary long-running role: independent reviewer, contradiction hunter and subsystem archaeologist.
 - Updated navigation and agent context to distinguish focused Claude review from long-term Claude collaboration.
 
+## 2026-06-01 - Codex Wiki UX Pass
+
+- Reworked `Home.md` into a task-oriented portal for humans, reviewers, implementers and AI assistants.
+- Reworked `_Sidebar.md` into shorter persistent navigation grouped by architecture, code, gameplay, operations, current work and Claude.
+- Added `_Footer.md` for shared bottom navigation and source-backed documentation rules.
+- Added `Quickstart-For-Humans-And-Agents.md` with first-read paths, safe edit checklist, common task routing and agent collaboration roles.
+
 ## 2026-06-01 - Codex Background Reviewer
 
 - Reviewed the repo read-only for missing docs before publish.
