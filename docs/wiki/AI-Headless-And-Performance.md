@@ -52,3 +52,31 @@ Instrumented areas include:
 - Public-variable storms can cause more harm than local scheduled work.
 - Treat long monitoring rows with sleeps/database waits differently from CPU-heavy loops.
 
+## Delegation & caching internals (Claude deep-dive, source-cited)
+
+Paths relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
+
+### Distance-based spawn/despawn is the primary perf mechanism
+
+Town AI is **not** simulation-cached (`enableSimulation false` is used only on the invisible town logic entities in `mission.sqm`, never on AI units). Instead, `Server/FSM/server_town_ai.sqf` fully creates and fully deletes groups based on proximity:
+
+- **Spawn:** `_town nearEntities [["Man","Car","Motorcycle","Tank","Ship"], 600 * detection_coef]`, with aircraft explicitly filtered out so fly-overs don't trigger spawns.
+- **Despawn:** after `time - wfbe_inactivity > WFBE_C_TOWNS_UNITS_INACTIVE` (default 90s) with no enemies, `{deleteVehicle _x} forEach units _x; deleteGroup _x;`.
+- **Gotcha:** the despawn deletes active vehicles when `!(isPlayer leader group _x)`. A player riding as cargo/gunner (not leader) can have their vehicle deleted under them.
+
+### HC delegation works by remote-creation, not ownership transfer
+
+There is **no `setGroupOwner` anywhere in the mission**. The HC owns AI because the HC's machine *creates* the units locally when it receives a delegation message (`delegate-townai`, `delegate-ai`, `delegate-ai-static-defence`) via `WFBE_CO_FNC_SendToClient` to the HC leader. Implications:
+
+- If the HC disconnects mid-mission, units it created become ownerless; `Server/Functions/Server_OnPlayerDisconnected.sqf:26` only removes the HC group from the candidate pool — it does not reclaim those units.
+- HC registration: on `["RequestSpecial", ["connected-hc", player]]`, `Server/Functions/Server_HandleSpecial.sqf` appends `group _hc` to `WFBE_HEADLESSCLIENTS_ID` — **but only if `owner _hc != 0`**; an HC that connects before the engine assigns a distinct owner ID is logged and skipped.
+
+### Delegation mode can silently downgrade at init
+
+`WFBE_C_AI_DELEGATION` is set to `2` (HC) at `initJIPCompatible.sqf:155`, then downgraded to `0` at `:178-179` if the OA version doesn't support HC **or** no HC has connected at init time. The downgrade happens once at boot and is not re-upgraded if an HC joins later — so an HC connecting after server init may never receive delegated work. (This refines the version-only framing above.)
+
+### `GetSleepFPS` is inverted by design
+
+`Common/Functions/Common_GetSleepFPS.sqf` returns a **shorter** sleep as FPS drops (×0.85 ≤15fps … ×0.50 ≤5fps). Used by `updateresources.sqf:74`, this makes the income loop run *faster* under load — intentional, to avoid economic stalls during lag, at the cost of more work when the server is already struggling. Don't "fix" it as a bug.
+
+

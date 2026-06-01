@@ -24,7 +24,7 @@ This register separates working systems from partial, deferred or risky systems 
 
 | Area | Evidence | Status |
 | --- | --- | --- |
-| Autonomous AI supply trucks | `UpdateSupplyTruck` compile is commented in `Server/Init/Init_Server.sqf`; `AI_UpdateSupplyTruck.sqf` references missing `Server/FSM/supplytruck.fsm`. | Broken/deferred. Do not build supply heli AI on top of this until the FSM is restored or redesigned. |
+| Autonomous AI supply trucks | `UpdateSupplyTruck` compile is commented at `Server/Init/Init_Server.sqf:36`, **but the call site `[_side] Spawn UpdateSupplyTruck;` at `:383` is live** — gated by `WFBE_C_ECONOMY_SUPPLY_SYSTEM == 0 && WFBE_C_AI_COMMANDER_ENABLED > 0` (`:381`). `AI_UpdateSupplyTruck.sqf` then `ExecFSM`s the missing `Server/FSM/supplytruck.fsm`. | **Config-gated latent breakage** (sharpened by Claude — see below). |
 | Task system | `TaskSystem` compile and `TownAddComplete` spawn are commented in `Client/Init/Init_Client.sqf` though `Client_TaskSystem.sqf` still exists. | Disabled/partial. Re-enable only after checking task spam/JIP behavior. |
 | MASH marker receiver | `WFBE_CL_FNC_ReceiverMASHmarker` compile is commented in `Client/Init/Init_Client.sqf` while server/client MASH marker event scripts still exist. | Needs verification. MASH respawn may work, but marker sync path appears partially disabled. |
 | Old map blink loop | `Client_BlinkMapIcons` and `AddUnitToTrack` compiles plus old exec are commented; newer singular `Client_BlinkMapIcon` and bookkeeping are active. | Legacy replacement. Avoid resurrecting old loop without perf review. |
@@ -44,6 +44,31 @@ This register separates working systems from partial, deferred or risky systems 
 ## Broken Feature Candidate: AI Supply Logistics
 
 This is the clearest broken/abandoned feature. `AI_UpdateSupplyTruck.sqf` is present and loops over `wfbe_ai_supplytrucks`, but it cannot run correctly because the compile is disabled and the referenced `supplytruck.fsm` is absent. PR #1 correctly defers autonomous supply helicopters because the AI logistics base is incomplete.
+
+### Claude refinement (2026-06-01): it is *not* cleanly inert — it is config-gated
+
+The original note above implied the feature is dormant because the compile is off. The call site is actually still **live**. In `Server/Init/Init_Server.sqf`:
+
+- `:36` — `/* UpdateSupplyTruck = Compile preprocessFile "Server\AI\AI_UpdateSupplyTruck.sqf"; */` → the function `UpdateSupplyTruck` is **never defined**.
+- `:381-384` — per-side init runs, *unconditionally compiled into the init*:
+  ```sqf
+  if ((missionNamespace getVariable "WFBE_C_ECONOMY_SUPPLY_SYSTEM") == 0
+      && (missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0) then {
+      _logik setVariable ["wfbe_ai_supplytrucks", []];
+      [_side] Spawn UpdateSupplyTruck;   // UpdateSupplyTruck is nil here
+  };
+  ```
+
+Consequences:
+
+- **Default play is safe.** `WFBE_C_ECONOMY_SUPPLY_SYSTEM` defaults to `1` ("Automatic with time"; `Init_CommonConstants.sqf:161`), so the `:381` guard is false and `:383` never runs.
+- **Selecting Supply System 0 ("Trucks") with an AI commander hits the landmine.** `Spawn UpdateSupplyTruck` spawns a `nil` code value → a runtime `Type Nothing, expected Code` error during per-side server init, and AI supply trucks silently never spawn. Even if `:36` were restored, `AI_UpdateSupplyTruck.sqf` immediately `ExecFSM "Server\FSM\supplytruck.fsm"`, which does not exist → a second runtime failure.
+
+**Net:** the truck-based supply economy (`WFBE_C_ECONOMY_SUPPLY_SYSTEM = 0`) combined with AI commanders is broken on this fork, not merely deferred. Restoring it requires (a) re-enabling the `:36` compile **and** (b) authoring/restoring `Server/FSM/supplytruck.fsm`. Until then, document Supply System 0 as unsupported, or remove the dead `:383` call.
+
+## Confirmed defect: stacked `Killed` handlers on supply vehicles (PR #1)
+
+`Server/Module/supplyMission/supplyMissionStarted.sqf` (introduced/extended by PR #1) adds a `Killed` event handler to the loaded supply vehicle **every time a supply mission starts**, with no removal or guard. A vehicle reused across N missions accumulates N handlers. Interdiction cannot double-pay (the first handler zeroes `SupplyAmount`), so current impact is a bounded EH leak — but any future side-effect on that EH would multiply. Fix: guard with an object variable or `removeAllEventHandlers "Killed"` before adding. Full evidence in [Current work: supply helicopters PR #1](Current-Work-Supply-Helicopters-PR1).
 
 ## Missing Feature Candidates
 

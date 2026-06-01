@@ -53,3 +53,24 @@ Autonomous AI-flown supply helicopters are intentionally deferred. The upstream 
 - Confirm action labels and completion messages still make sense for trucks and helicopters.
 - Run LoadoutManager after merge to propagate Chernarus source changes to Takistan/generated targets.
 
+## Claude review pass — questions answered (source-cited)
+
+Verified against the full `master..feat/supply-helicopter` diff (commits `08664ebc`, `1faf738d`). Paths relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
+
+| Review question | Verdict | Evidence |
+| --- | --- | --- |
+| Can a non-supply heli trigger the action? | **No.** Eligibility is double-gated. | The `addAction` `condition` in `Client/Module/Skill/Skill_Apply.sqf` requires `cursorTarget` ∈ `WFBE_C_SUPPLY_TRUCK_TYPES`, or ∈ `_T2` with Supply upgrade ≥2, or ∈ `_T3` with ≥3. `supplyMissionStart.sqf` re-computes `_eligible` independently before loading. |
+| Do upgrade gates match the class lists? | **Yes.** | Constants added in `Common/Init/Init_CommonConstants.sqf`: `_T2` (light, ≥2) = `UH60M_EP1, MH60S, Mi17_*`; `_T3` (heavy, ≥3, +20% payload) = `CH_47F_EP1, CH_47F_BAF, BAF_Merlin_HC3_D`. The gate expressions in both `Skill_Apply.sqf` and `supplyMissionStart.sqf` use the same `WFBE_UP_SUPPLYRATE` thresholds. |
+| Can interdiction double-award? | **No (within one death).** | `supplyMissionStarted.sqf` `Killed` EH awards `round(_amt*0.25)` then immediately `_veh setVariable ["SupplyAmount",0,true]`. If handlers are stacked (see below), the first zeroes the amount; later handlers read `0` (nil-guarded) and skip. |
+| Do repeated reloads stack duplicate `Killed` handlers? | **Yes — confirmed defect.** | `supplyMissionStarted.sqf` calls `_associatedSupplyTruck addEventHandler ["Killed", …]` unconditionally inside the `WFBE_Server_PV_SupplyMissionCompleted`-adjacent start handler, with no `removeAllEventHandlers "Killed"` and no "already-tracked" guard. A vehicle that runs N supply missions accumulates N `Killed` EHs. Impact is bounded (interdiction can't double-pay due to the zeroing above), but it is an EH leak and any future side-effect added to that EH *would* multiply. Recommended fix: guard with a `wfbe_supply_killed_eh_set` object variable, or `removeAllEventHandlers` before adding. |
+| Do cash-run funds reach the right account? | **Yes.** | `supplyMissionCompleted.sqf`: `_cashRun = _byHeli && (_upgradeLevel >= 3)`. If cash-run, funds go to `(_sidePlayer) call WFBE_CO_FNC_GetCommanderTeam` via `ChangeTeamFunds`; if no commander, banked as side supply via `ChangeSideSupply`. Note the **design tradeoff**: on a cash run the side supply pool receives nothing — the value is diverted to commander team funds (plus the pilot's personal +25%). |
+| Do labels/messages read sensibly for both? | **Yes.** | Label generalized to `LOAD SUPPLIES` (`Skill_Apply.sqf`); messages switch on `_byHeli` to read `"HELI"`/`"truck"` and append `" (cash run)"`; "truck" wording in load/too-far messages changed to "vehicle". |
+
+### Net-new constants introduced by this PR
+
+`Init_CommonConstants.sqf` gains `WFBE_C_SUPPLY_TRUCK_TYPES`, `WFBE_C_SUPPLY_HELI_TYPES_T2`, `WFBE_C_SUPPLY_HELI_TYPES_T3`, `WFBE_C_SUPPLY_HELI_TYPES` (= T2+T3), and `WFBE_C_SUPPLY_VEHICLE_TYPES` (all supply-capable, used for the buy-menu highlight). These centralize what was previously a hard-coded classname array duplicated across `Skill_Apply.sqf` and `supplyMissionStart.sqf` — a genuine quality improvement.
+
+### Cross-reference
+
+This PR is built on the stable supply-mission flow documented in [Supply mission architecture](Supply-Mission-Architecture). It deliberately does **not** add AI-flown supply helicopters; that is gated by a separate, partially-broken AI logistics path — see the sharpened note in [Feature status register](Feature-Status-Register).
+

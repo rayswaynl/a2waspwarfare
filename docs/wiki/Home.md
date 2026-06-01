@@ -8,6 +8,7 @@ Use the Bohemia Interactive Arma 2 OA scripting command reference when checking 
 
 - [Architecture overview](Architecture-Overview)
 - [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle)
+- [Lifecycle wait-chain reference](Lifecycle-Wait-Chain)
 - [Source inventory](Source-Inventory)
 - [Core systems index](Core-Systems-Index)
 - [Function and module index](Function-And-Module-Index)
@@ -15,6 +16,7 @@ Use the Bohemia Interactive Arma 2 OA scripting command reference when checking 
 - [Economy, towns and supply](Economy-Towns-And-Supply)
 - [Supply mission architecture](Supply-Mission-Architecture)
 - [AI, headless and performance](AI-Headless-And-Performance)
+- [WASP overlay](WASP-Overlay)
 - [Client UI, HUD and menus](Client-UI-HUD-And-Menus)
 - [Tools and build workflow](Tools-And-Build-Workflow)
 - [External integrations](External-Integrations)

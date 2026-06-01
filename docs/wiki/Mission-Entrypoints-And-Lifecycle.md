@@ -1,5 +1,7 @@
 # Mission Entrypoints And Lifecycle
 
+> For the machine-role truth table, per-role boot timelines, and the global-flag → `waitUntil` dependency graph (read this before reordering any init call), see [Lifecycle wait-chain reference](Lifecycle-Wait-Chain).
+
 ## `description.ext`
 
 The mission metadata and UI resource graph is assembled from:
