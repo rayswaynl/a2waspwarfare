@@ -9,12 +9,12 @@ The swarm is intentionally evidence-first: agents read source, report path/line-
 | Agent | Lane | Status | Expected output |
 | --- | --- | --- | --- |
 | Codex | `victory-endgame-runtime-atlas` | Active integrator | New victory/endgame atlas plus nav/context/risk updates. |
-| Faraday | `gear-loadout-easa-balance-discovery` | Active read-only scout | Gear templates, EASA, loadout generation and balance metadata report. |
-| Mencius | `respawn-medical-mash-support-discovery` | Active read-only scout | MASH, medical/support actions, service flows and marker wiring report. |
-| Hilbert | `server-runtime-scheduler-discovery` | Active read-only scout | Server loops, FSMs, scheduler, FPS, cleanup and town-processing report. |
+| Faraday | `discord-extension-antistack-integration-discovery` | Active read-only scout | Extension, DiscordBot, AntiStack DB, BattlEye and external trust report. |
+| Mencius | `parameters-config-localization-discovery` | Active read-only scout | Parameters, defaults, includes, version files and localization report. |
+| Hilbert | `abandoned-code-missing-reference-discovery` | Active read-only scout | Commented compiles, missing scripts, TODOs, dead PV handlers and stale leftovers report. |
 | Cicero | `ai-headless-delegation-discovery` | Active read-only scout | AI squads, autonomous teams, AI commander, HC delegation and town AI report. |
-| Curie | `wiki-ux-navigation-discovery` | Active read-only scout | Wiki navigation, click-through, LLM affordance and broken-link report. |
-| Meitner | `content-drift-generation-discovery` | Active read-only scout | Source/generated/stale mission folders, assets and drift report. |
+| Curie | `wiki-ux-phase2-agent-interface-discovery` | Active read-only scout | Concrete implementation checklist for human + LLM wiki UX improvements. |
+| Meitner | `pr1-supply-helicopter-delta-discovery` | Active read-only scout | PR #1 supply-helicopter branch delta, deferred AI work and merge-risk report. |
 
 ## Rotation Queue
 
@@ -22,10 +22,10 @@ When a scout finishes, Codex should assign the next bounded lane from this queue
 
 | Priority | Lane | Scope |
 | --- | --- | --- |
-| 1 | `discord-extension-antistack-integration-discovery` | Extension handoff, DiscordBot, AntiStack DB calls, callExtension contracts and missing DLL behavior. |
-| 2 | `parameters-config-localization-discovery` | `description.ext`, parameters, stringtables/localization, version/includes and mission tuning knobs. |
-| 3 | `abandoned-code-missing-reference-discovery` | Commented compiles, missing scripts, TODO/FIXME, dead PV handlers and stale/generated code. |
-| 4 | `pr1-supply-helicopter-delta-discovery` | PR #1 branch delta against `master`, deferred supply-heli AI work and merge risks. |
+| 1 | `cleanup-maintenance-runtime-discovery` | Garbage, empty vehicles, mines, ruins, craters, building restore and object lifecycle cleanup. |
+| 2 | `support-artillery-uav-paradrop-discovery` | Tactical supports, artillery, UAV, paradrops, ICBM and related PV/safety gates. |
+| 3 | `stringtable-copyediting-discovery` | User-facing text, localization gaps, stale help text and agent-readable wording improvements. |
+| 4 | `generated-output-parity-check` | Compare wiki mirror, source mission and generated mission files for drift after docs integration. |
 
 ## Reports Waiting For Integration
 
@@ -33,6 +33,11 @@ When a scout finishes, Codex should assign the next bounded lane from this queue
 | --- | --- | --- | --- |
 | `client-jip-lifecycle-discovery` | Mencius | Report received | [Mission lifecycle](Mission-Entrypoints-And-Lifecycle), [Lifecycle wait-chain](Lifecycle-Wait-Chain), [Client UI systems atlas](Client-UI-Systems-Atlas), [Feature status](Feature-Status-Register), [`agent-context.json`](agent-context.json). |
 | `economy-town-factory-upgrade-discovery` | Faraday | Report received | [Economy/towns/supply](Economy-Towns-And-Supply), [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas), [Server runtime atlas](Server-Gameplay-Runtime-Atlas), [Feature status](Feature-Status-Register), [`agent-context.json`](agent-context.json). |
+| `gear-loadout-easa-balance-discovery` | Faraday | Report received | [Client UI systems atlas](Client-UI-Systems-Atlas), [Tools/build](Tools-And-Build-Workflow), [Feature status](Feature-Status-Register), [`agent-context.json`](agent-context.json). |
+| `respawn-medical-mash-support-discovery` | Mencius | Report received | [Gameplay atlas](Gameplay-Systems-Atlas), [Client UI systems atlas](Client-UI-Systems-Atlas), [Feature status](Feature-Status-Register), [`agent-context.json`](agent-context.json). |
+| `server-runtime-scheduler-discovery` | Hilbert | Report received | [Server runtime atlas](Server-Gameplay-Runtime-Atlas), [AI/performance](AI-Headless-And-Performance), [Feature status](Feature-Status-Register), [`agent-context.json`](agent-context.json). |
+| `wiki-ux-navigation-discovery` | Curie | Report received | [Home](Home), [Quickstart](Quickstart-For-Humans-And-Agents), [Progress dashboard](Progress-Dashboard), [`agent-context.json`](agent-context.json). |
+| `content-drift-generation-discovery` | Meitner | Report received | [Content/maps](Content-Structure-And-Maps), [Tools/build](Tools-And-Build-Workflow), [Feature status](Feature-Status-Register), [`agent-context.json`](agent-context.json). |
 
 ## Integration Rules
 

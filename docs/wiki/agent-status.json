@@ -26,21 +26,21 @@
     },
     "Faraday": {
       "status": "active-readonly-scout",
-      "currentLane": "gear-loadout-easa-balance-discovery",
-      "currentWork": "Reading gear templates, EASA, loadout generation, balance configs, aircraft weapon metadata and dangerous loadout markers. Prior economy report is pending Codex integration.",
-      "nextExpectedOutput": "Read-only report for Codex integration into gear/EASA/balance/tooling docs."
+      "currentLane": "discord-extension-antistack-integration-discovery",
+      "currentWork": "Reading Extension, DiscordBot, AntiStack DB calls, BattlEye filters and external trust boundaries. Prior economy and gear/EASA reports are pending Codex integration.",
+      "nextExpectedOutput": "Read-only report for Codex integration into integrations/AntiStack/BattlEye docs."
     },
     "Mencius": {
       "status": "active-readonly-scout",
-      "currentLane": "respawn-medical-mash-support-discovery",
-      "currentWork": "Reading respawn sources, MASH, ambulances, service/repair/heal/rearm, support actions and marker wiring. Prior client/JIP report is pending Codex integration.",
-      "nextExpectedOutput": "Read-only report for Codex integration into respawn/MASH/support docs."
+      "currentLane": "parameters-config-localization-discovery",
+      "currentWork": "Reading parameters, defaults, includes, version files and localization/string resources. Prior client/JIP and respawn/support reports are pending Codex integration.",
+      "nextExpectedOutput": "Read-only report for Codex integration into parameters/config/localization docs."
     },
     "Hilbert": {
       "status": "active-readonly-scout",
-      "currentLane": "server-runtime-scheduler-discovery",
-      "currentWork": "Reading server loops, FSMs, scheduler behavior, FPS publishers, cleanup and town processing. Previous PV report is integrated.",
-      "nextExpectedOutput": "Read-only report for Codex integration into server runtime/performance docs."
+      "currentLane": "abandoned-code-missing-reference-discovery",
+      "currentWork": "Reading commented compiles, missing scripts, TODO/FIXME, dead PV handlers and stale WASP leftovers. Previous PV and server-runtime reports are pending/integrated as noted.",
+      "nextExpectedOutput": "Read-only report for Codex integration into Feature Status and source atlases."
     },
     "Cicero": {
       "status": "active-readonly-scout",
@@ -50,15 +50,15 @@
     },
     "Curie": {
       "status": "active-readonly-scout",
-      "currentLane": "wiki-ux-navigation-discovery",
-      "currentWork": "Reviewing wiki navigation, click-through usability, page graph and LLM entry points. Previous UI report is integrated.",
-      "nextExpectedOutput": "Read-only report for Codex integration into wiki UX/navigation."
+      "currentLane": "wiki-ux-phase2-agent-interface-discovery",
+      "currentWork": "Turning wiki UX findings into a concrete implementation checklist for human + LLM navigation. Previous UI and wiki UX reports are pending/integrated as noted.",
+      "nextExpectedOutput": "Read-only checklist for Codex implementation in wiki navigation/templates/dashboard."
     },
     "Meitner": {
       "status": "active-readonly-scout",
-      "currentLane": "content-drift-generation-discovery",
-      "currentWork": "Comparing Chernarus source, Takistan generated vanilla output, modded missions, assets and generation skip-lists. Previous tooling report is integrated.",
-      "nextExpectedOutput": "Read-only report for Codex integration into content/source-of-truth docs."
+      "currentLane": "pr1-supply-helicopter-delta-discovery",
+      "currentWork": "Reading PR #1 / feat/supply-helicopter delta and merge risks. Previous tooling and content-drift reports are pending/integrated as noted.",
+      "nextExpectedOutput": "Read-only report for Codex integration into Supply Heli PR #1 docs."
     }
   },
   "lanes": [
@@ -93,7 +93,7 @@
     {
       "lane": "gear-loadout-easa-balance-discovery",
       "owner": "Faraday",
-      "status": "active-readonly-scout",
+      "status": "reported-pending-integration",
       "sourceScope": [
         "Client/GUI/GUI_BuyGearMenu.sqf",
         "Client/GUI/GUI_Menu_EASA.sqf",
@@ -101,6 +101,19 @@
         "Tools/LoadoutManager/**",
         "Common/Config/Core_*.sqf",
         "Client/Module/EASA/EASA_Init.sqf"
+      ],
+      "output": "Read-only scout report received; Codex integration pending."
+    },
+    {
+      "lane": "discord-extension-antistack-integration-discovery",
+      "owner": "Faraday",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "Extension/**",
+        "DiscordBot/**",
+        "Server/CallExtensions/*.sqf",
+        "Server/Module/AntiStack/*.sqf",
+        "BattlEyeFilter/**"
       ]
     },
     {
@@ -119,7 +132,7 @@
     {
       "lane": "respawn-medical-mash-support-discovery",
       "owner": "Mencius",
-      "status": "active-readonly-scout",
+      "status": "reported-pending-integration",
       "sourceScope": [
         "Client/Functions/*Respawn*.sqf",
         "Client/GUI/GUI_RespawnMenu.sqf",
@@ -127,18 +140,43 @@
         "Client/GUI/GUI_Menu_Service.sqf",
         "Server/Module/MASH/*.sqf",
         "Server/Support/*.sqf"
+      ],
+      "output": "Read-only scout report received; Codex integration pending."
+    },
+    {
+      "lane": "parameters-config-localization-discovery",
+      "owner": "Mencius",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "description.ext",
+        "Rsc/Parameters.hpp",
+        "Common/Init/Init_CommonConstants.sqf",
+        "version.sqf",
+        "stringtable.csv",
+        "Stringtable.xml"
       ]
     },
     {
       "lane": "server-runtime-scheduler-discovery",
       "owner": "Hilbert",
-      "status": "active-readonly-scout",
+      "status": "reported-pending-integration",
       "sourceScope": [
         "Server/Init/Init_Server.sqf",
         "Server/FSM/*.sqf",
         "Server/GUI/serverFpsGUI.sqf",
         "Server/Module/serverFPS/*.sqf",
         "Common/Functions/Common_PerformanceAudit.sqf"
+      ],
+      "output": "Read-only scout report received; Codex integration pending."
+    },
+    {
+      "lane": "abandoned-code-missing-reference-discovery",
+      "owner": "Hilbert",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/**",
+        "Tools/LoadoutManager/**",
+        "docs/wiki/Feature-Status-Register.md"
       ]
     },
     {
@@ -156,23 +194,47 @@
     {
       "lane": "wiki-ux-navigation-discovery",
       "owner": "Curie",
-      "status": "active-readonly-scout",
+      "status": "reported-pending-integration",
       "sourceScope": [
         "docs/wiki/*.md",
         "docs/wiki/agent-*.json",
         "docs/wiki/agent-events.jsonl"
+      ],
+      "output": "Read-only scout report received; Codex integration pending."
+    },
+    {
+      "lane": "wiki-ux-phase2-agent-interface-discovery",
+      "owner": "Curie",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "docs/wiki/Home.md",
+        "docs/wiki/Quickstart-For-Humans-And-Agents.md",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/_Sidebar.md",
+        "docs/wiki/agent-context.json"
       ]
     },
     {
       "lane": "content-drift-generation-discovery",
       "owner": "Meitner",
-      "status": "active-readonly-scout",
+      "status": "reported-pending-integration",
       "sourceScope": [
         "Missions/**",
         "Missions_Vanilla/**",
         "Modded_Missions/**",
         "Tools/LoadoutManager/**",
         "Mods/**"
+      ],
+      "output": "Read-only scout report received; Codex integration pending."
+    },
+    {
+      "lane": "pr1-supply-helicopter-delta-discovery",
+      "owner": "Meitner",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "feat/supply-helicopter branch if present",
+        "Current-Work-Supply-Helicopters-PR1.md",
+        "supply helicopter changed files from local git state"
       ]
     },
     {

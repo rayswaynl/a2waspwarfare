@@ -9,13 +9,13 @@ Keep this page open when parallel documentation work is running. It links to the
 | Agent | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
 | Codex | Active | `victory-endgame-runtime-atlas` | Mapping victory/endgame runtime, DB/log hooks and mission termination. |
-| Faraday | Active read-only scout | `gear-loadout-easa-balance-discovery` | Gear templates, EASA, loadout generation and balance metadata report; prior economy report awaits integration. |
-| Mencius | Active read-only scout | `respawn-medical-mash-support-discovery` | MASH, medical/support actions, service flows and marker wiring report; prior client/JIP report awaits integration. |
+| Faraday | Active read-only scout | `discord-extension-antistack-integration-discovery` | Extension, DiscordBot, AntiStack DB, BattlEye and external trust report; prior economy and gear reports await integration. |
+| Mencius | Active read-only scout | `parameters-config-localization-discovery` | Parameters, defaults, includes and localization report; prior client/JIP and respawn/support reports await integration. |
 | Claude | Ready-for-review + autonomous-ready | `factory-purchase-authority` | Latest completed reviews: Victory/endgame DR-11..DR-13 and Factory/purchase DR-14..DR-15 in [Deep-review findings](Deep-Review-Findings). |
-| Hilbert | Active read-only scout | `server-runtime-scheduler-discovery` | Reused after PV pass; now reading server loops, FSMs, FPS, cleanup and town processing. |
+| Hilbert | Active read-only scout | `abandoned-code-missing-reference-discovery` | Commented compiles, missing scripts, TODOs, dead PV handlers and stale WASP leftovers; prior server runtime report awaits integration. |
 | Cicero | Active read-only scout | `ai-headless-delegation-discovery` | Reused after server pass; now reading AI squads, autonomous teams, AI commander and HC delegation. |
-| Curie | Active read-only scout | `wiki-ux-navigation-discovery` | Reused after UI pass; now reviewing wiki navigation and human/LLM browsing affordances. |
-| Meitner | Active read-only scout | `content-drift-generation-discovery` | Reused after tooling pass; now comparing source/generated/stale missions and content drift. |
+| Curie | Active read-only scout | `wiki-ux-phase2-agent-interface-discovery` | Concrete wiki navigation/template/dashboard implementation checklist; prior wiki UX report awaits integration. |
+| Meitner | Active read-only scout | `pr1-supply-helicopter-delta-discovery` | PR #1 supply-helicopter branch delta and merge-risk report; prior content-drift report awaits integration. |
 | Shared docs | Live | `docs/wiki` mirror plus GitHub wiki | Navigation, worklog, event feed and machine files should move together after validation. |
 
 ## One-Link Check
@@ -37,13 +37,18 @@ Keep this page open when parallel documentation work is running. It links to the
 | `factory-purchase-atlas` | Codex | Integrated | Codex published [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas). |
 | `victory-endgame-runtime-atlas` | Codex | Active | Codex is mapping win conditions, game-over flags, endgame broadcast, stats/logging, AntiStack flush and mission termination. |
 | `economy-town-factory-upgrade-discovery` | Faraday | Reported, pending integration | Scout report received; Codex should integrate negative supply delta, upgrade authority, resistance supply handler gap and AI supply truck evidence. |
-| `gear-loadout-easa-balance-discovery` | Faraday | Active | Cheap read-only scout mapping gear templates, EASA, loadout generation, balance configs and dangerous loadout metadata. |
+| `gear-loadout-easa-balance-discovery` | Faraday | Reported, pending integration | Scout report received; Codex should integrate EASA generation, gear profile hazards, CRV7PG warning metadata and balance authority gaps. |
+| `discord-extension-antistack-integration-discovery` | Faraday | Active | Cheap read-only scout mapping Extension, DiscordBot, AntiStack DB calls, BattlEye filters and external trust boundaries. |
 | `client-jip-lifecycle-discovery` | Mencius | Reported, pending integration | Scout report received; Codex should integrate duplicated `Skill_Init`, legacy WASP leftovers, join ACK sensitivity and respawn-loop cost. |
-| `respawn-medical-mash-support-discovery` | Mencius | Active | Cheap read-only scout mapping MASH, ambulances, service/repair/heal/rearm, support actions and marker wiring. |
-| `server-runtime-scheduler-discovery` | Hilbert | Active | Cheap read-only scout mapping server loops, FSMs, FPS publishers, cleanup and town processing. |
+| `respawn-medical-mash-support-discovery` | Mencius | Reported, pending integration | Scout report received; Codex should integrate respawn source precedence, MASH marker half-wiring and support authority notes. |
+| `parameters-config-localization-discovery` | Mencius | Active | Cheap read-only scout mapping parameters, defaults, includes, version files and localization/string resources. |
+| `server-runtime-scheduler-discovery` | Hilbert | Reported, pending integration | Scout report received; Codex should integrate cleanup loops, FPS publishers, inverse sleep risk and missing supplytruck FSM evidence. |
+| `abandoned-code-missing-reference-discovery` | Hilbert | Active | Cheap read-only scout mapping commented compiles, missing scripts, TODO/FIXME, dead PV handlers and stale leftovers. |
 | `ai-headless-delegation-discovery` | Cicero | Active | Cheap read-only scout mapping AI teams, AI commander, HC delegation and town AI lifecycle. |
-| `wiki-ux-navigation-discovery` | Curie | Active | Cheap read-only scout reviewing wiki click-through, sidebar/footer, page graph and LLM entry points. |
-| `content-drift-generation-discovery` | Meitner | Active | Cheap read-only scout comparing Chernarus source, Takistan generated output, modded missions and assets. |
+| `wiki-ux-navigation-discovery` | Curie | Reported, pending integration | Scout report received; Codex should add task-oriented navigation, related-page blocks and a dashboard mini-panel. |
+| `wiki-ux-phase2-agent-interface-discovery` | Curie | Active | Cheap read-only scout turning wiki UX findings into a concrete implementation checklist. |
+| `content-drift-generation-discovery` | Meitner | Reported, pending integration | Scout report received; Codex should integrate source/generated/stale mission folder and generation-rule findings. |
+| `pr1-supply-helicopter-delta-discovery` | Meitner | Active | Cheap read-only scout mapping PR #1 supply-helicopter branch delta, deferred AI work and merge risks. |
 | `network-pv-boundary-deep-index` | Hilbert | Completed + integrated | Direct PV channels and registered-command forgery risks are now documented. |
 | `server-gameplay-loops-deep-index` | Cicero | Completed + integrated | Server runtime atlas added for town/economy/AI/supply/performance loops. |
 | `ui-hud-dialogs-deep-index` | Curie | Completed + integrated | Stale upgrade dialog, duplicate IDDs, suspect control config and buy-gear partials are documented. |
