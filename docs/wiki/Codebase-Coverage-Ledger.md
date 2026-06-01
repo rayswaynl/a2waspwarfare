@@ -32,7 +32,7 @@ Legend: ✅ done (source-cited) · 🟡 partial · ⬜ gap.
 | Construction / CoIn | ✅ | ✅ | ✅ | 🟡 | 🟡 | 🟡 | [Construction atlas](Construction-And-CoIn-Systems-Atlas), DR-6 |
 | Factory / purchase | ✅ | 🟡 | 🟡 | ⬜ | ⬜ | n/a | [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas); DR-14 (no server authority, architectural), DR-15 (commander-assign bug) |
 | AI / headless / perf | ✅ | 🟡 | 🟡 | ✅ | 🟡 | n/a | [AI/headless](AI-Headless-And-Performance) |
-| UI / HUD / menus | ✅ | ⬜ | 🟡 | 🟡 | ⬜ | ⬜ | [UI atlas](Client-UI-Systems-Atlas) — Claude review ⬜ |
+| UI / HUD / menus | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ⬜ | [UI atlas](Client-UI-Systems-Atlas); DR-16 (client-side sale authority), DR-17 (dup IDD 23000); RscMenu_Upgrade/soundPush still ⬜ |
 | WASP overlay | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ✅ | [WASP overlay](WASP-Overlay) |
 | Tooling / LoadoutManager | ✅ | n/a | n/a | n/a | n/a | ✅ | [Tools](Tools-And-Build-Workflow), DR-4 |
 | Integrations (Extension / Discord / **AntiStack DB** / BattlEye) | 🟡 | 🟡 | 🟡 | 🟡 | 🟡 | n/a | [External integrations](External-Integrations); AntiStack DB done (DR-7..DR-10); Extension/Discord/BattlEye ⬜ |
@@ -45,7 +45,7 @@ Legend: ✅ done (source-cited) · 🟡 partial · ⬜ gap.
 
 1. ~~Integrations — AntiStack DB extension trust path~~ **DONE** (Round 5, DR-7..DR-10): server `call compile`s the external DLL's stdout; blocking poll on join; callExtension length limits; defaults-on against an absent DLL. Remaining integrations sub-targets: in-repo `Extension/` GLOBALGAMESTATS DLL + DiscordBot data path + BattlEye filter posture.
 2. ~~Factory / purchase authority~~ **DONE** (Round 7, DR-14/DR-15): player purchasing is fully client-authoritative (no server PVF; architectural ceiling); `Server_AssignNewCommander` call-shape bug confirmed.
-3. **UI / HUD adversarial pass** — duplicate IDD 23000 / shared title 10200 consequences; dialog/event-handler leaks; the economy-menu structure-sale authority (client-initiated refund/delete, DR-6 sibling).
+3. ~~UI / HUD adversarial pass~~ **PARTLY DONE** (Round 8, DR-16/DR-17): economy-menu sale is client-authoritative; dup IDD 23000 confirmed. Remaining: shared title IDD 10200, stale `RscMenu_Upgrade`→missing `GUI_Menu_Upgrade.sqf`, suspect `RscClickableText.soundPush[]`, dialog/EH leaks.
 4. **JIP/HC cross-cut** — one pass dedicated to join-in-progress + dedicated + headless correctness across economy, markers, HQ killed-EH locality, attack-wave sync.
 5. ~~Victory / endgame + DB flush~~ **DONE** (Round 6, DR-11..DR-13): winner-inversion in persisted stats, threeway mode has no detection, duplicate buggy LogGameEnd. Follow-up: `WFBE_CL_FNC_EndGame` payload semantics.
 

@@ -314,6 +314,25 @@ Adversarial verification of Cicero's candidate — **confirmed live** by tracing
 
 Code owners: (DR-14) decide whether to route player purchases through a validated server PVF (large) or accept client-authority + add a BattlEye `scripts.txt` filter; (DR-15) one-line fix `_side = _this select 0` in `Server_AssignNewCommander.sqf` and drop the duplicate `new-commander-assigned` broadcast. Ledger: Factory/purchase Auth/PV advanced; AI-commander caveat cross-linked.
 
+## Round 8 — 2026-06-02 (Claude) — UI/HUD authority + dialog IDs (DR-16, DR-17)
+
+Lane `ui-hud-authority-review`. Cross-checks Codex/Curie's [Client UI systems atlas](Client-UI-Systems-Atlas) and reviews the economy-menu sale authority (the DR-6/DR-14 sibling). Verified at source.
+
+### DR-16 — Structure sale is fully client-authoritative — **High (gameplay integrity)**
+
+`Client/GUI/GUI_Menu_Economy.sqf:104-152` (MenuAction 105, "Sell Building"):
+- The **commander check is client-side only** (`_isCommander` via `commanderTeam == group player`, `:107-109`).
+- It picks the closest own-side structure (`GetSideStructures`, `:110-112`), then in a spawned thread credits the refund **client-side** — `ChangeSideSupply` (broadcast, client-writable) or `ChangePlayerFunds` (`:141`) — and **destroys the structure client-side** with `_closest setDammage 1` (`:152`), which propagates globally because the structure is a synced object.
+- No server PVF, no server validation (same pattern as DR-6 construction and DR-14 purchasing). A modified client bypasses the commander gate and the `WFBE_SOLD` re-sell guard, mints the refund, and demolishes structures. Same **client-authority ceiling**: the realistic defense is a BattlEye `scripts.txt` filter constraining client `setDammage`/funds writes, or routing sell through a validated server PVF (matches the DR-6 fix shape). This completes the economy picture: **build (DR-6), buy (DR-14), and sell (DR-16) are all client-authoritative.**
+
+### DR-17 — Duplicate dialog IDD 23000 (EASA vs Economy) — **Low-Medium (UI correctness)** — *confirms Curie candidate*
+
+`Rsc/Dialogs.hpp`: `class RscMenu_EASA` (`:3209`, `idd = 23000` at `:3211`) and `class RscMenu_Economy` (`:3287`, `idd = 23000` at `:3289`) share the same display id. `findDisplay 23000` is therefore ambiguous, and any control-event/`closeDialog`/`findDisplay 23000` logic can target the wrong dialog if both are reachable. Verified Curie's flagged candidate at source. **Fix:** give EASA and Economy distinct IDDs (and audit any `findDisplay 23000` callers). Also re-confirmed Curie's note that other UI candidates (stale `RscMenu_Upgrade` → missing `GUI_Menu_Upgrade.sqf`; suspect `RscClickableText.soundPush[]`) remain open for a UI-focused follow-up.
+
+### Handoff
+
+Code owners: (DR-16) move sell authority/refund/destruction server-side (mirror the DR-6 server-PVF validation) or add a BattlEye `scripts.txt` filter; (DR-17) assign distinct IDDs to EASA/Economy dialogs. Ledger: UI/HUD Auth/PV advanced; economy thread (build/buy/sell) now fully characterized.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
