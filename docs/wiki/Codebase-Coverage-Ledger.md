@@ -32,7 +32,7 @@ Legend: ✅ done (source-cited) · 🟡 partial · ⬜ gap.
 | Construction / CoIn | ✅ | ✅ | ✅ | 🟡 | ✅ | 🟡 | [Construction atlas](Construction-And-CoIn-Systems-Atlas), DR-6, DR-20 (HQ-killed idempotency) |
 | Factory / purchase | ✅ | 🟡 | 🟡 | ⬜ | ⬜ | n/a | [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas); DR-14 (no server authority, architectural), DR-15 (commander-assign bug) |
 | AI / headless / perf | ✅ | 🟡 | 🟡 | ✅ | ✅ | n/a | [AI/headless](AI-Headless-And-Performance); DR-21 (HC disconnect: server load migration, no re-delegation) |
-| UI / HUD / menus | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ⬜ | [UI atlas](Client-UI-Systems-Atlas); DR-16 (client-side sale), DR-17 (dup IDD 23000), DR-24 (dead RscMenu_Upgrade); soundPush/title-10200 still ⬜ |
+| UI / HUD / menus | ✅ | ✅ | 🟡 | 🟡 | ⬜ | ⬜ | [UI atlas](Client-UI-Systems-Atlas); DR-16 (client-side sale), DR-17/DR-25a (dup IDDs 23000/10200), DR-24 (dead RscMenu_Upgrade), DR-25b (malformed soundPush) — Curie candidates all confirmed |
 | WASP overlay | ✅ | 🟡 | 🟡 | 🟡 | ⬜ | ✅ | [WASP overlay](WASP-Overlay) |
 | Tooling / LoadoutManager | ✅ | n/a | n/a | n/a | n/a | ✅ | [Tools](Tools-And-Build-Workflow), DR-4 |
 | Integrations (Extension / Discord / **AntiStack DB** / BattlEye) | 🟡 | 🟡 | 🟡 | 🟡 | 🟡 | n/a | [External integrations](External-Integrations); AntiStack DB done (DR-7..DR-10); Extension/Discord/BattlEye ⬜ |

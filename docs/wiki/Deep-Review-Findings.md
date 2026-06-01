@@ -458,6 +458,19 @@ Lane `missing-reference-inventory`. Confirms Curie's `RscMenu_Upgrade` candidate
 ### Handoff
 Code owners: remove or repoint the dead `RscMenu_Upgrade` dialog (DR-24). Tooling (Codex/Meitner lane): build a reliable missing-reference scanner. Ledger: UI dead-reference candidate confirmed; abandoned-code inventory still has open candidates (TaskSystem, old blink loops, WASP OnArmor/KeyDown — see round-1 WASP-Overlay + Feature-Status).
 
+## Round 15 — 2026-06-02 (Claude) — remaining UI config defects (DR-25a/b)
+
+Lane `ui-followups-verify`. Confirms Curie's last two UI candidates at source; closes the UI follow-up items.
+
+### DR-25a — Duplicate title IDD 10200 (`RscOverlay` vs `OptionsAvailable`) — **Low (UI correctness)**
+`Rsc/Titles.hpp`: `class RscOverlay` (`:46`) and `class OptionsAvailable` (`:165`) both declare `idd = 10200`. Titles are shown via `cutRsc`/`titleRsc` (addressed by class name, so the collision is less damaging than the dialog dup in DR-17), but any code that does `findDisplay 10200` / `uiNamespace` lookups on that id is ambiguous. Assign distinct IDDs. (Sibling of DR-17's `idd=23000` dialog dup.)
+
+### DR-25b — Malformed `soundPush[]` in `RscClickableText` — **Low (config defect)**
+`Rsc/Ressources.hpp:556` `class RscClickableText` has `soundPush[] = {, 0.2, 1};` — the first array element (the sound file) is **empty/missing** (a leading comma). The correct empty-sound form is `{"", 0.2, 1}` (as used at `Ressources.hpp:92`); the line-556 form is a malformed config array. `RscClickableText` is a base control class used widely, so the defect propagates to inheritors. **Fix:** `soundPush[] = {"", 0.2, 1};` (or a real sound macro like the adjacent `soundEscape[] = {WFBE_SoundEscape,0.2,1}`).
+
+### Handoff
+Code owners: assign distinct IDDs to `RscOverlay`/`OptionsAvailable` (DR-25a); fix the malformed `RscClickableText.soundPush[]` (DR-25b). Both Low. Ledger: UI follow-up candidates (title 10200, soundPush) now confirmed — UI cell's documented candidates are closed.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
