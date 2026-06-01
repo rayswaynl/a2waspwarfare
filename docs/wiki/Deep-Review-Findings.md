@@ -790,6 +790,26 @@ Lane `supply-missions-perf-jip-review`. Filled the Supply-missions Perf + JIP/HC
 
 **Outcome:** Supply missions row — **Perf and JIP/HC cells filled (DR-39)**: Perf = all-object `nearestObjects` poll (narrowable) + dead twin loop; JIP reviewed clean (pull-based status, server-side tracking). The row's Auth 🟡 remains the DR-18 + PR#1 items (owner).
 
+## Round 31 — 2026-06-02 (Claude) — WASP overlay Perf + JIP/HC (DR-40): the last Perf/JIP-HC cell
+
+Lane `wasp-overlay-perf-jip-review`. Filled the final 🟡 Perf cell and ⬜ JIP/HC cell — the WASP overlay (`WASP/*`, the project-specific subtree). Reviewed against the [WASP overlay](WASP-Overlay) page; live wiring confirmed in `Client/Init/Init_Client.sqf`.
+
+### DR-40 — WASP Perf clean except one sleepless display-wait busy-spin; JIP/HC correct (per-client init); old WASP init path is dead — **Low (Perf nit + reviewed clean)**
+
+**Live wiring (JIP-correct).** The active WASP components are all `execVM`/`call`'d from `Client/Init/Init_Client.sqf`, which runs on **every** machine including JIP clients: `DropRPG.sqf` (`:15`, `player call`), `global_marking_monitor.sqf` (`:267`), `WASP/baserep/init.sqf` (`:574`), `WASP/actions/AddActions.sqf` (`:575`). Each client therefore builds its own local overlay on join — JIP-correct by construction (same principle as DR-37). The old monolithic init `if (local player) then {ExecVM "WASP\Init_Client.sqf"}` in `initJIPCompatible.sqf:243-244` is inside the commented `/* Marty : old wasp script … */` block — **dead**, superseded by the per-component wiring above (abandoned-code, already noted on the WASP page).
+
+**Perf.** Mostly clean and bounded:
+- **The one nit:** `global_marking_monitor.sqf:62` `while {time < _this} do { _display = findDisplay 54; if (!isNull _display) exitWith {…add keyUp/keyDown EHs…} }` is a **sleepless busy-spin** — it polls `findDisplay 54` every frame for up to a 2 s window (`_this = time + 2`) with `disableUserInput true` during. Bounded and one-time at init, so impact is a brief hitch, but it is a genuine CPU spin. Its own sibling at `:80` does it correctly: `waitUntil {sleep 0.1; !isNull (findDisplay 12)}`. **Fix:** convert `:62` to the same throttled `waitUntil {sleep 0.05; !isNull findDisplay 54}` form.
+- The rest are bounded: `baserep/repair.sqf` polls at `sleep 1` only while a repair is active; `baserep/viem.sqf` `sleep 3`; `DropRPG.sqf` `sleep 30` is a post-drop cooldown, not a loop; `AddActions.sqf:2` `While {!(Alive Player)} do {sleep 2}` is a one-shot wait that exits when the player spawns. No sustained per-frame marker/blink loop in the live WASP code.
+
+**JIP/HC — clean.** Per-client init (above) means joiners initialize WASP locally; `if (local player)` guards (`global_marking_monitor.sqf:78`, DropRPG `player call`) correctly scope client-local features so a headless client (no real player) skips them. No PV-replay dependency in the live WASP path (the map-marking handlers are local input EHs, not networked state).
+
+**Auth/PV note (scoped out, for a future Auth pass).** WASP action *authority* (`Action_RepairMHQDepot.sqf`, `DropRPG.sqf` createVehicle, `baserep/repair.sqf`) is the WASP row's remaining 🟡 Auth/PV — several are client-local self-effect, others touch shared objects; they belong to the same client-authority question as the economy class (DR-6/14/…) and are left as an explicit owner-review item, not closed here.
+
+**Handoff for Codex.** Note on the [WASP overlay](WASP-Overlay) page: `global_marking_monitor.sqf:62` should use the throttled `waitUntil` idiom (as `:80` does); the `initJIPCompatible.sqf:243-244` WASP init is dead/commented (remove). Code-owner items are the one-line `:62` throttle + dead-code removal.
+
+**Outcome:** WASP overlay row — **Perf and JIP/HC cells reviewed (DR-40)**: Perf clean except the `:62` sleepless display-wait (one-line fix); JIP/HC correct (per-client init). **This was the last outstanding Perf/JIP-HC cell in the matrix** — every subsystem's Perf and JIP/HC dimension is now source-reviewed. The residual 🟡 cells are exclusively **Auth/PV owner decisions** (the client-authoritative economy/forgery class DR-1/6/14/16/22/23/27/28, the victory fixes DR-11/12/13, supply DR-18/PR#1, and the WASP/modules Auth follow-ups).
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
