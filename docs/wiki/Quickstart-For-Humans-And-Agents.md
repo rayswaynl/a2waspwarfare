@@ -19,8 +19,9 @@ This page is the low-friction route into the repo. Use it before editing mission
 1. Read [Home](Home) for the map.
 2. Read [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) to understand startup.
 3. Read [SQF code atlas](SQF-Code-Atlas) before changing functions, PVF commands or init files.
-4. Read [Feature status register](Feature-Status-Register) before reviving old code.
-5. Check [Agent worklog](Agent-Worklog) for the latest Codex/Claude findings.
+4. Read [Gameplay systems atlas](Gameplay-Systems-Atlas) before touching towns, economy, commander, upgrades, construction or factories.
+5. Read [Feature status register](Feature-Status-Register) before reviving old code.
+6. Check [Agent worklog](Agent-Worklog) for the latest Codex/Claude findings.
 
 ## If You Are An LLM
 
@@ -29,9 +30,10 @@ Load these first, in order:
 1. [`agent-context.json`](agent-context.json)
 2. [Agent context](Agent-Context)
 3. [SQF code atlas](SQF-Code-Atlas)
-4. [Documentation implementation plan](Documentation-Implementation-Plan)
-5. [Feature status register](Feature-Status-Register)
-6. [Agent worklog](Agent-Worklog)
+4. [Gameplay systems atlas](Gameplay-Systems-Atlas)
+5. [Documentation implementation plan](Documentation-Implementation-Plan)
+6. [Feature status register](Feature-Status-Register)
+7. [Agent worklog](Agent-Worklog)
 
 Then inspect source before making claims. Do not infer Arma 3 behavior. If you add high-level facts, update `agent-context.json`.
 
@@ -53,6 +55,7 @@ Then inspect source before making claims. Do not infer Arma 3 behavior. If you a
 | Add or change a PVF command | [SQF code atlas](SQF-Code-Atlas), [Networking and public variables](Networking-And-Public-Variables) |
 | Change supply missions | [Supply mission architecture](Supply-Mission-Architecture), [Economy, towns and supply](Economy-Towns-And-Supply) |
 | Change commander/upgrades | [Core systems index](Core-Systems-Index), [Feature status register](Feature-Status-Register) |
+| Change town capture/economy/construction/factories | [Gameplay systems atlas](Gameplay-Systems-Atlas) |
 | Change UI or buy menus | [Client UI, HUD and menus](Client-UI-HUD-And-Menus) |
 | Change AI/headless behavior | [AI, headless and performance](AI-Headless-And-Performance) |
 | Touch generated missions | [Tools and build workflow](Tools-And-Build-Workflow), [Content structure and maps](Content-Structure-And-Maps) |
@@ -66,4 +69,3 @@ Then inspect source before making claims. Do not infer Arma 3 behavior. If you a
 | Future agents | Start from `agent-context.json`, inspect source and append findings to `Agent-Worklog.md`. |
 
 Use [Claude long-term goal](Claude-Long-Term-Goal) when spinning up Claude as a persistent counterpart.
-

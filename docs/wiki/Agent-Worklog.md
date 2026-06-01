@@ -30,6 +30,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Added `_Footer.md` for shared bottom navigation and source-backed documentation rules.
 - Added `Quickstart-For-Humans-And-Agents.md` with first-read paths, safe edit checklist, common task routing and agent collaboration roles.
 
+## 2026-06-01 - Codex Gameplay Systems Pass 1
+
+- Read town initialization, town starting modes, town capture/SV loop, town AI activation, resource loop, commander PVFs, upgrade processing, CoIn construction, server construction scripts and factory/unit production paths.
+- Added `Gameplay-Systems-Atlas.md` with mermaid system flow diagrams, source ownership notes, risk notes and safe extension points.
+- Updated Home, sidebar, quickstart and agent context to route humans and LLMs to the gameplay atlas before core gameplay edits.
+
 ## 2026-06-01 - Codex Background Reviewer
 
 - Reviewed the repo read-only for missing docs before publish.

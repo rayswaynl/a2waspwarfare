@@ -52,5 +52,6 @@ This is the compact human-readable context file for AI coding agents. See `agent
 - PR #1 `feat/supply-helicopter`: documents supply helicopters, upgrade gating, cash runs, interdiction reward and deferred AI supply heli work.
 - Implementation roadmap: `Documentation-Implementation-Plan.md`.
 - Code-level atlas: `SQF-Code-Atlas.md`.
+- Gameplay systems atlas: `Gameplay-Systems-Atlas.md`.
 - External Claude review: use `Claude-Goal.md` for a focused pass or `Claude-Long-Term-Goal.md` for a long-running counterpart, then update `Agent-Worklog.md`.
 

@@ -21,6 +21,7 @@
 
 ## Gameplay
 
+- [Gameplay atlas](Gameplay-Systems-Atlas)
 - [Economy/towns/supply](Economy-Towns-And-Supply)
 - [Supply missions](Supply-Mission-Architecture)
 - [AI/performance](AI-Headless-And-Performance)
@@ -44,4 +45,3 @@
 
 - [Focused goal](Claude-Goal)
 - [Long-term goal](Claude-Long-Term-Goal)
-

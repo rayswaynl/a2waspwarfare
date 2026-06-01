@@ -31,6 +31,7 @@ This wiki is built for two audiences at once:
 | Work on economy or supply | [Economy, towns and supply](Economy-Towns-And-Supply) -> [Supply mission architecture](Supply-Mission-Architecture) -> [Current supply heli PR](Current-Work-Supply-Helicopters-PR1) |
 | Work on AI/performance | [AI, headless and performance](AI-Headless-And-Performance) -> [Feature status register](Feature-Status-Register) |
 | Work on UI/HUD/menus | [Client UI, HUD and menus](Client-UI-HUD-And-Menus) -> [Tools and build workflow](Tools-And-Build-Workflow) |
+| Work on core gameplay | [Gameplay systems atlas](Gameplay-Systems-Atlas) -> [Core systems index](Core-Systems-Index) |
 | Coordinate agents | [Coordination board](Coordination-Board) -> [Agent worklog](Agent-Worklog) -> [Claude long-term goal](Claude-Long-Term-Goal) |
 
 ## Current Map
@@ -40,7 +41,7 @@ This wiki is built for two audiences at once:
 | Architecture | [Architecture overview](Architecture-Overview), [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) |
 | Inventory | [Source inventory](Source-Inventory), [Content structure and maps](Content-Structure-And-Maps) |
 | Code | [Function and module index](Function-And-Module-Index), [SQF code atlas](SQF-Code-Atlas) |
-| Runtime systems | [Core systems index](Core-Systems-Index), [Economy, towns and supply](Economy-Towns-And-Supply), [AI, headless and performance](AI-Headless-And-Performance) |
+| Runtime systems | [Gameplay systems atlas](Gameplay-Systems-Atlas), [Core systems index](Core-Systems-Index), [Economy, towns and supply](Economy-Towns-And-Supply), [AI, headless and performance](AI-Headless-And-Performance) |
 | Networking | [Networking and public variables](Networking-And-Public-Variables) |
 | UI | [Client UI, HUD and menus](Client-UI-HUD-And-Menus) |
 | Operations | [Tools and build workflow](Tools-And-Build-Workflow), [External integrations](External-Integrations) |
@@ -68,4 +69,3 @@ This wiki is built for two audiences at once:
 - Agent coordination log: [Agent worklog](Agent-Worklog)
 
 Persistent navigation is provided by `_Sidebar.md`; shared bottom navigation is provided by `_Footer.md`.
-
