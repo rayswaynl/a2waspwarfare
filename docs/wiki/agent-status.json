@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-01T23:05:00+02:00",
+  "generatedAt": "2026-06-01T22:19:55+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -13,31 +13,111 @@
   },
   "agents": {
     "Codex": {
-      "status": "active",
-      "currentLane": "factory-purchase-atlas",
-      "currentWork": "Deep-read factory purchase, buy menu, unit spawn, server AI buying and purchase authority boundaries; publish a source-backed atlas.",
-      "nextExpectedOutput": "Factory-And-Purchase-Systems-Atlas.md plus navigation/context/worklog updates."
+      "status": "integrating-fleet-results",
+      "currentLane": "fleet-deep-index",
+      "currentWork": "First sub-agent wave completed; integrating network, server runtime, UI and tooling findings into wiki/docs.",
+      "nextExpectedOutput": "Validate docs/wiki parity, commit/push docs branch and GitHub wiki, then refresh the progress dashboard."
     },
     "Claude": {
       "status": "ready-for-review; autonomous-ready",
       "currentLane": "pvf-hardening-review",
       "currentWork": "PVF hardening implementation playbook is published in Deep-Review-Findings.md; Claude may claim another bounded lane next.",
       "nextExpectedOutput": "Code-owner review of the PVF playbook, or a new Claude claim event for the next autonomous source-backed lane."
+    },
+    "Hilbert": {
+      "status": "completed-integrated",
+      "currentLane": "network-pv-boundary-deep-index",
+      "currentWork": "Read-only network/PV report completed and integrated into Networking, Feature Status and agent-context.",
+      "nextExpectedOutput": "Review future PV hardening implementation if requested."
+    },
+    "Cicero": {
+      "status": "completed-integrated",
+      "currentLane": "server-gameplay-loops-deep-index",
+      "currentWork": "Read-only server runtime report completed and integrated into Server Gameplay Runtime Atlas and Feature Status.",
+      "nextExpectedOutput": "Review future server-loop or commander/economy implementation if requested."
+    },
+    "Curie": {
+      "status": "completed-integrated",
+      "currentLane": "ui-hud-dialogs-deep-index",
+      "currentWork": "Read-only UI/HUD/dialog report completed and integrated into Client UI atlas and Feature Status.",
+      "nextExpectedOutput": "Review future UI/HUD work if requested."
+    },
+    "Meitner": {
+      "status": "completed-integrated",
+      "currentLane": "tooling-integrations-deep-index",
+      "currentWork": "Read-only tooling/integration report completed and integrated into Tools, Integrations, Content Structure and agent-context.",
+      "nextExpectedOutput": "Review future build/tooling changes if requested."
     }
   },
   "lanes": [
     {
       "lane": "factory-purchase-atlas",
       "owner": "Codex",
-      "status": "active",
+      "status": "integrated",
       "sourceScope": [
         "Client/GUI/GUI_Menu_BuyUnits.sqf",
         "Client/Functions/Client_BuildUnit.sqf",
-        "Server/PVFunctions/RequestBuyUnit.sqf",
+        "Common/Init/Init_PublicVariables.sqf (no RequestBuyUnit registered)",
         "Server/Functions/Server_BuyUnit.sqf",
         "Common/Config/Core_Units/*.sqf",
         "Common/Config/Core_Squads/*.sqf",
         "Common/Config/Core_Upgrades/*.sqf"
+      ],
+      "output": "Factory-And-Purchase-Systems-Atlas.md"
+    },
+    {
+      "lane": "network-pv-boundary-deep-index",
+      "owner": "Hilbert",
+      "status": "completed-integrated",
+      "sourceScope": [
+        "Common/Init/Init_PublicVariables.sqf",
+        "Server/PVFunctions/*.sqf",
+        "Client/PVFunctions/*.sqf",
+        "Server/Functions/Server_HandlePVF.sqf",
+        "Client/Functions/Client_HandlePVF.sqf",
+        "Common/Functions/Common_SendToServerOptimized.sqf",
+        "Common/Functions/Common_SendToClient.sqf",
+        "BattlEyeFilter/publicvariable.txt"
+      ]
+    },
+    {
+      "lane": "server-gameplay-loops-deep-index",
+      "owner": "Cicero",
+      "status": "completed-integrated",
+      "sourceScope": [
+        "Server/Init/*.sqf",
+        "Server/FSM/*.fsm",
+        "Server/Towns/*.sqf",
+        "Server/Functions/*.sqf",
+        "Common/Config/Core_Towns/*.sqf",
+        "Common/Config/Core_Root/*.sqf"
+      ],
+      "output": "Server-Gameplay-Runtime-Atlas.md"
+    },
+    {
+      "lane": "ui-hud-dialogs-deep-index",
+      "owner": "Curie",
+      "status": "completed-integrated",
+      "sourceScope": [
+        "description.ext",
+        "Rsc/*.hpp",
+        "Client/GUI/*.sqf",
+        "Client/Functions/*UI*.sqf",
+        "Client/HUD/*.sqf",
+        "Client/Module/RHUD/*"
+      ]
+    },
+    {
+      "lane": "tooling-integrations-deep-index",
+      "owner": "Meitner",
+      "status": "completed-integrated",
+      "sourceScope": [
+        "Tools/**",
+        "DiscordBot/**",
+        "Extension/**",
+        "BattlEyeFilter/**",
+        "ServerInfo/**",
+        "Missions/**"
       ]
     },
     {

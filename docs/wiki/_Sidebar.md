@@ -29,6 +29,8 @@
 
 - [Gameplay atlas](Gameplay-Systems-Atlas)
 - [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas)
+- [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas)
+- [Server runtime atlas](Server-Gameplay-Runtime-Atlas)
 - [Core systems](Core-Systems-Index)
 - [Economy/towns/supply](Economy-Towns-And-Supply)
 - [Supply missions](Supply-Mission-Architecture)

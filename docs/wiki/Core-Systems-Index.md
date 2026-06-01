@@ -48,6 +48,6 @@ Operational systems include anti-stack, AFK kick through BattlEye publicVariable
 
 ## Continue Reading
 
-Previous: [Construction and CoIn](Construction-And-CoIn-Systems-Atlas) | Next: [Economy/towns/supply](Economy-Towns-And-Supply)
+Previous: [Server runtime atlas](Server-Gameplay-Runtime-Atlas) | Next: [Economy/towns/supply](Economy-Towns-And-Supply)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

@@ -20,7 +20,9 @@ Build configurations:
 - `AIRWAR_SERVER_DEBUG`
 - `AIRWAR_RELEASE`
 
-Repo instruction: after mission edits, run from `Tools/LoadoutManager` with `dotnet run`. If .NET SDK is missing, stop and tell the user. If `7za` is missing, copying can still be useful; packaging is the only blocked part.
+Repo instruction: after mission edits, run from `Tools/LoadoutManager` with `dotnet run`. If .NET SDK is missing, stop and tell the user. In the current code path, generation/copy work runs before packaging, but `dotnet run` always reaches `ZipManager.DoZipOperations()`. If `7za` is missing, the run can still have produced useful copied/generated files before the final packaging failure.
+
+Local workspace warning: `FileManager.FindA2WaspWarfareDirectory` searches ancestors for a folder literally named `a2waspwarfare` and throws if it cannot find one. This Codex checkout is under `work\a`, so `dotnet run` is not runnable here without using a correctly named checkout/worktree or changing that lookup.
 
 ## Propagation rules & the skip-list trap (verified)
 
@@ -41,6 +43,16 @@ Repo instruction: after mission edits, run from `Tools/LoadoutManager` with `dot
 A recursive diff at the current commit confirms Takistan differs from Chernarus **only** in exactly these files — propagation is consistent and there is no accidental drift, but the skip-list is a standing silent-divergence trap. If you edit a skip-listed gameplay file (most importantly `mission.sqm` and `WASP/unsort/StartVeh.sqf`), edit **both** missions. See [Deep-review findings](Deep-Review-Findings) DR-4.
 
 **Modded missions are not maintained by `dotnet run`.** The modded-terrain propagation call is commented out at `SqfFileGenerators/SqfFileGenerator.cs:132`, so `Modded_Missions/*` are far behind Chernarus (Napf/eden/lingor are ~280-350 files behind; smd_sahrani_a2/tavi/dingor/isladuala are 1-4-file stubs). Treat them as non-authoritative until that path is re-enabled and regenerated.
+
+## Tooling Project Inventory
+
+| Project | Runtime | Entry point | Inputs | Outputs / side effects | Notes |
+| --- | --- | --- | --- | --- | --- |
+| `Tools/LoadoutManager` | .NET 8 executable | `Program.cs` -> `SqfFileGenerator.GenerateCommonBalanceInitAndTheEasaFileForEachTerrain()` | Terrain/loadout data classes, source Chernarus mission, terrain skip lists. | Generated `EASA_Init.sqf`, `Common_BalanceInit.sqf`, aircraft-name helper, per-terrain `version.sqf`, copied Takistan mission and `_MISSIONS.7z`. | Requires ancestor folder named `a2waspwarfare`; always attempts packaging. |
+| `Tools/PerformanceAuditAnalyzer` | PowerShell | `Analyze-PerformanceAudit.ps1`, GUI launcher | Arma RPT lines containing `[Performance Audit]`. | CSV, Markdown, HTML and Word-friendly performance reports. | Safe read-only analyzer for logs. |
+| `DiscordBot` | .NET 9 executable | `DiscordBot/src/ProgramRuntime.cs` | `preferences.json`, `token.txt`, extension `database.json`. | Discord channel name, bot presence and status embed updates every 60 seconds. | Missing token/preferences are expected in repo; do not invent secrets. |
+| `Extension` | .NET Framework 4.8 Arma extension | `_RVExtension@12` export | Arma `callExtension` arguments from mission scripts. | Writes `C:\a2waspwarfare\Data\database.json` for DiscordBot. | Uses legacy NuGet/MSBuild package layout. |
+| `Mods/mkswf_sidewinder_reload_time_fix` | Arma addon config | `CfgWeapons.hpp` | Sidewinder launcher class config. | Sets `magazineReloadTime = 1` for Sidewinder launchers. | External addon fragment, not mission SQF. |
 
 ## PerformanceAuditAnalyzer
 
@@ -66,7 +78,8 @@ Use it after performance-sensitive mission changes or live-server audits.
 ## Packaging And Deployment Notes
 
 - `7za` environment variable points to `7za.exe`.
-- `ZipManager` packages mission directories after copy/generation.
+- `ZipManager` packages mission directories after copy/generation and currently zips only `Missions` plus `Missions_Vanilla`, not `Modded_Missions`.
+- Missing `7za` causes the final packaging step to throw; inspect generated/copied files before assuming the whole run did nothing.
 - The source Chernarus mission is copied to target terrain folders. Avoid manual changes in generated targets unless the generator is being updated.
 
 ## Development Commands

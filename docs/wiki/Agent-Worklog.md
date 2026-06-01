@@ -108,6 +108,21 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Added `agent-status.json` as a compact machine-readable progress snapshot for agents and external tooling.
 - Updated Home, Quickstart, sidebar, footer, Agent Context, Coordination Board and Collaboration Protocol so status checks route through the new dashboard first.
 
+## 2026-06-01 - Codex Factory/Purchase Systems Pass 1
+
+- Read the buy-unit dialog/controller, client action range FSM, client build worker, common unit/vehicle creation helpers, unit metadata cores, factory unit lists, faction filter builder, attack-wave price path and server `AIBuyUnit` worker.
+- Added `Factory-And-Purchase-Systems-Atlas.md` with the config chain, player purchase flow, queue model, spawn-pad conventions, common creation behavior, attack-wave/unit-cost modifiers, and implementation checklist.
+- Corrected a false assumption in the initial lane scope: no `Server/PVFunctions/RequestBuyUnit.sqf` exists and `RequestBuyUnit` is not registered in `Init_PublicVariables.sqf`; player purchases are client-local.
+- Flagged `Server_BuyUnit.sqf` / `AIBuyUnit` as latent/unused unless a dynamic caller is later proven.
+
+## 2026-06-01 - Codex Sub-Agent Fleet Pass 1
+
+- Spawned four read-only sub-agents with disjoint source lanes: Hilbert for network/PV, Cicero for server gameplay loops, Curie for UI/HUD/dialogs and Meitner for tooling/integrations.
+- Integrated Hilbert's network findings into [Networking and public variables](Networking-And-Public-Variables), [Feature status](Feature-Status-Register) and `agent-context.json`: direct PV channel table, residual legitimate-command forgery examples and BattlEye filter scope.
+- Integrated Cicero's server findings by adding [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas): lifecycle graph, data ownership, load risks, supply mission trust boundary, AI commander caveat and server end conditions.
+- Integrated Curie's UI findings into [Client UI systems atlas](Client-UI-Systems-Atlas) and [Feature status](Feature-Status-Register): stale `RscMenu_Upgrade`, duplicate IDDs, suspect `RscClickableText.soundPush[]` and buy-gear partials.
+- Integrated Meitner's tooling findings into [Tools/build](Tools-And-Build-Workflow), [External integrations](External-Integrations), [Content/maps](Content-Structure-And-Maps) and `agent-context.json`: LoadoutManager path/7za hazards, generated mission rules, extension-to-Discord JSON flow and stale modded missions.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

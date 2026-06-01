@@ -58,6 +58,7 @@ This is the compact human-readable context file for AI coding agents. See `agent
 - Code-level atlas: `SQF-Code-Atlas.md`.
 - Gameplay systems atlas: `Gameplay-Systems-Atlas.md`.
 - Construction and CoIn systems atlas: `Construction-And-CoIn-Systems-Atlas.md`; important hardening note: cost/placement gating is mostly client-side while `RequestStructure` / `RequestDefense` perform only light server validation before object creation.
+- Factory and purchase systems atlas: `Factory-And-Purchase-Systems-Atlas.md`; important note: player buy-unit flow is client-local (`GUI_Menu_BuyUnits.sqf` -> `Client_BuildUnit.sqf`) with no `RequestBuyUnit` PVF, while `Server_BuyUnit.sqf` / `AIBuyUnit` appears latent/unused.
 - Client UI systems atlas: `Client-UI-Systems-Atlas.md`.
 - Boot wait-chain atlas: `Lifecycle-Wait-Chain.md`.
 - WASP custom subtree atlas: `WASP-Overlay.md`.

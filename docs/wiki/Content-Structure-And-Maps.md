@@ -34,6 +34,10 @@ Mission assets include:
 
 Do not treat differences in generated mission folders as independent source truth until LoadoutManager has been checked. Many changes should be made once in Chernarus and propagated.
 
+`Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` is copied from Chernarus, then `SET_MAP` is patched from `1` to `2`. The generator intentionally skips map-specific or binary/terrain files such as `mission.sqm`, `version.sqf`, `GUI_Menu_Help.sqf`, `texHeaders.bin`, `StartVeh.sqf`, non-modded `loadScreen.jpg`, `Textures`, `Server/Config` and Takistan `Core_Artillery`.
+
+`Modded_Missions/*` should be treated as stale/non-authoritative right now. Terrain classes exist, but the modded-terrain generation call is commented in `Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs`. Packaging also zips only `Missions` and `Missions_Vanilla`, not `Modded_Missions`.
+
 ## Continue Reading
 
 Previous: [Source inventory](Source-Inventory) | Next: [WASP overlay](WASP-Overlay)

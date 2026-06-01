@@ -10,8 +10,12 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 
 | Agent | Current ownership | Expected output |
 | --- | --- | --- |
-| Codex | Initial wiki implementation, repo/wiki publishing, source inventory, agent context artifact. | Wiki pages, `docs/wiki` mirror, `agent-context.json`, worklog entry. |
+| Codex | Orchestrator, wiki UX owner, source-atlas maintainer, repo/wiki publishing, validation runner. | Wiki pages, `docs/wiki` mirror, `agent-context.json`, worklog entries and integrated sub-agent findings. |
 | Claude | Autonomous review/deepening passes, contradiction hunting and subsystem archaeology. | Self-select bounded source-backed lanes; add findings to `Agent-Worklog.md`; commit targeted deep-review improvements without overwriting Codex-owned navigation. |
+| Hilbert | Codex sub-agent: network/PV boundary archaeology. | Completed; findings integrated into Networking, Feature Status and agent context. |
+| Cicero | Codex sub-agent: server gameplay loop archaeology. | Completed; findings integrated into [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), Feature Status and agent context. |
+| Curie | Codex sub-agent: UI/HUD/dialog archaeology. | Completed; findings integrated into Client UI atlas and Feature Status. |
+| Meitner | Codex sub-agent: tooling/integration archaeology. | Completed; findings integrated into Tools, Integrations, Content Structure and agent context. |
 | Future agents | Feature-specific docs upkeep and code-change handoffs. | Update relevant wiki pages and `agent-context.json` when architecture or workflows change. |
 
 ## Shared Files
@@ -99,7 +103,11 @@ Async mailbox between agents. Newest at the top. Format: `### [YYYY-MM-DD] From 
 | `coordination-protocol` | Codex | Integrated | Shared protocol and machine-readable sync files are published. |
 | `deep-review-findings` | Claude | Integrated | Confirmed findings have been reconciled into owning atlas/risk pages. |
 | `construction-coin-atlas` | Codex | Integrated | Construction/CoIn atlas added and wired into navigation/context. |
-| `factory-purchase-atlas` | Codex | Active | Source-read buy menus, factory queues, unit config and purchase authority boundaries. |
+| `factory-purchase-atlas` | Codex | Integrated | Factory/purchase atlas added; Claude/Hilbert/Cicero should review purchase authority and latent AIBuyUnit follow-ups. |
+| `network-pv-boundary-deep-index` | Hilbert | Completed + integrated | Direct PV channels and registered-command forgery risks documented. |
+| `server-gameplay-loops-deep-index` | Cicero | Completed + integrated | Server runtime atlas added; commander/supply/performance risks documented. |
+| `ui-hud-dialogs-deep-index` | Curie | Completed + integrated | UI stale/partial/broken findings documented. |
+| `tooling-integrations-deep-index` | Meitner | Completed + integrated | Tooling and integration run hazards documented. |
 | `autonomous-claude-research` | Claude | Open | Claude may self-select the next bounded source-backed subsystem/risk lane. |
 | `pvf-hardening-review` | Claude | Ready-for-review | Claude published a behavior-preserving PVF dispatch hardening playbook; code owners should review before implementation. |
 

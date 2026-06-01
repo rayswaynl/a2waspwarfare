@@ -54,7 +54,7 @@ flowchart TD
 | `RscMenu_BuyUnits` | 12000 | `Client/GUI/GUI_Menu_BuyUnits.sqf` | Unit/vehicle purchase from structures, depots and hangars. |
 | `RscMenu_Command` | 14000 | `Client/GUI/GUI_Menu_Command.sqf` | Commander/team orders, task assignment and squad behavior. |
 | `RscMenu_Tactical` | 17000 | `Client/GUI/GUI_Menu_Tactical.sqf` | Fast travel, artillery, support requests, UAV and unit camera entry. |
-| `RscMenu_Upgrade` | 18000 | `Client/GUI/GUI_Menu_Upgrade.sqf` | Legacy/alternate upgrade menu class. |
+| `RscMenu_Upgrade` | 18000 | `Client/GUI/GUI_Menu_Upgrade.sqf` | Stale legacy upgrade class; controller file is missing. |
 | `RscMenu_Service` | 20000 | `Client/GUI/GUI_Menu_Service.sqf` | Rearm/repair/refuel/heal and EASA entry. |
 | `RscMenu_UnitCamera` | 21000 | `Client/GUI/GUI_Menu_UnitCamera.sqf` | Unit camera selection. |
 | `RscDisplay_Parameters` | 22000 | `Client/GUI/GUI_Display_Parameters.sqf` | Runtime mission parameter display. |
@@ -64,6 +64,7 @@ flowchart TD
 
 ### Dialog Risks
 
+- `RscMenu_Upgrade` is stale: it points to missing `Client/GUI/GUI_Menu_Upgrade.sqf` (`Dialogs.hpp:2425-2428`). The live main menu opens `WFBE_UpgradeMenu` / `Client/GUI/GUI_UpgradeMenu.sqf` instead (`GUI_Menu.sqf:165`).
 - `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000` (`Dialogs.hpp:3209-3212`, `:3287-3290`). They are not opened together in normal flow, but IDD reuse is a maintenance trap for `findDisplay`, debugging and future scripted interactions.
 - The main menu and most submenus are not event-driven state machines. They are `while {alive player && dialog}` polling loops with `sleep` delays. Keep new work small inside those loops and reuse existing update flags.
 - Several menu files return to `WF_Menu` by `closeDialog 0; createDialog "WF_Menu"` rather than maintaining a stack. Adding nested dialogs must preserve those return paths.
@@ -224,7 +225,7 @@ The scroll-action surface is part UI, part gameplay:
 `Client/Images` contains 45 `.paa` files plus `fps_hud.jpg`. Resource users include:
 
 - Gear tabs: `gearicontemplate`, `geariconall`, `geariconprimary`, `geariconsecondary`, `geariconsidearm`, `geariconmisc`.
-- Buy-unit controls: factory/category images and crew toggles (`i_driver`, `i_gunner`, `i_commander`, `i_extra`, `i_lock`).
+- Buy-unit controls: factory/category images and crew toggles (`i_driver`, `i_gunner`, `i_commander`, `i_extra`, `i_lock`). See [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) for the full buy/spawn flow.
 - Action availability icons: `icon_wf_building_*` and `icon_wf_support_*`.
 - Upgrade category icons: `wf_b`, `wf_lvf`, `wf_hvf`, `wf_air`, `wf_par`, `wf_uav`, `wf_sup`, `wf_*`.
 - Help branding: `Textures/logo1.paa`.
@@ -236,11 +237,15 @@ The intro video is `Videos/intro720p.ogv`, started from `Init_Client.sqf:785`.
 | Area | Evidence | Risk |
 | --- | --- | --- |
 | Duplicate dialog IDD | `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000`. | Avoid `findDisplay 23000` assumptions; assign a new IDD before adding scripted cross-dialog control work. |
+| Stale old upgrade dialog | `RscMenu_Upgrade` references missing `Client/GUI/GUI_Menu_Upgrade.sqf`; live flow uses `WFBE_UpgradeMenu`. | Treat `RscMenu_Upgrade` as dead/stale unless a later pass proves a dynamic opener. |
 | Shared title IDD | `RscOverlay` and `OptionsAvailable` both use `10200`. | Use `uiNamespace` display variables rather than IDD uniqueness. |
+| Suspect base control config | `RscClickableText.soundPush[] = {, 0.2, 1};` in `Rsc/Ressources.hpp`. | Verify parser behavior before deriving new clickable controls from this class. |
 | Polling loops | `GUI_Menu.sqf`, buy/command/tactical/service/upgrade/respawn menus all run scheduled loops. | Keep work incremental and cache expensive state. |
 | Map marker loops | Marker loops are live-server sensitive and now include performance-audit records. | Preserve map-closed skip behavior and `WFBE_C_MAP_ICON_BLINKING_ENABLED` gates. |
 | Respawn selector loop | `Client_UI_Respawn_Selector.sqf` sleeps `0.03`. | Do not add expensive marker or object scans inside it. |
 | Economy supply-truck UI | `GUI_Menu_Economy.sqf` can send `RespawnST`. | This touches the config-gated broken autonomous supply-truck path. |
+| Buy-unit authority | `RscMenu_BuyUnits` drives local `GUI_Menu_BuyUnits.sqf` and `Client_BuildUnit.sqf`; no `RequestBuyUnit` PVF exists. | UI purchase checks are not server authority. See [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas). |
+| Buy-gear partials | `GUI_BuyGearMenu.sqf` includes TODOs for target refresh, vehicle target content and template scope. | Avoid expanding templates until gear, cargo, vehicle and backpack behavior is deliberately mapped. |
 | CoIn title registration | `WFBE_ConstructionInterface` is cut from `coin_interface.sqf` and stores `wfbe_title_coin`, but it is not listed in `RscTitles.titles[]`. | Construction appears intentionally wired; verify in-game before refactoring title registration. |
 | Disabled task UI | `TaskSystem` compile and town task spawn are commented in `Init_Client.sqf:75` and `:744-745`. | Task UI behavior is partial/disabled; revive only with JIP and spam review. |
 

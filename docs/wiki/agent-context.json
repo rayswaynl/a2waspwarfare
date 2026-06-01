@@ -27,6 +27,8 @@
       "Networking-And-Public-Variables",
       "Gameplay-Systems-Atlas",
       "Construction-And-CoIn-Systems-Atlas",
+      "Factory-And-Purchase-Systems-Atlas",
+      "Server-Gameplay-Runtime-Atlas",
       "Core-Systems-Index",
       "Economy-Towns-And-Supply",
       "Supply-Mission-Architecture",
@@ -69,6 +71,8 @@
         "Networking-And-Public-Variables",
         "Gameplay-Systems-Atlas",
         "Construction-And-CoIn-Systems-Atlas",
+        "Factory-And-Purchase-Systems-Atlas",
+        "Server-Gameplay-Runtime-Atlas",
         "Core-Systems-Index",
         "Economy-Towns-And-Supply",
         "Supply-Mission-Architecture",
@@ -117,11 +121,140 @@
     "networking": "PVF lists in Common/Init/Init_PublicVariables.sqf plus direct publicVariable channels for supply, anti-stack, day/night, FPS, AFK and markers.",
     "economy": "Funds and side supply with town SV, commander income, resources FSM and supply missions. See Gameplay-Systems-Atlas for source-backed town/economy/commander/factory flow.",
     "construction": "Commander/repair-truck CoIn flow, structure arrays, HQ deploy/mobilize, server construction workers, defense building, repair and sale flows. See Construction-And-CoIn-Systems-Atlas.md.",
+    "factoryPurchase": "Player buy-unit flow is client-local from GUI_Menu_BuyUnits.sqf to Client_BuildUnit.sqf; RequestBuyUnit is not registered and no Server/PVFunctions/RequestBuyUnit.sqf exists. Server_BuyUnit/AIBuyUnit is compiled but no static caller was found. See Factory-And-Purchase-Systems-Atlas.md.",
+    "serverRuntime": "Server gameplay loops are owned by Init_Server.sqf: town capture/SV, town AI activation/despawn, camp manager, resources/economy, victory checks, garbage/vehicle cleanup, server FPS and AntiStack loops. See Server-Gameplay-Runtime-Atlas.md.",
     "ai": "Server town AI, AI commanders, client/headless delegation, player AI watchdog/recovery.",
     "ui": "Rsc resources, Client/GUI dialog controllers, RHUD/FPS HUD, title resources, map/action marker loops, CoIn construction UI and WASP overlays. See Client-UI-Systems-Atlas.md.",
     "tooling": "LoadoutManager for mission generation/packaging; PerformanceAuditAnalyzer for RPT metrics.",
     "integrations": "DiscordBot, a2waspwarfare_Extension, A2WaspDatabase extension, BattlEye publicVariable filter.",
     "waspOverlay": "Project-specific WASP additions include base repair, RPG dropping, marker monitor, HQ recovery action, start vehicles and a server selftest. See WASP-Overlay.md."
+  },
+  "toolingProjects": [
+    {
+      "name": "Tools/LoadoutManager",
+      "language": "C#",
+      "framework": ".NET 8 executable",
+      "entrypoints": [
+        "Tools/LoadoutManager/Program.cs",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs"
+      ],
+      "inputs": [
+        "Chernarus source mission",
+        "terrain/loadout data classes",
+        "FileManager skip lists"
+      ],
+      "outputs": [
+        "Client/Module/EASA/EASA_Init.sqf",
+        "Common/Functions/Common_BalanceInit.sqf",
+        "Common/Common_ReturnAircraftNameFromItsType.sqf",
+        "per-terrain version.sqf",
+        "Takistan generated mission",
+        "_MISSIONS.7z"
+      ],
+      "requiredExternalFiles": [
+        "7za on PATH or configured for packaging"
+      ],
+      "safeToRunInMirror": false,
+      "notes": "Requires an ancestor folder literally named a2waspwarfare; the current Codex checkout work/a will throw unless run from a correctly named checkout or the lookup is changed. dotnet run always attempts packaging after generation."
+    },
+    {
+      "name": "Tools/PerformanceAuditAnalyzer",
+      "language": "PowerShell",
+      "framework": "PowerShell scripts",
+      "entrypoints": [
+        "Tools/PerformanceAuditAnalyzer/Analyze-PerformanceAudit.ps1"
+      ],
+      "inputs": [
+        "Arma RPT logs containing [Performance Audit]"
+      ],
+      "outputs": [
+        "CSV",
+        "Markdown",
+        "HTML",
+        "Word-friendly reports"
+      ],
+      "requiredExternalFiles": [],
+      "safeToRunInMirror": true,
+      "notes": "Read-only log analyzer useful after performance-sensitive mission changes."
+    },
+    {
+      "name": "DiscordBot",
+      "language": "C#",
+      "framework": ".NET 9 executable",
+      "entrypoints": [
+        "DiscordBot/src/ProgramRuntime.cs"
+      ],
+      "inputs": [
+        "DiscordBot/preferences.json",
+        "DiscordBot/token.txt",
+        "C:\\a2waspwarfare\\Data\\database.json"
+      ],
+      "outputs": [
+        "Discord channel name",
+        "bot presence",
+        "status embed"
+      ],
+      "requiredExternalFiles": [
+        "preferences.json",
+        "token.txt"
+      ],
+      "safeToRunInMirror": false,
+      "notes": "Runtime refuses missing/empty token.txt. Do not invent secrets."
+    },
+    {
+      "name": "Extension",
+      "language": "C#",
+      "framework": ".NET Framework 4.8 Arma extension",
+      "entrypoints": [
+        "Extension/src/EntryPoint.cs"
+      ],
+      "inputs": [
+        "Arma callExtension arguments from Server/CallExtensions/GlobalGameStats.sqf"
+      ],
+      "outputs": [
+        "C:\\a2waspwarfare\\Data\\database.json"
+      ],
+      "requiredExternalFiles": [
+        "legacy NuGet/MSBuild packages"
+      ],
+      "safeToRunInMirror": false,
+      "notes": "Exports _RVExtension@12 and serializes GameData for DiscordBot."
+    },
+    {
+      "name": "Mods/mkswf_sidewinder_reload_time_fix",
+      "language": "Arma config",
+      "framework": "Addon config fragment",
+      "entrypoints": [
+        "Mods/mkswf_sidewinder_reload_time_fix/CfgWeapons.hpp"
+      ],
+      "inputs": [
+        "Sidewinder launcher class config"
+      ],
+      "outputs": [
+        "magazineReloadTime = 1"
+      ],
+      "requiredExternalFiles": [],
+      "safeToRunInMirror": true,
+      "notes": "External addon fragment, not mission SQF."
+    }
+  ],
+  "generatedMissionRules": {
+    "sourceOfTruth": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+    "vanillaGeneratedTarget": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+    "postCopyPatch": "Takistan SET_MAP is patched from 1 to 2.",
+    "skipList": [
+      "mission.sqm",
+      "version.sqf",
+      "Client/GUI/GUI_Menu_Help.sqf",
+      "texHeaders.bin",
+      "WASP/unsort/StartVeh.sqf",
+      "loadScreen.jpg",
+      "Textures",
+      "Server/Config",
+      "Common/Config/Core_Artillery"
+    ],
+    "moddedGeneration": "Disabled/commented in LoadoutManager; treat Modded_Missions/* as stale/non-authoritative.",
+    "packaging": "ZipManager zips Missions and Missions_Vanilla only, then writes _MISSIONS.7z."
   },
   "knownRisks": [
     "Autonomous AI supply trucks are config-gated latent breakage: UpdateSupplyTruck compile is disabled, a live call remains under Supply System 0 plus AI commanders, and Server/FSM/supplytruck.fsm is missing.",
@@ -139,7 +272,16 @@
     "Residual after DR-1 fix: the PVF model still trusts client-sent commands and params, for example RequestChangeScore sets score from payload. Arbitrary code execution is closed, but legitimate-command forgery needs separate per-handler sender/param validation.",
     "DR-2/DR-3: paratrooper drop markers and MASH tent markers are confirmed dead receiver-side paths.",
     "DR-4: Chernarus and Takistan differ only by LoadoutManager skip-list/blacklist, but skip-listed files never propagate and must be hand-mirrored; Modded_Missions/* are abandoned until modded propagation is re-enabled.",
-    "Construction hardening gap: coin_interface.sqf performs cost/placement/role checks client-side, then RequestStructure/RequestDefense do only light server class-existence validation before creating server objects."
+    "Construction hardening gap: coin_interface.sqf performs cost/placement/role checks client-side, then RequestStructure/RequestDefense do only light server class-existence validation before creating server objects.",
+    "Player buy-unit authority gap: GUI_Menu_BuyUnits.sqf deducts funds and spawns Client_BuildUnit locally; there is no registered RequestBuyUnit PVF and no Server/PVFunctions/RequestBuyUnit.sqf in the repo.",
+    "Server_BuyUnit/AIBuyUnit latent path: AIBuyUnit is compiled in Server/Init/Init_Server.sqf, but the current repo-wide static scan found no caller outside Server_BuyUnit.sqf itself.",
+    "AI commander automation partial: constants/state/funds exist, but no active server loop/FSM was found to set wfbe_aicom_running = true.",
+    "Server_AssignNewCommander call-shape bug candidate: RequestNewCommander passes [_side, _assigned_commander], but Server_AssignNewCommander.sqf assigns _side = _this instead of _this select 0.",
+    "Supply mission cooldown casing mismatch: town init seeds lastSupplyMissionRun while server supply mission code reads/writes LastSupplyMissionRun.",
+    "Hosted server FPS loop risk: serverFpsGUI.sqf and monitorServerFPS.sqf sleep only inside if (isDedicated), so hosted/non-dedicated mode can busy-loop.",
+    "LoadoutManager local path hazard: the current Codex checkout is work/a, but the tool searches ancestor folders for a literal a2waspwarfare directory and will throw outside that shape.",
+    "LoadoutManager packaging hazard: dotnet run always attempts ZipManager.DoZipOperations after generation/copy, so missing 7za can fail the final run even after useful outputs were written.",
+    "BattlEyeFilter/publicvariable.txt is feature-specific for kickAFK and is not a comprehensive PV hardening layer."
   ],
   "currentPR": {
     "number": 1,
@@ -165,7 +307,112 @@
     "board": "Coordination-Board.md",
     "codeAtlas": "SQF-Code-Atlas.md"
   },
+  "subAgentFleet": {
+    "startedAt": "2026-06-01T22:09:08+02:00",
+    "orchestrator": "Codex",
+    "activeLanes": [
+      {
+        "agent": "Hilbert",
+        "lane": "network-pv-boundary-deep-index",
+        "scope": "publicVariable/PVF registration, handler flow, authority risks and BattlEye filters",
+        "status": "completed-integrated"
+      },
+      {
+        "agent": "Cicero",
+        "lane": "server-gameplay-loops-deep-index",
+        "scope": "towns, economy, commander, AI teams, supply/value loops and server performance",
+        "status": "completed-integrated"
+      },
+      {
+        "agent": "Curie",
+        "lane": "ui-hud-dialogs-deep-index",
+        "scope": "Rsc resources, HUD/RHUD, dialogs, menus, gear templates and client UX state",
+        "status": "completed-integrated"
+      },
+      {
+        "agent": "Meitner",
+        "lane": "tooling-integrations-deep-index",
+        "scope": "tools, generated missions, extensions, DiscordBot, BattlEye and server configs",
+        "status": "completed-integrated"
+      }
+    ]
+  },
   "reviewPasses": [
+    {
+      "date": "2026-06-01",
+      "agent": "Hilbert",
+      "lane": "network-pv-boundary-deep-index",
+      "type": "read-only sub-agent source report integrated by Codex",
+      "findings": [
+        "Direct publicVariable channels include day/night, messages, markers, ICBM/radiation, side supply, supply missions, anti-stack, AFK and server FPS.",
+        "Replacing PVF dispatcher Call Compile does not close legitimate-command forgery; high-trust handlers still need sender/role/funds/object validation.",
+        "BattlEye publicvariable.txt contains only the kickAFK feature rule."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Curie",
+      "lane": "ui-hud-dialogs-deep-index",
+      "type": "read-only sub-agent source report integrated by Codex",
+      "findings": [
+        "RscMenu_Upgrade points to missing GUI_Menu_Upgrade.sqf while live flow uses WFBE_UpgradeMenu.",
+        "RscClickableText.soundPush[] has a suspect malformed config value.",
+        "Buy gear has documented partial work around target refresh, vehicle target content and template scope."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Meitner",
+      "lane": "tooling-integrations-deep-index",
+      "type": "read-only sub-agent source report integrated by Codex",
+      "findings": [
+        "LoadoutManager requires an ancestor folder named a2waspwarfare and the current work/a checkout cannot run it as-is.",
+        "LoadoutManager always attempts packaging after generation; missing 7za fails the final packaging step.",
+        "Mission game stats flow through a2waspwarfare_Extension to C:\\a2waspwarfare\\Data\\database.json, then DiscordBot polls that file every 60 seconds.",
+        "Modded mission generation is disabled/commented; Modded_Missions/* are stale/non-authoritative."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Cicero",
+      "lane": "server-gameplay-loops-deep-index",
+      "type": "read-only sub-agent source report integrated by Codex",
+      "pagesAdded": [
+        "Server-Gameplay-Runtime-Atlas.md"
+      ],
+      "findings": [
+        "Server runtime starts town, camp, town AI, resources, victory, cleanup, FPS and AntiStack loops from Init_Server.sqf.",
+        "AI commander state/funds/constants exist, but no active AI commander loop/FSM was found.",
+        "Server_AssignNewCommander likely has a call-shape bug when called from RequestNewCommander.",
+        "Supply mission reward/cooldown logic has client-authority and variable-casing risks.",
+        "Hosted/non-dedicated server FPS publishers can busy-loop because sleeps are inside isDedicated guards."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Codex",
+      "lane": "factory-purchase-atlas",
+      "type": "source-backed subsystem atlas",
+      "pagesAdded": [
+        "Factory-And-Purchase-Systems-Atlas.md"
+      ],
+      "findings": [
+        "Player buy-unit path is client-local and does not use a RequestBuyUnit PVF.",
+        "RequestBuyUnit is not registered in Common/Init/Init_PublicVariables.sqf and no Server/PVFunctions/RequestBuyUnit.sqf exists.",
+        "Server_BuyUnit/AIBuyUnit is compiled but appears latent unless a dynamic caller is later proven.",
+        "Factory spawn pads and queue state are convention-heavy and should be preserved carefully."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Codex",
+      "lane": "fleet-deep-index",
+      "type": "sub-agent orchestration",
+      "findings": [
+        "Spawned four read-only Codex sub-agents for independent deep-index lanes: network/PV, server gameplay loops, UI/HUD/dialogs and tooling/integrations.",
+        "Progress is tracked in Progress-Dashboard.md, Coordination-Board.md, agent-status.json, agent-collaboration.json and agent-events.jsonl."
+      ]
+    },
     {
       "date": "2026-06-01",
       "agent": "Claude",

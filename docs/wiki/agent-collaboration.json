@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-01T21:23:39+02:00",
+  "generatedAt": "2026-06-01T22:19:55+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -14,13 +14,33 @@
   "agents": {
     "Codex": {
       "role": "Integrator, wiki UX owner, source-atlas maintainer, publisher and validation runner.",
-      "currentLane": "factory-purchase-atlas",
-      "status": "active"
+      "currentLane": "fleet-deep-index",
+      "status": "orchestrating-fleet"
     },
     "Claude": {
       "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
       "currentLane": "pvf-hardening-review",
       "status": "ready-for-review; autonomous-ready"
+    },
+    "Hilbert": {
+      "role": "Read-only Codex sub-agent for network/PV boundary archaeology.",
+      "currentLane": "network-pv-boundary-deep-index",
+      "status": "completed-integrated"
+    },
+    "Cicero": {
+      "role": "Read-only Codex sub-agent for server gameplay loops, towns, economy and AI commander systems.",
+      "currentLane": "server-gameplay-loops-deep-index",
+      "status": "completed-integrated"
+    },
+    "Curie": {
+      "role": "Read-only Codex sub-agent for UI/HUD/dialogs/client UX archaeology.",
+      "currentLane": "ui-hud-dialogs-deep-index",
+      "status": "completed-integrated"
+    },
+    "Meitner": {
+      "role": "Read-only Codex sub-agent for tooling, generated missions, extension, DiscordBot, BattlEye and server integration archaeology.",
+      "currentLane": "tooling-integrations-deep-index",
+      "status": "completed-integrated"
     }
   },
   "activeClaims": [
@@ -46,11 +66,11 @@
     {
       "lane": "factory-purchase-atlas",
       "owner": "Codex",
-      "status": "active",
+      "status": "integrated",
       "sourceScope": [
         "Client/GUI/GUI_Menu_BuyUnits.sqf",
         "Client/Functions/Client_BuildUnit.sqf",
-        "Server/PVFunctions/RequestBuyUnit.sqf",
+        "Common/Init/Init_PublicVariables.sqf (no RequestBuyUnit registered)",
         "Server/Functions/Server_BuyUnit.sqf",
         "Server/Functions/Server_HandleEmptyVehicle.sqf",
         "Common/Config/Core_Units/*.sqf",
@@ -63,7 +83,85 @@
         "Factory-And-Purchase-Systems-Atlas.md",
         "updated navigation/context/worklog"
       ],
-      "handoff": "Claude should review purchase authority boundaries, AI commander buying and factory queue edge cases after the atlas lands."
+      "handoff": "Claude and Hilbert should review purchase authority boundaries and the missing RequestBuyUnit PVF; Cicero should review whether AIBuyUnit has any dynamic AI commander caller."
+    },
+    {
+      "lane": "network-pv-boundary-deep-index",
+      "owner": "Hilbert",
+      "status": "completed-integrated",
+      "sourceScope": [
+        "Common/Init/Init_PublicVariables.sqf",
+        "Server/PVFunctions/*.sqf",
+        "Client/PVFunctions/*.sqf",
+        "Server/Functions/Server_HandlePVF.sqf",
+        "Client/Functions/Client_HandlePVF.sqf",
+        "Common/Functions/Common_SendToServerOptimized.sqf",
+        "Common/Functions/Common_SendToClient.sqf",
+        "BattlEyeFilter/publicvariable.txt"
+      ],
+      "outputs": [
+        "Networking-And-Public-Variables.md",
+        "Feature-Status-Register.md",
+        "agent-context.json"
+      ],
+      "handoff": "Future implementation should validate high-impact registered PVF handlers after the dispatch hardening fix."
+    },
+    {
+      "lane": "server-gameplay-loops-deep-index",
+      "owner": "Cicero",
+      "status": "completed-integrated",
+      "sourceScope": [
+        "Server/Init/*.sqf",
+        "Server/FSM/*.fsm",
+        "Server/Towns/*.sqf",
+        "Server/Functions/*.sqf",
+        "Common/Config/Core_Towns/*.sqf",
+        "Common/Config/Core_Root/*.sqf"
+      ],
+      "outputs": [
+        "Server-Gameplay-Runtime-Atlas.md",
+        "Feature-Status-Register.md",
+        "agent-context.json"
+      ],
+      "handoff": "Future implementation should review commander reassignment, AI commander runtime ownership, supply mission authority and hosted FPS loops."
+    },
+    {
+      "lane": "ui-hud-dialogs-deep-index",
+      "owner": "Curie",
+      "status": "completed-integrated",
+      "sourceScope": [
+        "description.ext",
+        "Rsc/*.hpp",
+        "Client/GUI/*.sqf",
+        "Client/Functions/*UI*.sqf",
+        "Client/HUD/*.sqf",
+        "Client/Module/RHUD/*"
+      ],
+      "outputs": [
+        "Client-UI-Systems-Atlas.md",
+        "Feature-Status-Register.md"
+      ],
+      "handoff": "Future UI work should resolve stale RscMenu_Upgrade, duplicate IDDs and suspect RscClickableText soundPush before adding new dialogs."
+    },
+    {
+      "lane": "tooling-integrations-deep-index",
+      "owner": "Meitner",
+      "status": "completed-integrated",
+      "sourceScope": [
+        "Tools/**",
+        "DiscordBot/**",
+        "Extension/**",
+        "BattlEyeFilter/**",
+        "ServerInfo/**",
+        "Missions/**"
+      ],
+      "outputs": [
+        "Tools-And-Build-Workflow.md",
+        "External-Integrations.md",
+        "Content-Structure-And-Maps.md",
+        "agent-context.json"
+      ],
+      "handoff": "Future tooling work should use a correctly named a2waspwarfare checkout before running LoadoutManager."
     },
     {
       "lane": "coordination-protocol",
@@ -155,8 +253,32 @@
     {
       "lane": "factory-purchase-atlas",
       "suggestedOwner": "Codex",
-      "status": "active",
+      "status": "integrated",
       "summary": "Deep-read client buy menus, factory queues, unit config, server AI buying and purchase authority boundaries."
+    },
+    {
+      "lane": "network-pv-boundary-deep-index",
+      "suggestedOwner": "Hilbert",
+      "status": "completed-integrated",
+      "summary": "Sub-agent deep-index of publicVariable/PVF registration, authority boundaries and BattlEye filter risks."
+    },
+    {
+      "lane": "server-gameplay-loops-deep-index",
+      "suggestedOwner": "Cicero",
+      "status": "completed-integrated",
+      "summary": "Sub-agent deep-index of towns, economy, commander, AI teams, supply/value loops and server performance."
+    },
+    {
+      "lane": "ui-hud-dialogs-deep-index",
+      "suggestedOwner": "Curie",
+      "status": "completed-integrated",
+      "summary": "Sub-agent deep-index of Rsc resources, HUD/RHUD, dialogs, menus, gear templates and client UX state."
+    },
+    {
+      "lane": "tooling-integrations-deep-index",
+      "suggestedOwner": "Meitner",
+      "status": "completed-integrated",
+      "summary": "Sub-agent deep-index of tools, generated missions, extensions, DiscordBot, BattlEye and server configs."
     },
     {
       "lane": "construction-coin-atlas",

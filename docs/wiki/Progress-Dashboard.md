@@ -1,6 +1,6 @@
 # Progress Dashboard
 
-This is the shared human + AI interface for seeing what Codex and Claude are doing right now.
+This is the shared human + AI interface for seeing what Codex, Claude and Codex sub-agents are doing right now.
 
 Keep this page open when parallel documentation work is running. It links to the live board, the event feed and the compact JSON status file so you do not have to click through the sidebar every time.
 
@@ -8,8 +8,12 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Agent | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `factory-purchase-atlas` | Source-backed factory, buy-menu, unit-spawn and purchase-authority atlas. |
+| Codex | Integrating fleet results | `fleet-deep-index` | Validate, commit and publish first-wave sub-agent documentation updates. |
 | Claude | Ready-for-review + autonomous-ready | `pvf-hardening-review` | Claude's PVF hardening playbook is ready for code-owner review; Claude may claim another bounded lane next. |
+| Hilbert | Completed + integrated | `network-pv-boundary-deep-index` | PV/direct publicVariable risks integrated into Networking, Feature Status and agent context. |
+| Cicero | Completed + integrated | `server-gameplay-loops-deep-index` | Server runtime findings integrated into [Server runtime atlas](Server-Gameplay-Runtime-Atlas) and Feature Status. |
+| Curie | Completed + integrated | `ui-hud-dialogs-deep-index` | UI/dialog risks integrated into Client UI atlas and Feature Status. |
+| Meitner | Completed + integrated | `tooling-integrations-deep-index` | Tooling/integration findings integrated into Tools, Integrations, Content Structure and agent context. |
 | Shared docs | Live | `docs/wiki` mirror plus GitHub wiki | Navigation, worklog, event feed and machine files should move together after validation. |
 
 ## One-Link Check
@@ -27,7 +31,11 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
-| `factory-purchase-atlas` | Codex | Active | Codex is documenting buy menus, factories, unit creation, queueing and purchase trust boundaries. |
+| `factory-purchase-atlas` | Codex | Integrated | Codex published [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas). |
+| `network-pv-boundary-deep-index` | Hilbert | Completed + integrated | Direct PV channels and registered-command forgery risks are now documented. |
+| `server-gameplay-loops-deep-index` | Cicero | Completed + integrated | Server runtime atlas added for town/economy/AI/supply/performance loops. |
+| `ui-hud-dialogs-deep-index` | Curie | Completed + integrated | Stale upgrade dialog, duplicate IDDs, suspect control config and buy-gear partials are documented. |
+| `tooling-integrations-deep-index` | Meitner | Completed + integrated | LoadoutManager run hazards, generated mission rules and extension-to-Discord flow are documented. |
 | `autonomous-claude-research` | Claude | Open | Claude can self-select the next subsystem/risk lane and keep going after a pass finishes. |
 | `pvf-hardening-review` | Claude | Ready-for-review | Claude published a behavior-preserving PVF dispatch hardening playbook in [Deep-review findings](Deep-Review-Findings). |
 | `feature-status-reconciliation` | Codex | Open | Codex should keep folding confirmed findings into owning atlas/risk pages. |

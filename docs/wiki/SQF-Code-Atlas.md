@@ -165,7 +165,9 @@ PVF dispatch mechanics:
 Unregistered PV function files:
 
 - `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` exists but is not in the client command list.
-- `Server/PVFunctions/AttackWave.sqf` and `Server/PVFunctions/LogGameEnd.sqf` are compiled directly in server init rather than through the standard PVF command list.
+- `Client/PVFunctions/DatabaseDebug.sqf` is present but the registry entry is commented out in `Init_PublicVariables.sqf`.
+- `Server/PVFunctions/LogGameEnd.sqf` is present but not registered; server init compiles `Server/Functions/Server_LogGameEnd.sqf` instead.
+- `Server/PVFunctions/AttackWave.sqf` is a direct/public-variable handler path rather than a standard PVF command-list entry.
 
 ## Direct Public Variable Channels
 

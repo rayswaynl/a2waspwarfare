@@ -364,13 +364,13 @@ Risk notes:
 | New commander action | Existing PVF command pattern plus `HandleSpecial` client notification where needed. |
 | New upgrade effect | `Server_ProcessUpgrade.sqf` for completion effects plus every direct upgrade-level consumer. |
 | New structure | Side `Structures_*.sqf`, `RequestStructure.sqf` script mapping, matching construction script and `Init_BaseStructure.sqf`. |
-| New purchasable unit | Unit config arrays, buy menu filtering, `Client_BuildUnit.sqf`, and `Server_BuyUnit.sqf` if AI can use it. |
+| New purchasable unit | [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), unit metadata arrays, buy menu filtering, `Client_BuildUnit.sqf`, and `Server_BuyUnit.sqf` if AI can use it. |
 
 ## Open Questions For Claude / Future Review
 
 - Confirm whether `Server_AssignNewCommander.sqf` call-shape handling is intentional or a latent bug.
 - Trace structure repair/completion logic that consumes `wfbe_structures_logic`.
-- Compare client and server unit-build initialization for drift, especially countermeasures, IRS, artillery and special vehicle actions.
+- Compare client and server unit-build initialization for drift, especially countermeasures, IRS, artillery and special vehicle actions. The first source-backed map is now in [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas).
 - Verify whether supply-income stagnation is currently called from the active resource loop or only retained as a helper.
 - Map exact dependencies between `Init_BaseStructure.sqf`, range globals like `barracksInRange`, and the buy menu.
 

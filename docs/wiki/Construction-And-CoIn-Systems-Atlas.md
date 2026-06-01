@@ -267,6 +267,6 @@ When changing construction:
 
 ## Continue Reading
 
-Previous: [Gameplay atlas](Gameplay-Systems-Atlas) | Next: [Core systems](Core-Systems-Index)
+Previous: [Gameplay atlas](Gameplay-Systems-Atlas) | Next: [Factory and purchase systems](Factory-And-Purchase-Systems-Atlas)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
