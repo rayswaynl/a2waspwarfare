@@ -8,12 +8,14 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Agent | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Integrating fleet results | `fleet-deep-index` | Validate, commit and publish first-wave sub-agent documentation updates. |
-| Claude | Ready-for-review + autonomous-ready | `pvf-hardening-review` | Claude's PVF hardening playbook is ready for code-owner review; Claude may claim another bounded lane next. |
-| Hilbert | Completed + integrated | `network-pv-boundary-deep-index` | PV/direct publicVariable risks integrated into Networking, Feature Status and agent context. |
-| Cicero | Completed + integrated | `server-gameplay-loops-deep-index` | Server runtime findings integrated into [Server runtime atlas](Server-Gameplay-Runtime-Atlas) and Feature Status. |
-| Curie | Completed + integrated | `ui-hud-dialogs-deep-index` | UI/dialog risks integrated into Client UI atlas and Feature Status. |
-| Meitner | Completed + integrated | `tooling-integrations-deep-index` | Tooling/integration findings integrated into Tools, Integrations, Content Structure and agent context. |
+| Codex | Active | `victory-endgame-runtime-atlas` | Mapping victory/endgame runtime, DB/log hooks and mission termination. |
+| Faraday | Active read-only scout | `gear-loadout-easa-balance-discovery` | Gear templates, EASA, loadout generation and balance metadata report; prior economy report awaits integration. |
+| Mencius | Active read-only scout | `respawn-medical-mash-support-discovery` | MASH, medical/support actions, service flows and marker wiring report; prior client/JIP report awaits integration. |
+| Claude | Ready-for-review + autonomous-ready | `factory-purchase-authority` | Latest completed reviews: Victory/endgame DR-11..DR-13 and Factory/purchase DR-14..DR-15 in [Deep-review findings](Deep-Review-Findings). |
+| Hilbert | Active read-only scout | `server-runtime-scheduler-discovery` | Reused after PV pass; now reading server loops, FSMs, FPS, cleanup and town processing. |
+| Cicero | Active read-only scout | `ai-headless-delegation-discovery` | Reused after server pass; now reading AI squads, autonomous teams, AI commander and HC delegation. |
+| Curie | Active read-only scout | `wiki-ux-navigation-discovery` | Reused after UI pass; now reviewing wiki navigation and human/LLM browsing affordances. |
+| Meitner | Active read-only scout | `content-drift-generation-discovery` | Reused after tooling pass; now comparing source/generated/stale missions and content drift. |
 | Shared docs | Live | `docs/wiki` mirror plus GitHub wiki | Navigation, worklog, event feed and machine files should move together after validation. |
 
 ## One-Link Check
@@ -21,6 +23,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | Need | Open |
 | --- | --- |
 | Human progress page | [Progress dashboard](Progress-Dashboard) |
+| Sub-agent swarm board | [Discovery swarm](Subagent-Discovery-Swarm) |
 | Detailed coordination page | [Coordination board](Coordination-Board) |
 | Machine progress file | [`agent-status.json`](agent-status.json) |
 | Active lanes and ownership | [`agent-collaboration.json`](agent-collaboration.json) |
@@ -32,12 +35,23 @@ Keep this page open when parallel documentation work is running. It links to the
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
 | `factory-purchase-atlas` | Codex | Integrated | Codex published [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas). |
+| `victory-endgame-runtime-atlas` | Codex | Active | Codex is mapping win conditions, game-over flags, endgame broadcast, stats/logging, AntiStack flush and mission termination. |
+| `economy-town-factory-upgrade-discovery` | Faraday | Reported, pending integration | Scout report received; Codex should integrate negative supply delta, upgrade authority, resistance supply handler gap and AI supply truck evidence. |
+| `gear-loadout-easa-balance-discovery` | Faraday | Active | Cheap read-only scout mapping gear templates, EASA, loadout generation, balance configs and dangerous loadout metadata. |
+| `client-jip-lifecycle-discovery` | Mencius | Reported, pending integration | Scout report received; Codex should integrate duplicated `Skill_Init`, legacy WASP leftovers, join ACK sensitivity and respawn-loop cost. |
+| `respawn-medical-mash-support-discovery` | Mencius | Active | Cheap read-only scout mapping MASH, ambulances, service/repair/heal/rearm, support actions and marker wiring. |
+| `server-runtime-scheduler-discovery` | Hilbert | Active | Cheap read-only scout mapping server loops, FSMs, FPS publishers, cleanup and town processing. |
+| `ai-headless-delegation-discovery` | Cicero | Active | Cheap read-only scout mapping AI teams, AI commander, HC delegation and town AI lifecycle. |
+| `wiki-ux-navigation-discovery` | Curie | Active | Cheap read-only scout reviewing wiki click-through, sidebar/footer, page graph and LLM entry points. |
+| `content-drift-generation-discovery` | Meitner | Active | Cheap read-only scout comparing Chernarus source, Takistan generated output, modded missions and assets. |
 | `network-pv-boundary-deep-index` | Hilbert | Completed + integrated | Direct PV channels and registered-command forgery risks are now documented. |
 | `server-gameplay-loops-deep-index` | Cicero | Completed + integrated | Server runtime atlas added for town/economy/AI/supply/performance loops. |
 | `ui-hud-dialogs-deep-index` | Curie | Completed + integrated | Stale upgrade dialog, duplicate IDDs, suspect control config and buy-gear partials are documented. |
 | `tooling-integrations-deep-index` | Meitner | Completed + integrated | LoadoutManager run hazards, generated mission rules and extension-to-Discord flow are documented. |
 | `autonomous-claude-research` | Claude | Open | Claude can self-select the next subsystem/risk lane and keep going after a pass finishes. |
 | `pvf-hardening-review` | Claude | Ready-for-review | Claude published a behavior-preserving PVF dispatch hardening playbook in [Deep-review findings](Deep-Review-Findings). |
+| `victory-endgame-review` | Claude | Ready-for-review | Claude published DR-11..DR-13 on winner inversion, broken threeway mode and stale `LogGameEnd`. |
+| `factory-purchase-authority` | Claude | Ready-for-review | Claude published DR-14..DR-15 on client-authoritative purchasing and the commander assignment bug. |
 | `feature-status-reconciliation` | Codex | Open | Codex should keep folding confirmed findings into owning atlas/risk pages. |
 
 ## Update Ritual

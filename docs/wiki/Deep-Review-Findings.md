@@ -247,6 +247,121 @@ _responseCode = _response select 0;
 
 Code owners: apply DR-7 defensive validation (guard empty + shape-check before reading) to all seven `callDatabase*.sqf`; add a circuit-breaker (DR-8); chunk SEND_PLAYERLIST (DR-9); document/auto-detect the external DLL (DR-10). Codex: the `A2WaspDatabase` external dependency + `call compile` trust contract should be called out in the [External integrations](External-Integrations) page (its lane). Ledger: Integrations Auth/PV cells advanced from ⬜ to 🟡 (AntiStack covered; Extension/Discord/BattlEye still pending).
 
+## Round 6 — 2026-06-02 (Claude) — victory / endgame (DR-11..DR-13)
+
+Lane `victory-endgame-review`. Source: `Server/FSM/server_victory_threeway.sqf` (the **only** script that sets `gameOver`/`WFBE_GameOver`/`failMission` — verified by grep across `Server/`), `Server/Functions/Server_LogGameEnd.sqf`, `Server/PVFunctions/LogGameEnd.sqf`, `Common/Init/Init_CommonConstants.sqf:401`.
+
+### DR-11 — Endgame reports the winner inconsistently; persisted win-tally is wrong for the all-towns win — **Medium-High (correctness, persistent side effect)**
+
+The trigger merges a *lose* test and a *win* test into one condition and then handles both identically:
+```sqf
+if (!(alive _hq) && _factories == 0 || _towns == _total && !WFBE_GameOver) then {
+    [nil,"HandleSpecial",["endgame",(_x) Call WFBE_CO_FNC_GetSideID]] Call WFBE_CO_FNC_SendToClients;
+    WF_Logic setVariable ["WF_Winner", _x];
+    gameOver = true; WFBE_GameOver = true;
+    _side = west; if (_x == west) then {_side = east};
+    [_side] call WFBE_CO_FNC_LogGameEnd;   // Server_LogGameEnd: _this select 0 == WINNER
+}
+```
+SQF precedence (`&&` before `||`) parses this as `(!alive _hq && _factories==0) || (_towns==_total && !WFBE_GameOver)`:
+- **Branch A** — `_x` HQ dead **and** no factories → `_x` is the **loser**. `LogGameEnd(_side = opposite of _x)` records the correct winner. ✓
+- **Branch B** — `_x` holds **all** towns → `_x` is the **winner**. But `LogGameEnd` is still called with `_side` = *opposite of _x* → it records the **loser as the winner** in the persisted `%1_WIN_CHERNARUS` profileNamespace tally. ✗
+
+Consequences:
+- The win/loss statistics saved via `WFBE_CO_FNC_LogGameEnd` (→ `profileNamespace`, `saveProfileNamespace`) are **inverted for every all-towns victory**.
+- `WF_Logic setVariable ["WF_Winner", _x]` is a **dead write** — `WF_Winner` has no reader anywhere in the mission (grep). So it can't compensate.
+- The `endgame` client broadcast sends `_x`'s sideID to `WFBE_CL_FNC_EndGame` (`HandleSpecial.sqf:16`) for **both** opposite scenarios, so the player-facing outro shows the same side regardless of who actually won — at least one path is wrong. *(Follow-up: confirm whether EndGame treats the payload sideID as winner or loser.)*
+- **Guard/precedence bug:** `!WFBE_GameOver` guards only the towns branch, and the `forEach` over sides has **no break** after setting `gameOver`. Branch A is unguarded, so if two sides both satisfy "HQ dead + no factories" in the same 80s tick, endgame fires **twice** (double `endgame` broadcast, double `SET_MAP`, double `LogGameEnd`). Fix: guard both branches with `!WFBE_GameOver` (or `exitWith` after the first winner) and split the win/lose logic so the winner is computed correctly per branch.
+
+### DR-12 — "Threeway" victory mode has no detection — **Medium (broken/abandoned feature)**
+
+`WFBE_C_VICTORY_THREEWAY` defaults to `0` (`Init_CommonConstants.sqf:401`, comment "0: Side a vs Side b [supremacy] minus defender"), and the detection block is gated `if (!gameOver && _victory == 0)`. Since `server_victory_threeway.sqf` is the **only** victory/`failMission` setter in `Server/`, selecting any non-zero `WFBE_C_VICTORY_THREEWAY` value disables victory detection entirely — **matches never auto-end** in the mode the file is named for. Either implement the threeway path or document the parameter as non-functional.
+
+### DR-13 — Two divergent `LogGameEnd` implementations, one buggy — **Low (cleanup / latent)**
+
+- `Server/Functions/Server_LogGameEnd.sqf` — clean; wired to `WFBE_CO_FNC_LogGameEnd` (compiled twice, `Init_Server.sqf:64` and `:89`).
+- `Server/PVFunctions/LogGameEnd.sqf` — **buggy** duplicate: `profileNamespace setVariable [(profileNamespace getVariable format ["%1_WIN_CHERNARUS",_winnerTeam]), (...)]` uses a getVariable *result* as the setVariable *key*, and reads `profileNamespace getVariable WEST_WIN_CHERNARUS` (bare global, not the `"WEST_WIN_CHERNARUS"` string). If this variant is ever wired in, win-stat persistence silently corrupts. Recommend deleting the duplicate to prevent future mis-wiring.
+
+### Handoff
+
+Code owners: fix DR-11 (split win/lose branches, compute winner per branch, guard both branches / break the loop) — this corrects permanently-skewed win stats; decide DR-12 (implement or document-as-disabled threeway); delete the buggy `PVFunctions/LogGameEnd.sqf` (DR-13). Follow-up review item: `WFBE_CL_FNC_EndGame` payload semantics (winner vs loser sideID). Ledger: Victory/endgame Map/Auth/PV/Perf cells advanced.
+
+## Round 7 — 2026-06-02 (Claude) — factory/purchase authority + commander assignment (DR-14, DR-15)
+
+Lane `factory-purchase-authority`. Builds on Codex's [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) (which noted player buy is client-local with no `RequestBuyUnit` PVF) and adversarially verifies Cicero's flagged `Server_AssignNewCommander` candidate. All claims verified at source.
+
+### DR-14 — Player unit purchasing has no server authority (the economy ceiling) — **High (gameplay integrity), architectural**
+
+The player buy path never contacts the server:
+- `Client/GUI/GUI_Menu_BuyUnits.sqf:102,108` check funds client-side; `:155-156` do `_params Spawn BuildUnit; -(_currentCost) Call ChangePlayerFunds;`.
+- `Client/Functions/Client_BuildUnit.sqf:217/249/…` create the unit/vehicle **directly on the buyer** via `WFBE_CO_FNC_CreateUnit` / `WFBE_CO_FNC_CreateVehicle` (engine `createUnit`/`createVehicle`). There is **no `RequestBuyUnit` PVF** (confirmed: not in `Init_PublicVariables.sqf`, no `Server/PVFunctions/RequestBuyUnit.sqf`).
+- Funds live in `wfbe_funds` on the team group, written by `Common_ChangeTeamFunds` with `setVariable [..., true]` (broadcast, client-writable — see Round 1 / DR-6 root cause).
+
+So a modified client can mint any factory unit for free (skip the deduction, or set `wfbe_funds` directly) — and the created vehicle is globally synced because client `createVehicle` in MP is global. **This is the ceiling on the DR-1/DR-6 hardening thread:** unlike construction (DR-6, which at least routes through a server PVF that *could* be validated), the player economy and unit production are *architecturally* client-authoritative in WFBE's locality model. Fully fixing it = a large redesign (route purchases through a validated server PVF like construction). The realistic live-server defense is a **BattlEye script filter** (`scripts.txt`) constraining client `createVehicle`/`createUnit`, **not** a publicVariable filter. Document this ceiling so future hardening targets the right layer.
+
+> Latent path note (confirms atlas): `Server_BuyUnit.sqf` / `AIBuyUnit` is compiled (`Init_Server.sqf`) but has no proven dynamic caller — the AI-commander production path that *would* use it is itself dormant (the AI commander FSM never starts; see Cicero's server atlas + DR-15 neighbourhood).
+
+### DR-15 — `Server_AssignNewCommander` call-shape bug (confirmed) — **Medium (correctness)**
+
+Adversarial verification of Cicero's candidate — **confirmed live** by tracing compile + sole caller:
+- `Init_Server.sqf:62`: `WFBE_SE_FNC_AssignForCommander = Compile … "Server\Functions\Server_AssignNewCommander.sqf"`.
+- Sole caller `Server/PVFunctions/RequestNewCommander.sqf:13`: `[_side, _assigned_commander] Spawn WFBE_SE_FNC_AssignForCommander;` (a 2-element array).
+- `Server/Functions/Server_AssignNewCommander.sqf:3`: `_side = _this;` — sets `_side` to the **whole array** `[side, commander]` (should be `_this select 0`), then `_commander = _this select 1` (correct). `_logic = (_side) Call WFBE_CO_FNC_GetSideLogic` then receives an array, not a side → wrong/`objNull` logic → the block that stops the AI-commander FSM (`_logic getVariable "wfbe_aicom_running"`) operates on a bad logic and fails.
+
+**Impact:** when a human is assigned commander via `RequestNewCommander`, the AI-commander shutdown path mis-fires (mitigated in practice because the AI-commander FSM is itself dormant — DR-14 note). There's also a **redundant** `new-commander-assigned` broadcast (sent by both `RequestNewCommander.sqf` and `Server_AssignNewCommander.sqf`). **Fix:** `_side = _this select 0;`. One-line change in Chernarus source.
+
+### Handoff
+
+Code owners: (DR-14) decide whether to route player purchases through a validated server PVF (large) or accept client-authority + add a BattlEye `scripts.txt` filter; (DR-15) one-line fix `_side = _this select 0` in `Server_AssignNewCommander.sqf` and drop the duplicate `new-commander-assigned` broadcast. Ledger: Factory/purchase Auth/PV advanced; AI-commander caveat cross-linked.
+
+## Round 8 — 2026-06-02 (Claude) — UI/HUD authority + dialog IDs (DR-16, DR-17)
+
+Lane `ui-hud-authority-review`. Cross-checks Codex/Curie's [Client UI systems atlas](Client-UI-Systems-Atlas) and reviews the economy-menu sale authority (the DR-6/DR-14 sibling). Verified at source.
+
+### DR-16 — Structure sale is fully client-authoritative — **High (gameplay integrity)**
+
+`Client/GUI/GUI_Menu_Economy.sqf:104-152` (MenuAction 105, "Sell Building"):
+- The **commander check is client-side only** (`_isCommander` via `commanderTeam == group player`, `:107-109`).
+- It picks the closest own-side structure (`GetSideStructures`, `:110-112`), then in a spawned thread credits the refund **client-side** — `ChangeSideSupply` (broadcast, client-writable) or `ChangePlayerFunds` (`:141`) — and **destroys the structure client-side** with `_closest setDammage 1` (`:152`), which propagates globally because the structure is a synced object.
+- No server PVF, no server validation (same pattern as DR-6 construction and DR-14 purchasing). A modified client bypasses the commander gate and the `WFBE_SOLD` re-sell guard, mints the refund, and demolishes structures. Same **client-authority ceiling**: the realistic defense is a BattlEye `scripts.txt` filter constraining client `setDammage`/funds writes, or routing sell through a validated server PVF (matches the DR-6 fix shape). This completes the economy picture: **build (DR-6), buy (DR-14), and sell (DR-16) are all client-authoritative.**
+
+### DR-17 — Duplicate dialog IDD 23000 (EASA vs Economy) — **Low-Medium (UI correctness)** — *confirms Curie candidate*
+
+`Rsc/Dialogs.hpp`: `class RscMenu_EASA` (`:3209`, `idd = 23000` at `:3211`) and `class RscMenu_Economy` (`:3287`, `idd = 23000` at `:3289`) share the same display id. `findDisplay 23000` is therefore ambiguous, and any control-event/`closeDialog`/`findDisplay 23000` logic can target the wrong dialog if both are reachable. Verified Curie's flagged candidate at source. **Fix:** give EASA and Economy distinct IDDs (and audit any `findDisplay 23000` callers). Also re-confirmed Curie's note that other UI candidates (stale `RscMenu_Upgrade` → missing `GUI_Menu_Upgrade.sqf`; suspect `RscClickableText.soundPush[]`) remain open for a UI-focused follow-up.
+
+### Handoff
+
+Code owners: (DR-16) move sell authority/refund/destruction server-side (mirror the DR-6 server-PVF validation) or add a BattlEye `scripts.txt` filter; (DR-17) assign distinct IDDs to EASA/Economy dialogs. Ledger: UI/HUD Auth/PV advanced; economy thread (build/buy/sell) now fully characterized.
+
+## Round 9 — 2026-06-02 (Claude) — server-loop candidates verified (DR-18, DR-19)
+
+Lane `server-loop-candidates-verify`. Adversarial verification of two Cicero candidates from the [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas); both confirmed at source with exact impact.
+
+### DR-18 — Supply-mission cooldown key casing mismatch → nil-throw on first check — **Medium (correctness)** — *confirms Cicero*
+
+`setVariable`/`getVariable` keys are **case-sensitive** in Arma 2 OA (unlike SQF identifiers). The seed and the readers disagree by one letter:
+- `Common/Init/Init_Town.sqf:35`: `_town setVariable ["lastSupplyMissionRun", 0];` — **lowercase** `l`.
+- `Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf:8`: `getVariable "LastSupplyMissionRun"` — **capital** `L`. Same capital form is written by `supplyMissionStarted.sqf:8` and `supplyMissionActive.sqf:6`.
+
+So the `0` seed lands in a slot nothing reads, and `"LastSupplyMissionRun"` is **nil** until the first mission completes. The cooldown check then runs:
+```sqf
+if (((_lastActivationTime + WFBE_CO_VAR_SupplyMissionRegenInterval) > time) && (_lastActivationTime != 0)) then {...}
+```
+On a never-run town `_lastActivationTime` is nil → `nil + interval` throws ("Type Nothing, expected Number"), aborting the handler before it publishes `WFBE_Server_PV_IsSupplyMissionActiveInTown` — so the client's cooldown query can get **no response** on first use. The mis-cased seed defeats exactly the `!= 0` guard it was meant to satisfy. **Fix:** make the seed key `"LastSupplyMissionRun"`, or read with a default: `getVariable ["LastSupplyMissionRun", 0]`.
+
+### DR-19 — Hosted/listen-server FPS publishers busy-loop — **Medium (performance, non-dedicated)** — *confirms Cicero*
+
+Both server FPS publishers put `sleep 8` **inside** the `isDedicated` guard:
+```sqf
+// Server/GUI/serverFpsGUI.sqf  AND  Server/Module/serverFPS/monitorServerFPS.sqf
+while {true} do { if (isDedicated) then { …; publicVariable …; sleep 8; } };
+```
+On a **dedicated** server this is fine. On a **hosted/listen server or singleplayer host** (`isServer` true, `isDedicated` false — and both scripts are launched server-side from `Init_Server`), the `if` is false every iteration, so `while {true}` spins **with no sleep** → a tight CPU busy-loop per script (two of them), degrading the host. **Fix:** either `if (!isDedicated) exitWith {}` at the top (don't publish FPS when hosted), or move `sleep 8` outside the `if` so the loop always yields. (Two scripts publishing the same `round diag_fps` under different PV names — `SERVER_FPS_GUI` / `WFBE_VAR_SERVER_FPS` — is also redundant; consolidating would remove one loop entirely.)
+
+### Handoff
+
+Code owners: (DR-18) align the supply-cooldown key casing (or default the read) — one-line fix; (DR-19) hoist the FPS-loop `sleep` out of the `isDedicated` guard (or early-exit when not dedicated), and consider consolidating the two redundant FPS publishers. Ledger: Supply JIP/HC and server-runtime perf cells advanced.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)

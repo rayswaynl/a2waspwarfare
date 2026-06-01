@@ -158,7 +158,11 @@
     "Hosted server FPS loop risk: serverFpsGUI.sqf and monitorServerFPS.sqf sleep only inside if (isDedicated), so hosted/non-dedicated mode can busy-loop.",
     "LoadoutManager local path hazard: the current Codex checkout is work/a, but the tool searches ancestor folders for a literal a2waspwarfare directory and will throw outside that shape.",
     "LoadoutManager packaging hazard: dotnet run always attempts ZipManager.DoZipOperations after generation/copy, so missing 7za can fail the final run even after useful outputs were written.",
-    "BattlEyeFilter/publicvariable.txt is feature-specific for kickAFK and is not a comprehensive PV hardening layer."
+    "BattlEyeFilter/publicvariable.txt is feature-specific for kickAFK and is not a comprehensive PV hardening layer.",
+    "DR-11 (Med-High, correctness): server_victory_threeway.sqf merges a lose-test (HQ dead + no factories) and a win-test (holds all towns) into one if and calls WFBE_CO_FNC_LogGameEnd (arg=winner) with the OPPOSITE of _x, so the persisted *_WIN_CHERNARUS profile tally is inverted for all-towns victories. WF_Winner is a dead write. && before || + !WFBE_GameOver guards only the towns branch + no forEach break -> endgame can double-fire. DR-12 threeway victory mode has no detection (WFBE_C_VICTORY_THREEWAY default 0; detection gated if(_victory==0); sole gameOver/failMission setter). DR-13 duplicate buggy Server/PVFunctions/LogGameEnd.sqf. See Deep-Review-Findings Round 6.",
+    "DR-14 (High, architectural): player unit purchasing has NO server authority — GUI_Menu_BuyUnits.sqf spawns BuildUnit (client createVehicle/createUnit) and deducts client-side; no RequestBuyUnit PVF. With wfbe_funds broadcast-writable, the player economy is fully client-trusted. This is the ceiling on DR-1/DR-6 hardening; only a BattlEye scripts.txt filter (not a PV filter) can constrain client createVehicle. DR-15 (confirmed): Server_AssignNewCommander.sqf:3 '_side = _this' but sole caller RequestNewCommander.sqf:13 passes [_side,_commander] -> GetSideLogic fails, AI-commander-stop mis-fires; fix _side = _this select 0. See Deep-Review-Findings Round 7.",
+    "DR-16 (High): structure sale (GUI_Menu_Economy.sqf:104-152) is fully client-authoritative — client commander check, client refund, client setDammage 1 destruction; no server PVF. With DR-6 (build) and DR-14 (buy), the entire WFBE economy is client-authoritative; only a BattlEye scripts.txt filter or a server-PVF redesign can enforce it. DR-17 (confirms Curie): RscMenu_EASA and RscMenu_Economy share idd=23000 (Rsc/Dialogs.hpp:3211,3289) -> findDisplay 23000 ambiguous. See Deep-Review-Findings Round 8.",
+    "DR-18 (Med, confirms Cicero): supply-cooldown key casing mismatch — Init_Town.sqf:35 seeds 'lastSupplyMissionRun' (lowercase) but supply logic uses 'LastSupplyMissionRun' (capital); setVariable keys are case-sensitive -> 0-seed dead, key nil first check -> isSupplyMissionActiveInTown.sqf:11 nil+interval throws. Fix: align casing or getVariable default 0. DR-19 (Med, non-dedicated, confirms Cicero): serverFpsGUI.sqf + monitorServerFPS.sqf put sleep 8 inside if(isDedicated) -> hosted/listen server busy-loops; hoist sleep/early-exit + consolidate redundant FPS publishers. See Deep-Review-Findings Round 9."
   ],
   "currentPR": {
     "number": 1,
@@ -190,10 +194,7 @@
       "agent": "Claude",
       "branch": "docs/developer-wiki-claude",
       "integratedBy": "Codex",
-      "pagesAdded": [
-        "Lifecycle-Wait-Chain.md",
-        "WASP-Overlay.md"
-      ],
+      "pagesAdded": ["Lifecycle-Wait-Chain.md", "WASP-Overlay.md"],
       "findings": [
         "PVF dispatch uses one PV variable per command with client-side element-0 routing and scheduled Spawn dispatch.",
         "Town AI performance is based on spawn/delete distance activation, not simulation caching.",
@@ -210,9 +211,7 @@
       "agent": "Claude",
       "round": 2,
       "type": "adversarial cross-check of Codex atlas",
-      "pagesAdded": [
-        "Deep-Review-Findings.md"
-      ],
+      "pagesAdded": ["Deep-Review-Findings.md"],
       "deepened": [
         "Feature-Status-Register",
         "Networking-And-Public-Variables",
@@ -232,9 +231,7 @@
       "round": 3,
       "lane": "pvf-hardening-review",
       "type": "implementation-readiness playbook",
-      "deepened": [
-        "Deep-Review-Findings"
-      ],
+      "deepened": ["Deep-Review-Findings"],
       "findings": [
         "DR-1 fix is behavior-preserving: SRVFNC/CLTFNC are missionNamespace globals, so dispatch can resolve via getVariable [_script, {}] instead of Call Compile; hostile strings become no-ops.",
         "No registered PVF handler compiles its parameters; no second-order injection on the PVF path.",
@@ -263,10 +260,7 @@
       "round": 5,
       "lane": "antistack-db-trust",
       "type": "external trust-boundary review + hardening playbook",
-      "deepened": [
-        "Deep-Review-Findings",
-        "Codebase-Coverage-Ledger"
-      ],
+      "deepened": ["Deep-Review-Findings", "Codebase-Coverage-Ledger"],
       "findings": [
         "DR-7 (High): all 7 callDatabase*.sqf call compile the A2WaspDatabase callExtension return — server executes external DLL stdout as SQF; DLL absent from repo; defaults ON.",
         "DR-8 blocking DB poll on join/skill path; DR-9 SEND_PLAYERLIST vs callExtension length limits; DR-10 defaults-on against an absent DLL.",
@@ -312,9 +306,7 @@
       "agent": "Cicero",
       "lane": "server-gameplay-loops-deep-index",
       "type": "read-only sub-agent source report integrated by Codex",
-      "pagesAdded": [
-        "Server-Gameplay-Runtime-Atlas.md"
-      ],
+      "pagesAdded": ["Server-Gameplay-Runtime-Atlas.md"],
       "findings": [
         "Server runtime starts town, camp, town AI, resources, victory, cleanup, FPS and AntiStack loops from Init_Server.sqf.",
         "AI commander state/funds/constants exist, but no active AI commander loop/FSM was found.",
@@ -328,9 +320,7 @@
       "agent": "Codex",
       "lane": "factory-purchase-atlas",
       "type": "source-backed subsystem atlas",
-      "pagesAdded": [
-        "Factory-And-Purchase-Systems-Atlas.md"
-      ],
+      "pagesAdded": ["Factory-And-Purchase-Systems-Atlas.md"],
       "findings": [
         "Player buy-unit path is client-local and does not use a RequestBuyUnit PVF.",
         "RequestBuyUnit is not registered in Common/Init/Init_PublicVariables.sqf and no Server/PVFunctions/RequestBuyUnit.sqf exists.",
@@ -346,6 +336,58 @@
       "findings": [
         "Spawned four read-only Codex sub-agents for independent deep-index lanes: network/PV, server gameplay loops, UI/HUD/dialogs and tooling/integrations.",
         "Progress is tracked in Progress-Dashboard.md, Coordination-Board.md, agent-status.json, agent-collaboration.json and agent-events.jsonl."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 6,
+      "lane": "victory-endgame-review",
+      "type": "correctness + broken-feature review",
+      "deepened": ["Deep-Review-Findings", "Codebase-Coverage-Ledger"],
+      "findings": [
+        "DR-11 (Med-High): victory winner reported inconsistently; persisted *_WIN_CHERNARUS tally inverted for all-towns victories (LogGameEnd called with opposite of _x); WF_Winner is a dead write; precedence/guard gap allows double-fire.",
+        "DR-12: threeway victory mode (WFBE_C_VICTORY_THREEWAY != 0) has no detection in the only victory script -> matches never auto-end.",
+        "DR-13: duplicate buggy Server/PVFunctions/LogGameEnd.sqf (getVariable result used as setVariable key; bare-global WEST_WIN_CHERNARUS)."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 7,
+      "lane": "factory-purchase-authority",
+      "type": "authority review + adversarial cross-check of Codex/Cicero",
+      "deepened": ["Deep-Review-Findings", "Codebase-Coverage-Ledger"],
+      "findings": [
+        "DR-14 (High, architectural): player purchasing has no server authority (client createVehicle/createUnit + client-side deduct; no RequestBuyUnit PVF). Ceiling on DR-1/DR-6 hardening; only a BattlEye scripts.txt filter can constrain it.",
+        "DR-15 (confirmed): Server_AssignNewCommander.sqf:3 '_side = _this' vs sole caller passing [_side,_commander] -> GetSideLogic fails; fix _side = _this select 0; redundant new-commander-assigned broadcast.",
+        "Verified Codex factory-purchase-atlas (no RequestBuyUnit) and Cicero's commander-assign candidate at source."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 8,
+      "lane": "ui-hud-authority-review",
+      "type": "authority review + adversarial cross-check of Curie",
+      "deepened": ["Deep-Review-Findings", "Codebase-Coverage-Ledger"],
+      "findings": [
+        "DR-16 (High): structure sale (GUI_Menu_Economy.sqf:104-152) is fully client-authoritative (client commander check, client refund, client setDammage 1); completes build(DR-6)/buy(DR-14)/sell(DR-16) all client-authoritative.",
+        "DR-17 (confirms Curie): RscMenu_EASA and RscMenu_Economy both idd=23000 (Rsc/Dialogs.hpp:3211,3289) -> findDisplay 23000 ambiguous.",
+        "Remaining UI follow-ups: shared title IDD 10200, stale RscMenu_Upgrade, RscClickableText.soundPush."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 9,
+      "lane": "server-loop-candidates-verify",
+      "type": "adversarial verification of Cicero candidates",
+      "deepened": ["Deep-Review-Findings", "Codebase-Coverage-Ledger"],
+      "findings": [
+        "DR-18 confirmed: supply-cooldown key casing mismatch (lowercase seed vs capital readers; case-sensitive keys) -> nil-throw on first check; defeats the 0-seed guard.",
+        "DR-19 confirmed: hosted/listen-server FPS publishers busy-loop because sleep 8 is inside if(isDedicated); also two redundant FPS publishers.",
+        "Both were Cicero candidates from Server-Gameplay-Runtime-Atlas; verified at source with exact impact and one-line fixes."
       ]
     }
   ],
@@ -371,9 +413,7 @@
         "Takistan generated mission",
         "_MISSIONS.7z"
       ],
-      "requiredExternalFiles": [
-        "7za on PATH or configured for packaging"
-      ],
+      "requiredExternalFiles": ["7za on PATH or configured for packaging"],
       "safeToRunInMirror": false,
       "notes": "Requires an ancestor folder literally named a2waspwarfare; the current Codex checkout work/a will throw unless run from a correctly named checkout or the lookup is changed. dotnet run always attempts packaging after generation."
     },
@@ -384,15 +424,8 @@
       "entrypoints": [
         "Tools/PerformanceAuditAnalyzer/Analyze-PerformanceAudit.ps1"
       ],
-      "inputs": [
-        "Arma RPT logs containing [Performance Audit]"
-      ],
-      "outputs": [
-        "CSV",
-        "Markdown",
-        "HTML",
-        "Word-friendly reports"
-      ],
+      "inputs": ["Arma RPT logs containing [Performance Audit]"],
+      "outputs": ["CSV", "Markdown", "HTML", "Word-friendly reports"],
       "requiredExternalFiles": [],
       "safeToRunInMirror": true,
       "notes": "Read-only log analyzer useful after performance-sensitive mission changes."
@@ -401,23 +434,14 @@
       "name": "DiscordBot",
       "language": "C#",
       "framework": ".NET 9 executable",
-      "entrypoints": [
-        "DiscordBot/src/ProgramRuntime.cs"
-      ],
+      "entrypoints": ["DiscordBot/src/ProgramRuntime.cs"],
       "inputs": [
         "DiscordBot/preferences.json",
         "DiscordBot/token.txt",
         "C:\\a2waspwarfare\\Data\\database.json"
       ],
-      "outputs": [
-        "Discord channel name",
-        "bot presence",
-        "status embed"
-      ],
-      "requiredExternalFiles": [
-        "preferences.json",
-        "token.txt"
-      ],
+      "outputs": ["Discord channel name", "bot presence", "status embed"],
+      "requiredExternalFiles": ["preferences.json", "token.txt"],
       "safeToRunInMirror": false,
       "notes": "Runtime refuses missing/empty token.txt. Do not invent secrets."
     },
@@ -425,18 +449,12 @@
       "name": "Extension",
       "language": "C#",
       "framework": ".NET Framework 4.8 Arma extension",
-      "entrypoints": [
-        "Extension/src/EntryPoint.cs"
-      ],
+      "entrypoints": ["Extension/src/EntryPoint.cs"],
       "inputs": [
         "Arma callExtension arguments from Server/CallExtensions/GlobalGameStats.sqf"
       ],
-      "outputs": [
-        "C:\\a2waspwarfare\\Data\\database.json"
-      ],
-      "requiredExternalFiles": [
-        "legacy NuGet/MSBuild packages"
-      ],
+      "outputs": ["C:\\a2waspwarfare\\Data\\database.json"],
+      "requiredExternalFiles": ["legacy NuGet/MSBuild packages"],
       "safeToRunInMirror": false,
       "notes": "Exports _RVExtension@12 and serializes GameData for DiscordBot."
     },
@@ -444,15 +462,9 @@
       "name": "Mods/mkswf_sidewinder_reload_time_fix",
       "language": "Arma config",
       "framework": "Addon config fragment",
-      "entrypoints": [
-        "Mods/mkswf_sidewinder_reload_time_fix/CfgWeapons.hpp"
-      ],
-      "inputs": [
-        "Sidewinder launcher class config"
-      ],
-      "outputs": [
-        "magazineReloadTime = 1"
-      ],
+      "entrypoints": ["Mods/mkswf_sidewinder_reload_time_fix/CfgWeapons.hpp"],
+      "inputs": ["Sidewinder launcher class config"],
+      "outputs": ["magazineReloadTime = 1"],
       "requiredExternalFiles": [],
       "safeToRunInMirror": true,
       "notes": "External addon fragment, not mission SQF."

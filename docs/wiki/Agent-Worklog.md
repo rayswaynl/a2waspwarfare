@@ -146,6 +146,35 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Integrated Curie's UI findings into [Client UI systems atlas](Client-UI-Systems-Atlas) and [Feature status](Feature-Status-Register): stale `RscMenu_Upgrade`, duplicate IDDs, suspect `RscClickableText.soundPush[]` and buy-gear partials.
 - Integrated Meitner's tooling findings into [Tools/build](Tools-And-Build-Workflow), [External integrations](External-Integrations), [Content/maps](Content-Structure-And-Maps) and `agent-context.json`: LoadoutManager path/7za hazards, generated mission rules, extension-to-Discord JSON flow and stale modded missions.
 
+## 2026-06-02 - Claude Deep-Review Round 6 (victory-endgame-review lane)
+
+- Ledger-driven pick: victory/endgame was fully ⬜ + high-traffic. Reviewed `Server/FSM/server_victory_threeway.sqf` (the ONLY gameOver/failMission setter in `Server/`), `Server_LogGameEnd.sqf`, `PVFunctions/LogGameEnd.sqf`, `Init_CommonConstants.sqf:401`. New findings **DR-11..DR-13**.
+- **DR-11 (Med-High, correctness):** the trigger merges a lose-test (`_x` HQ dead + no factories) and a win-test (`_x` holds all towns) into one `if` and handles both identically. `WFBE_CO_FNC_LogGameEnd` (arg = winner) is called with the *opposite* of `_x`, so the persisted `*_WIN_CHERNARUS` profile tally is **inverted for all-towns victories**. `WF_Winner` is a dead write (no reader). `&&` binds before `||`, `!WFBE_GameOver` guards only the towns branch, and the `forEach` has no break → endgame can double-fire.
+- **DR-12 (Med, broken feature):** `WFBE_C_VICTORY_THREEWAY` defaults 0; detection gated `if(_victory==0)`; sole victory setter → non-zero (threeway) = matches never auto-end.
+- **DR-13 (Low, cleanup):** duplicate `PVFunctions/LogGameEnd.sqf` is buggy (getVariable result used as setVariable key; bare-global `WEST_WIN_CHERNARUS`) — delete to prevent mis-wiring. The clean `Server_LogGameEnd.sqf` is the one wired (Init_Server:64,89).
+- Advanced ledger Victory/endgame row. Handoffs to code owners; follow-up review item `WFBE_CL_FNC_EndGame` payload semantics. `ready-for-review`.
+
+## 2026-06-02 - Claude Deep-Review Round 7 (factory-purchase-authority lane)
+
+- Unblocked by Codex's `Factory-And-Purchase-Systems-Atlas`. New findings **DR-14, DR-15**; also an adversarial cross-check of Cicero's commander-assign candidate.
+- **DR-14 (High, architectural):** player purchasing has **no server authority** — `GUI_Menu_BuyUnits.sqf:155-156` spawns `BuildUnit` (client `createVehicle`/`createUnit` in `Client_BuildUnit.sqf`) and deducts client-side; there is no `RequestBuyUnit` PVF. With `wfbe_funds` broadcast-writable, the player economy + unit production are fully client-trusted. This is the **ceiling** on the DR-1/DR-6 hardening thread (WFBE locality model); the only real defense is a BattlEye `scripts.txt` filter, not a PV filter. Documented so future hardening targets the right layer.
+- **DR-15 (Med, confirmed):** verified Cicero's candidate end-to-end. `Init_Server.sqf:62` compiles `Server_AssignNewCommander.sqf` as `WFBE_SE_FNC_AssignForCommander`; sole caller `RequestNewCommander.sqf:13` passes `[_side,_commander]`; but `Server_AssignNewCommander.sqf:3` does `_side = _this` (the whole array) → `GetSideLogic` fails → AI-commander-stop block mis-fires. Fix: `_side = _this select 0`. Plus a redundant `new-commander-assigned` broadcast.
+- Advanced ledger Factory/purchase row (Map ✅ from Codex atlas; Auth/PV 🟡). Handoffs to code owners. `ready-for-review`.
+
+## 2026-06-02 - Claude Deep-Review Round 8 (ui-hud-authority-review lane)
+
+- New findings **DR-16, DR-17**. Completes the economy authority picture and cross-checks Curie's UI candidates.
+- **DR-16 (High):** `GUI_Menu_Economy.sqf:104-152` structure sale is fully client-authoritative — client-side commander check, client refund (`ChangeSideSupply`/`ChangePlayerFunds`), and `_closest setDammage 1` destruction on the client; no server PVF. So **build (DR-6), buy (DR-14), and sell (DR-16) are all client-authoritative** — the WFBE economy has no server enforcement; BattlEye `scripts.txt` is the only practical anti-cheat layer short of a server-PVF redesign.
+- **DR-17 (Low-Med, confirms Curie):** `RscMenu_EASA` and `RscMenu_Economy` both `idd = 23000` (`Rsc/Dialogs.hpp:3211, :3289`) → `findDisplay 23000` ambiguous. Assign distinct IDDs.
+- Advanced ledger UI/HUD row (Auth/PV 🟡). Remaining UI follow-ups (Curie): title IDD 10200, stale `RscMenu_Upgrade`, `RscClickableText.soundPush[]`. `ready-for-review`.
+
+## 2026-06-02 - Claude Deep-Review Round 9 (server-loop-candidates-verify lane)
+
+- Adversarially verified two Cicero candidates at source; both **confirmed** with exact impact. New findings **DR-18, DR-19**.
+- **DR-18 (Med):** supply-cooldown key casing mismatch — `Init_Town.sqf:35` seeds `"lastSupplyMissionRun"` (lowercase) but supply logic uses `"LastSupplyMissionRun"` (capital). `setVariable` keys are case-sensitive in A2 OA, so the `0` seed is dead and the key is nil on first check → `isSupplyMissionActiveInTown.sqf:11` `nil + interval` throws, defeating the `!= 0` guard. Fix: align casing or `getVariable ["LastSupplyMissionRun", 0]`.
+- **DR-19 (Med, non-dedicated):** `serverFpsGUI.sqf` + `monitorServerFPS.sqf` put `sleep 8` inside `if (isDedicated)`, so on a hosted/listen server `while {true}` busy-loops (two of them). Fix: hoist the sleep / early-exit when not dedicated; also two redundant FPS publishers (`SERVER_FPS_GUI`/`WFBE_VAR_SERVER_FPS`).
+- Advanced ledger Supply JIP/HC. Handoffs to code owners (both one-liners). `ready-for-review`.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

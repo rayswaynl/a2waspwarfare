@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-01T22:19:55+02:00",
+  "generatedAt": "2026-06-01T22:36:29+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -14,36 +14,201 @@
   "agents": {
     "Codex": {
       "role": "Integrator, wiki UX owner, source-atlas maintainer, publisher and validation runner.",
-      "currentLane": "fleet-deep-index",
-      "status": "orchestrating-fleet"
+      "currentLane": "victory-endgame-runtime-atlas",
+      "status": "active; orchestrating cheap discovery swarm"
     },
     "Claude": {
       "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
-      "currentLane": "pvf-hardening-review",
-      "status": "ready-for-review; autonomous-ready"
+      "currentLane": "factory-purchase-authority",
+      "status": "ready-for-review; autonomous-ready; latest reviews include victory-endgame and factory-purchase authority"
+    },
+    "Faraday": {
+      "role": "Cheap read-only Codex discovery scout for economy, gear, loadout, EASA and balance flows.",
+      "currentLane": "gear-loadout-easa-balance-discovery",
+      "status": "active-readonly-scout; prior economy report pending integration"
+    },
+    "Mencius": {
+      "role": "Cheap read-only Codex discovery scout for client lifecycle, respawn, MASH, medical and support paths.",
+      "currentLane": "respawn-medical-mash-support-discovery",
+      "status": "active-readonly-scout; prior client-jip report pending integration"
     },
     "Hilbert": {
-      "role": "Read-only Codex sub-agent for network/PV boundary archaeology.",
-      "currentLane": "network-pv-boundary-deep-index",
-      "status": "completed-integrated"
+      "role": "Read-only Codex sub-agent; prior PV boundary pass integrated, now scouting server runtime/scheduler behavior.",
+      "currentLane": "server-runtime-scheduler-discovery",
+      "status": "active-readonly-scout"
     },
     "Cicero": {
-      "role": "Read-only Codex sub-agent for server gameplay loops, towns, economy and AI commander systems.",
-      "currentLane": "server-gameplay-loops-deep-index",
-      "status": "completed-integrated"
+      "role": "Read-only Codex sub-agent; prior server runtime pass integrated, now scouting AI/headless delegation.",
+      "currentLane": "ai-headless-delegation-discovery",
+      "status": "active-readonly-scout"
     },
     "Curie": {
-      "role": "Read-only Codex sub-agent for UI/HUD/dialogs/client UX archaeology.",
-      "currentLane": "ui-hud-dialogs-deep-index",
-      "status": "completed-integrated"
+      "role": "Read-only Codex sub-agent; prior UI pass integrated, now scouting wiki UX/navigation.",
+      "currentLane": "wiki-ux-navigation-discovery",
+      "status": "active-readonly-scout"
     },
     "Meitner": {
-      "role": "Read-only Codex sub-agent for tooling, generated missions, extension, DiscordBot, BattlEye and server integration archaeology.",
-      "currentLane": "tooling-integrations-deep-index",
-      "status": "completed-integrated"
+      "role": "Read-only Codex sub-agent; prior tooling pass integrated, now scouting content drift and generation rules.",
+      "currentLane": "content-drift-generation-discovery",
+      "status": "active-readonly-scout"
     }
   },
   "activeClaims": [
+    {
+      "lane": "victory-endgame-runtime-atlas",
+      "owner": "Codex",
+      "status": "active",
+      "sourceScope": [
+        "Server/FSM/server_victory_threeway.sqf",
+        "Server/Functions/*GameEnd*.sqf",
+        "Server/Functions/Server_LogGameEnd.sqf",
+        "Server/PVFunctions/LogGameEnd.sqf",
+        "Client/PVFunctions/HandleSpecial.sqf",
+        "Client/GUI/GUI_EndOfGameStats.sqf",
+        "Server/Module/AntiStack/*.sqf",
+        "Server/Init/Init_Server.sqf",
+        "initJIPCompatible.sqf"
+      ],
+      "outputs": [
+        "Victory-And-Endgame-Runtime-Atlas.md",
+        "updated navigation/context/status/worklog"
+      ],
+      "handoff": "Claude's DR-11..DR-13 victory/endgame review is already published; Codex should integrate it into the runtime atlas instead of duplicating the review."
+    },
+    {
+      "lane": "economy-town-factory-upgrade-discovery",
+      "owner": "Faraday",
+      "status": "reported-pending-integration",
+      "sourceScope": [
+        "Server/FSM/updateresources.sqf",
+        "Server/FSM/server_town*.sqf",
+        "Common/Functions/*Supply*.sqf",
+        "Server/Functions/*Supply*.sqf",
+        "Client/GUI/GUI_Menu_Economy.sqf",
+        "Server/Functions/Server_ProcessUpgrade.sqf",
+        "Common/Config/Core_Upgrades/*.sqf"
+      ],
+      "outputs": [
+        "read-only scout report received 2026-06-01T22:36:29+02:00"
+      ],
+      "handoff": "Codex should fold confirmed findings into Economy-Towns-And-Supply, Factory-And-Purchase-Systems-Atlas, Server-Gameplay-Runtime-Atlas, Feature-Status-Register and agent-context.json."
+    },
+    {
+      "lane": "gear-loadout-easa-balance-discovery",
+      "owner": "Faraday",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "Client/GUI/GUI_BuyGearMenu.sqf",
+        "Client/GUI/GUI_Menu_EASA.sqf",
+        "Client/Functions/Client_UI_Gear_*.sqf",
+        "Tools/LoadoutManager/**",
+        "Common/Config/Core_*.sqf",
+        "Client/Module/EASA/EASA_Init.sqf"
+      ],
+      "outputs": [
+        "read-only scout report for Codex integration"
+      ],
+      "handoff": "Codex should fold confirmed findings into Client-UI-Systems-Atlas, Tools-And-Build-Workflow, gear/loadout docs and agent-context.json."
+    },
+    {
+      "lane": "client-jip-lifecycle-discovery",
+      "owner": "Mencius",
+      "status": "reported-pending-integration",
+      "sourceScope": [
+        "initJIPCompatible.sqf",
+        "Common/Init/Init_Common.sqf",
+        "Server/Init/Init_Server.sqf",
+        "Client/Init/Init_Client.sqf",
+        "Server/Functions/Server_OnPlayerConnected.sqf",
+        "Server/Functions/Server_OnPlayerDisconnected.sqf",
+        "Server/PVFunctions/RequestJoin.sqf",
+        "Client/Functions/Client_OnKilled.sqf",
+        "Client/Functions/Client_OnRespawnHandler.sqf"
+      ],
+      "outputs": [
+        "read-only scout report received 2026-06-01T22:36:29+02:00"
+      ],
+      "handoff": "Codex should integrate duplicated Skill_Init, legacy WASP leftovers, join ACK sensitivity and respawn loop cost into lifecycle/client pages."
+    },
+    {
+      "lane": "respawn-medical-mash-support-discovery",
+      "owner": "Mencius",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "Client/Functions/*Respawn*.sqf",
+        "Client/GUI/GUI_RespawnMenu.sqf",
+        "Client/Module/MASH/*.sqf",
+        "Client/GUI/GUI_Menu_Service.sqf",
+        "Server/Module/MASH/*.sqf",
+        "Server/Support/*.sqf"
+      ],
+      "outputs": [
+        "read-only scout report for Codex integration"
+      ],
+      "handoff": "Codex should fold confirmed findings into respawn, MASH/support and feature-status pages."
+    },
+    {
+      "lane": "server-runtime-scheduler-discovery",
+      "owner": "Hilbert",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "Server/Init/Init_Server.sqf",
+        "Server/FSM/*.sqf",
+        "Server/GUI/serverFpsGUI.sqf",
+        "Server/Module/serverFPS/*.sqf",
+        "Common/Functions/Common_PerformanceAudit.sqf"
+      ],
+      "outputs": [
+        "read-only scout report for Codex integration"
+      ],
+      "handoff": "Codex should fold confirmed findings into Server-Gameplay-Runtime-Atlas and AI-Headless-And-Performance."
+    },
+    {
+      "lane": "ai-headless-delegation-discovery",
+      "owner": "Cicero",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "Server/AI/*.sqf",
+        "Headless/Init/*.sqf",
+        "Headless/**/*.sqf",
+        "Server/FSM/server_town_ai.sqf",
+        "Common/Functions/*Team*.sqf"
+      ],
+      "outputs": [
+        "read-only scout report for Codex integration"
+      ],
+      "handoff": "Codex should fold confirmed findings into AI/headless, server runtime and feature-status pages."
+    },
+    {
+      "lane": "wiki-ux-navigation-discovery",
+      "owner": "Curie",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "docs/wiki/*.md",
+        "docs/wiki/agent-*.json",
+        "docs/wiki/agent-events.jsonl"
+      ],
+      "outputs": [
+        "read-only scout report for Codex integration"
+      ],
+      "handoff": "Codex should fold confirmed findings into navigation, Progress-Dashboard, Quickstart and agent-facing context files."
+    },
+    {
+      "lane": "content-drift-generation-discovery",
+      "owner": "Meitner",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "Missions/**",
+        "Missions_Vanilla/**",
+        "Modded_Missions/**",
+        "Tools/LoadoutManager/**",
+        "Mods/**"
+      ],
+      "outputs": [
+        "read-only scout report for Codex integration"
+      ],
+      "handoff": "Codex should fold confirmed findings into Content-Structure-And-Maps, Tools-And-Build-Workflow and agent-context.json."
+    },
     {
       "lane": "progress-interface",
       "owner": "Codex",
@@ -137,10 +302,7 @@
         "Client/HUD/*.sqf",
         "Client/Module/RHUD/*"
       ],
-      "outputs": [
-        "Client-UI-Systems-Atlas.md",
-        "Feature-Status-Register.md"
-      ],
+      "outputs": ["Client-UI-Systems-Atlas.md", "Feature-Status-Register.md"],
       "handoff": "Future UI work should resolve stale RscMenu_Upgrade, duplicate IDDs and suspect RscClickableText soundPush before adding new dialogs."
     },
     {
@@ -277,9 +439,124 @@
         "Codebase-Coverage-Ledger.md (Integrations row advanced)"
       ],
       "handoff": "Code owners: defensive shape-validate the callExtension return before use (no parseSimpleArray in A2 OA), add a DB circuit-breaker, chunk SEND_PLAYERLIST, auto-detect the external DLL. Codex: document the A2WaspDatabase external dependency + call-compile trust contract on External-Integrations (its lane)."
+    },
+    {
+      "lane": "victory-endgame-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Server/FSM/server_victory_threeway.sqf",
+        "Server/Functions/Server_LogGameEnd.sqf",
+        "Server/PVFunctions/LogGameEnd.sqf",
+        "Common/Init/Init_CommonConstants.sqf"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (DR-11..DR-13 victory/endgame)",
+        "Codebase-Coverage-Ledger.md (Victory row advanced)"
+      ],
+      "handoff": "Code owners: fix winner-inversion in the persisted win-tally (split win/lose branches, compute winner per branch, guard both branches or break the loop), decide threeway (implement or document non-functional), delete the buggy Server/PVFunctions/LogGameEnd.sqf. Follow-up review item: WFBE_CL_FNC_EndGame payload semantics."
+    },
+    {
+      "lane": "factory-purchase-authority",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Client/Functions/Client_BuildUnit.sqf",
+        "Server/PVFunctions/RequestNewCommander.sqf",
+        "Server/Functions/Server_AssignNewCommander.sqf",
+        "Server/Init/Init_Server.sqf"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (DR-14 economy ceiling, DR-15 commander-assign bug)",
+        "Codebase-Coverage-Ledger.md (Factory/purchase row advanced)"
+      ],
+      "handoff": "Code owners: decide purchase authority approach (validated server PVF vs accept client-authority + BattlEye scripts.txt filter); apply one-line fix _side = _this select 0 in Server_AssignNewCommander.sqf and drop the duplicate new-commander-assigned broadcast. Verified Codex factory-purchase-atlas + Cicero's commander-assign candidate at source."
+    },
+    {
+      "lane": "ui-hud-authority-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": ["Client/GUI/GUI_Menu_Economy.sqf", "Rsc/Dialogs.hpp"],
+      "outputs": [
+        "Deep-Review-Findings.md (DR-16 sale authority, DR-17 dup IDD)",
+        "Codebase-Coverage-Ledger.md (UI/HUD row advanced)"
+      ],
+      "handoff": "Code owners: move structure sale authority/refund/destruction server-side (mirror DR-6 server-PVF) or add a BattlEye scripts.txt filter; assign distinct IDDs to RscMenu_EASA/RscMenu_Economy. Remaining UI follow-ups (Curie): shared title IDD 10200, stale RscMenu_Upgrade, RscClickableText.soundPush."
+    },
+    {
+      "lane": "server-loop-candidates-verify",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Common/Init/Init_Town.sqf",
+        "Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf",
+        "Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Server/GUI/serverFpsGUI.sqf",
+        "Server/Module/serverFPS/monitorServerFPS.sqf"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (DR-18 cooldown casing, DR-19 hosted FPS busy-loop)",
+        "Codebase-Coverage-Ledger.md (Supply JIP/HC advanced)"
+      ],
+      "handoff": "Code owners: align supply-cooldown key casing or read with default 0 (DR-18); hoist the FPS-loop sleep out of the isDedicated guard or early-exit when not dedicated, and consolidate the two redundant FPS publishers (DR-19). Both confirm Cicero candidates at source."
     }
   ],
   "lanes": [
+    {
+      "lane": "victory-endgame-runtime-atlas",
+      "suggestedOwner": "Codex",
+      "status": "active",
+      "summary": "Map victory conditions, endgame broadcast, game-over flags, stats/logging, DB flush and mission termination; integrate Claude DR-11..DR-13."
+    },
+    {
+      "lane": "economy-town-factory-upgrade-discovery",
+      "suggestedOwner": "Faraday",
+      "status": "reported-pending-integration",
+      "summary": "Scout report received for economy, towns, factories, upgrades and commander cash/supply flows; Codex integration pending."
+    },
+    {
+      "lane": "gear-loadout-easa-balance-discovery",
+      "suggestedOwner": "Faraday",
+      "status": "active-readonly-scout",
+      "summary": "Cheap read-only discovery of gear templates, EASA, loadout generation, balance configs and dangerous loadout metadata."
+    },
+    {
+      "lane": "client-jip-lifecycle-discovery",
+      "suggestedOwner": "Mencius",
+      "status": "reported-pending-integration",
+      "summary": "Scout report received for client init, JIP, player setup and lifecycle wait-flow; Codex integration pending."
+    },
+    {
+      "lane": "respawn-medical-mash-support-discovery",
+      "suggestedOwner": "Mencius",
+      "status": "active-readonly-scout",
+      "summary": "Cheap read-only discovery of respawn sources, MASH, service/medical/support actions and marker wiring."
+    },
+    {
+      "lane": "server-runtime-scheduler-discovery",
+      "suggestedOwner": "Hilbert",
+      "status": "active-readonly-scout",
+      "summary": "Cheap read-only discovery of server loops, FSMs, scheduler behavior, server FPS, cleanup and town processing."
+    },
+    {
+      "lane": "ai-headless-delegation-discovery",
+      "suggestedOwner": "Cicero",
+      "status": "active-readonly-scout",
+      "summary": "Cheap read-only discovery of AI squads, autonomous teams, AI commander, headless delegation and town AI lifecycle."
+    },
+    {
+      "lane": "wiki-ux-navigation-discovery",
+      "suggestedOwner": "Curie",
+      "status": "active-readonly-scout",
+      "summary": "Cheap read-only review of wiki navigation, click-through usability, page graph and LLM entry points."
+    },
+    {
+      "lane": "content-drift-generation-discovery",
+      "suggestedOwner": "Meitner",
+      "status": "active-readonly-scout",
+      "summary": "Cheap read-only discovery of source/generated/stale mission folders, assets and generation drift."
+    },
     {
       "lane": "progress-interface",
       "suggestedOwner": "Codex",

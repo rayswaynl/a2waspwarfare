@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-01T22:19:55+02:00",
+  "generatedAt": "2026-06-01T22:36:29+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -13,43 +13,168 @@
   },
   "agents": {
     "Codex": {
-      "status": "integrating-fleet-results",
-      "currentLane": "fleet-deep-index",
-      "currentWork": "First sub-agent wave completed; integrating network, server runtime, UI and tooling findings into wiki/docs.",
-      "nextExpectedOutput": "Validate docs/wiki parity, commit/push docs branch and GitHub wiki, then refresh the progress dashboard."
+      "status": "active",
+      "currentLane": "victory-endgame-runtime-atlas",
+      "currentWork": "Deep-reading victory/endgame runtime: win conditions, endgame broadcast, game-over flags, stats/logging, AntiStack flush and mission termination.",
+      "nextExpectedOutput": "Victory-And-Endgame-Runtime-Atlas.md plus navigation/context/status updates."
     },
     "Claude": {
       "status": "ready-for-review; autonomous-ready",
-      "currentLane": "pvf-hardening-review",
-      "currentWork": "PVF hardening implementation playbook is published in Deep-Review-Findings.md; Claude may claim another bounded lane next.",
-      "nextExpectedOutput": "Code-owner review of the PVF playbook, or a new Claude claim event for the next autonomous source-backed lane."
+      "currentLane": "factory-purchase-authority",
+      "currentWork": "Latest completed reviews are Victory/endgame DR-11..DR-13 and Factory/purchase DR-14..DR-15 in Deep-Review-Findings.md; earlier PVF/Construction/AntiStack reviews are also ready for code-owner review.",
+      "nextExpectedOutput": "Code-owner review of the published playbooks, or a new Claude claim event for the next autonomous source-backed lane."
+    },
+    "Faraday": {
+      "status": "active-readonly-scout",
+      "currentLane": "gear-loadout-easa-balance-discovery",
+      "currentWork": "Reading gear templates, EASA, loadout generation, balance configs, aircraft weapon metadata and dangerous loadout markers. Prior economy report is pending Codex integration.",
+      "nextExpectedOutput": "Read-only report for Codex integration into gear/EASA/balance/tooling docs."
+    },
+    "Mencius": {
+      "status": "active-readonly-scout",
+      "currentLane": "respawn-medical-mash-support-discovery",
+      "currentWork": "Reading respawn sources, MASH, ambulances, service/repair/heal/rearm, support actions and marker wiring. Prior client/JIP report is pending Codex integration.",
+      "nextExpectedOutput": "Read-only report for Codex integration into respawn/MASH/support docs."
     },
     "Hilbert": {
-      "status": "completed-integrated",
-      "currentLane": "network-pv-boundary-deep-index",
-      "currentWork": "Read-only network/PV report completed and integrated into Networking, Feature Status and agent-context.",
-      "nextExpectedOutput": "Review future PV hardening implementation if requested."
+      "status": "active-readonly-scout",
+      "currentLane": "server-runtime-scheduler-discovery",
+      "currentWork": "Reading server loops, FSMs, scheduler behavior, FPS publishers, cleanup and town processing. Previous PV report is integrated.",
+      "nextExpectedOutput": "Read-only report for Codex integration into server runtime/performance docs."
     },
     "Cicero": {
-      "status": "completed-integrated",
-      "currentLane": "server-gameplay-loops-deep-index",
-      "currentWork": "Read-only server runtime report completed and integrated into Server Gameplay Runtime Atlas and Feature Status.",
-      "nextExpectedOutput": "Review future server-loop or commander/economy implementation if requested."
+      "status": "active-readonly-scout",
+      "currentLane": "ai-headless-delegation-discovery",
+      "currentWork": "Reading AI squads, autonomous teams, AI commander, headless delegation and town AI lifecycle. Previous server runtime report is integrated.",
+      "nextExpectedOutput": "Read-only report for Codex integration into AI/headless/performance docs."
     },
     "Curie": {
-      "status": "completed-integrated",
-      "currentLane": "ui-hud-dialogs-deep-index",
-      "currentWork": "Read-only UI/HUD/dialog report completed and integrated into Client UI atlas and Feature Status.",
-      "nextExpectedOutput": "Review future UI/HUD work if requested."
+      "status": "active-readonly-scout",
+      "currentLane": "wiki-ux-navigation-discovery",
+      "currentWork": "Reviewing wiki navigation, click-through usability, page graph and LLM entry points. Previous UI report is integrated.",
+      "nextExpectedOutput": "Read-only report for Codex integration into wiki UX/navigation."
     },
     "Meitner": {
-      "status": "completed-integrated",
-      "currentLane": "tooling-integrations-deep-index",
-      "currentWork": "Read-only tooling/integration report completed and integrated into Tools, Integrations, Content Structure and agent-context.",
-      "nextExpectedOutput": "Review future build/tooling changes if requested."
+      "status": "active-readonly-scout",
+      "currentLane": "content-drift-generation-discovery",
+      "currentWork": "Comparing Chernarus source, Takistan generated vanilla output, modded missions, assets and generation skip-lists. Previous tooling report is integrated.",
+      "nextExpectedOutput": "Read-only report for Codex integration into content/source-of-truth docs."
     }
   },
   "lanes": [
+    {
+      "lane": "victory-endgame-runtime-atlas",
+      "owner": "Codex",
+      "status": "active",
+      "sourceScope": [
+        "Server/FSM/server_victory_threeway.sqf",
+        "Server/Functions/*GameEnd*.sqf",
+        "Server/Functions/Server_LogGameEnd.sqf",
+        "Client/PVFunctions/HandleSpecial.sqf",
+        "Client/GUI/GUI_EndOfGameStats.sqf",
+        "Server/Module/AntiStack/*.sqf"
+      ]
+    },
+    {
+      "lane": "economy-town-factory-upgrade-discovery",
+      "owner": "Faraday",
+      "status": "reported-pending-integration",
+      "sourceScope": [
+        "Server/FSM/updateresources.sqf",
+        "Server/FSM/server_town*.sqf",
+        "Common/Functions/*Supply*.sqf",
+        "Server/Functions/*Supply*.sqf",
+        "Client/GUI/GUI_Menu_Economy.sqf",
+        "Server/Functions/Server_ProcessUpgrade.sqf",
+        "Common/Config/Core_Upgrades/*.sqf"
+      ],
+      "output": "Read-only scout report received; Codex integration pending."
+    },
+    {
+      "lane": "gear-loadout-easa-balance-discovery",
+      "owner": "Faraday",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "Client/GUI/GUI_BuyGearMenu.sqf",
+        "Client/GUI/GUI_Menu_EASA.sqf",
+        "Client/Functions/Client_UI_Gear_*.sqf",
+        "Tools/LoadoutManager/**",
+        "Common/Config/Core_*.sqf",
+        "Client/Module/EASA/EASA_Init.sqf"
+      ]
+    },
+    {
+      "lane": "client-jip-lifecycle-discovery",
+      "owner": "Mencius",
+      "status": "reported-pending-integration",
+      "sourceScope": [
+        "initJIPCompatible.sqf",
+        "Client/Init/*.sqf",
+        "Client/Functions/*Respawn*.sqf",
+        "Client/FSM/*.fsm",
+        "description.ext"
+      ],
+      "output": "Read-only scout report received; Codex integration pending."
+    },
+    {
+      "lane": "respawn-medical-mash-support-discovery",
+      "owner": "Mencius",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "Client/Functions/*Respawn*.sqf",
+        "Client/GUI/GUI_RespawnMenu.sqf",
+        "Client/Module/MASH/*.sqf",
+        "Client/GUI/GUI_Menu_Service.sqf",
+        "Server/Module/MASH/*.sqf",
+        "Server/Support/*.sqf"
+      ]
+    },
+    {
+      "lane": "server-runtime-scheduler-discovery",
+      "owner": "Hilbert",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "Server/Init/Init_Server.sqf",
+        "Server/FSM/*.sqf",
+        "Server/GUI/serverFpsGUI.sqf",
+        "Server/Module/serverFPS/*.sqf",
+        "Common/Functions/Common_PerformanceAudit.sqf"
+      ]
+    },
+    {
+      "lane": "ai-headless-delegation-discovery",
+      "owner": "Cicero",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "Server/AI/*.sqf",
+        "Headless/Init/*.sqf",
+        "Headless/**/*.sqf",
+        "Server/FSM/server_town_ai.sqf",
+        "Common/Functions/*Team*.sqf"
+      ]
+    },
+    {
+      "lane": "wiki-ux-navigation-discovery",
+      "owner": "Curie",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "docs/wiki/*.md",
+        "docs/wiki/agent-*.json",
+        "docs/wiki/agent-events.jsonl"
+      ]
+    },
+    {
+      "lane": "content-drift-generation-discovery",
+      "owner": "Meitner",
+      "status": "active-readonly-scout",
+      "sourceScope": [
+        "Missions/**",
+        "Missions_Vanilla/**",
+        "Modded_Missions/**",
+        "Tools/LoadoutManager/**",
+        "Mods/**"
+      ]
+    },
     {
       "lane": "factory-purchase-atlas",
       "owner": "Codex",
@@ -139,6 +264,31 @@
         "BattlEyeFilter/publicvariable.txt"
       ],
       "output": "Deep-Review-Findings.md Round 3 PVF hardening implementation playbook"
+    },
+    {
+      "lane": "victory-endgame-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Server/FSM/server_victory_threeway.sqf",
+        "Server/Functions/Server_LogGameEnd.sqf",
+        "Server/PVFunctions/LogGameEnd.sqf",
+        "Common/Init/Init_CommonConstants.sqf"
+      ],
+      "output": "Deep-Review-Findings.md Round 6 DR-11..DR-13"
+    },
+    {
+      "lane": "factory-purchase-authority",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Client/Functions/Client_BuildUnit.sqf",
+        "Server/PVFunctions/RequestNewCommander.sqf",
+        "Server/Functions/Server_AssignNewCommander.sqf",
+        "Server/Init/Init_Server.sqf"
+      ],
+      "output": "Deep-Review-Findings.md Round 7 DR-14..DR-15"
     }
   ],
   "updateProtocol": [

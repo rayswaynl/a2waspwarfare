@@ -49,6 +49,7 @@
 ## Current Work
 
 - [Progress dashboard](Progress-Dashboard)
+- [Discovery swarm](Subagent-Discovery-Swarm)
 - [Implementation plan](Documentation-Implementation-Plan)
 - [Coordination board](Coordination-Board)
 - [Collaboration protocol](Agent-Collaboration-Protocol)
