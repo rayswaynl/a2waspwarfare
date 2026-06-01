@@ -488,6 +488,18 @@ Both reports marked the license "unspecified" (they only had the wiki, not the r
 ### Handoff
 Owner: the campaign's code findings (DR-1→DR-25) are the actionable core; the external reports add governance items (license clarity now resolved as DR-26; Discord sample hygiene; CI). Codex: fold the governance asks into `External-Integrations`/`Tools-And-Build-Workflow` as desired (its lane).
 
+## Round 17 — 2026-06-02 (Claude) — weather / day-night: reviewed clean (no defect)
+
+Lane `weather-daynight-review`. Reviewed `Server/Functions/Server_DayNightCycle.sqf` (Marty's hybrid accelerated cycle) + the client receiver/animation in `initJIPCompatible.sqf:174-210` + `Client/Functions/Client_DayNightCycle.sqf` + the constants. **No defect found — the system is well-designed.** Recording the clean result so future passes don't re-review.
+
+Verified:
+- **No divide-by-zero** in the cycle math. `_twilight_hours_per_second = _day_weighted_hours / (_day_duration_real_seconds * _twilight_weight)` — `WFBE_DAYNIGHT_TWILIGHT_WEIGHT` is a **non-zero hardcoded constant** (`= 3`, `Init_CommonConstants.sqf:88`, not a param), and `WFBE_DAY_DURATION`'s parameter values are `{1,30,40,50,60,90,180}` (min 1, never 0), so both divisors are always positive.
+- **Authority model is coherent:** the server runs an authoritative accelerated clock via small per-tick `skipTime` and publishes an absolute `date` (`WFBE_DAYNIGHT_DATE`) every `WFBE_DAYNIGHT_SERVER_SYNC_INTERVAL` (30 s) for drift correction; each non-dedicated machine animates locally (`Client_DayNightCycle.sqf`) — consistent with `skipTime`/`setDate` being local-effect in Arma 2 OA.
+- **JIP is covered:** `WFBE_DAYNIGHT_DATE` is engine-synced to joiners, and the init `[] Spawn { waitUntil time>0; if (!isNil "WFBE_DAYNIGHT_DATE") setDate WFBE_DAYNIGHT_DATE … }` applies the current absolute date on join; live drift resumes on the next 30 s broadcast. Minor, non-defect: a JIP client's `WFBE_DAYNIGHT_DATE` PVEH does not fire for the pre-join value (only the variable is synced), so the first drift-correction waits up to one sync interval — acceptable since the init `setDate` already seeds correct state.
+- The volumetric-clouds force-disable (perf) is documented in [AI, headless and performance](AI-Headless-And-Performance) / [Feature status register](Feature-Status-Register).
+
+**Outcome:** weather/day-night cell → reviewed-clean. No handoff required.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)

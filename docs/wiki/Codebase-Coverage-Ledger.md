@@ -37,7 +37,7 @@ Legend: ✅ done (source-cited) · 🟡 partial · ⬜ gap.
 | Tooling / LoadoutManager | ✅ | n/a | n/a | n/a | n/a | ✅ | [Tools](Tools-And-Build-Workflow), DR-4 |
 | Integrations (Extension / Discord / **AntiStack DB** / BattlEye) | 🟡 | 🟡 | 🟡 | 🟡 | 🟡 | n/a | [External integrations](External-Integrations); AntiStack DB done (DR-7..DR-10); Extension/Discord/BattlEye ⬜ |
 | Victory / endgame | ✅ | 🟡 | 🟡 | 🟡 | 🟡 | n/a | `server_victory_threeway.sqf`; DR-11..DR-13 (winner inversion, threeway no-detection, dup LogGameEnd) |
-| Weather / day-night | 🟡 | n/a | 🟡 | 🟡 | 🟡 | n/a | `Server/Functions/Server_DayNightCycle.sqf` |
+| Weather / day-night | ✅ | n/a | ✅ | ✅ | ✅ | n/a | `Server_DayNightCycle.sqf` — **reviewed clean (Round 17, no defect)**: no div-by-zero, JIP-covered, local-animation+drift-sync design sound |
 | Modules (Artillery / EASA / ICBM / IRS / CM / UAV) | 🟡 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | scattered; partially in Feature-Status |
 | Markers / cleaners / restorers | ✅ | n/a | 🟡 | ✅ | 🟡 | n/a | [AI/headless](AI-Headless-And-Performance) |
 
