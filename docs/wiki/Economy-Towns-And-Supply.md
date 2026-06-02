@@ -57,8 +57,11 @@ This should be treated as one owner decision, not separate patch tracks. Either 
 
 The open PR extends this flow to helicopters. It adds class constants, light/heavy upgrade gates, `SupplyByHeli`, air bonuses, commander-team cash runs and interdiction rewards, but it does not change the fundamental client-started/server-completed trust model. See [Current work: supply helicopters PR #1](Current-Work-Supply-Helicopters-PR1).
 
+Implementation handoff: [Economy authority first cut](Economy-Authority-First-Cut) turns this economy-authority class into the smallest source-backed patch order.
+
 ## Continue Reading
 
 Previous: [Core systems](Core-Systems-Index) | Next: [Supply mission architecture](Supply-Mission-Architecture)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
+

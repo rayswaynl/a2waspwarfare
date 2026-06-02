@@ -209,8 +209,11 @@ Validation:
 - For every gameplay patch, update [Feature status](Feature-Status-Register), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Agent worklog](Agent-Worklog) and `agent-context.json`.
 - If Claude is active, leave a claim/handoff in `agent-collaboration.json` and `agent-events.jsonl` before touching shared authority code.
 
+Economy first-cut handoff: [Economy authority first cut](Economy-Authority-First-Cut) recommends `side-supply-clamp` before upgrade/construction authority migrations and before any player-buy locality redesign.
+
 ## Continue Reading
 
 Previous: [Feature status](Feature-Status-Register) | Next: [Server authority migration map](Server-Authority-Migration-Map)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
+

@@ -123,8 +123,11 @@ This page does not change mission behavior. It is the source-backed design layer
 
 Dedicated playbook: [Attack-wave authority](Attack-Wave-Authority-Playbook) expands the DR-41 row into an implementation-ready patch shape, including the current all-side-supply spend model.
 
+First implementation cut: [Economy authority first cut](Economy-Authority-First-Cut) sequences the broad economy class into side-supply clamp, upgrade authority, construction/defense authority and deferred player-buy redesign.
+
 ## Continue Reading
 
 Previous: [Hardening roadmap](Hardening-Implementation-Roadmap) | Next: [Attack-wave authority playbook](Attack-Wave-Authority-Playbook)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
+

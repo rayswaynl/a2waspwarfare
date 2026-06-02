@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T18:50:00+02:00",
+  "generatedAt": "2026-06-02T18:58:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -17,13 +17,13 @@
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
       "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass began Wiki-Quality-Audit C6 by adding path:line citations to the Client UI/HUD overview.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed lane while Codex-2 owns economy-authority-first-cut."
+      "nextExpectedOutput": "Continue with the next bounded source-backed lane while Codex-2 is ready for its next review lane."
     },
     "Codex-2": {
-      "status": "active",
+      "status": "ready-for-next-lane",
       "currentLane": "economy-authority-first-cut",
-      "currentWork": "Source-tracing first-cut economy/server-authority hardening opportunities around player funds, side supply and request/direct PV boundaries.",
-      "nextExpectedOutput": "Economy-Authority-First-Cut.md with source evidence, minimum safe patch sequence and validation plan."
+      "currentWork": "Published Economy-Authority-First-Cut.md; side-supply clamp is the smallest first code branch, followed by upgrade and construction authority.",
+      "nextExpectedOutput": "Pick the next bounded lane after validation, likely supply-mission authority cleanup or BattlEye posture design."
     },
     "Claude": {
       "status": "autonomous-ready",
@@ -36,8 +36,8 @@
     {
       "lane": "economy-authority-first-cut",
       "owner": "Codex-2",
-      "status": "active",
-      "output": "Source-tracing first-cut server-authority hardening around player funds, side supply and request/direct PV boundaries"
+      "status": "published",
+      "output": "Economy-Authority-First-Cut.md and side-supply-clamp-first backlog item"
     },
     {
       "lane": "wiki-quality-c6-ui-citations",
@@ -183,6 +183,7 @@
     "claudeLoopGoal": "Claude-Loop-Goal.md",
     "attackWaveAuthority": "Attack-Wave-Authority-Playbook.md",
     "attackWaveBacklog": "agent-hardening-backlog.jsonl#attack-wave-authority",
-    "pvfDispatchPlaybook": "PVF-Dispatch-Implementation-Playbook.md"
+    "pvfDispatchPlaybook": "PVF-Dispatch-Implementation-Playbook.md",
+    "economyAuthorityFirstCut": "Economy-Authority-First-Cut.md"
   }
 }

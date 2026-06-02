@@ -539,6 +539,14 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Source-checked Init_PublicVariables.sqf, Server_HandlePVF.sqf, Client_HandlePVF.sqf and the PVF send helpers in the Chernarus source mission.
 - Published [PVF dispatch implementation playbook](PVF-Dispatch-Implementation-Playbook), turning DR-1 and DR-38 into a P0 patch guide with registered allowlists, missionNamespace getVariable, hosted/dedicated validation and a clear boundary against per-handler authority and direct publicVariable channels.
 - Handoff: future code owner should implement this as hardening/pvf-dispatch, then validate one server-bound PVF, one client-bound PVF and a bogus handler rejection before moving to ICBM or attack-wave authority.
+
+## 2026-06-02 - Codex-2 Economy Authority First Cut
+
+- Claimed `economy-authority-first-cut` after checking the live dashboard/collaboration state and avoiding the already-published HC/failover lane.
+- Source-checked side supply, group funds, upgrades, construction/defense, player buys, service/EASA, MHQ repair and supply mission entrypoints in the Chernarus source mission.
+- Published [Economy authority first cut](Economy-Authority-First-Cut), recommending side-supply-clamp as the first small code branch, then server-owned upgrades and construction/defense, while keeping player factory buys as a separate locality redesign.
+- Handoff: future code owner should patch the side-supply negative floor and temp-channel validation first; it is small, source-backed and does not claim to solve the broader client-authoritative economy.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.
@@ -548,4 +556,3 @@ Append entries here so Codex, Claude and future assistants can see what each age
 Previous: [Agent collaboration protocol](Agent-Collaboration-Protocol) | Next: [Deep-review findings](Deep-Review-Findings)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
-

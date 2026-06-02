@@ -8,7 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
-| `economy-authority-first-cut` | Active | Codex-2 is source-tracing first-cut server-authority hardening around player funds, side supply and request/direct PV boundaries. |
+| `economy-authority-first-cut` | Published | [Economy authority first cut](Economy-Authority-First-Cut) sequences the economy hardening class into side-supply clamp first, then upgrade authority, construction/defense authority and deferred player-buy locality redesign. |
 | `wiki-quality-c6-ui-citations` | Published | [Client UI/HUD](Client-UI-HUD-And-Menus) now has path:line anchors for Rsc includes, dialog IDDs, menu routing, RHUD/FPS toggles and respawn marker tracking. |
 | `wiki-quality-c4-victory-searchability` | Published | [Feature status](Feature-Status-Register) and [Hardening roadmap](Hardening-Implementation-Roadmap) now cite DR-11 by number for the victory/endgame winner inversion bug. |
 | `wiki-quality-c2-atlas-crosslinks` | Published | Atlas pages now link directly to the relevant DR records: gameplay DR-6/11/14/15/22/23, UI DR-16/17/24/25, AI DR-21/42, construction DR-6 and lifecycle DR-37/43a. |
@@ -33,7 +33,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
 | Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. |
-| Codex-2 | Active | `economy-authority-first-cut` | Expect `Economy-Authority-First-Cut.md` with source evidence, minimum safe patch sequence and validation plan. |
+| Codex-2 | Ready for next lane | `economy-authority-first-cut` | [Economy authority first cut](Economy-Authority-First-Cut) is published; likely next lanes are supply-mission authority cleanup or BattlEye posture design. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
@@ -58,7 +58,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
-| `economy-authority-first-cut` | Codex-2 | Active | Source-tracing the smallest player-funds/side-supply authority hardening moves without overlapping PVF dispatcher or attack-wave playbooks. |
+| `economy-authority-first-cut` | Codex-2 | Published | Use [Economy authority first cut](Economy-Authority-First-Cut) before patching side-supply clamps, upgrade authority, construction/defense authority or player-buy locality. |
 | `wiki-quality-c6-ui-citations` | Codex | Published | First C6 pass is done for [Client UI/HUD](Client-UI-HUD-And-Menus); Gameplay/AI citation uplift remains open. |
 | `wiki-quality-c4-victory-searchability` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) C4 is resolved: victory/endgame pages now name DR-11 explicitly. |
 | `wiki-quality-c2-atlas-crosslinks` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) C2 is resolved: high-traffic atlas pages now point to their canonical DR findings. |
@@ -79,6 +79,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| Economy authority first cut | [Economy authority first cut](Economy-Authority-First-Cut), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) | Codex-2 turns the broad economy authority class into a source-backed patch sequence: side-supply clamp first, then upgrade and construction/defense authority, with player-buy locality deferred as a larger redesign. |
 | Wiki-quality C6 UI citations | [Client UI/HUD](Client-UI-HUD-And-Menus), [Wiki quality audit](Wiki-Quality-Audit) | Adds path:line anchors to the lightweight UI overview so it meets the project's source-backed citation standard without duplicating the full UI systems atlas. |
 | Wiki-quality C4 victory searchability | [Feature status](Feature-Status-Register), [Hardening roadmap](Hardening-Implementation-Roadmap), [Wiki quality audit](Wiki-Quality-Audit) | Adds explicit DR-11 references to the victory/endgame bug while keeping DR-36 as the mechanism/perf-JIP review. |
 | Wiki-quality C2 atlas cross-links | [Gameplay atlas](Gameplay-Systems-Atlas), [Client UI systems atlas](Client-UI-Systems-Atlas), [Client UI/HUD](Client-UI-HUD-And-Menus), [AI/headless](AI-Headless-And-Performance), [Construction atlas](Construction-And-CoIn-Systems-Atlas), [Mission lifecycle](Mission-Entrypoints-And-Lifecycle) | Adds concise links from developer-facing atlas pages to the canonical DR findings, and resolves the stale DR-15 commander open question. |
