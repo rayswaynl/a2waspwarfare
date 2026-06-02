@@ -1,5 +1,7 @@
 # Supply Mission Architecture
 
+Page ownership: this page owns the supply-mission flow, cooldown/JIP pattern and state-owner map. [Deep-review findings](Deep-Review-Findings) DR-18 owns the exact cooldown casing defect evidence; [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) owns the implementation-ready patch shape.
+
 Supply missions are one of the most cross-cutting systems in the mission. They touch client actions, skill roles, town cooldown state, server tracking loops, side supply, commander/team funds in PR #1, player rewards, public variables and buy-menu affordances.
 
 ## Master Branch Flow
@@ -32,7 +34,7 @@ Supply missions are one of the most cross-cutting systems in the mission. They t
 
 - `supplyMissionStart.sqf` on master uses duplicated hardcoded supply-truck classname arrays.
 - The client asks for cooldown and immediately reads local town state; timing/race behavior depends on the server response arriving quickly enough.
-- Cooldown variable casing is suspicious: town init seeds `lastSupplyMissionRun`, while server supply code reads/writes `LastSupplyMissionRun`.
+- Cooldown variable casing is a confirmed DR-18 defect: town init seeds `lastSupplyMissionRun`, while server supply code reads/writes `LastSupplyMissionRun`.
 - `supplyMissionStarted.sqf` loops until the vehicle dies; it should avoid creating duplicate tracking loops for the same loaded vehicle.
 - Completion trusts object variables on the supply vehicle, so any feature that reuses those vars must clear them reliably.
 - Player resolution depends on `WFBE_SE_PLAYERLIST` and proximity/driver checks.

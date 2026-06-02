@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T22:50:00+02:00",
+  "generatedAt": "2026-06-02T23:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,40 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-quality-dup7-supply-cooldown-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Supply-Mission-Architecture.md",
+        "Deep-Review-Findings.md DR-18",
+        "Supply-Mission-Authority-Cleanup-Playbook.md",
+        "Economy-Towns-And-Supply.md",
+        "Server-Gameplay-Runtime-Atlas.md",
+        "Feature-Status-Register.md",
+        "Hardening-Implementation-Roadmap.md",
+        "Wiki-Quality-Audit.md DUP-7",
+        "Common/Init/Init_Town.sqf",
+        "Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf",
+        "Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Server/Module/supplyMission/supplyMissionActive.sqf"
+      ],
+      "outputs": [
+        "Supply-Mission-Architecture.md page ownership note and DR-18 fragility wording",
+        "Economy-Towns-And-Supply.md cooldown routing note",
+        "Server-Gameplay-Runtime-Atlas.md runtime-only routing note",
+        "Feature-Status-Register.md compact supply cooldown row",
+        "Hardening-Implementation-Roadmap.md DR-18/playbook routing",
+        "Wiki-Quality-Audit.md DUP-7 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future supply-mission docs should update Supply-Mission-Architecture.md for flow/state/JIP pattern, Deep-Review-Findings.md DR-18 for exact cooldown casing evidence, and Supply-Mission-Authority-Cleanup-Playbook.md for patch sequence. Economy, Server runtime, Feature Status and Hardening roadmap should stay short routing summaries."
+    },
     {
       "lane": "wiki-quality-dup4-generated-mission-routing",
       "owner": "Codex",
@@ -903,6 +937,7 @@
     }
   ],
   "integratedReports": [
+    "wiki-quality-dup7-supply-cooldown-routing",
     "gear-loadout-easa-balance-discovery",
     "external-pdf-research-intake",
     "pv-matrix-second-pass-v2",

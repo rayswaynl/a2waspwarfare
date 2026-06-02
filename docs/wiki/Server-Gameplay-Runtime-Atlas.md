@@ -89,7 +89,7 @@ flowchart LR
 
 Supply mission start is not fully server-authoritative. Client code sets `SupplyFromTown` and `SupplyAmount` on the truck at `Client/Module/supplyMission/supplyMissionStart.sqf:20-34`, then sends `WFBE_Client_PV_SupplyMissionStarted` at `:38-39`. Completion later trusts truck variables in `Server/Module/supplyMission/supplyMissionCompleted.sqf:9-27`.
 
-There is also a casing mismatch to resolve before relying on cooldown behavior: town init seeds `lastSupplyMissionRun` at `Common/Init/Init_Town.sqf:35`, while server supply mission code reads/writes `LastSupplyMissionRun` at `Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf:8` and `supplyMissionStarted.sqf:8`.
+Cooldown casing detail is canonical in [Deep-review findings](Deep-Review-Findings) DR-18 and the [Supply mission architecture](Supply-Mission-Architecture) page. This atlas keeps only the runtime owner map.
 
 ## AI Commander Status
 
@@ -123,7 +123,7 @@ Canonical correctness findings: [Deep-review findings](Deep-Review-Findings) DR-
 | AI supply truck system | `UpdateSupplyTruck` compile is commented at `Init_Server.sqf:36`, but spawn remains under supply system 0 + AI commander at `:381-383`; script calls missing `Server/FSM/supplytruck.fsm` at `Server/AI/AI_UpdateSupplyTruck.sqf:17`. | Config-gated broken path. |
 | AI commander automation | State/funds/constants exist, but no active AI commander loop/FSM was found. | Partial/latent. |
 | `Server_AssignNewCommander` call shape | `_side = _this` then `_commander = _this select 1` in `Server_AssignNewCommander.sqf:3-5`; caller passes `[_side, _assigned_commander]` from `RequestNewCommander.sqf:12-14`. | Likely bug; should assign `_side = _this select 0`. |
-| Supply mission cooldown casing | `lastSupplyMissionRun` seeded in town init, `LastSupplyMissionRun` used by server supply code. | Likely cooldown bug or stale variable. |
+| Supply mission cooldown casing | DR-18 confirms `lastSupplyMissionRun` / `LastSupplyMissionRun` mismatch. | Correctness bug; route details through [Supply mission architecture](Supply-Mission-Architecture) and DR-18. |
 | Supply mission reward authority | Client sets truck `SupplyFromTown` and `SupplyAmount`; server completion trusts truck vars. | Hardening gap. |
 | Resistance supply handler gap | Common sender can format `wfbe_supply_temp_<side>` generically, but server handlers only exist for west/east. | Resistance side supply not fully wired. |
 | Paratrooper markers | Server sends `HandleParatrooperMarkerCreation`, client receiver file exists, command is missing from client PVF list. | Broken/dead receiver path. |

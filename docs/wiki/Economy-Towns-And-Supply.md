@@ -23,9 +23,9 @@ Town supply value drives economy and supply missions. Constants define automatic
 
 ## Cooldown Flow
 
-`isSupplyMissionActiveInTown.sqf` compares `LastSupplyMissionRun` to `WFBE_CO_VAR_SupplyMissionRegenInterval`, then broadcasts `WFBE_Server_PV_IsSupplyMissionActiveInTown`. Client `townSupplyStatus.sqf` stores that on the town as `supplyMissionCoolDownEnabled`.
+`isSupplyMissionActiveInTown.sqf` compares the town's supply-mission timestamp to `WFBE_CO_VAR_SupplyMissionRegenInterval`, then broadcasts `WFBE_Server_PV_IsSupplyMissionActiveInTown`. Client `townSupplyStatus.sqf` stores that on the town as `supplyMissionCoolDownEnabled`.
 
-Source reconciliation note: `Common/Init/Init_Town.sqf` seeds `lastSupplyMissionRun`, but server supply mission code reads/writes `LastSupplyMissionRun`. Treat cooldown behavior as suspect until the casing is normalized or proven harmless in-game.
+Routing note: [Supply mission architecture](Supply-Mission-Architecture) owns the cooldown/JIP flow, [Deep-review findings](Deep-Review-Findings) DR-18 owns the `lastSupplyMissionRun` / `LastSupplyMissionRun` casing defect, and [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) owns the patch shape.
 
 ## Economy And Commander Funds
 

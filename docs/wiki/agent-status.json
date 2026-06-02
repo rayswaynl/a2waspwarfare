@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T22:50:00+02:00",
+  "generatedAt": "2026-06-02T23:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,7 +16,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki Quality DUP-4 by routing generated-mission drift detail to Tools-And-Build-Workflow.md plus DR-4/DR-32.",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki Quality DUP-7 by routing supply cooldown casing detail to Supply-Mission-Architecture.md, Deep-Review-Findings.md DR-18 and Supply-Mission-Authority-Cleanup-Playbook.md.",
       "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining duplicate reductions, Arma 2 OA external-reference integration into subsystem pages, or more implementation-readiness playbooks."
     },
     "Codex-2": {
@@ -33,6 +33,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wiki-quality-dup7-supply-cooldown-routing",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Supply-Mission-Architecture.md owns cooldown/JIP flow and state-owner map; Deep-Review-Findings.md DR-18 owns exact casing evidence; Economy, Server runtime, Feature Status and Hardening roadmap now route there instead of repeating the mismatch"
+    },
     {
       "lane": "wiki-quality-dup4-generated-mission-routing",
       "owner": "Codex",

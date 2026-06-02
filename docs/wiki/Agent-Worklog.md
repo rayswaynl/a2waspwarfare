@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wiki-Quality DUP-7 Supply Cooldown Routing
+
+- Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-7 by keeping the supply-mission cooldown flow canonical in [Supply mission architecture](Supply-Mission-Architecture) and the exact casing defect evidence canonical in [Deep-review findings](Deep-Review-Findings) DR-18.
+- Reduced [Economy, towns and supply](Economy-Towns-And-Supply), [Server runtime atlas](Server-Gameplay-Runtime-Atlas), [Feature status](Feature-Status-Register) and [Hardening roadmap](Hardening-Implementation-Roadmap) so they route to the canonical supply pages.
+- Preserved [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) as the implementation-ready patch guide for cooldown casing, loaded/tracking state, dead twin code and PR #1 stacked-handler risk.
+
 ## 2026-06-02 - Codex Wiki-Quality DUP-4 Generated Mission Routing
 
 - Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-4 by making [Tools and build workflow](Tools-And-Build-Workflow) the operational owner for LoadoutManager skip-list, packaging and generated-mission status rules.

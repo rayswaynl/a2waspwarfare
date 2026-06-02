@@ -118,12 +118,12 @@ Validation:
 
 ## P1: Supply Missions And PR #1
 
-Dedicated playbook: [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook). It owns the source chain for client-stamped truck state, server tracking loop, completion reward trust, cooldown casing, dead twin code and PR #1 supply-helicopter stacked-handler risk.
+Dedicated playbook: [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook). It owns the implementation sequence for client-stamped truck state, server tracking loop, completion reward trust, DR-18 cooldown casing, dead twin code and PR #1 supply-helicopter stacked-handler risk. Use [Supply mission architecture](Supply-Mission-Architecture) for the flow map and [Deep-review findings](Deep-Review-Findings) DR-18 for the exact casing evidence.
 
 Implementation shape:
 
 1. Remove or retire `supplyMissionActive.sqf` compile path.
-2. Standardize cooldown casing: `lastSupplyMissionRun` vs `LastSupplyMissionRun`.
+2. Standardize cooldown casing per DR-18.
 3. Recompute reward and source town server-side from trusted truck/town state where possible.
 4. Add explicit loaded/unloaded state to prevent duplicate tracking loops and PR #1 stacked `Killed` handlers.
 5. Narrow `nearestObjects [(getPos _associatedSupplyTruck), [], 80]` to the specific command-center terminal type.

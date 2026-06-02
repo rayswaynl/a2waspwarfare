@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-context-v1",
-  "generatedAt": "2026-06-02T22:50:00+02:00",
+  "generatedAt": "2026-06-02T23:05:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "game": "Arma 2 Operation Arrowhead 1.64",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -304,6 +304,7 @@
     "Use Economy-Authority-First-Cut.md before economy hardening code work; patch side-supply negative clamp first, then migrate existing PVF spend handlers before attempting player-buy locality redesign.",
     "Use Abandoned-Feature-Revival-Review.md before reviving dormant MASH/paratrooper/WASP/UAV/UI/modded-mission paths; source-check liveness first and prefer remove/annotate over re-enabling half-wired code.",
     "Use Performance-Opportunity-Sweep.md before performance patches; prefer PVF dispatch lookup, hosted FPS loop sleep, Skill_Init idempotency and supply scan narrowing before speculative marker/cleaner cadence changes.",
+    "Supply-mission docs have split ownership: Supply-Mission-Architecture.md owns flow/state/JIP pattern; Deep-Review-Findings.md DR-18 owns exact cooldown casing defect evidence; Supply-Mission-Authority-Cleanup-Playbook.md owns implementation-ready patch shape; Economy/Server runtime/Feature status/Roadmap should route there.",
     "Generated-mission docs have split ownership: Tools-And-Build-Workflow.md owns operational LoadoutManager skip-list, packaging and status rules; Deep-Review-Findings.md DR-4/DR-32 own full drift evidence; Content-Structure-And-Maps.md only orients folder layout.",
     "HC delegation docs have split ownership: AI-Headless-And-Performance.md routes runtime/source anchors, Lifecycle-Wait-Chain.md owns HC boot timing, and Headless-Delegation-And-Failover-Playbook.md owns DR-21/DR-42 patch policy.",
     "Lifecycle docs have split ownership: Lifecycle-Wait-Chain.md owns flags, boot ordering, JIP waits and HC wait hazards; Mission-Entrypoints-And-Lifecycle.md owns include graph and role-dispatch orientation; SQF-Code-Atlas.md owns compile/source ownership; Server-Gameplay-Runtime-Atlas.md owns long-running server loops.",
@@ -345,7 +346,7 @@
     "markersCleanersRestorers": "Map markers + Server/FSM cleaners (crater/mines/ruins/dropped-items) and restorers (buildings). DR-34: MASH map-marker feature dead both ends (trigger never broadcast + receiver commented Init_Client.sqf:132 + orphaned server PVEH). Cleaners/restorers not yet atlas'd (ledger Map partial). See AI-Headless-And-Performance.md.",
     "parametersLocalization": "Mission parameters (Common/Init/Init_Parameters.sqf <- initJIPCompatible.sqf:121; Rsc/Parameters.hpp; Dialogs.hpp:3136) and stringtable.xml localization. Reviewed clean (DR-35): no live missing localize/$STR_ keys; paramsArray index-aligned to class Params order. DR-43a: description.ext:39 #include version.sqf absent from source (pack-time generated).",
     "economyAuthorityFirstCut": "Economy-Authority-First-Cut.md is the source-backed minimum patch order for DR-22 side-supply clamp, DR-23 upgrades, DR-6 construction/defense and DR-14 player-buy ceiling.",
-    "supplyMissionAuthorityCleanup": "Supply-Mission-Authority-Cleanup-Playbook.md is the source-backed patch guide for player supply missions and PR #1 supply helicopters: server-owned loaded/tracking state, cooldown casing, cargo validation, Killed-handler idempotency, command-center scan narrowing and dedicated/JIP/heli validation.",
+    "supplyMissionAuthorityCleanup": "Supply-Mission-Authority-Cleanup-Playbook.md is the source-backed patch guide for player supply missions and PR #1 supply helicopters: server-owned loaded/tracking state, DR-18 cooldown casing patch shape, cargo validation, Killed-handler idempotency, command-center scan narrowing and dedicated/JIP/heli validation. Supply-Mission-Architecture.md owns the flow/JIP map; Deep-Review-Findings.md DR-18 owns exact casing evidence.",
     "abandonedFeatureRevival": "Abandoned-Feature-Revival-Review.md classifies dormant/broken feature paths: MASH markers need server-held/JIP-safe revival or removal; paratrooper markers are a small PVF registration revive; AI supply trucks are broken because compile is commented and supplytruck.fsm is missing; UAV 007/WASP actions/old upgrade dialog are stale cleanup; modded mission propagation needs an owner maintenance-model decision.",
     "performanceOpportunitySweep": "Performance-Opportunity-Sweep.md ranks low-risk and high-value performance work: PVF dispatcher lookup, hosted FPS loop sleep/consolidation, supply mission scan narrowing, duplicate Skill_Init idempotency, factory queue churn, WASP marker polling and audit-first cleaner/marker-loop tuning."
   },
