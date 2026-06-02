@@ -61,14 +61,14 @@ Quick path:
 
 ## 3. Keep-or-remove / maintenance-model decisions
 
-Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) for the source-backed revive/remove matrix behind the MASH, paratrooper, WASP, AI supply truck, stale UI and modded-mission rows.
+Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) for the source-backed revive/remove matrix behind the MASH, WASP, AI supply truck, stale UI and modded-mission rows. Paratrooper markers have moved out of the revive/remove bucket for maintained source/Vanilla: see [Paratrooper marker revival](Paratrooper-Marker-Revival) and the smoke-pending row below.
 
 | Decision | Finding | Note |
 | --- | --- | --- |
 | Modded missions: regenerate from source vs maintain as forks | DR-32 | Napf/eden/lingor are divergent hand-edited forks; source fixes don't reach them |
 | 4 abandoned stub missions: complete or delete | DR-32 | sahrani/dingor/tavi/isladuala are non-runnable (1–20 files) |
 | MASH map-marker feature: revive or remove | DR-34 | dead both ends; revive needs server-held list + JIP re-send |
-| Paratrooper drop markers: revive or remove | DR-2 | dead receive path |
+| Paratrooper drop markers: smoke propagated fix / decide modded drift | DR-2 | source Chernarus + maintained Vanilla now register the callback and ship the handler; Arma smoke and divergent modded folders remain |
 | Dead WASP actions (OnArmor, GearYourUnit) | DR-35 | commented in `AddActions.sqf` |
 | `supplyMissionActive.sqf` dead twin | DR-39 | compiled but never called |
 | Duplicate `Init_Server` function binds (6) | DR-43b | de-duplicate; `LogGameEnd` dup relates to DR-13 |

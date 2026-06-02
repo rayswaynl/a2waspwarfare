@@ -1026,4 +1026,5 @@ Key conclusions:
 
 - Added an [Owner Decision Queue](Feature-Status-Register#owner-decision-queue) to [Feature status](Feature-Status-Register) so the remaining yellow/residual items are easier to read as decisions, not unresolved archaeology.
 - Expanded [Pending owner decisions](Pending-Owner-Decisions) with a fast decision queue and agent handoff contract. It now routes code owners to the first safe implementation gates for server authority, direct publicVariable channels, victory semantics, supply logistics, dormant features and scoped local hardening.
+- Reconciled stale paratrooper-marker wording in [Pending owner decisions](Pending-Owner-Decisions) and [Hardening roadmap](Hardening-Implementation-Roadmap): maintained source/Vanilla are now propagated and smoke-pending, while modded folders still need an owner decision.
 - Updated [`agent-status.json`](agent-status.json), [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-events.jsonl`](agent-events.jsonl) and [Progress dashboard](Progress-Dashboard) so future Codex/Claude tabs can see that the next step is policy/patch selection, not another broad review pass.
