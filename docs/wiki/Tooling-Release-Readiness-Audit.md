@@ -42,6 +42,28 @@ Canonical companion pages are [Tools/build workflow](Tools-And-Build-Workflow), 
 | AntiStack DB extension | Separate absent `A2WaspDatabase`; default enabled; wrappers `call compile` extension strings and assume array shape. | High deployment/runtime trust risk. | `Init_CommonConstants.sqf:171`; `Parameters.hpp:547-551`; `callDatabaseRetrieve.sqf:24-40`; `callDatabaseRequestSideTotalSkill.sqf:30-64`; `callDatabaseSendPlayerList.sqf:58-65`. |
 | BattlEye filters | Shipped filter is AFK `kickAFK` plumbing only; no `scripts.txt`, `server.cfg` or `basic.cfg` bundle. | Medium release-claim risk, not comprehensive public-server hardening. | `BattlEyeFilter/publicvariable.txt:2`; `Client/FSM/updateclient.sqf:153-160`; `External-Integrations.md:96-104`. |
 
+## GlobalGameStats Fixture Contract
+
+Wave P mapped the intended five-slot export contract after the class name:
+
+| Slot | Meaning | Evidence |
+| ---: | --- | --- |
+| 0 | BLUFOR score | `GlobalGameStats.sqf:22`; `DiscordBot/src/ExtensionData/GameData/GameData.cs:167-170` |
+| 1 | OPFOR score | `GlobalGameStats.sqf:22`; `GameData.cs:167-170` |
+| 2 | map / terrain enum string | `GlobalGameStats.sqf:22`; `GameData.cs:149-156` |
+| 3 | uptime seconds | `GlobalGameStats.sqf:22`; `GameData.cs:184-189` |
+| 4 | player count | `GlobalGameStats.sqf:20-22`; `GameData.cs:80-82`, `:112-114` |
+
+Recommended normal fixture:
+
+```json
+{
+  "exportedArgs": ["12", "9", "CHERNARUS", "3661", "7"]
+}
+```
+
+Expected assertions: Discord displays BLUFOR score `12`, OPFOR score `9`, terrain `CHERNARUS`, uptime from slot `3`, player count `7`, and Chernarus max player display `55`. Hardening should also stop collapsing empty CSV fields (`ArrayTools.cs:10` uses `RemoveEmptyEntries`), replace one-HC subtraction with explicit HC filtering, and read JSON with `TypeNameHandling.None`.
+
 ## Validation Commands
 
 ```powershell
@@ -76,7 +98,7 @@ rg --files | rg "(^|/)(publicvariable\.txt|scripts\.txt|server\.cfg|basic\.cfg)$
 | P1 | Add generated drift checker to CI or a separate release validator. |
 | P2 | Expand `agent-release-readiness.json` generated-targets from wildcard `Modded_Missions/*` to tiered states: maintained Vanilla, divergent forks, skeletal stubs. |
 | P2 | Record current Takistan comparable drift and modded drift posture in [Tools/build workflow](Tools-And-Build-Workflow) or [Source fix propagation queue](Source-Fix-Propagation-Queue). |
-| P2 | Add GlobalGameStats fixture tests or a tiny contract document covering exported arg order, HC/player-count policy and Discord display parsing. |
+| P2 | Add GlobalGameStats fixture tests for the five-slot contract documented above, plus malformed/empty-field and no-HC/multi-HC cases. |
 | P2 | Note that `DiscordBot/FileConfiguration.cs` exists while active status JSON reader uses `Preferences.Instance.DataSourcePath ?? C:\a2waspwarfare\Data`. |
 | P3 | Replace concrete `preferences_sample.json` snowflakes with placeholders. |
 

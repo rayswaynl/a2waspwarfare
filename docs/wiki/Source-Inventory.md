@@ -38,6 +38,24 @@ $files | ForEach-Object { $ext = [IO.Path]::GetExtension($_).ToLowerInvariant();
 | 1 | `README.md` |
 | 1 | `mkdocs.yml` |
 
+## Mission Parity Snapshot
+
+Tracked-file counts are from `git ls-files` only, not filesystem recursion. Generated/ignored files such as `version.sqf` are intentionally absent from this count.
+
+| Mission tree | Tracked files | Parity posture |
+| --- | ---: | --- |
+| `Missions/[55-2hc]warfarev2_073v48co.chernarus` | 787 | Authoritative source mission. |
+| `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` | 786 | Maintained generated/copy target; expected map/faction/media drift such as `SET_MAP` `1` vs `2`, `mission.sqm`, `loadScreen.jpg`, artillery config, `Config_GUE.sqf`, help title and WASP start vehicles. |
+| `Modded_Missions/[55-2hc]warfarev2_073v48co.eden` | 502 | Divergent partial fork; not a maintained generated parity target. |
+| `Modded_Missions/[55-2hc]warfarev2_073v48co.lingor` | 438 | Divergent partial fork; not a maintained generated parity target. |
+| `Modded_Missions/[55-2hc]warfarev2_073v48co.Napf` | 507 | Divergent partial fork; not a maintained generated parity target. |
+| `Modded_Missions/[55-2hc]warfarev2_073v48co.smd_sahrani_a2` | 4 | Stub. |
+| `Modded_Missions/[55-2hc]warfarev2_073v48co.tavi` | 3 | Stub. |
+| `Modded_Missions/[61-2hc]warfarev2_073v48co.dingor` | 20 | Overlay/stub. |
+| `Modded_Missions/[61-2hc]warfarev2_073v48co.isladuala` | 1 | Stub. |
+
+`git ls-files "*version.sqf"` returns no tracked rows, but both `description.ext:39` and `initJIPCompatible.sqf:4` include it at runtime. Treat `version.sqf` as generated input, not a missing tracked file.
+
 ## Extension Inventory
 
 | Count | Extension |

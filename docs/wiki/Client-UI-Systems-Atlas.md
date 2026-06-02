@@ -200,6 +200,8 @@ There is no standalone `Client/RHUD` directory in the current checkout. RHUD is 
 
 Full RHUD displays health, uptime, commander, AI count, money, income, side supply, supply income/minimum, towns held and client/server FPS. FPS-only mode repositions four controls into a small upper-right overlay.
 
+Wave P clarified the server-FPS contract: player UI reads `SERVER_FPS_GUI` from `Client/Client_UpdateRHUD.sqf:113`, populated by `Server/GUI/serverFpsGUI.sqf:6-7`. The second dedicated publisher `Server/Module/serverFPS/monitorServerFPS.sqf:4-6` publishes `WFBE_VAR_SERVER_FPS`, but no current source Chernarus player-UI reader was found. Treat that as a compatibility/redundancy channel until generated and modded consumers are deliberately retired.
+
 ## Map And Marker UI
 
 Map UI is split across one-shot initialization, long-running refresh loops and event handlers:

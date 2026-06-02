@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T22:10:00+02:00",
+  "generatedAt": "2026-06-02T22:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -34,13 +34,19 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "returned-selected-harvest-local",
-      "currentLane": "orchestrator-sidecar-discovery-o",
-      "currentWork": "Wave N owner-page promotion is published/validated. Wave O returned from the six reused attached agents; Codex is promoting selected source-checked findings into canonical owner pages and leaving the rest as routed leads.",
-      "nextExpectedOutput": "After validation/publish, start the next bounded discovery wave only where it does not duplicate current Claude/Codex lanes."
+      "status": "wave-p-returned-harvest-local",
+      "currentLane": "orchestrator-sidecar-discovery-p",
+      "currentWork": "All six Wave P read-only lanes returned. Codex has promoted selected source-checked deltas locally: FPS/RHUD contract, stale GetDelegators drift, construction logic-list asymmetry, GlobalGameStats fixture contract, tracked mission parity counts and buy-gear click-pool clarification.",
+      "nextExpectedOutput": "Codex will validate, mirror, commit and push the Wave P owner-page harvest."
     }
   },
   "laneSummary": [
+    {
+      "lane": "wave-p-owner-page-harvest",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "All six Wave P reports returned and selected findings are promoted into owner pages: FPS/RHUD SERVER_FPS_GUI contract, stale Server_GetDelegators generated drift, SmallSite/MediumSite wfbe_structures_logic asymmetry, GlobalGameStats fixture contract, tracked mission parity counts and buy-gear click-pool clarification."
+    },
     {
       "lane": "wave-o-orchestrator-sidecar-harvest",
       "owner": "Codex",

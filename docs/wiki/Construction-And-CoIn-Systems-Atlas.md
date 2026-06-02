@@ -196,6 +196,7 @@ Focused construction review found a source asymmetry worth treating as a bug can
 - `Construction_SmallSite.sqf:70` adds `_nearLogic` to `wfbe_structures_logic`, and `:98-99` says "Remove the logic from the list since it's built" but adds `_nearLogic` again.
 - `Construction_MediumSite.sqf:70` adds `_nearLogic`, then `:113-114` removes it after construction.
 - No source initializer for `wfbe_structures_logic` was found in the server init path; `Init_Server.sqf` initializes `wfbe_structures` and `wfbe_structures_live`, while `wfbe_structures_logic` appears only in SmallSite/MediumSite/repair-handler code.
+- Wave P confirmed the same SmallSite add/add and MediumSite add/remove shape in maintained Vanilla Takistan and the main modded Eden/Napf copies. `Server_HandleBuildingRepair.sqf:81,99` removes repair logic entries, but no active source caller for `HandleBuildingRepair` was found beyond compile/init text, so repair cleanup does not prove SmallSite stale entries are cleared in live play.
 
 Patch shape should be smoke-led: confirm whether small sites can leave duplicate/stale construction logic in a live build, then align SmallSite with MediumSite if the list is actually active.
 

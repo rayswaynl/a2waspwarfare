@@ -4,6 +4,21 @@ This page tracks the cheap read-only Codex discovery agents currently digging th
 
 The swarm is intentionally evidence-first: agents read source, report path/line-backed findings, and avoid editing docs or mission code. Codex integrates the useful findings into the wiki, `agent-context.json`, the coverage ledger and the feature-status register after review.
 
+## Current Wave: Wave P
+
+Spawned from the main orchestrator after Wave O was published. These are narrow read-only lanes chosen from Wave O leads; Codex is again keeping edits and publication local.
+
+| Agent | Lane | Status | Harvest summary |
+| --- | --- | --- | --- |
+| Tesla | `construction-logic-list-asymmetry` | Returned / selected harvest local | Confirmed SmallSite add/add versus MediumSite add/remove `wfbe_structures_logic` asymmetry across source/Vanilla/main modded copies; repair cleanup does not prove SmallSite stale entries are cleared because no active source caller for `HandleBuildingRepair` was found. Promoted into [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas). |
+| Linnaeus | `delegation-stale-helper-generated-check` | Returned / selected harvest local | Confirmed `Server_GetDelegators.sqf` is stale duplicate/generated drift across source/Vanilla/modded trees; active delegation uses inline `WFBE_SE_FNC_GetDelegators`. Promoted into [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map). |
+| Lorentz | `ui-fps-rhud-title-contract` | Returned / selected harvest local | Confirmed player UI reads `SERVER_FPS_GUI` from `Client_UpdateRHUD.sqf`; `WFBE_VAR_SERVER_FPS` is a second dedicated publisher with no source Chernarus player-UI reader found. Promoted into [Client UI systems atlas](Client-UI-Systems-Atlas), [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) and [Public variable channel index](Public-Variable-Channel-Index). |
+| Hubble | `globalgamestats-contract-fixture-map` | Returned / selected harvest local | Mapped the five-slot GlobalGameStats contract, DTO/default drift, CSV empty-field risk and normal JSON fixture. Promoted into [Tooling release readiness](Tooling-Release-Readiness-Audit). |
+| Banach | `generated-parity-tracked-counts` | Returned / selected harvest local | Regenerated tracked-file mission parity counts with `git ls-files`; confirmed Chernarus 787, Vanilla Takistan 786, modded fork/stub counts and no tracked `version.sqf`. Promoted into [Source inventory](Source-Inventory). |
+| Curie | `buy-gear-bounds-and-template-cleanup` | Returned / selected harvest local | Reconfirmed existing gear profile/cargo defects and clarified that buy-gear click-pool bounds are not currently proven off-by-one because the UI uses one-based cumulative slot IDs. Promoted into [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas). |
+
+Harvest rule: Wave P produced owner-page refinements, not broad Feature Status expansion. Remaining work is validation/publish and future code-owner decisions.
+
 ## Current Wave: Wave O
 
 Spawned from the orchestrator seat after Wave N was published. Fresh spawns were blocked by the active-thread cap, so Codex reused the six attached agents as sidecar scouts and kept publication local. All six reports returned; this section is a routing summary, not canonical evidence by itself.

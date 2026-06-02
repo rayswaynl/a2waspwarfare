@@ -1135,3 +1135,14 @@ Key conclusions:
 - Added a stale helper finding to [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map): `Server_GetDelegators.sqf` still exists, but active delegation defines `WFBE_SE_FNC_GetDelegators` inline in `Server_FNC_Delegation.sqf`.
 - Added GlobalGameStats data-shape/player-count fixture risk to [Tooling release readiness](Tooling-Release-Readiness-Audit): SQF exports five data args after the class name, extension/Discord DTO defaults differ, Discord reads index `4`, and the mission subtracts one assumed headless client.
 - Updated [Discovery swarm](Subagent-Discovery-Swarm), [Progress dashboard](Progress-Dashboard), [`agent-status.json`](agent-status.json), [`agent-collaboration.json`](agent-collaboration.json), [`agent-events.jsonl`](agent-events.jsonl) and [`agent-knowledge.jsonl`](agent-knowledge.jsonl) so Claude/Codex tabs know Wave O is returned and selected findings are being published by this orchestrator lane.
+
+# 2026-06-02 - Wave P FPS/RHUD Contract Harvest
+
+- Harvested Wave P read-only scouts and source-checked the selected deltas with `rg` / `git ls-files` before promotion.
+- Updated [Client UI systems atlas](Client-UI-Systems-Atlas): player RHUD/FPS UI reads `SERVER_FPS_GUI` at `Client/Client_UpdateRHUD.sqf:113`; `Server/GUI/serverFpsGUI.sqf:6-7` publishes it.
+- Updated [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) and [Public variable channel index](Public-Variable-Channel-Index): `WFBE_VAR_SERVER_FPS` is still published by `Server/Module/serverFPS/monitorServerFPS.sqf:5-6`, but no current source Chernarus player-UI reader was found. Treat consolidation as a compatibility cleanup separate from the hosted/listen busy-loop fix.
+- Updated [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map): `Server_GetDelegators.sqf` is stale duplicate/generated drift across source/Vanilla/modded trees; active code uses inline `WFBE_SE_FNC_GetDelegators`.
+- Updated [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas): SmallSite add/add versus MediumSite add/remove `wfbe_structures_logic` asymmetry also exists in maintained Vanilla and main modded copies.
+- Updated [Tooling release readiness](Tooling-Release-Readiness-Audit): added a five-slot GlobalGameStats fixture contract for BLUFOR score, OPFOR score, terrain, uptime and player count.
+- Updated [Source inventory](Source-Inventory): added tracked mission parity counts from `git ls-files`, with Vanilla Takistan marked maintained-but-map-divergent and modded folders marked forks/stubs.
+- Updated [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas): clarified that buy-gear click-pool bounds are not currently proven off-by-one; the already-known profile/cargo defects remain the patch-ready items.

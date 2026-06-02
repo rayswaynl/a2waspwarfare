@@ -69,6 +69,8 @@ For Codex/future code owner:
 - If cleaning further, decide whether stale/modded `WFBE_VAR_SERVER_FPS` consumers still matter before consolidating publishers.
 - Modded mission folders still need their broader generated/forked maintenance model resolved before hand edits.
 
+Wave P contract note: in current source Chernarus, RHUD/FPS HUD reads `SERVER_FPS_GUI` (`Client/Client_UpdateRHUD.sqf:113`), while `WFBE_VAR_SERVER_FPS` is published by `Server/Module/serverFPS/monitorServerFPS.sqf:5-6` with no player-UI reader found in the source mission. Consolidation is therefore a separate compatibility cleanup, not part of the hosted/listen busy-loop fix.
+
 For Claude:
 
 - Good contradiction check: inspect hosted/listen behavior in Arma 2 OA after this patch and verify no other `Init_Server.sqf` loop has the same `while true` + branch-only sleep shape.
