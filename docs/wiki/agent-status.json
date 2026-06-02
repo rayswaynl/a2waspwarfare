@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T17:35:00+02:00",
+  "generatedAt": "2026-06-02T18:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,7 +16,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass wired Claude's new canonical glossary/index/atlas/decision pages into Home/sidebar/footer and resolved Wiki-Quality-Audit C5 duplicate sidebar entries.",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki-Quality-Audit C2 by adding DR cross-links to developer-facing atlas pages.",
       "nextExpectedOutput": "Continue with the next bounded source-backed lane while Codex-2 owns PVF dispatch."
     },
     "Codex-2": {
@@ -33,6 +33,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wiki-quality-c2-atlas-crosslinks",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Gameplay, Client UI, AI/headless, Construction and Mission lifecycle atlas pages now link directly to canonical DR findings"
+    },
     {
       "lane": "pvf-dispatch-implementation-playbook",
       "owner": "Codex-2/Codex",

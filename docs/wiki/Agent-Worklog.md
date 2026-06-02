@@ -514,6 +514,13 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Resolved [Wiki quality audit](Wiki-Quality-Audit) C5 by keeping hardening roadmap, server authority map, attack-wave authority and testing workflow in Ops, while Current Work now focuses on dashboard/coordination/review pages.
 - Added the new pages into Home reading paths/current map, `_Footer.md` and `agent-context.json`.
 
+## 2026-06-02 - Codex Wiki-Quality C2 Atlas Cross-Links
+
+- Actioned [Wiki quality audit](Wiki-Quality-Audit) C2 across developer-facing atlas pages.
+- Added DR links in [Gameplay atlas](Gameplay-Systems-Atlas) for construction authority DR-6, purchase authority DR-14, victory/endgame DR-11/12/13/36, supply windfall DR-22, upgrade forgery DR-23 and commander assign DR-15.
+- Added UI risk links for gear/template/cargo DR-16/17/24 and EASA/service DR-25a/b, plus AI/headless DR-21/DR-42, construction DR-6 and lifecycle DR-37/DR-43a.
+- Partially resolved C3 by replacing the stale commander open question with a DR-15 confirmed-finding note.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

@@ -23,6 +23,8 @@ It also sets `loadScreen`, disables spoken sentences, disables channels 3 and 6,
 
 Source verification: `description.ext:39` includes `version.sqf`; `:41-58` include sound, music and Rsc bundles; `:64-67` set `loadScreen`, `disableChannels[]` and `disabledAI`. `version.sqf` is absent from the current Chernarus source mission checkout, so the generated-file warning is current.
 
+Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-43a tracks the missing `version.sqf` source/build gap.
+
 ## `initJIPCompatible.sqf`
 
 This is the first major runtime script. It creates early logging, determines server/client/headless roles, runs version detection, initializes common constants and parameters, applies environment time, then dispatches common/server/client/headless init scripts.
@@ -118,6 +120,8 @@ Headless support is gated by the OA version check in `initJIPCompatible.sqf`. Wh
 `Headless/Init/Init_HC.sqf` currently uses a fixed delay and then sends `["RequestSpecial", ["connected-hc", player]]` to the server. There is no explicit `waitUntil {serverInitFull}` barrier in that file, so HC timing bugs should be investigated against [Lifecycle wait-chain](Lifecycle-Wait-Chain) and [AI/headless](AI-Headless-And-Performance) together.
 
 Source verification: `Headless/Init/Init_HC.sqf:12` is `sleep 20`; `:15` sends the `connected-hc` request. The server sets `serverInitComplete = true` early at `Server/Init/Init_Server.sqf:117`, waits for `commonInitComplete && townInit` at `:127`, and only later sets `serverInitFull = true` at `:507`. Treat the HC sleep as a timing proxy, not a real dependency barrier.
+
+Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-37 is the boot wait-chain review; use [Lifecycle wait-chain](Lifecycle-Wait-Chain) before reordering init flags or replacing waits.
 
 ## 2026-06-02 Lifecycle Report Verification
 

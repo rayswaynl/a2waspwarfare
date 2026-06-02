@@ -138,6 +138,7 @@ Risk notes:
 - Town AI activation and capture loops are independent; changing one can make the other stale.
 - Detection range differs for inactive vs active towns.
 - `wfbe_active_sideIDs` and `wfbe_attacker_sideIDs` are side-scoped visibility tools; avoid replacing them with global reveal flags.
+- Confirmed finding cross-links: town-AI occupied-vehicle deletion is tracked in [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety); use [Deep-review findings](Deep-Review-Findings) DR-21 for HC disconnect/no failover and DR-42 for static-defense HC update-back.
 
 ## Economy And Resource Loop
 
@@ -175,6 +176,7 @@ Risk notes:
 - Economy, AntiStack and side presence interact; changing AntiStack guards can change income behavior.
 - Resource sleeps use `GetSleepFPS`, so tick rate may adapt to server FPS.
 - `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` gates the whole income block when side supply exceeds the limit.
+- Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-22 covers side-supply overspend windfall; DR-41 covers attack-wave direct-PV supply forgery. Use [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) before touching that path.
 
 ## Commander Flow
 
@@ -212,7 +214,7 @@ sequenceDiagram
 
 Risk notes:
 
-- `Server_AssignNewCommander.sqf` treats `_this` both as side and array (`_side = _this; _commander = _this select 1`), so confirm call shape before changing it.
+- `Server_AssignNewCommander.sqf` treats `_this` both as side and array (`_side = _this; _commander = _this select 1`). This is confirmed as [Deep-review findings](Deep-Review-Findings) DR-15, not just an open question.
 - Commander identity lives on side logic and is public; client UI and resource distribution both depend on it.
 
 ## Upgrades
@@ -244,6 +246,7 @@ Risk notes:
 
 - Some feature code checks upgrade levels directly from `WFBE_CO_FNC_GetSideUpgrades`; changing upgrade indices affects many systems.
 - Existing artillery is special: it needs explicit ammo refresh after artillery ammo upgrades because it may not pass through buy/build init again.
+- Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-23 covers upgrade request forgery / missing server-side commander and funds validation.
 
 ## Construction And Base Structures
 
@@ -304,6 +307,7 @@ Risk notes:
 - `coin_interface.sqf` still contains old commented direct publicVariable code near the newer PVF path.
 - Construction mode changes affect `wfbe_structures_logic`, which other repair/build-completion code may inspect.
 - HQ deploy/mobilize deletes and replaces the HQ object; client-side killed handlers and JIP handling must be preserved.
+- Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-6 covers construction authority, where the server request mostly validates class existence while trusting client-side payment, placement and authority checks. See [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) for the dedicated map.
 
 ## Factories And Unit Production
 
@@ -354,6 +358,13 @@ Risk notes:
 - Building queue cleanup has timeout behavior based on longest build time; changing queue variables can strand factories.
 - Spawn pads are type-based helper objects near factories; pad class changes can alter spawn placement.
 - Buy menu affordability is client-side, so server-side validation should be considered before adding high-value or exploitable purchases.
+- Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-14 covers player purchase authority; use [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) before changing buy-unit behavior.
+
+## Victory And Endgame Gateway
+
+Victory detection is owned by `Server/FSM/server_victory_threeway.sqf`, not by the town capture or economy loops above. Keep it separate when changing gameplay flow.
+
+Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-11 covers winner inversion / persisted win-tally correctness, DR-12 covers threeway no-detection, DR-13 covers duplicate game-end logging and DR-36 explains the guard/precedence mechanism plus the clean perf/JIP review.
 
 ## Safe Extension Points
 
@@ -366,9 +377,9 @@ Risk notes:
 | New structure | Side `Structures_*.sqf`, `RequestStructure.sqf` script mapping, matching construction script and `Init_BaseStructure.sqf`. |
 | New purchasable unit | [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), unit metadata arrays, buy menu filtering, `Client_BuildUnit.sqf`, and `Server_BuyUnit.sqf` if AI can use it. |
 
-## Open Questions For Claude / Future Review
+## Remaining Questions For Future Review
 
-- Confirm whether `Server_AssignNewCommander.sqf` call-shape handling is intentional or a latent bug.
+- `Server_AssignNewCommander.sqf` call-shape handling is now DR-15 in [Deep-review findings](Deep-Review-Findings); future work should fix or explicitly preserve it, not re-open it as an unknown.
 - Trace structure repair/completion logic that consumes `wfbe_structures_logic`.
 - Compare client and server unit-build initialization for drift, especially countermeasures, IRS, artillery and special vehicle actions. The first source-backed map is now in [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas).
 - Verify whether supply-income stagnation is currently called from the active resource loop or only retained as a helper.

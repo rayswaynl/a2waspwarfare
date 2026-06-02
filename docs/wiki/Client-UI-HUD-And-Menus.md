@@ -102,6 +102,7 @@ The combat icon blinking feature is guarded by `WFBE_C_MAP_ICON_BLINKING_ENABLED
 - Preserve cached-write patterns in RHUD and marker scripts.
 - Keep action label changes consistent with localized string usage where available.
 - Use unique dialog IDDs for new menus; this fork already has IDD reuse that future work should not expand.
+- UI-originated economy actions are not automatically authoritative. For known risks, see [Deep-review findings](Deep-Review-Findings) DR-16/DR-17/DR-24 for gear/template/cargo behavior and DR-25a/b for EASA/service authority, plus [Client UI systems atlas](Client-UI-Systems-Atlas) for the source map.
 
 ## Continue Reading
 

@@ -12,6 +12,8 @@
 
 Implementation playbook: [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook).
 
+Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-21 covers HC disconnect/no failover, while DR-42 covers static-defense HC one-way delegation / missing update-back. Treat those as the canonical finding records and use the playbook for patch shape.
+
 Boyle's second-pass autonomy review clarified the split between real AI plumbing and missing autonomy:
 
 | Area | Source status | Notes |
