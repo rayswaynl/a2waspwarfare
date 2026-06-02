@@ -1,58 +1,224 @@
-//--- Support_DroneStrike.sqf — SPIKE (Task 1).
-//--- Proves crewless, AI-free scripted flight for ONE drone before the full orchestrator is built.
+//--- Support_DroneStrike.sqf — Mixed Saturation Strike orchestrator (server-authoritative).
 //--- Payload: ["DroneStrike", side, callPos, playerTeam]  (spawned server-side via KAT_DroneStrike).
-//--- All commands here are Arma 2 OA compatible (no setVelocityModelSpace / distance2D / getDir-target / BIS_fnc_relPos).
+//--- Arma 2 OA SQF only: no pushBack / params / distance2D / setVelocityModelSpace / vector* (A3) / code-select.
+//--- Flight primitive validated by the Task-1 spike (Method A: setVelocity-from-heading + setPosATL alt-lock).
 
-Private ["_side","_destination","_model","_bd","_corners","_spawnPos","_drone","_alt","_speed","_t","_hdg","_tgt","_ang","_pt","_dx","_dy","_p"];
+private ["_side","_destination","_playerTeam","_sideID","_enemySide","_model","_alt","_speed","_lspeed",
+        "_flareN","_total","_zoneR","_warhead","_scatter","_hp","_stagger","_loiterTime",
+        "_bd","_corners","_spawnPos","_drones","_i","_role","_drone","_activeKey","_active","_mkr"];
 
-_side = _this select 1;
+_side        = _this select 1;
 _destination = _this select 2;
+_playerTeam  = _this select 3;
+_sideID      = _side call GetSideID;
+_enemySide   = if (_side == east) then {west} else {east};
+
 _model = missionNamespace getVariable Format ["WFBE_%1DRONE", str _side];
 if (isNil "_model") then {_model = missionNamespace getVariable Format ["WFBE_%1UAV", str _side]};
-_alt = WFBE_C_DRONE_CRUISE_ALT;
-_speed = WFBE_C_DRONE_INGRESS_SPEED;
 
-["INFORMATION", Format ["Support_DroneStrike.sqf SPIKE : [%1] strike at %2, model %3.", str _side, _destination, _model]] Call WFBE_CO_FNC_LogContent;
+_alt        = WFBE_C_DRONE_CRUISE_ALT;
+_speed      = WFBE_C_DRONE_INGRESS_SPEED;
+_lspeed     = WFBE_C_DRONE_LOITER_SPEED;
+_flareN     = WFBE_C_DRONE_FLARE_COUNT;
+_total      = WFBE_C_DRONE_FLARE_COUNT + WFBE_C_DRONE_MUNITION_COUNT;
+_zoneR      = WFBE_C_DRONE_ZONE_RADIUS;
+_warhead    = WFBE_C_DRONE_WARHEAD;
+_scatter    = WFBE_C_DRONE_SCATTER;
+_hp         = WFBE_C_DRONE_HP;
+_stagger    = WFBE_C_DRONE_DIVE_STAGGER;
+_loiterTime = WFBE_C_DRONE_LOITER_TIME;
 
-//--- Map-edge spawn (clone of Support_Paratroopers).
+["INFORMATION", Format ["Support_DroneStrike.sqf : [%1] Team [%2] strike at %3 (model %4).", str _side, _playerTeam, _destination, _model]] Call WFBE_CO_FNC_LogContent;
+
+//--- Concurrent cap (per side).
+_activeKey = Format ["WFBE_DRONE_ACTIVE_%1", str _side];
+_active = missionNamespace getVariable [_activeKey, 0];
+if (_active >= WFBE_C_DRONE_CONCURRENT_CAP) exitWith {
+    ["INFORMATION","Support_DroneStrike.sqf : concurrent cap reached, ignoring request."] Call WFBE_CO_FNC_LogContent;
+};
+missionNamespace setVariable [_activeKey, _active + 1];
+
+//--- Scripted survivability: only >=.50-cal hits count; drone has WFBE_C_DRONE_HP hit-points. Defined global (referenced by EH).
+WFBE_DroneHandleDamage = {
+    private ["_unit","_dmg","_prev","_delta","_h"];
+    _unit = _this select 0;
+    _dmg  = _this select 2;
+    _prev = damage _unit;
+    _delta = _dmg - _prev;
+    if (_delta >= WFBE_C_DRONE_MIN_HIT) then {
+        _h = (_unit getVariable ["wfbe_drone_hp", WFBE_C_DRONE_HP]) - 1;
+        _unit setVariable ["wfbe_drone_hp", _h, true];
+        if (_h <= 0) exitWith {1};   //--- depleted -> destroy
+        0
+    } else {
+        0                            //--- sub-.50 plink -> ignored, stays pristine
+    };
+};
+
+//--- Strike-zone marker so the commander can see where the package is headed (also a fairness warning).
+_mkr = Format ["WFBE_DRONE_MKR_%1_%2", str _side, str (round time)];
+createMarker [_mkr, _destination];
+_mkr setMarkerType "mil_destroy";
+_mkr setMarkerColor (if (_side == west) then {"ColorBlue"} else {"ColorRed"});
+_mkr setMarkerText "Drone strike";
+
+//--- Map-edge spawn (clone of Support_Paratroopers ingress origin).
 _bd = missionNamespace getVariable 'WFBE_BOUNDARIESXY';
-_corners = if (isNil "_bd") then {[[0,0,_alt]]} else {[[0,0,_alt],[0,_bd,_alt],[_bd,_bd,_alt],[_bd,0,_alt]]};
+_corners = if (isNil "_bd") then {[[0,0,_alt]]} else {
+    [[0+random 200,0+random 200,_alt],[0+random 200,_bd-random 200,_alt],[_bd-random 200,_bd-random 200,_alt],[_bd-random 200,0+random 200,_alt]]
+};
 _spawnPos = _corners select (floor random count _corners);
 
-_drone = createVehicle [_model, _spawnPos, [], 0, "FLY"];
-_drone setPosATL _spawnPos;
-_drone allowDamage false;     //--- SPIKE ONLY: isolate flight quality from being shot.
-_drone flyInHeight _alt;
-
-//--- METHOD A (no AI): scripted thrust + heading steer toward the painted point.
-_tgt = [_destination select 0, _destination select 1, _alt];
-while {alive _drone && ((_drone distance _tgt) > 70)} do {
-	_p = getPosATL _drone;
-	_dx = (_tgt select 0) - (_p select 0);
-	_dy = (_tgt select 1) - (_p select 1);
-	_hdg = _dx atan2 _dy;
-	_drone setDir _hdg;
-	_drone setVectorDirAndUp [[sin _hdg, cos _hdg, 0],[0,0,1]];
-	_drone setVelocity [sin _hdg * _speed, cos _hdg * _speed, 0];
-	_drone setPosATL [_p select 0, _p select 1, _alt];   //--- altitude lock
-	sleep 0.08;
+//--- Spawn the crewless package.
+_drones = [];
+for "_i" from 0 to (_total - 1) do {
+    _role = if (_i < _flareN) then {"flare"} else {"munition"};
+    _drone = createVehicle [_model, _spawnPos, [], 0, "FLY"];
+    _drone setPosATL [(_spawnPos select 0) + (_i * 22), (_spawnPos select 1) + (_i * 16), _alt];
+    _drone setVariable ["wfbe_drone_role", _role, true];
+    _drone setVariable ["wfbe_drone_hp", _hp, true];
+    _drone setVariable ["wfbe_phase", _i, true];
+    _drone setVariable ["wfbe_sideID", _sideID, false];
+    _drone flyInHeight _alt;
+    _drone addEventHandler ["HandleDamage", {_this call WFBE_DroneHandleDamage}];
+    _drone addEventHandler ["Killed", {[_this select 0, _this select 1, (_this select 0) getVariable "wfbe_sideID"] Spawn WFBE_CO_FNC_OnUnitKilled}];
+    _drones set [count _drones, _drone];
 };
+processInitCommands;
 
-//--- Loiter a circle around the point for 30s, then despawn.
-_t = time;
-while {alive _drone && (time - _t < 30)} do {
-	_ang = (time - _t) * 60;   //--- deg/s sweep
-	_pt = [(_destination select 0) + WFBE_C_DRONE_ZONE_RADIUS * sin _ang, (_destination select 1) + WFBE_C_DRONE_ZONE_RADIUS * cos _ang, _alt];
-	_p = getPosATL _drone;
-	_dx = (_pt select 0) - (_p select 0);
-	_dy = (_pt select 1) - (_p select 1);
-	_hdg = _dx atan2 _dy;
-	_drone setDir _hdg;
-	_drone setVectorDirAndUp [[sin _hdg, cos _hdg, -0.05],[0,0,1]];
-	_drone setVelocity [sin _hdg * WFBE_C_DRONE_LOITER_SPEED, cos _hdg * WFBE_C_DRONE_LOITER_SPEED, 0];
-	_drone setPosATL [_p select 0, _p select 1, _alt];
-	sleep 0.08;
+//--- Drive each drone in its own loop: ingress -> role behaviour -> despawn.
+{
+    private "_d"; _d = _x;
+    [_d, _destination, _alt, _speed, _lspeed, _zoneR, _loiterTime, _warhead, _scatter, _stagger, _enemySide] spawn {
+        private ["_d","_dest","_alt","_speed","_lspeed","_zoneR","_loiterTime","_warhead","_scatter","_stagger","_enemySide",
+                "_role","_phase","_tgt","_p","_dx","_dy","_hdg","_ang","_pt","_endT","_t0","_target","_cands","_valid","_aa",
+                "_aim","_dur","_imp","_vx","_vy","_vz","_mag"];
+        _d          = _this select 0;
+        _dest       = _this select 1;
+        _alt        = _this select 2;
+        _speed      = _this select 3;
+        _lspeed     = _this select 4;
+        _zoneR      = _this select 5;
+        _loiterTime = _this select 6;
+        _warhead    = _this select 7;
+        _scatter    = _this select 8;
+        _stagger    = _this select 9;
+        _enemySide  = _this select 10;
+        _role  = _d getVariable "wfbe_drone_role";
+        _phase = _d getVariable "wfbe_phase";
+
+        //--- INGRESS to the zone.
+        _tgt = [_dest select 0, _dest select 1, _alt];
+        while {alive _d && ((_d distance _tgt) > (90 + random 90))} do {
+            _p = getPosATL _d;
+            _dx = (_tgt select 0) - (_p select 0);
+            _dy = (_tgt select 1) - (_p select 1);
+            _hdg = _dx atan2 _dy;
+            _d setDir _hdg;
+            _d setVectorDirAndUp [[sin _hdg, cos _hdg, 0],[0,0,1]];
+            _d setVelocity [sin _hdg * _speed, cos _hdg * _speed, 0];
+            _d setPosATL [_p select 0, _p select 1, _alt];
+            sleep 0.08;
+        };
+
+        _endT = time + _loiterTime;
+        _t0 = time;
+
+        if (_role == "flare") then {
+            //--- FLARE DRONE: orbit as a conspicuous screen, pop flares (visual bait), soak fire.
+            _d addEventHandler ["incomingMissile", {
+                private "_fd"; _fd = _this select 0;
+                if (alive _fd) then {
+                    "F_40mm_White" createVehicle (getPosATL _fd);
+                    "F_40mm_White" createVehicle [(getPosATL _fd select 0)+10, (getPosATL _fd select 1)+10, (getPosATL _fd select 2)];
+                };
+            }];
+            while {alive _d && time < (_endT + 25)} do {
+                _ang = (_phase * 70) + ((time - _t0) * 70);
+                _pt = [(_dest select 0) + _zoneR * sin _ang, (_dest select 1) + _zoneR * cos _ang, _alt];
+                _p = getPosATL _d;
+                _dx = (_pt select 0) - (_p select 0);
+                _dy = (_pt select 1) - (_p select 1);
+                _hdg = _dx atan2 _dy;
+                _d setDir _hdg;
+                _d setVectorDirAndUp [[sin _hdg, cos _hdg, -0.05],[0,0,1]];
+                _d setVelocity [sin _hdg * _lspeed, cos _hdg * _lspeed, 0];
+                _d setPosATL [_p select 0, _p select 1, _alt];
+                if ((round ((time - _t0) * 10)) mod 80 == 0) then {"F_40mm_White" createVehicle (getPosATL _d)};
+                sleep 0.1;
+            };
+            if (alive _d) then {deleteVehicle _d};
+        } else {
+            //--- LOITERING MUNITION: orbit-search for an enemy ground vehicle, then top-attack dive.
+            _target = objNull;
+            while {alive _d && isNull _target && time < _endT} do {
+                _cands = nearestObjects [_dest, ["LandVehicle","StaticWeapon"], _zoneR];
+                _valid = []; _aa = [];
+                {
+                    if (alive _x && (side _x == _enemySide) && !(_x isKindOf "Air")) then {
+                        _valid set [count _valid, _x];
+                        if (_x isKindOf "StaticWeapon") then {_aa set [count _aa, _x]};
+                    };
+                } forEach _cands;
+                if (count _aa > 0) then {_target = _aa select 0} else {if (count _valid > 0) then {_target = _valid select 0}};
+                if (isNull _target) then {
+                    _ang = (_phase * 55) + ((time - _t0) * 70);
+                    _pt = [(_dest select 0) + _zoneR * sin _ang, (_dest select 1) + _zoneR * cos _ang, _alt];
+                    _p = getPosATL _d;
+                    _dx = (_pt select 0) - (_p select 0);
+                    _dy = (_pt select 1) - (_p select 1);
+                    _hdg = _dx atan2 _dy;
+                    _d setDir _hdg;
+                    _d setVectorDirAndUp [[sin _hdg, cos _hdg, -0.05],[0,0,1]];
+                    _d setVelocity [sin _hdg * _lspeed, cos _hdg * _lspeed, 0];
+                    _d setPosATL [_p select 0, _p select 1, _alt];
+                };
+                sleep 0.4;
+            };
+
+            //--- Stagger the dives so the sirens + explosions chain.
+            sleep (_phase * _stagger);
+            if (!alive _d) exitWith {};
+
+            _aim = if (isNull _target) then {[_dest select 0, _dest select 1, _alt]} else {getPosATL _target};
+            _d say3D "drone_stuka";   //--- Ju-87 Jericho-trumpet dive siren (global-effect; silent until the .ogg lands).
+
+            //--- Top-attack dive.
+            _dur = 0;
+            while {alive _d && ((getPosATL _d) select 2 > 6) && _dur < 9} do {
+                _p = getPosATL _d;
+                _vx = (_aim select 0) - (_p select 0);
+                _vy = (_aim select 1) - (_p select 1);
+                _vz = (_aim select 2) - (_p select 2);
+                _mag = sqrt (_vx*_vx + _vy*_vy + _vz*_vz);
+                if (_mag < 1) then {_mag = 1};
+                _hdg = _vx atan2 _vy;
+                _d setDir _hdg;
+                _d setVectorDirAndUp [[_vx/_mag, _vy/_mag, _vz/_mag],[0,0,1]];
+                _d setVelocity [(_vx/_mag)*_speed, (_vy/_mag)*_speed, (_vz/_mag)*_speed];
+                _dur = _dur + 0.06;
+                sleep 0.06;
+            };
+
+            //--- Impact: survivable warhead at target +/- scatter (package-lethal, not per-drone one-shot).
+            _aim = if (isNull _target) then {_dest} else {getPos _target};
+            _ang = random 360;
+            _imp = [(_aim select 0) + (random _scatter) * sin _ang, (_aim select 1) + (random _scatter) * cos _ang, 0];
+            _warhead createVehicle _imp;
+            if (alive _d) then {deleteVehicle _d};
+        };
+    };
+} forEach _drones;
+
+//--- Lifecycle cleanup: remove marker, delete any survivors past hard lifetime, decrement the cap.
+[_drones, _activeKey, _mkr] spawn {
+    private ["_drones","_activeKey","_mkr","_hardLife"];
+    _drones    = _this select 0;
+    _activeKey = _this select 1;
+    _mkr       = _this select 2;
+    _hardLife  = time + WFBE_C_DRONE_LOITER_TIME + 90;
+    waitUntil {sleep 2; (({alive _x} count _drones) == 0) || time > _hardLife};
+    {if (!isNull _x) then {deleteVehicle _x}} forEach _drones;
+    deleteMarker _mkr;
+    missionNamespace setVariable [_activeKey, ((missionNamespace getVariable [_activeKey, 1]) - 1) max 0];
 };
-
-if (!isNull _drone) then {deleteVehicle _drone};
-["INFORMATION", "Support_DroneStrike.sqf SPIKE : complete."] Call WFBE_CO_FNC_LogContent;
