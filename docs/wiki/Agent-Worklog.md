@@ -494,6 +494,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Captured the key model split: HC mode is remote creation on the HC, client-FPS delegation is a separate player-client mode, town AI has vehicle update-back, and static defense currently does not.
 - Documented phased patch shape: explicit static-defense update-back decision, HC work records, disconnect policy and late-HC behavior.
 
+## 2026-06-02 - Codex Wiki-Quality C1 MASH Networking Fix
+
+- Actioned [Wiki quality audit](Wiki-Quality-Audit) C1 on [Networking/PV](Networking-And-Public-Variables).
+- Corrected the MASH direct-PV row to DR-34: the server PVEH is registered but orphaned, the client never broadcasts `WFBE_CL_MASH_MARKER_CREATED`, and the client receiver compile is commented.
+- Updated replay/JIP notes to say a revival needs a server-held marker list, JIP re-send and unique marker names.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

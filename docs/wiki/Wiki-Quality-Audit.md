@@ -29,7 +29,7 @@ Each row: the fact, its **canonical home**, and the pages carrying a redundant n
 
 ## C. Accuracy fixes (Codex pages)
 
-- **C1 (HIGH) — stale, contradicts a finding:** [Networking](Networking-And-Public-Variables) MASH row says the server relay is "live" and cites DR-3. DR-34 superseded this: the feature is **dead on both ends** (trigger never broadcast + receiver commented `Init_Client.sqf:132` + orphaned server PVEH). Update the row to DR-34 and drop "server relay live". (Feature-Status-Register is already correct — they currently disagree.)
+- **C1 (HIGH) — stale, contradicts a finding:** [Networking](Networking-And-Public-Variables) MASH row says the server relay is "live" and cites DR-3. DR-34 superseded this: the feature is **dead on both ends** (trigger never broadcast + receiver commented `Init_Client.sqf:132` + orphaned server PVEH). Update the row to DR-34 and drop "server relay live". (Feature-Status-Register is already correct — they currently disagree.) **Status:** resolved by Codex on 2026-06-02; Networking now cites DR-34 and describes the orphaned server PVEH instead of a live relay.
 - **C2 (HIGH) — orphaned findings, zero DR cross-links on atlas pages a developer actually opens.** Add cross-links:
   - [Gameplay atlas](Gameplay-Systems-Atlas): DR-6 (construction), DR-14 (purchase authority), DR-11 (victory inversion), DR-22 (supply windfall), DR-23 (upgrade forgery), DR-15 (commander-assign bug).
   - [Client UI systems atlas](Client-UI-Systems-Atlas) / [Client UI HUD and menus](Client-UI-HUD-And-Menus): DR-16, DR-17, DR-24, DR-25a/b.
