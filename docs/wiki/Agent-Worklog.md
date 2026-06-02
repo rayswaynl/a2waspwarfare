@@ -486,6 +486,7 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - **Pass 2 done:** `agent-context.json` `systems` map +5 entries (`modules`, `victoryEndgame`, `weatherDayNight`, `markersCleanersRestorers`, `parametersLocalization`) — all 22 ledger subsystems now represented so agents loading context see them.
 - **Pass 3 done:** new `Wiki-Quality-Audit.md` — a Codex-lane punch-list: (A) 11 dedup→cross-link rows, (B) page merges (Hardening-roadmap≈Server-authority-map ~70%; Client-UI-HUD ⊂ Client-UI-Systems-Atlas; Mission-entrypoints≈Lifecycle-wait-chain ~50%; Gameplay-atlas reduce-to-summary), (C) accuracy fixes (C1 HIGH: Networking MASH row contradicts DR-34; C2 HIGH: orphaned-DR cross-links to add per atlas; C3 stale Gameplay open-questions; C4 cite DR-11 by number; C5 sidebar dup entries; C6 thin citations). **Codex handoff event posted** to action A/B/C on its pages + wire upcoming new Claude pages into nav.
 - **Pass 4 done:** new `Variable-And-Naming-Conventions.md` — source-cited WFBE_* prefix glossary (config/CO_FNC/SE_FNC/CL_FNC/SRVFNC/CLTFNC/WFBE_PVF_/wfbe_ object vars) + key implications (module gates, pre-compiled-vs-recompile DR-1/38, setVariable-true replication, case-sensitive getVariable keys DR-18). Sibling-new-page links backticked pending creation; final relink pass at the end.
+- **Pass 5 done:** new `Public-Variable-Channel-Index.md` — canonical inventory of ALL PV channels: 13 server-bound + 14 client-bound registered PVF commands (`Init_PublicVariables.sqf:8-20`/`:23-37`, each annotated with its notable DR) + ~23 direct channels (ATTACK_WAVE_INIT DR-41, MASH DR-34, supply DR-39/DR-22, ICBM/radiation FX, AFK/kickAFK DR-30, daynight, handshakes DR-37). Trust legend + BattlEye-filter design surface. Supersedes the 2 Networking tables + SQF-atlas duplicate (DUP-11 handoff to Codex).
 
 ## 2026-06-02 - Codex HC Delegation/Failover Playbook
 
@@ -493,6 +494,11 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Added [HC delegation/failover](Headless-Delegation-And-Failover-Playbook) as an implementation-ready DR-21/DR-42 guide.
 - Captured the key model split: HC mode is remote creation on the HC, client-FPS delegation is a separate player-client mode, town AI has vehicle update-back, and static defense currently does not.
 - Documented phased patch shape: explicit static-defense update-back decision, HC work records, disconnect policy and late-HC behavior.
+
+## 2026-06-02 - Claude Wiki-Quality Program, Pass 6 (Modules atlas)
+
+- New `Modules-Atlas.md` — source-verified sections for the ~10 previously-undocumented modules: **IRS** (IR smoke; gate `WFBE_C_MODULE_WFBE_IRSMOKE` + `WFBE_UP_IRSMOKE`), **CM** (flares/chaff; vanilla-only gate), **Reaktiv** (ERA armor via `HandleDamage`), **Engines** (stealth = save fuel + `setFuel 0`), **AutoFlip** (Marty; flip-righting poll, tilt 0.35/cooldown 45), **ZetaCargo** (Benny sling-load; lifter allow-list + cargo types), **Valhalla** (low-gear/high-climb; display-46 key EHs), **Skill** (Benny class abilities; Engineer/Soldier/Officer/…), **NEURO** (Benny AI taxi; `NEURO_TAXI_CONDITION` hook), **CIPHER** (Benny sort util; no side effects). Cross-links the already-covered modules (Nuke DR-27, EASA DR-28, AntiStack DR-7-10, supplyMission DR-39, MASH DR-34, UAV, serverFPS DR-19, AFK DR-30).
+- Ledger **Modules Map 🟡→✅** (restored; atlas now exists) and row title/anchor expanded to name the documented modules.
 
 ## 2026-06-02 - Codex Wiki-Quality C1 MASH Networking Fix
 
