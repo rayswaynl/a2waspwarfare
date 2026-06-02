@@ -1014,3 +1014,10 @@ Key conclusions:
 - Mapped `Init_Server.sqf:521-560`, `server_collector_garbage.sqf`, `emptyvehiclescollector.sqf`, `droppeditems_cleaner.sqf`, `crater_cleaner.sqf`, `ruins_cleaner.sqf`, `buildings_restorer.sqf` and `mines_cleaner.sqf`.
 - Added interval/default parameter notes from `Rsc/Parameters.hpp:515-543`, PerformanceAudit labels, ownership notes for `gc_collector`, `emptyQueu` and `mines`, and Chernarus-first propagation guidance.
 - Updated [Codebase coverage ledger](Codebase-Coverage-Ledger) so markers/cleaners/restorers are now marked mapped, with remaining work tracked as patch-ready validation/owner decisions.
+
+# 2026-06-02 - UI JIP/Headless Verdict
+
+- Resolved a coverage-ledger contradiction where the campaign milestone said all dimensions were reviewed while the UI/HUD/menus JIP/HC cell was still blank.
+- Source-read UI role gating and recovery paths in `initJIPCompatible.sqf`, `Init_Client.sqf`, `updateclient.sqf`, `Client_UpdateRHUD.sqf`, `Client_OnKilled.sqf`, `Client_PreRespawnHandler.sqf` and `Rsc/Titles.hpp`.
+- Added a JIP/headless verdict to [Client UI systems atlas](Client-UI-Systems-Atlas): headless clients do not run UI init; late joiners get marker/vote/HUD recovery; several synced-variable waits remain unbounded and event-style marker/support channels still need feature smoke.
+- Updated [Client UI/HUD quick reference](Client-UI-HUD-And-Menus) and [Codebase coverage ledger](Codebase-Coverage-Ledger) so the UI JIP/HC cell is now reviewed-with-caveats instead of blank.

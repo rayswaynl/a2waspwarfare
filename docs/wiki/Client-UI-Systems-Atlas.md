@@ -258,6 +258,21 @@ The intro video is `Videos/intro720p.ogv`, started from `Init_Client.sqf:785`.
 | CoIn title registration | `WFBE_ConstructionInterface` is cut from `coin_interface.sqf` and stores `wfbe_title_coin`, but it is not listed in `RscTitles.titles[]`. | Construction appears intentionally wired; verify in-game before refactoring title registration. |
 | Disabled task UI | `TaskSystem` compile and town task spawn are commented in `Init_Client.sqf:75` and `:744-745`. | Task UI behavior is partial/disabled; revive only with JIP and spam review. |
 
+## JIP And Headless-Client Verdict
+
+The UI layer is reviewed for JIP/headless scope as of 2026-06-02. It is ordinary-client and hosted-client code; headless clients do not run the UI init path.
+
+| Question | Source-backed verdict |
+| --- | --- |
+| Does a dedicated headless client run UI scripts? | No. `initJIPCompatible.sqf:70-76` and `:224-234` run client init only for hosted server or non-headless non-dedicated clients; `:237-238` sends detected headless clients to `Headless/Init/Init_HC.sqf` instead. |
+| Does a late-joining client wait for usable side/team state before UI init? | Mostly yes, but without timeouts. `initJIPCompatible.sqf:224-233` waits for `WFBE_PRESENTSIDES` and each side's `wfbe_teams` before launching `Init_Client.sqf`; `Init_Client.sqf:165`, `:360`, `:367-369`, `:384`, `:394-397`, `:463-467`, `:490`, `:595`, `:757` and `:787` then wait on common/town/client logic state. This inherits the broader boot/JIP wait-chain caveat in [Lifecycle wait-chain](Lifecycle-Wait-Chain): a never-synced variable can hang the client UI path. |
+| Are local UI/title displays resilient after JIP or display loss? | Partly. `Init_Client.sqf:147-150` keeps the legacy `RscOverlay` alive, `:161-162` clears stale title display refs, `Rsc/Titles.hpp:170-171` tracks `OptionsAvailable` in `uiNamespace["currentCutDisplay"]`, and `Client_UpdateRHUD.sqf:87-95` recreates `OptionsAvailable` if the stored display is null. |
+| Are markers and vote UI rehydrated for late joiners? | Partly. `Init_Client.sqf:730-734` re-runs `Client/Init/Init_Markers.sqf` after a short JIP delay, `updateclient.sqf:41-99` re-evaluates west/east HQ wreck marker state, and `Init_Client.sqf:787-789` opens `WFBE_VoteMenu` if the side logic says a vote is already running. Public-variable marker styling still needs the marker-specific smoke cases from [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas). |
+| Do respawns restore the UI/action surface? | Yes for the audited local action surface. `Client_OnKilled.sqf:49-52` closes active dialogs, `:60-87` waits for the new player object and rebinds the killed EH, then calls `PreRespawnHandler` at `:87-89`. `Client_PreRespawnHandler.sqf:1-38` reapplies skill effects, restarts `updateactions.fsm`, re-adds the WF menu/player AI actions and restores commander build action when applicable. |
+| Is "HC" wording ambiguous in this code? | Yes. `updateclient.sqf:203-205` and `:227-228` call `hcAllGroups` / `HCRemoveAllGroups`, which are player high-command UI/group controls. They are not evidence that the Arma 2 OA headless-client process is running UI code. |
+
+Verdict: mark the UI/HUD/menus JIP/HC coverage cell as reviewed with caveats. No dedicated headless-client UI execution was found. Late-join support exists through client-role gating, marker replay, HQ marker repair and vote/menu recovery, but the UI path depends on multiple unbounded synchronized-variable waits and several event-style publicVariable handlers that require feature-specific smoke rather than a blanket "JIP clean" claim.
+
 ## Safe Extension Points
 
 - For a new modal workflow, add a distinct class in `Rsc/Dialogs.hpp`, a controller under `Client/GUI`, and a main-menu or action entry. Use a unique IDD.

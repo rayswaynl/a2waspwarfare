@@ -12,6 +12,7 @@ This is the quick-reference gateway for client UI work. The canonical implementa
 | Upgrades and economy menu | `GUI_UpgradeMenu.sqf`, `GUI_Menu_Economy.sqf` | `Rsc/Dialogs.hpp:4-6`, `:3287-3289`, `GUI_UpgradeMenu.sqf:137-171` | [Gameplay systems atlas](Gameplay-Systems-Atlas) and [Economy](Economy-Towns-And-Supply) |
 | RHUD / FPS HUD / title resources | `Client/Client_UpdateRHUD.sqf`, `Rsc/Titles.hpp` | `Rsc/Titles.hpp:25`, `:44`, `:164-173`, `Client_UpdateRHUD.sqf:3-7`, `:207-208` | [Client UI systems atlas](Client-UI-Systems-Atlas) Title And HUD Resource Map |
 | Respawn selector and markers | `GUI_RespawnMenu.sqf`, client marker FSMs | `GUI_RespawnMenu.sqf:31`, `:100`, `:193`, `Client_UI_Respawn_Selector.sqf:19-31` | [Client UI systems atlas](Client-UI-Systems-Atlas) Map And Marker UI |
+| UI JIP/headless scope | `initJIPCompatible.sqf`, `Init_Client.sqf`, `Client_UpdateRHUD.sqf` | `initJIPCompatible.sqf:70-76`, `:224-238`, `Init_Client.sqf:730-734`, `Client_UpdateRHUD.sqf:87-95` | [Client UI systems atlas](Client-UI-Systems-Atlas) JIP And Headless-Client Verdict |
 
 ## UI Safety Rules
 
@@ -19,6 +20,8 @@ This is the quick-reference gateway for client UI work. The canonical implementa
 - Treat any UI change that touches score, funds, supply, structures, upgrades, support, loadouts, HQ state or vehicle creation as a networking/economy change too.
 - Do not assume dialog IDs are unique: `RscMenu_EASA` and `RscMenu_Economy` share `idd = 23000`, and `RscOverlay` / `OptionsAvailable` both use `idd = 10200`.
 - Keep polling menu loops and marker/HUD loops light; reuse cached display handles and existing update flags.
+- Headless clients do not run the UI init path; "HC" calls inside `updateclient.sqf` are high-command player UI controls, not headless-client rendering.
+- Late-join UI support exists, but do not call it fully clean without feature smoke: several UI waits depend on synchronized variables with no timeout.
 
 ## Known UI Findings
 
