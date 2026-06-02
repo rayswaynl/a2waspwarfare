@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-context-v1",
-  "generatedAt": "2026-06-02T14:40:00+02:00",
+  "generatedAt": "2026-06-02T14:45:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "game": "Arma 2 Operation Arrowhead 1.64",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -128,9 +128,9 @@
       "Agent-Worklog.md",
       "agent-knowledge.jsonl",
       "agent-hardening-backlog.jsonl",
-      "Server-Authority-Migration-Map.md",
       "agent-test-plan.schema.json",
       "Testing-Debugging-And-Release-Workflow.md",
+      "Server-Authority-Migration-Map.md",
       "Claude-Loop-Goal.md"
     ],
     "rules": [
@@ -251,6 +251,7 @@
     "serverAuthority": "Server-Authority-Migration-Map.md is the design layer for migrating client-trusted and payload-trusted gameplay flows to server-owned authority: PVF dispatch, ICBM, construction, buys, upgrades, side supply, supply missions, attack waves, gear/EASA/service, structure sale and WASP HQ recovery."
   },
   "knownRisks": [
+    "DR-41 (High, economy authority/forgery - new direct-PV channel): ATTACK_WAVE_INIT is forgeable. Server_AttackWave.sqf takes _supply/_side directly from the client payload (no GetSideSupply re-derivation, no _side-vs-sender check, no server cost deduction); the 25000-supply gate is client-side only (updateclient.sqf:240). Forged _supply>=70000 (SUPPLY_MAX=50000) drives ATTACK_WAVE_PRICE_MODIFIER to 0 -> free units side-wide (larger -> negative pricing). Not in BattlEye publicvariable.txt. KEY: the forgery class has TWO surfaces - the PVF dispatcher (DR-1) and direct publicVariableServer channels (DR-41) - so the server-authority redesign must re-derive trusted values in each direct PVEH too, not just validate the PVF dispatcher. Confirms Codex pv-scout candidate attack-wave-authority.",
     "CONFIRMED 2026-06-02: Town AI vehicle despawn can delete a vehicle with a player passenger/crew member aboard if the player is not the group leader. server_town_ai.sqf:211-216 checks !(isPlayer leader group _x) and does not inspect crew/cargo/turret occupants. Use Town-AI-Vehicle-Despawn-Safety.md for the source chain, behavior-preserving guard shape and validation gates.",
     "Direct attack-wave authority gap: ATTACK_WAVE_INIT is a direct publicVariable channel outside the generic PVF dispatcher. Common_AttackWaveActivate.sqf sends [_supply,_side], and Server_AttackWave.sqf uses client-supplied _supply for discount/timing. Server should re-derive supply from authoritative side state.",
     "JIP robustness note: RequestJoin and AntiStack launch ACK have 30s resend loops but no terminal timeout; the later Init_Client.sqf post-join replicated-variable waits have no timeout/retry/log. Normal JIP is reviewed functional, but failures can hang silently.",
@@ -846,6 +847,13 @@
       "lane": "wasp-overlay-perf-jip-review",
       "type": "deep-review",
       "findings": "DR-40 (Low). WASP Perf mostly clean; one nit: global_marking_monitor.sqf:62 while{time<_this}do{findDisplay 54} is a sleepless busy-spin (<=2s, input-disabled, one-time) - convert to throttled waitUntil like its :80 sibling. baserep 1Hz only while repairing; DropRPG sleep 30 cooldown; AddActions one-shot wait. JIP/HC clean: live WASP wired per-client from Init_Client (:15/:267/:574/:575) so joiners init locally; local-player guards correct; HC skips. Dead: old WASP/Init_Client.sqf path commented in initJIPCompatible.sqf:243-244. MILESTONE: last Perf/JIP-HC cell - all Perf+JIP/HC dimensions now reviewed; residual is Auth/PV owner decisions."
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "lane": "attack-wave-authority-verify",
+      "type": "deep-review",
+      "findings": "DR-41 (High, economy forgery; first collaboration-follow pass): confirmed Codex pv-scout candidate. ATTACK_WAVE_INIT is a forgeable DIRECT publicVariable - Server_AttackWave.sqf:5-6 trusts client _supply/_side wholesale (no GetSideSupply re-derivation, no sender check, no cost deduction); client gate (updateclient.sqf:240, GetSideSupply>=25000) is advisory only. Forged _supply>=70000 (SUPPLY_MAX=50000) -> ATTACK_WAVE_PRICE_MODIFIER 0 -> free units side-wide; larger -> negative pricing. Not in BattlEye filter. Extends the forgery class; ARCHITECTURE: class has TWO surfaces - PVF dispatcher (DR-1) AND direct publicVariableServer channels (DR-41) - server-authority redesign must cover both."
     }
   ],
   "toolingProjects": [

@@ -423,6 +423,13 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Phase 1 (self-select the emptiest ledger cell) reached completion: Map + Perf + JIP/HC + Drift are reviewed for every subsystem (DR-1..DR-40); residual `🟡` is exclusively Auth/PV owner decisions.
 - New standing mode set by Ray: **collaboration-follow loop with research autonomy, self-paced** — each pass read the shared coordination state and follow Codex's lead (verify at source before claiming), with autonomy to pull own threads on idle passes. Docs-only. Recorded as `Claude-Loop-Goal.md`. **Codex:** link it from nav at your convenience (your lane). Done = nothing pending from Codex + only owner-decisions left.
 
+## 2026-06-02 - Claude Deep-Review Round 32 (attack-wave-authority-verify lane) — DR-41 [first collaboration-follow pass]
+
+- First pass under the new mode: read Codex's recent work (hardening roadmap, agent-hardening-backlog.jsonl, wave E/F), picked the raw scout candidate `attack-wave-authority` (status `new-from-2026-06-02-pv-scout`) and source-verified it.
+- **DR-41 (High, economy authority / forgery — new direct-PV channel):** `ATTACK_WAVE_INIT` is forgeable. `Server/Functions/Server_AttackWave.sqf:5-6` takes `_supply`/`_side` **directly from the client payload** — no `GetSideSupply` re-derivation, no `_side`-vs-sender check, no server-side cost deduction; the `GetSideSupply >= 25000` gate (`updateclient.sqf:240`) is **client-side only**. With `SUPPLY_MAX = 50000` (`Init_CommonConstants.sqf:166`), a forged `_supply >= 70000` drives `ATTACK_WAVE_PRICE_MODIFIER` (a side-wide unit-price multiplier) to **0 → free units side-wide**; larger → negative pricing. Not in `BattlEyeFilter/publicvariable.txt` (DR-30).
+- **Architectural point:** the forgery class has **two surfaces** — the registered PVF dispatcher (DR-1, fixed by validated lookup) **and** direct `publicVariableServer` channels (DR-41). The DR-1 fix does NOT cover direct channels; each direct PVEH must re-derive trusted values server-side. Other direct channels (side-supply, supply-mission, MASH) share this surface.
+- Confirms Codex backlog item `attack-wave-authority` → confirmed/High. Ledger Economy row + DR-41. Handoff to Codex: flip backlog status, cross-link DR-41 from Networking direct-PV table + economy roadmap, fold into the economy-authority owner decision with the two-surfaces note.
+
 ## 2026-06-02 - Codex Server Authority Migration Map
 
 - Added [Server authority migration map](Server-Authority-Migration-Map) as the design layer between the hardening roadmap and testing workflow.

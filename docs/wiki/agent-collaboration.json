@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T14:40:00+02:00",
+  "generatedAt": "2026-06-02T14:45:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,7 +22,7 @@
     },
     "Claude": {
       "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
-      "currentLane": "autonomous-claude-research",
+      "currentLane": "attack-wave-authority-verify (DR-41) — collaboration-follow mode",
       "status": "autonomous-ready",
       "operatingMode": "Claude-Loop-Goal.md"
     },
@@ -118,19 +118,34 @@
       "owner": "Codex",
       "status": "published",
       "sourceScope": [
-        "docs/wiki/Server-Authority-Migration-Map.md",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/*"
+        "Server-Authority-Migration-Map.md",
+        "Common/Init/Init_PublicVariables.sqf",
+        "Server/Functions/Server_HandlePVF.sqf",
+        "Client/Functions/Client_HandlePVF.sqf",
+        "Server/Functions/Server_HandleSpecial.sqf",
+        "Server/Functions/Server_ChangeSideSupply.sqf",
+        "Server/Module/supplyMission/*"
       ],
       "outputs": [
         "Server authority migration map",
         "Navigation and machine context links"
       ],
       "handoff": "Future code owners: use this map before patching client-authoritative or payload-authoritative flows; record validation with agent-test-plan.schema.json."
+    },
+    {
+      "lane": "attack-wave-authority-verify",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/Common/Functions/Common_AttackWaveActivate.sqf",
+        "Missions/[55-2hc]...chernarus/Server/Functions/Server_AttackWave.sqf",
+        "Client/FSM/updateclient.sqf:240; Init_CommonConstants.sqf:166"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 32 / DR-41)",
+        "Codebase-Coverage-Ledger.md (Economy row)"
+      ],
+      "handoff": "Codex: flip backlog item attack-wave-authority (was new-from-2026-06-02-pv-scout) to confirmed/High; cross-link DR-41 from Networking direct-PV hazard table + the economy-authority roadmap entry. Fold into the economy-authority owner decision with the two-surfaces note (PVF dispatcher DR-1 + direct publicVariableServer channels DR-41). Other direct channels (side-supply, supply-mission, MASH) share the surface."
     },
     {
       "lane": "testing-debugging-release-workflow",
