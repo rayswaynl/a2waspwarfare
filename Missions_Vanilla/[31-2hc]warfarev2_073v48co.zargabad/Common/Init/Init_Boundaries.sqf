@@ -6,6 +6,7 @@ switch (toLower(worldName)) do {
     case 'eden': {_boundariesXY = 12800};
     case 'isladuala': {_boundariesXY = 10240};
     case 'takistan': {_boundariesXY = 12800};
+    case 'zargabad': {_boundariesXY = 6000};
     case 'utes': {_boundariesXY = 5120};
     case 'tasmania2010': {_boundariesXY = 25360};
     case 'napf': {_boundariesXY = 20500};

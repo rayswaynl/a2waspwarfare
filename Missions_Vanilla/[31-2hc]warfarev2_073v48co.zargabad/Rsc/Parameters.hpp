@@ -111,7 +111,7 @@
 		title = "$STR_WF_PARAMETER_AutoDefense_Range";
 		values[] = {50,100,150,200,250,300,350,400,450,500,600,700,800,900,1000};
 		texts[] = {"50m","100m","150m","200m","250m","300m","350m","400m","450m","500m","600m","700m","800m","900m","1000m"};
-		default = 350;
+		default = 500;
 	};
 	class WFBE_C_STRUCTURES_MAX {
 		title = "$STR_WF_PARAMETER_BuildingsLimit";
@@ -165,32 +165,32 @@
 		title = "$STR_WF_PARAMETER_Funds_East";
 		values[] = {800,1600,2400,3200,4000,4800,6400,8000,12800,25600,51200,102400,204800,409600,819200};
 		texts[] = {"$ 800","$ 1600","$ 2400","$ 3200","$ 4000","$ 4800","$ 6400","$ 8000","$ 12800","$ 25600","$ 51200","$ 102400","$ 204800","$ 409600","$ 819200"};
-		default = 25600;
+		default = 12800;
 	};
 	class WFBE_C_ECONOMY_FUNDS_START_WEST {
 		title = "$STR_WF_PARAMETER_Funds_West";
 		values[] = {800,1600,2400,3200,4000,4800,6400,8000,12800,25600,51200,102400,204800,409600,819200};
 		texts[] = {"$ 800","$ 1600","$ 2400","$ 3200","$ 4000","$ 4800","$ 6400","$ 8000","$ 12800","$ 25600","$ 51200","$ 102400","$ 204800","$ 409600","$ 819200"};
-		default = 25600;
+		default = 12800;
 	};
 	class WFBE_C_ECONOMY_SUPPLY_START_EAST {
 		title = "$STR_WF_PARAMETER_Supply_East";
 		values[] = {1200,2400,3600,4800,6000,7200,8400,9600,12800,16000,19200,38400,76800};
 		texts[] = {"S 1200","S 2400","S 3600","S 4800","S 6000","S 7200","S 8400","S 9600","S 12800","S 16000","S 19200","S 38400","S 76800"};
-		default = 9600;
+		default = 4800;
 	};
 	class WFBE_C_ECONOMY_SUPPLY_START_WEST {
 		title = "$STR_WF_PARAMETER_Supply_West";
 		values[] = {1200,2400,3600,4800,6000,7200,8400,9600,12800,16000,19200,38400,76800};
 		texts[] = {"S 1200","S 2400","S 3600","S 4800","S 6000","S 7200","S 8400","S 9600","S 12800","S 16000","S 19200","S 38400","S 76800"};
-		default = 9600;
+		default = 4800;
 	};
 
 	class WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT {
 		title = "$STR_WF_PARAMETER_Max_Supply_Limit";
 		values[] = {30000, 35000,40000,45000,50000,60000,80000,100000};
 		texts[] = {"S 30000","S 35000","S 40000","S 45000","S 50000","S 60000","S 80000","S 100000"};
-		default = 50000;
+		default = 30000;
 	};
 
 	class WFBE_C_ENVIRONMENT_STARTING_HOUR {
@@ -297,7 +297,7 @@
 		title = "$STR_WF_PARAMETER_MissileRange";
 		values[] = {0,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,5500,6000,6500,7000,7500,8000,8500,9000,9500,10000};
 		texts[] = {"$STR_WF_Disabled","500m","1000m","1500m","2000m","2500m","3000m","3500m","4000m","4500m","5000m","5500m","6000m","6500m","7000m","7500m","8000m","8500m","9000m","9500m","10000m"};
-		default = 3000;
+		default = 2000;
 	};
 	class WFBE_C_GAMEPLAY_UID_SHOW {
 		title = "$STR_WF_PARAMETER_ShowUID";
@@ -467,7 +467,7 @@
 		title = "$STR_WF_PARAMETER_Defender";
 		values[] = {0,1,2,3,4};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_PARAMETER_Light","$STR_WF_PARAMETER_Medium","$STR_WF_PARAMETER_Hard","$STR_WF_PARAMETER_Impossible"};
-		default = 2;
+		default = 3;
 	};
 	class WFBE_C_TOWNS_GEAR {
 		title = "$STR_WF_PARAMETER_TownsGear";
@@ -479,7 +479,7 @@
 		title = "$STR_WF_PARAMETER_Occupation";
 		values[] = {0,1,2,3,4};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_PARAMETER_Light","$STR_WF_PARAMETER_Medium","$STR_WF_PARAMETER_Hard","$STR_WF_PARAMETER_Impossible"};
-		default = 1;
+		default = 2;
 	};
 	class WFBE_C_TOWNS_PATROLS {
 		title = "$STR_WF_PARAMETER_MaxResPatrols";
@@ -491,7 +491,7 @@
 		title = "$STR_WF_PARAMETER_TownProtectionRange";
 		values[] = {0,50,100,150,200,250,300,350,400,450,500};
 		texts[] = {"0m","50m","100m","150m","200m","250m","300m","350m","400m","450m","500m"};
-		default = 100;
+		default = 300;
 	};
 	class WFBE_C_UNITS_TOWN_PURCHASE {
 		title = "$STR_WF_PARAMETER_TownsPurchaseMilita";
@@ -503,7 +503,7 @@
 		title = "$STR_WF_PARAMETER_Resistance_VehLock";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1;
 	};
 	class WFBE_C_TOWNS_STARTING_MODE {
 		title = "$STR_WF_PARAMETER_StartingMode";

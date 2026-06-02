@@ -247,6 +247,10 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['BAF_FV510_D'];
 };
 
+if (IS_zargabad_lowpop_map) then {
+	_u = ['M2A2_EP1','M2A3_EP1','BAF_FV510_D'];
+};
+
 missionNamespace setVariable [Format ["WFBE_%1HEAVYUNITS", _side], _u];
 if (local player) then {['HEAVY', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};
 
@@ -273,6 +277,10 @@ _u = _u		+ ['A10_US_EP1'];
 _u = _u		+ ['AV8B'];
 _u = _u		+ ['AV8B2'];
 _u = _u		+ ['F35B'];
+
+if (IS_zargabad_lowpop_map) then {
+	_u = ['MH6J_EP1','UH60M_EP1','UH60M_MEV_EP1','CH_47F_EP1','CH_47F_BAF','BAF_Merlin_HC3_D','AH6J_EP1'];
+};
 
 missionNamespace setVariable [Format ["WFBE_%1AIRCRAFTUNITS", _side], _u];
 if (local player) then {['AIRCRAFT', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};
