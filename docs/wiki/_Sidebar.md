@@ -57,6 +57,7 @@
 - [Hardening roadmap](Hardening-Implementation-Roadmap)
 - [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook)
 - [Server authority map](Server-Authority-Migration-Map)
+- [ICBM authority](ICBM-Authority-Playbook)
 - [Economy authority first cut](Economy-Authority-First-Cut)
 - [Attack-wave authority](Attack-Wave-Authority-Playbook)
 - [HC delegation/failover](Headless-Delegation-And-Failover-Playbook)

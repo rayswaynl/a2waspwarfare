@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex ICBM Authority Playbook
+
+- Source-read the ICBM/Nuke path across Tactical menu gating, `Client/Module/Nuke/nukeincoming.sqf`, `Server/PVFunctions/RequestSpecial.sqf`, `Server/Functions/Server_HandleSpecial.sqf` and `Client/Module/Nuke/damage.sqf`.
+- Added [ICBM authority](ICBM-Authority-Playbook) as the canonical DR-27 implementation playbook for server-side commander/team, side, module/upgrade, funds/cost, impact-anchor and idempotency validation.
+- Routed [Hardening roadmap](Hardening-Implementation-Roadmap), [Server authority map](Server-Authority-Migration-Map), [Feature status](Feature-Status-Register), Home/sidebar/footer and [Wiki quality audit](Wiki-Quality-Audit) to the playbook so DUP-3 has one source of implementation detail.
+
 ## 2026-06-02 - Codex Wiki-Quality MERGE-1 Authority Routing
 
 - Resolved [Wiki quality audit](Wiki-Quality-Audit) MERGE-1 by splitting ownership between [Hardening implementation roadmap](Hardening-Implementation-Roadmap) and [Server authority migration map](Server-Authority-Migration-Map).
@@ -638,3 +644,14 @@ Append entries here so Codex, Claude and future assistants can see what each age
 Previous: [Agent collaboration protocol](Agent-Collaboration-Protocol) | Next: [Deep-review findings](Deep-Review-Findings)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
+
+## 2026-06-02T08:46:54+02:00 - Codex-2 performance opportunity sweep
+
+Published [Performance opportunity sweep](Performance-Opportunity-Sweep) after source-checking hosted server FPS loops, supply mission scans, WASP marker polling, factory queue broadcasts, PVF dispatch, client marker loops, RHUD, cleaners/restorers and skill initialization.
+
+Key conclusions:
+
+- Highest-value performance-adjacent patch remains PVF dispatcher lookup because it also closes DR-1/DR-38.
+- Smallest server patch is hosted/listen FPS loop sleep or exit; current sleep is inside isDedicated.
+- New finding: Skill_Init.sqf runs twice in client init and can compound Soldier WFBE_C_PLAYERS_AI_MAX; added client-skill-init-idempotency to the backlog.
+- Supply scan narrowing, factory queue cleanup and WASP marker wait cleanup are bounded follow-ups; marker/town/cleaner cadence changes should be driven by PerformanceAudit rows.

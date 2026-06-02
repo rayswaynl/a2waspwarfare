@@ -8,6 +8,8 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `performance-opportunity-sweep` | Published | [Performance opportunity sweep](Performance-Opportunity-Sweep) ranks PVF dispatch lookup, hosted FPS loops, supply scans, duplicate `Skill_Init`, factory queue churn, WASP marker polling and audit-first cleaner/marker loops. |
+| `icbm-authority-playbook-routing` | Published | [ICBM authority](ICBM-Authority-Playbook) turns DR-27 into a patch-ready guide and routes duplicated ICBM/Nuke authority detail from the roadmap, authority map, feature status and navigation into one canonical page. |
 | `wiki-quality-merge1-authority-routing` | Published | [Hardening roadmap](Hardening-Implementation-Roadmap) now owns patch order and validation gates; [Server authority map](Server-Authority-Migration-Map) owns authority design principles, flow table and handler checklist. |
 | `wiki-quality-dup10-hc-routing` | Published | [AI/headless](AI-Headless-And-Performance) is now the concise HC runtime source router, [Lifecycle wait-chain](Lifecycle-Wait-Chain) owns HC boot timing only, and [HC delegation/failover](Headless-Delegation-And-Failover-Playbook) owns DR-21/DR-42 patch policy. |
 | `external-arma2-reference-guide` | Published | [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) maps official BI docs to Wasp PV/PVEH, JIP, object-var, event-handler, object-scan and performance hotspots. |
@@ -44,8 +46,8 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved Wiki Quality MERGE-1 by splitting hardening patch order from server-authority design guidance. |
-| Codex-2 | Ready for next lane | `abandoned-feature-revival-review` | [Abandoned feature revival](Abandoned-Feature-Revival-Review) is published; next best lanes are performance opportunity sweep, AI supply logistics cleanup, or paratrooper-marker implementation. |
+| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice published the [ICBM authority playbook](ICBM-Authority-Playbook) and resolved Wiki Quality DUP-3 routing. |
+| Codex-2 | Active | `performance-opportunity-sweep` | Source-tracing server FPS loops, supply mission scans, WASP display polling, factory queue broadcasts, PVF dispatch and marker update loops into a ranked performance handoff. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
@@ -70,6 +72,8 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `icbm-authority-playbook-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-3 is resolved: DR-27 ICBM/Nuke implementation detail lives in [ICBM authority](ICBM-Authority-Playbook), with short routing summaries elsewhere. |
+| `performance-opportunity-sweep` | Codex-2 | Active | Codex-2 is source-tracing performance hotspots into a ranked implementation handoff; keep this lane separate from ICBM authority routing. |
 | `wiki-quality-merge1-authority-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) MERGE-1 is resolved: roadmap is the patch-order hub, server-authority map is the design/checklist/table page. |
 | `wiki-quality-dup10-hc-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-10 is resolved: HC runtime source routing, lifecycle boot timing and DR-21/DR-42 patch policy now have distinct page ownership. |
 | `wiki-quality-c3-gameplay-followups` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) C3 is resolved: Gameplay open questions are now source-backed resolved follow-ups. |
@@ -102,6 +106,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| ICBM authority playbook routing | [ICBM authority](ICBM-Authority-Playbook), [Hardening roadmap](Hardening-Implementation-Roadmap), [Server authority map](Server-Authority-Migration-Map), [Feature status](Feature-Status-Register), [Wiki quality audit](Wiki-Quality-Audit) | Turns DR-27 into a source-backed implementation playbook covering Tactical-menu gating, `NukeIncoming`, `RequestSpecial`, `Server_HandleSpecial.sqf` and `NukeDammage`, while keeping summary pages short. |
 | Wiki-quality MERGE-1 authority routing | [Hardening roadmap](Hardening-Implementation-Roadmap), [Server authority map](Server-Authority-Migration-Map), [Wiki quality audit](Wiki-Quality-Audit) | Reduces duplicated P0/P1 evidence and phase guidance by making the roadmap the canonical patch-order hub while the authority map owns principles, flow table, handler checklist and design-review routing. |
 | Wiki-quality DUP-10 HC routing | [AI/headless](AI-Headless-And-Performance), [Lifecycle wait-chain](Lifecycle-Wait-Chain), [HC delegation/failover](Headless-Delegation-And-Failover-Playbook), [Wiki quality audit](Wiki-Quality-Audit) | Replaces duplicate HC failover discussion with clear page ownership: AI/headless keeps source-route orientation, Lifecycle keeps HC `sleep 20` boot timing, and the playbook owns update-back/work-record/disconnect/late-HC policy. |
 | Wiki-quality C3 Gameplay follow-ups | [Gameplay atlas](Gameplay-Systems-Atlas), [Wiki quality audit](Wiki-Quality-Audit) | Replaces stale open questions with resolved source-backed notes for commander assignment DR-15, construction repair logic consumption, factory build drift ownership, supply-income stagnation liveness and range-global ownership. |

@@ -6,7 +6,7 @@ Scope: Chernarus source mission first, then LoadoutManager propagation. All path
 
 Machine-readable backlog for agents and code owners: [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl). Validation workflow and test evidence schema: [Testing workflow](Testing-Debugging-And-Release-Workflow) and [`agent-test-plan.schema.json`](agent-test-plan.schema.json).
 
-Page ownership: this roadmap owns canonical patch order, branch discipline and validation gates. [Server authority migration map](Server-Authority-Migration-Map) owns the reusable authority principles, handler validation checklist and cross-system migration table. Focused playbooks own detailed patch shape for PVF dispatch, attack waves, supply missions, economy first cut, HC failover and town-AI vehicle safety.
+Page ownership: this roadmap owns canonical patch order, branch discipline and validation gates. [Server authority migration map](Server-Authority-Migration-Map) owns the reusable authority principles, handler validation checklist and cross-system migration table. Focused playbooks own detailed patch shape for PVF dispatch, ICBM authority, attack waves, supply missions, economy first cut, HC failover and town-AI vehicle safety.
 
 ## Authority Design Preamble
 
@@ -28,7 +28,7 @@ For the full per-handler checklist, use [Server authority migration map](Server-
 | Priority | Work package | Why first |
 | --- | --- | --- |
 | P0 | PVF dispatcher lookup hardening | Smallest behavior-preserving change that closes DR-1 arbitrary code execution and DR-38 per-message recompilation. |
-| P0 | ICBM `RequestSpecial` server validation | Highest blast radius: forged PV can trigger server-applied map-wide damage. |
+| P0 | ICBM `RequestSpecial` server validation | Highest blast radius: forged PV can trigger server-applied map-wide damage. Use [ICBM authority](ICBM-Authority-Playbook). |
 | P1 | Victory/endgame correctness (DR-11 / DR-36) | Small source change with large match-outcome/stat impact. |
 | P1 | Server-side economy authority design | Covers the confirmed class: build, buy, sell, supply, upgrade, ICBM and gear/service spend paths. |
 | P1 | Direct attack-wave authority | Claude DR-41 confirmed `ATTACK_WAVE_INIT` is a forgeable direct-PV channel that can drive side-wide unit prices to zero or negative values. |
@@ -49,13 +49,7 @@ Validation:
 
 ## P0: ICBM Server Validation
 
-Evidence:
-
-| File | Current behavior |
-| --- | --- |
-| `Server/PVFunctions/RequestSpecial.sqf` | `_this Spawn HandleSpecial;` with no local validation. |
-| `Server/Functions/Server_HandleSpecial.sqf` | `"ICBM"` case trusts `_side`, `_base`, `_target` and `_playerTeam` from payload, waits for `_target` to die, then `[_base] Spawn NukeDammage`. |
-| `Client/Module/Nuke/nukeincoming.sqf` | Client sends `["RequestSpecial", ["ICBM", sideJoined, _target, _cruise, clientTeam]]`. |
+Dedicated playbook: [ICBM authority](ICBM-Authority-Playbook). Use it before implementation; it owns the DR-27 source chain from Tactical menu gating through `NukeIncoming`, `RequestSpecial`, `Server_HandleSpecial.sqf` and `NukeDammage`.
 
 Implementation shape:
 

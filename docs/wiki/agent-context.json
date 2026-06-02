@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-context-v1",
-  "generatedAt": "2026-06-02T21:50:00+02:00",
+  "generatedAt": "2026-06-02T21:55:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "game": "Arma 2 Operation Arrowhead 1.64",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -38,6 +38,7 @@
       "Supply-Mission-Authority-Cleanup-Playbook",
       "Current-Work-Supply-Helicopters-PR1",
       "AI-Headless-And-Performance",
+      "Performance-Opportunity-Sweep",
       "Headless-Delegation-And-Failover-Playbook",
       "Town-AI-Vehicle-Despawn-Safety",
       "Client-UI-HUD-And-Menus",
@@ -51,6 +52,7 @@
       "Hardening-Implementation-Roadmap",
       "PVF-Dispatch-Implementation-Playbook",
       "Server-Authority-Migration-Map",
+      "ICBM-Authority-Playbook",
       "Attack-Wave-Authority-Playbook",
       "Testing-Debugging-And-Release-Workflow",
       "Arma-2-OA-External-Reference-Guide",
@@ -105,6 +107,7 @@
         "Supply-Mission-Authority-Cleanup-Playbook",
         "Current-Work-Supply-Helicopters-PR1",
         "AI-Headless-And-Performance",
+        "Performance-Opportunity-Sweep",
         "Headless-Delegation-And-Failover-Playbook",
         "Town-AI-Vehicle-Despawn-Safety",
         "Client-UI-HUD-And-Menus",
@@ -118,6 +121,7 @@
         "Hardening-Implementation-Roadmap",
         "PVF-Dispatch-Implementation-Playbook",
         "Server-Authority-Migration-Map",
+        "ICBM-Authority-Playbook",
         "Attack-Wave-Authority-Playbook",
         "Testing-Debugging-And-Release-Workflow",
         "Arma-2-OA-External-Reference-Guide",
@@ -153,9 +157,11 @@
       "Testing-Debugging-And-Release-Workflow.md",
       "Arma-2-OA-External-Reference-Guide.md",
       "Server-Authority-Migration-Map.md",
+      "ICBM-Authority-Playbook.md",
       "Attack-Wave-Authority-Playbook.md",
       "Claude-Loop-Goal.md",
-      "Abandoned-Feature-Revival-Review.md"
+      "Abandoned-Feature-Revival-Review.md",
+      "Performance-Opportunity-Sweep.md"
     ],
     "rules": [
       "Claim substantial lanes before editing shared docs.",
@@ -163,6 +169,7 @@
       "Use source-backed evidence for broken/partial feature claims.",
       "Keep docs/wiki and the GitHub wiki checkout in parity before publishing.",
       "Treat external reports as leads until repo evidence confirms them.",
+      "Use ICBM-Authority-Playbook.md before patching RequestSpecial \"ICBM\", NukeIncoming, NukeDammage or ICBM Tactical UI/marker flow.",
       "For attack-wave authority work, use Attack-Wave-Authority-Playbook.md and preserve the current all-side-supply spend model unless the owner approves a design change."
     ],
     "ownerSplit": {
@@ -226,6 +233,12 @@
       "nextAction": "Use Server-Authority-Migration-Map.md before claiming network-authority, economy or gameplay-security items; attack-wave-authority is now confirmed-high-dr41 in agent-hardening-backlog.jsonl."
     },
     {
+      "lane": "icbm-authority-playbook-routing",
+      "owner": "Codex/future-code-owner",
+      "status": "playbook-published",
+      "nextAction": "Use ICBM-Authority-Playbook.md before editing RequestSpecial \"ICBM\", NukeIncoming, NukeDammage or ICBM Tactical UI/marker flow; DR-27 details should stay canonical there."
+    },
+    {
       "lane": "attack-wave-authority-dr41",
       "owner": "future-code-owner",
       "status": "playbook-published",
@@ -254,6 +267,12 @@
       "owner": "Codex-2",
       "status": "published",
       "nextAction": "Future code owner should pick one bounded cleanup: register paratrooper marker PVF, guard/remove AI supply truck branch, or decide MASH marker revive/remove."
+    },
+    {
+      "lane": "performance-opportunity-sweep",
+      "owner": "Codex-2",
+      "status": "published",
+      "nextAction": "Future code owner can claim PVF dispatcher lookup, hosted FPS loop sleep, client-skill-init-idempotency, supply mission scan narrowing, factory queue cleanup or WASP marker wait cleanup."
     }
   ],
   "pr1SupplyHeliContext": {
@@ -277,10 +296,12 @@
     "Record validation level for gameplay changes with Testing-Debugging-And-Release-Workflow.md and agent-test-plan.schema.json; source-only review is not in-game smoke proof.",
     "Use Arma-2-OA-External-Reference-Guide.md before accepting engine-level claims about public variables, PVEHs, setVariable publication, event handlers, nearestObjects, JIP, marker timing or performance diagnostics.",
     "For server-authority or economy patches, read Server-Authority-Migration-Map.md before changing handlers; client UI checks are affordance, not authority.",
+    "Use ICBM-Authority-Playbook.md before patching RequestSpecial \"ICBM\", NukeIncoming, NukeDammage or ICBM Tactical UI/marker flow.",
     "DR-41 rule: direct publicVariableServer channels such as ATTACK_WAVE_INIT require per-channel server recomputation; PVF dispatcher hardening alone does not cover them.",
     "Attack-wave authority patches should read Attack-Wave-Authority-Playbook.md first; default behavior preserves all-current-side-supply spend, with 25000 as the minimum gate.",
     "Use Economy-Authority-First-Cut.md before economy hardening code work; patch side-supply negative clamp first, then migrate existing PVF spend handlers before attempting player-buy locality redesign.",
     "Use Abandoned-Feature-Revival-Review.md before reviving dormant MASH/paratrooper/WASP/UAV/UI/modded-mission paths; source-check liveness first and prefer remove/annotate over re-enabling half-wired code.",
+    "Use Performance-Opportunity-Sweep.md before performance patches; prefer PVF dispatch lookup, hosted FPS loop sleep, Skill_Init idempotency and supply scan narrowing before speculative marker/cleaner cadence changes.",
     "HC delegation docs have split ownership: AI-Headless-And-Performance.md routes runtime/source anchors, Lifecycle-Wait-Chain.md owns HC boot timing, and Headless-Delegation-And-Failover-Playbook.md owns DR-21/DR-42 patch policy.",
     "Hardening authority docs have split ownership: Hardening-Implementation-Roadmap.md owns patch order/branch discipline/validation gates, while Server-Authority-Migration-Map.md owns authority design principles, flow table and handler checklist."
   ],
@@ -307,11 +328,12 @@
     "factoryPurchase": "Player buy-unit flow is client-local from GUI_Menu_BuyUnits.sqf to Client_BuildUnit.sqf; RequestBuyUnit is not registered and no Server/PVFunctions/RequestBuyUnit.sqf exists. Server_BuyUnit/AIBuyUnit is compiled but no static caller was found. See Factory-And-Purchase-Systems-Atlas.md.",
     "serverRuntime": "Server gameplay loops are owned by Init_Server.sqf: town capture/SV, town AI activation/despawn, camp manager, resources/economy, victory checks, garbage/vehicle cleanup, server FPS and AntiStack loops. See Server-Gameplay-Runtime-Atlas.md.",
     "externalResearch": "Three Steff-provided Dutch PDF reports and nine Markdown deep-research reports are summarized in external-research-report-manifest.json. Raw report text is not mirrored into the wiki. Treat all external-report claims as leads until repo evidence confirms them; Claude found earlier report citations were downstream corroboration from the wiki/upstream proxy. See External-Research-Reports.md.",
-    "hardeningRoadmap": "Hardening-Implementation-Roadmap.md plus agent-hardening-backlog.jsonl convert confirmed Auth/PV, correctness, performance and docs-polish findings into patch order, branch discipline and validation gates. Use Server-Authority-Migration-Map.md for authority design/checklist decisions. PVF-Dispatch-Implementation-Playbook.md covers DR-1/DR-38 dispatcher hardening; Attack-Wave-Authority-Playbook.md covers confirmed-high-dr41 direct-PV authority.",
+    "hardeningRoadmap": "Hardening-Implementation-Roadmap.md plus agent-hardening-backlog.jsonl convert confirmed Auth/PV, correctness, performance and docs-polish findings into patch order, branch discipline and validation gates. Use Server-Authority-Migration-Map.md for authority design/checklist decisions. PVF-Dispatch-Implementation-Playbook.md covers DR-1/DR-38 dispatcher hardening; ICBM-Authority-Playbook.md covers DR-27 RequestSpecial/Nuke authority; Attack-Wave-Authority-Playbook.md covers confirmed-high-dr41 direct-PV authority.",
     "lifecycle": "description.ext and initJIPCompatible.sqf are the entry front doors, but mission.sqm object init fields are also runtime producers: town logic objects call Init_Town.sqf and WF_Logic starts Init_TownMode.sqf. See Mission-Entrypoints-And-Lifecycle.md and Lifecycle-Wait-Chain.md.",
     "testing": "Testing-Debugging-And-Release-Workflow.md defines source-only, local-tool, hosted/dedicated/JIP/HC smoke and live-server-sensitive validation levels. agent-test-plan.schema.json records machine-readable evidence so agents do not confuse source review with in-game proof.",
     "arma2OAExternalReferences": "Arma-2-OA-External-Reference-Guide.md maps official BI OA scripting references to Wasp hotspots for multiplayer/JIP, public variables, PVEHs, setVariable, event handlers, nearestObjects, compile/preprocess diagnostics, render/simulation scope and performance timing.",
-    "serverAuthority": "Server-Authority-Migration-Map.md is the design/checklist layer for migrating client-trusted and payload-trusted gameplay flows to server-owned authority; patch order lives in Hardening-Implementation-Roadmap.md. DR-41 confirms the same class has two network surfaces: registered PVF handlers and direct publicVariableServer channels such as ATTACK_WAVE_INIT; use Attack-Wave-Authority-Playbook.md for that channel.",
+    "serverAuthority": "Server-Authority-Migration-Map.md is the design/checklist layer for migrating client-trusted and payload-trusted gameplay flows to server-owned authority; patch order lives in Hardening-Implementation-Roadmap.md. Use ICBM-Authority-Playbook.md for DR-27 RequestSpecial/Nuke patch shape. DR-41 confirms the same class has two network surfaces: registered PVF handlers and direct publicVariableServer channels such as ATTACK_WAVE_INIT; use Attack-Wave-Authority-Playbook.md for that channel.",
+    "icbmAuthority": "ICBM-Authority-Playbook.md is the implementation-ready DR-27 guide. The client UI has local affordance gates, but the server currently trusts RequestSpecial \"ICBM\" payload side/team/objects before spawning NukeDammage. Server patching should re-derive commander/team, side, module/upgrade, funds/cost, impact anchor and idempotency before launch acceptance.",
     "attackWaveAuthority": "Attack-Wave-Authority-Playbook.md is the implementation-ready DR-41 guide. ATTACK_WAVE_INIT is a direct publicVariableServer channel outside PVF; server must re-derive side/supply, validate requester, reject duplicates and preserve all-side-supply spend unless owner-approved design changes say otherwise.",
     "modules": "Modules-Atlas.md is now the source-verified module map. It covers Nuke/ICBM (DR-27, CRITICAL client-authoritative superweapon), EASA, CM flares, IRS smoke, UAV (007 branch disabled), AntiStack, MASH, Skill classes, Valhalla low-gear, ZetaCargo sling, Engines stealth, AutoFlip, NEURO AI-taxi, CIPHER sort and Reaktiv. Use Deep-Review-Findings.md for DR details and Modules-Atlas.md for subsystem responsibilities/gates.",
     "victoryEndgame": "Server/FSM/server_victory_threeway.sqf is the sole victory loop (80s cadence). DR-11 (winner inversion, High), DR-12 (threeway mode has no detection), DR-13 (duplicate LogGameEnd); DR-36 = root-cause mechanism (precedence guard covers only the towns clause + no break in the side forEach) + clean Perf/JIP review.",
@@ -320,7 +342,8 @@
     "parametersLocalization": "Mission parameters (Common/Init/Init_Parameters.sqf <- initJIPCompatible.sqf:121; Rsc/Parameters.hpp; Dialogs.hpp:3136) and stringtable.xml localization. Reviewed clean (DR-35): no live missing localize/$STR_ keys; paramsArray index-aligned to class Params order. DR-43a: description.ext:39 #include version.sqf absent from source (pack-time generated).",
     "economyAuthorityFirstCut": "Economy-Authority-First-Cut.md is the source-backed minimum patch order for DR-22 side-supply clamp, DR-23 upgrades, DR-6 construction/defense and DR-14 player-buy ceiling.",
     "supplyMissionAuthorityCleanup": "Supply-Mission-Authority-Cleanup-Playbook.md is the source-backed patch guide for player supply missions and PR #1 supply helicopters: server-owned loaded/tracking state, cooldown casing, cargo validation, Killed-handler idempotency, command-center scan narrowing and dedicated/JIP/heli validation.",
-    "abandonedFeatureRevival": "Abandoned-Feature-Revival-Review.md classifies dormant/broken feature paths: MASH markers need server-held/JIP-safe revival or removal; paratrooper markers are a small PVF registration revive; AI supply trucks are broken because compile is commented and supplytruck.fsm is missing; UAV 007/WASP actions/old upgrade dialog are stale cleanup; modded mission propagation needs an owner maintenance-model decision."
+    "abandonedFeatureRevival": "Abandoned-Feature-Revival-Review.md classifies dormant/broken feature paths: MASH markers need server-held/JIP-safe revival or removal; paratrooper markers are a small PVF registration revive; AI supply trucks are broken because compile is commented and supplytruck.fsm is missing; UAV 007/WASP actions/old upgrade dialog are stale cleanup; modded mission propagation needs an owner maintenance-model decision.",
+    "performanceOpportunitySweep": "Performance-Opportunity-Sweep.md ranks low-risk and high-value performance work: PVF dispatcher lookup, hosted FPS loop sleep/consolidation, supply mission scan narrowing, duplicate Skill_Init idempotency, factory queue churn, WASP marker polling and audit-first cleaner/marker-loop tuning."
   },
   "knownRisks": [
     "DR-43 (Low): external-research intake #2 (9 reports) corroborates the campaign (esp. report 8 = economy-authority thesis). Two source-confirmed leads: (a) description.ext:39 includes version.sqf which is absent from the committed tree (repo not buildable as-is; pack-time generated) - source-completeness/drift; (b) Init_Server.sqf has duplicate compile/bind rows. Corrected source re-check: LogGameEnd, PlayerObjectsList and AwardScorePlayer are live duplicate binds; InitAFKkickHandler, monitorServerFPS and MASH_MARKER are commented duplicate remnants. LogGameEnd dup ties DR-13.",

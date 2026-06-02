@@ -41,6 +41,7 @@ Canonical patch sequencing lives in [Hardening roadmap](Hardening-Implementation
 | Prioritized patch order | [Hardening roadmap](Hardening-Implementation-Roadmap) |
 | Machine-readable work packages | [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) |
 | Generic PVF dispatcher patch | [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook) |
+| ICBM/Nuke `RequestSpecial` patch | [ICBM authority](ICBM-Authority-Playbook) |
 | Direct attack-wave channel patch | [Attack-wave authority](Attack-Wave-Authority-Playbook) |
 | Economy first cut | [Economy authority first cut](Economy-Authority-First-Cut) |
 | Supply truck/heli authority cleanup | [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) |
@@ -50,7 +51,7 @@ Canonical patch sequencing lives in [Hardening roadmap](Hardening-Implementation
 | Flow | Client entrypoint | Current server/current handler | Current trust | Target authority owner | Patch shape | First validation |
 | --- | --- | --- | --- | --- | --- | --- |
 | PVF dispatch | Any `WFBE_CO_FNC_SendToServer`, `SendToClient` or `SendToClients` command | `Server_HandlePVF.sqf:14`, `Client_HandlePVF.sqf:22`, registry in `Init_PublicVariables.sqf:23-51` | Dispatchers run `Spawn (Call Compile _script)` on command strings from the PV payload; init already compiles `SRVFNC*` and `CLTFNC*`. | Validated handler lookup in `missionNamespace`. | Use `missionNamespace getVariable [_script, {}]`, reject non-`CODE` and unregistered names, keep `Spawn` until scheduled handler needs are audited. | Valid `RequestJoin` or `RequestVehicleLock`, valid `LocalizeMessage` or `HandleSpecial`, bogus handler rejected and logged once. |
-| ICBM / nuke | `Client/Module/Nuke/nukeincoming.sqf:23` | `Server/PVFunctions/RequestSpecial.sqf:1`, `"ICBM"` in `Server_HandleSpecial.sqf:97-111` | Client supplies side, base/target object, cruise object and team; server later spawns `NukeDammage`. | Server special-weapons authority. | Server validates commander/team, side, module/upgrade state, funds/cost, base/target object shape and range; server owns debit and launch acceptance. | Valid commander launch still works; forged non-commander, wrong-side, dead/invalid target and invalid base do not spawn `NukeDammage`. |
+| ICBM / nuke | `Client/Module/Nuke/nukeincoming.sqf:23` | `Server/PVFunctions/RequestSpecial.sqf:1`, `"ICBM"` in `Server_HandleSpecial.sqf:97-111` | Client supplies side, base/target object, cruise object and team; server later spawns `NukeDammage`. | Server special-weapons authority. | Use [ICBM authority](ICBM-Authority-Playbook): validate commander/team, side, module/upgrade state, funds/cost and impact anchor server-side; server owns debit and launch acceptance. | Valid commander launch still works; forged non-commander, wrong-side, dead/invalid target and invalid base do not spawn `NukeDammage`. |
 | Construction and defenses | `Client/Module/CoIn/coin_interface.sqf` | `Server/PVFunctions/RequestStructure.sqf:3-20`, `RequestDefense.sqf:2-8` | Client sends side, class/name, position, direction and manned flag; server mostly resolves class arrays and builds. | Server base-construction authority. | Include requester context, validate side and commander/repair-truck authority, funds, HQ/base area, placement, class allowlist and manned-defense permission; server debit before build. | Accepted HQ/factory/defense builds still work; wrong-side, unaffordable, out-of-base and disallowed manned-defense requests reject. |
 | Player factory buy | `Client/GUI/GUI_Menu_BuyUnits.sqf:102-156` | No registered `RequestBuyUnit`; `Client/Functions/Client_BuildUnit.sqf:217,249,411-450` creates units/vehicles locally | Client checks funds, spawns `BuildUnit`, debits with `ChangePlayerFunds`, and creates units/vehicles locally. | Large redesign: server buy authority, or explicit public-server dependency on BattlEye script filters while locality is preserved. | Prefer a server-validated buy request for high-value purchases. If preserving client locality temporarily, document it as not server-authoritative and harden with BE `scripts.txt` outside mission code. | Buy infantry and vehicles on hosted/dedicated; forged createVehicle/createUnit path must be constrained by chosen authority model or BE posture. |
 | Upgrades | `Client/GUI/GUI_UpgradeMenu.sqf` and upgrade menu send path | `Server/PVFunctions/RequestUpgrade.sqf:5`, `Server_ProcessUpgrade.sqf:12-18,40-44,85-87` | Raw payload selects side, upgrade id and level; server processes timing and state but cost/dependency authority is client-side. | Server upgrade authority. | Server validates commander/team, side, current level, requested next level, dependencies, cost and funds/supply; server owns debit and state transition. | Valid upgrade completes; invalid id/level, skipped dependency, insufficient funds and wrong-side/role reject. |
@@ -124,13 +125,15 @@ Agents should read this page before claiming any `agent-hardening-backlog.jsonl`
 
 This page does not change mission behavior. It is the source-backed design layer for future implementation branches such as `hardening/pvf-dispatch`, `hardening/icbm-authority`, `hardening/economy-ledger`, `hardening/supply-missions` and `hardening/attack-wave-authority`. For the order in which those branches should be claimed, use [Hardening roadmap](Hardening-Implementation-Roadmap).
 
+Dedicated playbook: [ICBM authority](ICBM-Authority-Playbook) expands the DR-27 row into an implementation-ready patch shape for `RequestSpecial` `"ICBM"`, `NukeIncoming`, `Server_HandleSpecial.sqf` and `NukeDammage`.
+
 Dedicated playbook: [Attack-wave authority](Attack-Wave-Authority-Playbook) expands the DR-41 row into an implementation-ready patch shape, including the current all-side-supply spend model.
 
 First implementation cut: [Economy authority first cut](Economy-Authority-First-Cut) sequences the broad economy class into side-supply clamp, upgrade authority, construction/defense authority and deferred player-buy redesign.
 
 ## Continue Reading
 
-Previous: [Hardening roadmap](Hardening-Implementation-Roadmap) | Next: [Attack-wave authority playbook](Attack-Wave-Authority-Playbook)
+Previous: [Hardening roadmap](Hardening-Implementation-Roadmap) | Next: [ICBM authority playbook](ICBM-Authority-Playbook)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
 

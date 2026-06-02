@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T21:50:00+02:00",
+  "generatedAt": "2026-06-02T21:55:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,37 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "icbm-authority-playbook-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "ICBM-Authority-Playbook.md",
+        "Hardening-Implementation-Roadmap.md",
+        "Server-Authority-Migration-Map.md",
+        "Feature-Status-Register.md",
+        "Wiki-Quality-Audit.md DUP-3",
+        "Client/GUI/GUI_Menu_Tactical.sqf",
+        "Client/Module/Nuke/nukeincoming.sqf",
+        "Server/PVFunctions/RequestSpecial.sqf",
+        "Server/Functions/Server_HandleSpecial.sqf",
+        "Client/Module/Nuke/damage.sqf"
+      ],
+      "outputs": [
+        "ICBM-Authority-Playbook.md",
+        "Hardening-Implementation-Roadmap.md P0 ICBM route",
+        "Server-Authority-Migration-Map.md ICBM route",
+        "Feature-Status-Register.md ICBM route",
+        "Wiki-Quality-Audit.md DUP-3 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future code owner should use ICBM-Authority-Playbook.md before editing RequestSpecial \"ICBM\", NukeIncoming, NukeDammage or ICBM Tactical UI/marker flow. The playbook owns DR-27 patch shape; roadmap/authority/status pages should stay short."
+    },
     {
       "lane": "wiki-quality-merge1-authority-routing",
       "owner": "Codex",
@@ -715,6 +746,35 @@
         "agent-hardening-backlog.jsonl#marker-support-cleanups"
       ],
       "handoff": "Decision matrix published. Future code owner: paratrooper markers are the smallest revive; MASH markers need server-held/JIP-safe design or removal; AI supply trucks require design/guarding before truck supply + AI commander configs are enabled; old UAV/WASP/upgrade UI paths are cleanup, not quick revives."
+    },
+    {
+      "lane": "performance-opportunity-sweep",
+      "owner": "Codex-2",
+      "status": "published",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/global_marking_monitor.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updatetownmarkers.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateteamsmarkers.sqf",
+        "AI-Headless-And-Performance.md",
+        "Feature-Status-Register.md",
+        "Hardening-Implementation-Roadmap.md",
+        "agent-hardening-backlog.jsonl"
+      ],
+      "outputs": [
+        "Performance-Opportunity-Sweep.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl finding/complete/handoff events",
+        "agent-status.json",
+        "agent-context.json",
+        "agent-hardening-backlog.jsonl#client-skill-init-idempotency"
+      ],
+      "handoff": "Performance sweep published. Future code owner: PVF lookup is highest value; hosted FPS sleep/consolidation is smallest server patch; duplicate Skill_Init is a new P2 client-init/balance cleanup; supply scan, factory queue and WASP marker polling are bounded follow-ups."
     }
   ],
   "integratedReports": [
@@ -737,9 +797,11 @@
     "server-authority-migration-map",
     "attack-wave-authority-dr41",
     "abandoned-feature-revival-review",
+    "performance-opportunity-sweep",
     "external-arma2-reference-guide",
     "wiki-quality-dup10-hc-routing",
-    "wiki-quality-merge1-authority-routing"
+    "wiki-quality-merge1-authority-routing",
+    "icbm-authority-playbook-routing"
   ],
   "queuedReports": [],
   "lanes": [

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T21:50:00+02:00",
+  "generatedAt": "2026-06-02T08:46:54+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,14 +16,14 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki Quality MERGE-1 by splitting hardening patch order from server-authority design guidance.",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass published ICBM-Authority-Playbook.md and resolved Wiki Quality DUP-3 routing.",
       "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining duplicate reductions, Arma 2 OA external-reference integration into subsystem pages, or more implementation-readiness playbooks."
     },
     "Codex-2": {
       "status": "ready-for-next-lane",
-      "currentLane": "abandoned-feature-revival-review",
-      "currentWork": "Published Abandoned-Feature-Revival-Review.md with revive/remove/leave-dormant classifications for MASH markers, paratrooper markers, AI supply trucks, UAV 007, WASP legacy actions, stale upgrade UI and modded mission propagation.",
-      "nextExpectedOutput": "Select the next bounded lane, likely performance opportunity sweep, AI supply logistics cleanup, or paratrooper-marker implementation."
+      "currentLane": "performance-opportunity-sweep",
+      "currentWork": "Published Performance-Opportunity-Sweep.md with ranked opportunities and a new client-skill-init-idempotency backlog item.",
+      "nextExpectedOutput": "Select the next bounded lane, likely AI supply logistics cleanup, paratrooper-marker implementation, or one code patch from the performance sweep."
     },
     "Claude": {
       "status": "autonomous-ready",
@@ -33,6 +33,18 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "icbm-authority-playbook-routing",
+      "owner": "Codex",
+      "status": "published",
+      "output": "ICBM-Authority-Playbook.md is the canonical DR-27 implementation guide; roadmap, authority map, feature status and navigation route there"
+    },
+    {
+      "lane": "performance-opportunity-sweep",
+      "owner": "Codex-2",
+      "status": "published",
+      "output": "Performance-Opportunity-Sweep.md ranked performance opportunity handoff plus client-skill-init-idempotency backlog item"
+    },
     {
       "lane": "wiki-quality-merge1-authority-routing",
       "owner": "Codex",
@@ -254,9 +266,11 @@
     "serverAuthorityMap": "Server-Authority-Migration-Map.md",
     "claudeLoopGoal": "Claude-Loop-Goal.md",
     "attackWaveAuthority": "Attack-Wave-Authority-Playbook.md",
+    "icbmAuthority": "ICBM-Authority-Playbook.md",
     "attackWaveBacklog": "agent-hardening-backlog.jsonl#attack-wave-authority",
     "pvfDispatchPlaybook": "PVF-Dispatch-Implementation-Playbook.md",
     "economyAuthorityFirstCut": "Economy-Authority-First-Cut.md",
-    "abandonedFeatureRevival": "Abandoned-Feature-Revival-Review.md"
+    "abandonedFeatureRevival": "Abandoned-Feature-Revival-Review.md",
+    "performanceOpportunitySweep": "Performance-Opportunity-Sweep.md"
   }
 }
