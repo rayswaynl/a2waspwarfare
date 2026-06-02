@@ -20,6 +20,11 @@ The fastest way to break OA mission SQF is to "fix" it with Arma 3 reflexes: man
 | `parseSimpleArray` | Arma 3 · 1.68 | `call compile` — trusted input only (see DR-1 / DR-7 / DR-46). |
 | `ext callExtension [fn, args]` (array form) | Arma 3 · 1.68 | string form: `ext callExtension "code,args"`. |
 | `private _x = value` (inline-assign) | Arma 3 style | `private "_x"; _x = value;` |
+| `setUnitLoadout` / `getUnitLoadout` | Arma 3 · 1.58 | **No OA equivalent.** OA loadouts come from config classes plus `addWeapon`/`addMagazine`/`*CargoGlobal` and `setVehicleInit`. **Confirmed absent from source (0 hits):** `Tools/LoadoutManager` generates config-driven loadouts; it does not use the A3 loadout API. Do not introduce. |
+| `hideObjectGlobal` / `enableSimulationGlobal` | Arma 3 · 1.12 | A3-only **Global** variants. OA only has the **local** `hideObject` / `enableSimulation`; the effect is per-machine and must be re-applied (or driven by the mission's PV pattern) for global state. **Confirmed absent from source (0 hits)** — do not introduce a Global variant by reflex. |
+| `selectRandom` | Arma 3 · 1.56 | Use the repo idiom `_arr select floor(random count _arr)` (`Common/Init/Init_Town.sqf:39`, `Server/AI/AI_AdvancedRespawn.sqf`) **or** `_arr call BIS_fnc_selectRandom` (OA-safe, see below). **Confirmed absent** — the 4 `selectRandom` source hits are all `BIS_fnc_selectRandom`. ⚠ Do not "simplify" `call BIS_fnc_selectRandom` into the `selectRandom` *command*: the function is OA-safe, the command is not. |
+| `splitString` / `joinString` | Arma 3 · 1.50 | No OA native split/join — parse with `toArray`/`toString` + a manual `forEach`. **Confirmed absent (0 hits).** |
+| `trim` (+ `regexFind` / `regexMatch`) | Arma 3 · 2.02 (regex 2.x) | No OA equivalent; trim/match manually via `toArray`/`toString`. **Confirmed absent.** |
 
 ## Confirmed available in Arma 2 OA
 
@@ -31,7 +36,24 @@ The fastest way to break OA mission SQF is to "fix" it with Arma 3 reflexes: man
 | `callExtension` (string form) | **OA 1.60** | Blocking — keep out of hot loops. |
 | `diag_tickTime` | **Arma 2 · 1.00** | Real-time, high-precision elapsed seconds; **unscaled** and does not pause with game time. Commonly mis-remembered as A3-only, but it is A2-era and OA-safe — the correct clock for perf instrumentation. Repo uses it as the `PerformanceAudit_Record` stopwatch (~62 files, e.g. `Client/Client_UpdateRHUD.sqf:187`). Do **not** "modernize" it away. |
 | `uiSleep` | **Arma 2 · 1.05** (also OA 1.50) | Like `sleep` but **not** scaled by accelerated/skipped game time — suspends on real-time cadence (correct for server housekeeping loops). Also frequently assumed A3-only; it is OA-safe. Repo uses it in the AntiStack loops (`Server/Module/AntiStack/mainLoop.sqf:16`, `flushLoop.sqf`) and `Server/FSM/restorers/buildings_restorer.sqf:26` (7 files). |
-| `allGroups`, `call`, `compile`, `preprocessFileLineNumbers`, `typeName`, `isNil`, `format`, `localize`, `hintSilent`, `diag_log`, `diag_fps`, `publicVariable`, `addPublicVariableEventHandler`, `toArray`, `toString` | OFP / ArmA / A2 | All OA-safe. |
+| `getPosATL` / `setPosATL` | **Arma 2 · 1.03** | Above-terrain-level coordinates. OA-safe (7 / 2 files). |
+| `createVehicleLocal` | ArmA 1.00 | Creates a **client-local** object **not** synchronized over the network (`netId` is `0:0`) — use only for local FX/markers; other machines will not see it. 6 files. |
+| `addWeaponCargoGlobal` / `addMagazineCargoGlobal` | **OA 1.55** | **Global** MP effect (cargo synced to all clients) — the MP-correct cargo add, **not** A3-only. Repo gear-equip path (`Common/Functions/Common_EquipBackpack.sqf`, `Common_EquipVehicle.sqf`). |
+| `BIS_fnc_selectRandom` | **Arma 2 · 1.00** (OA 1.50) | OA-safe **function** (`_arr call BIS_fnc_selectRandom`) returning a random array element — **distinct from the A3-only `selectRandom` command** in the avoid-list above. Repo: spawn-pad pick in `Client/Functions/Client_BuildUnit.sqf:59/85/111/135`. |
+| `allGroups`, `call`, `compile`, `preprocessFileLineNumbers`, `typeName`, `isNil`, `format`, `localize`, `hintSilent`, `diag_log`, `diag_fps`, `publicVariable`, `addPublicVariableEventHandler`, `toArray`, `toString`, `setVectorDirAndUp` (ArmA 1.09) | OFP / ArmA / A2 | All OA-safe. |
+
+## Object scans & spatial queries — all OA-safe; pick the right one
+
+These are heavily used across the fork and all date to OFP/ArmA/A2, so the trap here is **semantic, not version**: choosing a scan whose filter silently excludes what you need.
+
+| Command | First · version | Returns / when to use | Repo |
+| --- | --- | --- | --- |
+| `nearestObjects [pos, classes, radius]` | **A2 · 1.00** | Array **sorted by distance**; `isKindOf` class matching; `[]` = all classes (slowest). | Supply command-center scan (`Server/Module/supplyMission/supplyMissionStarted.sqf:45,61`) — currently `[]` then filters for `Base_WarfareBUAVterminal` (DR-39). 16 files. |
+| `nearEntities [classes, radius]` | **A2 · 1.00** | Unsorted; **alive units / vehicles / game-logics only** — excludes dead objects, buildings/structures, and crew inside vehicles. BI notes it is *"much faster"* than `nearestObjects` for soldiers/vehicles. | Camp/depot/airfield proximity (`nearEntities [WFBE_Logic_Camp, _range]`; `Client_GetClosestCamp/Depot/Airport.sqf`). 39 files. |
+| `nearObjects [classes, radius]` | ArmA 1.00 | Unsorted radius scan, optional class filter; **does** include structures/dead objects. | 5 files. |
+| `nearestObject` | OFP 1.00 | Single nearest object of a type (a hardcoded-50 m form exists). | 27 files. |
+
+> **Guardrail (DR-39):** the supply command-center scan targets the `Base_WarfareBUAVterminal` **structure**, so it cannot be "optimized" by swapping to `nearEntities` — that command returns no buildings and would silently match nothing. The OA-safe narrowing is a **class-filtered** `nearestObjects` (or `nearObjects`) plus `isKindOf`, not an entity scan. See [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) and [Performance opportunity sweep](Performance-Opportunity-Sweep).
 
 ## OA-safe but removed in Arma 3 — the inverse trap
 

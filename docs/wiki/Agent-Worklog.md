@@ -1082,3 +1082,21 @@ Key conclusions:
 - Removed the fabricated live `test/wasp_selftest.sqf` row, wiring entry and behavior section from [WASP overlay](WASP-Overlay); the page now records it as a documentation error under dead/missing references.
 - Corrected `WASP_procInitComm` from `initJIPCompatible.sqf:253-255`/`:253` to the commented block at `initJIPCompatible.sqf:241-245`, specifically `:243`.
 - Updated [`agent-context.json`](agent-context.json), [Instructions for Codex](Instructions-For-Codex), and [`agent-knowledge.jsonl`](agent-knowledge.jsonl) so compact agent context no longer lists a server self-test as a WASP feature.
+# 2026-06-02 - Scripting-Reference Pass 2: Object-Scan Family + A3 Trap-Check (Claude)
+
+- Second BIKI version cross-check, theme = object-scan/spatial commands and a sweep for A3-only "looks-useful" commands. All grounded in source usage.
+- Added an **Object scans & spatial queries** section to [Arma-2-OA command version reference](Arma-2-OA-Command-Version-Reference): `nearestObjects` (A2 1.00, sorted, `[]`=all/slow), `nearEntities` (A2 1.00, unsorted, **alive units/vehicles/logics only** — no buildings/dead/crew, BI "much faster"), `nearObjects` (ArmA 1.00), `nearestObject` (OFP 1.00). Key guardrail: the DR-39 supply scan targets the `Base_WarfareBUAVterminal` **structure** (`supplyMissionStarted.sqf:45,61`), so it must stay a class-filtered `nearestObjects` — it cannot be swapped to `nearEntities` (returns no buildings).
+- Added confirmed-available rows: `getPosATL`/`setPosATL` (A2 1.03), `createVehicleLocal` (ArmA 1.00, client-local/not network-synced, netId 0:0), `addWeaponCargoGlobal`/`addMagazineCargoGlobal` (**OA 1.55**, Global effect, not A3-only; repo gear-equip path), `setVectorDirAndUp` (ArmA 1.09).
+- Extended the A3-only table with two **confirmed-absent** traps (positive assurance, 0 source hits each): `setUnitLoadout`/`getUnitLoadout` (A3 1.58 — LoadoutManager is config-driven, not the A3 loadout API) and `hideObjectGlobal`/`enableSimulationGlobal` (A3 1.12 — OA only has the local `hideObject`/`enableSimulation`).
+- Item 48 confirmed DONE by Codex (inverse-trap classes canonicalized in the compatibility audit + `agent-compatibility-audit.json`). Routed item 49: a one-line DR-39 guardrail for the Codex-owned Supply-Mission-Scan-Narrowing / Performance-Opportunity-Sweep pages.
+- Aside (not in scope, flagged to owner): `Common/Functions/Common_EquipBackpack.sqf:35` uses `for '_i' from 0 to count(_items)` — inclusive in A2, an off-by-one overrun feeding nil to `addWeaponCargoGlobal`. Latent gear-system issue, no source edits this pass.
+- No source edits (docs only). Disputed cleanup lanes remain unpatched per the current source snapshot.
+
+# 2026-06-02 - Scripting-Reference Pass 3: String/Selection Command Traps (Claude)
+
+- Third BIKI version cross-check, theme = string/selection commands an A3-trained agent reaches for by reflex. All A3-only ones confirmed absent from source.
+- Added to the A3-only table in [Arma-2-OA command version reference](Arma-2-OA-Command-Version-Reference): `selectRandom` (A3 1.56), `splitString`/`joinString` (A3 1.50), `trim` (A3 2.02) + regex helpers — all 0 source hits.
+- **Function-vs-command distinction:** `BIS_fnc_selectRandom` (the *function*) IS OA-safe (A2 1.00) and is used 4× in `Client/Functions/Client_BuildUnit.sqf:59/85/111/135` (spawn-pad pick); the `selectRandom` *command* is A3-only. Added `BIS_fnc_selectRandom` to the Confirmed-available table with the explicit warning not to collapse the function call into the command.
+- The repo's OA-safe random-pick idiom is `_arr select floor(random count _arr)` (`Init_Town.sqf:39`, `AI_AdvancedRespawn.sqf`, `AI_SquadRespawn.sqf`, `ARTY_HandleSADARM.sqf:63`).
+- Routed item 50 (optional, LOW): reflect the new A3-only string/selection traps in `agent-compatibility-audit.json`'s avoid-list.
+- No source edits (docs only). Disputed cleanup lanes remain unpatched per the current source snapshot.
