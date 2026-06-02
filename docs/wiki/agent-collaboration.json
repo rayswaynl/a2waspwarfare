@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T21:06:00+02:00",
+  "generatedAt": "2026-06-02T21:15:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,9 +22,30 @@
   },
   "activeClaims": [
     {
+      "lane": "orchestrator-code-discovery-wave-r",
+      "owner": "Codex sub-agents",
+      "status": "running-readonly",
+      "sourceScope": [
+        "economy side-supply negative risk",
+        "town AI camp patrol repair authority",
+        "factory player-buy path and queue semantics",
+        "direct-PV trust-boundary second pass"
+      ],
+      "agents": [
+        {"name": "Ohm", "id": "019e89c2-6dac-70e0-9abf-93c2dbd3a279", "lane": "economy-side-supply-negative-risk"},
+        {"name": "Godel", "id": "019e89c2-6ebb-7413-baae-be2800d1a83c", "lane": "town-ai-camp-patrol-repair-authority"},
+        {"name": "Zeno", "id": "019e89c2-6f20-7261-91eb-f6cb235c8ad9", "lane": "factory-player-buy-path-queue-semantics"},
+        {"name": "Dalton", "id": "019e89c2-6f7d-7131-b004-78d945f5f64c", "lane": "direct-pv-trust-boundary-second-pass"}
+      ],
+      "outputs": [
+        "Read-only source evidence packets for Codex review"
+      ],
+      "handoff": "Wave R reports are not canonical until Codex source-checks and promotes them into owner pages. Other agents should avoid editing these exact lanes unless coordinating through the event/worklog files."
+    },
+    {
       "lane": "rhud-endgame-currentcutdisplay-harvest",
       "owner": "Codex",
-      "status": "local-validation-pending",
+      "status": "published-validated",
       "sourceScope": [
         "docs/wiki/Client-UI-Systems-Atlas.md",
         "docs/wiki/UI-IDD-Collision-Repair.md",
@@ -47,7 +68,7 @@
         "agent-events.jsonl",
         "agent-knowledge.jsonl"
       ],
-      "handoff": "Codex is promoting Curie's Wave Q RHUD/endgame currentCutDisplay finding. Patch owner should split title display handles or gate RHUD/action-icon recreation during endgame, then propagate maintained Vanilla and smoke RHUD/FPS, action icons and endgame stat bars together."
+      "handoff": "Codex promoted Curie's Wave Q RHUD/endgame currentCutDisplay finding into owner pages and machine ledgers. Patch owner should split title display handles or gate RHUD/action-icon recreation during endgame, then propagate maintained Vanilla and smoke RHUD/FPS, action icons and endgame stat bars together."
     },
     {
       "lane": "construction-logic-list-cleanup-playbook",

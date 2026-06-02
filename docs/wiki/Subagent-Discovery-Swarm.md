@@ -4,7 +4,20 @@ This page tracks the cheap read-only Codex discovery agents currently digging th
 
 The swarm is intentionally evidence-first: agents read source, report path/line-backed findings, and avoid editing docs or mission code. Codex integrates the useful findings into the wiki, `agent-context.json`, the coverage ledger and the feature-status register after review.
 
-## Current Wave: Wave Q
+## Current Wave: Wave R
+
+Spawned from the main orchestrator after the Wave Q UI handle harvest was published. These are fresh read-only explorers; Codex keeps docs edits and publication local.
+
+| Agent | Lane | Status | Expected output |
+| --- | --- | --- | --- |
+| Ohm | `economy-side-supply-negative-risk` | Running | Source-check side-supply/cash/commander-funds validation, especially negative-amount and temp-channel trust boundaries. |
+| Godel | `town-ai-camp-patrol-repair-authority` | Running | Source-check town AI/camp capture, patrol reset, camp repair authority, HC/server split and stale partial features. |
+| Zeno | `factory-player-buy-path-queue-semantics` | Running | Source-check normal player-buy path versus server factory queues, cancel/refund absence, empty-vehicle queue semantics and upgrade gates. |
+| Dalton | `direct-pv-trust-boundary-second-pass` | Running | Source-check high-risk direct publicVariable/temp-channel flows not yet fully represented in the authority/PV indexes. |
+
+Harvest rule: Wave R reports are not canonical until Codex source-checks and promotes them into owner pages. Good first harvest targets are side-supply negative amount handling, player-buy path correction, town/camp repair authority and any direct-PV channel missing from the existing indexes.
+
+## Previous Wave: Wave Q
 
 Spawned from the main orchestrator after Wave P was published. Fresh spawns were blocked by the active subagent thread cap, so Codex reused the six attached explorers as read-only Wave Q lanes while keeping docs edits local. All six reports returned; summaries below are routing notes, not canonical findings until Codex promotes them into owner pages.
 

@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Main Orchestrator: Wave R Spawn
+
+- Fresh subagent spawn succeeded after the older attached Wave Q IDs returned `not_found`.
+- Spawned four read-only explorers with no docs or source write ownership: Ohm (economy/side-supply negative-risk), Godel (town AI/camp/patrol/repair authority), Zeno (factory player-buy path and queue semantics) and Dalton (direct-PV trust-boundary second pass).
+- Updated [Discovery swarm](Subagent-Discovery-Swarm), [Progress dashboard](Progress-Dashboard), [`agent-status.json`](agent-status.json), [`agent-collaboration.json`](agent-collaboration.json) and [`agent-events.jsonl`](agent-events.jsonl) so other agents can see the running lanes.
+
 ## 2026-06-02 - Codex Main Orchestrator: Wave Q UI Handle Harvest
 
 - Reused the six attached subagents after the thread cap blocked fresh spawns again; each now has a fresh read-only discovery lane and no write ownership.

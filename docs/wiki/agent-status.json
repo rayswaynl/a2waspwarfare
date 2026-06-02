@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T21:06:00+02:00",
+  "generatedAt": "2026-06-02T21:15:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -17,9 +17,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "rhud-endgame-currentcutdisplay-harvest",
-      "currentWork": "Acting as main LLM orchestrator and publisher. Current local slice promotes the Wave Q RHUD/endgame currentCutDisplay collision into owner pages and machine ledgers while keeping remaining Wave Q leads routed for later source-check.",
-      "nextExpectedOutput": "Validate wiki links, JSON/JSONL, mirror parity, then publish the scoped UI-handle documentation harvest."
+      "currentLane": "orchestrator-code-discovery-wave-r",
+      "currentWork": "Acting as main LLM orchestrator and publisher. Wave Q RHUD/endgame currentCutDisplay harvest is published; Wave R read-only explorers are running on economy/side-supply, town AI/camp authority, factory player-buy/queue semantics and direct-PV trust-boundary gaps.",
+      "nextExpectedOutput": "Harvest the first returned Wave R evidence packet into owner pages after source-check."
     },
     "Codex-2": {
       "status": "ready",
@@ -34,18 +34,24 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "wave-q-returned-partial-harvest",
-      "currentLane": "orchestrator-code-discovery-wave-q",
-      "currentWork": "All six attached explorers returned scoped read-only reports: construction cleanup, economy authority, commander/HQ lifecycle, factory queues, town AI/capture/delegation and UI/action/RHUD state. Curie's RHUD/endgame handle collision is promoted locally.",
-      "nextExpectedOutput": "Codex will validate/publish the UI-handle harvest, then source-check the remaining Wave Q leads."
+      "status": "wave-r-running",
+      "currentLane": "orchestrator-code-discovery-wave-r",
+      "currentWork": "Four fresh read-only explorers are running: Ohm on economy/side-supply negative risk, Godel on town AI/camp/patrol/repair authority, Zeno on factory player-buy path and queue semantics, and Dalton on direct-PV trust boundaries.",
+      "nextExpectedOutput": "Compact source-backed evidence packets for Codex owner-page harvest."
     }
   },
   "laneSummary": [
     {
+      "lane": "orchestrator-code-discovery-wave-r",
+      "owner": "Codex sub-agents",
+      "status": "running-readonly",
+      "output": "Fresh read-only team spawned: Ohm economy/side-supply negative risk, Godel town AI/camp authority, Zeno factory player-buy/queue semantics, Dalton direct-PV trust-boundary second pass."
+    },
+    {
       "lane": "rhud-endgame-currentcutdisplay-harvest",
       "owner": "Codex",
-      "status": "local-validation-pending",
-      "output": "Wave Q UI lead promoted locally: OptionsAvailable/RHUD/action icons and EndOfGameStats both use uiNamespace currentCutDisplay, so the patch lane must split title display handles or gate RHUD/action recreation during endgame."
+      "status": "published-validated",
+      "output": "Wave Q UI lead published: OptionsAvailable/RHUD/action icons and EndOfGameStats both use uiNamespace currentCutDisplay, so the patch lane must split title display handles or gate RHUD/action recreation during endgame."
     },
     {
       "lane": "construction-logic-list-cleanup-playbook",
