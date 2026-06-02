@@ -96,12 +96,13 @@ That simpler version is easier to reason about, but it is a behavioral change be
 ## Related Pages
 
 - [AI, headless and performance](AI-Headless-And-Performance)
+- [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook)
 - [Feature status register](Feature-Status-Register)
 - [Hardening implementation roadmap](Hardening-Implementation-Roadmap)
 - [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl)
 
 ## Continue Reading
 
-Previous: [AI, headless and performance](AI-Headless-And-Performance) | Next: [Client UI/HUD/menus](Client-UI-HUD-And-Menus)
+Previous: [HC delegation/failover](Headless-Delegation-And-Failover-Playbook) | Next: [Client UI/HUD/menus](Client-UI-HUD-And-Menus)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

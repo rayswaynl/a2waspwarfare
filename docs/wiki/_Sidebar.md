@@ -38,6 +38,7 @@
 - [Supply missions](Supply-Mission-Architecture)
 - [Supply heli PR #1](Current-Work-Supply-Helicopters-PR1)
 - [AI/performance](AI-Headless-And-Performance)
+- [HC delegation/failover](Headless-Delegation-And-Failover-Playbook)
 - [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety)
 - [UI/HUD/menus](Client-UI-HUD-And-Menus)
 - [UI systems atlas](Client-UI-Systems-Atlas)
@@ -51,6 +52,7 @@
 - [Hardening roadmap](Hardening-Implementation-Roadmap)
 - [Server authority map](Server-Authority-Migration-Map)
 - [Attack-wave authority](Attack-Wave-Authority-Playbook)
+- [HC delegation/failover](Headless-Delegation-And-Failover-Playbook)
 - [Testing/release workflow](Testing-Debugging-And-Release-Workflow)
 - [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl)
 - [`agent-test-plan.schema.json`](agent-test-plan.schema.json)
@@ -72,6 +74,7 @@
 - [Hardening roadmap](Hardening-Implementation-Roadmap)
 - [Server authority map](Server-Authority-Migration-Map)
 - [Attack-wave authority](Attack-Wave-Authority-Playbook)
+- [HC delegation/failover](Headless-Delegation-And-Failover-Playbook)
 - [Testing/release workflow](Testing-Debugging-And-Release-Workflow)
 
 ## Claude

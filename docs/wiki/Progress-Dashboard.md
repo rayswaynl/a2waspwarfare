@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `hc-delegation-failover-playbook` | Ready to publish | [HC delegation/failover](Headless-Delegation-And-Failover-Playbook) turns DR-21/DR-42 into an implementation-ready plan for town AI, static-defense HC update-back, HC work records and disconnect policy. |
 | `dr42-dr43-reconciliation` | Ready to publish | DR-42 static-defense HC update-back and DR-43 source/version + duplicate-bind cleanups are integrated into [AI/headless](AI-Headless-And-Performance), [Feature status](Feature-Status-Register), [Hardening roadmap](Hardening-Implementation-Roadmap) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl). |
 | `markdown-research-report-intake` | Ready to publish | [External research reports](External-Research-Reports) and [`external-research-report-manifest.json`](external-research-report-manifest.json) now track nine Markdown deep-research reports as source-check leads. |
 | `attack-wave-authority-playbook` | Ready to publish | [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) turns DR-41 into an implementation-ready patch guide, including server recomputation, duplicate rejection, modifier clamps and the all-side-supply spend model. |
@@ -50,6 +51,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `hc-delegation-failover-playbook` | Codex/future AI owner | Playbook ready | Use [HC delegation/failover](Headless-Delegation-And-Failover-Playbook) before changing headless town AI, static-defense delegation or disconnect/failover behavior. |
 | `dashboard-current-state-cleanup` | Codex | Published | Progress page now shows current state first; historic scout detail lives in swarm/worklog pages. |
 | `town-ai-vehicle-despawn-safety` | Codex/future code owner | Playbook published | The confirmed occupied-vehicle deletion bug now has a dedicated implementation playbook; next step is a gameplay patch in the Chernarus source mission when code work is claimed. |
 | `attack-wave-authority-dr41` | Future code owner | Playbook published | `ATTACK_WAVE_INIT` is confirmed high-risk; use [Attack-wave authority playbook](Attack-Wave-Authority-Playbook), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) and [Server authority map](Server-Authority-Migration-Map) before patching. |
@@ -63,6 +65,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| HC delegation/failover playbook | [HC delegation/failover](Headless-Delegation-And-Failover-Playbook), [AI/headless](AI-Headless-And-Performance), [`agent-context.json`](agent-context.json) | Adds the source-backed patch model for DR-21/DR-42: HC registry, town-AI update-back, static-defense one-way gap, work records, disconnect policy and validation scenarios. |
 | DR-42/DR-43 reconciliation | [AI/headless](AI-Headless-And-Performance), [Feature status](Feature-Status-Register), [Hardening roadmap](Hardening-Implementation-Roadmap), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) | Promotes static-defense HC update-back to confirmed DR-42, marks hosted FPS backlog as a DR-19 duplicate, adds `source-version-sqf-build-gap` and `init-server-duplicate-binds`, and corrects DR-43 to three live duplicate binds plus three commented remnants. |
 | Markdown research report intake | [External research reports](External-Research-Reports), [`external-research-report-manifest.json`](external-research-report-manifest.json), [`agent-context.json`](agent-context.json) | Adds sanitized metadata for nine Steff-provided Markdown deep-research reports; treats them as leads until repo evidence confirms them. First source-checked overlap confirms the modded mission tooling/propagation claims already documented in [Tools/build](Tools-And-Build-Workflow). |
 | Attack-wave authority playbook | [Attack-wave authority playbook](Attack-Wave-Authority-Playbook), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), [`agent-context.json`](agent-context.json) | Adds the DR-41 patch shape future code owners need: treat `ATTACK_WAVE_INIT` as request data, re-derive real side supply server-side, reject bad/duplicate requests, clamp modifier/duration and preserve all-current-side-supply spend unless design changes are approved. |

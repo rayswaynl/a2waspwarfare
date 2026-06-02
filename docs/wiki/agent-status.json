@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T16:20:00+02:00",
+  "generatedAt": "2026-06-02T16:50:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,8 +16,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass reconciled Claude DR-42/DR-43 into owning pages and agent-hardening-backlog.jsonl.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed lane, likely PVF dispatch implementation playbook or HC delegation/failover review."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass added a source-backed HC delegation/failover playbook for DR-21/DR-42.",
+      "nextExpectedOutput": "Continue with the next bounded source-backed lane while Codex-2 owns PVF dispatch."
     },
     "Codex-2": {
       "status": "active",
@@ -102,8 +102,14 @@
     {
       "lane": "dr42-dr43-reconciliation",
       "owner": "Codex",
-      "status": "ready-to-publish",
+      "status": "published",
       "output": "AI/headless, Feature status, Hardening roadmap, Deep Review Findings, Agent Worklog and agent-hardening-backlog.jsonl updated for DR-42 and corrected DR-43 duplicate-bind count"
+    },
+    {
+      "lane": "hc-delegation-failover-playbook",
+      "owner": "Codex",
+      "status": "ready-to-publish",
+      "output": "Headless-Delegation-And-Failover-Playbook.md plus links from Home/sidebar/footer/AI/headless/roadmap/dashboard/context"
     }
   ],
   "queuedReports": [],

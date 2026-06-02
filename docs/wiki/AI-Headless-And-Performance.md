@@ -10,6 +10,8 @@
 
 `initJIPCompatible.sqf` downgrades headless delegation to disabled when the detected OA version does not support headless clients. Server functions `Server_DelegateAITownHeadless`, `Server_DelegateAIStaticDefenceHeadless` and `Server_FNC_Delegation` are the core delegation hooks. Client handlers `Client_DelegateAI`, `Client_DelegateTownAI` and `Client_DelegateAIStaticDefence` receive delegated work.
 
+Implementation playbook: [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook).
+
 Boyle's second-pass autonomy review clarified the split between real AI plumbing and missing autonomy:
 
 | Area | Source status | Notes |
@@ -93,6 +95,6 @@ There is also no visible failover/rebalancing pass on HC disconnect. A disconnec
 
 ## Continue Reading
 
-Previous: [Supply heli PR #1](Current-Work-Supply-Helicopters-PR1) | Next: [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety)
+Previous: [Supply heli PR #1](Current-Work-Supply-Helicopters-PR1) | Next: [HC delegation/failover](Headless-Delegation-And-Failover-Playbook)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

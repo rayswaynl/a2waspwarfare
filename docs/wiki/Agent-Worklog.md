@@ -478,6 +478,13 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Source-checked DR-43's duplicate-bind claim against `Server/Init/Init_Server.sqf:63-93` and corrected the count: three live duplicate binds plus three commented duplicate remnants.
 - Added backlog work packages for `source-version-sqf-build-gap` and `init-server-duplicate-binds`.
 
+## 2026-06-02 - Codex HC Delegation/Failover Playbook
+
+- Read `Headless/Init/Init_HC.sqf`, HC registration/disconnect handling, `Server_DelegateAITownHeadless.sqf`, `Server_DelegateAIStaticDefenceHeadless.sqf`, `Client_DelegateTownAI.sqf`, `Client_DelegateAIStaticDefence.sqf`, `Server_FNC_Delegation.sqf`, `Server_HandleDefense.sqf`, `Server_OperateTownDefensesUnits.sqf` and `server_town_ai.sqf`.
+- Added [HC delegation/failover](Headless-Delegation-And-Failover-Playbook) as an implementation-ready DR-21/DR-42 guide.
+- Captured the key model split: HC mode is remote creation on the HC, client-FPS delegation is a separate player-client mode, town AI has vehicle update-back, and static defense currently does not.
+- Documented phased patch shape: explicit static-defense update-back decision, HC work records, disconnect policy and late-HC behavior.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

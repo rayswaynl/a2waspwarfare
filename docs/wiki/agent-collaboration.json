@@ -22,6 +22,25 @@
  },
  "activeClaims": [
   {
+   "lane": "hc-delegation-failover-playbook",
+   "owner": "Codex",
+   "status": "ready-to-publish",
+   "sourceScope": [
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_DelegateAI*.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/PVFunctions/HandleSpecial.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_DelegateAI*.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnPlayerDisconnected.sqf",
+    "Deep-Review-Findings.md DR-21 / DR-42"
+   ],
+   "outputs": [
+    "Headless-Delegation-And-Failover-Playbook.md",
+    "AI/headless, roadmap, dashboard and agent context links"
+   ],
+   "handoff": "Create a source-backed implementation playbook for HC delegation/failover that separates town AI, team AI and static-defense behavior."
+  },
+  {
    "lane": "pvf-dispatch-implementation-playbook",
    "owner": "Codex-2",
    "status": "active",
