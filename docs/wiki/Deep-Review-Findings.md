@@ -884,6 +884,40 @@ Chain (source-cited):
 
 **Outcome:** direct-PV forgery surface now has two confirmed members (DR-41 attack-wave, DR-44 side-supply); economy thesis extended to "the supply balance is client-writable".
 
+## Round 36 — 2026-06-02 (Claude) — full wiki audit follow-through: DR-45 (town-AI vehicle despawn) + direct-PV surface closed + coverage-gap assessment
+
+Lane `wiki-audit-followthrough`. Three parallel audits of all 60 wiki pages (duplication already resolved by Codex; this pass = accuracy/consistency/coverage). The wiki is healthy (no broken links, no orphans, DR severities consistent everywhere). Two **audit findings were false positives** — verified at source: the `Public-Variable-Channel-Index` PVF line ranges (`:8-20`/`:23-37`) and DR-15's `_side = _this` at `:3` are **correct** (the audit agents miscounted blank lines); not changed. Real outcomes below.
+
+### DR-45 — Town-AI inactivity despawn deletes vehicles with player passengers — **Medium (gameplay; player vehicle loss)**
+
+`Server/FSM/server_town_ai.sqf:213-216` cleans up a captured/inactive town's vehicles:
+```
+{ if (alive _x) then { if (!(isPlayer leader group _x)) then {deleteVehicle _x} } } forEach (_town getVariable 'wfbe_active_vehicles');
+```
+The guard `!(isPlayer leader group _x)` only spares a vehicle whose **group leader** is a player. It does **not** inspect crew/cargo/turret occupants, so an AI-led (or empty-group) vehicle that a **player is riding as a passenger/cargo** is deleted under them during the despawn sweep. Promotes the existing (un-numbered) `Town-AI-Vehicle-Despawn-Safety` playbook — confirmed by Codex's Einstein verifier and now re-confirmed at source — to a formal DR. **Fix:** before delete, also check `crew _x` / `assignedCargo _x` for any `isPlayer`, or skip vehicles with any player occupant.
+
+### Direct-PV forgery surface — closed (coverage-clean)
+
+Following DR-41/DR-44, the remaining client-touchable **direct** `publicVariable` channels were source-checked for the same forgery class:
+- `REQUEST_SUPPLY_VALUE` (`Server/Functions/Server_PV_RequestSupplyValue.sqf`) — **clean**: a read-only query (`SUPPLY_VALUE_REQUESTED = (side _player) call GetSideSupply; (owner _player) publicVariableClient …`); no mutation, no authority surface (worst case: a client reads another side's public supply — negligible).
+- `MARKER_CREATION` (`Client/Functions/Client_onEventHandler_MARKER_CREATION.sqf`) — **clean/cosmetic**: creates a side-visible **local** map marker from the payload; worst case is cosmetic marker spam, no gameplay/authority impact.
+
+**Conclusion:** the direct-PV **forgery** surface is fully enumerated and **bounded to the two mutation channels** (DR-41 `ATTACK_WAVE_INIT`, DR-44 `wfbe_supply_temp_<side>`); the read/cosmetic direct channels are safe. No further direct-PV forgery findings.
+
+### Coverage-gap & code-depth assessment (what remains unreviewed)
+
+Honest accounting of where the campaign has **not** gone deep, for the owner/Codex to prioritise:
+- **Server/AI respawn + orders** (`Server/AI/AI_AdvancedRespawn.sqf`, `AI_SquadRespawn.sqf`, `AI_AddMultiplayerRespawnEH.sqf`, `Orders/AI_*.sqf`, legacy `AI_TLWPHandler.sqs`) — listed in the Modules/Function index but not deep-reviewed for authority/perf/JIP.
+- **Cleaners/restorers Perf** (`Server/FSM/cleaners/*`, `buildings_restorer.sqf`) — cadence/cost not measured (ledger Markers Map is 🟡 for this reason).
+- **Config data model** (`Common/Config/Core*/`, `Gear/`, `Loadout/`, `Defenses/`) — the faction/unit/upgrade data layer load-order is documented per-atlas but not as a coherent whole.
+- **`Server/FSM/basearea.sqf`, `groupsMonitor.sqf`, `Server/Support/Support_*` ** — purpose-mapped only; trigger chains not traced.
+- **PR#1 supply-helicopter** delta — reviewed at a high level (stacked `Killed` EH) but not line-by-line on the `feat/supply-helicopter` branch.
+- **Code depth note:** the economy/forgery and PVF classes are reviewed to *exploit-and-fix* depth; the AI/respawn and cleaner subsystems are at *map-only* depth. These are the next high-value review lanes if the campaign continues.
+
+**Handoff for Codex.** Audit punch-list (Codex-lane accuracy fixes) recorded in [Wiki quality audit](Wiki-Quality-Audit) "Round 2"; DR-45 should be cross-linked from the Town-AI playbook + AI/headless atlas; the coverage-gap list seeds the next review queue.
+
+**Outcome:** DR-45 filed (town-AI passenger-vehicle deletion); direct-PV forgery surface closed as bounded; coverage gaps enumerated for the next phase.
+
 ## Continue Reading
 
 Previous: [Testing workflow](Testing-Debugging-And-Release-Workflow) | Next: [Implementation plan](Documentation-Implementation-Plan)

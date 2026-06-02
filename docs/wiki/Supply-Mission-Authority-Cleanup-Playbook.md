@@ -12,8 +12,8 @@ Scope: Chernarus source mission first, then generated mission propagation throug
 | PR #1 supply helicopters | Partial / PR-ready risk | Additive feature; needs loaded-state and `Killed` handler cleanup before baseline merge. |
 | Cooldown model | Partial | Pull-based JIP query is good, but casing and start-time race need cleanup. |
 | Dead twin script | Abandoned | `supplyMissionActive.sqf` is compiled but no static caller was found. |
-| Command-center scan | Source/Vanilla patched, smoke pending | Current Chernarus source and Vanilla Takistan use `nearestObjects [..., ["Base_WarfareBUAVterminal"], 80]`; smoke west/east command centers plus PR #1 deliveries. |
 | Authority posture | Opportunity | Small server-owned record can improve integrity without redesigning all economy flows. |
+| Command-center scan narrowing | Source/Vanilla patched | The 80-meter return-to-base scan now filters to `Base_WarfareBUAVterminal`; see [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing). |
 
 ## What Was Read
 
@@ -33,7 +33,7 @@ Scope: Chernarus source mission first, then generated mission propagation throug
 - `Client/Module/supplyMission/supplyMissionCompletedMessage.sqf`
 - `Client/Functions/Client_UIFillListBuyUnits.sqf`
 - `Client/FSM/updatetownmarkers.sqf`
-- Existing pages: [Supply mission architecture](Supply-Mission-Architecture), [Current supply heli PR](Current-Work-Supply-Helicopters-PR1), [Economy authority first cut](Economy-Authority-First-Cut), [Documentation plan](Documentation-Implementation-Plan)
+- Existing pages: [Supply mission architecture](Supply-Mission-Architecture), [Current supply heli PR](Current-Work-Supply-Helicopters-PR1), [Economy authority first cut](Economy-Authority-First-Cut), [Hardening roadmap](Hardening-Implementation-Roadmap)
 
 ## What The Code Does
 
@@ -41,7 +41,7 @@ Scope: Chernarus source mission first, then generated mission propagation throug
 2. Mission start asks the server for town cooldown (`supplyMissionStart.sqf:6-7`), immediately reads local `supplyMissionCoolDownEnabled` (`:9-14`), then checks cursor target class/distance (`:16-32`).
 3. The client stamps authority-bearing object vars on the vehicle: `SupplyFromTown`, `SupplyByHeli` and `SupplyAmount` (`supplyMissionStart.sqf:34-46`), then sends `WFBE_Client_PV_SupplyMissionStarted` (`:50-51`).
 4. The server start handler records town cooldown as `LastSupplyMissionRun` (`supplyMissionStarted.sqf:8`), adds a `Killed` event handler to the vehicle (`:10-25`), starts the town timer (`:35`) and loops while the vehicle is alive (`:37-86`).
-5. The loop checks command-center proximity every 3 seconds. Current Chernarus source and Vanilla Takistan use `nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]`, then retain the existing `isKindOf "Base_WarfareBUAVterminal"` guard (`supplyMissionStarted.sqf:41-45`).
+5. The loop scans nearby objects every 3 seconds with `nearestObjects [(getPos _associatedSupplyTruck), [], 80]`, then filters for `Base_WarfareBUAVterminal` in script (`supplyMissionStarted.sqf:41-45`).
 6. On command-center proximity, the loop resolves a player through `WFBE_SE_PLAYERLIST`, nearby units and the vehicle leader/driver (`supplyMissionStarted.sqf:48-78`), then emits `WFBE_Server_PV_SupplyMissionCompleted` back to the server (`:80-82`).
 7. Completion reads `SupplyAmount`, `SupplyFromTown` and `SupplyByHeli` from the vehicle object (`supplyMissionCompleted.sqf:9-25`), decides whether a heavy-heli cash run applies from server-side upgrade state (`:26-27`), pays commander team funds or side supply (`:31-40`), clears only amount/source vars (`:41-42`) and broadcasts the message (`:48`).
 8. Client reward/score presentation is local after the completion broadcast. The pilot receives the reward through `ChangePlayerFunds` and score is requested with `RequestChangeScore` (`supplyMissionCompletedMessage.sqf:15-33`).
@@ -55,7 +55,7 @@ Scope: Chernarus source mission first, then generated mission propagation throug
 | Duplicate mission starts for the same vehicle are not explicitly guarded. | `supplyMissionStart.sqf:32-51`; `supplyMissionStarted.sqf:37-86` | A reused or rapidly reloaded vehicle can create parallel tracking loops and repeated handler attachment unless state gates are added. |
 | Cooldown key casing is inconsistent. | `Init_Town.sqf:35` seeds `lastSupplyMissionRun`; `isSupplyMissionActiveInTown.sqf:8` reads `LastSupplyMissionRun`; `supplyMissionStarted.sqf:8` writes `LastSupplyMissionRun`. | After the first start, the uppercase key exists; before that, the query path depends on nil behavior. Treat this as a source-confirmed mismatch and smoke-test after standardizing. |
 | Cooldown response model is good but the start flow races it. | Request at `supplyMissionStart.sqf:6-7`, local read at `:9`, second server request at `:61`; receiver stores result at `townSupplyStatus.sqf:5-8`. | Keep the pull-based JIP pattern, but do not make the immediate local cache read the final authority decision. |
-| Command-center scan was broader than needed. | Historical DR-39 evidence found `nearestObjects [..., [], 80]`; current Chernarus source and Vanilla Takistan now use `["Base_WarfareBUAVterminal"]` at `supplyMissionStarted.sqf:45`. | Low-risk performance cleanup is source/Vanilla patched; remaining risk is Arma smoke for real command-center detection and PR #1 truck/heli delivery behavior. |
+| Command-center scan was broader than needed. | `supplyMissionStarted.sqf:41-45` now uses `nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]`. | Source/Vanilla patched as a low-risk performance sub-step; remaining authority/idempotency work is still open. |
 | `supplyMissionActive.sqf` is a dead twin. | `Init_Server.sqf:81` compiles it; repository search found no static caller. Live PVEH is in `supplyMissionStarted.sqf:1-2`. | Removes a second, similar implementation from future readers and avoids patching the wrong file. |
 | Completion uses server-to-server public variable routing. | `supplyMissionStarted.sqf:81-82`; `supplyMissionCompleted.sqf:2`. | It works as a registered server PVEH, but an implementation patch can call a server function directly once the completion path is refactored. |
 
@@ -91,10 +91,8 @@ Recommended branch: `hardening/supply-mission-authority-cleanup`.
    - No-commander cash-run fallback to side supply is already coded and should remain unless redesigned.
    - Interdiction reward should pay once per loaded vehicle death.
 
-6. Verify command-center detection after the source/Vanilla scan patch.
-   - Current Chernarus source and Vanilla Takistan already use `nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]`.
-   - This is source/external grounded: the live script already filters each result with `isKindOf "Base_WarfareBUAVterminal"`, the structure configs name the concrete terminal classes at `Structures_*.sqf:10`, and official BI docs describe `nearestObjects` type arrays as `isKindOf`-matched class filters.
-   - Keep the player-proximity scan at `nearestObjects [(getPos _associatedSupplyTruck), [], 8]`; that second scan is looking for nearby players/vehicles, not only the command center.
+6. Command-center detection narrowing is patched.
+   - Source Chernarus and Vanilla Takistan now use `["Base_WarfareBUAVterminal"]` for the 80-meter command-center scan.
    - Keep the 3-second cadence unless a performance test proves a need to change it.
 
 7. Retire the dead twin.
@@ -110,12 +108,11 @@ Source-only checks:
 - Confirm repeated start attempts cannot create duplicate loops or duplicate `Killed` handlers.
 - Confirm `SupplyAmount` is cleared only after server-owned reward state has already been consumed.
 - Confirm no code path still uses lowercase `lastSupplyMissionRun` after the casing cleanup.
-- Confirm the command-center scan uses `["Base_WarfareBUAVterminal"]` while player proximity still uses a broad scan or a deliberately audited replacement.
+- Done for scan sub-step: source/Vanilla command-center detection uses one narrowed `["Base_WarfareBUAVterminal"]` 80-meter scan; `git diff --check` passed.
 
 Hosted/dedicated smoke:
 
 - Truck mission can be loaded, delivered and rewarded once.
-- Delivery still detects west/east command centers in Chernarus source and Vanilla Takistan after the narrowed class filter.
 - Same truck can run a second mission after cooldown; no duplicate delivery or stacked handler behavior.
 - Attempting to load during cooldown is rejected by the server and reflected in client feedback.
 - Destroying a loaded enemy supply vehicle pays interdiction exactly once.
@@ -150,13 +147,13 @@ Code owner:
 
 Codex:
 
-- Keep [Supply mission architecture](Supply-Mission-Architecture), [Current supply heli PR](Current-Work-Supply-Helicopters-PR1), [Documentation plan](Documentation-Implementation-Plan) and agent context linked to this page.
-- When a code patch lands, update [Feature status](Feature-Status-Register), [Economy authority first cut](Economy-Authority-First-Cut) and validation evidence.
+- Keep [Supply mission architecture](Supply-Mission-Architecture), [Current supply heli PR](Current-Work-Supply-Helicopters-PR1), [Hardening roadmap](Hardening-Implementation-Roadmap) and `agent-hardening-backlog.jsonl` linked to this page.
+- When a code patch lands, update [Feature status](Feature-Status-Register), [Server authority map](Server-Authority-Migration-Map) and validation evidence.
 
 Claude:
 
 - If reviewing this patch independently, focus on contradictions in server ownership: any remaining path where client-stamped amount/source/side can influence reward without server recomputation.
-- Also check Arma 2 OA-specific event-handler removal and in-game command-center detection after any `nearestObjects` class-filter patch before declaring the implementation clean.
+- Also check Arma 2 OA-specific event-handler removal and `nearestObjects` class-filter behavior before declaring the implementation clean.
 
 ## Continue Reading
 

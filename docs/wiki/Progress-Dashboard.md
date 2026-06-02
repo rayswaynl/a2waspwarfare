@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `supply-mission-scan-narrowing` | Published/source patched | [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) narrows the live supply return-to-base command-center scan to `Base_WarfareBUAVterminal` in source Chernarus and generated Vanilla Takistan; Arma smoke remains. |
 | `hosted-server-fps-loop-sleep` | Published/source patched | [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) fixes DR-19 in source/Vanilla by exiting both FPS publishers on non-dedicated hosts while preserving dedicated 8-second publishing. |
 | `paratrooper-marker-revival` | Published/source patched | [Paratrooper marker revival](Paratrooper-Marker-Revival) restores the paratrooper marker callback in source Chernarus by registering `HandleParatrooperMarkerCreation`; Vanilla propagation and modded mission cleanup remain. |
 | `wiki-quality-dup8-construction-routing` | Published | [Deep-review findings](Deep-Review-Findings) DR-6 now owns exact construction-authority proof; [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas) owns runtime flow and safe extension checklist; Gameplay, Feature status, Hardening roadmap and Server authority map route there instead of repeating class-existence evidence. |
@@ -56,7 +57,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
 | Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved Wiki Quality DUP-8 by routing construction authority detail to [Deep-review findings](Deep-Review-Findings) DR-6, [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas) and [Server authority map](Server-Authority-Migration-Map). |
-| Codex-2 | Ready | None claimed | Published [supply mission scan narrowing](Supply-Mission-Scan-Narrowing); next bounded candidates are PVF dispatcher lookup, factory queue cleanup or WASP marker wait cleanup. |
+| Codex-2 | Active | `wasp-marker-wait-cleanup` | Source-checking `WASP/global_marking_monitor.sqf` marker-dialog display polling and preparing the smallest safe wait cleanup. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
@@ -81,6 +82,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `wasp-marker-wait-cleanup` | Codex-2 | Active | Source-check `WASP/global_marking_monitor.sqf:57-73`; replace the sleepless display-54 wait with a throttled wait if source-safe. |
 | `supply-mission-scan-narrowing` | Codex-2 | Published/source patched | [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) narrows the server command-center proximity scan to `Base_WarfareBUAVterminal` in source Chernarus and generated Vanilla Takistan; Arma smoke remains. |
 | `hosted-server-fps-loop-sleep` | Codex-2 | Published/source patched | [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) exits FPS publishers on hosted/listen servers and keeps dedicated publishing unchanged; smoke remains. |
 | `client-skill-init-idempotency` | Codex-2 | Published/source patched | [Client skill init idempotency](Client-Skill-Init-Idempotency) removes the duplicate `Skill_Init.sqf` call from source Chernarus and propagated Vanilla Takistan; Arma smoke remains. |

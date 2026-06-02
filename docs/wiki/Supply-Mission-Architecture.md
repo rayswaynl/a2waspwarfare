@@ -1,5 +1,7 @@
 # Supply Mission Architecture
 
+Page ownership: this page owns the supply-mission flow, cooldown/JIP pattern and state-owner map. [Deep-review findings](Deep-Review-Findings) DR-18 owns the exact cooldown casing defect evidence; [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) owns the implementation-ready patch shape.
+
 Supply missions are one of the most cross-cutting systems in the mission. They touch client actions, skill roles, town cooldown state, server tracking loops, side supply, commander/team funds in PR #1, player rewards, public variables and buy-menu affordances.
 
 ## Master Branch Flow
@@ -13,7 +15,7 @@ Supply missions are one of the most cross-cutting systems in the mission. They t
 7. If allowed, client validates cursor target against hardcoded supply-truck classes and distance < 50m.
 8. Client writes object variables on the vehicle: `SupplyFromTown` and `SupplyAmount`.
 9. Client broadcasts `WFBE_Client_PV_SupplyMissionStarted`.
-10. Server `supplyMissionStarted.sqf` starts a loop against the vehicle object, checking for command center proximity within 80m.
+10. Server `supplyMissionStarted.sqf` starts a loop against the vehicle object, checking for command center proximity within 80m with a narrowed `Base_WarfareBUAVterminal` object scan.
 11. On match, server broadcasts `WFBE_Server_PV_SupplyMissionCompleted`.
 12. Server `supplyMissionCompleted.sqf` reads the vehicle object variables, calls `ChangeSideSupply`, clears the vehicle vars and broadcasts completion message.
 13. Client `supplyMissionCompletedMessage.sqf` displays the message and requests score reward.
@@ -22,7 +24,7 @@ Supply missions are one of the most cross-cutting systems in the mission. They t
 
 | State | Owner | Notes |
 | --- | --- | --- |
-| `LastSupplyMissionRun` | town object/server | Cooldown anchor. DR-18: `Init_Town.sqf:35` seeds lowercase `lastSupplyMissionRun`, while the live server cooldown path reads/writes capitalized `LastSupplyMissionRun` (`isSupplyMissionActiveInTown.sqf:8`, `supplyMissionStarted.sqf:8`). |
+| `LastSupplyMissionRun` | town object/server | Cooldown anchor. |
 | `supplyMissionCoolDownEnabled` | town object/client | Client-side affordance for map/action feedback. |
 | `SupplyFromTown` | supply vehicle object | Source town object. |
 | `SupplyAmount` | supply vehicle object | Payload amount. Cleared on completion. |
@@ -32,32 +34,48 @@ Supply missions are one of the most cross-cutting systems in the mission. They t
 
 - `supplyMissionStart.sqf` on master uses duplicated hardcoded supply-truck classname arrays.
 - The client asks for cooldown and immediately reads local town state; timing/race behavior depends on the server response arriving quickly enough.
-- The cooldown seed casing mismatch is a confirmed first-use defect. See [Deep-review findings](Deep-Review-Findings) DR-18 for full evidence and the one-line fix options.
+- Cooldown variable casing is a confirmed DR-18 defect: town init seeds `lastSupplyMissionRun`, while server supply code reads/writes `LastSupplyMissionRun`.
 - `supplyMissionStarted.sqf` loops until the vehicle dies; it should avoid creating duplicate tracking loops for the same loaded vehicle.
 - Completion trusts object variables on the supply vehicle, so any feature that reuses those vars must clear them reliably.
 - Player resolution depends on `WFBE_SE_PLAYERLIST` and proximity/driver checks.
 
-## DR-39 Perf And JIP Notes
+Claude DR-39 split the Perf/JIP status cleanly:
 
-Claude DR-39 source-verified two important details:
-
-- `Server/Module/supplyMission/supplyMissionActive.sqf` is a dead twin of the live tracking loop. `Init_Server.sqf:81` compiles it as `WFBE_SE_FNC_SupplyMissionActive`, but the file does not self-register a public-variable handler and has no caller. The live path is `supplyMissionStarted.sqf`, whose first line registers `WFBE_Client_PV_SupplyMissionStarted`.
-- Supply cooldown status is a good JIP pattern: clients request status with `WFBE_Client_PV_IsSupplyMissionActiveInTown`; the server computes it from `LastSupplyMissionRun`; clients store the response on the town. A joiner can ask for current state instead of needing a replayed one-shot event.
-
-Owner cleanup: remove `supplyMissionActive.sqf` plus its `Init_Server.sqf:81` compile, or wire it intentionally if a second path is desired. Perf cleanup: narrow the live `nearestObjects [..., [], 80]` scan in `supplyMissionStarted.sqf` if the tracked object classes are known. Optional network cleanup: target the cooldown response to the requester instead of broadcasting to every client. See [Deep-review findings](Deep-Review-Findings) DR-39.
+| Item | Status | Development note |
+| --- | --- | --- |
+| `supplyMissionActive.sqf` | Dead twin. It is compiled as `WFBE_SE_FNC_SupplyMissionActive`, but the live path is `supplyMissionStarted.sqf`, which self-registers the `WFBE_Client_PV_SupplyMissionStarted` handler. | Remove the dead compile/function or keep it explicitly marked as retired. |
+| Command-center detection loop | Source/Vanilla patched. The live loop still sleeps 3 seconds, but now uses `nearestObjects [pos, ["Base_WarfareBUAVterminal"], 80]` for command-center detection. | Smoke delivery at command centers and no-completion near unrelated objects; authority cleanup remains separate. |
+| Cooldown JIP behavior | Pull-based and good. Clients ask `WFBE_Client_PV_IsSupplyMissionActiveInTown`; server computes from `LastSupplyMissionRun`; clients store the answer locally. | This is a positive pattern for JIP state: query current state instead of relying on replayed events. The response is broadcast to all clients today, not targeted to the requester. |
 
 ## PR #1 Changes
 
-PR #1 improves the system by centralizing supply vehicle types, adding helicopter tiers, adding `SupplyByHeli`, changing labels to `LOAD SUPPLIES`, adding air rewards/cash runs/interdiction, and highlighting supply helicopters in buy menus.
+PR #1 improves the system by centralizing supply vehicle types, adding helicopter tiers, adding `SupplyByHeli`, changing labels to `LOAD SUPPLIES`, adding air rewards/cash runs/interdiction, and highlighting supply helicopters in buy menus. It is additive: it extends the same client-started, server-completed object-var flow rather than replacing the trust model.
 
 Review risk from the independent doc reviewer: the PR adds a `Killed` event handler when a supply mission starts. Make sure repeated reloads of the same vehicle cannot stack duplicate handlers or duplicate interdiction rewards.
 
-Implementation handoff: [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) is the source-backed patch guide for loaded state, cooldown casing, server validation and PR #1 handler idempotency.
+## Master vs PR #1 Authority Matrix
+
+| Area | `master` | PR #1 / `feat/supply-helicopter` |
+| --- | --- | --- |
+| Vehicle type | Truck-only hardcoded class checks. | Centralized supply truck + light/heavy supply helicopter constants. |
+| Start authority | Client chooses eligible vehicle, stamps `SupplyFromTown` / `SupplyAmount`, then notifies server. | Same trust model, plus `SupplyByHeli` and heli class/upgrade gates. |
+| Completion authority | Server loop verifies command-center proximity, then trusts the vehicle object vars. | Same server-completion pattern; reward path branches for truck, heli and cash run. |
+| Reward | Side supply on completion; player message/score path follows completion broadcast. | Heli rewards can add air bonus, interdiction reward and heavy-heli cash-run funds to commander team funds when a commander exists. |
+| Cooldown | Town object cooldown uses `LastSupplyMissionRun`, with source casing mismatch against seeded `lastSupplyMissionRun`. | Same cooldown foundation; PR does not redesign cooldown ownership. |
+| AI logistics | Broken/deferred `UpdateSupplyTruck` / missing `supplytruck.fsm`. | Still deferred; PR covers player-run vehicles, not autonomous AI-flown supply helicopters. |
+| Known PR defect | Not applicable. | Reused vehicles can accumulate `Killed` handlers because each mission start adds another EH without a guard/removal. |
 
 ## Future Design Direction
 
 - Move all supply-capable vehicle classes to one constant source of truth.
 - Add an explicit loaded/unloaded state variable to prevent duplicate loops and duplicate event handlers.
 - Split client affordance, server validation and reward calculation into documented helper functions.
+- Keep the pull-based cooldown request/response pattern for JIP-visible state, but target responses where possible.
+- Command-center scan narrowing is patched in source/Vanilla; keep smoke evidence on [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing).
 - Redesign autonomous AI logistics separately from the broken `AI_UpdateSupplyTruck` / missing `supplytruck.fsm` path.
 
+## Continue Reading
+
+Previous: [Economy/towns/supply](Economy-Towns-And-Supply) | Next: [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

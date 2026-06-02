@@ -28,6 +28,10 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 
 | Date | Agent | Lane | Status |
 | --- | --- | --- | --- |
+| 2026-06-02 | Codex | `external-reference-gateway-upgrade` | Complete: expanded `Arma-2-OA-External-Reference-Guide.md` into a compact first-stop router for official BI OA command docs, Wasp subsystem pages and common engine-claim mistakes. |
+| 2026-06-02 | Codex | `collaboration-protocol-gateway-upgrade` | Complete: expanded `Agent-Collaboration-Protocol.md` into a concise read-order, collision-check, update-surface and validation guide. |
+| 2026-06-02 | Codex | `wiki-mirror-route-parity-repair` | Complete: added gateway pages/files for concurrently restored route links, refreshed `agent-context.json` page arrays and restored full `Tools/ValidateWiki.ps1` pass. |
+| 2026-06-02 | Codex | `agent-status-concurrent-state-reconcile` | Complete: reconciled with the newer `agent-status.json` shape; `agents.Codex` and `agents.Codex-2` are intentional separate status surfaces, so no active-agent cleanup is pending. |
 | 2026-06-02 | Codex | `supply-scan-patch-status-reconcile` | Complete: reconciled docs and machine context with current Chernarus source plus Vanilla Takistan `["Base_WarfareBUAVterminal"]` scan patch; Arma smoke remains. |
 | 2026-06-02 | Codex | `backlog-supply-scan-candidate-sync` | Complete: synced `agent-hardening-backlog.jsonl` supply cleanup entry with the exact `["Base_WarfareBUAVterminal"]` scan candidate and validation notes. |
 | 2026-06-02 | Codex | `supply-scan-class-filter-handoff` | Complete: grounded supply command-center scan narrowing in source and BI nearestObjects/isKindOf docs; later source/Vanilla patch status is captured by `supply-scan-patch-status-reconcile`. |

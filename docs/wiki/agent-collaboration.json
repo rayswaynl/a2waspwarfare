@@ -1,0 +1,1135 @@
+{
+  "schema": "a2waspwarfare-agent-collaboration-v1",
+  "generatedAt": "2026-06-02T11:05:29+02:00",
+  "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
+  "sourceOfTruth": {
+    "progressDashboard": "Progress-Dashboard.md",
+    "statusFile": "agent-status.json",
+    "humanBoard": "Coordination-Board.md",
+    "protocol": "Agent-Collaboration-Protocol.md",
+    "worklog": "Agent-Worklog.md",
+    "eventFeed": "agent-events.jsonl",
+    "repoContext": "agent-context.json",
+    "knowledgeRecords": "agent-knowledge.jsonl",
+    "hardeningBacklog": "agent-hardening-backlog.jsonl",
+    "externalResearchManifest": "external-research-report-manifest.json"
+  },
+  "Claude": {
+    "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
+    "currentLane": "hc-static-defense-verify (DR-42) — collaboration-follow",
+    "status": "autonomous-ready",
+    "operatingMode": "Claude-Loop-Goal.md"
+  },
+  "activeClaims": [
+    {
+      "lane": "wiki-quality-dup8-construction-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Deep-Review-Findings.md DR-6",
+        "Construction-And-CoIn-Systems-Atlas.md",
+        "Gameplay-Systems-Atlas.md",
+        "Feature-Status-Register.md",
+        "Hardening-Implementation-Roadmap.md",
+        "Server-Authority-Migration-Map.md",
+        "Wiki-Quality-Audit.md DUP-8",
+        "Server/PVFunctions/RequestStructure.sqf",
+        "Server/PVFunctions/RequestDefense.sqf",
+        "Server/PVFunctions/RequestMHQRepair.sqf",
+        "Client/Module/CoIn/coin_interface.sqf"
+      ],
+      "outputs": [
+        "Construction-And-CoIn-Systems-Atlas.md page ownership note and DR-6 authority routing",
+        "Gameplay-Systems-Atlas.md construction gateway routing note",
+        "Feature-Status-Register.md compact construction authority row",
+        "Hardening-Implementation-Roadmap.md economy/construction routing sentence",
+        "Server-Authority-Migration-Map.md construction row routed to DR-6 and construction atlas",
+        "Wiki-Quality-Audit.md DUP-8 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future construction docs should update Deep-Review-Findings.md DR-6 for exact RequestStructure/RequestDefense/RequestMHQRepair proof, Construction-And-CoIn-Systems-Atlas.md for runtime map and checklist, and Server-Authority-Migration-Map.md for migration design. Gameplay, Feature Status and Hardening roadmap should stay concise routing summaries."
+    },
+    {
+      "lane": "wiki-quality-dup7-supply-cooldown-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Supply-Mission-Architecture.md",
+        "Deep-Review-Findings.md DR-18",
+        "Supply-Mission-Authority-Cleanup-Playbook.md",
+        "Economy-Towns-And-Supply.md",
+        "Server-Gameplay-Runtime-Atlas.md",
+        "Feature-Status-Register.md",
+        "Hardening-Implementation-Roadmap.md",
+        "Wiki-Quality-Audit.md DUP-7",
+        "Common/Init/Init_Town.sqf",
+        "Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf",
+        "Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Server/Module/supplyMission/supplyMissionActive.sqf"
+      ],
+      "outputs": [
+        "Supply-Mission-Architecture.md page ownership note and DR-18 fragility wording",
+        "Economy-Towns-And-Supply.md cooldown routing note",
+        "Server-Gameplay-Runtime-Atlas.md runtime-only routing note",
+        "Feature-Status-Register.md compact supply cooldown row",
+        "Hardening-Implementation-Roadmap.md DR-18/playbook routing",
+        "Wiki-Quality-Audit.md DUP-7 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future supply-mission docs should update Supply-Mission-Architecture.md for flow/state/JIP pattern, Deep-Review-Findings.md DR-18 for exact cooldown casing evidence, and Supply-Mission-Authority-Cleanup-Playbook.md for patch sequence. Economy, Server runtime, Feature Status and Hardening roadmap should stay short routing summaries."
+    },
+    {
+      "lane": "wiki-quality-dup4-generated-mission-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Tools-And-Build-Workflow.md",
+        "Content-Structure-And-Maps.md",
+        "Wiki-Quality-Audit.md DUP-4",
+        "Deep-Review-Findings.md DR-4 / DR-32",
+        "Tools/LoadoutManager/FileManagement/FileManager.cs",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs",
+        "Tools/LoadoutManager/ZipManager.cs",
+        "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs"
+      ],
+      "outputs": [
+        "Tools-And-Build-Workflow.md page ownership note and DR-4/DR-32 routing",
+        "Content-Structure-And-Maps.md generated-folder routing summary",
+        "Wiki-Quality-Audit.md DUP-4 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future generated-mission docs should update Tools-And-Build-Workflow.md for operational LoadoutManager skip-list/package/status rules, Deep-Review-Findings.md DR-4/DR-32 for analysis evidence, and keep Content-Structure-And-Maps.md as folder orientation only."
+    },
+    {
+      "lane": "wiki-quality-dup6-lifecycle-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Lifecycle-Wait-Chain.md",
+        "Server-Gameplay-Runtime-Atlas.md",
+        "SQF-Code-Atlas.md",
+        "Mission-Entrypoints-And-Lifecycle.md",
+        "Wiki-Quality-Audit.md DUP-6"
+      ],
+      "outputs": [
+        "Server-Gameplay-Runtime-Atlas.md lifecycle routing note",
+        "SQF-Code-Atlas.md init owner routing note",
+        "Wiki-Quality-Audit.md DUP-6 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future lifecycle docs should update Lifecycle-Wait-Chain.md for flags, boot ordering, JIP waits and HC wait hazards; Mission entrypoints owns include graph/role-dispatch orientation, SQF atlas owns compile ownership and Server runtime owns long-running loop owners."
+    },
+    {
+      "lane": "wiki-quality-dup9-victory-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Server-Gameplay-Runtime-Atlas.md",
+        "Hardening-Implementation-Roadmap.md",
+        "Feature-Status-Register.md",
+        "Wiki-Quality-Audit.md DUP-9",
+        "Deep-Review-Findings.md DR-11 / DR-36",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_victory_threeway.sqf"
+      ],
+      "outputs": [
+        "Server-Gameplay-Runtime-Atlas.md victory routing summary",
+        "Hardening-Implementation-Roadmap.md compact P1 victory route",
+        "Feature-Status-Register.md compact victory row",
+        "Wiki-Quality-Audit.md DUP-9 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future victory/endgame docs should update Deep-Review-Findings.md DR-11/DR-36 or the victory-endgame-correctness backlog first, then keep Server runtime, roadmap and Feature Status as short routing summaries."
+    },
+    {
+      "lane": "wiki-quality-dup5-battleye-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "External-Integrations.md",
+        "Feature-Status-Register.md",
+        "Networking-And-Public-Variables.md",
+        "Hardening-Implementation-Roadmap.md",
+        "Server-Authority-Migration-Map.md",
+        "Wiki-Quality-Audit.md DUP-5",
+        "Deep-Review-Findings.md DR-30",
+        "BattlEyeFilter/publicvariable.txt"
+      ],
+      "outputs": [
+        "External-Integrations.md canonical BattlEye posture section",
+        "Feature-Status-Register.md short BattlEye routing rows",
+        "Networking-And-Public-Variables.md short filter design route",
+        "Hardening-Implementation-Roadmap.md BattlEye policy route",
+        "Server-Authority-Migration-Map.md shipped-posture route",
+        "Wiki-Quality-Audit.md DUP-5 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future BattlEye/public-server hardening docs should start from External-Integrations.md BattlEye Filter. Feature Status, Networking/PV, roadmap and authority pages should route there instead of repeating DR-30 evidence."
+    },
+    {
+      "lane": "icbm-authority-playbook-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "ICBM-Authority-Playbook.md",
+        "Hardening-Implementation-Roadmap.md",
+        "Server-Authority-Migration-Map.md",
+        "Feature-Status-Register.md",
+        "Wiki-Quality-Audit.md DUP-3",
+        "Client/GUI/GUI_Menu_Tactical.sqf",
+        "Client/Module/Nuke/nukeincoming.sqf",
+        "Server/PVFunctions/RequestSpecial.sqf",
+        "Server/Functions/Server_HandleSpecial.sqf",
+        "Client/Module/Nuke/damage.sqf"
+      ],
+      "outputs": [
+        "ICBM-Authority-Playbook.md",
+        "Hardening-Implementation-Roadmap.md P0 ICBM route",
+        "Server-Authority-Migration-Map.md ICBM route",
+        "Feature-Status-Register.md ICBM route",
+        "Wiki-Quality-Audit.md DUP-3 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future code owner should use ICBM-Authority-Playbook.md before editing RequestSpecial \"ICBM\", NukeIncoming, NukeDammage or ICBM Tactical UI/marker flow. The playbook owns DR-27 patch shape; roadmap/authority/status pages should stay short."
+    },
+    {
+      "lane": "wiki-quality-merge1-authority-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Hardening-Implementation-Roadmap.md",
+        "Server-Authority-Migration-Map.md",
+        "Wiki-Quality-Audit.md MERGE-1",
+        "PVF-Dispatch-Implementation-Playbook.md",
+        "Attack-Wave-Authority-Playbook.md",
+        "Economy-Authority-First-Cut.md",
+        "Supply-Mission-Authority-Cleanup-Playbook.md"
+      ],
+      "outputs": [
+        "Hardening-Implementation-Roadmap.md patch-order ownership note and concise playbook routing",
+        "Server-Authority-Migration-Map.md design/checklist ownership note and patch-order routing table",
+        "Wiki-Quality-Audit.md MERGE-1 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future authority docs/code work should keep the split intact: roadmap for what to patch first, server-authority map for how to design/review a handler migration, focused playbooks for exact patch shape."
+    },
+    {
+      "lane": "wiki-quality-dup10-hc-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "AI-Headless-And-Performance.md",
+        "Lifecycle-Wait-Chain.md",
+        "Headless-Delegation-And-Failover-Playbook.md",
+        "Wiki-Quality-Audit.md DUP-10",
+        "Deep-Review-Findings.md DR-21 / DR-42"
+      ],
+      "outputs": [
+        "AI-Headless-And-Performance.md HC source router",
+        "Lifecycle-Wait-Chain.md HC boot ownership note",
+        "Headless-Delegation-And-Failover-Playbook.md page ownership note",
+        "Wiki-Quality-Audit.md DUP-10 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future HC edits should keep the page split intact: AI/headless for runtime orientation, Lifecycle wait-chain for boot timing and Headless delegation/failover for update-back, work-record, disconnect and late-HC policy."
+    },
+    {
+      "lane": "wiki-quality-c3-gameplay-followups",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Gameplay-Systems-Atlas.md",
+        "Wiki-Quality-Audit.md C3",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_SmallSite.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_MediumSite.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleBuildingRepair.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/updateresources.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_StagnateSupplyIncomeNoPlayers.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_BaseStructure.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateavailableactions.fsm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf"
+      ],
+      "outputs": [
+        "Gameplay-Systems-Atlas.md resolved follow-up table",
+        "Wiki-Quality-Audit.md C3 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-status.json"
+      ],
+      "handoff": "Future Gameplay atlas questions should be converted to source-backed resolved notes or moved to the owning subsystem atlas instead of remaining as stale open questions."
+    },
+    {
+      "lane": "wiki-quality-dup11-pv-channel-index",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Public-Variable-Channel-Index.md",
+        "Networking-And-Public-Variables.md",
+        "SQF-Code-Atlas.md",
+        "Wiki-Quality-Audit.md DUP-11"
+      ],
+      "outputs": [
+        "Public-Variable-Channel-Index.md canonical direct-channel inventory rows",
+        "Networking-And-Public-Variables.md direct-PV cross-link summary",
+        "SQF-Code-Atlas.md direct-PV cross-link summary",
+        "Wiki-Quality-Audit.md DUP-11 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-status.json"
+      ],
+      "handoff": "Future PV/channel updates should edit Public-Variable-Channel-Index.md first, then leave only short cross-links on atlas pages."
+    },
+    {
+      "lane": "wiki-quality-merge3-lifecycle-split",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Mission-Entrypoints-And-Lifecycle.md",
+        "Lifecycle-Wait-Chain.md",
+        "Wiki-Quality-Audit.md MERGE-3",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/mission.sqm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf"
+      ],
+      "outputs": [
+        "Mission-Entrypoints-And-Lifecycle.md reduced to entrypoint/init responsibility map",
+        "Lifecycle-Wait-Chain.md canonical ownership note",
+        "Wiki-Quality-Audit.md MERGE-3 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-status.json"
+      ],
+      "handoff": "Keep future include graph, role dispatch and mission-object init notes in Mission entrypoints; keep boot-order, JIP wait and flag dependency notes in Lifecycle wait-chain."
+    },
+    {
+      "lane": "wiki-quality-merge2-ui-quickref",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Client-UI-HUD-And-Menus.md",
+        "Client-UI-Systems-Atlas.md",
+        "Wiki-Quality-Audit.md MERGE-2"
+      ],
+      "outputs": [
+        "Client-UI-HUD-And-Menus.md quick-reference gateway",
+        "Client-UI-Systems-Atlas.md intro relationship note",
+        "Wiki-Quality-Audit.md MERGE-2 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-status.json"
+      ],
+      "handoff": "Client UI/HUD is now a compact router. Keep detailed implementation tables and future UI source-map changes in Client-UI-Systems-Atlas.md."
+    },
+    {
+      "lane": "wiki-quality-reduce4-gameplay-gateway",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Gameplay-Systems-Atlas.md",
+        "Economy-Towns-And-Supply.md",
+        "Construction-And-CoIn-Systems-Atlas.md",
+        "Factory-And-Purchase-Systems-Atlas.md",
+        "Wiki-Quality-Audit.md REDUCE-4"
+      ],
+      "outputs": [
+        "Gameplay-Systems-Atlas.md reduced gateway sections",
+        "Wiki-Quality-Audit.md REDUCE-4 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-status.json"
+      ],
+      "handoff": "Gameplay atlas now orients readers to economy/construction/factory systems without duplicating their canonical atlases. Future bloat work should continue with MERGE-1 or MERGE-3."
+    },
+    {
+      "lane": "wiki-quality-c6-gameplay-citations",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Town.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Towns.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_ai.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/updateresources.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestCommanderVote.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_VoteForCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ProcessUpgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/CoIn/coin_interface.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_BuyUnit.sqf",
+        "Gameplay-Systems-Atlas.md",
+        "Wiki-Quality-Audit.md"
+      ],
+      "outputs": [
+        "Gameplay-Systems-Atlas.md path:line citation uplift",
+        "Wiki-Quality-Audit.md C6 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-status.json"
+      ],
+      "handoff": "Wiki-Quality-Audit C6 is now resolved across UI/HUD, AI/headless and Gameplay. Future work can focus on REDUCE-4 bloat reduction or merge/dedup items."
+    },
+    {
+      "lane": "supply-mission-authority-cleanup-playbook",
+      "owner": "Codex-2",
+      "status": "complete",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionActive.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Town.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Supply-Mission-Architecture.md",
+        "Current-Work-Supply-Helicopters-PR1.md",
+        "Economy-Authority-First-Cut.md",
+        "agent-hardening-backlog.jsonl#supply-mission-authority-cleanup"
+      ],
+      "outputs": [
+        "Supply-Mission-Authority-Cleanup-Playbook.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl finding/complete/handoff events",
+        "agent-context.json",
+        "agent-status.json",
+        "agent-hardening-backlog.jsonl"
+      ],
+      "handoff": "Playbook published. Future code owner should implement loaded/tracking state and Killed-handler idempotency first, then cooldown casing and server-side cargo validation; validate truck reuse, PR #1 heli gates/cash run/interdiction, JIP cooldown and starter disconnect."
+    },
+    {
+      "lane": "economy-authority-first-cut",
+      "owner": "Codex-2",
+      "status": "published",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/Request*.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_*.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission",
+        "Server-Authority-Migration-Map.md",
+        "Economy-Towns-And-Supply.md",
+        "Public-Variable-Channel-Index.md",
+        "Pending-Owner-Decisions.md"
+      ],
+      "outputs": [
+        "Economy-Authority-First-Cut.md",
+        "Agent-Worklog.md",
+        "agent-hardening-backlog.jsonl",
+        "agent-events.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future code owner: implement hardening/side-supply-clamp first, then split upgrade authority and construction/defense authority; treat player-buy locality as a separate redesign."
+    },
+    {
+      "lane": "hc-delegation-failover-playbook",
+      "owner": "Codex",
+      "status": "ready-to-publish",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_DelegateAI*.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/PVFunctions/HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_DelegateAI*.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnPlayerDisconnected.sqf",
+        "Deep-Review-Findings.md DR-21 / DR-42"
+      ],
+      "outputs": [
+        "Headless-Delegation-And-Failover-Playbook.md",
+        "AI/headless, roadmap, dashboard and agent context links"
+      ],
+      "handoff": "Create a source-backed implementation playbook for HC delegation/failover that separates town AI, team AI and static-defense behavior."
+    },
+    {
+      "lane": "pvf-dispatch-implementation-playbook",
+      "owner": "Codex-2",
+      "status": "published",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf",
+        "Deep-Review-Findings.md DR-1 / DR-38",
+        "Hardening-Implementation-Roadmap.md P0 PVF Dispatcher Lookup",
+        "Server-Authority-Migration-Map.md PVF dispatch row"
+      ],
+      "outputs": [
+        "PVF-Dispatch-Implementation-Playbook.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-hardening-backlog.jsonl",
+        "agent-context.json",
+        "agent-status.json"
+      ],
+      "handoff": "Future code owner: implement hardening/pvf-dispatch from PVF-Dispatch-Implementation-Playbook.md; validate one server PVF, one client PVF and bogus-handler rejection; then continue with ICBM RequestSpecial or direct attack-wave authority."
+    },
+    {
+      "lane": "hc-static-defense-verify",
+      "owner": "Claude",
+      "status": "integrated-by-codex",
+      "outputs": [
+        "Deep-Review-Findings.md (Round 33 / DR-42)"
+      ],
+      "handoff": "Integrated by Codex into AI-Headless-And-Performance, Feature-Status-Register, Hardening-Implementation-Roadmap and agent-hardening-backlog.jsonl. server-fps-hosted-loop-sleep is marked duplicate-of-dr19."
+    },
+    {
+      "lane": "dr42-dr43-reconciliation",
+      "owner": "Codex",
+      "status": "ready-to-publish",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_DelegateAIStaticDefence.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_DelegateTownAI.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf"
+      ],
+      "outputs": [
+        "DR-42 promoted in AI/headless docs and backlog",
+        "DR-43 corrected duplicate-bind count and two cleanup backlog records",
+        "server-fps-hosted-loop-sleep marked duplicate-of-dr19"
+      ],
+      "handoff": "Future code owners: use agent-hardening-backlog.jsonl ids hc-static-defense-sync, source-version-sqf-build-gap and init-server-duplicate-binds for implementation. Treat server-fps-hosted-loop-sleep as part of DR-19."
+    },
+    {
+      "lane": "server-authority-migration-map",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Server-Authority-Migration-Map.md",
+        "Common/Init/Init_PublicVariables.sqf",
+        "Server/Functions/Server_HandlePVF.sqf",
+        "Client/Functions/Client_HandlePVF.sqf",
+        "Server/Functions/Server_HandleSpecial.sqf",
+        "Server/Functions/Server_ChangeSideSupply.sqf",
+        "Server/Module/supplyMission/*"
+      ],
+      "outputs": [
+        "Server authority migration map",
+        "Navigation and machine context links"
+      ],
+      "handoff": "Future code owners: use this map before patching client-authoritative or payload-authoritative flows; record validation with agent-test-plan.schema.json."
+    },
+    {
+      "lane": "attack-wave-authority-verify",
+      "owner": "Claude",
+      "status": "playbook-published-by-codex",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/Common/Functions/Common_AttackWaveActivate.sqf",
+        "Missions/[55-2hc]...chernarus/Server/Functions/Server_AttackWave.sqf",
+        "Client/FSM/updateclient.sqf:240; Init_CommonConstants.sqf:166"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 32 / DR-41)",
+        "Codebase-Coverage-Ledger.md (Economy row)",
+        "agent-hardening-backlog.jsonl confirmed-high-dr41",
+        "Networking/roadmap/economy/server-authority cross-links",
+        "Attack-Wave-Authority-Playbook.md"
+      ],
+      "handoff": "Future code owner: implement hardening/attack-wave-authority from Attack-Wave-Authority-Playbook.md and agent-hardening-backlog.jsonl. Server must re-derive side supply, validate requester/side, reject duplicate active waves, clamp modifier/duration and preserve the all-side-supply spend model unless an owner approves a fixed-cost design change."
+    },
+    {
+      "lane": "markdown-research-report-intake",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (1).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (2).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (3).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (4).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (5).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (6).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (7).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (8).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (9).md",
+        "Tools/LoadoutManager/ZipManager.cs",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs"
+      ],
+      "outputs": [
+        "External-Research-Reports.md Markdown intake section",
+        "external-research-report-manifest.json markdownReports metadata"
+      ],
+      "handoff": "Claude/future agents: treat Markdown reports as leads. Source-check each claim against repository files or already-verified DR findings before promoting it into canonical subsystem docs."
+    },
+    {
+      "lane": "testing-debugging-release-workflow",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "docs/wiki/Testing-Debugging-And-Release-Workflow.md",
+        "docs/wiki/agent-test-plan.schema.json",
+        "docs/wiki/Hardening-Implementation-Roadmap.md",
+        "docs/wiki/Tools-And-Build-Workflow.md"
+      ],
+      "outputs": [
+        "Testing/debugging/release workflow page",
+        "Machine-readable agent test plan schema"
+      ],
+      "handoff": "Future gameplay agents: add or link test evidence records that match agent-test-plan.schema.json when smoke tests are actually performed."
+    },
+    {
+      "lane": "lifecycle-runtime-readout-verification",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/mission.sqm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Town*.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf"
+      ],
+      "outputs": [
+        "Mission lifecycle source verification section",
+        "Lifecycle wait-chain mission object init and HC timing notes"
+      ],
+      "handoff": "Future lifecycle work: inspect mission.sqm object init fields together with SQF init scripts before changing town bootstrap or generated map propagation."
+    },
+    {
+      "lane": "town-ai-vehicle-despawn-safety-docs",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "docs/wiki/Town-AI-Vehicle-Despawn-Safety.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_ai.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_CreateTownUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleEmptyVehicle.sqf"
+      ],
+      "outputs": [
+        "Town-AI-Vehicle-Despawn-Safety.md implementation playbook",
+        "Navigation and machine context links for the confirmed town-AI occupied-vehicle despawn bug"
+      ],
+      "handoff": "Future gameplay owner: apply the documented crew-aware guard in server_town_ai.sqf, then run occupied/empty vehicle despawn smoke tests and LoadoutManager propagation."
+    },
+    {
+      "lane": "dashboard-current-state-cleanup",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/agent-collaboration.json"
+      ],
+      "outputs": [
+        "Progress-Dashboard.md current-state-first layout",
+        "agent-status.json compact current state"
+      ],
+      "handoff": "Dashboard now presents current state first; future agents should keep it compact and move historical scout detail to Subagent-Discovery-Swarm.md and Agent-Worklog.md."
+    },
+    {
+      "lane": "agent-hardening-backlog-and-wave-f-integration",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "docs/wiki/agent-hardening-backlog.jsonl",
+        "docs/wiki/external-research-report-manifest.json",
+        "docs/wiki/Hardening-Implementation-Roadmap.md",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Subagent-Discovery-Swarm.md"
+      ],
+      "outputs": [
+        "agent-hardening-backlog.jsonl",
+        "external-research-report-manifest.json",
+        "Wave F harvest notes",
+        "Town-AI occupied-vehicle deletion confirmation",
+        "Lifecycle wait-chain audit"
+      ],
+      "handoff": "Future code owner: start from agent-hardening-backlog.jsonl for claimable work packages. Highest fresh item is town-ai-vehicle-despawn-safety, now confirmed."
+    },
+    {
+      "lane": "wasp-overlay-perf-jip-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/WASP/global_marking_monitor.sqf",
+        "Missions/[55-2hc]...chernarus/WASP/baserep/*, WASP/actions/AddActions.sqf, WASP/rpg_dropping/DropRPG.sqf",
+        "Client/Init/Init_Client.sqf:15,267,574,575; initJIPCompatible.sqf:243-244"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 31 / DR-40)",
+        "Codebase-Coverage-Ledger.md (WASP overlay Perf+JIP-HC)"
+      ],
+      "handoff": "Codex: on the WASP-Overlay page note global_marking_monitor.sqf:62 should use the throttled waitUntil idiom (as :80 does) and that the initJIPCompatible.sqf:243-244 WASP init is dead/commented. MILESTONE: all Perf/JIP-HC cells across the matrix are now reviewed; residual 🟡 is exclusively Auth/PV owner decisions."
+    },
+    {
+      "lane": "supply-missions-perf-jip-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/Server/Module/supplyMission/* (supplyMissionStarted, supplyMissionActive, isSupplyMissionActiveInTown)",
+        "Missions/[55-2hc]...chernarus/Client/Module/supplyMission/townSupplyStatus.sqf",
+        "Server/Init/Init_Server.sqf:68,81"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 30 / DR-39)",
+        "Codebase-Coverage-Ledger.md (Supply missions Perf+JIP-HC)"
+      ],
+      "handoff": "Codex: note the dead supplyMissionActive.sqf twin + the pull-based cooldown JIP pattern in Supply-Mission-Architecture. Code-owner: remove the dead twin (+ Init_Server:81 compile), narrow the nearestObjects[...,[],80] filter to [Base_WarfareBUAVterminal], optionally target the cooldown response to the requester."
+    },
+    {
+      "lane": "pv-dispatch-perf-jip-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/Server/Functions/Server_HandlePVF.sqf",
+        "Missions/[55-2hc]...chernarus/Client/Functions/Client_HandlePVF.sqf",
+        "Missions/[55-2hc]...chernarus/Common/Init/Init_PublicVariables.sqf"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 29 / DR-38)",
+        "Codebase-Coverage-Ledger.md (PV-dispatch Perf+JIP-HC)"
+      ],
+      "handoff": "Codex: fold the Perf observation into the Networking DR-1 remediation note - the validated-lookup fix also removes a per-message compile."
+    },
+    {
+      "lane": "boot-lifecycle-perf-jip-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]...chernarus/Client/Init/Init_Client.sqf"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 28 / DR-37)",
+        "Codebase-Coverage-Ledger.md (Boot/lifecycle Perf+JIP-HC)"
+      ],
+      "handoff": "Codex: optionally note in Lifecycle-Wait-Chain that the post-join wfbe_* waitUntil chain (Init_Client.sqf:367-502) is timeout-less (a single missed server broadcast = permanent JIP hang with no log). Owner decision: add defensive timeouts (mirroring the RequestJoin handshake's 30s retry) or accept fail-silent."
+    },
+    {
+      "lane": "victory-perf-jip-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/Server/FSM/server_victory_threeway.sqf",
+        "Server/Init/Init_Server.sqf:528",
+        "Client/Client_EndGame.sqf"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 27 / DR-36)",
+        "Codebase-Coverage-Ledger.md (Victory row Perf+JIP-HC)"
+      ],
+      "handoff": "Codex: cross-link Feature-Status victory rows to DR-36 for the root-cause mechanism of DR-11/DR-13. Two-part one-line fix: parenthesize+guard both win clauses with !WFBE_GameOver, and exitWith/break the side forEach (and while) once gameOver is set."
+    },
+    {
+      "lane": "params-localization-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/stringtable.xml (vs all localize/$STR_ refs)",
+        "Common/Init/Init_Parameters.sqf",
+        "Rsc/Parameters.hpp",
+        "Client/GUI/GUI_Display_Parameters.sqf",
+        "WASP/actions/AddActions.sqf"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 26 / DR-35)",
+        "Codebase-Coverage-Ledger.md (new Parameters/localization row)"
+      ],
+      "handoff": "Codex: optionally note dead OnArmor/GearYourUnit WASP actions in WASP-Overlay, and a 'keep class Params order stable (index-aligned to paramsArray)' caution in params docs. No code defect."
+    },
+    {
+      "lane": "respawn-mash-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/Client/Functions/Client_UI_Respawn_Selector.sqf",
+        "Missions/[55-2hc]...chernarus/Server/Module/MASH/MASHMarker.sqf",
+        "Missions/[55-2hc]...chernarus/Client/Module/MASH/receiverMASHmarker.sqf",
+        "Init_Client.sqf:132 / Init_Server.sqf:70"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 25 / DR-34)",
+        "Codebase-Coverage-Ledger.md (Markers row PV+JIP-HC)"
+      ],
+      "handoff": "Codex: mark the MASH map-marker feature dead/abandoned in Feature-Status-Register + marker/respawn docs. Revival recipe: server-held list + JIP re-send (like construction set-hq-killed re-sends) + unique marker names + fix publicVariable JIP gap. Owner decision: revive or remove dead receiverMASHmarker.sqf + the orphaned Init_Server.sqf:70 registration."
+    },
+    {
+      "lane": "factory-perf-jip-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]...chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions/[55-2hc]...chernarus/Client/Init/Init_Client.sqf"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 24 / DR-33)",
+        "Codebase-Coverage-Ledger.md (Factory row Perf+JIP-HC)"
+      ],
+      "handoff": "Codex: document the production queue model in Factory-And-Purchase-Systems-Atlas (client-owned per-unit producer; broadcast queu token list; per-client WFBE_C_QUEUE caps). Code-owner fixes: DR-33a decrement WFBE_C_QUEUE/unitQueu on all exit paths (empty-vehicle exitWith at :365 skips :469); DR-33b unique queue token + reduce broadcast."
+    },
+    {
+      "lane": "generated-mission-drift-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus (source) vs Missions_Vanilla/[61-2hc]...takistan",
+        "vs all 7 Modded_Missions/* (file-set comm + per-file cmp of all .sqf)"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 23 / DR-32)",
+        "Codebase-Coverage-Ledger.md (Drift cells + global Drift note)"
+      ],
+      "handoff": "Codex: add a generated-mission status table to Tools-And-Build-Workflow (vanilla=faithful; Napf/eden/lingor=divergent forks; sahrani/dingor/tavi/isladuala=abandoned stubs). Owner decisions: complete-or-delete the 4 stubs; pick a maintenance model for the 3 forks; apply DR fixes to source first then propagate."
+    },
+    {
+      "lane": "integration-backlog-batch-a",
+      "owner": "Codex",
+      "status": "partially-integrated; publishing",
+      "outputs": [
+        "Networking-And-Public-Variables.md",
+        "External-Integrations.md",
+        "Feature-Status-Register.md",
+        "Gear-Loadout-And-EASA-Atlas.md",
+        "Economy-Towns-And-Supply.md"
+      ],
+      "handoff": "PV/direct-channel matrix, external integration trust, DR-27 through DR-31, explorer wave C and PDF reconciliation wave D are folded/cross-linked locally. Validate and publish wiki + docs mirror."
+    },
+    {
+      "lane": "discord-datapath-review",
+      "owner": "Claude",
+      "status": "ready-for-review; Codex cross-link integrated",
+      "sourceScope": [
+        "DiscordBot/src/ExtensionData/GameData/GameData.cs",
+        "DiscordBot/src/ExtensionData/GameData/GameDataDeSerialization.cs",
+        "DiscordBot/src/GameStatus/GameStatusUpdater.cs",
+        "DiscordBot/src/ProgramRuntime.cs",
+        "DiscordBot/src/CommandHandler.cs"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md Round 22 / DR-31",
+        "External-Integrations.md",
+        "Feature-Status-Register.md"
+      ],
+      "handoff": "DiscordBot reads GLOBALGAMESTATS database.json on a 60s timer with TypeNameHandling.All. Fix All->None and remove the dead Auto path; command auth and secret hygiene are otherwise documented as good."
+    },
+    {
+      "lane": "battleye-posture-review",
+      "owner": "Claude",
+      "status": "ready-for-review; Codex cross-link integrated",
+      "outputs": [
+        "Deep-Review-Findings.md Round 21 / DR-30",
+        "External-Integrations.md",
+        "Feature-Status-Register.md"
+      ],
+      "handoff": "As shipped, option (b) rely on BattlEye is not present in the repo; production BEpath/server config remains an owner question."
+    },
+    {
+      "lane": "latest-doc-batch-validation-publish",
+      "owner": "Codex",
+      "status": "active",
+      "outputs": [
+        "GitHub wiki",
+        "docs/wiki mirror",
+        "agent-knowledge.jsonl"
+      ],
+      "handoff": "Validate JSON/JSONL and internal links, reconcile any Claude remote changes, then publish wiki and mirror docs branch."
+    },
+    {
+      "lane": "attack-wave-authority-playbook",
+      "owner": "Codex",
+      "status": "ready-to-publish",
+      "sourceScope": [
+        "docs/wiki/Attack-Wave-Authority-Playbook.md",
+        "Server/Functions/Server_AttackWave.sqf",
+        "Server/PVFunctions/AttackWave.sqf",
+        "Common/Functions/Common_AttackWaveActivate.sqf",
+        "Client/FSM/updateclient.sqf"
+      ],
+      "outputs": [
+        "Attack-Wave-Authority-Playbook.md",
+        "Navigation and machine context links for DR-41 implementation readiness"
+      ],
+      "handoff": "Future code owner: use the playbook before editing attack-wave mission code; update validation records after smoke or source-only checks."
+    },
+    {
+      "lane": "abandoned-feature-revival-review",
+      "owner": "Codex-2",
+      "status": "published",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/MASH/MASHMarker.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/MASH/receiverMASHmarker.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_Paratroopers.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/UAV",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/AI_UpdateSupplyTruck.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/supplytruck.fsm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI",
+        "Modded_Missions/*",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "agent-hardening-backlog.jsonl#marker-support-cleanups"
+      ],
+      "outputs": [
+        "Abandoned-Feature-Revival-Review.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl finding/complete/handoff events",
+        "agent-status.json",
+        "agent-context.json",
+        "agent-hardening-backlog.jsonl#marker-support-cleanups"
+      ],
+      "handoff": "Decision matrix published. Future code owner: paratrooper markers are the smallest revive; MASH markers need server-held/JIP-safe design or removal; AI supply trucks require design/guarding before truck supply + AI commander configs are enabled; old UAV/WASP/upgrade UI paths are cleanup, not quick revives."
+    },
+    {
+      "lane": "performance-opportunity-sweep",
+      "owner": "Codex-2",
+      "status": "published",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/global_marking_monitor.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updatetownmarkers.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateteamsmarkers.sqf",
+        "AI-Headless-And-Performance.md",
+        "Feature-Status-Register.md",
+        "Hardening-Implementation-Roadmap.md",
+        "agent-hardening-backlog.jsonl"
+      ],
+      "outputs": [
+        "Performance-Opportunity-Sweep.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl finding/complete/handoff events",
+        "agent-status.json",
+        "agent-context.json",
+        "agent-hardening-backlog.jsonl#client-skill-init-idempotency"
+      ],
+      "handoff": "Performance sweep published. Future code owner: PVF lookup is highest value; hosted FPS sleep/consolidation is smallest server patch; duplicate Skill_Init is a new P2 client-init/balance cleanup; supply scan, factory queue and WASP marker polling are bounded follow-ups."
+    },
+    {
+      "lane": "paratrooper-marker-revival",
+      "owner": "Codex-2",
+      "status": "published-source-patched",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_Paratroopers.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/PVFunctions/HandleParatrooperMarkerCreation.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Abandoned-Feature-Revival-Review.md",
+        "Public-Variable-Channel-Index.md",
+        "Networking-And-Public-Variables.md"
+      ],
+      "outputs": [
+        "Paratrooper-Marker-Revival.md",
+        "source Chernarus Init_PublicVariables.sqf registration patch",
+        "Vanilla Takistan propagation handoff after LoadoutManager path failure",
+        "Feature/Networking/PV/backlog/dashboard/context updates"
+      ],
+      "handoff": "Run LoadoutManager from a correctly named a2waspwarfare checkout to propagate Vanilla Takistan, then smoke paratrooper support in Arma 2 OA. Source Chernarus now registers the marker callback; do not treat this as RequestSpecial authority hardening. Modded missions still need propagation-model cleanup."
+    },
+    {
+      "lane": "client-skill-init-idempotency",
+      "owner": "Codex-2",
+      "status": "published-source-patched",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Init.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Apply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_PreRespawnHandler.sqf",
+        "Performance-Opportunity-Sweep.md",
+        "agent-hardening-backlog.jsonl#client-skill-init-idempotency"
+      ],
+      "outputs": [
+        "Client-Skill-Init-Idempotency.md",
+        "source Chernarus Init_Client.sqf duplicate Skill_Init removal",
+        "Vanilla Takistan propagated Init_Client.sqf duplicate Skill_Init removal",
+        "Performance/Feature/backlog/dashboard/context updates"
+      ],
+      "handoff": "Smoke Soldier/non-Soldier AI caps, respawn skill reapply and dedicated/JIP client init. If future paths rerun Skill_Init.sqf, guard the Soldier cap mutation. Do not hand-edit modded mission folders until generated/forked maintenance is resolved."
+    },
+    {
+      "lane": "hosted-server-fps-loop-sleep",
+      "owner": "Codex-2",
+      "status": "published-source-patched",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Performance-Opportunity-Sweep.md",
+        "AI-Headless-And-Performance.md",
+        "Feature-Status-Register.md",
+        "agent-hardening-backlog.jsonl#hosted-server-fps-loop-sleep"
+      ],
+      "outputs": [
+        "Hosted-Server-FPS-Loop-Sleep.md",
+        "source Chernarus serverFpsGUI/monitorServerFPS early-exit patch",
+        "Vanilla Takistan propagated FPS patch",
+        "Performance/AI/Server runtime/Feature/backlog/status updates"
+      ],
+      "handoff": "Smoke dedicated RHUD/server FPS updates and hosted/listen no-spin behavior. Defer publisher consolidation until SERVER_FPS_GUI vs WFBE_VAR_SERVER_FPS compatibility is decided."
+    },
+    {
+      "lane": "supply-mission-scan-narrowing",
+      "owner": "Codex-2",
+      "status": "published-source-patched",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf",
+        "Supply-Mission-Architecture.md",
+        "Supply-Mission-Authority-Cleanup-Playbook.md",
+        "Performance-Opportunity-Sweep.md",
+        "agent-hardening-backlog.jsonl#supply-mission-authority-cleanup"
+      ],
+      "outputs": [
+        "Supply-Mission-Scan-Narrowing.md",
+        "source Chernarus supplyMissionStarted.sqf command-center scan narrowing",
+        "Vanilla Takistan propagated supplyMissionStarted.sqf scan narrowing and source parity",
+        "Performance/Supply/Feature/backlog/dashboard/context updates"
+      ],
+      "handoff": "Smoke truck/heli delivery at command centers and no-completion near unrelated objects. Continue larger supply cleanup separately: loaded/tracking state, Killed handler idempotency, cooldown casing and server-side cargo validation."
+    },
+    {
+      "lane": "wasp-marker-wait-cleanup",
+      "owner": "Codex-2",
+      "status": "active",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/global_marking_monitor.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/WASP/global_marking_monitor.sqf",
+        "Performance-Opportunity-Sweep.md",
+        "WASP-Overlay.md",
+        "Feature-Status-Register.md"
+      ],
+      "outputs": [
+        "source trace and low-risk wait cleanup patch or handoff"
+      ],
+      "handoff": "Replace the 2-second sleepless marker-dialog display polling loop with a throttled wait that still re-enables input on timeout."
+    }
+  ],
+  "integratedReports": [
+    "wiki-quality-dup8-construction-routing",
+    "wiki-quality-dup7-supply-cooldown-routing",
+    "gear-loadout-easa-balance-discovery",
+    "external-pdf-research-intake",
+    "pv-matrix-second-pass-v2",
+    "common-pv-network-authority-v2",
+    "discord-extension-antistack-integration-discovery",
+    "modules-review-dr27",
+    "gear-easa-review-dr28",
+    "extension-globalgamestats-dr29",
+    "battleye-posture-dr30",
+    "discord-datapath-dr31",
+    "cheap-explorer-wave-c",
+    "external-pdf-reconciliation-wave-d",
+    "agent-readable-artifact-v3",
+    "supply-mission-authority-matrix-v2",
+    "cheap-explorer-wave-e",
+    "implementation-hardening-planning",
+    "server-authority-migration-map",
+    "attack-wave-authority-dr41",
+    "abandoned-feature-revival-review",
+    "performance-opportunity-sweep",
+    "external-arma2-reference-guide",
+    "wiki-quality-dup10-hc-routing",
+    "wiki-quality-merge1-authority-routing",
+    "icbm-authority-playbook-routing",
+    "wiki-quality-dup5-battleye-routing",
+    "wiki-quality-dup9-victory-routing",
+    "wiki-quality-dup6-lifecycle-routing",
+    "wiki-quality-dup4-generated-mission-routing",
+    "client-skill-init-idempotency",
+    "hosted-server-fps-loop-sleep",
+    "supply-mission-scan-narrowing"
+  ],
+  "queuedReports": [],
+  "lanes": [
+    {
+      "lane": "cheap-discovery-swarm-v2",
+      "suggestedOwner": "Codex",
+      "status": "harvested",
+      "summary": "Earlier cheap scout wave is complete."
+    },
+    {
+      "lane": "cheap-explorer-wave-c",
+      "suggestedOwner": "Codex",
+      "status": "integrated",
+      "summary": "Wave C reports from Newton, Linnaeus, Ampere, Pascal, Boyle and Peirce are folded into owner pages or agent-knowledge.jsonl where useful."
+    },
+    {
+      "lane": "autonomous-claude-research",
+      "suggestedOwner": "Claude",
+      "status": "open",
+      "summary": "Claude may self-select the next bounded, source-backed subsystem or verification lane without waiting for Codex assignment."
+    },
+    {
+      "lane": "external-pdf-reconciliation-wave-d",
+      "suggestedOwner": "Codex",
+      "status": "integrated",
+      "summary": "Second PDF reconciliation wave integrated into External-Research-Reports, UI hub, lifecycle/integration/supply pages and agent-knowledge.jsonl."
+    },
+    {
+      "lane": "cheap-explorer-wave-e",
+      "suggestedOwner": "Codex",
+      "status": "integrated",
+      "summary": "Godel/Gauss/Popper/Locke/Planck/Schrodinger reports folded into owner docs and machine-readable context; publish validation remains."
+    },
+    {
+      "lane": "implementation-hardening-planning",
+      "suggestedOwner": "Codex",
+      "status": "roadmap-published",
+      "summary": "Hardening-Implementation-Roadmap.md turns residual Auth/PV owner decisions into concrete patch order, source files and validation gates."
+    }
+  ],
+  "rules": [
+    "Update Progress-Dashboard.md and agent-status.json when visible ownership or lane state changes.",
+    "Append, do not overwrite, Agent-Worklog.md and agent-events.jsonl.",
+    "Use source-cited evidence for broken/partial-feature claims.",
+    "Treat external PDFs as downstream corroboration unless independently source-checked.",
+    "If a branch is stale, integrate targeted findings instead of merging over newer navigation.",
+    "Keep docs/wiki and the GitHub wiki checkout in parity before publishing.",
+    "Use Arma 2 OA scripting references only."
+  ]
+}
