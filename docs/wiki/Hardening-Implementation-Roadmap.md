@@ -6,7 +6,24 @@ Scope: Chernarus source mission first, then LoadoutManager propagation. All path
 
 Machine-readable backlog for agents and code owners: [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl). Validation workflow and test evidence schema: [Testing workflow](Testing-Debugging-And-Release-Workflow) and [`agent-test-plan.schema.json`](agent-test-plan.schema.json).
 
-## Patch Order
+Page ownership: this roadmap owns canonical patch order, branch discipline and validation gates. [Server authority migration map](Server-Authority-Migration-Map) owns the reusable authority principles, handler validation checklist and cross-system migration table. Focused playbooks own detailed patch shape for PVF dispatch, attack waves, supply missions, economy first cut, HC failover and town-AI vehicle safety.
+
+## Authority Design Preamble
+
+Every authority patch should follow the same rules before touching code:
+
+| Principle | Patch rule |
+| --- | --- |
+| Client UI is affordance | Menus may show prices and buttons, but final acceptance, debit and effect belong on the server. |
+| Server recomputes truth | Re-derive side, role, funds, supply, costs, upgrade state, object validity, range and placement from server-held state. |
+| Dispatch and payloads are different | PVF dispatcher hardening closes sender-chosen handler strings; legitimate handlers and direct PV channels still need per-flow validation. |
+| Sender identity is weak in Arma 2 OA PVEHs | Include requester context where safe and cross-check group, side, ownership and UID instead of trusting a payload scalar. |
+| Logging is part of the patch | Accepted high-value transactions and rejected malformed/unauthorized requests need compact, non-spammy logs. |
+| BattlEye is defense in depth | Filters reduce public-server exposure but are not the mission's source of truth. |
+
+For the full per-handler checklist, use [Server authority migration map](Server-Authority-Migration-Map).
+
+## Canonical Patch Order
 
 | Priority | Work package | Why first |
 | --- | --- | --- |
@@ -20,30 +37,9 @@ Machine-readable backlog for agents and code owners: [`agent-hardening-backlog.j
 
 ## P0: PVF Dispatcher Lookup
 
-Evidence:
+Dedicated playbook: [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook).
 
-| File | Current behavior |
-| --- | --- |
-| `Server/Functions/Server_HandlePVF.sqf` | Reads sender-provided `_script = _publicVar select 0`, then `_parameters Spawn (Call Compile _script)`. |
-| `Client/Functions/Client_HandlePVF.sqf` | After destination filtering, reads `_script = _publicVar select 1`, then `_parameters Spawn (Call Compile _script)`. |
-| `Common/Init/Init_PublicVariables.sqf` | Already precompiles registered command handlers into `SRVFNC*` and `CLTFNC*` globals. |
-
-Implementation shape:
-
-1. Replace dispatch-time `Call Compile _script` with a validated namespace lookup.
-2. Default missing/unregistered command names to a no-op plus a small `WARNING` log.
-3. Keep `Spawn` unless a handler audit proves every target is non-sleeping. Several handlers rely on scheduled execution.
-4. Do this in both server and client dispatchers in the same patch.
-
-Patch sketch:
-
-```sqf
-_handler = missionNamespace getVariable [_script, {}];
-if (typeName _handler != "CODE") exitWith {
-    ["WARNING", Format ["HandlePVF: rejected unregistered PVF handler [%1].", _script]] Call WFBE_CO_FNC_LogContent;
-};
-_parameters Spawn _handler;
-```
+Roadmap summary: replace dispatch-time `Call Compile _script` in `Server_HandlePVF.sqf` and `Client_HandlePVF.sqf` with a validated allowlist / namespace lookup while preserving `Spawn`. This closes DR-1 arbitrary handler-string compilation and DR-38 avoidable per-message recompilation. It does **not** validate forged payloads sent to legitimate handlers and does **not** touch direct publicVariable channels like `ATTACK_WAVE_INIT`.
 
 Validation:
 
@@ -104,17 +100,9 @@ Validation:
 
 ## P1: Economy Authority Class
 
-Confirmed class: every spend/effect path is client-authoritative or payload-authoritative today.
+Canonical evidence and flow table: [Server authority migration map](Server-Authority-Migration-Map). First implementation sequence: [Economy authority first cut](Economy-Authority-First-Cut).
 
-| Path | Finding | Implementation direction |
-| --- | --- | --- |
-| Construction | `RequestStructure` / `RequestDefense` trust side/class/pos/dir/manned from payload. | Include requester object in payload; server validates side, commander/repair authority, funds, base area and placement before construction. |
-| Player purchases | Buy menu spawns `Client_BuildUnit` locally; no `RequestBuyUnit` PVF exists. | Introduce server-validated buy request for new high-value purchases, or make the owner decision that public-server hardening depends on BattlEye `scripts.txt`. |
-| Upgrades | `RequestUpgrade.sqf` forwards raw payload to `Server_ProcessUpgrade.sqf`. | Server validates commander, side, upgrade id/level, dependency and cost; server debits funds/supply. |
-| Side supply | `Server_ChangeSideSupply.sqf` trusts direct temp PV deltas and has the negative-delta windfall bug. | Clamp negative overspend to zero change; restrict callers or move supply mutations behind server-owned functions. |
-| Gear/EASA/service | Gear/EASA/service effects and debits are client-local. | Add server ledger/effect validation for public-server hardening; add local affordability guards for rearm/refuel as a quick UX bug fix only. |
-| Attack waves | `ATTACK_WAVE_INIT` trusts client `_supply` and `_side`; DR-41 shows forged supply can set side-wide unit prices to zero or negative. | Treat direct attack-wave PV as a request; server re-derives side supply, validates permission, deducts cost and clamps modifier/duration. |
-| WASP HQ recovery | `WASP/actions/Action_RepairMHQDepot.sqf` applies funds/HQ/town-SV effects mostly client-side. | Move authority checks and town-SV reset to server before expanding HQ recovery. |
+Confirmed class: build, buy, sell, supply, upgrade, attack-wave, ICBM and gear/service paths are client-authoritative or payload-authoritative today. Do not patch them as seven unrelated bugs. Pick a server ledger model, then migrate flows in a consistent order.
 
 Implementation strategy:
 
@@ -131,20 +119,7 @@ Validation:
 
 ## P1: Direct Attack-Wave Authority
 
-Evidence:
-
-| File | Current behavior |
-| --- | --- |
-| `Common/Functions/Common_AttackWaveActivate.sqf` | Client/common side writes `ATTACK_WAVE_INIT = [_supply, _side]` and broadcasts it to the server. |
-| `Server/Functions/Server_AttackWave.sqf` | Server uses payload `_supply` to compute attack-wave discount and duration/length. |
-| `Client/FSM/updateclient.sqf` | The 25,000 supply gate is only the action condition on the client. |
-| `Common/Init/Init_CommonConstants.sqf` | `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT = 50000`; DR-41 shows forged `_supply >= 70000` can make the price modifier zero or negative. |
-| `Server/PVFunctions/AttackWave.sqf` | Direct PVEH coordination path; this is outside `_serverCommandPV` and is not fixed by PVF dispatcher lookup alone. |
-| `BattlEyeFilter/publicvariable.txt` | Does not filter `ATTACK_WAVE_INIT`; only the AFK feature rule is present in the repo. |
-
-Implementation shape:
-
-Dedicated playbook: [Attack-wave authority](Attack-Wave-Authority-Playbook). Use it before implementation; it records that current source treats 25,000 supply as the minimum action gate while spending all current side supply when the wave starts.
+Dedicated playbook: [Attack-wave authority](Attack-Wave-Authority-Playbook). Use it before implementation; it records the DR-41 source chain and the current model where 25,000 supply is the minimum action gate while the wave spends all current side supply.
 
 1. Treat `ATTACK_WAVE_INIT` as a request, not as authoritative state.
 2. Re-derive side supply and discount inputs server-side from trusted side/town state; never use client `_supply` for price math.
@@ -162,16 +137,7 @@ Validation:
 
 ## P1: Supply Missions And PR #1
 
-Dedicated playbook: [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook).
-
-Evidence:
-
-| File | Current behavior |
-| --- | --- |
-| `Client/Module/supplyMission/supplyMissionStart.sqf` | Client stamps `SupplyFromTown` and `SupplyAmount` on vehicle object before notifying server. |
-| `Server/Module/supplyMission/supplyMissionStarted.sqf` | Server tracks vehicle, scans command-center proximity every 3 seconds, then emits completion. |
-| `Server/Module/supplyMission/supplyMissionCompleted.sqf` | Completion reads trusted vehicle object vars for reward/state. |
-| `Server/Module/supplyMission/supplyMissionActive.sqf` | Dead twin compiled but not called; live path is `supplyMissionStarted.sqf`. |
+Dedicated playbook: [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook). It owns the source chain for client-stamped truck state, server tracking loop, completion reward trust, cooldown casing, dead twin code and PR #1 supply-helicopter stacked-handler risk.
 
 Implementation shape:
 

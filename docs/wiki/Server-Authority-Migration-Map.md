@@ -6,6 +6,8 @@ Scope: Chernarus source mission first, Arma 2 Operation Arrowhead 1.64 behavior 
 
 Use this with [Hardening roadmap](Hardening-Implementation-Roadmap), [Networking and public variables](Networking-And-Public-Variables), [Economy, towns and supply](Economy-Towns-And-Supply), [Feature status](Feature-Status-Register), [Testing workflow](Testing-Debugging-And-Release-Workflow) and [`agent-test-plan.schema.json`](agent-test-plan.schema.json).
 
+Page ownership: this page owns the design model for authority migrations: principles, flow table, handler checklist, "do not migrate casually" notes and validation expectations. [Hardening roadmap](Hardening-Implementation-Roadmap) owns canonical patch order and branch sequencing. Focused playbooks own detailed implementation shape.
+
 ## Why This Exists
 
 Many high-impact findings are not isolated bugs. They are the same ownership problem repeated across different mission systems:
@@ -30,17 +32,18 @@ Do not patch seven spend/effect paths in seven unrelated styles. Pick an authori
 | Log compactly | Use small `INFORMATION` logs for accepted high-value transactions and `WARNING` logs for rejected malformed or unauthorized requests. Avoid hot-loop spam. |
 | BattlEye is defense in depth | Public server filters can reduce attack surface, but they are not the mission's source of authority. The repo currently ships only a minimal `BattlEyeFilter/publicvariable.txt` AFK-related rule. |
 
-## Migration Phases
+## Patch Order Routing
 
-| Phase | Target | Patch shape |
-| --- | --- | --- |
-| 1 | PVF foundation | Harden `Server/Functions/Server_HandlePVF.sqf` and `Client/Functions/Client_HandlePVF.sqf` against sender-chosen handler strings. Add a rejection log convention and validate one server PVF plus one client PVF. |
-| 1 | Ledger decision | Decide where server funds, side supply and accepted transaction records live before migrating individual spend flows. |
-| 2 | Highest blast radius | Migrate `RequestSpecial` `"ICBM"` and direct attack-wave activation first. These can create server-side mass effects or global price modifiers. |
-| 2 | Release correctness | Fix victory/endgame double-fire and winner correctness before relying on public releases or statistics. |
-| 3 | Economy ledger | Move upgrades, construction/defense, side supply and player factory buys toward server-owned debit/effect decisions. |
-| 4 | Supports and logistics | Migrate supply missions, PR #1 supply helicopter mechanics, gear/EASA/service and WASP HQ recovery after the ledger model is stable. |
-| 5 | Cleanup | Remove dead twins, stale marker receivers and abandoned paths once their owner decision is clear. Keep generated mission propagation explicit. |
+Canonical patch sequencing lives in [Hardening roadmap](Hardening-Implementation-Roadmap). Use this page when designing or reviewing a specific authority migration, then return to the roadmap or machine backlog to claim work.
+
+| Need | Open |
+| --- | --- |
+| Prioritized patch order | [Hardening roadmap](Hardening-Implementation-Roadmap) |
+| Machine-readable work packages | [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) |
+| Generic PVF dispatcher patch | [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook) |
+| Direct attack-wave channel patch | [Attack-wave authority](Attack-Wave-Authority-Playbook) |
+| Economy first cut | [Economy authority first cut](Economy-Authority-First-Cut) |
+| Supply truck/heli authority cleanup | [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) |
 
 ## Migration Table
 
@@ -119,7 +122,7 @@ Recommended minimum coverage by phase:
 
 Agents should read this page before claiming any `agent-hardening-backlog.jsonl` item with `network-authority`, `economy`, `gameplay-security`, `support-systems` or `BattlEye` categories.
 
-This page does not change mission behavior. It is the source-backed design layer for future implementation branches such as `hardening/pvf-dispatch`, `hardening/icbm-authority`, `hardening/economy-ledger`, `hardening/supply-missions` and `hardening/attack-wave-authority`.
+This page does not change mission behavior. It is the source-backed design layer for future implementation branches such as `hardening/pvf-dispatch`, `hardening/icbm-authority`, `hardening/economy-ledger`, `hardening/supply-missions` and `hardening/attack-wave-authority`. For the order in which those branches should be claimed, use [Hardening roadmap](Hardening-Implementation-Roadmap).
 
 Dedicated playbook: [Attack-wave authority](Attack-Wave-Authority-Playbook) expands the DR-41 row into an implementation-ready patch shape, including the current all-side-supply spend model.
 

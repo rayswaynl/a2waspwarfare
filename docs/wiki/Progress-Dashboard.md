@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `wiki-quality-merge1-authority-routing` | Published | [Hardening roadmap](Hardening-Implementation-Roadmap) now owns patch order and validation gates; [Server authority map](Server-Authority-Migration-Map) owns authority design principles, flow table and handler checklist. |
 | `wiki-quality-dup10-hc-routing` | Published | [AI/headless](AI-Headless-And-Performance) is now the concise HC runtime source router, [Lifecycle wait-chain](Lifecycle-Wait-Chain) owns HC boot timing only, and [HC delegation/failover](Headless-Delegation-And-Failover-Playbook) owns DR-21/DR-42 patch policy. |
 | `external-arma2-reference-guide` | Published | [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) maps official BI docs to Wasp PV/PVEH, JIP, object-var, event-handler, object-scan and performance hotspots. |
 | `abandoned-feature-revival-review` | Published | [Abandoned feature revival](Abandoned-Feature-Revival-Review) classifies MASH/paratrooper marker edges, AI supply trucks, UAV 007, WASP legacy actions, stale upgrade UI and modded mission propagation into revive/remove/leave-dormant decisions. |
@@ -43,7 +44,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved Wiki Quality DUP-10 by routing HC duplication to the canonical failover playbook. |
+| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved Wiki Quality MERGE-1 by splitting hardening patch order from server-authority design guidance. |
 | Codex-2 | Ready for next lane | `abandoned-feature-revival-review` | [Abandoned feature revival](Abandoned-Feature-Revival-Review) is published; next best lanes are performance opportunity sweep, AI supply logistics cleanup, or paratrooper-marker implementation. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
@@ -69,6 +70,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `wiki-quality-merge1-authority-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) MERGE-1 is resolved: roadmap is the patch-order hub, server-authority map is the design/checklist/table page. |
 | `wiki-quality-dup10-hc-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-10 is resolved: HC runtime source routing, lifecycle boot timing and DR-21/DR-42 patch policy now have distinct page ownership. |
 | `wiki-quality-c3-gameplay-followups` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) C3 is resolved: Gameplay open questions are now source-backed resolved follow-ups. |
 | `wiki-quality-dup11-pv-channel-index` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-11 is resolved: direct-PV inventory lives in [Public variable channel index](Public-Variable-Channel-Index). |
@@ -100,6 +102,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| Wiki-quality MERGE-1 authority routing | [Hardening roadmap](Hardening-Implementation-Roadmap), [Server authority map](Server-Authority-Migration-Map), [Wiki quality audit](Wiki-Quality-Audit) | Reduces duplicated P0/P1 evidence and phase guidance by making the roadmap the canonical patch-order hub while the authority map owns principles, flow table, handler checklist and design-review routing. |
 | Wiki-quality DUP-10 HC routing | [AI/headless](AI-Headless-And-Performance), [Lifecycle wait-chain](Lifecycle-Wait-Chain), [HC delegation/failover](Headless-Delegation-And-Failover-Playbook), [Wiki quality audit](Wiki-Quality-Audit) | Replaces duplicate HC failover discussion with clear page ownership: AI/headless keeps source-route orientation, Lifecycle keeps HC `sleep 20` boot timing, and the playbook owns update-back/work-record/disconnect/late-HC policy. |
 | Wiki-quality C3 Gameplay follow-ups | [Gameplay atlas](Gameplay-Systems-Atlas), [Wiki quality audit](Wiki-Quality-Audit) | Replaces stale open questions with resolved source-backed notes for commander assignment DR-15, construction repair logic consumption, factory build drift ownership, supply-income stagnation liveness and range-global ownership. |
 | Wiki-quality DUP-11 PV channel index | [Public variable channel index](Public-Variable-Channel-Index), [Networking/PV](Networking-And-Public-Variables), [SQF atlas](SQF-Code-Atlas), [Wiki quality audit](Wiki-Quality-Audit) | Makes the PV channel index the canonical direct-channel table, adds missing server-FPS/HQ/AntiStack rows from the old Networking table, and replaces duplicate atlas tables with cross-links. |

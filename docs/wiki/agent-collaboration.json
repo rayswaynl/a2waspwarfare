@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T21:45:00+02:00",
+  "generatedAt": "2026-06-02T21:50:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,32 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-quality-merge1-authority-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Hardening-Implementation-Roadmap.md",
+        "Server-Authority-Migration-Map.md",
+        "Wiki-Quality-Audit.md MERGE-1",
+        "PVF-Dispatch-Implementation-Playbook.md",
+        "Attack-Wave-Authority-Playbook.md",
+        "Economy-Authority-First-Cut.md",
+        "Supply-Mission-Authority-Cleanup-Playbook.md"
+      ],
+      "outputs": [
+        "Hardening-Implementation-Roadmap.md patch-order ownership note and concise playbook routing",
+        "Server-Authority-Migration-Map.md design/checklist ownership note and patch-order routing table",
+        "Wiki-Quality-Audit.md MERGE-1 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future authority docs/code work should keep the split intact: roadmap for what to patch first, server-authority map for how to design/review a handler migration, focused playbooks for exact patch shape."
+    },
     {
       "lane": "wiki-quality-dup10-hc-routing",
       "owner": "Codex",
@@ -712,7 +738,8 @@
     "attack-wave-authority-dr41",
     "abandoned-feature-revival-review",
     "external-arma2-reference-guide",
-    "wiki-quality-dup10-hc-routing"
+    "wiki-quality-dup10-hc-routing",
+    "wiki-quality-merge1-authority-routing"
   ],
   "queuedReports": [],
   "lanes": [

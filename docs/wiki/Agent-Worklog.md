@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wiki-Quality MERGE-1 Authority Routing
+
+- Resolved [Wiki quality audit](Wiki-Quality-Audit) MERGE-1 by splitting ownership between [Hardening implementation roadmap](Hardening-Implementation-Roadmap) and [Server authority migration map](Server-Authority-Migration-Map).
+- Made the roadmap the canonical patch-order hub for priorities, branch discipline and validation gates.
+- Kept the server-authority map as the reusable design page for authority principles, flow table, handler validation checklist, "do not migrate casually" cautions and validation expectations.
+- Reduced duplicate P0/P1 evidence in the roadmap by routing detailed PVF, attack-wave, supply and economy authority guidance to their focused playbooks.
+
 ## 2026-06-02 - Codex Wiki-Quality DUP-10 HC Routing
 
 - Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-10 by making [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) the canonical implementation playbook for DR-21/DR-42.
