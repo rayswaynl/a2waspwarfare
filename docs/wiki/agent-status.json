@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T18:05:00+02:00",
+  "generatedAt": "2026-06-02T18:06:39+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -18,7 +18,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest slice published the Wave L owner-page follow-up harvest into Feature Status, integrations/tooling, EASA/gear, construction/CoIn, server runtime/supply and propagated-fix status pages.",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest slice deepened the marker cleanup/restoration atlas from Chernarus source loops, timer parameters, PerformanceAudit labels and ownership notes.",
       "nextExpectedOutput": "Continue with the next bounded source-backed review or documentation consistency pass from the active backlog."
     },
     "Codex-2": {
@@ -41,6 +41,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "marker-cleanup-restoration-atlas-deepening",
+      "owner": "Codex",
+      "status": "validated-publication-in-progress",
+      "output": "Marker-Cleanup-Restoration-Systems-Atlas.md now maps server cleanup/restoration startup, garbage/empty vehicle/cleaner/restorer loops, timer defaults, PerformanceAudit labels and runtime ownership contracts; Codebase-Coverage-Ledger.md now marks this subsystem mapped."
+    },
     {
       "lane": "scout-wave-l",
       "owner": "Codex sub-agents",

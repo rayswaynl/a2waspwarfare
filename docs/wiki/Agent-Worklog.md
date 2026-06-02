@@ -1007,3 +1007,10 @@ Key conclusions:
 - Added new local correctness findings for EASA exact-funds rejection, stale unsupported-vehicle EASA no-op/debit risk, buy-unit detail price drift and special-vehicle UI incompleteness in [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas) and [Factory/purchase](Factory-And-Purchase-Systems-Atlas).
 - Tightened integration/tooling docs for DiscordBot active config source, active JSON deserialization risk, docs-only CI, legacy x86 Extension build requirements and GLOBALGAMESTATS headless-client count assumptions.
 - Clarified construction/server-runtime nuance: SmallSite/MediumSite `wfbe_structures_logic` asymmetry, latent stock building repair vs live WASP base repair, mostly inert post-game patrol polling and current-`master` supply duplicate-start risk separated from PR #1 interdiction handlers.
+
+# 2026-06-02 - Marker Cleanup/Restoration Atlas Deepening
+
+- Deepened [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas) from Chernarus source files instead of scout summaries.
+- Mapped `Init_Server.sqf:521-560`, `server_collector_garbage.sqf`, `emptyvehiclescollector.sqf`, `droppeditems_cleaner.sqf`, `crater_cleaner.sqf`, `ruins_cleaner.sqf`, `buildings_restorer.sqf` and `mines_cleaner.sqf`.
+- Added interval/default parameter notes from `Rsc/Parameters.hpp:515-543`, PerformanceAudit labels, ownership notes for `gc_collector`, `emptyQueu` and `mines`, and Chernarus-first propagation guidance.
+- Updated [Codebase coverage ledger](Codebase-Coverage-Ledger) so markers/cleaners/restorers are now marked mapped, with remaining work tracked as patch-ready validation/owner decisions.

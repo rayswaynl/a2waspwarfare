@@ -38,16 +38,42 @@ Current audit nuance: the repair path calls the marker helper, but that helper s
 
 ## Server Cleanup And Restoration Loops
 
-`Server/Init/Init_Server.sqf:521-560` starts the major maintenance loops: garbage collection, empty vehicles, map cleaners and building restoration.
+`Server/Init/Init_Server.sqf:521-560` starts the major maintenance loops after town initialization: garbage collection, empty vehicles, dropped item cleanup, crater cleanup, ruins cleanup, building restoration and tracked mine cleanup. Treat this as a server-owned runtime layer, not a client UI feature. The Chernarus source mission is the authoritative edit point; generated Vanilla/terrain copies should be produced through the LoadoutManager workflow after source changes.
 
-| Loop | Source refs | Responsibility |
-| --- | --- | --- |
-| Garbage collector | `Server/FSM/server_collector_garbage.sqf:17+` | Queues dead/unwanted objects for trash handling. |
-| Empty vehicle collector | `Server/FSM/emptyvehiclescollector.sqf` | Handles empty vehicle cleanup. |
-| Mine cleaner | `Server/FSM/cleaners/mines_cleaner.sqf:3-17` | Maintains tracked mine pairs. |
-| Building restorer | `Server/FSM/restorers/buildings_restorer.sqf:11-20` | Periodically repairs `WarfareBBaseStructure` objects in a large scan. |
+### Runtime Contracts
 
-The building restorer's broad scan radius means future balancing work should explicitly decide whether it should affect player-built structures, ambient Warfare structures or both.
+| Loop | Startup / timer source | Runtime behavior | Performance hook | Developer notes |
+| --- | --- | --- | --- | --- |
+| Garbage collector | `Init_Server.sqf:521-536`; `server_collector_garbage.sqf:4-32` | Every 0.5 seconds it scans `allDead`, excludes current west/east HQ objects, skips objects already in `gc_collector` and skips objects carrying `wfbe_trashable`, then spawns `TrashObject` and records the object in `gc_collector`. | `server_garbage_collector` with `dead`, `tracked` and `spawned`. | Runs every 0.5s. `RequestOnUnitKilled.sqf:51-54` uses `wfbe_trashed`, not `wfbe_trashable`, so the collector flag contract is inconsistent. |
+| Empty vehicle collector | `Init_Server.sqf:523,537-538`; `emptyvehiclescollector.sqf:4-30` | Polls replicated `WF_Logic getVariable "emptyVehicles"`, skips vehicles already in `emptyQueu`, adds new vehicles to `emptyQueu`, spawns `WFBE_SE_FNC_HandleEmptyVehicle`, then removes the handled vehicle from the replicated list. | `emptyvehiclescollector` with queued/handled counts. | `emptyVehicles` can be pushed by clients after buys (`Client_BuildUnit.sqf:252-253`), while the server handles lifecycle. Keep this queue idempotent. |
+| Dropped items cleaner | `Init_Server.sqf:542-544`; `droppeditems_cleaner.sqf:3-44` | Uses one map-wide center/radius scan for `weaponholder`, `Mine` and `MineE` within radius `20000`, deletes every object with a cooperative `sleep 0.5` per object, then sleeps by `WFBE_C_DROPPEDITEMS_CLEANER_TIME_PERIOD`. | `cleaner_droppeditems` with scanned/deleted counts and per-class counts. | Default interval is 120 seconds (`Parameters.hpp:527-531`). It also deletes generic `Mine`/`MineE`, so confirm it does not fight tracked minefield cleanup or intended live mine gameplay. |
+| Crater cleaner | `Init_Server.sqf:546-548`; `crater_cleaner.sqf:3-49` | Scans `CraterLong_small` and `CraterLong` within a broad `20000` map radius, deletes every crater with cooperative sleeps, then sleeps by `WFBE_C_CRATER_CLEANER_TIME_PERIOD`. | `cleaner_craters` with scanned/deleted/small/long counts. | Default interval is 1800 seconds (`Parameters.hpp:521-525`). A future optimization should preserve the cooperative deletion behavior while narrowing the candidate set. |
+| Ruins cleaner | `Init_Server.sqf:550-552`; `ruins_cleaner.sqf:3-28` | Scans broad map center/radius for `Ruins`, deletes every result with cooperative sleeps, then sleeps by `WFBE_C_RUINS_CLEANER_TIME_PERIOD`. | `cleaner_ruins` with scanned/deleted counts. | Default interval is 1800 seconds (`Parameters.hpp:539-543`). This is broad ambient cleanup; verify it does not remove ruins that other systems expect as evidence/state. |
+| Building restorer | `Init_Server.sqf:554-556`; `buildings_restorer.sqf:3-26` | Scans `[7500,7900,0]` for `WarfareBBaseStructure` within radius `10500` and calls `setdamage 0` on every result with cooperative sleeps, then `uisleep`s by `WFBE_C_BUILDING_RESTORER_TIME_PERIOD`. | `restorer_buildings` with scanned/restored counts. | Default parameter is 1800 seconds (`Parameters.hpp:515-519`), but the script has a fallback of 600 seconds if the parameter is missing. It repairs by class, not by ownership registry. |
+| Mine cleaner | `Init_Server.sqf:558-560`; `mines_cleaner.sqf:3-32` | Initializes global `mines = []`, then loops tracked `[mine, time]` pairs. When `time - _mine_timer >= _timer`, it deletes the mine object. | `cleaner_mines` with tracked/scanned/deleted counts. | Mine producers append pairs in `WASP/rpg_dropping/DropRPG.sqf:66-67` and `Construction_StationaryDefense.sqf:32,44,55`. Current removal uses `mines = mines - _x`, which is the wrong shape for removing a nested pair. |
+
+### Timing And Parameter Notes
+
+`Rsc/Parameters.hpp:515-543` exposes the operator-facing intervals for building restoration, crater cleanup, dropped items, minefields and ruins. Defaults are:
+
+| Parameter | Default | Values | Consumed by |
+| --- | --- | --- | --- |
+| `WFBE_C_BUILDING_RESTORER_TIME_PERIOD` | 1800 seconds | 1800, 3600, 5400, 7200 | `buildings_restorer.sqf:3,26` |
+| `WFBE_C_CRATER_CLEANER_TIME_PERIOD` | 1800 seconds | 1800, 3600, 5400, 7200 | `crater_cleaner.sqf:3,47` |
+| `WFBE_C_DROPPEDITEMS_CLEANER_TIME_PERIOD` | 120 seconds | 60, 75, 90, 105, 120, 150, 180, 240, 300, 360, 420, 480, 540, 600 | `droppeditems_cleaner.sqf:3,44` |
+| `WFBE_C_MINEFIELDS_CLEANER_TIME_PERIOD` | 5400 seconds | 1800, 3600, 5400, 7200 | `mines_cleaner.sqf:4,30` |
+| `WFBE_C_RUINS_CLEANER_TIME_PERIOD` | 1800 seconds | 1800, 3600, 5400, 7200 | `ruins_cleaner.sqf:3,26` |
+
+The code intentionally separates active work time from wall-clock cycle time in PerformanceAudit records: wide scans and delete/restore calls are timed, but cooperative per-object sleeps are excluded and captured only indirectly in `cycleMs`. This is useful when testing because a low active time can still produce a long real-world cycle if a large delete queue is spread across many half-second pauses.
+
+### Ownership And Data-Flow Notes
+
+- `gc_collector` is a server global dedupe list for `allDead` objects already handed to `TrashObject`.
+- `emptyQueu` is initialized at `Init_Server.sqf:300` and is used to avoid launching duplicate empty-vehicle handlers while `WF_Logic emptyVehicles` is drained.
+- `mines` is a global array owned by the mine cleaner and populated by RPG-dropping and stationary-defense construction. It stores nested pairs `[mineObject, createdAt]`, not a flat object list.
+- Dropped item, crater, ruins and building loops do not use registries; they use fixed map-center `nearestObjects` scans.
+- The building restorer repairs all scanned `WarfareBBaseStructure` class objects. Future gameplay changes must decide whether this should include only player-built structures, stock Warfare base objects, destroyed AI-built structures or all matching ambient objects.
+- These scripts exist in generated/terrain mission copies too. Patch Chernarus first, then run the LoadoutManager propagation workflow and inspect generated diffs.
 
 ## Patch-Ready Findings
 
