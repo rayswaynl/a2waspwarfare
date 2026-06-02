@@ -29,12 +29,17 @@ This is the first-10-minutes path for `rayswaynl/a2waspwarfare`. It is for orien
 ## Fast Source Checks
 
 ```powershell
-git status --short
-git branch --show-current
+Set-Location C:\Users\Steff\a2waspwarfare
+$SourceMission = 'Missions/[55-2hc]warfarev2_073v48co.chernarus'
+if (-not (Test-Path -LiteralPath $SourceMission)) { throw "Missing source mission: $SourceMission" }
+
+git status --short --branch
 git log --oneline -5
-rg -n "publicVariable|addPublicVariableEventHandler|publicVariableServer" Missions/[55-2hc]warfarev2_073v48co.chernarus
-rg -n "Compile preprocessFile|execFSM|callExtension" Missions/[55-2hc]warfarev2_073v48co.chernarus
+rg -n "publicVariable|addPublicVariableEventHandler|publicVariableServer" $SourceMission
+rg -n "Compile preprocessFile|execFSM|callExtension" $SourceMission
 ```
+
+Use `-LiteralPath` with PowerShell cmdlets for mission paths containing `[55-2hc]`; for native commands such as `rg`, keep the path in `$SourceMission` and pass the variable.
 
 ## Risk Trail
 
@@ -48,7 +53,8 @@ rg -n "Compile preprocessFile|execFSM|callExtension" Missions/[55-2hc]warfarev2_
 - Append to [Agent worklog](Agent-Worklog) after each completed lane.
 - Keep [Coordination board](Coordination-Board) current for active or completed lanes.
 - Update [`agent-context.json`](agent-context.json) when page lists, high-level facts or durable risks change.
-- Run a link/JSON check before handing off.
+- Use [`agent-status.json`](agent-status.json) for the compact current progress snapshot and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) for implementation-sized handoffs.
+- Run `powershell -ExecutionPolicy Bypass -File .\Tools\ValidateWiki.ps1` before handing off.
 
 ## Continue Reading
 

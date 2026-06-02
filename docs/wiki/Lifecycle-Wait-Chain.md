@@ -67,7 +67,7 @@ Block on `WFBE_PRESENTSIDES` + `wfbe_teams` → `Init_Client` compiles functions
 
 ### Headless client
 
-`Init_HC.sqf` compiles the three delegation handlers (`Client_DelegateTownAI`, `Client_DelegateAI`, `Client_DelegateAIStaticDefence`) plus `Client_HandlePVF`, then **`sleep 20`** (a hard wait used in place of a `waitUntil {serverInitFull}` barrier) and notifies the server via `["RequestSpecial", ["connected-hc", player]]`. See [AI, headless and performance](AI-Headless-And-Performance) for what gets delegated.
+`Init_HC.sqf` compiles the three delegation handlers (`Client_DelegateTownAI`, `Client_DelegateAI`, `Client_DelegateAIStaticDefence`) plus `Client_HandlePVF`, then **`sleep 20`** (a hard wait used in place of a `waitUntil {serverInitFull}` barrier) and notifies the server via `["RequestSpecial", ["connected-hc", player]]`. This lifecycle page covers boot ordering only; use [AI, headless and performance](AI-Headless-And-Performance#hc-delegation-routing) for routing mechanics and [Deep-review findings](Deep-Review-Findings) DR-21 for the canonical HC-disconnect/no-failover finding.
 
 ## JIP specifics
 
@@ -83,5 +83,5 @@ There is no `didJIP` variable; JIP is handled implicitly because `initJIPCompati
 - **Debug-only economy override:** `initJIPCompatible.sqf:151-162` raises starting funds/supply and other test parameters (to 999999) **only inside `if (WF_Debug)`** — it is build-gated, not unconditional. Confirm `WF_Debug` state (set by the generated `version.sqf` per build config) before comparing economy behaviour against mission parameters. *(Corrected 2026-06-01 after Codex flagged an over-statement in the round-1 draft; an earlier feat-branch variant used a different, ungated form.)*
 - **Server-only code inside Common:** `Init_Common.sqf:303-308` runs an `if (isServer)` town-group load from the *common* path. Functionally correct but architecturally surprising.
 - **Duplicate compiles in `Init_Server`:** several functions are compiled twice (e.g. `WFBE_SE_FNC_PlayerObjectsList`, `WFBE_CO_FNC_LogGameEnd`); harmless (second overwrites first) but wasteful.
-- **`gameOver` vs `WFBE_GameOver` vs `WFBE_gameover`:** SQF identifiers are case-insensitive, so `WFBE_gameover == WFBE_GameOver`; the lowercase-`gameOver` is a separate variable also set at boot. No bug, but easy to misread.
+- **`gameOver` vs `WFBE_GameOver` vs `WFBE_gameover`:** SQF identifiers are case-insensitive, so `WFBE_gameover == WFBE_GameOver`; the lowercase-`gameOver` is a separate variable also set at boot. No bug, but easy to misread. Victory-loop correctness findings live in [Deep-review findings](Deep-Review-Findings) DR-11/DR-36.
 - **Timeout-less post-join waits:** after common/town init, `Client/Init/Init_Client.sqf` still waits indefinitely for replicated side-logic and namespace values such as `wfbe_structures` (`:367`), side supply (`:369`), commander (`:384`), HQ radio (`:394-397`), JIP HQ/start state (`:463-467`, `:490`, `:502`) and vote time (`:788`). If one producer stops publishing a value, a JIP client can hang silently. Add diagnostic timeouts or fallback paths before reordering these producers. See DR-37.

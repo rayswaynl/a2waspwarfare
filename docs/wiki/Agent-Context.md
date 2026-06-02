@@ -2,6 +2,8 @@
 
 This is the compact human-readable context file for AI coding agents. See `agent-context.json` for machine-readable structure.
 
+Current mirror authority: `agent-context.json`, `agent-status.json` and `agent-hardening-backlog.jsonl` are the active machine-readable files. Treat any older local machine file that references retired pages or missing JSON/JSONL companions as stale until refreshed against this page list.
+
 ## Identity
 
 - Repo: `rayswaynl/a2waspwarfare`

@@ -23,7 +23,7 @@ Town supply value drives economy and supply missions. Constants define automatic
 
 ## Cooldown Flow
 
-`isSupplyMissionActiveInTown.sqf` compares `LastSupplyMissionRun` to `WFBE_CO_VAR_SupplyMissionRegenInterval`, then broadcasts `WFBE_Server_PV_IsSupplyMissionActiveInTown`. Client `townSupplyStatus.sqf` stores that on the town as `supplyMissionCoolDownEnabled`.
+Supply mission cooldown behavior belongs in [Supply mission architecture](Supply-Mission-Architecture). The key correctness hazard is [Deep-review findings](Deep-Review-Findings) DR-18.
 
 ## Economy And Commander Funds
 

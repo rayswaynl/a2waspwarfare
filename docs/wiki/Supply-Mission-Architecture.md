@@ -22,7 +22,7 @@ Supply missions are one of the most cross-cutting systems in the mission. They t
 
 | State | Owner | Notes |
 | --- | --- | --- |
-| `LastSupplyMissionRun` | town object/server | Cooldown anchor. |
+| `LastSupplyMissionRun` | town object/server | Cooldown anchor. DR-18: `Init_Town.sqf:35` seeds lowercase `lastSupplyMissionRun`, while the live server cooldown path reads/writes capitalized `LastSupplyMissionRun` (`isSupplyMissionActiveInTown.sqf:8`, `supplyMissionStarted.sqf:8`). |
 | `supplyMissionCoolDownEnabled` | town object/client | Client-side affordance for map/action feedback. |
 | `SupplyFromTown` | supply vehicle object | Source town object. |
 | `SupplyAmount` | supply vehicle object | Payload amount. Cleared on completion. |
@@ -32,6 +32,7 @@ Supply missions are one of the most cross-cutting systems in the mission. They t
 
 - `supplyMissionStart.sqf` on master uses duplicated hardcoded supply-truck classname arrays.
 - The client asks for cooldown and immediately reads local town state; timing/race behavior depends on the server response arriving quickly enough.
+- The cooldown seed casing mismatch is a confirmed first-use defect. See [Deep-review findings](Deep-Review-Findings) DR-18 for full evidence and the one-line fix options.
 - `supplyMissionStarted.sqf` loops until the vehicle dies; it should avoid creating duplicate tracking loops for the same loaded vehicle.
 - Completion trusts object variables on the supply vehicle, so any feature that reuses those vars must clear them reliably.
 - Player resolution depends on `WFBE_SE_PLAYERLIST` and proximity/driver checks.
@@ -50,6 +51,8 @@ Owner cleanup: remove `supplyMissionActive.sqf` plus its `Init_Server.sqf:81` co
 PR #1 improves the system by centralizing supply vehicle types, adding helicopter tiers, adding `SupplyByHeli`, changing labels to `LOAD SUPPLIES`, adding air rewards/cash runs/interdiction, and highlighting supply helicopters in buy menus.
 
 Review risk from the independent doc reviewer: the PR adds a `Killed` event handler when a supply mission starts. Make sure repeated reloads of the same vehicle cannot stack duplicate handlers or duplicate interdiction rewards.
+
+Implementation handoff: [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) is the source-backed patch guide for loaded state, cooldown casing, server validation and PR #1 handler idempotency.
 
 ## Future Design Direction
 

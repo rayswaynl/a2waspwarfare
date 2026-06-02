@@ -6,40 +6,7 @@ For external engine grounding, see [External Arma 2 OA reference index](External
 
 ## Central PVF Registration
 
-`Common/Init/Init_PublicVariables.sqf` creates two command lists:
-
-Server PVF commands:
-
-- `RequestVehicleLock`
-- `RequestOnUnitKilled`
-- `RequestChangeScore`
-- `RequestCommanderVote`
-- `RequestNewCommander`
-- `RequestStructure`
-- `RequestDefense`
-- `RequestJoin`
-- `RequestMHQRepair`
-- `RequestSpecial`
-- `RequestTeamUpdate`
-- `RequestUpgrade`
-- `RequestAutoWallConstructinChange`
-
-Client PVF commands:
-
-- `AllCampsCaptured`
-- `AwardBounty`
-- `AwardBountyPlayer`
-- `CampCaptured`
-- `ChangeScore`
-- `HandleSpecial`
-- `LocalizeMessage`
-- `SetTask`
-- `SetVehicleLock`
-- `TownCaptured`
-- `SetMHQLock`
-- `Available`
-- `RequestBaseArea`
-- `NukeIncoming`
+`Common/Init/Init_PublicVariables.sqf` creates two command lists: 13 server-bound commands and 14 client-bound commands. Use [Public variable channel index](Public-Variable-Channel-Index#1-registered-pvf-commands) as the canonical inventory; it includes purpose notes, notable DR findings and source anchors for every registered `WFBE_PVF_*` command.
 
 Each command is compiled into either `SRVFNC...` or `CLTFNC...`, and `WFBE_PVF_<Command>` receives an event handler that passes payloads to `Server_HandlePVF` or `Client_HandlePVF`.
 
@@ -53,16 +20,13 @@ These wrappers are preferred over hand-coded public variable dispatch for new fe
 
 ## Direct Public Variables
 
-Some systems use explicit public-variable channels outside the generic PVF list:
+Some systems use explicit public-variable channels outside the generic PVF list. Do not maintain a second channel table here; use [Public variable channel index](Public-Variable-Channel-Index#2-direct-publicvariable-channels-own-event-handlers) as the canonical inventory for BattlEye whitelist work and direct-PV authority hardening.
 
-- Supply mission: `WFBE_Client_PV_IsSupplyMissionActiveInTown`, `WFBE_Client_PV_SupplyMissionStarted`, `WFBE_Server_PV_IsSupplyMissionActiveInTown`, `WFBE_Server_PV_SupplyMissionCompleted`, `WFBE_Server_PV_SupplyMissionCompletedMessage`.
-- Anti-stack join checks: `WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH`, `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK`, `WFBE_C_PLAYER_OBJECT`.
-- Day/night: `WFBE_DAYNIGHT_DATE`.
-- Server FPS/HUD: `SERVER_FPS_GUI`, `WFBE_VAR_SERVER_FPS`.
-- AFK kick: `AFKthresholdExceededName` and `kickAFK`; `kickAFK` is intentionally caught by BattlEye filters because serverCommand is unavailable.
-- Markers/messages: `MARKER_CREATION`, `SEND_MESSAGE`, ICBM and radiation variables.
-- MASH markers: the intended `WFBE_CL_MASH_MARKER_CREATED` -> `WFBE_SE_MASH_MARKER_SENT` relay is not currently a working channel. The client receiver compile is commented and the send trigger is absent, leaving an orphaned server PVEH. See [Deep-review findings](Deep-Review-Findings) DR-34.
-- Attack wave: `ATTACK_WAVE_INIT` is broadcast with `publicVariableServer` from `Common/Functions/Common_AttackWaveActivate.sqf`.
+High-risk examples to keep visible on this networking page:
+
+- **Attack wave:** `ATTACK_WAVE_INIT` is broadcast with `publicVariableServer` from `Common/Functions/Common_AttackWaveActivate.sqf` and is the confirmed DR-41 direct-PV authority issue.
+- **MASH markers:** the intended `WFBE_CL_MASH_MARKER_CREATED` -> `WFBE_SE_MASH_MARKER_SENT` relay is not currently a working channel. The client receiver compile is commented and the send trigger is absent, leaving an orphaned server PVEH. See [Deep-review findings](Deep-Review-Findings) DR-34.
+- **AFK kick:** `kickAFK` is intentionally caught by BattlEye filters because `serverCommand` is unavailable; [External integrations](External-Integrations) and [Deep-review findings](Deep-Review-Findings) DR-30 cover the current filter posture.
 
 ## Safety Notes
 
@@ -75,7 +39,7 @@ Some systems use explicit public-variable channels outside the generic PVF list:
 
 DR-1 closes the most dangerous PVF issue, but it does not by itself make gameplay requests authoritative. Two server-facing surfaces need separate hardening:
 
-- **PVF command surface.** ICBM uses `RequestSpecial`: `Client/Module/Nuke/nukeincoming.sqf:23` sends `["ICBM", sideJoined, _target, _cruise, clientTeam]`; `Server/Functions/Server_HandleSpecial.sqf:97-111` trusts the request enough to wait for the target death and spawn `NukeDammage`. The tactical UI gates this during normal play, but the server case should re-check commander/team/upgrade/cost/cooldown before launching a superweapon.
+- **PVF command surface.** ICBM uses `RequestSpecial`: `Client/Module/Nuke/nukeincoming.sqf:23` reaches `Server/Functions/Server_HandleSpecial.sqf:97-111`. Keep payload/impact/fix details in [Deep-review findings](Deep-Review-Findings) DR-27; the networking takeaway is that legitimate PVF commands still need per-handler authority validation after the DR-1 dispatch lookup is fixed.
 - **Direct public-variable surface.** Attack wave does not use PVF. `Common/Functions/Common_AttackWaveActivate.sqf:6-8` writes `ATTACK_WAVE_INIT = [_supply, _side]` and sends it with `publicVariableServer`; `Server/Functions/Server_AttackWave.sqf:1-27` trusts that supplied side/supply to calculate `ATTACK_WAVE_PRICE_MODIFIER` and broadcast `ATTACK_WAVE_DETAILS`. Server-side validation should derive current side supply and authority from trusted state, not from the payload.
 
 Treat these as sibling work items when refactoring economy authority. A validated PVF lookup prevents arbitrary function-string execution; it does not validate that the requested game action is allowed.
@@ -96,7 +60,7 @@ Registration (`Common/Init/Init_PublicVariables.sqf:43-51`) creates one PV name 
 - a `SIDE` value → run only if `sideJoined == destination` (`:14`).
 - a `STRING` (player UID) → run only if `getPlayerUID player == destination` (`:15`).
 
-The actual function is resolved from element 1 (`"CLTFNC<Command>"`) and executed with `_parameters Spawn (Call Compile _script)` (`:22`). The server dispatcher `Server/Functions/Server_HandlePVF.sqf:1-13` is simpler — no routing, just `Spawn (Call Compile _script)`.
+The actual function is resolved from element 1 (`"CLTFNC<Command>"`) and executed by the generic PVF dispatcher. The current generic dispatch trust/perf issue is tracked in [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) and [Deep-review findings](Deep-Review-Findings) DR-1/DR-38.
 
 ### The four send wrappers map to four engine primitives
 
@@ -119,10 +83,9 @@ When tracing a feature, a single registered command (`WFBE_PVF_HandleSpecial`) c
 
 - **UID-targeted broadcast is wasteful.** `SendToClients` with a UID at element 0 (e.g. `Server/PVFunctions/RequestOnUnitKilled.sqf:86` awarding bounty) still `publicVariable`s to *every* client; each non-matching client deserializes and discards it in `Client_HandlePVF.sqf:15`. For true unicast prefer `SendToClient` (`publicVariableClient`).
 - **All handlers `Spawn` (not `Call`).** Messages run in fresh scheduled threads with no ordering guarantee; two rapid messages mutating the same state (e.g. back-to-back `ChangeScore`) can race.
-- **`Call Compile` per dispatch.** Both dispatchers recompile the function-name string on every message even though the function object already exists in a global — a minor per-message CPU cost on hot paths.
+- **PVF dispatch boundary.** Both generic handlers still compile the registered handler-name string per message. Keep source proof and fix shape in [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) and DR-1/DR-38.
 - **Per-side copy-paste channels.** Some bare-PV channels are duplicated per side rather than parameterized, e.g. `wfbe_supply_temp_west` / `wfbe_supply_temp_east` each get their own event handler in `Server/Functions/Server_ChangeSideSupply.sqf` (no resistance handler).
 
-### Security: the `Call Compile` trust boundary
+### Security: generic PVF dispatch boundary
 
-`Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` run `Call Compile` on the function-name string taken from the **value a remote machine broadcast** (`select 0` / `select 1`), with no check that it names a registered command — and the shipped `BattlEyeFilter/publicvariable.txt` only carries the `kickAFK` feature rule, not a security filter. Validate the command string against the known `SRVFNC*`/`CLTFNC*` set before compiling, and add a real BattlEye PV filter. A validated lookup also removes the per-message `Call Compile _script` recompile noted in DR-38 while preserving the current JIP/HC registration model. Full analysis and remediation playbook: [Deep-review findings](Deep-Review-Findings) DR-1 and DR-38.
-
+`Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` are the DR-1 generic dispatch trust boundary. Keep the source proof and behavior-preserving patch shape in [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) and [Deep-review findings](Deep-Review-Findings) DR-1/DR-38; this page only tracks the boundary and the residual: validated dispatch does not authorize legitimate handler payloads or direct `publicVariable` channels.

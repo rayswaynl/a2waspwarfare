@@ -1,0 +1,231 @@
+{
+  "schema": "a2waspwarfare-agent-status-v1",
+  "generatedAt": "2026-06-02T10:56:17+02:00",
+  "purpose": "Compact current progress snapshot for Codex, Claude and future agents.",
+  "sourceOfTruth": {
+    "context": "agent-context.json",
+    "hardeningBacklog": "agent-hardening-backlog.jsonl",
+    "humanContext": "Agent-Context.md",
+    "coordinationBoard": "Coordination-Board.md",
+    "worklog": "Agent-Worklog.md",
+    "implementationPlan": "Documentation-Implementation-Plan.md",
+    "qualityAudit": "Wiki-Quality-Audit.md",
+    "validationTool": "Tools/ValidateWiki.ps1"
+  },
+  "currentState": {
+    "docsMirror": "active",
+    "primaryBranch": "docs/developer-wiki-claude",
+    "sourceBranchObserved": "feat/supply-helicopter",
+    "machineFiles": "refreshed-current",
+    "notes": [
+      "This file replaces an older stale progress dashboard snapshot that referenced retired pages.",
+      "Use agent-context.json for page routing and durable architecture facts.",
+      "Use agent-hardening-backlog.jsonl for implementation-sized hardening handoffs."
+    ]
+  },
+  "activeAgents": {
+    "Codex": {
+      "role": "third long-running research/editorial partner",
+      "currentLane": "long-running-docs-continuation",
+      "status": "active",
+      "nextExpectedOutput": "Keep reducing stale/bloated agent context, add source-backed wiki improvements, and validate JSON/link health after edits."
+    },
+    "Claude": {
+      "role": "source-backed deep-review partner",
+      "status": "autonomous-ready",
+      "nextExpectedOutput": "Use Claude-Loop-Goal.md, Codebase-Coverage-Ledger.md and current handoffs before starting another bounded review."
+    },
+    "future-code-owner": {
+      "role": "implementation owner for mission-source patches",
+      "status": "handoff-ready",
+      "nextExpectedOutput": "Claim one backlog item, edit the Chernarus source mission first, propagate with Tools/LoadoutManager, and update docs plus machine files after validation."
+    }
+  },
+  "recentCompletedLanes": [
+    {
+      "lane": "supply-scan-patch-status-reconcile",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Reconciled docs and machine context with the current Chernarus source plus Vanilla Takistan supply command-center scan patch; Arma smoke remains for west/east command-center detection and PR #1 truck/heli deliveries."
+    },
+    {
+      "lane": "backlog-supply-scan-candidate-sync",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Synced agent-hardening-backlog.jsonl supply cleanup entry with the exact [\"Base_WarfareBUAVterminal\"] scan candidate, external evidence route and smoke validation notes; later source/Vanilla patch status is captured by supply-scan-patch-status-reconcile."
+    },
+    {
+      "lane": "supply-scan-class-filter-handoff",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Grounded supply command-center scan narrowing in source and official nearestObjects/isKindOf docs; later source/Vanilla patch status is captured by supply-scan-patch-status-reconcile."
+    },
+    {
+      "lane": "hosted-fps-current-status-reconcile",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Reconciled AI/headless, Performance-Opportunity-Sweep and agent-context with the source/Vanilla hosted-FPS early-exit patch; Arma smoke remains."
+    },
+    {
+      "lane": "tool-command-smoke-notes",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Verified LoadoutManager builds with .NET 8.0.421 and PerformanceAuditAnalyzer command shape produces reports; documented that real generation/RPT audit remains separate validation."
+    },
+    {
+      "lane": "windows-safe-search-snippets",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Updated Quickstart and AI Assistant search examples to define $SourceMission and use a Test-Path -LiteralPath guard before rg searches against the bracketed Chernarus mission path."
+    },
+    {
+      "lane": "home-route-map-compression",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Compressed Home into task-oriented route groups, moved client-skill follow-up into current patch handoffs and added a small current source/Vanilla state note."
+    },
+    {
+      "lane": "deep-review-current-status-notes",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Added current-status notes to Deep-Review-Findings DR-2 and related handoff text so paratrooper marker registration is treated as source/Vanilla patched, smoke pending."
+    },
+    {
+      "lane": "atlas-source-status-reconcile",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Updated SQF atlas and AI/headless wording so paratrooper PVF registration and duplicate Skill_Init cleanup match current source/Vanilla state."
+    },
+    {
+      "lane": "wiki-validation-exact-machine-refs",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Strengthened Tools/ValidateWiki.ps1 to recursively validate exact machine-file strings that point to wiki pages, agent JSON/JSONL files or repo PowerShell tools."
+    },
+    {
+      "lane": "client-skill-context-reconcile",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Reconciled Function-And-Module-Index, Performance-Opportunity-Sweep and agent context with the source/Vanilla client-skill-init patch; remaining work is Arma smoke."
+    },
+    {
+      "lane": "coordination-routing-refresh",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Replaced live guidance that referenced retired auxiliary coordination files with current Coordination-Board, Agent-Worklog, agent-status and backlog routing."
+    },
+    {
+      "lane": "wiki-validation-page-parity",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Strengthened Tools/ValidateWiki.ps1 so agent-context page lists must match the actual wiki mirror and repo tool references are checked."
+    },
+    {
+      "lane": "wiki-validation-tooling",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Added Tools/ValidateWiki.ps1 and routed documentation-only handoff validation through one reusable command."
+    },
+    {
+      "lane": "machine-file-refresh",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Replaced stale agent-status.json and agent-hardening-backlog.jsonl snapshots with concise current machine artifacts."
+    },
+    {
+      "lane": "machine-file-authority-note",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Clarified active machine-file authority and removed duplicate agent-context.json machineFiles entry."
+    },
+    {
+      "lane": "paratrooper-marker-context-reconcile",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Reconciled abandoned-feature docs with current source/Vanilla HandleParatrooperMarkerCreation registration."
+    },
+    {
+      "lane": "antistack-trust-loop-drilldown",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Documented AntiStack external DB trust, response parsing, loops and launch ACK routing."
+    },
+    {
+      "lane": "pvf-handler-payload-drilldown",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Added registered server-bound PVF payload trust and mutation notes."
+    },
+    {
+      "lane": "direct-pv-handler-drilldown",
+      "owner": "Codex",
+      "status": "complete",
+      "output": "Added direct public-variable handler trust and mutation notes."
+    }
+  ],
+  "openWork": [
+    {
+      "lane": "implementation-hardening-planning",
+      "status": "roadmap-published",
+      "route": [
+        "Documentation-Implementation-Plan.md",
+        "Feature-Status-Register.md",
+        "agent-hardening-backlog.jsonl"
+      ]
+    },
+    {
+      "lane": "source-backed-review-continuation",
+      "status": "open",
+      "route": [
+        "Codebase-Coverage-Ledger.md",
+        "Deep-Review-Findings.md",
+        "Claude-Loop-Goal.md"
+      ]
+    },
+    {
+      "lane": "wiki-quality-and-bloat-reduction",
+      "status": "open",
+      "route": [
+        "Wiki-Quality-Audit.md",
+        "Home.md",
+        "Documentation-Implementation-Plan.md"
+      ]
+    }
+  ],
+  "validationChecklist": [
+    "Run powershell -ExecutionPolicy Bypass -File .\\Tools\\ValidateWiki.ps1",
+    "agent-context.json parses as JSON",
+    "agent-status.json parses as JSON",
+    "agent-hardening-backlog.jsonl parses line-by-line as JSON",
+    "agent-context.json documentation.pages matches docs/wiki/*.md",
+    "Exact machine-file references resolve",
+    "Markdown links resolve inside docs/wiki",
+    "git diff --check exits clean"
+  ],
+  "agents": {
+    "Codex-2": {
+      "status": "ready",
+      "currentLane": "next-lane-selection",
+      "currentWork": "hosted-server-fps-loop-sleep published/source patched; awaiting Arma smoke or next bounded lane.",
+      "nextExpectedOutput": "Pick the next source-backed opportunity lane, likely PVF dispatcher lookup, factory queue cleanup or WASP marker wait cleanup."
+    }
+  },
+  "laneSummary": [
+    {
+      "lane": "client-skill-init-idempotency",
+      "owner": "Codex-2",
+      "status": "published-source-patched",
+      "output": "Client-Skill-Init-Idempotency.md plus source/Vanilla Init_Client.sqf duplicate Skill_Init removal; Arma smoke pending."
+    },
+    {
+      "lane": "hosted-server-fps-loop-sleep",
+      "owner": "Codex-2",
+      "status": "published-source-patched",
+      "output": "Hosted-Server-FPS-Loop-Sleep.md plus source/Vanilla FPS publisher early non-dedicated exits; Arma smoke pending."
+    }
+  ],
+  "quickLinks": {
+    "clientSkillInitIdempotency": "Client-Skill-Init-Idempotency.md",
+    "hostedServerFpsLoopSleep": "Hosted-Server-FPS-Loop-Sleep.md"
+  }
+}

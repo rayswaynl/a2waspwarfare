@@ -23,18 +23,7 @@ It also sets `loadScreen`, disables spoken sentences, disables channels 3 and 6,
 
 ## `initJIPCompatible.sqf`
 
-This is the first major runtime script. It creates early logging, determines server/client/headless roles, runs version detection, initializes common constants and parameters, applies environment time, then dispatches common/server/client/headless init scripts.
-
-Important lifecycle flags include:
-
-- `clientInitComplete`
-- `commonInitComplete`
-- `serverInitComplete`
-- `serverInitFull`
-- `townInitServer`
-- `townInit`
-- `WFBE_GameOver`
-- `gameOver`
+This is the first major runtime script. It creates early logging, determines server/client/headless roles, runs version detection, initializes common constants and parameters, applies environment time, then dispatches common/server/client/headless init scripts. Keep the flag dependency graph in [Lifecycle wait-chain reference](Lifecycle-Wait-Chain#global-flag-dependency-graph), not duplicated here.
 
 ## Common Init
 

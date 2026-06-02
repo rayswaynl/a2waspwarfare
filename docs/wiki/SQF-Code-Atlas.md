@@ -44,7 +44,7 @@ Top source registrars:
 
 ### `initJIPCompatible.sqf`
 
-Early bootstrap compiles the log function first, checks headless-client identity, prepares server connect/disconnect callbacks, then compiles MP parameters and common constants. This file is the role router: common init runs for all roles, server init runs on server, client init runs on players and headless init runs on headless clients.
+Early bootstrap compiles the log function first, checks headless-client identity, prepares server connect/disconnect callbacks, then compiles MP parameters and common constants. This file is the role router; use [Lifecycle wait-chain reference](Lifecycle-Wait-Chain#machine-role-truth-table) for the canonical role truth table and [Lifecycle wait-chain reference](Lifecycle-Wait-Chain#branch-dispatch-in-initjipcompatiblesqf) for branch ordering.
 
 Key compile targets:
 
@@ -111,7 +111,7 @@ Risk notes:
 
 ### `Headless/Init/Init_HC.sqf`
 
-Headless init compiles the same delegation helpers used by clients plus `WFBE_CL_FNC_HandlePVF`. Headless support is version-gated earlier in `initJIPCompatible.sqf`, and server-side delegation helpers are compiled in server init when the version allows it.
+Headless init compiles the same delegation helpers used by clients plus `WFBE_CL_FNC_HandlePVF`. Headless support is version-gated earlier in `initJIPCompatible.sqf`; see [Lifecycle wait-chain reference](Lifecycle-Wait-Chain#headless-client) for the boot wait and [AI, headless and performance](AI-Headless-And-Performance#hc-delegation-routing) for delegation mechanics.
 
 ## PVF Contract
 
@@ -162,31 +162,16 @@ PVF dispatch mechanics:
 - Client filtering in `Client_HandlePVF.sqf` supports side destinations and player UID destinations.
 - Both client and server dispatch call `Call Compile _script`, so malformed function names or unsanitized command names would be high-risk.
 
-Unregistered PV function files:
+PV function files outside the standard PVF command lists:
 
-- `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` exists but is not in the client command list.
+- `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` is now registered in source Chernarus and Vanilla Takistan; see [Paratrooper marker revival](Paratrooper-Marker-Revival) for the smoke plan and modded-mission drift.
 - `Server/PVFunctions/AttackWave.sqf` and `Server/PVFunctions/LogGameEnd.sqf` are compiled directly in server init rather than through the standard PVF command list.
 
 ## Direct Public Variable Channels
 
-Not all networking uses the PVF wrapper. Important direct channels include:
+Not all networking uses the PVF wrapper. The canonical inventory is [Public variable channel index](Public-Variable-Channel-Index#2-direct-publicvariable-channels-own-event-handlers); keep direct channel additions there first so BattlEye filter work and direct-PV authority reviews use one source of truth.
 
-| Channel | Direction / owner | Purpose |
-| --- | --- | --- |
-| `WFBE_DAYNIGHT_DATE` | server to clients | Day/night date synchronization. |
-| `SEND_MESSAGE` | broadcast to clients | Global message delivery via `Client_onEventHandler_SEND_MESSAGE.sqf`. |
-| `MARKER_CREATION` | broadcast to clients | Marker creation via `Client_onEventHandler_MARKER_CREATION.sqf`. |
-| `ICBM_launched`, `PLAYER_RADIATED` | nuke module | ICBM marker/radiation client event handlers. |
-| `kickAFK` | client to BattlEye filter | AFK kick trigger expected by BattlEye `publicVariable.txt`. |
-| `AFKthresholdExceededName` | client to server | AFK monitor notification. |
-| `WFBE_Client_PV_SupplyMissionStarted` | client to server | Supply mission start event. |
-| `WFBE_Server_PV_SupplyMissionCompleted` | server local/PV | Supply mission completion event. |
-| `WFBE_Server_PV_IsSupplyMissionActiveInTown` | server to clients | Town supply mission state response. |
-| `WFBE_C_PLAYER_OBJECT` | client to server | Supply mission player-object list maintenance. |
-| `SERVER_FPS_GUI`, `WFBE_VAR_SERVER_FPS` | server to clients | Server FPS GUI/HUD publication. |
-| `ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS`, `CLIENT_INIT_READY` | attack-wave system | Client readiness and attack wave details. |
-| `WFBE_CL_MASH_MARKER_CREATED`, `WFBE_SE_MASH_MARKER_SENT` | MASH marker system | MASH marker request/response, with client receiver currently not clearly active. |
-| `REQUEST_SUPPLY_VALUE`, `SUPPLY_VALUE_REQUESTED` | supply/economy | Side supply value request/response. |
+For code-reading orientation, the important shape is: direct channels have their own `addPublicVariableEventHandler`s, so a PVF dispatch fix does not validate their payloads. The highest-risk examples are `ATTACK_WAVE_INIT` (DR-41 direct authority), `wfbe_supply_temp_east` / `wfbe_supply_temp_west` (side-supply mutation class), the dead MASH marker relay (DR-34), and `kickAFK` as the only current BattlEye-filtered PV feature channel.
 
 ## Disabled Or Deferred Compile Signals
 

@@ -14,7 +14,8 @@
 | Construction (`RequestStructure`/`RequestDefense`/MHQ) | DR-6 | High |
 | Unit purchase | DR-14 | High (architectural) |
 | Structure sale | DR-16 | High |
-| Side-supply transfer | DR-22 | High |
+| Side-supply transfer (overspend floor) | DR-22 | High |
+| Side-supply ledger directly client-writable (forged `wfbe_supply_temp_<side>`) | DR-44 | High |
 | Upgrades | DR-23 | High |
 | ICBM superweapon (forged `RequestSpecial`) | DR-27 | **Critical** |
 | Gear/EASA + vehicle rearm/repair/refuel/heal | DR-28 | High |
@@ -38,6 +39,8 @@
 | GLOBALGAMESTATS extension dormant deser + async-void race | DR-29 | Med | delete dead `.Auto` load; fix `File.Replace` race |
 
 ## 3. Keep-or-remove / maintenance-model decisions
+
+Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) for the source-backed revive/remove matrix behind the MASH, paratrooper, WASP, AI supply truck, stale UI and modded-mission rows.
 
 | Decision | Finding | Note |
 | --- | --- | --- |

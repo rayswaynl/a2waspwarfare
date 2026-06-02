@@ -3,7 +3,7 @@
 > Claude-owned, source-verified (2026-06-02). Behavioral map of the `Client/Module/*`, `Server/Module/*` and `Common/Module/*` subsystems — most are config-gated QoL/combat features (gate = a `WFBE_C_MODULE_WFBE_<X>` constant; see [Variable and naming conventions](Variable-And-Naming-Conventions)). The high-stakes module (Nuke/ICBM) and the integration modules (AntiStack, supplyMission, MASH) have dedicated findings; this page documents the **previously-undocumented** ones. Paths relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Arma 2 OA 1.64.
 
 ## Already covered elsewhere (cross-links)
-- **Nuke / ICBM** — [Deep-review findings](Deep-Review-Findings) DR-27 (CRITICAL: forged `RequestSpecial` → server-applied map-wide kill). `Client/Module/Nuke/`.
+- **Nuke / ICBM** — [Deep-review findings](Deep-Review-Findings) DR-27. `Client/Module/Nuke/`.
 - **EASA** (aircraft loadout) — DR-28 (client-authoritative). `Client/Module/EASA/`.
 - **AntiStack** (external DB) — DR-7..DR-10. `Server/Module/AntiStack/`, `Client/Module/AntiStack/`.
 - **supplyMission** — DR-39 (dead twin + pull-based JIP). `Server/Module/supplyMission/`.
@@ -21,7 +21,7 @@ Compiles `WFBE_CO_MOD_IRS_CreateSmoke/DeploySmoke/HandleMissile/OnIncomingMissil
 `CM_Init.sqf:1-3` compiles `CM_Countermeasures`, `CM_Flares`, `CM_Spoofing`. **Gate:** `WFBE_C_MODULE_WFBE_FLARES > 0 && WF_A2_Vanilla` (`Init_Client.sqf:590`); on built aircraft, CM is removed unless enabled + the side owns `WFBE_UP_FLARESCM` (`Client_BuildUnit.sqf:276-283`). Vanilla-only by design.
 
 ### Reaktiv — reactive (ERA) armor (`Common/Module/Reaktiv/`)
-`Reaktiv_Init.sqf:5` compiles `WFBE_CO_MOD_Reaktiv_OnDamageReceived` (`Reaktiv_OnHandleDamage.sqf`). Applies a `HandleDamage`-based per-hit-selection damage model (the init's comment block enumerates hull/turret/track/engine selections for an Abrams under `R_M136_AT`). Modifies how AT hits map to vehicle hitpoints.
+`Reaktiv_Init.sqf:5` compiles `WFBE_CO_MOD_Reaktiv_OnDamageReceived` (`Reaktiv_OnHandleDamage.sqf`). The handler would apply a `HandleDamage`-based per-hit-selection damage model from `*_Reaktiv` missionNamespace data (`Reaktiv_OnHandleDamage.sqf:7-21`), and the init's comment block enumerates hull/turret/track/engine selections for an Abrams under `R_M136_AT`. Current source scan found the compile/handler but no live attachment point outside the module, so verify liveness before treating Reaktiv as an active armor feature.
 
 ### Engines — "stealth" engine-off (`Client/Module/Engines/`)
 `Engine.sqf` toggles a stealth mode: saves current fuel into the vehicle's `Fuel` variable and `setFuel 0` (engine cannot run), swapping the addAction to `STEALTH OFF` → `Startengine.sqf` which restores fuel. Added to built tanks/wheeled-APCs (`Client_BuildUnit.sqf:336-337`). Client addAction-driven, local.
@@ -48,8 +48,8 @@ Pure utility library: `CIPHER_CompareString` (lexicographic compare via `toArray
 
 ## Notes for hardening / review
 - Module **gates** are config constants (`WFBE_C_MODULE_WFBE_*`) read at boot; toggling them is the supported on/off switch.
-- Combat modules attach their EHs at **unit creation** in `Client/Functions/Client_BuildUnit.sqf` (IRS/CM/Engines/Reaktiv-class), so they are client-local on the buyer's machine — consistent with the factory locality model (DR-33).
-- The only module with an authority/forgery defect is **Nuke/ICBM** (DR-27); the rest are cosmetic/QoL or AI behavior with no client→server trust surface beyond the shared PVF dispatcher.
+- Combat modules such as IRS/CM/Engines attach their EHs or actions at **unit creation** in `Client/Functions/Client_BuildUnit.sqf`, so they are client-local on the buyer's machine — consistent with the factory locality model (DR-33). Reaktiv is different: current source evidence shows a compiled damage handler, but no live attachment point outside `Common/Module/Reaktiv/`.
+- The only module with a dedicated authority finding is **Nuke/ICBM** (DR-27); the rest are cosmetic/QoL or AI behavior with no client-to-server trust surface beyond the shared PVF dispatcher.
 
 ## Continue Reading
 
