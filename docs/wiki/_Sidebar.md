@@ -76,3 +76,4 @@
 
 - [Focused goal](Claude-Goal)
 - [Long-term goal](Claude-Long-Term-Goal)
+- [Loop goal](Claude-Loop-Goal)

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T14:30:00+02:00",
+  "generatedAt": "2026-06-02T14:40:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -23,7 +23,8 @@
     "Claude": {
       "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
       "currentLane": "autonomous-claude-research",
-      "status": "autonomous-ready"
+      "status": "autonomous-ready",
+      "operatingMode": "Claude-Loop-Goal.md"
     },
     "Newton": {
       "role": "Cheap read-only broken-reference explorer.",

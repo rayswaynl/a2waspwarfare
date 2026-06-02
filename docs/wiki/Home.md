@@ -12,7 +12,7 @@ This wiki is built for two audiences at once:
 | Hardening implementer | [Hardening roadmap](Hardening-Implementation-Roadmap) and [Server authority map](Server-Authority-Migration-Map) | Source-backed patch order, validation gates and safe implementation notes. |
 | Tester / releaser | [Testing workflow](Testing-Debugging-And-Release-Workflow) | Source checks, smoke packs, RPT logging and release gates. |
 | Mission implementer | [SQF code atlas](SQF-Code-Atlas) | Compile registry, PVF contract and entrypoint ownership. |
-| Claude collaborator | [Agent collaboration protocol](Agent-Collaboration-Protocol) | Shared claim, handoff and event protocol for Codex/Claude work. |
+| Claude collaborator | [Agent collaboration protocol](Agent-Collaboration-Protocol) and [Claude loop goal](Claude-Loop-Goal) | Shared claim, handoff, event protocol and Claude's current operating mode. |
 | Steff / project owner | [Progress dashboard](Progress-Dashboard) | One page for current Codex/Claude lanes, event feed and status files. |
 
 ## Click-Through Tours
@@ -26,7 +26,7 @@ Use these when you want to read the wiki like a connected handbook instead of ju
 | Harden the mission | [Feature status](Feature-Status-Register) -> [Hardening roadmap](Hardening-Implementation-Roadmap) -> [Server authority map](Server-Authority-Migration-Map) -> [Testing workflow](Testing-Debugging-And-Release-Workflow) -> [Networking/PV](Networking-And-Public-Variables) -> [Deep-review findings](Deep-Review-Findings) |
 | Trace SQF and networking | [SQF atlas](SQF-Code-Atlas) -> [Function index](Function-And-Module-Index) -> [Networking/PV](Networking-And-Public-Variables) |
 | Work on UI/HUD | [Client UI/HUD/menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) -> [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) -> [Tools/build](Tools-And-Build-Workflow) |
-| Coordinate Codex and Claude | [Progress dashboard](Progress-Dashboard) -> [Coordination board](Coordination-Board) -> [Agent collaboration protocol](Agent-Collaboration-Protocol) -> [Agent worklog](Agent-Worklog) |
+| Coordinate Codex and Claude | [Progress dashboard](Progress-Dashboard) -> [Coordination board](Coordination-Board) -> [Agent collaboration protocol](Agent-Collaboration-Protocol) -> [Claude loop goal](Claude-Loop-Goal) -> [Agent worklog](Agent-Worklog) |
 
 Every content page now includes a **Continue Reading** block with previous and next links for the main handbook path.
 
@@ -52,7 +52,7 @@ Every content page now includes a **Continue Reading** block with previous and n
 | Work on core gameplay | [Gameplay systems atlas](Gameplay-Systems-Atlas) -> [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) -> [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) -> [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) -> [Core systems index](Core-Systems-Index) |
 | Test or release changes | [Testing workflow](Testing-Debugging-And-Release-Workflow) -> [Tools/build](Tools-And-Build-Workflow) -> [Hardening roadmap](Hardening-Implementation-Roadmap) -> [Server authority map](Server-Authority-Migration-Map) |
 | Check agent progress | [Progress dashboard](Progress-Dashboard) -> [`agent-status.json`](agent-status.json) -> [`agent-events.jsonl`](agent-events.jsonl) |
-| Coordinate agents | [Progress dashboard](Progress-Dashboard) -> [Coordination board](Coordination-Board) -> [Agent worklog](Agent-Worklog) -> [Codebase coverage ledger](Codebase-Coverage-Ledger) -> [Claude long-term goal](Claude-Long-Term-Goal) |
+| Coordinate agents | [Progress dashboard](Progress-Dashboard) -> [Coordination board](Coordination-Board) -> [Agent worklog](Agent-Worklog) -> [Codebase coverage ledger](Codebase-Coverage-Ledger) -> [Claude long-term goal](Claude-Long-Term-Goal) -> [Claude loop goal](Claude-Loop-Goal) |
 | Understand WASP-specific additions | [WASP overlay](WASP-Overlay) -> [Feature status register](Feature-Status-Register) |
 
 ## Current Map
@@ -69,7 +69,7 @@ Every content page now includes a **Continue Reading** block with previous and n
 | WASP additions | [WASP overlay](WASP-Overlay) |
 | Operations | [Tools and build workflow](Tools-And-Build-Workflow), [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow), [External integrations](External-Integrations) |
 | Risk and future work | [Feature status register](Feature-Status-Register), [Hardening implementation roadmap](Hardening-Implementation-Roadmap), [Server authority migration map](Server-Authority-Migration-Map), [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow), [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety), [Deep-review findings](Deep-Review-Findings), [External research reports](External-Research-Reports), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Documentation implementation plan](Documentation-Implementation-Plan) |
-| Agent collaboration | [AI assistant developer guide](AI-Assistant-Developer-Guide), [Agent context](Agent-Context), [Progress dashboard](Progress-Dashboard), [Coordination board](Coordination-Board), [Agent collaboration protocol](Agent-Collaboration-Protocol) |
+| Agent collaboration | [AI assistant developer guide](AI-Assistant-Developer-Guide), [Agent context](Agent-Context), [Progress dashboard](Progress-Dashboard), [Coordination board](Coordination-Board), [Agent collaboration protocol](Agent-Collaboration-Protocol), [Claude loop goal](Claude-Loop-Goal) |
 
 ## Repo Shape
 

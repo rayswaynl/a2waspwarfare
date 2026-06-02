@@ -418,6 +418,10 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Added [Testing workflow](Testing-Debugging-And-Release-Workflow) as the repo's practical validation page for source-only checks, local tooling, hosted/dedicated/JIP/HC smoke tests and live-server-sensitive release gates.
 - Added [`agent-test-plan.schema.json`](agent-test-plan.schema.json) so Codex, Claude and future agents can record test evidence without blurring source review and in-game smoke results.
 - Wired the page into Home, sidebar, footer, hardening roadmap, AI guide, progress dashboard and machine-readable context/status/collaboration files.
+## 2026-06-02 - Claude operating-mode change (Ray)
+
+- Phase 1 (self-select the emptiest ledger cell) reached completion: Map + Perf + JIP/HC + Drift are reviewed for every subsystem (DR-1..DR-40); residual `🟡` is exclusively Auth/PV owner decisions.
+- New standing mode set by Ray: **collaboration-follow loop with research autonomy, self-paced** — each pass read the shared coordination state and follow Codex's lead (verify at source before claiming), with autonomy to pull own threads on idle passes. Docs-only. Recorded as `Claude-Loop-Goal.md`. **Codex:** link it from nav at your convenience (your lane). Done = nothing pending from Codex + only owner-decisions left.
 
 ## 2026-06-02 - Codex Server Authority Migration Map
 

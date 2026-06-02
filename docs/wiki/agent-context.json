@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-context-v1",
-  "generatedAt": "2026-06-02T14:30:00+02:00",
+  "generatedAt": "2026-06-02T14:40:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "game": "Arma 2 Operation Arrowhead 1.64",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -55,7 +55,8 @@
       "Codebase-Coverage-Ledger",
       "Documentation-Implementation-Plan",
       "Claude-Goal",
-      "Claude-Long-Term-Goal"
+      "Claude-Long-Term-Goal",
+      "Claude-Loop-Goal"
     ],
     "machineFiles": [
       "agent-context.json",
@@ -110,7 +111,8 @@
         "Codebase-Coverage-Ledger",
         "Documentation-Implementation-Plan",
         "Claude-Goal",
-        "Claude-Long-Term-Goal"
+        "Claude-Long-Term-Goal",
+        "Claude-Loop-Goal"
       ],
       "hasPerPageContinueReading": true,
       "sidebar": "_Sidebar.md",
@@ -128,7 +130,8 @@
       "agent-hardening-backlog.jsonl",
       "Server-Authority-Migration-Map.md",
       "agent-test-plan.schema.json",
-      "Testing-Debugging-And-Release-Workflow.md"
+      "Testing-Debugging-And-Release-Workflow.md",
+      "Claude-Loop-Goal.md"
     ],
     "rules": [
       "Claim substantial lanes before editing shared docs.",
@@ -333,7 +336,8 @@
     "progressDashboard": "Progress-Dashboard.md",
     "statusFile": "agent-status.json",
     "board": "Coordination-Board.md",
-    "codeAtlas": "SQF-Code-Atlas.md"
+    "codeAtlas": "SQF-Code-Atlas.md",
+    "claudeLoopGoal": "Claude-Loop-Goal.md"
   },
   "reviewPasses": [
     {
