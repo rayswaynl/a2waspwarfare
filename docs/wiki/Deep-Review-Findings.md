@@ -619,6 +619,147 @@ Source-verified:
 
 **Outcome:** Integrations row — **Discord sub-target reviewed (DR-31); all four sub-targets (AntiStack DB, Extension, BattlEye, Discord) now done.** Map cell can move to ✅. The DR-29 deserialization concern is now closed end-to-end (dormant in writer, live in reader, one-token fix).
 
+## Round 23 — 2026-06-02 (Claude) — generated-mission drift (DR-32): vanilla faithful, modded forks divergent, 4 modded stubs abandoned
+
+Lane `generated-mission-drift-review`. Cross-cutting Drift pass: file-set + byte-level comparison of the Chernarus **source** mission against every generated mission (1 vanilla + 7 modded), to establish whether the DR-1..DR-31 findings (all verified against Chernarus) propagate, and whether LoadoutManager generation introduces divergence. This is the single highest-leverage Drift result — it characterizes the Drift dimension for **all** subsystems at once.
+
+### DR-32 — Generated missions fall into three fidelity tiers; modded missions are divergent forks or abandoned stubs, so source fixes do not propagate to them — **Medium (maintainability / drift) + abandoned-code inventory**
+
+Method: relative-path file-set `comm` + per-file `cmp` of all source `.sqf` against each generated mission. Results (differing/common `.sqf`):
+
+| Generated mission | differ/common .sqf | Tier |
+| --- | --- | --- |
+| `Missions_Vanilla/…takistan` | **15 / 671** | **Faithful** |
+| `Modded_Missions/…Napf` | 123 / 466 | Divergent fork |
+| `Modded_Missions/…eden` | 119 / 465 | Divergent fork |
+| `Modded_Missions/…lingor` | 104 / 417 | Divergent fork |
+| `Modded_Missions/…smd_sahrani_a2` | 4 / 4 (4 files total) | Abandoned stub |
+| `Modded_Missions/…dingor` | 3 / 3 (20 files total) | Abandoned stub |
+| `Modded_Missions/…tavi` | 2 / 2 (3 files total) | Abandoned stub |
+| `Modded_Missions/…isladuala` | 1 / 1 (1 file total) | Abandoned stub |
+
+1. **Vanilla Takistan is a faithful regeneration.** Only 15 `.sqf` differ, and all are map-config, not logic: the per-faction `Core_Artillery/Artillery_*.sqf`, `Config_GUE.sqf`, `GUI_Menu_Help.sqf`, `WASP/unsort/StartVeh.sqf`, and **`Server/Init/Init_Server.sqf` whose sole diff is one line** — `["SET_MAP", 1]` → `["SET_MAP", 2]` (the AntiStack DB map identifier). Plus textures (US/CDF skins → desert skins) and 3 extra native `Artillery_{TKA,TKGUE,US}.sqf`. **All other 656 logic files are byte-identical.** → **Every DR-1..DR-31 finding propagates verbatim to vanilla Takistan; a fix to the Chernarus source + regen corrects both.** The Drift dimension for the source→vanilla path is clean.
+
+2. **Napf / eden / lingor are heavily divergent full forks.** 104–123 of ~465 logic files differ from source — including security-critical files I reviewed: `Server_HandlePVF.sqf` (DR-1), `Server_HandleSpecial.sqf` (DR-27), `server_victory_threeway.sqf` (DR-11), `Server_ProcessUpgrade.sqf` (DR-23), `Server_OnHQKilled.sqf` (DR-20), `Server_OnPlayerDisconnected.sqf` (DR-21), `Init_PublicVariables.sqf`, `initJIPCompatible.sqf`. The divergence is **hand-customized behavior, not just config**: e.g. Napf's `Server_HandleSpecial.sqf` "ICBM" case additionally spawns three `BO_GBU12_LGB` laser-guided bombs around the target (absent in source). This is consistent with **DR-4** (modded propagation is commented out at `Tools/LoadoutManager/.../SqfFileGenerator.cs:132`) — the modded missions are **not** regenerated from source; they are independent forks. **Consequence:** a fix to the Chernarus source does **not** reach Napf/eden/lingor; the DR vulnerability *classes* almost certainly persist there (same architecture) but at different lines/with different effects, so each fork needs its own review and manual fix propagation.
+
+3. **smd_sahrani_a2 / dingor / tavi / isladuala are abandoned stubs.** 1–20 files each (a real mission is ~786 files / ~671 `.sqf`); they are missing `Server/`, `mission.sqm`, the `WASP/` overlay, `description.ext`, and essentially all logic. They cannot load as functional Warfare missions. These are incomplete scaffolds committed to the repo — an **abandoned-code/inventory** item.
+
+**Owner decisions / handoff.** Three explicit choices for the code owner, all logged for Codex to fold into [Tools and build workflow](Tools-And-Build-Workflow) / a generated-mission status table (Codex's lane):
+- **Stub missions (sahrani/dingor/tavi/isladuala):** complete via regeneration or **remove** them — they are dead weight and misleading as "supported maps."
+- **Divergent forks (Napf/eden/lingor):** pick a maintenance model — (a) re-enable modded propagation (DR-4) and regenerate from the hardened source, accepting loss of the hand-customizations (e.g. Napf's GBU ICBM), or (b) formally treat them as independent forks and apply every DR-1..DR-31 fix to each by hand. Today they silently drift.
+- **All security fixes:** apply to the Chernarus source first (propagates to vanilla Takistan on regen), then deliberately propagate to the 3 forks.
+
+**Outcome:** Drift dimension characterized across the whole codebase. Source→vanilla path is faithful (DR findings transfer verbatim); modded missions are out-of-scope forks/stubs flagged here. Ledger Drift cells updated to reference DR-32 (faithful-to-vanilla ✅; modded divergence is an owner decision, not a review gap).
+
+## Round 24 — 2026-06-02 (Claude) — factory/production Perf + JIP/HC (DR-33)
+
+Lane `factory-perf-jip-review`. Filled the two ⬜ cells on the Factory/purchase row by source-reviewing the unit-production path: `Client/GUI/GUI_Menu_BuyUnits.sqf` (queue gate) → `_params Spawn BuildUnit` → `Client/Functions/Client_BuildUnit.sqf` (the production loop), plus the `WFBE_C_QUEUE_*` counters seeded in `Client/Init/Init_Client.sqf`. Production runs entirely on the **buyer's client** (`group player`, local `CreateUnit`/`CreateVehicle`). Two real defects (one JIP/HC, one Perf) plus a network-churn note.
+
+### DR-33a — Empty-vehicle purchase leaks the buyer's `WFBE_C_QUEUE` counter → silent per-factory soft-lock — **Medium (JIP/HC / client-state leak)**
+
+`WFBE_C_QUEUE_<type>` is a **client-local** counter (seeded in `Init_Client.sqf:185+`, e.g. `BARRACKS_MAX=10`, `LIGHT_MAX/HEAVY_MAX=5`). The buy gate increments it before producing and blocks at the cap:
+- `GUI_Menu_BuyUnits.sqf:145-146`: `if (WFBE_C_QUEUE_<type> < WFBE_C_QUEUE_<type>_MAX) then { …+1; _params Spawn BuildUnit }` else `:158` "queue max" hint.
+- `Client_BuildUnit.sqf:469` decrements it **at the normal tail** of the script.
+
+But the vehicle branch has an early `if (!_driver && !_gunner && !_commander) exitWith {}` (`Client_BuildUnit.sqf:365`) — for a **crewless vehicle purchase** (all crew unchecked, a legitimate option) — which returns *before* the tail decrement at `:469`. So each empty-vehicle buy permanently increments the buyer's local queue counter without ever decrementing it. After `_MAX` such purchases (5 for Light/Heavy) the GUI gate at `:145` silently refuses all further production from that factory type for the rest of the match — a slow soft-lock that presents as a mysterious "can't buy / queue full" with nothing actually queued. Reachable in normal play. **Fix:** move the `WFBE_C_QUEUE` (and `unitQueu`, `:467`) decrements before/around the empty-vehicle `exitWith`, or restructure so all exit paths decrement (e.g. a single cleanup block).
+
+### DR-33b — Per-unit `sleep 4` queue poll re-broadcasts the building's queue on every mutation; non-unique queue token — **Low/Medium (Perf / network churn + latent correctness)**
+
+- **Network churn.** Each queued unit gets its own `Spawn BuildUnit`, which busy-waits `while {_unique != _queu select 0 …} { sleep 4; … }` (`:180-199`) and writes `_building setVariable ["queu", _queu, true]` — a **global broadcast** — on every enqueue (`:172`), timeout-advance (`:191`) and completion (`:207`). With several factories producing across a full server, every 4 s tick that advances or cleans a queue broadcasts that building's whole `queu` array to all machines. Bounded but avoidable; consider a server-owned queue or a non-broadcast local timer.
+- **Non-unique token.** The per-item identity is `varQueu = random(10)+random(100)+random(1000)` (`:168`) — a ~0–1110 value space, **not unique**. Two concurrently-queued items can collide on `_unique`, breaking the `_unique != _queu select 0` front-of-queue test (an item may wait forever or two may think they're first). Low probability per pair but non-zero on a busy factory. **Fix:** use a monotonic counter or `diag_tickTime`-seeded id.
+- **Orphan token on disconnect (minor).** Because the loop + the front-token removal (`:206`) run on the buyer's client, a buyer disconnecting mid-production leaves their `_unique` token in the building's broadcast `queu`; it self-heals only if another buyer is queued behind to run the `_ret > _longest` timeout-cleanup (`:187-192`). The local `WFBE_C_QUEUE` counter is not leaked across clients (it dies with the buyer). Stale shared data, low impact.
+
+**Handoff for Codex.** Document the production queue model in the [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas): client-owned per-unit producer, broadcast `queu` token list, per-client `WFBE_C_QUEUE` caps. The two fixes (DR-33a decrement-on-all-paths; DR-33b unique token + reduce broadcast) are concrete code-owner items, not architectural decisions. Note DR-33a propagates to vanilla Takistan verbatim (DR-32) and likely exists in the 3 forks too.
+
+**Outcome:** Factory/purchase row — **Perf and JIP/HC cells filled (DR-33)**. The row's remaining 🟡 (Auth/PV) is the DR-14 client-authoritative-purchase architectural ceiling (economy class, owner decision).
+
+## Round 25 — 2026-06-02 (Claude) — respawn / MASH markers (DR-34): MASH map-marker feature is dead on both ends
+
+Lane `respawn-mash-review`. Reviewed the respawn UI (`Client/Functions/Client_UI_Respawn_Selector.sqf`) and the MASH respawn-marker chain (`Server/Module/MASH/MASHMarker.sqf` ↔ `Client/Module/MASH/receiverMASHmarker.sqf`), with wiring confirmed in `Init_Client.sqf` / `Init_Server.sqf`. Extends the earlier DR-2 note ("MASH markers are dead receive-side") to a full both-ends diagnosis.
+
+### DR-34 — MASH map-marker feature is fully dead (send trigger never broadcast + client receiver commented out); the live server PVEH is orphaned — **Low/Medium (broken/abandoned feature; UX)**
+
+MASH tents are a real deployable officer feature (`Client/Module/Skill/Actions/Officer_Undeploy_MASH.sqf` exists), but the **map marker that should show a team its MASH locations does nothing**, because all three links are broken or orphaned:
+
+1. **Client receiver is commented out.** `Init_Client.sqf:132`: `//WFBE_CL_FNC_ReceiverMASHmarker = Call Compile preprocessFileLineNumbers "Client\Module\MASH\receiverMASHmarker.sqf";` — so no client ever registers the `WFBE_SE_MASH_MARKER_SENT` event handler; the receiver in `receiverMASHmarker.sqf` is never installed.
+2. **The trigger PV is never broadcast.** `WFBE_CL_MASH_MARKER_CREATED` appears in the repo **only** as the server's `addPublicVariableEventHandler` registration (`MASHMarker.sqf:1`). No client deploy path ever does `WFBE_CL_MASH_MARKER_CREATED = […]; publicVariable …`, so the server handler can never fire.
+3. **The server handler is live but orphaned.** `Init_Server.sqf:70` actively compiles `WFBE_SE_FNC_MASH_MARKER` (= `MASHMarker.sqf`), registering a PVEH for a PV (`WFBE_CL_MASH_MARKER_CREATED`) that nothing emits — harmless dead weight that *looks* active in a grep but does nothing in composition. (Line 92 is a duplicate, commented.)
+
+Net: deployed MASH tents produce **no map markers** for the owning side. Confirms and extends DR-2.
+
+**Latent JIP gap if revived (note for whoever fixes it).** Even with both ends re-enabled, the marker is delivered by `publicVariable "WFBE_SE_MASH_MARKER_SENT"` — a single global **overwritten on each deploy** (not a list) and **not replayed to join-in-progress clients**. So a revived feature would: (a) show JIP joiners no markers for MASH deployed before they joined, and (b) only ever carry the most-recent MASH in the synced value. A correct revival needs a server-held list + a JIP re-send on join (the same pattern the construction/HQ-killed code uses via `Server_HandleSpecial` "set-…" re-sends).
+
+**Secondary (Low):**
+- **Respawn selector is a ~33 Hz local loop.** `Client_UI_Respawn_Selector.sqf:19-33` runs `while {!isNil 'WFBE_MarkerTracking'} do { sleep 0.03; … }`, animating a pulsing **local** marker (`setMarkerDirLocal`/`SizeLocal`/`PosLocal`) — network-free and bounded to while the respawn UI is open, but `sleep 0.03` cannot be honored by the SQF scheduler so it effectively runs every frame. Acceptable for a transient UI; flagged for completeness.
+- **Non-unique marker name (dead code, DR-33b class).** `receiverMASHmarker.sqf:12` builds the marker name with `round random 50000` (collision-prone) and later deletes a `createMarkerLocal` marker with the global `deleteMarker` (local/global mismatch). Moot while the receiver is disabled; fix if revived.
+
+**Handoff for Codex.** Mark the MASH map-marker feature as **dead/abandoned** in the [Feature status register](Feature-Status-Register) and the relevant marker/respawn docs (Codex's lane), with the revival recipe above (server-held list + JIP re-send + unique names + fix `publicVariable` JIP gap). Owner decision: revive the feature or remove the dead `receiverMASHmarker.sqf` + orphaned `Init_Server.sqf:70` registration.
+
+**Outcome:** Markers/respawn — MASH marker chain reviewed (DR-34): dead both ends + orphaned server PVEH; respawn selector Perf characterized. Markers row PV/JIP-HC cells reference DR-34.
+
+## Round 26 — 2026-06-02 (Claude) — parameters / localization integrity (DR-35): clean, with 2 dead-action confirmations
+
+Lane `params-localization-review`. Reviewed the two never-covered cross-cutting areas: **localization integrity** (do `localize`/`$STR_` references resolve?) and the **mission parameters** system. Result: localization is clean once case-folding and dead-code are accounted for; the params system is live and correctly wired.
+
+### DR-35 — Localization integrity is clean (no live broken strings); parameters system is live and correctly wired; 2 dead WASP actions confirmed — **Informational (reviewed clean + abandoned-code)**
+
+**Method matters (the trap that produces false findings).** Arma 2 OA stringtable lookup is **case-insensitive**, but text-diff tools are not. A naïve case-sensitive set-difference of the 204 static `localize "STR_…"` keys against the 1289 `stringtable.xml` keys reports 4 "missing"; after lowercasing both sides it drops to 3, and after checking each reference site for liveness it drops to **0 live bugs**:
+- `STR_WF_UPGRADE_uav_Desc` — **false positive (casing)**: defined as `STR_WF_UPGRADE_UAV_DESC`; resolves at runtime.
+- `STR_EP1_UAV_action_exit` (`Client/Module/UAV/uav_interface_oa.sqf:25`, live) — **engine-provided**: the `STR_EP1_*` namespace is supplied by the Arma 2 OA base game's global stringtable, not the mission; resolves at runtime.
+- `STR_WASP_actions_OnArmor` and `STR_WF_Gear` — referenced **only in commented-out lines** (`WASP/actions/AddActions.sqf:4,10-12`, the dead "ride-on-armor" and "gear your unit" WASP actions). Dead code; the missing keys are moot.
+
+Config-side `$STR_` references in `.hpp`/`.ext` (excluding engine `STR_EP1_`/`STR_DN_`/`STR_USRACT` prefixes) all resolve. So **no live missing-localization display bug exists.** The stringtable carries ~1085 keys not hit by any static `localize` — a large legacy surface typical of a long-lived WFBE fork, not a defect (some are reached by config `$STR_`, engine, or removed features).
+
+**Parameters system — live and correct.** `Common/Init/Init_Parameters.sqf` iterates `missionConfigFile >> "Params"` and sets each `configName` as a `missionNamespace` variable, taking `paramsArray select _i` in multiplayer and the param's `default` in single-player. Wiring confirmed: `initJIPCompatible.sqf:121` runs it in MP; the parameter-display dialog is loaded via `Rsc/Dialogs.hpp:3136` (`onLoad ExecVM GUI_Display_Parameters.sqf`), defined in `Rsc/Parameters.hpp`. This is the canonical A2 OA pattern. One **fragility note** (not a defect): the `paramsArray select _i` ↔ `Params` iteration is **index-aligned**, so inserting/removing a param without keeping `class Params` order in sync would silently shift every later parameter's value — worth a comment in the config for future editors.
+
+**Abandoned-code inventory (adds to DR-32/DR-34).** `WASP/actions/AddActions.sqf` contains commented-out `OnArmor` (ride-on-tank: `GetOnArmor.sqf`/`GetOnArmorBots.sqf`/`GetOutBots.sqf`) and `GearYourUnit` actions — dead WASP features whose localization keys were never added. Confirms the earlier "WASP OnArmor/KeyDown abandoned" suspicion.
+
+**Handoff for Codex.** Optionally note in the [WASP overlay](WASP-Overlay) page that `AddActions.sqf` carries dead OnArmor/Gear actions, and add a one-line "keep `class Params` order stable (index-aligned to `paramsArray`)" caution to any parameters documentation (Codex's lane). No code defect to fix; the dead WASP actions are an owner cleanup decision (remove vs revive).
+
+**Outcome:** parameters/localization reviewed — **clean**; localization integrity verified (no live broken keys), params system confirmed live/wired, 2 dead WASP actions logged. New ledger row **Parameters / localization** → reviewed-clean (DR-35).
+
+## Round 27 — 2026-06-02 (Claude) — victory/endgame Perf + JIP/HC (DR-36); source mechanism for DR-11/DR-13
+
+Lane `victory-perf-jip-review`. Filled the Victory/endgame Perf + JIP/HC cells by reviewing the loop in `Server/FSM/server_victory_threeway.sqf` (the **sole** victory FSM, `execVM`'d unconditionally at `Server/Init/Init_Server.sqf:528`) and the end-of-match DB-flush tail, and traced the win-condition expression to a source-level root cause for the previously-observed DR-11/DR-13.
+
+### DR-36 — Victory loop Perf clean + JIP/HC server-authoritative; the win-condition guard/precedence is the source of DR-11/DR-13 double-fire — **Low (Perf/JIP clean) + Medium (the confirmed correctness bug)**
+
+**Perf — clean.** The detection loop runs every `_loopTimer = 80` seconds (`:6,46`) with cheap per-side work (`GetSideHQ`/`GetSideStructures`/`GetTownsHeld` + 4× `GetFactories`, `:14-21`). No hot loop, no per-frame churn. Minor: `_innerTimer` is incremented (`:47`) but never read (dead variable); `_miniSleep = 0.05` paces only the one-time end-of-match per-player DB `STORE` (`:60-82`). No perf trap.
+
+**JIP/HC — server-authoritative, one narrow gap.** Detection runs server-only on server-authoritative state; headless clients don't participate (correct). Endgame is pushed to clients via `[nil,"HandleSpecial",["endgame", sideID]] Call WFBE_CO_FNC_SendToClients` (`:24`); `gameOver`/`WFBE_GameOver` are set server-side (`:32-33`) and `WFBE_GameOver` is **not** broadcast. The only gap: a player joining in the brief endgame window (between the broadcast and `failMission "END1"` at `:88`) won't receive the outro, because `SendToClients` is not replayed to JIP joiners — moot in practice since the mission is tearing down.
+
+**Confirmed source mechanism for DR-11 (winner inversion) + DR-13 (duplicate LogGameEnd).** The win check (`:23`):
+```
+if (!(alive _hq) && _factories == 0 || _towns == _total && !WFBE_GameOver) then {
+```
+By SQF precedence (`&&` binds tighter than `||`) this is `((!alive _hq) && _factories==0) || (_towns==_total && !WFBE_GameOver)` — so the **`!WFBE_GameOver` guard covers only the "holds-all-towns" clause, not the "HQ-destroyed elimination" clause**. Combined with the enclosing `forEach WFBE_PRESENTSIDES - [WFBE_DEFENDER]` (`:43`) having **no break/exit after a winner is declared**, if two sides are eliminated within the same 80 s tick the elimination clause fires again for the second side: a second `["endgame",…]` broadcast, a second `WFBE_CO_FNC_LogGameEnd` (`:41`), and `WF_Logic setVariable ["WF_Winner", _x]` (`:31`) overwritten with the *opposite* side (the `_side = west; if (_x==west) _side=east` swap at `:35-39` then logs the inverted winner). That is the exact mechanism behind DR-11's inverted persisted winner and DR-13's duplicate game-end. **Fix (one place):** parenthesize and guard both clauses with `!WFBE_GameOver`, and `exitWith`/break the `forEach` (and the `while`) once `gameOver` is set, so only the first-detected winner is recorded.
+
+Also re-confirms **DR-12**: the detection block is gated by `if (_victory == 0)` where `_victory = WFBE_C_VICTORY_THREEWAY` (default 0). When threeway is *enabled* (`_victory != 0`), the entire detection block is skipped and the loop just sleeps — i.e. threeway mode has no victory detection.
+
+**Handoff for Codex.** This is a code-owner fix already tracked under DR-11/DR-13; this round adds the precise `path:line` mechanism + the two-part one-line fix. No new wiki page needed — cross-link from the victory rows of [Feature status register](Feature-Status-Register) to DR-36 for the root cause.
+
+**Outcome:** Victory/endgame row — **Perf and JIP/HC cells filled (DR-36)**: Perf clean, JIP server-authoritative (narrow endgame-join gap noted); DR-11/DR-13 now have a source-level mechanism + fix.
+
+## Round 28 — 2026-06-02 (Claude) — boot/lifecycle Perf + JIP/HC (DR-37): reviewed clean, one robustness note
+
+Lane `boot-lifecycle-perf-jip-review`. Filled the Boot/lifecycle Perf + JIP/HC cells by reviewing the role router (`initJIPCompatible.sqf`) and the client boot chain (`Client/Init/Init_Client.sqf`), with the wait-chain cross-referenced against [Lifecycle wait-chain](Lifecycle-Wait-Chain). Result: boot is well-architected for JIP and Perf-clean; one robustness gap worth a defensive fix.
+
+### DR-37 — Boot Perf clean + JIP state-sync comprehensive; the post-join `waitUntil` chain has no timeouts (a never-set synced var hangs the JIP client) — **Low (reviewed clean + robustness note)**
+
+**Perf — clean.** All boot blocking-waits are bare `waitUntil {cond}`, which the A2 OA scheduler evaluates once per frame and yields between (not a CPU busy-spin like a sleepless `while`), and every condition is cheap (`!isNil`, `!isNull player`, `time>0`, `!isNil {logic getVariable …}`). One wait uses the throttle idiom `waitUntil {sleep 0.5; visibleMap}` (`Init_Client.sqf:248`) — deliberately evaluates every 0.5 s instead of per-frame, a good pattern. The `while {true} { sleep 0.1; … exitWith … }` loops at `Init_Client.sqf:419/444` are **not** perpetual 10 Hz loops — they are bounded join-handshake polls (see below) that exit on ACK. No boot perf trap. (The genuinely long-running client loops — RHUD/marker updaters at `:522/:864` — belong to the UI/Markers rows already covered, each with its own internal `sleep`.)
+
+**JIP/HC — comprehensive and correct.** `initJIPCompatible.sqf` routes roles cleanly: server (`isHostedServer || isDedicated`), client part II (`isHostedServer || (!isHeadLessClient && !isDedicated)`), headless (`isHeadLessClient`). A JIP client:
+- syncs time/date via the engine-synced `WFBE_DAYNIGHT_DATE` (or `skipTime (time/3600)` catch-up on the disabled path) — `:189-205`, reviewed clean in Round 17;
+- syncs teams by waiting on the synced `WFBE_PRESENTSIDES` then per-side `wfbe_teams` (`:225-234`);
+- pulls all remaining client state from broadcast logic-object variables via a serial `waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_…"}}` chain (`Init_Client.sqf:367-502`: structures, commander, radio_hq(+id), startpos, hq, hq_deployed, votetime).
+- **Robust join handshake:** the `RequestJoin`→ACK poll (`:416-429`) polls at 10 Hz, **re-sends after a 30 s timeout**, and fails the client back to the lobby on team-stack/swap — a well-defended one-time handshake.
+
+**The one robustness gap.** Unlike the join handshake, the **post-join state-sync `waitUntil` chain has no timeouts**. Each step blocks on a synced `wfbe_*` logic variable; in normal operation all are reliably `setVariable [...,true]` server-side so the chain completes, but if a server-side regression ever fails to set one (e.g. `wfbe_radio_hq_id`, `:397`), the JIP client **hangs forever at that step with no fallback or log past it** — presenting as a "stuck on black screen at join" with no diagnostic. Not a live bug (the variables are set today), but a fragility: consider a `waitUntil {!isNil … || (_t = _t + …; _t > N)}` timeout with a logged warning, mirroring the handshake's own retry discipline.
+
+**Handoff for Codex.** No code defect to fix and no wiki rewrite needed; optionally note in [Lifecycle wait-chain](Lifecycle-Wait-Chain) that the post-join `wfbe_*` waits are timeout-less (a single missed server broadcast = permanent JIP hang) as a known robustness characteristic. Owner decision: add defensive timeouts or accept the current fail-silent behavior.
+
+**Outcome:** Boot/lifecycle row — **Perf and JIP/HC cells reviewed clean (DR-37)**; role routing + JIP state-sync confirmed correct; timeout-less post-join wait-chain logged as a robustness note.
+
 ## Continue Reading
 
 Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)

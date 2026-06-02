@@ -12,6 +12,8 @@ Status at indexing: open, not draft, mergeable, no status checks reported by Git
 
 PR #1 extends player-run supply missions from trucks to transport helicopters. The stable `master` flow is vehicle-object based on the server, so the PR mostly expands client eligibility, action labels, upgrade gating, rewards and completion messaging.
 
+Linnaeus' second-pass source reconciliation confirmed the branch is additive, not a rewrite. `master` remains a truck-based, client-started, server-completed flow; PR #1 adds heli tiers, cash-run routing and interdiction rewards on the same object-variable trust model.
+
 ## Files Changed
 
 - `Client/Functions/Client_UIFillListBuyUnits.sqf`
@@ -38,6 +40,16 @@ PR #1 extends player-run supply missions from trucks to transport helicopters. T
 ## Why The Server Flow Can Work
 
 On `master`, server delivery already tracks a vehicle object and checks command-center proximity. The server completion code is not intrinsically truck-only. The PR carries a `SupplyByHeli` flag end-to-end to distinguish rewards and cargo behavior.
+
+## Authority And Reward Notes
+
+| Topic | Current reading |
+| --- | --- |
+| Start authority | Still client initiated. The client performs eligibility checks and writes object variables before the server tracking loop starts. |
+| Completion authority | Server verifies proximity to a command center, then trusts vehicle state such as `SupplyAmount`, `SupplyFromTown` and PR #1's `SupplyByHeli`. |
+| Cooldown | Still town-var based; the existing `lastSupplyMissionRun` / `LastSupplyMissionRun` casing mismatch remains a master and PR concern. |
+| Cash runs | Heavy-heli supply upgrade level 3 can route value to commander team funds when a commander exists; otherwise completion falls back to side supply. |
+| Interdiction | Destroying a loaded enemy supply vehicle pays a fraction of cargo value. Stacked handlers are muted today because the handler clears `SupplyAmount`, but the event-handler leak remains real. |
 
 ## Deferred Work
 

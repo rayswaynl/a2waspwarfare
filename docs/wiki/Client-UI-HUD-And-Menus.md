@@ -2,6 +2,35 @@
 
 For the implementation-level map of IDDs, `Rsc` resources, controller loops, HUD ownership, marker/action UI and known UI risks, read [Client UI systems atlas](Client-UI-Systems-Atlas).
 
+## UI Triage Hub
+
+Use this page as the quick router for UI work:
+
+| Need | Start here | Then check |
+| --- | --- | --- |
+| Dialog/controller ownership | [Client UI systems atlas](Client-UI-Systems-Atlas) dialog map | [Feature status](Feature-Status-Register) for stale IDDs/files and authority risks |
+| HUD, title resources and overlays | [Client UI systems atlas](Client-UI-Systems-Atlas) title/HUD map | [WASP overlay](WASP-Overlay) for legacy overlay/action wiring |
+| Main menu or commander/team menus | `Client/GUI/GUI_Menu.sqf` and owning submenu | [Networking/PV](Networking-And-Public-Variables) for any server request triggered by the UI |
+| Gear/EASA/service UI | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) | [Economy/towns/supply](Economy-Towns-And-Supply) for funds and spend authority |
+| Marker/action visibility or JIP oddities | client marker/action loops below | [Mission lifecycle](Mission-Entrypoints-And-Lifecycle) and [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
+
+Rule of thumb: UI code is usually client-local, but many UI buttons trigger server-side effects through PVF/direct publicVariable paths. A UI change that mutates score, funds, structures, supply, upgrades, support, loadouts or HQ state should be reviewed as a networking/economy change too.
+
+## Compact Dialog Index
+
+| Dialog/resource | IDD | Controller/owner | Status |
+| --- | ---: | --- | --- |
+| `WF_Menu` | 11000 | `Client/GUI/GUI_Menu.sqf` | Main router. |
+| `RscMenu_BuyUnits` | 12000 | `Client/GUI/GUI_Menu_BuyUnits.sqf` | Live; client-authoritative purchase path risk is documented in [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas). |
+| `RscMenu_Tactical` | 17000 | `Client/GUI/GUI_Menu_Tactical.sqf` | Live; includes high-impact support paths such as ICBM. |
+| `WFBE_UpgradeMenu` | 504000 | `Client/GUI/GUI_UpgradeMenu.sqf` | Live upgrade UI. |
+| `RscMenu_Upgrade` | 18000 | `Client/GUI/GUI_Menu_Upgrade.sqf` | Stale legacy class; target controller file is missing. |
+| `WFBE_BuyGearMenu` | 503000 | `Client/GUI/GUI_BuyGearMenu.sqf` | Live gear/template UI. |
+| `RscMenu_Service` | 20000 | `Client/GUI/GUI_Menu_Service.sqf` | Live service/EASA entry; spend validation is client-side. |
+| `RscMenu_EASA` | 23000 | `Client/GUI/GUI_Menu_EASA.sqf` | Live; shares IDD with economy menu. |
+| `RscMenu_Economy` | 23000 | `Client/GUI/GUI_Menu_Economy.sqf` | Live; IDD reuse is a maintenance trap. |
+| `RscOverlay` / `OptionsAvailable` | 10200 | `Init_Client.sqf`, `Client_UpdateRHUD.sqf`, action FSMs | Legacy/current overlay resources share an IDD; use stored display handles rather than assuming unique `findDisplay`. |
+
 ## UI Resource Layer
 
 `description.ext` includes the `Rsc` stack:

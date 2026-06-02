@@ -62,12 +62,14 @@ flowchart TD
 
 `Common/Functions/Common_PerformanceAudit.sqf` is local RPT logging, not network sync. It snapshots FPS/player/AI/unit/vehicle/town-active counts (`:28-105`), records aggregate call stats (`:159-193`) and flushes every 60 seconds by default (`:221-239`).
 
+Ampere's runtime pass confirmed that the major loops are cooperative rather than tight in the normal dedicated-server path: town capture, town AI, camps, resources, victory, garbage and empty-vehicle collection all have sleeps or per-cycle yields. The high-risk exceptions remain the FPS publisher scripts in hosted/listen mode and any restored AI supply-truck path.
+
 ## Server Load Risks
 
 | Risk | Evidence | Development note |
 | --- | --- | --- |
 | Low-FPS sleep inversion | `Common_GetSleepFPS.sqf:5-9` shortens sleeps under lower FPS. | Overloaded servers may run some loops more often, not less. Verify before reusing this helper. |
-| Hosted-server FPS busy loop | `serverFpsGUI.sqf:1-10` and `monitorServerFPS.sqf:1-7` sleep only inside `if (isDedicated)`. | Hosted/non-dedicated server mode can spin these loops without sleep. |
+| Hosted-server FPS busy loop | `Init_Server.sqf:578` starts `Server/GUI/serverFpsGUI.sqf` and `:595` starts `Server/Module/serverFPS/monitorServerFPS.sqf`; both loop forever and sleep only inside their dedicated-server branches. | Hosted/non-dedicated server mode can spin these loops without sleep. Consolidate publishers or hoist sleeps outside locality guards. |
 | Town scans | `server_town.sqf:57` uses `nearEntities` per town. | Preserve per-town/per-cycle sleeps and audit records. |
 | Garbage scan | `server_collector_garbage.sqf:4-32` scans `allDead` every 0.5s. | Avoid adding more all-world scans nearby. |
 | Empty vehicle scan | `emptyvehiclescollector.sqf:4-30` polls every 0.5s. | Keep cleanup conditions cheap. |
@@ -91,16 +93,17 @@ There is also a casing mismatch to resolve before relying on cooldown behavior: 
 
 ## AI Commander Status
 
-AI commander support is partially present, but Cicero's source pass found no live AI commander FSM/loop that sets `wfbe_aicom_running = true`.
+AI commander support is partially present. Boyle's second-pass review corrected the earlier shorthand: the upgrade worker and AI commander funds are real, but no obvious live scheduler was found that drives the full autonomous commander loop or sets `wfbe_aicom_running = true`.
 
 Evidence:
 
 - Constants expose AI commander settings at `Common/Init/Init_CommonConstants.sqf:91-100`.
 - Side logic state and funds exist at `Server/Init/Init_Server.sqf:364-365`.
+- `WFBE_SE_FNC_AI_Com_Upgrade` is compiled at `Server/Init/Init_Server.sqf:48`; `Server/Functions/Server_AI_Com_Upgrade.sqf:12-50` reads upgrade order, checks funds/supply and debits through `ChangeAICommanderFunds` / `ChangeSideSupply`.
 - Commander vote/assign code stops AI commander when a player commander exists at `Server/Functions/Server_VoteForCommander.sqf:54-57`.
 - No active loop/FSM was found that starts and drives AI commander automation.
 
-Treat AI commander production and autonomous logistics as partial until a dedicated implementation pass proves or restores the runtime owner.
+Treat AI commander production and autonomous logistics as partial until a dedicated implementation pass proves or restores the runtime owner. In particular, `AIBuyUnit` appears latent and `UpdateSupplyTruck` is broken under the supply-system-0 + AI commander branch.
 
 ## Server End Conditions
 

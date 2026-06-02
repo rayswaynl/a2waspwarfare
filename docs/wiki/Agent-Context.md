@@ -1,6 +1,6 @@
 # Agent Context
 
-This is the compact human-readable context file for AI coding agents. See `agent-context.json` for machine-readable structure.
+This is the compact human-readable context file for AI coding agents. See `agent-context.json` for machine-readable structure and `agent-knowledge.jsonl` for durable source knowledge records.
 
 ## Identity
 
@@ -8,7 +8,7 @@ This is the compact human-readable context file for AI coding agents. See `agent
 - Game/runtime: Arma 2 Operation Arrowhead 1.64
 - Mission type: Warfare / CTI TvT PvE, forked from Benny's Warfare and modernized for WASP/Miksuu.
 - Documentation target: GitHub wiki plus `docs/wiki` mirror.
-- Progress surface: `Progress-Dashboard.md` plus `agent-status.json`.
+- Progress surface: `Progress-Dashboard.md` plus `agent-status.json` and `agent-knowledge.jsonl`.
 
 ## Source Of Truth
 
@@ -64,7 +64,7 @@ This is the compact human-readable context file for AI coding agents. See `agent
 - WASP custom subtree atlas: `WASP-Overlay.md`.
 - External Claude review: use `Claude-Goal.md` for a focused pass or `Claude-Long-Term-Goal.md` for a long-running counterpart, then update `Agent-Worklog.md`.
 - Cross-agent progress: read `Progress-Dashboard.md` and `agent-status.json` first when you need the current Codex/Claude state.
-- Cross-agent coordination: read `Agent-Collaboration-Protocol.md`, `agent-collaboration.json` and `agent-events.jsonl` before starting a parallel pass.
+- Cross-agent coordination: read `Agent-Collaboration-Protocol.md`, `agent-collaboration.json`, `agent-knowledge.jsonl` and `agent-events.jsonl` before starting a parallel pass.
 - Independent review findings: `Deep-Review-Findings.md` records source-cited Claude findings that still need to be reconciled into owning atlas pages.
 
 ## Continue Reading

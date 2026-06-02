@@ -5,6 +5,7 @@
 [Progress](Progress-Dashboard)
 [Agent context](Agent-Context)
 [`agent-context.json`](agent-context.json)
+[`agent-knowledge.jsonl`](agent-knowledge.jsonl)
 
 ## Start Here
 
@@ -55,6 +56,7 @@
 - [Coordination board](Coordination-Board)
 - [Collaboration protocol](Agent-Collaboration-Protocol)
 - [Worklog](Agent-Worklog)
+- [`agent-knowledge.jsonl`](agent-knowledge.jsonl)
 - [Deep-review findings](Deep-Review-Findings)
 - [External research reports](External-Research-Reports)
 - [Coverage ledger](Codebase-Coverage-Ledger)

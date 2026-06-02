@@ -1,6 +1,6 @@
 # External Research Reports
 
-This page tracks three PDF deep-research reports provided by Steff on 2026-06-01 and digested by Codex sub-agents Sagan, Helmholtz and Parfit.
+This page tracks three PDF deep-research reports provided by Steff on 2026-06-01 and re-shared on 2026-06-02 for a second reconciliation pass with Claude and Codex.
 
 Treat this page as an intake ledger, not as source truth. Claims from the PDFs must be checked against the repo before they are promoted into subsystem atlas pages or the feature-status register.
 
@@ -8,11 +8,27 @@ Claude later cross-checked the reports in Deep-Review Round 16 and found their c
 
 ## Source Files
 
-| Report | Local file | Scout | Status |
-| --- | --- | --- | --- |
-| `Analytisch rapport over rayswaynl/a2waspwarfare` | `C:\Users\Steff\Downloads\Analytisch rapport over rayswaynl_a2waspwarfare.pdf` | Sagan | External PDF digested; repo verification required. |
-| `Analyse van rayswaynl/a2waspwarfare` | `C:\Users\Steff\Downloads\Analyse van rayswaynl_a2waspwarfare.pdf` | Helmholtz | External PDF digested; many claims overlap existing source-backed wiki findings. |
-| `Diepgaande analyse van rayswaynl/a2waspwarfare` | `C:\Users\Steff\Downloads\Diepgaande analyse van rayswaynl_a2waspwarfare.pdf` | Parfit | External PDF digested; security/network posture focus. |
+| Report | Local file | Extracted text | Scout | Status |
+| --- | --- | --- | --- | --- |
+| `Analytisch rapport over rayswaynl/a2waspwarfare` | `C:\Users\Steff\Downloads\Analytisch rapport over rayswaynl_a2waspwarfare.pdf` | `outputs/external-reports/report-01-analytisch-rapport-over-rayswaynl-a2waspwarfare.txt` | Sagan / Erdos | External PDF digested twice; repo verification required before promotion. |
+| `Analyse van rayswaynl/a2waspwarfare` | `C:\Users\Steff\Downloads\Analyse van rayswaynl_a2waspwarfare.pdf` | `outputs/external-reports/report-02-analyse-van-rayswaynl-a2waspwarfare.txt` | Helmholtz / Arendt | External PDF digested twice; many claims overlap existing source-backed wiki findings. |
+| `Diepgaande analyse van rayswaynl/a2waspwarfare` | `C:\Users\Steff\Downloads\Diepgaande analyse van rayswaynl_a2waspwarfare.pdf` | `outputs/external-reports/report-03-diepgaande-analyse-van-rayswaynl-a2waspwarfare.txt` | Parfit / Carver | External PDF digested twice; security/network posture focus. |
+
+Extraction manifest: `outputs/external-reports/manifest.json`.
+
+## Second Reconciliation Wave
+
+On 2026-06-02 Codex extracted the PDFs into shared text artifacts and spawned a cheap read-only explorer wave:
+
+| Explorer | Focus |
+| --- | --- |
+| Erdos | Architecture, lifecycle, bootstrap and wait-chain claims. |
+| Arendt | Broken, partial, abandoned and missing feature claims. |
+| Carver | Server, security, networking and external integration claims. |
+| Laplace | UI/HUD/dialog source findings and GitHub wiki UX implications. |
+| Tesla | Agent-friendly artifact/schema proposal for future development work. |
+
+Promotion rule: explorer output from this wave is still external-report reconciliation. It becomes canonical only after a repo file, branch diff, wiki source page or generated inventory backs the claim.
 
 ## Provenance Update
 

@@ -32,7 +32,10 @@ This page names the major function groups and what they are for. It is intention
 - `Server_HandlePVF`: server-side PVF dispatcher.
 - `Server_HandleDefense`, `Server_SpawnTownDefense`, `Server_ManageTownDefenses`: town/static defense systems.
 - `Server_AI_SetTownAttackPath*`: AI attack path selection and safety checks.
+- `Server_AI_Com_Upgrade`: live AI commander upgrade worker; selects from `WFBE_C_UPGRADES_%SIDE_AI_ORDER`, checks AI commander funds/supply and debits, but no obvious live scheduler has been found.
 - `Server_DelegateAI*`: delegation to headless/client workers.
+- `Server_FNC_Delegation`: selects delegation targets for town/player AI. No `setGroupOwner` rebalancing path has been found.
+- `Server_AssignNewCommander`: commander assignment notification/AI-commander stop helper; likely call-shape bug because it assigns `_side = _this` while callers pass `[_side, _commander]`.
 - `Server_HandleBuilding*`, `Server_Building*`, `Server_OnHQKilled`, `Server_MHQRepair`: structure lifecycle and HQ damage/repair.
 - `Server_ChangeSideSupply`, `Server_PV_RequestSupplyValue`: side supply network bridge.
 - `Server_LogGameEnd`, `Server_CallExtensions/GlobalGameStats`: operational reporting.
@@ -74,6 +77,7 @@ This page names the major function groups and what they are for. It is intention
 
 - `Init_CommonConstants.sqf`: central constant namespace. Changes here affect both server and clients.
 - `Init_PublicVariables.sqf`: PVF registration. Missing files or mismatched function names break networking; direct publicVariable channels outside this registry are inventoried in [Networking/PV](Networking-And-Public-Variables).
+- `description.ext` / `initJIPCompatible.sqf`: both include generated `version.sqf`; a fresh checkout without generated version files will not preprocess cleanly.
 - `Client_BuildUnit.sqf` and `Server_BuyUnit.sqf`: purchase/spawn paths with many factory-specific assumptions.
 - `Server/Init/Init_Server.sqf`: long-lived server loops; duplicate or unconditional loops can hurt live performance.
 - `Tools/LoadoutManager`: generated mission copying/packing; accidental edits to generated mission folders can be overwritten.

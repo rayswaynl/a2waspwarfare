@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T10:20:00+02:00",
+  "generatedAt": "2026-06-02T10:50:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -9,27 +9,168 @@
     "protocol": "Agent-Collaboration-Protocol.md",
     "worklog": "Agent-Worklog.md",
     "eventFeed": "agent-events.jsonl",
-    "repoContext": "agent-context.json"
+    "repoContext": "agent-context.json",
+    "knowledgeRecords": "agent-knowledge.jsonl"
   },
   "agents": {
     "Codex": {
       "role": "Integrator, wiki UX owner, source-atlas maintainer, publisher and validation runner.",
-      "currentLane": "integration-backlog-batch-a + explorer-wave-c intake",
+      "currentLane": "integration-backlog-batch-a + explorer-wave-c + external-pdf-reconciliation-wave-d validation/publish",
       "status": "active"
     },
     "Claude": {
       "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
-      "currentLane": "discord-datapath-review (DR-31 ready-for-review)",
+      "currentLane": "boot-lifecycle-perf-jip-review (DR-37)",
       "status": "ready-for-review; autonomous-ready"
     },
-    "Newton": {"role": "Cheap read-only broken-reference explorer.", "currentLane": "known-broken-reference-second-pass-v2", "status": "completed"},
-    "Linnaeus": {"role": "Cheap read-only supply authority explorer.", "currentLane": "supply-mission-authority-matrix-v2", "status": "running-or-pending-report"},
-    "Ampere": {"role": "Cheap read-only server runtime/FSM explorer.", "currentLane": "server-fsm-runtime-orchestration-v2", "status": "completed"},
-    "Pascal": {"role": "Cheap read-only boot/include graph explorer.", "currentLane": "boot-include-parameter-graph-v2", "status": "completed"},
-    "Boyle": {"role": "Cheap read-only AI commander/autonomy explorer.", "currentLane": "ai-commander-autonomy-second-pass-v2", "status": "completed"},
-    "Peirce": {"role": "Cheap read-only hosting/BattlEye explorer.", "currentLane": "server-config-hosting-be-v2", "status": "completed"}
+    "Newton": {
+      "role": "Cheap read-only broken-reference explorer.",
+      "currentLane": "known-broken-reference-second-pass-v2",
+      "status": "completed"
+    },
+    "Linnaeus": {
+      "role": "Cheap read-only supply authority explorer.",
+      "currentLane": "supply-mission-authority-matrix-v2",
+      "status": "completed"
+    },
+    "Ampere": {
+      "role": "Cheap read-only server runtime/FSM explorer.",
+      "currentLane": "server-fsm-runtime-orchestration-v2",
+      "status": "completed"
+    },
+    "Pascal": {
+      "role": "Cheap read-only boot/include graph explorer.",
+      "currentLane": "boot-include-parameter-graph-v2",
+      "status": "completed"
+    },
+    "Boyle": {
+      "role": "Cheap read-only AI commander/autonomy explorer.",
+      "currentLane": "ai-commander-autonomy-second-pass-v2",
+      "status": "completed"
+    },
+    "Peirce": {
+      "role": "Cheap read-only hosting/BattlEye explorer.",
+      "currentLane": "server-config-hosting-be-v2",
+      "status": "completed"
+    },
+    "Erdos": {
+      "role": "Cheap read-only PDF architecture/lifecycle reconciliation explorer.",
+      "currentLane": "external-pdf-architecture-reconcile-v2",
+      "status": "completed"
+    },
+    "Arendt": {
+      "role": "Cheap read-only PDF broken/partial-feature reconciliation explorer.",
+      "currentLane": "external-pdf-feature-status-reconcile-v2",
+      "status": "completed"
+    },
+    "Carver": {
+      "role": "Cheap read-only PDF security/integration reconciliation explorer.",
+      "currentLane": "external-pdf-security-integration-reconcile-v2",
+      "status": "completed"
+    },
+    "Laplace": {
+      "role": "Cheap read-only PDF UI/wiki UX reconciliation explorer.",
+      "currentLane": "external-pdf-ui-wiki-ux-reconcile-v2",
+      "status": "completed"
+    },
+    "Tesla": {
+      "role": "Cheap read-only agent-readable artifact schema explorer.",
+      "currentLane": "agent-readable-artifact-v3",
+      "status": "completed"
+    }
   },
   "activeClaims": [
+    {
+      "lane": "boot-lifecycle-perf-jip-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]...chernarus/Client/Init/Init_Client.sqf"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 28 / DR-37)",
+        "Codebase-Coverage-Ledger.md (Boot/lifecycle Perf+JIP-HC)"
+      ],
+      "handoff": "Codex: optionally note in Lifecycle-Wait-Chain that the post-join wfbe_* waitUntil chain (Init_Client.sqf:367-502) is timeout-less (a single missed server broadcast = permanent JIP hang with no log). Owner decision: add defensive timeouts (mirroring the RequestJoin handshake's 30s retry) or accept fail-silent."
+    },
+    {
+      "lane": "victory-perf-jip-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/Server/FSM/server_victory_threeway.sqf",
+        "Server/Init/Init_Server.sqf:528",
+        "Client/Client_EndGame.sqf"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 27 / DR-36)",
+        "Codebase-Coverage-Ledger.md (Victory row Perf+JIP-HC)"
+      ],
+      "handoff": "Codex: cross-link Feature-Status victory rows to DR-36 for the root-cause mechanism of DR-11/DR-13. Two-part one-line fix: parenthesize+guard both win clauses with !WFBE_GameOver, and exitWith/break the side forEach (and while) once gameOver is set."
+    },
+    {
+      "lane": "params-localization-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/stringtable.xml (vs all localize/$STR_ refs)",
+        "Common/Init/Init_Parameters.sqf",
+        "Rsc/Parameters.hpp",
+        "Client/GUI/GUI_Display_Parameters.sqf",
+        "WASP/actions/AddActions.sqf"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 26 / DR-35)",
+        "Codebase-Coverage-Ledger.md (new Parameters/localization row)"
+      ],
+      "handoff": "Codex: optionally note dead OnArmor/GearYourUnit WASP actions in WASP-Overlay, and a 'keep class Params order stable (index-aligned to paramsArray)' caution in params docs. No code defect."
+    },
+    {
+      "lane": "respawn-mash-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/Client/Functions/Client_UI_Respawn_Selector.sqf",
+        "Missions/[55-2hc]...chernarus/Server/Module/MASH/MASHMarker.sqf",
+        "Missions/[55-2hc]...chernarus/Client/Module/MASH/receiverMASHmarker.sqf",
+        "Init_Client.sqf:132 / Init_Server.sqf:70"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 25 / DR-34)",
+        "Codebase-Coverage-Ledger.md (Markers row PV+JIP-HC)"
+      ],
+      "handoff": "Codex: mark the MASH map-marker feature dead/abandoned in Feature-Status-Register + marker/respawn docs. Revival recipe: server-held list + JIP re-send (like construction set-hq-killed re-sends) + unique marker names + fix publicVariable JIP gap. Owner decision: revive or remove dead receiverMASHmarker.sqf + the orphaned Init_Server.sqf:70 registration."
+    },
+    {
+      "lane": "factory-perf-jip-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]...chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions/[55-2hc]...chernarus/Client/Init/Init_Client.sqf"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 24 / DR-33)",
+        "Codebase-Coverage-Ledger.md (Factory row Perf+JIP-HC)"
+      ],
+      "handoff": "Codex: document the production queue model in Factory-And-Purchase-Systems-Atlas (client-owned per-unit producer; broadcast queu token list; per-client WFBE_C_QUEUE caps). Code-owner fixes: DR-33a decrement WFBE_C_QUEUE/unitQueu on all exit paths (empty-vehicle exitWith at :365 skips :469); DR-33b unique queue token + reduce broadcast."
+    },
+    {
+      "lane": "generated-mission-drift-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]...chernarus (source) vs Missions_Vanilla/[61-2hc]...takistan",
+        "vs all 7 Modded_Missions/* (file-set comm + per-file cmp of all .sqf)"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 23 / DR-32)",
+        "Codebase-Coverage-Ledger.md (Drift cells + global Drift note)"
+      ],
+      "handoff": "Codex: add a generated-mission status table to Tools-And-Build-Workflow (vanilla=faithful; Napf/eden/lingor=divergent forks; sahrani/dingor/tavi/isladuala=abandoned stubs). Owner decisions: complete-or-delete the 4 stubs; pick a maintenance model for the 3 forks; apply DR fixes to source first then propagate."
+    },
     {
       "lane": "integration-backlog-batch-a",
       "owner": "Codex",
@@ -41,7 +182,7 @@
         "Gear-Loadout-And-EASA-Atlas.md",
         "Economy-Towns-And-Supply.md"
       ],
-      "handoff": "PV/direct-channel matrix, external integration trust, DR-27, DR-28, DR-29, DR-30 and DR-31 are folded/cross-linked into owner pages. Continue explorer-wave-c reports after publish."
+      "handoff": "PV/direct-channel matrix, external integration trust, DR-27 through DR-31, explorer wave C and PDF reconciliation wave D are folded/cross-linked locally. Validate and publish wiki + docs mirror."
     },
     {
       "lane": "discord-datapath-review",
@@ -71,6 +212,17 @@
         "Feature-Status-Register.md"
       ],
       "handoff": "As shipped, option (b) rely on BattlEye is not present in the repo; production BEpath/server config remains an owner question."
+    },
+    {
+      "lane": "latest-doc-batch-validation-publish",
+      "owner": "Codex",
+      "status": "active",
+      "outputs": [
+        "GitHub wiki",
+        "docs/wiki mirror",
+        "agent-knowledge.jsonl"
+      ],
+      "handoff": "Validate JSON/JSONL and internal links, reconcile any Claude remote changes, then publish wiki and mirror docs branch."
     }
   ],
   "integratedReports": [
@@ -83,20 +235,38 @@
     "gear-easa-review-dr28",
     "extension-globalgamestats-dr29",
     "battleye-posture-dr30",
-    "discord-datapath-dr31"
+    "discord-datapath-dr31",
+    "cheap-explorer-wave-c",
+    "external-pdf-reconciliation-wave-d",
+    "agent-readable-artifact-v3",
+    "supply-mission-authority-matrix-v2"
   ],
-  "queuedReports": [
-    {"lane": "known-broken-reference-second-pass-v2", "status": "reported-pending-integration", "owner": "Newton", "targets": ["Feature-Status-Register", "Mission-Entrypoints-And-Lifecycle", "Client-UI-Systems-Atlas", "Deep-Review-Findings"]},
-    {"lane": "supply-mission-authority-matrix-v2", "status": "running-or-reported-pending-integration", "owner": "Linnaeus", "targets": ["Supply-Mission-Architecture", "Current-Work-Supply-Helicopters-PR1", "Feature-Status-Register"]},
-    {"lane": "server-fsm-runtime-orchestration-v2", "status": "reported-pending-integration", "owner": "Ampere", "targets": ["Server-Gameplay-Runtime-Atlas", "Lifecycle-Wait-Chain", "Feature-Status-Register"]},
-    {"lane": "boot-include-parameter-graph-v2", "status": "reported-pending-integration", "owner": "Pascal", "targets": ["Mission-Entrypoints-And-Lifecycle", "Lifecycle-Wait-Chain", "SQF-Code-Atlas"]},
-    {"lane": "ai-commander-autonomy-second-pass-v2", "status": "reported-pending-integration", "owner": "Boyle", "targets": ["AI-Headless-And-Performance", "Feature-Status-Register", "Function-And-Module-Index", "Gameplay-Systems-Atlas"]},
-    {"lane": "server-config-hosting-be-v2", "status": "reported-pending-integration", "owner": "Peirce", "targets": ["External-Integrations", "Networking-And-Public-Variables", "Feature-Status-Register", "Tools-And-Build-Workflow"]}
-  ],
+  "queuedReports": [],
   "lanes": [
-    {"lane": "cheap-discovery-swarm-v2", "suggestedOwner": "Codex", "status": "harvested", "summary": "Earlier cheap scout wave is complete."},
-    {"lane": "cheap-explorer-wave-c", "suggestedOwner": "Codex", "status": "reporting", "summary": "Fresh cheap explorer wave is producing focused read-only reports for the next integration batch."},
-    {"lane": "autonomous-claude-research", "suggestedOwner": "Claude", "status": "open", "summary": "Claude may self-select the next bounded, source-backed subsystem or verification lane without waiting for Codex assignment."}
+    {
+      "lane": "cheap-discovery-swarm-v2",
+      "suggestedOwner": "Codex",
+      "status": "harvested",
+      "summary": "Earlier cheap scout wave is complete."
+    },
+    {
+      "lane": "cheap-explorer-wave-c",
+      "suggestedOwner": "Codex",
+      "status": "integrated",
+      "summary": "Wave C reports from Newton, Linnaeus, Ampere, Pascal, Boyle and Peirce are folded into owner pages or agent-knowledge.jsonl where useful."
+    },
+    {
+      "lane": "autonomous-claude-research",
+      "suggestedOwner": "Claude",
+      "status": "open",
+      "summary": "Claude may self-select the next bounded, source-backed subsystem or verification lane without waiting for Codex assignment."
+    },
+    {
+      "lane": "external-pdf-reconciliation-wave-d",
+      "suggestedOwner": "Codex",
+      "status": "integrated-locally",
+      "summary": "Second PDF reconciliation wave integrated into External-Research-Reports, UI hub, lifecycle/integration/supply pages and agent-knowledge.jsonl."
+    }
   ],
   "rules": [
     "Update Progress-Dashboard.md and agent-status.json when visible ownership or lane state changes.",

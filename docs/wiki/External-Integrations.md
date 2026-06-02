@@ -34,6 +34,8 @@ Claude DR-31 completed the consumer-side review of the extension data path. The 
 
 That setting is unnecessary for the flat `GameData` DTO and creates a local-write-gated RCE sink in the token-holding bot process if anything can write to `C:\a2waspwarfare\Data\database.json`. Fix direction: use `TypeNameHandling.None` for the active reader and remove the dead `.Auto` deserialization helper noted in DR-29/DR-31.
 
+Do not conflate this with the in-repo extension writer: `Extension/src/SerializationManager.cs` writes the live database JSON with `TypeNameHandling.None`. The active `TypeNameHandling.All` sink is the DiscordBot reader, while the in-repo extension's `Auto` deserialization path is dead/commented scaffolding unless a future persistence load path revives it.
+
 ## Arma Extension: `a2waspwarfare_Extension`
 
 `Extension` is a .NET Framework 4.8 library using `RGiesecke.DllExport` and Newtonsoft.Json. It exports `_RVExtension@12`, parses comma-separated arguments, resolves an extension class by enum name, and currently includes `GLOBALGAMESTATS`.
@@ -63,7 +65,7 @@ Implementation notes from the source:
 - `Extension/src/SerializationManager.cs` writes `database.json` through a temp file and `File.Replace`.
 - `SerializeDB()` is `async void`, so extension write failures can become log-only/asynchronous failures rather than mission-visible errors.
 
-Claude DR-29 sharpened this boundary: the in-repo `GLOBALGAMESTATS` extension is not an SQF RCE path today because `GlobalGameStats.sqf` discards the `callExtension` return and the extension does not write `_output`. It still has code-owner risks: a commented/load-path deserialization landmine using Newtonsoft `TypeNameHandling.Auto`, an `async void` create/write race around `File.Replace`, stale write-only persistence scaffolding, and a player-count heuristic that can misreport headless clients.
+Claude DR-29 sharpened this boundary: the in-repo `GLOBALGAMESTATS` extension is not an SQF RCE path today because `GlobalGameStats.sqf` discards the `callExtension` return, the extension does not write `_output`, and the active writer serializes with `TypeNameHandling.None`. It still has code-owner risks: a commented/load-path deserialization landmine using Newtonsoft `TypeNameHandling.Auto`, an `async void` create/write race around `File.Replace`, stale write-only persistence scaffolding, and a player-count heuristic that can misreport headless clients.
 
 ## AntiStack Database Extension
 

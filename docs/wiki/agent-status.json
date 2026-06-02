@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T10:22:00+02:00",
+  "generatedAt": "2026-06-02T10:45:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -8,15 +8,16 @@
     "humanBoard": "Coordination-Board.md",
     "worklog": "Agent-Worklog.md",
     "collaborationState": "agent-collaboration.json",
+    "knowledgeRecords": "agent-knowledge.jsonl",
     "eventFeed": "agent-events.jsonl",
     "repoContext": "agent-context.json"
   },
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "integration-backlog-batch-a + cheap-explorer-wave-c",
-      "currentWork": "PV/direct-channel matrix, external integration trust docs and Claude DR-27 through DR-31 have landed or are cross-linked in owner pages; fresh explorer reports from Newton/Ampere/Pascal/Boyle/Peirce are queued for the next integration batch.",
-      "nextExpectedOutput": "Next focused integration batch, likely broken-reference register, supply authority matrix or content/tooling drift."
+      "currentLane": "integration-backlog-batch-a + cheap-explorer-wave-c + external-pdf-reconciliation-wave-d",
+      "currentWork": "PV/direct-channel matrix, external integration trust docs, Claude DR-27 through DR-31, all wave-C reports and the second PDF reconciliation wave have been folded into owner pages or agent-readable records.",
+      "nextExpectedOutput": "Validation, wiki/docs mirror parity and publish of the latest documentation batch."
     },
     "Claude": {
       "status": "ready-for-review; autonomous-ready",
@@ -83,8 +84,14 @@
     {
       "lane": "cheap-explorer-wave-c",
       "owner": "Codex",
-      "status": "reporting",
-      "output": "Newton, Ampere, Pascal, Boyle and Peirce reports received; Linnaeus pending capture."
+      "status": "integrated",
+      "output": "Newton, Linnaeus, Ampere, Pascal, Boyle and Peirce reports integrated into owner pages and agent-knowledge.jsonl where useful."
+    },
+    {
+      "lane": "external-pdf-reconciliation-wave-d",
+      "owner": "Codex + Erdos/Arendt/Carver/Laplace/Tesla",
+      "status": "integrated-locally",
+      "output": "External-Research-Reports.md, Client-UI-HUD-And-Menus.md, Agent-Collaboration-Protocol.md, agent-knowledge.jsonl and precision edits across lifecycle/integrations/supply pages."
     },
     {
       "lane": "cheap-discovery-swarm-v2",
@@ -96,7 +103,7 @@
       "lane": "integration-backlog-batch-a",
       "owner": "Codex",
       "status": "active",
-      "output": "PV/network, external integration trust and DR-27 through DR-31 integrated; explorer-wave reports remain queued."
+      "output": "PV/network, external integration trust, DR-27 through DR-31, explorer wave C and PDF reconciliation wave D integrated locally; validation/publish remains."
     },
     {
       "lane": "autonomous-claude-research",
@@ -106,9 +113,6 @@
     }
   ],
   "queuedReports": [
-    "known-broken-reference-second-pass-v2",
-    "server-fsm-runtime-orchestration-v2",
-    "boot-include-parameter-graph-v2",
     "commander-construction-factory-v2",
     "towns-camps-depots-economy-v2",
     "support-artillery-uav-paradrop-v2",
@@ -116,12 +120,8 @@
     "stringtable-localization-copy-v2",
     "generated-output-parity-check-v2",
     "assets-audio-textures-identity-v2",
-    "server-config-hosting-be-v2",
     "loadoutmanager-generator-deeper-v2",
-    "ai-commander-autonomy-second-pass-v2",
-    "wiki-agent-artifact-schema-v2",
-    "modded-presentation-parity-v2",
-    "supply-mission-authority-matrix-v2"
+    "modded-presentation-parity-v2"
   ],
   "updateProtocol": [
     "Before substantial work, update agent-collaboration.json and append a claim event to agent-events.jsonl.",
@@ -137,6 +137,7 @@
     "networking": "Networking-And-Public-Variables.md",
     "externalIntegrations": "External-Integrations.md",
     "collaborationProtocol": "Agent-Collaboration-Protocol.md",
+    "knowledgeRecords": "agent-knowledge.jsonl",
     "events": "agent-events.jsonl",
     "worklog": "Agent-Worklog.md"
   }

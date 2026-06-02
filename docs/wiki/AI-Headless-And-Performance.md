@@ -10,6 +10,15 @@
 
 `initJIPCompatible.sqf` downgrades headless delegation to disabled when the detected OA version does not support headless clients. Server functions `Server_DelegateAITownHeadless`, `Server_DelegateAIStaticDefenceHeadless` and `Server_FNC_Delegation` are the core delegation hooks. Client handlers `Client_DelegateAI`, `Client_DelegateTownAI` and `Client_DelegateAIStaticDefence` receive delegated work.
 
+Boyle's second-pass autonomy review clarified the split between real AI plumbing and missing autonomy:
+
+| Area | Source status | Notes |
+| --- | --- | --- |
+| AI commander constants/state | Live. Constants are in `Common/Init/Init_CommonConstants.sqf:91-102`; side state/funds are initialized in `Server/Init/Init_Server.sqf:364-365`. | This is real state, not just comments. |
+| AI commander upgrade worker | Live function. `WFBE_SE_FNC_AI_Com_Upgrade` is compiled at `Server/Init/Init_Server.sqf:48`; `Server_AI_Com_Upgrade.sqf:12-50` selects an upgrade, checks AI commander funds/supply and debits. | The worker exists, but no obvious live scheduler was found that calls it end-to-end. |
+| AI buy worker | Latent. `AIBuyUnit` is compiled from `Server_BuyUnit.sqf`, but no static caller was found outside that file family. | Do not document AI unit production as fully operational until a dynamic caller is proven. |
+| AI commander run flag | Partial. `wfbe_aicom_running` is initialized and cleared by commander reassignment/vote code, but no visible owner loop was found that starts autonomous commander behavior. | Scaffolding plus workers, not a complete self-driving commander brain. |
+
 ## Town AI
 
 Town AI is centralized through `Server/FSM/server_town_ai.sqf`. The server starts it once globally when defenders or occupation are enabled. `Server_GetTownGroups`, `Server_GetTownGroupsDefender`, `Server_SpawnTownDefense`, and `Server_ManageTownDefenses` support the flow.
@@ -70,10 +79,13 @@ There is no `setGroupOwner` in the mission. The headless client owns delegated A
 
 - If the HC disconnects mid-mission, `Server/Functions/Server_OnPlayerDisconnected.sqf` removes the HC group from the candidate pool, but does not reclaim already-created units.
 - HC registration is handled through `["RequestSpecial", ["connected-hc", player]]`; `Server/Functions/Server_HandleSpecial.sqf` appends `group _hc` to `WFBE_HEADLESSCLIENTS_ID` only if `owner _hc != 0`.
+- `Client/Functions/Client_DelegateAIStaticDefence.sqf` has the server update branch commented near the end of the helper, so static-defense delegation should be treated as intentionally incomplete until source-tested.
 
 ### Delegation Can Downgrade Once At Init
 
 `WFBE_C_AI_DELEGATION` can be set to `2` for HC mode, then downgraded to `0` during init if the OA version does not support HC or no HC is connected when that check runs. The downgrade is not automatically reversed later when an HC joins, so late HC connection may not receive work unless the init/delegation flow is changed.
+
+There is also no visible failover/rebalancing pass on HC disconnect. A disconnected HC can dump locality/load back onto the server through engine behavior, but the mission does not use `setGroupOwner` and does not redistribute groups to a surviving HC.
 
 ### `GetSleepFPS` Is Intentional
 

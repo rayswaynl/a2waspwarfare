@@ -19,6 +19,8 @@ The mission metadata and UI resource graph is assembled from:
 
 It also sets `loadScreen`, disables spoken sentences, disables channels 3 and 6, and leaves `disabledAI=0`.
 
+`version.sqf` is included here and again by `initJIPCompatible.sqf`, but it is not committed in the current repo checkout. Treat it as generated terrain metadata from LoadoutManager, not as an optional nicety: a fresh source mission needs `version.sqf` produced or supplied before it can preprocess cleanly.
+
 ## `initJIPCompatible.sqf`
 
 This is the first major runtime script. It creates early logging, determines server/client/headless roles, runs version detection, initializes common constants and parameters, applies environment time, then dispatches common/server/client/headless init scripts.
@@ -33,6 +35,27 @@ Important lifecycle flags include:
 - `townInit`
 - `WFBE_GameOver`
 - `gameOver`
+
+### Boot Graph And Parameter Gates
+
+The high-level boot chain is:
+
+```text
+description.ext
+  -> initJIPCompatible.sqf
+  -> Init_Version.sqf / VERSION_SET
+  -> Init_Parameters.sqf + Init_CommonConstants.sqf
+  -> Init_TownMode.sqf / townModeSet
+  -> Init_Common.sqf / commonInitComplete
+  -> Init_Towns.sqf / townInit
+  -> Init_Server.sqf, Init_Client.sqf and/or Init_HC.sqf
+```
+
+`Common/Init/Init_Parameters.sqf:5-10` copies each `description.ext` `Params` class name into `missionNamespace`, so parameter names are live runtime globals. `initJIPCompatible.sqf:142-162` can then override several of those values for air-war/debug modes before later init code consumes them. The most easily misread gates are `WFBE_DAYNIGHT_ENABLED`, `WFBE_C_AI_DELEGATION`, economy/supply mode constants, `WFBE_C_BASE_START_TOWN`, module toggles such as EASA/ICBM/IRS/CM, and map-icon blinking.
+
+Headless mode is especially stateful: `WFBE_C_AI_DELEGATION == 2` means HC mode in configuration, but `initJIPCompatible.sqf:168-170` downgrades it to `0` when the detected OA build does not support HC. That downgrade happens during boot, so bug reports can show a different runtime value than the lobby parameter suggested.
+
+WASP should not be described as a live parallel bootstrap branch. The old WASP block in `initJIPCompatible.sqf` is commented out; current WASP behavior is wired per feature from client/server init and from the specific WASP scripts documented in [WASP overlay](WASP-Overlay).
 
 ## Common Init
 
@@ -72,6 +95,8 @@ Global gameplay hotkeys are wired here through `findDisplay 46` `KeyDown` handle
 ## Headless Init
 
 Headless support is gated by the OA version check in `initJIPCompatible.sqf`. When supported and configured, `Headless/Init/Init_HC.sqf` loads client PVF handling and common init pieces needed for delegated AI.
+
+`Headless/Init/Init_HC.sqf` currently uses a fixed delay and then sends `["RequestSpecial", ["connected-hc", player]]` to the server. There is no explicit `waitUntil {serverInitFull}` barrier in that file, so HC timing bugs should be investigated against [Lifecycle wait-chain](Lifecycle-Wait-Chain) and [AI/headless](AI-Headless-And-Performance) together.
 
 ## Continue Reading
 

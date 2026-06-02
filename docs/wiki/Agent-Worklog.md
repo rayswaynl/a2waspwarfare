@@ -285,7 +285,68 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Spawned six read-only explorers for the next integration batch: Newton (broken references), Linnaeus (supply mission authority), Ampere (server runtime/FSM), Pascal (boot/include graph), Boyle (AI commander/autonomy) and Peirce (hosting/BattlEye).
 - Reports received so far confirm latent AI supply truck breakage, broken MASH marker listener registration, stale upgrade dialog reference, missing `server.cfg`/`basic.cfg`/`scripts.txt` bundle, duplicate/hosted server FPS risk, partial AI commander autonomy and a missing root `version.sqf` boot dependency.
 - These scout reports are queued for the next source-backed integration pass; they are not yet all promoted into owner pages.
+## 2026-06-02 - Claude Deep-Review Round 23 (generated-mission-drift-review lane) — DR-32, Drift characterized campaign-wide
 
+- Cross-cutting Drift pass: file-set (`comm`) + byte-level (`cmp`) comparison of the Chernarus source mission against all 8 generated missions (1 vanilla + 7 modded).
+- **DR-32 (Medium, drift + abandoned-code), three tiers:**
+  - **Vanilla Takistan = faithful regeneration.** 15/671 `.sqf` differ, all map-config (per-faction `Core_Artillery/*`, `Init_Server.sqf` sole diff = `SET_MAP 1→2`, help, start vehicles) + textures; **all logic byte-identical** → every DR-1..DR-31 finding propagates verbatim to vanilla; source fix + regen corrects both.
+  - **Napf/eden/lingor = divergent hand-edited forks.** 104–123 logic files differ from source, incl. `Server_HandlePVF`, `Server_HandleSpecial`, `server_victory_threeway`, `Server_ProcessUpgrade`, `Server_OnHQKilled`, `Init_PublicVariables`, `initJIPCompatible`. Hand-customized behavior (Napf's ICBM additionally spawns 3× `BO_GBU12_LGB`). Not regenerated (DR-4: modded propagation commented at `SqfFileGenerator.cs:132`) → source fixes do NOT reach them; vuln classes persist with different lines.
+  - **sahrani/dingor/tavi/isladuala = abandoned stubs.** 1–20 files each (a real mission ≈ 786 files / 671 `.sqf`); missing `Server/`, `mission.sqm`, `WASP/`, most logic → non-runnable scaffolds.
+- Ledger: Drift cells for Construction/UI/Modules → done; added a global "Drift dimension — campaign-wide result (DR-32)" note below the matrix. Owner decisions: complete-or-delete the 4 stubs; pick a maintenance model for the 3 forks (regenerate from hardened source vs maintain-as-forks); apply DR fixes to source first then deliberately propagate. Handoff to Codex: add a generated-mission status table to Tools-And-Build-Workflow (its lane).
+
+## 2026-06-02 - Claude Deep-Review Round 24 (factory-perf-jip-review lane) — DR-33
+
+- Filled the two ⬜ cells on the Factory/purchase row by reviewing the production path: `GUI_Menu_BuyUnits.sqf` (queue gate) → `Spawn BuildUnit` → `Client_BuildUnit.sqf` (production loop) + `WFBE_C_QUEUE_*` counters in `Init_Client.sqf`. Production runs entirely on the **buyer's client**.
+- **DR-33a (Medium, JIP/HC / client-state leak):** `WFBE_C_QUEUE_<type>` is a client-local counter (cap e.g. Light/Heavy=5) incremented at the buy gate (`GUI_Menu_BuyUnits.sqf:145-146`) and decremented at the script tail (`Client_BuildUnit.sqf:469`). The **empty-vehicle** path `if (!_driver && !_gunner && !_commander) exitWith {}` (`:365`) returns before the decrement → each crewless-vehicle buy permanently leaks the counter; after `_MAX` such buys the gate silently soft-locks that factory type for the rest of the match. Reachable in normal play. Fix: decrement on all exit paths.
+- **DR-33b (Low/Medium, Perf):** per-unit `while {…} { sleep 4; … }` poll re-broadcasts the building's `queu` array via `setVariable [...,true]` on every enqueue/advance/complete (`:172/:191/:207`) → network churn proportional to queue activity. `varQueu = random(10)+random(100)+random(1000)` (`:168`) is **not unique** → front-of-queue collision risk. Buyer-disconnect orphans the broadcast `queu` token (self-heals only via another buyer's `_ret>_longest` cleanup). Fixes: unique token + reduce broadcast.
+- Ledger Factory/purchase row: Perf + JIP/HC cells filled (DR-33). Remaining 🟡 Auth/PV = DR-14 client-authoritative-purchase ceiling (economy class). Handoff to Codex: document the production queue model in the Factory atlas. Both fixes propagate to vanilla Takistan verbatim (DR-32).
+
+## 2026-06-02 - Claude Deep-Review Round 25 (respawn-mash-review lane) — DR-34
+
+- Reviewed the respawn UI (`Client_UI_Respawn_Selector.sqf`) + MASH respawn-marker chain (`Server/Module/MASH/MASHMarker.sqf` ↔ `Client/Module/MASH/receiverMASHmarker.sqf`); resolved the DR-2 MASH dead-path note to a full both-ends diagnosis.
+- **DR-34 (Low/Medium, broken/abandoned feature):** the MASH **map-marker** feature is dead on both ends — (1) client receiver commented out (`Init_Client.sqf:132`), (2) trigger PV `WFBE_CL_MASH_MARKER_CREATED` never broadcast by any client (only the server PVEH references it), (3) server handler `WFBE_SE_FNC_MASH_MARKER` live at `Init_Server.sqf:70` but **orphaned** (listens for a never-sent PV). MASH tents are a real officer feature (`Officer_Undeploy_MASH.sqf`) but produce **no map markers**. Confirms + extends DR-2.
+- **Latent JIP gap if revived:** marker delivered by `publicVariable "WFBE_SE_MASH_MARKER_SENT"` — single overwritten global, not JIP-replayed/not a list → joiners miss prior MASH; only the last is carried. Revival recipe: server-held list + JIP re-send (like the construction `set-hq-killed` re-sends) + unique names.
+- **Secondary (Low):** respawn selector is a ~33 Hz `sleep 0.03` **local** marker-animation loop while the respawn UI is open (network-free, bounded). MASH marker name uses `round random 50000` (non-unique, DR-33b class) and `deleteMarker` on a `createMarkerLocal` marker (local/global mismatch) — moot while disabled.
+- Ledger Markers/cleaners row: PV + JIP/HC cells reviewed (DR-34). Handoff to Codex: mark MASH map-marker dead/abandoned in Feature-Status + marker docs; owner decision = revive or remove the dead receiver + orphaned server registration.
+
+## 2026-06-02 - Claude Deep-Review Round 26 (params-localization-review lane) — DR-35 (reviewed clean)
+
+- Reviewed the two never-covered cross-cutting areas: localization integrity + the mission parameters system.
+- **Localization: clean.** 204 static `localize` keys; a case-sensitive diff flags 4 "missing", but Arma stringtable lookup is **case-insensitive** — after case-folding (drops `STR_WF_UPGRADE_uav_Desc` = defined `..._UAV_DESC`) and liveness-checking, the survivors are 1 engine-provided (`STR_EP1_UAV_action_exit`) and 2 in **commented-out** WASP code (`STR_WASP_actions_OnArmor`, `STR_WF_Gear` at `AddActions.sqf:4,10-12`). **No live broken-string bug.** Config-side `$STR_` all resolve. ~1085 stringtable keys are unused legacy (normal).
+- **Parameters: live + correctly wired.** `Init_Parameters.sqf` (MP `paramsArray select _i` / SP `default`) ← `initJIPCompatible.sqf:121`; display dialog via `Rsc/Dialogs.hpp:3136` + `Rsc/Parameters.hpp`. Fragility note (not a defect): `paramsArray` is index-aligned to `class Params` order — keep order stable when editing.
+- **Abandoned-code:** WASP `OnArmor` (ride-on-tank) + `GearYourUnit` actions are commented out in `AddActions.sqf` (confirms the earlier WASP-OnArmor suspicion).
+- New ledger row **Parameters / localization → reviewed-clean (DR-35)**. Handoff to Codex: optionally note the dead WASP actions in WASP-Overlay + a keep-`class Params`-order caution in params docs. Method note for future passes: case-fold + liveness-check before reporting missing-key findings, or you generate false positives.
+
+## 2026-06-02 - Claude Deep-Review Round 27 (victory-perf-jip-review lane) — DR-36
+
+- Filled the Victory/endgame Perf + JIP/HC cells by reviewing `Server/FSM/server_victory_threeway.sqf` (the sole victory FSM, `execVM`'d at `Init_Server.sqf:528`) and the end-of-match DB-flush tail.
+- **Perf: clean.** 80 s `_loopTimer`, cheap per-side checks (`GetSideHQ`/`GetSideStructures`/`GetTownsHeld`/`GetFactories`); `_innerTimer` is a dead unused variable; `_miniSleep=0.05` only paces the one-time end-of-match per-player DB `STORE`.
+- **JIP/HC: server-authoritative (correct).** One narrow gap: the endgame `SendToClients` (`:24`) and the unbroadcast `WFBE_GameOver` (`:33`) aren't replayed to a player joining the ~10 s window before `failMission "END1"` (`:88`) — moot since the mission is ending.
+- **Source mechanism for DR-11 + DR-13.** Win check (`:23`) `!(alive _hq) && _factories==0 || _towns==_total && !WFBE_GameOver` parses (`&&`>`||`) as `(HQ-dead && no-factories) || (holds-all-towns && !WFBE_GameOver)` — so `!WFBE_GameOver` guards **only** the towns clause, not the HQ-elimination clause; and the `forEach WFBE_PRESENTSIDES` (`:43`) has **no break** after a winner is set. Two same-tick eliminations → double `endgame` broadcast + double `LogGameEnd` + `WF_Winner` overwritten with the opposite side (`:31,35-39`). Exact root cause of DR-11 inversion + DR-13 duplication. Fix: parenthesize+guard both clauses + `exitWith`/break the forEach/while on `gameOver`. Re-confirms DR-12 (threeway `_victory!=0` skips detection).
+- Ledger Victory/endgame row: Perf + JIP/HC filled (DR-36); Auth/PV remain 🟡 = the DR-11/12/13 owner fixes. Handoff to Codex: cross-link Feature-Status victory rows to DR-36.
+
+## 2026-06-02 - Claude Deep-Review Round 28 (boot-lifecycle-perf-jip-review lane) — DR-37 (reviewed clean + robustness note)
+
+- Filled the Boot/lifecycle Perf + JIP/HC cells by reviewing the role router (`initJIPCompatible.sqf`) + client boot chain (`Init_Client.sqf`).
+- **Perf: clean.** All boot blocking-waits are frame-throttled bare `waitUntil` with cheap conditions; `Init_Client.sqf:248` uses the `waitUntil {sleep 0.5; cond}` throttle idiom; the `while {true} {sleep 0.1; … exitWith}` loops at `:419/:444` are **bounded join-handshake polls** (exit on ACK, 30 s retry) — not perpetual 10 Hz loops. No boot perf trap.
+- **JIP/HC: comprehensive + correct.** `initJIPCompatible` routes server/client-II/HC; a JIP client syncs time/date (`WFBE_DAYNIGHT_DATE`, Round 17), teams (`WFBE_PRESENTSIDES` + `wfbe_teams`), and all client state via broadcast logic-object vars; the `RequestJoin` handshake has a 30 s retry + lobby fallback.
+- **Robustness note (not a live bug):** the post-join serial `waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_…"}}` chain (`Init_Client.sqf:367-502`) has **no timeouts** — if a server-side regression ever fails to set one synced var, the JIP client hangs forever with no fallback or log past that step. Unlike the handshake, which retries. Suggested: add defensive timeouts mirroring the handshake.
+- Ledger Boot/lifecycle row: Perf + JIP/HC reviewed clean (DR-37). Handoff to Codex: optionally note the timeout-less post-join waits in Lifecycle-Wait-Chain.
+
+## 2026-06-02 - Codex Explorer Wave C Integration
+
+- Integrated Ampere, Pascal, Boyle and Peirce into owner pages: [Server runtime](Server-Gameplay-Runtime-Atlas), [Mission lifecycle](Mission-Entrypoints-And-Lifecycle), [AI/headless](AI-Headless-And-Performance), [Function/module index](Function-And-Module-Index) and [Feature status](Feature-Status-Register).
+- Promoted source-backed facts: generated/missing root `version.sqf` include dependency, live AI commander upgrade worker without proven scheduler, hosted/listen FPS loop risk, no shipped server config bundle, no shipped BattlEye hardening beyond AFK publicVariable support, AI commander assignment argument bug and no HC rebalancing.
+- Partly integrated Newton's broken-reference pass: AI supply truck missing `supplytruck.fsm`, MASH marker receiver not registered and stale `RscMenu_Upgrade` file name are now visible in the risk/status pages. Lower-risk cleanup/resource/localization candidates remain queued.
+- Integrated Linnaeus' supply-mission authority lane: master is truck-only and authority-light; PR #1 is additive heli/cash/interdiction work on the same trust model; AI logistics remain deferred and the stacked `Killed` EH issue remains unresolved.
+
+## 2026-06-02 - Codex External PDF Reconciliation Wave D
+
+- Steff re-shared three Dutch deep-research PDFs and is also handing them to Claude.
+- Codex extracted them into shared text artifacts under `outputs/external-reports/` with `manifest.json` so all agents can read the same normalized corpus.
+- Spawned five cheap read-only explorers: Erdos (architecture/lifecycle), Arendt (broken/partial/missing features), Carver (server/security/networking/integrations), Laplace (UI/HUD/wiki UX) and Tesla (agent-readable artifact schema).
+- Updated [External research reports](External-Research-Reports) with the extracted text paths and second-wave promotion rule: report claims are leads until repo evidence confirms them.
+- Created [`agent-knowledge.jsonl`](agent-knowledge.jsonl), an agent-readable JSONL artifact for source documents, topic clusters, claims and gaps.
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

@@ -55,6 +55,7 @@
   ],
   "machineFiles": [
    "agent-context.json",
+   "agent-knowledge.jsonl",
    "agent-status.json",
    "agent-collaboration.json",
    "agent-events.jsonl"
@@ -138,6 +139,12 @@
   "externalResearch": "Three Steff-provided Dutch PDF reports were digested by Codex scouts and later cross-checked by Claude. Claude found they are downstream corroboration from the wiki/upstream proxy rather than independent source verification. See External-Research-Reports.md and Deep-Review-Findings Round 16."
  },
  "knownRisks": [
+  "DR-37 (Low, reviewed clean + robustness note): boot/lifecycle Perf clean (frame-throttled cheap waitUntils; the while{true}{sleep 0.1} loops at Init_Client.sqf:419/444 are bounded join-handshake polls with 30s retry, not perpetual). JIP/HC comprehensive+correct (initJIPCompatible role routing; time/date/teams/client-state synced via broadcast logic vars; RequestJoin handshake robust). Gap: the post-join serial waitUntil chain (Init_Client.sqf:367-502, wfbe_structures/commander/radio_hq/startpos/hq/hq_deployed/votetime) has NO timeouts -> a never-set synced variable hangs the JIP client forever with no fallback or log. Defensive-timeout improvement, not a live bug.",
+  "DR-36 (Medium correctness + Perf/JIP clean): victory loop (server_victory_threeway.sqf) is the source of DR-11/DR-13. Win check (:23) !(alive _hq)&&_factories==0 || _towns==_total&&!WFBE_GameOver parses (&&>||) so the !WFBE_GameOver guard covers only the towns clause, not the HQ-elimination clause; the side forEach (:43) has no break after a winner is set -> two same-tick eliminations double-fire endgame+LogGameEnd and overwrite WF_Winner with the opposite side (inversion). Perf clean (80s cadence); JIP server-authoritative (narrow endgame-join gap). Fix: parenthesize+guard both clauses + exitWith the forEach/while on gameOver.",
+  "DR-35 (Info, reviewed clean): parameters/localization reviewed - localization integrity clean (no live missing localize/$STR_ keys; 3 apparent misses = 1 casing FP, 1 engine STR_EP1_*, 2 dead/commented WASP actions). Params system live and correctly wired (Init_Parameters.sqf MP paramsArray / SP default; initJIPCompatible.sqf:121; Dialogs.hpp:3136). Fragility (not a defect): paramsArray is index-aligned to class Params order. Abandoned-code: WASP OnArmor + GearYourUnit actions are commented out in AddActions.sqf.",
+  "DR-34 (Low/Medium, broken/abandoned feature): the MASH map-marker feature is dead on both ends - client receiver commented out (Init_Client.sqf:132), the trigger PV WFBE_CL_MASH_MARKER_CREATED is never broadcast by any client, and the live server PVEH (Init_Server.sqf:70) is orphaned (listens for a never-sent PV). Deployed MASH tents (officer skill) therefore show no map markers. If revived, the publicVariable delivery (single overwritten global, no JIP replay) is a latent JIP gap. Respawn selector is a harmless ~33Hz local marker-animation loop. Owner: revive (server-held list + JIP re-send + unique names) or remove the dead code.",
+  "DR-33 (Medium, factory Perf+JIP/HC): unit production runs on the buyer's client. (a) Empty-vehicle purchase early-exitWith (Client_BuildUnit.sqf:365) skips the WFBE_C_QUEUE decrement (:469), leaking the buyer's per-client queue counter; after _MAX (5 light/heavy) such buys the GUI gate silently soft-locks that factory for the match. (b) Per-unit sleep-4 poll re-broadcasts the building's queu array on every mutation (network churn) and uses a non-unique random queue token (front-of-queue collision risk); buyer-disconnect orphans the broadcast token. Fixes: decrement on all exit paths; unique token + less broadcast.",
+  "DR-32 (Medium, generated-mission drift + abandoned code): vanilla Takistan is a faithful regeneration of the Chernarus source (logic byte-identical; only map-config differs) so DR-1..DR-31 apply verbatim. BUT the 7 modded missions are out of scope: Napf/eden/lingor are divergent hand-edited forks (100+ logic files differ incl security-critical PVF/victory/upgrade/HQ; not regenerated per DR-4 -> source fixes do NOT reach them; vuln classes persist with different lines), and sahrani/dingor/tavi/isladuala are abandoned stubs (1-20 files, non-runnable). Owner: complete-or-delete stubs; pick fork maintenance model; propagate fixes deliberately.",
   "DR-31 (High, insecure deserialization): DiscordBot GameData.LoadFromFile() reads database.json with Newtonsoft TypeNameHandling.All every 60s (GameStatusUpdater timer) + at startup + on a command. $type gadget sink in the process that holds the Discord token. Not remotely exploitable as-configured (file written by the trusted local extension) but any write-primitive to the data dir = RCE. Trivial fix: TypeNameHandling.All -> None (data is a flat string[] DTO). Closes DR-29 #2 end-to-end. Discord secret hygiene is otherwise good (token.txt/preferences.json gitignored).",
   "DR-30 (High, campaign-wide BE gap): the 'rely on BattlEye' remediation option cited in 8 prior findings (DR-1/6/14/16/22/23/27/28) is NOT shipped. Repo's entire BE footprint = 22-byte publicvariable.txt (single kickAFK feature rule, no default-deny, no forgery-PV restriction) + a README.docx; scripts.txt and all other BE filters absent. So nothing in-repo blunts PV forgery or the DR-1 call compile RCE; realistic remediation collapses to server-side authority in SQF. Caveat: BE filters normally live in the server BEpath outside the mission PBO -> confirm production posture with the server owner.",
   "DR-29 (Medium, latent Critical, extension trust boundary): in-repo GLOBALGAMESTATS DLL is a one-way output-discarded telemetry exporter (no RCE-into-SQF, unlike AntiStack DB DR-7). Dormant deserialization-RCE landmine: commented load path uses Newtonsoft TypeNameHandling.Auto + DeserializeObject -> $type gadget RCE if re-enabled (and a load path is required for the feature to actually persist). Plus async-void create unawaited before File.Replace (first-run FileNotFound race; async-void exceptions can crash host) and a write-only/abandoned-refactor stub. Owner asks: delete/harden dead deser path, fix the I/O race.",
@@ -656,6 +663,48 @@
     "Claude DR-28 was linked from Economy, Gear/EASA and Feature Status as the final confirmed spend path in the client-authoritative economy class.",
     "Claude DR-29, DR-30 and DR-31 are now linked from External Integrations / Feature Status as integration and hosting hardening follow-ups."
    ]
+  },
+  {
+   "date": "2026-06-02",
+   "agent": "Claude",
+   "lane": "generated-mission-drift-review",
+   "type": "deep-review",
+   "findings": "DR-32 (Medium, drift + abandoned-code): 3 fidelity tiers. Vanilla Takistan faithful (15/671 sqf differ, all map-config + textures; logic byte-identical -> DR-1..DR-31 propagate verbatim). Napf/eden/lingor divergent hand-edited forks (104-123 logic files differ incl security-critical; Napf ICBM adds GBU-12 bombs; not regenerated per DR-4). sahrani/dingor/tavi/isladuala abandoned stubs (1-20 files, non-runnable)."
+  },
+  {
+   "date": "2026-06-02",
+   "agent": "Claude",
+   "lane": "factory-perf-jip-review",
+   "type": "deep-review",
+   "findings": "DR-33 (Medium). DR-33a JIP/HC: empty-vehicle purchase exitWith (Client_BuildUnit.sqf:365) returns before the WFBE_C_QUEUE decrement (:469), leaking the buyer's local queue counter -> after _MAX empty-vehicle buys the GUI gate (GUI_Menu_BuyUnits.sqf:145) silently soft-locks that factory type. DR-33b Perf: per-unit while{sleep 4} poll re-broadcasts building queu via setVariable[...,true] each mutation (network churn); varQueu=random(10)+random(100)+random(1000) non-unique (front-of-queue collision); buyer-disconnect orphans queu token (self-heals via another buyer's timeout-cleanup)."
+  },
+  {
+   "date": "2026-06-02",
+   "agent": "Claude",
+   "lane": "respawn-mash-review",
+   "type": "deep-review",
+   "findings": "DR-34 (Low/Medium, broken feature): MASH map-marker dead on both ends - client receiver commented (Init_Client.sqf:132), trigger PV WFBE_CL_MASH_MARKER_CREATED never broadcast, server PVEH live-but-orphaned (Init_Server.sqf:70). MASH tents real (Officer_Undeploy_MASH.sqf) but no markers. Confirms+extends DR-2. Latent JIP gap if revived (publicVariable single overwritten global, no JIP replay). Perf: respawn selector ~33Hz sleep-0.03 local loop (bounded). Minor: round random 50000 non-unique marker name."
+  },
+  {
+   "date": "2026-06-02",
+   "agent": "Claude",
+   "lane": "params-localization-review",
+   "type": "deep-review",
+   "findings": "DR-35 (Info, reviewed clean): localization integrity clean - all 204 static localize keys resolve except 3 (1 casing FP, 1 engine STR_EP1_*, 2 in dead/commented WASP actions); config $STR_ all resolve; no live broken string. Params system live+wired (Init_Parameters.sqf paramsArray MP/default SP <- initJIPCompatible.sqf:121; display via Dialogs.hpp:3136); paramsArray index-aligned to class Params order (fragility note). Abandoned: WASP OnArmor + GearYourUnit actions commented in AddActions.sqf. Method: Arma stringtable lookup is case-insensitive -> case-fold before diffing + check liveness or you get false missing-key findings."
+  },
+  {
+   "date": "2026-06-02",
+   "agent": "Claude",
+   "lane": "victory-perf-jip-review",
+   "type": "deep-review",
+   "findings": "DR-36. Victory Perf clean (80s _loopTimer, cheap checks, dead _innerTimer). JIP/HC server-authoritative; narrow gap: endgame SendToClients + unbroadcast WFBE_GameOver not replayed to a player joining the ~10s pre-failMission window (moot). SOURCE MECHANISM for DR-11/DR-13: win check (:23) parses (&&>||) so !WFBE_GameOver guards only the towns clause not the HQ-elimination clause; side forEach (:43) has no break -> two same-tick eliminations double-fire endgame+LogGameEnd and overwrite WF_Winner with the opposite side. Re-confirms DR-12 (threeway _victory!=0 skips detection). Fix: guard both clauses + break on winner."
+  },
+  {
+   "date": "2026-06-02",
+   "agent": "Claude",
+   "lane": "boot-lifecycle-perf-jip-review",
+   "type": "deep-review",
+   "findings": "DR-37 (Low, reviewed clean + robustness note): Boot Perf clean - frame-throttled bare waitUntils with cheap conditions; Init_Client.sqf:248 throttle idiom waitUntil{sleep 0.5;cond}; while{true}{sleep 0.1...exitWith} at :419/:444 are bounded join-handshake polls (ACK exit, 30s retry), not perpetual. JIP/HC correct: initJIPCompatible routes server/client-II/HC; JIP syncs time/date+teams+all client state via broadcast logic vars; RequestJoin handshake has 30s retry + lobby fallback. Robustness gap: post-join serial waitUntil chain (Init_Client.sqf:367-502) has no timeouts -> a never-set synced var hangs JIP client forever with no fallback/log."
   }
  ],
  "toolingProjects": [

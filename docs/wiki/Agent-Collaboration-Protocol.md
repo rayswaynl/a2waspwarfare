@@ -16,6 +16,7 @@ Keep the documentation and source analysis moving in parallel while preserving s
 | Append-only narrative log | [Agent worklog](Agent-Worklog) |
 | Machine-readable repo context | [`agent-context.json`](agent-context.json) |
 | Machine-readable collaboration state | [`agent-collaboration.json`](agent-collaboration.json) |
+| Machine-readable source knowledge records | [`agent-knowledge.jsonl`](agent-knowledge.jsonl) |
 | Append-only event feed | [`agent-events.jsonl`](agent-events.jsonl) |
 | Claude-focused instructions | [Claude long-term goal](Claude-Long-Term-Goal) |
 | Independent review findings | [Deep-review findings](Deep-Review-Findings) |
@@ -61,6 +62,27 @@ Example:
 ```json
 {"ts":"2026-06-01T21:23:39+02:00","agent":"Codex","type":"claim","lane":"construction-coin-atlas","status":"active","summary":"Deep-read construction and CoIn flow; publish atlas and update risks."}
 ```
+
+## Knowledge Records
+
+`agent-knowledge.jsonl` is the agent-friendly development artifact. It is appendable JSONL, but it is not an event log. Use it for durable facts and leads that future assistants should be able to query without re-reading every wiki page.
+
+Required fields:
+
+| Field | Meaning |
+| --- | --- |
+| `id` | Stable unique record id. |
+| `type` | `source_document`, `topic_cluster`, `claim`, `gap`, `crosswalk` or `handoff`. |
+| `topic` | Short topic bucket such as `pv-network-trust` or `ui-hud-dialogs`. |
+| `summary` | One narrow claim or lead. |
+| `sourceRefs` | Paths plus page/line where available. |
+| `wikiTargets` | Pages that own the topic. |
+| `provenanceClass` | `repo_verified`, `wiki_corroborated`, `external_corroboration` or `hypothesis`. |
+| `status` | `indexed`, `confirmed`, `open`, `needs_repo_check`, `integrated` or `deferred`. |
+| `confidence` | `high`, `medium` or `low`. |
+| `nextAction` | Exact action for the next agent. |
+
+Rule: external PDFs can corroborate, but they do not create canonical claims by themselves. A `claim` should be `repo_verified`; otherwise keep it as a `gap` or `hypothesis`.
 
 ## Branch And Merge Rules
 

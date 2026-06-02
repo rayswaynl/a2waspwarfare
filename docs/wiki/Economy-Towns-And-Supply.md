@@ -25,6 +25,8 @@ Town supply value drives economy and supply missions. Constants define automatic
 
 `isSupplyMissionActiveInTown.sqf` compares `LastSupplyMissionRun` to `WFBE_CO_VAR_SupplyMissionRegenInterval`, then broadcasts `WFBE_Server_PV_IsSupplyMissionActiveInTown`. Client `townSupplyStatus.sqf` stores that on the town as `supplyMissionCoolDownEnabled`.
 
+Source reconciliation note: `Common/Init/Init_Town.sqf` seeds `lastSupplyMissionRun`, but server supply mission code reads/writes `LastSupplyMissionRun`. Treat cooldown behavior as suspect until the casing is normalized or proven harmless in-game.
+
 ## Economy And Commander Funds
 
 Funds and supply are separate systems unless the mission parameter switches currency behavior. Commander income can be limited and distributed; player delivery funds use `WFBE_C_PLAYERS_SUPPLY_TRUCKS_DELIVERY_FUNDS_COEF`.
@@ -39,6 +41,7 @@ The economy authority class is now fully characterized by source review. Every c
 | Player unit buy | Client spawns through `Client_BuildUnit` and deducts locally; no `RequestBuyUnit` PVF exists. | DR-14, [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas) |
 | Structure sale | Economy UI refunds and destroys locally. | DR-16 |
 | Side supply | Server negative-delta floor can turn overspend into supply gain. | DR-22 |
+| Supply mission cargo/reward | Client stamps `SupplyFromTown` / `SupplyAmount` onto the vehicle; server completion trusts those vars after proximity checks. | [Supply mission architecture](Supply-Mission-Architecture) |
 | Upgrades | `RequestUpgrade` passes raw payload into server process; no server-side cost/commander/dependency validation. | DR-23 |
 | ICBM/special | Client can send `RequestSpecial ["ICBM", ...]`; server spawns `NukeDammage` from payload without authority checks. | DR-27, [Networking/PV](Networking-And-Public-Variables) |
 | Gear/EASA/service | Gear, EASA and vehicle service effects/debits are client-side; service rearm/refuel skip even client affordability guards. | DR-28, [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
@@ -51,7 +54,7 @@ This should be treated as one owner decision, not seven separate patch tracks. E
 
 ## PR #1 Supply Helicopters
 
-The open PR extends this flow to helicopters. See [Current work: supply helicopters PR #1](Current-Work-Supply-Helicopters-PR1).
+The open PR extends this flow to helicopters. It adds class constants, light/heavy upgrade gates, `SupplyByHeli`, air bonuses, commander-team cash runs and interdiction rewards, but it does not change the fundamental client-started/server-completed trust model. See [Current work: supply helicopters PR #1](Current-Work-Supply-Helicopters-PR1).
 
 ## Continue Reading
 
