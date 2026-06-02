@@ -1013,7 +1013,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="ZargabadCityCenter";
-					init="nullReturn = [this,""Zargabad City Center"",""+"",25,80,350,[""HugeTown1"",""HugeTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
+					init="nullReturn = [this,""Zargabad City Center"",""+"",30,95,380,[""HugeTown1"",""HugeTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					synchronizations[]={101,102,103,104,105,153,154};
 				};
 				class Item1
@@ -1104,7 +1104,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="ZargabadNorth";
-					init="nullReturn = [this,""Zargabad North District"",""+"",15,55,220,[""MediumTown1"",""MediumTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
+					init="nullReturn = [this,""Zargabad North District"",""+"",15,60,240,[""MediumTown1"",""MediumTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					synchronizations[]={107,108,109,110,155};
 				};
 				class Item1
@@ -1175,7 +1175,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="ZargabadSouth";
-					init="nullReturn = [this,""Zargabad South District"",""+"",15,55,220,[""MediumTown1"",""MediumTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
+					init="nullReturn = [this,""Zargabad South District"",""+"",15,60,240,[""MediumTown1"",""MediumTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					synchronizations[]={112,113,114,115,156};
 				};
 				class Item1
@@ -1287,7 +1287,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="EastMarket";
-					init="nullReturn = [this,""East Market"",""+"",10,45,170,[""SmallTown1"",""SmallTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
+					init="nullReturn = [this,""East Market"",""+"",15,55,190,[""SmallTown1"",""SmallTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					synchronizations[]={120,121};
 				};
 				class Item1
@@ -1328,7 +1328,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="ZargabadAirfield";
-					init="nullReturn = [this,""Zargabad Airfield"",""+"",20,70,260,[""LargeTown1"",""LargeTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
+					init="nullReturn = [this,""Zargabad Airfield"",""+"",20,75,300,[""LargeTown1"",""LargeTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					synchronizations[]={123,124,125,126,127,157,158};
 				};
 				class Item1
@@ -1571,7 +1571,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="NorthCamp";
-					init="nullReturn = [this,""North Camp"",""+"",10,40,150,[""SmallTown1"",""SmallTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
+					init="nullReturn = [this,""North Camp"",""+"",10,38,150,[""SmallTown1"",""SmallTown2""]] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					synchronizations[]={139,140,162};
 				};
 				class Item1
@@ -1622,7 +1622,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="EastFarms";
-					init="nullReturn = [this,""East Farms"",""+"",10,35,140,""SmallTown1""] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
+					init="nullReturn = [this,""East Farms"",""+"",10,30,130,""SmallTown1""] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					synchronizations[]={142,143,163};
 				};
 				class Item1
@@ -1673,7 +1673,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="SouthFarms";
-					init="nullReturn = [this,""South Farms"",""+"",10,35,140,""SmallTown1""] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
+					init="nullReturn = [this,""South Farms"",""+"",10,30,130,""SmallTown1""] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					synchronizations[]={145,146,164};
 				};
 				class Item1
@@ -1724,7 +1724,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WestFarms";
-					init="nullReturn = [this,""West Farms"",""+"",10,35,140,""SmallTown1""] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
+					init="nullReturn = [this,""West Farms"",""+"",10,30,130,""SmallTown1""] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					synchronizations[]={148,149};
 				};
 				class Item1
@@ -1765,7 +1765,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="SouthernOutskirts";
-					init="nullReturn = [this,""Southern Outskirts"",""+"",10,35,140,""SmallTown1""] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
+					init="nullReturn = [this,""Southern Outskirts"",""+"",10,30,130,""SmallTown1""] execVM ""Common\Init\Init_Town.sqf"";this enableSimulation false;";
 					synchronizations[]={151,152};
 				};
 				class Item1

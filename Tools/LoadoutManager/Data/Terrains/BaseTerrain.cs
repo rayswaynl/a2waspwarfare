@@ -71,6 +71,7 @@ class CfgSounds
         {
             UpdateFilesForTakistan();
             EnsureVanillaInitServerUsesCorrectMapId(destinationDirectory);
+            ApplyZargabadLowPopParameterDefaults(destinationDirectory);
         }
 
         // Perhaps do a inherited class from this to reduce spaghetti
@@ -354,6 +355,78 @@ class CfgSounds
         }
 
         Console.WriteLine($"SET_MAP definition not updated for {terrainName} in {initServerPath}.");
+    }
+
+    private void ApplyZargabadLowPopParameterDefaults(string _destinationDirectory)
+    {
+        if (terrainName != TerrainName.ZARGABAD)
+        {
+            return;
+        }
+
+        string parametersPath = Path.Combine(_destinationDirectory, @"Rsc\Parameters.hpp");
+
+        if (!File.Exists(parametersPath))
+        {
+            Console.WriteLine($"Parameters.hpp not found at {parametersPath}");
+            return;
+        }
+
+        Dictionary<string, string> defaults = new Dictionary<string, string>
+        {
+            ["WFBE_C_BASE_DEFENSE_MANNING_RANGE"] = "500",
+            ["WFBE_C_ECONOMY_FUNDS_START_EAST"] = "12800",
+            ["WFBE_C_ECONOMY_FUNDS_START_WEST"] = "12800",
+            ["WFBE_C_ECONOMY_SUPPLY_START_EAST"] = "4800",
+            ["WFBE_C_ECONOMY_SUPPLY_START_WEST"] = "4800",
+            ["WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT"] = "30000",
+            ["WFBE_C_GAMEPLAY_MISSILES_RANGE"] = "2000",
+            ["WFBE_C_TOWNS_DEFENDER"] = "3",
+            ["WFBE_C_TOWNS_OCCUPATION"] = "2",
+            ["WFBE_C_TOWNS_BUILD_PROTECTION_RANGE"] = "300",
+            ["WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER"] = "1",
+        };
+
+        string fileContent = File.ReadAllText(parametersPath);
+
+        foreach (KeyValuePair<string, string> parameterDefault in defaults)
+        {
+            fileContent = ReplaceParameterDefault(fileContent, parameterDefault.Key, parameterDefault.Value, parametersPath);
+        }
+
+        File.WriteAllText(parametersPath, fileContent);
+    }
+
+    private static string ReplaceParameterDefault(string _content, string _parameterName, string _defaultValue, string _filePath)
+    {
+        string classNeedle = $"class {_parameterName}";
+        int classStart = _content.IndexOf(classNeedle, StringComparison.Ordinal);
+
+        if (classStart < 0)
+        {
+            Console.WriteLine($"{_parameterName} not found in {_filePath}");
+            return _content;
+        }
+
+        int nextClassStart = _content.IndexOf("\n\tclass ", classStart + classNeedle.Length, StringComparison.Ordinal);
+        int searchEnd = nextClassStart < 0 ? _content.Length : nextClassStart;
+        int defaultStart = _content.IndexOf("default = ", classStart, searchEnd - classStart, StringComparison.Ordinal);
+
+        if (defaultStart < 0)
+        {
+            Console.WriteLine($"{_parameterName} default not found in {_filePath}");
+            return _content;
+        }
+
+        int defaultEnd = _content.IndexOf(";", defaultStart, StringComparison.Ordinal);
+
+        if (defaultEnd < 0 || defaultEnd >= searchEnd)
+        {
+            Console.WriteLine($"{_parameterName} default terminator not found in {_filePath}");
+            return _content;
+        }
+
+        return _content.Substring(0, defaultStart) + $"default = {_defaultValue}" + _content.Substring(defaultEnd);
     }
 
     // Generates and returns the SQF code for a specific terrain. This method is built upon 

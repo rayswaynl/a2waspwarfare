@@ -347,6 +347,25 @@ _balancePrice = missionNamespace getVariable "WFBE_C_UNITS_PRICING";
 	missionNamespace setVariable [Format ["WFBE_LONGEST%1BUILDTIME",_structure], _longest];
 } forEach ["BARRACKS","LIGHT","HEAVY","AIRCRAFT","AIRPORT","DEPOT"];
 
+if (IS_zargabad_lowpop_map) then {
+	{
+		Private ["_multiplier","_structure"];
+		_structure = _x select 0;
+		_multiplier = _x select 1;
+		{
+			Private ["_type"];
+			_type = missionNamespace getVariable Format ["WFBE_%1%2UNITS", _x, _structure];
+			if !(isNil '_type') then {
+				{
+					Private ["_config"];
+					_config = missionNamespace getVariable _x;
+					if !(isNil '_config') then {_config set [QUERYUNITPRICE, round((_config select QUERYUNITPRICE) * _multiplier)]};
+				} forEach _type;
+			};
+		} forEach WFBE_PRESENTSIDES;
+	} forEach [["BARRACKS",0.9],["LIGHT",1.1],["HEAVY",1.2],["AIRCRAFT",1.35],["AIRPORT",1.5],["DEPOT",0.95]];
+};
+
 //--- If money is the only resource, multiply the building cost.
 if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 1) then {
 	Private ["_list"];
