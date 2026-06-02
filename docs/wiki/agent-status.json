@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T20:13:00+02:00",
+  "generatedAt": "2026-06-02T20:34:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,8 +16,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki-Quality-Audit MERGE-2 by turning the HUD/menus page into a compact quick-reference gateway.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are MERGE-3 lifecycle/entrypoint split, remaining duplicate cross-link reductions or external Arma 2 OA source reference integration."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki-Quality-Audit MERGE-3 by separating Mission entrypoints from Lifecycle wait-chain ownership.",
+      "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are MERGE-1 hardening/authority consolidation, duplicate cross-link reductions or external Arma 2 OA source reference integration."
     },
     "Codex-2": {
       "status": "active",
@@ -33,6 +33,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wiki-quality-merge3-lifecycle-split",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Mission-Entrypoints-And-Lifecycle.md owns include graph/role dispatch; Lifecycle-Wait-Chain.md owns boot ordering, JIP waits and global flag dependencies"
+    },
     {
       "lane": "wiki-quality-merge2-ui-quickref",
       "owner": "Codex",

@@ -29,31 +29,22 @@ Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-43
 
 This is the first major runtime script. It creates early logging, determines server/client/headless roles, runs version detection, initializes common constants and parameters, applies environment time, then dispatches common/server/client/headless init scripts.
 
-Important lifecycle flags include:
+Source anchors: role detection at `initJIPCompatible.sqf:52-56`, version wait at `:49`, parameter readiness at `:212`, server branch at `:218-220`, client branch at `:224-233` and headless branch at `:237-238`.
 
-- `clientInitComplete`
-- `commonInitComplete`
-- `serverInitComplete`
-- `serverInitFull`
-- `townInitServer`
-- `townInit`
-- `WFBE_GameOver`
-- `gameOver`
+### Boot Ordering Handoff
 
-### Boot Graph And Parameter Gates
+This page only summarizes entrypoints. The canonical boot timeline, role truth table and flag dependency graph live in [Lifecycle wait-chain](Lifecycle-Wait-Chain).
 
-The high-level boot chain is:
+Key flags to look up there before reordering init code:
 
-```text
-description.ext
-  -> initJIPCompatible.sqf
-  -> Init_Version.sqf / VERSION_SET
-  -> Init_Parameters.sqf + Init_CommonConstants.sqf
-  -> Init_TownMode.sqf / townModeSet
-  -> Init_Common.sqf / commonInitComplete
-  -> Init_Towns.sqf / townInit
-  -> Init_Server.sqf, Init_Client.sqf and/or Init_HC.sqf
-```
+| Flag | Why it matters |
+| --- | --- |
+| `VERSION_SET` | Unblocks version-dependent initialization. |
+| `WFBE_Parameters_Ready` | Unblocks town mode and town object setup. |
+| `commonInitComplete` | Unblocks server/client/town consumers of common functions and config. |
+| `townInit` / `townInitServer` | Separate common town setup from server-side town distribution/camp follow-up. |
+| `serverInitComplete` / `serverInitFull` | Distinguish early server readiness from full per-side setup. |
+| `clientInitComplete` | Signals that client-local initialization finished. |
 
 `Common/Init/Init_Parameters.sqf:5-10` copies each `description.ext` `Params` class name into `missionNamespace`, so parameter names are live runtime globals. `initJIPCompatible.sqf:142-162` can then override several of those values for air-war/debug modes before later init code consumes them. The most easily misread gates are `WFBE_DAYNIGHT_ENABLED`, `WFBE_C_AI_DELEGATION`, economy/supply mode constants, `WFBE_C_BASE_START_TOWN`, module toggles such as EASA/ICBM/IRS/CM, and map-icon blinking.
 
@@ -80,9 +71,9 @@ This means town lifecycle bugs can live in mission object init, town init script
 
 ## Common Init
 
-`Common/Init/Init_Common.sqf` compiles most shared helpers and config. The central idea is that config arrays and helper functions are available to both server and clients before side-specific runtime code starts using them.
+`Common/Init/Init_Common.sqf` compiles most shared helpers and config. The central idea is that config arrays and helper functions are available to both server and clients before side-specific runtime code starts using them. For the exact consumer waits, use [Lifecycle wait-chain](Lifecycle-Wait-Chain).
 
-Major common responsibilities:
+Major common responsibilities include:
 
 - combat handlers: reload, AT, AA, artillery, alarm;
 - economy helpers: team funds, side supply, income, commander team;
@@ -107,6 +98,8 @@ Notable server loops:
 - building restorer;
 - `Server/Module/serverFPS/monitorServerFPS.sqf`.
 
+Source anchors: `serverInitComplete = true` at `Server/Init/Init_Server.sqf:117`, `serverInitFull = true` at `:507`, town AI at `:514`, victory at `:528` and resource loop at `:531`.
+
 ## Client Init
 
 `Client/Init/Init_Client.sqf` initializes player-side behavior. It compiles client functions, registers damage/fired handlers, adds map/menu/action behaviors, starts day/night client sync when needed, applies skill/module actions, sends join/anti-stack handshakes, and starts client update loops.
@@ -125,18 +118,11 @@ Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-37
 
 ## 2026-06-02 Lifecycle Report Verification
 
-Anscombe's lifecycle readout was source-checked against the actual `Missions/[55-2hc]warfarev2_073v48co.chernarus` tree. The report's `Migrations` path spelling was a typo; the substantive lifecycle claims below were confirmed from source:
+Anscombe's lifecycle readout was source-checked against the actual `Missions/[55-2hc]warfarev2_073v48co.chernarus` tree. The report's `Migrations` path spelling was a typo; the substantive claims were confirmed and split between this page and [Lifecycle wait-chain](Lifecycle-Wait-Chain):
 
-| Claim | Verification |
-| --- | --- |
-| `description.ext` is the metadata/resource front door. | Confirmed at `description.ext:39-67`. |
-| `initJIPCompatible.sqf` is the top-level runtime orchestrator. | Confirmed by role detection at `:52-56`, version wait at `:46-50`, parameter readiness at `:212`, and branch dispatch at `:214`, `:220`, `:233`, `:238`. |
-| Lobby parameters become missionNamespace globals. | Confirmed in `Common/Init/Init_Parameters.sqf:5-9`. |
-| Common init is the shared compile/config hub. | Confirmed by `Init_PublicVariables.sqf` load at `Init_Common.sqf:295`, airport/boundary init at `:311` and `:316`, and `commonInitComplete = true` at `:371`. |
-| Town bootstrap spans mission objects plus SQF. | Confirmed by `mission.sqm` town object init lines, `mission.sqm:3265`, `Init_TownMode.sqf:3/21`, `Init_Towns.sqf:3/13`, and `Init_Town.sqf:18/42/92/134`. |
-| Client waits on common and town state before full readiness. | Confirmed by `Init_Client.sqf:165`, `:360`, `:596`, `:788`, `:957`, and `:961-963`. |
-| Server starts authoritative long-running loops after setup. | Confirmed by `Init_Server.sqf:514`, `:528`, `:531` and related server loop launches. |
-| HC has no `serverInitFull` wait barrier. | Confirmed by `Init_HC.sqf:12/15` versus `Init_Server.sqf:507`. |
+- This page owns the entrypoint/include graph, role dispatch, mission-object town init layer and per-role init responsibilities.
+- [Lifecycle wait-chain](Lifecycle-Wait-Chain) owns the machine-role truth table, ordered boot timelines, global flag dependency graph, JIP waits and HC timing caveat.
+- Keep future lifecycle additions in the page that owns the behavior. If the note is about "which file starts what", add it here. If it is about "what waits on what", add it to the wait-chain page.
 
 ## Continue Reading
 

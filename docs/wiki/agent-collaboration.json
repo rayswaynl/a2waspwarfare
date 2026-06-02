@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T20:13:00+02:00",
+  "generatedAt": "2026-06-02T20:34:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,30 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-quality-merge3-lifecycle-split",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Mission-Entrypoints-And-Lifecycle.md",
+        "Lifecycle-Wait-Chain.md",
+        "Wiki-Quality-Audit.md MERGE-3",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/mission.sqm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf"
+      ],
+      "outputs": [
+        "Mission-Entrypoints-And-Lifecycle.md reduced to entrypoint/init responsibility map",
+        "Lifecycle-Wait-Chain.md canonical ownership note",
+        "Wiki-Quality-Audit.md MERGE-3 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-status.json"
+      ],
+      "handoff": "Keep future include graph, role dispatch and mission-object init notes in Mission entrypoints; keep boot-order, JIP wait and flag dependency notes in Lifecycle wait-chain."
+    },
     {
       "lane": "wiki-quality-merge2-ui-quickref",
       "owner": "Codex",

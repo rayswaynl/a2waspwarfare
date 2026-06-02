@@ -1,6 +1,6 @@
 # Lifecycle Wait-Chain Reference
 
-> Claude deep-dive page (source-cited). Complements [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle) with the precise boot ordering, the machine-role truth table, and the global-flag dependency graph that enforces init order.
+> Claude deep-dive page (source-cited). This is the canonical page for precise boot ordering, the machine-role truth table, JIP waits and the global-flag dependency graph that enforces init order. Use [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle) for the include graph, role dispatch and per-role init responsibility map.
 
 All paths below are relative to the source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 

@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wiki-Quality MERGE-3 Lifecycle Split
+
+- Resolved [Wiki quality audit](Wiki-Quality-Audit) MERGE-3 by separating page ownership between [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle) and [Lifecycle wait-chain](Lifecycle-Wait-Chain).
+- Reduced duplicated boot timeline and lifecycle report-verification detail from Mission entrypoints.
+- Kept Mission entrypoints focused on `description.ext`, `initJIPCompatible.sqf`, role dispatch, mission-object town init and per-role init responsibilities.
+- Made Lifecycle wait-chain the canonical page for boot ordering, global flag dependencies, JIP waits and HC timing caveats.
+
 ## 2026-06-02 - Codex Wiki-Quality MERGE-2 UI Quick Reference
 
 - Resolved [Wiki quality audit](Wiki-Quality-Audit) MERGE-2 by reducing [Client UI, HUD and menus](Client-UI-HUD-And-Menus) from a duplicate mini-atlas into a compact quick-reference gateway.
