@@ -70,6 +70,7 @@ There is **no `setGroupOwner` anywhere in the mission**. The HC owns AI because 
 
 - If the HC disconnects mid-mission, units it created become ownerless; `Server/Functions/Server_OnPlayerDisconnected.sqf:26` only removes the HC group from the candidate pool — it does not reclaim those units.
 - HC registration: on `["RequestSpecial", ["connected-hc", player]]`, `Server/Functions/Server_HandleSpecial.sqf` appends `group _hc` to `WFBE_HEADLESSCLIENTS_ID` — **but only if `owner _hc != 0`**; an HC that connects before the engine assigns a distinct owner ID is logged and skipped.
+- Static-defence delegation has an extra tracking gap (DR-42): `Server_DelegateAIStaticDefenceHeadless.sqf:26` sends `delegate-ai-static-defence`, and `Client_DelegateAIStaticDefence.sqf:25` creates the units, but the server update-back line at `:28` is commented (`update-delegation-static_defence`). Town AI does report back through `Client_DelegateTownAI.sqf:35` and `Server_HandleSpecial.sqf`'s `update-town-delegation` case. Result: HC-created static-defence units are invisible to server cleanup/accounting/re-delegation unless code owners restore and define that update-back path. See [Deep-review findings](Deep-Review-Findings) DR-42.
 
 ### Delegation mode can silently downgrade at init
 

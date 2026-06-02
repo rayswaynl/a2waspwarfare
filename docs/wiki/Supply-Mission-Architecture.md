@@ -36,6 +36,15 @@ Supply missions are one of the most cross-cutting systems in the mission. They t
 - Completion trusts object variables on the supply vehicle, so any feature that reuses those vars must clear them reliably.
 - Player resolution depends on `WFBE_SE_PLAYERLIST` and proximity/driver checks.
 
+## DR-39 Perf And JIP Notes
+
+Claude DR-39 source-verified two important details:
+
+- `Server/Module/supplyMission/supplyMissionActive.sqf` is a dead twin of the live tracking loop. `Init_Server.sqf:81` compiles it as `WFBE_SE_FNC_SupplyMissionActive`, but the file does not self-register a public-variable handler and has no caller. The live path is `supplyMissionStarted.sqf`, whose first line registers `WFBE_Client_PV_SupplyMissionStarted`.
+- Supply cooldown status is a good JIP pattern: clients request status with `WFBE_Client_PV_IsSupplyMissionActiveInTown`; the server computes it from `LastSupplyMissionRun`; clients store the response on the town. A joiner can ask for current state instead of needing a replayed one-shot event.
+
+Owner cleanup: remove `supplyMissionActive.sqf` plus its `Init_Server.sqf:81` compile, or wire it intentionally if a second path is desired. Perf cleanup: narrow the live `nearestObjects [..., [], 80]` scan in `supplyMissionStarted.sqf` if the tracked object classes are known. Optional network cleanup: target the cooldown response to the requester instead of broadcasting to every client. See [Deep-review findings](Deep-Review-Findings) DR-39.
+
 ## PR #1 Changes
 
 PR #1 improves the system by centralizing supply vehicle types, adding helicopter tiers, adding `SupplyByHeli`, changing labels to `LOAD SUPPLIES`, adding air rewards/cash runs/interdiction, and highlighting supply helicopters in buy menus.

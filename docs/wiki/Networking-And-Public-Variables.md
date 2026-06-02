@@ -2,6 +2,8 @@
 
 Arma 2 OA networking here is built around public variables, public-variable event handlers and wrapper functions that dispatch named PVF commands.
 
+For external engine grounding, see [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index). In short: `publicVariable` broadcasts and is JIP-persistent; `publicVariableServer` and `publicVariableClient` target one direction; `addPublicVariableEventHandler` reacts to broadcasts but does not provide a trusted sender identity. This is why DR-1 (PVF command-string validation) and DR-41 (direct-PV server authority) are separate hardening layers.
+
 ## Central PVF Registration
 
 `Common/Init/Init_PublicVariables.sqf` creates two command lists:

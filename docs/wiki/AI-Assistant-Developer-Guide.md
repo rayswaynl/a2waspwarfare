@@ -5,10 +5,12 @@ This page is written for Codex, Claude and future coding agents.
 ## Always Start Here
 
 1. Read `AGENTS.md`.
-2. Check for `CLAUDE.md` and `JOURNAL.md`; none existed at the time this wiki was generated, but follow them if added later.
-3. Check `git status`, current branch, recent commits and remote.
-4. Treat `Missions/[55-2hc]warfarev2_073v48co.chernarus` as the mission source for gameplay edits.
-5. Use Bohemia Interactive Arma 2 OA scripting docs, not Arma 3 docs.
+2. Read [Quickstart for humans and agents](Quickstart-For-Humans-And-Agents).
+3. Check for `CLAUDE.md` and `JOURNAL.md`; follow them if present.
+4. Check `git status`, current branch, recent commits and remote.
+5. Treat `Missions/[55-2hc]warfarev2_073v48co.chernarus` as the mission source for gameplay edits.
+6. Use Bohemia Interactive Arma 2 OA scripting docs, not Arma 3 docs.
+7. Use [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index) when grounding engine behavior, then verify repo behavior in source.
 
 ## Safe Edit Rules
 
@@ -21,6 +23,7 @@ This page is written for Codex, Claude and future coding agents.
 ## Common Pitfalls
 
 - Arma 2 OA SQF differs from Arma 3; avoid using newer commands unless verified for OA 1.64.
+- External references explain engine primitives; they do not prove this fork's server authority, payload validation or JIP behavior.
 - Hosted server paths often need local handler calls as well as public-variable dispatch.
 - Client-side UI/marker loops are performance-sensitive.
 - `publicVariable` payloads can become a network performance issue.

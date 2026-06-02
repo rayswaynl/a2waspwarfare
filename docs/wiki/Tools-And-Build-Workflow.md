@@ -40,6 +40,10 @@ Repo instruction: after mission edits, run from `Tools/LoadoutManager` with `dot
 
 A recursive diff at the current commit confirms Takistan differs from Chernarus **only** in exactly these files — i.e. propagation is consistent and there is no accidental drift, but the skip-list is a standing silent-divergence trap. If you edit a skip-listed gameplay file (most importantly `mission.sqm` and `WASP/unsort/StartVeh.sqf`), edit **both** missions. See [Deep-review findings](Deep-Review-Findings) DR-4.
 
+`version.sqf` is a special source-completeness trap (DR-43a). `description.ext:39` and `initJIPCompatible.sqf:4` include it, but no committed `version.sqf` exists in the repo. `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs` generates it per terrain, while `FileManagement/FileManager.cs` skips copying it. A fresh raw checkout is therefore not directly loadable from the mission folder until LoadoutManager has generated `version.sqf` or a deploy step has supplied it.
+
+DR-43b also found redundant server init compiles in `Server/Init/Init_Server.sqf`: `LogGameEnd`, `PlayerObjectsList` and `AwardScorePlayer` are actively compiled twice, while nearby AFK/FPS/MASH duplicates include commented older binds. Runtime impact is trivial, but the pattern is a maintenance trap because a future divergent duplicate bind would silently let the later line win. Code-owner cleanup: de-duplicate the active binds and keep the commented history out of hot init once the intended wiring is clear. See [Deep-review findings](Deep-Review-Findings) DR-43.
+
 **Modded missions are not maintained by `dotnet run`.** The modded-terrain propagation call is commented out at `SqfFileGenerators/SqfFileGenerator.cs:132`, so `Modded_Missions/*` are far behind Chernarus (Napf/eden/lingor are ~280-350 files behind; smd_sahrani_a2/tavi/dingor/isladuala are 1-4-file stubs). Treat them as non-authoritative until that path is re-enabled and regenerated.
 
 ## PerformanceAuditAnalyzer

@@ -6,6 +6,7 @@ Use the Bohemia Interactive Arma 2 OA scripting command reference when checking 
 
 ## Start Here
 
+- [Quickstart for humans and agents](Quickstart-For-Humans-And-Agents)
 - [Architecture overview](Architecture-Overview)
 - [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle)
 - [Lifecycle wait-chain reference](Lifecycle-Wait-Chain)
@@ -13,6 +14,7 @@ Use the Bohemia Interactive Arma 2 OA scripting command reference when checking 
 - [Core systems index](Core-Systems-Index)
 - [Function and module index](Function-And-Module-Index)
 - [Networking and public variables](Networking-And-Public-Variables)
+- [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index)
 - [Economy, towns and supply](Economy-Towns-And-Supply)
 - [Supply mission architecture](Supply-Mission-Architecture)
 - [AI, headless and performance](AI-Headless-And-Performance)

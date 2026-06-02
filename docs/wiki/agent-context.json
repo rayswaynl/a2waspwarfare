@@ -13,12 +13,16 @@
     "mirror": "docs/wiki",
     "pages": [
       "Home",
+      "Quickstart-For-Humans-And-Agents",
       "Architecture-Overview",
       "Mission-Entrypoints-And-Lifecycle",
       "Source-Inventory",
       "Core-Systems-Index",
       "Function-And-Module-Index",
+      "SQF-Code-Atlas",
+      "Gameplay-Systems-Atlas",
       "Networking-And-Public-Variables",
+      "External-Arma-2-OA-Reference-Index",
       "Economy-Towns-And-Supply",
       "Supply-Mission-Architecture",
       "AI-Headless-And-Performance",
@@ -31,11 +35,13 @@
       "Documentation-Implementation-Plan",
       "Coordination-Board",
       "Claude-Goal",
+      "Claude-Loop-Goal",
       "Agent-Worklog",
       "Agent-Context",
       "AI-Assistant-Developer-Guide",
       "Lifecycle-Wait-Chain",
       "WASP-Overlay",
+      "Codebase-Coverage-Ledger",
       "Deep-Review-Findings"
     ]
   },
@@ -69,10 +75,12 @@
     "DoNotUse CRV7PG loadout classes can crash the game if used in loadouts.",
     "AntiStack database extension calls are live-server sensitive.",
     "Generated missions can be overwritten by LoadoutManager.",
+    "version.sqf is generated per terrain by LoadoutManager and absent from raw source; description.ext/initJIPCompatible.sqf include it, so a fresh checkout is not directly loadable until generation/deploy supplies it.",
     "PublicVariable traffic and client marker/UI loops are performance-sensitive.",
     "PV dispatch trust boundary (DR-1): Server_HandlePVF.sqf/Client_HandlePVF.sqf Call Compile the sender-chosen command string with no validation; BattlEyeFilter/publicvariable.txt only has the kickAFK feature rule. Harden via command-set validation + a real BE PV filter before trusting on a public server.",
     "Paratrooper drop markers (DR-2) and MASH tent markers (DR-3) are confirmed dead: receivers unregistered (HandleParatrooperMarkerCreation not in client PVF list; receiverMASHmarker.sqf only referenced by commented Init_Client.sqf:132).",
-    "Generated-mission drift (DR-4): Chernarus<->Takistan differ only by LoadoutManager skip-list/blacklist (no accidental drift), but skip-listed files (mission.sqm, GUI_Menu_Help, StartVeh, Core_Artillery, Server/Config, Textures, loadScreen, texHeaders) never propagate and must be hand-mirrored. Modded_Missions/* are abandoned (modded propagation commented at SqfFileGenerator.cs:132)."
+    "Generated-mission drift (DR-4): Chernarus<->Takistan differ only by LoadoutManager skip-list/blacklist (no accidental drift), but skip-listed files (mission.sqm, GUI_Menu_Help, StartVeh, Core_Artillery, Server/Config, Textures, loadScreen, texHeaders) never propagate and must be hand-mirrored. Modded_Missions/* are abandoned (modded propagation commented at SqfFileGenerator.cs:132).",
+    "Headless static-defence delegation (DR-42) is fire-and-forget today: Client_DelegateAIStaticDefence.sqf creates units on the HC but the update-delegation-static_defence send-back is commented, so the server does not track those HC-created static-defence units."
   ],
   "currentPR": {
     "number": 1,

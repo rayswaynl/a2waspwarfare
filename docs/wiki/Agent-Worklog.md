@@ -50,6 +50,30 @@ Adversarial verification pass over Codex's atlas pages (`SQF-Code-Atlas`, `Gamep
 
 Edited: `Feature-Status-Register.md` (MASH row → confirmed broken; added paratrooper-marker and PV-trust-boundary rows), `Networking-And-Public-Variables.md` (security subsection), `Tools-And-Build-Workflow.md` (propagation skip-list trap + modded staleness), `agent-context.json` (new risks + round-2 reviewPass). No gameplay code changed. Handoffs for code owners listed at the bottom of `Deep-Review-Findings.md`.
 
+## 2026-06-02 - Codex (external OA reference index)
+
+Lane `external-arma2-oa-reference-index`. Read the current docs branch coordination files (`CLAUDE.md`, `Agent-Context.md`, `agent-context.json`, `Coordination-Board.md`, `Agent-Worklog.md`) and overview/networking pages, then checked repo anchors for PVF registration, direct public variables, `description.ext`, FSM files, BattlEye filters and the extension project.
+
+Added `External-Arma-2-OA-Reference-Index.md`, a compact map from Arma 2 OA references to this fork's concepts. External references used: BI Community pages for the OA scripting command category, `publicVariable`, `publicVariableServer`, `publicVariableClient`, `owner`, `addPublicVariableEventHandler`, multiplayer locality/JIP/HC roles, `Description.ext`, mission parameters, Arma 2 OA multiple mission parameters, FSM/`execFSM`, `compile`, `preprocessFile`, `preprocessFileLineNumbers`, `callExtension` and BattlEye; plus the Bohemia forum post introducing Arma 2/OA server-side event logging/blocking for `publicvariable.txt`.
+
+Changed `Home.md`, `AI-Assistant-Developer-Guide.md`, `Networking-And-Public-Variables.md`, `agent-context.json` and `Coordination-Board.md` to make the index discoverable and preserve the distinction between external engine semantics and source-backed repo behavior. No gameplay code changed. Follow-up: if an `external-research-report-manifest.json` file is restored or recreated later, external research report intake can be tracked there; it is not present in this docs branch today.
+
+## 2026-06-02 - Codex (quickstart and stale-link repair)
+
+Lane `stale-link-quickstart-navigation`. Ran a wiki-internal Markdown link scan and found stale links to missing page names (`Claude-Long-Term-Goal`, several older `*-Systems-Atlas` pages, `Server-Gameplay-Runtime-Atlas`, `Testing-Debugging-And-Release-Workflow`) plus the absent quickstart page referenced from `Deep-Review-Findings.md`.
+
+Added `Quickstart-For-Humans-And-Agents.md` as a compact first-10-minutes path for humans and agents: read order, worktree map, source-mission rule, LoadoutManager caveats, fast `rg` checks, and the main risk trail. Repointed stale links to current pages/sections (`Claude-Goal`, `Gameplay-Systems-Atlas`, `Client-UI-HUD-And-Menus`, `AI-Headless-And-Performance`, `Tools-And-Build-Workflow`) instead of creating duplicate atlas pages. Updated `Home.md`, `AI-Assistant-Developer-Guide.md`, `Codebase-Coverage-Ledger.md`, `Claude-Loop-Goal.md`, `Deep-Review-Findings.md`, `Coordination-Board.md` and `agent-context.json`. Also added existing high-value pages (`SQF-Code-Atlas`, `Gameplay-Systems-Atlas`, `Claude-Loop-Goal`, `Codebase-Coverage-Ledger`) to the machine-readable page list. No gameplay code changed.
+
+## 2026-06-02 - Codex (DR-39..DR-43 handoff integration)
+
+Lane `codex-handoff-integration-dr39-dr43`. Followed the explicit "Handoff for Codex" items in `Deep-Review-Findings.md` for DR-39, DR-40, DR-42 and DR-43, then re-checked the relevant source anchors before editing topic pages.
+
+Read/verified: `Server/Module/supplyMission/supplyMissionStarted.sqf`, `supplyMissionActive.sqf`, `isSupplyMissionActiveInTown.sqf`, `Server/Init/Init_Server.sqf`, `WASP/global_marking_monitor.sqf`, `Client_DelegateAIStaticDefence.sqf`, `Client_DelegateTownAI.sqf`, `Server_DelegateAIStaticDefenceHeadless.sqf`, `description.ext`, `initJIPCompatible.sqf`, `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs` and `FileManagement/FileManager.cs`.
+
+Changed: `Supply-Mission-Architecture.md` now records DR-39's dead `supplyMissionActive.sqf` twin and the pull-based JIP-correct cooldown query. `WASP-Overlay.md` now records DR-40's JIP-clean per-client wiring and the one `global_marking_monitor.sqf:62` busy-spin fix. `AI-Headless-And-Performance.md` now cross-links DR-42's static-defence HC update-back gap near the existing HC ownership notes. `Tools-And-Build-Workflow.md` now explains DR-43a (`version.sqf` generated/absent from raw source) and DR-43b (active duplicate server init compiles as a maintenance trap). `agent-context.json` gained durable risk notes for generated `version.sqf` and static-defence HC tracking. No gameplay code changed.
+
+Remaining owner work: remove or wire the dead supply twin; throttle the WASP display wait; decide whether static-defence HC should report units back to the server; de-duplicate the active server init binds; decide whether to commit a source `version.sqf` or keep documenting it as generated.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

@@ -1,6 +1,6 @@
 # Claude Loop Goal (operating mode)
 
-> Claude-owned. The self-paced standing goal Claude runs each pass. Set by Ray 2026-06-02 after Phase 1 (self-select the emptiest ledger cell) reached completion — every subsystem's **Map / Perf / JIP-HC / Drift** dimension is source-reviewed (DR-1..DR-40); the only residual `🟡` cells are **Auth/PV owner decisions**, each backed by a source-cited finding + fix in [Deep-review findings](Deep-Review-Findings). This page records the *operating mode*; the role is in [Claude long-term goal](Claude-Long-Term-Goal), the scoreboard in [Codebase coverage ledger](Codebase-Coverage-Ledger).
+> Claude-owned. The self-paced standing goal Claude runs each pass. Set by Ray 2026-06-02 after Phase 1 (self-select the emptiest ledger cell) reached completion — every subsystem's **Map / Perf / JIP-HC / Drift** dimension is source-reviewed (DR-1..DR-40); the only residual `🟡` cells are **Auth/PV owner decisions**, each backed by a source-cited finding + fix in [Deep-review findings](Deep-Review-Findings). This page records the *operating mode*; the role is in [Claude goal](Claude-Goal), the scoreboard in [Codebase coverage ledger](Codebase-Coverage-Ledger).
 
 ## Mode: collaboration-follow, with research autonomy, self-paced
 
@@ -26,6 +26,6 @@ Nothing is pending from Codex **and** every open ledger item is an explicit, own
 
 ## Continue Reading
 
-Previous: [Claude long-term goal](Claude-Long-Term-Goal) | Next: [Codebase coverage ledger](Codebase-Coverage-Ledger)
+Previous: [Claude goal](Claude-Goal) | Next: [Codebase coverage ledger](Codebase-Coverage-Ledger)
 
 Main map: [Home](Home) | Findings: [Deep-review findings](Deep-Review-Findings) | Agent file: [`agent-context.json`](agent-context.json)

@@ -23,6 +23,14 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 - `docs/wiki/Agent-Worklog.md`: append-only agent-visible worklog.
 - `docs/wiki/Feature-Status-Register.md`: open risks, partial features and missing features.
 
+## Active Lanes
+
+| Date | Agent | Lane | Status |
+| --- | --- | --- | --- |
+| 2026-06-02 | Codex | `external-arma2-oa-reference-index` | Complete: added compact official-reference map and linked it from onboarding/networking. |
+| 2026-06-02 | Codex | `stale-link-quickstart-navigation` | Complete: repaired stale internal links, added quickstart, and aligned `agent-context.json` page list. |
+| 2026-06-02 | Codex | `codex-handoff-integration-dr39-dr43` | Complete: folded DR-39/40/42/43 handoffs into focused topic pages and `agent-context.json`. |
+
 ## Coordination Rules
 
 - Append worklog entries instead of replacing another agent's notes.

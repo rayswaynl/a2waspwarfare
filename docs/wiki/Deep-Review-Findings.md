@@ -251,7 +251,7 @@ Code owners: apply DR-7 defensive validation (guard empty + shape-check before r
 
 Lane `victory-endgame-review`. Source: `Server/FSM/server_victory_threeway.sqf` (the **only** script that sets `gameOver`/`WFBE_GameOver`/`failMission` — verified by grep across `Server/`), `Server/Functions/Server_LogGameEnd.sqf`, `Server/PVFunctions/LogGameEnd.sqf`, `Common/Init/Init_CommonConstants.sqf:401`.
 
-### DR-11 — Endgame reports the winner inconsistently; persisted win-tally is wrong for the all-towns win — **Medium-High (correctness, persistent side effect)**
+### DR-11 — Endgame reports the winner inconsistently; persisted win-tally is wrong for the all-towns win — **High (correctness, persistent side effect — inverted persisted win-tally)**
 
 The trigger merges a *lose* test and a *win* test into one condition and then handles both identically:
 ```sqf
@@ -724,6 +724,8 @@ Lane `victory-perf-jip-review`. Filled the Victory/endgame Perf + JIP/HC cells b
 
 ### DR-36 — Victory loop Perf clean + JIP/HC server-authoritative; the win-condition guard/precedence is the source of DR-11/DR-13 double-fire — **Low (Perf/JIP clean) + Medium (the confirmed correctness bug)**
 
+> **Dual-purpose finding — disambiguate when citing:** DR-36 records *two* things: (1) a **clean** Perf/JIP review of the victory loop (no defect on those dimensions), and (2) the **root-cause mechanism** for the separate correctness bugs DR-11 (winner inversion, High) and DR-13 (duplicate game-end). Cite "DR-36" for the *mechanism/fix*; cite DR-11/DR-13 for the *severity/impact*.
+
 **Perf — clean.** The detection loop runs every `_loopTimer = 80` seconds (`:6,46`) with cheap per-side work (`GetSideHQ`/`GetSideStructures`/`GetTownsHeld` + 4× `GetFactories`, `:14-21`). No hot loop, no per-frame churn. Minor: `_innerTimer` is incremented (`:47`) but never read (dead variable); `_miniSleep = 0.05` paces only the one-time end-of-match per-player DB `STORE` (`:60-82`). No perf trap.
 
 **JIP/HC — server-authoritative, one narrow gap.** Detection runs server-only on server-authoritative state; headless clients don't participate (correct). Endgame is pushed to clients via `[nil,"HandleSpecial",["endgame", sideID]] Call WFBE_CO_FNC_SendToClients` (`:24`); `gameOver`/`WFBE_GameOver` are set server-side (`:32-33`) and `WFBE_GameOver` is **not** broadcast. The only gap: a player joining in the brief endgame window (between the broadcast and `failMission "END1"` at `:88`) won't receive the outro, because `SendToClients` is not replayed to JIP joiners — moot in practice since the mission is tearing down.
@@ -855,7 +857,7 @@ Mapping: (1) Runtime Architecture → boot/lifecycle DR-37 + the version.sqf lea
 
 **(a) `description.ext:39` `#include "version.sqf"` but `version.sqf` is absent from the committed source tree** (verified: not in the mission root, not anywhere in the repo). Since the live mission runs, the file must be injected at pack/deploy time (consistent with the LoadoutManager/7za build per `AGENTS.md`). So this is a **source-completeness/drift note, not a runtime bug**: the repo is **not buildable/loadable directly from source** without the generation step that supplies `version.sqf` — anyone preprocessing `description.ext` from the raw tree hits a missing-include. Ties to the generated-mission story (DR-4/DR-32). Owner: commit a source `version.sqf` (or document that packaging generates it).
 
-**(b) Six functions are double-`Compile`d in `Server/Init/Init_Server.sqf`** — `WFBE_CO_FNC_InitAFKkickHandler`, `WFBE_CO_FNC_LogGameEnd`, `WFBE_CO_FNC_monitorServerFPS`, `WFBE_SE_FNC_AwardScorePlayer`, `WFBE_SE_FNC_MASH_MARKER`, `WFBE_SE_FNC_PlayerObjectsList` (each appears as an uncommented `… = (Call) Compile preprocessFileLineNumbers …` twice). Redundant init-time double-compile (perf-trivial; the second bind wins). **Latent risk:** if any duplicated pair ever points at different files, the second silently overrides — a maintenance trap; and the **`LogGameEnd` duplication is consistent with the DR-13 duplicate game-end** concern. Owner: de-duplicate the binds.
+**(b) `Server/Init/Init_Server.sqf` has redundant duplicate compile/bind rows.** Codex re-checked the current Chernarus source before promotion: three functions are live duplicate binds (`WFBE_CO_FNC_LogGameEnd` at `:64` and `:89`, `WFBE_SE_FNC_PlayerObjectsList` at `:69` and `:91`, `WFBE_SE_FNC_AwardScorePlayer` at `:83` and `:93`), while three other apparent duplicates are commented remnants (`WFBE_CO_FNC_InitAFKkickHandler`, `WFBE_CO_FNC_monitorServerFPS`, `WFBE_SE_FNC_MASH_MARKER`). The live duplicates are perf-trivial because they happen at init and bind the same files, but they are a maintenance trap: if a pair diverges later, the second bind silently wins. The `LogGameEnd` duplicate also sits near the DR-13 game-end cleanup area. Owner: de-duplicate live binds and either remove or clearly annotate the commented remnants.
 
 **Handoff for Codex.** Add the 9 reports to `external-research-report-manifest.json` (Codex's lane); mark them corroborating (no contradictions found). The two confirmed leads (version.sqf source gap; duplicate Init_Server binds) are small code-owner cleanups — cross-link DR-43(b) from the victory/DR-13 area and DR-43(a) from the tooling/generated-mission docs.
 

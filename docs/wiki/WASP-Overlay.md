@@ -45,6 +45,12 @@ The original single entry point (`WASP/Init_Client.sqf`, called from `initJIPCom
 | `Init_Server.sqf:306,425-459` | `WASP/unsort/StartVeh.sqf` |
 | `updateclient.sqf:124-145` / `updateteamsmarkers.sqf:88` | `WASP_AFK` player variable (AFK detection + "(AFK)" marker suffix) |
 
+## DR-40 Perf And JIP Notes
+
+DR-40 re-checked the live WASP wiring and found JIP/HC behavior clean: the live WASP pieces are initialized from `Client/Init/Init_Client.sqf`, so every joining player runs the local setup, while headless clients skip player-local branches through `local player` / player-scoped calls.
+
+The one confirmed perf nit is in `WASP/global_marking_monitor.sqf`: line `:62` busy-spins on `findDisplay 54` until a short timeout, while the same file uses the better throttled form at `:80` (`waitUntil {sleep 0.1; !isNull (findDisplay 12)}`). Code-owner fix: replace the `:62` sleepless loop with the same throttled `waitUntil` idiom. The old monolithic WASP init in `initJIPCompatible.sqf:243-244` is commented/dead and can be removed when doing cleanup. See [Deep-review findings](Deep-Review-Findings) DR-40.
+
 ## `test/wasp_selftest.sqf`
 
 A **read-only** observer harness, gated to the server twice (`init.sqf:4` via `isServer`, and `if (!isServer) exitWith {}` inside).
