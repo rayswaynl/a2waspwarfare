@@ -829,6 +829,22 @@ Chain (source-cited):
 
 **Outcome:** Economy/forgery class extended to a new direct-PV channel (DR-41). Collaboration-follow pass: a Codex pv-scout candidate verified at source and promoted to a confirmed finding.
 
+## Round 33 — 2026-06-02 (Claude) — HC static-defence update-back commented out (DR-42); + DR-19 dedup
+
+Lane `hc-static-defense-verify` (collaboration-follow: adjudicating two raw backlog candidates).
+
+### DR-42 — Static-defence HC delegation never reports created units back to the server (update-back commented out) — **Low/Medium (headless/JIP; confirms `hc-static-defense-sync`)**
+
+The server delegates static-defence AI to a random headless client (`Server/Functions/Server_DelegateAIStaticDefenceHeadless.sqf:26`, `["…","HandleSpecial",['delegate-ai-static-defence',…]]`). The HC receiver `Client/Functions/Client_DelegateAIStaticDefence.sqf` creates the units (`:25` `_retVal = … call WFBE_CO_FNC_CreateUnitForStaticDefence`) — but the **update-back to the server is commented out** (`:28` `//["RequestSpecial", ["update-delegation-static_defence", _teams]] Call WFBE_CO_FNC_SendToServer;`). By contrast, the **town-AI** delegation does report back: `Client/Functions/Client_DelegateTownAI.sqf:35` sends `["RequestSpecial", ["update-town-delegation", _town, _town_vehicles]]`, which `Server_HandleSpecial.sqf` ("update-town-delegation") folds into the town's `wfbe_active_vehicles`. So static-defence units created on an HC are **invisible to the server** — there is no server-side record for cleanup, accounting, or re-delegation. The HC manages only its own group lifecycle locally (`:30-38`, a per-team `while {count units > 0} {sleep 1}; deleteGroup`). This compounds **DR-21** (HC disconnect → server load-migrates the units but cannot re-delegate): for static defence the server doesn't even know the units exist. Owner decision: either un-comment/restore the update-back (define the server `update-delegation-static_defence` handler) or document that static-defence HC units are deliberately fire-and-forget. Confirms backlog `hc-static-defense-sync`.
+
+### DR-19 dedup — `server-fps-hosted-loop-sleep` is already DR-19
+
+The support-scout backlog candidate `server-fps-hosted-loop-sleep` ("move `sleep` outside the `isDedicated` branch in the server FPS monitor") is **the same defect already confirmed as DR-19** (Round 9). Source re-verified: `Server/Module/serverFPS/monitorServerFPS.sqf:1-7` is `while {true} { if(isDedicated) { …; sleep 8; } }` — on a hosted/listen server the `if` is false every iteration so the loop busy-spins with no yield (and `Server/GUI/serverFpsGUI.sqf` is the second, redundant publisher). Not a new finding — fold the backlog item into DR-19.
+
+**Handoff for Codex.** Mark backlog `hc-static-defense-sync` → confirmed (DR-42); mark `server-fps-hosted-loop-sleep` → duplicate of DR-19. Cross-link DR-42 from the [AI, headless and performance](AI-Headless-And-Performance) page near the DR-21 HC notes.
+
+**Outcome:** two raw scout candidates adjudicated — one promoted (DR-42), one deduped (DR-19). AI/headless authority deepened.
+
 ## Continue Reading
 
 Previous: [Testing workflow](Testing-Debugging-And-Release-Workflow) | Next: [Implementation plan](Documentation-Implementation-Plan)
