@@ -26,8 +26,9 @@ This page is the low-friction route into the repo. Use it before editing mission
 7. Read [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) before changing town loops, economy/resources, AI commander state, supply mission authority or server performance loops.
 8. Read [WASP overlay](WASP-Overlay) before changing project-specific additions under `WASP/`.
 9. Read [Feature status register](Feature-Status-Register) before reviving old code.
-10. Check [Progress dashboard](Progress-Dashboard) for current Codex/Claude lanes.
-11. Check [Agent worklog](Agent-Worklog) for the latest Codex/Claude findings.
+10. Read [Hardening implementation roadmap](Hardening-Implementation-Roadmap) before patching Auth/PV, economy, victory, supply or BattlEye-sensitive behavior.
+11. Check [Progress dashboard](Progress-Dashboard) for current Codex/Claude lanes.
+12. Check [Agent worklog](Agent-Worklog) for the latest Codex/Claude findings.
 
 ## If You Are An LLM
 
@@ -48,7 +49,8 @@ Load these first, in order:
 13. [WASP overlay](WASP-Overlay)
 14. [Documentation implementation plan](Documentation-Implementation-Plan)
 15. [Feature status register](Feature-Status-Register)
-16. [Agent worklog](Agent-Worklog)
+16. [Hardening implementation roadmap](Hardening-Implementation-Roadmap)
+17. [Agent worklog](Agent-Worklog)
 
 Then inspect source before making claims. Do not infer Arma 3 behavior. If you add high-level facts, update `agent-context.json`.
 
@@ -68,6 +70,7 @@ Then inspect source before making claims. Do not infer Arma 3 behavior. If you a
 | Task | Start with |
 | --- | --- |
 | Add or change a PVF command | [SQF code atlas](SQF-Code-Atlas), [Networking and public variables](Networking-And-Public-Variables) |
+| Harden security/authority paths | [Feature status register](Feature-Status-Register), [Hardening implementation roadmap](Hardening-Implementation-Roadmap), [Deep-review findings](Deep-Review-Findings) |
 | Change supply missions | [Supply mission architecture](Supply-Mission-Architecture), [Economy, towns and supply](Economy-Towns-And-Supply) |
 | Change commander/upgrades | [Core systems index](Core-Systems-Index), [Feature status register](Feature-Status-Register) |
 | Change town capture/economy/construction/factories | [Gameplay systems atlas](Gameplay-Systems-Atlas), [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas), [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) |

@@ -70,6 +70,8 @@ Current high-confidence items:
 - CRV7PG loadout classes are explicitly marked as game-crashing.
 - Some generated/modded mission support in LoadoutManager is marked TODO.
 
+Implementation-ready owner decisions now live in [Hardening implementation roadmap](Hardening-Implementation-Roadmap). That page is the bridge from "known risk" to patch order, source files and validation gates.
+
 ## Workstream 4: PR #1 Supply Helicopters
 
 Status: documented, pending code merge/review.
@@ -104,6 +106,16 @@ Rules:
 - Agents update `agent-context.json` when high-level architecture facts, risks or page names change.
 - Agents should cite concrete source evidence before adding broken-feature claims.
 - Documentation-only branches should not include gameplay code changes unless explicitly requested.
+
+## Workstream 7: Mission Hardening Plans
+
+Status: first roadmap published.
+
+Next improvements:
+
+- Turn each roadmap work package into a dedicated implementation PR plan when the owner chooses to patch gameplay code.
+- Add post-patch validation notes after PVF dispatch, ICBM authority, victory/endgame or supply mission fixes land.
+- Keep the roadmap tied to DR findings so "reviewed" and "fixed" cannot drift apart.
 
 ## Definition Of Done For Future Passes
 

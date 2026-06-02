@@ -31,6 +31,7 @@ This page is written for Codex, Claude and future coding agents.
 ## Feature Work Checklist
 
 - Locate the authoritative function registration in `Init_Common.sqf`, `Init_Client.sqf`, `Init_Server.sqf` or `Init_PublicVariables.sqf`.
+- For Auth/PV, economy, victory, supply or BattlEye-sensitive patches, read [Hardening implementation roadmap](Hardening-Implementation-Roadmap) before editing.
 - Identify whether state is client-owned, server-owned, common config or generated tool data.
 - Add or reuse constants in `Init_CommonConstants.sqf` only when the value is truly shared.
 - For networked features, prefer `Common_SendToServer`, `Common_SendToClient` or `Common_SendToClients`.

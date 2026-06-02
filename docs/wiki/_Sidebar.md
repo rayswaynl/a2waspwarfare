@@ -46,6 +46,7 @@
 - [Tools/build](Tools-And-Build-Workflow)
 - [Integrations](External-Integrations)
 - [Feature status](Feature-Status-Register)
+- [Hardening roadmap](Hardening-Implementation-Roadmap)
 - [AI guide](AI-Assistant-Developer-Guide)
 
 ## Current Work
@@ -60,6 +61,7 @@
 - [Deep-review findings](Deep-Review-Findings)
 - [External research reports](External-Research-Reports)
 - [Coverage ledger](Codebase-Coverage-Ledger)
+- [Hardening roadmap](Hardening-Implementation-Roadmap)
 
 ## Claude
 

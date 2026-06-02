@@ -1,6 +1,6 @@
 {
  "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T11:35:00+02:00",
+  "generatedAt": "2026-06-02T12:05:00+02:00",
  "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
  "sourceOfTruth": {
   "progressDashboard": "Progress-Dashboard.md",
@@ -15,7 +15,7 @@
  "agents": {
   "Codex": {
    "role": "Integrator, wiki UX owner, source-atlas maintainer, publisher and validation runner.",
-   "currentLane": "feature-status-reconciliation + cheap-explorer-wave-e validation/publish",
+   "currentLane": "implementation-hardening-planning validation/publish",
    "status": "active"
   },
   "Claude": {
@@ -315,7 +315,8 @@
   "external-pdf-reconciliation-wave-d",
    "agent-readable-artifact-v3",
    "supply-mission-authority-matrix-v2",
-   "cheap-explorer-wave-e"
+   "cheap-explorer-wave-e",
+   "implementation-hardening-planning"
  ],
  "queuedReports": [],
  "lanes": [
@@ -346,8 +347,14 @@
   {
    "lane": "cheap-explorer-wave-e",
    "suggestedOwner": "Codex",
-   "status": "integrated-locally",
+   "status": "integrated",
    "summary": "Godel/Gauss/Popper/Locke/Planck/Schrodinger reports folded into owner docs and machine-readable context; publish validation remains."
+  },
+  {
+   "lane": "implementation-hardening-planning",
+   "suggestedOwner": "Codex",
+   "status": "roadmap-published",
+   "summary": "Hardening-Implementation-Roadmap.md turns residual Auth/PV owner decisions into concrete patch order, source files and validation gates."
   }
  ],
  "rules": [

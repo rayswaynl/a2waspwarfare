@@ -378,6 +378,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Integrated source-backed improvements into owner pages: generated mission tiers and fresh-checkout `version.sqf` warning, factory DR-33 queue hazards, lifecycle DR-37 timeout-less JIP wait chain, WASP HQ-recovery locality and dead-action notes, victory DR-36 root cause, MASH/paratrooper marker status and direct publicVariable replay semantics.
 - Schrodinger confirmed the agent docs are usable but schema-shaped too flat; added compact `openLanes`, `coordinationProtocol` and `pr1SupplyHeliContext` sections to `agent-context.json` so future agents do not have to scrape dashboard prose.
 
+## 2026-06-02 - Codex Hardening Roadmap
+
+- Added [Hardening implementation roadmap](Hardening-Implementation-Roadmap) to convert the reviewed residual Auth/PV owner decisions into implementation work packages.
+- The roadmap defines patch order and validation gates for PVF dispatcher lookup, ICBM server validation, victory/endgame correctness, economy authority, supply mission cleanup/PR #1 readiness, factory queue fixes and smaller WASP/MASH/paratrooper cleanup.
+- Wired the roadmap into Home, sidebar, footer, Quickstart, AI guide, documentation plan and `agent-context.json` so future agents find it before editing risky mission code.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

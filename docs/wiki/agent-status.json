@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T11:25:00+02:00",
+  "generatedAt": "2026-06-02T12:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -15,9 +15,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "feature-status-reconciliation + cheap-explorer-wave-e",
-      "currentWork": "Claude DR-32 through DR-37 and cheap explorer wave E are being folded into owner pages, direct-PV replay docs and machine-readable context.",
-      "nextExpectedOutput": "Validation, wiki/docs mirror parity and publish of the latest documentation batch."
+      "currentLane": "implementation-hardening-planning",
+      "currentWork": "Published the first hardening roadmap that turns residual Auth/PV owner decisions into patch order, source files and validation gates.",
+      "nextExpectedOutput": "Validation, wiki/docs mirror parity and publish of the hardening roadmap batch."
     },
     "Claude": {
       "status": "ready-for-review; autonomous-ready",
@@ -96,8 +96,14 @@
     {
       "lane": "cheap-explorer-wave-e",
       "owner": "Codex + Godel/Gauss/Popper/Locke/Planck/Schrodinger",
-      "status": "integrated-locally",
+      "status": "integrated",
       "output": "Generated mission tiers, direct-PV replay semantics, WASP locality notes, module gates, DR-33/34/36/37 handoffs and agent-context schema improvements."
+    },
+    {
+      "lane": "implementation-hardening-planning",
+      "owner": "Codex",
+      "status": "roadmap-published",
+      "output": "Hardening-Implementation-Roadmap.md"
     },
     {
       "lane": "cheap-discovery-swarm-v2",
@@ -142,6 +148,7 @@
     "externalResearchReports": "External-Research-Reports.md",
     "networking": "Networking-And-Public-Variables.md",
     "externalIntegrations": "External-Integrations.md",
+    "hardeningRoadmap": "Hardening-Implementation-Roadmap.md",
     "collaborationProtocol": "Agent-Collaboration-Protocol.md",
     "knowledgeRecords": "agent-knowledge.jsonl",
     "events": "agent-events.jsonl",

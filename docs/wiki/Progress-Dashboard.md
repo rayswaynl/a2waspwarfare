@@ -8,7 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Agent | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `feature-status-reconciliation` + `cheap-explorer-wave-e` | Folding Claude DR-32 through DR-37 and fresh cheap explorer wave E into owner pages, direct-PV replay docs and machine-readable context. |
+| Codex | Active | `implementation-hardening-planning` | Published [Hardening roadmap](Hardening-Implementation-Roadmap), turning residual Auth/PV owner decisions into patch order, source files and validation gates. |
 | Godel | Integrated locally | `ui-jip-hc-review-wave-e` | UI JIP/HC reviewed clean; stale `RscMenu_Upgrade` remains the only concrete UI orphan and is already documented. |
 | Gauss | Integrated locally | `wasp-overlay-jip-locality-wave-e` | WASP live/dead split and HQ-recovery locality notes folded into [WASP overlay](WASP-Overlay) and [Feature status](Feature-Status-Register). |
 | Popper | Integrated locally | `modules-support-status-wave-e` | Module gate/status table and paratrooper/MASH marker confirmations folded into [Function/module index](Function-And-Module-Index) and [Feature status](Feature-Status-Register). |
@@ -78,6 +78,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | `external-pdf-research-intake` | Codex + Sagan/Helmholtz/Parfit + Claude | Integrated | Three Steff-provided PDF reports were digested, then Claude clarified they are downstream corroboration; see [External research reports](External-Research-Reports). |
 | `external-pdf-reconciliation-wave-d` | Codex + Erdos/Arendt/Carver/Laplace/Tesla | Active | PDFs were extracted to `outputs/external-reports/`; second cheap explorer wave is reconciling report claims with repo evidence and agent-readable artifact needs. |
 | `cheap-explorer-wave-e` | Codex + Godel/Gauss/Popper/Locke/Planck/Schrodinger | Integrated locally | Remaining thin cells reviewed: UI JIP/HC clean, WASP locality, modules/support gates, direct-PV replay semantics, generated-mission docs QA and agent-readable schema gaps. |
+| `implementation-hardening-planning` | Codex | Roadmap published | [Hardening roadmap](Hardening-Implementation-Roadmap) now gives code-owner patch order for PVF dispatch, ICBM, victory/endgame, economy authority, supply missions and smaller cleanup fixes. |
 | `cheap-discovery-swarm-v2` | Codex | Harvested | Cheap scout wave is complete; no active scout slots remain. |
 | `integration-backlog-batch-a` | Codex | Active | PV matrix, external integration trust and DR-27 through DR-31 have landed; next batch should continue explorer-wave reports and lower-risk atlas polish. |
 | `cheap-explorer-wave-c` | Codex | Mostly integrated | Newton, Ampere, Pascal, Boyle and Peirce are folded into owner pages; Linnaeus supply-mission report is still expected or pending capture. |
