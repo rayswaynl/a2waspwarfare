@@ -8,7 +8,13 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Agent | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `integration-backlog-batch-a` + `cheap-explorer-wave-c` + `external-pdf-reconciliation-wave-d` | PV/network, external trust, DR-27 through DR-31 and five explorer-wave reports are folded into owner pages; second PDF reconciliation wave is running. |
+| Codex | Active | `feature-status-reconciliation` + `cheap-explorer-wave-e` | Folding Claude DR-32 through DR-37 and fresh cheap explorer wave E into owner pages, direct-PV replay docs and machine-readable context. |
+| Godel | Integrated locally | `ui-jip-hc-review-wave-e` | UI JIP/HC reviewed clean; stale `RscMenu_Upgrade` remains the only concrete UI orphan and is already documented. |
+| Gauss | Integrated locally | `wasp-overlay-jip-locality-wave-e` | WASP live/dead split and HQ-recovery locality notes folded into [WASP overlay](WASP-Overlay) and [Feature status](Feature-Status-Register). |
+| Popper | Integrated locally | `modules-support-status-wave-e` | Module gate/status table and paratrooper/MASH marker confirmations folded into [Function/module index](Function-And-Module-Index) and [Feature status](Feature-Status-Register). |
+| Locke | Integrated locally | `direct-pv-replay-semantics-wave-e` | Direct publicVariable replay/JIP semantics folded into [Networking/PV](Networking-And-Public-Variables). |
+| Planck | Integrated locally | `generated-mission-docs-qa-wave-e` | Generated mission tiers, `version.sqf` status and checkout path warning sharpened in [Content/maps](Content-Structure-And-Maps) and [Tools](Tools-And-Build-Workflow). |
+| Schrodinger | Integrated locally | `agent-readable-docs-qa-wave-e` | Added compact `openLanes`, `coordinationProtocol` and PR #1 supply-heli context to [`agent-context.json`](agent-context.json). |
 | Sagan | Report received | `external-pdf-analytisch-rapport` | Digested `Analytisch rapport over rayswaynl_a2waspwarfare.pdf`; claims captured in [External research reports](External-Research-Reports). |
 | Helmholtz | Report received | `external-pdf-analyse` | Digested `Analyse van rayswaynl_a2waspwarfare.pdf`; many claims overlap existing source-backed findings. |
 | Parfit | Report received | `external-pdf-diepgaande-analyse` | Digested `Diepgaande analyse van rayswaynl_a2waspwarfare.pdf`; security/network leads captured for verification. |
@@ -71,6 +77,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | `gear-loadout-easa-atlas-integration` | Codex | Integrated | Codex published [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) and linked the risk/register updates. |
 | `external-pdf-research-intake` | Codex + Sagan/Helmholtz/Parfit + Claude | Integrated | Three Steff-provided PDF reports were digested, then Claude clarified they are downstream corroboration; see [External research reports](External-Research-Reports). |
 | `external-pdf-reconciliation-wave-d` | Codex + Erdos/Arendt/Carver/Laplace/Tesla | Active | PDFs were extracted to `outputs/external-reports/`; second cheap explorer wave is reconciling report claims with repo evidence and agent-readable artifact needs. |
+| `cheap-explorer-wave-e` | Codex + Godel/Gauss/Popper/Locke/Planck/Schrodinger | Integrated locally | Remaining thin cells reviewed: UI JIP/HC clean, WASP locality, modules/support gates, direct-PV replay semantics, generated-mission docs QA and agent-readable schema gaps. |
 | `cheap-discovery-swarm-v2` | Codex | Harvested | Cheap scout wave is complete; no active scout slots remain. |
 | `integration-backlog-batch-a` | Codex | Active | PV matrix, external integration trust and DR-27 through DR-31 have landed; next batch should continue explorer-wave reports and lower-risk atlas polish. |
 | `cheap-explorer-wave-c` | Codex | Mostly integrated | Newton, Ampere, Pascal, Boyle and Peirce are folded into owner pages; Linnaeus supply-mission report is still expected or pending capture. |

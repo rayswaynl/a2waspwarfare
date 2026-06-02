@@ -46,6 +46,17 @@ A recursive diff at the current commit confirms Takistan differs from Chernarus 
 
 **Modded missions are not maintained by `dotnet run`.** The modded-terrain propagation call is commented out at `SqfFileGenerators/SqfFileGenerator.cs:132`, so `Modded_Missions/*` are far behind Chernarus (Napf/eden/lingor are ~280-350 files behind; smd_sahrani_a2/tavi/dingor/isladuala are 1-4-file stubs). Treat them as non-authoritative until that path is re-enabled and regenerated.
 
+## Generated Mission Status Table
+
+Claude DR-32 split the campaign folders into three maintenance tiers. Use this table before assuming a fix in Chernarus reaches every mission folder.
+
+| Target | Current status | Development consequence |
+| --- | --- | --- |
+| `Missions/[55-2hc]warfarev2_073v48co.chernarus` | Source of truth. | Apply gameplay and documentation evidence here first. |
+| `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` | Faithful generated/copy target. Current drift is map-config and terrain assets only; logic files are byte-identical to Chernarus outside the documented skip-list and `SET_MAP` patch. | Source fixes should propagate through LoadoutManager, except skip-listed files that need hand-mirroring. All DR findings in Chernarus apply to vanilla Takistan unless the changed file is map-specific. |
+| `Modded_Missions/napf`, `Modded_Missions/eden`, `Modded_Missions/lingor` | Divergent hand-edited forks with 100+ logic-file differences, including security-sensitive runtime/PVF/victory/upgrade/HQ paths. | Source fixes do not automatically reach these missions. Pick a maintenance model before shipping them: regenerate from hardened source or maintain as explicit forks with separate audits. |
+| `Modded_Missions/sahrani`, `Modded_Missions/dingor`, `Modded_Missions/tavi`, `Modded_Missions/isladuala` | Abandoned/non-runnable stubs with only a small fraction of the real mission tree. | Complete or delete before presenting them as supported missions. |
+
 ## Tooling Project Inventory
 
 | Project | Runtime | Entry point | Inputs | Outputs / side effects | Notes |

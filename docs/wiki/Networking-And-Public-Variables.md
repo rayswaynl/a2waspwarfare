@@ -89,6 +89,22 @@ Archimedes/James and Galileo's second-pass reports expanded the direct-channel m
 3. Review the direct channels above separately, because they will not be protected by a `WFBE_PVF_*` allow-list.
 4. Design BattlEye `publicvariable.txt` from both lists: registered `WFBE_PVF_*` channels plus explicit direct channels such as `kickAFK`, supply mission PVs, day/night, HQ markers, attack waves and AntiStack compensation.
 
+### Replay / JIP Semantics Of Direct Channels
+
+Locke's direct-PV pass split the non-PVF channels by whether they are durable state, transient events, or heartbeats. This matters for JIP: a late player only receives retained mission/engine state or the next heartbeat, not a replay of old publicVariable events.
+
+| Channel family | Semantics | JIP implication | Risk note |
+| --- | --- | --- | --- |
+| `WFBE_DAYNIGHT_DATE` | Absolute server date state. | JIP can sync from the latest date value; clients use it for drift correction rather than replaying a timeline. | Low/medium; time-authoritative. |
+| `wfbe_supply_temp_*` -> `wfbe_supply_<side>` | Temp request PV plus authoritative side-supply state. | JIP sees current side supply after sync, not the delta event history. | High; economy mutation path and no resistance-side handler. |
+| `IS_*_HQ_ALIVE`, `HQ_*_MARKER_INFOS` | Server-owned HQ state and marker payload. | JIP sees current HQ state, while client marker loops poll/refresh from it. | Medium; repair/kill transitions can race with marker refresh. |
+| `ATTACK_WAVE_INIT` / `ATTACK_WAVE_DETAILS` | Two-step live broadcast. | Event-only; no explicit replay contract for late joiners beyond whatever current details remain in namespace. | Medium; initiation starts from client-side state. |
+| `WFBE_CL_MASH_MARKER_CREATED` -> `WFBE_SE_MASH_MARKER_SENT` | Event-only relay. | No replay list; if revived, joiners miss old MASH marker events unless the server stores and re-sends them. | High while broken; marker lifetime also couples to the tent object. |
+| `SERVER_FPS_GUI`, `WFBE_VAR_SERVER_FPS` | Periodic heartbeat overwrite. | JIP receives the next tick, not history. | Low/medium; two parallel publishers exist. |
+| `AFKthresholdExceededName`, `kickAFK` | One-shot operational alerts. | No JIP meaning. `kickAFK` is caught by BattlEye, not a mission script receiver. | Medium/high operationally; depends on server BE config. |
+| `SEND_MESSAGE` | Event-only message broadcast. | Late joiners do not receive old messages. | Medium; message shape and localization payloads matter. |
+| `MARKER_CREATION` | Transient PV causes persistent marker creation. | The PV is not replayed, but global markers can persist for late joiners through engine marker state. | Medium; persistence comes from marker object state, not the channel. |
+
 ## Safety Notes
 
 - Keep payloads small and structured; Arma 2 public-variable traffic can be expensive.
@@ -137,7 +153,7 @@ When tracing one feature, grep the string tag as well as the PVF command name.
 
 - UID-targeted `SendToClients` still broadcasts to every client and lets non-matching clients discard locally. Use `SendToClient` for true unicast when possible.
 - PVF handlers use `Spawn`, so rapid messages that mutate shared state have no strict ordering guarantee.
-- Both dispatchers use `Call Compile` on the generated function-name string per dispatch. Keep command names controlled and avoid turning hot paths into chatty PVF streams.
+- Both dispatchers use `Call Compile` on the generated function-name string per dispatch. DR-38 notes this is redundant as well as unsafe: `Init_PublicVariables.sqf` already precompiles `SRVFNC*` / `CLTFNC*` globals at init, so a validated `missionNamespace getVariable` lookup removes per-message recompilation and closes the DR-1 RCE with the same change.
 - Some bare PV channels are copied per side, such as `wfbe_supply_temp_west` and `wfbe_supply_temp_east`; there is no resistance-side handler in that path.
 - A real BattlEye PV filter must include direct non-PVF channels as well as `WFBE_PVF_*`; the current repo filter only contains `kickAFK`.
 

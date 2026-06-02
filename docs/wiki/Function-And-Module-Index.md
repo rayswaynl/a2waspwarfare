@@ -73,6 +73,20 @@ This page names the major function groups and what they are for. It is intention
 - `Server/Module/serverFPS`
 - `Server/Module/supplyMission`
 
+## Module Status And Gates
+
+Presence in the tree does not always mean enabled in the current mission mode. Popper's module/support pass found this practical status split:
+
+| Module family | Status | Gate / note |
+| --- | --- | --- |
+| `Common/Module/Arty` | Live. | Used through common artillery handlers and support flows. |
+| `Common/Module/IRS`, `Common/Module/Reaktiv` | Live. | Initialized through common init; vehicle/module availability still depends on constants and vehicle config. |
+| `Client/Module/Nuke` | Live and config-gated. | `RequestSpecial` / ICBM authority is the critical DR-27 risk. |
+| `Client/Module/EASA`, `Client/Module/CM` | Live but config-gated. | Countermeasures are also gated by vanilla/OA mode. |
+| `Server/Module/AntiStack` | Compiled but optional. | Runtime loops are dormant when `WFBE_C_ANTISTACK_ENABLED == 0`; external DB dependency is still live-server sensitive when enabled. |
+| `Server/Module/MASH` | Marker relay present, marker feature broken. | MASH respawn and MASH map-marker sync are separate; the marker relay lacks a live client trigger/receiver. |
+| `Server/Support/Support_Paratroopers.sqf` | Drop flow live, marker path broken. | Server sends `HandleParatrooperMarkerCreation`, but that command is absent from the client PVF registry, so the marker handler never receives an event. |
+
 ## High-Risk Edit Areas
 
 - `Init_CommonConstants.sqf`: central constant namespace. Changes here affect both server and clients.

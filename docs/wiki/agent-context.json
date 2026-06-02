@@ -1,6 +1,6 @@
 {
  "schema": "a2waspwarfare-agent-context-v1",
- "generatedAt": "2026-06-02T09:30:00+02:00",
+ "generatedAt": "2026-06-02T11:35:00+02:00",
  "repository": "rayswaynl/a2waspwarfare",
  "game": "Arma 2 Operation Arrowhead 1.64",
  "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -106,6 +106,58 @@
    "footer": "_Footer.md"
   }
  },
+ "coordinationProtocol": {
+  "readFirst": [
+   "Agent-Collaboration-Protocol.md",
+   "agent-collaboration.json",
+   "agent-events.jsonl",
+   "Progress-Dashboard.md",
+   "Agent-Worklog.md",
+   "agent-knowledge.jsonl"
+  ],
+  "rules": [
+   "Claim substantial lanes before editing shared docs.",
+   "Append events and worklog notes; do not overwrite another agent's entries.",
+   "Use source-backed evidence for broken/partial feature claims.",
+   "Keep docs/wiki and the GitHub wiki checkout in parity before publishing.",
+   "Treat external reports as leads until repo evidence confirms them."
+  ],
+  "ownerSplit": {
+   "Codex": "Navigation, atlas integration, machine-readable context, docs/wiki mirror and publish validation.",
+   "Claude": "Autonomous source-backed deep reviews, contradiction hunting and subsystem archaeology."
+  }
+ },
+ "openLanes": [
+  {
+   "lane": "feature-status-reconciliation",
+   "owner": "Codex",
+   "status": "open",
+   "nextAction": "Continue folding confirmed scout and Claude findings into owning atlas/risk pages and close stale dashboard rows."
+  },
+  {
+   "lane": "autonomous-claude-research",
+   "owner": "Claude",
+   "status": "open",
+   "nextAction": "Self-select the next bounded source-backed review from yellow/blank cells in Codebase-Coverage-Ledger.md."
+  },
+  {
+   "lane": "implementation-hardening-planning",
+   "owner": "future-agent",
+   "status": "open",
+   "nextAction": "Turn top confirmed risks into implementation plans: PVF dispatch whitelist, server-side economy authority, ICBM validation, BattlEye/server config posture and generated-mission propagation."
+  }
+ ],
+ "pr1SupplyHeliContext": {
+  "page": "Current-Work-Supply-Helicopters-PR1.md",
+  "branchScope": "PR #1 / feat/supply-helicopter is in scope for docs; master remains the stable baseline.",
+  "summary": "PR #1 adds supply helicopters, cash runs and interdiction rewards on top of the existing supply mission trust model.",
+  "knownRisks": [
+   "Supply mission start/completion still trusts vehicle object variables set by client-started flow.",
+   "Cooldown casing mismatch LastSupplyMissionRun vs lastSupplyMissionRun remains unresolved.",
+   "Supply vehicle Killed event handlers can stack on reused vehicles; current double-payment is bounded but the handler leak is real.",
+   "Autonomous AI supply heli work is deferred because the underlying AI supply logistics path is already incomplete/broken."
+  ]
+ },
  "rules": [
   "Use Bohemia Interactive Arma 2 OA scripting docs; avoid Arma 3 assumptions.",
   "Gameplay mission edits belong in the Chernarus source mission.",
@@ -139,6 +191,9 @@
   "externalResearch": "Three Steff-provided Dutch PDF reports were digested by Codex scouts and later cross-checked by Claude. Claude found they are downstream corroboration from the wiki/upstream proxy rather than independent source verification. See External-Research-Reports.md and Deep-Review-Findings Round 16."
  },
  "knownRisks": [
+  "DR-40 (Low, WASP Perf nit + reviewed clean): WASP overlay Perf mostly clean; one busy-spin - global_marking_monitor.sqf:62 while{time<_this}do{findDisplay 54} polls every frame for up to 2s (input-disabled, one-time at init); should use the throttled waitUntil{sleep ...;cond} idiom like its :80 sibling. JIP/HC clean (per-client init from Init_Client; local-player guards; HC skips player-local). Old WASP/Init_Client.sqf init path is dead/commented (initJIPCompatible.sqf:243-244). MILESTONE: this was the last outstanding Perf/JIP-HC cell - every subsystem's Perf and JIP/HC dimension is now source-reviewed; residual 🟡 is exclusively Auth/PV owner decisions.",
+  "DR-39 (Low/Medium, supply missions Perf + abandoned-code; JIP clean): supplyMissionActive.sqf is a dead twin (compiled to WFBE_SE_FNC_SupplyMissionActive at Init_Server:81 but never called; superseded by the live supplyMissionStarted.sqf PVEH). The live per-mission server loop polls nearestObjects[pos,[],80] (all object types) every 3s to find a UAV terminal - narrow the type filter. JIP/HC is done correctly (the positive counterexample to DR-34): cooldown status is pull-based request/response so joiners query current state; the server-side tracking loop is truck-keyed and survives the starting player's disconnect. Minor: cooldown response is broadcast to all clients rather than targeted.",
+  "DR-38 (Low/Medium Perf, JIP clean): the PVF dispatchers Call Compile the sender-provided command string on every inbound message (Server/Client_HandlePVF.sqf), an avoidable per-message runtime recompile - redundant because PVFunctions are already pre-compiled at init into SRVFNC/CLTFNC globals (Init_PublicVariables.sqf:44/49). A validated getVariable lookup removes the recompile AND closes the DR-1 RCE in one change. JIP/HC dispatch is clean (registered at init on all machines incl JIP; PVFs are transient events; routing matches joiners).",
   "DR-37 (Low, reviewed clean + robustness note): boot/lifecycle Perf clean (frame-throttled cheap waitUntils; the while{true}{sleep 0.1} loops at Init_Client.sqf:419/444 are bounded join-handshake polls with 30s retry, not perpetual). JIP/HC comprehensive+correct (initJIPCompatible role routing; time/date/teams/client-state synced via broadcast logic vars; RequestJoin handshake robust). Gap: the post-join serial waitUntil chain (Init_Client.sqf:367-502, wfbe_structures/commander/radio_hq/startpos/hq/hq_deployed/votetime) has NO timeouts -> a never-set synced variable hangs the JIP client forever with no fallback or log. Defensive-timeout improvement, not a live bug.",
   "DR-36 (Medium correctness + Perf/JIP clean): victory loop (server_victory_threeway.sqf) is the source of DR-11/DR-13. Win check (:23) !(alive _hq)&&_factories==0 || _towns==_total&&!WFBE_GameOver parses (&&>||) so the !WFBE_GameOver guard covers only the towns clause, not the HQ-elimination clause; the side forEach (:43) has no break after a winner is set -> two same-tick eliminations double-fire endgame+LogGameEnd and overwrite WF_Winner with the opposite side (inversion). Perf clean (80s cadence); JIP server-authoritative (narrow endgame-join gap). Fix: parenthesize+guard both clauses + exitWith the forEach/while on gameOver.",
   "DR-35 (Info, reviewed clean): parameters/localization reviewed - localization integrity clean (no live missing localize/$STR_ keys; 3 apparent misses = 1 casing FP, 1 engine STR_EP1_*, 2 dead/commented WASP actions). Params system live and correctly wired (Init_Parameters.sqf MP paramsArray / SP default; initJIPCompatible.sqf:121; Dialogs.hpp:3136). Fragility (not a defect): paramsArray is index-aligned to class Params order. Abandoned-code: WASP OnArmor + GearYourUnit actions are commented out in AddActions.sqf.",
@@ -705,6 +760,27 @@
    "lane": "boot-lifecycle-perf-jip-review",
    "type": "deep-review",
    "findings": "DR-37 (Low, reviewed clean + robustness note): Boot Perf clean - frame-throttled bare waitUntils with cheap conditions; Init_Client.sqf:248 throttle idiom waitUntil{sleep 0.5;cond}; while{true}{sleep 0.1...exitWith} at :419/:444 are bounded join-handshake polls (ACK exit, 30s retry), not perpetual. JIP/HC correct: initJIPCompatible routes server/client-II/HC; JIP syncs time/date+teams+all client state via broadcast logic vars; RequestJoin handshake has 30s retry + lobby fallback. Robustness gap: post-join serial waitUntil chain (Init_Client.sqf:367-502) has no timeouts -> a never-set synced var hangs JIP client forever with no fallback/log."
+  },
+  {
+   "date": "2026-06-02",
+   "agent": "Claude",
+   "lane": "pv-dispatch-perf-jip-review",
+   "type": "deep-review",
+   "findings": "DR-38 (Low/Medium Perf + JIP clean): PVF dispatchers do Spawn (Call Compile _script) per inbound message (Server_HandlePVF.sqf:14, Client_HandlePVF.sqf:22) - avoidable per-message recompile, redundant vs the init-time precompile into SRVFNC/CLTFNC globals (Init_PublicVariables.sqf:44/49). Validated getVariable lookup removes the recompile AND closes DR-1 RCE (one fix). JIP/HC clean: dispatchers registered in Init_PublicVariables (:45/:50) via Init_Common on all machines incl JIP; PVFs are transient events (no replay); destination routing matches joiners."
+  },
+  {
+   "date": "2026-06-02",
+   "agent": "Claude",
+   "lane": "supply-missions-perf-jip-review",
+   "type": "deep-review",
+   "findings": "DR-39 (Low/Medium). Abandoned-code: supplyMissionActive.sqf is a dead twin (plain body, no PVEH, compiled Init_Server:81 but never called), superseded by live supplyMissionStarted.sqf (self-registers PVEH). Perf: live per-mission while{alive truck}{sleep 3} loop does nearestObjects[pos,[],80] all-types every 3s - narrowable to [Base_WarfareBUAVterminal]. JIP/HC done right (vs DR-34): cooldown status is pull-based request/response (WFBE_Client_PV_IsSupplyMissionActiveInTown -> server compute -> WFBE_Server_PV_IsSupplyMissionActiveInTown -> client store) so joiners query state; server-side loop survives starter disconnect (truck-keyed). Minor: cooldown answer broadcast to all not targeted."
+  },
+  {
+   "date": "2026-06-02",
+   "agent": "Claude",
+   "lane": "wasp-overlay-perf-jip-review",
+   "type": "deep-review",
+   "findings": "DR-40 (Low). WASP Perf mostly clean; one nit: global_marking_monitor.sqf:62 while{time<_this}do{findDisplay 54} is a sleepless busy-spin (<=2s, input-disabled, one-time) - convert to throttled waitUntil like its :80 sibling. baserep 1Hz only while repairing; DropRPG sleep 30 cooldown; AddActions one-shot wait. JIP/HC clean: live WASP wired per-client from Init_Client (:15/:267/:574/:575) so joiners init locally; local-player guards correct; HC skips. Dead: old WASP/Init_Client.sqf path commented in initJIPCompatible.sqf:243-244. MILESTONE: last Perf/JIP-HC cell - all Perf+JIP/HC dimensions now reviewed; residual is Auth/PV owner decisions."
   }
  ],
  "toolingProjects": [

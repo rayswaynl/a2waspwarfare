@@ -347,6 +347,37 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Spawned five cheap read-only explorers: Erdos (architecture/lifecycle), Arendt (broken/partial/missing features), Carver (server/security/networking/integrations), Laplace (UI/HUD/wiki UX) and Tesla (agent-readable artifact schema).
 - Updated [External research reports](External-Research-Reports) with the extracted text paths and second-wave promotion rule: report claims are leads until repo evidence confirms them.
 - Created [`agent-knowledge.jsonl`](agent-knowledge.jsonl), an agent-readable JSONL artifact for source documents, topic clusters, claims and gaps.
+## 2026-06-02 - Claude Deep-Review Round 29 (pv-dispatch-perf-jip-review lane) — DR-38
+
+- Filled the PV/networking dispatch Perf + JIP/HC cells by reviewing the hot path (`Server/Client_HandlePVF.sqf`) + registration/precompile (`Init_PublicVariables.sqf`). (Auth/PV/RCE already DR-1.)
+- **Perf:** both dispatchers do `_parameters Spawn (Call Compile _script)` (`Server_HandlePVF.sqf:14`, `Client_HandlePVF.sqf:22`) → a per-message runtime recompile of the sender string. **Redundant** — `Init_PublicVariables.sqf:44/49` already pre-compiles every PVFunction into `SRVFNC<name>`/`CLTFNC<name>` globals at init. A validated `getVariable` lookup removes the recompile **and closes the DR-1 RCE in the same one change** (Perf–Security convergence). `Spawn`-per-message adds scheduler pressure under floods (justified for sleep-using handlers; lower priority).
+- **JIP/HC: clean.** Dispatchers registered via `addPublicVariableEventHandler` in `Init_PublicVariables.sqf:45/50`, which runs in `Init_Common` on all machines incl JIP clients; PVFs are **transient events** (no replay needed — state sync is the separate DR-37 layer); destination routing (nil/SIDE/UID, `Client_HandlePVF.sqf:12-15`) matches joiners.
+- Ledger PV/networking dispatch row: Perf + JIP/HC filled (DR-38). Handoff to Codex: fold the Perf note into the Networking DR-1 remediation section (the security fix is free on Perf).
+- **Integrity/recovery note:** this Round 29 commit (`0c1832b`) was pushed to wiki master, then **orphaned** when Codex's `28b9b2d` ("docs: integrate explorer and PDF reconciliation") was built on Round 28 (`891fb5c`) and force-pushed over master — dropping DR-38 from Deep-Review-Findings + ledger + context. Recovered by cherry-picking `0c1832b` from the local object store onto current master; the `docs/wiki` mirror branch had preserved DR-38 throughout. **Coordination ask to Codex: pull-rebase wiki master rather than force-push, so `claude:`-prefixed commits aren't dropped.**
+
+## 2026-06-02 - Claude Deep-Review Round 30 (supply-missions-perf-jip-review lane) — DR-39
+
+- Filled the Supply-missions Perf + JIP/HC cells by reviewing `Server/Module/supplyMission/*` + client consumers.
+- **Abandoned-code:** `supplyMissionActive.sqf` is a **dead twin** — a plain function body (no PVEH), compiled to `WFBE_SE_FNC_SupplyMissionActive` (`Init_Server.sqf:81`) but **never called**; superseded by the live `supplyMissionStarted.sqf` (self-registers `WFBE_Client_PV_SupplyMissionStarted` PVEH at `:1`). Remove the dead twin + its compile.
+- **Perf:** the live per-mission `while {alive truck} {sleep 3}` server loop does `nearestObjects [pos, [], 80]` (**all** object types) every 3 s just to detect a `Base_WarfareBUAVterminal` — narrow the type filter; bounded by concurrent missions otherwise.
+- **JIP/HC: done right (positive counterexample to DR-34).** Cooldown status is **pull-based request/response** (`WFBE_Client_PV_IsSupplyMissionActiveInTown` → server computes from `LastSupplyMissionRun` → `WFBE_Server_PV_IsSupplyMissionActiveInTown` → client stores), so JIP joiners get correct state by asking — no replay needed. The server-side tracking loop is truck-keyed and survives the starting player's disconnect. Minor: the cooldown answer is broadcast to all clients rather than targeted to the requester.
+- Ledger Supply missions row: Perf + JIP/HC filled (DR-39); Auth 🟡 remains DR-18 + PR#1 (owner). Handoff to Codex: note the dead twin + the pull-based JIP pattern in Supply-Mission-Architecture.
+
+## 2026-06-02 - Claude Deep-Review Round 31 (wasp-overlay-perf-jip-review lane) — DR-40 (last Perf/JIP-HC cell)
+
+- Filled the final 🟡 Perf cell + ⬜ JIP/HC cell: the WASP overlay (`WASP/*`).
+- **Perf: mostly clean, one nit.** `global_marking_monitor.sqf:62` `while {time < _this} do { findDisplay 54 … }` is a **sleepless busy-spin** (polls every frame for up to a 2 s window, input-disabled, one-time at init) — its own sibling at `:80` correctly uses `waitUntil {sleep 0.1; !isNull (findDisplay 12)}`. Convert `:62` likewise. The rest are bounded: `baserep/repair.sqf` 1 Hz only while repairing; `DropRPG.sqf` `sleep 30` cooldown; `AddActions.sqf:2` `While {!alive player}{sleep 2}` one-shot wait. No sustained per-frame loop in live WASP.
+- **JIP/HC: clean.** Live WASP wired per-client from `Init_Client.sqf` (`:15` DropRPG, `:267` marking monitor, `:574` baserep, `:575` AddActions) → joiners init locally; `local player` guards correct; HC skips player-local features. Dead: the old `WASP/Init_Client.sqf` path in `initJIPCompatible.sqf:243-244` is inside the commented "old wasp script" block.
+- Auth/PV scoped out (WASP action authority = owner economy-class follow-up).
+- **MILESTONE:** DR-40 was the **last outstanding Perf/JIP-HC cell** in the matrix. Every subsystem's Perf and JIP/HC dimension is now source-reviewed. The residual 🟡 across the ledger is **exclusively Auth/PV owner decisions** — the client-authoritative economy/forgery class (DR-1/6/14/16/22/23/27/28), the victory fixes (DR-11/12/13), supply (DR-18/PR#1), and the WASP/modules Auth follow-ups.
+- Handoff to Codex: note `global_marking_monitor.sqf:62` throttle + dead `initJIPCompatible:243-244` WASP path on the WASP-Overlay page.
+
+## 2026-06-02 - Codex Cheap Explorer Wave E
+
+- Spawned six cheap read-only explorers against remaining thin cells: Godel (UI JIP/HC), Gauss (WASP overlay), Popper (modules/support), Locke (direct PV replay semantics), Planck (generated mission docs QA) and Schrodinger (agent-readable docs QA).
+- Integrated source-backed improvements into owner pages: generated mission tiers and fresh-checkout `version.sqf` warning, factory DR-33 queue hazards, lifecycle DR-37 timeout-less JIP wait chain, WASP HQ-recovery locality and dead-action notes, victory DR-36 root cause, MASH/paratrooper marker status and direct publicVariable replay semantics.
+- Schrodinger confirmed the agent docs are usable but schema-shaped too flat; added compact `openLanes`, `coordinationProtocol` and `pr1SupplyHeliContext` sections to `agent-context.json` so future agents do not have to scrape dashboard prose.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

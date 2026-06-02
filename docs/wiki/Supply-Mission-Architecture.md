@@ -37,6 +37,14 @@ Supply missions are one of the most cross-cutting systems in the mission. They t
 - Completion trusts object variables on the supply vehicle, so any feature that reuses those vars must clear them reliably.
 - Player resolution depends on `WFBE_SE_PLAYERLIST` and proximity/driver checks.
 
+Claude DR-39 split the Perf/JIP status cleanly:
+
+| Item | Status | Development note |
+| --- | --- | --- |
+| `supplyMissionActive.sqf` | Dead twin. It is compiled as `WFBE_SE_FNC_SupplyMissionActive`, but the live path is `supplyMissionStarted.sqf`, which self-registers the `WFBE_Client_PV_SupplyMissionStarted` handler. | Remove the dead compile/function or keep it explicitly marked as retired. |
+| Command-center detection loop | Bounded but broad. The live loop sleeps 3 seconds, then uses `nearestObjects [pos, [], 80]` to find a `Base_WarfareBUAVterminal`. | Narrow the type filter before adding more concurrent supply missions. |
+| Cooldown JIP behavior | Pull-based and good. Clients ask `WFBE_Client_PV_IsSupplyMissionActiveInTown`; server computes from `LastSupplyMissionRun`; clients store the answer locally. | This is a positive pattern for JIP state: query current state instead of relying on replayed events. The response is broadcast to all clients today, not targeted to the requester. |
+
 ## PR #1 Changes
 
 PR #1 improves the system by centralizing supply vehicle types, adding helicopter tiers, adding `SupplyByHeli`, changing labels to `LOAD SUPPLIES`, adding air rewards/cash runs/interdiction, and highlighting supply helicopters in buy menus. It is additive: it extends the same client-started, server-completed object-var flow rather than replacing the trust model.
@@ -60,6 +68,8 @@ Review risk from the independent doc reviewer: the PR adds a `Killed` event hand
 - Move all supply-capable vehicle classes to one constant source of truth.
 - Add an explicit loaded/unloaded state variable to prevent duplicate loops and duplicate event handlers.
 - Split client affordance, server validation and reward calculation into documented helper functions.
+- Keep the pull-based cooldown request/response pattern for JIP-visible state, but target responses where possible.
+- Narrow the server command-center proximity scan from all object types to the specific terminal class.
 - Redesign autonomous AI logistics separately from the broken `AI_UpdateSupplyTruck` / missing `supplytruck.fsm` path.
 
 ## Continue Reading

@@ -45,6 +45,17 @@ The original single entry point (`WASP/Init_Client.sqf`, called from `initJIPCom
 | `Init_Server.sqf:306,425-459` | `WASP/unsort/StartVeh.sqf` |
 | `updateclient.sqf:124-145` / `updateteamsmarkers.sqf:88` | `WASP_AFK` player variable (AFK detection + "(AFK)" marker suffix) |
 
+## Locality / JIP Notes
+
+| WASP feature | Locality status | Development note |
+| --- | --- | --- |
+| HQ recovery action | Mostly client-side. `Action_RepairMHQDepot.sqf` checks funds/HQ state, deducts player cash, moves the HQ and mutates town supply locally before sending the repair request. | Treat as an authority-light legacy action. If hardened, move commander/funds/HQ/town-SV validation to the server side. |
+| Global marking monitor | Intentionally client-local map double-click helper. | Safe for UI behavior; do not expect it on HC/server. |
+| Start vehicles | Server-owned spawn state from `WASP/unsort/StartVeh.sqf`, compiled/used in `Init_Server.sqf`. | Not a JIP UI feature; changes affect initial server-side vehicle spawning and generated mission skip-list mirroring. |
+| Respawn action re-add | `WASP/actions/OnKilled.sqf` re-runs `AddActions.sqf`; current wiring comes through `Client_PreRespawnHandler.sqf`. | Keep this dependency when changing respawn handlers, or the active HQ recovery action can disappear after respawn. |
+
+Claude DR-40 reviewed the WASP Perf + JIP/HC cells. The live WASP wiring is JIP/HC-clean because it runs per player from `Init_Client.sqf`, and headless clients skip these player-local features. The one perf nit is `WASP/global_marking_monitor.sqf:62`: a `while {time < _this}` loop polls `findDisplay 54` without a sleep for up to two seconds during init. Its sibling wait at `:80` already uses `waitUntil {sleep 0.1; ...}`; use that throttled style if this helper is touched.
+
 ## `test/wasp_selftest.sqf`
 
 A **read-only** observer harness, gated to the server twice (`init.sqf:4` via `isServer`, and `if (!isServer) exitWith {}` inside).
@@ -61,7 +72,15 @@ These are referenced only from commented-out lines, or point at files that no lo
 - `WASP/Init_Client.sqf` body — fully commented (Killed EH, OnArmor timer, KeyDown handler, trigger creation).
 - `WASP/actions/OnArmor/` and `WASP/actions/SitsOnArmor/` directories — **deleted**; still referenced by commented `AddActions.sqf:10-12` and `Init_Client.sqf:7,21`.
 - `WASP/KeyDown.sqf` — **missing**; referenced by commented `Init_Client.sqf:12-13`.
-- `WASP_procInitComm` — compile line commented (`initJIPCompatible.sqf:253`), so `car_wheel_new.sqf` (its only consumer) is a dead chain.
+- `WASP_procInitComm` — compile line commented (`initJIPCompatible.sqf:253` in this checkout's line map; Gauss also observed the old block around `:241-245`), so `car_wheel_new.sqf` (its only consumer) is a dead chain.
+- `WASP/actions/GearYouUnit.sqf` is still present, but the action that opens it is commented at `WASP/actions/AddActions.sqf:4`; DR-35 also found this dead action was one of the apparent localization misses.
+- The commented OnArmor actions reference missing localization keys and missing scripts, but DR-35 verified these are dead-code misses rather than live broken strings.
+
+## Parameters And Localization Notes
+
+The mission parameter system is live and index-aligned: `Common/Init/Init_Parameters.sqf:5-10` iterates `missionConfigFile >> "Params"` and reads `paramsArray select _i` in multiplayer. Keep `class Params` ordering stable when inserting or removing parameters, or every later parameter value can silently shift.
+
+Localization was reviewed clean in DR-35 after case-folding and dead-code filtering. Do not spend time chasing the WASP OnArmor/Gear string keys as live UI bugs unless the dead actions are deliberately revived.
 
 ## Continue Reading
 

@@ -78,6 +78,8 @@ There is no `didJIP` variable; JIP is handled implicitly because `initJIPCompati
 - **Markers:** `Init_Client.sqf:732-736` — deferred re-init of town/camp markers from already-synced object variables after a short sleep.
 - **State sync:** town `sideID`/`supplyValue`, side-logic commander/HQ/upgrades/teams, and team `wfbe_funds` are all written with `setVariable [..., true]` so the engine replicates them to JIP clients automatically (see the JIP section of [Networking and public variables](Networking-And-Public-Variables)).
 
+Claude DR-37 reviewed the boot/JIP path as broadly correct: the `RequestJoin` handshake has a 30-second retry, time/date/team/client state is replicated through broadcast variables, and the apparent `while {true}` joins at `Init_Client.sqf:419` and `:444` are bounded handshake polls. The remaining robustness gap is the post-join serial wait chain in `Init_Client.sqf:367-502`: waits for `wfbe_structures`, side supply, `wfbe_commander`, radio HQ state, start position, HQ, deployment state and vote time have no timeout or log fallback. A single missed synced variable can leave a JIP client black-screened or stuck forever. Treat defensive timeouts here as a robustness improvement, not evidence that the normal JIP path is broken.
+
 ## Known ordering hazards
 
 - **Debug-only economy override:** `initJIPCompatible.sqf:151-162` raises starting funds/supply and other test parameters only inside `if (WF_Debug)`. Confirm `WF_Debug` state before comparing economy behavior against mission parameters.

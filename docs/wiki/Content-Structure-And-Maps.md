@@ -38,6 +38,17 @@ Do not treat differences in generated mission folders as independent source trut
 
 `Modded_Missions/*` should be treated as stale/non-authoritative right now. Terrain classes exist, but the modded-terrain generation call is commented in `Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs`. Packaging also zips only `Missions` and `Missions_Vanilla`, not `Modded_Missions`.
 
+`version.sqf` is generated/expected, not source-owned. It is absent from a fresh checkout and is included by both `description.ext` and `initJIPCompatible.sqf`, so a mission pack/test run needs LoadoutManager output or a terrain-specific generated copy first. Also note the local Codex checkout path hazard: `Tools/LoadoutManager` currently searches for an ancestor folder literally named `a2waspwarfare`, while this workspace lives under `work\a`; see [Tools and build workflow](Tools-And-Build-Workflow).
+
+Claude DR-32 sharpened this into three tiers:
+
+| Folder | Tier | Meaning |
+| --- | --- | --- |
+| Chernarus source mission | Authoritative source | Gameplay edits belong here first. |
+| Vanilla Takistan | Faithful generated target | Logic drift is characterized and currently limited to documented map-config/skip-list differences. |
+| Napf, Eden, Lingor | Divergent forks | They need their own maintenance/audit decision before source hardening can be considered shipped there. |
+| Sahrani, Dingor, Tavi, Isla Duala | Abandoned stubs | They should not be treated as playable/supportable until completed or retired. |
+
 ## Continue Reading
 
 Previous: [Source inventory](Source-Inventory) | Next: [WASP overlay](WASP-Overlay)

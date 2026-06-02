@@ -114,6 +114,8 @@ Treat AI commander production and autonomous logistics as partial until a dedica
 - Optional AntiStack persistence may run.
 - Mission ends through `failMission "END1"`.
 
+Claude DR-36 found the victory loop's performance and JIP/HC posture clean, but also identified the exact root cause for earlier endgame correctness defects. The condition at `server_victory_threeway.sqf:23` effectively parses as `((!alive _hq) && _factories == 0) || (_towns == _total && !WFBE_GameOver)`, so the `!WFBE_GameOver` guard only protects the all-towns branch. The side loop also has no break after a winner is set. If two sides are eliminated in the same 80-second tick, the endgame path can double-fire, broadcast twice and overwrite/log the opposite winner. Code-owner fix direction: parenthesize and guard both win clauses with `!WFBE_GameOver`, then break/`exitWith` once a winner is recorded.
+
 ## Confirmed Defects And Partial Features
 
 | Area | Evidence | Status |
@@ -125,7 +127,8 @@ Treat AI commander production and autonomous logistics as partial until a dedica
 | Supply mission reward authority | Client sets truck `SupplyFromTown` and `SupplyAmount`; server completion trusts truck vars. | Hardening gap. |
 | Resistance supply handler gap | Common sender can format `wfbe_supply_temp_<side>` generically, but server handlers only exist for west/east. | Resistance side supply not fully wired. |
 | Paratrooper markers | Server sends `HandleParatrooperMarkerCreation`, client receiver file exists, command is missing from client PVF list. | Broken/dead receiver path. |
-| MASH markers | Server rebroadcast exists, client receiver compile is commented. | Broken/dead receiver path. |
+| MASH markers | Server rebroadcast exists, client receiver compile is commented, and DR-34 found no client broadcast of `WFBE_CL_MASH_MARKER_CREATED`. | Broken/dead on both ends; revive with a server-held marker list and JIP replay, or remove. |
+| Victory/endgame guard | `server_victory_threeway.sqf:23` only guards one branch with `!WFBE_GameOver`; the per-side loop does not break after setting a winner. | Correctness bug; see DR-36 root cause above. |
 
 ## Safe Extension Points
 

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T10:45:00+02:00",
+  "generatedAt": "2026-06-02T11:25:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -15,8 +15,8 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "integration-backlog-batch-a + cheap-explorer-wave-c + external-pdf-reconciliation-wave-d",
-      "currentWork": "PV/direct-channel matrix, external integration trust docs, Claude DR-27 through DR-31, all wave-C reports and the second PDF reconciliation wave have been folded into owner pages or agent-readable records.",
+      "currentLane": "feature-status-reconciliation + cheap-explorer-wave-e",
+      "currentWork": "Claude DR-32 through DR-37 and cheap explorer wave E are being folded into owner pages, direct-PV replay docs and machine-readable context.",
       "nextExpectedOutput": "Validation, wiki/docs mirror parity and publish of the latest documentation batch."
     },
     "Claude": {
@@ -90,8 +90,14 @@
     {
       "lane": "external-pdf-reconciliation-wave-d",
       "owner": "Codex + Erdos/Arendt/Carver/Laplace/Tesla",
-      "status": "integrated-locally",
+      "status": "integrated",
       "output": "External-Research-Reports.md, Client-UI-HUD-And-Menus.md, Agent-Collaboration-Protocol.md, agent-knowledge.jsonl and precision edits across lifecycle/integrations/supply pages."
+    },
+    {
+      "lane": "cheap-explorer-wave-e",
+      "owner": "Codex + Godel/Gauss/Popper/Locke/Planck/Schrodinger",
+      "status": "integrated-locally",
+      "output": "Generated mission tiers, direct-PV replay semantics, WASP locality notes, module gates, DR-33/34/36/37 handoffs and agent-context schema improvements."
     },
     {
       "lane": "cheap-discovery-swarm-v2",
