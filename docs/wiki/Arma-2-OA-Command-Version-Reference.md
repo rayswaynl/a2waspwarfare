@@ -22,6 +22,9 @@ The fastest way to break OA mission SQF is to "fix" it with Arma 3 reflexes: man
 | `private _x = value` (inline-assign) | Arma 3 style | `private "_x"; _x = value;` |
 | `setUnitLoadout` / `getUnitLoadout` | Arma 3 · 1.58 | **No OA equivalent.** OA loadouts come from config classes plus `addWeapon`/`addMagazine`/`*CargoGlobal` and `setVehicleInit`. **Confirmed absent from source (0 hits):** `Tools/LoadoutManager` generates config-driven loadouts; it does not use the A3 loadout API. Do not introduce. |
 | `hideObjectGlobal` / `enableSimulationGlobal` | Arma 3 · 1.12 | A3-only **Global** variants. OA only has the **local** `hideObject` / `enableSimulation`; the effect is per-machine and must be re-applied (or driven by the mission's PV pattern) for global state. **Confirmed absent from source (0 hits)** — do not introduce a Global variant by reflex. |
+| `selectRandom` | Arma 3 · 1.56 | Use the repo idiom `_arr select floor(random count _arr)` (`Common/Init/Init_Town.sqf:39`, `Server/AI/AI_AdvancedRespawn.sqf`) **or** `_arr call BIS_fnc_selectRandom` (OA-safe, see below). **Confirmed absent** — the 4 `selectRandom` source hits are all `BIS_fnc_selectRandom`. ⚠ Do not "simplify" `call BIS_fnc_selectRandom` into the `selectRandom` *command*: the function is OA-safe, the command is not. |
+| `splitString` / `joinString` | Arma 3 · 1.50 | No OA native split/join — parse with `toArray`/`toString` + a manual `forEach`. **Confirmed absent (0 hits).** |
+| `trim` (+ `regexFind` / `regexMatch`) | Arma 3 · 2.02 (regex 2.x) | No OA equivalent; trim/match manually via `toArray`/`toString`. **Confirmed absent.** |
 
 ## Confirmed available in Arma 2 OA
 
@@ -36,6 +39,7 @@ The fastest way to break OA mission SQF is to "fix" it with Arma 3 reflexes: man
 | `getPosATL` / `setPosATL` | **Arma 2 · 1.03** | Above-terrain-level coordinates. OA-safe (7 / 2 files). |
 | `createVehicleLocal` | ArmA 1.00 | Creates a **client-local** object **not** synchronized over the network (`netId` is `0:0`) — use only for local FX/markers; other machines will not see it. 6 files. |
 | `addWeaponCargoGlobal` / `addMagazineCargoGlobal` | **OA 1.55** | **Global** MP effect (cargo synced to all clients) — the MP-correct cargo add, **not** A3-only. Repo gear-equip path (`Common/Functions/Common_EquipBackpack.sqf`, `Common_EquipVehicle.sqf`). |
+| `BIS_fnc_selectRandom` | **Arma 2 · 1.00** (OA 1.50) | OA-safe **function** (`_arr call BIS_fnc_selectRandom`) returning a random array element — **distinct from the A3-only `selectRandom` command** in the avoid-list above. Repo: spawn-pad pick in `Client/Functions/Client_BuildUnit.sqf:59/85/111/135`. |
 | `allGroups`, `call`, `compile`, `preprocessFileLineNumbers`, `typeName`, `isNil`, `format`, `localize`, `hintSilent`, `diag_log`, `diag_fps`, `publicVariable`, `addPublicVariableEventHandler`, `toArray`, `toString`, `setVectorDirAndUp` (ArmA 1.09) | OFP / ArmA / A2 | All OA-safe. |
 
 ## Object scans & spatial queries — all OA-safe; pick the right one
