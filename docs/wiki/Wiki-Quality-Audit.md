@@ -18,7 +18,7 @@ Each row: the fact, its **canonical home**, and the pages carrying a redundant n
 | DUP-8 | Construction authority (DR-6, class-existence-only checks) | [Deep-review findings](Deep-Review-Findings) DR-6 | [Construction atlas](Construction-And-CoIn-Systems-Atlas); [Gameplay atlas](Gameplay-Systems-Atlas); roadmap/migration/feature-status |
 | DUP-9 | Victory/endgame double-fire (DR-11/DR-36) | [Deep-review findings](Deep-Review-Findings) DR-11 + DR-36 | [Server runtime atlas](Server-Gameplay-Runtime-Atlas); [Hardening roadmap](Hardening-Implementation-Roadmap); [Feature status](Feature-Status-Register) |
 | DUP-10 | HC delegation, no failover (DR-21) | [Deep-review findings](Deep-Review-Findings) DR-21 | [AI/headless](AI-Headless-And-Performance); [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
-| DUP-11 | Direct public-variable channel table | the new [Public variable channel index](Public-Variable-Channel-Index) | point [Networking](Networking-And-Public-Variables) (2 tables) and [SQF atlas](SQF-Code-Atlas) (direct-channel table) at the index |
+| DUP-11 | Direct public-variable channel table | the new [Public variable channel index](Public-Variable-Channel-Index) | **Resolved by Codex on 2026-06-02:** [Networking](Networking-And-Public-Variables) and [SQF atlas](SQF-Code-Atlas) now point at the index instead of carrying duplicate direct-channel tables; the index also picked up server-FPS, HQ state/marker and AntiStack/no-player rows from the old Networking table. |
 
 ## B. Overlapping pages → merge or reduce to summary + cross-link
 

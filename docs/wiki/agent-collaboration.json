@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T20:34:00+02:00",
+  "generatedAt": "2026-06-02T20:57:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,28 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-quality-dup11-pv-channel-index",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Public-Variable-Channel-Index.md",
+        "Networking-And-Public-Variables.md",
+        "SQF-Code-Atlas.md",
+        "Wiki-Quality-Audit.md DUP-11"
+      ],
+      "outputs": [
+        "Public-Variable-Channel-Index.md canonical direct-channel inventory rows",
+        "Networking-And-Public-Variables.md direct-PV cross-link summary",
+        "SQF-Code-Atlas.md direct-PV cross-link summary",
+        "Wiki-Quality-Audit.md DUP-11 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-status.json"
+      ],
+      "handoff": "Future PV/channel updates should edit Public-Variable-Channel-Index.md first, then leave only short cross-links on atlas pages."
+    },
     {
       "lane": "wiki-quality-merge3-lifecycle-split",
       "owner": "Codex",

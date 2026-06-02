@@ -171,24 +171,9 @@ Unregistered PV function files:
 
 ## Direct Public Variable Channels
 
-Not all networking uses the PVF wrapper. Important direct channels include:
+Not all networking uses the PVF wrapper. The canonical inventory is [Public variable channel index](Public-Variable-Channel-Index), which covers registered `WFBE_PVF_*` commands and direct channels such as day/night, message/marker creation, ICBM/radiation, AFK/BattlEye, supply missions, side supply, server FPS, attack waves, MASH marker channels, HQ marker/state broadcasts and client-init handshakes.
 
-| Channel | Direction / owner | Purpose |
-| --- | --- | --- |
-| `WFBE_DAYNIGHT_DATE` | server to clients | Day/night date synchronization. |
-| `SEND_MESSAGE` | broadcast to clients | Global message delivery via `Client_onEventHandler_SEND_MESSAGE.sqf`. |
-| `MARKER_CREATION` | broadcast to clients | Marker creation via `Client_onEventHandler_MARKER_CREATION.sqf`. |
-| `ICBM_launched`, `PLAYER_RADIATED` | nuke module | ICBM marker/radiation client event handlers. |
-| `kickAFK` | client to BattlEye filter | AFK kick trigger expected by BattlEye `publicVariable.txt`. |
-| `AFKthresholdExceededName` | client to server | AFK monitor notification. |
-| `WFBE_Client_PV_SupplyMissionStarted` | client to server | Supply mission start event. |
-| `WFBE_Server_PV_SupplyMissionCompleted` | server local/PV | Supply mission completion event. |
-| `WFBE_Server_PV_IsSupplyMissionActiveInTown` | server to clients | Town supply mission state response. |
-| `WFBE_C_PLAYER_OBJECT` | client to server | Supply mission player-object list maintenance. |
-| `SERVER_FPS_GUI`, `WFBE_VAR_SERVER_FPS` | server to clients | Server FPS GUI/HUD publication. |
-| `ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS`, `CLIENT_INIT_READY` | attack-wave system | Client readiness and attack wave details. |
-| `WFBE_CL_MASH_MARKER_CREATED`, `WFBE_SE_MASH_MARKER_SENT` | MASH marker system | MASH marker request/response, with client receiver currently not clearly active. |
-| `REQUEST_SUPPLY_VALUE`, `SUPPLY_VALUE_REQUESTED` | supply/economy | Side supply value request/response. |
+Use this atlas for compile/registration ownership. Use [Networking and public variables](Networking-And-Public-Variables) for dispatcher mechanics and [Public variable channel index](Public-Variable-Channel-Index) for channel inventory and BattlEye whitelist design.
 
 ## Disabled Or Deferred Compile Signals
 

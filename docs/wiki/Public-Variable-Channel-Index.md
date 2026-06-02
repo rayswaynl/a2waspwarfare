@@ -68,6 +68,11 @@ Each has its own `addPublicVariableEventHandler`; not behind the dispatcher.
 | `PLAYER_RADIATED` | server → clients | nuke radiation effect | `Client/Module/Nuke/OnEventHandler_player_radiated.sqf` |
 | `AFKthresholdExceededName` / `kickAFK` | client → server/BattlEye | AFK kick (the one BattlEye-filtered PV, DR-30) | `Client/Module/AFK/monitorAFK.sqf`; `BattlEyeFilter/publicvariable.txt` |
 | `WFBE_DAYNIGHT_DATE` | server → clients | day/night drift sync (reviewed clean, Round 17) | `Server/Functions/Server_DayNightCycle.sqf` |
+| `SERVER_FPS_GUI` / `WFBE_VAR_SERVER_FPS` | server → clients | server FPS GUI/HUD publication | `Server/Module/serverFPS/serverFpsGUI.sqf`, `Server/Init/Init_Server.sqf` |
+| `IS_WEST_HQ_ALIVE` / `IS_EAST_HQ_ALIVE` | server → clients | HQ alive-state broadcast | `Server/Functions/Server_MHQRepair.sqf`, `Server/Functions/Server_OnHQKilled.sqf` |
+| `HQ_WEST_MARKER_INFOS` / `HQ_EAST_MARKER_INFOS` | server → clients | HQ marker payload broadcast | `Server/Functions/Server_MHQRepair.sqf`, `Server/Functions/Server_OnHQKilled.sqf` |
+| `SUPPLY_COMPENSATION_AMOUNT_EAST` / `SUPPLY_COMPENSATION_AMOUNT_WEST` | server → clients | AntiStack skill-difference supply compensation | `Server/Module/AntiStack/skillDiffCompensation.sqf` |
+| `TEAM_WEST_TICKS_NO_PLAYERS` / `TEAM_EAST_TICKS_NO_PLAYERS` | common/server → clients | no-player supply-income stagnation counters | `Common/Functions/Common_StagnateSupplyIncomeNoPlayers.sqf` |
 | `MARKER_CREATION` | server → clients | map-marker creation channel | WASP/marker code |
 | `SEND_MESSAGE` | mixed | message channel | message code |
 | `REQUEST_SUPPLY_VALUE` / `SUPPLY_VALUE_REQUESTED` | client ↔ server | supply-value request/response | supply code |

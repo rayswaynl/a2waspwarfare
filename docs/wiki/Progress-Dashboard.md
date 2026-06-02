@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `wiki-quality-dup11-pv-channel-index` | Published | [Public variable channel index](Public-Variable-Channel-Index) is now the canonical direct-PV inventory; [Networking/PV](Networking-And-Public-Variables) and [SQF atlas](SQF-Code-Atlas) link there instead of duplicating tables. |
 | `wiki-quality-merge3-lifecycle-split` | Published | [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) now owns include graph/role dispatch; [Lifecycle wait-chain](Lifecycle-Wait-Chain) owns boot ordering, JIP waits and flag dependencies. |
 | `wiki-quality-merge2-ui-quickref` | Published | [Client UI/HUD](Client-UI-HUD-And-Menus) is now a compact quick-reference gateway; [Client UI systems atlas](Client-UI-Systems-Atlas) remains the canonical implementation map. |
 | `wiki-quality-reduce4-gameplay-gateway` | Published | [Gameplay atlas](Gameplay-Systems-Atlas) now routes economy, construction and factory detail to the canonical atlases while keeping source-backed orientation anchors. |
@@ -38,7 +39,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved MERGE-3 for lifecycle/entrypoint page ownership. |
+| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved DUP-11 by canonicalizing the direct public-variable inventory. |
 | Codex-2 | Active | `supply-mission-authority-cleanup-playbook` | Expect [Supply mission](Supply-Mission-Architecture) authority cleanup guidance for truck + PR #1 helicopter flows. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
@@ -64,6 +65,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `wiki-quality-dup11-pv-channel-index` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-11 is resolved: direct-PV inventory lives in [Public variable channel index](Public-Variable-Channel-Index). |
 | `wiki-quality-merge3-lifecycle-split` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) MERGE-3 is resolved: entrypoints and wait-chain now have distinct page ownership. |
 | `wiki-quality-merge2-ui-quickref` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) MERGE-2 is resolved: the HUD/menus page is a quick-reference gateway into the full UI atlas. |
 | `wiki-quality-reduce4-gameplay-gateway` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) REDUCE-4 is resolved: Gameplay is now a gateway for detailed economy/construction/factory pages. |
@@ -91,6 +93,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| Wiki-quality DUP-11 PV channel index | [Public variable channel index](Public-Variable-Channel-Index), [Networking/PV](Networking-And-Public-Variables), [SQF atlas](SQF-Code-Atlas), [Wiki quality audit](Wiki-Quality-Audit) | Makes the PV channel index the canonical direct-channel table, adds missing server-FPS/HQ/AntiStack rows from the old Networking table, and replaces duplicate atlas tables with cross-links. |
 | Wiki-quality MERGE-3 lifecycle split | [Mission entrypoints](Mission-Entrypoints-And-Lifecycle), [Lifecycle wait-chain](Lifecycle-Wait-Chain), [Wiki quality audit](Wiki-Quality-Audit) | Removes duplicated boot timeline/report verification detail from Mission entrypoints, keeps it focused on include graph and per-role init responsibility, and makes Lifecycle wait-chain the canonical boot-order/JIP/flag-dependency page. |
 | Wiki-quality MERGE-2 UI quick reference | [Client UI/HUD](Client-UI-HUD-And-Menus), [Client UI systems atlas](Client-UI-Systems-Atlas), [Wiki quality audit](Wiki-Quality-Audit) | Shrinks the HUD/menus page into a source-anchored router for common UI work and leaves detailed dialog/HUD/marker implementation notes in the canonical UI atlas. |
 | Wiki-quality REDUCE-4 Gameplay gateway | [Gameplay atlas](Gameplay-Systems-Atlas), [Wiki quality audit](Wiki-Quality-Audit) | Trims duplicated economy, construction and factory explanation from the Gameplay atlas, adds gateway links to the owning atlases, and keeps the source anchors needed for safe orientation. |

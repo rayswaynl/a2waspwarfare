@@ -51,36 +51,9 @@ These wrappers are preferred over hand-coded public variable dispatch for new fe
 
 ## Direct Public Variables
 
-Some systems use explicit public-variable channels outside the generic PVF list:
+Some systems use explicit public-variable channels outside the generic PVF list. The canonical inventory is [Public variable channel index](Public-Variable-Channel-Index), including registered `WFBE_PVF_*` commands, direct channels, source anchors and notable findings.
 
-| Channel | Direction | Evidence | Notes |
-| --- | --- | --- | --- |
-| `WFBE_DAYNIGHT_DATE` | server -> clients | `Server/Module/Server_DayNightCycle.sqf:88-89`, `initJIPCompatible.sqf:176-182` | Server-authoritative date sync. |
-| `SEND_MESSAGE` | mixed broadcast/client receive | `Client/FSM/updateclient.sqf:10-24`, `Common/Functions/Common_SendMessage.sqf:37-38` | Bare message channel outside PVF routing. |
-| `MARKER_CREATION` | mixed broadcast/client receive | `Client/FSM/updateclient.sqf:10-24`, `Common/Functions/Common_CreateMarker.sqf:82-83` | Marker creation channel. |
-| `ICBM_launched`, `PLAYER_RADIATED` | nuke/radiation module -> clients | `Client/FSM/updateclient.sqf:10-24`, `Common/Module/ICBM/radzone.sqf:103-104` | ICBM marker/radiation notifications. |
-| `REQUEST_SUPPLY_VALUE`, `SUPPLY_VALUE_REQUESTED` | client request -> server response | `Common/Functions/Common_GetSideSupply.sqf:14-41`, `Server/Functions/Server_PV_RequestSupplyValue.sqf:1-8`, `Client/Functions/Client_ReceiveSupplyValue.sqf:1-7` | Side-supply value request/response. |
-| `WFBE_Client_PV_IsSupplyMissionActiveInTown`, `WFBE_Client_PV_SupplyMissionStarted` | client -> server | `Client/Module/supplyMission/supplyMissionStart.sqf:6-49` | Supply mission start/availability requests. |
-| `WFBE_Server_PV_IsSupplyMissionActiveInTown`, `WFBE_Server_PV_SupplyMissionCompleted`, `WFBE_Server_PV_SupplyMissionCompletedMessage` | server local/PV -> clients | `Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf:1-18`, `supplyMissionStarted.sqf:1-65`, `supplyMissionCompleted.sqf:2-34` | Supply mission state and completion publication. |
-| `WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH`, `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK`, `WFBE_C_PLAYER_OBJECT` | client/server anti-stack and supply support | `Client/Init/Init_Client.sqf:442-454`, `Server/Module/AntiStack/clientHasConnectedAtLaunch.sqf:1-15` | Launch-side/anti-stack and player object bookkeeping. |
-| `AFKthresholdExceededName`, `kickAFK` | client -> server/BattlEye | `Client/Module/AFK/monitorAFK.sqf:25`, `Server/Module/AFK/initAFKkickHandler.sqf:9`, `BattlEyeFilter/publicvariable.txt:1-2` | `kickAFK` is intentionally caught by BattlEye because `serverCommand` is unavailable. |
-| `SERVER_FPS_GUI`, `WFBE_VAR_SERVER_FPS` | server -> clients | `Server/Module/serverFPS/serverFpsGUI.sqf:7-8`, `Server/Init/Init_Server.sqf:578,595` | Two server-FPS publication paths exist. |
-
-## Second-Pass Direct PV Inventory
-
-Archimedes/James and Galileo's second-pass reports expanded the direct-channel map. These are not automatically covered by the `WFBE_PVF_*` registration list or a future PVF dispatcher fix, so treat them as separate review targets when hardening the network layer.
-
-| Channel | Direction | Owner / evidence | Trust or lifecycle note |
-| --- | --- | --- | --- |
-| `ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS`, `CLIENT_INIT_READY` | client/common -> server; server/PVEH coordination | `Common/Functions/Common_AttackWaveActivate.sqf`, `Server/Functions/Server_AttackWave.sqf`, `Server/PVFunctions/AttackWave.sqf`, `Client/Init/Init_Client.sqf` | **DR-41 confirmed high-risk authority gap:** `ATTACK_WAVE_INIT` is forgeable, outside the PVF list and trusts client `_supply` / `_side` for a side-wide price modifier. |
-| `wfbe_supply_temp_west`, `wfbe_supply_temp_east`, `wfbe_supply_<side>` | common/client -> server; server -> clients | `Common/Functions/Common_ChangeSideSupply.sqf`, `Server/Functions/Server_ChangeSideSupply.sqf` | West/east server handlers recompute supply; no resistance handler was found. DR-22 found the overspend windfall in the server clamp. |
-| `WFBE_Client_PV_IsSupplyMissionActiveInTown`, `WFBE_Client_PV_SupplyMissionStarted` | client -> server | `Client/Module/supplyMission/supplyMissionStart.sqf`, `Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf`, `supplyMissionStarted.sqf` | Client starts availability/completion flow. DR-18 found first-use cooldown nil risk; supply reward variables still need server-side recompute. |
-| `WFBE_Server_PV_IsSupplyMissionActiveInTown`, `WFBE_Server_PV_SupplyMissionCompleted`, `WFBE_Server_PV_SupplyMissionCompletedMessage` | server -> clients / server local PVEH | `Server/Module/supplyMission/*.sqf`, `Client/Module/supplyMission/*.sqf` | Completion publication is live-only and intertwined with supply vehicle object variables. |
-| `WFBE_CL_MASH_MARKER_CREATED`, `WFBE_SE_MASH_MARKER_SENT` | client -> server -> clients | `Server/Module/MASH/MASHMarker.sqf`, `Client/Module/MASH/receiverMASHmarker.sqf`, `Client/Init/Init_Client.sqf:132`, `Server/Init/Init_Server.sqf:70,92` | **DR-34 supersedes DR-3:** the server PVEH is registered but orphaned, no live client path broadcasts `WFBE_CL_MASH_MARKER_CREATED`, and the receiver compile is commented. MASH map markers are dead on both ends; MASH respawn itself is separate. |
-| `IS_WEST_HQ_ALIVE`, `IS_EAST_HQ_ALIVE`, `HQ_WEST_MARKER_INFOS`, `HQ_EAST_MARKER_INFOS` | server -> clients | `Server/Functions/Server_MHQRepair.sqf`, `Server/Functions/Server_OnHQKilled.sqf` | HQ state is broadcast directly; DR-20 found the HQ-killed consumer is not idempotent when multiple clients detect the same death. |
-| `SUPPLY_COMPENSATION_AMOUNT_EAST`, `SUPPLY_COMPENSATION_AMOUNT_WEST` | server -> clients | `Server/Module/AntiStack/skillDiffCompensation.sqf` | AntiStack skill compensation publishes side-specific supply deltas outside PVF; depends on external DB/skill data when AntiStack is enabled. |
-| `TEAM_WEST_TICKS_NO_PLAYERS`, `TEAM_EAST_TICKS_NO_PLAYERS` | common/server -> clients | `Common/Functions/Common_StagnateSupplyIncomeNoPlayers.sqf` | No-player stagnation state is a direct broadcast channel. |
-| `CLIENT_INIT_READY` | client -> server | `Client/Init/Init_Client.sqf`, `Server/PVFunctions/AttackWave.sqf` | Despite the `Server/PVFunctions` path, this is a direct PVEH channel and not part of `_serverCommandPV`. |
+Why this matters: direct channels such as `ATTACK_WAVE_INIT`, supply mission PVs, side-supply temp variables, MASH marker channels, HQ marker/state broadcasts, AntiStack compensation, server FPS and AFK kick are not automatically covered by a future PVF dispatcher fix. Treat them as separate review targets when hardening the network layer.
 
 ### Direct PV Hardening Order
 
@@ -89,21 +62,7 @@ Archimedes/James and Galileo's second-pass reports expanded the direct-channel m
 3. Review the direct channels above separately, because they will not be protected by a `WFBE_PVF_*` allow-list.
 4. Design BattlEye `publicvariable.txt` from both lists: registered `WFBE_PVF_*` channels plus explicit direct channels such as `kickAFK`, supply mission PVs, day/night, HQ markers, attack waves and AntiStack compensation.
 
-### Replay / JIP Semantics Of Direct Channels
-
-Locke's direct-PV pass split the non-PVF channels by whether they are durable state, transient events, or heartbeats. This matters for JIP: a late player only receives retained mission/engine state or the next heartbeat, not a replay of old publicVariable events.
-
-| Channel family | Semantics | JIP implication | Risk note |
-| --- | --- | --- | --- |
-| `WFBE_DAYNIGHT_DATE` | Absolute server date state. | JIP can sync from the latest date value; clients use it for drift correction rather than replaying a timeline. | Low/medium; time-authoritative. |
-| `wfbe_supply_temp_*` -> `wfbe_supply_<side>` | Temp request PV plus authoritative side-supply state. | JIP sees current side supply after sync, not the delta event history. | High; economy mutation path and no resistance-side handler. |
-| `IS_*_HQ_ALIVE`, `HQ_*_MARKER_INFOS` | Server-owned HQ state and marker payload. | JIP sees current HQ state, while client marker loops poll/refresh from it. | Medium; repair/kill transitions can race with marker refresh. |
-| `ATTACK_WAVE_INIT` / `ATTACK_WAVE_DETAILS` | Two-step live broadcast. | Event-only; no explicit replay contract for late joiners beyond whatever current details remain in namespace. | High after DR-41; initiation trusts client-side `_supply` / `_side` and can forge side-wide free or negative-price unit modifiers. |
-| `WFBE_CL_MASH_MARKER_CREATED` -> `WFBE_SE_MASH_MARKER_SENT` | Event-only relay, currently dead on both ends per DR-34. | No replay list; if revived, joiners miss old MASH marker events unless the server stores and re-sends them. | Broken/abandoned marker UX; a revival needs a server-held marker list, JIP re-send and unique marker names. |
-| `SERVER_FPS_GUI`, `WFBE_VAR_SERVER_FPS` | Periodic heartbeat overwrite. | JIP receives the next tick, not history. | Low/medium; two parallel publishers exist. |
-| `AFKthresholdExceededName`, `kickAFK` | One-shot operational alerts. | No JIP meaning. `kickAFK` is caught by BattlEye, not a mission script receiver. | Medium/high operationally; depends on server BE config. |
-| `SEND_MESSAGE` | Event-only message broadcast. | Late joiners do not receive old messages. | Medium; message shape and localization payloads matter. |
-| `MARKER_CREATION` | Transient PV causes persistent marker creation. | The PV is not replayed, but global markers can persist for late joiners through engine marker state. | Medium; persistence comes from marker object state, not the channel. |
+Replay/JIP rule of thumb: late players receive retained object/global state and the next heartbeat, not a replay of old publicVariable events. For revived event-only channels such as MASH marker relays, add a server-held list and explicit JIP re-send plan rather than assuming event replay.
 
 ## Safety Notes
 

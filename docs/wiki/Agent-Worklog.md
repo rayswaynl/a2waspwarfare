@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wiki-Quality DUP-11 PV Channel Index
+
+- Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-11 by making [Public variable channel index](Public-Variable-Channel-Index) the canonical direct public-variable inventory.
+- Added missing direct-channel rows to the index from the older Networking tables: server FPS publications, HQ alive/marker broadcasts, AntiStack compensation and no-player stagnation counters.
+- Replaced duplicate direct-channel tables in [Networking and public variables](Networking-And-Public-Variables) and [SQF code atlas](SQF-Code-Atlas) with concise cross-links to the index.
+- Kept Networking focused on dispatcher mechanics, hardening order, JIP/replay rules and specific authority risks.
+
 ## 2026-06-02 - Codex Wiki-Quality MERGE-3 Lifecycle Split
 
 - Resolved [Wiki quality audit](Wiki-Quality-Audit) MERGE-3 by separating page ownership between [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle) and [Lifecycle wait-chain](Lifecycle-Wait-Chain).

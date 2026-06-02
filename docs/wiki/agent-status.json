@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T20:34:00+02:00",
+  "generatedAt": "2026-06-02T20:57:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,8 +16,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki-Quality-Audit MERGE-3 by separating Mission entrypoints from Lifecycle wait-chain ownership.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are MERGE-1 hardening/authority consolidation, duplicate cross-link reductions or external Arma 2 OA source reference integration."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki-Quality-Audit DUP-11 by canonicalizing the direct public-variable channel inventory.",
+      "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining duplicate cross-link reductions, MERGE-1 hardening/authority consolidation after Codex-2's supply lane settles, or external Arma 2 OA source reference integration."
     },
     "Codex-2": {
       "status": "active",
@@ -33,6 +33,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wiki-quality-dup11-pv-channel-index",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Public-Variable-Channel-Index.md is the canonical direct-PV inventory; Networking and SQF atlas now cross-link instead of duplicating tables"
+    },
     {
       "lane": "wiki-quality-merge3-lifecycle-split",
       "owner": "Codex",
