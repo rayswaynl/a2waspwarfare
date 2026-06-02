@@ -133,8 +133,10 @@ Why this is safe and behavior-identical:
 
 At the end of `Init_PublicVariables.sqf`, snapshot the legal command set so the handler check is explicit rather than implicit:
 ```sqf
-WFBE_SE_PVF_ALLOWED = _serverCommandPV apply {format ["SRVFNC%1", _x]};
-WFBE_CL_PVF_ALLOWED = _clientCommandPV apply {format ["CLTFNC%1", _x]};
+WFBE_SE_PVF_ALLOWED = [];
+WFBE_CL_PVF_ALLOWED = [];
+{WFBE_SE_PVF_ALLOWED = WFBE_SE_PVF_ALLOWED + [Format ["SRVFNC%1", _x]]} forEach _serverCommandPV;
+{WFBE_CL_PVF_ALLOWED = WFBE_CL_PVF_ALLOWED + [Format ["CLTFNC%1", _x]]} forEach _clientCommandPV;
 publicVariable "WFBE_SE_PVF_ALLOWED"; // optional; or keep server-local
 ```
 Then guard with `if !(_script in WFBE_SE_PVF_ALLOWED) exitWith { ...log... };` before resolving. Fix 1 already covers the same cases; use Fix 2 only if you want a named, auditable whitelist.

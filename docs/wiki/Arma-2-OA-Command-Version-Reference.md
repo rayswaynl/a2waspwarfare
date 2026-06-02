@@ -14,7 +14,7 @@ The fastest way to break OA mission SQF is to "fix" it with Arma 3 reflexes: man
 | `array select [start, count]` | Arma 3 · 1.32 | single-index `select N`, or build with `for`/`forEach`. |
 | `string select [start, length]` (substring) | Arma 3 · 1.28 | `toArray` / `toString` (no native substring in OA). |
 | `array select {expression}` (filter) | Arma 3 · 1.56 | `{ if (cond) then { … } } forEach _arr`. |
-| `array apply {expression}` (map) | Arma 3 · 1.56 | `{ _x = f _x } forEach _arr`, or build a new array in a `for`/`forEach` loop. Source has **zero** `apply` array-command uses (only the English word in comments); it appears only in a draft doc fix-snippet (Deep-Review-Findings Fix-2), so do not let it leak into a real OA patch. |
+| `array apply {expression}` (map) | Arma 3 · 1.56 | `{ _x = f _x } forEach _arr`, or build a new array in a `for`/`forEach` loop. Source has **zero** `apply` array-command uses (only the English word in comments); it previously appeared in a draft doc fix-snippet and is kept here as a regression warning. |
 | `isEqualType` | Arma 3 · 1.54 | `typeName _x == "ARRAY"` (etc.). |
 | `remoteExec` / `remoteExecCall` | Arma 3 · 1.50 | `publicVariable` + `addPublicVariableEventHandler` (this mission's PVF wrappers). |
 | `parseSimpleArray` | Arma 3 · 1.68 | `call compile` — trusted input only (see DR-1 / DR-7 / DR-46). |
@@ -45,7 +45,7 @@ These commands **exist and work in OA 1.64** but were **disabled in Arma 3** for
 > The MP-safe wrapper `WASP_procInitComm` (`WASP/common/procInitComm.sqf`) is compiled **commented-out** (`initJIPCompatible.sqf:241-245`), so the mission relies on these raw calls directly — the standard A2 pattern. See [WASP overlay](WASP-Overlay).
 
 ## Gaps folded into canonical indexes
-The [External Arma 2 OA reference guide](Arma-2-OA-External-Reference-Guide) avoid-list currently names `params`, `remoteExec`, `parseSimpleArray`, `isEqualTo`, `private _var = value`. It should also name **`setGroupOwner` / `groupOwner`** (A3 1.40, no OA equivalent), the **`select [start,count]` / substring / filter** forms (A3 1.28–1.56) and **`apply`** (A3 1.56 — now added above, per Instructions-For-Codex item 42) — all easy to import by reflex, and `apply` appeared in a draft fix-snippet for this fork.
+The [External Arma 2 OA reference guide](Arma-2-OA-External-Reference-Guide) now routes future agents to this page for A3-only command forms such as `params`, `remoteExec`, `parseSimpleArray`, `setGroupOwner` / `groupOwner`, multi-index `select`, filter `select`, `apply`, `isEqualTo` and inline `private _var = value`. The former `apply` snippet in [Deep-review findings](Deep-Review-Findings) has been rewritten as an OA-safe `forEach` loop.
 
 The two **inverse-trap** classes are now represented in the [compatibility audit](Arma-2-OA-Compatibility-Audit#inverse-trap-commands) and `agent-compatibility-audit.json`: (a) OA-safe commands commonly **mis-assumed A3-only** (`diag_tickTime`, `uiSleep` — both verified A2-era above), and (b) OA-safe commands **removed in A3** (`setVehicleInit`, `processInitCommands`). Both classes risk a future agent "fixing" working OA code. Instructions-For-Codex item 48 is canonicalized.
 

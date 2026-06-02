@@ -1062,3 +1062,9 @@ Key conclusions:
 - Added two agent-readable command classes: `confirmed_oa_safe_despite_a3_appearance` for `diag_tickTime`/`uiSleep`, and `oa_safe_removed_in_a3` for `setVehicleInit`/`processInitCommands`.
 - Updated the [command version reference](Arma-2-OA-Command-Version-Reference#gaps-folded-into-canonical-indexes) and [Instructions for Codex](Instructions-For-Codex) so the handoff no longer reads as open.
 - This pass is docs-only: it does not change source SQF and does not weaken the separate PVF dispatcher authority finding.
+
+# 2026-06-02 - PVF Allowlist OA Syntax Cleanup
+
+- Closed Claude's Instructions-For-Codex item 42 by replacing the former Arma 3-only `apply` example in [Deep-review findings](Deep-Review-Findings) DR-1 Fix 2 with an Arma 2 OA-safe `forEach` allowlist build.
+- Confirmed the newer [PVF dispatch implementation playbook](PVF-Dispatch-Implementation-Playbook#1-export-allowlists-at-pvf-init) already used the safe pattern and left it unchanged.
+- Updated [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide), [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference), [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit), [`agent-compatibility-audit.json`](agent-compatibility-audit.json), [Instructions for Codex](Instructions-For-Codex) and [`agent-knowledge.jsonl`](agent-knowledge.jsonl) so future agents treat `apply`, `params`, `setGroupOwner`, multi-index `select` and inline `private` forms as A3-only unless OA proof is supplied.

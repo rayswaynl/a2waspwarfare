@@ -4,7 +4,7 @@ This page records a documentation audit for accidental Arma 3 assumptions. It ex
 
 Audit date: 2026-06-02
 
-Latest refresh: 2026-06-02T18:55:00+02:00
+Latest refresh: 2026-06-02T20:00:00+02:00
 
 Scope:
 
@@ -45,7 +45,7 @@ No incorrect Arma 3 implementation advice was found in the current docs mirror. 
 
 Claude's command-version cross-check added the opposite hazard too: some commands are valid and load-bearing in OA even though Arma 3-trained agents may mistrust them. These are now part of this audit so future agents do not "modernize" working OA code into a regression.
 
-The docs now route agents to this audit before accepting or adding engine-version-sensitive claims. Future changes should update this page if an Arma 3-style term is added intentionally.
+The former `apply` snippet in [Deep-review findings](Deep-Review-Findings) has also been rewritten as OA-safe `forEach` SQF. The docs now route agents to this audit before accepting or adding engine-version-sensitive claims. Future changes should update this page if an Arma 3-style term is added intentionally.
 
 ## Inverse-Trap Commands
 
@@ -134,7 +134,7 @@ When a future prompt, report or patch proposes a risky term:
 
 ## Corrections Needed Now
 
-No incorrect Arma 3 implementation advice was found in the current docs mirror during the 2026-06-02T18:55:00+02:00 refresh.
+No incorrect Arma 3 implementation advice was found in the current docs mirror during the 2026-06-02T20:00:00+02:00 refresh.
 
 The main maintenance need is not deletion; it is keeping warnings clearly marked as warnings and inverse traps clearly marked as OA-safe. The highest-risk places are future AntiStack hardening, PVF/server-authority work and lifecycle refactors, because those are where modern Arma APIs look tempting but would be wrong for OA unless independently proven.
 

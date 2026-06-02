@@ -1,13 +1,13 @@
 {
   "schema": "a2waspwarfare-agent-compatibility-audit-v1",
-  "generatedAt": "2026-06-02T18:55:00+02:00",
+  "generatedAt": "2026-06-02T20:00:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "engineBaseline": "Arma 2 Operation Arrowhead 1.64 / Combined Operations",
   "canonicalHumanPage": "Arma-2-OA-Compatibility-Audit.md",
   "status": "no-incorrect-arma3-implementation-advice-found-in-current-docs-inverse-traps-canonicalized",
   "latestRefresh": {
-    "timestamp": "2026-06-02T18:55:00+02:00",
-    "result": "No incorrect Arma 3 implementation advice found in the expanded docs mirror. Existing risky terms remain classified as warnings, explicit non-options, evidence contrasts or folder-name caveats, and inverse-trap OA-safe commands are now explicitly classified.",
+    "timestamp": "2026-06-02T20:00:00+02:00",
+    "result": "No incorrect Arma 3 implementation advice found in the expanded docs mirror. Existing risky terms remain classified as warnings, explicit non-options, evidence contrasts or folder-name caveats. A3-only command forms and inverse-trap OA-safe commands are now explicitly classified.",
     "includesNewerPages": [
       "AntiStack-Database-Extension-Audit.md",
       "Integration-Trust-Boundary-Audit.md",
@@ -25,7 +25,8 @@
   "auditCommands": [
     "rg -n -i \"\\bArma ?3\\b|\\bA3\\b|Arma3|remoteExec(Call)?|BIS_fnc_MP|addMissionEventHandler|isRemoteExecuted|remoteExecutedOwner|CfgFunctions|CBA|ACE|Eden Editor\" docs\\wiki --glob '*.md'",
     "rg -n -i \"remoteExec|remoteExecCall|BIS_fnc_MP|addMissionEventHandler|isRemoteExecuted|remoteExecutedOwner|CfgFunctions|Eden Editor|parseSimpleArray|RVExtensionArgs\" docs\\wiki --glob '*.{md,json,jsonl,txt}'",
-    "rg -n -i \"\\bCBA\\b|\\bACE\\b|Eden\" docs\\wiki --glob '*.{md,json,jsonl,txt}'"
+    "rg -n -i \"\\bCBA\\b|\\bACE\\b|Eden\" docs\\wiki --glob '*.{md,json,jsonl,txt}'",
+    "rg -n -i \"\\bapply\\b|setGroupOwner|groupOwner|diag_tickTime|uiSleep|setVehicleInit|processInitCommands\" docs\\wiki --glob '*.{md,json,jsonl,txt}'"
   ],
   "knownAllowedReferenceClasses": [
     {
@@ -88,7 +89,13 @@
     "CBA helper requirement",
     "ACE helper requirement",
     "Eden Editor workflow requirement",
-    "Arma 3 BattlEye examples treated as shipped repo evidence"
+    "Arma 3 BattlEye examples treated as shipped repo evidence",
+    "params command style",
+    "array apply map form",
+    "setGroupOwner / groupOwner locality transfer",
+    "array or string multi-index select forms",
+    "array select filter form",
+    "inline private assignment"
   ],
   "unsafeIfRemovedOrModernizedWithoutOAReplacement": [
     "diag_tickTime",
@@ -141,6 +148,11 @@
       "pattern": "Eden / eden",
       "classification": "terrain_or_folder_name",
       "action": "Treat Modded_Missions/eden as a terrain/fork name unless text explicitly says Eden Editor."
+    },
+    {
+      "pattern": "apply / params / setGroupOwner / multi-index select / inline private assignment",
+      "classification": "explicit_non_option",
+      "action": "Keep only as avoid-list or correction text; use A2-OA private/select/forEach patterns in snippets."
     },
     {
       "pattern": "diag_tickTime / uiSleep",

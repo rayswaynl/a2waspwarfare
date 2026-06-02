@@ -6,6 +6,8 @@ Rule: prefer Bohemia Interactive Community Wiki pages that explicitly list Arma 
 
 Current docs scan: [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) records the latest search for accidental Arma 3 references. The current result is that explicit Arma 3 terms are guardrails or contrast notes, not implementation advice.
 
+Command support scan: [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference) records BIKI version-badge checks for command forms that are easy to import by Arma 3 reflex. Treat `params`, `remoteExec`, `parseSimpleArray`, `apply`, `setGroupOwner`, multi-index `select` forms and inline `private _x = ...` as A3-only unless that page or another BI OA source proves otherwise.
+
 ## Fast Reference Matrix
 
 | Topic | Official reference | Wasp source hotspots | Development implication |
@@ -17,6 +19,7 @@ Current docs scan: [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit
 | Event-handler stacking | [addEventHandler](https://community.bohemia.net/wiki/addEventHandler) | `Common/Init/Init_Unit.sqf:101-127,188,211`, `Common/Init/Init_Town.sqf:85,106`, [Current supply heli PR](Current-Work-Supply-Helicopters-PR1) | `addEventHandler` stacks instead of replacing old handlers. Use guard object vars or stored handler IDs before re-registering effects on reusable vehicles/units. |
 | Object scans | [nearestObjects](https://community.bohemia.net/wiki/nearestObjects) | `Server/Module/supplyMission/supplyMissionStarted.sqf:28,44`, `Server/FSM/cleaners/crater_cleaner.sqf:15,28`, `Server/FSM/cleaners/droppeditems_cleaner.sqf:15,22,29` | Prefer narrow class filters and bounded cadence. Matching uses inheritance (`isKindOf`), and broad empty-type scans are review targets. |
 | Compile/preprocess diagnostics | [preprocessFileLineNumbers](https://community.bohemia.net/wiki/preprocessFileLineNumbers) | `initJIPCompatible.sqf:37,56,62-63,121,123`, `Common/Init/Init_PublicVariables.sqf:44,49`, [SQF code atlas](SQF-Code-Atlas) | Keep `preprocessFileLineNumbers` for compiled functions because line numbers improve RPT debugging. Missing files are build/runtime risks, not cosmetic docs nits. |
+| Command-version traps | [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference) | [Deep-review findings](Deep-Review-Findings) DR-1 Fix 2, [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook), [Compatibility audit](Arma-2-OA-Compatibility-Audit) | Do not use A3-only syntax such as `apply`, `params`, `setGroupOwner`, multi-index `select` or inline private assignment in OA snippets. Also do not remove OA-safe inverse-trap commands like `diag_tickTime`, `uiSleep`, `setVehicleInit` or `processInitCommands` just because A3 changed them. |
 | Simulation vs render scope | [Simulation vs Render Time Scope](https://community.bohemia.net/wiki/Simulation_vs_Render_Time_Scope) | `Common/Common_MarkerUpdate.sqf:78-88,103-218`, `Common/Common_AARadarMarkerUpdate.sqf:55-180`, [Client UI systems atlas](Client-UI-Systems-Atlas) | For visible HUD/marker work, distinguish smooth visual positions from lower-rate simulation state. Do not blindly replace position commands with Arma 3-only variants. |
 | FPS/tick diagnostics | [diag_fps](https://community.bohemia.net/wiki/diag_fps), [diag_tickTime](https://community.bohemia.net/wiki/diag_tickTime) | `Common/Functions/Common_GetSleepFPS.sqf:5-9`, `Server/Module/serverFPS/monitorServerFPS.sqf:4`, `Common/Functions/Common_PerformanceAudit.sqf:84,154` | Performance docs and patches should preserve existing diagnostic vocabulary: FPS, tick time, RPT logs and PerformanceAudit records. |
 
@@ -27,8 +30,9 @@ Current docs scan: [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit
 3. For JIP, distinguish replayed public variables from live event-handler side effects. A late joiner can receive variable values without having seen the original event sequence.
 4. For object variables with `true`, ask who wrote the value. If the client wrote authority-bearing cargo, price, side or reward data, document it as a trust boundary.
 5. For event handlers, assume repeated initialization can stack handlers unless source shows a guard, a removed handler ID or a one-shot object lifecycle.
-6. For object scans, avoid changing class filters or scan radii without checking inheritance behavior and runtime cadence.
-7. For performance code, preserve source-backed RPT/PerformanceAudit evidence instead of replacing it with unsupported profiling assumptions.
+6. For command syntax, check the command-version reference before using modern forms such as `apply`, `params`, `setGroupOwner`, multi-index `select` or inline `private _x = ...`.
+7. For object scans, avoid changing class filters or scan radii without checking inheritance behavior and runtime cadence.
+8. For performance code, preserve source-backed RPT/PerformanceAudit evidence instead of replacing it with unsupported profiling assumptions.
 
 ## Wasp Examples To Recheck First
 
