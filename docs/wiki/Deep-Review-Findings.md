@@ -810,8 +810,27 @@ Lane `wasp-overlay-perf-jip-review`. Filled the final 🟡 Perf cell and ⬜ JIP
 
 **Outcome:** WASP overlay row — **Perf and JIP/HC cells reviewed (DR-40)**: Perf clean except the `:62` sleepless display-wait (one-line fix); JIP/HC correct (per-client init). **This was the last outstanding Perf/JIP-HC cell in the matrix** — every subsystem's Perf and JIP/HC dimension is now source-reviewed. The residual 🟡 cells are exclusively **Auth/PV owner decisions** (the client-authoritative economy/forgery class DR-1/6/14/16/22/23/27/28, the victory fixes DR-11/12/13, supply DR-18/PR#1, and the WASP/modules Auth follow-ups).
 
+## Round 32 — 2026-06-02 (Claude) — ATTACK_WAVE_INIT forgeable direct-PV (DR-41); confirms Codex's pv-scout candidate
+
+Lane `attack-wave-authority-verify` (collaboration-follow: source-verifying Codex's `attack-wave-authority` backlog candidate, status `new-from-2026-06-02-pv-scout`). Confirmed at source and upgraded to a finding.
+
+### DR-41 — `ATTACK_WAVE_INIT` is a forgeable direct publicVariable: server trusts client `_supply`/`_side`, no re-derivation/authority/cost → side-wide free units — **High (economy authority / forgery; new direct-PV channel)**
+
+Chain (source-cited):
+- **Client gate is advisory only.** `Client/FSM/updateclient.sqf:240` adds the "HEAVY ATTACK MODE" action with params `[(sideJoined) call GetSideSupply, sideJoined]` and condition `((sideJoined) Call GetSideSupply) >= 25000` — a **client-side** visibility/eligibility check.
+- **Client sends its own numbers.** `Common/Functions/Common_AttackWaveActivate.sqf:6-8`: `ATTACK_WAVE_INIT = [_supply, _side]; publicVariableServer "ATTACK_WAVE_INIT";` — a **direct** publicVariable to the server (not via the WFBE_PVF dispatcher).
+- **Server trusts the payload wholesale.** `Server/Functions/Server_AttackWave.sqf:1-27` (`"ATTACK_WAVE_INIT" addPublicVariableEventHandler`): `_supply = _this select 1 select 0; _side = _this select 1 select 1;` then `_discountPercentage = 0.7 * (0.4 + ((WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT - _supply) * (1/50000)))` → sets `ATTACK_WAVE_PRICE_MODIFIER` (a **side-wide unit-price multiplier**, read by `GUI_Menu_BuyUnits.sqf:90/261` and `Client_UIFillListBuyUnits.sqf:60`) and `_attackWaveLength = (1 - _discountPercentage) * 1500` (a server-side `sleep`). **No re-derivation of the side's real supply (never calls `GetSideSupply`), no check that `_side` matches the PV sender, and no server-side supply deduction.**
+
+**Impact.** `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT = 50000` (`Init_CommonConstants.sqf:166`), so legitimately `_supply ∈ [0,50000]` → modifier `∈ [0.28, 0.98]` (a discount). But `_supply` is attacker-controlled and unvalidated: forging `_supply = 50000 + 0.4·50000 = 70000` drives `_discountPercentage → 0` → `ATTACK_WAVE_PRICE_MODIFIER → 0` → **every unit costs `price × 0 = free` for the chosen `_side`**; larger forged values make the modifier **negative** (negative-priced units / broken pricing). The 25 000-supply cost is **never deducted server-side** (client gate only), so the forger pays nothing, and `_side` is attacker-chosen. `ATTACK_WAVE_INIT` is **not** in `BattlEyeFilter/publicvariable.txt` (only `kickAFK`, DR-30), so the channel is unfiltered. `_attackWaveLength` is also attacker-influenced (a `sleep` of forged length).
+
+**Architectural significance — the forgery class has two surfaces.** This is the first confirmed exploit on a **direct publicVariable channel** rather than the registered PVF dispatcher. The DR-1 remediation (validate the PVF command string before `compile`) does **not** protect direct channels like `ATTACK_WAVE_INIT`. So the economy/forgery owner decision must cover **both**: (1) the PVF dispatcher (DR-1, validated lookup) **and** (2) each direct `publicVariableServer` PVEH must re-derive trusted values server-side — here: take `_side` from the PV sender/`owner`, compute `_supply` from `GetSideSupply _side` on the server, and deduct the cost there — ignoring the payload's economic fields. Other direct channels (side-supply, supply-mission, MASH) share this surface and warrant the same treatment.
+
+**Handoff for Codex.** Confirms backlog item `attack-wave-authority` (was `new-from-2026-06-02-pv-scout`) → **confirmed, High**; flip its status and cross-link DR-41 from [Networking](Networking-And-Public-Variables) (direct-PV hazard table) and the economy-authority roadmap entry. Fold into the same owner decision as the economy class, with the explicit "two surfaces (PVF + direct PV)" note so the server-authority redesign covers direct channels too.
+
+**Outcome:** Economy/forgery class extended to a new direct-PV channel (DR-41). Collaboration-follow pass: a Codex pv-scout candidate verified at source and promoted to a confirmed finding.
+
 ## Continue Reading
 
-Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
+Previous: [Testing workflow](Testing-Debugging-And-Release-Workflow) | Next: [Implementation plan](Documentation-Implementation-Plan)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
