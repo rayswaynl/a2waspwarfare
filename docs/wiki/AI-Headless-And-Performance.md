@@ -71,7 +71,7 @@ Town AI is not simulation-cached. `enableSimulation false` is used on invisible 
 
 - Spawn: nearby `"Man"`, `"Car"`, `"Motorcycle"`, `"Tank"` and `"Ship"` entities inside `600 * detection_coef` wake a town; aircraft are filtered out so flyovers do not activate towns.
 - Despawn: after `time - wfbe_inactivity > WFBE_C_TOWNS_UNITS_INACTIVE` with no enemies, units and groups are deleted.
-- Confirmed risk: the vehicle cleanup in `server_town_ai.sqf:191-223`, especially `:211-216`, iterates `wfbe_active_vehicles` and deletes each alive vehicle when `!(isPlayer leader group _x)`. It does not check `crew`, cargo or turret occupants, so a player riding in a town-AI vehicle while not group leader can still be inside a vehicle that gets deleted. This is separate from `Server_HandleEmptyVehicle.sqf`, which has its own empty-vehicle wait and is not the source of this bug.
+- Confirmed risk: the vehicle cleanup in `server_town_ai.sqf:191-223`, especially `:211-216`, iterates `wfbe_active_vehicles` and deletes each alive vehicle when `!(isPlayer leader group _x)`. It does not check `crew`, cargo or turret occupants, so a player riding in a town-AI vehicle while not group leader can still be inside a vehicle that gets deleted. This is separate from `Server_HandleEmptyVehicle.sqf`, which has its own empty-vehicle wait and is not the source of this bug. See [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) for the source chain, patch shape and validation gates.
 
 ### HC Delegation Uses Remote Creation
 
@@ -93,6 +93,6 @@ There is also no visible failover/rebalancing pass on HC disconnect. A disconnec
 
 ## Continue Reading
 
-Previous: [Supply heli PR #1](Current-Work-Supply-Helicopters-PR1) | Next: [Client UI/HUD/menus](Client-UI-HUD-And-Menus)
+Previous: [Supply heli PR #1](Current-Work-Supply-Helicopters-PR1) | Next: [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

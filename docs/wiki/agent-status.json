@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T13:10:00+02:00",
+  "generatedAt": "2026-06-02T13:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -47,9 +47,9 @@
     },
     {
       "lane": "town-ai-vehicle-despawn-safety",
-      "owner": "future-ai-owner",
-      "status": "confirmed-backlog",
-      "output": "Feature-Status-Register.md, AI-Headless-And-Performance.md, agent-hardening-backlog.jsonl"
+      "owner": "future-code-owner",
+      "status": "playbook-published",
+      "output": "Town-AI-Vehicle-Despawn-Safety.md, Feature-Status-Register.md, AI-Headless-And-Performance.md, agent-hardening-backlog.jsonl"
     },
     {
       "lane": "autonomous-claude-research",
@@ -64,7 +64,13 @@
       "output": "Keep confirmed findings reflected in owning atlas/risk pages"
     }
   ],
-  "queuedReports": [],
+  "queuedReports": [
+    {
+      "source": "Anscombe subagent notification",
+      "status": "needs-source-verification",
+      "summary": "Lifecycle/runtime readout received with useful leads, but paths use Migrations instead of Missions; verify against repo source before integrating."
+    }
+  ],
   "updateProtocol": [
     "Before substantial work, update agent-collaboration.json and append a claim event to agent-events.jsonl.",
     "For long work, append heartbeat events with current source scope.",
@@ -84,6 +90,7 @@
     "collaborationProtocol": "Agent-Collaboration-Protocol.md",
     "knowledgeRecords": "agent-knowledge.jsonl",
     "events": "agent-events.jsonl",
-    "worklog": "Agent-Worklog.md"
+    "worklog": "Agent-Worklog.md",
+    "townAiVehicleSafety": "Town-AI-Vehicle-Despawn-Safety.md"
   }
 }

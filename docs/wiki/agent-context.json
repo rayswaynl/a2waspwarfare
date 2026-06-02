@@ -1,6 +1,6 @@
 {
  "schema": "a2waspwarfare-agent-context-v1",
- "generatedAt": "2026-06-02T13:10:00+02:00",
+ "generatedAt": "2026-06-02T13:20:00+02:00",
  "repository": "rayswaynl/a2waspwarfare",
  "game": "Arma 2 Operation Arrowhead 1.64",
  "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -34,6 +34,7 @@
    "Supply-Mission-Architecture",
    "Current-Work-Supply-Helicopters-PR1",
    "AI-Headless-And-Performance",
+   "Town-AI-Vehicle-Despawn-Safety",
    "Client-UI-HUD-And-Menus",
    "Client-UI-Systems-Atlas",
    "Gear-Loadout-And-EASA-Atlas",
@@ -85,6 +86,7 @@
     "Supply-Mission-Architecture",
     "Current-Work-Supply-Helicopters-PR1",
     "AI-Headless-And-Performance",
+    "Town-AI-Vehicle-Despawn-Safety",
     "Client-UI-HUD-And-Menus",
     "Client-UI-Systems-Atlas",
     "Gear-Loadout-And-EASA-Atlas",
@@ -159,9 +161,9 @@
   },
   {
    "lane": "town-ai-vehicle-despawn-safety",
-   "owner": "future-ai-owner",
-   "status": "confirmed-backlog",
-   "nextAction": "Guard server_town_ai.sqf vehicle deletion with a full player occupancy check, not only isPlayer leader group."
+   "owner": "future-code-owner",
+   "status": "implementation-playbook-published",
+   "nextAction": "Apply Town-AI-Vehicle-Despawn-Safety.md when claiming the gameplay patch; edit Chernarus source mission first and validate occupied plus empty vehicle despawn cases."
   },
   {
    "lane": "jip-postjoin-wait-timeouts",
@@ -203,7 +205,7 @@
   "networking": "PVF lists in Common/Init/Init_PublicVariables.sqf plus direct publicVariable channels for attack waves, side supply, supply missions, MASH markers, HQ state, anti-stack compensation, day/night, FPS, AFK and markers. See Networking-And-Public-Variables.md.",
   "economy": "Funds and side supply with town SV, commander income, resources FSM and supply missions. See Gameplay-Systems-Atlas for source-backed town/economy/commander/factory flow.",
   "construction": "Commander/repair-truck CoIn flow, structure arrays, HQ deploy/mobilize, server construction workers, defense building, repair and sale flows. See Construction-And-CoIn-Systems-Atlas.md.",
-  "ai": "Server town AI, AI commanders, client/headless delegation, player AI watchdog/recovery.",
+  "ai": "Server town AI, AI commanders, client/headless delegation, player AI watchdog/recovery. The confirmed occupied town-AI vehicle despawn bug now has an implementation playbook in Town-AI-Vehicle-Despawn-Safety.md.",
   "ui": "Rsc resources, Client/GUI dialog controllers, RHUD/FPS HUD, title resources, map/action marker loops, CoIn construction UI and WASP overlays. See Client-UI-Systems-Atlas.md.",
   "gearLoadoutEasa": "Gear metadata/profile templates and EASA aircraft loadouts; generated EASA/balance output comes from LoadoutManager. See Gear-Loadout-And-EASA-Atlas.md.",
   "tooling": "LoadoutManager for mission generation/packaging; PerformanceAuditAnalyzer for RPT metrics.",
@@ -215,7 +217,7 @@
   "hardeningRoadmap": "Hardening-Implementation-Roadmap.md plus agent-hardening-backlog.jsonl convert confirmed Auth/PV, correctness, performance and docs-polish findings into patch order, source files, implementation shape and validation gates. Start there before changing PVF dispatch, ICBM, attack waves, victory/endgame, economy authority, supply missions, town AI or BattlEye-sensitive behavior."
  },
  "knownRisks": [
-  "CONFIRMED 2026-06-02: Town AI vehicle despawn can delete a vehicle with a player passenger/crew member aboard if the player is not the group leader. server_town_ai.sqf:211-216 checks !(isPlayer leader group _x) and does not inspect crew/cargo/turret occupants. Guard with full player occupancy before deleting wfbe_active_vehicles.",
+  "CONFIRMED 2026-06-02: Town AI vehicle despawn can delete a vehicle with a player passenger/crew member aboard if the player is not the group leader. server_town_ai.sqf:211-216 checks !(isPlayer leader group _x) and does not inspect crew/cargo/turret occupants. Use Town-AI-Vehicle-Despawn-Safety.md for the source chain, behavior-preserving guard shape and validation gates.",
   "Direct attack-wave authority gap: ATTACK_WAVE_INIT is a direct publicVariable channel outside the generic PVF dispatcher. Common_AttackWaveActivate.sqf sends [_supply,_side], and Server_AttackWave.sqf uses client-supplied _supply for discount/timing. Server should re-derive supply from authoritative side state.",
   "JIP robustness note: RequestJoin and AntiStack launch ACK have 30s resend loops but no terminal timeout; the later Init_Client.sqf post-join replicated-variable waits have no timeout/retry/log. Normal JIP is reviewed functional, but failures can hang silently.",
   "DR-40 (Low, WASP Perf nit + reviewed clean): WASP overlay Perf mostly clean; one busy-spin - global_marking_monitor.sqf:62 while{time<_this}do{findDisplay 54} polls every frame for up to 2s (input-disabled, one-time at init); should use the throttled waitUntil{sleep ...;cond} idiom like its :80 sibling. JIP/HC clean (per-client init from Init_Client; local-player guards; HC skips player-local). Old WASP/Init_Client.sqf init path is dead/commented (initJIPCompatible.sqf:243-244). MILESTONE: this was the last outstanding Perf/JIP-HC cell - every subsystem's Perf and JIP/HC dimension is now source-reviewed; residual 🟡 is exclusively Auth/PV owner decisions.",

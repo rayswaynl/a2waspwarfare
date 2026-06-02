@@ -1,6 +1,6 @@
 {
  "schema": "a2waspwarfare-agent-collaboration-v1",
- "generatedAt": "2026-06-02T13:10:00+02:00",
+ "generatedAt": "2026-06-02T13:20:00+02:00",
  "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
  "sourceOfTruth": {
   "progressDashboard": "Progress-Dashboard.md",
@@ -112,6 +112,22 @@
   }
  },
  "activeClaims": [
+  {
+   "lane": "town-ai-vehicle-despawn-safety-docs",
+   "owner": "Codex",
+   "status": "published",
+   "sourceScope": [
+    "docs/wiki/Town-AI-Vehicle-Despawn-Safety.md",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_ai.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_CreateTownUnits.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleEmptyVehicle.sqf"
+   ],
+   "outputs": [
+    "Town-AI-Vehicle-Despawn-Safety.md implementation playbook",
+    "Navigation and machine context links for the confirmed town-AI occupied-vehicle despawn bug"
+   ],
+   "handoff": "Future gameplay owner: apply the documented crew-aware guard in server_town_ai.sqf, then run occupied/empty vehicle despawn smoke tests and LoadoutManager propagation."
+  },
   {
    "lane": "dashboard-current-state-cleanup",
    "owner": "Codex",

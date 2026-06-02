@@ -399,6 +399,13 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Moved detailed scout history responsibility to [Discovery swarm](Subagent-Discovery-Swarm) and this worklog.
 - Updated `agent-status.json`, `agent-collaboration.json` and `agent-context.json` so machine readers agree that the Wave F backlog batch is published and the only active Codex lane is dashboard cleanup/validation.
 
+## 2026-06-02 - Codex Town-AI Vehicle Safety Playbook
+
+- Added [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) as a dedicated implementation playbook for the confirmed `server_town_ai.sqf:211-216` occupied-vehicle deletion bug.
+- Wired the page into Home, sidebar, footer, [AI/headless](AI-Headless-And-Performance), [Feature status](Feature-Status-Register), [Hardening roadmap](Hardening-Implementation-Roadmap), dashboard and machine-readable agent files.
+- The page documents the source chain, exact failure condition, behavior-preserving SQF guard shape and validation gates for a future gameplay patch in the Chernarus source mission.
+- Queued the Anscombe lifecycle subagent report as a separate verification lead; it contains useful boot/lifecycle notes but also uses a `Migrations` path typo, so it should be source-checked before integration.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

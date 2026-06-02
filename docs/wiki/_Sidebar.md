@@ -38,6 +38,7 @@
 - [Supply missions](Supply-Mission-Architecture)
 - [Supply heli PR #1](Current-Work-Supply-Helicopters-PR1)
 - [AI/performance](AI-Headless-And-Performance)
+- [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety)
 - [UI/HUD/menus](Client-UI-HUD-And-Menus)
 - [UI systems atlas](Client-UI-Systems-Atlas)
 - [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas)

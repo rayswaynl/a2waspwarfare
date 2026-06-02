@@ -182,7 +182,7 @@ Validation:
 | --- | --- | --- |
 | Factory empty-vehicle queue leak | `Client_BuildUnit.sqf` early empty-vehicle `exitWith` skips normal `WFBE_C_QUEUE` decrement. | Buy repeated crewless vehicles; queue cap returns to normal after each build attempt. |
 | Factory FIFO token/broadcast churn | `Client_BuildUnit.sqf` uses random token and broadcasts `queu` mutations. | Multiple simultaneous buyers cannot collide; queue UI remains correct. |
-| Town AI occupied-vehicle despawn | `server_town_ai.sqf:211-216` deletes inactive town-AI vehicles based on `!(isPlayer leader group _x)` without checking crew/cargo/turret occupants. | Vehicles with any player occupant survive despawn while empty AI-only vehicles are still cleaned. |
+| [Town AI occupied-vehicle despawn](Town-AI-Vehicle-Despawn-Safety) | `server_town_ai.sqf:211-216` deletes inactive town-AI vehicles based on `!(isPlayer leader group _x)` without checking crew/cargo/turret occupants. | Vehicles with any player occupant survive despawn while empty AI-only vehicles are still cleaned. |
 | WASP marker monitor busy-spin | `WASP/global_marking_monitor.sqf:62` polls display without sleep for up to 2 seconds. | Replace with throttled wait style like sibling `:80`; verify map double-click prefix still works. |
 | MASH markers | Client receiver commented and trigger never sent. | Either remove dead code or revive with server-held marker list, unique names and JIP replay. |
 | Paratrooper markers | `HandleParatrooperMarkerCreation` not registered in client PVF list. | Register receiver or remove marker callback; paratroop drop itself remains server-owned. |

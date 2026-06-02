@@ -46,7 +46,7 @@ Every content page now includes a **Continue Reading** block with previous and n
 | Understand startup flow | [Architecture overview](Architecture-Overview) -> [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) -> [SQF code atlas](SQF-Code-Atlas) |
 | Work on networking | [Networking and public variables](Networking-And-Public-Variables) -> [SQF code atlas](SQF-Code-Atlas) |
 | Work on economy or supply | [Economy, towns and supply](Economy-Towns-And-Supply) -> [Supply mission architecture](Supply-Mission-Architecture) -> [Current supply heli PR](Current-Work-Supply-Helicopters-PR1) |
-| Work on AI/performance | [AI, headless and performance](AI-Headless-And-Performance) -> [Feature status register](Feature-Status-Register) |
+| Work on AI/performance | [AI, headless and performance](AI-Headless-And-Performance) -> [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) -> [Feature status register](Feature-Status-Register) |
 | Work on UI/HUD/menus | [Client UI, HUD and menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) -> [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
 | Work on core gameplay | [Gameplay systems atlas](Gameplay-Systems-Atlas) -> [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) -> [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) -> [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) -> [Core systems index](Core-Systems-Index) |
 | Check agent progress | [Progress dashboard](Progress-Dashboard) -> [`agent-status.json`](agent-status.json) -> [`agent-events.jsonl`](agent-events.jsonl) |
@@ -61,12 +61,12 @@ Every content page now includes a **Continue Reading** block with previous and n
 | Boot dependencies | [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
 | Inventory | [Source inventory](Source-Inventory), [Content structure and maps](Content-Structure-And-Maps) |
 | Code | [Function and module index](Function-And-Module-Index), [SQF code atlas](SQF-Code-Atlas) |
-| Runtime systems | [Gameplay systems atlas](Gameplay-Systems-Atlas), [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas), [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), [Core systems index](Core-Systems-Index), [Economy, towns and supply](Economy-Towns-And-Supply), [AI, headless and performance](AI-Headless-And-Performance) |
+| Runtime systems | [Gameplay systems atlas](Gameplay-Systems-Atlas), [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas), [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), [Core systems index](Core-Systems-Index), [Economy, towns and supply](Economy-Towns-And-Supply), [AI, headless and performance](AI-Headless-And-Performance), [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) |
 | Networking | [Networking and public variables](Networking-And-Public-Variables) |
 | UI | [Client UI, HUD and menus](Client-UI-HUD-And-Menus), [Client UI systems atlas](Client-UI-Systems-Atlas), [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
 | WASP additions | [WASP overlay](WASP-Overlay) |
 | Operations | [Tools and build workflow](Tools-And-Build-Workflow), [External integrations](External-Integrations) |
-| Risk and future work | [Feature status register](Feature-Status-Register), [Hardening implementation roadmap](Hardening-Implementation-Roadmap), [Deep-review findings](Deep-Review-Findings), [External research reports](External-Research-Reports), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Documentation implementation plan](Documentation-Implementation-Plan) |
+| Risk and future work | [Feature status register](Feature-Status-Register), [Hardening implementation roadmap](Hardening-Implementation-Roadmap), [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety), [Deep-review findings](Deep-Review-Findings), [External research reports](External-Research-Reports), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Documentation implementation plan](Documentation-Implementation-Plan) |
 | Agent collaboration | [AI assistant developer guide](AI-Assistant-Developer-Guide), [Agent context](Agent-Context), [Progress dashboard](Progress-Dashboard), [Coordination board](Coordination-Board), [Agent collaboration protocol](Agent-Collaboration-Protocol) |
 
 ## Repo Shape

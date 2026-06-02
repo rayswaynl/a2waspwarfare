@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `town-ai-vehicle-despawn-safety` | Published | [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) turns the confirmed occupied-vehicle delete bug into a source-backed patch plan and validation checklist. |
 | `agent-hardening-backlog-and-wave-f-integration` | Published | [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), [Hardening roadmap](Hardening-Implementation-Roadmap), [Feature status](Feature-Status-Register), [Networking/PV](Networking-And-Public-Variables), [Lifecycle wait-chain](Lifecycle-Wait-Chain), [AI/headless](AI-Headless-And-Performance). |
 | External report intake | Published | [`external-research-report-manifest.json`](external-research-report-manifest.json) plus [External research reports](External-Research-Reports). Raw extracted text remains local cache only. |
 | Cheap discovery wave F | Harvested | PV/security, economy, AI/perf, UI, support modules, tooling, PDF triage, town-AI vehicle safety and lifecycle wait-chain checks all returned; no active sub-agent threads remain. |
@@ -42,6 +43,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
 | `dashboard-current-state-cleanup` | Codex | Published | Progress page now shows current state first; historic scout detail lives in swarm/worklog pages. |
+| `town-ai-vehicle-despawn-safety` | Codex/future code owner | Playbook published | The confirmed occupied-vehicle deletion bug now has a dedicated implementation playbook; next step is a gameplay patch in the Chernarus source mission when code work is claimed. |
 | `autonomous-claude-research` | Claude | Open | Claude may claim the next bounded source-backed review lane and continue independently. |
 | `feature-status-reconciliation` | Codex/future agent | Open | Fold any newly confirmed findings into owning atlas/risk pages and keep machine files aligned. |
 | `implementation-hardening-from-backlog` | Future code owner | Open | Pick work packages from [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), starting with P0/P1 authority fixes or the confirmed town-AI vehicle safety bug. |
@@ -50,6 +52,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| Town-AI safety playbook | [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) | Source chain, exact failure condition, SQF-safe guard shape and smoke-test gates for `server_town_ai.sqf:211-216`. |
 | Wave F hardening backlog | [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) | Machine-readable work packages for PVF, ICBM, attack waves, victory, economy, supply, factory queues, markers, hosting, town AI, JIP waits, tooling and UI debt. |
 | External report manifest | [`external-research-report-manifest.json`](external-research-report-manifest.json) | Sanitized metadata for the three Steff-provided PDF reports; raw extracted text is local cache only. |
 | Confirmed town-AI vehicle bug | [Feature status](Feature-Status-Register), [AI/headless](AI-Headless-And-Performance) | `server_town_ai.sqf:211-216` can delete an occupied town-AI vehicle if the player is not group leader. |

@@ -105,6 +105,6 @@ The combat icon blinking feature is guarded by `WFBE_C_MAP_ICON_BLINKING_ENABLED
 
 ## Continue Reading
 
-Previous: [AI/headless/performance](AI-Headless-And-Performance) | Next: [Client UI systems atlas](Client-UI-Systems-Atlas)
+Previous: [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) | Next: [Client UI systems atlas](Client-UI-Systems-Atlas)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
