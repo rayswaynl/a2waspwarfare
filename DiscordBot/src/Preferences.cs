@@ -13,6 +13,12 @@ public sealed class Preferences
     public string? DataSourcePath { get; set; }
     public bool a3Mode { get; set; } = false;
 
+    // --- Player-stats ingest (RPT tail -> stats.json). No-op unless StatsEnabled. ---
+    public bool StatsEnabled { get; set; } = false;
+    public string? ServerRptPath { get; set; }                                  // full path to the Arma 2 OA server .rpt
+    public string StatsJsonPath { get; set; } = @"C:\a2waspwarfare\Data\stats.json";
+    public int StatsPollSeconds { get; set; } = 60;
+
     public static Preferences Instance
     {
         get
