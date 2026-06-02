@@ -8,6 +8,9 @@ public enum TerrainName
     [EnumMember(Value = "Takistan")]
     TAKISTAN,
 
+    [EnumMember(Value = "Zargabad")]
+    ZARGABAD,
+
     [EnumMember(Value = "Dingor")]
     DINGOR,
 

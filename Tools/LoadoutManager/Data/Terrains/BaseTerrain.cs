@@ -12,6 +12,7 @@ public abstract class BaseTerrain : InterfaceTerrain
     // Properties that specifies the name/type of the terrain.
     public TerrainName TerrainName { get => terrainName; set => terrainName = value; }
     public TerrainType TerrainType { get => terrainType; set => terrainType = value; }
+    public string missionPlayerCount { get; set; } = "";
     private TerrainName terrainName { get; set; }
     private TerrainType terrainType { get; set; }
 
@@ -69,7 +70,7 @@ class CfgSounds
         if (terrainModStatus == TerrainModStatus.VANILLA)
         {
             UpdateFilesForTakistan();
-            EnsureTakistanInitServerUsesCorrectMapId(destinationDirectory);
+            EnsureVanillaInitServerUsesCorrectMapId(destinationDirectory);
         }
 
         // Perhaps do a inherited class from this to reduce spaghetti
@@ -159,6 +160,11 @@ class CfgSounds
     // Method to determine the mission type based on the terrain type (Forest or Desert)
     private string DetermineMissionTypeIfItsForestOrDesert()
     {
+        if (!string.IsNullOrWhiteSpace(missionPlayerCount))
+        {
+            return missionPlayerCount;
+        }
+
         // Return "55" if the terrain type is FOREST, otherwise return "61"
         return TerrainType == TerrainType.FOREST ? "55" : "61";
     }
@@ -301,12 +307,20 @@ class CfgSounds
         File.WriteAllText(finalPathToEdit, content);
     }
 
-    // Ensures the Takistan init_server uses the correct map id after copying from Chernarus
-    private void EnsureTakistanInitServerUsesCorrectMapId(string _destinationDirectory)
+    // Ensures vanilla generated missions use their own map id after copying from Chernarus.
+    private void EnsureVanillaInitServerUsesCorrectMapId(string _destinationDirectory)
     {
-        if (terrainName != TerrainName.TAKISTAN)
+        int mapId;
+        switch (terrainName)
         {
-            return;
+            case TerrainName.TAKISTAN:
+                mapId = 2;
+                break;
+            case TerrainName.ZARGABAD:
+                mapId = 3;
+                break;
+            default:
+                return;
         }
 
         string initServerPath = Path.Combine(_destinationDirectory, @"Server\Init\Init_Server.sqf");
@@ -317,23 +331,29 @@ class CfgSounds
             return;
         }
 
-        const string chernarusMapLine = "[\"SET_MAP\", 1] call WFBE_SE_FNC_CallDatabaseSetMap;";
-        const string takistanMapLine = "[\"SET_MAP\", 2] call WFBE_SE_FNC_CallDatabaseSetMap;";
+        const string setMapPattern = "[\"SET_MAP\", ";
+        string terrainMapLine = $"[\"SET_MAP\", {mapId}] call WFBE_SE_FNC_CallDatabaseSetMap;";
 
         string fileContent = File.ReadAllText(initServerPath);
 
-        if (fileContent.Contains(takistanMapLine))
+        if (fileContent.Contains(terrainMapLine))
         {
             return;
         }
 
-        if (fileContent.Contains(chernarusMapLine))
+        int setMapStart = fileContent.IndexOf(setMapPattern, StringComparison.Ordinal);
+        if (setMapStart >= 0)
         {
-            File.WriteAllText(initServerPath, fileContent.Replace(chernarusMapLine, takistanMapLine));
-            return;
+            int lineEnd = fileContent.IndexOf(";", setMapStart, StringComparison.Ordinal);
+            if (lineEnd >= 0)
+            {
+                string currentMapLine = fileContent.Substring(setMapStart, lineEnd - setMapStart + 1);
+                File.WriteAllText(initServerPath, fileContent.Replace(currentMapLine, terrainMapLine));
+                return;
+            }
         }
 
-        Console.WriteLine($"SET_MAP definition not updated for Takistan in {initServerPath}.");
+        Console.WriteLine($"SET_MAP definition not updated for {terrainName} in {initServerPath}.");
     }
 
     // Generates and returns the SQF code for a specific terrain. This method is built upon 
@@ -353,6 +373,7 @@ class CfgSounds
         string maxPlayers = DetermineMissionTypeIfItsForestOrDesert();
         string missionName = $@"[{maxPlayers}] Warfare V48 {EnumExtensions.GetEnumMemberAttrValue(terrainName)}";
         string isAirWarEvent = GenerateIsAirWarEvent();
+        string isZargabadLowPop = terrainName == TerrainName.ZARGABAD ? "#define IS_ZARGABAD_LOWPOP_MAP" : "//#define IS_ZARGABAD_LOWPOP_MAP";
         
         return $@"{wfDebug}
 {wfLogContent}
@@ -360,6 +381,7 @@ class CfgSounds
 {isModMapDependant}#define IS_MOD_MAP_DEPENDENT
 {isNavalTerrain}#define IS_NAVAL_MAP
 {isAirWarEvent}
+{isZargabadLowPop}
 #define WF_MAXPLAYERS {maxPlayers}
 #define WF_MISSIONNAME ""{missionName}""
 #define STARTING_DISTANCE {startingDistanceInMeters}
