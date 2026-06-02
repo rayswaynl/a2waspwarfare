@@ -1,17 +1,27 @@
-//--- Support_DroneStrike.sqf — Mixed Saturation Strike orchestrator (server-authoritative).
+//--- Support_DroneStrike.sqf — Mixed Saturation Strike orchestrator (server-authoritative). [HARDENED]
 //--- Payload: ["DroneStrike", side, callPos, playerTeam]  (spawned server-side via KAT_DroneStrike).
-//--- Arma 2 OA SQF only: no pushBack / params / distance2D / setVelocityModelSpace / vector* (A3) / code-select.
-//--- Flight primitive validated by the Task-1 spike (Method A: setVelocity-from-heading + setPosATL alt-lock).
+//--- Reuses mission systems:
+//---   WFBE_PRESENTSIDES          -> threeway-safe enemy sides
+//---   WFBE_%1_Defenses_AA        -> real AA classnames (prioritise true AA, not "any static")
+//---   WFBE_CO_FNC_SendToClients + the existing "uav-reveal" HandleSpecial case -> reveal-on-fire payoff
+//---   IRS deflection technique   -> flare drones actually spoof incoming missiles
+//--- Arma 2 OA SQF only (no pushBack / params / distance2D / setVelocityModelSpace / vector* A3 / code-select).
 
-private ["_side","_destination","_playerTeam","_sideID","_enemySide","_model","_alt","_speed","_lspeed",
+private ["_side","_destination","_playerTeam","_sideID","_enemySides","_aaTypes","_model","_alt","_speed","_lspeed",
         "_flareN","_total","_zoneR","_warhead","_scatter","_hp","_stagger","_loiterTime",
-        "_bd","_corners","_spawnPos","_drones","_i","_role","_drone","_activeKey","_active","_mkr"];
+        "_bd","_corners","_spawnPos","_drones","_i","_role","_drone","_activeKey","_active","_mkr","_x"];
 
 _side        = _this select 1;
 _destination = _this select 2;
 _playerTeam  = _this select 3;
 _sideID      = _side call GetSideID;
-_enemySide   = if (_side == east) then {west} else {east};
+
+//--- (1) Threeway-safe enemy sides — reuse WFBE_PRESENTSIDES instead of a WEST/EAST hack.
+_enemySides = WFBE_PRESENTSIDES - [_side];
+
+//--- (2) Real AA classnames the mission registers per side (static AA) + mobile AA — reuse WFBE_%1_Defenses_AA.
+_aaTypes = ["M6_EP1"];   //--- mobile AA (Avenger / Linebacker)
+{ _aaTypes = _aaTypes + (missionNamespace getVariable [Format ["WFBE_%1_Defenses_AA", _x], []]) } forEach ["WEST","EAST","GUER"];
 
 _model = missionNamespace getVariable Format ["WFBE_%1DRONE", str _side];
 if (isNil "_model") then {_model = missionNamespace getVariable Format ["WFBE_%1UAV", str _side]};
@@ -28,7 +38,7 @@ _hp         = WFBE_C_DRONE_HP;
 _stagger    = WFBE_C_DRONE_DIVE_STAGGER;
 _loiterTime = WFBE_C_DRONE_LOITER_TIME;
 
-["INFORMATION", Format ["Support_DroneStrike.sqf : [%1] Team [%2] strike at %3 (model %4).", str _side, _playerTeam, _destination, _model]] Call WFBE_CO_FNC_LogContent;
+["INFORMATION", Format ["Support_DroneStrike.sqf : [%1] Team [%2] strike at %3 (model %4, enemies %5).", str _side, _playerTeam, _destination, _model, _enemySides]] Call WFBE_CO_FNC_LogContent;
 
 //--- Concurrent cap (per side).
 _activeKey = Format ["WFBE_DRONE_ACTIVE_%1", str _side];
@@ -38,24 +48,52 @@ if (_active >= WFBE_C_DRONE_CONCURRENT_CAP) exitWith {
 };
 missionNamespace setVariable [_activeKey, _active + 1];
 
-//--- Scripted survivability: only >=.50-cal hits count; drone has WFBE_C_DRONE_HP hit-points. Defined global (referenced by EH).
+//--- Scripted survivability + (3) reveal-on-fire. Only >=.50-cal hits count; the shooter is pinged to the friendly team.
 WFBE_DroneHandleDamage = {
-    private ["_unit","_dmg","_prev","_delta","_h"];
+    private ["_unit","_dmg","_src","_prev","_delta","_h","_dside","_last"];
     _unit = _this select 0;
     _dmg  = _this select 2;
+    _src  = _this select 3;
     _prev = damage _unit;
     _delta = _dmg - _prev;
-    if (_delta >= WFBE_C_DRONE_MIN_HIT) then {
-        _h = (_unit getVariable ["wfbe_drone_hp", WFBE_C_DRONE_HP]) - 1;
-        _unit setVariable ["wfbe_drone_hp", _h, true];
-        if (_h <= 0) exitWith {1};   //--- depleted -> destroy
-        0
-    } else {
-        0                            //--- sub-.50 plink -> ignored, stays pristine
+    if (_delta < WFBE_C_DRONE_MIN_HIT) exitWith {0};   //--- sub-.50 plink -> ignored, stays pristine
+
+    //--- Engage-or-eat-it: reveal the shooter on the friendly team map (reuse uav-reveal), rate-limited.
+    if (!isNull _src && {_src != _unit} && {typeName _src == "OBJECT"}) then {
+        _last = _unit getVariable ["wfbe_reveal_t", -100];
+        if (time - _last > 3) then {
+            _dside = _unit getVariable ["wfbe_side", west];
+            [_dside, "HandleSpecial", ["uav-reveal", _unit, _src]] Call WFBE_CO_FNC_SendToClients;
+            _unit setVariable ["wfbe_reveal_t", time];
+        };
+    };
+
+    _h = (_unit getVariable ["wfbe_drone_hp", WFBE_C_DRONE_HP]) - 1;
+    _unit setVariable ["wfbe_drone_hp", _h, true];
+    if (_h <= 0) exitWith {1};   //--- depleted -> destroy
+    0
+};
+
+//--- (4) Real missile spoof — distilled from the IRS deflection. Perturbs the incoming missile while it closes.
+WFBE_DroneSpoofMissile = {
+    private ["_drone","_ammo","_shooter","_m","_cnt","_v"];
+    _drone   = _this select 0;
+    _ammo    = _this select 1;
+    _shooter = _this select 2;
+    _m = nearestObject [_shooter, _ammo];
+    if (isNull _m) exitWith {};
+    _cnt = 0;
+    while {!isNull _m && alive _drone && (_m distance _drone) > 14 && _cnt < 60} do {
+        if (random 1 < 0.30) then {
+            _v = velocity _m;
+            _m setVelocity [(_v select 0) + (random 36 - 18), (_v select 1) + (random 36 - 18), (_v select 2) + (random 10 - 5)];
+        };
+        _cnt = _cnt + 1;
+        sleep 0.05;
     };
 };
 
-//--- Strike-zone marker so the commander can see where the package is headed (also a fairness warning).
+//--- Strike-zone marker (commander sees where the package is headed; doubles as the camper's "displace or pay" warning).
 _mkr = Format ["WFBE_DRONE_MKR_%1_%2", str _side, str (round time)];
 createMarker [_mkr, _destination];
 _mkr setMarkerType "mil_destroy";
@@ -79,6 +117,7 @@ for "_i" from 0 to (_total - 1) do {
     _drone setVariable ["wfbe_drone_hp", _hp, true];
     _drone setVariable ["wfbe_phase", _i, true];
     _drone setVariable ["wfbe_sideID", _sideID, false];
+    _drone setVariable ["wfbe_side", _side, false];
     _drone flyInHeight _alt;
     _drone addEventHandler ["HandleDamage", {_this call WFBE_DroneHandleDamage}];
     _drone addEventHandler ["Killed", {[_this select 0, _this select 1, (_this select 0) getVariable "wfbe_sideID"] Spawn WFBE_CO_FNC_OnUnitKilled}];
@@ -89,10 +128,10 @@ processInitCommands;
 //--- Drive each drone in its own loop: ingress -> role behaviour -> despawn.
 {
     private "_d"; _d = _x;
-    [_d, _destination, _alt, _speed, _lspeed, _zoneR, _loiterTime, _warhead, _scatter, _stagger, _enemySide] spawn {
-        private ["_d","_dest","_alt","_speed","_lspeed","_zoneR","_loiterTime","_warhead","_scatter","_stagger","_enemySide",
+    [_d, _destination, _alt, _speed, _lspeed, _zoneR, _loiterTime, _warhead, _scatter, _stagger, _enemySides, _aaTypes] spawn {
+        private ["_d","_dest","_alt","_speed","_lspeed","_zoneR","_loiterTime","_warhead","_scatter","_stagger","_enemySides","_aaTypes",
                 "_role","_phase","_tgt","_p","_dx","_dy","_hdg","_ang","_pt","_endT","_t0","_target","_cands","_valid","_aa",
-                "_aim","_dur","_imp","_vx","_vy","_vz","_mag"];
+                "_aim","_dur","_imp","_vx","_vy","_vz","_mag","_x"];
         _d          = _this select 0;
         _dest       = _this select 1;
         _alt        = _this select 2;
@@ -103,7 +142,8 @@ processInitCommands;
         _warhead    = _this select 7;
         _scatter    = _this select 8;
         _stagger    = _this select 9;
-        _enemySide  = _this select 10;
+        _enemySides = _this select 10;
+        _aaTypes    = _this select 11;
         _role  = _d getVariable "wfbe_drone_role";
         _phase = _d getVariable "wfbe_phase";
 
@@ -125,12 +165,13 @@ processInitCommands;
         _t0 = time;
 
         if (_role == "flare") then {
-            //--- FLARE DRONE: orbit as a conspicuous screen, pop flares (visual bait), soak fire.
+            //--- FLARE DRONE: conspicuous orbiting screen, pops flares + spoofs incoming missiles, soaks fire.
             _d addEventHandler ["incomingMissile", {
                 private "_fd"; _fd = _this select 0;
                 if (alive _fd) then {
                     "F_40mm_White" createVehicle (getPosATL _fd);
                     "F_40mm_White" createVehicle [(getPosATL _fd select 0)+10, (getPosATL _fd select 1)+10, (getPosATL _fd select 2)];
+                    [_this select 0, _this select 1, _this select 2] spawn WFBE_DroneSpoofMissile;
                 };
             }];
             while {alive _d && time < (_endT + 25)} do {
@@ -149,15 +190,15 @@ processInitCommands;
             };
             if (alive _d) then {deleteVehicle _d};
         } else {
-            //--- LOITERING MUNITION: orbit-search for an enemy ground vehicle, then top-attack dive.
+            //--- LOITERING MUNITION: orbit-search for an enemy ground vehicle (AA first), then top-attack dive.
             _target = objNull;
             while {alive _d && isNull _target && time < _endT} do {
                 _cands = nearestObjects [_dest, ["LandVehicle","StaticWeapon"], _zoneR];
                 _valid = []; _aa = [];
                 {
-                    if (alive _x && (side _x == _enemySide) && !(_x isKindOf "Air")) then {
+                    if (alive _x && {(side _x) in _enemySides} && {!(_x isKindOf "Air")}) then {
                         _valid set [count _valid, _x];
-                        if (_x isKindOf "StaticWeapon") then {_aa set [count _aa, _x]};
+                        if ((typeOf _x) in _aaTypes || {_x isKindOf "StaticWeapon"}) then {_aa set [count _aa, _x]};
                     };
                 } forEach _cands;
                 if (count _aa > 0) then {_target = _aa select 0} else {if (count _valid > 0) then {_target = _valid select 0}};
@@ -176,14 +217,12 @@ processInitCommands;
                 sleep 0.4;
             };
 
-            //--- Stagger the dives so the sirens + explosions chain.
+            //--- Stagger, then COMMIT to a captured aim point (fixed — robust to the target dying mid-dive).
             sleep (_phase * _stagger);
             if (!alive _d) exitWith {};
+            _aim = if (!isNull _target && {alive _target}) then {getPosATL _target} else {[_dest select 0, _dest select 1, 12]};
+            _d say3D "drone_stuka";   //--- Ju-87 dive siren (global; silent until the .ogg lands).
 
-            _aim = if (isNull _target) then {[_dest select 0, _dest select 1, _alt]} else {getPosATL _target};
-            _d say3D "drone_stuka";   //--- Ju-87 Jericho-trumpet dive siren (global-effect; silent until the .ogg lands).
-
-            //--- Top-attack dive.
             _dur = 0;
             while {alive _d && ((getPosATL _d) select 2 > 6) && _dur < 9} do {
                 _p = getPosATL _d;
@@ -200,8 +239,7 @@ processInitCommands;
                 sleep 0.06;
             };
 
-            //--- Impact: survivable warhead at target +/- scatter (package-lethal, not per-drone one-shot).
-            _aim = if (isNull _target) then {_dest} else {getPos _target};
+            //--- Impact at the committed point +/- scatter (package-lethal, never a per-drone one-shot).
             _ang = random 360;
             _imp = [(_aim select 0) + (random _scatter) * sin _ang, (_aim select 1) + (random _scatter) * cos _ang, 0];
             _warhead createVehicle _imp;
