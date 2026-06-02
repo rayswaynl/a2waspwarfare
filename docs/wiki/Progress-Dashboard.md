@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `wiki-quality-reduce4-gameplay-gateway` | Published | [Gameplay atlas](Gameplay-Systems-Atlas) now routes economy, construction and factory detail to the canonical atlases while keeping source-backed orientation anchors. |
 | `wiki-quality-c6-gameplay-citations` | Published | [Gameplay atlas](Gameplay-Systems-Atlas) now has path:line anchors for town init/capture/AI, economy, commander, upgrades, construction, factories and attack-wave production. |
 | `supply-mission-authority-cleanup-playbook` | Active | Codex-2 is tracing truck and PR #1 helicopter supply flows, cargo/reward trust, cooldown casing, dead twin code and idempotency into a patch-ready playbook. |
 | `wiki-quality-c6-ai-citations` | Published | [AI/headless](AI-Headless-And-Performance) now has path:line anchors for HC bootstrap, HC registry, town/static delegation, disconnect handling, town-AI cleanup, server FPS and `GetSleepFPS`. |
@@ -61,6 +62,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `wiki-quality-reduce4-gameplay-gateway` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) REDUCE-4 is resolved: Gameplay is now a gateway for detailed economy/construction/factory pages. |
 | `wiki-quality-c6-gameplay-citations` | Codex | Published | Final C6 pass is done for [Gameplay atlas](Gameplay-Systems-Atlas); [Wiki quality audit](Wiki-Quality-Audit) C6 is resolved. |
 | `supply-mission-authority-cleanup-playbook` | Codex-2 | Active | Codex-2 is source-tracing truck and supply-helicopter authority cleanup and should publish a dedicated playbook. |
 | `wiki-quality-c6-ai-citations` | Codex | Published | Second C6 pass is done for [AI/headless](AI-Headless-And-Performance). |
@@ -85,6 +87,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| Wiki-quality REDUCE-4 Gameplay gateway | [Gameplay atlas](Gameplay-Systems-Atlas), [Wiki quality audit](Wiki-Quality-Audit) | Trims duplicated economy, construction and factory explanation from the Gameplay atlas, adds gateway links to the owning atlases, and keeps the source anchors needed for safe orientation. |
 | Wiki-quality C6 Gameplay citations | [Gameplay atlas](Gameplay-Systems-Atlas), [Wiki quality audit](Wiki-Quality-Audit) | Adds source anchors for town initialization, starting mode/patrol flags, capture/SV/perf loop, town AI activation/delegation/cleanup, economy resource ticks, commander assignment/votes, upgrade processing, CoIn construction, factory purchase/build paths and attack-wave production. |
 | Wiki-quality C6 AI/headless citations | [AI/headless](AI-Headless-And-Performance), [Wiki quality audit](Wiki-Quality-Audit) | Adds source anchors for HC bootstrap/registry/delegation/disconnect, client-FPS delegation, town-AI cleanup, server-FPS publishing and `GetSleepFPS`; this pairs with the UI and Gameplay passes that now resolve C6. |
 | Economy authority first cut | [Economy authority first cut](Economy-Authority-First-Cut), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) | Codex-2 turns the broad economy authority class into a source-backed patch sequence: side-supply clamp first, then upgrade and construction/defense authority, with player-buy locality deferred as a larger redesign. |

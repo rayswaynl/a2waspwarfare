@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T19:38:00+02:00",
+  "generatedAt": "2026-06-02T19:53:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,8 +16,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki-Quality-Audit C6 by adding Gameplay atlas path:line citations after the UI and AI/headless passes.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are bloat/cross-link reduction, external Arma 2 OA source reference integration or implementation-readiness playbooks from the hardening backlog."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki-Quality-Audit REDUCE-4 by turning duplicated Gameplay economy/construction/factory detail into gateway summaries.",
+      "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining merge/dedup audit items, external Arma 2 OA source reference integration or implementation-readiness playbooks from the hardening backlog."
     },
     "Codex-2": {
       "status": "active",
@@ -33,6 +33,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wiki-quality-reduce4-gameplay-gateway",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Gameplay-Systems-Atlas.md now routes detailed economy, construction and factory mechanics to canonical atlases while preserving source-backed orientation anchors"
+    },
     {
       "lane": "wiki-quality-c6-gameplay-citations",
       "owner": "Codex",

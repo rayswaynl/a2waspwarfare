@@ -142,13 +142,15 @@ Risk notes:
 
 ## Economy And Resource Loop
 
+Gateway page: use [Economy, towns and supply](Economy-Towns-And-Supply) for the economy authority matrix, supply missions and PR #1 supply-helicopter context.
+
 `Server/Init/Init_Server.sqf` starts resources only when there are at least two present sides:
 
 ```sqf
 [] ExecVM "Server\FSM\updateresources.sqf";
 ```
 
-`Server/FSM/updateresources.sqf` loops over `WFBE_PRESENTSIDES` and computes. Source anchors: `Server/Init/Init_Server.sqf:531` starts the resource loop; `Server/FSM/updateresources.sqf:3-17` reads economy parameters; `:29` reads town supply; `:49` calls `ChangeSideSupply`; `:63` pays teams; `:67` pays AI commander funds; and `:74` applies `GetSleepFPS`.
+`Server/FSM/updateresources.sqf` loops over `WFBE_PRESENTSIDES` and computes the resource tick. Source anchors: `Server/Init/Init_Server.sqf:531` starts the resource loop; `Server/FSM/updateresources.sqf:3-17` reads economy parameters; `:29` reads town supply; `:49` calls `ChangeSideSupply`; `:63` pays teams; `:67` pays AI commander funds; and `:74` applies `GetSleepFPS`.
 
 - town supply with `WFBE_CO_FNC_GetTownsSupply`;
 - income from supply value, depending on `WFBE_C_ECONOMY_INCOME_SYSTEM`;
@@ -157,17 +159,7 @@ Risk notes:
 - team funds through `WFBE_CO_FNC_ChangeTeamFunds`;
 - AI commander funds through `ChangeAICommanderFunds` when no player commander exists.
 
-Important parameters:
-
-| Parameter | Role |
-| --- | --- |
-| `WFBE_C_ECONOMY_INCOME_SYSTEM` | Selects income mode. |
-| `WFBE_C_ECONOMY_INCOME_INTERVAL` | Base resource tick interval. |
-| `WFBE_C_ECONOMY_INCOME_COEF` | Multiplier for income mode 3. |
-| `WFBE_C_ECONOMY_INCOME_DIVIDED` | Commander income divisor in mode 3. |
-| `WFBE_C_ECONOMY_CURRENCY_SYSTEM` | Whether side supply currency is active. |
-| `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` | Upper supply cap gate in resource loop. |
-| `wfbe_commander_percent` | Per-side commander share, initialized on side logic. |
+Important parameters live in the resource loop: `WFBE_C_ECONOMY_INCOME_SYSTEM`, `WFBE_C_ECONOMY_INCOME_INTERVAL`, `WFBE_C_ECONOMY_INCOME_COEF`, `WFBE_C_ECONOMY_INCOME_DIVIDED`, `WFBE_C_ECONOMY_CURRENCY_SYSTEM`, `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` and side-logic `wfbe_commander_percent`.
 
 `Common_StagnateSupplyIncomeNoPlayers.sqf` is a supply-income modifier that uses AntiStack database side-skill calls first; if a side has no skill data and no players, it increments no-player ticks and can reduce supply income. It publishes `TEAM_WEST_TICKS_NO_PLAYERS` and `TEAM_EAST_TICKS_NO_PLAYERS` (`Common/Functions/Common_StagnateSupplyIncomeNoPlayers.sqf:38-68`).
 
@@ -252,6 +244,8 @@ Risk notes:
 
 ## Construction And Base Structures
 
+Gateway page: use [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) for structure arrays, placement rules, CoIn runtime behavior, server request handlers, HQ lifecycle, repair flows, base-area notes and DR-6 authority details.
+
 ### Source files
 
 - `Client/Init/Init_Coin.sqf`
@@ -263,45 +257,9 @@ Risk notes:
 - `Server/Construction/Construction_StationaryDefense.sqf`
 - `Client/Init/Init_BaseStructure.sqf`
 
-Construction flow:
+Construction is a client-preview/server-create path. `Init_Coin.sqf` adapts side structure/defense arrays into BIS CoIn data (`Client/Init/Init_Coin.sqf:8-12`, `:20-42`, `:80-91`). `coin_interface.sqf` owns display/camera/preview state and dispatches PVF requests (`Client/Module/CoIn/coin_interface.sqf:28-34`, `:50-62`, `:491-494`, `:560-581`, `:891-920`). `RequestStructure.sqf` maps display classname to structure/script arrays and starts the selected construction worker (`Server/PVFunctions/RequestStructure.sqf:8-21`).
 
-```mermaid
-flowchart TD
-    Player["Commander/player opens construction"] --> InitCoin["Client/Init/Init_Coin.sqf"]
-    InitCoin --> CoIn["Client/Module/CoIn/coin_interface.sqf"]
-    CoIn --> Preview["local preview, border and menu state"]
-    CoIn --> StructurePV["RequestStructure via WFBE_CO_FNC_SendToServer"]
-    CoIn --> DefensePV["RequestDefense via WFBE_CO_FNC_SendToServer"]
-    StructurePV --> RequestStructure["Server/PVFunctions/RequestStructure.sqf"]
-    RequestStructure --> ScriptChoice["WFBE_<side>STRUCTURESCRIPTS chooses Construction_*.sqf"]
-    ScriptChoice --> Build["server creates final structure and init"]
-```
-
-`Init_Coin.sqf` builds the CoIn item list from side structure arrays and defense arrays. Source anchors: `Client/Init/Init_Coin.sqf:8-12` for CoIn area/funds/currency display, `:20-42` for structure and defense lists, and `:80-91` for item/category population. It sets:
-
-- `BIS_COIN_categories`;
-- `BIS_COIN_items`;
-- funds display and supply/cash mode;
-- construction/defense category mapping.
-
-`coin_interface.sqf` owns the camera, preview object, local helper/border, input handlers, selected object state and final request dispatch. Source anchors: `Client/Module/CoIn/coin_interface.sqf:28-34` for display setup, `:50-62` for camera/display event handlers, `:491-494` for the newer `RequestStructure` PVF dispatch beside old commented direct-PV code, `:560-581` for preview/helper creation, and `:891-920` for live structure-limit item state. It calls:
-
-- `RequestAutoWallConstructinChange` when toggling auto wall construction;
-- `RequestStructure` for HQ deploy/mobilize and structures;
-- `RequestDefense` for defenses;
-- `RequestChangeScore` for commander build score.
-
-`RequestStructure.sqf` resolves display structure name to real structure type and construction script using (`Server/PVFunctions/RequestStructure.sqf:8-21`):
-
-- `WFBE_<side>STRUCTURES`;
-- `WFBE_<side>STRUCTURENAMES`;
-- `WFBE_<side>STRUCTURESCRIPTS`.
-
-It sends a `building-started` `HandleSpecial` for major structures and starts `Server/Construction/Construction_<script>.sqf`.
-
-`Construction_HQSite.sqf` toggles deployed HQ and mobile HQ. It uses `wfbe_hqinuse` as a side-logic lock, updates `wfbe_hq`, `wfbe_hq_deployed`, killed/hit/damage handlers and client structure init. Source anchors: `Server/Construction/Construction_HQSite.sqf:14-38` for deploy lock/object/state setup, `:68-95` for MHQ recreation/JIP handler broadcast, and `:104` for lock release.
-
-`Construction_SmallSite.sqf` and `Construction_MediumSite.sqf` create temporary construction-site objects using BIS object mapper, optionally track completion via `wfbe_structures_logic`, delete temporary objects and create final structures with hit/damage/killed handlers and `Client/Init/Init_BaseStructure.sqf`. Source anchors: `Server/Construction/Construction_SmallSite.sqf:37-70` and `:104-131`; `Server/Construction/Construction_MediumSite.sqf:37-70`, `:83-114` and `:119-146`; stationary defenses use `Server/Construction/Construction_StationaryDefense.sqf:15-19`, `:61-75` and `:105-112`.
+The server workers then create the final objects and handlers: HQ deploy/mobilize (`Server/Construction/Construction_HQSite.sqf:14-38`, `:68-95`, `:104`), small/medium sites (`Server/Construction/Construction_SmallSite.sqf:37-70`, `:104-131`; `Server/Construction/Construction_MediumSite.sqf:37-70`, `:83-114`, `:119-146`) and stationary defenses (`Server/Construction/Construction_StationaryDefense.sqf:15-19`, `:61-75`, `:105-112`).
 
 Risk notes:
 
@@ -312,6 +270,8 @@ Risk notes:
 - Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-6 covers construction authority, where the server request mostly validates class existence while trusting client-side payment, placement and authority checks. See [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) for the dedicated map.
 
 ## Factories And Unit Production
+
+Gateway page: use [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) for config chains, range globals, buy-menu filtering, queue model, common creation helpers, DR-14 authority notes and DR-33 queue hazards.
 
 ### Source files
 
@@ -328,31 +288,7 @@ There are two main production paths:
 | Player local build | Client | `GUI_Menu_BuyUnits.sqf` -> `Client_BuildUnit.sqf` | Player buys units/vehicles near a factory. |
 | AI/server build | Server | `AIBuyUnit` -> `Server_BuyUnit.sqf` | AI teams and server-side production. |
 
-The buy menu (`Client/GUI/GUI_Menu_BuyUnits.sqf:89-156`, `:195-248`, `:257-369`):
-
-- detects current factory range via `barracksInRange`, `lightInRange`, `heavyInRange`, `aircraftInRange`, `depotInRange`, `hangarInRange`;
-- filters by tab/factory type and selected faction;
-- validates funds;
-- checks depot infantry camp ownership requirements;
-- calculates crew costs;
-- applies infantry limit from barracks upgrade;
-- spawns `BuildUnit` and deducts player funds.
-
-`Client_BuildUnit.sqf` (`Client/Functions/Client_BuildUnit.sqf:149-217`, `:246-356`, `:368-469`):
-
-- computes spawn position from structure offsets or nearby pad helper objects;
-- uses a local queue on the building (`queu`);
-- waits for queue position and build time;
-- creates infantry or vehicle locally using common creation helpers;
-- initializes cargo, lock actions, salvage truck, balance, countermeasures, artillery, missile handlers, engine stealth actions and crew.
-
-`Server_BuyUnit.sqf` (`Server/Functions/Server_BuyUnit.sqf:21-97`, `:98-214`):
-
-- uses server-side queue state and build time;
-- exits if the factory is destroyed or a player takes over the AI team;
-- creates units/vehicles server-side;
-- applies vehicle fired/missile/reload/IRS/countermeasure/artillery handlers;
-- creates crew and updates statistics.
+The buy menu detects factory range globals, filters by tab/faction/upgrade, performs local funds/group/queue checks, spawns `BuildUnit` and deducts player funds (`Client/GUI/GUI_Menu_BuyUnits.sqf:89-156`, `:195-248`, `:257-369`). `Client_BuildUnit.sqf` owns local queue wait, build time, spawn placement and vehicle/crew initialization (`Client/Functions/Client_BuildUnit.sqf:149-217`, `:246-356`, `:368-469`). `Server_BuyUnit.sqf` mirrors much of that initialization for AI/server production (`Server/Functions/Server_BuyUnit.sqf:21-97`, `:98-214`).
 
 Attack-wave production is a direct-PV side path rather than normal factory production; `Server/Functions/Server_AttackWave.sqf:1-38` publishes the request details before `Server/PVFunctions/AttackWave.sqf:19-55` consumes and resets active wave state.
 

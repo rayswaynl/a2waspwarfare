@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wiki-Quality REDUCE-4 Gameplay Gateway Cleanup
+
+- Reduced duplicated economy, construction and factory explanation in [Gameplay systems atlas](Gameplay-Systems-Atlas).
+- Added explicit gateway links to [Economy, towns and supply](Economy-Towns-And-Supply), [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) and [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas).
+- Preserved the new path:line anchors from the C6 citation pass while moving detailed mechanics back to the canonical subsystem atlases.
+- Marked [Wiki quality audit](Wiki-Quality-Audit) REDUCE-4 resolved and surfaced the lane on [Progress dashboard](Progress-Dashboard).
+
 ## 2026-06-02 - Codex Wiki-Quality C6 Gameplay Citation Uplift
 
 - Finished the remaining [Wiki quality audit](Wiki-Quality-Audit) C6 citation gap on [Gameplay systems atlas](Gameplay-Systems-Atlas).

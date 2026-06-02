@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T19:38:00+02:00",
+  "generatedAt": "2026-06-02T19:53:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,27 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-quality-reduce4-gameplay-gateway",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Gameplay-Systems-Atlas.md",
+        "Economy-Towns-And-Supply.md",
+        "Construction-And-CoIn-Systems-Atlas.md",
+        "Factory-And-Purchase-Systems-Atlas.md",
+        "Wiki-Quality-Audit.md REDUCE-4"
+      ],
+      "outputs": [
+        "Gameplay-Systems-Atlas.md reduced gateway sections",
+        "Wiki-Quality-Audit.md REDUCE-4 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-status.json"
+      ],
+      "handoff": "Gameplay atlas now orients readers to economy/construction/factory systems without duplicating their canonical atlases. Future bloat work should continue with MERGE-1 or MERGE-3."
+    },
     {
       "lane": "wiki-quality-c6-gameplay-citations",
       "owner": "Codex",
