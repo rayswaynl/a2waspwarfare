@@ -7,7 +7,7 @@ This audit records the source-only and local-tool evidence for the Zargabad low-
 - Generated mission: `Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad`
 - Source support logic: `Missions/[55-2hc]warfarev2_073v48co.chernarus`
 - Branch: `feature/zargabad-map`
-- Latest audited commit before this document: `d376afde`
+- Latest audited branch state: `feature/zargabad-map` PR head including the edge-guard pass.
 
 ## Placement Audit
 
@@ -41,6 +41,8 @@ Totals from static validation: 13 towns, 19 camps, 1 airport, 33 town-defense lo
 
 Zargabad uses a `6000` boundary in `Common/Init/Init_Boundaries.sqf`; the current static check reports zero town/camp/airport/start logics outside that square.
 
+`Server/Module/Zargabad/Zargabad_EdgeGuard.sqf` adds a server-side rim guard for the extreme outer 120m of that square. Ground players and their vehicles are removed after 45s in the rim unless they are within 325m of a start, town, camp or airport logic. This is deliberately conservative: it backs up the client off-map kill and deters side-hill/edge camping without banning legitimate fights around Rahim Villa, North Camp, East Farms or the airfield.
+
 ## Balance Audit
 
 Runtime Zargabad overrides in `Init_CommonConstants.sqf` reduce smaller-map abuse:
@@ -63,7 +65,8 @@ Static validation currently proves the editor data shape, not tactical effective
 - Spawn-to-spawn and spawn-to-city sightlines.
 - Whether side statics can be trivially sniped or stolen.
 - Whether extra town AT/AA/MG/GL defenses face useful routes after terrain placement.
-- Whether north/east side hills still allow unfair shelling or overwatch.
+- Whether north/east side hills still allow unfair shelling or overwatch outside the guarded rim.
+- Whether the edge guard logs once on init, ignores objective-side fights, and removes only sustained extreme-rim ground abuse.
 
 ## Mystery Feature
 

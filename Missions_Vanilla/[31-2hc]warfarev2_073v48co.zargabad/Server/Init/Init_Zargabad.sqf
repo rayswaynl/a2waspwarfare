@@ -60,6 +60,7 @@ _buildBase = {
 _sides = [[west, 45], [east, 225]];
 {_x call _buildBase} forEach _sides;
 
+[] execVM "Server\Module\Zargabad\Zargabad_EdgeGuard.sqf";
 [] execVM "Server\Module\Zargabad\Zargabad_BlackMarket.sqf";
 
 ["INITIALIZATION", "Init_Zargabad.sqf: Spawn fortifications and side defenses are placed."] Call WFBE_CO_FNC_LogContent;
