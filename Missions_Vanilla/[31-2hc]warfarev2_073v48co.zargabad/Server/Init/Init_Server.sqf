@@ -626,5 +626,10 @@ if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
 	[] execVM "Server\Functions\Server_DayNightCycle.sqf";
 };
 
+//--- Black Market Cache (mystery feature) - server-side, gated by lobby toggle.
+if ((missionNamespace getVariable ["WFBE_C_MYSTERY_CACHE_ENABLED", 1]) > 0) then {
+	[] execVM "Server\Custom\Server_MysteryCache.sqf";
+};
+
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
