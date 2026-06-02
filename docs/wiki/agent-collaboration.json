@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T21:18:00+02:00",
+  "generatedAt": "2026-06-02T21:34:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -640,7 +640,7 @@
     {
       "lane": "abandoned-feature-revival-review",
       "owner": "Codex-2",
-      "status": "active",
+      "status": "published",
       "sourceScope": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/MASH/MASHMarker.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/MASH/receiverMASHmarker.sqf",
@@ -658,10 +658,12 @@
       "outputs": [
         "Abandoned-Feature-Revival-Review.md",
         "Agent-Worklog.md",
-        "agent-events.jsonl claim/finding/complete/handoff events",
-        "agent-status/context/backlog links if published"
+        "agent-events.jsonl finding/complete/handoff events",
+        "agent-status.json",
+        "agent-context.json",
+        "agent-hardening-backlog.jsonl#marker-support-cleanups"
       ],
-      "handoff": "Classify dormant/commented/orphaned features as revive, remove, leave dormant or needs design, using source evidence and safe validation steps."
+      "handoff": "Decision matrix published. Future code owner: paratrooper markers are the smallest revive; MASH markers need server-held/JIP-safe design or removal; AI supply trucks require design/guarding before truck supply + AI commander configs are enabled; old UAV/WASP/upgrade UI paths are cleanup, not quick revives."
     }
   ],
   "integratedReports": [
@@ -682,7 +684,8 @@
     "cheap-explorer-wave-e",
     "implementation-hardening-planning",
     "server-authority-migration-map",
-    "attack-wave-authority-dr41"
+    "attack-wave-authority-dr41",
+    "abandoned-feature-revival-review"
   ],
   "queuedReports": [],
   "lanes": [

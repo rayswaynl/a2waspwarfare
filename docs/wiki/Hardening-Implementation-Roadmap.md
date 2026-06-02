@@ -197,7 +197,7 @@ Validation:
 | Factory FIFO token/broadcast churn | `Client_BuildUnit.sqf` uses random token and broadcasts `queu` mutations. | Multiple simultaneous buyers cannot collide; queue UI remains correct. |
 | [Town AI occupied-vehicle despawn](Town-AI-Vehicle-Despawn-Safety) | `server_town_ai.sqf:211-216` deletes inactive town-AI vehicles based on `!(isPlayer leader group _x)` without checking crew/cargo/turret occupants. | Vehicles with any player occupant survive despawn while empty AI-only vehicles are still cleaned. |
 | WASP marker monitor busy-spin | `WASP/global_marking_monitor.sqf:62` polls display without sleep for up to 2 seconds. | Replace with throttled wait style like sibling `:80`; verify map double-click prefix still works. |
-| MASH markers | Client receiver commented and trigger never sent. | Either remove dead code or revive with server-held marker list, unique names and JIP replay. |
+| MASH markers | Client receiver commented and trigger never sent. | Either remove dead code or revive with server-held marker list, unique names and JIP replay. See [Abandoned feature revival](Abandoned-Feature-Revival-Review). |
 | Paratrooper markers | `HandleParatrooperMarkerCreation` not registered in client PVF list. | Register receiver or remove marker callback; paratroop drop itself remains server-owned. |
 | [HC delegation/failover](Headless-Delegation-And-Failover-Playbook) | DR-42: `Client_DelegateAIStaticDefence.sqf:28` has update-back send commented; town-AI delegation still reports through `update-town-delegation`; DR-21 covers missing HC disconnect re-delegation. | Decide whether static-defense delegation is intentionally one-way, then restore update-back/handler or retire stale code; add HC work records before implementing disconnect failover. |
 | Hosted FPS monitor loop | DR-19 duplicate: `Server/GUI/serverFpsGUI.sqf` and `Server/Module/serverFPS/monitorServerFPS.sqf` sleep inside `isDedicated`, so hosted/listen paths can loop without sleep. | Track as DR-19, not a separate finding; move sleep outside branches or exit early when not dedicated. |
@@ -218,4 +218,3 @@ Economy first-cut handoff: [Economy authority first cut](Economy-Authority-First
 Previous: [Feature status](Feature-Status-Register) | Next: [Server authority migration map](Server-Authority-Migration-Map)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
-

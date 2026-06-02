@@ -39,6 +39,8 @@
 
 ## 3. Keep-or-remove / maintenance-model decisions
 
+Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) for the source-backed revive/remove matrix behind the MASH, paratrooper, WASP, AI supply truck, stale UI and modded-mission rows.
+
 | Decision | Finding | Note |
 | --- | --- | --- |
 | Modded missions: regenerate from source vs maintain as forks | DR-32 | Napf/eden/lingor are divergent hand-edited forks; source fixes don't reach them |

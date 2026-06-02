@@ -1,6 +1,6 @@
 # Feature Status Register
 
-This register separates working systems from partial, deferred or risky systems found during indexing.
+This register separates working systems from partial, deferred or risky systems found during indexing. For revive/remove decisions on dormant feature paths, use [Abandoned feature revival](Abandoned-Feature-Revival-Review).
 
 ## Working / Active Systems
 

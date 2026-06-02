@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `abandoned-feature-revival-review` | Published | [Abandoned feature revival](Abandoned-Feature-Revival-Review) classifies MASH/paratrooper marker edges, AI supply trucks, UAV 007, WASP legacy actions, stale upgrade UI and modded mission propagation into revive/remove/leave-dormant decisions. |
 | `wiki-quality-c3-gameplay-followups` | Published | [Gameplay atlas](Gameplay-Systems-Atlas) no longer has stale open questions; resolved follow-ups now cite DR-15, structure repair consumers, live stagnation flow and range-global ownership. |
 | `wiki-quality-dup11-pv-channel-index` | Published | [Public variable channel index](Public-Variable-Channel-Index) is now the canonical direct-PV inventory; [Networking/PV](Networking-And-Public-Variables) and [SQF atlas](SQF-Code-Atlas) link there instead of duplicating tables. |
 | `wiki-quality-merge3-lifecycle-split` | Published | [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) now owns include graph/role dispatch; [Lifecycle wait-chain](Lifecycle-Wait-Chain) owns boot ordering, JIP waits and flag dependencies. |
@@ -41,7 +42,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
 | Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved C3 by retiring stale Gameplay atlas open questions. |
-| Codex-2 | Ready for next lane | `supply-mission-authority-cleanup-playbook` | [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) is published; next best lanes are abandoned-feature revival or performance opportunity sweep. |
+| Codex-2 | Ready for next lane | `abandoned-feature-revival-review` | [Abandoned feature revival](Abandoned-Feature-Revival-Review) is published; next best lanes are performance opportunity sweep, AI supply logistics cleanup, or paratrooper-marker implementation. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
@@ -73,6 +74,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | `wiki-quality-reduce4-gameplay-gateway` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) REDUCE-4 is resolved: Gameplay is now a gateway for detailed economy/construction/factory pages. |
 | `wiki-quality-c6-gameplay-citations` | Codex | Published | Final C6 pass is done for [Gameplay atlas](Gameplay-Systems-Atlas); [Wiki quality audit](Wiki-Quality-Audit) C6 is resolved. |
 | `supply-mission-authority-cleanup-playbook` | Codex-2 | Published | Use [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) before merging PR #1 supply helicopters as baseline or patching supply mission loaded-state/cooldown authority. |
+| `abandoned-feature-revival-review` | Codex-2 | Published | Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) before reviving old marker/support/UI/modded-mission paths; paratrooper markers are the smallest revive, AI supply trucks need design. |
 | `wiki-quality-c6-ai-citations` | Codex | Published | Second C6 pass is done for [AI/headless](AI-Headless-And-Performance). |
 | `economy-authority-first-cut` | Codex-2 | Published | Use [Economy authority first cut](Economy-Authority-First-Cut) before patching side-supply clamps, upgrade authority, construction/defense authority or player-buy locality. |
 | `wiki-quality-c6-ui-citations` | Codex | Published | First C6 pass is done for [Client UI/HUD](Client-UI-HUD-And-Menus); Gameplay/AI citation uplift remains open. |
@@ -95,6 +97,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| `abandoned-feature-revival-review` | Published | [Abandoned feature revival](Abandoned-Feature-Revival-Review) classifies MASH/paratrooper marker edges, AI supply trucks, UAV 007, WASP legacy actions, stale upgrade UI and modded mission propagation into revive/remove/leave-dormant decisions. |
 | Wiki-quality C3 Gameplay follow-ups | [Gameplay atlas](Gameplay-Systems-Atlas), [Wiki quality audit](Wiki-Quality-Audit) | Replaces stale open questions with resolved source-backed notes for commander assignment DR-15, construction repair logic consumption, factory build drift ownership, supply-income stagnation liveness and range-global ownership. |
 | Wiki-quality DUP-11 PV channel index | [Public variable channel index](Public-Variable-Channel-Index), [Networking/PV](Networking-And-Public-Variables), [SQF atlas](SQF-Code-Atlas), [Wiki quality audit](Wiki-Quality-Audit) | Makes the PV channel index the canonical direct-channel table, adds missing server-FPS/HQ/AntiStack rows from the old Networking table, and replaces duplicate atlas tables with cross-links. |
 | Wiki-quality MERGE-3 lifecycle split | [Mission entrypoints](Mission-Entrypoints-And-Lifecycle), [Lifecycle wait-chain](Lifecycle-Wait-Chain), [Wiki quality audit](Wiki-Quality-Audit) | Removes duplicated boot timeline/report verification detail from Mission entrypoints, keeps it focused on include graph and per-role init responsibility, and makes Lifecycle wait-chain the canonical boot-order/JIP/flag-dependency page. |

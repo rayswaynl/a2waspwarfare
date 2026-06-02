@@ -53,6 +53,7 @@
 - [Integrations](External-Integrations)
 - [Feature status](Feature-Status-Register)
 - [Pending owner decisions](Pending-Owner-Decisions)
+- [Abandoned feature revival](Abandoned-Feature-Revival-Review)
 - [Hardening roadmap](Hardening-Implementation-Roadmap)
 - [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook)
 - [Server authority map](Server-Authority-Migration-Map)

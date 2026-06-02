@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T21:20:00+02:00",
+  "generatedAt": "2026-06-02T21:34:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,10 +20,10 @@
       "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining duplicate cross-link reductions, MERGE-1 hardening/authority consolidation, or external Arma 2 OA source reference integration."
     },
     "Codex-2": {
-      "status": "active",
+      "status": "ready-for-next-lane",
       "currentLane": "abandoned-feature-revival-review",
-      "currentWork": "Source-tracing abandoned, commented and orphaned feature paths for revive/remove/leave-dormant classification.",
-      "nextExpectedOutput": "Abandoned-Feature-Revival-Review.md with evidence, classification, implementation shape and validation plan."
+      "currentWork": "Published Abandoned-Feature-Revival-Review.md with revive/remove/leave-dormant classifications for MASH markers, paratrooper markers, AI supply trucks, UAV 007, WASP legacy actions, stale upgrade UI and modded mission propagation.",
+      "nextExpectedOutput": "Select the next bounded lane, likely performance opportunity sweep, AI supply logistics cleanup, or paratrooper-marker implementation."
     },
     "Claude": {
       "status": "autonomous-ready",
@@ -33,6 +33,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "abandoned-feature-revival-review",
+      "owner": "Codex-2",
+      "status": "published",
+      "output": "Abandoned-Feature-Revival-Review.md revive/remove decision matrix"
+    },
     {
       "lane": "wiki-quality-c3-gameplay-followups",
       "owner": "Codex",
@@ -232,6 +238,7 @@
     "attackWaveAuthority": "Attack-Wave-Authority-Playbook.md",
     "attackWaveBacklog": "agent-hardening-backlog.jsonl#attack-wave-authority",
     "pvfDispatchPlaybook": "PVF-Dispatch-Implementation-Playbook.md",
-    "economyAuthorityFirstCut": "Economy-Authority-First-Cut.md"
+    "economyAuthorityFirstCut": "Economy-Authority-First-Cut.md",
+    "abandonedFeatureRevival": "Abandoned-Feature-Revival-Review.md"
   }
 }

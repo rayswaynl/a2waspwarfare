@@ -602,6 +602,13 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Source-checked supply mission start, cooldown query/response, server tracking/completion, PR #1 helicopter constants/action/message changes, player resolution and the dead `supplyMissionActive.sqf` twin.
 - Published [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook), turning DR-18/DR-39 and the PR #1 stacked-`Killed` handler review into a practical patch guide.
 - Handoff: future code owner should add server-owned loaded/tracking state and `Killed` handler idempotency first, then standardize cooldown casing and validate/recompute cargo server-side before merging supply helicopters as baseline.
+
+## 2026-06-02 - Codex-2 Abandoned Feature Revival Review
+
+- Published [Abandoned feature revival](Abandoned-Feature-Revival-Review) after source-checking MASH marker relay, paratrooper marker PVF, AI supply-truck logistics, UAV 007 UI branch, WASP legacy actions, stale upgrade dialog and modded mission propagation.
+- Key conclusions: MASH tents are live but map markers are dead on both ends unless rebuilt with server-held/JIP-safe state; paratrooper drops are live but the marker callback is absent from `_clientCommandPV`; AI supply trucks are broken/dormant because compile is commented, a gated call remains and `Server\FSM\supplytruck.fsm` is missing.
+- Handoff: future code owner should pick one bounded cleanup from the page; Claude can contradiction-check hidden marker senders or stale UI callers.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.
