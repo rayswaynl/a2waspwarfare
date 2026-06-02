@@ -13,7 +13,7 @@ WASP is the community/server identity this fork is built for. The mission credit
 | File | Purpose | Wired in / status |
 | --- | --- | --- |
 | `WASP/Init_Client.sqf` | Original WASP client entry point. | **Dead** — entire body commented (`WASP/Init_Client.sqf:5-21`). Superseded by direct wiring in `Client/Init/Init_Client.sqf`. |
-| `WASP/common/procInitComm.sqf` | MP-safe wrapper around `setVehicleInit`/`processInitCommands`/`clearVehicleInit` to run init code on a vehicle network-wide. | Compiled as `WASP_procInitComm` only at `initJIPCompatible.sqf:253`, which is **commented out** → function is undefined at runtime. |
+| `WASP/common/procInitComm.sqf` | MP-safe wrapper around `setVehicleInit`/`processInitCommands`/`clearVehicleInit` to run init code on a vehicle network-wide. | Compiled as `WASP_procInitComm` only in the commented block at `initJIPCompatible.sqf:243-245`, specifically `:243` → function is undefined at runtime. |
 | `WASP/actions/AddActions.sqf` | Re-adds player scroll actions on spawn/respawn. | **Live** (`Init_Client.sqf:575`). Most actions commented; only the HQ cash-recovery action is active. |
 | `WASP/actions/Action_RepairMHQDepot.sqf` | Commander-only: spend cash to paradrop-respawn a destroyed HQ near the player; resets all town SV to 10. | **Live** (via `AddActions.sqf`). |
 | `WASP/actions/OnKilled.sqf` | On player death, re-runs `AddActions.sqf` to reattach actions after respawn. | **Live** (`Client/Functions/Client_PreRespawnHandler.sqf:11`). |
@@ -26,7 +26,6 @@ WASP is the community/server identity this fork is built for. The mission credit
 | `WASP/global_marking_monitor.sqf` | Intercepts map double-click to auto-prefix the player's name onto marker text. | **Live** (`Init_Client.sqf:267`). Display wait still has a short busy-poll opportunity; see [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup). |
 | `WASP/rpg_dropping/DropRPG.sqf` | By DeraKOren (2012). (a) single-use AT-launcher weapon-swap, (b) pipe-bomb TK prevention near friendly bases, (c) mine time-tracking. | **Live** (`Init_Client.sqf:15` + recompiled on respawn at `Client_PreRespawnHandler.sqf:12`). |
 | `WASP/unsort/StartVeh.sqf` | Defines `EAST_StartVeh` / `WEST_StartVeh` classname pools for one random extra starting vehicle per side. | **Live** (compiled `Init_Server.sqf:306`, used `:425-459`). |
-| `test/wasp_selftest.sqf` | Server-only read-only diagnostic observer. | **Live** (`init.sqf:4`). See below. |
 
 > "**baserep**" is **base repair**, not base reputation. "**unsort**" is literally an unsorted dumping folder — `StartVeh.sqf` is live but the author never moved it into the proper `Common/Config/` hierarchy.
 
@@ -34,11 +33,10 @@ Do not confuse WASP base repair with the stock `Server_HandleBuildingRepair.sqf`
 
 ## How WASP is wired into the stock lifecycle
 
-The original single entry point (`WASP/Init_Client.sqf`, called from `initJIPCompatible.sqf:253-255`) was disabled by Marty as "old wasp script using resources unnecessarily." WASP features are now wired individually:
+The original single entry point (`WASP/Init_Client.sqf`, formerly called from the commented block at `initJIPCompatible.sqf:241-245`) was disabled by Marty as "old wasp script using resources unnecessarily." WASP features are now wired individually:
 
 | Call site | Wires |
 | --- | --- |
-| `init.sqf:4` | `test/wasp_selftest.sqf` (server-only) |
 | `Init_Client.sqf:15` | `WASP/rpg_dropping/DropRPG.sqf` |
 | `Init_Client.sqf:267` | `WASP/global_marking_monitor.sqf` |
 | `Init_Client.sqf:574` | `WASP/baserep/init.sqf` |
@@ -58,15 +56,6 @@ The original single entry point (`WASP/Init_Client.sqf`, called from `initJIPCom
 
 Claude DR-40 reviewed the WASP Perf + JIP/HC cells. The live WASP wiring is JIP/HC-clean because it runs per player from `Init_Client.sqf`, and headless clients skip these player-local features. The DR-40 perf nit in `WASP/global_marking_monitor.sqf:62` remains a small local cleanup opportunity: add a tiny sleep/backoff to the display-54 wait before expanding marker behavior. See [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup).
 
-## `test/wasp_selftest.sqf`
-
-A **read-only** observer harness, gated to the server twice (`init.sqf:4` via `isServer`, and `if (!isServer) exitWith {}` inside).
-
-- Waits up to 240s for `WFBE_PRESENTSIDES`; logs FAIL if it times out.
-- Asserts `count WFBE_PRESENTSIDES > 0`.
-- Samples 20 times at 30s intervals (~10 min window): per side it logs AI-commander funds (`GetAICommanderFunds`), town supply (`WFBE_CO_FNC_GetTownsSupply`), and whether the commander is AI (`WFBE_CO_FNC_GetCommanderTeam`). Exits early if `gameOver`.
-- Reports exclusively via `diag_log` with the tag `[WASP-SELFTEST]` (grep the server RPT). It never mutates mission state — safe to leave enabled.
-
 ## Dead / missing WASP references (cleanup candidates)
 
 These are referenced only from commented-out lines, or point at files that no longer exist. See [Feature status register](Feature-Status-Register) for the full disabled-feature inventory.
@@ -74,7 +63,8 @@ These are referenced only from commented-out lines, or point at files that no lo
 - `WASP/Init_Client.sqf` body — fully commented (Killed EH, OnArmor timer, KeyDown handler, trigger creation).
 - `WASP/actions/OnArmor/` and `WASP/actions/SitsOnArmor/` directories — **deleted**; still referenced by commented `AddActions.sqf:10-12` and `Init_Client.sqf:7,21`.
 - `WASP/KeyDown.sqf` — **missing**; referenced by commented `Init_Client.sqf:12-13`.
-- `WASP_procInitComm` — compile line commented (`initJIPCompatible.sqf:253` in this checkout's line map; Gauss also observed the old block around `:241-245`), so `car_wheel_new.sqf` (its only consumer) is a dead chain.
+- `WASP_procInitComm` — compile line commented (`initJIPCompatible.sqf:243`, inside block `:241-245`), so `car_wheel_new.sqf` (its only consumer) is a dead chain.
+- `test/wasp_selftest.sqf` — **not present** in the source mission. Current source has no root `init.sqf`, no `test/` directory, no `*selftest*` file, and no `WASP-SELFTEST` log tag. Treat any old self-test description as a documentation error, not a dormant feature.
 - `WASP/actions/GearYouUnit.sqf` is still present, but the action that opens it is commented at `WASP/actions/AddActions.sqf:4`; DR-35 also found this dead action was one of the apparent localization misses.
 - The commented OnArmor actions reference missing localization keys and missing scripts, but DR-35 verified these are dead-code misses rather than live broken strings.
 

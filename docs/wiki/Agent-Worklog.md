@@ -193,7 +193,7 @@ Append entries here so Codex, Claude and future assistants can see what each age
 
 - Reviewed Codex wiki against source on `feat/supply-helicopter` using parallel read-only sweeps across lifecycle, PV networking, economy/town/supply, AI/headless/performance, tooling/integrations, WASP overlay and broken-feature inventory.
 - Added `Lifecycle-Wait-Chain.md` for role truth table, boot timelines and global flag -> `waitUntil` dependencies.
-- Added `WASP-Overlay.md` for the project-specific `WASP/` subtree, live wiring, orphaned actions, base repair, RPG dropping, start vehicles and selftest.
+- Added `WASP-Overlay.md` for the project-specific `WASP/` subtree, live wiring, orphaned actions, base repair, RPG dropping, start vehicles and dead/missing legacy references.
 - Sharpened PVF internals: one PV variable per command, client element-0 routing, wrapper-to-engine primitive mapping, second-level `HandleSpecial` and `LocalizeMessage` multiplexers.
 - Sharpened AI/headless notes: town AI is spawn/delete distance activation, HC owns units through remote creation, late HC joins can miss delegation after init downgrade and `GetSleepFPS` intentionally shortens sleeps under low FPS.
 - Confirmed Supply System 0 plus AI commanders is config-gated latent breakage because `UpdateSupplyTruck` is not compiled but the call site remains live under that configuration.
@@ -1045,7 +1045,7 @@ Key conclusions:
   - OA-safe but **mis-assumed A3-only**: `diag_tickTime` (A2 1.00; the `PerformanceAudit_Record` stopwatch, ~62 files, e.g. `Client/Client_UpdateRHUD.sqf:187`) and `uiSleep` (A2 1.05 / OA 1.50; AntiStack loops + `buildings_restorer.sqf:26`, 7 files).
   - OA-safe but **removed in A3**: `setVehicleInit` + `processInitCommands` (OFP/A2 1.00, OA 1.50; disabled in A3 for security; 17/19 files). All `setVehicleInit` strings are hardcoded literals (textures, fixed init-script calls) — not network-derived — so no injection surface beyond the documented PVF dispatcher class (DR-1).
 - Added a "Confirmed available" pair + a new "OA-safe but removed in Arma 3 — the inverse trap" section to the command version reference, and updated its "Gaps to fold" note. Routed the canonical-page mirror suggestion to Codex as Instructions-For-Codex item 48 (additive; no correction to existing audit content).
-- Confirmed false alarms while scanning: SQF `params` keyword is genuinely absent (the 4 hits are `setParticleParams [`); `isEqualTo` appears only in a self-imposed-rule comment in `test/wasp_selftest.sqf`. (Note: that selftest file does exist in source — separate from the WASP-Overlay "fabricated wiring" finding, item 43, which is about its `init.sqf:4` wiring + behavior section, not the file's existence.)
+- Confirmed false alarms while scanning: SQF `params` keyword is genuinely absent (the 4 hits are `setParticleParams [`); `isEqualTo` does not appear as live source usage. The earlier `test/wasp_selftest.sqf` reference was part of the WASP-Overlay documentation error later corrected by Codex: that file does not exist in the source mission.
 - Remaining: Codex to fold the inverse-trap classes into `agent-compatibility-audit.json` / the human audit page (item 48); Arma 2 OA runtime smoke remains the gate for any actual source patch (no source edits made this pass — docs only).
 
 # 2026-06-02 - Registered Client PVF Runtime Matrix
@@ -1068,3 +1068,10 @@ Key conclusions:
 - Closed Claude's Instructions-For-Codex item 42 by replacing the former Arma 3-only `apply` example in [Deep-review findings](Deep-Review-Findings) DR-1 Fix 2 with an Arma 2 OA-safe `forEach` allowlist build.
 - Confirmed the newer [PVF dispatch implementation playbook](PVF-Dispatch-Implementation-Playbook#1-export-allowlists-at-pvf-init) already used the safe pattern and left it unchanged.
 - Updated [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide), [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference), [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit), [`agent-compatibility-audit.json`](agent-compatibility-audit.json), [Instructions for Codex](Instructions-For-Codex) and [`agent-knowledge.jsonl`](agent-knowledge.jsonl) so future agents treat `apply`, `params`, `setGroupOwner`, multi-index `select` and inline `private` forms as A3-only unless OA proof is supplied.
+
+# 2026-06-02 - WASP Overlay Self-Test Documentation Correction
+
+- Closed Claude's Instructions-For-Codex item 43 by source-checking the Chernarus source mission for `init.sqf`, `test/`, `*selftest*` and `WASP-SELFTEST`.
+- Removed the fabricated live `test/wasp_selftest.sqf` row, wiring entry and behavior section from [WASP overlay](WASP-Overlay); the page now records it as a documentation error under dead/missing references.
+- Corrected `WASP_procInitComm` from `initJIPCompatible.sqf:253-255`/`:253` to the commented block at `initJIPCompatible.sqf:241-245`, specifically `:243`.
+- Updated [`agent-context.json`](agent-context.json), [Instructions for Codex](Instructions-For-Codex), and [`agent-knowledge.jsonl`](agent-knowledge.jsonl) so compact agent context no longer lists a server self-test as a WASP feature.
