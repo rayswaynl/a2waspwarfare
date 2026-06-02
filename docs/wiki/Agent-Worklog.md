@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Main Orchestrator: Wave N Owner-Page Harvest + Sidecar Scouts
+
+- Accepted Steff's explicit note that this tab is now the main LLM orchestrator: Codex owns canonical docs publishing, validation, dashboard/status updates and cross-agent handoffs.
+- Reused the six already-attached agents after the subagent thread cap blocked fresh spawns. New read-only sidecar lanes are factories/economy authority, AI/headless cleanup, UI/IDDs/RHUD, server integrations/tooling drift, parameter/include/generated parity and abandoned-feature archaeology.
+- Promoted the highest-risk Wave N findings from [Discovery swarm](Subagent-Discovery-Swarm) into owner pages instead of leaving them as raw summaries: [WASP overlay](WASP-Overlay), [join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle), [support/specials atlas](Support-Specials-And-Tactical-Modules-Atlas), [gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [towns/camps/capture atlas](Towns-Camps-And-Capture-Atlas) and [Feature status](Feature-Status-Register).
+- Added owner-page evidence for unbounded join/launch ACK retries, RU para-ammo config swallowed by a line comment, missing `airRaid` on stale nuke warning path, profile import six-field bounds, dormant/broken town mortar scaffold, resistance/static-defense scaffolds and WASP action/procInitComm revival traps.
+
 ## 2026-06-02 - Codex Main Orchestrator: Assets/Config Atlas + Wave N Returns
 
 - Accepted Steff's direction that this Codex tab is the main LLM orchestrator: Codex owns canonical navigation, mirror validation, progress reporting and publishing; Claude and other Codex tabs should claim bounded deep-review lanes and feed source-backed findings back through shared worklog/events/status files.

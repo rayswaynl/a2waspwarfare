@@ -71,13 +71,22 @@ Paradrops, service actions and supply missions overlap with economy authority:
 
 Use [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook), [Service menu affordability guards](Service-Menu-Affordability-Guards) and [Economy authority first cut](Economy-Authority-First-Cut) for implementation sequencing.
 
+## Wave N Dispatch Notes
+
+Wave N rechecked the support router and found two source-level traps worth keeping on this owner page:
+
+- `Server/PVFunctions/RequestSpecial.sqf:1` remains only a trampoline into `HandleSpecial`, so the actual authority boundary is `Server/Functions/Server_HandleSpecial.sqf`. That dispatch accepts paratroop/ammo/vehicle tags around `:43-52`, UAV around `:63-64`, ICBM around `:97-111`, `track-playerobject` around `:133-146` and `repair-camp` around `:147-170`.
+- RU para-ammo config is effectively commented out in `Common/Config/Core_Root/Root_RU.sqf:36`: the `WFBE_%1PARAAMMO` assignment appears after `//--- Starting Vehicles` on the same physical line. `Server/Support/Support_ParaAmmo.sqf:59-60` exits unless `WFBE_%1PARAAMMO` is an array, so RU ammo paradrop support needs a config-line repair before it can be treated as feature-complete.
+- `Client/PVFunctions/NukeIncoming.sqf:7` plays `airRaid`, while [Assets/config/localization/parameters atlas](Assets-Config-Localization-And-Parameters-Atlas) confirms no `class airRaid` in `Sounds/description.ext`. If `NukeIncoming` is revived, add or replace that sound reference.
+
 ## Patch-Ready Hardening
 
 | Finding | Patch shape |
 | --- | --- |
 | `RequestSpecial` trusts client-side gates | Add server-side requester/side/role/funds/cooldown/upgrade validation before dispatching assets or map-wide effects. |
+| RU ammo paradrop config is commented out | Split `Root_RU.sqf:36` so the starting-vehicle comment does not swallow `WFBE_%1PARAAMMO`; smoke RU para-ammo request after the fix. |
 | Zeta detach missing vehicle arg | Pass `[_vehicle]` when adding the detach action in `Zeta_Hook.sqf`, or revise `Zeta_Unhook.sqf` to find the lifted object safely. |
-| Stale ICBM adjuncts | Either wire the `ICBM_launched` / `NukeIncoming` paths intentionally or remove/document them as dead. |
+| Stale ICBM adjuncts | Either wire the `ICBM_launched` / `NukeIncoming` paths intentionally or remove/document them as dead. If revived, fix the missing `airRaid` sound reference first. |
 | MASH marker flow is split | Reconcile sender, server relay and client receiver, or remove the stale marker relay. |
 | Supply mission cargo/source trust | Recompute cargo/source/reward server-side from trusted truck/town state. |
 | UAV creation/cost client-owned | Move UAV spawn/cost validation server-side or validate requested type, side, funds and existing UAV before accepting tracking. |

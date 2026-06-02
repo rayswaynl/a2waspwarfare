@@ -99,6 +99,7 @@ For public hosting, treat AFK as a client UX kick plus BattlEye/logging signal, 
 | Stale supply player rows | `playerObjectsList.sqf:31-35` appends when no valid match updates; `Server_OnPlayerDisconnected.sqf` does not remove `WFBE_SE_PLAYERLIST` rows. | Add UID-based disconnect cleanup and ignore/null-prune stale object refs before supply completion lookup. |
 | Stale disconnect cleanup race | `Server_OnPlayerDisconnected.sqf:128-129` clears `wfbe_uid` / `wfbe_teamleader` after a 0.5-second delay. | Before clearing, confirm the variables still match the disconnecting UID and old player object. |
 | Raw lifecycle ACK names are global | Lifecycle ACK/request names above are not UID-scoped. | Use payload arrays or UID-scoped state; validate owner/player when Arma 2 OA gives enough context. |
+| Join and launch ACK retries are unbounded | `Init_Client.sqf:416-430` resends `RequestJoin` every 30-second warning cycle until `WFBE_P_CANJOIN`; `:442-456` repeats `WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH` until `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK`. | Add bounded retry/backoff and a clear degraded-server message/log path so missing PV handlers do not leave clients in an endless retry loop. |
 | Launch-connect side signal is client-pushed | `clientHasConnectedAtLaunch.sqf:1-15` records side from the client-published player object and owner-targets the ACK. | Validate sender/UID/side/object consistency before storing `WFBE_PLAYER_%UID_CONNECTED_AT_LAUNCH`; log mismatches once per UID. |
 | AntiStack disconnect writes are unchecked | `Server_OnPlayerDisconnected.sqf:151-176` calls store-side/score wrappers and ignores return codes. | Log failures, consider one bounded retry and expose degraded persistence in the AntiStack audit/performance state. |
 | AFK PV trusts a name string | `AFKthresholdExceededName` carries the client-reported name. | Send `[player, uid, name]` or derive from owner where possible; log mismatches rather than trusting the string. |
@@ -107,6 +108,7 @@ For public hosting, treat AFK as a client UX kick plus BattlEye/logging signal, 
 
 - First join with teamswap protection enabled and disabled.
 - Launch players on both sides; verify launch-side ACK is owner-specific.
+- Temporarily suppress the join/launch server reply in a test copy; verify clients get bounded diagnostics instead of an infinite retry loop.
 - Fast disconnect/reconnect with the same UID; confirm no stale cleanup clears the new team record.
 - Supply mission player-object list updates the matching UID row after reconnect; stale-entry removal is still a separate hardening task.
 - Commander disconnect clears commander state exactly once.

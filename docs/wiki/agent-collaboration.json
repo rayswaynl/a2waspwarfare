@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T17:05:00+02:00",
+  "generatedAt": "2026-06-02T22:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "main-orchestrator-wave-n-owner-page-harvest",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Subagent-Discovery-Swarm.md#current-wave-wave-n",
+        "docs/wiki/WASP-Overlay.md",
+        "docs/wiki/Player-Join-Disconnect-And-AntiStack-Lifecycle.md",
+        "docs/wiki/Support-Specials-And-Tactical-Modules-Atlas.md",
+        "docs/wiki/Gear-Loadout-And-EASA-Atlas.md",
+        "docs/wiki/Towns-Camps-And-Capture-Atlas.md",
+        "docs/wiki/Feature-Status-Register.md"
+      ],
+      "outputs": [
+        "Owner-page promotion for Wave N high-risk findings",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-status.json",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl"
+      ],
+      "handoff": "Codex is the canonical publisher/orchestrator for this lane. Other agents should feed compact source-backed reports into the dashboard/worklog/events flow and avoid overwriting these owner-page edits."
+    },
     {
       "lane": "send-message-rce-review",
       "owner": "Claude",

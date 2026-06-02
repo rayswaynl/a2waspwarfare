@@ -56,6 +56,15 @@ The original single entry point (`WASP/Init_Client.sqf`, formerly called from th
 
 Claude DR-40 reviewed the WASP Perf + JIP/HC cells. The live WASP wiring is JIP/HC-clean because it runs per player from `Init_Client.sqf`, and headless clients skip these player-local features. The DR-40 perf nit in `WASP/global_marking_monitor.sqf:62` remains a small local cleanup opportunity: add a tiny sleep/backoff to the display-54 wait before expanding marker behavior. See [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup).
 
+## Wave N Fragility Checks
+
+The Wave N WASP scout rechecked several old-action edges that are easy to misread as live features:
+
+- `WASP/actions/AddActions.sqf:15` assigns the HQ recovery action ID through `208 = player addAction ...`, an unusual global numeric variable style. Treat it as legacy action-ID storage; do not copy that pattern into new actions.
+- `WASP/actions/Action_RepairMHQDepot.sqf:6-29` performs the cash gate, cash deduction, local HQ position move and local town-SV reset before/around `RequestMHQRepair`. The server still owns the final HQ repair in `Server_MHQRepair.sqf`, but the preflight economics and visible side effects are client-led.
+- `WASP/common/procInitComm.sqf:2-6` is not just dormant; if revived as-is, it calls `_obj setVehicleInit "_initCMD"` with a literal string instead of the command variable. Any revival must fix that call shape and deliberately accept the Arma 2 OA `setVehicleInit`/`processInitCommands` JIP semantics.
+- The commented `initJIPCompatible.sqf:241-245` WASP bootstrap is the only compile site for `WASP_procInitComm`, so `car_wheel_new.sqf` remains a dead chain until both the bootstrap and call shape are repaired.
+
 ## Dead / missing WASP references (cleanup candidates)
 
 These are referenced only from commented-out lines, or point at files that no longer exist. See [Feature status register](Feature-Status-Register) for the full disabled-feature inventory.

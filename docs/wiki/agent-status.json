@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T21:00:00+02:00",
+  "generatedAt": "2026-06-02T22:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -19,7 +19,7 @@
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
       "currentWork": "Acting as main LLM orchestrator and publisher: routing Claude/Codex lanes, harvesting returned reports into owner pages and machine records, and publishing validated docs/wiki mirror updates.",
-      "nextExpectedOutput": "Validate and publish the assets/config atlas plus Wave N harvest summary, then promote highest-risk Wave N findings into owner pages."
+      "nextExpectedOutput": "Harvest the new sidecar scout reports when they return, then promote confirmed findings into owner pages and machine records."
     },
     "Codex-2": {
       "status": "ready",
@@ -34,17 +34,29 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "returned-summary-harvest-pending-owner-pages",
-      "currentLane": "code-discovery-wave-n",
-      "currentWork": "Wave N returned: Tesla WASP overlay, Linnaeus join/JIP/disconnect, Lorentz PVF/router tags, Hubble gear/EASA/profile, Banach supports/ICBM/UAV and Curie towns/static defense. Compact harvest is in Subagent-Discovery-Swarm.md.",
-      "nextExpectedOutput": "Codex or another owner should spot-check and promote the highest-risk Wave N findings into the canonical owner pages."
+      "status": "queued-readonly-sidecar-discovery",
+      "currentLane": "orchestrator-sidecar-discovery-o",
+      "currentWork": "Wave N owner-page promotion is local/validation pending. The six attached agents were reused for new read-only sidecar lanes: factories/economy authority, AI/headless cleanup, UI/IDDs/RHUD, server integrations/tooling drift, parameter/include/generated parity and abandoned-feature archaeology.",
+      "nextExpectedOutput": "Return compact source-backed reports; Codex will spot-check and promote only confirmed findings into canonical owner pages."
     }
   },
   "laneSummary": [
     {
+      "lane": "wave-n-owner-page-harvest",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Checked Wave N findings are promoted into WASP-Overlay.md, Player-Join-Disconnect-And-AntiStack-Lifecycle.md, Support-Specials-And-Tactical-Modules-Atlas.md, Gear-Loadout-And-EASA-Atlas.md, Towns-Camps-And-Capture-Atlas.md and Feature-Status-Register.md. New owner-page evidence covers unbounded join/launch ACK retries, RU para-ammo config swallowed by a comment, missing airRaid on stale NukeIncoming, profile import bounds, dormant town mortars, resistance/static-defense scaffolds and WASP revival traps."
+    },
+    {
+      "lane": "orchestrator-sidecar-discovery-o",
+      "owner": "Codex sub-agents",
+      "status": "queued-readonly",
+      "output": "Fresh spawn was blocked by the subagent thread cap, so Codex reused the six attached agents for sidecar source discovery: factories/economy authority, AI/headless cleanup, UI/IDDs/RHUD, server integrations/tooling drift, parameter/include/generated parity and abandoned-feature archaeology. Raw reports are not canonical until Codex promotes them."
+    },
+    {
       "lane": "assets-config-localization-parameters-atlas",
       "owner": "Codex",
-      "status": "local-validation-pending",
+      "status": "published-validated",
       "output": "Assets-Config-Localization-And-Parameters-Atlas.md maps description.ext/Rsc include graph, mission parameter export, stringtable, sound/music/media counts, missing airRaid, missing tactical wf_*.paa icons, missing local vehicle textures and stale unitCaching include."
     },
     {
