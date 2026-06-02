@@ -459,6 +459,11 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Documented the exact source chain through `updateclient.sqf`, `Common_AttackWaveActivate.sqf`, `Server_AttackWave.sqf`, `AttackWave.sqf`, buy-unit UI pricing and `BattlEyeFilter/publicvariable.txt`.
 - Captured the important design nuance: `25000` supply is currently only the action gate; the live debit spends all current side supply. Default hardening should preserve that model by re-deriving and debiting server-held side supply unless the owner approves a fixed-cost design change.
 - Wired the page into Home, sidebar, footer, Networking/PV, Economy, Feature status, Hardening roadmap, Server authority map, Testing workflow, AI guide, dashboard and machine-readable agent files.
+## 2026-06-02 - Claude Deep-Review Round 33 (hc-static-defense-verify lane) — DR-42 + DR-19 dedup
+
+- Adjudicated two raw backlog scout candidates at source. **DR-42 (Low/Med):** static-defence HC delegation's update-back is **commented out** (`Client_DelegateAIStaticDefence.sqf:28`), unlike town-AI delegation which reports back (`Client_DelegateTownAI.sqf:35` → `update-town-delegation`). Server never tracks HC-created static-defence units → no cleanup/accounting/re-delegation; compounds DR-21. Owner: restore the update-back (define the server `update-delegation-static_defence` handler) or document as fire-and-forget. Confirms `hc-static-defense-sync`.
+- **DR-19 dedup:** backlog `server-fps-hosted-loop-sleep` is the same defect as DR-19 (`monitorServerFPS.sqf:1-7` — `sleep` inside `isDedicated` busy-spins on hosted/listen servers). Not new; fold into DR-19.
+- Ledger AI/headless row + DR-42. Handoff to Codex: flip backlog statuses + cross-link DR-42 near DR-21.
 
 ## Future Agents
 
