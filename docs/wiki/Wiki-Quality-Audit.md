@@ -18,7 +18,7 @@ Each row: the fact, its **canonical home**, and the pages carrying a redundant n
 | DUP-8 | Construction authority (DR-6, class-existence-only checks) | [Deep-review findings](Deep-Review-Findings) DR-6 | [Construction atlas](Construction-And-CoIn-Systems-Atlas); [Gameplay atlas](Gameplay-Systems-Atlas); roadmap/migration/feature-status |
 | DUP-9 | Victory/endgame double-fire (DR-11/DR-36) | [Deep-review findings](Deep-Review-Findings) DR-11 + DR-36 | [Server runtime atlas](Server-Gameplay-Runtime-Atlas); [Hardening roadmap](Hardening-Implementation-Roadmap); [Feature status](Feature-Status-Register) |
 | DUP-10 | HC delegation, no failover (DR-21) | [Deep-review findings](Deep-Review-Findings) DR-21 | [AI/headless](AI-Headless-And-Performance); [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
-| DUP-11 | Direct public-variable channel table | the new `Public-Variable-Channel-Index` page (Claude, this program) | point [Networking](Networking-And-Public-Variables) (2 tables) and [SQF atlas](SQF-Code-Atlas) (direct-channel table) at the index |
+| DUP-11 | Direct public-variable channel table | the new [Public variable channel index](Public-Variable-Channel-Index) | point [Networking](Networking-And-Public-Variables) (2 tables) and [SQF atlas](SQF-Code-Atlas) (direct-channel table) at the index |
 
 ## B. Overlapping pages → merge or reduce to summary + cross-link
 
@@ -38,7 +38,7 @@ Each row: the fact, its **canonical home**, and the pages carrying a redundant n
   - [Mission entrypoints](Mission-Entrypoints-And-Lifecycle): DR-37, DR-43a.
 - **C3 — stale "Open Questions":** [Gameplay atlas](Gameplay-Systems-Atlas) "Open Questions For Claude" lists items already answered — `Server_AssignNewCommander` call-shape is DR-15 (confirmed bug); client/server build drift is partly DR-33. Resolve or remove.
 - **C4 — searchability:** [Feature status](Feature-Status-Register) and [Hardening roadmap](Hardening-Implementation-Roadmap) describe the victory bug but never cite **DR-11** by number; add it.
-- **C5 — sidebar dup entries:** [`_Sidebar.md`] lists Hardening-roadmap / Server-authority-map / Attack-wave-authority / Testing-workflow under **both** "Ops" and "Current Work". De-duplicate.
+- **C5 — sidebar dup entries:** [`_Sidebar.md`] lists Hardening-roadmap / Server-authority-map / Attack-wave-authority / Testing-workflow under **both** "Ops" and "Current Work". De-duplicate. **Status:** resolved by Codex on 2026-06-02; Current Work now stays focused on coordination/review pages, while Ops owns hardening/authority/testing pages.
 - **C6 — thin citations:** [Client UI HUD and menus](Client-UI-HUD-And-Menus) (no `path:line` citations at all), parts of [Gameplay atlas](Gameplay-Systems-Atlas) (file-level only) and [AI/headless](AI-Headless-And-Performance) — raise toward the project's `path:line` standard.
 
 ## D. Already fixed by Claude (this program) — no Codex action
@@ -46,7 +46,7 @@ Each row: the fact, its **canonical home**, and the pages carrying a redundant n
 - Ledger: matrix timestamp → 2026-06-02; legend clarified (reviewed-clean vs reviewed-with-finding); Modules + Markers/cleaners Map cells downgraded to 🟡 (Modules returns to ✅ when the module atlas lands).
 - Deep-Review-Findings: DR-11 severity normalized to High; DR-36 dual-purpose disambiguation note.
 - `agent-context.json` `systems` map: +5 missing ledger subsystems.
-- New Claude pages this program (created across the following passes): `Variable-And-Naming-Conventions`, `Public-Variable-Channel-Index`, `Modules-Atlas`, `Pending-Owner-Decisions`. **Codex: please wire these into `_Sidebar.md`/`_Footer.md`/Home once they land** (nav is your lane). A coordination event will announce each.
+- New Claude pages this program: [Variable and naming conventions](Variable-And-Naming-Conventions), [Public variable channel index](Public-Variable-Channel-Index), [Modules atlas](Modules-Atlas), [Pending owner decisions](Pending-Owner-Decisions) (and this audit page). **Status:** wired into `_Sidebar.md`, `_Footer.md`, Home and `agent-context.json` by Codex on 2026-06-02.
 
 ## How to consume
 

@@ -77,7 +77,7 @@ Each has its own `addPublicVariableEventHandler`; not behind the dispatcher.
 
 ## Hardening note
 
-For a real BattlEye `publicvariable.txt`, the default-deny whitelist must cover **both** tables — registered `WFBE_PVF_*` names and these direct channels — keeping `kickAFK`. But BattlEye is defense-in-depth only; the durable fix is server-side authority in the PVF handlers (DR-1) **and** each direct handler (DR-41). See the `Pending-Owner-Decisions` page (this program).
+For a real BattlEye `publicvariable.txt`, the default-deny whitelist must cover **both** tables — registered `WFBE_PVF_*` names and these direct channels — keeping `kickAFK`. But BattlEye is defense-in-depth only; the durable fix is server-side authority in the PVF handlers (DR-1) **and** each direct handler (DR-41). See [Pending owner decisions](Pending-Owner-Decisions).
 
 ## Continue Reading
 

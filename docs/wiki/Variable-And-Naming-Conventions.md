@@ -18,11 +18,11 @@
 
 ## Key implications
 
-- **`WFBE_C_MODULE_WFBE_<X>` gates a module** — most `Client/Module/*` and `Common/Module/*` subsystems are config-gated by one of these (e.g. `WFBE_C_MODULE_WFBE_EASA`, `WFBE_C_MODULE_WFBE_FLARES`, `WFBE_C_MODULE_WFBE_ICBM`, `WFBE_C_MODULE_WFBE_IRSMOKE`). See the `Modules-Atlas` page.
+- **`WFBE_C_MODULE_WFBE_<X>` gates a module** — most `Client/Module/*` and `Common/Module/*` subsystems are config-gated by one of these (e.g. `WFBE_C_MODULE_WFBE_EASA`, `WFBE_C_MODULE_WFBE_FLARES`, `WFBE_C_MODULE_WFBE_ICBM`, `WFBE_C_MODULE_WFBE_IRSMOKE`). See the [Modules atlas](Modules-Atlas).
 - **`SRVFNC*`/`CLTFNC*` are pre-compiled once at boot**, but the dispatchers `Server_HandlePVF.sqf`/`Client_HandlePVF.sqf` `Call Compile` the sender-provided command string per message instead of using these pre-compiled globals — that is both the DR-1 RCE and a per-message recompile (DR-38). See [Networking](Networking-And-Public-Variables).
 - **`wfbe_*` with `setVariable [..., true]` is the replication mechanism** — the "true" makes the value global and JIP-synced; this is also why the economy ledger is *replicated client state* rather than a server source of truth (DR-8-class; the economy-authority findings).
 - **SQF identifiers are case-insensitive, but `setVariable`/`getVariable` keys are case-SENSITIVE** — the source of DR-18 (`lastSupplyMissionRun` vs `LastSupplyMissionRun`). Watch casing on `wfbe_*` keys specifically.
 
 ## Continue Reading
 
-PV channels: `Public-Variable-Channel-Index` (this program) | Dispatch: [Networking](Networking-And-Public-Variables) | Map: [Home](Home)
+PV channels: [Public variable channel index](Public-Variable-Channel-Index) | Dispatch: [Networking](Networking-And-Public-Variables) | Map: [Home](Home)

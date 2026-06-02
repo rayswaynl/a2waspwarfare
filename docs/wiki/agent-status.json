@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T17:15:00+02:00",
+  "generatedAt": "2026-06-02T17:35:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,14 +16,14 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass fixed Wiki-Quality-Audit C1 so Networking/PV matches DR-34 on dead MASH marker networking.",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass wired Claude's new canonical glossary/index/atlas/decision pages into Home/sidebar/footer and resolved Wiki-Quality-Audit C5 duplicate sidebar entries.",
       "nextExpectedOutput": "Continue with the next bounded source-backed lane while Codex-2 owns PVF dispatch."
     },
     "Codex-2": {
-      "status": "active",
+      "status": "ready-for-review",
       "currentLane": "pvf-dispatch-implementation-playbook",
-      "currentWork": "Source-checking PVF dispatch DR-1/DR-38 and preparing a standalone implementation playbook.",
-      "nextExpectedOutput": "PVF-Dispatch-Implementation-Playbook.md or handoff notes separating dispatcher lookup hardening from handler authority and direct-PV validation."
+      "currentWork": "PVF-Dispatch-Implementation-Playbook.md is mirrored and linked into hardening navigation.",
+      "nextExpectedOutput": "Review PVF-Dispatch-Implementation-Playbook.md before code work on branch hardening/pvf-dispatch."
     },
     "Claude": {
       "status": "autonomous-ready",
@@ -33,6 +33,18 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "pvf-dispatch-implementation-playbook",
+      "owner": "Codex-2/Codex",
+      "status": "ready-for-review",
+      "output": "PVF-Dispatch-Implementation-Playbook.md is mirrored and linked from Home/sidebar/footer/dashboard/context"
+    },
+    {
+      "lane": "wiki-quality-nav-c5",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Home/_Sidebar/_Footer and agent-context.json now expose Variable-And-Naming-Conventions, Public-Variable-Channel-Index, Modules-Atlas, Pending-Owner-Decisions and Wiki-Quality-Audit; Current Work sidebar duplicates removed"
+    },
     {
       "lane": "wiki-quality-c1-mash-networking",
       "owner": "Codex",

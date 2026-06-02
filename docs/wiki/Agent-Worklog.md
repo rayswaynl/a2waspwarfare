@@ -499,12 +499,20 @@ Append entries here so Codex, Claude and future assistants can see what each age
 
 - New `Modules-Atlas.md` — source-verified sections for the ~10 previously-undocumented modules: **IRS** (IR smoke; gate `WFBE_C_MODULE_WFBE_IRSMOKE` + `WFBE_UP_IRSMOKE`), **CM** (flares/chaff; vanilla-only gate), **Reaktiv** (ERA armor via `HandleDamage`), **Engines** (stealth = save fuel + `setFuel 0`), **AutoFlip** (Marty; flip-righting poll, tilt 0.35/cooldown 45), **ZetaCargo** (Benny sling-load; lifter allow-list + cargo types), **Valhalla** (low-gear/high-climb; display-46 key EHs), **Skill** (Benny class abilities; Engineer/Soldier/Officer/…), **NEURO** (Benny AI taxi; `NEURO_TAXI_CONDITION` hook), **CIPHER** (Benny sort util; no side effects). Cross-links the already-covered modules (Nuke DR-27, EASA DR-28, AntiStack DR-7-10, supplyMission DR-39, MASH DR-34, UAV, serverFPS DR-19, AFK DR-30).
 - Ledger **Modules Map 🟡→✅** (restored; atlas now exists) and row title/anchor expanded to name the documented modules.
+- **Pass 7 done (program complete):** new `Pending-Owner-Decisions.md` — consolidates every open owner decision (economy/forgery class as one two-surface decision; correctness fixes; keep-or-remove; robustness) with finding + severity + page links; it operationalizes the loop's "done = only owner decisions remain". Final relink pass converted all backticked sibling refs to real links now that the 5 new pages exist; **full-wiki link gate: no broken links**. **Codex handoff posted:** wire the 5 new pages (`Wiki-Quality-Audit`, `Variable-And-Naming-Conventions`, `Public-Variable-Channel-Index`, `Modules-Atlas`, `Pending-Owner-Decisions`) into nav, and action the Wiki-Quality-Audit A/B/C punch-list on your pages.
 
 ## 2026-06-02 - Codex Wiki-Quality C1 MASH Networking Fix
 
 - Actioned [Wiki quality audit](Wiki-Quality-Audit) C1 on [Networking/PV](Networking-And-Public-Variables).
 - Corrected the MASH direct-PV row to DR-34: the server PVEH is registered but orphaned, the client never broadcasts `WFBE_CL_MASH_MARKER_CREATED`, and the client receiver compile is commented.
 - Updated replay/JIP notes to say a revival needs a server-held marker list, JIP re-send and unique marker names.
+
+## 2026-06-02 - Codex Wiki-Quality Navigation / C5
+
+- Wired Claude's new canonical pages into primary navigation: [Variable and naming conventions](Variable-And-Naming-Conventions), [Public variable channel index](Public-Variable-Channel-Index), [Modules atlas](Modules-Atlas), [Pending owner decisions](Pending-Owner-Decisions) and [Wiki quality audit](Wiki-Quality-Audit).
+- Mirrored and surfaced Codex-2's [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) as the DR-1/DR-38 hardening guide.
+- Resolved [Wiki quality audit](Wiki-Quality-Audit) C5 by keeping hardening roadmap, server authority map, attack-wave authority and testing workflow in Ops, while Current Work now focuses on dashboard/coordination/review pages.
+- Added the new pages into Home reading paths/current map, `_Footer.md` and `agent-context.json`.
 
 ## Future Agents
 

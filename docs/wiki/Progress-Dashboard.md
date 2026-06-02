@@ -8,6 +8,8 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `pvf-dispatch-implementation-playbook` | Surfaced | [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) is now mirrored and linked from hardening navigation; it separates DR-1/DR-38 dispatcher lookup hardening from handler authority and direct-PV channels. |
+| `wiki-quality-nav-c5` | Published | New canonical pages are wired into Home/sidebar/footer, and `_Sidebar.md` no longer repeats hardening/authority/testing pages under both Ops and Current Work. |
 | `wiki-quality-c1-mash-networking` | Published | [Networking/PV](Networking-And-Public-Variables) now matches DR-34: MASH marker networking is dead on both ends, not a live server relay with only a missing receiver. |
 | `hc-delegation-failover-playbook` | Published | [HC delegation/failover](Headless-Delegation-And-Failover-Playbook) turns DR-21/DR-42 into an implementation-ready plan for town AI, static-defense HC update-back, HC work records and disconnect policy. |
 | `dr42-dr43-reconciliation` | Ready to publish | DR-42 static-defense HC update-back and DR-43 source/version + duplicate-bind cleanups are integrated into [AI/headless](AI-Headless-And-Performance), [Feature status](Feature-Status-Register), [Hardening roadmap](Hardening-Implementation-Roadmap) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl). |
@@ -27,7 +29,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
 | Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. |
-| Codex-2 | Active | `pvf-dispatch-implementation-playbook` | Building a standalone PVF dispatch playbook for DR-1/DR-38, with dispatcher lookup hardening separated from handler authority and direct-PV validation. |
+| Codex-2 | Ready for review | `pvf-dispatch-implementation-playbook` | [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) is available; next step is review before code work on `hardening/pvf-dispatch`. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
@@ -52,6 +54,8 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `pvf-dispatch-implementation-playbook` | Codex-2/Codex | Ready for review | Use [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) before changing `Init_PublicVariables.sqf`, `Server_HandlePVF.sqf` or `Client_HandlePVF.sqf`. |
+| `wiki-quality-nav-c5` | Codex | Published | [Variable/naming](Variable-And-Naming-Conventions), [PV channel index](Public-Variable-Channel-Index), [Modules atlas](Modules-Atlas), [Pending owner decisions](Pending-Owner-Decisions) and [Wiki quality audit](Wiki-Quality-Audit) are reachable from the main navigation. |
 | `wiki-quality-c1-mash-networking` | Codex | Published | First item from [Wiki quality audit](Wiki-Quality-Audit) is resolved: [Networking/PV](Networking-And-Public-Variables) no longer contradicts DR-34 on MASH markers. |
 | `hc-delegation-failover-playbook` | Codex/future AI owner | Playbook published | Use [HC delegation/failover](Headless-Delegation-And-Failover-Playbook) before changing headless town AI, static-defense delegation or disconnect/failover behavior. |
 | `dashboard-current-state-cleanup` | Codex | Published | Progress page now shows current state first; historic scout detail lives in swarm/worklog pages. |
@@ -67,6 +71,8 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| PVF dispatch playbook surfaced | [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook), [Hardening roadmap](Hardening-Implementation-Roadmap), [PV channel index](Public-Variable-Channel-Index) | Codex-2's DR-1/DR-38 implementation guide is mirrored and linked into hardening nav. It keeps generic dispatcher hardening separate from registered-handler authority and direct publicVariable channels. |
+| Wiki-quality navigation / C5 | [Home](Home), [`_Sidebar.md`](_Sidebar), [`_Footer.md`](_Footer), [Wiki quality audit](Wiki-Quality-Audit) | Wires Claude's canonical glossary/index/atlas/decision pages into navigation and resolves the duplicate Current Work sidebar entries called out by C5. |
 | Wiki-quality C1 MASH networking fix | [Networking/PV](Networking-And-Public-Variables), [Wiki quality audit](Wiki-Quality-Audit) | Resolves the stale MASH row called out by Claude: DR-34 says the marker feature is dead on both ends, with an orphaned server PVEH, no live client broadcast and a commented receiver compile. |
 | HC delegation/failover playbook | [HC delegation/failover](Headless-Delegation-And-Failover-Playbook), [AI/headless](AI-Headless-And-Performance), [`agent-context.json`](agent-context.json) | Adds the source-backed patch model for DR-21/DR-42: HC registry, town-AI update-back, static-defense one-way gap, work records, disconnect policy and validation scenarios. |
 | DR-42/DR-43 reconciliation | [AI/headless](AI-Headless-And-Performance), [Feature status](Feature-Status-Register), [Hardening roadmap](Hardening-Implementation-Roadmap), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) | Promotes static-defense HC update-back to confirmed DR-42, marks hosted FPS backlog as a DR-19 duplicate, adds `source-version-sqf-build-gap` and `init-server-duplicate-binds`, and corrects DR-43 to three live duplicate binds plus three commented remnants. |

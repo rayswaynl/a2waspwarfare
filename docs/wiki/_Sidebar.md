@@ -26,6 +26,8 @@
 - [SQF atlas](SQF-Code-Atlas)
 - [Function index](Function-And-Module-Index)
 - [Networking/PV](Networking-And-Public-Variables)
+- [PV channel index](Public-Variable-Channel-Index)
+- [Variable/naming conventions](Variable-And-Naming-Conventions)
 
 ## Gameplay
 
@@ -34,6 +36,7 @@
 - [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas)
 - [Server runtime atlas](Server-Gameplay-Runtime-Atlas)
 - [Core systems](Core-Systems-Index)
+- [Modules atlas](Modules-Atlas)
 - [Economy/towns/supply](Economy-Towns-And-Supply)
 - [Supply missions](Supply-Mission-Architecture)
 - [Supply heli PR #1](Current-Work-Supply-Helicopters-PR1)
@@ -49,7 +52,9 @@
 - [Tools/build](Tools-And-Build-Workflow)
 - [Integrations](External-Integrations)
 - [Feature status](Feature-Status-Register)
+- [Pending owner decisions](Pending-Owner-Decisions)
 - [Hardening roadmap](Hardening-Implementation-Roadmap)
+- [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook)
 - [Server authority map](Server-Authority-Migration-Map)
 - [Attack-wave authority](Attack-Wave-Authority-Playbook)
 - [HC delegation/failover](Headless-Delegation-And-Failover-Playbook)
@@ -71,11 +76,7 @@
 - [External research reports](External-Research-Reports)
 - [`external-research-report-manifest.json`](external-research-report-manifest.json)
 - [Coverage ledger](Codebase-Coverage-Ledger)
-- [Hardening roadmap](Hardening-Implementation-Roadmap)
-- [Server authority map](Server-Authority-Migration-Map)
-- [Attack-wave authority](Attack-Wave-Authority-Playbook)
-- [HC delegation/failover](Headless-Delegation-And-Failover-Playbook)
-- [Testing/release workflow](Testing-Debugging-And-Release-Workflow)
+- [Wiki quality audit](Wiki-Quality-Audit)
 
 ## Claude
 
