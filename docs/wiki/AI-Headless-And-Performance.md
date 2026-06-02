@@ -8,7 +8,9 @@
 - `1`: client-side AI creation/delegation
 - `2`: headless client
 
-`initJIPCompatible.sqf` downgrades headless delegation to disabled when the detected OA version does not support headless clients. Server functions `Server_DelegateAITownHeadless`, `Server_DelegateAIStaticDefenceHeadless` and `Server_FNC_Delegation` are the core delegation hooks. Client handlers `Client_DelegateAI`, `Client_DelegateTownAI` and `Client_DelegateAIStaticDefence` receive delegated work.
+Source anchors: `Rsc/Parameters.hpp:50-53` exposes the mission parameter; `Common/Init/Init_CommonConstants.sqf:93-100` defines the default delegation mode and client-FPS thresholds. `initJIPCompatible.sqf:155` forces HC mode for the fork, while `initJIPCompatible.sqf:164-170` downgrades HC mode to disabled when the detected OA build lacks HC support.
+
+Server functions `Server_DelegateAITownHeadless.sqf`, `Server_DelegateAIStaticDefenceHeadless.sqf` and `Server_FNC_Delegation.sqf` are the core delegation hooks. Client handlers `Client_DelegateAI.sqf`, `Client_DelegateTownAI.sqf` and `Client_DelegateAIStaticDefence.sqf` receive delegated work through `Client/PVFunctions/HandleSpecial.sqf:13-15`.
 
 Implementation playbook: [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook).
 
@@ -25,7 +27,9 @@ Boyle's second-pass autonomy review clarified the split between real AI plumbing
 
 ## Town AI
 
-Town AI is centralized through `Server/FSM/server_town_ai.sqf`. The server starts it once globally when defenders or occupation are enabled. `Server_GetTownGroups`, `Server_GetTownGroupsDefender`, `Server_SpawnTownDefense`, and `Server_ManageTownDefenses` support the flow.
+Town AI is centralized through `Server/FSM/server_town_ai.sqf`. The server starts it once globally when defenders or occupation are enabled at `Server/Init/Init_Server.sqf:513-514`. `Server_GetTownGroups`, `Server_GetTownGroupsDefender`, `Server_SpawnTownDefense`, and `Server_ManageTownDefenses` are compiled at `Server/Init/Init_Server.sqf:49-60`.
+
+Source anchors: `server_town_ai.sqf:11-19` loads range, inactivity and delegation settings; `server_town_ai.sqf:35-51` owns the global loop and performance timing; `server_town_ai.sqf:157-179` switches between client delegation, HC delegation and server fallback; `server_town_ai.sqf:205-219` deletes inactive town groups/vehicles.
 
 ## Player AI Watchdog
 
@@ -57,7 +61,9 @@ Instrumented areas include:
 
 ## Server FPS
 
-`Server/GUI/serverFpsGUI.sqf` and `Server/Module/serverFPS/monitorServerFPS.sqf` publish server FPS data used by HUD/status surfaces. Earlier compile lines for `WFBE_CO_FNC_monitorServerFPS` are commented, but `Init_Server.sqf` later executes the module directly.
+`Server/GUI/serverFpsGUI.sqf` and `Server/Module/serverFPS/monitorServerFPS.sqf` publish server FPS data used by HUD/status surfaces. Earlier compile lines for `WFBE_CO_FNC_monitorServerFPS` are commented at `Server/Init/Init_Server.sqf:65,90`, but `Init_Server.sqf` later executes the GUI and module directly at `Server/Init/Init_Server.sqf:578,595`.
+
+Source anchors: `Server/GUI/serverFpsGUI.sqf:1-10` publishes `SERVER_FPS_GUI` every 8 seconds when dedicated; `Server/Module/serverFPS/monitorServerFPS.sqf:1-6` publishes `WFBE_VAR_SERVER_FPS` with the same dedicated-only sleep placement. The hosted/listen-server busy-loop caveat is DR-19.
 
 ## Performance Caveats
 
@@ -81,19 +87,21 @@ Town AI is not simulation-cached. `enableSimulation false` is used on invisible 
 
 There is no `setGroupOwner` in the mission. The headless client owns delegated AI because it receives a `delegate-townai`, `delegate-ai`, or `delegate-ai-static-defence` message and creates the units locally.
 
-- If the HC disconnects mid-mission, `Server/Functions/Server_OnPlayerDisconnected.sqf` removes the HC group from the candidate pool, but does not reclaim already-created units.
-- HC registration is handled through `["RequestSpecial", ["connected-hc", player]]`; `Server/Functions/Server_HandleSpecial.sqf` appends `group _hc` to `WFBE_HEADLESSCLIENTS_ID` only if `owner _hc != 0`.
-- DR-42 confirms static-defense delegation is one-way in current source: `Client/Functions/Client_DelegateAIStaticDefence.sqf:28` comments out the `update-delegation-static_defence` send-back, while town-AI delegation does report vehicles back through `Client_DelegateTownAI.sqf:35` -> `Server_HandleSpecial.sqf` `"update-town-delegation"`. Server therefore never records HC-created static-defense units for cleanup/accounting/re-delegation. Treat this as partial until the update-back is restored or explicitly documented as fire-and-forget.
+- HC bootstrap: `initJIPCompatible.sqf:236-238` runs `Headless/Init/Init_HC.sqf`; `Init_HC.sqf:4-6` compiles the client-side delegation receivers; `Init_HC.sqf:12-15` waits 20 seconds and sends `["RequestSpecial", ["connected-hc", player]]`.
+- HC registration: `Server_HandleSpecial.sqf:117-131` stores `WFBE_HEADLESS_<uid>` and appends `group _hc` to `WFBE_HEADLESSCLIENTS_ID` only when `owner _hc != 0`; `Server/Init/Init_Server.sqf:109-110` initializes that HC list only in delegation mode `2`.
+- Town HC path: `Server_DelegateAITownHeadless.sqf:23-34` randomly chooses HC groups and sends `delegate-townai`; `Client_DelegateTownAI.sqf:23-35` creates the town units locally and reports created vehicles through `update-town-delegation`; `Server_HandleSpecial.sqf:86-96` appends those vehicles to `wfbe_active_vehicles`.
+- Static-defense HC path: `Server_OperateTownDefensesUnits.sqf:38-56` and `Server_HandleDefense.sqf:19-24` call `Server_DelegateAIStaticDefenceHeadless.sqf`; that helper sends `delegate-ai-static-defence` at `Server_DelegateAIStaticDefenceHeadless.sqf:23-26`. DR-42 confirms the return path is missing: `Client_DelegateAIStaticDefence.sqf:25-28` creates units but comments out the `update-delegation-static_defence` send-back.
+- HC disconnect: `Server_OnPlayerDisconnected.sqf:22-29` removes the HC group from `WFBE_HEADLESSCLIENTS_ID` and clears `WFBE_HEADLESS_<uid>`, but does not reclaim, re-track or re-delegate work that was already created by the HC.
 
 ### Delegation Can Downgrade Once At Init
 
-`WFBE_C_AI_DELEGATION` can be set to `2` for HC mode, then downgraded to `0` during init if the OA version does not support HC or no HC is connected when that check runs. The downgrade is not automatically reversed later when an HC joins, so late HC connection may not receive work unless the init/delegation flow is changed.
+`WFBE_C_AI_DELEGATION` can be set to `2` for HC mode at `initJIPCompatible.sqf:155`, then downgraded to `0` during init if the OA version does not support HC (`initJIPCompatible.sqf:164-170`). The downgrade is not automatically reversed later when an HC joins, so late HC connection may not receive work unless the init/delegation flow is changed.
 
 There is also no visible failover/rebalancing pass on HC disconnect. A disconnected HC can dump locality/load back onto the server through engine behavior, but the mission does not use `setGroupOwner` and does not redistribute groups to a surviving HC.
 
 ### `GetSleepFPS` Is Intentional
 
-`Common/Functions/Common_GetSleepFPS.sqf` returns shorter sleeps when FPS drops. In `updateresources.sqf`, that means the economy loop tries to avoid income stalls during lag, at the cost of doing more scheduled work while the server is already stressed. Treat it as a design tradeoff, not an obvious bug.
+`Common/Functions/Common_GetSleepFPS.sqf:5-9` returns shorter sleeps when FPS drops. In `Server/FSM/updateresources.sqf:74-75`, that means the economy loop tries to avoid income stalls during lag, at the cost of doing more scheduled work while the server is already stressed. Treat it as a design tradeoff, not an obvious bug.
 
 ## Continue Reading
 

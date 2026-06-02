@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `wiki-quality-c6-ai-citations` | Published | [AI/headless](AI-Headless-And-Performance) now has path:line anchors for HC bootstrap, HC registry, town/static delegation, disconnect handling, town-AI cleanup, server FPS and `GetSleepFPS`. |
 | `economy-authority-first-cut` | Published | [Economy authority first cut](Economy-Authority-First-Cut) sequences the economy hardening class into side-supply clamp first, then upgrade authority, construction/defense authority and deferred player-buy locality redesign. |
 | `wiki-quality-c6-ui-citations` | Published | [Client UI/HUD](Client-UI-HUD-And-Menus) now has path:line anchors for Rsc includes, dialog IDDs, menu routing, RHUD/FPS toggles and respawn marker tracking. |
 | `wiki-quality-c4-victory-searchability` | Published | [Feature status](Feature-Status-Register) and [Hardening roadmap](Hardening-Implementation-Roadmap) now cite DR-11 by number for the victory/endgame winner inversion bug. |
@@ -58,6 +59,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `wiki-quality-c6-ai-citations` | Codex | Published | Second C6 pass is done for [AI/headless](AI-Headless-And-Performance); Gameplay citation uplift remains open. |
 | `economy-authority-first-cut` | Codex-2 | Published | Use [Economy authority first cut](Economy-Authority-First-Cut) before patching side-supply clamps, upgrade authority, construction/defense authority or player-buy locality. |
 | `wiki-quality-c6-ui-citations` | Codex | Published | First C6 pass is done for [Client UI/HUD](Client-UI-HUD-And-Menus); Gameplay/AI citation uplift remains open. |
 | `wiki-quality-c4-victory-searchability` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) C4 is resolved: victory/endgame pages now name DR-11 explicitly. |
@@ -79,6 +81,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| Wiki-quality C6 AI/headless citations | [AI/headless](AI-Headless-And-Performance), [Wiki quality audit](Wiki-Quality-Audit) | Adds source anchors for HC bootstrap/registry/delegation/disconnect, client-FPS delegation, town-AI cleanup, server-FPS publishing and `GetSleepFPS`, leaving Gameplay atlas citation uplift as the remaining C6 item. |
 | Economy authority first cut | [Economy authority first cut](Economy-Authority-First-Cut), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) | Codex-2 turns the broad economy authority class into a source-backed patch sequence: side-supply clamp first, then upgrade and construction/defense authority, with player-buy locality deferred as a larger redesign. |
 | Wiki-quality C6 UI citations | [Client UI/HUD](Client-UI-HUD-And-Menus), [Wiki quality audit](Wiki-Quality-Audit) | Adds path:line anchors to the lightweight UI overview so it meets the project's source-backed citation standard without duplicating the full UI systems atlas. |
 | Wiki-quality C4 victory searchability | [Feature status](Feature-Status-Register), [Hardening roadmap](Hardening-Implementation-Roadmap), [Wiki quality audit](Wiki-Quality-Audit) | Adds explicit DR-11 references to the victory/endgame bug while keeping DR-36 as the mechanism/perf-JIP review. |

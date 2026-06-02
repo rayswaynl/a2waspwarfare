@@ -547,6 +547,13 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Published [Economy authority first cut](Economy-Authority-First-Cut), recommending side-supply-clamp as the first small code branch, then server-owned upgrades and construction/defense, while keeping player factory buys as a separate locality redesign.
 - Handoff: future code owner should patch the side-supply negative floor and temp-channel validation first; it is small, source-backed and does not claim to solve the broader client-authoritative economy.
 
+## 2026-06-02 - Codex Wiki-Quality C6 AI Citation Uplift
+
+- Continued [Wiki quality audit](Wiki-Quality-Audit) C6 after the UI citation pass.
+- Added path:line anchors to [AI/headless](AI-Headless-And-Performance) for delegation parameters/constants, HC bootstrap, HC registry, town-AI HC delegation, static-defense HC delegation, HC disconnect handling, town-AI cleanup, server-FPS publishers and the `GetSleepFPS` scheduling tradeoff.
+- Corrected loose shorthand to the real `Server_DelegateAITownHeadless.sqf` / `Server_DelegateAIStaticDefenceHeadless.sqf` source files.
+- Left Gameplay atlas citation uplift as the remaining C6 item.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

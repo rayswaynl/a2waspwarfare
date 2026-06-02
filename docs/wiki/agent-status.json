@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T18:58:00+02:00",
+  "generatedAt": "2026-06-02T19:12:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,8 +16,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass began Wiki-Quality-Audit C6 by adding path:line citations to the Client UI/HUD overview.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed lane while Codex-2 is ready for its next review lane."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass continued Wiki-Quality-Audit C6 by adding path:line citations to AI/headless.",
+      "nextExpectedOutput": "Continue with the next bounded source-backed lane; remaining C6 citation uplift target is Gameplay atlas."
     },
     "Codex-2": {
       "status": "ready-for-next-lane",
@@ -33,6 +33,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wiki-quality-c6-ai-citations",
+      "owner": "Codex",
+      "status": "published",
+      "output": "AI-Headless-And-Performance.md now has path:line anchors for HC bootstrap, registry, delegation, disconnect, town-AI cleanup, server FPS and GetSleepFPS"
+    },
     {
       "lane": "economy-authority-first-cut",
       "owner": "Codex-2",
