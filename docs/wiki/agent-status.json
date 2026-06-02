@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T22:05:00+02:00",
+  "generatedAt": "2026-06-02T22:18:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,7 +16,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki Quality DUP-5 by making External-Integrations.md the canonical shipped BattlEye posture page.",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki Quality DUP-9 by routing victory/endgame double-fire detail to Deep-Review-Findings.md DR-11/DR-36.",
       "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining duplicate reductions, Arma 2 OA external-reference integration into subsystem pages, or more implementation-readiness playbooks."
     },
     "Codex-2": {
@@ -33,6 +33,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wiki-quality-dup9-victory-routing",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Deep-Review-Findings.md DR-11/DR-36 now own victory/endgame double-fire detail; Server runtime, Hardening roadmap and Feature Status keep short routing summaries"
+    },
     {
       "lane": "wiki-quality-dup5-battleye-routing",
       "owner": "Codex",

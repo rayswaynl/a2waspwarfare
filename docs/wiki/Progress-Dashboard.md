@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `wiki-quality-dup9-victory-routing` | Published | [Deep-review findings](Deep-Review-Findings) DR-11/DR-36 now own the victory/endgame double-fire mechanism; [Server runtime](Server-Gameplay-Runtime-Atlas), [Hardening roadmap](Hardening-Implementation-Roadmap) and [Feature status](Feature-Status-Register) keep short routing summaries. |
 | `wiki-quality-dup5-battleye-routing` | Published | [External integrations](External-Integrations) now owns shipped BattlEye posture; [Feature status](Feature-Status-Register), [Networking/PV](Networking-And-Public-Variables), [Hardening roadmap](Hardening-Implementation-Roadmap) and [Server authority map](Server-Authority-Migration-Map) route there instead of repeating the `kickAFK`/missing-filter evidence. |
 | `performance-opportunity-sweep` | Published | [Performance opportunity sweep](Performance-Opportunity-Sweep) ranks PVF dispatch lookup, hosted FPS loops, supply scans, duplicate `Skill_Init`, factory queue churn, WASP marker polling and audit-first cleaner/marker loops. |
 | `icbm-authority-playbook-routing` | Published | [ICBM authority](ICBM-Authority-Playbook) turns DR-27 into a patch-ready guide and routes duplicated ICBM/Nuke authority detail from the roadmap, authority map, feature status and navigation into one canonical page. |
@@ -47,7 +48,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved Wiki Quality DUP-5 by making [External integrations](External-Integrations) the BattlEye posture source. |
+| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved Wiki Quality DUP-9 by routing victory/endgame detail to [Deep-review findings](Deep-Review-Findings) DR-11/DR-36. |
 | Codex-2 | Ready for next lane | `performance-opportunity-sweep` | [Performance opportunity sweep](Performance-Opportunity-Sweep) is published; next best lanes are AI supply logistics cleanup, paratrooper-marker implementation, or one code patch from the new sweep. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
@@ -73,6 +74,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `wiki-quality-dup9-victory-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-9 is resolved: victory/endgame mechanism detail lives in [Deep-review findings](Deep-Review-Findings) DR-11/DR-36, with concise routing on Server runtime, roadmap and Feature Status. |
 | `wiki-quality-dup5-battleye-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-5 is resolved: shipped BattlEye posture lives in [External integrations](External-Integrations), with short routing notes on Feature Status, Networking/PV, roadmap and authority map. |
 | `icbm-authority-playbook-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-3 is resolved: DR-27 ICBM/Nuke implementation detail lives in [ICBM authority](ICBM-Authority-Playbook), with short routing summaries elsewhere. |
 | `performance-opportunity-sweep` | Codex-2 | Published | [Performance opportunity sweep](Performance-Opportunity-Sweep) ranks PVF dispatch lookup, hosted FPS loops, supply mission scans, duplicate `Skill_Init`, factory queue churn, WASP marker polling and audit-first cleaner/marker loops. |

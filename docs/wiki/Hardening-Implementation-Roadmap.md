@@ -68,22 +68,9 @@ Validation:
 
 ## P1: Victory And Endgame
 
-Canonical finding: [Deep-review findings](Deep-Review-Findings) DR-11 covers the winner inversion / persisted win-tally bug. DR-36 explains the exact guard/precedence mechanism and confirms the loop is otherwise clean for Perf/JIP.
+Canonical finding: [Deep-review findings](Deep-Review-Findings) DR-11 covers the winner inversion / persisted win-tally impact. DR-36 owns the exact `server_victory_threeway.sqf:23` guard/precedence mechanism, the no-break side loop, and the one-place fix shape. This roadmap keeps only the patch-order and validation gate.
 
-Evidence:
-
-| File | Current behavior |
-| --- | --- |
-| `Server/FSM/server_victory_threeway.sqf` | Condition parses as `((!alive _hq) && _factories == 0) || (_towns == _total && !WFBE_GameOver)`, so `!WFBE_GameOver` guards only the all-towns branch. |
-| Same file | Side `forEach` does not break after winner is set; same-tick eliminations can double-fire endgame/logging. |
-
-Implementation shape:
-
-1. Split or parenthesize the HQ-elimination and all-towns clauses.
-2. Guard the combined result with `!WFBE_GameOver`.
-3. Exit the side loop immediately after first winner is recorded.
-4. Decide whether threeway victory modes should be implemented or disabled/hidden until implemented.
-5. Delete or clearly retire the duplicate buggy `Server/PVFunctions/LogGameEnd.sqf` path if still unused.
+Implementation route: patch the Chernarus source mission first, using DR-36 for the exact condition/loop change. Keep the threeway-victory owner decision explicit, and cross-check DR-43 before touching duplicate `LogGameEnd` bindings around the same endgame path.
 
 Validation:
 

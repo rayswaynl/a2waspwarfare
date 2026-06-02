@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T22:05:00+02:00",
+  "generatedAt": "2026-06-02T22:18:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,32 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-quality-dup9-victory-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Server-Gameplay-Runtime-Atlas.md",
+        "Hardening-Implementation-Roadmap.md",
+        "Feature-Status-Register.md",
+        "Wiki-Quality-Audit.md DUP-9",
+        "Deep-Review-Findings.md DR-11 / DR-36",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_victory_threeway.sqf"
+      ],
+      "outputs": [
+        "Server-Gameplay-Runtime-Atlas.md victory routing summary",
+        "Hardening-Implementation-Roadmap.md compact P1 victory route",
+        "Feature-Status-Register.md compact victory row",
+        "Wiki-Quality-Audit.md DUP-9 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future victory/endgame docs should update Deep-Review-Findings.md DR-11/DR-36 or the victory-endgame-correctness backlog first, then keep Server runtime, roadmap and Feature Status as short routing summaries."
+    },
     {
       "lane": "wiki-quality-dup5-battleye-routing",
       "owner": "Codex",
@@ -832,7 +858,8 @@
     "wiki-quality-dup10-hc-routing",
     "wiki-quality-merge1-authority-routing",
     "icbm-authority-playbook-routing",
-    "wiki-quality-dup5-battleye-routing"
+    "wiki-quality-dup5-battleye-routing",
+    "wiki-quality-dup9-victory-routing"
   ],
   "queuedReports": [],
   "lanes": [

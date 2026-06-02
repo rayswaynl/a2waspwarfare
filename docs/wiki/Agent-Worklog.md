@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wiki-Quality DUP-9 Victory Routing
+
+- Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-9 by keeping the victory/endgame double-fire mechanism canonical in [Deep-review findings](Deep-Review-Findings) DR-11 and DR-36.
+- Reduced [Server runtime atlas](Server-Gameplay-Runtime-Atlas) to a runtime-oriented summary that notes DR-36 found Perf/JIP/HC clean while routing the guard/precedence bug to Deep Review.
+- Reduced [Hardening roadmap](Hardening-Implementation-Roadmap) and [Feature status](Feature-Status-Register) so they keep patch priority, impact and validation routing without repeating the full `server_victory_threeway.sqf:23` analysis.
+
 ## 2026-06-02 - Codex Wiki-Quality DUP-5 BattlEye Routing
 
 - Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-5 by making [External integrations](External-Integrations) the canonical shipped BattlEye/server-filter posture page.
