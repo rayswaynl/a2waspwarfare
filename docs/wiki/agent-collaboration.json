@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T15:02:00+02:00",
+  "generatedAt": "2026-06-02T15:25:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -135,7 +135,7 @@
     {
       "lane": "attack-wave-authority-verify",
       "owner": "Claude",
-      "status": "integrated-by-codex",
+      "status": "playbook-published-by-codex",
       "sourceScope": [
         "Missions/[55-2hc]...chernarus/Common/Functions/Common_AttackWaveActivate.sqf",
         "Missions/[55-2hc]...chernarus/Server/Functions/Server_AttackWave.sqf",
@@ -145,9 +145,10 @@
         "Deep-Review-Findings.md (Round 32 / DR-41)",
         "Codebase-Coverage-Ledger.md (Economy row)",
         "agent-hardening-backlog.jsonl confirmed-high-dr41",
-        "Networking/roadmap/economy/server-authority cross-links"
+        "Networking/roadmap/economy/server-authority cross-links",
+        "Attack-Wave-Authority-Playbook.md"
       ],
-      "handoff": "Future code owner: implement hardening/attack-wave-authority from agent-hardening-backlog.jsonl. Server must re-derive side supply, validate permission, deduct cost server-side and clamp modifier/duration; PVF dispatcher hardening alone does not cover this direct channel."
+      "handoff": "Future code owner: implement hardening/attack-wave-authority from Attack-Wave-Authority-Playbook.md and agent-hardening-backlog.jsonl. Server must re-derive side supply, validate requester/side, reject duplicate active waves, clamp modifier/duration and preserve the all-side-supply spend model unless an owner approves a fixed-cost design change."
     },
     {
       "lane": "testing-debugging-release-workflow",
@@ -421,6 +422,23 @@
         "agent-knowledge.jsonl"
       ],
       "handoff": "Validate JSON/JSONL and internal links, reconcile any Claude remote changes, then publish wiki and mirror docs branch."
+    },
+    {
+      "lane": "attack-wave-authority-playbook",
+      "owner": "Codex",
+      "status": "ready-to-publish",
+      "sourceScope": [
+        "docs/wiki/Attack-Wave-Authority-Playbook.md",
+        "Server/Functions/Server_AttackWave.sqf",
+        "Server/PVFunctions/AttackWave.sqf",
+        "Common/Functions/Common_AttackWaveActivate.sqf",
+        "Client/FSM/updateclient.sqf"
+      ],
+      "outputs": [
+        "Attack-Wave-Authority-Playbook.md",
+        "Navigation and machine context links for DR-41 implementation readiness"
+      ],
+      "handoff": "Future code owner: use the playbook before editing attack-wave mission code; update validation records after smoke or source-only checks."
     }
   ],
   "integratedReports": [

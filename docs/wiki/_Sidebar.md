@@ -50,6 +50,7 @@
 - [Feature status](Feature-Status-Register)
 - [Hardening roadmap](Hardening-Implementation-Roadmap)
 - [Server authority map](Server-Authority-Migration-Map)
+- [Attack-wave authority](Attack-Wave-Authority-Playbook)
 - [Testing/release workflow](Testing-Debugging-And-Release-Workflow)
 - [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl)
 - [`agent-test-plan.schema.json`](agent-test-plan.schema.json)
@@ -70,6 +71,7 @@
 - [Coverage ledger](Codebase-Coverage-Ledger)
 - [Hardening roadmap](Hardening-Implementation-Roadmap)
 - [Server authority map](Server-Authority-Migration-Map)
+- [Attack-wave authority](Attack-Wave-Authority-Playbook)
 - [Testing/release workflow](Testing-Debugging-And-Release-Workflow)
 
 ## Claude

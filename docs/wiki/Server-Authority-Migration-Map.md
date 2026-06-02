@@ -121,8 +121,10 @@ Agents should read this page before claiming any `agent-hardening-backlog.jsonl`
 
 This page does not change mission behavior. It is the source-backed design layer for future implementation branches such as `hardening/pvf-dispatch`, `hardening/icbm-authority`, `hardening/economy-ledger`, `hardening/supply-missions` and `hardening/attack-wave-authority`.
 
+Dedicated playbook: [Attack-wave authority](Attack-Wave-Authority-Playbook) expands the DR-41 row into an implementation-ready patch shape, including the current all-side-supply spend model.
+
 ## Continue Reading
 
-Previous: [Hardening roadmap](Hardening-Implementation-Roadmap) | Next: [Testing workflow](Testing-Debugging-And-Release-Workflow)
+Previous: [Hardening roadmap](Hardening-Implementation-Roadmap) | Next: [Attack-wave authority playbook](Attack-Wave-Authority-Playbook)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

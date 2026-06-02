@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T15:02:00+02:00",
+  "generatedAt": "2026-06-02T15:25:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,13 +16,13 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces for ongoing a2waspwarfare development.",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass added Attack-Wave-Authority-Playbook.md as the implementation guide for DR-41.",
       "nextExpectedOutput": "Claim the next bounded source-backed lane when new findings, Claude output or gameplay work arrives."
     },
     "Claude": {
       "status": "autonomous-ready",
       "currentLane": "collaboration-follow-autonomous-ready",
-      "currentWork": "DR-41 attack-wave authority finding has been integrated by Codex; Claude can continue with the next source-backed review under Claude-Loop-Goal.md.",
+      "currentWork": "DR-41 attack-wave authority finding has a dedicated playbook; Claude can continue with the next source-backed review under Claude-Loop-Goal.md or inspect implementation readiness.",
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     }
   },
@@ -84,8 +84,8 @@
     {
       "lane": "attack-wave-authority-dr41",
       "owner": "Claude/Codex",
-      "status": "integrated-locally",
-      "output": "DR-41 promoted to confirmed-high-dr41 in agent-hardening-backlog.jsonl and cross-linked through owning pages"
+      "status": "playbook-published",
+      "output": "Attack-Wave-Authority-Playbook.md plus cross-links through Networking/PV, Hardening roadmap, Server authority map, Economy, Feature status and agent-hardening-backlog.jsonl"
     }
   ],
   "queuedReports": [],
@@ -115,6 +115,7 @@
     "agentTestPlanSchema": "agent-test-plan.schema.json",
     "serverAuthorityMap": "Server-Authority-Migration-Map.md",
     "claudeLoopGoal": "Claude-Loop-Goal.md",
-    "attackWaveAuthority": "agent-hardening-backlog.jsonl#attack-wave-authority"
+    "attackWaveAuthority": "Attack-Wave-Authority-Playbook.md",
+    "attackWaveBacklog": "agent-hardening-backlog.jsonl#attack-wave-authority"
   }
 }

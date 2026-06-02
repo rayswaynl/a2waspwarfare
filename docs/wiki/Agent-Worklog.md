@@ -445,6 +445,13 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Cross-linked the finding through [Networking/PV](Networking-And-Public-Variables), [Hardening roadmap](Hardening-Implementation-Roadmap), [Server authority map](Server-Authority-Migration-Map), [Economy](Economy-Towns-And-Supply) and [Feature status](Feature-Status-Register).
 - Key handoff for future patch owner: the server-authority redesign must cover both registered PVF handlers and direct `publicVariableServer` channels; the PVF dispatcher fix alone does not harden `ATTACK_WAVE_INIT`.
 
+## 2026-06-02 - Codex Attack-Wave Authority Playbook
+
+- Added [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) as the implementation-ready DR-41 guide.
+- Documented the exact source chain through `updateclient.sqf`, `Common_AttackWaveActivate.sqf`, `Server_AttackWave.sqf`, `AttackWave.sqf`, buy-unit UI pricing and `BattlEyeFilter/publicvariable.txt`.
+- Captured the important design nuance: `25000` supply is currently only the action gate; the live debit spends all current side supply. Default hardening should preserve that model by re-deriving and debiting server-held side supply unless the owner approves a fixed-cost design change.
+- Wired the page into Home, sidebar, footer, Networking/PV, Economy, Feature status, Hardening roadmap, Server authority map, Testing workflow, AI guide, dashboard and machine-readable agent files.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

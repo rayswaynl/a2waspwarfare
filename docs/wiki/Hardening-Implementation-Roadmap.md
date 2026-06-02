@@ -142,6 +142,8 @@ Evidence:
 
 Implementation shape:
 
+Dedicated playbook: [Attack-wave authority](Attack-Wave-Authority-Playbook). Use it before implementation; it records that current source treats 25,000 supply as the minimum action gate while spending all current side supply when the wave starts.
+
 1. Treat `ATTACK_WAVE_INIT` as a request, not as authoritative state.
 2. Re-derive side supply and discount inputs server-side from trusted side/town state; never use client `_supply` for price math.
 3. Validate requester side and any intended commander/support permission before starting an attack wave.

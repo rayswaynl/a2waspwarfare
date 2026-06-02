@@ -189,7 +189,7 @@ McClintock's 2026-06-02 PV scout found one direct-channel authority issue outsid
 - `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT = 50000` at `Common/Init/Init_CommonConstants.sqf:166`, so a forged `_supply >= 70000` can drive the side-wide unit price modifier to zero; larger values can make it negative.
 - The repo's `BattlEyeFilter/publicvariable.txt` does not cover `ATTACK_WAVE_INIT`.
 
-A PVF lookup hardening patch does not touch this path. The forgery class has two surfaces: registered PVF commands and direct `publicVariableServer` channels. The attack-wave fix should treat `ATTACK_WAVE_INIT` as a request, re-derive real side supply and permissions server-side, deduct any intended cost server-side, clamp the resulting modifier and ignore client-supplied economic fields.
+A PVF lookup hardening patch does not touch this path. The forgery class has two surfaces: registered PVF commands and direct `publicVariableServer` channels. The attack-wave fix should treat `ATTACK_WAVE_INIT` as a request, re-derive real side supply and permissions server-side, deduct any intended cost server-side, clamp the resulting modifier and ignore client-supplied economic fields. Implementation detail is captured in [Attack-wave authority playbook](Attack-Wave-Authority-Playbook).
 
 ## Continue Reading
 
