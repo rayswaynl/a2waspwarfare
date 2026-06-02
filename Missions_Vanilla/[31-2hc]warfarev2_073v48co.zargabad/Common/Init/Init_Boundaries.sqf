@@ -13,7 +13,14 @@ switch (toLower(worldName)) do {
     case 'smd_sahrani_a2': {_boundariesXY = 20480};
     case 'tavi': {_boundariesXY = 25600};
     case 'dingor': {_boundariesXY = 10300};
+    case 'zargabad': {_boundariesXY = 6000}; //--- Tight box (6km) centred on the valley; clips the steep edge-hills. Paired with the centre override below.
 };
+
+//--- Zargabad is a central valley ringed by steep mountains. The default boundary centre is
+//--- [size/2,size/2] (map-corner-derived), which would shift a tight box toward the SW; instead
+//--- pin the box centre on the valley (~map centre) so a 6km box symmetrically excludes the
+//--- exploitable hills on all sides. Adjust the size/centre after an in-engine recon pass.
+if (toLower worldName == 'zargabad') then { missionNamespace setVariable ['WFBE_BOUNDARIES_CENTER', [4096, 4096]] };
 
 
 if ((missionNamespace getVariable "WFBE_C_GAMEPLAY_BOUNDARIES_ENABLED") > 0) then {
