@@ -44,10 +44,10 @@ These commands **exist and work in OA 1.64** but were **disabled in Arma 3** for
 
 > The MP-safe wrapper `WASP_procInitComm` (`WASP/common/procInitComm.sqf`) is compiled **commented-out** (`initJIPCompatible.sqf:241-245`), so the mission relies on these raw calls directly — the standard A2 pattern. See [WASP overlay](WASP-Overlay).
 
-## Gaps to fold into the canonical index
+## Gaps folded into canonical indexes
 The [External Arma 2 OA reference guide](Arma-2-OA-External-Reference-Guide) avoid-list currently names `params`, `remoteExec`, `parseSimpleArray`, `isEqualTo`, `private _var = value`. It should also name **`setGroupOwner` / `groupOwner`** (A3 1.40, no OA equivalent), the **`select [start,count]` / substring / filter** forms (A3 1.28–1.56) and **`apply`** (A3 1.56 — now added above, per Instructions-For-Codex item 42) — all easy to import by reflex, and `apply` appeared in a draft fix-snippet for this fork.
 
-Two **inverse-trap** classes are not yet represented in the [compatibility audit](Arma-2-OA-Compatibility-Audit) or its `agent-compatibility-audit.json` (which only catalogues *A3-into-OA* import risks): (a) OA-safe commands commonly **mis-assumed A3-only** (`diag_tickTime`, `uiSleep` — both verified A2-era above), and (b) OA-safe commands **removed in A3** (`setVehicleInit`, `processInitCommands`). Both classes risk a future agent "fixing" working OA code. Routed to Codex as Instructions-For-Codex item 48 for the canonical pages.
+The two **inverse-trap** classes are now represented in the [compatibility audit](Arma-2-OA-Compatibility-Audit#inverse-trap-commands) and `agent-compatibility-audit.json`: (a) OA-safe commands commonly **mis-assumed A3-only** (`diag_tickTime`, `uiSleep` — both verified A2-era above), and (b) OA-safe commands **removed in A3** (`setVehicleInit`, `processInitCommands`). Both classes risk a future agent "fixing" working OA code. Instructions-For-Codex item 48 is canonicalized.
 
 ## Continue Reading
 Canonical usage map: [External Arma 2 OA reference guide](Arma-2-OA-External-Reference-Guide) · Compatibility audit: [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) · Networking: [Networking and public variables](Networking-And-Public-Variables) · Findings: [Deep-review findings](Deep-Review-Findings) · Code map: [SQF code atlas](SQF-Code-Atlas)

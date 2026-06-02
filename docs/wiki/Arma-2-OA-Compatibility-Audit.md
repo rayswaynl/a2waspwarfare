@@ -4,7 +4,7 @@ This page records a documentation audit for accidental Arma 3 assumptions. It ex
 
 Audit date: 2026-06-02
 
-Latest refresh: 2026-06-02T14:00:39+02:00
+Latest refresh: 2026-06-02T18:55:00+02:00
 
 Scope:
 
@@ -43,7 +43,20 @@ Broad searches for `params` and `A3` are intentionally avoided as primary tests 
 
 No incorrect Arma 3 implementation advice was found in the current docs mirror. The explicit Arma 3 references are guardrails, contrast notes or compatibility warnings.
 
+Claude's command-version cross-check added the opposite hazard too: some commands are valid and load-bearing in OA even though Arma 3-trained agents may mistrust them. These are now part of this audit so future agents do not "modernize" working OA code into a regression.
+
 The docs now route agents to this audit before accepting or adding engine-version-sensitive claims. Future changes should update this page if an Arma 3-style term is added intentionally.
+
+## Inverse-Trap Commands
+
+The main audit catches Arma 3 features that must not be imported into OA. The inverse trap catches OA-safe commands that might look suspicious to agents trained on newer Arma 3 patterns.
+
+| Class | Commands | Status | Action |
+| --- | --- | --- | --- |
+| OA-safe but mis-assumed A3-only | `diag_tickTime`, `uiSleep` | Verified by the [command version reference](Arma-2-OA-Command-Version-Reference#confirmed-available-in-arma-2-oa). `diag_tickTime` is the PerformanceAudit stopwatch; `uiSleep` appears in AntiStack/restorer loops. | Keep when source context fits. Do not replace merely because the command looks modern. |
+| OA-safe but removed in Arma 3 | `setVehicleInit`, `processInitCommands` | Verified by the [command version reference](Arma-2-OA-Command-Version-Reference#oa-safe-but-removed-in-arma-3--the-inverse-trap). The repo uses hardcoded literal init strings, not client-derived strings. | Keep as an OA-era pattern unless a source-backed replacement is designed and smoked. Do not call it an A3 security ban in this OA codebase. |
+
+This does not weaken the PVF dispatch finding. `setVehicleInit` with hardcoded literals is a separate surface from DR-1's sender-chosen `Call Compile` dispatcher.
 
 ## Safe Wording For Future Agents
 
@@ -55,6 +68,7 @@ Prefer:
 - "Do not add CBA/ACE helpers unless the mission owner accepts a new dependency."
 - "`Params` / `paramsArray` are the mission parameter system here; do not confuse them with newer SQF `params` command style."
 - "`Modded_Missions/eden` is a terrain/fork folder name, not evidence of an Eden Editor workflow."
+- "`diag_tickTime`, `uiSleep`, `setVehicleInit` and `processInitCommands` are documented OA-safe inverse traps; check the command-version reference before removing them."
 
 Avoid:
 
@@ -62,6 +76,7 @@ Avoid:
 - "Move this into CfgFunctions preInit/postInit" without an explicit OA-compatible migration plan.
 - "Use `parseSimpleArray` to harden extension output."
 - "Use Arma 3 BattlEye examples as proof that this repo ships those filters."
+- "Remove `setVehicleInit` / `processInitCommands` because Arma 3 disabled them" without an OA-compatible replacement plan and runtime smoke.
 
 ## Follow-Up Check
 
@@ -69,11 +84,12 @@ Run this lightweight audit after future documentation passes:
 
 ```powershell
 rg -n -i "\bArma ?3\b|Arma3|remoteExec(Call)?|BIS_fnc_MP|remoteExecutedOwner|parseSimpleArray|RVExtensionArgs|CfgFunctions|Eden Editor|\bCBA\b|\bACE\b" docs\wiki --glob '*.{md,json,jsonl,txt}'
+rg -n -i "\bapply\b|setGroupOwner|groupOwner|diag_tickTime|uiSleep|setVehicleInit|processInitCommands" docs\wiki --glob '*.{md,json,jsonl,txt}'
 ```
 
 ## Current Scan Snapshot
 
-This refresh includes the newer AntiStack, integration-trust, release-readiness and source-propagation pages.
+This refresh includes the newer AntiStack, integration-trust, release-readiness, source-propagation and command-version-reference pages.
 
 | Pattern | Hit count | Current classification |
 | --- | ---: | --- |
@@ -86,6 +102,8 @@ This refresh includes the newer AntiStack, integration-trust, release-readiness 
 | `CfgFunctions` | 14 | Warning against assuming automatic preInit/postInit lifecycle. |
 | `CBA` / `ACE` | 10 | Dependency guardrail. |
 | `Eden Editor` | 11 | Folder-name caveat and audit text; not editor workflow advice. |
+| `diag_tickTime` / `uiSleep` | see command reference | OA-safe inverse traps; do not remove as assumed A3-only commands. |
+| `setVehicleInit` / `processInitCommands` | see command reference | OA-safe inverse traps removed in A3; keep hardcoded-literal usage unless an OA replacement is designed. |
 
 Representative pages intentionally containing risky terms:
 
@@ -109,15 +127,16 @@ When a future prompt, report or patch proposes a risky term:
 
 1. Check whether the term is already classified in [`agent-compatibility-audit.json`](agent-compatibility-audit.json).
 2. If the term is only a warning, leave it as warning text and do not turn it into an implementation step.
-3. If the term is proposed as implementation advice, require a Bohemia Interactive Arma 2 OA / Combined Operations source proving support.
-4. If OA support is not proven, replace the advice with the existing mission pattern: public variables/PVEHs, hand-rolled init barriers, defensive `call compile` shape validation or local helper functions.
-5. If the term is added intentionally, update this page and the JSON audit with its classification and representative pages.
+3. If the term is an inverse-trap command, check [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference) before removing or rewriting it.
+4. If the term is proposed as implementation advice, require a Bohemia Interactive Arma 2 OA / Combined Operations source proving support.
+5. If OA support is not proven, replace the advice with the existing mission pattern: public variables/PVEHs, hand-rolled init barriers, defensive `call compile` shape validation or local helper functions.
+6. If the term is added intentionally, update this page and the JSON audit with its classification and representative pages.
 
 ## Corrections Needed Now
 
-No incorrect Arma 3 implementation advice was found in the current docs mirror during the 2026-06-02T14:00:39+02:00 refresh.
+No incorrect Arma 3 implementation advice was found in the current docs mirror during the 2026-06-02T18:55:00+02:00 refresh.
 
-The main maintenance need is not deletion; it is keeping the warnings clearly marked as warnings. The highest-risk places are future AntiStack hardening, PVF/server-authority work and lifecycle refactors, because those are where modern Arma APIs look tempting but would be wrong for OA unless independently proven.
+The main maintenance need is not deletion; it is keeping warnings clearly marked as warnings and inverse traps clearly marked as OA-safe. The highest-risk places are future AntiStack hardening, PVF/server-authority work and lifecycle refactors, because those are where modern Arma APIs look tempting but would be wrong for OA unless independently proven.
 
 ## Continue Reading
 

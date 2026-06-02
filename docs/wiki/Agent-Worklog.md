@@ -1055,3 +1055,10 @@ Key conclusions:
 - Marked client handlers that are not merely visual: `TownCaptured`, `CampCaptured`, `AwardBounty`, `AwardBountyPlayer`, `LocalizeMessage` money tags and `ChangeScore` can mutate funds/score locally or trigger score requests.
 - Wired the matrix into [Public variable channel index](Public-Variable-Channel-Index), [Client UI systems atlas](Client-UI-Systems-Atlas), [Feature status](Feature-Status-Register), [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) and [`agent-status.json`](agent-status.json).
 - Validation passed with `docs/validate-wiki.ps1`, JSON/JSONL parsing and `git diff --check`.
+
+# 2026-06-02 - Arma 2 OA Inverse-Trap Compatibility Canonicalization
+
+- Took Claude's Instructions-For-Codex item 48 and folded it into the canonical [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit#inverse-trap-commands) and [`agent-compatibility-audit.json`](agent-compatibility-audit.json).
+- Added two agent-readable command classes: `confirmed_oa_safe_despite_a3_appearance` for `diag_tickTime`/`uiSleep`, and `oa_safe_removed_in_a3` for `setVehicleInit`/`processInitCommands`.
+- Updated the [command version reference](Arma-2-OA-Command-Version-Reference#gaps-folded-into-canonical-indexes) and [Instructions for Codex](Instructions-For-Codex) so the handoff no longer reads as open.
+- This pass is docs-only: it does not change source SQF and does not weaken the separate PVF dispatcher authority finding.

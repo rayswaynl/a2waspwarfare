@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T19:25:00+02:00",
+  "generatedAt": "2026-06-02T19:40:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -18,7 +18,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest slice source-mapped and validated the registered client-bound PVF runtime/JIP matrix.",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest slice canonicalized and validated Claude's Arma 2 OA inverse-trap command findings into the compatibility audit and agent JSON.",
       "nextExpectedOutput": "Continue with the next bounded source-backed subsystem or implementation-readiness pass."
     },
     "Codex-2": {
@@ -41,6 +41,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "arma2-oa-inverse-trap-compatibility",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Arma-2-OA-Compatibility-Audit.md and agent-compatibility-audit.json now classify OA-safe commands that A3-trained agents may mistrust: diag_tickTime/uiSleep and setVehicleInit/processInitCommands."
+    },
     {
       "lane": "registered-client-pvf-runtime-matrix",
       "owner": "Codex",

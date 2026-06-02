@@ -1,18 +1,19 @@
 {
   "schema": "a2waspwarfare-agent-compatibility-audit-v1",
-  "generatedAt": "2026-06-02T14:00:39+02:00",
+  "generatedAt": "2026-06-02T18:55:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "engineBaseline": "Arma 2 Operation Arrowhead 1.64 / Combined Operations",
   "canonicalHumanPage": "Arma-2-OA-Compatibility-Audit.md",
-  "status": "no-incorrect-arma3-implementation-advice-found-in-current-docs",
+  "status": "no-incorrect-arma3-implementation-advice-found-in-current-docs-inverse-traps-canonicalized",
   "latestRefresh": {
-    "timestamp": "2026-06-02T14:00:39+02:00",
-    "result": "No incorrect Arma 3 implementation advice found in the expanded docs mirror. Existing risky terms remain classified as warnings, explicit non-options, evidence contrasts or folder-name caveats.",
+    "timestamp": "2026-06-02T18:55:00+02:00",
+    "result": "No incorrect Arma 3 implementation advice found in the expanded docs mirror. Existing risky terms remain classified as warnings, explicit non-options, evidence contrasts or folder-name caveats, and inverse-trap OA-safe commands are now explicitly classified.",
     "includesNewerPages": [
       "AntiStack-Database-Extension-Audit.md",
       "Integration-Trust-Boundary-Audit.md",
       "Agent-Release-Readiness-Ledger.md",
-      "Source-Fix-Propagation-Queue.md"
+      "Source-Fix-Propagation-Queue.md",
+      "Arma-2-OA-Command-Version-Reference.md"
     ]
   },
   "scope": [
@@ -56,6 +57,22 @@
       "examples": [
         "Modded_Missions/eden is a divergent terrain fork, not Eden Editor advice."
       ]
+    },
+    {
+      "class": "confirmed_oa_safe_despite_a3_appearance",
+      "meaning": "The command exists in Arma 2/OA and is used intentionally even though newer-engine familiarity may make it look suspicious.",
+      "examples": [
+        "diag_tickTime is A2-era and is the correct unscaled stopwatch for PerformanceAudit.",
+        "uiSleep is OA-safe and appropriate for real-time housekeeping cadence."
+      ]
+    },
+    {
+      "class": "oa_safe_removed_in_a3",
+      "meaning": "The command exists and works in Arma 2 OA even though Arma 3 disabled or removed it; do not remove it solely because of Arma 3 security history.",
+      "examples": [
+        "setVehicleInit is OA-safe when this repo uses hardcoded literal init strings.",
+        "processInitCommands is the OA-era pair for queued setVehicleInit calls."
+      ]
     }
   ],
   "unsafeIfAddedAsImplementationAdvice": [
@@ -72,6 +89,12 @@
     "ACE helper requirement",
     "Eden Editor workflow requirement",
     "Arma 3 BattlEye examples treated as shipped repo evidence"
+  ],
+  "unsafeIfRemovedOrModernizedWithoutOAReplacement": [
+    "diag_tickTime",
+    "uiSleep",
+    "setVehicleInit",
+    "processInitCommands"
   ],
   "classificationSummary": [
     {
@@ -118,6 +141,46 @@
       "pattern": "Eden / eden",
       "classification": "terrain_or_folder_name",
       "action": "Treat Modded_Missions/eden as a terrain/fork name unless text explicitly says Eden Editor."
+    },
+    {
+      "pattern": "diag_tickTime / uiSleep",
+      "classification": "confirmed_oa_safe_despite_a3_appearance",
+      "action": "Keep when source context fits; do not replace merely because they look modern to an Arma 3-trained agent."
+    },
+    {
+      "pattern": "setVehicleInit / processInitCommands",
+      "classification": "oa_safe_removed_in_a3",
+      "action": "Keep hardcoded-literal OA usage unless a source-backed replacement is designed and smoked."
+    }
+  ],
+  "inverseTrapCommandClasses": [
+    {
+      "class": "confirmed_oa_safe_despite_a3_appearance",
+      "commands": [
+        "diag_tickTime",
+        "uiSleep"
+      ],
+      "evidence": [
+        "Arma-2-OA-Command-Version-Reference.md#confirmed-available-in-arma-2-oa",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Client_UpdateRHUD.sqf:187",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/AntiStack/mainLoop.sqf:16",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/restorers/buildings_restorer.sqf:26"
+      ],
+      "agentRule": "Do not modernize these away; verify OA support through the command-version reference and preserve intended real-time/performance semantics."
+    },
+    {
+      "class": "oa_safe_removed_in_a3",
+      "commands": [
+        "setVehicleInit",
+        "processInitCommands"
+      ],
+      "evidence": [
+        "Arma-2-OA-Command-Version-Reference.md#oa-safe-but-removed-in-arma-3--the-inverse-trap",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AddVehicleTexture.sqf:8",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/UAV/uav.sqf:30",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_CreateVehicle.sqf:44"
+      ],
+      "agentRule": "Do not remove these because Arma 3 disabled them. In this OA mission, the documented uses are hardcoded literal init strings; distinguish that from DR-1's sender-chosen compile risk."
     }
   ],
   "scanSnapshot": [
@@ -178,6 +241,7 @@
     "Use Bohemia Interactive Arma 2 OA / Combined Operations support as the scripting baseline.",
     "Before adding docs or patches with engine-version-sensitive commands, run the auditCommands or inspect Arma-2-OA-Compatibility-Audit.md.",
     "If a risky term is added intentionally, classify it as guardrail, explicit_non_option, evidence_contrast or terrain_or_folder_name.",
+    "If an inverse-trap command appears, classify it as confirmed_oa_safe_despite_a3_appearance or oa_safe_removed_in_a3 before suggesting removal.",
     "If a risky term is added as implementation guidance, correct it or cite an OA-compatible source proving support.",
     "Do not replace this mission's publicVariable/PVEH model with Arma 3 remote execution patterns."
   ],
