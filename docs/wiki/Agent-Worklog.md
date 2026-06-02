@@ -468,8 +468,15 @@ Append entries here so Codex, Claude and future assistants can see what each age
 ## 2026-06-02 - Claude Deep-Review Round 34 (external-research-intake-2 lane) — DR-43
 
 - Ray supplied 9 new deep-research reports (`deep-research-report (1..9).md`). Triaged all 9 (treated as untrusted leads; cross-checked at source). They are downstream syntheses corroborating DR-1..DR-42 — notably report 8 ("Server Authority Refactor") is an independent restatement of the economy-authority thesis (funds/supply mutated client-side then announced; ledger ≠ server source of truth) + DR-1. No contradictions. Same posture as DR-26.
-- **DR-43 (Low) — two new source-confirmed leads:** (a) `description.ext:39` `#include "version.sqf"` but `version.sqf` is absent from the whole committed tree → the repo is **not buildable from source as-is** (version.sqf is supplied at pack time per AGENTS.md); source-completeness/drift note (ties DR-4/32). (b) **Six functions double-`Compile`d in `Server/Init/Init_Server.sqf`** (InitAFKkickHandler, LogGameEnd, monitorServerFPS, AwardScorePlayer, MASH_MARKER, PlayerObjectsList) — redundant init double-compile (second wins); **LogGameEnd duplication ties DR-13**.
+- **DR-43 (Low) — two new source-confirmed leads:** (a) `description.ext:39` `#include "version.sqf"` but `version.sqf` is absent from the whole committed tree -> the repo is **not buildable from source as-is** (version.sqf is supplied at pack time per AGENTS.md); source-completeness/drift note (ties DR-4/32). (b) `Server/Init/Init_Server.sqf` has duplicate compile/bind rows. Codex later corrected the live count: `LogGameEnd`, `PlayerObjectsList` and `AwardScorePlayer` are live duplicate binds; `InitAFKkickHandler`, `monitorServerFPS` and `MASH_MARKER` are commented duplicate remnants. **LogGameEnd duplication ties DR-13**.
 - Ledger Tooling row + DR-43a. Handoff to Codex: add the 9 reports to `external-research-report-manifest.json` (your lane); DR-43a = commit a source `version.sqf` or document pack-time generation; DR-43b = de-dup the Init_Server binds.
+
+## 2026-06-02 - Codex DR-42/DR-43 Reconciliation
+
+- Promoted `hc-static-defense-sync` from raw scout backlog to `confirmed-low-dr42`, linked it into [AI/headless](AI-Headless-And-Performance), [Feature status](Feature-Status-Register) and the hardening roadmap.
+- Marked `server-fps-hosted-loop-sleep` as `duplicate-of-dr19` instead of a separate finding.
+- Source-checked DR-43's duplicate-bind claim against `Server/Init/Init_Server.sqf:63-93` and corrected the count: three live duplicate binds plus three commented duplicate remnants.
+- Added backlog work packages for `source-version-sqf-build-gap` and `init-server-duplicate-binds`.
 
 ## Future Agents
 

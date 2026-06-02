@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `dr42-dr43-reconciliation` | Ready to publish | DR-42 static-defense HC update-back and DR-43 source/version + duplicate-bind cleanups are integrated into [AI/headless](AI-Headless-And-Performance), [Feature status](Feature-Status-Register), [Hardening roadmap](Hardening-Implementation-Roadmap) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl). |
 | `markdown-research-report-intake` | Ready to publish | [External research reports](External-Research-Reports) and [`external-research-report-manifest.json`](external-research-report-manifest.json) now track nine Markdown deep-research reports as source-check leads. |
 | `attack-wave-authority-playbook` | Ready to publish | [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) turns DR-41 into an implementation-ready patch guide, including server recomputation, duplicate rejection, modifier clamps and the all-side-supply spend model. |
 | `attack-wave-authority-dr41` | Playbook published | DR-41 is now cross-linked from [Networking/PV](Networking-And-Public-Variables), [Hardening roadmap](Hardening-Implementation-Roadmap), [Economy](Economy-Towns-And-Supply), [Feature status](Feature-Status-Register), [Server authority map](Server-Authority-Migration-Map), [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl). |
@@ -24,6 +25,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
 | Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. |
+| Codex-2 | Active | `pvf-dispatch-implementation-playbook` | Building a standalone PVF dispatch playbook for DR-1/DR-38, with dispatcher lookup hardening separated from handler authority and direct-PV validation. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
@@ -61,6 +63,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| DR-42/DR-43 reconciliation | [AI/headless](AI-Headless-And-Performance), [Feature status](Feature-Status-Register), [Hardening roadmap](Hardening-Implementation-Roadmap), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) | Promotes static-defense HC update-back to confirmed DR-42, marks hosted FPS backlog as a DR-19 duplicate, adds `source-version-sqf-build-gap` and `init-server-duplicate-binds`, and corrects DR-43 to three live duplicate binds plus three commented remnants. |
 | Markdown research report intake | [External research reports](External-Research-Reports), [`external-research-report-manifest.json`](external-research-report-manifest.json), [`agent-context.json`](agent-context.json) | Adds sanitized metadata for nine Steff-provided Markdown deep-research reports; treats them as leads until repo evidence confirms them. First source-checked overlap confirms the modded mission tooling/propagation claims already documented in [Tools/build](Tools-And-Build-Workflow). |
 | Attack-wave authority playbook | [Attack-wave authority playbook](Attack-Wave-Authority-Playbook), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), [`agent-context.json`](agent-context.json) | Adds the DR-41 patch shape future code owners need: treat `ATTACK_WAVE_INIT` as request data, re-derive real side supply server-side, reject bad/duplicate requests, clamp modifier/duration and preserve all-current-side-supply spend unless design changes are approved. |
 | DR-41 attack-wave authority | [Networking/PV](Networking-And-Public-Variables), [Hardening roadmap](Hardening-Implementation-Roadmap), [Economy](Economy-Towns-And-Supply), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) | Claude's source-verified direct-PV finding is now promoted from scout candidate to confirmed high-priority backlog item. |

@@ -1,6 +1,6 @@
 {
  "schema": "a2waspwarfare-agent-context-v1",
- "generatedAt": "2026-06-02T15:50:00+02:00",
+ "generatedAt": "2026-06-02T16:20:00+02:00",
  "repository": "rayswaynl/a2waspwarfare",
  "game": "Arma 2 Operation Arrowhead 1.64",
  "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -215,6 +215,12 @@
    "owner": "Codex",
    "status": "published",
    "nextAction": "Use the nine Markdown reports as source-check leads only; promote claims to subsystem pages after repository verification."
+  },
+  {
+   "lane": "dr42-dr43-reconciliation",
+   "owner": "Codex",
+   "status": "ready-to-publish",
+   "nextAction": "No further docs action after publish; future code owners can claim hc-static-defense-sync, source-version-sqf-build-gap or init-server-duplicate-binds from agent-hardening-backlog.jsonl."
   }
  ],
  "pr1SupplyHeliContext": {
@@ -270,7 +276,7 @@
   "attackWaveAuthority": "Attack-Wave-Authority-Playbook.md is the implementation-ready DR-41 guide. ATTACK_WAVE_INIT is a direct publicVariableServer channel outside PVF; server must re-derive side/supply, validate requester, reject duplicates and preserve all-side-supply spend unless owner-approved design changes say otherwise."
  },
  "knownRisks": [
-  "DR-43 (Low): external-research intake #2 (9 reports) corroborates the campaign (esp. report 8 = economy-authority thesis). Two source-confirmed leads: (a) description.ext:39 includes version.sqf which is absent from the committed tree (repo not buildable as-is; pack-time generated) - source-completeness/drift; (b) six functions double-Compiled in Init_Server.sqf (InitAFKkickHandler/LogGameEnd/monitorServerFPS/AwardScorePlayer/MASH_MARKER/PlayerObjectsList) - redundant, second bind wins; LogGameEnd dup ties DR-13.",
+  "DR-43 (Low): external-research intake #2 (9 reports) corroborates the campaign (esp. report 8 = economy-authority thesis). Two source-confirmed leads: (a) description.ext:39 includes version.sqf which is absent from the committed tree (repo not buildable as-is; pack-time generated) - source-completeness/drift; (b) Init_Server.sqf has duplicate compile/bind rows. Corrected source re-check: LogGameEnd, PlayerObjectsList and AwardScorePlayer are live duplicate binds; InitAFKkickHandler, monitorServerFPS and MASH_MARKER are commented duplicate remnants. LogGameEnd dup ties DR-13.",
   "DR-42 (Low/Med, headless): static-defence HC delegation never reports created units back to the server (update-back commented at Client_DelegateAIStaticDefence.sqf:28; town-AI reports via Client_DelegateTownAI.sqf:35). Server has no record of HC static-defence units, compounding DR-21. Backlog server-fps-hosted-loop-sleep duplicates DR-19.",
   "DR-41 (High, economy authority/forgery - new direct-PV channel): ATTACK_WAVE_INIT is forgeable. Server_AttackWave.sqf takes _supply/_side directly from the client payload (no GetSideSupply re-derivation, no _side-vs-sender check, no server cost deduction); the 25000-supply gate is client-side only (updateclient.sqf:240). Forged _supply>=70000 (SUPPLY_MAX=50000) drives ATTACK_WAVE_PRICE_MODIFIER to 0 -> free units side-wide (larger -> negative pricing). Not in BattlEye publicvariable.txt. KEY: the forgery class has TWO surfaces - the PVF dispatcher (DR-1) and direct publicVariableServer channels (DR-41) - so the server-authority redesign must re-derive trusted values in each direct PVEH too, not just validate the PVF dispatcher. Confirms Codex pv-scout candidate attack-wave-authority.",
   "CONFIRMED 2026-06-02: Town AI vehicle despawn can delete a vehicle with a player passenger/crew member aboard if the player is not the group leader. server_town_ai.sqf:211-216 checks !(isPlayer leader group _x) and does not inspect crew/cargo/turret occupants. Use Town-AI-Vehicle-Despawn-Safety.md for the source chain, behavior-preserving guard shape and validation gates.",
@@ -888,7 +894,7 @@
    "agent": "Claude",
    "lane": "external-research-intake-2",
    "type": "external-research-intake",
-   "findings": "DR-43: 9 new deep-research reports corroborate DR-1..DR-42 (report 8 = independent restatement of economy-authority thesis + DR-1; downstream syntheses, not source-verification). Two NEW source-confirmed leads: (a) description.ext:39 #include version.sqf but file absent from repo -> not buildable from source as-is (pack-time generated per AGENTS.md); (b) six double-Compiled binds in Init_Server.sqf (incl LogGameEnd, ties DR-13)."
+   "findings": "DR-43: 9 new deep-research reports corroborate DR-1..DR-42 (report 8 = independent restatement of economy-authority thesis + DR-1; downstream syntheses, not source-verification). Two NEW source-confirmed leads: (a) description.ext:39 #include version.sqf but file absent from repo -> not buildable from source as-is (pack-time generated per AGENTS.md); (b) Init_Server.sqf duplicate bind cleanup: LogGameEnd/PlayerObjectsList/AwardScorePlayer live duplicates; InitAFKkickHandler/monitorServerFPS/MASH_MARKER commented remnants."
   }
  ],
  "toolingProjects": [

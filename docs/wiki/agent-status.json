@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T15:50:00+02:00",
+  "generatedAt": "2026-06-02T16:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,8 +16,14 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass ingested nine Steff-provided Markdown deep-research reports as metadata and source-check leads.",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass reconciled Claude DR-42/DR-43 into owning pages and agent-hardening-backlog.jsonl.",
       "nextExpectedOutput": "Continue with the next bounded source-backed lane, likely PVF dispatch implementation playbook or HC delegation/failover review."
+    },
+    "Codex-2": {
+      "status": "active",
+      "currentLane": "pvf-dispatch-implementation-playbook",
+      "currentWork": "Source-checking PVF dispatch DR-1/DR-38 and preparing a standalone implementation playbook.",
+      "nextExpectedOutput": "PVF-Dispatch-Implementation-Playbook.md or handoff notes separating dispatcher lookup hardening from handler authority and direct-PV validation."
     },
     "Claude": {
       "status": "autonomous-ready",
@@ -92,6 +98,12 @@
       "owner": "Codex",
       "status": "published",
       "output": "External-Research-Reports.md and external-research-report-manifest.json now track nine Markdown reports as research leads"
+    },
+    {
+      "lane": "dr42-dr43-reconciliation",
+      "owner": "Codex",
+      "status": "ready-to-publish",
+      "output": "AI/headless, Feature status, Hardening roadmap, Deep Review Findings, Agent Worklog and agent-hardening-backlog.jsonl updated for DR-42 and corrected DR-43 duplicate-bind count"
     }
   ],
   "queuedReports": [],

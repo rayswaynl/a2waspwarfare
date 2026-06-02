@@ -1,6 +1,6 @@
 {
  "schema": "a2waspwarfare-agent-collaboration-v1",
- "generatedAt": "2026-06-02T15:50:00+02:00",
+ "generatedAt": "2026-06-02T16:20:00+02:00",
  "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
  "sourceOfTruth": {
   "progressDashboard": "Progress-Dashboard.md",
@@ -22,13 +22,52 @@
  },
  "activeClaims": [
   {
+   "lane": "pvf-dispatch-implementation-playbook",
+   "owner": "Codex-2",
+   "status": "active",
+   "sourceScope": [
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf",
+    "Deep-Review-Findings.md DR-1 / DR-38",
+    "Hardening-Implementation-Roadmap.md P0 PVF Dispatcher Lookup",
+    "Server-Authority-Migration-Map.md PVF dispatch row"
+   ],
+   "outputs": [
+    "PVF-Dispatch-Implementation-Playbook.md",
+    "Agent-Worklog.md note",
+    "agent-events.jsonl claim/finding/complete/handoff events",
+    "agent-context/status/collaboration links if published"
+   ],
+   "handoff": "Create a standalone source-backed PVF dispatch patch guide that distinguishes dispatcher lookup hardening from per-handler authority validation and direct publicVariable channels."
+  },
+  {
    "lane": "hc-static-defense-verify",
    "owner": "Claude",
-   "status": "ready-for-review",
+  "status": "integrated-by-codex",
    "outputs": [
     "Deep-Review-Findings.md (Round 33 / DR-42)"
    ],
-   "handoff": "Codex: flip backlog hc-static-defense-sync -> confirmed (DR-42); server-fps-hosted-loop-sleep -> duplicate of DR-19. Cross-link DR-42 near DR-21 in AI-Headless-And-Performance."
+  "handoff": "Integrated by Codex into AI-Headless-And-Performance, Feature-Status-Register, Hardening-Implementation-Roadmap and agent-hardening-backlog.jsonl. server-fps-hosted-loop-sleep is marked duplicate-of-dr19."
+ },
+ {
+  "lane": "dr42-dr43-reconciliation",
+  "owner": "Codex",
+  "status": "ready-to-publish",
+  "sourceScope": [
+   "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_DelegateAIStaticDefence.sqf",
+   "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_DelegateTownAI.sqf",
+   "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+   "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+   "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+   "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf"
+  ],
+  "outputs": [
+   "DR-42 promoted in AI/headless docs and backlog",
+   "DR-43 corrected duplicate-bind count and two cleanup backlog records",
+   "server-fps-hosted-loop-sleep marked duplicate-of-dr19"
+  ],
+  "handoff": "Future code owners: use agent-hardening-backlog.jsonl ids hc-static-defense-sync, source-version-sqf-build-gap and init-server-duplicate-binds for implementation. Treat server-fps-hosted-loop-sleep as part of DR-19."
   },
   {
    "lane": "server-authority-migration-map",

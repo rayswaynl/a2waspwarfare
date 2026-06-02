@@ -79,7 +79,7 @@ There is no `setGroupOwner` in the mission. The headless client owns delegated A
 
 - If the HC disconnects mid-mission, `Server/Functions/Server_OnPlayerDisconnected.sqf` removes the HC group from the candidate pool, but does not reclaim already-created units.
 - HC registration is handled through `["RequestSpecial", ["connected-hc", player]]`; `Server/Functions/Server_HandleSpecial.sqf` appends `group _hc` to `WFBE_HEADLESSCLIENTS_ID` only if `owner _hc != 0`.
-- `Client/Functions/Client_DelegateAIStaticDefence.sqf` has the server update branch commented near the end of the helper, so static-defense delegation should be treated as intentionally incomplete until source-tested.
+- DR-42 confirms static-defense delegation is one-way in current source: `Client/Functions/Client_DelegateAIStaticDefence.sqf:28` comments out the `update-delegation-static_defence` send-back, while town-AI delegation does report vehicles back through `Client_DelegateTownAI.sqf:35` -> `Server_HandleSpecial.sqf` `"update-town-delegation"`. Server therefore never records HC-created static-defense units for cleanup/accounting/re-delegation. Treat this as partial until the update-back is restored or explicitly documented as fire-and-forget.
 
 ### Delegation Can Downgrade Once At Init
 

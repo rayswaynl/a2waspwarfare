@@ -195,8 +195,10 @@ Validation:
 | WASP marker monitor busy-spin | `WASP/global_marking_monitor.sqf:62` polls display without sleep for up to 2 seconds. | Replace with throttled wait style like sibling `:80`; verify map double-click prefix still works. |
 | MASH markers | Client receiver commented and trigger never sent. | Either remove dead code or revive with server-held marker list, unique names and JIP replay. |
 | Paratrooper markers | `HandleParatrooperMarkerCreation` not registered in client PVF list. | Register receiver or remove marker callback; paratroop drop itself remains server-owned. |
-| Static-defense HC sync | `Client_DelegateAIStaticDefence.sqf` has update-back send commented; `HandleSpecial` only has `update-town-delegation`. | Decide whether static-defense delegation is intentionally one-way, then restore update-back or retire stale code. |
-| Hosted FPS monitor loop | `Server/Module/serverFPS/monitorServerFPS.sqf` sleeps inside `isDedicated`, so hosted/listen path can loop without sleep. | Move sleep outside the branch; dedicated publishing cadence should remain unchanged. |
+| Static-defense HC sync | DR-42: `Client_DelegateAIStaticDefence.sqf:28` has update-back send commented; town-AI delegation still reports through `update-town-delegation`. | Decide whether static-defense delegation is intentionally one-way, then restore update-back/handler or retire stale code with a clear owner note. |
+| Hosted FPS monitor loop | DR-19 duplicate: `Server/GUI/serverFpsGUI.sqf` and `Server/Module/serverFPS/monitorServerFPS.sqf` sleep inside `isDedicated`, so hosted/listen paths can loop without sleep. | Track as DR-19, not a separate finding; move sleep outside branches or exit early when not dedicated. |
+| Generated `version.sqf` source gap | DR-43: `description.ext` and `initJIPCompatible.sqf` include `version.sqf`, but it is generated/ignored and absent from the committed source tree. | Decide whether to commit a safe placeholder or keep generated-only with explicit pre-pack/pre-test checks. |
+| `Init_Server.sqf` duplicate binds | DR-43 corrected re-check: live duplicates for `LogGameEnd`, `PlayerObjectsList` and `AwardScorePlayer`; commented duplicate remnants for AFK kick, server FPS and MASH marker. | De-duplicate live binds and annotate/remove remnants; coordinate `LogGameEnd` cleanup with DR-13/DR-36. |
 
 ## Branching And Review Discipline
 

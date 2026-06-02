@@ -38,6 +38,8 @@ Steff provided nine additional Markdown deep-research reports on 2026-06-02. Cod
 
 The Markdown batch is valuable as a structured second-brain pass, especially for server authority, AI onboarding and long-term refactor strategy. It does not replace source-backed wiki pages. Future agents should use the reports to find what to inspect next, then cite repository files or already-verified DR findings before changing canonical subsystem docs.
 
+Claude's Round 34 independently triaged the same nine reports and found no contradictions with the current DR register. It recorded DR-43: the generated `version.sqf` source-completeness gap, plus `Init_Server.sqf` duplicate bind cleanup. Codex then re-checked the duplicate-bind count and corrected it to three live duplicate binds (`LogGameEnd`, `PlayerObjectsList`, `AwardScorePlayer`) plus three commented duplicate remnants (`InitAFKkickHandler`, `monitorServerFPS`, `MASH_MARKER`).
+
 Confirmed overlap from this intake pass:
 
 | Lead | Source-backed status |
