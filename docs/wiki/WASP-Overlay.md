@@ -23,7 +23,7 @@ WASP is the community/server identity this fork is built for. The mission credit
 | `WASP/baserep/data.sqf` | Table mapping base building classnames → display name, interaction distance, repair-rate %. | Data include. |
 | `WASP/baserep/viem.sqf` | Commander-only loop: HUD building-health overlay; attaches/removes a "Repair" action near damaged structures. Spotters also see enemy building health at range. | Main baserep loop. |
 | `WASP/baserep/repair.sqf` | Performs the repair: medic animation, drains side supply, increments building HP per tick. | Called by `viem.sqf`. |
-| `WASP/global_marking_monitor.sqf` | Intercepts map double-click to auto-prefix the player's name onto marker text. | **Live** (`Init_Client.sqf:267`). |
+| `WASP/global_marking_monitor.sqf` | Intercepts map double-click to auto-prefix the player's name onto marker text. | **Live** (`Init_Client.sqf:267`). Display wait still has a short busy-poll opportunity; see [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup). |
 | `WASP/rpg_dropping/DropRPG.sqf` | By DeraKOren (2012). (a) single-use AT-launcher weapon-swap, (b) pipe-bomb TK prevention near friendly bases, (c) mine time-tracking. | **Live** (`Init_Client.sqf:15` + recompiled on respawn at `Client_PreRespawnHandler.sqf:12`). |
 | `WASP/unsort/StartVeh.sqf` | Defines `EAST_StartVeh` / `WEST_StartVeh` classname pools for one random extra starting vehicle per side. | **Live** (compiled `Init_Server.sqf:306`, used `:425-459`). |
 | `test/wasp_selftest.sqf` | Server-only read-only diagnostic observer. | **Live** (`init.sqf:4`). See below. |
@@ -49,12 +49,12 @@ The original single entry point (`WASP/Init_Client.sqf`, called from `initJIPCom
 
 | WASP feature | Locality status | Development note |
 | --- | --- | --- |
-| HQ recovery action | Mostly client-side. `Action_RepairMHQDepot.sqf` checks funds/HQ state, deducts player cash, moves the HQ and mutates town supply locally before sending the repair request. | Treat as an authority-light legacy action. If hardened, move commander/funds/HQ/town-SV validation to the server side. |
+| HQ recovery action | Mostly client-side. `Action_RepairMHQDepot.sqf` checks funds/HQ state, deducts player cash, moves the HQ and mutates town supply locally before sending the repair request. | Treat as an authority-light legacy action. If hardened, move commander/funds/HQ/town-SV validation to the server side through [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) and [Server authority map](Server-Authority-Migration-Map). |
 | Global marking monitor | Intentionally client-local map double-click helper. | Safe for UI behavior; do not expect it on HC/server. |
 | Start vehicles | Server-owned spawn state from `WASP/unsort/StartVeh.sqf`, compiled/used in `Init_Server.sqf`. | Not a JIP UI feature; changes affect initial server-side vehicle spawning and generated mission skip-list mirroring. |
 | Respawn action re-add | `WASP/actions/OnKilled.sqf` re-runs `AddActions.sqf`; current wiring comes through `Client_PreRespawnHandler.sqf`. | Keep this dependency when changing respawn handlers, or the active HQ recovery action can disappear after respawn. |
 
-Claude DR-40 reviewed the WASP Perf + JIP/HC cells. The live WASP wiring is JIP/HC-clean because it runs per player from `Init_Client.sqf`, and headless clients skip these player-local features. The one perf nit is `WASP/global_marking_monitor.sqf:62`: a `while {time < _this}` loop polls `findDisplay 54` without a sleep for up to two seconds during init. Its sibling wait at `:80` already uses `waitUntil {sleep 0.1; ...}`; use that throttled style if this helper is touched.
+Claude DR-40 reviewed the WASP Perf + JIP/HC cells. The live WASP wiring is JIP/HC-clean because it runs per player from `Init_Client.sqf`, and headless clients skip these player-local features. The DR-40 perf nit in `WASP/global_marking_monitor.sqf:62` remains a small local cleanup opportunity: add a tiny sleep/backoff to the display-54 wait before expanding marker behavior. See [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup).
 
 ## `test/wasp_selftest.sqf`
 

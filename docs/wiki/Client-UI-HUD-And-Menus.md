@@ -28,6 +28,19 @@ This is the quick-reference gateway for client UI work. The canonical implementa
 | DR-16 / DR-17 / DR-24 | Gear/template/cargo and stale UI behavior need careful source checks. | [Deep-review findings](Deep-Review-Findings) |
 | DR-25a/b | EASA and service spend/loadout paths are UI-originated authority risks. | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
 | Duplicate IDDs | EASA/Economy share `23000`; overlay/title resources share `10200`. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| Command task partial | Commander task controls are visible, but the `SetTask` send path is commented out. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
+
+## UI Risk Index
+
+Use this as the fast route before touching UI:
+
+| Risk | Go to |
+| --- | --- |
+| Duplicate dialog/title IDs | [UI IDD collision repair](UI-IDD-Collision-Repair) |
+| Service affordability and action-time guards | [Service menu affordability guards](Service-Menu-Affordability-Guards) |
+| Command task controls / dormant task system | [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| Gear/EASA/template/cargo partials | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Gear template profile filter](Gear-Template-Profile-Filter), [Vehicle cargo equip loop bounds](Vehicle-Cargo-Equip-Loop-Bounds) |
+| Stale legacy dialogs | [Deep-review findings](Deep-Review-Findings) DR-24 and [Feature status](Feature-Status-Register) |
 
 ## Continue Reading
 

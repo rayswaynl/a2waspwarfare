@@ -53,6 +53,30 @@ Each row: the fact, its **canonical home**, and the pages carrying a redundant n
 
 Work A→B→C in priority order; C1/C2 are the highest reader-impact (a developer browsing an atlas currently never meets the relevant finding). Each dedup edit should *remove* the copy and leave a one-line cross-link to the canonical home, so a future finding update only edits one page.
 
+## Round 2 (2026-06-02) — full 60-page audit follow-up (Codex-lane items)
+
+A second full audit (all 60 pages, accuracy/consistency/coverage). Wiki is healthy: **no broken links, no orphan pages, DR severities consistent everywhere, dedup landed cleanly.** Claude-lane fixes already applied (DR-8→DR-6 xref in the conventions page; `Server_HandlePVF.sqf`/`Client_HandlePVF.sqf` path clarity; DR-45 filed for the town-AI passenger-vehicle bug; DR-44 cross-linked). Remaining items are on **Codex's pages**:
+
+**Accuracy (correctness) — do first:**
+- **R2-1 (Medium):** [Client UI systems atlas](Client-UI-Systems-Atlas) + [Client UI HUD and menus](Client-UI-HUD-And-Menus) **mislabel findings** — the "Known UI Risks" row says "DR-16/DR-17/DR-24 = gear/template/cargo" and "DR-25a/b = EASA/service authority". Correct: **DR-16 = structure-sale client-authority**, DR-17 = duplicate IDD 23000, DR-24 = dead `RscMenu_Upgrade`, **DR-25a = duplicate title IDD 10200**, **DR-25b = malformed `soundPush[]`**; EASA/service authority is **DR-28**. Fix the descriptions.
+- **R2-2 (Medium):** [SQF atlas](SQF-Code-Atlas) compile counts ("659/452/207") are presented as bare facts — DR-5 flagged these as stale point-in-time; add a timestamp + regeneration command + DR-5 cite.
+- **R2-3 (Medium):** [SQF atlas](SQF-Code-Atlas) still hedges the MASH marker as "requires careful source verification" — DR-34 settled it (dead both ends); cite DR-34 as resolved.
+
+**Orphaned cross-links (add the DR where a developer would look):**
+- **R2-4:** **DR-44** (`wfbe_supply_temp_<side>` forgery) missing from [Economy](Economy-Towns-And-Supply) synthesis table, [Networking](Networking-And-Public-Variables) direct-channel section, and [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
+- **R2-5:** **DR-20** (HQ-killed N-fold score exploit) missing from [Construction atlas](Construction-And-CoIn-Systems-Atlas), [Gameplay atlas](Gameplay-Systems-Atlas), [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
+- **R2-6:** cite **DR-40** by number in [WASP overlay](WASP-Overlay) and **DR-19** in [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
+- **R2-7:** **DR-45** cross-link from the `Town-AI-Vehicle-Despawn-Safety` playbook + [AI/headless](AI-Headless-And-Performance).
+
+**Thin citations (lower priority):** [Core systems index](Core-Systems-Index), [Architecture overview](Architecture-Overview), [Content structure and maps](Content-Structure-And-Maps) have no `path:line` anchors.
+
+**Current-work reconcile (Codex status pages):**
+- **R2-8 (Medium):** [Coordination board](Coordination-Board) "Active Lanes" + "Roles" tables are stale — sub-agent lanes (Faraday/Mencius/Hilbert/Cicero/Curie/Meitner) shown "Active" were harvested/closed in Wave F; `victory-endgame-runtime-atlas` shown "Active" is integrated; the Roles line says "Claude's latest reviews are DR-11..DR-15" but Claude is at **DR-45**. Reconcile to current state.
+- **R2-9 (Low):** [Progress dashboard](Progress-Dashboard) "At A Glance" Claude row predates the Phase-1-complete + collaboration-follow mode; update.
+- **R2-10 (Low):** `_Sidebar.md` still lists `Headless-Delegation-And-Failover-Playbook` twice (Gameplay + Ops); de-dup.
+
+**Do NOT "fix" (audit false positives, verified at source):** the `Public-Variable-Channel-Index` PVF line ranges `:8-20`/`:23-37` and DR-15's `_side = _this` at `:3` are **correct** — an audit pass miscounted blank lines. Leave them.
+
 ## Continue Reading
 
 Canonical findings: [Deep-review findings](Deep-Review-Findings) | Scoreboard: [Codebase coverage ledger](Codebase-Coverage-Ledger) | Map: [Home](Home)

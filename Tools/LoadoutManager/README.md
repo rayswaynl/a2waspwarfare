@@ -9,7 +9,7 @@ A tool for managing loadouts and packing missions for the A2WaspWarfare project.
 
 ## Environment Setup
 
-Before running the tool, you must set the `7za` environment variable to point to the 7-Zip executable (7za.exe). This is required for packing missions.
+Before running the tool for release packaging, set the `7za` environment variable to point to the 7-Zip executable (7za.exe). This is required only for packing missions. Generation/copy runs can skip packaging with `A2WASP_SKIP_ZIP=1`.
 
 ### Windows
 
@@ -58,7 +58,15 @@ $env:7za = "C:\Program Files\7-Zip\7za.exe"
 dotnet run -c SERVER_DEBUG
 ```
 
+To regenerate/copy mission files without creating `_MISSIONS.7z`:
+
+```powershell
+$env:A2WASP_SKIP_ZIP = "1"
+dotnet run
+```
+
 ## Notes
 
-- Setting the 7za environment variable is only necessary if you're packing missions. It's not required if you're only copying files to other missions from Chernarus.
+- Setting the 7za environment variable is only necessary if you're packing missions. Set `A2WASP_SKIP_ZIP=1` when you only want to generate/copy files from Chernarus to the maintained targets.
+- The tool can find the project root either from an ancestor folder named `a2waspwarfare` or from a normal repo checkout containing `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`.
 - Make sure to use the appropriate configuration based on your deployment target.

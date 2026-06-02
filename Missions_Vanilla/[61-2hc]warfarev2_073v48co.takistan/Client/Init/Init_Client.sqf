@@ -568,7 +568,6 @@ if (count _default <= 3) then {
 WF_Logic setVariable ['filler','primary'];
 
 /* Skill Module. */
-[] Call Compile preprocessFile "Client\Module\Skill\Skill_Init.sqf";
 (player) Call WFBE_SK_FNC_Apply;
 
 [] execVM "WASP\baserep\init.sqf";

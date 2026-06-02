@@ -2,7 +2,7 @@
 
 This page turns the broad economy/server-authority decision into the smallest source-backed implementation sequence worth doing first.
 
-Scope: Chernarus source mission first, Arma 2 Operation Arrowhead 1.64 only, then LoadoutManager propagation. It complements [Server authority map](Server-Authority-Migration-Map), [Economy, towns and supply](Economy-Towns-And-Supply), [Hardening roadmap](Hardening-Implementation-Roadmap), [Public variable channel index](Public-Variable-Channel-Index), [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook), [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl).
+Scope: Chernarus source mission first, Arma 2 Operation Arrowhead 1.64 only, then LoadoutManager propagation. It complements [Server authority map](Server-Authority-Migration-Map), [Upgrades and research atlas](Upgrades-And-Research-Atlas), [Economy, towns and supply](Economy-Towns-And-Supply), [Hardening roadmap](Hardening-Implementation-Roadmap), [Public variable channel index](Public-Variable-Channel-Index), [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook), [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl).
 
 ## Status
 
@@ -10,6 +10,7 @@ Scope: Chernarus source mission first, Arma 2 Operation Arrowhead 1.64 only, the
 | --- | --- |
 | Finding class | Confirmed economy/server-authority class across DR-6, DR-14, DR-16, DR-22, DR-23, DR-27, DR-28 and DR-41. |
 | New value from this pass | First safe code sequence: side-supply arithmetic/validation first, then existing PVF spend handlers, then player-buy redesign. |
+| Wave I refinement | Kepler split client-trusted score/funds/supply mutation from safer server-derived read and award helpers. |
 | Immediate patch candidate | `Common_ChangeSideSupply.sqf` and `Server_ChangeSideSupply.sqf` negative clamp and side/channel validation. |
 | Smallest server-led migration candidate | Upgrade purchase, because `RequestUpgrade` already reaches a server process but currently trusts client-side debit and dependency checks. |
 | Do not treat as small | Player factory buys. They create units/vehicles from the client and have no `RequestBuyUnit` PVF. |
@@ -19,6 +20,14 @@ Scope: Chernarus source mission first, Arma 2 Operation Arrowhead 1.64 only, the
 - `Common/Functions/Common_ChangeSideSupply.sqf:3-30`
 - `Server/Functions/Server_ChangeSideSupply.sqf:1-47`
 - `Common/Functions/Common_ChangeTeamFunds.sqf:1-8`
+- `Server/PVFunctions/RequestChangeScore.sqf:3-13`
+- `Client/PVFunctions/TownCaptured.sqf:71`
+- `Common/Functions/Common_AwardScorePlayer.sqf:17-27`
+- `Common/Functions/Common_GetTotalSupplyValue.sqf:7-11`
+- `Common/Functions/Common_GetSideSupply.sqf:11,17,24,30,37,43`
+- `Server/Functions/Server_PV_RequestSupplyValue.sqf:1-8`
+- `Client/Functions/Client_ReceiveSupplyValue.sqf:7`
+- `Client/Init/Init_Client.sqf:371`
 - `Client/Functions/Client_ChangePlayerFunds.sqf:1`
 - `Client/Functions/Client_GetPlayerFunds.sqf:1`
 - `Client/GUI/GUI_UpgradeMenu.sqf:129-172`
@@ -54,6 +63,8 @@ _team setVariable ["wfbe_funds", (_team getVariable "wfbe_funds") + _amount, tru
 
 `Client_ChangePlayerFunds.sqf:1` simply calls that with `clientTeam`, and `Client_GetPlayerFunds.sqf:1` reads the same team value. This is why many UI paths can debit or credit locally after client-side affordability checks.
 
+There is no `Server/PVFunctions/RequestChangeFunds.sqf` in the current source. Funds authority is a convention over replicated group variables and shared helpers, not a single server request wall.
+
 ### Side supply uses direct publicVariable temp channels
 
 `Common_ChangeSideSupply.sqf:28-30` writes `wfbe_supply_temp_<side>` and `publicVariableServer`s it. `Server_ChangeSideSupply.sqf` registers separate handlers for `wfbe_supply_temp_west` and `wfbe_supply_temp_east`.
@@ -67,6 +78,14 @@ if (_change < 0) then {_change = _currentSupply - _amount};
 
 For `_currentSupply = 100` and `_amount = -1000`, this produces `1100`, not `0`. The direct-PV authority issue remains, but the arithmetic bug is a small, real first patch.
 
+The live source of truth for side supply is the side-keyed mission variable `wfbe_supply_%1` read by `Common_GetSideSupply.sqf`. The generic `wfbe_supply` value initialized in `Client/Init/Init_Client.sqf:371` is a legacy alias/cache and should not be used as the target for new authority work.
+
+### Score and supply reads show mixed authority patterns
+
+`RequestChangeScore.sqf` accepts a score value from the payload and applies it with `addScore`. `TownCaptured.sqf:71` uses this route after client-side capture reward handling, so capture bounty scoring belongs in the same authority family as funds and supply rewards.
+
+There are also safer patterns worth reusing. `Common_AwardScorePlayer.sqf:17-27` derives score awards from configured constants, `RequestOnUnitKilled.sqf:71-80` computes kill points server-side, `Common_GetTotalSupplyValue.sqf:7-11` recomputes aggregate supply from town state, and `Server_PV_RequestSupplyValue.sqf:1-8` answers a read request by deriving the current supply on the server. New patches should move toward those server-derived patterns rather than adding more client-stamped mutation payloads.
+
 ### Upgrades already have a server entrypoint, but client owns debit and validation
 
 `GUI_UpgradeMenu.sqf:141-161` checks funds, side supply and dependencies locally, then:
@@ -75,7 +94,7 @@ For `_currentSupply = 100` and `_amount = -1000`, this produces `1100`, not `0`.
 - debits side supply through `ChangeSideSupply` at `:159`;
 - sends `RequestUpgrade` with `[side, id, currentLevel, true]` at `:161`.
 
-`RequestUpgrade.sqf:5` just spawns `Server_ProcessUpgrade`. `Server_ProcessUpgrade.sqf:12-18` trusts side, id and level from the payload to look up time; `:40-44` increments the upgrade state and clears the running flag. It does not recompute commander, current level, dependencies, cost or funds before accepting the transition.
+`RequestUpgrade.sqf:5` just spawns `Server_ProcessUpgrade`. `Server_ProcessUpgrade.sqf:12-18` trusts side, id and level from the payload to look up time; `:40-44` increments the upgrade state and clears the running flag. It does not recompute commander, current level, dependencies, cost or funds before accepting the transition. See [Upgrades and research atlas](Upgrades-And-Research-Atlas) for the full live-menu/server-worker/AI-worker map.
 
 ### Construction/defense already have server entrypoints, but client owns debit and placement affordance
 

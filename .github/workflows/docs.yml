@@ -1,0 +1,46 @@
+name: Docs
+
+on:
+  pull_request:
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/docs.yml"
+  push:
+    branches:
+      - master
+      - docs/developer-wiki-index
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/docs.yml"
+
+jobs:
+  validate:
+    name: Validate wiki docs
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate docs/wiki
+        shell: pwsh
+        run: ./docs/validate-wiki.ps1
+
+  mkdocs:
+    name: Build MkDocs site
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install docs dependencies
+        run: pip install -r docs/requirements-docs.txt
+
+      - name: Build docs
+        run: mkdocs build --strict

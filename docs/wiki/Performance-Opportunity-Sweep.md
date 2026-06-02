@@ -7,11 +7,11 @@ This page ranks source-backed performance opportunities found in the Chernarus s
 | Priority | Opportunity | Source evidence | Why it matters | Implementation shape |
 | --- | --- | --- | --- | --- |
 | P0 | PVF dispatcher lookup | `Server/Functions/Server_HandlePVF.sqf:14`, `Client/Functions/Client_HandlePVF.sqf:22`, `Common/Init/Init_PublicVariables.sqf:43-50` | Every PVF dispatch recompiles the sender-chosen function string even though init already compiles `CLTFNC*` and `SRVFNC*`. This is also DR-1 security hardening. | Use the [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook): validated namespace/allowlist lookup, keep `Spawn`, log rejects. |
-| P1 | Hosted server FPS loop sleep/consolidation | `Server/GUI/serverFpsGUI.sqf:1-11`, `Server/Module/serverFPS/monitorServerFPS.sqf:1-8`, `Server/Init/Init_Server.sqf:577-595` | Both loops sleep only inside `isDedicated`. On hosted/listen server they can spin forever. Dedicated servers also run two near-identical 8-second FPS publishers. | If hosted mode matters, either exit immediately when `!isDedicated` or move sleep outside the branch. Consider one shared publisher for both `SERVER_FPS_GUI` and `WFBE_VAR_SERVER_FPS`. |
-| P1 | Supply mission command-center scan narrowing | `Server/Module/supplyMission/supplyMissionStarted.sqf:37-45` | Every active supply mission checks every nearby object class with `nearestObjects [..., [], 80]` every 3 seconds, then filters with `isKindOf "Base_WarfareBUAVterminal"`. | Change the scan class array to command-center terminal classes or the base `Base_WarfareBUAVterminal` class if OA inheritance behaves as expected. Keep the 3-second cadence unless smoke data says otherwise. |
-| P2 | Duplicate `Skill_Init` and non-idempotent Soldier AI cap | `Client/Init/Init_Client.sqf:547`, `Client/Init/Init_Client.sqf:571-572`, `Client/Module/Skill/Skill_Init.sqf:39-49` | Client init runs `Skill_Init.sqf` twice. For Soldier class, that multiplies local `WFBE_C_PLAYERS_AI_MAX` by 1.5 twice. With the default 16, the local cap can become 36 instead of the intended 24. This is a balance/perf multiplier. | Compile/init skills once, then call `WFBE_SK_FNC_Apply` separately. Or make the Soldier cap adjustment idempotent by storing base cap / applied flag. |
-| P2 | Factory queue broadcast churn and soft-lock | `Client/Functions/Client_BuildUnit.sqf:167-207`, `Client/Functions/Client_BuildUnit.sqf:364-365`, `Client/Functions/Client_BuildUnit.sqf:467-469` | Queue token is low-entropy random, `queu` is broadcast on each mutation, and empty-vehicle exit skips the later local queue decrement. This is both player-facing correctness and network churn. | Use the existing `factory-queue-cleanups` backlog: decrement on every exit path, use unique queue tokens, reduce public queue writes where UI allows. |
-| P2 | WASP marker dialog busy-spin | `WASP/global_marking_monitor.sqf:57-73`, `WASP/global_marking_monitor.sqf:80-81` | Double-click map marker naming disables user input and then spins until display 54 appears or a 2-second timeout expires. The same file already uses a throttled `waitUntil {sleep 0.1; ...}` pattern for display 12. | Replace the inner `while {time < _this}` with a throttled wait loop that always re-enables input. Smoke map double-click marker naming. |
+| P1 | Hosted server FPS loop sleep/consolidation | Server/GUI/serverFpsGUI.sqf:1-9, Server/Module/serverFPS/monitorServerFPS.sqf:1-7, Server/Init/Init_Server.sqf:577-595 | Source Chernarus patched: both publishers now exit immediately when !isDedicated, preserving dedicated 8-second publishing without hosted/listen busy-spin. Vanilla propagation remains pending. | Smoke dedicated RHUD FPS updates and hosted/listen no-spin behavior. See [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep). |
+| P1 | Supply mission command-center scan narrowing | `Server/Module/supplyMission/supplyMissionStarted.sqf:25-28` | Source Chernarus patched: the 80-meter command-center scan now filters `nearestObjects` to `["Base_WarfareBUAVterminal"]` while preserving the separate 8-meter nearby-player scan. Vanilla propagation remains pending. | Smoke truck/heli delivery at command centers and no-completion near unrelated objects. See [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing). |
+| P2 | Duplicate `Skill_Init` and non-idempotent Soldier AI cap | `Client/Init/Init_Client.sqf:547`, former duplicate `:571`, `Client/Module/Skill/Skill_Init.sqf:39-49` | Patched in source Chernarus: client init now runs `Skill_Init.sqf` once before class default gear selection, then calls `WFBE_SK_FNC_Apply` without rerunning init. Vanilla propagation remains pending. | Smoke Soldier/non-Soldier caps and respawn skill reapply. See [Client skill init idempotency](Client-Skill-Init-Idempotency). |
+| P2 | Factory queue broadcast churn and soft-lock | `Client/Functions/Client_BuildUnit.sqf:167-172`, `Client/Functions/Client_BuildUnit.sqf:365-369`, `Client/Functions/Client_BuildUnit.sqf:467-469` | Current source still has the random queue token and empty-vehicle counter leak. Public `queu` broadcasts also remain on queue mutations. | Smoke repeated crewless buys, normal crewed/infantry buys, concurrent buyers and factory-dead cleanup. Broadcast reduction remains a follow-up. See [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup). |
+| P2 | WASP marker dialog busy-spin | `WASP/global_marking_monitor.sqf:57-73`, `WASP/global_marking_monitor.sqf:80-81` | Current source still has the short display-54 busy wait; patch with a throttled wait and preserve input re-enable behavior. | Smoke map double-click marker naming, Enter prefixing, Escape cleanup and timeout/no-dialog input re-enable. See [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup). |
 | P3 | Cleaner/restorer wide scans | `Server/FSM/cleaners/crater_cleaner.sqf:14-49`, `Server/FSM/cleaners/droppeditems_cleaner.sqf:14-45`, `Server/FSM/cleaners/ruins_cleaner.sqf:9-28`, `Server/FSM/restorers/buildings_restorer.sqf:10-26` | These use very wide class-filtered `nearestObjects` scans, but run on long timers, sleep between per-item work, and already emit PerformanceAudit records. | Do not patch first. Use RPT audit rows to prove actual cost, then consider smaller terrain-aware centers/radii or tracked-object lists. |
 
 ## What Was Read
@@ -73,11 +73,11 @@ Validation:
 
 `supplyMissionStarted.sqf:37-45` loops while the supply vehicle is alive. Every 3 seconds it scans all object classes within 80 meters and checks each result for `Base_WarfareBUAVterminal`.
 
-This is a contained low-risk improvement because the code already wants one class family. The [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) flags broad `nearestObjects` scans as review targets, and the supply mission cleanup playbook already calls this out.
+This is patched in source Chernarus by changing the 80-meter command-center scan to `["Base_WarfareBUAVterminal"]`. Vanilla propagation remains pending. The code already wanted that class family, and the 8-meter nearby-player scan intentionally remains broad. Arma smoke remains pending.
 
 Validation:
 
-- Source-only: broad empty class array is gone.
+- Source-only: done. Source Chernarus now has one narrowed `["Base_WarfareBUAVterminal"]` 80-meter scan and still has the broad 8-meter nearby-player scan.
 - Dedicated smoke: supply completion still detects command centers for both sides and PR #1 supply helicopter/truck variants.
 - JIP note: completion detection is server-side; cooldown JIP behavior should remain pull-based and unchanged.
 
@@ -87,19 +87,19 @@ Validation:
 
 `Skill_Init.sqf:49` mutates `WFBE_C_PLAYERS_AI_MAX` for Soldier class by setting it to `ceil (1.5 * current value)`. Because there is no guard or remembered base value, the double init compounds the cap. With default `WFBE_C_PLAYERS_AI_MAX = 16`, first init gives 24 and second init gives 36.
 
-This is an opportunity because it can inflate per-player AI counts and affect server/client load. It is also a balance bug if Soldier was intended to get only one 1.5x boost.
+This was patched in source Chernarus by removing the second client init call while preserving the later `WFBE_SK_FNC_Apply` call. It remains propagation and smoke pending for Soldier/non-Soldier caps and respawn reapply.
 
 Validation:
 
-- Source-only: `Skill_Init.sqf` runs once, or the Soldier cap mutation is idempotent.
+- Source-only: done. Chernarus now runs `Skill_Init.sqf` once and still calls `WFBE_SK_FNC_Apply`.
 - Local smoke: Soldier sees the intended AI cap; non-Soldier classes keep their normal cap.
 - Respawn smoke: `Client_PreRespawnHandler.sqf` can still call `WFBE_SK_FNC_Apply`.
 
 ### Factory Queue
 
-`Client_BuildUnit.sqf:167-172` uses `varQueu`, then immediately changes `varQueu` to `random(10)+random(100)+random(1000)`. Queue changes are broadcast with `_building setVariable ["queu", _queu, true]` at `:172`, `:191` and `:207`. Empty vehicle purchases can exit at `:365` before the local queue cap is decremented at `:467-469`.
+`Client_BuildUnit.sqf:167-172` still uses the low-entropy random FIFO token. Queue changes are still broadcast with `_building setVariable ["queu", _queu, true]` at `:172`, `:191` and `:207`. Empty vehicle purchases still need local queue-cap cleanup before exiting at `:365`.
 
-This is already in the hardening backlog as `factory-queue-cleanups`. Treat the soft-lock first, then reduce token/broadcast churn. Because the queue is visible to clients, do not silently remove network publication without checking UI consumers.
+The hardening backlog item `factory-queue-cleanups` is patch-ready: soft-lock cleanup and token identity are the first pieces, while public queue broadcast reduction remains a separate UI-aware follow-up. Because the queue is visible to clients, do not silently remove network publication without checking UI consumers.
 
 Validation:
 
@@ -109,9 +109,9 @@ Validation:
 
 ### WASP Marker Dialog
 
-`global_marking_monitor.sqf:57-73` disables input, spawns a 2-second window, and polls `findDisplay 54` without sleep. The same file uses a better `waitUntil {sleep 0.1; !isNull (findDisplay 12)}` pattern at `:80`.
+`global_marking_monitor.sqf:57-73` still needs a throttled wait for display 54 while preserving input re-enable after display-open or timeout. The same file already used `waitUntil {sleep 0.1; !isNull (findDisplay 12)}` at `:80`.
 
-This is not a server-wide disaster because it is one player action and time-bounded. It is still a friendly low-risk cleanup because the code already has the desired idiom.
+This remains a small local UI cleanup, not a server-wide performance fix. See [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup) for the patch shape and smoke plan.
 
 Validation:
 
@@ -145,10 +145,9 @@ The whole-map cleaner/restorer scripts have wide scans, but they are class-filte
 
 1. PVF dispatcher lookup, because it is both P0 security and performance.
 2. Hosted server FPS loop sleep/consolidation, if hosted/listen mode still matters.
-3. Duplicate `Skill_Init` idempotency, because it can inflate AI caps.
-4. Supply mission scan narrowing, bundled with the supply mission authority cleanup playbook.
-5. Factory queue cleanup, because it fixes both soft-lock and network churn.
-6. WASP marker dialog wait cleanup.
+3. Completed in source: supply mission scan narrowing is patched; propagation and smoke remain.
+5. Factory queue cleanup is patch-ready for counter leak and token identity; current source still needs the code patch, and broadcast reduction remains a later UI-aware follow-up.
+6. WASP marker dialog wait cleanup remains an opportunity; code patch and Arma smoke remain.
 7. Audit-led cleaner/restorer or marker-loop tuning only after RPT evidence.
 
 ## Handoff
@@ -166,7 +165,7 @@ For a future code owner:
 
 - Smallest code patch: hosted FPS loop sleep/exit.
 - Highest value patch: PVF dispatcher lookup from the existing playbook.
-- New cleanup package: `client-skill-init-idempotency`.
+- Completed cleanup packages: [Client skill init idempotency](Client-Skill-Init-Idempotency), [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) and [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing), smoke pending.
 
 ## Continue Reading
 

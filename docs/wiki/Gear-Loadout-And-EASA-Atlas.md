@@ -9,6 +9,9 @@ All mission paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus
 | Need | Start here |
 | --- | --- |
 | Change player gear purchase UI | `Client/GUI/GUI_BuyGearMenu.sqf`, then `Client/Functions/Client_UI_Gear_*.sqf`. |
+| Fix profile-template persistence | [Gear template profile filter](Gear-Template-Profile-Filter), then `Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf`. |
+| Fix vehicle/backpack cargo application | [Vehicle cargo equip loop bounds](Vehicle-Cargo-Equip-Loop-Bounds), then `Common/Functions/Common_EquipVehicle.sqf` and `Common_EquipBackpack.sqf`. |
+| Fix service rearm/refuel/repair/heal affordability parity | [Service menu affordability guards](Service-Menu-Affordability-Guards), then `Client/GUI/GUI_Menu_Service.sqf`. |
 | Change gear catalog data | `Common/Config/Config_Weapons.sqf`, `Config_Magazines.sqf`, `Config_SetTemplates.sqf`, `Config_SortWeapons.sqf`, `Config_SortMagazines.sqf`. |
 | Change aircraft loadouts | `Tools/LoadoutManager/Data/Vehicles/Aircrafts/**`, not generated `Client/Module/EASA/EASA_Init.sqf` by hand. |
 | Change aircraft balance | `Tools/LoadoutManager` data classes, then regenerate `Common/Functions/Common_BalanceInit.sqf`. |
@@ -76,7 +79,7 @@ Evidence:
 
 ### Template Risk
 
-`Client_UI_Gear_SaveTemplateProfile.sqf` references `_u_upgrade` at `:33`, `:52` and `:75`, but the variable is not defined in the inspected function. That likely weakens or breaks the intended upgrade filtering for saved profile templates. Treat profile-template validation as suspect until this variable is fixed or replaced with the correct item upgrade field.
+`Client_UI_Gear_SaveTemplateProfile.sqf` references `_u_upgrade` at `:33`, `:52` and `:75`, but the variable is not defined in that function. The focused patch and smoke plan live in [Gear template profile filter](Gear-Template-Profile-Filter). Treat profile-template save filtering as suspect until this variable is replaced with an item- or template-upgrade comparison.
 
 ## EASA Runtime
 
@@ -104,7 +107,7 @@ Claude DR-28 completed the source review for EASA and vehicle service actions. T
 
 - `GUI_Menu_EASA.sqf:46-50` performs the affordability check on the client, calls `EASA_Equip`, then debits via `ChangePlayerFunds`.
 - `EASA_Equip.sqf:28-36` mutates the local aircraft with `addWeapon` / `addMagazine` or turret variants, then only broadcasts the chosen `WFBE_EASA_Setup` index.
-- `GUI_Menu_Service.sqf:196-200` rearm and `:217-219` refuel debit funds unconditionally before running local effect threads; unlike repair and heal, they do not first check that the player can afford the action.
+- `GUI_Menu_Service.sqf:196-200` rearm and `:217-219` refuel debit funds unconditionally before running local effect threads; unlike repair and heal, they do not first check that the player can afford the action. The patch-ready local guard is documented in [Service menu affordability guards](Service-Menu-Affordability-Guards).
 
 This is not a separate one-off bug class. It completes the economy authority map: build, buy, sell, side supply, upgrades, ICBM/special weapons, gear, EASA and service actions all rely on client-side spend/effect authority unless a future hardening pass moves the ledger and effect validation server-side or constrains the client with BattlEye script filters.
 
@@ -157,9 +160,10 @@ Treat `WARNING_GAME_CRASH_DO_NOT_USE_IN_LOADOUTS_*` as hard blockers, not normal
 
 | Risk | Evidence | Recommended action |
 | --- | --- | --- |
-| Gear purchase, EASA purchase and service actions are client-authoritative. | `GUI_BuyGearMenu.sqf:429-441`, `GUI_Menu_EASA.sqf:46-50`, `EASA_Equip.sqf:28-36`, `GUI_Menu_Service.sqf:196-200`, `:217-219`; Claude DR-28. | For public-server hardening, decide between a server funds/effects ledger and BattlEye script filters. If touching service code first, add `if (_funds >= _price)` parity guards to rearm/refuel, but treat that as a correctness patch rather than real anti-cheat. |
-| Profile template upgrade filtering references undefined `_u_upgrade`. | `Client_UI_Gear_SaveTemplateProfile.sqf:33`, `:52`, `:75` | Fix before trusting saved templates to enforce upgrade gates. |
-| `Common_EquipVehicle.sqf` loop bounds may overrun. | Scout finding: `for '_i' from 0 to count(_items)` around cargo loops. | Review and change to `count(_items)-1` if confirmed in source. |
+| Gear purchase, EASA purchase and service actions are client-authoritative. | `GUI_BuyGearMenu.sqf:429-441`, `GUI_Menu_EASA.sqf:46-50`, `EASA_Equip.sqf:28-36`, `GUI_Menu_Service.sqf:196-200`, `:217-219`; Claude DR-28. | For public-server hardening, decide between a server funds/effects ledger and BattlEye script filters. If touching service code first, use [Service menu affordability guards](Service-Menu-Affordability-Guards) for local price/funds/context parity, but treat that as a correctness patch rather than real anti-cheat. |
+| Profile template upgrade filtering references undefined `_u_upgrade`. | `Client_UI_Gear_SaveTemplateProfile.sqf:33`, `:52`, `:75`; [Gear template profile filter](Gear-Template-Profile-Filter). | Fix before trusting saved templates to enforce upgrade gates. |
+| Respawn penalty mode `5` can skip custom gear at base/HQ despite no charge. | `Client_OnRespawnHandler.sqf:54-70`; [Respawn and death lifecycle atlas](Respawn-And-Death-Lifecycle-Atlas). | If mode `5` means charge-on-mobile only, make `_skip` respect `_charge`; smoke custom gear respawn at base and mobile with insufficient funds. |
+| Vehicle/backpack cargo equip loops overrun by one. | `Common_EquipVehicle.sqf:27,33,39` and `Common_EquipBackpack.sqf:35,41` use inclusive `for '_i' from 0 to count(_items)` bounds; [Vehicle cargo equip loop bounds](Vehicle-Cargo-Equip-Loop-Bounds). | Patch to `count(_items)-1` in source Chernarus, then propagate Vanilla and smoke cargo application. |
 | EASA/Economy duplicate dialog IDD. | `Rsc/Dialogs.hpp:3209-3212`, `:3287-3290`; Claude DR-17. | Give one dialog a distinct IDD before adding scripts that use `findDisplay 23000`. |
 | Balance exits on server, but server spawn code calls it. | `Common_BalanceInit.sqf:3-4`, `Server_BuyUnit.sqf:139` | Test spawn/rearm separately; document intended locality before moving balance logic. |
 | Generated files can be overwritten. | `BaseTerrain.cs:99-102` | Change LoadoutManager data classes first, then regenerate. |
@@ -183,7 +187,7 @@ Treat `WARNING_GAME_CRASH_DO_NOT_USE_IN_LOADOUTS_*` as hard blockers, not normal
   {"fact":"easa_generated_runtime","source":"BaseTerrain.cs:99; EASA_Init.sqf:668","summary":"EASA runtime arrays are generated by LoadoutManager, then published as WFBE_EASA_Vehicles/Loadouts/Default."},
   {"fact":"easa_vehicle_state","source":"EASA_Equip.sqf:36; Common_RearmVehicle.sqf:65-69","summary":"The selected EASA setup is stored on the vehicle as public WFBE_EASA_Setup and reapplied during rearm."},
   {"fact":"easa_authority_dr28","source":"GUI_Menu_EASA.sqf:46-50; EASA_Equip.sqf:28-36","summary":"EASA affordability, debit and loadout application are client-side; the server receives only public vehicle setup state."},
-  {"fact":"service_authority_dr28","source":"GUI_Menu_Service.sqf:196-200; GUI_Menu_Service.sqf:217-219","summary":"Vehicle service rearm/refuel debit unconditionally and run client-local effects without a server authority check."},
+  {"fact":"service_authority_dr28","source":"GUI_Menu_Service.sqf:196-200; GUI_Menu_Service.sqf:217-219","summary":"Vehicle service rearm/refuel debit unconditionally and run client-local effects without a server authority check; Service-Menu-Affordability-Guards.md owns the small local parity patch."},
   {"fact":"balance_server_exit","source":"Common_BalanceInit.sqf:3-4; Server_BuyUnit.sqf:139","summary":"Generated balance exits on server even though server buy code calls it."},
   {"fact":"crv7pg_warning","source":"WeaponType.cs:121-122; WILDCAT.cs:35-38","summary":"CRV7PG warning metadata is explicitly marked as game-crash dangerous and still referenced in Wildcat data."}
 ]

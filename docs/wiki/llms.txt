@@ -1,0 +1,98 @@
+# A2 Wasp Warfare
+
+> Developer and AI-assistant documentation for `rayswaynl/a2waspwarfare`, an Arma 2: Operation Arrowhead 1.64 Warfare / CTI mission and server ecosystem. Use this file to find the highest-signal docs before modifying mission code.
+
+Important notes:
+
+- The source mission is `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
+- `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` is a generated/copy target and should be propagated with `Tools/LoadoutManager` from either an ancestor folder named `a2waspwarfare` or a repo root containing `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`.
+- `Modded_Missions/*` exists in-tree but is not actively maintained by the current generation/package path.
+- Use Bohemia Interactive Arma 2 OA scripting references, not Arma 3 assumptions.
+- Treat publicVariable/PVF, economy authority, ICBM, side supply, attack waves and integration trust boundaries as high-risk public-server surfaces.
+- Current docs are mirrored between the GitHub Wiki and `docs/wiki`; the long-term recommendation is repo-canonical docs plus GitHub Pages/MkDocs.
+- Machine files split into snapshots and append-oriented logs. Treat `agent-status.json`, `agent-collaboration.json`, `agent-context.json`, `agent-release-readiness.json` and `agent-compatibility-audit.json` as snapshots; treat `agent-events.jsonl`, `agent-knowledge.jsonl`, `agent-feature-status.jsonl` and `agent-hardening-backlog.jsonl` as evidence streams where later/superseding rows may refine older records.
+
+## Start Here
+
+- [LLM agent entry pack](https://github.com/rayswaynl/a2waspwarfare/wiki/LLM-Agent-Entry-Pack): Compact read order, safety rules and task-specific page bundles for AI assistants.
+- [Home](https://github.com/rayswaynl/a2waspwarfare/wiki/Home): Main navigation, click-through tours and current page map.
+- [Quickstart](https://github.com/rayswaynl/a2waspwarfare/wiki/Quickstart-For-Humans-And-Agents): First-day orientation for humans and agents.
+- [Feature status register](https://github.com/rayswaynl/a2waspwarfare/wiki/Feature-Status-Register): Triage dashboard for working, broken, partial, dormant and high-risk systems.
+- [Progress dashboard](https://github.com/rayswaynl/a2waspwarfare/wiki/Progress-Dashboard): Current Codex/Claude lanes and shared status.
+- [Release-readiness ledger](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-release-readiness.json): Machine-readable source-only fix, generated propagation and smoke gate status.
+- [Knowledge platform roadmap](https://github.com/rayswaynl/a2waspwarfare/wiki/Knowledge-Platform-Roadmap): Why repo docs + GitHub Pages/MkDocs should become canonical.
+
+## Architecture And Code
+
+- [Architecture overview](https://github.com/rayswaynl/a2waspwarfare/wiki/Architecture-Overview): Mission lifecycle and client/server/common/headless split.
+- [Mission entrypoints and lifecycle](https://github.com/rayswaynl/a2waspwarfare/wiki/Mission-Entrypoints-And-Lifecycle): `description.ext`, `initJIPCompatible.sqf`, init ordering and generated includes.
+- [Player join/disconnect lifecycle](https://github.com/rayswaynl/a2waspwarfare/wiki/Player-Join-Disconnect-And-AntiStack-Lifecycle): Join, JIP, reconnect, disconnect cleanup, raw lifecycle PVs, AntiStack persistence and AFK edges.
+- [Mission parameters/localization/build inputs](https://github.com/rayswaynl/a2waspwarfare/wiki/Mission-Parameters-Localization-And-Generated-Build-Inputs): Parameter cache flow, `version.sqf` generation, localization hazards and LoadoutManager overwrite/root/7za traps.
+- [SQF code atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/SQF-Code-Atlas): Compile registry, preprocess map and key script ownership.
+- [Function and module index](https://github.com/rayswaynl/a2waspwarfare/wiki/Function-And-Module-Index): Cross-module function map.
+- [Source inventory](https://github.com/rayswaynl/a2waspwarfare/wiki/Source-Inventory): File/subsystem inventory.
+
+## Networking And Authority
+
+- [Networking and public variables](https://github.com/rayswaynl/a2waspwarfare/wiki/Networking-And-Public-Variables): PVF and direct publicVariable flow overview.
+- [Public variable channel index](https://github.com/rayswaynl/a2waspwarfare/wiki/Public-Variable-Channel-Index): Direct channel inventory and trust posture.
+- [PVF dispatch implementation](https://github.com/rayswaynl/a2waspwarfare/wiki/PVF-Dispatch-Implementation-Playbook): Allowlist / namespace lookup patch shape.
+- [Server authority migration map](https://github.com/rayswaynl/a2waspwarfare/wiki/Server-Authority-Migration-Map): Server-side authority design for spend/effect paths.
+- [Economy authority first cut](https://github.com/rayswaynl/a2waspwarfare/wiki/Economy-Authority-First-Cut): First safe economy hardening slice.
+- [Upgrades and research atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/Upgrades-And-Research-Atlas): Upgrade constants, side config arrays, live player UI, server worker, AI commander worker, stale legacy dialog and authority migration notes.
+- [Resistance supply scaffold](https://github.com/rayswaynl/a2waspwarfare/wiki/Resistance-Supply-Scaffold): GUER/resistance economy scaffold and missing temp-channel handler.
+- [ICBM authority](https://github.com/rayswaynl/a2waspwarfare/wiki/ICBM-Authority-Playbook): High-risk nuke/RequestSpecial validation path.
+- [Attack-wave authority](https://github.com/rayswaynl/a2waspwarfare/wiki/Attack-Wave-Authority-Playbook): Direct-PV attack-wave validation plan.
+
+## Gameplay Systems
+
+- [Gameplay systems atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/Gameplay-Systems-Atlas): Broad gameplay map.
+- [Economy, towns and supply](https://github.com/rayswaynl/a2waspwarfare/wiki/Economy-Towns-And-Supply): Town economy and supply context.
+- [Towns, camps and capture atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/Towns-Camps-And-Capture-Atlas): Canonical town object init, capture/SV, camp capture, marker visibility, town AI activation and economy consumer map.
+- [Commander and HQ lifecycle atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/Commander-HQ-Lifecycle-Atlas): Canonical commander vote/reassignment, HQ/MHQ deploy/mobilize/destroy/repair, allied wreck marker and authority-risk map.
+- [Victory and endgame atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/Victory-And-Endgame-Atlas): Canonical match-end detection, loser/winner payload semantics, win-stat logging and patch-ready endgame correctness map.
+- [Marker cleanup/restoration atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/Marker-Cleanup-Restoration-Systems-Atlas): Client marker families, `MARKER_CREATION`, HQ wreck markers, garbage/mines/empty-vehicle cleanup and restoration risks.
+- [Support/specials/tactical modules atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/Support-Specials-And-Tactical-Modules-Atlas): Tactical support menu, `RequestSpecial`, paratroopers, UAV, artillery, ICBM, MASH, ZetaCargo, service and supply support status.
+- [Upgrades and research atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/Upgrades-And-Research-Atlas): Canonical upgrade/research system map and patch-ready authority risks.
+- [Supply mission architecture](https://github.com/rayswaynl/a2waspwarfare/wiki/Supply-Mission-Architecture): Player supply-truck mission flow.
+- [Supply mission authority cleanup](https://github.com/rayswaynl/a2waspwarfare/wiki/Supply-Mission-Authority-Cleanup-Playbook): Cooldown/reward/trust cleanup plan.
+- [Current supply helicopter PR](https://github.com/rayswaynl/a2waspwarfare/wiki/Current-Work-Supply-Helicopters-PR1): PR #1 / `feat/supply-helicopter` notes.
+- [AI, headless and performance](https://github.com/rayswaynl/a2waspwarfare/wiki/AI-Headless-And-Performance): AI, HC and performance architecture.
+- [AI commander autonomy audit](https://github.com/rayswaynl/a2waspwarfare/wiki/AI-Commander-Autonomy-Audit): Source-backed partial/autonomous AI commander and broken AI logistics revival audit.
+- [Headless delegation/failover](https://github.com/rayswaynl/a2waspwarfare/wiki/Headless-Delegation-And-Failover-Playbook): HC delegation patch guidance.
+
+## UI, Tooling And Operations
+
+- [Client UI systems atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/Client-UI-Systems-Atlas): Dialogs, HUD, marker loops and UI risks.
+- [Respawn/death lifecycle](https://github.com/rayswaynl/a2waspwarfare/wiki/Respawn-And-Death-Lifecycle-Atlas): Player death/menu flow, AI respawn, MASH/mobile/camp spawn options and custom-gear penalty risks.
+- [UI IDD collision repair](https://github.com/rayswaynl/a2waspwarfare/wiki/UI-IDD-Collision-Repair): Unique IDD repair plan for EASA/Economy and title resources.
+- [Gear/loadout/EASA atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/Gear-Loadout-And-EASA-Atlas): Gear, aircraft loadouts and generated balance output.
+- [Gear template profile filter](https://github.com/rayswaynl/a2waspwarfare/wiki/Gear-Template-Profile-Filter): Patch-ready profile-template save filter bug and validation plan.
+- [Vehicle cargo equip loop bounds](https://github.com/rayswaynl/a2waspwarfare/wiki/Vehicle-Cargo-Equip-Loop-Bounds): Patch-ready vehicle/backpack cargo application loop-bound bug.
+- [Service menu affordability guards](https://github.com/rayswaynl/a2waspwarfare/wiki/Service-Menu-Affordability-Guards): Patch-ready local service-menu price/funds/context guard plan; not full server authority.
+- [Tools and build workflow](https://github.com/rayswaynl/a2waspwarfare/wiki/Tools-And-Build-Workflow): LoadoutManager, generation, packaging and Windows path traps.
+- [Source fix propagation queue](https://github.com/rayswaynl/a2waspwarfare/wiki/Source-Fix-Propagation-Queue): Current source/Vanilla propagation status and smoke gates.
+- [Testing/debugging/release workflow](https://github.com/rayswaynl/a2waspwarfare/wiki/Testing-Debugging-And-Release-Workflow): Source checks, smoke gates and release notes.
+- [External integrations](https://github.com/rayswaynl/a2waspwarfare/wiki/External-Integrations): DiscordBot, extension, BattlEye and server config footprint.
+- [Integration trust boundary audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Integration-Trust-Boundary-Audit): Security-first split between DiscordBot JSON intake, in-repo extension writes, AntiStack DB calls and BattlEye posture.
+- [AntiStack database extension audit](https://github.com/rayswaynl/a2waspwarfare/wiki/AntiStack-Database-Extension-Audit): Runtime/procedure map for AntiStack ON/OFF guards, A2WaspDatabase wrappers and enabled-mode return hardening.
+- [Arma 2 OA external references](https://github.com/rayswaynl/a2waspwarfare/wiki/Arma-2-OA-External-Reference-Guide): Approved scripting reference path.
+- [Arma 2 OA compatibility audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Arma-2-OA-Compatibility-Audit): Current docs scan for accidental Arma 3 assumptions and safe wording rules.
+
+## Machine-Readable Context
+
+- [agent-context.json](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-context.json): Compact repo map, rules and page inventory.
+- [agent-compatibility-audit.json](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-compatibility-audit.json): Machine-readable Arma 2 OA compatibility classifications and risky-term rules.
+- [agent-release-readiness.json](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-release-readiness.json): Machine-readable release-readiness ledger for tracked fixes, Vanilla propagation and smoke gates.
+- [agent-feature-status.jsonl](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-feature-status.jsonl): Compact machine-readable feature/risk status index.
+- [agent-hardening-backlog.jsonl](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-hardening-backlog.jsonl): High-risk backlog records.
+- [agent-knowledge.jsonl](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-knowledge.jsonl): Append-only knowledge records.
+- [agent-status.json](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-status.json): Current shared agent status.
+- [agent-collaboration.json](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-collaboration.json): Shared collaboration state and handoffs.
+
+## Optional
+
+- [Deep-review findings](https://github.com/rayswaynl/a2waspwarfare/wiki/Deep-Review-Findings): Consolidated external/deep research findings.
+- [External research reports](https://github.com/rayswaynl/a2waspwarfare/wiki/External-Research-Reports): Imported report manifest and promotion rules.
+- [Codebase coverage ledger](https://github.com/rayswaynl/a2waspwarfare/wiki/Codebase-Coverage-Ledger): Documentation coverage tracking.
+- [Wiki quality audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Wiki-Quality-Audit): Page quality and duplication audit.

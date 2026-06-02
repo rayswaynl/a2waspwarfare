@@ -1,0 +1,84 @@
+site_name: A2 Wasp Warfare Developer Docs
+site_description: Developer and AI-assistant documentation for the A2 Wasp Warfare Arma 2 OA mission/server ecosystem.
+repo_url: https://github.com/rayswaynl/a2waspwarfare
+docs_dir: docs/wiki
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.suggest
+plugins:
+  - search
+nav:
+  - Home: Home.md
+  - LLM Agent Entry Pack: LLM-Agent-Entry-Pack.md
+  - Quickstart: Quickstart-For-Humans-And-Agents.md
+  - Feature Status: Feature-Status-Register.md
+  - Progress Dashboard: Progress-Dashboard.md
+  - Knowledge Platform Roadmap: Knowledge-Platform-Roadmap.md
+  - Architecture:
+      - Overview: Architecture-Overview.md
+      - Mission Entrypoints And Lifecycle: Mission-Entrypoints-And-Lifecycle.md
+      - Lifecycle Wait Chain: Lifecycle-Wait-Chain.md
+      - Player Join Disconnect And AntiStack Lifecycle: Player-Join-Disconnect-And-AntiStack-Lifecycle.md
+      - Mission Parameters Localization And Generated Build Inputs: Mission-Parameters-Localization-And-Generated-Build-Inputs.md
+      - Source Inventory: Source-Inventory.md
+      - Content Structure And Maps: Content-Structure-And-Maps.md
+  - Code And Networking:
+      - SQF Code Atlas: SQF-Code-Atlas.md
+      - Function And Module Index: Function-And-Module-Index.md
+      - Networking And Public Variables: Networking-And-Public-Variables.md
+      - Public Variable Channel Index: Public-Variable-Channel-Index.md
+      - PVF Dispatch Implementation: PVF-Dispatch-Implementation-Playbook.md
+      - Server Authority Migration Map: Server-Authority-Migration-Map.md
+  - Gameplay:
+      - Gameplay Systems Atlas: Gameplay-Systems-Atlas.md
+      - Commander HQ Lifecycle Atlas: Commander-HQ-Lifecycle-Atlas.md
+      - Economy Towns And Supply: Economy-Towns-And-Supply.md
+      - Towns Camps And Capture Atlas: Towns-Camps-And-Capture-Atlas.md
+      - Victory And Endgame Atlas: Victory-And-Endgame-Atlas.md
+      - Marker Cleanup Restoration Systems Atlas: Marker-Cleanup-Restoration-Systems-Atlas.md
+      - Support Specials And Tactical Modules Atlas: Support-Specials-And-Tactical-Modules-Atlas.md
+      - Resistance Supply Scaffold: Resistance-Supply-Scaffold.md
+      - Upgrades And Research Atlas: Upgrades-And-Research-Atlas.md
+      - Supply Mission Architecture: Supply-Mission-Architecture.md
+      - Supply Mission Authority Cleanup: Supply-Mission-Authority-Cleanup-Playbook.md
+      - Current Supply Helicopters PR1: Current-Work-Supply-Helicopters-PR1.md
+      - AI Headless And Performance: AI-Headless-And-Performance.md
+      - AI Commander Autonomy Audit: AI-Commander-Autonomy-Audit.md
+      - Headless Delegation And Failover: Headless-Delegation-And-Failover-Playbook.md
+      - Commander Reassignment Call Shape: Commander-Reassignment-Call-Shape.md
+  - UI And Tooling:
+      - Client UI Systems Atlas: Client-UI-Systems-Atlas.md
+      - Respawn And Death Lifecycle: Respawn-And-Death-Lifecycle-Atlas.md
+      - UI IDD Collision Repair: UI-IDD-Collision-Repair.md
+      - Client UI HUD And Menus: Client-UI-HUD-And-Menus.md
+      - Gear Loadout And EASA Atlas: Gear-Loadout-And-EASA-Atlas.md
+      - Gear Template Profile Filter: Gear-Template-Profile-Filter.md
+      - Vehicle Cargo Equip Loop Bounds: Vehicle-Cargo-Equip-Loop-Bounds.md
+      - Service Menu Affordability Guards: Service-Menu-Affordability-Guards.md
+      - Tools And Build Workflow: Tools-And-Build-Workflow.md
+      - Source Fix Propagation Queue: Source-Fix-Propagation-Queue.md
+      - Agent Release Readiness Ledger: Agent-Release-Readiness-Ledger.md
+      - Testing Debugging And Release Workflow: Testing-Debugging-And-Release-Workflow.md
+      - Arma 2 OA Compatibility Audit: Arma-2-OA-Compatibility-Audit.md
+      - External Integrations: External-Integrations.md
+      - Integration Trust Boundary Audit: Integration-Trust-Boundary-Audit.md
+      - AntiStack Database Extension Audit: AntiStack-Database-Extension-Audit.md
+  - Hardening:
+      - Hardening Roadmap: Hardening-Implementation-Roadmap.md
+      - ICBM Authority: ICBM-Authority-Playbook.md
+      - Economy Authority First Cut: Economy-Authority-First-Cut.md
+      - Upgrades And Research Atlas: Upgrades-And-Research-Atlas.md
+      - Attack Wave Authority: Attack-Wave-Authority-Playbook.md
+      - Abandoned Feature Revival: Abandoned-Feature-Revival-Review.md
+      - Pending Owner Decisions: Pending-Owner-Decisions.md
+  - Agent Coordination:
+      - Agent Context: Agent-Context.md
+      - Agent Collaboration Protocol: Agent-Collaboration-Protocol.md
+      - Agent Worklog: Agent-Worklog.md
+      - Coordination Board: Coordination-Board.md
+      - Codebase Coverage Ledger: Codebase-Coverage-Ledger.md
+      - Wiki Quality Audit: Wiki-Quality-Audit.md

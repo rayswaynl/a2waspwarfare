@@ -6,11 +6,15 @@ This page classifies dormant, broken and orphaned feature paths by what the sour
 
 | Candidate | What the code does now | Classification | Recommendation |
 | --- | --- | --- | --- |
-| MASH map markers | MASH tents are created and undeployed client-side, but the marker receiver is commented out and no live sender for `WFBE_CL_MASH_MARKER_CREATED` was found. | Broken marker edge; MASH respawn itself remains live. | Revive only with server-held marker records, unique marker ids, delete cleanup and JIP replay. Otherwise remove/annotate the dead marker relay. |
-| Paratrooper drop markers | Server paratrooper support ejects units and sends `HandleParatrooperMarkerCreation`, but that client PVF is not registered in `_clientCommandPV`. | Small broken edge; paratrooper drop itself remains live. | Best small revive candidate: register the client handler and smoke the drop. If markers are not wanted, remove the send and orphaned receiver. |
-| AI commander supply trucks | `UpdateSupplyTruck` compile is commented, the gated server init call remains, and the update script references missing `Server\FSM\supplytruck.fsm`. | Broken/dormant logistics feature. | Do not just uncomment. Either guard/remove the gated call or redesign autonomous logistics around a new FSM/script. |
+| MASH map markers | Source/Vanilla MASH tents are created and undeployed client-side, but the marker receiver is commented out and no live source/Vanilla sender for `WFBE_CL_MASH_MARKER_CREATED` was found. Modded eden/lingor/Napf emit the marker-created PV but do not ship the receiver/server marker files. | Broken marker edge; MASH respawn itself remains live. Modded forks have sender-only drift. | Revive only with server-held marker records, unique marker ids, delete cleanup and JIP replay. Otherwise remove/annotate the dead marker relay and clean modded sender drift. |
+| Paratrooper drop markers | Server paratrooper support ejects units and sends `HandleParatrooperMarkerCreation`; source Chernarus and maintained Vanilla Takistan now register the existing client handler. | Small broken edge patched and propagated; Arma smoke pending. | Use [Paratrooper marker revival](Paratrooper-Marker-Revival) for evidence and validation. Modded missions still need maintenance-model cleanup because they register the callback but lack the handler file. |
+| AI commander supply trucks | `UpdateSupplyTruck` compile is commented, the gated server init call remains, and the update script references missing `Server\FSM\supplytruck.fsm`. | Broken/dormant logistics feature. | Do not just uncomment. Use [AI commander autonomy audit](AI-Commander-Autonomy-Audit) before guarding/removing the gated call or redesigning autonomous logistics. |
+| Task system | `TaskSystem` compile/start calls and town-capture task spawns are commented, while `Client_TaskSystem.sqf` remains in the tree. | Dormant legacy client UX path. | Treat as owner decision. Re-enable only with task-spam, JIP and notification UX smoke; otherwise remove/annotate the stale helper. |
+| Old map-icon tracking loop | Old plural blink/track compiles and exec are commented, old helper files are absent, and newer singular marker blinking remains active. | Replaced/dormant client marker path. | Do not restore the old loop without a performance review. Keep documentation clear that marker blinking is not wholly dead. |
+| AT/bomb common hooks | `HandleATReloadVehicle` and `HandleBombs` compiles are commented; bomb helper is missing and AT reload has no active wiring found. | Cut-off hook family. | Leave dormant unless a gameplay owner designs the reload/bomb feature and its authority/locality model. |
+| Air-vehicle modification hook | Vehicle creation comments out `Common_ModifyAirVehicle.sqf`; the hook is not active in source or modded forks. | Dormant post-create hook. | Do not assume active aircraft post-processing; revive only with aircraft smoke and generated/modded propagation policy. |
 | UAV 007 branch | Tactical UAV deploy/destroy/remote-control is live. The OA UAV interface has a stale mouse-button branch checking `_button == 007` and toggling hidden controls. | Stale UI branch, not abandoned UAV. | Leave dormant or remove as cleanup. Do not treat core UAV as abandoned. |
-| WASP `GearYouUnit`, wheel change and OnArmor actions | `WASP\actions\AddActions.sqf` waits for player and then leaves these addActions commented; `WASP\Init_Client.sqf` also has OnArmor bootstrap comments. | Commented legacy actions. | Leave dormant or remove unless a code owner explicitly redesigns player-on-armor/group interaction UX and authority. |
+| WASP startup and legacy actions | `WASP\actions\AddActions.sqf` waits for player and then leaves these addActions commented; `WASP\Init_Client.sqf` also comments killed-handler, OnArmor, timer/key/bootstrap paths. HQ recovery and marker monitoring are separate live WASP edges. | Mixed live/dormant WASP family. | Leave old armor/God-Slayer hooks dormant or remove them; do not conflate them with live HQ recovery and marker-monitor behavior. |
 | Old upgrade dialog `RscMenu_Upgrade` | `Dialogs.hpp` still defines `RscMenu_Upgrade` with `GUI_Menu_Upgrade.sqf`, but that file is absent. The live menu opens `WFBE_UpgradeMenu` and `GUI_UpgradeMenu.sqf`. | Stale UI resource. | Remove or replace old resource class; do not revive missing script path. |
 | Modded mission propagation | LoadoutManager can target `Modded_Missions`, but packaging currently includes only `Missions` and `Missions_Vanilla`; modded folders exist as divergent/stub mission sets. | Needs maintenance-model decision. | Pick regenerate-from-source vs maintained forks before applying gameplay fixes to modded missions. Do not patch stubs ad hoc. |
 
@@ -99,12 +103,14 @@ What the code does:
 
 - `UpdateSupplyTruck` is commented out at compile time.
 - The per-side server init still spawns `UpdateSupplyTruck` if supply system is trucks (`WFBE_C_ECONOMY_SUPPLY_SYSTEM == 0`) and AI commanders are enabled.
-- Defaults make AI commanders enabled and supply system automatic (`WFBE_C_ECONOMY_SUPPLY_SYSTEM = 1`), so the broken branch is normally avoided.
+- Mission parameter defaults appear to keep AI commander disabled (`Rsc/Parameters.hpp:92-97`), while constants fall back to automatic supply (`WFBE_C_ECONOMY_SUPPLY_SYSTEM = 1`) if no parameter overrides it. The broken branch is normally avoided, but the parameter/fallback distinction matters.
 - If the branch is enabled, the call can hit an undefined `UpdateSupplyTruck`. If the compile is restored, the script later tries to `ExecFSM "Server\FSM\supplytruck.fsm"`, which is absent.
 
 Why it matters:
 
 This is the clearest "do not casually revive" feature. It is config-gated latent breakage, not a small missing registration. PR #1 correctly avoids building autonomous supply helicopters on this base.
+
+Detailed AI commander state, upgrade-worker and production/logistics readiness are now canonical in [AI commander autonomy audit](AI-Commander-Autonomy-Audit).
 
 Safe implementation shape:
 

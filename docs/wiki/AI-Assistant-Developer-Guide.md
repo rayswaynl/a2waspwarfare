@@ -9,7 +9,7 @@ This page is written for Codex, Claude and future coding agents.
 3. Read `Agent-Collaboration-Protocol.md`, `agent-collaboration.json` and `agent-events.jsonl` before parallel work.
 4. Check `git status`, current branch, recent commits and remote.
 5. Treat `Missions/[55-2hc]warfarev2_073v48co.chernarus` as the mission source for gameplay edits.
-6. Use [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) and Bohemia Interactive Arma 2 OA scripting docs, not Arma 3 docs.
+6. Use [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide), [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) and Bohemia Interactive Arma 2 OA scripting docs, not Arma 3 docs.
 
 ## Safe Edit Rules
 
@@ -23,6 +23,7 @@ This page is written for Codex, Claude and future coding agents.
 
 - Arma 2 OA SQF differs from Arma 3; avoid using newer commands unless verified for OA 1.64.
 - `remoteExec`, CfgFunctions-era assumptions and Arma 3-only command variants are not valid drop-ins for this mission's OA-era PV/PVEH model.
+- If a doc mentions Arma 3 terms, classify the hit with [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) before treating it as implementation advice.
 - Hosted server paths often need local handler calls as well as public-variable dispatch.
 - Client-side UI/marker loops are performance-sensitive.
 - `publicVariable` payloads can become a network performance issue.
@@ -60,6 +61,6 @@ rg -n "TODO|FIXME|DoNotUse|GAME_CRASH|disabled|commented" Missions/[55-2hc]warfa
 
 ## Continue Reading
 
-Previous: [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) | Next: [Agent context](Agent-Context)
+Previous: [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) | Next: [Agent context](Agent-Context)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

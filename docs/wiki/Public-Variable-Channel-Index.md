@@ -10,7 +10,7 @@
 
 ## 1. Registered PVF commands
 
-Registration: `Common/Init/Init_PublicVariables.sqf` — server-bound list `:8-20`, client-bound list `:23-37`, dispatch wiring `:44-50`. Each name `X` → channel `WFBE_PVF_X` → pre-compiled `SRVFNC X` / `CLTFNC X` (built `:44,:49`) but dispatched via `Call Compile` (`Server_HandlePVF.sqf:14` / `Client_HandlePVF.sqf:22`).
+Registration: `Common/Init/Init_PublicVariables.sqf` — server-bound list `:9-21`, client-bound list `:25-40`, dispatch wiring `:44-51`. Each name `X` -> channel `WFBE_PVF_X` -> pre-compiled `SRVFNC X` / `CLTFNC X` (built `:45,:50`) but dispatched via `Call Compile` (`Server_HandlePVF.sqf:14` / `Client_HandlePVF.sqf:22`).
 
 ### 1a. Server-bound (client → server) — 13
 
@@ -18,19 +18,19 @@ Registration: `Common/Init/Init_PublicVariables.sqf` — server-bound list `:8-2
 | --- | --- |
 | `RequestVehicleLock` | lock/unlock a vehicle |
 | `RequestOnUnitKilled` | report a kill for scoring |
-| `RequestChangeScore` | score mutation |
+| `RequestChangeScore` | score mutation; accepts payload score and applies `addScore`, unlike safer server-derived award helpers |
 | `RequestCommanderVote` | commander vote |
-| `RequestNewCommander` | assign new commander — **DR-15** (`_side = _this` call-shape bug) |
+| `RequestNewCommander` | assign new commander — **DR-15** (`_side = _this` call-shape bug); flow map in [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) |
 | `RequestStructure` | build a structure — **DR-6** (no commander/funds/placement check) |
 | `RequestDefense` | build a defense — **DR-6** |
 | `RequestJoin` | join handshake (robust 30s-retry, DR-37) |
-| `RequestMHQRepair` | MHQ repair — DR-6-class (`_side` from payload) |
+| `RequestMHQRepair` | MHQ repair — DR-6-class (`_side` from payload); lifecycle/risk map in [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) |
 | `RequestSpecial` | multiplexer → `Server_HandleSpecial.sqf` (ICBM/paradrop/uav/HC/…) — **DR-27** (forged `["ICBM",…]` = map-wide kill) |
 | `RequestTeamUpdate` | team roster update |
 | `RequestUpgrade` | side upgrade purchase — **DR-23** (client-authoritative) |
 | `RequestAutoWallConstructinChange` | auto-wall construction toggle |
 
-### 1b. Client-bound (server → client) — 14
+### 1b. Client-bound (server → client) — 15
 
 | Command (`WFBE_PVF_*`) | Purpose / notable finding |
 | --- | --- |
@@ -41,10 +41,11 @@ Registration: `Common/Init/Init_PublicVariables.sqf` — server-bound list `:8-2
 | `HandleSpecial` | multiplexer → `Client_FNC_Special.sqf` (endgame/group/icbm-display/hq-status/delegate-*/…) |
 | `LocalizeMessage` | localized message multiplexer |
 | `SetTask` | task assignment |
-| `SetVehicleLock` / `SetMHQLock` | lock-state push |
+| `SetVehicleLock` / `SetMHQLock` | lock-state push; HQ/MHQ context in [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) |
 | `TownCaptured` | town capture event |
 | `Available` | availability push |
-| `RequestBaseArea` | base-area (client-bound despite the name) |
+| `RequestBaseArea` | base-area (client-bound despite the name); multiplayer-sensitive HQ deploy edge in [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) |
+| `HandleParatrooperMarkerCreation` | paratrooper-drop unit marker creation; source and maintained Vanilla are propagated, Arma smoke pending in [Paratrooper marker revival](Paratrooper-Marker-Revival) |
 | `NukeIncoming` | nuke-incoming broadcast (paired with the ICBM direct channels) |
 
 > `DatabaseDebug` is registered-commented (`:30`).
@@ -56,29 +57,29 @@ Each has its own `addPublicVariableEventHandler`; not behind the dispatcher.
 | Channel | Direction | Purpose / notable finding | Source |
 | --- | --- | --- | --- |
 | `ATTACK_WAVE_INIT` | client → server | activate heavy attack-wave; **DR-41** — server trusts client `_supply`/`_side`, no re-derivation → free units side-wide | `Common/Functions/Common_AttackWaveActivate.sqf:6-8`, `Server/Functions/Server_AttackWave.sqf` |
-| `ATTACK_WAVE_DETAILS` | server → clients | broadcast resulting price modifier + length | `Server/Functions/Server_AttackWave.sqf:23-27` |
-| `WFBE_CL_MASH_MARKER_CREATED` | (intended) client → server | **DR-34** — never broadcast (dead) | `Server/Module/MASH/MASHMarker.sqf:1` (orphaned PVEH) |
+| `ATTACK_WAVE_DETAILS` | direct server event channel | DR-41 detail payload; `Server_AttackWave.sqf` uses `publicVariableServer`, and the server handler then notifies clients through PVF `HandleSpecial` / `LocalizeMessage` | `Server/Functions/Server_AttackWave.sqf:23-27`, `Server/PVFunctions/AttackWave.sqf:19-25,40-46,58-60` |
+| `WFBE_CL_MASH_MARKER_CREATED` | (intended) client → server | **DR-34** — never broadcast in current Chernarus (dead/orphaned); modded forks have sender-only drift | `Server/Module/MASH/MASHMarker.sqf:1` (orphaned PVEH) |
 | `WFBE_SE_MASH_MARKER_SENT` | (intended) server → clients | **DR-34** — receiver commented `Init_Client.sqf:132` (dead) | `Client/Module/MASH/receiverMASHmarker.sqf:1` |
 | `WFBE_Client_PV_IsSupplyMissionActiveInTown` | client → server | supply-cooldown query (pull-based; JIP-correct, DR-39) | `Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf:1` |
 | `WFBE_Server_PV_IsSupplyMissionActiveInTown` | server → clients | cooldown answer (broadcast not targeted) | `Client/Module/supplyMission/townSupplyStatus.sqf:1` |
-| `WFBE_Client_PV_SupplyMissionStarted` | client → server | start supply mission (live loop) | `Server/Module/supplyMission/supplyMissionStarted.sqf:1` |
-| `WFBE_Server_PV_SupplyMissionCompleted` / `…CompletedMessage` | server | completion / message | `Server/Module/supplyMission/supplyMissionCompleted.sqf` |
-| `wfbe_supply_temp_east` / `wfbe_supply_temp_west` | client → server | side-supply mutation — economy-authority class (DR-22) | `Common/Functions/Common_ChangeSideSupply.sqf` |
+| `WFBE_Client_PV_SupplyMissionStarted` | client → server | start supply mission; live handler is `supplyMissionStarted.sqf`, while compiled `supplyMissionActive.sqf` is a dead twin | `Client/Module/supplyMission/supplyMissionStart.sqf:39`, `Server/Module/supplyMission/supplyMissionStarted.sqf:1`, `Server/Init/Init_Server.sqf:81` |
+| `WFBE_Server_PV_SupplyMissionCompleted` / `…CompletedMessage` | server | completion / message; still consumes vehicle object vars that are stamped during client start | `Server/Module/supplyMission/supplyMissionStarted.sqf:65`, `Server/Module/supplyMission/supplyMissionCompleted.sqf:2,9-12,34` |
+| `wfbe_supply_temp_east` / `wfbe_supply_temp_west` | client → server | side-supply mutation — **DR-44** direct-PV forgery class plus DR-22 broken-floor risk; server applies `[side, amount, reason]` payload to keyed `wfbe_supply_%1` state, while generic `wfbe_supply` is legacy/cache | `Common/Functions/Common_ChangeSideSupply.sqf:28-30`, `Server/Functions/Server_ChangeSideSupply.sqf:1,19,21,25` |
 | `ICBM_launched` | server → clients | ICBM launch FX trigger | `Client/FSM/updateclient.sqf:20` |
 | `PLAYER_RADIATED` | server → clients | nuke radiation effect | `Client/Module/Nuke/OnEventHandler_player_radiated.sqf` |
 | `AFKthresholdExceededName` / `kickAFK` | client → server/BattlEye | AFK kick (the one BattlEye-filtered PV, DR-30) | `Client/Module/AFK/monitorAFK.sqf`; `BattlEyeFilter/publicvariable.txt` |
 | `WFBE_DAYNIGHT_DATE` | server → clients | day/night drift sync (reviewed clean, Round 17) | `Server/Functions/Server_DayNightCycle.sqf` |
 | `SERVER_FPS_GUI` / `WFBE_VAR_SERVER_FPS` | server → clients | server FPS GUI/HUD publication | `Server/Module/serverFPS/serverFpsGUI.sqf`, `Server/Init/Init_Server.sqf` |
-| `IS_WEST_HQ_ALIVE` / `IS_EAST_HQ_ALIVE` | server → clients | HQ alive-state broadcast | `Server/Functions/Server_MHQRepair.sqf`, `Server/Functions/Server_OnHQKilled.sqf` |
-| `HQ_WEST_MARKER_INFOS` / `HQ_EAST_MARKER_INFOS` | server → clients | HQ marker payload broadcast | `Server/Functions/Server_MHQRepair.sqf`, `Server/Functions/Server_OnHQKilled.sqf` |
+| `IS_WEST_HQ_ALIVE` / `IS_EAST_HQ_ALIVE` | server → clients | HQ alive-state broadcast; see [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) | `Server/Functions/Server_MHQRepair.sqf`, `Server/Functions/Server_OnHQKilled.sqf` |
+| `HQ_WEST_MARKER_INFOS` / `HQ_EAST_MARKER_INFOS` | server → clients | HQ marker payload broadcast; see [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) | `Server/Functions/Server_MHQRepair.sqf`, `Server/Functions/Server_OnHQKilled.sqf` |
 | `SUPPLY_COMPENSATION_AMOUNT_EAST` / `SUPPLY_COMPENSATION_AMOUNT_WEST` | server → clients | AntiStack skill-difference supply compensation | `Server/Module/AntiStack/skillDiffCompensation.sqf` |
 | `TEAM_WEST_TICKS_NO_PLAYERS` / `TEAM_EAST_TICKS_NO_PLAYERS` | common/server → clients | no-player supply-income stagnation counters | `Common/Functions/Common_StagnateSupplyIncomeNoPlayers.sqf` |
 | `MARKER_CREATION` | server → clients | map-marker creation channel | WASP/marker code |
 | `SEND_MESSAGE` | mixed | message channel | message code |
-| `REQUEST_SUPPLY_VALUE` / `SUPPLY_VALUE_REQUESTED` | client ↔ server | supply-value request/response | supply code |
+| `REQUEST_SUPPLY_VALUE` / `SUPPLY_VALUE_REQUESTED` | client ↔ server | supply-value request/response; read/probe surface rather than final mutation, and a useful safer pattern because the server derives the response value | `Common/Functions/Common_GetSideSupply.sqf:15`, `Server/Functions/Server_PV_RequestSupplyValue.sqf:1,8`, `Client/Functions/Client_ReceiveSupplyValue.sqf:1,7` |
 | `WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH` / `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK` | client ↔ server | launch-connect handshake (DR-37) | `Client/Init/Init_Client.sqf:444-` |
 | `CLIENT_INIT_READY` | client → server | client-init-ready signal | `Client/Init/Init_Client.sqf` |
-| `WFBE_C_PLAYER_OBJECT` | mixed | player-object publication | client/server |
+| `WFBE_C_PLAYER_OBJECT` | client → server | player-object publication for `WFBE_SE_PLAYERLIST`; source indexing is patched, but disconnect pruning/stale row cleanup remains open | `Client/Init/Init_Client.sqf:759-760`, `Server/Module/supplyMission/playerObjectsList.sqf:1-35` |
 
 ## Hardening note
 

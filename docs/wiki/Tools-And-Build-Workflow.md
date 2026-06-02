@@ -1,6 +1,6 @@
 # Tools And Build Workflow
 
-Page ownership: this page owns the operational LoadoutManager rules, skip-list and generated-mission status table. Full drift evidence and file-count analysis live in [Deep-review findings](Deep-Review-Findings) DR-4 and DR-32; keep only the actionable build/propagation rules here.
+Page ownership: this page owns the operational LoadoutManager rules, skip-list and generated-mission status table. [Source fix propagation queue](Source-Fix-Propagation-Queue) owns the current source/Vanilla propagation and smoke-gate ledger. Full drift evidence and file-count analysis live in [Deep-review findings](Deep-Review-Findings) DR-4 and DR-32; keep only the actionable build/propagation rules here.
 
 ## LoadoutManager
 
@@ -24,9 +24,9 @@ Build configurations:
 - `AIRWAR_SERVER_DEBUG`
 - `AIRWAR_RELEASE`
 
-Repo instruction: after mission edits, run from `Tools/LoadoutManager` with `dotnet run`. If .NET SDK is missing, stop and tell the user. In the current code path, generation/copy work runs before packaging, but `dotnet run` always reaches `ZipManager.DoZipOperations()`. If `7za` is missing, the run can still have produced useful copied/generated files before the final packaging failure.
+Repo instruction: after mission edits, run from `Tools/LoadoutManager` with `dotnet run`, or from the repo root with `dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj`. If .NET SDK is missing, stop and tell the user. For propagation-only runs, set `A2WASP_SKIP_ZIP=1` so generation/copy completes without requiring `7za` or creating `_MISSIONS.7z`.
 
-Local workspace warning: `FileManager.FindA2WaspWarfareDirectory` searches ancestors for a folder literally named `a2waspwarfare` and throws if it cannot find one. This Codex checkout is under `work\a`, so `dotnet run` is not runnable here without using a correctly named checkout/worktree or changing that lookup.
+Local workspace note: `FileManager.FindA2WaspWarfareDirectory` now supports both an ancestor folder literally named `a2waspwarfare` and a normal repo root containing `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`. This lets Codex checkouts such as `work\a` run the tool without renaming the workspace.
 
 ## Operator Checklist
 
@@ -34,8 +34,9 @@ Before running tooling or deployment-adjacent pieces, check these first:
 
 | Item | Why it matters |
 | --- | --- |
-| Checkout path contains an ancestor folder named `a2waspwarfare`. | LoadoutManager searches for that exact folder name and throws in short aliases such as `work\a`. |
-| `7za` is configured and available if packaging is required. | Generation/copy may succeed before the final packaging step fails. Missing `7za` is packaging-only unless you need `_MISSIONS.7z`. |
+| Checkout path resolves to the repo root. | LoadoutManager accepts either an ancestor named `a2waspwarfare` or root markers: `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`. |
+| `A2WASP_SKIP_ZIP=1` is set for propagation-only runs. | Skips `_MISSIONS.7z` packaging and avoids a packaging-only `7za` dependency during docs/code propagation work. |
+| `7za` is configured and available if packaging is required. | Required only when producing `_MISSIONS.7z` release archives. |
 | `version.sqf` exists for the mission being packed/tested. | It is generated and git-ignored, but included by `description.ext` and `initJIPCompatible.sqf`. |
 | DiscordBot has real `preferences.json` and `token.txt` outside git. | Missing token/config is expected in repo and is not a mission-code failure. |
 | AntiStack has the separate `A2WaspDatabase` DLL if enabled. | The in-repo `Extension` project is `a2waspwarfare_Extension` / `GLOBALGAMESTATS`, not the AntiStack database extension. |
@@ -75,7 +76,7 @@ This is the operational summary of DR-32's three maintenance tiers. Use it befor
 
 | Project | Runtime | Entry point | Inputs | Outputs / side effects | Notes |
 | --- | --- | --- | --- | --- | --- |
-| `Tools/LoadoutManager` | .NET 8 executable | `Program.cs` -> `SqfFileGenerator.GenerateCommonBalanceInitAndTheEasaFileForEachTerrain()` | Terrain/loadout data classes, source Chernarus mission, terrain skip lists. | Generated `EASA_Init.sqf`, `Common_BalanceInit.sqf`, aircraft-name helper, per-terrain `version.sqf`, copied Takistan mission and `_MISSIONS.7z`. | Requires ancestor folder named `a2waspwarfare`; always attempts packaging. |
+| `Tools/LoadoutManager` | .NET 8 executable | `Program.cs` -> `SqfFileGenerator.GenerateCommonBalanceInitAndTheEasaFileForEachTerrain()` | Terrain/loadout data classes, source Chernarus mission, terrain skip lists. | Generated `EASA_Init.sqf`, `Common_BalanceInit.sqf`, aircraft-name helper, per-terrain `version.sqf`, copied Takistan mission and optional `_MISSIONS.7z`. | Accepts named-root or repo-marker root discovery; set `A2WASP_SKIP_ZIP=1` to skip packaging. |
 | `Tools/PerformanceAuditAnalyzer` | PowerShell | `Analyze-PerformanceAudit.ps1`, GUI launcher | Arma RPT lines containing `[Performance Audit]`. | CSV, Markdown, HTML and Word-friendly performance reports. | Safe read-only analyzer for logs. |
 | `DiscordBot` | .NET 9 executable | `DiscordBot/src/ProgramRuntime.cs` | `preferences.json`, `token.txt`, extension `database.json`. | Discord channel name, bot presence and status embed updates every 60 seconds. | Missing token/preferences are expected in repo; do not invent secrets. |
 | `Extension` | .NET Framework 4.8 Arma extension | `_RVExtension@12` export | Arma `callExtension` arguments from mission scripts. | Writes `C:\a2waspwarfare\Data\database.json` for DiscordBot. | Uses legacy NuGet/MSBuild package layout. |
@@ -106,8 +107,9 @@ Use it after performance-sensitive mission changes or live-server audits.
 
 - `7za` environment variable points to `7za.exe`.
 - `ZipManager` packages mission directories after copy/generation and currently zips only `Missions` plus `Missions_Vanilla`, not `Modded_Missions`.
-- Missing `7za` causes the final packaging step to throw; inspect generated/copied files before assuming the whole run did nothing.
+- Missing `7za` causes the final packaging step to throw unless `A2WASP_SKIP_ZIP=1` is set; inspect generated/copied files before assuming the whole run did nothing.
 - The source Chernarus mission is copied to target terrain folders. Avoid manual changes in generated targets unless the generator is being updated.
+- `The specified content was not found in the file.` during the current run comes from the terrain help-menu title replacement path and did not stop Chernarus/Takistan generation/copy.
 
 ## Development Commands
 
@@ -115,6 +117,11 @@ Use it after performance-sensitive mission changes or live-server audits.
 cd Tools\LoadoutManager
 dotnet run
 dotnet run -c SERVER_DEBUG
+```
+
+```powershell
+$env:A2WASP_SKIP_ZIP = "1"
+dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj
 ```
 
 ```powershell

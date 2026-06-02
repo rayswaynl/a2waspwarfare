@@ -1,6 +1,6 @@
 # Construction And CoIn Systems Atlas
 
-Page ownership: this page owns the construction/CoIn runtime map, source anchors, request-handler map and safe extension checklist. [Deep-review findings](Deep-Review-Findings) DR-6 owns the exact per-handler construction-authority proof; [Server authority migration map](Server-Authority-Migration-Map) owns the broader migration design table.
+Page ownership: this page owns the construction/CoIn runtime map, source anchors, request-handler map and safe extension checklist. [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) owns commander selection, HQ deploy/mobilize, HQ destruction, wreck markers and MHQ repair. [Deep-review findings](Deep-Review-Findings) DR-6 owns the exact per-handler construction-authority proof; [Server authority migration map](Server-Authority-Migration-Map) owns the broader migration design table.
 
 This page maps the build system that turns commander/repair-truck actions into HQ state changes, factories, base defenses, static weapons and repair flows.
 

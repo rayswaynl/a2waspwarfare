@@ -68,9 +68,9 @@ Validation:
 
 ## P1: Victory And Endgame
 
-Canonical finding: [Deep-review findings](Deep-Review-Findings) DR-11 covers the winner inversion / persisted win-tally impact. DR-36 owns the exact `server_victory_threeway.sqf:23` guard/precedence mechanism, the no-break side loop, and the one-place fix shape. This roadmap keeps only the patch-order and validation gate.
+Canonical guide: [Victory/endgame atlas](Victory-And-Endgame-Atlas). Raw evidence stays in [Deep-review findings](Deep-Review-Findings): DR-11 covers the winner inversion / persisted win-tally impact, and DR-36 owns the exact `server_victory_threeway.sqf:23` guard/precedence mechanism, the no-break side loop, and the one-place fix shape. This roadmap keeps only the patch-order and validation gate.
 
-Implementation route: patch the Chernarus source mission first, using DR-36 for the exact condition/loop change. Keep the threeway-victory owner decision explicit, and cross-check DR-43 before touching duplicate `LogGameEnd` bindings around the same endgame path.
+Implementation route: patch the Chernarus source mission first, using [Victory/endgame atlas](Victory-And-Endgame-Atlas) for the safer patch shape and DR-36 for the exact condition/loop evidence. Keep the threeway-victory owner decision explicit, and cross-check DR-43 before touching duplicate `LogGameEnd` bindings around the same endgame path.
 
 Validation:
 

@@ -863,6 +863,93 @@ Mapping: (1) Runtime Architecture → boot/lifecycle DR-37 + the version.sqf lea
 
 **Outcome:** external-research intake #2 complete — 9 reports corroborate DR-1..DR-42 (esp. report 8 ↔ the economy-authority thesis); two new source-confirmed leads recorded as DR-43.
 
+## Round 35 — 2026-06-02 (Claude) — side-supply ledger is directly client-writable (DR-44); 2nd direct-PV forgery
+
+Lane `direct-pv-supply-authority` (research autonomy: walking the direct `publicVariableServer` channels enumerated in [Public variable channel index](Public-Variable-Channel-Index) for the forgery class DR-41 opened).
+
+### DR-44 — `wfbe_supply_temp_<side>` lets any client write a side's supply balance via a forged direct PV — **High (economy authority / forgery)**
+
+Chain (source-cited):
+- **Client sender** `Common/Functions/Common_ChangeSideSupply.sqf:28-30`: `missionNamespace setVariable [format ["wfbe_supply_temp_%1", _side], [_side, _amount, _reason]]; publicVariableServer format ["wfbe_supply_temp_%1", _side];` — a **direct** channel (not via the PVF dispatcher).
+- **Server handler** `Server/Functions/Server_ChangeSideSupply.sqf` (`addPublicVariableEventHandler` on `wfbe_supply_temp_west` `:1` and `wfbe_supply_temp_east` `:25`): takes `_side = _this select 1 select 0` and **`_amount = _this select 1 select 1` straight from the payload** (`:4-5`/`:28-29`), computes `_change = _currentSupply + _amount` (`:11`/`:35`), caps at `WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT`, then `missionNamespace setVariable ["wfbe_supply_<side>", _change]` + `publicVariable` (`:19-21`/`:43-45`).
+- **No authority:** the handler never checks the PV sender, never verifies `_side` belongs to the sender, and never re-derives `_amount` server-side. So a forged `wfbe_supply_temp_west = [west, 999999, "x"]` makes the **server** set west's supply to (current + 999999), capped at the max — **arbitrary side-supply inflation from any client**.
+
+**Impact.** Supply gates attack-wave eligibility (≥25000, DR-41), funds/income, and production — so writing the supply balance is a high-leverage economy exploit. The author was aware: the `_reason` fallback string is literally *"This might indicate a malicious supply update request. Check stuff if you see this message."* (`:6`/`:30`) — i.e. a log breadcrumb was added **instead of** authority validation.
+
+**Relationship to other findings.** Same files as **DR-22** but a **different axis**: DR-22 is the broken overspend *floor* (`if (_change<0) then {_change=_currentSupply-_amount}` should be `{_change=0}`, a correctness bug present here too at `:12`/`:36`); DR-44 is the *authority/forgery* gap (payload-trusted `_amount`, no sender/side check). And it is the **second confirmed direct-PV forgery** after DR-41 — establishing that the direct-channel surface is a class, not a one-off. Sharpens the economy thesis: not only is *spending* client-authoritative (DR-6/14/16/22/23/27/28), the **supply ledger itself is directly client-writable**.
+
+**Owner decision.** Folds into the economy-authority decision (server-side authority vs BattlEye) with the **two-surfaces** note (PVF dispatcher DR-1 **+** direct channels DR-41/DR-44). The direct fix: the `wfbe_supply_temp_<side>` handler must derive the authorized delta server-side (or validate the sender is the side's commander/server) and ignore the payload's `_amount` as an authority. BattlEye `publicvariable.txt` should also restrict `wfbe_supply_temp_*` (not shipped, DR-30).
+
+**Handoff for Codex.** Update the [Public variable channel index](Public-Variable-Channel-Index) `wfbe_supply_temp_*` row to cite DR-44; add DR-44 to the economy-authority class wherever the class is listed (it's a new member); the [Pending owner decisions](Pending-Owner-Decisions) economy table gains a row.
+
+**Outcome:** direct-PV forgery surface now has two confirmed members (DR-41 attack-wave, DR-44 side-supply); economy thesis extended to "the supply balance is client-writable".
+
+## Round 36 — 2026-06-02 (Claude) — full wiki audit follow-through: DR-45 (town-AI vehicle despawn) + direct-PV surface closed + coverage-gap assessment
+
+Lane `wiki-audit-followthrough`. Three parallel audits of all 60 wiki pages (duplication already resolved by Codex; this pass = accuracy/consistency/coverage). The wiki is healthy (no broken links, no orphans, DR severities consistent everywhere). Two **audit findings were false positives** — verified at source: the `Public-Variable-Channel-Index` PVF line ranges (`:8-20`/`:23-37`) and DR-15's `_side = _this` at `:3` are **correct** (the audit agents miscounted blank lines); not changed. Real outcomes below.
+
+### DR-45 — Town-AI inactivity despawn deletes vehicles with player passengers — **Medium (gameplay; player vehicle loss)**
+
+`Server/FSM/server_town_ai.sqf:213-216` cleans up a captured/inactive town's vehicles:
+```
+{ if (alive _x) then { if (!(isPlayer leader group _x)) then {deleteVehicle _x} } } forEach (_town getVariable 'wfbe_active_vehicles');
+```
+The guard `!(isPlayer leader group _x)` only spares a vehicle whose **group leader** is a player. It does **not** inspect crew/cargo/turret occupants, so an AI-led (or empty-group) vehicle that a **player is riding as a passenger/cargo** is deleted under them during the despawn sweep. Promotes the existing (un-numbered) `Town-AI-Vehicle-Despawn-Safety` playbook — confirmed by Codex's Einstein verifier and now re-confirmed at source — to a formal DR. **Fix:** before delete, also check `crew _x` / `assignedCargo _x` for any `isPlayer`, or skip vehicles with any player occupant.
+
+### Direct-PV forgery surface — closed (coverage-clean)
+
+Following DR-41/DR-44, the remaining client-touchable **direct** `publicVariable` channels were source-checked for the same forgery class:
+- `REQUEST_SUPPLY_VALUE` (`Server/Functions/Server_PV_RequestSupplyValue.sqf`) — **clean**: a read-only query (`SUPPLY_VALUE_REQUESTED = (side _player) call GetSideSupply; (owner _player) publicVariableClient …`); no mutation, no authority surface (worst case: a client reads another side's public supply — negligible).
+- `MARKER_CREATION` (`Client/Functions/Client_onEventHandler_MARKER_CREATION.sqf`) — **clean/cosmetic**: creates a side-visible **local** map marker from the payload; worst case is cosmetic marker spam, no gameplay/authority impact.
+
+**Conclusion:** the direct-PV **forgery** surface is fully enumerated and **bounded to the two mutation channels** (DR-41 `ATTACK_WAVE_INIT`, DR-44 `wfbe_supply_temp_<side>`); the read/cosmetic direct channels are safe. No further direct-PV forgery findings.
+
+### Coverage-gap & code-depth assessment (what remains unreviewed)
+
+Honest accounting of where the campaign has **not** gone deep, for the owner/Codex to prioritise:
+- **Server/AI respawn + orders** (`Server/AI/AI_AdvancedRespawn.sqf`, `AI_SquadRespawn.sqf`, `AI_AddMultiplayerRespawnEH.sqf`, `Orders/AI_*.sqf`, legacy `AI_TLWPHandler.sqs`) — listed in the Modules/Function index but not deep-reviewed for authority/perf/JIP.
+- **Cleaners/restorers Perf** (`Server/FSM/cleaners/*`, `buildings_restorer.sqf`) — cadence/cost not measured (ledger Markers Map is 🟡 for this reason).
+- **Config data model** (`Common/Config/Core*/`, `Gear/`, `Loadout/`, `Defenses/`) — the faction/unit/upgrade data layer load-order is documented per-atlas but not as a coherent whole.
+- **`Server/FSM/basearea.sqf`, `groupsMonitor.sqf`, `Server/Support/Support_*` ** — purpose-mapped only; trigger chains not traced.
+- **PR#1 supply-helicopter** delta — reviewed at a high level (stacked `Killed` EH) but not line-by-line on the `feat/supply-helicopter` branch.
+- **Code depth note:** the economy/forgery and PVF classes are reviewed to *exploit-and-fix* depth; the AI/respawn and cleaner subsystems are at *map-only* depth. These are the next high-value review lanes if the campaign continues.
+
+**Handoff for Codex.** Audit punch-list (Codex-lane accuracy fixes) recorded in [Wiki quality audit](Wiki-Quality-Audit) "Round 2"; DR-45 should be cross-linked from the Town-AI playbook + AI/headless atlas; the coverage-gap list seeds the next review queue.
+
+**Outcome:** DR-45 filed (town-AI passenger-vehicle deletion); direct-PV forgery surface closed as bounded; coverage gaps enumerated for the next phase.
+
+## Round 37 — SEND_MESSAGE second RCE (Claude, 2026-06-02)
+
+Lane `send-message-rce-review`. While producing a standalone "20 improvements" review for the owner (a shareable PDF), a fresh source pass over the message/notification path surfaced a **second network-data `call compile` site** that DR-1's analysis explicitly assumed did not exist.
+
+### DR-46 — `SEND_MESSAGE` broadcast `call compile`s network text: a second client-side RCE, independent of the PVF dispatcher — **High (security / RCE; extends and corrects DR-1)**
+
+`Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf:25-31` handles the `SEND_MESSAGE` **direct** `publicVariable` broadcast (`_SEND_MESSAGE_infos = _this select 1`; index 0 = text, index 2 = receiving side, index 3 = multi-language flag). When the flag is `true` it runs:
+```
+if _is_multi_language_message then { _messageText = call compile _messageText };
+systemChat _messageText;
+```
+`_messageText` is **network data**. Any connected client can broadcast `SEND_MESSAGE` with arbitrary SQF in index 0 and `true` in index 3; every receiver whose `playerSide` matches index 2 compiles and executes the payload — a full **client-side remote-code-execution** primitive. It does **not** pass through `WFBE_PVF_*` / `Server_HandlePVF` / `Client_HandlePVF`, so even a perfect DR-1 dispatcher fix leaves this surface open. `Common/Functions/Common_SendMessage.sqf:26` has the identical sender-local `call compile`, and the callers (artillery / ICBM friendly+enemy messages) pass compilable strings.
+
+**Correction to DR-1.** DR-1's "why the dispatch never needs `Call Compile`" note (≈ line 159) states the other `call compile` sites "compile **files**… or local engine key-strings…, not network data" and that there is "no second-order injection on the PVF path." That is accurate **for the PVF path**, but `SEND_MESSAGE` is a *direct* `addPublicVariableEventHandler` outside that path, and it *does* compile network data. The repo therefore has **two** independent network-data `call compile` RCE surfaces, not one — DR-1's single-site assumption should be amended to name SEND_MESSAGE explicitly.
+
+**Fix.** Treat the multi-language payload as a stringtable key plus arguments — `["STR_KEY", arg1, …]` — and resolve with `localize` + `format`; treat any non-array payload as a literal string and never compile it. Patch the identical line in `Common_SendMessage.sqf` and update the artillery/ICBM callers to send arrays. Optionally allowlist the `SEND_MESSAGE` channel (with a value-shape filter) in the BattlEye `publicvariable.txt` from DR-30. Source-verified; fix shape in `agent-hardening-backlog.jsonl#send-message-call-compile-rce`.
+
+**Maintainability leads (for Codex to verify against existing pages, not yet filed as DRs).** The same pass source-confirmed these, but they may already be owned by [Variable and naming conventions](Variable-And-Naming-Conventions) / [SQF atlas](SQF-Code-Atlas): (1) `Common/Init/Init_Common.sqf` compiles ~15 functions **twice** — once as a short global (`GetSideID`) and again as `WFBE_CO_FNC_GetSideID`, both pointing at the same file (plus ~22 un-prefixed globals in `Init_Server.sqf` and four `GetClosestEntity{,2,3,4}` variants); (2) the four `Client_Support{Repair,Refuel,Rearm,Heal}.sqf` (~90% identical), `Construction_{Small,Medium}Site.sqf` (identical heads) and the ten `Common/Config/Loadout/*.sqf` (one structure, data-only difference) are large copy-paste families; (3) ~12 hardcoded English `hint`/`systemChat` strings bypass `stringtable.xml`.
+
+**Handoff for Codex.** Cross-link DR-46 from [Networking and public variables](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index) (the `SEND_MESSAGE` row) and [SQF atlas](SQF-Code-Atlas) (call-compile inventory), and add the one-line correction to the DR-1 single-site note. The maintainability leads are verify-then-document, not new DRs unless confirmed undocumented.
+
+**Outcome:** DR-46 filed — a second, source-verified network-data `call compile` RCE (SEND_MESSAGE), correcting DR-1's single-site assumption; hardening backlog + knowledge record + Codex cross-link handoff recorded. (Context: produced alongside a standalone 20-improvement PDF for the owner.)
+
+### DR-30 correction — `remoteexec.txt` is Arma 3-only; BattlEye filters are local + contingent (defense-in-depth, not the primary fix)
+
+Two refinements to **DR-30** (BattlEye posture), surfaced during the improvements pass and confirmed at source:
+
+- **`remoteexec.txt` does not apply to Arma 2 OA.** It is an Arma 3 BattlEye filter (it gates the A3-only `remoteExec` / `remoteExecCall` commands); Arma 2 OA has no such command, so there is nothing for it to filter. DR-30 / External-Integrations and any "missing filters" list should **drop `remoteexec.txt`** and name the **A2 OA** set instead: `scripts.txt`, `publicvariable.txt`, `createvehicle.txt`, `setpos.txt`, `setdamage.txt`, `setvariable.txt`, `deletevehicle.txt`, `mpeventhandler.txt`, `addmagazinecargo.txt` / `addweaponcargo.txt` / `addbackpackcargo.txt`, `teamswitch.txt`, `waypointcondition.txt`, `selectplayer.txt`, `attachto.txt`.
+- **BattlEye is defense-in-depth, contingent on the server still loading BE.** BE's *global/online* anti-cheat for the Arma 2 series is effectively defunct, but the **filter files are processed locally** by the server-side BE component (reads `BEpath` next to `server.cfg`), independent of BE's online services. Direct evidence the deployment model assumes working BE filters: `Client/FSM/updateclient.sqf:153-162` broadcasts `kickAFK` with the comment *"detected by BattlEye (customized filter)… Must be kicked using BattlEye Filter."* So if AFK-kick works on the production server, BE filters are live (and a `scripts.txt` would too); if it does not, BE isn't loaded and the BattlEye remediation is moot. Either way, the **durable, BE-independent** fix for the RCE/economy classes is server-side authority (DR-1, DR-46, DR-6, DR-27, DR-41/44); BattlEye is a layered backstop only.
+
+**Handoff for Codex.** Update the External-Integrations BattlEye section + any "missing filters" list to drop `remoteexec.txt`, name the A2 set, and reframe BE as contingent local-filter defense-in-depth (cite `updateclient.sqf:153-162`). DR-30's substance — no security filters are shipped in the repo — **stands**; only the filter-name list and the "primary mitigation" framing change.
+
 ## Continue Reading
 
 Previous: [Testing workflow](Testing-Debugging-And-Release-Workflow) | Next: [Implementation plan](Documentation-Implementation-Plan)

@@ -1,0 +1,177 @@
+{
+  "schema": "a2waspwarfare-agent-release-readiness-v1",
+  "generatedAt": "2026-06-02T16:39:06+02:00",
+  "lastVerifiedAt": "2026-06-02T16:39:06+02:00",
+  "purpose": "Machine-readable release-readiness ledger for source fixes, generated mission propagation and Arma 2 OA smoke gates.",
+  "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
+  "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+  "generatedTargets": [
+    {
+      "path": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+      "status": "maintained-generated-target"
+    },
+    {
+      "path": "Modded_Missions/*",
+      "status": "not-currently-maintained-by-generation-workflow"
+    }
+  ],
+  "toolingGate": {
+    "tool": "Tools/LoadoutManager",
+    "requirement": "Run from a checkout with either an ancestor folder named a2waspwarfare or repo-root markers: Missions, Missions_Vanilla and Tools/LoadoutManager/LoadoutManager.csproj.",
+    "skipZipForPropagationOnly": {
+      "environmentVariable": "A2WASP_SKIP_ZIP",
+      "acceptedValues": ["1", "true", "yes"],
+      "effect": "Skips _MISSIONS.7z packaging after generation/copy."
+    },
+    "evidenceRefs": [
+      "Tools/LoadoutManager/FileManagement/FileManager.cs",
+      "Tools/LoadoutManager/ZipManager.cs",
+      "Source-Fix-Propagation-Queue.md#rule"
+    ],
+    "currentLocalCheckoutStatus": "runnable-from-normal-repo-root-marker-checkouts"
+  },
+  "latestLoadoutManagerPropagationRun": {
+    "checkedAt": "2026-06-02T16:18:32+02:00",
+    "checkedBy": "Codex",
+    "command": "$env:A2WASP_SKIP_ZIP = \"1\"; dotnet run --project Tools\\LoadoutManager\\LoadoutManager.csproj",
+    "scope": "Generated/copied Chernarus and maintained Vanilla Takistan after source fixes.",
+    "result": "All five tracked source fixes are present in Chernarus and propagated to maintained Vanilla Takistan; Arma 2 OA smoke remains pending.",
+    "packagingStatus": "skipped-by-A2WASP_SKIP_ZIP",
+    "nonFatalWarnings": [
+      {
+        "message": "The specified content was not found in the file.",
+        "likelySource": "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs ReplaceGUIMenuHelp -> ReplaceContentOnASpecificFile",
+        "impact": "Did not stop Chernarus/Takistan generation or the tracked fix propagation; treat as help-menu title replacement drift unless future evidence says otherwise."
+      }
+    ],
+    "canonicalDoc": "Source-Fix-Propagation-Queue.md#latest-propagation-run"
+  },
+  "globalReleaseRule": "A source fix is not release-complete until the Chernarus source patch is present, LoadoutManager propagation has run, generated diffs are inspected and the relevant Arma 2 OA smoke is recorded.",
+  "sourceOnlyFixes": [
+    {
+      "id": "paratrooper-marker-revival",
+      "priority": "P2",
+      "sourceStatus": "patched",
+      "vanillaStatus": "propagated-diff-inspected",
+      "smokeStatus": "pending",
+      "canonicalDocs": [
+        "Paratrooper-Marker-Revival.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Feature-Status-Register.md"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:39",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_PublicVariables.sqf:39",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_Paratroopers.sqf:117"
+      ],
+      "releaseGate": "Trigger paratrooper support and confirm the client marker appears without an unregistered-client-PVF error."
+    },
+    {
+      "id": "client-skill-init-idempotency",
+      "priority": "P2",
+      "sourceStatus": "patched",
+      "vanillaStatus": "propagated-diff-inspected",
+      "smokeStatus": "pending",
+      "canonicalDocs": [
+        "Client-Skill-Init-Idempotency.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Feature-Status-Register.md"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf:547",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf:571",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf:547",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf:571",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Init.sqf:49"
+      ],
+      "releaseGate": "Smoke Soldier/non-Soldier AI caps and respawn skill reapply."
+    },
+    {
+      "id": "hosted-server-fps-loop-sleep",
+      "priority": "P2",
+      "sourceStatus": "patched",
+      "vanillaStatus": "propagated-diff-inspected",
+      "smokeStatus": "pending",
+      "canonicalDocs": [
+        "Hosted-Server-FPS-Loop-Sleep.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Feature-Status-Register.md"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf:1",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf:1",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/GUI/serverFpsGUI.sqf:1",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/serverFPS/monitorServerFPS.sqf:1"
+      ],
+      "releaseGate": "Smoke dedicated FPS publishing and confirm hosted/listen servers do not spin the FPS publisher loops."
+    },
+    {
+      "id": "supply-mission-scan-narrowing",
+      "priority": "P2",
+      "sourceStatus": "patched",
+      "vanillaStatus": "propagated-diff-inspected",
+      "smokeStatus": "pending",
+      "canonicalDocs": [
+        "Supply-Mission-Scan-Narrowing.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Feature-Status-Register.md"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf:25-28",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/supplyMission/supplyMissionStarted.sqf:25-28"
+      ],
+      "releaseGate": "Smoke delivery at a real command center and no completion near unrelated objects."
+    },
+    {
+      "id": "supply-player-object-list-indexing",
+      "priority": "P1",
+      "sourceStatus": "patched",
+      "vanillaStatus": "propagated-diff-inspected",
+      "smokeStatus": "pending",
+      "canonicalDocs": [
+        "Player-Join-Disconnect-And-AntiStack-Lifecycle.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Feature-Status-Register.md"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/playerObjectsList.sqf:17-29",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/supplyMission/playerObjectsList.sqf:17-29",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf:57",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionActive.sqf:51"
+      ],
+      "releaseGate": "Smoke reconnect/JIP player-object replacement and supply mission completion lookup."
+    }
+  ],
+  "patchReadyNotSourcePatched": [
+    {
+      "id": "factory-queue-counter-token-cleanup",
+      "canonicalDoc": "Factory-Queue-Counter-Token-Cleanup.md",
+      "status": "patch-ready-not-source-patched"
+    },
+    {
+      "id": "commander-reassignment-call-shape",
+      "canonicalDoc": "Commander-Reassignment-Call-Shape.md",
+      "status": "patch-ready-not-source-patched"
+    },
+    {
+      "id": "gear-template-profile-filter",
+      "canonicalDoc": "Gear-Template-Profile-Filter.md",
+      "status": "patch-ready-not-source-patched"
+    },
+    {
+      "id": "vehicle-cargo-equip-loop-bounds",
+      "canonicalDoc": "Vehicle-Cargo-Equip-Loop-Bounds.md",
+      "status": "patch-ready-not-source-patched"
+    },
+    {
+      "id": "service-menu-affordability-guards",
+      "canonicalDoc": "Service-Menu-Affordability-Guards.md",
+      "status": "patch-ready-not-source-patched"
+    },
+    {
+      "id": "wasp-marker-wait-cleanup",
+      "canonicalDoc": "WASP-Marker-Wait-Cleanup.md",
+      "status": "opportunity-not-source-patched"
+    }
+  ]
+}

@@ -6,12 +6,12 @@ Source mission: `Missions/[55-2hc]warfarev2_073v48co.chernarus`
 
 ## Compile Registry Summary
 
-The source mission contains 659 `preprocessFile` references:
+The source mission contains 673 `preprocessFile` references, counted with `rg 'preprocessFile' Missions/[55-2hc]warfarev2_073v48co.chernarus` on 2026-06-02:
 
 | Kind | Count | Notes |
 | --- | ---: | --- |
-| `preprocessFileLineNumbers` | 452 | Preferred for source-backed runtime errors and debugging. |
-| plain `preprocessFile` | 207 | Older or performance/legacy style compiles; still common in init files. |
+| `preprocessFileLineNumbers` | 461 | Preferred for source-backed runtime errors and debugging. |
+| plain `preprocessFile` | 212 | Older or performance/legacy style compiles; still common in init files. |
 | commented compile references | 21 | Includes disabled systems, duplicate old lines and experiments. |
 
 Target area counts:
@@ -152,6 +152,7 @@ Client-bound PVF commands:
 | `SetMHQLock` | `Client/PVFunctions/SetMHQLock.sqf` |
 | `Available` | `Client/PVFunctions/Available.sqf` |
 | `RequestBaseArea` | `Client/PVFunctions/RequestBaseArea.sqf` |
+| `HandleParatrooperMarkerCreation` | `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` |
 | `NukeIncoming` | `Client/PVFunctions/NukeIncoming.sqf` |
 
 PVF dispatch mechanics:
@@ -162,9 +163,9 @@ PVF dispatch mechanics:
 - Client filtering in `Client_HandlePVF.sqf` supports side destinations and player UID destinations.
 - Both client and server dispatch call `Call Compile _script`, so malformed function names or unsanitized command names would be high-risk.
 
-Unregistered PV function files:
+Unregistered or non-standard PV function files:
 
-- `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` exists but is not in the client command list.
+- `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` was formerly unregistered in early review notes. Current source and maintained Vanilla now register it in the client command list; Arma smoke remains tracked in [Paratrooper marker revival](Paratrooper-Marker-Revival).
 - `Client/PVFunctions/DatabaseDebug.sqf` is present but the registry entry is commented out in `Init_PublicVariables.sqf`.
 - `Server/PVFunctions/LogGameEnd.sqf` is present but not registered; server init compiles `Server/Functions/Server_LogGameEnd.sqf` instead.
 - `Server/PVFunctions/AttackWave.sqf` is a direct/public-variable handler path rather than a standard PVF command-list entry.

@@ -2,6 +2,47 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wave H Agent Team + Supply Player-Object Source Patch
+
+- Spawned Wave H read-only scout agents for supply lifecycle, economy authority, respawn/MHQ/victory, UI/HUD, generated mission drift and PV/networking. The broad PV/networking scout hit context limits, was closed, and was replaced by a smaller direct-public-variable index scout.
+- Patched Chernarus source `Server/Module/supplyMission/playerObjectsList.sqf` so `_i = 0` is initialized before the `WFBE_SE_PLAYERLIST` loop; matching reconnect/JIP UIDs now update their actual row instead of index 0.
+- Confirmed Vanilla Takistan still has the old loop-index placement, so the fix is source-only until LoadoutManager propagation and Arma 2 OA reconnect/supply smoke run.
+- Updated [Source fix propagation queue](Source-Fix-Propagation-Queue), [Join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle), [Feature status](Feature-Status-Register), [Progress dashboard](Progress-Dashboard), [Discovery swarm](Subagent-Discovery-Swarm) and machine ledgers.
+- Harvested Darwin's generated-mission drift report: current propagation queue is accurate, LoadoutManager still packages only `Missions` + `Missions_Vanilla`, modded generation is disabled/stale, and the current `work/a` checkout still cannot run generation because it lacks an ancestor folder literally named `a2waspwarfare`.
+
+## 2026-06-02 - Codex Source Fix Propagation Queue
+
+- Source-checked Chernarus source and Vanilla Takistan for the active source-only patch set: paratrooper marker PV registration, client skill init idempotency, hosted server FPS loop exits and supply mission command-center scan narrowing.
+- Confirmed Vanilla still lags for those fixes, while `Tools/LoadoutManager/FileManagement/FileManager.cs:140-152` requires a checkout ancestor folder named `a2waspwarfare`, so the current `work/a` checkout cannot run propagation directly.
+- Added [Source fix propagation queue](Source-Fix-Propagation-Queue) as the canonical release-readiness ledger for "source patched; generated propagation/smoke pending" work.
+- Routed it through Home, sidebar/footer, Tools/build, Feature Status, LLM entry files, MkDocs, `agent-context.json`, `agent-feature-status.jsonl`, `agent-hardening-backlog.jsonl`, dashboard/status/collaboration/events/knowledge.
+
+## 2026-06-02 - Codex Service Menu Affordability Guards
+
+- Source-read `GUI_Menu_Service.sqf` and the four support scripts: `Client_SupportRearm.sqf`, `Client_SupportRefuel.sqf`, `Client_SupportRepair.sqf` and `Client_SupportHeal.sqf`.
+- Added [Service menu affordability guards](Service-Menu-Affordability-Guards) as the patch-ready guide for the local service-menu guard gap: cached-price button enables, unconditional rearm/refuel debit, and repair/heal missing fresh funds checks.
+- Preserved the authority boundary: support scripts re-check distance/alive/airborne state, but funds are already debited by the menu; this is a local correctness patch, not full gear/EASA/service server authority.
+- Routed the finding through [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Client UI systems atlas](Client-UI-Systems-Atlas), [Feature status](Feature-Status-Register), [Server authority migration map](Server-Authority-Migration-Map), LLM entry files and machine backlog/status records.
+
+## 2026-06-02 - Codex Vehicle Cargo Equip Loop Bounds
+
+- Source-checked the old `Common_EquipVehicle.sqf` loop-bound scout note and confirmed inclusive `0..count(_items)` loops at vehicle weapon, magazine and backpack cargo application.
+- Expanded the confirmed finding to `Common_EquipBackpack.sqf`, which uses the same inclusive pattern for backpack weapon and magazine contents.
+- Added [Vehicle cargo equip loop bounds](Vehicle-Cargo-Equip-Loop-Bounds) and routed it through [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Feature status](Feature-Status-Register), [Client UI systems atlas](Client-UI-Systems-Atlas), `agent-feature-status.jsonl`, `agent-hardening-backlog.jsonl` and `agent-knowledge.jsonl`.
+
+## 2026-06-02 - Codex Gear Template Profile Filter
+
+- Source-read the buy-gear profile-template path across `GUI_BuyGearMenu.sqf`, `Client_UI_Gear_AddTemplate.sqf`, `Client_UI_Gear_SaveTemplateProfile.sqf`, `Init_ProfileVariables.sqf`, `Init_ProfileGear.sqf` and `Client_UI_Gear_FillTemplates.sqf`.
+- Added [Gear template profile filter](Gear-Template-Profile-Filter) as the canonical patch-ready guide for the undefined `_u_upgrade` save-filter bug.
+- Routed the finding through [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Client UI systems atlas](Client-UI-Systems-Atlas), [Feature status](Feature-Status-Register), `agent-feature-status.jsonl`, `agent-hardening-backlog.jsonl` and `agent-knowledge.jsonl`.
+
+## 2026-06-02 - Codex Arma 2 OA Compatibility Audit
+
+- Audited docs/wiki Markdown and agent files for accidental Arma 3-era references including `remoteExec`, `remoteExecCall`, `BIS_fnc_MP`, `remoteExecutedOwner`, `parseSimpleArray`, `RVExtensionArgs`, `CfgFunctions`, CBA/ACE and Eden Editor wording.
+- Added [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) to classify current hits as intentional guardrails, explicit non-options, evidence caveats or terrain/folder-name coincidences.
+- Added [`agent-compatibility-audit.json`](agent-compatibility-audit.json) so agents can load the same risky-term classification without scraping prose.
+- Wired the audit into Home, sidebar, footer, [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide), [AI assistant guide](AI-Assistant-Developer-Guide), [LLM agent entry pack](LLM-Agent-Entry-Pack), `llms.txt`, `agent-context.json` and MkDocs navigation.
+
 ## 2026-06-02 - Codex Wiki-Quality DUP-8 Construction Routing
 
 - Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-8 by keeping exact construction-authority proof canonical in [Deep-review findings](Deep-Review-Findings) DR-6.
@@ -671,6 +712,22 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Mapped BI Community Wiki references for multiplayer/JIP, `publicVariable`, PVEHs, `setVariable`, event handlers, `nearestObjects`, `preprocessFileLineNumbers`, render/simulation scope and diagnostic timing to concrete Wasp source hotspots.
 - Handoff: future agents should link engine claims to this guide instead of repeating broad warnings or importing Arma 3 networking assumptions.
 
+## 2026-06-02 - Claude Deep-Review Round 35 (direct-pv-supply-authority lane) — DR-44
+
+- Research-autonomy pass walking the direct `publicVariableServer` channels from the new PV-channel index for the forgery class DR-41 opened.
+- **DR-44 (High, economy authority/forgery):** `wfbe_supply_temp_<side>` is forgeable. `Common_ChangeSideSupply.sqf:28-30` broadcasts `[_side,_amount,_reason]`; `Server_ChangeSideSupply.sqf` (PVEH `:1` west / `:25` east) takes `_amount` straight from the payload and sets `wfbe_supply_<side> = currentSupply + _amount` (capped at max) with **no sender auth, no `_side`-vs-sender check, no re-derivation** → any client can arbitrarily inflate a side's supply (which gates attack-wave/funds/production). The `_reason` fallback string even admits "might indicate a malicious supply update request" — a log breadcrumb instead of authority. **Second** confirmed direct-PV forgery after DR-41 → the direct-channel surface is a class, and the supply **ledger itself** is client-writable. Distinct axis from DR-22 (broken floor, same file).
+- Updated DRF (Round 35), ledger Economy row, `Public-Variable-Channel-Index` supply row, `Pending-Owner-Decisions` economy table, agent-context risk/reviewPass. Folds into the economy-authority owner decision (two surfaces: PVF dispatcher DR-1 + direct channels DR-41/DR-44); BattlEye should restrict `wfbe_supply_temp_*` (not shipped, DR-30).
+
+## 2026-06-02 - Claude full-wiki audit follow-through (Round 36) — DR-45 + direct-PV closed + coverage gaps
+
+- Ran a 3-agent full audit of all 60 pages (accuracy/consistency/coverage). Wiki healthy: **no broken links, no orphans, DR severities consistent, dedup clean.** Verified two audit findings at source and found them **false positives** (PV-index PVF line ranges `:8-20`/`:23-37` and DR-15 `_side=_this` `:3` are correct — agents miscounted blank lines); did not change.
+- **DR-45 (Medium):** `server_town_ai.sqf:213-216` despawn deletes `wfbe_active_vehicles` guarded only by `!(isPlayer leader group _x)` — no crew/cargo check → a player riding as passenger in an AI-led vehicle loses it. Promotes the un-numbered `Town-AI-Vehicle-Despawn-Safety` playbook to a DR; ledger AI/headless row updated.
+- **Direct-PV forgery surface CLOSED:** checked the remaining direct channels — `REQUEST_SUPPLY_VALUE` (read-only query) and `MARKER_CREATION` (cosmetic local marker) are **clean**. Forgery surface bounded to DR-41 + DR-44.
+- **Coverage-gap assessment** (answers "did we miss code spots / depth"): unreviewed-to-depth = Server/AI respawn+orders, cleaners/restorers Perf, the Config data model, `basearea`/`groupsMonitor`/`Support_*` trigger chains, PR#1 line-by-line. Economy/PVF classes are at exploit-and-fix depth; AI/respawn/cleaners are map-only depth — the next review lanes.
+- **Claude-lane audit fixes applied:** `DR-8-class`→economy-authority class (conventions page); `Server_HandlePVF.sqf`/`Client_HandlePVF.sqf` path clarity (owner-decisions page).
+- **Codex-lane handoff:** `Wiki-Quality-Audit` "Round 2" punch-list — R2-1 UI atlas finding mislabels (DR-16 is structure-sale, not gear; DR-25a/b are IDD/soundPush, not EASA), R2-2 SQF compile counts (DR-5), R2-3 MASH hedge (DR-34), R2-4 DR-44 / R2-5 DR-20 / R2-6 DR-40+DR-19 / R2-7 DR-45 atlas cross-links, R2-8 Coordination-Board stale lanes/roles, R2-9 Progress-Dashboard, R2-10 sidebar HC-delegation dup.
+- **Created `Instructions-For-Codex.md`** — one consolidated, current, prioritized action queue (P0 accuracy → P1 cross-links + current-work reconcile → P2 page merges → P3 thin citations), marking already-done items (nav wiring, dedup routing, MASH C1) and the 2 audit false-positives not to change. State-checked first: Codex already wired the 5 new pages into the sidebar; page merges + UI-atlas mislabels + current-work reconcile remain outstanding. Codex works from this page.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.
@@ -696,3 +753,243 @@ Key conclusions:
 
 - Claimed `paratrooper-marker-revival` after the dashboard identified paratrooper markers as one of the next best Codex-2 lanes.
 - Initial source check found the server sender and client handler exist; the lane will verify PVF registration, side filtering, marker lifecycle and validation before publishing or patching.
+
+## 2026-06-02T12:14:00+02:00 - Claude SEND_MESSAGE RCE (DR-46) + improvements PDF
+
+- Produced a standalone "20 improvements" review PDF for the owner (`Desktop/a2waspwarfare-improvements/a2waspwarfare-20-improvements.pdf`): 20 ranked, source-verified improvements (effort/gains/complexity, before/after snippets) distilled from DR-1..DR-45 + a fresh source pass, plus a ranked appendix and rollout sequence.
+- Filed **DR-46**: `Client_onEventHandler_SEND_MESSAGE.sqf:27` `call compile`s network text on the SEND_MESSAGE direct-PV channel (multi-language branch) — a second client-side RCE independent of the PVF dispatcher; corrects DR-1's single-compile-site assumption (~line 159). `Common_SendMessage.sqf:26` shares the pattern. Added `agent-hardening-backlog.jsonl#send-message-call-compile-rce`, a `pv-network-trust` knowledge record, claim/finding/handoff events, and a New-findings block in Instructions-For-Codex.
+- Handed Codex source-verified **maintainability leads** (Init_Common double-compile dup-pairs + un-prefixed globals + GetClosestEntity variants; Support/Construction/Loadout copy-paste families; ~12 hardcoded hints) to verify against Variable-And-Naming-Conventions / SQF-Code-Atlas before documenting.
+- NOTE: the docs/wiki mirror (`a2waspwarfare-docs` @ `docs/developer-wiki-claude`) had pre-existing uncommitted local changes (Agent-Worklog, Coordination-Board, Content-Structure-And-Maps, Factory atlas, …) made outside this pass — left untouched; DR-46 mirror parity deferred to avoid capturing unrelated edits.
+
+## 2026-06-02T15:21:42+02:00 - Claude consistency Batch-4 + Batch-2 clobber recovery
+
+- **Batch-4 wiki↔source audit** (7 playbook/index pages, ~190 claims, 29 confirmed inconsistencies, every one re-verified at source). [Attack-wave authority playbook] clean (0/8). Routed all to `Instructions-For-Codex.md` items 19–25 (not the findings page — see below).
+- **Headline (HIGH):** [Supply-mission authority cleanup playbook] documents code that does **not** exist in current source — a `Killed` EH on the supply vehicle (0 grep hits for `addEventHandler`/`Killed` in the supply module), a `SupplyByHeli` object var (0 grep hits anywhere), a heavy-heli cash-run + commander-funds completion branch, and recommended-patch constants `WFBE_C_SUPPLY_TRUCK_TYPES`/`…HELI_TYPES_T2`/`_T3`. Reads like a draft "PR #1" written up as shipped. Its status table also marks the supply scan "Source/Vanilla claimed-patched" though `supplyMissionStarted.sqf:28` is still `nearestObjects [...,[],80]` (DR-39 not applied) — and the page self-contradicts (Step 5 shows `[]`).
+- Other confirmed: ICBM playbook authority-boundary line reads as factual but `Server_HandleSpecial.sqf:97-112` has no validation (DR-27); `Reaktiv` listed "Live" but `Reaktiv_Init` has zero callers (dead/unreachable); PVF playbook client-command list enumerates 9 of 14; plus family-summary + line-drift LOWs on Function-And-Module-Index / Variable-And-Naming / Economy-Authority-First-Cut.
+- **Batch-2 clobber recovery:** diagnosed that my batch-3 commit `89f848f` silently dropped the Batch-2 section of `Wiki-Source-Consistency-Findings` (shared-worktree revert between Edit and `git add`, same mechanism as the HC-page `41c5a20` clobber). Re-verified the 5 still-live Batch-2 items at source (all still wrong on the live wiki) and **routed them to their owning pages** (Modules-Atlas ×4 + Economy-Towns-And-Supply dead-constant) as item 25, rather than re-adding a section — Codex is actively curating that findings page (uncommitted slimming of Batch 3 + a 15:05 note), so I stayed out of its lane.
+- Published from the clean clone `_wasp_wiki_claude` (clobber-free), committing only my own coordination files; appended 2 events + 3 `repo_verified` knowledge records (all JSONL re-validated, 0 parse failures).
+
+## 2026-06-02T15:35:10+02:00 - Claude consistency Batch-5
+
+- **Batch-5 audit** (4 pages, 133 claims, 4 confirmed, all self-verified at source → Instructions-For-Codex items 26–28).
+- (HIGH) [Core-Systems-Index] lists "Discord bot status publishing" as an in-mission operational system — no Discord code in the mission (only plain-text mentions: `Init_Client.sqf:959`, `briefing.sqf`, `stringtable.xml`); the real mission role is the separately-listed extension stats export, and Discord publishing is the external `DiscordBot/` repo component.
+- (HIGH) [Factory-And-Purchase-Systems-Atlas] FSM `depotInRange` gate uses `WFBE_C_TOWNS_CAPTURE_RANGE` (40, `updateavailableactions.fsm:39,194`), not the `WFBE_C_TOWNS_PURCHASE_RANGE` (60) the page labels it; (MED/DR-33b) the varQueu factory token is still `random(...)` (`Client_BuildUnit.sqf:167-168`, comment "to remove with new sys later on"), not the UID/counter token the page calls "current source".
+- (LOW) [Architecture-Overview] `initJIPCompatible.sqf:31` logs `WF_MAXPLAYERS` ("Max players Defined", a slot ceiling), described on the page as "player count".
+- Coverage: [Attack-Wave-Authority-Playbook] genuinely clean (0/8, batch 4). [Headless-Delegation-And-Failover-Playbook] auditor returned 0 claims (a whiff) — re-queued for batch 6.
+- Inventory: 78 wiki pages total; ~26 content pages audited across batches 1–5. NOTE a `Current-Work-Supply-Helicopters-PR1` page exists — likely the source of the Supply-Mission-Authority-Cleanup-Playbook's "PR1 documented as shipped" problem (batch-4 item 19). Batch 6 audits the PR1/supply cluster (Current-Work-Supply-Helicopters-PR1, Supply-Mission-Architecture, Supply-Mission-Scan-Narrowing, Resistance-Supply-Scaffold) + re-audits the Headless-Delegation playbook + more.
+- Appended 2 events + 2 `repo_verified` knowledge records (JSONL re-validated, 0 parse failures); committed only my own files from the clean clone.
+
+## 2026-06-02T15:43:13+02:00 - Claude consistency Batch-6 + PR1 investigation + item-19 correction
+
+- **Batch-6 audit** (9 pages, 193 claims, 18 confirmed → Instructions-For-Codex items 30–35). Clean: Headless-Delegation-And-Failover-Playbook (0/6, prior whiff resolved), Current-Work-Supply-Helicopters-PR1 (0/24), Resistance-Supply-Scaffold (0/6). Town-AI-Vehicle-Despawn-Safety returned 0 claims (whiff) → batch 7.
+- **PR1 investigation (key context):** confirmed via `git ls-remote` that the repo has exactly 4 branches — `master`, `feat/supply-helicopter` (PR #1, open, head `1faf738d`), `docs/developer-wiki-claude`, `docs/developer-wiki-index`. PR #1 is REAL unmerged work adding supply helicopters (SupplyByHeli, Killed-EH, cash-run, `WFBE_C_SUPPLY_*_TYPES` constants). It does NOT narrow the supply scan (PR1 line 45 still `[]`).
+- **CROSS-CUTTING HIGH finding (item 30):** a "claimed-patched-but-unmerged" status drift — Hosted-Server-FPS-Loop-Sleep, Supply-Mission-Scan-Narrowing, Performance-Opportunity-Sweep all mark DR-19 (FPS busy-spin) + DR-39 (scan narrowing) as "patched/current source", but both are on NO branch. `serverFpsGUI.sqf`/`monitorServerFPS.sqf` still busy-spin (sleep only inside `if(isDedicated)`); `supplyMissionStarted.sqf:28` still `[]` on master AND PR1. Performance-Opportunity-Sweep even self-contradicts (table says broad `[]`, Notes says patched) and mis-describes the double-Skill_Init.
+- **Correction to batch-4 item 19:** the Supply playbook's Killed-EH/SupplyByHeli/cash-run/constants are REAL PR #1 code (unmerged), not nonexistent — added an inline correction; fix is PR-vs-master scoping, not deletion. The scan-narrowing alone is genuinely proposed-only (no branch).
+- Appended 2 events + 3 `repo_verified` knowledge records (claimed-patched drift, DR-19-not-fixed, PR1-reference); JSONL re-validated 0 parse failures; committed only my own files from the clean clone.
+
+## 2026-06-02T15:52:34+02:00 - Claude consistency Batch-7 (status-drift proven systemic)
+
+- **Batch-7 audit** (9 pages, 174 claims, 22 confirmed → Instructions-For-Codex items 36–41).
+- **The "patched-but-unmerged" status drift (item 30) is now PROVEN SYSTEMIC** (item 36): 4 more DR-remediation pages assert Status "source/Vanilla claimed-patched" while the fix is NOT in master (verified vs Chernarus + Vanilla Takistan; no fix branches): Client-Skill-Init-Idempotency (2nd Skill_Init still at `Init_Client.sqf:571`, Apply `:572`), Commander-Reassignment-Call-Shape (DR-15 `_side=_this` at `Server_AssignNewCommander.sqf:3`; dup notification `:14`+`:9`), Factory-Queue-Counter-Token-Cleanup (DR-33 varQueu random `:167-168`; `:365` bare exit), Paratrooper-Marker-Revival (DR-2 `HandleParatrooperMarkerCreation` unregistered; `Init_PublicVariables.sqf:39`=NukeIncoming). **Total confirmed status-drift pages = 8** (incl. batch-4 supply playbook + batch-6 FPS/Scan/Perf). Confirmed the convention semantics by reading Client-Skill-Init-Idempotency in full ("the former second Skill_Init.sqf call is gone in source"; validation criteria listed as passing) — a definitive done-claim, not a TODO. Flagged as likely owner-attention-worthy.
+- **Clean** (accurate pages, for contrast): UI-IDD-Collision-Repair (0/11), WASP-Marker-Wait-Cleanup (0/18), Arma-2-OA-Compatibility-Audit (0/21), Abandoned-Feature-Revival-Review (dead-feature claims correct; only 2 LOW MASH file-range drifts). Town-AI-Vehicle-Despawn-Safety is a 7-line redirect stub (no checkable claims) — the prior "0/0" was a correct read, NOT a whiff.
+- Appended 2 events + 1 systemic `repo_verified` knowledge record (status-field-unreliable across DR-remediation pages, 8-page list); JSONL re-validated 0 parse failures; committed only my own files from the clean clone.
+- Coverage: ~44 of 78 wiki pages audited (batches 1–7). Remaining = index/guide/entry pages (Home, Quickstart, LLM-Agent-Entry-Pack, AI-Assistant-Developer-Guide, Content-Structure-And-Maps, Source-Inventory, Testing-Debugging-And-Release-Workflow, WASP-Overlay, External-* / OA-reference pages, Knowledge-Platform-Roadmap) + the Deep-Review-Findings register itself → batch 8.
+
+## 2026-06-02T16:01:27+02:00 - Claude consistency Batch-8 (completes content coverage)
+
+- **Batch-8 audit** (10 pages, 341 claims, 8 confirmed → Instructions-For-Codex items 42–45).
+- **Scoping good-news:** the canonical Deep-Review-Findings register (71/72 clean) and the entry/guide pages (Quickstart, LLM-Agent-Entry-Pack, AI-Assistant-Developer-Guide, Content-Structure-And-Maps, Arma-2-OA-Command-Version-Reference, Testing-Debugging stub) are RELIABLE — the systemic status-drift is confined to the remediation playbook pages, not the register or onboarding docs.
+- Notable: (HIGH) **WASP-Overlay** documents a fabricated `test/wasp_selftest.sqf` wired at `init.sqf:4` with a full behavior section — no root `init.sqf`, no `test/` dir, no `*selftest*` file, 0 `WASP-SELFTEST` hits in master; also `WASP_procInitComm` cited `:253`, actually `:243` (block `:241-245`). (MED a3-ism) **Deep-Review-Findings** Fix-2 allowlist snippet (lines 140-141) uses the A3-only `apply` array command (absent from A2 OA; source `apply` hits are the English word in comments only). (MED) **Source-Inventory** counts stale (.ogg 59→54, .md 8→75, .json 1→6, top-level 14/3319→16/3394; docs/ + CLAUDE.md absent). (LOW) **Home** Tools 199→200.
+- Appended 2 events + 2 `repo_verified` knowledge records (WASP fabrication, DR-register apply-a3-ism); JSONL re-validated 0 parse failures; committed only my own files from the clean clone.
+- **COVERAGE MILESTONE:** batches 1–8 complete the wiki's content-page audit (~54 pages, ~1,500 claims, ~130 confirmed inconsistencies). Remaining pages are agent-process/coordination + external-Arma-2-reference artifacts with low mission-source-claim density (not a fruitful source-consistency target). Dominant theme = the systemic "patched-but-unmerged" status drift (items 30/36): ≈8 DR-remediation pages mark fixes shipped that are still live in master.
+
+## 2026-06-02T16:09:13+02:00 - Claude consistency Batch-9 (FINAL breadth pass; audit complete)
+
+- **Batch-9 audit** (6 pages, 82 claims, 7 confirmed → Instructions-For-Codex items 46–47).
+- **CAPSTONE (item 46, HIGH):** the **Progress-Dashboard** — the project's rolled-up status surface — marks `client-skill-init-idempotency`, `supply-mission-scan-narrowing`, `hosted-server-fps-loop-sleep` as "Published/source-patched", all three still LIVE in master. So the status-drift reaches the dashboard a human/agent consults for "what's done". CONTRAST: the **Codebase-Coverage-Ledger is CLEAN (0/30)** — accurate. Fix: reconcile dashboard → ledger/master.
+- (47 MED+LOW) Pending-Owner-Decisions: PVF path `Server/Client_HandlePVF.sqf` conflates the two real files; dead action `GearYourUnit` → `GearYouUnit.sqf` (no "r"). Clean: Arma-2-OA-External-Reference-Guide, Knowledge-Platform-Roadmap, External-Research-Reports.
+- Appended 2 events + 1 `repo_verified` knowledge record (dashboard propagates false patched status); JSONL re-validated 0 parse failures; committed only my own files from the clean clone.
+- **AUDIT COMPLETE — 9 batches:** ~60 pages, ~1,580 concrete claims, **~137 confirmed inconsistencies**, all source-verified and routed to Instructions-For-Codex items 1–47 (+ the DR-30/item-19 corrections). Content pages, the DR register, and onboarding docs are largely reliable; the single highest-value reconciliation is the systemic "patched-but-unmerged" status drift (items 30 → 36 → 46), now shown to reach the Progress-Dashboard. Wiki-Source-Consistency-Findings left entirely to Codex's curation (untouched at `89f848f`). Remaining wiki pages are pure agent-process/coordination + my own pages + audit-meta — no mission-source claims.
+## 2026-06-02T09:47:25+02:00 - Codex-2 Paratrooper Marker Revival Published
+
+- Patched source Chernarus so `HandleParatrooperMarkerCreation` is registered in `_clientCommandPV`.
+- Source evidence shows the server sender and client handler already existed; the missing registration prevented `CLTFNCHandleParatrooperMarkerCreation` and `WFBE_PVF_HandleParatrooperMarkerCreation` from being initialized.
+- Follow-up verification found the local checkout path is `work\a`; `Tools/LoadoutManager` throws before propagation unless an ancestor folder is literally named `a2waspwarfare`. Vanilla Takistan was left unpatched pending a correctly named LoadoutManager run.
+- Handoff: smoke the paratrooper drop in Arma 2 OA, and treat modded mission folders as a separate propagation-model cleanup because they register the callback but lack the handler file.
+
+## 2026-06-02T10:00:02+02:00 - Codex-2 Client Skill Init Idempotency
+
+- Claimed `client-skill-init-idempotency` from [Performance opportunity sweep](Performance-Opportunity-Sweep) and backlog id `client-skill-init-idempotency`.
+- Scope: source-check Init_Client.sqf, Skill_Init.sqf, Skill_Apply.sqf and respawn skill reapply before making the smallest source patch.
+
+## 2026-06-02 - Codex-2 - client-skill-init-idempotency
+
+- Read Client/Init/Init_Client.sqf, Client/Module/Skill/Skill_Init.sqf, Client/Module/Skill/Skill_Apply.sqf, Client/Functions/Client_PreRespawnHandler.sqf and default AI-cap constants.
+- Confirmed Skill_Init.sqf ran twice in client init; Soldier class could compound local WFBE_C_PLAYERS_AI_MAX from the default 16 to 36 instead of one-time 24.
+- Patched source Chernarus by removing the second Skill_Init.sqf call while keeping (player) Call WFBE_SK_FNC_Apply.
+- Validation correction: source Chernarus now has one Skill_Init.sqf call and one immediate WFBE_SK_FNC_Apply; Vanilla Takistan propagation is pending because this checkout cannot run LoadoutManager without an `a2waspwarfare` ancestor path.
+- Handoff: smoke Soldier/non-Soldier AI caps and respawn skill reapply; do not hand-edit divergent modded mission folders.
+
+## 2026-06-02 - Codex-2 - hosted-server-fps-loop-sleep claim
+
+- Claimed hosted-server-fps-loop-sleep from [Performance opportunity sweep](Performance-Opportunity-Sweep).
+- Initial scope: Server/GUI/serverFpsGUI.sqf, Server/Module/serverFPS/monitorServerFPS.sqf, Server/Init/Init_Server.sqf.
+- Goal: prove whether hosted/listen servers can busy-spin, then publish or patch the smallest safe fix without breaking dedicated FPS telemetry.
+
+## 2026-06-02 - Codex-2 - supply-mission-scan-narrowing claim
+
+- Claimed supply-mission-scan-narrowing from [Performance opportunity sweep](Performance-Opportunity-Sweep) and the supply mission cleanup backlog.
+- Initial scope: Server/Module/supplyMission/supplyMissionStarted.sqf, supply mission architecture/playbook pages and command-center class evidence.
+- Goal: prove whether the broad `nearestObjects [..., [], 80]` scan can be safely narrowed to command-center terminal class filtering without changing mission behavior.
+
+## 2026-06-02T10:59:58+02:00 - Codex-2 - supply-mission-scan-narrowing published
+
+- Patched source Chernarus `Server/Module/supplyMission/supplyMissionStarted.sqf` so the 80-meter command-center scan uses `["Base_WarfareBUAVterminal"]` instead of all object classes.
+- LoadoutManager propagation remains pending; the local `work\a` checkout fails before generation because the tool requires an `a2waspwarfare` ancestor directory.
+- Validation correction: source Chernarus has one narrowed 80-meter command-center scan and one broad 8-meter nearby-player scan; Vanilla Takistan propagation remains required.
+- Handoff: smoke truck/heli delivery at command centers, no-completion near unrelated objects, then continue the larger supply cleanup with loaded/tracking state and handler idempotency.
+## 2026-06-02T11:05:29+02:00 - Codex-2 - wasp-marker-wait-cleanup claim
+
+- Claimed wasp-marker-wait-cleanup from [Performance opportunity sweep](Performance-Opportunity-Sweep).
+- Initial source check confirms WASP/global_marking_monitor.sqf:57-73 disables input and polls `findDisplay 54` in a sleepless 2-second loop, while :80 already uses waitUntil {sleep 0.1; ...} for display 12.
+- Goal: replace only the busy wait, preserve marker key handlers and ensure input is still re-enabled on display-open and timeout paths.
+## 2026-06-02T11:18:33+02:00 - Codex-2 - wasp-marker-wait-cleanup corrected to opportunity
+
+- Correction: later source verification showed this lane had been over-claimed. Current source and Vanilla still need the display-54 wait cleanup.
+- Rewrote [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup) as an opportunity/playbook instead of a completed patch record.
+- Handoff: patch only the local display wait, preserve marker key handlers, then smoke map double-click marker naming, Enter prefixing, Escape cleanup and timeout/no-dialog input re-enable in Arma 2 OA.
+- 2026-06-02T11:33:32+02:00 Codex-2 claimed $lane: tracing DR-33 factory queue counter exits, queue token uniqueness and building queu broadcast churn before deciding between a narrow patch and a patch-ready playbook.
+- 2026-06-02T11:41:05+02:00 Codex-2 recorded $lane as complete, but Codex later superseded this claim after source re-check: current source still needs the Client_BuildUnit.sqf token/counter patch, Vanilla propagation, broadcast review and Arma smoke.
+
+## 2026-06-02T12:28:13+02:00 - Codex - feature-status playbook expansion
+
+- Added [Commander reassignment call shape](Commander-Reassignment-Call-Shape), [Resistance supply scaffold](Resistance-Supply-Scaffold) and [UI IDD collision repair](UI-IDD-Collision-Repair).
+- Folded the Fermat/Galileo/Avicenna read-only findings into [Feature status](Feature-Status-Register), [`agent-feature-status.jsonl`](agent-feature-status.jsonl) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl).
+- Handoff: future owners can patch these as small source-first lanes, then run LoadoutManager propagation and smoke commander reassignment, resistance economy if enabled, and EASA/Economy/RHUD/title UI behavior.
+# 2026-06-02 - Agent Release-Readiness Ledger
+
+- Added [`agent-release-readiness.json`](agent-release-readiness.json) as a compact machine-readable mirror of [Source fix propagation queue](Source-Fix-Propagation-Queue): source-only fixes, Vanilla propagation status, smoke status, evidence refs and release gates.
+- Linked the ledger from [Progress dashboard](Progress-Dashboard), [Home](Home), [`llms.txt`](llms.txt), `_Sidebar.md`, [`agent-context.json`](agent-context.json) and [`agent-status.json`](agent-status.json).
+- Scope remains documentation/agent state only: no additional gameplay code was patched in this slice.
+
+# 2026-06-02 - Release Ledger Entrypoint Wiring
+
+- Wired [`agent-release-readiness.json`](agent-release-readiness.json) into the first-read agent surfaces: [LLM agent entry pack](LLM-Agent-Entry-Pack), [Quickstart](Quickstart-For-Humans-And-Agents), [Agent context](Agent-Context), `_Footer.md`, [`agent-context.json`](agent-context.json), [`agent-status.json`](agent-status.json) and `mkdocs.yml`.
+- This fixes a navigation gap where the ledger existed but a fresh LLM could still follow the older load order and miss the source-only propagation/smoke gate.
+
+# 2026-06-02 - AI Commander Autonomy Audit
+
+- Added [AI commander autonomy audit](AI-Commander-Autonomy-Audit) as the canonical owner-decision page for AI commander revival and autonomous logistics.
+- Source-checked the split: AI commander state/funds and `WFBE_SE_FNC_AI_Com_Upgrade` are real, but no audited source owner sets `wfbe_aicom_running = true`, schedules upgrades, drives `AIBuyUnit`, or uses `WFBE_C_AI_COMMANDER_MOVE_INTERVALS`.
+- Corrected the default-state nuance: `Rsc/Parameters.hpp:92-97` defaults AI commander parameter to disabled, while `Init_CommonConstants.sqf:91` is a nil fallback; `WFBE_C_ECONOMY_SUPPLY_SYSTEM` falls back to automatic supply at `Init_CommonConstants.sqf:161`.
+- Kept old AI supply trucks as config-gated broken: `UpdateSupplyTruck` compile is commented, the gated spawn remains and `Server/FSM/supplytruck.fsm` is missing.
+
+# 2026-06-02 - Integration Trust Boundary Audit
+
+- Added [Integration trust boundary audit](Integration-Trust-Boundary-Audit) as the canonical security-first page for DiscordBot JSON intake, the in-repo `a2waspwarfare_Extension` writer, AntiStack `A2WaspDatabase` wrappers and BattlEye shipped posture.
+- Source-checked the distinction: DiscordBot `GameData.LoadFromFile()` uses `TypeNameHandling.All`; the in-repo writer uses `TypeNameHandling.None`; AntiStack calls a separate absent DLL and compiles extension returns; the repo BattlEye file only contains the AFK `kickAFK` rule.
+- Wired the page through Home, sidebar, footer, MkDocs, LLM entry points, Feature Status, Testing workflow, Progress Dashboard and agent context/status files.
+
+# 2026-06-02 - AntiStack Database Extension Audit
+
+- Added [AntiStack database extension audit](AntiStack-Database-Extension-Audit) as the canonical source-backed map for AntiStack skill balancing, score persistence and the out-of-repo `A2WaspDatabase` dependency.
+- Source-checked the current nuance: `WFBE_C_ANTISTACK_ENABLED` defaults on, server init logs/records the state, disabled mode avoids starting scheduled loops, direct loop guards exist, first-join team-swap protection remains active, and disconnect/victory DB persistence is skipped when disabled.
+- Confirmed remaining enabled-mode risk: all seven `callDatabase*.sqf` wrappers still `call compile` extension return strings and assume array shape; `REQUEST_SIDE_SKILL` timeout fallback returns `[1,1]` even though callers expect scalar skill.
+
+# 2026-06-02 - Arma 2 OA Compatibility Refresh
+
+- Refreshed [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) and [`agent-compatibility-audit.json`](agent-compatibility-audit.json) against the expanded docs/wiki mirror after the AntiStack, integration-trust, release-readiness and source-propagation pages landed.
+- Current scan still finds no incorrect Arma 3 implementation advice; existing hits are guardrails, explicit non-options, evidence contrasts or folder-name caveats.
+- Added current hit counts and a future-agent decision procedure so risky terms such as `remoteExec`, `parseSimpleArray`, `RVExtensionArgs`, `CfgFunctions`, CBA/ACE and Eden Editor stay warnings unless OA support is proven.
+
+# 2026-06-02 - Respawn And Death Lifecycle Atlas
+
+- Added [Respawn and death lifecycle atlas](Respawn-And-Death-Lifecycle-Atlas) as the canonical source-backed map for player death cleanup, custom respawn menu selection, camp/mobile/MASH/leader spawn sources, AI respawn, kill scoring and post-respawn gear/action recovery.
+- Source-checked the split: local officer MASH respawn is live for the audited deployer path, but MASH marker synchronization remains dead/orphaned because the client receiver compile is commented and no live deploy broadcast was found.
+- Recorded a patch-ready local correctness edge: respawn penalty mode `5` disables charging at base/HQ structures but can still skip custom gear when funds are below the theoretical gear price.
+
+# 2026-06-02 - Upgrades And Research Atlas
+
+- Added [Upgrades and research atlas](Upgrades-And-Research-Atlas) as the canonical source-backed map for `WFBE_UP_*` constants, side config arrays, live `WFBE_UpgradeMenu` / `GUI_UpgradeMenu.sqf`, `RequestUpgrade` -> `Server_ProcessUpgrade`, client timer sync and the AI commander upgrade worker.
+- Source-checked the key authority split: the server owns replicated upgrade state and completion timing, but the live player UI currently owns commander gating, dependency checks, affordability checks and immediate resource debit before sending the raw server request.
+- Documented stale UI archaeology: `RscMenu_Upgrade` still points to missing `Client/GUI/GUI_Menu_Upgrade.sqf`, while the live main menu opens `WFBE_UpgradeMenu`.
+- Recorded upgrade config drift as research-needed before any upgrade expansion or balance change.
+
+# 2026-06-02 - Towns Camps And Capture Atlas
+
+- Added [Towns, camps and capture atlas](Towns-Camps-And-Capture-Atlas) as the canonical source-backed map for `mission.sqm` town object init, `Init_TownMode`, `Init_Town`, starting ownership modes, `server_town.sqf`, `server_town_camp.sqf`, `updatetownmarkers.sqf` and `server_town_ai.sqf`.
+- Source-checked the runtime split: `server_town.sqf` owns town `sideID` / `supplyValue` / capture transitions; `server_town_camp.sqf` owns camp capture as one global manager; `server_town_ai.sqf` owns active-town AI state and side-scoped marker visibility.
+- Recorded a scoped authority gap: town and camp ownership is server-owned, but `TownCaptured.sqf` and `CampCaptured.sqf` award client-local funds and request score after capture PVFs.
+- Routed known town-adjacent risks to owner pages: town AI occupied-vehicle despawn, supply cooldown casing, victory endgame and performance loop tuning.
+
+# 2026-06-02 - Commander HQ Lifecycle Atlas
+
+- Added [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) as the canonical source-backed map for side-logic commander/HQ state, commander vote/reassignment, client commander affordances, HQ deploy/mobilize, HQ destruction, allied wreck markers, normal MHQ repair and WASP cash HQ recovery.
+- Source-checked the runtime split: side logic variables own canonical replicated commander/HQ state, `Construction_HQSite.sqf` swaps deployed/mobile HQ state, `Server_OnHQKilled.sqf` creates/marks HQ wreck state and `Server_MHQRepair.sqf` recreates the MHQ.
+- Recorded risk edges for future owners: DR-15 commander reassignment call shape, client-led normal MHQ repair, client-led WASP cash HQ recovery/town-SV reset, client-forwarded mobile-HQ killed EH locality and client-bound `RequestBaseArea`.
+- Wired the page through Home, sidebar, footer, MkDocs, LLM entry points, Feature Status, Public Variable Channel Index, Server Runtime, Testing workflow, WASP overlay and agent context/status files.
+
+# 2026-06-02 - Victory And Endgame Atlas
+
+- Added [Victory/endgame atlas](Victory-And-Endgame-Atlas) as the canonical developer map for default victory detection, winner/loser semantics, client outro flow, live win-stat logging, stale duplicate logger cleanup and AntiStack final persistence.
+- Source-checked `server_victory_threeway.sqf`, `Server_LogGameEnd.sqf`, `PVFunctions/LogGameEnd.sqf`, `Client_FNC_Special.sqf`, `Client_EndGame.sqf`, `Init_Server.sqf` and the fallback `WFBE_C_VICTORY_THREEWAY` constant.
+- Consolidated DR-11/DR-12/DR-13/DR-36 into a patch-ready map: all-towns winner inversion, `!WFBE_GameOver` guarding only one clause, no-break side loop, non-zero threeway no-detection and stale buggy PVF logger.
+- Wired the page through Home, sidebar, footer, MkDocs, LLM entry points, Server Runtime, Feature Status, Hardening roadmap, Testing workflow and agent context/status files.
+
+# 2026-06-02 - Scout Wave G Started
+
+- Spawned four read-only Codex scouts for non-overlapping long-running archivist lanes: markers/cleaners/restorers, parameters/localization/build hazards, supports/special modules and join/disconnect/AntiStack lifecycle.
+- Updated [Discovery swarm](Subagent-Discovery-Swarm), [Progress dashboard](Progress-Dashboard) and [`agent-status.json`](agent-status.json) so Steff can see the active team instead of relying on chat memory.
+- Integration rule: scout reports remain leads until Codex folds source-backed findings into the owning atlas pages, [Feature status](Feature-Status-Register) and machine-readable records.
+
+# 2026-06-02 - Scout Wave G Harvest
+
+- Harvested all four Wave G scout reports into canonical owner pages: [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas), [Parameters/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs), [Support/specials/modules atlas](Support-Specials-And-Tactical-Modules-Atlas) and [Join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle).
+- Spot-checked the highest-risk evidence before promotion: player-object list indexing, disconnect delete-then-`setPos`, mine cleaner pair removal, garbage flag mismatch, marker delete locality, generated `version.sqf`, LoadoutManager root discovery and `7za` packaging behavior.
+- Updated [Feature status](Feature-Status-Register), [Discovery swarm](Subagent-Discovery-Swarm), [Progress dashboard](Progress-Dashboard), [`agent-status.json`](agent-status.json), [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), [`agent-knowledge.jsonl`](agent-knowledge.jsonl) and [`agent-events.jsonl`](agent-events.jsonl).
+
+# 2026-06-02 - Scout Wave I Started
+
+- Spawned five small read-only Codex scouts after broad Wave H scouts hit context limits: economy/rewards, UI/HUD/dialogs, AntiStack/database identity lifecycle, commander AI/autonomy and respawn/MASH/HQ cleanup.
+- Documented the Wave H request-handler harvest in [Networking/PV](Networking-And-Public-Variables), including score/kill reports, join, commander vote/reassignment, MHQ repair, base-area accounting and `RequestSpecial` HQ-kill forwarding.
+- Marked the generated-mission drift lane as local-only for Codex because the sixth scout could not start under the current thread limit.
+
+# 2026-06-02 - Scout Wave I Harvest
+
+- Harvested all five small Wave I scouts: Kepler economy/rewards, Copernicus AntiStack identity, Kierkegaard UI/HUD/dialogs, Laplace commander AI/autonomy and Aquinas respawn/MASH/HQ cleanup.
+- Integrated source-backed findings into owner pages: [Economy authority first cut](Economy-Authority-First-Cut), [Public variable channel index](Public-Variable-Channel-Index), [AntiStack database audit](AntiStack-Database-Extension-Audit), [Join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle), [Client UI systems atlas](Client-UI-Systems-Atlas), [AI commander autonomy audit](AI-Commander-Autonomy-Audit), [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas), [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas), [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas) and [Feature status](Feature-Status-Register).
+- Added machine-readable records for economy authority boundaries, AntiStack launch/disconnect persistence, UI resource risks, commander economy/autonomy and MASH/HQ marker cleanup in [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), [`agent-knowledge.jsonl`](agent-knowledge.jsonl) and [`agent-events.jsonl`](agent-events.jsonl).
+
+# 2026-06-02 - Source Fix Propagation Drift Spot-Check
+
+- Rechecked the five current Chernarus source-only fixes against maintained Vanilla Takistan after Wave I harvest.
+- Confirmed the propagation ledger is still accurate: paratrooper marker registration, duplicate `Skill_Init` removal, hosted FPS early exits, supply command-center scan narrowing and supply player-object list indexing are present in source and still absent from Vanilla.
+- Updated [Source fix propagation queue](Source-Fix-Propagation-Queue), [`agent-release-readiness.json`](agent-release-readiness.json), [`agent-knowledge.jsonl`](agent-knowledge.jsonl) and [`agent-events.jsonl`](agent-events.jsonl). LoadoutManager was not run because this checkout path is `work/a`, not an ancestor named `a2waspwarfare`.
+
+# 2026-06-02 - LoadoutManager Root Fix And Propagation Run
+
+- Patched `Tools/LoadoutManager/FileManagement/FileManager.cs` so root discovery supports either an ancestor named `a2waspwarfare` or a normal repo root containing `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`.
+- Patched `Tools/LoadoutManager/ZipManager.cs` so `A2WASP_SKIP_ZIP=1|true|yes` skips `_MISSIONS.7z` packaging for propagation-only runs; updated `Tools/LoadoutManager/README.md`.
+- Built and ran `dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj` with `A2WASP_SKIP_ZIP=1`. Generation/copy completed for Chernarus and Takistan, packaging was skipped, and maintained Vanilla Takistan now contains the five tracked fixes: paratrooper marker PV registration, duplicate `Skill_Init` removal, dedicated-only server FPS loops, narrowed supply command-center scan and supply player-list index handling.
+- The run printed `The specified content was not found in the file.` once per terrain from the help-menu title replacement path. Current docs classify this as non-fatal because the tracked mission propagation completed and `GUI_Menu_Help.sqf` is intentionally skip-listed/terrain-specific.
+- Updated [Source fix propagation queue](Source-Fix-Propagation-Queue), [Tools/build workflow](Tools-And-Build-Workflow), [Feature status](Feature-Status-Register), [Progress dashboard](Progress-Dashboard) and [`agent-release-readiness.json`](agent-release-readiness.json): the tracked fixes are now source + Vanilla propagated, with Arma 2 OA smoke still pending.
+
+# 2026-06-02 - Wave J Started And Propagated Fix Smoke Pack
+
+- Spawned six read-only Codex explorers for Steff's requested agent-team assist: Feature Status evidence audit, propagated-fix smoke gates, supply mission authority/abuse, wiki human+AI UX, agent-readable pack validation and abandoned/partial-system sweep.
+- Integrated Tesla's propagated-fix smoke-gate report into [Testing workflow](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack), with setup/action/evidence/failure-signal rows for paratrooper markers, `Skill_Init` idempotency, hosted server FPS loops, supply scan narrowing and supply player-object list indexing.
+- Updated [Source fix propagation queue](Source-Fix-Propagation-Queue), [Supply mission architecture](Supply-Mission-Architecture), [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing), [Discovery swarm](Subagent-Discovery-Swarm), [Progress dashboard](Progress-Dashboard) and machine records so the current release gate is clear: source + maintained Vanilla are propagated, but Arma 2 OA runtime smoke is still pending.
+
+# 2026-06-02 - Wave J Harvest
+
+- Harvested Socrates and Gibbs into [Feature status](Feature-Status-Register) and [Abandoned feature revival](Abandoned-Feature-Revival-Review): MASH source/Vanilla vs modded drift, paratrooper modded missing-handler drift, dormant TaskSystem, old map-icon tracking, AT/bomb hooks, WASP startup chain, air-vehicle modification and AI logistics were clarified.
+- Harvested Boyle into [Supply mission architecture](Supply-Mission-Architecture), [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook), [Economy, towns and supply](Economy-Towns-And-Supply), [Join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl): start remains client-authored, completion reward is split, the dead twin still carries broad-scan logic and player-object disconnect pruning remains open.
+- Harvested Carver into [LLM agent entry pack](LLM-Agent-Entry-Pack), [`llms.txt`](llms.txt), [`agent-release-readiness.json`](agent-release-readiness.json) and the hardening backlog: JSON/JSONL parses, but snapshot-vs-log semantics and duplicate/superseded IDs must be read carefully.
+- Harvested Zeno into [Home](Home), [Towns/camps/capture atlas](Towns-Camps-And-Capture-Atlas) and [Codebase coverage ledger](Codebase-Coverage-Ledger): no dead internal links found; wording/footer/duplicate-link fixes landed, with dashboard/sidebar slimming left as editorial follow-up.
+
+# 2026-06-02 - Wave K Agent Team Harvest
+
+- Spawned six read-only Codex explorers for Steff's request to aid the Feature Status and adjacent documentation pass: Hubble, Dirac, Lovelace, Nietzsche, Franklin and Linnaeus.
+- Harvested source-backed corrections into [Feature status](Feature-Status-Register), [SQF atlas](SQF-Code-Atlas), [Public variable channel index](Public-Variable-Channel-Index), [Client UI/HUD](Client-UI-HUD-And-Menus), [Client UI systems atlas](Client-UI-Systems-Atlas), [Support/specials/modules atlas](Support-Specials-And-Tactical-Modules-Atlas), [Home](Home), [Quickstart](Quickstart-For-Humans-And-Agents), [LLM agent entry pack](LLM-Agent-Entry-Pack) and [Discovery swarm](Subagent-Discovery-Swarm).
+- Added [`agent-entrypoint.json`](agent-entrypoint.json) as the small canonical machine bootstrap file and updated links so future Codex/Claude tabs do not have to start from the much larger `agent-context.json`.
+- Promoted the most useful new findings: command task UI visible-but-commented, DiscordBot command/config ambiguity, Extension build caveat, GLOBALGAMESTATS one-HC player-count assumption, construction small-site stale logic candidate, supply completion-loop repeat work, attack-wave detail channel direction correction and current compile-count refresh.

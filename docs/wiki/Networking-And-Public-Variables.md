@@ -37,6 +37,7 @@ Client PVF commands:
 - `SetMHQLock`
 - `Available`
 - `RequestBaseArea`
+- `HandleParatrooperMarkerCreation`
 - `NukeIncoming`
 
 Each command is compiled into either `SRVFNC...` or `CLTFNC...`, and `WFBE_PVF_<Command>` receives an event handler that passes payloads to `Server_HandlePVF` or `Client_HandlePVF`.

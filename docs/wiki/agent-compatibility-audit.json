@@ -1,0 +1,192 @@
+{
+  "schema": "a2waspwarfare-agent-compatibility-audit-v1",
+  "generatedAt": "2026-06-02T14:00:39+02:00",
+  "repository": "rayswaynl/a2waspwarfare",
+  "engineBaseline": "Arma 2 Operation Arrowhead 1.64 / Combined Operations",
+  "canonicalHumanPage": "Arma-2-OA-Compatibility-Audit.md",
+  "status": "no-incorrect-arma3-implementation-advice-found-in-current-docs",
+  "latestRefresh": {
+    "timestamp": "2026-06-02T14:00:39+02:00",
+    "result": "No incorrect Arma 3 implementation advice found in the expanded docs mirror. Existing risky terms remain classified as warnings, explicit non-options, evidence contrasts or folder-name caveats.",
+    "includesNewerPages": [
+      "AntiStack-Database-Extension-Audit.md",
+      "Integration-Trust-Boundary-Audit.md",
+      "Agent-Release-Readiness-Ledger.md",
+      "Source-Fix-Propagation-Queue.md"
+    ]
+  },
+  "scope": [
+    "docs/wiki/*.md",
+    "docs/wiki/*.json",
+    "docs/wiki/*.jsonl",
+    "docs/wiki/*.txt"
+  ],
+  "auditCommands": [
+    "rg -n -i \"\\bArma ?3\\b|\\bA3\\b|Arma3|remoteExec(Call)?|BIS_fnc_MP|addMissionEventHandler|isRemoteExecuted|remoteExecutedOwner|CfgFunctions|CBA|ACE|Eden Editor\" docs\\wiki --glob '*.md'",
+    "rg -n -i \"remoteExec|remoteExecCall|BIS_fnc_MP|addMissionEventHandler|isRemoteExecuted|remoteExecutedOwner|CfgFunctions|Eden Editor|parseSimpleArray|RVExtensionArgs\" docs\\wiki --glob '*.{md,json,jsonl,txt}'",
+    "rg -n -i \"\\bCBA\\b|\\bACE\\b|Eden\" docs\\wiki --glob '*.{md,json,jsonl,txt}'"
+  ],
+  "knownAllowedReferenceClasses": [
+    {
+      "class": "guardrail",
+      "meaning": "The term is present to warn agents not to use an Arma 3-era API or assumption.",
+      "examples": [
+        "Use Arma 2 OA scripting docs, not Arma 3.",
+        "Do not import remoteExec into this OA-era PV/PVEH mission."
+      ]
+    },
+    {
+      "class": "explicit_non_option",
+      "meaning": "The term names an Arma 3 or newer feature specifically to reject it for this repo.",
+      "examples": [
+        "parseSimpleArray is not the hardening path here.",
+        "RVExtensionArgs is not the extension ABI used here."
+      ]
+    },
+    {
+      "class": "evidence_contrast",
+      "meaning": "The term appears in deep-review evidence to contrast Arma 2 OA behavior with newer engine behavior.",
+      "examples": [
+        "remoteExecutedOwner is mentioned only to explain that OA PVEHs do not provide that sender-identity model."
+      ]
+    },
+    {
+      "class": "terrain_or_folder_name",
+      "meaning": "The term is a content/folder name, not an editor workflow or engine feature recommendation.",
+      "examples": [
+        "Modded_Missions/eden is a divergent terrain fork, not Eden Editor advice."
+      ]
+    }
+  ],
+  "unsafeIfAddedAsImplementationAdvice": [
+    "remoteExec",
+    "remoteExecCall",
+    "BIS_fnc_MP",
+    "remoteExecutedOwner",
+    "isRemoteExecuted",
+    "remoteExecutedOwner-based authority",
+    "CfgFunctions preInit/postInit migration without OA proof",
+    "parseSimpleArray",
+    "RVExtensionArgs",
+    "CBA helper requirement",
+    "ACE helper requirement",
+    "Eden Editor workflow requirement",
+    "Arma 3 BattlEye examples treated as shipped repo evidence"
+  ],
+  "classificationSummary": [
+    {
+      "pattern": "Arma 3 / Arma3",
+      "classification": "guardrail",
+      "action": "Keep warnings; do not treat as implementation advice."
+    },
+    {
+      "pattern": "remoteExec / remoteExecCall",
+      "classification": "guardrail",
+      "action": "Keep only as invalid drop-in examples for OA-era PV/PVEH flow."
+    },
+    {
+      "pattern": "BIS_fnc_MP",
+      "classification": "guardrail",
+      "action": "Keep only in anti-modernization checklist text."
+    },
+    {
+      "pattern": "remoteExecutedOwner",
+      "classification": "evidence_contrast",
+      "action": "Keep only when explaining why server authority must be reconstructed without sender identity."
+    },
+    {
+      "pattern": "parseSimpleArray",
+      "classification": "explicit_non_option",
+      "action": "Keep as a rejected parser-swap fix; use defensive validation for extension output."
+    },
+    {
+      "pattern": "RVExtensionArgs",
+      "classification": "explicit_non_option",
+      "action": "Keep as a rejected extension ABI assumption."
+    },
+    {
+      "pattern": "CfgFunctions",
+      "classification": "guardrail",
+      "action": "Keep as a warning that this mission uses hand-rolled wait barriers instead of CfgFunctions auto-init."
+    },
+    {
+      "pattern": "CBA / ACE",
+      "classification": "guardrail",
+      "action": "Keep only as dependency warnings; do not add these helpers without owner approval."
+    },
+    {
+      "pattern": "Eden / eden",
+      "classification": "terrain_or_folder_name",
+      "action": "Treat Modded_Missions/eden as a terrain/fork name unless text explicitly says Eden Editor."
+    }
+  ],
+  "scanSnapshot": [
+    {
+      "pattern": "Arma 3 / Arma3",
+      "hitCount": 64,
+      "classification": "guardrail"
+    },
+    {
+      "pattern": "remoteExec / remoteExecCall",
+      "hitCount": 27,
+      "classification": "guardrail"
+    },
+    {
+      "pattern": "BIS_fnc_MP",
+      "hitCount": 11,
+      "classification": "guardrail"
+    },
+    {
+      "pattern": "remoteExecutedOwner / isRemoteExecuted",
+      "hitCount": 14,
+      "classification": "evidence_contrast"
+    },
+    {
+      "pattern": "parseSimpleArray",
+      "hitCount": 19,
+      "classification": "explicit_non_option"
+    },
+    {
+      "pattern": "RVExtensionArgs",
+      "hitCount": 10,
+      "classification": "explicit_non_option"
+    },
+    {
+      "pattern": "CfgFunctions",
+      "hitCount": 14,
+      "classification": "guardrail"
+    },
+    {
+      "pattern": "CBA / ACE",
+      "hitCount": 10,
+      "classification": "guardrail"
+    },
+    {
+      "pattern": "Eden Editor",
+      "hitCount": 11,
+      "classification": "terrain_or_folder_name"
+    }
+  ],
+  "highRiskFutureWorkAreas": [
+    "AntiStack A2WaspDatabase return hardening",
+    "PVF/server-authority migration",
+    "mission lifecycle/init refactors",
+    "BattlEye filter design",
+    "UI or marker performance rewrites that might suggest newer SQF commands"
+  ],
+  "futureAgentRules": [
+    "Use Bohemia Interactive Arma 2 OA / Combined Operations support as the scripting baseline.",
+    "Before adding docs or patches with engine-version-sensitive commands, run the auditCommands or inspect Arma-2-OA-Compatibility-Audit.md.",
+    "If a risky term is added intentionally, classify it as guardrail, explicit_non_option, evidence_contrast or terrain_or_folder_name.",
+    "If a risky term is added as implementation guidance, correct it or cite an OA-compatible source proving support.",
+    "Do not replace this mission's publicVariable/PVEH model with Arma 3 remote execution patterns."
+  ],
+  "wikiTargets": [
+    "Arma-2-OA-Compatibility-Audit",
+    "Arma-2-OA-External-Reference-Guide",
+    "AI-Assistant-Developer-Guide",
+    "LLM-Agent-Entry-Pack",
+    "llms.txt",
+    "agent-context.json"
+  ]
+}

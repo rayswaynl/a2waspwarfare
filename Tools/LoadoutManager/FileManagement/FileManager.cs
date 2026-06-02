@@ -139,20 +139,53 @@ public class FileManager
     // Ensures that the program is being ran in the correct directory, throws error if this is not the case.
     public static DirectoryInfo FindA2WaspWarfareDirectory()
     {
-        string currentDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-        DirectoryInfo dir = new DirectoryInfo(currentDirectory);
-
-        while (dir.Name != "a2waspwarfare" && dir.Parent != null)
+        string? currentDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        if (string.IsNullOrWhiteSpace(currentDirectory))
         {
+            throw new Exception("Could not determine LoadoutManager execution directory.");
+        }
+
+        DirectoryInfo dir = new DirectoryInfo(currentDirectory);
+        DirectoryInfo? repoRootCandidate = null;
+
+        while (dir.Parent != null)
+        {
+            if (dir.Name == "a2waspwarfare")
+            {
+                return dir;
+            }
+
+            if (LooksLikeA2WaspWarfareDirectory(dir))
+            {
+                repoRootCandidate = dir;
+            }
+
             dir = dir.Parent;
         }
 
-        if (dir.Name != "a2waspwarfare")
+        if (dir.Name == "a2waspwarfare")
         {
-            throw new Exception("Could not find the 'a2waspwarfare' directory.");
+            return dir;
         }
 
-        return dir;
+        if (repoRootCandidate != null)
+        {
+            return repoRootCandidate;
+        }
+
+        if (LooksLikeA2WaspWarfareDirectory(dir))
+        {
+            return dir;
+        }
+
+        throw new Exception("Could not find the a2waspwarfare project root. Expected an ancestor named 'a2waspwarfare' or a repo root containing Missions and Tools/LoadoutManager.");
+    }
+
+    private static bool LooksLikeA2WaspWarfareDirectory(DirectoryInfo _dir)
+    {
+        return Directory.Exists(Path.Combine(_dir.FullName, "Missions")) &&
+               Directory.Exists(Path.Combine(_dir.FullName, "Missions_Vanilla")) &&
+               File.Exists(Path.Combine(_dir.FullName, "Tools", "LoadoutManager", "LoadoutManager.csproj"));
     }
 
     // This method traverses a directory and lists all the file paths.

@@ -22,10 +22,10 @@
             sleep 3;
 			
             {
-       			if (_x isKindOf "Base_WarfareBUAVterminal") then {
-            	    _friendlyCommandCenterInProximity = true;
-        		};
-    		} forEach (nearestObjects [(getPos _associatedSupplyTruck), [], 80]);
+                if (_x isKindOf "Base_WarfareBUAVterminal") then {
+                    _friendlyCommandCenterInProximity = true;
+                };
+            } forEach (nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]);
 
             if (_friendlyCommandCenterInProximity) exitWith {
                 {

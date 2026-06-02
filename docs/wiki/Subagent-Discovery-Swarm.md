@@ -4,6 +4,81 @@ This page tracks the cheap read-only Codex discovery agents currently digging th
 
 The swarm is intentionally evidence-first: agents read source, report path/line-backed findings, and avoid editing docs or mission code. Codex integrates the useful findings into the wiki, `agent-context.json`, the coverage ledger and the feature-status register after review.
 
+## Current Wave: Wave K
+
+Spawned on 2026-06-02 after Steff asked Codex to spin up an agent team to aid the feature-status/documentation work. All six scouts were read-only and returned. Codex harvested the findings into the Feature Status Register, UI docs, SQF/PV indexes, navigation pages and the new agent bootstrap file.
+
+| Agent | Lane | Status | Integrated output |
+| --- | --- | --- | --- |
+| Hubble | `feature-status-evidence-hardening` | Returned/harvested | Corrected stale paratrooper/SQF atlas state, attack-wave PV direction, MASH marker nuance, resistance supply wording and compile counts. |
+| Dirac | `server-runtime-partial-features` | Returned/harvested | Added supply completion-loop note, construction small-site stale-logic candidate, patrol game-over loop cleanup and HC delegation unevenness. |
+| Lovelace | `client-ui-ux-partials` | Returned/harvested | Added command task UI partial, EASA/service edge routing and UI Risk Index links. |
+| Nietzsche | `tooling-integrations-status` | Returned/harvested | Added DiscordBot command/config ambiguity, Extension build caveat, GLOBALGAMESTATS HC-count edge and docs-CI partial status. |
+| Franklin | `agent-readable-pack` | Returned/harvested | Added `agent-entrypoint.json` and clarified machine-file/status vocabulary. |
+| Linnaeus | `feature-status-navigation-bloat` | Returned/harvested | Added Feature Status quick jumps, stronger Continue Reading links and local-status section naming cleanup. |
+
+Harvest rule: Wave K promoted only source-backed corrections and navigation/status improvements that had a clear owner page. Larger schema normalization remains a future machine-file cleanup lane.
+
+## Previous Wave: Wave J
+
+Spawned on 2026-06-02 after Steff asked Codex to spin up an agent team to aid the long-running developer-wiki goal. This wave was read-only and deliberately split into narrow lanes so Codex could keep editing/integration local. All six reports returned and were harvested into owner pages, status files and follow-up backlog notes.
+
+| Agent | Lane | Status | Expected output |
+| --- | --- | --- | --- |
+| Socrates | `feature-status-evidence-audit` | Returned/integrated | Feature Status corrections for MASH/paratrooper/modded drift, task dormancy, PR #1 supply-heli separation, HQ authority wording, version/build inputs and BattlEye posture. |
+| Tesla | `propagated-fix-smoke-gates` | Returned/integrated | Concrete smoke matrix for the five propagated fixes; folded into [Testing workflow](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack). |
+| Boyle | `supply-mission-authority-and-abuse` | Returned/integrated | Supply start authority, split reward trust boundary, player-object disconnect leakage, cooldown casing and live-vs-dead scan scope folded into supply/lifecycle docs. |
+| Zeno | `wiki-navigation-human-ai-ux` | Returned/partly integrated | No dead internal links found; Home wording, footer gaps and duplicate navigation were patched. Larger dashboard/sidebar slimming remains a later editorial lane. |
+| Carver | `agent-readable-pack-validation` | Returned/integrated | JSON/JSONL parse state, snapshot-vs-log contract, release-readiness freshness and duplicate backlog-ID issue documented/patched. |
+| Gibbs | `abandoned-partial-system-sweep` | Returned/integrated | MASH, map-icon tracking, TaskSystem, AT/bomb hooks, WASP startup, air-vehicle modification and AI logistics evidence folded into status/revival pages. |
+
+Harvest rule: reports are leads until Codex promotes them into owner pages, [Feature status](Feature-Status-Register), [Progress dashboard](Progress-Dashboard) and machine-readable records. Agents do not edit files.
+
+## Latest Harvest: Wave G
+
+Spawned on 2026-06-02 after Steff asked Codex to bring an agent team back into the long-running archivist goal. These scouts are read-only and scoped to lanes that do not overlap with Codex's current integration work.
+
+| Agent | Lane | Result |
+| --- | --- | --- |
+| Godel | `markers-cleaners-restorers-atlas-scout` | Integrated locally into [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas). |
+| Rawls | `parameters-localization-build-scout` | Integrated locally into [Parameters/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs). |
+| Jason | `supports-specials-modules-scout` | Integrated locally into [Support/specials/modules atlas](Support-Specials-And-Tactical-Modules-Atlas). |
+| Locke | `disconnect-join-antistack-lifecycle-scout` | Integrated locally into [Join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle). |
+
+Harvest rule: scout output becomes canonical only after Codex integrates it into the owning atlas, [Feature status](Feature-Status-Register) and machine-readable records with source evidence. Wave G has owner pages now; validation and mirror parity are the remaining gates.
+
+## Latest Harvest: Wave I
+
+Spawned on 2026-06-02 after Steff asked Codex to spin up another agent team. This wave deliberately uses small source-path-bounded scouts because previous broad scouts hit context limits.
+
+| Agent | Lane | Status | Integrated output |
+| --- | --- | --- | --- |
+| Kepler | `economy-reward-integrity-small` | Harvested | Economy/score/funds/side-supply trust boundaries integrated into [Economy authority first cut](Economy-Authority-First-Cut), [Economy/towns/supply](Economy-Towns-And-Supply), [Public variable channel index](Public-Variable-Channel-Index) and [Feature status](Feature-Status-Register). |
+| Kierkegaard | `ui-hud-dialog-feature-status-small` | Harvested | Stale upgrade resource, IDD collisions, RHUD ownership, service/EASA stale TODO and economy cleanup notes integrated into [Client UI systems atlas](Client-UI-Systems-Atlas) and [UI IDD collision repair](UI-IDD-Collision-Repair). |
+| Copernicus | `antistack-database-identity-lifecycle-small` | Harvested | UID/object/owner identity model, launch-connect client-pushed signal and unchecked disconnect persistence integrated into [AntiStack database audit](AntiStack-Database-Extension-Audit) and [Join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle). |
+| Laplace | `commander-ai-autonomy-privilege-small` | Harvested | Human commander live vs AI autonomy partial split, commander percent/sell/MHQ repair authority edges integrated into [AI commander autonomy audit](AI-Commander-Autonomy-Audit) and [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas). |
+| Aquinas | `respawn-mash-hq-marker-cleanup-small` | Harvested | Local MASH respawn vs dead marker sync, HQ marker cleanup/stale marker/resistance gap integrated into [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas), [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) and [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas). |
+| n/a | `generated-mission-drift-small` | Could not spawn | Thread limit reached; Codex owns this deterministic local drift check. |
+
+Harvest rule: keep reports compact, promote only source-backed findings into owner pages, then mirror them into `agent-feature-status.jsonl`, `agent-hardening-backlog.jsonl` or `agent-knowledge.jsonl` when they affect future work.
+
+## Latest Harvest: Wave H
+
+Spawned on 2026-06-02 after Steff asked for another agent team. The app hit its active thread limit after six scouts, so this wave is intentionally focused rather than huge.
+
+| Agent | Lane | Status | Expected output |
+| --- | --- | --- | --- |
+| Huygens | `supply-mission-player-object-lifecycle-scout` | Harvested | Supply mission player-object lifecycle, reconnect/JIP hazards, stale rows and smoke gates; source player-object list index patch is now queued for propagation. |
+| Popper | `economy-authority-and-reward-integrity-scout` | Closed after context error | Broad economy scout exceeded context; replaced by Wave I Kepler with a smaller scope. |
+| Wegener | `respawn-mhq-hq-recovery-victory-scout` | Harvested | Reconfirmed victory/endgame correctness, PVF dispatch, HQ repair authority, respawn mode-5 edge, HQ-kill forwarding schema and dead MASH marker relay. |
+| Dalton | `ui-dialogs-hud-ux-feature-status-scout` | Closed after context error | Broad UI/HUD ask exceeded context; split later into smaller UI slices such as IDD/resource collisions and menu-specific audits. |
+| Darwin | `generated-mission-drift-and-propagation-scout` | Harvested | Confirmed source-only propagation matrix, LoadoutManager build configs, package scope, modded-generation disablement and literal-root blocker. |
+| McClintock | `pvf-networking-attack-surface-scout` | Closed after context error | Original all-PVF ask exceeded context; replaced by the smaller direct-PV index scout below. |
+| Euler | `direct-public-variable-index-scout-small` | Harvested | Top-risk direct `publicVariable*` index confirms attack-wave, supply mission, side-supply, AntiStack lifecycle, MASH marker and nuke/radiation channels need owner-page routing. |
+| Aristotle | `high-impact-request-handler-authority-scout-small` | Harvested | Top registered request-handler authority risks are now reflected in [Networking/PV](Networking-And-Public-Variables) and [Server authority map](Server-Authority-Migration-Map): score, join, commander, MHQ repair, vehicle lock, base area and special-router paths. |
+
+Harvest rule: wait for each report, spot-check high-risk claims, then integrate only into the owning page plus [Feature status](Feature-Status-Register), [Source fix queue](Source-Fix-Propagation-Queue) and machine files where relevant.
+
 ## Latest Harvest: Wave F
 
 Spawned on 2026-06-02 after Steff re-shared three external research PDFs. All wave-F agents were read-only, have returned, and were closed after harvest.
@@ -56,7 +131,7 @@ Spawned on 2026-06-02 after Steff re-shared three external research PDFs. All wa
 
 ## Rotation Queue
 
-The cheap scout wave is currently harvested. Do not spawn more scouts until at least one integration batch has landed.
+Wave I is harvested. Next scout wave should be smaller again, and should wait until validation/mirror parity is clean unless Steff explicitly asks for more parallel discovery.
 
 | Priority | Lane | Scope |
 | --- | --- | --- |

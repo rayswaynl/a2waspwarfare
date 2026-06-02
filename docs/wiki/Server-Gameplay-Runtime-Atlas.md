@@ -1,5 +1,7 @@
 # Server Gameplay Runtime Atlas
 
+For town object startup, capture/SV, camp capture, marker visibility and town-AI activation ownership, use [Towns, camps and capture atlas](Towns-Camps-And-Capture-Atlas). For commander vote/reassignment, HQ deploy/mobilize, HQ destruction, wreck markers and MHQ repair ownership, use [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas). For match-end detection, winner/loser semantics and win-stat logging, use [Victory/endgame atlas](Victory-And-Endgame-Atlas). This page stays the broader server-loop router.
+
 This page maps the long-running server gameplay systems from source: town capture, town AI, camps, economy/resources, commander/team state, victory checks, supply mission trust boundaries and server performance loops.
 
 All paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
@@ -32,11 +34,12 @@ Lifecycle ownership note: [Lifecycle wait-chain](Lifecycle-Wait-Chain) owns the 
 | Town capture and supply value loop | `Init_Server.sqf:509-510` starts `Server/FSM/server_town.sqf`. |
 | Town AI activation/despawn | `Init_Server.sqf:512-516` starts `Server/FSM/server_town_ai.sqf`. |
 | Camp capture manager | `Common/Init/Init_Town.sqf:129-130` registers camp workers; `Server/FSM/server_town_camp.sqf:8-25` runs one singleton manager. |
+| Commander/HQ lifecycle | `Init_Server.sqf:313-371,622`, `Construction_HQSite.sqf`, `Server_OnHQKilled.sqf`, `Server_MHQRepair.sqf`; deep map in [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas). |
 | Resources and economy | `Init_Server.sqf:526-532` starts `Server/FSM/updateresources.sqf`. |
 | Victory/end state | `Init_Server.sqf:526-529` starts `Server/FSM/server_victory_threeway.sqf`. |
 | Garbage, empty vehicles and cleaners | `Init_Server.sqf:535-559`. |
 | Server FPS monitors | `Init_Server.sqf:577-595`. |
-| AntiStack loops | `Init_Server.sqf:597-614`. |
+| AntiStack loops | `Init_Server.sqf:597-614`; deep map in [AntiStack database extension audit](AntiStack-Database-Extension-Audit). |
 | Commander vote bootstrap | `Init_Server.sqf:622`. |
 
 ## Data Ownership
@@ -62,18 +65,18 @@ Lifecycle ownership note: [Lifecycle wait-chain](Lifecycle-Wait-Chain) owns the 
 
 `Common/Functions/Common_PerformanceAudit.sqf` is local RPT logging, not network sync. It snapshots FPS/player/AI/unit/vehicle/town-active counts (`:28-105`), records aggregate call stats (`:159-193`) and flushes every 60 seconds by default (`:221-239`).
 
-Ampere's runtime pass confirmed that the major loops are cooperative rather than tight in the normal dedicated-server path: town capture, town AI, camps, resources, victory, garbage and empty-vehicle collection all have sleeps or per-cycle yields. The high-risk exceptions remain the FPS publisher scripts in hosted/listen mode and any restored AI supply-truck path.
+Ampere's runtime pass confirmed that the major loops are cooperative rather than tight in the normal dedicated-server path: town capture, town AI, camps, resources, victory, garbage and empty-vehicle collection all have sleeps or per-cycle yields. The FPS publisher hosted/listen exception is now patched in source Chernarus; generated propagation and any restored AI supply-truck path remain review targets.
 
 ## Server Load Risks
 
 | Risk | Evidence | Development note |
 | --- | --- | --- |
 | Low-FPS sleep inversion | `Common_GetSleepFPS.sqf:5-9` shortens sleeps under lower FPS. | Overloaded servers may run some loops more often, not less. Verify before reusing this helper. |
-| Hosted-server FPS busy loop | `Init_Server.sqf:578` starts `Server/GUI/serverFpsGUI.sqf` and `:595` starts `Server/Module/serverFPS/monitorServerFPS.sqf`; both loop forever and sleep only inside their dedicated-server branches. | Hosted/non-dedicated server mode can spin these loops without sleep. Consolidate publishers or hoist sleeps outside locality guards. |
+| Hosted-server FPS busy loop | Init_Server.sqf:578 starts Server/GUI/serverFpsGUI.sqf and :595 starts Server/Module/serverFPS/monitorServerFPS.sqf; source Chernarus now exits on !isDedicated before entering their loops. | Source patched; generated propagation remains. Dedicated publishing is preserved. See [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep). |
 | Town scans | `server_town.sqf:57` uses `nearEntities` per town. | Preserve per-town/per-cycle sleeps and audit records. |
 | Garbage scan | `server_collector_garbage.sqf:4-32` scans `allDead` every 0.5s. | Avoid adding more all-world scans nearby. |
 | Empty vehicle scan | `emptyvehiclescollector.sqf:4-30` polls every 0.5s. | Keep cleanup conditions cheap. |
-| AntiStack DB loop | `Server/Module/AntiStack/mainLoop.sqf:15-43` iterates `allUnits` and performs DB retrieve/store per player. | Extension/database latency is live-server sensitive. |
+| AntiStack DB loop | `Server/Module/AntiStack/mainLoop.sqf:15-43` iterates `allUnits` and performs DB retrieve/store per player. | Extension/database latency is live-server sensitive; [AntiStack database extension audit](AntiStack-Database-Extension-Audit) owns the procedure/guard table. |
 
 ## Supply Mission Data Flow
 
@@ -93,7 +96,7 @@ Cooldown casing detail is canonical in [Deep-review findings](Deep-Review-Findin
 
 ## AI Commander Status
 
-AI commander support is partially present. Boyle's second-pass review corrected the earlier shorthand: the upgrade worker and AI commander funds are real, but no obvious live scheduler was found that drives the full autonomous commander loop or sets `wfbe_aicom_running = true`.
+AI commander support is partially present. Boyle's second-pass review corrected the earlier shorthand: the upgrade worker and AI commander funds are real, but no obvious live scheduler was found that drives the full autonomous commander loop or sets `wfbe_aicom_running = true`. The detailed revival audit and source table now live in [AI commander autonomy audit](AI-Commander-Autonomy-Audit).
 
 Evidence:
 
@@ -103,32 +106,32 @@ Evidence:
 - Commander vote/assign code stops AI commander when a player commander exists at `Server/Functions/Server_VoteForCommander.sqf:54-57`.
 - No active loop/FSM was found that starts and drives AI commander automation.
 
-Treat AI commander production and autonomous logistics as partial until a dedicated implementation pass proves or restores the runtime owner. In particular, `AIBuyUnit` appears latent and `UpdateSupplyTruck` is broken under the supply-system-0 + AI commander branch.
+Treat AI commander production and autonomous logistics as partial until a dedicated implementation pass proves or restores the runtime owner. In particular, `AIBuyUnit` appears latent and `UpdateSupplyTruck` is broken under the supply-system-0 + AI commander branch. `Rsc/Parameters.hpp:92-97` also gives the AI commander mission parameter default as `0`, while `Init_CommonConstants.sqf:91` is only a nil fallback; use the audit before making default-state claims.
 
 ## Server End Conditions
 
-`Server/FSM/server_victory_threeway.sqf:23-57` ends the mission when victory conditions are met. The broad end-state pattern is:
+`Server/FSM/server_victory_threeway.sqf:23-57` ends the mission when victory conditions are met. [Victory/endgame atlas](Victory-And-Endgame-Atlas) owns the exact implementation map, risk register and smoke checklist. The broad end-state pattern is:
 
 - HQ is dead and no factories remain, or a side holds all towns.
 - Server publishes endgame state, sets winner data such as `WF_Winner`, and flips `gameOver` / `WFBE_GameOver`.
 - Optional AntiStack persistence may run.
 - Mission ends through `failMission "END1"`.
 
-Canonical correctness findings: [Deep-review findings](Deep-Review-Findings) DR-11 owns the winner-inversion impact, and DR-36 owns the `server_victory_threeway.sqf:23` guard/precedence mechanism. Runtime summary: the loop is server-authoritative and DR-36 found its Perf/JIP/HC posture clean, but the end-condition guard and no-break side loop still need the DR-36 fix before match results are trusted.
+Canonical correctness findings are routed through [Victory/endgame atlas](Victory-And-Endgame-Atlas), with raw evidence in [Deep-review findings](Deep-Review-Findings) DR-11 and DR-36. Runtime summary: the loop is server-authoritative and DR-36 found its Perf/JIP/HC posture clean, but the end-condition guard, winner semantics and no-break side loop still need the atlas fix before match results are trusted.
 
 ## Confirmed Defects And Partial Features
 
 | Area | Evidence | Status |
 | --- | --- | --- |
-| AI supply truck system | `UpdateSupplyTruck` compile is commented at `Init_Server.sqf:36`, but spawn remains under supply system 0 + AI commander at `:381-383`; script calls missing `Server/FSM/supplytruck.fsm` at `Server/AI/AI_UpdateSupplyTruck.sqf:17`. | Config-gated broken path. |
-| AI commander automation | State/funds/constants exist, but no active AI commander loop/FSM was found. | Partial/latent. |
-| `Server_AssignNewCommander` call shape | `_side = _this` then `_commander = _this select 1` in `Server_AssignNewCommander.sqf:3-5`; caller passes `[_side, _assigned_commander]` from `RequestNewCommander.sqf:12-14`. | Likely bug; should assign `_side = _this select 0`. |
+| AI supply truck system | `UpdateSupplyTruck` compile is commented at `Init_Server.sqf:36`, but spawn remains under supply system 0 + AI commander at `:381-383`; script calls missing `Server/FSM/supplytruck.fsm` at `Server/AI/AI_UpdateSupplyTruck.sqf:17`. | Config-gated broken path; see [AI commander autonomy audit](AI-Commander-Autonomy-Audit). |
+| AI commander automation | State/funds/constants exist, but no active AI commander loop/FSM was found. | Partial/latent; see [AI commander autonomy audit](AI-Commander-Autonomy-Audit). |
+| `Server_AssignNewCommander` call shape | `_side = _this` then `_commander = _this select 1` in `Server_AssignNewCommander.sqf:3-5`; caller passes `[_side, _assigned_commander]` from `RequestNewCommander.sqf:12-14`. | Confirmed bug; use [commander reassignment call shape](Commander-Reassignment-Call-Shape). |
 | Supply mission cooldown casing | DR-18 confirms `lastSupplyMissionRun` / `LastSupplyMissionRun` mismatch. | Correctness bug; route details through [Supply mission architecture](Supply-Mission-Architecture) and DR-18. |
 | Supply mission reward authority | Client sets truck `SupplyFromTown` and `SupplyAmount`; server completion trusts truck vars. | Hardening gap. |
-| Resistance supply handler gap | Common sender can format `wfbe_supply_temp_<side>` generically, but server handlers only exist for west/east. | Resistance side supply not fully wired. |
+| Resistance supply handler gap | Common sender can format `wfbe_supply_temp_<side>` generically, but server handlers only exist for west/east. | Partially scaffolded but unsupported for live economy; use [resistance supply scaffold](Resistance-Supply-Scaffold). |
 | Paratrooper markers | Server sends `HandleParatrooperMarkerCreation`, client receiver file exists, command is missing from client PVF list. | Broken/dead receiver path. |
-| MASH markers | Server rebroadcast exists, client receiver compile is commented, and DR-34 found no client broadcast of `WFBE_CL_MASH_MARKER_CREATED`. | Broken/dead on both ends; revive with a server-held marker list and JIP replay, or remove. |
-| Victory/endgame guard | `server_victory_threeway.sqf:23` plus the per-side loop are the DR-36 root-cause surface for DR-11/DR-13. | Correctness bug; use [Deep-review findings](Deep-Review-Findings) DR-11/DR-36 for the canonical mechanism and fix direction. |
+| MASH markers | Server rebroadcast exists, client receiver compile is commented, and DR-34 found no client broadcast of `WFBE_CL_MASH_MARKER_CREATED`. | Broken/dead on both ends; MASH respawn itself is separate and mapped in [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas). Revive markers with a server-held marker list and JIP replay, or remove. |
+| Victory/endgame guard | `server_victory_threeway.sqf:23` plus the per-side loop are the DR-36 root-cause surface for DR-11/DR-13. | Correctness bug; use [Victory/endgame atlas](Victory-And-Endgame-Atlas) for the developer map and [Deep-review findings](Deep-Review-Findings) DR-11/DR-36 for raw evidence. |
 
 ## Safe Extension Points
 

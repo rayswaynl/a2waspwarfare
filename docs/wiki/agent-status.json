@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T23:20:00+02:00",
+  "generatedAt": "2026-06-02T17:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -10,29 +10,163 @@
     "collaborationState": "agent-collaboration.json",
     "knowledgeRecords": "agent-knowledge.jsonl",
     "eventFeed": "agent-events.jsonl",
-    "repoContext": "agent-context.json"
+    "repoContext": "agent-context.json",
+    "releaseReadiness": "agent-release-readiness.json",
+    "agentEntryPoint": "agent-entrypoint.json"
   },
   "agents": {
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki Quality DUP-8 by routing construction authority detail to Deep-Review-Findings.md DR-6, Construction-And-CoIn-Systems-Atlas.md and Server-Authority-Migration-Map.md.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining duplicate reductions, Arma 2 OA external-reference integration into subsystem pages, or more implementation-readiness playbooks."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest slice harvested Wave K into Feature Status, SQF/PV indexes, UI docs, tooling/integration notes, navigation and agent-entrypoint.json.",
+      "nextExpectedOutput": "Validate wiki links, JSON/JSONL, diff hygiene and mirror parity after the Wave K harvest."
     },
     "Codex-2": {
-      "status": "active",
-      "currentLane": "paratrooper-marker-revival",
-      "currentWork": "Source-checking the paratrooper support marker callback and deciding whether to publish a minimal revival patch or a patch-ready handoff.",
-      "nextExpectedOutput": "Paratrooper marker revival source evidence, safe implementation shape, validation plan and coordination updates."
+      "status": "ready",
+      "currentLane": "none",
+      "currentWork": "Published factory queue counter/token cleanup playbook: current source still needs the DR-33a empty-vehicle counter cleanup and DR-33b token identity patch; Vanilla propagation, broadcast reduction and Arma smoke remain.",
+      "nextExpectedOutput": "Pick the next bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening."
     },
     "Claude": {
       "status": "autonomous-ready",
       "currentLane": "collaboration-follow-autonomous-ready",
       "currentWork": "DR-41 attack-wave authority finding has a dedicated playbook; Claude can continue with the next source-backed review under Claude-Loop-Goal.md or inspect implementation readiness.",
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
+    },
+    "Sub-agents": {
+      "status": "returned-harvested",
+      "currentLane": "scout-wave-k",
+      "currentWork": "Six read-only explorers returned. Reports were harvested into Feature Status, SQF/PV indexes, UI docs, tooling/integration notes, navigation and agent-entrypoint.json.",
+      "nextExpectedOutput": "No further Wave K output expected; use the harvested pages and machine files."
     }
   },
   "laneSummary": [
+    {
+      "lane": "scout-wave-k",
+      "owner": "Codex sub-agents",
+      "status": "returned-harvested-validation-pending",
+      "output": "Hubble, Dirac, Lovelace, Nietzsche, Franklin and Linnaeus findings are folded into Feature Status, SQF/PV indexes, UI docs, navigation and agent-entrypoint.json; validation and mirror parity remain pending."
+    },
+    {
+      "lane": "scout-wave-j",
+      "owner": "Codex sub-agents",
+      "status": "returned-harvested-validation-pending",
+      "output": "Six scoped explorers returned. Tesla, Socrates, Boyle, Zeno, Carver and Gibbs findings are folded into owner pages and machine records; validation and mirror parity remain pending."
+    },
+    {
+      "lane": "propagated-fix-smoke-pack",
+      "owner": "Codex",
+      "status": "drafted-runtime-pending",
+      "output": "Testing-Debugging-And-Release-Workflow.md now contains exact hosted/dedicated/JIP smoke setup, actions, expected evidence and failure signals for the five source + Vanilla propagated fixes."
+    },
+    {
+      "lane": "scout-wave-i",
+      "owner": "Codex sub-agents",
+      "status": "harvested-locally-validation-pending",
+      "output": "Kepler, Copernicus, Kierkegaard, Laplace and Aquinas reports are integrated into economy, AntiStack, UI, commander/HQ, respawn/MASH, marker cleanup and Feature Status pages plus JSONL machine records."
+    },
+    {
+      "lane": "loadoutmanager-propagation-run",
+      "owner": "Codex",
+      "status": "propagated-smoke-pending",
+      "output": "LoadoutManager root discovery and A2WASP_SKIP_ZIP were patched, dotnet build/run succeeded, and maintained Vanilla Takistan now contains the five tracked source fixes; Arma 2 OA smoke remains pending."
+    },
+    {
+      "lane": "scout-wave-h",
+      "owner": "Codex sub-agents",
+      "status": "active-partially-harvested",
+      "output": "Wave H has Darwin harvested for generated mission drift, McClintock closed after context overflow and Euler running as the smaller direct-PV replacement; remaining scouts cover supply lifecycle, economy authority, respawn/MHQ/victory and UI/HUD."
+    },
+    {
+      "lane": "scout-wave-g",
+      "owner": "Codex sub-agents",
+      "status": "integrated-locally-validation-pending",
+      "output": "Godel, Rawls, Jason and Locke reports are integrated into owner pages for marker cleanup/restorer flows, parameters/localization/build hazards, support/special modules and join/disconnect/AntiStack lifecycle."
+    },
+    {
+      "lane": "victory-endgame-atlas",
+      "owner": "Codex",
+      "status": "published-patch-ready-correctness-map",
+      "output": "Victory-And-Endgame-Atlas.md maps server_victory_threeway.sqf, Client_FNC_Special endgame dispatch, Client_EndGame loser-side semantics, live Server_LogGameEnd, stale PVFunctions/LogGameEnd, DR-11/12/13/36 correctness risks, AntiStack final persistence and smoke gates."
+    },
+    {
+      "lane": "commander-hq-lifecycle-atlas",
+      "owner": "Codex",
+      "status": "published-authority-and-runtime-map",
+      "output": "Commander-HQ-Lifecycle-Atlas.md maps side-logic commander/HQ state, vote and reassignment flows, client commander action refresh, Construction_HQSite deploy/mobilize, Server_OnHQKilled wreck creation/marker state, Server_MHQRepair, WASP cash HQ recovery, base-area RequestBaseArea and authority/JIP smoke gates."
+    },
+    {
+      "lane": "towns-camps-capture-atlas",
+      "owner": "Codex",
+      "status": "published-authority-and-runtime-map",
+      "output": "Towns-Camps-And-Capture-Atlas.md maps mission.sqm town startup, Init_Town/Init_TownMode, starting ownership modes, server_town capture/SV loop, global camp capture manager, marker visibility, town AI activation/deactivation, economy consumers and town/camp capture reward authority."
+    },
+    {
+      "lane": "upgrades-research-atlas",
+      "owner": "Codex",
+      "status": "published-patch-ready-authority",
+      "output": "Upgrades-And-Research-Atlas.md maps WFBE_UP_* constants, side upgrade configs, live WFBE_UpgradeMenu/GUI_UpgradeMenu, RequestUpgrade -> Server_ProcessUpgrade, client sync, AI commander upgrade worker, stale RscMenu_Upgrade and the server-authority migration plan."
+    },
+    {
+      "lane": "respawn-death-lifecycle-atlas",
+      "owner": "Codex",
+      "status": "published-patch-ready-edge",
+      "output": "Respawn-And-Death-Lifecycle-Atlas.md maps engine/custom respawn shell, player death cleanup, pre-respawn reapply, respawn menu selection, spawn-source rules, AI respawn, kill scoring, MASH live-vs-dead-marker split and the mode-5 custom-gear penalty edge."
+    },
+    {
+      "lane": "arma2-oa-compatibility-refresh",
+      "owner": "Codex",
+      "status": "published-docs-guardrail",
+      "output": "Arma-2-OA-Compatibility-Audit.md and agent-compatibility-audit.json now include a 2026-06-02T14:00:39+02:00 scan snapshot, current hit counts, representative pages and high-risk future wording areas."
+    },
+    {
+      "lane": "antistack-database-extension-audit",
+      "owner": "Codex",
+      "status": "published",
+      "output": "AntiStack-Database-Extension-Audit.md maps the current WFBE_C_ANTISTACK_ENABLED guards, join/disconnect/victory hooks, scheduled loops, wrapper procedure table, polling timeouts and remaining enabled-mode return-shape/circuit-breaker work."
+    },
+    {
+      "lane": "integration-trust-boundary-audit",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Integration-Trust-Boundary-Audit.md separates the active DiscordBot TypeNameHandling.All JSON intake risk from the in-repo a2waspwarfare_Extension writer, the absent AntiStack A2WaspDatabase dependency and the AFK-only BattlEye filter."
+    },
+    {
+      "lane": "source-fix-propagation-queue",
+      "owner": "Codex",
+      "status": "published-propagated-smoke-pending",
+      "output": "Source-Fix-Propagation-Queue.md centralizes the five tracked fixes now present in Chernarus source and maintained Vanilla Takistan, plus skip-zip propagation command, diff evidence and Arma smoke gates."
+    },
+    {
+      "lane": "agent-release-readiness-ledger",
+      "owner": "Codex",
+      "status": "published-machine-readable",
+      "output": "agent-release-readiness.json mirrors propagated fix readiness for agents: Chernarus source status, Vanilla propagation status, smoke status, skip-zip command, evidence refs and release gates."
+    },
+    {
+      "lane": "agent-entrypoint-release-readiness-wiring",
+      "owner": "Codex",
+      "status": "published-navigation",
+      "output": "LLM-Agent-Entry-Pack.md, Quickstart-For-Humans-And-Agents.md, Agent-Context.md, _Footer.md, mkdocs.yml and agent-context.json now route agents to agent-release-readiness.json before release-completion claims."
+    },
+    {
+      "lane": "ai-commander-autonomy-audit",
+      "owner": "Codex",
+      "status": "published-owner-decision",
+      "output": "AI-Commander-Autonomy-Audit.md separates real AI commander state/funds/upgrade worker from missing scheduler/production ownership and broken AI supply-truck logistics."
+    },
+    {
+      "lane": "service-menu-affordability-guards",
+      "owner": "Codex",
+      "status": "published-patch-ready",
+      "output": "Service-Menu-Affordability-Guards.md documents action-time price/funds/context guard shape for service rearm/refuel/repair/heal; source and Vanilla still need code changes and Arma smoke."
+    },
+    {
+      "lane": "factory-queue-counter-token-cleanup",
+      "owner": "Codex-2",
+      "status": "published-patch-ready",
+      "output": "Factory-Queue-Counter-Token-Cleanup.md documents the patch-ready Client_BuildUnit.sqf counter/token fix; current source still needs the code patch, then Vanilla propagation, public queu broadcast review and Arma smoke."
+    },
     {
       "lane": "wiki-quality-dup8-construction-routing",
       "owner": "Codex",
@@ -272,6 +406,30 @@
       "owner": "Codex",
       "status": "published",
       "output": "Headless-Delegation-And-Failover-Playbook.md plus links from Home/sidebar/footer/AI/headless/roadmap/dashboard/context"
+    },
+    {
+      "lane": "client-skill-init-idempotency",
+      "owner": "Codex-2",
+      "status": "published-propagated-smoke-pending",
+      "output": "Client-Skill-Init-Idempotency.md plus source Chernarus Init_Client.sqf duplicate Skill_Init removal; Vanilla propagation and Arma smoke pending."
+    },
+    {
+      "lane": "hosted-server-fps-loop-sleep",
+      "owner": "Codex-2",
+      "status": "published-propagated-smoke-pending",
+      "output": "Hosted-Server-FPS-Loop-Sleep.md plus source Chernarus FPS publisher early non-dedicated exits; Vanilla propagation and Arma smoke pending."
+    },
+    {
+      "lane": "supply-mission-scan-narrowing",
+      "owner": "Codex-2",
+      "status": "published-propagated-smoke-pending",
+      "output": "Supply-Mission-Scan-Narrowing.md plus source Chernarus supplyMissionStarted.sqf command-center scan narrowing; Vanilla propagation and Arma smoke pending."
+    },
+    {
+      "lane": "wasp-marker-wait-cleanup",
+      "owner": "Codex-2",
+      "status": "published-opportunity-not-patched",
+      "output": "WASP-Marker-Wait-Cleanup.md documents an opportunity; source and Vanilla still need global_marking_monitor.sqf throttled display wait plus Arma smoke."
     }
   ],
   "queuedReports": [],
@@ -300,6 +458,7 @@
     "lifecycleWaitChain": "Lifecycle-Wait-Chain.md",
     "testingWorkflow": "Testing-Debugging-And-Release-Workflow.md",
     "agentTestPlanSchema": "agent-test-plan.schema.json",
+    "releaseReadinessLedger": "agent-release-readiness.json",
     "serverAuthorityMap": "Server-Authority-Migration-Map.md",
     "claudeLoopGoal": "Claude-Loop-Goal.md",
     "attackWaveAuthority": "Attack-Wave-Authority-Playbook.md",
@@ -308,6 +467,12 @@
     "pvfDispatchPlaybook": "PVF-Dispatch-Implementation-Playbook.md",
     "economyAuthorityFirstCut": "Economy-Authority-First-Cut.md",
     "abandonedFeatureRevival": "Abandoned-Feature-Revival-Review.md",
-    "performanceOpportunitySweep": "Performance-Opportunity-Sweep.md"
+    "performanceOpportunitySweep": "Performance-Opportunity-Sweep.md",
+    "aiCommanderAutonomyAudit": "AI-Commander-Autonomy-Audit.md",
+    "clientSkillInitIdempotency": "Client-Skill-Init-Idempotency.md",
+    "hostedServerFpsLoopSleep": "Hosted-Server-FPS-Loop-Sleep.md",
+    "supplyMissionScanNarrowing": "Supply-Mission-Scan-Narrowing.md",
+    "waspMarkerWaitCleanup": "WASP-Marker-Wait-Cleanup.md",
+    "factoryQueueCleanup": "Factory-Queue-Counter-Token-Cleanup.md"
   }
 }

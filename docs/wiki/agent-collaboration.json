@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T23:20:00+02:00",
+  "generatedAt": "2026-06-02T17:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -16,11 +16,30 @@
   },
   "Claude": {
     "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
-    "currentLane": "hc-static-defense-verify (DR-42) — collaboration-follow",
+    "currentLane": "send-message-rce-review (DR-46) — filed, ready-for-review",
     "status": "autonomous-ready",
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "send-message-rce-review",
+      "owner": "Claude",
+      "status": "ready-for-review",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendMessage.sqf",
+        "Deep-Review-Findings.md DR-1 / DR-46"
+      ],
+      "outputs": [
+        "Deep-Review-Findings.md (Round 37 / DR-46)",
+        "agent-hardening-backlog.jsonl#send-message-call-compile-rce",
+        "agent-knowledge.jsonl#claude-2026-06-02-send-message-rce",
+        "Instructions-For-Codex.md New-findings block",
+        "agent-events.jsonl claim/finding/handoff",
+        "Agent-Worklog.md"
+      ],
+      "handoff": "Codex: cross-link DR-46 from Networking-And-Public-Variables, Public-Variable-Channel-Index (SEND_MESSAGE row) and SQF-Code-Atlas, and correct DR-1's 'no other network-data compile sites' note. Verify the maintainability leads against Variable-And-Naming-Conventions / SQF-Code-Atlas before documenting."
+    },
     {
       "lane": "wiki-quality-dup8-construction-routing",
       "owner": "Codex",
@@ -967,6 +986,165 @@
         "coordination/status/events/worklog updates"
       ],
       "handoff": "Determine whether the paratrooper marker repair is safe as a minimal code patch or should remain a patch-ready docs handoff; keep this separate from broader RequestSpecial authority hardening."
+    },
+    {
+      "lane": "scout-wave-j-integration",
+      "owner": "Codex",
+      "status": "harvested-validation-pending",
+      "sourceScope": [
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Testing-Debugging-And-Release-Workflow.md",
+        "docs/wiki/Supply-Mission-Architecture.md",
+        "docs/wiki/agent-context.json",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/Subagent-Discovery-Swarm.md"
+      ],
+      "outputs": [
+        "Wave J explorer reports",
+        "Testing-Debugging-And-Release-Workflow.md propagated fix smoke pack",
+        "Feature Status and adjacent owner-page updates after source-backed harvest"
+      ],
+      "handoff": "Wave J reports are harvested into owner pages and machine records. Other agents should use the promoted findings rather than the raw reports; remaining work is validation, mirror parity and future implementation lanes."
+    },
+    {
+      "lane": "source-fix-propagation-queue",
+      "owner": "Codex",
+      "status": "published-propagated-smoke-pending",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/GUI/serverFpsGUI.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Tools/LoadoutManager/FileManagement/FileManager.cs"
+      ],
+      "outputs": [
+        "Source-Fix-Propagation-Queue.md",
+        "Tools/build and Feature Status routing updates",
+        "agent-feature-status.jsonl and agent-hardening-backlog.jsonl records"
+      ],
+      "handoff": "Future release owner should not rerun this propagation unless new source fixes are added. The listed fixes are in maintained Vanilla Takistan; record paratrooper, skill, FPS and supply mission smoke before claiming release completeness."
+    },
+    {
+      "lane": "service-menu-affordability-guards",
+      "owner": "Codex",
+      "status": "published-patch-ready",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Service.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_SupportRearm.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_SupportRefuel.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_SupportRepair.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_SupportHeal.sqf",
+        "Gear-Loadout-And-EASA-Atlas.md",
+        "Feature-Status-Register.md"
+      ],
+      "outputs": [
+        "Service-Menu-Affordability-Guards.md",
+        "Gear/Client-UI/Feature/Authority routing updates",
+        "agent-feature-status.jsonl and agent-hardening-backlog.jsonl records"
+      ],
+      "handoff": "Future gear UI owner should add action-time price/funds/context guards before service debits/spawns, keep this separate from full server-authority migration, propagate Vanilla through LoadoutManager, and smoke affordable/unaffordable service actions."
+    },
+    {
+      "lane": "factory-queue-counter-token-cleanup",
+      "owner": "Codex-2",
+      "status": "published-patch-ready",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Factory-And-Purchase-Systems-Atlas.md",
+        "Deep-Review-Findings.md DR-33"
+      ],
+      "outputs": [
+        "Factory-Queue-Counter-Token-Cleanup.md",
+        "patch-ready source Chernarus Client_BuildUnit.sqf counter/token handoff",
+        "Vanilla Takistan propagation handoff after source patch",
+        "Factory/Performance/Feature/backlog/dashboard/context updates"
+      ],
+      "handoff": "Current source still needs the DR-33 counter/token patch. After patching source Chernarus, propagate Vanilla with LoadoutManager from a correctly named checkout, then smoke repeated crewless vehicle buys, normal crewed/infantry buys, concurrent buyers and factory-dead cleanup. Broadcast reduction for public building queu state remains separate from this local counter/token patch."
+    },
+    {
+      "lane": "client-skill-init-idempotency",
+      "owner": "Codex-2",
+      "status": "published-propagated-smoke-pending",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Init.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Apply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_PreRespawnHandler.sqf",
+        "Performance-Opportunity-Sweep.md",
+        "agent-hardening-backlog.jsonl#client-skill-init-idempotency"
+      ],
+      "outputs": [
+        "Client-Skill-Init-Idempotency.md",
+        "source Chernarus Init_Client.sqf duplicate Skill_Init removal",
+        "Vanilla Takistan propagation handoff for duplicate Skill_Init removal",
+        "Performance/Feature/backlog/dashboard/context updates"
+      ],
+      "handoff": "Smoke Soldier/non-Soldier AI caps, respawn skill reapply and dedicated/JIP client init. Source Chernarus now removes the duplicate Skill_Init call; Vanilla propagation remains pending. If future paths rerun Skill_Init.sqf, guard the Soldier cap mutation."
+    },
+    {
+      "lane": "hosted-server-fps-loop-sleep",
+      "owner": "Codex-2",
+      "status": "published-propagated-smoke-pending",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Performance-Opportunity-Sweep.md",
+        "AI-Headless-And-Performance.md",
+        "Feature-Status-Register.md",
+        "agent-hardening-backlog.jsonl#hosted-server-fps-loop-sleep"
+      ],
+      "outputs": [
+        "Hosted-Server-FPS-Loop-Sleep.md",
+        "source Chernarus serverFpsGUI/monitorServerFPS early-exit patch",
+        "Vanilla Takistan propagation handoff for FPS patch",
+        "Performance/AI/Server runtime/Feature/backlog/status updates"
+      ],
+      "handoff": "Smoke dedicated RHUD/server FPS updates and hosted/listen no-spin behavior. Source Chernarus now exits both FPS publishers on non-dedicated hosts; Vanilla propagation remains pending. Publisher consolidation remains a separate compatibility decision."
+    },
+    {
+      "lane": "supply-mission-scan-narrowing",
+      "owner": "Codex-2",
+      "status": "published-propagated-smoke-pending",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf",
+        "Supply-Mission-Architecture.md",
+        "Supply-Mission-Authority-Cleanup-Playbook.md",
+        "Performance-Opportunity-Sweep.md",
+        "agent-hardening-backlog.jsonl#supply-mission-authority-cleanup"
+      ],
+      "outputs": [
+        "Supply-Mission-Scan-Narrowing.md",
+        "source Chernarus supplyMissionStarted.sqf command-center scan narrowing",
+        "Vanilla Takistan propagation handoff for supplyMissionStarted.sqf scan narrowing",
+        "Performance/Supply/Feature/backlog/dashboard/context updates"
+      ],
+      "handoff": "Smoke truck/heli delivery at command centers and no-completion near unrelated objects. Source Chernarus now narrows the command-center scan; Vanilla propagation remains pending. Continue larger supply cleanup separately: loaded/tracking state, Killed handler idempotency, cooldown casing and server-side cargo validation."
+    },
+    {
+      "lane": "wasp-marker-wait-cleanup",
+      "owner": "Codex-2",
+      "status": "published-propagated-smoke-pending",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/global_marking_monitor.sqf",
+        "Performance-Opportunity-Sweep.md",
+        "WASP-Overlay.md",
+        "Feature-Status-Register.md"
+      ],
+      "outputs": [
+        "WASP-Marker-Wait-Cleanup.md",
+        "patch-ready global_marking_monitor.sqf throttled display wait handoff",
+        "Vanilla Takistan propagation handoff after source patch",
+        "Performance/WASP/Feature/backlog/dashboard/context updates"
+      ],
+      "handoff": "Current source still needs the tiny wait/backoff patch. After source and generated propagation, smoke map double-click marker naming in Arma 2 OA: Enter prefixing, empty text, Escape cleanup and timeout/no-dialog input re-enable."
     }
   ],
   "integratedReports": [
@@ -999,7 +1177,13 @@
     "wiki-quality-dup5-battleye-routing",
     "wiki-quality-dup9-victory-routing",
     "wiki-quality-dup6-lifecycle-routing",
-    "wiki-quality-dup4-generated-mission-routing"
+    "wiki-quality-dup4-generated-mission-routing",
+    "client-skill-init-idempotency",
+    "hosted-server-fps-loop-sleep",
+    "supply-mission-scan-narrowing",
+    "wasp-marker-wait-cleanup",
+    "factory-queue-counter-token-cleanup",
+    "scout-wave-j-harvest"
   ],
   "queuedReports": [],
   "lanes": [

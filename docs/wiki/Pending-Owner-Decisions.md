@@ -5,7 +5,7 @@
 ## 1. The big one — economy/forgery authority (one decision, whole class)
 
 **Decision:** add server-side authority to spend/effect paths, **or** accept client-authoritative economy and ship a real BattlEye filter set. The forgery class has **two surfaces** and the decision must cover both:
-- **PVF dispatcher** — `Server/Client_HandlePVF.sqf` `Call Compile` the sender's command string (DR-1). Fix: validate against the known `SRVFNC*`/`CLTFNC*` set + re-derive authority in each handler. (Same change removes a per-message recompile, DR-38.)
+- **PVF dispatcher** — `Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` `Call Compile` the sender's command string (DR-1). Fix: validate against the known `SRVFNC*`/`CLTFNC*` set + re-derive authority in each handler. (Same change removes a per-message recompile, DR-38.)
 - **Direct `publicVariableServer` channels** — e.g. `ATTACK_WAVE_INIT` (DR-41); each needs its own server re-derivation. See [Public variable channel index](Public-Variable-Channel-Index).
 
 | Path | Finding | Severity |
@@ -14,7 +14,8 @@
 | Construction (`RequestStructure`/`RequestDefense`/MHQ) | DR-6 | High |
 | Unit purchase | DR-14 | High (architectural) |
 | Structure sale | DR-16 | High |
-| Side-supply transfer | DR-22 | High |
+| Side-supply transfer (overspend floor) | DR-22 | High |
+| Side-supply ledger directly client-writable (forged `wfbe_supply_temp_<side>`) | DR-44 | High |
 | Upgrades | DR-23 | High |
 | ICBM superweapon (forged `RequestSpecial`) | DR-27 | **Critical** |
 | Gear/EASA + vehicle rearm/repair/refuel/heal | DR-28 | High |

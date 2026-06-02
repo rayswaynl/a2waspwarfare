@@ -1,0 +1,78 @@
+{
+  "schema": "a2waspwarfare-agent-entrypoint-v1",
+  "generatedAt": "2026-06-02T17:35:00+02:00",
+  "repo": {
+    "owner": "rayswaynl",
+    "name": "a2waspwarfare",
+    "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+    "maintainedGeneratedMission": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+    "wikiMirror": "docs/wiki"
+  },
+  "statusConvention": {
+    "sourceStatus": [
+      "master_current",
+      "proposed_no_branch",
+      "proposed_pr",
+      "propagated_smoke_pending",
+      "shipped_master",
+      "owner_decision",
+      "superseded"
+    ],
+    "publicationStatus": [
+      "draft",
+      "published_wiki",
+      "published_repo_mirror",
+      "validated",
+      "needs_sync"
+    ],
+    "rule": "Do not collapse source patch state, generated propagation, Arma runtime smoke and wiki publication into one prose status."
+  },
+  "readOrder": [
+    "llms.txt",
+    "AI-Assistant-Developer-Guide.md",
+    "Progress-Dashboard.md",
+    "Feature-Status-Register.md",
+    "Hardening-Implementation-Roadmap.md",
+    "Public-Variable-Channel-Index.md",
+    "SQF-Code-Atlas.md",
+    "Testing-Debugging-And-Release-Workflow.md"
+  ],
+  "currentHighRiskEntryPoints": [
+    {
+      "id": "pvf-dispatch-trust-boundary",
+      "status": "proposed_no_branch",
+      "page": "PVF-Dispatch-Implementation-Playbook.md"
+    },
+    {
+      "id": "icbm-requestspecial-authority",
+      "status": "proposed_no_branch",
+      "page": "ICBM-Authority-Playbook.md"
+    },
+    {
+      "id": "side-supply-clamp-first",
+      "status": "proposed_no_branch",
+      "page": "Economy-Authority-First-Cut.md"
+    },
+    {
+      "id": "source-fix-propagation-queue",
+      "status": "propagated_smoke_pending",
+      "page": "Source-Fix-Propagation-Queue.md"
+    }
+  ],
+  "machineFiles": {
+    "status": "agent-status.json",
+    "collaboration": "agent-collaboration.json",
+    "events": "agent-events.jsonl",
+    "knowledge": "agent-knowledge.jsonl",
+    "featureStatus": "agent-feature-status.jsonl",
+    "hardeningBacklog": "agent-hardening-backlog.jsonl",
+    "releaseReadiness": "agent-release-readiness.json",
+    "compatibilityAudit": "agent-compatibility-audit.json"
+  },
+  "validation": [
+    "Run docs/validate-wiki.ps1 from the repo root.",
+    "Parse all docs/wiki/*.json and docs/wiki/*.jsonl.",
+    "Keep docs/wiki and the GitHub wiki checkout in parity before publishing.",
+    "Any shipped_master or source-patched claim must cite branch/commit evidence or a source assertion."
+  ]
+}

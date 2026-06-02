@@ -1,5 +1,7 @@
 # Economy, Towns And Supply
 
+Town object initialization, capture/SV state, camp capture, marker visibility and town-AI activation are now mapped in [Towns, camps and capture atlas](Towns-Camps-And-Capture-Atlas). Keep this page focused on economy/supply/resource interpretation and route town lifecycle implementation details there.
+
 ## Town Supply Model
 
 Town supply value drives economy and supply missions. Constants define automatic supply growth and truck/supply mission effects:
@@ -18,8 +20,8 @@ Town supply value drives economy and supply missions. Constants define automatic
 4. The client broadcasts `WFBE_Client_PV_SupplyMissionStarted`.
 5. `Server/Module/supplyMission/supplyMissionStarted.sqf` starts tracking the vehicle object and town.
 6. Proximity to a command center completes the mission by broadcasting `WFBE_Server_PV_SupplyMissionCompleted`.
-7. `Server/Module/supplyMission/supplyMissionCompleted.sqf` updates side supply and sends the completion message.
-8. `Client/Module/supplyMission/supplyMissionCompletedMessage.sqf` notifies the player and asks the server to award score.
+7. `Server/Module/supplyMission/supplyMissionCompleted.sqf` trusts the vehicle object vars, updates side supply and sends the completion message.
+8. `Client/Module/supplyMission/supplyMissionCompletedMessage.sqf` notifies the player, applies the personal cash reward locally and asks the server to award score.
 
 ## Cooldown Flow
 
@@ -40,8 +42,10 @@ The economy authority class is now fully characterized by source review. Every c
 | Construction/build | Client pays and sends `RequestStructure` / `RequestDefense`; server performs only light creation checks. | DR-6, [Construction atlas](Construction-And-CoIn-Systems-Atlas) |
 | Player unit buy | Client spawns through `Client_BuildUnit` and deducts locally; no `RequestBuyUnit` PVF exists. | DR-14, [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas) |
 | Structure sale | Economy UI refunds and destroys locally. | DR-16 |
-| Side supply | Server negative-delta floor can turn overspend into supply gain. | DR-22 |
-| Supply mission cargo/reward | Client stamps `SupplyFromTown` / `SupplyAmount` onto the vehicle; server completion trusts those vars after proximity checks. | [Supply mission architecture](Supply-Mission-Architecture) |
+| Side supply | Direct temp channels mutate keyed `wfbe_supply_%1` values; the generic `wfbe_supply` client init value is a legacy alias/cache. Server negative-delta floor can turn overspend into supply gain. | DR-22, [Economy authority first cut](Economy-Authority-First-Cut) |
+| Score mutation/rewards | `RequestChangeScore` accepts a payload score, while `Common_AwardScorePlayer` and kill scoring show safer server-derived award patterns. | [Economy authority first cut](Economy-Authority-First-Cut), [Public variable channel index](Public-Variable-Channel-Index) |
+| Player/group funds | No `RequestChangeFunds` PVF exists; funds are changed through replicated `wfbe_funds` group variables and shared helpers. | [Economy authority first cut](Economy-Authority-First-Cut) |
+| Supply mission cargo/reward | Client stamps `SupplyFromTown` / `SupplyAmount` onto the vehicle; server completion trusts those vars after proximity checks. Personal cash/score reward presentation is still client-side after the completion broadcast. | [Supply mission architecture](Supply-Mission-Architecture) |
 | Upgrades | `RequestUpgrade` passes raw payload into server process; no server-side cost/commander/dependency validation. | DR-23 |
 | ICBM/special | Client can send `RequestSpecial ["ICBM", ...]`; server spawns `NukeDammage` from payload without authority checks. | DR-27, [Networking/PV](Networking-And-Public-Variables) |
 | Gear/EASA/service | Gear, EASA and vehicle service effects/debits are client-side; service rearm/refuel skip even client affordability guards. | DR-28, [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |

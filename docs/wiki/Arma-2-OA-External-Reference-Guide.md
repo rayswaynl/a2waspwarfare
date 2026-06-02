@@ -4,6 +4,8 @@ This page maps official Bohemia Interactive Arma 2 OA scripting references to th
 
 Rule: prefer Bohemia Interactive Community Wiki pages that explicitly list Arma 2: Operation Arrowhead support. When a BI page also describes newer Arma 3 behavior, treat that newer behavior as out-of-scope unless the page or source proves OA support.
 
+Current docs scan: [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) records the latest search for accidental Arma 3 references. The current result is that explicit Arma 3 terms are guardrails or contrast notes, not implementation advice.
+
 ## Fast Reference Matrix
 
 | Topic | Official reference | Wasp source hotspots | Development implication |
@@ -48,6 +50,6 @@ Rule: prefer Bohemia Interactive Community Wiki pages that explicitly list Arma 
 
 ## Continue Reading
 
-Previous: [Testing workflow](Testing-Debugging-And-Release-Workflow) | Next: [AI assistant developer guide](AI-Assistant-Developer-Guide)
+Previous: [Testing workflow](Testing-Debugging-And-Release-Workflow) | Next: [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

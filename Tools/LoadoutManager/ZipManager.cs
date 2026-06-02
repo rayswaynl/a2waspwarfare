@@ -6,6 +6,12 @@ public class ZipManager
 {
     public static void DoZipOperations()
     {
+        if (ShouldSkipZipOperations())
+        {
+            Console.WriteLine("Skipping mission packaging because A2WASP_SKIP_ZIP is set.");
+            return;
+        }
+
         string a2waspDirectory = FileManager.FindA2WaspWarfareDirectory().FullName;
         string[] missionDirectories = { "Missions", "Missions_Vanilla" }; //, "Modded_Missions" 
         // Create this directory if it doesn't exist
@@ -83,6 +89,15 @@ public class ZipManager
         Process x = Process.Start(p);
         x.WaitForExit();
         Console.WriteLine($"Created 7z file: {_destinationFile}");
+    }
+
+    private static bool ShouldSkipZipOperations()
+    {
+        string skipZip = Environment.GetEnvironmentVariable("A2WASP_SKIP_ZIP");
+        return !string.IsNullOrWhiteSpace(skipZip) &&
+               (skipZip.Equals("1", StringComparison.OrdinalIgnoreCase) ||
+                skipZip.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+                skipZip.Equals("yes", StringComparison.OrdinalIgnoreCase));
     }
 
     // This method copies directories from one location to another, ignoring symlinks

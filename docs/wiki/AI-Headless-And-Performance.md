@@ -14,7 +14,7 @@ Server functions `Server_DelegateAITownHeadless.sqf`, `Server_DelegateAIStaticDe
 
 Page ownership: this atlas owns AI/performance runtime orientation and source routing. The implementation patch shape, work-record model, disconnect policy and DR-21/DR-42 decisions live in [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook).
 
-Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-21 covers HC disconnect/no failover, while DR-42 covers static-defense HC one-way delegation / missing update-back. Treat those as the canonical finding records and use the playbook for patch shape.
+Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-21 covers HC disconnect/no failover, while DR-42 covers static-defense HC one-way delegation / missing update-back. Treat those as the canonical finding records and use the playbook for patch shape. For AI commander/autonomous logistics revival decisions, use [AI commander autonomy audit](AI-Commander-Autonomy-Audit).
 
 Boyle's second-pass autonomy review clarified the split between real AI plumbing and missing autonomy:
 
@@ -24,6 +24,8 @@ Boyle's second-pass autonomy review clarified the split between real AI plumbing
 | AI commander upgrade worker | Live function. `WFBE_SE_FNC_AI_Com_Upgrade` is compiled at `Server/Init/Init_Server.sqf:48`; `Server_AI_Com_Upgrade.sqf:12-50` selects an upgrade, checks AI commander funds/supply and debits. | The worker exists, but no obvious live scheduler was found that calls it end-to-end. |
 | AI buy worker | Latent. `AIBuyUnit` is compiled from `Server_BuyUnit.sqf`, but no static caller was found outside that file family. | Do not document AI unit production as fully operational until a dynamic caller is proven. |
 | AI commander run flag | Partial. `wfbe_aicom_running` is initialized and cleared by commander reassignment/vote code, but no visible owner loop was found that starts autonomous commander behavior. | Scaffolding plus workers, not a complete self-driving commander brain. |
+
+Canonical revival/readiness detail lives in [AI commander autonomy audit](AI-Commander-Autonomy-Audit), including the mission-parameter/fallback-default distinction and the broken `UpdateSupplyTruck` / missing `supplytruck.fsm` path.
 
 ## Town AI
 

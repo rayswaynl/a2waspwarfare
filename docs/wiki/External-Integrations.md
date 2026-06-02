@@ -1,5 +1,7 @@
 # External Integrations
 
+This page maps the Discord bot, C# extension, AntiStack database extension, BattlEye filter and public server metadata. For the security-first view across these boundaries, use [Integration trust boundary audit](Integration-Trust-Boundary-Audit); it separates the DiscordBot JSON reader risk from the in-repo extension writer and the out-of-repo AntiStack DLL.
+
 ## Discord Bot
 
 `DiscordBot` is a .NET 9 executable using:
@@ -69,6 +71,8 @@ Claude DR-29 sharpened this boundary: the in-repo `GLOBALGAMESTATS` extension is
 
 ## AntiStack Database Extension
 
+Deep page: [AntiStack database extension audit](AntiStack-Database-Extension-Audit) owns the current runtime map, ON/OFF guards, wrapper procedure table, remaining `call compile` return-shape risks and validation pack.
+
 Server AntiStack scripts call `"A2WaspDatabase" callExtension` for player/team score storage and map selection. Key scripts:
 
 - `callDatabaseRetrieve.sqf`
@@ -83,7 +87,7 @@ This is live-server sensitive because extension/database latency can affect moni
 
 Claude DR-7 through DR-10 found that all seven AntiStack DB wrappers `call compile` the `A2WaspDatabase` extension return. The `A2WaspDatabase` DLL is not in this repo, and `WFBE_C_ANTISTACK_ENABLED` defaults on in mission constants. In Arma 2 OA there is no `parseSimpleArray`, so hardening has to guard and shape-check the compiled value before reading it, plus add a circuit breaker for missing/slow extension responses.
 
-Important distinction: the in-repo `Extension` project implements `a2waspwarfare_Extension` / `GLOBALGAMESTATS`; AntiStack uses a separate out-of-repo `A2WaspDatabase` extension.
+Important distinction: the in-repo `Extension` project implements `a2waspwarfare_Extension` / `GLOBALGAMESTATS`; AntiStack uses a separate out-of-repo `A2WaspDatabase` extension. Current source also has a controlled AntiStack ON/OFF parameter and disabled-mode loop guards, but enabled mode still needs extension return-shape hardening; see [AntiStack database extension audit](AntiStack-Database-Extension-Audit).
 
 ## BattlEye Filter
 
@@ -124,6 +128,6 @@ The repo README lists:
 
 ## Continue Reading
 
-Previous: [Tools/build](Tools-And-Build-Workflow) | Next: [Feature status](Feature-Status-Register)
+Previous: [Tools/build](Tools-And-Build-Workflow) | Next: [Integration trust boundary audit](Integration-Trust-Boundary-Audit)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

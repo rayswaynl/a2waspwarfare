@@ -12,7 +12,7 @@ flowchart TD
     Rsc --> Dialogs["Dialog classes in Rsc/Dialogs.hpp"]
     Rsc --> Titles["Title/cutRsc classes in Rsc/Titles.hpp"]
     Dialogs --> GUI["Client/GUI/*.sqf controller loops"]
-    Titles --> HUD["Client/Client_UpdateRHUD.sqf and Client/FSM/client_title_capture.sqf"]
+    Titles --> HUD["Client/Client_UpdateRHUD.sqf (no Client/RHUD folder) and Client/FSM/client_title_capture.sqf"]
     GUI --> ClientFuncs["Client/Functions UI helpers"]
     GUI --> PVF["WFBE_CO_FNC_SendToServer / SendToClient flows"]
     ClientInit["Client/Init/Init_Client.sqf"] --> GUI
@@ -65,7 +65,10 @@ flowchart TD
 ### Dialog Risks
 
 - `RscMenu_Upgrade` is stale: it points to missing `Client/GUI/GUI_Menu_Upgrade.sqf` (`Dialogs.hpp:2425-2428`). The live main menu opens `WFBE_UpgradeMenu` / `Client/GUI/GUI_UpgradeMenu.sqf` instead (`GUI_Menu.sqf:165`).
-- `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000` (`Dialogs.hpp:3209-3212`, `:3287-3290`). They are not opened together in normal flow, but IDD reuse is a maintenance trap for `findDisplay`, debugging and future scripted interactions.
+- `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000` (`Dialogs.hpp:3209-3212`, `:3287-3290`). They are not opened together in normal flow, but IDD reuse is a maintenance trap for `findDisplay`, debugging and future scripted interactions. Use [UI IDD collision repair](UI-IDD-Collision-Repair) for the patch shape and smoke plan.
+- `GUI_Menu_Service.sqf:240-244` still carries a stale `TBD: Add dialog` comment even though the live path closes the service menu and opens `RscMenu_EASA`. Treat it as stale commentary, not evidence that EASA is missing.
+- `GUI_Menu_Economy.sqf:32-35` has a commented HQ-death sell guard, while active structure sell/refund logic remains at `:105-150`. The UI exposes useful commander affordances, but the sell path belongs to the server-authority migration class.
+- `GUI_Menu_Economy.sqf:93-96` keeps old `WFBE_RequestSpecial` relay comments around the live `RespawnST` send-to-server path, and `:136-141` still has a cleanup TODO to replace a name/find lookup with object variables.
 - The main menu and most submenus are not event-driven state machines. They are `while {alive player && dialog}` polling loops with `sleep` delays. Keep new work small inside those loops and reuse existing update flags.
 - Several menu files return to `WF_Menu` by `closeDialog 0; createDialog "WF_Menu"` rather than maintaining a stack. Adding nested dialogs must preserve those return paths.
 
@@ -88,7 +91,7 @@ flowchart TD
 - `Client/Client_UpdateRHUD.sqf:87-95` to recover/recreate the display.
 - `Client/FSM/updateavailableactions.fsm:225-233` to write action icons into controls `3500 + index`.
 
-`RscOverlay` and `OptionsAvailable` both use `idd=10200` (`Titles.hpp:44-51`, `:164-176`). Treat them as separate cutRsc resources with overlapping IDD values; code should key off the stored display (`currentCutDisplay` or `GUI`) rather than assume IDD lookup is unique.
+`RscOverlay` and `OptionsAvailable` both use `idd=10200` (`Titles.hpp:44-51`, `:164-176`). Treat them as separate cutRsc resources with overlapping IDD values; code should key off the stored display (`currentCutDisplay` or `GUI`) rather than assume IDD lookup is unique. Use [UI IDD collision repair](UI-IDD-Collision-Repair) before changing title IDs.
 
 ## Client Init UI Boot
 
@@ -164,7 +167,7 @@ The helper functions compiled in `Init_Client.sqf:116-126` own list filling, tem
 
 ### Commander And Tactical Menus
 
-`GUI_Menu_Command.sqf` owns team selection, AI team templates, behavior/combat/formation/speed combos, move/task orders and respawn factory choice. It calls team/order helpers such as `SetTeamMoveMode`, `UIFillListTeamOrders` and command PVF paths.
+`GUI_Menu_Command.sqf` owns team selection, AI team templates, behavior/combat/formation/speed combos, move/task controls and respawn factory choice. The move/order helpers are live, but task assignment is partial: the dialog exposes the Set Task button (`Rsc/Dialogs.hpp:2052-2053`) and `GUI_Menu_Command.sqf:315-344` gathers task data and plays HQ speech, while the `SetTask` send calls are commented at `:335-337` and `:343`.
 
 `GUI_Menu_Tactical.sqf` is the support hub. It builds the support list from fast travel, ICBM, paratroopers, ammo/vehicle paradrops, UAV actions and unit camera (`:56-64`). Availability is recomputed from current upgrades, funds, cooldowns and selected support (`:144-290`), then requests are sent through `RequestSpecial` where needed (`:373` and later request branches).
 
@@ -180,17 +183,11 @@ EASA opens from `GUI_Menu_Service.sqf` and uses generated arrays from `Client/Mo
 
 ### Respawn Menu
 
-Respawn flow starts in `Client/Functions/Client_OnKilled.sqf:156` with `createDialog "WFBE_RespawnMenu"`.
-
-`GUI_RespawnMenu.sqf`:
-
-- Stores the display in `uiNamespace["wfbe_display_respawn"]`.
-- Centers the map on `WFBE_DeathLocation`.
-- Starts a countdown from `WFBE_C_RESPAWN_DELAY`, shortened in debug.
-- Spawns `WFBE_CL_FNC_UI_Respawn_Selector`, which animates marker `wfbe_respawn_selector` every 0.03 seconds while `WFBE_MarkerTracking` exists.
-- Rebuilds local respawn markers and calls `OnRespawnHandler` after selection/time expiry.
+Respawn flow starts in `Client/Functions/Client_OnKilled.sqf:156` with `createDialog "WFBE_RespawnMenu"`. The canonical source-backed flow, spawn-source table, MASH split, AI respawn path and custom-gear penalty edge now live in [Respawn and death lifecycle atlas](Respawn-And-Death-Lifecycle-Atlas).
 
 ## RHUD And FPS HUD
+
+There is no standalone `Client/RHUD` directory in the current checkout. RHUD is the combination of `Client/Client_UpdateRHUD.sqf`, the `OptionsAvailable` title resource and the main-menu toggles.
 
 `Client/Client_UpdateRHUD.sqf` is the optimized HUD loop:
 
@@ -214,7 +211,7 @@ Map UI is split across one-shot initialization, long-running refresh loops and e
 | `Client/FSM/updateteamsmarkers.sqf` | Tracks team/player/AI markers, AFK suffix and alpha/color changes. | Skips most work when no map/GPS/Warfare dialog consumer is visible; records `updateteamsmarkers`. |
 | `Client/FSM/updateavailableactions.fsm` | Computes range booleans and writes action availability icons. | Tracks `nearEntities` count and records `updateavailableactions`. |
 | `Client/Functions/Client_BookkeepBlinkingIcons.sqf` | Optional combat marker blinking bookkeeping. | Fully gated by `WFBE_C_MAP_ICON_BLINKING_ENABLED`. |
-| `WASP/global_marking_monitor.sqf` | Adds a display-12 map double-click handler that prefixes marker text with the player's name. | Waits for map display then attaches `mouseButtonDblClick`. |
+| `WASP/global_marking_monitor.sqf` | Adds a display-12 map double-click handler that prefixes marker text with the player's name. | Polls for the marker dialog/display before attaching `mouseButtonDblClick`; current source still has a short unslept wait and should get a tiny backoff before expansion. |
 
 ## Action Menus And Scroll Actions
 
@@ -248,11 +245,16 @@ The intro video is `Videos/intro720p.ogv`, started from `Init_Client.sqf:785`.
 | Suspect base control config | `RscClickableText.soundPush[] = {, 0.2, 1};` in `Rsc/Ressources.hpp`. | Verify parser behavior before deriving new clickable controls from this class. |
 | Polling loops | `GUI_Menu.sqf`, buy/command/tactical/service/upgrade/respawn menus all run scheduled loops. | Keep work incremental and cache expensive state. |
 | Map marker loops | Marker loops are live-server sensitive and now include performance-audit records. | Preserve map-closed skip behavior and `WFBE_C_MAP_ICON_BLINKING_ENABLED` gates. |
+| WASP marker dialog wait | `WASP/global_marking_monitor.sqf` does up to two seconds of display polling. | Add a tiny sleep/backoff and smoke map-marker creation before adding more WASP marker features. |
 | Respawn selector loop | `Client_UI_Respawn_Selector.sqf` sleeps `0.03`. | Do not add expensive marker or object scans inside it. |
 | Economy supply-truck UI | `GUI_Menu_Economy.sqf` can send `RespawnST`. | This touches the config-gated broken autonomous supply-truck path. |
+| Command task assignment UI | `Rsc/Dialogs.hpp:2052-2053` exposes the button and `GUI_Menu_Command.sqf:315-344` builds task data/HQ speech, but the `SetTask` sends are commented. | Visible partial feature; revive only with JIP/task-spam review, or hide the affordance. |
+| Economy sell guard commented | `GUI_Menu_Economy.sqf:32-35` comments an HQ-death guard while `:105-150` keeps the sell/refund path active. | Treat structure selling as part of the server-authority migration class, not as a safe UI-only feature. |
+| Economy stale cleanup notes | `GUI_Menu_Economy.sqf:93-96,136-141` contains dead relay comments and a TODO to replace lookup-by-find behavior. | Clean comments/lookup behavior before using this menu as a model for new commander controls. |
+| Service/EASA stale TODO | `GUI_Menu_Service.sqf:240-244` says EASA dialog is TBD, but the live path opens `RscMenu_EASA`. | Do not document EASA as missing; update comments if touching service UI. |
 | Buy-unit authority | `RscMenu_BuyUnits` drives local `GUI_Menu_BuyUnits.sqf` and `Client_BuildUnit.sqf`; no `RequestBuyUnit` PVF exists. | UI purchase checks are not server authority; see [Deep-review findings](Deep-Review-Findings) DR-14 and [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas). |
-| Buy-gear authority and partials | `GUI_BuyGearMenu.sqf` includes TODOs for target refresh, vehicle target content and template scope. | Avoid expanding templates until gear, cargo, vehicle and backpack behavior is deliberately mapped; see [Deep-review findings](Deep-Review-Findings) DR-16, DR-17 and DR-24. |
-| EASA/service authority | `GUI_Menu_Service.sqf` and `GUI_Menu_EASA.sqf` are live aircraft/service UI paths. | Service/EASA spend and loadout changes are UI-originated; see [Deep-review findings](Deep-Review-Findings) DR-25a/b and [Gear, loadout and EASA atlas](Gear-Loadout-And-EASA-Atlas). |
+| Buy-gear authority and partials | `GUI_BuyGearMenu.sqf` includes TODOs for target refresh, vehicle target content and template scope; profile-template save filtering has a confirmed `_u_upgrade` bug; cargo equip helpers have confirmed inclusive loop bounds. | Avoid expanding templates until gear, cargo, vehicle and backpack behavior is deliberately mapped; see [Gear template profile filter](Gear-Template-Profile-Filter), [Vehicle cargo equip loop bounds](Vehicle-Cargo-Equip-Loop-Bounds) and [Deep-review findings](Deep-Review-Findings) DR-16/17/24. |
+| EASA/service authority | `GUI_Menu_Service.sqf` and `GUI_Menu_EASA.sqf` are live aircraft/service UI paths. | Service/EASA spend and loadout changes are UI-originated; see [Deep-review findings](Deep-Review-Findings) DR-25a/b, [Gear, loadout and EASA atlas](Gear-Loadout-And-EASA-Atlas) and the local [service menu affordability guards](Service-Menu-Affordability-Guards). |
 | CoIn title registration | `WFBE_ConstructionInterface` is cut from `coin_interface.sqf` and stores `wfbe_title_coin`, but it is not listed in `RscTitles.titles[]`. | Construction appears intentionally wired; verify in-game before refactoring title registration. |
 | Disabled task UI | `TaskSystem` compile and town task spawn are commented in `Init_Client.sqf:75` and `:744-745`. | Task UI behavior is partial/disabled; revive only with JIP and spam review. |
 
