@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T12:42:00+02:00",
+  "generatedAt": "2026-06-02T13:10:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -15,132 +15,56 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "agent-hardening-backlog-and-wave-f-integration",
-      "currentWork": "Converted the hardening roadmap and latest cheap discovery wave into agent-hardening-backlog.jsonl, external report manifest metadata and source-backed wiki updates.",
-      "nextExpectedOutput": "Validation, wiki/docs mirror parity and publish of the backlog/research-manifest batch."
+      "currentLane": "long-running-archivist-continuation",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces for ongoing a2waspwarfare development.",
+      "nextExpectedOutput": "Claim the next bounded source-backed lane when new findings, Claude output or gameplay work arrives."
     },
     "Claude": {
-      "status": "ready-for-review; autonomous-ready",
-      "currentLane": "discord-datapath-review / autonomous-claude-research",
-      "currentWork": "Deep-review findings through Round 22 are mirrored in docs/wiki and the GitHub wiki; DR-27 through DR-31 are integrated or cross-linked into owner pages.",
-      "nextExpectedOutput": "Claude may self-select the next bounded source-backed review lane."
+      "status": "autonomous-ready",
+      "currentLane": "autonomous-claude-research",
+      "currentWork": "No currently claimed lane in Codex state; Claude can self-select the next source-backed review from the coverage ledger or hardening backlog.",
+      "nextExpectedOutput": "A bounded claim event and source-cited review if Claude continues."
     }
   },
   "laneSummary": [
     {
-      "lane": "gear-loadout-easa-atlas-integration",
+      "lane": "dashboard-current-state-cleanup",
       "owner": "Codex",
-      "status": "integrated",
-      "output": "Gear-Loadout-And-EASA-Atlas.md"
+      "status": "published",
+      "output": "Progress-Dashboard.md current-state-first cleanup"
     },
     {
-      "lane": "external-pdf-research-intake",
-      "owner": "Codex + Claude",
-      "status": "integrated",
-      "output": "External-Research-Reports.md and Deep-Review-Findings Round 16"
-    },
-    {
-      "lane": "pv-matrix-second-pass-v2",
-      "owner": "Archimedes/James + Codex",
-      "status": "integrated",
-      "output": "Networking-And-Public-Variables.md direct PV inventory"
-    },
-    {
-      "lane": "discord-extension-antistack-integration-discovery",
-      "owner": "Faraday + Codex",
-      "status": "integrated",
-      "output": "External-Integrations.md and Feature-Status-Register.md"
-    },
-    {
-      "lane": "modules-review-dr27",
-      "owner": "Claude + Codex",
-      "status": "integrated",
-      "output": "Deep-Review-Findings.md Round 18, Networking-And-Public-Variables.md and Feature-Status-Register.md"
-    },
-    {
-      "lane": "gear-easa-review-dr28",
-      "owner": "Claude + Codex",
-      "status": "integrated",
-      "output": "Deep-Review-Findings.md Round 19, Economy-Towns-And-Supply.md, Gear-Loadout-And-EASA-Atlas.md and Feature-Status-Register.md"
-    },
-    {
-      "lane": "extension-globalgamestats-dr29",
-      "owner": "Claude + Codex",
-      "status": "integrated",
-      "output": "Deep-Review-Findings.md Round 20, External-Integrations.md and Feature-Status-Register.md"
-    },
-    {
-      "lane": "battleye-posture-dr30",
-      "owner": "Claude + Codex",
-      "status": "integrated",
-      "output": "Deep-Review-Findings.md Round 21, External-Integrations.md and Feature-Status-Register.md"
-    },
-    {
-      "lane": "discord-datapath-dr31",
-      "owner": "Claude + Codex",
-      "status": "integrated",
-      "output": "Deep-Review-Findings.md Round 22, External-Integrations.md and Feature-Status-Register.md"
-    },
-    {
-      "lane": "cheap-explorer-wave-c",
+      "lane": "agent-hardening-backlog-and-wave-f-integration",
       "owner": "Codex",
-      "status": "integrated",
-      "output": "Newton, Linnaeus, Ampere, Pascal, Boyle and Peirce reports integrated into owner pages and agent-knowledge.jsonl where useful."
-    },
-    {
-      "lane": "external-pdf-reconciliation-wave-d",
-      "owner": "Codex + Erdos/Arendt/Carver/Laplace/Tesla",
-      "status": "integrated",
-      "output": "External-Research-Reports.md, Client-UI-HUD-And-Menus.md, Agent-Collaboration-Protocol.md, agent-knowledge.jsonl and precision edits across lifecycle/integrations/supply pages."
-    },
-    {
-      "lane": "cheap-explorer-wave-e",
-      "owner": "Codex + Godel/Gauss/Popper/Locke/Planck/Schrodinger",
-      "status": "integrated",
-      "output": "Generated mission tiers, direct-PV replay semantics, WASP locality notes, module gates, DR-33/34/36/37 handoffs and agent-context schema improvements."
+      "status": "published",
+      "output": "agent-hardening-backlog.jsonl, external-research-report-manifest.json, Wave F harvest docs"
     },
     {
       "lane": "implementation-hardening-planning",
-      "owner": "Codex",
-      "status": "roadmap-plus-machine-backlog",
-      "output": "Hardening-Implementation-Roadmap.md and agent-hardening-backlog.jsonl"
+      "owner": "Codex/future-code-owner",
+      "status": "published",
+      "output": "Hardening-Implementation-Roadmap.md plus agent-hardening-backlog.jsonl"
     },
     {
-      "lane": "cheap-discovery-wave-f",
-      "owner": "Codex + Anscombe/Darwin/Kierkegaard/Avicenna/Beauvoir/Dalton/Dewey/Einstein/Bernoulli",
-      "status": "integrated-locally",
-      "output": "Attack-wave authority, town-AI occupied-vehicle deletion, lifecycle wait-chain audit, UI/player-map debt and tooling operator checklist added to docs/backlog."
-    },
-    {
-      "lane": "cheap-discovery-swarm-v2",
-      "owner": "Codex",
-      "status": "harvested",
-      "output": "Subagent-Discovery-Swarm.md and Agent-Worklog.md list received reports."
-    },
-    {
-      "lane": "integration-backlog-batch-a",
-      "owner": "Codex",
-      "status": "active",
-      "output": "PV/network, external integration trust, DR-27 through DR-31, explorer wave C and PDF reconciliation wave D integrated locally; validation/publish remains."
+      "lane": "town-ai-vehicle-despawn-safety",
+      "owner": "future-ai-owner",
+      "status": "confirmed-backlog",
+      "output": "Feature-Status-Register.md, AI-Headless-And-Performance.md, agent-hardening-backlog.jsonl"
     },
     {
       "lane": "autonomous-claude-research",
       "owner": "Claude",
       "status": "open",
-      "output": "Claude may continue with source-backed reviews."
+      "output": "Claude may continue with bounded source-backed reviews"
+    },
+    {
+      "lane": "feature-status-reconciliation",
+      "owner": "Codex/future-agent",
+      "status": "open",
+      "output": "Keep confirmed findings reflected in owning atlas/risk pages"
     }
   ],
-  "queuedReports": [
-    "commander-construction-factory-v2",
-    "towns-camps-depots-economy-v2",
-    "support-artillery-uav-paradrop-v2",
-    "cleanup-maintenance-runtime-v2",
-    "stringtable-localization-copy-v2",
-    "generated-output-parity-check-v2",
-    "assets-audio-textures-identity-v2",
-    "loadoutmanager-generator-deeper-v2",
-    "modded-presentation-parity-v2"
-  ],
+  "queuedReports": [],
   "updateProtocol": [
     "Before substantial work, update agent-collaboration.json and append a claim event to agent-events.jsonl.",
     "For long work, append heartbeat events with current source scope.",

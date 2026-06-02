@@ -1,6 +1,6 @@
 {
  "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T12:42:00+02:00",
+ "generatedAt": "2026-06-02T13:10:00+02:00",
  "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
  "sourceOfTruth": {
   "progressDashboard": "Progress-Dashboard.md",
@@ -17,13 +17,13 @@
  "agents": {
   "Codex": {
    "role": "Integrator, wiki UX owner, source-atlas maintainer, publisher and validation runner.",
-   "currentLane": "agent-hardening-backlog-and-wave-f-integration validation/publish",
+   "currentLane": "long-running-archivist-continuation",
    "status": "active"
   },
   "Claude": {
    "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
-   "currentLane": "wasp-overlay-perf-jip-review (DR-40) — all Perf/JIP-HC cells reviewed",
-   "status": "ready-for-review; autonomous-ready"
+   "currentLane": "autonomous-claude-research",
+   "status": "autonomous-ready"
   },
   "Newton": {
    "role": "Cheap read-only broken-reference explorer.",
@@ -112,10 +112,25 @@
   }
  },
  "activeClaims": [
- {
+  {
+   "lane": "dashboard-current-state-cleanup",
+   "owner": "Codex",
+   "status": "published",
+   "sourceScope": [
+    "docs/wiki/Progress-Dashboard.md",
+    "docs/wiki/agent-status.json",
+    "docs/wiki/agent-collaboration.json"
+   ],
+   "outputs": [
+    "Progress-Dashboard.md current-state-first layout",
+    "agent-status.json compact current state"
+   ],
+   "handoff": "Dashboard now presents current state first; future agents should keep it compact and move historical scout detail to Subagent-Discovery-Swarm.md and Agent-Worklog.md."
+  },
+  {
    "lane": "agent-hardening-backlog-and-wave-f-integration",
    "owner": "Codex",
-   "status": "integrated-locally",
+   "status": "published",
    "sourceScope": [
     "docs/wiki/agent-hardening-backlog.jsonl",
     "docs/wiki/external-research-report-manifest.json",
@@ -335,10 +350,10 @@
   "discord-datapath-dr31",
   "cheap-explorer-wave-c",
   "external-pdf-reconciliation-wave-d",
-   "agent-readable-artifact-v3",
-   "supply-mission-authority-matrix-v2",
-   "cheap-explorer-wave-e",
-   "implementation-hardening-planning"
+  "agent-readable-artifact-v3",
+  "supply-mission-authority-matrix-v2",
+  "cheap-explorer-wave-e",
+  "implementation-hardening-planning"
  ],
  "queuedReports": [],
  "lanes": [

@@ -393,6 +393,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Added the post-join wait-chain audit to [Lifecycle wait-chain](Lifecycle-Wait-Chain): handshake gates retry every 30 seconds but have no terminal timeout, while later replicated-variable waits have no retry/timeout/log fallback.
 - Added an operator checklist to [Tools/build](Tools-And-Build-Workflow) for LoadoutManager checkout path, `7za`, generated `version.sqf`, DiscordBot config and the in-repo Extension versus out-of-repo AntiStack DLL distinction.
 
+## 2026-06-02 - Codex Dashboard Current-State Cleanup
+
+- Reworked [Progress dashboard](Progress-Dashboard) so the first screen shows the current state, open lanes and recent published work instead of a stale historical roster.
+- Moved detailed scout history responsibility to [Discovery swarm](Subagent-Discovery-Swarm) and this worklog.
+- Updated `agent-status.json`, `agent-collaboration.json` and `agent-context.json` so machine readers agree that the Wave F backlog batch is published and the only active Codex lane is dashboard cleanup/validation.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

@@ -1,6 +1,6 @@
 {
  "schema": "a2waspwarfare-agent-context-v1",
- "generatedAt": "2026-06-02T12:05:00+02:00",
+ "generatedAt": "2026-06-02T13:10:00+02:00",
  "repository": "rayswaynl/a2waspwarfare",
  "game": "Arma 2 Operation Arrowhead 1.64",
  "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -134,6 +134,12 @@
  },
  "openLanes": [
   {
+   "lane": "dashboard-current-state-cleanup",
+   "owner": "Codex",
+   "status": "published",
+   "nextAction": "No action; dashboard now uses current-state-first layout."
+  },
+  {
    "lane": "feature-status-reconciliation",
    "owner": "Codex",
    "status": "open",
@@ -149,7 +155,7 @@
    "lane": "implementation-hardening-planning",
    "owner": "Codex/future-agent",
    "status": "roadmap-plus-machine-backlog-published",
-   "nextAction": "Turn Hardening-Implementation-Roadmap.md and agent-hardening-backlog.jsonl work packages into code branches when the owner chooses to patch gameplay."
+   "nextAction": "Future code owners should claim implementation work from agent-hardening-backlog.jsonl."
   },
   {
    "lane": "town-ai-vehicle-despawn-safety",
@@ -205,8 +211,7 @@
   "waspOverlay": "Project-specific WASP additions include base repair, RPG dropping, marker monitor, HQ recovery action, start vehicles and a server selftest. See WASP-Overlay.md.",
   "factoryPurchase": "Player buy-unit flow is client-local from GUI_Menu_BuyUnits.sqf to Client_BuildUnit.sqf; RequestBuyUnit is not registered and no Server/PVFunctions/RequestBuyUnit.sqf exists. Server_BuyUnit/AIBuyUnit is compiled but no static caller was found. See Factory-And-Purchase-Systems-Atlas.md.",
   "serverRuntime": "Server gameplay loops are owned by Init_Server.sqf: town capture/SV, town AI activation/despawn, camp manager, resources/economy, victory checks, garbage/vehicle cleanup, server FPS and AntiStack loops. See Server-Gameplay-Runtime-Atlas.md.",
-  "externalResearch": "Three Steff-provided Dutch PDF reports were extracted to local cache and summarized in external-research-report-manifest.json. Treat them as leads until repo evidence confirms them; Claude found earlier report citations were downstream corroboration from the wiki/upstream proxy. See External-Research-Reports.md."
-  ,
+  "externalResearch": "Three Steff-provided Dutch PDF reports were extracted to local cache and summarized in external-research-report-manifest.json. Treat them as leads until repo evidence confirms them; Claude found earlier report citations were downstream corroboration from the wiki/upstream proxy. See External-Research-Reports.md.",
   "hardeningRoadmap": "Hardening-Implementation-Roadmap.md plus agent-hardening-backlog.jsonl convert confirmed Auth/PV, correctness, performance and docs-polish findings into patch order, source files, implementation shape and validation gates. Start there before changing PVF dispatch, ICBM, attack waves, victory/endgame, economy authority, supply missions, town AI or BattlEye-sensitive behavior."
  },
  "knownRisks": [
