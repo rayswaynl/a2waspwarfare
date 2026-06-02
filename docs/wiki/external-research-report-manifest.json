@@ -1,7 +1,7 @@
 {
-  "schema": "a2waspwarfare-external-research-report-manifest-v1",
-  "generatedAt": "2026-06-02T04:26:04+02:00",
-  "purpose": "Sanitized metadata for Steff-provided external PDF reports. Report claims are research leads until checked against repository source.",
+  "schema": "a2waspwarfare-external-research-report-manifest-v2",
+  "generatedAt": "2026-06-02T15:50:00+02:00",
+  "purpose": "Sanitized metadata for Steff-provided external PDF and Markdown deep-research reports. Report claims are research leads until checked against repository source.",
   "rawTextPublished": false,
   "localExtractionCache": "work/research-intake/pdf-reports",
   "reports": [
@@ -34,6 +34,107 @@
       "pages": 12,
       "charsExtracted": 30016,
       "lastWriteTime": "2026-06-01T23:13:42+02:00"
+    }
+  ],
+  "markdownReports": [
+    {
+      "title": "Server Authority Refactor Design voor a2waspwarfare",
+      "providedLocalPath": "C:\\Users\\Steff\\Downloads\\deep-research-report (8).md",
+      "bytes": 31817,
+      "sha256": "e5aa6f998b6dfe347c14780171a8ddecce77e1daab66e7bc902790b366b17448",
+      "chars": 31219,
+      "lines": 93,
+      "headingCount": 7,
+      "lastWriteTime": "2026-06-02T05:48:42+02:00",
+      "status": "intake-complete-source-verification-required"
+    },
+    {
+      "title": "AI-onboarding en veilige refactor-playbook voor a2waspwarfare",
+      "providedLocalPath": "C:\\Users\\Steff\\Downloads\\deep-research-report (9).md",
+      "bytes": 45226,
+      "sha256": "b2fc2ebeeb732026c61bc3b14feea6d9b86d6a95c0f1f13e33671f84eab11601",
+      "chars": 44191,
+      "lines": 433,
+      "headingCount": 20,
+      "lastWriteTime": "2026-06-02T05:48:51+02:00",
+      "status": "intake-complete-source-verification-required"
+    },
+    {
+      "title": "Full Mission Runtime Architecture",
+      "providedLocalPath": "C:\\Users\\Steff\\Downloads\\deep-research-report (1).md",
+      "bytes": 29932,
+      "sha256": "b98d7a9a4396d8e0dbfb87915efa91323d637279675ef51e267cf2bad73bd396",
+      "chars": 29094,
+      "lines": 158,
+      "headingCount": 10,
+      "lastWriteTime": "2026-06-02T05:47:48+02:00",
+      "status": "intake-complete-source-verification-required"
+    },
+    {
+      "title": "Multiplayer Trust Boundary Hardening Audit of a2waspwarfare",
+      "providedLocalPath": "C:\\Users\\Steff\\Downloads\\deep-research-report (2).md",
+      "bytes": 31256,
+      "sha256": "a3f90575c1dea9f4b61110ce88c2134a2e852f21e667322c1c7af08b570bd58d",
+      "chars": 30670,
+      "lines": 212,
+      "headingCount": 7,
+      "lastWriteTime": "2026-06-02T05:47:56+02:00",
+      "status": "intake-complete-source-verification-required"
+    },
+    {
+      "title": "Broken, Partial, Abandoned, and Missing Feature Archaeology for rayswaynl/a2waspwarfare",
+      "providedLocalPath": "C:\\Users\\Steff\\Downloads\\deep-research-report (3).md",
+      "bytes": 19484,
+      "sha256": "8e3022ab556d47068de88f2a1decf72ce3a1013c8da75bca9563da845fd6f955",
+      "chars": 18942,
+      "lines": 115,
+      "headingCount": 8,
+      "lastWriteTime": "2026-06-02T05:48:07+02:00",
+      "status": "intake-complete-source-verification-required"
+    },
+    {
+      "title": "Long-Term Modernization and Safe Development Strategy for a2waspwarfare",
+      "providedLocalPath": "C:\\Users\\Steff\\Downloads\\deep-research-report (4).md",
+      "bytes": 39524,
+      "sha256": "211487e06a3e6127f658195a093f87466d605ec9ac0f767ea4f5113bc0da09ea",
+      "chars": 38700,
+      "lines": 186,
+      "headingCount": 18,
+      "lastWriteTime": "2026-06-02T05:48:13+02:00",
+      "status": "intake-complete-source-verification-required"
+    },
+    {
+      "title": "Deep research van rayswaynl a2waspwarfare locality en JIP architectuur",
+      "providedLocalPath": "C:\\Users\\Steff\\Downloads\\deep-research-report (5).md",
+      "bytes": 23043,
+      "sha256": "ee614a67de2cb2550b308b77d863cf7843786855aed8b8f77d97102e66a199b4",
+      "chars": 22480,
+      "lines": 78,
+      "headingCount": 7,
+      "lastWriteTime": "2026-06-02T05:48:19+02:00",
+      "status": "intake-complete-source-verification-required"
+    },
+    {
+      "title": "Practical Testing, Debugging, and Release Workflow for Arma 2 OA a2waspwarfare",
+      "providedLocalPath": "C:\\Users\\Steff\\Downloads\\deep-research-report (6).md",
+      "bytes": 40139,
+      "sha256": "43e5c658715c57739bd081555a056c7f2a0c56d6e260e9794418e16055ec16ac",
+      "chars": 39429,
+      "lines": 297,
+      "headingCount": 8,
+      "lastWriteTime": "2026-06-02T05:48:29+02:00",
+      "status": "intake-complete-source-verification-required"
+    },
+    {
+      "title": "Gameplay Systems and State Ownership Atlas for a2waspwarfare",
+      "providedLocalPath": "C:\\Users\\Steff\\Downloads\\deep-research-report (7).md",
+      "bytes": 40380,
+      "sha256": "37ee582812e06c34d2fd627487dc7f67f92427712cb334b0443f0743046d3951",
+      "chars": 39330,
+      "lines": 169,
+      "headingCount": 16,
+      "lastWriteTime": "2026-06-02T05:48:38+02:00",
+      "status": "intake-complete-source-verification-required"
     }
   ],
   "promotionRule": "Promote claims into subsystem docs only after source-file verification; use the reports as corroboration and idea discovery, not as source truth."

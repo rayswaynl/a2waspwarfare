@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T15:25:00+02:00",
+  "generatedAt": "2026-06-02T15:50:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,8 +16,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass added Attack-Wave-Authority-Playbook.md as the implementation guide for DR-41.",
-      "nextExpectedOutput": "Claim the next bounded source-backed lane when new findings, Claude output or gameplay work arrives."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass ingested nine Steff-provided Markdown deep-research reports as metadata and source-check leads.",
+      "nextExpectedOutput": "Continue with the next bounded source-backed lane, likely PVF dispatch implementation playbook or HC delegation/failover review."
     },
     "Claude": {
       "status": "autonomous-ready",
@@ -86,6 +86,12 @@
       "owner": "Claude/Codex",
       "status": "playbook-published",
       "output": "Attack-Wave-Authority-Playbook.md plus cross-links through Networking/PV, Hardening roadmap, Server authority map, Economy, Feature status and agent-hardening-backlog.jsonl"
+    },
+    {
+      "lane": "markdown-research-report-intake",
+      "owner": "Codex",
+      "status": "published",
+      "output": "External-Research-Reports.md and external-research-report-manifest.json now track nine Markdown reports as research leads"
     }
   ],
   "queuedReports": [],

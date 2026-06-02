@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T15:25:00+02:00",
+  "generatedAt": "2026-06-02T15:50:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -149,6 +149,29 @@
         "Attack-Wave-Authority-Playbook.md"
       ],
       "handoff": "Future code owner: implement hardening/attack-wave-authority from Attack-Wave-Authority-Playbook.md and agent-hardening-backlog.jsonl. Server must re-derive side supply, validate requester/side, reject duplicate active waves, clamp modifier/duration and preserve the all-side-supply spend model unless an owner approves a fixed-cost design change."
+    },
+    {
+      "lane": "markdown-research-report-intake",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (1).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (2).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (3).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (4).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (5).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (6).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (7).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (8).md",
+        "C:\\Users\\Steff\\Downloads\\deep-research-report (9).md",
+        "Tools/LoadoutManager/ZipManager.cs",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs"
+      ],
+      "outputs": [
+        "External-Research-Reports.md Markdown intake section",
+        "external-research-report-manifest.json markdownReports metadata"
+      ],
+      "handoff": "Claude/future agents: treat Markdown reports as leads. Source-check each claim against repository files or already-verified DR findings before promoting it into canonical subsystem docs."
     },
     {
       "lane": "testing-debugging-release-workflow",

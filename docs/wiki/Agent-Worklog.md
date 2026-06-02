@@ -2,6 +2,14 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Markdown Research Report Intake
+
+- Read nine Steff-provided Markdown deep-research reports from `C:\Users\Steff\Downloads\deep-research-report (1).md` through `(9).md`.
+- Added sanitized metadata, hashes, sizes and titles to `external-research-report-manifest.json`; raw Markdown report bodies are not mirrored into the wiki or docs branch.
+- Added a Markdown intake section to [External research reports](External-Research-Reports), including report scopes, promotion rules and a source-check lead table.
+- Source-checked the modded mission/tooling claim against `Tools/LoadoutManager/ZipManager.cs` and `Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs`; it matches already-documented disabled modded propagation and packaging scope in [Tools/build](Tools-And-Build-Workflow).
+- Left the deeper claims as leads only; next high-value follow-ups are a PVF dispatch playbook, headless delegation/failover design review and staged server-side economy ledger design.
+
 ## 2026-06-01 - Codex
 
 - Created initial developer wiki structure and `docs/wiki` mirror plan.

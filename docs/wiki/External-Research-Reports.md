@@ -1,14 +1,14 @@
 # External Research Reports
 
-This page tracks three PDF deep-research reports provided by Steff on 2026-06-01 and re-shared on 2026-06-02 for a second reconciliation pass with Claude and Codex.
+This page tracks external deep-research reports provided by Steff: three PDFs from 2026-06-01 and nine Markdown reports from 2026-06-02.
 
-Treat this page as an intake ledger, not as source truth. Claims from the PDFs must be checked against the repo before they are promoted into subsystem atlas pages or the feature-status register.
+Treat this page as an intake ledger, not as source truth. Claims from the PDFs or Markdown reports must be checked against the repo before they are promoted into subsystem atlas pages or the feature-status register.
 
 Claude later cross-checked the reports in Deep-Review Round 16 and found their citations are mostly downstream of this wiki or an upstream proxy, so they are corroboration of the current documentation rather than independent source verification. The wiki's source-backed DR findings are currently the stronger authority.
 
-Machine-readable manifest: [`external-research-report-manifest.json`](external-research-report-manifest.json). Raw extracted text is kept in the local Codex workspace cache (`work/research-intake/pdf-reports`) and is not mirrored into the wiki.
+Machine-readable manifest: [`external-research-report-manifest.json`](external-research-report-manifest.json). Raw PDF extracted text is kept in the local Codex workspace cache (`work/research-intake/pdf-reports`) and is not mirrored into the wiki. Raw Markdown report contents are also not mirrored; the wiki stores metadata, status and source-checked deltas only.
 
-## Source Files
+## PDF Source Files
 
 | Report | Local file | Pages | SHA-256 | Scout | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -17,6 +17,44 @@ Machine-readable manifest: [`external-research-report-manifest.json`](external-r
 | `Diepgaande analyse van rayswaynl/a2waspwarfare` | `C:\Users\Steff\Downloads\Diepgaande analyse van rayswaynl_a2waspwarfare.pdf` | 12 | `61e5e77d80e485300fb37fc9fc273d769948c88eeb158dcd6d55d78e7dac94b3` | Parfit / Carver / Dewey | External PDF digested again; security/network posture focus. |
 
 Extraction cache manifest: `work/research-intake/pdf-reports/manifest.json`.
+
+## Markdown Report Intake 2026-06-02
+
+Steff provided nine additional Markdown deep-research reports on 2026-06-02. Codex read them as a fresh intake batch, recorded hashes and titles in the manifest, and used them as candidate leads for future source-backed work.
+
+| Report | Local file | SHA-256 | Scope | Status |
+| --- | --- | --- | --- | --- |
+| `Server Authority Refactor Design voor a2waspwarfare` | `C:\Users\Steff\Downloads\deep-research-report (8).md` | `e5aa6f998b6dfe347c14780171a8ddecce77e1daab66e7bc902790b366b17448` | Server authority redesign, trust boundary migration and staged hardening concepts. | Intake complete; design claims require source-backed implementation decisions. |
+| `AI-onboarding en veilige refactor-playbook voor a2waspwarfare` | `C:\Users\Steff\Downloads\deep-research-report (9).md` | `b2fc2ebeeb732026c61bc3b14feea6d9b86d6a95c0f1f13e33671f84eab11601` | AI assistant onboarding, safe refactor rules, proposed agent files and machine context patterns. | Intake complete; do not copy generated guide text directly without review. |
+| `Full Mission Runtime Architecture` | `C:\Users\Steff\Downloads\deep-research-report (1).md` | `b98d7a9a4396d8e0dbfb87915efa91323d637279675ef51e267cf2bad73bd396` | Mission boot, runtime split, common/client/server/headless flow. | Mostly overlaps existing architecture and lifecycle pages; use as corroboration. |
+| `Multiplayer Trust Boundary Hardening Audit of a2waspwarfare` | `C:\Users\Steff\Downloads\deep-research-report (2).md` | `a3f90575c1dea9f4b61110ce88c2134a2e852f21e667322c1c7af08b570bd58d` | PVF/direct-PV trust boundaries, validation and hardening plan. | Overlaps DR-1/DR-6/DR-14/DR-16/DR-27/DR-28/DR-30/DR-41. |
+| `Broken, Partial, Abandoned, and Missing Feature Archaeology for rayswaynl/a2waspwarfare` | `C:\Users\Steff\Downloads\deep-research-report (3).md` | `8e3022ab556d47068de88f2a1decf72ce3a1013c8da75bca9563da845fd6f955` | Feature archaeology, disabled code, partial systems and missing files. | Useful lead list; source-backed status remains in Feature Status and Deep Review Findings. |
+| `Long-Term Modernization and Safe Development Strategy for a2waspwarfare` | `C:\Users\Steff\Downloads\deep-research-report (4).md` | `211487e06a3e6127f658195a093f87466d605ec9ac0f767ea4f5113bc0da09ea` | Long-term modernization sequence, testing posture and safer refactor strategy. | Treat as roadmap input, not current behavior proof. |
+| `Deep research van rayswaynl a2waspwarfare locality en JIP architectuur` | `C:\Users\Steff\Downloads\deep-research-report (5).md` | `ee614a67de2cb2550b308b77d863cf7843786855aed8b8f77d97102e66a199b4` | Locality, JIP, headless and hosted/dedicated behavior. | Overlaps lifecycle, AI/headless and wait-chain docs; verify any new claim against source. |
+| `Practical Testing, Debugging, and Release Workflow for Arma 2 OA a2waspwarfare` | `C:\Users\Steff\Downloads\deep-research-report (6).md` | `43e5c658715c57739bd081555a056c7f2a0c56d6e260e9794418e16055ec16ac` | Practical smoke tests, release gates, diagnostics and RPT workflow. | Overlaps Testing Workflow page; use for test-plan refinement ideas. |
+| `Gameplay Systems and State Ownership Atlas for a2waspwarfare` | `C:\Users\Steff\Downloads\deep-research-report (7).md` | `37ee582812e06c34d2fd627487dc7f67f92427712cb334b0443f0743046d3951` | Towns, economy, commander, construction, factories and state ownership. | Overlaps gameplay/factory/construction/economy atlas pages. |
+
+## Markdown Intake Synthesis
+
+The Markdown batch is valuable as a structured second-brain pass, especially for server authority, AI onboarding and long-term refactor strategy. It does not replace source-backed wiki pages. Future agents should use the reports to find what to inspect next, then cite repository files or already-verified DR findings before changing canonical subsystem docs.
+
+Confirmed overlap from this intake pass:
+
+| Lead | Source-backed status |
+| --- | --- |
+| Modded mission propagation is not currently maintained by `Tools/LoadoutManager`. | Verified from `Tools/LoadoutManager/ZipManager.cs:10`, which packages only `Missions` and `Missions_Vanilla`, and `Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs:132-133`, where modded-terrain propagation is commented with a TODO. Already covered by [Tools/build](Tools-And-Build-Workflow). |
+| Runtime architecture, lifecycle and wait-chain reports broadly match current docs. | Already covered by [Architecture overview](Architecture-Overview), [Mission lifecycle](Mission-Entrypoints-And-Lifecycle) and [Lifecycle wait-chain](Lifecycle-Wait-Chain). |
+| Server authority reports point at the same client-trusted economy class already found by Claude/Codex. | Use [Server authority map](Server-Authority-Migration-Map), [Deep-review findings](Deep-Review-Findings), [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) as the source-backed versions. |
+| Testing and release workflow report is aligned with the newly published validation levels. | Use [Testing workflow](Testing-Debugging-And-Release-Workflow) and [`agent-test-plan.schema.json`](agent-test-plan.schema.json) for canonical validation language. |
+
+New or sharpened leads to source-check later:
+
+| Lead | Suggested verification target |
+| --- | --- |
+| Headless delegation lease/ACK/failover model for future stability. | `Headless/`, `Common/Functions/Common_CreateUnit.sqf`, town AI activation and HC creation paths. |
+| Server shadow ledger for staged economy hardening. | `Server_ChangeSideSupply.sqf`, funds/supply PV flows, buy/build/sell/upgrade/supply request handlers. |
+| Root `AGENTS.md` addition for repo-native AI onboarding. | Compare the report's proposed agent guide against current `CLAUDE.md`, [AI assistant guide](AI-Assistant-Developer-Guide) and shared machine files before adding a new root file. |
+| PVF dispatch implementation playbook. | `Common/Init/Init_PublicVariables.sqf`, `Server_HandlePVF.sqf`, `Client_HandlePVF.sqf`, DR-1 and DR-38. |
 
 ## Second Reconciliation Wave
 
@@ -89,13 +127,14 @@ The reports recommend these longer-term hardening moves. They are consistent wit
 ```json
 {
   "page": "External-Research-Reports",
-  "sourceType": "external_pdf_intake",
+  "sourceType": "external_report_intake",
   "status": "unverified_claims_must_be_repo_checked",
-  "reports": [
+  "pdfReports": [
     "Analytisch rapport over rayswaynl_a2waspwarfare.pdf",
     "Analyse van rayswaynl_a2waspwarfare.pdf",
     "Diepgaande analyse van rayswaynl_a2waspwarfare.pdf"
   ],
+  "markdownReports": 9,
   "scouts": ["Sagan", "Helmholtz", "Parfit"],
   "promotionRule": "Only promote claims to subsystem pages after source-file verification."
 }
