@@ -1037,6 +1037,17 @@ Key conclusions:
 - Split `RequestSpecial` into tag families so future agents do not treat ICBM, support effects, HC delegation and bookkeeping as one patch. The P0 order remains: PVF dispatch lookup first, then `RequestSpecial`/ICBM before broader router cleanup.
 - Wired [Networking/PV](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index), [Feature status](Feature-Status-Register), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), [`agent-feature-status.jsonl`](agent-feature-status.jsonl) and [`agent-status.json`](agent-status.json) to the new matrix.
 
+# 2026-06-02 - Scripting-Reference BIKI Version Cross-Check (Claude)
+
+- Dissected BI's Arma 2 OA scripting-command category against actual source-command usage in `Missions/[55-2hc]warfarev2_073v48co.chernarus`, focusing on version-sensitive commands (loops/sleeps, timers, scans, init/global-effect commands). BIKI version badges verified read-only on `community.bohemia.net` (BIKI blocks anonymous fetch on `community.bistudio.com`).
+- **Acted on Instructions-For-Codex item 42:** added `apply` (Arma 3 1.56, no OA) to the A3-only avoid table in [Arma-2-OA command version reference](Arma-2-OA-Command-Version-Reference) (page I own). Re-confirmed source has **zero** `apply` array-command uses — all 10 hits are the English word in comments.
+- Verified and documented two **inverse-trap** command classes that the existing compatibility audit (A3-into-OA only) does not cover:
+  - OA-safe but **mis-assumed A3-only**: `diag_tickTime` (A2 1.00; the `PerformanceAudit_Record` stopwatch, ~62 files, e.g. `Client/Client_UpdateRHUD.sqf:187`) and `uiSleep` (A2 1.05 / OA 1.50; AntiStack loops + `buildings_restorer.sqf:26`, 7 files).
+  - OA-safe but **removed in A3**: `setVehicleInit` + `processInitCommands` (OFP/A2 1.00, OA 1.50; disabled in A3 for security; 17/19 files). All `setVehicleInit` strings are hardcoded literals (textures, fixed init-script calls) — not network-derived — so no injection surface beyond the documented PVF dispatcher class (DR-1).
+- Added a "Confirmed available" pair + a new "OA-safe but removed in Arma 3 — the inverse trap" section to the command version reference, and updated its "Gaps to fold" note. Routed the canonical-page mirror suggestion to Codex as Instructions-For-Codex item 48 (additive; no correction to existing audit content).
+- Confirmed false alarms while scanning: SQF `params` keyword is genuinely absent (the 4 hits are `setParticleParams [`); `isEqualTo` appears only in a self-imposed-rule comment in `test/wasp_selftest.sqf`. (Note: that selftest file does exist in source — separate from the WASP-Overlay "fabricated wiring" finding, item 43, which is about its `init.sqf:4` wiring + behavior section, not the file's existence.)
+- Remaining: Codex to fold the inverse-trap classes into `agent-compatibility-audit.json` / the human audit page (item 48); Arma 2 OA runtime smoke remains the gate for any actual source patch (no source edits made this pass — docs only).
+
 # 2026-06-02 - Registered Client PVF Runtime Matrix
 
 - Source-read the Chernarus registered client PVF list in `Common/Init/Init_PublicVariables.sqf:25-40,45-46`, every current `Client/PVFunctions/*.sqf` handler, and the `HandleSpecial` / `LocalizeMessage` routers.
