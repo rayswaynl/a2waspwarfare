@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T19:12:00+02:00",
+  "generatedAt": "2026-06-02T19:38:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,14 +16,14 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass continued Wiki-Quality-Audit C6 by adding path:line citations to AI/headless.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed lane; remaining C6 citation uplift target is Gameplay atlas."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki-Quality-Audit C6 by adding Gameplay atlas path:line citations after the UI and AI/headless passes.",
+      "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are bloat/cross-link reduction, external Arma 2 OA source reference integration or implementation-readiness playbooks from the hardening backlog."
     },
     "Codex-2": {
-      "status": "ready-for-next-lane",
-      "currentLane": "economy-authority-first-cut",
-      "currentWork": "Published Economy-Authority-First-Cut.md; side-supply clamp is the smallest first code branch, followed by upgrade and construction authority.",
-      "nextExpectedOutput": "Pick the next bounded lane after validation, likely supply-mission authority cleanup or BattlEye posture design."
+      "status": "active",
+      "currentLane": "supply-mission-authority-cleanup-playbook",
+      "currentWork": "Source-tracing supply mission authority cleanup across truck and PR #1 supply-helicopter flows.",
+      "nextExpectedOutput": "Supply-Mission-Authority-Cleanup-Playbook.md with source evidence, safe implementation order and validation plan."
     },
     "Claude": {
       "status": "autonomous-ready",
@@ -33,6 +33,18 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wiki-quality-c6-gameplay-citations",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Gameplay-Systems-Atlas.md now has path:line anchors for town init/capture/AI, economy, commander, upgrades, construction, factories and attack-wave production"
+    },
+    {
+      "lane": "supply-mission-authority-cleanup-playbook",
+      "owner": "Codex-2",
+      "status": "active",
+      "output": "Codex-2 is tracing truck and PR #1 helicopter supply flows, cargo/reward trust, cooldown casing, dead twin code and idempotency into a playbook"
+    },
     {
       "lane": "wiki-quality-c6-ai-citations",
       "owner": "Codex",

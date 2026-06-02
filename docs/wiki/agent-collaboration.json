@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T18:58:00+02:00",
+  "generatedAt": "2026-06-02T19:38:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,61 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-quality-c6-gameplay-citations",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Town.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Towns.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_ai.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/updateresources.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestCommanderVote.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_VoteForCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ProcessUpgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/CoIn/coin_interface.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_BuyUnit.sqf",
+        "Gameplay-Systems-Atlas.md",
+        "Wiki-Quality-Audit.md"
+      ],
+      "outputs": [
+        "Gameplay-Systems-Atlas.md path:line citation uplift",
+        "Wiki-Quality-Audit.md C6 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-status.json"
+      ],
+      "handoff": "Wiki-Quality-Audit C6 is now resolved across UI/HUD, AI/headless and Gameplay. Future work can focus on REDUCE-4 bloat reduction or merge/dedup items."
+    },
+    {
+      "lane": "supply-mission-authority-cleanup-playbook",
+      "owner": "Codex-2",
+      "status": "active",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionActive.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Town.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Supply-Mission-Architecture.md",
+        "Current-Work-Supply-Helicopters-PR1.md",
+        "Economy-Authority-First-Cut.md",
+        "agent-hardening-backlog.jsonl#supply-mission-authority-cleanup"
+      ],
+      "outputs": [
+        "Supply-Mission-Authority-Cleanup-Playbook.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl claim/finding/complete/handoff events",
+        "agent-status/context links if published"
+      ],
+      "handoff": "Create a source-backed supply mission authority/cleanup playbook for truck + PR#1 helicopter flows, including cargo vars, cooldown casing, completion reward, interdiction idempotency and validation."
+    },
     {
       "lane": "economy-authority-first-cut",
       "owner": "Codex-2",

@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wiki-Quality C6 Gameplay Citation Uplift
+
+- Finished the remaining [Wiki quality audit](Wiki-Quality-Audit) C6 citation gap on [Gameplay systems atlas](Gameplay-Systems-Atlas).
+- Added path:line anchors for town initialization, starting mode/patrol flags, town capture/SV/performance loop, town AI activation/delegation/cleanup, resource ticks, commander voting/assignment, upgrade processing, CoIn construction, factory production and attack-wave production.
+- Updated [Progress dashboard](Progress-Dashboard), [Wiki quality audit](Wiki-Quality-Audit), `agent-status.json` and `agent-events.jsonl` so C6 now reads as resolved across UI/HUD, AI/headless and Gameplay.
+- Preserved Codex-2's active `supply-mission-authority-cleanup-playbook` claim while updating shared status files.
+
 ## 2026-06-02 - Codex Markdown Research Report Intake
 
 - Read nine Steff-provided Markdown deep-research reports from `C:\Users\Steff\Downloads\deep-research-report (1).md` through `(9).md`.

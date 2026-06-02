@@ -8,6 +8,8 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `wiki-quality-c6-gameplay-citations` | Published | [Gameplay atlas](Gameplay-Systems-Atlas) now has path:line anchors for town init/capture/AI, economy, commander, upgrades, construction, factories and attack-wave production. |
+| `supply-mission-authority-cleanup-playbook` | Active | Codex-2 is tracing truck and PR #1 helicopter supply flows, cargo/reward trust, cooldown casing, dead twin code and idempotency into a patch-ready playbook. |
 | `wiki-quality-c6-ai-citations` | Published | [AI/headless](AI-Headless-And-Performance) now has path:line anchors for HC bootstrap, HC registry, town/static delegation, disconnect handling, town-AI cleanup, server FPS and `GetSleepFPS`. |
 | `economy-authority-first-cut` | Published | [Economy authority first cut](Economy-Authority-First-Cut) sequences the economy hardening class into side-supply clamp first, then upgrade authority, construction/defense authority and deferred player-buy locality redesign. |
 | `wiki-quality-c6-ui-citations` | Published | [Client UI/HUD](Client-UI-HUD-And-Menus) now has path:line anchors for Rsc includes, dialog IDDs, menu routing, RHUD/FPS toggles and respawn marker tracking. |
@@ -33,8 +35,8 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. |
-| Codex-2 | Ready for next lane | `economy-authority-first-cut` | [Economy authority first cut](Economy-Authority-First-Cut) is published; likely next lanes are supply-mission authority cleanup or BattlEye posture design. |
+| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice finished the C6 Gameplay citation uplift. |
+| Codex-2 | Active | `supply-mission-authority-cleanup-playbook` | Expect [Supply mission](Supply-Mission-Architecture) authority cleanup guidance for truck + PR #1 helicopter flows. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
@@ -59,7 +61,9 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
-| `wiki-quality-c6-ai-citations` | Codex | Published | Second C6 pass is done for [AI/headless](AI-Headless-And-Performance); Gameplay citation uplift remains open. |
+| `wiki-quality-c6-gameplay-citations` | Codex | Published | Final C6 pass is done for [Gameplay atlas](Gameplay-Systems-Atlas); [Wiki quality audit](Wiki-Quality-Audit) C6 is resolved. |
+| `supply-mission-authority-cleanup-playbook` | Codex-2 | Active | Codex-2 is source-tracing truck and supply-helicopter authority cleanup and should publish a dedicated playbook. |
+| `wiki-quality-c6-ai-citations` | Codex | Published | Second C6 pass is done for [AI/headless](AI-Headless-And-Performance). |
 | `economy-authority-first-cut` | Codex-2 | Published | Use [Economy authority first cut](Economy-Authority-First-Cut) before patching side-supply clamps, upgrade authority, construction/defense authority or player-buy locality. |
 | `wiki-quality-c6-ui-citations` | Codex | Published | First C6 pass is done for [Client UI/HUD](Client-UI-HUD-And-Menus); Gameplay/AI citation uplift remains open. |
 | `wiki-quality-c4-victory-searchability` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) C4 is resolved: victory/endgame pages now name DR-11 explicitly. |
@@ -81,7 +85,8 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
-| Wiki-quality C6 AI/headless citations | [AI/headless](AI-Headless-And-Performance), [Wiki quality audit](Wiki-Quality-Audit) | Adds source anchors for HC bootstrap/registry/delegation/disconnect, client-FPS delegation, town-AI cleanup, server-FPS publishing and `GetSleepFPS`, leaving Gameplay atlas citation uplift as the remaining C6 item. |
+| Wiki-quality C6 Gameplay citations | [Gameplay atlas](Gameplay-Systems-Atlas), [Wiki quality audit](Wiki-Quality-Audit) | Adds source anchors for town initialization, starting mode/patrol flags, capture/SV/perf loop, town AI activation/delegation/cleanup, economy resource ticks, commander assignment/votes, upgrade processing, CoIn construction, factory purchase/build paths and attack-wave production. |
+| Wiki-quality C6 AI/headless citations | [AI/headless](AI-Headless-And-Performance), [Wiki quality audit](Wiki-Quality-Audit) | Adds source anchors for HC bootstrap/registry/delegation/disconnect, client-FPS delegation, town-AI cleanup, server-FPS publishing and `GetSleepFPS`; this pairs with the UI and Gameplay passes that now resolve C6. |
 | Economy authority first cut | [Economy authority first cut](Economy-Authority-First-Cut), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) | Codex-2 turns the broad economy authority class into a source-backed patch sequence: side-supply clamp first, then upgrade and construction/defense authority, with player-buy locality deferred as a larger redesign. |
 | Wiki-quality C6 UI citations | [Client UI/HUD](Client-UI-HUD-And-Menus), [Wiki quality audit](Wiki-Quality-Audit) | Adds path:line anchors to the lightweight UI overview so it meets the project's source-backed citation standard without duplicating the full UI systems atlas. |
 | Wiki-quality C4 victory searchability | [Feature status](Feature-Status-Register), [Hardening roadmap](Hardening-Implementation-Roadmap), [Wiki quality audit](Wiki-Quality-Audit) | Adds explicit DR-11 references to the victory/endgame bug while keeping DR-36 as the mechanism/perf-JIP review. |

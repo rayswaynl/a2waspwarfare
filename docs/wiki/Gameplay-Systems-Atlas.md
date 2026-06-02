@@ -34,7 +34,7 @@ flowchart TD
 
 `mission.sqm` places town logics and calls `Common/Init/Init_Town.sqf` with town name, optional dubbing name, start supply value, max supply value, town value and town group template/type.
 
-`Init_Town.sqf` waits for town mode and mission parameters, skips disabled towns from `TownTemplate`, then sets the core town variables:
+`Init_Town.sqf` waits for town mode and mission parameters, skips disabled towns from `TownTemplate`, then sets the core town variables. Source anchors: `Common/Init/Init_Town.sqf:31-40` for name/SV/type setup, `:64-71` for defenses and dubbing, and `:87-88` for public owner/SV initialization.
 
 | Variable | Purpose |
 | --- | --- |
@@ -51,7 +51,7 @@ flowchart TD
 | `sideID` | Owning side ID, defaulting to defender when unset. |
 | `supplyValue` | Current town SV, public. |
 
-Camp creation is server-owned. For each synchronized camp, the server creates a camp bunker model, flag object and side/supply variables, then starts `Server/FSM/server_town_camp.sqf` once all camps are initialized.
+Camp creation is server-owned. For each synchronized camp, the server creates a camp bunker model, flag object and side/supply variables, then starts `Server/FSM/server_town_camp.sqf` once all camps are initialized. Source anchors: `Common/Init/Init_Town.sqf:116-119` for camp side/SV inheritance and `:130-134` for the camp loop handoff and `townInitServer` wait.
 
 Client town initialization waits for `camps`, assigns camp marker names and records town ownership on camp logic objects.
 
@@ -68,7 +68,7 @@ Supported starting modes:
 | `2` | Nearby towns: each side gets a limited number of nearby towns. |
 | `3` | Random 25/25/50 style setup: west/east/resistance distribution, using boundaries when available. |
 
-Resistance patrols are enabled by setting `wfbe_patrol_enabled` on selected towns; old `respatrol.fsm` references are commented, while `server_town_ai.sqf` later starts `Server/FSM/server_patrols.sqf`.
+Resistance patrols are enabled by setting `wfbe_patrol_enabled` on selected towns; old `respatrol.fsm` references are commented, while `server_town_ai.sqf` later starts `Server/FSM/server_patrols.sqf`. Source anchors: `Server/Init/Init_Towns.sqf:169-175` for patrol flags and `:183` for `townInitServer = true`.
 
 ## Town Capture And Supply Value
 
@@ -78,7 +78,7 @@ Resistance patrols are enabled by setting `wfbe_patrol_enabled` on selected town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
 ```
 
-`server_town.sqf` iterates every town while the game is running. It performs:
+`server_town.sqf` iterates every town while the game is running. Source anchors: `Server/Init/Init_Server.sqf:510` starts the loop; `Server/FSM/server_town.sqf:57` performs the active-entity scan; `:81-97` handles configured SV growth; `:207-222` handles attack/protection SV updates; `:240` publishes `TownCaptured`; and `:263-265` records performance-audit data. It performs:
 
 - active entity scan near each town for `Man`, `Car`, `Motorcycle`, `Tank`, `Air` and `Ship`;
 - side counts for west/east/resistance;
@@ -108,13 +108,13 @@ On capture, the loop:
 - removes old town defense units;
 - creates new defender/occupation defenses if enabled.
 
-Performance note: this loop deliberately sleeps `0.05` between towns and records active time, town count, nearEntities count, detected units, network writes and capture count through `PerformanceAudit_Record`.
+Performance note: this loop deliberately sleeps `0.05` between towns and records active time, town count, nearEntities count, detected units, network writes and capture count through `PerformanceAudit_Record` (`Server/FSM/server_town.sqf:259-265`).
 
 ## Town AI Activation
 
 `Server/Init/Init_Server.sqf` starts `Server/FSM/server_town_ai.sqf` only when defender or occupation AI is enabled.
 
-`server_town_ai.sqf` is separate from town ownership/capture. It:
+`server_town_ai.sqf` is separate from town ownership/capture. Source anchors: `Server/Init/Init_Server.sqf:514` starts the loop when enabled; `Server/FSM/server_town_ai.sqf:17` reads `WFBE_C_AI_DELEGATION`; `:27-30` initializes active-side and active-vehicle state; `:85` scans nearby non-air entities; `:107` publishes side-scoped active visibility; `:159-179` covers client/headless/server delegation paths; `:185` operates static defenses; `:199-222` cleans up active state/vehicles/defenses; `:230` starts patrols; and `:245-247` records performance-audit data. It:
 
 - initializes `wfbe_active`, `wfbe_active_air`, `wfbe_active_sideIDs`, `wfbe_inactivity`, `wfbe_active_vehicles` and `wfbe_town_teams`;
 - scans each town for enemies, excluding aircraft from activation scans to prevent fly-by spawns;
@@ -148,7 +148,7 @@ Risk notes:
 [] ExecVM "Server\FSM\updateresources.sqf";
 ```
 
-`Server/FSM/updateresources.sqf` loops over `WFBE_PRESENTSIDES` and computes:
+`Server/FSM/updateresources.sqf` loops over `WFBE_PRESENTSIDES` and computes. Source anchors: `Server/Init/Init_Server.sqf:531` starts the resource loop; `Server/FSM/updateresources.sqf:3-17` reads economy parameters; `:29` reads town supply; `:49` calls `ChangeSideSupply`; `:63` pays teams; `:67` pays AI commander funds; and `:74` applies `GetSleepFPS`.
 
 - town supply with `WFBE_CO_FNC_GetTownsSupply`;
 - income from supply value, depending on `WFBE_C_ECONOMY_INCOME_SYSTEM`;
@@ -169,7 +169,7 @@ Important parameters:
 | `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` | Upper supply cap gate in resource loop. |
 | `wfbe_commander_percent` | Per-side commander share, initialized on side logic. |
 
-`Common_StagnateSupplyIncomeNoPlayers.sqf` is a supply-income modifier that uses AntiStack database side-skill calls first; if a side has no skill data and no players, it increments no-player ticks and can reduce supply income. It publishes `TEAM_WEST_TICKS_NO_PLAYERS` and `TEAM_EAST_TICKS_NO_PLAYERS`.
+`Common_StagnateSupplyIncomeNoPlayers.sqf` is a supply-income modifier that uses AntiStack database side-skill calls first; if a side has no skill data and no players, it increments no-player ticks and can reduce supply income. It publishes `TEAM_WEST_TICKS_NO_PLAYERS` and `TEAM_EAST_TICKS_NO_PLAYERS` (`Common/Functions/Common_StagnateSupplyIncomeNoPlayers.sqf:38-68`).
 
 Risk notes:
 
@@ -206,11 +206,11 @@ sequenceDiagram
     Vote->>Clients: commander-vote result
 ```
 
-`RequestCommanderVote.sqf` only starts a vote when side logic `wfbe_votetime <= 0`. It seeds votes with `SetCommanderVotes`, spawns `WFBE_SE_FNC_VoteForCommander`, sends `VotingForNewCommander`, and notifies clients with `HandleSpecial`.
+`RequestCommanderVote.sqf` only starts a vote when side logic `wfbe_votetime <= 0`. It seeds votes with `SetCommanderVotes`, spawns `WFBE_SE_FNC_VoteForCommander`, sends `VotingForNewCommander`, and notifies clients with `HandleSpecial` (`Server/PVFunctions/RequestCommanderVote.sqf:8-22`; `Common/Functions/Common_SetCommanderVotes.sqf:9-10`).
 
-`Server_VoteForCommander.sqf` counts down `WFBE_C_GAMEPLAY_VOTE_TIME`, collects team votes, resolves a winner or AI commander fallback, sets side logic `wfbe_commander`, notifies clients and stops AI commander state when a player commander is elected.
+`Server_VoteForCommander.sqf` counts down `WFBE_C_GAMEPLAY_VOTE_TIME`, collects team votes, resolves a winner or AI commander fallback, sets side logic `wfbe_commander`, notifies clients and stops AI commander state when a player commander is elected (`Server/Functions/Server_VoteForCommander.sqf:10-56`; `Common/Functions/Common_GetCommanderTeam.sqf:8-10`).
 
-`RequestNewCommander.sqf` directly assigns a commander when no vote is running, then spawns `WFBE_SE_FNC_AssignForCommander` and sends `new-commander-assigned`.
+`RequestNewCommander.sqf` directly assigns a commander when no vote is running, then spawns `WFBE_SE_FNC_AssignForCommander` and sends `new-commander-assigned` (`Server/PVFunctions/RequestNewCommander.sqf:8-14`; `Server/Functions/Server_AssignNewCommander.sqf:1-13`).
 
 Risk notes:
 
@@ -227,7 +227,7 @@ Risk notes:
 - `Common/Config/Core_Upgrades/Check_Upgrades.sqf`
 - `Client/GUI/GUI_UpgradeMenu.sqf`
 
-`RequestUpgrade.sqf` is a thin PVF wrapper that spawns `WFBE_SE_FNC_ProcessUpgrade`.
+`RequestUpgrade.sqf` is a thin PVF wrapper that spawns `WFBE_SE_FNC_ProcessUpgrade` (`Server/PVFunctions/RequestUpgrade.sqf:5`).
 
 `Server_ProcessUpgrade.sqf`:
 
@@ -240,7 +240,9 @@ Risk notes:
 - refreshes existing artillery pieces when the artillery ammo upgrade completes;
 - notifies clients with `HandleSpecial ['upgrade-complete', id, level]`.
 
-`Check_Upgrades.sqf` fills missing AI commander upgrade order entries from enabled upgrade levels. It is a repair/normalization helper, not the live upgrade processor.
+Source anchors: `Server/Functions/Server_ProcessUpgrade.sqf:17-24` for upgrade time/state/start notification, `:26-46` for player-start sync and completion state, and `:48-87` for artillery refresh and complete notification.
+
+`Check_Upgrades.sqf` fills missing AI commander upgrade order entries from enabled upgrade levels. It is a repair/normalization helper, not the live upgrade processor (`Common/Config/Core_Upgrades/Check_Upgrades.sqf:7-9` and `:39-40`). Client upgrade initiation currently performs affordability/debit/send locally through `Client/GUI/GUI_UpgradeMenu.sqf:137-171`, then renders running status around `:186-202`.
 
 Risk notes:
 
@@ -275,21 +277,21 @@ flowchart TD
     ScriptChoice --> Build["server creates final structure and init"]
 ```
 
-`Init_Coin.sqf` builds the CoIn item list from side structure arrays and defense arrays. It sets:
+`Init_Coin.sqf` builds the CoIn item list from side structure arrays and defense arrays. Source anchors: `Client/Init/Init_Coin.sqf:8-12` for CoIn area/funds/currency display, `:20-42` for structure and defense lists, and `:80-91` for item/category population. It sets:
 
 - `BIS_COIN_categories`;
 - `BIS_COIN_items`;
 - funds display and supply/cash mode;
 - construction/defense category mapping.
 
-`coin_interface.sqf` owns the camera, preview object, local helper/border, input handlers, selected object state and final request dispatch. It calls:
+`coin_interface.sqf` owns the camera, preview object, local helper/border, input handlers, selected object state and final request dispatch. Source anchors: `Client/Module/CoIn/coin_interface.sqf:28-34` for display setup, `:50-62` for camera/display event handlers, `:491-494` for the newer `RequestStructure` PVF dispatch beside old commented direct-PV code, `:560-581` for preview/helper creation, and `:891-920` for live structure-limit item state. It calls:
 
 - `RequestAutoWallConstructinChange` when toggling auto wall construction;
 - `RequestStructure` for HQ deploy/mobilize and structures;
 - `RequestDefense` for defenses;
 - `RequestChangeScore` for commander build score.
 
-`RequestStructure.sqf` resolves display structure name to real structure type and construction script using:
+`RequestStructure.sqf` resolves display structure name to real structure type and construction script using (`Server/PVFunctions/RequestStructure.sqf:8-21`):
 
 - `WFBE_<side>STRUCTURES`;
 - `WFBE_<side>STRUCTURENAMES`;
@@ -297,9 +299,9 @@ flowchart TD
 
 It sends a `building-started` `HandleSpecial` for major structures and starts `Server/Construction/Construction_<script>.sqf`.
 
-`Construction_HQSite.sqf` toggles deployed HQ and mobile HQ. It uses `wfbe_hqinuse` as a side-logic lock, updates `wfbe_hq`, `wfbe_hq_deployed`, base areas, killed/hit/damage handlers and client structure init.
+`Construction_HQSite.sqf` toggles deployed HQ and mobile HQ. It uses `wfbe_hqinuse` as a side-logic lock, updates `wfbe_hq`, `wfbe_hq_deployed`, killed/hit/damage handlers and client structure init. Source anchors: `Server/Construction/Construction_HQSite.sqf:14-38` for deploy lock/object/state setup, `:68-95` for MHQ recreation/JIP handler broadcast, and `:104` for lock release.
 
-`Construction_SmallSite.sqf` and `Construction_MediumSite.sqf` create temporary construction-site objects using BIS object mapper, optionally track completion via `wfbe_structures_logic`, delete temporary objects and create final structures with hit/damage/killed handlers and `Client/Init/Init_BaseStructure.sqf`.
+`Construction_SmallSite.sqf` and `Construction_MediumSite.sqf` create temporary construction-site objects using BIS object mapper, optionally track completion via `wfbe_structures_logic`, delete temporary objects and create final structures with hit/damage/killed handlers and `Client/Init/Init_BaseStructure.sqf`. Source anchors: `Server/Construction/Construction_SmallSite.sqf:37-70` and `:104-131`; `Server/Construction/Construction_MediumSite.sqf:37-70`, `:83-114` and `:119-146`; stationary defenses use `Server/Construction/Construction_StationaryDefense.sqf:15-19`, `:61-75` and `:105-112`.
 
 Risk notes:
 
@@ -326,7 +328,7 @@ There are two main production paths:
 | Player local build | Client | `GUI_Menu_BuyUnits.sqf` -> `Client_BuildUnit.sqf` | Player buys units/vehicles near a factory. |
 | AI/server build | Server | `AIBuyUnit` -> `Server_BuyUnit.sqf` | AI teams and server-side production. |
 
-The buy menu:
+The buy menu (`Client/GUI/GUI_Menu_BuyUnits.sqf:89-156`, `:195-248`, `:257-369`):
 
 - detects current factory range via `barracksInRange`, `lightInRange`, `heavyInRange`, `aircraftInRange`, `depotInRange`, `hangarInRange`;
 - filters by tab/factory type and selected faction;
@@ -336,7 +338,7 @@ The buy menu:
 - applies infantry limit from barracks upgrade;
 - spawns `BuildUnit` and deducts player funds.
 
-`Client_BuildUnit.sqf`:
+`Client_BuildUnit.sqf` (`Client/Functions/Client_BuildUnit.sqf:149-217`, `:246-356`, `:368-469`):
 
 - computes spawn position from structure offsets or nearby pad helper objects;
 - uses a local queue on the building (`queu`);
@@ -344,13 +346,15 @@ The buy menu:
 - creates infantry or vehicle locally using common creation helpers;
 - initializes cargo, lock actions, salvage truck, balance, countermeasures, artillery, missile handlers, engine stealth actions and crew.
 
-`Server_BuyUnit.sqf`:
+`Server_BuyUnit.sqf` (`Server/Functions/Server_BuyUnit.sqf:21-97`, `:98-214`):
 
 - uses server-side queue state and build time;
 - exits if the factory is destroyed or a player takes over the AI team;
 - creates units/vehicles server-side;
 - applies vehicle fired/missile/reload/IRS/countermeasure/artillery handlers;
 - creates crew and updates statistics.
+
+Attack-wave production is a direct-PV side path rather than normal factory production; `Server/Functions/Server_AttackWave.sqf:1-38` publishes the request details before `Server/PVFunctions/AttackWave.sqf:19-55` consumes and resets active wave state.
 
 Risk notes:
 
