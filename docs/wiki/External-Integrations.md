@@ -21,7 +21,7 @@ Required local files are intentionally absent from the repo:
 
 ### Discord Config Hygiene
 
-Claude Round 16 verified that `DiscordBot/preferences_sample.json` currently includes concrete sample IDs (`GuildID`, `AuthorizedUserIDs`) plus the production-style `DataSourcePath`. `DiscordBot/FileConfiguration.cs` also has `DataSourcePath`/`botconfig.json` support, but the active status-data reader bypasses it: `DiscordBot/src/ExtensionData/GameData/GameData.cs` resolves `Preferences.Instance.DataSourcePath ?? C:\a2waspwarfare\Data`. Static usage review only found `FileConfiguration` feeding logging paths, not the live game-status JSON reader.
+Claude Round 16 verified that `DiscordBot/preferences_sample.json` currently includes concrete sample IDs (`GuildID`, `AuthorizedUserIDs`) plus the production-style `DataSourcePath`. `DiscordBot/FileConfiguration.cs` also has `DataSourcePath`/`botconfig.json` support, but the active status-data reader bypasses it: `DiscordBot/src/ExtensionData/GameData/GameData.cs` resolves `Preferences.Instance.DataSourcePath ?? C:\a2waspwarfare\Data`. Static usage review found only `FileConfiguration.LogsPath` used by the live logging path, not by the live game-status JSON reader.
 
 No token is committed, which is good. Still, treat the sample identifiers and hardcoded path as governance cleanup:
 
@@ -34,7 +34,7 @@ No token is committed, which is good. Still, treat the sample identifiers and ha
 
 Claude DR-31 completed the consumer-side review of the extension data path. The bot polls `database.json` on a 60-second timer, at startup and from a command path. Secret hygiene is good (`token.txt` and `preferences.json` are ignored, and commands are auth-gated), but `DiscordBot/src/ExtensionData/GameData/GameData.cs` deserializes that JSON with Newtonsoft `TypeNameHandling.All`.
 
-That setting is unnecessary for the flat `GameData` DTO and creates a local-write-gated RCE sink in the token-holding bot process if anything can write to `C:\a2waspwarfare\Data\database.json`. Fix direction: use `TypeNameHandling.None` for the active reader and remove the dead `.Auto` deserialization helper noted in DR-29/DR-31.
+That setting is unnecessary for the flat `GameData` DTO and creates a local-write-gated RCE sink in the token-holding bot process if anything can write to `C:\a2waspwarfare\Data\database.json`. Fix direction: use `TypeNameHandling.None` for the active reader and remove or make private/safe the still-callable `.Auto` helper in `DiscordBot/src/ExtensionData/GameData/GameDataDeSerialization.cs:31-36`.
 
 Do not conflate this with the in-repo extension writer: `Extension/src/SerializationManager.cs` writes the live database JSON with `TypeNameHandling.None`. The active `TypeNameHandling.All` sink is the DiscordBot reader, while the in-repo extension's `Auto` deserialization path is dead/commented scaffolding unless a future persistence load path revives it.
 

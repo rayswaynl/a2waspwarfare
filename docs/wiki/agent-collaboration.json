@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T21:26:20+02:00",
+  "generatedAt": "2026-06-02T22:35:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,9 +22,30 @@
   },
   "activeClaims": [
     {
-      "lane": "orchestrator-code-discovery-wave-r",
+      "lane": "orchestrator-code-discovery-wave-s",
       "owner": "Codex sub-agents",
       "status": "returned-selected-harvest-local",
+      "sourceScope": [
+        "victory/endgame/stat integrity",
+        "integrations/deployment trust boundary",
+        "generated and modded mission drift",
+        "Arma 2 OA documentation snippet compatibility"
+      ],
+      "agents": [
+        {"name": "Hilbert", "id": "019e89da-07e0-7183-b8d7-4d28c5c805c4", "lane": "victory-endgame-stat-integrity", "status": "returned-harvested"},
+        {"name": "Dirac", "id": "019e89da-08d6-7c00-9968-ef1ca24c5f25", "lane": "integration-deployment-trust-boundary", "status": "returned-harvested"},
+        {"name": "Descartes", "id": "019e89da-61aa-7690-aa70-fb2bf401ee78", "lane": "generated-and-modded-drift-reality-check", "status": "returned-harvested"},
+        {"name": "Nash", "id": "019e89da-6229-76a1-a144-966b0851e787", "lane": "arma2-oa-doc-snippet-compatibility", "status": "returned-harvested"}
+      ],
+      "outputs": [
+        "Selected owner-page and machine-file harvest: victory/endgame semantics, integration deployment checklist, modded mission runnable-state corrections and OA snippet compatibility cleanup"
+      ],
+      "handoff": "Wave S is canonical only where promoted into owner pages and machine records. Future agents should use Victory-And-Endgame-Atlas.md, Integration-Trust-Boundary-Audit.md, Tools-And-Build-Workflow.md, Abandoned-Feature-Revival-Review.md, Deep-Review-Findings.md and agent-compatibility-audit.json instead of raw scout packets."
+    },
+    {
+      "lane": "orchestrator-code-discovery-wave-r",
+      "owner": "Codex sub-agents",
+      "status": "published-validated",
       "sourceScope": [
         "economy side-supply negative risk",
         "town AI camp patrol repair authority",

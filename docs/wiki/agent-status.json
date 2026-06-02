@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T21:26:20+02:00",
+  "generatedAt": "2026-06-02T22:35:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -17,9 +17,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "orchestrator-code-discovery-wave-r",
-      "currentWork": "Acting as main LLM orchestrator and publisher. Wave Q RHUD/endgame currentCutDisplay harvest is published; Wave R read-only explorers returned and selected findings are being promoted into owner pages. A live player AI cap/balance page was added for default GroupSizePlayer=15.",
-      "nextExpectedOutput": "Mirror, validate and publish the Wave R/player-AI-cap docs harvest, then continue next owner-page/status-drift reconciliation."
+      "currentLane": "orchestrator-code-discovery-wave-s",
+      "currentWork": "Acting as main LLM orchestrator and publisher. Wave S read-only scouts returned and the selected source-backed corrections are being harvested into owner pages and machine records: victory/endgame semantics, integration deployment inventory, modded mission runnable-state drift and Arma 2 OA snippet compatibility.",
+      "nextExpectedOutput": "Validate docs/wiki mirror parity, JSON/JSONL and wiki links, then publish the scoped Wave S documentation harvest."
     },
     "Codex-2": {
       "status": "ready",
@@ -34,17 +34,23 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "wave-r-returned-harvested",
-      "currentLane": "orchestrator-code-discovery-wave-r",
-      "currentWork": "Ohm, Godel, Zeno and Dalton returned source-backed packets. Selected deltas are promoted into economy, networking/PV, attack-wave, factory, town/camp, upgrade and AI commander owner pages.",
-      "nextExpectedOutput": "No active Wave R packets remain; future subagent work should pick new lanes from the hardening roadmap or status-drift cleanup."
+      "status": "wave-s-returned-selected-harvest-local",
+      "currentLane": "orchestrator-code-discovery-wave-s",
+      "currentWork": "Hilbert, Dirac, Descartes and Nash returned compact source-backed reports; Codex promoted selected deltas into owner pages and machine ledgers.",
+      "nextExpectedOutput": "Treat Wave S as canonical only where promoted into owner pages, backlog records and compatibility/context files."
     }
   },
   "laneSummary": [
     {
-      "lane": "orchestrator-code-discovery-wave-r",
+      "lane": "orchestrator-code-discovery-wave-s",
       "owner": "Codex sub-agents",
       "status": "returned-selected-harvest-local",
+      "output": "Wave S returned and selected harvest is local: explicit winner/loser endgame semantics, DiscordBot FileConfiguration/.Auto/deployment inventory corrections, modded mission runnable-state drift and Arma 2 OA isEqualTo/setGroupOwner snippet cleanup."
+    },
+    {
+      "lane": "orchestrator-code-discovery-wave-r",
+      "owner": "Codex sub-agents",
+      "status": "published-validated",
       "output": "Wave R selected harvest: side-supply side/channel mismatch, master-vs-PR supply reward scoping, AI commander upgrade debit swap, camp repair authority-light, extra-turret-crew factory queue nuance, ATTACK_WAVE_DETAILS detail trust, SEND_MESSAGE direct RCE wording, WFBE_C_PLAYER_OBJECT trust note and AFK self-kick/log split."
     },
     {

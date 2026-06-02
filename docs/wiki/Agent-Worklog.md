@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Main Orchestrator: Wave S Spawn
+
+- Corrected the progress dashboard's stale Wave R "running" status after the Wave R harvest was already published.
+- Closed the completed Wave R subagent handles to free thread capacity.
+- Spawned four read-only Wave S explorers with no docs or source write ownership: Hilbert (`victory-endgame-stat-integrity`), Dirac (`integration-deployment-trust-boundary`), Descartes (`generated-and-modded-drift-reality-check`) and Nash (`arma2-oa-doc-snippet-compatibility`).
+- Updated [Discovery swarm](Subagent-Discovery-Swarm), [Progress dashboard](Progress-Dashboard), [`agent-status.json`](agent-status.json), [`agent-collaboration.json`](agent-collaboration.json) and [`agent-events.jsonl`](agent-events.jsonl) so other agents can see the running lanes.
+
 ## 2026-06-02 - Codex Main Orchestrator: Wave R Spawn
 
 - Fresh subagent spawn succeeded after the older attached Wave Q IDs returned `not_found`.
@@ -1175,3 +1182,11 @@ Key conclusions:
 - Updated [Tooling release readiness](Tooling-Release-Readiness-Audit): added a five-slot GlobalGameStats fixture contract for BLUFOR score, OPFOR score, terrain, uptime and player count.
 - Updated [Source inventory](Source-Inventory): added tracked mission parity counts from `git ls-files`, with Vanilla Takistan marked maintained-but-map-divergent and modded folders marked forks/stubs.
 - Updated [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas): clarified that buy-gear click-pool bounds are not currently proven off-by-one; the already-known profile/cargo defects remain the patch-ready items.
+
+# 2026-06-02 - Wave S Scout Harvest
+
+- Acting as main LLM orchestrator, harvested Hilbert, Dirac, Descartes and Nash and promoted only selected source-backed corrections into canonical pages.
+- Tightened [Victory/endgame atlas](Victory-And-Endgame-Atlas), [Feature status](Feature-Status-Register) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl): current `_x` is loser in the HQ/factory branch but winner in all-towns victory, so a patch must compute explicit `_winnerSide`/`_loserSide`, guard both branches with `!WFBE_GameOver` and exit after the first winner.
+- Tightened [External integrations](External-Integrations), [Integration trust boundary audit](Integration-Trust-Boundary-Audit) and [Tools/build](Tools-And-Build-Workflow): the active Discord status reader bypasses `FileConfiguration.DataSourcePath`, live `FileConfiguration` usage is logging, DiscordBot still has a callable `TypeNameHandling.Auto` helper, and deployment inventory must distinguish GLOBALGAMESTATS, A2WaspDatabase, bot secrets and production BE/server config.
+- Corrected [Tools/build](Tools-And-Build-Workflow), [Abandoned feature revival](Abandoned-Feature-Revival-Review), [Deep-review findings](Deep-Review-Findings) and [`agent-context.json`](agent-context.json): Napf/eden/lingor are partial forks rather than checkout-runnable mission roots; source/Vanilla paratrooper markers are revived but modded drift remains; MASH sender drift is eden/lingor, not Napf.
+- Corrected Arma 2 OA compatibility guidance in [Deep-review findings](Deep-Review-Findings), [command version reference](Arma-2-OA-Command-Version-Reference), [`agent-compatibility-audit.json`](agent-compatibility-audit.json) and [`agent-context.json`](agent-context.json): no copyable `isEqualTo` snippets and no `setGroupOwner`/`groupOwner` live-transfer advice.

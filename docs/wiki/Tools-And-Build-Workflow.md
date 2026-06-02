@@ -42,6 +42,7 @@ Before running tooling or deployment-adjacent pieces, check these first:
 | `version.sqf` exists for the mission being packed/tested. | It is generated and git-ignored, but included by `description.ext` and `initJIPCompatible.sqf`. |
 | DiscordBot has real `preferences.json` and `token.txt` outside git. | Missing token/config is expected in repo and is not a mission-code failure. |
 | AntiStack has the separate `A2WaspDatabase` DLL if enabled. | The in-repo `Extension` project is `a2waspwarfare_Extension` / `GLOBALGAMESTATS`, not the AntiStack database extension. |
+| Deployment inventory records actual server artifacts and config paths. | Track `a2waspwarfare_Extension`, separate `A2WaspDatabase`, `token.txt`, `preferences.json`, production `BEpath`, and any external `server.cfg`/`basic.cfg` before calling a host reproducible. |
 | The in-repo `Extension` is built with legacy MSBuild tooling. | It targets .NET Framework 4.8 x86 with `RGiesecke.DllExport`/`UnmanagedExports` packages under `../packages`; do not treat it as a normal SDK-style `dotnet build` project. |
 
 ## Propagation rules & the skip-list trap (verified)
@@ -72,8 +73,8 @@ This is the operational summary of DR-32's three maintenance tiers. Use it befor
 | --- | --- | --- |
 | `Missions/[55-2hc]warfarev2_073v48co.chernarus` | Source of truth. | Apply gameplay and documentation evidence here first. |
 | `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` | Faithful generated/copy target. Current drift is map-config and terrain assets only; logic files are byte-identical to Chernarus outside the documented skip-list and `SET_MAP` patch. | Source fixes should propagate through LoadoutManager, except skip-listed files that need hand-mirroring. All DR findings in Chernarus apply to vanilla Takistan unless the changed file is map-specific. |
-| `Modded_Missions/napf`, `Modded_Missions/eden`, `Modded_Missions/lingor` | Divergent hand-edited forks with 100+ logic-file differences, including security-sensitive runtime/PVF/victory/upgrade/HQ paths. | Source fixes do not automatically reach these missions. Pick a maintenance model before shipping them: regenerate from hardened source or maintain as explicit forks with separate audits. |
-| `Modded_Missions/sahrani`, `Modded_Missions/dingor`, `Modded_Missions/tavi`, `Modded_Missions/isladuala` | Abandoned/non-runnable stubs with only a small fraction of the real mission tree. | Complete or delete before presenting them as supported missions. |
+| `Modded_Missions/napf`, `Modded_Missions/eden`, `Modded_Missions/lingor` | Divergent hand-edited partial forks with 100+ logic-file differences, including security-sensitive runtime/PVF/victory/upgrade/HQ paths. Wave S confirmed they are not drop-in runnable from the checkout: `eden` lacks tracked `version.sqf`, `Napf` lacks tracked `mission.sqm` and `version.sqf`, and `lingor` lacks tracked `mission.sqm`, `description.ext`, `initJIPCompatible.sqf` and `version.sqf`. | Source fixes do not automatically reach these missions. Pick a maintenance model before shipping them: regenerate from hardened source or maintain as explicit forks with separate audits and generated/runtime inputs. |
+| `Modded_Missions/sahrani`, `Modded_Missions/dingor`, `Modded_Missions/tavi`, `Modded_Missions/isladuala` | Abandoned/non-runnable stubs with only a small fraction of the real mission tree; `dingor` also has a `description.ext` that includes missing `version.sqf`. | Complete or delete before presenting them as supported missions. |
 
 ## Tooling Project Inventory
 

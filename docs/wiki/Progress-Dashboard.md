@@ -8,7 +8,8 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
-| `orchestrator-code-discovery-wave-r` | Running / read-only | Fresh agent team is active after stale Wave Q agent IDs were unavailable: Ohm on economy/side-supply negative-risk, Godel on town AI/camp/patrol/repair authority, Zeno on factory player-buy path and queue semantics, Dalton on direct-PV trust-boundary gaps. See [Discovery swarm](Subagent-Discovery-Swarm). |
+| `orchestrator-code-discovery-wave-s` | Returned / selected harvest local | Hilbert, Dirac, Descartes and Nash returned. Codex promoted selected corrections into owner pages and machine records: explicit victory winner/loser semantics, DiscordBot `.Auto`/FileConfiguration/deployment inventory, modded mission checkout-runnability drift, MASH sender correction and Arma 2 OA `isEqualTo`/`setGroupOwner` snippet cleanup. See [Discovery swarm](Subagent-Discovery-Swarm). |
+| `orchestrator-code-discovery-wave-r` | Published / validated | Ohm, Godel, Zeno and Dalton returned. Codex source-checked the selected harvest and promoted it into owner pages: side-supply temp-channel validation, `ATTACK_WAVE_DETAILS`, `SEND_MESSAGE`, `WFBE_C_PLAYER_OBJECT`, camp repair authority-light, factory extra-crew queue nuance and AI commander upgrade debit risk. See [Discovery swarm](Subagent-Discovery-Swarm). |
 | `rhud-endgame-currentcutdisplay-harvest` | Published / validated | Codex source-checked Curie's Wave Q UI lead and promoted the RHUD/endgame `currentCutDisplay` collision into [Client UI systems atlas](Client-UI-Systems-Atlas), [UI IDD collision repair](UI-IDD-Collision-Repair), [Client UI/HUD](Client-UI-HUD-And-Menus), [Feature status](Feature-Status-Register) and [Source fix queue](Source-Fix-Propagation-Queue). Patch shape: split title display handles or gate RHUD/action-icon recreation during endgame, then smoke RHUD/FPS, action icons and endgame stat bars together. |
 | `construction-logic-list-cleanup-playbook` | Local / validation pending | Codex elevated the SmallSite/MediumSite `wfbe_structures_logic` asymmetry into [Construction logic list cleanup](Construction-Logic-List-Cleanup), with exact source evidence, one-line patch shape, maintained Vanilla propagation plan and Arma smoke checklist. |
 | `orchestrator-code-discovery-wave-q` | Returned / partial harvest | All six attached explorers returned. Routing summaries are on [Discovery swarm](Subagent-Discovery-Swarm): construction cleanup, economy authority, commander/HQ lifecycle, factory queues, town AI/capture/delegation and UI/action/RHUD state. Curie's RHUD/endgame display-handle lead is promoted; remaining leads still need Codex source-check before owner-page publication. |
@@ -103,10 +104,10 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active / main orchestrator | `orchestrator-code-discovery-wave-r` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice harvested Wave R and added the live player AI cap/balance page. |
+| Codex | Active / main orchestrator | `orchestrator-code-discovery-wave-s` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Current slice has Wave S returned/harvested locally and Wave R/player-AI-cap docs published. |
 | Codex-2 | Ready | None claimed | Published [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup); next bounded candidates are PVF dispatcher lookup, side-supply clamp first or commander reassignment call-shape repair. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
-| Sub-agents | Returned / harvested | Wave R sidecar | Ohm, Godel, Zeno and Dalton returned; selected findings are promoted into owner pages for economy, direct PVs, factories, camp repair and AI commander upgrade readiness. |
+| Sub-agents | Returned / selected harvest local | Wave S sidecar | Hilbert, Dirac, Descartes and Nash returned; selected findings are promoted into owner pages and machine files. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
 
 ## One-Link Check

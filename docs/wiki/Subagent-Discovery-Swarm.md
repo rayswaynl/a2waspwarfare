@@ -4,7 +4,20 @@ This page tracks the cheap read-only Codex discovery agents currently digging th
 
 The swarm is intentionally evidence-first: agents read source, report path/line-backed findings, and avoid editing docs or mission code. Codex integrates the useful findings into the wiki, `agent-context.json`, the coverage ledger and the feature-status register after review.
 
-## Current Wave: Wave R
+## Current Wave: Wave S
+
+Spawned by the main orchestrator after Wave R was harvested and the stale dashboard status was corrected. These read-only explorers returned compact source packets; Codex promoted only selected source-backed deltas into owner pages and machine records.
+
+| Agent | Lane | Status | Harvest summary |
+| --- | --- | --- | --- |
+| Hilbert | `victory-endgame-stat-integrity` | Returned / selected harvest local | Tightened [Victory/endgame atlas](Victory-And-Endgame-Atlas): current `_x` is loser in HQ/factory elimination but winner in all-towns victory, so patches must compute explicit winner/loser sides; AntiStack score loop nuance and UI handle cross-link were added. |
+| Dirac | `integration-deployment-trust-boundary` | Returned / selected harvest local | Tightened [External integrations](External-Integrations), [Integration trust boundary audit](Integration-Trust-Boundary-Audit) and [Tools/build](Tools-And-Build-Workflow): active Discord status reader bypasses `FileConfiguration`, DiscordBot still has a callable `.Auto` helper, and deployment inventory must distinguish GLOBALGAMESTATS, A2WaspDatabase, bot secrets and production BE/server config. |
+| Descartes | `generated-and-modded-drift-reality-check` | Returned / selected harvest local | Corrected [Tools/build](Tools-And-Build-Workflow), [Abandoned feature revival](Abandoned-Feature-Revival-Review), [Deep-review findings](Deep-Review-Findings) and agent context: Napf/eden/lingor are partial forks, not drop-in runnable checkout missions; source/Vanilla paratrooper status is revived but modded drift remains; MASH sender drift is eden/lingor, not Napf. |
+| Nash | `arma2-oa-doc-snippet-compatibility` | Returned / selected harvest local | Corrected [Deep-review findings](Deep-Review-Findings), [command version reference](Arma-2-OA-Command-Version-Reference), [`agent-compatibility-audit.json`](agent-compatibility-audit.json) and [`agent-context.json`](agent-context.json): no `isEqualTo` copyable OA snippets and no `setGroupOwner`/`groupOwner` live-transfer advice. |
+
+Harvest rule: Wave S reports are canonical only where promoted into owner pages and machine records. Future agents should start from the linked pages rather than raw scout packets.
+
+## Previous Wave: Wave R
 
 Spawned from the main orchestrator after the Wave Q UI handle harvest was published. These read-only explorers returned source packets; Codex keeps docs edits and publication local.
 

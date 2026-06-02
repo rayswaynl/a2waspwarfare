@@ -84,6 +84,8 @@ flowchart TD
 | Team-swap remains active when AntiStack disabled | `RequestJoin.sqf:49-53` | Yes. Do not accidentally turn off team-swap protection while disabling skill balancing. |
 | Final/disconnect DB skip when disabled | `Server_OnPlayerDisconnected.sqf:151-153`, `server_victory_threeway.sqf:51-53` | Yes. Score sampling is not running when disabled, so DB persistence would be misleading. |
 
+Wave S nuance for endgame readers: the main/flush AntiStack loops observe `WFBE_GameOver`, but `updateScoreInternal.sqf:13` runs `while { true }`. Mission teardown follows shortly after victory, so this is a low-risk cleanup item; do not overread the docs as "every AntiStack loop stops immediately on game over."
+
 ## Remaining Hardening Work
 
 | Priority | Work | Patch shape |

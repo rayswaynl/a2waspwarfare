@@ -116,9 +116,13 @@ Replace the compile-the-string dispatch with a name lookup that defaults to a no
 
 `Server/Functions/Server_HandlePVF.sqf` (current `_parameters Spawn (Call Compile _script);`):
 ```sqf
-private _fn = missionNamespace getVariable [_script, {}];   // resolve SRVFNC<cmd>; unknown -> {}
-if (_fn isEqualTo {}) exitWith {
+private ["_fn"];
+_fn = missionNamespace getVariable _script;   // resolve SRVFNC<cmd>; unknown -> nil
+if (isNil "_fn") exitWith {
     ["WARNING", format ["Server_HandlePVF: rejected unknown PVF command '%1' from network", _script]] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _fn != "CODE") exitWith {
+    ["WARNING", format ["Server_HandlePVF: rejected non-code PVF command '%1' from network", _script]] Call WFBE_CO_FNC_LogContent;
 };
 _parameters Spawn _fn;
 ```
@@ -126,8 +130,8 @@ _parameters Spawn _fn;
 
 Why this is safe and behavior-identical:
 - Legitimate traffic sets `_script` to exactly `"SRVFNC"+cmd` / `"CLTFNC"+cmd` (see `Common/Functions/Common_SendToServerOptimized.sqf:15`, `Common/Functions/Common_SendToClient.sqf`), which resolves to the compiled function — unchanged.
-- A hostile value such as `"hint 'x'; <server-side effect>"` is not a defined variable, so `getVariable` returns the default `{}` → `Spawn {}` → no-op (plus a WARNING that surfaces probing in the RPT). No `compile` ever runs on attacker text.
-- `isEqualTo {}` is a valid Arma 2 OA `code` comparison; use it (not `isNil`) because the default is empty code, not nil.
+- A hostile value such as `"hint 'x'; <server-side effect>"` is not a defined variable, so `getVariable` leaves `_fn` nil and exits with a WARNING. No `compile` ever runs on attacker text.
+- Use OA-safe `isNil` and `typeName` guards. Do not use `isEqualTo` here; it is an Arma 3-era command and will mislead OA patch authors.
 
 ### Fix 2 — Optional explicit allow-list (defense-in-depth + clarity)
 
@@ -231,7 +235,7 @@ _responseCode = _response select 0;
 - **Echo-to-code latent risk.** Only UID/score/side/map round-trip today (all constrained, low risk). But the pattern means *any* future free-text field persisted and echoed back becomes executable.
 
 **Engine caveat (why the pattern exists):** Arma 2 OA 1.64 has **no `parseSimpleArray`** (that is Arma 3), so `call compile` is the idiomatic string→array path for extensions. The A2-correct hardening is defensive validation, not a parser swap:
-1. Guard the raw string first: `if (isNil "_response" || {_response isEqualTo ""}) exitWith { /* neutral fallback + WARNING */ };`
+1. Guard the raw string first with OA-safe checks: `if (isNil "_response") exitWith { /* neutral fallback + WARNING */ }; if (_response == "") exitWith { /* neutral fallback + WARNING */ };`
 2. Compile, then **shape-check before use**: `_response = call compile _response; if (typeName _response != "ARRAY") exitWith {...}; if ({ typeName _x != "SCALAR" } count _response > 0) exitWith {...};`
 3. Only then read `_response select 0/1/2`. This keeps the DLL contract (numeric arrays) but refuses to execute anything that isn't one.
 
@@ -404,10 +408,10 @@ Round 1 listed, as an unverified gotcha, "HC disconnect orphans units it created
 - If `WFBE_C_AI_DELEGATION == 2` and `WFBE_HEADLESS_<uid>` exists, it removes the HC's group from `WFBE_HEADLESSCLIENTS_ID` and clears `WFBE_HEADLESS_<uid>`.
 - `WFBE_JIP_USER<uid>` is nil for an HC (HCs don't register as players via `RequestJoin`), so the handler `exitWith`s before the player-team/unit logic. (It does also delete any `WFBE_CLIENT_<uid>_OBJECTS` registered to that uid earlier in the handler.)
 
-What actually happens to the AI the HC was simulating: the **engine transfers those units/groups to the server**, so the server's load spikes by exactly the amount the HC was offloading — the opposite of the delegation benefit, precisely when you least want it. There is **no re-delegation**: the disconnect handler does not hand the migrated AI to a surviving HC, and (per the round-1 init finding) `WFBE_C_AI_DELEGATION` is only evaluated/downgraded at boot, so a later HC reconnect does not resume offloading either. **Net:** HC delegation has no failover/rebalancing — a single HC drop silently re-loads the server for the rest of the match. **Suggested handling:** on HC disconnect, if other HCs remain, re-`setGroupOwner` the migrated town-AI groups to a surviving HC (a periodic rebalancer is cleaner than doing it in the disconnect handler); and make delegation re-evaluate when an HC (re)connects rather than only at boot. (Arma 2 OA *does* support `setGroupOwner`; note the mission currently never uses it — see [AI, headless and performance](AI-Headless-And-Performance).)
+What actually happens to the AI the HC was simulating: the **engine transfers those units/groups to the server**, so the server's load spikes by exactly the amount the HC was offloading — the opposite of the delegation benefit, precisely when you least want it. There is **no re-delegation**: the disconnect handler does not hand the migrated AI to a surviving HC, and (per the round-1 init finding) `WFBE_C_AI_DELEGATION` is only evaluated/downgraded at boot, so a later HC reconnect does not resume offloading either. **Net:** HC delegation has no failover/rebalancing — a single HC drop silently re-loads the server for the rest of the match. **Suggested handling:** on HC disconnect, re-register migrated groups for cleanup/accounting, redirect future spawns to the server or a surviving HC, and make delegation re-evaluate when an HC (re)connects rather than only at boot. Arma 2 OA has no `setGroupOwner` / `groupOwner` live-transfer command, so full live re-delegation of already-created groups is not available; keep patch design inside this mission's remote-create-on-HC model. See [AI, headless and performance](AI-Headless-And-Performance) and [Headless delegation/failover](Headless-Delegation-And-Failover-Playbook).
 
 ### Handoff
-Code owners: treat HC delegation as best-effort with no failover today; if HC stability matters, add re-delegation/rebalancing on HC disconnect/connect. Ledger: AI/Headless JIP/HC cell advanced; round-1 "orphan" hypothesis corrected.
+Code owners: treat HC delegation as best-effort with no failover today; if HC stability matters, add cleanup/accounting re-registration and future-spawn rebalancing on HC disconnect/connect. Ledger: AI/Headless JIP/HC cell advanced; round-1 "orphan" hypothesis corrected.
 
 ## Round 12 — 2026-06-02 (Claude) — side-supply overspend windfall (DR-22)
 
@@ -646,7 +650,9 @@ Method: relative-path file-set `comm` + per-file `cmp` of all source `.sqf` agai
 
 2. **Napf / eden / lingor are heavily divergent full forks.** 104–123 of ~465 logic files differ from source — including security-critical files I reviewed: `Server_HandlePVF.sqf` (DR-1), `Server_HandleSpecial.sqf` (DR-27), `server_victory_threeway.sqf` (DR-11), `Server_ProcessUpgrade.sqf` (DR-23), `Server_OnHQKilled.sqf` (DR-20), `Server_OnPlayerDisconnected.sqf` (DR-21), `Init_PublicVariables.sqf`, `initJIPCompatible.sqf`. The divergence is **hand-customized behavior, not just config**: e.g. Napf's `Server_HandleSpecial.sqf` "ICBM" case additionally spawns three `BO_GBU12_LGB` laser-guided bombs around the target (absent in source). This is consistent with **DR-4** (modded propagation is commented out at `Tools/LoadoutManager/.../SqfFileGenerator.cs:132`) — the modded missions are **not** regenerated from source; they are independent forks. **Consequence:** a fix to the Chernarus source does **not** reach Napf/eden/lingor; the DR vulnerability *classes* almost certainly persist there (same architecture) but at different lines/with different effects, so each fork needs its own review and manual fix propagation.
 
-3. **smd_sahrani_a2 / dingor / tavi / isladuala are abandoned stubs.** 1–20 files each (a real mission is ~786 files / ~671 `.sqf`); they are missing `Server/`, `mission.sqm`, the `WASP/` overlay, `description.ext`, and essentially all logic. They cannot load as functional Warfare missions. These are incomplete scaffolds committed to the repo — an **abandoned-code/inventory** item.
+3. **smd_sahrani_a2 / dingor / tavi / isladuala are abandoned stubs.** They have only a tiny fraction of the real mission tree; most are missing `Server/`, `mission.sqm`, the `WASP/` overlay, `description.ext`, and essentially all logic. They cannot load as functional Warfare missions. These are incomplete scaffolds committed to the repo — an **abandoned-code/inventory** item.
+
+**Wave S 2026-06-02 refinement:** Napf/eden/lingor should be treated as partial forks, not drop-in runnable missions from the checkout. `eden` lacks tracked `version.sqf`; `Napf` lacks tracked `mission.sqm` and `version.sqf`; `lingor` lacks tracked `mission.sqm`, `description.ext`, `initJIPCompatible.sqf` and `version.sqf`. The stub tier remains non-runnable; `dingor` has a `description.ext` that includes missing `version.sqf`.
 
 **Owner decisions / handoff.** Three explicit choices for the code owner, all logged for Codex to fold into [Tools and build workflow](Tools-And-Build-Workflow) / a generated-mission status table (Codex's lane):
 - **Stub missions (sahrani/dingor/tavi/isladuala):** complete via regeneration or **remove** them — they are dead weight and misleading as "supported maps."

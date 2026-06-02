@@ -418,9 +418,9 @@
     "OptionsAvailable and RscOverlay share title IDD 10200; use uiNamespace display handles rather than IDD uniqueness.",
     "UI/marker loops are performance-sensitive polling loops; preserve cached writes, map-closed backoff and mission-parameter gates.",
     "DR-1 (High, hardening): Server_HandlePVF.sqf/Client_HandlePVF.sqf Call Compile the sender-chosen command string with no validation, and BattlEyeFilter/publicvariable.txt has only the kickAFK feature rule. Validate the command set before compile and add a real BE PV filter before trusting on a public server.",
-    "DR-1 fix (behavior-preserving): replace 'Spawn (Call Compile _script)' with 'Spawn (missionNamespace getVariable [_script, {}])' in both HandlePVF dispatchers; SRVFNC/CLTFNC are globals so legitimate traffic is unchanged and hostile strings no-op. See Deep-Review-Findings Round 3 playbook.",
+    "DR-1 fix (behavior-preserving): replace 'Spawn (Call Compile _script)' with missionNamespace getVariable _script plus isNil/typeName CODE guards in both HandlePVF dispatchers; SRVFNC/CLTFNC are globals so legitimate traffic is unchanged and hostile strings no-op. See Deep-Review-Findings Round 3 playbook.",
     "Residual after DR-1 fix: the PVF model still trusts client-sent commands and params, for example RequestChangeScore sets score from payload. Arbitrary code execution is closed, but legitimate-command forgery needs separate per-handler sender/param validation.",
-    "DR-2/DR-3: paratrooper drop markers and MASH tent markers are confirmed dead receiver-side paths.",
+    "DR-2/DR-3 status split: paratrooper drop markers are revived in source Chernarus + maintained Vanilla Takistan by registering HandleParatrooperMarkerCreation, with Arma smoke still pending and modded drift unresolved. MASH tent markers remain dead receiver-side/source-sender paths.",
     "DR-4: Chernarus and Takistan differ only by LoadoutManager skip-list/blacklist, but skip-listed files never propagate and must be hand-mirrored; Modded_Missions/* are abandoned until modded propagation is re-enabled.",
     "Construction hardening gap: coin_interface.sqf performs cost/placement/role checks client-side, then RequestStructure/RequestDefense do only light server class-existence validation before creating server objects.",
     "DR-6 (High, gameplay integrity): RequestStructure/RequestDefense take _side (and _manned) from the client payload and RequestMHQRepair passes the raw payload to MHQRepair; no commander/funds/dead-HQ/base-area checks server-side. A modified client can forge free factories, AI-manned defenses/minefields and HQ repairs for any side. Root cause: payloads omit the player and Arma2 PVEH has no sender identity. Fix: add player to payload + validate side+commander+funds server-side. Pairs with DR-1 (DR-1 stops code execution; DR-6 stops forged legit commands). See Deep-Review-Findings Round 4.",
@@ -439,7 +439,7 @@
     "DR-16 (High): structure sale (GUI_Menu_Economy.sqf:104-152) is fully client-authoritative — client commander check, client refund, client setDammage 1 destruction; no server PVF. With DR-6 (build) and DR-14 (buy), the entire WFBE economy is client-authoritative; only a BattlEye scripts.txt filter or a server-PVF redesign can enforce it. DR-17 (confirms Curie): RscMenu_EASA and RscMenu_Economy share idd=23000 (Rsc/Dialogs.hpp:3211,3289) -> findDisplay 23000 ambiguous. See Deep-Review-Findings Round 8.",
     "DR-18 (Med, confirms Cicero): supply-cooldown key casing mismatch — Init_Town.sqf:35 seeds 'lastSupplyMissionRun' (lowercase) but supply logic uses 'LastSupplyMissionRun' (capital); setVariable keys are case-sensitive -> 0-seed dead, key nil first check -> isSupplyMissionActiveInTown.sqf:11 nil+interval throws. Fix: align casing or getVariable default 0. DR-19 (Med, non-dedicated, confirms Cicero): serverFpsGUI.sqf + monitorServerFPS.sqf put sleep 8 inside if(isDedicated) -> hosted/listen server busy-loops; hoist sleep/early-exit + consolidate redundant FPS publishers. See Deep-Review-Findings Round 9.",
     "DR-20 (High, multiplayer correctness): the HQ Killed EH is registered on every owning-side client (set-hq-killed-eh broadcast + Init_Client.sqf:500-503 JIP path), but Server_OnHQKilled.sqf has no idempotency guard -> on mobile-HQ death the server runs it once per owning-side client (~2N x killer score award + N messages; score exploit on populated servers). JIP detection itself is correct. Fix: per-HQ processed flag in OnHQKilled (detect redundantly, act once). See Deep-Review-Findings Round 10.",
-    "DR-21 (Med, perf/operational): HC delegation has no failover. On HC disconnect Arma2 OA migrates its local AI to the server (load spike, NOT orphaned/lost — corrects round-1 hypothesis); Server_OnPlayerDisconnected.sqf does no re-delegation and WFBE_C_AI_DELEGATION is only evaluated at boot, so a reconnecting HC doesn't resume offload. Suggest setGroupOwner-based rebalancing on HC connect/disconnect (mission never uses setGroupOwner). See Deep-Review-Findings Round 11.",
+    "DR-21 (Med, perf/operational): HC delegation has no failover. On HC disconnect Arma2 OA migrates its local AI to the server (load spike, NOT orphaned/lost — corrects round-1 hypothesis); Server_OnPlayerDisconnected.sqf does no re-delegation and WFBE_C_AI_DELEGATION is only evaluated at boot, so a reconnecting HC doesn't resume offload. Arma 2 OA has no setGroupOwner/groupOwner live-transfer command; re-register migrated groups for cleanup/accounting and redirect future spawns to a surviving HC or the server inside the mission's remote-create-on-HC model. See Deep-Review-Findings Round 11.",
     "DR-22 (High, economy exploit): Server_ChangeSideSupply.sqf clamp 'if (_change<0) then {_change=_currentSupply-_amount}' is a broken floor — _amount is signed, so overspending yields currentSupply+|amount| (spend 300 from 100 -> 400, a windfall). Live in both west/east handlers; identical block in Common_ChangeSideSupply is dead. Fix: _change=0. Confirms Faraday candidate + round-1 note. No resistance-side handler. See Deep-Review-Findings Round 12.",
     "DR-23 (High, economy integrity): RequestUpgrade.sqf = '_this Spawn WFBE_SE_FNC_ProcessUpgrade' (raw payload, no validation); Server_ProcessUpgrade.sqf does no commander/funds/sequence/dependency check and never deducts cost (client-side). Forge free upgrades; client-controlled indices -> out-of-range error. SYNTHESIS: with DR-6/14/16/22/23 the entire WFBE economy (build/buy/sell/supply/upgrade) is client-authoritative — one architectural decision (server-PVF validation vs BattlEye scripts.txt) covers the class. See Deep-Review-Findings Round 13.",
     "DR-24 (Low, dead code): RscMenu_Upgrade (Rsc/Dialogs.hpp:2425) onLoad ExecVMs Client/GUI/GUI_Menu_Upgrade.sqf which does not exist (only GUI_UpgradeMenu.sqf); dialog never opened; live upgrade UI is GUI_UpgradeMenu.sqf. Dead/naming-drift reference. Delete or repoint. See Deep-Review-Findings Round 14.",
@@ -513,7 +513,7 @@
       ],
       "findings": [
         "DR-1 PV dispatch Call Compile trust boundary unmitigated by validation or BattlEye filter.",
-        "DR-2 paratrooper drop markers dead because HandleParatrooperMarkerCreation is not in the client PVF list.",
+        "DR-2 paratrooper drop markers are superseded for source Chernarus + maintained Vanilla Takistan: HandleParatrooperMarkerCreation is now in the client PVF list; Arma smoke and modded drift cleanup remain.",
         "DR-3 MASH tent markers dead because receiverMASHmarker.sqf is only referenced by a commented client init compile.",
         "DR-4 Chernarus and Takistan are in sync except skip-list/blacklist differences; Modded_Missions are stale or stubbed.",
         "DR-5 atlas preprocessFile counts should be treated as point-in-time; FSM count of 3 verified accurate."
@@ -529,7 +529,7 @@
         "Deep-Review-Findings"
       ],
       "findings": [
-        "DR-1 fix is behavior-preserving: SRVFNC/CLTFNC are missionNamespace globals, so dispatch can resolve via getVariable [_script, {}] instead of Call Compile; hostile strings become no-ops.",
+        "DR-1 fix is behavior-preserving: SRVFNC/CLTFNC are missionNamespace globals, so dispatch can resolve via getVariable _script plus isNil/typeName CODE guards instead of Call Compile; hostile strings become no-ops.",
         "No registered PVF handler compiles its parameters; no second-order injection on the PVF path.",
         "Residual: legitimate-command forgery, such as RequestChangeScore trusting payload, is not closed by the dispatch fix and needs separate per-handler sender/param validation."
       ]
@@ -734,7 +734,7 @@
       "findings": [
         "Self-correction: round-1 'HC disconnect orphans units' is wrong — engine migrates local units to server (no loss).",
         "DR-21 (Med): HC delegation has no failover/rebalancing; disconnect dumps AI on the server and delegation is only evaluated at boot.",
-        "Suggest setGroupOwner-based rebalancing on HC connect/disconnect; mission never uses setGroupOwner."
+        "Do not suggest setGroupOwner/groupOwner live transfer for OA. Re-register migrated groups for cleanup/accounting and redirect future spawns to a surviving HC or the server."
       ]
     },
     {
@@ -927,7 +927,7 @@
       "agent": "Claude",
       "lane": "generated-mission-drift-review",
       "type": "deep-review",
-      "findings": "DR-32 (Medium, drift + abandoned-code): 3 fidelity tiers. Vanilla Takistan faithful (15/671 sqf differ, all map-config + textures; logic byte-identical -> DR-1..DR-31 propagate verbatim). Napf/eden/lingor divergent hand-edited forks (104-123 logic files differ incl security-critical; Napf ICBM adds GBU-12 bombs; not regenerated per DR-4). sahrani/dingor/tavi/isladuala abandoned stubs (1-20 files, non-runnable)."
+      "findings": "DR-32 (Medium, drift + abandoned-code): 3 fidelity tiers. Vanilla Takistan faithful (15/671 sqf differ, all map-config + textures; logic byte-identical -> DR-1..DR-31 propagate verbatim). Napf/eden/lingor are divergent hand-edited partial forks (104-123 logic files differ incl security-critical; Napf ICBM adds GBU-12 bombs; not regenerated per DR-4) and are not drop-in runnable from checkout without missing tracked/generated inputs. sahrani/dingor/tavi/isladuala are abandoned stubs (1-20 files, non-runnable)."
     },
     {
       "date": "2026-06-02",

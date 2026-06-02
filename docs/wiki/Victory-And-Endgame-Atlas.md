@@ -104,7 +104,7 @@ if (_side == west) then {
 };
 ```
 
-So the current client payload is semantically "loser side id", not "winner side id." This is easy to misread because the server also writes `WF_Winner` in the same block. Any patch must pick a single explicit semantic and keep the client, logger and messages consistent.
+So the current client payload is semantically "loser side id", not "winner side id." This is easy to misread because the server also writes `WF_Winner` in the same block. Wave S tightened this further: `_x` is the eliminated/losing side in the HQ/factory branch, but `_x` is the winning side in the all-towns branch. Any patch must compute explicit `_winnerSide` and `_loserSide` per branch, then keep the client, logger and messages consistent.
 
 The client outro:
 
@@ -115,6 +115,8 @@ The client outro:
 - terminates death camera effects if needed (`:47-52`);
 - runs a camera tour (`:54-86`);
 - calls `failMission "END1"` after a short delay (`:88-89`).
+
+UI note: endgame stats have a unique `idd`, but `GUI_EndOfGameStats.sqf` shares `uiNamespace["currentCutDisplay"]` with `OptionsAvailable`/RHUD action title recovery. Route visual fixes through [UI IDD collision repair](UI-IDD-Collision-Repair) so the outro, RHUD/FPS and action icons are smoked together.
 
 ## Winner Logging
 
@@ -132,7 +134,7 @@ if (_x == west) then {
 
 The live logger expects its first argument to be the winning side (`Server_LogGameEnd.sqf:9-12`). It increments `profileNamespace` key `"%1_WIN_CHERNARUS"` for that side when `WFBE_Server_LogMatchWin` is enabled (`Server_LogGameEnd.sqf:21-44`).
 
-This is correct for a side being eliminated: if `_x` is the loser, the opposite side should be logged as winner. It is wrong for an all-towns victory: if `_x` holds all towns, `_x` is the winner, but the current block still logs the opposite side.
+This is correct for a side being eliminated: if `_x` is the loser, the opposite side should be logged as winner. It is wrong for an all-towns victory: if `_x` holds all towns, `_x` is the winner, but the current block still logs the opposite side. Treat `WF_Winner` in current source as branch-dependent and therefore unreliable: it stores the condition side, not a consistently named winner.
 
 Deep Review DR-11 owns this impact, and DR-36 owns the exact guard/precedence/no-break mechanism.
 
@@ -152,6 +154,8 @@ If AntiStack is enabled, the script:
 6. sleeps 5 seconds, logs and calls `failMission "END1"` (`:86-88`).
 
 DR-36 found the loop cadence/performance posture clean: the victory check itself runs every 80 seconds and the final persistence tail is bounded by player count. The JIP gap is narrow: endgame broadcast and `WFBE_GameOver` are not replayed to a player who joins in the few seconds before `failMission`, but the mission is already ending.
+
+AntiStack nuance from Wave S: `mainLoop.sqf` and `flushLoop.sqf` stop on `WFBE_GameOver`, but `updateScoreInternal.sqf:13` uses `while { true }`. Mission shutdown follows shortly after victory, so this is a low-risk cleanup nuance rather than a result-integrity root cause.
 
 ## Stale Duplicate Logger
 
