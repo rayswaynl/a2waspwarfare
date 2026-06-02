@@ -1683,7 +1683,6 @@ class Mission
 					side="CIV";
 					vehicle="Citizen1";
 					player="PLAY CDG";
-					forceInServer=1;
 					forceHeadlessClient=1;
 					leader=1;
 					skill=0.60000002;
