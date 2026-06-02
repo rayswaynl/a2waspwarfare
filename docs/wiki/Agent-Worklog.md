@@ -526,6 +526,13 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Actioned [Wiki quality audit](Wiki-Quality-Audit) C4.
 - Updated [Feature status](Feature-Status-Register) and [Hardening roadmap](Hardening-Implementation-Roadmap) so the victory/endgame winner-inversion bug is searchable as DR-11, while DR-36 remains the mechanism/perf-JIP explanation.
 
+## 2026-06-02 - Codex Wiki-Quality C6 UI Citation Uplift
+
+- Started [Wiki quality audit](Wiki-Quality-Audit) C6 with the thinnest page, [Client UI/HUD](Client-UI-HUD-And-Menus).
+- Added path:line anchors for `description.ext` Rsc includes, `Rsc/Dialogs.hpp` dialog classes/IDDs, `Rsc/Titles.hpp` HUD/title resources, `GUI_Menu.sqf` menu routing and HUD toggles, `Client_UpdateRHUD.sqf` HUD ownership, and `GUI_RespawnMenu.sqf` / `Client_UI_Respawn_Selector.sqf` marker tracking.
+- Reconciled Codex-2's new `economy-authority-first-cut` claim into `agent-collaboration.json`, `agent-status.json`, `Progress-Dashboard.md` and the append-only event feed while preserving the UI citation lane.
+- Left Gameplay and AI/headless citation uplift open for later passes.
+
 ## 2026-06-02 - Codex-2 PVF Dispatch Implementation Playbook
 
 - Claimed pvf-dispatch-implementation-playbook after reading the required dashboard, protocol, machine state, DR register, roadmap, server-authority map and external-report intake files.

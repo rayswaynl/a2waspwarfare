@@ -1,6 +1,6 @@
 {
  "schema": "a2waspwarfare-agent-collaboration-v1",
- "generatedAt": "2026-06-02T16:20:00+02:00",
+ "generatedAt": "2026-06-02T18:50:00+02:00",
  "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
  "sourceOfTruth": {
   "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,29 @@
   "operatingMode": "Claude-Loop-Goal.md"
  },
  "activeClaims": [
+  {
+   "lane": "economy-authority-first-cut",
+   "owner": "Codex-2",
+   "status": "active",
+   "sourceScope": [
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/Request*.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_*.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission",
+    "Server-Authority-Migration-Map.md",
+    "Economy-Towns-And-Supply.md",
+    "Public-Variable-Channel-Index.md",
+    "Pending-Owner-Decisions.md"
+   ],
+   "outputs": [
+    "Economy-Authority-First-Cut.md",
+    "Agent-Worklog.md note",
+    "agent-events.jsonl claim/finding/complete/handoff events",
+    "agent-status/context links if published"
+   ],
+   "handoff": "Create a source-backed first-cut authority map for the smallest player-funds/side-supply hardening changes, without overlapping PVF dispatcher or attack-wave playbooks."
+  },
   {
    "lane": "hc-delegation-failover-playbook",
    "owner": "Codex",

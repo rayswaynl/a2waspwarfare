@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T18:25:00+02:00",
+  "generatedAt": "2026-06-02T18:50:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,14 +16,14 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki-Quality-Audit C4 by adding explicit DR-11 references to victory/endgame pages.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed lane while Codex-2 owns PVF dispatch."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass began Wiki-Quality-Audit C6 by adding path:line citations to the Client UI/HUD overview.",
+      "nextExpectedOutput": "Continue with the next bounded source-backed lane while Codex-2 owns economy-authority-first-cut."
     },
     "Codex-2": {
-      "status": "ready-for-next-lane",
-      "currentLane": "pvf-dispatch-implementation-playbook",
-      "currentWork": "Published standalone DR-1/DR-38 PVF dispatch hardening playbook; source-only validation complete, no in-game smoke run.",
-      "nextExpectedOutput": "Pick the next bounded lane, likely HC/static-defence delegation or economy authority implementation map."
+      "status": "active",
+      "currentLane": "economy-authority-first-cut",
+      "currentWork": "Source-tracing first-cut economy/server-authority hardening opportunities around player funds, side supply and request/direct PV boundaries.",
+      "nextExpectedOutput": "Economy-Authority-First-Cut.md with source evidence, minimum safe patch sequence and validation plan."
     },
     "Claude": {
       "status": "autonomous-ready",
@@ -33,6 +33,18 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "economy-authority-first-cut",
+      "owner": "Codex-2",
+      "status": "active",
+      "output": "Source-tracing first-cut server-authority hardening around player funds, side supply and request/direct PV boundaries"
+    },
+    {
+      "lane": "wiki-quality-c6-ui-citations",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Client-UI-HUD-And-Menus.md now has path:line source anchors for dialogs, Rsc includes, RHUD/FPS and respawn marker tracking"
+    },
     {
       "lane": "wiki-quality-c4-victory-searchability",
       "owner": "Codex",

@@ -18,18 +18,18 @@ Rule of thumb: UI code is usually client-local, but many UI buttons trigger serv
 
 ## Compact Dialog Index
 
-| Dialog/resource | IDD | Controller/owner | Status |
+| Dialog/resource | IDD | Controller/owner | Source anchor | Status |
 | --- | ---: | --- | --- |
-| `WF_Menu` | 11000 | `Client/GUI/GUI_Menu.sqf` | Main router. |
-| `RscMenu_BuyUnits` | 12000 | `Client/GUI/GUI_Menu_BuyUnits.sqf` | Live; client-authoritative purchase path risk is documented in [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas). |
-| `RscMenu_Tactical` | 17000 | `Client/GUI/GUI_Menu_Tactical.sqf` | Live; includes high-impact support paths such as ICBM. |
-| `WFBE_UpgradeMenu` | 504000 | `Client/GUI/GUI_UpgradeMenu.sqf` | Live upgrade UI. |
-| `RscMenu_Upgrade` | 18000 | `Client/GUI/GUI_Menu_Upgrade.sqf` | Stale legacy class; target controller file is missing. |
-| `WFBE_BuyGearMenu` | 503000 | `Client/GUI/GUI_BuyGearMenu.sqf` | Live gear/template UI. |
-| `RscMenu_Service` | 20000 | `Client/GUI/GUI_Menu_Service.sqf` | Live service/EASA entry; spend validation is client-side. |
-| `RscMenu_EASA` | 23000 | `Client/GUI/GUI_Menu_EASA.sqf` | Live; shares IDD with economy menu. |
-| `RscMenu_Economy` | 23000 | `Client/GUI/GUI_Menu_Economy.sqf` | Live; IDD reuse is a maintenance trap. |
-| `RscOverlay` / `OptionsAvailable` | 10200 | `Init_Client.sqf`, `Client_UpdateRHUD.sqf`, action FSMs | Legacy/current overlay resources share an IDD; use stored display handles rather than assuming unique `findDisplay`. |
+| `WF_Menu` | 11000 | `Client/GUI/GUI_Menu.sqf` | `Rsc/Dialogs.hpp:1019`, `GUI_Menu.sqf:33-43` | Main router. |
+| `RscMenu_BuyUnits` | 12000 | `Client/GUI/GUI_Menu_BuyUnits.sqf` | `Rsc/Dialogs.hpp:1445-1447`, `GUI_Menu.sqf:33-36` | Live; client-authoritative purchase path risk is documented in [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas). |
+| `RscMenu_Tactical` | 17000 | `Client/GUI/GUI_Menu_Tactical.sqf` | `Rsc/Dialogs.hpp:2161-2163` | Live; includes high-impact support paths such as ICBM. |
+| `WFBE_UpgradeMenu` | 504000 | `Client/GUI/GUI_UpgradeMenu.sqf` | `Rsc/Dialogs.hpp:4-6`, `GUI_Menu.sqf:162-165` | Live upgrade UI. |
+| `RscMenu_Upgrade` | 18000 | `Client/GUI/GUI_Menu_Upgrade.sqf` | `Rsc/Dialogs.hpp:2425-2427` | Stale legacy class; target controller file is missing. |
+| `WFBE_BuyGearMenu` | 503000 | `Client/GUI/GUI_BuyGearMenu.sqf` | `Rsc/Dialogs.hpp:530-532`, `GUI_Menu.sqf:40-43` | Live gear/template UI. |
+| `RscMenu_Service` | 20000 | `Client/GUI/GUI_Menu_Service.sqf` | `Rsc/Dialogs.hpp:2870-2872`, `GUI_Menu.sqf:176-179` | Live service/EASA entry; spend validation is client-side. |
+| `RscMenu_EASA` | 23000 | `Client/GUI/GUI_Menu_EASA.sqf` | `Rsc/Dialogs.hpp:3209-3211`, `GUI_Menu_Service.sqf:241-244` | Live; shares IDD with economy menu. |
+| `RscMenu_Economy` | 23000 | `Client/GUI/GUI_Menu_Economy.sqf` | `Rsc/Dialogs.hpp:3287-3289`, `GUI_Menu.sqf:169-172` | Live; IDD reuse is a maintenance trap. |
+| `RscOverlay` / `OptionsAvailable` | 10200 | `Init_Client.sqf`, `Client_UpdateRHUD.sqf`, action FSMs | `Rsc/Titles.hpp:44`, `:164-173`, `Client_UpdateRHUD.sqf:3-7` | Legacy/current overlay resources share an IDD; use stored display handles rather than assuming unique `findDisplay`. |
 
 ## UI Resource Layer
 
@@ -44,6 +44,8 @@ Rule of thumb: UI code is usually client-local, but many UI buttons trigger serv
 - `Identities.hpp` outside vanilla mode
 
 Dialog scripts then live under `Client/GUI`.
+
+Source anchors: `description.ext:46-58` includes `Rsc/Header.hpp`, `Styles.hpp`, `Parameters.hpp`, `Ressources.hpp`, `Dialogs.hpp` and `Titles.hpp`; `Rsc/Titles.hpp:25` registers `RscOverlay`, `CaptureBar`, `OptionsAvailable` and `EndOfGameStats`.
 
 ## Main Menus
 
@@ -84,6 +86,8 @@ Gear files and UI helpers support profile gear templates:
 
 `Client_UpdateRHUD.sqf` manages the full resource HUD and lightweight FPS overlay. `GUI_Menu.sqf` toggles `RUBHUD` and `RUBFPSHUD`. The code caches controls/text/colors and uses explicit client/server FPS rows.
 
+Source anchors: `GUI_Menu.sqf:191-199` toggles `RUBHUD` / `RUBFPSHUD`; `Client_UpdateRHUD.sqf:3-7` initializes the flags and cuts `OptionsAvailable`; `Client_UpdateRHUD.sqf:207-208` selects FPS-only vs full HUD mode.
+
 ## Map And Marker UI
 
 Client marker updates are split between:
@@ -95,6 +99,8 @@ Client marker updates are split between:
 - `Client_SetMapIconStatusInCombat`
 
 The combat icon blinking feature is guarded by `WFBE_C_MAP_ICON_BLINKING_ENABLED`.
+
+Respawn selector anchor: `GUI_RespawnMenu.sqf:31,100,193` owns `WFBE_MarkerTracking`; `Client_UI_Respawn_Selector.sqf:19-31` loops while that variable exists and updates the local selector marker. Keep that loop light.
 
 ## UI Risk Notes
 
