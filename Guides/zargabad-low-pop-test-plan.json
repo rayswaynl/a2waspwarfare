@@ -30,6 +30,8 @@
     "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Module/Zargabad/Zargabad_EdgeGuard.sqf",
     "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Module/Zargabad/Zargabad_BlackMarket.sqf",
     "Tools/Validate-ZargabadMission.ps1",
+    "Tools/Validate-ZargabadRuntimeEvidence.ps1",
+    "Guides/Zargabad-Claude-Runtime-Handoff.md",
     "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs"
   ],
   "relatedWikiPages": [
@@ -94,6 +96,10 @@
     },
     {
       "type": "source-audit",
+      "summary": "Tools/Validate-ZargabadRuntimeEvidence.ps1 is ready for Claude/runtime RPT validation and checks server/town/Zargabad/edge-guard init, optional JIP/HC/edge-removal/black-market evidence, and common missing-script/dependency/expression failures."
+    },
+    {
+      "type": "source-audit",
       "summary": "Init_Zargabad builds WFBE_ZARGABAD_CENTRAL_WALL through CreateDefenseTemplate with six separated H-barrier spans centered at 3425,3375 and angled 316 degrees across the flat middle."
     },
     {
@@ -102,7 +108,7 @@
     }
   ],
   "result": "partial",
-  "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete.",
-  "updatedAt": "2026-06-02T23:35:01Z",
+  "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md and Tools/Validate-ZargabadRuntimeEvidence.ps1 for RPT evidence.",
+  "updatedAt": "2026-06-03T01:50:13+02:00",
   "updatedBy": "Codex"
 }

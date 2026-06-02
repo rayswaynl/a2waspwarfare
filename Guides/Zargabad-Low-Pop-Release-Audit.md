@@ -7,7 +7,7 @@ This audit records the source-only and local-tool evidence for the Zargabad low-
 - Generated mission: `Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad`
 - Source support logic: `Missions/[55-2hc]warfarev2_073v48co.chernarus`
 - Branch: `feature/zargabad-map`
-- Latest audited branch state: `feature/zargabad-map` PR head including the edge-guard and central-wall passes.
+- Latest audited branch state: `feature/zargabad-map` PR head including the edge-guard, central-wall, static-validator and runtime-evidence-validator passes.
 
 ## Placement Audit
 
@@ -93,8 +93,10 @@ Static validation currently proves the editor data shape, not tactical effective
 
 `Tools/Validate-ZargabadMission.ps1` is the repeatable local validator for this PR. It parses the generated Zargabad `mission.sqm`, checks town/camp/airport/start/defense counts, sync targets, 6000m boundary containment, SV totals, town camp/defense coverage, mystery feature LOC, edge-guard LOC/hooks, central-wall template/gaps, and Takistan spillover.
 
+`Tools/Validate-ZargabadRuntimeEvidence.ps1` is the repeatable RPT validator for Claude/runtime testers. It checks that Zargabad appears in supplied RPT logs, server/town/Zargabad/edge-guard init completed, optional JIP/HC/edge-removal/black-market evidence appears when requested, and common Arma missing-script/dependency/expression failures are absent.
+
 Known verification gap: no in-game Arma 2 OA hosted/dedicated/JIP/HC smoke has been run from this environment.
 
 ## Required Playtest Gates
 
-Use `Guides/zargabad-low-pop-test-plan.json` as the machine-readable checklist. The goal should not be considered fully complete until at least the hosted or dedicated boot/town/economy/base-sightline gates pass with RPT evidence.
+Use `Guides/zargabad-low-pop-test-plan.json` as the machine-readable checklist and `Guides/Zargabad-Claude-Runtime-Handoff.md` as the Claude/runtime handoff. The goal should not be considered fully complete until at least the hosted or dedicated boot/town/economy/base-sightline gates pass with RPT evidence.
