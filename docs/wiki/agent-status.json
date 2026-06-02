@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T18:00:00+02:00",
+  "generatedAt": "2026-06-02T18:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -18,8 +18,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest slice harvested Wave L owner-page follow-up scouts into Feature Status, integrations/tooling, EASA/gear, construction/CoIn, server runtime/supply and propagated-fix status pages.",
-      "nextExpectedOutput": "Validate wiki links, JSON/JSONL, diff hygiene and mirror parity, then mirror/publish the Wave L harvest."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest slice published the Wave L owner-page follow-up harvest into Feature Status, integrations/tooling, EASA/gear, construction/CoIn, server runtime/supply and propagated-fix status pages.",
+      "nextExpectedOutput": "Continue with the next bounded source-backed review or documentation consistency pass from the active backlog."
     },
     "Codex-2": {
       "status": "ready",
@@ -34,18 +34,18 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "returned-harvested-locally",
+      "status": "returned-harvested-published",
       "currentLane": "scout-wave-l",
       "currentWork": "Six read-only explorers returned; Codex harvested source-backed findings into owner pages and machine records.",
-      "nextExpectedOutput": "No active Wave L scout output pending; validation, mirror parity and publish remain with Codex."
+      "nextExpectedOutput": "No active Wave L scout output pending; future work should use the published owner pages and machine records."
     }
   },
   "laneSummary": [
     {
       "lane": "scout-wave-l",
       "owner": "Codex sub-agents",
-      "status": "returned-harvested-validation-pending",
-      "output": "Confucius, Pasteur, Beauvoir, Dewey, Averroes and Kuhn returned; findings were folded into Feature Status, paratrooper revival, EASA/gear, factory purchase, integrations/tooling, construction/CoIn, server runtime/supply and machine status records."
+      "status": "published-validated",
+      "output": "Confucius, Pasteur, Beauvoir, Dewey, Averroes and Kuhn returned; findings were folded into Feature Status, paratrooper revival, EASA/gear, factory purchase, integrations/tooling, construction/CoIn, server runtime/supply and machine status records, then published to the wiki and docs mirror."
     },
     {
       "lane": "scout-wave-k",

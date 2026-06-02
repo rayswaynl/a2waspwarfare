@@ -6,7 +6,7 @@ The swarm is intentionally evidence-first: agents read source, report path/line-
 
 ## Current Wave: Wave L
 
-Spawned on this Codex session after Steff asked to bring an agent team back in for the owner-page follow-up pass. These six scouts were read-only and scoped to the highest-value Feature Status adjacent pages, while Codex kept edits, validation and publishing local. Reports have returned and the useful findings are being harvested into owner pages and machine records.
+Spawned on this Codex session after Steff asked to bring an agent team back in for the owner-page follow-up pass. These six scouts were read-only and scoped to the highest-value Feature Status adjacent pages, while Codex kept edits, validation and publishing local. Reports have returned, the useful findings were harvested into owner pages and machine records, and the results were published to both the wiki and `docs/wiki` mirror.
 
 | Agent | Lane | Status | Expected output |
 | --- | --- | --- | --- |
@@ -17,7 +17,7 @@ Spawned on this Codex session after Steff asked to bring an agent team back in f
 | Averroes | `server-runtime-supply-loop-followup` | Returned/harvested | Clarified post-game patrol loops as mostly inert polling, current-master supply duplicate-start risk and PR #1 handler separation. |
 | Kuhn | `feature-status-wiki-llm-navigation` | Returned/harvested | Added release-readiness links, owner-page routing for gear/service/construction/support items and refreshed JSONL status drift. |
 
-Harvest rule: Wave L findings were leads until Codex spot-checked high-risk claims. The owner-page harvest is local now; wiki checkout mirror, validation and push are the remaining gates.
+Harvest rule: Wave L findings were leads until Codex spot-checked high-risk claims. The owner-page harvest is now published and validated; remaining work is future Arma 2 OA smoke or code-owner implementation, not scout integration.
 
 ## Previous Wave: Wave K
 
