@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T18:05:00+02:00",
+  "generatedAt": "2026-06-02T18:25:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,14 +16,14 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki-Quality-Audit C2 by adding DR cross-links to developer-facing atlas pages.",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki-Quality-Audit C4 by adding explicit DR-11 references to victory/endgame pages.",
       "nextExpectedOutput": "Continue with the next bounded source-backed lane while Codex-2 owns PVF dispatch."
     },
     "Codex-2": {
-      "status": "ready-for-review",
+      "status": "ready-for-next-lane",
       "currentLane": "pvf-dispatch-implementation-playbook",
-      "currentWork": "PVF-Dispatch-Implementation-Playbook.md is mirrored and linked into hardening navigation.",
-      "nextExpectedOutput": "Review PVF-Dispatch-Implementation-Playbook.md before code work on branch hardening/pvf-dispatch."
+      "currentWork": "Published standalone DR-1/DR-38 PVF dispatch hardening playbook; source-only validation complete, no in-game smoke run.",
+      "nextExpectedOutput": "Pick the next bounded lane, likely HC/static-defence delegation or economy authority implementation map."
     },
     "Claude": {
       "status": "autonomous-ready",
@@ -34,6 +34,12 @@
   },
   "laneSummary": [
     {
+      "lane": "wiki-quality-c4-victory-searchability",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Feature-Status-Register.md and Hardening-Implementation-Roadmap.md now cite DR-11 for the victory/endgame winner inversion bug"
+    },
+    {
       "lane": "wiki-quality-c2-atlas-crosslinks",
       "owner": "Codex",
       "status": "published",
@@ -42,7 +48,7 @@
     {
       "lane": "pvf-dispatch-implementation-playbook",
       "owner": "Codex-2/Codex",
-      "status": "ready-for-review",
+      "status": "published",
       "output": "PVF-Dispatch-Implementation-Playbook.md is mirrored and linked from Home/sidebar/footer/dashboard/context"
     },
     {
@@ -164,6 +170,7 @@
     "serverAuthorityMap": "Server-Authority-Migration-Map.md",
     "claudeLoopGoal": "Claude-Loop-Goal.md",
     "attackWaveAuthority": "Attack-Wave-Authority-Playbook.md",
-    "attackWaveBacklog": "agent-hardening-backlog.jsonl#attack-wave-authority"
+    "attackWaveBacklog": "agent-hardening-backlog.jsonl#attack-wave-authority",
+    "pvfDispatchPlaybook": "PVF-Dispatch-Implementation-Playbook.md"
   }
 }

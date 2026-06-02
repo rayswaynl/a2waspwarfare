@@ -521,6 +521,17 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Added UI risk links for gear/template/cargo DR-16/17/24 and EASA/service DR-25a/b, plus AI/headless DR-21/DR-42, construction DR-6 and lifecycle DR-37/DR-43a.
 - Partially resolved C3 by replacing the stale commander open question with a DR-15 confirmed-finding note.
 
+## 2026-06-02 - Codex Wiki-Quality C4 Victory Searchability
+
+- Actioned [Wiki quality audit](Wiki-Quality-Audit) C4.
+- Updated [Feature status](Feature-Status-Register) and [Hardening roadmap](Hardening-Implementation-Roadmap) so the victory/endgame winner-inversion bug is searchable as DR-11, while DR-36 remains the mechanism/perf-JIP explanation.
+
+## 2026-06-02 - Codex-2 PVF Dispatch Implementation Playbook
+
+- Claimed pvf-dispatch-implementation-playbook after reading the required dashboard, protocol, machine state, DR register, roadmap, server-authority map and external-report intake files.
+- Source-checked Init_PublicVariables.sqf, Server_HandlePVF.sqf, Client_HandlePVF.sqf and the PVF send helpers in the Chernarus source mission.
+- Published [PVF dispatch implementation playbook](PVF-Dispatch-Implementation-Playbook), turning DR-1 and DR-38 into a P0 patch guide with registered allowlists, missionNamespace getVariable, hosted/dedicated validation and a clear boundary against per-handler authority and direct publicVariable channels.
+- Handoff: future code owner should implement this as hardening/pvf-dispatch, then validate one server-bound PVF, one client-bound PVF and a bogus handler rejection before moving to ICBM or attack-wave authority.
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.
@@ -530,3 +541,4 @@ Append entries here so Codex, Claude and future assistants can see what each age
 Previous: [Agent collaboration protocol](Agent-Collaboration-Protocol) | Next: [Deep-review findings](Deep-Review-Findings)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
+

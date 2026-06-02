@@ -12,7 +12,7 @@ Machine-readable backlog for agents and code owners: [`agent-hardening-backlog.j
 | --- | --- | --- |
 | P0 | PVF dispatcher lookup hardening | Smallest behavior-preserving change that closes DR-1 arbitrary code execution and DR-38 per-message recompilation. |
 | P0 | ICBM `RequestSpecial` server validation | Highest blast radius: forged PV can trigger server-applied map-wide damage. |
-| P1 | Victory/endgame correctness | Small source change with large match-outcome/stat impact. |
+| P1 | Victory/endgame correctness (DR-11 / DR-36) | Small source change with large match-outcome/stat impact. |
 | P1 | Server-side economy authority design | Covers the confirmed class: build, buy, sell, supply, upgrade, ICBM and gear/service spend paths. |
 | P1 | Direct attack-wave authority | Claude DR-41 confirmed `ATTACK_WAVE_INIT` is a forgeable direct-PV channel that can drive side-wide unit prices to zero or negative values. |
 | P1 | Supply mission authority and cooldown cleanup | Needed before PR #1 supply helicopters/cash/interdiction become baseline. |
@@ -77,6 +77,8 @@ Validation:
 - BattlEye filter design still treats `RequestSpecial` as high-risk defense-in-depth, not as the main authority layer.
 
 ## P1: Victory And Endgame
+
+Canonical finding: [Deep-review findings](Deep-Review-Findings) DR-11 covers the winner inversion / persisted win-tally bug. DR-36 explains the exact guard/precedence mechanism and confirms the loop is otherwise clean for Perf/JIP.
 
 Evidence:
 

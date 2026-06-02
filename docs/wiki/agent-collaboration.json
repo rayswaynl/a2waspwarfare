@@ -43,7 +43,7 @@
   {
    "lane": "pvf-dispatch-implementation-playbook",
    "owner": "Codex-2",
-   "status": "active",
+   "status": "published",
    "sourceScope": [
     "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
     "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf",
@@ -54,11 +54,13 @@
    ],
    "outputs": [
     "PVF-Dispatch-Implementation-Playbook.md",
-    "Agent-Worklog.md note",
-    "agent-events.jsonl claim/finding/complete/handoff events",
-    "agent-context/status/collaboration links if published"
+    "Progress-Dashboard.md",
+    "Agent-Worklog.md",
+    "agent-hardening-backlog.jsonl",
+    "agent-context.json",
+    "agent-status.json"
    ],
-   "handoff": "Create a standalone source-backed PVF dispatch patch guide that distinguishes dispatcher lookup hardening from per-handler authority validation and direct publicVariable channels."
+   "handoff": "Future code owner: implement hardening/pvf-dispatch from PVF-Dispatch-Implementation-Playbook.md; validate one server PVF, one client PVF and bogus-handler rejection; then continue with ICBM RequestSpecial or direct attack-wave authority."
   },
   {
    "lane": "hc-static-defense-verify",

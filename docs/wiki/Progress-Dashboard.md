@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `wiki-quality-c4-victory-searchability` | Published | [Feature status](Feature-Status-Register) and [Hardening roadmap](Hardening-Implementation-Roadmap) now cite DR-11 by number for the victory/endgame winner inversion bug. |
 | `wiki-quality-c2-atlas-crosslinks` | Published | Atlas pages now link directly to the relevant DR records: gameplay DR-6/11/14/15/22/23, UI DR-16/17/24/25, AI DR-21/42, construction DR-6 and lifecycle DR-37/43a. |
 | `pvf-dispatch-implementation-playbook` | Surfaced | [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) is now mirrored and linked from hardening navigation; it separates DR-1/DR-38 dispatcher lookup hardening from handler authority and direct-PV channels. |
 | `wiki-quality-nav-c5` | Published | New canonical pages are wired into Home/sidebar/footer, and `_Sidebar.md` no longer repeats hardening/authority/testing pages under both Ops and Current Work. |
@@ -55,6 +56,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `wiki-quality-c4-victory-searchability` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) C4 is resolved: victory/endgame pages now name DR-11 explicitly. |
 | `wiki-quality-c2-atlas-crosslinks` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) C2 is resolved: high-traffic atlas pages now point to their canonical DR findings. |
 | `pvf-dispatch-implementation-playbook` | Codex-2/Codex | Ready for review | Use [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) before changing `Init_PublicVariables.sqf`, `Server_HandlePVF.sqf` or `Client_HandlePVF.sqf`. |
 | `wiki-quality-nav-c5` | Codex | Published | [Variable/naming](Variable-And-Naming-Conventions), [PV channel index](Public-Variable-Channel-Index), [Modules atlas](Modules-Atlas), [Pending owner decisions](Pending-Owner-Decisions) and [Wiki quality audit](Wiki-Quality-Audit) are reachable from the main navigation. |
@@ -73,6 +75,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| Wiki-quality C4 victory searchability | [Feature status](Feature-Status-Register), [Hardening roadmap](Hardening-Implementation-Roadmap), [Wiki quality audit](Wiki-Quality-Audit) | Adds explicit DR-11 references to the victory/endgame bug while keeping DR-36 as the mechanism/perf-JIP review. |
 | Wiki-quality C2 atlas cross-links | [Gameplay atlas](Gameplay-Systems-Atlas), [Client UI systems atlas](Client-UI-Systems-Atlas), [Client UI/HUD](Client-UI-HUD-And-Menus), [AI/headless](AI-Headless-And-Performance), [Construction atlas](Construction-And-CoIn-Systems-Atlas), [Mission lifecycle](Mission-Entrypoints-And-Lifecycle) | Adds concise links from developer-facing atlas pages to the canonical DR findings, and resolves the stale DR-15 commander open question. |
 | PVF dispatch playbook surfaced | [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook), [Hardening roadmap](Hardening-Implementation-Roadmap), [PV channel index](Public-Variable-Channel-Index) | Codex-2's DR-1/DR-38 implementation guide is mirrored and linked into hardening nav. It keeps generic dispatcher hardening separate from registered-handler authority and direct publicVariable channels. |
 | Wiki-quality navigation / C5 | [Home](Home), [`_Sidebar.md`](_Sidebar), [`_Footer.md`](_Footer), [Wiki quality audit](Wiki-Quality-Audit) | Wires Claude's canonical glossary/index/atlas/decision pages into navigation and resolves the duplicate Current Work sidebar entries called out by C5. |
