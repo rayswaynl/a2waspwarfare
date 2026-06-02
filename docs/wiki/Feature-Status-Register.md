@@ -6,7 +6,7 @@ This register separates working systems from partial, deferred or risky systems 
 
 This is the triage dashboard, not the evidence dump. Keep each row short, link the canonical page, and put source traces, proof snippets and patch notes in the linked page or JSONL backlog.
 
-Quick jumps: [Priority Command Center](#priority-command-center) | [Owner Decision Queue](#owner-decision-queue) | [Working / Active Systems](#working--active-systems) | [Partial / Deferred / Needs Review](#partial--deferred--needs-review) | [Missing Feature Candidates](#missing-feature-candidates) | [Pending owner decisions](Pending-Owner-Decisions) | [Hardening roadmap](Hardening-Implementation-Roadmap) | [Source fix queue](Source-Fix-Propagation-Queue) | [`release readiness`](agent-release-readiness.json) | [`agent-feature-status.jsonl`](agent-feature-status.jsonl)
+Quick jumps: [Priority Command Center](#priority-command-center) | [Owner Decision Queue](#owner-decision-queue) | [Working / Active Systems](#working--active-systems) | [Partial / Deferred / Needs Review](#partial--deferred--needs-review) | [Missing Feature Candidates](#missing-feature-candidates) | [Pending owner decisions](Pending-Owner-Decisions) | [Hardening roadmap](Hardening-Implementation-Roadmap) | [Source fix queue](Source-Fix-Propagation-Queue) | [`release readiness`](agent-release-readiness.json) | [`agent-feature-status.jsonl`](agent-feature-status.jsonl) | [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl)
 
 Recommended row states:
 
@@ -45,7 +45,7 @@ Recommended row states:
 
 ## Owner Decision Queue
 
-The source-review campaign has mapped the remaining high-risk yellow cells. Most are no longer "research needed"; they are decisions about patch policy, hosting posture or whether to revive dormant code. Use [Pending owner decisions](Pending-Owner-Decisions) as the canonical decision register before starting code work.
+The source-review campaign has mapped the remaining high-risk yellow cells. Most are no longer "research needed"; they are decisions about patch policy, hosting posture or whether to revive dormant code. This section is a shortcut; use [Pending owner decisions](Pending-Owner-Decisions) as the canonical decision register before starting code work.
 
 | Decision class | What the owner must choose | First safe gate |
 | --- | --- | --- |
@@ -188,6 +188,6 @@ Current `master` is different: it has no supply-vehicle `Killed` handler, but du
 
 Previous: [Integration trust boundary audit](Integration-Trust-Boundary-Audit) | Next: [Hardening roadmap](Hardening-Implementation-Roadmap)
 
-Related: [Pending owner decisions](Pending-Owner-Decisions) | [Abandoned feature revival](Abandoned-Feature-Revival-Review) | [Source fix queue](Source-Fix-Propagation-Queue) | [Progress dashboard](Progress-Dashboard) | [`agent-feature-status.jsonl`](agent-feature-status.jsonl)
+Related: [Pending owner decisions](Pending-Owner-Decisions) | [Abandoned feature revival](Abandoned-Feature-Revival-Review) | [Source fix queue](Source-Fix-Propagation-Queue) | [Progress dashboard](Progress-Dashboard) | Evidence: [Deep-review findings](Deep-Review-Findings), [Codebase coverage ledger](Codebase-Coverage-Ledger) | Agent files: [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
