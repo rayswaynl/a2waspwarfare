@@ -6,7 +6,7 @@ This register separates working systems from partial, deferred or risky systems 
 
 This is the triage dashboard, not the evidence dump. Keep each row short, link the canonical page, and put source traces, proof snippets and patch notes in the linked page or JSONL backlog.
 
-Quick jumps: [Priority Command Center](#priority-command-center) | [Working / Active Systems](#working--active-systems) | [Partial / Deferred / Needs Review](#partial--deferred--needs-review) | [Missing Feature Candidates](#missing-feature-candidates) | [Hardening roadmap](Hardening-Implementation-Roadmap) | [Source fix queue](Source-Fix-Propagation-Queue) | [`release readiness`](agent-release-readiness.json) | [`agent-feature-status.jsonl`](agent-feature-status.jsonl)
+Quick jumps: [Priority Command Center](#priority-command-center) | [Owner Decision Queue](#owner-decision-queue) | [Working / Active Systems](#working--active-systems) | [Partial / Deferred / Needs Review](#partial--deferred--needs-review) | [Missing Feature Candidates](#missing-feature-candidates) | [Pending owner decisions](Pending-Owner-Decisions) | [Hardening roadmap](Hardening-Implementation-Roadmap) | [Source fix queue](Source-Fix-Propagation-Queue) | [`release readiness`](agent-release-readiness.json) | [`agent-feature-status.jsonl`](agent-feature-status.jsonl)
 
 Recommended row states:
 
@@ -42,6 +42,19 @@ Recommended row states:
 | Player-run supply helicopters (PR #1) | P1 review | Open additive branch | [Current supply heli PR](Current-Work-Supply-Helicopters-PR1) | Player-run supply helicopters, upgrade gating, cash runs and interdiction rewards are separate from dormant AI logistics; smoke truck/heli reward and duplicate-handler behavior before merge. |
 | AI commander autonomy | Owner decision | Dormant / partial | [AI commander autonomy audit](AI-Commander-Autonomy-Audit) | Human commander systems and the AI upgrade worker are real, but full autonomous commander production/logistics are not proven. Keep this separate from player-run supply-heli PR work. |
 | Autonomous AI logistics | Owner decision | Broken/dormant | [Abandoned feature revival](Abandoned-Feature-Revival-Review) | `UpdateSupplyTruck` is config-gated latent breakage with a disabled compile and missing `supplytruck.fsm`; redesign or remove/guard before any autonomous supply-truck/heli work. |
+
+## Owner Decision Queue
+
+The source-review campaign has mapped the remaining high-risk yellow cells. Most are no longer "research needed"; they are decisions about patch policy, hosting posture or whether to revive dormant code. Use [Pending owner decisions](Pending-Owner-Decisions) as the canonical decision register before starting code work.
+
+| Decision class | What the owner must choose | First safe gate |
+| --- | --- | --- |
+| Server authority vs public-hosting mitigation | Move spend/effect paths to server-side authority, or knowingly keep client-authoritative legacy behavior behind a real BattlEye/filter posture. | Start with [PVF dispatch](PVF-Dispatch-Implementation-Playbook), [ICBM authority](ICBM-Authority-Playbook) and [economy first cut](Economy-Authority-First-Cut); do not call BattlEye "shipped" without production `BEpath` evidence. |
+| Direct publicVariable channels | Treat direct channels such as `ATTACK_WAVE_INIT` and `wfbe_supply_temp_*` as requests, or explicitly accept their current payload-trust behavior. | Use [Public variable channel index](Public-Variable-Channel-Index), [Attack-wave authority](Attack-Wave-Authority-Playbook) and [Server authority migration map](Server-Authority-Migration-Map). |
+| Match outcome semantics | Decide whether to patch default victory immediately and whether non-zero threeway victory modes should be implemented or hidden/unsupported. | Use [Victory/endgame atlas](Victory-And-Endgame-Atlas); first smoke gate is exactly one winner/log in elimination, all-towns and same-tick cases. |
+| Supply logistics baseline | Decide what belongs on `master`: current player truck missions, PR #1 player supply helicopters, and which autonomous AI logistics pieces remain deferred. | Use [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) and [Current supply heli PR](Current-Work-Supply-Helicopters-PR1); finish cooldown, duplicate-start, reward-authority and Killed-handler smoke before merging heli work. |
+| Dormant visible features | For command task UI, MASH markers, old WASP actions, AI supply trucks and abandoned mission folders, choose revive, remove or keep dormant. | Use [Abandoned feature revival](Abandoned-Feature-Revival-Review), [AI commander autonomy audit](AI-Commander-Autonomy-Audit) and [Client UI systems atlas](Client-UI-Systems-Atlas); do not document visible task/orders as working until sends/JIP/spam behavior are restored. |
+| Patch-ready local correctness | Some items do not need broad design, only a scoped patch and smoke scheduling. | Factory queue cleanup, town-AI vehicle despawn safety, service guards, gear template filter, cargo loop bounds and marker cleanup all have owner pages and backlog records. |
 
 ## Working / Active Systems
 

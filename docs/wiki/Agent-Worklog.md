@@ -1021,3 +1021,9 @@ Key conclusions:
 - Source-read UI role gating and recovery paths in `initJIPCompatible.sqf`, `Init_Client.sqf`, `updateclient.sqf`, `Client_UpdateRHUD.sqf`, `Client_OnKilled.sqf`, `Client_PreRespawnHandler.sqf` and `Rsc/Titles.hpp`.
 - Added a JIP/headless verdict to [Client UI systems atlas](Client-UI-Systems-Atlas): headless clients do not run UI init; late joiners get marker/vote/HUD recovery; several synced-variable waits remain unbounded and event-style marker/support channels still need feature smoke.
 - Updated [Client UI/HUD quick reference](Client-UI-HUD-And-Menus) and [Codebase coverage ledger](Codebase-Coverage-Ledger) so the UI JIP/HC cell is now reviewed-with-caveats instead of blank.
+
+# 2026-06-02 - Owner Decision Queue
+
+- Added an [Owner Decision Queue](Feature-Status-Register#owner-decision-queue) to [Feature status](Feature-Status-Register) so the remaining yellow/residual items are easier to read as decisions, not unresolved archaeology.
+- Expanded [Pending owner decisions](Pending-Owner-Decisions) with a fast decision queue and agent handoff contract. It now routes code owners to the first safe implementation gates for server authority, direct publicVariable channels, victory semantics, supply logistics, dormant features and scoped local hardening.
+- Updated [`agent-status.json`](agent-status.json), [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-events.jsonl`](agent-events.jsonl) and [Progress dashboard](Progress-Dashboard) so future Codex/Claude tabs can see that the next step is policy/patch selection, not another broad review pass.

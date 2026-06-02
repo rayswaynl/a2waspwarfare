@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T18:13:26+02:00",
+  "generatedAt": "2026-06-02T18:21:07+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -18,8 +18,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest slice resolved the UI/HUD/menus JIP/HC coverage gap with a source-backed headless-client exclusion and late-join recovery verdict.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed review or documentation consistency pass from the active backlog."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; current slice is clarifying owner-decision routing so Feature Status distinguishes research-complete decisions from patch-ready local defects.",
+      "nextExpectedOutput": "Publish owner-decision queue updates, mirror them to the wiki checkout, then continue with the next bounded source-backed subsystem or implementation-readiness pass."
     },
     "Codex-2": {
       "status": "ready",
@@ -41,6 +41,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "owner-decision-queue",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Feature-Status-Register.md and Pending-Owner-Decisions.md now route remaining yellow/residual items by decision class: server authority, direct publicVariable, victory semantics, supply logistics baseline, dormant feature revive/remove and patch-ready local correctness."
+    },
     {
       "lane": "ui-jip-headless-verdict",
       "owner": "Codex",
