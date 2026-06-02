@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T23:05:00+02:00",
+  "generatedAt": "2026-06-02T23:20:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,39 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-quality-dup8-construction-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Deep-Review-Findings.md DR-6",
+        "Construction-And-CoIn-Systems-Atlas.md",
+        "Gameplay-Systems-Atlas.md",
+        "Feature-Status-Register.md",
+        "Hardening-Implementation-Roadmap.md",
+        "Server-Authority-Migration-Map.md",
+        "Wiki-Quality-Audit.md DUP-8",
+        "Server/PVFunctions/RequestStructure.sqf",
+        "Server/PVFunctions/RequestDefense.sqf",
+        "Server/PVFunctions/RequestMHQRepair.sqf",
+        "Client/Module/CoIn/coin_interface.sqf"
+      ],
+      "outputs": [
+        "Construction-And-CoIn-Systems-Atlas.md page ownership note and DR-6 authority routing",
+        "Gameplay-Systems-Atlas.md construction gateway routing note",
+        "Feature-Status-Register.md compact construction authority row",
+        "Hardening-Implementation-Roadmap.md economy/construction routing sentence",
+        "Server-Authority-Migration-Map.md construction row routed to DR-6 and construction atlas",
+        "Wiki-Quality-Audit.md DUP-8 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future construction docs should update Deep-Review-Findings.md DR-6 for exact RequestStructure/RequestDefense/RequestMHQRepair proof, Construction-And-CoIn-Systems-Atlas.md for runtime map and checklist, and Server-Authority-Migration-Map.md for migration design. Gameplay, Feature Status and Hardening roadmap should stay concise routing summaries."
+    },
     {
       "lane": "wiki-quality-dup7-supply-cooldown-routing",
       "owner": "Codex",
@@ -937,6 +970,7 @@
     }
   ],
   "integratedReports": [
+    "wiki-quality-dup8-construction-routing",
     "wiki-quality-dup7-supply-cooldown-routing",
     "gear-loadout-easa-balance-discovery",
     "external-pdf-research-intake",

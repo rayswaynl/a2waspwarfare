@@ -1,5 +1,7 @@
 # Construction And CoIn Systems Atlas
 
+Page ownership: this page owns the construction/CoIn runtime map, source anchors, request-handler map and safe extension checklist. [Deep-review findings](Deep-Review-Findings) DR-6 owns the exact per-handler construction-authority proof; [Server authority migration map](Server-Authority-Migration-Map) owns the broader migration design table.
+
 This page maps the build system that turns commander/repair-truck actions into HQ state changes, factories, base defenses, static weapons and repair flows.
 
 All source paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
@@ -140,9 +142,9 @@ These are preview/client rules. The server creation handlers do not repeat most 
 
 ### Authority Boundary
 
-The client pays cost and enforces most placement/role checks before sending the request. Server-side request handlers mainly check that the requested class exists in the side arrays. They do not re-check commander ownership, funds, build radius, base-area restrictions, hostile-town distance or most collision checks.
+DR-6 confirms the authority boundary: the client pays cost and enforces most placement/role checks before sending the request, while server-side request handlers mainly check that the requested class exists in the side arrays. They do not re-check commander ownership, funds, build radius, base-area restrictions, hostile-town distance or most collision checks.
 
-This is a gameplay hardening risk, especially because the PVF layer itself already has a `Call Compile` trust-boundary finding in [Deep-review findings](Deep-Review-Findings) DR-1. A safe future hardening pass should add server-side validation without changing normal CoIn UX.
+This atlas keeps the system map and checklist. For exact forged payload examples and the validation sketch, use [Deep-review findings](Deep-Review-Findings) DR-6; for migration sequencing across other economy authority paths, use [Economy authority first cut](Economy-Authority-First-Cut) and [Server authority migration map](Server-Authority-Migration-Map).
 
 ## Server Construction Workers
 

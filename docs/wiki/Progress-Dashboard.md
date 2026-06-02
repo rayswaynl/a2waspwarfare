@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `wiki-quality-dup8-construction-routing` | Published | [Deep-review findings](Deep-Review-Findings) DR-6 now owns exact construction-authority proof; [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas) owns runtime flow and safe extension checklist; Gameplay, Feature status, Hardening roadmap and Server authority map route there instead of repeating class-existence evidence. |
 | `wiki-quality-dup7-supply-cooldown-routing` | Published | [Supply mission architecture](Supply-Mission-Architecture) and [Deep-review findings](Deep-Review-Findings) DR-18 now own cooldown/JIP flow and exact casing evidence; [Economy](Economy-Towns-And-Supply), [Server runtime](Server-Gameplay-Runtime-Atlas), [Feature status](Feature-Status-Register) and [Hardening roadmap](Hardening-Implementation-Roadmap) route there instead of repeating the mismatch. |
 | `wiki-quality-dup4-generated-mission-routing` | Published | [Tools/build](Tools-And-Build-Workflow) now owns operational LoadoutManager skip-list and generated-mission status rules, while [Deep-review findings](Deep-Review-Findings) DR-4/DR-32 own the full drift analysis; [Content structure](Content-Structure-And-Maps) is reduced to folder orientation and routing. |
 | `wiki-quality-dup6-lifecycle-routing` | Published | [Lifecycle wait-chain](Lifecycle-Wait-Chain) now remains the canonical home for lifecycle flags, boot ordering, JIP waits and HC wait hazards; [Server runtime](Server-Gameplay-Runtime-Atlas) and [SQF atlas](SQF-Code-Atlas) route there instead of restating boot/role details. |
@@ -51,7 +52,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved Wiki Quality DUP-7 by routing supply cooldown casing detail to [Supply mission architecture](Supply-Mission-Architecture), [Deep-review findings](Deep-Review-Findings) DR-18 and the supply authority cleanup playbook. |
+| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved Wiki Quality DUP-8 by routing construction authority detail to [Deep-review findings](Deep-Review-Findings) DR-6, [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas) and [Server authority map](Server-Authority-Migration-Map). |
 | Codex-2 | Active | `paratrooper-marker-revival` | Source-checking the paratrooper support marker callback into a minimal revival patch or patch-ready handoff; keeping it separate from broader `RequestSpecial` authority hardening. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
@@ -78,6 +79,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
 | `paratrooper-marker-revival` | Codex-2 | Active | Source-check the live paratrooper support sender, existing client marker handler and missing PVF registration; decide whether to patch the small revive or publish a focused handoff. |
+| `wiki-quality-dup8-construction-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-8 is resolved: DR-6 owns exact proof, Construction atlas owns runtime map/checklist, and authority/status pages keep migration routing. |
 | `wiki-quality-dup7-supply-cooldown-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-7 is resolved: DR-18 owns exact casing evidence, Supply architecture owns flow/JIP state, and Economy/Server runtime/Feature status/Hardening roadmap route there. |
 | `wiki-quality-dup4-generated-mission-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-4 is resolved: Tools/build owns operational generation/skip-list rules, Deep Review owns DR-4/DR-32 drift evidence, and Content Structure routes instead of duplicating. |
 | `wiki-quality-dup6-lifecycle-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-6 is resolved: lifecycle flags, boot order, JIP waits and HC wait hazards live in [Lifecycle wait-chain](Lifecycle-Wait-Chain); server/SQF atlases keep concise owner summaries. |

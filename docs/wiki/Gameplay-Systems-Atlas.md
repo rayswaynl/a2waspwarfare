@@ -267,7 +267,7 @@ Risk notes:
 - `coin_interface.sqf` still contains old commented direct publicVariable code near the newer PVF path.
 - Construction mode changes affect `wfbe_structures_logic`, which other repair/build-completion code may inspect.
 - HQ deploy/mobilize deletes and replaces the HQ object; client-side killed handlers and JIP handling must be preserved.
-- Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-6 covers construction authority, where the server request mostly validates class existence while trusting client-side payment, placement and authority checks. See [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) for the dedicated map.
+- Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-6 owns construction-authority proof; [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) owns the runtime map and extension checklist. This page stays a gateway.
 
 ## Factories And Unit Production
 

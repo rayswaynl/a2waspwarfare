@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T23:05:00+02:00",
+  "generatedAt": "2026-06-02T23:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,7 +16,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki Quality DUP-7 by routing supply cooldown casing detail to Supply-Mission-Architecture.md, Deep-Review-Findings.md DR-18 and Supply-Mission-Authority-Cleanup-Playbook.md.",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki Quality DUP-8 by routing construction authority detail to Deep-Review-Findings.md DR-6, Construction-And-CoIn-Systems-Atlas.md and Server-Authority-Migration-Map.md.",
       "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining duplicate reductions, Arma 2 OA external-reference integration into subsystem pages, or more implementation-readiness playbooks."
     },
     "Codex-2": {
@@ -33,6 +33,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wiki-quality-dup8-construction-routing",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Deep-Review-Findings.md DR-6 owns exact construction-authority proof; Construction-And-CoIn-Systems-Atlas.md owns runtime map and safe extension checklist; Gameplay, Feature Status, Hardening roadmap and Server authority map now route instead of repeating class-existence evidence"
+    },
     {
       "lane": "wiki-quality-dup7-supply-cooldown-routing",
       "owner": "Codex",

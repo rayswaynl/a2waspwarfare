@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-context-v1",
-  "generatedAt": "2026-06-02T23:05:00+02:00",
+  "generatedAt": "2026-06-02T23:20:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "game": "Arma 2 Operation Arrowhead 1.64",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -304,6 +304,7 @@
     "Use Economy-Authority-First-Cut.md before economy hardening code work; patch side-supply negative clamp first, then migrate existing PVF spend handlers before attempting player-buy locality redesign.",
     "Use Abandoned-Feature-Revival-Review.md before reviving dormant MASH/paratrooper/WASP/UAV/UI/modded-mission paths; source-check liveness first and prefer remove/annotate over re-enabling half-wired code.",
     "Use Performance-Opportunity-Sweep.md before performance patches; prefer PVF dispatch lookup, hosted FPS loop sleep, Skill_Init idempotency and supply scan narrowing before speculative marker/cleaner cadence changes.",
+    "Construction authority docs have split ownership: Deep-Review-Findings.md DR-6 owns exact RequestStructure/RequestDefense/RequestMHQRepair proof; Construction-And-CoIn-Systems-Atlas.md owns runtime flow, request-handler map and safe extension checklist; Server-Authority-Migration-Map.md owns migration design; Gameplay/Feature status/Roadmap should route there.",
     "Supply-mission docs have split ownership: Supply-Mission-Architecture.md owns flow/state/JIP pattern; Deep-Review-Findings.md DR-18 owns exact cooldown casing defect evidence; Supply-Mission-Authority-Cleanup-Playbook.md owns implementation-ready patch shape; Economy/Server runtime/Feature status/Roadmap should route there.",
     "Generated-mission docs have split ownership: Tools-And-Build-Workflow.md owns operational LoadoutManager skip-list, packaging and status rules; Deep-Review-Findings.md DR-4/DR-32 own full drift evidence; Content-Structure-And-Maps.md only orients folder layout.",
     "HC delegation docs have split ownership: AI-Headless-And-Performance.md routes runtime/source anchors, Lifecycle-Wait-Chain.md owns HC boot timing, and Headless-Delegation-And-Failover-Playbook.md owns DR-21/DR-42 patch policy.",
@@ -323,7 +324,7 @@
   "systems": {
     "networking": "PVF lists in Common/Init/Init_PublicVariables.sqf plus direct publicVariable channels for attack waves, side supply, supply missions, MASH markers, HQ state, anti-stack compensation, day/night, FPS, AFK and markers. See Networking-And-Public-Variables.md.",
     "economy": "Funds and side supply with town SV, commander income, resources FSM and supply missions. See Gameplay-Systems-Atlas for source-backed town/economy/commander/factory flow.",
-    "construction": "Commander/repair-truck CoIn flow, structure arrays, HQ deploy/mobilize, server construction workers, defense building, repair and sale flows. See Construction-And-CoIn-Systems-Atlas.md.",
+    "construction": "Commander/repair-truck CoIn flow, structure arrays, HQ deploy/mobilize, server construction workers, defense building, repair and sale flows. Construction-And-CoIn-Systems-Atlas.md owns the runtime map/checklist; Deep-Review-Findings.md DR-6 owns exact authority proof; Server-Authority-Migration-Map.md owns migration design.",
     "ai": "Server town AI, AI commanders, client/headless delegation, player AI watchdog/recovery. AI-Headless-And-Performance.md is the runtime/source router; Headless-Delegation-And-Failover-Playbook.md covers DR-21/DR-42 HC tracking, static-defense update-back and disconnect policy. The confirmed occupied town-AI vehicle despawn bug has an implementation playbook in Town-AI-Vehicle-Despawn-Safety.md.",
     "ui": "Rsc resources, Client/GUI dialog controllers, RHUD/FPS HUD, title resources, map/action marker loops, CoIn construction UI and WASP overlays. See Client-UI-Systems-Atlas.md.",
     "gearLoadoutEasa": "Gear metadata/profile templates and EASA aircraft loadouts; generated EASA/balance output comes from LoadoutManager. See Gear-Loadout-And-EASA-Atlas.md.",

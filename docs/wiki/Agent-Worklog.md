@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wiki-Quality DUP-8 Construction Routing
+
+- Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-8 by keeping exact construction-authority proof canonical in [Deep-review findings](Deep-Review-Findings) DR-6.
+- Clarified [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) owns the construction runtime map, request-handler map and safe extension checklist, while [Server authority migration map](Server-Authority-Migration-Map) owns migration design.
+- Reduced [Gameplay systems atlas](Gameplay-Systems-Atlas), [Feature status](Feature-Status-Register) and [Hardening roadmap](Hardening-Implementation-Roadmap) so they route to the canonical construction pages instead of repeating class-existence evidence.
+
 ## 2026-06-02 - Codex Wiki-Quality DUP-7 Supply Cooldown Routing
 
 - Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-7 by keeping the supply-mission cooldown flow canonical in [Supply mission architecture](Supply-Mission-Architecture) and the exact casing defect evidence canonical in [Deep-review findings](Deep-Review-Findings) DR-18.
