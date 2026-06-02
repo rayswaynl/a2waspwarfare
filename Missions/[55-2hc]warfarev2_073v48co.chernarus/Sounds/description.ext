@@ -158,4 +158,10 @@ class CfgSounds
         sound[] = {"\Sounds\SidewinderLock-1.ogg", 1, 1};
         titles[] = {};
     };
+
+    class drone_stuka {
+        name = "drone_stuka";
+        sound[] = {"\Sounds\drone_stuka-10.ogg", 10, 1};
+        titles[] = {};
+    };
 };

@@ -55,10 +55,10 @@ _currentFee = -1;
 
 //--- Support List.
 _lastSel = -1;
-_addToList = [localize 'STR_WF_TACTICAL_FastTravel',localize 'STR_WF_ICBM',localize 'STR_WF_TACTICAL_ParadropAmmo',localize 'STR_WF_TACTICAL_ParadropVehicle',localize 'STR_WF_TACTICAL_Paratroop',localize 'STR_WF_TACTICAL_UnitCam',localize 'STR_WF_TACTICAL_UAV',localize 'STR_WF_TACTICAL_UAVDestroy',localize 'STR_WF_TACTICAL_UAVRemoteControl'];
-_addToListID = ["Fast_Travel","ICBM","Paradrop_Ammo","Paradrop_Vehicle","Paratroopers","Units_Camera","UAV","UAV_Destroy","UAV_Remote_Control"];
-_addToListFee = [0,75000,9500,3500,8500,0,12500,0,0];
-_addToListInterval = [0,1000,800,600,900,0,0,0,0];
+_addToList = [localize 'STR_WF_TACTICAL_FastTravel',localize 'STR_WF_ICBM',localize 'STR_WF_TACTICAL_ParadropAmmo',localize 'STR_WF_TACTICAL_ParadropVehicle',localize 'STR_WF_TACTICAL_Paratroop',localize 'STR_WF_TACTICAL_UnitCam',localize 'STR_WF_TACTICAL_UAV',localize 'STR_WF_TACTICAL_UAVDestroy',localize 'STR_WF_TACTICAL_UAVRemoteControl',localize 'STR_WF_TACTICAL_DroneStrike'];
+_addToListID = ["Fast_Travel","ICBM","Paradrop_Ammo","Paradrop_Vehicle","Paratroopers","Units_Camera","UAV","UAV_Destroy","UAV_Remote_Control","DroneStrike"];
+_addToListFee = [0,75000,9500,3500,8500,0,12500,0,0,22000];
+_addToListInterval = [0,1000,800,600,900,0,0,0,0,360];
 
 for '_i' from 0 to count(_addToList)-1 do {
 	lbAdd [_listBox,_addToList select _i];
@@ -284,6 +284,11 @@ while {alive player && dialog} do {
 			case "Units_Camera": {
 				_controlEnable = commandInRange;
 			};
+			case "DroneStrike": {
+				if (isNil "lastDroneCall") then {lastDroneCall = -99999};
+				_currentLevel = _currentUpgrades select WFBE_UP_UAV;
+				_controlEnable = if (_funds >= _currentFee && _currentLevel > 0 && time - lastDroneCall > _currentInterval) then {true} else {false};
+			};
 		};
 		
 		ctrlEnable[17020, _controlEnable];
@@ -340,6 +345,11 @@ while {alive player && dialog} do {
 			case "Units_Camera": {
 				closeDialog 0;
 				createDialog "RscMenu_UnitCamera";
+			};
+			case "DroneStrike": {
+				MenuAction = 11;
+				if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
+				_textAnimHandler = [17022,localize 'STR_WF_TACTICAL_ClickOnMap',10,"ff9900"] spawn SetControlFadeAnim;
 			};
 		};
 		
@@ -525,6 +535,20 @@ while {alive player && dialog} do {
 			-_currentFee Call ChangePlayerFunds;
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
 			["RequestSpecial", ["ParaAmmo",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+		};
+		//--- Drone Strike.
+		if (MenuAction == 11) then {
+			MenuAction = -1;
+			_forceReload = true;
+			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
+			[17022] Call SetControlFadeAnimStop;
+			_callPos = _map posScreenToWorld[mouseX,mouseY];
+			if (!surfaceIsWater _callPos) then {
+				lastDroneCall = time;
+				-(_currentFee) Call ChangePlayerFunds;
+				["RequestSpecial", ["DroneStrike",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+				hint localize "STR_WF_TACTICAL_DroneStrike_Info";
+			};
 		};
 	};
 	

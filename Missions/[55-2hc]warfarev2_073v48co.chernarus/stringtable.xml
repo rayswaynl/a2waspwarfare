@@ -3,6 +3,21 @@
   <Package name="CWarfare">
     <Container name="WF">
 
+<Key ID="STR_WF_TACTICAL_DroneStrike">
+       <English>Drone Strike</English>
+        <French>Frappe de drones</French>
+        <German>Drohnenangriff</German>
+        <Russian>Удар дронов</Russian>
+        <Italian>Attacco droni</Italian>
+      </Key>
+<Key ID="STR_WF_TACTICAL_DroneStrike_Info">
+       <English>Drone package inbound. They will saturate the target area.</English>
+        <French>Drones en approche.</French>
+        <German>Drohnenpaket im Anflug.</German>
+        <Russian>Дроны на подходе.</Russian>
+        <Italian>Droni in arrivo.</Italian>
+      </Key>
+
 
 <!--COIN Upgrade Strings - ALL DONE-->
     

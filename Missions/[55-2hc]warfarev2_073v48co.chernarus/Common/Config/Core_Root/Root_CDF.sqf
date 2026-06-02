@@ -16,6 +16,7 @@ missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCKS", _side], ['UralRepair
 missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_CDF']];
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCKS", _side], ['WarfareSupplyTruck_CDF']];
 missionNamespace setVariable [Format["WFBE_%1UAV", _side], 'MQ9PredatorB'];
+missionNamespace setVariable [Format["WFBE_%1DRONE", _side], (missionNamespace getVariable Format["WFBE_%1UAV", _side])];
 
 //--- Radio Announcers.
 missionNamespace setVariable [Format ["WFBE_%1_RadioAnnouncers", _side], ['WFHQ_RU0','WFHQ_RU1','WFHQ_RU2']];

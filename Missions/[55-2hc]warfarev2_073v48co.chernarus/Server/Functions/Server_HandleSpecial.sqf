@@ -64,6 +64,10 @@ switch (_args select 0) do {
 		_args spawn KAT_UAV;
 	};
 
+	case "DroneStrike": {
+		_args spawn KAT_DroneStrike;
+	};
+
 	case "upgrade-sync": {
 		Private ["_side","_upgrade_id","_upgrade_level"];
 		_side = _args select 1;

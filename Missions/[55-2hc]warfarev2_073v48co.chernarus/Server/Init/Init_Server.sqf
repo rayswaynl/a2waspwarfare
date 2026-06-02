@@ -40,6 +40,7 @@ KAT_ParaAmmo = Compile preprocessFile "Server\Support\Support_ParaAmmo.sqf";
 KAT_Paratroopers = Compile preprocessFile "Server\Support\Support_Paratroopers.sqf";
 KAT_ParaVehicles = Compile preprocessFile "Server\Support\Support_ParaVehicles.sqf";
 KAT_UAV = Compile preprocessFile "Server\Support\Support_UAV.sqf";
+KAT_DroneStrike = Compile preprocessFile "Server\Support\Support_DroneStrike.sqf";
 
 //--- New Fnc.
 WFBE_SE_FNC_AI_SetTownAttackPath = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath.sqf";

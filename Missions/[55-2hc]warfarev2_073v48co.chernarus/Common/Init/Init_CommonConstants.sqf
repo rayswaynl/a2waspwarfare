@@ -239,6 +239,23 @@ with missionNamespace do {
 	if (isNil "WFBE_ICBM_TIME_TO_IMPACT") then {WFBE_ICBM_TIME_TO_IMPACT = 1}; //--- Time for ICBM to impact 
 	if (isNil "WFBE_RADZONE_TIME") then {WFBE_RADZONE_TIME = 1}; //--- Time for radiation effect 
 
+//--- Drone Saturation Strike (System B).
+	if (isNil "WFBE_C_DRONE_FLARE_COUNT") then {WFBE_C_DRONE_FLARE_COUNT = 2}; //--- # flare/CM drones
+	if (isNil "WFBE_C_DRONE_MUNITION_COUNT") then {WFBE_C_DRONE_MUNITION_COUNT = 3}; //--- # loitering munitions
+	if (isNil "WFBE_C_DRONE_INGRESS_SPEED") then {WFBE_C_DRONE_INGRESS_SPEED = 60}; //--- m/s transit
+	if (isNil "WFBE_C_DRONE_LOITER_SPEED") then {WFBE_C_DRONE_LOITER_SPEED = 35}; //--- m/s orbit
+	if (isNil "WFBE_C_DRONE_CRUISE_ALT") then {WFBE_C_DRONE_CRUISE_ALT = 200}; //--- m AGL
+	if (isNil "WFBE_C_DRONE_LOITER_TIME") then {WFBE_C_DRONE_LOITER_TIME = 90}; //--- s before forced commit
+	if (isNil "WFBE_C_DRONE_ZONE_RADIUS") then {WFBE_C_DRONE_ZONE_RADIUS = 250}; //--- m acquisition radius
+	if (isNil "WFBE_C_DRONE_WARHEAD") then {WFBE_C_DRONE_WARHEAD = "Sh_125_HE"}; //--- survivable warhead
+	if (isNil "WFBE_C_DRONE_SCATTER") then {WFBE_C_DRONE_SCATTER = 12}; //--- m impact scatter
+	if (isNil "WFBE_C_DRONE_HP") then {WFBE_C_DRONE_HP = 6}; //--- ~ .50-cal hits to down
+	if (isNil "WFBE_C_DRONE_MIN_HIT") then {WFBE_C_DRONE_MIN_HIT = 0.08}; //--- min HandleDamage delta that counts (>=.50)
+	if (isNil "WFBE_C_DRONE_DIVE_STAGGER") then {WFBE_C_DRONE_DIVE_STAGGER = 1.5}; //--- s between dives
+	if (isNil "WFBE_C_DRONE_COST") then {WFBE_C_DRONE_COST = 22000}; //--- server-validated cost
+	if (isNil "WFBE_C_DRONE_COOLDOWN") then {WFBE_C_DRONE_COOLDOWN = 360}; //--- s cooldown
+	if (isNil "WFBE_C_DRONE_CONCURRENT_CAP") then {WFBE_C_DRONE_CONCURRENT_CAP = 1}; //--- max packages/side in flight
+
 //--- Players.
 	if (isNil "WFBE_C_PLAYERS_AI_MAX") then {WFBE_C_PLAYERS_AI_MAX = 16}; //--- Max AI allowed on each player groups.
 	WFBE_C_PLAYERS_BOUNTY_CAPTURE = 2000;
