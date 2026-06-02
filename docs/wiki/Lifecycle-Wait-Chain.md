@@ -80,6 +80,22 @@ There is no `didJIP` variable; JIP is handled implicitly because `initJIPCompati
 
 Claude DR-37 reviewed the boot/JIP path as broadly correct: the `RequestJoin` handshake has a 30-second retry, time/date/team/client state is replicated through broadcast variables, and the apparent `while {true}` joins at `Init_Client.sqf:419` and `:444` are bounded handshake polls. The remaining robustness gap is the post-join serial wait chain in `Init_Client.sqf:367-502`: waits for `wfbe_structures`, side supply, `wfbe_commander`, radio HQ state, start position, HQ, deployment state and vote time have no timeout or log fallback. A single missed synced variable can leave a JIP client black-screened or stuck forever. Treat defensive timeouts here as a robustness improvement, not evidence that the normal JIP path is broken.
 
+### Post-Join Wait Audit
+
+Bernoulli's 2026-06-02 wait-chain audit split the client join gates into two classes: retrying handshake gates and replicated-variable waits with no terminal timeout.
+
+| Gate | Producer | Timeout / retry state | Failure mode | Fix direction |
+| --- | --- | --- | --- | --- |
+| `RequestJoin` -> `WFBE_P_CANJOIN` | `Server/PVFunctions/RequestJoin.sqf` then client `HandleSpecial.sqf` writes `WFBE_P_CANJOIN`. | Polls and resends every 30 seconds; no hard terminal timeout. | Black screen / join pending forever if no answer; explicit lobby return if denied. | Keep retry but add hard timeout, log and fail-soft fallback. |
+| Launch ACK -> `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK` | `Server/Module/AntiStack/clientHasConnectedAtLaunch.sqf` then `Client/Module/AntiStack/hasConnectedAtLaunchACK.sqf`. | Polls and resends every 30 seconds; no hard terminal timeout. | Join remains pending if ACK is lost. | Add bounded retry budget and diagnostic log. |
+| `wfbe_structures` / optional side supply | `Init_Server.sqf` seeds structures/supply; `Server_ChangeSideSupply.sqf` updates supply. | No timeout, no retry. | Client never reaches action/resources init. | Add timeout/log fallback around structure and supply sync. |
+| `wfbe_commander` | Server init seeds side commander state; vote/disconnect handlers rebroadcast. | No timeout, no retry. | Commander FSM/UI state never starts correctly. | Guard with timeout and missing-broadcast diagnostic. |
+| `wfbe_radio_hq` / `wfbe_radio_hq_id` | Server init creates radio HQ and topic ID. | No timeout, no retry. | HQ announcer identity/radio wiring stalls. | Add sync check and log. |
+| Spawn location: `wfbe_startpos`, else `wfbe_hq` + `wfbe_structures` | Server init plus HQ construction/kill/repair paths. | No timeout, no retry. | Spawn position never resolves or resolves poorly. | Fail soft if HQ/structures are absent. |
+| `wfbe_hq_deployed` and nested `wfbe_hq` | Server init and HQ construction/kill/repair paths. | No timeout, no retry. | CoIn/HQ event-handler setup can block; JIP client may miss HQ killed handler. | Timeout and skip/retry only the dependent setup instead of stalling all client boot. |
+| `townInit` | `Common/Init/Init_Towns.sqf`. | No timeout, no retry. | Town, marker and action FSMs never launch. | Log a town-init stall before launching client FSM bundle. |
+| `wfbe_votetime` | Server init and vote countdown. | No timeout, no retry. | Vote menu does not open when vote state should exist. | Treat as optional/lazy-polled with timeout and log. |
+
 ## Known ordering hazards
 
 - **Debug-only economy override:** `initJIPCompatible.sqf:151-162` raises starting funds/supply and other test parameters only inside `if (WF_Debug)`. Confirm `WF_Debug` state before comparing economy behavior against mission parameters.

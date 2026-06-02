@@ -156,6 +156,7 @@ When tracing one feature, grep the string tag as well as the PVF command name.
 - Both dispatchers use `Call Compile` on the generated function-name string per dispatch. DR-38 notes this is redundant as well as unsafe: `Init_PublicVariables.sqf` already precompiles `SRVFNC*` / `CLTFNC*` globals at init, so a validated `missionNamespace getVariable` lookup removes per-message recompilation and closes the DR-1 RCE with the same change.
 - Some bare PV channels are copied per side, such as `wfbe_supply_temp_west` and `wfbe_supply_temp_east`; there is no resistance-side handler in that path.
 - A real BattlEye PV filter must include direct non-PVF channels as well as `WFBE_PVF_*`; the current repo filter only contains `kickAFK`.
+- The master/Chernarus branch documented here does not ship PR #1 supply-helicopter source; it has the older truck supply mission path plus direct support/supply/ICBM channels. Treat supply-heli mechanics as PR-only until the branch is merged.
 
 ### Security: the `Call Compile` trust boundary
 
@@ -177,6 +178,10 @@ Replacing `Call Compile` with mission-namespace lookup closes arbitrary code exe
 ### Highest-Priority Registered Command: ICBM / Nuke
 
 DR-27 makes `RequestSpecial` the highest-priority registered-command hardening target discovered so far. The Tactical menu does client-side ICBM gating and the client sends `["RequestSpecial", ["ICBM", side, baseObj, cruiseObj, team]]`; the server's `HandleSpecial` `"ICBM"` case trusts the payload and spawns nuke damage from it. A forged PV therefore becomes a server-applied map-wide kill. Fixes belong server-side in the `"ICBM"` branch, paired with BattlEye restrictions around `RequestSpecial`.
+
+### Direct Channel Authority: Attack Waves
+
+McClintock's 2026-06-02 PV scout found one additional direct-channel authority issue outside the generic PVF dispatcher: `Common/Functions/Common_AttackWaveActivate.sqf` writes `ATTACK_WAVE_INIT = [_supply, _side]` and broadcasts it to the server, while `Server/Functions/Server_AttackWave.sqf` uses the supplied `_supply` value to compute attack-wave discount and timing. A PVF lookup hardening patch does not touch this path. The server should re-derive supply and any privilege checks from authoritative side state before starting the wave.
 
 ## Continue Reading
 

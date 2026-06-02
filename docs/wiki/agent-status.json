@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T12:05:00+02:00",
+  "generatedAt": "2026-06-02T12:42:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -15,9 +15,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "implementation-hardening-planning",
-      "currentWork": "Published the first hardening roadmap that turns residual Auth/PV owner decisions into patch order, source files and validation gates.",
-      "nextExpectedOutput": "Validation, wiki/docs mirror parity and publish of the hardening roadmap batch."
+      "currentLane": "agent-hardening-backlog-and-wave-f-integration",
+      "currentWork": "Converted the hardening roadmap and latest cheap discovery wave into agent-hardening-backlog.jsonl, external report manifest metadata and source-backed wiki updates.",
+      "nextExpectedOutput": "Validation, wiki/docs mirror parity and publish of the backlog/research-manifest batch."
     },
     "Claude": {
       "status": "ready-for-review; autonomous-ready",
@@ -102,8 +102,14 @@
     {
       "lane": "implementation-hardening-planning",
       "owner": "Codex",
-      "status": "roadmap-published",
-      "output": "Hardening-Implementation-Roadmap.md"
+      "status": "roadmap-plus-machine-backlog",
+      "output": "Hardening-Implementation-Roadmap.md and agent-hardening-backlog.jsonl"
+    },
+    {
+      "lane": "cheap-discovery-wave-f",
+      "owner": "Codex + Anscombe/Darwin/Kierkegaard/Avicenna/Beauvoir/Dalton/Dewey/Einstein/Bernoulli",
+      "status": "integrated-locally",
+      "output": "Attack-wave authority, town-AI occupied-vehicle deletion, lifecycle wait-chain audit, UI/player-map debt and tooling operator checklist added to docs/backlog."
     },
     {
       "lane": "cheap-discovery-swarm-v2",
@@ -146,9 +152,11 @@
     "progressDashboard": "Progress-Dashboard.md",
     "discoverySwarm": "Subagent-Discovery-Swarm.md",
     "externalResearchReports": "External-Research-Reports.md",
+    "externalResearchManifest": "external-research-report-manifest.json",
     "networking": "Networking-And-Public-Variables.md",
     "externalIntegrations": "External-Integrations.md",
     "hardeningRoadmap": "Hardening-Implementation-Roadmap.md",
+    "hardeningBacklog": "agent-hardening-backlog.jsonl",
     "collaborationProtocol": "Agent-Collaboration-Protocol.md",
     "knowledgeRecords": "agent-knowledge.jsonl",
     "events": "agent-events.jsonl",

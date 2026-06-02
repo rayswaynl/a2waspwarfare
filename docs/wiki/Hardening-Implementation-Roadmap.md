@@ -4,6 +4,8 @@ This page turns the source-reviewed risk register into implementation-ready work
 
 Scope: Chernarus source mission first, then LoadoutManager propagation. All paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
+Machine-readable backlog for agents and code owners: [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl).
+
 ## Patch Order
 
 | Priority | Work package | Why first |
@@ -12,8 +14,9 @@ Scope: Chernarus source mission first, then LoadoutManager propagation. All path
 | P0 | ICBM `RequestSpecial` server validation | Highest blast radius: forged PV can trigger server-applied map-wide damage. |
 | P1 | Victory/endgame correctness | Small source change with large match-outcome/stat impact. |
 | P1 | Server-side economy authority design | Covers the confirmed class: build, buy, sell, supply, upgrade, ICBM and gear/service spend paths. |
+| P1 | Direct attack-wave authority | McClintock's PV scout found `ATTACK_WAVE_INIT` trusts client-supplied supply values outside the generic PVF list. |
 | P1 | Supply mission authority and cooldown cleanup | Needed before PR #1 supply helicopters/cash/interdiction become baseline. |
-| P2 | Factory queue and support-loop cleanups | Player-facing soft-lock/perf fixes once core authority is moving. |
+| P2 | Factory queue, HC/static-defense and support-loop cleanups | Player-facing soft-lock/perf/partial-feature fixes once core authority is moving. |
 
 ## P0: PVF Dispatcher Lookup
 
@@ -123,6 +126,29 @@ Validation:
 - Validate both dedicated and hosted/listen paths where locality differs.
 - Run LoadoutManager after mission code changes; Chernarus source changes should propagate to vanilla Takistan except skip-list files.
 
+## P1: Direct Attack-Wave Authority
+
+Evidence:
+
+| File | Current behavior |
+| --- | --- |
+| `Common/Functions/Common_AttackWaveActivate.sqf` | Client/common side writes `ATTACK_WAVE_INIT = [_supply, _side]` and broadcasts it to the server. |
+| `Server/Functions/Server_AttackWave.sqf` | Server uses payload `_supply` to compute attack-wave discount and duration/length. |
+| `Server/PVFunctions/AttackWave.sqf` | Direct PVEH coordination path; this is outside `_serverCommandPV` and is not fixed by PVF dispatcher lookup alone. |
+
+Implementation shape:
+
+1. Treat `ATTACK_WAVE_INIT` as a request, not as authoritative state.
+2. Re-derive side supply and discount inputs server-side from trusted side/town state.
+3. Validate requester side and any intended commander/support permission before starting an attack wave.
+4. Keep `ATTACK_WAVE_DETAILS` broadcast behavior unless a JIP/replay audit proves a change is needed.
+
+Validation:
+
+- Legitimate attack wave still starts and publishes expected details.
+- Forged exaggerated `_supply` cannot change discount, duration, length or cost.
+- Late-join behavior remains unchanged or is explicitly documented.
+
 ## P1: Supply Missions And PR #1
 
 Evidence:
@@ -156,9 +182,12 @@ Validation:
 | --- | --- | --- |
 | Factory empty-vehicle queue leak | `Client_BuildUnit.sqf` early empty-vehicle `exitWith` skips normal `WFBE_C_QUEUE` decrement. | Buy repeated crewless vehicles; queue cap returns to normal after each build attempt. |
 | Factory FIFO token/broadcast churn | `Client_BuildUnit.sqf` uses random token and broadcasts `queu` mutations. | Multiple simultaneous buyers cannot collide; queue UI remains correct. |
+| Town AI occupied-vehicle despawn | `server_town_ai.sqf:211-216` deletes inactive town-AI vehicles based on `!(isPlayer leader group _x)` without checking crew/cargo/turret occupants. | Vehicles with any player occupant survive despawn while empty AI-only vehicles are still cleaned. |
 | WASP marker monitor busy-spin | `WASP/global_marking_monitor.sqf:62` polls display without sleep for up to 2 seconds. | Replace with throttled wait style like sibling `:80`; verify map double-click prefix still works. |
 | MASH markers | Client receiver commented and trigger never sent. | Either remove dead code or revive with server-held marker list, unique names and JIP replay. |
 | Paratrooper markers | `HandleParatrooperMarkerCreation` not registered in client PVF list. | Register receiver or remove marker callback; paratroop drop itself remains server-owned. |
+| Static-defense HC sync | `Client_DelegateAIStaticDefence.sqf` has update-back send commented; `HandleSpecial` only has `update-town-delegation`. | Decide whether static-defense delegation is intentionally one-way, then restore update-back or retire stale code. |
+| Hosted FPS monitor loop | `Server/Module/serverFPS/monitorServerFPS.sqf` sleeps inside `isDedicated`, so hosted/listen path can loop without sleep. | Move sleep outside the branch; dedicated publishing cadence should remain unchanged. |
 
 ## Branching And Review Discipline
 

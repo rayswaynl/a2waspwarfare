@@ -6,15 +6,17 @@ Treat this page as an intake ledger, not as source truth. Claims from the PDFs m
 
 Claude later cross-checked the reports in Deep-Review Round 16 and found their citations are mostly downstream of this wiki or an upstream proxy, so they are corroboration of the current documentation rather than independent source verification. The wiki's source-backed DR findings are currently the stronger authority.
 
+Machine-readable manifest: [`external-research-report-manifest.json`](external-research-report-manifest.json). Raw extracted text is kept in the local Codex workspace cache (`work/research-intake/pdf-reports`) and is not mirrored into the wiki.
+
 ## Source Files
 
-| Report | Local file | Extracted text | Scout | Status |
-| --- | --- | --- | --- | --- |
-| `Analytisch rapport over rayswaynl/a2waspwarfare` | `C:\Users\Steff\Downloads\Analytisch rapport over rayswaynl_a2waspwarfare.pdf` | `outputs/external-reports/report-01-analytisch-rapport-over-rayswaynl-a2waspwarfare.txt` | Sagan / Erdos | External PDF digested twice; repo verification required before promotion. |
-| `Analyse van rayswaynl/a2waspwarfare` | `C:\Users\Steff\Downloads\Analyse van rayswaynl_a2waspwarfare.pdf` | `outputs/external-reports/report-02-analyse-van-rayswaynl-a2waspwarfare.txt` | Helmholtz / Arendt | External PDF digested twice; many claims overlap existing source-backed wiki findings. |
-| `Diepgaande analyse van rayswaynl/a2waspwarfare` | `C:\Users\Steff\Downloads\Diepgaande analyse van rayswaynl_a2waspwarfare.pdf` | `outputs/external-reports/report-03-diepgaande-analyse-van-rayswaynl-a2waspwarfare.txt` | Parfit / Carver | External PDF digested twice; security/network posture focus. |
+| Report | Local file | Pages | SHA-256 | Scout | Status |
+| --- | --- | --- | --- | --- | --- |
+| `Analytisch rapport over rayswaynl/a2waspwarfare` | `C:\Users\Steff\Downloads\Analytisch rapport over rayswaynl_a2waspwarfare.pdf` | 17 | `a8abae9656ec02a0b39894d2a7ec509a5c30c779160d6002f359ac9bdd7be469` | Sagan / Erdos / Dewey | External PDF digested again; repo verification required before promotion. |
+| `Analyse van rayswaynl/a2waspwarfare` | `C:\Users\Steff\Downloads\Analyse van rayswaynl_a2waspwarfare.pdf` | 10 | `edb6237b1c52e91a5b1cd9d5ca1b84457d80dbe78045f0e7bc9f38b5f7db86fd` | Helmholtz / Arendt / Dewey | External PDF digested again; many claims overlap existing source-backed wiki findings. |
+| `Diepgaande analyse van rayswaynl/a2waspwarfare` | `C:\Users\Steff\Downloads\Diepgaande analyse van rayswaynl_a2waspwarfare.pdf` | 12 | `61e5e77d80e485300fb37fc9fc273d769948c88eeb158dcd6d55d78e7dac94b3` | Parfit / Carver / Dewey | External PDF digested again; security/network posture focus. |
 
-Extraction manifest: `outputs/external-reports/manifest.json`.
+Extraction cache manifest: `work/research-intake/pdf-reports/manifest.json`.
 
 ## Second Reconciliation Wave
 
@@ -27,6 +29,7 @@ On 2026-06-02 Codex extracted the PDFs into shared text artifacts and spawned a 
 | Carver | Server, security, networking and external integration claims. |
 | Laplace | UI/HUD/dialog source findings and GitHub wiki UX implications. |
 | Tesla | Agent-friendly artifact/schema proposal for future development work. |
+| Dewey | Third-pass external report claim triage against the published wiki and hardening backlog. |
 
 Promotion rule: explorer output from this wave is still external-report reconciliation. It becomes canonical only after a repo file, branch diff, wiki source page or generated inventory backs the claim.
 

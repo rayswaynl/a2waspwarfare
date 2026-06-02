@@ -17,6 +17,8 @@ Keep the documentation and source analysis moving in parallel while preserving s
 | Machine-readable repo context | [`agent-context.json`](agent-context.json) |
 | Machine-readable collaboration state | [`agent-collaboration.json`](agent-collaboration.json) |
 | Machine-readable source knowledge records | [`agent-knowledge.jsonl`](agent-knowledge.jsonl) |
+| Machine-readable hardening backlog | [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) |
+| External report metadata | [`external-research-report-manifest.json`](external-research-report-manifest.json) |
 | Append-only event feed | [`agent-events.jsonl`](agent-events.jsonl) |
 | Claude-focused instructions | [Claude long-term goal](Claude-Long-Term-Goal) |
 | Independent review findings | [Deep-review findings](Deep-Review-Findings) |
@@ -33,7 +35,7 @@ Keep the documentation and source analysis moving in parallel while preserving s
 
 Before starting a substantial pass:
 
-1. Read [Quickstart](Quickstart-For-Humans-And-Agents), [Agent context](Agent-Context), [`agent-context.json`](agent-context.json), this page and [Coordination board](Coordination-Board).
+1. Read [Quickstart](Quickstart-For-Humans-And-Agents), [Agent context](Agent-Context), [`agent-context.json`](agent-context.json), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), this page and [Coordination board](Coordination-Board).
 2. Add or update one claim in [`agent-collaboration.json`](agent-collaboration.json).
 3. Append a `claim` event to [`agent-events.jsonl`](agent-events.jsonl).
 4. Work in a lane that does not overlap another active claim unless the board says it is a review lane.

@@ -57,9 +57,11 @@
   "machineFiles": [
    "agent-context.json",
    "agent-knowledge.jsonl",
+   "agent-hardening-backlog.jsonl",
    "agent-status.json",
    "agent-collaboration.json",
-   "agent-events.jsonl"
+   "agent-events.jsonl",
+   "external-research-report-manifest.json"
   ],
   "navigation": {
    "primaryTour": [
@@ -115,7 +117,8 @@
    "agent-events.jsonl",
    "Progress-Dashboard.md",
    "Agent-Worklog.md",
-   "agent-knowledge.jsonl"
+   "agent-knowledge.jsonl",
+   "agent-hardening-backlog.jsonl"
   ],
   "rules": [
    "Claim substantial lanes before editing shared docs.",
@@ -145,8 +148,20 @@
   {
    "lane": "implementation-hardening-planning",
    "owner": "Codex/future-agent",
-   "status": "roadmap-published",
-   "nextAction": "Turn Hardening-Implementation-Roadmap.md work packages into code branches when the owner chooses to patch gameplay."
+   "status": "roadmap-plus-machine-backlog-published",
+   "nextAction": "Turn Hardening-Implementation-Roadmap.md and agent-hardening-backlog.jsonl work packages into code branches when the owner chooses to patch gameplay."
+  },
+  {
+   "lane": "town-ai-vehicle-despawn-safety",
+   "owner": "future-ai-owner",
+   "status": "confirmed-backlog",
+   "nextAction": "Guard server_town_ai.sqf vehicle deletion with a full player occupancy check, not only isPlayer leader group."
+  },
+  {
+   "lane": "jip-postjoin-wait-timeouts",
+   "owner": "future-lifecycle-owner",
+   "status": "documented-owner-decision",
+   "nextAction": "Decide whether to add hard timeouts/logging to post-join replicated-variable waits after RequestJoin."
   }
  ],
  "pr1SupplyHeliContext": {
@@ -190,11 +205,14 @@
   "waspOverlay": "Project-specific WASP additions include base repair, RPG dropping, marker monitor, HQ recovery action, start vehicles and a server selftest. See WASP-Overlay.md.",
   "factoryPurchase": "Player buy-unit flow is client-local from GUI_Menu_BuyUnits.sqf to Client_BuildUnit.sqf; RequestBuyUnit is not registered and no Server/PVFunctions/RequestBuyUnit.sqf exists. Server_BuyUnit/AIBuyUnit is compiled but no static caller was found. See Factory-And-Purchase-Systems-Atlas.md.",
   "serverRuntime": "Server gameplay loops are owned by Init_Server.sqf: town capture/SV, town AI activation/despawn, camp manager, resources/economy, victory checks, garbage/vehicle cleanup, server FPS and AntiStack loops. See Server-Gameplay-Runtime-Atlas.md.",
-  "externalResearch": "Three Steff-provided Dutch PDF reports were digested by Codex scouts and later cross-checked by Claude. Claude found they are downstream corroboration from the wiki/upstream proxy rather than independent source verification. See External-Research-Reports.md and Deep-Review-Findings Round 16."
+  "externalResearch": "Three Steff-provided Dutch PDF reports were extracted to local cache and summarized in external-research-report-manifest.json. Treat them as leads until repo evidence confirms them; Claude found earlier report citations were downstream corroboration from the wiki/upstream proxy. See External-Research-Reports.md."
   ,
-  "hardeningRoadmap": "Hardening-Implementation-Roadmap.md converts confirmed Auth/PV and correctness findings into patch order, source files, implementation shape and validation gates. Start there before changing PVF dispatch, ICBM, victory/endgame, economy authority, supply missions or BattlEye-sensitive behavior."
+  "hardeningRoadmap": "Hardening-Implementation-Roadmap.md plus agent-hardening-backlog.jsonl convert confirmed Auth/PV, correctness, performance and docs-polish findings into patch order, source files, implementation shape and validation gates. Start there before changing PVF dispatch, ICBM, attack waves, victory/endgame, economy authority, supply missions, town AI or BattlEye-sensitive behavior."
  },
  "knownRisks": [
+  "CONFIRMED 2026-06-02: Town AI vehicle despawn can delete a vehicle with a player passenger/crew member aboard if the player is not the group leader. server_town_ai.sqf:211-216 checks !(isPlayer leader group _x) and does not inspect crew/cargo/turret occupants. Guard with full player occupancy before deleting wfbe_active_vehicles.",
+  "Direct attack-wave authority gap: ATTACK_WAVE_INIT is a direct publicVariable channel outside the generic PVF dispatcher. Common_AttackWaveActivate.sqf sends [_supply,_side], and Server_AttackWave.sqf uses client-supplied _supply for discount/timing. Server should re-derive supply from authoritative side state.",
+  "JIP robustness note: RequestJoin and AntiStack launch ACK have 30s resend loops but no terminal timeout; the later Init_Client.sqf post-join replicated-variable waits have no timeout/retry/log. Normal JIP is reviewed functional, but failures can hang silently.",
   "DR-40 (Low, WASP Perf nit + reviewed clean): WASP overlay Perf mostly clean; one busy-spin - global_marking_monitor.sqf:62 while{time<_this}do{findDisplay 54} polls every frame for up to 2s (input-disabled, one-time at init); should use the throttled waitUntil{sleep ...;cond} idiom like its :80 sibling. JIP/HC clean (per-client init from Init_Client; local-player guards; HC skips player-local). Old WASP/Init_Client.sqf init path is dead/commented (initJIPCompatible.sqf:243-244). MILESTONE: this was the last outstanding Perf/JIP-HC cell - every subsystem's Perf and JIP/HC dimension is now source-reviewed; residual 🟡 is exclusively Auth/PV owner decisions.",
   "DR-39 (Low/Medium, supply missions Perf + abandoned-code; JIP clean): supplyMissionActive.sqf is a dead twin (compiled to WFBE_SE_FNC_SupplyMissionActive at Init_Server:81 but never called; superseded by the live supplyMissionStarted.sqf PVEH). The live per-mission server loop polls nearestObjects[pos,[],80] (all object types) every 3s to find a UAV terminal - narrow the type filter. JIP/HC is done correctly (the positive counterexample to DR-34): cooldown status is pull-based request/response so joiners query current state; the server-side tracking loop is truck-keyed and survives the starting player's disconnect. Minor: cooldown response is broadcast to all clients rather than targeted.",
   "DR-38 (Low/Medium Perf, JIP clean): the PVF dispatchers Call Compile the sender-provided command string on every inbound message (Server/Client_HandlePVF.sqf), an avoidable per-message runtime recompile - redundant because PVFunctions are already pre-compiled at init into SRVFNC/CLTFNC globals (Init_PublicVariables.sqf:44/49). A validated getVariable lookup removes the recompile AND closes the DR-1 RCE in one change. JIP/HC dispatch is clean (registered at init on all machines incl JIP; PVFs are transient events; routing matches joiners).",

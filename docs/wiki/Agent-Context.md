@@ -9,6 +9,8 @@ This is the compact human-readable context file for AI coding agents. See `agent
 - Mission type: Warfare / CTI TvT PvE, forked from Benny's Warfare and modernized for WASP/Miksuu.
 - Documentation target: GitHub wiki plus `docs/wiki` mirror.
 - Progress surface: `Progress-Dashboard.md` plus `agent-status.json` and `agent-knowledge.jsonl`.
+- Agent-actionable backlog: `agent-hardening-backlog.jsonl`.
+- External report manifest: `external-research-report-manifest.json`; raw extracted report text is local cache only.
 
 ## Source Of Truth
 
@@ -66,6 +68,7 @@ This is the compact human-readable context file for AI coding agents. See `agent
 - Cross-agent progress: read `Progress-Dashboard.md` and `agent-status.json` first when you need the current Codex/Claude state.
 - Cross-agent coordination: read `Agent-Collaboration-Protocol.md`, `agent-collaboration.json`, `agent-knowledge.jsonl` and `agent-events.jsonl` before starting a parallel pass.
 - Independent review findings: `Deep-Review-Findings.md` records source-cited Claude findings that still need to be reconciled into owning atlas pages.
+- Implementation-ready work packages: `Hardening-Implementation-Roadmap.md` plus machine-readable `agent-hardening-backlog.jsonl`. Current added backlog items include attack-wave authority, static-defense HC sync, hosted FPS loop sleep, town-AI vehicle despawn verification, tooling operator checklist, JIP wait-chain timeout polish and UI/player-map debt.
 
 ## Continue Reading
 

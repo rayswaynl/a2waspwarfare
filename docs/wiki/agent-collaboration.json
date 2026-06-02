@@ -1,6 +1,6 @@
 {
  "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T12:05:00+02:00",
+  "generatedAt": "2026-06-02T12:42:00+02:00",
  "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
  "sourceOfTruth": {
   "progressDashboard": "Progress-Dashboard.md",
@@ -10,12 +10,14 @@
   "worklog": "Agent-Worklog.md",
   "eventFeed": "agent-events.jsonl",
   "repoContext": "agent-context.json",
-  "knowledgeRecords": "agent-knowledge.jsonl"
+  "knowledgeRecords": "agent-knowledge.jsonl",
+  "hardeningBacklog": "agent-hardening-backlog.jsonl",
+  "externalResearchManifest": "external-research-report-manifest.json"
  },
  "agents": {
   "Codex": {
    "role": "Integrator, wiki UX owner, source-atlas maintainer, publisher and validation runner.",
-   "currentLane": "implementation-hardening-planning validation/publish",
+   "currentLane": "agent-hardening-backlog-and-wave-f-integration validation/publish",
    "status": "active"
   },
   "Claude": {
@@ -110,6 +112,26 @@
   }
  },
  "activeClaims": [
+ {
+   "lane": "agent-hardening-backlog-and-wave-f-integration",
+   "owner": "Codex",
+   "status": "integrated-locally",
+   "sourceScope": [
+    "docs/wiki/agent-hardening-backlog.jsonl",
+    "docs/wiki/external-research-report-manifest.json",
+    "docs/wiki/Hardening-Implementation-Roadmap.md",
+    "docs/wiki/Progress-Dashboard.md",
+    "docs/wiki/Subagent-Discovery-Swarm.md"
+   ],
+   "outputs": [
+    "agent-hardening-backlog.jsonl",
+    "external-research-report-manifest.json",
+    "Wave F harvest notes",
+    "Town-AI occupied-vehicle deletion confirmation",
+    "Lifecycle wait-chain audit"
+   ],
+   "handoff": "Future code owner: start from agent-hardening-backlog.jsonl for claimable work packages. Highest fresh item is town-ai-vehicle-despawn-safety, now confirmed."
+  },
   {
    "lane": "wasp-overlay-perf-jip-review",
    "owner": "Claude",

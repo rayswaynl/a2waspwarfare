@@ -6,6 +6,7 @@
 [Agent context](Agent-Context)
 [`agent-context.json`](agent-context.json)
 [`agent-knowledge.jsonl`](agent-knowledge.jsonl)
+[`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl)
 
 ## Start Here
 
@@ -47,6 +48,7 @@
 - [Integrations](External-Integrations)
 - [Feature status](Feature-Status-Register)
 - [Hardening roadmap](Hardening-Implementation-Roadmap)
+- [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl)
 - [AI guide](AI-Assistant-Developer-Guide)
 
 ## Current Work
@@ -60,6 +62,7 @@
 - [`agent-knowledge.jsonl`](agent-knowledge.jsonl)
 - [Deep-review findings](Deep-Review-Findings)
 - [External research reports](External-Research-Reports)
+- [`external-research-report-manifest.json`](external-research-report-manifest.json)
 - [Coverage ledger](Codebase-Coverage-Ledger)
 - [Hardening roadmap](Hardening-Implementation-Roadmap)
 

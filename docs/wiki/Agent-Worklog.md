@@ -384,6 +384,15 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - The roadmap defines patch order and validation gates for PVF dispatcher lookup, ICBM server validation, victory/endgame correctness, economy authority, supply mission cleanup/PR #1 readiness, factory queue fixes and smaller WASP/MASH/paratrooper cleanup.
 - Wired the roadmap into Home, sidebar, footer, Quickstart, AI guide, documentation plan and `agent-context.json` so future agents find it before editing risky mission code.
 
+## 2026-06-02 - Codex Agent Backlog And Discovery Wave F
+
+- Extracted the three Steff-provided PDF reports into local workspace cache and published sanitized metadata in [`external-research-report-manifest.json`](external-research-report-manifest.json). Raw extracted text stays local and is not mirrored into the wiki.
+- Added [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), a machine-readable backlog for future Codex/Claude/code-owner runs. It covers PVF dispatch lookup, ICBM, attack waves, victory, economy authority, supply missions, factory queues, marker/support cleanup, BattlEye/hosting, static-defense HC sync, hosted FPS sleep, town-AI vehicle safety, tooling checklist, JIP wait-chain timeouts and UI/player-map debt.
+- Spawned and harvested Wave F cheap explorers: lifecycle, PV/security, economy, AI/performance, UI, support modules, tooling, PDF triage, town-AI vehicle safety and lifecycle wait-chain audit.
+- Promoted the most important new confirmed bug: `server_town_ai.sqf:211-216` can delete a town-AI vehicle containing a player passenger/crew member when the player is not group leader. This is now in [Feature status](Feature-Status-Register), [AI/headless](AI-Headless-And-Performance), [Hardening roadmap](Hardening-Implementation-Roadmap) and the backlog.
+- Added the post-join wait-chain audit to [Lifecycle wait-chain](Lifecycle-Wait-Chain): handshake gates retry every 30 seconds but have no terminal timeout, while later replicated-variable waits have no retry/timeout/log fallback.
+- Added an operator checklist to [Tools/build](Tools-And-Build-Workflow) for LoadoutManager checkout path, `7za`, generated `version.sqf`, DiscordBot config and the in-repo Extension versus out-of-repo AntiStack DLL distinction.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

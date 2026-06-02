@@ -1,0 +1,40 @@
+{
+  "schema": "a2waspwarfare-external-research-report-manifest-v1",
+  "generatedAt": "2026-06-02T04:26:04+02:00",
+  "purpose": "Sanitized metadata for Steff-provided external PDF reports. Report claims are research leads until checked against repository source.",
+  "rawTextPublished": false,
+  "localExtractionCache": "work/research-intake/pdf-reports",
+  "reports": [
+    {
+      "title": "Analytisch rapport over rayswaynl/a2waspwarfare",
+      "providedLocalPath": "C:\\Users\\Steff\\Downloads\\Analytisch rapport over rayswaynl_a2waspwarfare.pdf",
+      "extractedTextCacheFile": "work/research-intake/pdf-reports/analytisch-rapport-over-rayswaynl-a2waspwarfare.txt",
+      "bytes": 17801759,
+      "sha256": "a8abae9656ec02a0b39894d2a7ec509a5c30c779160d6002f359ac9bdd7be469",
+      "pages": 17,
+      "charsExtracted": 33952,
+      "lastWriteTime": "2026-06-01T23:07:23+02:00"
+    },
+    {
+      "title": "Analyse van rayswaynl/a2waspwarfare",
+      "providedLocalPath": "C:\\Users\\Steff\\Downloads\\Analyse van rayswaynl_a2waspwarfare.pdf",
+      "extractedTextCacheFile": "work/research-intake/pdf-reports/analyse-van-rayswaynl-a2waspwarfare.txt",
+      "bytes": 168674,
+      "sha256": "edb6237b1c52e91a5b1cd9d5ca1b84457d80dbe78045f0e7bc9f38b5f7db86fd",
+      "pages": 10,
+      "charsExtracted": 27383,
+      "lastWriteTime": "2026-06-01T23:18:42+02:00"
+    },
+    {
+      "title": "Diepgaande analyse van rayswaynl/a2waspwarfare",
+      "providedLocalPath": "C:\\Users\\Steff\\Downloads\\Diepgaande analyse van rayswaynl_a2waspwarfare.pdf",
+      "extractedTextCacheFile": "work/research-intake/pdf-reports/diepgaande-analyse-van-rayswaynl-a2waspwarfare.txt",
+      "bytes": 17798056,
+      "sha256": "61e5e77d80e485300fb37fc9fc273d769948c88eeb158dcd6d55d78e7dac94b3",
+      "pages": 12,
+      "charsExtracted": 30016,
+      "lastWriteTime": "2026-06-01T23:13:42+02:00"
+    }
+  ],
+  "promotionRule": "Promote claims into subsystem docs only after source-file verification; use the reports as corroboration and idea discovery, not as source truth."
+}

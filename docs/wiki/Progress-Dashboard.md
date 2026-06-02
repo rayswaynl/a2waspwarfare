@@ -4,11 +4,19 @@ This is the shared human + AI interface for seeing what Codex, Claude and Codex 
 
 Keep this page open when parallel documentation work is running. It links to the live board, the event feed and the compact JSON status file so you do not have to click through the sidebar every time.
 
+## Latest Batch
+
+| Lane | Status | Output |
+| --- | --- | --- |
+| `agent-hardening-backlog-and-wave-f-integration` | Integrated locally | [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), [Hardening roadmap](Hardening-Implementation-Roadmap), [Feature status](Feature-Status-Register), [Networking/PV](Networking-And-Public-Variables), [Lifecycle wait-chain](Lifecycle-Wait-Chain), [AI/headless](AI-Headless-And-Performance). |
+| External report intake | Integrated locally | [`external-research-report-manifest.json`](external-research-report-manifest.json) plus [External research reports](External-Research-Reports). Raw extracted text remains local cache only. |
+| Cheap discovery wave F | Harvested | PV/security, economy, AI/perf, UI, support modules, tooling, PDF triage, town-AI vehicle safety and lifecycle wait-chain checks all returned; no active sub-agent threads remain. |
+
 ## At A Glance
 
 | Agent | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `implementation-hardening-planning` | Published [Hardening roadmap](Hardening-Implementation-Roadmap), turning residual Auth/PV owner decisions into patch order, source files and validation gates. |
+| Codex | Active | `agent-hardening-backlog-and-wave-f-integration` | Backlog/manifest/docs updates are integrated locally; validation and publish are next. |
 | Godel | Integrated locally | `ui-jip-hc-review-wave-e` | UI JIP/HC reviewed clean; stale `RscMenu_Upgrade` remains the only concrete UI orphan and is already documented. |
 | Gauss | Integrated locally | `wasp-overlay-jip-locality-wave-e` | WASP live/dead split and HQ-recovery locality notes folded into [WASP overlay](WASP-Overlay) and [Feature status](Feature-Status-Register). |
 | Popper | Integrated locally | `modules-support-status-wave-e` | Module gate/status table and paratrooper/MASH marker confirmations folded into [Function/module index](Function-And-Module-Index) and [Feature status](Feature-Status-Register). |
@@ -65,9 +73,11 @@ Keep this page open when parallel documentation work is running. It links to the
 | Machine progress file | [`agent-status.json`](agent-status.json) |
 | Active lanes and ownership | [`agent-collaboration.json`](agent-collaboration.json) |
 | Agent-readable knowledge records | [`agent-knowledge.jsonl`](agent-knowledge.jsonl) |
+| Agent-readable hardening backlog | [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) |
 | Latest event stream | [`agent-events.jsonl`](agent-events.jsonl) |
 | Dated narrative notes | [Agent worklog](Agent-Worklog) |
 | External PDF intake | [External research reports](External-Research-Reports) |
+| External PDF manifest | [`external-research-report-manifest.json`](external-research-report-manifest.json) |
 
 ## Current Lanes
 
@@ -79,6 +89,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | `external-pdf-reconciliation-wave-d` | Codex + Erdos/Arendt/Carver/Laplace/Tesla | Active | PDFs were extracted to `outputs/external-reports/`; second cheap explorer wave is reconciling report claims with repo evidence and agent-readable artifact needs. |
 | `cheap-explorer-wave-e` | Codex + Godel/Gauss/Popper/Locke/Planck/Schrodinger | Integrated locally | Remaining thin cells reviewed: UI JIP/HC clean, WASP locality, modules/support gates, direct-PV replay semantics, generated-mission docs QA and agent-readable schema gaps. |
 | `implementation-hardening-planning` | Codex | Roadmap published | [Hardening roadmap](Hardening-Implementation-Roadmap) now gives code-owner patch order for PVF dispatch, ICBM, victory/endgame, economy authority, supply missions and smaller cleanup fixes. |
+| `agent-hardening-backlog-and-wave-f-integration` | Codex | Integrated locally | [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) now gives machine-readable work packages, including attack-wave authority, town-AI vehicle safety, static-defense HC sync, hosted FPS loop sleep, JIP wait-chain timeouts, tooling checklist and UI/player-map debt. |
 | `cheap-discovery-swarm-v2` | Codex | Harvested | Cheap scout wave is complete; no active scout slots remain. |
 | `integration-backlog-batch-a` | Codex | Active | PV matrix, external integration trust and DR-27 through DR-31 have landed; next batch should continue explorer-wave reports and lower-risk atlas polish. |
 | `cheap-explorer-wave-c` | Codex | Mostly integrated | Newton, Ampere, Pascal, Boyle and Peirce are folded into owner pages; Linnaeus supply-mission report is still expected or pending capture. |

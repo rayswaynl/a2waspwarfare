@@ -90,6 +90,8 @@ Every content page now includes a **Continue Reading** block with previous and n
 - Human-readable progress dashboard: [Progress dashboard](Progress-Dashboard)
 - Machine-readable progress file: [`agent-status.json`](agent-status.json)
 - Machine-readable collaboration file: [`agent-collaboration.json`](agent-collaboration.json)
+- Machine-readable hardening backlog: [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl)
+- External PDF report metadata: [`external-research-report-manifest.json`](external-research-report-manifest.json)
 - Append-only coordination feed: [`agent-events.jsonl`](agent-events.jsonl)
 - Agent coordination log: [Agent worklog](Agent-Worklog)
 

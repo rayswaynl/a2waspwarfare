@@ -4,6 +4,23 @@ This page tracks the cheap read-only Codex discovery agents currently digging th
 
 The swarm is intentionally evidence-first: agents read source, report path/line-backed findings, and avoid editing docs or mission code. Codex integrates the useful findings into the wiki, `agent-context.json`, the coverage ledger and the feature-status register after review.
 
+## Latest Harvest: Wave F
+
+Spawned on 2026-06-02 after Steff re-shared three external research PDFs. All wave-F agents were read-only, have returned, and were closed after harvest.
+
+| Agent | Lane | Result |
+| --- | --- | --- |
+| Anscombe | Mission lifecycle and entrypoints | Source-backed lifecycle context; no direct docs delta beyond existing lifecycle pages. |
+| McClintock | PV/network authority | Confirmed PVF `Call Compile`; added `ATTACK_WAVE_INIT` client-supply authority gap. |
+| Darwin | Economy/construction/factory authority | Confirmed client-led construction, upgrade, factory, service and economy paths. |
+| Kierkegaard | Town AI/headless/performance | Confirmed static-defense HC sync partiality and HC/AI performance notes. |
+| Avicenna | UI/HUD/dialogs | Confirmed player menu graph, stale upgrade dialog and hardcoded Help/localization debt. |
+| Beauvoir | Support modules | Confirmed truck-only master supply baseline, MASH marker breakage, AFK/AntiStack/FPS/ICBM support status. |
+| Dalton | Tooling/integrations | Confirmed LoadoutManager path/`7za` assumptions, DiscordBot config, Extension vs AntiStack split. |
+| Dewey | External PDF claim triage | Found PDFs mostly covered; promoted JIP wait-chain polish and town-AI passenger-despawn verification. |
+| Einstein | Town-AI vehicle safety verifier | Confirmed `server_town_ai.sqf` can delete occupied vehicles when the player is not group leader. |
+| Bernoulli | Lifecycle wait-chain audit | Produced post-join wait table now integrated into [Lifecycle wait-chain](Lifecycle-Wait-Chain). |
+
 ## Current Pool
 
 | Agent | Lane | Status | Expected output |

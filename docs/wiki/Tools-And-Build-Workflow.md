@@ -26,6 +26,18 @@ Repo instruction: after mission edits, run from `Tools/LoadoutManager` with `dot
 
 Local workspace warning: `FileManager.FindA2WaspWarfareDirectory` searches ancestors for a folder literally named `a2waspwarfare` and throws if it cannot find one. This Codex checkout is under `work\a`, so `dotnet run` is not runnable here without using a correctly named checkout/worktree or changing that lookup.
 
+## Operator Checklist
+
+Before running tooling or deployment-adjacent pieces, check these first:
+
+| Item | Why it matters |
+| --- | --- |
+| Checkout path contains an ancestor folder named `a2waspwarfare`. | LoadoutManager searches for that exact folder name and throws in short aliases such as `work\a`. |
+| `7za` is configured and available if packaging is required. | Generation/copy may succeed before the final packaging step fails. Missing `7za` is packaging-only unless you need `_MISSIONS.7z`. |
+| `version.sqf` exists for the mission being packed/tested. | It is generated and git-ignored, but included by `description.ext` and `initJIPCompatible.sqf`. |
+| DiscordBot has real `preferences.json` and `token.txt` outside git. | Missing token/config is expected in repo and is not a mission-code failure. |
+| AntiStack has the separate `A2WaspDatabase` DLL if enabled. | The in-repo `Extension` project is `a2waspwarfare_Extension` / `GLOBALGAMESTATS`, not the AntiStack database extension. |
+
 ## Propagation rules & the skip-list trap (verified)
 
 "Edit Chernarus, then run `dotnet run`" is correct for **most** files but **silently incomplete** for a fixed skip-list. `LoadoutManager` copies Chernarus → Takistan via `FileManagement/FileManager.cs`, which **never overwrites** certain files and **never copies** certain directories. A change made in Chernarus to any of these does **not** reach Takistan and must be hand-mirrored in both missions:
