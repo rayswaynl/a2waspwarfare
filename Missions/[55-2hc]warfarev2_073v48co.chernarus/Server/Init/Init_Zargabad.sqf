@@ -1,6 +1,6 @@
 if (!isServer || !IS_zargabad_lowpop_map) exitWith {};
 
-Private ["_buildBase", "_baseWalls", "_mgWall", "_sides"];
+Private ["_buildBase", "_buildCentralWall", "_baseWalls", "_centralWall", "_centralWallSpans", "_mgWall", "_sides"];
 
 _baseWalls = [
 	["Land_HBarrier_large",[-55,-55,0],45],["Land_HBarrier_large",[-30,-70,0],15],
@@ -13,6 +13,23 @@ _baseWalls = [
 ];
 
 _mgWall = missionNamespace getVariable ["WFBE_NEURODEF_MG", []];
+_centralWall = [];
+_centralWallSpans = [[-1180,-1018],[-790,-628],[-420,-258],[30,192],[470,632],[870,1032]];
+{
+	for "_offset" from (_x select 0) to (_x select 1) step 18 do {
+		_centralWall = _centralWall + [["Land_HBarrier_large",[0,_offset,0],0]];
+	};
+} forEach _centralWallSpans;
+missionNamespace setVariable ["WFBE_ZARGABAD_CENTRAL_WALL", _centralWall];
+
+_buildCentralWall = {
+	Private ["_origin", "_pos"];
+	_pos = [3425,3375,0];
+	_origin = (createGroup sideLogic) createUnit ["Logic", _pos, [], 0, "NONE"];
+	_origin setDir 316;
+	[_origin, missionNamespace getVariable ["WFBE_ZARGABAD_CENTRAL_WALL", []]] call CreateDefenseTemplate;
+	deleteVehicle _origin;
+};
 
 _buildBase = {
 	Private ["_def", "_dir", "_logic", "_origin", "_pos", "_side", "_sideID", "_statics", "_team", "_unit"];
@@ -59,8 +76,9 @@ _buildBase = {
 
 _sides = [[west, 45], [east, 225]];
 {_x call _buildBase} forEach _sides;
+[] call _buildCentralWall;
 
 [] execVM "Server\Module\Zargabad\Zargabad_EdgeGuard.sqf";
 [] execVM "Server\Module\Zargabad\Zargabad_BlackMarket.sqf";
 
-["INITIALIZATION", "Init_Zargabad.sqf: Spawn fortifications and side defenses are placed."] Call WFBE_CO_FNC_LogContent;
+["INITIALIZATION", "Init_Zargabad.sqf: Spawn fortifications, central wall gaps, and side defenses are placed."] Call WFBE_CO_FNC_LogContent;

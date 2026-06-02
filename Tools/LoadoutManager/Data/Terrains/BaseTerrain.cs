@@ -72,6 +72,7 @@ class CfgSounds
             UpdateFilesForTakistan();
             EnsureVanillaInitServerUsesCorrectMapId(destinationDirectory);
             ApplyZargabadLowPopParameterDefaults(destinationDirectory);
+            RemoveZargabadLowPopGeneratedContent(destinationDirectory);
         }
 
         // Perhaps do a inherited class from this to reduce spaghetti
@@ -427,6 +428,134 @@ class CfgSounds
         }
 
         return _content.Substring(0, defaultStart) + $"default = {_defaultValue}" + _content.Substring(defaultEnd);
+    }
+
+    private void RemoveZargabadLowPopGeneratedContent(string _destinationDirectory)
+    {
+        if (terrainName == TerrainName.ZARGABAD)
+        {
+            return;
+        }
+
+        string zargabadModulePath = Path.Combine(_destinationDirectory, @"Server\Module\Zargabad");
+        if (Directory.Exists(zargabadModulePath))
+        {
+            Directory.Delete(zargabadModulePath, true);
+        }
+
+        string zargabadInitPath = Path.Combine(_destinationDirectory, @"Server\Init\Init_Zargabad.sqf");
+        if (File.Exists(zargabadInitPath))
+        {
+            File.Delete(zargabadInitPath);
+        }
+
+        RemoveExactLine(Path.Combine(_destinationDirectory, @"Server\Init\Init_Server.sqf"),
+            "if (IS_zargabad_lowpop_map) then {[] execVM \"Server\\Init\\Init_Zargabad.sqf\"};");
+        RemoveExactLine(Path.Combine(_destinationDirectory, @"Common\Init\Init_Boundaries.sqf"),
+            "case 'zargabad': {_boundariesXY = 6000};");
+
+        foreach (string relativePath in new[]
+        {
+            @"Common\Init\Init_Common.sqf",
+            @"Common\Init\Init_CommonConstants.sqf",
+            @"Common\Config\Core_Units\Units_CO_RU.sqf",
+            @"Common\Config\Core_Units\Units_CO_US.sqf",
+        })
+        {
+            RemoveAllZargabadGuardBlocks(Path.Combine(_destinationDirectory, relativePath));
+        }
+    }
+
+    private static void RemoveExactLine(string _path, string _line)
+    {
+        if (!File.Exists(_path))
+        {
+            return;
+        }
+
+        string content = File.ReadAllText(_path).Replace("\r\n", "\n");
+        string[] lines = content.Split('\n');
+        string updated = string.Join("\n", lines.Where(line => line.Trim() != _line));
+
+        if (updated != content)
+        {
+            File.WriteAllText(_path, updated);
+        }
+    }
+
+    private static void RemoveAllZargabadGuardBlocks(string _path)
+    {
+        if (!File.Exists(_path))
+        {
+            return;
+        }
+
+        const string blockStartNeedle = "if (IS_zargabad_lowpop_map) then {";
+        string content = File.ReadAllText(_path).Replace("\r\n", "\n");
+        string[] lines = content.Split('\n');
+        List<string> updatedLines = new List<string>();
+        bool isSkippingZargabadBlock = false;
+        bool skipFollowingBlankLine = false;
+        bool previousLineWasBlankBeforeSkippedBlock = false;
+        int braceDepth = 0;
+        bool changed = false;
+
+        foreach (string line in lines)
+        {
+            if (skipFollowingBlankLine)
+            {
+                skipFollowingBlankLine = false;
+                if (line.Trim().Length == 0)
+                {
+                    continue;
+                }
+            }
+
+            if (!isSkippingZargabadBlock && line.Contains(blockStartNeedle, StringComparison.Ordinal))
+            {
+                previousLineWasBlankBeforeSkippedBlock = updatedLines.Count > 0 && updatedLines[updatedLines.Count - 1].Trim().Length == 0;
+                isSkippingZargabadBlock = true;
+                braceDepth = CountChar(line, '{') - CountChar(line, '}');
+                changed = true;
+                if (braceDepth <= 0)
+                {
+                    isSkippingZargabadBlock = false;
+                    skipFollowingBlankLine = previousLineWasBlankBeforeSkippedBlock;
+                }
+                continue;
+            }
+
+            if (isSkippingZargabadBlock)
+            {
+                braceDepth += CountChar(line, '{') - CountChar(line, '}');
+                if (braceDepth <= 0)
+                {
+                    isSkippingZargabadBlock = false;
+                    skipFollowingBlankLine = previousLineWasBlankBeforeSkippedBlock;
+                }
+                continue;
+            }
+
+            updatedLines.Add(line);
+        }
+
+        if (changed)
+        {
+            File.WriteAllText(_path, string.Join("\n", updatedLines));
+        }
+    }
+
+    private static int CountChar(string _value, char _character)
+    {
+        int count = 0;
+        foreach (char valueCharacter in _value)
+        {
+            if (valueCharacter == _character)
+            {
+                count++;
+            }
+        }
+        return count;
     }
 
     // Generates and returns the SQF code for a specific terrain. This method is built upon 

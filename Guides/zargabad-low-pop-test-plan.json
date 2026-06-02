@@ -16,6 +16,7 @@
     "towns-camps-capture",
     "economy",
     "base-defense",
+    "central-wall",
     "edge-guard",
     "factory-purchase",
     "town-ai",
@@ -28,6 +29,7 @@
     "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Init/Init_Zargabad.sqf",
     "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Module/Zargabad/Zargabad_EdgeGuard.sqf",
     "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Module/Zargabad/Zargabad_BlackMarket.sqf",
+    "Tools/Validate-ZargabadMission.ps1",
     "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs"
   ],
   "relatedWikiPages": [
@@ -54,6 +56,7 @@
     "Confirm 13 town markers, 19 camp markers and one airfield objective are present and positioned according to Guides/Zargabad-Low-Pop-Release-Audit.md.",
     "Join a second client after time > 30 and confirm current town/camp colors and SV visibility rules are preserved.",
     "Inspect WEST southwest and EAST northeast starts for direct spawn-to-spawn fire, spawn-to-city fire and hill-edge overwatch abuse.",
+    "Inspect the WDDM-compatible central H-barrier wall around 3425,3375 and confirm the pass-through gaps preserve normal infantry, light armor and AI movement.",
     "Drive a ground vehicle into the outer Zargabad rim away from starts/towns/camps/airport and confirm Zargabad_EdgeGuard removes it after the configured timeout, while aircraft and objective-near ground fights are ignored.",
     "Verify WEST/EAST Zargabad fortifications and statics spawn, are side-owned, manned, and do not block commander construction in normal base flow.",
     "Wake city, airfield and one outer farm with ground units; confirm town AI and static defenses activate, fight, and clean up after inactivity.",
@@ -67,6 +70,7 @@
     "All town/camp/airport/start logics remain inside the 6000m Zargabad boundary.",
     "Central city, market, districts and airfield are the high-value flow; farms/outskirts remain lower-value flank objectives.",
     "Spawn areas require movement/scouting to attack and are not trivially suppressed from the opposing spawn or side hills.",
+    "The central wall interrupts flat middle sightlines without sealing the map or trapping AI pathing.",
     "Extreme-rim ground camping is server-enforced without punishing legitimate objective fights near the northern/eastern settlements.",
     "Smaller-map economy reduces vehicle/air spam while preserving infantry and IFV fights.",
     "The black-market cache is fun but not match-breaking."
@@ -86,11 +90,19 @@
     },
     {
       "type": "command-output",
+      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, no out-of-6000 logic positions, start SV 185, max SV 648, all towns have camps and defenses, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Init_Zargabad builds WFBE_ZARGABAD_CENTRAL_WALL through CreateDefenseTemplate with six separated H-barrier spans centered at 3425,3375 and angled 316 degrees across the flat middle."
+    },
+    {
+      "type": "command-output",
       "summary": "Static mission validation found unique ids, all sync ids resolvable, zero out-of-6000 logic positions, 13 towns, 19 camps, 1 airport, 33 defense logics, start SV 185 and max SV 648."
     }
   ],
   "result": "partial",
   "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete.",
-  "updatedAt": "2026-06-03T00:15:00Z",
+  "updatedAt": "2026-06-02T23:35:01Z",
   "updatedBy": "Codex"
 }

@@ -7,7 +7,7 @@ This audit records the source-only and local-tool evidence for the Zargabad low-
 - Generated mission: `Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad`
 - Source support logic: `Missions/[55-2hc]warfarev2_073v48co.chernarus`
 - Branch: `feature/zargabad-map`
-- Latest audited branch state: `feature/zargabad-map` PR head including the edge-guard pass.
+- Latest audited branch state: `feature/zargabad-map` PR head including the edge-guard and central-wall passes.
 
 ## Placement Audit
 
@@ -60,10 +60,13 @@ The normal factory lists are restricted away from MBTs and heavy attack aircraft
 
 `Server/Init/Init_Zargabad.sqf` adds side-owned start fortifications and statics for WEST/EAST. Extra synchronized town-defense logics were added around the city approaches, airfield, farms and outer chokepoints.
 
+The same init now builds a WDDM-compatible `WFBE_ZARGABAD_CENTRAL_WALL` defense template centered at `3425,3375` and angled at `316` degrees, roughly perpendicular to the southwest-to-northeast base axis. It uses six separated H-barrier runs with pass-through gaps, so the flat middle has broken sightlines without turning the map into two sealed halves.
+
 Static validation currently proves the editor data shape, not tactical effectiveness. Dedicated playtest still needs to verify:
 
 - Spawn-to-spawn and spawn-to-city sightlines.
 - Whether side statics can be trivially sniped or stolen.
+- Whether the central wall gaps are wide enough for normal infantry, light armor and AI movement while still interrupting easy flat-map fire lanes.
 - Whether extra town AT/AA/MG/GL defenses face useful routes after terrain placement.
 - Whether north/east side hills still allow unfair shelling or overwatch outside the guarded rim.
 - Whether the edge guard logs once on init, ignores objective-side fights, and removes only sustained extreme-rim ground abuse.
@@ -83,9 +86,12 @@ Static validation currently proves the editor data shape, not tactical effective
 - `A2WASP_SKIP_ZIP=1 dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj`
 - `dotnet build Tools\LoadoutManager\LoadoutManager.csproj --no-restore`
 - `dotnet build DiscordBot\DiscordBot.csproj --no-restore`
+- `powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadMission.ps1`
 - `git diff --check`
 - `git diff --cached --check`
 - Static mission validation: unique ids, all sync ids resolvable, no out-of-6000 Zargabad logic positions, 13 towns, 19 camps, 1 airport, 33 defense logics, start SV 185, max SV 648.
+
+`Tools/Validate-ZargabadMission.ps1` is the repeatable local validator for this PR. It parses the generated Zargabad `mission.sqm`, checks town/camp/airport/start/defense counts, sync targets, 6000m boundary containment, SV totals, town camp/defense coverage, mystery feature LOC, edge-guard LOC/hooks, central-wall template/gaps, and Takistan spillover.
 
 Known verification gap: no in-game Arma 2 OA hosted/dedicated/JIP/HC smoke has been run from this environment.
 
