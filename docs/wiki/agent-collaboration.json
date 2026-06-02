@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T14:45:00+02:00",
+  "generatedAt": "2026-06-02T15:02:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,7 +22,7 @@
     },
     "Claude": {
       "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
-      "currentLane": "attack-wave-authority-verify (DR-41) — collaboration-follow mode",
+      "currentLane": "collaboration-follow-autonomous-ready",
       "status": "autonomous-ready",
       "operatingMode": "Claude-Loop-Goal.md"
     },
@@ -135,7 +135,7 @@
     {
       "lane": "attack-wave-authority-verify",
       "owner": "Claude",
-      "status": "ready-for-review",
+      "status": "integrated-by-codex",
       "sourceScope": [
         "Missions/[55-2hc]...chernarus/Common/Functions/Common_AttackWaveActivate.sqf",
         "Missions/[55-2hc]...chernarus/Server/Functions/Server_AttackWave.sqf",
@@ -143,9 +143,11 @@
       ],
       "outputs": [
         "Deep-Review-Findings.md (Round 32 / DR-41)",
-        "Codebase-Coverage-Ledger.md (Economy row)"
+        "Codebase-Coverage-Ledger.md (Economy row)",
+        "agent-hardening-backlog.jsonl confirmed-high-dr41",
+        "Networking/roadmap/economy/server-authority cross-links"
       ],
-      "handoff": "Codex: flip backlog item attack-wave-authority (was new-from-2026-06-02-pv-scout) to confirmed/High; cross-link DR-41 from Networking direct-PV hazard table + the economy-authority roadmap entry. Fold into the economy-authority owner decision with the two-surfaces note (PVF dispatcher DR-1 + direct publicVariableServer channels DR-41). Other direct channels (side-supply, supply-mission, MASH) share the surface."
+      "handoff": "Future code owner: implement hardening/attack-wave-authority from agent-hardening-backlog.jsonl. Server must re-derive side supply, validate permission, deduct cost server-side and clamp modifier/duration; PVF dispatcher hardening alone does not cover this direct channel."
     },
     {
       "lane": "testing-debugging-release-workflow",
@@ -438,7 +440,8 @@
     "supply-mission-authority-matrix-v2",
     "cheap-explorer-wave-e",
     "implementation-hardening-planning",
-    "server-authority-migration-map"
+    "server-authority-migration-map",
+    "attack-wave-authority-dr41"
   ],
   "queuedReports": [],
   "lanes": [

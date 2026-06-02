@@ -72,7 +72,7 @@ Archimedes/James and Galileo's second-pass reports expanded the direct-channel m
 
 | Channel | Direction | Owner / evidence | Trust or lifecycle note |
 | --- | --- | --- | --- |
-| `ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS`, `CLIENT_INIT_READY` | client/common -> server; server/PVEH coordination | `Common/Functions/Common_AttackWaveActivate.sqf`, `Server/Functions/Server_AttackWave.sqf`, `Server/PVFunctions/AttackWave.sqf`, `Client/Init/Init_Client.sqf` | Attack-wave sync is outside the generic PVF list and should be reviewed separately for JIP/order behavior. |
+| `ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS`, `CLIENT_INIT_READY` | client/common -> server; server/PVEH coordination | `Common/Functions/Common_AttackWaveActivate.sqf`, `Server/Functions/Server_AttackWave.sqf`, `Server/PVFunctions/AttackWave.sqf`, `Client/Init/Init_Client.sqf` | **DR-41 confirmed high-risk authority gap:** `ATTACK_WAVE_INIT` is forgeable, outside the PVF list and trusts client `_supply` / `_side` for a side-wide price modifier. |
 | `wfbe_supply_temp_west`, `wfbe_supply_temp_east`, `wfbe_supply_<side>` | common/client -> server; server -> clients | `Common/Functions/Common_ChangeSideSupply.sqf`, `Server/Functions/Server_ChangeSideSupply.sqf` | West/east server handlers recompute supply; no resistance handler was found. DR-22 found the overspend windfall in the server clamp. |
 | `WFBE_Client_PV_IsSupplyMissionActiveInTown`, `WFBE_Client_PV_SupplyMissionStarted` | client -> server | `Client/Module/supplyMission/supplyMissionStart.sqf`, `Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf`, `supplyMissionStarted.sqf` | Client starts availability/completion flow. DR-18 found first-use cooldown nil risk; supply reward variables still need server-side recompute. |
 | `WFBE_Server_PV_IsSupplyMissionActiveInTown`, `WFBE_Server_PV_SupplyMissionCompleted`, `WFBE_Server_PV_SupplyMissionCompletedMessage` | server -> clients / server local PVEH | `Server/Module/supplyMission/*.sqf`, `Client/Module/supplyMission/*.sqf` | Completion publication is live-only and intertwined with supply vehicle object variables. |
@@ -98,7 +98,7 @@ Locke's direct-PV pass split the non-PVF channels by whether they are durable st
 | `WFBE_DAYNIGHT_DATE` | Absolute server date state. | JIP can sync from the latest date value; clients use it for drift correction rather than replaying a timeline. | Low/medium; time-authoritative. |
 | `wfbe_supply_temp_*` -> `wfbe_supply_<side>` | Temp request PV plus authoritative side-supply state. | JIP sees current side supply after sync, not the delta event history. | High; economy mutation path and no resistance-side handler. |
 | `IS_*_HQ_ALIVE`, `HQ_*_MARKER_INFOS` | Server-owned HQ state and marker payload. | JIP sees current HQ state, while client marker loops poll/refresh from it. | Medium; repair/kill transitions can race with marker refresh. |
-| `ATTACK_WAVE_INIT` / `ATTACK_WAVE_DETAILS` | Two-step live broadcast. | Event-only; no explicit replay contract for late joiners beyond whatever current details remain in namespace. | Medium; initiation starts from client-side state. |
+| `ATTACK_WAVE_INIT` / `ATTACK_WAVE_DETAILS` | Two-step live broadcast. | Event-only; no explicit replay contract for late joiners beyond whatever current details remain in namespace. | High after DR-41; initiation trusts client-side `_supply` / `_side` and can forge side-wide free or negative-price unit modifiers. |
 | `WFBE_CL_MASH_MARKER_CREATED` -> `WFBE_SE_MASH_MARKER_SENT` | Event-only relay. | No replay list; if revived, joiners miss old MASH marker events unless the server stores and re-sends them. | High while broken; marker lifetime also couples to the tent object. |
 | `SERVER_FPS_GUI`, `WFBE_VAR_SERVER_FPS` | Periodic heartbeat overwrite. | JIP receives the next tick, not history. | Low/medium; two parallel publishers exist. |
 | `AFKthresholdExceededName`, `kickAFK` | One-shot operational alerts. | No JIP meaning. `kickAFK` is caught by BattlEye, not a mission script receiver. | Medium/high operationally; depends on server BE config. |
@@ -181,7 +181,15 @@ DR-27 makes `RequestSpecial` the highest-priority registered-command hardening t
 
 ### Direct Channel Authority: Attack Waves
 
-McClintock's 2026-06-02 PV scout found one additional direct-channel authority issue outside the generic PVF dispatcher: `Common/Functions/Common_AttackWaveActivate.sqf` writes `ATTACK_WAVE_INIT = [_supply, _side]` and broadcasts it to the server, while `Server/Functions/Server_AttackWave.sqf` uses the supplied `_supply` value to compute attack-wave discount and timing. A PVF lookup hardening patch does not touch this path. The server should re-derive supply and any privilege checks from authoritative side state before starting the wave.
+McClintock's 2026-06-02 PV scout found one direct-channel authority issue outside the generic PVF dispatcher, and Claude DR-41 source-verified it as high risk:
+
+- `Client/FSM/updateclient.sqf:240` gates the action with a client-side `GetSideSupply >= 25000` condition.
+- `Common/Functions/Common_AttackWaveActivate.sqf:3-8` sends `ATTACK_WAVE_INIT = [_supply, _side]` via `publicVariableServer`.
+- `Server/Functions/Server_AttackWave.sqf:5-15` takes both values directly from the payload and computes `ATTACK_WAVE_PRICE_MODIFIER`.
+- `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT = 50000` at `Common/Init/Init_CommonConstants.sqf:166`, so a forged `_supply >= 70000` can drive the side-wide unit price modifier to zero; larger values can make it negative.
+- The repo's `BattlEyeFilter/publicvariable.txt` does not cover `ATTACK_WAVE_INIT`.
+
+A PVF lookup hardening patch does not touch this path. The forgery class has two surfaces: registered PVF commands and direct `publicVariableServer` channels. The attack-wave fix should treat `ATTACK_WAVE_INIT` as a request, re-derive real side supply and permissions server-side, deduct any intended cost server-side, clamp the resulting modifier and ignore client-supplied economic fields.
 
 ## Continue Reading
 

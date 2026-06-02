@@ -8,7 +8,8 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
-| `server-authority-migration-map` | Ready to publish | [Server authority map](Server-Authority-Migration-Map) consolidates client-trusted and payload-trusted gameplay flows into one migration plan. |
+| `attack-wave-authority-dr41` | Integrated locally | DR-41 is now cross-linked from [Networking/PV](Networking-And-Public-Variables), [Hardening roadmap](Hardening-Implementation-Roadmap), [Economy](Economy-Towns-And-Supply), [Feature status](Feature-Status-Register), [Server authority map](Server-Authority-Migration-Map) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl). |
+| `server-authority-migration-map` | Published | [Server authority map](Server-Authority-Migration-Map) consolidates client-trusted and payload-trusted gameplay flows into one migration plan. |
 | `testing-debugging-release-workflow` | Drafted | [Testing workflow](Testing-Debugging-And-Release-Workflow) and [`agent-test-plan.schema.json`](agent-test-plan.schema.json) define validation levels, smoke packs and machine-readable test evidence. |
 | `lifecycle-runtime-readout` | Verified | Anscombe report source-checked against `Missions/[55-2hc]...`; lifecycle pages now document mission-object town init and HC timing caveat. |
 | `town-ai-vehicle-despawn-safety` | Published | [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) turns the confirmed occupied-vehicle delete bug into a source-backed patch plan and validation checklist. |
@@ -47,7 +48,8 @@ Keep this page open when parallel documentation work is running. It links to the
 | --- | --- | --- | --- |
 | `dashboard-current-state-cleanup` | Codex | Published | Progress page now shows current state first; historic scout detail lives in swarm/worklog pages. |
 | `town-ai-vehicle-despawn-safety` | Codex/future code owner | Playbook published | The confirmed occupied-vehicle deletion bug now has a dedicated implementation playbook; next step is a gameplay patch in the Chernarus source mission when code work is claimed. |
-| `server-authority-migration-map` | Codex/future code owner | Ready to publish | Use the map before patching PVF dispatch, ICBM, economy, supply, support or BattlEye-sensitive authority flows. |
+| `attack-wave-authority-dr41` | Future code owner | Confirmed playbook | `ATTACK_WAVE_INIT` is confirmed high-risk; use [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) and [Server authority map](Server-Authority-Migration-Map) before patching. |
+| `server-authority-migration-map` | Codex/future code owner | Published | Use the map before patching PVF dispatch, ICBM, economy, supply, support or BattlEye-sensitive authority flows. |
 | `testing-debugging-release-workflow` | Codex/future agent | Drafted | Publish and use the test workflow to distinguish source-only review from hosted/dedicated/JIP/HC smoke evidence. |
 | `autonomous-claude-research` | Claude | Open | Claude may claim the next bounded source-backed review lane and continue independently. |
 | `feature-status-reconciliation` | Codex/future agent | Open | Fold any newly confirmed findings into owning atlas/risk pages and keep machine files aligned. |
@@ -57,6 +59,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| DR-41 attack-wave authority | [Networking/PV](Networking-And-Public-Variables), [Hardening roadmap](Hardening-Implementation-Roadmap), [Economy](Economy-Towns-And-Supply), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) | Claude's source-verified direct-PV finding is now promoted from scout candidate to confirmed high-priority backlog item. |
 | Server authority map | [Server authority map](Server-Authority-Migration-Map) | Source-backed migration table and handler checklist for moving trusted-client flows toward server-owned authority. |
 | Testing workflow | [Testing workflow](Testing-Debugging-And-Release-Workflow), [`agent-test-plan.schema.json`](agent-test-plan.schema.json) | Adds validation levels, system test matrix, static checks, RPT logging conventions, smoke packs, release gates and a machine-readable test evidence schema. |
 | Lifecycle source verification | [Mission lifecycle](Mission-Entrypoints-And-Lifecycle), [Lifecycle wait-chain](Lifecycle-Wait-Chain) | Verified Anscombe's report, corrected the `Migrations` typo to `Missions`, and promoted mission-object town init plus HC `sleep 20` timing boundary. |

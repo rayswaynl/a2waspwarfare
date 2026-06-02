@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T14:45:00+02:00",
+  "generatedAt": "2026-06-02T15:02:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,9 +21,9 @@
     },
     "Claude": {
       "status": "autonomous-ready",
-      "currentLane": "autonomous-claude-research",
-      "currentWork": "No currently claimed lane in Codex state; Claude can self-select the next source-backed review from the coverage ledger or hardening backlog.",
-      "nextExpectedOutput": "A bounded claim event and source-cited review if Claude continues."
+      "currentLane": "collaboration-follow-autonomous-ready",
+      "currentWork": "DR-41 attack-wave authority finding has been integrated by Codex; Claude can continue with the next source-backed review under Claude-Loop-Goal.md.",
+      "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     }
   },
   "laneSummary": [
@@ -80,6 +80,12 @@
       "owner": "Codex",
       "status": "published",
       "output": "Server-Authority-Migration-Map.md source-backed migration guide for client-trusted authority flows"
+    },
+    {
+      "lane": "attack-wave-authority-dr41",
+      "owner": "Claude/Codex",
+      "status": "integrated-locally",
+      "output": "DR-41 promoted to confirmed-high-dr41 in agent-hardening-backlog.jsonl and cross-linked through owning pages"
     }
   ],
   "queuedReports": [],
@@ -108,6 +114,7 @@
     "testingWorkflow": "Testing-Debugging-And-Release-Workflow.md",
     "agentTestPlanSchema": "agent-test-plan.schema.json",
     "serverAuthorityMap": "Server-Authority-Migration-Map.md",
-    "claudeLoopGoal": "Claude-Loop-Goal.md"
+    "claudeLoopGoal": "Claude-Loop-Goal.md",
+    "attackWaveAuthority": "agent-hardening-backlog.jsonl#attack-wave-authority"
   }
 }

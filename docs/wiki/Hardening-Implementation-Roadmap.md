@@ -14,7 +14,7 @@ Machine-readable backlog for agents and code owners: [`agent-hardening-backlog.j
 | P0 | ICBM `RequestSpecial` server validation | Highest blast radius: forged PV can trigger server-applied map-wide damage. |
 | P1 | Victory/endgame correctness | Small source change with large match-outcome/stat impact. |
 | P1 | Server-side economy authority design | Covers the confirmed class: build, buy, sell, supply, upgrade, ICBM and gear/service spend paths. |
-| P1 | Direct attack-wave authority | McClintock's PV scout found `ATTACK_WAVE_INIT` trusts client-supplied supply values outside the generic PVF list. |
+| P1 | Direct attack-wave authority | Claude DR-41 confirmed `ATTACK_WAVE_INIT` is a forgeable direct-PV channel that can drive side-wide unit prices to zero or negative values. |
 | P1 | Supply mission authority and cooldown cleanup | Needed before PR #1 supply helicopters/cash/interdiction become baseline. |
 | P2 | Factory queue, HC/static-defense and support-loop cleanups | Player-facing soft-lock/perf/partial-feature fixes once core authority is moving. |
 
@@ -111,6 +111,7 @@ Confirmed class: every spend/effect path is client-authoritative or payload-auth
 | Upgrades | `RequestUpgrade.sqf` forwards raw payload to `Server_ProcessUpgrade.sqf`. | Server validates commander, side, upgrade id/level, dependency and cost; server debits funds/supply. |
 | Side supply | `Server_ChangeSideSupply.sqf` trusts direct temp PV deltas and has the negative-delta windfall bug. | Clamp negative overspend to zero change; restrict callers or move supply mutations behind server-owned functions. |
 | Gear/EASA/service | Gear/EASA/service effects and debits are client-local. | Add server ledger/effect validation for public-server hardening; add local affordability guards for rearm/refuel as a quick UX bug fix only. |
+| Attack waves | `ATTACK_WAVE_INIT` trusts client `_supply` and `_side`; DR-41 shows forged supply can set side-wide unit prices to zero or negative. | Treat direct attack-wave PV as a request; server re-derives side supply, validates permission, deducts cost and clamps modifier/duration. |
 | WASP HQ recovery | `WASP/actions/Action_RepairMHQDepot.sqf` applies funds/HQ/town-SV effects mostly client-side. | Move authority checks and town-SV reset to server before expanding HQ recovery. |
 
 Implementation strategy:
@@ -134,19 +135,25 @@ Evidence:
 | --- | --- |
 | `Common/Functions/Common_AttackWaveActivate.sqf` | Client/common side writes `ATTACK_WAVE_INIT = [_supply, _side]` and broadcasts it to the server. |
 | `Server/Functions/Server_AttackWave.sqf` | Server uses payload `_supply` to compute attack-wave discount and duration/length. |
+| `Client/FSM/updateclient.sqf` | The 25,000 supply gate is only the action condition on the client. |
+| `Common/Init/Init_CommonConstants.sqf` | `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT = 50000`; DR-41 shows forged `_supply >= 70000` can make the price modifier zero or negative. |
 | `Server/PVFunctions/AttackWave.sqf` | Direct PVEH coordination path; this is outside `_serverCommandPV` and is not fixed by PVF dispatcher lookup alone. |
+| `BattlEyeFilter/publicvariable.txt` | Does not filter `ATTACK_WAVE_INIT`; only the AFK feature rule is present in the repo. |
 
 Implementation shape:
 
 1. Treat `ATTACK_WAVE_INIT` as a request, not as authoritative state.
-2. Re-derive side supply and discount inputs server-side from trusted side/town state.
+2. Re-derive side supply and discount inputs server-side from trusted side/town state; never use client `_supply` for price math.
 3. Validate requester side and any intended commander/support permission before starting an attack wave.
-4. Keep `ATTACK_WAVE_DETAILS` broadcast behavior unless a JIP/replay audit proves a change is needed.
+4. Deduct the intended side-supply cost server-side or reject the request.
+5. Clamp the resulting price modifier/duration to sane ranges even after server recomputation.
+6. Keep `ATTACK_WAVE_DETAILS` broadcast behavior unless a JIP/replay audit proves a change is needed.
 
 Validation:
 
 - Legitimate attack wave still starts and publishes expected details.
-- Forged exaggerated `_supply` cannot change discount, duration, length or cost.
+- Forged exaggerated `_supply` cannot change discount, duration, length or cost; `_supply >= 70000` cannot create free or negative-price units.
+- Wrong-side or non-authorized requester cannot activate the wave for the other side.
 - Late-join behavior remains unchanged or is explicitly documented.
 
 ## P1: Supply Missions And PR #1
