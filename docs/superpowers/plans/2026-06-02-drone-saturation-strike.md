@@ -113,6 +113,45 @@ _addToListFee = [0,75000,9500,3500,8500,0,12500,0,0,22000];
 _addToListInterval = [0,1000,800,600,900,0,0,0,0,360];
 ```
 
+- [ ] **Step 6b: Add the enable/disable case.** In `GUI_Menu_Tactical.sqf`, inside the `switch (_currentSpecial)` at lines 245–287, after the `case "UAV_Remote_Control":` block (line 283):
+
+```sqf
+			case "DroneStrike": {
+				if (isNil "lastDroneCall") then {lastDroneCall = -99999};
+				_currentLevel = _currentUpgrades select WFBE_UP_UAV;
+				_controlEnable = if (_funds >= _currentFee && _currentLevel > 0 && time - lastDroneCall > _currentInterval) then {true} else {false};
+			};
+```
+
+- [ ] **Step 6c: Add the request case.** In the `switch (_currentSpecial)` at lines 298–344 (the `if (MenuAction == 20)` block), after `case "Units_Camera":` (line 343):
+
+```sqf
+				case "DroneStrike": {
+					MenuAction = 11;
+					if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
+					_textAnimHandler = [17022,localize 'STR_WF_TACTICAL_ClickOnMap',10,"ff9900"] spawn SetControlFadeAnim;
+				};
+```
+
+- [ ] **Step 6d: Add the map-click handler.** In the `if (mouseButtonUp == 0)` block, after the Ammo-Paradrop handler (`MenuAction == 10`, ends line 528) and before that block's closing `};` (line 529):
+
+```sqf
+			//--- Drone Strike.
+			if (MenuAction == 11) then {
+				MenuAction = -1;
+				_forceReload = true;
+				if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
+				[17022] Call SetControlFadeAnimStop;
+				_callPos = _map posScreenToWorld[mouseX,mouseY];
+				if (!surfaceIsWater _callPos) then {
+					lastDroneCall = time;
+					-(_currentFee) Call ChangePlayerFunds;
+					["RequestSpecial", ["DroneStrike",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+					hint localize "STR_WF_TACTICAL_DroneStrike_Info";
+				};
+			};
+```
+
 - [ ] **Step 7: Register the server function.** In `Server/Init/Init_Server.sqf`, after line 42:
 
 ```sqf
