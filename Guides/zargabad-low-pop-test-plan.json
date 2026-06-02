@@ -1,0 +1,88 @@
+{
+  "schema": "a2waspwarfare-agent-test-plan-v1",
+  "id": "zargabad-low-pop-release-smoke-2026-06-03",
+  "title": "Zargabad low-pop mission release smoke plan",
+  "status": "in-progress",
+  "coverageLevel": [
+    "source-only",
+    "local-tool",
+    "hosted-smoke",
+    "dedicated-smoke",
+    "jip-smoke",
+    "hc-smoke"
+  ],
+  "subsystems": [
+    "zargabad-map",
+    "towns-camps-capture",
+    "economy",
+    "base-defense",
+    "factory-purchase",
+    "town-ai",
+    "generated-missions"
+  ],
+  "sourceRefs": [
+    "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/mission.sqm",
+    "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Common/Init/Init_CommonConstants.sqf",
+    "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Common/Init/Init_Common.sqf",
+    "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Init/Init_Zargabad.sqf",
+    "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Module/Zargabad/Zargabad_BlackMarket.sqf",
+    "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs"
+  ],
+  "relatedWikiPages": [
+    "Towns-Camps-And-Capture-Atlas",
+    "Economy-Towns-And-Supply",
+    "Mission-Parameters-Localization-And-Generated-Build-Inputs",
+    "Testing-Debugging-And-Release-Workflow"
+  ],
+  "environment": {
+    "mission": "[31-2hc]warfarev2_073v48co.zargabad",
+    "branch": "feature/zargabad-map",
+    "commit": "d376afde",
+    "serverMode": "source-only",
+    "missionParams": {
+      "WFBE_C_TOWNS_AMOUNT": "Full",
+      "WFBE_C_TOWNS_DEFENDER": "Hard",
+      "WFBE_C_TOWNS_OCCUPATION": "Medium",
+      "WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT": 30000,
+      "WFBE_C_GAMEPLAY_MISSILES_RANGE": 2000
+    }
+  },
+  "steps": [
+    "Start hosted or dedicated Zargabad and verify no init hang through WFBE_Parameters_Ready, commonInitComplete, townInit, serverInitFull and clientInitComplete.",
+    "Confirm 13 town markers, 19 camp markers and one airfield objective are present and positioned according to Guides/Zargabad-Low-Pop-Release-Audit.md.",
+    "Join a second client after time > 30 and confirm current town/camp colors and SV visibility rules are preserved.",
+    "Inspect WEST southwest and EAST northeast starts for direct spawn-to-spawn fire, spawn-to-city fire and hill-edge overwatch abuse.",
+    "Verify WEST/EAST Zargabad fortifications and statics spawn, are side-owned, manned, and do not block commander construction in normal base flow.",
+    "Wake city, airfield and one outer farm with ground units; confirm town AI and static defenses activate, fight, and clean up after inactivity.",
+    "Capture camps and then a town from both WEST and EAST; confirm camp/town SV drains, resets on capture, and income ticks reflect ownership.",
+    "Buy representative infantry, light, heavy, aircraft and airport units; confirm Zargabad lists exclude MBTs/heavy attack aircraft and price multipliers feel sane.",
+    "Own Zargabad Airfield as WEST or EAST and wait for the black-market cache event; confirm crate/smoke spawn, ownership gating and cleanup.",
+    "Run one HC-enabled smoke if headless client is used by the server and confirm town AI/static defense behavior does not regress."
+  ],
+  "expected": [
+    "Mission boots without undefined variable, missing file, sync id or townInit errors in server/client RPT.",
+    "All town/camp/airport/start logics remain inside the 6000m Zargabad boundary.",
+    "Central city, market, districts and airfield are the high-value flow; farms/outskirts remain lower-value flank objectives.",
+    "Spawn areas require movement/scouting to attack and are not trivially suppressed from the opposing spawn or side hills.",
+    "Smaller-map economy reduces vehicle/air spam while preserving infantry and IFV fights.",
+    "The black-market cache is fun but not match-breaking."
+  ],
+  "evidence": [
+    {
+      "type": "command-output",
+      "summary": "LoadoutManager generation completed with A2WASP_SKIP_ZIP=1; packaging skipped because 7za is not required for local propagation."
+    },
+    {
+      "type": "command-output",
+      "summary": "dotnet build Tools/LoadoutManager/LoadoutManager.csproj --no-restore completed with existing warnings and 0 errors."
+    },
+    {
+      "type": "command-output",
+      "summary": "Static mission validation found unique ids, all sync ids resolvable, zero out-of-6000 logic positions, 13 towns, 19 camps, 1 airport, 33 defense logics, start SV 185 and max SV 648."
+    }
+  ],
+  "result": "partial",
+  "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete.",
+  "updatedAt": "2026-06-03T00:15:00Z",
+  "updatedBy": "Codex"
+}
