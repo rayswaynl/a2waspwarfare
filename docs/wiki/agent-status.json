@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T19:00:00+02:00",
+  "generatedAt": "2026-06-02T19:25:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -18,7 +18,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest slice source-mapped the registered server PVF handler authority queue after dispatcher hardening.",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest slice source-mapped and validated the registered client-bound PVF runtime/JIP matrix.",
       "nextExpectedOutput": "Continue with the next bounded source-backed subsystem or implementation-readiness pass."
     },
     "Codex-2": {
@@ -41,6 +41,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "registered-client-pvf-runtime-matrix",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Networking-And-Public-Variables.md now classifies all 15 registered client-bound PVF handlers and router tag families by runtime effect, JIP/replay posture and authority note."
+    },
     {
       "lane": "registered-server-pvf-handler-authority-matrix",
       "owner": "Codex",

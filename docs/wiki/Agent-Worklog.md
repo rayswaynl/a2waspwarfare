@@ -1036,3 +1036,11 @@ Key conclusions:
 - Added a [registered server PVF handler authority matrix](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) to [Server authority migration map](Server-Authority-Migration-Map), classifying all 13 server-bound handlers by current behavior, authority status and first validation rule.
 - Split `RequestSpecial` into tag families so future agents do not treat ICBM, support effects, HC delegation and bookkeeping as one patch. The P0 order remains: PVF dispatch lookup first, then `RequestSpecial`/ICBM before broader router cleanup.
 - Wired [Networking/PV](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index), [Feature status](Feature-Status-Register), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), [`agent-feature-status.jsonl`](agent-feature-status.jsonl) and [`agent-status.json`](agent-status.json) to the new matrix.
+
+# 2026-06-02 - Registered Client PVF Runtime Matrix
+
+- Source-read the Chernarus registered client PVF list in `Common/Init/Init_PublicVariables.sqf:25-40,45-46`, every current `Client/PVFunctions/*.sqf` handler, and the `HandleSpecial` / `LocalizeMessage` routers.
+- Added a [registered client PVF runtime matrix](Networking-And-Public-Variables#registered-client-pvf-runtime-matrix) to [Networking/PV](Networking-And-Public-Variables), classifying all 15 server-to-client handlers by runtime effect and JIP/authority note.
+- Marked client handlers that are not merely visual: `TownCaptured`, `CampCaptured`, `AwardBounty`, `AwardBountyPlayer`, `LocalizeMessage` money tags and `ChangeScore` can mutate funds/score locally or trigger score requests.
+- Wired the matrix into [Public variable channel index](Public-Variable-Channel-Index), [Client UI systems atlas](Client-UI-Systems-Atlas), [Feature status](Feature-Status-Register), [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) and [`agent-status.json`](agent-status.json).
+- Validation passed with `docs/validate-wiki.ps1`, JSON/JSONL parsing and `git diff --check`.

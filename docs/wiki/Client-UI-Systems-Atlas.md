@@ -262,6 +262,8 @@ The intro video is `Videos/intro720p.ogv`, started from `Init_Client.sqf:785`.
 
 The UI layer is reviewed for JIP/headless scope as of 2026-06-02. It is ordinary-client and hosted-client code; headless clients do not run the UI init path.
 
+Client-bound PVF runtime notes are now centralized in [Networking and public variables](Networking-And-Public-Variables#registered-client-pvf-runtime-matrix). Use that matrix before reviving `SetTask`, paratrooper markers, MASH marker replay, attack-wave JIP display, endgame routing or money-changing localized messages.
+
 | Question | Source-backed verdict |
 | --- | --- |
 | Does a dedicated headless client run UI scripts? | No. `initJIPCompatible.sqf:70-76` and `:224-234` run client init only for hosted server or non-headless non-dedicated clients; `:237-238` sends detected headless clients to `Headless/Init/Init_HC.sqf` instead. |

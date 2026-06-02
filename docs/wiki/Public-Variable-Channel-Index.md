@@ -34,6 +34,8 @@ For implementation work after PVF dispatch allowlisting, use the [registered ser
 
 ### 1b. Client-bound (server → client) — 15
 
+For runtime/JIP behavior after these messages arrive, use the [registered client PVF runtime matrix](Networking-And-Public-Variables#registered-client-pvf-runtime-matrix). This page owns channel inventory; Networking owns client-side effect and replay notes.
+
 | Command (`WFBE_PVF_*`) | Purpose / notable finding |
 | --- | --- |
 | `AllCampsCaptured` | all-camps event |
