@@ -1,6 +1,6 @@
 {
  "schema": "a2waspwarfare-agent-collaboration-v1",
- "generatedAt": "2026-06-02T13:20:00+02:00",
+ "generatedAt": "2026-06-02T13:40:00+02:00",
  "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
  "sourceOfTruth": {
   "progressDashboard": "Progress-Dashboard.md",
@@ -112,6 +112,23 @@
   }
  },
  "activeClaims": [
+  {
+   "lane": "lifecycle-runtime-readout-verification",
+   "owner": "Codex",
+   "status": "published",
+   "sourceScope": [
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/mission.sqm",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Town*.sqf",
+    "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf"
+   ],
+   "outputs": [
+    "Mission lifecycle source verification section",
+    "Lifecycle wait-chain mission object init and HC timing notes"
+   ],
+   "handoff": "Future lifecycle work: inspect mission.sqm object init fields together with SQF init scripts before changing town bootstrap or generated map propagation."
+  },
   {
    "lane": "town-ai-vehicle-despawn-safety-docs",
    "owner": "Codex",

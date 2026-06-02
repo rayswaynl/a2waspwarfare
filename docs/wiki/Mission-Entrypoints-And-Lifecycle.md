@@ -21,6 +21,8 @@ It also sets `loadScreen`, disables spoken sentences, disables channels 3 and 6,
 
 `version.sqf` is included here and again by `initJIPCompatible.sqf`, but it is not committed in the current repo checkout. Treat it as generated terrain metadata from LoadoutManager, not as an optional nicety: a fresh source mission needs `version.sqf` produced or supplied before it can preprocess cleanly.
 
+Source verification: `description.ext:39` includes `version.sqf`; `:41-58` include sound, music and Rsc bundles; `:64-67` set `loadScreen`, `disableChannels[]` and `disabledAI`. `version.sqf` is absent from the current Chernarus source mission checkout, so the generated-file warning is current.
+
 ## `initJIPCompatible.sqf`
 
 This is the first major runtime script. It creates early logging, determines server/client/headless roles, runs version detection, initializes common constants and parameters, applies environment time, then dispatches common/server/client/headless init scripts.
@@ -56,6 +58,23 @@ description.ext
 Headless mode is especially stateful: `WFBE_C_AI_DELEGATION == 2` means HC mode in configuration, but `initJIPCompatible.sqf:168-170` downgrades it to `0` when the detected OA build does not support HC. That downgrade happens during boot, so bug reports can show a different runtime value than the lobby parameter suggested.
 
 WASP should not be described as a live parallel bootstrap branch. The old WASP block in `initJIPCompatible.sqf` is commented out; current WASP behavior is wired per feature from client/server init and from the specific WASP scripts documented in [WASP overlay](WASP-Overlay).
+
+### Mission Object Init Layer
+
+`mission.sqm` is part of the lifecycle, not just terrain metadata. Town logic objects run `Common\Init\Init_Town.sqf` from their `init` fields, and the `WF_Logic` object sets town-mode removal lists before running `Common\Init\Init_TownMode.sqf`.
+
+Verified anchors:
+
+| Source | Runtime role |
+| --- | --- |
+| `mission.sqm:128` and following town logic entries | Town objects call `Common\Init\Init_Town.sqf` with name, dubbing name, start SV, max SV, range and group templates. Current source scan found 40 such explicit `Init_Town.sqf` calls. |
+| `mission.sqm:3265` | `WF_Logic` sets `totalTowns = 43`, disables simulation and seeds `Towns_Removed*` lists before `ExecVM "Common\Init\Init_TownMode.sqf"`. |
+| `Common/Init/Init_Town.sqf:18` | Each town waits for `townModeSet && WFBE_Parameters_Ready` before applying town state. |
+| `Common/Init/Init_Town.sqf:42` | Town object setup then waits for `commonInitComplete`. |
+| `Common/Init/Init_Town.sqf:92` | Server-side town model/camp setup waits for `serverInitComplete`. |
+| `Common/Init/Init_Town.sqf:134` | AI/patrol follow-up waits for `townInitServer`. |
+
+This means town lifecycle bugs can live in mission object init, town init scripts and server FSMs together. Regex-only scans of SQF files will miss the `mission.sqm` entry layer.
 
 ## Common Init
 
@@ -97,6 +116,23 @@ Global gameplay hotkeys are wired here through `findDisplay 46` `KeyDown` handle
 Headless support is gated by the OA version check in `initJIPCompatible.sqf`. When supported and configured, `Headless/Init/Init_HC.sqf` loads client PVF handling and common init pieces needed for delegated AI.
 
 `Headless/Init/Init_HC.sqf` currently uses a fixed delay and then sends `["RequestSpecial", ["connected-hc", player]]` to the server. There is no explicit `waitUntil {serverInitFull}` barrier in that file, so HC timing bugs should be investigated against [Lifecycle wait-chain](Lifecycle-Wait-Chain) and [AI/headless](AI-Headless-And-Performance) together.
+
+Source verification: `Headless/Init/Init_HC.sqf:12` is `sleep 20`; `:15` sends the `connected-hc` request. The server sets `serverInitComplete = true` early at `Server/Init/Init_Server.sqf:117`, waits for `commonInitComplete && townInit` at `:127`, and only later sets `serverInitFull = true` at `:507`. Treat the HC sleep as a timing proxy, not a real dependency barrier.
+
+## 2026-06-02 Lifecycle Report Verification
+
+Anscombe's lifecycle readout was source-checked against the actual `Missions/[55-2hc]warfarev2_073v48co.chernarus` tree. The report's `Migrations` path spelling was a typo; the substantive lifecycle claims below were confirmed from source:
+
+| Claim | Verification |
+| --- | --- |
+| `description.ext` is the metadata/resource front door. | Confirmed at `description.ext:39-67`. |
+| `initJIPCompatible.sqf` is the top-level runtime orchestrator. | Confirmed by role detection at `:52-56`, version wait at `:46-50`, parameter readiness at `:212`, and branch dispatch at `:214`, `:220`, `:233`, `:238`. |
+| Lobby parameters become missionNamespace globals. | Confirmed in `Common/Init/Init_Parameters.sqf:5-9`. |
+| Common init is the shared compile/config hub. | Confirmed by `Init_PublicVariables.sqf` load at `Init_Common.sqf:295`, airport/boundary init at `:311` and `:316`, and `commonInitComplete = true` at `:371`. |
+| Town bootstrap spans mission objects plus SQF. | Confirmed by `mission.sqm` town object init lines, `mission.sqm:3265`, `Init_TownMode.sqf:3/21`, `Init_Towns.sqf:3/13`, and `Init_Town.sqf:18/42/92/134`. |
+| Client waits on common and town state before full readiness. | Confirmed by `Init_Client.sqf:165`, `:360`, `:596`, `:788`, `:957`, and `:961-963`. |
+| Server starts authoritative long-running loops after setup. | Confirmed by `Init_Server.sqf:514`, `:528`, `:531` and related server loop launches. |
+| HC has no `serverInitFull` wait barrier. | Confirmed by `Init_HC.sqf:12/15` versus `Init_Server.sqf:507`. |
 
 ## Continue Reading
 

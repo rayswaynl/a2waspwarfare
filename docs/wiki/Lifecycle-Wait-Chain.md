@@ -28,17 +28,19 @@ Role is computed in `initJIPCompatible.sqf:52-56`. `isHeadLessClient` comes from
 2. Engine runs `init.sqf` (server-only: spawns `test/wasp_selftest.sqf`).
 3. Engine runs `initJIPCompatible.sqf` — the **master bootstrap**, including on JIP clients.
 
+Mission object init fields are also part of startup. In the Chernarus source mission, town logic objects call `Common\Init\Init_Town.sqf` from `mission.sqm`, while the `WF_Logic` object at `mission.sqm:3265` seeds town-mode lists and starts `Common\Init\Init_TownMode.sqf`. Treat `mission.sqm` as an init source when auditing town lifecycle, not just as map placement data.
+
 > **Gotcha — `version.sqf` is generated and git-ignored.** It is `#include`d by `description.ext` and `initJIPCompatible.sqf` but is produced per-terrain by LoadoutManager (see [Tools and build workflow](Tools-And-Build-Workflow)) and listed in `.gitignore`. A fresh checkout will not compile until LoadoutManager has been run or a `version.sqf` is dropped in.
 
 ## Branch dispatch in `initJIPCompatible.sqf`
 
 | Branch | Guard | Line |
 | --- | --- | --- |
-| Server | `isHostedServer \|\| isDedicated` → `ExecVM "Server/Init/Init_Server.sqf"` | ~228-230 |
-| Client | `isHostedServer \|\| (!isHeadLessClient && !isDedicated)` → `execVM "Client/Init/Init_Client.sqf"` | ~234-244 |
-| Headless | `isHeadLessClient` → `execVM "Headless/Init/Init_HC.sqf"` | ~247-249 |
+| Server | `isHostedServer \|\| isDedicated` → `ExecVM "Server/Init/Init_Server.sqf"` | `initJIPCompatible.sqf:218-220` |
+| Client | `isHostedServer \|\| (!isHeadLessClient && !isDedicated)` → `execVM "Client/Init/Init_Client.sqf"` | `initJIPCompatible.sqf:224-233` |
+| Headless | `isHeadLessClient` → `execVM "Headless/Init/Init_HC.sqf"` | `initJIPCompatible.sqf:237-238` |
 
-The old WASP client-init block is commented out at `initJIPCompatible.sqf:251-255` (see [WASP overlay](WASP-Overlay)).
+The old WASP client-init block is commented out at `initJIPCompatible.sqf:241-245` (see [WASP overlay](WASP-Overlay)).
 
 ## Global-flag dependency graph
 
@@ -47,8 +49,8 @@ Each row: a flag, where it is **set**, and the `waitUntil` barriers it **unblock
 | Flag | Set at | Unblocks (consumer `waitUntil`) |
 | --- | --- | --- |
 | `VERSION_SET` | `Common/Init/Init_Version.sqf` | `initJIPCompatible.sqf:49` |
-| `WFBE_Parameters_Ready` | `initJIPCompatible.sqf:222` | `Common/Init/Init_TownMode.sqf:18` |
-| `townModeSet` | `Common/Init/Init_TownMode.sqf:20` | `Init_Towns.sqf:3`, `Init_Town.sqf:18` |
+| `WFBE_Parameters_Ready` | `initJIPCompatible.sqf:212` | `Common/Init/Init_TownMode.sqf:3`, `Init_Town.sqf:18` |
+| `townModeSet` | `Common/Init/Init_TownMode.sqf:21`, started by `mission.sqm:3265` | `Init_Towns.sqf:3`, `Init_Town.sqf:18` |
 | `BIS_fnc_init` (engine) | engine | `Common/Init/Init_Common.sqf:205-206` |
 | `WFBE_PRESENTSIDES` | `Common/Init/Init_Common.sqf:282` | client branch `initJIPCompatible.sqf:235`; `test/wasp_selftest.sqf` |
 | `commonInitComplete` | `Common/Init/Init_Common.sqf:371` | `Init_Server.sqf:127`, `Init_Client.sqf:165`, `Init_Town.sqf:42`, `Init_Unit.sqf:18` |
@@ -68,6 +70,8 @@ Block on `WFBE_PRESENTSIDES` + `wfbe_teams` → `Init_Client` compiles functions
 ### Headless client
 
 `Init_HC.sqf` compiles the three delegation handlers (`Client_DelegateTownAI`, `Client_DelegateAI`, `Client_DelegateAIStaticDefence`) plus `Client_HandlePVF`, then **`sleep 20`** (a hard wait used in place of a `waitUntil {serverInitFull}` barrier) and notifies the server via `["RequestSpecial", ["connected-hc", player]]`. See [AI, headless and performance](AI-Headless-And-Performance) for what gets delegated.
+
+Source-check note: `Init_HC.sqf:12` is the fixed sleep and `:15` sends the HC registration request. `serverInitFull` is not set until `Server/Init/Init_Server.sqf:507`, after `serverInitComplete` at `:117` and the `commonInitComplete && townInit` wait at `:127`.
 
 ## JIP specifics
 
@@ -100,6 +104,7 @@ Bernoulli's 2026-06-02 wait-chain audit split the client join gates into two cla
 
 - **Debug-only economy override:** `initJIPCompatible.sqf:151-162` raises starting funds/supply and other test parameters only inside `if (WF_Debug)`. Confirm `WF_Debug` state before comparing economy behavior against mission parameters.
 - **Server-only code inside Common:** `Init_Common.sqf:303-308` runs an `if (isServer)` town-group load from the *common* path. Functionally correct but architecturally surprising.
+- **Mission object init can look invisible in SQF-only scans:** town setup begins from `mission.sqm` object `init` fields. Audit `mission.sqm` together with `Init_Town*.sqf` before changing town startup, town-mode filters, town count assumptions or generated mission propagation.
 - **Duplicate compiles in `Init_Server`:** several functions are compiled twice (e.g. `WFBE_SE_FNC_PlayerObjectsList`, `WFBE_CO_FNC_LogGameEnd`); harmless (second overwrites first) but wasteful.
 - **`gameOver` vs `WFBE_GameOver` vs `WFBE_gameover`:** SQF identifiers are case-insensitive, so `WFBE_gameover == WFBE_GameOver`; the lowercase-`gameOver` is a separate variable also set at boot. No bug, but easy to misread.
 

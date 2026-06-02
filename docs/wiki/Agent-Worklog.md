@@ -406,6 +406,13 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - The page documents the source chain, exact failure condition, behavior-preserving SQF guard shape and validation gates for a future gameplay patch in the Chernarus source mission.
 - Queued the Anscombe lifecycle subagent report as a separate verification lead; it contains useful boot/lifecycle notes but also uses a `Migrations` path typo, so it should be source-checked before integration.
 
+## 2026-06-02 - Codex Lifecycle Runtime Verification
+
+- Source-checked Anscombe's lifecycle report against `Missions/[55-2hc]warfarev2_073v48co.chernarus`; the report's `Migrations` path was a typo, not a repo path.
+- Confirmed the main lifecycle claims: `description.ext` resource front door, `initJIPCompatible.sqf` branch dispatch, `Init_Parameters.sqf` missionNamespace globals, `Init_Common.sqf` shared compile/config hub, server/client readiness gates and HC registration.
+- Promoted the most useful missing nuance into [Mission lifecycle](Mission-Entrypoints-And-Lifecycle) and [Lifecycle wait-chain](Lifecycle-Wait-Chain): town startup begins from `mission.sqm` object `init` fields, with `WF_Logic` at `mission.sqm:3265` starting `Init_TownMode.sqf`.
+- Reconfirmed the HC timing caveat: `Init_HC.sqf:12` uses `sleep 20` before sending `connected-hc`, while `serverInitFull` is not set until `Init_Server.sqf:507`.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

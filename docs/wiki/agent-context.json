@@ -1,6 +1,6 @@
 {
  "schema": "a2waspwarfare-agent-context-v1",
- "generatedAt": "2026-06-02T13:20:00+02:00",
+ "generatedAt": "2026-06-02T13:40:00+02:00",
  "repository": "rayswaynl/a2waspwarfare",
  "game": "Arma 2 Operation Arrowhead 1.64",
  "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -170,6 +170,12 @@
    "owner": "future-lifecycle-owner",
    "status": "documented-owner-decision",
    "nextAction": "Decide whether to add hard timeouts/logging to post-join replicated-variable waits after RequestJoin."
+  },
+  {
+   "lane": "lifecycle-runtime-readout",
+   "owner": "Codex/Anscombe",
+   "status": "verified-published",
+   "nextAction": "No action; report verified and folded into lifecycle pages."
   }
  ],
  "pr1SupplyHeliContext": {
@@ -214,12 +220,14 @@
   "factoryPurchase": "Player buy-unit flow is client-local from GUI_Menu_BuyUnits.sqf to Client_BuildUnit.sqf; RequestBuyUnit is not registered and no Server/PVFunctions/RequestBuyUnit.sqf exists. Server_BuyUnit/AIBuyUnit is compiled but no static caller was found. See Factory-And-Purchase-Systems-Atlas.md.",
   "serverRuntime": "Server gameplay loops are owned by Init_Server.sqf: town capture/SV, town AI activation/despawn, camp manager, resources/economy, victory checks, garbage/vehicle cleanup, server FPS and AntiStack loops. See Server-Gameplay-Runtime-Atlas.md.",
   "externalResearch": "Three Steff-provided Dutch PDF reports were extracted to local cache and summarized in external-research-report-manifest.json. Treat them as leads until repo evidence confirms them; Claude found earlier report citations were downstream corroboration from the wiki/upstream proxy. See External-Research-Reports.md.",
-  "hardeningRoadmap": "Hardening-Implementation-Roadmap.md plus agent-hardening-backlog.jsonl convert confirmed Auth/PV, correctness, performance and docs-polish findings into patch order, source files, implementation shape and validation gates. Start there before changing PVF dispatch, ICBM, attack waves, victory/endgame, economy authority, supply missions, town AI or BattlEye-sensitive behavior."
+  "hardeningRoadmap": "Hardening-Implementation-Roadmap.md plus agent-hardening-backlog.jsonl convert confirmed Auth/PV, correctness, performance and docs-polish findings into patch order, source files, implementation shape and validation gates. Start there before changing PVF dispatch, ICBM, attack waves, victory/endgame, economy authority, supply missions, town AI or BattlEye-sensitive behavior.",
+  "lifecycle": "description.ext and initJIPCompatible.sqf are the entry front doors, but mission.sqm object init fields are also runtime producers: town logic objects call Init_Town.sqf and WF_Logic starts Init_TownMode.sqf. See Mission-Entrypoints-And-Lifecycle.md and Lifecycle-Wait-Chain.md."
  },
  "knownRisks": [
   "CONFIRMED 2026-06-02: Town AI vehicle despawn can delete a vehicle with a player passenger/crew member aboard if the player is not the group leader. server_town_ai.sqf:211-216 checks !(isPlayer leader group _x) and does not inspect crew/cargo/turret occupants. Use Town-AI-Vehicle-Despawn-Safety.md for the source chain, behavior-preserving guard shape and validation gates.",
   "Direct attack-wave authority gap: ATTACK_WAVE_INIT is a direct publicVariable channel outside the generic PVF dispatcher. Common_AttackWaveActivate.sqf sends [_supply,_side], and Server_AttackWave.sqf uses client-supplied _supply for discount/timing. Server should re-derive supply from authoritative side state.",
   "JIP robustness note: RequestJoin and AntiStack launch ACK have 30s resend loops but no terminal timeout; the later Init_Client.sqf post-join replicated-variable waits have no timeout/retry/log. Normal JIP is reviewed functional, but failures can hang silently.",
+  "Lifecycle source-check 2026-06-02: mission.sqm is part of town runtime bootstrap, not just map data. SQF-only scans miss town object Init_Town.sqf calls and WF_Logic Init_TownMode.sqf startup at mission.sqm:3265.",
   "DR-40 (Low, WASP Perf nit + reviewed clean): WASP overlay Perf mostly clean; one busy-spin - global_marking_monitor.sqf:62 while{time<_this}do{findDisplay 54} polls every frame for up to 2s (input-disabled, one-time at init); should use the throttled waitUntil{sleep ...;cond} idiom like its :80 sibling. JIP/HC clean (per-client init from Init_Client; local-player guards; HC skips player-local). Old WASP/Init_Client.sqf init path is dead/commented (initJIPCompatible.sqf:243-244). MILESTONE: this was the last outstanding Perf/JIP-HC cell - every subsystem's Perf and JIP/HC dimension is now source-reviewed; residual 🟡 is exclusively Auth/PV owner decisions.",
   "DR-39 (Low/Medium, supply missions Perf + abandoned-code; JIP clean): supplyMissionActive.sqf is a dead twin (compiled to WFBE_SE_FNC_SupplyMissionActive at Init_Server:81 but never called; superseded by the live supplyMissionStarted.sqf PVEH). The live per-mission server loop polls nearestObjects[pos,[],80] (all object types) every 3s to find a UAV terminal - narrow the type filter. JIP/HC is done correctly (the positive counterexample to DR-34): cooldown status is pull-based request/response so joiners query current state; the server-side tracking loop is truck-keyed and survives the starting player's disconnect. Minor: cooldown response is broadcast to all clients rather than targeted.",
   "DR-38 (Low/Medium Perf, JIP clean): the PVF dispatchers Call Compile the sender-provided command string on every inbound message (Server/Client_HandlePVF.sqf), an avoidable per-message runtime recompile - redundant because PVFunctions are already pre-compiled at init into SRVFNC/CLTFNC globals (Init_PublicVariables.sqf:44/49). A validated getVariable lookup removes the recompile AND closes the DR-1 RCE in one change. JIP/HC dispatch is clean (registered at init on all machines incl JIP; PVFs are transient events; routing matches joiners).",

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T13:20:00+02:00",
+  "generatedAt": "2026-06-02T13:40:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -34,6 +34,12 @@
       "output": "Progress-Dashboard.md current-state-first cleanup"
     },
     {
+      "lane": "lifecycle-runtime-readout",
+      "owner": "Codex/Anscombe",
+      "status": "verified-published",
+      "output": "Mission-Entrypoints-And-Lifecycle.md, Lifecycle-Wait-Chain.md"
+    },
+    {
       "lane": "agent-hardening-backlog-and-wave-f-integration",
       "owner": "Codex",
       "status": "published",
@@ -64,13 +70,7 @@
       "output": "Keep confirmed findings reflected in owning atlas/risk pages"
     }
   ],
-  "queuedReports": [
-    {
-      "source": "Anscombe subagent notification",
-      "status": "needs-source-verification",
-      "summary": "Lifecycle/runtime readout received with useful leads, but paths use Migrations instead of Missions; verify against repo source before integrating."
-    }
-  ],
+  "queuedReports": [],
   "updateProtocol": [
     "Before substantial work, update agent-collaboration.json and append a claim event to agent-events.jsonl.",
     "For long work, append heartbeat events with current source scope.",
@@ -91,6 +91,7 @@
     "knowledgeRecords": "agent-knowledge.jsonl",
     "events": "agent-events.jsonl",
     "worklog": "Agent-Worklog.md",
-    "townAiVehicleSafety": "Town-AI-Vehicle-Despawn-Safety.md"
+    "townAiVehicleSafety": "Town-AI-Vehicle-Despawn-Safety.md",
+    "lifecycleWaitChain": "Lifecycle-Wait-Chain.md"
   }
 }
