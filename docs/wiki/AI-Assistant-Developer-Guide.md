@@ -31,7 +31,7 @@ This page is written for Codex, Claude and future coding agents.
 ## Feature Work Checklist
 
 - Locate the authoritative function registration in `Init_Common.sqf`, `Init_Client.sqf`, `Init_Server.sqf` or `Init_PublicVariables.sqf`.
-- For Auth/PV, economy, victory, supply or BattlEye-sensitive patches, read [Hardening implementation roadmap](Hardening-Implementation-Roadmap) before editing.
+- For Auth/PV, economy, victory, supply or BattlEye-sensitive patches, read [Hardening implementation roadmap](Hardening-Implementation-Roadmap) and [Server authority migration map](Server-Authority-Migration-Map) before editing.
 - For any gameplay patch, record the validation level using [Testing workflow](Testing-Debugging-And-Release-Workflow) and [`agent-test-plan.schema.json`](agent-test-plan.schema.json). Mark source-only review separately from in-game smoke tests.
 - Identify whether state is client-owned, server-owned, common config or generated tool data.
 - Add or reuse constants in `Init_CommonConstants.sqf` only when the value is truly shared.

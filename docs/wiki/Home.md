@@ -9,7 +9,7 @@ This wiki is built for two audiences at once:
 | New human developer | [Quickstart](Quickstart-For-Humans-And-Agents) | Fast orientation, safe edit rules and reading paths. |
 | AI assistant | [Agent context](Agent-Context) and [`agent-context.json`](agent-context.json) | Compact context, page map and high-risk rules. |
 | Reviewer | [Feature status register](Feature-Status-Register) | Broken, partial, deferred and missing features. |
-| Hardening implementer | [Hardening roadmap](Hardening-Implementation-Roadmap) | Source-backed patch order, validation gates and safe implementation notes. |
+| Hardening implementer | [Hardening roadmap](Hardening-Implementation-Roadmap) and [Server authority map](Server-Authority-Migration-Map) | Source-backed patch order, validation gates and safe implementation notes. |
 | Tester / releaser | [Testing workflow](Testing-Debugging-And-Release-Workflow) | Source checks, smoke packs, RPT logging and release gates. |
 | Mission implementer | [SQF code atlas](SQF-Code-Atlas) | Compile registry, PVF contract and entrypoint ownership. |
 | Claude collaborator | [Agent collaboration protocol](Agent-Collaboration-Protocol) | Shared claim, handoff and event protocol for Codex/Claude work. |
@@ -23,7 +23,7 @@ Use these when you want to read the wiki like a connected handbook instead of ju
 | --- | --- |
 | First day in the repo | [Quickstart](Quickstart-For-Humans-And-Agents) -> [Architecture overview](Architecture-Overview) -> [Mission lifecycle](Mission-Entrypoints-And-Lifecycle) -> [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
 | Implement a gameplay change | [Gameplay atlas](Gameplay-Systems-Atlas) -> [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas) -> [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas) -> [Server runtime atlas](Server-Gameplay-Runtime-Atlas) -> [Core systems](Core-Systems-Index) -> [Feature status](Feature-Status-Register) |
-| Harden the mission | [Feature status](Feature-Status-Register) -> [Hardening roadmap](Hardening-Implementation-Roadmap) -> [Testing workflow](Testing-Debugging-And-Release-Workflow) -> [Networking/PV](Networking-And-Public-Variables) -> [Deep-review findings](Deep-Review-Findings) |
+| Harden the mission | [Feature status](Feature-Status-Register) -> [Hardening roadmap](Hardening-Implementation-Roadmap) -> [Server authority map](Server-Authority-Migration-Map) -> [Testing workflow](Testing-Debugging-And-Release-Workflow) -> [Networking/PV](Networking-And-Public-Variables) -> [Deep-review findings](Deep-Review-Findings) |
 | Trace SQF and networking | [SQF atlas](SQF-Code-Atlas) -> [Function index](Function-And-Module-Index) -> [Networking/PV](Networking-And-Public-Variables) |
 | Work on UI/HUD | [Client UI/HUD/menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) -> [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) -> [Tools/build](Tools-And-Build-Workflow) |
 | Coordinate Codex and Claude | [Progress dashboard](Progress-Dashboard) -> [Coordination board](Coordination-Board) -> [Agent collaboration protocol](Agent-Collaboration-Protocol) -> [Agent worklog](Agent-Worklog) |
@@ -50,7 +50,7 @@ Every content page now includes a **Continue Reading** block with previous and n
 | Work on AI/performance | [AI, headless and performance](AI-Headless-And-Performance) -> [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) -> [Feature status register](Feature-Status-Register) |
 | Work on UI/HUD/menus | [Client UI, HUD and menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) -> [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
 | Work on core gameplay | [Gameplay systems atlas](Gameplay-Systems-Atlas) -> [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) -> [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) -> [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) -> [Core systems index](Core-Systems-Index) |
-| Test or release changes | [Testing workflow](Testing-Debugging-And-Release-Workflow) -> [Tools/build](Tools-And-Build-Workflow) -> [Hardening roadmap](Hardening-Implementation-Roadmap) |
+| Test or release changes | [Testing workflow](Testing-Debugging-And-Release-Workflow) -> [Tools/build](Tools-And-Build-Workflow) -> [Hardening roadmap](Hardening-Implementation-Roadmap) -> [Server authority map](Server-Authority-Migration-Map) |
 | Check agent progress | [Progress dashboard](Progress-Dashboard) -> [`agent-status.json`](agent-status.json) -> [`agent-events.jsonl`](agent-events.jsonl) |
 | Coordinate agents | [Progress dashboard](Progress-Dashboard) -> [Coordination board](Coordination-Board) -> [Agent worklog](Agent-Worklog) -> [Codebase coverage ledger](Codebase-Coverage-Ledger) -> [Claude long-term goal](Claude-Long-Term-Goal) |
 | Understand WASP-specific additions | [WASP overlay](WASP-Overlay) -> [Feature status register](Feature-Status-Register) |
@@ -68,7 +68,7 @@ Every content page now includes a **Continue Reading** block with previous and n
 | UI | [Client UI, HUD and menus](Client-UI-HUD-And-Menus), [Client UI systems atlas](Client-UI-Systems-Atlas), [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
 | WASP additions | [WASP overlay](WASP-Overlay) |
 | Operations | [Tools and build workflow](Tools-And-Build-Workflow), [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow), [External integrations](External-Integrations) |
-| Risk and future work | [Feature status register](Feature-Status-Register), [Hardening implementation roadmap](Hardening-Implementation-Roadmap), [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow), [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety), [Deep-review findings](Deep-Review-Findings), [External research reports](External-Research-Reports), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Documentation implementation plan](Documentation-Implementation-Plan) |
+| Risk and future work | [Feature status register](Feature-Status-Register), [Hardening implementation roadmap](Hardening-Implementation-Roadmap), [Server authority migration map](Server-Authority-Migration-Map), [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow), [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety), [Deep-review findings](Deep-Review-Findings), [External research reports](External-Research-Reports), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Documentation implementation plan](Documentation-Implementation-Plan) |
 | Agent collaboration | [AI assistant developer guide](AI-Assistant-Developer-Guide), [Agent context](Agent-Context), [Progress dashboard](Progress-Dashboard), [Coordination board](Coordination-Board), [Agent collaboration protocol](Agent-Collaboration-Protocol) |
 
 ## Repo Shape

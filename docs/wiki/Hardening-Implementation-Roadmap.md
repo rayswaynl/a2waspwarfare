@@ -198,6 +198,6 @@ Validation:
 
 ## Continue Reading
 
-Previous: [Feature status](Feature-Status-Register) | Next: [Testing workflow](Testing-Debugging-And-Release-Workflow)
+Previous: [Feature status](Feature-Status-Register) | Next: [Server authority migration map](Server-Authority-Migration-Map)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

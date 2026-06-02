@@ -1,993 +1,1004 @@
 {
- "schema": "a2waspwarfare-agent-context-v1",
- "generatedAt": "2026-06-02T14:10:00+02:00",
- "repository": "rayswaynl/a2waspwarfare",
- "game": "Arma 2 Operation Arrowhead 1.64",
- "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
- "generatedMissions": [
-  "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
-  "Modded_Missions/*"
- ],
- "documentation": {
-  "wiki": "https://github.com/rayswaynl/a2waspwarfare/wiki",
-  "mirror": "docs/wiki",
-  "pages": [
-   "Home",
-   "_Sidebar",
-   "_Footer",
-   "Quickstart-For-Humans-And-Agents",
-   "Architecture-Overview",
-   "Mission-Entrypoints-And-Lifecycle",
-   "Lifecycle-Wait-Chain",
-   "Source-Inventory",
-   "Content-Structure-And-Maps",
-   "WASP-Overlay",
-   "SQF-Code-Atlas",
-   "Function-And-Module-Index",
-   "Networking-And-Public-Variables",
-   "Gameplay-Systems-Atlas",
-   "Construction-And-CoIn-Systems-Atlas",
-   "Factory-And-Purchase-Systems-Atlas",
-   "Server-Gameplay-Runtime-Atlas",
-   "Core-Systems-Index",
-   "Economy-Towns-And-Supply",
-   "Supply-Mission-Architecture",
-   "Current-Work-Supply-Helicopters-PR1",
-   "AI-Headless-And-Performance",
-   "Town-AI-Vehicle-Despawn-Safety",
-   "Client-UI-HUD-And-Menus",
-   "Client-UI-Systems-Atlas",
-   "Gear-Loadout-And-EASA-Atlas",
-   "Tools-And-Build-Workflow",
-   "External-Integrations",
-   "Feature-Status-Register",
-   "Hardening-Implementation-Roadmap",
-   "Testing-Debugging-And-Release-Workflow",
-   "AI-Assistant-Developer-Guide",
-   "Agent-Context",
-   "Progress-Dashboard",
-   "Coordination-Board",
-   "Agent-Collaboration-Protocol",
-   "Agent-Worklog",
-   "Deep-Review-Findings",
-   "External-Research-Reports",
-   "Codebase-Coverage-Ledger",
-   "Documentation-Implementation-Plan",
-   "Claude-Goal",
-   "Claude-Long-Term-Goal"
+  "schema": "a2waspwarfare-agent-context-v1",
+  "generatedAt": "2026-06-02T14:30:00+02:00",
+  "repository": "rayswaynl/a2waspwarfare",
+  "game": "Arma 2 Operation Arrowhead 1.64",
+  "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+  "generatedMissions": [
+    "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+    "Modded_Missions/*"
   ],
-  "machineFiles": [
-   "agent-context.json",
-   "agent-knowledge.jsonl",
-   "agent-hardening-backlog.jsonl",
-   "agent-test-plan.schema.json",
-   "agent-status.json",
-   "agent-collaboration.json",
-   "agent-events.jsonl",
-   "external-research-report-manifest.json"
+  "documentation": {
+    "wiki": "https://github.com/rayswaynl/a2waspwarfare/wiki",
+    "mirror": "docs/wiki",
+    "pages": [
+      "Home",
+      "_Sidebar",
+      "_Footer",
+      "Quickstart-For-Humans-And-Agents",
+      "Architecture-Overview",
+      "Mission-Entrypoints-And-Lifecycle",
+      "Lifecycle-Wait-Chain",
+      "Source-Inventory",
+      "Content-Structure-And-Maps",
+      "WASP-Overlay",
+      "SQF-Code-Atlas",
+      "Function-And-Module-Index",
+      "Networking-And-Public-Variables",
+      "Gameplay-Systems-Atlas",
+      "Construction-And-CoIn-Systems-Atlas",
+      "Factory-And-Purchase-Systems-Atlas",
+      "Server-Gameplay-Runtime-Atlas",
+      "Core-Systems-Index",
+      "Economy-Towns-And-Supply",
+      "Supply-Mission-Architecture",
+      "Current-Work-Supply-Helicopters-PR1",
+      "AI-Headless-And-Performance",
+      "Town-AI-Vehicle-Despawn-Safety",
+      "Client-UI-HUD-And-Menus",
+      "Client-UI-Systems-Atlas",
+      "Gear-Loadout-And-EASA-Atlas",
+      "Tools-And-Build-Workflow",
+      "External-Integrations",
+      "Feature-Status-Register",
+      "Hardening-Implementation-Roadmap",
+      "Server-Authority-Migration-Map",
+      "Testing-Debugging-And-Release-Workflow",
+      "AI-Assistant-Developer-Guide",
+      "Agent-Context",
+      "Progress-Dashboard",
+      "Coordination-Board",
+      "Agent-Collaboration-Protocol",
+      "Agent-Worklog",
+      "Deep-Review-Findings",
+      "External-Research-Reports",
+      "Codebase-Coverage-Ledger",
+      "Documentation-Implementation-Plan",
+      "Claude-Goal",
+      "Claude-Long-Term-Goal"
+    ],
+    "machineFiles": [
+      "agent-context.json",
+      "agent-knowledge.jsonl",
+      "agent-hardening-backlog.jsonl",
+      "agent-test-plan.schema.json",
+      "agent-status.json",
+      "agent-collaboration.json",
+      "agent-events.jsonl",
+      "external-research-report-manifest.json"
+    ],
+    "navigation": {
+      "primaryTour": [
+        "Home",
+        "Quickstart-For-Humans-And-Agents",
+        "Architecture-Overview",
+        "Mission-Entrypoints-And-Lifecycle",
+        "Lifecycle-Wait-Chain",
+        "Source-Inventory",
+        "Content-Structure-And-Maps",
+        "WASP-Overlay",
+        "SQF-Code-Atlas",
+        "Function-And-Module-Index",
+        "Networking-And-Public-Variables",
+        "Gameplay-Systems-Atlas",
+        "Construction-And-CoIn-Systems-Atlas",
+        "Factory-And-Purchase-Systems-Atlas",
+        "Server-Gameplay-Runtime-Atlas",
+        "Core-Systems-Index",
+        "Economy-Towns-And-Supply",
+        "Supply-Mission-Architecture",
+        "Current-Work-Supply-Helicopters-PR1",
+        "AI-Headless-And-Performance",
+        "Town-AI-Vehicle-Despawn-Safety",
+        "Client-UI-HUD-And-Menus",
+        "Client-UI-Systems-Atlas",
+        "Gear-Loadout-And-EASA-Atlas",
+        "Tools-And-Build-Workflow",
+        "External-Integrations",
+        "Feature-Status-Register",
+        "Hardening-Implementation-Roadmap",
+        "Server-Authority-Migration-Map",
+        "Testing-Debugging-And-Release-Workflow",
+        "AI-Assistant-Developer-Guide",
+        "Agent-Context",
+        "Progress-Dashboard",
+        "Coordination-Board",
+        "Agent-Collaboration-Protocol",
+        "Agent-Worklog",
+        "Deep-Review-Findings",
+        "External-Research-Reports",
+        "Codebase-Coverage-Ledger",
+        "Documentation-Implementation-Plan",
+        "Claude-Goal",
+        "Claude-Long-Term-Goal"
+      ],
+      "hasPerPageContinueReading": true,
+      "sidebar": "_Sidebar.md",
+      "footer": "_Footer.md"
+    }
+  },
+  "coordinationProtocol": {
+    "readFirst": [
+      "Agent-Collaboration-Protocol.md",
+      "agent-collaboration.json",
+      "agent-events.jsonl",
+      "Progress-Dashboard.md",
+      "Agent-Worklog.md",
+      "agent-knowledge.jsonl",
+      "agent-hardening-backlog.jsonl",
+      "Server-Authority-Migration-Map.md",
+      "agent-test-plan.schema.json",
+      "Testing-Debugging-And-Release-Workflow.md"
+    ],
+    "rules": [
+      "Claim substantial lanes before editing shared docs.",
+      "Append events and worklog notes; do not overwrite another agent's entries.",
+      "Use source-backed evidence for broken/partial feature claims.",
+      "Keep docs/wiki and the GitHub wiki checkout in parity before publishing.",
+      "Treat external reports as leads until repo evidence confirms them."
+    ],
+    "ownerSplit": {
+      "Codex": "Navigation, atlas integration, machine-readable context, docs/wiki mirror and publish validation.",
+      "Claude": "Autonomous source-backed deep reviews, contradiction hunting and subsystem archaeology."
+    }
+  },
+  "openLanes": [
+    {
+      "lane": "dashboard-current-state-cleanup",
+      "owner": "Codex",
+      "status": "published",
+      "nextAction": "No action; dashboard now uses current-state-first layout."
+    },
+    {
+      "lane": "feature-status-reconciliation",
+      "owner": "Codex",
+      "status": "open",
+      "nextAction": "Continue folding confirmed scout and Claude findings into owning atlas/risk pages and close stale dashboard rows."
+    },
+    {
+      "lane": "autonomous-claude-research",
+      "owner": "Claude",
+      "status": "open",
+      "nextAction": "Self-select the next bounded source-backed review from yellow/blank cells in Codebase-Coverage-Ledger.md."
+    },
+    {
+      "lane": "implementation-hardening-planning",
+      "owner": "Codex/future-agent",
+      "status": "roadmap-plus-machine-backlog-published",
+      "nextAction": "Future code owners should claim implementation work from agent-hardening-backlog.jsonl."
+    },
+    {
+      "lane": "town-ai-vehicle-despawn-safety",
+      "owner": "future-code-owner",
+      "status": "implementation-playbook-published",
+      "nextAction": "Apply Town-AI-Vehicle-Despawn-Safety.md when claiming the gameplay patch; edit Chernarus source mission first and validate occupied plus empty vehicle despawn cases."
+    },
+    {
+      "lane": "jip-postjoin-wait-timeouts",
+      "owner": "future-lifecycle-owner",
+      "status": "documented-owner-decision",
+      "nextAction": "Decide whether to add hard timeouts/logging to post-join replicated-variable waits after RequestJoin."
+    },
+    {
+      "lane": "lifecycle-runtime-readout",
+      "owner": "Codex/Anscombe",
+      "status": "verified-published",
+      "nextAction": "No action; report verified and folded into lifecycle pages."
+    },
+    {
+      "lane": "testing-debugging-release-workflow",
+      "owner": "Codex/future-agent",
+      "status": "published",
+      "nextAction": "Use agent-test-plan.schema.json for future gameplay patch validation records; add concrete test result records when smoke tests are actually run."
+    },
+    {
+      "lane": "server-authority-migration-map",
+      "owner": "Codex/future-code-owner",
+      "status": "published",
+      "nextAction": "Use Server-Authority-Migration-Map.md before claiming network-authority, economy or gameplay-security items from agent-hardening-backlog.jsonl."
+    }
   ],
-  "navigation": {
-   "primaryTour": [
-    "Home",
-    "Quickstart-For-Humans-And-Agents",
-    "Architecture-Overview",
-    "Mission-Entrypoints-And-Lifecycle",
-    "Lifecycle-Wait-Chain",
-    "Source-Inventory",
-    "Content-Structure-And-Maps",
-    "WASP-Overlay",
-    "SQF-Code-Atlas",
-    "Function-And-Module-Index",
-    "Networking-And-Public-Variables",
-    "Gameplay-Systems-Atlas",
-    "Construction-And-CoIn-Systems-Atlas",
-    "Factory-And-Purchase-Systems-Atlas",
-    "Server-Gameplay-Runtime-Atlas",
-    "Core-Systems-Index",
-    "Economy-Towns-And-Supply",
-    "Supply-Mission-Architecture",
-    "Current-Work-Supply-Helicopters-PR1",
-    "AI-Headless-And-Performance",
-    "Town-AI-Vehicle-Despawn-Safety",
-    "Client-UI-HUD-And-Menus",
-    "Client-UI-Systems-Atlas",
-    "Gear-Loadout-And-EASA-Atlas",
-    "Tools-And-Build-Workflow",
-    "External-Integrations",
-    "Feature-Status-Register",
-    "Hardening-Implementation-Roadmap",
-    "Testing-Debugging-And-Release-Workflow",
-    "AI-Assistant-Developer-Guide",
-    "Agent-Context",
-    "Progress-Dashboard",
-    "Coordination-Board",
-    "Agent-Collaboration-Protocol",
-    "Agent-Worklog",
-    "Deep-Review-Findings",
-    "External-Research-Reports",
-    "Codebase-Coverage-Ledger",
-    "Documentation-Implementation-Plan",
-    "Claude-Goal",
-    "Claude-Long-Term-Goal"
-   ],
-   "hasPerPageContinueReading": true,
-   "sidebar": "_Sidebar.md",
-   "footer": "_Footer.md"
-  }
- },
- "coordinationProtocol": {
-  "readFirst": [
-   "Agent-Collaboration-Protocol.md",
-   "agent-collaboration.json",
-   "agent-events.jsonl",
-   "Progress-Dashboard.md",
-   "Agent-Worklog.md",
-   "agent-knowledge.jsonl",
-   "agent-hardening-backlog.jsonl",
-   "agent-test-plan.schema.json",
-   "Testing-Debugging-And-Release-Workflow.md"
-  ],
+  "pr1SupplyHeliContext": {
+    "page": "Current-Work-Supply-Helicopters-PR1.md",
+    "branchScope": "PR #1 / feat/supply-helicopter is in scope for docs; master remains the stable baseline.",
+    "summary": "PR #1 adds supply helicopters, cash runs and interdiction rewards on top of the existing supply mission trust model.",
+    "knownRisks": [
+      "Supply mission start/completion still trusts vehicle object variables set by client-started flow.",
+      "Cooldown casing mismatch LastSupplyMissionRun vs lastSupplyMissionRun remains unresolved.",
+      "Supply vehicle Killed event handlers can stack on reused vehicles; current double-payment is bounded but the handler leak is real.",
+      "Autonomous AI supply heli work is deferred because the underlying AI supply logistics path is already incomplete/broken."
+    ]
+  },
   "rules": [
-   "Claim substantial lanes before editing shared docs.",
-   "Append events and worklog notes; do not overwrite another agent's entries.",
-   "Use source-backed evidence for broken/partial feature claims.",
-   "Keep docs/wiki and the GitHub wiki checkout in parity before publishing.",
-   "Treat external reports as leads until repo evidence confirms them."
+    "Use Bohemia Interactive Arma 2 OA scripting docs; avoid Arma 3 assumptions.",
+    "Gameplay mission edits belong in the Chernarus source mission.",
+    "Run Tools/LoadoutManager dotnet run after mission edits to propagate generated missions.",
+    "Treat missing 7za as packaging-only unless deployment packaging is required.",
+    "Use WF_Debug-gated detailed logs and small always-on INFORMATION/WARNING logs for tester-visible state transitions.",
+    "Use PowerShell -LiteralPath for mission paths containing [55-2hc].",
+    "Record validation level for gameplay changes with Testing-Debugging-And-Release-Workflow.md and agent-test-plan.schema.json; source-only review is not in-game smoke proof.",
+    "For server-authority or economy patches, read Server-Authority-Migration-Map.md before changing handlers; client UI checks are affordance, not authority."
   ],
-  "ownerSplit": {
-   "Codex": "Navigation, atlas integration, machine-readable context, docs/wiki mirror and publish validation.",
-   "Claude": "Autonomous source-backed deep reviews, contradiction hunting and subsystem archaeology."
-  }
- },
- "openLanes": [
-  {
-   "lane": "dashboard-current-state-cleanup",
-   "owner": "Codex",
-   "status": "published",
-   "nextAction": "No action; dashboard now uses current-state-first layout."
+  "entrypoints": [
+    "description.ext",
+    "initJIPCompatible.sqf",
+    "Common/Init/Init_Common.sqf",
+    "Common/Init/Init_CommonConstants.sqf",
+    "Common/Init/Init_PublicVariables.sqf",
+    "Server/Init/Init_Server.sqf",
+    "Client/Init/Init_Client.sqf",
+    "Headless/Init/Init_HC.sqf"
+  ],
+  "systems": {
+    "networking": "PVF lists in Common/Init/Init_PublicVariables.sqf plus direct publicVariable channels for attack waves, side supply, supply missions, MASH markers, HQ state, anti-stack compensation, day/night, FPS, AFK and markers. See Networking-And-Public-Variables.md.",
+    "economy": "Funds and side supply with town SV, commander income, resources FSM and supply missions. See Gameplay-Systems-Atlas for source-backed town/economy/commander/factory flow.",
+    "construction": "Commander/repair-truck CoIn flow, structure arrays, HQ deploy/mobilize, server construction workers, defense building, repair and sale flows. See Construction-And-CoIn-Systems-Atlas.md.",
+    "ai": "Server town AI, AI commanders, client/headless delegation, player AI watchdog/recovery. The confirmed occupied town-AI vehicle despawn bug now has an implementation playbook in Town-AI-Vehicle-Despawn-Safety.md.",
+    "ui": "Rsc resources, Client/GUI dialog controllers, RHUD/FPS HUD, title resources, map/action marker loops, CoIn construction UI and WASP overlays. See Client-UI-Systems-Atlas.md.",
+    "gearLoadoutEasa": "Gear metadata/profile templates and EASA aircraft loadouts; generated EASA/balance output comes from LoadoutManager. See Gear-Loadout-And-EASA-Atlas.md.",
+    "tooling": "LoadoutManager for mission generation/packaging; PerformanceAuditAnalyzer for RPT metrics.",
+    "integrations": "DiscordBot, in-repo a2waspwarfare_Extension/GLOBALGAMESTATS, out-of-repo A2WaspDatabase AntiStack extension, BattlEye publicVariable filter, custom license and missing CI posture. See External-Integrations.md.",
+    "waspOverlay": "Project-specific WASP additions include base repair, RPG dropping, marker monitor, HQ recovery action, start vehicles and a server selftest. See WASP-Overlay.md.",
+    "factoryPurchase": "Player buy-unit flow is client-local from GUI_Menu_BuyUnits.sqf to Client_BuildUnit.sqf; RequestBuyUnit is not registered and no Server/PVFunctions/RequestBuyUnit.sqf exists. Server_BuyUnit/AIBuyUnit is compiled but no static caller was found. See Factory-And-Purchase-Systems-Atlas.md.",
+    "serverRuntime": "Server gameplay loops are owned by Init_Server.sqf: town capture/SV, town AI activation/despawn, camp manager, resources/economy, victory checks, garbage/vehicle cleanup, server FPS and AntiStack loops. See Server-Gameplay-Runtime-Atlas.md.",
+    "externalResearch": "Three Steff-provided Dutch PDF reports were extracted to local cache and summarized in external-research-report-manifest.json. Treat them as leads until repo evidence confirms them; Claude found earlier report citations were downstream corroboration from the wiki/upstream proxy. See External-Research-Reports.md.",
+    "hardeningRoadmap": "Hardening-Implementation-Roadmap.md plus agent-hardening-backlog.jsonl convert confirmed Auth/PV, correctness, performance and docs-polish findings into patch order, source files, implementation shape and validation gates. Start there before changing PVF dispatch, ICBM, attack waves, victory/endgame, economy authority, supply missions, town AI or BattlEye-sensitive behavior.",
+    "lifecycle": "description.ext and initJIPCompatible.sqf are the entry front doors, but mission.sqm object init fields are also runtime producers: town logic objects call Init_Town.sqf and WF_Logic starts Init_TownMode.sqf. See Mission-Entrypoints-And-Lifecycle.md and Lifecycle-Wait-Chain.md.",
+    "testing": "Testing-Debugging-And-Release-Workflow.md defines source-only, local-tool, hosted/dedicated/JIP/HC smoke and live-server-sensitive validation levels. agent-test-plan.schema.json records machine-readable evidence so agents do not confuse source review with in-game proof.",
+    "serverAuthority": "Server-Authority-Migration-Map.md is the design layer for migrating client-trusted and payload-trusted gameplay flows to server-owned authority: PVF dispatch, ICBM, construction, buys, upgrades, side supply, supply missions, attack waves, gear/EASA/service, structure sale and WASP HQ recovery."
   },
-  {
-   "lane": "feature-status-reconciliation",
-   "owner": "Codex",
-   "status": "open",
-   "nextAction": "Continue folding confirmed scout and Claude findings into owning atlas/risk pages and close stale dashboard rows."
-  },
-  {
-   "lane": "autonomous-claude-research",
-   "owner": "Claude",
-   "status": "open",
-   "nextAction": "Self-select the next bounded source-backed review from yellow/blank cells in Codebase-Coverage-Ledger.md."
-  },
-  {
-   "lane": "implementation-hardening-planning",
-   "owner": "Codex/future-agent",
-   "status": "roadmap-plus-machine-backlog-published",
-   "nextAction": "Future code owners should claim implementation work from agent-hardening-backlog.jsonl."
-  },
-  {
-   "lane": "town-ai-vehicle-despawn-safety",
-   "owner": "future-code-owner",
-   "status": "implementation-playbook-published",
-   "nextAction": "Apply Town-AI-Vehicle-Despawn-Safety.md when claiming the gameplay patch; edit Chernarus source mission first and validate occupied plus empty vehicle despawn cases."
-  },
-  {
-   "lane": "jip-postjoin-wait-timeouts",
-   "owner": "future-lifecycle-owner",
-   "status": "documented-owner-decision",
-   "nextAction": "Decide whether to add hard timeouts/logging to post-join replicated-variable waits after RequestJoin."
-  },
-  {
-   "lane": "lifecycle-runtime-readout",
-   "owner": "Codex/Anscombe",
-   "status": "verified-published",
-   "nextAction": "No action; report verified and folded into lifecycle pages."
-  },
-  {
-   "lane": "testing-debugging-release-workflow",
-   "owner": "Codex/future-agent",
-   "status": "published",
-   "nextAction": "Use agent-test-plan.schema.json for future gameplay patch validation records; add concrete test result records when smoke tests are actually run."
-  }
- ],
- "pr1SupplyHeliContext": {
-  "page": "Current-Work-Supply-Helicopters-PR1.md",
-  "branchScope": "PR #1 / feat/supply-helicopter is in scope for docs; master remains the stable baseline.",
-  "summary": "PR #1 adds supply helicopters, cash runs and interdiction rewards on top of the existing supply mission trust model.",
   "knownRisks": [
-   "Supply mission start/completion still trusts vehicle object variables set by client-started flow.",
-   "Cooldown casing mismatch LastSupplyMissionRun vs lastSupplyMissionRun remains unresolved.",
-   "Supply vehicle Killed event handlers can stack on reused vehicles; current double-payment is bounded but the handler leak is real.",
-   "Autonomous AI supply heli work is deferred because the underlying AI supply logistics path is already incomplete/broken."
-  ]
- },
- "rules": [
-  "Use Bohemia Interactive Arma 2 OA scripting docs; avoid Arma 3 assumptions.",
-  "Gameplay mission edits belong in the Chernarus source mission.",
-  "Run Tools/LoadoutManager dotnet run after mission edits to propagate generated missions.",
-  "Treat missing 7za as packaging-only unless deployment packaging is required.",
-  "Use WF_Debug-gated detailed logs and small always-on INFORMATION/WARNING logs for tester-visible state transitions.",
-  "Use PowerShell -LiteralPath for mission paths containing [55-2hc].",
-  "Record validation level for gameplay changes with Testing-Debugging-And-Release-Workflow.md and agent-test-plan.schema.json; source-only review is not in-game smoke proof."
- ],
- "entrypoints": [
-  "description.ext",
-  "initJIPCompatible.sqf",
-  "Common/Init/Init_Common.sqf",
-  "Common/Init/Init_CommonConstants.sqf",
-  "Common/Init/Init_PublicVariables.sqf",
-  "Server/Init/Init_Server.sqf",
-  "Client/Init/Init_Client.sqf",
-  "Headless/Init/Init_HC.sqf"
- ],
- "systems": {
-  "networking": "PVF lists in Common/Init/Init_PublicVariables.sqf plus direct publicVariable channels for attack waves, side supply, supply missions, MASH markers, HQ state, anti-stack compensation, day/night, FPS, AFK and markers. See Networking-And-Public-Variables.md.",
-  "economy": "Funds and side supply with town SV, commander income, resources FSM and supply missions. See Gameplay-Systems-Atlas for source-backed town/economy/commander/factory flow.",
-  "construction": "Commander/repair-truck CoIn flow, structure arrays, HQ deploy/mobilize, server construction workers, defense building, repair and sale flows. See Construction-And-CoIn-Systems-Atlas.md.",
-  "ai": "Server town AI, AI commanders, client/headless delegation, player AI watchdog/recovery. The confirmed occupied town-AI vehicle despawn bug now has an implementation playbook in Town-AI-Vehicle-Despawn-Safety.md.",
-  "ui": "Rsc resources, Client/GUI dialog controllers, RHUD/FPS HUD, title resources, map/action marker loops, CoIn construction UI and WASP overlays. See Client-UI-Systems-Atlas.md.",
-  "gearLoadoutEasa": "Gear metadata/profile templates and EASA aircraft loadouts; generated EASA/balance output comes from LoadoutManager. See Gear-Loadout-And-EASA-Atlas.md.",
-  "tooling": "LoadoutManager for mission generation/packaging; PerformanceAuditAnalyzer for RPT metrics.",
-  "integrations": "DiscordBot, in-repo a2waspwarfare_Extension/GLOBALGAMESTATS, out-of-repo A2WaspDatabase AntiStack extension, BattlEye publicVariable filter, custom license and missing CI posture. See External-Integrations.md.",
-  "waspOverlay": "Project-specific WASP additions include base repair, RPG dropping, marker monitor, HQ recovery action, start vehicles and a server selftest. See WASP-Overlay.md.",
-  "factoryPurchase": "Player buy-unit flow is client-local from GUI_Menu_BuyUnits.sqf to Client_BuildUnit.sqf; RequestBuyUnit is not registered and no Server/PVFunctions/RequestBuyUnit.sqf exists. Server_BuyUnit/AIBuyUnit is compiled but no static caller was found. See Factory-And-Purchase-Systems-Atlas.md.",
-  "serverRuntime": "Server gameplay loops are owned by Init_Server.sqf: town capture/SV, town AI activation/despawn, camp manager, resources/economy, victory checks, garbage/vehicle cleanup, server FPS and AntiStack loops. See Server-Gameplay-Runtime-Atlas.md.",
-  "externalResearch": "Three Steff-provided Dutch PDF reports were extracted to local cache and summarized in external-research-report-manifest.json. Treat them as leads until repo evidence confirms them; Claude found earlier report citations were downstream corroboration from the wiki/upstream proxy. See External-Research-Reports.md.",
-  "hardeningRoadmap": "Hardening-Implementation-Roadmap.md plus agent-hardening-backlog.jsonl convert confirmed Auth/PV, correctness, performance and docs-polish findings into patch order, source files, implementation shape and validation gates. Start there before changing PVF dispatch, ICBM, attack waves, victory/endgame, economy authority, supply missions, town AI or BattlEye-sensitive behavior.",
-  "lifecycle": "description.ext and initJIPCompatible.sqf are the entry front doors, but mission.sqm object init fields are also runtime producers: town logic objects call Init_Town.sqf and WF_Logic starts Init_TownMode.sqf. See Mission-Entrypoints-And-Lifecycle.md and Lifecycle-Wait-Chain.md.",
-  "testing": "Testing-Debugging-And-Release-Workflow.md defines source-only, local-tool, hosted/dedicated/JIP/HC smoke and live-server-sensitive validation levels. agent-test-plan.schema.json records machine-readable evidence so agents do not confuse source review with in-game proof."
- },
- "knownRisks": [
-  "CONFIRMED 2026-06-02: Town AI vehicle despawn can delete a vehicle with a player passenger/crew member aboard if the player is not the group leader. server_town_ai.sqf:211-216 checks !(isPlayer leader group _x) and does not inspect crew/cargo/turret occupants. Use Town-AI-Vehicle-Despawn-Safety.md for the source chain, behavior-preserving guard shape and validation gates.",
-  "Direct attack-wave authority gap: ATTACK_WAVE_INIT is a direct publicVariable channel outside the generic PVF dispatcher. Common_AttackWaveActivate.sqf sends [_supply,_side], and Server_AttackWave.sqf uses client-supplied _supply for discount/timing. Server should re-derive supply from authoritative side state.",
-  "JIP robustness note: RequestJoin and AntiStack launch ACK have 30s resend loops but no terminal timeout; the later Init_Client.sqf post-join replicated-variable waits have no timeout/retry/log. Normal JIP is reviewed functional, but failures can hang silently.",
-  "Lifecycle source-check 2026-06-02: mission.sqm is part of town runtime bootstrap, not just map data. SQF-only scans miss town object Init_Town.sqf calls and WF_Logic Init_TownMode.sqf startup at mission.sqm:3265.",
-  "DR-40 (Low, WASP Perf nit + reviewed clean): WASP overlay Perf mostly clean; one busy-spin - global_marking_monitor.sqf:62 while{time<_this}do{findDisplay 54} polls every frame for up to 2s (input-disabled, one-time at init); should use the throttled waitUntil{sleep ...;cond} idiom like its :80 sibling. JIP/HC clean (per-client init from Init_Client; local-player guards; HC skips player-local). Old WASP/Init_Client.sqf init path is dead/commented (initJIPCompatible.sqf:243-244). MILESTONE: this was the last outstanding Perf/JIP-HC cell - every subsystem's Perf and JIP/HC dimension is now source-reviewed; residual 🟡 is exclusively Auth/PV owner decisions.",
-  "DR-39 (Low/Medium, supply missions Perf + abandoned-code; JIP clean): supplyMissionActive.sqf is a dead twin (compiled to WFBE_SE_FNC_SupplyMissionActive at Init_Server:81 but never called; superseded by the live supplyMissionStarted.sqf PVEH). The live per-mission server loop polls nearestObjects[pos,[],80] (all object types) every 3s to find a UAV terminal - narrow the type filter. JIP/HC is done correctly (the positive counterexample to DR-34): cooldown status is pull-based request/response so joiners query current state; the server-side tracking loop is truck-keyed and survives the starting player's disconnect. Minor: cooldown response is broadcast to all clients rather than targeted.",
-  "DR-38 (Low/Medium Perf, JIP clean): the PVF dispatchers Call Compile the sender-provided command string on every inbound message (Server/Client_HandlePVF.sqf), an avoidable per-message runtime recompile - redundant because PVFunctions are already pre-compiled at init into SRVFNC/CLTFNC globals (Init_PublicVariables.sqf:44/49). A validated getVariable lookup removes the recompile AND closes the DR-1 RCE in one change. JIP/HC dispatch is clean (registered at init on all machines incl JIP; PVFs are transient events; routing matches joiners).",
-  "DR-37 (Low, reviewed clean + robustness note): boot/lifecycle Perf clean (frame-throttled cheap waitUntils; the while{true}{sleep 0.1} loops at Init_Client.sqf:419/444 are bounded join-handshake polls with 30s retry, not perpetual). JIP/HC comprehensive+correct (initJIPCompatible role routing; time/date/teams/client-state synced via broadcast logic vars; RequestJoin handshake robust). Gap: the post-join serial waitUntil chain (Init_Client.sqf:367-502, wfbe_structures/commander/radio_hq/startpos/hq/hq_deployed/votetime) has NO timeouts -> a never-set synced variable hangs the JIP client forever with no fallback or log. Defensive-timeout improvement, not a live bug.",
-  "DR-36 (Medium correctness + Perf/JIP clean): victory loop (server_victory_threeway.sqf) is the source of DR-11/DR-13. Win check (:23) !(alive _hq)&&_factories==0 || _towns==_total&&!WFBE_GameOver parses (&&>||) so the !WFBE_GameOver guard covers only the towns clause, not the HQ-elimination clause; the side forEach (:43) has no break after a winner is set -> two same-tick eliminations double-fire endgame+LogGameEnd and overwrite WF_Winner with the opposite side (inversion). Perf clean (80s cadence); JIP server-authoritative (narrow endgame-join gap). Fix: parenthesize+guard both clauses + exitWith the forEach/while on gameOver.",
-  "DR-35 (Info, reviewed clean): parameters/localization reviewed - localization integrity clean (no live missing localize/$STR_ keys; 3 apparent misses = 1 casing FP, 1 engine STR_EP1_*, 2 dead/commented WASP actions). Params system live and correctly wired (Init_Parameters.sqf MP paramsArray / SP default; initJIPCompatible.sqf:121; Dialogs.hpp:3136). Fragility (not a defect): paramsArray is index-aligned to class Params order. Abandoned-code: WASP OnArmor + GearYourUnit actions are commented out in AddActions.sqf.",
-  "DR-34 (Low/Medium, broken/abandoned feature): the MASH map-marker feature is dead on both ends - client receiver commented out (Init_Client.sqf:132), the trigger PV WFBE_CL_MASH_MARKER_CREATED is never broadcast by any client, and the live server PVEH (Init_Server.sqf:70) is orphaned (listens for a never-sent PV). Deployed MASH tents (officer skill) therefore show no map markers. If revived, the publicVariable delivery (single overwritten global, no JIP replay) is a latent JIP gap. Respawn selector is a harmless ~33Hz local marker-animation loop. Owner: revive (server-held list + JIP re-send + unique names) or remove the dead code.",
-  "DR-33 (Medium, factory Perf+JIP/HC): unit production runs on the buyer's client. (a) Empty-vehicle purchase early-exitWith (Client_BuildUnit.sqf:365) skips the WFBE_C_QUEUE decrement (:469), leaking the buyer's per-client queue counter; after _MAX (5 light/heavy) such buys the GUI gate silently soft-locks that factory for the match. (b) Per-unit sleep-4 poll re-broadcasts the building's queu array on every mutation (network churn) and uses a non-unique random queue token (front-of-queue collision risk); buyer-disconnect orphans the broadcast token. Fixes: decrement on all exit paths; unique token + less broadcast.",
-  "DR-32 (Medium, generated-mission drift + abandoned code): vanilla Takistan is a faithful regeneration of the Chernarus source (logic byte-identical; only map-config differs) so DR-1..DR-31 apply verbatim. BUT the 7 modded missions are out of scope: Napf/eden/lingor are divergent hand-edited forks (100+ logic files differ incl security-critical PVF/victory/upgrade/HQ; not regenerated per DR-4 -> source fixes do NOT reach them; vuln classes persist with different lines), and sahrani/dingor/tavi/isladuala are abandoned stubs (1-20 files, non-runnable). Owner: complete-or-delete stubs; pick fork maintenance model; propagate fixes deliberately.",
-  "DR-31 (High, insecure deserialization): DiscordBot GameData.LoadFromFile() reads database.json with Newtonsoft TypeNameHandling.All every 60s (GameStatusUpdater timer) + at startup + on a command. $type gadget sink in the process that holds the Discord token. Not remotely exploitable as-configured (file written by the trusted local extension) but any write-primitive to the data dir = RCE. Trivial fix: TypeNameHandling.All -> None (data is a flat string[] DTO). Closes DR-29 #2 end-to-end. Discord secret hygiene is otherwise good (token.txt/preferences.json gitignored).",
-  "DR-30 (High, campaign-wide BE gap): the 'rely on BattlEye' remediation option cited in 8 prior findings (DR-1/6/14/16/22/23/27/28) is NOT shipped. Repo's entire BE footprint = 22-byte publicvariable.txt (single kickAFK feature rule, no default-deny, no forgery-PV restriction) + a README.docx; scripts.txt and all other BE filters absent. So nothing in-repo blunts PV forgery or the DR-1 call compile RCE; realistic remediation collapses to server-side authority in SQF. Caveat: BE filters normally live in the server BEpath outside the mission PBO -> confirm production posture with the server owner.",
-  "DR-29 (Medium, latent Critical, extension trust boundary): in-repo GLOBALGAMESTATS DLL is a one-way output-discarded telemetry exporter (no RCE-into-SQF, unlike AntiStack DB DR-7). Dormant deserialization-RCE landmine: commented load path uses Newtonsoft TypeNameHandling.Auto + DeserializeObject -> $type gadget RCE if re-enabled (and a load path is required for the feature to actually persist). Plus async-void create unawaited before File.Replace (first-run FileNotFound race; async-void exceptions can crash host) and a write-only/abandoned-refactor stub. Owner asks: delete/harden dead deser path, fix the I/O race.",
-  "DR-28 (High, economy authority): gear/EASA loadouts and vehicle rearm/repair/refuel/heal are client-authoritative (no server PVF; ChangePlayerFunds + client-side affordability tests only). Service rearm/refuel skip even the client guard. Completes the class: EVERY WFBE spend path (build/buy/sell/supply/upgrade/ICBM/gear) is client-authoritative -> single owner decision (server ledger vs BattlEye).",
-  "DR-27 (CRITICAL, network authority): ICBM nuke is forgeable. Any client can publicVariable RequestSpecial=[\"ICBM\",side,baseObj,liveObj,team]; server RequestSpecial.sqf -> Server_HandleSpecial.sqf ICBM case spawns NukeDammage at the client-chosen position with zero authority validation (no per-side ICBM upgrade check, no commander check, no server funds check; menu gate + ChangePlayerFunds are client-only). Result: server-applied map-wide mass-kill from one forged PV. Same root cause/fix as economy class (DR-6/14/16/22/23) but match-wide blast radius -> higher priority.",
-  "Autonomous AI supply trucks are config-gated latent breakage: UpdateSupplyTruck compile is disabled, a live call remains under Supply System 0 plus AI commanders, and Server/FSM/supplytruck.fsm is missing.",
-  "DoNotUse CRV7PG loadout classes can crash the game if used in loadouts.",
-  "AntiStack database extension calls are live-server sensitive.",
-  "Generated missions can be overwritten by LoadoutManager.",
-  "PublicVariable traffic and client marker/UI loops are performance-sensitive.",
-  "PVF dispatch uses Call Compile on registered function-name strings; keep command names controlled.",
-  "PR #1 currently stacks Killed event handlers on reused supply vehicles; current double-payment is bounded, but the event-handler leak should be fixed before adding side effects.",
-  "Client UI has duplicate dialog IDD 23000 for EASA and Economy; avoid findDisplay assumptions and use unique IDDs for new dialogs.",
-  "OptionsAvailable and RscOverlay share title IDD 10200; use uiNamespace display handles rather than IDD uniqueness.",
-  "UI/marker loops are performance-sensitive polling loops; preserve cached writes, map-closed backoff and mission-parameter gates.",
-  "DR-1 (High, hardening): Server_HandlePVF.sqf/Client_HandlePVF.sqf Call Compile the sender-chosen command string with no validation, and BattlEyeFilter/publicvariable.txt has only the kickAFK feature rule. Validate the command set before compile and add a real BE PV filter before trusting on a public server.",
-  "DR-1 fix (behavior-preserving): replace 'Spawn (Call Compile _script)' with 'Spawn (missionNamespace getVariable [_script, {}])' in both HandlePVF dispatchers; SRVFNC/CLTFNC are globals so legitimate traffic is unchanged and hostile strings no-op. See Deep-Review-Findings Round 3 playbook.",
-  "Residual after DR-1 fix: the PVF model still trusts client-sent commands and params, for example RequestChangeScore sets score from payload. Arbitrary code execution is closed, but legitimate-command forgery needs separate per-handler sender/param validation.",
-  "DR-2/DR-3: paratrooper drop markers and MASH tent markers are confirmed dead receiver-side paths.",
-  "DR-4: Chernarus and Takistan differ only by LoadoutManager skip-list/blacklist, but skip-listed files never propagate and must be hand-mirrored; Modded_Missions/* are abandoned until modded propagation is re-enabled.",
-  "Construction hardening gap: coin_interface.sqf performs cost/placement/role checks client-side, then RequestStructure/RequestDefense do only light server class-existence validation before creating server objects.",
-  "DR-6 (High, gameplay integrity): RequestStructure/RequestDefense take _side (and _manned) from the client payload and RequestMHQRepair passes the raw payload to MHQRepair; no commander/funds/dead-HQ/base-area checks server-side. A modified client can forge free factories, AI-manned defenses/minefields and HQ repairs for any side. Root cause: payloads omit the player and Arma2 PVEH has no sender identity. Fix: add player to payload + validate side+commander+funds server-side. Pairs with DR-1 (DR-1 stops code execution; DR-6 stops forged legit commands). See Deep-Review-Findings Round 4.",
-  "DR-7 (High, external trust): all 7 Server/Module/AntiStack/callDatabase*.sqf 'call compile' the A2WaspDatabase callExtension return — server executes the external DLL stdout as SQF. DLL is not in the repo; ANTISTACK defaults ON (Init_CommonConstants.sqf:171). Empty/garbage return -> call compile '' -> nil select 0 throws. A2 OA has no parseSimpleArray; fix = guard empty + shape-check (ARRAY of SCALARs) before reading. DR-8 blocking join/skill poll (<=12s/<=27s); DR-9 SEND_PLAYERLIST vs callExtension length limits; DR-10 defaults-on against an absent DLL. See Deep-Review-Findings Round 5.",
-  "Player buy-unit authority gap: GUI_Menu_BuyUnits.sqf deducts funds and spawns Client_BuildUnit locally; there is no registered RequestBuyUnit PVF and no Server/PVFunctions/RequestBuyUnit.sqf in the repo.",
-  "Server_BuyUnit/AIBuyUnit latent path: AIBuyUnit is compiled in Server/Init/Init_Server.sqf, but the current repo-wide static scan found no caller outside Server_BuyUnit.sqf itself.",
-  "AI commander automation partial: constants/state/funds exist, but no active server loop/FSM was found to set wfbe_aicom_running = true.",
-  "Server_AssignNewCommander call-shape bug candidate: RequestNewCommander passes [_side, _assigned_commander], but Server_AssignNewCommander.sqf assigns _side = _this instead of _this select 0.",
-  "Supply mission cooldown casing mismatch: town init seeds lastSupplyMissionRun while server supply mission code reads/writes LastSupplyMissionRun.",
-  "Hosted server FPS loop risk: serverFpsGUI.sqf and monitorServerFPS.sqf sleep only inside if (isDedicated), so hosted/non-dedicated mode can busy-loop.",
-  "LoadoutManager local path hazard: the current Codex checkout is work/a, but the tool searches ancestor folders for a literal a2waspwarfare directory and will throw outside that shape.",
-  "LoadoutManager packaging hazard: dotnet run always attempts ZipManager.DoZipOperations after generation/copy, so missing 7za can fail the final run even after useful outputs were written.",
-  "BattlEyeFilter/publicvariable.txt is feature-specific for kickAFK and is not a comprehensive PV hardening layer.",
-  "DR-11 (Med-High, correctness): server_victory_threeway.sqf merges a lose-test (HQ dead + no factories) and a win-test (holds all towns) into one if and calls WFBE_CO_FNC_LogGameEnd (arg=winner) with the OPPOSITE of _x, so the persisted *_WIN_CHERNARUS profile tally is inverted for all-towns victories. WF_Winner is a dead write. && before || + !WFBE_GameOver guards only the towns branch + no forEach break -> endgame can double-fire. DR-12 threeway victory mode has no detection (WFBE_C_VICTORY_THREEWAY default 0; detection gated if(_victory==0); sole gameOver/failMission setter). DR-13 duplicate buggy Server/PVFunctions/LogGameEnd.sqf. See Deep-Review-Findings Round 6.",
-  "DR-14 (High, architectural): player unit purchasing has NO server authority — GUI_Menu_BuyUnits.sqf spawns BuildUnit (client createVehicle/createUnit) and deducts client-side; no RequestBuyUnit PVF. With wfbe_funds broadcast-writable, the player economy is fully client-trusted. This is the ceiling on DR-1/DR-6 hardening; only a BattlEye scripts.txt filter (not a PV filter) can constrain client createVehicle. DR-15 (confirmed): Server_AssignNewCommander.sqf:3 '_side = _this' but sole caller RequestNewCommander.sqf:13 passes [_side,_commander] -> GetSideLogic fails, AI-commander-stop mis-fires; fix _side = _this select 0. See Deep-Review-Findings Round 7.",
-  "DR-16 (High): structure sale (GUI_Menu_Economy.sqf:104-152) is fully client-authoritative — client commander check, client refund, client setDammage 1 destruction; no server PVF. With DR-6 (build) and DR-14 (buy), the entire WFBE economy is client-authoritative; only a BattlEye scripts.txt filter or a server-PVF redesign can enforce it. DR-17 (confirms Curie): RscMenu_EASA and RscMenu_Economy share idd=23000 (Rsc/Dialogs.hpp:3211,3289) -> findDisplay 23000 ambiguous. See Deep-Review-Findings Round 8.",
-  "DR-18 (Med, confirms Cicero): supply-cooldown key casing mismatch — Init_Town.sqf:35 seeds 'lastSupplyMissionRun' (lowercase) but supply logic uses 'LastSupplyMissionRun' (capital); setVariable keys are case-sensitive -> 0-seed dead, key nil first check -> isSupplyMissionActiveInTown.sqf:11 nil+interval throws. Fix: align casing or getVariable default 0. DR-19 (Med, non-dedicated, confirms Cicero): serverFpsGUI.sqf + monitorServerFPS.sqf put sleep 8 inside if(isDedicated) -> hosted/listen server busy-loops; hoist sleep/early-exit + consolidate redundant FPS publishers. See Deep-Review-Findings Round 9.",
-  "DR-20 (High, multiplayer correctness): the HQ Killed EH is registered on every owning-side client (set-hq-killed-eh broadcast + Init_Client.sqf:500-503 JIP path), but Server_OnHQKilled.sqf has no idempotency guard -> on mobile-HQ death the server runs it once per owning-side client (~2N x killer score award + N messages; score exploit on populated servers). JIP detection itself is correct. Fix: per-HQ processed flag in OnHQKilled (detect redundantly, act once). See Deep-Review-Findings Round 10.",
-  "DR-21 (Med, perf/operational): HC delegation has no failover. On HC disconnect Arma2 OA migrates its local AI to the server (load spike, NOT orphaned/lost — corrects round-1 hypothesis); Server_OnPlayerDisconnected.sqf does no re-delegation and WFBE_C_AI_DELEGATION is only evaluated at boot, so a reconnecting HC doesn't resume offload. Suggest setGroupOwner-based rebalancing on HC connect/disconnect (mission never uses setGroupOwner). See Deep-Review-Findings Round 11.",
-  "DR-22 (High, economy exploit): Server_ChangeSideSupply.sqf clamp 'if (_change<0) then {_change=_currentSupply-_amount}' is a broken floor — _amount is signed, so overspending yields currentSupply+|amount| (spend 300 from 100 -> 400, a windfall). Live in both west/east handlers; identical block in Common_ChangeSideSupply is dead. Fix: _change=0. Confirms Faraday candidate + round-1 note. No resistance-side handler. See Deep-Review-Findings Round 12.",
-  "DR-23 (High, economy integrity): RequestUpgrade.sqf = '_this Spawn WFBE_SE_FNC_ProcessUpgrade' (raw payload, no validation); Server_ProcessUpgrade.sqf does no commander/funds/sequence/dependency check and never deducts cost (client-side). Forge free upgrades; client-controlled indices -> out-of-range error. SYNTHESIS: with DR-6/14/16/22/23 the entire WFBE economy (build/buy/sell/supply/upgrade) is client-authoritative — one architectural decision (server-PVF validation vs BattlEye scripts.txt) covers the class. See Deep-Review-Findings Round 13.",
-  "DR-24 (Low, dead code): RscMenu_Upgrade (Rsc/Dialogs.hpp:2425) onLoad ExecVMs Client/GUI/GUI_Menu_Upgrade.sqf which does not exist (only GUI_UpgradeMenu.sqf); dialog never opened; live upgrade UI is GUI_UpgradeMenu.sqf. Dead/naming-drift reference. Delete or repoint. See Deep-Review-Findings Round 14.",
-  "DR-25a (Low): RscOverlay (Titles.hpp:46) + OptionsAvailable (Titles.hpp:165) share idd=10200. DR-25b (Low): RscClickableText.soundPush[]={, 0.2, 1} (Ressources.hpp:556) malformed (empty leading element; correct {\"\", 0.2, 1}); base control class. Both confirm Curie candidates; assign distinct IDDs and fix the array. See Deep-Review-Findings Round 15.",
-  "DR-26 (Low, governance): LICENSE.md is a custom/proprietary license (Copyright Spayker 2016 / Miksuu 2025; contributions assigned to the repo owner; reuse/distribution restricted), NOT OSI -> source-available, not open-source. Resolves external deep-research reports' 'license unspecified'. Also: DiscordBot/preferences_sample.json ships a real GuildID + hardcoded DataSourcePath (neutralize); no CI (only FUNDING.yml). See Deep-Review-Findings Round 16.",
-  "Gear/EASA risk: buy-gear and EASA flows are mostly client-authoritative for purchase/deduction/equip decisions; treat them as gameplay-integrity risks until server validation or BattlEye script filtering is designed.",
-  "Gear profile risk: Client_UI_Gear_SaveTemplateProfile.sqf references _u_upgrade in template filtering without a local definition; verify before extending template/profile behavior.",
-  "External deep-research note: the 3 PDFs Steff supplied were generated FROM this wiki (raw.githubusercontent wiki citations) + Miksuu upstream proxy -> downstream corroboration of DR-1/DR-6/DR-7 etc., not independent source verification. Claude's source-verified DR findings are a superset (reports lack DR-11/15/18/19/20/22/23).",
-  "Direct PV hardening gap: attack waves, side supply, supply missions, MASH markers, HQ state, AntiStack compensation, FPS, day/night, marker/message and AFK channels bypass the generic WFBE_PVF command lists; a PVF dispatcher fix alone does not harden them.",
-  "Integration deployment gap: building the in-repo Extension project only provides a2waspwarfare_Extension/GLOBALGAMESTATS; AntiStack depends on a separate A2WaspDatabase DLL that is absent from the repo.",
-  "Governance/tooling gap: DiscordBot sample config has real-looking IDs and production-style path defaults, and the repo has no CI for .NET builds, SQF reference checks or generated-mission drift."
- ],
- "currentPR": {
-  "number": 1,
-  "branch": "feat/supply-helicopter",
-  "title": "feat: supply helicopters for both teams",
-  "docsPage": "Current-Work-Supply-Helicopters-PR1.md",
-  "deferred": "Autonomous AI-flown supply helicopters until AI supply logistics is restored/redesigned.",
-  "reviewRisks": [
-   "Repeated supply vehicle reloads must not stack duplicate Killed event handlers.",
-   "PR #1 behavior is pending until merged."
-  ]
- },
- "coordination": {
-  "claudeGoal": "Claude-Goal.md",
-  "claudeLongTermGoal": "Claude-Long-Term-Goal.md",
-  "protocol": "Agent-Collaboration-Protocol.md",
-  "machineState": "agent-collaboration.json",
-  "eventFeed": "agent-events.jsonl",
-  "deepReviewFindings": "Deep-Review-Findings.md",
-  "worklog": "Agent-Worklog.md",
-  "progressDashboard": "Progress-Dashboard.md",
-  "statusFile": "agent-status.json",
-  "board": "Coordination-Board.md",
-  "codeAtlas": "SQF-Code-Atlas.md"
- },
- "reviewPasses": [
-  {
-   "date": "2026-06-01",
-   "agent": "Claude",
-   "branch": "docs/developer-wiki-claude",
-   "integratedBy": "Codex",
-   "pagesAdded": [
-    "Lifecycle-Wait-Chain.md",
-    "WASP-Overlay.md"
-   ],
-   "findings": [
-    "PVF dispatch uses one PV variable per command with client-side element-0 routing and scheduled Spawn dispatch.",
-    "Town AI performance is based on spawn/delete distance activation, not simulation caching.",
-    "HC delegation works by remote creation and can downgrade at init if no HC is present.",
-    "Supply System 0 plus AI commanders can hit disabled UpdateSupplyTruck and missing supplytruck.fsm.",
-    "PR #1 stacks Killed event handlers on reused supply vehicles."
-   ],
-   "correctionsDuringIntegration": [
-    "Lifecycle economy override is WF_Debug-gated in current source, not unconditional."
-   ]
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Claude",
-   "round": 2,
-   "type": "adversarial cross-check of Codex atlas",
-   "pagesAdded": [
-    "Deep-Review-Findings.md"
-   ],
-   "deepened": [
-    "Feature-Status-Register",
-    "Networking-And-Public-Variables",
-    "Tools-And-Build-Workflow"
-   ],
-   "findings": [
-    "DR-1 PV dispatch Call Compile trust boundary unmitigated by validation or BattlEye filter.",
-    "DR-2 paratrooper drop markers dead because HandleParatrooperMarkerCreation is not in the client PVF list.",
-    "DR-3 MASH tent markers dead because receiverMASHmarker.sqf is only referenced by a commented client init compile.",
-    "DR-4 Chernarus and Takistan are in sync except skip-list/blacklist differences; Modded_Missions are stale or stubbed.",
-    "DR-5 atlas preprocessFile counts should be treated as point-in-time; FSM count of 3 verified accurate."
-   ]
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Claude",
-   "round": 3,
-   "lane": "pvf-hardening-review",
-   "type": "implementation-readiness playbook",
-   "deepened": [
-    "Deep-Review-Findings"
-   ],
-   "findings": [
-    "DR-1 fix is behavior-preserving: SRVFNC/CLTFNC are missionNamespace globals, so dispatch can resolve via getVariable [_script, {}] instead of Call Compile; hostile strings become no-ops.",
-    "No registered PVF handler compiles its parameters; no second-order injection on the PVF path.",
-    "Residual: legitimate-command forgery, such as RequestChangeScore trusting payload, is not closed by the dispatch fix and needs separate per-handler sender/param validation."
-   ]
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Claude",
-   "round": 4,
-   "lane": "construction-authority-review",
-   "type": "authority/forgery review + validation playbook",
-   "deepened": [
-    "Deep-Review-Findings",
-    "Construction-And-CoIn-Systems-Atlas (cross-check)"
-   ],
-   "findings": [
-    "DR-6: RequestStructure/RequestDefense take _side (+_manned) from the client payload; RequestMHQRepair passes the raw payload to MHQRepair. Only class-existence is checked server-side; no commander/funds/dead-HQ/base-area validation.",
-    "Forgeable to mint free factories, AI-manned defenses/minefields and HQ repairs for any side, bypassing economy and base-area avail (decremented only client-side).",
-    "Root cause: payloads omit the requesting player and Arma2 PVEH has no sender identity; authority must be reconstructed server-side. Playbook: add player to payload + validate side+commander+funds. Pairs with DR-1."
-   ]
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "round": 5,
-   "lane": "antistack-db-trust",
-   "type": "external trust-boundary review + hardening playbook",
-   "deepened": [
-    "Deep-Review-Findings",
-    "Codebase-Coverage-Ledger"
-   ],
-   "findings": [
-    "DR-7 (High): all 7 callDatabase*.sqf call compile the A2WaspDatabase callExtension return — server executes external DLL stdout as SQF; DLL absent from repo; defaults ON.",
-    "DR-8 blocking DB poll on join/skill path; DR-9 SEND_PLAYERLIST vs callExtension length limits; DR-10 defaults-on against an absent DLL.",
-    "A2 OA has no parseSimpleArray; fix = defensive shape-validation (guard empty + assert ARRAY of SCALARs) before reading, plus circuit-breaker, chunking and DLL auto-detect."
-   ]
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Hilbert",
-   "lane": "network-pv-boundary-deep-index",
-   "type": "read-only sub-agent source report integrated by Codex",
-   "findings": [
-    "Direct publicVariable channels include day/night, messages, markers, ICBM/radiation, side supply, supply missions, anti-stack, AFK and server FPS.",
-    "Replacing PVF dispatcher Call Compile does not close legitimate-command forgery; high-trust handlers still need sender/role/funds/object validation.",
-    "BattlEye publicvariable.txt contains only the kickAFK feature rule."
-   ]
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Curie",
-   "lane": "ui-hud-dialogs-deep-index",
-   "type": "read-only sub-agent source report integrated by Codex",
-   "findings": [
-    "RscMenu_Upgrade points to missing GUI_Menu_Upgrade.sqf while live flow uses WFBE_UpgradeMenu.",
-    "RscClickableText.soundPush[] has a suspect malformed config value.",
-    "Buy gear has documented partial work around target refresh, vehicle target content and template scope."
-   ]
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Meitner",
-   "lane": "tooling-integrations-deep-index",
-   "type": "read-only sub-agent source report integrated by Codex",
-   "findings": [
-    "LoadoutManager requires an ancestor folder named a2waspwarfare and the current work/a checkout cannot run it as-is.",
-    "LoadoutManager always attempts packaging after generation; missing 7za fails the final packaging step.",
-    "Mission game stats flow through a2waspwarfare_Extension to C:\\a2waspwarfare\\Data\\database.json, then DiscordBot polls that file every 60 seconds.",
-    "Modded mission generation is disabled/commented; Modded_Missions/* are stale/non-authoritative."
-   ]
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Cicero",
-   "lane": "server-gameplay-loops-deep-index",
-   "type": "read-only sub-agent source report integrated by Codex",
-   "pagesAdded": [
-    "Server-Gameplay-Runtime-Atlas.md"
-   ],
-   "findings": [
-    "Server runtime starts town, camp, town AI, resources, victory, cleanup, FPS and AntiStack loops from Init_Server.sqf.",
-    "AI commander state/funds/constants exist, but no active AI commander loop/FSM was found.",
-    "Server_AssignNewCommander likely has a call-shape bug when called from RequestNewCommander.",
-    "Supply mission reward/cooldown logic has client-authority and variable-casing risks.",
-    "Hosted/non-dedicated server FPS publishers can busy-loop because sleeps are inside isDedicated guards."
-   ]
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Codex",
-   "lane": "factory-purchase-atlas",
-   "type": "source-backed subsystem atlas",
-   "pagesAdded": [
-    "Factory-And-Purchase-Systems-Atlas.md"
-   ],
-   "findings": [
-    "Player buy-unit path is client-local and does not use a RequestBuyUnit PVF.",
-    "RequestBuyUnit is not registered in Common/Init/Init_PublicVariables.sqf and no Server/PVFunctions/RequestBuyUnit.sqf exists.",
-    "Server_BuyUnit/AIBuyUnit is compiled but appears latent unless a dynamic caller is later proven.",
-    "Factory spawn pads and queue state are convention-heavy and should be preserved carefully."
-   ]
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Codex",
-   "lane": "fleet-deep-index",
-   "type": "sub-agent orchestration",
-   "findings": [
-    "Spawned four read-only Codex sub-agents for independent deep-index lanes: network/PV, server gameplay loops, UI/HUD/dialogs and tooling/integrations.",
-    "Progress is tracked in Progress-Dashboard.md, Coordination-Board.md, agent-status.json, agent-collaboration.json and agent-events.jsonl."
-   ]
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "round": 6,
-   "lane": "victory-endgame-review",
-   "type": "correctness + broken-feature review",
-   "deepened": [
-    "Deep-Review-Findings",
-    "Codebase-Coverage-Ledger"
-   ],
-   "findings": [
-    "DR-11 (Med-High): victory winner reported inconsistently; persisted *_WIN_CHERNARUS tally inverted for all-towns victories (LogGameEnd called with opposite of _x); WF_Winner is a dead write; precedence/guard gap allows double-fire.",
-    "DR-12: threeway victory mode (WFBE_C_VICTORY_THREEWAY != 0) has no detection in the only victory script -> matches never auto-end.",
-    "DR-13: duplicate buggy Server/PVFunctions/LogGameEnd.sqf (getVariable result used as setVariable key; bare-global WEST_WIN_CHERNARUS)."
-   ]
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "round": 7,
-   "lane": "factory-purchase-authority",
-   "type": "authority review + adversarial cross-check of Codex/Cicero",
-   "deepened": [
-    "Deep-Review-Findings",
-    "Codebase-Coverage-Ledger"
-   ],
-   "findings": [
-    "DR-14 (High, architectural): player purchasing has no server authority (client createVehicle/createUnit + client-side deduct; no RequestBuyUnit PVF). Ceiling on DR-1/DR-6 hardening; only a BattlEye scripts.txt filter can constrain it.",
-    "DR-15 (confirmed): Server_AssignNewCommander.sqf:3 '_side = _this' vs sole caller passing [_side,_commander] -> GetSideLogic fails; fix _side = _this select 0; redundant new-commander-assigned broadcast.",
-    "Verified Codex factory-purchase-atlas (no RequestBuyUnit) and Cicero's commander-assign candidate at source."
-   ]
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "round": 8,
-   "lane": "ui-hud-authority-review",
-   "type": "authority review + adversarial cross-check of Curie",
-   "deepened": [
-    "Deep-Review-Findings",
-    "Codebase-Coverage-Ledger"
-   ],
-   "findings": [
-    "DR-16 (High): structure sale (GUI_Menu_Economy.sqf:104-152) is fully client-authoritative (client commander check, client refund, client setDammage 1); completes build(DR-6)/buy(DR-14)/sell(DR-16) all client-authoritative.",
-    "DR-17 (confirms Curie): RscMenu_EASA and RscMenu_Economy both idd=23000 (Rsc/Dialogs.hpp:3211,3289) -> findDisplay 23000 ambiguous.",
-    "Remaining UI follow-ups: shared title IDD 10200, stale RscMenu_Upgrade, RscClickableText.soundPush."
-   ]
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "round": 9,
-   "lane": "server-loop-candidates-verify",
-   "type": "adversarial verification of Cicero candidates",
-   "deepened": [
-    "Deep-Review-Findings",
-    "Codebase-Coverage-Ledger"
-   ],
-   "findings": [
-    "DR-18 confirmed: supply-cooldown key casing mismatch (lowercase seed vs capital readers; case-sensitive keys) -> nil-throw on first check; defeats the 0-seed guard.",
-    "DR-19 confirmed: hosted/listen-server FPS publishers busy-loop because sleep 8 is inside if(isDedicated); also two redundant FPS publishers.",
-    "Both were Cicero candidates from Server-Gameplay-Runtime-Atlas; verified at source with exact impact and one-line fixes."
-   ]
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "round": 10,
-   "lane": "jip-headless-crosscut",
-   "type": "JIP/multiplayer correctness review",
-   "deepened": [
-    "Deep-Review-Findings",
-    "Codebase-Coverage-Ledger"
-   ],
-   "findings": [
-    "DR-20 (High): HQ Killed EH registered on every owning-side client (broadcast + JIP init), but Server_OnHQKilled.sqf has no idempotency guard -> N-fold duplicate processing (score exploit) on mobile-HQ death.",
-    "JIP HQ-death detection itself is correct (Init_Client !_isDeployed guard; deployed HQ has server-side EH).",
-    "Fix: per-HQ processed flag in OnHQKilled; keep redundant EH registration (detect redundantly, act once)."
-   ]
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "round": 11,
-   "lane": "headless-disconnect-review",
-   "type": "verification + self-correction",
-   "deepened": [
-    "Deep-Review-Findings",
-    "Codebase-Coverage-Ledger"
-   ],
-   "findings": [
-    "Self-correction: round-1 'HC disconnect orphans units' is wrong — engine migrates local units to server (no loss).",
-    "DR-21 (Med): HC delegation has no failover/rebalancing; disconnect dumps AI on the server and delegation is only evaluated at boot.",
-    "Suggest setGroupOwner-based rebalancing on HC connect/disconnect; mission never uses setGroupOwner."
-   ]
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "round": 12,
-   "lane": "side-supply-delta-verify",
-   "type": "economy exploit confirmation (Faraday candidate)",
-   "deepened": [
-    "Deep-Review-Findings",
-    "Codebase-Coverage-Ledger"
-   ],
-   "findings": [
-    "DR-22 (High): Server_ChangeSideSupply.sqf broken floor turns overspend into a windfall (currentSupply+|amount|). Fix: _change=0.",
-    "Same block in Common_ChangeSideSupply is dead (server recomputes from _amount).",
-    "Confirms Faraday's negative-delta candidate + round-1 note; resistance-side handler still missing."
-   ]
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "round": 13,
-   "lane": "upgrade-authority-verify",
-   "type": "economy authority confirmation + synthesis",
-   "deepened": [
-    "Deep-Review-Findings",
-    "Codebase-Coverage-Ledger"
-   ],
-   "findings": [
-    "DR-23 (High): upgrade purchasing client-authoritative — RequestUpgrade passes raw payload to ProcessUpgrade; no commander/funds/sequence/dependency check, no server-side cost.",
-    "Synthesis: entire WFBE economy (build/buy/sell/supply/upgrade = DR-6/14/16/22/23) is client-authoritative; one architectural decision (server-PVF vs BattlEye) covers the class.",
-    "Confirms Faraday's upgrade-authority candidate."
-   ]
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "round": 14,
-   "lane": "missing-reference-inventory",
-   "type": "dead-reference confirmation (Curie candidate)",
-   "deepened": [
-    "Deep-Review-Findings",
-    "Codebase-Coverage-Ledger"
-   ],
-   "findings": [
-    "DR-24 (Low): RscMenu_Upgrade onLoad ExecVMs missing GUI_Menu_Upgrade.sqf; dialog never opened; live UI is GUI_UpgradeMenu.sqf. Dead/naming-drift.",
-    "Handed a reliable missing-reference scanner to Codex/tooling (my ad-hoc bash scan mishandled Windows backslash paths).",
-    "Severity gradient: campaign now in the long tail (Low/cleanup), indicating high-traffic cells are largely reviewed."
-   ]
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "round": 15,
-   "lane": "ui-followups-verify",
-   "type": "UI config defect confirmation (Curie candidates)",
-   "deepened": [
-    "Deep-Review-Findings",
-    "Codebase-Coverage-Ledger"
-   ],
-   "findings": [
-    "DR-25a (Low): RscOverlay + OptionsAvailable share title idd=10200.",
-    "DR-25b (Low): RscClickableText.soundPush[] malformed ({, 0.2, 1}) at Ressources.hpp:556.",
-    "Both confirm Curie's remaining UI candidates; UI follow-ups closed."
-   ]
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "round": 16,
-   "lane": "external-research-integration",
-   "type": "external deep-research integration + corroboration",
-   "deepened": [
-    "Deep-Review-Findings",
-    "Codebase-Coverage-Ledger"
-   ],
-   "findings": [
-    "3 deep-research PDFs are downstream of our wiki (corroboration, not independent source verification); they re-derive DR-1/6/7 etc.; our DR findings are a superset.",
-    "DR-26 (Low, governance): LICENSE.md is custom/proprietary (not OSI); resolves reports' 'license unspecified'.",
-    "Governance handoffs to Codex/owner: neutralize DiscordBot sample GuildID/DataSourcePath; add CI (SQF syntax + generated-mission drift + .NET build)."
-   ]
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "round": 17,
-   "lane": "weather-daynight-review",
-   "type": "clean review (no defect)",
-   "deepened": [
-    "Deep-Review-Findings",
-    "Codebase-Coverage-Ledger"
-   ],
-   "findings": [
-    "Weather/day-night reviewed clean: no div-by-zero (twilight weight constant=3; day duration min 1), JIP covered (engine-synced WFBE_DAYNIGHT_DATE + init setDate), local-animation + 30s drift-sync design sound.",
-    "Recorded the negative result so future passes don't re-review; ledger weather cell -> reviewed-clean.",
-    "Integrity: not manufacturing a finding where code is correct is as valuable as finding bugs."
-   ]
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Codex",
-   "lane": "gear-loadout-easa-atlas-integration",
-   "type": "source-backed subsystem atlas",
-   "pagesAdded": [
-    "Gear-Loadout-And-EASA-Atlas.md"
-   ],
-   "findings": [
-    "Gear catalog arrays, buy-gear templates and EASA aircraft loadouts are split across mission config, client UI and generated LoadoutManager output.",
-    "EASA and balance output are generated by Tools/LoadoutManager and should be edited at the tool data/source layer where possible.",
-    "Gear/EASA purchase and equip decisions remain client-authoritative and should be treated as gameplay-integrity risks."
-   ]
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Claude",
-   "lane": "modules-review",
-   "type": "deep-review",
-   "pagesAdded": [
-    "Deep-Review-Findings.md (Round 18 / DR-27)",
-    "Codebase-Coverage-Ledger.md (Modules row -> Map done, Auth/PV/Perf/JIP-HC partial)"
-   ],
-   "findings": "DR-27 (CRITICAL): ICBM nuke fully client-authoritative. nukeincoming.sqf:23 sends RequestSpecial=[ICBM,...]; RequestSpecial.sqf=_this Spawn HandleSpecial; Server_HandleSpecial.sqf:97-112 spawns NukeDammage at client-chosen position with no upgrade/commander/funds check. waitUntil !alive _target is timing-only. One forged PV = server-applied map-wide kill. Apex of client-authoritative class. Also confirmed UAV-007 branch disabled; rest of Client/Module config-gated cosmetic/QoL."
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Claude",
-   "lane": "gear-easa-review",
-   "type": "deep-review",
-   "pagesAdded": [
-    "Deep-Review-Findings.md (Round 19 / DR-28)",
-    "Codebase-Coverage-Ledger.md (Gear/EASA row Auth->done; Economy note extended)"
-   ],
-   "findings": "DR-28 (High): gear/EASA loadouts + vehicle rearm/repair/refuel/heal are client-authoritative. No server PVF; EASA cost is client-side if(_funds>price)+ChangePlayerFunds (GUI_Menu_EASA.sqf:46-50); Service rearm (:196-200) and refuel (:217-219) deduct unconditionally (no affordability guard, unlike repair/heal). Completes economy-authority class (build/buy/sell/supply/upgrade/ICBM/gear all client-authoritative)."
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Claude",
-   "lane": "extension-globalgamestats-review",
-   "type": "deep-review",
-   "pagesAdded": [
-    "Deep-Review-Findings.md (Round 20 / DR-29)",
-    "Codebase-Coverage-Ledger.md (Integrations row: Extension sub-target done)"
-   ],
-   "findings": "DR-29 (Medium, latent Critical): in-repo GLOBALGAMESTATS callExtension DLL. Safe today (output never written/discarded -> no call compile, contrast DR-7; reflection enum-gated). Risks: dormant deser-RCE landmine (commented TypeNameHandling.Auto+DeserializeObject); write-only/abandoned-refactor stub (no cross-restart persistence; load path commented, references Database not GameData); async-void create unawaited before File.Replace -> first-run race + possible host crash; minor SQF abs(playerCount-1) HC misreport."
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Claude",
-   "lane": "battleye-posture-review",
-   "type": "deep-review",
-   "pagesAdded": [
-    "Deep-Review-Findings.md (Round 21 / DR-30)",
-    "Codebase-Coverage-Ledger.md (Integrations row: BattlEye sub-target done)"
-   ],
-   "findings": "DR-30 (High, campaign-wide): repo BattlEye footprint is a 22-byte publicvariable.txt with one rule (5 \"kickAFK\" = AFK-kick feature plumbing, not security). No default-deny -> no restriction on forgery-class PVs (RequestSpecial/RequestStructure/RequestUpgrade/HandlePVF). scripts.txt ABSENT -> nothing blunts DR-1 call compile RCE. Implication: option (b) rely-on-BattlEye across DR-1/6/14/16/22/23/27/28 is not shipped; remediation collapses to (a) server-side authority. Caveat: BE files normally live in server BEpath outside the PBO -> production posture is an owner question."
-  },
-  {
-   "date": "2026-06-01",
-   "agent": "Claude",
-   "lane": "discord-datapath-review",
-   "type": "deep-review",
-   "pagesAdded": [
-    "Deep-Review-Findings.md (Round 22 / DR-31)",
-    "Codebase-Coverage-Ledger.md (Integrations row: all 4 sub-targets done, Map complete)"
-   ],
-   "findings": "DR-31 (High): DiscordBot GameData.LoadFromFile() deserializes database.json with TypeNameHandling.All (Newtonsoft gadget sink, worse than the dormant .Auto in DR-29), run every 60s by GameStatusUpdater timer + startup + a command. Capability gratuitous (flat string[] DTO; writer uses .None). Not remote as-configured but any write to the data path = RCE in the token-holding bot process. Fix: .All->.None + delete dead .Auto. Secondary: secret hygiene GOOD (token.txt+preferences.json gitignored; sample tokenless); commands auth-gated; 3-way exportedArgs shape drift (ext[2]/bot[4]/SQF 5)."
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Codex",
-   "lane": "integration-backlog-batch-a",
-   "type": "PV/direct-channel and external integration docs integration",
-   "deepened": [
-    "Networking-And-Public-Variables",
-    "External-Integrations",
-    "Feature-Status-Register"
-   ],
-   "findings": [
-    "Direct non-PVF channels include attack waves, side supply, supply missions, MASH markers, HQ state, AntiStack compensation, server FPS, AFK, day/night and marker/message channels.",
-    "A WFBE_PVF dispatcher fix or whitelist does not cover those direct channels; BattlEye publicvariable design must include both registered and direct channels.",
-    "The in-repo a2waspwarfare_Extension/GLOBALGAMESTATS path is separate from the absent out-of-repo A2WaspDatabase AntiStack extension.",
-    "DiscordBot sample/config hygiene and missing CI/reference validation are documented governance/tooling follow-ups.",
-    "Claude DR-27 was linked from Networking and Feature Status as the highest-priority registered-command authority hazard.",
-    "Claude DR-28 was linked from Economy, Gear/EASA and Feature Status as the final confirmed spend path in the client-authoritative economy class.",
-    "Claude DR-29, DR-30 and DR-31 are now linked from External Integrations / Feature Status as integration and hosting hardening follow-ups."
-   ]
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "lane": "generated-mission-drift-review",
-   "type": "deep-review",
-   "findings": "DR-32 (Medium, drift + abandoned-code): 3 fidelity tiers. Vanilla Takistan faithful (15/671 sqf differ, all map-config + textures; logic byte-identical -> DR-1..DR-31 propagate verbatim). Napf/eden/lingor divergent hand-edited forks (104-123 logic files differ incl security-critical; Napf ICBM adds GBU-12 bombs; not regenerated per DR-4). sahrani/dingor/tavi/isladuala abandoned stubs (1-20 files, non-runnable)."
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "lane": "factory-perf-jip-review",
-   "type": "deep-review",
-   "findings": "DR-33 (Medium). DR-33a JIP/HC: empty-vehicle purchase exitWith (Client_BuildUnit.sqf:365) returns before the WFBE_C_QUEUE decrement (:469), leaking the buyer's local queue counter -> after _MAX empty-vehicle buys the GUI gate (GUI_Menu_BuyUnits.sqf:145) silently soft-locks that factory type. DR-33b Perf: per-unit while{sleep 4} poll re-broadcasts building queu via setVariable[...,true] each mutation (network churn); varQueu=random(10)+random(100)+random(1000) non-unique (front-of-queue collision); buyer-disconnect orphans queu token (self-heals via another buyer's timeout-cleanup)."
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "lane": "respawn-mash-review",
-   "type": "deep-review",
-   "findings": "DR-34 (Low/Medium, broken feature): MASH map-marker dead on both ends - client receiver commented (Init_Client.sqf:132), trigger PV WFBE_CL_MASH_MARKER_CREATED never broadcast, server PVEH live-but-orphaned (Init_Server.sqf:70). MASH tents real (Officer_Undeploy_MASH.sqf) but no markers. Confirms+extends DR-2. Latent JIP gap if revived (publicVariable single overwritten global, no JIP replay). Perf: respawn selector ~33Hz sleep-0.03 local loop (bounded). Minor: round random 50000 non-unique marker name."
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "lane": "params-localization-review",
-   "type": "deep-review",
-   "findings": "DR-35 (Info, reviewed clean): localization integrity clean - all 204 static localize keys resolve except 3 (1 casing FP, 1 engine STR_EP1_*, 2 in dead/commented WASP actions); config $STR_ all resolve; no live broken string. Params system live+wired (Init_Parameters.sqf paramsArray MP/default SP <- initJIPCompatible.sqf:121; display via Dialogs.hpp:3136); paramsArray index-aligned to class Params order (fragility note). Abandoned: WASP OnArmor + GearYourUnit actions commented in AddActions.sqf. Method: Arma stringtable lookup is case-insensitive -> case-fold before diffing + check liveness or you get false missing-key findings."
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "lane": "victory-perf-jip-review",
-   "type": "deep-review",
-   "findings": "DR-36. Victory Perf clean (80s _loopTimer, cheap checks, dead _innerTimer). JIP/HC server-authoritative; narrow gap: endgame SendToClients + unbroadcast WFBE_GameOver not replayed to a player joining the ~10s pre-failMission window (moot). SOURCE MECHANISM for DR-11/DR-13: win check (:23) parses (&&>||) so !WFBE_GameOver guards only the towns clause not the HQ-elimination clause; side forEach (:43) has no break -> two same-tick eliminations double-fire endgame+LogGameEnd and overwrite WF_Winner with the opposite side. Re-confirms DR-12 (threeway _victory!=0 skips detection). Fix: guard both clauses + break on winner."
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "lane": "boot-lifecycle-perf-jip-review",
-   "type": "deep-review",
-   "findings": "DR-37 (Low, reviewed clean + robustness note): Boot Perf clean - frame-throttled bare waitUntils with cheap conditions; Init_Client.sqf:248 throttle idiom waitUntil{sleep 0.5;cond}; while{true}{sleep 0.1...exitWith} at :419/:444 are bounded join-handshake polls (ACK exit, 30s retry), not perpetual. JIP/HC correct: initJIPCompatible routes server/client-II/HC; JIP syncs time/date+teams+all client state via broadcast logic vars; RequestJoin handshake has 30s retry + lobby fallback. Robustness gap: post-join serial waitUntil chain (Init_Client.sqf:367-502) has no timeouts -> a never-set synced var hangs JIP client forever with no fallback/log."
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "lane": "pv-dispatch-perf-jip-review",
-   "type": "deep-review",
-   "findings": "DR-38 (Low/Medium Perf + JIP clean): PVF dispatchers do Spawn (Call Compile _script) per inbound message (Server_HandlePVF.sqf:14, Client_HandlePVF.sqf:22) - avoidable per-message recompile, redundant vs the init-time precompile into SRVFNC/CLTFNC globals (Init_PublicVariables.sqf:44/49). Validated getVariable lookup removes the recompile AND closes DR-1 RCE (one fix). JIP/HC clean: dispatchers registered in Init_PublicVariables (:45/:50) via Init_Common on all machines incl JIP; PVFs are transient events (no replay); destination routing matches joiners."
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "lane": "supply-missions-perf-jip-review",
-   "type": "deep-review",
-   "findings": "DR-39 (Low/Medium). Abandoned-code: supplyMissionActive.sqf is a dead twin (plain body, no PVEH, compiled Init_Server:81 but never called), superseded by live supplyMissionStarted.sqf (self-registers PVEH). Perf: live per-mission while{alive truck}{sleep 3} loop does nearestObjects[pos,[],80] all-types every 3s - narrowable to [Base_WarfareBUAVterminal]. JIP/HC done right (vs DR-34): cooldown status is pull-based request/response (WFBE_Client_PV_IsSupplyMissionActiveInTown -> server compute -> WFBE_Server_PV_IsSupplyMissionActiveInTown -> client store) so joiners query state; server-side loop survives starter disconnect (truck-keyed). Minor: cooldown answer broadcast to all not targeted."
-  },
-  {
-   "date": "2026-06-02",
-   "agent": "Claude",
-   "lane": "wasp-overlay-perf-jip-review",
-   "type": "deep-review",
-   "findings": "DR-40 (Low). WASP Perf mostly clean; one nit: global_marking_monitor.sqf:62 while{time<_this}do{findDisplay 54} is a sleepless busy-spin (<=2s, input-disabled, one-time) - convert to throttled waitUntil like its :80 sibling. baserep 1Hz only while repairing; DropRPG sleep 30 cooldown; AddActions one-shot wait. JIP/HC clean: live WASP wired per-client from Init_Client (:15/:267/:574/:575) so joiners init locally; local-player guards correct; HC skips. Dead: old WASP/Init_Client.sqf path commented in initJIPCompatible.sqf:243-244. MILESTONE: last Perf/JIP-HC cell - all Perf+JIP/HC dimensions now reviewed; residual is Auth/PV owner decisions."
-  }
- ],
- "toolingProjects": [
-  {
-   "name": "Tools/LoadoutManager",
-   "language": "C#",
-   "framework": ".NET 8 executable",
-   "entrypoints": [
-    "Tools/LoadoutManager/Program.cs",
-    "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs"
-   ],
-   "inputs": [
-    "Chernarus source mission",
-    "terrain/loadout data classes",
-    "FileManager skip lists"
-   ],
-   "outputs": [
-    "Client/Module/EASA/EASA_Init.sqf",
-    "Common/Functions/Common_BalanceInit.sqf",
-    "Common/Common_ReturnAircraftNameFromItsType.sqf",
-    "per-terrain version.sqf",
-    "Takistan generated mission",
-    "_MISSIONS.7z"
-   ],
-   "requiredExternalFiles": [
-    "7za on PATH or configured for packaging"
-   ],
-   "safeToRunInMirror": false,
-   "notes": "Requires an ancestor folder literally named a2waspwarfare; the current Codex checkout work/a will throw unless run from a correctly named checkout or the lookup is changed. dotnet run always attempts packaging after generation."
-  },
-  {
-   "name": "Tools/PerformanceAuditAnalyzer",
-   "language": "PowerShell",
-   "framework": "PowerShell scripts",
-   "entrypoints": [
-    "Tools/PerformanceAuditAnalyzer/Analyze-PerformanceAudit.ps1"
-   ],
-   "inputs": [
-    "Arma RPT logs containing [Performance Audit]"
-   ],
-   "outputs": [
-    "CSV",
-    "Markdown",
-    "HTML",
-    "Word-friendly reports"
-   ],
-   "requiredExternalFiles": [],
-   "safeToRunInMirror": true,
-   "notes": "Read-only log analyzer useful after performance-sensitive mission changes."
-  },
-  {
-   "name": "DiscordBot",
-   "language": "C#",
-   "framework": ".NET 9 executable",
-   "entrypoints": [
-    "DiscordBot/src/ProgramRuntime.cs"
-   ],
-   "inputs": [
-    "DiscordBot/preferences.json",
-    "DiscordBot/token.txt",
-    "C:\\a2waspwarfare\\Data\\database.json"
-   ],
-   "outputs": [
-    "Discord channel name",
-    "bot presence",
-    "status embed"
-   ],
-   "requiredExternalFiles": [
-    "preferences.json",
-    "token.txt"
-   ],
-   "safeToRunInMirror": false,
-   "notes": "Runtime refuses missing/empty token.txt. Do not invent secrets."
-  },
-  {
-   "name": "Extension",
-   "language": "C#",
-   "framework": ".NET Framework 4.8 Arma extension",
-   "entrypoints": [
-    "Extension/src/EntryPoint.cs"
-   ],
-   "inputs": [
-    "Arma callExtension arguments from Server/CallExtensions/GlobalGameStats.sqf"
-   ],
-   "outputs": [
-    "C:\\a2waspwarfare\\Data\\database.json"
-   ],
-   "requiredExternalFiles": [
-    "legacy NuGet/MSBuild packages"
-   ],
-   "safeToRunInMirror": false,
-   "notes": "Exports _RVExtension@12 and serializes GameData for DiscordBot."
-  },
-  {
-   "name": "Mods/mkswf_sidewinder_reload_time_fix",
-   "language": "Arma config",
-   "framework": "Addon config fragment",
-   "entrypoints": [
-    "Mods/mkswf_sidewinder_reload_time_fix/CfgWeapons.hpp"
-   ],
-   "inputs": [
-    "Sidewinder launcher class config"
-   ],
-   "outputs": [
-    "magazineReloadTime = 1"
-   ],
-   "requiredExternalFiles": [],
-   "safeToRunInMirror": true,
-   "notes": "External addon fragment, not mission SQF."
-  }
- ],
- "generatedMissionRules": {
-  "sourceOfTruth": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
-  "vanillaGeneratedTarget": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
-  "postCopyPatch": "Takistan SET_MAP is patched from 1 to 2.",
-  "skipList": [
-   "mission.sqm",
-   "version.sqf",
-   "Client/GUI/GUI_Menu_Help.sqf",
-   "texHeaders.bin",
-   "WASP/unsort/StartVeh.sqf",
-   "loadScreen.jpg",
-   "Textures",
-   "Server/Config",
-   "Common/Config/Core_Artillery"
+    "CONFIRMED 2026-06-02: Town AI vehicle despawn can delete a vehicle with a player passenger/crew member aboard if the player is not the group leader. server_town_ai.sqf:211-216 checks !(isPlayer leader group _x) and does not inspect crew/cargo/turret occupants. Use Town-AI-Vehicle-Despawn-Safety.md for the source chain, behavior-preserving guard shape and validation gates.",
+    "Direct attack-wave authority gap: ATTACK_WAVE_INIT is a direct publicVariable channel outside the generic PVF dispatcher. Common_AttackWaveActivate.sqf sends [_supply,_side], and Server_AttackWave.sqf uses client-supplied _supply for discount/timing. Server should re-derive supply from authoritative side state.",
+    "JIP robustness note: RequestJoin and AntiStack launch ACK have 30s resend loops but no terminal timeout; the later Init_Client.sqf post-join replicated-variable waits have no timeout/retry/log. Normal JIP is reviewed functional, but failures can hang silently.",
+    "Lifecycle source-check 2026-06-02: mission.sqm is part of town runtime bootstrap, not just map data. SQF-only scans miss town object Init_Town.sqf calls and WF_Logic Init_TownMode.sqf startup at mission.sqm:3265.",
+    "DR-40 (Low, WASP Perf nit + reviewed clean): WASP overlay Perf mostly clean; one busy-spin - global_marking_monitor.sqf:62 while{time<_this}do{findDisplay 54} polls every frame for up to 2s (input-disabled, one-time at init); should use the throttled waitUntil{sleep ...;cond} idiom like its :80 sibling. JIP/HC clean (per-client init from Init_Client; local-player guards; HC skips player-local). Old WASP/Init_Client.sqf init path is dead/commented (initJIPCompatible.sqf:243-244). MILESTONE: this was the last outstanding Perf/JIP-HC cell - every subsystem's Perf and JIP/HC dimension is now source-reviewed; residual 🟡 is exclusively Auth/PV owner decisions.",
+    "DR-39 (Low/Medium, supply missions Perf + abandoned-code; JIP clean): supplyMissionActive.sqf is a dead twin (compiled to WFBE_SE_FNC_SupplyMissionActive at Init_Server:81 but never called; superseded by the live supplyMissionStarted.sqf PVEH). The live per-mission server loop polls nearestObjects[pos,[],80] (all object types) every 3s to find a UAV terminal - narrow the type filter. JIP/HC is done correctly (the positive counterexample to DR-34): cooldown status is pull-based request/response so joiners query current state; the server-side tracking loop is truck-keyed and survives the starting player's disconnect. Minor: cooldown response is broadcast to all clients rather than targeted.",
+    "DR-38 (Low/Medium Perf, JIP clean): the PVF dispatchers Call Compile the sender-provided command string on every inbound message (Server/Client_HandlePVF.sqf), an avoidable per-message runtime recompile - redundant because PVFunctions are already pre-compiled at init into SRVFNC/CLTFNC globals (Init_PublicVariables.sqf:44/49). A validated getVariable lookup removes the recompile AND closes the DR-1 RCE in one change. JIP/HC dispatch is clean (registered at init on all machines incl JIP; PVFs are transient events; routing matches joiners).",
+    "DR-37 (Low, reviewed clean + robustness note): boot/lifecycle Perf clean (frame-throttled cheap waitUntils; the while{true}{sleep 0.1} loops at Init_Client.sqf:419/444 are bounded join-handshake polls with 30s retry, not perpetual). JIP/HC comprehensive+correct (initJIPCompatible role routing; time/date/teams/client-state synced via broadcast logic vars; RequestJoin handshake robust). Gap: the post-join serial waitUntil chain (Init_Client.sqf:367-502, wfbe_structures/commander/radio_hq/startpos/hq/hq_deployed/votetime) has NO timeouts -> a never-set synced variable hangs the JIP client forever with no fallback or log. Defensive-timeout improvement, not a live bug.",
+    "DR-36 (Medium correctness + Perf/JIP clean): victory loop (server_victory_threeway.sqf) is the source of DR-11/DR-13. Win check (:23) !(alive _hq)&&_factories==0 || _towns==_total&&!WFBE_GameOver parses (&&>||) so the !WFBE_GameOver guard covers only the towns clause, not the HQ-elimination clause; the side forEach (:43) has no break after a winner is set -> two same-tick eliminations double-fire endgame+LogGameEnd and overwrite WF_Winner with the opposite side (inversion). Perf clean (80s cadence); JIP server-authoritative (narrow endgame-join gap). Fix: parenthesize+guard both clauses + exitWith the forEach/while on gameOver.",
+    "DR-35 (Info, reviewed clean): parameters/localization reviewed - localization integrity clean (no live missing localize/$STR_ keys; 3 apparent misses = 1 casing FP, 1 engine STR_EP1_*, 2 dead/commented WASP actions). Params system live and correctly wired (Init_Parameters.sqf MP paramsArray / SP default; initJIPCompatible.sqf:121; Dialogs.hpp:3136). Fragility (not a defect): paramsArray is index-aligned to class Params order. Abandoned-code: WASP OnArmor + GearYourUnit actions are commented out in AddActions.sqf.",
+    "DR-34 (Low/Medium, broken/abandoned feature): the MASH map-marker feature is dead on both ends - client receiver commented out (Init_Client.sqf:132), the trigger PV WFBE_CL_MASH_MARKER_CREATED is never broadcast by any client, and the live server PVEH (Init_Server.sqf:70) is orphaned (listens for a never-sent PV). Deployed MASH tents (officer skill) therefore show no map markers. If revived, the publicVariable delivery (single overwritten global, no JIP replay) is a latent JIP gap. Respawn selector is a harmless ~33Hz local marker-animation loop. Owner: revive (server-held list + JIP re-send + unique names) or remove the dead code.",
+    "DR-33 (Medium, factory Perf+JIP/HC): unit production runs on the buyer's client. (a) Empty-vehicle purchase early-exitWith (Client_BuildUnit.sqf:365) skips the WFBE_C_QUEUE decrement (:469), leaking the buyer's per-client queue counter; after _MAX (5 light/heavy) such buys the GUI gate silently soft-locks that factory for the match. (b) Per-unit sleep-4 poll re-broadcasts the building's queu array on every mutation (network churn) and uses a non-unique random queue token (front-of-queue collision risk); buyer-disconnect orphans the broadcast token. Fixes: decrement on all exit paths; unique token + less broadcast.",
+    "DR-32 (Medium, generated-mission drift + abandoned code): vanilla Takistan is a faithful regeneration of the Chernarus source (logic byte-identical; only map-config differs) so DR-1..DR-31 apply verbatim. BUT the 7 modded missions are out of scope: Napf/eden/lingor are divergent hand-edited forks (100+ logic files differ incl security-critical PVF/victory/upgrade/HQ; not regenerated per DR-4 -> source fixes do NOT reach them; vuln classes persist with different lines), and sahrani/dingor/tavi/isladuala are abandoned stubs (1-20 files, non-runnable). Owner: complete-or-delete stubs; pick fork maintenance model; propagate fixes deliberately.",
+    "DR-31 (High, insecure deserialization): DiscordBot GameData.LoadFromFile() reads database.json with Newtonsoft TypeNameHandling.All every 60s (GameStatusUpdater timer) + at startup + on a command. $type gadget sink in the process that holds the Discord token. Not remotely exploitable as-configured (file written by the trusted local extension) but any write-primitive to the data dir = RCE. Trivial fix: TypeNameHandling.All -> None (data is a flat string[] DTO). Closes DR-29 #2 end-to-end. Discord secret hygiene is otherwise good (token.txt/preferences.json gitignored).",
+    "DR-30 (High, campaign-wide BE gap): the 'rely on BattlEye' remediation option cited in 8 prior findings (DR-1/6/14/16/22/23/27/28) is NOT shipped. Repo's entire BE footprint = 22-byte publicvariable.txt (single kickAFK feature rule, no default-deny, no forgery-PV restriction) + a README.docx; scripts.txt and all other BE filters absent. So nothing in-repo blunts PV forgery or the DR-1 call compile RCE; realistic remediation collapses to server-side authority in SQF. Caveat: BE filters normally live in the server BEpath outside the mission PBO -> confirm production posture with the server owner.",
+    "DR-29 (Medium, latent Critical, extension trust boundary): in-repo GLOBALGAMESTATS DLL is a one-way output-discarded telemetry exporter (no RCE-into-SQF, unlike AntiStack DB DR-7). Dormant deserialization-RCE landmine: commented load path uses Newtonsoft TypeNameHandling.Auto + DeserializeObject -> $type gadget RCE if re-enabled (and a load path is required for the feature to actually persist). Plus async-void create unawaited before File.Replace (first-run FileNotFound race; async-void exceptions can crash host) and a write-only/abandoned-refactor stub. Owner asks: delete/harden dead deser path, fix the I/O race.",
+    "DR-28 (High, economy authority): gear/EASA loadouts and vehicle rearm/repair/refuel/heal are client-authoritative (no server PVF; ChangePlayerFunds + client-side affordability tests only). Service rearm/refuel skip even the client guard. Completes the class: EVERY WFBE spend path (build/buy/sell/supply/upgrade/ICBM/gear) is client-authoritative -> single owner decision (server ledger vs BattlEye).",
+    "DR-27 (CRITICAL, network authority): ICBM nuke is forgeable. Any client can publicVariable RequestSpecial=[\"ICBM\",side,baseObj,liveObj,team]; server RequestSpecial.sqf -> Server_HandleSpecial.sqf ICBM case spawns NukeDammage at the client-chosen position with zero authority validation (no per-side ICBM upgrade check, no commander check, no server funds check; menu gate + ChangePlayerFunds are client-only). Result: server-applied map-wide mass-kill from one forged PV. Same root cause/fix as economy class (DR-6/14/16/22/23) but match-wide blast radius -> higher priority.",
+    "Autonomous AI supply trucks are config-gated latent breakage: UpdateSupplyTruck compile is disabled, a live call remains under Supply System 0 plus AI commanders, and Server/FSM/supplytruck.fsm is missing.",
+    "DoNotUse CRV7PG loadout classes can crash the game if used in loadouts.",
+    "AntiStack database extension calls are live-server sensitive.",
+    "Generated missions can be overwritten by LoadoutManager.",
+    "PublicVariable traffic and client marker/UI loops are performance-sensitive.",
+    "PVF dispatch uses Call Compile on registered function-name strings; keep command names controlled.",
+    "PR #1 currently stacks Killed event handlers on reused supply vehicles; current double-payment is bounded, but the event-handler leak should be fixed before adding side effects.",
+    "Client UI has duplicate dialog IDD 23000 for EASA and Economy; avoid findDisplay assumptions and use unique IDDs for new dialogs.",
+    "OptionsAvailable and RscOverlay share title IDD 10200; use uiNamespace display handles rather than IDD uniqueness.",
+    "UI/marker loops are performance-sensitive polling loops; preserve cached writes, map-closed backoff and mission-parameter gates.",
+    "DR-1 (High, hardening): Server_HandlePVF.sqf/Client_HandlePVF.sqf Call Compile the sender-chosen command string with no validation, and BattlEyeFilter/publicvariable.txt has only the kickAFK feature rule. Validate the command set before compile and add a real BE PV filter before trusting on a public server.",
+    "DR-1 fix (behavior-preserving): replace 'Spawn (Call Compile _script)' with 'Spawn (missionNamespace getVariable [_script, {}])' in both HandlePVF dispatchers; SRVFNC/CLTFNC are globals so legitimate traffic is unchanged and hostile strings no-op. See Deep-Review-Findings Round 3 playbook.",
+    "Residual after DR-1 fix: the PVF model still trusts client-sent commands and params, for example RequestChangeScore sets score from payload. Arbitrary code execution is closed, but legitimate-command forgery needs separate per-handler sender/param validation.",
+    "DR-2/DR-3: paratrooper drop markers and MASH tent markers are confirmed dead receiver-side paths.",
+    "DR-4: Chernarus and Takistan differ only by LoadoutManager skip-list/blacklist, but skip-listed files never propagate and must be hand-mirrored; Modded_Missions/* are abandoned until modded propagation is re-enabled.",
+    "Construction hardening gap: coin_interface.sqf performs cost/placement/role checks client-side, then RequestStructure/RequestDefense do only light server class-existence validation before creating server objects.",
+    "DR-6 (High, gameplay integrity): RequestStructure/RequestDefense take _side (and _manned) from the client payload and RequestMHQRepair passes the raw payload to MHQRepair; no commander/funds/dead-HQ/base-area checks server-side. A modified client can forge free factories, AI-manned defenses/minefields and HQ repairs for any side. Root cause: payloads omit the player and Arma2 PVEH has no sender identity. Fix: add player to payload + validate side+commander+funds server-side. Pairs with DR-1 (DR-1 stops code execution; DR-6 stops forged legit commands). See Deep-Review-Findings Round 4.",
+    "DR-7 (High, external trust): all 7 Server/Module/AntiStack/callDatabase*.sqf 'call compile' the A2WaspDatabase callExtension return — server executes the external DLL stdout as SQF. DLL is not in the repo; ANTISTACK defaults ON (Init_CommonConstants.sqf:171). Empty/garbage return -> call compile '' -> nil select 0 throws. A2 OA has no parseSimpleArray; fix = guard empty + shape-check (ARRAY of SCALARs) before reading. DR-8 blocking join/skill poll (<=12s/<=27s); DR-9 SEND_PLAYERLIST vs callExtension length limits; DR-10 defaults-on against an absent DLL. See Deep-Review-Findings Round 5.",
+    "Player buy-unit authority gap: GUI_Menu_BuyUnits.sqf deducts funds and spawns Client_BuildUnit locally; there is no registered RequestBuyUnit PVF and no Server/PVFunctions/RequestBuyUnit.sqf in the repo.",
+    "Server_BuyUnit/AIBuyUnit latent path: AIBuyUnit is compiled in Server/Init/Init_Server.sqf, but the current repo-wide static scan found no caller outside Server_BuyUnit.sqf itself.",
+    "AI commander automation partial: constants/state/funds exist, but no active server loop/FSM was found to set wfbe_aicom_running = true.",
+    "Server_AssignNewCommander call-shape bug candidate: RequestNewCommander passes [_side, _assigned_commander], but Server_AssignNewCommander.sqf assigns _side = _this instead of _this select 0.",
+    "Supply mission cooldown casing mismatch: town init seeds lastSupplyMissionRun while server supply mission code reads/writes LastSupplyMissionRun.",
+    "Hosted server FPS loop risk: serverFpsGUI.sqf and monitorServerFPS.sqf sleep only inside if (isDedicated), so hosted/non-dedicated mode can busy-loop.",
+    "LoadoutManager local path hazard: the current Codex checkout is work/a, but the tool searches ancestor folders for a literal a2waspwarfare directory and will throw outside that shape.",
+    "LoadoutManager packaging hazard: dotnet run always attempts ZipManager.DoZipOperations after generation/copy, so missing 7za can fail the final run even after useful outputs were written.",
+    "BattlEyeFilter/publicvariable.txt is feature-specific for kickAFK and is not a comprehensive PV hardening layer.",
+    "DR-11 (Med-High, correctness): server_victory_threeway.sqf merges a lose-test (HQ dead + no factories) and a win-test (holds all towns) into one if and calls WFBE_CO_FNC_LogGameEnd (arg=winner) with the OPPOSITE of _x, so the persisted *_WIN_CHERNARUS profile tally is inverted for all-towns victories. WF_Winner is a dead write. && before || + !WFBE_GameOver guards only the towns branch + no forEach break -> endgame can double-fire. DR-12 threeway victory mode has no detection (WFBE_C_VICTORY_THREEWAY default 0; detection gated if(_victory==0); sole gameOver/failMission setter). DR-13 duplicate buggy Server/PVFunctions/LogGameEnd.sqf. See Deep-Review-Findings Round 6.",
+    "DR-14 (High, architectural): player unit purchasing has NO server authority — GUI_Menu_BuyUnits.sqf spawns BuildUnit (client createVehicle/createUnit) and deducts client-side; no RequestBuyUnit PVF. With wfbe_funds broadcast-writable, the player economy is fully client-trusted. This is the ceiling on DR-1/DR-6 hardening; only a BattlEye scripts.txt filter (not a PV filter) can constrain client createVehicle. DR-15 (confirmed): Server_AssignNewCommander.sqf:3 '_side = _this' but sole caller RequestNewCommander.sqf:13 passes [_side,_commander] -> GetSideLogic fails, AI-commander-stop mis-fires; fix _side = _this select 0. See Deep-Review-Findings Round 7.",
+    "DR-16 (High): structure sale (GUI_Menu_Economy.sqf:104-152) is fully client-authoritative — client commander check, client refund, client setDammage 1 destruction; no server PVF. With DR-6 (build) and DR-14 (buy), the entire WFBE economy is client-authoritative; only a BattlEye scripts.txt filter or a server-PVF redesign can enforce it. DR-17 (confirms Curie): RscMenu_EASA and RscMenu_Economy share idd=23000 (Rsc/Dialogs.hpp:3211,3289) -> findDisplay 23000 ambiguous. See Deep-Review-Findings Round 8.",
+    "DR-18 (Med, confirms Cicero): supply-cooldown key casing mismatch — Init_Town.sqf:35 seeds 'lastSupplyMissionRun' (lowercase) but supply logic uses 'LastSupplyMissionRun' (capital); setVariable keys are case-sensitive -> 0-seed dead, key nil first check -> isSupplyMissionActiveInTown.sqf:11 nil+interval throws. Fix: align casing or getVariable default 0. DR-19 (Med, non-dedicated, confirms Cicero): serverFpsGUI.sqf + monitorServerFPS.sqf put sleep 8 inside if(isDedicated) -> hosted/listen server busy-loops; hoist sleep/early-exit + consolidate redundant FPS publishers. See Deep-Review-Findings Round 9.",
+    "DR-20 (High, multiplayer correctness): the HQ Killed EH is registered on every owning-side client (set-hq-killed-eh broadcast + Init_Client.sqf:500-503 JIP path), but Server_OnHQKilled.sqf has no idempotency guard -> on mobile-HQ death the server runs it once per owning-side client (~2N x killer score award + N messages; score exploit on populated servers). JIP detection itself is correct. Fix: per-HQ processed flag in OnHQKilled (detect redundantly, act once). See Deep-Review-Findings Round 10.",
+    "DR-21 (Med, perf/operational): HC delegation has no failover. On HC disconnect Arma2 OA migrates its local AI to the server (load spike, NOT orphaned/lost — corrects round-1 hypothesis); Server_OnPlayerDisconnected.sqf does no re-delegation and WFBE_C_AI_DELEGATION is only evaluated at boot, so a reconnecting HC doesn't resume offload. Suggest setGroupOwner-based rebalancing on HC connect/disconnect (mission never uses setGroupOwner). See Deep-Review-Findings Round 11.",
+    "DR-22 (High, economy exploit): Server_ChangeSideSupply.sqf clamp 'if (_change<0) then {_change=_currentSupply-_amount}' is a broken floor — _amount is signed, so overspending yields currentSupply+|amount| (spend 300 from 100 -> 400, a windfall). Live in both west/east handlers; identical block in Common_ChangeSideSupply is dead. Fix: _change=0. Confirms Faraday candidate + round-1 note. No resistance-side handler. See Deep-Review-Findings Round 12.",
+    "DR-23 (High, economy integrity): RequestUpgrade.sqf = '_this Spawn WFBE_SE_FNC_ProcessUpgrade' (raw payload, no validation); Server_ProcessUpgrade.sqf does no commander/funds/sequence/dependency check and never deducts cost (client-side). Forge free upgrades; client-controlled indices -> out-of-range error. SYNTHESIS: with DR-6/14/16/22/23 the entire WFBE economy (build/buy/sell/supply/upgrade) is client-authoritative — one architectural decision (server-PVF validation vs BattlEye scripts.txt) covers the class. See Deep-Review-Findings Round 13.",
+    "DR-24 (Low, dead code): RscMenu_Upgrade (Rsc/Dialogs.hpp:2425) onLoad ExecVMs Client/GUI/GUI_Menu_Upgrade.sqf which does not exist (only GUI_UpgradeMenu.sqf); dialog never opened; live upgrade UI is GUI_UpgradeMenu.sqf. Dead/naming-drift reference. Delete or repoint. See Deep-Review-Findings Round 14.",
+    "DR-25a (Low): RscOverlay (Titles.hpp:46) + OptionsAvailable (Titles.hpp:165) share idd=10200. DR-25b (Low): RscClickableText.soundPush[]={, 0.2, 1} (Ressources.hpp:556) malformed (empty leading element; correct {\"\", 0.2, 1}); base control class. Both confirm Curie candidates; assign distinct IDDs and fix the array. See Deep-Review-Findings Round 15.",
+    "DR-26 (Low, governance): LICENSE.md is a custom/proprietary license (Copyright Spayker 2016 / Miksuu 2025; contributions assigned to the repo owner; reuse/distribution restricted), NOT OSI -> source-available, not open-source. Resolves external deep-research reports' 'license unspecified'. Also: DiscordBot/preferences_sample.json ships a real GuildID + hardcoded DataSourcePath (neutralize); no CI (only FUNDING.yml). See Deep-Review-Findings Round 16.",
+    "Gear/EASA risk: buy-gear and EASA flows are mostly client-authoritative for purchase/deduction/equip decisions; treat them as gameplay-integrity risks until server validation or BattlEye script filtering is designed.",
+    "Gear profile risk: Client_UI_Gear_SaveTemplateProfile.sqf references _u_upgrade in template filtering without a local definition; verify before extending template/profile behavior.",
+    "External deep-research note: the 3 PDFs Steff supplied were generated FROM this wiki (raw.githubusercontent wiki citations) + Miksuu upstream proxy -> downstream corroboration of DR-1/DR-6/DR-7 etc., not independent source verification. Claude's source-verified DR findings are a superset (reports lack DR-11/15/18/19/20/22/23).",
+    "Direct PV hardening gap: attack waves, side supply, supply missions, MASH markers, HQ state, AntiStack compensation, FPS, day/night, marker/message and AFK channels bypass the generic WFBE_PVF command lists; a PVF dispatcher fix alone does not harden them.",
+    "Integration deployment gap: building the in-repo Extension project only provides a2waspwarfare_Extension/GLOBALGAMESTATS; AntiStack depends on a separate A2WaspDatabase DLL that is absent from the repo.",
+    "Governance/tooling gap: DiscordBot sample config has real-looking IDs and production-style path defaults, and the repo has no CI for .NET builds, SQF reference checks or generated-mission drift."
   ],
-  "moddedGeneration": "Disabled/commented in LoadoutManager; treat Modded_Missions/* as stale/non-authoritative.",
-  "packaging": "ZipManager zips Missions and Missions_Vanilla only, then writes _MISSIONS.7z."
- },
- "subAgentFleet": {
-  "startedAt": "2026-06-01T22:09:08+02:00",
-  "orchestrator": "Codex",
-  "activeLanes": [
-   {
-    "agent": "Hilbert",
-    "lane": "network-pv-boundary-deep-index",
-    "scope": "publicVariable/PVF registration, handler flow, authority risks and BattlEye filters",
-    "status": "completed-integrated"
-   },
-   {
-    "agent": "Cicero",
-    "lane": "server-gameplay-loops-deep-index",
-    "scope": "towns, economy, commander, AI teams, supply/value loops and server performance",
-    "status": "completed-integrated"
-   },
-   {
-    "agent": "Curie",
-    "lane": "ui-hud-dialogs-deep-index",
-    "scope": "Rsc resources, HUD/RHUD, dialogs, menus, gear templates and client UX state",
-    "status": "completed-integrated"
-   },
-   {
-    "agent": "Meitner",
-    "lane": "tooling-integrations-deep-index",
-    "scope": "tools, generated missions, extensions, DiscordBot, BattlEye and server configs",
-    "status": "completed-integrated"
-   }
-  ]
- }
+  "currentPR": {
+    "number": 1,
+    "branch": "feat/supply-helicopter",
+    "title": "feat: supply helicopters for both teams",
+    "docsPage": "Current-Work-Supply-Helicopters-PR1.md",
+    "deferred": "Autonomous AI-flown supply helicopters until AI supply logistics is restored/redesigned.",
+    "reviewRisks": [
+      "Repeated supply vehicle reloads must not stack duplicate Killed event handlers.",
+      "PR #1 behavior is pending until merged."
+    ]
+  },
+  "coordination": {
+    "claudeGoal": "Claude-Goal.md",
+    "claudeLongTermGoal": "Claude-Long-Term-Goal.md",
+    "protocol": "Agent-Collaboration-Protocol.md",
+    "machineState": "agent-collaboration.json",
+    "eventFeed": "agent-events.jsonl",
+    "deepReviewFindings": "Deep-Review-Findings.md",
+    "worklog": "Agent-Worklog.md",
+    "progressDashboard": "Progress-Dashboard.md",
+    "statusFile": "agent-status.json",
+    "board": "Coordination-Board.md",
+    "codeAtlas": "SQF-Code-Atlas.md"
+  },
+  "reviewPasses": [
+    {
+      "date": "2026-06-01",
+      "agent": "Claude",
+      "branch": "docs/developer-wiki-claude",
+      "integratedBy": "Codex",
+      "pagesAdded": [
+        "Lifecycle-Wait-Chain.md",
+        "WASP-Overlay.md"
+      ],
+      "findings": [
+        "PVF dispatch uses one PV variable per command with client-side element-0 routing and scheduled Spawn dispatch.",
+        "Town AI performance is based on spawn/delete distance activation, not simulation caching.",
+        "HC delegation works by remote creation and can downgrade at init if no HC is present.",
+        "Supply System 0 plus AI commanders can hit disabled UpdateSupplyTruck and missing supplytruck.fsm.",
+        "PR #1 stacks Killed event handlers on reused supply vehicles."
+      ],
+      "correctionsDuringIntegration": [
+        "Lifecycle economy override is WF_Debug-gated in current source, not unconditional."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Claude",
+      "round": 2,
+      "type": "adversarial cross-check of Codex atlas",
+      "pagesAdded": [
+        "Deep-Review-Findings.md"
+      ],
+      "deepened": [
+        "Feature-Status-Register",
+        "Networking-And-Public-Variables",
+        "Tools-And-Build-Workflow"
+      ],
+      "findings": [
+        "DR-1 PV dispatch Call Compile trust boundary unmitigated by validation or BattlEye filter.",
+        "DR-2 paratrooper drop markers dead because HandleParatrooperMarkerCreation is not in the client PVF list.",
+        "DR-3 MASH tent markers dead because receiverMASHmarker.sqf is only referenced by a commented client init compile.",
+        "DR-4 Chernarus and Takistan are in sync except skip-list/blacklist differences; Modded_Missions are stale or stubbed.",
+        "DR-5 atlas preprocessFile counts should be treated as point-in-time; FSM count of 3 verified accurate."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Claude",
+      "round": 3,
+      "lane": "pvf-hardening-review",
+      "type": "implementation-readiness playbook",
+      "deepened": [
+        "Deep-Review-Findings"
+      ],
+      "findings": [
+        "DR-1 fix is behavior-preserving: SRVFNC/CLTFNC are missionNamespace globals, so dispatch can resolve via getVariable [_script, {}] instead of Call Compile; hostile strings become no-ops.",
+        "No registered PVF handler compiles its parameters; no second-order injection on the PVF path.",
+        "Residual: legitimate-command forgery, such as RequestChangeScore trusting payload, is not closed by the dispatch fix and needs separate per-handler sender/param validation."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Claude",
+      "round": 4,
+      "lane": "construction-authority-review",
+      "type": "authority/forgery review + validation playbook",
+      "deepened": [
+        "Deep-Review-Findings",
+        "Construction-And-CoIn-Systems-Atlas (cross-check)"
+      ],
+      "findings": [
+        "DR-6: RequestStructure/RequestDefense take _side (+_manned) from the client payload; RequestMHQRepair passes the raw payload to MHQRepair. Only class-existence is checked server-side; no commander/funds/dead-HQ/base-area validation.",
+        "Forgeable to mint free factories, AI-manned defenses/minefields and HQ repairs for any side, bypassing economy and base-area avail (decremented only client-side).",
+        "Root cause: payloads omit the requesting player and Arma2 PVEH has no sender identity; authority must be reconstructed server-side. Playbook: add player to payload + validate side+commander+funds. Pairs with DR-1."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 5,
+      "lane": "antistack-db-trust",
+      "type": "external trust-boundary review + hardening playbook",
+      "deepened": [
+        "Deep-Review-Findings",
+        "Codebase-Coverage-Ledger"
+      ],
+      "findings": [
+        "DR-7 (High): all 7 callDatabase*.sqf call compile the A2WaspDatabase callExtension return — server executes external DLL stdout as SQF; DLL absent from repo; defaults ON.",
+        "DR-8 blocking DB poll on join/skill path; DR-9 SEND_PLAYERLIST vs callExtension length limits; DR-10 defaults-on against an absent DLL.",
+        "A2 OA has no parseSimpleArray; fix = defensive shape-validation (guard empty + assert ARRAY of SCALARs) before reading, plus circuit-breaker, chunking and DLL auto-detect."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Hilbert",
+      "lane": "network-pv-boundary-deep-index",
+      "type": "read-only sub-agent source report integrated by Codex",
+      "findings": [
+        "Direct publicVariable channels include day/night, messages, markers, ICBM/radiation, side supply, supply missions, anti-stack, AFK and server FPS.",
+        "Replacing PVF dispatcher Call Compile does not close legitimate-command forgery; high-trust handlers still need sender/role/funds/object validation.",
+        "BattlEye publicvariable.txt contains only the kickAFK feature rule."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Curie",
+      "lane": "ui-hud-dialogs-deep-index",
+      "type": "read-only sub-agent source report integrated by Codex",
+      "findings": [
+        "RscMenu_Upgrade points to missing GUI_Menu_Upgrade.sqf while live flow uses WFBE_UpgradeMenu.",
+        "RscClickableText.soundPush[] has a suspect malformed config value.",
+        "Buy gear has documented partial work around target refresh, vehicle target content and template scope."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Meitner",
+      "lane": "tooling-integrations-deep-index",
+      "type": "read-only sub-agent source report integrated by Codex",
+      "findings": [
+        "LoadoutManager requires an ancestor folder named a2waspwarfare and the current work/a checkout cannot run it as-is.",
+        "LoadoutManager always attempts packaging after generation; missing 7za fails the final packaging step.",
+        "Mission game stats flow through a2waspwarfare_Extension to C:\\a2waspwarfare\\Data\\database.json, then DiscordBot polls that file every 60 seconds.",
+        "Modded mission generation is disabled/commented; Modded_Missions/* are stale/non-authoritative."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Cicero",
+      "lane": "server-gameplay-loops-deep-index",
+      "type": "read-only sub-agent source report integrated by Codex",
+      "pagesAdded": [
+        "Server-Gameplay-Runtime-Atlas.md"
+      ],
+      "findings": [
+        "Server runtime starts town, camp, town AI, resources, victory, cleanup, FPS and AntiStack loops from Init_Server.sqf.",
+        "AI commander state/funds/constants exist, but no active AI commander loop/FSM was found.",
+        "Server_AssignNewCommander likely has a call-shape bug when called from RequestNewCommander.",
+        "Supply mission reward/cooldown logic has client-authority and variable-casing risks.",
+        "Hosted/non-dedicated server FPS publishers can busy-loop because sleeps are inside isDedicated guards."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Codex",
+      "lane": "factory-purchase-atlas",
+      "type": "source-backed subsystem atlas",
+      "pagesAdded": [
+        "Factory-And-Purchase-Systems-Atlas.md"
+      ],
+      "findings": [
+        "Player buy-unit path is client-local and does not use a RequestBuyUnit PVF.",
+        "RequestBuyUnit is not registered in Common/Init/Init_PublicVariables.sqf and no Server/PVFunctions/RequestBuyUnit.sqf exists.",
+        "Server_BuyUnit/AIBuyUnit is compiled but appears latent unless a dynamic caller is later proven.",
+        "Factory spawn pads and queue state are convention-heavy and should be preserved carefully."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Codex",
+      "lane": "fleet-deep-index",
+      "type": "sub-agent orchestration",
+      "findings": [
+        "Spawned four read-only Codex sub-agents for independent deep-index lanes: network/PV, server gameplay loops, UI/HUD/dialogs and tooling/integrations.",
+        "Progress is tracked in Progress-Dashboard.md, Coordination-Board.md, agent-status.json, agent-collaboration.json and agent-events.jsonl."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 6,
+      "lane": "victory-endgame-review",
+      "type": "correctness + broken-feature review",
+      "deepened": [
+        "Deep-Review-Findings",
+        "Codebase-Coverage-Ledger"
+      ],
+      "findings": [
+        "DR-11 (Med-High): victory winner reported inconsistently; persisted *_WIN_CHERNARUS tally inverted for all-towns victories (LogGameEnd called with opposite of _x); WF_Winner is a dead write; precedence/guard gap allows double-fire.",
+        "DR-12: threeway victory mode (WFBE_C_VICTORY_THREEWAY != 0) has no detection in the only victory script -> matches never auto-end.",
+        "DR-13: duplicate buggy Server/PVFunctions/LogGameEnd.sqf (getVariable result used as setVariable key; bare-global WEST_WIN_CHERNARUS)."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 7,
+      "lane": "factory-purchase-authority",
+      "type": "authority review + adversarial cross-check of Codex/Cicero",
+      "deepened": [
+        "Deep-Review-Findings",
+        "Codebase-Coverage-Ledger"
+      ],
+      "findings": [
+        "DR-14 (High, architectural): player purchasing has no server authority (client createVehicle/createUnit + client-side deduct; no RequestBuyUnit PVF). Ceiling on DR-1/DR-6 hardening; only a BattlEye scripts.txt filter can constrain it.",
+        "DR-15 (confirmed): Server_AssignNewCommander.sqf:3 '_side = _this' vs sole caller passing [_side,_commander] -> GetSideLogic fails; fix _side = _this select 0; redundant new-commander-assigned broadcast.",
+        "Verified Codex factory-purchase-atlas (no RequestBuyUnit) and Cicero's commander-assign candidate at source."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 8,
+      "lane": "ui-hud-authority-review",
+      "type": "authority review + adversarial cross-check of Curie",
+      "deepened": [
+        "Deep-Review-Findings",
+        "Codebase-Coverage-Ledger"
+      ],
+      "findings": [
+        "DR-16 (High): structure sale (GUI_Menu_Economy.sqf:104-152) is fully client-authoritative (client commander check, client refund, client setDammage 1); completes build(DR-6)/buy(DR-14)/sell(DR-16) all client-authoritative.",
+        "DR-17 (confirms Curie): RscMenu_EASA and RscMenu_Economy both idd=23000 (Rsc/Dialogs.hpp:3211,3289) -> findDisplay 23000 ambiguous.",
+        "Remaining UI follow-ups: shared title IDD 10200, stale RscMenu_Upgrade, RscClickableText.soundPush."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 9,
+      "lane": "server-loop-candidates-verify",
+      "type": "adversarial verification of Cicero candidates",
+      "deepened": [
+        "Deep-Review-Findings",
+        "Codebase-Coverage-Ledger"
+      ],
+      "findings": [
+        "DR-18 confirmed: supply-cooldown key casing mismatch (lowercase seed vs capital readers; case-sensitive keys) -> nil-throw on first check; defeats the 0-seed guard.",
+        "DR-19 confirmed: hosted/listen-server FPS publishers busy-loop because sleep 8 is inside if(isDedicated); also two redundant FPS publishers.",
+        "Both were Cicero candidates from Server-Gameplay-Runtime-Atlas; verified at source with exact impact and one-line fixes."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 10,
+      "lane": "jip-headless-crosscut",
+      "type": "JIP/multiplayer correctness review",
+      "deepened": [
+        "Deep-Review-Findings",
+        "Codebase-Coverage-Ledger"
+      ],
+      "findings": [
+        "DR-20 (High): HQ Killed EH registered on every owning-side client (broadcast + JIP init), but Server_OnHQKilled.sqf has no idempotency guard -> N-fold duplicate processing (score exploit) on mobile-HQ death.",
+        "JIP HQ-death detection itself is correct (Init_Client !_isDeployed guard; deployed HQ has server-side EH).",
+        "Fix: per-HQ processed flag in OnHQKilled; keep redundant EH registration (detect redundantly, act once)."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 11,
+      "lane": "headless-disconnect-review",
+      "type": "verification + self-correction",
+      "deepened": [
+        "Deep-Review-Findings",
+        "Codebase-Coverage-Ledger"
+      ],
+      "findings": [
+        "Self-correction: round-1 'HC disconnect orphans units' is wrong — engine migrates local units to server (no loss).",
+        "DR-21 (Med): HC delegation has no failover/rebalancing; disconnect dumps AI on the server and delegation is only evaluated at boot.",
+        "Suggest setGroupOwner-based rebalancing on HC connect/disconnect; mission never uses setGroupOwner."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 12,
+      "lane": "side-supply-delta-verify",
+      "type": "economy exploit confirmation (Faraday candidate)",
+      "deepened": [
+        "Deep-Review-Findings",
+        "Codebase-Coverage-Ledger"
+      ],
+      "findings": [
+        "DR-22 (High): Server_ChangeSideSupply.sqf broken floor turns overspend into a windfall (currentSupply+|amount|). Fix: _change=0.",
+        "Same block in Common_ChangeSideSupply is dead (server recomputes from _amount).",
+        "Confirms Faraday's negative-delta candidate + round-1 note; resistance-side handler still missing."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 13,
+      "lane": "upgrade-authority-verify",
+      "type": "economy authority confirmation + synthesis",
+      "deepened": [
+        "Deep-Review-Findings",
+        "Codebase-Coverage-Ledger"
+      ],
+      "findings": [
+        "DR-23 (High): upgrade purchasing client-authoritative — RequestUpgrade passes raw payload to ProcessUpgrade; no commander/funds/sequence/dependency check, no server-side cost.",
+        "Synthesis: entire WFBE economy (build/buy/sell/supply/upgrade = DR-6/14/16/22/23) is client-authoritative; one architectural decision (server-PVF vs BattlEye) covers the class.",
+        "Confirms Faraday's upgrade-authority candidate."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 14,
+      "lane": "missing-reference-inventory",
+      "type": "dead-reference confirmation (Curie candidate)",
+      "deepened": [
+        "Deep-Review-Findings",
+        "Codebase-Coverage-Ledger"
+      ],
+      "findings": [
+        "DR-24 (Low): RscMenu_Upgrade onLoad ExecVMs missing GUI_Menu_Upgrade.sqf; dialog never opened; live UI is GUI_UpgradeMenu.sqf. Dead/naming-drift.",
+        "Handed a reliable missing-reference scanner to Codex/tooling (my ad-hoc bash scan mishandled Windows backslash paths).",
+        "Severity gradient: campaign now in the long tail (Low/cleanup), indicating high-traffic cells are largely reviewed."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 15,
+      "lane": "ui-followups-verify",
+      "type": "UI config defect confirmation (Curie candidates)",
+      "deepened": [
+        "Deep-Review-Findings",
+        "Codebase-Coverage-Ledger"
+      ],
+      "findings": [
+        "DR-25a (Low): RscOverlay + OptionsAvailable share title idd=10200.",
+        "DR-25b (Low): RscClickableText.soundPush[] malformed ({, 0.2, 1}) at Ressources.hpp:556.",
+        "Both confirm Curie's remaining UI candidates; UI follow-ups closed."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 16,
+      "lane": "external-research-integration",
+      "type": "external deep-research integration + corroboration",
+      "deepened": [
+        "Deep-Review-Findings",
+        "Codebase-Coverage-Ledger"
+      ],
+      "findings": [
+        "3 deep-research PDFs are downstream of our wiki (corroboration, not independent source verification); they re-derive DR-1/6/7 etc.; our DR findings are a superset.",
+        "DR-26 (Low, governance): LICENSE.md is custom/proprietary (not OSI); resolves reports' 'license unspecified'.",
+        "Governance handoffs to Codex/owner: neutralize DiscordBot sample GuildID/DataSourcePath; add CI (SQF syntax + generated-mission drift + .NET build)."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "round": 17,
+      "lane": "weather-daynight-review",
+      "type": "clean review (no defect)",
+      "deepened": [
+        "Deep-Review-Findings",
+        "Codebase-Coverage-Ledger"
+      ],
+      "findings": [
+        "Weather/day-night reviewed clean: no div-by-zero (twilight weight constant=3; day duration min 1), JIP covered (engine-synced WFBE_DAYNIGHT_DATE + init setDate), local-animation + 30s drift-sync design sound.",
+        "Recorded the negative result so future passes don't re-review; ledger weather cell -> reviewed-clean.",
+        "Integrity: not manufacturing a finding where code is correct is as valuable as finding bugs."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Codex",
+      "lane": "gear-loadout-easa-atlas-integration",
+      "type": "source-backed subsystem atlas",
+      "pagesAdded": [
+        "Gear-Loadout-And-EASA-Atlas.md"
+      ],
+      "findings": [
+        "Gear catalog arrays, buy-gear templates and EASA aircraft loadouts are split across mission config, client UI and generated LoadoutManager output.",
+        "EASA and balance output are generated by Tools/LoadoutManager and should be edited at the tool data/source layer where possible.",
+        "Gear/EASA purchase and equip decisions remain client-authoritative and should be treated as gameplay-integrity risks."
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Claude",
+      "lane": "modules-review",
+      "type": "deep-review",
+      "pagesAdded": [
+        "Deep-Review-Findings.md (Round 18 / DR-27)",
+        "Codebase-Coverage-Ledger.md (Modules row -> Map done, Auth/PV/Perf/JIP-HC partial)"
+      ],
+      "findings": "DR-27 (CRITICAL): ICBM nuke fully client-authoritative. nukeincoming.sqf:23 sends RequestSpecial=[ICBM,...]; RequestSpecial.sqf=_this Spawn HandleSpecial; Server_HandleSpecial.sqf:97-112 spawns NukeDammage at client-chosen position with no upgrade/commander/funds check. waitUntil !alive _target is timing-only. One forged PV = server-applied map-wide kill. Apex of client-authoritative class. Also confirmed UAV-007 branch disabled; rest of Client/Module config-gated cosmetic/QoL."
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Claude",
+      "lane": "gear-easa-review",
+      "type": "deep-review",
+      "pagesAdded": [
+        "Deep-Review-Findings.md (Round 19 / DR-28)",
+        "Codebase-Coverage-Ledger.md (Gear/EASA row Auth->done; Economy note extended)"
+      ],
+      "findings": "DR-28 (High): gear/EASA loadouts + vehicle rearm/repair/refuel/heal are client-authoritative. No server PVF; EASA cost is client-side if(_funds>price)+ChangePlayerFunds (GUI_Menu_EASA.sqf:46-50); Service rearm (:196-200) and refuel (:217-219) deduct unconditionally (no affordability guard, unlike repair/heal). Completes economy-authority class (build/buy/sell/supply/upgrade/ICBM/gear all client-authoritative)."
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Claude",
+      "lane": "extension-globalgamestats-review",
+      "type": "deep-review",
+      "pagesAdded": [
+        "Deep-Review-Findings.md (Round 20 / DR-29)",
+        "Codebase-Coverage-Ledger.md (Integrations row: Extension sub-target done)"
+      ],
+      "findings": "DR-29 (Medium, latent Critical): in-repo GLOBALGAMESTATS callExtension DLL. Safe today (output never written/discarded -> no call compile, contrast DR-7; reflection enum-gated). Risks: dormant deser-RCE landmine (commented TypeNameHandling.Auto+DeserializeObject); write-only/abandoned-refactor stub (no cross-restart persistence; load path commented, references Database not GameData); async-void create unawaited before File.Replace -> first-run race + possible host crash; minor SQF abs(playerCount-1) HC misreport."
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Claude",
+      "lane": "battleye-posture-review",
+      "type": "deep-review",
+      "pagesAdded": [
+        "Deep-Review-Findings.md (Round 21 / DR-30)",
+        "Codebase-Coverage-Ledger.md (Integrations row: BattlEye sub-target done)"
+      ],
+      "findings": "DR-30 (High, campaign-wide): repo BattlEye footprint is a 22-byte publicvariable.txt with one rule (5 \"kickAFK\" = AFK-kick feature plumbing, not security). No default-deny -> no restriction on forgery-class PVs (RequestSpecial/RequestStructure/RequestUpgrade/HandlePVF). scripts.txt ABSENT -> nothing blunts DR-1 call compile RCE. Implication: option (b) rely-on-BattlEye across DR-1/6/14/16/22/23/27/28 is not shipped; remediation collapses to (a) server-side authority. Caveat: BE files normally live in server BEpath outside the PBO -> production posture is an owner question."
+    },
+    {
+      "date": "2026-06-01",
+      "agent": "Claude",
+      "lane": "discord-datapath-review",
+      "type": "deep-review",
+      "pagesAdded": [
+        "Deep-Review-Findings.md (Round 22 / DR-31)",
+        "Codebase-Coverage-Ledger.md (Integrations row: all 4 sub-targets done, Map complete)"
+      ],
+      "findings": "DR-31 (High): DiscordBot GameData.LoadFromFile() deserializes database.json with TypeNameHandling.All (Newtonsoft gadget sink, worse than the dormant .Auto in DR-29), run every 60s by GameStatusUpdater timer + startup + a command. Capability gratuitous (flat string[] DTO; writer uses .None). Not remote as-configured but any write to the data path = RCE in the token-holding bot process. Fix: .All->.None + delete dead .Auto. Secondary: secret hygiene GOOD (token.txt+preferences.json gitignored; sample tokenless); commands auth-gated; 3-way exportedArgs shape drift (ext[2]/bot[4]/SQF 5)."
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Codex",
+      "lane": "integration-backlog-batch-a",
+      "type": "PV/direct-channel and external integration docs integration",
+      "deepened": [
+        "Networking-And-Public-Variables",
+        "External-Integrations",
+        "Feature-Status-Register"
+      ],
+      "findings": [
+        "Direct non-PVF channels include attack waves, side supply, supply missions, MASH markers, HQ state, AntiStack compensation, server FPS, AFK, day/night and marker/message channels.",
+        "A WFBE_PVF dispatcher fix or whitelist does not cover those direct channels; BattlEye publicvariable design must include both registered and direct channels.",
+        "The in-repo a2waspwarfare_Extension/GLOBALGAMESTATS path is separate from the absent out-of-repo A2WaspDatabase AntiStack extension.",
+        "DiscordBot sample/config hygiene and missing CI/reference validation are documented governance/tooling follow-ups.",
+        "Claude DR-27 was linked from Networking and Feature Status as the highest-priority registered-command authority hazard.",
+        "Claude DR-28 was linked from Economy, Gear/EASA and Feature Status as the final confirmed spend path in the client-authoritative economy class.",
+        "Claude DR-29, DR-30 and DR-31 are now linked from External Integrations / Feature Status as integration and hosting hardening follow-ups."
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "lane": "generated-mission-drift-review",
+      "type": "deep-review",
+      "findings": "DR-32 (Medium, drift + abandoned-code): 3 fidelity tiers. Vanilla Takistan faithful (15/671 sqf differ, all map-config + textures; logic byte-identical -> DR-1..DR-31 propagate verbatim). Napf/eden/lingor divergent hand-edited forks (104-123 logic files differ incl security-critical; Napf ICBM adds GBU-12 bombs; not regenerated per DR-4). sahrani/dingor/tavi/isladuala abandoned stubs (1-20 files, non-runnable)."
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "lane": "factory-perf-jip-review",
+      "type": "deep-review",
+      "findings": "DR-33 (Medium). DR-33a JIP/HC: empty-vehicle purchase exitWith (Client_BuildUnit.sqf:365) returns before the WFBE_C_QUEUE decrement (:469), leaking the buyer's local queue counter -> after _MAX empty-vehicle buys the GUI gate (GUI_Menu_BuyUnits.sqf:145) silently soft-locks that factory type. DR-33b Perf: per-unit while{sleep 4} poll re-broadcasts building queu via setVariable[...,true] each mutation (network churn); varQueu=random(10)+random(100)+random(1000) non-unique (front-of-queue collision); buyer-disconnect orphans queu token (self-heals via another buyer's timeout-cleanup)."
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "lane": "respawn-mash-review",
+      "type": "deep-review",
+      "findings": "DR-34 (Low/Medium, broken feature): MASH map-marker dead on both ends - client receiver commented (Init_Client.sqf:132), trigger PV WFBE_CL_MASH_MARKER_CREATED never broadcast, server PVEH live-but-orphaned (Init_Server.sqf:70). MASH tents real (Officer_Undeploy_MASH.sqf) but no markers. Confirms+extends DR-2. Latent JIP gap if revived (publicVariable single overwritten global, no JIP replay). Perf: respawn selector ~33Hz sleep-0.03 local loop (bounded). Minor: round random 50000 non-unique marker name."
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "lane": "params-localization-review",
+      "type": "deep-review",
+      "findings": "DR-35 (Info, reviewed clean): localization integrity clean - all 204 static localize keys resolve except 3 (1 casing FP, 1 engine STR_EP1_*, 2 in dead/commented WASP actions); config $STR_ all resolve; no live broken string. Params system live+wired (Init_Parameters.sqf paramsArray MP/default SP <- initJIPCompatible.sqf:121; display via Dialogs.hpp:3136); paramsArray index-aligned to class Params order (fragility note). Abandoned: WASP OnArmor + GearYourUnit actions commented in AddActions.sqf. Method: Arma stringtable lookup is case-insensitive -> case-fold before diffing + check liveness or you get false missing-key findings."
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "lane": "victory-perf-jip-review",
+      "type": "deep-review",
+      "findings": "DR-36. Victory Perf clean (80s _loopTimer, cheap checks, dead _innerTimer). JIP/HC server-authoritative; narrow gap: endgame SendToClients + unbroadcast WFBE_GameOver not replayed to a player joining the ~10s pre-failMission window (moot). SOURCE MECHANISM for DR-11/DR-13: win check (:23) parses (&&>||) so !WFBE_GameOver guards only the towns clause not the HQ-elimination clause; side forEach (:43) has no break -> two same-tick eliminations double-fire endgame+LogGameEnd and overwrite WF_Winner with the opposite side. Re-confirms DR-12 (threeway _victory!=0 skips detection). Fix: guard both clauses + break on winner."
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "lane": "boot-lifecycle-perf-jip-review",
+      "type": "deep-review",
+      "findings": "DR-37 (Low, reviewed clean + robustness note): Boot Perf clean - frame-throttled bare waitUntils with cheap conditions; Init_Client.sqf:248 throttle idiom waitUntil{sleep 0.5;cond}; while{true}{sleep 0.1...exitWith} at :419/:444 are bounded join-handshake polls (ACK exit, 30s retry), not perpetual. JIP/HC correct: initJIPCompatible routes server/client-II/HC; JIP syncs time/date+teams+all client state via broadcast logic vars; RequestJoin handshake has 30s retry + lobby fallback. Robustness gap: post-join serial waitUntil chain (Init_Client.sqf:367-502) has no timeouts -> a never-set synced var hangs JIP client forever with no fallback/log."
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "lane": "pv-dispatch-perf-jip-review",
+      "type": "deep-review",
+      "findings": "DR-38 (Low/Medium Perf + JIP clean): PVF dispatchers do Spawn (Call Compile _script) per inbound message (Server_HandlePVF.sqf:14, Client_HandlePVF.sqf:22) - avoidable per-message recompile, redundant vs the init-time precompile into SRVFNC/CLTFNC globals (Init_PublicVariables.sqf:44/49). Validated getVariable lookup removes the recompile AND closes DR-1 RCE (one fix). JIP/HC clean: dispatchers registered in Init_PublicVariables (:45/:50) via Init_Common on all machines incl JIP; PVFs are transient events (no replay); destination routing matches joiners."
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "lane": "supply-missions-perf-jip-review",
+      "type": "deep-review",
+      "findings": "DR-39 (Low/Medium). Abandoned-code: supplyMissionActive.sqf is a dead twin (plain body, no PVEH, compiled Init_Server:81 but never called), superseded by live supplyMissionStarted.sqf (self-registers PVEH). Perf: live per-mission while{alive truck}{sleep 3} loop does nearestObjects[pos,[],80] all-types every 3s - narrowable to [Base_WarfareBUAVterminal]. JIP/HC done right (vs DR-34): cooldown status is pull-based request/response (WFBE_Client_PV_IsSupplyMissionActiveInTown -> server compute -> WFBE_Server_PV_IsSupplyMissionActiveInTown -> client store) so joiners query state; server-side loop survives starter disconnect (truck-keyed). Minor: cooldown answer broadcast to all not targeted."
+    },
+    {
+      "date": "2026-06-02",
+      "agent": "Claude",
+      "lane": "wasp-overlay-perf-jip-review",
+      "type": "deep-review",
+      "findings": "DR-40 (Low). WASP Perf mostly clean; one nit: global_marking_monitor.sqf:62 while{time<_this}do{findDisplay 54} is a sleepless busy-spin (<=2s, input-disabled, one-time) - convert to throttled waitUntil like its :80 sibling. baserep 1Hz only while repairing; DropRPG sleep 30 cooldown; AddActions one-shot wait. JIP/HC clean: live WASP wired per-client from Init_Client (:15/:267/:574/:575) so joiners init locally; local-player guards correct; HC skips. Dead: old WASP/Init_Client.sqf path commented in initJIPCompatible.sqf:243-244. MILESTONE: last Perf/JIP-HC cell - all Perf+JIP/HC dimensions now reviewed; residual is Auth/PV owner decisions."
+    }
+  ],
+  "toolingProjects": [
+    {
+      "name": "Tools/LoadoutManager",
+      "language": "C#",
+      "framework": ".NET 8 executable",
+      "entrypoints": [
+        "Tools/LoadoutManager/Program.cs",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs"
+      ],
+      "inputs": [
+        "Chernarus source mission",
+        "terrain/loadout data classes",
+        "FileManager skip lists"
+      ],
+      "outputs": [
+        "Client/Module/EASA/EASA_Init.sqf",
+        "Common/Functions/Common_BalanceInit.sqf",
+        "Common/Common_ReturnAircraftNameFromItsType.sqf",
+        "per-terrain version.sqf",
+        "Takistan generated mission",
+        "_MISSIONS.7z"
+      ],
+      "requiredExternalFiles": [
+        "7za on PATH or configured for packaging"
+      ],
+      "safeToRunInMirror": false,
+      "notes": "Requires an ancestor folder literally named a2waspwarfare; the current Codex checkout work/a will throw unless run from a correctly named checkout or the lookup is changed. dotnet run always attempts packaging after generation."
+    },
+    {
+      "name": "Tools/PerformanceAuditAnalyzer",
+      "language": "PowerShell",
+      "framework": "PowerShell scripts",
+      "entrypoints": [
+        "Tools/PerformanceAuditAnalyzer/Analyze-PerformanceAudit.ps1"
+      ],
+      "inputs": [
+        "Arma RPT logs containing [Performance Audit]"
+      ],
+      "outputs": [
+        "CSV",
+        "Markdown",
+        "HTML",
+        "Word-friendly reports"
+      ],
+      "requiredExternalFiles": [],
+      "safeToRunInMirror": true,
+      "notes": "Read-only log analyzer useful after performance-sensitive mission changes."
+    },
+    {
+      "name": "DiscordBot",
+      "language": "C#",
+      "framework": ".NET 9 executable",
+      "entrypoints": [
+        "DiscordBot/src/ProgramRuntime.cs"
+      ],
+      "inputs": [
+        "DiscordBot/preferences.json",
+        "DiscordBot/token.txt",
+        "C:\\a2waspwarfare\\Data\\database.json"
+      ],
+      "outputs": [
+        "Discord channel name",
+        "bot presence",
+        "status embed"
+      ],
+      "requiredExternalFiles": [
+        "preferences.json",
+        "token.txt"
+      ],
+      "safeToRunInMirror": false,
+      "notes": "Runtime refuses missing/empty token.txt. Do not invent secrets."
+    },
+    {
+      "name": "Extension",
+      "language": "C#",
+      "framework": ".NET Framework 4.8 Arma extension",
+      "entrypoints": [
+        "Extension/src/EntryPoint.cs"
+      ],
+      "inputs": [
+        "Arma callExtension arguments from Server/CallExtensions/GlobalGameStats.sqf"
+      ],
+      "outputs": [
+        "C:\\a2waspwarfare\\Data\\database.json"
+      ],
+      "requiredExternalFiles": [
+        "legacy NuGet/MSBuild packages"
+      ],
+      "safeToRunInMirror": false,
+      "notes": "Exports _RVExtension@12 and serializes GameData for DiscordBot."
+    },
+    {
+      "name": "Mods/mkswf_sidewinder_reload_time_fix",
+      "language": "Arma config",
+      "framework": "Addon config fragment",
+      "entrypoints": [
+        "Mods/mkswf_sidewinder_reload_time_fix/CfgWeapons.hpp"
+      ],
+      "inputs": [
+        "Sidewinder launcher class config"
+      ],
+      "outputs": [
+        "magazineReloadTime = 1"
+      ],
+      "requiredExternalFiles": [],
+      "safeToRunInMirror": true,
+      "notes": "External addon fragment, not mission SQF."
+    }
+  ],
+  "generatedMissionRules": {
+    "sourceOfTruth": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+    "vanillaGeneratedTarget": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+    "postCopyPatch": "Takistan SET_MAP is patched from 1 to 2.",
+    "skipList": [
+      "mission.sqm",
+      "version.sqf",
+      "Client/GUI/GUI_Menu_Help.sqf",
+      "texHeaders.bin",
+      "WASP/unsort/StartVeh.sqf",
+      "loadScreen.jpg",
+      "Textures",
+      "Server/Config",
+      "Common/Config/Core_Artillery"
+    ],
+    "moddedGeneration": "Disabled/commented in LoadoutManager; treat Modded_Missions/* as stale/non-authoritative.",
+    "packaging": "ZipManager zips Missions and Missions_Vanilla only, then writes _MISSIONS.7z."
+  },
+  "subAgentFleet": {
+    "startedAt": "2026-06-01T22:09:08+02:00",
+    "orchestrator": "Codex",
+    "activeLanes": [
+      {
+        "agent": "Hilbert",
+        "lane": "network-pv-boundary-deep-index",
+        "scope": "publicVariable/PVF registration, handler flow, authority risks and BattlEye filters",
+        "status": "completed-integrated"
+      },
+      {
+        "agent": "Cicero",
+        "lane": "server-gameplay-loops-deep-index",
+        "scope": "towns, economy, commander, AI teams, supply/value loops and server performance",
+        "status": "completed-integrated"
+      },
+      {
+        "agent": "Curie",
+        "lane": "ui-hud-dialogs-deep-index",
+        "scope": "Rsc resources, HUD/RHUD, dialogs, menus, gear templates and client UX state",
+        "status": "completed-integrated"
+      },
+      {
+        "agent": "Meitner",
+        "lane": "tooling-integrations-deep-index",
+        "scope": "tools, generated missions, extensions, DiscordBot, BattlEye and server configs",
+        "status": "completed-integrated"
+      }
+    ]
+  }
 }

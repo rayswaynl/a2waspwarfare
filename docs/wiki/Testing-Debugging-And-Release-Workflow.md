@@ -123,6 +123,6 @@ Minimal record example:
 
 ## Continue Reading
 
-Previous: [Hardening roadmap](Hardening-Implementation-Roadmap) | Next: [Deep-review findings](Deep-Review-Findings)
+Previous: [Server authority migration map](Server-Authority-Migration-Map) | Next: [Deep-review findings](Deep-Review-Findings)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

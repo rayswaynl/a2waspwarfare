@@ -419,6 +419,13 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Added [`agent-test-plan.schema.json`](agent-test-plan.schema.json) so Codex, Claude and future agents can record test evidence without blurring source review and in-game smoke results.
 - Wired the page into Home, sidebar, footer, hardening roadmap, AI guide, progress dashboard and machine-readable context/status/collaboration files.
 
+## 2026-06-02 - Codex Server Authority Migration Map
+
+- Added [Server authority migration map](Server-Authority-Migration-Map) as the design layer between the hardening roadmap and testing workflow.
+- Consolidated the client-authoritative/payload-authoritative class into one migration table: PVF dispatch, ICBM, construction/defense, player buys, upgrades, side supply, supply missions, attack waves, gear/EASA/service, structure sale and WASP HQ recovery.
+- Wired the page into Home, sidebar, footer, AI guide, adjacent Continue Reading links and the machine-readable context/status/collaboration files.
+- Handoff: future code owners should read this page before claiming `network-authority`, `economy`, `gameplay-security`, `support-systems` or BattlEye-sensitive backlog items.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

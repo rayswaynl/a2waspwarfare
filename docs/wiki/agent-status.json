@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T14:10:00+02:00",
+  "generatedAt": "2026-06-02T14:30:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -74,6 +74,12 @@
       "owner": "Codex/future-agent",
       "status": "open",
       "output": "Keep confirmed findings reflected in owning atlas/risk pages"
+    },
+    {
+      "lane": "server-authority-migration-map",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Server-Authority-Migration-Map.md source-backed migration guide for client-trusted authority flows"
     }
   ],
   "queuedReports": [],
@@ -100,6 +106,7 @@
     "townAiVehicleSafety": "Town-AI-Vehicle-Despawn-Safety.md",
     "lifecycleWaitChain": "Lifecycle-Wait-Chain.md",
     "testingWorkflow": "Testing-Debugging-And-Release-Workflow.md",
-    "agentTestPlanSchema": "agent-test-plan.schema.json"
+    "agentTestPlanSchema": "agent-test-plan.schema.json",
+    "serverAuthorityMap": "Server-Authority-Migration-Map.md"
   }
 }
