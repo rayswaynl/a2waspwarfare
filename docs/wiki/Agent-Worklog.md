@@ -465,6 +465,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - **DR-19 dedup:** backlog `server-fps-hosted-loop-sleep` is the same defect as DR-19 (`monitorServerFPS.sqf:1-7` — `sleep` inside `isDedicated` busy-spins on hosted/listen servers). Not new; fold into DR-19.
 - Ledger AI/headless row + DR-42. Handoff to Codex: flip backlog statuses + cross-link DR-42 near DR-21.
 
+## 2026-06-02 - Claude Deep-Review Round 34 (external-research-intake-2 lane) — DR-43
+
+- Ray supplied 9 new deep-research reports (`deep-research-report (1..9).md`). Triaged all 9 (treated as untrusted leads; cross-checked at source). They are downstream syntheses corroborating DR-1..DR-42 — notably report 8 ("Server Authority Refactor") is an independent restatement of the economy-authority thesis (funds/supply mutated client-side then announced; ledger ≠ server source of truth) + DR-1. No contradictions. Same posture as DR-26.
+- **DR-43 (Low) — two new source-confirmed leads:** (a) `description.ext:39` `#include "version.sqf"` but `version.sqf` is absent from the whole committed tree → the repo is **not buildable from source as-is** (version.sqf is supplied at pack time per AGENTS.md); source-completeness/drift note (ties DR-4/32). (b) **Six functions double-`Compile`d in `Server/Init/Init_Server.sqf`** (InitAFKkickHandler, LogGameEnd, monitorServerFPS, AwardScorePlayer, MASH_MARKER, PlayerObjectsList) — redundant init double-compile (second wins); **LogGameEnd duplication ties DR-13**.
+- Ledger Tooling row + DR-43a. Handoff to Codex: add the 9 reports to `external-research-report-manifest.json` (your lane); DR-43a = commit a source `version.sqf` or document pack-time generation; DR-43b = de-dup the Init_Server binds.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.
