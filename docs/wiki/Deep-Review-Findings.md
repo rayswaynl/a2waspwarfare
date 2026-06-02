@@ -251,7 +251,7 @@ Code owners: apply DR-7 defensive validation (guard empty + shape-check before r
 
 Lane `victory-endgame-review`. Source: `Server/FSM/server_victory_threeway.sqf` (the **only** script that sets `gameOver`/`WFBE_GameOver`/`failMission` — verified by grep across `Server/`), `Server/Functions/Server_LogGameEnd.sqf`, `Server/PVFunctions/LogGameEnd.sqf`, `Common/Init/Init_CommonConstants.sqf:401`.
 
-### DR-11 — Endgame reports the winner inconsistently; persisted win-tally is wrong for the all-towns win — **Medium-High (correctness, persistent side effect)**
+### DR-11 — Endgame reports the winner inconsistently; persisted win-tally is wrong for the all-towns win — **High (correctness, persistent side effect — inverted persisted win-tally)**
 
 The trigger merges a *lose* test and a *win* test into one condition and then handles both identically:
 ```sqf
@@ -723,6 +723,8 @@ Config-side `$STR_` references in `.hpp`/`.ext` (excluding engine `STR_EP1_`/`ST
 Lane `victory-perf-jip-review`. Filled the Victory/endgame Perf + JIP/HC cells by reviewing the loop in `Server/FSM/server_victory_threeway.sqf` (the **sole** victory FSM, `execVM`'d unconditionally at `Server/Init/Init_Server.sqf:528`) and the end-of-match DB-flush tail, and traced the win-condition expression to a source-level root cause for the previously-observed DR-11/DR-13.
 
 ### DR-36 — Victory loop Perf clean + JIP/HC server-authoritative; the win-condition guard/precedence is the source of DR-11/DR-13 double-fire — **Low (Perf/JIP clean) + Medium (the confirmed correctness bug)**
+
+> **Dual-purpose finding — disambiguate when citing:** DR-36 records *two* things: (1) a **clean** Perf/JIP review of the victory loop (no defect on those dimensions), and (2) the **root-cause mechanism** for the separate correctness bugs DR-11 (winner inversion, High) and DR-13 (duplicate game-end). Cite "DR-36" for the *mechanism/fix*; cite DR-11/DR-13 for the *severity/impact*.
 
 **Perf — clean.** The detection loop runs every `_loopTimer = 80` seconds (`:6,46`) with cheap per-side work (`GetSideHQ`/`GetSideStructures`/`GetTownsHeld` + 4× `GetFactories`, `:14-21`). No hot loop, no per-frame churn. Minor: `_innerTimer` is incremented (`:47`) but never read (dead variable); `_miniSleep = 0.05` paces only the one-time end-of-match per-player DB `STORE` (`:60-82`). No perf trap.
 

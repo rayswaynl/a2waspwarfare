@@ -478,6 +478,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Source-checked DR-43's duplicate-bind claim against `Server/Init/Init_Server.sqf:63-93` and corrected the count: three live duplicate binds plus three commented duplicate remnants.
 - Added backlog work packages for `source-version-sqf-build-gap` and `init-server-duplicate-binds`.
 
+## 2026-06-02 - Claude Wiki-Quality Program, Pass 1 (Ray-approved plan)
+
+- Ray asked for a wiki quality pass (dedup / audit entries / additional context). Ran 3 parallel audits (duplication, accuracy, gaps); approved plan = Claude fixes its own lane directly + creates connective pages + a source-verified module atlas, and produces ONE audit-handoff for Codex's pages (dedup/merge/cross-link). Plan: `~/.claude/plans/drifting-tickling-platypus.md`.
+- **Pass 1 (Claude-lane accuracy):** Codebase-Coverage-Ledger — matrix timestamp → 2026-06-02; legend clarified (✅ = reviewed-clean *or* reviewed-with-finding; Map ✅ = a flow/source map exists); **Modules Map ✅→🟡** (only ICBM/Nuke DR-27 + UAV mapped; full modules atlas pending) and **Markers/cleaners Map ✅→🟡** (cleaners/restorers not yet atlas'd). Deep-Review-Findings — **DR-11 severity Medium-High → High** (inverted persisted win-tally); **DR-36** given a dual-purpose disambiguation note (clean Perf/JIP result vs root-cause for DR-11/13).
+- Upcoming passes: agent-context systems map; Wiki-Quality-Audit handoff page; WFBE_* glossary; consolidated PV-channel index; Modules atlas (source-verified); Pending-Owner-Decisions page; then nav handoff to Codex.
+
 ## 2026-06-02 - Codex HC Delegation/Failover Playbook
 
 - Read `Headless/Init/Init_HC.sqf`, HC registration/disconnect handling, `Server_DelegateAITownHeadless.sqf`, `Server_DelegateAIStaticDefenceHeadless.sqf`, `Client_DelegateTownAI.sqf`, `Client_DelegateAIStaticDefence.sqf`, `Server_FNC_Delegation.sqf`, `Server_HandleDefense.sqf`, `Server_OperateTownDefensesUnits.sqf` and `server_town_ai.sqf`.
