@@ -15,7 +15,7 @@ All source paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.cher
 | CoIn runtime UI | `Client/Module/CoIn/coin_interface.sqf` |
 | Client action lifecycle | `Client/FSM/updateclient.sqf`, `Client/Functions/Client_PreRespawnHandler.sqf`, `Client/Functions/Client_OnKilled.sqf` |
 | Server PVF entrypoints | `Server/PVFunctions/RequestStructure.sqf`, `Server/PVFunctions/RequestDefense.sqf`, `Server/PVFunctions/RequestMHQRepair.sqf` |
-| Server construction workers | `Server/Construction/Construction_HQSite.sqf`, `Construction_SmallSite.sqf`, `Construction_MediumSite.sqf`, `Construction_StationaryDefense.sqf` |
+| Server construction workers | `Server/Construction/Construction_HQSite.sqf`, `Construction_SmallSite.sqf`, `Construction_MediumSite.sqf`, `Construction_StationaryDefense.sqf`; patch-ready SmallSite cleanup lives in [Construction logic list cleanup](Construction-Logic-List-Cleanup). |
 | Structure config | `Common/Config/Core_Structures/Structures_*.sqf` |
 | Server support functions | `Server_HandleBuildingRepair.sqf`, `Server_MHQRepair.sqf`, `Server_OnHQKilled.sqf`, `Server_HandleDefense.sqf`, `Server_CreateDefenseTemplate.sqf` |
 | Client structure markers | `Client/Init/Init_BaseStructure.sqf` |
@@ -198,7 +198,7 @@ Focused construction review found a source asymmetry worth treating as a bug can
 - No source initializer for `wfbe_structures_logic` was found in the server init path; `Init_Server.sqf` initializes `wfbe_structures` and `wfbe_structures_live`, while `wfbe_structures_logic` appears only in SmallSite/MediumSite/repair-handler code.
 - Wave P confirmed the same SmallSite add/add and MediumSite add/remove shape in maintained Vanilla Takistan and the main modded Eden/Napf copies. `Server_HandleBuildingRepair.sqf:81,99` removes repair logic entries, but no active source caller for `HandleBuildingRepair` was found beyond compile/init text, so repair cleanup does not prove SmallSite stale entries are cleared in live play.
 
-Patch shape should be smoke-led: confirm whether small sites can leave duplicate/stale construction logic in a live build, then align SmallSite with MediumSite if the list is actually active.
+Patch shape is now captured in [Construction logic list cleanup](Construction-Logic-List-Cleanup): source Chernarus should change only the post-completion SmallSite line from append to remove, then propagate maintained Vanilla with `Tools/LoadoutManager` and smoke small/medium construction before claiming runtime impact.
 
 ### StationaryDefense
 
@@ -260,7 +260,7 @@ The server reaches this script by `setVehicleInit` in construction scripts (`Con
 | Server request validation | `RequestStructure` / `RequestDefense` trust client-side payment and placement checks; see [Deep-review findings](Deep-Review-Findings) DR-6. | Add server-side validation of side, commander/repair-truck authority, class membership, funds, radius, base-area availability and collision restrictions before creating objects. Start in request handlers, not in CoIn UI. |
 | PVF dispatch | Construction uses generic PVF channels; DR-1 already shows dispatch hardening is needed. | Validate PVF function strings and then validate construction payloads. |
 | Base-area availability | `avail`/`weapons` are updated through client-visible logic and direct client CoIn mutations. | Before changing limits, trace `RequestBaseArea`, `coin_interface`, `Construction_StationaryDefense` and JIP behavior together. |
-| SmallSite/MediumSite repair logic asymmetry | SmallSite adds `_nearLogic` where its comment says remove; MediumSite removes it. `wfbe_structures_logic` has no obvious source initializer. | Verify runtime list ownership before patching; if active, align SmallSite cleanup to MediumSite and smoke small/medium construction plus repair-logic cleanup. |
+| SmallSite/MediumSite repair logic asymmetry | SmallSite adds `_nearLogic` where its comment says remove; MediumSite removes it. `wfbe_structures_logic` has no obvious source initializer. | Use [Construction logic list cleanup](Construction-Logic-List-Cleanup) for the exact one-line patch, Vanilla propagation and smoke checklist; keep this separate from construction authority hardening. |
 | Progressive repair/construction path appears dormant | Progressive mode code remains in construction scripts and economy UI, but `Rsc/Parameters.hpp` exposes only construction-time mode `0`. | Do not expand progressive repair UI until the mission parameter and live caller model are restored intentionally. |
 | Cost deduction | Normal build/MHQ repair/sale costs are deducted client-side. | Server should become the final authority for final debits/refunds; client can keep previews and immediate feedback. |
 | HQ killed EH locality | Mobile HQ killed EH fires locally, so server sends clients `set-hq-killed-eh`. | Preserve dedicated/JIP handling when touching HQ mobilize/repair/deploy. |

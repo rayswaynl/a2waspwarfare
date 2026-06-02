@@ -1071,6 +1071,13 @@ Key conclusions:
 - Split `RequestSpecial` into tag families so future agents do not treat ICBM, support effects, HC delegation and bookkeeping as one patch. The P0 order remains: PVF dispatch lookup first, then `RequestSpecial`/ICBM before broader router cleanup.
 - Wired [Networking/PV](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index), [Feature status](Feature-Status-Register), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), [`agent-feature-status.jsonl`](agent-feature-status.jsonl) and [`agent-status.json`](agent-status.json) to the new matrix.
 
+# 2026-06-02 - Construction Logic List Cleanup Playbook
+
+- Reused the six attached subagents as Wave Q after the runtime reported the subagent thread cap was reached. Wave Q lanes cover construction cleanup, economy authority, commander/HQ lifecycle, factory queues, town AI/capture/delegation and UI/action/RHUD state.
+- Added [Construction logic list cleanup](Construction-Logic-List-Cleanup), turning the Wave P SmallSite/MediumSite `wfbe_structures_logic` asymmetry into a patch-ready guide.
+- The proposed source patch is deliberately tiny: keep the initial SmallSite append, but change the post-completion line in `Construction_SmallSite.sqf` from append to remove so it matches `Construction_MediumSite.sqf`.
+- Propagation remains source-first: patch Chernarus, run `A2WASP_SKIP_ZIP=1 dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj`, inspect maintained Vanilla Takistan, then smoke small and medium construction in Arma 2 OA before claiming runtime impact.
+
 # 2026-06-02 - Scripting-Reference BIKI Version Cross-Check (Claude)
 
 - Dissected BI's Arma 2 OA scripting-command category against actual source-command usage in `Missions/[55-2hc]warfarev2_073v48co.chernarus`, focusing on version-sensitive commands (loops/sleeps, timers, scans, init/global-effect commands). BIKI version badges verified read-only on `community.bohemia.net` (BIKI blocks anonymous fetch on `community.bistudio.com`).

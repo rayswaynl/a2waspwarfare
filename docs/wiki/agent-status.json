@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T22:20:00+02:00",
+  "generatedAt": "2026-06-02T20:48:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -17,9 +17,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Acting as main LLM orchestrator and publisher: routing Claude/Codex lanes, harvesting returned reports into owner pages and machine records, and publishing validated docs/wiki mirror updates.",
-      "nextExpectedOutput": "Harvest the new sidecar scout reports when they return, then promote confirmed findings into owner pages and machine records."
+      "currentLane": "construction-logic-list-cleanup-playbook",
+      "currentWork": "Acting as main LLM orchestrator and publisher. Current local slice turns the SmallSite/MediumSite wfbe_structures_logic asymmetry into a patch-ready playbook while Wave Q subagents run read-only code discovery.",
+      "nextExpectedOutput": "Validate and publish the construction cleanup playbook, then harvest Wave Q reports when they return."
     },
     "Codex-2": {
       "status": "ready",
@@ -34,13 +34,25 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "wave-p-returned-harvest-local",
-      "currentLane": "orchestrator-sidecar-discovery-p",
-      "currentWork": "All six Wave P read-only lanes returned. Codex has promoted selected source-checked deltas locally: FPS/RHUD contract, stale GetDelegators drift, construction logic-list asymmetry, GlobalGameStats fixture contract, tracked mission parity counts and buy-gear click-pool clarification.",
-      "nextExpectedOutput": "Codex will validate, mirror, commit and push the Wave P owner-page harvest."
+      "status": "wave-q-running-readonly",
+      "currentLane": "orchestrator-code-discovery-wave-q",
+      "currentWork": "Six attached explorers are running scoped read-only lanes: construction cleanup, economy authority, commander/HQ lifecycle, factory queues, town AI/capture/delegation and UI/action/RHUD state.",
+      "nextExpectedOutput": "Return concise reports with exact paths/line refs; Codex will source-check and promote only confirmed findings."
     }
   },
   "laneSummary": [
+    {
+      "lane": "construction-logic-list-cleanup-playbook",
+      "owner": "Codex",
+      "status": "local-validation-pending",
+      "output": "Construction-Logic-List-Cleanup.md turns the SmallSite/MediumSite wfbe_structures_logic asymmetry into a patch-ready guide with exact source evidence, one-line source patch shape, Vanilla propagation plan and smoke checklist."
+    },
+    {
+      "lane": "orchestrator-code-discovery-wave-q",
+      "owner": "Codex sub-agents",
+      "status": "running-readonly",
+      "output": "The subagent thread cap blocked fresh spawns, so Codex reused the six attached explorers for Wave Q: construction cleanup, economy authority, commander/HQ lifecycle, factory queues, town AI/capture/delegation and UI/action/RHUD state."
+    },
     {
       "lane": "wave-p-owner-page-harvest",
       "owner": "Codex",

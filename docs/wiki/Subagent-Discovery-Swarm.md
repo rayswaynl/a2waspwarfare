@@ -4,7 +4,22 @@ This page tracks the cheap read-only Codex discovery agents currently digging th
 
 The swarm is intentionally evidence-first: agents read source, report path/line-backed findings, and avoid editing docs or mission code. Codex integrates the useful findings into the wiki, `agent-context.json`, the coverage ledger and the feature-status register after review.
 
-## Current Wave: Wave P
+## Current Wave: Wave Q
+
+Spawned from the main orchestrator after Wave P was published. Fresh spawns were blocked by the active subagent thread cap, so Codex reused the six attached explorers as read-only Wave Q lanes while keeping docs edits local.
+
+| Agent | Lane | Status | Expected output |
+| --- | --- | --- | --- |
+| Tesla | `construction-logic-cleanup-propagation` | Running / read-only | Confirm SmallSite/MediumSite `wfbe_structures_logic` lifecycle, repair consumer status and source/Vanilla/modded propagation shape. |
+| Linnaeus | `economy-authority-trust-boundaries` | Running / read-only | Trace funds/supply/score mutation and PV channels, then identify patch-ready first authority cuts. |
+| Lorentz | `commander-hq-lifecycle-edge-cases` | Running / read-only | Trace commander assignment, HQ/MHQ lifecycle, disconnect/reassignment, vote and PV/UI dependencies. |
+| Hubble | `factories-purchase-queue-integrity` | Running / read-only | Trace client buy flow through server factory queue, spawn/refund/cancel and queue counter/token cleanup risks. |
+| Banach | `town-ai-camp-capture-delegation` | Running / read-only | Trace town/camp capture, town AI spawn/delegation, despawn safety and resistance/supply interactions. |
+| Curie | `client-ui-action-rhud-state` | Running / read-only | Trace action menu/RHUD/OptionsAvailable/buy/service/respawn UI state, IDD/IDC collisions and stale paths. |
+
+Harvest rule: Wave Q reports are leads until Codex source-checks and promotes them into owner pages. The first local output from this wave is [Construction logic list cleanup](Construction-Logic-List-Cleanup), a patch-ready playbook for the SmallSite cleanup lane.
+
+## Previous Wave: Wave P
 
 Spawned from the main orchestrator after Wave O was published. These are narrow read-only lanes chosen from Wave O leads; Codex is again keeping edits and publication local.
 

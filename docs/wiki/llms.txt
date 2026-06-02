@@ -53,6 +53,7 @@ Important notes:
 - [Victory and endgame atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/Victory-And-Endgame-Atlas): Canonical match-end detection, loser/winner payload semantics, win-stat logging and patch-ready endgame correctness map.
 - [Marker cleanup/restoration atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/Marker-Cleanup-Restoration-Systems-Atlas): Client marker families, `MARKER_CREATION`, HQ wreck markers, garbage/mines/empty-vehicle cleanup and restoration risks.
 - [Support/specials/tactical modules atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/Support-Specials-And-Tactical-Modules-Atlas): Tactical support menu, `RequestSpecial`, paratroopers, UAV, artillery, ICBM, MASH, ZetaCargo, service and supply support status.
+- [Construction logic list cleanup](https://github.com/rayswaynl/a2waspwarfare/wiki/Construction-Logic-List-Cleanup): Patch-ready SmallSite/MediumSite `wfbe_structures_logic` cleanup plan, propagation path and smoke checklist.
 - [Upgrades and research atlas](https://github.com/rayswaynl/a2waspwarfare/wiki/Upgrades-And-Research-Atlas): Canonical upgrade/research system map and patch-ready authority risks.
 - [Supply mission architecture](https://github.com/rayswaynl/a2waspwarfare/wiki/Supply-Mission-Architecture): Player supply-truck mission flow.
 - [Supply mission authority cleanup](https://github.com/rayswaynl/a2waspwarfare/wiki/Supply-Mission-Authority-Cleanup-Playbook): Cooldown/reward/trust cleanup plan.

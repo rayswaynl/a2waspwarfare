@@ -43,6 +43,7 @@
 - [Gameplay atlas](Gameplay-Systems-Atlas)
 - [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas)
 - [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas)
+- [Construction logic cleanup](Construction-Logic-List-Cleanup)
 - [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas)
 - [Upgrades/research atlas](Upgrades-And-Research-Atlas)
 - [Server runtime atlas](Server-Gameplay-Runtime-Atlas)
