@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `wiki-quality-dup5-battleye-routing` | Published | [External integrations](External-Integrations) now owns shipped BattlEye posture; [Feature status](Feature-Status-Register), [Networking/PV](Networking-And-Public-Variables), [Hardening roadmap](Hardening-Implementation-Roadmap) and [Server authority map](Server-Authority-Migration-Map) route there instead of repeating the `kickAFK`/missing-filter evidence. |
 | `performance-opportunity-sweep` | Published | [Performance opportunity sweep](Performance-Opportunity-Sweep) ranks PVF dispatch lookup, hosted FPS loops, supply scans, duplicate `Skill_Init`, factory queue churn, WASP marker polling and audit-first cleaner/marker loops. |
 | `icbm-authority-playbook-routing` | Published | [ICBM authority](ICBM-Authority-Playbook) turns DR-27 into a patch-ready guide and routes duplicated ICBM/Nuke authority detail from the roadmap, authority map, feature status and navigation into one canonical page. |
 | `wiki-quality-merge1-authority-routing` | Published | [Hardening roadmap](Hardening-Implementation-Roadmap) now owns patch order and validation gates; [Server authority map](Server-Authority-Migration-Map) owns authority design principles, flow table and handler checklist. |
@@ -46,8 +47,8 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice published the [ICBM authority playbook](ICBM-Authority-Playbook) and resolved Wiki Quality DUP-3 routing. |
-| Codex-2 | Active | `performance-opportunity-sweep` | Source-tracing server FPS loops, supply mission scans, WASP display polling, factory queue broadcasts, PVF dispatch and marker update loops into a ranked performance handoff. |
+| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved Wiki Quality DUP-5 by making [External integrations](External-Integrations) the BattlEye posture source. |
+| Codex-2 | Ready for next lane | `performance-opportunity-sweep` | [Performance opportunity sweep](Performance-Opportunity-Sweep) is published; next best lanes are AI supply logistics cleanup, paratrooper-marker implementation, or one code patch from the new sweep. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
@@ -72,8 +73,9 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `wiki-quality-dup5-battleye-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-5 is resolved: shipped BattlEye posture lives in [External integrations](External-Integrations), with short routing notes on Feature Status, Networking/PV, roadmap and authority map. |
 | `icbm-authority-playbook-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-3 is resolved: DR-27 ICBM/Nuke implementation detail lives in [ICBM authority](ICBM-Authority-Playbook), with short routing summaries elsewhere. |
-| `performance-opportunity-sweep` | Codex-2 | Active | Codex-2 is source-tracing performance hotspots into a ranked implementation handoff; keep this lane separate from ICBM authority routing. |
+| `performance-opportunity-sweep` | Codex-2 | Published | [Performance opportunity sweep](Performance-Opportunity-Sweep) ranks PVF dispatch lookup, hosted FPS loops, supply mission scans, duplicate `Skill_Init`, factory queue churn, WASP marker polling and audit-first cleaner/marker loops. |
 | `wiki-quality-merge1-authority-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) MERGE-1 is resolved: roadmap is the patch-order hub, server-authority map is the design/checklist/table page. |
 | `wiki-quality-dup10-hc-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-10 is resolved: HC runtime source routing, lifecycle boot timing and DR-21/DR-42 patch policy now have distinct page ownership. |
 | `wiki-quality-c3-gameplay-followups` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) C3 is resolved: Gameplay open questions are now source-backed resolved follow-ups. |

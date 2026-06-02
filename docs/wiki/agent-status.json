@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T08:46:54+02:00",
+  "generatedAt": "2026-06-02T22:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,7 +16,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass published ICBM-Authority-Playbook.md and resolved Wiki Quality DUP-3 routing.",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki Quality DUP-5 by making External-Integrations.md the canonical shipped BattlEye posture page.",
       "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining duplicate reductions, Arma 2 OA external-reference integration into subsystem pages, or more implementation-readiness playbooks."
     },
     "Codex-2": {
@@ -33,6 +33,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wiki-quality-dup5-battleye-routing",
+      "owner": "Codex",
+      "status": "published",
+      "output": "External-Integrations.md now owns shipped BattlEye posture; Feature Status, Networking/PV, Hardening roadmap and Server authority map route there instead of repeating DR-30 evidence"
+    },
     {
       "lane": "icbm-authority-playbook-routing",
       "owner": "Codex",
@@ -253,6 +259,7 @@
     "externalResearchManifest": "external-research-report-manifest.json",
     "networking": "Networking-And-Public-Variables.md",
     "externalIntegrations": "External-Integrations.md",
+    "battlEyePosture": "External-Integrations.md#battleye-filter",
     "hardeningRoadmap": "Hardening-Implementation-Roadmap.md",
     "hardeningBacklog": "agent-hardening-backlog.jsonl",
     "collaborationProtocol": "Agent-Collaboration-Protocol.md",

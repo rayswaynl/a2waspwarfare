@@ -19,7 +19,7 @@ Every authority patch should follow the same rules before touching code:
 | Dispatch and payloads are different | PVF dispatcher hardening closes sender-chosen handler strings; legitimate handlers and direct PV channels still need per-flow validation. |
 | Sender identity is weak in Arma 2 OA PVEHs | Include requester context where safe and cross-check group, side, ownership and UID instead of trusting a payload scalar. |
 | Logging is part of the patch | Accepted high-value transactions and rejected malformed/unauthorized requests need compact, non-spammy logs. |
-| BattlEye is defense in depth | Filters reduce public-server exposure but are not the mission's source of truth. |
+| BattlEye is defense in depth | Filters reduce public-server exposure but are not the mission's source of truth; shipped filter evidence lives in [External integrations](External-Integrations). |
 
 For the full per-handler checklist, use [Server authority migration map](Server-Authority-Migration-Map).
 
@@ -64,7 +64,7 @@ Validation:
 - Valid commander with required ICBM state can still launch.
 - Non-commander and wrong-side requests are rejected.
 - Bad `_target`, dead `_target`, wrong `_base` and out-of-range/invalid objects do not spawn `NukeDammage`.
-- BattlEye filter design still treats `RequestSpecial` as high-risk defense-in-depth, not as the main authority layer.
+- BattlEye filter design still treats `RequestSpecial` as high-risk defense-in-depth, not as the main authority layer; see [External integrations](External-Integrations) before claiming shipped filter coverage.
 
 ## P1: Victory And Endgame
 

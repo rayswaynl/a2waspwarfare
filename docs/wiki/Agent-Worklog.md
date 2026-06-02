@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wiki-Quality DUP-5 BattlEye Routing
+
+- Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-5 by making [External integrations](External-Integrations) the canonical shipped BattlEye/server-filter posture page.
+- Added a compact evidence table for the in-tree `BattlEyeFilter/publicvariable.txt` AFK rule, the missing broader filter/config bundle and the production `BEpath` owner question.
+- Trimmed [Feature status](Feature-Status-Register), [Networking and public variables](Networking-And-Public-Variables), [Hardening roadmap](Hardening-Implementation-Roadmap) and [Server authority map](Server-Authority-Migration-Map) so they route to the canonical posture page instead of repeating DR-30 evidence.
+
 ## 2026-06-02 - Codex ICBM Authority Playbook
 
 - Source-read the ICBM/Nuke path across Tactical menu gating, `Client/Module/Nuke/nukeincoming.sqf`, `Server/PVFunctions/RequestSpecial.sqf`, `Server/Functions/Server_HandleSpecial.sqf` and `Client/Module/Nuke/damage.sqf`.

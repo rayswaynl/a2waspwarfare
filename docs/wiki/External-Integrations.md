@@ -87,13 +87,19 @@ Important distinction: the in-repo `Extension` project implements `a2waspwarfare
 
 ## BattlEye Filter
 
+Page ownership: this section is the canonical shipped BattlEye/server-filter posture. Other pages should link here instead of restating the `kickAFK`/missing-filter evidence.
+
 `BattlEyeFilter/publicvariable.txt` contains the public-variable rule used for AFK kick behavior. Client `updateclient.sqf` intentionally broadcasts `kickAFK`; BattlEye detects it and kicks because direct serverCommand paths are unavailable/disabled.
 
-This file is feature-specific, not a comprehensive publicVariable hardening layer. The current filter contains only the `kickAFK` rule, so PVF spoofing and direct mission PV channels must not be considered protected by BattlEye until a restrictive whitelist is designed and tested.
+| Shipped evidence | Developer meaning |
+| --- | --- |
+| `BattlEyeFilter/publicvariable.txt` contains only `//new` and `5 "kickAFK"`. | This is feature plumbing for AFK kick, not a comprehensive publicVariable hardening layer. |
+| No in-tree `scripts.txt`, `server.cfg`, `basic.cfg` or broader BattlEye filter bundle is present. | The repo cannot claim shipped public-server BattlEye hardening; production `BEpath` files remain an owner/deployment question. |
+| PVF registered commands and direct mission PV channels both exist. | Filter design must include `WFBE_PVF_*` plus direct channels, and still does not replace server-side authority checks. |
 
 Claude DR-30 closed the remediation loop: as shipped in this repo, the "rely on BattlEye" option is not implemented. No `scripts.txt`, `server.cfg`, `basic.cfg` or broader BattlEye filter bundle is present in the tree. Production servers may have external `BEpath` files, but that is an owner/deployment question, not documented source truth.
 
-The filter design should be driven by [Networking and public variables](Networking-And-Public-Variables), including both `WFBE_PVF_*` registered commands and direct channels such as supply missions, day/night, HQ state, attack waves, server FPS, MASH markers and AntiStack compensation. A PV filter alone still will not solve client-side `createVehicle`/`createUnit` authority; that class needs BattlEye `scripts.txt` or a server-authoritative redesign.
+Filter design should be driven by [Networking and public variables](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index) and [Server authority migration map](Server-Authority-Migration-Map). A PV filter alone still will not solve client-side `createVehicle`/`createUnit` authority; that class needs BattlEye `scripts.txt` or a server-authoritative redesign.
 
 ## License And CI Posture
 

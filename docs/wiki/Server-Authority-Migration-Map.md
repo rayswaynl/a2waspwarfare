@@ -15,7 +15,7 @@ Many high-impact findings are not isolated bugs. They are the same ownership pro
 - client UI validates affordability, role or range;
 - client or payload chooses side, target, class, position, amount or reward;
 - server executes a legitimate handler with limited recomputation;
-- BattlEye filters in the repo do not provide a shipped fallback authority layer.
+- BattlEye filters in the repo do not provide a shipped fallback authority layer; see [External integrations](External-Integrations) for the canonical shipped-posture evidence.
 
 Do not patch seven spend/effect paths in seven unrelated styles. Pick an authority model first, then migrate flows in a consistent order.
 
@@ -30,7 +30,7 @@ Do not patch seven spend/effect paths in seven unrelated styles. Pick an authori
 | Arma 2 OA sender identity is weak | A publicVariable event handler does not hand the server a clean sender identity. If a handler needs authority, include a requester/player/team object where safe and cross-check group, side, ownership and UID when available. |
 | Keep old UI until confirmation | Let the client request work and show feedback, but do not mutate final funds/effects until the server accepts or rejects. |
 | Log compactly | Use small `INFORMATION` logs for accepted high-value transactions and `WARNING` logs for rejected malformed or unauthorized requests. Avoid hot-loop spam. |
-| BattlEye is defense in depth | Public server filters can reduce attack surface, but they are not the mission's source of authority. The repo currently ships only a minimal `BattlEyeFilter/publicvariable.txt` AFK-related rule. |
+| BattlEye is defense in depth | Public server filters can reduce attack surface, but they are not the mission's source of authority. Canonical shipped-filter evidence lives in [External integrations](External-Integrations). |
 
 ## Patch Order Routing
 
@@ -91,7 +91,7 @@ Use this checklist for every authority-sensitive handler before writing code:
 | Gear/EASA/service | Many UI/effect paths mutate inventory, weapons, magazines, fuel, damage and vehicle state locally. Quick local guards are not a full authority migration. |
 | Modded missions | Napf, Eden and Lingor are divergent forks; other modded folders are stubs. Source fixes do not automatically make all modded missions safe. |
 | Autonomous AI logistics | Supply truck/heli AI work sits on partially disabled/missing logistics code. Finish the owner decision before reviving autonomous behavior. |
-| BattlEye posture | Filters usually live outside the mission PBO. Confirm production BEpath before claiming public-server hardening. |
+| BattlEye posture | Filters usually live outside the mission PBO. Confirm production `BEpath` before claiming public-server hardening; use [External integrations](External-Integrations) for in-repo evidence. |
 
 ## Interim Live-Server Posture
 
@@ -121,7 +121,7 @@ Recommended minimum coverage by phase:
 
 ## Machine Notes
 
-Agents should read this page before claiming any `agent-hardening-backlog.jsonl` item with `network-authority`, `economy`, `gameplay-security`, `support-systems` or `BattlEye` categories.
+Agents should read this page before claiming any `agent-hardening-backlog.jsonl` item with `network-authority`, `economy`, `gameplay-security`, `support-systems` or `BattlEye` categories. For BattlEye-specific shipped evidence, start with [External integrations](External-Integrations).
 
 This page does not change mission behavior. It is the source-backed design layer for future implementation branches such as `hardening/pvf-dispatch`, `hardening/icbm-authority`, `hardening/economy-ledger`, `hardening/supply-missions` and `hardening/attack-wave-authority`. For the order in which those branches should be claimed, use [Hardening roadmap](Hardening-Implementation-Roadmap).
 
