@@ -28,6 +28,7 @@ For the full per-handler checklist, use [Server authority migration map](Server-
 | Priority | Work package | Why first |
 | --- | --- | --- |
 | P0 | PVF dispatcher lookup hardening | Smallest behavior-preserving change that closes DR-1 arbitrary code execution and DR-38 per-message recompilation. |
+| P0 | `SEND_MESSAGE` direct-PV compile removal | DR-46 is a second network-data RCE outside the PVF dispatcher; dispatcher lookup does not close it. |
 | P0 | ICBM `RequestSpecial` server validation | Highest blast radius: forged PV can trigger server-applied map-wide damage. Use [ICBM authority](ICBM-Authority-Playbook). |
 | P1 | Victory/endgame correctness (DR-11 / DR-36) | Small source change with large match-outcome/stat impact. |
 | P1 | Server-side economy authority design | Covers the confirmed class: build, buy, sell, supply, upgrade, ICBM and gear/service spend paths. |
@@ -46,6 +47,26 @@ Validation:
 - Verify all entries in `_serverCommandPV` and `_clientCommandPV` still resolve to CODE after `Init_PublicVariables.sqf`.
 - Test one server request (`RequestJoin` or `RequestVehicleLock`) and one client message (`LocalizeMessage` or `HandleSpecial`) on a hosted/local mission if possible.
 - Re-run docs/update notes: this fixes dispatch execution risk only; it does not validate legitimate-command payload forgery.
+
+## P0: `SEND_MESSAGE` Direct-PV Compile Removal
+
+Raw evidence: [Deep-review findings](Deep-Review-Findings) DR-46. Channel inventory: [Public variable channel index](Public-Variable-Channel-Index).
+
+Roadmap summary: remove `call compile` from both `Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf` and `Common/Functions/Common_SendMessage.sqf`. The current multi-language branch treats message text as executable code. Because `SEND_MESSAGE` is a direct `publicVariable` channel, this is independent of the PVF dispatcher fix.
+
+Implementation shape:
+
+1. Treat multi-language payloads as structured arrays: `[stringtableKey, arg1, arg2, ...]`.
+2. Resolve with `localize` and `format` locally.
+3. Treat malformed or non-array multi-language payloads as literal text or reject/log them; never compile message text.
+4. Update artillery/ICBM callers that currently pass compilable strings.
+5. Add a BattlEye `publicvariable.txt` value-shape rule only as defense in depth after the source fix is designed.
+
+Validation:
+
+- Normal side messages still display and play sound.
+- Localized artillery/ICBM messages still render in the intended language.
+- A forged `SEND_MESSAGE` payload containing SQF text is displayed/ignored as data and never executed.
 
 ## P0: ICBM Server Validation
 

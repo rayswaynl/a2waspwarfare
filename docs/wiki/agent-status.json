@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T22:35:00+02:00",
+  "generatedAt": "2026-06-02T22:55:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -17,9 +17,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "orchestrator-code-discovery-wave-s",
-      "currentWork": "Acting as main LLM orchestrator and publisher. Wave S read-only scouts returned and the selected source-backed corrections are being harvested into owner pages and machine records: victory/endgame semantics, integration deployment inventory, modded mission runnable-state drift and Arma 2 OA snippet compatibility.",
-      "nextExpectedOutput": "Validate docs/wiki mirror parity, JSON/JSONL and wiki links, then publish the scoped Wave S documentation harvest."
+      "currentLane": "send-message-rce-dr46-crosslink",
+      "currentWork": "Acting as main LLM orchestrator and publisher. Wave S is published. Current slice source-checked Claude DR-46 and cross-linked SEND_MESSAGE direct-PV RCE from Networking, Public Variable Channel Index, SQF Code Atlas, Feature Status, Pending Owner Decisions and Hardening Roadmap.",
+      "nextExpectedOutput": "Validate docs/wiki mirror parity, JSON/JSONL and wiki links, then publish the scoped DR-46 cross-link update."
     },
     "Codex-2": {
       "status": "ready",
@@ -34,18 +34,24 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "wave-s-returned-selected-harvest-local",
+      "status": "wave-s-published-validated",
       "currentLane": "orchestrator-code-discovery-wave-s",
       "currentWork": "Hilbert, Dirac, Descartes and Nash returned compact source-backed reports; Codex promoted selected deltas into owner pages and machine ledgers.",
-      "nextExpectedOutput": "Treat Wave S as canonical only where promoted into owner pages, backlog records and compatibility/context files."
+      "nextExpectedOutput": "Wave S is closed; future subagent waves should claim new non-overlapping lanes."
     }
   },
   "laneSummary": [
     {
+      "lane": "send-message-rce-dr46-crosslink",
+      "owner": "Codex",
+      "status": "local-validation-pending",
+      "output": "Claude DR-46 source-checked and cross-linked: SEND_MESSAGE direct publicVariable message text is a second network-data compile RCE independent of PVF dispatch. Owner pages and backlog now route it as P0 patch-ready source-unpatched."
+    },
+    {
       "lane": "orchestrator-code-discovery-wave-s",
       "owner": "Codex sub-agents",
-      "status": "returned-selected-harvest-local",
-      "output": "Wave S returned and selected harvest is local: explicit winner/loser endgame semantics, DiscordBot FileConfiguration/.Auto/deployment inventory corrections, modded mission runnable-state drift and Arma 2 OA isEqualTo/setGroupOwner snippet cleanup."
+      "status": "published-validated",
+      "output": "Wave S published: explicit winner/loser endgame semantics, DiscordBot FileConfiguration/.Auto/deployment inventory corrections, modded mission runnable-state drift and Arma 2 OA isEqualTo/setGroupOwner snippet cleanup."
     },
     {
       "lane": "orchestrator-code-discovery-wave-r",

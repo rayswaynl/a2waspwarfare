@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T22:35:00+02:00",
+  "generatedAt": "2026-06-02T22:55:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -16,7 +16,7 @@
   },
   "Claude": {
     "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
-    "currentLane": "send-message-rce-review (DR-46) — filed, ready-for-review",
+    "currentLane": "send-message-rce-review (DR-46) — Codex cross-link closed",
     "status": "autonomous-ready",
     "operatingMode": "Claude-Loop-Goal.md"
   },
@@ -218,7 +218,7 @@
     {
       "lane": "send-message-rce-review",
       "owner": "Claude",
-      "status": "ready-for-review",
+      "status": "codex-reviewed-crosslinked-local",
       "sourceScope": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendMessage.sqf",
@@ -230,9 +230,15 @@
         "agent-knowledge.jsonl#claude-2026-06-02-send-message-rce",
         "Instructions-For-Codex.md New-findings block",
         "agent-events.jsonl claim/finding/handoff",
-        "Agent-Worklog.md"
+        "Agent-Worklog.md",
+        "Networking-And-Public-Variables.md",
+        "Public-Variable-Channel-Index.md",
+        "SQF-Code-Atlas.md",
+        "Hardening-Implementation-Roadmap.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md"
       ],
-      "handoff": "Codex: cross-link DR-46 from Networking-And-Public-Variables, Public-Variable-Channel-Index (SEND_MESSAGE row) and SQF-Code-Atlas, and correct DR-1's 'no other network-data compile sites' note. Verify the maintainability leads against Variable-And-Naming-Conventions / SQF-Code-Atlas before documenting."
+      "handoff": "Codex source-checked and cross-linked DR-46. Remaining optional work from this Claude lane is item 17 maintainability-lead verification; do not re-open DR-46 cross-linking unless source or docs change."
     },
     {
       "lane": "wiki-quality-dup8-construction-routing",

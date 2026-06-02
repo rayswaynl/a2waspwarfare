@@ -22,6 +22,7 @@ Recommended row states:
 | Area | Severity | State | Canonical page | Next gate |
 | --- | --- | --- | --- | --- |
 | PVF dispatch trust boundary | P0 critical | Planned | [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook) | Replace sender-chosen dispatch compile with allowlist / namespace lookup; dedicated PVF smoke. |
+| `SEND_MESSAGE` direct-PV RCE | P0 critical | Planned | [Public variable channel index](Public-Variable-Channel-Index) / [Deep review DR-46](Deep-Review-Findings) | Stop call-compiling direct message payload text; send structured localization key/args and resolve with `localize`/`format`. |
 | ICBM/Nuke authority | P0 critical | Planned | [ICBM authority](ICBM-Authority-Playbook) | Server-side upgrade/role/funds validation before public hosting. |
 | Side-supply clamp / temp-channel validation | P0 critical | Planned | [Economy authority first cut](Economy-Authority-First-Cut) | Clamp negative supply to zero, validate side/amount, and smoke west/east temp channels. |
 | Economy/server-authority class | P1 confirmed | Design lane | [Server authority migration map](Server-Authority-Migration-Map) | Patch spend/effect paths as one ledger model, not scattered local menu fixes. |

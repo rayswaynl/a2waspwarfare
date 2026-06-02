@@ -16,7 +16,7 @@ Quick path:
 
 | Queue | Decision type | Canonical implementation route |
 | --- | --- | --- |
-| P0 public-server safety | Choose server-side authority and dispatcher hardening before public hosting, or document a real BattlEye/filter deployment as defense in depth only. | [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook), [ICBM authority](ICBM-Authority-Playbook), [Economy authority first cut](Economy-Authority-First-Cut), [External integrations](External-Integrations). |
+| P0 public-server safety | Choose server-side authority and dispatcher/direct-channel hardening before public hosting, or document a real BattlEye/filter deployment as defense in depth only. | [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook), [Public variable channel index](Public-Variable-Channel-Index), [ICBM authority](ICBM-Authority-Playbook), [Economy authority first cut](Economy-Authority-First-Cut), [External integrations](External-Integrations). |
 | P1 economy and direct-PV migration | Treat spend/effect/direct-PV payloads as requests and re-derive side/funds/supply/effects server-side. | [Server authority migration map](Server-Authority-Migration-Map), [Public variable channel index](Public-Variable-Channel-Index), [Attack-wave authority](Attack-Wave-Authority-Playbook). |
 | P1/P2 match correctness | Patch default victory winner/double-fire behavior and choose whether threeway victory is real or unsupported. | [Victory/endgame atlas](Victory-And-Endgame-Atlas), [Hardening roadmap](Hardening-Implementation-Roadmap). |
 | P1 logistics baseline | Decide PR #1 supply heli merge requirements separately from dormant autonomous AI logistics. | [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook), [Supply mission architecture](Supply-Mission-Architecture), [Current supply heli PR](Current-Work-Supply-Helicopters-PR1). |
@@ -32,6 +32,7 @@ Quick path:
 | Path | Finding | Severity |
 | --- | --- | --- |
 | PVF dispatch RCE/forgery | DR-1 | High |
+| `SEND_MESSAGE` direct-PV message-text RCE | DR-46 | High |
 | Construction (`RequestStructure`/`RequestDefense`/MHQ) | DR-6 | High |
 | Unit purchase | DR-14 | High (architectural) |
 | Structure sale | DR-16 | High |

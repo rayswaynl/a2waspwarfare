@@ -163,6 +163,17 @@ PVF dispatch mechanics:
 - Client filtering in `Client_HandlePVF.sqf` supports side destinations and player UID destinations.
 - Both client and server dispatch call `Call Compile _script`, so malformed function names or unsanitized command names would be high-risk.
 
+## `call compile` Trust Inventory
+
+Most compile sites in this mission are static file registration or local engine helper strings. The two network-data compile surfaces are the ones to prioritize:
+
+| Surface | Source | Why it matters | Owner page |
+| --- | --- | --- | --- |
+| PVF dispatcher command string | `Server/Functions/Server_HandlePVF.sqf:14`, `Client/Functions/Client_HandlePVF.sqf:22` | Registered `WFBE_PVF_*` payload chooses the function-name string that the dispatcher compiles. | [Networking/PV](Networking-And-Public-Variables#security-the-call-compile-trust-boundary), [Deep review DR-1](Deep-Review-Findings) |
+| `SEND_MESSAGE` direct payload text | `Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf:25-31`, `Common/Functions/Common_SendMessage.sqf:24-27` | Direct publicVariable channel compiles message text when payload index 3 marks it multi-language; this bypasses PVF dispatcher hardening. | [Public variable channel index](Public-Variable-Channel-Index), [Deep review DR-46](Deep-Review-Findings) |
+
+AntiStack database wrappers are a separate extension-output trust boundary: they compile strings returned by the external `A2WaspDatabase` DLL, not player PV payloads. Use [AntiStack database extension audit](AntiStack-Database-Extension-Audit) for that wrapper family.
+
 Unregistered or non-standard PV function files:
 
 - `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` was formerly unregistered in early review notes. Current source and maintained Vanilla now register it in the client command list; Arma smoke remains tracked in [Paratrooper marker revival](Paratrooper-Marker-Revival).
@@ -207,7 +218,7 @@ Server-side long-running systems are mostly `.sqf` loop scripts under `Server/FS
 - Use `-LiteralPath` in PowerShell for mission paths containing `[55-2hc]`; plain `-Path` treats brackets as wildcards.
 - Prefer adding new registered function names in the existing init owner for that side: common in `Init_Common`, server in `Init_Server`, client in `Init_Client`.
 - If adding a PVF command, update both the command list and the corresponding `Client/PVFunctions` or `Server/PVFunctions` file, then document payload shape.
-- Avoid `Call Compile` on data strings unless following an established PVF/localization pattern and the source is controlled.
+- Avoid `Call Compile` on data strings. Existing PVF and `SEND_MESSAGE` network-data compile paths are documented security findings, not patterns to copy. For localization, prefer structured stringtable keys plus arguments resolved with `localize`/`format`.
 - For performance-sensitive loops, preserve existing parameter guards and `WF_Debug` logging style.
 
 ## Continue Reading

@@ -54,13 +54,13 @@ These wrappers are preferred over hand-coded public variable dispatch for new fe
 
 Some systems use explicit public-variable channels outside the generic PVF list. The canonical inventory is [Public variable channel index](Public-Variable-Channel-Index), including registered `WFBE_PVF_*` commands, direct channels, source anchors and notable findings.
 
-Why this matters: direct channels such as `ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS`, `SEND_MESSAGE`, supply mission PVs, side-supply temp variables, MASH marker channels, HQ marker/state broadcasts, AntiStack compensation, server FPS and AFK kick are not automatically covered by a future PVF dispatcher fix. Treat them as separate review targets when hardening the network layer.
+Why this matters: direct channels such as `ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS`, `SEND_MESSAGE`, supply mission PVs, side-supply temp variables, MASH marker channels, HQ marker/state broadcasts, AntiStack compensation, server FPS and AFK kick are not automatically covered by a future PVF dispatcher fix. Treat them as separate review targets when hardening the network layer. DR-46 proves this is not only theoretical: `SEND_MESSAGE` compiles direct-PV payload text on receiving clients.
 
 ### Direct PV Hardening Order
 
 1. Fix PVF dispatcher command resolution first (DR-1), because that closes arbitrary command-string execution.
 2. Harden registered high-impact handlers next: construction, upgrades, score, vehicle lock, commander/team changes.
-3. Review the direct channels above separately, because they will not be protected by a `WFBE_PVF_*` allow-list.
+3. Review the direct channels above separately, because they will not be protected by a `WFBE_PVF_*` allow-list. Start with DR-46 `SEND_MESSAGE`, DR-41/`ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS` and DR-44 side-supply temp channels.
 4. Design BattlEye `publicvariable.txt` from both lists: registered `WFBE_PVF_*` channels plus explicit direct channels such as `kickAFK`, supply mission PVs, day/night, HQ markers, attack waves and AntiStack compensation. Use [External integrations](External-Integrations) for the canonical shipped BattlEye posture.
 
 Replay/JIP rule of thumb: late players receive retained object/global state and the next heartbeat, not a replay of old publicVariable events. For revived event-only channels such as MASH marker relays, add a server-held list and explicit JIP re-send plan rather than assuming event replay.
@@ -150,17 +150,19 @@ Registration source: `Common/Init/Init_PublicVariables.sqf:25-40` registers 15 c
 - Both dispatchers use `Call Compile` on the generated function-name string per dispatch. DR-38 notes this is redundant as well as unsafe: `Init_PublicVariables.sqf` already precompiles `SRVFNC*` / `CLTFNC*` globals at init, so a validated `missionNamespace getVariable` lookup removes per-message recompilation and closes the DR-1 RCE with the same change.
 - Some bare PV channels are copied per side, such as `wfbe_supply_temp_west` and `wfbe_supply_temp_east`; there is no resistance-side handler in that path.
 - The side-supply temp handlers trust the payload side as well as the payload amount. A hardened handler must reject side/channel mismatches such as a west temp channel carrying an east-side payload.
-- `SEND_MESSAGE` is not harmless chat plumbing: its multi-language branch compiles payload text on receiving clients. Treat it as a direct-channel RCE until rewritten to structured localization keys/args.
+- `SEND_MESSAGE` is not harmless chat plumbing: its multi-language branch compiles payload text on receiving clients (`Client_onEventHandler_SEND_MESSAGE.sqf:25-31`), and `Common_SendMessage.sqf:24-27` has the same local compile branch. Treat DR-46 as a direct-channel RCE until rewritten to structured localization keys/args.
 - A real BattlEye PV filter must include direct non-PVF channels as well as `WFBE_PVF_*`; shipped filter evidence is tracked in [External integrations](External-Integrations).
 - The master/Chernarus branch documented here does not ship PR #1 supply-helicopter source; it has the older truck supply mission path plus direct support/supply/ICBM channels. Treat supply-heli mechanics as PR-only until the branch is merged.
 
 ### Security: the `Call Compile` trust boundary
 
-`Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` run `Call Compile` on the function-name string taken from the **value a remote machine broadcast** (`select 0` / `select 1`), with no check that it names a registered command. Validate the command string against the known `SRVFNC*`/`CLTFNC*` set before compiling, and add a real BattlEye PV filter as defense in depth. Full dispatcher analysis: [Deep-review findings](Deep-Review-Findings) DR-1. Shipped BattlEye evidence and production-owner caveats: [External integrations](External-Integrations).
+`Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` run `Call Compile` on the function-name string taken from the **value a remote machine broadcast** (`select 0` / `select 1`), with no check that it names a registered command. Validate the command string against the known `SRVFNC*`/`CLTFNC*` set before compiling, and add a real BattlEye PV filter as defense in depth. Full dispatcher analysis: [Deep-review findings](Deep-Review-Findings) DR-1.
+
+DR-46 adds a second independent network-data compile surface outside the PVF dispatcher: the direct `SEND_MESSAGE` channel compiles payload text on receiving clients when the payload's multi-language flag is true. A PVF dispatcher fix does not close it. Fix DR-46 by sending structured stringtable keys plus arguments and resolving them locally without `call compile`. Shipped BattlEye evidence and production-owner caveats: [External integrations](External-Integrations).
 
 ### Residual Authority Risks After Dispatch Hardening
 
-Replacing `Call Compile` with mission-namespace lookup closes arbitrary code execution from forged function-name strings, but it does not make registered commands authoritative. The full post-dispatch queue is now in [Server authority migration map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix). The table below keeps only the highest-risk examples:
+Replacing `Call Compile` with mission-namespace lookup closes arbitrary code execution from forged PVF function-name strings, but it does not make registered commands authoritative and it does not touch direct-PV RCEs such as DR-46 `SEND_MESSAGE`. The full post-dispatch queue is now in [Server authority migration map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix). The table below keeps only the highest-risk examples:
 
 | Handler | Trust issue | Evidence |
 | --- | --- | --- |
