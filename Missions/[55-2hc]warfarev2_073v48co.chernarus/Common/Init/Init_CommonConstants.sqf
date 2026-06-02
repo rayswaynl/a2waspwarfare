@@ -438,3 +438,24 @@ missionNamespace setVariable ["WFBE_C_UNKNOWN_COLOR", "ColorBlue"];
 };
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
+
+// --- Player stats (feature-flagged; OFF by default) ---
+WFBE_C_STATS_ENABLED = false;        // master switch — nothing is recorded/emitted while false
+WFBE_C_STATS_FLUSH_INTERVAL = 60;    // seconds between RPT flushes (also the playtime credit step)
+WFBE_STAT_KILLS_INFANTRY   = 0;
+WFBE_STAT_KILLS_VEHICLE    = 1;
+WFBE_STAT_KILLS_AIR        = 2;
+WFBE_STAT_KILLS_STATIC     = 3;
+WFBE_STAT_KILLS_FACTORY    = 4;
+WFBE_STAT_KILLS_HQ         = 5;
+WFBE_STAT_DEATHS           = 6;
+WFBE_STAT_PVP_KILLS        = 7;
+WFBE_STAT_SUPPLY_RUNS      = 8;
+WFBE_STAT_SUPPLY_VALUE     = 9;
+WFBE_STAT_CAPTURES_TOWN    = 10;
+WFBE_STAT_CAPTURES_CAMP    = 11;
+WFBE_STAT_STRUCTURES_BUILT = 12;
+WFBE_STAT_DEFENSES_BUILT   = 13;
+WFBE_STAT_PLAYTIME         = 14;
+WFBE_STAT_FIELD_COUNT      = 15;
+WFBE_STATS_DIRTY_UIDS = [];           // server-only working set of UIDs with pending deltas

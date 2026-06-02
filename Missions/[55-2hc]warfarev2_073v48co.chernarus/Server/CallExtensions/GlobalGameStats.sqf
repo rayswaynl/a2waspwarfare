@@ -17,7 +17,8 @@ while {true} do {
         }
     } forEach call BIS_fnc_listPlayers;
 
-    _playerCount = abs(_playerCount - 1); // Exclude headless client
+    // Exclude the headless client (assumes one). Clamp so an empty server reports 0, not 1.
+    _playerCount = (_playerCount - 1) max 0;
 
     "a2waspwarfare_Extension" callExtension format ["%1,%2,%3,%4,%5,%6",_cSharpClassName,_scoreSideWest,_scoreSideEast,_currentMap,_uptime,_playerCount];
     ["INFORMATION", Format ["Done %1: %2 | %3 | %4 | %5 | %6",_cSharpClassName,_scoreSideWest,_scoreSideEast,_currentMap,_uptime,_playerCount]] Call WFBE_CO_FNC_LogContent;
