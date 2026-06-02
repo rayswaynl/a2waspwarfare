@@ -845,6 +845,22 @@ The support-scout backlog candidate `server-fps-hosted-loop-sleep` ("move `sleep
 
 **Outcome:** two raw scout candidates adjudicated — one promoted (DR-42), one deduped (DR-19). AI/headless authority deepened.
 
+## Round 34 — 2026-06-02 (Claude) — external deep-research intake #2 (9 reports) → DR-43 (2 new source-confirmed leads)
+
+Lane `external-research-intake-2`. Ray supplied **9** new deep-research reports (`deep-research-report (1..9).md`). Triaged all 9 (treating their content as untrusted leads, not authority — cross-checked at source). Same posture as the 3 PDFs in DR-26: these are **downstream syntheses that corroborate the campaign**, not independent source verification (they cite their own research-tool fetches, `turnNNview…`).
+
+Mapping: (1) Runtime Architecture → boot/lifecycle DR-37 + the version.sqf lead below; (2) Trust-Boundary Audit → **DR-1** (PVF `Call Compile` = privileged exec surface); (3) Feature Archaeology → DR-4/32/34/39 + the duplicate-binds lead below; (4) Modernization Strategy → roadmap (Codex lane); (5) Locality & JIP → DR-37/38; (6) Testing/Release Workflow → already shipped by Codex (`Testing-Debugging-And-Release-Workflow.md`); (7) Gameplay State Ownership → DR-32/38; (8) **Server Authority Refactor** → an independent restatement of the campaign's central thesis — *"not one exploit but the architecture; funds/supply are mutated client-side then merely announced; the ledger is a replicated client mutation, not a server source of truth"* = the economy-authority class (DR-6/14/16/22/23/27/28/41) + DR-1 + the two-surfaces point; (9) AI-onboarding playbook → agent-docs (Codex lane). Net: strong third-party corroboration; our source-cited DRs remain the verified core (superset-confirming-subset, as with DR-26).
+
+### DR-43 — two new leads extracted from the reports, both source-confirmed — **Low (source-completeness + init redundancy)**
+
+**(a) `description.ext:39` `#include "version.sqf"` but `version.sqf` is absent from the committed source tree** (verified: not in the mission root, not anywhere in the repo). Since the live mission runs, the file must be injected at pack/deploy time (consistent with the LoadoutManager/7za build per `AGENTS.md`). So this is a **source-completeness/drift note, not a runtime bug**: the repo is **not buildable/loadable directly from source** without the generation step that supplies `version.sqf` — anyone preprocessing `description.ext` from the raw tree hits a missing-include. Ties to the generated-mission story (DR-4/DR-32). Owner: commit a source `version.sqf` (or document that packaging generates it).
+
+**(b) Six functions are double-`Compile`d in `Server/Init/Init_Server.sqf`** — `WFBE_CO_FNC_InitAFKkickHandler`, `WFBE_CO_FNC_LogGameEnd`, `WFBE_CO_FNC_monitorServerFPS`, `WFBE_SE_FNC_AwardScorePlayer`, `WFBE_SE_FNC_MASH_MARKER`, `WFBE_SE_FNC_PlayerObjectsList` (each appears as an uncommented `… = (Call) Compile preprocessFileLineNumbers …` twice). Redundant init-time double-compile (perf-trivial; the second bind wins). **Latent risk:** if any duplicated pair ever points at different files, the second silently overrides — a maintenance trap; and the **`LogGameEnd` duplication is consistent with the DR-13 duplicate game-end** concern. Owner: de-duplicate the binds.
+
+**Handoff for Codex.** Add the 9 reports to `external-research-report-manifest.json` (Codex's lane); mark them corroborating (no contradictions found). The two confirmed leads (version.sqf source gap; duplicate Init_Server binds) are small code-owner cleanups — cross-link DR-43(b) from the victory/DR-13 area and DR-43(a) from the tooling/generated-mission docs.
+
+**Outcome:** external-research intake #2 complete — 9 reports corroborate DR-1..DR-42 (esp. report 8 ↔ the economy-authority thesis); two new source-confirmed leads recorded as DR-43.
+
 ## Continue Reading
 
 Previous: [Testing workflow](Testing-Debugging-And-Release-Workflow) | Next: [Implementation plan](Documentation-Implementation-Plan)
