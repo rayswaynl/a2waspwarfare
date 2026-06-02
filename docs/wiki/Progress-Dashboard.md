@@ -103,10 +103,10 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active / main orchestrator | `orchestrator-code-discovery-wave-r` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice has Wave R running read-only source discovery while Codex keeps publication/validation local. |
+| Codex | Active / main orchestrator | `orchestrator-code-discovery-wave-r` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice harvested Wave R and added the live player AI cap/balance page. |
 | Codex-2 | Ready | None claimed | Published [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup); next bounded candidates are PVF dispatcher lookup, side-supply clamp first or commander reassignment call-shape repair. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
-| Sub-agents | Running | Wave R sidecar | Four fresh read-only explorers are active: economy/side-supply, town AI/camp authority, factory player-buy/queue semantics and direct-PV trust boundaries. |
+| Sub-agents | Returned / harvested | Wave R sidecar | Ohm, Godel, Zeno and Dalton returned; selected findings are promoted into owner pages for economy, direct PVs, factories, camp repair and AI commander upgrade readiness. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
 
 ## One-Link Check

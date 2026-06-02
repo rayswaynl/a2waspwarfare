@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T21:15:00+02:00",
+  "generatedAt": "2026-06-02T21:26:20+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -24,7 +24,7 @@
     {
       "lane": "orchestrator-code-discovery-wave-r",
       "owner": "Codex sub-agents",
-      "status": "running-readonly",
+      "status": "returned-selected-harvest-local",
       "sourceScope": [
         "economy side-supply negative risk",
         "town AI camp patrol repair authority",
@@ -32,15 +32,15 @@
         "direct-PV trust-boundary second pass"
       ],
       "agents": [
-        {"name": "Ohm", "id": "019e89c2-6dac-70e0-9abf-93c2dbd3a279", "lane": "economy-side-supply-negative-risk"},
-        {"name": "Godel", "id": "019e89c2-6ebb-7413-baae-be2800d1a83c", "lane": "town-ai-camp-patrol-repair-authority"},
-        {"name": "Zeno", "id": "019e89c2-6f20-7261-91eb-f6cb235c8ad9", "lane": "factory-player-buy-path-queue-semantics"},
-        {"name": "Dalton", "id": "019e89c2-6f7d-7131-b004-78d945f5f64c", "lane": "direct-pv-trust-boundary-second-pass"}
+        {"name": "Ohm", "id": "019e89c2-6dac-70e0-9abf-93c2dbd3a279", "lane": "economy-side-supply-negative-risk", "status": "returned-harvested"},
+        {"name": "Godel", "id": "019e89c2-6ebb-7413-baae-be2800d1a83c", "lane": "town-ai-camp-patrol-repair-authority", "status": "returned-harvested"},
+        {"name": "Zeno", "id": "019e89c2-6f20-7261-91eb-f6cb235c8ad9", "lane": "factory-player-buy-path-queue-semantics", "status": "returned-harvested"},
+        {"name": "Dalton", "id": "019e89c2-6f7d-7131-b004-78d945f5f64c", "lane": "direct-pv-trust-boundary-second-pass", "status": "returned-harvested"}
       ],
       "outputs": [
-        "Read-only source evidence packets for Codex review"
+        "Selected owner-page harvest in economy, networking/PV, attack-wave, factories, towns/camps, upgrades and AI commander docs"
       ],
-      "handoff": "Wave R reports are not canonical until Codex source-checks and promotes them into owner pages. Other agents should avoid editing these exact lanes unless coordinating through the event/worklog files."
+      "handoff": "Wave R selected findings are canonical where promoted into owner pages. Raw duplicate report details remain routing notes. Other agents should now use the owner pages rather than the raw packets."
     },
     {
       "lane": "rhud-endgame-currentcutdisplay-harvest",

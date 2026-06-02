@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T21:15:00+02:00",
+  "generatedAt": "2026-06-02T21:26:20+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -18,8 +18,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "orchestrator-code-discovery-wave-r",
-      "currentWork": "Acting as main LLM orchestrator and publisher. Wave Q RHUD/endgame currentCutDisplay harvest is published; Wave R read-only explorers are running on economy/side-supply, town AI/camp authority, factory player-buy/queue semantics and direct-PV trust-boundary gaps.",
-      "nextExpectedOutput": "Harvest the first returned Wave R evidence packet into owner pages after source-check."
+      "currentWork": "Acting as main LLM orchestrator and publisher. Wave Q RHUD/endgame currentCutDisplay harvest is published; Wave R read-only explorers returned and selected findings are being promoted into owner pages. A live player AI cap/balance page was added for default GroupSizePlayer=15.",
+      "nextExpectedOutput": "Mirror, validate and publish the Wave R/player-AI-cap docs harvest, then continue next owner-page/status-drift reconciliation."
     },
     "Codex-2": {
       "status": "ready",
@@ -34,18 +34,18 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "wave-r-running",
+      "status": "wave-r-returned-harvested",
       "currentLane": "orchestrator-code-discovery-wave-r",
-      "currentWork": "Four fresh read-only explorers are running: Ohm on economy/side-supply negative risk, Godel on town AI/camp/patrol/repair authority, Zeno on factory player-buy path and queue semantics, and Dalton on direct-PV trust boundaries.",
-      "nextExpectedOutput": "Compact source-backed evidence packets for Codex owner-page harvest."
+      "currentWork": "Ohm, Godel, Zeno and Dalton returned source-backed packets. Selected deltas are promoted into economy, networking/PV, attack-wave, factory, town/camp, upgrade and AI commander owner pages.",
+      "nextExpectedOutput": "No active Wave R packets remain; future subagent work should pick new lanes from the hardening roadmap or status-drift cleanup."
     }
   },
   "laneSummary": [
     {
       "lane": "orchestrator-code-discovery-wave-r",
       "owner": "Codex sub-agents",
-      "status": "running-readonly",
-      "output": "Fresh read-only team spawned: Ohm economy/side-supply negative risk, Godel town AI/camp authority, Zeno factory player-buy/queue semantics, Dalton direct-PV trust-boundary second pass."
+      "status": "returned-selected-harvest-local",
+      "output": "Wave R selected harvest: side-supply side/channel mismatch, master-vs-PR supply reward scoping, AI commander upgrade debit swap, camp repair authority-light, extra-turret-crew factory queue nuance, ATTACK_WAVE_DETAILS detail trust, SEND_MESSAGE direct RCE wording, WFBE_C_PLAYER_OBJECT trust note and AFK self-kick/log split."
     },
     {
       "lane": "rhud-endgame-currentcutdisplay-harvest",

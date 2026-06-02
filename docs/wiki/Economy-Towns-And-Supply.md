@@ -31,7 +31,7 @@ Routing note: [Supply mission architecture](Supply-Mission-Architecture) owns th
 
 ## Economy And Commander Funds
 
-Funds and supply are separate systems unless the mission parameter switches currency behavior. Commander income can be limited and distributed; player delivery funds use `WFBE_C_PLAYERS_SUPPLY_TRUCKS_DELIVERY_FUNDS_COEF`.
+Funds and supply are separate systems unless the mission parameter switches currency behavior. Commander income can be limited and distributed. On current `master`, supply mission side reward is applied by `supplyMissionCompleted.sqf`, while the personal player cash message path grants raw `_supplyAmount`; the constant `WFBE_C_PLAYERS_SUPPLY_TRUCKS_DELIVERY_FUNDS_COEF` is defined but no live consumer was found in this flow.
 
 ## Economy Authority Synthesis
 
@@ -42,7 +42,7 @@ The economy authority class is now fully characterized by source review. Every c
 | Construction/build | Client pays and sends `RequestStructure` / `RequestDefense`; server performs only light creation checks. | DR-6, [Construction atlas](Construction-And-CoIn-Systems-Atlas) |
 | Player unit buy | Client spawns through `Client_BuildUnit` and deducts locally; no `RequestBuyUnit` PVF exists. | DR-14, [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas) |
 | Structure sale | Economy UI refunds and destroys locally. | DR-16 |
-| Side supply | Direct temp channels mutate keyed `wfbe_supply_%1` values; the generic `wfbe_supply` client init value is a legacy alias/cache. Server negative-delta floor can turn overspend into supply gain. | DR-22, [Economy authority first cut](Economy-Authority-First-Cut) |
+| Side supply | Direct temp channels mutate keyed `wfbe_supply_%1` values; the generic `wfbe_supply` client init value is a legacy alias/cache. Server negative-delta floor can turn overspend into supply gain, and the west/east handlers trust the payload side rather than deriving it from the channel suffix. | DR-22, DR-44, [Economy authority first cut](Economy-Authority-First-Cut) |
 | Score mutation/rewards | `RequestChangeScore` accepts a payload score, while `Common_AwardScorePlayer` and kill scoring show safer server-derived award patterns. | [Economy authority first cut](Economy-Authority-First-Cut), [Public variable channel index](Public-Variable-Channel-Index) |
 | Player/group funds | No `RequestChangeFunds` PVF exists; funds are changed through replicated `wfbe_funds` group variables and shared helpers. | [Economy authority first cut](Economy-Authority-First-Cut) |
 | Supply mission cargo/reward | Client stamps `SupplyFromTown` / `SupplyAmount` onto the vehicle; server completion trusts those vars after proximity checks. Personal cash/score reward presentation is still client-side after the completion broadcast. | [Supply mission architecture](Supply-Mission-Architecture) |

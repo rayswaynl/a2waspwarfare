@@ -110,7 +110,9 @@ That means player buy authority is a redesign, not a tidy handler hardening patc
 
 ### Supply missions are a separate logistics authority lane
 
-`supplyMissionStart.sqf:34-46` lets the client stamp `SupplyFromTown`, `SupplyByHeli` and `SupplyAmount` on the vehicle, then publishes `WFBE_Client_PV_SupplyMissionStarted` at `:50-51`. The server starts a tracking loop in `supplyMissionStarted.sqf:1-88` and completes via `WFBE_Server_PV_SupplyMissionCompleted`. Completion reads the vehicle vars at `supplyMissionCompleted.sqf:9-10` and rewards funds/supply at `:31-40`.
+On current `master`, `supplyMissionStart.sqf:20-39` lets the client stamp `SupplyFromTown` and `SupplyAmount` on the truck, then publishes `WFBE_Client_PV_SupplyMissionStarted`. The server starts a tracking loop in `supplyMissionStarted.sqf:1-88` and completes via `WFBE_Server_PV_SupplyMissionCompleted`. Completion reads the vehicle vars at `supplyMissionCompleted.sqf:9-28`, rewards side supply through `ChangeSideSupply`, clears the source/amount vars and broadcasts the completion message. The player's personal cash/score path is in the client completion message, not the server completion handler.
+
+PR #1 adds `SupplyByHeli` and additional heli/cash-run reward branches on top of this trust model; keep those branch-only mechanics scoped to [Current supply helicopter PR](Current-Work-Supply-Helicopters-PR1) and [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook).
 
 That flow is important, but it should stay with `supply-mission-authority-cleanup` rather than being bundled into the first economy patch.
 
@@ -136,6 +138,7 @@ Also validate the direct temp channel:
 - west handler accepts only `_side == west`;
 - east handler accepts only `_side == east`;
 - reject malformed `_amount` or `_side` values with one compact `WARNING`;
+- reject side/channel mismatches, not just negative amounts;
 - keep positive rewards and normal spend behavior unchanged.
 
 Why first: this is the smallest source-backed exploit fix. It does not solve who is allowed to mutate supply, but it prevents overspend from becoming a windfall while future authority work is designed.

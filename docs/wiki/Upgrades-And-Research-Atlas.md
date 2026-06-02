@@ -136,6 +136,8 @@ What it does not do for player requests:
 
 `Server_AI_Com_Upgrade.sqf` is more authoritative than the player PV path. It reads `WFBE_C_UPGRADES_<side>_AI_ORDER`, finds the first desired upgrade level not yet met, checks AI commander funds and side supply, calls `WFBE_SE_FNC_ProcessUpgrade` with `_upgrade_isplayer = false`, sets running state, and deducts resources (`Server_AI_Com_Upgrade.sqf:7-53`).
 
+Wave R found a likely debit-index swap in that AI worker. The player UI names cost element `0` as supply and element `1` as funds (`GUI_UpgradeMenu.sqf:139-140`) and validates/deducts that way (`:158-159`). The AI worker validates with the same convention (`Server_AI_Com_Upgrade.sqf:34-36`), but then deducts `_cost select 0` from AI commander funds and `_cost select 1` from side supply (`:47-50`). Before enabling or scheduling AI commander upgrades, fix or deliberately confirm this convention.
+
 This means the upgrade worker is real, but the broader AI commander autonomy still needs care. See [AI Commander Autonomy Audit](AI-Commander-Autonomy-Audit): the repo has AI commander upgrade code and state, but the current docs should not imply a complete autonomous commander loop until the scheduler/owner path is proven.
 
 ## Consumers
@@ -168,6 +170,7 @@ Related page: [Abandoned Feature Revival Review](Abandoned-Feature-Revival-Revie
 | --- | --- | --- | --- |
 | Patch-ready | Player upgrade request is client-authoritative for affordability, dependencies and commander permission. | `GUI_UpgradeMenu.sqf:129-161`; `RequestUpgrade.sqf:1-5`; `Server_ProcessUpgrade.sqf:12-18` | Move validation/debit into a server authority wrapper before adding new upgrade mechanics or balancing expensive upgrades. |
 | Patch-ready | Invalid side/upgrade/level payloads can index config arrays directly. | `Server_ProcessUpgrade.sqf:12-18`; `Common_GetSideUpgrades.sqf:7-11` | Add side, ID, current-level and max-level guards before reading `TIMES`/`COSTS`/`LINKS`. |
+| Patch-ready | AI commander upgrade worker appears to swap supply/funds when deducting after a successful validation. | `GUI_UpgradeMenu.sqf:139-159`; `Server_AI_Com_Upgrade.sqf:34-50` | Align AI deduction with the `[supply, funds]` convention before wiring a live AI commander upgrade scheduler. |
 | Research-needed | Config arrays may be length-misaligned around AAR/unit-cost. | `Init_CommonConstants.sqf:36-58`; representative `Upgrades_USMC.sqf` excerpt | Build a side-config validator before changing upgrade arrays or propagating generated missions. |
 | Partial | AI commander upgrade worker exists, but full autonomous scheduling remains unproven. | `Server_AI_Com_Upgrade.sqf:7-53`; [AI Commander Autonomy Audit](AI-Commander-Autonomy-Audit) | Treat AI upgrade flow as a useful worker, not as proof of a complete AI commander. |
 | Abandoned/stale | `RscMenu_Upgrade` references missing `GUI_Menu_Upgrade.sqf`. | `Rsc/Dialogs.hpp:2424-2428` | Keep it documented as stale unless intentionally deleting or reviving it. |

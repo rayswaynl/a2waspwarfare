@@ -6,16 +6,16 @@ The swarm is intentionally evidence-first: agents read source, report path/line-
 
 ## Current Wave: Wave R
 
-Spawned from the main orchestrator after the Wave Q UI handle harvest was published. These are fresh read-only explorers; Codex keeps docs edits and publication local.
+Spawned from the main orchestrator after the Wave Q UI handle harvest was published. These read-only explorers returned source packets; Codex keeps docs edits and publication local.
 
-| Agent | Lane | Status | Expected output |
+| Agent | Lane | Status | Harvest summary |
 | --- | --- | --- | --- |
-| Ohm | `economy-side-supply-negative-risk` | Running | Source-check side-supply/cash/commander-funds validation, especially negative-amount and temp-channel trust boundaries. |
-| Godel | `town-ai-camp-patrol-repair-authority` | Running | Source-check town AI/camp capture, patrol reset, camp repair authority, HC/server split and stale partial features. |
-| Zeno | `factory-player-buy-path-queue-semantics` | Running | Source-check normal player-buy path versus server factory queues, cancel/refund absence, empty-vehicle queue semantics and upgrade gates. |
-| Dalton | `direct-pv-trust-boundary-second-pass` | Running | Source-check high-risk direct publicVariable/temp-channel flows not yet fully represented in the authority/PV indexes. |
+| Ohm | `economy-side-supply-negative-risk` | Returned / selected harvest local | Side-supply side/channel mismatch, supply mission master-vs-PR reward scoping and AI commander upgrade debit-swap promoted into [Economy authority first cut](Economy-Authority-First-Cut), [Economy/towns/supply](Economy-Towns-And-Supply), [Upgrades/research](Upgrades-And-Research-Atlas), [AI commander autonomy audit](AI-Commander-Autonomy-Audit) and [Server authority map](Server-Authority-Migration-Map). |
+| Godel | `town-ai-camp-patrol-repair-authority` | Returned / selected harvest local | Most town/camp lifecycle evidence was already canonical; camp repair authority-light path was added to [Towns/camps/capture atlas](Towns-Camps-And-Capture-Atlas). |
+| Zeno | `factory-player-buy-path-queue-semantics` | Returned / selected harvest local | Normal player-buy client-local path was already canonical; extra-turret-crew-only empty-exit nuance was promoted into [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) and [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas). |
+| Dalton | `direct-pv-trust-boundary-second-pass` | Returned / selected harvest local | `ATTACK_WAVE_DETAILS`, `SEND_MESSAGE`, side-supply temp-channel payload trust, `WFBE_C_PLAYER_OBJECT` and AFK wording corrections were promoted into [Public variable channel index](Public-Variable-Channel-Index), [Networking/PV](Networking-And-Public-Variables) and [Attack-wave authority](Attack-Wave-Authority-Playbook). |
 
-Harvest rule: Wave R reports are not canonical until Codex source-checks and promotes them into owner pages. Good first harvest targets are side-supply negative amount handling, player-buy path correction, town/camp repair authority and any direct-PV channel missing from the existing indexes.
+Harvest rule: Wave R selected findings are canonical only where they are now promoted into owner pages. Raw report details that duplicate existing pages remain routing notes, not new status claims.
 
 ## Previous Wave: Wave Q
 

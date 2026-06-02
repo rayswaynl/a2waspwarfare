@@ -1111,6 +1111,14 @@ Key conclusions:
 - Wired the matrix into [Public variable channel index](Public-Variable-Channel-Index), [Client UI systems atlas](Client-UI-Systems-Atlas), [Feature status](Feature-Status-Register), [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) and [`agent-status.json`](agent-status.json).
 - Validation passed with `docs/validate-wiki.ps1`, JSON/JSONL parsing and `git diff --check`.
 
+# 2026-06-02 - Wave R Harvest + Player AI Cap Note
+
+- Acting as main LLM orchestrator, harvested all four Wave R read-only source packets and promoted only selected deltas into canonical owner pages.
+- Added [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance) after source-checking `WFBE_C_PLAYERS_AI_MAX`, Soldier `1.5x` multiplier, barracks scaling and commander `+10` group-slot bonus. The page includes a Discord-ready default cap table and balance suggestions for lower-AI specialist roles.
+- Tightened direct-PV documentation: `ATTACK_WAVE_DETAILS` is now documented as forgeable/detail-authority-sensitive, `SEND_MESSAGE` as a direct-channel RCE surface, `wfbe_supply_temp_<side>` as side/channel-mismatch sensitive, `WFBE_C_PLAYER_OBJECT` as UID/object trust-sensitive, and AFK wording as log-vs-self-kick split.
+- Folded economy updates into [Economy authority first cut](Economy-Authority-First-Cut), [Economy/towns/supply](Economy-Towns-And-Supply), [Server authority map](Server-Authority-Migration-Map), [Upgrades/research](Upgrades-And-Research-Atlas) and [AI commander autonomy audit](AI-Commander-Autonomy-Audit): master supply mission rewards are scoped separately from PR #1 heli rewards, and the AI commander upgrade worker likely swaps supply/funds deduction.
+- Folded Zeno/Godel details into [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup), [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas) and [Towns/camps/capture atlas](Towns-Camps-And-Capture-Atlas): extra-turret-crew-only buys need a decision before queue patching, and camp repair remains client-paid/client-gated.
+
 # 2026-06-02 - Arma 2 OA Inverse-Trap Compatibility Canonicalization
 
 - Took Claude's Instructions-For-Codex item 48 and folded it into the canonical [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit#inverse-trap-commands) and [`agent-compatibility-audit.json`](agent-compatibility-audit.json).

@@ -45,6 +45,7 @@
 - [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas)
 - [Construction logic cleanup](Construction-Logic-List-Cleanup)
 - [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas)
+- [Player AI caps/balance](Player-AI-Caps-And-Role-Balance)
 - [Upgrades/research atlas](Upgrades-And-Research-Atlas)
 - [Server runtime atlas](Server-Gameplay-Runtime-Atlas)
 - [Core systems](Core-Systems-Index)

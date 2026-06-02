@@ -69,6 +69,7 @@ Some commander-facing systems are live but still client-led. Keep them out of th
 | --- | --- | --- |
 | Commander income percent | `Client/GUI/GUI_Menu_Economy.sqf:24-27,74-79`; `Server/FSM/updateresources.sqf:36-43` | Client UI writes the commander percent that the server resource loop consumes. It needs sender/commander validation in the economy authority lane. |
 | Upgrade requests | `Client/GUI/GUI_UpgradeMenu.sqf:137-171`; `Server/PVFunctions/RequestUpgrade.sqf:1-5`; `Server/Functions/Server_ProcessUpgrade.sqf:12-21` | The server owns the timer/state transition, but the live request still trusts client-side funds/dependency/level checks. |
+| AI commander upgrade worker | `GUI_UpgradeMenu.sqf:139-159`; `Server_AI_Com_Upgrade.sqf:34-50` | The AI worker validates `[supply, funds]` costs like the player UI but appears to deduct them swapped, taking supply cost from AI funds and funds cost from side supply. Fix this before enabling a scheduler. |
 | MHQ repair | `Client/Action/Action_RepairMHQ.sqf:5-35`; `Server/PVFunctions/RequestMHQRepair.sqf:1`; `Server/Functions/Server_MHQRepair.sqf:1-35` | Repair is client-debited and side-only when it reaches the server. |
 | Commander specials and selling | `Client/GUI/GUI_Menu_Tactical.sqf:363-373,463-527`; `Client/GUI/GUI_Menu_Economy.sqf:104-150`; `Server/Functions/Server_HandleSpecial.sqf:55-64` | Paratroops, paradrops, UAV/ICBM paths, RespawnST and structure sale/refund all need role/side/funds/effect validation before public-server confidence. |
 

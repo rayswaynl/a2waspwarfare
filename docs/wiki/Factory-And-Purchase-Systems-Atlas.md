@@ -192,6 +192,8 @@ When `MenuAction == 1`, `GUI_Menu_BuyUnits.sqf` performs these checks before spa
 | Queue cap | Checks `WFBE_C_QUEUE_<type>` against `WFBE_C_QUEUE_<type>_MAX`. |
 | Factory queue text | Reads the selected building's `queu` variable to show immediate or queued purchase hint. |
 
+For the exact default AI-follower table and role-balance notes, use [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance). The important source rule is that the lobby player-AI cap is scaled by barracks level, Soldier slots apply a `1.5x` multiplier before that scaling, and commander team players get `+10` total group slots.
+
 If accepted:
 
 1. `WFBE_C_QUEUE_<type>` increments locally.
@@ -308,7 +310,7 @@ This means class metadata mistakes can break more than the visible buy menu:
 | No player `RequestBuyUnit` server authority | `Init_PublicVariables.sqf` has no `RequestBuyUnit`; `GUI_Menu_BuyUnits.sqf` calls local `BuildUnit` and deducts funds client-side. | For high-value or exploit-sensitive purchases, add a server-validated request path or at least document why client-local creation is acceptable for the target server model. |
 | `Server_BuyUnit.sqf` appears unused | `AIBuyUnit` is compiled in `Init_Server.sqf`, but source search finds no caller. | Before reviving AI purchases, find intended caller history or design a new explicit AI commander production loop. |
 | Player/server build drift | `Client_BuildUnit.sqf` and `Server_BuyUnit.sqf` duplicate vehicle handler, missile, IRS, countermeasure and crew setup logic. | Any new vehicle behavior may need both paths unless server path is formally retired or refactored. |
-| Queue state is fragile | Building `queu` and client `WFBE_C_QUEUE_*` counters are manually incremented/decremented; DR-33 counter/token fixes are patch-ready but still absent from current source, while public queue broadcast churn also remains. | Always test cancellation, factory destruction, menu close, empty-vehicle buys, repeated purchases and queue hints when touching queues. |
+| Queue state is fragile | Building `queu` and client `WFBE_C_QUEUE_*` counters are manually incremented/decremented; DR-33 counter/token fixes are patch-ready but still absent from current source, while public queue broadcast churn also remains. Wave R added that extra-turret-crew-only vehicle buys, if exposed, can hit the same empty-exit before extra crew creation. | Always test cancellation, factory destruction, menu close, empty-vehicle buys, extra-turret-crew selections, repeated purchases and queue hints when touching queues. |
 | Cost authority is local | Menu checks funds and calls `ChangePlayerFunds` locally after spawning build thread. | Do not add new economy side effects to purchase without tracing client funds, commander income, side supply and PV hardening. |
 | Spawn pads are object-class conventions | Light/heavy/air/barracks pads depend on nearby helper object classes. | Document required map editor objects when adding or moving bases. |
 | Attack-wave cost is client-visible state | `ATTACK_WAVE_PRICE_MODIFIER` affects list display and purchase cost. | Keep JIP sync and local modifier state aligned before adding temporary discounts. |
