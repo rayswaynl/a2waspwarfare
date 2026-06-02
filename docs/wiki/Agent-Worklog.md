@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wiki-Quality MERGE-2 UI Quick Reference
+
+- Resolved [Wiki quality audit](Wiki-Quality-Audit) MERGE-2 by reducing [Client UI, HUD and menus](Client-UI-HUD-And-Menus) from a duplicate mini-atlas into a compact quick-reference gateway.
+- Kept source anchors for the common UI entrypoints: main menu, buy units, gear/service/EASA, upgrades/economy, RHUD/FPS title resources, respawn selector and marker loops.
+- Updated [Client UI systems atlas](Client-UI-Systems-Atlas) to state that it is the canonical implementation map and the HUD/menus page is the quick router.
+- Updated [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` for the published lane.
+
 ## 2026-06-02 - Codex Wiki-Quality REDUCE-4 Gameplay Gateway Cleanup
 
 - Reduced duplicated economy, construction and factory explanation in [Gameplay systems atlas](Gameplay-Systems-Atlas).

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T19:53:00+02:00",
+  "generatedAt": "2026-06-02T20:13:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-quality-merge2-ui-quickref",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Client-UI-HUD-And-Menus.md",
+        "Client-UI-Systems-Atlas.md",
+        "Wiki-Quality-Audit.md MERGE-2"
+      ],
+      "outputs": [
+        "Client-UI-HUD-And-Menus.md quick-reference gateway",
+        "Client-UI-Systems-Atlas.md intro relationship note",
+        "Wiki-Quality-Audit.md MERGE-2 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-status.json"
+      ],
+      "handoff": "Client UI/HUD is now a compact router. Keep detailed implementation tables and future UI source-map changes in Client-UI-Systems-Atlas.md."
+    },
     {
       "lane": "wiki-quality-reduce4-gameplay-gateway",
       "owner": "Codex",

@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `wiki-quality-merge2-ui-quickref` | Published | [Client UI/HUD](Client-UI-HUD-And-Menus) is now a compact quick-reference gateway; [Client UI systems atlas](Client-UI-Systems-Atlas) remains the canonical implementation map. |
 | `wiki-quality-reduce4-gameplay-gateway` | Published | [Gameplay atlas](Gameplay-Systems-Atlas) now routes economy, construction and factory detail to the canonical atlases while keeping source-backed orientation anchors. |
 | `wiki-quality-c6-gameplay-citations` | Published | [Gameplay atlas](Gameplay-Systems-Atlas) now has path:line anchors for town init/capture/AI, economy, commander, upgrades, construction, factories and attack-wave production. |
 | `supply-mission-authority-cleanup-playbook` | Active | Codex-2 is tracing truck and PR #1 helicopter supply flows, cargo/reward trust, cooldown casing, dead twin code and idempotency into a patch-ready playbook. |
@@ -36,7 +37,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice finished the C6 Gameplay citation uplift. |
+| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved MERGE-2 for the UI quick-reference page. |
 | Codex-2 | Active | `supply-mission-authority-cleanup-playbook` | Expect [Supply mission](Supply-Mission-Architecture) authority cleanup guidance for truck + PR #1 helicopter flows. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
@@ -62,6 +63,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `wiki-quality-merge2-ui-quickref` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) MERGE-2 is resolved: the HUD/menus page is a quick-reference gateway into the full UI atlas. |
 | `wiki-quality-reduce4-gameplay-gateway` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) REDUCE-4 is resolved: Gameplay is now a gateway for detailed economy/construction/factory pages. |
 | `wiki-quality-c6-gameplay-citations` | Codex | Published | Final C6 pass is done for [Gameplay atlas](Gameplay-Systems-Atlas); [Wiki quality audit](Wiki-Quality-Audit) C6 is resolved. |
 | `supply-mission-authority-cleanup-playbook` | Codex-2 | Active | Codex-2 is source-tracing truck and supply-helicopter authority cleanup and should publish a dedicated playbook. |
@@ -87,6 +89,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| Wiki-quality MERGE-2 UI quick reference | [Client UI/HUD](Client-UI-HUD-And-Menus), [Client UI systems atlas](Client-UI-Systems-Atlas), [Wiki quality audit](Wiki-Quality-Audit) | Shrinks the HUD/menus page into a source-anchored router for common UI work and leaves detailed dialog/HUD/marker implementation notes in the canonical UI atlas. |
 | Wiki-quality REDUCE-4 Gameplay gateway | [Gameplay atlas](Gameplay-Systems-Atlas), [Wiki quality audit](Wiki-Quality-Audit) | Trims duplicated economy, construction and factory explanation from the Gameplay atlas, adds gateway links to the owning atlases, and keeps the source anchors needed for safe orientation. |
 | Wiki-quality C6 Gameplay citations | [Gameplay atlas](Gameplay-Systems-Atlas), [Wiki quality audit](Wiki-Quality-Audit) | Adds source anchors for town initialization, starting mode/patrol flags, capture/SV/perf loop, town AI activation/delegation/cleanup, economy resource ticks, commander assignment/votes, upgrade processing, CoIn construction, factory purchase/build paths and attack-wave production. |
 | Wiki-quality C6 AI/headless citations | [AI/headless](AI-Headless-And-Performance), [Wiki quality audit](Wiki-Quality-Audit) | Adds source anchors for HC bootstrap/registry/delegation/disconnect, client-FPS delegation, town-AI cleanup, server-FPS publishing and `GetSleepFPS`; this pairs with the UI and Gameplay passes that now resolve C6. |
