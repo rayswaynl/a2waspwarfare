@@ -12,7 +12,7 @@ Source anchors: `Rsc/Parameters.hpp:50-53` exposes the mission parameter; `Commo
 
 Server functions `Server_DelegateAITownHeadless.sqf`, `Server_DelegateAIStaticDefenceHeadless.sqf` and `Server_FNC_Delegation.sqf` are the core delegation hooks. Client handlers `Client_DelegateAI.sqf`, `Client_DelegateTownAI.sqf` and `Client_DelegateAIStaticDefence.sqf` receive delegated work through `Client/PVFunctions/HandleSpecial.sqf:13-15`.
 
-Implementation playbook: [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook).
+Page ownership: this atlas owns AI/performance runtime orientation and source routing. The implementation patch shape, work-record model, disconnect policy and DR-21/DR-42 decisions live in [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook).
 
 Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-21 covers HC disconnect/no failover, while DR-42 covers static-defense HC one-way delegation / missing update-back. Treat those as the canonical finding records and use the playbook for patch shape.
 
@@ -83,21 +83,18 @@ Town AI is not simulation-cached. `enableSimulation false` is used on invisible 
 - Despawn: after `time - wfbe_inactivity > WFBE_C_TOWNS_UNITS_INACTIVE` with no enemies, units and groups are deleted.
 - Confirmed risk: the vehicle cleanup in `server_town_ai.sqf:191-223`, especially `:211-216`, iterates `wfbe_active_vehicles` and deletes each alive vehicle when `!(isPlayer leader group _x)`. It does not check `crew`, cargo or turret occupants, so a player riding in a town-AI vehicle while not group leader can still be inside a vehicle that gets deleted. This is separate from `Server_HandleEmptyVehicle.sqf`, which has its own empty-vehicle wait and is not the source of this bug. See [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) for the source chain, patch shape and validation gates.
 
-### HC Delegation Uses Remote Creation
+### HC Delegation Source Router
 
-There is no `setGroupOwner` in the mission. The headless client owns delegated AI because it receives a `delegate-townai`, `delegate-ai`, or `delegate-ai-static-defence` message and creates the units locally.
+There is no `setGroupOwner` in the mission. HC mode uses remote creation: the server sends `delegate-townai`, `delegate-ai` or `delegate-ai-static-defence`, and the headless/client receiver creates the units locally. Keep detailed patch decisions in [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook); use this table to find the live source path.
 
-- HC bootstrap: `initJIPCompatible.sqf:236-238` runs `Headless/Init/Init_HC.sqf`; `Init_HC.sqf:4-6` compiles the client-side delegation receivers; `Init_HC.sqf:12-15` waits 20 seconds and sends `["RequestSpecial", ["connected-hc", player]]`.
-- HC registration: `Server_HandleSpecial.sqf:117-131` stores `WFBE_HEADLESS_<uid>` and appends `group _hc` to `WFBE_HEADLESSCLIENTS_ID` only when `owner _hc != 0`; `Server/Init/Init_Server.sqf:109-110` initializes that HC list only in delegation mode `2`.
-- Town HC path: `Server_DelegateAITownHeadless.sqf:23-34` randomly chooses HC groups and sends `delegate-townai`; `Client_DelegateTownAI.sqf:23-35` creates the town units locally and reports created vehicles through `update-town-delegation`; `Server_HandleSpecial.sqf:86-96` appends those vehicles to `wfbe_active_vehicles`.
-- Static-defense HC path: `Server_OperateTownDefensesUnits.sqf:38-56` and `Server_HandleDefense.sqf:19-24` call `Server_DelegateAIStaticDefenceHeadless.sqf`; that helper sends `delegate-ai-static-defence` at `Server_DelegateAIStaticDefenceHeadless.sqf:23-26`. DR-42 confirms the return path is missing: `Client_DelegateAIStaticDefence.sqf:25-28` creates units but comments out the `update-delegation-static_defence` send-back.
-- HC disconnect: `Server_OnPlayerDisconnected.sqf:22-29` removes the HC group from `WFBE_HEADLESSCLIENTS_ID` and clears `WFBE_HEADLESS_<uid>`, but does not reclaim, re-track or re-delegate work that was already created by the HC.
+| Topic | Source anchors | Canonical patch guide |
+| --- | --- | --- |
+| HC bootstrap and registration | `initJIPCompatible.sqf:236-238`; `Headless/Init/Init_HC.sqf:4-15`; `Server_HandleSpecial.sqf:117-131`; `Server/Init/Init_Server.sqf:109-110` | [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) |
+| Town AI HC path | `Server_DelegateAITownHeadless.sqf:23-34`; `Client_DelegateTownAI.sqf:23-35`; `Server_HandleSpecial.sqf:86-96` | [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) |
+| Static-defense HC path | `Server_OperateTownDefensesUnits.sqf:38-56`; `Server_HandleDefense.sqf:19-24`; `Server_DelegateAIStaticDefenceHeadless.sqf:23-26`; `Client_DelegateAIStaticDefence.sqf:25-28` | [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) |
+| Disconnect and late-HC behavior | `Server_OnPlayerDisconnected.sqf:22-29`; `initJIPCompatible.sqf:155,164-170` | [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) |
 
-### Delegation Can Downgrade Once At Init
-
-`WFBE_C_AI_DELEGATION` can be set to `2` for HC mode at `initJIPCompatible.sqf:155`, then downgraded to `0` during init if the OA version does not support HC (`initJIPCompatible.sqf:164-170`). The downgrade is not automatically reversed later when an HC joins, so late HC connection may not receive work unless the init/delegation flow is changed.
-
-There is also no visible failover/rebalancing pass on HC disconnect. A disconnected HC can dump locality/load back onto the server through engine behavior, but the mission does not use `setGroupOwner` and does not redistribute groups to a surviving HC.
+Runtime caveats: HC mode can be forced at `initJIPCompatible.sqf:155`, then downgraded once during init if the OA build lacks HC support (`initJIPCompatible.sqf:164-170`). The current mission has no visible failover/rebalancing pass on HC disconnect and no late-HC rebalance pass. DR-21 and DR-42 track those as implementation findings; this atlas only routes readers to the live code.
 
 ### `GetSleepFPS` Is Intentional
 

@@ -69,9 +69,11 @@ Block on `WFBE_PRESENTSIDES` + `wfbe_teams` → `Init_Client` compiles functions
 
 ### Headless client
 
-`Init_HC.sqf` compiles the three delegation handlers (`Client_DelegateTownAI`, `Client_DelegateAI`, `Client_DelegateAIStaticDefence`) plus `Client_HandlePVF`, then **`sleep 20`** (a hard wait used in place of a `waitUntil {serverInitFull}` barrier) and notifies the server via `["RequestSpecial", ["connected-hc", player]]`. See [AI, headless and performance](AI-Headless-And-Performance) for what gets delegated.
+`Init_HC.sqf` compiles the three delegation handlers (`Client_DelegateTownAI`, `Client_DelegateAI`, `Client_DelegateAIStaticDefence`) plus `Client_HandlePVF`, then **`sleep 20`** (a hard wait used in place of a `waitUntil {serverInitFull}` barrier) and notifies the server via `["RequestSpecial", ["connected-hc", player]]`. See [AI, headless and performance](AI-Headless-And-Performance) for the runtime source router and [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) for DR-21/DR-42 patch policy.
 
 Source-check note: `Init_HC.sqf:12` is the fixed sleep and `:15` sends the HC registration request. `serverInitFull` is not set until `Server/Init/Init_Server.sqf:507`, after `serverInitComplete` at `:117` and the `commonInitComplete && townInit` wait at `:127`.
+
+Page ownership note: this lifecycle page owns HC boot timing and wait-chain risk only. HC work tracking, update-back choices, disconnect policy and failover design intentionally live in [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook).
 
 ## JIP specifics
 

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T21:40:00+02:00",
+  "generatedAt": "2026-06-02T21:45:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,31 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-quality-dup10-hc-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "AI-Headless-And-Performance.md",
+        "Lifecycle-Wait-Chain.md",
+        "Headless-Delegation-And-Failover-Playbook.md",
+        "Wiki-Quality-Audit.md DUP-10",
+        "Deep-Review-Findings.md DR-21 / DR-42"
+      ],
+      "outputs": [
+        "AI-Headless-And-Performance.md HC source router",
+        "Lifecycle-Wait-Chain.md HC boot ownership note",
+        "Headless-Delegation-And-Failover-Playbook.md page ownership note",
+        "Wiki-Quality-Audit.md DUP-10 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future HC edits should keep the page split intact: AI/headless for runtime orientation, Lifecycle wait-chain for boot timing and Headless delegation/failover for update-back, work-record, disconnect and late-HC policy."
+    },
     {
       "lane": "wiki-quality-c3-gameplay-followups",
       "owner": "Codex",
@@ -686,7 +711,8 @@
     "server-authority-migration-map",
     "attack-wave-authority-dr41",
     "abandoned-feature-revival-review",
-    "external-arma2-reference-guide"
+    "external-arma2-reference-guide",
+    "wiki-quality-dup10-hc-routing"
   ],
   "queuedReports": [],
   "lanes": [

@@ -2,6 +2,8 @@
 
 This is the implementation guide for hardening headless-client AI delegation. It ties together DR-21 and DR-42 so future code owners can patch HC behavior without confusing three different delegation models.
 
+Page ownership: use [AI, headless and performance](AI-Headless-And-Performance) for runtime orientation and source routing, and [Lifecycle wait-chain](Lifecycle-Wait-Chain) for HC boot timing. This playbook owns the DR-21/DR-42 implementation decisions: update-back policy, work records, disconnect handling, failover and late-HC behavior.
+
 ## Scope
 
 Use this page before editing:

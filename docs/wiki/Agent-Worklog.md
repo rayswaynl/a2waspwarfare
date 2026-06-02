@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wiki-Quality DUP-10 HC Routing
+
+- Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-10 by making [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) the canonical implementation playbook for DR-21/DR-42.
+- Reduced [AI, headless and performance](AI-Headless-And-Performance) to a concise HC source router for bootstrap, registration, town AI, static defense, disconnect and late-HC source anchors.
+- Clarified [Lifecycle wait-chain](Lifecycle-Wait-Chain) owns only HC boot timing and the `Init_HC.sqf` fixed `sleep 20` vs `serverInitFull` wait-chain risk.
+- Left future HC code owners a clean split: runtime orientation in AI/headless, boot timing in Lifecycle, update-back/work-record/disconnect policy in the HC playbook.
+
 ## 2026-06-02 - Codex Wiki-Quality C3 Gameplay Follow-Ups
 
 - Resolved [Wiki quality audit](Wiki-Quality-Audit) C3 by replacing stale [Gameplay systems atlas](Gameplay-Systems-Atlas) open questions with a source-backed resolved follow-up table.
