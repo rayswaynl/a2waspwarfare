@@ -29,7 +29,7 @@ A commander-tier "powerup," called like the ICBM: paint a point on the map and a
 
 ### 3.1 Trigger & designation
 
-- **Who:** commander-tier, gated behind an upgrade (new `WFBE_UP_DRONE`, or reuse the existing UAV/Air gate — decision deferred, see §12).
+- **Who:** commander-tier, gated behind the **existing UAV/Air upgrade** (reuse — no new upgrade node). *Locked 2026-06-02.*
 - **How:** the existing **Tactical menu** (`Client/GUI/GUI_Menu_Tactical.sqf`). The drone strike is added as a **new `MenuAction` entry** alongside the six that already share that dialog's map (artillery, paratroopers, fast-travel, ICBM, vehicle drop, ammo drop).
 - **Designation = map-click point (Option A).** Click a grid; the swarm flies there and auto-acquires ground vehicles in a radius. No operator piloting in v1.
 - **Cost + cooldown + concurrent cap** enforced (see §6, §7.4). Server validates the request (do **not** inherit the legacy UAV's client-only authority gap).
@@ -110,33 +110,25 @@ Survivability is a **scripted HP model** via `HandleDamage` (see §7.5), *not* t
 
 ## 5. Spectacle — how to make it look cool (cheaply)
 
-This is the "coolest" lens from the four-designs study, delivered without server cost. **Rule: the server owns truth + movement; clients own the juice.** All visual/audio FX run client-side (server broadcasts a "play FX" event), so particles never cost the server.
+**Rule (load-bearing): the server owns truth + movement; clients own the juice.** All audio/visual FX run client-side off a broadcast event, so they never cost the server.
 
-### 5.1 Visual
+### 5.1 v1 scope (locked 2026-06-02) — flares + a Stuka dive siren
 
-- **Smoke trails** — a lightweight attached particle/`drop` emitter behind each airframe (at minimum the 2 flare drones). Five thin contrails reading as a coordinated swarm. Short particle lifetime, capped emitter rate.
-- **Flares** — the flare drones pop flare/illum rounds on ingress and whenever the AA fires (the spoof moment). Bright IR/visual bloom; a handful of cheap objects.
-- **Top-attack silhouette** — loiterers climb, then nose-over into a steep dive before impact (the Lancet/Switchblade look) — a distinctive, readable attack profile rather than a flat run-in.
-- **Staggered converging dives** — the 3 loiterers commit ~`WFBE_C_DRONE_DIVE_STAGGER` apart and ideally from different bearings → a *chain* of explosions, not a single blast. This single change does most of the "cinematic" work for free.
-- **Impact chain** — each warhead `createVehicle` already yields an explosion; a small secondary dust/smoke puff at each impact ties the chain together.
+Deliberately minimal for the first ship:
 
-### 5.2 Audio
+- **Flares** — the 2 flare drones pop flare/illum rounds on ingress and whenever the AA fires (the spoof moment). This is *both* mechanic (missile spoof) and spectacle. Cheap (a handful of objects).
+- **Stuka dive siren** — when a loitering munition commits to its dive, play a Ju-87 "Jericho trumpet" siren as a 3D sound at the drone (`playSound3D`/`say3D`). Staggered dives (`WFBE_C_DRONE_DIVE_STAGGER`) chain the sirens into a rising, dread-inducing sequence. Requires a sound asset + `CfgSounds` entry (see §12).
+- **Staggered converging dives** are kept (a near-free movement pattern that makes the siren chain land); the top-attack silhouette is a natural consequence.
 
-- **Drone buzz** — a looped 3D whine on the airframes (`say3D`/`playSound3D`). The dread "moped buzz" of a loitering munition is iconic and is the cheapest cool-factor available (client-side sound).
-- **Inbound cue** — a one-shot warning sting when the package commits.
-- **Announcer / radio** — `sideRadio`/`sideChat` to the launching team ("Saturation strike inbound, grid X"); optionally a fairness warning to the target side ("drone activity detected") that adds tension and signals the counterplay window.
+That's the whole v1 juice: **no** smoke trails, **no** buzz loop, **no** announcer radio, **no** FPV cam.
 
-### 5.3 Camera (deferred to a follow-up, speced here)
+### 5.2 Deferred to the juice pass (architecture leaves room)
 
-- **Optional FPV "money shot"** — a `cameraEffect`/UAV-cam view from the lead drone for the operator to *watch* the dives (no control). This is the clip-generator. Held for a follow-up phase (it adds a UI surface and disconnect-handling), but the architecture leaves room for it.
+Held for a fast-follow once v1 is proven in-engine: **smoke contrails**, a looped **drone buzz**, **announcer/radio** calls, **impact-chain** secondary FX, and the **FPV "money-shot" camera** on the lead drone. All client-side, capped, short-lived.
 
-### 5.4 Emergent cinematics (free)
+### 5.3 Emergent cinematics (free)
 
-- **Defenders' tracers** arcing up at the swarm (a natural product of the .50-cal counterplay) and **night flares + chained explosions** make for dramatic moments with zero extra code — they fall out of mechanics we already have.
-
-### 5.5 Cost guardrails for the cool stuff
-
-- FX are **client-side**, **capped**, and **short-lived**. Particle emitters limited per drone with brief lifetimes; sounds are client-local; the FPV cam (when added) is single-instance for the operator only.
+Defenders' tracers arcing up at the swarm (from the .50-cal counterplay) and night flares + chained explosions are dramatic with zero extra code.
 
 ## 6. Balance constants (proposed defaults — tune in playtest)
 
@@ -150,14 +142,15 @@ Defined in `Common/Init/Init_CommonConstants.sqf` as `WFBE_C_DRONE_*`. Values ar
 | `WFBE_C_DRONE_LOITER_SPEED` | ~35 m/s | Scripted orbit speed |
 | `WFBE_C_DRONE_LOITER_TIME` | ~90 s | Endurance before forced commit |
 | `WFBE_C_DRONE_ZONE_RADIUS` | ~250 m | Acquisition radius around the painted point |
-| `WFBE_C_DRONE_WARHEAD` | `"Sh_125_HE"` | Survivable warhead (not instant-GBU). Tune per "hard-kill-but-not-one-shot" |
+| `WFBE_C_DRONE_WARHEAD` | `"Sh_125_HE"` | **Locked.** Survivable tank-HE warhead (not instant-GBU) — hard-kill as a package, not per-drone |
 | `WFBE_C_DRONE_SCATTER` | ~12 m | Impact scatter radius |
 | `WFBE_C_DRONE_HP` | ~6 | Scripted hit-points ≈ number of .50-cal hits to down one drone |
 | `WFBE_C_DRONE_MIN_HIT` | ~0.08 | Min normalized `HandleDamage` delta that counts; below this = sub-.50 plink, ignored |
-| `WFBE_C_DRONE_COST` | ~40,000 | Commander funds cost |
-| `WFBE_C_DRONE_COOLDOWN` | ~720 s | Reuse cooldown |
+| `WFBE_C_DRONE_COST` | ~22,000 | Commander funds cost (**mid-tier**) |
+| `WFBE_C_DRONE_COOLDOWN` | ~360 s | Reuse cooldown (**mid-tier**) |
 | `WFBE_C_DRONE_CONCURRENT_CAP` | 1 | Max packages in flight per side |
-| `WFBE_C_DRONE_DIVE_STAGGER` | ~1.5 s | Gap between loiterer dives |
+| `WFBE_C_DRONE_DIVE_STAGGER` | ~1.5 s | Gap between loiterer dives (chains the siren) |
+| `WFBE_C_DRONE_DIVE_SOUND` | `"drone_stuka"` | `CfgSounds` key for the Ju-87 dive siren played on commit |
 
 ## 7. Technical architecture
 
@@ -181,15 +174,16 @@ Defined in `Common/Init/Init_CommonConstants.sqf` as `WFBE_C_DRONE_*`. Values ar
 
 **New:**
 - `Server/Support/Support_DroneStrike.sqf` — the orchestrator (spawn, formation flight, flare screen, acquire, staggered dive, scripted HP, cap, despawn). ~160–220 LOC. The only substantial new code.
-- (Optional) `Client/Module/DroneStrike/dronestrike_fx.sqf` — client FX (smoke/flares/sound) off broadcast events.
+- `Client/Module/DroneStrike/dronestrike_fx.sqf` — client FX (flares + Stuka dive siren) off broadcast events. ~40 LOC.
+- A Stuka dive-siren sound asset (e.g. `Sounds/drone_stuka.ogg`).
 
 **Edited:**
-- `Client/GUI/GUI_Menu_Tactical.sqf` — new listbox entry + `MenuAction` enable/disable case + map-click block (clone ICBM).
+- `Client/GUI/GUI_Menu_Tactical.sqf` — new listbox entry + `MenuAction` enable/disable case + map-click block (clone ICBM); gate check **reuses the UAV/Air upgrade**.
 - `Server/Functions/Server_HandleSpecial.sqf` — `case "DroneStrike"`.
-- `Common/Init/Init_CommonConstants.sqf` — `WFBE_C_DRONE_*` constants (+ `WFBE_UP_DRONE` if a new gate).
+- `Common/Init/Init_CommonConstants.sqf` — `WFBE_C_DRONE_*` constants.
 - `Common/Config/Core_Root/Root_*.sqf` — `WFBE_%1DRONE` model var (defaults to `WFBE_%1UAV`).
+- `description.ext` — `CfgSounds` entry for `drone_stuka`.
 - `stringtable.xml` — localized strings.
-- (If new gate) the relevant `Core_Upgrades/Upgrades_*.sqf`.
 
 ### 7.4 Server validation
 
@@ -236,16 +230,18 @@ The `RequestSpecial`→`Server_HandleSpecial` path must validate: side, upgrade 
 ## 11. Phasing
 
 1. **Spike** (½ day) — prove one crewless airframe loiters a clean circle server-side. De-risks everything.
-2. **v1 core** — map-click launch + 5-ship package + flare screen + acquire + staggered hard-kill dives + `.50` survivability + cap/despawn. Mirror balance. **Shippable.**
-3. **Juice pass** — smoke trails, buzz/announcer audio, impact chain polish.
+2. **v1 core** — map-click launch + 5-ship package + flare screen + acquire + staggered hard-kill dives (`Sh_125_HE`) + Stuka dive siren + `.50` survivability + cap/despawn. Reuse UAV/Air gate. Mirror balance. Mid-tier cost. **Shippable.**
+3. **Juice pass** — smoke contrails, looped drone buzz, announcer/radio calls, impact-chain FX, FPV money-shot cam.
 4. **Follow-ups** (separate PRs): reveal-on-bait (paint the AA on the team map when it fires), laser-designate (Option C — `LaserTarget` homing), operator FPV cam (Option 2 money-shot).
 
 ## 12. To confirm at build time
 
 - Exact Arma 2 OA mechanism to classify a hit as ≥.50 (`HandleDamage` magnitude vs `HitPart`).
 - `setPosATL` vs `setVelocity` vs `enableSimulation false` for clean scripted flight (spike outcome).
-- Whether to add a dedicated `WFBE_UP_DRONE` upgrade or gate behind the existing UAV/Air upgrade.
-- Final warhead class + scatter that delivers "hard-kill package, not per-drone one-shot."
+- **Source the Stuka dive-siren sound** (.ogg) + add the `CfgSounds` entry in `description.ext` keyed `drone_stuka`.
+- Final scatter value that delivers "hard-kill package, not per-drone one-shot."
+
+*Decided 2026-06-02:* gate = reuse UAV/Air upgrade · warhead = `Sh_125_HE` · rarity = mid-tier · v1 juice = flares + dive siren only.
 
 ## 13. Out of scope (YAGNI for v1)
 
