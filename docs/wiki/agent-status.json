@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T21:18:00+02:00",
+  "generatedAt": "2026-06-02T21:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -17,13 +17,13 @@
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
       "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki-Quality-Audit C3 by turning stale Gameplay atlas open questions into source-backed resolved follow-ups.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining duplicate cross-link reductions, MERGE-1 hardening/authority consolidation after Codex-2's supply lane settles, or external Arma 2 OA source reference integration."
+      "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining duplicate cross-link reductions, MERGE-1 hardening/authority consolidation, or external Arma 2 OA source reference integration."
     },
     "Codex-2": {
       "status": "active",
-      "currentLane": "supply-mission-authority-cleanup-playbook",
-      "currentWork": "Source-tracing supply mission authority cleanup across truck and PR #1 supply-helicopter flows.",
-      "nextExpectedOutput": "Supply-Mission-Authority-Cleanup-Playbook.md with source evidence, safe implementation order and validation plan."
+      "currentLane": "abandoned-feature-revival-review",
+      "currentWork": "Source-tracing abandoned, commented and orphaned feature paths for revive/remove/leave-dormant classification.",
+      "nextExpectedOutput": "Abandoned-Feature-Revival-Review.md with evidence, classification, implementation shape and validation plan."
     },
     "Claude": {
       "status": "autonomous-ready",
@@ -72,8 +72,8 @@
     {
       "lane": "supply-mission-authority-cleanup-playbook",
       "owner": "Codex-2",
-      "status": "active",
-      "output": "Codex-2 is tracing truck and PR #1 helicopter supply flows, cargo/reward trust, cooldown casing, dead twin code and idempotency into a playbook"
+      "status": "published",
+      "output": "Supply-Mission-Authority-Cleanup-Playbook.md turns truck and PR #1 helicopter supply flows, cargo/reward trust, cooldown casing, dead twin code and idempotency into a patch-ready playbook"
     },
     {
       "lane": "wiki-quality-c6-ai-citations",

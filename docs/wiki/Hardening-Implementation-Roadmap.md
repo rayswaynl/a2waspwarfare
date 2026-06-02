@@ -162,6 +162,8 @@ Validation:
 
 ## P1: Supply Missions And PR #1
 
+Dedicated playbook: [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook).
+
 Evidence:
 
 | File | Current behavior |

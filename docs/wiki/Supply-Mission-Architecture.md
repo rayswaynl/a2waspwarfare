@@ -74,6 +74,6 @@ Review risk from the independent doc reviewer: the PR adds a `Killed` event hand
 
 ## Continue Reading
 
-Previous: [Economy/towns/supply](Economy-Towns-And-Supply) | Next: [Supply heli PR #1](Current-Work-Supply-Helicopters-PR1)
+Previous: [Economy/towns/supply](Economy-Towns-And-Supply) | Next: [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

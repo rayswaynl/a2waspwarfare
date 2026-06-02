@@ -84,10 +84,10 @@ Claude verified the review questions against the `master..feat/supply-helicopter
 
 ### Confirmed Follow-Up Defect
 
-Repeatedly loading the same vehicle stacks `Killed` event handlers. Recommended fix: set an object variable such as `wfbe_supply_killed_eh_set`, or remove the previous `Killed` handler before adding a new one. Do not add future side effects to that handler until this is fixed.
+Repeatedly loading the same vehicle stacks `Killed` event handlers. Recommended fix: set an object variable such as `wfbe_supply_killed_eh_set`, or remove the previous `Killed` handler before adding a new one. Do not add future side effects to that handler until this is fixed. Use [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) before turning PR #1 into baseline behavior.
 
 ## Continue Reading
 
-Previous: [Supply mission architecture](Supply-Mission-Architecture) | Next: [AI/headless/performance](AI-Headless-And-Performance)
+Previous: [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) | Next: [AI/headless/performance](AI-Headless-And-Performance)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

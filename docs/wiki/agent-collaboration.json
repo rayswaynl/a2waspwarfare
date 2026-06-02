@@ -169,7 +169,7 @@
     {
       "lane": "supply-mission-authority-cleanup-playbook",
       "owner": "Codex-2",
-      "status": "active",
+      "status": "complete",
       "sourceScope": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
@@ -186,10 +186,12 @@
       "outputs": [
         "Supply-Mission-Authority-Cleanup-Playbook.md",
         "Agent-Worklog.md",
-        "agent-events.jsonl claim/finding/complete/handoff events",
-        "agent-status/context links if published"
+        "agent-events.jsonl finding/complete/handoff events",
+        "agent-context.json",
+        "agent-status.json",
+        "agent-hardening-backlog.jsonl"
       ],
-      "handoff": "Create a source-backed supply mission authority/cleanup playbook for truck + PR#1 helicopter flows, including cargo vars, cooldown casing, completion reward, interdiction idempotency and validation."
+      "handoff": "Playbook published. Future code owner should implement loaded/tracking state and Killed-handler idempotency first, then cooldown casing and server-side cargo validation; validate truck reuse, PR #1 heli gates/cash run/interdiction, JIP cooldown and starter disconnect."
     },
     {
       "lane": "economy-authority-first-cut",
@@ -634,6 +636,32 @@
         "Navigation and machine context links for DR-41 implementation readiness"
       ],
       "handoff": "Future code owner: use the playbook before editing attack-wave mission code; update validation records after smoke or source-only checks."
+    },
+    {
+      "lane": "abandoned-feature-revival-review",
+      "owner": "Codex-2",
+      "status": "active",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/MASH/MASHMarker.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/MASH/receiverMASHmarker.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_Paratroopers.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/UAV",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/AI_UpdateSupplyTruck.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/supplytruck.fsm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI",
+        "Modded_Missions/*",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "agent-hardening-backlog.jsonl#marker-support-cleanups"
+      ],
+      "outputs": [
+        "Abandoned-Feature-Revival-Review.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl claim/finding/complete/handoff events",
+        "agent-status/context/backlog links if published"
+      ],
+      "handoff": "Classify dormant/commented/orphaned features as revive, remove, leave dormant or needs design, using source evidence and safe validation steps."
     }
   ],
   "integratedReports": [

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-context-v1",
-  "generatedAt": "2026-06-02T07:09:20+02:00",
+  "generatedAt": "2026-06-02T21:20:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "game": "Arma 2 Operation Arrowhead 1.64",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -35,6 +35,7 @@
       "Core-Systems-Index",
       "Economy-Towns-And-Supply",
       "Supply-Mission-Architecture",
+      "Supply-Mission-Authority-Cleanup-Playbook",
       "Current-Work-Supply-Helicopters-PR1",
       "AI-Headless-And-Performance",
       "Headless-Delegation-And-Failover-Playbook",
@@ -99,6 +100,7 @@
         "Core-Systems-Index",
         "Economy-Towns-And-Supply",
         "Supply-Mission-Architecture",
+        "Supply-Mission-Authority-Cleanup-Playbook",
         "Current-Work-Supply-Helicopters-PR1",
         "AI-Headless-And-Performance",
         "Headless-Delegation-And-Failover-Playbook",
@@ -299,7 +301,8 @@
     "weatherDayNight": "Server_DayNightCycle.sqf accelerated hybrid cycle; reviewed clean (Round 17, no defect) - no divide-by-zero, JIP-covered via engine-synced WFBE_DAYNIGHT_DATE + init setDate, server clock + per-machine local animation + 30s drift sync.",
     "markersCleanersRestorers": "Map markers + Server/FSM cleaners (crater/mines/ruins/dropped-items) and restorers (buildings). DR-34: MASH map-marker feature dead both ends (trigger never broadcast + receiver commented Init_Client.sqf:132 + orphaned server PVEH). Cleaners/restorers not yet atlas'd (ledger Map partial). See AI-Headless-And-Performance.md.",
     "parametersLocalization": "Mission parameters (Common/Init/Init_Parameters.sqf <- initJIPCompatible.sqf:121; Rsc/Parameters.hpp; Dialogs.hpp:3136) and stringtable.xml localization. Reviewed clean (DR-35): no live missing localize/$STR_ keys; paramsArray index-aligned to class Params order. DR-43a: description.ext:39 #include version.sqf absent from source (pack-time generated).",
-    "economyAuthorityFirstCut": "Economy-Authority-First-Cut.md is the source-backed minimum patch order for DR-22 side-supply clamp, DR-23 upgrades, DR-6 construction/defense and DR-14 player-buy ceiling."
+    "economyAuthorityFirstCut": "Economy-Authority-First-Cut.md is the source-backed minimum patch order for DR-22 side-supply clamp, DR-23 upgrades, DR-6 construction/defense and DR-14 player-buy ceiling.",
+    "supplyMissionAuthorityCleanup": "Supply-Mission-Authority-Cleanup-Playbook.md is the source-backed patch guide for player supply missions and PR #1 supply helicopters: server-owned loaded/tracking state, cooldown casing, cargo validation, Killed-handler idempotency, command-center scan narrowing and dedicated/JIP/heli validation."
   },
   "knownRisks": [
     "DR-43 (Low): external-research intake #2 (9 reports) corroborates the campaign (esp. report 8 = economy-authority thesis). Two source-confirmed leads: (a) description.ext:39 includes version.sqf which is absent from the committed tree (repo not buildable as-is; pack-time generated) - source-completeness/drift; (b) Init_Server.sqf has duplicate compile/bind rows. Corrected source re-check: LogGameEnd, PlayerObjectsList and AwardScorePlayer are live duplicate binds; InitAFKkickHandler, monitorServerFPS and MASH_MARKER are commented duplicate remnants. LogGameEnd dup ties DR-13.",
