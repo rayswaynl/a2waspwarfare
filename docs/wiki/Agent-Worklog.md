@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wiki-Quality DUP-6 Lifecycle Routing
+
+- Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-6 by keeping lifecycle flags, boot ordering, JIP waits and HC wait hazards canonical in [Lifecycle wait-chain](Lifecycle-Wait-Chain).
+- Reduced [Server runtime atlas](Server-Gameplay-Runtime-Atlas) so its lifecycle section routes to the wait-chain page and stays focused on long-running `Init_Server.sqf` owners.
+- Reduced [SQF code atlas](SQF-Code-Atlas) so `initJIPCompatible.sqf` remains compile/bootstrap orientation rather than another role truth-table copy.
+
 ## 2026-06-02 - Codex Wiki-Quality DUP-9 Victory Routing
 
 - Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-9 by keeping the victory/endgame double-fire mechanism canonical in [Deep-review findings](Deep-Review-Findings) DR-11 and DR-36.

@@ -23,7 +23,7 @@ flowchart TD
 
 ## Server Lifecycle Entrypoints
 
-`initJIPCompatible.sqf:80-89` seeds core lifecycle globals: `clientInitComplete`, `commonInitComplete`, `serverInitComplete`, `serverInitFull`, `gameOver`, `WFBE_GameOver`, `townInitServer`, `townInit` and `towns = []`. Common, town and server init are dispatched at `initJIPCompatible.sqf:214-220`; headless init is dispatched at `:237-238`.
+Lifecycle ownership note: [Lifecycle wait-chain](Lifecycle-Wait-Chain) owns the flag table, boot ordering, JIP waits and client/HC wait hazards. This atlas only lists the server runtime owners that start after `Init_Server.sqf` reaches its long-running loop phase.
 
 `Server/Init/Init_Server.sqf` is the central server owner. It guards repeated execution at `:1`, compiles server functions at `:10-103`, initializes side/HQ/team state at `:302-503`, then starts long-running systems.
 

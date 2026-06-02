@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `wiki-quality-dup6-lifecycle-routing` | Published | [Lifecycle wait-chain](Lifecycle-Wait-Chain) now remains the canonical home for lifecycle flags, boot ordering, JIP waits and HC wait hazards; [Server runtime](Server-Gameplay-Runtime-Atlas) and [SQF atlas](SQF-Code-Atlas) route there instead of restating boot/role details. |
 | `wiki-quality-dup9-victory-routing` | Published | [Deep-review findings](Deep-Review-Findings) DR-11/DR-36 now own the victory/endgame double-fire mechanism; [Server runtime](Server-Gameplay-Runtime-Atlas), [Hardening roadmap](Hardening-Implementation-Roadmap) and [Feature status](Feature-Status-Register) keep short routing summaries. |
 | `wiki-quality-dup5-battleye-routing` | Published | [External integrations](External-Integrations) now owns shipped BattlEye posture; [Feature status](Feature-Status-Register), [Networking/PV](Networking-And-Public-Variables), [Hardening roadmap](Hardening-Implementation-Roadmap) and [Server authority map](Server-Authority-Migration-Map) route there instead of repeating the `kickAFK`/missing-filter evidence. |
 | `performance-opportunity-sweep` | Published | [Performance opportunity sweep](Performance-Opportunity-Sweep) ranks PVF dispatch lookup, hosted FPS loops, supply scans, duplicate `Skill_Init`, factory queue churn, WASP marker polling and audit-first cleaner/marker loops. |
@@ -48,7 +49,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved Wiki Quality DUP-9 by routing victory/endgame detail to [Deep-review findings](Deep-Review-Findings) DR-11/DR-36. |
+| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved Wiki Quality DUP-6 by routing lifecycle/boot truth-table detail to [Lifecycle wait-chain](Lifecycle-Wait-Chain). |
 | Codex-2 | Active | `paratrooper-marker-revival` | Source-checking the paratrooper support marker callback into a minimal revival patch or patch-ready handoff; keeping it separate from broader `RequestSpecial` authority hardening. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
@@ -75,6 +76,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
 | `paratrooper-marker-revival` | Codex-2 | Active | Source-check the live paratrooper support sender, existing client marker handler and missing PVF registration; decide whether to patch the small revive or publish a focused handoff. |
+| `wiki-quality-dup6-lifecycle-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-6 is resolved: lifecycle flags, boot order, JIP waits and HC wait hazards live in [Lifecycle wait-chain](Lifecycle-Wait-Chain); server/SQF atlases keep concise owner summaries. |
 | `wiki-quality-dup9-victory-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-9 is resolved: victory/endgame mechanism detail lives in [Deep-review findings](Deep-Review-Findings) DR-11/DR-36, with concise routing on Server runtime, roadmap and Feature Status. |
 | `wiki-quality-dup5-battleye-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-5 is resolved: shipped BattlEye posture lives in [External integrations](External-Integrations), with short routing notes on Feature Status, Networking/PV, roadmap and authority map. |
 | `icbm-authority-playbook-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-3 is resolved: DR-27 ICBM/Nuke implementation detail lives in [ICBM authority](ICBM-Authority-Playbook), with short routing summaries elsewhere. |

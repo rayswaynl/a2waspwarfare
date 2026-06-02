@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T22:22:00+02:00",
+  "generatedAt": "2026-06-02T22:35:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,30 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-quality-dup6-lifecycle-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Lifecycle-Wait-Chain.md",
+        "Server-Gameplay-Runtime-Atlas.md",
+        "SQF-Code-Atlas.md",
+        "Mission-Entrypoints-And-Lifecycle.md",
+        "Wiki-Quality-Audit.md DUP-6"
+      ],
+      "outputs": [
+        "Server-Gameplay-Runtime-Atlas.md lifecycle routing note",
+        "SQF-Code-Atlas.md init owner routing note",
+        "Wiki-Quality-Audit.md DUP-6 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future lifecycle docs should update Lifecycle-Wait-Chain.md for flags, boot ordering, JIP waits and HC wait hazards; Mission entrypoints owns include graph/role-dispatch orientation, SQF atlas owns compile ownership and Server runtime owns long-running loop owners."
+    },
     {
       "lane": "wiki-quality-dup9-victory-routing",
       "owner": "Codex",
@@ -877,7 +901,8 @@
     "wiki-quality-merge1-authority-routing",
     "icbm-authority-playbook-routing",
     "wiki-quality-dup5-battleye-routing",
-    "wiki-quality-dup9-victory-routing"
+    "wiki-quality-dup9-victory-routing",
+    "wiki-quality-dup6-lifecycle-routing"
   ],
   "queuedReports": [],
   "lanes": [

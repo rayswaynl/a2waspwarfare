@@ -44,7 +44,7 @@ Top source registrars:
 
 ### `initJIPCompatible.sqf`
 
-Early bootstrap compiles the log function first, checks headless-client identity, prepares server connect/disconnect callbacks, then compiles MP parameters and common constants. This file is the role router: common init runs for all roles, server init runs on server, client init runs on players and headless init runs on headless clients.
+`initJIPCompatible.sqf` is the early compile/bootstrap file and role router. Detailed lifecycle flags, role timing, JIP waits and HC wait hazards are canonical in [Lifecycle wait-chain](Lifecycle-Wait-Chain); this atlas keeps compile ownership and source-owner orientation.
 
 Key compile targets:
 
