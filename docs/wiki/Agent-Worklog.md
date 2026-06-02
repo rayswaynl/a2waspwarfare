@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wiki-Quality C3 Gameplay Follow-Ups
+
+- Resolved [Wiki quality audit](Wiki-Quality-Audit) C3 by replacing stale [Gameplay systems atlas](Gameplay-Systems-Atlas) open questions with a source-backed resolved follow-up table.
+- Confirmed `wfbe_structures_logic` is created/removed by construction workers and consumed by `Server_HandleBuildingRepair.sqf`.
+- Confirmed supply-income stagnation is live when `updateresources.sqf` calls `ChangeSideSupply` with stagnation enabled.
+- Clarified that `Init_BaseStructure.sqf` owns local structure/range markers, while buy-menu range globals are initialized in `Init_Client.sqf`, updated by `updateavailableactions.fsm` and consumed by `GUI_Menu*.sqf`.
+
 ## 2026-06-02 - Codex Wiki-Quality DUP-11 PV Channel Index
 
 - Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-11 by making [Public variable channel index](Public-Variable-Channel-Index) the canonical direct public-variable inventory.

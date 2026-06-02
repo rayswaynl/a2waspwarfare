@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T20:57:00+02:00",
+  "generatedAt": "2026-06-02T21:18:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,34 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-quality-c3-gameplay-followups",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Gameplay-Systems-Atlas.md",
+        "Wiki-Quality-Audit.md C3",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_SmallSite.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_MediumSite.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleBuildingRepair.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/updateresources.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_StagnateSupplyIncomeNoPlayers.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_BaseStructure.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateavailableactions.fsm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf"
+      ],
+      "outputs": [
+        "Gameplay-Systems-Atlas.md resolved follow-up table",
+        "Wiki-Quality-Audit.md C3 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-status.json"
+      ],
+      "handoff": "Future Gameplay atlas questions should be converted to source-backed resolved notes or moved to the owning subsystem atlas instead of remaining as stale open questions."
+    },
     {
       "lane": "wiki-quality-dup11-pv-channel-index",
       "owner": "Codex",
