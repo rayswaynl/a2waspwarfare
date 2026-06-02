@@ -993,3 +993,17 @@ Key conclusions:
 - Harvested source-backed corrections into [Feature status](Feature-Status-Register), [SQF atlas](SQF-Code-Atlas), [Public variable channel index](Public-Variable-Channel-Index), [Client UI/HUD](Client-UI-HUD-And-Menus), [Client UI systems atlas](Client-UI-Systems-Atlas), [Support/specials/modules atlas](Support-Specials-And-Tactical-Modules-Atlas), [Home](Home), [Quickstart](Quickstart-For-Humans-And-Agents), [LLM agent entry pack](LLM-Agent-Entry-Pack) and [Discovery swarm](Subagent-Discovery-Swarm).
 - Added [`agent-entrypoint.json`](agent-entrypoint.json) as the small canonical machine bootstrap file and updated links so future Codex/Claude tabs do not have to start from the much larger `agent-context.json`.
 - Promoted the most useful new findings: command task UI visible-but-commented, DiscordBot command/config ambiguity, Extension build caveat, GLOBALGAMESTATS one-HC player-count assumption, construction small-site stale logic candidate, supply completion-loop repeat work, attack-wave detail channel direction correction and current compile-count refresh.
+
+# 2026-06-02 - Wave L Owner-Page Follow-Up Started
+
+- Spawned six read-only Codex explorers for a focused owner-page follow-up pass while Codex keeps integration local.
+- Lanes: Confucius audits paratrooper/PV status drift; Pasteur audits EASA/gear/client menu edges; Beauvoir audits DiscordBot, Extension, CI and callExtension integration posture; Dewey audits construction/CoIn lifecycle asymmetry; Averroes audits server runtime loops and supply completion behavior; Kuhn audits Feature Status navigation and LLM usability.
+- Integration rule: agent output remains advisory until Codex verifies source evidence, patches owner pages, mirrors to the wiki checkout and validates parity.
+
+# 2026-06-02 - Wave L Owner-Page Follow-Up Harvest
+
+- Harvested all six Wave L scout reports into high-traffic owner pages and machine records.
+- Corrected propagated-fix status drift for paratrooper markers, client skill init idempotency, hosted server FPS loops, supply mission scan narrowing and supply player-object list indexing in [Feature status](Feature-Status-Register), [Performance sweep](Performance-Opportunity-Sweep), [`agent-feature-status.jsonl`](agent-feature-status.jsonl) and related playbooks.
+- Added new local correctness findings for EASA exact-funds rejection, stale unsupported-vehicle EASA no-op/debit risk, buy-unit detail price drift and special-vehicle UI incompleteness in [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas) and [Factory/purchase](Factory-And-Purchase-Systems-Atlas).
+- Tightened integration/tooling docs for DiscordBot active config source, active JSON deserialization risk, docs-only CI, legacy x86 Extension build requirements and GLOBALGAMESTATS headless-client count assumptions.
+- Clarified construction/server-runtime nuance: SmallSite/MediumSite `wfbe_structures_logic` asymmetry, latent stock building repair vs live WASP base repair, mostly inert post-game patrol polling and current-`master` supply duplicate-start risk separated from PR #1 interdiction handlers.

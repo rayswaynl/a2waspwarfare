@@ -191,6 +191,14 @@ Base-area support is present but partly strange: the server creates a `LocationL
 
 Medium sites use a lower completion ratio (`0.6`) and more staged waiting than small sites.
 
+Focused construction review found a source asymmetry worth treating as a bug candidate rather than a vague TODO:
+
+- `Construction_SmallSite.sqf:70` adds `_nearLogic` to `wfbe_structures_logic`, and `:98-99` says "Remove the logic from the list since it's built" but adds `_nearLogic` again.
+- `Construction_MediumSite.sqf:70` adds `_nearLogic`, then `:113-114` removes it after construction.
+- No source initializer for `wfbe_structures_logic` was found in the server init path; `Init_Server.sqf` initializes `wfbe_structures` and `wfbe_structures_live`, while `wfbe_structures_logic` appears only in SmallSite/MediumSite/repair-handler code.
+
+Patch shape should be smoke-led: confirm whether small sites can leave duplicate/stale construction logic in a live build, then align SmallSite with MediumSite if the list is actually active.
+
 ### StationaryDefense
 
 `Construction_StationaryDefense.sqf` creates defenses, fortifications, minefields and static weapons.
@@ -225,6 +233,8 @@ Server side:
 
 `Server_HandleBuildingRepair.sqf` uses a repair logic with `WFBE_B_Completion`. It creates ruins, waits for completion, recreates the site if structure live limits allow it, re-adds init/event handlers and subtracts half the building cost from side supply in currency system 0. If completion stalls, it degrades over time and eventually deletes the repair logic.
 
+Current status is latent/uncalled by static search: `Server_HandleBuildingRepair.sqf` is compiled, but no active caller was found in the source mission. Do not confuse this with the WASP base-repair flow, which is live and separate in `WASP/baserep/viem.sqf` and `WASP/baserep/repair.sqf`.
+
 ## Sale And Deletion Flows
 
 There are two sale paths:
@@ -249,6 +259,8 @@ The server reaches this script by `setVehicleInit` in construction scripts (`Con
 | Server request validation | `RequestStructure` / `RequestDefense` trust client-side payment and placement checks; see [Deep-review findings](Deep-Review-Findings) DR-6. | Add server-side validation of side, commander/repair-truck authority, class membership, funds, radius, base-area availability and collision restrictions before creating objects. Start in request handlers, not in CoIn UI. |
 | PVF dispatch | Construction uses generic PVF channels; DR-1 already shows dispatch hardening is needed. | Validate PVF function strings and then validate construction payloads. |
 | Base-area availability | `avail`/`weapons` are updated through client-visible logic and direct client CoIn mutations. | Before changing limits, trace `RequestBaseArea`, `coin_interface`, `Construction_StationaryDefense` and JIP behavior together. |
+| SmallSite/MediumSite repair logic asymmetry | SmallSite adds `_nearLogic` where its comment says remove; MediumSite removes it. `wfbe_structures_logic` has no obvious source initializer. | Verify runtime list ownership before patching; if active, align SmallSite cleanup to MediumSite and smoke small/medium construction plus repair-logic cleanup. |
+| Progressive repair/construction path appears dormant | Progressive mode code remains in construction scripts and economy UI, but `Rsc/Parameters.hpp` exposes only construction-time mode `0`. | Do not expand progressive repair UI until the mission parameter and live caller model are restored intentionally. |
 | Cost deduction | Normal build/MHQ repair/sale costs are deducted client-side. | Server should become the final authority for final debits/refunds; client can keep previews and immediate feedback. |
 | HQ killed EH locality | Mobile HQ killed EH fires locally, so server sends clients `set-hq-killed-eh`. | Preserve dedicated/JIP handling when touching HQ mobilize/repair/deploy. |
 | `setVehicleInit` usage | Construction relies on legacy Arma 2 init broadcast patterns for client markers and artillery UI. | Avoid replacing without testing dedicated, hosted and JIP cases. |

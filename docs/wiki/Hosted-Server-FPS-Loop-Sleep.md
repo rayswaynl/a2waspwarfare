@@ -2,7 +2,7 @@
 
 ## Status
 
-`hosted-server-fps-loop-sleep` is source patched and smoke pending as of 2026-06-02. This is the implementation pass for DR-19 / backlog id `server-fps-hosted-loop-sleep`. Vanilla Takistan propagation is pending because this Codex checkout cannot run LoadoutManager until it has an `a2waspwarfare` ancestor directory.
+`hosted-server-fps-loop-sleep` is source + maintained Vanilla propagated and smoke pending as of 2026-06-02. This is the implementation pass for DR-19 / backlog id `server-fps-hosted-loop-sleep`. The earlier checkout-root blocker was removed by the LoadoutManager root-discovery patch, and propagation now works from this Codex checkout with `A2WASP_SKIP_ZIP=1`.
 
 ## What I Read
 
@@ -40,14 +40,19 @@ Changed source files:
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf`
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf`
 
+Propagated maintained Vanilla files:
+
+- `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/GUI/serverFpsGUI.sqf`
+- `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/serverFPS/monitorServerFPS.sqf`
+
 ## Validation
 
-Source-only validation done:
+Source/Vanilla validation done:
 
 - Chernarus `serverFpsGUI.sqf` has one early `!isDedicated` exit, one loop, one `sleep 8` and no inner `if (isDedicated)` branch.
 - Chernarus `monitorServerFPS.sqf` has one early `!isDedicated` exit, one loop, one `sleep 8` and no inner `if (isDedicated)` branch.
-- Vanilla Takistan propagation is still required.
-- `dotnet run` in `Tools/LoadoutManager` was attempted from `work\a` and failed before generation with `Could not find the 'a2waspwarfare' directory`; this is the documented path-shape requirement, not the missing-`7za` packaging-only case.
+- Vanilla Takistan has the same early-exit shape after the propagation run.
+- `dotnet run` in `Tools/LoadoutManager` now works from `work\a`; use `A2WASP_SKIP_ZIP=1` for propagation-only runs so missing `7za` remains non-blocking.
 - `git diff --check` passes.
 
 Pending smoke:

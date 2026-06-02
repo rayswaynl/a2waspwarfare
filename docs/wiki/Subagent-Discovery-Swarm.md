@@ -4,7 +4,22 @@ This page tracks the cheap read-only Codex discovery agents currently digging th
 
 The swarm is intentionally evidence-first: agents read source, report path/line-backed findings, and avoid editing docs or mission code. Codex integrates the useful findings into the wiki, `agent-context.json`, the coverage ledger and the feature-status register after review.
 
-## Current Wave: Wave K
+## Current Wave: Wave L
+
+Spawned on this Codex session after Steff asked to bring an agent team back in for the owner-page follow-up pass. These six scouts were read-only and scoped to the highest-value Feature Status adjacent pages, while Codex kept edits, validation and publishing local. Reports have returned and the useful findings are being harvested into owner pages and machine records.
+
+| Agent | Lane | Status | Expected output |
+| --- | --- | --- | --- |
+| Confucius | `paratrooper-pv-status-drift` | Returned/harvested | Confirmed DR-2 is superseded for source Chernarus + maintained Vanilla Takistan; modded missing-handler drift and Arma smoke remain. |
+| Pasteur | `easa-gear-client-menu-edges` | Returned/harvested | Added EASA exact-funds rejection, stale unsupported-vehicle no-op/debit risk, buy-detail price drift and special-vehicle UI incompleteness. |
+| Beauvoir | `external-integrations-tooling-posture` | Returned/harvested | Corrected docs-CI posture, DiscordBot config source ambiguity, active `TypeNameHandling.All` reader risk, legacy x86 Extension build caveat and HC-count heuristic. |
+| Dewey | `construction-coin-lifecycle-asymmetry` | Returned/harvested | Promoted SmallSite/MediumSite `wfbe_structures_logic` asymmetry, latent stock building repair and separate live WASP base-repair note. |
+| Averroes | `server-runtime-supply-loop-followup` | Returned/harvested | Clarified post-game patrol loops as mostly inert polling, current-master supply duplicate-start risk and PR #1 handler separation. |
+| Kuhn | `feature-status-wiki-llm-navigation` | Returned/harvested | Added release-readiness links, owner-page routing for gear/service/construction/support items and refreshed JSONL status drift. |
+
+Harvest rule: Wave L findings were leads until Codex spot-checked high-risk claims. The owner-page harvest is local now; wiki checkout mirror, validation and push are the remaining gates.
+
+## Previous Wave: Wave K
 
 Spawned on 2026-06-02 after Steff asked Codex to spin up an agent team to aid the feature-status/documentation work. All six scouts were read-only and returned. Codex harvested the findings into the Feature Status Register, UI docs, SQF/PV indexes, navigation pages and the new agent bootstrap file.
 

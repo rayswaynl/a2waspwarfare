@@ -6,10 +6,10 @@ This lane turns the abandoned-feature note for paratrooper drop markers into a m
 
 | Surface | Status | Evidence |
 | --- | --- | --- |
-| Source Chernarus mission | Patched source-only | `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:39` now registers `HandleParatrooperMarkerCreation`. |
-| Vanilla Takistan mission | Propagation pending | The normal `Tools/LoadoutManager` run failed in this Codex checkout because the repo path is `work\a`, while `FileManager.FindA2WaspWarfareDirectory()` requires an ancestor folder literally named `a2waspwarfare`. Do not hand-edit Vanilla as the source of truth. |
+| Source Chernarus mission | Patched | `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:39` now registers `HandleParatrooperMarkerCreation`. |
+| Vanilla Takistan mission | Propagated | `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_PublicVariables.sqf:39` now has the same registration after the LoadoutManager propagation run. |
 | Modded mission folders | Still drifted / not patched | Napf, eden and lingor register `HandleParatrooperMarkerCreation`, but no `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` file exists in those folders. Per `AGENTS.md`, direct mission edits should only touch Chernarus; modded propagation needs an owner decision. |
-| Runtime validation | Pending hosted/dedicated smoke | Source checks prove the handler now compiles/registers in Chernarus source; propagation and Arma 2 OA gameplay smoke are still needed to prove Vanilla parity, marker visibility and side filtering in-engine. |
+| Runtime validation | Pending hosted/dedicated smoke | Source checks prove the handler now compiles/registers in Chernarus source and maintained Vanilla; Arma 2 OA gameplay smoke is still needed to prove marker visibility and side filtering in-engine. |
 
 ## What Was Read
 
@@ -37,7 +37,7 @@ The server-side paratrooper support flow creates transport aircraft, spawns para
 - `HandleParatrooperMarkerCreation.sqf:29-40` creates a local marker name and spawns `MarkerUpdate`.
 - `Common_MarkerUpdate.sqf:21` has an additional same-side/alive/null guard before creating the local marker.
 
-Before this patch, source Chernarus had the sender and handler file but not the registration entry, so `Init_PublicVariables.sqf` never compiled `CLTFNCHandleParatrooperMarkerCreation` and never attached a PVEH for `WFBE_PVF_HandleParatrooperMarkerCreation`. Vanilla Takistan showed the same missing registration before this lane, but its fix should come from LoadoutManager propagation rather than a hand edit.
+Before this patch, source Chernarus had the sender and handler file but not the registration entry, so `Init_PublicVariables.sqf` never compiled `CLTFNCHandleParatrooperMarkerCreation` and never attached a PVEH for `WFBE_PVF_HandleParatrooperMarkerCreation`. Vanilla Takistan showed the same missing registration before propagation; it is now aligned with source.
 
 ## Why It Matters
 
@@ -63,16 +63,16 @@ Files changed:
 
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf`
 
-No Vanilla or modded mission files are intentionally edited in this lane. The modded folders currently show inverse drift: the PVF registration exists, but the handler file is absent.
+The maintained Vanilla Takistan mission has been regenerated/propagated and now carries the same registration. The modded folders still show inverse drift: the PVF registration exists, but the handler file is absent.
 
 ## Validation
 
-Source-only checks completed:
+Source/Vanilla checks completed:
 
 - Chernarus source mission now has sender + registered client PVF + handler file.
-- Vanilla Takistan still has sender + handler file but is missing the registration until propagation is run from a correctly named checkout.
+- Vanilla Takistan now has sender + handler file + registration after the propagation run.
 - Diff is scoped to one source `Init_PublicVariables.sqf` insertion plus docs/machine-readable handoff updates.
-- `dotnet run` in `Tools/LoadoutManager` was attempted from this workspace and failed before generation with `Could not find the 'a2waspwarfare' directory`; this matches the documented path requirement in `Tools-And-Build-Workflow`. This was not the missing-`7za` packaging-only case.
+- Earlier propagation was blocked by the checkout path, but `Tools/LoadoutManager` root discovery and `A2WASP_SKIP_ZIP=1` support were later patched; generation/copy completed for maintained Vanilla Takistan.
 
 Required Arma 2 OA smoke:
 
@@ -89,7 +89,7 @@ JIP note: these are transient unit markers, not historical drop records. No expl
 
 Future code owner:
 
-- Run LoadoutManager from a checkout/worktree with an `a2waspwarfare` ancestor name, then smoke the source/Vanilla patch in Arma 2 OA.
+- Smoke the source/Vanilla patch in Arma 2 OA.
 - Do not present this as a `RequestSpecial` authority fix.
 - If modded missions are revived, propagate both the registration and handler file through the LoadoutManager/modded-terrain maintenance model rather than patching the stale folders by hand.
 

@@ -30,6 +30,8 @@ WASP is the community/server identity this fork is built for. The mission credit
 
 > "**baserep**" is **base repair**, not base reputation. "**unsort**" is literally an unsorted dumping folder — `StartVeh.sqf` is live but the author never moved it into the proper `Common/Config/` hierarchy.
 
+Do not confuse WASP base repair with the stock `Server_HandleBuildingRepair.sqf` path. WASP base repair is live client-side wiring from `Init_Client.sqf:574` through `WASP/baserep/viem.sqf` and `repair.sqf`; `Server_HandleBuildingRepair.sqf` is compiled but no active source caller was found during the construction audit.
+
 ## How WASP is wired into the stock lifecycle
 
 The original single entry point (`WASP/Init_Client.sqf`, called from `initJIPCompatible.sqf:253-255`) was disabled by Marty as "old wasp script using resources unnecessarily." WASP features are now wired individually:

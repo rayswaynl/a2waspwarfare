@@ -28,7 +28,9 @@ The legitimate flow always sets index 0 to the bare identifier `"SRVFNC<Command>
 2. **Add a real BattlEye `publicvariable.txt`** as defense-in-depth: a restrictive default plus an explicit allow-list of `WFBE_PVF_*`, the direct channels in the [SQF code atlas](SQF-Code-Atlas) "Direct Public Variable Channels" table, and the existing `kickAFK` rule. Do not add a blanket restrictive default *without* the allow-list, or you will break all PVF traffic.
 3. Prefer `publicVariableClient`/`publicVariableServer` (targeted) over broadcast for owner-directed messages to shrink the surface (already mostly done).
 
-### DR-2 — Paratrooper drop map markers are dead (abandoned/half-implemented) — **Medium**
+### DR-2 — Paratrooper drop map markers were dead before source/Vanilla propagation — **Superseded / smoke pending**
+
+Current status: this raw finding is historical for the maintained source path. Source Chernarus and maintained Vanilla Takistan now register `HandleParatrooperMarkerCreation`, compile the client handler and ship the sender/handler pair; see [Paratrooper marker revival](Paratrooper-Marker-Revival). Arma 2 OA smoke is still pending, and modded eden/Napf/lingor still register/send the callback without shipping `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf`.
 
 `Server/Support/Support_Paratroopers.sqf:117` sends the marker:
 ```sqf
@@ -36,9 +38,9 @@ The legitimate flow always sets index 0 to the bare identifier `"SRVFNC<Command>
 ```
 `Common/Functions/Common_SendToClient.sqf` turns that into `WFBE_PVF_HandleParatrooperMarkerCreation` (dedicated path) / `CLTFNCHandleParatrooperMarkerCreation` (hosted path). But:
 
-- `HandleParatrooperMarkerCreation` is **not** in the `_clientCommandPV` list in `Common/Init/Init_PublicVariables.sqf`, so `WFBE_PVF_HandleParatrooperMarkerCreation` has **no** `addPublicVariableEventHandler`, and `CLTFNCHandleParatrooperMarkerCreation` is **never compiled** (confirmed: no reference in any `Init_*`).
+- At the time of DR-2, `HandleParatrooperMarkerCreation` was **not** in the `_clientCommandPV` list in `Common/Init/Init_PublicVariables.sqf`, so `WFBE_PVF_HandleParatrooperMarkerCreation` had **no** `addPublicVariableEventHandler`, and `CLTFNCHandleParatrooperMarkerCreation` was **never compiled**.
 
-**Result:** on a dedicated server the marker PV is broadcast but never handled; on a hosted/SP server `Spawn (Call Compile "CLTFNCHandleParatrooperMarkerCreation")` resolves to nil → no marker (and a likely script error). The send side exists; the receive side was never wired. This upgrades the atlas note ("exists but not registered") to a confirmed broken feature. **Fix:** add `HandleParatrooperMarkerCreation` to `_clientCommandPV` (the receiver file `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` already exists), or remove the dead send.
+**Historical result:** on a dedicated server the marker PV was broadcast but never handled; on a hosted/SP server `Spawn (Call Compile "CLTFNCHandleParatrooperMarkerCreation")` resolved to nil. The fix has now been applied in source Chernarus and maintained Vanilla Takistan by adding `HandleParatrooperMarkerCreation` to `_clientCommandPV`. Remaining gates are Arma smoke and modded mission maintenance policy.
 
 ### DR-3 — MASH tent map markers are dead on the receive side (abandoned/half-implemented) — **Medium**
 
@@ -83,13 +85,13 @@ The [SQF code atlas](SQF-Code-Atlas) states "659 `preprocessFile` references (45
 ```powershell
 (Get-ChildItem -Recurse -Filter *.sqf | Select-String -SimpleMatch 'preprocessFileLineNumbers').Count
 ```
-**Verified-accurate cross-checks (for trust calibration):** the atlas's FSM inventory is correct — exactly three `.fsm` files exist (`Client/FSM/updateactions.fsm`, `Client/FSM/updateavailableactions.fsm`, `Client/kb/hq.fsm`); and `HandleParatrooperMarkerCreation` / `AttackWave` / `LogGameEnd` are indeed outside the standard PVF list as the atlas notes.
+**Verified-accurate cross-checks (for trust calibration):** the atlas's FSM inventory is correct — exactly three `.fsm` files exist (`Client/FSM/updateactions.fsm`, `Client/FSM/updateavailableactions.fsm`, `Client/kb/hq.fsm`). `AttackWave` and `LogGameEnd` remain outside the standard PVF list; `HandleParatrooperMarkerCreation` was later moved into the client PVF list as a small revived feature.
 
 ---
 
 ### Open items handed to Codex / code owners
 
-- Decide fix-vs-remove for DR-2 (paratrooper markers) and DR-3 (MASH markers); both are one-line wiring changes in the Chernarus source.
+- DR-2 is source/Vanilla propagated; smoke and modded drift remain. Decide fix-vs-remove for DR-3 (MASH markers), which is still dead on the receive side.
 - DR-1 server-side validation is a small, safe gameplay-code change (Chernarus `Server_HandlePVF.sqf`) — gate behind review since it touches the network hot path.
 - Re-confirm DR-4 modded-map decision: regenerate or formally retire `Modded_Missions/*`.
 

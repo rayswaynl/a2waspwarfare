@@ -21,13 +21,13 @@ Required local files are intentionally absent from the repo:
 
 ### Discord Config Hygiene
 
-Claude Round 16 verified that `DiscordBot/preferences_sample.json` currently includes concrete sample IDs (`GuildID`, `AuthorizedUserIDs`) plus the production-style `DataSourcePath`. `DiscordBot/FileConfiguration.cs` also falls back to `C:\a2waspwarfare\Data`, while `DiscordBot/src/ExtensionData/GameData/GameData.cs` has its own fallback path if preferences do not set one.
+Claude Round 16 verified that `DiscordBot/preferences_sample.json` currently includes concrete sample IDs (`GuildID`, `AuthorizedUserIDs`) plus the production-style `DataSourcePath`. `DiscordBot/FileConfiguration.cs` also has `DataSourcePath`/`botconfig.json` support, but the active status-data reader bypasses it: `DiscordBot/src/ExtensionData/GameData/GameData.cs` resolves `Preferences.Instance.DataSourcePath ?? C:\a2waspwarfare\Data`. Static usage review only found `FileConfiguration` feeding logging paths, not the live game-status JSON reader.
 
 No token is committed, which is good. Still, treat the sample identifiers and hardcoded path as governance cleanup:
 
 - replace real-looking sample IDs with obvious placeholders;
 - prefer one config-loading path instead of multiple fallbacks;
-- document whether `botconfig.json`, `preferences.json` or environment variables are the intended deployment source;
+- document whether `botconfig.json`, `preferences.json` or environment variables are the intended deployment source, then remove or clearly demote the unused path;
 - keep `token.txt` and any live Discord IDs out of committed files.
 
 ### Discord Data Path Risk
@@ -40,7 +40,7 @@ Do not conflate this with the in-repo extension writer: `Extension/src/Serializa
 
 ## Arma Extension: `a2waspwarfare_Extension`
 
-`Extension` is a .NET Framework 4.8 library using `RGiesecke.DllExport` and Newtonsoft.Json. It exports `_RVExtension@12`, parses comma-separated arguments, resolves an extension class by enum name, and currently includes `GLOBALGAMESTATS`.
+`Extension` is a legacy .NET Framework 4.8 x86 Arma 2 OA extension using `RGiesecke.DllExport`/`UnmanagedExports` and Newtonsoft.Json. It is not an SDK-style `dotnet build` target. Build it with Visual Studio/MSBuild after restoring the old `../packages` NuGet layout, and preserve x86 for Arma 2 OA extension loading. It exports `_RVExtension@12`, parses comma-separated arguments, resolves an extension class by enum name, and currently includes `GLOBALGAMESTATS`.
 
 Mission bridge:
 
@@ -67,7 +67,7 @@ Implementation notes from the source:
 - `Extension/src/SerializationManager.cs` writes `database.json` through a temp file and `File.Replace`.
 - `SerializeDB()` is `async void`, so extension write failures can become log-only/asynchronous failures rather than mission-visible errors.
 
-Claude DR-29 sharpened this boundary: the in-repo `GLOBALGAMESTATS` extension is not an SQF RCE path today because `GlobalGameStats.sqf` discards the `callExtension` return, the extension does not write `_output`, and the active writer serializes with `TypeNameHandling.None`. It still has code-owner risks: a commented/load-path deserialization landmine using Newtonsoft `TypeNameHandling.Auto`, an `async void` create/write race around `File.Replace`, stale write-only persistence scaffolding, and a player-count heuristic that can misreport headless clients.
+Claude DR-29 sharpened this boundary: the in-repo `GLOBALGAMESTATS` extension is not an SQF RCE path today because `GlobalGameStats.sqf` discards the `callExtension` return, the extension does not write `_output`, and the active writer serializes with `TypeNameHandling.None`. It still has code-owner risks: a commented/load-path deserialization landmine using Newtonsoft `TypeNameHandling.Auto`, an `async void` create/write race around `File.Replace`, stale write-only persistence scaffolding, and a player-count heuristic in `GlobalGameStats.sqf` that uses `abs(_playerCount - 1)` to exclude one assumed headless client. That can misreport 0-HC, multi-HC or unusual bot/player states.
 
 ## AntiStack Database Extension
 
@@ -109,7 +109,7 @@ Filter design should be driven by [Networking and public variables](Networking-A
 
 Claude Round 16 resolved the external reports' license uncertainty: `LICENSE.md` is a custom/proprietary/source-available license, not an OSI open-source license. Treat redistribution/reuse as restricted unless the repo owner explicitly grants it.
 
-The repo currently has no CI beyond `.github/FUNDING.yml`. Useful checks for this project would be:
+The docs branch now has docs-only CI in `.github/workflows/docs.yml`: Windows wiki validation plus an Ubuntu MkDocs strict build. Treat that as documentation validation, not release CI. Useful additional checks for this project would be:
 
 - .NET builds for `Tools/LoadoutManager`, `DiscordBot` and `Extension` where the platform/toolchain is available;
 - generated-mission drift checks after LoadoutManager runs;

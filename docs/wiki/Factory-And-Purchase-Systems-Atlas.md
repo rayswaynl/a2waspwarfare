@@ -177,6 +177,8 @@ round (((_c select QUERYUNITPRICE) * ATTACK_WAVE_PRICE_MODIFIER) * UNIT_COST_MOD
 
 The visible list is therefore a combined result of core metadata, side upgrade state, faction filter state, unit-cost upgrades and attack-wave discount state.
 
+Focused UI review found a display/detail drift: `Client_UIFillListBuyUnits.sqf:59-60` uses the rounded attack-wave plus unit-cost modifier price for the list and affordability flow, while the detail panel in `GUI_Menu_BuyUnits.sqf:90-99` uses `floor(base * ATTACK_WAVE_PRICE_MODIFIER)` before adding crew cost. Any `UNIT_COST_MODIFIER` discount can therefore leave the details panel showing a different price from the list/purchase path. If the detail panel is used for player decisions, align it to the same helper or formula before rebalancing costs.
+
 ## Purchase Checks
 
 When `MenuAction == 1`, `GUI_Menu_BuyUnits.sqf` performs these checks before spawning:
@@ -310,6 +312,8 @@ This means class metadata mistakes can break more than the visible buy menu:
 | Cost authority is local | Menu checks funds and calls `ChangePlayerFunds` locally after spawning build thread. | Do not add new economy side effects to purchase without tracing client funds, commander income, side supply and PV hardening. |
 | Spawn pads are object-class conventions | Light/heavy/air/barracks pads depend on nearby helper object classes. | Document required map editor objects when adding or moving bases. |
 | Attack-wave cost is client-visible state | `ATTACK_WAVE_PRICE_MODIFIER` affects list display and purchase cost. | Keep JIP sync and local modifier state aligned before adding temporary discounts. |
+| Buy-list detail price can drift from actual list/purchase price | `Client_UIFillListBuyUnits.sqf:59-60` applies `UNIT_COST_MODIFIER`, while `GUI_Menu_BuyUnits.sqf:90-99` detail math does not before crew cost. | Extract or duplicate one exact price helper before changing unit-cost discounts or attack-wave modifiers. |
+| Special-vehicle color/hint support is incomplete | The briefing claims colored special vehicles, `Client_UIFillListBuyUnits.sqf:67-100` colors many support classes, and `GUI_Menu_BuyUnits.sqf:442-458` has manual hints/conditions for special purchase classes. | Treat colored/hinted special vehicles as a UI affordance, not a complete feature registry. Add new support classes to list coloring, detail text, purchase checks and root arrays together. |
 
 ## Implementation Checklist
 

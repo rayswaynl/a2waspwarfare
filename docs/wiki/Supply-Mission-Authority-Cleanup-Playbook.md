@@ -4,6 +4,8 @@ This page is the implementation handoff for the `supply-mission-authority-cleanu
 
 Scope: Chernarus source mission first, then generated mission propagation through `Tools/LoadoutManager` after code changes. Paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
+Branch split: current `master` has the truck mission flow, client-stamped `SupplyFromTown`/`SupplyAmount`, duplicate-start tracking risk and no supply-vehicle `Killed` handler. PR #1 / `feat/supply-helicopter` adds `SupplyByHeli`, supply-heli class/upgrade gates, cash-run semantics and the interdiction `Killed` handler. Keep those branch-specific mechanics separate when auditing or patching.
+
 ## Status
 
 | Item | Status | Notes |
@@ -38,22 +40,22 @@ Scope: Chernarus source mission first, then generated mission propagation throug
 
 ## What The Code Does
 
-1. SpecOps action wiring runs `Client/Module/supplyMission/supplyMissionStart.sqf`; the action condition is local and checks town distance plus supply truck or supply-heli class/upgrade gates (`Client/Module/Skill/Skill_Apply.sqf:62-73`).
+1. SpecOps action wiring runs `Client/Module/supplyMission/supplyMissionStart.sqf`; the action condition is local and checks town distance plus supply truck class in current `master`. PR #1 extends this gate to supply-heli classes/upgrades (`Client/Module/Skill/Skill_Apply.sqf`).
 2. Mission start asks the server for town cooldown (`supplyMissionStart.sqf:6-7`), immediately reads local `supplyMissionCoolDownEnabled` (`:9-14`), then checks cursor target class/distance (`:16-32`).
-3. The client stamps authority-bearing object vars on the vehicle: `SupplyFromTown`, `SupplyByHeli` and `SupplyAmount` (`supplyMissionStart.sqf:34-46`), then sends `WFBE_Client_PV_SupplyMissionStarted` (`:50-51`).
-4. The server start handler records town cooldown as `LastSupplyMissionRun` (`supplyMissionStarted.sqf:8`), adds a `Killed` event handler to the vehicle (`:10-25`), starts the town timer (`:35`) and loops while the vehicle is alive (`:37-86`).
+3. Current `master` stamps authority-bearing object vars on the vehicle: `SupplyFromTown` and `SupplyAmount` (`supplyMissionStart.sqf:20-34`), then sends `WFBE_Client_PV_SupplyMissionStarted` (`:38-39`). PR #1 also stamps `SupplyByHeli`.
+4. Current `master` server start handler records town cooldown as `LastSupplyMissionRun`, starts the town timer and loops while the vehicle is alive. PR #1 additionally adds a `Killed` event handler to the vehicle for interdiction rewards.
 5. The live loop scans command-center terminals every 3 seconds with `nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]` (`supplyMissionStarted.sqf:41-45`). The later nearby-player/object lookup remains a broad 8-meter scan because it resolves occupants/player objects, not command centers.
 6. On command-center proximity, the loop resolves a player through `WFBE_SE_PLAYERLIST`, nearby units and the vehicle leader/driver (`supplyMissionStarted.sqf:48-78`), then emits `WFBE_Server_PV_SupplyMissionCompleted` back to the server (`:80-82`).
-7. Completion reads `SupplyAmount`, `SupplyFromTown` and `SupplyByHeli` from the vehicle object (`supplyMissionCompleted.sqf:9-25`), decides whether a heavy-heli cash run applies from server-side upgrade state (`:26-27`), pays commander team funds or side supply (`:31-40`), clears only amount/source vars (`:41-42`) and broadcasts the message (`:48`).
+7. Current `master` completion reads `SupplyAmount` and `SupplyFromTown` from the vehicle object (`supplyMissionCompleted.sqf:9-28`), pays side supply, clears amount/source vars and broadcasts the message. PR #1 extends completion to read `SupplyByHeli`, decide whether a heavy-heli cash run applies from server-side upgrade state, and pay commander team funds or side supply.
 8. Client reward/score presentation is local after the completion broadcast. The pilot receives the reward through `ChangePlayerFunds` and score is requested with `RequestChangeScore` (`supplyMissionCompletedMessage.sqf:15-33`).
 
 ## Confirmed Findings
 
 | Finding | Evidence | Why It Matters |
 | --- | --- | --- |
-| Client-stamped cargo is still authority-bearing. | `supplyMissionStart.sqf:34-46`; `supplyMissionCompleted.sqf:9-25` | Server completion trusts the object vars for source and amount. PR #1 adds more reward surfaces on top of that trust. |
+| Client-stamped cargo is still authority-bearing. | Current `master`: `supplyMissionStart.sqf:20-34`; `supplyMissionCompleted.sqf:9-28`. PR #1 adds `SupplyByHeli`. | Server completion trusts the object vars for source and amount. PR #1 adds more reward surfaces on top of that trust. |
 | The PR #1 `Killed` handler can stack on reused vehicles. | `supplyMissionStarted.sqf:10-25` adds a handler every start with no guard/removal. | Double payment is currently muted because the first handler clears `SupplyAmount` to zero, but handler leakage is real and future side effects would multiply. |
-| Duplicate mission starts for the same vehicle are not explicitly guarded. | `supplyMissionStart.sqf:32-51`; `supplyMissionStarted.sqf:37-86` | A reused or rapidly reloaded vehicle can create parallel tracking loops and repeated handler attachment unless state gates are added. |
+| Duplicate mission starts for the same vehicle are not explicitly guarded. | Current `master`: `supplyMissionStart.sqf:32-39`; `supplyMissionStarted.sqf:20-65`. PR #1 extends this with handler attachment. | A reused or rapidly reloaded vehicle can create parallel tracking loops; on PR #1 it can also attach repeated handlers unless state gates are added. |
 | Cooldown key casing is inconsistent. | `Init_Town.sqf:35` seeds `lastSupplyMissionRun`; `isSupplyMissionActiveInTown.sqf:8` reads `LastSupplyMissionRun`; `supplyMissionStarted.sqf:8` writes `LastSupplyMissionRun`. | After the first start, the uppercase key exists; before that, the query path depends on nil behavior. Treat this as a source-confirmed mismatch and smoke-test after standardizing. |
 | Cooldown response model is good but the start flow races it. | Request at `supplyMissionStart.sqf:6-7`, local read at `:9`, second server request at `:61`; receiver stores result at `townSupplyStatus.sqf:5-8`. | Keep the pull-based JIP pattern, but do not make the immediate local cache read the final authority decision. |
 | Command-center scan was broader than needed. | `supplyMissionStarted.sqf:41-45` now uses `nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]` in Chernarus source and maintained Vanilla Takistan. | Source and maintained Vanilla are propagated; Arma 2 OA smoke and remaining authority/idempotency work are still open. |
@@ -123,7 +125,6 @@ Hosted/dedicated smoke:
 - Truck mission can be loaded, delivered and rewarded once.
 - Same truck can run a second mission after cooldown; no duplicate delivery or stacked handler behavior.
 - Attempting to load during cooldown is rejected by the server and reflected in client feedback.
-- Destroying a loaded enemy supply vehicle pays interdiction exactly once.
 - Tampered or stale `SupplyFromTown` / `SupplyAmount` object variables do not drive reward unless the server can validate them against active mission state.
 
 PR #1 helicopter smoke:
@@ -132,6 +133,7 @@ PR #1 helicopter smoke:
 - Light supply helicopter requires Supply upgrade 2.
 - Heavy supply helicopter requires Supply upgrade 3 and applies the 20 percent payload bonus.
 - Heavy-heli upgrade-3 cash run pays commander team funds; no-commander fallback banks as side supply.
+- Destroying a loaded enemy supply vehicle pays interdiction exactly once and does not stack handlers after repeated missions.
 - Air delivery still gives the pilot 25 percent reward/score bonus.
 
 JIP/disconnect/HC smoke:

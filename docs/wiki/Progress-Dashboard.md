@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `scout-wave-l` | Returned / harvested locally | Six read-only explorers returned and were harvested into owner pages: paratrooper DR-2 propagation state, EASA exact-funds/stale-context bugs, DiscordBot/Extension/CI posture, construction logic asymmetry, patrol/supply loop nuance and Feature Status navigation/status drift. Validation, mirror parity and push remain. See [Discovery swarm](Subagent-Discovery-Swarm). |
 | `scout-wave-k` | Returned / harvested locally | Six read-only explorers returned. Hubble corrected SQF/PV status drift, Dirac added server-runtime partials, Lovelace found command task UI partials, Nietzsche added tooling/integration gaps, Franklin drove the agent-entrypoint file and Linnaeus tightened Feature Status navigation. See [Discovery swarm](Subagent-Discovery-Swarm) and [`agent-entrypoint.json`](agent-entrypoint.json). |
 | `scout-wave-j` | Returned / harvested locally | Six cheap explorers returned. Tesla's smoke matrix, Socrates/Gibbs feature-status archaeology, Carver machine-file contract notes, Boyle supply authority findings and Zeno navigation fixes are integrated into owner pages and machine records; validation and mirror parity are the remaining gates. Track details in [Discovery swarm](Subagent-Discovery-Swarm). |
 | `propagated-fix-smoke-pack` | Drafted / runtime proof pending | [Testing workflow](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack) now gives exact smoke setup, actions, expected evidence and failure signals for the five source + Vanilla propagated fixes. These remain planned gates until Arma 2 OA hosted/dedicated/JIP evidence is recorded. |
@@ -83,10 +84,10 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice harvested Wave J into the smoke pack, feature-status/register pages, supply authority docs, navigation fixes and machine-file contracts. |
+| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice harvested Wave L into Feature Status, integration/tooling, EASA/gear, construction/CoIn, server runtime/supply and propagated-fix status pages. |
 | Codex-2 | Ready | None claimed | Published [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup); next bounded candidates are PVF dispatcher lookup, side-supply clamp first or commander reassignment call-shape repair. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
-| Sub-agents | Returned / harvested | Wave K harvested | Six scoped explorers returned; reports are integrated or captured as follow-ups in [Discovery swarm](Subagent-Discovery-Swarm), [Agent worklog](Agent-Worklog), [`agent-entrypoint.json`](agent-entrypoint.json) and machine records. |
+| Sub-agents | Returned / harvested | Wave L harvested locally | Six scoped explorers returned; reports are integrated or captured as follow-ups in [Discovery swarm](Subagent-Discovery-Swarm), [Agent worklog](Agent-Worklog), [`agent-feature-status.jsonl`](agent-feature-status.jsonl) and owner pages. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
 
 ## One-Link Check
@@ -112,6 +113,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `scout-wave-l` | Codex sub-agents | Returned / harvested locally | Six scoped explorers checked paratrooper/PV drift, EASA/gear UI bugs, integrations/tooling posture, construction/CoIn asymmetry, server runtime/supply loops and Feature Status navigation; owner pages now carry the promoted findings. |
 | `scout-wave-j` | Codex sub-agents | Returned / harvested locally | Six scoped explorers checked Feature Status evidence, propagated smoke gates, supply authority/abuse, wiki UX, agent-readable files and abandoned/partial systems; owner pages now carry the promoted findings. |
 | `propagated-fix-smoke-pack` | Codex | Drafted/runtime pending | [Testing workflow](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack) now turns source + Vanilla propagation state into exact hosted/dedicated/JIP smoke steps. |
 | `scout-wave-g` | Codex sub-agents | Integrated locally/validation pending | Four scout reports landed in owner pages for marker cleanup/restoration, parameters/build inputs, support/special modules and join/disconnect lifecycle. |

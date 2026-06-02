@@ -65,14 +65,17 @@ Lifecycle ownership note: [Lifecycle wait-chain](Lifecycle-Wait-Chain) owns the 
 
 `Common/Functions/Common_PerformanceAudit.sqf` is local RPT logging, not network sync. It snapshots FPS/player/AI/unit/vehicle/town-active counts (`:28-105`), records aggregate call stats (`:159-193`) and flushes every 60 seconds by default (`:221-239`).
 
-Ampere's runtime pass confirmed that the major loops are cooperative rather than tight in the normal dedicated-server path: town capture, town AI, camps, resources, victory, garbage and empty-vehicle collection all have sleeps or per-cycle yields. The FPS publisher hosted/listen exception is now patched in source Chernarus; generated propagation and any restored AI supply-truck path remain review targets.
+Ampere's runtime pass confirmed that the major loops are cooperative rather than tight in the normal dedicated-server path: town capture, town AI, camps, resources, victory, garbage and empty-vehicle collection all have sleeps or per-cycle yields. The FPS publisher hosted/listen exception is now patched in source Chernarus and maintained Vanilla Takistan; Arma smoke and any restored AI supply-truck path remain review targets.
+
+Patrol loop caveat: `server_patrols.sqf` and `server_town_patrol.sqf` use `while {!WFBE_GameOver || _team_alive}` / `while {!WFBE_GameOver || _aliveTeam}`, so after game over they can keep polling/sleeping while their team remains alive. Their active behavior branches are still guarded by `!WFBE_GameOver`, so document this as mostly inert post-game polling rather than continued active patrol assignment.
 
 ## Server Load Risks
 
 | Risk | Evidence | Development note |
 | --- | --- | --- |
 | Low-FPS sleep inversion | `Common_GetSleepFPS.sqf:5-9` shortens sleeps under lower FPS. | Overloaded servers may run some loops more often, not less. Verify before reusing this helper. |
-| Hosted-server FPS busy loop | Init_Server.sqf:578 starts Server/GUI/serverFpsGUI.sqf and :595 starts Server/Module/serverFPS/monitorServerFPS.sqf; source Chernarus now exits on !isDedicated before entering their loops. | Source patched; generated propagation remains. Dedicated publishing is preserved. See [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep). |
+| Hosted-server FPS busy loop | Init_Server.sqf:578 starts Server/GUI/serverFpsGUI.sqf and :595 starts Server/Module/serverFPS/monitorServerFPS.sqf; source Chernarus and maintained Vanilla Takistan now exit on !isDedicated before entering their loops. | Propagated, smoke pending. Dedicated publishing is preserved. See [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep). |
+| Post-game patrol loop polling | `server_patrols.sqf` and `server_town_patrol.sqf` keep looping while their team remains alive, but active work is behind `!WFBE_GameOver` checks. | Low/medium cleanup. If post-game polling is unwanted, exit on game-over after confirming no cleanup semantics are being preserved. |
 | Town scans | `server_town.sqf:57` uses `nearEntities` per town. | Preserve per-town/per-cycle sleeps and audit records. |
 | Garbage scan | `server_collector_garbage.sqf:4-32` scans `allDead` every 0.5s. | Avoid adding more all-world scans nearby. |
 | Empty vehicle scan | `emptyvehiclescollector.sqf:4-30` polls every 0.5s. | Keep cleanup conditions cheap. |
@@ -91,6 +94,8 @@ flowchart LR
 ```
 
 Supply mission start is not fully server-authoritative. Client code sets `SupplyFromTown` and `SupplyAmount` on the truck at `Client/Module/supplyMission/supplyMissionStart.sqf:20-34`, then sends `WFBE_Client_PV_SupplyMissionStarted` at `:38-39`. Completion later trusts truck variables in `Server/Module/supplyMission/supplyMissionCompleted.sqf:9-27`.
+
+Current `master` duplicate-start risk is parallel tracking, not PR #1 interdiction handlers. `supplyMissionStarted.sqf` has no already-tracked guard, so repeated starts can spawn multiple completion loops for the same vehicle. `supplyMissionCompleted.sqf` clears `SupplyAmount` and `SupplyFromTown`, which bounds repeated reward risk, but repeated server/PV work and racey completion semantics remain unproven until an idempotency guard is added and smoked.
 
 Cooldown casing detail is canonical in [Deep-review findings](Deep-Review-Findings) DR-18 and the [Supply mission architecture](Supply-Mission-Architecture) page. This atlas keeps only the runtime owner map.
 
@@ -128,8 +133,9 @@ Canonical correctness findings are routed through [Victory/endgame atlas](Victor
 | `Server_AssignNewCommander` call shape | `_side = _this` then `_commander = _this select 1` in `Server_AssignNewCommander.sqf:3-5`; caller passes `[_side, _assigned_commander]` from `RequestNewCommander.sqf:12-14`. | Confirmed bug; use [commander reassignment call shape](Commander-Reassignment-Call-Shape). |
 | Supply mission cooldown casing | DR-18 confirms `lastSupplyMissionRun` / `LastSupplyMissionRun` mismatch. | Correctness bug; route details through [Supply mission architecture](Supply-Mission-Architecture) and DR-18. |
 | Supply mission reward authority | Client sets truck `SupplyFromTown` and `SupplyAmount`; server completion trusts truck vars. | Hardening gap. |
+| Supply mission duplicate starts | `supplyMissionStarted.sqf` can start parallel tracking loops for one vehicle; completion clears truck vars but does not prove idempotency. | Correctness/hardening gap; add an already-tracked guard before PR #1 supply-heli interdiction work is merged. |
 | Resistance supply handler gap | Common sender can format `wfbe_supply_temp_<side>` generically, but server handlers only exist for west/east. | Partially scaffolded but unsupported for live economy; use [resistance supply scaffold](Resistance-Supply-Scaffold). |
-| Paratrooper markers | Server sends `HandleParatrooperMarkerCreation`, client receiver file exists, command is missing from client PVF list. | Broken/dead receiver path. |
+| Paratrooper markers | Server sends `HandleParatrooperMarkerCreation`; source Chernarus and maintained Vanilla Takistan now register the client PVF and ship the handler file. | Propagated, smoke pending; modded folders still drift. Use [Paratrooper marker revival](Paratrooper-Marker-Revival). |
 | MASH markers | Server rebroadcast exists, client receiver compile is commented, and DR-34 found no client broadcast of `WFBE_CL_MASH_MARKER_CREATED`. | Broken/dead on both ends; MASH respawn itself is separate and mapped in [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas). Revive markers with a server-held marker list and JIP replay, or remove. |
 | Victory/endgame guard | `server_victory_threeway.sqf:23` plus the per-side loop are the DR-36 root-cause surface for DR-11/DR-13. | Correctness bug; use [Victory/endgame atlas](Victory-And-Endgame-Atlas) for the developer map and [Deep-review findings](Deep-Review-Findings) DR-11/DR-36 for raw evidence. |
 

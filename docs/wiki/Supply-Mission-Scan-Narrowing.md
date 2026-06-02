@@ -55,7 +55,7 @@ Status: **source and maintained Vanilla propagated; hosted/dedicated smoke pendi
 
 ## Validation
 
-Source-only checks completed:
+Source/Vanilla checks completed:
 
 - Source Chernarus has zero 80-meter broad command-center scans and one narrowed `["Base_WarfareBUAVterminal"]` 80-meter scan.
 - Maintained Vanilla Takistan contains the same narrowed 80-meter command-center scan after the 2026-06-02 propagation run.

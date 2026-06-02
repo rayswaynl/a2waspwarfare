@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T17:05:00+02:00",
+  "generatedAt": "2026-06-02T18:00:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -18,8 +18,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest slice harvested Wave K into Feature Status, SQF/PV indexes, UI docs, tooling/integration notes, navigation and agent-entrypoint.json.",
-      "nextExpectedOutput": "Validate wiki links, JSON/JSONL, diff hygiene and mirror parity after the Wave K harvest."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest slice harvested Wave L owner-page follow-up scouts into Feature Status, integrations/tooling, EASA/gear, construction/CoIn, server runtime/supply and propagated-fix status pages.",
+      "nextExpectedOutput": "Validate wiki links, JSON/JSONL, diff hygiene and mirror parity, then mirror/publish the Wave L harvest."
     },
     "Codex-2": {
       "status": "ready",
@@ -34,13 +34,19 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "returned-harvested",
-      "currentLane": "scout-wave-k",
-      "currentWork": "Six read-only explorers returned. Reports were harvested into Feature Status, SQF/PV indexes, UI docs, tooling/integration notes, navigation and agent-entrypoint.json.",
-      "nextExpectedOutput": "No further Wave K output expected; use the harvested pages and machine files."
+      "status": "returned-harvested-locally",
+      "currentLane": "scout-wave-l",
+      "currentWork": "Six read-only explorers returned; Codex harvested source-backed findings into owner pages and machine records.",
+      "nextExpectedOutput": "No active Wave L scout output pending; validation, mirror parity and publish remain with Codex."
     }
   },
   "laneSummary": [
+    {
+      "lane": "scout-wave-l",
+      "owner": "Codex sub-agents",
+      "status": "returned-harvested-validation-pending",
+      "output": "Confucius, Pasteur, Beauvoir, Dewey, Averroes and Kuhn returned; findings were folded into Feature Status, paratrooper revival, EASA/gear, factory purchase, integrations/tooling, construction/CoIn, server runtime/supply and machine status records."
+    },
     {
       "lane": "scout-wave-k",
       "owner": "Codex sub-agents",

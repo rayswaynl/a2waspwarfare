@@ -65,7 +65,7 @@ Instrumented areas include:
 
 `Server/GUI/serverFpsGUI.sqf` and `Server/Module/serverFPS/monitorServerFPS.sqf` publish server FPS data used by HUD/status surfaces. Earlier compile lines for `WFBE_CO_FNC_monitorServerFPS` are commented at `Server/Init/Init_Server.sqf:65,90`, but `Init_Server.sqf` later executes the GUI and module directly at `Server/Init/Init_Server.sqf:578,595`.
 
-Source anchors: `Server/GUI/serverFpsGUI.sqf:1-10` publishes `SERVER_FPS_GUI` every 8 seconds when dedicated; `Server/Module/serverFPS/monitorServerFPS.sqf:1-6` publishes `WFBE_VAR_SERVER_FPS` with the same dedicated-only sleep placement. The hosted/listen-server busy-loop caveat is DR-19.
+Source anchors: `Server/GUI/serverFpsGUI.sqf:1-10` exits immediately when `!isDedicated`, then publishes `SERVER_FPS_GUI` every 8 seconds on dedicated servers; `Server/Module/serverFPS/monitorServerFPS.sqf:1-6` now uses the same early-exit shape for `WFBE_VAR_SERVER_FPS`. The hosted/listen-server busy-loop caveat is DR-19 and is patched in source Chernarus plus maintained Vanilla; Arma smoke remains pending.
 
 ## Performance Caveats
 

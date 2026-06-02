@@ -2,7 +2,7 @@
 
 ## Status
 
-`client-skill-init-idempotency` is source patched and smoke pending as of 2026-06-02. The patch removes the second `Skill_Init.sqf` call in client init while preserving the immediate `WFBE_SK_FNC_Apply` call. Vanilla Takistan propagation is pending because this Codex checkout cannot run LoadoutManager until it has an `a2waspwarfare` ancestor directory.
+`client-skill-init-idempotency` is source + maintained Vanilla propagated and smoke pending as of 2026-06-02. The patch removes the second `Skill_Init.sqf` call in client init while preserving the immediate `WFBE_SK_FNC_Apply` call. The earlier checkout-root blocker was removed by the LoadoutManager root-discovery patch, and propagation now works from this Codex checkout with `A2WASP_SKIP_ZIP=1`.
 
 ## What I Read
 
@@ -11,7 +11,7 @@
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Apply.sqf`
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_PreRespawnHandler.sqf`
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf`
-- Vanilla Takistan `Client/Init/Init_Client.sqf` after future LoadoutManager propagation.
+- Vanilla Takistan `Client/Init/Init_Client.sqf` after LoadoutManager propagation.
 
 ## What The Code Did
 
@@ -35,22 +35,26 @@ The source mission patch removes only the second `Skill_Init.sqf` call:
 - Keep `Client/Init/Init_Client.sqf:547` so `WFBE_SK_V_Type` exists before class-based default gear selection.
 - Keep `(player) Call WFBE_SK_FNC_Apply` in the later skill block so the selected class still gets skill effects/actions before play.
 - Do not change `Skill_Init.sqf` internals, because a single init call is enough for the current path.
-- Propagate later with `Tools/LoadoutManager` so Vanilla Takistan matches source.
+- Propagate with `Tools/LoadoutManager` so Vanilla Takistan matches source.
 
 Changed source files:
 
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf`
 
+Propagated maintained Vanilla file:
+
+- `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf`
+
 ## Validation
 
-Source-only validation done:
+Source/Vanilla validation done:
 
 - Chernarus `Init_Client.sqf` has exactly one `Skill_Init.sqf` call and one immediate `WFBE_SK_FNC_Apply` call.
-- Vanilla Takistan propagation is still required.
+- Vanilla Takistan has the same single-init shape after the propagation run.
 - `Skill_Init.sqf` still compiles `WFBE_SK_FNC_Apply`.
 - `Client_PreRespawnHandler.sqf` still applies skill effects on respawn.
 - `git diff --check` passes.
-- `dotnet run` in `Tools/LoadoutManager` was attempted from `work\a` and failed before generation with `Could not find the 'a2waspwarfare' directory`; this is the documented path-shape requirement, not the missing-`7za` packaging-only case.
+- `dotnet run` in `Tools/LoadoutManager` now works from `work\a`; use `A2WASP_SKIP_ZIP=1` for propagation-only runs so missing `7za` remains non-blocking.
 
 Pending smoke:
 

@@ -70,15 +70,15 @@ What the code does:
 
 - On greenlight, the server ejects paratrooper cargo and calls `WFBE_CO_FNC_SendToClient` with command `HandleParatrooperMarkerCreation`.
 - The handler file exists and creates a side-filtered `MarkerUpdate` marker; it also grants east paratroopers NVGs if needed.
-- The command is absent from `_clientCommandPV`, so init never compiles `CLTFNCHandleParatrooperMarkerCreation` and never registers `WFBE_PVF_HandleParatrooperMarkerCreation`.
+- Source Chernarus and maintained Vanilla Takistan now include the command in `_clientCommandPV`, so init compiles `CLTFNCHandleParatrooperMarkerCreation` and registers `WFBE_PVF_HandleParatrooperMarkerCreation`. This remains unproven in Arma smoke and still drifts in modded forks.
 
 Why it matters:
 
-This is a small, bounded repair with likely gameplay value. The support itself is not abandoned; only the client callback is unwired. It is also a useful smoke target for the PVF dispatch hardening playbook because it exercises a client-bound support callback.
+This was a small, bounded repair with likely gameplay value. The support itself was not abandoned; only the client callback was unwired in source/Vanilla before propagation. It is still a useful smoke target for the PVF dispatch hardening playbook because it exercises a client-bound support callback.
 
 Safe implementation shape:
 
-1. Add `HandleParatrooperMarkerCreation` to `_clientCommandPV`.
+1. Source/Vanilla already add `HandleParatrooperMarkerCreation` to `_clientCommandPV`; keep that registration during future refactors.
 2. Keep the side filter in the handler.
 3. Prefer one compact validation/logging path if the payload unit is null/dead or not an object.
 4. If the feature is not wanted, remove the server send and handler file instead of leaving a ghost callback.
@@ -250,11 +250,11 @@ For Codex:
 
 For Claude:
 
-- Best contradiction checks: confirm no hidden live sender for `WFBE_CL_MASH_MARKER_CREATED`; confirm `HandleParatrooperMarkerCreation` has no alternate dispatch path; verify whether `RscMenu_Upgrade` is truly uncalled outside static text search.
+- Best contradiction checks: confirm no hidden live sender for `WFBE_CL_MASH_MARKER_CREATED`; confirm source/Vanilla `HandleParatrooperMarkerCreation` still registers and modded forks still lack the handler file; verify whether `RscMenu_Upgrade` is truly uncalled outside static text search.
 
 For a future code owner:
 
-- Smallest useful patch: revive paratrooper markers by registering `HandleParatrooperMarkerCreation`, or remove the ghost send/receiver.
+- Smallest already-landed patch: paratrooper markers are revived in source/Vanilla by registering `HandleParatrooperMarkerCreation`; remaining work is Arma smoke plus modded maintenance policy.
 - Highest cleanup value: guard/remove AI supply truck config-gated nil/FSM path before anyone enables truck-based AI logistics.
 - Highest owner decision: modded mission maintenance model before porting hardening fixes beyond Chernarus/Takistan.
 

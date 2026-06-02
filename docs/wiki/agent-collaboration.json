@@ -1084,7 +1084,7 @@
         "Vanilla Takistan propagation handoff for duplicate Skill_Init removal",
         "Performance/Feature/backlog/dashboard/context updates"
       ],
-      "handoff": "Smoke Soldier/non-Soldier AI caps, respawn skill reapply and dedicated/JIP client init. Source Chernarus now removes the duplicate Skill_Init call; Vanilla propagation remains pending. If future paths rerun Skill_Init.sqf, guard the Soldier cap mutation."
+      "handoff": "Smoke Soldier/non-Soldier AI caps, respawn skill reapply and dedicated/JIP client init. Source Chernarus and maintained Vanilla now remove the duplicate Skill_Init call; Arma smoke remains pending. If future paths rerun Skill_Init.sqf, guard the Soldier cap mutation."
     },
     {
       "lane": "hosted-server-fps-loop-sleep",
@@ -1105,7 +1105,7 @@
         "Vanilla Takistan propagation handoff for FPS patch",
         "Performance/AI/Server runtime/Feature/backlog/status updates"
       ],
-      "handoff": "Smoke dedicated RHUD/server FPS updates and hosted/listen no-spin behavior. Source Chernarus now exits both FPS publishers on non-dedicated hosts; Vanilla propagation remains pending. Publisher consolidation remains a separate compatibility decision."
+      "handoff": "Smoke dedicated RHUD/server FPS updates and hosted/listen no-spin behavior. Source Chernarus and maintained Vanilla now exit both FPS publishers on non-dedicated hosts; Arma smoke remains pending. Publisher consolidation remains a separate compatibility decision."
     },
     {
       "lane": "supply-mission-scan-narrowing",
@@ -1126,7 +1126,7 @@
         "Vanilla Takistan propagation handoff for supplyMissionStarted.sqf scan narrowing",
         "Performance/Supply/Feature/backlog/dashboard/context updates"
       ],
-      "handoff": "Smoke truck/heli delivery at command centers and no-completion near unrelated objects. Source Chernarus now narrows the command-center scan; Vanilla propagation remains pending. Continue larger supply cleanup separately: loaded/tracking state, Killed handler idempotency, cooldown casing and server-side cargo validation."
+      "handoff": "Smoke truck/heli delivery at command centers and no-completion near unrelated objects. Source Chernarus and maintained Vanilla now narrow the command-center scan; Arma smoke remains pending. Continue larger supply cleanup separately: loaded/tracking state, PR #1 Killed handler idempotency, cooldown casing and server-side cargo validation."
     },
     {
       "lane": "wasp-marker-wait-cleanup",

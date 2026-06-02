@@ -40,6 +40,7 @@ Before running tooling or deployment-adjacent pieces, check these first:
 | `version.sqf` exists for the mission being packed/tested. | It is generated and git-ignored, but included by `description.ext` and `initJIPCompatible.sqf`. |
 | DiscordBot has real `preferences.json` and `token.txt` outside git. | Missing token/config is expected in repo and is not a mission-code failure. |
 | AntiStack has the separate `A2WaspDatabase` DLL if enabled. | The in-repo `Extension` project is `a2waspwarfare_Extension` / `GLOBALGAMESTATS`, not the AntiStack database extension. |
+| The in-repo `Extension` is built with legacy MSBuild tooling. | It targets .NET Framework 4.8 x86 with `RGiesecke.DllExport`/`UnmanagedExports` packages under `../packages`; do not treat it as a normal SDK-style `dotnet build` project. |
 
 ## Propagation rules & the skip-list trap (verified)
 
@@ -79,7 +80,7 @@ This is the operational summary of DR-32's three maintenance tiers. Use it befor
 | `Tools/LoadoutManager` | .NET 8 executable | `Program.cs` -> `SqfFileGenerator.GenerateCommonBalanceInitAndTheEasaFileForEachTerrain()` | Terrain/loadout data classes, source Chernarus mission, terrain skip lists. | Generated `EASA_Init.sqf`, `Common_BalanceInit.sqf`, aircraft-name helper, per-terrain `version.sqf`, copied Takistan mission and optional `_MISSIONS.7z`. | Accepts named-root or repo-marker root discovery; set `A2WASP_SKIP_ZIP=1` to skip packaging. |
 | `Tools/PerformanceAuditAnalyzer` | PowerShell | `Analyze-PerformanceAudit.ps1`, GUI launcher | Arma RPT lines containing `[Performance Audit]`. | CSV, Markdown, HTML and Word-friendly performance reports. | Safe read-only analyzer for logs. |
 | `DiscordBot` | .NET 9 executable | `DiscordBot/src/ProgramRuntime.cs` | `preferences.json`, `token.txt`, extension `database.json`. | Discord channel name, bot presence and status embed updates every 60 seconds. | Missing token/preferences are expected in repo; do not invent secrets. |
-| `Extension` | .NET Framework 4.8 Arma extension | `_RVExtension@12` export | Arma `callExtension` arguments from mission scripts. | Writes `C:\a2waspwarfare\Data\database.json` for DiscordBot. | Uses legacy NuGet/MSBuild package layout. |
+| `Extension` | .NET Framework 4.8 x86 Arma extension | `_RVExtension@12` export | Arma `callExtension` arguments from mission scripts. | Writes `C:\a2waspwarfare\Data\database.json` for DiscordBot. | Legacy Visual Studio/MSBuild target using `RGiesecke.DllExport`/`UnmanagedExports` from `../packages`; preserve x86. |
 | `Mods/mkswf_sidewinder_reload_time_fix` | Arma addon config | `CfgWeapons.hpp` | Sidewinder launcher class config. | Sets `magazineReloadTime = 1` for Sidewinder launchers. | External addon fragment, not mission SQF. |
 
 ## PerformanceAuditAnalyzer
