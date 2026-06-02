@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T21:34:00+02:00",
+  "generatedAt": "2026-06-02T21:40:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -685,7 +685,8 @@
     "implementation-hardening-planning",
     "server-authority-migration-map",
     "attack-wave-authority-dr41",
-    "abandoned-feature-revival-review"
+    "abandoned-feature-revival-review",
+    "external-arma2-reference-guide"
   ],
   "queuedReports": [],
   "lanes": [

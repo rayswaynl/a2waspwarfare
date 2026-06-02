@@ -9,7 +9,7 @@ This page is written for Codex, Claude and future coding agents.
 3. Read `Agent-Collaboration-Protocol.md`, `agent-collaboration.json` and `agent-events.jsonl` before parallel work.
 4. Check `git status`, current branch, recent commits and remote.
 5. Treat `Missions/[55-2hc]warfarev2_073v48co.chernarus` as the mission source for gameplay edits.
-6. Use Bohemia Interactive Arma 2 OA scripting docs, not Arma 3 docs.
+6. Use [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) and Bohemia Interactive Arma 2 OA scripting docs, not Arma 3 docs.
 
 ## Safe Edit Rules
 
@@ -22,9 +22,12 @@ This page is written for Codex, Claude and future coding agents.
 ## Common Pitfalls
 
 - Arma 2 OA SQF differs from Arma 3; avoid using newer commands unless verified for OA 1.64.
+- `remoteExec`, CfgFunctions-era assumptions and Arma 3-only command variants are not valid drop-ins for this mission's OA-era PV/PVEH model.
 - Hosted server paths often need local handler calls as well as public-variable dispatch.
 - Client-side UI/marker loops are performance-sensitive.
 - `publicVariable` payloads can become a network performance issue.
+- `addEventHandler` stacks handlers; reusable vehicles/units need guards or stored handler IDs before adding another handler.
+- `setVariable [..., true]` publishes object/group state, but it does not make client-written authority data trustworthy.
 - LoadoutManager has very deep paths; Windows clones may require Git `core.longpaths=true`.
 - `7za` missing does not block copy-only generation, but does block packaging.
 
@@ -36,6 +39,7 @@ This page is written for Codex, Claude and future coding agents.
 - Identify whether state is client-owned, server-owned, common config or generated tool data.
 - Add or reuse constants in `Init_CommonConstants.sqf` only when the value is truly shared.
 - For networked features, prefer `Common_SendToServer`, `Common_SendToClient` or `Common_SendToClients`.
+- Cross-check engine behavior in [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) when touching public variables, PVEHs, object vars, event handlers, object scans, JIP waits, UI marker loops or performance instrumentation.
 - Run/read targeted searches for duplicate hardcoded arrays before adding new ones.
 - Verify with source mission first, then propagate generated mission folders.
 
@@ -56,6 +60,6 @@ rg -n "TODO|FIXME|DoNotUse|GAME_CRASH|disabled|commented" Missions/[55-2hc]warfa
 
 ## Continue Reading
 
-Previous: [Feature status](Feature-Status-Register) | Next: [Agent context](Agent-Context)
+Previous: [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) | Next: [Agent context](Agent-Context)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

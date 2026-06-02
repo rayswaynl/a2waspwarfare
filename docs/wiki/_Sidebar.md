@@ -61,6 +61,7 @@
 - [Attack-wave authority](Attack-Wave-Authority-Playbook)
 - [HC delegation/failover](Headless-Delegation-And-Failover-Playbook)
 - [Testing/release workflow](Testing-Debugging-And-Release-Workflow)
+- [Arma 2 OA references](Arma-2-OA-External-Reference-Guide)
 - [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl)
 - [`agent-test-plan.schema.json`](agent-test-plan.schema.json)
 - [AI guide](AI-Assistant-Developer-Guide)

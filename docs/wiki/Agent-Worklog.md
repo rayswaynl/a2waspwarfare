@@ -609,6 +609,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Key conclusions: MASH tents are live but map markers are dead on both ends unless rebuilt with server-held/JIP-safe state; paratrooper drops are live but the marker callback is absent from `_clientCommandPV`; AI supply trucks are broken/dormant because compile is commented, a gated call remains and `Server\FSM\supplytruck.fsm` is missing.
 - Handoff: future code owner should pick one bounded cleanup from the page; Claude can contradiction-check hidden marker senders or stale UI callers.
 
+## 2026-06-02 - Codex External Arma 2 OA Reference Guide
+
+- Published [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) as the official-reference router for future mission changes.
+- Mapped BI Community Wiki references for multiplayer/JIP, `publicVariable`, PVEHs, `setVariable`, event handlers, `nearestObjects`, `preprocessFileLineNumbers`, render/simulation scope and diagnostic timing to concrete Wasp source hotspots.
+- Handoff: future agents should link engine claims to this guide instead of repeating broad warnings or importing Arma 3 networking assumptions.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T21:34:00+02:00",
+  "generatedAt": "2026-06-02T21:40:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -16,8 +16,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki-Quality-Audit C3 by turning stale Gameplay atlas open questions into source-backed resolved follow-ups.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining duplicate cross-link reductions, MERGE-1 hardening/authority consolidation, or external Arma 2 OA source reference integration."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass published the Arma 2 OA external reference guide and wired it into navigation/context.",
+      "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining duplicate cross-link reductions, MERGE-1 hardening/authority consolidation, or integrating the external reference guide into more subsystem pages."
     },
     "Codex-2": {
       "status": "ready-for-next-lane",
@@ -33,6 +33,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "external-arma2-reference-guide",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Arma-2-OA-External-Reference-Guide.md maps official BI OA docs to Wasp PV/PVEH, JIP, object-var, event-handler, object-scan and performance hotspots"
+    },
     {
       "lane": "abandoned-feature-revival-review",
       "owner": "Codex-2",
