@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T20:15:00+02:00",
+  "generatedAt": "2026-06-02T20:30:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -18,8 +18,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; current slice removed fabricated WASP self-test documentation and corrected WASP_procInitComm source refs.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed subsystem or implementation-readiness pass."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; current slice refreshed tracked source inventory counts, launched five high-depth read-only discovery agents and validated the local docs gates.",
+      "nextExpectedOutput": "Publish the Source Inventory refresh to repo/wiki, then harvest the depth-agent reports into owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -34,13 +34,25 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "returned-harvested-published",
-      "currentLane": "scout-wave-l",
-      "currentWork": "Six read-only explorers returned; Codex harvested source-backed findings into owner pages and machine records.",
-      "nextExpectedOutput": "No active Wave L scout output pending; future work should use the published owner pages and machine records."
+      "status": "active-readonly-depth-team",
+      "currentLane": "deep-discovery-agent-team-m",
+      "currentWork": "Herschel, Boole, Einstein, Feynman and Epicurus are running disjoint high-depth reads across economy/supply, commander/construction/factory/upgrades, AI/runtime/HC, UI/action surfaces and tooling/integration/release readiness.",
+      "nextExpectedOutput": "Return structured source-backed reports for Codex review and wiki/machine-file harvest."
     }
   },
   "laneSummary": [
+    {
+      "lane": "deep-discovery-agent-team-m",
+      "owner": "Codex sub-agents",
+      "status": "active-readonly",
+      "output": "Five high-depth agents are running with disjoint lanes: economy/supply authority, commander/construction/factories/upgrades, AI/headless/runtime, player UI/action surfaces and tooling/integrations/release readiness."
+    },
+    {
+      "lane": "source-inventory-count-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Source-Inventory.md now has a tracked git ls-files snapshot for 2026-06-02T20:30:00+02:00: 3432 total tracked files, docs/ 110, .github 2, .md 104, .json 9, .jsonl 4, .ogg 59, plus regeneration commands. Home repo-shape now points readers to Source Inventory for the full snapshot."
+    },
     {
       "lane": "wasp-overlay-selftest-doc-error",
       "owner": "Codex",

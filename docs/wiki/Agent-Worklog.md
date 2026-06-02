@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Source Inventory Refresh + Depth Agent Team
+
+- Spawned a high-depth read-only discovery team for economy/supply authority, commander/construction/factory/upgrade flow, AI/headless/server runtime, player UI/action surfaces and tooling/integration/release readiness. Agents: Herschel, Boole, Einstein, Feynman and Epicurus.
+- Regenerated [Source inventory](Source-Inventory) from `git ls-files` on `docs/developer-wiki-index`: current tracked total is **3432** files, with `docs/` (**110**), `.github` (**2**), `CLAUDE.md`, `mkdocs.yml`, `.md` (**104**), `.json` (**9**), `.jsonl` (**4**) and `.ogg` still **59** in this checkout.
+- Added regeneration commands to the page so future agents can refresh top-level and extension counts instead of copying stale audit numbers.
+- Rechecked Claude item 45: `git ls-files Tools` returns **199**, while filesystem recursion sees ignored build/bin output. Home and Source Inventory remain anchored to tracked source counts.
+
 ## 2026-06-02 - Codex Wave H Agent Team + Supply Player-Object Source Patch
 
 - Spawned Wave H read-only scout agents for supply lifecycle, economy authority, respawn/MHQ/victory, UI/HUD, generated mission drift and PV/networking. The broad PV/networking scout hit context limits, was closed, and was replaced by a smaller direct-public-variable index scout.

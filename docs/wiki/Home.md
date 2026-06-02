@@ -78,17 +78,21 @@ Most content pages now include a **Continue Reading** block with previous and ne
 
 ## Repo Shape
 
+Tracked-file snapshot from `git ls-files`; see [Source inventory](Source-Inventory) for full extension and subsystem counts plus regeneration commands.
+
 | Count | Top-level path |
 | ---: | --- |
 | 1475 | `Modded_Missions` |
 | 787 | `Missions` |
 | 786 | `Missions_Vanilla` |
 | 199 | `Tools` |
+| 110 | `docs` |
 | 42 | `DiscordBot` |
 | 16 | `Extension` |
 | 3 | `Guides` |
 | 3 | `Mods` |
 | 2 | `BattlEyeFilter` |
+| 2 | `.github` |
 
 ## Machine Context
 

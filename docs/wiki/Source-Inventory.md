@@ -2,6 +2,19 @@
 
 Generated from `git ls-files` in the main repository checkout.
 
+Snapshot: `2026-06-02T20:30:00+02:00` on `docs/developer-wiki-index`.
+
+Total tracked files: **3432**.
+
+Regenerate with:
+
+```powershell
+$files = git ls-files
+$files.Count
+$files | ForEach-Object { ($_ -split '[\\/]')[0] } | Group-Object | Sort-Object Count -Descending
+$files | ForEach-Object { $ext = [IO.Path]::GetExtension($_).ToLowerInvariant(); if ([string]::IsNullOrEmpty($ext)) { '<none>' } else { $ext } } | Group-Object | Sort-Object Count -Descending
+```
+
 ## Top-Level Inventory
 
 | Count | Top-level path |
@@ -10,17 +23,20 @@ Generated from `git ls-files` in the main repository checkout.
 | 787 | `Missions` |
 | 786 | `Missions_Vanilla` |
 | 199 | `Tools` |
+| 110 | `docs` |
 | 42 | `DiscordBot` |
 | 16 | `Extension` |
 | 3 | `Guides` |
 | 3 | `Mods` |
 | 2 | `BattlEyeFilter` |
+| 2 | `.github` |
 | 1 | `.gitattributes` |
-| 1 | `.github` |
 | 1 | `.gitignore` |
 | 1 | `AGENTS.md` |
+| 1 | `CLAUDE.md` |
 | 1 | `LICENSE.md` |
 | 1 | `README.md` |
+| 1 | `mkdocs.yml` |
 
 ## Extension Inventory
 
@@ -29,31 +45,32 @@ Generated from `git ls-files` in the main repository checkout.
 | 2703 | `.sqf` |
 | 242 | `.cs` |
 | 196 | `.paa` |
+| 104 | `.md` |
 | 59 | `.ogg` |
 | 37 | `.hpp` |
 | 12 | `.fsm` |
 | 9 | `.ext` |
-| 8 | `.md` |
-| 6 | `.txt` |
-| 5 | `.sqs` |
-| 5 | `.bin` |
+| 9 | `.json` |
+| 8 | `.txt` |
 | 5 | `.bikb` |
+| 5 | `.bin` |
+| 5 | `.sqs` |
 | 4 | `.sqm` |
-| 4 | `.gitignore` |
+| 4 | `.jsonl` |
 | 4 | `.jpg` |
+| 4 | `.gitignore` |
+| 3 | `.ps1` |
 | 3 | `.csproj` |
-| 2 | `.ps1` |
-| 2 | `.png` |
+| 3 | `.yml` |
 | 2 | `.html` |
 | 2 | `.xml` |
 | 2 | `.ogv` |
-| 1 | `.json` |
+| 2 | `.png` |
 | 1 | `.gitattributes` |
 | 1 | `.docx` |
 | 1 | `.cpp` |
 | 1 | `.config` |
 | 1 | `.cmd` |
-| 1 | `.yml` |
 
 ## Source Mission Subsystems
 
