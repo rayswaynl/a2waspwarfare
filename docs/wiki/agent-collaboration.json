@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T22:18:00+02:00",
+  "generatedAt": "2026-06-02T22:22:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -831,6 +831,24 @@
         "agent-hardening-backlog.jsonl#client-skill-init-idempotency"
       ],
       "handoff": "Performance sweep published. Future code owner: PVF lookup is highest value; hosted FPS sleep/consolidation is smallest server patch; duplicate Skill_Init is a new P2 client-init/balance cleanup; supply scan, factory queue and WASP marker polling are bounded follow-ups."
+    },
+    {
+      "lane": "paratrooper-marker-revival",
+      "owner": "Codex-2",
+      "status": "active",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_Paratroopers.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/PVFunctions/HandleParatrooperMarkerCreation.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Abandoned-Feature-Revival-Review.md",
+        "Public-Variable-Channel-Index.md",
+        "Networking-And-Public-Variables.md"
+      ],
+      "outputs": [
+        "source-backed paratrooper marker implementation/readiness note",
+        "coordination/status/events/worklog updates"
+      ],
+      "handoff": "Determine whether the paratrooper marker repair is safe as a minimal code patch or should remain a patch-ready docs handoff; keep this separate from broader RequestSpecial authority hardening."
     }
   ],
   "integratedReports": [

@@ -20,10 +20,10 @@
       "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining duplicate reductions, Arma 2 OA external-reference integration into subsystem pages, or more implementation-readiness playbooks."
     },
     "Codex-2": {
-      "status": "ready-for-next-lane",
-      "currentLane": "performance-opportunity-sweep",
-      "currentWork": "Published Performance-Opportunity-Sweep.md with ranked opportunities and a new client-skill-init-idempotency backlog item.",
-      "nextExpectedOutput": "Select the next bounded lane, likely AI supply logistics cleanup, paratrooper-marker implementation, or one code patch from the performance sweep."
+      "status": "active",
+      "currentLane": "paratrooper-marker-revival",
+      "currentWork": "Source-checking the paratrooper support marker callback and deciding whether to publish a minimal revival patch or a patch-ready handoff.",
+      "nextExpectedOutput": "Paratrooper marker revival source evidence, safe implementation shape, validation plan and coordination updates."
     },
     "Claude": {
       "status": "autonomous-ready",

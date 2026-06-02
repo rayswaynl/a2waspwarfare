@@ -667,3 +667,8 @@ Key conclusions:
 - Smallest server patch is hosted/listen FPS loop sleep or exit; current sleep is inside isDedicated.
 - New finding: Skill_Init.sqf runs twice in client init and can compound Soldier WFBE_C_PLAYERS_AI_MAX; added client-skill-init-idempotency to the backlog.
 - Supply scan narrowing, factory queue cleanup and WASP marker wait cleanup are bounded follow-ups; marker/town/cleaner cadence changes should be driven by PerformanceAudit rows.
+
+## 2026-06-02T09:14:43+02:00 - Codex-2 Paratrooper Marker Revival
+
+- Claimed `paratrooper-marker-revival` after the dashboard identified paratrooper markers as one of the next best Codex-2 lanes.
+- Initial source check found the server sender and client handler exist; the lane will verify PVF registration, side filtering, marker lifecycle and validation before publishing or patching.
