@@ -61,6 +61,8 @@ Some systems use explicit public-variable channels outside the generic PVF list:
 - Server FPS/HUD: `SERVER_FPS_GUI`, `WFBE_VAR_SERVER_FPS`.
 - AFK kick: `AFKthresholdExceededName` and `kickAFK`; `kickAFK` is intentionally caught by BattlEye filters because serverCommand is unavailable.
 - Markers/messages: `MARKER_CREATION`, `SEND_MESSAGE`, ICBM and radiation variables.
+- MASH markers: the intended `WFBE_CL_MASH_MARKER_CREATED` -> `WFBE_SE_MASH_MARKER_SENT` relay is not currently a working channel. The client receiver compile is commented and the send trigger is absent, leaving an orphaned server PVEH. See [Deep-review findings](Deep-Review-Findings) DR-34.
+- Attack wave: `ATTACK_WAVE_INIT` is broadcast with `publicVariableServer` from `Common/Functions/Common_AttackWaveActivate.sqf`.
 
 ## Safety Notes
 
@@ -68,6 +70,15 @@ Some systems use explicit public-variable channels outside the generic PVF list:
 - Prefer server authority for state changes. Client scripts should request, not mutate, team/base/economy state directly.
 - When adding a PVF command, update both the registration list and the target `Client/PVFunctions` or `Server/PVFunctions` file.
 - Hosted-server paths often call the handler locally in addition to broadcasting. Preserve those branches when modernizing code.
+
+## Authority Surfaces To Audit Together
+
+DR-1 closes the most dangerous PVF issue, but it does not by itself make gameplay requests authoritative. Two server-facing surfaces need separate hardening:
+
+- **PVF command surface.** ICBM uses `RequestSpecial`: `Client/Module/Nuke/nukeincoming.sqf:23` sends `["ICBM", sideJoined, _target, _cruise, clientTeam]`; `Server/Functions/Server_HandleSpecial.sqf:97-111` trusts the request enough to wait for the target death and spawn `NukeDammage`. The tactical UI gates this during normal play, but the server case should re-check commander/team/upgrade/cost/cooldown before launching a superweapon.
+- **Direct public-variable surface.** Attack wave does not use PVF. `Common/Functions/Common_AttackWaveActivate.sqf:6-8` writes `ATTACK_WAVE_INIT = [_supply, _side]` and sends it with `publicVariableServer`; `Server/Functions/Server_AttackWave.sqf:1-27` trusts that supplied side/supply to calculate `ATTACK_WAVE_PRICE_MODIFIER` and broadcast `ATTACK_WAVE_DETAILS`. Server-side validation should derive current side supply and authority from trusted state, not from the payload.
+
+Treat these as sibling work items when refactoring economy authority. A validated PVF lookup prevents arbitrary function-string execution; it does not validate that the requested game action is allowed.
 
 ## PVF dispatch internals (Claude deep-dive, source-cited)
 
@@ -113,5 +124,5 @@ When tracing a feature, a single registered command (`WFBE_PVF_HandleSpecial`) c
 
 ### Security: the `Call Compile` trust boundary
 
-`Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` run `Call Compile` on the function-name string taken from the **value a remote machine broadcast** (`select 0` / `select 1`), with no check that it names a registered command — and the shipped `BattlEyeFilter/publicvariable.txt` only carries the `kickAFK` feature rule, not a security filter. Validate the command string against the known `SRVFNC*`/`CLTFNC*` set before compiling, and add a real BattlEye PV filter. Full analysis and remediation playbook: [Deep-review findings](Deep-Review-Findings) DR-1.
+`Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` run `Call Compile` on the function-name string taken from the **value a remote machine broadcast** (`select 0` / `select 1`), with no check that it names a registered command — and the shipped `BattlEyeFilter/publicvariable.txt` only carries the `kickAFK` feature rule, not a security filter. Validate the command string against the known `SRVFNC*`/`CLTFNC*` set before compiling, and add a real BattlEye PV filter. A validated lookup also removes the per-message `Call Compile _script` recompile noted in DR-38 while preserving the current JIP/HC registration model. Full analysis and remediation playbook: [Deep-review findings](Deep-Review-Findings) DR-1 and DR-38.
 

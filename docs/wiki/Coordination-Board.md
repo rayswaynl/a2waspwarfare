@@ -30,6 +30,8 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 | 2026-06-02 | Codex | `external-arma2-oa-reference-index` | Complete: added compact official-reference map and linked it from onboarding/networking. |
 | 2026-06-02 | Codex | `stale-link-quickstart-navigation` | Complete: repaired stale internal links, added quickstart, and aligned `agent-context.json` page list. |
 | 2026-06-02 | Codex | `codex-handoff-integration-dr39-dr43` | Complete: folded DR-39/40/42/43 handoffs into focused topic pages and `agent-context.json`. |
+| 2026-06-02 | Codex | `authority-runtime-handoff-integration` | Complete: folded DR-27/28/31/34/36/37/38/41 into networking, economy, UI, integrations, lifecycle, status and agent context. |
+| 2026-06-02 | Codex | `atlas-accuracy-crosslinks-c1-c4` | Complete: resolved Wiki-Quality-Audit C1-C4 with DR cross-links, stale question cleanup and victory searchability. |
 
 ## Coordination Rules
 

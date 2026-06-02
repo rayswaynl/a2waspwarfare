@@ -161,7 +161,7 @@ Fix 1 stops arbitrary **code execution**, but the PVF model still **trusts clien
 
 ## Round 4 — 2026-06-01 (Claude) — construction PVF authority (DR-6)
 
-Lane `construction-authority-review` (extends [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas), whose "Authority Boundary" section flags this risk generically; this finding adds per-handler forgery proof + a validation design). This is the concrete realization of the **command-forgery residual** scoped in Round 3 (Fix 1 closes code execution, not command forgery).
+Lane `construction-authority-review` (extends [Gameplay atlas: construction](Gameplay-Systems-Atlas#construction-and-base-structures), whose authority notes flag this risk generically; this finding adds per-handler forgery proof + a validation design). This is the concrete realization of the **command-forgery residual** scoped in Round 3 (Fix 1 closes code execution, not command forgery).
 
 ### DR-6 — Construction request handlers perform no sender/authority/resource validation — **High (gameplay integrity)**
 
@@ -288,7 +288,7 @@ Code owners: fix DR-11 (split win/lose branches, compute winner per branch, guar
 
 ## Round 7 — 2026-06-02 (Claude) — factory/purchase authority + commander assignment (DR-14, DR-15)
 
-Lane `factory-purchase-authority`. Builds on Codex's [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) (which noted player buy is client-local with no `RequestBuyUnit` PVF) and adversarially verifies Cicero's flagged `Server_AssignNewCommander` candidate. All claims verified at source.
+Lane `factory-purchase-authority`. Builds on Codex's [Gameplay atlas: factories](Gameplay-Systems-Atlas#factories-and-unit-production) (which noted player buy is client-local with no `RequestBuyUnit` PVF) and adversarially verifies Cicero's flagged `Server_AssignNewCommander` candidate. All claims verified at source.
 
 ### DR-14 — Player unit purchasing has no server authority (the economy ceiling) — **High (gameplay integrity), architectural**
 
@@ -316,7 +316,7 @@ Code owners: (DR-14) decide whether to route player purchases through a validate
 
 ## Round 8 — 2026-06-02 (Claude) — UI/HUD authority + dialog IDs (DR-16, DR-17)
 
-Lane `ui-hud-authority-review`. Cross-checks Codex/Curie's [Client UI systems atlas](Client-UI-Systems-Atlas) and reviews the economy-menu sale authority (the DR-6/DR-14 sibling). Verified at source.
+Lane `ui-hud-authority-review`. Cross-checks Codex/Curie's [Client UI, HUD and menus](Client-UI-HUD-And-Menus) page and reviews the economy-menu sale authority (the DR-6/DR-14 sibling). Verified at source.
 
 ### DR-16 — Structure sale is fully client-authoritative — **High (gameplay integrity)**
 
@@ -335,7 +335,7 @@ Code owners: (DR-16) move sell authority/refund/destruction server-side (mirror 
 
 ## Round 9 — 2026-06-02 (Claude) — server-loop candidates verified (DR-18, DR-19)
 
-Lane `server-loop-candidates-verify`. Adversarial verification of two Cicero candidates from the [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas); both confirmed at source with exact impact.
+Lane `server-loop-candidates-verify`. Adversarial verification of two Cicero candidates from [AI, headless and performance](AI-Headless-And-Performance) and [Gameplay systems atlas](Gameplay-Systems-Atlas); both confirmed at source with exact impact.
 
 ### DR-18 — Supply-mission cooldown key casing mismatch → nil-throw on first check — **Medium (correctness)** — *confirms Cicero*
 
@@ -669,7 +669,7 @@ But the vehicle branch has an early `if (!_driver && !_gunner && !_commander) ex
 - **Non-unique token.** The per-item identity is `varQueu = random(10)+random(100)+random(1000)` (`:168`) — a ~0–1110 value space, **not unique**. Two concurrently-queued items can collide on `_unique`, breaking the `_unique != _queu select 0` front-of-queue test (an item may wait forever or two may think they're first). Low probability per pair but non-zero on a busy factory. **Fix:** use a monotonic counter or `diag_tickTime`-seeded id.
 - **Orphan token on disconnect (minor).** Because the loop + the front-token removal (`:206`) run on the buyer's client, a buyer disconnecting mid-production leaves their `_unique` token in the building's broadcast `queu`; it self-heals only if another buyer is queued behind to run the `_ret > _longest` timeout-cleanup (`:187-192`). The local `WFBE_C_QUEUE` counter is not leaked across clients (it dies with the buyer). Stale shared data, low impact.
 
-**Handoff for Codex.** Document the production queue model in the [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas): client-owned per-unit producer, broadcast `queu` token list, per-client `WFBE_C_QUEUE` caps. The two fixes (DR-33a decrement-on-all-paths; DR-33b unique token + reduce broadcast) are concrete code-owner items, not architectural decisions. Note DR-33a propagates to vanilla Takistan verbatim (DR-32) and likely exists in the 3 forks too.
+**Handoff for Codex.** Document the production queue model in the [Gameplay atlas: factories](Gameplay-Systems-Atlas#factories-and-unit-production): client-owned per-unit producer, broadcast `queu` token list, per-client `WFBE_C_QUEUE` caps. The two fixes (DR-33a decrement-on-all-paths; DR-33b unique token + reduce broadcast) are concrete code-owner items, not architectural decisions. Note DR-33a propagates to vanilla Takistan verbatim (DR-32) and likely exists in the 3 forks too.
 
 **Outcome:** Factory/purchase row — **Perf and JIP/HC cells filled (DR-33)**. The row's remaining 🟡 (Auth/PV) is the DR-14 client-authoritative-purchase architectural ceiling (economy class, owner decision).
 
@@ -851,7 +851,7 @@ The support-scout backlog candidate `server-fps-hosted-loop-sleep` ("move `sleep
 
 Lane `external-research-intake-2`. Ray supplied **9** new deep-research reports (`deep-research-report (1..9).md`). Triaged all 9 (treating their content as untrusted leads, not authority — cross-checked at source). Same posture as the 3 PDFs in DR-26: these are **downstream syntheses that corroborate the campaign**, not independent source verification (they cite their own research-tool fetches, `turnNNview…`).
 
-Mapping: (1) Runtime Architecture → boot/lifecycle DR-37 + the version.sqf lead below; (2) Trust-Boundary Audit → **DR-1** (PVF `Call Compile` = privileged exec surface); (3) Feature Archaeology → DR-4/32/34/39 + the duplicate-binds lead below; (4) Modernization Strategy → roadmap (Codex lane); (5) Locality & JIP → DR-37/38; (6) Testing/Release Workflow → already shipped by Codex (`Testing-Debugging-And-Release-Workflow.md`); (7) Gameplay State Ownership → DR-32/38; (8) **Server Authority Refactor** → an independent restatement of the campaign's central thesis — *"not one exploit but the architecture; funds/supply are mutated client-side then merely announced; the ledger is a replicated client mutation, not a server source of truth"* = the economy-authority class (DR-6/14/16/22/23/27/28/41) + DR-1 + the two-surfaces point; (9) AI-onboarding playbook → agent-docs (Codex lane). Net: strong third-party corroboration; our source-cited DRs remain the verified core (superset-confirming-subset, as with DR-26).
+Mapping: (1) Runtime Architecture → boot/lifecycle DR-37 + the version.sqf lead below; (2) Trust-Boundary Audit → **DR-1** (PVF `Call Compile` = privileged exec surface); (3) Feature Archaeology → DR-4/32/34/39 + the duplicate-binds lead below; (4) Modernization Strategy → roadmap (Codex lane); (5) Locality & JIP → DR-37/38; (6) Testing/Release Workflow → already covered by [Tools and build workflow](Tools-And-Build-Workflow); (7) Gameplay State Ownership → DR-32/38; (8) **Server Authority Refactor** → an independent restatement of the campaign's central thesis — *"not one exploit but the architecture; funds/supply are mutated client-side then merely announced; the ledger is a replicated client mutation, not a server source of truth"* = the economy-authority class (DR-6/14/16/22/23/27/28/41) + DR-1 + the two-surfaces point; (9) AI-onboarding playbook → agent-docs (Codex lane). Net: strong third-party corroboration; our source-cited DRs remain the verified core (superset-confirming-subset, as with DR-26).
 
 ### DR-43 — two new leads extracted from the reports, both source-confirmed — **Low (source-completeness + init redundancy)**
 
@@ -865,6 +865,6 @@ Mapping: (1) Runtime Architecture → boot/lifecycle DR-37 + the version.sqf lea
 
 ## Continue Reading
 
-Previous: [Testing workflow](Testing-Debugging-And-Release-Workflow) | Next: [Implementation plan](Documentation-Implementation-Plan)
+Previous: [Tools and build workflow](Tools-And-Build-Workflow) | Next: [Implementation plan](Documentation-Implementation-Plan)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

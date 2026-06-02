@@ -74,6 +74,24 @@ Changed: `Supply-Mission-Architecture.md` now records DR-39's dead `supplyMissio
 
 Remaining owner work: remove or wire the dead supply twin; throttle the WASP display wait; decide whether static-defence HC should report units back to the server; de-duplicate the active server init binds; decide whether to commit a source `version.sqf` or keep documenting it as generated.
 
+## 2026-06-02 - Codex (authority/runtime handoff integration)
+
+Lane `authority-runtime-handoff-integration`. Folded the remaining source-confirmed handoffs DR-27/28/31/34/36/37/38/41 into the topic pages developers are likely to open first.
+
+Read/verified: ICBM `RequestSpecial` flow (`Client/Module/Nuke/nukeincoming.sqf`, `Server/Functions/Server_HandleSpecial.sqf`, tactical UI/config anchors), gear/EASA/service client spend paths (`GUI_Menu_EASA.sqf`, `EASA_Equip.sqf`, `GUI_Menu_Service.sqf`), Discord status reader/writer (`GameStatusUpdater.cs`, `GameData.cs`, `SerializationManager.cs`, `ProgramRuntime.cs`), MASH marker receiver/server rebroadcast, three-way victory loop, post-join client `waitUntil` chain, PVF dispatchers and attack-wave direct PV path.
+
+Changed: `Networking-And-Public-Variables.md` now separates PVF validation from direct `publicVariableServer` authority and calls out ICBM/attack-wave. `Economy-Towns-And-Supply.md` now records the full economy-authority class. `Client-UI-HUD-And-Menus.md` documents the EASA/service client-authority pattern. `External-Integrations.md` captures the Discord `TypeNameHandling.All` risk. `Feature-Status-Register.md` now distinguishes active-but-risky systems from broken marker sync and adds rows for ICBM, EASA/service, attack-wave and victory review. `Lifecycle-Wait-Chain.md` records timeout-less post-join waits. `agent-context.json` and `Coordination-Board.md` were updated for future-agent routing.
+
+Remaining owner work: choose server-ledger vs accepted client-authoritative economy, harden both PVF and direct-PV server request surfaces, switch Discord bot deserialization away from `TypeNameHandling.All`, add diagnostics/timeouts for replicated client waits, and parenthesize/guard victory conditions before any rule changes.
+
+## 2026-06-02 - Codex (atlas accuracy cross-links C1-C4)
+
+Lane `atlas-accuracy-crosslinks-c1-c4`. Used `Wiki-Quality-Audit.md` C1-C4 as the source of truth for this pass and closed those high-reader-impact items without touching gameplay code.
+
+Changed: `Networking-And-Public-Variables.md` now records the MASH marker relay as dead/orphaned per DR-34. `Gameplay-Systems-Atlas.md` now links economy/upgrade authority (DR-22/23), construction authority (DR-6), factory purchase authority and queue follow-ups (DR-14/33), confirmed commander assignment bug (DR-15), and the victory/endgame mechanism (DR-11/36). `Client-UI-HUD-And-Menus.md` now links DR-14/16/17/24/25/28 from the UI page. `AI-Headless-And-Performance.md` now preserves DR-21's correction: HC-disconnected units migrate to the server, but are not re-delegated. `Mission-Entrypoints-And-Lifecycle.md` now cross-links DR-37 and DR-43a. `Feature-Status-Register.md`, `Documentation-Implementation-Plan.md`, `Wiki-Quality-Audit.md`, `Coordination-Board.md`, and `agent-context.json` were updated for searchability and coordination.
+
+Remaining audit items: C5 sidebar de-dup only applies if `_Sidebar.md` is present in the wiki mirror; C6 thin-citation cleanup remains a good next Codex lane. Larger A/B dedup and merge work remains open.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

@@ -18,7 +18,7 @@ Each row: the fact, its **canonical home**, and the pages carrying a redundant n
 | DUP-8 | Construction authority (DR-6, class-existence-only checks) | [Deep-review findings](Deep-Review-Findings) DR-6 | [Construction atlas](Construction-And-CoIn-Systems-Atlas); [Gameplay atlas](Gameplay-Systems-Atlas); roadmap/migration/feature-status |
 | DUP-9 | Victory/endgame double-fire (DR-11/DR-36) | [Deep-review findings](Deep-Review-Findings) DR-11 + DR-36 | [Server runtime atlas](Server-Gameplay-Runtime-Atlas); [Hardening roadmap](Hardening-Implementation-Roadmap); [Feature status](Feature-Status-Register) |
 | DUP-10 | HC delegation, no failover (DR-21) | [Deep-review findings](Deep-Review-Findings) DR-21 | [AI/headless](AI-Headless-And-Performance); [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
-| DUP-11 | Direct public-variable channel table | the new `Public-Variable-Channel-Index` page (Claude, this program) | point [Networking](Networking-And-Public-Variables) (2 tables) and [SQF atlas](SQF-Code-Atlas) (direct-channel table) at the index |
+| DUP-11 | Direct public-variable channel table | the new [Public variable channel index](Public-Variable-Channel-Index) | point [Networking](Networking-And-Public-Variables) (2 tables) and [SQF atlas](SQF-Code-Atlas) (direct-channel table) at the index |
 
 ## B. Overlapping pages → merge or reduce to summary + cross-link
 
@@ -29,7 +29,7 @@ Each row: the fact, its **canonical home**, and the pages carrying a redundant n
 
 ## C. Accuracy fixes (Codex pages)
 
-- **C1 (HIGH) — stale, contradicts a finding:** [Networking](Networking-And-Public-Variables) MASH row says the server relay is "live" and cites DR-3. DR-34 superseded this: the feature is **dead on both ends** (trigger never broadcast + receiver commented `Init_Client.sqf:132` + orphaned server PVEH). Update the row to DR-34 and drop "server relay live". (Feature-Status-Register is already correct — they currently disagree.)
+- **C1 (HIGH) — stale, contradicts a finding:** [Networking](Networking-And-Public-Variables) MASH row says the server relay is "live" and cites DR-3. DR-34 superseded this: the feature is **dead on both ends** (trigger never broadcast + receiver commented `Init_Client.sqf:132` + orphaned server PVEH). Update the row to DR-34 and drop "server relay live". (Feature-Status-Register is already correct — they currently disagree.) **Status:** resolved by Codex on 2026-06-02; Networking now cites DR-34 and describes the orphaned server PVEH instead of a live relay.
 - **C2 (HIGH) — orphaned findings, zero DR cross-links on atlas pages a developer actually opens.** Add cross-links:
   - [Gameplay atlas](Gameplay-Systems-Atlas): DR-6 (construction), DR-14 (purchase authority), DR-11 (victory inversion), DR-22 (supply windfall), DR-23 (upgrade forgery), DR-15 (commander-assign bug).
   - [Client UI systems atlas](Client-UI-Systems-Atlas) / [Client UI HUD and menus](Client-UI-HUD-And-Menus): DR-16, DR-17, DR-24, DR-25a/b.
@@ -46,7 +46,7 @@ Each row: the fact, its **canonical home**, and the pages carrying a redundant n
 - Ledger: matrix timestamp → 2026-06-02; legend clarified (reviewed-clean vs reviewed-with-finding); Modules + Markers/cleaners Map cells downgraded to 🟡 (Modules returns to ✅ when the module atlas lands).
 - Deep-Review-Findings: DR-11 severity normalized to High; DR-36 dual-purpose disambiguation note.
 - `agent-context.json` `systems` map: +5 missing ledger subsystems.
-- New Claude pages this program (created across the following passes): `Variable-And-Naming-Conventions`, `Public-Variable-Channel-Index`, `Modules-Atlas`, `Pending-Owner-Decisions`. **Codex: please wire these into `_Sidebar.md`/`_Footer.md`/Home once they land** (nav is your lane). A coordination event will announce each.
+- New Claude pages this program: [Variable and naming conventions](Variable-And-Naming-Conventions), [Public variable channel index](Public-Variable-Channel-Index), [Modules atlas](Modules-Atlas), [Pending owner decisions](Pending-Owner-Decisions) (and this audit page). **Codex: please wire these into `_Sidebar.md`/`_Footer.md`/Home** (nav is your lane).
 
 ## How to consume
 

@@ -59,6 +59,7 @@ Next improvements:
 - Verify every row in `Feature-Status-Register.md` against source before treating it as a bug backlog.
 - Add severity and blast-radius fields for broken/deferred features.
 - Split abandoned experiments from intentionally disabled runtime features.
+- Keep victory/endgame work searchable by DR number: DR-11 is the wrong persisted winner, while DR-36 is the source mechanism for the double-fire/guard bug.
 
 Current high-confidence items:
 

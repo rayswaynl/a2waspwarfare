@@ -29,6 +29,22 @@ Town supply value drives economy and supply missions. Constants define automatic
 
 Funds and supply are separate systems unless the mission parameter switches currency behavior. Commander income can be limited and distributed; player delivery funds use `WFBE_C_PLAYERS_SUPPLY_TRUCKS_DELIVERY_FUNDS_COEF`.
 
+## Authority Model
+
+The current economy works in normal cooperative play, but the trust boundary is broad: many spend paths are initiated and priced on the client, then reflected through replicated state or permissive server handlers. Treat this as an architectural class rather than one isolated exploit.
+
+Source-backed examples from the deep-review trail:
+
+- Construction / CoIn requests: DR-6.
+- Player unit buying: DR-14.
+- Structure selling: DR-16.
+- Supply transfer and upgrades: DR-22 / DR-23.
+- ICBM launch request: `Client/Module/Nuke/nukeincoming.sqf:23` -> `Server/Functions/Server_HandleSpecial.sqf:97-111` (DR-27).
+- Gear, EASA and support service menus: `Client/GUI/GUI_Menu_EASA.sqf:40-49`, `Client/Module/EASA/EASA_Equip.sqf`, and `Client/GUI/GUI_Menu_Service.sqf:198-233` (DR-28).
+- Attack-wave discount: `Common/Functions/Common_AttackWaveActivate.sqf:6-8` -> `Server/Functions/Server_AttackWave.sqf:1-27` (DR-41).
+
+Owner decision: either redesign around a server-side economy ledger that derives costs/eligibility from trusted state, or explicitly accept client-authoritative economy behavior and compensate with BattlEye/script filters plus operational monitoring. Mixing the two approaches leaves false confidence.
+
 ## Supply-Related Partial Work
 
 `Server/AI/AI_UpdateSupplyTruck.sqf` exists but is not compiled on `master`; its compile line in `Init_Server.sqf` is commented out. The script references missing `Server/FSM/supplytruck.fsm`. Treat autonomous AI logistics as incomplete/deferred.

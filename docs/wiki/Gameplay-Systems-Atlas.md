@@ -175,6 +175,7 @@ Risk notes:
 - Economy, AntiStack and side presence interact; changing AntiStack guards can change income behavior.
 - Resource sleeps use `GetSleepFPS`, so tick rate may adapt to server FPS.
 - `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` gates the whole income block when side supply exceeds the limit.
+- Side-supply and upgrade authority are part of the client-authoritative economy class. See [Deep-review findings](Deep-Review-Findings) DR-22/DR-23 and [Economy](Economy-Towns-And-Supply#authority-model).
 
 ## Commander Flow
 
@@ -212,7 +213,7 @@ sequenceDiagram
 
 Risk notes:
 
-- `Server_AssignNewCommander.sqf` treats `_this` both as side and array (`_side = _this; _commander = _this select 1`), so confirm call shape before changing it.
+- `Server_AssignNewCommander.sqf` treats `_this` both as side and array (`_side = _this; _commander = _this select 1`). DR-15 confirms this as a call-shape bug; code-owner fix is `_side = _this select 0` plus removing the duplicate `new-commander-assigned` broadcast. See [Deep-review findings](Deep-Review-Findings) DR-15.
 - Commander identity lives on side logic and is public; client UI and resource distribution both depend on it.
 
 ## Upgrades
@@ -244,6 +245,7 @@ Risk notes:
 
 - Some feature code checks upgrade levels directly from `WFBE_CO_FNC_GetSideUpgrades`; changing upgrade indices affects many systems.
 - Existing artillery is special: it needs explicit ammo refresh after artillery ammo upgrades because it may not pass through buy/build init again.
+- Player-triggered upgrade purchasing is client-authoritative today; hardening should re-derive commander authority, cost, dependencies and next level on the server. See [Deep-review findings](Deep-Review-Findings) DR-23.
 
 ## Construction And Base Structures
 
@@ -300,7 +302,7 @@ It sends a `building-started` `HandleSpecial` for major structures and starts `S
 
 Risk notes:
 
-- CoIn uses local preview objects and client camera state; server must still be the authority for final creation.
+- CoIn uses local preview objects and client camera state; server must still be the authority for final creation. DR-6 confirms the current request handlers perform no sender/authority/resource validation beyond class/script resolution, so public-server hardening needs server-side validation.
 - `coin_interface.sqf` still contains old commented direct publicVariable code near the newer PVF path.
 - Construction mode changes affect `wfbe_structures_logic`, which other repair/build-completion code may inspect.
 - HQ deploy/mobilize deletes and replaces the HQ object; client-side killed handlers and JIP handling must be preserved.
@@ -353,7 +355,16 @@ Risk notes:
 - Player and AI production paths duplicate substantial vehicle initialization logic. Any new vehicle feature may need both `Client_BuildUnit.sqf` and `Server_BuyUnit.sqf`.
 - Building queue cleanup has timeout behavior based on longest build time; changing queue variables can strand factories.
 - Spawn pads are type-based helper objects near factories; pad class changes can alter spawn placement.
-- Buy menu affordability is client-side, so server-side validation should be considered before adding high-value or exploitable purchases.
+- Buy menu affordability and player unit creation are client-side, so server-side validation should be considered before adding high-value or exploitable purchases. See [Deep-review findings](Deep-Review-Findings) DR-14; queue/perf follow-ups are DR-33.
+
+## Victory And Endgame
+
+`Server/Init/Init_Server.sqf` starts `Server/FSM/server_victory_threeway.sqf` after core server setup. The victory loop is server-authoritative and runs at a coarse cadence, but its winner/duplicate-endgame correctness issues are already source-confirmed:
+
+- DR-11: all-towns victory can persist the wrong winner.
+- DR-13/DR-36: the `!WFBE_GameOver` guard only covers one branch of the win-condition expression, and the side loop has no break after setting `gameOver`.
+
+Before changing win rules, parenthesize the intended condition and guard both branches; then exit the loop once the first winner is recorded. See [Deep-review findings](Deep-Review-Findings) DR-11 and DR-36.
 
 ## Safe Extension Points
 
@@ -368,7 +379,6 @@ Risk notes:
 
 ## Open Questions For Claude / Future Review
 
-- Confirm whether `Server_AssignNewCommander.sqf` call-shape handling is intentional or a latent bug.
 - Trace structure repair/completion logic that consumes `wfbe_structures_logic`.
 - Compare client and server unit-build initialization for drift, especially countermeasures, IRS, artillery and special vehicle actions.
 - Verify whether supply-income stagnation is currently called from the active resource loop or only retained as a helper.
