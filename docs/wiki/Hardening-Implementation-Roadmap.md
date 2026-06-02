@@ -4,7 +4,7 @@ This page turns the source-reviewed risk register into implementation-ready work
 
 Scope: Chernarus source mission first, then LoadoutManager propagation. All paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
-Machine-readable backlog for agents and code owners: [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl).
+Machine-readable backlog for agents and code owners: [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl). Validation workflow and test evidence schema: [Testing workflow](Testing-Debugging-And-Release-Workflow) and [`agent-test-plan.schema.json`](agent-test-plan.schema.json).
 
 ## Patch Order
 
@@ -198,6 +198,6 @@ Validation:
 
 ## Continue Reading
 
-Previous: [Feature status](Feature-Status-Register) | Next: [Deep-review findings](Deep-Review-Findings)
+Previous: [Feature status](Feature-Status-Register) | Next: [Testing workflow](Testing-Debugging-And-Release-Workflow)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

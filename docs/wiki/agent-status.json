@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T13:40:00+02:00",
+  "generatedAt": "2026-06-02T14:10:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -38,6 +38,12 @@
       "owner": "Codex/Anscombe",
       "status": "verified-published",
       "output": "Mission-Entrypoints-And-Lifecycle.md, Lifecycle-Wait-Chain.md"
+    },
+    {
+      "lane": "testing-debugging-release-workflow",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Testing-Debugging-And-Release-Workflow.md, agent-test-plan.schema.json"
     },
     {
       "lane": "agent-hardening-backlog-and-wave-f-integration",
@@ -92,6 +98,8 @@
     "events": "agent-events.jsonl",
     "worklog": "Agent-Worklog.md",
     "townAiVehicleSafety": "Town-AI-Vehicle-Despawn-Safety.md",
-    "lifecycleWaitChain": "Lifecycle-Wait-Chain.md"
+    "lifecycleWaitChain": "Lifecycle-Wait-Chain.md",
+    "testingWorkflow": "Testing-Debugging-And-Release-Workflow.md",
+    "agentTestPlanSchema": "agent-test-plan.schema.json"
   }
 }

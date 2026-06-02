@@ -1,6 +1,6 @@
 {
  "schema": "a2waspwarfare-agent-collaboration-v1",
- "generatedAt": "2026-06-02T13:40:00+02:00",
+ "generatedAt": "2026-06-02T14:10:00+02:00",
  "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
  "sourceOfTruth": {
   "progressDashboard": "Progress-Dashboard.md",
@@ -112,6 +112,22 @@
   }
  },
  "activeClaims": [
+  {
+   "lane": "testing-debugging-release-workflow",
+   "owner": "Codex",
+   "status": "published",
+   "sourceScope": [
+    "docs/wiki/Testing-Debugging-And-Release-Workflow.md",
+    "docs/wiki/agent-test-plan.schema.json",
+    "docs/wiki/Hardening-Implementation-Roadmap.md",
+    "docs/wiki/Tools-And-Build-Workflow.md"
+   ],
+   "outputs": [
+    "Testing/debugging/release workflow page",
+    "Machine-readable agent test plan schema"
+   ],
+   "handoff": "Future gameplay agents: add or link test evidence records that match agent-test-plan.schema.json when smoke tests are actually performed."
+  },
   {
    "lane": "lifecycle-runtime-readout-verification",
    "owner": "Codex",

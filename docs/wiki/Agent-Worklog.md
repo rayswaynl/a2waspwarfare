@@ -413,6 +413,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Promoted the most useful missing nuance into [Mission lifecycle](Mission-Entrypoints-And-Lifecycle) and [Lifecycle wait-chain](Lifecycle-Wait-Chain): town startup begins from `mission.sqm` object `init` fields, with `WF_Logic` at `mission.sqm:3265` starting `Init_TownMode.sqf`.
 - Reconfirmed the HC timing caveat: `Init_HC.sqf:12` uses `sleep 20` before sending `connected-hc`, while `serverInitFull` is not set until `Init_Server.sqf:507`.
 
+## 2026-06-02 - Codex Testing Workflow And Agent Schema
+
+- Added [Testing workflow](Testing-Debugging-And-Release-Workflow) as the repo's practical validation page for source-only checks, local tooling, hosted/dedicated/JIP/HC smoke tests and live-server-sensitive release gates.
+- Added [`agent-test-plan.schema.json`](agent-test-plan.schema.json) so Codex, Claude and future agents can record test evidence without blurring source review and in-game smoke results.
+- Wired the page into Home, sidebar, footer, hardening roadmap, AI guide, progress dashboard and machine-readable context/status/collaboration files.
+
 ## Future Agents
 
 - Add dated entries here before and after substantial documentation or code changes.

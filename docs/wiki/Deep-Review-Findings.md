@@ -812,6 +812,6 @@ Lane `wasp-overlay-perf-jip-review`. Filled the final 🟡 Perf cell and ⬜ JIP
 
 ## Continue Reading
 
-Previous: [Agent worklog](Agent-Worklog) | Next: [Implementation plan](Documentation-Implementation-Plan)
+Previous: [Testing workflow](Testing-Debugging-And-Release-Workflow) | Next: [Implementation plan](Documentation-Implementation-Plan)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

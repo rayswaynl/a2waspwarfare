@@ -49,7 +49,9 @@
 - [Integrations](External-Integrations)
 - [Feature status](Feature-Status-Register)
 - [Hardening roadmap](Hardening-Implementation-Roadmap)
+- [Testing/release workflow](Testing-Debugging-And-Release-Workflow)
 - [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl)
+- [`agent-test-plan.schema.json`](agent-test-plan.schema.json)
 - [AI guide](AI-Assistant-Developer-Guide)
 
 ## Current Work
@@ -66,6 +68,7 @@
 - [`external-research-report-manifest.json`](external-research-report-manifest.json)
 - [Coverage ledger](Codebase-Coverage-Ledger)
 - [Hardening roadmap](Hardening-Implementation-Roadmap)
+- [Testing/release workflow](Testing-Debugging-And-Release-Workflow)
 
 ## Claude
 
