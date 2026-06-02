@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `wiki-quality-dup4-generated-mission-routing` | Published | [Tools/build](Tools-And-Build-Workflow) now owns operational LoadoutManager skip-list and generated-mission status rules, while [Deep-review findings](Deep-Review-Findings) DR-4/DR-32 own the full drift analysis; [Content structure](Content-Structure-And-Maps) is reduced to folder orientation and routing. |
 | `wiki-quality-dup6-lifecycle-routing` | Published | [Lifecycle wait-chain](Lifecycle-Wait-Chain) now remains the canonical home for lifecycle flags, boot ordering, JIP waits and HC wait hazards; [Server runtime](Server-Gameplay-Runtime-Atlas) and [SQF atlas](SQF-Code-Atlas) route there instead of restating boot/role details. |
 | `wiki-quality-dup9-victory-routing` | Published | [Deep-review findings](Deep-Review-Findings) DR-11/DR-36 now own the victory/endgame double-fire mechanism; [Server runtime](Server-Gameplay-Runtime-Atlas), [Hardening roadmap](Hardening-Implementation-Roadmap) and [Feature status](Feature-Status-Register) keep short routing summaries. |
 | `wiki-quality-dup5-battleye-routing` | Published | [External integrations](External-Integrations) now owns shipped BattlEye posture; [Feature status](Feature-Status-Register), [Networking/PV](Networking-And-Public-Variables), [Hardening roadmap](Hardening-Implementation-Roadmap) and [Server authority map](Server-Authority-Migration-Map) route there instead of repeating the `kickAFK`/missing-filter evidence. |
@@ -49,7 +50,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved Wiki Quality DUP-6 by routing lifecycle/boot truth-table detail to [Lifecycle wait-chain](Lifecycle-Wait-Chain). |
+| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved Wiki Quality DUP-4 by routing generated-mission drift detail to [Tools/build](Tools-And-Build-Workflow) and DR-4/DR-32. |
 | Codex-2 | Active | `paratrooper-marker-revival` | Source-checking the paratrooper support marker callback into a minimal revival patch or patch-ready handoff; keeping it separate from broader `RequestSpecial` authority hardening. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
@@ -76,6 +77,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
 | `paratrooper-marker-revival` | Codex-2 | Active | Source-check the live paratrooper support sender, existing client marker handler and missing PVF registration; decide whether to patch the small revive or publish a focused handoff. |
+| `wiki-quality-dup4-generated-mission-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-4 is resolved: Tools/build owns operational generation/skip-list rules, Deep Review owns DR-4/DR-32 drift evidence, and Content Structure routes instead of duplicating. |
 | `wiki-quality-dup6-lifecycle-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-6 is resolved: lifecycle flags, boot order, JIP waits and HC wait hazards live in [Lifecycle wait-chain](Lifecycle-Wait-Chain); server/SQF atlases keep concise owner summaries. |
 | `wiki-quality-dup9-victory-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-9 is resolved: victory/endgame mechanism detail lives in [Deep-review findings](Deep-Review-Findings) DR-11/DR-36, with concise routing on Server runtime, roadmap and Feature Status. |
 | `wiki-quality-dup5-battleye-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-5 is resolved: shipped BattlEye posture lives in [External integrations](External-Integrations), with short routing notes on Feature Status, Networking/PV, roadmap and authority map. |

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-context-v1",
-  "generatedAt": "2026-06-02T22:35:00+02:00",
+  "generatedAt": "2026-06-02T22:50:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "game": "Arma 2 Operation Arrowhead 1.64",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -304,6 +304,7 @@
     "Use Economy-Authority-First-Cut.md before economy hardening code work; patch side-supply negative clamp first, then migrate existing PVF spend handlers before attempting player-buy locality redesign.",
     "Use Abandoned-Feature-Revival-Review.md before reviving dormant MASH/paratrooper/WASP/UAV/UI/modded-mission paths; source-check liveness first and prefer remove/annotate over re-enabling half-wired code.",
     "Use Performance-Opportunity-Sweep.md before performance patches; prefer PVF dispatch lookup, hosted FPS loop sleep, Skill_Init idempotency and supply scan narrowing before speculative marker/cleaner cadence changes.",
+    "Generated-mission docs have split ownership: Tools-And-Build-Workflow.md owns operational LoadoutManager skip-list, packaging and status rules; Deep-Review-Findings.md DR-4/DR-32 own full drift evidence; Content-Structure-And-Maps.md only orients folder layout.",
     "HC delegation docs have split ownership: AI-Headless-And-Performance.md routes runtime/source anchors, Lifecycle-Wait-Chain.md owns HC boot timing, and Headless-Delegation-And-Failover-Playbook.md owns DR-21/DR-42 patch policy.",
     "Lifecycle docs have split ownership: Lifecycle-Wait-Chain.md owns flags, boot ordering, JIP waits and HC wait hazards; Mission-Entrypoints-And-Lifecycle.md owns include graph and role-dispatch orientation; SQF-Code-Atlas.md owns compile/source ownership; Server-Gameplay-Runtime-Atlas.md owns long-running server loops.",
     "Hardening authority docs have split ownership: Hardening-Implementation-Roadmap.md owns patch order/branch discipline/validation gates, while Server-Authority-Migration-Map.md owns authority design principles, flow table and handler checklist."
@@ -325,7 +326,7 @@
     "ai": "Server town AI, AI commanders, client/headless delegation, player AI watchdog/recovery. AI-Headless-And-Performance.md is the runtime/source router; Headless-Delegation-And-Failover-Playbook.md covers DR-21/DR-42 HC tracking, static-defense update-back and disconnect policy. The confirmed occupied town-AI vehicle despawn bug has an implementation playbook in Town-AI-Vehicle-Despawn-Safety.md.",
     "ui": "Rsc resources, Client/GUI dialog controllers, RHUD/FPS HUD, title resources, map/action marker loops, CoIn construction UI and WASP overlays. See Client-UI-Systems-Atlas.md.",
     "gearLoadoutEasa": "Gear metadata/profile templates and EASA aircraft loadouts; generated EASA/balance output comes from LoadoutManager. See Gear-Loadout-And-EASA-Atlas.md.",
-    "tooling": "LoadoutManager for mission generation/packaging; PerformanceAuditAnalyzer for RPT metrics.",
+    "tooling": "LoadoutManager for mission generation/packaging; PerformanceAuditAnalyzer for RPT metrics. Tools-And-Build-Workflow.md owns operational generation/skip-list rules, while DR-4/DR-32 own full generated-mission drift evidence.",
     "integrations": "DiscordBot, in-repo a2waspwarfare_Extension/GLOBALGAMESTATS, out-of-repo A2WaspDatabase AntiStack extension, BattlEye publicVariable filter, custom license and missing CI posture. External-Integrations.md owns the canonical shipped BattlEye posture and DR-30 production BEpath caveat.",
     "waspOverlay": "Project-specific WASP additions include base repair, RPG dropping, marker monitor, HQ recovery action, start vehicles and a server selftest. See WASP-Overlay.md.",
     "factoryPurchase": "Player buy-unit flow is client-local from GUI_Menu_BuyUnits.sqf to Client_BuildUnit.sqf; RequestBuyUnit is not registered and no Server/PVFunctions/RequestBuyUnit.sqf exists. Server_BuyUnit/AIBuyUnit is compiled but no static caller was found. See Factory-And-Purchase-Systems-Atlas.md.",

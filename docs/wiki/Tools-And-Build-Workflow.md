@@ -1,5 +1,7 @@
 # Tools And Build Workflow
 
+Page ownership: this page owns the operational LoadoutManager rules, skip-list and generated-mission status table. Full drift evidence and file-count analysis live in [Deep-review findings](Deep-Review-Findings) DR-4 and DR-32; keep only the actionable build/propagation rules here.
+
 ## LoadoutManager
 
 `Tools/LoadoutManager` is a .NET 8 executable. `Program.cs` calls `SqfFileGenerator.GenerateCommonBalanceInitAndTheEasaFileForEachTerrain()`.
@@ -54,13 +56,13 @@ Before running tooling or deployment-adjacent pieces, check these first:
 | `Textures/*` | directory blacklist | Per-terrain textures. |
 | `Server/Init/Init_Server.sqf` | copied **then patched** | `SET_MAP 1 → 2` rewrite post-copy. |
 
-A recursive diff at the current commit confirms Takistan differs from Chernarus **only** in exactly these files — propagation is consistent and there is no accidental drift, but the skip-list is a standing silent-divergence trap. If you edit a skip-listed gameplay file (most importantly `mission.sqm` and `WASP/unsort/StartVeh.sqf`), edit **both** missions. See [Deep-review findings](Deep-Review-Findings) DR-4.
+A recursive diff in [Deep-review findings](Deep-Review-Findings) DR-4 confirmed vanilla Takistan has no accidental drift outside this skip-list/blacklist and the `SET_MAP` rewrite. If you edit a skip-listed gameplay file, especially `mission.sqm` or `WASP/unsort/StartVeh.sqf`, hand-mirror it instead of assuming `dotnet run` will propagate it.
 
-**Modded missions are not maintained by `dotnet run`.** The modded-terrain propagation call is commented out at `SqfFileGenerators/SqfFileGenerator.cs:132`, so `Modded_Missions/*` are far behind Chernarus (Napf/eden/lingor are ~280-350 files behind; smd_sahrani_a2/tavi/dingor/isladuala are 1-4-file stubs). Treat them as non-authoritative until that path is re-enabled and regenerated.
+**Modded missions are not maintained by the current `dotnet run` path.** The modded-terrain propagation call is commented out at `SqfFileGenerators/SqfFileGenerator.cs:132`, and `ZipManager.cs:10` packages only `Missions` plus `Missions_Vanilla`. Treat `Modded_Missions/*` as non-authoritative until the owner chooses regenerate-from-source or maintained-fork policy; see DR-32 for the full tier analysis.
 
 ## Generated Mission Status Table
 
-Claude DR-32 split the campaign folders into three maintenance tiers. Use this table before assuming a fix in Chernarus reaches every mission folder.
+This is the operational summary of DR-32's three maintenance tiers. Use it before assuming a fix in Chernarus reaches every mission folder.
 
 | Target | Current status | Development consequence |
 | --- | --- | --- |

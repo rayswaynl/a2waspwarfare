@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T22:35:00+02:00",
+  "generatedAt": "2026-06-02T22:50:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,33 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wiki-quality-dup4-generated-mission-routing",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Tools-And-Build-Workflow.md",
+        "Content-Structure-And-Maps.md",
+        "Wiki-Quality-Audit.md DUP-4",
+        "Deep-Review-Findings.md DR-4 / DR-32",
+        "Tools/LoadoutManager/FileManagement/FileManager.cs",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs",
+        "Tools/LoadoutManager/ZipManager.cs",
+        "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs"
+      ],
+      "outputs": [
+        "Tools-And-Build-Workflow.md page ownership note and DR-4/DR-32 routing",
+        "Content-Structure-And-Maps.md generated-folder routing summary",
+        "Wiki-Quality-Audit.md DUP-4 resolved status",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-status.json",
+        "agent-context.json"
+      ],
+      "handoff": "Future generated-mission docs should update Tools-And-Build-Workflow.md for operational LoadoutManager skip-list/package/status rules, Deep-Review-Findings.md DR-4/DR-32 for analysis evidence, and keep Content-Structure-And-Maps.md as folder orientation only."
+    },
     {
       "lane": "wiki-quality-dup6-lifecycle-routing",
       "owner": "Codex",
@@ -902,7 +929,8 @@
     "icbm-authority-playbook-routing",
     "wiki-quality-dup5-battleye-routing",
     "wiki-quality-dup9-victory-routing",
-    "wiki-quality-dup6-lifecycle-routing"
+    "wiki-quality-dup6-lifecycle-routing",
+    "wiki-quality-dup4-generated-mission-routing"
   ],
   "queuedReports": [],
   "lanes": [

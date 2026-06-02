@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Wiki-Quality DUP-4 Generated Mission Routing
+
+- Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-4 by making [Tools and build workflow](Tools-And-Build-Workflow) the operational owner for LoadoutManager skip-list, packaging and generated-mission status rules.
+- Kept [Deep-review findings](Deep-Review-Findings) DR-4 and DR-32 as the full evidence owner for Chernarus/Takistan drift and modded mission tier analysis.
+- Reduced [Content structure and maps](Content-Structure-And-Maps) to folder orientation plus links to Tools/build, DR-4, DR-32 and DR-43a instead of restating the same generated-folder warning.
+
 ## 2026-06-02 - Codex Wiki-Quality DUP-6 Lifecycle Routing
 
 - Resolved [Wiki quality audit](Wiki-Quality-Audit) DUP-6 by keeping lifecycle flags, boot ordering, JIP waits and HC wait hazards canonical in [Lifecycle wait-chain](Lifecycle-Wait-Chain).
