@@ -4,6 +4,21 @@ This page tracks the cheap read-only Codex discovery agents currently digging th
 
 The swarm is intentionally evidence-first: agents read source, report path/line-backed findings, and avoid editing docs or mission code. Codex integrates the useful findings into the wiki, `agent-context.json`, the coverage ledger and the feature-status register after review.
 
+## Current Wave: Wave N
+
+Spawned after Steff made this Codex tab the main LLM orchestrator and asked for more deep code discovery. All six read-only explorers returned. Codex has summarized the reports here and in machine records; the next pass should promote the highest-risk items into their owner pages.
+
+| Agent | Lane | Status | Harvest summary |
+| --- | --- | --- | --- |
+| Tesla | `wasp-overlay-archaeology` | Returned / summary harvested | Live hooks are RPG dropping, marker monitor, base repair/actions, respawn rewiring and start vehicles. Dead/fragile areas include commented legacy WASP bootstrap, abandoned `WASP/Init_Client.sqf`, literal `"_initCMD"` in dead `procInitComm`, `208 = player addAction`, client-side cash HQ recovery effects, inclusive base repair loop and DropRPG locality risk. |
+| Linnaeus | `join-jip-disconnect-resilience` | Returned / summary harvested | Join path and ACK retry are mapped. Main risks: disconnect deletes `_old_unit` before later `setPos`, `WFBE_SE_PLAYERLIST` is not pruned, delayed UID/teamleader clearing lacks revalidation and ACK retry loops indefinitely. |
+| Lorentz | `pvf-special-router-tag-audit` | Returned / summary harvested | PVF registration and dispatcher symbols still need cross-checking. Risks cluster around `RequestSpecial` authority, client-to-client `HandleSpecial`, raw supply PVs, `SEND_MESSAGE` compile, partial MASH and stale delegation/update scripts. |
+| Hubble | `gear-loadout-easa-profile` | Returned / summary harvested | Gear/EASA/profile lifecycle is mapped. Patch candidates include undefined `_u_upgrade` in profile save, six-element template select risk, inclusive EquipBackpack/EquipVehicle loops, backpack cargo-size index issue, exact-funds EASA rejection and shared EASA/Economy `idd=23000`. |
+| Banach | `supports-artillery-icbm-uav` | Returned / summary harvested | `RequestSpecial` trampoline and `Server_HandleSpecial` tags are mapped. Main risks: server trusts support payloads after client cost/cooldown checks, `NukeIncoming`/`ICBM_launched` look stale, missing `airRaid` agrees with the assets atlas and RU para ammo likely expects a commented-out config array. |
+| Curie | `towns-camps-resistance-static-defense` | Returned / summary harvested | Town/camp/static-defense runtime is mapped. Findings: resistance side remains scaffold, GUER static defense/update-back is partial, town mortars are dead scaffold (`ManageTownMortars` not compiled and `Server_SpawnTownMortars.sqf` has undefined `_positions`), `townModeSet` is fragile, reward authority is client-side and town AI vehicle cleanup remains risky. |
+
+Harvest rule: Wave N is not a replacement for owner pages. Promote Tesla into [WASP overlay](WASP-Overlay), Linnaeus into [Join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle), Lorentz/Banach into [Networking/PV](Networking-And-Public-Variables) and [Support/specials/modules atlas](Support-Specials-And-Tactical-Modules-Atlas), Hubble into [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), and Curie into [Towns/camps/capture atlas](Towns-Camps-And-Capture-Atlas) after spot-checking citations.
+
 ## Current Wave: Wave L
 
 Spawned on this Codex session after Steff asked to bring an agent team back in for the owner-page follow-up pass. These six scouts were read-only and scoped to the highest-value Feature Status adjacent pages, while Codex kept edits, validation and publishing local. Reports have returned, the useful findings were harvested into owner pages and machine records, and the results were published to both the wiki and `docs/wiki` mirror.

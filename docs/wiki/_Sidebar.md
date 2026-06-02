@@ -27,6 +27,7 @@
 
 - [Source inventory](Source-Inventory)
 - [Content/maps](Content-Structure-And-Maps)
+- [Assets/config atlas](Assets-Config-Localization-And-Parameters-Atlas)
 - [WASP overlay](WASP-Overlay)
 
 ## Code
@@ -74,6 +75,7 @@
 - [Tools/build](Tools-And-Build-Workflow)
 - [Tooling release readiness audit](Tooling-Release-Readiness-Audit)
 - [Parameters/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs)
+- [Assets/config atlas](Assets-Config-Localization-And-Parameters-Atlas)
 - [Source fix propagation queue](Source-Fix-Propagation-Queue)
 - [`agent-release-readiness.json`](agent-release-readiness.json)
 - [Integrations](External-Integrations)

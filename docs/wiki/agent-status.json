@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T20:55:00+02:00",
+  "generatedAt": "2026-06-02T21:00:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -18,8 +18,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Acting as main LLM orchestrator and publisher: harvesting returned depth reports, maintaining source-backed docs/machine records, and coordinating active read-only discovery waves.",
-      "nextExpectedOutput": "Publish the UI/runtime/tooling harvest, then harvest Herschel/Boole and code-discovery-wave-n reports as they return."
+      "currentWork": "Acting as main LLM orchestrator and publisher: routing Claude/Codex lanes, harvesting returned reports into owner pages and machine records, and publishing validated docs/wiki mirror updates.",
+      "nextExpectedOutput": "Validate and publish the assets/config atlas plus Wave N harvest summary, then promote highest-risk Wave N findings into owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -34,18 +34,24 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "partially-harvested-readonly-depth-team",
-      "currentLane": "deep-discovery-agent-team-m",
-      "currentWork": "Depth team M is partially harvested: Einstein, Feynman and Epicurus returned; Herschel and Boole remain pending. Code discovery wave N is active with six read-only explorers on WASP, JIP, PVF routers, gear/EASA, supports and towns/static defense.",
-      "nextExpectedOutput": "Return remaining reports for Codex orchestrator review and wiki/machine-file harvest."
+      "status": "returned-summary-harvest-pending-owner-pages",
+      "currentLane": "code-discovery-wave-n",
+      "currentWork": "Wave N returned: Tesla WASP overlay, Linnaeus join/JIP/disconnect, Lorentz PVF/router tags, Hubble gear/EASA/profile, Banach supports/ICBM/UAV and Curie towns/static defense. Compact harvest is in Subagent-Discovery-Swarm.md.",
+      "nextExpectedOutput": "Codex or another owner should spot-check and promote the highest-risk Wave N findings into the canonical owner pages."
     }
   },
   "laneSummary": [
     {
+      "lane": "assets-config-localization-parameters-atlas",
+      "owner": "Codex",
+      "status": "local-validation-pending",
+      "output": "Assets-Config-Localization-And-Parameters-Atlas.md maps description.ext/Rsc include graph, mission parameter export, stringtable, sound/music/media counts, missing airRaid, missing tactical wf_*.paa icons, missing local vehicle textures and stale unitCaching include."
+    },
+    {
       "lane": "code-discovery-wave-n",
       "owner": "Codex sub-agents",
-      "status": "active-readonly",
-      "output": "Six explorers are running: Tesla WASP overlay archaeology, Linnaeus join/JIP/disconnect resilience, Lorentz PVF/special router tags, Hubble gear/loadout/EASA/profile, Banach support/specials/artillery/ICBM/UAV and Curie towns/camps/resistance/static defense. A seventh assets/config/localization lane could not spawn because the agent thread limit was reached."
+      "status": "returned-summary-harvest-pending-owner-pages",
+      "output": "All six Wave N explorers returned. Tesla found WASP live hooks and dead/fragile legacy action paths; Linnaeus mapped join/JIP/disconnect risks; Lorentz mapped PVF/special-router trust surfaces; Hubble mapped gear/EASA/profile edge cases; Banach mapped support/ICBM/UAV stale and authority risks; Curie mapped towns/resistance/static-defense partials. See Subagent-Discovery-Swarm.md."
     },
     {
       "lane": "depth-agent-harvest-ui-runtime-tooling",
@@ -551,6 +557,7 @@
     "hostedServerFpsLoopSleep": "Hosted-Server-FPS-Loop-Sleep.md",
     "supplyMissionScanNarrowing": "Supply-Mission-Scan-Narrowing.md",
     "waspMarkerWaitCleanup": "WASP-Marker-Wait-Cleanup.md",
-    "factoryQueueCleanup": "Factory-Queue-Counter-Token-Cleanup.md"
+    "factoryQueueCleanup": "Factory-Queue-Counter-Token-Cleanup.md",
+    "assetsConfigAtlas": "Assets-Config-Localization-And-Parameters-Atlas.md"
   }
 }

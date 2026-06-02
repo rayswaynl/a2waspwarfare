@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Main Orchestrator: Assets/Config Atlas + Wave N Returns
+
+- Accepted Steff's direction that this Codex tab is the main LLM orchestrator: Codex owns canonical navigation, mirror validation, progress reporting and publishing; Claude and other Codex tabs should claim bounded deep-review lanes and feed source-backed findings back through shared worklog/events/status files.
+- Took the blocked seventh Wave N lane locally and added [Assets/config/localization/parameters atlas](Assets-Config-Localization-And-Parameters-Atlas), covering `description.ext`, `Rsc` includes, parameter export, stringtable, sound/music registries, media counts and missing/stale asset references.
+- Recorded the immediate atlas findings: missing `airRaid` sound class used by `NukeIncoming.sqf`, unused support/ICBM message sounds, missing `Client\Images\wf_*.paa` tactical icons, missing relative vehicle texture files and stale commented unit-caching include.
+- Confirmed all six Wave N read-only explorers returned. Their reports are now summarized in [Discovery swarm](Subagent-Discovery-Swarm); owner-page promotion remains the next harvest pass.
+
 ## 2026-06-02 - Codex Orchestrator Code Discovery Wave N
 
 - Spawned six read-only code discovery explorers for non-overlapping source archaeology: Tesla (WASP overlay), Linnaeus (join/JIP/disconnect), Lorentz (PVF/special router tags), Hubble (gear/loadout/EASA/profile), Banach (support/specials/artillery/ICBM/UAV) and Curie (towns/camps/resistance/static defense).

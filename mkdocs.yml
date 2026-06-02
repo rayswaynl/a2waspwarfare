@@ -26,6 +26,7 @@ nav:
       - Mission Parameters Localization And Generated Build Inputs: Mission-Parameters-Localization-And-Generated-Build-Inputs.md
       - Source Inventory: Source-Inventory.md
       - Content Structure And Maps: Content-Structure-And-Maps.md
+      - Assets Config Localization And Parameters Atlas: Assets-Config-Localization-And-Parameters-Atlas.md
   - Code And Networking:
       - SQF Code Atlas: SQF-Code-Atlas.md
       - Function And Module Index: Function-And-Module-Index.md
