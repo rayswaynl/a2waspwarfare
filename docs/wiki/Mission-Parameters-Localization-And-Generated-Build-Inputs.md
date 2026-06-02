@@ -25,6 +25,20 @@ Source refs:
 
 Runtime consumers include day/night duration, AFK timeout, AntiStack enable, performance audit enable, map icon blinking, bomb restrictions and many gameplay/economy toggles.
 
+## MP Defaults Versus Constants Fallbacks
+
+Wave O found a real default drift class: mission boot only calls `Common/Init/Init_Parameters.sqf` when `isMultiplayer` is true (`initJIPCompatible.sqf:121`). In non-MP boot paths, `Init_CommonConstants.sqf` fills any nil values instead of reading `Rsc/Parameters.hpp` defaults, even though `GUI_Display_Parameters.sqf` can display SP defaults directly from the config tree.
+
+| Parameter | Lobby/config default | Constants fallback | Why it matters |
+| --- | --- | --- | --- |
+| `WFBE_C_AI_COMMANDER_ENABLED` | `Rsc/Parameters.hpp:92-97` default `0` | `Init_CommonConstants.sqf:91` fallback `1` | Solo/local tests can exercise AI-commander-adjacent code that the MP lobby default disables. |
+| `WFBE_C_ARTILLERY` | `Rsc/Parameters.hpp:80-84` default `2` | `Init_CommonConstants.sqf:105` fallback `1` | Artillery range/timeout behavior can differ between hosted MP and non-MP tests. |
+| `WFBE_C_BASE_AREA` | `Rsc/Parameters.hpp:104-108` default `3` | `Init_CommonConstants.sqf:119` fallback `2` | Construction/base-area limits differ under fallback-only boot. |
+| `WFBE_ICBM_TIME_TO_IMPACT` | `Rsc/Parameters.hpp:32-36` default `5` | `Init_CommonConstants.sqf:239` fallback `1` | Nuke timing tests can look dramatically faster/shorter different outside MP. |
+| `WFBE_RADZONE_TIME` | `Rsc/Parameters.hpp:38-42` default `10` | `Init_CommonConstants.sqf:240` fallback `1` | Radiation-duration tests can understate live lobby behavior. |
+
+Practical rule: when a finding depends on mission parameters, state whether the evidence came from MP lobby defaults, non-MP/constants fallback, or generated mission config. Do not assume those three layers agree.
+
 ## In-Game Parameter Display
 
 `RscDisplay_Parameters` loads `Client/GUI/GUI_Display_Parameters.sqf`, which reads titles/texts/values from `missionConfigFile >> "Params"` and current values from `paramsArray` or default. That makes the `Params` tree both the host setup source and the in-game reference display source.
@@ -66,6 +80,7 @@ This is why the current `work\a` checkout cannot run LoadoutManager cleanly: it 
 | Literal `a2waspwarfare` root requirement | Discover repo root by project file, git root or explicit config rather than folder name. | LoadoutManager runs from `work\a` and a normal `a2waspwarfare` clone. |
 | Missing `7za` aborts after generation | Split generation/copy from packaging or make missing `7za` a non-fatal packaging-only warning. | Generated files land even when package creation is skipped. |
 | Generated files lack banners | Add generated-file banners to generated SQF/description/version outputs. | Future agents avoid hand-editing generated targets. |
+| Lobby/default fallback drift | Either deliberately align the constants fallback values with `Rsc/Parameters.hpp` or document which non-MP fallback differences are intentional. | Compare MP lobby, non-MP boot and generated mission behavior for AI commander, artillery, base area and nuke/radzone timings. |
 
 ## Developer Rules
 

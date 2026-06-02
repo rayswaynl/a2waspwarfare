@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T22:05:00+02:00",
+  "generatedAt": "2026-06-02T22:10:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -34,13 +34,19 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "queued-readonly-sidecar-discovery",
+      "status": "returned-selected-harvest-local",
       "currentLane": "orchestrator-sidecar-discovery-o",
-      "currentWork": "Wave N owner-page promotion is local/validation pending. The six attached agents were reused for new read-only sidecar lanes: factories/economy authority, AI/headless cleanup, UI/IDDs/RHUD, server integrations/tooling drift, parameter/include/generated parity and abandoned-feature archaeology.",
-      "nextExpectedOutput": "Return compact source-backed reports; Codex will spot-check and promote only confirmed findings into canonical owner pages."
+      "currentWork": "Wave N owner-page promotion is published/validated. Wave O returned from the six reused attached agents; Codex is promoting selected source-checked findings into canonical owner pages and leaving the rest as routed leads.",
+      "nextExpectedOutput": "After validation/publish, start the next bounded discovery wave only where it does not duplicate current Claude/Codex lanes."
     }
   },
   "laneSummary": [
+    {
+      "lane": "wave-o-orchestrator-sidecar-harvest",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Wave O sidecar reports returned and selected findings are promoted: MP defaults versus constants fallback drift in Mission Parameters, stale Server_GetDelegators helper in AI Runtime/HC Loop Map, GlobalGameStats data-shape/player-count fixture risk in Tooling Release Readiness, and a compact routing summary in Subagent Discovery Swarm."
+    },
     {
       "lane": "wave-n-owner-page-harvest",
       "owner": "Codex",

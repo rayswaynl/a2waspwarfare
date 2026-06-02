@@ -4,6 +4,21 @@ This page tracks the cheap read-only Codex discovery agents currently digging th
 
 The swarm is intentionally evidence-first: agents read source, report path/line-backed findings, and avoid editing docs or mission code. Codex integrates the useful findings into the wiki, `agent-context.json`, the coverage ledger and the feature-status register after review.
 
+## Current Wave: Wave O
+
+Spawned from the orchestrator seat after Wave N was published. Fresh spawns were blocked by the active-thread cap, so Codex reused the six attached agents as sidecar scouts and kept publication local. All six reports returned; this section is a routing summary, not canonical evidence by itself.
+
+| Agent | Lane | Status | Harvest summary |
+| --- | --- | --- | --- |
+| Tesla | `factories-economy-construction-upgrades-sidecar` | Returned / selected findings routed | Reconfirmed client/payload authority gaps in construction, player factory buying, upgrades, side supply and commander economy controls. New lead: construction logic-list asymmetry around small/medium sites and repair paths needs a scoped source check before patching. |
+| Linnaeus | `ai-headless-cleanup-sidecar` | Returned / owner-page harvest local | Reconfirmed HC fire-once registration, no heartbeat/failback, static-defense no update-back and the stale `delegate-ai` receiver. Promoted stale `Server_GetDelegators.sqf` duplicate into [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map). |
+| Lorentz | `ui-idd-rhud-buy-menu-sidecar` | Returned / routing captured | Reconfirmed EASA/Economy and title ID collisions, stale upgrade dialog, RHUD/title display coupling, duplicate server-FPS publishers and buy-gear TODO/bounds cleanup leads. Most canonical routing already lives in UI and gear owner pages. |
+| Hubble | `server-ops-extension-discord-battleye-sidecar` | Returned / owner-page harvest local | Reconfirmed DiscordBot `TypeNameHandling.All`, extension async/write risks, HC player-count heuristic and BattlEye minimal posture. Promoted GlobalGameStats data-shape/player-count fixture risk into [Tooling release readiness](Tooling-Release-Readiness-Audit). |
+| Banach | `parameters-include-generated-parity-sidecar` | Returned / owner-page harvest local | Found MP lobby defaults versus constants fallback drift and reminded agents that `Init_Parameters.sqf` is only compiled on `isMultiplayer` boot. Promoted the drift table into [Parameters/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs). |
+| Curie | `abandoned-partial-feature-archaeology-sidecar` | Returned / routing captured | Reconfirmed AI supply trucks, supplyMissionActive dead twin, MASH marker dead/live split, town mortars, old upgrade UI and dormant AT/bomb/air hook family. Existing Feature Status and revival pages already own these; no duplicate prose added. |
+
+Harvest rule: Wave O promoted only source-checked deltas into owner pages. Remaining leads should become new bounded lanes, not more raw Feature Status rows.
+
 ## Current Wave: Wave N
 
 Spawned after Steff made this Codex tab the main LLM orchestrator and asked for more deep code discovery. All six read-only explorers returned. Codex has summarized the reports here and in machine records; the next pass should promote the highest-risk items into their owner pages.

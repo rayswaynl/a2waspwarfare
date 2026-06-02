@@ -52,6 +52,7 @@ This page is a focused runtime map for server loops, town AI, headless-client de
 | Medium | FPS sleep helper may be inverted. | `Common_GetSleepFPS.sqf:5-9`; `updateresources.sqf:74-75`. | Decide intent before patching; record RPT/perf evidence. |
 | Medium | Patrol exit condition is lifecycle-hostile. | `server_town_patrol.sqf:18`; `server_patrols.sqf:26`. | Replace with bounded lifecycle after confirming cleanup semantics. |
 | Medium | AI commander autonomy is scaffolded, not complete. | Funds at `Init_Server.sqf:356-365`; upgrade helper `Server_AI_Com_Upgrade.sqf:12-50`; no complete scheduler proven. | Treat as owner decision / disabled partial until scheduler and buy/upgrade smoke exist. |
+| Low/Medium | Stale delegation helper shadows the current inline implementation. | `Server/Functions/Server_GetDelegators.sqf:1-10` still exists, while active delegation defines `WFBE_SE_FNC_GetDelegators` inline in `Server_FNC_Delegation.sqf:139-178`; no compile/reference to `Server_GetDelegators` was found in the source mission. | Annotate or delete the stale helper only after a generated/modded reference check; keep active patches in `Server_FNC_Delegation.sqf`. |
 | Low/Medium | Town static defenses are resistance-only. | `Server_SpawnTownDefense.sqf:18`; `Server_OperateTownDefensesUnits.sqf:24`. | Correct any docs implying all occupied towns spawn static defense crews. |
 
 ## Runtime Smoke

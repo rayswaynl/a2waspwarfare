@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T22:05:00+02:00",
+  "generatedAt": "2026-06-02T22:10:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,31 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wave-o-orchestrator-sidecar-harvest",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Subagent-Discovery-Swarm.md#current-wave-wave-o",
+        "docs/wiki/Mission-Parameters-Localization-And-Generated-Build-Inputs.md",
+        "docs/wiki/AI-Runtime-HC-Loop-Map.md",
+        "docs/wiki/Tooling-Release-Readiness-Audit.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_FNC_Delegation.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/CallExtensions/GlobalGameStats.sqf"
+      ],
+      "outputs": [
+        "Wave O selected owner-page harvest",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-status.json",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl"
+      ],
+      "handoff": "Codex is the main orchestrator and canonical publisher for Wave O. Other agents should treat Discovery Swarm as a routing board and owner pages as source of truth; do not duplicate these findings into broad Feature Status prose unless a new implementation decision is required."
+    },
     {
       "lane": "main-orchestrator-wave-n-owner-page-harvest",
       "owner": "Codex",

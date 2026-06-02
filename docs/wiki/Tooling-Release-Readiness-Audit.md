@@ -38,6 +38,7 @@ Canonical companion pages are [Tools/build workflow](Tools-And-Build-Workflow), 
 | DiscordBot config/secrets | `token.txt` and `preferences.json` are ignored; sample contains real-looking IDs and prod-style paths. | Low/medium governance issue, no token committed. | `DiscordBot/.gitignore:7`, `:9`; `preferences_sample.json:3-8`; `Preferences.cs:24-43`. |
 | DiscordBot server-info display | JSON controls map/player count/channel name; invalid map/player shape can break updates. | Medium reliability/spoofing inside trusted data path. | `GameData.cs:80-156`; `GameStatusUpdater.cs:92-119`. |
 | `GLOBALGAMESTATS` extension | SQF output discarded, enum-gated selector, `TypeNameHandling.None`; but hardcoded path, `async void`, `File.Replace` race and stale arg shapes remain. | Medium reliability, low current SQF-RCE risk. | `GlobalGameStats.sqf:20-22`; `ExtensionMethods.cs:10-35`; `SerializationManager.cs:12-55`; `GameData.cs:29`. |
+| GlobalGameStats data shape | SQF sends class name plus west score, east score, map, uptime and player count; the extension DTO defaults `exportedArgs` to two strings and the Discord DTO defaults four while reading index `4`. | Medium fixture/contract drift risk; player count also subtracts one assumed HC before export. | `GlobalGameStats.sqf:20-22`; `Extension/src/GameData.cs:29`; `DiscordBot/src/ExtensionData/GameData/GameData.cs:30`, `:80-82`, `:112-114`. |
 | AntiStack DB extension | Separate absent `A2WaspDatabase`; default enabled; wrappers `call compile` extension strings and assume array shape. | High deployment/runtime trust risk. | `Init_CommonConstants.sqf:171`; `Parameters.hpp:547-551`; `callDatabaseRetrieve.sqf:24-40`; `callDatabaseRequestSideTotalSkill.sqf:30-64`; `callDatabaseSendPlayerList.sqf:58-65`. |
 | BattlEye filters | Shipped filter is AFK `kickAFK` plumbing only; no `scripts.txt`, `server.cfg` or `basic.cfg` bundle. | Medium release-claim risk, not comprehensive public-server hardening. | `BattlEyeFilter/publicvariable.txt:2`; `Client/FSM/updateclient.sqf:153-160`; `External-Integrations.md:96-104`. |
 
@@ -75,6 +76,7 @@ rg --files | rg "(^|/)(publicvariable\.txt|scripts\.txt|server\.cfg|basic\.cfg)$
 | P1 | Add generated drift checker to CI or a separate release validator. |
 | P2 | Expand `agent-release-readiness.json` generated-targets from wildcard `Modded_Missions/*` to tiered states: maintained Vanilla, divergent forks, skeletal stubs. |
 | P2 | Record current Takistan comparable drift and modded drift posture in [Tools/build workflow](Tools-And-Build-Workflow) or [Source fix propagation queue](Source-Fix-Propagation-Queue). |
+| P2 | Add GlobalGameStats fixture tests or a tiny contract document covering exported arg order, HC/player-count policy and Discord display parsing. |
 | P2 | Note that `DiscordBot/FileConfiguration.cs` exists while active status JSON reader uses `Preferences.Instance.DataSourcePath ?? C:\a2waspwarfare\Data`. |
 | P3 | Replace concrete `preferences_sample.json` snowflakes with placeholders. |
 

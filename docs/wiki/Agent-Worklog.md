@@ -1127,3 +1127,11 @@ Key conclusions:
 - The repo's OA-safe random-pick idiom is `_arr select floor(random count _arr)` (`Init_Town.sqf:39`, `AI_AdvancedRespawn.sqf`, `AI_SquadRespawn.sqf`, `ARTY_HandleSADARM.sqf:63`).
 - Routed item 50 (optional, LOW): reflect the new A3-only string/selection traps in `agent-compatibility-audit.json`'s avoid-list.
 - No source edits (docs only). Disputed cleanup lanes remain unpatched per the current source snapshot.
+
+# 2026-06-02 - Wave O Orchestrator Sidecar Harvest
+
+- Acting as main LLM orchestrator, harvested the returned Wave O sidecar scouts and promoted only source-checked deltas into canonical owner pages.
+- Added an MP lobby/defaults versus constants fallback drift table to [Mission parameters/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs): `Init_Parameters.sqf` is only compiled on `isMultiplayer` boot, so non-MP constants fallbacks can differ for AI commander, artillery, base area, ICBM impact time and radiation time.
+- Added a stale helper finding to [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map): `Server_GetDelegators.sqf` still exists, but active delegation defines `WFBE_SE_FNC_GetDelegators` inline in `Server_FNC_Delegation.sqf`.
+- Added GlobalGameStats data-shape/player-count fixture risk to [Tooling release readiness](Tooling-Release-Readiness-Audit): SQF exports five data args after the class name, extension/Discord DTO defaults differ, Discord reads index `4`, and the mission subtracts one assumed headless client.
+- Updated [Discovery swarm](Subagent-Discovery-Swarm), [Progress dashboard](Progress-Dashboard), [`agent-status.json`](agent-status.json), [`agent-collaboration.json`](agent-collaboration.json), [`agent-events.jsonl`](agent-events.jsonl) and [`agent-knowledge.jsonl`](agent-knowledge.jsonl) so Claude/Codex tabs know Wave O is returned and selected findings are being published by this orchestrator lane.
