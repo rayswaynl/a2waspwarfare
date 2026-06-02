@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T20:48:00+02:00",
+  "generatedAt": "2026-06-02T20:57:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -48,7 +48,7 @@
     {
       "lane": "orchestrator-code-discovery-wave-q",
       "owner": "Codex sub-agents",
-      "status": "running-readonly",
+      "status": "returned-harvest-pending",
       "sourceScope": [
         "construction logic cleanup",
         "economy authority",
@@ -60,7 +60,7 @@
       "outputs": [
         "Read-only source reports for Codex review"
       ],
-      "handoff": "Raw Wave Q reports are not canonical until Codex source-checks and promotes them into owner pages."
+      "handoff": "Raw Wave Q reports returned and are not canonical until Codex source-checks and promotes them into owner pages. Highest-value next harvest leads: RHUD/endgame currentCutDisplay collision, negative side-supply amount handling, town patrol reset/camp repair authority and player-buy path correction."
     },
     {
       "lane": "wave-p-owner-page-harvest",

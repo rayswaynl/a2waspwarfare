@@ -1077,6 +1077,7 @@ Key conclusions:
 - Added [Construction logic list cleanup](Construction-Logic-List-Cleanup), turning the Wave P SmallSite/MediumSite `wfbe_structures_logic` asymmetry into a patch-ready guide.
 - The proposed source patch is deliberately tiny: keep the initial SmallSite append, but change the post-completion line in `Construction_SmallSite.sqf` from append to remove so it matches `Construction_MediumSite.sqf`.
 - Propagation remains source-first: patch Chernarus, run `A2WASP_SKIP_ZIP=1 dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj`, inspect maintained Vanilla Takistan, then smoke small and medium construction in Arma 2 OA before claiming runtime impact.
+- Wave Q returned after the playbook publish. Raw reports are summarized on [Subagent discovery swarm](Subagent-Discovery-Swarm); strongest next harvest leads are RHUD/endgame display-var collision, side-supply negative amount handling, town patrol reset/camp repair authority and factory player-buy path correction.
 
 # 2026-06-02 - Scripting-Reference BIKI Version Cross-Check (Claude)
 

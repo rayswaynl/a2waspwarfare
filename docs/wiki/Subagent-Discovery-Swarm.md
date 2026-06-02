@@ -6,18 +6,18 @@ The swarm is intentionally evidence-first: agents read source, report path/line-
 
 ## Current Wave: Wave Q
 
-Spawned from the main orchestrator after Wave P was published. Fresh spawns were blocked by the active subagent thread cap, so Codex reused the six attached explorers as read-only Wave Q lanes while keeping docs edits local.
+Spawned from the main orchestrator after Wave P was published. Fresh spawns were blocked by the active subagent thread cap, so Codex reused the six attached explorers as read-only Wave Q lanes while keeping docs edits local. All six reports returned; summaries below are routing notes, not canonical findings until Codex promotes them into owner pages.
 
-| Agent | Lane | Status | Expected output |
+| Agent | Lane | Status | Harvest summary |
 | --- | --- | --- | --- |
-| Tesla | `construction-logic-cleanup-propagation` | Running / read-only | Confirm SmallSite/MediumSite `wfbe_structures_logic` lifecycle, repair consumer status and source/Vanilla/modded propagation shape. |
-| Linnaeus | `economy-authority-trust-boundaries` | Running / read-only | Trace funds/supply/score mutation and PV channels, then identify patch-ready first authority cuts. |
-| Lorentz | `commander-hq-lifecycle-edge-cases` | Running / read-only | Trace commander assignment, HQ/MHQ lifecycle, disconnect/reassignment, vote and PV/UI dependencies. |
-| Hubble | `factories-purchase-queue-integrity` | Running / read-only | Trace client buy flow through server factory queue, spawn/refund/cancel and queue counter/token cleanup risks. |
-| Banach | `town-ai-camp-capture-delegation` | Running / read-only | Trace town/camp capture, town AI spawn/delegation, despawn safety and resistance/supply interactions. |
-| Curie | `client-ui-action-rhud-state` | Running / read-only | Trace action menu/RHUD/OptionsAvailable/buy/service/respawn UI state, IDD/IDC collisions and stale paths. |
+| Tesla | `construction-logic-cleanup-propagation` | Returned / partially harvested | Reconfirmed SmallSite add/add versus MediumSite add/remove, plus suggested a possible `wfbe_structures_logic` initializer. The SmallSite cleanup is already captured in [Construction logic list cleanup](Construction-Logic-List-Cleanup); initializer advice needs a separate runtime check before becoming canonical. |
+| Linnaeus | `economy-authority-trust-boundaries` | Returned / harvest pending | Reconfirmed side-supply temp-channel trust, negative amount risk, upgrade/construction/client-buy authority gaps and safer server-derived supply read pattern. Route to [Economy authority first cut](Economy-Authority-First-Cut), [Server authority map](Server-Authority-Migration-Map) and [Public variable channel index](Public-Variable-Channel-Index). |
+| Lorentz | `commander-hq-lifecycle-edge-cases` | Returned / harvest pending | Reconfirmed commander reassignment call-shape/trust issues, HQ death killer assumptions, MHQ repair client authority/split counters and commander-disconnect no-auto-reassign behavior. Route to [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) and [Commander reassignment](Commander-Reassignment-Call-Shape). |
+| Hubble | `factories-purchase-queue-integrity` | Returned / harvest pending | Confirmed normal player purchase path is client UI -> local `Client_BuildUnit.sqf`, not a server factory queue; reaffirmed counter/token cleanup and no cancel/refund semantics. Route to [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) and [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas). |
+| Banach | `town-ai-camp-capture-delegation` | Returned / harvest pending | Reconfirmed town/camp capture runtime, town AI despawn safety, client-stamped supply amount/source, client-gated camp repair and stale AI supply-truck/supplyMissionActive paths. Route to [Towns/camps/capture atlas](Towns-Camps-And-Capture-Atlas), [Town AI safety](Town-AI-Vehicle-Despawn-Safety) and [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook). |
+| Curie | `client-ui-action-rhud-state` | Returned / harvest pending | Found a new RHUD/endgame `currentCutDisplay` collision lead, reaffirmed service action-time guards, EASA exact-funds/stale-vehicle context and stale old upgrade resource. Route to [Client UI systems atlas](Client-UI-Systems-Atlas), [UI IDD collision repair](UI-IDD-Collision-Repair), [Service menu affordability guards](Service-Menu-Affordability-Guards) and [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas). |
 
-Harvest rule: Wave Q reports are leads until Codex source-checks and promotes them into owner pages. The first local output from this wave is [Construction logic list cleanup](Construction-Logic-List-Cleanup), a patch-ready playbook for the SmallSite cleanup lane.
+Harvest rule: Wave Q reports are leads until Codex source-checks and promotes them into owner pages. Highest-value next owner-page harvests are Curie's RHUD/endgame display-var collision, Linnaeus's negative side-supply amount risk and Banach's town patrol reset / camp repair authority notes.
 
 ## Previous Wave: Wave P
 

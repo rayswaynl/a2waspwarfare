@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T20:48:00+02:00",
+  "generatedAt": "2026-06-02T20:57:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -19,7 +19,7 @@
       "status": "active",
       "currentLane": "construction-logic-list-cleanup-playbook",
       "currentWork": "Acting as main LLM orchestrator and publisher. Current local slice turns the SmallSite/MediumSite wfbe_structures_logic asymmetry into a patch-ready playbook while Wave Q subagents run read-only code discovery.",
-      "nextExpectedOutput": "Validate and publish the construction cleanup playbook, then harvest Wave Q reports when they return."
+      "nextExpectedOutput": "Source-check and promote the highest-value returned Wave Q findings into owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -34,10 +34,10 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "wave-q-running-readonly",
+      "status": "wave-q-returned-harvest-pending",
       "currentLane": "orchestrator-code-discovery-wave-q",
-      "currentWork": "Six attached explorers are running scoped read-only lanes: construction cleanup, economy authority, commander/HQ lifecycle, factory queues, town AI/capture/delegation and UI/action/RHUD state.",
-      "nextExpectedOutput": "Return concise reports with exact paths/line refs; Codex will source-check and promote only confirmed findings."
+      "currentWork": "All six attached explorers returned scoped read-only reports: construction cleanup, economy authority, commander/HQ lifecycle, factory queues, town AI/capture/delegation and UI/action/RHUD state.",
+      "nextExpectedOutput": "Codex will source-check and promote selected Wave Q findings into owner pages."
     }
   },
   "laneSummary": [
@@ -50,8 +50,8 @@
     {
       "lane": "orchestrator-code-discovery-wave-q",
       "owner": "Codex sub-agents",
-      "status": "running-readonly",
-      "output": "The subagent thread cap blocked fresh spawns, so Codex reused the six attached explorers for Wave Q: construction cleanup, economy authority, commander/HQ lifecycle, factory queues, town AI/capture/delegation and UI/action/RHUD state."
+      "status": "returned-harvest-pending",
+      "output": "The subagent thread cap blocked fresh spawns, so Codex reused the six attached explorers for Wave Q. All returned with routing leads for construction cleanup, economy authority, commander/HQ lifecycle, factory queues, town AI/capture/delegation and UI/action/RHUD state."
     },
     {
       "lane": "wave-p-owner-page-harvest",
