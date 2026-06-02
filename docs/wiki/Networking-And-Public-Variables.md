@@ -124,7 +124,7 @@ When tracing one feature, grep the string tag as well as the PVF command name.
 
 ### Residual Authority Risks After Dispatch Hardening
 
-Replacing `Call Compile` with mission-namespace lookup closes arbitrary code execution from forged function-name strings, but it does not make registered commands authoritative. Hilbert's PV boundary pass found several handlers that still need per-handler sender and payload validation:
+Replacing `Call Compile` with mission-namespace lookup closes arbitrary code execution from forged function-name strings, but it does not make registered commands authoritative. The full post-dispatch queue is now in [Server authority migration map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix). The table below keeps only the highest-risk examples:
 
 | Handler | Trust issue | Evidence |
 | --- | --- | --- |

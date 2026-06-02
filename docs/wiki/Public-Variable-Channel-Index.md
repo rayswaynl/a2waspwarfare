@@ -14,6 +14,8 @@ Registration: `Common/Init/Init_PublicVariables.sqf` — server-bound list `:9-2
 
 ### 1a. Server-bound (client → server) — 13
 
+For implementation work after PVF dispatch allowlisting, use the [registered server PVF handler authority matrix](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix). This index owns channel inventory; the authority map owns per-handler validation shape.
+
 | Command (`WFBE_PVF_*`) | Purpose / notable finding |
 | --- | --- |
 | `RequestVehicleLock` | lock/unlock a vehicle |

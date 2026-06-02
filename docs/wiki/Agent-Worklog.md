@@ -1029,3 +1029,10 @@ Key conclusions:
 - Reconciled stale paratrooper-marker wording in [Pending owner decisions](Pending-Owner-Decisions) and [Hardening roadmap](Hardening-Implementation-Roadmap): maintained source/Vanilla are now propagated and smoke-pending, while modded folders still need an owner decision.
 - Reconciled the hosted-FPS roadmap row with current propagation status and tightened click-through navigation: [Home](Home) now routes risk triage through [Pending owner decisions](Pending-Owner-Decisions), and [Feature status](Feature-Status-Register) links both machine status and hardening backlog files.
 - Updated [`agent-status.json`](agent-status.json), [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-events.jsonl`](agent-events.jsonl) and [Progress dashboard](Progress-Dashboard) so future Codex/Claude tabs can see that the next step is policy/patch selection, not another broad review pass.
+
+# 2026-06-02 - Registered Server PVF Handler Authority Matrix
+
+- Source-read the Chernarus registered server PVF list in `Common/Init/Init_PublicVariables.sqf:9-21,50-51` and every current `Server/PVFunctions/Request*.sqf` handler.
+- Added a [registered server PVF handler authority matrix](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) to [Server authority migration map](Server-Authority-Migration-Map), classifying all 13 server-bound handlers by current behavior, authority status and first validation rule.
+- Split `RequestSpecial` into tag families so future agents do not treat ICBM, support effects, HC delegation and bookkeeping as one patch. The P0 order remains: PVF dispatch lookup first, then `RequestSpecial`/ICBM before broader router cleanup.
+- Wired [Networking/PV](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index), [Feature status](Feature-Status-Register), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), [`agent-feature-status.jsonl`](agent-feature-status.jsonl) and [`agent-status.json`](agent-status.json) to the new matrix.

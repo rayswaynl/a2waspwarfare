@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T18:21:07+02:00",
+  "generatedAt": "2026-06-02T19:00:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -18,8 +18,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; current slice is clarifying owner-decision routing so Feature Status distinguishes research-complete decisions from patch-ready local defects.",
-      "nextExpectedOutput": "Publish owner-decision queue updates, mirror them to the wiki checkout, then continue with the next bounded source-backed subsystem or implementation-readiness pass."
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest slice source-mapped the registered server PVF handler authority queue after dispatcher hardening.",
+      "nextExpectedOutput": "Continue with the next bounded source-backed subsystem or implementation-readiness pass."
     },
     "Codex-2": {
       "status": "ready",
@@ -41,6 +41,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "registered-server-pvf-handler-authority-matrix",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Server-Authority-Migration-Map.md now classifies all 13 registered server-bound PVF handlers and the RequestSpecial tag families by current behavior, authority status and first validation rule."
+    },
     {
       "lane": "owner-decision-queue",
       "owner": "Codex",

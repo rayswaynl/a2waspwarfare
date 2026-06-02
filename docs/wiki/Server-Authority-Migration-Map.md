@@ -49,6 +49,40 @@ Canonical patch sequencing lives in [Hardening roadmap](Hardening-Implementation
 | Commander/HQ repair and recovery authority | [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) |
 | Supply truck/heli authority cleanup | [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) |
 
+## Registered Server PVF Handler Authority Matrix
+
+This table is the post-dispatch work queue. It assumes the generic PVF dispatcher has already stopped compiling arbitrary sender-provided handler strings. These registered commands still need their own payload, requester and authority checks because a valid command name can still carry forged state.
+
+Registration source: `Common/Init/Init_PublicVariables.sqf:9-21` registers 13 server-bound commands, while `:50-51` compiles each `SRVFNC*` handler and adds `WFBE_PVF_<Command>` server PVEHs.
+
+| Handler | Current server behavior | Authority status | First validation rule |
+| --- | --- | --- | --- |
+| `RequestVehicleLock` | Applies `_vehicle lock _locked`, then broadcasts `SetVehicleLock` (`RequestVehicleLock.sqf:6-8`). | Payload-authoritative object effect. | Validate requester, side, ownership/role, lockable class and range before changing lock state. |
+| `RequestOnUnitKilled` | Re-derives some kill context, trashes bodies, updates statistics, awards score/bounty and may call `RequestChangeScore` (`RequestOnUnitKilled.sqf:51-92`). | Partly server-derived but event-payload sensitive. | Re-derive killed side from object state where possible, reject stale/null/duplicate kill reports and set a killed-object idempotency flag before award paths. |
+| `RequestChangeScore` | Replaces the target unit's score by removing old score and adding `_newScore`, then broadcasts `ChangeScore` (`RequestChangeScore.sqf:7-13`). | High-risk direct score overwrite. | Replace caller-stamped absolute score with server-owned award reasons/deltas; never accept arbitrary target/new-score payload from clients. |
+| `RequestCommanderVote` | Starts side vote when side logic `wfbe_votetime <= 0`, using payload side/name (`RequestCommanderVote.sqf:14-22`). | Payload-side workflow trigger. | Validate requester belongs to the side, derive name from requester, and rate-limit or ignore duplicate vote starts. |
+| `RequestNewCommander` | Sets side logic `wfbe_commander`, spawns commander assignment and broadcasts `new-commander-assigned` (`RequestNewCommander.sqf:12-14`). | High-impact commander mutation. | Accept only from the server vote/assignment path or validate requester authority, side, candidate team membership and vote state. |
+| `RequestStructure` | Looks up side structure names, announces building start for major classes and executes `Construction_<script>.sqf` with payload class/side/pos/dir (`RequestStructure.sqf:8-21`). | DR-6 construction authority gap. | Validate requester commander/repair-truck role, side, funds, class allowlist, HQ/base area, placement and debit before `ExecVM`. |
+| `RequestDefense` | Finds payload defense class in side defense names and calls `ConstructDefense` with payload side/pos/dir/manned flag (`RequestDefense.sqf:2-10`). | DR-6 defense authority gap. | Validate requester, funds, class allowlist, manned-defense permission, position/range and debit before construction. |
+| `RequestJoin` | Checks UID team history, launch side and optional AntiStack DB/team skill before sending `join-answer`; stores side on accept (`RequestJoin.sqf:18-89`). | Real server-side gate, with object/UID shape assumptions. | Preserve this as a server-owned pattern; add null/UID/object shape guards and keep team-swap protection independent from AntiStack DB availability. |
+| `RequestMHQRepair` | Forwards side-only payload to `MHQRepair` (`RequestMHQRepair.sqf:1`). | HQ repair/recovery authority gap. | Include requester and repair/recovery context; server validates dead HQ, side, vehicle/range/class, repair count, funds and one-time WASP recovery flags. |
+| `RequestSpecial` | Spawns `HandleSpecial`, which multiplexes group, support, UAV, ICBM, HC, town delegation, camp repair and bookkeeping tags (`RequestSpecial.sqf:1`; `Server_HandleSpecial.sqf:6-168`). | Broad mixed-risk router; ICBM is P0. | Split by tag. Harden `"ICBM"` first; then validate support fees/upgrades/cooldowns, HC identity, town-delegation vehicle ownership, camp repair side/object state and HQ-kill payload shape. |
+| `RequestTeamUpdate` | Applies behavior/combat/formation/speed to a payload group array or all teams on a payload side (`RequestTeamUpdate.sqf:9-25`). | Commander/team-control payload mutation. | Validate requester is commander or authorized leader for the requested groups/side; allowlist behavior/combat/formation/speed values. |
+| `RequestUpgrade` | Raw-spawns `WFBE_SE_FNC_ProcessUpgrade` with side/id/level payload (`RequestUpgrade.sqf:5`). | DR-23 upgrade authority gap. | Validate commander/team, side, current level, requested next level, dependencies, cost and funds before spawning the upgrade worker. |
+| `RequestAutoWallConstructinChange` | Sets global `isAutoWallConstructingEnabled` from payload and replies to payload player (`RequestAutoWallConstructinChange.sqf:3-7`). | Low/medium CoIn workflow toggle. | Validate requester/player object and side/commander/build context before changing the global toggle; keep response targeted. |
+
+### `RequestSpecial` Tag Triage
+
+Do not patch `RequestSpecial` as one giant rewrite. It is a tag router with materially different authority needs:
+
+| Tag family | Current behavior | First hardening gate |
+| --- | --- | --- |
+| Bookkeeping: `update-teamleader`, `group-query`, `upgrade-sync`, `update-clientfps`, `track-playerobject` | Mutates teamleader, group join, upgrade sync flags, HC/client FPS records or player-object lists from payloads (`Server_HandleSpecial.sqf:6-41,67-83,133-144`). | Shape-check objects/UIDs/groups and ensure the requester can speak for the team/player record. |
+| Support effects: `Paratroops`, `ParaVehi`, `ParaAmmo`, `uav`, `RespawnST`, `repair-camp` | Spawns support scripts, kills supply trucks or recreates camp bunkers from payload side/position/object state (`Server_HandleSpecial.sqf:43-64,147-168`). | Recompute fee, cooldown, upgrade, side, target object and position server-side before effect. |
+| Delegation/HC: `update-town-delegation`, `connected-hc` | Registers HC groups and appends delegated vehicles to town active-vehicle state (`Server_HandleSpecial.sqf:86-94,117-128`). | Validate HC identity/owner and ensure delegated vehicle lists belong to the expected town/HC handoff. |
+| HQ/endgame-sensitive: `process-killed-hq` | Forwards payload killed event into `WFBE_SE_FNC_OnHQKilled` (`Server_HandleSpecial.sqf:114-115`). | Validate killed object is the side HQ/MHQ being tracked and reject duplicate killed-event processing. |
+| P0 special weapon: `ICBM` | Trusts side/base/target/team payload, waits for target death and spawns `NukeDammage` (`Server_HandleSpecial.sqf:97-111`). | Use [ICBM authority](ICBM-Authority-Playbook) before any other `RequestSpecial` hardening claim. |
+
 ## Migration Table
 
 | Flow | Client entrypoint | Current server/current handler | Current trust | Target authority owner | Patch shape | First validation |
