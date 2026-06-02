@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Main Orchestrator: Wave Q UI Handle Harvest
+
+- Reused the six attached subagents after the thread cap blocked fresh spawns again; each now has a fresh read-only discovery lane and no write ownership.
+- Source-checked Curie's Wave Q RHUD/endgame display lead against `Rsc/Titles.hpp`, `Client/Client_UpdateRHUD.sqf`, `Client/GUI/GUI_EndOfGameStats.sqf`, `Client_EndGame.sqf` and `updateavailableactions.fsm`.
+- Promoted the confirmed `currentCutDisplay` collision into [Client UI systems atlas](Client-UI-Systems-Atlas), [UI IDD collision repair](UI-IDD-Collision-Repair), [Client UI/HUD](Client-UI-HUD-And-Menus), [Feature status](Feature-Status-Register) and [Source fix queue](Source-Fix-Propagation-Queue).
+- Patch-ready shape: split title display handles between OptionsAvailable/RHUD/action icons and EndOfGameStats, or gate RHUD/action-icon recreation during endgame; smoke RHUD/FPS, action icons and endgame stat bars together.
+
 ## 2026-06-02 - Codex Main Orchestrator: Wave N Owner-Page Harvest + Sidecar Scouts
 
 - Accepted Steff's explicit note that this tab is now the main LLM orchestrator: Codex owns canonical docs publishing, validation, dashboard/status updates and cross-agent handoffs.

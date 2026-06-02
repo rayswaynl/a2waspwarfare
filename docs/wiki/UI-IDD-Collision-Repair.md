@@ -42,6 +42,8 @@ Two title resources share `idd = 10200`:
 
 There is no standalone `Client/RHUD` subtree in the current source. RHUD is folded into `OptionsAvailable` plus `Client/Client_UpdateRHUD.sqf`, so title-ID repair must preserve that display-owner relationship.
 
+Wave Q added a separate title-display ownership finding. `EndOfGameStats` uses `idd = 90000` (`Rsc/Titles.hpp:532-533`), but it shares the same `onLoad`/`onUnload` helper scripts and therefore the same `uiNamespace["currentCutDisplay"]` key as `OptionsAvailable` (`Titles.hpp:539-540`). `Client/GUI/GUI_EndOfGameStats.sqf:13` cuts `EndOfGameStats`, then waits for and writes controls through `currentCutDisplay` at `:34-44` and `:86-93`. Meanwhile `Client/Client_UpdateRHUD.sqf:183-190` keeps its one-second loop alive and `_RHUDGetDisplay` can re-cut `OptionsAvailable` when the shared key is null (`:89-92`). This is a handle collision even if all `idd` values are made unique.
+
 ## Why It Is A Risk
 
 In Arma 2 OA UI terms, duplicated `idd` makes `findDisplay 23000` or `findDisplay 10200` ambiguous when more than one matching display can exist or when future code assumes uniqueness.
@@ -56,7 +58,7 @@ Current normal flow reduces the chance of an immediate player-visible bug:
 - `GUI_Menu.sqf:171` closes the previous dialog before opening Economy.
 - `GUI_Menu_Service.sqf:243` closes the previous dialog before opening EASA.
 
-The title collision is less likely to break creation because `cutRsc` addresses resources by class/layer, but it can still confuse ID-based debug, `findDisplay`, or future display-control lookup.
+The title IDD collision is less likely to break creation because `cutRsc` addresses resources by class/layer, but it can still confuse ID-based debug, `findDisplay`, or future display-control lookup. The `currentCutDisplay` collision is more direct: two unrelated title resources write through the same stored handle, so unloading or recreating one title can make another title's controller read the wrong display.
 
 ## Patch Shape
 
@@ -66,7 +68,9 @@ Keep the first patch small:
 2. Audit all `findDisplay 23000` and hard-coded display assumptions before changing scripts.
 3. Keep existing `idc` values unless a specific control collision is proven after the dialog ID change.
 4. Assign a distinct `idd` to either `RscOverlay` or `OptionsAvailable`.
-5. Prefer stored display handles such as `currentCutDisplay` / `uiNamespace` over ID lookup for title resources.
+5. Keep title IDD cleanup separate from title display-variable cleanup.
+6. Split title display handles so `OptionsAvailable`/RHUD/action icons and `EndOfGameStats` do not share `currentCutDisplay`. Either add separate helper scripts/keys or make the helper accept the key name explicitly.
+7. If the minimal patch instead gates RHUD/action-icon recreation during endgame, still avoid making endgame stat rendering depend on an action-HUD-owned key.
 
 Do not combine this with EASA balance generation or Economy authority changes. This is resource hygiene and future-proofing.
 
@@ -80,6 +84,7 @@ Source-only:
 
 - `RscMenu_EASA` and `RscMenu_Economy` have distinct `idd` values.
 - `RscOverlay` and `OptionsAvailable` have distinct `idd` values.
+- `OptionsAvailable`/RHUD/action icons and `EndOfGameStats` no longer set/clear the same `uiNamespace` display key.
 - Any `findDisplay 23000` / `findDisplay 10200` references are updated or proven safe.
 
 Arma smoke:
@@ -88,6 +93,8 @@ Arma smoke:
 - Economy opens from main menu and income/sell/supply-truck controls still render.
 - RHUD/FPS HUD still appears and updates.
 - Action availability icons still appear.
+- Endgame stat bars populate after match end with RHUD/FPS toggled on and off.
+- Unloading endgame stats does not clear the action/RHUD display handle unless endgame intentionally disables that surface.
 - No title resource flicker/regression during map/menu transitions.
 
 ## Continue Reading

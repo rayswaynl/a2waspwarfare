@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T20:57:00+02:00",
+  "generatedAt": "2026-06-02T21:06:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,34 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "rhud-endgame-currentcutdisplay-harvest",
+      "owner": "Codex",
+      "status": "local-validation-pending",
+      "sourceScope": [
+        "docs/wiki/Client-UI-Systems-Atlas.md",
+        "docs/wiki/UI-IDD-Collision-Repair.md",
+        "docs/wiki/Client-UI-HUD-And-Menus.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Titles.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Client_UpdateRHUD.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_EndOfGameStats.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateavailableactions.fsm"
+      ],
+      "outputs": [
+        "UI handle collision owner-page harvest",
+        "Progress-Dashboard.md",
+        "Subagent-Discovery-Swarm.md",
+        "Agent-Worklog.md",
+        "agent-status.json",
+        "agent-feature-status.jsonl",
+        "agent-hardening-backlog.jsonl",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl"
+      ],
+      "handoff": "Codex is promoting Curie's Wave Q RHUD/endgame currentCutDisplay finding. Patch owner should split title display handles or gate RHUD/action-icon recreation during endgame, then propagate maintained Vanilla and smoke RHUD/FPS, action icons and endgame stat bars together."
+    },
     {
       "lane": "construction-logic-list-cleanup-playbook",
       "owner": "Codex",
@@ -48,7 +76,7 @@
     {
       "lane": "orchestrator-code-discovery-wave-q",
       "owner": "Codex sub-agents",
-      "status": "returned-harvest-pending",
+      "status": "returned-partial-harvest",
       "sourceScope": [
         "construction logic cleanup",
         "economy authority",
@@ -60,7 +88,7 @@
       "outputs": [
         "Read-only source reports for Codex review"
       ],
-      "handoff": "Raw Wave Q reports returned and are not canonical until Codex source-checks and promotes them into owner pages. Highest-value next harvest leads: RHUD/endgame currentCutDisplay collision, negative side-supply amount handling, town patrol reset/camp repair authority and player-buy path correction."
+      "handoff": "Raw Wave Q reports returned and are not canonical until Codex source-checks and promotes them into owner pages. Curie's RHUD/endgame currentCutDisplay collision is promoted locally; remaining next harvest leads are negative side-supply amount handling, town patrol reset/camp repair authority and player-buy path correction."
     },
     {
       "lane": "wave-p-owner-page-harvest",

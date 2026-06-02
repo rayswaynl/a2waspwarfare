@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T20:57:00+02:00",
+  "generatedAt": "2026-06-02T21:06:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -17,9 +17,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "construction-logic-list-cleanup-playbook",
-      "currentWork": "Acting as main LLM orchestrator and publisher. Current local slice turns the SmallSite/MediumSite wfbe_structures_logic asymmetry into a patch-ready playbook while Wave Q subagents run read-only code discovery.",
-      "nextExpectedOutput": "Source-check and promote the highest-value returned Wave Q findings into owner pages."
+      "currentLane": "rhud-endgame-currentcutdisplay-harvest",
+      "currentWork": "Acting as main LLM orchestrator and publisher. Current local slice promotes the Wave Q RHUD/endgame currentCutDisplay collision into owner pages and machine ledgers while keeping remaining Wave Q leads routed for later source-check.",
+      "nextExpectedOutput": "Validate wiki links, JSON/JSONL, mirror parity, then publish the scoped UI-handle documentation harvest."
     },
     "Codex-2": {
       "status": "ready",
@@ -34,13 +34,19 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "wave-q-returned-harvest-pending",
+      "status": "wave-q-returned-partial-harvest",
       "currentLane": "orchestrator-code-discovery-wave-q",
-      "currentWork": "All six attached explorers returned scoped read-only reports: construction cleanup, economy authority, commander/HQ lifecycle, factory queues, town AI/capture/delegation and UI/action/RHUD state.",
-      "nextExpectedOutput": "Codex will source-check and promote selected Wave Q findings into owner pages."
+      "currentWork": "All six attached explorers returned scoped read-only reports: construction cleanup, economy authority, commander/HQ lifecycle, factory queues, town AI/capture/delegation and UI/action/RHUD state. Curie's RHUD/endgame handle collision is promoted locally.",
+      "nextExpectedOutput": "Codex will validate/publish the UI-handle harvest, then source-check the remaining Wave Q leads."
     }
   },
   "laneSummary": [
+    {
+      "lane": "rhud-endgame-currentcutdisplay-harvest",
+      "owner": "Codex",
+      "status": "local-validation-pending",
+      "output": "Wave Q UI lead promoted locally: OptionsAvailable/RHUD/action icons and EndOfGameStats both use uiNamespace currentCutDisplay, so the patch lane must split title display handles or gate RHUD/action recreation during endgame."
+    },
     {
       "lane": "construction-logic-list-cleanup-playbook",
       "owner": "Codex",
