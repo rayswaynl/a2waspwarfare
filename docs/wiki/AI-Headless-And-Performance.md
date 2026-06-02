@@ -1,5 +1,7 @@
 # AI, Headless And Performance
 
+For the loop-level runtime and HC delegation table, see [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map). This page remains the broader atlas for AI, headless-client behavior and performance ownership.
+
 ## AI Delegation
 
 `WFBE_C_AI_DELEGATION` controls delegation:

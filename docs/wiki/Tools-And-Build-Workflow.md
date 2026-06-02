@@ -1,5 +1,7 @@
 # Tools And Build Workflow
 
+For the release-readiness and integration risk audit that sits on top of this workflow, see [Tooling release readiness audit](Tooling-Release-Readiness-Audit).
+
 Page ownership: this page owns the operational LoadoutManager rules, skip-list and generated-mission status table. [Source fix propagation queue](Source-Fix-Propagation-Queue) owns the current source/Vanilla propagation and smoke-gate ledger. Full drift evidence and file-count analysis live in [Deep-review findings](Deep-Review-Findings) DR-4 and DR-32; keep only the actionable build/propagation rules here.
 
 ## LoadoutManager

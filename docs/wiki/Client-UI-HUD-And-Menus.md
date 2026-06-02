@@ -1,6 +1,6 @@
 # Client UI, HUD And Menus
 
-This is the quick-reference gateway for client UI work. The canonical implementation map is [Client UI systems atlas](Client-UI-Systems-Atlas); update that atlas for detailed dialog tables, title resources, controller loops, marker/action UI and UI risk analysis.
+This is the quick-reference gateway for client UI work. Start with the [player UI workflow map](Player-UI-Workflow-Map) when you need a "what can the player click?" tour. The canonical implementation map is [Client UI systems atlas](Client-UI-Systems-Atlas); update that atlas for detailed dialog tables, title resources, controller loops, marker/action UI and UI risk analysis.
 
 ## First Stops
 
@@ -47,6 +47,6 @@ Use this as the fast route before touching UI:
 
 ## Continue Reading
 
-Previous: [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) | Next: [Client UI systems atlas](Client-UI-Systems-Atlas)
+Previous: [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) | Next: [Player UI workflow map](Player-UI-Workflow-Map)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

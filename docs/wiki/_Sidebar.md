@@ -55,10 +55,12 @@
 - [Supply missions](Supply-Mission-Architecture)
 - [Supply heli PR #1](Current-Work-Supply-Helicopters-PR1)
 - [AI/performance](AI-Headless-And-Performance)
+- [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map)
 - [AI commander autonomy audit](AI-Commander-Autonomy-Audit)
 - [HC delegation/failover](Headless-Delegation-And-Failover-Playbook)
 - [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety)
 - [UI/HUD/menus](Client-UI-HUD-And-Menus)
+- [Player UI workflow map](Player-UI-Workflow-Map)
 - [UI systems atlas](Client-UI-Systems-Atlas)
 - [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas)
 - [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas)
@@ -70,6 +72,7 @@
 ## Ops
 
 - [Tools/build](Tools-And-Build-Workflow)
+- [Tooling release readiness audit](Tooling-Release-Readiness-Audit)
 - [Parameters/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs)
 - [Source fix propagation queue](Source-Fix-Propagation-Queue)
 - [`agent-release-readiness.json`](agent-release-readiness.json)

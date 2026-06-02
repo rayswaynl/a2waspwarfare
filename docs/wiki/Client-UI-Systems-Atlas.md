@@ -1,6 +1,6 @@
 # Client UI Systems Atlas
 
-This page maps the client-facing UI layer from source: `description.ext`, `Rsc/*.hpp`, `Client/GUI`, client FSM loops, map marker scripts, HUD/title resources and WASP overlays. For a compact routing table before diving into the implementation map, use [Client UI, HUD and menus](Client-UI-HUD-And-Menus).
+This page maps the client-facing UI layer from source: `description.ext`, `Rsc/*.hpp`, `Client/GUI`, client FSM loops, map marker scripts, HUD/title resources and WASP overlays. For a player-facing workflow tour before diving into implementation, use [Player UI workflow map](Player-UI-Workflow-Map); for a compact quick reference, use [Client UI, HUD and menus](Client-UI-HUD-And-Menus).
 
 All paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
@@ -286,6 +286,6 @@ Verdict: mark the UI/HUD/menus JIP/HC coverage cell as reviewed with caveats. No
 
 ## Continue Reading
 
-Previous: [Client UI/HUD/menus](Client-UI-HUD-And-Menus) | Next: [Tools/build](Tools-And-Build-Workflow)
+Previous: [Player UI workflow map](Player-UI-Workflow-Map) | Next: [Tools/build](Tools-And-Build-Workflow)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

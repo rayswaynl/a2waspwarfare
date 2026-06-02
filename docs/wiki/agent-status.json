@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T20:30:00+02:00",
+  "generatedAt": "2026-06-02T20:55:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -18,8 +18,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; current slice refreshed tracked source inventory counts, launched five high-depth read-only discovery agents and validated the local docs gates.",
-      "nextExpectedOutput": "Publish the Source Inventory refresh to repo/wiki, then harvest the depth-agent reports into owner pages."
+      "currentWork": "Acting as main LLM orchestrator and publisher: harvesting returned depth reports, maintaining source-backed docs/machine records, and coordinating active read-only discovery waves.",
+      "nextExpectedOutput": "Publish the UI/runtime/tooling harvest, then harvest Herschel/Boole and code-discovery-wave-n reports as they return."
     },
     "Codex-2": {
       "status": "ready",
@@ -34,18 +34,30 @@
       "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
     },
     "Sub-agents": {
-      "status": "active-readonly-depth-team",
+      "status": "partially-harvested-readonly-depth-team",
       "currentLane": "deep-discovery-agent-team-m",
-      "currentWork": "Herschel, Boole, Einstein, Feynman and Epicurus are running disjoint high-depth reads across economy/supply, commander/construction/factory/upgrades, AI/runtime/HC, UI/action surfaces and tooling/integration/release readiness.",
-      "nextExpectedOutput": "Return structured source-backed reports for Codex review and wiki/machine-file harvest."
+      "currentWork": "Depth team M is partially harvested: Einstein, Feynman and Epicurus returned; Herschel and Boole remain pending. Code discovery wave N is active with six read-only explorers on WASP, JIP, PVF routers, gear/EASA, supports and towns/static defense.",
+      "nextExpectedOutput": "Return remaining reports for Codex orchestrator review and wiki/machine-file harvest."
     }
   },
   "laneSummary": [
     {
-      "lane": "deep-discovery-agent-team-m",
+      "lane": "code-discovery-wave-n",
       "owner": "Codex sub-agents",
       "status": "active-readonly",
-      "output": "Five high-depth agents are running with disjoint lanes: economy/supply authority, commander/construction/factories/upgrades, AI/headless/runtime, player UI/action surfaces and tooling/integrations/release readiness."
+      "output": "Six explorers are running: Tesla WASP overlay archaeology, Linnaeus join/JIP/disconnect resilience, Lorentz PVF/special router tags, Hubble gear/loadout/EASA/profile, Banach support/specials/artillery/ICBM/UAV and Curie towns/camps/resistance/static defense. A seventh assets/config/localization lane could not spawn because the agent thread limit was reached."
+    },
+    {
+      "lane": "depth-agent-harvest-ui-runtime-tooling",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Feynman, Einstein and Epicurus reports are promoted into Player-UI-Workflow-Map.md, AI-Runtime-HC-Loop-Map.md and Tooling-Release-Readiness-Audit.md; docs/wiki link validation, JSON/JSONL parsing and diff whitespace checks passed before wiki mirror."
+    },
+    {
+      "lane": "deep-discovery-agent-team-m",
+      "owner": "Codex sub-agents",
+      "status": "partially-harvested-readonly",
+      "output": "Einstein AI/headless/runtime, Feynman UI/action surfaces and Epicurus tooling/integrations/release readiness returned and were harvested. Herschel economy/supply authority and Boole commander/construction/factories/upgrades remain pending."
     },
     {
       "lane": "source-inventory-count-refresh",
@@ -477,19 +489,19 @@
       "lane": "client-skill-init-idempotency",
       "owner": "Codex-2",
       "status": "published-propagated-smoke-pending",
-      "output": "Client-Skill-Init-Idempotency.md plus source Chernarus Init_Client.sqf duplicate Skill_Init removal; Vanilla propagation and Arma smoke pending."
+      "output": "Client-Skill-Init-Idempotency.md plus source Chernarus Init_Client.sqf duplicate Skill_Init removal; Vanilla propagated, Arma smoke pending."
     },
     {
       "lane": "hosted-server-fps-loop-sleep",
       "owner": "Codex-2",
       "status": "published-propagated-smoke-pending",
-      "output": "Hosted-Server-FPS-Loop-Sleep.md plus source Chernarus FPS publisher early non-dedicated exits; Vanilla propagation and Arma smoke pending."
+      "output": "Hosted-Server-FPS-Loop-Sleep.md plus source Chernarus FPS publisher early non-dedicated exits; Vanilla propagated, Arma smoke pending."
     },
     {
       "lane": "supply-mission-scan-narrowing",
       "owner": "Codex-2",
       "status": "published-propagated-smoke-pending",
-      "output": "Supply-Mission-Scan-Narrowing.md plus source Chernarus supplyMissionStarted.sqf command-center scan narrowing; Vanilla propagation and Arma smoke pending."
+      "output": "Supply-Mission-Scan-Narrowing.md plus source Chernarus supplyMissionStarted.sqf command-center scan narrowing; Vanilla propagated, Arma smoke pending."
     },
     {
       "lane": "wasp-marker-wait-cleanup",

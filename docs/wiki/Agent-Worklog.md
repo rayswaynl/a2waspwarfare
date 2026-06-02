@@ -2,6 +2,19 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-02 - Codex Orchestrator Code Discovery Wave N
+
+- Spawned six read-only code discovery explorers for non-overlapping source archaeology: Tesla (WASP overlay), Linnaeus (join/JIP/disconnect), Lorentz (PVF/special router tags), Hubble (gear/loadout/EASA/profile), Banach (support/specials/artillery/ICBM/UAV) and Curie (towns/camps/resistance/static defense).
+- The agent thread limit blocked a seventh assets/config/localization/parameters explorer, so that lane remains a good next spawn when capacity frees up.
+- Main Codex remains the orchestrator/publisher lane: it should harvest returned reports into owner pages, machine records and the progress dashboard instead of letting raw agent output become the source of truth.
+
+## 2026-06-02 - Codex Depth Agent Harvest: UI, Runtime, Tooling
+
+- Harvested returned high-depth reports from Feynman, Einstein and Epicurus into three owner pages: [Player UI workflow map](Player-UI-Workflow-Map), [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) and [Tooling release-readiness audit](Tooling-Release-Readiness-Audit).
+- Wired the new pages through Home, sidebar/footer navigation, MkDocs and the relevant owner pages for UI, AI/headless and Tools/build.
+- Captured the immediate high-risk surfaces: client-authoritative UI actions and duplicate IDDs, AI supply-truck enablement hazards, HC delegation failback gaps, hosted/dedicated FPS loop semantics, LoadoutManager fresh-checkout hazards and integration trust boundaries.
+- Left Herschel economy/supply authority and Boole commander/construction/factory/upgrades pending for a later harvest when their reports return.
+
 ## 2026-06-02 - Codex Source Inventory Refresh + Depth Agent Team
 
 - Spawned a high-depth read-only discovery team for economy/supply authority, commander/construction/factory/upgrade flow, AI/headless/server runtime, player UI/action surfaces and tooling/integration/release readiness. Agents: Herschel, Boole, Einstein, Feynman and Epicurus.

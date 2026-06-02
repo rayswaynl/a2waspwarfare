@@ -47,11 +47,13 @@ nav:
       - Supply Mission Authority Cleanup: Supply-Mission-Authority-Cleanup-Playbook.md
       - Current Supply Helicopters PR1: Current-Work-Supply-Helicopters-PR1.md
       - AI Headless And Performance: AI-Headless-And-Performance.md
+      - AI Runtime HC Loop Map: AI-Runtime-HC-Loop-Map.md
       - AI Commander Autonomy Audit: AI-Commander-Autonomy-Audit.md
       - Headless Delegation And Failover: Headless-Delegation-And-Failover-Playbook.md
       - Commander Reassignment Call Shape: Commander-Reassignment-Call-Shape.md
   - UI And Tooling:
       - Client UI Systems Atlas: Client-UI-Systems-Atlas.md
+      - Player UI Workflow Map: Player-UI-Workflow-Map.md
       - Respawn And Death Lifecycle: Respawn-And-Death-Lifecycle-Atlas.md
       - UI IDD Collision Repair: UI-IDD-Collision-Repair.md
       - Client UI HUD And Menus: Client-UI-HUD-And-Menus.md
@@ -60,6 +62,7 @@ nav:
       - Vehicle Cargo Equip Loop Bounds: Vehicle-Cargo-Equip-Loop-Bounds.md
       - Service Menu Affordability Guards: Service-Menu-Affordability-Guards.md
       - Tools And Build Workflow: Tools-And-Build-Workflow.md
+      - Tooling Release Readiness Audit: Tooling-Release-Readiness-Audit.md
       - Source Fix Propagation Queue: Source-Fix-Propagation-Queue.md
       - Agent Release Readiness Ledger: Agent-Release-Readiness-Ledger.md
       - Testing Debugging And Release Workflow: Testing-Debugging-And-Release-Workflow.md
