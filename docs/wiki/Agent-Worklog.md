@@ -1637,3 +1637,8 @@ Key conclusions:
 - Rechecked the visible [Progress Dashboard](Progress-Dashboard) after the machine-ledger branch-scope batch and found its top `At A Glance` panel still advertised Codex on `networking-publicvariable-atlas`, Codex-2 actively on `wasp-marker-wait-cleanup`, and Wave F as the latest sub-agent state.
 - Updated the dashboard to match `agent-status.json`: Codex is on `documentation-finisher-loop`, Codex-2 is ready/idle, Wave S is closed, and `wasp-marker-wait-cleanup` is a published opportunity/source-needs-code lane rather than active work.
 - Also reconciled visible stale rows for PVF dispatch, DR42/DR43, markdown intake, attack-wave authority, economy-supply commander audit and testing workflow from surfaced/ready/drafted wording to published/validated or published status.
+
+## 2026-06-03T23:05:00+02:00 - Codex - owner decision branch-scope refresh
+- Source-checked [Pending owner decisions](Pending-Owner-Decisions) against current docs/source and canonical DR pages before editing.
+- Corrected the DR-43 owner row from "duplicate `Init_Server` function binds (6)" to the actual shape: three live duplicate binds (`LogGameEnd`, `PlayerObjectsList`, `AwardScorePlayer`) plus three commented remnants (AFK kick, server FPS, MASH marker), with line evidence from `Server/Init/Init_Server.sqf:64,69,83,88-93`.
+- Clarified that `version.sqf` is absent from tracked source even though `description.ext:39` and `initJIPCompatible.sqf:4` include it, and branch-scoped the DR-19 hosted-FPS row: docs/source Chernarus/Vanilla are patched, stable master is not, release `a9219d88` is Chernarus-only, and Arma smoke remains.

@@ -72,15 +72,15 @@ Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) for the source
 | Paratrooper drop markers: smoke propagated fix / decide modded drift | DR-2 | source Chernarus + maintained Vanilla now register the callback and ship the handler; Arma smoke and divergent modded folders remain |
 | Dead WASP actions (OnArmor, GearYouUnit) | DR-35 | commented in `WASP/actions/AddActions.sqf:4` |
 | `supplyMissionActive.sqf` dead twin | DR-39 | compiled but never called |
-| Duplicate `Init_Server` function binds (6) | DR-43b | de-duplicate; `LogGameEnd` dup relates to DR-13 |
-| `version.sqf` referenced by `description.ext:39` but absent from source | DR-43a | commit a source `version.sqf` or document pack-time generation |
+| `Init_Server.sqf` duplicate binds: 3 live + 3 commented remnants | DR-43b | Live duplicates are `LogGameEnd` (`Init_Server.sqf:64,89`), `PlayerObjectsList` (`:69,91`) and `AwardScorePlayer` (`:83,93`); commented remnants are AFK kick, server FPS and MASH marker. De-duplicate live binds; coordinate `LogGameEnd` with DR-13/DR-36. |
+| `version.sqf` referenced by `description.ext:39` and `initJIPCompatible.sqf:4` but absent from tracked source | DR-43a | `git ls-files` has no `version.sqf`; commit a safe source placeholder or keep generated-only with explicit pre-pack/pre-test checks. |
 
 ## 4. Robustness / defense-in-depth (optional)
 
 | Decision | Finding | Note |
 | --- | --- | --- |
 | Post-join `wfbe_*` `waitUntil` chain has no timeouts | DR-37 | a never-set synced var hangs the JIP client; add defensive timeouts |
-| Server-FPS hosted/listen busy-loop | DR-19 | move `sleep` outside the `isDedicated` guard |
+| Server-FPS hosted/listen busy-loop | DR-19 | docs/source Chernarus + Vanilla now early-exit on `!isDedicated` (`serverFpsGUI.sqf:1`, `monitorServerFPS.sqf:1`); stable `origin/master` still has the old inner-`isDedicated` sleep, release `a9219d88` is Chernarus-only, and Arma smoke remains. |
 | WASP `global_marking_monitor.sqf:62` sleepless display-wait | DR-40 | use the throttled `waitUntil {sleep …; cond}` idiom |
 
 ## Agent Handoff Contract

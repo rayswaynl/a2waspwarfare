@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T22:45:00+02:00",
+  "generatedAt": "2026-06-03T23:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed the visible Progress Dashboard handoff so its At A Glance and Current Lanes rows match the compact machine state: Codex is on documentation-finisher-loop, Codex-2 is ready, Wave S is closed, and stale ready-to-publish rows are published/validated.",
+      "currentWork": "Refreshed Pending-Owner-Decisions and machine context so DR-43 duplicate-bind wording and DR-19 hosted-FPS branch scope match the current source evidence.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: feature-status reconciliation, owner-decision consolidation, P0/P1 accuracy drift with exact source refs, or deeper release/readiness smoke planning."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "owner-decision-branch-scope-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Pending-Owner-Decisions now matches corrected DR-43 and DR-19 evidence: Init_Server.sqf has three live duplicate binds plus three commented remnants, version.sqf is absent from tracked source while included by description.ext:39 and initJIPCompatible.sqf:4, and hosted-FPS is docs/source propagated while stable master is old and release a9219d88 is Chernarus-only. agent-context.json and agent-hardening-backlog.jsonl were aligned."
+    },
     {
       "lane": "dashboard-active-handoff-refresh",
       "owner": "Codex",

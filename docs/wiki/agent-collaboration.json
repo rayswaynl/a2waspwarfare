@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T22:45:00+02:00",
+  "generatedAt": "2026-06-03T23:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -1267,9 +1267,10 @@
         "Closed the commander map-order executor source-proof follow-up by documenting live RequestTeamUpdate, unproven wfbe_teammode/wfbe_teamgoto executor state and dormant SetTask sends",
         "Closed PR #1 supply-heli line-delta/propagation audit: Chernarus source has the heli constants/action gate/SupplyByHeli/cash-run/interdiction path, but maintained Vanilla lacks those runtime symbols on this branch; local branch diff is broad and no-commander cash-run side-supply fallback is absent",
         "Refreshed this active loop handoff after dashboard/status evidence showed cleanup flag/nested-pair promotion is already published/validated",
-        "Refreshed Progress-Dashboard At A Glance and visible stale lane rows so they match agent-status.json and no longer advertise closed lanes as active or ready-to-publish"
+        "Refreshed Progress-Dashboard At A Glance and visible stale lane rows so they match agent-status.json and no longer advertise closed lanes as active or ready-to-publish",
+        "Refreshed Pending-Owner-Decisions and adjacent machine context so DR-43 duplicate-bind wording and DR-19 hosted-FPS branch scope match current source evidence"
       ],
-      "handoff": "Continue from the highest-value open docs item after validation and publish. Cleanup/restorer cadence, scout-wave-g validation, commander map-order source proof, PR #1 supply-heli line-delta/propagation audit, cleanup flag/nested-pair shape promotion and dashboard active-handoff refresh are reconciled; next bounded candidate is another feature-status reconciliation item, owner-decision consolidation, release/readiness smoke planning, or P0/P1 accuracy drift with exact source refs. Do not overlap active Codex, Claude or other agent claims."
+      "handoff": "Continue from the highest-value open docs item after validation and publish. Cleanup/restorer cadence, scout-wave-g validation, commander map-order source proof, PR #1 supply-heli line-delta/propagation audit, cleanup flag/nested-pair shape promotion, dashboard active-handoff refresh and owner-decision branch-scope refresh are reconciled; next bounded candidate is another feature-status reconciliation item, release/readiness smoke planning, or P0/P1 accuracy drift with exact source refs. Do not overlap active Codex, Claude or other agent claims."
     },
     {
       "lane": "lesson-aware-codebase-indexer",
