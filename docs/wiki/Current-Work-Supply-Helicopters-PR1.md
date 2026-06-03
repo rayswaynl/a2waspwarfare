@@ -6,7 +6,7 @@ Branch: `feat/supply-helicopter`
 
 Base: `master`
 
-Status at original indexing: open, not draft, mergeable, no status checks reported by GitHub. A 2026-06-04 local branch recheck found `origin/feat/supply-helicopter` at head `262dc431`; the earlier line-by-line audit used `ffeea4c2`. PR web state was not re-verified here.
+Status at original indexing: open, not draft, mergeable, no status checks reported by GitHub. A 2026-06-04 local branch recheck found `origin/feat/supply-helicopter` at head `262dc431`; the line-by-line source table below is now refreshed against that head. PR web state was not re-verified here.
 
 ## Summary
 
@@ -24,6 +24,7 @@ Current local head `262dc431` changes important mechanics from the older `ffeea4
 - Heli-specific gating now uses Aircraft Factory upgrade levels: `Client/Module/supplyMission/supplyMissionStart.sqf:21-29` denies heli loading until Aircraft Factory upgrade level 3.
 - `Common/Init/Init_CommonConstants.sqf:172-173` adds load/unload timers, and `:176-180` records the "one supply helicopter per side" / Air 3 load / Air 4 cash-run intent.
 - `Server/Module/supplyMission/supplyMissionCompleted.sqf:24-35` treats heli delivery at Air upgrade level 4 as a cash run, with commander-team tithe through `WFBE_CO_FNC_ChangeTeamFunds`.
+- Current head writes `SupplyByHeli` at `supplyMissionStart.sqf:54` and reads it at `supplyMissionStarted.sqf:7` / `supplyMissionCompleted.sqf:24`, but completion only clears `SupplyAmount` and `SupplyFromTown` (`supplyMissionCompleted.sqf:40-41`). Clearing or deliberately retaining `SupplyByHeli` is an open merge gate.
 - Maintained Vanilla still has no `SupplyByHeli`, `WFBE_C_SUPPLY_HELI_TYPES`, `WFBE_C_SUPPLY_HELI_ENABLED` or `wfbe_supply_killed_eh_set` hits on this branch, so any Vanilla release claim needs propagation first.
 
 ## Supply-Heli Core Files
@@ -62,17 +63,17 @@ Treat these as branch hygiene / merge-scope review items, not evidence for the p
 
 ## Line-By-Line Delta Audit
 
-This audit was originally source-scoped to `origin/feat/supply-helicopter` at `ffeea4c2`; the 2026-06-04 `262dc431` head-drift note above supersedes its upgrade-level wording. Re-run the full table before merge approval. Paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
+This table is refreshed against `origin/feat/supply-helicopter` head `262dc431`. Older `ffeea4c2` review notes remain useful only where explicitly marked historical. Paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
 | File | Branch evidence | Delta | Review note |
 | --- | --- | --- | --- |
-| `Rsc/Parameters.hpp` | `:5-11` | Adds lobby parameter `WFBE_C_SUPPLY_HELI_ENABLED`, default enabled. | Chernarus branch has the toggle. Vanilla feature propagation still needs checking because the heli constants and runtime vars are absent from Vanilla on this branch. |
-| `Common/Init/Init_CommonConstants.sqf` | `:169-178` | Adds reward/cash/interdiction multipliers, truck/heli/combined supply class lists, map-dependent heli classes and the feature toggle fallback. | Centralizes class lists. The comment explicitly says Takistan buy lists need verification. |
-| `Client/Module/Skill/Skill_Apply.sqf` | older `ffeea4c2`: `:65,72` | Changes action label to `LOAD SUPPLIES` and allowed trucks or supply-heli classes once Supply upgrade >= 2. Current `262dc431` needs a refreshed line audit because load gating moved to Air upgrade level 3 in `supplyMissionStart.sqf:21-29`. | UI/action affordance only; server authority still depends on supply mission start/completion hardening. |
-| `Client/Module/supplyMission/supplyMissionStart.sqf` | current `262dc431`: `:21-29`, `:54` | Recomputes truck/heli eligibility, shows an Aircraft Factory level-3 warning for locked supply helis and stamps `SupplyByHeli` alongside `SupplyFromTown`/`SupplyAmount`. | Still client-started and object-var based. Server-side class, cooldown, timer-interruption and source-town validation remain future hardening gates. |
-| `Server/Module/supplyMission/supplyMissionStarted.sqf` | `:7,13-30,36-43` | Reads `SupplyByHeli`, adds a guarded `Killed` handler, awards interdiction through `ChangeSideSupply`, clears `SupplyAmount` after death and expands heli command-center scan to 400m with a 2D-distance check. | The old stacked-handler claim is stale. The guard is persistent, so repeated load/deliver/destroy cycles still need smoke and any future removal/re-arm behavior needs a handler-ID plan. |
-| `Server/Module/supplyMission/supplyMissionCompleted.sqf` | current `262dc431`: `:24-35` | Reads `SupplyByHeli`, treats heli deliveries at Air upgrade >= 4 as cash runs and pays a commander-team tithe through `WFBE_CO_FNC_ChangeTeamFunds` when a commander group exists. | If no commander team exists, the cash-run branch has no side-supply fallback. Decide whether that pilot-only outcome is intended. |
-| `Client/Module/supplyMission/supplyMissionCompletedMessage.sqf` | `:13-31` | Reads `_byHeli`/`_cashRun`, applies the air reward multiplier to pilot funds and score, and labels the completion as `HELI` or `truck`. | Personal reward remains client-side and score is still a `RequestChangeScore` PVF, so this does not solve economy authority. |
+| `Rsc/Parameters.hpp` | `:4-10` | Adds lobby parameter `WFBE_C_SUPPLY_HELI_ENABLED`, default enabled. | Chernarus branch has the toggle. Vanilla feature propagation still needs checking because the heli constants and runtime vars are absent from Vanilla on this branch. |
+| `Common/Init/Init_CommonConstants.sqf` | `:168-180` | Adds reward/cash/interdiction multipliers, heli load/unload timers, truck/heli/combined supply class lists, map-dependent heli classes and the feature toggle fallback. | Centralizes class lists. The comment explicitly says Takistan buy lists need verification. |
+| `Client/Module/Skill/Skill_Apply.sqf` | `:62-72` | Adds `LOAD SUPPLIES`; trucks are always eligible, and supply heli action visibility requires the cursor target to be in `WFBE_C_SUPPLY_HELI_TYPES` and Aircraft Factory upgrade `WFBE_UP_AIR >= 3`. | UI/action affordance only; server authority still depends on supply mission start/completion hardening. |
+| `Client/Module/supplyMission/supplyMissionStart.sqf` | `:16-60` | Recomputes vehicle type, Air upgrade level, truck/heli eligibility, level-3 denial message, timed heli load and object vars `SupplyFromTown`, `SupplyByHeli`, `SupplyAmount`. | Still client-started and object-var based. Server-side class, cooldown, timer-interruption and source-town validation remain future hardening gates. |
+| `Server/Module/supplyMission/supplyMissionStarted.sqf` | `:7-30`, `:42-60`, `:93-95` | Reads `SupplyByHeli`, adds a guarded `Killed` handler, awards interdiction through `ChangeSideSupply`, clears `SupplyAmount` after death, expands heli command-center scan to 400m, uses 2D distance and requires timed unload dwell. | The old stacked-handler claim is stale. The guard is persistent, so repeated load/deliver/destroy cycles still need smoke and any future removal/re-arm behavior needs a handler-ID plan. |
+| `Server/Module/supplyMission/supplyMissionCompleted.sqf` | `:24-41` | Reads `SupplyByHeli`, treats heli deliveries at Air upgrade >= 4 as cash runs, pays commander-team tithe through `WFBE_CO_FNC_ChangeTeamFunds` when a commander group exists, and clears `SupplyAmount`/`SupplyFromTown`. | If no commander team exists, the cash-run branch has no side-supply fallback. `SupplyByHeli` is not cleared on completion; decide whether to clear it or document the retained flag as harmless. |
+| `Client/Module/supplyMission/supplyMissionCompletedMessage.sqf` | `:10-32` | Reads `_byHeli`/`_cashRun`, applies the air reward multiplier to pilot funds and score, and labels the completion as `HELI` or `truck`. | Personal reward remains client-side and score is still a `RequestChangeScore` PVF, so this does not solve economy authority. |
 | `Client/Functions/Client_UIFillListBuyUnits.sqf` | `:102` | Colors supply heli classes like supply trucks in the buy list. | Uses the central heli list; safe UI affordance. |
 | `Client/GUI/GUI_Menu_BuyUnits.sqf` | `:451-456` | Adds explanatory hint text for supply helicopters and separates ordinary lift helicopters from supply helicopters. | Text is hardcoded English, matching existing UI style but still localization debt. |
 
@@ -89,7 +90,8 @@ On `master`, server delivery already tracks a vehicle object and checks command-
 | Cooldown | Still town-var based; the existing `lastSupplyMissionRun` / `LastSupplyMissionRun` casing mismatch remains a master and PR concern. |
 | Cash runs | On current head `262dc431`, heli delivery at Air upgrade level 4 can route commander-tithe value to commander team funds when a commander exists. If no commander team exists, current PR code has no side-supply fallback; decide whether that pilot-only outcome is intended. |
 | Interdiction | Destroying a loaded enemy supply vehicle pays a fraction of cargo value. Current branch sets `wfbe_supply_killed_eh_set` before adding the handler, so older unguarded-stacking wording is stale. Repeated load/deliver/destroy smoke is still required because the guard is persistent and no handler-ID removal/re-arm plan is documented. |
-| Vanilla propagation | Not complete on this PR branch. | The Chernarus source mission contains the heli constants, `SupplyByHeli` flow and guarded handler; `git grep` found no equivalent symbols under maintained Vanilla Takistan. |
+| State cleanup | Completion clears `SupplyAmount` and `SupplyFromTown` but not `SupplyByHeli`. Current head writes `SupplyByHeli` only at start and reads it in started/completed handlers. Decide whether retained `SupplyByHeli` on a completed vehicle is harmless because `SupplyAmount` is zeroed, or clear it explicitly for cleaner state. |
+| Vanilla propagation | Not complete on this PR branch. The Chernarus source mission contains the heli constants, `SupplyByHeli` flow and guarded handler; `git grep` found no equivalent symbols under maintained Vanilla Takistan. |
 
 ## Deferred Work
 
@@ -98,10 +100,11 @@ Autonomous AI-flown supply helicopters are intentionally deferred. The upstream 
 ## Suggested Review Focus
 
 - Confirm action eligibility cannot be triggered by non-supply helicopters.
-- Confirm upgrade gates match the single heli class list and Supply upgrade thresholds.
+- Confirm upgrade gates match the single heli class list and Aircraft Factory upgrade thresholds.
 - Confirm loaded vehicle kill handler cannot double-award interdiction rewards.
 - Confirm repeated loading of the same vehicle keeps the guarded interdiction `Killed` event handler idempotent.
 - Confirm cash-run funds go to the intended commander/team account.
+- Confirm `SupplyByHeli` retained-after-completion behavior is either fixed or accepted.
 - Confirm action labels and completion messages still make sense for trucks and helicopters.
 - Run LoadoutManager after merge to propagate Chernarus source changes to Takistan/generated targets.
 

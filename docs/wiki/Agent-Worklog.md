@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-04T01:55:00+0200 - Codex - supply-heli-current-head-refresh
+
+- Refreshed the PR #1 supply-heli page against current `origin/feat/supply-helicopter` head `262dc431`, replacing older-head line-table wording instead of leaving only a drift note.
+- Source evidence checked: commit list `08664ebc` -> `262dc431`, merge base `f5985b77`, diff stat 82 files +462/-2056, branch whitespace hits, `Rsc/Parameters.hpp:4-10`, `Init_CommonConstants.sqf:168-180`, `Skill_Apply.sqf:62-72`, `supplyMissionStart.sqf:16-60`, `supplyMissionStarted.sqf:7-30,42-60,93-95`, `supplyMissionCompleted.sqf:24-41`, `supplyMissionCompletedMessage.sqf:10-32`, `Client_UIFillListBuyUnits.sqf:102` and `GUI_Menu_BuyUnits.sqf:451-456`.
+- Corrected stale adjacent wording: current head uses Aircraft Factory upgrade 3 for load/action visibility and Air 4 for cash runs, not older Supply-upgrade wording; maintained Vanilla still has no `SupplyByHeli`, `WFBE_C_SUPPLY_HELI_TYPES`, `WFBE_C_SUPPLY_HELI_ENABLED` or `wfbe_supply_killed_eh_set` hits.
+- Added a current-head gate: `SupplyByHeli` is written at mission start and read in started/completed handlers, but completion clears only `SupplyAmount` and `SupplyFromTown`; owner should either clear `SupplyByHeli` or accept/document retained state as harmless because amount is zeroed.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-04T01:25:00+0200 - Codex - commander-positions-branch-deep-audit
 
 - Deep-audited `origin/feat/commander-positions` head `560db61c` after branch intake identified it as useful but under-documented construction work.

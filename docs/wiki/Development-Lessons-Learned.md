@@ -116,6 +116,14 @@ The propagation scope is narrower than the branch footprint. Branch grep found n
 
 Development rule: before merge/release claims for a broad feature branch, document three labels separately: feature payload, branch baggage and propagation scope. See [Commander positions branch audit](Commander-Positions-Branch-Audit).
 
+## Lesson 14: Head-Drift Notes Must Become Current Tables
+
+The PR #1 supply-heli page originally carried an older `ffeea4c2` line audit with a current-head note for `262dc431`. That was better than silence, but it still left adjacent pages saying the PR page needed refresh and hid a current-head state-cleanup gap. Rechecking `origin/feat/supply-helicopter@262dc431` showed the exact current shape: lobby toggle at `Rsc/Parameters.hpp:4-10`, supply-heli constants/timers at `Init_CommonConstants.sqf:168-180`, Air 3 action gate at `Skill_Apply.sqf:62-72`, client load/start at `supplyMissionStart.sqf:16-60`, server dwell/interdiction at `supplyMissionStarted.sqf:7-30,42-60,93-95`, and Air 4 cash-run completion at `supplyMissionCompleted.sqf:24-41`.
+
+The current-head recheck also found a small but important state-cleanup decision: `SupplyByHeli` is written at start and read by the started/completed handlers, while completion clears `SupplyAmount` and `SupplyFromTown` only. That may be harmless because `SupplyAmount` is zeroed, but it should be explicitly fixed or accepted before merge.
+
+Development rule: when a branch-head note says older line refs are superseded, refresh the canonical table and all adjacent machine/status rows in the same batch. A note is not enough once owners are using the page for merge gates. See [Current supply heli PR](Current-Work-Supply-Helicopters-PR1).
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |

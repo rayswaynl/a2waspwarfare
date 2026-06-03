@@ -60,7 +60,7 @@ Current `origin/feat/supply-helicopter` has already addressed the older handler-
 
 Propagation caveat: the current PR branch has the supply-heli runtime symbols in `Missions/[55-2hc]warfarev2_073v48co.chernarus` only. A branch grep found no `SupplyByHeli`, `WFBE_C_SUPPLY_HELI_TYPES`, `WFBE_C_SUPPLY_HELI_ENABLED` or `wfbe_supply_killed_eh_set` symbols under maintained Vanilla Takistan, so Vanilla propagation remains a merge/release gate.
 
-Merge-scope caveat: current local `origin/feat/supply-helicopter` at `ffeea4c2` is broader than this feature path. The branch diff against `origin/master` changes 82 files with 431 insertions and 2048 deletions, including service-menu, Valhalla/low-gear, static-defense/HC, performance-audit and UI/resource changes. Review or isolate those separately before treating the branch as a supply-only merge.
+Merge-scope caveat: current local `origin/feat/supply-helicopter` head is `262dc431` and is broader than this feature path. The branch diff against `origin/master` changes 82 files with 462 insertions and 2056 deletions, including service-menu, Valhalla/low-gear, static-defense/HC, performance-audit and UI/resource changes. Review or isolate those separately before treating the branch as a supply-only merge.
 
 ## Master vs PR #1 Authority Matrix
 
@@ -69,7 +69,8 @@ Merge-scope caveat: current local `origin/feat/supply-helicopter` at `ffeea4c2` 
 | Vehicle type | Truck-only hardcoded class checks. | Centralized `WFBE_C_SUPPLY_TRUCK_TYPES`, `WFBE_C_SUPPLY_HELI_TYPES` and `WFBE_C_SUPPLY_VEHICLE_TYPES`. |
 | Start authority | Client chooses eligible vehicle, stamps `SupplyFromTown` / `SupplyAmount`, then notifies server. | Same trust model, plus `SupplyByHeli` and heli class/upgrade gates. |
 | Completion authority | Server loop verifies command-center proximity, then trusts the vehicle object vars. | Same server-completion pattern; reward path branches for truck, heli and cash run. |
-| Reward | Side supply on completion; player message/score path follows completion broadcast. | Heli rewards add the air bonus; heli deliveries at Supply upgrade 3 become cash runs that pay commander team funds when a commander exists. Current PR code does not fall back to side supply when no commander team exists. |
+| Reward | Side supply on completion; player message/score path follows completion broadcast. | Heli rewards add the air bonus; heli deliveries at Aircraft Factory upgrade 4 become cash runs that pay commander team funds when a commander exists. Current PR code does not fall back to side supply when no commander team exists. |
+| State cleanup | Completion clears `SupplyAmount` and `SupplyFromTown`. | Current head `262dc431` also writes/reads `SupplyByHeli`, but `supplyMissionCompleted.sqf:40-41` clears only amount/source. Decide whether to clear `SupplyByHeli` or document retained state as harmless because amount is zeroed. |
 | Cooldown | Town object cooldown uses `LastSupplyMissionRun`, with source casing mismatch against seeded `lastSupplyMissionRun`. | Same cooldown foundation; PR does not redesign cooldown ownership. |
 | AI logistics | Broken/deferred `UpdateSupplyTruck` / missing `supplytruck.fsm`. | Still deferred; PR covers player-run vehicles, not autonomous AI-flown supply helicopters. |
 | Known PR risk | Not applicable. | Current branch guards the interdiction `Killed` handler; repeated load/deliver/destroy behavior still needs Arma smoke before merge. |

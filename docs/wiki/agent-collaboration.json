@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T01:25:00+02:00",
+  "generatedAt": "2026-06-04T01:55:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,34 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "supply-heli-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "origin/feat/supply-helicopter",
+        "origin/master",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Apply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf",
+        "docs/wiki/Current-Work-Supply-Helicopters-PR1.md",
+        "docs/wiki/Supply-Mission-Architecture.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Pending-Owner-Decisions.md",
+        "docs/wiki/Testing-Debugging-And-Release-Workflow.md",
+        "docs/wiki/agent-release-readiness.json"
+      ],
+      "outputs": [
+        "Refreshed PR #1 supply-heli line table against current head 262dc431",
+        "Recorded Air 3 action/load gate, Air 4 cash-run branch and load/unload timers",
+        "Recorded retained SupplyByHeli state after completion as an open owner gate",
+        "Reconfirmed maintained Vanilla has no SupplyByHeli/WFBE_C_SUPPLY_HELI/wfbe_supply_killed_eh_set hits"
+      ],
+      "handoff": "Future supply owner should start at Current-Work-Supply-Helicopters-PR1. Do not call PR #1 merge-ready until branch whitespace/baggage, maintained Vanilla propagation, retained SupplyByHeli state, no-commander cash-run behavior, timer UX and runtime smoke are resolved."
+    },
     {
       "lane": "commander-positions-branch-deep-audit",
       "owner": "Codex",

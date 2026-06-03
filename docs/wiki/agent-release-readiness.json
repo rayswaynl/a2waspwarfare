@@ -362,7 +362,7 @@
       "branch": "origin/feat/supply-helicopter",
       "head": "262dc431",
       "base": "f5985b77",
-      "state": "branch-review-needed-pr1-head-drift-and-vanilla-open",
+      "state": "branch-review-needed-current-head-reviewed-vanilla-open",
       "sourceScope": "source-chernarus-supply-heli-plus-broad-branch-baggage",
       "canonicalDocs": [
         "Current-Work-Supply-Helicopters-PR1.md",
@@ -373,14 +373,16 @@
       ],
       "evidenceRefs": [
         "origin/master..origin/feat/supply-helicopter: 82 files +462/-2056",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp:4-7 on origin/feat/supply-helicopter",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:172-180 on origin/feat/supply-helicopter",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf:21-29,54 on origin/feat/supply-helicopter",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf:24-35 on origin/feat/supply-helicopter",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp:4-10 on origin/feat/supply-helicopter",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:168-180 on origin/feat/supply-helicopter",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Apply.sqf:62-72 on origin/feat/supply-helicopter",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf:16-60 on origin/feat/supply-helicopter",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf:7-30,42-60,93-95 on origin/feat/supply-helicopter",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf:24-41 on origin/feat/supply-helicopter",
         "No SupplyByHeli/WFBE_C_SUPPLY_HELI/wfbe_supply_killed_eh_set hits under maintained Vanilla on origin/feat/supply-helicopter"
       ],
-      "ownerDecision": "Refresh PR #1 merge review against current head; decide Air upgrade 3/4 semantics, cash-run economy, timer UX, Vanilla propagation and non-supply branch baggage.",
-      "promotionGate": "Smoke truck control, heli disabled/enabled, Air 2/3 load gate, Air 4 cash run, timer interruption, pilot/commander payout, interdiction, repeated missions and JIP before merge.",
+      "ownerDecision": "Decide Air upgrade 3/4 semantics, cash-run economy, timer UX, retained SupplyByHeli cleanup, Vanilla propagation and non-supply branch baggage.",
+      "promotionGate": "Smoke truck control, heli disabled/enabled, Air 2/3 load gate, Air 4 cash run, timer interruption, pilot/commander payout, interdiction, same-vehicle reload after completion and JIP before merge.",
       "plannedSmoke": {
         "status": "planned-not-run",
         "coverageLevel": [
