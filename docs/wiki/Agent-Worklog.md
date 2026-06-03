@@ -1632,3 +1632,8 @@ Key conclusions:
 - Audited current machine-readable status files after the branch matrix landed; `agent-release-readiness.json`, `agent-feature-status.jsonl`, `agent-hardening-backlog.jsonl`, `agent-context.json` and `agent-entrypoint.json` still contained unscoped or stale current-source wording.
 - Updated those ledgers so docs/source propagation, stable `origin/master` absence and release `a9219d88` partial coverage are explicit for hosted FPS, supply scan narrowing, client `Skill_Init` idempotency and paratrooper marker registration.
 - Added [Development lessons learned](Development-Lessons-Learned) Lesson 9 plus `agent-development-lessons.jsonl#lesson-machine-ledgers-need-branch-scope-2026-06-03`: machine ledgers need branch/commit and Chernarus/Vanilla line-shape proof before `patched`, `propagated` or `release-ready` wording is trusted.
+
+## 2026-06-03T22:45:00+02:00 - Codex - dashboard active handoff refresh
+- Rechecked the visible [Progress Dashboard](Progress-Dashboard) after the machine-ledger branch-scope batch and found its top `At A Glance` panel still advertised Codex on `networking-publicvariable-atlas`, Codex-2 actively on `wasp-marker-wait-cleanup`, and Wave F as the latest sub-agent state.
+- Updated the dashboard to match `agent-status.json`: Codex is on `documentation-finisher-loop`, Codex-2 is ready/idle, Wave S is closed, and `wasp-marker-wait-cleanup` is a published opportunity/source-needs-code lane rather than active work.
+- Also reconciled visible stale rows for PVF dispatch, DR42/DR43, markdown intake, attack-wave authority, economy-supply commander audit and testing workflow from surfaced/ready/drafted wording to published/validated or published status.

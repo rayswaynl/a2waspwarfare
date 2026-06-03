@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T22:25:00+02:00",
+  "generatedAt": "2026-06-03T22:45:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed machine-readable ledgers so docs/source propagation is separated from stable master and release/2026-06-feature-bundle coverage for hosted FPS, supply scan narrowing, client Skill_Init and paratrooper markers.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: owner-decision consolidation, another P0/P1 accuracy drift with exact source refs, or deeper release/readiness smoke planning."
+      "currentWork": "Refreshed the visible Progress Dashboard handoff so its At A Glance and Current Lanes rows match the compact machine state: Codex is on documentation-finisher-loop, Codex-2 is ready, Wave S is closed, and stale ready-to-publish rows are published/validated.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: feature-status reconciliation, owner-decision consolidation, P0/P1 accuracy drift with exact source refs, or deeper release/readiness smoke planning."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "dashboard-active-handoff-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Progress-Dashboard At A Glance and Current Lanes rows now agree with agent-status.json. Codex is active on documentation-finisher-loop, Codex-2 is ready rather than actively owning WASP cleanup, Wave S sub-agent work is closed, and older ready-to-publish/surfaced/drafted rows for PVF dispatch, DR42/DR43, markdown intake, attack-wave playbook, testing workflow and economy-supply commander audit are reconciled to their published state."
+    },
     {
       "lane": "machine-ledger-branch-scope-refresh",
       "owner": "Codex",
@@ -706,8 +712,8 @@
     {
       "lane": "source-fix-propagation-queue",
       "owner": "Codex",
-      "status": "published-propagated-smoke-pending",
-      "output": "Source-Fix-Propagation-Queue.md centralizes the five tracked fixes now present in Chernarus source and maintained Vanilla Takistan, plus skip-zip propagation command, diff evidence and Arma smoke gates."
+      "status": "docs-source-propagated-branch-scoped-smoke-pending",
+      "output": "Source-Fix-Propagation-Queue.md centralizes the five tracked docs/source fixes present in Chernarus source and maintained Vanilla Takistan, plus skip-zip propagation command, diff evidence, branch-scope caveats for stable master/release a9219d88 and Arma smoke gates."
     },
     {
       "lane": "agent-release-readiness-ledger",
@@ -982,20 +988,20 @@
     {
       "lane": "client-skill-init-idempotency",
       "owner": "Codex-2",
-      "status": "published-propagated-smoke-pending",
-      "output": "Client-Skill-Init-Idempotency.md plus source Chernarus Init_Client.sqf duplicate Skill_Init removal; Vanilla propagated, Arma smoke pending."
+      "status": "docs-source-propagated-absent-on-master-and-release-smoke-pending",
+      "output": "Client-Skill-Init-Idempotency.md plus docs/source Chernarus and Vanilla Init_Client.sqf duplicate Skill_Init removal; stable master and release a9219d88 still duplicate it, and Arma smoke is pending."
     },
     {
       "lane": "hosted-server-fps-loop-sleep",
       "owner": "Codex-2",
-      "status": "published-propagated-smoke-pending",
-      "output": "Hosted-Server-FPS-Loop-Sleep.md plus source Chernarus FPS publisher early non-dedicated exits; Vanilla propagated, Arma smoke pending."
+      "status": "docs-source-propagated-release-chernarus-only-smoke-pending",
+      "output": "Hosted-Server-FPS-Loop-Sleep.md plus docs/source Chernarus and Vanilla FPS publisher early non-dedicated exits; stable master keeps the old loops, release a9219d88 has Chernarus-only coverage, and Arma smoke is pending."
     },
     {
       "lane": "supply-mission-scan-narrowing",
       "owner": "Codex-2",
-      "status": "published-propagated-smoke-pending",
-      "output": "Supply-Mission-Scan-Narrowing.md plus source Chernarus supplyMissionStarted.sqf command-center scan narrowing; Vanilla propagated, Arma smoke pending."
+      "status": "docs-source-propagated-release-chernarus-only-smoke-pending",
+      "output": "Supply-Mission-Scan-Narrowing.md plus docs/source Chernarus and Vanilla supplyMissionStarted.sqf command-center scan narrowing; stable master remains broad, release a9219d88 has Chernarus-only coverage, and Arma smoke is pending."
     },
     {
       "lane": "wasp-marker-wait-cleanup",
