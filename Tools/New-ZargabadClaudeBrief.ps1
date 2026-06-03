@@ -63,6 +63,11 @@ $brief.Add(('- Latest commit: `{0}` `{1}`' -f $headShort, $subject))
 $brief.Add(('- Full commit: `{0}`' -f $headFull))
 foreach ($line in ($prInfo -split "`n")) { $brief.Add("- $line") }
 $brief.Add("")
+$brief.Add("## Coordination Cadence")
+$brief.Add("- Codex should send this fresh brief to Claude after every commit or material mission/tooling change.")
+$brief.Add("- Claude should report back after each runtime gate: hosted boot, dedicated boot, JIP, HC, base safety, central wall/pathing, side hills/rim, economy/factory feel, and mystery feature.")
+$brief.Add("- Claude findings with RPT excerpts, screenshots, coordinates, or repeatable repro steps should be treated as actionable. Codex should patch or retest the mission instead of defending stale assumptions.")
+$brief.Add("")
 $brief.Add("## What Changed Last")
 foreach ($file in $changedFiles) { $brief.Add(('- `{0}`' -f $file)) }
 $brief.Add("")

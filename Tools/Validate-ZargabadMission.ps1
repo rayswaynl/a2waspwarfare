@@ -333,6 +333,9 @@ Assert-True "runtime report tool emits Claude notes" ($runtimeReportSource -matc
 Assert-True "runtime report tool emits validator output" ($runtimeReportSource -match '## Validator Output')
 Assert-True "Claude brief tool exists" (Test-Path -LiteralPath $claudeBriefTool)
 $claudeBriefSource = Get-Content -Raw -LiteralPath $claudeBriefTool
+Assert-True "Claude brief tool emits coordination cadence" ($claudeBriefSource -match '## Coordination Cadence')
+Assert-True "Claude brief tool requires post-commit updates" ($claudeBriefSource -match 'after every commit or material mission/tooling change')
+Assert-True "Claude brief tool listens to evidence-backed findings" ($claudeBriefSource -match 'RPT excerpts, screenshots, coordinates, or repeatable repro steps')
 Assert-True "Claude brief tool emits retest focus" ($claudeBriefSource -match '## Retest Focus')
 Assert-True "Claude brief tool carries stop/go ownership" ($claudeBriefSource -match 'Codex owns the stop/go call')
 Assert-True "Claude brief tool points to runtime report" ($claudeBriefSource -match 'New-ZargabadRuntimeReport\.ps1')
