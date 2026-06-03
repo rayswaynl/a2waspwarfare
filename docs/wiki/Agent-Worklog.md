@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Lifecycle Wait-Chain Timeout Gap Closure
+
+- Closed the stale `gap-wait-chain-timeouts` record in `agent-knowledge.jsonl` by source-checking [Lifecycle wait-chain](Lifecycle-Wait-Chain)'s post-join wait audit.
+- Evidence checked: retrying gates at `Client/Init/Init_Client.sqf:416-456`, `Server/PVFunctions/RequestJoin.sqf:75-79`, `Client/PVFunctions/HandleSpecial.sqf:24-28`, `Server/Module/AntiStack/clientHasConnectedAtLaunch.sqf:1-15` and `Client/Module/AntiStack/hasConnectedAtLaunchACK.sqf:1-6`; raw wait gates at `Init_Client.sqf:367-371,384,394-398,461-490,595,787-789`; producers at `Server/Init/Init_Server.sqf:356-413`, `Common/Init/Init_Towns.sqf:13`, `Server/Functions/Server_ChangeSideSupply.sqf:19-21,43-45`.
+- Added the matching [Development lessons learned](Development-Lessons-Learned) rule and `agent-development-lessons.jsonl` entry: lifecycle wait changes must cite both consumer and producer, and 30-second retry semantics must not be copied onto raw `waitUntil` gates.
+
 ## 2026-06-03 - Codex Documentation Finisher: Wave Q Lorentz Commander/HQ Lifecycle Harvest
 
 - Source-checked Lorentz's Wave Q commander/HQ lead against `Server/PVFunctions/RequestNewCommander.sqf:3-16`, `Server/Functions/Server_AssignNewCommander.sqf:3-5`, `Server/Functions/Server_OnHQKilled.sqf:8-20,46-82`, `Client/Action/Action_RepairMHQ.sqf:5-35`, `Server/PVFunctions/RequestMHQRepair.sqf:1`, `Server/Functions/Server_MHQRepair.sqf:7-79` and `Server/Functions/Server_OnPlayerDisconnected.sqf:136-146`.

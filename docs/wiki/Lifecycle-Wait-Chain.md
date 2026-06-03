@@ -88,19 +88,21 @@ Claude DR-37 reviewed the boot/JIP path as broadly correct: the `RequestJoin` ha
 
 ### Post-Join Wait Audit
 
+Gap closure note (2026-06-03): this table is the source-backed wait-chain audit promised by the old `gap-wait-chain-timeouts` machine record. It is intentionally scoped to boot/JIP gates rather than ordinary gameplay loops. Rows distinguish retrying handshakes from timeout-less replicated-variable waits and cite both the consumer gate and the producer where practical.
+
 Bernoulli's 2026-06-02 wait-chain audit split the client join gates into two classes: retrying handshake gates and replicated-variable waits with no terminal timeout.
 
-| Gate | Producer | Timeout / retry state | Failure mode | Fix direction |
-| --- | --- | --- | --- | --- |
-| `RequestJoin` -> `WFBE_P_CANJOIN` | `Server/PVFunctions/RequestJoin.sqf` then client `HandleSpecial.sqf` writes `WFBE_P_CANJOIN`. | Polls and resends every 30 seconds; no hard terminal timeout. | Black screen / join pending forever if no answer; explicit lobby return if denied. | Keep retry but add hard timeout, log and fail-soft fallback. |
-| Launch ACK -> `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK` | `Server/Module/AntiStack/clientHasConnectedAtLaunch.sqf` then `Client/Module/AntiStack/hasConnectedAtLaunchACK.sqf`. | Polls and resends every 30 seconds; no hard terminal timeout. | Join remains pending if ACK is lost. | Add bounded retry budget and diagnostic log. |
-| `wfbe_structures` / optional side supply | `Init_Server.sqf` seeds structures/supply; `Server_ChangeSideSupply.sqf` updates supply. | No timeout, no retry. | Client never reaches action/resources init. | Add timeout/log fallback around structure and supply sync. |
-| `wfbe_commander` | Server init seeds side commander state; vote/disconnect handlers rebroadcast. | No timeout, no retry. | Commander FSM/UI state never starts correctly. | Guard with timeout and missing-broadcast diagnostic. |
-| `wfbe_radio_hq` / `wfbe_radio_hq_id` | Server init creates radio HQ and topic ID. | No timeout, no retry. | HQ announcer identity/radio wiring stalls. | Add sync check and log. |
-| Spawn location: `wfbe_startpos`, else `wfbe_hq` + `wfbe_structures` | Server init plus HQ construction/kill/repair paths. | No timeout, no retry. | Spawn position never resolves or resolves poorly. | Fail soft if HQ/structures are absent. |
-| `wfbe_hq_deployed` and nested `wfbe_hq` | Server init and HQ construction/kill/repair paths. | No timeout, no retry. | CoIn/HQ event-handler setup can block; JIP client may miss HQ killed handler. | Timeout and skip/retry only the dependent setup instead of stalling all client boot. |
-| `townInit` | `Common/Init/Init_Towns.sqf`. | No timeout, no retry. | Town, marker and action FSMs never launch. | Log a town-init stall before launching client FSM bundle. |
-| `wfbe_votetime` | Server init and vote countdown. | No timeout, no retry. | Vote menu does not open when vote state should exist. | Treat as optional/lazy-polled with timeout and log. |
+| Gate | Producer | Consumer / source anchors | Timeout / retry state | Failure mode | Fix direction |
+| --- | --- | --- | --- | --- | --- |
+| `RequestJoin` -> `WFBE_P_CANJOIN` | `RequestJoin.sqf` sends `HandleSpecial ["join-answer", ...]`; client `HandleSpecial.sqf` writes `WFBE_P_CANJOIN`. | `Init_Client.sqf:416-431`, `RequestJoin.sqf:75-79`, `HandleSpecial.sqf:24-28`. | Polls and resends every 30 seconds; no hard terminal timeout. | Black screen / join pending forever if no answer; explicit lobby return if denied. | Keep retry but add hard timeout, log and fail-soft fallback. |
+| Launch ACK -> `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK` | Server PVEH records launch side and replies to the player owner; client PVEH stores the ACK variable. | `Init_Client.sqf:441-456`, `clientHasConnectedAtLaunch.sqf:1-15`, `hasConnectedAtLaunchACK.sqf:1-6`. | Polls and resends every 30 seconds; no hard terminal timeout. | Join remains pending if ACK is lost. | Add bounded retry budget and diagnostic log. |
+| `wfbe_structures` / optional side supply | Server seeds `wfbe_structures` and initial side supply; side-supply PVEH later updates `wfbe_supply_<side>`. | `Init_Client.sqf:367-371`, `Init_Server.sqf:363,386`, `Server_ChangeSideSupply.sqf:19-21,43-45`. | No timeout, no retry. | Client never reaches action/resources init. | Add timeout/log fallback around structure and supply sync. |
+| `wfbe_commander` | Server init seeds side commander state; vote/reassignment/disconnect handlers later mutate it. | `Init_Client.sqf:384`, `Init_Server.sqf:356`, `RequestNewCommander.sqf:12-14`, `Server_OnPlayerDisconnected.sqf:136-146`. | No timeout, no retry. | Commander FSM/UI state never starts correctly. | Guard with timeout and missing-broadcast diagnostic. |
+| `wfbe_radio_hq` / `wfbe_radio_hq_id` | Server init creates side radio HQ objects and topic IDs. | `Init_Client.sqf:394-405`, `Init_Server.sqf:401-413`. | No timeout, no retry. | HQ announcer identity/radio wiring stalls. | Add sync check and log. |
+| Spawn location: `wfbe_startpos`, else `wfbe_hq` + `wfbe_structures` | Server init seeds start position, HQ and structures; later construction/kill/repair paths mutate HQ state. | `Init_Client.sqf:461-486`, `Init_Server.sqf:357,361,363`. | No timeout, no retry. | Spawn position never resolves or resolves poorly. | Fail soft if HQ/structures are absent. |
+| `wfbe_hq_deployed` and nested `wfbe_hq` | Server init seeds deployment/HQ; HQ construction, death and repair paths later update them. | `Init_Client.sqf:490-506`, `Init_Server.sqf:357-358`, `Construction_HQSite.sqf:79-91`, `Server_MHQRepair.sqf:41-43`. | No timeout, no retry. | CoIn/HQ event-handler setup can block; JIP client may miss HQ killed handler. | Timeout and skip/retry only the dependent setup instead of stalling all client boot. |
+| `townInit` | `Common/Init/Init_Towns.sqf` sets `townInit = true`; client waits before JIP town/FSM setup. | `Init_Client.sqf:595`, `Init_Towns.sqf:13`. | No timeout, no retry. | Town, marker and action FSMs never launch. | Log a town-init stall before launching client FSM bundle. |
+| `wfbe_votetime` | Server init seeds vote time from mission constants; vote code later updates countdown state. | `Init_Client.sqf:787-789`, `Init_Server.sqf:370`. | No timeout, no retry. | Vote menu does not open when vote state should exist. | Treat as optional/lazy-polled with timeout and log. |
 
 ## Known ordering hazards
 

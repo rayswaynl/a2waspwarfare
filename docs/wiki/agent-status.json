@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T16:30:00+02:00",
+  "generatedAt": "2026-06-03T16:35:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Reconciled stale Scout Wave K status from validation-pending to published-validated after checking discovery, worklog, event records and mirror parity.",
+      "currentWork": "Closed the lifecycle wait-chain timeout gap: Lifecycle-Wait-Chain now has source-anchored producer/consumer/timeout rows, and Development-Lessons-Learned carries the wait-gate implementation rule.",
       "nextExpectedOutput": "Pick the next highest-value stale validation/status row or fresh source-backed docs gap; Wave K, Wave J and Wave Q rows are no longer pending."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "lifecycle-wait-chain-timeout-gap-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Closed the old gap-wait-chain-timeouts machine record by source-anchoring the Lifecycle-Wait-Chain post-join wait audit. The page now separates 30-second retrying join/launch ACK handshakes from raw replicated-variable waitUntil gates and links producer/consumer refs; Development-Lessons-Learned records the implementation rule."
+    },
     {
       "lane": "wave-q-commander-hq-lifecycle-harvest",
       "owner": "Codex",

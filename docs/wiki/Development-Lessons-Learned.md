@@ -72,6 +72,12 @@ Some module effects attach when units or vehicles are built rather than when the
 
 Development rule: for module edits, identify whether the runtime edge is "boot init", "player respawn reapply", "unit creation attach", "PV/PVF event", or "server loop". Smoke the edge, not just the edited file.
 
+## Lesson 8: Wait Gates Need Producer And Timeout Evidence
+
+The lifecycle boot path uses hand-rolled `waitUntil` barriers instead of engine-managed init ordering. Some join gates are retrying handshakes: `RequestJoin` polls `WFBE_P_CANJOIN` and resends after 30 seconds (`Client/Init/Init_Client.sqf:416-431`), while the launch ACK path republishes `WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH` after the same 30-second window (`:441-456`). Many later gates are different: `wfbe_structures`, `wfbe_supply_<side>`, `wfbe_commander`, radio HQ state, spawn/HQ state, `townInit` and `wfbe_votetime` use raw waits with no terminal timeout (`Init_Client.sqf:367-371,384,394-398,461-490,595,787-789`).
+
+Development rule: before moving or patching lifecycle waits, cite both the consumer wait and the producer set/publicVariable. Do not copy the 30-second retry language onto raw `waitUntil` gates unless the code actually retries. Use [Lifecycle wait-chain](Lifecycle-Wait-Chain#post-join-wait-audit) as the owner table for condition, producer, timeout/logging and failure mode.
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |
