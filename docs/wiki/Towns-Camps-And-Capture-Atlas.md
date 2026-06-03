@@ -164,6 +164,19 @@ For each eligible town, the AI loop scans nearby `Man`, `Car`, `Motorcycle`, `Ta
 
 When inactive long enough, it clears active state and deletes town teams/vehicles (`:191-223`). The current vehicle deletion check is known unsafe for player passengers; use [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) before touching that cleanup.
 
+## Upstream Miksuu Town-Defense Diagnostics
+
+Current [Miksuu upstream commit intel](Upstream-Miksuu-Commit-Intel) found `miksuu/master` ahead of `rayswaynl/master` by a focused town-defense diagnostics batch as of 2026-06-03. The key Chernarus commit is [`913ecdf6`](https://github.com/Miksuu/a2waspwarfare/commit/913ecdf6b55698ad8ea5de70dc1ecb33193b17ce), followed by Takistan propagation in [`d5bfe3a2`](https://github.com/Miksuu/a2waspwarfare/commit/d5bfe3a26d677d84c49188abe8d92c03b72f049f).
+
+What matters for this atlas:
+
+- `WFBE_C_TOWN_DEFENSE_DIAGNOSTICS` gates focused `TOWN_DEFENSE_DIAG` RPT logging, rather than relying on broad `WF_Debug` in hot loops.
+- `server_town_ai.sqf` records activation start, valid group creation, client delegation, HC delegation and server-created unit/vehicle results.
+- `Common_CreateTeam.sqf` and static-defense helpers treat `createGroup` / `createUnit` / `createVehicle` failure as expected runtime pressure, not impossible state.
+- The patch deletes a just-created town combat vehicle when no crew could be created, preventing empty defense vehicles from becoming the visible symptom of group-limit failure.
+
+This upstream work is adjacent to, but not the same as, the local [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) finding. The upstream batch hardens failed creation and diagnostics; DR-45 hardens later inactivity cleanup of already tracked town vehicles with player occupants.
+
 ## Economy And Victory Consumers
 
 Town ownership and SV feed the economy:
@@ -191,6 +204,7 @@ The supply mission code later reads/writes `LastSupplyMissionRun` with a differe
 | Status | Finding | Evidence | Owner page |
 | --- | --- | --- | --- |
 | Patch-ready | Town AI inactivity cleanup can delete a town-AI vehicle with a player passenger/crew member aboard if the player is not group leader. | `server_town_ai.sqf:211-216` | [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) |
+| Upstream candidate | Miksuu's latest `master` adds focused town-defense diagnostics plus `grpNull`/`objNull` creation guards and Vanilla propagation. | [`913ecdf6`](https://github.com/Miksuu/a2waspwarfare/commit/913ecdf6b55698ad8ea5de70dc1ecb33193b17ce), [`d5bfe3a2`](https://github.com/Miksuu/a2waspwarfare/commit/d5bfe3a26d677d84c49188abe8d92c03b72f049f) | [Miksuu upstream commit intel](Upstream-Miksuu-Commit-Intel) |
 | Patch-ready | Supply mission cooldown key casing differs between town init and supply mission code. | `Init_Town.sqf:35`; supply pages trace `LastSupplyMissionRun` | [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) |
 | Authority gap | Town and camp capture bounties are awarded client-side after server capture broadcasts. | `TownCaptured.sqf:37-81`; `CampCaptured.sqf:19-40` | [Server authority map](Server-Authority-Migration-Map), [Feature status](Feature-Status-Register) |
 | Authority gap | Camp repair is client-paid/client-gated, then server `repair-camp` recreates the camp bunker from payload side/camp state. | `Client/Action/Action_RepairCamp.sqf:33-66`; `Client/Action/Action_RepairCampEngineer.sqf:33-67`; `Server_HandleSpecial.sqf:147-168` | [Server authority map](Server-Authority-Migration-Map), [Support/specials/modules atlas](Support-Specials-And-Tactical-Modules-Atlas) |

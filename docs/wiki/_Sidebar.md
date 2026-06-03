@@ -30,6 +30,7 @@
 - [Source inventory](Source-Inventory)
 - [Content/maps](Content-Structure-And-Maps)
 - [Assets/config atlas](Assets-Config-Localization-And-Parameters-Atlas)
+- [Miksuu upstream intel](Upstream-Miksuu-Commit-Intel)
 - [WASP overlay](WASP-Overlay)
 
 ## Code

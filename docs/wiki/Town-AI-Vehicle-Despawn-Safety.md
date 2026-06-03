@@ -39,6 +39,16 @@ The unsafe delete path exists when all of these are true:
 
 This is a player-experience correctness bug, not a generic empty-vehicle timeout bug. `Server_HandleEmptyVehicle.sqf:26-30` is already crew-aware; the unsafe delete lives in the town inactivity branch and is tracked as DR-45.
 
+## Upstream Adjacent Work
+
+[Miksuu upstream commit intel](Upstream-Miksuu-Commit-Intel) found a newer `miksuu/master` town-defense diagnostics batch (`913ecdf6` plus Takistan propagation `d5bfe3a2`) that guards failed town group/unit/vehicle creation and removes just-created vehicles when no crew can be made.
+
+That upstream patch is useful, but it is not a substitute for this DR-45 fix:
+
+- upstream guards creation-time `grpNull` / `objNull` / crewless-vehicle failures;
+- DR-45 guards inactivity-time deletion of an already tracked `wfbe_active_vehicles` entry with a player aboard;
+- both should be smoke-tested together if imported.
+
 ## Safe Patch Shape
 
 Use an explicit vehicle local variable so the nested `crew` count does not reuse the outer `_x` accidentally:
@@ -97,6 +107,7 @@ That simpler version is easier to reason about, but it is a behavioral change be
 
 - [AI, headless and performance](AI-Headless-And-Performance)
 - [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook)
+- [Miksuu upstream commit intel](Upstream-Miksuu-Commit-Intel)
 - [Feature status register](Feature-Status-Register)
 - [Hardening implementation roadmap](Hardening-Implementation-Roadmap)
 - [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl)

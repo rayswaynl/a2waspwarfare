@@ -2,6 +2,14 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Upstream Intel: Miksuu Latest Commits
+
+- Cloned/fetched [Miksuu/a2waspwarfare](https://github.com/Miksuu/a2waspwarfare), added `miksuu` as a comparison remote in `work/a`, and checked latest commits, branches, PRs, issues and tags.
+- Published [Miksuu upstream commit intel](Upstream-Miksuu-Commit-Intel), then cross-linked it from [Home](Home), `_Sidebar`, [Feature status](Feature-Status-Register), [Towns/camps/capture atlas](Towns-Camps-And-Capture-Atlas) and [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety).
+- Key finding: `miksuu/master` is 3 commits ahead of `rayswaynl/master` at merge base `2cdf5fb8`; the delta is town-defense diagnostics and creation safety (`913ecdf6`), Vanilla Takistan propagation (`d5bfe3a2`) and the merge (`8bcc42b1`).
+- PR context checked: no issues, no tags, 12 PRs total. Recent PRs #10-#12 have no comments but their bodies document supply-run remote activation abuse, a 50-meter too-far notification and a JIP compatibility fix.
+- Scope remained docs/wiki/machine records only; no gameplay source was changed. Adoption remains a future code-owner decision with conflict review, diagnostic-default decision and Arma 2 OA smoke.
+
 ## 2026-06-03 - Codex Documentation Finisher: Active Handoff Refresh
 
 - Refreshed the active `documentation-finisher-loop` handoff in [`agent-collaboration.json`](agent-collaboration.json) so future agents no longer chase `cleanup-flag-nested-pair-shape-closure` as a next candidate.
