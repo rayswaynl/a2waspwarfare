@@ -152,6 +152,7 @@ foreach ($path in @($sourceMissionFullPath, $missionFullPath)) {
 	Assert-True "$path launches Zargabad black market" ($initZargabad -like '*Zargabad_BlackMarket.sqf*')
 	Assert-True "$path launches Zargabad runtime audit" ($initZargabad -like '*Zargabad_RuntimeAudit.sqf*')
 	Assert-True "$path builds WDDM-compatible central wall" ($initZargabad -like '*WFBE_ZARGABAD_CENTRAL_WALL*' -and $initZargabad -like '*CreateDefenseTemplate*')
+	Assert-True "$path orients Zargabad town defense logics" ($initZargabad.Contains('WFBE_ZARGABAD_TOWN_DEFENSE_ORIENTED_COUNT') -and $initZargabad.Contains('atan2') -and $initZargabad.Contains('_synced setDir _dir;') -and $initZargabad.Contains('Oriented [%1] town defense logics'))
 	Assert-True "$path central wall has pass-through gaps" ($initZargabad -match '\[-1180,-1018\][\s\S]*\[-790,-628\][\s\S]*\[-420,-258\][\s\S]*\[30,192\][\s\S]*\[470,632\][\s\S]*\[870,1032\]')
 	Assert-True "$path central wall is centered and diagonal" ($initZargabad -match '\[3425,3375,0\][\s\S]*setDir 316;')
 	Assert-True "$path records Zargabad base audit counts" ($initZargabad -match 'WFBE_ZARGABAD_BASE_WALL_COUNT' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_COUNT_%1' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_POS_%1')
@@ -186,6 +187,7 @@ Assert-True "runtime audit logs Zargabad price multipliers and samples" ($runtim
 Assert-True "runtime report tool exists" (Test-Path -LiteralPath $runtimeReportTool)
 $runtimeReportSource = Get-Content -Raw -LiteralPath $runtimeReportTool
 Assert-True "runtime report tool wraps runtime validator" ($runtimeReportSource -match 'Validate-ZargabadRuntimeEvidence\.ps1')
+Assert-True "runtime report tool checks town defense orientation" ($runtimeReportSource -match 'Town defense orientation')
 Assert-True "runtime report tool emits Claude notes" ($runtimeReportSource -match '## Claude Notes')
 Assert-True "runtime report tool emits validator output" ($runtimeReportSource -match '## Validator Output')
 

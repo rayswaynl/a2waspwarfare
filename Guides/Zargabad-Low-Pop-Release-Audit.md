@@ -58,7 +58,7 @@ The normal factory lists are restricted away from MBTs and heavy attack aircraft
 
 ## Fortification And Defense Audit
 
-`Server/Init/Init_Zargabad.sqf` adds side-owned start fortifications and statics for WEST/EAST. Extra synchronized town-defense logics were added around the city approaches, airfield, farms and outer chokepoints.
+`Server/Init/Init_Zargabad.sqf` adds side-owned start fortifications and statics for WEST/EAST. Extra synchronized town-defense logics were added around the city approaches, airfield, farms and outer chokepoints. During Zargabad init, the server orients those 33 defense logics toward their linked town centers before town defenses can spawn, so statics do not all inherit default north-facing editor direction.
 
 Static validation now checks town-defense placement quality, not only count: every synchronized defense logic sits between 90m and 325m from its town center, so defenses cover approaches instead of spawning on top of the depot or far outside the fight. City center and airfield each require at least five defenses, while North District, South District, Northwest Base and Rahim Villa each require at least three.
 
@@ -69,7 +69,7 @@ Static validation currently proves the editor data shape, not tactical effective
 - Spawn-to-spawn and spawn-to-city sightlines.
 - Whether side statics can be trivially sniped or stolen.
 - Whether the central wall gaps are wide enough for normal infantry, light armor and AI movement while still interrupting easy flat-map fire lanes.
-- Whether extra town AT/AA/MG/GL defenses face useful routes after terrain placement.
+- Whether extra town AT/AA/MG/GL defenses face useful routes after the runtime orientation pass and terrain placement.
 - Whether north/east side hills still allow unfair shelling or overwatch outside the guarded rim.
 - Whether the edge guard logs once on init, ignores objective-side fights, and removes only sustained extreme-rim ground abuse.
 
@@ -91,11 +91,11 @@ Static validation currently proves the editor data shape, not tactical effective
 - `powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadMission.ps1`
 - `git diff --check`
 - `git diff --cached --check`
-- Static mission validation: unique ids, all sync ids resolvable, no out-of-6000 Zargabad logic positions, 13 towns, 19 camps, 1 airport, 33 defense logics, start SV 185, max SV 648.
+- Static mission validation: unique ids, all sync ids resolvable, no out-of-6000 Zargabad logic positions, 13 towns, 19 camps, 1 airport, 33 defense logics, start SV 185, max SV 648, defense orientation hook present.
 
-`Tools/Validate-ZargabadMission.ps1` is the repeatable local validator for this PR. It parses the generated Zargabad `mission.sqm`, checks town/camp/airport/start/defense counts, sync targets, 6000m boundary containment, SV totals, town camp/defense coverage, defense approach distances, high-value objective defense depth, mystery feature LOC, edge-guard LOC/hooks, central-wall template/gaps, and Takistan spillover.
+`Tools/Validate-ZargabadMission.ps1` is the repeatable local validator for this PR. It parses the generated Zargabad `mission.sqm`, checks town/camp/airport/start/defense counts, sync targets, 6000m boundary containment, SV totals, town camp/defense coverage, defense approach distances, high-value objective defense depth, runtime defense-orientation hook, mystery feature LOC, edge-guard LOC/hooks, central-wall template/gaps, and Takistan spillover.
 
-`Tools/Validate-ZargabadRuntimeEvidence.ps1` is the repeatable RPT validator for Claude/runtime testers. It checks that Zargabad appears in supplied RPT logs, server/town/Zargabad/edge-guard init completed, runtime audit count/SV/base/factory/price/economy evidence appears, optional JIP/HC/edge-removal/black-market evidence appears when requested, and common Arma missing-script/dependency/expression failures are absent.
+`Tools/Validate-ZargabadRuntimeEvidence.ps1` is the repeatable RPT validator for Claude/runtime testers. It checks that Zargabad appears in supplied RPT logs, server/town/Zargabad/edge-guard init completed, the town-defense orientation pass handled all 33 defense logics, runtime audit count/SV/base/factory/price/economy evidence appears, optional JIP/HC/edge-removal/black-market evidence appears when requested, and common Arma missing-script/dependency/expression failures are absent.
 
 `Tools/New-ZargabadRuntimeReport.ps1` wraps the runtime validator and emits a compact markdown gate snapshot, failure scan, key RPT excerpts, and Claude note prompts. Claude should paste this report back to Codex after each hosted/dedicated/JIP/HC pass so runtime findings are frequent, evidence-backed, and easy to act on.
 

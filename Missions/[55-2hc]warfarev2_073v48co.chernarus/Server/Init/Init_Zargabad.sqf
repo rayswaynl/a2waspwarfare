@@ -1,6 +1,6 @@
 if (!isServer || !IS_zargabad_lowpop_map) exitWith {};
 
-Private ["_buildBase", "_buildCentralWall", "_baseWalls", "_centralWall", "_centralWallSpans", "_mgWall", "_sides"];
+Private ["_buildBase", "_buildCentralWall", "_orientTownDefenses", "_baseWalls", "_centralWall", "_centralWallSpans", "_mgWall", "_sides"];
 
 _baseWalls = [
 	["Land_HBarrier_large",[-55,-55,0],45],["Land_HBarrier_large",[-30,-70,0],15],
@@ -30,6 +30,27 @@ _buildCentralWall = {
 	_origin setDir 316;
 	[_origin, missionNamespace getVariable ["WFBE_ZARGABAD_CENTRAL_WALL", []]] call CreateDefenseTemplate;
 	deleteVehicle _origin;
+};
+
+_orientTownDefenses = {
+	Private ["_count", "_dir", "_from", "_synced", "_to", "_town"];
+	_count = 0;
+	{
+		_town = _x;
+		{
+			_synced = _x;
+			if (!isNil {_synced getVariable "wfbe_defense_kind"}) then {
+				_from = getPos _synced;
+				_to = getPos _town;
+				_dir = (((_to select 0) - (_from select 0)) atan2 ((_to select 1) - (_from select 1)));
+				if (_dir < 0) then {_dir = _dir + 360};
+				_synced setDir _dir;
+				_count = _count + 1;
+			};
+		} forEach synchronizedObjects _town;
+	} forEach towns;
+	missionNamespace setVariable ["WFBE_ZARGABAD_TOWN_DEFENSE_ORIENTED_COUNT", _count];
+	["INITIALIZATION", Format ["Init_Zargabad.sqf: Oriented [%1] town defense logics toward linked town centers.", _count]] Call WFBE_CO_FNC_LogContent;
 };
 
 _buildBase = {
@@ -78,6 +99,7 @@ _buildBase = {
 };
 
 _sides = [[west, 45], [east, 225]];
+[] call _orientTownDefenses;
 {_x call _buildBase} forEach _sides;
 [] call _buildCentralWall;
 

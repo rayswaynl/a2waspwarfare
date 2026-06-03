@@ -63,7 +63,7 @@
     "Inspect the WDDM-compatible central H-barrier wall around 3425,3375 and confirm the pass-through gaps preserve normal infantry, light armor and AI movement.",
     "Drive a ground vehicle into the outer Zargabad rim away from starts/towns/camps/airport and confirm Zargabad_EdgeGuard removes it after the configured timeout, while aircraft and objective-near ground fights are ignored.",
     "Verify WEST/EAST Zargabad fortifications and statics spawn, are side-owned, manned, and do not block commander construction in normal base flow.",
-    "Wake city, airfield and one outer farm with ground units; confirm town AI and static defenses activate, fight, and clean up after inactivity.",
+    "Wake city, airfield and one outer farm with ground units; confirm town AI and static defenses activate, face useful approaches after the Zargabad orientation pass, fight, and clean up after inactivity.",
     "Capture camps and then a town from both WEST and EAST; confirm camp/town SV drains, resets on capture, and income ticks reflect ownership.",
     "Buy representative infantry, light, heavy, aircraft and airport units; confirm Zargabad lists exclude MBTs/heavy attack aircraft and price multipliers feel sane.",
     "Own Zargabad Airfield as WEST or EAST and wait for the black-market cache event; confirm crate/smoke spawn, ownership gating and cleanup.",
@@ -94,7 +94,7 @@
     },
     {
       "type": "command-output",
-      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, no out-of-6000 logic positions, start SV 185, max SV 648, all towns have camps and defenses, synchronized defenses sit in the 90m-325m town approach band, high-value objectives have layered defense coverage, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
+      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, no out-of-6000 logic positions, start SV 185, max SV 648, all towns have camps and defenses, synchronized defenses sit in the 90m-325m town approach band, high-value objectives have layered defense coverage, the runtime town-defense orientation hook is present, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
     },
     {
       "type": "source-audit",
@@ -102,7 +102,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/New-ZargabadRuntimeReport.ps1 generates a Codex-ready markdown report with gate state, base/fortification audit state, failure scan, key RPT excerpts, validator output, and a structured Claude Notes verdict table requiring PASS/FAIL/UNCERTAIN plus concrete evidence for ambiguous or failing runtime checks."
+      "summary": "Tools/New-ZargabadRuntimeReport.ps1 generates a Codex-ready markdown report with gate state, town-defense orientation state, base/fortification audit state, failure scan, key RPT excerpts, validator output, and a structured Claude Notes verdict table requiring PASS/FAIL/UNCERTAIN plus concrete evidence for ambiguous or failing runtime checks."
     },
     {
       "type": "source-audit",
@@ -114,11 +114,11 @@
     },
     {
       "type": "command-output",
-      "summary": "Static mission validation found unique ids, all sync ids resolvable, zero out-of-6000 logic positions, 13 towns, 19 camps, 1 airport, 33 defense logics, defense approach distances inside 90m-325m, start SV 185 and max SV 648."
+      "summary": "Static mission validation found unique ids, all sync ids resolvable, zero out-of-6000 logic positions, 13 towns, 19 camps, 1 airport, 33 defense logics, defense approach distances inside 90m-325m, runtime defense-orientation hook present, start SV 185 and max SV 648."
     }
   ],
   "result": "partial",
   "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports.",
-  "updatedAt": "2026-06-03T03:18:00+02:00",
+  "updatedAt": "2026-06-03T03:42:00+02:00",
   "updatedBy": "Codex"
 }

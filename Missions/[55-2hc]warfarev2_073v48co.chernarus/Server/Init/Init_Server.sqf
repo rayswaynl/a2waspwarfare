@@ -506,6 +506,8 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 
 serverInitFull = true;
 
+if (IS_zargabad_lowpop_map) then {[] Call Compile preprocessFile "Server\Init\Init_Zargabad.sqf"};
+
 // run one global server town script to process supply updates in each town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
 
@@ -563,7 +565,6 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 
 //--- Base Area (grouped base)
 if ((missionNamespace getVariable "WFBE_C_BASE_AREA") > 0) then {[] execVM "Server\FSM\basearea.sqf"};
-if (IS_zargabad_lowpop_map) then {[] execVM "Server\Init\Init_Zargabad.sqf"};
 
 //if (LOG_CONTENT_STATE == "ACTIVATED") then {[] execVM "Server\FSM\groupsMonitor.sqf"};
 

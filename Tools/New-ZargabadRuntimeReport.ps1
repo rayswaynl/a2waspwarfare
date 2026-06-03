@@ -77,6 +77,7 @@ $gates = @(
 	[ordered]@{ Name = "Server init begins"; Pattern = 'Init_Server\.sqf: Server initialization begins'; Required = $true },
 	[ordered]@{ Name = "Town init done"; Pattern = 'Init_Server\.sqf: Town starting mode is done'; Required = $true },
 	[ordered]@{ Name = "Zargabad init done"; Pattern = 'Init_Zargabad\.sqf: Spawn fortifications, central wall gaps, and side defenses are placed'; Required = $true },
+	[ordered]@{ Name = "Town defense orientation"; Pattern = 'Init_Zargabad\.sqf: Oriented \[33\] town defense logics toward linked town centers'; Required = $true },
 	[ordered]@{ Name = "Edge guard init"; Pattern = 'Zargabad_EdgeGuard\.sqf: outer \[[0-9]+\]m rim timeout \[[0-9]+\]s safe range \[[0-9]+\]m'; Required = $true },
 	[ordered]@{ Name = "Runtime count/SV audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: towns \[13\] camps \[19\] airports \[1\] defenses \[33\] startSV \[185\] maxSV \[648\]'; Required = $true },
 	[ordered]@{ Name = "Runtime base/fortification audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: bases WEST .* EAST .* distance \[[0-9]+\] westStatic \[4\] eastStatic \[4\] baseWalls \[13\] centralWallPieces \[60\]'; Required = $true },
