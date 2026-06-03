@@ -1054,6 +1054,15 @@ class WF_Menu {
 			h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
+		class Brand_Chevron : RscPictureKeepAspect {
+			idc = -1;
+			x = 0.18000;
+			y = 0.19100;
+			w = 0.030;
+			h = 0.04200;
+			colorText[] = {1, 1, 1, 1};
+			text = "Client\images\brand_chevron.jpg";
+		};
 	};
 	class controls {
 		class Button_A : RscShortcutButtonMain {
@@ -1163,10 +1172,11 @@ class WF_Menu {
 		
 		class TitleMenu: RscText_Title {
 			idc = 11015;
-			x = 0.178164;
+			x = 0.221164;
 			y = 0.19379;
-			w = 0.800001;
-			sizeEx = 0.035;
+			w = 0.560000;
+			sizeEx = 0.038;
+			font = "PuristaBold";
 		};
 		class CA_PA_Button : RscClickableText {
 			idc = 11012;
@@ -1226,6 +1236,18 @@ class WF_Menu {
 			text = "Client\images\fps_hud.jpg";
 			action = "MenuAction = 19";
 			tooltip = "FPS HUD On/Off";
+		};
+		class Brand_Footer : RscText {
+			idc = -1;
+			x = 0.55000;
+			y = 0.77000;
+			w = 0.20500;
+			h = 0.040;
+			style = 1;
+			sizeEx = 0.022;
+			font = "EtelkaMonospacePro";
+			text = "miksuu.com";
+			colorText[] = {0.851, 0.4627, 0.2353, 0.55};
 		};
 	};
 };

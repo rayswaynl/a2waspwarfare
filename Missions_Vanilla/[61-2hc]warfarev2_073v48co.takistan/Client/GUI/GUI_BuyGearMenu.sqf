@@ -32,7 +32,7 @@ while {true} do {
 	_funds = Call WFBE_CL_FNC_GetClientFunds;
 	if (_funds_cli != _funds) then {
 		_funds_cli = _funds;
-		((uiNamespace getVariable "wfbe_display_buygear") displayCtrl 503011) ctrlSetStructuredText (parseText Format ["<t size='1.1'><t color='#42b6ff' shadow='1'>My Funds: </t><t shadow='1' color='#76F563'>$%1.</t></t>", _funds]);
+		((uiNamespace getVariable "wfbe_display_buygear") displayCtrl 503011) ctrlSetStructuredText (parseText Format ["<t size='1.1'><t color='#d9763c' shadow='1'>My Funds: </t><t shadow='1' color='#76F563'>$%1.</t></t>", _funds]);
 	};
 
 	_tab_current = uiNamespace getVariable 'wfbe_display_buygear_tab';
@@ -379,7 +379,7 @@ while {true} do {
 	if (_update_backpack) then {
 		_update_backpack = false;
 		_returned = [_gear_backpack, _gear_backpack_content] Call WFBE_CL_FNC_GetGearCargoSize;
-		_html = Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Capacity:</t><br /><br /><t color='#42b6ff' shadow='1'>Weapons: </t><t shadow='1'>%1/%2 (Size: %3)</t><br /><t color='#42b6ff' shadow='1'>Magazines: </t><t shadow='1'>%4/%5</t><br /><t color='#42b6ff' shadow='1'>Overall: </t><t shadow='1' color='#FF6242'>%6/%7</t>",_returned select 5, getNumber(configFile >> 'CfgVehicles' >> _gear_backpack >> 'transportMaxWeapons'),_returned select 3,_returned select 4,getNumber(configFile >> 'CfgVehicles' >> _gear_backpack >> 'transportMaxMagazines'),(_returned select 3)+(_returned select 4),getNumber(configFile >> 'CfgVehicles' >> _gear_backpack >> 'transportMaxMagazines')];
+		_html = Format["<t color='#d9763c' size='1.2' underline='1' shadow='1'>Capacity:</t><br /><br /><t color='#d9763c' shadow='1'>Weapons: </t><t shadow='1'>%1/%2 (Size: %3)</t><br /><t color='#d9763c' shadow='1'>Magazines: </t><t shadow='1'>%4/%5</t><br /><t color='#d9763c' shadow='1'>Overall: </t><t shadow='1' color='#FF6242'>%6/%7</t>",_returned select 5, getNumber(configFile >> 'CfgVehicles' >> _gear_backpack >> 'transportMaxWeapons'),_returned select 3,_returned select 4,getNumber(configFile >> 'CfgVehicles' >> _gear_backpack >> 'transportMaxMagazines'),(_returned select 3)+(_returned select 4),getNumber(configFile >> 'CfgVehicles' >> _gear_backpack >> 'transportMaxMagazines')];
 		((uiNamespace getVariable "wfbe_display_buygear") displayCtrl 503006) ctrlSetStructuredText (parseText _html);
 		((uiNamespace getVariable "wfbe_display_buygear") displayCtrl 503007) ctrlSetStructuredText (parseText Format["<img size='5' image='%1' align='right'/>",(missionNamespace getVariable _gear_backpack) select 0]);
 	};
@@ -388,7 +388,7 @@ while {true} do {
 	if (_update_vehicle) then {
 		_update_vehicle = false;
 		_returned = [typeOf (vehicle _target), _gear_vehicle_content] Call WFBE_CL_FNC_GetVehicleCargoSize;
-		_html = Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Capacity:</t><br /><br /><t color='#42b6ff' shadow='1'>Weapons: </t><t shadow='1'>%1/%2</t><br /><t color='#42b6ff' shadow='1'>Magazines: </t><t shadow='1'>%3/%4</t><br /><t color='#42b6ff' shadow='1'>Backpacks: </t><t shadow='1'>%5/%6</t><br />",_returned select 3,getNumber(configFile >> 'CfgVehicles' >> typeOf (vehicle _target) >> 'transportMaxWeapons'),_returned select 4,getNumber(configFile >> 'CfgVehicles' >> typeOf (vehicle _target) >> 'transportMaxMagazines'),_returned select 5,getNumber(configFile >> 'CfgVehicles' >> typeOf (vehicle _target) >> 'transportMaxBackpacks')];
+		_html = Format["<t color='#d9763c' size='1.2' underline='1' shadow='1'>Capacity:</t><br /><br /><t color='#d9763c' shadow='1'>Weapons: </t><t shadow='1'>%1/%2</t><br /><t color='#d9763c' shadow='1'>Magazines: </t><t shadow='1'>%3/%4</t><br /><t color='#d9763c' shadow='1'>Backpacks: </t><t shadow='1'>%5/%6</t><br />",_returned select 3,getNumber(configFile >> 'CfgVehicles' >> typeOf (vehicle _target) >> 'transportMaxWeapons'),_returned select 4,getNumber(configFile >> 'CfgVehicles' >> typeOf (vehicle _target) >> 'transportMaxMagazines'),_returned select 5,getNumber(configFile >> 'CfgVehicles' >> typeOf (vehicle _target) >> 'transportMaxBackpacks')];
 		((uiNamespace getVariable "wfbe_display_buygear") displayCtrl 503006) ctrlSetStructuredText (parseText _html);
 		((uiNamespace getVariable "wfbe_display_buygear") displayCtrl 503007) ctrlSetStructuredText (parseText Format["<img size='5' image='%1' align='right'/>",getText(configFile >> 'CfgVehicles' >> typeOf (vehicle _target) >> 'picture')]);
 	};
@@ -439,12 +439,12 @@ while {true} do {
 				[vehicle _target, _gear_sel_vehicle] Call WFBE_CO_FNC_EquipVehicle;
 			};
 			-(_price) Call WFBE_CL_FNC_ChangeClientFunds;
-			if (_has_inv_changed || _has_veh_changed) then {hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Purchased Equipement to %1 for $<t color='#F5D363'>%2</t>.</t>",_msg,_price];_price = 0;} else {hint parseText("<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>The gear was not purchased since nothing has changed.</t>");};
+			if (_has_inv_changed || _has_veh_changed) then {hint parseText Format["<t color='#d9763c' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Purchased Equipement to %1 for $<t color='#F5D363'>%2</t>.</t>",_msg,_price];_price = 0;} else {hint parseText("<t color='#d9763c' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>The gear was not purchased since nothing has changed.</t>");};
 			_has_inv_changed = false;
 			_has_veh_changed = false;
 			_update_inventory = true;
 		} else {
-			hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t><t color='#F56363'>Cannot</t> purchase equipment, missing $<t color='#F5D363'>%1</t>.</t>",_price - (Call WFBE_CL_FNC_GetClientFunds)];
+			hint parseText Format["<t color='#d9763c' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t><t color='#F56363'>Cannot</t> purchase equipment, missing $<t color='#F5D363'>%1</t>.</t>",_price - (Call WFBE_CL_FNC_GetClientFunds)];
 		};
 	};
 
@@ -484,7 +484,7 @@ while {true} do {
 		_update_display = true;
 		_prices = [[_target_weapons,_gear_sel_weapons],[_target_magazines,_gear_sel_magazines],[_gear_sel_backpack, _gear_backpack_content],[_gear_sel_vehicle, _gear_vehicle_content]] Call WFBE_CL_FNC_UI_Gear_UpdatePrice;
 		_price = _prices select 0;
-		((uiNamespace getVariable "wfbe_display_buygear") displayCtrl 503008) ctrlSetStructuredText (parseText Format["<t size='1.1'><t color='#42b6ff' shadow='1'>Gear Cost: </t><t shadow='1' color='%1'>$%2.</t></t>",if (_price > 0) then {'#F56363'} else {'#76F563'},_price]);
+		((uiNamespace getVariable "wfbe_display_buygear") displayCtrl 503008) ctrlSetStructuredText (parseText Format["<t size='1.1'><t color='#d9763c' shadow='1'>Gear Cost: </t><t shadow='1' color='%1'>$%2.</t></t>",if (_price > 0) then {'#F56363'} else {'#76F563'},_price]);
 	};
 
 	//--- Update the inventory

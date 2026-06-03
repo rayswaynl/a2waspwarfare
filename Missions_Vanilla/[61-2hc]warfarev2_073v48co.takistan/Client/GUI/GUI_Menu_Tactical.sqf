@@ -532,7 +532,7 @@ while {alive player && dialog} do {
 	if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0) then {
 		_fireTime = (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS") select (_currentUpgrades select WFBE_UP_ARTYTIMEOUT);
 		_status = round(_fireTime - (time - fireMissionTime));
-		_txt = if (time - fireMissionTime > _fireTime) then {Format['<t align="left" color="#73FF47">%1</t>',localize 'STR_WF_TACTICAL_Available']} else {Format ['<t align="left" color="#4782FF">%1 %2</t>',_status,localize 'STR_WF_Seconds']};
+		_txt = if (time - fireMissionTime > _fireTime) then {Format['<t align="left" color="#73FF47">%1</t>',localize 'STR_WF_TACTICAL_Available']} else {Format ['<t align="left" color="#d9763c">%1 %2</t>',_status,localize 'STR_WF_Seconds']};
 		(_display displayCtrl 17016) ctrlSetStructuredText (parseText _txt);
 		_enable = if (_status > 0) then {false} else {true};
 		ctrlEnable [17007,_enable];
