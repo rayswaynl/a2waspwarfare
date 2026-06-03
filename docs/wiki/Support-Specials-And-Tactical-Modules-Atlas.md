@@ -71,6 +71,19 @@ Paradrops, service actions and supply missions overlap with economy authority:
 
 Use [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook), [Service menu affordability guards](Service-Menu-Affordability-Guards) and [Economy authority first cut](Economy-Authority-First-Cut) for implementation sequencing.
 
+## Aircraft Ordnance Guardrails
+
+Current source has live ordnance guardrails, but they are not all equally active:
+
+- Bomb distance restriction is live for `Bo_FAB_250` and `Bo_Mk82`. Plane setup attaches `HandleShootBombs` (`Common/Init/Init_Unit.sqf:118-121`); the handler exits unless the ammo is one of those bomb classes, requires the local player as shooter, reads `WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION`, checks `cursorTarget`, hints `STR_WF_MESSAGE_BombDistanceRestriction` and deletes the projectile when the target is beyond the configured distance (`Common/Functions/Common_HandleShootBombs.sqf:15-30`).
+- Bomb altitude is config-present but runtime-dormant in that handler. `Rsc/Parameters.hpp:284-288` exposes `WFBE_C_GAMEPLAY_BOMBS_ALTITUDE`, default 2000, but the altitude check/delete block in `Common_HandleShootBombs.sqf:32-44` is commented out.
+- Incoming missile range limiting is live when `WFBE_C_GAMEPLAY_MISSILES_RANGE` is non-zero. Non-man units get an `incomingMissile` handler (`Common/Init/Init_Unit.sqf:125-128`); `Common_HandleIncomingMissile.sqf:9-21` deletes IR-lock missiles, with a dumb-bomb workaround, once they exceed the configured range.
+- Terrain-masking missile blocking is live for tanks, cars and air units through a `Fired` handler (`Common/Init/Init_Unit.sqf:207-212`). `Common_HandleShootMissiles.sqf:95-140` detects guided missile-like ammo, uses `cursorTarget`, checks vehicle-to-target terrain intersection with ASL positions and deletes the projectile with `STR_WF_MESSAGE_MissileTerrainMaskingRestriction` plus `MissileLaunchBlocked`.
+- The terrain-masking handler has a commented `_limit_distance` section (`Common_HandleShootMissiles.sqf:107-117`), so current enforcement is terrain-intersection based rather than "only under configured distance".
+- Aircraft AA gating is partial/path-dependent. Build, buy, rearm and EASA paths remove/filter AA missiles through upgrade and parameter checks (`Client_BuildUnit.sqf:287-293`; `Server_BuyUnit.sqf:155-162`; `Common_RearmVehicle.sqf:53-60`; `GUI_Menu_EASA.sqf:15-20`), but start/pre-placed vehicles or unusual creation paths should be smoke-tested before claiming complete coverage.
+
+The main risks are locality and player-facing false positives: bomb distance and missile masking lean on local `cursorTarget`, the unit init path exits for non-local player scope, and bomb altitude has a lobby parameter without active enforcement. Treat future aircraft-balance work as runtime-test-heavy, not just config editing.
+
 ## Wave N Dispatch Notes
 
 Wave N rechecked the support router and found two source-level traps worth keeping on this owner page:
@@ -84,6 +97,9 @@ Wave N rechecked the support router and found two source-level traps worth keepi
 | Finding | Patch shape |
 | --- | --- |
 | `RequestSpecial` trusts client-side gates | Add server-side requester/side/role/funds/cooldown/upgrade validation before dispatching assets or map-wide effects. |
+| Bomb altitude parameter is dormant | Either revive and smoke the commented altitude block in `Common_HandleShootBombs.sqf`, or rename/document the parameter as historical so admins do not expect it to enforce. |
+| Ordnance guardrails depend on local target state | Test lock/no-lock, pilot/gunner, AI crew, JIP and remote locality cases before tightening bomb or missile restrictions. |
+| AA missile gating is path-dependent | Verify start vehicles, purchased aircraft, client-built aircraft, rearmed aircraft, SAMs and EASA loadouts all pass the same `WFBE_C_GAMEPLAY_AIR_AA_MISSILES` / `WFBE_UP_AIRAAM` policy before calling AA restrictions complete. |
 | RU ammo paradrop config is commented out | Split `Root_RU.sqf:36` so the starting-vehicle comment does not swallow `WFBE_%1PARAAMMO`; smoke RU para-ammo request after the fix. |
 | Zeta detach missing vehicle arg | Pass `[_vehicle]` when adding the detach action in `Zeta_Hook.sqf`, or revise `Zeta_Unhook.sqf` to find the lifted object safely. |
 | Stale ICBM adjuncts | Either wire the `ICBM_launched` / `NukeIncoming` paths intentionally or remove/document them as dead. If revived, fix the missing `airRaid` sound reference first. |

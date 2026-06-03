@@ -29,6 +29,7 @@ This page maps the mission-facing configuration and media layer: `description.ex
 | `WFBE_C_ENVIRONMENT_WEATHER_VOLUMETRIC` | `Rsc/Parameters.hpp:210-214`, `Client/Init/Init_Client.sqf:218` | only value `0` | Comment says clouds are globally disabled for FPS/stutter; client init also forces the variable to `0`. |
 | `WFBE_C_MODULE_BIS_PMC` | `Rsc/Parameters.hpp:222-227` | hidden behind `#ifndef VANILLA` | Loadout/unit roots use it for PMC content gates, for example `Common/Config/Core_Root/Root_TKGUE.sqf:99`. |
 | `WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION` | `Rsc/Parameters.hpp:290-294` | distance list | Its `title` is the same string as bomb altitude (`$STR_WF_PARAMETER_BombAltitude`), but it drives distance restriction in `Common/Functions/Common_HandleShootBombs.sqf:21`. |
+| `WFBE_C_GAMEPLAY_BOMBS_ALTITUDE` | `Rsc/Parameters.hpp:284-288` | altitude list, default 2000 | Config-present, but current `Common_HandleShootBombs.sqf:32-44` comments out the altitude enforcement block. Do not document this as active gameplay behavior until the handler is revived and smoke-tested. |
 
 ## Config Data-Model Checklist
 
@@ -74,7 +75,8 @@ Minimum smoke scenario for content changes: boot hosted or dedicated with the ed
 2. Decide whether missing `Client\Images\wf_*.paa` tactical icons are intended absent art, stale dialog references or files lost during repo history.
 3. Audit missing local vehicle texture references before changing texture behavior; many entries may be old livery leftovers.
 4. Rename or retitle `WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION` UI text so it does not present as bomb altitude.
-5. Either remove the commented unit-caching include from docs/mental model or restore the folder as a real optimization feature.
+5. Decide whether `WFBE_C_GAMEPLAY_BOMBS_ALTITUDE` should be revived, hidden or marked historical in the host parameter UX.
+6. Either remove the commented unit-caching include from docs/mental model or restore the folder as a real optimization feature.
 
 ## Continue Reading
 

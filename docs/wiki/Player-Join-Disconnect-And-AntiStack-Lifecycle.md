@@ -16,7 +16,7 @@ Source mission: `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
 | Disconnect cleanup | `Server/Functions/Server_OnPlayerDisconnected.sqf:31-175` deletes client objects, restores AI/group state, saves funds, clears commander/delegation and writes AntiStack side/score state. |
 | Launch-side raw PV | `Server/Module/AntiStack/clientHasConnectedAtLaunch.sqf:1+` records `WFBE_PLAYER_%UID_CONNECTED_AT_LAUNCH`. |
 | Supply player object list | `Server/Module/supplyMission/playerObjectsList.sqf:1-29` maintains `WFBE_SE_PLAYERLIST` for supply mission lookup; Chernarus source and maintained Vanilla Takistan now keep the update index outside the loop, but disconnect cleanup still does not prune stale rows. |
-| AFK intersection | `Client/Module/AFKkick/monitorAFK.sqf:24+`, `Client/Module/AFKkick/handleKeys.sqf:11+`, `Server/Module/afkKick/initAFKkickHandler.sqf:9+`. |
+| AFK intersection | `Client/FSM/updateclient.sqf:28-31,117-160`, `Client/Module/AFKkick/monitorAFK.sqf:24-30`, `Client/Module/AFKkick/handleKeys.sqf:11-15`, `Server/Module/afkKick/initAFKkickHandler.sqf:9-12`, `BattlEyeFilter/publicvariable.txt:1-2`. |
 
 ## Identity Model
 
@@ -86,9 +86,12 @@ The launch-connect path is especially important because the client publishes a p
 
 ## AFK Kick Intersection
 
-AFK enforcement is client-local: the client timer publishes `AFKthresholdExceededName` and calls `failMission "END1"`. The server handler logs the name. It does not independently validate that the reported name/UID belongs to the publicVariable sender.
+AFK enforcement is client-local and currently has two live paths:
 
-For public hosting, treat AFK as a client UX kick plus BattlEye/logging signal, not a fully server-authoritative enforcement model.
+- The client FSM path reads `WFBE_C_AFK_TIME`, whose current Chernarus parameter default is 15 minutes (`Rsc/Parameters.hpp:44-48`). `updateclient.sqf` converts it to seconds, marks `WASP_AFK`, warns players during the final 10 minutes, switches to per-30-second hints while more than 120 seconds remain, then per-tick second hints under 120 seconds. When elapsed inactivity exceeds the threshold it logs locally and publishes `kickAFK`, which the in-repo BattlEye publicVariable rule is expected to kick (`Client/FSM/updateclient.sqf:28-31,117-160`; `BattlEyeFilter/publicvariable.txt:1-2`).
+- The older AFKkick module is also started by client init (`Init_Client.sqf:256-264`). It uses keypresses to reset a minute counter, publishes `AFKthresholdExceededName` and calls `failMission "END1"` after `WFBE_CO_VAR_AFKkickThreshold = 30` minutes (`monitorAFK.sqf:19-30`). The server handler only logs the reported name (`initAFKkickHandler.sqf:9-12`).
+
+For public hosting, treat AFK as client UX plus BattlEye/logging signals, not a fully server-authoritative enforcement model. The dual-path shape is also a maintenance risk: future cleanup should decide whether the old `AFKthresholdExceededName`/`failMission` path is still wanted or whether the BattlEye `kickAFK` path should be the single owner.
 
 ## Patch-Ready Findings
 
@@ -102,7 +105,8 @@ For public hosting, treat AFK as a client UX kick plus BattlEye/logging signal, 
 | Join and launch ACK retries are unbounded | `Init_Client.sqf:416-430` resends `RequestJoin` every 30-second warning cycle until `WFBE_P_CANJOIN`; `:442-456` repeats `WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH` until `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK`. | Add bounded retry/backoff and a clear degraded-server message/log path so missing PV handlers do not leave clients in an endless retry loop. |
 | Launch-connect side signal is client-pushed | `clientHasConnectedAtLaunch.sqf:1-15` records side from the client-published player object and owner-targets the ACK. | Validate sender/UID/side/object consistency before storing `WFBE_PLAYER_%UID_CONNECTED_AT_LAUNCH`; log mismatches once per UID. |
 | AntiStack disconnect writes are unchecked | `Server_OnPlayerDisconnected.sqf:151-176` calls store-side/score wrappers and ignores return codes. | Log failures, consider one bounded retry and expose degraded persistence in the AntiStack audit/performance state. |
-| AFK PV trusts a name string | `AFKthresholdExceededName` carries the client-reported name. | Send `[player, uid, name]` or derive from owner where possible; log mismatches rather than trusting the string. |
+| AFK has two active client-local enforcement paths | `Init_Client.sqf:256-264` starts the older `monitorAFK.sqf` path, while `updateclient.sqf:28-31,117-160` also runs the parameterized `kickAFK` BattlEye path. | Pick one canonical AFK owner or deliberately document the two-stage policy. If keeping both, align thresholds, warning cadence, logging and disconnect validation. |
+| AFK PV trusts a name string | `AFKthresholdExceededName` carries the client-reported name and `kickAFK` carries a client-formatted name string. | Send `[player, uid, name]` or derive from owner where possible; log mismatches rather than trusting the string. |
 
 ## Validation Checklist
 

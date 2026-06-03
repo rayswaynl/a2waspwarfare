@@ -88,6 +88,14 @@ This is the operational summary of DR-32's three maintenance tiers. Use it befor
 | `Extension` | .NET Framework 4.8 x86 Arma extension | `_RVExtension@12` export | Arma `callExtension` arguments from mission scripts. | Writes `C:\a2waspwarfare\Data\database.json` for DiscordBot. | Legacy Visual Studio/MSBuild target using `RGiesecke.DllExport`/`UnmanagedExports` from `../packages`; preserve x86. |
 | `Mods/mkswf_sidewinder_reload_time_fix` | Arma addon config | `CfgWeapons.hpp` | Sidewinder launcher class config. | Sets `magazineReloadTime = 1` for Sidewinder launchers. | External addon fragment, not mission SQF. |
 
+## Local Build Verification 2026-06-03
+
+| Project | Local result | Notes |
+| --- | --- | --- |
+| `Tools/LoadoutManager/LoadoutManager.csproj` | `dotnet build -v minimal` succeeded with 86 nullable warnings and 0 errors. | Warnings are mostly non-nullable initialization / possible null-reference warnings in data classes and zip helper paths. Build success does not run mission generation or packaging. |
+| `DiscordBot/DiscordBot.csproj` | `dotnet build -v minimal` succeeded with 0 warnings and 0 errors. | Runtime still requires ignored `token.txt` and `preferences.json` plus a valid `database.json` source. |
+| `Extension/Extension.csproj` | `dotnet build -v minimal` failed locally with `MSB3644`: .NET Framework 4.8 reference assemblies were not found. | Treat as local toolchain missing targeting pack, not proof the legacy extension source is broken. Use Visual Studio/MSBuild with the .NET Framework 4.8 developer pack and x86/package layout before release claims. |
+
 ## PerformanceAuditAnalyzer
 
 `Tools/PerformanceAuditAnalyzer` parses Arma 2 RPT lines containing `[Performance Audit]` and exports CSV/Markdown/HTML/Word-friendly reports.

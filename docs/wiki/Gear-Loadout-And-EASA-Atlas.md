@@ -148,7 +148,9 @@ That creates a subtle locality edge:
 - `Common/Functions/Common_RearmVehicle.sqf:50` calls `BalanceInit` during rearm on whoever runs the script.
 - `Server_BuyUnit.sqf:157-160` and `Common_RearmVehicle.sqf:55-58` also call `WFBE_CO_FNC_RemoveAAMissiles` based on `WFBE_C_GAMEPLAY_AIR_AA_MISSILES` and `WFBE_UP_AIRAAM`.
 
-Safe rule: when changing aircraft balance, test both initial spawn and service/rearm behavior. A client-side rearm path may apply balance that a server-side spawn path skips.
+AA policy is path-dependent. EASA filters AA rows through `WFBE_C_GAMEPLAY_AIR_AA_MISSILES` and `WFBE_UP_AIRAAM` (`GUI_Menu_EASA.sqf:15-20`), client build and server buy paths also call `WFBE_CO_FNC_RemoveAAMissiles` (`Client_BuildUnit.sqf:287-293`; `Server_BuyUnit.sqf:155-162`), and rearm reapplies the same gate (`Common_RearmVehicle.sqf:53-60`). Start/pre-placed vehicles and unusual creation paths still need live smoke before claiming every aircraft/SAM follows the same AA policy.
+
+Safe rule: when changing aircraft balance or AA loadouts, test initial spawn, start vehicles, purchased vehicles, EASA purchase and service/rearm behavior separately. A client-side rearm path may apply balance that a server-side spawn path skips.
 
 ## Dangerous Loadout Metadata
 
@@ -176,6 +178,7 @@ Treat `WARNING_GAME_CRASH_DO_NOT_USE_IN_LOADOUTS_*` as hard blockers, not normal
 | Buy-gear click-pool bounds are not currently proven off-by-one. | `GUI_BuyGearMenu.sqf:44-45` accepts one-based click slots with `<= _size`; `Dialogs.hpp` emits magazine slot IDs as `1..12` and gun slot IDs as `1..8`, and `Client_RemoveMagazineGear.sqf:21` treats the value as one-based cumulative size. | Do not file this as a confirmed bug. A small hardening patch could still reject `< 1` before calling remove. |
 | EASA/Economy duplicate dialog IDD. | `Rsc/Dialogs.hpp:3209-3212`, `:3287-3290`; Claude DR-17. | Give one dialog a distinct IDD before adding scripts that use `findDisplay 23000`. |
 | Balance exits on server, but server spawn code calls it. | `Common_BalanceInit.sqf:3-4`, `Server_BuyUnit.sqf:139` | Test spawn/rearm separately; document intended locality before moving balance logic. |
+| AA missile gating is not proven universal. | `GUI_Menu_EASA.sqf:15-20`, `Client_BuildUnit.sqf:287-293`, `Server_BuyUnit.sqf:155-162`, `Common_RearmVehicle.sqf:53-60`. | Smoke start/pre-placed aircraft, purchased aircraft, SAMs, EASA loadouts and service rearm before treating `WFBE_C_GAMEPLAY_AIR_AA_MISSILES` / `WFBE_UP_AIRAAM` as complete coverage. |
 | Generated files can be overwritten. | `BaseTerrain.cs:99-102` | Change LoadoutManager data classes first, then regenerate. |
 | Crash-warning CRV7PG metadata still exists. | `WeaponType.cs:121-122`, `WILDCAT.cs:35-38` | Keep warning names visible and avoid using them in new loadout combinations. |
 

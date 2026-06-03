@@ -124,6 +124,19 @@ Wave Q found a separate display-handle collision that does not depend on matchin
 | `790` | Opens `WFBE_VoteMenu` if a vote is already running. |
 | `959` | Shows the long new-player hint with Discord and map guidance. |
 
+### View Distance And Target FPS Hotkeys
+
+The current source has a live client-side view-distance system:
+
+- Client init sets `AUTO_DISTANCE_VIEW_TARGET_FPS` to 60 and starts automatic mode off (`Init_Client.sqf:12-13,175-176`).
+- Display 46 binds `Common_AdjustViewDistance.sqf` as a `KeyDown` handler (`Init_Client.sqf:236-240`).
+- `User18` toggles automatic view distance, saving the current distance before enabling and restoring it when disabled (`Common_AdjustViewDistance.sqf:17-33`).
+- `User19`/`User20` are dual-purpose. In automatic mode they adjust target FPS by 1 and clamp it to 30..240 while persisting `WFBE_TARGET_FPS`; in manual mode they adjust view distance by 1000 meters through the timer script (`Common_AdjustViewDistance.sqf:35-69`).
+- The automatic loop runs from `updateclient.sqf` only when the toggle is enabled and the map is not visible (`updateclient.sqf:102-107`). This preserves the old upstream lesson that FPS helpers must not react to map-open view state.
+- Runtime adjustment uses a target band of +/-4 FPS, hard-clamps view distance to 500..6000, lowers by 200 when below the band and raises by 300 or 50 otherwise (`Common_AutomaticViewDistance.sqf:6-36`).
+
+Historical changelog text says +/-2 FPS. Treat that as old provenance; the current source and messages use +/-4.
+
 ## Main Menu Router
 
 The player opens the main menu through the scroll action wired by `Client/Functions/Client_AddWFMenuAction.sqf:17` and `Client/Action/Action_Menu.sqf:1`.

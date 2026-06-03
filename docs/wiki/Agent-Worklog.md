@@ -1778,3 +1778,9 @@ Key conclusions:
 - Folded the useful scout findings into [Community & Dev](Community-And-Dev) and [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import): normalized contributor aliases, stronger stale-claim caveats for modded-map event notes, server ops/HC/performance anecdotes and DiscordBot provenance, plus archive-page previous/next/related navigation.
 - Added [Upstream changelog feature leads](Upstream-Changelog-Feature-Leads) to preserve old changelog feature/status candidates for later source verification.
 - No gameplay source files changed.
+
+## 2026-06-04T00:20:00+02:00 - Codex - Spark scout source-verification wave
+- Ran focused Spark scouts for auto view-distance, AFK/BattlEye policy, aircraft ordnance guardrails, AI command caps, abandoned/partial features, UI/HUD/dialogs and tooling/external integrations. Broad scouts that overflowed were closed and replaced with tighter lanes.
+- Promoted source-checked findings: auto view distance is live with target FPS 60, map-visible guard and +/-4 band; AFK currently has both the parameterized `kickAFK` BattlEye path and the older `AFKthresholdExceededName`/`failMission` path; bomb distance and missile guardrails are live but bomb altitude is dormant; AA loadout gating is path-dependent.
+- Verified local tooling status: `LoadoutManager` builds with nullable warnings, `DiscordBot` builds cleanly, and the legacy `Extension` needs the .NET Framework 4.8 targeting pack in this environment.
+- Updated the owning wiki pages and kept this docs-only; no gameplay source files changed.

@@ -25,6 +25,8 @@ Source refs:
 
 Runtime consumers include day/night duration, AFK timeout, AntiStack enable, performance audit enable, map icon blinking, bomb restrictions and many gameplay/economy toggles.
 
+Current ordnance parameter caveat: `WFBE_C_GAMEPLAY_BOMBS_ALTITUDE` exists in `Rsc/Parameters.hpp:284-288`, but the current bomb handler comments out the altitude enforcement block (`Common/Functions/Common_HandleShootBombs.sqf:32-44`). By contrast, `WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION` is consumed by the live distance-delete path (`Common_HandleShootBombs.sqf:21-30`). Do not describe the altitude parameter as active gameplay enforcement until that handler is revived and smoke-tested.
+
 ## MP Defaults Versus Constants Fallbacks
 
 Wave O found a real default drift class: mission boot only calls `Common/Init/Init_Parameters.sqf` when `isMultiplayer` is true (`initJIPCompatible.sqf:121`). In non-MP boot paths, `Init_CommonConstants.sqf` fills any nil values instead of reading `Rsc/Parameters.hpp` defaults, even though `GUI_Display_Parameters.sqf` can display SP defaults directly from the config tree.
@@ -76,6 +78,7 @@ This is why the current `work\a` checkout cannot run LoadoutManager cleanly: it 
 | --- | --- | --- |
 | Literal English admin parameter titles | Add stringtable-backed titles for AntiStack and performance audit, or document them as intentionally admin-only English. | Parameter display shows intended labels; no missing stringtable keys. |
 | Bomb distance title reuses altitude text | Add `STR_WF_PARAMETER_BombDistanceRestriction` and use it for `WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION`. | Host parameter list and in-game parameter display distinguish altitude from distance. |
+| Bomb altitude parameter is visible but dormant | Either revive/smoke the commented `Common_HandleShootBombs.sqf` altitude block or hide/rename the host parameter as historical. | Host/admin UX does not imply an active restriction that the runtime does not enforce. |
 | Missing fallback for bomb distance | Add an `Init_CommonConstants.sqf` fallback or use `getVariable` default in the consumer. | Bomb-distance handling works in SP, MP and generated missions. |
 | Literal `a2waspwarfare` root requirement | Discover repo root by project file, git root or explicit config rather than folder name. | LoadoutManager runs from `work\a` and a normal `a2waspwarfare` clone. |
 | Missing `7za` aborts after generation | Split generation/copy from packaging or make missing `7za` a non-fatal packaging-only warning. | Generated files land even when package creation is skipped. |
