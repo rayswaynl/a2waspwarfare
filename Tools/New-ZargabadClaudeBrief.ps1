@@ -46,7 +46,7 @@ if ($prJson.Trim().Length -gt 0) {
 }
 
 $focus = New-Object System.Collections.Generic.List[string]
-if ($changedFiles -match 'Zargabad_BlackMarket') { $focus.Add("Mystery feature: own Zargabad Airfield, confirm cache surfacing and cleanup-release RPT lines.") }
+if ($changedFiles -match 'Zargabad_BlackMarket|New-ZargabadRuntimeReport|Validate-ZargabadRuntimeEvidence|Validate-ZargabadRuntimeReport|Zargabad-Claude-Runtime-Handoff|zargabad-low-pop-test-plan|New-ZargabadClaudeBrief') { $focus.Add("Mystery feature: confirm the armed RPT line after town init, then own Zargabad Airfield and confirm cache surfacing and cleanup-release RPT lines.") }
 if ($changedFiles -match 'Zargabad_EdgeGuard|Init_Boundaries|edge') { $focus.Add("Side hills/rim: retest outer-rim removal, aircraft exemption, and objective-near safe bubbles.") }
 if ($changedFiles -match 'Init_Zargabad|Zargabad_RuntimeAudit|mission\.sqm|New-ZargabadMapAuditPacket|Validate-ZargabadMission|Zargabad-Low-Pop-Release-Audit|zargabad-low-pop-test-plan|New-ZargabadClaudeBrief') { $focus.Add("Map/runtime init: retest fortifications, central wall gaps, town-defense orientation, and runtime audit lines.") }
 if ($changedFiles -match 'Init_Zargabad|New-ZargabadRuntimeReport|Validate-ZargabadRuntimeEvidence|New-ZargabadClaudeBrief|Validate-ZargabadMission') { $focus.Add("Base statics: compare the Init_Zargabad base static runtime positions line against screenshots/coordinates for facing, manning, arcs, and commander construction space.") }

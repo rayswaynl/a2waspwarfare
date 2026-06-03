@@ -432,6 +432,7 @@ $runtimeReportSource = Get-Content -Raw -LiteralPath $runtimeReportTool
 Assert-True "runtime report tool wraps runtime validator" ($runtimeReportSource -match 'Validate-ZargabadRuntimeEvidence\.ps1')
 Assert-True "runtime report tool checks town defense orientation" ($runtimeReportSource -match 'Town defense orientation')
 Assert-True "runtime report tool checks base static runtime positions" ($runtimeReportSource -match 'Base static runtime positions')
+Assert-True "runtime report tool checks black-market arming" ($runtimeReportSource -match 'Black-market armed')
 Assert-True "runtime report tool emits Claude notes" ($runtimeReportSource -match '## Claude Notes')
 Assert-True "runtime report tool asks Claude for priority defense mix arcs" ($runtimeReportSource -match 'Priority defense mix arcs' -and $runtimeReportSource -match 'city MG/nest\+GL\+AT' -and $runtimeReportSource -match 'airfield MG/nest\+AT\+2xAA')
 Assert-True "runtime report tool emits validator output" ($runtimeReportSource -match '## Validator Output')
@@ -440,6 +441,7 @@ $runtimeReportValidatorSource = Get-Content -Raw -LiteralPath $runtimeReportVali
 Assert-True "runtime report validator requires Claude Notes PASS rows" ($runtimeReportValidatorSource -match 'Claude Notes rows are all PASS')
 Assert-True "runtime report validator rejects missing gates and found failures" ($runtimeReportValidatorSource -match 'runtime report has no missing required gates' -and $runtimeReportValidatorSource -match 'runtime report failure scan is clear')
 Assert-True "runtime report validator checks optional runtime gates" ($runtimeReportValidatorSource -match 'RequireJip' -and $runtimeReportValidatorSource -match 'RequireHeadlessClient' -and $runtimeReportValidatorSource -match 'RequireEdgeGuardRemoval' -and $runtimeReportValidatorSource -match 'RequireBlackMarket')
+Assert-True "runtime report validator checks black-market arming gate" ($runtimeReportValidatorSource -match 'runtime report black-market armed gate passed')
 Assert-True "map audit packet tool exists" (Test-Path -LiteralPath $mapAuditPacketTool)
 $mapAuditPacketSource = Get-Content -Raw -LiteralPath $mapAuditPacketTool
 Assert-True "map audit packet emits population flow table" ($mapAuditPacketSource -match '## Population Flow')
@@ -456,6 +458,7 @@ Assert-True "Claude brief tool emits coordination cadence" ($claudeBriefSource -
 Assert-True "Claude brief tool requires post-commit updates" ($claudeBriefSource -match 'after every commit or material mission/tooling change')
 Assert-True "Claude brief tool listens to evidence-backed findings" ($claudeBriefSource -match 'RPT excerpts, screenshots, coordinates, or repeatable repro steps')
 Assert-True "Claude brief tool emits retest focus" ($claudeBriefSource -match '## Retest Focus')
+Assert-True "Claude brief tool emits mystery armed retest focus" ($claudeBriefSource -match 'Mystery feature: confirm the armed RPT line after town init')
 Assert-True "Claude brief tool emits base static runtime position retest focus" ($claudeBriefSource -match 'Base statics: compare the Init_Zargabad base static runtime positions line' -and $claudeBriefSource -match 'Base static runtime positions WEST \.\.\. EAST \.\.\.')
 Assert-True "Claude brief tool emits defense mix retest focus" ($claudeBriefSource -match 'Town defenses: retest priority defense mix arcs')
 Assert-True "Claude brief tool carries stop/go ownership" ($claudeBriefSource -match 'Codex owns the stop/go call')

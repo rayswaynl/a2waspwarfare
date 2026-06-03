@@ -59,6 +59,7 @@ if ($RequireJip) { Assert-True "runtime report JIP gate passed" ((Get-TableValue
 if ($RequireHeadlessClient) { Assert-True "runtime report headless-client gate passed" ((Get-TableValue -Rows $gateRows -Key "Headless client") -eq "PASS") }
 if ($RequireEdgeGuardRemoval) { Assert-True "runtime report edge-guard-removal gate passed" ((Get-TableValue -Rows $gateRows -Key "Edge guard removal") -eq "PASS") }
 if ($RequireBlackMarket) {
+	Assert-True "runtime report black-market armed gate passed" ((Get-TableValue -Rows $gateRows -Key "Black-market armed") -eq "PASS")
 	Assert-True "runtime report black-market cache gate passed" ((Get-TableValue -Rows $gateRows -Key "Black-market cache") -eq "PASS")
 	Assert-True "runtime report black-market cleanup gate passed" ((Get-TableValue -Rows $gateRows -Key "Black-market cleanup") -eq "PASS")
 }
