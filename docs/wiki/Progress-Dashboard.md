@@ -111,10 +111,10 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` | Micro-scout batch is published/validated; next work is bounded feature-status reconciliation, machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs. |
+| Codex | Active | `documentation-finisher-loop` | Cheap scout wave is published/validated; next work is bounded Feature Status or machine-ledger reconciliation with exact source refs. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
-| Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
-| Sub-agents | Closed | none | Completed/closed scouts covered economy, factory, respawn/MASH, UI/dialogs, HC, tools/integrations, entrypoints, camp capture, paratrooper markers, content/variants/assets and RequestSpecial. Broad scouts that overflowed were split into smaller lanes or dropped when confirmation was enough. |
+| Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle. |
+| Sub-agents | Closed | none | Cheap scout wave is closed; reports confirmed canonical coverage across PV/direct channels, MASH/respawn, commander/HQ, integrations, modded mission caveats, tooling and support-special authority boundaries. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
 
 ## One-Link Check

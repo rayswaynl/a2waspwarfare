@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T01:10:42+02:00",
+  "generatedAt": "2026-06-04T01:15:32+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated a cheap mini scout wave after Spark quota blocked: towns/supply, economy, AI/HC, PV/direct channels, UI, construction/factory, support specials, tooling/generated missions, integrations, commander/HQ, entrypoints/modded forks and respawn/service/gear. Harvest check found most useful deltas already represented in canonical pages.",
+      "currentWork": "Published and validated the Progress Dashboard At A Glance reconciliation after the cheap scout wave publish so the visible handoff matches this machine status and the latest event feed.",
       "nextExpectedOutput": "Pick the next bounded Feature Status or machine-ledger reconciliation item with exact source refs."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "dashboard-at-a-glance-reconciliation",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Progress Dashboard At A Glance now matches agent-status.json after the cheap scout wave publish: Codex points to the published cheap scout wave instead of the older micro-scout batch, Claude uses collaboration-follow-autonomous-ready, and Sub-agents summarize the latest closed cheap scout wave. Wiki validation, JSON/JSONL parsing, git diff --check and mirror parity passed."
+    },
     {
       "lane": "cheap-scout-wave-depth-confirmation",
       "owner": "Codex/Sub-agents",

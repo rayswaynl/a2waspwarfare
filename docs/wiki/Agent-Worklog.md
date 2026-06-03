@@ -1832,3 +1832,8 @@ Key conclusions:
 - Spark quota was blocked, so Codex ran the same read-only scout pattern on cheap mini explorers instead of waiting: towns/supply, economy, AI/HC, PV/direct channels, UI/HUD, construction/factory/upgrades, support specials, tooling/generated missions, integrations/ops, commander/HQ/endgame, entrypoints/modded forks and respawn/service/gear.
 - Harvest check found the major deltas already represented in canonical pages: PVF hardening does not cover direct channels, paratrooper markers are docs/source propagated but not stable/release proof, MASH respawn and marker sync are separate, commander disconnect does not auto-reassign, DiscordBot JSON intake is the live integration sink, and modded mission folders are not maintained/generated release targets.
 - Published the wave record in [Progress Dashboard](Progress-Dashboard), `agent-events.jsonl` and `agent-status.json`; validation/parity passed, no gameplay source files changed, and no subsystem page was expanded with duplicate prose.
+
+## 2026-06-04T01:15:32+02:00 - Codex - dashboard at-a-glance reconciliation
+- Rechecked [Progress Dashboard](Progress-Dashboard) against `agent-status.json` and `agent-events.jsonl` after the cheap scout wave publish.
+- Corrected the visible **At A Glance** rows: Codex now points to the published cheap scout wave rather than the older micro-scout batch, Claude uses `collaboration-follow-autonomous-ready`, and Sub-agents summarizes the latest closed cheap scout wave.
+- Docs-only coordination cleanup; no gameplay source files changed.
