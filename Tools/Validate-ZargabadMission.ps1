@@ -691,6 +691,7 @@ $runtimeReportValidatorTool = Join-Path (Resolve-RepoPath "Tools") "Validate-Zar
 $mapAuditPacketTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadMapAuditPacket.ps1"
 $claudeBriefTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadClaudeBrief.ps1"
 $completionGatesGuide = Join-Path (Resolve-RepoPath "Guides") "Zargabad-Completion-Gates.md"
+$claudeRuntimeHandoffGuide = Join-Path (Resolve-RepoPath "Guides") "Zargabad-Claude-Runtime-Handoff.md"
 
 Assert-True "source mystery feature under 100 non-empty LOC" ((Get-NonEmptyLineCount $sourceBlackMarket) -le 100)
 Assert-True "generated mystery feature under 100 non-empty LOC" ((Get-NonEmptyLineCount $generatedBlackMarket) -le 100)
@@ -803,6 +804,10 @@ Assert-True "Claude brief tool requires real screenshot files" ($claudeBriefSour
 Assert-True "Claude brief tool requests population placement evidence" ($claudeBriefSource -match 'Population/SP-SV placement screenshot filenames plus useful coordinates' -and $claudeBriefSource -match 'low-density farm/outskirt routes')
 Assert-True "Claude brief tool requests key visual screenshots" ($claudeBriefSource -match 'Key visual row screenshot filenames plus useful coordinates' -and $claudeBriefSource -match 'priority defense arcs')
 Assert-True "Claude brief tool requires Codex action recommendations" ($claudeBriefSource -match 'Every `PASS` row must also include an explicit Codex action recommendation' -and $claudeBriefSource -match 'keep, tune, revert, investigate, patch, or retest')
+Assert-True "Claude runtime handoff guide exists" (Test-Path -LiteralPath $claudeRuntimeHandoffGuide)
+$claudeRuntimeHandoffSource = Get-Content -Raw -LiteralPath $claudeRuntimeHandoffGuide
+Assert-True "Claude runtime handoff requires objective coverage final gate" ($claudeRuntimeHandoffSource -match 'Objective Coverage.*final mission-goal checklist' -and $claudeRuntimeHandoffSource -match 'Guides/Zargabad-Completion-Gates\.md' -and $claudeRuntimeHandoffSource -match 'current static/runtime evidence' -and $claudeRuntimeHandoffSource -match 'before Claude can recommend stop or Codex can say stop')
+Assert-True "Claude runtime handoff carries Codex action recommendation rule" ($claudeRuntimeHandoffSource -match 'keep/tune/revert/investigate/patch/retest Codex action recommendation' -and $claudeRuntimeHandoffSource -match 'Objective Coverage')
 Assert-True "completion gates guide exists" (Test-Path -LiteralPath $completionGatesGuide)
 $completionGatesSource = Get-Content -Raw -LiteralPath $completionGatesGuide
 Assert-True "completion gates guide maps objective to static and runtime proof" ($completionGatesSource -match '## Objective Coverage' -and $completionGatesSource -match 'Static proof' -and $completionGatesSource -match 'Runtime proof')
