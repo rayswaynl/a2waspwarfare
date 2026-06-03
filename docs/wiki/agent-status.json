@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T12:35:00+02:00",
+  "generatedAt": "2026-06-03T12:45:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Instructions-For-Codex item 22: PVF-Dispatch-Implementation-Playbook now lists all 15 active current client PVF commands and corrects Init_PublicVariables / SendTo helper line ranges.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 23: Economy-Authority-First-Cut supply reward and SupplyByHeli scoping."
+      "currentWork": "Closed Instructions-For-Codex item 23 as stale audit drift: Economy-Authority-First-Cut already scopes SupplyByHeli to PR #1, documents current master supply completion as side-supply-only on the server and keeps personal cash/score in the client completion message.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 24: Variable-And-Naming-Conventions compile-prefix and wfbe_funds object-scope correction."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "economy-authority-first-cut-supply-recheck",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 23 is resolved as stale audit drift: Economy-Authority-First-Cut.md already scopes SupplyByHeli to PR #1, documents current master supply completion as side-supply-only at supplyMissionCompleted.sqf:26 and keeps personal cash/score in supplyMissionCompletedMessage.sqf:13-22."
+    },
     {
       "lane": "pvf-dispatch-playbook-list-ranges",
       "owner": "Codex",

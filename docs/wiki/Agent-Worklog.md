@@ -1346,3 +1346,10 @@ Key conclusions:
 - Source-checked DR-20 against redundant HQ killed detection paths (`Init_Server.sqf:319`, `Construction_HQSite.sqf:36,89`, `Init_Client.sqf:499-503`) and the unguarded score awards in `Server_OnHQKilled.sqf:46-50` and `:74-82`.
 - Routed the finding into [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas), [Gameplay systems atlas](Gameplay-Systems-Atlas) and [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), then marked [Instructions for Codex](Instructions-For-Codex) item 5 complete.
 - Scope remained docs-only; no gameplay source files were edited.
+
+# 2026-06-03 - Economy Authority Supply Reward Recheck
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 23 as a stale audit warning after source-checking [Economy authority first cut](Economy-Authority-First-Cut) against current `master`.
+- Confirmed current `master` supply start stamps `SupplyFromTown` and `SupplyAmount` in `Client/Module/supplyMission/supplyMissionStart.sqf:20-39`; server completion reads them in `Server/Module/supplyMission/supplyMissionCompleted.sqf:9-28`.
+- Confirmed server completion rewards side supply only via `ChangeSideSupply` at `supplyMissionCompleted.sqf:26`; no `ChangePlayerFunds` or `ChangeTeamFunds` path exists in that server handler.
+- Confirmed personal cash/score remain in `Client/Module/supplyMission/supplyMissionCompletedMessage.sqf:13-22`, and `SupplyByHeli` is already scoped to PR #1 / `feat/supply-helicopter`.
