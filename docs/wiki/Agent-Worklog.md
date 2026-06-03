@@ -4,6 +4,18 @@ Append entries here so Codex, Claude and future assistants can see what each age
 
 Read this file as append-only history, not as a strict timestamp-sorted truth source. For the contested cleanup lanes, trust [Current source status snapshot](Current-Source-Status-Snapshot) plus `agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851` until a newer source re-check with file/line evidence replaces them. Older lines that say those lanes are source/Vanilla patched are stale-wave history.
 
+## 2026-06-03 - Codex Economy / Supply / Commander / Upgrades Audit
+
+- Completed the deep-pass boundary update requested by lane `economy-supply-commander-audit`.
+- Added explicit economy data-flow + authority notes across supply missions, commander vote/assignment, upgrade/construction/defense and support/reward surfaces in:
+  - [Economy-Authority-First-Cut](Economy-Authority-First-Cut)
+  - [Economy-Towns-And-Supply](Economy-Towns-And-Supply)
+  - [Feature-Status-Register](Feature-Status-Register)
+  - [Supply-Mission-Authority-Cleanup-Playbook](Supply-Mission-Authority-Cleanup-Playbook)
+- Updated [Progress-Dashboard](Progress-Dashboard) current-lane table and published-batch rows for this lane handoff.
+- Updated machine tracking (`agent-hardening-backlog.jsonl` and `agent-events.jsonl`) with commander/upgrade/support continuation findings and open follow-ups.
+- Confirmed PR #5/#10/#11/#12 carry-forward context for supply mission authority notes.
+
 ## 2026-06-02 - Codex Arma 2 OA Compatibility Audit
 
 - Audited docs/wiki Markdown and agent files for accidental Arma 3-era references including `remoteExec`, `remoteExecCall`, `BIS_fnc_MP`, `remoteExecutedOwner`, `parseSimpleArray`, `RVExtensionArgs`, `CfgFunctions`, CBA/ACE and Eden Editor wording.
@@ -1472,3 +1484,53 @@ Key conclusions:
 - ALSO carried 2 pre-existing local supply-heli commits (262dc431, c878bbca) to origin in that push (fast-forward, authorship intact).
 - FIXED WIKI DRIFT in Supply-Mission-Architecture / -Scan-Narrowing / -Authority-Cleanup-Playbook: scan-narrowing was described as unpatched but is SHIPPED (class-filtered + heli 400m + 2D gate, supplyMissionStarted.sqf:48-56); marked casing/dead-twin/SupplyByHeli DONE; documented the heli 2D gate + supplyMissionTimerForTown push-timer (were undocumented). Added dated UPDATE banners.
 - Still open (future pick): XR6 (duplicate-start guard), XR15/SM2 (friendly-side check on delivery CC), exploit-class cluster (deferred).
+
+## 2026-06-03T15:26:44+02:00 - Codex - publicVariableClient JIP caveat
+
+- Re-checked BI `publicVariable` and `publicVariableClient` pages plus current source `owner _player publicVariableClient` callsites.
+- Tightened [Networking and public variables](Networking-And-Public-Variables), [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index), [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) and `agent-compatibility-audit.json`: `publicVariableClient` is OA 1.62 and source-backed for one-client replies, but it is not persistent/JIP-compatible like `publicVariable`.
+- No gameplay code changed. Future changes that replace broadcast/resend state with targeted sends still need Arma 2 OA hosted/dedicated/JIP smoke.
+
+## 2026-06-03T15:42:00+02:00 - Codex - docs/wiki knowledge-pack quality lane
+- Added a new compact bootstrap page: [AI Assistant Guide](AI-Assistant-Guide).
+- Added doc-flow routing across Home, Sidebar, and llms.txt so LLM/agent bootstrap has one deterministic first read path.
+- Tightened AI-Assistant-Developer-Guide, SQF-Code-Atlas, Feature-Status-Register, Progress-Dashboard, and Wiki-Quality-Audit with explicit what/where/how/next navigation blocks.
+- Logged machine-readable notes in agent-events.jsonl and agent-knowledge.jsonl for future lane handoff and LLM boot order; no gameplay source files were edited.
+
+## 2026-06-03T15:58:00+02:00 - Codex - docs/wiki knowledge-pack quality lane (continuation)
+
+- Completed remaining docs-flow hardening for the docs-knowledge-entrypoint lane:
+  - Added canonical "what/where/how/risks/next" sections to [Feature-Status-Register](Feature-Status-Register) for clearer human + agent triage.
+  - Updated [Progress-Dashboard](Progress-Dashboard) current-lane tables and recent-work list so this lane is visible in dashboards and handoff surfaces.
+  - Expanded [Wiki-Quality-Audit](Wiki-Quality-Audit) with an explicit LLM bootstrap duplication watch section.
+- Appended machine-record continuity entries to `agent-events.jsonl` and `agent-knowledge.jsonl` (no gameplay source changes).
+
+## 2026-06-03 Economy / Supply / Commander / Upgrades Audit
+
+- Lane: economy-supply-commander-audit
+- Scope covered: money/funds, side supply, commander voting/authority, construction, factory, upgrades, support class, supply truck/heli mission flow, reward and bounty sinks, side income and cash sources, and upstream Miksuu PR links (#5, #10, #11, #12).
+- Files inspected (source):
+  - Common/Functions/Common_ChangeTeamFunds.sqf
+  - Common/Functions/Common_ChangeSideSupply.sqf
+  - Server/Functions/Server_ChangeSideSupply.sqf
+  - Common/Functions/Common_GetSideSupply.sqf
+  - Common/Functions/Common_GetTeamFunds.sqf
+  - Server/Functions/Server_PV_RequestSupplyValue.sqf
+  - Server/Functions/Server_ProcessUpgrade.sqf
+  - Server/PVFunctions/RequestUpgrade.sqf
+  - Server/PVFunctions/RequestStructure.sqf
+  - Server/PVFunctions/RequestDefense.sqf
+  - Server/PVFunctions/RequestNewCommander.sqf
+  - Server/Functions/Server_AssignNewCommander.sqf
+  - Server/Module/supplyMission/supplyMissionStarted.sqf
+  - Server/Module/supplyMission/supplyMissionCompleted.sqf
+  - Client/Module/supplyMission/supplyMissionStart.sqf
+  - Client/Module/supplyMission/supplyMissionCompletedMessage.sqf
+- Wiki reviewed before edits: Core-Gameplay-Systems (not found), Feature-Status-Register, Supply-Mission-Authority-Cleanup-Playbook, Upstream-Miksuu-Commit-Intel (not found), Progress-Dashboard, construction and factory upgrade pages.
+- Findings added: side-supply debit inversion, weak client-to-server trust edges in supply start/completion and attack-wave init, commander assignment validation defect, and duplicate new-commander notifications.
+- Actioned updates: docs and machine logs only; no gameplay code changes.
+
+## 2026-06-03T16:18:12+02:00 - Codex - Wiki knowledge-pack quality lane verification closeout
+- Completed the docs/knowledge wrap-up by adding the final [AI Assistant Guide](AI-Assistant-Guide) validation notes and lane breadcrumb updates across [Progress-Dashboard](Progress-Dashboard) and this log.
+- Re-ran Tools/ValidateWiki.ps1, docs/validate-wiki.ps1, and Tools/TestWikiParity.ps1; all passed after the earlier agent-hardening-backlog.jsonl wikiRef correction and source-mirror sync.
+- No gameplay source files were edited in this pass; this lane remains documentation-only and machine-readable context-first (Home, dashboard, llms, and canonical pages).

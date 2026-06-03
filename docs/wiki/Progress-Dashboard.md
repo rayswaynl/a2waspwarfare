@@ -8,6 +8,9 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `docs-knowledge-entrypoint` | Verified | Added final docs pass wrap-up: validated `Home`, `_Sidebar`, `AI-Assistant-Guide`, `SQF-Code-Atlas`, `Feature-Status-Register`, `Agent-Worklog`, machine-readable JSON/JSONL records, and mirror parity for this lane. |
+| `economy-supply-commander-audit` | Published | [Economy authority first cut](Economy-Authority-First-Cut) documents the full economy boundary map for supply mission trust, commander request validation and upgrade/factory/support spend, then links follow-through into [Commander-Reassignment-Call-Shape](Commander-Reassignment-Call-Shape), [Supply Mission Authority Cleanup](Supply-Mission-Authority-Cleanup-Playbook), [Feature-Status-Register](Feature-Status-Register) and [Deep-Review Findings](Deep-Review-Findings). |
+| `docs-knowledge-entrypoint` | Integrated | [AI-Assistant-Guide](AI-Assistant-Guide) is now the canonical first-touch docs/LLM entrypoint, with Home, `_Sidebar` and `llms.txt` routing execution guidance to subsystem atlases instead of duplicating bootstrap text. |
 | `supply-mission-scan-narrowing` | Published/source patched | [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) narrows the live supply return-to-base command-center scan to `Base_WarfareBUAVterminal` in source Chernarus and generated Vanilla Takistan; Arma smoke remains. |
 | `hosted-server-fps-loop-sleep` | Published/source patched | [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) fixes DR-19 in source/Vanilla by exiting both FPS publishers on non-dedicated hosts while preserving dedicated 8-second publishing. |
 | `paratrooper-marker-revival` | Published/source patched | [Paratrooper marker revival](Paratrooper-Marker-Revival) restores the paratrooper marker callback in source Chernarus by registering `HandleParatrooperMarkerCreation`; Vanilla propagation and modded mission cleanup remain. |
@@ -56,7 +59,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `long-running-archivist-continuation` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Latest slice resolved Wiki Quality DUP-8 by routing construction authority detail to [Deep-review findings](Deep-Review-Findings) DR-6, [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas) and [Server authority map](Server-Authority-Migration-Map). |
+| Codex | Active | `docs-knowledge-entrypoint` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Current docs pass keeps AI/agent onboarding stable and routes execution guidance through subsystem atlases. |
 | Codex-2 | Active | `wasp-marker-wait-cleanup` | Source-checking `WASP/global_marking_monitor.sqf` marker-dialog display polling and preparing the smallest safe wait cleanup. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
@@ -87,6 +90,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | `hosted-server-fps-loop-sleep` | Codex-2 | Published/source patched | [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) exits FPS publishers on hosted/listen servers and keeps dedicated publishing unchanged; smoke remains. |
 | `client-skill-init-idempotency` | Codex-2 | Published/source patched | [Client skill init idempotency](Client-Skill-Init-Idempotency) removes the duplicate `Skill_Init.sqf` call from source Chernarus and propagated Vanilla Takistan; Arma smoke remains. |
 | `paratrooper-marker-revival` | Codex-2 | Published/source patched | [Paratrooper marker revival](Paratrooper-Marker-Revival) registers the existing client handler in source Chernarus; Vanilla propagation, Arma smoke and modded drift cleanup remain. |
+| `docs-knowledge-entrypoint` | Codex | Integrated | [AI-Assistant-Guide](AI-Assistant-Guide) is now the canonical docs/LLM entrypoint and the dashboard/worklog/llms/Home/sidebar were updated to avoid duplicated bootstrap text. |
 | `wiki-quality-dup8-construction-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-8 is resolved: DR-6 owns exact proof, Construction atlas owns runtime map/checklist, and authority/status pages keep migration routing. |
 | `wiki-quality-dup7-supply-cooldown-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-7 is resolved: DR-18 owns exact casing evidence, Supply architecture owns flow/JIP state, and Economy/Server runtime/Feature status/Hardening roadmap route there. |
 | `wiki-quality-dup4-generated-mission-routing` | Codex | Published | [Wiki quality audit](Wiki-Quality-Audit) DUP-4 is resolved: Tools/build owns operational generation/skip-list rules, Deep Review owns DR-4/DR-32 drift evidence, and Content Structure routes instead of duplicating. |
@@ -116,6 +120,7 @@ Keep this page open when parallel documentation work is running. It links to the
 | `hc-delegation-failover-playbook` | Codex/future AI owner | Playbook published | Use [HC delegation/failover](Headless-Delegation-And-Failover-Playbook) before changing headless town AI, static-defense delegation or disconnect/failover behavior. |
 | `dashboard-current-state-cleanup` | Codex | Published | Progress page now shows current state first; historic scout detail lives in swarm/worklog pages. |
 | `town-ai-vehicle-despawn-safety` | Codex/future code owner | Playbook published | The confirmed occupied-vehicle deletion bug now has a dedicated implementation playbook; next step is a gameplay patch in the Chernarus source mission when code work is claimed. |
+| `economy-supply-commander-audit` | Codex | Ready-for-review | Economic and authority matrix updates are now complete across economy, commander, upgrade, support and supply-mission boundaries; next step is implementation owner pick from the backlog. |
 | `attack-wave-authority-dr41` | Future code owner | Playbook published | `ATTACK_WAVE_INIT` is confirmed high-risk; use [Attack-wave authority playbook](Attack-Wave-Authority-Playbook), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) and [Server authority map](Server-Authority-Migration-Map) before patching. |
 | `server-authority-migration-map` | Codex/future code owner | Published | Use the map before patching PVF dispatch, ICBM, economy, supply, support or BattlEye-sensitive authority flows. |
 | `testing-debugging-release-workflow` | Codex/future agent | Drafted | Publish and use the test workflow to distinguish source-only review from hosted/dedicated/JIP/HC smoke evidence. |
@@ -127,6 +132,8 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Batch | Output | Details |
 | --- | --- | --- |
+| Economy supply commander audit deepening | [Economy authority first cut](Economy-Authority-First-Cut), [Economy towns and supply](Economy-Towns-And-Supply), [Commander reassignment call-shape](Commander-Reassignment-Call-Shape), [Feature status](Feature-Status-Register), [Supply-mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) | Added explicit client/server boundary map for commander upgrades, support spend and supply-reward flow with known exploitable/undocumented paths and PR #5/#10/#11/#12 carry-through. |
+| LLM/agent onboarding cleanup | [AI-Assistant-Guide](AI-Assistant-Guide), [AI-Assistant-Developer-Guide](AI-Assistant-Developer-Guide), [Progress dashboard](Progress-Dashboard), [Wiki quality audit](Wiki-Quality-Audit) | Added a compact docs/LLM bootstrap and aligned Home/_Sidebar/`llms.txt` routing so execution guidance is now consistently routed through subsystem atlases with lower duplication surface. |
 | ICBM authority playbook routing | [ICBM authority](ICBM-Authority-Playbook), [Hardening roadmap](Hardening-Implementation-Roadmap), [Server authority map](Server-Authority-Migration-Map), [Feature status](Feature-Status-Register), [Wiki quality audit](Wiki-Quality-Audit) | Turns DR-27 into a source-backed implementation playbook covering Tactical-menu gating, `NukeIncoming`, `RequestSpecial`, `Server_HandleSpecial.sqf` and `NukeDammage`, while keeping summary pages short. |
 | Wiki-quality MERGE-1 authority routing | [Hardening roadmap](Hardening-Implementation-Roadmap), [Server authority map](Server-Authority-Migration-Map), [Wiki quality audit](Wiki-Quality-Audit) | Reduces duplicated P0/P1 evidence and phase guidance by making the roadmap the canonical patch-order hub while the authority map owns principles, flow table, handler checklist and design-review routing. |
 | Wiki-quality DUP-10 HC routing | [AI/headless](AI-Headless-And-Performance), [Lifecycle wait-chain](Lifecycle-Wait-Chain), [HC delegation/failover](Headless-Delegation-And-Failover-Playbook), [Wiki quality audit](Wiki-Quality-Audit) | Replaces duplicate HC failover discussion with clear page ownership: AI/headless keeps source-route orientation, Lifecycle keeps HC `sleep 20` boot timing, and the playbook owns update-back/work-record/disconnect/late-HC policy. |
@@ -195,3 +202,11 @@ Historic scout rosters and harvested reports live in [Discovery swarm](Subagent-
 Previous: [Agent context](Agent-Context) | Next: [Coordination board](Coordination-Board)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
+
+## Goal update: economy-supply-commander-audit (2026-06-03)
+
+- Economy data-flow audit complete: side funds, side supply, bounty/reward, construction, factory, upgrade, and commander vote/assign request paths inspected in source.
+- Supply run authority status: Supply-Mission-Scan-Narrowing is SHIPPED in source (Server/Module/supplyMission/supplyMissionStarted.sqf), but authority-hardening remains partial due client-initialized mission vars and permissive completion bridges.
+- Commander authority status: request path is server-handled but requester attribution is weak; RequestNewCommander trusts caller-provided _side and _assigned_commander and Server_AssignNewCommander has a parameter-index mismatch risk.
+- Upgrade/Construction/Factory status: request handlers perform server-side cost checks, but malformed/unauthorized payload handling is not fully normalized across all call sites.
+- Evidence links now added in Feature-Status-Register, Economy-Authority-First-Cut, Economy-Towns-And-Supply, Supply-Mission-Authority-Cleanup-Playbook, and machine JSONL logs.
