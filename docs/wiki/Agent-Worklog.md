@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Stale Collaboration Claim Closure
+
+- Closed stale machine-readable claims in [`agent-collaboration.json`](agent-collaboration.json): `latest-doc-batch-validation-publish` no longer represents an active publish task, and `attack-wave-authority-playbook` is already published/validated.
+- Evidence checked: [Progress dashboard](Progress-Dashboard) and [`agent-status.json`](agent-status.json) already show the attack-wave playbook row as published/validated; [`agent-events.jsonl`](agent-events.jsonl) records the older `ready-to-publish` event and the later dashboard closure; [Attack-wave authority](Attack-Wave-Authority-Playbook), [Feature status](Feature-Status-Register) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) carry the DR-41 playbook/backlog state.
+- Source recheck for the retained DR-41 evidence: `Common_AttackWaveActivate.sqf:3-8` sends `_supply`/`_side` over `ATTACK_WAVE_INIT`, `Server_AttackWave.sqf:1-27` trusts that payload to compute/publish attack-wave details, and `AttackWave.sqf:23,40` consumes the published side and debits current side supply.
+- Scope remained docs/status only; no gameplay source files were edited.
+
 ## 2026-06-03 - Codex Documentation Finisher: PVF Dispatch Dashboard Status Closure
 
 - Closed stale [Progress dashboard](Progress-Dashboard) rows that still labelled [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook) as `Surfaced` / `Ready for review` even though the playbook is mirrored, linked and already recorded as published in machine status.

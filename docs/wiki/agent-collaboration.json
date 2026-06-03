@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T18:45:00+02:00",
+  "generatedAt": "2026-06-03T18:50:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "stale-collaboration-claim-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/agent-events.jsonl",
+        "docs/wiki/Attack-Wave-Authority-Playbook.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/agent-hardening-backlog.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AttackWaveActivate.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AttackWave.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/AttackWave.sqf"
+      ],
+      "outputs": [
+        "Closed stale latest-doc-batch-validation-publish active claim",
+        "Closed stale attack-wave-authority-playbook ready-to-publish claim",
+        "Preserved DR-41 playbook/source evidence without changing gameplay source"
+      ],
+      "handoff": "Future agents should treat these two older collaboration records as historical published/validated work, not current publish blockers. Continue with feature-status reconciliation, remaining stale-status cleanup or source-backed P0/P1 accuracy drift."
+    },
     {
       "lane": "pvf-dispatch-dashboard-status-closure",
       "owner": "Codex",
@@ -2044,18 +2067,18 @@
     {
       "lane": "latest-doc-batch-validation-publish",
       "owner": "Codex",
-      "status": "active",
+      "status": "superseded-published-validated",
       "outputs": [
         "GitHub wiki",
         "docs/wiki mirror",
         "agent-knowledge.jsonl"
       ],
-      "handoff": "Validate JSON/JSONL and internal links, reconcile any Claude remote changes, then publish wiki and mirror docs branch."
+      "handoff": "Historical publish-batch claim. Current docs mirror and wiki publish state are tracked by the newer published/validated lane records; no standalone active publish blocker remains from this record."
     },
     {
       "lane": "attack-wave-authority-playbook",
       "owner": "Codex",
-      "status": "ready-to-publish",
+      "status": "published-validated",
       "sourceScope": [
         "docs/wiki/Attack-Wave-Authority-Playbook.md",
         "Server/Functions/Server_AttackWave.sqf",
@@ -2067,7 +2090,7 @@
         "Attack-Wave-Authority-Playbook.md",
         "Navigation and machine context links for DR-41 implementation readiness"
       ],
-      "handoff": "Future code owner: use the playbook before editing attack-wave mission code; update validation records after smoke or source-only checks."
+      "handoff": "Historical claim now closed as published/validated. Future code owner: use the playbook before editing attack-wave mission code; update validation records after smoke or source-only checks."
     },
     {
       "lane": "abandoned-feature-revival-review",
