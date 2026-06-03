@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T10:45:00+02:00",
+  "generatedAt": "2026-06-03T11:00:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Instructions-For-Codex item 27 is published/validated: Factory/purchase atlas now separates depot action range (capture range 40) from buy-menu closest-depot lookup (purchase range 60) and marks DR-33b random varQueu token as still open with exact anchors.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 29 or the next highest-value open status-drift item."
+      "currentWork": "Published Progress-Dashboard.md status-drift recheck: Instructions-For-Codex item 46 was a stale false-positive because current source/Vanilla agree with the dashboard for client skill init idempotency, supply scan narrowing and hosted/server FPS loop exits.",
+      "nextExpectedOutput": "Continue with the next highest-value open Instructions item after the published status-drift recheck."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "progress-dashboard-status-drift-recheck",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 46 is resolved: Progress-Dashboard.md's current-evidence rows for client skill init idempotency, supply scan narrowing and hosted/server FPS loop exits match current source and maintained Vanilla; Arma smoke remains pending."
+    },
     {
       "lane": "factory-purchase-range-token-correction",
       "owner": "Codex",

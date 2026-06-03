@@ -26,6 +26,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Closed [Instructions for Codex](Instructions-For-Codex) item 27 in [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas).
 - Corrected the depot range split: `updateavailableactions.fsm:39,194` uses `WFBE_C_TOWNS_CAPTURE_RANGE` (40 at `Init_CommonConstants.sqf:323`) for `depotInRange`, while `GUI_Menu_BuyUnits.sqf:217` uses `WFBE_C_TOWNS_PURCHASE_RANGE` (60 at `Init_CommonConstants.sqf:338`) for closest-depot lookup inside the buy menu.
 - Reframed DR-33b as still open with exact token evidence: `Init_Common.sqf:164` initializes random `varQueu`; `Client_BuildUnit.sqf:167-172` uses/rerolls it and broadcasts `queu`, with later broadcasts at `:191` and `:207`.
+
+## 2026-06-03 - Codex Documentation Finisher: Progress Dashboard Status-Drift Recheck
+
+- Rechecked [Instructions for Codex](Instructions-For-Codex) item 46 against current source Chernarus and maintained Vanilla Takistan.
+- Confirmed the dashboard rows for client skill init idempotency, supply mission scan narrowing and hosted/server FPS loop exits are accurate in the current checkout: both source trees have a single `Skill_Init.sqf` call at `Init_Client.sqf:547`, `WFBE_SK_FNC_Apply` at `:571`, class-filtered supply command-center scans at `supplyMissionStarted.sqf:28`, and non-dedicated early exits at `serverFpsGUI.sqf:1` / `monitorServerFPS.sqf:1`.
+- Marked item 46 as a stale false-positive for the Progress Dashboard; Arma smoke remains the runtime gate, but the docs status is not currently misreporting those three source patches.
 - Validation passed: `docs/validate-wiki.ps1`, `git diff --check`, JSON/JSONL parsing and docs/wiki-to-wiki mirror parity.
 
 ## 2026-06-03 - Codex Documentation Finisher: Progress Dashboard At A Glance Refresh

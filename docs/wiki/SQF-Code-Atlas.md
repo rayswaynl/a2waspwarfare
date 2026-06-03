@@ -82,6 +82,11 @@ Risk notes:
 - Gear config loads only on `local player`, while class/core config loads more broadly.
 - Root faction files compile side-specific units, structures, artillery, squads and upgrades; changes here affect buy menus, AI and production.
 
+Maintainability notes:
+
+- `Init_Common.sqf:24-63` and `:94-160` intentionally mix old short global helper names with newer `WFBE_CO_FNC_*` names. Several names compile the same target file under both eras, so future cleanup should map call sites before deleting either spelling.
+- The four nearest-entity helpers are separate functions registered at `Init_Common.sqf:116-119` (`Common_GetClosestEntity{,2,3,4}.sqf`). Treat them as a small API family that needs behavior comparison before consolidation.
+
 ### `Server/Init/Init_Server.sqf`
 
 Server init owns AI, town, building, construction, special support, supply mission, AntiStack, attack wave, headless delegation and long server loops.
@@ -120,6 +125,17 @@ Risk notes:
 ### `Headless/Init/Init_HC.sqf`
 
 Headless init compiles the same delegation helpers used by clients plus `WFBE_CL_FNC_HandlePVF`. Headless support is version-gated earlier in `initJIPCompatible.sqf`, and server-side delegation helpers are compiled in server init when the version allows it.
+
+## Maintainability Watchlist
+
+These are not new gameplay defects by themselves. They are source-backed areas where future code changes should be careful because duplicated shape can hide drift.
+
+| Lead | Evidence | Existing owner / guidance |
+| --- | --- | --- |
+| Dual common-helper naming era | `Init_Common.sqf:24-63` compiles legacy short globals (`GetSideID`, `GetTeamFunds`, `GetTownsIncome`, ...); `:94-160` compiles newer `WFBE_CO_FNC_*` globals, including overlapping target files such as `Common_GetSideID.sqf`, `Common_GetSideSupply.sqf`, `Common_GetSideUpgrades.sqf` and `Common_GetTeamFunds.sqf`. | [Variable/naming conventions](Variable-And-Naming-Conventions) now documents the overlap. Do not delete either spelling until call sites are counted. |
+| Similar helper families | `Init_Common.sqf:116-119` registers `WFBE_CO_FNC_GetClosestEntity`, `GetClosestEntity2`, `GetClosestEntity3` and `GetClosestEntity4`. | Keep as an explicit API family until the four files are behavior-compared; replacing by one helper is a later refactor, not a docs correction. |
+| Copy-paste implementation families | `Client_SupportRepair.sqf`, `Client_SupportRefuel.sqf`, `Client_SupportRearm.sqf` and `Client_SupportHeal.sqf` are 78-81 line siblings with near-identical setup; `Construction_SmallSite.sqf` / `Construction_MediumSite.sqf` share construction-site flow with known logic-list asymmetry; `Common/Config/Loadout/Loadout_*.sqf` has ten faction data files. | Use [Service menu affordability guards](Service-Menu-Affordability-Guards), [Construction logic list cleanup](Construction-Logic-List-Cleanup) and [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) before touching these families. |
+| Hardcoded English hints mixed with localized UI | Examples include Zeta cargo HQ-wreck hints (`Zeta_Hook.sqf:21-22`), gear menu target/backpack/template hints (`GUI_BuyGearMenu.sqf:71,256-257,442,467,474`), GPS zoom hints (`GUI_Menu.sqf:204,208`), a debug `systemChat` (`Common_HandleShootMissiles.sqf:116`) and gear-template hints (`Client_UI_Gear_AddTemplate.sqf:132,150`). | Prefer `stringtable.xml` + `localize` for new user-facing text. Leave debug strings alone unless the owner is deliberately cleaning UX/localization. |
 
 ## PVF Contract
 
