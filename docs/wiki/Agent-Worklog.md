@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Active Handoff Refresh
+
+- Refreshed the active `documentation-finisher-loop` handoff in [`agent-collaboration.json`](agent-collaboration.json) so future agents no longer chase `cleanup-flag-nested-pair-shape-closure` as a next candidate.
+- Evidence checked: [Progress dashboard](Progress-Dashboard) already marks `dashboard-next-candidate-refresh` and `cleanup-flag-nested-pair-shape-closure` as published/validated, while this worklog records the earlier stale-handoff correction.
+- Scope remained docs/status only; next bounded docs candidates are feature-status reconciliation, machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs.
+
 ## 2026-06-03 - Codex Documentation Finisher: Generated Mission Drift Status Closure
 
 - Closed the stale `generated-mission-drift-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); DR-4/DR-32 are already integrated into [Tools/build workflow](Tools-And-Build-Workflow#generated-mission-status-table), [Source inventory](Source-Inventory), [Codebase coverage ledger](Codebase-Coverage-Ledger#drift-dimension--campaign-wide-result-dr-32), [Content structure/maps](Content-Structure-And-Maps) and [Deep review findings](Deep-Review-Findings).
