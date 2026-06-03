@@ -28,6 +28,27 @@ switch (_request) do {
 		missionNamespace setVariable ['WFBE_OPFOR_SCORE_JOIN', (_args select 2)]
 	};
 	case "uav-reveal": {_args spawn WFBE_CL_FNC_Reveal_UAV};
+	case "drone-strike-fx": {
+		_args spawn {
+			private ["_pos","_strikeSide","_m"];
+			_pos = _this select 0;
+			_strikeSide = _this select 1;
+			if (playerSide == _strikeSide) then {
+				_m = Format ["WFBE_DRONE_FX_%1", str (round (time * 10))];
+				createMarkerLocal [_m, _pos];
+				_m setMarkerTypeLocal "mil_destroy";
+				_m setMarkerColorLocal (if (_strikeSide == west) then {"ColorBlue"} else {"ColorRed"});
+				_m setMarkerTextLocal "Drone strike";
+				playSound "commanderNotification";
+				systemChat "Drone strike package inbound -- target grid painted.";
+				sleep 35;
+				deleteMarkerLocal _m;
+			} else {
+				playSound "inbound";
+				systemChat "WARNING: hostile drone activity detected in your sector.";
+			};
+		};
+	};
 	case "upgrade-started": {_args spawn WFBE_CL_FNC_Upgrade_Started};
 	case "upgrade-complete": {_args spawn WFBE_CL_FNC_Upgrade_Complete};
 	case "building-started": {_args spawn WFBE_CL_FNC_Building_Started};

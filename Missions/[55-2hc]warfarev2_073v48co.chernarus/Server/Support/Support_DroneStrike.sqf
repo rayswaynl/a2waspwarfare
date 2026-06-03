@@ -9,7 +9,7 @@
 
 private ["_side","_destination","_playerTeam","_sideID","_enemySides","_aaTypes","_model","_alt","_speed","_lspeed",
         "_flareN","_total","_zoneR","_warhead","_scatter","_hp","_stagger","_loiterTime",
-        "_bd","_corners","_spawnPos","_drones","_i","_role","_drone","_activeKey","_active","_mkr","_x"];
+        "_bd","_corners","_spawnPos","_drones","_i","_role","_drone","_activeKey","_active","_x"];
 
 _side        = _this select 1;
 _destination = _this select 2;
@@ -93,12 +93,8 @@ WFBE_DroneSpoofMissile = {
     };
 };
 
-//--- Strike-zone marker (commander sees where the package is headed; doubles as the camper's "displace or pay" warning).
-_mkr = Format ["WFBE_DRONE_MKR_%1_%2", str _side, str (round time)];
-createMarker [_mkr, _destination];
-_mkr setMarkerType "mil_destroy";
-_mkr setMarkerColor (if (_side == west) then {"ColorBlue"} else {"ColorRed"});
-_mkr setMarkerText "Drone strike";
+//--- Friendly map marker + "inbound" announcer (friendly: precise marker + chime; enemy: fairness warning). Reuses the broadcast infra.
+[nil, "HandleSpecial", ["drone-strike-fx", _destination, _side]] Call WFBE_CO_FNC_SendToClients;
 
 //--- Map-edge spawn (clone of Support_Paratroopers ingress origin).
 _bd = missionNamespace getVariable 'WFBE_BOUNDARIESXY';
@@ -130,7 +126,7 @@ processInitCommands;
     private "_d"; _d = _x;
     [_d, _destination, _alt, _speed, _lspeed, _zoneR, _loiterTime, _warhead, _scatter, _stagger, _enemySides, _aaTypes] spawn {
         private ["_d","_dest","_alt","_speed","_lspeed","_zoneR","_loiterTime","_warhead","_scatter","_stagger","_enemySides","_aaTypes",
-                "_role","_phase","_tgt","_p","_dx","_dy","_hdg","_ang","_pt","_endT","_t0","_target","_cands","_valid","_aa",
+                "_role","_phase","_tgt","_idl","_p","_dx","_dy","_hdg","_ang","_pt","_endT","_t0","_target","_cands","_valid","_aa",
                 "_aim","_dur","_imp","_vx","_vy","_vz","_mag","_x"];
         _d          = _this select 0;
         _dest       = _this select 1;
@@ -147,9 +143,10 @@ processInitCommands;
         _role  = _d getVariable "wfbe_drone_role";
         _phase = _d getVariable "wfbe_phase";
 
-        //--- INGRESS to the zone.
+        //--- INGRESS to the zone (safety deadline so a stuck drone can't loop forever).
         _tgt = [_dest select 0, _dest select 1, _alt];
-        while {alive _d && ((_d distance _tgt) > (90 + random 90))} do {
+        _idl = time + 70;
+        while {alive _d && ((_d distance _tgt) > 110) && time < _idl} do {
             _p = getPosATL _d;
             _dx = (_tgt select 0) - (_p select 0);
             _dy = (_tgt select 1) - (_p select 1);
@@ -249,14 +246,12 @@ processInitCommands;
 } forEach _drones;
 
 //--- Lifecycle cleanup: remove marker, delete any survivors past hard lifetime, decrement the cap.
-[_drones, _activeKey, _mkr] spawn {
-    private ["_drones","_activeKey","_mkr","_hardLife"];
+[_drones, _activeKey] spawn {
+    private ["_drones","_activeKey","_hardLife"];
     _drones    = _this select 0;
     _activeKey = _this select 1;
-    _mkr       = _this select 2;
     _hardLife  = time + WFBE_C_DRONE_LOITER_TIME + 90;
     waitUntil {sleep 2; (({alive _x} count _drones) == 0) || time > _hardLife};
     {if (!isNull _x) then {deleteVehicle _x}} forEach _drones;
-    deleteMarker _mkr;
     missionNamespace setVariable [_activeKey, ((missionNamespace getVariable [_activeKey, 1]) - 1) max 0];
 };
