@@ -2,6 +2,18 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Stale Claude Audit Machine-Record Cleanup
+
+- Closed stale 2026-06-02 `agent-knowledge.jsonl` records whose owning docs had already been reconciled: BattlEye A2 OA filter wording, ICBM normative validation wording, Core Systems Discord integration scope, factory depot range constants, supply PR #1 scoping and the old patched-status drift capstone rows.
+- Evidence checked: current Chernarus and maintained Vanilla have single `Skill_Init.sqf` init plus `WFBE_SK_FNC_Apply` at `Client/Init/Init_Client.sqf:547,571`, class-filtered supply command-center scans at `supplyMissionStarted.sqf:25,28`, and early hosted/listen FPS exits at `serverFpsGUI.sqf:1` / `monitorServerFPS.sqf:1`; owning docs now cite the corrected BattlEye, ICBM, Core Systems and factory range wording.
+- Kept real source work open: `SEND_MESSAGE` DR-46 remains docs-routed but source-unpatched; Arma 2 OA runtime smoke remains the separate release gate for propagated fixes.
+
+## 2026-06-03 - Codex Documentation Finisher: AI Respawn Branch Smoke Plan
+
+- Closed the open Development Lessons follow-up to add branch-specific AI respawn smoke coverage to [Testing workflow](Testing-Debugging-And-Release-Workflow#minimal-smoke-packs).
+- Evidence checked: `Server/Init/Init_Server.sqf:10-12` compiles `AISquadRespawn` for vanilla and `AIAdvancedRespawn` for non-vanilla; `Server/AI/AI_AddMultiplayerRespawnEH.sqf:1` attaches the non-player `MPRespawn` handler; `AI_AdvancedRespawn.sqf:55-125` and `AI_SquadRespawn.sqf:14-21,53-110` cover delay, loadout, spawn fallback and order reset; `Client/GUI/GUI_Menu_Command.sqf:356,439-442` writes forced/team respawn choices.
+- Updated [Development lessons learned](Development-Lessons-Learned), `agent-development-lessons.jsonl`, the dashboard and machine records so future agents know the smoke plan exists but runtime Arma 2 OA proof is still pending.
+
 ## 2026-06-03 - Codex Documentation Finisher: Lifecycle Wait-Chain Timeout Gap Closure
 
 - Closed the stale `gap-wait-chain-timeouts` record in `agent-knowledge.jsonl` by source-checking [Lifecycle wait-chain](Lifecycle-Wait-Chain)'s post-join wait audit.

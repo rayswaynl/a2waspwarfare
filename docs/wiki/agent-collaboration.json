@@ -780,9 +780,10 @@
         "source-backed documentation accuracy and lesson capture"
       ],
       "outputs": [
-        "Reviewed, validated and published scoped documentation batches with docs/wiki and wiki checkout parity"
+        "Reviewed, validated and published scoped documentation batches with docs/wiki and wiki checkout parity",
+        "Closed the AI respawn branch smoke-plan follow-up by adding a vanilla/non-vanilla AI leader death/respawn smoke pack to Testing-Debugging-And-Release-Workflow"
       ],
-      "handoff": "Continue from the highest-value open docs item after validation and publish; do not overlap active Codex, Claude or other agent claims."
+      "handoff": "Continue from the highest-value open docs item after validation and publish; likely next docs gaps are config data-model checklist, cleanup/restorer perf cadence or stale scout-wave-g validation reconciliation. Do not overlap active Codex, Claude or other agent claims."
     },
     {
       "lane": "lesson-aware-codebase-indexer",

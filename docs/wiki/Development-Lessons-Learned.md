@@ -9,7 +9,7 @@ Source root: `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
 | Area | Current coverage state | Why it still deserves attention |
 | --- | --- | --- |
 | Config data model | The assets/config page covers parameters, media and high-level assets, but `Common/Config` is much deeper than media/config shell coverage. | Content changes propagate through root faction files, unit arrays, gear registries, squad derivation, loadouts, upgrades, factory timers and generated missions. |
-| AI respawn/orders | Respawn atlas maps AI respawn; AI pages map HC/town AI. | Vanilla/non-vanilla respawn branches and commander-order team variables need a single maintainer checklist before AI feature work. |
+| AI respawn/orders | Respawn atlas maps AI respawn; testing workflow now has a branch-specific AI respawn smoke pack. | Commander-order team variables still need a dedicated executor proof before AI order hardening. |
 | Direct-PV economy helpers | Economy authority pages map the DRs, but implementation agents still need a local rule of thumb before touching helpers. | Shared helpers can look local and harmless while publishing direct mutation payloads; read helpers show the safer server-derived pattern. |
 | Cleanup/garbage/empty vehicles | Marker/cleanup atlas is strong, but patch handoffs are scattered. | Cleanup code has short polling loops, global replicated queues, inconsistent flags and nested-pair array traps. |
 | Non-EASA modules | Modules atlas maps many modules. | Feature changes still need a "where to smoke" rule because modules are split across Common/Client/Server and often attach at unit creation. |
@@ -18,7 +18,7 @@ Source root: `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
 
 `Init_Server.sqf` compiles different AI respawn implementations depending on `WF_A2_Vanilla`: vanilla uses `AISquadRespawn`, non-vanilla uses `AIAdvancedRespawn` (`Server/Init/Init_Server.sqf:10-12`). The advanced path is an `MPRespawn` handler entrypoint (`Server/AI/AI_AddMultiplayerRespawnEH.sqf:1`), while the vanilla path is a long-running leader watch loop (`Server/AI/AI_SquadRespawn.sqf:14-21`).
 
-Both paths share key semantics: wait by `WFBE_C_RESPAWN_DELAY`, equip from `WFBE_%SIDE_AI_Loadout_%level`, choose camp/mobile/base fallback, and reset movement mode after non-autonomous respawn (`Server/AI/AI_AdvancedRespawn.sqf:55-76`, `:80-125`; `Server/AI/AI_SquadRespawn.sqf:53-64`, `:68-110`). Any AI respawn change needs a source check and smoke plan for both branches, or the untested branch should be explicitly called out.
+Both paths share key semantics: wait by `WFBE_C_RESPAWN_DELAY`, equip from `WFBE_%SIDE_AI_Loadout_%level`, choose camp/mobile/base fallback, and reset movement mode after non-autonomous respawn (`Server/AI/AI_AdvancedRespawn.sqf:55-76`, `:80-125`; `Server/AI/AI_SquadRespawn.sqf:53-64`, `:68-110`). Any AI respawn change needs a source check and smoke plan for both branches, or the untested branch should be explicitly called out. The concrete smoke steps now live in [Testing workflow](Testing-Debugging-And-Release-Workflow#minimal-smoke-packs).
 
 Concrete follow-up: `Server/AI/AI_SquadRespawn.sqf:1` has a private-list typo-like entry `_rcm'`. It does not stop `_rcm` assignment at line 10, but it is a low-risk cleanup candidate when vanilla AI respawn is next touched.
 
@@ -84,7 +84,7 @@ Development rule: before moving or patching lifecycle waits, cite both the consu
 | --- | --- | --- | --- |
 | P1 | Add this page and `agent-development-lessons.jsonl` to navigation/agent context after orchestrator review. | `Home`, `_Sidebar`, `Agent-Context`, `agent-context.json` | Link check and JSON parse. |
 | P1 | Add a config data-model checklist to the assets/config or a dedicated config atlas page. | `Assets-Config-Localization-And-Parameters-Atlas` or new `Config-Data-Model-Atlas` | Source-only plus one content-change smoke scenario. |
-| P2 | Add AI respawn branch smoke to testing workflow. | `Testing-Debugging-And-Release-Workflow` | Vanilla and non-vanilla AI leader death/respawn smoke. |
+| Done | AI respawn branch smoke is now in the testing workflow. | `Testing-Debugging-And-Release-Workflow#minimal-smoke-packs` | Runtime evidence is still pending until vanilla and non-vanilla AI leader death/respawn are run in Arma 2 OA. |
 | P2 | Promote cleanup flag/nested-pair shape rules into the marker/cleanup atlas patch-ready section if not already accepted. | `Marker-Cleanup-Restoration-Systems-Atlas` | Mine expiry and unit-kill garbage smoke. |
 | P3 | Source-check whether commander `wfbe_teammode`/`wfbe_teamgoto` has a live general executor or is mostly UI/respawn/support state. | AI/order owner page | Dedicated commander AI order smoke. |
 

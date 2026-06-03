@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T16:35:00+02:00",
+  "generatedAt": "2026-06-03T12:29:47+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed the lifecycle wait-chain timeout gap: Lifecycle-Wait-Chain now has source-anchored producer/consumer/timeout rows, and Development-Lessons-Learned carries the wait-gate implementation rule.",
-      "nextExpectedOutput": "Pick the next highest-value stale validation/status row or fresh source-backed docs gap; Wave K, Wave J and Wave Q rows are no longer pending."
+      "currentWork": "Closed the AI respawn branch smoke-plan follow-up: Testing-Debugging-And-Release-Workflow now has a concrete vanilla/non-vanilla AI leader death/respawn smoke pack, and Development-Lessons-Learned points to it while keeping runtime proof pending.",
+      "nextExpectedOutput": "Pick the next highest-value stale validation/status row or fresh source-backed docs gap; good candidates are the config data-model checklist, cleanup/restorer perf cadence or scout-wave-g validation reconciliation."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "ai-respawn-branch-smoke-plan",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Closed the Development-Lessons-Learned AI respawn smoke follow-up by source-checking the vanilla AISquadRespawn and non-vanilla AIAdvancedRespawn split, then adding a concrete branch-specific smoke pack to Testing-Debugging-And-Release-Workflow. Runtime Arma 2 OA evidence is still pending."
+    },
     {
       "lane": "lifecycle-wait-chain-timeout-gap-closure",
       "owner": "Codex",
