@@ -151,7 +151,7 @@ Second BIKI cross-check, theme = object-scan/spatial commands + a sweep for A3-o
 
 Third BIKI cross-check, theme = the string/selection commands an A3-trained agent reaches for by reflex. All A3-only ones **confirmed absent** from source; added to the A3-only table in the [command version reference](Arma-2-OA-Command-Version-Reference): `selectRandom` (A3 1.56), `splitString`/`joinString` (A3 1.50), `trim` (A3 2.02) + regex. The repo's OA-safe random-pick idiom is `_arr select floor(random count _arr)`. **Key distinction documented:** `BIS_fnc_selectRandom` (the *function*) **is** OA-safe (A2 1.00) and is used 4× in `Client_BuildUnit.sqf`, but the `selectRandom` *command* is A3-only — don't collapse one into the other.
 
-50. **(Optional, LOW) Reflect the new A3-only string/selection traps in `agent-compatibility-audit.json`.** The `unsafeIfAddedAsImplementationAdvice` list could gain `selectRandom`, `splitString`, `joinString`, `trim` (all verified A3-only, absent from source) to match the avoid-list now on the command version reference. Purely additive guardrail; no doc currently misuses them. *Acceptance:* the four commands appear in the JSON avoid-list (or an explicit decision to keep the JSON scoped to remote-exec/extension risks only).
+50. ✅ **DONE by Codex — A3-only string/selection traps reflected in `agent-compatibility-audit.json`.** The `unsafeIfAddedAsImplementationAdvice` list now includes `selectRandom`, `splitString`, `joinString` and `trim`; the JSON also carries a dedicated `a3OnlyStringSelectionCommandTraps` evidence block. Source grep confirmed the command forms are absent from mission/tooling code, while `BIS_fnc_selectRandom` remains documented as the OA-safe function form.
 
 ## Continue Reading
 

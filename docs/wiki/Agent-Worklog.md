@@ -1439,3 +1439,9 @@ Key conclusions:
 - Closed [Instructions for Codex](Instructions-For-Codex) item 34 after source-checking [Supply mission architecture](Supply-Mission-Architecture).
 - Confirmed `Server/Init/Init_Server.sqf:36` compiles the runtime global as `UpdateSupplyTruck` and `:383` spawns `UpdateSupplyTruck`.
 - Corrected the remaining `AI_UpdateSupplyTruck` mention to `UpdateSupplyTruck`, while preserving `AI_UpdateSupplyTruck.sqf` as the filename/log-label context and keeping the missing `supplytruck.fsm` warning.
+
+# 2026-06-03 - A3 String/Selection Command Guardrails
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 50 by adding `selectRandom`, `splitString`, `joinString` and `trim` to [`agent-compatibility-audit.json`](agent-compatibility-audit.json)'s `unsafeIfAddedAsImplementationAdvice` list.
+- Added a dedicated `a3OnlyStringSelectionCommandTraps` block so future agents preserve OA-safe random/string idioms and do not collapse `BIS_fnc_selectRandom` into the Arma 3-only `selectRandom` command.
+- Source grep confirmed the A3-only command forms are absent from mission/tooling code outside documentation guardrails. Also corrected the object-scan command reference row to use current branch-aware `supplyMissionStarted.sqf:24-28`, `:28` and `:44` evidence.

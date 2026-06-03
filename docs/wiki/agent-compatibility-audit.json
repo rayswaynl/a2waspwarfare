@@ -1,13 +1,13 @@
 {
   "schema": "a2waspwarfare-agent-compatibility-audit-v1",
-  "generatedAt": "2026-06-02T22:35:00+02:00",
+  "generatedAt": "2026-06-03T14:45:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "engineBaseline": "Arma 2 Operation Arrowhead 1.64 / Combined Operations",
   "canonicalHumanPage": "Arma-2-OA-Compatibility-Audit.md",
-  "status": "wave-s-incorrect-arma3-snippets-corrected-and-machine-guardrails-refreshed",
+  "status": "string-selection-a3-only-command-guardrails-refreshed",
   "latestRefresh": {
-    "timestamp": "2026-06-02T22:35:00+02:00",
-    "result": "Wave S corrected stale Arma 3-era implementation advice: Deep-Review-Findings.md no longer uses isEqualTo in copyable OA snippets, and HC failover guidance no longer suggests setGroupOwner/groupOwner live transfer. Existing risky terms remain classified as warnings, explicit non-options, evidence contrasts or folder-name caveats.",
+    "timestamp": "2026-06-03T14:45:00+02:00",
+    "result": "Added machine-readable guardrails for A3-only string/selection command traps: selectRandom, splitString, joinString and trim. The command forms are confirmed absent from source; BIS_fnc_selectRandom remains classified as an OA-safe function and must not be collapsed into the A3-only selectRandom command.",
     "includesNewerPages": [
       "AntiStack-Database-Extension-Audit.md",
       "Integration-Trust-Boundary-Audit.md",
@@ -28,7 +28,8 @@
     "rg -n -i \"\\bArma ?3\\b|\\bA3\\b|Arma3|remoteExec(Call)?|BIS_fnc_MP|addMissionEventHandler|isRemoteExecuted|remoteExecutedOwner|CfgFunctions|CBA|ACE|Eden Editor\" docs\\wiki --glob '*.md'",
     "rg -n -i \"remoteExec|remoteExecCall|BIS_fnc_MP|addMissionEventHandler|isRemoteExecuted|remoteExecutedOwner|CfgFunctions|Eden Editor|parseSimpleArray|RVExtensionArgs\" docs\\wiki --glob '*.{md,json,jsonl,txt}'",
     "rg -n -i \"\\bCBA\\b|\\bACE\\b|Eden\" docs\\wiki --glob '*.{md,json,jsonl,txt}'",
-    "rg -n -i \"\\bapply\\b|isEqualTo|setGroupOwner|groupOwner|diag_tickTime|uiSleep|setVehicleInit|processInitCommands\" docs\\wiki --glob '*.{md,json,jsonl,txt}'"
+    "rg -n -i \"\\bapply\\b|isEqualTo|setGroupOwner|groupOwner|diag_tickTime|uiSleep|setVehicleInit|processInitCommands\" docs\\wiki --glob '*.{md,json,jsonl,txt}'",
+    "rg -n \"\\bselectRandom\\b|\\bsplitString\\b|\\bjoinString\\b|\\btrim\\b\" Missions Tools DiscordBot Extension docs\\wiki --glob '!docs/wiki/Arma-2-OA-Command-Version-Reference.md'"
   ],
   "knownAllowedReferenceClasses": [
     {
@@ -98,7 +99,11 @@
     "setGroupOwner / groupOwner locality transfer",
     "array or string multi-index select forms",
     "array select filter form",
-    "inline private assignment"
+    "inline private assignment",
+    "selectRandom",
+    "splitString",
+    "joinString",
+    "trim"
   ],
   "unsafeIfRemovedOrModernizedWithoutOAReplacement": [
     "diag_tickTime",
@@ -158,6 +163,11 @@
       "action": "Keep only as avoid-list or correction text; use A2-OA private/select/forEach patterns in snippets."
     },
     {
+      "pattern": "selectRandom / splitString / joinString / trim",
+      "classification": "explicit_non_option",
+      "action": "Keep only as A3-only avoid-list terms. Use OA-safe manual select/toArray/toString patterns, or BIS_fnc_selectRandom where the source already uses the function."
+    },
+    {
       "pattern": "diag_tickTime / uiSleep",
       "classification": "confirmed_oa_safe_despite_a3_appearance",
       "action": "Keep when source context fits; do not replace merely because they look modern to an Arma 3-trained agent."
@@ -196,6 +206,23 @@
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_CreateVehicle.sqf:44"
       ],
       "agentRule": "Do not remove these because Arma 3 disabled them. In this OA mission, the documented uses are hardcoded literal init strings; distinguish that from DR-1's sender-chosen compile risk."
+    }
+  ],
+  "a3OnlyStringSelectionCommandTraps": [
+    {
+      "class": "explicit_non_option",
+      "commands": [
+        "selectRandom",
+        "splitString",
+        "joinString",
+        "trim"
+      ],
+      "evidence": [
+        "Arma-2-OA-Command-Version-Reference.md#commands-to-avoid-unless-proven-oa-compatible",
+        "docs/wiki/agent-knowledge.jsonl#string-selection-command-traps-oa-2026-06-02",
+        "Source grep on 2026-06-03 found no mission/tooling uses of the command forms outside documentation guardrails."
+      ],
+      "agentRule": "Do not introduce these Arma 3-only commands into SQF snippets or code patches. Preserve `_arr select floor(random count _arr)` and `_arr call BIS_fnc_selectRandom` as the OA-safe random-pick forms."
     }
   ],
   "scanSnapshot": [

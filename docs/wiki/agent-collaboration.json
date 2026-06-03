@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T14:35:00+02:00",
+  "generatedAt": "2026-06-03T14:50:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "a3-string-selection-command-guardrails",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/agent-compatibility-audit.json",
+        "docs/wiki/Arma-2-OA-Command-Version-Reference.md",
+        "docs/wiki/Instructions-For-Codex.md",
+        "Missions",
+        "Tools",
+        "DiscordBot",
+        "Extension"
+      ],
+      "outputs": [
+        "Marked Instructions-For-Codex item 50 complete",
+        "Added selectRandom/splitString/joinString/trim to the agent compatibility avoid-list",
+        "Preserved BIS_fnc_selectRandom as the OA-safe function form"
+      ],
+      "handoff": "Re-read Instructions-For-Codex for newly appended handoffs; otherwise continue the documentation finisher loop with the next source-backed accuracy or owner-decision item."
+    },
     {
       "lane": "dr39-nearestobjects-guardrail",
       "owner": "Codex",

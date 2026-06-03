@@ -49,7 +49,7 @@ These are heavily used across the fork and all date to OFP/ArmA/A2, so the trap 
 
 | Command | First · version | Returns / when to use | Repo |
 | --- | --- | --- | --- |
-| `nearestObjects [pos, classes, radius]` | **A2 · 1.00** | Array **sorted by distance**; `isKindOf` class matching; `[]` = all classes (slowest). | Supply command-center scan (`Server/Module/supplyMission/supplyMissionStarted.sqf:45,61`) — currently `[]` then filters for `Base_WarfareBUAVterminal` (DR-39). 16 files. |
+| `nearestObjects [pos, classes, radius]` | **A2 · 1.00** | Array **sorted by distance**; `isKindOf` class matching; `[]` = all classes (slowest). | Supply command-center scan: `origin/master` still uses `[]` at `Server/Module/supplyMission/supplyMissionStarted.sqf:24-28`; this docs branch uses `["Base_WarfareBUAVterminal"]` at `:28` while leaving the nearby-player scan broad at `:44` (DR-39). 16 files. |
 | `nearEntities [classes, radius]` | **A2 · 1.00** | Unsorted; **alive units / vehicles / game-logics only** — excludes dead objects, buildings/structures, and crew inside vehicles. BI notes it is *"much faster"* than `nearestObjects` for soldiers/vehicles. | Camp/depot/airfield proximity (`nearEntities [WFBE_Logic_Camp, _range]`; `Client_GetClosestCamp/Depot/Airport.sqf`). 39 files. |
 | `nearObjects [classes, radius]` | ArmA 1.00 | Unsorted radius scan, optional class filter; **does** include structures/dead objects. | 5 files. |
 | `nearestObject` | OFP 1.00 | Single nearest object of a type (a hardcoded-50 m form exists). | 27 files. |
