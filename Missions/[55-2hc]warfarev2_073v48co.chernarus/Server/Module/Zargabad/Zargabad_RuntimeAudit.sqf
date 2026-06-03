@@ -2,7 +2,7 @@ if (!isServer || !IS_zargabad_lowpop_map) exitWith {};
 
 waitUntil {townInitServer};
 
-Private ["_airports", "_campCount", "_cfg", "_defenseCount", "_eastAircraft", "_eastAirport", "_eastHeavy", "_eastLight", "_eastBasePos", "_forbiddenNormal", "_forbiddenPresent", "_maxSV", "_priceSamples", "_startSV", "_townNames", "_westAircraft", "_westAirport", "_westBasePos", "_westHeavy", "_westLight"];
+Private ["_airports", "_campCount", "_cfg", "_centralWallGaps", "_defenseCount", "_eastAircraft", "_eastAirport", "_eastHeavy", "_eastLight", "_eastBasePos", "_forbiddenNormal", "_forbiddenPresent", "_maxSV", "_priceSamples", "_startSV", "_townNames", "_westAircraft", "_westAirport", "_westBasePos", "_westHeavy", "_westLight"];
 
 _campCount = 0;
 _defenseCount = 0;
@@ -32,16 +32,18 @@ _airports = [0,0,0] nearEntities [["LocationLogicAirport"], 100000];
 
 _westBasePos = missionNamespace getVariable ["WFBE_ZARGABAD_BASE_POS_WEST", [0,0,0]];
 _eastBasePos = missionNamespace getVariable ["WFBE_ZARGABAD_BASE_POS_EAST", [0,0,0]];
+_centralWallGaps = missionNamespace getVariable ["WFBE_ZARGABAD_CENTRAL_WALL_GAPS", []];
 
 ["INFORMATION", Format [
-	"Zargabad_RuntimeAudit.sqf: bases WEST %1 EAST %2 distance [%3] westStatic [%4] eastStatic [%5] baseWalls [%6] centralWallPieces [%7] centralWallOrigin [3425,3375] centralWallDir [316].",
+	"Zargabad_RuntimeAudit.sqf: bases WEST %1 EAST %2 distance [%3] westStatic [%4] eastStatic [%5] baseWalls [%6] centralWallPieces [%7] centralWallOrigin [3425,3375] centralWallDir [316] centralWallGaps %8.",
 	_westBasePos,
 	_eastBasePos,
 	round (_westBasePos distance _eastBasePos),
 	missionNamespace getVariable ["WFBE_ZARGABAD_BASE_STATIC_COUNT_WEST", -1],
 	missionNamespace getVariable ["WFBE_ZARGABAD_BASE_STATIC_COUNT_EAST", -1],
 	missionNamespace getVariable ["WFBE_ZARGABAD_BASE_WALL_COUNT", -1],
-	count (missionNamespace getVariable ["WFBE_ZARGABAD_CENTRAL_WALL", []])
+	count (missionNamespace getVariable ["WFBE_ZARGABAD_CENTRAL_WALL", []]),
+	_centralWallGaps
 ]] Call WFBE_CO_FNC_LogContent;
 
 ["INFORMATION", Format [

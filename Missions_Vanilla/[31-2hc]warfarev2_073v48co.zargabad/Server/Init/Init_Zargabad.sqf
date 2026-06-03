@@ -1,6 +1,6 @@
 if (!isServer || !IS_zargabad_lowpop_map) exitWith {};
 
-Private ["_buildBase", "_buildCentralWall", "_orientTownDefenses", "_baseWalls", "_centralWall", "_centralWallSpans", "_eastStatics", "_mgWall", "_sides", "_westStatics"];
+Private ["_buildBase", "_buildCentralWall", "_orientTownDefenses", "_baseWalls", "_centralWall", "_centralWallGapOffsets", "_centralWallSpans", "_eastStatics", "_mgWall", "_sides", "_westStatics"];
 
 _baseWalls = [
 	["Land_HBarrier_large",[-55,-55,0],45],["Land_HBarrier_large",[-30,-70,0],15],
@@ -16,12 +16,14 @@ missionNamespace setVariable ["WFBE_ZARGABAD_BASE_WALL_COUNT", count _baseWalls]
 _mgWall = missionNamespace getVariable ["WFBE_NEURODEF_MG", []];
 _centralWall = [];
 _centralWallSpans = [[-1180,-1018],[-790,-628],[-420,-258],[30,192],[470,632],[870,1032]];
+_centralWallGapOffsets = [-904,-524,-114,331,751];
 {
 	for "_offset" from (_x select 0) to (_x select 1) step 18 do {
 		_centralWall = _centralWall + [["Land_HBarrier_large",[0,_offset,0],0]];
 	};
 } forEach _centralWallSpans;
 missionNamespace setVariable ["WFBE_ZARGABAD_CENTRAL_WALL", _centralWall];
+missionNamespace setVariable ["WFBE_ZARGABAD_CENTRAL_WALL_GAP_OFFSETS", _centralWallGapOffsets];
 
 _westStatics = [["M2StaticMG_US_EP1",[-45,0,0],270],["M2StaticMG_US_EP1",[45,0,0],90],["TOW_TriPod_US_EP1",[0,58,0],0],["Stinger_Pod_US_EP1",[0,-58,0],180]];
 _eastStatics = [["KORD_high_TK_EP1",[-45,0,0],270],["KORD_high_TK_EP1",[45,0,0],90],["Metis_TK_EP1",[0,-58,0],180],["Igla_AA_pod_TK_EP1",[0,58,0],0]];
@@ -29,10 +31,13 @@ missionNamespace setVariable ["WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_WEST", _westSt
 missionNamespace setVariable ["WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_EAST", _eastStatics];
 
 _buildCentralWall = {
-	Private ["_origin", "_pos"];
+	Private ["_gap", "_gaps", "_origin", "_pos"];
 	_pos = [3425,3375,0];
 	_origin = (createGroup sideLogic) createUnit ["Logic", _pos, [], 0, "NONE"];
 	_origin setDir 316;
+	_gaps = [];
+	{_gap = _origin modelToWorld [0,_x,0]; _gap set [2,0]; _gaps = _gaps + [[round (_gap select 0), round (_gap select 1), 0]]} forEach (missionNamespace getVariable ["WFBE_ZARGABAD_CENTRAL_WALL_GAP_OFFSETS", []]);
+	missionNamespace setVariable ["WFBE_ZARGABAD_CENTRAL_WALL_GAPS", _gaps];
 	[_origin, missionNamespace getVariable ["WFBE_ZARGABAD_CENTRAL_WALL", []]] call CreateDefenseTemplate;
 	deleteVehicle _origin;
 };

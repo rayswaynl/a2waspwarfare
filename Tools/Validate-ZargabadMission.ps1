@@ -238,6 +238,7 @@ foreach ($path in @($sourceMissionFullPath, $missionFullPath)) {
 	Assert-True "$path builds WDDM-compatible central wall" ($initZargabad -like '*WFBE_ZARGABAD_CENTRAL_WALL*' -and $initZargabad -like '*CreateDefenseTemplate*')
 	Assert-True "$path orients Zargabad town defense logics" ($initZargabad.Contains('WFBE_ZARGABAD_TOWN_DEFENSE_ORIENTED_COUNT') -and $initZargabad.Contains('atan2') -and $initZargabad.Contains('_synced setDir _dir;') -and $initZargabad.Contains('Oriented [%1] town defense logics'))
 	Assert-True "$path central wall has pass-through gaps" ($initZargabad -match '\[-1180,-1018\][\s\S]*\[-790,-628\][\s\S]*\[-420,-258\][\s\S]*\[30,192\][\s\S]*\[470,632\][\s\S]*\[870,1032\]')
+	Assert-True "$path records central wall gap checkpoints" ($initZargabad -match 'WFBE_ZARGABAD_CENTRAL_WALL_GAP_OFFSETS' -and $initZargabad -match '\[-904,-524,-114,331,751\]' -and $initZargabad -match 'WFBE_ZARGABAD_CENTRAL_WALL_GAPS')
 	Assert-True "$path central wall is centered and diagonal" ($initZargabad -match '\[3425,3375,0\][\s\S]*setDir 316;')
 	Assert-True "$path records Zargabad base audit counts" ($initZargabad -match 'WFBE_ZARGABAD_BASE_WALL_COUNT' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_COUNT_%1' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_POS_%1')
 	Assert-True "$path records Zargabad base static templates" ($initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_WEST' -and $initZargabad -match 'M2StaticMG_US_EP1' -and $initZargabad -match 'TOW_TriPod_US_EP1' -and $initZargabad -match 'Stinger_Pod_US_EP1' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_EAST' -and $initZargabad -match 'KORD_high_TK_EP1' -and $initZargabad -match 'Metis_TK_EP1' -and $initZargabad -match 'Igla_AA_pod_TK_EP1')
@@ -318,6 +319,7 @@ Assert-True "generated runtime audit under 100 non-empty LOC" ((Get-NonEmptyLine
 $runtimeAuditSource = Get-Content -Raw -LiteralPath $sourceRuntimeAudit
 Assert-True "runtime audit logs counts and SV totals" ($runtimeAuditSource -match 'towns \[%1\] camps \[%2\] airports \[%3\] defenses \[%4\] startSV \[%5\] maxSV \[%6\]')
 Assert-True "runtime audit logs Zargabad base and fortification counts" ($runtimeAuditSource -match 'bases WEST %1 EAST %2 distance \[%3\] westStatic \[%4\] eastStatic \[%5\] baseWalls \[%6\] centralWallPieces \[%7\]')
+Assert-True "runtime audit logs central wall gap checkpoints" ($runtimeAuditSource -match 'centralWallGaps %8')
 Assert-True "runtime audit logs Zargabad base static templates" ($runtimeAuditSource -match 'baseStaticTemplates WEST %1 EAST %2')
 Assert-True "runtime audit logs Zargabad economy and range constants" ($runtimeAuditSource -match 'supplyCap \[%1\] teamSupplyCap \[%2\] fastTravelMax \[%3\] respawnCampRange \[%4\].*edgeGuard \[%10,%11,%12\]')
 Assert-True "runtime audit logs Zargabad factory restrictions" ($runtimeAuditSource -match 'factoryCounts WEST L/H/A/AP')

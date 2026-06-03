@@ -137,7 +137,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Init_Zargabad builds WFBE_ZARGABAD_CENTRAL_WALL through CreateDefenseTemplate with six separated H-barrier spans centered at 3425,3375 and angled 316 degrees across the flat middle."
+      "summary": "Init_Zargabad builds WFBE_ZARGABAD_CENTRAL_WALL through CreateDefenseTemplate with six separated H-barrier spans centered at 3425,3375 and angled 316 degrees across the flat middle. Runtime audit records central-wall gap checkpoints near [4053,2725], [3789,2998], [3504,3293], [3195,3613], and [2903,3915] for Claude's infantry, light armor and AI pathing checks."
     },
     {
       "type": "command-output",

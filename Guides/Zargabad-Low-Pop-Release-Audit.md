@@ -68,7 +68,7 @@ The normal factory lists are restricted away from MBTs, MLRS, SPAAGs, attack hel
 
 Static validation now checks town-defense placement quality, not only count: every synchronized defense logic sits between 90m and 325m from its town center, so defenses cover approaches instead of spawning on top of the depot or far outside the fight. City center and airfield each require at least five defenses, while North District, South District, Northwest Base and Rahim Villa each require at least three.
 
-The same init now builds a WDDM-compatible `WFBE_ZARGABAD_CENTRAL_WALL` defense template centered at `3425,3375` and angled at `316` degrees, roughly perpendicular to the southwest-to-northeast base axis. It uses six separated H-barrier runs with pass-through gaps, so the flat middle has broken sightlines without turning the map into two sealed halves.
+The same init now builds a WDDM-compatible `WFBE_ZARGABAD_CENTRAL_WALL` defense template centered at `3425,3375` and angled at `316` degrees, roughly perpendicular to the southwest-to-northeast base axis. It uses six separated H-barrier runs with pass-through gaps, so the flat middle has broken sightlines without turning the map into two sealed halves. Runtime audit records gap checkpoints near `[4053,2725]`, `[3789,2998]`, `[3504,3293]`, `[3195,3613]`, and `[2903,3915]` for Claude's infantry, light armor and AI pathing screenshots.
 
 Static validation currently proves the editor data shape, not tactical effectiveness. Dedicated playtest still needs to verify:
 
@@ -108,7 +108,7 @@ Static validation currently proves the editor data shape, not tactical effective
 
 `Tools/New-ZargabadClaudeBrief.ps1` emits the current Codex-to-Claude context packet: latest commit, PR head, changed files, inferred retest focus, required runtime commands, dirty local state warning, and the rule that Codex owns final stop/go while accepting Claude's evidence-backed findings.
 
-`Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf` is launched from `Init_Zargabad.sqf` and logs the runtime town/camp/airport/defense counts, start/max SV totals, WEST/EAST base positions and separation, base static/wall counts, exact WEST/EAST base static templates, normal factory restriction counts, exact compact normal factory lists, price multiplier/sample values, and core Zargabad economy/range/base-defense/edge-guard constants. This gives Claude a concrete RPT target for checking that the in-game mission matches the static map audit.
+`Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf` is launched from `Init_Zargabad.sqf` and logs the runtime town/camp/airport/defense counts, start/max SV totals, WEST/EAST base positions and separation, base static/wall counts, central-wall gap checkpoints, exact WEST/EAST base static templates, normal factory restriction counts, exact compact normal factory lists, price multiplier/sample values, and core Zargabad economy/range/base-defense/edge-guard constants. This gives Claude a concrete RPT target for checking that the in-game mission matches the static map audit.
 
 Known verification gap: no in-game Arma 2 OA hosted/dedicated/JIP/HC smoke has been run from this environment.
 

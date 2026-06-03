@@ -40,12 +40,12 @@ Claude/runtime tester should keep going until there is RPT and short note eviden
 | Zargabad init | RPT contains `Init_Zargabad.sqf: Spawn fortifications, central wall gaps, and side defenses are placed`. |
 | Town defense orientation | RPT contains `Init_Zargabad.sqf: Oriented [33] town defense logics toward linked town centers`. |
 | Edge guard init | RPT contains `Zargabad_EdgeGuard.sqf: outer [120]m rim timeout [45]s safe range [325]m`. |
-| Runtime audit | RPT contains `Zargabad_RuntimeAudit.sqf` lines with 13 towns, 19 camps, 1 airport, 33 defenses, start SV 185, max SV 648, base/static/wall counts, factory restriction counts, exact compact normal heavy/aircraft lists, price multipliers/samples, and the Zargabad economy/range constants. |
+| Runtime audit | RPT contains `Zargabad_RuntimeAudit.sqf` lines with 13 towns, 19 camps, 1 airport, 33 defenses, start SV 185, max SV 648, base/static/wall counts, central-wall gap checkpoints, factory restriction counts, exact compact normal heavy/aircraft lists, price multipliers/samples, and the Zargabad economy/range constants. |
 | Base static templates | RPT contains `Zargabad_RuntimeAudit.sqf: baseStaticTemplates` with the WEST M2/TOW/Stinger and EAST KORD/Metis/Igla static layouts; screenshot notes should call out any mismatch between template, spawned objects, and usable firing arcs. |
 | JIP | A second client joins after time > 30 and RPT shows player join/JIP storage; markers and town colors still match current ownership. |
 | HC | If the server uses HC, RPT shows `Headless client is now connected` and town AI/static defense still wakes. |
 | Base safety | WEST/EAST starts cannot trivially spawn-kill each other or suppress city routes from spawn. |
-| Central wall | Wall around `3425,3375` interrupts flat middle sightlines; gaps pass infantry, light armor and AI. |
+| Central wall | Wall around `3425,3375` interrupts flat middle sightlines; gap checkpoints around `[4053,2725]`, `[3789,2998]`, `[3504,3293]`, `[3195,3613]`, and `[2903,3915]` pass infantry, light armor and AI. |
 | Side hills/rim | Extreme-rim ground camping is removed after the configured timeout; objective-near fights and aircraft are not punished. |
 | Economy | City/airfield are valuable without runaway snowball; farms/outskirts stay lower-value flank objectives. |
 | Factory lists/costs | Source/static validation proves exact compact WEST/EAST normal heavy/aircraft lists with MBTs, MLRS, SPAAGs, attack helicopters and attack jets excluded; runtime confirms buy-menu availability and price feel. |
@@ -95,10 +95,10 @@ Use `-AllowKnownDisconnectScoreErrors` only if the only RPT `ERROR` lines are th
 ## Notes To Capture
 
 - Screenshot or coordinates for WEST/EAST start sightlines.
-- Screenshot or coordinates for the central wall gaps that were driven/walked through.
+- Screenshot or coordinates for the central wall gaps that were driven/walked through, especially `[4053,2725]`, `[3789,2998]`, `[3504,3293]`, `[3195,3613]`, and `[2903,3915]`.
 - RPT excerpt for edge-guard init and, if tested, removal.
 - RPT excerpt for `Init_Zargabad.sqf: Oriented [33] town defense logics toward linked town centers`.
-- RPT excerpt for the `Zargabad_RuntimeAudit.sqf` count/SV, base/static/wall, base static template, factory restriction, price multiplier/sample, and economy/range lines.
+- RPT excerpt for the `Zargabad_RuntimeAudit.sqf` count/SV, base/static/wall with `centralWallGaps`, base static template, factory restriction, price multiplier/sample, and economy/range lines.
 - RPT excerpts for black-market cache surfacing and cleanup release.
 - Buy-menu notes for the exact compact normal factory lists: WEST heavy `M2A2_EP1/M2A3_EP1/BAF_FV510_D`, EAST heavy `M113_TK_EP1/BMP2_TK_EP1/T34_TK_EP1/BMP3`, WEST aircraft utility/light transport only, and EAST aircraft utility/light transport only.
 - Any observed town where static defenses still face the wrong route or block normal movement after the orientation pass.
