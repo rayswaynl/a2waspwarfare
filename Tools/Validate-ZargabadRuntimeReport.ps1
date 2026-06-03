@@ -5,6 +5,7 @@ param(
 	[switch]$RequireHeadlessClient,
 	[switch]$RequireEdgeGuardRemoval,
 	[switch]$RequireEdgeGuardSafeAllow,
+	[switch]$RequireNamedRimPoints,
 	[switch]$RequireBlackMarket
 )
 
@@ -60,6 +61,10 @@ if ($RequireJip) { Assert-True "runtime report JIP gate passed" ((Get-TableValue
 if ($RequireHeadlessClient) { Assert-True "runtime report headless-client gate passed" ((Get-TableValue -Rows $gateRows -Key "Headless client") -eq "PASS") }
 if ($RequireEdgeGuardRemoval) { Assert-True "runtime report edge-guard-removal gate passed" ((Get-TableValue -Rows $gateRows -Key "Edge guard removal") -eq "PASS") }
 if ($RequireEdgeGuardSafeAllow) { Assert-True "runtime report edge-guard-safe-allow gate passed" ((Get-TableValue -Rows $gateRows -Key "Edge guard safe allow") -eq "PASS") }
+if ($RequireNamedRimPoints) {
+	Assert-True "runtime report named-rim-points gate passed" ((Get-TableValue -Rows $gateRows -Key "Named rim points") -eq "PASS")
+	Assert-True "runtime report named rim validator output present" ($content -match 'named rim point West illegal rim removed' -and $content -match 'named rim point East Farms legal rim allowed')
+}
 if ($RequireBlackMarket) {
 	Assert-True "runtime report black-market armed gate passed" ((Get-TableValue -Rows $gateRows -Key "Black-market armed") -eq "PASS")
 	Assert-True "runtime report black-market cache gate passed" ((Get-TableValue -Rows $gateRows -Key "Black-market cache") -eq "PASS")

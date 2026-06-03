@@ -414,6 +414,7 @@ $sourceEdgeGuard = Join-Path $sourceMissionFullPath "Server/Module/Zargabad/Zarg
 $generatedEdgeGuard = Join-Path $missionFullPath "Server/Module/Zargabad/Zargabad_EdgeGuard.sqf"
 $sourceRuntimeAudit = Join-Path $sourceMissionFullPath "Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf"
 $generatedRuntimeAudit = Join-Path $missionFullPath "Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf"
+$runtimeEvidenceTool = Join-Path (Resolve-RepoPath "Tools") "Validate-ZargabadRuntimeEvidence.ps1"
 $runtimeReportTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadRuntimeReport.ps1"
 $runtimeReportValidatorTool = Join-Path (Resolve-RepoPath "Tools") "Validate-ZargabadRuntimeReport.ps1"
 $mapAuditPacketTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadMapAuditPacket.ps1"
@@ -452,12 +453,15 @@ Assert-True "runtime audit logs Zargabad price multipliers and samples" ($runtim
 
 Assert-True "runtime report tool exists" (Test-Path -LiteralPath $runtimeReportTool)
 $runtimeReportSource = Get-Content -Raw -LiteralPath $runtimeReportTool
+$runtimeEvidenceSource = Get-Content -Raw -LiteralPath $runtimeEvidenceTool
+Assert-True "runtime evidence validator checks named rim points" ($runtimeEvidenceSource -match 'RequireNamedRimPoints' -and $runtimeEvidenceSource -match 'West illegal rim removed' -and $runtimeEvidenceSource -match 'East Farms legal rim allowed')
 Assert-True "runtime report tool wraps runtime validator" ($runtimeReportSource -match 'Validate-ZargabadRuntimeEvidence\.ps1')
 Assert-True "runtime report tool checks town defense orientation" ($runtimeReportSource -match 'Town defense orientation')
 Assert-True "runtime report tool checks base static runtime positions" ($runtimeReportSource -match 'Base static runtime positions')
 Assert-True "runtime report tool checks base fortification footprint" ($runtimeReportSource -match 'baseFootprint \\\[35,45,74,78\\\]')
 Assert-True "runtime report tool checks uncrewed central wall" ($runtimeReportSource -match 'centralWallCrewed \\\[0\\\]')
 Assert-True "runtime report tool checks edge safe-rim allow gate" ($runtimeReportSource -match 'RequireEdgeGuardSafeAllow' -and $runtimeReportSource -match 'Edge guard safe allow' -and $runtimeReportSource -match 'allowed at safe edge rim')
+Assert-True "runtime report tool checks named rim point gate" ($runtimeReportSource -match 'RequireNamedRimPoints' -and $runtimeReportSource -match 'Named rim points')
 Assert-True "runtime report tool checks black-market arming" ($runtimeReportSource -match 'Black-market armed')
 Assert-True "runtime report tool emits Claude notes" ($runtimeReportSource -match '## Claude Notes')
 Assert-True "runtime report tool asks Claude for priority defense mix arcs" ($runtimeReportSource -match 'Priority defense mix arcs' -and $runtimeReportSource -match 'city MG/nest\+GL\+AT' -and $runtimeReportSource -match 'airfield MG/nest\+AT\+2xAA')
@@ -466,7 +470,7 @@ Assert-True "runtime report validator tool exists" (Test-Path -LiteralPath $runt
 $runtimeReportValidatorSource = Get-Content -Raw -LiteralPath $runtimeReportValidatorTool
 Assert-True "runtime report validator requires Claude Notes PASS rows" ($runtimeReportValidatorSource -match 'Claude Notes rows are all PASS')
 Assert-True "runtime report validator rejects missing gates and found failures" ($runtimeReportValidatorSource -match 'runtime report has no missing required gates' -and $runtimeReportValidatorSource -match 'runtime report failure scan is clear')
-Assert-True "runtime report validator checks optional runtime gates" ($runtimeReportValidatorSource -match 'RequireJip' -and $runtimeReportValidatorSource -match 'RequireHeadlessClient' -and $runtimeReportValidatorSource -match 'RequireEdgeGuardRemoval' -and $runtimeReportValidatorSource -match 'RequireEdgeGuardSafeAllow' -and $runtimeReportValidatorSource -match 'RequireBlackMarket')
+Assert-True "runtime report validator checks optional runtime gates" ($runtimeReportValidatorSource -match 'RequireJip' -and $runtimeReportValidatorSource -match 'RequireHeadlessClient' -and $runtimeReportValidatorSource -match 'RequireEdgeGuardRemoval' -and $runtimeReportValidatorSource -match 'RequireEdgeGuardSafeAllow' -and $runtimeReportValidatorSource -match 'RequireNamedRimPoints' -and $runtimeReportValidatorSource -match 'RequireBlackMarket')
 Assert-True "runtime report validator checks black-market arming gate" ($runtimeReportValidatorSource -match 'runtime report black-market armed gate passed')
 Assert-True "map audit packet tool exists" (Test-Path -LiteralPath $mapAuditPacketTool)
 $mapAuditPacketSource = Get-Content -Raw -LiteralPath $mapAuditPacketTool

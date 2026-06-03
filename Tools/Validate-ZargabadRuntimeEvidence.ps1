@@ -5,6 +5,7 @@ param(
 	[switch]$RequireHeadlessClient,
 	[switch]$RequireEdgeGuardRemoval,
 	[switch]$RequireEdgeGuardSafeAllow,
+	[switch]$RequireNamedRimPoints,
 	[switch]$RequireBlackMarket,
 	[switch]$AllowKnownDisconnectScoreErrors
 )
@@ -44,6 +45,29 @@ function Assert-NoPattern {
 		throw "Runtime failure pattern found: $Name :: $sample"
 	}
 	Write-Host "ok - no $Name"
+}
+
+function Assert-RimPoint {
+	param(
+		[string]$Name,
+		[string]$Content,
+		[string]$Pattern,
+		[double]$X,
+		[double]$Y,
+		[double]$Tolerance = 140
+	)
+	$lines = @($Content -split "`r?`n" | Where-Object { $_ -match $Pattern })
+	foreach ($line in $lines) {
+		$numbers = @([regex]::Matches($line, '[-+]?\d+(?:\.\d+)?') | ForEach-Object { [double]$_.Value })
+		if ($numbers.Count -lt 3) { continue }
+		$xActual = $numbers[$numbers.Count - 3]
+		$yActual = $numbers[$numbers.Count - 2]
+		if ([math]::Abs($xActual - $X) -le $Tolerance -and [math]::Abs($yActual - $Y) -le $Tolerance) {
+			Write-Host "ok - named rim point $Name"
+			return
+		}
+	}
+	throw "Missing runtime evidence: named rim point $Name near [$X,$Y]"
 }
 
 $files = Get-RptFiles $RptPath
@@ -88,6 +112,15 @@ if ($RequireEdgeGuardRemoval) {
 }
 if ($RequireEdgeGuardSafeAllow) {
 	Assert-Pattern "edge guard safe-rim allow evidence" $content 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] allowed at safe edge rim'
+}
+if ($RequireNamedRimPoints) {
+	Assert-RimPoint "West illegal rim removed" $content 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] removed from edge rim' 80 3000
+	Assert-RimPoint "South illegal rim removed" $content 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] removed from edge rim' 3000 80
+	Assert-RimPoint "East illegal rim removed" $content 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] removed from edge rim' 5900 3000
+	Assert-RimPoint "North illegal rim removed" $content 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] removed from edge rim' 3000 5900
+	Assert-RimPoint "North Camp legal rim allowed" $content 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] allowed at safe edge rim' 3600 5900
+	Assert-RimPoint "Rahim Villa legal rim allowed" $content 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] allowed at safe edge rim' 4330 5900
+	Assert-RimPoint "East Farms legal rim allowed" $content 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] allowed at safe edge rim' 5900 4340
 }
 if ($RequireBlackMarket) {
 	Assert-Pattern "black-market cache event evidence" $content 'Zargabad_BlackMarket\.sqf: \[[^\r\n]+\] cache \[[^\r\n]+\] surfaced near'
