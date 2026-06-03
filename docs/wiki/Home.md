@@ -2,13 +2,35 @@
 
 Developer documentation for `rayswaynl/a2waspwarfare`, an Arma 2: Operation Arrowhead 1.64 Warfare / CTI mission and server ecosystem.
 
+# This page is the central orientation surface:
+# what this is, where the source files live, and how to navigate next.
+
+## What this page is
+
+- Human and AI starter map for all current source-backed documentation in this repository.
+- A central orientation surface for click-through tours, source-linked canonical pages, and handoff-safe routing.
+- The first stop before opening subsystem pages.
+
+## Where it lives
+
+- Wiki page: `docs/wiki/Home.md`
+- Machine companion: [`agent-context.json`](agent-context.json)
+- Source and mirror live under `docs/wiki` (active checkout) plus the synced GitHub wiki mirror.
+
+## How to use this page
+
+1. Start with the audience-specific quick path in the table below.
+2. Follow a tour to related systems and risk pages.
+3. Re-check `Progress-Dashboard` and machine logs (`agent-status.json`, `agent-events.jsonl`) before opening lane claims.
+4. Return here when a page needs rerouting after any major subsystem change.
+
 This wiki is built for two audiences at once:
 
 | Audience | Start here | Why |
 | --- | --- | --- |
 | New human developer | [Quickstart](Quickstart-For-Humans-And-Agents) | Fast orientation, safe edit rules and reading paths. |
 | AI assistant | [Agent context](Agent-Context), [Current source status snapshot](Current-Source-Status-Snapshot), [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide), [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) and [`agent-context.json`](agent-context.json) | Compact context, current source truth for disputed lanes, OA engine references, compatibility guardrails, page map and high-risk rules. |
-| LLM / agent bootstrap | [LLM agent entry pack](LLM-Agent-Entry-Pack) and [`llms.txt`](llms.txt) | Fast load order, task bundles and machine-readable entrypoints. |
+| LLM / agent bootstrap | [AI Assistant Guide](AI-Assistant-Guide), [LLM agent entry pack](LLM-Agent-Entry-Pack), and [`llms.txt`](llms.txt) | Fast load order, task bundles and machine-readable entrypoints. |
 | Reviewer | [Feature status register](Feature-Status-Register) | Broken, partial, deferred and missing features. |
 | Hardening implementer | [Hardening roadmap](Hardening-Implementation-Roadmap), [Server authority map](Server-Authority-Migration-Map), [ICBM authority playbook](ICBM-Authority-Playbook), [Economy authority first cut](Economy-Authority-First-Cut) and [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) | Source-backed patch order, validation gates and safe implementation notes. |
 | Tester / releaser | [Testing workflow](Testing-Debugging-And-Release-Workflow) | Source checks, smoke packs, RPT logging and release gates. |
@@ -32,6 +54,47 @@ Use these when you want to read the wiki like a connected handbook instead of ju
 | Bootstrap an LLM agent | [LLM agent entry pack](LLM-Agent-Entry-Pack) -> [`llms.txt`](llms.txt) -> [`agent-context.json`](agent-context.json) -> [Feature status](Feature-Status-Register) -> [Progress dashboard](Progress-Dashboard) |
 
 Every content page now includes a **Continue Reading** block with previous and next links for the main handbook path.
+
+
+## Canonical Entry Path for Humans and Agents
+
+### What it is
+
+- A single orientation surface that answers where to start, what to read next, and where evidence and machine files live.
+
+### Where it lives
+
+- Wiki page: `Home.md`
+- Machine file: `agent-context.json`
+
+### How to use it
+
+Use this sequence for low-risk orientation:
+
+1. [AI-Assistant-Guide](AI-Assistant-Guide) for compact boot order.
+2. [AI-Assistant-Developer-Guide](AI-Assistant-Developer-Guide) for edit constraints and safety checks.
+3. [Progress-Dashboard](Progress-Dashboard) for lane state and ownership.
+4. [Feature-Status-Register](Feature-Status-Register) to choose safe first systems.
+5. [SQF-Code-Atlas](SQF-Code-Atlas) or the owning atlas/playbook for source entrypoints.
+
+### What depends on this page
+
+- LLM/agent bootstrap and human onboarding.
+- Dashboard handoff discoverability.
+- Cross-link drift checks when source-of-truth pages move.
+- Required companion files:
+  - [`agent-status.json`](agent-status.json)
+  - [`agent-events.jsonl`](agent-events.jsonl)
+  - [`agent-knowledge.jsonl`](agent-knowledge.jsonl)
+  - [`llms.txt`](llms.txt)
+  - [`_Sidebar.md`](./_Sidebar.md)
+  - [Progress Dashboard](Progress-Dashboard)
+  - [Wiki quality audit](Wiki-Quality-Audit)
+
+### What is risky / Next after reading
+
+- Risk: stale links between boot path, `_Sidebar`, and machine files can route agents to outdated routes.
+- Next action if uncertain: open [Feature-Status-Register](Feature-Status-Register), then [Progress-Dashboard](Progress-Dashboard), then confirm source status before opening subsystem files.
 
 ## First Principles
 

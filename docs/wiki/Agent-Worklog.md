@@ -4,6 +4,13 @@ Append entries here so Codex, Claude and future assistants can see what each age
 
 Read this file as append-only history, not as a strict timestamp-sorted truth source. For the contested cleanup lanes, trust [Current source status snapshot](Current-Source-Status-Snapshot) plus `agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851` until a newer source re-check with file/line evidence replaces them. Older lines that say those lanes are source/Vanilla patched are stale-wave history.
 
+## 2026-06-03 - Codex Docs knowledge-pack quality refinement
+
+- Added a compact click-through navigation pack for docs first-touches by adding explicit "what/where/how" sections to `Home.md`, `_Sidebar.md`, and `Progress-Dashboard.md`.
+- Kept lane boundaries source-safe: `AI-Assistant-Guide` remains canonical for LLM bootstrap, `AI-Assistant-Developer-Guide` remains execution rules, and subsystem pages keep canonical risk owners.
+- Improved `_Sidebar.md` routing by grouping startup, status, quality, and compatibility entries and adding `LLM-Agent-Entry-Pack` plus `Wiki-Quality-Audit`.
+- Logged this docs-only hardening pass in machine-readable event and knowledge records for future machine handoffs.
+
 ## 2026-06-03 - Codex Economy / Supply / Commander / Upgrades Audit
 
 - Completed the deep-pass boundary update requested by lane `economy-supply-commander-audit`.
@@ -1534,3 +1541,19 @@ Key conclusions:
 - Completed the docs/knowledge wrap-up by adding the final [AI Assistant Guide](AI-Assistant-Guide) validation notes and lane breadcrumb updates across [Progress-Dashboard](Progress-Dashboard) and this log.
 - Re-ran Tools/ValidateWiki.ps1, docs/validate-wiki.ps1, and Tools/TestWikiParity.ps1; all passed after the earlier agent-hardening-backlog.jsonl wikiRef correction and source-mirror sync.
 - No gameplay source files were edited in this pass; this lane remains documentation-only and machine-readable context-first (Home, dashboard, llms, and canonical pages).
+
+## 2026-06-03T16:19:00+02:00 - Codex - Arma 2 OA compatibility wording cleanup
+- Re-checked residual modern/A3 keyword hits after the compatibility audit and found only generic prose uses of `params` in [Economy authority first cut](Economy-Authority-First-Cut).
+- Reworded those instances to `request arguments` / `payload values` so the page cannot be mistaken as endorsing the Arma 3 SQF `params` command for OA docs or examples.
+- Docs-only correction; mirror parity and validation gates are being re-run before handoff.
+
+## 2026-06-03T17:08:00+02:00 - Codex - addAction params wording cleanup
+- Narrowed the residual `params` scan after the broader Arma 3/OA audit. Current-facing hits were either `paramsArray`/`class Params`, explicit unsafe-SQF guardrails, source variable names, or one generic phrase in [Deep-review findings](Deep-Review-Findings).
+- Rechecked source Chernarus and generated Vanilla `Client/FSM/updateclient.sqf:240`: the attack-wave `addAction` uses an argument array. Reworded the generic params phrase to "with addAction arguments" to avoid implying SQF `params` syntax.
+- Docs-only correction; no gameplay source files changed.
+
+## 2026-06-03T17:12:00+02:00 - Codex - compatibility audit rollup refresh
+- Updated [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) and `agent-compatibility-audit.json` so the latest Economy Authority and DR-41 residual `params` prose cleanups are part of the canonical audit record.
+- No gameplay source files changed; validation and active wiki parity are being re-run after this rollup.
+
+- 2026-06-03 18:04:00+02:00 - Codex - docs-knowledge-clickthrough-2026-06-03-1804: Added explicit canonical onboarding blocks and related-system gates in Home, AI-Assistant-Guide, Progress-Dashboard, and Wiki-Quality-Audit to reduce click-through duplication drift.

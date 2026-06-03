@@ -22,9 +22,9 @@ Each row: the fact, its **canonical home**, and the pages carrying a redundant n
 
 ## B. Overlapping pages → merge or reduce to summary + cross-link
 
-- **MERGE-1 (highest value):** [Hardening roadmap](Hardening-Implementation-Roadmap) ≈ [Server authority map](Server-Authority-Migration-Map) — ~70% overlap (same P0/P1 work packages, same evidence tables). Consolidate into one page: the Migration-Map's *Authority Principles* + *Handler Validation Checklist* as the design preamble, the Roadmap's *prioritized work packages* as the body. Keep focused sub-playbooks (e.g. [Attack-wave authority](Attack-Wave-Authority-Playbook)) linking back. **Status:** resolved by Codex on 2026-06-02; Hardening roadmap now owns canonical patch order, branch discipline and validation gates, while Server authority map owns authority principles, flow table, handler checklist and design review routing.
-- **MERGE-2:** [Client UI HUD and menus](Client-UI-HUD-And-Menus) ⊂ [Client UI systems atlas](Client-UI-Systems-Atlas) — the HUD/menus page is a strict subset. Make it a "Quick Reference" header section of the atlas, or a redirect. **Status:** resolved by Codex on 2026-06-02; the HUD/menus page is now a compact quick-reference gateway with source anchors, and the full UI atlas is the canonical implementation map.
-- **MERGE-3:** [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) ≈ [Lifecycle wait-chain](Lifecycle-Wait-Chain) — ~50% overlap. Keep the entrypoints page for the `description.ext` include graph + mission-object init layer; move the boot timeline/flag-dependency content to the wait-chain page and cross-link. **Status:** resolved by Codex on 2026-06-02; Mission entrypoints now keeps include graph, role dispatch, mission-object town init and per-role responsibility notes, while Lifecycle wait-chain is the canonical boot-order/JIP/flag-dependency page.
+- **MERGE-1 (highest value):** [Hardening roadmap](Hardening-Implementation-Roadmap) ≈ [Server authority map](Server-Authority-Migration-Map) — ~70% overlap (same P0/P1 work packages, same evidence tables). Consolidate into one page: the Migration-Map's *Authority Principles* + *Handler Validation Checklist* as the design preamble, the Roadmap's *prioritized work packages* as the body. Keep focused sub-playbooks (e.g. [Attack-wave authority](Attack-Wave-Authority-Playbook)) linking back. **Status:** resolved by Codex on 2026-06-02; both legacy routes now point to [Documentation implementation plan](Documentation-Implementation-Plan) plus focused authority playbooks, so the overlap no longer creates competing current pages.
+- **MERGE-2:** [Client UI HUD and menus](Client-UI-HUD-And-Menus) ⊂ [Client UI systems atlas](Client-UI-Systems-Atlas) — the HUD/menus page was a strict subset. Make one page the active map and keep the other as a route. **Status:** resolved by Codex on 2026-06-02; [Client UI systems atlas](Client-UI-Systems-Atlas) is now the legacy route, and [Client UI HUD and menus](Client-UI-HUD-And-Menus) owns the active UI/HUD/menu map with source anchors.
+- **MERGE-3:** [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) ≈ [Lifecycle wait-chain](Lifecycle-Wait-Chain) — ~50% overlap. Keep the entrypoints page for the `description.ext` include graph + mission-object init layer; move the boot timeline/flag-dependency content to the wait-chain page and cross-link. **Status:** resolved by Codex on 2026-06-02; Mission entrypoints keeps include graph, role dispatch, mission-object town init and per-role responsibility notes, while Lifecycle wait-chain is the canonical boot-order/JIP/flag-dependency page.
 - **REDUCE-4:** [Gameplay atlas](Gameplay-Systems-Atlas) construction/factory/economy sections re-summarize the dedicated atlases — reduce to brief gateway summaries + cross-links to [Construction atlas](Construction-And-CoIn-Systems-Atlas), [Factory atlas](Factory-And-Purchase-Systems-Atlas), [Economy](Economy-Towns-And-Supply). **Status:** resolved by Codex on 2026-06-02; Gameplay now keeps orientation/source anchors while routing detailed economy authority, CoIn construction and factory queue/config mechanics to their canonical atlases.
 
 ## C. Accuracy fixes (Codex pages)
@@ -58,25 +58,48 @@ Work A→B→C in priority order; C1/C2 are the highest reader-impact (a develop
 A second full audit (all 60 pages, accuracy/consistency/coverage). Wiki is healthy: **no broken links, no orphan pages, DR severities consistent everywhere, dedup landed cleanly.** Claude-lane fixes already applied (DR-8→DR-6 xref in the conventions page; `Server_HandlePVF.sqf`/`Client_HandlePVF.sqf` path clarity; DR-45 filed for the town-AI passenger-vehicle bug; DR-44 cross-linked). Remaining items are on **Codex's pages**:
 
 **Accuracy (correctness) — do first:**
-- **R2-1 (Medium):** [Client UI systems atlas](Client-UI-Systems-Atlas) + [Client UI HUD and menus](Client-UI-HUD-And-Menus) **mislabel findings** — the "Known UI Risks" row says "DR-16/DR-17/DR-24 = gear/template/cargo" and "DR-25a/b = EASA/service authority". Correct: **DR-16 = structure-sale client-authority**, DR-17 = duplicate IDD 23000, DR-24 = dead `RscMenu_Upgrade`, **DR-25a = duplicate title IDD 10200**, **DR-25b = malformed `soundPush[]`**; EASA/service authority is **DR-28**. Fix the descriptions.
-- **R2-2 (Medium):** [SQF atlas](SQF-Code-Atlas) compile counts ("659/452/207") are presented as bare facts — DR-5 flagged these as stale point-in-time; add a timestamp + regeneration command + DR-5 cite.
-- **R2-3 (Medium):** [SQF atlas](SQF-Code-Atlas) still hedges the MASH marker as "requires careful source verification" — DR-34 settled it (dead both ends); cite DR-34 as resolved.
+- ✅ **R2-1 resolved (Medium):** [Client UI systems atlas](Client-UI-Systems-Atlas) is now a redirect route, and [Client UI HUD and menus](Client-UI-HUD-And-Menus) has the corrected mapping: DR-16 = structure-sale client-authority, DR-17 = duplicate dialog IDD 23000, DR-24 = dead `RscMenu_Upgrade`, DR-25a/b = duplicate title IDD 10200 plus malformed `soundPush[]`, and gear/EASA/service authority = DR-28.
+- ✅ **R2-2 resolved (Medium):** [SQF atlas](SQF-Code-Atlas) now presents compile counts as a 2026-06-02 point-in-time recount with the regeneration command and a DR-5 caveat.
+- ✅ **R2-3 resolved (Medium):** [SQF atlas](SQF-Code-Atlas) now cites DR-34 definitively: MASH map markers are dead/abandoned; MASH tents remain a separate deployable officer feature.
 
 **Orphaned cross-links (add the DR where a developer would look):**
-- **R2-4:** **DR-44** (`wfbe_supply_temp_<side>` forgery) missing from [Economy](Economy-Towns-And-Supply) synthesis table, [Networking](Networking-And-Public-Variables) direct-channel section, and [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
-- **R2-5:** **DR-20** (HQ-killed N-fold score exploit) missing from [Construction atlas](Construction-And-CoIn-Systems-Atlas), [Gameplay atlas](Gameplay-Systems-Atlas), [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
-- **R2-6:** cite **DR-40** by number in [WASP overlay](WASP-Overlay) and **DR-19** in [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
-- **R2-7:** **DR-45** cross-link from the `Town-AI-Vehicle-Despawn-Safety` playbook + [AI/headless](AI-Headless-And-Performance).
+- ✅ **R2-4 resolved:** **DR-44** (`wfbe_supply_temp_<side>` forgery) is now surfaced from [Economy](Economy-Towns-And-Supply), [Networking](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index), [Server runtime atlas](Server-Gameplay-Runtime-Atlas) and [Feature status](Feature-Status-Register), with detailed proof kept in [Deep-review findings](Deep-Review-Findings).
+- ✅ **R2-5 resolved:** **DR-20** (HQ-killed duplicate processing / score exploit) is now visible from [Construction atlas](Construction-And-CoIn-Systems-Atlas), [Gameplay atlas](Gameplay-Systems-Atlas) and [Server runtime atlas](Server-Gameplay-Runtime-Atlas), with full proof kept in [Deep-review findings](Deep-Review-Findings).
+- ✅ **R2-6 resolved:** [WASP overlay](WASP-Overlay) already cited **DR-40** by number; [Server runtime atlas](Server-Gameplay-Runtime-Atlas) now names the hosted/listen FPS busy loop as **DR-19**.
+- ✅ **R2-7 resolved:** **DR-45** is now cross-linked from [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) and [AI/headless](AI-Headless-And-Performance), with the detailed source proof kept in [Deep-review findings](Deep-Review-Findings) Round 36.
 
-**Thin citations (lower priority):** [Core systems index](Core-Systems-Index), [Architecture overview](Architecture-Overview), [Content structure and maps](Content-Structure-And-Maps) have no `path:line` anchors.
+**Thin citations (lower priority):** ✅ resolved by Codex on 2026-06-02; [Core systems index](Core-Systems-Index), [Architecture overview](Architecture-Overview) and [Content structure and maps](Content-Structure-And-Maps) now include representative `path:line` source-anchor tables.
 
 **Current-work reconcile (Codex status pages):**
-- **R2-8 (Medium):** [Coordination board](Coordination-Board) "Active Lanes" + "Roles" tables are stale — sub-agent lanes (Faraday/Mencius/Hilbert/Cicero/Curie/Meitner) shown "Active" were harvested/closed in Wave F; `victory-endgame-runtime-atlas` shown "Active" is integrated; the Roles line says "Claude's latest reviews are DR-11..DR-15" but Claude is at **DR-45**. Reconcile to current state.
-- **R2-9 (Low):** [Progress dashboard](Progress-Dashboard) "At A Glance" Claude row predates the Phase-1-complete + collaboration-follow mode; update.
-- **R2-10 (Low):** `_Sidebar.md` still lists `Headless-Delegation-And-Failover-Playbook` twice (Gameplay + Ops); de-dup.
+- ✅ **R2-8 resolved (Medium):** [Coordination board](Coordination-Board) now separates current roles/snapshot from the historical lane ledger, names Claude as collaboration-follow with latest DR-45, and marks the old scout/victory lanes as harvested history rather than active claims.
+- ✅ **R2-9 resolved (Low):** [Progress dashboard](Progress-Dashboard) no longer carries the stale "At A Glance" Claude row and now routes current bottlenecks through [Bottleneck removal queue](Bottleneck-Removal-Queue).
+- ✅ **R2-10 resolved (Low):** `_Sidebar.md` no longer lists `Headless-Delegation-And-Failover-Playbook` twice; the sidebar now adds only the current bottleneck queue route.
 
-**Do NOT "fix" (audit false positives, verified at source):** the `Public-Variable-Channel-Index` PVF line ranges `:8-20`/`:23-37` and DR-15's `_side = _this` at `:3` are **correct** — an audit pass miscounted blank lines. Leave them.
+**Do NOT "fix" (audit false positives, verified at source):** the `Public-Variable-Channel-Index` PVF line ranges `:8-20`/`:23-37` are correct; an audit pass miscounted blank lines. DR-15's `_side = _this` line number is correct, but the code is still the current-source-unpatched caller-shape bug; use [Commander reassignment call shape](Commander-Reassignment-Call-Shape) and [Current source status snapshot](Current-Source-Status-Snapshot) before changing that lane.
 
 ## Continue Reading
 
 Canonical findings: [Deep-review findings](Deep-Review-Findings) | Scoreboard: [Codebase coverage ledger](Codebase-Coverage-Ledger) | Map: [Home](Home)
+
+## E. Compact bootstrap split (2026-06-03)
+
+| Topic | Canonical home | Route pages to remove duplication |
+| --- | --- | --- |
+| LLM bootstrap vs execution guidance | [AI-Assistant-Guide](AI-Assistant-Guide) | [AI-Assistant-Developer-Guide](AI-Assistant-Developer-Guide) remains execution rules; Home/_Sidebar/llms.txt now use the compact bootstrap page as first read. |
+
+### Why this was split
+
+- The large developer guide (`AI-Assistant-Developer-Guide`) carried both bootstrap and execution guidance; agents were loading it directly and missing critical click-through targets.
+- The compact `AI-Assistant-Guide` now acts as the first-touch page and then routes into execution/playbook/atlas pages.
+- This keeps future LLM onboarding stable as feature docs evolve and avoids duplicate bootstrap text.
+
+## F. LLM-onboarding duplication watch (2026-06-03)
+
+| Topic | Canonical home | Route pages to remove duplication |
+| --- | --- | --- |
+| bootstrap vs execution guidance | [AI-Assistant-Guide](AI-Assistant-Guide) | [AI-Assistant-Developer-Guide](AI-Assistant-Developer-Guide), [Home](Home), [`llms.txt`](llms.txt), [_Sidebar.md](_Sidebar.md), [Progress-Dashboard](Progress-Dashboard) now keep a compact first-read path and remove duplicate bootstrap language. |
+
+### Open watchpoint
+
+- Track any future edits that reintroduce duplicated "how to start" instructions across `AI-Assistant-Guide`, `AI-Assistant-Developer-Guide`, `Home`, and `llms.txt`.
+- Keep onboarding routing centralized in `AI-Assistant-Guide`; execution rules and proof routes stay in atlases/subsystem playbooks.

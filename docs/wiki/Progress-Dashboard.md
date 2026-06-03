@@ -4,6 +4,26 @@ This is the shared human + AI interface for seeing what Codex, Claude and Codex 
 
 Keep this page open when parallel documentation work is running. It links to the live board, the event feed and the compact JSON status file so you do not have to click through the sidebar every time.
 
+## What this page is
+
+- Shared source-of-truth for lane state, active owners, and what was recently validated.
+- Human + AI handoff surface that avoids jumping between side pages while work is active.
+- Quick index for where to read next when a lane claims changes.
+
+## Where this dashboard lives
+
+- Wiki page: `docs/wiki/Progress-Dashboard.md`
+- Runtime state files: `agent-status.json`, `agent-events.jsonl`, `agent-knowledge.jsonl`
+- Coordination board: `Coordination-Board.md`
+- Source of truth pointers: [`agent-context.json`](agent-context.json)
+
+## How to use this page
+
+1. Start with **At A Glance** to find active lanes and owners.
+2. Read **Latest Batch** for completed/ready-for-review outputs.
+3. Confirm evidence state in machine files before opening feature code lanes.
+4. Use **Recent Published Work** for the compact handoff sequence after a large pass.
+
 ## Latest Batch
 
 | Lane | Status | Output |
@@ -168,6 +188,32 @@ Keep this page open when parallel documentation work is running. It links to the
 | Hardening roadmap | [Hardening roadmap](Hardening-Implementation-Roadmap) | Human-readable patch order and validation gates for code owners. |
 
 Historic scout rosters and harvested reports live in [Discovery swarm](Subagent-Discovery-Swarm) and [Agent worklog](Agent-Worklog).
+
+
+## Docs-Knowledge Lane Tracking
+
+### Canonical onboarding lane
+
+- `docs-knowledge-clickthrough-2026-06-03-1707` remains the active compactness/duplication pass for Home/_Sidebar/AI Assistant entrypoint flow.
+- This lane is documentation-only and coordinates click-through path quality, source links and machine-readable evidence.
+
+### What this page is for this lane
+
+- Central lane status for documentation quality work.
+- Quick validation check before/after navigation edits.
+- Cross-link and machine-record coherence verification target.
+
+### What to do after updates
+
+1. Update machine records first (`agent-events.jsonl`, `agent-knowledge.jsonl`, `Agent-Worklog.md`).
+2. Re-run `Tools/ValidateWiki.ps1` and `Tools/TestWikiParity.ps1` for source/mirror checks.
+3. Keep this dashboard row in sync so future agents know the current docs-navigation state.
+
+### Where to go next
+
+- [Wiki Quality Audit](Wiki-Quality-Audit) for open/closed duplication checks.
+- [Agent Worklog](Agent-Worklog) for handoff notes and action history.
+- [Progress dashboard](Progress-Dashboard) (this page) for live lane ownership.
 
 ## Update Ritual
 
