@@ -137,3 +137,38 @@ Maintainers: SG5/AI7/AI11/AI2 are done on PR #8 — please cross-check and close
 - **V2** — removed the duplicate IFV `fired`→HandleReload EH (`Client_BuildUnit.sqf`); one fewer spawn/shot, no behaviour change (idempotent).
 - **AI1** — `||`→`&&` in `server_town_patrol.sqf:18` and `server_patrols.sqf:26`; wiped patrol-team loops now exit instead of running forever. (Triple-check: both files init the alive flag before the loop, so `&&` is safe — verified `server_patrols.sqf:7` `_team_alive=false` precedes the loop.)
 - **AI8** — `Server_BuyUnit.sqf:117` now uses the buying side `_side` (not client `sideJoined`); AI Tank/Car get IR-smoke on dedicated servers, still gated on the researched upgrade.
+  - ⚠️ **Round-3 correction:** `Server_BuyUnit.sqf` is **dead code** (`AIBuyUnit` compiled at `Init_Server.sqf:10`, zero callers — see FC1). So AI8 edited never-executed code: harmless, but the premise doesn't manifest. Recommend scrapping the file (FC1) rather than keeping the AI8 line. Do NOT cite AI8 as a live fix.
+
+---
+
+## Round 3 (2026-06-03) — Skills / Construction-CoIn / Factory / Support delivery
+4-agent sweep on fresh systems. Labels SK1-14, CN1-14, FC1-11, SP1-14. Verified a few; the rest are ⬜ UNVERIFIED — please cross-check against the codebase + the Construction/Factory/Modules atlases.
+
+**Verified this round:**
+- **FC1** — ✅ `Server_BuyUnit.sqf` / `AIBuyUnit` is DEAD CODE (no callers). Scrap candidate. (Supersedes/moots AI8.)
+- **SK1** — ✅ `WFBE_SK_V_Type` never set to "Officer" (`Skill_Init.sqf:42-47`); the whole MASH/Officer forward-respawn feature is unreachable. Revivable with SK2 (+ officer classnames).
+- **CN1** — ⚠️ `Construction_SmallSite.sqf:99` uses `+` where `Construction_MediumSite.sqf:114` uses `-` on `wfbe_structures_logic` (likely a leak — verify the +/- intent against the repair system).
+- **SP8** — ❌ FALSE POSITIVE (agent self-corrected: server `deleteMarker` is global, works).
+- **SP9** — marginal (cargo vehicle is tracked by emptyQueu).
+
+**High-value ⬜ to verify (correctness/game-affecting):**
+- **CN4** `Server_HandleBuildingRepair.sqf:66` — `_redu` referenced inside a `handleDamage` EH block (no closure capture in A2 → nil at fire-time) → repaired buildings possibly invulnerable when friendly-fire handling off. (1 LOC)
+- **CN8** `Server_HandleBuildingRepair.sqf:54` — increments `_bindex` (caller idx) instead of trimmed `_index` into `wfbe_structures_live` → wrong slot. (1)
+- **CN6** missing `WFBE_C_STRUCTURES_MAX_AARADAR` → AA Radar ignores build cap. (1)
+- **CN3** `coin_interface.sqf:261,728` — `avail` defense-slot counter local-only → resets on commander transfer → build-cap bypass. (2-6)
+- **CN11** `coin_interface.sqf:239-268` — defense **sell** is client-only `deleteVehicle` → broken in dedicated MP (refund given, defense stays). (~25)
+- **FC2** `Client_BuildUnit.sqf:211` — no refund when factory destroyed mid-build → lost funds. (5-8)
+- **FC5** `Client_BuildUnit.sqf:180` — `_queu select 0` on empty queue → crash → factory soft-lock. (3)
+- **FC3** `Client_BuildUnit.sqf:167` — `varQueu` read/write race → duplicate queue tokens → queue bypass. (2)
+- **FC11** `Common_CreateVehicle.sqf:19,25` — `Compile preprocessFile` per vehicle spawn → pre-compile once. (4, perf)
+- **SP1** `Support_ParaAmmo.sqf:85` — `_sideID` nil in nested spawn → broken Killed EH on ammo crates. (4-6)
+- **SP3** `ARTY_HandleSADARM.sqf:137` — `while{true}` immortal thread leak per SADARM round. (3)
+- **SP4** `uav.sqf:33` — `createGroup` never `deleteGroup` → group leak toward 288 cap. (1-2)
+- **SP12** `Server_HandleSpecial.sqf:55` — RespawnST doesn't clear `wfbe_ai_supplytrucks` → trucks never respawn. (1-3)
+- **SP11** ICBM Chukar object race on high-latency dedi → $75k strike may deal no damage. (3-4)
+- **SK3** sniper spot marker uses global `setMarkerText` on a local marker → no label. (1)
+- **SK4** lockpick `typeOf` switch never matches the abstract class → uniform difficulty. (~5)
+
+**Exploit-class (owner priority = gameplay over exploit; likely defer):** SP2 (no server-side support validation), SP13 (fast-travel client-authoritative), SP14 (artillery cooldown client-only), CN3/CN11 also have exploit angles.
+
+Lower-value/cleanup: SK5/6/7/8/9/10/11/12/13/14, CN2/5/7/9/10/12/13, FC4/6/7/8/9/10, SP5/6/7/10 — see chat summary; cross-check as capacity allows.

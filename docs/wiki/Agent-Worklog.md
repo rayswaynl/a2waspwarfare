@@ -1441,3 +1441,9 @@ Key conclusions:
 ## VERIFICATION RUN 2b - Claude - V2/AI1/AI8 shipped
 - After re-verify, also fixed on PR #8 (release commit 0bb16513): V2 (dedupe IFV HandleReload EH), AI1 (||->&& zombie patrol loops in server_town_patrol.sqf + server_patrols.sqf), AI8 (Server_BuyUnit.sqf IR-smoke uses _side not sideJoined for dedicated servers). Triple-checked: AI1 && is safe because both files init the alive flag before the loop.
 - Docs-only change here; no gameplay source on this branch.
+
+## ROUND 3 - Claude - Skills/Construction/Factory/Support sweep logged
+- Added ~50 findings (SK1-14, CN1-14, FC1-11, SP1-14) to Audit-Findings-Queue-2026-06-03 for cross-reference.
+- KEY CROSS-CHECK: FC1 = Server_BuyUnit.sqf is DEAD CODE (AIBuyUnit, no callers) -> the previously-shipped AI8 fix edited never-executed code (harmless; recommend scrapping the file instead). SK1 confirmed: MASH/Officer forward-respawn feature is unreachable (WFBE_SK_V_Type never "Officer"). SP8 false positive (self-corrected).
+- High-value UNVERIFIED to cross-check: CN4 (repaired-building invuln), CN8 (wfbe_structures_live wrong slot), FC2 (no refund on factory destruction), FC5 (empty-queue crash/soft-lock), FC3 (varQueu race), SP1 (ParaAmmo _sideID nil), SP3 (SADARM thread leak), SP4 (UAV group leak), SP12 (RespawnST supplytruck array).
+- Docs-only change; no gameplay source on this branch.
