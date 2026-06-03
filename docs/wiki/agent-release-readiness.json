@@ -189,28 +189,33 @@
       "state": "branch-review-needed-ui-qol-smoke-open",
       "sourceScope": "source-chernarus-only",
       "canonicalDocs": [
+        "BuyMenu-EASA-QoL-Branch-Audit.md",
         "Client-UI-Systems-Atlas.md#branch-only-ui-theme-work",
+        "Gear-Loadout-And-EASA-Atlas.md",
         "Feature-Status-Register.md",
         "Pending-Owner-Decisions.md",
         "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
         "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
       ],
       "evidenceRefs": [
-        "origin/master..origin/feat/buymenu-easa-qol: 3 files +42/-6",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UIFillListBuyUnits.sqf:104 on origin/feat/buymenu-easa-qol",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf:201-206 on origin/feat/buymenu-easa-qol",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_EASA.sqf:29-37 on origin/feat/buymenu-easa-qol",
-        "git diff --check origin/master..origin/feat/buymenu-easa-qol is clean"
+        "origin/feat/buymenu-easa-qol@a66d4691; merge-base origin/master@2cdf5fb8",
+        "origin/master..origin/feat/buymenu-easa-qol: 3 files +42/-6; all changed files are source Chernarus UI",
+        "git diff --check origin/master..origin/feat/buymenu-easa-qol is clean",
+        "git diff --name-only origin/master..origin/feat/buymenu-easa-qol -- Missions_Vanilla returns no changed files",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UIFillListBuyUnits.sqf:1,61-62,104 on origin/feat/buymenu-easa-qol",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf:201-210 on origin/feat/buymenu-easa-qol",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf:280,335,388,444,487 on origin/feat/buymenu-easa-qol",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_EASA.sqf:29-40 on origin/feat/buymenu-easa-qol"
       ],
       "ownerDecision": "Accept UI-only BuyMenu/EASA QoL and decide maintained Vanilla propagation.",
-      "promotionGate": "Smoke affordability price color, full/crew price expectations, queue-tab refresh and EASA current-loadout preselect before merge.",
+      "promotionGate": "Smoke affordability price color versus full/crew price, final idc 12034 price after later writes, queue-tab refresh/no flicker and EASA visible/filtered/unset current-loadout cases before merge; propagate maintained Vanilla or explicitly accept Chernarus-only scope.",
       "plannedSmoke": {
         "status": "planned-not-run",
         "coverageLevel": [
           "client-ui-smoke",
           "vanilla-parity-smoke"
         ],
-        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+        "canonicalDoc": "BuyMenu-EASA-QoL-Branch-Audit.md#promotion-gates"
       }
     },
     {

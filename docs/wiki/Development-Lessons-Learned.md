@@ -138,6 +138,14 @@ The propagation scope is also narrower than the fix list. The branch touches onl
 
 Development rule: even for a tiny branch, document the payload, baggage, propagation scope and smoke gates before merge/release wording. A fix can be high-confidence static evidence while still requiring Vanilla propagation and Arma runtime smoke. See [Perf quick wins branch audit](Perf-Quick-Wins-Branch-Audit).
 
+## Lesson 17: UI QoL Branches Need Final-Control Smoke
+
+`origin/feat/buymenu-easa-qol` is a small branch, but source review still found multiple UI lifecycle edges that static diffs alone do not prove. The branch colors Buy Units displayed base prices red when `_price > _funds` (`Client_UIFillListBuyUnits.sqf:61-62,104`), appends live queue counts to factory tabs (`GUI_Menu_BuyUnits.sqf:201-210`), updates selected-unit cost formula and idc `12034` writes (`GUI_Menu_BuyUnits.sqf:280,335,388,444,487`) and highlights the current EASA loadout (`GUI_Menu_EASA.sqf:29-40`).
+
+Those are useful changes, but the visible behavior depends on later control writes, lock/crew toggles, row filtering and live missionNamespace queue variables. The EASA highlight also does not solve exact-funds purchase rejection or stale/unsupported vehicle context because it does not change `GUI_Menu_EASA.sqf:46-50` or `EASA_Equip.sqf`.
+
+Development rule: for UI QoL branches, smoke the final rendered control state and interaction loop, not just the changed hunk. Include low/exact/high funds, crew toggles, tab switching, queue changes, filtered rows and maintained Vanilla propagation before release wording. See [BuyMenu EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit).
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |

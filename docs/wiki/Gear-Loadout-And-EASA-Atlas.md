@@ -106,6 +106,8 @@ Focused EASA review found two local correctness edges in the menu flow:
 - `GUI_Menu_EASA.sqf:40-53` uses `_funds > price`, so an exact-funds purchase is rejected and can display "missing $0" even though the player has the listed price.
 - The service menu opens EASA from a cached vehicle/context snapshot, and `EASA_Equip.sqf:8-38` silently exits if the current vehicle is unsupported. Without an action-time recheck, a stale menu can debit/show success while equipping nothing.
 
+`origin/feat/buymenu-easa-qol` head `a66d4691` adds EASA current-loadout highlighting/preselect in the menu (`GUI_Menu_EASA.sqf:29-40`) but does not change the purchase action at `GUI_Menu_EASA.sqf:46-50` or `EASA_Equip.sqf`. Treat it as UI orientation only; exact-funds and stale/unsupported context gates remain open. See [BuyMenu EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit).
+
 ### DR-28 Authority Finding
 
 Claude DR-28 completed the source review for EASA and vehicle service actions. The flow is client-authoritative:

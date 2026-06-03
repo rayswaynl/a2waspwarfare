@@ -19,6 +19,7 @@ Important notes:
 - [Quickstart](https://github.com/rayswaynl/a2waspwarfare/wiki/Quickstart-For-Humans-And-Agents): First-day orientation for humans and agents.
 - [Feature status register](https://github.com/rayswaynl/a2waspwarfare/wiki/Feature-Status-Register): Triage dashboard for working, broken, partial, dormant and high-risk systems.
 - [Player stats branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Player-Stats-Branch-Audit): Branch-only SQF-to-RPT-to-DiscordBot stats pipeline audit and enablement gates.
+- [BuyMenu EASA QoL branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/BuyMenu-EASA-QoL-Branch-Audit): Branch-only Buy Units/EASA UI audit covering affordability tint, queue tabs, EASA current-loadout selection and final-control smoke gates.
 - [Perf quick wins branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Perf-Quick-Wins-Branch-Audit): Branch-only Chernarus fix audit covering side supply, factory queues, paratrooper PV registration, server loops and propagation gates.
 - [Commander positions branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Commander-Positions-Branch-Audit): Branch-only WDDM commander positions audit, with Chernarus-only runtime scope, merge baggage and smoke gates.
 - [Zargabad branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Zargabad-Branch-Audit): Branch-only low-pop Zargabad terrain release audit, static validation result and runtime evidence gates.

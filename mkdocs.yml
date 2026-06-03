@@ -59,6 +59,7 @@ nav:
       - Commander Reassignment Call Shape: Commander-Reassignment-Call-Shape.md
   - UI And Tooling:
       - Client UI Systems Atlas: Client-UI-Systems-Atlas.md
+      - BuyMenu EASA QoL Branch Audit: BuyMenu-EASA-QoL-Branch-Audit.md
       - Player UI Workflow Map: Player-UI-Workflow-Map.md
       - Respawn And Death Lifecycle: Respawn-And-Death-Lifecycle-Atlas.md
       - UI IDD Collision Repair: UI-IDD-Collision-Repair.md

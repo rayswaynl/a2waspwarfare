@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T22:25:52+02:00",
+  "generatedAt": "2026-06-03T22:41:16+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Deep-audited origin/perf/quick-wins head 0076040f. Added Perf quick wins branch audit with commit breakdown, 18-file Chernarus-only scope, side-supply clamp, factory queue, paratrooper marker PV, server-loop cleanup, camp-bunker EH, kill-assist and WASP fix evidence, clean static preflight and remaining maintained Vanilla/runtime smoke gates.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: supply-heli runtime smoke evidence intake, P0/P1 accuracy drift with exact source refs, BuyMenu/EASA branch audit or stale machine-record cleanup."
+      "currentWork": "Deep-audited origin/feat/buymenu-easa-qol head a66d4691. Added BuyMenu EASA QoL branch audit with 3-file Chernarus-only UI scope, unaffordable price tint, live factory-tab queue labels, selected-unit cost display, EASA current-loadout highlight/preselect, clean static preflight and remaining maintained Vanilla/UI smoke gates.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: supply-heli runtime smoke evidence intake, P0/P1 accuracy drift with exact source refs or stale machine-record cleanup."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "buymenu-easa-qol-branch-deep-audit",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "BuyMenu-EASA-QoL-Branch-Audit now source-maps origin/feat/buymenu-easa-qol head a66d4691: three Chernarus client UI files, clean git diff --check, no maintained Vanilla diff, Buy Units affordability tint, live factory-tab queue labels, selected-unit cost display and EASA current-loadout highlight/preselect. Arma UI smoke and Vanilla propagation remain open."
+    },
     {
       "lane": "perf-quick-wins-branch-deep-audit",
       "owner": "Codex",

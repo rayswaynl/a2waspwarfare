@@ -1,5 +1,14 @@
 # Agent Worklog
 
+## 2026-06-03T22:41:16+0200 - Codex - buymenu-easa-qol-branch-deep-audit
+
+- Deep-audited `origin/feat/buymenu-easa-qol` head `a66d4691` after the branch matrix identified it as the remaining small UI branch without a dedicated audit page.
+- Source evidence checked: merge base `2cdf5fb8`; branch diff `3 files, +42/-6`; all touched files are source Chernarus client UI files; no maintained Vanilla files are touched; `git diff --check origin/master..origin/feat/buymenu-easa-qol` is clean.
+- Commit evidence checked: `43a7849e` unaffordable Buy Units price tint; `6aacf0c9` full/crew cost display and live queue-tab labels; `a66d4691` EASA current-loadout highlight/preselect.
+- Line evidence checked: `Client_UIFillListBuyUnits.sqf:1,61-62,104`; `GUI_Menu_BuyUnits.sqf:201-210,280,335,388,444,487`; `GUI_Menu_EASA.sqf:29-40`; branch Vanilla absence by `git diff --name-only ... -- Missions_Vanilla`.
+- Added [BuyMenu EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit) and routed it through Home, sidebar, mkdocs, llms, Client UI Systems, Gear/Loadout/EASA, Feature Status, Pending Owner Decisions, source snapshot, Testing workflow and machine ledgers.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-03T22:25:52+0200 - Codex - perf-quick-wins-branch-deep-audit
 
 - Deep-audited `origin/perf/quick-wins` head `0076040f` after the branch matrix identified it as a high-value fix candidate.
