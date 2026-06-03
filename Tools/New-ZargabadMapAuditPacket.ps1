@@ -104,6 +104,8 @@ $airports = @($objects | Where-Object { $_.Vehicle -eq "LocationLogicAirport" })
 $starts = @($objects | Where-Object { $_.Vehicle -eq "LocationLogicStart" })
 $defenses = @($objects | Where-Object { $_.Vehicle -eq "Logic" -and $_.Init -like "*wfbe_defense_kind*" })
 $parsedTowns = @($towns | ForEach-Object { Get-TownInfo -Town $_ -Camps $camps -Defenses $defenses })
+$westStart = @($starts | Where-Object { $_.Init -match 'wfbe_default"",\s*west' } | Select-Object -First 1)
+$eastStart = @($starts | Where-Object { $_.Init -match 'wfbe_default"",\s*east' } | Select-Object -First 1)
 
 $report = New-Object System.Collections.Generic.List[string]
 $report.Add("# Zargabad Map Audit Packet")
@@ -154,6 +156,19 @@ foreach ($start in ($starts | Sort-Object Y, X)) {
 	$azimut = if ($null -ne $start.Azimut) { [math]::Round($start.Azimut, 1) } else { "" }
 	$report.Add("| $($start.Id) | $side | ``$(Get-PositionText $start)`` | $azimut | $([math]::Round((Get-EdgeDistance $start 6000), 1)) |")
 }
+$report.Add("")
+$report.Add("## Base Axis And Sightlines")
+$report.Add("")
+if ($westStart.Count -gt 0 -and $eastStart.Count -gt 0) {
+	$baseDistance = [math]::Round((Get-FlatDistance $westStart[0] $eastStart[0]))
+	$midX = [math]::Round(($westStart[0].X + $eastStart[0].X) / 2)
+	$midY = [math]::Round(($westStart[0].Y + $eastStart[0].Y) / 2)
+	$report.Add("- WEST default start: ``$(Get-PositionText $westStart[0])``; EAST default start: ``$(Get-PositionText $eastStart[0])``; flat distance: [$baseDistance]m.")
+	$report.Add("- Direct base-axis midpoint: ``$midX,$midY``; central wall origin: ``3425,3375``. These intentionally overlap so the wall interrupts the flat southwest-to-northeast sightline.")
+	$report.Add("- Claude should screenshot from each default start toward ``3425,3375`` and from the wall origin back toward both starts, then mark whether fortifications and terrain block trivial spawn pressure.")
+} else {
+	$report.Add("- Default WEST/EAST starts were not found in mission.sqm.")
+}
 $safeObjects = @($towns) + @($camps) + @($airports) + @($starts)
 $edgeSafe = @($safeObjects | Where-Object { (Get-EdgeDistance $_ 6000) -le 325 } | Sort-Object Y, X)
 $report.Add("")
@@ -171,6 +186,7 @@ $report.Add("")
 $report.Add("## Claude Screenshot Targets")
 $report.Add("")
 $report.Add("- WEST default start `1500,1550` and EAST default start `5350,5200`: capture spawn-to-spawn and spawn-to-city sightline notes.")
+$report.Add("- Base-axis midpoint `3425,3375`: screenshot toward both default starts and toward city routes.")
 $report.Add("- City/airfield high-value flow: `4075,3950` and `2980,5200`, including their two camp approaches.")
 $report.Add("- Central wall gap checkpoints listed above, tested with infantry, light armor and AI pathing.")
 $report.Add("- Edge-safe north/east objectives listed above, especially any place that still permits unfair side-hill overwatch.")

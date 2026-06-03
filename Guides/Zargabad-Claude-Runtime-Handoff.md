@@ -34,7 +34,7 @@ For map-placement, defense-facing, pathing, or sightline notes, generate a coord
 powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadMapAuditPacket.ps1 -OutputPath ".\zargabad-map-audit.md"
 ```
 
-Use the packet's objective, camp, defense, start, edge-safe and central-wall checkpoint coordinates as the shared reference for screenshots and repro notes.
+Use the packet's objective, camp, defense, start, base-axis, edge-safe and central-wall checkpoint coordinates as the shared reference for screenshots and repro notes.
 
 ## Do Not Stop Until
 
@@ -104,6 +104,7 @@ Use `-AllowKnownDisconnectScoreErrors` only if the only RPT `ERROR` lines are th
 ## Notes To Capture
 
 - Screenshot or coordinates for WEST/EAST start sightlines.
+- Screenshot from the base-axis midpoint/wall origin `3425,3375` toward both default starts, and from both default starts back toward `3425,3375`.
 - Screenshot or coordinates for the central wall gaps that were driven/walked through, especially `[4053,2725]`, `[3789,2998]`, `[3504,3293]`, `[3195,3613]`, and `[2903,3915]`.
 - RPT excerpt for edge-guard init and, if tested, removal.
 - RPT excerpt for `Init_Zargabad.sqf: Oriented [33] town defense logics toward linked town centers`.

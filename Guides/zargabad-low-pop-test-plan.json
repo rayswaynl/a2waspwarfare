@@ -126,7 +126,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/New-ZargabadMapAuditPacket.ps1 generates a Claude-facing coordinate packet from mission.sqm with population-flow objective values, camp links/distances, town-defense kind/position/distance rows, starts, edge-safe bubbles, central-wall gap checkpoints, and screenshot targets for map-placement, pathing, sightline and defense-facing notes."
+      "summary": "Tools/New-ZargabadMapAuditPacket.ps1 generates a Claude-facing coordinate packet from mission.sqm with population-flow objective values, camp links/distances, town-defense kind/position/distance rows, starts, base-axis midpoint, edge-safe bubbles, central-wall gap checkpoints, and screenshot targets for map-placement, pathing, sightline and defense-facing notes."
     },
     {
       "type": "source-audit",

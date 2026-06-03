@@ -338,11 +338,12 @@ Assert-True "map audit packet tool exists" (Test-Path -LiteralPath $mapAuditPack
 $mapAuditPacketSource = Get-Content -Raw -LiteralPath $mapAuditPacketTool
 Assert-True "map audit packet emits population flow table" ($mapAuditPacketSource -match '## Population Flow')
 Assert-True "map audit packet emits camp and defense coordinates" ($mapAuditPacketSource -match '## Camps' -and $mapAuditPacketSource -match '## Town Defenses')
+Assert-True "map audit packet emits base-axis sightline section" ($mapAuditPacketSource -match '## Base Axis And Sightlines' -and $mapAuditPacketSource -match 'central wall origin')
 Assert-True "map audit packet emits Claude screenshot targets" ($mapAuditPacketSource -match '## Claude Screenshot Targets')
 Assert-True "map audit packet emits central wall gap checkpoints" ($mapAuditPacketSource -match '4053,2725' -and $mapAuditPacketSource -match '2903,3915')
 $mapAuditPacketOutput = (& $mapAuditPacketTool) -join "`n"
 Assert-True "map audit packet runs and reports Zargabad counts" ($mapAuditPacketOutput -match '# Zargabad Map Audit Packet' -and $mapAuditPacketOutput -match 'Counts: towns \[13\], camps \[19\], airports \[1\], starts \[9\], town defenses \[33\]')
-Assert-True "map audit packet runs and reports core screenshot targets" ($mapAuditPacketOutput -match 'Zargabad City Center' -and $mapAuditPacketOutput -match 'Claude Screenshot Targets' -and $mapAuditPacketOutput -match '4053,2725')
+Assert-True "map audit packet runs and reports core screenshot targets" ($mapAuditPacketOutput -match 'Zargabad City Center' -and $mapAuditPacketOutput -match 'Claude Screenshot Targets' -and $mapAuditPacketOutput -match '4053,2725' -and $mapAuditPacketOutput -match 'central wall origin')
 Assert-True "Claude brief tool exists" (Test-Path -LiteralPath $claudeBriefTool)
 $claudeBriefSource = Get-Content -Raw -LiteralPath $claudeBriefTool
 Assert-True "Claude brief tool emits coordination cadence" ($claudeBriefSource -match '## Coordination Cadence')
