@@ -16,6 +16,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadRuntimeRep
 
 Use the same required switches as the validator for the gate being tested, then paste the report and any screenshots/coordinates back to Codex.
 
+The `Claude Notes` table in the report is part of the gate, not optional commentary. Mark each runtime check `PASS`, `FAIL`, or `UNCERTAIN`; every `FAIL` or `UNCERTAIN` row should include coordinates, screenshot filenames, RPT excerpts, or repeatable repro steps. Codex should listen to that evidence: if Claude proves the mission is wrong, Codex updates mission code or validators before asking Claude to repeat the same pass.
+
 ## Do Not Stop Until
 
 Claude/runtime tester should keep going until there is RPT and short note evidence for every required gate below:
@@ -86,3 +88,13 @@ Use `-AllowKnownDisconnectScoreErrors` only if the only RPT `ERROR` lines are th
 - RPT excerpt for black-market cache surfacing.
 - Any observed town where static defenses face the wrong route or block normal movement.
 - Any economy issue where city/airfield income or vehicle pricing snowballs too fast in a 5v5-style test.
+
+## How Codex Should Respond
+
+When Claude sends a report:
+
+1. Treat RPT-backed validator failures as mission bugs until disproven.
+2. Treat screenshot/coordinate/repro-backed gameplay failures as actionable design findings.
+3. If evidence is concrete, patch the mission, validator, or handoff docs before requesting another pass.
+4. If evidence is ambiguous, ask Claude for the smallest missing proof: exact coordinates, RPT excerpt, screenshot filename, or reproduction steps.
+5. Do not ask Claude to stop until every required gate has a `PASS` or an accepted follow-up fix.
