@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T17:55:00+02:00",
+  "generatedAt": "2026-06-03T18:00:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed the stale Development Lessons navigation/context P1 row after proving the lesson page and agent-development-lessons.jsonl are already wired through Home, _Sidebar, Agent-Context and agent-context.json.",
+      "currentWork": "Corrected stale audit guidance that had wrongly treated DR-15 commander reassignment call shape as a false positive. Instructions, Wiki Quality Audit, Deep Review and the commander playbook now agree that the helper remains patch-ready/source-unpatched.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another owner-decision surfacing item, machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "dr15-false-positive-correction",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Corrected stale Instructions/Wiki Quality/Deep Review guidance that mislabeled DR-15 as a false positive. Source and Vanilla still pass [_side,_assigned_commander] into WFBE_SE_FNC_AssignForCommander while Server_AssignNewCommander.sqf sets _side = _this, so Commander-Reassignment-Call-Shape remains patch-ready/source-unpatched."
+    },
     {
       "lane": "development-lessons-nav-context-closure",
       "owner": "Codex",

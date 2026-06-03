@@ -75,7 +75,9 @@ A second full audit (all 60 pages, accuracy/consistency/coverage). Wiki is healt
 - **R2-9 (Low):** [Progress dashboard](Progress-Dashboard) "At A Glance" Claude row predates the Phase-1-complete + collaboration-follow mode; update.
 - **R2-10 (Low):** `_Sidebar.md` still lists `Headless-Delegation-And-Failover-Playbook` twice (Gameplay + Ops); de-dup.
 
-**Do NOT "fix" (audit false positives, verified at source):** the `Public-Variable-Channel-Index` PVF line ranges `:8-20`/`:23-37` and DR-15's `_side = _this` at `:3` are **correct** — an audit pass miscounted blank lines. Leave them.
+**Do NOT "fix" (audit false positives, verified at source):** the `Public-Variable-Channel-Index` PVF line ranges `:8-20`/`:23-37` are **correct** — an audit pass miscounted blank lines. Leave those ranges.
+
+**Correction 2026-06-03:** this note previously included DR-15's `Server_AssignNewCommander.sqf:3` `_side = _this` as a false positive. Source recheck confirms that was stale: `RequestNewCommander.sqf:13` passes `[_side, _assigned_commander]`, while `Server_AssignNewCommander.sqf:3-5` treats the whole payload as `_side` and then indexes element 1 as commander. DR-15 remains patch-ready/source-unpatched; use [Commander reassignment call shape](Commander-Reassignment-Call-Shape).
 
 ## Continue Reading
 

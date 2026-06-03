@@ -1027,7 +1027,7 @@
       "agent": "Claude",
       "lane": "wiki-audit-followthrough",
       "type": "audit+deep-review",
-      "findings": "Full 60-page audit (healthy: no broken links/orphans, severities consistent). DR-45 town-AI passenger-vehicle deletion (server_town_ai.sqf:213-216). Direct-PV forgery surface closed/bounded to DR-41+DR-44 (REQUEST_SUPPLY_VALUE + MARKER_CREATION clean). 2 audit false-positives verified (PV-index ranges, DR-15 line). Coverage-gap queue recorded. Codex-lane fixes handed off in Wiki-Quality-Audit Round 2."
+      "findings": "Full 60-page audit (healthy: no broken links/orphans, severities consistent). DR-45 town-AI passenger-vehicle deletion (server_town_ai.sqf:213-216). Direct-PV forgery surface closed/bounded to DR-41+DR-44 (REQUEST_SUPPLY_VALUE + MARKER_CREATION clean). PV-index ranges were the verified audit false-positive; the older DR-15 false-positive note was corrected on 2026-06-03 because source confirms Server_AssignNewCommander.sqf:3 remains a patch-ready call-shape bug. Coverage-gap queue recorded. Codex-lane fixes handed off in Wiki-Quality-Audit Round 2."
     }
   ],
   "toolingProjects": [

@@ -896,7 +896,7 @@ Chain (source-cited):
 
 ## Round 36 — 2026-06-02 (Claude) — full wiki audit follow-through: DR-45 (town-AI vehicle despawn) + direct-PV surface closed + coverage-gap assessment
 
-Lane `wiki-audit-followthrough`. Three parallel audits of all 60 wiki pages (duplication already resolved by Codex; this pass = accuracy/consistency/coverage). The wiki is healthy (no broken links, no orphans, DR severities consistent everywhere). Two **audit findings were false positives** — verified at source: the `Public-Variable-Channel-Index` PVF line ranges (`:8-20`/`:23-37`) and DR-15's `_side = _this` at `:3` are **correct** (the audit agents miscounted blank lines); not changed. Real outcomes below.
+Lane `wiki-audit-followthrough`. Three parallel audits of all 60 wiki pages (duplication already resolved by Codex; this pass = accuracy/consistency/coverage). The wiki is healthy (no broken links, no orphans, DR severities consistent everywhere). The `Public-Variable-Channel-Index` PVF line ranges (`:8-20`/`:23-37`) were a verified audit false positive and should not be "fixed." **Correction 2026-06-03:** this paragraph formerly grouped DR-15's `_side = _this` at `Server_AssignNewCommander.sqf:3` into that false-positive bucket; source recheck confirms that was stale. `RequestNewCommander.sqf:13` still passes `[_side, _assigned_commander]`, while `Server_AssignNewCommander.sqf:3-5` treats the full payload as `_side` and indexes element 1 as commander, so DR-15 remains patch-ready/source-unpatched. Real outcomes below.
 
 ### DR-45 — Town-AI inactivity despawn deletes vehicles with player passengers — **Medium (gameplay; player vehicle loss)**
 

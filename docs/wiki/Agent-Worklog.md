@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: DR-15 False-Positive Correction
+
+- Corrected stale audit guidance that had wrongly listed DR-15's `Server_AssignNewCommander.sqf:3` `_side = _this` as a false positive in [Instructions for Codex](Instructions-For-Codex), [Wiki quality audit](Wiki-Quality-Audit) and [Deep review findings](Deep-Review-Findings).
+- Evidence checked: source Chernarus and maintained Vanilla both compile `WFBE_SE_FNC_AssignForCommander` at `Server/Init/Init_Server.sqf:62`; `RequestNewCommander.sqf:13` spawns it with `[_side, _assigned_commander]`; `Server_AssignNewCommander.sqf:3-5` still uses `_side = _this` plus `_commander = _this select 1`.
+- Scope remained docs/status only; no gameplay source files were edited.
+
 ## 2026-06-03 - Codex Documentation Finisher: Development Lessons Navigation Closure
 
 - Closed the stale P1 row in [Development lessons learned](Development-Lessons-Learned#proposed-backlog-patches): the human page and machine lesson feed are already wired into [Home](Home), `_Sidebar`, [Agent context](Agent-Context) and [`agent-context.json`](agent-context.json).

@@ -35,8 +35,8 @@
 
 ## Do NOT change (audit false positives — verified at source)
 - [Public variable channel index](Public-Variable-Channel-Index) PVF list ranges `:8-20` (server) / `:23-37` (client) are **correct**.
-- DR-15's `_side = _this` at `Server_AssignNewCommander.sqf:3` is **correct**.
-(An audit pass miscounted blank lines; leave both as-is.)
+- **Correction 2026-06-03:** an older audit note also listed DR-15's `_side = _this` as a false positive. That was wrong. Source recheck confirms DR-15 remains a patch-ready bug: `RequestNewCommander.sqf:13` spawns `WFBE_SE_FNC_AssignForCommander` with `[_side, _assigned_commander]`, while `Server_AssignNewCommander.sqf:3-5` assigns `_side = _this` and `_commander = _this select 1`. Use [Commander reassignment call shape](Commander-Reassignment-Call-Shape).
+(An audit pass miscounted the PVF blank lines; leave the PVF ranges as-is.)
 
 ## Not Codex's lane — informational
 - The economy/forgery owner decision (server-authority vs BattlEye, two surfaces) and the coverage-gap next-review queue (Server/AI respawn+orders, cleaners Perf, config data model, PR#1 delta) are in [Pending owner decisions](Pending-Owner-Decisions) and [Deep-review findings](Deep-Review-Findings) Round 36 — for the owner / the next review phase, not a Codex doc task.

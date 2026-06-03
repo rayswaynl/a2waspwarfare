@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T17:55:00+02:00",
+  "generatedAt": "2026-06-03T18:00:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,28 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "dr15-false-positive-correction",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Commander-Reassignment-Call-Shape.md",
+        "docs/wiki/Instructions-For-Codex.md",
+        "docs/wiki/Wiki-Quality-Audit.md",
+        "docs/wiki/Deep-Review-Findings.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AssignNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/PVFunctions/RequestNewCommander.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_AssignNewCommander.sqf"
+      ],
+      "outputs": [
+        "Corrected stale false-positive guidance for DR-15",
+        "Updated the commander reassignment playbook to name WFBE_SE_FNC_AssignForCommander",
+        "Recorded that source and maintained Vanilla still carry the patch-ready call-shape mismatch"
+      ],
+      "handoff": "Future commander code owner should patch Server_AssignNewCommander.sqf to use _this select 0 for _side, choose one new-commander-assigned notification owner, propagate Vanilla and smoke manual reassignment plus vote fallback."
+    },
     {
       "lane": "development-lessons-nav-context-closure",
       "owner": "Codex",
