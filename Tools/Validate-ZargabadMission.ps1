@@ -266,6 +266,7 @@ $generatedEdgeGuard = Join-Path $missionFullPath "Server/Module/Zargabad/Zargaba
 $sourceRuntimeAudit = Join-Path $sourceMissionFullPath "Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf"
 $generatedRuntimeAudit = Join-Path $missionFullPath "Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf"
 $runtimeReportTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadRuntimeReport.ps1"
+$claudeBriefTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadClaudeBrief.ps1"
 
 Assert-True "source mystery feature under 100 non-empty LOC" ((Get-NonEmptyLineCount $sourceBlackMarket) -le 100)
 Assert-True "generated mystery feature under 100 non-empty LOC" ((Get-NonEmptyLineCount $generatedBlackMarket) -le 100)
@@ -297,6 +298,12 @@ Assert-True "runtime report tool wraps runtime validator" ($runtimeReportSource 
 Assert-True "runtime report tool checks town defense orientation" ($runtimeReportSource -match 'Town defense orientation')
 Assert-True "runtime report tool emits Claude notes" ($runtimeReportSource -match '## Claude Notes')
 Assert-True "runtime report tool emits validator output" ($runtimeReportSource -match '## Validator Output')
+Assert-True "Claude brief tool exists" (Test-Path -LiteralPath $claudeBriefTool)
+$claudeBriefSource = Get-Content -Raw -LiteralPath $claudeBriefTool
+Assert-True "Claude brief tool emits retest focus" ($claudeBriefSource -match '## Retest Focus')
+Assert-True "Claude brief tool carries stop/go ownership" ($claudeBriefSource -match 'Codex owns the stop/go call')
+Assert-True "Claude brief tool points to runtime report" ($claudeBriefSource -match 'New-ZargabadRuntimeReport\.ps1')
+Assert-True "Claude brief tool points to runtime validator" ($claudeBriefSource -match 'Validate-ZargabadRuntimeEvidence\.ps1')
 
 $takistanZargabadModule = Resolve-RepoPath "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/Zargabad"
 Assert-True "Takistan has no generated Zargabad module spillover" (-not (Test-Path -LiteralPath $takistanZargabadModule))

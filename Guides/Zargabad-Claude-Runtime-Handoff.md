@@ -10,6 +10,14 @@ Codex should treat Claude's runtime findings as authoritative when they include 
 
 Static claims from Codex should be handed back to Claude with the command evidence that proved them. Runtime or design claims from Claude should be accepted when they include reproducible evidence, then converted into a source patch, validator check, or explicit retest request.
 
+After each Codex commit, generate the current Claude brief and paste it to the runtime tester before asking for another pass:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadClaudeBrief.ps1
+```
+
+The brief names the latest commit, PR head, files changed by that commit, inferred retest focus, required runtime commands, dirty local state warning, and the stop/go rule. Use it as the fresh context packet so Claude is not working from stale chat memory.
+
 After each RPT-producing pass, Claude should generate a compact markdown status with:
 
 ```powershell
@@ -78,6 +86,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadRunti
 For a Codex-ready handoff report:
 
 ```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadClaudeBrief.ps1 -OutputPath ".\zargabad-claude-brief.md"
 powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadRuntimeReport.ps1 -RptPath "C:\path\to\rpts" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireBlackMarket -OutputPath ".\zargabad-runtime-report.md"
 ```
 

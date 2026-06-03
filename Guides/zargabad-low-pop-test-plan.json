@@ -33,6 +33,7 @@
     "Tools/Validate-ZargabadMission.ps1",
     "Tools/Validate-ZargabadRuntimeEvidence.ps1",
     "Tools/New-ZargabadRuntimeReport.ps1",
+    "Tools/New-ZargabadClaudeBrief.ps1",
     "Guides/Zargabad-Claude-Runtime-Handoff.md",
     "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs"
   ],
@@ -120,6 +121,10 @@
     },
     {
       "type": "source-audit",
+      "summary": "Tools/New-ZargabadClaudeBrief.ps1 generates a fresh Codex-to-Claude packet after each commit, including latest commit/PR head, changed files, inferred retest focus, required runtime commands, dirty local state warning, and the Codex stop/go rule."
+    },
+    {
+      "type": "source-audit",
       "summary": "Zargabad_RuntimeAudit logs runtime towns/camps/airports/defenses, start/max SV totals, WEST/EAST base positions and separation, base static/wall counts, factory restriction counts, price multiplier/sample values, and smaller-map economy/range/base-defense/edge-guard constants into RPT."
     },
     {
@@ -136,7 +141,7 @@
     }
   ],
   "result": "partial",
-  "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports after each Codex commit or runtime gate.",
-  "updatedAt": "2026-06-03T05:18:00+02:00",
+  "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Codex should send Tools/New-ZargabadClaudeBrief.ps1 output after each commit, and Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports after each Codex commit or runtime gate.",
+  "updatedAt": "2026-06-03T05:32:00+02:00",
   "updatedBy": "Codex"
 }
