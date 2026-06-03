@@ -918,7 +918,7 @@ Following DR-41/DR-44, the remaining client-touchable **direct** `publicVariable
 
 Honest accounting of where the campaign has **not** gone deep, for the owner/Codex to prioritise:
 - **Server/AI respawn + orders** (`Server/AI/AI_AdvancedRespawn.sqf`, `AI_SquadRespawn.sqf`, `AI_AddMultiplayerRespawnEH.sqf`, `Orders/AI_*.sqf`, legacy `AI_TLWPHandler.sqs`) — listed in the Modules/Function index but not deep-reviewed for authority/perf/JIP.
-- **Cleaners/restorers Perf** (`Server/FSM/cleaners/*`, `buildings_restorer.sqf`) — cadence/cost not measured (ledger Markers Map is 🟡 for this reason).
+- **Cleaners/restorers Perf** (`Server/FSM/cleaners/*`, `buildings_restorer.sqf`) — source-level cadence/cost is now documented in [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas#cadence-and-cost-interpretation): high-cadence registry drains are separate from long-timer wide scans and the tracked mine queue. Live RPT samples remain pending before performance-tuning patches.
 - **Config data model** (`Common/Config/Core*/`, `Gear/`, `Loadout/`, `Defenses/`) — the faction/unit/upgrade data layer load-order is documented per-atlas but not as a coherent whole.
 - **`Server/FSM/basearea.sqf`, `groupsMonitor.sqf`, `Server/Support/Support_*` ** — purpose-mapped only; trigger chains not traced.
 - **PR#1 supply-helicopter** delta — reviewed at a high level (stacked `Killed` EH) but not line-by-line on the `feat/supply-helicopter` branch.
