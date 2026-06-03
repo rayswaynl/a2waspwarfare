@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T00:37:08+02:00",
+  "generatedAt": "2026-06-04T00:46:40+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Harvested the micro-scout wave after Spark context/quota limits and promoted source-backed factory, construction, economy and modded-mission findings.",
-      "nextExpectedOutput": "Validate mirror/wiki parity, commit and push this micro-scout documentation batch."
+      "currentWork": "Published and validated the micro-scout wave after Spark context/quota limits; source-backed factory, construction, economy and modded-mission findings are in the owning pages and mirrored.",
+      "nextExpectedOutput": "Pick the next highest-value docs finisher item: feature-status reconciliation, machine-readable stale-status cleanup, or a P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -46,8 +46,8 @@
     {
       "lane": "micro-scout-wave-factory-construction-economy-modded",
       "owner": "Codex/Sub-agents",
-      "status": "harvested-validating",
-      "output": "Micro-scout wave promoted five source-backed findings plus one logging/audit defect: Napf/Eden/Lingor compile missing Common_GetTotalCamps.sqf; UNIT_COST_MODIFIER can keep a stale discount when upgrade level is 0; destroyed-factory purchase abort cleans queue state but does not refund already debited player funds; auto-wall construction uses one global toggle; Common_ChangeSideSupply ignores three-argument reason strings. UI, PV and respawn scouts mostly confirmed canonical pages; AI-cap scout overflowed and was closed."
+      "status": "published-validated",
+      "output": "Micro-scout wave promoted five source-backed findings plus one logging/audit defect: Napf/Eden/Lingor compile missing Common_GetTotalCamps.sqf; UNIT_COST_MODIFIER can keep a stale discount when upgrade level is 0; destroyed-factory purchase abort cleans queue state but does not refund already debited player funds; auto-wall construction uses one global toggle; Common_ChangeSideSupply ignores three-argument reason strings. UI, PV and respawn scouts mostly confirmed canonical pages; AI-cap scout overflowed and was closed. Pushed as docs mirror 4580c2b1 and wiki ebf043e after wiki validation, JSON/JSONL parsing, git diff --check and mirror parity."
     },
     {
       "lane": "spark-scout-wave-economy-construction-respawn-ai-pvf-ui",
