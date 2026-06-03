@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T14:50:00+02:00",
+  "generatedAt": "2026-06-03T15:00:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,22 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "dr39-register-branch-scope",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Deep-Review-Findings.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "origin/master:Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf"
+      ],
+      "outputs": [
+        "Corrected DR-39 register text to branch-aware status",
+        "Preserved the dead supplyMissionActive cleanup as separate from scan narrowing",
+        "Recorded master adoption and Arma smoke as remaining gates"
+      ],
+      "handoff": "Future release/code owner: adopt the narrowed command-center scan on master and smoke truck/heli delivery at command centers; remove or intentionally wire the dead supplyMissionActive.sqf twin separately."
+    },
     {
       "lane": "a3-string-selection-command-guardrails",
       "owner": "Codex",

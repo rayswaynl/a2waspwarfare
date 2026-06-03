@@ -1445,3 +1445,9 @@ Key conclusions:
 - Closed [Instructions for Codex](Instructions-For-Codex) item 50 by adding `selectRandom`, `splitString`, `joinString` and `trim` to [`agent-compatibility-audit.json`](agent-compatibility-audit.json)'s `unsafeIfAddedAsImplementationAdvice` list.
 - Added a dedicated `a3OnlyStringSelectionCommandTraps` block so future agents preserve OA-safe random/string idioms and do not collapse `BIS_fnc_selectRandom` into the Arma 3-only `selectRandom` command.
 - Source grep confirmed the A3-only command forms are absent from mission/tooling code outside documentation guardrails. Also corrected the object-scan command reference row to use current branch-aware `supplyMissionStarted.sqf:24-28`, `:28` and `:44` evidence.
+
+# 2026-06-03 - DR-39 Register Branch Scope
+
+- Corrected [Deep-review findings](Deep-Review-Findings) DR-39 so the all-object command-center scan is explicitly `origin/master` status, not current everywhere.
+- Source-checked `origin/master` broad `nearestObjects [..., [], 80]` at `supplyMissionStarted.sqf:24-28` and current docs-branch narrowed `["Base_WarfareBUAVterminal"]` scan at `:28`; the current `:44` nearby-player/object scan remains intentionally broad.
+- Updated the handoff/outcome language: future code owners need master adoption + Arma smoke for the scan narrowing, while the dead `supplyMissionActive.sqf` cleanup remains separate.

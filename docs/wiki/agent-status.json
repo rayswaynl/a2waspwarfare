@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T14:50:00+02:00",
+  "generatedAt": "2026-06-03T15:00:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Instructions-For-Codex item 50: agent-compatibility-audit now warns against A3-only selectRandom, splitString, joinString and trim command forms.",
-      "nextExpectedOutput": "Re-read Instructions-For-Codex for newly appended handoffs, then continue the documentation finisher loop."
+      "currentWork": "Corrected Deep-Review-Findings DR-39 branch scope: origin/master still has the all-object supply command-center scan; docs branch and Vanilla are narrowed.",
+      "nextExpectedOutput": "Re-read Instructions-For-Codex and status pages for newly appended handoffs, then continue the documentation finisher loop."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "dr39-register-branch-scope",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Deep-Review-Findings.md DR-39 now scopes the all-object supply command-center scan to origin/master, documents branch/Vanilla narrowing and keeps master adoption plus Arma smoke pending."
+    },
     {
       "lane": "a3-string-selection-command-guardrails",
       "owner": "Codex",
