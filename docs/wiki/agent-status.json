@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T15:40:00+02:00",
+  "generatedAt": "2026-06-03T15:50:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Harvested Linnaeus's Wave Q side-supply authority lead into Economy-Authority-First-Cut and Development-Lessons-Learned.",
-      "nextExpectedOutput": "Continue Wave Q owner-page harvest with Banach town/camp authority notes or Hubble player-buy path correction."
+      "currentWork": "Closed Banach's Wave Q town/camp lead as source-checked and already canonical across town, server-runtime, supply cleanup and abandoned-feature pages.",
+      "nextExpectedOutput": "Continue Wave Q owner-page harvest with Hubble player-buy path correction, or switch to the next stale validation/status row if higher value."
     },
     "Codex-2": {
       "status": "ready",
@@ -48,6 +48,12 @@
       "owner": "Codex",
       "status": "published-validated",
       "output": "Linnaeus's Wave Q side-supply lead is promoted: Economy-Authority-First-Cut and Development-Lessons-Learned now state that negative amounts are normal spend deltas but direct-PV payload data, so the first patch must clamp result arithmetic and validate side/channel/shape without treating sign checks as full authority."
+    },
+    {
+      "lane": "wave-q-town-camp-routing-harvest",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Banach's Wave Q town/camp lead is closed as already canonical: camp repair authority-light, post-game patrol polling, town-AI despawn safety, client-stamped supply mission state and dormant AI supply-truck logistics are routed through Towns/Camps, Server Runtime, Feature Status, Supply Mission Authority and Abandoned Feature Revival owner pages."
     },
     {
       "lane": "scout-wave-i",
@@ -232,8 +238,8 @@
     {
       "lane": "progress-dashboard-status-reconciliation",
       "owner": "Codex",
-      "status": "validation-pending",
-      "output": "Instructions-For-Codex item 10 is resolved locally: Progress-Dashboard.md now includes a status legend, keeps the Claude row aligned to the Codebase-Coverage-Ledger milestone, and corrects send-message-rce-dr46-crosslink from Local/validation pending to Published/validated while keeping the source patch open in agent-hardening-backlog.jsonl."
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 10 and the Progress-Dashboard At A Glance/status-language reconciliation are published and validated: the dashboard has the status legend, routes remaining Auth/PV work to owner decisions, and keeps DR-46 cross-linking published/validated while the gameplay source patch remains open in agent-hardening-backlog.jsonl."
     },
     {
       "lane": "coordination-board-current-state",

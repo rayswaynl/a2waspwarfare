@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T15:35:00+02:00",
+  "generatedAt": "2026-06-03T15:50:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -37,7 +37,34 @@
         "Promoted Wave Q Linnaeus side-supply negative-delta/direct-PV helper nuance",
         "Added development lesson and machine-readable lesson record"
       ],
-      "handoff": "Future economy owner should patch side-supply clamp/channel validation first, then migrate spend authority server-side; next Wave Q harvest candidates are Banach town/camp notes and Hubble player-buy path correction."
+      "handoff": "Future economy owner should patch side-supply clamp/channel validation first, then migrate spend authority server-side; next Wave Q harvest candidate is Hubble's player-buy path correction."
+    },
+    {
+      "lane": "wave-q-town-camp-routing-harvest",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Subagent-Discovery-Swarm.md",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Towns-Camps-And-Capture-Atlas.md",
+        "docs/wiki/Server-Gameplay-Runtime-Atlas.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Supply-Mission-Authority-Cleanup-Playbook.md",
+        "docs/wiki/Abandoned-Feature-Revival-Review.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Action/Action_RepairCamp.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_patrols.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_patrol.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/AI_UpdateSupplyTruck.sqf"
+      ],
+      "outputs": [
+        "Promoted Wave Q Banach town/camp/supply routing check as already canonical",
+        "Updated Discovery Swarm, Progress Dashboard and machine-readable coordination state"
+      ],
+      "handoff": "Banach town/camp lead does not need a new owner page. Future code owners should use the existing Towns/Camps, Server Runtime, Supply Mission Authority and Abandoned Feature Revival pages; next Wave Q harvest candidate is Hubble's player-buy path correction."
     },
     {
       "lane": "dr39-agent-readable-ref-cleanup",

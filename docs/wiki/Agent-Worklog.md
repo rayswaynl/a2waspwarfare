@@ -2,6 +2,18 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Wave Q Town/Camp Routing Harvest
+
+- Source-checked Banach's Wave Q town/camp lead against `Client/Action/Action_RepairCamp.sqf:33-66`, `Client/Action/Action_RepairCampEngineer.sqf:33-67`, `Server/Functions/Server_HandleSpecial.sqf:147-168`, `Server/FSM/server_patrols.sqf:26-68`, `Server/FSM/server_town_patrol.sqf:18-53`, supply mission start/tracking files and the AI supply-truck compile/spawn pair.
+- Confirmed no new owner-page prose was needed: camp repair authority-light is already in [Towns/camps/capture atlas](Towns-Camps-And-Capture-Atlas), patrol post-game polling is already in [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) and [Feature status](Feature-Status-Register), and the stale `supplyMissionActive` / `UpdateSupplyTruck` paths already route through [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook), [Abandoned feature revival](Abandoned-Feature-Revival-Review) and [AI commander autonomy audit](AI-Commander-Autonomy-Audit).
+- Updated [Discovery swarm](Subagent-Discovery-Swarm), [Progress dashboard](Progress-Dashboard) and machine records so future agents treat the Banach Wave Q note as selected-harvested, not pending rediscovery.
+
+## 2026-06-03 - Codex Documentation Finisher: Dashboard Status Machine Reconciliation
+
+- Reconciled a stale `agent-status.json` row for `progress-dashboard-status-reconciliation` from `validation-pending` to `published-validated`.
+- Evidence checked: [Instructions for Codex](Instructions-For-Codex) item 10 is checked complete, [Progress dashboard](Progress-Dashboard) already shows `progress-dashboard-at-a-glance-refresh` as `Published / validated`, and `agent-events.jsonl` has the matching 2026-06-03T09:50 validation event.
+- Scope remained docs/status only; no gameplay source files were edited.
+
 ## 2026-06-03 - Codex Documentation Finisher: Scout Wave I Validation
 
 - Reconciled the stale `scout-wave-i` validation-pending rows in [Progress dashboard](Progress-Dashboard), [Discovery swarm](Subagent-Discovery-Swarm) and `agent-status.json`.
