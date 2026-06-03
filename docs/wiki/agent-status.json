@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T08:45:00+02:00",
+  "generatedAt": "2026-06-03T08:55:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "DR-20 HQ-killed N-fold score/idempotency routing is validated and published-ready across Construction, Gameplay and Server runtime atlas pages.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 6: route DR-45 town-AI occupied-vehicle deletion through Town-AI-Vehicle-Despawn-Safety and AI/headless pages."
+      "currentWork": "DR-45 town-AI occupied-vehicle deletion is explicitly routed through the Town-AI vehicle despawn playbook and AI/headless atlas with source anchors for the unsafe inactivity cleanup and separate crew-aware empty-vehicle handler.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 7: cite DR-40 by number in WASP overlay and DR-19 in Server runtime atlas."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "dr45-town-ai-vehicle-despawn-crosslinks",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 6 is resolved: DR-45 is now explicit on Town-AI-Vehicle-Despawn-Safety.md and AI-Headless-And-Performance.md, with source anchors for server_town_ai.sqf:211-216 and Server_HandleEmptyVehicle.sqf:26-30."
+    },
     {
       "lane": "dr20-hq-killed-score-crosslinks",
       "owner": "Codex",

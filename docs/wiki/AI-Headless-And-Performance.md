@@ -16,7 +16,7 @@ Server functions `Server_DelegateAITownHeadless.sqf`, `Server_DelegateAIStaticDe
 
 Page ownership: this atlas owns AI/performance runtime orientation and source routing. The implementation patch shape, work-record model, disconnect policy and DR-21/DR-42 decisions live in [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook).
 
-Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-21 covers HC disconnect/no failover, while DR-42 covers static-defense HC one-way delegation / missing update-back. Treat those as the canonical finding records and use the playbook for patch shape. For AI commander/autonomous logistics revival decisions, use [AI commander autonomy audit](AI-Commander-Autonomy-Audit).
+Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-21 covers HC disconnect/no failover, DR-42 covers static-defense HC one-way delegation / missing update-back, and DR-45 covers town-AI vehicle despawn deleting vehicles with player passengers. Treat those as the canonical finding records and use the linked playbooks for patch shape. For AI commander/autonomous logistics revival decisions, use [AI commander autonomy audit](AI-Commander-Autonomy-Audit).
 
 Boyle's second-pass autonomy review clarified the split between real AI plumbing and missing autonomy:
 
@@ -85,7 +85,7 @@ Town AI is not simulation-cached. `enableSimulation false` is used on invisible 
 
 - Spawn: nearby `"Man"`, `"Car"`, `"Motorcycle"`, `"Tank"` and `"Ship"` entities inside `600 * detection_coef` wake a town; aircraft are filtered out so flyovers do not activate towns.
 - Despawn: after `time - wfbe_inactivity > WFBE_C_TOWNS_UNITS_INACTIVE` with no enemies, units and groups are deleted.
-- Confirmed risk: the vehicle cleanup in `server_town_ai.sqf:191-223`, especially `:211-216`, iterates `wfbe_active_vehicles` and deletes each alive vehicle when `!(isPlayer leader group _x)`. It does not check `crew`, cargo or turret occupants, so a player riding in a town-AI vehicle while not group leader can still be inside a vehicle that gets deleted. This is separate from `Server_HandleEmptyVehicle.sqf`, which has its own empty-vehicle wait and is not the source of this bug. See [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) for the source chain, patch shape and validation gates.
+- Confirmed DR-45 risk: the vehicle cleanup in `server_town_ai.sqf:191-223`, especially `:211-216`, iterates `wfbe_active_vehicles` and deletes each alive vehicle when `!(isPlayer leader group _x)`. It does not check `crew`, cargo or turret occupants, so a player riding in a town-AI vehicle while not group leader can still be inside a vehicle that gets deleted. This is separate from `Server_HandleEmptyVehicle.sqf:26-30`, which has its own empty-vehicle wait and is not the source of this bug. See [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) for the source chain, patch shape and validation gates.
 
 ### HC Delegation Source Router
 

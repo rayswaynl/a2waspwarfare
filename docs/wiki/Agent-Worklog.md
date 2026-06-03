@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: DR-45 Town-AI Vehicle Despawn Routing
+
+- Claimed [Instructions for Codex](Instructions-For-Codex) item 6 and source-checked DR-45 against the Chernarus town inactivity cleanup path.
+- Verified unsafe vehicle deletion at `Server/FSM/server_town_ai.sqf:211-216`: the guard checks only `isPlayer leader group _x` before `deleteVehicle _x`.
+- Verified the separate empty-vehicle timeout is already crew-aware at `Server/Functions/Server_HandleEmptyVehicle.sqf:26-30`, so DR-45 belongs to town inactivity cleanup rather than the normal empty-vehicle handler.
+- Routed the DR number and source distinction into [Town AI vehicle despawn safety](Town-AI-Vehicle-Despawn-Safety), [AI/headless](AI-Headless-And-Performance) and [Instructions for Codex](Instructions-For-Codex).
+
 ## 2026-06-03 - Codex Documentation Finisher: DR-20 HQ-Killed Routing
 
 - Claimed [Instructions for Codex](Instructions-For-Codex) item 5 and source-checked DR-20 against the Chernarus HQ death path.

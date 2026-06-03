@@ -1,6 +1,6 @@
 # Town AI Vehicle Despawn Safety
 
-Implementation playbook for the confirmed town-AI vehicle cleanup bug in the Chernarus source mission.
+Implementation playbook for [Deep-review findings](Deep-Review-Findings) DR-45, the confirmed town-AI vehicle cleanup bug in the Chernarus source mission.
 
 Scope: `Missions/[55-2hc]warfarev2_073v48co.chernarus`. Apply gameplay patches there first, then propagate generated missions with `Tools/LoadoutManager`.
 
@@ -8,7 +8,7 @@ Scope: `Missions/[55-2hc]warfarev2_073v48co.chernarus`. Apply gameplay patches t
 
 | Field | Value |
 | --- | --- |
-| Finding | Confirmed bug |
+| Finding | Confirmed bug; formal record is [Deep-review findings](Deep-Review-Findings) DR-45 |
 | Backlog id | `town-ai-vehicle-despawn-safety` |
 | Primary file | `Server/FSM/server_town_ai.sqf` |
 | Risk | A town-AI vehicle can be deleted while a player is aboard if that player is not the group leader. |
@@ -37,7 +37,7 @@ The unsafe delete path exists when all of these are true:
 | Player is aboard but not leader | Existing guard only checks `isPlayer leader group _x`. |
 | Vehicle has a player in crew/cargo/turret | Existing cleanup does not check `crew _vehicle`, so any non-leader player occupant can be missed. |
 
-This is a player-experience correctness bug, not a generic empty-vehicle timeout bug. `Server_HandleEmptyVehicle.sqf` is already crew-aware; the unsafe delete lives in the town inactivity branch.
+This is a player-experience correctness bug, not a generic empty-vehicle timeout bug. `Server_HandleEmptyVehicle.sqf:26-30` is already crew-aware; the unsafe delete lives in the town inactivity branch and is tracked as DR-45.
 
 ## Safe Patch Shape
 

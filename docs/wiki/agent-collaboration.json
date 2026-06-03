@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T08:35:00+02:00",
+  "generatedAt": "2026-06-03T08:55:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,21 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "dr45-town-ai-vehicle-despawn-crosslinks",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Town-AI-Vehicle-Despawn-Safety.md",
+        "docs/wiki/AI-Headless-And-Performance.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_ai.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleEmptyVehicle.sqf"
+      ],
+      "outputs": [
+        "Made DR-45 explicit on the town-AI vehicle despawn playbook and AI/headless atlas"
+      ],
+      "handoff": "Scoped docs-only cross-link batch is validated and ready to continue with Instructions-For-Codex item 7."
+    },
     {
       "lane": "dr20-hq-killed-score-crosslinks",
       "owner": "Codex",
