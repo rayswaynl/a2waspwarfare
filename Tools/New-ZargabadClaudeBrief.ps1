@@ -102,6 +102,7 @@ $brief.Add("- Population/SP-SV placement screenshot filenames plus useful coordi
 $brief.Add("- Key visual row screenshot filenames plus useful coordinates for base sightlines/statics, wall origin/gaps, town-defense blocking, priority defense arcs, rim abuse, pathing, and economy/factory observations.")
 $brief.Add("- If screenshot filenames are used, put real PNG/JPEG files in `.\zargabad-evidence`; Codex validates image signatures with `-EvidenceRoot`.")
 $brief.Add("- Clear `PASS`, `FAIL`, or `UNCERTAIN` verdicts for each row in the report's Claude Notes table; `PASS` rows must include row-specific evidence, not blank notes: coordinates or screenshot filenames for spatial checks, RPT excerpts or runtime values for balance/init/feature checks.")
+$brief.Add("- Every `PASS` row must also include an explicit Codex action recommendation using one of: keep, tune, revert, investigate, patch, or retest.")
 $brief.Add("")
 $brief.Add("## Dirty Local State Warning")
 if ($dirtyFiles.Count -eq 0) {

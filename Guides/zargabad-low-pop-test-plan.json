@@ -175,7 +175,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/New-ZargabadClaudeBrief.ps1 generates a fresh Codex-to-Claude packet after each commit or material change, including latest commit/PR head, coordination cadence, changed files, inferred retest focus, required runtime commands, dirty local state warning, and the Codex stop/go rule. It also tells Claude which runtime gates should trigger status updates, including population/SP-SV placement, asks for screenshot filenames plus coordinates on key visual rows, and tells Codex to treat RPT/screenshot/coordinate/repro-backed findings as actionable."
+      "summary": "Tools/New-ZargabadClaudeBrief.ps1 generates a fresh Codex-to-Claude packet after each commit or material change, including latest commit/PR head, coordination cadence, changed files, inferred retest focus, required runtime commands, dirty local state warning, and the Codex stop/go rule. It also tells Claude which runtime gates should trigger status updates, including population/SP-SV placement, asks for screenshot filenames plus coordinates on key visual rows, requires PASS rows to include keep/tune/revert/investigate/patch/retest Codex action recommendations, and tells Codex to treat RPT/screenshot/coordinate/repro-backed findings as actionable."
     },
     {
       "type": "source-audit",

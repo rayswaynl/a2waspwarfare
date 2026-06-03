@@ -797,6 +797,7 @@ Assert-True "Claude brief tool points to runtime report validator" ($claudeBrief
 Assert-True "Claude brief tool requires real screenshot files" ($claudeBriefSource -match 'real PNG/JPEG files' -and $claudeBriefSource -match 'validates image signatures')
 Assert-True "Claude brief tool requests population placement evidence" ($claudeBriefSource -match 'Population/SP-SV placement screenshot filenames plus useful coordinates' -and $claudeBriefSource -match 'low-density farm/outskirt routes')
 Assert-True "Claude brief tool requests key visual screenshots" ($claudeBriefSource -match 'Key visual row screenshot filenames plus useful coordinates' -and $claudeBriefSource -match 'priority defense arcs')
+Assert-True "Claude brief tool requires Codex action recommendations" ($claudeBriefSource -match 'Every `PASS` row must also include an explicit Codex action recommendation' -and $claudeBriefSource -match 'keep, tune, revert, investigate, patch, or retest')
 
 $takistanZargabadModule = Resolve-RepoPath "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/Zargabad"
 Assert-True "Takistan has no generated Zargabad module spillover" (-not (Test-Path -LiteralPath $takistanZargabadModule))
