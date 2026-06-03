@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-03T19:10:00+0200 - Codex - upstream-developer-lessons-and-history-deep-pass
+
+- Re-ran upstream history research further back into 2018-2024, including oldest `upstream/master` commits, old remote branch inventory and representative file-level deltas.
+- Added deep-history addenda to [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) and [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel).
+- New confirmed patterns: 2018 import/balance baseline is not design proof; 2022 AntiStack/RequestJoin semantics were fragile; 2023 side-supply/PVEH migration hit payload wrapping and array-index fixes; Task System removal was intentional and terrain-wide; A3 syntax entered OA code and had to be fixed; copy/paste/generator/version.sqf debt caused map-load failures; LLM/GPT output needed source correction; construction dedupe was reverted; Tasmania is removed negative knowledge.
+- Updated Feature Status, AI Assistant Guide, Progress Dashboard and agent JSONL records with older-history risk routing.
+- Documentation only; no gameplay code changed.
+
 ## 2026-06-03T18:40:00+0200 - Codex - upstream-developer-lessons-and-history
 
 - Researched `Miksuu/a2waspwarfare` upstream `master` through `8bcc42b1`, GitHub PRs #1-#12, branch list, merge/revert commits and file-level commit clusters.
@@ -1591,3 +1599,8 @@ Key conclusions:
 - Completed `networking-publicvariable-atlas`: rebuilt source-backed `[public variable]` docs and authority map (sender/receiver/payload/owner/JIP/race risk) across `Public-Variable-Channel-Index`, `Networking-And-Public-Variables`, and `AI-Assistant-Guide`; added hardening candidates to `Feature-Status-Register`.
 - Added lane bookkeeping so `networking-publicvariable-atlas` appears in `Progress-Dashboard` as verified and logged in agent machine JSONL files.
 - Prepared validation packet for docs consistency and ran `/Tools/ValidateWiki.ps1` at the end of the lane.
+
+## 2026-06-03T20:05:00+02:00 - Codex - upstream developer-history agent-team sweep
+- Ran a five-agent read-only research fleet over old `Miksuu/a2waspwarfare` refs: early map/tooling, AntiStack/DB/join, UI/JIP/client, construction/runtime/removal, and branch/PR negative knowledge.
+- Integrated confirmed lessons into [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons), [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel), [Feature status register](Feature-Status-Register), [AI Assistant Guide](AI-Assistant-Guide), and [Supply mission authority cleanup playbook](Supply-Mission-Authority-Cleanup-Playbook).
+- Added machine-readable JSONL records for branch tombstones/reverted PRs, client lifecycle/marker risk, and construction/runtime removal risk. No gameplay source files changed.

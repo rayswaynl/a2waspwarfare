@@ -4,7 +4,7 @@ This is the implementation handoff for the `supply-mission-authority-cleanup` la
 
 Scope: patch source Chernarus first, then propagate generated missions with `Tools/LoadoutManager`. Paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
-Upstream-history companion: [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) documents the PR #10 -> #11 -> #12 supply-run sequence: remote activation exploit fix, too-far feedback, then JIP notification regression fix. Keep that sequence in mind when changing supply mission start/reward behavior.
+Upstream-history companion: [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) documents the PR #10 -> #11 -> #12 supply-run sequence: remote activation exploit fix, too-far feedback, then JIP notification regression fix. The deeper history pass also found supply-performance reverts (`7bc4b7ac` -> `3c2efb8a`, `008ac5aa` -> `33fb2676`) where server-side optimization used the wrong object context. Keep both sequences in mind when changing supply mission start/reward behavior.
 
 > **✅ UPDATE 2026-06-03 (Claude): several items below are now DONE** (release `4cf443fe`): (1) cooldown casing standardized on `LastSupplyMissionRun` — `Init_Town.sqf` now seeds the correct key (XR4 / DR-18); (2) dead twin `supplyMissionActive.sqf` **removed** (plus `checkCCProximity.sqf`); (3) the command-center scan is **already narrowed** (class-filtered + heli 400 m / truck 80 m + heli 2D gate, `supplyMissionStarted.sqf:48-56`); (4) `SupplyByHeli` is now **cleared on completion** (XR3). **Still open:** server-owned mission state, `Killed`-handler idempotency, duplicate-start guard (XR6), server-side cargo validation, friendly-side check on the delivery CC (XR15).
 
@@ -36,6 +36,8 @@ Upstream-history companion: [Developer history and upstream lessons](Developer-H
 | Duplicate starts are not explicitly guarded. | Start and tracking scripts can be reached again for a reused/rapidly reloaded vehicle. | Parallel loops and repeated handlers can appear without server-owned state. |
 | Cooldown key casing is inconsistent. | ✅ FIXED 2026-06-03 (release `4cf443fe`): `Init_Town.sqf` now seeds `LastSupplyMissionRun` to match the server read/write key. | Was: town init seeded lowercase `lastSupplyMissionRun` so the first cooldown check read nil. |
 | Start flow races the cooldown response. | Client requests cooldown and immediately reads local cache. | Keep JIP pull model, but make server start the authority decision. |
+| Older performance attempts regressed authority context. | `7bc4b7ac` reverted by `3c2efb8a`; `008ac5aa` reverted by `33fb2676`; upstream history notes server supply logic checking `getPos player` rather than the truck position. | Performance changes must use authoritative mission objects and dedicated-server/JIP smoke, not implicit client globals. |
+| Client notification/action guards have JIP history. | PR #12 / `b76f9645` fixed a "too far" notification firing during JIP/non-truck contexts. | Snapshot `cursorTarget`, type-check before distance messages and gate feedback on actual player action. |
 | Command-center scan is broader than needed. | Current source still scans all classes in 80m, then filters `Base_WarfareBUAVterminal`; the 8m nearby-player/object scan remains intentionally broad. | Low-risk performance cleanup remains open. |
 | `supplyMissionActive.sqf` is a dead twin. | Compiled in server init, but no static caller found. | Future owners should not patch the wrong script as the live path. |
 

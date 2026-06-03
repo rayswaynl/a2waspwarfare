@@ -66,6 +66,10 @@ Use this checklist before adding a new networking channel:
 - Treat closed PRs, reverted commits and old branch families as negative knowledge until current-source testing proves they are safe to revive.
 - For supply, attack-wave, town-AI, marker and JIP work, read [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) before proposing code. Those systems have repeated exploit, lifecycle, locality or performance follow-up fixes in Miksuu history.
 - If citing an upstream lesson, include a PR number, commit hash, file path or short commit/PR wording, and label the confidence as confirmed, likely or speculative.
+- For older upstream history, watch especially for `version.sqf` generation/copy debt, A3 syntax contamination, AntiStack RequestJoin/DB type assumptions, removed task-system code, and LLM/GPT-generated guide or code guesses. The deep-history addendum on [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) records concrete commits for each.
+- When reading old branches, classify the branch family before trusting it: `oldMasterBranch` and `RevertedTo2018Version` are archaeology, `A3_*` is concept-only for OA, `Debug`/`Test` branches are probes, and AntiStack branches are generation-specific.
+- Do not revive merged PR or branch code just because it merged once. Check later reverts such as HQ repair pricing (`346e3be8`), cheaper nukes (`31d8a06d`), bomb/debug work (`f10d5bd9`, `8d74c332`) and task/guerilla removals before writing implementation guidance.
+- For UI, marker, JIP and performance helpers, preserve lifecycle contracts first: `clientInitComplete` placement, side-visible marker APIs, moving-marker position refresh, map-open FPS gating and public-variable payload shape all have old regression history.
 
 ## missionNamespace, player lifecycle, and JIP guidance
 

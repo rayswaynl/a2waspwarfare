@@ -81,3 +81,93 @@ Research snapshot: upstream `master` at `8bcc42b1` (2026-06-02), GitHub PRs #1-#
 - Compare reverted accelerated day/night commits with the later hybrid day/night synchronization line to capture the exact failure mode.
 - Inspect RPT/server notes, if available, for why `Marty_repair_camp_menu` was reverted.
 - Build a branch-family index for high-value unmerged branches only after an owner asks to revive one.
+
+## Deep History Addendum: Older Commit Clusters
+
+### Branch Family Taxonomy From Agent-Team Sweep
+
+| Branch family | Interpretation | Developer rule |
+| --- | --- | --- |
+| `v*`, `dev_*`, `test*` | Dated integration snapshots and live-test staging. | Use for chronology, not as proof that a feature survived. |
+| `oldMasterBranch`, `RevertedTo2018Version` | Tombstone/rollback archaeology; `oldMasterBranch` tip `3a7972a2` deletes old master contents, and `RevertedTo2018Version` tip `44abda43` is a test commit. | Never diff these as current gameplay baselines. |
+| `0=1_*`, `A3_*`, `a3*` | Arma 3 / external port experiments; later `83298186` removed `A3missionTest`. | Mine concepts only; reject A3 syntax unless OA-compatible. |
+| `AntiStack*` | Multiple enforcement, monitoring, removal and reintroduction generations. | Identify generation and rollout mode before copying code. |
+| `*_Debug`, `*Testing`, `*WIP`, `*_V999` | Diagnostics or live-test probes. | Preserve intent in docs; strip logs/test values before release. |
+| `LoadoutManager*`, `AirRework*`, `Bomb*`, `Maverick*` | Generated aircraft/loadout/missile experiments with reversions. | Regenerate from tool inputs and in-engine test aircraft behavior. |
+| `Marty_*` | Newer active upstream feature line. | Treat as stronger current-intent evidence than abandoned 2023-2024 branches, but still verify later reverts. |
+| PR branches `MergeToEzcooV3`, `MergeWithMiksuu`, `SupplyRunGlitchFix` | Pull-request lineage; some merged PRs later reverted. | Check PR status plus later revert commits before reviving ideas. |
+
+### 2018 Import And Baseline Edits
+
+| Evidence | Files / area | Finding |
+| --- | --- | --- |
+| `558537c3`, `bb9cd85e`, `f7bc288c` | initial repo and map imports | Early history is an import baseline, not clean greenfield design. |
+| `6e120ebf`, `b66d2681`, `423ce4b6`, `b94e68e6` | ICBM, supply limit, LF upgrade cost, unit tier changes | Balance and config changed immediately after import. Treat early constants as historical defaults, not fixed doctrine. |
+
+### 2022 AntiStack / Join Rewrite
+
+| Evidence | Files / area | Finding |
+| --- | --- | --- |
+| `09131233` | `Server/Module/AntiStack/clientHasConnectedAtLaunch.sqf` | A command typo broke AntiStack launch detection early. |
+| `841d16af` | launch-state variable | `CONNECTED_AT_LAUNCH` changed from bool to player side, proving the variable carried more state than its name implied. |
+| `88a2ef49`, `8bf294ac` | `Server/PVFunctions/RequestJoin.sqf`, teamswap | RequestJoin semantics and teamswap special cases needed follow-up fixes. |
+| `448b1d85` | `Server/Module/AntiStack/callDatabaseRetrieve.sqf` | DB crash came from string/integer type mismatch. |
+| `b32babc7`, `6f1d7af5` | AntiStackV6, monitoring mode | New AntiStack variants could be reverted or run monitoring-only for debug. |
+| `2624e943`, `6b34b46d` | mission parameter, `RequestJoin.sqf` | Disabling AntiStack initially disabled too much; teamswap protection had to remain active. |
+| `fc55456c`, `b69b901e`, `8b1e220b`, `8b8ea8e7` | `Server_OnPlayerDisconnected.sqf`, `callDatabaseStoreSide.sqf` | Disconnect score/side cleanup feeds future AntiStack team totals. |
+| `5ba16fce`, `4f9c21d7`, `931ad04a` | `getTeamScore*.sqf`, `compareTeamScores.sqf`, `RequestJoin.sqf` | DB load and duplicate score retrieval became join-time gameplay risks. |
+| `92a5ae70`, `3a852dff`, `5bae9665`, `6acf3c62`, `e9a1a6c3` | Takistan AntiStack files | AntiStack fixes repeatedly needed later Takistan propagation. |
+
+### 2023 Supply / PVEH / RHUD Iteration
+
+| Evidence | Files / area | Finding |
+| --- | --- | --- |
+| `680f4191`, `8036db59` | `Common_ChangeSideSupply.sqf`, `Server_ChangeSideSupply.sqf`, `Client_ReceiveSupplyValue.sqf` | Side-supply updates moved toward server-side handling. |
+| `33143928`, `591a217f`, `17b5fb6e` | supply PVEH request/receive files | publicVariable payload wrapping and array-index mistakes caused immediate fixes. |
+| `6cf271a4`, `c45a1c61` | `Client_UpdateRHUD.sqf` | RHUD needed OA-specific boolean/timing workarounds. |
+| `33fb2676`, `58171f5e`, `3c2efb8a` | `Server/Module/supplyMission/supplyMissionStarted.sqf` | Supply performance attempts were reverted multiple times before later safer fixes. |
+| `3ff02aea` | `Client/Init/Init_Client.sqf` | `clientInitComplete` had to move to the real end of client init after a merge lost the fix. |
+| `c6d2539e`, `5b056013`, `5de4d1a2` | buy-units UI, gear templates, CoIn UI | Client UI bugs clustered around shared globals, unguarded namespace lookups, and nil/null confusion. |
+| `9795f317`, `a074319b`, `b7bdb70b`, `6e5b3c50`, `9c72a281`, `95a12305` | marker helpers, HQ/UAV/team markers | Marker side locality, moving-object updates and cache optimization repeatedly caused user-visible regressions. |
+| `a9044821`, `c464df8b`, `8787ad79`, `3a35748f`, `cfbbbaf0`, `b02782f1` | `CLIENT_INIT_READY`, Attack Wave PV/action flow | Client/server public-variable payload schemas and addAction parameter types repeatedly drifted. |
+
+### 2023-2024 Generated Maps, Tooling And Copy Debt
+
+| Evidence | Files / area | Finding |
+| --- | --- | --- |
+| `62279d8e`, `0c03dc88`, `abb4d812` | `.gitignore`, `version.sqf` | Generated/ignored version files are central to boot and map-specific behavior. |
+| `081c1dc4`, `c312b0ec` | modded terrain folders / mission copies | Upstream explicitly used copypasted or manually copied mission files at times. |
+| `812e9596` | Tasmania deletion plus `Tools/LoadoutManager/Data/Terrains/*` | Tasmania became a removed negative example after repeated terrain/version failures. |
+| `24bddb66`, `1e8c3025`, `50cbc72e` | `Guides/CommanderGuide/a2WarfareCommanderGuide.md` | LLM/guesswork-generated guide content needed source correction. |
+| `20eeaa3e`, `3796feb5` | `Tools/LoadoutManager/FileManagement/FileManager.cs` | LoadoutManager path logic could delete or corrupt modded map outputs. |
+| `557f8126`, `0014b9e9`, branch `versionSqfDebug` | generated `version.sqf` | Version generation had preprocessor quoting/syntax hazards. |
+| `c2be3919`, `6ae6f36d`, `d475eaff`, `73c9078d` | LoadoutManager generated SQF | Modded/vanilla generation logic was retrofitted after failed writes and reverted attempts. |
+| `6abfc286`, `359b0cbf` | `Tools/LoadoutManager/bin/*` | Tool upgrade accidentally committed build outputs, then removed them via gitignore cleanup. |
+| `2f6a4d32`, `980b3539` | aircraft loadouts / `Tools/LoadoutManager/Program.cs` | Generator output could overwrite hand-debugged aircraft/missile work, including GPT-generated combinations. |
+
+### Removed Or Reverted Systems
+
+| Evidence | Files / area | Finding |
+| --- | --- | --- |
+| `f61f7222`, `4881e0d5` | `Client_TaskSystem.sqf`, `Init_Client.sqf`, `TownCaptured.sqf` across terrains | Task system was intentionally removed and propagated. |
+| `16856ae7`, `8b7fab95` | guerilla barracks code | Guerilla operating barracks were fully removed, not merely hidden. |
+| `77a07bc0` | `Construction_MediumSite.sqf`, `Construction_SmallSite.sqf`, `RequestStructure.sqf` | Construction duplicate-code refactor was reverted. |
+| `31d8a06d` | `GUI_Menu_Tactical.sqf` across maps | Cheaper nuke experiment was explicitly reverted. |
+| `6ba2344d` | `UAV_MarkerFix` merge | UAV marker fix branch was reverted after merge; later current behavior needs source re-check. |
+| PR #3, `346e3be8` | `Action_RepairMHQ.sqf`, `Init_CommonConstants.sqf`, `stringtable.xml` | Merged HQ repair price work was later reverted, proving merge status alone is insufficient. |
+| PR #9 | endgame music branch | Endgame music was closed unmerged against `v16102023`. |
+| `f10d5bd9`, `8d74c332` | bomb restriction/debug branches, `Common_HandleIncomingMissile.sqf` | Bomb limiter/debug work was reverted and needs in-engine aircraft testing before revival. |
+| `f67f0399`, `c23ba233`, `afe91fb6` | `Construction_StationaryDefense.sqf` | Broad nil guards for repair-truck defense construction suppressed enough behavior to be reverted. |
+| `46f0a301`, `3a0b13f8` | `Server/Init/Init_Defenses.sqf` | Commenting array elements for factory walls caused syntax/runtime failure. |
+| `4e6d585f`, `79680595`, `f17445c1` | `Server_BuildingKilled.sqf`, `Server_OnHQKilled.sqf` | Factory-kill score work needed immediate syntax and teamkill-scope fixes. |
+
+### Compatibility And UI Locality
+
+| Evidence | Files / area | Finding |
+| --- | --- | --- |
+| `2a62eaa0` | `Construction_StationaryDefense.sqf` | A3 `createGroup` syntax caused runtime error in OA mission code. |
+| `95a12305` | `Client/Module/UAV/uav_interface_oa.sqf` across maps | UAV marker messaging leaked to global chat and was moved to a marker helper. |
+| `7e3b9f4c`, `6eb1cbfa` | `Client/FSM/updateclient.sqf`, FPS optimizer UI | Client FPS optimizer interacted badly with map-open state and needed tooltip correction. |
+| `83298186` | `A3missionTest` deletion | Large A3 imported test tree was later removed; A3 branches are concept-only for OA docs. |
+| `a388f073`, `00791850`, `3c6a70c3`, `7e3b9f4c` | view-distance automation | FPS control loops learned the wrong state while the map was open. |
+| `b76f9645`, PR #12 | supply truck JIP notification | Client action/notification logic can run during JIP without a real player action. |
