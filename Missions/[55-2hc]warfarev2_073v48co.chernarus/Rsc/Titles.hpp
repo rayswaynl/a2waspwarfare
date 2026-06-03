@@ -175,6 +175,9 @@ class RscTitles {
 		"OptionsIcon11", "OptionsIcon12", "OptionsIcon13", "OptionsIcon14", "OptionsIcon15", "OptionsIcon16", "OptionsIcon17"};
 		controlsBackground[] = {};
 
+		class RUBHUD_ValueBase : RscText {
+			font = "EtelkaMonospacePro";
+		};
 		class RUBHUD_Background : RscText {
 			idc = 1345;
 			x = 0.882604 * safezoneW + safezoneX;
@@ -195,7 +198,7 @@ class RscTitles {
 			sizeEx = 0.030;
 		};
 
-		class RUBHUD_Health_Value : RscText
+		class RUBHUD_Health_Value : RUBHUD_ValueBase
 		{
 			idc = 1347;
 			text = "";
@@ -217,7 +220,7 @@ class RscTitles {
 			colorText[] = {1,1,1,1};
 		};
 
-		class RUBHUD_Uptime_Value: RscText {
+		class RUBHUD_Uptime_Value : RUBHUD_ValueBase {
 			idc = 1349;
 			text = "";
 			x = 0.925958 * safezoneW + safezoneX;
@@ -239,7 +242,7 @@ class RscTitles {
 			colorText[] = {1,1,1,1};
 		};
 
-		class RUBHUD_Commander_Value: RscText {
+		class RUBHUD_Commander_Value : RUBHUD_ValueBase {
 			idc = 1351;
 			text = "";
 			x = 0.921958 * safezoneW + safezoneX;
@@ -261,7 +264,7 @@ class RscTitles {
 			colorText[] = {1,1,1,1};
 		};
 
-		class RUBHUD_AICOUNT_Value: RscText {
+		class RUBHUD_AICOUNT_Value : RUBHUD_ValueBase {
 			idc = 1353;
 			text = "";
 			x = 0.925958 * safezoneW + safezoneX;
@@ -283,7 +286,7 @@ class RscTitles {
 			colorText[] = {1,1,1,1};
 		};
 
-		class RUBHUD_Money_Value: RscText {
+		class RUBHUD_Money_Value : RUBHUD_ValueBase {
 			idc = 1355;
 			text = "";
 			x = 0.925958 * safezoneW + safezoneX;
@@ -305,7 +308,7 @@ class RscTitles {
 			colorText[] = {1,1,1,1};
 		};
 
-		class RUBHUD_Income_Value: RscText {
+		class RUBHUD_Income_Value : RUBHUD_ValueBase {
 			idc = 1357;
 			text = "";
 			x = 0.925958 * safezoneW + safezoneX;
@@ -327,7 +330,7 @@ class RscTitles {
 			colorText[] = {1,1,1,1};
 		};
 
-		class RUBHUD_Supply_Value: RscText {
+		class RUBHUD_Supply_Value : RUBHUD_ValueBase {
 			idc = 1359;
 			text = "";
 			x = 0.925958 * safezoneW + safezoneX;
@@ -349,7 +352,7 @@ class RscTitles {
 			colorText[] = {1,1,1,1};
 		};
 
-		class RUBHUD_SupplyMin_Value: RscText {
+		class RUBHUD_SupplyMin_Value : RUBHUD_ValueBase {
 			idc = 1361;
 			text = "";
 			x = 0.925958 * safezoneW + safezoneX;
@@ -371,7 +374,7 @@ class RscTitles {
 			colorText[] = {1,1,1,1};
 		};
 
-		class RUBHUD_City_Value: RscText {
+		class RUBHUD_City_Value : RUBHUD_ValueBase {
 			idc = 1363;
 			text = "";
 			x = 0.925958 * safezoneW + safezoneX;
@@ -393,7 +396,7 @@ class RscTitles {
 			colorText[] = {1,1,1,1};
 		}
 
-		class RUBHUD_FPS_Client_Value: RscText {
+		class RUBHUD_FPS_Client_Value : RUBHUD_ValueBase {
 			idc = 1365;
 			text = "";
 			x = 0.925958 * safezoneW + safezoneX;
@@ -415,7 +418,7 @@ class RscTitles {
 			colorText[] = {1,1,1,1};
 		}
 
-		class RUBHUD_FPS_Server_Value: RscText {
+		class RUBHUD_FPS_Server_Value : RUBHUD_ValueBase {
 			idc = 1367;
 			text = "";
 			x = 0.925958 * safezoneW + safezoneX;
