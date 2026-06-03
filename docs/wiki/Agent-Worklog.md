@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: ICBM Authority Wording Recheck
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 20 as a stale handoff after source and page recheck.
+- Verified the current [ICBM authority playbook](ICBM-Authority-Playbook) already avoids implying server validation exists. It says Tactical-menu checks are local affordances only and lists the missing server commander, upgrade, funds, cooldown, target-shape, range and side/ownership checks.
+- Source evidence remains `Server/Functions/Server_HandleSpecial.sqf:97-111`: the `"ICBM"` case accepts `_side`, `_base`, `_target` and `_playerTeam` from the payload, only guards null/dead `_target`, waits on `_target` death/null and then spawns `NukeDammage` from `_base`.
+- Scope remained docs-only; no gameplay source files were edited. Next queue item is [Instructions for Codex](Instructions-For-Codex) item 21: [Function and module index](Function-And-Module-Index) Reaktiv/family-summary drift.
+
 ## 2026-06-03 - Codex Documentation Finisher: Sidebar HC Delegation De-Dupe
 
 - Claimed [Instructions for Codex](Instructions-For-Codex) item 11.

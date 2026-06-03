@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T12:05:00+02:00",
+  "generatedAt": "2026-06-03T12:10:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published Instructions-For-Codex item 19: supply mission docs now separate master truck flow from current PR #1 supply-heli branch state, including the guarded interdiction handler and current supply class constants.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 20: ICBM authority playbook normative/factual wording."
+      "currentWork": "Closed Instructions-For-Codex item 20 as an already-correct stale handoff: the ICBM authority playbook already says Tactical-menu checks are local affordances and that Server_HandleSpecial.sqf lacks DR-27 server validation.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 21: Function-And-Module-Index Reaktiv and family-summary drift."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "icbm-authority-wording-recheck",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 20 is resolved as a stale handoff: ICBM-Authority-Playbook.md already frames client Tactical-menu checks as local affordances and documents the live Server_HandleSpecial.sqf:97-111 DR-27 authority gap without implying server validation exists."
+    },
     {
       "lane": "supply-pr1-master-scoping-recheck",
       "owner": "Codex",
