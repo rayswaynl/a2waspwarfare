@@ -66,7 +66,7 @@
     "Inspect the WDDM-compatible central H-barrier wall around 3425,3375 and confirm the pass-through gaps preserve normal infantry, light armor and AI movement.",
     "Drive a ground vehicle into the outer Zargabad rim away from starts/towns/camps/airport and confirm Zargabad_EdgeGuard removes it after the configured timeout, while aircraft and objective-near ground fights are ignored.",
     "Probe the seven intended north/east edge-safe bubbles near starts/objectives and confirm they allow legitimate objective fights without becoming broad safe hill-camping corridors.",
-    "Verify WEST/EAST Zargabad fortifications and statics spawn, are side-owned, manned, and do not block commander construction in normal base flow.",
+    "Verify WEST/EAST Zargabad fortifications and statics spawn, are side-owned, manned, match runtime baseFootprint [35,45,74,78], and do not block commander construction in normal base flow.",
     "Compare the RPT baseStaticTemplates line and Init_Zargabad base static runtime positions line with screenshots/coordinates for spawned WEST/EAST base statics and flag mismatched classes, bad arcs, bad facing, unmanned statics, or blocked commander movement.",
     "Wake city, airfield and one outer farm with ground units; confirm town AI and static defenses activate, face useful approaches after the Zargabad orientation pass, fight, and clean up after inactivity.",
     "Capture camps and then a town from both WEST and EAST; confirm camp/town SV drains, resets on capture, and income ticks reflect ownership.",
@@ -171,7 +171,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Init_Zargabad stores exact WEST/EAST base static templates in missionNamespace and now logs actual spawned static positions/facing. Zargabad_RuntimeAudit logs the templates so Claude can compare RPT evidence against screenshots, firing arcs, manning, and commander construction space."
+      "summary": "Init_Zargabad stores exact WEST/EAST base static templates in missionNamespace and now logs actual spawned static positions/facing. Zargabad_RuntimeAudit logs the templates plus baseFootprint [35,45,74,78] so Claude can compare RPT evidence against screenshots, firing arcs, manning, and commander construction space."
     },
     {
       "type": "source-audit",

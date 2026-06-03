@@ -80,7 +80,7 @@ $gates = @(
 	[ordered]@{ Name = "Town defense orientation"; Pattern = 'Init_Zargabad\.sqf: Oriented \[33\] town defense logics toward linked town centers'; Required = $true },
 	[ordered]@{ Name = "Edge guard init"; Pattern = 'Zargabad_EdgeGuard\.sqf: outer \[[0-9]+\]m rim timeout \[[0-9]+\]s safe range \[[0-9]+\]m'; Required = $true },
 	[ordered]@{ Name = "Runtime count/SV audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: towns \[13\] camps \[19\] airports \[1\] defenses \[33\] startSV \[185\] maxSV \[648\]'; Required = $true },
-	[ordered]@{ Name = "Runtime base/fortification audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: bases WEST .* EAST .* distance \[[0-9]+\] westStatic \[4\] eastStatic \[4\] baseWalls \[13\] centralWallPieces \[60\] centralWallCrewed \[0\].*centralWallGaps .*4053.*2725.*3789.*2998.*3504.*3293.*3195.*3613.*2903.*3915'; Required = $true },
+	[ordered]@{ Name = "Runtime base/fortification audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: bases WEST .* EAST .* distance \[[0-9]+\] westStatic \[4\] eastStatic \[4\] baseWalls \[13\] baseFootprint \[35,45,74,78\] centralWallPieces \[60\] centralWallCrewed \[0\].*centralWallGaps .*4053.*2725.*3789.*2998.*3504.*3293.*3195.*3613.*2903.*3915'; Required = $true },
 	[ordered]@{ Name = "Runtime base static template audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: baseStaticTemplates WEST .*M2StaticMG_US_EP1.*TOW_TriPod_US_EP1.*Stinger_Pod_US_EP1.* EAST .*KORD_high_TK_EP1.*Metis_TK_EP1.*Igla_AA_pod_TK_EP1'; Required = $true },
 	[ordered]@{ Name = "Base static runtime positions"; Pattern = 'Init_Zargabad\.sqf: Base static runtime positions WEST .*M2StaticMG_US_EP1.*TOW_TriPod_US_EP1.*Stinger_Pod_US_EP1.* EAST .*KORD_high_TK_EP1.*Metis_TK_EP1.*Igla_AA_pod_TK_EP1'; Required = $true },
 	[ordered]@{ Name = "Runtime factory audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: factoryCounts WEST L/H/A/AP \[[0-9]+,3,7,2\] EAST L/H/A/AP \[[0-9]+,4,3,3\] forbiddenNormal \[\]'; Required = $true },
@@ -152,7 +152,7 @@ $report.Add("| --- | --- | --- |")
 $report.Add("| Hosted/dedicated context | UNCERTAIN |  |")
 $report.Add("| Map audit packet attached | UNCERTAIN | Include `zargabad-map-audit.md` when reporting coordinates, screenshots, pathing, or sightline findings. |")
 $report.Add("| Base safety and spawn sightlines | UNCERTAIN |  |")
-$report.Add("| Base static runtime positions and arcs | UNCERTAIN | Compare the Init_Zargabad base static runtime positions line against screenshots/coordinates, manning, usable arcs, and commander construction space. |")
+$report.Add("| Base static runtime positions and arcs | UNCERTAIN | Compare the Init_Zargabad base static runtime positions line plus runtime baseFootprint [35,45,74,78] against screenshots/coordinates, manning, usable arcs, and commander construction space. |")
 $report.Add("| Base-axis midpoint and wall origin | UNCERTAIN | Check `3425,3375` from both default starts and back toward both starts. |")
 $report.Add("| Central wall gaps and pathing | UNCERTAIN | Test `4053,2725`, `3789,2998`, `3504,3293`, `3195,3613`, and `2903,3915`. |")
 $report.Add("| Side hills and rim behavior | UNCERTAIN | Reference edge-safe rows from the map audit packet when reporting legal objective fights vs rim abuse. |")

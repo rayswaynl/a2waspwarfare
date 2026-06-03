@@ -49,7 +49,7 @@ $focus = New-Object System.Collections.Generic.List[string]
 if ($changedFiles -match 'Zargabad_BlackMarket|New-ZargabadRuntimeReport|Validate-ZargabadRuntimeEvidence|Validate-ZargabadRuntimeReport|Zargabad-Claude-Runtime-Handoff|zargabad-low-pop-test-plan|New-ZargabadClaudeBrief') { $focus.Add("Mystery feature: confirm the armed RPT line after town init, then own Zargabad Airfield and confirm cache surfacing and cleanup-release RPT lines.") }
 if ($changedFiles -match 'Zargabad_EdgeGuard|Init_Boundaries|edge') { $focus.Add("Side hills/rim: retest outer-rim removal, aircraft exemption, and objective-near safe bubbles.") }
 if ($changedFiles -match 'Init_Zargabad|Zargabad_RuntimeAudit|mission\.sqm|New-ZargabadMapAuditPacket|Validate-ZargabadMission|Zargabad-Low-Pop-Release-Audit|zargabad-low-pop-test-plan|New-ZargabadClaudeBrief') { $focus.Add("Map/runtime init: retest fortifications, central wall gaps, uncrewed central-wall evidence, town-defense orientation, and runtime audit lines.") }
-if ($changedFiles -match 'Init_Zargabad|New-ZargabadRuntimeReport|Validate-ZargabadRuntimeEvidence|New-ZargabadClaudeBrief|Validate-ZargabadMission') { $focus.Add("Base statics: compare the Init_Zargabad base static runtime positions line against screenshots/coordinates for facing, manning, arcs, and commander construction space.") }
+if ($changedFiles -match 'Init_Zargabad|New-ZargabadRuntimeReport|Validate-ZargabadRuntimeEvidence|New-ZargabadClaudeBrief|Validate-ZargabadMission') { $focus.Add("Base statics: compare the Init_Zargabad base static runtime positions line and baseFootprint evidence against screenshots/coordinates for facing, manning, arcs, and commander construction space.") }
 if ($changedFiles -match 'mission\.sqm|Validate-ZargabadMission|New-ZargabadMapAuditPacket|Zargabad-Low-Pop-Release-Audit|zargabad-low-pop-test-plan') { $focus.Add("Town defenses: retest priority defense mix arcs at city, airfield, North/South District, Northwest Base and Rahim Villa using map-audit defense rows.") }
 if ($changedFiles -match 'Init_Common|CommonConstants|Balance|Units_|Vehicles|LoadoutManager|Zargabad_RuntimeAudit|Validate-ZargabadMission') { $focus.Add("Balance/economy: retest factory lists, price multipliers, caps, ranges, and 5v5-style snowball feel.") }
 if ($changedFiles -match 'Validate-ZargabadRuntimeEvidence|New-ZargabadRuntimeReport') { $focus.Add("RPT tooling: rerun runtime validator/report with the same required switches as the pass being tested.") }
@@ -95,7 +95,7 @@ $brief.Add("")
 $brief.Add("- Map audit markdown from `Tools/New-ZargabadMapAuditPacket.ps1` when placement, pathing, sightline, or defense-coordinate notes are involved.")
 $brief.Add("- Runtime report markdown from `Tools/New-ZargabadRuntimeReport.ps1`.")
 $brief.Add("- RPT paths and exact excerpts for any failing or uncertain validator gate.")
-$brief.Add("- The `Init_Zargabad.sqf: Base static runtime positions WEST ... EAST ...` excerpt when base safety, spawn sightlines, or commander construction space are being judged.")
+$brief.Add("- The `Init_Zargabad.sqf: Base static runtime positions WEST ... EAST ...` excerpt and ``baseFootprint [35,45,74,78]`` runtime audit evidence when base safety, spawn sightlines, or commander construction space are being judged.")
 $brief.Add("- Screenshot filenames or map coordinates for base sightlines, central-wall gaps, rim abuse, defense arcs, pathing, and economy/factory observations.")
 $brief.Add("- Clear `PASS`, `FAIL`, or `UNCERTAIN` verdicts for each row in the report's Claude Notes table.")
 $brief.Add("")

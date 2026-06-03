@@ -12,6 +12,7 @@ _baseWalls = [
 	["Land_HBarrier_large",[-70,-25,0],90]
 ];
 missionNamespace setVariable ["WFBE_ZARGABAD_BASE_WALL_COUNT", count _baseWalls];
+missionNamespace setVariable ["WFBE_ZARGABAD_BASE_FORTIFICATION_FOOTPRINT", [35,45,74,78]];
 
 _mgWall = missionNamespace getVariable ["WFBE_NEURODEF_MG", []];
 _centralWall = [];

@@ -35,14 +35,14 @@ _eastBasePos = missionNamespace getVariable ["WFBE_ZARGABAD_BASE_POS_EAST", [0,0
 _centralWallGaps = missionNamespace getVariable ["WFBE_ZARGABAD_CENTRAL_WALL_GAPS", []];
 
 ["INFORMATION", Format [
-	"Zargabad_RuntimeAudit.sqf: bases WEST %1 EAST %2 distance [%3] westStatic [%4] eastStatic [%5] baseWalls [%6] centralWallPieces [%7] centralWallCrewed [%8] centralWallOrigin [3425,3375] centralWallDir [316] centralWallGaps %9.",
+	"Zargabad_RuntimeAudit.sqf: bases WEST %1 EAST %2 distance [%3] westStatic [%4] eastStatic [%5] baseWalls [%6] baseFootprint %7 centralWallPieces [%8] centralWallCrewed [%9] centralWallOrigin [3425,3375] centralWallDir [316] centralWallGaps %10.",
 	_westBasePos,
 	_eastBasePos,
 	round (_westBasePos distance _eastBasePos),
 	missionNamespace getVariable ["WFBE_ZARGABAD_BASE_STATIC_COUNT_WEST", -1],
 	missionNamespace getVariable ["WFBE_ZARGABAD_BASE_STATIC_COUNT_EAST", -1],
 	missionNamespace getVariable ["WFBE_ZARGABAD_BASE_WALL_COUNT", -1],
-	count (missionNamespace getVariable ["WFBE_ZARGABAD_CENTRAL_WALL", []]),
+	missionNamespace getVariable ["WFBE_ZARGABAD_BASE_FORTIFICATION_FOOTPRINT", []], count (missionNamespace getVariable ["WFBE_ZARGABAD_CENTRAL_WALL", []]),
 	missionNamespace getVariable ["WFBE_ZARGABAD_CENTRAL_WALL_CREWED_COUNT", -1],
 	_centralWallGaps
 ]] Call WFBE_CO_FNC_LogContent;

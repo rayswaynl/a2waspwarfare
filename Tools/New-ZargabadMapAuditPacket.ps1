@@ -166,6 +166,7 @@ if ($westStart.Count -gt 0 -and $eastStart.Count -gt 0) {
 	$report.Add("- WEST default start: ``$(Get-PositionText $westStart[0])``; EAST default start: ``$(Get-PositionText $eastStart[0])``; flat distance: [$baseDistance]m.")
 	$report.Add("- Direct base-axis midpoint: ``$midX,$midY``; central wall origin: ``3425,3375``. These intentionally overlap so the wall interrupts the flat southwest-to-northeast sightline.")
 	$report.Add("- Claude should screenshot from each default start toward ``3425,3375`` and from the wall origin back toward both starts, then mark whether fortifications and terrain block trivial spawn pressure.")
+	$report.Add("- Base fortification runtime audit should report ``baseFootprint [35,45,74,78]``: commander-clear radius 35m, nearest base static 45m, H-barrier ring 74m-78m from the start logic.")
 } else {
 	$report.Add("- Default WEST/EAST starts were not found in mission.sqm.")
 }
@@ -187,6 +188,7 @@ $report.Add("")
 $report.Add("## Claude Screenshot Targets")
 $report.Add("")
 $report.Add("- WEST default start `1500,1550` and EAST default start `5350,5200`: capture spawn-to-spawn and spawn-to-city sightline notes.")
+$report.Add("- WEST/EAST base interiors: compare runtime ``baseFootprint [35,45,74,78]`` against screenshots for commander-clear space, static placement, and H-barrier cover.")
 $report.Add("- Base-axis midpoint `3425,3375`: screenshot toward both default starts and toward city routes.")
 $report.Add("- City/airfield high-value flow: `4075,3950` and `2980,5200`, including their two camp approaches.")
 $report.Add("- Central wall gap checkpoints listed above, tested with infantry, light armor and AI pathing.")
