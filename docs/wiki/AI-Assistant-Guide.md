@@ -70,6 +70,10 @@ Use this checklist before adding a new networking channel:
 - When reading old branches, classify the branch family before trusting it: `oldMasterBranch` and `RevertedTo2018Version` are archaeology, `A3_*` is concept-only for OA, `Debug`/`Test` branches are probes, and AntiStack branches are generation-specific.
 - Do not revive merged PR or branch code just because it merged once. Check later reverts such as HQ repair pricing (`346e3be8`), cheaper nukes (`31d8a06d`), bomb/debug work (`f10d5bd9`, `8d74c332`) and task/guerilla removals before writing implementation guidance.
 - For UI, marker, JIP and performance helpers, preserve lifecycle contracts first: `clientInitComplete` placement, side-visible marker APIs, moving-marker position refresh, map-open FPS gating and public-variable payload shape all have old regression history.
+- Second-wave PR research found no upstream PR comments/reviews for PR #1-#12; cite PR titles/bodies and later commit afterlife instead of inventing reviewer intent.
+- Treat release tooling as a separate risk surface: current packaging is source Chernarus plus generated Vanilla/Takistan unless modded packaging is explicitly re-enabled; LoadoutManager needs `7za`, generated `version.sqf`, sound filename contracts and terrain-specific post-copy checks.
+- For economy/ordnance work, branch names are especially dangerous: 75k nukes were live-test data, HQ repair escalation was reverted until server-owned, Mavericks-to-Spikes was not current truth, and bomb limits went through workaround/revert/re-add churn.
+- For marker blinking or HC work, prefer current default-off/conservative behavior. Per-player blinking toggles need an event-handler ownership registry; multi-HC changes need typed routing plus server update-back accounting.
 
 ## missionNamespace, player lifecycle, and JIP guidance
 

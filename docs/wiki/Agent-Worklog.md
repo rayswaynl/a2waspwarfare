@@ -1604,3 +1604,8 @@ Key conclusions:
 - Ran a five-agent read-only research fleet over old `Miksuu/a2waspwarfare` refs: early map/tooling, AntiStack/DB/join, UI/JIP/client, construction/runtime/removal, and branch/PR negative knowledge.
 - Integrated confirmed lessons into [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons), [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel), [Feature status register](Feature-Status-Register), [AI Assistant Guide](AI-Assistant-Guide), and [Supply mission authority cleanup playbook](Supply-Mission-Authority-Cleanup-Playbook).
 - Added machine-readable JSONL records for branch tombstones/reverted PRs, client lifecycle/marker risk, and construction/runtime removal risk. No gameplay source files changed.
+
+## 2026-06-03T20:45:00+02:00 - Codex - upstream developer-history second-wave deep run
+- Ran a second five-agent read-only fleet focused on PR bodies/titles, dormant branch-only commits, tooling/deployment, economy/ordnance/HQ/score, and AI/HC/town-performance history.
+- Added a second-wave addendum to [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) plus evidence tables in [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel).
+- Routed strongest actionable risks into [Feature status register](Feature-Status-Register), [AI Assistant Guide](AI-Assistant-Guide), [Tools and build workflow](Tools-And-Build-Workflow), and JSONL machine records. No gameplay source files changed.

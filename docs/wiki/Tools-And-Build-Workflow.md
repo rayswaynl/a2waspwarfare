@@ -22,6 +22,8 @@ Build configurations:
 
 Repo instruction: after mission edits, run from `Tools/LoadoutManager` with `dotnet run`. If .NET SDK is missing, stop and tell the user. If `7za` is missing, copying can still be useful; packaging is the only blocked part.
 
+Upstream history warning: the second-wave [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) pass found concrete tooling hazards: current packaging is source Chernarus plus generated Vanilla/Takistan only, `Modded_Missions` packaging/generation is commented out, `ZipManager` depends on env var `7za`, `version.sqf` load order was reverted once, Takistan DB map ID needed generator-side post-copy repair, and sound generation assumes `ClassName-volume.ogg` filenames. Treat LoadoutManager console output plus `git diff --stat` as the release check, not a blind "DONE" signal.
+
 Local command check on 2026-06-02:
 
 - .NET SDK `8.0.421` is available in the source worktree.

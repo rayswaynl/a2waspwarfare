@@ -171,3 +171,63 @@ Research snapshot: upstream `master` at `8bcc42b1` (2026-06-02), GitHub PRs #1-#
 | `83298186` | `A3missionTest` deletion | Large A3 imported test tree was later removed; A3 branches are concept-only for OA docs. |
 | `a388f073`, `00791850`, `3c6a70c3`, `7e3b9f4c` | view-distance automation | FPS control loops learned the wrong state while the map was open. |
 | `b76f9645`, PR #12 | supply truck JIP notification | Client action/notification logic can run during JIP without a real player action. |
+
+## Second-Wave Deep Dive: PR Afterlife, Tooling And Branch-Only Evidence
+
+### PR Body / Title Evidence
+
+| Evidence | Files / area | Finding |
+| --- | --- | --- |
+| PR #1, PR #2; `96809ac3`, `7a38af51`, `01ea8db4` | repo topology, `.gitmodules`, DiscordBotFramework, mission folders | Closed broad-merge PRs were not necessarily dead; individual commits and folder-structure ideas can persist outside the PR result. |
+| PR #4 / `38b662aa`, later `6eb09dc3` | `Client/Init/Init_Client.sqf`, `wfbe_structures` | Latest-built-factory spawn needed later structure-type filtering; array order was too broad. |
+| PR #5 / `d086863c`, `e3ec8a17` | supply missions, `mission.sqm`, `Client/Init/Init_Client.sqf` | Supply-run feature work needed lobby-class metadata and init-idempotence follow-through. |
+| PR #6 / `670ecb6c` | `Client/GUI/GUI_Menu_BuyUnits.sqf` | Driver-slot preference persisted through `profileNamespace`, so UI state can survive matches. |
+| PR #7 / `8c88e5ef`, `aab49c33`, later `c07fe1e6`, `d3c5cc89` | commander UX, `Sounds/description.ext`, `Music/description.ext` | Commander help, sound effects and endgame music became entangled with asset/config packaging. |
+
+### Dormant Branch Leads
+
+| Branch / evidence | Files / area | Finding |
+| --- | --- | --- |
+| `upstream/commonbalanceinit_Old` tip `37e08f33`; `upstream/AirReworkTestBranch` tip `9973ef27`; commits `5d9c4587`, `c5953651`, `ddcbd3ca` | LoadoutManager, EASA, `Common_BalanceInit.sqf` | Aircraft/loadout history contains branch-only pylon/default-tag validation lessons; generated surfaces must move together. |
+| `upstream/AutomationSystems` tip `25f2b5ab` | callExtension, restart automation, backend process handoff | Direct `RESTARTSERVER` extension work evolved toward pipe/backend process handoff, absolute paths and delayed priority changes. |
+| `upstream/HeadlessClientMultithreading`; `6760f1a3`, `1d79ba2a`, `6b90c872`, `f5e8fa47` | HC delegation, static defenses | Multi-HC work needed typed HC pools and side-less HC client-call filtering; update-back accounting remains a risk. |
+| `upstream/MgNestRestriction` tip `498bd6c4` | static defense restrictions | Repeated wrong-block and `isKindOf` fixes show static-defense restrictions must sit in the correct class branch. |
+| `upstream/Tournament_SideSpeakerWIP` tip `8ddeb502` | spectator/tournament side speaker | Branch tip admits civilian side speaker may broadcast to all players; audience/channel scope is unresolved. |
+| `upstream/BlinkingDone`, `upstream/WorkingBlinking`, `upstream/BlinkingMapIconsV2`; `2f6ff43d`, `9a550b7a`, `9c1fe110` | marker blinking, event handlers | Marker blinking churned through refactor reverts, local/global marker vars, color restoration and a default-off mission parameter. |
+
+### Tooling, Packaging And Generated Assets
+
+| Evidence | Files / area | Finding |
+| --- | --- | --- |
+| current `Tools/LoadoutManager/ZipManager.cs`, earlier `0ffc3cb8` | `_MISSIONS.7z`, `Missions`, `Missions_Vanilla`, `Modded_Missions` | Current packaging is Vanilla-only plus source missions; modded packaging/generation is commented out. |
+| `465a5aa5`, `0ffc3cb8` | `TempZippingDirectory`, `_MISSIONS.7z` | Release zipping moved temp output under the repo root and now rewrites the archive. |
+| `2a13ce36`, merge `407c2d2d` | `ZipManager.cs`, env var `7za` | Packaging depends on a `7za` environment variable; missing 7-Zip is a packaging failure distinct from generation. |
+| `3458e714`, merge `9d8f3770` | LoadoutManager file copy | File-copy propagation hit locked-file cases and moved to explicit stream copy with IOException logging. |
+| `6d380c22`, `0fd730b0`, `24f4656f` | `version.sqf`, `description.ext`, mission parameters | Generated defines and parameter include order are a real config contract. |
+| `aa3f0451`, `f095e461` | Takistan DB map ID, LoadoutManager post-copy fix | Generated Takistan needed generator-side repair after Chernarus copy overwrote map identity. |
+| `0d0ac310` | `Server/Module/PersistanceDB/*`, callExtension | Removed `PersistanceDB` is a tombstone, but AntiStack DB and GlobalGameStats extension families remain live. |
+| `a31cfdb4`, `e2d23d00` | sound generation, `.ogg` names, `Sounds/description.ext` | Sound config generation depends on `ClassName-volume.ogg` filename shape. |
+
+### Economy, Ordnance And Compensation
+
+| Evidence | Files / area | Finding |
+| --- | --- | --- |
+| `9bf51d60`, `4c1d2fd9`, PR #3 / `7cd0e18d`, `346e3be8`, `59a995e8`, `a855081d` | `Action_RepairMHQ.sqf`, `Init_CommonConstants.sqf` | HQ repair escalation was reverted until repair economics are server-owned. |
+| `5db438ca`, `31d8a06d` | `GUI_Menu_Tactical.sqf`, ICBM fee | 75k ICBM pricing was live-test data and explicitly reverted. |
+| current `nukeincoming.sqf`, `GUI_Menu_Tactical.sqf`, DR-27 | ICBM request/debit authority | ICBM price/effect churn did not fix client-authoritative request/debit risk. |
+| `67886498`, `82bb5daf`, current `Common_HandleAAMissiles.sqf` | Maverick missile handling | Extreme Maverick parameters were experimental and later replaced by current handler values. |
+| `4720880a`, current `EASA_Init.sqf` | Mavericks/Spikes loadouts | Mavericks-to-Spikes branch is not current master truth for aircraft. |
+| `0c14f001`, `82fbab1f`, `bc5f23d5`, `7fddb251` | bomb scripts and altitude/distance limits | Bomb restriction history is workaround/revert/re-add/near-disable churn, not clean policy. |
+| `f17445c1`, `b31539b4`, `cc127ef4`, `415615c9` | score, bounty, teamkill paths | Score/bounty changes affect AntiStack skill and economy, not only the scoreboard. |
+| `upstream/SkillDiffCompensation`, current `skillDiffCompensation.sqf`, `Common_ChangeSideSupply.sqf` | side supply, DB skill, compensation | Skill-diff compensation rides on side-supply channels that still need authority hardening. |
+
+### AI, HC, Cleanup And Runtime
+
+| Evidence | Files / area | Finding |
+| --- | --- | --- |
+| `4aaa814a`, `6189f3c5`, `1d5092ef`, `a20a5a0f`, `84b1b684`, `ea0bff2e`, `913ecdf6` | town AI, town capture, defender tags | Town scan optimization needed restoration of remote/pre-capture activation and defender-origin filtering. |
+| `a20a5a0f`, `84b1b684` | capture detection vs pre-capture activation | Capture-scan wakeup was too late; pre-capture scans were restored. |
+| `ea0bff2e` | `WFBE_IsTownDefenderAI` | Defender units, crews, vehicles and groups must be tagged so they do not wake enemy towns. |
+| `823ad0da`, `a6f5020e`, `99bd4be8`, `8372f5ce` | RHUD/server FPS publishing | Diagnostics can become performance bugs; FPS HUD fixes and server loops both had reverts/guards. |
+| `95481b37`, DR-45 | mines cleanup, `wfbe_trashed`, town-AI despawn | Cleanup bugs are array-shape, idempotency and full-occupancy checks, not only missing deletes. |
+| local `feat/ai-commander` commits `585c3519`, `1a3e3def` | `Server/AI/Commander/*` | AI commander revival is branch-only/local evidence until merged, propagated and smoked. |
