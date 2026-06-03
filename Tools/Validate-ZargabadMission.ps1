@@ -321,6 +321,7 @@ Assert-True "runtime audit logs Zargabad base and fortification counts" ($runtim
 Assert-True "runtime audit logs Zargabad base static templates" ($runtimeAuditSource -match 'baseStaticTemplates WEST %1 EAST %2')
 Assert-True "runtime audit logs Zargabad economy and range constants" ($runtimeAuditSource -match 'supplyCap \[%1\] teamSupplyCap \[%2\] fastTravelMax \[%3\] respawnCampRange \[%4\].*edgeGuard \[%10,%11,%12\]')
 Assert-True "runtime audit logs Zargabad factory restrictions" ($runtimeAuditSource -match 'factoryCounts WEST L/H/A/AP')
+Assert-True "runtime audit logs exact Zargabad factory lists" ($runtimeAuditSource -match 'factoryLists WEST H %1 A %2 EAST H %3 A %4')
 Assert-True "runtime audit checks expanded forbidden normal factory set" ($runtimeAuditSource -match 'M1A1' -and $runtimeAuditSource -match 'T90' -and $runtimeAuditSource -match 'Ka52' -and $runtimeAuditSource -match 'Su34' -and $runtimeAuditSource -match 'F35B')
 Assert-True "runtime audit logs Zargabad price multipliers and samples" ($runtimeAuditSource -match 'priceMultipliers %1 priceSamples %2')
 

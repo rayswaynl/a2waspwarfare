@@ -69,6 +69,11 @@ _forbiddenPresent = [];
 	_forbiddenPresent
 ]] Call WFBE_CO_FNC_LogContent;
 
+["INFORMATION", Format [
+	"Zargabad_RuntimeAudit.sqf: factoryLists WEST H %1 A %2 EAST H %3 A %4.",
+	_westHeavy, _westAircraft, _eastHeavy, _eastAircraft
+]] Call WFBE_CO_FNC_LogContent;
+
 _priceSamples = [];
 {
 	_cfg = missionNamespace getVariable _x;
