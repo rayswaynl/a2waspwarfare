@@ -111,6 +111,68 @@ function Get-Numbers {
 	return @([regex]::Matches($Line, '-?\d+') | ForEach-Object { [int]$_.Value })
 }
 
+function Get-SqfTemplateEntries {
+	param([string]$Content, [string]$VariableName)
+	$pattern = [regex]::Escape($VariableName) + '\s*=\s*\[(?<body>[\s\S]*?)\];'
+	$match = [regex]::Match($Content, $pattern)
+	if (-not $match.Success) { throw "Could not find SQF template variable [$VariableName]" }
+	return @([regex]::Matches($match.Groups["body"].Value, '\["(?<class>[^"]+)",\[(?<x>-?\d+),(?<y>-?\d+),(?<z>-?\d+)\],(?<dir>-?\d+)\]') | ForEach-Object {
+		[pscustomobject]@{
+			Class = $_.Groups["class"].Value
+			X = [int]$_.Groups["x"].Value
+			Y = [int]$_.Groups["y"].Value
+			Z = [int]$_.Groups["z"].Value
+			Dir = [int]$_.Groups["dir"].Value
+		}
+	})
+}
+
+function Assert-TemplateMatches {
+	param([string]$Name, [object[]]$Actual, [object[]]$Expected)
+	Assert-Equal "$Name template row count" $Actual.Count $Expected.Count
+	for ($i = 0; $i -lt $Expected.Count; $i++) {
+		Assert-Equal "$Name row $i class" $Actual[$i].Class $Expected[$i].Class
+		Assert-Equal "$Name row $i x" $Actual[$i].X $Expected[$i].X
+		Assert-Equal "$Name row $i y" $Actual[$i].Y $Expected[$i].Y
+		Assert-Equal "$Name row $i z" $Actual[$i].Z $Expected[$i].Z
+		Assert-Equal "$Name row $i dir" $Actual[$i].Dir $Expected[$i].Dir
+	}
+}
+
+function Assert-RuntimeAnchorsMatch {
+	param([string]$Name, [object[]]$Actual, [object[]]$Expected)
+	Assert-Equal "$Name runtime anchor row count" $Actual.Count $Expected.Count
+	for ($i = 0; $i -lt $Expected.Count; $i++) {
+		Assert-Equal "$Name runtime row $i class" $Actual[$i].Class $Expected[$i].Class
+		Assert-Equal "$Name runtime row $i x" $Actual[$i].X $Expected[$i].X
+		Assert-Equal "$Name runtime row $i y" $Actual[$i].Y $Expected[$i].Y
+		Assert-Equal "$Name runtime row $i dir" $Actual[$i].Dir $Expected[$i].Dir
+	}
+}
+
+function Get-WorldPointFromTemplateOffset {
+	param($Origin, [double]$Dir, [int]$OffsetX, [int]$OffsetY)
+	$radians = $Dir * [math]::PI / 180
+	return [pscustomobject]@{
+		X = [int][math]::Round($Origin.X + ($OffsetX * [math]::Cos($radians)) + ($OffsetY * [math]::Sin($radians)))
+		Y = [int][math]::Round($Origin.Y - ($OffsetX * [math]::Sin($radians)) + ($OffsetY * [math]::Cos($radians)))
+	}
+}
+
+function Get-TemplateRuntimeAnchors {
+	param($Origin, [double]$Dir, [object[]]$Template)
+	return @($Template | ForEach-Object {
+		$point = Get-WorldPointFromTemplateOffset -Origin $Origin -Dir $Dir -OffsetX $_.X -OffsetY $_.Y
+		$staticDir = ($Dir + $_.Dir) % 360
+		[pscustomobject]@{
+			Class = $_.Class
+			X = $point.X
+			Y = $point.Y
+			Dir = [int][math]::Round($staticDir)
+		}
+	})
+}
+
 $missionFullPath = Resolve-RepoPath $MissionPath
 $sourceMissionFullPath = Resolve-RepoPath $SourceMissionPath
 $sqmPath = Join-Path $missionFullPath "mission.sqm"
@@ -438,6 +500,46 @@ foreach ($parameter in $expectedParameterDefaults.GetEnumerator()) {
 $terrainGeneratorSource = Get-Content -Raw -LiteralPath (Resolve-RepoPath "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs")
 Assert-True "LoadoutManager carries Zargabad low-pop parameter defaults" (Test-ContainsAll -Content $terrainGeneratorSource -Needles @('["WFBE_C_ECONOMY_FUNDS_START_EAST"] = "12800"', '["WFBE_C_ECONOMY_SUPPLY_START_WEST"] = "4800"', '["WFBE_C_GAMEPLAY_MISSILES_RANGE"] = "2000"', '["WFBE_C_TOWNS_DEFENDER"] = "3"', '["WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER"] = "1"'))
 
+$expectedBaseWallTemplate = @(
+	[pscustomobject]@{ Class = "Land_HBarrier_large"; X = -55; Y = -55; Z = 0; Dir = 45 },
+	[pscustomobject]@{ Class = "Land_HBarrier_large"; X = -30; Y = -70; Z = 0; Dir = 15 },
+	[pscustomobject]@{ Class = "Land_HBarrier_large"; X = 0; Y = -76; Z = 0; Dir = 0 },
+	[pscustomobject]@{ Class = "Land_HBarrier_large"; X = 30; Y = -70; Z = 0; Dir = 345 },
+	[pscustomobject]@{ Class = "Land_HBarrier_large"; X = 55; Y = -55; Z = 0; Dir = 315 },
+	[pscustomobject]@{ Class = "Land_HBarrier_large"; X = 70; Y = -25; Z = 0; Dir = 270 },
+	[pscustomobject]@{ Class = "Land_HBarrier_large"; X = 70; Y = 25; Z = 0; Dir = 270 },
+	[pscustomobject]@{ Class = "Land_HBarrier_large"; X = 55; Y = 55; Z = 0; Dir = 225 },
+	[pscustomobject]@{ Class = "Land_HBarrier_large"; X = 25; Y = 70; Z = 0; Dir = 180 },
+	[pscustomobject]@{ Class = "Land_HBarrier_large"; X = -25; Y = 70; Z = 0; Dir = 180 },
+	[pscustomobject]@{ Class = "Land_HBarrier_large"; X = -55; Y = 55; Z = 0; Dir = 135 },
+	[pscustomobject]@{ Class = "Land_HBarrier_large"; X = -70; Y = 25; Z = 0; Dir = 90 },
+	[pscustomobject]@{ Class = "Land_HBarrier_large"; X = -70; Y = -25; Z = 0; Dir = 90 }
+)
+$expectedWestStaticTemplate = @(
+	[pscustomobject]@{ Class = "M2StaticMG_US_EP1"; X = -45; Y = 0; Z = 0; Dir = 270 },
+	[pscustomobject]@{ Class = "M2StaticMG_US_EP1"; X = 45; Y = 0; Z = 0; Dir = 90 },
+	[pscustomobject]@{ Class = "TOW_TriPod_US_EP1"; X = 0; Y = 58; Z = 0; Dir = 0 },
+	[pscustomobject]@{ Class = "Stinger_Pod_US_EP1"; X = 0; Y = -58; Z = 0; Dir = 180 }
+)
+$expectedEastStaticTemplate = @(
+	[pscustomobject]@{ Class = "KORD_high_TK_EP1"; X = -45; Y = 0; Z = 0; Dir = 270 },
+	[pscustomobject]@{ Class = "KORD_high_TK_EP1"; X = 45; Y = 0; Z = 0; Dir = 90 },
+	[pscustomobject]@{ Class = "Metis_TK_EP1"; X = 0; Y = 58; Z = 0; Dir = 0 },
+	[pscustomobject]@{ Class = "Igla_AA_pod_TK_EP1"; X = 0; Y = -58; Z = 0; Dir = 180 }
+)
+$expectedWestRuntimeStaticAnchors = @(
+	[pscustomobject]@{ Class = "M2StaticMG_US_EP1"; X = 1468; Y = 1582; Dir = 315 },
+	[pscustomobject]@{ Class = "M2StaticMG_US_EP1"; X = 1532; Y = 1518; Dir = 135 },
+	[pscustomobject]@{ Class = "TOW_TriPod_US_EP1"; X = 1541; Y = 1591; Dir = 45 },
+	[pscustomobject]@{ Class = "Stinger_Pod_US_EP1"; X = 1459; Y = 1509; Dir = 225 }
+)
+$expectedEastRuntimeStaticAnchors = @(
+	[pscustomobject]@{ Class = "KORD_high_TK_EP1"; X = 5382; Y = 5168; Dir = 135 },
+	[pscustomobject]@{ Class = "KORD_high_TK_EP1"; X = 5318; Y = 5232; Dir = 315 },
+	[pscustomobject]@{ Class = "Metis_TK_EP1"; X = 5309; Y = 5159; Dir = 225 },
+	[pscustomobject]@{ Class = "Igla_AA_pod_TK_EP1"; X = 5391; Y = 5241; Dir = 45 }
+)
+
 foreach ($path in @($sourceMissionFullPath, $missionFullPath)) {
 	$initZargabad = Get-Content -Raw -LiteralPath (Join-Path $path "Server/Init/Init_Zargabad.sqf")
 	Assert-True "$path launches Zargabad edge guard" ($initZargabad -like '*Zargabad_EdgeGuard.sqf*')
@@ -474,6 +576,14 @@ foreach ($path in @($sourceMissionFullPath, $missionFullPath)) {
 	Assert-True "$path records Zargabad base audit counts" ($initZargabad -match 'WFBE_ZARGABAD_BASE_WALL_COUNT' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_COUNT_%1' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_POS_%1')
 	Assert-True "$path records Zargabad base fortification footprint" ($initZargabad -match 'WFBE_ZARGABAD_BASE_FORTIFICATION_FOOTPRINT", \[35,45,74,78\]' -and $initZargabad -match '\[-55,-55,0\]' -and $initZargabad -match '\[70,25,0\]' -and $initZargabad -match '\[0,-76,0\]')
 	Assert-True "$path records Zargabad base static templates" ($initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_WEST' -and $initZargabad -match 'M2StaticMG_US_EP1' -and $initZargabad -match 'TOW_TriPod_US_EP1' -and $initZargabad -match 'Stinger_Pod_US_EP1' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_EAST' -and $initZargabad -match 'KORD_high_TK_EP1' -and $initZargabad -match 'Metis_TK_EP1' -and $initZargabad -match 'Igla_AA_pod_TK_EP1')
+	$baseWallTemplate = Get-SqfTemplateEntries -Content $initZargabad -VariableName "_baseWalls"
+	$westStaticTemplate = Get-SqfTemplateEntries -Content $initZargabad -VariableName "_westStatics"
+	$eastStaticTemplate = Get-SqfTemplateEntries -Content $initZargabad -VariableName "_eastStatics"
+	Assert-TemplateMatches "$path base H-barrier ring" $baseWallTemplate $expectedBaseWallTemplate
+	Assert-TemplateMatches "$path WEST base statics" $westStaticTemplate $expectedWestStaticTemplate
+	Assert-TemplateMatches "$path EAST base statics" $eastStaticTemplate $expectedEastStaticTemplate
+	Assert-RuntimeAnchorsMatch "$path WEST base statics" (Get-TemplateRuntimeAnchors -Origin $westStart -Dir 45 -Template $westStaticTemplate) $expectedWestRuntimeStaticAnchors
+	Assert-RuntimeAnchorsMatch "$path EAST base statics" (Get-TemplateRuntimeAnchors -Origin $eastStart -Dir 225 -Template $eastStaticTemplate) $expectedEastRuntimeStaticAnchors
 	Assert-True "$path base anti-armor statics face the base-axis center" ($initZargabad -match '_westStatics[\s\S]*"TOW_TriPod_US_EP1",\[0,58,0\],0[\s\S]*"Stinger_Pod_US_EP1",\[0,-58,0\],180' -and $initZargabad -match '_eastStatics[\s\S]*"Metis_TK_EP1",\[0,58,0\],0[\s\S]*"Igla_AA_pod_TK_EP1",\[0,-58,0\],180')
 	Assert-True "$path normalizes Zargabad base static facing evidence" ($initZargabad -match '_staticDir = _dir \+ \(_x select 2\)' -and $initZargabad -match 'if \(_staticDir >= 360\) then \{_staticDir = _staticDir - 360\}' -and $initZargabad -match '_def setDir _staticDir')
 	Assert-True "$path records Zargabad base static runtime positions" ($initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_POSITIONS_%1' -and $initZargabad -match '_staticPositions = _staticPositions \+' -and $initZargabad -match 'Base static runtime positions WEST %1 EAST %2')
@@ -602,6 +712,7 @@ Assert-True "map audit packet emits population flow table" ($mapAuditPacketSourc
 Assert-True "map audit packet emits camp and defense coordinates" ($mapAuditPacketSource -match '## Camps' -and $mapAuditPacketSource -match '## Town Defenses')
 Assert-True "map audit packet emits base-axis sightline section" ($mapAuditPacketSource -match '## Base Axis And Sightlines' -and $mapAuditPacketSource -match 'central wall origin')
 Assert-True "map audit packet emits base fortification footprint" ($mapAuditPacketSource -match 'baseFootprint \[35,45,74,78\]' -and $mapAuditPacketSource -match 'commander-clear radius')
+Assert-True "map audit packet emits base static anchor table" ($mapAuditPacketSource -match 'Expected runtime position' -and $mapAuditPacketSource -match 'Base static runtime positions WEST \.\.\. EAST \.\.\.')
 Assert-True "map audit packet emits rim test points" ($mapAuditPacketSource -match '## Rim Test Points' -and $mapAuditPacketSource -match 'West illegal rim' -and $mapAuditPacketSource -match 'East Farms legal rim')
 Assert-True "map audit packet emits WDDM fortification review" ($mapAuditPacketSource -match '## WDDM Fortification Review' -and $mapAuditPacketSource -match 'https://rayswaynl\.github\.io/WDDM/' -and $mapAuditPacketSource -match '\+Y as front' -and $mapAuditPacketSource -match '\+X as right')
 Assert-True "map audit packet emits Claude screenshot targets" ($mapAuditPacketSource -match '## Claude Screenshot Targets')
@@ -610,6 +721,7 @@ Assert-True "map audit packet emits uncrewed central wall focus" ($mapAuditPacke
 $mapAuditPacketOutput = (& $mapAuditPacketTool) -join "`n"
 Assert-True "map audit packet runs and reports Zargabad counts" ($mapAuditPacketOutput -match '# Zargabad Map Audit Packet' -and $mapAuditPacketOutput -match 'Counts: towns \[13\], camps \[19\], airports \[1\], starts \[9\], town defenses \[33\]')
 Assert-True "map audit packet runs and reports core screenshot targets" ($mapAuditPacketOutput -match 'Zargabad City Center' -and $mapAuditPacketOutput -match 'Claude Screenshot Targets' -and $mapAuditPacketOutput -match '4053,2725' -and $mapAuditPacketOutput -match 'central wall origin' -and $mapAuditPacketOutput -match 'West illegal rim' -and $mapAuditPacketOutput -match 'East Farms legal rim' -and $mapAuditPacketOutput -match 'WDDM Fortification Review')
+Assert-True "map audit packet runs and reports exact base static anchors" ($mapAuditPacketOutput -match 'TOW_TriPod_US_EP1' -and $mapAuditPacketOutput -match '1541,1591' -and $mapAuditPacketOutput -match 'Metis_TK_EP1' -and $mapAuditPacketOutput -match '5309,5159')
 Assert-True "Claude brief tool exists" (Test-Path -LiteralPath $claudeBriefTool)
 $claudeBriefSource = Get-Content -Raw -LiteralPath $claudeBriefTool
 Assert-True "Claude brief tool emits coordination cadence" ($claudeBriefSource -match '## Coordination Cadence')

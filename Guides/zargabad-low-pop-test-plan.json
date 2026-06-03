@@ -119,6 +119,10 @@
     },
     {
       "type": "source-audit",
+      "summary": "Static validation now locks the 13-piece base H-barrier ring, exact WEST/EAST base static templates, and computed default-start runtime anchors for Claude screenshot/RPT comparison: WEST TOW 1541,1591 facing 45, WEST Stinger 1459,1509 facing 225, EAST Metis 5309,5159 facing 225, and EAST Igla 5391,5241 facing 45."
+    },
+    {
+      "type": "source-audit",
       "summary": "Camp placement audit measured 19 linked camps at 111.8m-192.4m from their town centers, with two camp approaches for the city center, airfield, north/south districts, Northwest Base and Rahim Villa."
     },
     {
@@ -163,7 +167,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/New-ZargabadMapAuditPacket.ps1 generates a Claude-facing coordinate packet from mission.sqm with population-flow objective values, camp links/distances, town-defense kind/position/distance rows, starts, base-axis midpoint, edge-safe bubbles, named rim test points, central-wall gap checkpoints, and screenshot targets for map-placement, pathing, sightline and defense-facing notes."
+      "summary": "Tools/New-ZargabadMapAuditPacket.ps1 generates a Claude-facing coordinate packet from mission.sqm with population-flow objective values, camp links/distances, town-defense kind/position/distance rows, starts, base-axis midpoint, expected base static runtime anchors, edge-safe bubbles, named rim test points, central-wall gap checkpoints, and screenshot targets for map-placement, pathing, sightline, base-static and defense-facing notes."
     },
     {
       "type": "source-audit",
@@ -183,7 +187,7 @@
     },
     {
       "type": "command-output",
-      "summary": "Static mission validation found unique ids, all sync ids resolvable, zero out-of-6000 logic positions, intended WEST/EAST/Resistance start anchors, WEST/EAST start headings toward center, WEST/EAST start separation at least 5000m, 13 towns, 19 camps, 1 airport, 33 defense logics, exact town, camp and defense anchors, runtime defense-orientation hook present, start SV 185 and max SV 648."
+      "summary": "Static mission validation found unique ids, all sync ids resolvable, zero out-of-6000 logic positions, intended WEST/EAST/Resistance start anchors, WEST/EAST start headings toward center, WEST/EAST start separation at least 5000m, 13 towns, 19 camps, 1 airport, 33 defense logics, exact town, camp, defense and base static anchors, runtime defense-orientation hook present, start SV 185 and max SV 648."
     }
   ],
   "result": "partial",

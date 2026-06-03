@@ -93,6 +93,46 @@ function Get-DefenseKind {
 	return ($kinds -join "+")
 }
 
+function Get-SqfTemplateEntries {
+	param([string]$Content, [string]$VariableName)
+	$pattern = [regex]::Escape($VariableName) + '\s*=\s*\[(?<body>[\s\S]*?)\];'
+	$match = [regex]::Match($Content, $pattern)
+	if (-not $match.Success) { return @() }
+	return @([regex]::Matches($match.Groups["body"].Value, '\["(?<class>[^"]+)",\[(?<x>-?\d+),(?<y>-?\d+),(?<z>-?\d+)\],(?<dir>-?\d+)\]') | ForEach-Object {
+		[pscustomobject]@{
+			Class = $_.Groups["class"].Value
+			X = [int]$_.Groups["x"].Value
+			Y = [int]$_.Groups["y"].Value
+			Z = [int]$_.Groups["z"].Value
+			Dir = [int]$_.Groups["dir"].Value
+		}
+	})
+}
+
+function Get-WorldPointFromTemplateOffset {
+	param($Origin, [double]$Dir, [int]$OffsetX, [int]$OffsetY)
+	$radians = $Dir * [math]::PI / 180
+	return [pscustomobject]@{
+		X = [int][math]::Round($Origin.X + ($OffsetX * [math]::Cos($radians)) + ($OffsetY * [math]::Sin($radians)))
+		Y = [int][math]::Round($Origin.Y - ($OffsetX * [math]::Sin($radians)) + ($OffsetY * [math]::Cos($radians)))
+	}
+}
+
+function Get-TemplateRuntimeAnchors {
+	param([string]$Side, $Origin, [double]$Dir, [object[]]$Template)
+	return @($Template | ForEach-Object {
+		$point = Get-WorldPointFromTemplateOffset -Origin $Origin -Dir $Dir -OffsetX $_.X -OffsetY $_.Y
+		[pscustomobject]@{
+			Side = $Side
+			Class = $_.Class
+			X = $point.X
+			Y = $point.Y
+			Dir = [int][math]::Round(($Dir + $_.Dir) % 360)
+			Offset = "$($_.X),$($_.Y)"
+		}
+	})
+}
+
 $missionFullPath = Resolve-RepoPath $MissionPath
 $sqmPath = Join-Path $missionFullPath "mission.sqm"
 if (-not (Test-Path -LiteralPath $sqmPath)) { throw "mission.sqm not found: $sqmPath" }
@@ -106,6 +146,13 @@ $defenses = @($objects | Where-Object { $_.Vehicle -eq "Logic" -and $_.Init -lik
 $parsedTowns = @($towns | ForEach-Object { Get-TownInfo -Town $_ -Camps $camps -Defenses $defenses })
 $westStart = @($starts | Where-Object { $_.Init -match 'wfbe_default"",\s*west' } | Select-Object -First 1)
 $eastStart = @($starts | Where-Object { $_.Init -match 'wfbe_default"",\s*east' } | Select-Object -First 1)
+$initZargabadPath = Join-Path $missionFullPath "Server/Init/Init_Zargabad.sqf"
+$baseStaticAnchors = @()
+if ((Test-Path -LiteralPath $initZargabadPath) -and $westStart.Count -gt 0 -and $eastStart.Count -gt 0) {
+	$initZargabad = Get-Content -Raw -LiteralPath $initZargabadPath
+	$baseStaticAnchors += Get-TemplateRuntimeAnchors -Side "WEST" -Origin $westStart[0] -Dir 45 -Template (Get-SqfTemplateEntries -Content $initZargabad -VariableName "_westStatics")
+	$baseStaticAnchors += Get-TemplateRuntimeAnchors -Side "EAST" -Origin $eastStart[0] -Dir 225 -Template (Get-SqfTemplateEntries -Content $initZargabad -VariableName "_eastStatics")
+}
 
 $report = New-Object System.Collections.Generic.List[string]
 $report.Add("# Zargabad Map Audit Packet")
@@ -167,6 +214,16 @@ if ($westStart.Count -gt 0 -and $eastStart.Count -gt 0) {
 	$report.Add("- Direct base-axis midpoint: ``$midX,$midY``; central wall origin: ``3425,3375``. These intentionally overlap so the wall interrupts the flat southwest-to-northeast sightline.")
 	$report.Add("- Claude should screenshot from each default start toward ``3425,3375`` and from the wall origin back toward both starts, then mark whether fortifications and terrain block trivial spawn pressure.")
 	$report.Add("- Base fortification runtime audit should report ``baseFootprint [35,45,74,78]``: commander-clear radius 35m, nearest base static 45m, H-barrier ring 74m-78m from the start logic.")
+	if ($baseStaticAnchors.Count -gt 0) {
+		$report.Add("")
+		$report.Add("| Side | Static | Expected runtime position | Expected facing | Template offset |")
+		$report.Add("| --- | --- | ---: | ---: | ---: |")
+		foreach ($anchor in $baseStaticAnchors) {
+			$report.Add("| $($anchor.Side) | $($anchor.Class) | ``$($anchor.X),$($anchor.Y)`` | $($anchor.Dir) | ``$($anchor.Offset)`` |")
+		}
+		$report.Add("")
+		$report.Add("- Compare these expected anchors against the runtime ``Base static runtime positions WEST ... EAST ...`` RPT line and screenshots before judging base arcs or construction space.")
+	}
 } else {
 	$report.Add("- Default WEST/EAST starts were not found in mission.sqm.")
 }
