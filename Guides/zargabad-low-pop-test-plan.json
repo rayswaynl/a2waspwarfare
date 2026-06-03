@@ -102,7 +102,7 @@
     },
     {
       "type": "command-output",
-      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, intended default start anchors/headings and WEST/EAST separation, no out-of-6000 logic positions, no objective safe-zone logics inside the 120m edge kill rim, exactly seven north/east edge-safe objective/start bubbles, start SV 185, max SV 648, all towns have camps and defenses, each camp links to exactly one town, all camps sit in the 90m-225m town-flow band, high-value objectives have two camp approaches and layered defense coverage, synchronized defenses sit in the 90m-325m town approach band, exact smaller-map economy/range/cap constants and exact compact normal heavy/aircraft lists are locked in source and generated Zargabad mission copies, the runtime town-defense orientation hook is present, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
+      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, intended default start anchors/headings and WEST/EAST separation, no out-of-6000 logic positions, no objective safe-zone logics inside the 120m edge kill rim, exactly seven north/east edge-safe objective/start bubbles, start SV 185, max SV 648, all towns have camps and defenses, each camp links to exactly one town, all camps sit in the 90m-225m town-flow band, high-value objectives have two camp approaches and layered defense coverage, synchronized defenses sit in the 90m-325m town approach band, generated low-pop parameter defaults, exact smaller-map economy/range/cap constants and exact compact normal heavy/aircraft lists are locked in source and generated Zargabad mission copies, the runtime town-defense orientation hook is present, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
     },
     {
       "type": "source-audit",
@@ -111,6 +111,10 @@
     {
       "type": "source-audit",
       "summary": "The static validator now checks Zargabad AI caps, player squad caps, team supply cap, fast travel, UAV spotting, respawn, command-center, town build/defense/mortar/patrol, support/service, aircraft countermeasure, and base-defense manning/protection constants before runtime testers spend effort on gameplay feel."
+    },
+    {
+      "type": "source-audit",
+      "summary": "The static validator now parses generated Zargabad Rsc/Parameters.hpp defaults for lower start funds/supply, team supply cap, missile range, hard town defenders, medium occupation, town build protection, locked defender vehicles, and base-defense manning range, and checks that LoadoutManager still carries those Zargabad defaults."
     },
     {
       "type": "source-audit",

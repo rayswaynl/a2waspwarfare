@@ -52,6 +52,14 @@ function Test-ContainsAll {
 	return $true
 }
 
+function Get-ParameterDefault {
+	param([string]$Content, [string]$Name)
+	$pattern = 'class\s+' + [regex]::Escape($Name) + '\s*\{[\s\S]*?default\s*=\s*([^;]+);'
+	$match = [regex]::Match($Content, $pattern)
+	if (-not $match.Success) { throw "Could not find parameter default for [$Name]" }
+	return $match.Groups[1].Value.Trim()
+}
+
 function Get-ZargabadOverrideUnits {
 	param([string]$Content, [string]$Factory)
 	$pattern = 'if\s*\(IS_zargabad_lowpop_map\)\s*then\s*\{\s*_u\s*=\s*\[([^\]]*)\];\s*\};\s*missionNamespace\s+setVariable\s+\[Format\s+\["WFBE_%1' + [regex]::Escape($Factory) + 'UNITS"'
@@ -78,8 +86,10 @@ function Assert-NearPosition {
 $missionFullPath = Resolve-RepoPath $MissionPath
 $sourceMissionFullPath = Resolve-RepoPath $SourceMissionPath
 $sqmPath = Join-Path $missionFullPath "mission.sqm"
+$parametersPath = Join-Path $missionFullPath "Rsc/Parameters.hpp"
 
 Assert-True "mission.sqm exists" (Test-Path -LiteralPath $sqmPath)
+Assert-True "Zargabad Parameters.hpp exists" (Test-Path -LiteralPath $parametersPath)
 
 $objects = @()
 $current = $null
@@ -229,6 +239,26 @@ Assert-True "WEST/EAST starts are separated for spawn safety" ((Get-FlatDistance
 
 $boundarySource = Get-Content -Raw -LiteralPath (Join-Path $sourceMissionFullPath "Common/Init/Init_Boundaries.sqf")
 Assert-True "source declares 6000m Zargabad boundary" ($boundarySource -match "case 'zargabad': \{_boundariesXY = 6000\};")
+
+$parametersSource = Get-Content -Raw -LiteralPath $parametersPath
+$expectedParameterDefaults = [ordered]@{
+	WFBE_C_BASE_DEFENSE_MANNING_RANGE = "500"
+	WFBE_C_ECONOMY_FUNDS_START_EAST = "12800"
+	WFBE_C_ECONOMY_FUNDS_START_WEST = "12800"
+	WFBE_C_ECONOMY_SUPPLY_START_EAST = "4800"
+	WFBE_C_ECONOMY_SUPPLY_START_WEST = "4800"
+	WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT = "30000"
+	WFBE_C_GAMEPLAY_MISSILES_RANGE = "2000"
+	WFBE_C_TOWNS_DEFENDER = "3"
+	WFBE_C_TOWNS_OCCUPATION = "2"
+	WFBE_C_TOWNS_BUILD_PROTECTION_RANGE = "300"
+	WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER = "1"
+}
+foreach ($parameter in $expectedParameterDefaults.GetEnumerator()) {
+	Assert-Equal "Zargabad parameter default $($parameter.Key)" (Get-ParameterDefault -Content $parametersSource -Name $parameter.Key) $parameter.Value
+}
+$terrainGeneratorSource = Get-Content -Raw -LiteralPath (Resolve-RepoPath "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs")
+Assert-True "LoadoutManager carries Zargabad low-pop parameter defaults" (Test-ContainsAll -Content $terrainGeneratorSource -Needles @('["WFBE_C_ECONOMY_FUNDS_START_EAST"] = "12800"', '["WFBE_C_ECONOMY_SUPPLY_START_WEST"] = "4800"', '["WFBE_C_GAMEPLAY_MISSILES_RANGE"] = "2000"', '["WFBE_C_TOWNS_DEFENDER"] = "3"', '["WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER"] = "1"'))
 
 foreach ($path in @($sourceMissionFullPath, $missionFullPath)) {
 	$initZargabad = Get-Content -Raw -LiteralPath (Join-Path $path "Server/Init/Init_Zargabad.sqf")
