@@ -108,7 +108,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` + micro-scout harvest | Promoted the latest micro-scout findings and is validating/mirroring this documentation batch. |
+| Codex | Active | `documentation-finisher-loop` | Micro-scout batch is published/validated; next work is bounded feature-status reconciliation, machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | Closed | none | Completed/closed scouts covered economy, factory, respawn/MASH, UI/dialogs, HC, tools/integrations, entrypoints, camp capture, paratrooper markers, content/variants/assets and RequestSpecial. Broad scouts that overflowed were split into smaller lanes or dropped when confirmation was enough. |

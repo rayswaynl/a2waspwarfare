@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-context-v1",
-  "generatedAt": "2026-06-03T15:26:44+02:00",
+  "generatedAt": "2026-06-04T00:49:12+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "game": "Arma 2 Operation Arrowhead 1.64",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -323,13 +323,13 @@
     {
       "lane": "dr42-dr43-reconciliation",
       "owner": "Codex",
-      "status": "ready-to-publish",
-      "nextAction": "No further docs action after publish; future code owners can claim hc-static-defense-sync, source-version-sqf-build-gap or init-server-duplicate-binds from agent-hardening-backlog.jsonl."
+      "status": "published-validated",
+      "nextAction": "No further docs action for this reconciliation lane; future code owners can claim hc-static-defense-sync, source-version-sqf-build-gap or init-server-duplicate-binds from agent-hardening-backlog.jsonl."
     },
     {
       "lane": "hc-delegation-failover-playbook",
       "owner": "Codex",
-      "status": "ready-to-publish",
+      "status": "published",
       "nextAction": "Use Headless-Delegation-And-Failover-Playbook.md before changing HC town AI, static-defense delegation, HC disconnect behavior or late-HC registration."
     },
     {

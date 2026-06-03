@@ -3056,7 +3056,7 @@
       "lane": "cheap-explorer-wave-e",
       "suggestedOwner": "Codex",
       "status": "integrated",
-      "summary": "Godel/Gauss/Popper/Locke/Planck/Schrodinger reports folded into owner docs and machine-readable context; publish validation remains."
+      "summary": "Godel/Gauss/Popper/Locke/Planck/Schrodinger reports were folded into owner docs and machine-readable context; later validation/publish batches closed the open publish state."
     },
     {
       "lane": "implementation-hardening-planning",

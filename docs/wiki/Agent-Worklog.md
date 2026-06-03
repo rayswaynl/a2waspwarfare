@@ -9,6 +9,13 @@
 - Closed errored/overflowed scouts, including the AI-cap broad scout; future AI-cap scouting should receive only the already identified cap files rather than a whole subsystem prompt.
 - Documentation only; no gameplay source files were edited.
 
+## 2026-06-04T00:49:12+02:00 - Codex - coordination stale-status cleanup
+
+- Re-scanned dashboard and machine context for stale `validating`, `ready-to-publish` and open publish wording after the micro-scout reconciliation.
+- Corrected [Progress dashboard](Progress-Dashboard) At A Glance so Codex no longer appears to be validating an already published micro-scout batch.
+- Corrected `agent-context.json` for the already-published DR42/DR43 reconciliation and HC delegation/failover playbook lanes, and removed old "publish validation remains" wording from the integrated cheap-explorer wave E record.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-04T00:13:27+02:00 - Codex - Spark scout wave harvest and micro-lane split
 
 - Harvested completed Spark scouts from the economy/factory/respawn/UI/HC/tooling/entrypoint/camp/paratrooper/content/variant/RequestSpecial lanes. Most economy, factory, respawn/MASH, HC and paratrooper results confirmed existing canonical pages, so they were treated as validation instead of duplicated.
