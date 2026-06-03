@@ -193,7 +193,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/New-ZargabadClaudeBrief.ps1 generates a fresh Codex-to-Claude packet after each commit or material change, including latest commit/PR head, coordination cadence, changed files, inferred retest focus, required runtime commands, dirty local state warning, and the Codex stop/go rule. It also tells Claude which runtime gates should trigger status updates, including population/SP-SV placement, points Claude to Guides/Zargabad-Completion-Gates.md as the objective coverage checklist before any final PASS recommendation, asks for screenshot filenames plus coordinates on key visual rows, requires PASS rows to include keep/tune/revert/investigate/patch/retest Codex action recommendations, and tells Codex to treat RPT/screenshot/coordinate/repro-backed findings as actionable."
+      "summary": "Tools/New-ZargabadClaudeBrief.ps1 generates a fresh Codex-to-Claude packet after each commit or material change, including latest commit/PR head, coordination cadence, changed files, inferred retest focus, required runtime commands, dirty local state warning, and the Codex stop/go rule. It also tells Claude which runtime gates should trigger status updates, including population/SP-SV placement, points Claude to Guides/Zargabad-Completion-Gates.md as the objective coverage checklist before any final PASS recommendation, points Claude to the runtime report Evidence Bundle Checklist and README-zargabad-evidence.md screenshot row mapping with exact preferred filenames, asks for screenshot filenames plus coordinates on key visual rows, requires PASS rows to include keep/tune/revert/investigate/patch/retest Codex action recommendations, and tells Codex to treat RPT/screenshot/coordinate/repro-backed findings as actionable."
     },
     {
       "type": "source-audit",
@@ -214,6 +214,6 @@
   ],
   "result": "partial",
   "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Codex should send Tools/New-ZargabadClaudeBrief.ps1 output after each commit, and Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports after each Codex commit or runtime gate.",
-  "updatedAt": "2026-06-03T09:58:53+02:00",
+  "updatedAt": "2026-06-03T10:03:00+02:00",
   "updatedBy": "Codex"
 }
