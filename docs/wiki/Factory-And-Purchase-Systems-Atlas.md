@@ -79,10 +79,13 @@ If no purchase type is in range, the dialog closes.
 | --- | ---: | --- |
 | `WFBE_C_UNITS_PURCHASE_RANGE` | `150` | Normal factory purchase range. |
 | `WFBE_C_STRUCTURES_COMMANDCENTER_RANGE` | `5500` | Command center remote interaction range. |
-| `WFBE_C_TOWNS_PURCHASE_RANGE` | `60` | Depot purchase range. |
+| `WFBE_C_TOWNS_CAPTURE_RANGE` | `40` | Depot action/range gate in `updateavailableactions.fsm` (`:39`, `:194`). |
+| `WFBE_C_TOWNS_PURCHASE_RANGE` | `60` | Buy-menu closest-depot lookup range in `GUI_Menu_BuyUnits.sqf:217`; not the FSM `depotInRange` gate. |
 | `WFBE_C_UNITS_PURCHASE_HANGAR_RANGE` | `50` | Airport/hangar purchase range. |
 
 The FSM sets `_purchaseRange = if (commandInRange) then {_ccr} else {_pur}`. That means the command center can effectively turn normal barracks/light/heavy/aircraft purchase into a much larger remote-purchase radius. Depot and hangar logic use their own closest-depot/airport checks.
+
+Important split: `depotInRange` is computed from `_tcr = WFBE_C_TOWNS_CAPTURE_RANGE` in `updateavailableactions.fsm:39,194`; the separate `WFBE_C_TOWNS_PURCHASE_RANGE` value is consumed by the buy menu when it resolves the closest depot at `GUI_Menu_BuyUnits.sqf:217`.
 
 The active buy menu then reads:
 
@@ -220,7 +223,7 @@ Claude DR-33 adds two concrete implementation hazards:
 | Hazard | Evidence | Fix direction |
 | --- | --- | --- |
 | Empty-vehicle buys leak the client queue counter. | Current source still has an empty-vehicle `exitWith` before the normal `unitQueu` / `WFBE_C_QUEUE_*` decrement in `Client_BuildUnit.sqf`. | Patch-ready, not patched. Smoke repeated crewless vehicle buys and normal crewed/infantry buys after the fix. See [Factory queue counter token cleanup](Factory-Queue-Counter-Token-Cleanup). |
-| Factory FIFO token identity is collision-prone; `queu` broadcast churn remains. | Current source still uses a low-entropy random `varQueu` token, and the building `queu` array is still broadcast with `setVariable [..., true]` on enqueue/progress/completion. | Patch the local token and counter first; broadcast reduction remains a separate UI-aware follow-up. See [Factory queue counter token cleanup](Factory-Queue-Counter-Token-Cleanup). |
+| Factory FIFO token identity is collision-prone; `queu` broadcast churn remains. | Current source still initializes `varQueu = random(10)+random(100)+random(1000)` in `Init_Common.sqf:164`, then uses `_unique = varQueu` and rerolls the same random expression in `Client_BuildUnit.sqf:167-172`. The building `queu` array is still broadcast with `setVariable [..., true]` on enqueue/progress/completion (`Client_BuildUnit.sqf:172,191,207`). | DR-33b is still open. Patch the local token and counter first; broadcast reduction remains a separate UI-aware follow-up. See [Factory queue counter token cleanup](Factory-Queue-Counter-Token-Cleanup). |
 
 ## Spawn Position Model
 

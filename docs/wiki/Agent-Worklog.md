@@ -21,6 +21,13 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Folded same-page audit fixes into the pass: Core Systems now treats Discord publishing as a separate `DiscordBot/` integration that consumes mission export data, and Architecture now says `initJIPCompatible.sqf` logs max player slots, not live player count.
 - Evidence checked: `initJIPCompatible.sqf:26-32,52-56,111-123,214-238`, `description.ext:39-67`, `Common/Init/Init_Common.sqf:217-323`, `Server/Init/Init_Server.sqf:10-57,298,510-531,578`, `Client/Init/Init_Client.sqf:52,958`, `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:102,139-145,194-212,246-256`, mission Discord text refs and `DiscordBot/src/*` status updater refs.
 
+## 2026-06-03 - Codex Documentation Finisher: Factory Range / Token Correction
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 27 in [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas).
+- Corrected the depot range split: `updateavailableactions.fsm:39,194` uses `WFBE_C_TOWNS_CAPTURE_RANGE` (40 at `Init_CommonConstants.sqf:323`) for `depotInRange`, while `GUI_Menu_BuyUnits.sqf:217` uses `WFBE_C_TOWNS_PURCHASE_RANGE` (60 at `Init_CommonConstants.sqf:338`) for closest-depot lookup inside the buy menu.
+- Reframed DR-33b as still open with exact token evidence: `Init_Common.sqf:164` initializes random `varQueu`; `Client_BuildUnit.sqf:167-172` uses/rerolls it and broadcasts `queu`, with later broadcasts at `:191` and `:207`.
+- Validation passed: `docs/validate-wiki.ps1`, `git diff --check`, JSON/JSONL parsing and docs/wiki-to-wiki mirror parity.
+
 ## 2026-06-03 - Codex Documentation Finisher: Progress Dashboard At A Glance Refresh
 
 - Claimed [Instructions for Codex](Instructions-For-Codex) item 10.

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T10:30:00+02:00",
+  "generatedAt": "2026-06-03T10:45:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Instructions-For-Codex item 15 plus same-page items 26 and 28 are published/validated: Core systems, Architecture overview and Content structure/maps now have representative source anchors; Discord publishing is separated as external DiscordBot integration; Architecture says max player slots.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 27 for Factory and purchase systems atlas range/token corrections."
+      "currentWork": "Instructions-For-Codex item 27 is published/validated: Factory/purchase atlas now separates depot action range (capture range 40) from buy-menu closest-depot lookup (purchase range 60) and marks DR-33b random varQueu token as still open with exact anchors.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 29 or the next highest-value open status-drift item."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "factory-purchase-range-token-correction",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 27 is resolved locally in Factory-And-Purchase-Systems-Atlas.md with source anchors for depot capture range, buy-menu purchase range and DR-33b random varQueu token status."
+    },
     {
       "lane": "core-architecture-content-citation-uplift",
       "owner": "Codex",
