@@ -2,6 +2,18 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Side-Supply DR-44 Feature-Status Reconciliation
+
+- Reconciled [Feature status](Feature-Status-Register) and [`agent-feature-status.jsonl`](agent-feature-status.jsonl) so the side-supply first-cut row now includes both DR-22 negative-floor correctness and DR-44 direct-PV payload authority.
+- Evidence checked: `Common_ChangeSideSupply.sqf:24-30` computes bad negative floor locally and publishes `wfbe_supply_temp_<side>`; `Server_ChangeSideSupply.sqf:4-13,28-37` reads payload `_side`/`_amount` in west/east handlers and repeats the bad negative-floor math; [Deep review findings](Deep-Review-Findings#round-35--2026-06-02-claude--side-supply-ledger-is-directly-client-writable-dr-44-2nd-direct-pv-forgery) records DR-44.
+- Scope remained docs/status only; no gameplay source files were edited.
+
+## 2026-06-03 - Codex Documentation Finisher: Module Runtime-Edge Lesson Closure
+
+- Promoted the proposed module-runtime-edge lesson to accepted documentation guidance in [Development lessons learned](Development-Lessons-Learned), [Modules atlas](Modules-Atlas) and [Testing workflow](Testing-Debugging-And-Release-Workflow).
+- Evidence checked: `Client/Init/Init_Client.sqf:127-135` for module/helper compiles, `Client/Init/Init_Client.sqf:570-589` for skill reapply/WASP/AutoFlip/artillery/EASA/CM gates, `Common/Init/Init_Common.sqf:319-323` for ICBM/IRS/CIPHER boot init, and `Client_BuildUnit.sqf:275-283,336-356` for unit-creation attach paths.
+- Scope remained docs/status only; no gameplay source files were edited.
+
 ## 2026-06-03 - Codex Documentation Finisher: Dashboard Next-Candidate Refresh
 
 - Refreshed the stale Codex actor handoff in [Progress dashboard](Progress-Dashboard): the row still pointed at cleanup flag/nested-pair promotion even though Latest Batch already marks both `cleanup-flag-nested-pair-shape-closure` and `dr15-false-positive-correction` as published/validated.

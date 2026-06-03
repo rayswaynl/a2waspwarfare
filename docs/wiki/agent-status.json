@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T18:10:00+02:00",
+  "generatedAt": "2026-06-03T18:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed the Progress Dashboard actor handoff after DR-15 false-positive cleanup and cleanup flag/nested-pair closure were both published/validated.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: feature-status reconciliation for newly confirmed findings, machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
+      "currentWork": "Reconciled DR-44 into side-supply Feature Status and promoted the module runtime-edge lesson from proposed to accepted guidance.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another feature-status reconciliation item, machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,18 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "side-supply-dr44-feature-status-reconciliation",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Feature-Status-Register and agent-feature-status.jsonl now carry DR-44 in the side-supply first-cut and economy-authority rows: direct wfbe_supply_temp_<side> channels trust payload _side/_amount, while DR-22 negative-floor arithmetic remains the first correctness patch."
+    },
+    {
+      "lane": "module-runtime-edge-lesson-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Promoted the module-runtime-edge lesson from proposed to accepted. Development-Lessons-Learned, Modules-Atlas, Testing-Debugging-And-Release-Workflow and agent-development-lessons.jsonl now tell future agents to identify and smoke the runtime edge: boot init, respawn reapply, unit creation attach, PV/PVF event or server loop."
+    },
     {
       "lane": "dashboard-next-candidate-refresh",
       "owner": "Codex",

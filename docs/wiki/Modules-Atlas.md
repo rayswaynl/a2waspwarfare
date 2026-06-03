@@ -49,6 +49,7 @@ Utility library plus one boot-time script. `CIPHER_Init.sqf` defines compiled he
 ## Notes for hardening / review
 - Module **gates** are config constants (`WFBE_C_MODULE_WFBE_*`) read at boot; toggling them is the supported on/off switch.
 - Combat modules attach their EHs at **unit creation** in `Client/Functions/Client_BuildUnit.sqf` (IRS/CM/Engines and inline rearmor handlers), so they are client-local on the buyer's machine — consistent with the factory locality model (DR-33). Do not count Reaktiv in that live set unless `Reaktiv_Init.sqf` is deliberately wired back in.
+- Before editing a module, name its runtime edge and smoke that edge: boot init (`Init_Common.sqf:319-323`, `Init_Client.sqf:127-135`, `:587-589`), respawn reapply (`Init_Client.sqf:570-571` and respawn skill reapply paths), unit creation attach (`Client_BuildUnit.sqf:275-283`, `:336-356`), PV/PVF event, or server loop. A module file diff alone is not enough proof that the live behavior changed.
 - The only module with an authority/forgery defect is **Nuke/ICBM** (DR-27); the rest are cosmetic/QoL or AI behavior with no client→server trust surface beyond the shared PVF dispatcher.
 
 ## Continue Reading

@@ -12,7 +12,7 @@ Source root: `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
 | AI respawn/orders | Respawn atlas maps AI respawn; testing workflow now has a branch-specific AI respawn smoke pack. Commander-order variable proof now lives in the AI/headless page. | Runtime Arma smoke is still needed for AI respawn branches and commander Move/Patrol/Defense/Take Towns behavior. |
 | Direct-PV economy helpers | Economy authority pages map the DRs, but implementation agents still need a local rule of thumb before touching helpers. | Shared helpers can look local and harmless while publishing direct mutation payloads; read helpers show the safer server-derived pattern. |
 | Cleanup/garbage/empty vehicles | Marker/cleanup atlas is strong, but patch handoffs are scattered. | Cleanup code has short polling loops, global replicated queues, inconsistent flags and nested-pair array traps. |
-| Non-EASA modules | Modules atlas maps many modules. | Feature changes still need a "where to smoke" rule because modules are split across Common/Client/Server and often attach at unit creation. |
+| Non-EASA modules | Modules atlas and testing workflow now carry the runtime-edge rule. | Use the edge type before module edits: boot init, respawn reapply, unit creation attach, PV/PVF event or server loop. Runtime Arma smoke is still needed when actual behavior changes. |
 
 ## Lesson 1: Smoke Both Vanilla Branches For AI Respawn
 

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T18:10:00+02:00",
+  "generatedAt": "2026-06-03T18:20:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,43 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "side-supply-dr44-feature-status-reconciliation",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/agent-feature-status.jsonl"
+      ],
+      "outputs": [
+        "Feature Status now names DR-44 beside DR-22 for side-supply first cut",
+        "agent-feature-status side-supply record now cites exact payload-trust refs and direct-publicvariable category",
+        "Economy/server-authority class now treats side-supply ledger writes as part of the same authority class"
+      ],
+      "handoff": "Future economy code owner should clamp DR-22 negative floors, validate wfbe_supply_temp_<side> channel/side/amount shape, then separately decide who is authorized to mutate side supply."
+    },
+    {
+      "lane": "module-runtime-edge-lesson-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "docs/wiki/Development-Lessons-Learned.md",
+        "docs/wiki/Modules-Atlas.md",
+        "docs/wiki/Testing-Debugging-And-Release-Workflow.md",
+        "docs/wiki/agent-development-lessons.jsonl"
+      ],
+      "outputs": [
+        "Promoted proposed module runtime-edge lesson to accepted guidance",
+        "Added Tactical modules row to Testing workflow",
+        "Added module hardening/review note requiring runtime-edge smoke"
+      ],
+      "handoff": "Future module edits should cite the owning runtime edge and smoke that edge; do not treat a module file diff alone as proof of live behavior."
+    },
     {
       "lane": "dashboard-next-candidate-refresh",
       "owner": "Codex",
