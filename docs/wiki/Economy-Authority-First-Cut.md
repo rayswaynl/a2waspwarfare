@@ -81,6 +81,8 @@ For `_currentSupply = 100` and `_amount = -1000`, this produces `1100`, not `0`.
 
 Important subtlety: negative `_amount` values are not inherently malicious. Normal spend paths use negative deltas, such as MHQ repair (`Client/Action/Action_RepairMHQ.sqf:30`), WASP base repair (`WASP/baserep/repair.sqf:24`), attack waves (`Server/PVFunctions/AttackWave.sqf:40`), upgrades (`Client/GUI/GUI_UpgradeMenu.sqf:159`), construction (`Client/Module/CoIn/coin_interface.sqf:500,672`) and building repair (`Server/Functions/Server_HandleBuildingRepair.sqf:71`). The problem is that the same signed amount is also the payload sent on `wfbe_supply_temp_<side>` (`Common_ChangeSideSupply.sqf:28-30`) and then trusted by the west/east handlers (`Server_ChangeSideSupply.sqf:4-13,28-37`). Do not "fix" this by rejecting all negative amounts; fix the result clamp and channel/side/shape validation first, then move spend acceptance server-side flow by flow.
 
+Small auditability bug: `Common_ChangeSideSupply.sqf:8-14` reads `_includeStagnation` and `_reason` only when `count _this > 3`. Three-argument calls such as `Server/PVFunctions/AttackWave.sqf:40` pass a reason string but still publish the default `"ERROR! No reason specified..."` reason. Fix this alongside the clamp/validation pass so economy logs keep useful provenance while malformed payloads still produce clear warnings.
+
 The live source of truth for side supply is the side-keyed mission variable `wfbe_supply_%1` read by `Common_GetSideSupply.sqf`. The generic `wfbe_supply` value initialized in `Client/Init/Init_Client.sqf:371` is a legacy alias/cache and should not be used as the target for new authority work.
 
 ### Score and supply reads show mixed authority patterns

@@ -182,6 +182,8 @@ The visible list is therefore a combined result of core metadata, side upgrade s
 
 Focused UI review found a display/detail drift: `Client_UIFillListBuyUnits.sqf:59-60` uses the rounded attack-wave plus unit-cost modifier price for the list and affordability flow, while the detail panel in `GUI_Menu_BuyUnits.sqf:90-99` uses `floor(base * ATTACK_WAVE_PRICE_MODIFIER)` before adding crew cost. Any `UNIT_COST_MODIFIER` discount can therefore leave the details panel showing a different price from the list/purchase path. If the detail panel is used for player decisions, align it to the same helper or formula before rebalancing costs.
 
+The unit-cost modifier also has a reset trap: `Client_UIFillListBuyUnits.sqf:7-16` sets `UNIT_COST_MODIFIER` only when the upgrade level is `1` or `2`. It does not reset the global to `1` when the upgrade level is `0`, even though `Init_CommonConstants.sqf:203` initializes it that way. If the same client had already seen a discounted state, a later no-upgrade list fill can keep the stale discount. Patch by assigning the default before the `if (_unitCostUpgradeLevel > 0)` branch or by using a local price helper instead of a mutable global.
+
 ## Purchase Checks
 
 When `MenuAction == 1`, `GUI_Menu_BuyUnits.sqf` performs these checks before spawning:
@@ -202,6 +204,8 @@ If accepted:
 1. `WFBE_C_QUEUE_<type>` increments locally.
 2. `_params Spawn BuildUnit`.
 3. Funds are deducted with `ChangePlayerFunds`.
+
+There is no refund on the destroyed-factory abort path. The menu deducts funds after spawning `BuildUnit` (`GUI_Menu_BuyUnits.sqf:145-156`), then `Client_BuildUnit.sqf:203-214` sleeps the build time, removes the queue token and exits if the factory is dead/null. That exit decrements the queue counters but does not restore the already deducted player funds. Smoke destroyed-factory and buyer-disconnect cases before changing purchase timing or adding cancellation UX.
 
 Important authority note: no server PVF request is sent for this player purchase. There is also no `Server/PVFunctions/RequestBuyUnit.sqf` in the current source and `RequestBuyUnit` is not registered in `Init_PublicVariables.sqf`.
 
@@ -315,9 +319,11 @@ This means class metadata mistakes can break more than the visible buy menu:
 | Player/server build drift | `Client_BuildUnit.sqf` and `Server_BuyUnit.sqf` duplicate vehicle handler, missile, IRS, countermeasure and crew setup logic. | Any new vehicle behavior may need both paths unless server path is formally retired or refactored. |
 | Queue state is fragile | Building `queu` and client `WFBE_C_QUEUE_*` counters are manually incremented/decremented (`Client_BuildUnit.sqf:167-172`, `:205-207`, `:467-469`); DR-33 counter/token fixes are patch-ready but still absent from current source, while public queue broadcast churn also remains. Wave R added that extra-turret-crew-only vehicle buys, if exposed, can hit the same empty-exit before extra crew creation (`Client_BuildUnit.sqf:365`, `:443`). The buy menu has a close/back path (`GUI_Menu_BuyUnits.sqf:495-499`) but no visible cancel/refund branch for already spawned buy threads. | Always test factory destruction, menu close, empty-vehicle buys, extra-turret-crew selections, repeated purchases and queue hints when touching queues; do not assume cancel/refund semantics exist unless a new branch is added. |
 | Cost authority is local | Menu checks funds and calls `ChangePlayerFunds` locally after spawning build thread. | Do not add new economy side effects to purchase without tracing client funds, commander income, side supply and PV hardening. |
+| Destroyed-factory build abort has no refund | `GUI_Menu_BuyUnits.sqf:156` debits after spawning `BuildUnit`; `Client_BuildUnit.sqf:211-214` exits on dead/null factory after queue cleanup but before unit creation and without a refund. | Decide whether this is intended risk/reward or a bug. If fixing, make debit/acceptance atomic with build start or add a single refund path that cannot be abused by disconnects or factory-damage timing. |
 | Spawn pads are object-class conventions | Light/heavy/air/barracks pads depend on nearby helper object classes. | Document required map editor objects when adding or moving bases. |
 | Attack-wave cost is client-visible state | `ATTACK_WAVE_PRICE_MODIFIER` affects list display and purchase cost. | Keep JIP sync and local modifier state aligned before adding temporary discounts. |
 | Buy-list detail price can drift from actual list/purchase price | `Client_UIFillListBuyUnits.sqf:59-60` applies `UNIT_COST_MODIFIER`, while `GUI_Menu_BuyUnits.sqf:90-99` detail math does not before crew cost. | Extract or duplicate one exact price helper before changing unit-cost discounts or attack-wave modifiers. |
+| Unit-cost discount can stay stale | `Client_UIFillListBuyUnits.sqf:7-16` mutates global `UNIT_COST_MODIFIER` for levels `1` and `2`, but does not restore `1` for level `0`. | Set default `1` on every list fill or replace the global with a local computed modifier shared by list, detail and purchase formulas. |
 | Special-vehicle color/hint support is incomplete | The briefing claims colored special vehicles, `Client_UIFillListBuyUnits.sqf:67-100` colors many support classes, and `GUI_Menu_BuyUnits.sqf:442-458` has manual hints/conditions for special purchase classes. | Treat colored/hinted special vehicles as a UI affordance, not a complete feature registry. Add new support classes to list coloring, detail text, purchase checks and root arrays together. |
 
 ## Implementation Checklist

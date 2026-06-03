@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T00:25:56+02:00",
+  "generatedAt": "2026-06-04T00:37:08+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published/validated the Spark scout harvest batch, corrected live status handoff wording and launched the next Spark scout wave for deeper source discovery.",
-      "nextExpectedOutput": "Harvest the next scout completions, promote only source-backed findings, then validate and publish a scoped wiki/docs batch."
+      "currentWork": "Harvested the micro-scout wave after Spark context/quota limits and promoted source-backed factory, construction, economy and modded-mission findings.",
+      "nextExpectedOutput": "Validate mirror/wiki parity, commit and push this micro-scout documentation batch."
     },
     "Codex-2": {
       "status": "ready",
@@ -38,11 +38,17 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "All Spark scouts from this wave are completed, errored/closed or harvested. Useful findings were promoted; confirmation-only reports were treated as validation notes.",
+      "currentWork": "Current scout wave is closed. Useful findings were promoted; UI/PV/respawn confirmation reports were treated as validation notes; broad AI-cap scout overflowed and should be retried only with a tiny file set.",
       "nextExpectedOutput": "No active sub-agent output pending."
     }
   },
   "laneSummary": [
+    {
+      "lane": "micro-scout-wave-factory-construction-economy-modded",
+      "owner": "Codex/Sub-agents",
+      "status": "harvested-validating",
+      "output": "Micro-scout wave promoted five source-backed findings plus one logging/audit defect: Napf/Eden/Lingor compile missing Common_GetTotalCamps.sqf; UNIT_COST_MODIFIER can keep a stale discount when upgrade level is 0; destroyed-factory purchase abort cleans queue state but does not refund already debited player funds; auto-wall construction uses one global toggle; Common_ChangeSideSupply ignores three-argument reason strings. UI, PV and respawn scouts mostly confirmed canonical pages; AI-cap scout overflowed and was closed."
+    },
     {
       "lane": "spark-scout-wave-economy-construction-respawn-ai-pvf-ui",
       "owner": "Codex/Sub-agents",

@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-04T00:37:08+02:00 - Codex - Micro-scout harvest after Spark quota/context limits
+
+- Ran a second scout wave, then switched from broad Spark prompts to bounded micro-scouts after context-window errors and Spark quota limits.
+- Promoted source-backed findings: modded Napf/Eden/Lingor compile missing `Common_GetTotalCamps.sqf`; `UNIT_COST_MODIFIER` can keep a stale discount when unit-cost upgrade level returns to `0`; destroyed-factory purchase abort cleans queue state but does not refund the already debited player; auto-wall construction uses a global `isAutoWallConstructingEnabled` toggle; and `Common_ChangeSideSupply.sqf` ignores three-argument reason strings.
+- Treated UI IDC/IDD, MASH marker, respawn charge, PV trust-boundary and broad economy findings as confirmation-only where canonical pages already covered them.
+- Closed errored/overflowed scouts, including the AI-cap broad scout; future AI-cap scouting should receive only the already identified cap files rather than a whole subsystem prompt.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-04T00:13:27+02:00 - Codex - Spark scout wave harvest and micro-lane split
 
 - Harvested completed Spark scouts from the economy/factory/respawn/UI/HC/tooling/entrypoint/camp/paratrooper/content/variant/RequestSpecial lanes. Most economy, factory, respawn/MASH, HC and paratrooper results confirmed existing canonical pages, so they were treated as validation instead of duplicated.
