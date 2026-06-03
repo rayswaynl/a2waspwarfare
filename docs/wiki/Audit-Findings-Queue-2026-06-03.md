@@ -109,3 +109,26 @@ Typos (all-language, visible): **UX2** "TeamBance"/"Autonalance" (autobalance), 
 - Cross-check the ⬜ rows; several "high" SG/NJ items (SG1 win-inversion, SG3 supply-underflow, SG2 HQ double-score, NJ8 HQ-dup, NJ10 JIP-HQ-killed) are economy/victory-critical — confirm before any fix.
 - Recurring patterns worth a wiki note: (1) **non-atomic check-and-set on networked vars** (NJ8, NJ11, NJ2); (2) **EHs not re-added on respawn** (NJ5, NJ7); (3) **`||` vs `&&` loop-exit slips** (AI1, V1, SG7); (4) **client `sideJoined` used server-side** (AI8); (5) **old-vs-new side variable mix-ups on capture** (SG5).
 - AI17 confirmed FALSE POSITIVE — note in any AI-waypoint wiki page that `Common_WaypointsAdd.sqf` (7-element) ≠ `AI_WPAdd.sqf` (6-element).
+
+---
+
+## Verification run 2 (2026-06-03) — owner-reviewed; fixes shipped + corrections
+Re-verified against the release tree (triple-check). Outcomes:
+
+**✅ FIXED & shipped to PR #8 (commit `97370acb`):**
+- **SG5** — `server_town_camp.sqf:135` `str _side` → `str _newSide` (captured camp now flies the captor's flag).
+- **AI7** — `Server_AI_SetTownAttackPath.sqf:41` now submits the built first waypoint before the 30% `exitWith`, so the flanking approach is kept.
+- **AI11** — capped the water-avoidance loop at 20 retries + fallback to town centre in **both** `AI_Patrol.sqf:26` and `AI_TownPatrol.sqf:50`.
+- **AI2** — town-mortar feature **removed**: deleted orphan `Server_SpawnTownMortars.sqf` (no compile registration) + the never-true caller line in `Server_ManageTownDefenses.sqf:32`. (`WFBE_%1DEFENSES_MORTAR` config vars in the 11 Structures files are now orphaned — optional further cleanup, left to limit blast radius.)
+
+**Verification corrections (owner decided NOT to fix):**
+- **V2** — REAL duplicate (`Client_BuildUnit.sqf:332`/`:334` differ only by a stray space) but **impact overstated**: `HandleReload`→`Common_HandleReload.sqf` only calls `setWeaponReloadingTime` (idempotent), so it's a redundant per-shot script spawn, **not** "double ammo." Low-value cleanup; owner querying necessity → left.
+- **AI1** — CONFIRMED real (`||` should be `&&`; wiped/deleted patrol teams loop forever — teams are not refilled in place). Owner querying → left for now.
+- **AI8** — CONFIRMED: IR-smoke is gated on `IRSMOKE upgrade > 0` (only once researched) and `_side` is the in-scope param (`_this select 3`); `sideJoined` is wrong server-side. Fix is safe (AI vehicles get IR-smoke only when the side researched it). Awaiting owner go.
+- **NJ11** — REAL in theory, but **low practical risk**: the queue's check→set is atomic in-tick and the manual buy button is client-greyed while `wfbe_upgrading`, leaving only a tiny network-latency window. (Note: the queue IS player-usable via `RequestEnqueue.sqf`, so the race is queue-vs-manual, not player-vs-AI-commander.) Owner skip = defensible.
+- **AI15** — **NON-ISSUE / CLOSED.** Overstated: `AI_MoveTo`/`AI_Patrol` set `setSpeedMode "NORMAL"` (not `"LIMITED"`) → cautious, not crawling; heavy combat AI uses the AWARE attack path anyway. Dev TODO noted at `Server_AI_SetTownAttackPath.sqf:74`. Do not action.
+- **NJ3** — design decision (reveal-enemy vs fog-of-war); owner chose to leave as-is.
+- **AI3** — backburner (balance change; verify captured towns retain `wfbe_town_defenses` + occupied gunner type first).
+- **AI5** — skip (marginal).
+
+Maintainers: SG5/AI7/AI11/AI2 are done on PR #8 — please cross-check and close those rows; AI15 → mark non-issue; the rest of the UNVERIFIED rows above still need cross-referencing.

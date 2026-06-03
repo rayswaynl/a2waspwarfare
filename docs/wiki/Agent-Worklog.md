@@ -1432,3 +1432,8 @@ Key conclusions:
 - 14 deep-dived + verdicts: confirmed real (SG4 double-bug, AI11, NJ11, V2, SG5, AI1, AI7), nuanced/owner-decision (NJ3 fog-of-war direction, AI3 balance, AI8, AI5 skip), OVERSTATED (AI15 — SpeedMode NORMAL, not crawling), and **one FALSE POSITIVE: AI17** (attack path uses Common_WaypointsAdd.sqf which DOES apply the 7th behaviour element; the agent checked AI_WPAdd.sqf). AI2 town-mortars are doubly-dead + never invoked (recommend removal).
 - ACTION for maintainers (codex/claude): cross-check the UNVERIFIED rows against code + existing findings pages, dedupe, close false positives. High-priority economy/victory items flagged (SG1/SG2/SG3/NJ8/NJ10).
 - This docs change only adds the queue page + this worklog line; no gameplay source touched on this branch.
+
+## VERIFICATION RUN 2 - Claude - audit findings re-checked, fixes shipped
+- Triple-checked the audit queue. SHIPPED to PR #8 (release commit 97370acb): SG5 (camp flag _newSide), AI7 (attack approach WP kept), AI11 (water-loop cap+fallback x2), AI2 (town mortars removed - orphan file deleted).
+- Corrections recorded in Audit-Findings-Queue-2026-06-03: V2 real-dup-but-idempotent (low impact, not double-ammo), AI1 confirmed, AI8 confirmed-gated, NJ11 real-but-low-risk (atomic in-tick + client-gated), AI15 NON-ISSUE (SpeedMode NORMAL not LIMITED) -> close, NJ3/AI3/AI5 owner-deferred.
+- Docs-only change (queue page + this worklog line); no gameplay source on this branch.
