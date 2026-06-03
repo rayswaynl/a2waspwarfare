@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-03T23:30:00+0200 - Codex - drone-recon-branch-intel-refresh
+
+- Pulled both docs surfaces and source-checked newly fetched support branches before changing docs.
+- Confirmed `origin/feat/drone-saturation-strike` head `8ca4be90` is the latest drone tuning branch: 4-Ka package, HP 20, cruise altitude 300, scatter 6 and cooldown 300.
+- Confirmed `origin/feat/recon-uav` head `563418ea` adds AI-flown `ReconUAV`/`ReconUAVRecall`, removes the old `Client/Module/UAV/uav*.sqf` UI scripts and old `Server/Support/Support_UAV.sqf`, but only includes drone history through `93b47594`.
+- Updated [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match), [Feature status register](Feature-Status-Register), dashboard and machine ledgers so future agents treat drone strike and recon UAV as separate support-review lanes.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-03T19:08:00+0200 - Codex - documentation-finisher-mirror-reconciliation
 
 - Pulled both documentation surfaces and found the live wiki had four direct commits after the mirror's `miksuu-upstream-commit-intel` batch: `f5c4ab6`, `2d73c5e`, `7c71b6a` and `69f48e4`.

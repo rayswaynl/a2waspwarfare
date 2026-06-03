@@ -1,12 +1,13 @@
 # PR8 And Drone Upstream Lesson Match
 
-Snapshot: 2026-06-03. This page maps the upstream developer-history lessons against rayswaynl PR #8 (`release/2026-06-feature-bundle`) and the drone branch series (`feat/drone-saturation-strike`, `test/drone-on-bundle`, `test/release-plus-drone`). It is a review checklist, not an implementation patch.
+Snapshot: 2026-06-03. This page maps the upstream developer-history lessons against rayswaynl PR #8 (`release/2026-06-feature-bundle`) and the drone/support branch series (`feat/drone-saturation-strike`, `feat/recon-uav`, `test/drone-on-bundle`, `test/release-plus-drone`). It is a review checklist, not an implementation patch.
 
 ## Bottom Line
 
 - PR #8 is closest to release-ready where it already absorbed the upstream lessons: supply-heli rescope, dead supply-script removal, A2 OA `pushBack` fix, UI tab-icon fix, supply cooldown casing and `SupplyByHeli` cleanup.
 - PR #8 still needs smoke proof in the exact areas upstream history says are fragile: supply JIP/reuse, upgrade queue forged/JIP requests, WDDM static-defense accounting, delayed kill rewards, Buy/EASA UI state and generated Takistan propagation.
-- Drone work has one high-value pre-merge lesson: make `DroneStrike` server-authoritative before treating it like a safe support power. The current branch still sends a client-shaped `RequestSpecial` and debits client funds before server acceptance.
+- Drone work has one high-value pre-merge lesson: make `DroneStrike` server-authoritative before treating it like a safe support power. Current `feat/drone-saturation-strike` still sends a client-shaped `RequestSpecial` and debits client funds before server acceptance.
+- `feat/recon-uav` is a separate support replacement lane on top of an older drone snapshot: it removes the old `Client/Module/UAV/uav*.sqf` UI scripts and `Server/Support/Support_UAV.sqf`, adds server AI-flown `ReconUAV`/`ReconUAVRecall`, and does **not** include the latest `8ca4be90` drone tuning from `feat/drone-saturation-strike`.
 
 ## PR #8 Useful Lesson Matches
 
@@ -26,6 +27,16 @@ Snapshot: 2026-06-03. This page maps the upstream developer-history lessons agai
 
 ## Drone Branch Useful Lesson Matches
 
+### Branch Refresh - Drone And Recon
+
+Both branch heads split from stable `origin/master` at merge base `2cdf5fb8`, but they now carry different truths:
+
+| Branch | Current evidence | What changed | Merge lesson |
+| --- | --- | --- | --- |
+| `feat/drone-saturation-strike` | Head `8ca4be90`; `origin/master..origin/feat/drone-saturation-strike` is 17 files, +1133/-4. | Latest tuning is a 4-Ka package, 2 flare / 2 munition, HP 20, cruise altitude 300, scatter 6 and cooldown 300. It removes smoke contrail visibility and keeps the feature source-Chernarus-only. | Treat as a paid attack support. Move acceptance, debit, cooldown, upgrade and side/caller validation server-side before merge. |
+| `feat/recon-uav` | Head `563418ea`; `origin/master..origin/feat/recon-uav` is 25 files, +1461/-657. | Adds `Support_ReconUAV.sqf`, `ReconUAV` and `ReconUAVRecall`; deletes old `Client/Module/UAV/uav.sqf`, `uav_interface*.sqf`, `uav_spotter.sqf` and `Server/Support/Support_UAV.sqf`. | Treat as a separate support replacement. Validate removal of old UAV UI/module paths, server-side cost/upgrade/cap checks, side-only reveal audience, recall cleanup, JIP state and generated Vanilla propagation. |
+| Relationship | `feat/recon-uav` includes drone history through `93b47594`, but not latest `8ca4be90`. | Recon's drone constants differ from the latest drone branch head. | Do not assume drone tuning parity when reviewing or cherry-picking recon. Rebase/merge consciously, then recheck constants, tactical menu IDs and support registration. |
+
 | Drone area | Drone evidence | Upstream lesson match | Useful check before merge | Confidence |
 | --- | --- | --- | --- | --- |
 | Paid support authority | `GUI_Menu_Tactical.sqf` sends `["DroneStrike", sideJoined, _callPos, clientTeam]` and client-debits; `Server_HandleSpecial.sqf` forwards to `KAT_DroneStrike`; `Support_DroneStrike.sqf` checks toggle/cap only. | Supply PR #10 remote activation, ICBM authority lessons, AttackWave/PV schema drift. | Move cost, cooldown, UAV/Air upgrade, caller/team/side, map bounds and non-water validation to server; debit only after server accept. | high |
@@ -39,14 +50,18 @@ Snapshot: 2026-06-03. This page maps the upstream developer-history lessons agai
 | Generated mission propagation | Drone symbols are source-Chernarus-only in `feat/drone-saturation-strike`; not in `Missions_Vanilla` or `Modded_Missions`. | Takistan/copy debt and LoadoutManager packaging scope lessons. | Run LoadoutManager before merge or mark branch Chernarus-only; review Takistan GUI, constants, server compile, strings and sounds. | high |
 | Sound asset contract | `Sounds/description.ext` adds `drone_stuka`; no matching `Sounds/drone_stuka-10.ogg`; runtime default still uses existing sound. | Sound generator filename contract `a31cfdb4`, `e2d23d00`. | Add a real/placeholder asset before enabling `drone_stuka`, or remove/defer the class. | high |
 | OA/UI map-click traps | `test/release-plus-drone` fixed A3-only `pushBack` and debug teleport consuming map-click confirmation; drone uses tactical map-click flow. | OA compatibility (`2a62eaa0`) and client UI lifecycle lessons. | OA 1.64 smoke: menu enablement, click-to-call, cancel/no-water click, debug teleport armed/unarmed. | high |
+| Recon UAV replacement | `feat/recon-uav` adds `Server/Support/Support_ReconUAV.sqf`, `Server_HandleSpecial.sqf` cases for `ReconUAV`/`ReconUAVRecall`, and tactical menu send paths for `["ReconUAV", sideJoined, clientTeam]` plus recall. | Client/UI/marker lifecycle and old UAV marker leakage lessons (`95a12305`, `9c72a281`) say recon visibility must be side-scoped and JIP-safe. | Smoke old UAV menu removal, deploy/recall, cap decrement, destroyed UAV cleanup, side-only reveals, JIP during active orbit and no-HQ/no-town-guard exits. | high |
+| Branch relationship / tuning drift | Recon branch has drone commits through `93b47594`, while latest drone branch head is `8ca4be90`. | Branch names can hide divergent truth; upstream negative-knowledge lessons warn against assuming branch family parity. | Before combining, diff `Init_CommonConstants.sqf`, tactical menu IDs, support compiles and sound/string entries across both heads; pick one drone-tuning baseline explicitly. | high |
 
 ## Review Priority
 
 1. Drone: server-authoritative acceptance/debit/cooldown is the most useful upstream lesson to apply before merge.
-2. PR #8: supply-heli JIP/reuse and reward-path smoke are the highest-value checks.
-3. PR #8: rebase/cherry-pick relationship with PR #12 should be settled before final smoke because both touch economy, build-unit and kill/PV paths.
-4. Both: generated Takistan propagation is not optional if release scope is "mission bundle"; otherwise keep Chernarus-only language explicit.
-5. Both: final RPT scan should include UI/menu paths, not just server feature harness events, because upstream history repeatedly found UI/runtime regressions late.
+2. Recon UAV: validate that the old UAV module was intentionally replaced, not half-deleted, and that reveal/recall/JIP state is server-owned enough for a support feature.
+3. Drone/recon combination: settle the `8ca4be90` vs `93b47594` tuning drift before cherry-picking or merging.
+4. PR #8: supply-heli JIP/reuse and reward-path smoke are the highest-value checks.
+5. PR #8: rebase/cherry-pick relationship with PR #12 should be settled before final smoke because both touch economy, build-unit and kill/PV paths.
+6. All support branches: generated Takistan propagation is not optional if release scope is "mission bundle"; otherwise keep Chernarus-only language explicit.
+7. All support branches: final RPT scan should include UI/menu paths, not just server feature harness events, because upstream history repeatedly found UI/runtime regressions late.
 
 ## Continue Reading
 

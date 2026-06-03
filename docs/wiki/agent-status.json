@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T23:05:00+02:00",
+  "generatedAt": "2026-06-03T23:30:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed Pending-Owner-Decisions and machine context so DR-43 duplicate-bind wording and DR-19 hosted-FPS branch scope match the current source evidence.",
+      "currentWork": "Refreshed drone/recon support branch intelligence so PR8/drone lessons and Feature Status distinguish latest DroneStrike tuning from the separate ReconUAV replacement branch.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: feature-status reconciliation, owner-decision consolidation, P0/P1 accuracy drift with exact source refs, or deeper release/readiness smoke planning."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "drone-recon-branch-intel-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "PR8-And-Drone-Upstream-Lesson-Match and Feature-Status-Register now capture the fetched support branch split. origin/feat/drone-saturation-strike head 8ca4be90 is latest drone tuning, while origin/feat/recon-uav head 563418ea adds ReconUAV/ReconUAVRecall and removes the old UAV module but only contains drone history through 93b47594. Future support owners must resolve tuning drift, server-authority acceptance/debit/cooldown and generated-mission scope before merge."
+    },
     {
       "lane": "owner-decision-branch-scope-refresh",
       "owner": "Codex",

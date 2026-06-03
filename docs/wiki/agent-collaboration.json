@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T23:05:00+02:00",
+  "generatedAt": "2026-06-03T23:30:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,35 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "drone-recon-branch-intel-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/PR8-And-Drone-Upstream-Lesson-Match.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/agent-feature-status.jsonl",
+        "docs/wiki/agent-knowledge.jsonl",
+        "docs/wiki/agent-events.jsonl",
+        "origin/feat/drone-saturation-strike",
+        "origin/feat/recon-uav",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_DroneStrike.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_ReconUAV.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf"
+      ],
+      "outputs": [
+        "Captured that feat/drone-saturation-strike head 8ca4be90 is latest drone tuning",
+        "Captured that feat/recon-uav head 563418ea replaces old UAV scripts with AI-flown ReconUAV/ReconUAVRecall",
+        "Recorded branch drift: recon includes drone history through 93b47594, not latest 8ca4be90",
+        "Routed future merge review to paid support authority, old-UAV replacement, reveal/recall/JIP cleanup and generated mission scope"
+      ],
+      "handoff": "Future support owner should not merge or cherry-pick drone/recon by branch name alone. Resolve the drone tuning baseline first, move DroneStrike cost/cooldown/upgrade/caller validation server-side, verify ReconUAV replacement and recall cleanup, then propagate Vanilla with LoadoutManager or keep the branch explicitly Chernarus-only."
+    },
     {
       "lane": "generated-mission-drift-status-closure",
       "owner": "Codex",
