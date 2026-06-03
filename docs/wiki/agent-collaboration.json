@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T16:00:00+02:00",
+  "generatedAt": "2026-06-03T16:10:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,30 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wave-q-commander-hq-lifecycle-harvest",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Subagent-Discovery-Swarm.md",
+        "docs/wiki/Commander-HQ-Lifecycle-Atlas.md",
+        "docs/wiki/Commander-Reassignment-Call-Shape.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Deep-Review-Findings.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AssignNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnHQKilled.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Action/Action_RepairMHQ.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestMHQRepair.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_MHQRepair.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnPlayerDisconnected.sqf"
+      ],
+      "outputs": [
+        "Closed Wave Q Lorentz commander/HQ lifecycle lead as canonical after source recheck",
+        "Added commander-disconnect fallback owner-decision note to lifecycle and feature-status pages"
+      ],
+      "handoff": "No Wave Q lead remains harvest-pending. Future commander/HQ code owners should patch DR-15 reassignment separately from DR-20 HQ-kill idempotency, MHQ repair authority and any owner decision about commander disconnect auto-reassignment."
+    },
     {
       "lane": "wave-q-hubble-factory-buy-routing-harvest",
       "owner": "Codex",
@@ -59,7 +83,7 @@
         "Promoted Wave Q Linnaeus side-supply negative-delta/direct-PV helper nuance",
         "Added development lesson and machine-readable lesson record"
       ],
-      "handoff": "Future economy owner should patch side-supply clamp/channel validation first, then migrate spend authority server-side; next Wave Q harvest candidate is Hubble's player-buy path correction."
+      "handoff": "Future economy owner should patch side-supply clamp/channel validation first, then migrate spend authority server-side. Wave Q economy/factory/commander/town/UI leads are now source-checked or routed; pick fresh stale-status rows instead of rediscovering them."
     },
     {
       "lane": "wave-q-town-camp-routing-harvest",
@@ -86,7 +110,7 @@
         "Promoted Wave Q Banach town/camp/supply routing check as already canonical",
         "Updated Discovery Swarm, Progress Dashboard and machine-readable coordination state"
       ],
-      "handoff": "Banach town/camp lead does not need a new owner page. Future code owners should use the existing Towns/Camps, Server Runtime, Supply Mission Authority and Abandoned Feature Revival pages; next Wave Q harvest candidate is Hubble's player-buy path correction."
+      "handoff": "Banach town/camp lead does not need a new owner page. Future code owners should use the existing Towns/Camps, Server Runtime, Supply Mission Authority and Abandoned Feature Revival pages; Wave Q leads are now closed unless fresh source contradicts them."
     },
     {
       "lane": "dr39-agent-readable-ref-cleanup",
@@ -861,7 +885,7 @@
       "outputs": [
         "Read-only source reports for Codex review"
       ],
-      "handoff": "Raw Wave Q reports returned and are not canonical until Codex source-checks and promotes them into owner pages. Curie's RHUD/endgame currentCutDisplay collision is promoted locally; remaining next harvest leads are negative side-supply amount handling, town patrol reset/camp repair authority and player-buy path correction."
+      "handoff": "Raw Wave Q reports returned and were not canonical until source-checked. Curie, Linnaeus, Lorentz, Hubble and Banach are now promoted/routed in owner pages; no Wave Q lead should remain harvest-pending unless fresh source contradicts the current docs."
     },
     {
       "lane": "wave-p-owner-page-harvest",

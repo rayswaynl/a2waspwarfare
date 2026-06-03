@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Wave Q Lorentz Commander/HQ Lifecycle Harvest
+
+- Source-checked Lorentz's Wave Q commander/HQ lead against `Server/PVFunctions/RequestNewCommander.sqf:3-16`, `Server/Functions/Server_AssignNewCommander.sqf:3-5`, `Server/Functions/Server_OnHQKilled.sqf:8-20,46-82`, `Client/Action/Action_RepairMHQ.sqf:5-35`, `Server/PVFunctions/RequestMHQRepair.sqf:1`, `Server/Functions/Server_MHQRepair.sqf:7-79` and `Server/Functions/Server_OnPlayerDisconnected.sqf:136-146`.
+- Confirmed the reassignment call-shape bug, HQ-kill duplicate/idempotency risk and MHQ repair authority gap are already canonical in the commander/HQ, reassignment, Feature Status and deep-review pages.
+- Added the missing commander-disconnect fallback note: disconnect clears `wfbe_commander` and broadcasts `CommanderDisconnected`, but no automatic vote/reassignment call is proven in that block. Updated the discovery swarm, dashboard and machine records so Lorentz is no longer stale `harvest pending`.
+
 ## 2026-06-03 - Codex Documentation Finisher: Wave Q Hubble Factory Buy Routing Harvest
 
 - Source-checked Hubble's Wave Q factory/purchase lead against `Client/GUI/GUI_Menu_BuyUnits.sqf:102-156`, `Client/Functions/Client_BuildUnit.sqf:167-208,365,467-469`, `Common/Init/Init_PublicVariables.sqf:9-21` and `Server/Init/Init_Server.sqf:10`.

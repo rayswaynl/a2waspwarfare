@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T16:00:00+02:00",
+  "generatedAt": "2026-06-03T16:10:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Hubble's Wave Q factory/player-buy lead as source-checked and already canonical across factory, queue, feature-status and deep-review pages.",
-      "nextExpectedOutput": "Pick the next highest-value stale validation/status row or fresh source-backed docs gap."
+      "currentWork": "Closed Lorentz's Wave Q commander/HQ lifecycle lead as source-checked and canonical, adding the missing commander-disconnect fallback owner-decision note.",
+      "nextExpectedOutput": "Pick the next highest-value stale validation/status row or fresh source-backed docs gap; Wave Q rows no longer have a harvest-pending lead."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wave-q-commander-hq-lifecycle-harvest",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Lorentz's Wave Q commander/HQ lead is source-checked and closed: DR-15 commander reassignment, DR-20 HQ-kill duplicate/idempotency and DR-6 MHQ repair authority were already canonical; Commander/HQ lifecycle and Feature Status now also state that commander disconnect clears wfbe_commander without proving automatic reassignment."
+    },
     {
       "lane": "wave-q-hubble-factory-buy-routing-harvest",
       "owner": "Codex",

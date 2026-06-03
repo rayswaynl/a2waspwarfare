@@ -102,6 +102,8 @@ When the local player becomes commander:
 
 When commander status is lost, the loop removes MHQ actions 0-3, removes `HQAction`, clears HC groups and disables team autonomy (`updateclient.sqf:196-205,226-229`). This action-removal path is position/index-sensitive; changes to HQ/MHQ actions should be smoked in commander handoff, respawn and JIP flows.
 
+Commander disconnect is handled server-side by clearing, not reassignment. `Server_OnPlayerDisconnected.sqf:136-146` checks whether the disconnecting team is the current commander team, sets side logic `wfbe_commander = objNull`, sends `CommanderDisconnected`, and clears team autonomy/respawn overrides. No `VoteForCommander`, `RequestNewCommander` or `AssignNewCommander` call appears in that disconnect block, so automatic replacement is not proven in current source. Treat auto-reassign/vote restart as a separate owner decision rather than assuming the AI commander or vote system takes over.
+
 ## HQ Deploy And Mobilize
 
 HQ deployment/mobilization is a special CoIn structure flow handled by `Construction_HQSite.sqf`.
@@ -175,6 +177,7 @@ This is not just "another repair UI." It mutates economy/town state and HQ posit
 | --- | --- | --- | --- |
 | Patch-ready correctness | Manual commander reassignment helper passes an array as `_side`. | `RequestNewCommander.sqf:13-14`; `Server_AssignNewCommander.sqf:3-5` | Patch via [Commander reassignment call shape](Commander-Reassignment-Call-Shape), then smoke one client notification. |
 | Authority-light | Normal MHQ repair is client-debited and sends only side to server. | `Action_RepairMHQ.sqf:24-35`; `RequestMHQRepair.sqf:1`; `Server_MHQRepair.sqf:7-79` | Server should validate requester, side, dead HQ, repair vehicle range, repair count and funds before creating the MHQ. |
+| Partial fallback | Commander disconnect clears `wfbe_commander` and warns the side, but does not prove automatic reassignment. | `Server_OnPlayerDisconnected.sqf:136-146`; `Server_VoteForCommander.sqf:48-57` | Decide whether disconnect should leave no commander, restart a vote, or restore AI commander behavior; smoke human commander disconnect and reconnect. |
 | Authority-light | Commander income percent is client-written and server-consumed. | `GUI_Menu_Economy.sqf:24-27,74-79`; `updateresources.sqf:36-43` | Server should accept percent changes only from the current commander team and clamp the configured range. |
 | Authority-light | Commander structure sell/refund is driven from Economy UI. | `GUI_Menu_Economy.sqf:104-150` | Move ownership, side, refund and destruction checks server-side before expanding sell/recovery mechanics. |
 | Authority-light/high impact | WASP cash HQ recovery moves the wreck and resets town SV client-side. | `WASP/actions/Action_RepairMHQDepot.sqf:19-29` | Move one-time flag, funds debit, HQ recovery position and town-SV side effects to a server-owned request. |
