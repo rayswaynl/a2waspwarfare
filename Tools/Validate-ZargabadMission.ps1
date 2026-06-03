@@ -324,6 +324,57 @@ foreach ($townName in $twoApproachTownNames) {
 }
 Assert-Equal "named two-approach population anchor failures" $namedTwoApproachFailures.Count 0
 Assert-Equal "towns without defenses" @($parsedTowns | Where-Object { $_.Defenses -lt 1 }).Count 0
+$expectedDefensePlacement = @(
+	[pscustomobject]@{ Id = 103; X = 3865; Y = 4000; Town = "Zargabad City Center"; Kinds = @("MGNest"); Min = 200; Max = 230 },
+	[pscustomobject]@{ Id = 104; X = 4285; Y = 3910; Town = "Zargabad City Center"; Kinds = @("MGNest"); Min = 200; Max = 230 },
+	[pscustomobject]@{ Id = 105; X = 4075; Y = 4130; Town = "Zargabad City Center"; Kinds = @("MG"); Min = 165; Max = 195 },
+	[pscustomobject]@{ Id = 109; X = 3960; Y = 4800; Town = "Zargabad North District"; Kinds = @("MGNest"); Min = 175; Max = 200 },
+	[pscustomobject]@{ Id = 110; X = 4320; Y = 4730; Town = "Zargabad North District"; Kinds = @("MG"); Min = 170; Max = 195 },
+	[pscustomobject]@{ Id = 114; X = 4000; Y = 3120; Town = "Zargabad South District"; Kinds = @("MGNest"); Min = 160; Max = 185 },
+	[pscustomobject]@{ Id = 115; X = 4340; Y = 3220; Town = "Zargabad South District"; Kinds = @("MG"); Min = 170; Max = 195 },
+	[pscustomobject]@{ Id = 118; X = 3150; Y = 3860; Town = "West Suburbs"; Kinds = @("MGNest"); Min = 150; Max = 175 },
+	[pscustomobject]@{ Id = 121; X = 5115; Y = 3995; Town = "East Market"; Kinds = @("MGNest"); Min = 150; Max = 180 },
+	[pscustomobject]@{ Id = 125; X = 2750; Y = 5230; Town = "Zargabad Airfield"; Kinds = @("MG"); Min = 220; Max = 245 },
+	[pscustomobject]@{ Id = 126; X = 3200; Y = 5140; Town = "Zargabad Airfield"; Kinds = @("AA"); Min = 215; Max = 240 },
+	[pscustomobject]@{ Id = 127; X = 3040; Y = 5370; Town = "Zargabad Airfield"; Kinds = @("MGNest"); Min = 170; Max = 195 },
+	[pscustomobject]@{ Id = 131; X = 4280; Y = 5830; Town = "Rahim Villa"; Kinds = @("MGNest"); Min = 175; Max = 200 },
+	[pscustomobject]@{ Id = 132; X = 4620; Y = 5710; Town = "Rahim Villa"; Kinds = @("MGNest"); Min = 160; Max = 190 },
+	[pscustomobject]@{ Id = 136; X = 2310; Y = 5640; Town = "Northwest Base"; Kinds = @("MG"); Min = 180; Max = 210 },
+	[pscustomobject]@{ Id = 137; X = 2680; Y = 5560; Town = "Northwest Base"; Kinds = @("AA"); Min = 170; Max = 200 },
+	[pscustomobject]@{ Id = 140; X = 3650; Y = 5815; Town = "North Camp"; Kinds = @("MGNest"); Min = 160; Max = 185 },
+	[pscustomobject]@{ Id = 143; X = 5820; Y = 4370; Town = "East Farms"; Kinds = @("MGNest"); Min = 170; Max = 200 },
+	[pscustomobject]@{ Id = 146; X = 4190; Y = 1920; Town = "South Farms"; Kinds = @("MGNest"); Min = 170; Max = 200 },
+	[pscustomobject]@{ Id = 149; X = 2100; Y = 3425; Town = "West Farms"; Kinds = @("MGNest"); Min = 155; Max = 180 },
+	[pscustomobject]@{ Id = 152; X = 3145; Y = 1760; Town = "Southern Outskirts"; Kinds = @("MGNest"); Min = 160; Max = 185 },
+	[pscustomobject]@{ Id = 153; X = 4070; Y = 3765; Town = "Zargabad City Center"; Kinds = @("AT"); Min = 175; Max = 200 },
+	[pscustomobject]@{ Id = 154; X = 3920; Y = 3940; Town = "Zargabad City Center"; Kinds = @("MG", "GL"); Min = 145; Max = 170 },
+	[pscustomobject]@{ Id = 155; X = 4140; Y = 4585; Town = "Zargabad North District"; Kinds = @("AT"); Min = 155; Max = 175 },
+	[pscustomobject]@{ Id = 156; X = 4170; Y = 3355; Town = "Zargabad South District"; Kinds = @("AT"); Min = 195; Max = 215 },
+	[pscustomobject]@{ Id = 157; X = 2910; Y = 5400; Town = "Zargabad Airfield"; Kinds = @("AA"); Min = 200; Max = 225 },
+	[pscustomobject]@{ Id = 158; X = 3230; Y = 5010; Town = "Zargabad Airfield"; Kinds = @("AT"); Min = 300; Max = 325 },
+	[pscustomobject]@{ Id = 159; X = 4450; Y = 5605; Town = "Rahim Villa"; Kinds = @("AT"); Min = 135; Max = 155 },
+	[pscustomobject]@{ Id = 160; X = 2500; Y = 5440; Town = "Northwest Base"; Kinds = @("AT"); Min = 150; Max = 170 },
+	[pscustomobject]@{ Id = 161; X = 2440; Y = 5720; Town = "Northwest Base"; Kinds = @("MGNest"); Min = 120; Max = 145 },
+	[pscustomobject]@{ Id = 162; X = 3535; Y = 5560; Town = "North Camp"; Kinds = @("AT"); Min = 100; Max = 125 },
+	[pscustomobject]@{ Id = 163; X = 5540; Y = 4210; Town = "East Farms"; Kinds = @("AT"); Min = 130; Max = 155 },
+	[pscustomobject]@{ Id = 164; X = 4410; Y = 2140; Town = "South Farms"; Kinds = @("AT"); Min = 115; Max = 140 }
+)
+$expectedDefenseIds = @($expectedDefensePlacement | ForEach-Object { $_.Id })
+Assert-Equal "exact defense anchor row count" $expectedDefensePlacement.Count 33
+Assert-Equal "unexpected defense logic ids" @($defenses | Where-Object { $_.Id -notin $expectedDefenseIds }).Count 0
+foreach ($expectedDefense in $expectedDefensePlacement) {
+	$defense = @($defenses | Where-Object { $_.Id -eq $expectedDefense.Id })
+	Assert-Equal "defense $($expectedDefense.Id) placement row count" $defense.Count 1
+	Assert-NearPosition "defense $($expectedDefense.Id) stays at intended firing anchor" $defense[0] $expectedDefense.X $expectedDefense.Y 5
+	$linkedTown = @($parsedTowns | Where-Object { $defense[0].Sync -contains $_.Id })
+	Assert-Equal "defense $($expectedDefense.Id) linked town count" $linkedTown.Count 1
+	Assert-Equal "defense $($expectedDefense.Id) linked town" $linkedTown[0].Name $expectedDefense.Town
+	$actualKinds = @((Get-DefenseKinds $defense[0]) | Sort-Object)
+	$expectedKinds = @($expectedDefense.Kinds | Sort-Object)
+	Assert-True "defense $($expectedDefense.Id) kind mix" (Test-SequenceEqual -Actual $actualKinds -Expected $expectedKinds)
+	$distance = [math]::Round((Get-FlatDistance $defense[0] $linkedTown[0]), 1)
+	Assert-True "defense $($expectedDefense.Id) approach distance in named band" ($distance -ge $expectedDefense.Min -and $distance -le $expectedDefense.Max)
+}
 Assert-True "city center is highest max SV" (($parsedTowns | Sort-Object MaxSV -Descending | Select-Object -First 1).Name -eq "Zargabad City Center")
 Assert-True "airfield is second highest max SV" (($parsedTowns | Sort-Object MaxSV -Descending | Select-Object -Skip 1 -First 1).Name -eq "Zargabad Airfield")
 foreach ($townName in @("Zargabad City Center", "Zargabad Airfield", "Zargabad North District", "Zargabad South District", "Northwest Base", "Rahim Villa")) {

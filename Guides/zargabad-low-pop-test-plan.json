@@ -107,7 +107,7 @@
     },
     {
       "type": "command-output",
-      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, exact named town population/value anchors with intended coordinates/start SV/max SV/ranges, exact camp approach anchors with intended coordinates, linked towns and distance bands, intended default start anchors/headings and WEST/EAST separation, no out-of-6000 logic positions, no objective safe-zone logics inside the 120m edge kill rim, exactly seven north/east edge-safe objective/start bubbles, start SV 185, max SV 648, all towns have camps and defenses, each camp links to exactly one town, all camps sit in the 90m-225m town-flow band, high-value objectives have two camp approaches and layered defense coverage, priority objective defense-kind mixes cover infantry, armor and air approaches where appropriate, synchronized defenses sit in the 90m-325m town approach band, generated low-pop parameter defaults, exact smaller-map economy/range/cap constants and exact compact normal heavy/aircraft lists are locked in source and generated Zargabad mission copies, the runtime town-defense orientation hook is present, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
+      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, exact named town population/value anchors with intended coordinates/start SV/max SV/ranges, exact camp approach anchors with intended coordinates, linked towns and distance bands, exact defense firing anchors with intended coordinates, linked towns, kind mixes and distance bands, intended default start anchors/headings and WEST/EAST separation, no out-of-6000 logic positions, no objective safe-zone logics inside the 120m edge kill rim, exactly seven north/east edge-safe objective/start bubbles, start SV 185, max SV 648, all towns have camps and defenses, each camp links to exactly one town, all camps sit in the 90m-225m town-flow band, high-value objectives have two camp approaches and layered defense coverage, priority objective defense-kind mixes cover infantry, armor and air approaches where appropriate, generated low-pop parameter defaults, exact smaller-map economy/range/cap constants and exact compact normal heavy/aircraft lists are locked in source and generated Zargabad mission copies, the runtime town-defense orientation hook is present, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
     },
     {
       "type": "source-audit",
@@ -132,6 +132,10 @@
     {
       "type": "source-audit",
       "summary": "The static validator now parses town-defense wfbe_defense_kind mixes and requires the priority Zargabad objectives to have sensible mixed coverage: city MG/nest plus GL plus AT, airfield MG/nest plus AT plus at least two AA defenses, district/base/villa objectives MG-or-nest plus AT, and Northwest Base AA for the northern air approach."
+    },
+    {
+      "type": "source-audit",
+      "summary": "The static validator now locks all 33 town-defense ids to exact firing anchors: intended coordinate, linked town, wfbe_defense_kind mix, and per-row approach-distance band, including the City Center MG+GL row and the Airfield AA/AT rows."
     },
     {
       "type": "source-audit",
@@ -179,7 +183,7 @@
     },
     {
       "type": "command-output",
-      "summary": "Static mission validation found unique ids, all sync ids resolvable, zero out-of-6000 logic positions, intended WEST/EAST/Resistance start anchors, WEST/EAST start headings toward center, WEST/EAST start separation at least 5000m, 13 towns, 19 camps, 1 airport, 33 defense logics, defense approach distances inside 90m-325m, runtime defense-orientation hook present, start SV 185 and max SV 648."
+      "summary": "Static mission validation found unique ids, all sync ids resolvable, zero out-of-6000 logic positions, intended WEST/EAST/Resistance start anchors, WEST/EAST start headings toward center, WEST/EAST start separation at least 5000m, 13 towns, 19 camps, 1 airport, 33 defense logics, exact town, camp and defense anchors, runtime defense-orientation hook present, start SV 185 and max SV 648."
     }
   ],
   "result": "partial",
