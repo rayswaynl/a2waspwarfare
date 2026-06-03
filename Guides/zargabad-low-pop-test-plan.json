@@ -94,7 +94,7 @@
     },
     {
       "type": "command-output",
-      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, no out-of-6000 logic positions, start SV 185, max SV 648, all towns have camps and defenses, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
+      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, no out-of-6000 logic positions, start SV 185, max SV 648, all towns have camps and defenses, synchronized defenses sit in the 90m-325m town approach band, high-value objectives have layered defense coverage, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
     },
     {
       "type": "source-audit",
@@ -114,11 +114,11 @@
     },
     {
       "type": "command-output",
-      "summary": "Static mission validation found unique ids, all sync ids resolvable, zero out-of-6000 logic positions, 13 towns, 19 camps, 1 airport, 33 defense logics, start SV 185 and max SV 648."
+      "summary": "Static mission validation found unique ids, all sync ids resolvable, zero out-of-6000 logic positions, 13 towns, 19 camps, 1 airport, 33 defense logics, defense approach distances inside 90m-325m, start SV 185 and max SV 648."
     }
   ],
   "result": "partial",
   "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports.",
-  "updatedAt": "2026-06-03T02:45:00+02:00",
+  "updatedAt": "2026-06-03T03:02:00+02:00",
   "updatedBy": "Codex"
 }

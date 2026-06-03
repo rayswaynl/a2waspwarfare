@@ -60,6 +60,8 @@ The normal factory lists are restricted away from MBTs and heavy attack aircraft
 
 `Server/Init/Init_Zargabad.sqf` adds side-owned start fortifications and statics for WEST/EAST. Extra synchronized town-defense logics were added around the city approaches, airfield, farms and outer chokepoints.
 
+Static validation now checks town-defense placement quality, not only count: every synchronized defense logic sits between 90m and 325m from its town center, so defenses cover approaches instead of spawning on top of the depot or far outside the fight. City center and airfield each require at least five defenses, while North District, South District, Northwest Base and Rahim Villa each require at least three.
+
 The same init now builds a WDDM-compatible `WFBE_ZARGABAD_CENTRAL_WALL` defense template centered at `3425,3375` and angled at `316` degrees, roughly perpendicular to the southwest-to-northeast base axis. It uses six separated H-barrier runs with pass-through gaps, so the flat middle has broken sightlines without turning the map into two sealed halves.
 
 Static validation currently proves the editor data shape, not tactical effectiveness. Dedicated playtest still needs to verify:
@@ -91,7 +93,7 @@ Static validation currently proves the editor data shape, not tactical effective
 - `git diff --cached --check`
 - Static mission validation: unique ids, all sync ids resolvable, no out-of-6000 Zargabad logic positions, 13 towns, 19 camps, 1 airport, 33 defense logics, start SV 185, max SV 648.
 
-`Tools/Validate-ZargabadMission.ps1` is the repeatable local validator for this PR. It parses the generated Zargabad `mission.sqm`, checks town/camp/airport/start/defense counts, sync targets, 6000m boundary containment, SV totals, town camp/defense coverage, mystery feature LOC, edge-guard LOC/hooks, central-wall template/gaps, and Takistan spillover.
+`Tools/Validate-ZargabadMission.ps1` is the repeatable local validator for this PR. It parses the generated Zargabad `mission.sqm`, checks town/camp/airport/start/defense counts, sync targets, 6000m boundary containment, SV totals, town camp/defense coverage, defense approach distances, high-value objective defense depth, mystery feature LOC, edge-guard LOC/hooks, central-wall template/gaps, and Takistan spillover.
 
 `Tools/Validate-ZargabadRuntimeEvidence.ps1` is the repeatable RPT validator for Claude/runtime testers. It checks that Zargabad appears in supplied RPT logs, server/town/Zargabad/edge-guard init completed, runtime audit count/SV/base/factory/price/economy evidence appears, optional JIP/HC/edge-removal/black-market evidence appears when requested, and common Arma missing-script/dependency/expression failures are absent.
 

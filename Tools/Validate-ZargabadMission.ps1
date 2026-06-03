@@ -110,6 +110,9 @@ foreach ($town in $towns) {
 	}
 	$campLinks = @($camps | Where-Object { $_.Sync -contains $town.Id })
 	$defenseLinks = @($defenses | Where-Object { $_.Sync -contains $town.Id })
+	$defenseDistances = @($defenseLinks | ForEach-Object {
+		[math]::Round([math]::Sqrt([math]::Pow($_.X - $town.X, 2) + [math]::Pow($_.Y - $town.Y, 2)), 1)
+	})
 	$parsedTowns += [pscustomobject]@{
 		Id = $town.Id
 		Name = $match.Groups["name"].Value
@@ -118,6 +121,9 @@ foreach ($town in $towns) {
 		Range = [int]$match.Groups["range"].Value
 		Camps = $campLinks.Count
 		Defenses = $defenseLinks.Count
+		DefenseDistances = $defenseDistances
+		MinDefenseDistance = if ($defenseDistances.Count -gt 0) { ($defenseDistances | Measure-Object -Minimum).Minimum } else { -1 }
+		MaxDefenseDistance = if ($defenseDistances.Count -gt 0) { ($defenseDistances | Measure-Object -Maximum).Maximum } else { -1 }
 		X = $town.X
 		Y = $town.Y
 	}
@@ -129,6 +135,13 @@ Assert-Equal "towns without camps" @($parsedTowns | Where-Object { $_.Camps -lt 
 Assert-Equal "towns without defenses" @($parsedTowns | Where-Object { $_.Defenses -lt 1 }).Count 0
 Assert-True "city center is highest max SV" (($parsedTowns | Sort-Object MaxSV -Descending | Select-Object -First 1).Name -eq "Zargabad City Center")
 Assert-True "airfield is second highest max SV" (($parsedTowns | Sort-Object MaxSV -Descending | Select-Object -Skip 1 -First 1).Name -eq "Zargabad Airfield")
+Assert-Equal "defenses outside 325m town approach band" @($parsedTowns | Where-Object { $_.MaxDefenseDistance -gt 325 }).Count 0
+Assert-Equal "defenses piled inside 90m town core" @($parsedTowns | Where-Object { $_.MinDefenseDistance -lt 90 }).Count 0
+Assert-True "city center has beefy defense coverage" (($parsedTowns | Where-Object { $_.Name -eq "Zargabad City Center" }).Defenses -ge 5)
+Assert-True "airfield has beefy defense coverage" (($parsedTowns | Where-Object { $_.Name -eq "Zargabad Airfield" }).Defenses -ge 5)
+foreach ($townName in @("Zargabad North District", "Zargabad South District", "Northwest Base", "Rahim Villa")) {
+	Assert-True "$townName has layered defense coverage" (($parsedTowns | Where-Object { $_.Name -eq $townName }).Defenses -ge 3)
+}
 
 $boundarySource = Get-Content -Raw -LiteralPath (Join-Path $sourceMissionFullPath "Common/Init/Init_Boundaries.sqf")
 Assert-True "source declares 6000m Zargabad boundary" ($boundarySource -match "case 'zargabad': \{_boundariesXY = 6000\};")
@@ -181,4 +194,4 @@ Assert-True "Takistan has no generated Zargabad module spillover" (-not (Test-Pa
 
 Write-Host ""
 Write-Host "Zargabad town/SV summary:"
-$parsedTowns | Sort-Object MaxSV -Descending | Format-Table Name, StartSV, MaxSV, Range, Camps, Defenses, X, Y -AutoSize
+$parsedTowns | Sort-Object MaxSV -Descending | Format-Table Name, StartSV, MaxSV, Range, Camps, Defenses, MinDefenseDistance, MaxDefenseDistance, X, Y -AutoSize
