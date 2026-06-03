@@ -1847,3 +1847,8 @@ Key conclusions:
 - Source-checked the queued economy scout lead against supply mission start, completion, player reward and stringtable files.
 - Confirmed live supply-truck reward math grants raw `SupplyAmount`, where `SupplyAmount = floor(town supplyValue * WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER * supplyUpgradeModifier)`, while `stringtable.xml` `STR_Supplies_2` still says players receive `4 x actual value`.
 - Updated economy/supply/localization/feature-status pages plus development lesson and machine records. No gameplay source files changed.
+
+## 2026-06-04T01:53:04+02:00 - Codex - UI/ops/telemetry scout harvest
+- Spark quota was blocked, so Codex used default explorer scouts for UI alias/path cleanup, server ops, AFK/lifecycle, runtime telemetry, Feature Status adjacency and tooling/generated-mission drift.
+- Integrated bounded docs findings: added [UI HUD and dialogs](UI-HUD-And-Dialogs), corrected the player UI gear-helper path, added [Server ops runbook](Server-Ops-Runbook), patched telemetry collection and server-FPS/supply-scan branch-scope wording, corrected AFKkick/lifecycle side-surface docs, and exposed missing Feature Status links for `SEND_MESSAGE` and supply player-object list propagation.
+- Corrected tooling docs for LoadoutManager repo-marker root discovery, `A2WASP_SKIP_ZIP`, `version.sqf` release flag inspection and the full PerformanceAuditAnalyzer output list. No gameplay source files changed.

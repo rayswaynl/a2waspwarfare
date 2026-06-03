@@ -42,6 +42,7 @@ Before running tooling or deployment-adjacent pieces, check these first:
 | `A2WASP_SKIP_ZIP=1` is set for propagation-only runs. | Skips `_MISSIONS.7z` packaging and avoids a packaging-only `7za` dependency during docs/code propagation work. |
 | `7za` is configured and available if packaging is required. | Required only when producing `_MISSIONS.7z` release archives. |
 | `version.sqf` exists for the mission being packed/tested. | It is generated and git-ignored, but included by `description.ext` and `initJIPCompatible.sqf`. |
+| Generated `version.sqf` has the intended release flags. | Current local generated files can contain debug/log-enabled values; inspect `WF_DEBUG` and `WF_LOG_CONTENT` before packaging a public release. |
 | DiscordBot has real `preferences.json` and `token.txt` outside git. | Missing token/config is expected in repo and is not a mission-code failure. |
 | AntiStack has the separate `A2WaspDatabase` DLL if enabled. | The in-repo `Extension` project is `a2waspwarfare_Extension` / `GLOBALGAMESTATS`, not the AntiStack database extension. |
 | Deployment inventory records actual server artifacts and config paths. | Track `a2waspwarfare_Extension`, separate `A2WaspDatabase`, `token.txt`, `preferences.json`, production `BEpath`, and any external `server.cfg`/`basic.cfg` before calling a host reproducible. |
@@ -115,6 +116,8 @@ Important outputs include:
 - `performance_by_session.csv`
 - `performance_report.md`
 - `performance_report.html`
+- `performance_interpretation.html`
+- `performance_report_word.doc`
 
 Use it after performance-sensitive mission changes or live-server audits.
 

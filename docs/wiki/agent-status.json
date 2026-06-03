@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T01:32:00+02:00",
+  "generatedAt": "2026-06-04T01:54:55+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published the supply reward/stringtable drift lane: live supply-truck rewards grant raw SupplyAmount from the town supply value * mission multiplier * upgrade modifier formula, while STR_Supplies_2 still says 4 x actual value and the old coefficient constant is unused in this flow.",
-      "nextExpectedOutput": "Pick the next queued scout lead: UI alias/path cleanup, server ops runbook, AFK ops split or runtime telemetry checklist."
+      "currentWork": "Published and validated the UI/ops/telemetry scout harvest: UI alias/path cleanup, Server Ops Runbook, runtime telemetry checklist, AFK/lifecycle cross-links, Feature Status adjacency links and tooling/root-discovery corrections.",
+      "nextExpectedOutput": "Commit and push the ui-ops-telemetry scout harvest batch; then pick the next bounded Feature Status or abandoned-feature lane."
     },
     "Codex-2": {
       "status": "ready",
@@ -38,11 +38,17 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "Fallback scout wave is closed. Five read-only scouts covered economy/supply, AI caps, networking/PV, UI/HUD and ops/runtime; clean PV/AI/ops findings were promoted and broader leads were queued.",
+      "currentWork": "Latest explorer wave completed after Spark quota blocked. Lanes covered UI alias/path cleanup, server ops, AFK/lifecycle, runtime telemetry, Feature Status adjacency and tooling/generated mission drift; useful findings are published and validated.",
       "nextExpectedOutput": "No active sub-agent output pending."
     }
   },
   "laneSummary": [
+    {
+      "lane": "ui-ops-telemetry-scout-harvest",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "output": "Spark quota was blocked, so Codex launched default explorer scouts and locally integrated the strongest source-backed findings: added UI-HUD-And-Dialogs as a navigation alias, corrected the player UI gear helper path, added Server-Ops-Runbook, patched telemetry collection and server-FPS branch-scope wording, corrected AFKkick path/lifecycle side-surface docs, added Feature Status links for SEND_MESSAGE and supply player-object list propagation, and corrected LoadoutManager root-discovery plus PerformanceAuditAnalyzer output docs."
+    },
     {
       "lane": "supply-reward-stringtable-drift",
       "owner": "Codex",

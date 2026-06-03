@@ -129,6 +129,8 @@ The repo README lists:
 - BattleMetrics and GameTracker links
 - Trello board link
 
+For deployment inventory and the distinction between committed artifacts and operator-supplied server files, start with [Server ops runbook](Server-Ops-Runbook).
+
 ## Continue Reading
 
 Previous: [Tools/build](Tools-And-Build-Workflow) | Next: [Integration trust boundary audit](Integration-Trust-Boundary-Audit)

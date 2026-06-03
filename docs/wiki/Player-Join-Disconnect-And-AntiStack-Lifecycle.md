@@ -38,6 +38,17 @@ When the join request path is skipped at launch, the client instead publishes `W
 
 For JIP/reconnect, `Server_OnPlayerConnected.sqf` waits for server init, matches groups by UID in `playableUnits`, assigns `wfbe_uid` and `wfbe_teamleader`, and creates or updates the `WFBE_JIP_USER%UID` session record.
 
+## Slot And Side Surfaces
+
+Side identity is split across several layers. Do not treat any one of them as the whole authority model:
+
+| Surface | Evidence | Meaning |
+| --- | --- | --- |
+| Playable slots | `mission.sqm` playable unit blocks. | Engine/editor side selection and slot availability. |
+| Client side cache | `Client/Init/Init_Client.sqf:5-9,221-223` | The client sets `sideJoined` / side text from `side player`. |
+| Server team objects | `Server/Init/Init_Server.sqf:465-501` | Server groups/teams carry `wfbe_side`, UID and teamleader state. |
+| Join gate | `Server/PVFunctions/RequestJoin.sqf:17-89` | Team-swap and AntiStack checks decide accepted side for JIP/reconnect. |
+
 ## Team Identity And Teamswap Guards
 
 `RequestJoin.sqf` is the main teamswap gate. It checks:
@@ -61,6 +72,8 @@ Successful joins store both `WFBE_JIP_USER%UID_TEAM_JOINED` and `STORE_SIDE`. Th
 - Stores AntiStack score diff and `STORE_SIDE NONE` when AntiStack persistence is enabled.
 
 The sleep gives Arma time to settle disconnect state, but it also creates a race window. A fast reconnect for the same UID can overlap with stale cleanup, so future hardening should confirm the team variables still match the disconnecting UID before clearing them.
+
+Commander disconnect is intentionally only a cleanup edge here. The commander ownership, UI reaction and no-auto-reassignment caveat live in [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas).
 
 ## AntiStack Persistence
 

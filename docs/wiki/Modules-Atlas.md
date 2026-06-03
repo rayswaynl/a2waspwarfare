@@ -10,7 +10,7 @@
 - **MASH markers** — DR-34 (dead both ends). `Client/Module/MASH/`, `Server/Module/MASH/`.
 - **UAV** — DR-27 round (the `_button == 007` branch is `comment 'DISABLED'`, `uav_interface.sqf:226` / `uav_interface_oa.sqf:100`). `Client/Module/UAV/`.
 - **serverFPS** — DR-19 (hosted busy-loop). `Server/Module/serverFPS/`.
-- **AFKkick** — `kickAFK` PV is the one BattlEye-filtered channel (DR-30). `Client/Module/AFK/`, `Server/Module/afkKick/`.
+- **AFKkick** — `kickAFK` PV is the one BattlEye-filtered channel (DR-30). Current client source uses `Client/Module/AFKkick/`; the server handler folder is `Server/Module/afkKick/`.
 
 ## Combat / vehicle modules
 

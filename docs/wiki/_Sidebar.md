@@ -16,6 +16,7 @@
   - [Wiki mirror reconciliation](Wiki-Mirror-Reconciliation-Plan)
 - Quality and operations
   - [Feature status](Feature-Status-Register)
+  - [Server ops runbook](Server-Ops-Runbook)
   - [Documentation plan](Documentation-Implementation-Plan)
   - [Knowledge platform roadmap](Knowledge-Platform-Roadmap)
   - [Wiki quality audit](Wiki-Quality-Audit)

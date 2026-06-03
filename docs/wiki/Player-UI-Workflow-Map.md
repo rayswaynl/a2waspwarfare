@@ -2,7 +2,7 @@
 
 This page maps what a player or commander can actually do from the client UI, and where each workflow lives in source. Use it before editing `Rsc/Dialogs.hpp`, `Client/GUI/*`, player actions, map-click behavior, HUD/title resources or WASP action surfaces.
 
-Canonical implementation pages remain [Client UI systems atlas](Client-UI-Systems-Atlas), [Client UI/HUD/menus](Client-UI-HUD-And-Menus), [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Service menu affordability guards](Service-Menu-Affordability-Guards), [UI IDD collision repair](UI-IDD-Collision-Repair), [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas) and [WASP overlay](WASP-Overlay).
+Canonical implementation pages remain [Client UI systems atlas](Client-UI-Systems-Atlas), [Client UI/HUD/menus](Client-UI-HUD-And-Menus), [UI HUD and dialogs](UI-HUD-And-Dialogs), [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Service menu affordability guards](Service-Menu-Affordability-Guards), [UI IDD collision repair](UI-IDD-Collision-Repair), [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas) and [WASP overlay](WASP-Overlay).
 
 ## Workflow Map
 
@@ -12,7 +12,7 @@ Canonical implementation pages remain [Client UI systems atlas](Client-UI-System
 | WF menu entry | Scroll `Options` opens the main Warfare menu; vehicle action mirror also exists. | `Client/Functions/Client_AddWFMenuAction.sqf:17`; `Client/Action/Action_Menu.sqf:1`; `Client/FSM/updateactions.fsm:114` | Live. |
 | Main menu | Buy units, gear, team, voting, command, tactical, upgrade, economy, service, help, params, unflip, headbug and HUD/FPS toggles. | `Rsc/Dialogs.hpp:1019-1022`; `Client/GUI/GUI_Menu.sqf:32-208` | Live; some help/tooltips are hardcoded. |
 | Buy units | Select factory/depot/airport, select unit and buy; client queues, debits and spawns. | `Rsc/Dialogs.hpp:1445-1448`; `Client/GUI/GUI_Menu_BuyUnits.sqf:90-156`; `Client/Functions/Client_BuildUnit.sqf:216-253` | Live; client-authoritative purchase surface. |
-| Buy gear/templates | Select target, gear tab/template, buy gear, create/delete/save templates. | `Rsc/Dialogs.hpp:530-533`; `Client/GUI/GUI_BuyGearMenu.sqf:418-509`; `Client/GUI/Client_UI_Gear_AddTemplate.sqf:132-150` | Live; client-authoritative and template-filter debt. |
+| Buy gear/templates | Select target, gear tab/template, buy gear, create/delete/save templates. | `Rsc/Dialogs.hpp:530-533`; `Client/GUI/GUI_BuyGearMenu.sqf:418-509`; `Client/Functions/Client_UI_Gear_AddTemplate.sqf:132-150` | Live; client-authoritative and template-filter debt. |
 | Team/vote/transfer | View terrain/FX/distance, transfer funds, disband AI, toggle vote popup and vote/select commander. | `Rsc/Dialogs.hpp:1233-1236`, `:409-412`, `:145-148`, `:237-240`; `GUI_Menu_Team.sqf:86-160`; `GUI_TransferMenu.sqf:57-75`; `GUI_VoteMenu.sqf:31-36` | Live. |
 | Command | Commander changes team properties, respawn, auto-AI and buy-type settings; map-order buttons write replicated move mode/destination variables; task controls are visible but not sent. | `Rsc/Dialogs.hpp:1789-1792`; `GUI_Menu_Command.sqf:252-443`, `:477-501` | Mixed: property PVF is live, map-order executor proof is pending, task send is dormant. |
 | Tactical/supports | Artillery, fast travel, ICBM, paradrop ammo/vehicle/paratroops, unit cam and UAV. | `Rsc/Dialogs.hpp:2161-2164`; `GUI_Menu_Tactical.sqf:56-61`, `:239-344`, `:363-527`, `:541-605` | Live; many paths are client-gated/debited. |

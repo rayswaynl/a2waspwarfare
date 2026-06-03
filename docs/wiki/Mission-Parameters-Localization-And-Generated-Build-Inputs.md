@@ -58,20 +58,20 @@ The scout pass found no live missing `$STR_...` keys for `Rsc/Parameters.hpp` re
 
 `version.sqf` is included by both `description.ext` and `initJIPCompatible.sqf`, but it is not present in the current source mission. LoadoutManager generates it; `Tools/LoadoutManager/FileManagement/FileManager.cs:92-100` treats it specially, and terrain generation writes version output from the C# terrain flow.
 
-Practical rule: a fresh source checkout is not self-contained for mission packing/testing until generated files exist. Use LoadoutManager from a correctly named `a2waspwarfare` checkout before claiming release readiness.
+Practical rule: a fresh source checkout is not self-contained for mission packing/testing until generated files exist. Use LoadoutManager from a normal `a2waspwarfare` clone or any repo root that contains `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`. For propagation-only work, set `A2WASP_SKIP_ZIP=1` so missing `7za` does not block generation/copy.
 
 ## LoadoutManager Overwrite Boundaries
 
 Important tooling evidence:
 
 - `FileManager.cs:59-84` and `:103-136` copy/delete outputs and remove destination extras.
-- `FileManager.cs:140-152` requires an ancestor folder literally named `a2waspwarfare`; otherwise it throws.
+- `FileManager.cs:140-180` first accepts an ancestor folder literally named `a2waspwarfare`, then falls back to a repo-marker check for `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`.
 - `BaseTerrain.cs:94-104` writes generated mission files such as EASA/balance/aircraft names/version outputs.
 - `BaseTerrain.cs:35-66` rewrites the source mission `Sounds/description.ext` from `.ogg` filenames.
 - `SqfFileGenerator.cs:127-135` calls package/zip operations after generation.
-- `ZipManager.cs:73-77` throws if the `7za` environment variable is not set.
+- `ZipManager.cs:73-77` throws if the `7za` environment variable is not set during packaging; propagation-only runs can skip packaging with `A2WASP_SKIP_ZIP=1`.
 
-This is why the current `work\a` checkout cannot run LoadoutManager cleanly: it lacks the literal ancestor folder name expected by `FindA2WaspWarfareDirectory`.
+This means current Codex checkouts such as `work\a` can run LoadoutManager after the repo-marker discovery update. Do not revive older documentation that says the literal folder name is the only valid path.
 
 ## Patch And Validation Checklist
 
@@ -82,8 +82,8 @@ This is why the current `work\a` checkout cannot run LoadoutManager cleanly: it 
 | Bomb altitude parameter is visible but dormant | Either revive/smoke the commented `Common_HandleShootBombs.sqf` altitude block or hide/rename the host parameter as historical. | Host/admin UX does not imply an active restriction that the runtime does not enforce. |
 | Missing fallback for bomb distance | Add an `Init_CommonConstants.sqf` fallback or use `getVariable` default in the consumer. | Bomb-distance handling works in SP, MP and generated missions. |
 | Supply reward stringtable drift | Update `STR_Supplies_2` to match live reward math, or change the reward implementation and stringtable together during supply-authority redesign. | Player help text, runtime load message and completion reward agree for default supply upgrades and upgraded supply-rate cases. |
-| Literal `a2waspwarfare` root requirement | Discover repo root by project file, git root or explicit config rather than folder name. | LoadoutManager runs from `work\a` and a normal `a2waspwarfare` clone. |
-| Missing `7za` aborts after generation | Split generation/copy from packaging or make missing `7za` a non-fatal packaging-only warning. | Generated files land even when package creation is skipped. |
+| Root discovery drift | Keep LoadoutManager's repo-marker root discovery documented and do not reintroduce literal-folder-only assumptions. | LoadoutManager runs from `work\a` and a normal `a2waspwarfare` clone. |
+| Missing `7za` during propagation-only work | Use `A2WASP_SKIP_ZIP=1`; require `7za` only for release packaging. | Generated files land even when package creation is skipped. |
 | Generated files lack banners | Add generated-file banners to generated SQF/description/version outputs. | Future agents avoid hand-editing generated targets. |
 | Lobby/default fallback drift | Either deliberately align the constants fallback values with `Rsc/Parameters.hpp` or document which non-MP fallback differences are intentional. | Compare MP lobby, non-MP boot and generated mission behavior for AI commander, artillery, base area and nuke/radzone timings. |
 

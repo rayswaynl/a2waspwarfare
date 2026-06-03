@@ -71,6 +71,20 @@ Use the existing logging helper instead of ad hoc `hint` debugging:
 
 Do not add constant always-on logs inside hot loops. For tester-visible changes, one small always-on line at the transition point is better than frame-by-frame tracing.
 
+## Telemetry Collection Checklist
+
+Use this when validating server ops, performance, Discord status or public-server health:
+
+| Signal | Collect | What it proves |
+| --- | --- | --- |
+| Server RPT | Dedicated/listen server `ArmA2OA.RPT`. | Server-scope `[Performance Audit]` rows, server FPS publishers, extension errors, AntiStack wrapper errors and missing-file warnings. |
+| Client RPTs | Each tested player's local RPT. | Client-scope audit rows such as `client_rhud`, UI/display errors, JIP marker failures and local script errors. |
+| PerformanceAuditAnalyzer output | Run `Tools/PerformanceAuditAnalyzer/Analyze-PerformanceAudit.ps1` over the RPT file or folder. | Session-separated CSV/HTML/Markdown reports for hot loops, spikes, FPS context and player/map/session grouping. |
+| `database.json` | The configured DiscordBot data source, usually `C:\a2waspwarfare\Data\database.json`. | GlobalGameStats extension writes current score/map/uptime/player-count data. |
+| DiscordBot logs/status | Bot process output plus channel/status update. | Bot token/config are present, JSON can be read and the 60-second status update path works. |
+
+For player-count validation, run no-HC and multi-HC cases before trusting public Discord counts: `GlobalGameStats.sqf` subtracts one assumed headless client.
+
 ## Minimal Smoke Packs
 
 | Pack | Steps |
