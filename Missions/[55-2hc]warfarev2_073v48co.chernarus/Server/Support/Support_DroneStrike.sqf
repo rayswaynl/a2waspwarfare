@@ -9,7 +9,7 @@
 
 private ["_side","_destination","_playerTeam","_sideID","_enemySides","_aaTypes","_model","_alt","_speed","_lspeed",
         "_flareN","_total","_zoneR","_warhead","_scatter","_hp","_stagger","_loiterTime",
-        "_bd","_corners","_spawnPos","_drones","_i","_role","_drone","_activeKey","_active","_x"];
+        "_spawnPos","_bearing","_spawnDist","_drones","_i","_role","_drone","_activeKey","_active","_x"];
 
 _side        = _this select 1;
 _destination = _this select 2;
@@ -84,12 +84,11 @@ WFBE_DroneSpoofMissile = {
 //--- Friendly map marker + "inbound" announcer (friendly: precise marker + chime; enemy: fairness warning). Reuses the broadcast infra.
 [nil, "HandleSpecial", ["drone-strike-fx", _destination, _side]] Call WFBE_CO_FNC_SendToClients;
 
-//--- Map-edge spawn (clone of Support_Paratroopers ingress origin).
-_bd = missionNamespace getVariable 'WFBE_BOUNDARIESXY';
-_corners = if (isNil "_bd") then {[[0,0,_alt]]} else {
-    [[0+random 200,0+random 200,_alt],[0+random 200,_bd-random 200,_alt],[_bd-random 200,_bd-random 200,_alt],[_bd-random 200,0+random 200,_alt]]
-};
-_spawnPos = _corners select (floor random count _corners);
+//--- Spawn the package a short distance out from the target on a random bearing, at cruise altitude.
+//--- (Map-edge spawn put it ~10 km out -> a multi-minute transit that the 70s ingress deadline never finished.)
+_bearing = random 360;
+_spawnDist = 1500 + random 600;   //--- ~1.5-2.1 km out: snappy arrival, drones visible over the target.
+_spawnPos = [(_destination select 0) + _spawnDist * sin _bearing, (_destination select 1) + _spawnDist * cos _bearing, _alt];
 
 //--- Spawn the crewless package.
 _drones = [];
@@ -107,6 +106,7 @@ for "_i" from 0 to (_total - 1) do {
     _drones set [count _drones, _drone];
 };
 processInitCommands;
+["INFORMATION", Format ["Support_DroneStrike.sqf : spawned %1 drones (%2 flare / %3 munition) at %4, target %5.", count _drones, _flareN, (_total - _flareN), _spawnPos, _destination]] Call WFBE_CO_FNC_LogContent;
 
 //--- Drive each drone in its own loop: ingress -> role behaviour -> despawn.
 {
@@ -227,6 +227,7 @@ processInitCommands;
             _ang = random 360;
             _imp = [(_aim select 0) + (random _scatter) * sin _ang, (_aim select 1) + (random _scatter) * cos _ang, 0];
             _warhead createVehicle _imp;
+            ["INFORMATION", Format ["Support_DroneStrike.sqf : munition phase %1 struck %2 (target was %3).", _phase, _imp, _target]] Call WFBE_CO_FNC_LogContent;
             if (alive _d) then {deleteVehicle _d};
         };
     };
