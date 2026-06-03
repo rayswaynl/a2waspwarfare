@@ -102,6 +102,7 @@ with missionNamespace do {
 	WFBE_C_AI_COMMANDER_TOWN_INTERVAL = 120;
 	WFBE_C_AI_COMMANDER_PRODUCE_INTERVAL = 45;
 	WFBE_C_AI_COMMANDER_TYPES_INTERVAL = 30;
+	WFBE_C_AI_COMMANDER_TICK = 15;             //--- Supervisor base tick (s); how often the order-executor runs (hybrid responsiveness).
 	WFBE_C_AI_DELEGATION_FPS_INTERVAL = 60 * 3; //--- A client send it's FPS average each x seconds to the server.
 	WFBE_C_AI_DELEGATION_FPS_MIN = 25; //--- A client can handle groups if it's FPS average is above x.
 	WFBE_C_AI_DELEGATION_GROUPS_MAX = 1; //--- A client max have up to x groups managed on his computer (high values may makes lag, be careful).

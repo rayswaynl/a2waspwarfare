@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc"];
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -19,6 +19,10 @@ if (isNil "_logik") exitWith {};
 
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") exitWith {};
+
+//--- Hybrid: when a human commands this side, only auto-assign DELEGATED (autonomous) teams.
+_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
+_humanCmd = (!isNull _cmdTeam) && {isPlayer (leader _cmdTeam)};
 
 //--- OA-safe filter: towns not owned by this side.
 _uncaptured = [];
@@ -31,7 +35,11 @@ _assigned = [];
 {
 	_team = _x;
 	_aliveCount = {alive _x} count (units _team);
-	if (_aliveCount > 0 && {!isPlayer (leader _team)}) then {
+	_autonomous = _team getVariable ["wfbe_autonomous", false];
+	_modeNow = toLower (_team getVariable ["wfbe_teammode", "towns"]);
+	//--- Drive only if AI-controllable (no human, or human delegated this team) AND the executor doesn't own it.
+	if (_aliveCount > 0 && {!isPlayer (leader _team)} && {!_humanCmd || _autonomous}
+		&& {!(_modeNow == "move" || _modeNow == "patrol" || _modeNow == "defense")}) then {
 		_mode = _team getVariable ["wfbe_teammode", ""];
 		_goto = _team getVariable ["wfbe_teamgoto", objNull];
 

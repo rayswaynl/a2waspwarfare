@@ -50,6 +50,7 @@ WFBE_SE_FNC_AI_Com_Upgrade = Compile preprocessFileLineNumbers "Server\Functions
 WFBE_SE_FNC_AI_Com_AssignTypes = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_AssignTypes.sqf";
 WFBE_SE_FNC_AI_Com_AssignTowns = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_AssignTowns.sqf";
 WFBE_SE_FNC_AI_Com_Produce = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Produce.sqf";
+WFBE_SE_FNC_AI_Com_Execute = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Execute.sqf";
 WFBE_SE_FNC_AI_Commander = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander.sqf";
 WFBE_SE_FNC_GetTownGroups = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroups.sqf";
 WFBE_SE_FNC_GetTownGroupsDefender = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroupsDefender.sqf";
