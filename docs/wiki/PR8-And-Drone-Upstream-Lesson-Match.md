@@ -1,0 +1,53 @@
+# PR8 And Drone Upstream Lesson Match
+
+Snapshot: 2026-06-03. This page maps the upstream developer-history lessons against rayswaynl PR #8 (`release/2026-06-feature-bundle`) and the drone branch series (`feat/drone-saturation-strike`, `test/drone-on-bundle`, `test/release-plus-drone`). It is a review checklist, not an implementation patch.
+
+## Bottom Line
+
+- PR #8 is closest to release-ready where it already absorbed the upstream lessons: supply-heli rescope, dead supply-script removal, A2 OA `pushBack` fix, UI tab-icon fix, supply cooldown casing and `SupplyByHeli` cleanup.
+- PR #8 still needs smoke proof in the exact areas upstream history says are fragile: supply JIP/reuse, upgrade queue forged/JIP requests, WDDM static-defense accounting, delayed kill rewards, Buy/EASA UI state and generated Takistan propagation.
+- Drone work has one high-value pre-merge lesson: make `DroneStrike` server-authoritative before treating it like a safe support power. The current branch still sends a client-shaped `RequestSpecial` and debits client funds before server acceptance.
+
+## PR #8 Useful Lesson Matches
+
+| PR #8 area | PR evidence | Upstream lesson match | Useful check before merge | Confidence |
+| --- | --- | --- | --- | --- |
+| Supply helicopter start/completion | `supplyMissionStart.sqf`, `supplyMissionStarted.sqf`, `supplyMissionCompleted.sqf`; commits `1a9799cd`, `c878bbca` | Supply-run PR #10-#12 fixed remote activation, too-far UX and JIP notification regressions; supply performance reverts `7bc4b7ac`/`008ac5aa` show wrong-object context risk. | Smoke normal load, remote/forged start denial, wrong town, reused vehicle, JIP spawn, loaded vehicle destruction and truck unchanged behavior. | high |
+| Heli hover unload and dwell loop | `c878bbca` reworked Air 3/4 gates, 15 s load and 5 s unload dwell; PR #8 comment says old heli gate needed re-merge and later commit incorporates it. | Upstream supply loop changes repeatedly needed follow-up after moving checks between client/server context. | Dedicated-server smoke: hover at CC, drift out mid-unload, return, pilot dismount, vehicle killed while loaded. | high |
+| Cash-run rewards and interdiction | `34b231a4`, `1faf738d`; `supplyMissionCompletedMessage.sqf`, `supplyMissionCompleted.sqf`, `supplyMissionStarted.sqf` | Upstream reward fixes `db317706` and `6861e310` fixed wrong reward target; second-wave lesson says score/economy changes feed AntiStack. | Verify one pilot reward/score, commander cut only at Air 4, no side pool on cash run, no double-award, `SupplyByHeli` clears after completion. | high |
+| Upgrade queue PVs | `RequestEnqueue.sqf`, `RequestDequeue.sqf`, `upgradeQueue.sqf`; merge `f91d0f36`, fix `1f56ec65` | AttackWave/PV lessons (`a9044821`, `b02782f1`) show JIP and payload-shape drift; AntiStack lessons show side/session validation can be over-broad. | JIP commander/non-commander smoke, forged enqueue/dequeue from wrong side, commander disconnect/vote change while queue exists. | high |
+| WDDM positions | `RequestDefense.sqf`, `Server_ConstructPosition.sqf`; commits `2a9996ae`, `2bfc06c2` | Construction dedupe revert `77a07bc0`; static-defense/HC branch lessons; defender tagging `ea0bff2e`. | Build every anchor both sides; inspect crew creation, score, artillery, cleanup/sell/destroy and HC/static-defense delegation. | high |
+| WDDM placement/orientation | `2bfc06c2` fixed map-corner placement | A3/OA syntax and construction-coordinate lessons (`2a62eaa0`, `77a07bc0`) warn that small coordinate/script-context changes can be runtime-only failures. | Visual smoke on flat/slope at 0/90/180/270 degrees; wall gates align; guns face intended arcs. | medium-high |
+| Engineer EASA at repair points | `Client_CanUseRepairPointEASA.sqf`, `Client_GetRepairTruckServicePoints.sqf`, service menu edits; merge `3ec81e20` | Repair-camp menu was reverted (`9424f0c8`); EASA/loadout generator history says current loadout data must be source-of-truth verified. | Test engineer/non-engineer, driver/passenger, destroyed repair point, cooldown, insufficient funds, current-loadout highlight after equip. | high |
+| Delayed vehicle-kill rewards | `Common_OnUnitHit.sqf`, `RequestOnUnitKilled.sqf`; merge `147e06b8` | Score/bounty fixes `f17445c1`, `b31539b4`, `cc127ef4`, `415615c9`; score feeds AntiStack/skill. | Validate enemy kill, friendly fire, suicide/crash, killer dies before vehicle, AI/player vehicle, bounty and score effects. | high |
+| Buy-menu/EASA QoL | `GUI_Menu_BuyUnits.sqf`, `Client_UIFillListBuyUnits.sqf`, `GUI_Menu_EASA.sqf`; `c24d35c1`, tab fix `d356d792` | UI globals/nil bugs (`c6d2539e`, `5b056013`, `5de4d1a2`) and PR #6 driver preference history show profile/UI state can leak. | Full buy-menu pass: all tabs/factories, crew toggles, profile driver default, insufficient-funds tint, actual charged amount vs displayed amount. | high |
+| Chernarus-only release scope | PR #8 body says Takistan equals `master`; regen via LoadoutManager later | Copy/generation debt, Takistan late parity, `version.sqf` and terrain post-copy lessons. | Either keep PR #8 explicitly Chernarus-only or run LoadoutManager and review Takistan `Init_Server`, params, strings, sounds, PV registrations and boot smoke. | high |
+| PR #12 overlap | PR #8 comment cross-links #12 quick-wins; overlap in `Client_BuildUnit.sqf`, `RequestOnUnitKilled.sqf`, `Init_PublicVariables.sqf` | Merged/closed work can still need afterlife checks; supply/economy fixes can conflict across feature bundles. | Rebase on #12 or cherry-pick critical DR-22/DR-33a-style fixes before final smoke. | high |
+
+## Drone Branch Useful Lesson Matches
+
+| Drone area | Drone evidence | Upstream lesson match | Useful check before merge | Confidence |
+| --- | --- | --- | --- | --- |
+| Paid support authority | `GUI_Menu_Tactical.sqf` sends `["DroneStrike", sideJoined, _callPos, clientTeam]` and client-debits; `Server_HandleSpecial.sqf` forwards to `KAT_DroneStrike`; `Support_DroneStrike.sqf` checks toggle/cap only. | Supply PR #10 remote activation, ICBM authority lessons, AttackWave/PV schema drift. | Move cost, cooldown, UAV/Air upgrade, caller/team/side, map bounds and non-water validation to server; debit only after server accept. | high |
+| RequestSpecial schema | `Support_DroneStrike.sqf` assumes side, position and team at fixed indices; kill credit uses `leader _playerTeam`. | AttackWave payload fixes `c464df8b`, `8787ad79`, `3a35748f`, `cfbbbaf0`. | Add explicit type/schema guards and negative tests for malformed/forged requests. | high |
+| Cooldown and JIP | `lastDroneCall` is client-local; FX/marker event is broadcast once, not replayed. | Supply PR #12 JIP notification and AttackWave JIP migration lessons. | Server-side cooldown per side/team; late-join smoke while strike active and after one was just called. | high |
+| Marker audience/locality | `HandleSpecial.sqf` shows precise local marker only for `playerSide == _strikeSide`; hostile side gets vague feedback. | Marker leakage/freeze fixes `95a12305`, `9a550b7a`, `9c72a281`, `951e72cb`, `332874fd`. | Two-side/JIP/disconnect marker smoke; friendly sees target grid, enemy sees no precise marker, marker cleans up. | high |
+| Resistance/town-defender targets | `0cd71b68` targets independent/resistance AI; scans `LandVehicle`/`StaticWeapon`. | Town defender activation/tagging `a20a5a0f`, `84b1b684`, `ea0bff2e`, `913ecdf6`. | Smoke occupied/empty static AA, neutral GUER assets, resistance vehicles and town defenders near contested towns. | high |
+| Rewards/score | `e6d05c7f` uses standard bounty by stamping `wfbe_lasthitby`; kill path then flows through `RequestOnUnitKilled.sqf`. | Score/bounty/AntiStack lesson: score is economy plus balance input, not only scoreboard. | Test enemy kill, friendly hit, resistance kill, launcher dies mid-strike, AI-team caller and drone shootdown rewards. | high |
+| Cleanup and active cap | `Support_DroneStrike.sqf` manually deletes drones/groups and decrements active cap in cleanup. | Cleanup lesson `95481b37`; DR-45 array/idempotency/occupancy risk. | RPT plus `allGroups`/vehicle counts after timeout, no targets, AA shootdowns and rapid repeated calls. | medium-high |
+| Performance/FX | `0cd71b68` doubles package size; enhanced mode adds FX; munitions loop `nearestObjects`. | Performance audit/town-marker lessons warn scans and FX can become the bug. | Dedicated-server FPS/RPT smoke with enhanced on/off, one side/both sides, no-target and dense-town targets. | high |
+| Generated mission propagation | Drone symbols are source-Chernarus-only in `feat/drone-saturation-strike`; not in `Missions_Vanilla` or `Modded_Missions`. | Takistan/copy debt and LoadoutManager packaging scope lessons. | Run LoadoutManager before merge or mark branch Chernarus-only; review Takistan GUI, constants, server compile, strings and sounds. | high |
+| Sound asset contract | `Sounds/description.ext` adds `drone_stuka`; no matching `Sounds/drone_stuka-10.ogg`; runtime default still uses existing sound. | Sound generator filename contract `a31cfdb4`, `e2d23d00`. | Add a real/placeholder asset before enabling `drone_stuka`, or remove/defer the class. | high |
+| OA/UI map-click traps | `test/release-plus-drone` fixed A3-only `pushBack` and debug teleport consuming map-click confirmation; drone uses tactical map-click flow. | OA compatibility (`2a62eaa0`) and client UI lifecycle lessons. | OA 1.64 smoke: menu enablement, click-to-call, cancel/no-water click, debug teleport armed/unarmed. | high |
+
+## Review Priority
+
+1. Drone: server-authoritative acceptance/debit/cooldown is the most useful upstream lesson to apply before merge.
+2. PR #8: supply-heli JIP/reuse and reward-path smoke are the highest-value checks.
+3. PR #8: rebase/cherry-pick relationship with PR #12 should be settled before final smoke because both touch economy, build-unit and kill/PV paths.
+4. Both: generated Takistan propagation is not optional if release scope is "mission bundle"; otherwise keep Chernarus-only language explicit.
+5. Both: final RPT scan should include UI/menu paths, not just server feature harness events, because upstream history repeatedly found UI/runtime regressions late.
+
+## Continue Reading
+
+Evidence base: [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) | Commit index: [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel) | Risks: [Feature status register](Feature-Status-Register) | Release tooling: [Tools and build workflow](Tools-And-Build-Workflow)

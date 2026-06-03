@@ -1609,3 +1609,8 @@ Key conclusions:
 - Ran a second five-agent read-only fleet focused on PR bodies/titles, dormant branch-only commits, tooling/deployment, economy/ordnance/HQ/score, and AI/HC/town-performance history.
 - Added a second-wave addendum to [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) plus evidence tables in [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel).
 - Routed strongest actionable risks into [Feature status register](Feature-Status-Register), [AI Assistant Guide](AI-Assistant-Guide), [Tools and build workflow](Tools-And-Build-Workflow), and JSONL machine records. No gameplay source files changed.
+
+## 2026-06-03T21:25:00+02:00 - Codex - PR8 and drone upstream lesson match
+- Ran a targeted read-only match against rayswaynl PR #8 and the drone branch series, using upstream developer-history lessons as the review lens.
+- Added [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match) with concrete merge checks for PR #8 supply-heli/JIP/rewards, upgrade queue PVs, WDDM/static-defense accounting, engineer EASA, delayed vehicle-kill rewards, Buy/EASA UI, and generated Takistan propagation.
+- Captured the drone-specific high-priority lesson: make `DroneStrike` server-authoritative for cost/cooldown/upgrade/caller validation before merge; also validate payload schema, JIP, marker audience, resistance targeting, score effects, cleanup, performance, sounds and generated mission propagation.
