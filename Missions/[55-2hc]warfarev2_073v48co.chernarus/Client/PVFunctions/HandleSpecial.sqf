@@ -58,8 +58,8 @@ switch (_request) do {
 			switch (_t) do {
 				case "trail": {
 					_src = "#particlesource" createVehicleLocal (getPosASL _o);
-					_src setDropInterval 0.035;
-					_src setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 0, 1], "", "Billboard", 0.08, 3, [0,0,0], [0, 0, 1], 0, 10, 7.9, 0.06, [1.2, 5], [[1,1,1,0.85],[1,1,1,0.45],[1,1,1,0]], [0], 1, 0, "\CA\Data\ParticleEffects\SCRIPTS\WPTrail.sqf", "", _o];   //--- FIX: bolder white smoke trail (was a near-invisible thin contrail) so the package can be spotted/filmed
+					_src setDropInterval 0.04;
+					_src setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 0, 1], "", "Billboard", 0.1, 1.4, [0,0,0], [0, 0, 4], 0, 12, 7.9, 0.07, [0.35], [[1,1,1,0.55],[1,1,1,0]], [0], 1, 0, "\CA\Data\ParticleEffects\SCRIPTS\WPTrail.sqf", "", _o];   //--- FIX: bolder white smoke trail (was a near-invisible thin contrail) so the package can be spotted/filmed
 					_src setParticleRandom [0.1, [0.25, 0.25, 0], [6, 6, 3], 0, 0.15, [0, 0, 0, 0], 0, 0];
 					[_src, _o] spawn { waitUntil {sleep 1.5; isNull (_this select 1) || !alive (_this select 1)}; deleteVehicle (_this select 0); };
 				};

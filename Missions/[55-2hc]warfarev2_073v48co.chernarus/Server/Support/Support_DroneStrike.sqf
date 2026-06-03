@@ -122,7 +122,7 @@ for "_i" from 0 to (_total - 1) do {
     _drone setVariable ["wfbe_sideID", _sideID, false];
     _drone addEventHandler ["HandleDamage", {_this call WFBE_DroneHandleDamage}];
     _drone addEventHandler ["Killed", {[_this select 0, _this select 1, (_this select 0) getVariable "wfbe_sideID"] Spawn WFBE_CO_FNC_OnUnitKilled}];
-    if (_enhanced) then {[nil, "HandleSpecial", ["drone-fx", "trail", _drone]] Call WFBE_CO_FNC_SendToClients};   //--- client-side smoke contrail.
+    //--- smoke contrail removed per design: spotted via the dive light + the 2 flaring drones, not a trail.   //--- client-side smoke contrail.
     _drones set [count _drones, _drone];
     _groups set [count _groups, _grp];
 };
