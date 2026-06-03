@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T00:51:57+02:00",
+  "generatedAt": "2026-06-04T00:56:35+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated the micro-scout wave, then cleaned the remaining dashboard/machine-status drift so current coordination files point to the next bounded finisher item.",
-      "nextExpectedOutput": "Pick the next highest-value docs finisher item: feature-status reconciliation, machine-readable stale-status cleanup, or a P0/P1 accuracy drift with exact source refs."
+      "currentWork": "Published and validated the DroneStrike/ReconUAV branch diff-scope clarification so total branch diff and Chernarus-only mission-runtime scope are distinct.",
+      "nextExpectedOutput": "Pick the next bounded Feature Status or machine-ledger reconciliation item, preferably another branch-only promotion gate with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "drone-recon-branch-diff-scope-clarification",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Fetched all remotes and verified origin/feat/drone-saturation-strike remains 8ca4be90 and origin/feat/recon-uav remains 563418ea. DroneStrike is 17 total files +1133/-4, with 15 source-Chernarus mission files +379/-4 and 0 maintained Vanilla mission files; ReconUAV is 25 total files +1461/-657, with 22 source-Chernarus mission files +593/-657 and 0 maintained Vanilla mission files. Patched Current-Source-Status-Snapshot, Feature Status, Pending Owner Decisions and agent-feature-status.jsonl to distinguish total branch diff from mission-runtime scope; wiki validation, JSON/JSONL parsing, git diff --check and mirror parity passed."
+    },
     {
       "lane": "coordination-stale-status-cleanup",
       "owner": "Codex",

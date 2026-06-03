@@ -23,6 +23,13 @@
 - Refreshed `agent-collaboration.json` `generatedAt` after the coordination file edits.
 - Documentation only; no gameplay source files were edited.
 
+## 2026-06-04T00:56:35+02:00 - Codex - drone/recon branch diff-scope clarification
+
+- Fetched all remotes and rechecked branch heads: `origin/feat/drone-saturation-strike` remains `8ca4be90`, `origin/feat/recon-uav` remains `563418ea`, both merge from stable `origin/master` `2cdf5fb8`.
+- Verified diff scopes from source: DroneStrike has 17 total files (+1133/-4), but only 15 source-Chernarus mission files (+379/-4) and 0 maintained Vanilla mission files; ReconUAV has 25 total files (+1461/-657), but only 22 source-Chernarus mission files (+593/-657) and 0 maintained Vanilla mission files.
+- Updated [Current source status snapshot](Current-Source-Status-Snapshot), [Feature status](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions) and `agent-feature-status.jsonl` so total branch diff and mission-runtime scope no longer look contradictory.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-04T00:13:27+02:00 - Codex - Spark scout wave harvest and micro-lane split
 
 - Harvested completed Spark scouts from the economy/factory/respawn/UI/HC/tooling/entrypoint/camp/paratrooper/content/variant/RequestSpecial lanes. Most economy, factory, respawn/MASH, HC and paratrooper results confirmed existing canonical pages, so they were treated as validation instead of duplicated.
