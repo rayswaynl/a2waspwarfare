@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-03T23:59:00+0200 - Codex - branch-feature-promotion-gates
+
+- Converted the latest branch-intel findings into explicit owner/release gates so useful branch evidence does not read as stable-master or release-ready truth.
+- Updated [Pending owner decisions](Pending-Owner-Decisions) with promotion decisions for `origin/feat/ai-commander` head `4dba060e`, `origin/feat/drone-saturation-strike` head `8ca4be90` and `origin/feat/recon-uav` head `563418ea`.
+- Updated [`agent-release-readiness.json`](agent-release-readiness.json) with machine-readable `branchOnlyFeaturePromotionGates` for default-on AI commander behavior, paid DroneStrike authority and ReconUAV old-UAV replacement scope.
+- Source evidence checked directly from branch files: `Parameters.hpp:96`, `Init_Server.sqf:49-54,387-389,630-631`, `AI_Commander.sqf:29-81`, Drone constants `Init_CommonConstants.sqf:243-263`, `Support_DroneStrike.sqf:1-14,16-18,46-52`, `Server_HandleSpecial.sqf:63-82` on recon and `Support_ReconUAV.sqf:1-22,83-102,119-132,140-151`.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-03T23:55:00+0200 - Codex - ai-commander-branch-intel-refresh
 
 - Pulled latest remotes and found new `origin/feat/ai-commander` at head `4dba060e`.

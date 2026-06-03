@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-03T22:25:00+02:00",
-  "lastVerifiedAt": "2026-06-03T22:25:00+02:00",
+  "generatedAt": "2026-06-03T23:59:00+02:00",
+  "lastVerifiedAt": "2026-06-03T23:59:00+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -50,7 +50,71 @@
     ],
     "canonicalDoc": "Source-Fix-Propagation-Queue.md#latest-propagation-run"
   },
-  "globalReleaseRule": "A fix is not release-complete until the target branch is named, Chernarus source carries the intended change, maintained Vanilla carries the same intended change when propagation matters, generated diffs are inspected and the relevant Arma 2 OA smoke is recorded.",
+  "globalReleaseRule": "A fix or branch feature is not release-complete until the target branch is named, Chernarus source carries the intended change, maintained Vanilla carries the same intended change when propagation matters, generated diffs are inspected and the relevant Arma 2 OA smoke is recorded.",
+  "branchOnlyFeaturePromotionGates": [
+    {
+      "id": "ai-commander-branch-revival",
+      "branch": "origin/feat/ai-commander",
+      "head": "4dba060e",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-not-stable-master-truth",
+      "sourceScope": "source-chernarus-only",
+      "canonicalDocs": [
+        "AI-Commander-Autonomy-Audit.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md"
+      ],
+      "evidenceRefs": [
+        "origin/master..origin/feat/ai-commander: 9 Chernarus source files +366/-5",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp:96 on origin/feat/ai-commander",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf:49-54,387-389,630-631 on origin/feat/ai-commander",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:29-81 on origin/feat/ai-commander"
+      ],
+      "ownerDecision": "Accept or reject default-on AI commander and human-assist mode; decide autonomous logistics scope separately because the old UpdateSupplyTruck path is guarded, not restored.",
+      "promotionGate": "Propagate/review maintained Vanilla, then smoke no-human full command, human assist/no-spend, order execution, town assignment, production cap, upgrade debit/costs, commander handoff, HQ death and JIP before calling AI commander revived."
+    },
+    {
+      "id": "drone-saturation-strike-branch",
+      "branch": "origin/feat/drone-saturation-strike",
+      "head": "8ca4be90",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-paid-support-authority-open",
+      "sourceScope": "source-chernarus-only",
+      "canonicalDocs": [
+        "PR8-And-Drone-Upstream-Lesson-Match.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:243-263 on origin/feat/drone-saturation-strike",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_DroneStrike.sqf:1-14,16-18,46-52 on origin/feat/drone-saturation-strike",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf DroneStrike/ChangePlayerFunds/RequestSpecial on origin/feat/drone-saturation-strike"
+      ],
+      "ownerDecision": "Decide whether DroneStrike is a paid economy-affecting support. If yes, server must own acceptance, debit, cooldown, upgrade, caller/team/side and map validation.",
+      "promotionGate": "Move paid-support authority server-side, choose generated Vanilla propagation or explicit Chernarus-only scope, then smoke active cap cleanup, JIP cooldown, marker/audience behavior, resistance targeting, score effects and performance."
+    },
+    {
+      "id": "recon-uav-branch",
+      "branch": "origin/feat/recon-uav",
+      "head": "563418ea",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-old-uav-replacement-open",
+      "sourceScope": "source-chernarus-only",
+      "canonicalDocs": [
+        "PR8-And-Drone-Upstream-Lesson-Match.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf:63-82 on origin/feat/recon-uav",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_ReconUAV.sqf:1-22,83-102,119-132,140-151 on origin/feat/recon-uav",
+        "origin/feat/recon-uav deletes old Client/Module/UAV/uav*.sqf and Server/Support/Support_UAV.sqf",
+        "origin/feat/recon-uav includes drone history only through 93b47594, not origin/feat/drone-saturation-strike head 8ca4be90"
+      ],
+      "ownerDecision": "Decide whether ReconUAV replaces the old UAV feature or remains experimental.",
+      "promotionGate": "Resolve drone tuning baseline, then smoke old-UAV removal, deploy/recall, cap decrement, destroyed-UAV cleanup, side-only reveal audience, JIP during active orbit, HQ-loss cleanup and generated Vanilla propagation."
+    }
+  ],
   "sourceOnlyFixes": [
     {
       "id": "paratrooper-marker-revival",

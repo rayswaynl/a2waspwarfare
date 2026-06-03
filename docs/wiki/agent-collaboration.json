@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T23:55:00+02:00",
+  "generatedAt": "2026-06-03T23:59:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,27 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "branch-feature-promotion-gates",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Pending-Owner-Decisions.md",
+        "docs/wiki/agent-release-readiness.json",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "origin/feat/ai-commander",
+        "origin/feat/drone-saturation-strike",
+        "origin/feat/recon-uav"
+      ],
+      "outputs": [
+        "Added owner-decision promotion gates for feat/ai-commander default-on behavior and autonomous logistics scope",
+        "Added paid-support promotion gate for DroneStrike server-side acceptance/debit/cooldown/upgrade/caller validation",
+        "Added ReconUAV replacement promotion gate for old UAV removal, tuning baseline, reveal/recall/JIP cleanup and generated mission scope",
+        "Mirrored those gates into agent-release-readiness.json for machine-readable release checks"
+      ],
+      "handoff": "Future branch/release owners should consult Pending-Owner-Decisions plus agent-release-readiness.json before merging AI commander, DroneStrike or ReconUAV. Branch evidence is useful but not release-ready until owner decisions, maintained Vanilla scope and Arma 2 OA smoke are recorded."
+    },
     {
       "lane": "ai-commander-branch-intel-refresh",
       "owner": "Codex",

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T23:55:00+02:00",
+  "generatedAt": "2026-06-03T23:59:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed AI commander branch intelligence so AI Commander Autonomy Audit and Feature Status distinguish stable-master partial/latent status from feat/ai-commander head 4dba060e revival evidence.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: feature-status reconciliation, owner-decision consolidation, P0/P1 accuracy drift with exact source refs, or deeper release/readiness smoke planning."
+      "currentWork": "Promoted branch-only AI commander, DroneStrike and ReconUAV findings into explicit owner-decision and release-readiness gates so useful branch evidence cannot be mistaken for stable-master or release-ready truth.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: remaining feature-status reconciliation, P0/P1 accuracy drift with exact source refs, or deeper release/readiness smoke planning."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "branch-feature-promotion-gates",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Pending-Owner-Decisions and agent-release-readiness.json now carry promotion gates for origin/feat/ai-commander head 4dba060e, origin/feat/drone-saturation-strike head 8ca4be90 and origin/feat/recon-uav head 563418ea. Future agents should require owner decisions, maintained Vanilla scope and Arma smoke before calling default-on AI commander, paid DroneStrike or ReconUAV replacement stable/release-ready."
+    },
     {
       "lane": "ai-commander-branch-intel-refresh",
       "owner": "Codex",
