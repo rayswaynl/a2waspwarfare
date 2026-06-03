@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T16:20:00+02:00",
+  "generatedAt": "2026-06-03T16:30:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Reconciled stale Scout Wave J status from validation-pending to published-validated after checking discovery, worklog, event and knowledge records plus mirror parity.",
-      "nextExpectedOutput": "Pick the next highest-value stale validation/status row or fresh source-backed docs gap; Wave J docs harvest and Wave Q rows are no longer pending."
+      "currentWork": "Reconciled stale Scout Wave K status from validation-pending to published-validated after checking discovery, worklog, event records and mirror parity.",
+      "nextExpectedOutput": "Pick the next highest-value stale validation/status row or fresh source-backed docs gap; Wave K, Wave J and Wave Q rows are no longer pending."
     },
     "Codex-2": {
       "status": "ready",
@@ -430,8 +430,8 @@
     {
       "lane": "scout-wave-k",
       "owner": "Codex sub-agents",
-      "status": "returned-harvested-validation-pending",
-      "output": "Hubble, Dirac, Lovelace, Nietzsche, Franklin and Linnaeus findings are folded into Feature Status, SQF/PV indexes, UI docs, navigation and agent-entrypoint.json; validation and mirror parity remain pending."
+      "status": "published-validated",
+      "output": "Hubble, Dirac, Lovelace, Nietzsche, Franklin and Linnaeus findings are folded into Feature Status, SQF/PV indexes, UI docs, navigation and agent-entrypoint.json; documentation validation and mirror parity are complete. Larger schema normalization remains a future machine-file cleanup lane."
     },
     {
       "lane": "scout-wave-j",
