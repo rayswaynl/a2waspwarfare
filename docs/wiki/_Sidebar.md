@@ -22,6 +22,7 @@
 - Community & Dev
   - [Community & Dev](Community-And-Dev)
   - [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import)
+  - [Upstream changelog feature leads](Upstream-Changelog-Feature-Leads)
   - [Project welcome](Miksuu-Wiki-Archive-Welcome)
   - [Big announcements](Miksuu-Wiki-Archive-Big-Announcements)
   - [Changelog](Miksuu-Wiki-Archive-Changelog)

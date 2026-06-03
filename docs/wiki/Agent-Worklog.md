@@ -1776,4 +1776,5 @@ Key conclusions:
 ## 2026-06-03T23:50:00+02:00 - Codex - Community & Dev scout harvest
 - Ran a follow-up Spark scout wave over the published Community & Dev cluster.
 - Folded the useful scout findings into [Community & Dev](Community-And-Dev) and [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import): normalized contributor aliases, stronger stale-claim caveats for modded-map event notes, server ops/HC/performance anecdotes and DiscordBot provenance, plus archive-page previous/next/related navigation.
+- Added [Upstream changelog feature leads](Upstream-Changelog-Feature-Leads) to preserve old changelog feature/status candidates for later source verification.
 - No gameplay source files changed.

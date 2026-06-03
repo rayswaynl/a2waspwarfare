@@ -77,6 +77,7 @@ Imported from `Miksuu/a2waspwarfare.wiki` at commit `45ef3da367d65e6487de488bbe3
 | Archive page | Best use |
 | --- | --- |
 | [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) | Import manifest, provenance, caveats and historical-only pages. |
+| [Upstream changelog feature leads](Upstream-Changelog-Feature-Leads) | Candidate backlog of old changelog features that need current-source verification. |
 | [Project welcome](Miksuu-Wiki-Archive-Welcome) | CTI overview, WASP -> Miksuu lineage, contribution culture. |
 | [Changelog](Miksuu-Wiki-Archive-Changelog) | Primary community timeline and release-note archive. |
 | [Big announcements](Miksuu-Wiki-Archive-Big-Announcements) | 2023 end-of-year community, donor, contributor and HC/GPT history. |
@@ -102,4 +103,4 @@ Imported from `Miksuu/a2waspwarfare.wiki` at commit `45ef3da367d65e6487de488bbe3
 
 Previous: [Knowledge platform roadmap](Knowledge-Platform-Roadmap) | Next: [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import)
 
-Related: [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) | [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel) | [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match)
+Related: [Upstream changelog feature leads](Upstream-Changelog-Feature-Leads) | [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) | [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel) | [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match)

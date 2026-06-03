@@ -31,6 +31,7 @@ Important notes:
 
 - [Community & Dev](https://github.com/rayswaynl/a2waspwarfare/wiki/Community-And-Dev): WASP -> Miksuu lineage, Discord/changelog culture, contributor mentions and development practices.
 - [Miksuu upstream wiki import](https://github.com/rayswaynl/a2waspwarfare/wiki/Miksuu-Upstream-Wiki-Import): Import manifest, provenance, caveats and archive routing.
+- [Upstream changelog feature leads](https://github.com/rayswaynl/a2waspwarfare/wiki/Upstream-Changelog-Feature-Leads): Candidate backlog of historical changelog features that need current-source verification.
 - [Miksuu project welcome archive](https://github.com/rayswaynl/a2waspwarfare/wiki/Miksuu-Wiki-Archive-Welcome): CTI overview and upstream contribution culture.
 - [Miksuu big announcements archive](https://github.com/rayswaynl/a2waspwarfare/wiki/Miksuu-Wiki-Archive-Big-Announcements): 2023 community announcement, donors, contributors, GPT and HC history.
 - [Miksuu changelog archive](https://github.com/rayswaynl/a2waspwarfare/wiki/Miksuu-Wiki-Archive-Changelog): Primary upstream release-note and community timeline archive.
