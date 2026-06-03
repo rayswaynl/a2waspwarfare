@@ -8,6 +8,14 @@ Claude should send Codex a short status after each major gate: hosted boot, dedi
 
 Codex should treat Claude's runtime findings as authoritative when they include RPT evidence, screenshots, coordinates, or repeatable repro steps. If Claude finds a real issue, update the mission or validators instead of trying to preserve the current implementation.
 
+After each RPT-producing pass, Claude should generate a compact markdown status with:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadRuntimeReport.ps1 -RptPath "C:\path\to\rpts"
+```
+
+Use the same required switches as the validator for the gate being tested, then paste the report and any screenshots/coordinates back to Codex.
+
 ## Do Not Stop Until
 
 Claude/runtime tester should keep going until there is RPT and short note evidence for every required gate below:
@@ -59,6 +67,12 @@ For the optional edge-guard and black-market action checks:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadRuntimeEvidence.ps1 -RptPath "C:\path\to\rpts" -RequireEdgeGuardRemoval -RequireBlackMarket
+```
+
+For a Codex-ready handoff report:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadRuntimeReport.ps1 -RptPath "C:\path\to\rpts" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireBlackMarket -OutputPath ".\zargabad-runtime-report.md"
 ```
 
 Use `-AllowKnownDisconnectScoreErrors` only if the only RPT `ERROR` lines are the existing disconnect score messages after intentionally disconnecting test clients.

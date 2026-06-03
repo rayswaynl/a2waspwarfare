@@ -32,6 +32,7 @@
     "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf",
     "Tools/Validate-ZargabadMission.ps1",
     "Tools/Validate-ZargabadRuntimeEvidence.ps1",
+    "Tools/New-ZargabadRuntimeReport.ps1",
     "Guides/Zargabad-Claude-Runtime-Handoff.md",
     "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs"
   ],
@@ -101,6 +102,10 @@
     },
     {
       "type": "source-audit",
+      "summary": "Tools/New-ZargabadRuntimeReport.ps1 generates a Codex-ready markdown report with gate state, failure scan, key RPT excerpts, validator output, and Claude note prompts."
+    },
+    {
+      "type": "source-audit",
       "summary": "Zargabad_RuntimeAudit logs runtime towns/camps/airports/defenses, start/max SV totals, factory restriction counts, price multiplier/sample values, and smaller-map economy/range/base-defense/edge-guard constants into RPT."
     },
     {
@@ -113,7 +118,7 @@
     }
   ],
   "result": "partial",
-  "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md and Tools/Validate-ZargabadRuntimeEvidence.ps1 for RPT evidence.",
-  "updatedAt": "2026-06-03T02:13:00+02:00",
+  "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports.",
+  "updatedAt": "2026-06-03T02:28:00+02:00",
   "updatedBy": "Codex"
 }
