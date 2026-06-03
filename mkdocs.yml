@@ -52,6 +52,7 @@ nav:
       - Supply Mission Authority Cleanup: Supply-Mission-Authority-Cleanup-Playbook.md
       - Current Supply Helicopters PR1: Current-Work-Supply-Helicopters-PR1.md
       - AI Headless And Performance: AI-Headless-And-Performance.md
+      - Perf Quick Wins Branch Audit: Perf-Quick-Wins-Branch-Audit.md
       - AI Runtime HC Loop Map: AI-Runtime-HC-Loop-Map.md
       - AI Commander Autonomy Audit: AI-Commander-Autonomy-Audit.md
       - Headless Delegation And Failover: Headless-Delegation-And-Failover-Playbook.md

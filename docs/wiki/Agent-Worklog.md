@@ -1,5 +1,14 @@
 # Agent Worklog
 
+## 2026-06-03T22:25:52+0200 - Codex - perf-quick-wins-branch-deep-audit
+
+- Deep-audited `origin/perf/quick-wins` head `0076040f` after the branch matrix identified it as a high-value fix candidate.
+- Source evidence checked: merge base `2cdf5fb8`; branch diff `18 files, +27/-27`; all touched files are source Chernarus under `Missions/[55-2hc]warfarev2_073v48co.chernarus`; no maintained Vanilla files are touched; `git diff --check origin/master..origin/perf/quick-wins` is clean.
+- Commit evidence checked: `95481b37` server-loop/perf cleanup; `0a1e6165` eleven correctness fixes; `0076040f` factory queue, camp-bunker EH and paratrooper PV fixes.
+- Line evidence checked: `Client_BuildUnit.sqf:366-368`; `Init_PublicVariables.sqf:40`; `Common_ChangeSideSupply.sqf:25`; `Server_ChangeSideSupply.sqf:12,36`; `mines_cleaner.sqf:17`; `server_collector_garbage.sqf:17`; `server_patrols.sqf:26`; `server_town_patrol.sqf:18`; `server_town_camp.sqf:135`; `updateresources.sqf:74`; `Server_HandleSpecial.sqf:235-236`; `RequestOnUnitKilled.sqf:92`; `Common_EquipBackpack.sqf:35,41`; `Common_EquipVehicle.sqf:27,33,39`; `Action_RepairMHQDepot.sqf:6`; `viem.sqf:20,38`; `DropRPG.sqf:57`.
+- Added [Perf quick wins branch audit](Perf-Quick-Wins-Branch-Audit) and routed it through Home, sidebar, mkdocs, llms, Feature Status, Pending Owner Decisions, source snapshot, Testing workflow and machine ledgers.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-03T22:11:05+0200 - Codex - zargabad-branch-deep-audit
 
 - Deep-audited `origin/feature/zargabad-map` head `1fdcb37a` after branch intake identified it as the remaining high-value map branch.

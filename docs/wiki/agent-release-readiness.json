@@ -260,20 +260,29 @@
       "state": "branch-review-needed-fix-candidate-vanilla-open",
       "sourceScope": "source-chernarus-only",
       "canonicalDocs": [
+        "Perf-Quick-Wins-Branch-Audit.md",
         "Feature-Status-Register.md",
         "Pending-Owner-Decisions.md",
         "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
         "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
       ],
       "evidenceRefs": [
-        "origin/master..origin/perf/quick-wins: 18 files +27/-27",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf:20-26 on origin/perf/quick-wins",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf:365-368 on origin/perf/quick-wins",
+        "origin/perf/quick-wins@0076040f; merge-base origin/master@2cdf5fb8",
+        "origin/master..origin/perf/quick-wins: 18 files +27/-27; all changed files are source Chernarus",
+        "git diff --check origin/master..origin/perf/quick-wins is clean",
+        "git diff --name-only origin/master..origin/perf/quick-wins -- Missions_Vanilla returns no changed files",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf:25 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf:12,36 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf:366-368 on origin/perf/quick-wins",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:40 on origin/perf/quick-wins",
-        "git diff --check origin/master..origin/perf/quick-wins is clean"
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/cleaners/mines_cleaner.sqf:17 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_collector_garbage.sqf:17 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/updateresources.sqf:74 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf:235-236 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestOnUnitKilled.sqf:92 on origin/perf/quick-wins"
       ],
       "ownerDecision": "Cherry-pick, split or merge as one fix branch after reconciling with existing docs/source propagated fixes.",
-      "promotionGate": "Propagate maintained Vanilla and smoke side-supply debit, factory queue counters, paratrooper marker registration and touched server-loop regressions before release wording.",
+      "promotionGate": "Propagate maintained Vanilla or explicitly accept Chernarus-only scope, keep DR-44 side-supply authority separate from the DR-22 clamp, and smoke side-supply debit, factory queue counters, paratrooper marker registration, cleaner/resource/camp loops, kill-assist bounty and WASP action paths before release wording.",
       "plannedSmoke": {
         "status": "planned-not-run",
         "coverageLevel": [
@@ -281,7 +290,7 @@
           "regression-smoke",
           "vanilla-parity-smoke"
         ],
-        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+        "canonicalDoc": "Perf-Quick-Wins-Branch-Audit.md#promotion-gates"
       }
     },
     {

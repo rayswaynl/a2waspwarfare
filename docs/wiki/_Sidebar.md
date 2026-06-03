@@ -24,6 +24,7 @@
   - [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel)
   - [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match)
   - [Player stats branch audit](Player-Stats-Branch-Audit)
+  - [Perf quick wins branch audit](Perf-Quick-Wins-Branch-Audit)
   - [Commander positions branch audit](Commander-Positions-Branch-Audit)
   - [Zargabad branch audit](Zargabad-Branch-Audit)
   - [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit)

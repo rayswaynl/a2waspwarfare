@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T22:11:05+02:00",
+  "generatedAt": "2026-06-03T22:25:52+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,31 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "perf-quick-wins-branch-deep-audit",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "origin/perf/quick-wins",
+        "origin/master",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestOnUnitKilled.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP",
+        "docs/wiki/Perf-Quick-Wins-Branch-Audit.md"
+      ],
+      "outputs": [
+        "Added Perf quick wins branch audit for origin/perf/quick-wins head 0076040f",
+        "Recorded compact branch scope: 18 source-Chernarus files, +27/-27, clean git diff --check and no maintained Vanilla diff",
+        "Recorded fix families for side supply, factory queue, paratrooper marker PV, server loops, camp-bunker EH, kill-assist bounty and WASP off-by-one/nil defaults",
+        "Recorded maintained Vanilla propagation and Arma runtime smoke as open promotion gates"
+      ],
+      "handoff": "Future fix owner should start at Perf-Quick-Wins-Branch-Audit. Do not call this stable/release-ready until merge strategy is chosen, docs/source overlap is reconciled, maintained Vanilla propagation is done or explicitly rejected, and Arma smoke covers side-supply debit, factory queues, paratrooper markers, cleaner/resource/camp loops and WASP action paths."
+    },
     {
       "lane": "zargabad-branch-deep-audit",
       "owner": "Codex",

@@ -130,6 +130,14 @@ Development rule: when a branch-head note says older line refs are superseded, r
 
 That does not prove the mission is playable. The branch's own completion gates require hosted/dedicated Arma 2 OA runtime evidence, plus JIP/HC evidence when those claims are made, screenshot packets for visual/pathing/balance rows and runtime-report validation. Future agents should say "static validation passed" and "runtime evidence open" separately for terrain branches. See [Zargabad branch audit](Zargabad-Branch-Audit).
 
+## Lesson 16: Small Fix Branches Need Payload Tables Too
+
+`origin/perf/quick-wins` shows why a branch name is not enough. Head `0076040f` is compact and clean (`18 files, +27/-27`, no `git diff --check` findings), but the payload crosses several ownership boundaries: DR-22 side-supply clamp shape (`Common_ChangeSideSupply.sqf:25`, `Server_ChangeSideSupply.sqf:12,36`), DR-33a factory queue cleanup (`Client_BuildUnit.sqf:366-368`), DR-2 paratrooper marker PV registration (`Init_PublicVariables.sqf:40`), mine/dead-object/resource-loop cleanup (`mines_cleaner.sqf:17`, `server_collector_garbage.sqf:17`, `updateresources.sqf:74`), patrol exit conditions (`server_patrols.sqf:26`, `server_town_patrol.sqf:18`), camp-bunker nil-code EH removal (`Server_HandleSpecial.sqf:235-236`), kill-assist bounty type (`RequestOnUnitKilled.sqf:92`) and WASP off-by-one/nil-default fixes.
+
+The propagation scope is also narrower than the fix list. The branch touches only source Chernarus; `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` has no branch diff and still carries old shapes such as `_currentSupply - _amount`, `WFBE_SE_FNC_OnBuildingKilled`, undefined `_objectType` and `GetSleepFPS` in `updateresources.sqf`.
+
+Development rule: even for a tiny branch, document the payload, baggage, propagation scope and smoke gates before merge/release wording. A fix can be high-confidence static evidence while still requiring Vanilla propagation and Arma runtime smoke. See [Perf quick wins branch audit](Perf-Quick-Wins-Branch-Audit).
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |
