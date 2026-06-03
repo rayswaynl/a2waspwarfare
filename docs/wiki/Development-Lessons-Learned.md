@@ -82,7 +82,7 @@ Development rule: before moving or patching lifecycle waits, cite both the consu
 
 | Priority | Patch | Owner page target | Validation |
 | --- | --- | --- | --- |
-| P1 | Add this page and `agent-development-lessons.jsonl` to navigation/agent context after orchestrator review. | `Home`, `_Sidebar`, `Agent-Context`, `agent-context.json` | Link check and JSON parse. |
+| Done | Development lessons and `agent-development-lessons.jsonl` are wired into navigation and agent context. | `Home`, `_Sidebar`, `Agent-Context`, `agent-context.json` | Link check and JSON parse; evidence rechecked at `Home.md:10,33,76,100,102`, `_Sidebar.md:10,12,119,121`, `Agent-Context.md:3,11,13,75` and `agent-context.json:69,87,141,163-185,479-480,1205`. |
 | Done | Config data-model checklist added to the assets/config atlas. | `Assets-Config-Localization-And-Parameters-Atlas#config-data-model-checklist` | Runtime content-change smoke remains per feature change. |
 | Done | AI respawn branch smoke is now in the testing workflow. | `Testing-Debugging-And-Release-Workflow#minimal-smoke-packs` | Runtime evidence is still pending until vanilla and non-vanilla AI leader death/respawn are run in Arma 2 OA. |
 | Done | Cleanup flag/nested-pair shape rules are already accepted in the marker/cleanup atlas patch-ready section. | `Marker-Cleanup-Restoration-Systems-Atlas#patch-ready-findings` | Mine expiry and unit-kill garbage smoke remain the runtime gates before source patch acceptance. |

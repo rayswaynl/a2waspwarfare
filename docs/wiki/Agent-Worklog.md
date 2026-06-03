@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Development Lessons Navigation Closure
+
+- Closed the stale P1 row in [Development lessons learned](Development-Lessons-Learned#proposed-backlog-patches): the human page and machine lesson feed are already wired into [Home](Home), `_Sidebar`, [Agent context](Agent-Context) and [`agent-context.json`](agent-context.json).
+- Evidence checked: `Home.md:10,33,76,100,102`, `_Sidebar.md:10,12,119,121`, `Agent-Context.md:3,11,13,75` and `agent-context.json:69,87,141,163-185,479-480,1205`.
+- Scope remained docs/status only; no gameplay source files were edited.
+
 ## 2026-06-03 - Codex Documentation Finisher: Cleanup Flag / Nested-Pair Shape Closure
 
 - Closed the stale Development Lessons P2 follow-up without gameplay source edits: [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas#patch-ready-findings) already owns both patch-ready rows.

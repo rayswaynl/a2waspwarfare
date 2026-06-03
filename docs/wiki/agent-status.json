@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T13:03:28+02:00",
+  "generatedAt": "2026-06-03T17:55:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed the stale cleanup flag/nested-pair shape promotion row after source-checking the existing marker/cleanup atlas owner section. The atlas already owns the mine nested-pair removal and garbage flag mismatch patch shapes; Development Lessons now marks that backlog item done.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another P0/P1 accuracy drift, owner-decision surfacing item or machine-readable stale-status cleanup with exact source refs."
+      "currentWork": "Closed the stale Development Lessons navigation/context P1 row after proving the lesson page and agent-development-lessons.jsonl are already wired through Home, _Sidebar, Agent-Context and agent-context.json.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another owner-decision surfacing item, machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "development-lessons-nav-context-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Closed the stale Development-Lessons-Learned P1 navigation/context row. Evidence confirms Home, _Sidebar, Agent-Context and agent-context.json already route both Development-Lessons-Learned and agent-development-lessons.jsonl for humans and agents."
+    },
     {
       "lane": "cleanup-flag-nested-pair-shape-closure",
       "owner": "Codex",
