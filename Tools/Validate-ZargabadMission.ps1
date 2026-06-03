@@ -286,6 +286,43 @@ Assert-Equal "town max SV total" (@($parsedTowns | Measure-Object -Property MaxS
 Assert-Equal "towns without camps" @($parsedTowns | Where-Object { $_.Camps -lt 1 }).Count 0
 Assert-Equal "town-linked camp count" (@($parsedTowns | Measure-Object -Property Camps -Sum).Sum) 19
 Assert-Equal "camps outside 90m-225m population flow band" @($parsedTowns | Where-Object { $_.MinCampDistance -lt 90 -or $_.MaxCampDistance -gt 225 }).Count 0
+$expectedCampPlacement = @(
+	[pscustomobject]@{ Id = 101; X = 3925; Y = 4060; Town = "Zargabad City Center"; Min = 170; Max = 200 },
+	[pscustomobject]@{ Id = 102; X = 4245; Y = 3860; Town = "Zargabad City Center"; Min = 170; Max = 205 },
+	[pscustomobject]@{ Id = 107; X = 4010; Y = 4840; Town = "Zargabad North District"; Min = 145; Max = 170 },
+	[pscustomobject]@{ Id = 108; X = 4270; Y = 4670; Town = "Zargabad North District"; Min = 145; Max = 170 },
+	[pscustomobject]@{ Id = 112; X = 4050; Y = 3060; Town = "Zargabad South District"; Min = 140; Max = 160 },
+	[pscustomobject]@{ Id = 113; X = 4310; Y = 3250; Town = "Zargabad South District"; Min = 160; Max = 185 },
+	[pscustomobject]@{ Id = 117; X = 3190; Y = 3870; Town = "West Suburbs"; Min = 120; Max = 145 },
+	[pscustomobject]@{ Id = 120; X = 5070; Y = 4010; Town = "East Market"; Min = 120; Max = 145 },
+	[pscustomobject]@{ Id = 123; X = 2810; Y = 5270; Town = "Zargabad Airfield"; Min = 170; Max = 200 },
+	[pscustomobject]@{ Id = 124; X = 3130; Y = 5080; Town = "Zargabad Airfield"; Min = 170; Max = 205 },
+	[pscustomobject]@{ Id = 129; X = 4330; Y = 5860; Town = "Rahim Villa"; Min = 150; Max = 175 },
+	[pscustomobject]@{ Id = 130; X = 4570; Y = 5680; Town = "Rahim Villa"; Min = 125; Max = 150 },
+	[pscustomobject]@{ Id = 134; X = 2370; Y = 5670; Town = "Northwest Base"; Min = 135; Max = 160 },
+	[pscustomobject]@{ Id = 135; X = 2630; Y = 5530; Town = "Northwest Base"; Min = 135; Max = 160 },
+	[pscustomobject]@{ Id = 139; X = 3600; Y = 5775; Town = "North Camp"; Min = 115; Max = 135 },
+	[pscustomobject]@{ Id = 142; X = 5770; Y = 4340; Town = "East Farms"; Min = 115; Max = 140 },
+	[pscustomobject]@{ Id = 145; X = 4230; Y = 1960; Town = "South Farms"; Min = 115; Max = 140 },
+	[pscustomobject]@{ Id = 148; X = 2150; Y = 3400; Town = "West Farms"; Min = 105; Max = 125 },
+	[pscustomobject]@{ Id = 151; X = 3100; Y = 1790; Town = "Southern Outskirts"; Min = 105; Max = 130 }
+)
+foreach ($expectedCamp in $expectedCampPlacement) {
+	$camp = @($camps | Where-Object { $_.Id -eq $expectedCamp.Id })
+	Assert-Equal "camp $($expectedCamp.Id) placement row count" $camp.Count 1
+	Assert-NearPosition "camp $($expectedCamp.Id) stays at intended approach anchor" $camp[0] $expectedCamp.X $expectedCamp.Y 5
+	$linkedTown = @($parsedTowns | Where-Object { $camp[0].Sync -contains $_.Id })
+	Assert-Equal "camp $($expectedCamp.Id) linked town count" $linkedTown.Count 1
+	Assert-Equal "camp $($expectedCamp.Id) linked town" $linkedTown[0].Name $expectedCamp.Town
+	$distance = [math]::Round((Get-FlatDistance $camp[0] $linkedTown[0]), 1)
+	Assert-True "camp $($expectedCamp.Id) approach distance in named band" ($distance -ge $expectedCamp.Min -and $distance -le $expectedCamp.Max)
+}
+$twoApproachTownNames = @("Zargabad City Center", "Zargabad Airfield", "Zargabad North District", "Zargabad South District", "Northwest Base", "Rahim Villa")
+$namedTwoApproachFailures = @()
+foreach ($townName in $twoApproachTownNames) {
+	if (@($expectedCampPlacement | Where-Object { $_.Town -eq $townName }).Count -ne 2) { $namedTwoApproachFailures += $townName }
+}
+Assert-Equal "named two-approach population anchor failures" $namedTwoApproachFailures.Count 0
 Assert-Equal "towns without defenses" @($parsedTowns | Where-Object { $_.Defenses -lt 1 }).Count 0
 Assert-True "city center is highest max SV" (($parsedTowns | Sort-Object MaxSV -Descending | Select-Object -First 1).Name -eq "Zargabad City Center")
 Assert-True "airfield is second highest max SV" (($parsedTowns | Sort-Object MaxSV -Descending | Select-Object -Skip 1 -First 1).Name -eq "Zargabad Airfield")
