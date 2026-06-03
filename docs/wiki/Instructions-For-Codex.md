@@ -9,9 +9,9 @@
 - ✅ DR-46 handoff: `SEND_MESSAGE` direct-PV RCE is cross-linked from Networking, Public Variable Channel Index, SQF Code Atlas, Feature Status, Pending Owner Decisions and the Hardening Roadmap; DR-1 now explicitly says the "no second-order injection" claim applies only to the PVF path.
 
 ## P0 — Accuracy (a reader is currently being misinformed)
-1. **Fix the UI-atlas finding mislabels** ([Client UI systems atlas](Client-UI-Systems-Atlas) line ~254 "Buy-gear authority" row, and the same in [Client UI HUD and menus](Client-UI-HUD-And-Menus)). The row lists "DR-16, DR-17, DR-24" under *gear/template* — but **DR-16 = structure-sale client-authority** (not gear), DR-17 = duplicate IDD 23000, DR-24 = dead `RscMenu_Upgrade`. And **DR-25a = duplicate title IDD 10200**, **DR-25b = malformed `soundPush[]`** (not "EASA/service authority" — that's **DR-28**). *Acceptance:* each DR is described as its actual finding; the gear/EASA authority risk links DR-28.
-2. **De-hedge the MASH status in** [SQF atlas](SQF-Code-Atlas) — replace "MASH marker status requires careful source verification" with a definitive **DR-34** cite (dead both ends). *Acceptance:* no "requires verification" hedge for MASH.
-3. **Mark the compile counts point-in-time in** [SQF atlas](SQF-Code-Atlas) — the "659/452/207" numbers need a timestamp + regeneration command + **DR-5** cite (DR-5 warned they go stale). *Acceptance:* counts labelled point-in-time with how to regenerate.
+1. ✅ **Fixed the UI-atlas finding mislabels** ([Client UI systems atlas](Client-UI-Systems-Atlas) and [Client UI HUD and menus](Client-UI-HUD-And-Menus)). DR-16/17/24/25a/25b/28 are now described as their actual findings, and gear/EASA/service authority links DR-28.
+2. ✅ **De-hedged the MASH status in** [SQF atlas](SQF-Code-Atlas). It now cites definitive **DR-34** dead/abandoned marker status and keeps MASH respawn separate.
+3. ✅ **Marked the compile counts point-in-time in** [SQF atlas](SQF-Code-Atlas). Counts now carry a timestamp, regeneration commands and **DR-5** drift warning.
 
 ## P1 — Surface findings where developers actually look (orphaned cross-links)
 4. **DR-44** (`wfbe_supply_temp_<side>` forgery) → add to [Economy](Economy-Towns-And-Supply) synthesis table, [Networking](Networking-And-Public-Variables) direct-channel section, [Server runtime atlas](Server-Gameplay-Runtime-Atlas).

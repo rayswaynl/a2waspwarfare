@@ -6,7 +6,15 @@ Source mission: `Missions/[55-2hc]warfarev2_073v48co.chernarus`
 
 ## Compile Registry Summary
 
-The source mission contains 673 `preprocessFile` references, counted with `rg 'preprocessFile' Missions/[55-2hc]warfarev2_073v48co.chernarus` on 2026-06-02:
+Point-in-time count, 2026-06-02:
+
+```powershell
+rg -n "preprocessFile" Missions/[55-2hc]warfarev2_073v48co.chernarus
+rg -n "preprocessFileLineNumbers" Missions/[55-2hc]warfarev2_073v48co.chernarus
+rg -n "preprocessFile(?!LineNumbers)" Missions/[55-2hc]warfarev2_073v48co.chernarus --pcre2
+```
+
+The source mission currently contains 673 `preprocessFile` references. Keep these numbers reproducible rather than authoritative; DR-5 exists because frozen compile metrics drift as docs, branches and generated missions move.
 
 | Kind | Count | Notes |
 | --- | ---: | --- |
@@ -90,7 +98,7 @@ Risk notes:
 
 - `UpdateSupplyTruck` is commented while `Server/AI/AI_UpdateSupplyTruck.sqf` still exists and references a missing `Server/FSM/supplytruck.fsm`; treat autonomous AI supply logistics as broken/deferred.
 - `WFBE_CO_FNC_monitorServerFPS` is commented as a compile target but server FPS is still run directly elsewhere.
-- `WFBE_SE_FNC_MASH_MARKER` appears once active and once commented in the init file; MASH marker status requires careful source verification before changes.
+- MASH map markers are source-confirmed dead/abandoned in DR-34: the server handler is compiled, but the client receiver compile is commented and no deploy path broadcasts `WFBE_CL_MASH_MARKER_CREATED`. MASH respawn itself is separate.
 
 ### `Client/Init/Init_Client.sqf`
 
