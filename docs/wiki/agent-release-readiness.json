@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-04T00:12:00+02:00",
-  "lastVerifiedAt": "2026-06-04T00:12:00+02:00",
+  "generatedAt": "2026-06-04T00:40:00+02:00",
+  "lastVerifiedAt": "2026-06-04T00:40:00+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -62,7 +62,9 @@
       "canonicalDocs": [
         "AI-Commander-Autonomy-Audit.md",
         "Feature-Status-Register.md",
-        "Pending-Owner-Decisions.md"
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
       ],
       "evidenceRefs": [
         "origin/master..origin/feat/ai-commander: 9 Chernarus source files +366/-5",
@@ -92,7 +94,9 @@
       "canonicalDocs": [
         "PR8-And-Drone-Upstream-Lesson-Match.md",
         "Feature-Status-Register.md",
-        "Pending-Owner-Decisions.md"
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
       ],
       "evidenceRefs": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:243-263 on origin/feat/drone-saturation-strike",
@@ -121,7 +125,9 @@
       "canonicalDocs": [
         "PR8-And-Drone-Upstream-Lesson-Match.md",
         "Feature-Status-Register.md",
-        "Pending-Owner-Decisions.md"
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
       ],
       "evidenceRefs": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf:63-82 on origin/feat/recon-uav",

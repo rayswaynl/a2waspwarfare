@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T00:24:00+02:00",
+  "generatedAt": "2026-06-04T00:40:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,34 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "branch-feature-agent-ledger-crosslink",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Current-Source-Status-Snapshot.md",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-feature-status.jsonl",
+        "docs/wiki/agent-release-readiness.json",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/agent-events.jsonl",
+        "docs/wiki/agent-knowledge.jsonl",
+        "origin/docs/developer-wiki-index",
+        "miksuu/master",
+        "origin/master",
+        "origin/feat/ai-commander",
+        "origin/feat/drone-saturation-strike",
+        "origin/feat/recon-uav"
+      ],
+      "outputs": [
+        "Clarified that the docs branch commit in the 2026-06-04 matrix is a source-check basis, not a durable branch-head promise",
+        "Added Current-Source-Status-Snapshot, Pending owner decisions, release-readiness gates and branch-only smoke pack routing to AI commander and DroneStrike/ReconUAV machine records",
+        "Reconfirmed branch heads after git fetch --all --prune before editing the docs"
+      ],
+      "handoff": "Future agents should treat branch-feature machine records as a proof chain, not as final release status: current source snapshot first, owner decision second, planned smoke third, runtime evidence only when actual tests are recorded."
+    },
     {
       "lane": "source-status-feature-branch-matrix-refresh",
       "owner": "Codex",

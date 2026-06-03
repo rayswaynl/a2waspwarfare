@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T00:40:00+0200 - Codex - branch-feature-agent-ledger-crosslink
+
+- Re-fetched `origin` and `miksuu` and confirmed branch heads for the current branch-feature matrix: docs branch `d9416609` after docs-only commits, `miksuu/master` `8bcc42b1`, stable `origin/master` `2cdf5fb8`, `origin/feat/ai-commander` `4dba060e`, `origin/feat/drone-saturation-strike` `8ca4be90` and `origin/feat/recon-uav` `563418ea`.
+- Updated [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-04-feature-branch-matrix) so the docs mirror row labels `154b7f38` as the source-check basis rather than a durable branch-head claim.
+- Updated [`agent-feature-status.jsonl`](agent-feature-status.jsonl) and [`agent-release-readiness.json`](agent-release-readiness.json) so the AI commander and DroneStrike/ReconUAV branch records point agents to the feature branch matrix, owner decisions, promotion gates and planned smoke pack before any stable/release-ready wording.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-04T00:24:00+0200 - Codex - source-status-feature-branch-matrix-refresh
 
 - Fetched `origin` and `miksuu` with prune, then rechecked current branch heads.

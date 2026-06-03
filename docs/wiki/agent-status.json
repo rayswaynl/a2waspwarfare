@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T00:24:00+02:00",
+  "generatedAt": "2026-06-04T00:40:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed the fast source-status snapshot with current docs, Miksuu, AI commander, DroneStrike and ReconUAV branch heads so branch evidence cannot be mistaken for shipped status.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: remaining feature-status reconciliation or P0/P1 accuracy drift with exact source refs."
+      "currentWork": "Aligned the branch-feature machine ledgers with the human wiki route: source-status snapshot, owner decisions, release-readiness gates and planned smoke pack now line up for AI commander, DroneStrike and ReconUAV.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: remaining feature-status reconciliation, stale machine-record cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "branch-feature-agent-ledger-crosslink",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "agent-feature-status.jsonl and agent-release-readiness.json now point AI commander, DroneStrike and ReconUAV branch records to Current-Source-Status-Snapshot, Pending owner decisions and the Branch-Only Feature Smoke Pack. Current-Source-Status-Snapshot now labels docs branch 154b7f38 as a source-check basis rather than a durable branch-head claim because later docs-only commits can move origin/docs/developer-wiki-index."
+    },
     {
       "lane": "source-status-feature-branch-matrix-refresh",
       "owner": "Codex",
