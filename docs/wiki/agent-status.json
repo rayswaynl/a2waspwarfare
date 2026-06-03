@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T19:40:00+02:00",
+  "generatedAt": "2026-06-03T19:45:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed stale boot-lifecycle-perf-jip-review collaboration status and corrected Lifecycle wait-chain self-test drift: DR-37 is already published; source still has timeout-less post-join waits as a robustness owner choice.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: factory perf-JIP review, generated-mission drift review, another feature-status reconciliation item or remaining machine-readable stale-status cleanup with exact source refs."
+      "currentWork": "Closed stale factory-perf-jip-review collaboration status: Factory atlas, cleanup playbook, Performance Sweep, Feature Status, Coverage Ledger and hardening backlog already route DR-33; source still needs the queue counter/token patch.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: generated-mission drift review, another feature-status reconciliation item or remaining machine-readable stale-status cleanup with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "factory-review-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "agent-collaboration.json no longer advertises factory-perf-jip-review as ready-for-review. Current docs already route DR-33 through Factory-And-Purchase-Systems-Atlas, Factory-Queue-Counter-Token-Cleanup, Performance Opportunity Sweep, Feature Status, Coverage Ledger, Deep Review and agent-hardening-backlog. Source remains patch-ready/source-unpatched: Client_BuildUnit.sqf still has the random varQueu token, public queu broadcasts and empty-vehicle cleanup skip."
+    },
     {
       "lane": "boot-lifecycle-review-status-closure",
       "owner": "Codex",

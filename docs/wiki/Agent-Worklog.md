@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Factory Review Status Closure
+
+- Closed the stale `factory-perf-jip-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); DR-33 is already integrated into [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Feature status](Feature-Status-Register), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Deep review findings](Deep-Review-Findings#round-24--2026-06-02-claude--factoryproduction-perf--jiphc-dr-33) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl#factory-queue-cleanups).
+- Evidence checked: `Client/Init/Init_Client.sqf:185-196` seeds per-client queue counters; `GUI_Menu_BuyUnits.sqf:145-155` increments the matching counter and spawns `BuildUnit`; `Client_BuildUnit.sqf:167-172` uses `varQueu = random(10)+random(100)+random(1000)` and broadcasts the building `queu`; `:180-199` polls the queue every 4 seconds; `:205-207` broadcasts completion; `:365` still exits empty vehicles before `unitQueu` / `WFBE_C_QUEUE_*` cleanup at `:467-469`.
+- Scope remained docs/status only. Future factory owner should patch counter cleanup/token identity first, propagate Vanilla, smoke crewless/crewed/concurrent buys, and treat broadcast reduction as a separate UI-aware performance pass.
+
 ## 2026-06-03 - Codex Documentation Finisher: Boot/Lifecycle Review Status Closure
 
 - Closed the stale `boot-lifecycle-perf-jip-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); DR-37 is already integrated into [Lifecycle wait-chain](Lifecycle-Wait-Chain), [Development lessons learned](Development-Lessons-Learned), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Agent context](Agent-Context) and [Deep review findings](Deep-Review-Findings#round-28--2026-06-02-claude--bootlifecycle-perf--jiphc-dr-37-reviewed-clean-one-robustness-note).

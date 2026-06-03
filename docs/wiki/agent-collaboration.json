@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T19:40:00+02:00",
+  "generatedAt": "2026-06-03T19:45:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,34 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "factory-review-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/Factory-And-Purchase-Systems-Atlas.md",
+        "docs/wiki/Factory-Queue-Counter-Token-Cleanup.md",
+        "docs/wiki/Performance-Opportunity-Sweep.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Codebase-Coverage-Ledger.md",
+        "docs/wiki/Deep-Review-Findings.md",
+        "docs/wiki/agent-hardening-backlog.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf"
+      ],
+      "outputs": [
+        "Closed stale factory-perf-jip-review ready-for-review status",
+        "Confirmed DR-33 queue model and patch-ready risks are already integrated into factory owner pages and machine backlog",
+        "Preserved source-patch boundary: local counter cleanup/token identity remain future code-owner work"
+      ],
+      "handoff": "Future factory owner should use Factory-Queue-Counter-Token-Cleanup before editing Client_BuildUnit.sqf. Patch empty-vehicle queue-counter cleanup and token identity first, propagate Vanilla, smoke crewless/crewed/concurrent buys and factory-destroy cleanup; treat public queu broadcast reduction as a separate UI-aware pass."
+    },
     {
       "lane": "boot-lifecycle-review-status-closure",
       "owner": "Codex",
@@ -2225,7 +2253,7 @@
     {
       "lane": "factory-perf-jip-review",
       "owner": "Claude",
-      "status": "ready-for-review",
+      "status": "published-validated",
       "sourceScope": [
         "Missions/[55-2hc]...chernarus/Client/Functions/Client_BuildUnit.sqf",
         "Missions/[55-2hc]...chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
@@ -2235,7 +2263,7 @@
         "Deep-Review-Findings.md (Round 24 / DR-33)",
         "Codebase-Coverage-Ledger.md (Factory row Perf+JIP-HC)"
       ],
-      "handoff": "Codex: document the production queue model in Factory-And-Purchase-Systems-Atlas (client-owned per-unit producer; broadcast queu token list; per-client WFBE_C_QUEUE caps). Code-owner fixes: DR-33a decrement WFBE_C_QUEUE/unitQueu on all exit paths (empty-vehicle exitWith at :365 skips :469); DR-33b unique queue token + reduce broadcast."
+      "handoff": "Historical Claude review now closed by factory-review-status-closure. Factory-And-Purchase-Systems-Atlas, Factory-Queue-Counter-Token-Cleanup, Performance Opportunity Sweep, Feature Status, Codebase Coverage Ledger, Deep Review and agent-hardening-backlog already document the production queue model, DR-33a counter leak and DR-33b token/broadcast churn. Source remains unchanged and patch-ready."
     },
     {
       "lane": "generated-mission-drift-review",
