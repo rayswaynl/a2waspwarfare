@@ -79,6 +79,14 @@ $noteRows = Get-MarkdownRows (Get-SectionText -Content $content -Name "Claude No
 Assert-True "Claude Notes table has rows" ($noteRows.Count -gt 1)
 $unfinishedNotes = @($noteRows | Where-Object { $_[0] -ne "Runtime check" -and $_[1] -ne "PASS" })
 Assert-True "Claude Notes rows are all PASS" ($unfinishedNotes.Count -eq 0)
+$notesWithoutEvidence = @($noteRows | Where-Object {
+	$_[0] -ne "Runtime check" -and (
+		$_.Count -lt 3 -or
+		[string]::IsNullOrWhiteSpace($_[2]) -or
+		$_[2] -match '^(?i:pass|ok|n/?a|none)$'
+	)
+})
+Assert-True "Claude Notes PASS rows include evidence" ($notesWithoutEvidence.Count -eq 0)
 
 Write-Host ""
 Write-Host "Zargabad runtime report is complete enough for Codex review."

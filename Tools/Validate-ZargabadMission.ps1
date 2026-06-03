@@ -469,6 +469,7 @@ Assert-True "runtime report tool emits validator output" ($runtimeReportSource -
 Assert-True "runtime report validator tool exists" (Test-Path -LiteralPath $runtimeReportValidatorTool)
 $runtimeReportValidatorSource = Get-Content -Raw -LiteralPath $runtimeReportValidatorTool
 Assert-True "runtime report validator requires Claude Notes PASS rows" ($runtimeReportValidatorSource -match 'Claude Notes rows are all PASS')
+Assert-True "runtime report validator requires evidence on PASS rows" ($runtimeReportValidatorSource -match 'Claude Notes PASS rows include evidence')
 Assert-True "runtime report validator rejects missing gates and found failures" ($runtimeReportValidatorSource -match 'runtime report has no missing required gates' -and $runtimeReportValidatorSource -match 'runtime report failure scan is clear')
 Assert-True "runtime report validator checks optional runtime gates" ($runtimeReportValidatorSource -match 'RequireJip' -and $runtimeReportValidatorSource -match 'RequireHeadlessClient' -and $runtimeReportValidatorSource -match 'RequireEdgeGuardRemoval' -and $runtimeReportValidatorSource -match 'RequireEdgeGuardSafeAllow' -and $runtimeReportValidatorSource -match 'RequireNamedRimPoints' -and $runtimeReportValidatorSource -match 'RequireBlackMarket')
 Assert-True "runtime report validator checks black-market arming gate" ($runtimeReportValidatorSource -match 'runtime report black-market armed gate passed')
