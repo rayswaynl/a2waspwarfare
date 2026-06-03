@@ -131,6 +131,8 @@ Assert-NoPattern "missing script or include file" $content 'Script [^\r\n]+ not 
 Assert-NoPattern "Arma expression errors" $content 'Error in expression|Error position:|Undefined variable in expression'
 Assert-NoPattern "missing mission dependency" $content 'You cannot play/edit this mission|Cannot load mission|No entry [^\r\n]+zargabad|No entry [^\r\n]+WFBE_[^\r\n]+ZARGABAD'
 Assert-NoPattern "Zargabad file load failures" $content 'Cannot open [^\r\n]+Zargabad|Cannot open [^\r\n]+zargabad'
+Assert-NoPattern "WFBE class or loadout validation errors" $content '\[WFBE \(ERROR\)\][^\r\n]+'
+Assert-NoPattern "vehicle or object creation failures" $content 'Bad vehicle type|Cannot create non-ai vehicle|Cannot create entity with abstract type|Cannot create object|Cannot create vehicle'
 
 Write-Host ""
 Write-Host "Zargabad runtime evidence passed."

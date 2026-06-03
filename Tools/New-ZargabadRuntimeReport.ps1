@@ -106,7 +106,9 @@ $failurePatterns = @(
 	[ordered]@{ Name = "Missing script/include"; Pattern = 'Script [^\r\n]+ not found|Include file [^\r\n]+ not found' },
 	[ordered]@{ Name = "Expression errors"; Pattern = 'Error in expression|Error position:|Undefined variable in expression' },
 	[ordered]@{ Name = "Missing dependency"; Pattern = 'You cannot play/edit this mission|Cannot load mission|No entry [^\r\n]+zargabad|No entry [^\r\n]+WFBE_[^\r\n]+ZARGABAD' },
-	[ordered]@{ Name = "Zargabad file load failures"; Pattern = 'Cannot open [^\r\n]+Zargabad|Cannot open [^\r\n]+zargabad' }
+	[ordered]@{ Name = "Zargabad file load failures"; Pattern = 'Cannot open [^\r\n]+Zargabad|Cannot open [^\r\n]+zargabad' },
+	[ordered]@{ Name = "WFBE class/loadout validation errors"; Pattern = '\[WFBE \(ERROR\)\][^\r\n]+' },
+	[ordered]@{ Name = "Vehicle/object creation failures"; Pattern = 'Bad vehicle type|Cannot create non-ai vehicle|Cannot create entity with abstract type|Cannot create object|Cannot create vehicle' }
 )
 
 $report = New-Object System.Collections.Generic.List[string]

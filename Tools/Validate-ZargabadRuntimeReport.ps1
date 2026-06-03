@@ -72,6 +72,37 @@ Assert-True "runtime report has no missing key evidence placeholders" (-not $con
 
 $gateRows = Get-MarkdownRows (Get-SectionText -Content $content -Name "Gate Snapshot")
 Assert-True "runtime gate snapshot has rows" ($gateRows.Count -gt 1)
+$expectedGateRows = @(
+	"Zargabad world",
+	"Server init begins",
+	"Town init done",
+	"Zargabad init done",
+	"Town defense orientation",
+	"Edge guard init",
+	"Runtime count/SV audit",
+	"Runtime base/fortification audit",
+	"Runtime base static template audit",
+	"Base static runtime positions",
+	"Runtime factory audit",
+	"Runtime compact factory lists",
+	"Runtime price audit",
+	"Runtime economy/range/weapons audit",
+	"Black-market armed",
+	"JIP",
+	"Headless client",
+	"Edge guard removal",
+	"Edge guard safe allow",
+	"Named rim points",
+	"Black-market cache",
+	"Black-market cleanup",
+	"Server init ends"
+)
+$actualGateRows = @{}
+foreach ($row in $gateRows) {
+	if ($row[0] -ne "Gate") { $actualGateRows[$row[0]] = $true }
+}
+$missingGateRows = @($expectedGateRows | Where-Object { -not $actualGateRows.ContainsKey($_) })
+Assert-True "runtime gate snapshot required rows are present" ($missingGateRows.Count -eq 0)
 $missingGates = @($gateRows | Where-Object { $_[0] -ne "Gate" -and $_[1] -eq "MISSING" })
 Assert-True "runtime report has no missing required gates" ($missingGates.Count -eq 0)
 if ($RequireJip) { Assert-True "runtime report JIP gate passed" ((Get-TableValue -Rows $gateRows -Key "JIP") -eq "PASS") }
@@ -89,6 +120,20 @@ if ($RequireBlackMarket) {
 }
 
 $failureRows = Get-MarkdownRows (Get-SectionText -Content $content -Name "Failure Scan")
+$expectedFailureRows = @(
+	"Missing script/include",
+	"Expression errors",
+	"Missing dependency",
+	"Zargabad file load failures",
+	"WFBE class/loadout validation errors",
+	"Vehicle/object creation failures"
+)
+$actualFailureRows = @{}
+foreach ($row in $failureRows) {
+	if ($row[0] -ne "Pattern") { $actualFailureRows[$row[0]] = $true }
+}
+$missingFailureRows = @($expectedFailureRows | Where-Object { -not $actualFailureRows.ContainsKey($_) })
+Assert-True "runtime failure scan required rows are present" ($missingFailureRows.Count -eq 0)
 $foundFailures = @($failureRows | Where-Object { $_[0] -ne "Pattern" -and $_[1] -eq "FOUND" })
 Assert-True "runtime report failure scan is clear" ($foundFailures.Count -eq 0)
 
