@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: C2 Cross-Link Completion
+
+- Claimed [Instructions for Codex](Instructions-For-Codex) item 8 and checked the requested target pages for their DR labels.
+- Verified Gameplay already routes DR-6/14/11/22/23/15; AI/headless routes DR-21/42; Construction routes DR-6; Mission entrypoints routes DR-37/43a.
+- Source-checked the UI findings against `Rsc/Dialogs.hpp`, `Rsc/Titles.hpp`, `Rsc/Ressources.hpp`, `GUI_Menu_Economy.sqf` and `GUI_Menu.sqf`.
+- Added the missing DR labels to [Client UI systems atlas](Client-UI-Systems-Atlas): DR-16 structure sale authority, DR-17 duplicate EASA/Economy dialog IDD, DR-24 stale upgrade dialog, and DR-25a/b title-ID/control-config defects.
+
 ## 2026-06-03 - Codex Documentation Finisher: DR-40/DR-19 Citation Routing
 
 - Claimed [Instructions for Codex](Instructions-For-Codex) item 7.

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T09:05:00+02:00",
+  "generatedAt": "2026-06-03T09:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Instructions-For-Codex item 7 is resolved locally: DR-40 is explicitly cited from WASP overlay and DR-19 from Server runtime atlas, with hosted-FPS historical/current wording corrected.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 8: add the remaining missing DR cross-links called out in audit section C2."
+      "currentWork": "Instructions-For-Codex item 8 is resolved locally: C2 cross-link coverage was verified and Client UI systems atlas now names DR-16/17/24/25a/25b on the canonical UI risk sections.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 9: reconcile Coordination board active lanes and roles against current closed lanes and Claude DR-45+ status."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wiki-quality-c2-crosslink-completion",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 8 is resolved: Gameplay, UI, AI/headless, Construction and Mission entrypoint DR cross-links are present. The only missing canonical labels were added to Client-UI-Systems-Atlas.md for DR-16, DR-17, DR-24 and DR-25a/b."
+    },
     {
       "lane": "dr40-dr19-citation-routing",
       "owner": "Codex",

@@ -64,10 +64,10 @@ flowchart TD
 
 ### Dialog Risks
 
-- `RscMenu_Upgrade` is stale: it points to missing `Client/GUI/GUI_Menu_Upgrade.sqf` (`Dialogs.hpp:2425-2428`). The live main menu opens `WFBE_UpgradeMenu` / `Client/GUI/GUI_UpgradeMenu.sqf` instead (`GUI_Menu.sqf:165`).
-- `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000` (`Dialogs.hpp:3209-3212`, `:3287-3290`). They are not opened together in normal flow, but IDD reuse is a maintenance trap for `findDisplay`, debugging and future scripted interactions. Use [UI IDD collision repair](UI-IDD-Collision-Repair) for the patch shape and smoke plan.
+- DR-24: `RscMenu_Upgrade` is stale: it points to missing `Client/GUI/GUI_Menu_Upgrade.sqf` (`Dialogs.hpp:2425-2428`). The live main menu opens `WFBE_UpgradeMenu` / `Client/GUI/GUI_UpgradeMenu.sqf` instead (`GUI_Menu.sqf:165`).
+- DR-17: `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000` (`Dialogs.hpp:3209-3212`, `:3287-3290`). They are not opened together in normal flow, but IDD reuse is a maintenance trap for `findDisplay`, debugging and future scripted interactions. Use [UI IDD collision repair](UI-IDD-Collision-Repair) for the patch shape and smoke plan.
 - `GUI_Menu_Service.sqf:240-244` still carries a stale `TBD: Add dialog` comment even though the live path closes the service menu and opens `RscMenu_EASA`. Treat it as stale commentary, not evidence that EASA is missing.
-- `GUI_Menu_Economy.sqf:32-35` has a commented HQ-death sell guard, while active structure sell/refund logic remains at `:105-150`. The UI exposes useful commander affordances, but the sell path belongs to the server-authority migration class.
+- DR-16: `GUI_Menu_Economy.sqf:32-35` has a commented HQ-death sell guard, while active structure sell/refund logic remains at `:105-150`. The UI exposes useful commander affordances, but the sell path belongs to the server-authority migration class.
 - `GUI_Menu_Economy.sqf:93-96` keeps old `WFBE_RequestSpecial` relay comments around the live `RespawnST` send-to-server path, and `:136-141` still has a cleanup TODO to replace a name/find lookup with object variables.
 - The main menu and most submenus are not event-driven state machines. They are `while {alive player && dialog}` polling loops with `sleep` delays. Keep new work small inside those loops and reuse existing update flags.
 - Several menu files return to `WF_Menu` by `closeDialog 0; createDialog "WF_Menu"` rather than maintaining a stack. Adding nested dialogs must preserve those return paths.
@@ -91,7 +91,7 @@ flowchart TD
 - `Client/Client_UpdateRHUD.sqf:87-95` to recover/recreate the display.
 - `Client/FSM/updateavailableactions.fsm:225-233` to write action icons into controls `3500 + index`.
 
-`RscOverlay` and `OptionsAvailable` both use `idd=10200` (`Titles.hpp:44-51`, `:164-176`). Treat them as separate `cutRsc` resources with overlapping IDD values; code should not assume IDD lookup is unique.
+DR-25a: `RscOverlay` and `OptionsAvailable` both use `idd=10200` (`Titles.hpp:44-51`, `:164-176`). Treat them as separate `cutRsc` resources with overlapping IDD values; code should not assume IDD lookup is unique.
 
 Wave Q found a separate display-handle collision that does not depend on matching IDDs: `EndOfGameStats` has `idd=90000`, but it also sets and clears `uiNamespace["currentCutDisplay"]` through the same helper scripts (`Titles.hpp:532-540`). `GUI_EndOfGameStats.sqf:13,34-44,86-93` cuts `EndOfGameStats` and writes stat bars through that key, while the RHUD loop keeps running (`Client_UpdateRHUD.sqf:183-190`) and can re-cut `OptionsAvailable` when the shared key is null (`:89-92`). Patch title work by splitting display ownership, for example an OptionsAvailable/action-icon/RHUD handle and a separate endgame-stats handle, or by gating RHUD/action-icon recreation once endgame begins. Use [UI IDD collision repair](UI-IDD-Collision-Repair) before changing title IDs or title display variables.
 
@@ -243,18 +243,18 @@ The intro video is `Videos/intro720p.ogv`, started from `Init_Client.sqf:785`.
 
 | Area | Evidence | Risk |
 | --- | --- | --- |
-| Duplicate dialog IDD | `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000`. | Avoid `findDisplay 23000` assumptions; assign a new IDD before adding scripted cross-dialog control work. |
-| Stale old upgrade dialog | `RscMenu_Upgrade` references missing `Client/GUI/GUI_Menu_Upgrade.sqf`; live flow uses `WFBE_UpgradeMenu`. | Treat `RscMenu_Upgrade` as dead/stale unless a later pass proves a dynamic opener. |
+| Duplicate dialog IDD | DR-17: `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000`. | Avoid `findDisplay 23000` assumptions; assign a new IDD before adding scripted cross-dialog control work. |
+| Stale old upgrade dialog | DR-24: `RscMenu_Upgrade` references missing `Client/GUI/GUI_Menu_Upgrade.sqf`; live flow uses `WFBE_UpgradeMenu`. | Treat `RscMenu_Upgrade` as dead/stale unless a later pass proves a dynamic opener. |
 | Shared title IDD | `RscOverlay` and `OptionsAvailable` both use `10200`. | Use explicit display ownership rather than IDD uniqueness; do not use `findDisplay 10200` assumptions. |
 | Shared title display handle | `OptionsAvailable` and `EndOfGameStats` both set/clear `uiNamespace["currentCutDisplay"]`; RHUD/action-icon recovery can recreate `OptionsAvailable` while endgame stats writes through the same key. | Split title display variables or gate RHUD/action-icon recreation during endgame; smoke RHUD/FPS, action icons and endgame stat bars together. |
-| Suspect base control config | `RscClickableText.soundPush[] = {, 0.2, 1};` in `Rsc/Ressources.hpp`. | Verify parser behavior before deriving new clickable controls from this class. |
+| Suspect base control config | DR-25b: `RscClickableText.soundPush[] = {, 0.2, 1};` in `Rsc/Ressources.hpp`. | Verify parser behavior before deriving new clickable controls from this class. |
 | Polling loops | `GUI_Menu.sqf`, buy/command/tactical/service/upgrade/respawn menus all run scheduled loops. | Keep work incremental and cache expensive state. |
 | Map marker loops | Marker loops are live-server sensitive and now include performance-audit records. | Preserve map-closed skip behavior and `WFBE_C_MAP_ICON_BLINKING_ENABLED` gates. |
 | WASP marker dialog wait | `WASP/global_marking_monitor.sqf` does up to two seconds of display polling. | Add a tiny sleep/backoff and smoke map-marker creation before adding more WASP marker features. |
 | Respawn selector loop | `Client_UI_Respawn_Selector.sqf` sleeps `0.03`. | Do not add expensive marker or object scans inside it. |
 | Economy supply-truck UI | `GUI_Menu_Economy.sqf` can send `RespawnST`. | This touches the config-gated broken autonomous supply-truck path. |
 | Command task assignment UI | `Rsc/Dialogs.hpp:2052-2053` exposes the button and `GUI_Menu_Command.sqf:315-344` builds task data/HQ speech, but the `SetTask` sends are commented. | Visible partial feature; revive only with JIP/task-spam review, or hide the affordance. |
-| Economy sell guard commented | `GUI_Menu_Economy.sqf:32-35` comments an HQ-death guard while `:105-150` keeps the sell/refund path active. | Treat structure selling as part of the server-authority migration class, not as a safe UI-only feature. |
+| Economy sell guard commented | DR-16: `GUI_Menu_Economy.sqf:32-35` comments an HQ-death guard while `:105-150` keeps the sell/refund path active. | Treat structure selling as part of the server-authority migration class, not as a safe UI-only feature. |
 | Economy stale cleanup notes | `GUI_Menu_Economy.sqf:93-96,136-141` contains dead relay comments and a TODO to replace lookup-by-find behavior. | Clean comments/lookup behavior before using this menu as a model for new commander controls. |
 | Service/EASA stale TODO | `GUI_Menu_Service.sqf:240-244` says EASA dialog is TBD, but the live path opens `RscMenu_EASA`. | Do not document EASA as missing; update comments if touching service UI. |
 | Buy-unit authority | `RscMenu_BuyUnits` drives local `GUI_Menu_BuyUnits.sqf` and `Client_BuildUnit.sqf`; no `RequestBuyUnit` PVF exists. | UI purchase checks are not server authority; see [Deep-review findings](Deep-Review-Findings) DR-14 and [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas). |
