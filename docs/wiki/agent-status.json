@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Instructions-For-Codex item 31 as stale: Hosted-Server-FPS-Loop-Sleep already matches current Chernarus and maintained Vanilla FPS publishers, with early !isDedicated exits at line 1, one loop, sleep 8 and Arma smoke still pending.",
+      "currentWork": "Closed Instructions-For-Codex item 31 with branch-aware status: origin/master still has the DR-19 branch-only FPS sleep shape, this docs branch has early !isDedicated exits in both publishers, and origin/release/2026-06-feature-bundle keeps a guarded serverFpsGUI publisher while removing/commenting the redundant monitor path.",
       "nextExpectedOutput": "Continue with Instructions-For-Codex item 32: Supply-Mission-Scan-Narrowing specific status/path/line recheck."
     },
     "Codex-2": {
@@ -47,13 +47,13 @@
       "lane": "hosted-fps-loop-status-recheck",
       "owner": "Codex",
       "status": "published-validated",
-      "output": "Instructions-For-Codex item 31 is resolved as stale: Hosted-Server-FPS-Loop-Sleep.md already matches current Chernarus and maintained Vanilla FPS publishers, with early !isDedicated exits at line 1, one loop, sleep 8 and Arma smoke still pending."
+      "output": "Instructions-For-Codex item 31 is resolved with branch-aware wording: Hosted-Server-FPS-Loop-Sleep.md now says origin/master still has the DR-19 branch-only FPS sleep shape, this docs branch has early !isDedicated exits in both publishers, and origin/release/2026-06-feature-bundle keeps a guarded serverFpsGUI publisher while removing/commenting the redundant monitor path."
     },
     {
       "lane": "dr19-dr39-status-drift-recheck",
       "owner": "Codex",
       "status": "published-validated",
-      "output": "Instructions-For-Codex item 30 is resolved as stale false-positive: current Chernarus and maintained Vanilla source contain the DR-19 FPS !isDedicated exits and DR-39 Base_WarfareBUAVterminal scan narrowing, while the remediation pages already use source/Vanilla propagated + Arma smoke pending wording."
+      "output": "Instructions-For-Codex item 30 is resolved with branch-aware status: origin/master still has DR-19 and DR-39, while this docs/source branch and origin/release/2026-06-feature-bundle carry the FPS and supply-scan fixes; affected pages avoid master-shipped wording."
     },
     {
       "lane": "batch2-modules-economy-recovery",

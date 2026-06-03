@@ -34,9 +34,9 @@
         "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/serverFPS/monitorServerFPS.sqf"
       ],
       "outputs": [
-        "Marked Instructions-For-Codex item 31 complete as stale",
-        "Confirmed current source and maintained Vanilla FPS publishers match Hosted-Server-FPS-Loop-Sleep",
-        "No Hosted-Server-FPS-Loop-Sleep page edits required beyond queue/status closure"
+        "Marked Instructions-For-Codex item 31 complete with branch-aware status",
+        "Confirmed origin/master still has the DR-19 branch-only FPS sleep shape",
+        "Confirmed this docs branch and origin/release/2026-06-feature-bundle carry guarded FPS publisher fixes"
       ],
       "handoff": "Continue with Instructions-For-Codex item 32: Supply-Mission-Scan-Narrowing specific status/path/line recheck."
     },
@@ -60,9 +60,9 @@
         "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/supplyMission/supplyMissionStarted.sqf"
       ],
       "outputs": [
-        "Marked Instructions-For-Codex item 30 complete as stale false-positive",
-        "Confirmed DR-19 FPS early exits and DR-39 command-center scan narrowing in current Chernarus and maintained Vanilla",
-        "Confirmed remediation pages already use source/Vanilla propagated plus Arma smoke pending wording"
+        "Marked Instructions-For-Codex item 30 complete with branch-aware status",
+        "Confirmed origin/master still has DR-19 FPS branch-only sleep and DR-39 broad command-center scan",
+        "Confirmed this docs branch and origin/release/2026-06-feature-bundle carry the FPS and supply-scan fixes"
       ],
       "handoff": "Continue with Instructions-For-Codex item 31: Hosted-Server-FPS-Loop-Sleep specific status-drift recheck."
     },

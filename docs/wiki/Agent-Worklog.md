@@ -1370,13 +1370,13 @@ Key conclusions:
 
 # 2026-06-03 - DR-19 / DR-39 Status Drift Recheck
 
-- Closed [Instructions for Codex](Instructions-For-Codex) item 30 as a stale false-positive after source-checking current Chernarus and maintained Vanilla.
-- Confirmed both FPS publishers in source and maintained Vanilla start with `if (!isDedicated) exitWith {};` at line `:1`, matching [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) and [Source fix propagation queue](Source-Fix-Propagation-Queue).
-- Confirmed both live supply mission handlers use `nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]` at `supplyMissionStarted.sqf:28`, matching [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) and [Performance opportunity sweep](Performance-Opportunity-Sweep).
+- Rechecked [Instructions for Codex](Instructions-For-Codex) item 30 against both this docs/source branch and stable `origin/master`.
+- Confirmed stable `origin/master` still has the DR-19 branch-only FPS sleep and DR-39 broad 80m command-center scan.
+- Confirmed this docs/source branch and `origin/release/2026-06-feature-bundle` carry the FPS/supply-scan fixes, so affected pages must say branch-local/release patched rather than master-shipped.
 - Noted that the older branch-landscape claim was stale: local remote refs now include additional feature/release branches beyond the old four-branch snapshot.
 
 # 2026-06-03 - Hosted FPS Loop Status Recheck
 
-- Closed [Instructions for Codex](Instructions-For-Codex) item 31 as stale after a focused recheck of [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep).
-- Confirmed source and maintained Vanilla `serverFpsGUI.sqf` and `monitorServerFPS.sqf` all have early `if (!isDedicated) exitWith {};` at line `:1`, one publisher loop and `sleep 8`.
-- Confirmed the page already treats the old inner-`isDedicated` / branch-only sleep shape as historical and leaves only Arma hosted/dedicated smoke pending.
+- Closed [Instructions for Codex](Instructions-For-Codex) item 31 after a focused recheck of [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep).
+- Confirmed `origin/master` FPS publishers still have the old branch-only `sleep 8` shape.
+- Confirmed this docs branch has early `if (!isDedicated) exitWith {};` guards in both FPS publishers, while `origin/release/2026-06-feature-bundle` keeps a guarded `serverFpsGUI.sqf` publisher and removes/comments the redundant Chernarus monitor path.
