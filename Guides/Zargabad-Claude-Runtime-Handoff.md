@@ -28,7 +28,7 @@ Use the same required switches as the validator for the gate being tested, then 
 
 The `Claude Notes` table in the report is part of the gate, not optional commentary. Mark each runtime check `PASS`, `FAIL`, or `UNCERTAIN`; every `PASS` row must include concrete evidence, and every `FAIL` or `UNCERTAIN` row should include coordinates, screenshot filenames, RPT excerpts, or repeatable repro steps. Codex should listen to that evidence: if Claude proves the mission is wrong, Codex updates mission code or validators before asking Claude to repeat the same pass.
 
-Before Codex makes a stop/go call on a filled runtime report, run the report validator against Claude's edited markdown. It fails if required gates are still `MISSING`, the failure scan contains `FOUND`, key evidence placeholders remain, any Claude Notes row is not `PASS`, or any `PASS` row has empty/generic evidence:
+Before Codex makes a stop/go call on a filled runtime report, run the report validator against Claude's edited markdown. It fails if required gates are still `MISSING`, the failure scan contains `FOUND`, key evidence placeholders remain, any expected Claude Notes row is missing, any Claude Notes row is not `PASS`, or any `PASS` row has empty/generic evidence:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadRuntimeReport.ps1 -ReportPath ".\zargabad-runtime-report.md" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireEdgeGuardSafeAllow -RequireNamedRimPoints -RequireBlackMarket

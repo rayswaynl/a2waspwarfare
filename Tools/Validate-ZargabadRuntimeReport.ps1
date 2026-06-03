@@ -77,6 +77,27 @@ Assert-True "runtime report failure scan is clear" ($foundFailures.Count -eq 0)
 
 $noteRows = Get-MarkdownRows (Get-SectionText -Content $content -Name "Claude Notes")
 Assert-True "Claude Notes table has rows" ($noteRows.Count -gt 1)
+$expectedNoteRows = @(
+	"Hosted/dedicated context",
+	"Map audit packet attached",
+	"Base safety and spawn sightlines",
+	"Base static runtime positions and arcs",
+	"Base-axis midpoint and wall origin",
+	"Central wall gaps and pathing",
+	"Side hills and rim behavior",
+	"Town defense facing and movement blocking",
+	"Priority defense mix arcs",
+	"Economy and factory pricing feel",
+	"Weapon/range pressure",
+	"Mystery feature behavior",
+	"Recommended Codex action"
+)
+$actualNoteRows = @{}
+foreach ($row in $noteRows) {
+	if ($row[0] -ne "Runtime check") { $actualNoteRows[$row[0]] = $true }
+}
+$missingNoteRows = @($expectedNoteRows | Where-Object { -not $actualNoteRows.ContainsKey($_) })
+Assert-True "Claude Notes required rows are present" ($missingNoteRows.Count -eq 0)
 $unfinishedNotes = @($noteRows | Where-Object { $_[0] -ne "Runtime check" -and $_[1] -ne "PASS" })
 Assert-True "Claude Notes rows are all PASS" ($unfinishedNotes.Count -eq 0)
 $notesWithoutEvidence = @($noteRows | Where-Object {

@@ -468,6 +468,7 @@ Assert-True "runtime report tool asks Claude for priority defense mix arcs" ($ru
 Assert-True "runtime report tool emits validator output" ($runtimeReportSource -match '## Validator Output')
 Assert-True "runtime report validator tool exists" (Test-Path -LiteralPath $runtimeReportValidatorTool)
 $runtimeReportValidatorSource = Get-Content -Raw -LiteralPath $runtimeReportValidatorTool
+Assert-True "runtime report validator requires all Claude Notes rows" ($runtimeReportValidatorSource -match 'Claude Notes required rows are present' -and $runtimeReportValidatorSource -match 'Base safety and spawn sightlines' -and $runtimeReportValidatorSource -match 'Economy and factory pricing feel')
 Assert-True "runtime report validator requires Claude Notes PASS rows" ($runtimeReportValidatorSource -match 'Claude Notes rows are all PASS')
 Assert-True "runtime report validator requires evidence on PASS rows" ($runtimeReportValidatorSource -match 'Claude Notes PASS rows include evidence')
 Assert-True "runtime report validator rejects missing gates and found failures" ($runtimeReportValidatorSource -match 'runtime report has no missing required gates' -and $runtimeReportValidatorSource -match 'runtime report failure scan is clear')

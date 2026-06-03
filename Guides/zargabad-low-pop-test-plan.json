@@ -151,7 +151,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/Validate-ZargabadRuntimeReport.ps1 validates Claude's edited runtime report before Codex stop/go: validator PASS, no MISSING required gates, no FOUND failure-scan rows, no _missing_ key evidence placeholders, requested JIP/HC/edge/black-market gates PASS, every Claude Notes row PASS, and every PASS row includes concrete evidence."
+      "summary": "Tools/Validate-ZargabadRuntimeReport.ps1 validates Claude's edited runtime report before Codex stop/go: validator PASS, no MISSING required gates, no FOUND failure-scan rows, no _missing_ key evidence placeholders, requested JIP/HC/edge/black-market gates PASS, every expected Claude Notes row present, every Claude Notes row PASS, and every PASS row includes concrete evidence."
     },
     {
       "type": "source-audit",
@@ -184,6 +184,6 @@
   ],
   "result": "partial",
   "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Codex should send Tools/New-ZargabadClaudeBrief.ps1 output after each commit, and Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports after each Codex commit or runtime gate.",
-  "updatedAt": "2026-06-03T06:06:56+02:00",
+  "updatedAt": "2026-06-03T06:17:41+02:00",
   "updatedBy": "Codex"
 }
