@@ -4,14 +4,14 @@ This page is the implementation handoff for the `supply-mission-authority-cleanu
 
 Scope: Chernarus source mission first, then generated mission propagation through `Tools/LoadoutManager` after code changes. Paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
-Branch split: current `master` has the truck mission flow, client-stamped `SupplyFromTown`/`SupplyAmount`, duplicate-start tracking risk and no supply-vehicle `Killed` handler. PR #1 / `feat/supply-helicopter` adds `SupplyByHeli`, supply-heli class/upgrade gates, cash-run semantics and the interdiction `Killed` handler. Keep those branch-specific mechanics separate when auditing or patching.
+Branch split: current `master` has the truck mission flow, client-stamped `SupplyFromTown`/`SupplyAmount`, duplicate-start tracking risk and no supply-vehicle `Killed` handler. PR #1 / `feat/supply-helicopter` adds `SupplyByHeli`, supply-heli class/upgrade gates, cash-run semantics and an interdiction `Killed` handler guarded by `wfbe_supply_killed_eh_set`. Keep those branch-specific mechanics separate when auditing or patching.
 
 ## Status
 
 | Item | Status | Notes |
 | --- | --- | --- |
 | Truck supply mission map | Working but risky | Server tracks return-to-base, but start cargo facts are client-stamped. |
-| PR #1 supply helicopters | Partial / PR-ready risk | Additive feature; needs loaded-state and `Killed` handler cleanup before baseline merge. |
+| PR #1 supply helicopters | Partial / PR-ready risk | Additive feature; current branch has a guarded interdiction `Killed` handler, but still needs loaded/tracking state, authority cleanup and Arma smoke before baseline merge. |
 | Cooldown model | Partial | Pull-based JIP query is good, but casing and start-time race need cleanup. |
 | Dead twin script | Abandoned | `supplyMissionActive.sqf` is compiled but no static caller was found. |
 | Authority posture | Opportunity | Small server-owned record can improve integrity without redesigning all economy flows. |
@@ -43,10 +43,10 @@ Branch split: current `master` has the truck mission flow, client-stamped `Suppl
 1. SpecOps action wiring runs `Client/Module/supplyMission/supplyMissionStart.sqf`; the action condition is local and checks town distance plus supply truck class in current `master`. PR #1 extends this gate to supply-heli classes/upgrades (`Client/Module/Skill/Skill_Apply.sqf`).
 2. Mission start asks the server for town cooldown (`supplyMissionStart.sqf:6-7`), immediately reads local `supplyMissionCoolDownEnabled` (`:9-14`), then checks cursor target class/distance (`:16-32`).
 3. Current `master` stamps authority-bearing object vars on the vehicle: `SupplyFromTown` and `SupplyAmount` (`supplyMissionStart.sqf:20-34`), then sends `WFBE_Client_PV_SupplyMissionStarted` (`:38-39`). PR #1 also stamps `SupplyByHeli`.
-4. Current `master` server start handler records town cooldown as `LastSupplyMissionRun`, starts the town timer and loops while the vehicle is alive. PR #1 additionally adds a `Killed` event handler to the vehicle for interdiction rewards.
+4. Current `master` server start handler records town cooldown as `LastSupplyMissionRun`, starts the town timer and loops while the vehicle is alive. PR #1 additionally adds a guarded `Killed` event handler to the vehicle for interdiction rewards (`origin/feat/supply-helicopter` `supplyMissionStarted.sqf:13-30`).
 5. The live loop scans command-center terminals every 3 seconds with `nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]` (`supplyMissionStarted.sqf:41-45`). The later nearby-player/object lookup remains a broad 8-meter scan because it resolves occupants/player objects, not command centers.
 6. On command-center proximity, the loop resolves a player through `WFBE_SE_PLAYERLIST`, nearby units and the vehicle leader/driver (`supplyMissionStarted.sqf:48-78`), then emits `WFBE_Server_PV_SupplyMissionCompleted` back to the server (`:80-82`).
-7. Current `master` completion reads `SupplyAmount` and `SupplyFromTown` from the vehicle object (`supplyMissionCompleted.sqf:9-28`), pays side supply, clears amount/source vars and broadcasts the message. PR #1 extends completion to read `SupplyByHeli`, decide whether a heavy-heli cash run applies from server-side upgrade state, and pay commander team funds or side supply.
+7. Current `master` completion reads `SupplyAmount` and `SupplyFromTown` from the vehicle object (`supplyMissionCompleted.sqf:9-28`), pays side supply, clears amount/source vars and broadcasts the message. PR #1 extends completion to read `SupplyByHeli`, decide whether a heli cash run applies from server-side Supply upgrade 3 state, and pay commander team funds or side supply.
 8. Client reward/score presentation is local after the completion broadcast. The pilot receives the reward through `ChangePlayerFunds` and score is requested with `RequestChangeScore` (`supplyMissionCompletedMessage.sqf:15-33`).
 
 ## Confirmed Findings
@@ -54,7 +54,7 @@ Branch split: current `master` has the truck mission flow, client-stamped `Suppl
 | Finding | Evidence | Why It Matters |
 | --- | --- | --- |
 | Client-stamped cargo is still authority-bearing. | Current `master`: `supplyMissionStart.sqf:20-34`; `supplyMissionCompleted.sqf:9-28`. PR #1 adds `SupplyByHeli`. | Server completion trusts the object vars for source and amount. PR #1 adds more reward surfaces on top of that trust. |
-| The PR #1 `Killed` handler can stack on reused vehicles. | `supplyMissionStarted.sqf:10-25` adds a handler every start with no guard/removal. | Double payment is currently muted because the first handler clears `SupplyAmount` to zero, but handler leakage is real and future side effects would multiply. |
+| The PR #1 interdiction handler is guarded, but not yet smoke-proven. | `origin/feat/supply-helicopter` `supplyMissionStarted.sqf:13-30` sets `wfbe_supply_killed_eh_set` before adding the `Killed` handler; the handler reads `SupplyAmount`, awards `WFBE_C_SUPPLY_INTERDICTION_CUT` once while amount is positive and clears `SupplyAmount`. | Earlier docs overstated a live stacking leak. Current PR code has a simple idempotency guard, but repeated load/death/reuse behavior still needs Arma smoke before merge. |
 | Duplicate mission starts for the same vehicle are not explicitly guarded. | Current `master`: `supplyMissionStart.sqf:32-39`; `supplyMissionStarted.sqf:20-65`. PR #1 extends this with handler attachment. | A reused or rapidly reloaded vehicle can create parallel tracking loops; on PR #1 it can also attach repeated handlers unless state gates are added. |
 | Cooldown key casing is inconsistent. | `Init_Town.sqf:35` seeds `lastSupplyMissionRun`; `isSupplyMissionActiveInTown.sqf:8` reads `LastSupplyMissionRun`; `supplyMissionStarted.sqf:8` writes `LastSupplyMissionRun`. | After the first start, the uppercase key exists; before that, the query path depends on nil behavior. Treat this as a source-confirmed mismatch and smoke-test after standardizing. |
 | Cooldown response model is good but the start flow races it. | Request at `supplyMissionStart.sqf:6-7`, local read at `:9`, second server request at `:61`; receiver stores result at `townSupplyStatus.sqf:5-8`. | Keep the pull-based JIP pattern, but do not make the immediate local cache read the final authority decision. |
@@ -73,7 +73,7 @@ Recommended branch: `hardening/supply-mission-authority-cleanup`.
 
 2. Guard idempotency.
    - Reject or no-op when a vehicle is already `wfbe_supply_loaded` or `wfbe_supply_tracking`.
-   - Attach at most one `Killed` handler per loaded vehicle; if using handler IDs, remove the old handler before adding a new one.
+   - Keep at most one `Killed` handler per loaded vehicle. PR #1 currently uses `wfbe_supply_killed_eh_set`; if future code needs removal/re-arm semantics, store the handler ID and remove it deliberately.
    - Clear loaded/tracking/handler state on completion, vehicle death and rejected invalid state.
 
 3. Standardize cooldown.
@@ -90,13 +90,13 @@ Recommended branch: `hardening/supply-mission-authority-cleanup`.
 5. Recompute or validate cargo on the server.
    - Validate requester side from the player object, not only the payload side.
    - Verify the source town is non-null, friendly to the requester side and within the intended load radius of player/vehicle.
-   - Verify vehicle class against `WFBE_C_SUPPLY_TRUCK_TYPES`, `WFBE_C_SUPPLY_HELI_TYPES_T2` and `WFBE_C_SUPPLY_HELI_TYPES_T3`.
+   - Verify vehicle class against `WFBE_C_SUPPLY_TRUCK_TYPES`, `WFBE_C_SUPPLY_HELI_TYPES` and `WFBE_C_SUPPLY_VEHICLE_TYPES` on PR #1 (`Init_CommonConstants.sqf:173-178`).
    - Verify upgrade gate server-side with `WFBE_CO_FNC_GetSideUpgrades`.
-   - Recompute amount from town `supplyValue`, `WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER`, supply upgrade modifier and heavy-heli bonus.
+   - Recompute amount from town `supplyValue`, `WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER`, supply upgrade modifier and heli reward/cash-run modifiers.
 
 6. Keep PR #1 reward semantics unless the owner asks for a design change.
    - Truck and light-heli non-cash completion should add side supply.
-   - Heavy-heli upgrade-3 cash run should pay commander team funds when commander exists.
+   - Heli upgrade-3 cash run should pay commander team funds when commander exists.
    - No-commander cash-run fallback to side supply is already coded and should remain unless redesigned.
    - Interdiction reward should pay once per loaded vehicle death.
 
@@ -114,7 +114,7 @@ Source-only checks:
 
 - Confirm every compile/init reference still resolves after retiring `supplyMissionActive.sqf`.
 - Confirm the server start handler owns the final accept/reject decision.
-- Confirm repeated start attempts cannot create duplicate loops or duplicate `Killed` handlers.
+- Confirm repeated start attempts cannot create duplicate loops; on PR #1, confirm the `wfbe_supply_killed_eh_set` guard prevents duplicate `Killed` handlers.
 - Confirm `SupplyAmount` is cleared only after server-owned reward state has already been consumed.
 - Confirm no code path still uses lowercase `lastSupplyMissionRun` after the casing cleanup.
 - Done for scan sub-step: source Chernarus and maintained Vanilla Takistan command-center detection use one narrowed `["Base_WarfareBUAVterminal"]` 80-meter scan; `git diff --check` and Arma 2 OA smoke remain validation gates.
@@ -123,17 +123,17 @@ Source-only checks:
 Hosted/dedicated smoke:
 
 - Truck mission can be loaded, delivered and rewarded once.
-- Same truck can run a second mission after cooldown; no duplicate delivery or stacked handler behavior.
+- Same truck can run a second mission after cooldown; no duplicate delivery or duplicate-handler behavior.
 - Attempting to load during cooldown is rejected by the server and reflected in client feedback.
 - Tampered or stale `SupplyFromTown` / `SupplyAmount` object variables do not drive reward unless the server can validate them against active mission state.
 
 PR #1 helicopter smoke:
 
 - Non-supply helicopters do not show or complete the action.
-- Light supply helicopter requires Supply upgrade 2.
-- Heavy supply helicopter requires Supply upgrade 3 and applies the 20 percent payload bonus.
-- Heavy-heli upgrade-3 cash run pays commander team funds; no-commander fallback banks as side supply.
-- Destroying a loaded enemy supply vehicle pays interdiction exactly once and does not stack handlers after repeated missions.
+- Supply helicopter loading requires Supply upgrade 2.
+- Heli delivery at Supply upgrade 3 becomes a cash run.
+- Heli upgrade-3 cash run pays commander team funds; no-commander fallback banks as side supply.
+- Destroying a loaded enemy supply vehicle pays interdiction exactly once; repeated missions on the same vehicle reuse or preserve the guarded handler without duplicate awards.
 - Air delivery still gives the pilot 25 percent reward/score bonus.
 
 JIP/disconnect/HC smoke:
@@ -153,7 +153,7 @@ Generated mission validation:
 Code owner:
 
 - Implement this before merging PR #1 supply helicopters as baseline if the project wants public-server robustness.
-- Start with loaded/tracking state and `Killed` handler idempotency; that is the smallest safety patch and unlocks the rest.
+- Start with loaded/tracking state and smoke the current PR #1 `Killed` handler guard; that is the smallest safety gate and unlocks the rest.
 - Then standardize cooldown casing and add server-side accept/reject validation.
 - Do not fold this into the broader economy authority migration; it is a separate logistics patch with its own tests.
 

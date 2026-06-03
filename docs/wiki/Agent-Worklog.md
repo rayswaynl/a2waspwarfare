@@ -40,6 +40,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Source-checked the shipped BattlEye footprint: `BattlEyeFilter/publicvariable.txt:1-2` only contains the `kickAFK` rule, and `Client/FSM/updateclient.sqf:153-162` documents the local `publicVariable.txt` deployment beside `server.cfg` and broadcasts `kickAFK`.
 - Updated [External integrations](External-Integrations) and [Deep-review findings](Deep-Review-Findings) so Arma 2 OA guidance names the relevant OA-era filter files, treats BattlEye as contingent local-filter defense in depth behind server authority, and does not list `remoteexec.txt` as a missing OA filter.
 
+## 2026-06-03 - Codex Documentation Finisher: Supply PR #1 / Master Scoping Recheck
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 19 by rechecking [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook), [Current supply heli PR](Current-Work-Supply-Helicopters-PR1) and [Feature status](Feature-Status-Register) against current `master` plus `origin/feat/supply-helicopter`.
+- Evidence checked: current `master` has no supply-vehicle `Killed` handler and no `SupplyByHeli`; PR #1 at `ffeea4c2` has `SupplyByHeli`, `WFBE_C_SUPPLY_TRUCK_TYPES` / `WFBE_C_SUPPLY_HELI_TYPES` / `WFBE_C_SUPPLY_VEHICLE_TYPES`, cash-run commander funds, and a guarded interdiction handler at `supplyMissionStarted.sqf:13-30`.
+- Corrected stale T2/T3 constant names and stale "stacked handler" wording; the remaining PR gate is repeated load/deliver/destroy smoke plus loaded/tracking/authority cleanup.
+
 ## 2026-06-03 - Codex Documentation Finisher: Maintainability Leads Routing
 
 - Closed [Instructions for Codex](Instructions-For-Codex) item 17 by verifying the maintenance leads against source and routing them to existing owner pages instead of filing them as new gameplay defects.

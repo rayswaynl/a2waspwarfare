@@ -54,26 +54,26 @@ Claude DR-39 split the Perf/JIP status cleanly:
 
 ## PR #1 Changes
 
-PR #1 improves the system by centralizing supply vehicle types, adding helicopter tiers, adding `SupplyByHeli`, changing labels to `LOAD SUPPLIES`, adding air rewards/cash runs/interdiction, and highlighting supply helicopters in buy menus. It is additive: it extends the same client-started, server-completed object-var flow rather than replacing the trust model.
+PR #1 improves the system by centralizing supply vehicle types, adding `SupplyByHeli`, changing labels to `LOAD SUPPLIES`, adding air rewards/cash runs/interdiction, and highlighting supply helicopters in buy menus. It is additive: it extends the same client-started, server-completed object-var flow rather than replacing the trust model.
 
-Review risk from the independent doc reviewer: the PR adds a `Killed` event handler when a supply mission starts. Make sure repeated reloads of the same vehicle cannot stack duplicate handlers or duplicate interdiction rewards.
+Current `origin/feat/supply-helicopter` has already addressed the older handler-stacking review risk with a `wfbe_supply_killed_eh_set` guard before adding the interdiction `Killed` handler. Keep that guarded shape and smoke repeated load/deliver/destroy cycles before merge.
 
 ## Master vs PR #1 Authority Matrix
 
 | Area | `master` | PR #1 / `feat/supply-helicopter` |
 | --- | --- | --- |
-| Vehicle type | Truck-only hardcoded class checks. | Centralized supply truck + light/heavy supply helicopter constants. |
+| Vehicle type | Truck-only hardcoded class checks. | Centralized `WFBE_C_SUPPLY_TRUCK_TYPES`, `WFBE_C_SUPPLY_HELI_TYPES` and `WFBE_C_SUPPLY_VEHICLE_TYPES`. |
 | Start authority | Client chooses eligible vehicle, stamps `SupplyFromTown` / `SupplyAmount`, then notifies server. | Same trust model, plus `SupplyByHeli` and heli class/upgrade gates. |
 | Completion authority | Server loop verifies command-center proximity, then trusts the vehicle object vars. | Same server-completion pattern; reward path branches for truck, heli and cash run. |
-| Reward | Side supply on completion; player message/score path follows completion broadcast. | Heli rewards can add air bonus, interdiction reward and heavy-heli cash-run funds to commander team funds when a commander exists. |
+| Reward | Side supply on completion; player message/score path follows completion broadcast. | Heli rewards add the air bonus; heli deliveries at Supply upgrade 3 become cash runs that pay commander team funds when a commander exists. |
 | Cooldown | Town object cooldown uses `LastSupplyMissionRun`, with source casing mismatch against seeded `lastSupplyMissionRun`. | Same cooldown foundation; PR does not redesign cooldown ownership. |
 | AI logistics | Broken/deferred `UpdateSupplyTruck` / missing `supplytruck.fsm`. | Still deferred; PR covers player-run vehicles, not autonomous AI-flown supply helicopters. |
-| Known PR defect | Not applicable. | Reused vehicles can accumulate `Killed` handlers because each mission start adds another EH without a guard/removal. |
+| Known PR risk | Not applicable. | Current branch guards the interdiction `Killed` handler; repeated load/deliver/destroy behavior still needs Arma smoke before merge. |
 
 ## Future Design Direction
 
-- Move all supply-capable vehicle classes to one constant source of truth.
-- Add an explicit loaded/unloaded state variable to prevent duplicate loops and duplicate event handlers.
+- Keep supply-capable vehicle classes in one constant source of truth.
+- Add an explicit loaded/unloaded state variable to prevent duplicate tracking loops; keep or deliberately extend the PR's `Killed` handler guard.
 - Split client affordance, server validation and reward calculation into documented helper functions.
 - Keep the pull-based cooldown request/response pattern for JIP-visible state, but target responses where possible.
 - Command-center scan narrowing is patched in source and maintained Vanilla Takistan; keep Arma smoke evidence on [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) and [Testing workflow](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack).

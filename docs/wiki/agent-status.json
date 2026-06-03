@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T11:25:00+02:00",
+  "generatedAt": "2026-06-03T12:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published Instructions-For-Codex item 18: External-Integrations.md and Deep-Review-Findings.md now name Arma 2 OA BattlEye filters, treat BE as contingent local-filter defense in depth, and do not present remoteexec.txt as a missing OA filter.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 19: reconcile Supply-Mission-Authority-Cleanup-Playbook PR-vs-master scoping."
+      "currentWork": "Published Instructions-For-Codex item 19: supply mission docs now separate master truck flow from current PR #1 supply-heli branch state, including the guarded interdiction handler and current supply class constants.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 20: ICBM authority playbook normative/factual wording."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "supply-pr1-master-scoping-recheck",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 19 is resolved: Supply-Mission-Authority-Cleanup-Playbook.md, Current-Work-Supply-Helicopters-PR1.md and Feature-Status-Register.md now match master versus origin/feat/supply-helicopter ffeea4c2, including guarded Killed handler and current supply class constants."
+    },
     {
       "lane": "battleye-dr30-oa-filter-correction",
       "owner": "Codex",
