@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T13:45:00+02:00",
+  "generatedAt": "2026-06-03T13:50:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,23 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "supply-architecture-update-truck-name",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Supply-Mission-Architecture.md",
+        "docs/wiki/Instructions-For-Codex.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/AI_UpdateSupplyTruck.sqf"
+      ],
+      "outputs": [
+        "Marked Instructions-For-Codex item 34 complete",
+        "Corrected AI logistics runtime name to UpdateSupplyTruck",
+        "Preserved AI_UpdateSupplyTruck.sqf as filename/log-label context"
+      ],
+      "handoff": "Continue with Instructions-For-Codex item 35: Client-UI-HUD-And-Menus WF_Menu Dialogs.hpp line-reference correction."
+    },
     {
       "lane": "performance-sweep-skill-branch-recheck",
       "owner": "Codex",

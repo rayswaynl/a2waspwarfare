@@ -91,7 +91,7 @@ Read-only wiki↔source audit of 7 playbook/index pages (~190 claims, 29 confirm
 
 33. ✅ **[Performance opportunity sweep](Performance-Opportunity-Sweep) — branch scope and line refs corrected.** Item 30/32 already fixed the DR-19/DR-39 status and scan refs; this pass corrected the remaining duplicate-skill-init wording. The page now says `origin/master` still runs `Skill_Init.sqf` twice at `Init_Client.sqf:561` and `:585`, then applies at `:586`; `origin/release/2026-06-feature-bundle` has the same duplicate at `:562` and `:586` with Apply at `:587`; this docs branch has the intended single init at `:547` and `WFBE_SK_FNC_Apply` at `:571`. Factory queue decrement refs already point at `Client_BuildUnit.sqf:467-469`.
 
-34. **[Supply-mission architecture](Supply-Mission-Architecture) — LOW.** Line 75 names the broken AI logistics path `AI_UpdateSupplyTruck`; the compiled global is `UpdateSupplyTruck` (`Init_Server.sqf:36` commented, spawned `:383`) — `AI_` is only the filename, and line 65 of the same page uses the correct name. *Acceptance:* use `UpdateSupplyTruck` at line 75.
+34. ✅ **[Supply-mission architecture](Supply-Mission-Architecture) — AI logistics runtime name corrected.** The page now uses `UpdateSupplyTruck` for the broken/deferred runtime path and cites `Init_Server.sqf:36,383`; `AI_UpdateSupplyTruck.sqf` remains only the filename/log label. The missing `supplytruck.fsm` note remains.
 
 35. **[Client-UI HUD and menus](Client-UI-HUD-And-Menus) — LOW.** `GUI_Menu.sqf` main Warfare menu cited at `Dialogs.hpp:1025`; the `WF_Menu` class is `:1019`, `idd = 11000` `:1021`, `onLoad` → `GUI_Menu.sqf` `:1022` (same drift batch 3 flagged for this page). *Acceptance:* cite `:1019-1022`.
 

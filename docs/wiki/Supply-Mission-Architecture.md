@@ -77,7 +77,7 @@ Current `origin/feat/supply-helicopter` has already addressed the older handler-
 - Split client affordance, server validation and reward calculation into documented helper functions.
 - Keep the pull-based cooldown request/response pattern for JIP-visible state, but target responses where possible.
 - Command-center scan narrowing is patched in source and maintained Vanilla Takistan; keep Arma smoke evidence on [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) and [Testing workflow](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack).
-- Redesign autonomous AI logistics separately from the broken `AI_UpdateSupplyTruck` / missing `supplytruck.fsm` path.
+- Redesign autonomous AI logistics separately from the broken `UpdateSupplyTruck` runtime path (`Init_Server.sqf:36,383`; filename/log label `AI_UpdateSupplyTruck.sqf`) and missing `supplytruck.fsm`.
 
 ## Continue Reading
 

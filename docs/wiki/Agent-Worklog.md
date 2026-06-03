@@ -1394,3 +1394,9 @@ Key conclusions:
 - Confirmed DR-19/DR-39 performance rows were already branch-scoped by items 30 and 32.
 - Corrected the duplicate skill-init section: `origin/master` runs `Skill_Init.sqf` at `Init_Client.sqf:561` and again at `:585`, then applies at `:586`; `origin/release/2026-06-feature-bundle` duplicates at `:562` and `:586`, then applies at `:587`; this docs branch has single init `:547` and Apply `:571`.
 - Confirmed factory queue decrement refs already point at `Client_BuildUnit.sqf:467-469`.
+
+# 2026-06-03 - Supply Architecture UpdateSupplyTruck Name
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 34 after source-checking [Supply mission architecture](Supply-Mission-Architecture).
+- Confirmed `Server/Init/Init_Server.sqf:36` compiles the runtime global as `UpdateSupplyTruck` and `:383` spawns `UpdateSupplyTruck`.
+- Corrected the remaining `AI_UpdateSupplyTruck` mention to `UpdateSupplyTruck`, while preserving `AI_UpdateSupplyTruck.sqf` as the filename/log-label context and keeping the missing `supplytruck.fsm` warning.
