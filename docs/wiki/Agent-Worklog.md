@@ -2,9 +2,10 @@
 
 ## 2026-06-04T00:13:27+02:00 - Codex - Spark scout wave harvest and micro-lane split
 
-- Harvested completed Spark scouts from the economy/factory/respawn/UI/HC/tooling/entrypoint/camp/paratrooper lanes. Most economy, factory, respawn/MASH, HC and paratrooper results confirmed existing canonical pages, so they were treated as validation instead of duplicated.
-- Promoted new source-backed findings into docs and machine backlog: Economy dialog missing controls (`23004`/`23005`), 18 unresolved conflict-marker files across modded Napf/Eden/Lingor, camp count helper zero-to-one fallback, and the absence of wrapper scripts under the scoped tooling/integration folders.
+- Harvested completed Spark scouts from the economy/factory/respawn/UI/HC/tooling/entrypoint/camp/paratrooper/content/variant/RequestSpecial lanes. Most economy, factory, respawn/MASH, HC and paratrooper results confirmed existing canonical pages, so they were treated as validation instead of duplicated.
+- Promoted new source-backed findings into docs and machine backlog: Economy dialog missing controls (`23004`/`23005`), 18 unresolved conflict-marker files across modded Napf/Eden/Lingor, camp count helper zero-to-one fallback, absence of wrapper scripts under the scoped tooling/integration folders and the undriven `RequestSpecial` `track-playerobject` branch.
 - Broad Spark prompts for PVF, supports/specials, towns/camps and commander/AI exceeded context. Replaced them with narrower micro-lanes where useful: RequestSpecial-only, camp-capture-only, paratrooper-marker-only and tactical-support-only.
+- Published as docs mirror `5e3507d8` and wiki `eda014e` after wiki validation, JSON/JSONL parsing, diff check and mirror parity.
 - Documentation only; no gameplay source files were edited.
 
 ## 2026-06-03T22:41:16+0200 - Codex - buymenu-easa-qol-branch-deep-audit

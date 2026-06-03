@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T00:13:27+02:00",
+  "generatedAt": "2026-06-04T00:25:56+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Harvested all active Spark scouts and promoted only new source-backed findings: Economy dialog missing controls, modded mission conflict markers/completeness gates, camp count helper zero fallback, missing wrapper scripts in scoped tool/integration folders and undriven RequestSpecial track-playerobject branch.",
-      "nextExpectedOutput": "Validate mirror/wiki parity, commit and push the docs/wiki batch."
+      "currentWork": "Published/validated the Spark scout harvest batch, corrected live status handoff wording and launched the next Spark scout wave for deeper source discovery.",
+      "nextExpectedOutput": "Harvest the next scout completions, promote only source-backed findings, then validate and publish a scoped wiki/docs batch."
     },
     "Codex-2": {
       "status": "ready",
@@ -46,8 +46,8 @@
     {
       "lane": "spark-scout-wave-economy-construction-respawn-ai-pvf-ui",
       "owner": "Codex/Sub-agents",
-      "status": "harvested-validated-locally",
-      "output": "Spark wave harvested completed reports and promoted five new findings: Economy dialog writes to missing controls 23004/23005; modded mission folders have missing generated/bootstrap inputs plus 18 unresolved conflict-marker files; camp count helpers coerce zero counts to 1; scoped tooling/integration folders contain no wrapper scripts; RequestSpecial track-playerobject appears undriven. Economy/factory/respawn/HC/paratrooper reports mostly validated existing canonical pages without duplication."
+      "status": "published-validated",
+      "output": "Spark wave harvested completed reports and promoted five new findings: Economy dialog writes to missing controls 23004/23005; modded mission folders have missing generated/bootstrap inputs plus 18 unresolved conflict-marker files; camp count helpers coerce zero counts to 1; scoped tooling/integration folders contain no wrapper scripts; RequestSpecial track-playerobject appears undriven. Economy/factory/respawn/HC/paratrooper reports mostly validated existing canonical pages without duplication. Pushed as docs mirror 5e3507d8 and wiki eda014e after wiki validation, JSON/JSONL parsing, diff check and mirror parity."
     },
     {
       "lane": "buymenu-easa-qol-branch-deep-audit",
