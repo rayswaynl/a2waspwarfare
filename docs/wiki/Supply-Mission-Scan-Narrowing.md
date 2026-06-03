@@ -35,6 +35,8 @@ On `origin/master`, each active supply mission scanned all nearby object classes
 
 The nearby-player check at branch-local `supplyMissionStarted.sqf:44` still uses `nearestObjects [..., [], 8]`; that scan is intentionally left broad because it is looking for player objects/vehicle occupants near the truck, not command-center terminals.
 
+Guardrail: keep the command-center completion scan as a class-filtered `nearestObjects`/`nearObjects` scan plus the `isKindOf "Base_WarfareBUAVterminal"` check (`supplyMissionStarted.sqf:25,28`). Do not replace it with `nearEntities`; this target is a command-center structure, while this mission uses `nearEntities` for entity/logics scans such as camps, towns, vehicles and units.
+
 Scope note: this patch applies to the live supply mission return-to-base handler in `supplyMissionStarted.sqf`. The compiled dead twin `supplyMissionActive.sqf` still carries the older broad-scan logic; retire or annotate that path during the broader cleanup instead of treating it as a second live implementation.
 
 ## Patch Shape

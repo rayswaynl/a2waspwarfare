@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T14:25:00+02:00",
+  "generatedAt": "2026-06-03T14:35:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Instructions-For-Codex item 47: Pending-Owner-Decisions now uses the real PVF dispatcher paths and GearYouUnit spelling.",
-      "nextExpectedOutput": "Re-read Instructions-For-Codex for any newly appended handoffs; otherwise continue with optional item 49 or 50 guardrail work."
+      "currentWork": "Closed Instructions-For-Codex item 49: supply scan pages now warn not to replace command-center structure scans with nearEntities.",
+      "nextExpectedOutput": "Continue with optional Instructions-For-Codex item 50: agent-compatibility-audit A3-only string/selection command guardrail, or re-read queue for new handoffs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "dr39-nearestobjects-guardrail",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 49 is resolved: Supply-Mission-Scan-Narrowing.md and Performance-Opportunity-Sweep.md now warn that command-center structure scans must stay class-filtered nearestObjects/nearObjects plus isKindOf, not nearEntities."
+    },
     {
       "lane": "pending-owner-decisions-path-typos",
       "owner": "Codex",

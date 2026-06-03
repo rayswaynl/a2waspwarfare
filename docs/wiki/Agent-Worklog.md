@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: DR-39 Scan Guardrail
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 49.
+- Source-checked `Server/Module/supplyMission/supplyMissionStarted.sqf:25,28,44`: the command-center completion path uses `isKindOf "Base_WarfareBUAVterminal"` plus class-filtered `nearestObjects`, while the nearby-player scan stays broad.
+- Added guardrails to [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) and [Performance opportunity sweep](Performance-Opportunity-Sweep): do not replace the command-center structure scan with `nearEntities`.
+
 ## 2026-06-03 - Codex Documentation Finisher: Pending Owner Decision Path Typos
 
 - Closed [Instructions for Codex](Instructions-For-Codex) item 47.

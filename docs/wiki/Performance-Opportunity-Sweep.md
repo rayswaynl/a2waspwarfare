@@ -75,6 +75,8 @@ Validation:
 
 This is patched in this docs branch's source Chernarus and maintained Vanilla Takistan by changing the 80-meter command-center scan to `["Base_WarfareBUAVterminal"]`; `origin/release/2026-06-feature-bundle` carries a PR #1-compatible narrowed scan too. `origin/master` remains broad-scan. The code already wanted that class family, and the 8-meter nearby-player scan intentionally remains broad. Arma smoke remains pending.
 
+Do not "optimize" the command-center scan by switching it to `nearEntities`: the target is a `Base_WarfareBUAVterminal` structure, so the safe shape is class-filtered `nearestObjects`/`nearObjects` plus `isKindOf` (`supplyMissionStarted.sqf:25,28`). In this mission, `nearEntities` belongs to entity/logics proximity scans such as camps, towns, vehicles and units.
+
 Validation:
 
 - Branch-local source/Vanilla: done. This docs branch's source Chernarus and maintained Vanilla Takistan now have one narrowed `["Base_WarfareBUAVterminal"]` 80-meter scan and still have the broad 8-meter nearby-player scan. `origin/master` is not patched.
