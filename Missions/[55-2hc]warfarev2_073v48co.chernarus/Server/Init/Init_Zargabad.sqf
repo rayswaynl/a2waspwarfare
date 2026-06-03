@@ -26,7 +26,7 @@ missionNamespace setVariable ["WFBE_ZARGABAD_CENTRAL_WALL", _centralWall];
 missionNamespace setVariable ["WFBE_ZARGABAD_CENTRAL_WALL_GAP_OFFSETS", _centralWallGapOffsets];
 
 _westStatics = [["M2StaticMG_US_EP1",[-45,0,0],270],["M2StaticMG_US_EP1",[45,0,0],90],["TOW_TriPod_US_EP1",[0,58,0],0],["Stinger_Pod_US_EP1",[0,-58,0],180]];
-_eastStatics = [["KORD_high_TK_EP1",[-45,0,0],270],["KORD_high_TK_EP1",[45,0,0],90],["Metis_TK_EP1",[0,-58,0],180],["Igla_AA_pod_TK_EP1",[0,58,0],0]];
+_eastStatics = [["KORD_high_TK_EP1",[-45,0,0],270],["KORD_high_TK_EP1",[45,0,0],90],["Metis_TK_EP1",[0,58,0],0],["Igla_AA_pod_TK_EP1",[0,-58,0],180]];
 missionNamespace setVariable ["WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_WEST", _westStatics];
 missionNamespace setVariable ["WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_EAST", _eastStatics];
 

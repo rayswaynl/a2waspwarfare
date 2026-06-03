@@ -107,6 +107,10 @@
     },
     {
       "type": "source-audit",
+      "summary": "Static validation requires the base anti-armor statics to sit on the forward base-axis side and face the map center: WEST TOW at forward offset [0,58] direction 0 relative to the southwest base heading, and EAST Metis at forward offset [0,58] direction 0 relative to the northeast base heading."
+    },
+    {
+      "type": "source-audit",
       "summary": "Camp placement audit measured 19 linked camps at 111.8m-192.4m from their town centers, with two camp approaches for the city center, airfield, north/south districts, Northwest Base and Rahim Villa."
     },
     {
