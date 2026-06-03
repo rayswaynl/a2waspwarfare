@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T12:45:00+02:00",
+  "generatedAt": "2026-06-03T12:55:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Instructions-For-Codex item 23 as stale audit drift: Economy-Authority-First-Cut already scopes SupplyByHeli to PR #1, documents current master supply completion as side-supply-only on the server and keeps personal cash/score in the client completion message.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 24: Variable-And-Naming-Conventions compile-prefix and wfbe_funds object-scope correction."
+      "currentWork": "Closed Instructions-For-Codex item 24: Variable-And-Naming-Conventions now treats WFBE_CO_FNC_* as mostly-common shared names with early/server compile exceptions, documents wfbe_funds as team/group state and moves legacy queu out of the wfbe_* example row.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 25: batch-2 recovery corrections across Modules-Atlas and Economy-Towns-And-Supply."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "variable-naming-prefix-ownership",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 24 is resolved: Variable-And-Naming-Conventions.md now treats WFBE_CO_FNC_* as mostly-common shared names with early/server compile exceptions, documents wfbe_funds as team/group state and records queu as a non-prefixed legacy replicated key."
+    },
     {
       "lane": "economy-authority-first-cut-supply-recheck",
       "owner": "Codex",

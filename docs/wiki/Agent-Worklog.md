@@ -1353,3 +1353,9 @@ Key conclusions:
 - Confirmed current `master` supply start stamps `SupplyFromTown` and `SupplyAmount` in `Client/Module/supplyMission/supplyMissionStart.sqf:20-39`; server completion reads them in `Server/Module/supplyMission/supplyMissionCompleted.sqf:9-28`.
 - Confirmed server completion rewards side supply only via `ChangeSideSupply` at `supplyMissionCompleted.sqf:26`; no `ChangePlayerFunds` or `ChangeTeamFunds` path exists in that server handler.
 - Confirmed personal cash/score remain in `Client/Module/supplyMission/supplyMissionCompletedMessage.sqf:13-22`, and `SupplyByHeli` is already scoped to PR #1 / `feat/supply-helicopter`.
+
+# 2026-06-03 - Variable Naming Prefix Ownership
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 24 by source-checking [Variable/naming conventions](Variable-And-Naming-Conventions) against `initJIPCompatible.sqf`, `Init_Common.sqf`, `Init_Server.sqf`, `Common_ChangeTeamFunds.sqf` and the factory queue keys.
+- Corrected `WFBE_CO_FNC_*` from an exclusive `Init_Common.sqf` compile family to mostly-common shared names with early `WFBE_CO_FNC_LogContent` and server-compiled AFK/game-end/HC delegation exceptions.
+- Corrected lowercase `wfbe_*` ownership to include team/group objects for `wfbe_funds`, and moved `"queu"` into a separate non-prefixed legacy-key note.
