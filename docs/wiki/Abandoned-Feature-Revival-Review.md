@@ -6,12 +6,12 @@ This page classifies dormant, broken and orphaned feature paths by what the sour
 
 | Candidate | What the code does now | Classification | Recommendation |
 | --- | --- | --- | --- |
-| MASH map markers | MASH tents are created and undeployed client-side, but the marker receiver is commented out and no live sender for `WFBE_CL_MASH_MARKER_CREATED` was found. | Broken marker edge; MASH respawn itself remains live. | Revive only with server-held marker records, unique marker ids, delete cleanup and JIP replay. Otherwise remove/annotate the dead marker relay. |
-| Paratrooper drop markers | Server paratrooper support ejects units and sends `HandleParatrooperMarkerCreation`; source Chernarus and Vanilla Takistan now register the existing client handler. | Small broken edge patched in source/Vanilla; Arma smoke pending. | Use [Paratrooper marker revival](Paratrooper-Marker-Revival) for evidence and validation. Modded missions still need maintenance-model cleanup because they register the callback but lack the handler file. |
+| MASH map markers | MASH tents are created and undeployed client-side, but the marker receiver is commented out and no live sender for `WFBE_CL_MASH_MARKER_CREATED` was found. | Broken marker edge; MASH respawn itself remains live. | Revive only with server-held marker records, unique marker ids, delete cleanup and server-held resend/pull for JIP clients. Otherwise remove/annotate the dead marker relay. |
+| Paratrooper drop markers | Server paratrooper support ejects units and sends `HandleParatrooperMarkerCreation`; current source Chernarus and Vanilla Takistan include the handler file but still omit `_clientCommandPV` registration. | Patch-ready/current-source-unpatched. | Use [Paratrooper marker revival](Paratrooper-Marker-Revival) for evidence and validation. Modded missions drift in the opposite direction because they register the callback but lack the handler file. |
 | AI commander supply trucks | `UpdateSupplyTruck` compile is commented, the gated server init call remains, and the update script references missing `Server\FSM\supplytruck.fsm`. | Broken/dormant logistics feature. | Do not just uncomment. Either guard/remove the gated call or redesign autonomous logistics around a new FSM/script. |
 | UAV 007 branch | Tactical UAV deploy/destroy/remote-control is live. The OA UAV interface has a stale mouse-button branch checking `_button == 007` and toggling hidden controls. | Stale UI branch, not abandoned UAV. | Leave dormant or remove as cleanup. Do not treat core UAV as abandoned. |
 | WASP `GearYouUnit`, wheel change and OnArmor actions | `WASP\actions\AddActions.sqf` waits for player and then leaves these addActions commented; `WASP\Init_Client.sqf` also has OnArmor bootstrap comments. | Commented legacy actions. | Leave dormant or remove unless a code owner explicitly redesigns player-on-armor/group interaction UX and authority. |
-| Old upgrade dialog `RscMenu_Upgrade` | `Dialogs.hpp` still defines `RscMenu_Upgrade` with `GUI_Menu_Upgrade.sqf`, but that file is absent. The live menu opens `WFBE_UpgradeMenu` and `GUI_UpgradeMenu.sqf`. | Stale UI resource. | Remove or replace old resource class; do not revive missing script path. |
+| Old upgrade dialog `RscMenu_Upgrade` | **REMOVED in PR #8** (commit `460c0312`). Was a 444-line WF2-era 18-icon tech-tree shell (IDD 18000) whose backing script `GUI_Menu_Upgrade.sqf` was never committed; superseded at first import by the WF3 list menu `WFBE_UpgradeMenu` (IDD 504000), which is the live upgrade UI. | Resolved — dead resource deleted (Chernarus). | DONE. Salvaged layout snippets + repurpose ideas recorded in the source-evidence section below for future devs. Takistan/modded missions still carry the block — clean via LoadoutManager regen separately. |
 | Modded mission propagation | LoadoutManager can target `Modded_Missions`, but packaging currently includes only `Missions` and `Missions_Vanilla`; modded folders exist as divergent/stub mission sets. | Needs maintenance-model decision. | Pick regenerate-from-source vs maintained forks before applying gameplay fixes to modded missions. Do not patch stubs ad hoc. |
 
 ## Source Evidence
@@ -37,7 +37,7 @@ What the code does:
 
 Why it matters:
 
-MASH respawn support should not be called dead. The dead part is the map-marker synchronization edge. Reviving the old publicVariable relay as-is would still have JIP and uniqueness problems: one overwritten global, no server-held replay list and marker names based on `round random 50000`.
+MASH respawn support should not be called dead. The dead part is the map-marker synchronization edge. Reviving the old publicVariable relay as-is would still have JIP and uniqueness problems: one overwritten global, no server-held marker registry/resend path and marker names based on `round random 50000`.
 
 Safe implementation shape:
 
@@ -66,15 +66,15 @@ What the code does:
 
 - On greenlight, the server ejects paratrooper cargo and calls `WFBE_CO_FNC_SendToClient` with command `HandleParatrooperMarkerCreation`.
 - The handler file exists and creates a side-filtered `MarkerUpdate` marker; it also grants east paratroopers NVGs if needed.
-- Source Chernarus and Vanilla Takistan now include `HandleParatrooperMarkerCreation` in `_clientCommandPV`, so init compiles `CLTFNCHandleParatrooperMarkerCreation` and registers `WFBE_PVF_HandleParatrooperMarkerCreation`. Modded mission folders still need owner cleanup because they register the command but lack the handler file.
+- Current source Chernarus and Vanilla Takistan still omit `HandleParatrooperMarkerCreation` from `_clientCommandPV`, so init cannot compile `CLTFNCHandleParatrooperMarkerCreation` or register `WFBE_PVF_HandleParatrooperMarkerCreation` until patched. Modded mission folders still need owner cleanup because they register the command but lack the handler file.
 
 Why it matters:
 
-This is a small, bounded repair with likely gameplay value. The support itself is not abandoned, and the source/Vanilla callback registration is patched; what remains is Arma 2 OA smoke plus modded-mission maintenance-model cleanup. It is also a useful smoke target for the PVF dispatch hardening playbook because it exercises a client-bound support callback.
+This is a small, bounded repair with likely gameplay value. The support itself is not abandoned; the source/Vanilla sender and handler file exist, but callback registration is still missing. What remains is source/Vanilla registration, Arma 2 OA smoke and modded-mission maintenance-model cleanup. It is also a useful smoke target for the PVF dispatch hardening playbook because it exercises a client-bound support callback.
 
-Applied implementation shape:
+Patch-ready implementation shape:
 
-1. `HandleParatrooperMarkerCreation` is registered in source Chernarus and Vanilla Takistan `_clientCommandPV`.
+1. Add and keep `HandleParatrooperMarkerCreation` registered in source Chernarus and generated Vanilla Takistan `_clientCommandPV`.
 2. Keep the side filter in the handler.
 3. Prefer one compact validation/logging path if the payload unit is null/dead or not an object.
 4. If the feature is later removed, remove the server send and handler file together instead of leaving a ghost callback.
@@ -183,24 +183,29 @@ What was read:
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_UpgradeMenu.sqf:1-41`
 - Missing path check: `Client/GUI/GUI_Menu_Upgrade.sqf`
 
-What the code does:
+What the code did (now removed):
 
-- Live menu routing opens `WFBE_UpgradeMenu`.
-- `WFBE_UpgradeMenu` runs `Client\GUI\GUI_UpgradeMenu.sqf`.
-- Stale `RscMenu_Upgrade` still points to missing `Client\GUI\GUI_Menu_Upgrade.sqf`.
+- Live menu routing opens `WFBE_UpgradeMenu` (WF3, IDD 504000) → `Client\GUI\GUI_UpgradeMenu.sqf`. Unchanged.
+- `RscMenu_Upgrade` (WF2, IDD 18000) was a finished `.hpp` layout — a 4-column, 18-icon tech-tree grid with connecting lines + a hover-tooltip overlay — but its `onLoad` script `Client\GUI\GUI_Menu_Upgrade.sqf` was **never committed**, and nothing ever `createDialog`'d it. The 18-slot grid also can't represent today's 22 upgrade types.
 
-Why it matters:
+Resolution (PR #8, commit `460c0312`):
 
-This is not a gameplay feature to revive; it is stale UI resource debt. It can mislead maintainers or break if opened by an old action path.
+- Deleted the 444-line `class RscMenu_Upgrade { … }` block from Chernarus `Rsc/Dialogs.hpp`.
+- Removed the stale `18000` entry from `Client/FSM/updateteamsmarkers.sqf` `_wfMenuDisplays`.
+- Verified: brace balance preserved, no remaining `RscMenu_Upgrade`/IDC 18001-18018 references, main-menu upgrade button still opens `WFBE_UpgradeMenu`.
+- Takistan/Lingor/Napf/Eden still contain the identical block — clean via `Tools/LoadoutManager` regen from Chernarus, do not hand-edit.
 
-Safe implementation shape:
+Salvaged reusable snippets (preserved here so the techniques aren't lost):
 
-- Remove `RscMenu_Upgrade` if no live caller exists, or replace it with a compatibility wrapper that opens the current upgrade UI.
+- **Tech-tree connecting lines without custom rendering** — thin colored `RscText` controls used as 1-px lines: a tall vertical "trunk" per column (`w = 0.0025`), horizontal branches (`h = 0.003`), short vertical stubs to each child icon. 44 line controls formed the 4-branch tree.
+- **Zero-size hover-tooltip overlay** — a hidden `RscText` (bg `{0,0,0,0.6}`) + `RscStructuredText`, both `w=h=0`, repositioned at runtime from `mouseX`/`mouseY` (written by each icon's `onMouseMoving`), shown via `onMouseEnter` setting a category global and `onMouseExit` clearing it.
 
-Validation:
+Repurpose ideas (if a future dev wants the spatial grid — build FRESH, do not resurrect the dead shell; distinct from the squad-orders Command menu, IDD 14000):
 
-- Source-only: no live caller references `RscMenu_Upgrade`.
-- UI smoke: main menu upgrade button still opens `WFBE_UpgradeMenu`.
+- **Read-only upgrade tech-tree viewer** — the grid's original intent: levels/costs/deps as connecting lines, hover for detail. Reuses `WFBE_C_UPGRADES_*` data. (~120-150 LOC.)
+- **Support / cooldown board** — arty/ICBM/paratroop/UAV availability + live cooldowns as a strategic-asset grid. (~150-180 LOC.)
+- **Structures/base overview** — what's built, health, what each unlocks. (~180-220 LOC.)
+- **Side scoreboard** — both sides' towns/funds/tech/counts. (~200-250 LOC.)
 
 ### Modded Mission Propagation
 
@@ -248,7 +253,7 @@ For Claude:
 
 For a future code owner:
 
-- Smallest remaining feature-edge cleanup: smoke paratrooper markers in Arma 2 OA and decide the modded-mission maintenance model, or remove the ghost MASH marker relay.
+- Smallest remaining feature-edge cleanup: patch and smoke paratrooper markers in Arma 2 OA, then decide the modded-mission maintenance model, or remove the ghost MASH marker relay.
 - Highest cleanup value: guard/remove AI supply truck config-gated nil/FSM path before anyone enables truck-based AI logistics.
 - Highest owner decision: modded mission maintenance model before porting hardening fixes beyond Chernarus/Takistan.
 

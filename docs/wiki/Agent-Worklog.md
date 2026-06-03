@@ -1419,3 +1419,9 @@ Key conclusions:
 - Added [Self-host testing field notes](Self-Host-Testing-Field-Notes) (linked from Home -> Current Map -> Operations): the listen-server `Tmp<port>\__cur_mp.pbo` pack-cache trap, "builds but invisible" = spawn coordinate (not locality), supply delivery is proximity-based (no unload action; 2D-for-air fix), HC `-password` symmetry against a no-pw host, RPT line-vs-frameno forensics, folder-vs-PBO browser poisoning, benign local AntiStack/CoIn errors, and A2 OA scripting traps (no `distance2D` / `lnbSetTooltip` / `try`-`catch`).
 - Two source fixes verified live on a self-host and shipped: (1) WDDM commander positions now build at the placement point — a `Land_HelipadEmpty` transform origin spawned at `[0,0,0]`, so every composition (player and AI) built ~12 km away at the SW map corner; replaced with direct rotation about `_pos` -> PR #10 (`feat/commander-positions`). (2) Supply-heli unload now works from a hover via 2D Command-Center proximity -> pushed to PR #1 (`feat/supply-helicopter`).
 - This docs change only adds the new wiki page + the Home link; no gameplay source touched on this branch.
+
+## 2026-06-03T10:09:21+0200 - Claude - RscMenu_Upgrade orphan removed (PR #8)
+
+- Removed the dead WF2 `RscMenu_Upgrade` dialog (IDD 18000, 444-line shell, never-committed backing script) from Chernarus `Rsc/Dialogs.hpp` + the stale `18000` in `updateteamsmarkers.sqf` -> release branch commit `460c0312` (PR #8). Live upgrade UI `WFBE_UpgradeMenu` (IDD 504000) untouched.
+- Updated [Abandoned Feature Revival Review](Abandoned-Feature-Revival-Review): marked the entry REMOVED and preserved the salvageable layout snippets (tech-tree connecting-line trick; zero-size hover-tooltip overlay) + repurpose ideas for future devs.
+- Takistan/modded still carry the block; regenerate via LoadoutManager, do not hand-edit.
