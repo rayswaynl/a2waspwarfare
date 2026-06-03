@@ -4,6 +4,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 
 Read this file as append-only history, not as a strict timestamp-sorted truth source. For the contested cleanup lanes, trust [Current source status snapshot](Current-Source-Status-Snapshot) plus `agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851` until a newer source re-check with file/line evidence replaces them. Older lines that say those lanes are source/Vanilla patched are stale-wave history.
 
+## 2026-06-03 - Codex Docs knowledge-pack quality follow-up
+
+- Resolved the remaining docs-lane ambiguity for this pass in [Progress-Dashboard](Progress-Dashboard): only `docs-knowledge-clickthrough-2026-06-03-1829` is now shown as the current canonical onboarding/navigation lane; `...-1707` is now historical.
+- Corrected stale branch text in [Home](Home.md) so the docs location description matches the live docs branch and mirrors.
+- Logged this follow-up in machine records as docs-only stabilization.
+
 ## 2026-06-03 - Codex Docs knowledge-pack quality refinement
 
 - Added a compact click-through navigation pack for docs first-touches by adding explicit "what/where/how" sections to `Home.md`, `_Sidebar.md`, and `Progress-Dashboard.md`.
@@ -1561,6 +1567,11 @@ Key conclusions:
 - Expanded the modern Arma 3/SQF term scan to include `AI-Assistant-Guide.md`, `Quickstart-For-Humans-And-Agents.md`, [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit), [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference), [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index) and [Tools and build workflow](Tools-And-Build-Workflow).
 - Kept append-only historical event/worklog streams out of the guardrail list because they intentionally preserve older wording as audit evidence.
 - The stricter validation exposed and fixed a stale [AI Assistant Guide](AI-Assistant-Guide) link to `agent-knowledge.json` (actual file is `agent-knowledge.jsonl`) plus two trailing-space lines in the AI guide and [Public variable channel index](Public-Variable-Channel-Index).
+
+## 2026-06-03T15:56:00+02:00 - Codex - source-root docs compatibility sweep
+- Extended the Arma 2 OA compatibility audit beyond `docs/wiki` to source-root documentation files (`README.md`, `AGENTS.md`, `Guides`, `Tools` readmes, mission config readmes and JSON/TXT samples).
+- The only suspicious source-root docs hit was `Tools/PerformanceAuditAnalyzer/README.md:70`, which mentions Arma 3 `systemTime` only as an explicit contrast to explain why the OA mission-side performance anchor exports SID/tick/frame rather than wall-clock mission date/time.
+- Updated [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit), `agent-compatibility-audit.json`, `agent-events.jsonl` and `agent-knowledge.jsonl`; no gameplay source files changed.
 
 - 2026-06-03 18:04:00+02:00 - Codex - docs-knowledge-clickthrough-2026-06-03-1804: Added explicit canonical onboarding blocks and related-system gates in Home, AI-Assistant-Guide, Progress-Dashboard, and Wiki-Quality-Audit to reduce click-through duplication drift.
 

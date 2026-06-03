@@ -196,8 +196,8 @@ Historic scout rosters and harvested reports live in [Discovery swarm](Subagent-
 
 ### Canonical onboarding lane
 
-- `docs-knowledge-clickthrough-2026-06-03-1829` is the latest active docs/navigation watch for Home/AI Assistant entrypoint drift, duplicate-onboarding risk and machine-record sync checks.
-- `docs-knowledge-clickthrough-2026-06-03-1707` remains the active compactness/duplication pass for Home/_Sidebar/AI Assistant entrypoint flow.
+- `docs-knowledge-clickthrough-2026-06-03-1829` is the current canonical docs/navigation lane for Home/AI Assistant entrypoint drift, duplicate-onboarding risk, and machine-record sync checks.
+- `docs-knowledge-clickthrough-2026-06-03-1707` is now historical and kept for audit trace only; its active checks are superseded by the latest `1829` pass.
 - This lane is documentation-only and coordinates click-through path quality, source links and machine-readable evidence.
 
 ### What this page is for this lane

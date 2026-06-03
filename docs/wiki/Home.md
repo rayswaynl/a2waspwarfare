@@ -105,7 +105,7 @@ Use this sequence for low-risk orientation:
 | Script reference | Use Bohemia Interactive Arma 2 OA scripting docs, not Arma 3 assumptions; see [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) for the current docs scan. |
 | Current source status | Use [Current source status snapshot](Current-Source-Status-Snapshot) before trusting older claims that cleanup lanes are already source/Vanilla patched. |
 | Windows path trap | Use PowerShell `-LiteralPath` for `[55-2hc]` paths because brackets are wildcard syntax. |
-| Current branch docs | Repo mirror lives in PR #2 on `docs/developer-wiki-index`. |
+| Current docs checkout | Active working branch is `docs/developer-wiki-claude`; keep this in sync with the live wiki mirror after validation. |
 
 ## Reading Paths
 
