@@ -22,6 +22,22 @@
   },
   "activeClaims": [
     {
+      "lane": "sidebar-hc-delegation-dedupe",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/_Sidebar.md",
+        "docs/wiki/Instructions-For-Codex.md",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/agent-collaboration.json"
+      ],
+      "outputs": [
+        "Removed duplicate HC delegation/failover sidebar link from Ops while keeping the Gameplay entry next to AI/headless"
+      ],
+      "handoff": "Scoped sidebar de-duplication is validated and ready to continue with Instructions-For-Codex item 12."
+    },
+    {
       "lane": "progress-dashboard-at-a-glance-refresh",
       "owner": "Codex",
       "status": "published-validated",

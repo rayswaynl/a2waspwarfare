@@ -23,7 +23,7 @@
 ## P1 — Reconcile "current work" status pages (they're stale)
 9. ✅ **[Coordination board](Coordination-Board):** reconciled the stale "Active Lanes" + "Roles" tables. Older sub-agent names (Faraday/Mencius/Hilbert/Cicero/Curie/Meitner) are now explicitly described as harvested/closed scout lanes, `victory-endgame-runtime-atlas` is marked integrated, and Claude is shown in `collaboration-follow-autonomous-ready` mode after DR-45+ / DR-46 handoffs.
 10. ✅ **[Progress dashboard](Progress-Dashboard):** reconciled the "At A Glance" Claude row and dashboard status language. It now reflects the coverage-ledger milestone (Map/Perf/JIP-HC/Drift complete; remaining yellow Auth/PV cells are owner decisions), adds a status legend that separates docs publication from source/Vanilla patches, and fixes the stale DR-46 row from "Local / validation pending" to published/validated with the source patch still open.
-11. **`_Sidebar.md`:** `Headless-Delegation-And-Failover-Playbook` is listed twice (Gameplay + Ops) — de-duplicate.
+11. ✅ **`_Sidebar.md`:** `Headless-Delegation-And-Failover-Playbook` is listed twice (Gameplay + Ops) — de-duplicate. Kept the Gameplay entry next to AI/headless and removed the Ops duplicate.
 
 ## P2 — Structure (page merges, audit section B)
 12. Merge [Hardening roadmap](Hardening-Implementation-Roadmap) + [Server authority map](Server-Authority-Migration-Map) (~70% overlap) — Migration-Map's *Authority Principles* + *Handler Validation Checklist* as preamble, Roadmap's *work packages* as body.

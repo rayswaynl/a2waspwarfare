@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Sidebar HC Delegation De-Dupe
+
+- Claimed [Instructions for Codex](Instructions-For-Codex) item 11.
+- Verified `_Sidebar.md` listed `Headless-Delegation-And-Failover-Playbook` twice: once under Gameplay next to AI/headless and once under Ops.
+- Kept the Gameplay entry, because developers following AI/headless delegation source routing will naturally look there first, and removed the Ops duplicate.
+
 ## 2026-06-03 - Codex Documentation Finisher: Progress Dashboard At A Glance Refresh
 
 - Claimed [Instructions for Codex](Instructions-For-Codex) item 10.

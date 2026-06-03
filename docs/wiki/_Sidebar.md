@@ -101,7 +101,6 @@
 - [Commander reassignment](Commander-Reassignment-Call-Shape)
 - [Resistance supply scaffold](Resistance-Supply-Scaffold)
 - [UI IDD collision repair](UI-IDD-Collision-Repair)
-- [HC delegation/failover](Headless-Delegation-And-Failover-Playbook)
 - [Testing/release workflow](Testing-Debugging-And-Release-Workflow)
 - [Arma 2 OA references](Arma-2-OA-External-Reference-Guide)
 - [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit)
