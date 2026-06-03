@@ -1,45 +1,72 @@
-# SQF Code Atlas
+﻿# SQF Code Atlas
+
+Historical guardrail: before changing supply mission, JIP, town-AI, marker or performance-sensitive SQF, read [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons). Miksuu history shows repeated follow-up fixes in those areas, so code changes should cite current source and upstream evidence separately.
 
 This page is the first deeper code-level atlas for the Chernarus source mission. It is generated from source inspection, not memory.
 
 Source mission: `Missions/[55-2hc]warfarev2_073v48co.chernarus`
 
+## What this atlas is
+
+- A source-first map of compile registration and execution owners.
+- A dependency map for how mission-side systems wire into runtime, plus canonical link targets for deeper subsystem playbooks.
+- A duplicate-control surface: it keeps authoritative pointers but avoids re-stating full deep-review evidence in every feature page.
+
+## Where it lives and how it runs
+
+- Path: `docs/wiki/SQF-Code-Atlas.md`.
+- Source owner: `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
+- Runtime anchors: `initJIPCompatible.sqf`, `Common/Init/Init_Common.sqf`, `Init_Server.sqf`, `Init_Client.sqf`, `Init_HC.sqf`.
+- Scope boundary: this atlas maps compile ownership and risk hotspots; implementation order and authority behavior live in subsystem atlases and feature lanes.
+
+## Related routing
+
+- Launch path: [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle) and [Lifecycle wait-chain](Lifecycle-Wait-Chain).
+- Networking and authority: [Public variable channel index](Public-Variable-Channel-Index), [Networking and public variables](Networking-And-Public-Variables), [Feature status register](Feature-Status-Register).
+- Subsystem follow-up:
+  - [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas)
+  - [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas)
+  - [Economy, towns and supply](Economy-Towns-And-Supply)
+
 ## Compile Registry Summary
 
-Point-in-time count, 2026-06-02:
+Point-in-time recount: 2026-06-02, source mission `Missions/[55-2hc]warfarev2_073v48co.chernarus`, all `.sqf` files, `Select-String -SimpleMatch 'preprocessFile'`. This deliberately counts `preprocessFile` as a substring of `preprocessFileLineNumbers`, so plain `preprocessFile` is `total - preprocessFileLineNumbers`. See [Deep-review findings](Deep-Review-Findings) DR-5 for why these counts must be regenerated before relying on them.
 
-```powershell
-rg -n "preprocessFile" Missions/[55-2hc]warfarev2_073v48co.chernarus
-rg -n "preprocessFileLineNumbers" Missions/[55-2hc]warfarev2_073v48co.chernarus
-rg -n "preprocessFile(?!LineNumbers)" Missions/[55-2hc]warfarev2_073v48co.chernarus --pcre2
-```
-
-The source mission currently contains 673 `preprocessFile` references. Keep these numbers reproducible rather than authoritative; DR-5 exists because frozen compile metrics drift as docs, branches and generated missions move.
+The source mission currently contains 739 `preprocessFile` references:
 
 | Kind | Count | Notes |
 | --- | ---: | --- |
-| `preprocessFileLineNumbers` | 461 | Preferred for source-backed runtime errors and debugging. |
-| plain `preprocessFile` | 212 | Older or performance/legacy style compiles; still common in init files. |
+| `preprocessFileLineNumbers` | 460 | Preferred for source-backed runtime errors and debugging. |
+| plain `preprocessFile` | 279 | Older or performance/legacy style compiles; still common in init files. |
 | commented compile references | 21 | Includes disabled systems, duplicate old lines and experiments. |
+
+Regenerate from the mission root with:
+
+```powershell
+$files = Get-ChildItem -Recurse -Filter *.sqf
+$total = ($files | Select-String -SimpleMatch 'preprocessFile').Count
+$lineNumbers = ($files | Select-String -SimpleMatch 'preprocessFileLineNumbers').Count
+[pscustomobject]@{ Total = $total; PreprocessFileLineNumbers = $lineNumbers; PlainPreprocessFile = $total - $lineNumbers }
+```
 
 Target area counts:
 
 | Target area | Count |
 | --- | ---: |
-| `Common` | 424 |
-| `Client` | 140 |
-| `Server` | 90 |
-| `WASP` / `Wasp` | 3 |
-| `Headless` | 1 |
-| `briefing.sqf` | 1 |
+| root/bootstrap `.sqf` files | 7 |
+| `Common` | 492 |
+| `Client` | 143 |
+| `Server` | 92 |
+| `Headless` | 4 |
+| `WASP` | 1 |
 
 Top source registrars:
 
 | Registrar | Count |
 | --- | ---: |
-| `Common/Init/Init_Common.sqf` | 187 |
+| `Common/Init/Init_Common.sqf` | 196 |
 | `Client/Init/Init_Client.sqf` | 112 |
-| `Server/Init/Init_Server.sqf` | 89 |
+| `Server/Init/Init_Server.sqf` | 90 |
 | `Common/Config/Core_Root/Root_GUE.sqf` | 12 |
 | `Common/Config/Core_Root/Root_TKA.sqf` | 12 |
 | `Common/Config/Core_Root/Root_USMC.sqf` | 12 |
@@ -52,7 +79,7 @@ Top source registrars:
 
 ### `initJIPCompatible.sqf`
 
-`initJIPCompatible.sqf` is the early compile/bootstrap file and role router. Detailed lifecycle flags, role timing, JIP waits and HC wait hazards are canonical in [Lifecycle wait-chain](Lifecycle-Wait-Chain); this atlas keeps compile ownership and source-owner orientation.
+Early bootstrap compiles the log function first, checks headless-client identity, prepares server connect/disconnect callbacks, then compiles MP parameters and common constants. This file is the role router; use [Lifecycle wait-chain reference](Lifecycle-Wait-Chain#machine-role-truth-table) for the canonical role truth table and [Lifecycle wait-chain reference](Lifecycle-Wait-Chain#branch-dispatch-in-initjipcompatiblesqf) for branch ordering.
 
 Key compile targets:
 
@@ -82,11 +109,6 @@ Risk notes:
 - Gear config loads only on `local player`, while class/core config loads more broadly.
 - Root faction files compile side-specific units, structures, artillery, squads and upgrades; changes here affect buy menus, AI and production.
 
-Maintainability notes:
-
-- `Init_Common.sqf:24-63` and `:94-160` intentionally mix old short global helper names with newer `WFBE_CO_FNC_*` names. Several names compile the same target file under both eras, so future cleanup should map call sites before deleting either spelling.
-- The four nearest-entity helpers are separate functions registered at `Init_Common.sqf:116-119` (`Common_GetClosestEntity{,2,3,4}.sqf`). Treat them as a small API family that needs behavior comparison before consolidation.
-
 ### `Server/Init/Init_Server.sqf`
 
 Server init owns AI, town, building, construction, special support, supply mission, AntiStack, attack wave, headless delegation and long server loops.
@@ -103,7 +125,7 @@ Risk notes:
 
 - `UpdateSupplyTruck` is commented while `Server/AI/AI_UpdateSupplyTruck.sqf` still exists and references a missing `Server/FSM/supplytruck.fsm`; treat autonomous AI supply logistics as broken/deferred.
 - `WFBE_CO_FNC_monitorServerFPS` is commented as a compile target but server FPS is still run directly elsewhere.
-- MASH map markers are source-confirmed dead/abandoned in DR-34: the server handler is compiled, but the client receiver compile is commented and no deploy path broadcasts `WFBE_CL_MASH_MARKER_CREATED`. MASH respawn itself is separate.
+- `WFBE_SE_FNC_MASH_MARKER` appears once active and once commented in server init, but DR-34 resolves the status: the MASH map-marker feature is dead/abandoned. `Client/Init/Init_Client.sqf:132` comments out the receiver compile, `WFBE_CL_MASH_MARKER_CREATED` has no emitter, and the live server PVEH in `Server/Module/MASH/MASHMarker.sqf` is orphaned. MASH tents remain a separate deployable officer feature.
 
 ### `Client/Init/Init_Client.sqf`
 
@@ -124,18 +146,7 @@ Risk notes:
 
 ### `Headless/Init/Init_HC.sqf`
 
-Headless init compiles the same delegation helpers used by clients plus `WFBE_CL_FNC_HandlePVF`. Headless support is version-gated earlier in `initJIPCompatible.sqf`, and server-side delegation helpers are compiled in server init when the version allows it.
-
-## Maintainability Watchlist
-
-These are not new gameplay defects by themselves. They are source-backed areas where future code changes should be careful because duplicated shape can hide drift.
-
-| Lead | Evidence | Existing owner / guidance |
-| --- | --- | --- |
-| Dual common-helper naming era | `Init_Common.sqf:24-63` compiles legacy short globals (`GetSideID`, `GetTeamFunds`, `GetTownsIncome`, ...); `:94-160` compiles newer `WFBE_CO_FNC_*` globals, including overlapping target files such as `Common_GetSideID.sqf`, `Common_GetSideSupply.sqf`, `Common_GetSideUpgrades.sqf` and `Common_GetTeamFunds.sqf`. | [Variable/naming conventions](Variable-And-Naming-Conventions) now documents the overlap. Do not delete either spelling until call sites are counted. |
-| Similar helper families | `Init_Common.sqf:116-119` registers `WFBE_CO_FNC_GetClosestEntity`, `GetClosestEntity2`, `GetClosestEntity3` and `GetClosestEntity4`. | Keep as an explicit API family until the four files are behavior-compared; replacing by one helper is a later refactor, not a docs correction. |
-| Copy-paste implementation families | `Client_SupportRepair.sqf`, `Client_SupportRefuel.sqf`, `Client_SupportRearm.sqf` and `Client_SupportHeal.sqf` are 78-81 line siblings with near-identical setup; `Construction_SmallSite.sqf` / `Construction_MediumSite.sqf` share construction-site flow with known logic-list asymmetry; `Common/Config/Loadout/Loadout_*.sqf` has ten faction data files. | Use [Service menu affordability guards](Service-Menu-Affordability-Guards), [Construction logic list cleanup](Construction-Logic-List-Cleanup) and [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) before touching these families. |
-| Hardcoded English hints mixed with localized UI | Examples include Zeta cargo HQ-wreck hints (`Zeta_Hook.sqf:21-22`), gear menu target/backpack/template hints (`GUI_BuyGearMenu.sqf:71,256-257,442,467,474`), GPS zoom hints (`GUI_Menu.sqf:204,208`), a debug `systemChat` (`Common_HandleShootMissiles.sqf:116`) and gear-template hints (`Client_UI_Gear_AddTemplate.sqf:132,150`). | Prefer `stringtable.xml` + `localize` for new user-facing text. Leave debug strings alone unless the owner is deliberately cleaning UX/localization. |
+Headless init compiles the same delegation helpers used by clients plus `WFBE_CL_FNC_HandlePVF`. Headless support is version-gated earlier in `initJIPCompatible.sqf`; see [Lifecycle wait-chain reference](Lifecycle-Wait-Chain#headless-client) for the boot wait and [AI, headless and performance](AI-Headless-And-Performance#hc-delegation-routing) for delegation mechanics.
 
 ## PVF Contract
 
@@ -176,40 +187,26 @@ Client-bound PVF commands:
 | `SetMHQLock` | `Client/PVFunctions/SetMHQLock.sqf` |
 | `Available` | `Client/PVFunctions/Available.sqf` |
 | `RequestBaseArea` | `Client/PVFunctions/RequestBaseArea.sqf` |
-| `HandleParatrooperMarkerCreation` | `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` |
 | `NukeIncoming` | `Client/PVFunctions/NukeIncoming.sqf` |
 
 PVF dispatch mechanics:
 
-- Server-bound packets start as `[Command, params...]`; `Common_SendToServer`/`Common_SendToServerOptimized` rewrites index 0 to `SRVFNC<Command>`.
+- Server-bound packets start as `[Command, payload...]`; `Common_SendToServer`/`Common_SendToServerOptimized` rewrites index 0 to `SRVFNC<Command>`.
 - Client-bound packets use the command at index 1; `Common_SendToClient` and `Common_SendToClients` rewrite it to `CLTFNC<Command>`.
 - Hosted server paths call the handler locally and may also broadcast in multiplayer.
 - Client filtering in `Client_HandlePVF.sqf` supports side destinations and player UID destinations.
 - Both client and server dispatch call `Call Compile _script`, so malformed function names or unsanitized command names would be high-risk.
 
-## `call compile` Trust Inventory
+PV function files outside the standard PVF command lists:
 
-Most compile sites in this mission are static file registration or local engine helper strings. The two network-data compile surfaces are the ones to prioritize:
-
-| Surface | Source | Why it matters | Owner page |
-| --- | --- | --- | --- |
-| PVF dispatcher command string | `Server/Functions/Server_HandlePVF.sqf:14`, `Client/Functions/Client_HandlePVF.sqf:22` | Registered `WFBE_PVF_*` payload chooses the function-name string that the dispatcher compiles. | [Networking/PV](Networking-And-Public-Variables#security-the-call-compile-trust-boundary), [Deep review DR-1](Deep-Review-Findings) |
-| `SEND_MESSAGE` direct payload text | `Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf:25-31`, `Common/Functions/Common_SendMessage.sqf:24-27` | Direct publicVariable channel compiles message text when payload index 3 marks it multi-language; this bypasses PVF dispatcher hardening. | [Public variable channel index](Public-Variable-Channel-Index), [Deep review DR-46](Deep-Review-Findings) |
-
-AntiStack database wrappers are a separate extension-output trust boundary: they compile strings returned by the external `A2WaspDatabase` DLL, not player PV payloads. Use [AntiStack database extension audit](AntiStack-Database-Extension-Audit) for that wrapper family.
-
-Unregistered or non-standard PV function files:
-
-- `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` was formerly unregistered in early review notes. Current source and maintained Vanilla now register it in the client command list; Arma smoke remains tracked in [Paratrooper marker revival](Paratrooper-Marker-Revival).
-- `Client/PVFunctions/DatabaseDebug.sqf` is present but the registry entry is commented out in `Init_PublicVariables.sqf`.
-- `Server/PVFunctions/LogGameEnd.sqf` is present but not registered; server init compiles `Server/Functions/Server_LogGameEnd.sqf` instead.
-- `Server/PVFunctions/AttackWave.sqf` is a direct/public-variable handler path rather than a standard PVF command-list entry.
+- `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` exists in current source/Vanilla, but `HandleParatrooperMarkerCreation` is still missing from `_clientCommandPV`; see [Paratrooper marker revival](Paratrooper-Marker-Revival) for the patch shape, smoke plan and modded-mission drift.
+- `Server/PVFunctions/AttackWave.sqf` and `Server/Functions/Server_AttackWave.sqf` are compiled directly in server init rather than through the standard PVF command list (`Init_Server.sqf:94-95`). `WFBE_CO_FNC_LogGameEnd` is wired to `Server/Functions/Server_LogGameEnd.sqf` at `Init_Server.sqf:64` and `:89`; the `Server/PVFunctions/LogGameEnd.sqf` twin exists as the DR-13 cleanup target but is not the live compile target.
 
 ## Direct Public Variable Channels
 
-Not all networking uses the PVF wrapper. The canonical inventory is [Public variable channel index](Public-Variable-Channel-Index), which covers registered `WFBE_PVF_*` commands and direct channels such as day/night, message/marker creation, ICBM/radiation, AFK/BattlEye, supply missions, side supply, server FPS, attack waves, MASH marker channels, HQ marker/state broadcasts and client-init handshakes.
+Not all networking uses the PVF wrapper. The canonical inventory is [Public variable channel index](Public-Variable-Channel-Index#2-direct-publicvariable-channels-own-event-handlers); keep direct channel additions there first so BattlEye filter work and direct-PV authority reviews use one source of truth.
 
-Use this atlas for compile/registration ownership. Use [Networking and public variables](Networking-And-Public-Variables) for dispatcher mechanics and [Public variable channel index](Public-Variable-Channel-Index) for channel inventory and BattlEye whitelist design.
+For code-reading orientation, the important shape is: direct channels have their own `addPublicVariableEventHandler`s, so a PVF dispatch fix does not validate their payloads. The highest-risk examples are `ATTACK_WAVE_INIT` (DR-41 direct authority), `wfbe_supply_temp_east` / `wfbe_supply_temp_west` (side-supply mutation class), the dead MASH marker relay (DR-34), and `kickAFK` as the only current BattlEye-filtered PV feature channel.
 
 ## Disabled Or Deferred Compile Signals
 
@@ -242,11 +239,11 @@ Server-side long-running systems are mostly `.sqf` loop scripts under `Server/FS
 - Use `-LiteralPath` in PowerShell for mission paths containing `[55-2hc]`; plain `-Path` treats brackets as wildcards.
 - Prefer adding new registered function names in the existing init owner for that side: common in `Init_Common`, server in `Init_Server`, client in `Init_Client`.
 - If adding a PVF command, update both the command list and the corresponding `Client/PVFunctions` or `Server/PVFunctions` file, then document payload shape.
-- Avoid `Call Compile` on data strings. Existing PVF and `SEND_MESSAGE` network-data compile paths are documented security findings, not patterns to copy. For localization, prefer structured stringtable keys plus arguments resolved with `localize`/`format`.
+- Avoid `Call Compile` on data strings unless following an established PVF/localization pattern and the source is controlled.
 - For performance-sensitive loops, preserve existing parameter guards and `WF_Debug` logging style.
 
 ## Continue Reading
 
-Previous: [WASP overlay](WASP-Overlay) | Next: [Function/module index](Function-And-Module-Index)
+Previous: [Gameplay systems atlas](Gameplay-Systems-Atlas) | Next: [Public variable channel index](Public-Variable-Channel-Index)
 
-Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
+Main map: [Home](Home) | Fast path: [Feature status register](Feature-Status-Register) | Agent file: [`agent-context.json`](agent-context.json)

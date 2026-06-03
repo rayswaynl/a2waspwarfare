@@ -28,6 +28,8 @@ Build configurations:
 
 Repo instruction: after mission edits, run from `Tools/LoadoutManager` with `dotnet run`, or from the repo root with `dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj`. If .NET SDK is missing, stop and tell the user. For propagation-only runs, set `A2WASP_SKIP_ZIP=1` so generation/copy completes without requiring `7za` or creating `_MISSIONS.7z`.
 
+Upstream history warning: the second-wave [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) pass found concrete tooling hazards: current packaging is source Chernarus plus generated Vanilla/Takistan only, `Modded_Missions` packaging/generation is commented out, `ZipManager` depends on env var `7za`, `version.sqf` load order was reverted once, Takistan DB map ID needed generator-side post-copy repair, and sound generation assumes `ClassName-volume.ogg` filenames. Treat LoadoutManager console output plus `git diff --stat` as the release check, not a blind "DONE" signal.
+
 Local workspace note: `FileManager.FindA2WaspWarfareDirectory` now supports both an ancestor folder literally named `a2waspwarfare` and a normal repo root containing `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`. This lets Codex checkouts such as `work\a` run the tool without renaming the workspace.
 
 ## Operator Checklist
