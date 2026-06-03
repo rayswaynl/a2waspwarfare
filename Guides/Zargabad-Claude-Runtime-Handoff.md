@@ -39,10 +39,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadRunti
 For map-placement, defense-facing, pathing, or sightline notes, generate a coordinate packet before the playtest and paste it beside the runtime report:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadMapAuditPacket.ps1 -OutputPath ".\zargabad-map-audit.md"
+powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadEvidenceFolder.ps1 -OutputPath ".\zargabad-evidence" -Force
 ```
 
-Use the packet's objective, camp, defense, start, base-axis, rim-test and central-wall checkpoint coordinates as the shared reference for screenshots and repro notes.
+Use the generated `.\zargabad-evidence\zargabad-map-audit.md` packet's objective, camp, defense, start, base-axis, rim-test and central-wall checkpoint coordinates as the shared reference for screenshots and repro notes. Put the referenced PNG/JPEG screenshots in the same evidence folder.
 
 For fortification changes, use Steff's WDDM tool at https://rayswaynl.github.io/WDDM/ beside the map audit packet. WDDM/`CreateDefenseTemplate` coordinates are relative to the template origin, with `+Y` as front and `+X` as right. Treat exported Z offsets as documentation only because `CreateDefenseTemplate` flattens spawned objects; side-hill or slope fixes need runtime screenshots/coordinates, not vertical template values. If Claude proposes a base wall or central-wall change, paste the WDDM-exported SQF or coordinate deltas back with screenshots/RPT evidence before Codex edits the template.
 
@@ -107,7 +107,7 @@ For a Codex-ready handoff report:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadClaudeBrief.ps1 -OutputPath ".\zargabad-claude-brief.md"
-powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadMapAuditPacket.ps1 -OutputPath ".\zargabad-map-audit.md"
+powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadEvidenceFolder.ps1 -OutputPath ".\zargabad-evidence" -Force
 powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadRuntimeReport.ps1 -RptPath "C:\path\to\rpts" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireEdgeGuardSafeAllow -RequireNamedRimPoints -RequireBlackMarket -OutputPath ".\zargabad-runtime-report.md"
 powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadRuntimeReport.ps1 -ReportPath ".\zargabad-runtime-report.md" -EvidenceRoot ".\zargabad-evidence" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireEdgeGuardSafeAllow -RequireNamedRimPoints -RequireBlackMarket
 ```

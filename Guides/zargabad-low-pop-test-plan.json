@@ -34,6 +34,7 @@
     "Tools/Validate-ZargabadRuntimeEvidence.ps1",
     "Tools/New-ZargabadRuntimeReport.ps1",
     "Tools/Validate-ZargabadRuntimeReport.ps1",
+    "Tools/New-ZargabadEvidenceFolder.ps1",
     "Tools/New-ZargabadMapAuditPacket.ps1",
     "Tools/New-ZargabadClaudeBrief.ps1",
     "Guides/Zargabad-Completion-Gates.md",
@@ -180,6 +181,10 @@
     },
     {
       "type": "source-audit",
+      "summary": "Tools/New-ZargabadEvidenceFolder.ps1 creates the runtime evidence folder, writes zargabad-map-audit.md into it, and adds README-zargabad-evidence.md with suggested screenshot filenames plus the exact Validate-ZargabadRuntimeReport.ps1 -EvidenceRoot command so Claude can build a Codex-ready evidence bundle before playtesting."
+    },
+    {
+      "type": "source-audit",
       "summary": "Guides/Zargabad-Completion-Gates.md maps the original mission objective to static and runtime proof, including base safety, population/SP-SV placement, defense placement, smaller-map economy/ranges/caps/costs, side-hill and rim abuse, WDDM fortification review, the under-100-LOC mystery feature, and the Claude/Codex stop rule."
     },
     {
@@ -209,6 +214,6 @@
   ],
   "result": "partial",
   "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Codex should send Tools/New-ZargabadClaudeBrief.ps1 output after each commit, and Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports after each Codex commit or runtime gate.",
-  "updatedAt": "2026-06-03T09:16:00+02:00",
+  "updatedAt": "2026-06-03T09:29:00+02:00",
   "updatedBy": "Codex"
 }

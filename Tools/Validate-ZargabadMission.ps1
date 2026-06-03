@@ -689,6 +689,7 @@ $runtimeEvidenceTool = Join-Path (Resolve-RepoPath "Tools") "Validate-ZargabadRu
 $runtimeReportTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadRuntimeReport.ps1"
 $runtimeReportValidatorTool = Join-Path (Resolve-RepoPath "Tools") "Validate-ZargabadRuntimeReport.ps1"
 $mapAuditPacketTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadMapAuditPacket.ps1"
+$evidenceFolderTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadEvidenceFolder.ps1"
 $claudeBriefTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadClaudeBrief.ps1"
 $completionGatesGuide = Join-Path (Resolve-RepoPath "Guides") "Zargabad-Completion-Gates.md"
 $claudeRuntimeHandoffGuide = Join-Path (Resolve-RepoPath "Guides") "Zargabad-Claude-Runtime-Handoff.md"
@@ -780,6 +781,15 @@ Assert-True "map audit packet runs and reports population tiers" ($mapAuditPacke
 Assert-True "map audit packet runs and reports core screenshot targets" ($mapAuditPacketOutput -match 'Zargabad City Center' -and $mapAuditPacketOutput -match 'Claude Screenshot Targets' -and $mapAuditPacketOutput -match '4053,2725' -and $mapAuditPacketOutput -match 'central wall origin' -and $mapAuditPacketOutput -match 'West illegal rim' -and $mapAuditPacketOutput -match 'East Farms legal rim' -and $mapAuditPacketOutput -match 'WDDM Fortification Review')
 Assert-True "map audit packet runs and reports exact base static anchors" ($mapAuditPacketOutput -match 'TOW_TriPod_US_EP1' -and $mapAuditPacketOutput -match '1541,1591' -and $mapAuditPacketOutput -match 'Metis_TK_EP1' -and $mapAuditPacketOutput -match '5309,5159')
 Assert-True "map audit packet runs and reports alternate start roles" ($mapAuditPacketOutput -match 'WEST alternate northwest road' -and $mapAuditPacketOutput -match 'EAST alternate south-east approach' -and $mapAuditPacketOutput -match 'Northern alternate airfield flank')
+Assert-True "evidence folder tool exists" (Test-Path -LiteralPath $evidenceFolderTool)
+$evidenceFolderSource = Get-Content -Raw -LiteralPath $evidenceFolderTool
+Assert-True "evidence folder tool generates map audit packet" ($evidenceFolderSource -match 'New-ZargabadMapAuditPacket\.ps1' -and $evidenceFolderSource -match 'zargabad-map-audit\.md')
+Assert-True "evidence folder tool writes screenshot README" ($evidenceFolderSource -match 'README-zargabad-evidence\.md' -and $evidenceFolderSource -match 'Suggested Screenshot Names' -and $evidenceFolderSource -match 'Validate-ZargabadRuntimeReport\.ps1')
+$evidenceFolderOutput = Join-Path ([System.IO.Path]::GetTempPath()) ("zargabad-evidence-folder-" + [guid]::NewGuid().ToString("N"))
+& $evidenceFolderTool -OutputPath $evidenceFolderOutput | Out-Null
+Assert-True "evidence folder tool runs and writes map audit packet" (Test-Path -LiteralPath (Join-Path $evidenceFolderOutput "zargabad-map-audit.md") -PathType Leaf)
+Assert-True "evidence folder tool runs and writes README" (Test-Path -LiteralPath (Join-Path $evidenceFolderOutput "README-zargabad-evidence.md") -PathType Leaf)
+Remove-Item -LiteralPath $evidenceFolderOutput -Recurse -Force
 Assert-True "Claude brief tool exists" (Test-Path -LiteralPath $claudeBriefTool)
 $claudeBriefSource = Get-Content -Raw -LiteralPath $claudeBriefTool
 Assert-True "Claude brief tool emits coordination cadence" ($claudeBriefSource -match '## Coordination Cadence')
@@ -797,7 +807,7 @@ Assert-True "Claude brief tool emits population SP/SV placement retest focus" ($
 Assert-True "Claude brief tool emits defense mix retest focus" ($claudeBriefSource -match 'Town defenses: retest priority defense mix arcs')
 Assert-True "Claude brief tool carries stop/go ownership" ($claudeBriefSource -match 'Codex owns the stop/go call')
 Assert-True "Claude brief tool requires completion-gate final PASS audit" ($claudeBriefSource -match 'Before any final PASS recommendation' -and $claudeBriefSource -match 'untested, uncertain, or proven only by source inspection')
-Assert-True "Claude brief tool points to map audit packet" ($claudeBriefSource -match 'New-ZargabadMapAuditPacket\.ps1')
+Assert-True "Claude brief tool points to evidence folder helper" ($claudeBriefSource -match 'New-ZargabadEvidenceFolder\.ps1' -and $claudeBriefSource -match 'zargabad-evidence')
 Assert-True "Claude brief tool points to runtime report" ($claudeBriefSource -match 'New-ZargabadRuntimeReport\.ps1')
 Assert-True "Claude brief tool points to runtime validator" ($claudeBriefSource -match 'Validate-ZargabadRuntimeEvidence\.ps1')
 Assert-True "Claude brief tool points to runtime report validator" ($claudeBriefSource -match 'Validate-ZargabadRuntimeReport\.ps1' -and $claudeBriefSource -match 'EvidenceRoot')
