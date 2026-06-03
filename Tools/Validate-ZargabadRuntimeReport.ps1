@@ -4,6 +4,7 @@ param(
 	[switch]$RequireJip,
 	[switch]$RequireHeadlessClient,
 	[switch]$RequireEdgeGuardRemoval,
+	[switch]$RequireEdgeGuardSafeAllow,
 	[switch]$RequireBlackMarket
 )
 
@@ -58,6 +59,7 @@ Assert-True "runtime report has no missing required gates" ($missingGates.Count 
 if ($RequireJip) { Assert-True "runtime report JIP gate passed" ((Get-TableValue -Rows $gateRows -Key "JIP") -eq "PASS") }
 if ($RequireHeadlessClient) { Assert-True "runtime report headless-client gate passed" ((Get-TableValue -Rows $gateRows -Key "Headless client") -eq "PASS") }
 if ($RequireEdgeGuardRemoval) { Assert-True "runtime report edge-guard-removal gate passed" ((Get-TableValue -Rows $gateRows -Key "Edge guard removal") -eq "PASS") }
+if ($RequireEdgeGuardSafeAllow) { Assert-True "runtime report edge-guard-safe-allow gate passed" ((Get-TableValue -Rows $gateRows -Key "Edge guard safe allow") -eq "PASS") }
 if ($RequireBlackMarket) {
 	Assert-True "runtime report black-market armed gate passed" ((Get-TableValue -Rows $gateRows -Key "Black-market armed") -eq "PASS")
 	Assert-True "runtime report black-market cache gate passed" ((Get-TableValue -Rows $gateRows -Key "Black-market cache") -eq "PASS")

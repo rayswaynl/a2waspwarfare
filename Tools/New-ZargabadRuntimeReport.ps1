@@ -5,6 +5,7 @@ param(
 	[switch]$RequireJip,
 	[switch]$RequireHeadlessClient,
 	[switch]$RequireEdgeGuardRemoval,
+	[switch]$RequireEdgeGuardSafeAllow,
 	[switch]$RequireBlackMarket,
 	[switch]$AllowKnownDisconnectScoreErrors
 )
@@ -60,6 +61,7 @@ $validatorParams = @{
 if ($RequireJip) { $validatorParams.RequireJip = $true }
 if ($RequireHeadlessClient) { $validatorParams.RequireHeadlessClient = $true }
 if ($RequireEdgeGuardRemoval) { $validatorParams.RequireEdgeGuardRemoval = $true }
+if ($RequireEdgeGuardSafeAllow) { $validatorParams.RequireEdgeGuardSafeAllow = $true }
 if ($RequireBlackMarket) { $validatorParams.RequireBlackMarket = $true }
 if ($AllowKnownDisconnectScoreErrors) { $validatorParams.AllowKnownDisconnectScoreErrors = $true }
 
@@ -91,6 +93,7 @@ $gates = @(
 	[ordered]@{ Name = "JIP"; Pattern = 'Server_PlayerConnected\.sqf: Player \[[^\r\n]+\] \[[^\r\n]+\] has joined the game|JIP Information have been stored'; Required = [bool]$RequireJip },
 	[ordered]@{ Name = "Headless client"; Pattern = 'Server_HandleSpecial\.sqf: Headless client is now connected'; Required = [bool]$RequireHeadlessClient },
 	[ordered]@{ Name = "Edge guard removal"; Pattern = 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] removed from edge rim'; Required = [bool]$RequireEdgeGuardRemoval },
+	[ordered]@{ Name = "Edge guard safe allow"; Pattern = 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] allowed at safe edge rim'; Required = [bool]$RequireEdgeGuardSafeAllow },
 	[ordered]@{ Name = "Black-market cache"; Pattern = 'Zargabad_BlackMarket\.sqf: \[[^\r\n]+\] cache \[[^\r\n]+\] surfaced near'; Required = [bool]$RequireBlackMarket },
 	[ordered]@{ Name = "Black-market cleanup"; Pattern = 'Zargabad_BlackMarket\.sqf: cache \[[^\r\n]+\] cleanup released near'; Required = [bool]$RequireBlackMarket },
 	[ordered]@{ Name = "Server init ends"; Pattern = 'Init_Server\.sqf: Server initialization ended'; Required = $true }
@@ -155,7 +158,7 @@ $report.Add("| Base safety and spawn sightlines | UNCERTAIN |  |")
 $report.Add("| Base static runtime positions and arcs | UNCERTAIN | Compare the Init_Zargabad base static runtime positions line plus runtime baseFootprint [35,45,74,78] against screenshots/coordinates, manning, usable arcs, and commander construction space. |")
 $report.Add("| Base-axis midpoint and wall origin | UNCERTAIN | Check `3425,3375` from both default starts and back toward both starts. |")
 $report.Add("| Central wall gaps and pathing | UNCERTAIN | Test `4053,2725`, `3789,2998`, `3504,3293`, `3195,3613`, and `2903,3915`. |")
-$report.Add("| Side hills and rim behavior | UNCERTAIN | Use the map audit Rim Test Points table: removal at west/south/east/north illegal rim points, allow at North Camp 3600,5900, Rahim Villa 4330,5900 and East Farms 5900,4340 legal rim points. |")
+$report.Add("| Side hills and rim behavior | UNCERTAIN | Use the map audit Rim Test Points table: removal at west/south/east/north illegal rim points, and `allowed at safe edge rim` RPT evidence at North Camp 3600,5900, Rahim Villa 4330,5900 and East Farms 5900,4340 legal rim points. |")
 $report.Add("| Town defense facing and movement blocking | UNCERTAIN |  |")
 $report.Add("| Priority defense mix arcs | UNCERTAIN | Use map audit Town Defenses rows: city MG/nest+GL+AT; airfield MG/nest+AT+2xAA; North/South District, Northwest Base and Rahim Villa MG-or-nest+AT; Northwest Base AA. Flag bad arcs, blocked routes or unusable terrain. |")
 $report.Add("| Economy and factory pricing feel | UNCERTAIN |  |")

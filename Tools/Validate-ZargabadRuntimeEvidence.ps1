@@ -4,6 +4,7 @@ param(
 	[switch]$RequireJip,
 	[switch]$RequireHeadlessClient,
 	[switch]$RequireEdgeGuardRemoval,
+	[switch]$RequireEdgeGuardSafeAllow,
 	[switch]$RequireBlackMarket,
 	[switch]$AllowKnownDisconnectScoreErrors
 )
@@ -84,6 +85,9 @@ if ($RequireHeadlessClient) {
 }
 if ($RequireEdgeGuardRemoval) {
 	Assert-Pattern "edge guard removal evidence" $content 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] removed from edge rim'
+}
+if ($RequireEdgeGuardSafeAllow) {
+	Assert-Pattern "edge guard safe-rim allow evidence" $content 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] allowed at safe edge rim'
 }
 if ($RequireBlackMarket) {
 	Assert-Pattern "black-market cache event evidence" $content 'Zargabad_BlackMarket\.sqf: \[[^\r\n]+\] cache \[[^\r\n]+\] surfaced near'

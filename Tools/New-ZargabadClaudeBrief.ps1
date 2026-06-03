@@ -47,7 +47,7 @@ if ($prJson.Trim().Length -gt 0) {
 
 $focus = New-Object System.Collections.Generic.List[string]
 if ($changedFiles -match 'Zargabad_BlackMarket|New-ZargabadRuntimeReport|Validate-ZargabadRuntimeEvidence|Validate-ZargabadRuntimeReport|Zargabad-Claude-Runtime-Handoff|zargabad-low-pop-test-plan|New-ZargabadClaudeBrief') { $focus.Add("Mystery feature: confirm the armed RPT line after town init, then own Zargabad Airfield and confirm cache surfacing and cleanup-release RPT lines.") }
-if ($changedFiles -match 'Zargabad_EdgeGuard|Init_Boundaries|edge|New-ZargabadMapAuditPacket|Validate-ZargabadMission|Zargabad-Claude-Runtime-Handoff|zargabad-low-pop-test-plan|Zargabad-Low-Pop-Release-Audit') { $focus.Add("Side hills/rim: retest named rim test points, outer-rim removal, aircraft exemption, and objective-near safe bubbles.") }
+if ($changedFiles -match 'Zargabad_EdgeGuard|Init_Boundaries|edge|New-ZargabadMapAuditPacket|Validate-ZargabadMission|Zargabad-Claude-Runtime-Handoff|zargabad-low-pop-test-plan|Zargabad-Low-Pop-Release-Audit') { $focus.Add("Side hills/rim: retest named rim test points, outer-rim removal, safe-rim allow evidence, aircraft exemption, and objective-near safe bubbles.") }
 if ($changedFiles -match 'Init_Zargabad|Zargabad_RuntimeAudit|mission\.sqm|New-ZargabadMapAuditPacket|Validate-ZargabadMission|Zargabad-Low-Pop-Release-Audit|zargabad-low-pop-test-plan|New-ZargabadClaudeBrief') { $focus.Add("Map/runtime init: retest fortifications, central wall gaps, uncrewed central-wall evidence, town-defense orientation, and runtime audit lines.") }
 if ($changedFiles -match 'WDDM|Init_Zargabad|New-ZargabadMapAuditPacket|Zargabad-Claude-Runtime-Handoff|Zargabad-Low-Pop-Release-Audit|Validate-ZargabadMission') { $focus.Add("WDDM fortification review: use https://rayswaynl.github.io/WDDM/ and return exported SQF or coordinate deltas for any proposed base or central-wall changes.") }
 if ($changedFiles -match 'Init_Zargabad|New-ZargabadRuntimeReport|Validate-ZargabadRuntimeEvidence|New-ZargabadClaudeBrief|Validate-ZargabadMission') { $focus.Add("Base statics: compare the Init_Zargabad base static runtime positions line and baseFootprint evidence against screenshots/coordinates for facing, manning, arcs, and commander construction space.") }
@@ -83,8 +83,8 @@ $brief.Add('```powershell')
 $brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadMission.ps1")
 $brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadMapAuditPacket.ps1 -OutputPath `".\zargabad-map-audit.md`"")
 $brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadRuntimeEvidence.ps1 -RptPath `"C:\path\to\rpts`"")
-$brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadRuntimeReport.ps1 -RptPath `"C:\path\to\rpts`" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireBlackMarket -OutputPath `".\zargabad-runtime-report.md`"")
-$brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadRuntimeReport.ps1 -ReportPath `".\zargabad-runtime-report.md`" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireBlackMarket")
+$brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadRuntimeReport.ps1 -RptPath `"C:\path\to\rpts`" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireEdgeGuardSafeAllow -RequireBlackMarket -OutputPath `".\zargabad-runtime-report.md`"")
+$brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadRuntimeReport.ps1 -ReportPath `".\zargabad-runtime-report.md`" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireEdgeGuardSafeAllow -RequireBlackMarket")
 $brief.Add('```')
 $brief.Add("")
 $brief.Add("## Stop/Go Rule")

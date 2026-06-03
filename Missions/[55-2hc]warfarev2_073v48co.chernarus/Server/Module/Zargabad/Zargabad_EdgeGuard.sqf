@@ -1,6 +1,6 @@
 if (!isServer || !IS_zargabad_lowpop_map) exitWith {};
 
-Private ["_band", "_boundary", "_edge", "_pos", "_safe", "_safeRange", "_since", "_timeout", "_types", "_unit", "_vehicle", "_xPos", "_yPos"];
+Private ["_band", "_boundary", "_edge", "_pos", "_safe", "_safeLogged", "_safeRange", "_since", "_timeout", "_types", "_unit", "_vehicle", "_xPos", "_yPos"];
 
 _band = missionNamespace getVariable ["WFBE_C_ZARGABAD_EDGE_GUARD_BAND", 120];
 _boundary = missionNamespace getVariable "WFBE_BOUNDARIESXY";
@@ -34,6 +34,15 @@ while {true} do {
 						};
 					};
 				} else {
+					if (_edge && _safe) then {
+						_safeLogged = _vehicle getVariable ["WFBE_Zargabad_EdgeSafeLogged", false];
+						if (!_safeLogged) then {
+							["INFORMATION", Format ["Zargabad_EdgeGuard.sqf: [%1] allowed at safe edge rim [%2].", name _unit, _pos]] Call WFBE_CO_FNC_LogContent;
+							_vehicle setVariable ["WFBE_Zargabad_EdgeSafeLogged", true];
+						};
+					} else {
+						_vehicle setVariable ["WFBE_Zargabad_EdgeSafeLogged", false];
+					};
 					_vehicle setVariable ["WFBE_Zargabad_EdgeSince", -1];
 				};
 			};
