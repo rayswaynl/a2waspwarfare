@@ -251,6 +251,36 @@ foreach ($town in $towns) {
 	}
 }
 
+$expectedTownPlacement = @(
+	[pscustomobject]@{ Name = "Zargabad City Center"; X = 4075; Y = 3950; StartSV = 30; MaxSV = 95; Range = 380; Tier = "primary" },
+	[pscustomobject]@{ Name = "Zargabad Airfield"; X = 2980; Y = 5200; StartSV = 20; MaxSV = 75; Range = 300; Tier = "primary" },
+	[pscustomobject]@{ Name = "Zargabad North District"; X = 4140; Y = 4750; StartSV = 15; MaxSV = 60; Range = 240; Tier = "district" },
+	[pscustomobject]@{ Name = "Zargabad South District"; X = 4170; Y = 3150; StartSV = 15; MaxSV = 60; Range = 240; Tier = "district" },
+	[pscustomobject]@{ Name = "East Market"; X = 4960; Y = 3940; StartSV = 15; MaxSV = 55; Range = 190; Tier = "district" },
+	[pscustomobject]@{ Name = "Northwest Base"; X = 2500; Y = 5600; StartSV = 15; MaxSV = 55; Range = 220; Tier = "district" },
+	[pscustomobject]@{ Name = "Rahim Villa"; X = 4450; Y = 5750; StartSV = 15; MaxSV = 50; Range = 180; Tier = "district" },
+	[pscustomobject]@{ Name = "West Suburbs"; X = 3300; Y = 3800; StartSV = 10; MaxSV = 40; Range = 160; Tier = "flank" },
+	[pscustomobject]@{ Name = "North Camp"; X = 3600; Y = 5650; StartSV = 10; MaxSV = 38; Range = 150; Tier = "flank" },
+	[pscustomobject]@{ Name = "East Farms"; X = 5650; Y = 4300; StartSV = 10; MaxSV = 30; Range = 130; Tier = "flank" },
+	[pscustomobject]@{ Name = "South Farms"; X = 4320; Y = 2050; StartSV = 10; MaxSV = 30; Range = 130; Tier = "flank" },
+	[pscustomobject]@{ Name = "Southern Outskirts"; X = 3000; Y = 1850; StartSV = 10; MaxSV = 30; Range = 130; Tier = "flank" },
+	[pscustomobject]@{ Name = "West Farms"; X = 2250; Y = 3350; StartSV = 10; MaxSV = 30; Range = 130; Tier = "flank" }
+)
+foreach ($expectedTown in $expectedTownPlacement) {
+	$town = @($parsedTowns | Where-Object { $_.Name -eq $expectedTown.Name })
+	Assert-Equal "$($expectedTown.Name) placement row count" $town.Count 1
+	Assert-NearPosition "$($expectedTown.Name) stays at intended population anchor" $town[0] $expectedTown.X $expectedTown.Y 5
+	Assert-Equal "$($expectedTown.Name) start SV" $town[0].StartSV $expectedTown.StartSV
+	Assert-Equal "$($expectedTown.Name) max SV" $town[0].MaxSV $expectedTown.MaxSV
+	Assert-Equal "$($expectedTown.Name) capture range" $town[0].Range $expectedTown.Range
+}
+$primaryTowns = @($expectedTownPlacement | Where-Object { $_.Tier -eq "primary" } | ForEach-Object { $_.Name })
+$districtTowns = @($expectedTownPlacement | Where-Object { $_.Tier -eq "district" } | ForEach-Object { $_.Name })
+$flankTowns = @($expectedTownPlacement | Where-Object { $_.Tier -eq "flank" } | ForEach-Object { $_.Name })
+Assert-Equal "primary population/value anchor count" @($parsedTowns | Where-Object { $_.Name -in $primaryTowns -and $_.MaxSV -ge 75 }).Count 2
+Assert-Equal "district or market value anchor count" @($parsedTowns | Where-Object { $_.Name -in $districtTowns -and $_.MaxSV -ge 50 -and $_.MaxSV -le 60 }).Count 5
+Assert-Equal "lower-value flank route count" @($parsedTowns | Where-Object { $_.Name -in $flankTowns -and $_.MaxSV -le 40 }).Count 6
+
 Assert-Equal "town start SV total" (@($parsedTowns | Measure-Object -Property StartSV -Sum).Sum) 185
 Assert-Equal "town max SV total" (@($parsedTowns | Measure-Object -Property MaxSV -Sum).Sum) 648
 Assert-Equal "towns without camps" @($parsedTowns | Where-Object { $_.Camps -lt 1 }).Count 0
