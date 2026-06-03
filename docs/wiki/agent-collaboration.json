@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T13:40:00+02:00",
+  "generatedAt": "2026-06-03T13:45:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "performance-sweep-skill-branch-recheck",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Performance-Opportunity-Sweep.md",
+        "docs/wiki/Instructions-For-Codex.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "origin/master",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Marked Instructions-For-Codex item 33 complete",
+        "Corrected Performance-Opportunity-Sweep duplicate Skill_Init branch/line refs",
+        "Confirmed factory queue decrement refs were already current"
+      ],
+      "handoff": "Continue with Instructions-For-Codex item 34: Supply-Mission-Architecture UpdateSupplyTruck naming correction."
+    },
     {
       "lane": "supply-scan-branch-status-recheck",
       "owner": "Codex",

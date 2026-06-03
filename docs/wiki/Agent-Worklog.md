@@ -1387,3 +1387,10 @@ Key conclusions:
 - Confirmed `origin/master` still uses `nearestObjects [..., [], 80]` at `supplyMissionStarted.sqf:24-28`.
 - Confirmed this docs branch uses `nearestObjects [..., ["Base_WarfareBUAVterminal"], 80]` at `:28`, with the intentionally broad nearby-player/object scan at `:44`.
 - Confirmed the release branch carries a PR #1-compatible narrowed scan at `:46-53`, and the page uses the real `Common/Config/Core_Structures/Structures_*.sqf` path.
+
+# 2026-06-03 - Performance Sweep Skill Branch Recheck
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 33 after source-checking [Performance opportunity sweep](Performance-Opportunity-Sweep).
+- Confirmed DR-19/DR-39 performance rows were already branch-scoped by items 30 and 32.
+- Corrected the duplicate skill-init section: `origin/master` runs `Skill_Init.sqf` at `Init_Client.sqf:561` and again at `:585`, then applies at `:586`; `origin/release/2026-06-feature-bundle` duplicates at `:562` and `:586`, then applies at `:587`; this docs branch has single init `:547` and Apply `:571`.
+- Confirmed factory queue decrement refs already point at `Client_BuildUnit.sqf:467-469`.
