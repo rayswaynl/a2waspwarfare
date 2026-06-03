@@ -287,7 +287,7 @@ while {alive player && dialog} do {
 			case "DroneStrike": {
 				if (isNil "lastDroneCall") then {lastDroneCall = -99999};
 				_currentLevel = _currentUpgrades select WFBE_UP_UAV;
-				_controlEnable = if (_funds >= _currentFee && _currentLevel > 0 && time - lastDroneCall > _currentInterval) then {true} else {false};
+				_controlEnable = if (_funds >= _currentFee && _currentLevel > 0 && time - lastDroneCall > _currentInterval && (missionNamespace getVariable ["WFBE_C_DRONE_ENABLED",1]) == 1) then {true} else {false};
 			};
 		};
 		

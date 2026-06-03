@@ -41,11 +41,11 @@ A commander-tier "powerup," called like the ICBM: paint a point on the map and a
 | **Flare / CM drone** | 2 | Orbit the killers as a screen. Auto-pop flares to spoof incoming AA **missiles**, trail smoke to clutter the camper's view. Survivable bait. |
 | **Loitering munition** | 3 | The real threat. Acquire a ground vehicle, top-attack dive, hard-kill warhead. |
 
-All 5 use the **same airframe model per side** (cosmetic only — preserves the "which one is the killer?" dilemma). Count and mix are constants, not hardcoded.
+All 5 use the **same airframe — the PMC Ka-137** (`Ka137_PMC`) — on **both teams** (cosmetic only; preserves the "which one is the killer?" dilemma). Count and mix are constants, not hardcoded.
 
 ### 3.3 Lifecycle
 
-1. **Spawn** — 5 crewless airframes at a random map-edge corner (paratrooper-style ingress origin).
+1. **Spawn** — 5 crewless Ka-137 airframes ~1.5–2 km from the target on a random bearing (snappy ~30 s arrival, visible over the zone). *(Was a map-edge corner — ~10 km out, never arrived before the deadline; fixed 2026-06-03.)*
 2. **Ingress** — scripted flight to the painted point (`setPosATL`/`setVelocity`, coarse tick), in a wedge formation, slots ≥15–20 m apart.
 3. **Screen & search** — flare drones orbit and dispense CM/smoke; loiterers orbit and scan via `nearestObjects` every ~2 s.
 4. **Acquire — or time out** — on a valid lock *or* after the loiter-endurance timer, commit. Acquisition can fail; it is never guaranteed.
@@ -80,33 +80,19 @@ Survivability is a **scripted HP model** via `HandleDamage` (see §7.5), *not* t
 - **Key emergent dynamic — flares spoof missiles, not bullets.** The flare screen protects against the classic *missile*-AA camper, but a **gun**-based defender shreds the swarm because countermeasures do nothing against ballistic rounds. This is intentional rock-paper-scissors: the swarm is strongest against exactly the lazy SAM camper it is meant to punish, and a defender with a gun already has real counterplay.
 - **Numbers game.** With 5 drones, a lone gunner *thins* but rarely *stops* the swarm before the loiterers commit; a layered defense (gun + AA + a second player) clears it. Under-defended → punished; defended → fine.
 
-## 4. Faction balance — Pchela vs MQ9 (the explicit plan)
+## 4. Faction balance — identical Ka-137 on both teams
 
-**Models (already declared in `Common/Config/Core_Root/Root_*.sqf` via `WFBE_%1UAV`):**
+**Model: the PMC Ka-137** (`Ka137_PMC` — the ION PMC rotary-wing UAV from the PMC DLC), set for **every faction** via `WFBE_%1DRONE` in each `Root_*.sqf`. Both teams fly the exact same airframe.
 
-| Faction | Airframe | Source |
-|---|---|---|
-| USMC / CDF | `MQ9PredatorB` (Reaper) | `Root_USMC.sqf:18`, `Root_CDF.sqf:18` |
-| US (Arrowhead) | `MQ9PredatorB_US_EP1` | `Root_US_Camo.sqf:19` |
-| RU / INS / Takistani | `Pchela1T` (small recon drone) | `Root_RU.sqf:17`, `Root_INS.sqf:17`, `Core_TKA.sqf:245` |
+> **Decided 2026-06-03** — swapped from per-faction Predator/Pchela to a single **Ka-137** on both sides. It's small, purpose-built as a crewless drone, and **rotary-wing** — so under scripted flight it hovers and noses-over into a dive *without ever stalling* (the failure mode of a fixed-wing). The PMC DLC is in the modset and `Ka137_PMC` is already referenced in `Core_PMC`, so no new content dependency.
 
-**Decision: MIRROR balance.** The model is cosmetic; *all* mechanics come from a single faction-agnostic `WFBE_C_DRONE_*` constant block. Predator and Pchela are the same machine wearing different skins.
+**Decision: MIRROR balance — now literal.** With both teams on the *same* airframe there is **no per-faction asymmetry to neutralize** — same model, same hitbox, same native armor. All mechanics come from one faction-agnostic `WFBE_C_DRONE_*` constant block; survivability is scripted (`HandleDamage` vs `WFBE_C_DRONE_HP`), not the airframe's armor. The original Predator-vs-Pchela size/armor leaks are moot.
 
-**Why this is the right call here.** The mission's *existing* UAV is **accidentally asymmetric** because it inherits the airframe's weapons — the Commander Guide literally notes *"BLUFOR uav is very useful… it gets hellfires. OPFOR uav, not so much."* Because our strike is script-driven (movement = `setPosATL`, kill = `createVehicle` warhead, flares = script), we *choose* symmetry instead of inheriting that imbalance.
+**Why not inherit asymmetry.** The mission's existing UAV is accidentally asymmetric because it inherits the airframe's weapons (the Commander Guide notes BLUFOR's Predator gets Hellfires, OPFOR's Pchela doesn't). Our strike is fully script-driven (movement, kill, flares), so the model is purely cosmetic and symmetry is a choice — made *literal* here by using one model.
 
-**The two places the airframe could still leak into balance, and how we neutralize them:**
+**Per-side override path (built, unused):** `WFBE_%1DRONE` is still per-faction, so an admin could point one side at a different airframe later without code changes. By default all six factions resolve to `Ka137_PMC`.
 
-| Leak | Why it matters | Fix |
-|---|---|---|
-| **Native armor / HP** | A Reaper and a Pchela have different default damage thresholds → "hits-to-down" would differ by faction by accident. | Survivability is scripted (`HandleDamage` against `WFBE_C_DRONE_HP`) and we normalize the airframe (e.g. `setObjectArmor`/our own accounting), so the .50-cal threshold and hits-to-down are identical on both. |
-| **Hitbox / visual size** | The MQ9 is physically bigger → a slightly easier target to hit; the small Pchela is naturally sneakier. | **Accept as cosmetic flavor** by default (a big Reaper *should* read as easier to spot than a tiny recon drone). If playtest shows the Reaper measurably dies faster, compensate with a single per-side `WFBE_%1DRONE_HP` override. |
-
-**What is shared vs. per-side:**
-
-- **Shared (default):** count/mix, ingress & loiter speed, loiter endurance, acquisition radius, warhead class, scatter, `.50` damage threshold, scripted HP, cost, cooldown, concurrent cap, dive stagger.
-- **Per-side override path (built, unused by default):** the `WFBE_%1DRONE…` namespace pattern (mirrors `WFBE_%1UAV`) lets an admin diverge any single value later — e.g. give Pchela a hair more speed and the Reaper a touch more HP — *without code changes*. Picking mirror now does not lock the door to asymmetric flavor later.
-
-**Tuning protocol:** ship symmetric → playtest both sides → only diverge a per-side constant if data shows a real gap. No speculative asymmetry (YAGNI).
+**Shelving:** like every bundle feature, the strike has a lobby on/off param **`WFBE_C_DRONE_ENABLED`** (default Enabled) — disabling it greys the menu entry and the server rejects any request, no repack needed.
 
 ## 5. Spectacle — how to make it look cool (cheaply)
 

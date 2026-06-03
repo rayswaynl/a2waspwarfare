@@ -240,6 +240,7 @@ with missionNamespace do {
 	if (isNil "WFBE_RADZONE_TIME") then {WFBE_RADZONE_TIME = 1}; //--- Time for radiation effect 
 
 //--- Drone Saturation Strike (System B).
+	if (isNil "WFBE_C_DRONE_ENABLED") then {WFBE_C_DRONE_ENABLED = 1}; //--- lobby toggle: shelve the feature without a repack
 	if (isNil "WFBE_C_DRONE_FLARE_COUNT") then {WFBE_C_DRONE_FLARE_COUNT = 2}; //--- # flare/CM drones
 	if (isNil "WFBE_C_DRONE_MUNITION_COUNT") then {WFBE_C_DRONE_MUNITION_COUNT = 3}; //--- # loitering munitions
 	if (isNil "WFBE_C_DRONE_INGRESS_SPEED") then {WFBE_C_DRONE_INGRESS_SPEED = 60}; //--- m/s transit

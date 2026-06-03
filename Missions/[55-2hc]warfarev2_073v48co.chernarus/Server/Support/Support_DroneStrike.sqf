@@ -16,6 +16,11 @@ _destination = _this select 2;
 _playerTeam  = _this select 3;
 _sideID      = _side call GetSideID;
 
+//--- Lobby toggle: feature shelved -> reject (defense-in-depth alongside the greyed menu entry).
+if ((missionNamespace getVariable ["WFBE_C_DRONE_ENABLED", 1]) != 1) exitWith {
+    ["INFORMATION","Support_DroneStrike.sqf : disabled by lobby param (WFBE_C_DRONE_ENABLED), ignoring."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- (1) Threeway-safe enemy sides — reuse WFBE_PRESENTSIDES instead of a WEST/EAST hack.
 _enemySides = WFBE_PRESENTSIDES - [_side];
 
