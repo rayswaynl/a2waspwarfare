@@ -172,3 +172,7 @@ Maintainers: SG5/AI7/AI11/AI2 are done on PR #8 — please cross-check and close
 **Exploit-class (owner priority = gameplay over exploit; likely defer):** SP2 (no server-side support validation), SP13 (fast-travel client-authoritative), SP14 (artillery cooldown client-only), CN3/CN11 also have exploit angles.
 
 Lower-value/cleanup: SK5/6/7/8/9/10/11/12/13/14, CN2/5/7/9/10/12/13, FC4/6/7/8/9/10, SP5/6/7/10 — see chat summary; cross-check as capacity allows.
+
+**✅ FIXED & shipped to PR #8 (commit `b8a895b0`):**
+- **FC2** — destroyed-factory builds now refund the purchase price. `_currentCost` is passed into `BuildUnit` (`GUI_Menu_BuyUnits.sqf:162`) and refunded in the factory-destroyed `exitWith` (`Client_BuildUnit.sqf`), mirroring the deduction. Guarded so it's a no-op for other callers / never double-refunds.
+- **SP4** — `uav.sqf` now deletes the crew group(s) after the UAV lifecycle ends (incl. the driver's split-off group), closing the per-UAV group leak toward the 288-group cap. Residual: a UAV active at *player disconnect* still leaks its group (server has no group ref) — minor follow-up.

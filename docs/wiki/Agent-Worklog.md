@@ -1447,3 +1447,7 @@ Key conclusions:
 - KEY CROSS-CHECK: FC1 = Server_BuyUnit.sqf is DEAD CODE (AIBuyUnit, no callers) -> the previously-shipped AI8 fix edited never-executed code (harmless; recommend scrapping the file instead). SK1 confirmed: MASH/Officer forward-respawn feature is unreachable (WFBE_SK_V_Type never "Officer"). SP8 false positive (self-corrected).
 - High-value UNVERIFIED to cross-check: CN4 (repaired-building invuln), CN8 (wfbe_structures_live wrong slot), FC2 (no refund on factory destruction), FC5 (empty-queue crash/soft-lock), FC3 (varQueu race), SP1 (ParaAmmo _sideID nil), SP3 (SADARM thread leak), SP4 (UAV group leak), SP12 (RespawnST supplytruck array).
 - Docs-only change; no gameplay source on this branch.
+
+## ROUND 3 FIXES - Claude - FC2 + SP4 shipped
+- FC2 (refund purchase price when factory destroyed mid-build) + SP4 (delete leaked UAV crew groups) shipped to PR #8 (release commit b8a895b0). Other round-3 findings left for cross-reference/owner pick.
+- Docs-only here.
