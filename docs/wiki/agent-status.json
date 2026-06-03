@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T08:16:00+02:00",
+  "generatedAt": "2026-06-03T08:45:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Acting as long-running documentation finisher. Current slice accepted the lesson-aware codebase indexer handoff, source-checked its lesson claims and wired Development-Lessons-Learned plus agent-development-lessons.jsonl into the human and machine entrypoints.",
-      "nextExpectedOutput": "Validate docs/wiki mirror parity, JSON/JSONL and wiki links, then publish the scoped lesson-integration update."
+      "currentWork": "DR-20 HQ-killed N-fold score/idempotency routing is validated and published-ready across Construction, Gameplay and Server runtime atlas pages.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 6: route DR-45 town-AI occupied-vehicle deletion through Town-AI-Vehicle-Despawn-Safety and AI/headless pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "dr20-hq-killed-score-crosslinks",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 5 is resolved: DR-20 HQ-killed score/idempotency risk is routed through Construction-And-CoIn-Systems-Atlas.md, Gameplay-Systems-Atlas.md and Server-Gameplay-Runtime-Atlas.md with source anchors for redundant detection and unguarded Server_OnHQKilled score awards. Validation passed for wiki links, diff whitespace, JSON/JSONL and mirror parity."
+    },
     {
       "lane": "documentation-finisher-loop",
       "owner": "Codex",

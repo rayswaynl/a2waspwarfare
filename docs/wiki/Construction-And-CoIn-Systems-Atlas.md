@@ -1,6 +1,6 @@
 # Construction And CoIn Systems Atlas
 
-Page ownership: this page owns the construction/CoIn runtime map, source anchors, request-handler map and safe extension checklist. [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) owns commander selection, HQ deploy/mobilize, HQ destruction, wreck markers and MHQ repair. [Deep-review findings](Deep-Review-Findings) DR-6 owns the exact per-handler construction-authority proof; [Server authority migration map](Server-Authority-Migration-Map) owns the broader migration design table.
+Page ownership: this page owns the construction/CoIn runtime map, source anchors, request-handler map and safe extension checklist. [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) owns commander selection, HQ deploy/mobilize, HQ destruction, wreck markers and MHQ repair. [Deep-review findings](Deep-Review-Findings) DR-6 owns the exact per-handler construction-authority proof, and DR-20 owns the HQ-killed non-idempotency / score-duplication proof; [Server authority migration map](Server-Authority-Migration-Map) owns the broader migration design table.
 
 This page maps the build system that turns commander/repair-truck actions into HQ state changes, factories, base defenses, static weapons and repair flows.
 
@@ -264,6 +264,7 @@ The server reaches this script by `setVehicleInit` in construction scripts (`Con
 | Progressive repair/construction path appears dormant | Progressive mode code remains in construction scripts and economy UI, but `Rsc/Parameters.hpp` exposes only construction-time mode `0`. | Do not expand progressive repair UI until the mission parameter and live caller model are restored intentionally. |
 | Cost deduction | Normal build/MHQ repair/sale costs are deducted client-side. | Server should become the final authority for final debits/refunds; client can keep previews and immediate feedback. |
 | HQ killed EH locality | Mobile HQ killed EH fires locally, so server sends clients `set-hq-killed-eh`. | Preserve dedicated/JIP handling when touching HQ mobilize/repair/deploy. |
+| HQ killed idempotency | [Deep-review findings](Deep-Review-Findings) DR-20 confirms multiple client-held HQ killed EHs can all send `process-killed-hq`; `Server_OnHQKilled.sqf:46-50` and `:74-81` award score without a done guard. | Keep redundant detection for locality/JIP, but make the server consumer idempotent before changing HQ destruction or score handling. |
 | `setVehicleInit` usage | Construction relies on legacy Arma 2 init broadcast patterns for client markers and artillery UI. | Avoid replacing without testing dedicated, hosted and JIP cases. |
 | CoIn performance | CoIn uses camera/menu loops with `sleep 0.01` and rich nearest-object checks. | Keep new checks cached or server-side; avoid adding expensive per-frame scans to `coin_interface.sqf`. |
 

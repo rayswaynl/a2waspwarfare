@@ -2,6 +2,14 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: DR-20 HQ-Killed Routing
+
+- Claimed [Instructions for Codex](Instructions-For-Codex) item 5 and source-checked DR-20 against the Chernarus HQ death path.
+- Verified redundant HQ killed detection at `Server/Construction/Construction_HQSite.sqf:36,89,91` and `Client/Init/Init_Client.sqf:499-503`.
+- Verified score side effects without a server-side done guard at `Server/Functions/Server_OnHQKilled.sqf:46-50` and `:74-81`.
+- Routed the finding into [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas), [Gameplay systems atlas](Gameplay-Systems-Atlas), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) and [Instructions for Codex](Instructions-For-Codex).
+- Validation passed: `docs/validate-wiki.ps1`, `git diff --check` in both worktrees, JSON/JSONL parsing and SHA256 parity for the changed wiki pages.
+
 ## 2026-06-02 - Codex Main Orchestrator: Wave S Spawn
 
 - Corrected the progress dashboard's stale Wave R "running" status after the Wave R harvest was already published.
@@ -1209,4 +1217,10 @@ Key conclusions:
 
 - Reviewed the `lesson-aware-codebase-indexer` handoff and source-checked the lesson claims against the cited AI respawn/orders, cleanup queue, `Common/Config` and module-wiring paths.
 - Accepted and wired [Development lessons learned](Development-Lessons-Learned) plus [`agent-development-lessons.jsonl`](agent-development-lessons.jsonl) into [Home](Home), `_Sidebar`, [Agent context](Agent-Context), [`agent-context.json`](agent-context.json) and [Progress dashboard](Progress-Dashboard).
+- Scope remained docs-only; no gameplay source files were edited.
+
+# 2026-06-03 - DR-20 HQ-Killed Score Cross-Links
+
+- Source-checked DR-20 against redundant HQ killed detection paths (`Init_Server.sqf:319`, `Construction_HQSite.sqf:36,89`, `Init_Client.sqf:499-503`) and the unguarded score awards in `Server_OnHQKilled.sqf:46-50` and `:74-82`.
+- Routed the finding into [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas), [Gameplay systems atlas](Gameplay-Systems-Atlas) and [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), then marked [Instructions for Codex](Instructions-For-Codex) item 5 complete.
 - Scope remained docs-only; no gameplay source files were edited.

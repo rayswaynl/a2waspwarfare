@@ -15,7 +15,7 @@
 
 ## P1 — Surface findings where developers actually look (orphaned cross-links)
 4. ✅ **DR-44** (`wfbe_supply_temp_<side>` forgery) is now routed through [Economy](Economy-Towns-And-Supply), [Networking](Networking-And-Public-Variables) and [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
-5. **DR-20** (HQ-killed N-fold score exploit) → add to [Construction atlas](Construction-And-CoIn-Systems-Atlas), [Gameplay atlas](Gameplay-Systems-Atlas), [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
+5. ✅ **DR-20** (HQ-killed N-fold score exploit) is now routed through [Construction atlas](Construction-And-CoIn-Systems-Atlas), [Gameplay atlas](Gameplay-Systems-Atlas) and [Server runtime atlas](Server-Gameplay-Runtime-Atlas), with source anchors for redundant HQ killed detection and `Server_OnHQKilled.sqf` score awards.
 6. **DR-45** (town-AI deletes player-occupied vehicles) → cross-link from `Town-AI-Vehicle-Despawn-Safety` and [AI/headless](AI-Headless-And-Performance).
 7. Cite **DR-40** by number in [WASP overlay](WASP-Overlay) and **DR-19** in [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
 8. Add the missing DR cross-links called out in audit section C2 ([Gameplay atlas](Gameplay-Systems-Atlas): DR-6/14/11/22/23/15; UI atlases: DR-16/17/24/25; [AI/headless](AI-Headless-And-Performance): DR-21/42; [Construction atlas](Construction-And-CoIn-Systems-Atlas): DR-6; [Mission entrypoints](Mission-Entrypoints-And-Lifecycle): DR-37/43a).

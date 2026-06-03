@@ -244,7 +244,7 @@ Risk notes:
 
 ## Construction And Base Structures
 
-Gateway page: use [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) for structure arrays, placement rules, CoIn runtime behavior, server request handlers, HQ lifecycle, repair flows, base-area notes and DR-6 authority details.
+Gateway page: use [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) for structure arrays, placement rules, CoIn runtime behavior, server request handlers, HQ lifecycle, repair flows, base-area notes, DR-6 authority details and DR-20 HQ-killed idempotency routing.
 
 ### Source files
 
@@ -267,7 +267,7 @@ Risk notes:
 - `coin_interface.sqf` still contains old commented direct publicVariable code near the newer PVF path.
 - Construction mode changes affect `wfbe_structures_logic`, which other repair/build-completion code may inspect.
 - HQ deploy/mobilize deletes and replaces the HQ object; client-side killed handlers and JIP handling must be preserved.
-- Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-6 owns construction-authority proof; [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) owns the runtime map and extension checklist. This page stays a gateway.
+- Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-6 owns construction-authority proof, and DR-20 owns the HQ-killed N-fold score/idempotency defect. `Server_OnHQKilled.sqf:46-50` and `:74-81` award score without a done guard after redundant HQ killed detection paths. [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) owns the runtime map and extension checklist. This page stays a gateway.
 
 ## Factories And Unit Production
 

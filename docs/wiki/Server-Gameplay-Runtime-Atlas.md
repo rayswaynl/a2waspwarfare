@@ -34,7 +34,7 @@ Lifecycle ownership note: [Lifecycle wait-chain](Lifecycle-Wait-Chain) owns the 
 | Town capture and supply value loop | `Init_Server.sqf:509-510` starts `Server/FSM/server_town.sqf`. |
 | Town AI activation/despawn | `Init_Server.sqf:512-516` starts `Server/FSM/server_town_ai.sqf`. |
 | Camp capture manager | `Common/Init/Init_Town.sqf:129-130` registers camp workers; `Server/FSM/server_town_camp.sqf:8-25` runs one singleton manager. |
-| Commander/HQ lifecycle | `Init_Server.sqf:313-371,622`, `Construction_HQSite.sqf`, `Server_OnHQKilled.sqf`, `Server_MHQRepair.sqf`; deep map in [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas). |
+| Commander/HQ lifecycle | `Init_Server.sqf:313-371,622`, `Construction_HQSite.sqf`, `Server_OnHQKilled.sqf`, `Server_MHQRepair.sqf`; deep map in [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas). DR-20 covers `Server_OnHQKilled.sqf` score/idempotency risk. |
 | Resources and economy | `Init_Server.sqf:526-532` starts `Server/FSM/updateresources.sqf`. |
 | Victory/end state | `Init_Server.sqf:526-529` starts `Server/FSM/server_victory_threeway.sqf`. |
 | Garbage, empty vehicles and cleaners | `Init_Server.sqf:535-559`. |
@@ -131,6 +131,7 @@ Canonical correctness findings are routed through [Victory/endgame atlas](Victor
 | AI supply truck system | `UpdateSupplyTruck` compile is commented at `Init_Server.sqf:36`, but spawn remains under supply system 0 + AI commander at `:381-383`; script calls missing `Server/FSM/supplytruck.fsm` at `Server/AI/AI_UpdateSupplyTruck.sqf:17`. | Config-gated broken path; see [AI commander autonomy audit](AI-Commander-Autonomy-Audit). |
 | AI commander automation | State/funds/constants exist, but no active AI commander loop/FSM was found. | Partial/latent; see [AI commander autonomy audit](AI-Commander-Autonomy-Audit). |
 | `Server_AssignNewCommander` call shape | `_side = _this` then `_commander = _this select 1` in `Server_AssignNewCommander.sqf:3-5`; caller passes `[_side, _assigned_commander]` from `RequestNewCommander.sqf:12-14`. | Confirmed bug; use [commander reassignment call shape](Commander-Reassignment-Call-Shape). |
+| HQ-killed score/idempotency | Redundant HQ killed detection is intentional for locality/JIP (`Init_Server.sqf:319`, `Construction_HQSite.sqf:36,89`, `Init_Client.sqf:499-503`), but `Server_OnHQKilled.sqf:46-50` and `:74-81` award score without a done guard. | Confirmed [Deep-review findings](Deep-Review-Findings) DR-20. Guard the server consumer so repeated detections act once. |
 | Supply mission cooldown casing | DR-18 confirms `lastSupplyMissionRun` / `LastSupplyMissionRun` mismatch. | Correctness bug; route details through [Supply mission architecture](Supply-Mission-Architecture) and DR-18. |
 | Supply mission reward authority | Client sets truck `SupplyFromTown` and `SupplyAmount`; server completion trusts truck vars. | Hardening gap. |
 | Supply mission duplicate starts | `supplyMissionStarted.sqf` can start parallel tracking loops for one vehicle; completion clears truck vars but does not prove idempotency. | Correctness/hardening gap; add an already-tracked guard before PR #1 supply-heli interdiction work is merged. |
