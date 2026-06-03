@@ -24,6 +24,6 @@ WFBE_CLAUDE_FNC_GiveFunds = {
 
 [] execVM "Server\Module\Claude\Claude_Sandstorm.sqf";        //--- #1 (<=100) Haboob sandstorm  [DONE]
 [] execVM "Server\Module\Claude\Claude_Warlord.sqf";          //--- #2 (<=250) HVT/Warlord hunt  [DONE]
-// [] execVM "Server\Module\Claude\Claude_SupplyConvoy.sqf";  //--- #3 (<=500) supply convoy     [pending]
+[] execVM "Server\Module\Claude\Claude_SupplyConvoy.sqf";     //--- #3 (<=500) supply convoy     [DONE]
 
 ["INITIALIZATION", "Claude_Features_Init.sqf: Claude Zargabad add-on features launched."] call WFBE_CO_FNC_LogContent;
