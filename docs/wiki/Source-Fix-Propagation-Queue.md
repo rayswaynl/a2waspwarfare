@@ -28,35 +28,46 @@ Result: generation/copy completed for Chernarus and Takistan, `_MISSIONS.7z` pac
 
 | Fix | Rechecked evidence | Result |
 | --- | --- | --- |
-| Paratrooper marker revival | Source and Vanilla `Common/Init/Init_PublicVariables.sqf:39` include `HandleParatrooperMarkerCreation`. | Source patched, Vanilla propagated, smoke pending. |
-| Client skill init idempotency | Source and Vanilla `Client/Init/Init_Client.sqf` now run one `Skill_Init.sqf` compile and then `WFBE_SK_FNC_Apply`; the duplicate post-apply compile is removed. | Source patched, Vanilla propagated, smoke pending. |
-| Hosted server FPS loop sleep | Source and Vanilla `serverFpsGUI.sqf:1` and `monitorServerFPS.sqf:1` exit on `!isDedicated`. | Source patched, Vanilla propagated, smoke pending. |
-| Supply mission scan narrowing | Source and Vanilla `supplyMissionStarted.sqf:28` scan only `["Base_WarfareBUAVterminal"]` for the 80m command-center check. | Source patched, Vanilla propagated, smoke pending. |
-| Supply player-object list indexing | Source and Vanilla `playerObjectsList.sqf:17` initialize `_i = 0` before the `WFBE_SE_PLAYERLIST` loop. | Source patched, Vanilla propagated, smoke pending. |
+| Paratrooper marker revival | Source and Vanilla `Common/Init/Init_PublicVariables.sqf:39` include `HandleParatrooperMarkerCreation`. | Chernarus carries it, Vanilla carries it, smoke pending. |
+| Client skill init idempotency | Source and Vanilla `Client/Init/Init_Client.sqf` now run one `Skill_Init.sqf` compile and then `WFBE_SK_FNC_Apply`; the duplicate post-apply compile is removed. | Chernarus carries it, Vanilla carries it, smoke pending. |
+| Hosted server FPS loop sleep | Source and Vanilla `serverFpsGUI.sqf:1` and `monitorServerFPS.sqf:1` exit on `!isDedicated`. | Chernarus carries it, Vanilla carries it, smoke pending. |
+| Supply mission scan narrowing | Source and Vanilla `supplyMissionStarted.sqf:28` scan only `["Base_WarfareBUAVterminal"]` for the 80m command-center check. | Chernarus carries it, Vanilla carries it, smoke pending. |
+| Supply player-object list indexing | Source and Vanilla `playerObjectsList.sqf:17` initialize `_i = 0` before the `WFBE_SE_PLAYERLIST` loop. | Chernarus carries it, Vanilla carries it, smoke pending. |
+
+## Release Branch Caveat (2026-06-03)
+
+The propagation table above describes the docs/source branch state, not a stable-master or release-branch guarantee. Current source-status recheck used docs/source `HEAD` `4163faba`, `origin/master` `2cdf5fb8`, and `origin/release/2026-06-feature-bundle` `a9219d88`.
+
+| Lane | Stable `origin/master` | Release `a9219d88` | Practical rule |
+| --- | --- | --- | --- |
+| Paratrooper marker revival | Handler registration absent in Chernarus/Vanilla `Common/Init/Init_PublicVariables.sqf`. | Handler registration absent in release Chernarus (`NukeIncoming` at `:41`) and release Vanilla (`NukeIncoming` at `:39`). | Do not assume this lane is in release builds until the release branch carries it in both maintained missions. |
+| Client skill init idempotency | Duplicate `Skill_Init.sqf` remains in Chernarus/Vanilla at `Client/Init/Init_Client.sqf:561` and `:585`. | Duplicate `Skill_Init.sqf` remains in release Chernarus at `:565`/`:589` and release Vanilla at `:561`/`:585`. | Treat release/master as still needing the single-init change. |
+| Hosted server FPS loop sleep | Chernarus/Vanilla still use branch-only sleeps inside the loop. | Release Chernarus has the guarded publisher and removed/commented monitor path; release Vanilla still has the old loop shape. | Release branch is Chernarus-only for this lane. |
+| Supply mission scan narrowing | Chernarus/Vanilla still use the broad 80m command-center scan. | Release Chernarus has the heli-aware narrowed command-center scan; release Vanilla still uses the broad 80m scan. | Release branch is Chernarus-only for this lane. |
 
 ## Current Propagated Fix Queue
 
 | Lane | Source status | Vanilla status | Smoke status | Evidence | Next action |
 | --- | --- | --- | --- | --- | --- |
-| [Paratrooper marker revival](Paratrooper-Marker-Revival) | Patched: Chernarus registers `HandleParatrooperMarkerCreation` in the client PV list. | Propagated: Vanilla `Init_PublicVariables.sqf` now registers the handler too. | Pending Arma smoke. | Source/Vanilla `Common/Init/Init_PublicVariables.sqf:39`; sender `Server/Support/Support_Paratroopers.sqf:117`. | Smoke a paratrooper support drop and confirm the client marker appears. |
-| [Client skill init idempotency](Client-Skill-Init-Idempotency) | Patched: Chernarus runs `Skill_Init.sqf` once, then calls `WFBE_SK_FNC_Apply`. | Propagated: Vanilla duplicate compile removed. | Pending Arma smoke. | Source/Vanilla `Client/Init/Init_Client.sqf:547,571`; skill cap mutation `Client/Module/Skill/Skill_Init.sqf:49`. | Smoke Soldier/non-Soldier AI cap and respawn skill reapply. |
-| [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) | Patched: Chernarus FPS publishers exit immediately on `!isDedicated`. | Propagated: Vanilla FPS publishers have the same early exit. | Pending dedicated/hosted smoke. | Source/Vanilla `Server/GUI/serverFpsGUI.sqf:1`; source/Vanilla `Server/Module/serverFPS/monitorServerFPS.sqf:1`. | Smoke dedicated FPS publish and hosted/listen no-spin behavior. |
-| [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) | Patched: Chernarus 80m command-center scan uses `nearestObjects [..., ["Base_WarfareBUAVterminal"], 80]`. | Propagated: Vanilla uses the same narrowed 80m scan. | Pending truck/heli smoke. | Source/Vanilla `Server/Module/supplyMission/supplyMissionStarted.sqf:25-28`; broad nearby-player 8m scan remains intentional. | Smoke delivery near command centers and no completion near unrelated objects. |
-| [Supply player-object list indexing](Player-Join-Disconnect-And-AntiStack-Lifecycle) | Patched: Chernarus initializes `_i = 0` before the `WFBE_SE_PLAYERLIST` loop so reconnecting UIDs replace their real row. | Propagated: Vanilla has the same counter placement. | Pending reconnect/supply smoke. | Source/Vanilla `Server/Module/supplyMission/playerObjectsList.sqf:17-29`; consumers `supplyMissionStarted.sqf:57+` and `supplyMissionActive.sqf:51+`. | Smoke reconnect/JIP player-object replacement and supply mission completion lookup. |
+| [Paratrooper marker revival](Paratrooper-Marker-Revival) | Chernarus registers `HandleParatrooperMarkerCreation` in the client PV list. | Vanilla `Init_PublicVariables.sqf` now registers the handler too. | Pending Arma smoke. | Source/Vanilla `Common/Init/Init_PublicVariables.sqf:39`; sender `Server/Support/Support_Paratroopers.sqf:117`. | Smoke a paratrooper support drop and confirm the client marker appears. |
+| [Client skill init idempotency](Client-Skill-Init-Idempotency) | Chernarus runs `Skill_Init.sqf` once, then calls `WFBE_SK_FNC_Apply`. | Vanilla duplicate compile removed. | Pending Arma smoke. | Source/Vanilla `Client/Init/Init_Client.sqf:547,571`; skill cap mutation `Client/Module/Skill/Skill_Init.sqf:49`. | Smoke Soldier/non-Soldier AI cap and respawn skill reapply. |
+| [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) | Chernarus FPS publishers exit immediately on `!isDedicated`. | Vanilla FPS publishers have the same early exit. | Pending dedicated/hosted smoke. | Source/Vanilla `Server/GUI/serverFpsGUI.sqf:1`; source/Vanilla `Server/Module/serverFPS/monitorServerFPS.sqf:1`. | Smoke dedicated FPS publish and hosted/listen no-spin behavior. |
+| [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) | Chernarus 80m command-center scan uses `nearestObjects [..., ["Base_WarfareBUAVterminal"], 80]`. | Vanilla uses the same narrowed 80m scan. | Pending truck/heli smoke. | Source/Vanilla `Server/Module/supplyMission/supplyMissionStarted.sqf:25-28`; broad nearby-player 8m scan remains intentional. | Smoke delivery near command centers and no completion near unrelated objects. |
+| [Supply player-object list indexing](Player-Join-Disconnect-And-AntiStack-Lifecycle) | Chernarus initializes `_i = 0` before the `WFBE_SE_PLAYERLIST` loop so reconnecting UIDs replace their real row. | Vanilla has the same counter placement. | Pending reconnect/supply smoke. | Source/Vanilla `Server/Module/supplyMission/playerObjectsList.sqf:17-29`; consumers `supplyMissionStarted.sqf:57+` and `supplyMissionActive.sqf:51+`. | Smoke reconnect/JIP player-object replacement and supply mission completion lookup. |
 
-## Patch-Ready But Not Source-Patched
+## Patch-Ready But Not In Current Code
 
 These have source-backed playbooks but are not current code fixes yet. Do not mix them into a propagation run unless the code owner explicitly claims the patch.
 
 | Lane | Status | Canonical page | Why separate |
 | --- | --- | --- | --- |
-| Factory queue counter/token cleanup | Patch-ready, current source still unpatched. | [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) | A code patch is still needed in `Client_BuildUnit.sqf` before propagation. |
-| Commander reassignment call shape | Patch-ready, current source still unpatched. | [Commander reassignment call shape](Commander-Reassignment-Call-Shape) | Needs a source patch plus one notification-owner decision. |
-| Construction small-site logic cleanup | Patch-ready, current source still unpatched. | [Construction logic list cleanup](Construction-Logic-List-Cleanup) | Needs the one-line SmallSite add-to-remove source patch, then Vanilla propagation and construction smoke. |
-| RHUD/endgame title display handle split | Patch-ready, current source still unpatched. | [UI IDD collision repair](UI-IDD-Collision-Repair) | Needs a title display-variable split or RHUD/action-icon endgame gate before propagation; keep separate from broader UI IDD cleanup and smoke RHUD/action icons/endgame stat bars together. |
-| Gear template profile filter | Patch-ready, current source still unpatched. | [Gear template profile filter](Gear-Template-Profile-Filter) | Needs `_u_upgrade` replacement in `Client_UI_Gear_SaveTemplateProfile.sqf`. |
-| Vehicle cargo equip loop bounds | Patch-ready, current source still unpatched. | [Vehicle cargo equip loop bounds](Vehicle-Cargo-Equip-Loop-Bounds) | Needs five loop-bound edits before propagation. |
-| Service menu affordability guards | Patch-ready, current source still unpatched. | [Service menu affordability guards](Service-Menu-Affordability-Guards) | Needs action-time price/funds/context guards before propagation. |
+| Factory queue counter/token cleanup | Patch-ready, current code still carries the defect. | [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) | A code patch is still needed in `Client_BuildUnit.sqf` before propagation. |
+| Commander reassignment call shape | Patch-ready, current code still carries the defect. | [Commander reassignment call shape](Commander-Reassignment-Call-Shape) | Needs a source edit plus one notification-owner decision. |
+| Construction small-site logic cleanup | Patch-ready, current code still carries the defect. | [Construction logic list cleanup](Construction-Logic-List-Cleanup) | Needs the one-line SmallSite add-to-remove edit, then Vanilla propagation and construction smoke. |
+| RHUD/endgame title display handle split | Patch-ready, current code still carries the defect. | [UI IDD collision repair](UI-IDD-Collision-Repair) | Needs a title display-variable split or RHUD/action-icon endgame gate before propagation; keep separate from broader UI IDD cleanup and smoke RHUD/action icons/endgame stat bars together. |
+| Gear template profile filter | Patch-ready, current code still carries the defect. | [Gear template profile filter](Gear-Template-Profile-Filter) | Needs `_u_upgrade` replacement in `Client_UI_Gear_SaveTemplateProfile.sqf`. |
+| Vehicle cargo equip loop bounds | Patch-ready, current code still carries the defect. | [Vehicle cargo equip loop bounds](Vehicle-Cargo-Equip-Loop-Bounds) | Needs five loop-bound edits before propagation. |
+| Service menu affordability guards | Patch-ready, current code still carries the defect. | [Service menu affordability guards](Service-Menu-Affordability-Guards) | Needs action-time price/funds/context guards before propagation. |
 | WASP marker wait cleanup | Opportunity, source implementation still needed. | [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup) | Small performance cleanup, but still requires map-marker smoke. |
 
 ## Propagation Procedure

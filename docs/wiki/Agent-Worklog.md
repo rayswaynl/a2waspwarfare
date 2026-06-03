@@ -1622,3 +1622,8 @@ Key conclusions:
 - Ran a targeted read-only match against rayswaynl PR #8 and the drone branch series, using upstream developer-history lessons as the review lens.
 - Added [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match) with concrete merge checks for PR #8 supply-heli/JIP/rewards, upgrade queue PVs, WDDM/static-defense accounting, engineer EASA, delayed vehicle-kill rewards, Buy/EASA UI, and generated Takistan propagation.
 - Captured the drone-specific high-priority lesson: make `DroneStrike` server-authoritative for cost/cooldown/upgrade/caller validation before merge; also validate payload schema, JIP, marker audience, resistance targeting, score effects, cleanup, performance, sounds and generated mission propagation.
+
+## 2026-06-03T22:05:00+02:00 - Codex - source status branch matrix refresh
+- Rechecked docs/source `HEAD` `4163faba`, stable `origin/master` `2cdf5fb8`, and release `origin/release/2026-06-feature-bundle` `a9219d88` for hosted FPS, supply scan narrowing, client `Skill_Init` idempotency and paratrooper marker registration.
+- Updated [Current source status snapshot](Current-Source-Status-Snapshot), [Feature status register](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue) and [Progress dashboard](Progress-Dashboard) so docs/source propagation is not mistaken for stable-master or release-branch coverage.
+- Key correction: release `a9219d88` carries Chernarus-only versions of the FPS and supply-scan fixes, but its Vanilla target still has the old shapes; client `Skill_Init` and paratrooper marker registration are absent from both stable master and that release branch.

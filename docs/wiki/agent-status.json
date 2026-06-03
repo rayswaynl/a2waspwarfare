@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Indexed current Miksuu/a2waspwarfare upstream commits, PR context and latest town-defense diagnostics/safety delta into the wiki and machine records.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: another feature-status reconciliation item, machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs. If code owners consider Miksuu import, start from Upstream-Miksuu-Commit-Intel."
+      "currentWork": "Refreshed branch-scoped source-status docs so docs/source propagation is separated from stable master and release/2026-06-feature-bundle coverage for hosted FPS, supply scan narrowing, client Skill_Init and paratrooper markers.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: machine-readable stale-status cleanup, owner-decision consolidation, or another P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "source-status-branch-matrix-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Current-Source-Status-Snapshot, Feature-Status-Register, Source-Fix-Propagation-Queue and Progress-Dashboard now distinguish docs/source HEAD 4163faba, stable origin/master 2cdf5fb8 and release/2026-06-feature-bundle a9219d88. Release a9219d88 is Chernarus-only for hosted FPS and supply scan narrowing, and lacks client Skill_Init idempotency plus paratrooper marker registration in both maintained missions."
+    },
     {
       "lane": "miksuu-upstream-commit-intel",
       "owner": "Codex",
