@@ -33,6 +33,7 @@
     "Tools/Validate-ZargabadMission.ps1",
     "Tools/Validate-ZargabadRuntimeEvidence.ps1",
     "Tools/New-ZargabadRuntimeReport.ps1",
+    "Tools/Validate-ZargabadRuntimeReport.ps1",
     "Tools/New-ZargabadMapAuditPacket.ps1",
     "Tools/New-ZargabadClaudeBrief.ps1",
     "Guides/Zargabad-Claude-Runtime-Handoff.md",
@@ -131,6 +132,10 @@
     {
       "type": "source-audit",
       "summary": "Tools/New-ZargabadRuntimeReport.ps1 generates a Codex-ready markdown report with gate state, town-defense orientation state, base/fortification audit state, failure scan, key RPT excerpts, validator output, and a structured Claude Notes verdict table requiring PASS/FAIL/UNCERTAIN plus concrete evidence for ambiguous or failing runtime checks, including a priority defense mix arcs row for city, airfield, district, Northwest Base and Rahim Villa defense screenshots/coordinate notes."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Tools/Validate-ZargabadRuntimeReport.ps1 validates Claude's edited runtime report before Codex stop/go: validator PASS, no MISSING required gates, no FOUND failure-scan rows, no _missing_ key evidence placeholders, requested JIP/HC/edge/black-market gates PASS, and every Claude Notes row PASS."
     },
     {
       "type": "source-audit",

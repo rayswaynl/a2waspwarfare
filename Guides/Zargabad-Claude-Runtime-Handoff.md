@@ -28,6 +28,12 @@ Use the same required switches as the validator for the gate being tested, then 
 
 The `Claude Notes` table in the report is part of the gate, not optional commentary. Mark each runtime check `PASS`, `FAIL`, or `UNCERTAIN`; every `FAIL` or `UNCERTAIN` row should include coordinates, screenshot filenames, RPT excerpts, or repeatable repro steps. Codex should listen to that evidence: if Claude proves the mission is wrong, Codex updates mission code or validators before asking Claude to repeat the same pass.
 
+Before Codex makes a stop/go call on a filled runtime report, run the report validator against Claude's edited markdown. It fails if required gates are still `MISSING`, the failure scan contains `FOUND`, key evidence placeholders remain, or any Claude Notes row is not `PASS`:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadRuntimeReport.ps1 -ReportPath ".\zargabad-runtime-report.md" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireBlackMarket
+```
+
 For map-placement, defense-facing, pathing, or sightline notes, generate a coordinate packet before the playtest and paste it beside the runtime report:
 
 ```powershell
@@ -98,6 +104,7 @@ For a Codex-ready handoff report:
 powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadClaudeBrief.ps1 -OutputPath ".\zargabad-claude-brief.md"
 powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadMapAuditPacket.ps1 -OutputPath ".\zargabad-map-audit.md"
 powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadRuntimeReport.ps1 -RptPath "C:\path\to\rpts" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireBlackMarket -OutputPath ".\zargabad-runtime-report.md"
+powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadRuntimeReport.ps1 -ReportPath ".\zargabad-runtime-report.md" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireBlackMarket
 ```
 
 Use `-AllowKnownDisconnectScoreErrors` only if the only RPT `ERROR` lines are the existing disconnect score messages after intentionally disconnecting test clients.

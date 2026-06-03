@@ -108,6 +108,8 @@ Static validation currently proves the editor data shape, not tactical effective
 
 `Tools/New-ZargabadRuntimeReport.ps1` wraps the runtime validator and emits a compact markdown gate snapshot, failure scan, key RPT excerpts, and Claude note prompts. Its Claude Notes table now has a dedicated priority-defense-mix row that points testers to the city, airfield, North/South District, Northwest Base and Rahim Villa defense rows from the map audit packet. Claude should paste this report back to Codex after each hosted/dedicated/JIP/HC pass so runtime findings are frequent, evidence-backed, and easy to act on.
 
+`Tools/Validate-ZargabadRuntimeReport.ps1` is the stop/go checker for Claude's edited markdown report. It fails if the runtime validator did not pass, required gates are still `MISSING`, the failure scan contains `FOUND`, `_missing_` key-evidence placeholders remain, optional JIP/HC/edge/black-market gates requested by switches did not pass, or any Claude Notes row is still not `PASS`.
+
 `Tools/New-ZargabadMapAuditPacket.ps1` emits a Claude-facing coordinate packet from the generated Zargabad `mission.sqm`: population-flow objectives, camp links/distances, defense kind/position/distance rows, start positions, base-axis midpoint, edge-safe objective/start bubbles, central-wall gap checkpoints, and screenshot targets. Use it beside runtime screenshots so map-placement, sightline, pathing and defense-facing feedback points to exact coordinates.
 
 `Tools/New-ZargabadClaudeBrief.ps1` emits the current Codex-to-Claude context packet: latest commit, PR head, changed files, inferred retest focus, required runtime commands, dirty local state warning, and the rule that Codex owns final stop/go while accepting Claude's evidence-backed findings.

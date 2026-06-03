@@ -358,6 +358,7 @@ $generatedEdgeGuard = Join-Path $missionFullPath "Server/Module/Zargabad/Zargaba
 $sourceRuntimeAudit = Join-Path $sourceMissionFullPath "Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf"
 $generatedRuntimeAudit = Join-Path $missionFullPath "Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf"
 $runtimeReportTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadRuntimeReport.ps1"
+$runtimeReportValidatorTool = Join-Path (Resolve-RepoPath "Tools") "Validate-ZargabadRuntimeReport.ps1"
 $mapAuditPacketTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadMapAuditPacket.ps1"
 $claudeBriefTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadClaudeBrief.ps1"
 
@@ -395,6 +396,11 @@ Assert-True "runtime report tool checks town defense orientation" ($runtimeRepor
 Assert-True "runtime report tool emits Claude notes" ($runtimeReportSource -match '## Claude Notes')
 Assert-True "runtime report tool asks Claude for priority defense mix arcs" ($runtimeReportSource -match 'Priority defense mix arcs' -and $runtimeReportSource -match 'city MG/nest\+GL\+AT' -and $runtimeReportSource -match 'airfield MG/nest\+AT\+2xAA')
 Assert-True "runtime report tool emits validator output" ($runtimeReportSource -match '## Validator Output')
+Assert-True "runtime report validator tool exists" (Test-Path -LiteralPath $runtimeReportValidatorTool)
+$runtimeReportValidatorSource = Get-Content -Raw -LiteralPath $runtimeReportValidatorTool
+Assert-True "runtime report validator requires Claude Notes PASS rows" ($runtimeReportValidatorSource -match 'Claude Notes rows are all PASS')
+Assert-True "runtime report validator rejects missing gates and found failures" ($runtimeReportValidatorSource -match 'runtime report has no missing required gates' -and $runtimeReportValidatorSource -match 'runtime report failure scan is clear')
+Assert-True "runtime report validator checks optional runtime gates" ($runtimeReportValidatorSource -match 'RequireJip' -and $runtimeReportValidatorSource -match 'RequireHeadlessClient' -and $runtimeReportValidatorSource -match 'RequireEdgeGuardRemoval' -and $runtimeReportValidatorSource -match 'RequireBlackMarket')
 Assert-True "map audit packet tool exists" (Test-Path -LiteralPath $mapAuditPacketTool)
 $mapAuditPacketSource = Get-Content -Raw -LiteralPath $mapAuditPacketTool
 Assert-True "map audit packet emits population flow table" ($mapAuditPacketSource -match '## Population Flow')
@@ -416,6 +422,7 @@ Assert-True "Claude brief tool carries stop/go ownership" ($claudeBriefSource -m
 Assert-True "Claude brief tool points to map audit packet" ($claudeBriefSource -match 'New-ZargabadMapAuditPacket\.ps1')
 Assert-True "Claude brief tool points to runtime report" ($claudeBriefSource -match 'New-ZargabadRuntimeReport\.ps1')
 Assert-True "Claude brief tool points to runtime validator" ($claudeBriefSource -match 'Validate-ZargabadRuntimeEvidence\.ps1')
+Assert-True "Claude brief tool points to runtime report validator" ($claudeBriefSource -match 'Validate-ZargabadRuntimeReport\.ps1')
 
 $takistanZargabadModule = Resolve-RepoPath "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/Zargabad"
 Assert-True "Takistan has no generated Zargabad module spillover" (-not (Test-Path -LiteralPath $takistanZargabadModule))
