@@ -69,6 +69,7 @@ nav:
       - Source Fix Propagation Queue: Source-Fix-Propagation-Queue.md
       - Agent Release Readiness Ledger: Agent-Release-Readiness-Ledger.md
       - Testing Debugging And Release Workflow: Testing-Debugging-And-Release-Workflow.md
+      - Player Stats Branch Audit: Player-Stats-Branch-Audit.md
       - Arma 2 OA Compatibility Audit: Arma-2-OA-Compatibility-Audit.md
       - External Integrations: External-Integrations.md
       - Integration Trust Boundary Audit: Integration-Trust-Boundary-Audit.md

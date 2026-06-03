@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T21:15:00+02:00",
+  "generatedAt": "2026-06-03T22:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,36 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "player-stats-branch-deep-audit",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "origin/feat/player-stats",
+        "origin/master",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestOnUnitKilled.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Stats/RecordStat.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Stats/StatsFlush.sqf",
+        "DiscordBot/src/Stats/*",
+        "DiscordBot.Tests/*",
+        "docs/wiki/Player-Stats-Branch-Audit.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Pending-Owner-Decisions.md",
+        "docs/wiki/Testing-Debugging-And-Release-Workflow.md",
+        "docs/wiki/Development-Lessons-Learned.md",
+        "docs/wiki/agent-feature-status.jsonl",
+        "docs/wiki/agent-release-readiness.json"
+      ],
+      "outputs": [
+        "Added a dedicated Player stats branch audit page for origin/feat/player-stats head e01e47e1",
+        "Recorded local dotnet test evidence: DiscordBot.Tests passed 13/13 on .NET 9.0.314",
+        "Recorded branch scope: absent on origin/master and absent from Missions_Vanilla on the branch",
+        "Recorded promotion gates: UID/privacy, RPT path/log volume, tail state, corrupt stats.json recovery, Chernarus-only vs Vanilla propagation and Arma runtime smoke"
+      ],
+      "handoff": "Future stats/integration owner should start at Player-Stats-Branch-Audit. Do not enable publicly until disabled/enabled Arma RPT smoke, bot restart/tail-state smoke, RPT rotation smoke, privacy/retention policy and Chernarus/Vanilla scope decision are recorded."
+    },
     {
       "lane": "origin-branch-intake-second-wave",
       "owner": "Codex",

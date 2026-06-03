@@ -73,6 +73,7 @@
       "Developer-History-And-Upstream-Lessons",
       "Upstream-Miksuu-Commit-Intel",
       "PR8-And-Drone-Upstream-Lesson-Match",
+      "Player-Stats-Branch-Audit",
       "Current-Source-Status-Snapshot",
       "External-Arma-2-OA-Reference-Index",
       "AI-Assistant-Developer-Guide",
@@ -1235,6 +1236,7 @@
     "supplyMissionScanNarrowing": "Supply-Mission-Scan-Narrowing.md",
     "waspMarkerWaitCleanup": "WASP-Marker-Wait-Cleanup.md",
     "factoryQueueCleanup": "Factory-Queue-Counter-Token-Cleanup.md",
+    "playerStatsBranchAudit": "Player-Stats-Branch-Audit.md",
     "currentSourceStatusSnapshot": "Current-Source-Status-Snapshot.md",
     "currentSourceStatusKnowledge": "agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851",
     "currentSourceStatusEvent": "agent-events.jsonl#current-source-status-pointer-refresh-2026-06-02-1851"

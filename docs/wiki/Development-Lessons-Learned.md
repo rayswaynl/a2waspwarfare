@@ -98,6 +98,14 @@ The branch-only feature smoke pack is intentionally marked planned. It tells rel
 
 Development rule: never promote `planned`, `source-only` or checklist text into `passed`, `stable`, `release-ready` or `smoked` wording. A smoke claim needs target branch/commit, mission variant, server mode, relevant params, steps, observations and failure-signal review. If those are missing, keep the state as planned and link the checklist.
 
+## Lesson 12: Dark-Launched Integration Branches Still Need Ops Gates
+
+`origin/feat/player-stats` is deliberately safe by default: `WFBE_C_STATS_ENABLED = false` at `Init_CommonConstants.sqf:443`, `RecordStat.sqf:9-10,31-32` exits when disabled, and `StatsFlush.sqf:6-7` exits before the loop unless the flag is enabled. The DiscordBot side also no-ops unless `Preferences.StatsEnabled` is true and `ServerRptPath` is set (`Preferences.cs:16-20`, `StatsService.cs:17-23`).
+
+That does not make the feature ready for public enablement. The branch crosses several operational boundaries: `StatsFlush.sqf:48` emits RPT lines; `RptTailer.cs:24-45,57-71` persists offset/fingerprint state beside `stats.json`; `StatsDocument.cs:22-40` returns an empty document on load errors and writes via temp/replace; `PlayerStat.cs:23-45` must stay index-aligned with SQF constants at `Init_CommonConstants.sqf:445-459`; and the identity key is Steam UID64. Local validation is useful but scoped: `dotnet test DiscordBot.Tests/DiscordBot.Tests.csproj` passed 13/13 on .NET 9.0.314, while Arma 2 OA runtime smoke and maintained Vanilla propagation remain open.
+
+Development rule: for dark-launched integration branches, document two separate states: "safe when disabled" and "safe to enable." The second state needs runtime smoke, privacy/retention decisions, file/state ownership, failure/recovery policy, log-volume review and propagation scope. See [Player stats branch audit](Player-Stats-Branch-Audit).
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |

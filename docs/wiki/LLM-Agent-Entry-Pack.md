@@ -38,7 +38,7 @@ Use this page first, then jump into the canonical pages and machine files it nam
 | Upgrade request authority | [Upgrades/research atlas](Upgrades-And-Research-Atlas), [Economy authority first cut](Economy-Authority-First-Cut), [Server authority map](Server-Authority-Migration-Map) | P1. Client menu validates/debits; server worker owns timer/state but must accept/reject authoritatively. |
 | Attack-wave authority | [Attack-wave authority](Attack-Wave-Authority-Playbook), [Public variable channel index](Public-Variable-Channel-Index) | P1. Direct PV must become server-derived request flow. |
 | Economy/server-authority class | [Server authority map](Server-Authority-Migration-Map), [Economy authority first cut](Economy-Authority-First-Cut) | P1 design lane. Do not patch build/buy/sell/gear/supply as unrelated one-offs. |
-| Integration trust boundaries | [Integration trust boundary audit](Integration-Trust-Boundary-Audit), [AntiStack database extension audit](AntiStack-Database-Extension-Audit), [External integrations](External-Integrations), [Feature status](Feature-Status-Register) | High local-write-gated DiscordBot JSON risk; separate from the in-repo extension writer and the absent AntiStack DB DLL. |
+| Integration trust boundaries | [Integration trust boundary audit](Integration-Trust-Boundary-Audit), [AntiStack database extension audit](AntiStack-Database-Extension-Audit), [External integrations](External-Integrations), [Player stats branch audit](Player-Stats-Branch-Audit), [Feature status](Feature-Status-Register) | High local-write-gated DiscordBot JSON risk; separate from the in-repo extension writer, the absent AntiStack DB DLL and branch-only stats RPT/file integration gates. |
 
 ## Common Task Bundles
 

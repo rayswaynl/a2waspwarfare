@@ -221,6 +221,7 @@
       "state": "branch-review-needed-integration-and-privacy-open",
       "sourceScope": "source-chernarus-plus-discordbot-tests",
       "canonicalDocs": [
+        "Player-Stats-Branch-Audit.md",
         "Feature-Status-Register.md",
         "Pending-Owner-Decisions.md",
         "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
@@ -230,20 +231,25 @@
         "origin/master..origin/feat/player-stats: 23 files +1919/-1",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:443-444 on origin/feat/player-stats",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestOnUnitKilled.sqf:51-65 on origin/feat/player-stats",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Stats/StatsFlush.sqf:12-49 on origin/feat/player-stats",
         "DiscordBot/src/Stats/StatsService.cs:6-23 on origin/feat/player-stats",
+        "DiscordBot/src/Stats/RptTailer.cs:24-45,57-71 on origin/feat/player-stats",
+        "DiscordBot/src/Stats/StatsDocument.cs:22-40 on origin/feat/player-stats",
         "DiscordBot.Tests/* on origin/feat/player-stats",
-        "git diff --check origin/master..origin/feat/player-stats is clean"
+        "git diff --check origin/master..origin/feat/player-stats is clean",
+        "local dotnet test DiscordBot.Tests/DiscordBot.Tests.csproj passed 13/13 on .NET 9.0.314"
       ],
-      "ownerDecision": "Decide RPT path/state-file ownership, UID/privacy policy, log volume and whether stats live in DiscordBot or the mission extension.",
-      "promotionGate": "Prove disabled-by-default silence, enabled RPT-to-stats.json accumulation, restart/tail-state behavior and DiscordBot tests before enabling publicly.",
+      "ownerDecision": "Decide RPT path/state-file ownership, UID/privacy policy, log volume, corrupt-stats.json recovery behavior, Chernarus-only versus Vanilla propagation and whether stats live in DiscordBot or the mission extension.",
+      "promotionGate": "Prove disabled-by-default silence, enabled RPT-to-stats.json accumulation, restart/tail-state behavior, RPT rotation behavior and Arma runtime smoke before enabling publicly.",
       "plannedSmoke": {
-        "status": "planned-not-run",
+        "status": "discordbot-tests-passed-runtime-smoke-not-run",
         "coverageLevel": [
           "integration-smoke",
           "discordbot-test",
-          "privacy-review"
+          "privacy-review",
+          "vanilla-scope-decision"
         ],
-        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+        "canonicalDoc": "Player-Stats-Branch-Audit.md#smoke-checklist"
       }
     },
     {

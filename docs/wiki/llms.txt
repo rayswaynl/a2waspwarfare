@@ -18,6 +18,7 @@ Important notes:
 - [Home](https://github.com/rayswaynl/a2waspwarfare/wiki/Home): Main navigation, click-through tours and current page map.
 - [Quickstart](https://github.com/rayswaynl/a2waspwarfare/wiki/Quickstart-For-Humans-And-Agents): First-day orientation for humans and agents.
 - [Feature status register](https://github.com/rayswaynl/a2waspwarfare/wiki/Feature-Status-Register): Triage dashboard for working, broken, partial, dormant and high-risk systems.
+- [Player stats branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Player-Stats-Branch-Audit): Branch-only SQF-to-RPT-to-DiscordBot stats pipeline audit and enablement gates.
 - [Progress dashboard](https://github.com/rayswaynl/a2waspwarfare/wiki/Progress-Dashboard): Current Codex/Claude lanes and shared status.
 - [Release-readiness ledger](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-release-readiness.json): Machine-readable source-only fix, generated propagation and smoke gate status.
 - [Knowledge platform roadmap](https://github.com/rayswaynl/a2waspwarfare/wiki/Knowledge-Platform-Roadmap): Why repo docs + GitHub Pages/MkDocs should become canonical.

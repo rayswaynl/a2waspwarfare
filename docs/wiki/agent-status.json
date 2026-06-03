@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T21:15:00+02:00",
+  "generatedAt": "2026-06-03T22:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Indexed the second wave of visible origin branches: buymenu/EASA QoL, player stats, perf quick-wins, commander positions, Zargabad low-pop, and current supply-helicopter head drift. Human pages and machine ledgers now treat them as branch evidence with owner/smoke/cleanup gates.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: deeper branch-specific line audits for player stats/Zargabad/commander positions, stale machine-record cleanup or P0/P1 accuracy drift with exact source refs."
+      "currentWork": "Deep-audited origin/feat/player-stats head e01e47e1. Added a dedicated Player stats branch audit with SQF, DiscordBot, test, privacy, runtime-smoke and Vanilla-scope evidence; local DiscordBot.Tests passed 13/13 on .NET 9.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: deeper branch-specific line audits for Zargabad or commander positions, stale machine-record cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "player-stats-branch-deep-audit",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Player-Stats-Branch-Audit now source-maps origin/feat/player-stats head e01e47e1: off-by-default SQF constants and guards, server kill hook, RecordStat/StatsFlush RPT wire format, DiscordBot StatsService/RptTailer/parser/accumulator/document writer, local dotnet test result 13/13, origin/master absence, maintained Vanilla absence, privacy/log-volume/tail-state/corrupt-json/propagation gates and smoke checklist."
+    },
     {
       "lane": "origin-branch-intake-second-wave",
       "owner": "Codex",

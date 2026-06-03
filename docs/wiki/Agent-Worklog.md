@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-03T22:05:00+0200 - Codex - player-stats-branch-deep-audit
+
+- Deep-audited `origin/feat/player-stats` head `e01e47e1` after the second-wave branch intake identified it as a useful but under-documented branch.
+- Source evidence checked: `Init_CommonConstants.sqf:442-461`, `Init_Server.sqf:300-302`, `RequestOnUnitKilled.sqf:50-69`, `RecordStat.sqf:1-39`, `StatsFlush.sqf:1-50`, `Preferences.cs:16-20`, `ProgramRuntime.cs:72-73`, `StatsService.cs:17-40`, `RptTailer.cs:24-45,57-71`, `StatsBatchParser.cs:10-41`, `StatsAccumulator.cs:9-30`, `StatsDocument.cs:22-40`, `PlayerStat.cs:6-25`, and `DiscordBot.Tests/*`.
+- Validation evidence: `git diff --check origin/master..origin/feat/player-stats` is clean; `git grep` found no stats hits on `origin/master` and no stats hits under `Missions_Vanilla` on the branch; local `.NET 9.0.314` `dotnet test DiscordBot.Tests\DiscordBot.Tests.csproj` passed 13/13 in a temporary detached worktree.
+- Added [Player stats branch audit](Player-Stats-Branch-Audit), linked it from Home/sidebar/source snapshot/Feature Status/Pending owner decisions/Testing workflow, and added a development lesson for dark-launched integration branches that are safe when disabled but still need ops/privacy/runtime gates before enablement.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-03T21:15:00+0200 - Codex - origin-branch-intake-second-wave
 
 - Fetched `origin`/`miksuu` and indexed the remaining visible branch-only feature lanes not yet represented in the wiki: `origin/feat/buymenu-easa-qol` `a66d4691`, `origin/feat/player-stats` `e01e47e1`, `origin/perf/quick-wins` `0076040f`, `origin/feat/commander-positions` `560db61c`, `origin/feature/zargabad-map` `1fdcb37a` and current `origin/feat/supply-helicopter` `262dc431`.
