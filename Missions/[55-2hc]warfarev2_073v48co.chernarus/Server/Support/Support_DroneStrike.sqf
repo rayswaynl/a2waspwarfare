@@ -95,7 +95,7 @@ WFBE_DroneSpoofMissile = {
 //--- Spawn the package a short distance out from the target on a random bearing, at cruise altitude.
 //--- (Map-edge spawn put it ~10 km out -> a multi-minute transit that the 70s ingress deadline never finished.)
 _bearing = random 360;
-_spawnDist = 1500 + random 600;   //--- ~1.5-2.1 km out: snappy arrival, drones visible over the target.
+_spawnDist = WFBE_C_DRONE_SPAWN_DIST + random 1000;   //--- mid-distance approach (default 3-4 km): far enough to see incoming, not map-edge. Tunable.
 _spawnPos = [(_destination select 0) + _spawnDist * sin _bearing, (_destination select 1) + _spawnDist * cos _bearing, _alt];
 
 //--- Spawn the crewless package.
@@ -141,7 +141,7 @@ processInitCommands;
 
         //--- INGRESS to the zone (safety deadline so a stuck drone can't loop forever).
         _tgt = [_dest select 0, _dest select 1, _alt];
-        _idl = time + 70;
+        _idl = time + 90;   //--- ingress deadline (covers the farther spawn at cruise speed)
         while {alive _d && ((_d distance _tgt) > 110) && time < _idl} do {
             _p = getPosATL _d;
             _dx = (_tgt select 0) - (_p select 0);
