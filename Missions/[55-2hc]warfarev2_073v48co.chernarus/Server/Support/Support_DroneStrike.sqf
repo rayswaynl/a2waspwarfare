@@ -19,7 +19,7 @@ if ((missionNamespace getVariable ["WFBE_C_DRONE_ENABLED", 1]) != 1) exitWith {
 };
 
 //--- Threeway-safe enemy sides + real AA classnames.
-_enemySides = WFBE_PRESENTSIDES - [_side];
+_enemySides = (WFBE_PRESENTSIDES - [_side]) + [resistance];	//--- include independent/resistance (GUER) AI as targets, not just the opposing commander side
 _aaTypes = ["M6_EP1"];
 { _aaTypes = _aaTypes + (missionNamespace getVariable [Format ["WFBE_%1_Defenses_AA", _x], []]) } forEach ["WEST","EAST","GUER"];
 

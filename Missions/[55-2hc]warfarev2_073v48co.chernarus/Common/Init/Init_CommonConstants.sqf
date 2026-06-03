@@ -242,8 +242,8 @@ with missionNamespace do {
 //--- Drone Saturation Strike (System B).
 	if (isNil "WFBE_C_DRONE_ENABLED") then {WFBE_C_DRONE_ENABLED = 1}; //--- lobby toggle: shelve the feature without a repack
 	if (isNil "WFBE_C_DRONE_ENHANCED") then {WFBE_C_DRONE_ENHANCED = 1}; //--- optional layer: contrail/flare FX + smooth circling orbit (toggle off = lean mode). Kill bounty is CORE, not gated here.
-	if (isNil "WFBE_C_DRONE_FLARE_COUNT") then {WFBE_C_DRONE_FLARE_COUNT = 2}; //--- # flare/CM drones
-	if (isNil "WFBE_C_DRONE_MUNITION_COUNT") then {WFBE_C_DRONE_MUNITION_COUNT = 3}; //--- # loitering munitions
+	if (isNil "WFBE_C_DRONE_FLARE_COUNT") then {WFBE_C_DRONE_FLARE_COUNT = 4}; //--- # flare/CM drones
+	if (isNil "WFBE_C_DRONE_MUNITION_COUNT") then {WFBE_C_DRONE_MUNITION_COUNT = 6}; //--- # loitering munitions
 	if (isNil "WFBE_C_DRONE_INGRESS_SPEED") then {WFBE_C_DRONE_INGRESS_SPEED = 60}; //--- m/s transit
 	if (isNil "WFBE_C_DRONE_OFFSHORE") then {WFBE_C_DRONE_OFFSHORE = 700}; //--- m offshore the package spawns over the sea (random +400). Targets nearer the coast = shorter overland run = better survival.
 	if (isNil "WFBE_C_DRONE_SPAWN_DIST") then {WFBE_C_DRONE_SPAWN_DIST = 3000}; //--- fallback random-bearing spawn distance when no open sea is found near the target (deep inland)
