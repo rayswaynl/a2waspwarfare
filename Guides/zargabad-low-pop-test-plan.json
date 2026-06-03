@@ -111,6 +111,10 @@
     },
     {
       "type": "source-audit",
+      "summary": "Init_Zargabad normalizes base static setDir/logged facing below 360 degrees before spawning and recording runtime positions, so Claude can compare RPT facing evidence directly against screenshots."
+    },
+    {
+      "type": "source-audit",
       "summary": "Camp placement audit measured 19 linked camps at 111.8m-192.4m from their town centers, with two camp approaches for the city center, airfield, north/south districts, Northwest Base and Rahim Villa."
     },
     {

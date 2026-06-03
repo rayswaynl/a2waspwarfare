@@ -64,7 +64,7 @@ _orientTownDefenses = {
 };
 
 _buildBase = {
-	Private ["_def", "_dir", "_logic", "_origin", "_pos", "_side", "_sideID", "_staticPositions", "_statics", "_team", "_unit"];
+	Private ["_def", "_dir", "_logic", "_origin", "_pos", "_side", "_sideID", "_staticDir", "_staticPositions", "_statics", "_team", "_unit"];
 	_side = _this select 0;
 	_dir = _this select 1;
 	_logic = (_side Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_startpos";
@@ -87,9 +87,11 @@ _buildBase = {
 	{
 		_pos = _origin modelToWorld (_x select 1);
 		_pos set [2, 0];
-		_staticPositions = _staticPositions + [[_x select 0, [round (_pos select 0), round (_pos select 1), 0], round (_dir + (_x select 2))]];
+		_staticDir = _dir + (_x select 2);
+		if (_staticDir >= 360) then {_staticDir = _staticDir - 360};
+		_staticPositions = _staticPositions + [[_x select 0, [round (_pos select 0), round (_pos select 1), 0], round _staticDir]];
 		_def = createVehicle [_x select 0, _pos, [], 0, "NONE"];
-		_def setDir (_dir + (_x select 2));
+		_def setDir _staticDir;
 		_def setPos _pos;
 		_def setVariable ["side", _side];
 		_def setVariable ["wfbe_defense", true];
