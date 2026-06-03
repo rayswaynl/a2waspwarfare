@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Victory Review Status Closure
+
+- Closed the stale `victory-perf-jip-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); the requested DR-36 cross-linking is already published in [Feature status](Feature-Status-Register), [Hardening roadmap](Hardening-Implementation-Roadmap), [Victory/endgame atlas](Victory-And-Endgame-Atlas), [Server runtime atlas](Server-Gameplay-Runtime-Atlas), [Codebase coverage ledger](Codebase-Coverage-Ledger) and [Deep review findings](Deep-Review-Findings#round-27--2026-06-02-claude--victoryendgame-perf--jiphc-dr-36-source-mechanism-for-dr-11dr-13).
+- Evidence checked: `Server/FSM/server_victory_threeway.sqf:23` still leaves the HQ/factory elimination clause outside the `!WFBE_GameOver` guard, `:31-33` still writes `WF_Winner` and flips `gameOver`/`WFBE_GameOver`, the side loop continues through `:43`, and `Server/Init/Init_Server.sqf:528-529` still starts the victory FSM unconditionally after town init.
+- Scope remained docs/status only; future victory owner still needs the source patch, explicit winner/loser semantics, non-zero threeway owner decision and elimination/all-towns/same-tick smoke.
+
 ## 2026-06-03 - Codex Documentation Finisher: Params/Localization Review Status Closure
 
 - Closed the stale `params-localization-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); DR-35 is already integrated into [Deep-review findings](Deep-Review-Findings), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Assets/config/localization/parameters atlas](Assets-Config-Localization-And-Parameters-Atlas), [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) and [Feature status](Feature-Status-Register).

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T19:30:00+02:00",
+  "generatedAt": "2026-06-03T19:35:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,31 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "victory-review-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Hardening-Implementation-Roadmap.md",
+        "docs/wiki/Victory-And-Endgame-Atlas.md",
+        "docs/wiki/Server-Gameplay-Runtime-Atlas.md",
+        "docs/wiki/Codebase-Coverage-Ledger.md",
+        "docs/wiki/Deep-Review-Findings.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_victory_threeway.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf"
+      ],
+      "outputs": [
+        "Closed stale victory-perf-jip-review ready-for-review status",
+        "Confirmed DR-36 cross-links are already integrated into Feature Status, Hardening Roadmap, Victory atlas, Server runtime and Coverage Ledger",
+        "Preserved source-patch boundary: victory correctness remains P1 patch-ready/source-unpatched"
+      ],
+      "handoff": "Future victory owner should use Victory-And-Endgame-Atlas plus DR-11/DR-36 before touching source. This closure is status-only: patch server_victory_threeway.sqf so both win clauses are guarded by !WFBE_GameOver, exit/break after first winner, keep winner/loser payload semantics explicit, decide non-zero threeway mode, then smoke elimination, all-towns and same-tick cases."
+    },
     {
       "lane": "params-localization-review-status-closure",
       "owner": "Codex",
@@ -2127,8 +2152,8 @@
     },
     {
       "lane": "victory-perf-jip-review",
-      "owner": "Claude",
-      "status": "ready-for-review",
+      "owner": "Codex",
+      "status": "published-validated",
       "sourceScope": [
         "Missions/[55-2hc]...chernarus/Server/FSM/server_victory_threeway.sqf",
         "Server/Init/Init_Server.sqf:528",
@@ -2138,12 +2163,12 @@
         "Deep-Review-Findings.md (Round 27 / DR-36)",
         "Codebase-Coverage-Ledger.md (Victory row Perf+JIP-HC)"
       ],
-      "handoff": "Codex: cross-link Feature-Status victory rows to DR-36 for the root-cause mechanism of DR-11/DR-13. Two-part one-line fix: parenthesize+guard both win clauses with !WFBE_GameOver, and exitWith/break the side forEach (and while) once gameOver is set."
+      "handoff": "Historical Claude review now closed by victory-review-status-closure. Feature Status, Hardening Roadmap, Victory/endgame atlas, Server runtime atlas, Codebase Coverage Ledger and Deep Review already route DR-11/DR-36 to the exact source mechanism and fix shape. Source remains P1 patch-ready/source-unpatched."
     },
     {
       "lane": "params-localization-review",
       "owner": "Claude",
-      "status": "ready-for-review",
+      "status": "published-validated",
       "sourceScope": [
         "Missions/[55-2hc]...chernarus/stringtable.xml (vs all localize/$STR_ refs)",
         "Common/Init/Init_Parameters.sqf",

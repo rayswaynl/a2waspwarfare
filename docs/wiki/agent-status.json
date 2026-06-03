@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T19:30:00+02:00",
+  "generatedAt": "2026-06-03T19:35:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed stale params-localization-review collaboration status: DR-35 clean localization and live mission-parameter wiring are already published in Deep Review, Codebase Coverage Ledger and the assets/config atlas.",
+      "currentWork": "Closed stale victory-perf-jip-review collaboration status: Feature Status, Hardening Roadmap, Victory/endgame atlas, Server runtime atlas and Coverage Ledger already route DR-11/DR-36; source still needs the P1 victory correctness patch.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another feature-status reconciliation item, remaining machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "victory-review-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "agent-collaboration.json no longer advertises victory-perf-jip-review as ready-for-review. Current docs already cite DR-11/DR-36 for the exact source mechanism: server_victory_threeway.sqf:23 leaves the HQ/factory elimination clause outside the !WFBE_GameOver guard, the side forEach continues to :43, and Init_Server.sqf:528-529 starts the victory FSM. Source remains P1 patch-ready/source-unpatched."
+    },
     {
       "lane": "params-localization-review-status-closure",
       "owner": "Codex",
