@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T13:05:00+02:00",
+  "generatedAt": "2026-06-03T13:15:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,32 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "dr19-dr39-status-drift-recheck",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Instructions-For-Codex.md",
+        "docs/wiki/Hosted-Server-FPS-Loop-Sleep.md",
+        "docs/wiki/Supply-Mission-Scan-Narrowing.md",
+        "docs/wiki/Performance-Opportunity-Sweep.md",
+        "docs/wiki/Supply-Mission-Authority-Cleanup-Playbook.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md",
+        "docs/wiki/agent-release-readiness.json",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/GUI/serverFpsGUI.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/serverFPS/monitorServerFPS.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/supplyMission/supplyMissionStarted.sqf"
+      ],
+      "outputs": [
+        "Marked Instructions-For-Codex item 30 complete as stale false-positive",
+        "Confirmed DR-19 FPS early exits and DR-39 command-center scan narrowing in current Chernarus and maintained Vanilla",
+        "Confirmed remediation pages already use source/Vanilla propagated plus Arma smoke pending wording"
+      ],
+      "handoff": "Continue with Instructions-For-Codex item 31: Hosted-Server-FPS-Loop-Sleep specific status-drift recheck."
+    },
     {
       "lane": "batch2-modules-economy-recovery",
       "owner": "Codex",

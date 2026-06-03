@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T13:05:00+02:00",
+  "generatedAt": "2026-06-03T13:15:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Instructions-For-Codex item 25: Modules-Atlas now separates generic AT missile vs IRS handlers, fixes CM vanilla/OA wording, changes Soldier from double team size to 1.5x AI cap and treats CIPHER_Sort.sqf as an ExecVM data-prep script; Economy-Towns-And-Supply already had the dead delivery-funds constant note.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 30: claimed-patched/unmerged status drift recheck across DR-19 and DR-39 remediation pages."
+      "currentWork": "Closed Instructions-For-Codex item 30 as stale false-positive: current Chernarus and maintained Vanilla source contain the DR-19 FPS !isDedicated exits and DR-39 Base_WarfareBUAVterminal scan narrowing, while remediation pages already say source/Vanilla propagated with Arma smoke pending.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 31: Hosted-Server-FPS-Loop-Sleep specific status-drift recheck."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "dr19-dr39-status-drift-recheck",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 30 is resolved as stale false-positive: current Chernarus and maintained Vanilla source contain the DR-19 FPS !isDedicated exits and DR-39 Base_WarfareBUAVterminal scan narrowing, while the remediation pages already use source/Vanilla propagated + Arma smoke pending wording."
+    },
     {
       "lane": "batch2-modules-economy-recovery",
       "owner": "Codex",
