@@ -19,13 +19,14 @@ Use this with [Networking and public variables](Networking-And-Public-Variables)
 
 ## What I Read
 
-- `Common/Init/Init_PublicVariables.sqf:9-23`, `:25-41`, `:43-50`
+- `Common/Init/Init_PublicVariables.sqf:9-23`, `:25-42`, `:44-52`
 - `Server/Functions/Server_HandlePVF.sqf:7-14`
 - `Client/Functions/Client_HandlePVF.sqf:7-22`
-- `Common/Functions/Common_SendToServer.sqf:12-17`
-- `Common/Functions/Common_SendToServerOptimized.sqf:12-17`
-- `Common/Functions/Common_SendToClient.sqf:13-20`
-- `Common/Functions/Common_SendToClients.sqf:12-18`
+- `Common/Functions/Common_SendToServer.sqf:12-18`
+- `Common/Functions/Common_SendToServerOptimized.sqf:12-18`
+- `Common/Functions/Common_SendToClient.sqf:13-21`
+- `Common/Functions/Common_SendToClients.sqf:12-19`
+- `Client/Module/supplyMission/supplyMissionCompletedMessage.sqf:22`
 - [Deep-review findings](Deep-Review-Findings) DR-1 and DR-38
 - [Networking and public variables](Networking-And-Public-Variables), especially direct-PV and residual authority sections
 - [Server authority map](Server-Authority-Migration-Map) PVF dispatch row
@@ -34,7 +35,7 @@ Use this with [Networking and public variables](Networking-And-Public-Variables)
 
 ## What The Code Actually Does
 
-`Init_PublicVariables.sqf` builds two command arrays. The server command list includes `RequestVehicleLock`, `RequestChangeScore`, `RequestStructure`, `RequestDefense`, `RequestJoin`, `RequestSpecial`, `RequestUpgrade` and related server handlers at `:9-23`. The client command list includes `AllCampsCaptured`, `AwardBounty`, `CampCaptured`, `HandleSpecial`, `LocalizeMessage`, `SetVehicleLock`, `TownCaptured`, `RequestBaseArea` and `NukeIncoming` at `:25-41`.
+`Init_PublicVariables.sqf` builds two command arrays. The server command list includes `RequestVehicleLock`, `RequestChangeScore`, `RequestStructure`, `RequestDefense`, `RequestJoin`, `RequestSpecial`, `RequestUpgrade` and related server handlers at `:9-23`. The current client command list has 15 active entries at `:25-40`: `AllCampsCaptured`, `AwardBounty`, `AwardBountyPlayer`, `CampCaptured`, `ChangeScore`, `HandleSpecial`, `LocalizeMessage`, `SetTask`, `SetVehicleLock`, `TownCaptured`, `SetMHQLock`, `Available`, `RequestBaseArea`, `HandleParatrooperMarkerCreation` and `NukeIncoming`. `DatabaseDebug` is still commented at `:30` and is not active.
 
 The same file already compiles every registered command into global code variables:
 

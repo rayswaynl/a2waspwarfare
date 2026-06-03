@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T12:25:00+02:00",
+  "generatedAt": "2026-06-03T12:35:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,27 @@
   },
   "activeClaims": [
     {
+      "lane": "pvf-dispatch-playbook-list-ranges",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/PVF-Dispatch-Implementation-Playbook.md",
+        "docs/wiki/Instructions-For-Codex.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendToServer.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendToServerOptimized.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendToClient.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendToClients.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionCompletedMessage.sqf"
+      ],
+      "outputs": [
+        "Listed all 15 active client PVF commands in the PVF dispatch playbook",
+        "Corrected current PVF init and SendTo helper line references",
+        "Recorded supplyMissionCompletedMessage.sqf:22 as the RequestChangeScore source anchor"
+      ],
+      "handoff": "Continue with Instructions-For-Codex item 23: Economy-Authority-First-Cut supply reward and SupplyByHeli scoping."
+    },
+    {
       "lane": "function-module-index-reaktiv-correction",
       "owner": "Codex",
       "status": "published-validated",
@@ -37,7 +58,7 @@
         "Marked Reaktiv dead/unreachable in the function/module index and modules atlas",
         "Corrected Common_Get/Common_Set/Common_Handle and Server_AI_Com_Upgrade family descriptions"
       ],
-      "handoff": "Continue with Instructions-For-Codex item 22: PVF dispatch playbook client-command enumeration and line-reference drift."
+      "handoff": "Item 22 is now closed; continue with Instructions-For-Codex item 23: Economy-Authority-First-Cut supply reward and SupplyByHeli scoping."
     },
     {
       "lane": "icbm-authority-wording-recheck",
@@ -52,7 +73,7 @@
         "Marked Instructions-For-Codex item 20 complete after correcting the ICBM validation-gate wording",
         "Verified the current ICBM playbook treats Tactical-menu checks as local affordances and names the missing server commander/upgrade/funds/cooldown/shape/range/side validation"
       ],
-      "handoff": "Item 21 is now closed; continue with Instructions-For-Codex item 22: PVF dispatch playbook client-command enumeration and line-reference drift."
+      "handoff": "Item 22 is now closed; continue with Instructions-For-Codex item 23: Economy-Authority-First-Cut supply reward and SupplyByHeli scoping."
     },
     {
       "lane": "supply-pr1-master-scoping-recheck",

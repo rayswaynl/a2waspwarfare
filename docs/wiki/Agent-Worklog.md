@@ -2,6 +2,14 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: PVF Dispatch Playbook List / Range Correction
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 22.
+- Source-checked `Common/Init/Init_PublicVariables.sqf`: current `_clientCommandPV` has 15 active entries at `:25-42`, including `HandleParatrooperMarkerCreation`; `DatabaseDebug` remains commented.
+- Corrected [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook) so a reader building an allowlist from the prose would include all active client handlers.
+- Corrected current line ranges for PVF wiring and SendTo helpers: `Init_PublicVariables.sqf:44-52`, `Common_SendToServer*.sqf:12-18`, `Common_SendToClient.sqf:13-21` and `Common_SendToClients.sqf:12-19`.
+- Source-checked `Client/Module/supplyMission/supplyMissionCompletedMessage.sqf:22` as the `RequestChangeScore` send point.
+
 ## 2026-06-03 - Codex Documentation Finisher: Function / Module Index Reaktiv Correction
 
 - Closed [Instructions for Codex](Instructions-For-Codex) item 21.
