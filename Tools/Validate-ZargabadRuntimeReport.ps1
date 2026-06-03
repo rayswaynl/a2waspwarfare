@@ -105,6 +105,32 @@ function Test-ScreenshotReference {
 	return $false
 }
 
+function Find-EvidenceFile {
+	param([string]$Reference, [string[]]$Roots)
+	if ([System.IO.Path]::IsPathRooted($Reference)) {
+		if (Test-Path -LiteralPath $Reference -PathType Leaf) { return (Resolve-Path -LiteralPath $Reference).Path }
+		return ""
+	}
+	foreach ($root in $Roots) {
+		$fullPath = Join-Path $root $Reference
+		if (Test-Path -LiteralPath $fullPath -PathType Leaf) { return (Resolve-Path -LiteralPath $fullPath).Path }
+	}
+	return ""
+}
+
+function Test-MapAuditPacketFile {
+	param([string]$Path)
+	if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $false }
+	$text = Get-Content -Raw -LiteralPath $Path
+	return (
+		$text -match '^# Zargabad Map Audit Packet' -and
+		$text -match '## Population Flow' -and
+		$text -match '## Rim Test Points' -and
+		$text -match '## WDDM Fortification Review' -and
+		$text -match '## Claude Screenshot Targets'
+	)
+}
+
 function Test-ScreenshotImageFile {
 	param([string]$Path)
 	if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $false }
@@ -314,6 +340,9 @@ if ($EvidenceRoot.Trim().Length -gt 0) {
 	Assert-True "runtime report evidence root exists" (Test-Path -LiteralPath $EvidenceRoot -PathType Container)
 	$resolvedEvidenceRoot = (Resolve-Path -LiteralPath $EvidenceRoot).Path
 	$evidenceRoots = @($resolvedEvidenceRoot, $reportFile.Directory.FullName)
+	$mapAuditPacketPath = Find-EvidenceFile -Reference "zargabad-map-audit.md" -Roots $evidenceRoots
+	Assert-True "map audit packet attachment exists under evidence root" ($mapAuditPacketPath.Trim().Length -gt 0)
+	Assert-True "map audit packet attachment has expected Zargabad sections" (Test-MapAuditPacketFile -Path $mapAuditPacketPath)
 	$screenshotRefs = @((Get-ScreenshotReferences -Rows $noteRows) + (Get-ScreenshotReferences -Rows $objectiveRows) | Sort-Object -Unique)
 	Assert-True "Claude Notes screenshot references are present when evidence root is supplied" ($screenshotRefs.Count -gt 0)
 	$missingScreenshotRefs = @($screenshotRefs | Where-Object { -not (Test-ScreenshotReference -Reference $_ -Roots $evidenceRoots) })

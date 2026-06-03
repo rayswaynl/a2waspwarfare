@@ -168,6 +168,10 @@
     },
     {
       "type": "source-audit",
+      "summary": "Tools/Validate-ZargabadRuntimeReport.ps1 now also requires a real zargabad-map-audit.md attachment under the evidence root or beside the report when -EvidenceRoot is supplied, and checks that it contains the Population Flow, Rim Test Points, WDDM Fortification Review and Claude Screenshot Targets sections."
+    },
+    {
+      "type": "source-audit",
       "summary": "Tools/New-ZargabadClaudeBrief.ps1 now infers population/SP-SV placement and town-defense retest focuses when the latest commit touches mission placement, the static validator, the runtime report, the map audit packet or Zargabad audit/test-plan docs, so Claude is nudged to retest population flow/value tiers and priority defense mix arcs after every relevant Codex checkpoint."
     },
     {
@@ -205,6 +209,6 @@
   ],
   "result": "partial",
   "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Codex should send Tools/New-ZargabadClaudeBrief.ps1 output after each commit, and Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports after each Codex commit or runtime gate.",
-  "updatedAt": "2026-06-03T08:39:00+02:00",
+  "updatedAt": "2026-06-03T09:05:00+02:00",
   "updatedBy": "Codex"
 }
