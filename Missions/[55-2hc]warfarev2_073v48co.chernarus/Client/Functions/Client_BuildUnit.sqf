@@ -362,7 +362,11 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 
 
 	//--- Empty Vehicle.
-	if (!_driver && !_gunner && !_commander) exitWith {};
+	if (!_driver && !_gunner && !_commander) exitWith {
+		//--- bug (DR-33a): was "exitWith {}" which skipped the queue decrement below, leaking unitQueu / WFBE_C_QUEUE_<factory> on every crewless buy -> factory soft-locks after MAX such buys. Mirror the normal completion decrement.
+		unitQueu = unitQueu - _cpt;
+		missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+	};
 
 	//--- Crew Management.
 	_crew = missionNamespace getVariable Format ["WFBE_%1SOLDIER",sideJoinedText];

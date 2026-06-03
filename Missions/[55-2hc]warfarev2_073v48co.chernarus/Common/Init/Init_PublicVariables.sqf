@@ -37,6 +37,7 @@ _l = _l + ["SetMHQLock"];
 _l = _l + ["Available"];
 _l = _l + ["RequestBaseArea"];
 _l = _l + ["NukeIncoming"];
+_l = _l + ["HandleParatrooperMarkerCreation"]; //--- bug (DR-2): handler file + server send exist, but the channel was never registered -> nil-code on hosted / lost paratrooper markers on dedicated.
 
 _clientCommandPV = _l;
 
