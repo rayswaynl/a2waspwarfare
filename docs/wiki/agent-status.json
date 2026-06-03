@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T18:50:00+02:00",
+  "generatedAt": "2026-06-03T18:55:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed stale machine-readable collaboration claims: latest-doc-batch-validation-publish is no longer an active publish task, and attack-wave-authority-playbook is already published/validated.",
+      "currentWork": "Closed stale machine-readable collaboration claims: latest-doc-batch-validation-publish is no longer active, attack-wave-authority-playbook is published/validated, and paratrooper-marker-revival is propagated with smoke pending.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another feature-status reconciliation item, remaining machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
@@ -47,7 +47,7 @@
       "lane": "stale-collaboration-claim-closure",
       "owner": "Codex",
       "status": "published-validated",
-      "output": "agent-collaboration.json no longer advertises latest-doc-batch-validation-publish as active or attack-wave-authority-playbook as ready-to-publish. Current dashboard/status/event records and the DR-41 playbook/backlog show those docs lanes are published/validated; attack-wave source evidence remains Common_AttackWaveActivate.sqf:3-8, Server_AttackWave.sqf:1-27 and AttackWave.sqf:23,40."
+      "output": "agent-collaboration.json no longer advertises latest-doc-batch-validation-publish as active, attack-wave-authority-playbook as ready-to-publish or paratrooper-marker-revival as active. Current dashboard/status/event records and owner pages show the publish/attack-wave lanes are published/validated and paratrooper markers are propagated/smoke-pending; attack-wave source evidence remains Common_AttackWaveActivate.sqf:3-8, Server_AttackWave.sqf:1-27 and AttackWave.sqf:23,40, while Chernarus/Vanilla both register HandleParatrooperMarkerCreation at Init_PublicVariables.sqf:39."
     },
     {
       "lane": "pvf-dispatch-dashboard-status-closure",
