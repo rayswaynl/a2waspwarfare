@@ -244,7 +244,8 @@ with missionNamespace do {
 	if (isNil "WFBE_C_DRONE_FLARE_COUNT") then {WFBE_C_DRONE_FLARE_COUNT = 2}; //--- # flare/CM drones
 	if (isNil "WFBE_C_DRONE_MUNITION_COUNT") then {WFBE_C_DRONE_MUNITION_COUNT = 3}; //--- # loitering munitions
 	if (isNil "WFBE_C_DRONE_INGRESS_SPEED") then {WFBE_C_DRONE_INGRESS_SPEED = 60}; //--- m/s transit
-	if (isNil "WFBE_C_DRONE_SPAWN_DIST") then {WFBE_C_DRONE_SPAWN_DIST = 3000}; //--- m from target the package spawns in (random +1km); far enough to see incoming, not map-edge
+	if (isNil "WFBE_C_DRONE_OFFSHORE") then {WFBE_C_DRONE_OFFSHORE = 700}; //--- m offshore the package spawns over the sea (random +400). Targets nearer the coast = shorter overland run = better survival.
+	if (isNil "WFBE_C_DRONE_SPAWN_DIST") then {WFBE_C_DRONE_SPAWN_DIST = 3000}; //--- fallback random-bearing spawn distance when no open sea is found near the target (deep inland)
 	if (isNil "WFBE_C_DRONE_LOITER_SPEED") then {WFBE_C_DRONE_LOITER_SPEED = 35}; //--- m/s orbit
 	if (isNil "WFBE_C_DRONE_CRUISE_ALT") then {WFBE_C_DRONE_CRUISE_ALT = 200}; //--- m AGL
 	if (isNil "WFBE_C_DRONE_LOITER_TIME") then {WFBE_C_DRONE_LOITER_TIME = 90}; //--- s before forced commit

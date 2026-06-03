@@ -9,7 +9,7 @@
 
 private ["_side","_destination","_playerTeam","_sideID","_enemySides","_aaTypes","_model","_alt","_speed","_lspeed",
         "_flareN","_total","_zoneR","_warhead","_scatter","_hp","_stagger","_loiterTime",
-        "_spawnPos","_bearing","_spawnDist","_drones","_i","_role","_drone","_activeKey","_active","_x"];
+        "_spawnPos","_coastDir","_coastDist","_a","_w","_r","_spawnDist","_drones","_i","_role","_drone","_activeKey","_active","_x"];
 
 _side        = _this select 1;
 _destination = _this select 2;
@@ -94,9 +94,23 @@ WFBE_DroneSpoofMissile = {
 
 //--- Spawn the package a short distance out from the target on a random bearing, at cruise altitude.
 //--- (Map-edge spawn put it ~10 km out -> a multi-minute transit that the 70s ingress deadline never finished.)
-_bearing = random 360;
-_spawnDist = WFBE_C_DRONE_SPAWN_DIST + random 1000;   //--- mid-distance approach (default 3-4 km): far enough to see incoming, not map-edge. Tunable.
-_spawnPos = [(_destination select 0) + _spawnDist * sin _bearing, (_destination select 1) + _spawnDist * cos _bearing, _alt];
+//--- Spawn over the SEA off the nearest OPEN coast to the target, then ingress inland.
+//--- Coastal targets = short overland run (likely strike); deep-inland targets = long exposed run that often
+//--- bails before the ingress deadline -> the package "survives to strike" mainly near the coast.
+_coastDir = -1; _coastDist = 999999;
+for "_a" from 0 to 345 step 15 do {
+    _w = -1;
+    for "_r" from 300 to 12000 step 300 do {
+        if (surfaceIsWater [(_destination select 0) + _r * sin _a, (_destination select 1) + _r * cos _a]) exitWith {_w = _r};
+    };
+    //--- require OPEN sea (still water ~1.5 km further out) so we don't launch from a small inland lake.
+    if (_w > 0 && {surfaceIsWater [(_destination select 0) + (_w + 1500) * sin _a, (_destination select 1) + (_w + 1500) * cos _a]} && {_w < _coastDist}) then {
+        _coastDist = _w; _coastDir = _a;
+    };
+};
+if (_coastDir < 0) then { _coastDir = random 360; _coastDist = WFBE_C_DRONE_SPAWN_DIST; }; //--- no sea within range (deep inland): random-bearing fallback.
+_spawnDist = _coastDist + WFBE_C_DRONE_OFFSHORE + random 400;
+_spawnPos = [(_destination select 0) + _spawnDist * sin _coastDir, (_destination select 1) + _spawnDist * cos _coastDir, _alt];
 
 //--- Spawn the crewless package.
 _drones = [];

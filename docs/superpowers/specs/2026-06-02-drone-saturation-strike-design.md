@@ -45,7 +45,7 @@ All 5 use the **same airframe — the PMC Ka-137** (`Ka137_PMC`) — on **both t
 
 ### 3.3 Lifecycle
 
-1. **Spawn** — 5 crewless Ka-137 airframes ~1.5–2 km from the target on a random bearing (snappy ~30 s arrival, visible over the zone). *(Was a map-edge corner — ~10 km out, never arrived before the deadline; fixed 2026-06-03.)*
+1. **Spawn** — 5 crewless Ka-137s spawn **over the sea, off the nearest open coast** to the target, then ingress inland at staggered altitudes. Coastal targets get a short overland run (likely strike); deep-inland targets face a long, exposed run that often bails before the ingress deadline — so the package **"survives to strike" mainly near the coast**. *(Spawn evolved map-edge → near-target → naval offshore, 2026-06-03.)*
 2. **Ingress** — scripted flight to the painted point (`setPosATL`/`setVelocity`, coarse tick), in a wedge formation, slots ≥15–20 m apart.
 3. **Screen & search** — flare drones orbit and dispense CM/smoke; loiterers orbit and scan via `nearestObjects` every ~2 s.
 4. **Acquire — or time out** — on a valid lock *or* after the loiter-endurance timer, commit. Acquisition can fail; it is never guaranteed.
