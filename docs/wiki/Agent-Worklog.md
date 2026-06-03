@@ -6,7 +6,7 @@ Append entries here so Codex, Claude and future assistants can see what each age
 
 - Source-checked Hubble's Wave Q factory/purchase lead against `Client/GUI/GUI_Menu_BuyUnits.sqf:102-156`, `Client/Functions/Client_BuildUnit.sqf:167-208,365,467-469`, `Common/Init/Init_PublicVariables.sqf:9-21` and `Server/Init/Init_Server.sqf:10`.
 - Confirmed the owner docs are already canonical: player purchases spawn local `BuildUnit` and deduct client funds, no `RequestBuyUnit` PVF exists, `AIBuyUnit`/`Server_BuyUnit.sqf` has no proven live caller, and the DR-33 queue counter/token hazards remain patch-ready/source-unpatched.
-- Updated [Discovery swarm](Subagent-Discovery-Swarm), [Progress dashboard](Progress-Dashboard) and machine records so future agents treat the Hubble Wave Q note as selected-harvested instead of rediscovering the player-buy path split.
+- Tightened the factory atlas risk rows with exact refs for the no-`RequestBuyUnit` player path, latent `AIBuyUnit` compile, queue counter/token cleanup, empty-exit/extra-crew hazard and missing cancel/refund semantics; updated [Discovery swarm](Subagent-Discovery-Swarm), [Progress dashboard](Progress-Dashboard) and machine records so future agents treat the Hubble Wave Q note as selected-harvested instead of rediscovering the player-buy path split.
 
 ## 2026-06-03 - Codex Documentation Finisher: Wave Q Town/Camp Routing Harvest
 
