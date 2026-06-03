@@ -193,6 +193,7 @@ $expectedNoteRows = @(
 	"Hosted boot context",
 	"Dedicated boot context",
 	"Map audit packet attached",
+	"Population and SP/SV placement feel",
 	"Base safety and spawn sightlines",
 	"Base static runtime positions and arcs",
 	"Base-axis midpoint and wall origin",
@@ -226,6 +227,7 @@ $coordinateOrScreenshot = '(\b[0-9]{2,4}\s*,\s*[0-9]{2,4}\b|\[[0-9]{2,4}\s*,\s*[
 Assert-NoteEvidence -Rows $noteRows -Key "Hosted boot context" -Pattern '(hosted|listen|local host|local-host|non-dedicated).*(RPT|Init_Server|server initialization ended|Arma)|((RPT|Init_Server|server initialization ended|Arma).*(hosted|listen|local host|local-host|non-dedicated))'
 Assert-NoteEvidence -Rows $noteRows -Key "Dedicated boot context" -Pattern '(dedicated|arma2oaserver|server\.exe).*(RPT|Init_Server|server initialization ended|Arma)|((RPT|Init_Server|server initialization ended|Arma).*(dedicated|arma2oaserver|server\.exe))'
 Assert-NoteEvidence -Rows $noteRows -Key "Map audit packet attached" -Pattern 'zargabad-map-audit\.md'
+Assert-NoteEvidence -Rows $noteRows -Key "Population and SP/SV placement feel" -Pattern '(population|SP/SV|SV|supply|city|district|market|airfield|farm|outskirt|camp|town center|4075\s*,\s*3950|2980\s*,\s*5200|\.png|\.jpg|\.jpeg)'
 Assert-NoteEvidence -Rows $noteRows -Key "Base safety and spawn sightlines" -Pattern $coordinateOrScreenshot
 Assert-NoteEvidence -Rows $noteRows -Key "Base static runtime positions and arcs" -Pattern '(baseFootprint|base static|Init_Zargabad|static).*([0-9]{2,4}\s*,\s*[0-9]{2,4}|[0-9]{1,3}\])'
 Assert-NoteEvidence -Rows $noteRows -Key "Base-axis midpoint and wall origin" -Pattern '(3425\s*,\s*3375|base-axis|wall origin)'
