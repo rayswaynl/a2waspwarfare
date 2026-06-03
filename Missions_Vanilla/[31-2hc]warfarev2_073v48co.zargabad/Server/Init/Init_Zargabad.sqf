@@ -23,6 +23,7 @@ _centralWallGapOffsets = [-904,-524,-114,331,751];
 	};
 } forEach _centralWallSpans;
 missionNamespace setVariable ["WFBE_ZARGABAD_CENTRAL_WALL", _centralWall];
+missionNamespace setVariable ["WFBE_ZARGABAD_CENTRAL_WALL_CREWED_COUNT", 0];
 missionNamespace setVariable ["WFBE_ZARGABAD_CENTRAL_WALL_GAP_OFFSETS", _centralWallGapOffsets];
 
 _westStatics = [["M2StaticMG_US_EP1",[-45,0,0],270],["M2StaticMG_US_EP1",[45,0,0],90],["TOW_TriPod_US_EP1",[0,58,0],0],["Stinger_Pod_US_EP1",[0,-58,0],180]];

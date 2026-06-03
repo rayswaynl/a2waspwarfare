@@ -76,7 +76,7 @@ Static validation currently proves the editor data shape, not tactical effective
 
 - Spawn-to-spawn and spawn-to-city sightlines.
 - Whether side statics can be trivially sniped or stolen.
-- Whether the central wall gaps are wide enough for normal infantry, light armor and AI movement while still interrupting easy flat-map fire lanes.
+- Whether the uncrewed central wall reports `centralWallCrewed [0]`, keeps gaps wide enough for normal infantry, light armor and AI movement, and still interrupts easy flat-map fire lanes without creating an armed middle-map kill strip.
 - Whether extra town AT/AA/MG/GL defenses face useful routes after the runtime orientation pass and terrain placement.
 - Whether north/east side hills still allow unfair shelling or overwatch outside the guarded rim.
 - Whether the edge guard logs once on init, ignores objective-side fights, and removes only sustained extreme-rim ground abuse.
