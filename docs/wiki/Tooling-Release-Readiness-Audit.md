@@ -17,7 +17,7 @@ Canonical companion pages are [Tools/build workflow](Tools-And-Build-Workflow), 
 | Takistan copy rules | `FileManager.ShouldSkipFile()` excludes `mission.sqm`, `version.sqf`, help, `texHeaders.bin`, `StartVeh.sqf`, non-modded `loadScreen.jpg`: `FileManager.cs:89-101`. |
 | Takistan blacklist | Directory blacklist includes `Textures`, `Server\Config`, `Core_Artillery`: `FileManager.cs:20-36`. |
 | Current comparable drift | Read-only spot check found Chernarus -> Takistan comparable drift bounded to expected map/asset extras plus `Server/Init/Init_Server.sqf` `SET_MAP` `1` vs `2` at about `:613`. |
-| Modded drift posture | Modded folders remain divergent/stub/fork-like; do not treat them as maintained generated outputs while `SqfFileGenerator.cs:132-133` remains commented. |
+| Modded drift posture | Modded folders remain divergent/stub/fork-like; do not treat them as maintained generated outputs while `SqfFileGenerator.cs:132-133` remains commented. 2026-06-03 scout evidence adds a harder gate: all tracked modded folders lack generated `version.sqf`, several lack core bootstrap/sound/music files, and Napf/Eden/Lingor contain 18 unresolved conflict-marker files. |
 | PerformanceAuditAnalyzer | Read-only RPT parser for `[Performance Audit]`, `SID`, legacy sessions and CSV/HTML/Markdown reports: `Tools/PerformanceAuditAnalyzer/Analyze-PerformanceAudit.ps1:14-18`, `:282`, `:1295`, `:1361-1393`. |
 
 ## Release Consistency Findings
@@ -28,7 +28,7 @@ Canonical companion pages are [Tools/build workflow](Tools-And-Build-Workflow), 
 | P1 | `agent-status.json` still has stale prose for some propagated lanes. | Status rows around the propagated fix lanes say Vanilla propagation pending while release readiness says propagated. | Update wording to "Vanilla propagated; Arma smoke pending" in the next status cleanup. |
 | P1 | Fresh-checkout boot/package hazard is real. | `version.sqf` is git-ignored/generated but included by mission boot files. | Add a machine-readable release gate for generated `version.sqf`. |
 | P1 | Docs CI validates wiki structure, not build/drift/security. | `.github/workflows/docs.yml:25-46`; `docs/validate-wiki.ps1:63-111` | Add separate build/drift/security checks rather than overloading docs validation. |
-| P2 | Modded release posture is cautious and source-consistent. | `Tools-And-Build-Workflow.md:63`, `:72-74`; `agent-release-readiness.json:14-15`; `SqfFileGenerator.cs:132-133`; `ZipManager.cs:16` | Keep Modded_Missions out of generated-propagation claims unless generation is intentionally restored. |
+| P2 | Modded release posture is cautious and source-consistent. | `Tools-And-Build-Workflow.md:63`, `:72-74`; `agent-release-readiness.json:14-15`; `SqfFileGenerator.cs:132-133`; `ZipManager.cs:16`; `rg -l "<<<<<<<|=======|>>>>>>>" Modded_Missions` finds 18 files. | Keep Modded_Missions out of generated-propagation claims unless generation is intentionally restored and conflict/bootstrap cleanup is validated. |
 
 ## Integration Risk Table
 
@@ -42,6 +42,7 @@ Canonical companion pages are [Tools/build workflow](Tools-And-Build-Workflow), 
 | AntiStack DB extension | Separate absent `A2WaspDatabase`; default enabled; wrappers `call compile` extension strings and assume array shape. | High deployment/runtime trust risk. | `Init_CommonConstants.sqf:171`; `Parameters.hpp:547-551`; `callDatabaseRetrieve.sqf:24-40`; `callDatabaseRequestSideTotalSkill.sqf:30-64`; `callDatabaseSendPlayerList.sqf:58-65`. |
 | BattlEye filters | Shipped filter is AFK `kickAFK` plumbing only; no `scripts.txt`, `server.cfg` or `basic.cfg` bundle. | Medium release-claim risk, not comprehensive public-server hardening. | `BattlEyeFilter/publicvariable.txt:2`; `Client/FSM/updateclient.sqf:153-160`; `External-Integrations.md:96-104`. |
 | Deployment inventory | Actual server deployment still needs artifact/config locations for `a2waspwarfare_Extension`, separate `A2WaspDatabase`, DiscordBot secrets/preferences, production `BEpath` and external `server.cfg`/`basic.cfg` if used. | Medium reproducibility risk. | `Integration-Trust-Boundary-Audit.md#deployment-inventory-gate`; `Tools-And-Build-Workflow.md#operator-checklist`. |
+| Missing wrapper scripts | A scoped scan found no `.cmd`, `.ps1`, `.bat` or `.sh` files under `Tools/LoadoutManager`, `DiscordBot`, `Extension` or `BattlEyeFilter`. | Low/medium operator-expectation risk: release flow is direct tool invocation/manual deployment, not a hidden script pipeline. | `Tools-And-Build-Workflow.md#operator-checklist`; scout query `rg --files Tools/LoadoutManager DiscordBot Extension BattlEyeFilter -g "*.ps1" -g "*.cmd" -g "*.bat" -g "*.sh"`. |
 
 ## GlobalGameStats Fixture Contract
 

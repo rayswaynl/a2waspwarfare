@@ -125,6 +125,12 @@ Each camp cycle:
 
 When a town itself is captured, `Server_SetCampsToSide.sqf` resets every camp to the new side and starting SV, updates flag textures, then sends `AllCampsCaptured` (`Server_SetCampsToSide.sqf:15-27`).
 
+### Camp Helper Risks
+
+`Common_GetTotalCamps.sqf:10-11` and `Common_GetTotalCampsOnSide.sqf:16` both return `1` when the computed count is zero. That fallback may have been intended as a divide-by-zero guard for camp-ratio logic, but it can also inflate empty-camp totals in UI, metrics or future balance code. Before reusing these helpers, decide whether the caller needs a real count or a safe denominator.
+
+Camp capture marker events are also timing-sensitive: `CampCaptured.sqf:12-13` and `AllCampsCaptured.sqf:9-10` assume each camp already has a local `wfbe_camp_marker`. `Init_Town.sqf:149-158` creates those marker names on clients, so JIP or unusually early PVF delivery should be smoked before changing camp marker dispatch.
+
 ## Client Marker And Capture Feedback
 
 Client PV functions are registered in `Init_PublicVariables.sqf:25-35`:

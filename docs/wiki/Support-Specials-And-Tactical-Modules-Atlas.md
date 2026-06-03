@@ -16,6 +16,8 @@ Key source refs:
 
 Server dispatch starts at `Server/PVFunctions/RequestSpecial.sqf:1`, which forwards directly into `Server/Functions/Server_HandleSpecial.sqf`. The server dispatch file handles paratroops/ammo/vehicle/UAV around `:43-64`, ICBM around `:97-111`, and repair-camp behavior around `:147-170`.
 
+RequestSpecial scout 2026-06-04: the active tag set in source Chernarus is `update-teamleader`, `group-query`, `Paratroops`, `ParaVehi`, `ParaAmmo`, `RespawnST`, `uav`, `upgrade-sync`, `update-clientfps`, `update-town-delegation`, `ICBM`, `process-killed-hq`, `connected-hc` and `repair-camp`. `track-playerobject` has a server switch case around `Server_HandleSpecial.sqf:133-145`, but no active Chernarus `RequestSpecial` caller was found; treat it as an undriven bookkeeping branch unless a later dynamic caller proves otherwise.
+
 ## Support Feature Matrix
 
 | Feature | Status | Notes |

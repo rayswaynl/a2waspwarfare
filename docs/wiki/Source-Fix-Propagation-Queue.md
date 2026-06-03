@@ -77,7 +77,7 @@ These have source-backed playbooks but are not current code fixes yet. Do not mi
 3. Run `dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj` from the repo root, or `dotnet run` from `Tools/LoadoutManager`.
 4. Inspect `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` diffs for the intended source fixes.
 5. Treat `The specified content was not found in the file.` from `ReplaceGUIMenuHelp` as a non-fatal warning unless a future diff shows help-menu title replacement was expected for that terrain.
-6. Do not claim `Modded_Missions/*` propagation; current tooling does not actively maintain those folders.
+6. Do not claim `Modded_Missions/*` propagation; current tooling does not actively maintain those folders. A 2026-06-03 scout confirmed all tracked modded folders lack generated `version.sqf`, several lack core bootstrap files, and 18 Napf/Eden/Lingor files contain unresolved conflict markers.
 7. Run or record the relevant smoke from [Testing workflow](Testing-Debugging-And-Release-Workflow), especially the [propagated fix smoke pack](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack).
 8. Update this page, [Progress dashboard](Progress-Dashboard), [`agent-release-readiness.json`](agent-release-readiness.json), [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) and [`agent-knowledge.jsonl`](agent-knowledge.jsonl).
 

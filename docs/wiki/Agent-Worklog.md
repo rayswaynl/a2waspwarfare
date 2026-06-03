@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T00:13:27+02:00 - Codex - Spark scout wave harvest and micro-lane split
+
+- Harvested completed Spark scouts from the economy/factory/respawn/UI/HC/tooling/entrypoint/camp/paratrooper lanes. Most economy, factory, respawn/MASH, HC and paratrooper results confirmed existing canonical pages, so they were treated as validation instead of duplicated.
+- Promoted new source-backed findings into docs and machine backlog: Economy dialog missing controls (`23004`/`23005`), 18 unresolved conflict-marker files across modded Napf/Eden/Lingor, camp count helper zero-to-one fallback, and the absence of wrapper scripts under the scoped tooling/integration folders.
+- Broad Spark prompts for PVF, supports/specials, towns/camps and commander/AI exceeded context. Replaced them with narrower micro-lanes where useful: RequestSpecial-only, camp-capture-only, paratrooper-marker-only and tactical-support-only.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-03T22:41:16+0200 - Codex - buymenu-easa-qol-branch-deep-audit
 
 - Deep-audited `origin/feat/buymenu-easa-qol` head `a66d4691` after the branch matrix identified it as the remaining small UI branch without a dedicated audit page.
@@ -1784,3 +1791,8 @@ Key conclusions:
 - Promoted source-checked findings: auto view distance is live with target FPS 60, map-visible guard and +/-4 band; AFK currently has both the parameterized `kickAFK` BattlEye path and the older `AFKthresholdExceededName`/`failMission` path; bomb distance and missile guardrails are live but bomb altitude is dormant; AA loadout gating is path-dependent.
 - Verified local tooling status: `LoadoutManager` builds with nullable warnings, `DiscordBot` builds cleanly, and the legacy `Extension` needs the .NET Framework 4.8 targeting pack in this environment.
 - Updated the owning wiki pages and kept this docs-only; no gameplay source files changed.
+
+## 2026-06-03T23:43:22+02:00 - Codex - Spark scout deep-index wave launch
+- Launched a new read-only Spark scout wave for economy, construction/factory, respawn/MASH, AI/HC, networking/PVF and UI/dialog correctness.
+- Replaced the first broad economy scout and the broad UI/dialog scout after Spark context overflows with tighter economy-only and resource/dialog-only lanes.
+- Updated [Progress Dashboard](Progress-Dashboard) and `agent-status.json` so Steff and future agents can see the live wave and harvest status. No gameplay source files changed.

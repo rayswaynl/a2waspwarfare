@@ -54,10 +54,24 @@ Generated-mission maintenance tiers:
 | Chernarus source mission | Authoritative source | Gameplay edits belong here first. |
 | Vanilla Takistan | Faithful generated target | Logic drift is characterized and currently limited to documented map-config/skip-list differences. |
 | Branch-only Zargabad | Candidate Vanilla low-pop target | `origin/feature/zargabad-map` adds terrain/tooling support and a `[31-2hc]` mission folder. Static branch validation passed locally; see [Zargabad branch audit](Zargabad-Branch-Audit). Runtime evidence, class-load checks, screenshot/RPT packet validation and generated whitespace cleanup are still required. |
-| Napf, Eden, Lingor | Divergent forks | They need their own maintenance/audit decision before source hardening can be considered shipped there. |
+| Napf, Eden, Lingor | Divergent forks with syntax-integrity hazards | They need their own maintenance/audit decision before source hardening can be considered shipped there. A 2026-06-03 scan found unresolved conflict markers in 18 modded files across Napf, Eden and Lingor, including `Napf/description.ext:43-46`, `Napf/Common/Module/IRS/IRS_OnIncomingMissile.sqf`, `Lingor/Client/Client_UpdateRHUD.sqf`, `Lingor/Common/Config/Core_Root/*` and `Eden/Client/Module/Skill/Skill_Apply.sqf`. |
 | Sahrani, Dingor, Tavi, Isla Duala | Abandoned stubs | They should not be treated as playable/supportable until completed or retired. |
 
 `version.sqf` is generated/expected, not source-owned. A fresh checkout needs LoadoutManager output or a terrain-specific generated copy before direct mission pack/test work; see [Tools and build workflow](Tools-And-Build-Workflow) and DR-43a.
+
+### Modded Folder Completeness Snapshot
+
+All tracked modded folders lack tracked `version.sqf`. The current generator can describe modded roots, but `SqfFileGenerator.cs:132-133` leaves modded writes commented and `ZipManager.cs:16` packages only `Missions` plus `Missions_Vanilla`.
+
+| Folder | Missing or blocking evidence from 2026-06-03 scout |
+| --- | --- |
+| `eden` | Missing generated `version.sqf`, `Sounds/description.ext` and `Music/description.ext`; conflict markers also exist in `Client/Action/Action_RepairMHQ.sqf`, skill files and `Structures_CO_RU.sqf`. |
+| `lingor` | Missing `mission.sqm`, `description.ext`, `initJIPCompatible.sqf`, generated `version.sqf`, sound/music descriptions and textures; conflict markers exist in RHUD, Nuke, Init_Unit and multiple root/artillery config files. |
+| `Napf` | Missing `mission.sqm`, generated `version.sqf` and sound/music descriptions; `description.ext` and several SQF/config files contain conflict markers. |
+| `smd_sahrani_a2` | Stub: missing mission/bootstrap/server-init/generated/sound/music/texture essentials. |
+| `tavi` | Stub: missing description/bootstrap/server-init/generated/sound/music/texture essentials. |
+| `dingor` | Overlay/stub: `description.ext` exists and includes generated/sound files, but `version.sqf`, `mission.sqm`, `initJIPCompatible.sqf`, server init and `Sounds` are missing. |
+| `isladuala` | Stub: missing mission/description/bootstrap/server-init/generated/sound/music/texture essentials. |
 
 ## Continue Reading
 
