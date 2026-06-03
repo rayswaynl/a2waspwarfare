@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T19:20:00+02:00",
+  "generatedAt": "2026-06-03T19:25:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed stale pv-dispatch-perf-jip-review collaboration status: Networking/PV, PVF dispatch playbook, Performance sweep, Hardening roadmap and agent-hardening-backlog already publish the DR-38 per-message compile performance note beside DR-1.",
+      "currentWork": "Closed stale wasp-overlay-perf-jip-review collaboration status: WASP Overlay, Performance Sweep, Codebase Coverage Ledger and WASP Marker Wait Cleanup already publish DR-40; source still needs the small display-54 wait code change.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another feature-status reconciliation item, remaining machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wasp-overlay-review-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "agent-collaboration.json no longer advertises wasp-overlay-perf-jip-review as ready-for-review. Current docs already state DR-40: live WASP overlay wiring is per-client and JIP/HC-clean, the old initJIPCompatible.sqf:241-245 WASP bootstrap/WASP_procInitComm path is commented/dead, and global_marking_monitor.sqf:62-72 still needs a small throttled display-54 wait cleanup. wasp-marker-wait-cleanup status was corrected to source-needs-code."
+    },
     {
       "lane": "pv-dispatch-perf-review-status-closure",
       "owner": "Codex",

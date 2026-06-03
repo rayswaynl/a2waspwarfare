@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T19:20:00+02:00",
+  "generatedAt": "2026-06-03T19:25:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wasp-overlay-review-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/WASP-Overlay.md",
+        "docs/wiki/Performance-Opportunity-Sweep.md",
+        "docs/wiki/Codebase-Coverage-Ledger.md",
+        "docs/wiki/WASP-Marker-Wait-Cleanup.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/global_marking_monitor.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf"
+      ],
+      "outputs": [
+        "Closed stale wasp-overlay-perf-jip-review ready-for-review status",
+        "Confirmed DR-40 WASP Perf+JIP/HC findings are already integrated into owner pages",
+        "Corrected adjacent wasp-marker-wait-cleanup status to source-needs-code"
+      ],
+      "handoff": "Future WASP cleanup owner should use WASP-Marker-Wait-Cleanup. This closure is status-only: source still needs a tiny sleep/backoff in global_marking_monitor.sqf around the display-54 wait, Vanilla propagation after source patch, and Arma 2 OA map-marker smoke."
+    },
     {
       "lane": "pv-dispatch-perf-review-status-closure",
       "owner": "Codex",
@@ -2020,7 +2043,7 @@
     {
       "lane": "wasp-overlay-perf-jip-review",
       "owner": "Claude",
-      "status": "ready-for-review",
+      "status": "published-validated",
       "sourceScope": [
         "Missions/[55-2hc]...chernarus/WASP/global_marking_monitor.sqf",
         "Missions/[55-2hc]...chernarus/WASP/baserep/*, WASP/actions/AddActions.sqf, WASP/rpg_dropping/DropRPG.sqf",
@@ -2030,7 +2053,7 @@
         "Deep-Review-Findings.md (Round 31 / DR-40)",
         "Codebase-Coverage-Ledger.md (WASP overlay Perf+JIP-HC)"
       ],
-      "handoff": "Codex: on the WASP-Overlay page note global_marking_monitor.sqf:62 should use the throttled waitUntil idiom (as :80 does) and that the initJIPCompatible.sqf:243-244 WASP init is dead/commented. MILESTONE: all Perf/JIP-HC cells across the matrix are now reviewed; residual 🟡 is exclusively Auth/PV owner decisions."
+      "handoff": "Historical Claude review now closed by wasp-overlay-review-status-closure. WASP Overlay, Performance opportunity sweep, Codebase coverage ledger and WASP Marker Wait Cleanup already document DR-40: per-client live WASP wiring is JIP/HC-clean, the old initJIPCompatible.sqf:241-245 bootstrap/WASP_procInitComm path is dead/commented, and global_marking_monitor.sqf:62-72 remains a small display-54 wait cleanup that still needs a source code change."
     },
     {
       "lane": "supply-missions-perf-jip-review",
@@ -2442,7 +2465,7 @@
     {
       "lane": "wasp-marker-wait-cleanup",
       "owner": "Codex-2",
-      "status": "published-propagated-smoke-pending",
+      "status": "published-opportunity-source-needs-code",
       "sourceScope": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/global_marking_monitor.sqf",
         "Performance-Opportunity-Sweep.md",

@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: WASP Overlay Review Status Closure
+
+- Closed the stale `wasp-overlay-perf-jip-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); DR-40 is already integrated into [WASP overlay](WASP-Overlay), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Codebase coverage ledger](Codebase-Coverage-Ledger) and [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup).
+- Evidence checked: `WASP/global_marking_monitor.sqf:62-72` still loops on `findDisplay 54` without a sleep/backoff, while the same file uses the throttled `waitUntil {sleep 0.1; !isNull (findDisplay 12)}` idiom at `:80`; `initJIPCompatible.sqf:241-245` still comments out the old WASP bootstrap, including `WASP_procInitComm` at `:243`.
+- Scope remained docs/status only. Corrected the adjacent `wasp-marker-wait-cleanup` collaboration status to source-needs-code so future owners do not mistake the published playbook for a shipped code patch.
+
 ## 2026-06-03 - Codex Documentation Finisher: PV Dispatch Perf Review Status Closure
 
 - Closed the stale `pv-dispatch-perf-jip-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); the requested DR-38 performance observation is already integrated into [Networking/PV](Networking-And-Public-Variables), [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Hardening roadmap](Hardening-Implementation-Roadmap) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl#pvf-dispatch-lookup).
