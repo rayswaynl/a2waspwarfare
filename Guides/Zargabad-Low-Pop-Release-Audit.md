@@ -39,7 +39,7 @@ Totals from static validation: 13 towns, 19 camps, 1 airport, 33 town-defense lo
 | EAST northeast | `5350,5200` | Keeps EAST near the northeast edge but inside the 6000m square after the anti-edge pass. |
 | Resistance central | `4100,3950` | Keeps neutral/resistance initialization near the main city area. |
 
-Zargabad uses a `6000` boundary in `Common/Init/Init_Boundaries.sqf`; the current static check reports zero town/camp/airport/start logics outside that square.
+Zargabad uses a `6000` boundary in `Common/Init/Init_Boundaries.sqf`; the current static check reports zero town/camp/airport/start logics outside that square. Static validation also locks the intended default start anchors: WEST stays near `1500,1550` facing `45`, EAST stays near `5350,5200` facing `225`, Resistance stays near `4100,3950`, and WEST/EAST remain at least 5000m apart for spawn safety.
 
 `Server/Module/Zargabad/Zargabad_EdgeGuard.sqf` adds a server-side rim guard for the extreme outer 120m of that square. Ground players and their vehicles are removed after 45s in the rim unless they are within 325m of a start, town, camp or airport logic. This is deliberately conservative: it backs up the client off-map kill and deters side-hill/edge camping without banning legitimate fights around Rahim Villa, North Camp, East Farms or the airfield.
 
@@ -91,9 +91,9 @@ Static validation currently proves the editor data shape, not tactical effective
 - `powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadMission.ps1`
 - `git diff --check`
 - `git diff --cached --check`
-- Static mission validation: unique ids, all sync ids resolvable, no out-of-6000 Zargabad logic positions, 13 towns, 19 camps, 1 airport, 33 defense logics, start SV 185, max SV 648, defense orientation hook present.
+- Static mission validation: unique ids, all sync ids resolvable, no out-of-6000 Zargabad logic positions, intended default starts/headings and WEST/EAST separation, 13 towns, 19 camps, 1 airport, 33 defense logics, start SV 185, max SV 648, defense orientation hook present.
 
-`Tools/Validate-ZargabadMission.ps1` is the repeatable local validator for this PR. It parses the generated Zargabad `mission.sqm`, checks town/camp/airport/start/defense counts, sync targets, 6000m boundary containment, SV totals, town camp/defense coverage, defense approach distances, high-value objective defense depth, runtime defense-orientation hook, mystery feature LOC, edge-guard LOC/hooks, central-wall template/gaps, and Takistan spillover.
+`Tools/Validate-ZargabadMission.ps1` is the repeatable local validator for this PR. It parses the generated Zargabad `mission.sqm`, checks town/camp/airport/start/defense counts, sync targets, 6000m boundary containment, default start anchors/headings/separation, SV totals, town camp/defense coverage, defense approach distances, high-value objective defense depth, runtime defense-orientation hook, mystery feature LOC, edge-guard LOC/hooks, central-wall template/gaps, and Takistan spillover.
 
 `Tools/Validate-ZargabadRuntimeEvidence.ps1` is the repeatable RPT validator for Claude/runtime testers. It checks that Zargabad appears in supplied RPT logs, server/town/Zargabad/edge-guard init completed, the town-defense orientation pass handled all 33 defense logics, runtime audit count/SV/base/factory/price/economy evidence appears, optional JIP/HC/edge-removal/black-market evidence appears when requested, and common Arma missing-script/dependency/expression failures are absent.
 

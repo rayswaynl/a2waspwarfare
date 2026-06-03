@@ -32,6 +32,17 @@ function Get-NonEmptyLineCount {
 	return @((Get-Content -LiteralPath $Path) | Where-Object { $_.Trim().Length -gt 0 }).Count
 }
 
+function Get-FlatDistance {
+	param($A, $B)
+	return [math]::Sqrt([math]::Pow($A.X - $B.X, 2) + [math]::Pow($A.Y - $B.Y, 2))
+}
+
+function Assert-NearPosition {
+	param([string]$Name, $Object, [double]$X, [double]$Y, [double]$Tolerance)
+	$distance = [math]::Sqrt([math]::Pow($Object.X - $X, 2) + [math]::Pow($Object.Y - $Y, 2))
+	Assert-True $Name ($distance -le $Tolerance)
+}
+
 $missionFullPath = Resolve-RepoPath $MissionPath
 $sourceMissionFullPath = Resolve-RepoPath $SourceMissionPath
 $sqmPath = Join-Path $missionFullPath "mission.sqm"
@@ -48,6 +59,7 @@ foreach ($line in Get-Content -LiteralPath $sqmPath) {
 			Y = [double]$Matches[3]
 			Id = $null
 			Vehicle = $null
+			Azimut = $null
 			Text = ""
 			Init = ""
 			Sync = @()
@@ -58,6 +70,7 @@ foreach ($line in Get-Content -LiteralPath $sqmPath) {
 	if ($null -eq $current) { continue }
 
 	if ($line -match '^\s*id=(\d+);') { $current.Id = [int]$Matches[1] }
+	if ($line -match '^\s*azimut=([-0-9.]+);') { $current.Azimut = [double]$Matches[1] }
 	if ($line -match '^\s*vehicle="([^"]+)";') { $current.Vehicle = $Matches[1] }
 	if ($line -match '^\s*text="([^"]*)";') { $current.Text = $Matches[1] }
 	if ($line -match '^\s*init="(.*)";') { $current.Init = $Matches[1] }
@@ -142,6 +155,22 @@ Assert-True "airfield has beefy defense coverage" (($parsedTowns | Where-Object 
 foreach ($townName in @("Zargabad North District", "Zargabad South District", "Northwest Base", "Rahim Villa")) {
 	Assert-True "$townName has layered defense coverage" (($parsedTowns | Where-Object { $_.Name -eq $townName }).Defenses -ge 3)
 }
+
+$westStart = @($starts | Where-Object { $_.Init -match 'wfbe_default"", west' })
+$eastStart = @($starts | Where-Object { $_.Init -match 'wfbe_default"", east' })
+$resistanceStart = @($starts | Where-Object { $_.Init -match 'wfbe_default"", resistance' })
+Assert-Equal "default WEST start count" $westStart.Count 1
+Assert-Equal "default EAST start count" $eastStart.Count 1
+Assert-Equal "default Resistance start count" $resistanceStart.Count 1
+$westStart = $westStart[0]
+$eastStart = $eastStart[0]
+$resistanceStart = $resistanceStart[0]
+Assert-NearPosition "default WEST start remains southwest" $westStart 1500 1550 5
+Assert-NearPosition "default EAST start remains northeast" $eastStart 5350 5200 5
+Assert-NearPosition "default Resistance start remains central" $resistanceStart 4100 3950 5
+Assert-True "WEST start points toward center" ([math]::Abs($westStart.Azimut - 45) -le 0.1)
+Assert-True "EAST start points toward center" ([math]::Abs($eastStart.Azimut - 225) -le 0.1)
+Assert-True "WEST/EAST starts are separated for spawn safety" ((Get-FlatDistance $westStart $eastStart) -ge 5000)
 
 $boundarySource = Get-Content -Raw -LiteralPath (Join-Path $sourceMissionFullPath "Common/Init/Init_Boundaries.sqf")
 Assert-True "source declares 6000m Zargabad boundary" ($boundarySource -match "case 'zargabad': \{_boundariesXY = 6000\};")
