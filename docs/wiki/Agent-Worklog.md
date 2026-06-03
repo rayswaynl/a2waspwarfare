@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-03T21:15:00+0200 - Codex - origin-branch-intake-second-wave
+
+- Fetched `origin`/`miksuu` and indexed the remaining visible branch-only feature lanes not yet represented in the wiki: `origin/feat/buymenu-easa-qol` `a66d4691`, `origin/feat/player-stats` `e01e47e1`, `origin/perf/quick-wins` `0076040f`, `origin/feat/commander-positions` `560db61c`, `origin/feature/zargabad-map` `1fdcb37a` and current `origin/feat/supply-helicopter` `262dc431`.
+- Added branch rows and promotion gates to [Current source status snapshot](Current-Source-Status-Snapshot), [Feature status](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions), the [branch-only smoke pack](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) and machine ledgers.
+- Source evidence checked: BuyMenu/EASA UI price/queue/current-loadout hints; player-stats off-by-default SQF instrumentation plus DiscordBot RPT tailer; perf quick-wins server/client bugfix bundle; commander-position/wall construction branch; branch-only Zargabad low-pop mission/guides; and supply-heli current-head drift from Supply upgrade wording to Aircraft Factory level 3/4 gating.
+- Static branch caveats recorded: commander-positions and supply-helicopter inherit trailing whitespace in source files, while Zargabad has trailing whitespace in generated mission files. These are cleanup gates before merge/release claims.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-04T01:05:00+0200 - Codex - wf-menu-ops-console-branch-index
 
 - `git pull` fetched new branch `origin/feat/wf-menu-ops-console`; source-checked head `0767c0b5` against stable `origin/master` merge base `2cdf5fb8`.

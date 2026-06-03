@@ -78,6 +78,8 @@ flowchart TD
 
 Static caveat for the branch: `git diff --check origin/master..origin/feat/wf-menu-ops-console` currently reports trailing whitespace in `docs/superpowers/plans/2026-06-03-wf-menu-ops-console.md:78,179`. Clean that before merge even though it is not mission runtime code.
 
+`origin/feat/buymenu-easa-qol` head `a66d4691` is the smaller UI QoL branch. It changes only three Chernarus client UI files: `Client_UIFillListBuyUnits.sqf:104` colors unaffordable unit base prices red, `GUI_Menu_BuyUnits.sqf:201-206` appends live queue counts to factory tabs, and `GUI_Menu_EASA.sqf:29-37` colors/preselects the aircraft's current loadout. Treat this as low-blast-radius UI evidence, not merged behavior: maintained Vanilla is not changed on the branch, and Arma smoke still needs to confirm affordability color, queue-label refresh and EASA current-loadout selection.
+
 ## Title And HUD Resource Map
 
 `Rsc/Titles.hpp` defines long-lived non-modal resources.

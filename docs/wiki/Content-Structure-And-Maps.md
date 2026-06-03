@@ -4,6 +4,7 @@
 
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus`: authoritative Chernarus source mission.
 - `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan`: vanilla Takistan generated/copy target.
+- Branch-only `origin/feature/zargabad-map`: adds `Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad` as a low-pop Vanilla map candidate, but it is not stable-master content.
 - `Modded_Missions/*`: modded terrain variants.
 
 Source anchors: LoadoutManager chooses target roots in `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:139-145`, copies Chernarus to Takistan at `:194-201`, copies modded terrain sources at `:205-212`, and computes modded source roots at `:246-256`.
@@ -13,6 +14,8 @@ Source anchors: LoadoutManager chooses target roots in `Tools/LoadoutManager/Dat
 Terrain classes include Chernarus, Takistan and modded maps such as Dingor, Eden, Lingor, SMD Sahrani, Tavi, Isla Duala and Napf. The operational generation rules, skip-list and modded-mission status table live in [Tools and build workflow](Tools-And-Build-Workflow); this page only orients the folder layout.
 
 Source anchors: terrain implementations live under `Tools/LoadoutManager/Data/Terrains/Implementations/`; generated `version.sqf` is written by `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:102`, with helper comments at `:168-183`.
+
+Branch-only Zargabad note: `origin/feature/zargabad-map` head `1fdcb37a` adds `DiscordBot/src/ExtensionData/GameData/SharedWithLoadoutManager/Terrains/Implementations/VanillaMaps/ZARGABAD.cs:1-5`, source hooks at `initJIPCompatible.sqf:121-123` and Zargabad-specific runtime setup under `Server/Init/Init_Zargabad.sqf`. Treat that branch as a full terrain release candidate; use [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-04-feature-branch-matrix) and the [branch-only feature smoke pack](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) before calling Zargabad playable or maintained.
 
 ## Assets
 
@@ -50,6 +53,7 @@ Generated-mission maintenance tiers:
 | --- | --- | --- |
 | Chernarus source mission | Authoritative source | Gameplay edits belong here first. |
 | Vanilla Takistan | Faithful generated target | Logic drift is characterized and currently limited to documented map-config/skip-list differences. |
+| Branch-only Zargabad | Candidate Vanilla low-pop target | `origin/feature/zargabad-map` adds terrain/tooling support and a `[31-2hc]` mission folder, but runtime evidence, class-load checks, screenshot/RPT packet validation and generated whitespace cleanup are still required. |
 | Napf, Eden, Lingor | Divergent forks | They need their own maintenance/audit decision before source hardening can be considered shipped there. |
 | Sahrani, Dingor, Tavi, Isla Duala | Abandoned stubs | They should not be treated as playable/supportable until completed or retired. |
 

@@ -180,6 +180,205 @@
         ],
         "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
       }
+    },
+    {
+      "id": "buymenu-easa-qol-branch",
+      "branch": "origin/feat/buymenu-easa-qol",
+      "head": "a66d4691",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-ui-qol-smoke-open",
+      "sourceScope": "source-chernarus-only",
+      "canonicalDocs": [
+        "Client-UI-Systems-Atlas.md#branch-only-ui-theme-work",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/master..origin/feat/buymenu-easa-qol: 3 files +42/-6",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UIFillListBuyUnits.sqf:104 on origin/feat/buymenu-easa-qol",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf:201-206 on origin/feat/buymenu-easa-qol",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_EASA.sqf:29-37 on origin/feat/buymenu-easa-qol",
+        "git diff --check origin/master..origin/feat/buymenu-easa-qol is clean"
+      ],
+      "ownerDecision": "Accept UI-only BuyMenu/EASA QoL and decide maintained Vanilla propagation.",
+      "promotionGate": "Smoke affordability price color, full/crew price expectations, queue-tab refresh and EASA current-loadout preselect before merge.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-ui-smoke",
+          "vanilla-parity-smoke"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "player-stats-branch",
+      "branch": "origin/feat/player-stats",
+      "head": "e01e47e1",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-integration-and-privacy-open",
+      "sourceScope": "source-chernarus-plus-discordbot-tests",
+      "canonicalDocs": [
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/master..origin/feat/player-stats: 23 files +1919/-1",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:443-444 on origin/feat/player-stats",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestOnUnitKilled.sqf:51-65 on origin/feat/player-stats",
+        "DiscordBot/src/Stats/StatsService.cs:6-23 on origin/feat/player-stats",
+        "DiscordBot.Tests/* on origin/feat/player-stats",
+        "git diff --check origin/master..origin/feat/player-stats is clean"
+      ],
+      "ownerDecision": "Decide RPT path/state-file ownership, UID/privacy policy, log volume and whether stats live in DiscordBot or the mission extension.",
+      "promotionGate": "Prove disabled-by-default silence, enabled RPT-to-stats.json accumulation, restart/tail-state behavior and DiscordBot tests before enabling publicly.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "integration-smoke",
+          "discordbot-test",
+          "privacy-review"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "perf-quick-wins-branch",
+      "branch": "origin/perf/quick-wins",
+      "head": "0076040f",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-fix-candidate-vanilla-open",
+      "sourceScope": "source-chernarus-only",
+      "canonicalDocs": [
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/master..origin/perf/quick-wins: 18 files +27/-27",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf:20-26 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf:365-368 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:40 on origin/perf/quick-wins",
+        "git diff --check origin/master..origin/perf/quick-wins is clean"
+      ],
+      "ownerDecision": "Cherry-pick, split or merge as one fix branch after reconciling with existing docs/source propagated fixes.",
+      "promotionGate": "Propagate maintained Vanilla and smoke side-supply debit, factory queue counters, paratrooper marker registration and touched server-loop regressions before release wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "dedicated-smoke",
+          "regression-smoke",
+          "vanilla-parity-smoke"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "commander-positions-branch",
+      "branch": "origin/feat/commander-positions",
+      "head": "560db61c",
+      "base": "f5985b77",
+      "state": "branch-review-needed-broad-construction-scope-open",
+      "sourceScope": "source-chernarus-and-maintained-vanilla-plus-unrelated-deltas",
+      "canonicalDocs": [
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/master..origin/feat/commander-positions: 83 files +524/-2025",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Structures/Structures_CO_US.sqf:168-174 on origin/feat/commander-positions",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestDefense.sqf:11-14 on origin/feat/commander-positions",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ConstructPosition.sqf on origin/feat/commander-positions",
+        "git diff --check origin/master..origin/feat/commander-positions reports trailing whitespace in source files"
+      ],
+      "ownerDecision": "Split construction-position work from unrelated Valhalla/UI/HC/perf deltas or accept the branch as a broad feature bundle.",
+      "promotionGate": "Clean whitespace, recheck DR-6 construction authority, smoke position placement at clicked point, CoIn/HQ undeploy cleanup, modular wall pathing and Chernarus/Vanilla parity.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "construction-smoke",
+          "client-ui-smoke",
+          "vanilla-parity-smoke"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "zargabad-map-branch",
+      "branch": "origin/feature/zargabad-map",
+      "head": "1fdcb37a",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-map-release-candidate-open",
+      "sourceScope": "new-vanilla-zargabad-mission-plus-terrain-tooling",
+      "canonicalDocs": [
+        "Content-Structure-And-Maps.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/master..origin/feature/zargabad-map: 832 files +77702/-95",
+        "DiscordBot/src/ExtensionData/GameData/SharedWithLoadoutManager/Terrains/Implementations/VanillaMaps/ZARGABAD.cs:1-5 on origin/feature/zargabad-map",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf:121-123 on origin/feature/zargabad-map",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Zargabad.sqf:1-119 on origin/feature/zargabad-map",
+        "Guides/Zargabad-Completion-Gates.md:11-20 on origin/feature/zargabad-map",
+        "git diff --check origin/master..origin/feature/zargabad-map reports trailing whitespace in generated Zargabad mission files"
+      ],
+      "ownerDecision": "Decide whether Zargabad becomes a maintained Vanilla target, a low-pop experiment or a branch-only playtest.",
+      "promotionGate": "Clean generated whitespace, validate terrain generation/class loads, collect hosted/dedicated/JIP/HC runtime plus screenshot/RPT evidence and pass the Zargabad completion gates before playable/maintained wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "hosted-smoke",
+          "dedicated-smoke",
+          "jip-smoke",
+          "hc-smoke",
+          "screenshot-evidence"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "supply-helicopter-current-head",
+      "branch": "origin/feat/supply-helicopter",
+      "head": "262dc431",
+      "base": "f5985b77",
+      "state": "branch-review-needed-pr1-head-drift-and-vanilla-open",
+      "sourceScope": "source-chernarus-supply-heli-plus-broad-branch-baggage",
+      "canonicalDocs": [
+        "Current-Work-Supply-Helicopters-PR1.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/master..origin/feat/supply-helicopter: 82 files +462/-2056",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp:4-7 on origin/feat/supply-helicopter",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:172-180 on origin/feat/supply-helicopter",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf:21-29,54 on origin/feat/supply-helicopter",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf:24-35 on origin/feat/supply-helicopter",
+        "No SupplyByHeli/WFBE_C_SUPPLY_HELI/wfbe_supply_killed_eh_set hits under maintained Vanilla on origin/feat/supply-helicopter"
+      ],
+      "ownerDecision": "Refresh PR #1 merge review against current head; decide Air upgrade 3/4 semantics, cash-run economy, timer UX, Vanilla propagation and non-supply branch baggage.",
+      "promotionGate": "Smoke truck control, heli disabled/enabled, Air 2/3 load gate, Air 4 cash run, timer interruption, pilot/commander payout, interdiction, repeated missions and JIP before merge.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "supply-smoke",
+          "economy-smoke",
+          "vanilla-parity-smoke"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
     }
   ],
   "sourceOnlyFixes": [

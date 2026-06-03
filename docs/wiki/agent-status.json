@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T01:05:00+02:00",
+  "generatedAt": "2026-06-03T21:15:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Indexed new origin/feat/wf-menu-ops-console branch as a UI-only ops-console reskin with visual smoke, packed texture/font validation, Chernarus/Vanilla parity and branch whitespace cleanup gates.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: remaining feature-status reconciliation, stale machine-record cleanup or P0/P1 accuracy drift with exact source refs."
+      "currentWork": "Indexed the second wave of visible origin branches: buymenu/EASA QoL, player stats, perf quick-wins, commander positions, Zargabad low-pop, and current supply-helicopter head drift. Human pages and machine ledgers now treat them as branch evidence with owner/smoke/cleanup gates.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: deeper branch-specific line audits for player stats/Zargabad/commander positions, stale machine-record cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "origin-branch-intake-second-wave",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Fetched and indexed remaining visible origin branch lanes not yet represented in the wiki: feat/buymenu-easa-qol a66d4691, feat/player-stats e01e47e1, perf/quick-wins 0076040f, feat/commander-positions 560db61c, feature/zargabad-map 1fdcb37a and feat/supply-helicopter 262dc431. Current-Source-Status-Snapshot, Feature Status, Pending Owner Decisions, Testing workflow, Content/Client UI/Supply pages and machine ledgers now route each branch through owner decisions, branch cleanup gates and planned smoke before merge/release claims."
+    },
     {
       "lane": "wf-menu-ops-console-branch-index",
       "owner": "Codex",
