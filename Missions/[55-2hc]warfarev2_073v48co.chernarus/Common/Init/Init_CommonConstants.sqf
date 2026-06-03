@@ -243,19 +243,19 @@ with missionNamespace do {
 	if (isNil "WFBE_C_DRONE_ENABLED") then {WFBE_C_DRONE_ENABLED = 1}; //--- lobby toggle: shelve the feature without a repack
 	if (isNil "WFBE_C_DRONE_ENHANCED") then {WFBE_C_DRONE_ENHANCED = 1}; //--- optional layer: contrail/flare FX + smooth circling orbit (toggle off = lean mode). Kill bounty is CORE, not gated here.
 	if (isNil "WFBE_C_DRONE_FLARE_COUNT") then {WFBE_C_DRONE_FLARE_COUNT = 2}; //--- # flare/CM drones
-	if (isNil "WFBE_C_DRONE_MUNITION_COUNT") then {WFBE_C_DRONE_MUNITION_COUNT = 6}; //--- # loitering munitions
+	if (isNil "WFBE_C_DRONE_MUNITION_COUNT") then {WFBE_C_DRONE_MUNITION_COUNT = 2}; //--- # loitering munitions
 	if (isNil "WFBE_C_DRONE_INGRESS_SPEED") then {WFBE_C_DRONE_INGRESS_SPEED = 60}; //--- m/s transit
 	if (isNil "WFBE_C_DRONE_OFFSHORE") then {WFBE_C_DRONE_OFFSHORE = 700}; //--- m offshore the package spawns over the sea (random +400). Targets nearer the coast = shorter overland run = better survival.
 	if (isNil "WFBE_C_DRONE_SPAWN_DIST") then {WFBE_C_DRONE_SPAWN_DIST = 3000}; //--- fallback random-bearing spawn distance when no open sea is found near the target (deep inland)
 	if (isNil "WFBE_C_DRONE_LOITER_SPEED") then {WFBE_C_DRONE_LOITER_SPEED = 35}; //--- m/s orbit
-	if (isNil "WFBE_C_DRONE_CRUISE_ALT") then {WFBE_C_DRONE_CRUISE_ALT = 200}; //--- m AGL
+	if (isNil "WFBE_C_DRONE_CRUISE_ALT") then {WFBE_C_DRONE_CRUISE_ALT = 300}; //--- m AGL
 	if (isNil "WFBE_C_DRONE_LOITER_TIME") then {WFBE_C_DRONE_LOITER_TIME = 90}; //--- s before forced commit
 	if (isNil "WFBE_C_DRONE_ZONE_RADIUS") then {WFBE_C_DRONE_ZONE_RADIUS = 250}; //--- m acquisition radius
 	if (isNil "WFBE_C_DRONE_WARHEAD") then {WFBE_C_DRONE_WARHEAD = "Sh_125_HE"}; //--- warhead A (even munitions, direct ground burst)
 	if (isNil "WFBE_C_DRONE_WARHEAD2") then {WFBE_C_DRONE_WARHEAD2 = "Bo_GBU12_LGB"}; //--- warhead B (odd munitions, top-attack drop from altitude). Set to a SADARM class (e.g. Sh_105_SADARM) to experiment.
 	if (isNil "WFBE_C_DRONE_DIVE_SOUND") then {WFBE_C_DRONE_DIVE_SOUND = "inboundMissileGround_cont"}; //--- dive siren (existing CfgSound; swap to "drone_stuka" once a real Ju-87 .ogg is dropped in)
-	if (isNil "WFBE_C_DRONE_SCATTER") then {WFBE_C_DRONE_SCATTER = 12}; //--- m impact scatter
-	if (isNil "WFBE_C_DRONE_HP") then {WFBE_C_DRONE_HP = 12}; //--- ~ .50-cal hits to down
+	if (isNil "WFBE_C_DRONE_SCATTER") then {WFBE_C_DRONE_SCATTER = 6}; //--- m impact scatter
+	if (isNil "WFBE_C_DRONE_HP") then {WFBE_C_DRONE_HP = 20}; //--- ~ .50-cal hits to down
 	if (isNil "WFBE_C_DRONE_MIN_HIT") then {WFBE_C_DRONE_MIN_HIT = 0.08}; //--- min HandleDamage delta that counts (>=.50)
 	if (isNil "WFBE_C_DRONE_DIVE_STAGGER") then {WFBE_C_DRONE_DIVE_STAGGER = 1.5}; //--- s between dives
 	if (isNil "WFBE_C_DRONE_COST") then {WFBE_C_DRONE_COST = 22000}; //--- server-validated cost
