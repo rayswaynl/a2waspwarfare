@@ -2252,7 +2252,7 @@
     },
     {
       "lane": "factory-perf-jip-review",
-      "owner": "Claude",
+      "owner": "Codex",
       "status": "published-validated",
       "sourceScope": [
         "Missions/[55-2hc]...chernarus/Client/Functions/Client_BuildUnit.sqf",
