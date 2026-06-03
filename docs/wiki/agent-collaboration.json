@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T19:25:00+02:00",
+  "generatedAt": "2026-06-03T19:30:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,32 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "params-localization-review-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/Deep-Review-Findings.md",
+        "docs/wiki/Codebase-Coverage-Ledger.md",
+        "docs/wiki/Assets-Config-Localization-And-Parameters-Atlas.md",
+        "docs/wiki/Arma-2-OA-Compatibility-Audit.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Parameters.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/actions/AddActions.sqf"
+      ],
+      "outputs": [
+        "Closed stale params-localization-review ready-for-review status",
+        "Confirmed DR-35 clean localization and mission-parameter findings are already integrated",
+        "Preserved parameter-order caution and dead WASP action classification"
+      ],
+      "handoff": "No code defect to fix from DR-35. Future parameter edits must keep class Params order index-aligned with paramsArray; future localization scans must case-fold stringtable keys and exclude commented/dead WASP action refs before filing missing-key bugs."
+    },
     {
       "lane": "wasp-overlay-review-status-closure",
       "owner": "Codex",
@@ -2058,7 +2084,7 @@
     {
       "lane": "supply-missions-perf-jip-review",
       "owner": "Claude",
-      "status": "ready-for-review",
+      "status": "published-validated",
       "sourceScope": [
         "Missions/[55-2hc]...chernarus/Server/Module/supplyMission/* (supplyMissionStarted, supplyMissionActive, isSupplyMissionActiveInTown)",
         "Missions/[55-2hc]...chernarus/Client/Module/supplyMission/townSupplyStatus.sqf",
@@ -2129,7 +2155,7 @@
         "Deep-Review-Findings.md (Round 26 / DR-35)",
         "Codebase-Coverage-Ledger.md (new Parameters/localization row)"
       ],
-      "handoff": "Codex: optionally note dead OnArmor/GearYourUnit WASP actions in WASP-Overlay, and a 'keep class Params order stable (index-aligned to paramsArray)' caution in params docs. No code defect."
+      "handoff": "Historical Claude review now closed by params-localization-review-status-closure. Deep-review findings, Codebase coverage ledger, Assets/config/localization/parameters atlas, Arma 2 OA compatibility audit and Feature status already document DR-35: no live missing localization keys after case-fold/dead-code checks, live mission-parameter wiring through Params/paramsArray, and a class Params order caution."
     },
     {
       "lane": "respawn-mash-review",

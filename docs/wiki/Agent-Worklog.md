@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Params/Localization Review Status Closure
+
+- Closed the stale `params-localization-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); DR-35 is already integrated into [Deep-review findings](Deep-Review-Findings), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Assets/config/localization/parameters atlas](Assets-Config-Localization-And-Parameters-Atlas), [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) and [Feature status](Feature-Status-Register).
+- Evidence checked: `description.ext:51-52` includes `Rsc/Parameters.hpp`; `Rsc/Parameters.hpp:3` defines `class Params`; `Common/Init/Init_Parameters.sqf:5-9` reads `missionConfigFile >> "Params"`, uses `paramsArray select _i` in MP or class `default` in SP, and writes the value to `missionNamespace`; `initJIPCompatible.sqf:121` runs it in MP; `Rsc/Dialogs.hpp:3133-3136` wires `RscDisplay_Parameters` to `GUI_Display_Parameters.sqf`.
+- Scope remained docs/status only. Dead WASP localization refs stay documented as commented actions at `WASP/actions/AddActions.sqf:4,10-12`, not live missing stringtable bugs.
+
 ## 2026-06-03 - Codex Documentation Finisher: WASP Overlay Review Status Closure
 
 - Closed the stale `wasp-overlay-perf-jip-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); DR-40 is already integrated into [WASP overlay](WASP-Overlay), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Codebase coverage ledger](Codebase-Coverage-Ledger) and [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup).

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T19:25:00+02:00",
+  "generatedAt": "2026-06-03T19:30:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed stale wasp-overlay-perf-jip-review collaboration status: WASP Overlay, Performance Sweep, Codebase Coverage Ledger and WASP Marker Wait Cleanup already publish DR-40; source still needs the small display-54 wait code change.",
+      "currentWork": "Closed stale params-localization-review collaboration status: DR-35 clean localization and live mission-parameter wiring are already published in Deep Review, Codebase Coverage Ledger and the assets/config atlas.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another feature-status reconciliation item, remaining machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "params-localization-review-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "agent-collaboration.json no longer advertises params-localization-review as ready-for-review. Current docs already state DR-35: localization has no live missing localize/$STR_ keys after case-folding and dead-code checks; mission Params/paramsArray are legitimate Arma 2 OA parameter mechanics; class Params order must stay index-aligned. Source evidence remains description.ext:51-52, Rsc/Parameters.hpp:3, Init_Parameters.sqf:5-9, initJIPCompatible.sqf:121, Dialogs.hpp:3133-3136 and commented WASP AddActions.sqf localize refs."
+    },
     {
       "lane": "wasp-overlay-review-status-closure",
       "owner": "Codex",
