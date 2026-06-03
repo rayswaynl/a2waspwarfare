@@ -1425,3 +1425,10 @@ Key conclusions:
 - Removed the dead WF2 `RscMenu_Upgrade` dialog (IDD 18000, 444-line shell, never-committed backing script) from Chernarus `Rsc/Dialogs.hpp` + the stale `18000` in `updateteamsmarkers.sqf` -> release branch commit `460c0312` (PR #8). Live upgrade UI `WFBE_UpgradeMenu` (IDD 504000) untouched.
 - Updated [Abandoned Feature Revival Review](Abandoned-Feature-Revival-Review): marked the entry REMOVED and preserved the salvageable layout snippets (tech-tree connecting-line trick; zero-size hover-tooltip overlay) + repurpose ideas for future devs.
 - Takistan/modded still carry the block; regenerate via LoadoutManager, do not hand-edit.
+
+## 2026-06-03T13:23:40+0200 - Claude - Audit findings queue logged for cross-reference
+
+- Added [Audit Findings Queue 2026-06-03](Audit-Findings-Queue-2026-06-03): ~88 code-audit findings from a multi-agent sweep over `release/2026-06-feature-bundle` (PR #8), labelled AI/V/SG/NJ/UX, with a verification column.
+- 14 deep-dived + verdicts: confirmed real (SG4 double-bug, AI11, NJ11, V2, SG5, AI1, AI7), nuanced/owner-decision (NJ3 fog-of-war direction, AI3 balance, AI8, AI5 skip), OVERSTATED (AI15 — SpeedMode NORMAL, not crawling), and **one FALSE POSITIVE: AI17** (attack path uses Common_WaypointsAdd.sqf which DOES apply the 7th behaviour element; the agent checked AI_WPAdd.sqf). AI2 town-mortars are doubly-dead + never invoked (recommend removal).
+- ACTION for maintainers (codex/claude): cross-check the UNVERIFIED rows against code + existing findings pages, dedupe, close false positives. High-priority economy/victory items flagged (SG1/SG2/SG3/NJ8/NJ10).
+- This docs change only adds the queue page + this worklog line; no gameplay source touched on this branch.
