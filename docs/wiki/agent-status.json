@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Instructions-For-Codex item 11 is resolved locally: _Sidebar now lists HC delegation/failover once under Gameplay next to AI/headless, with the Ops duplicate removed.",
+      "currentWork": "Instructions-For-Codex item 11 is published/validated: _Sidebar now lists HC delegation/failover once under Gameplay next to AI/headless, with the Ops duplicate removed.",
       "nextExpectedOutput": "Continue with Instructions-For-Codex item 12: merge Hardening roadmap and Server authority map only after checking overlap and preserving evidence."
     },
     "Codex-2": {
