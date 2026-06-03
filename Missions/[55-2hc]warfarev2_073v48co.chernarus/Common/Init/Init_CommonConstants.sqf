@@ -255,7 +255,7 @@ with missionNamespace do {
 	if (isNil "WFBE_C_DRONE_WARHEAD2") then {WFBE_C_DRONE_WARHEAD2 = "Bo_GBU12_LGB"}; //--- warhead B (odd munitions, top-attack drop from altitude). Set to a SADARM class (e.g. Sh_105_SADARM) to experiment.
 	if (isNil "WFBE_C_DRONE_DIVE_SOUND") then {WFBE_C_DRONE_DIVE_SOUND = "inboundMissileGround_cont"}; //--- dive siren (existing CfgSound; swap to "drone_stuka" once a real Ju-87 .ogg is dropped in)
 	if (isNil "WFBE_C_DRONE_SCATTER") then {WFBE_C_DRONE_SCATTER = 12}; //--- m impact scatter
-	if (isNil "WFBE_C_DRONE_HP") then {WFBE_C_DRONE_HP = 6}; //--- ~ .50-cal hits to down
+	if (isNil "WFBE_C_DRONE_HP") then {WFBE_C_DRONE_HP = 12}; //--- ~ .50-cal hits to down
 	if (isNil "WFBE_C_DRONE_MIN_HIT") then {WFBE_C_DRONE_MIN_HIT = 0.08}; //--- min HandleDamage delta that counts (>=.50)
 	if (isNil "WFBE_C_DRONE_DIVE_STAGGER") then {WFBE_C_DRONE_DIVE_STAGGER = 1.5}; //--- s between dives
 	if (isNil "WFBE_C_DRONE_COST") then {WFBE_C_DRONE_COST = 22000}; //--- server-validated cost

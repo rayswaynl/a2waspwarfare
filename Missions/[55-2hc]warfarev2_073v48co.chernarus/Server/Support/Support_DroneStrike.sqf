@@ -114,6 +114,7 @@ for "_i" from 0 to (_total - 1) do {
     _grp setCombatMode "BLUE";   //--- never fire.
     {_pilot disableAI _x} forEach ["TARGET","AUTOTARGET"];
     _drone flyInHeight _myAlt;
+    _grp setSpeedMode "FULL"; _drone forceSpeed WFBE_C_DRONE_INGRESS_SPEED;   //--- FIX: actually apply the ingress speed (was a dead constant; the Ka flew at slow AI autopilot speed -> long exposure + hard-life culled inland strikes)
     _drone lockDriver true;
     _drone setVariable ["wfbe_drone_role", _role, true];
     _drone setVariable ["wfbe_drone_hp", _hp, true];
@@ -161,6 +162,7 @@ processInitCommands;
         if (!alive _d) exitWith {};
 
         _endT = time + _loiterTime;
+        _d forceSpeed WFBE_C_DRONE_LOITER_SPEED;   //--- FIX: apply the (previously dead) loiter speed for the orbit phase
 
         if (_role == "flare") then {
             _d addEventHandler ["incomingMissile", {
@@ -190,6 +192,7 @@ processInitCommands;
                     };
                 } forEach _cands;
                 if (count _aa > 0) then {_target = _aa select 0} else {if (count _valid > 0) then {_target = _valid select 0}};
+                if (isNull _target) then { { if (isNull _target && {alive _x} && {(side _x) in _enemySides} && {vehicle _x == _x}) then {_target = _x} } forEach (nearestObjects [_dest, ["Man"], _zoneR]) };   //--- FIX: infantry fallback - if no vehicles/static in the zone, dive on the nearest enemy foot soldier (was: loitered doing nothing in infantry-only towns)
                 if (isNull _target) then { if (_enhanced) then { _loiterAng = _loiterAng + 28; _pilot doMove [(_dest select 0) + _zoneR * sin _loiterAng, (_dest select 1) + _zoneR * cos _loiterAng, 0]; } else { _pilot doMove _loiterPt; } };
                 sleep 2;
             };
