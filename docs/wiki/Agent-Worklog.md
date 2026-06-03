@@ -1766,3 +1766,9 @@ Key conclusions:
 - Source-checked [Pending owner decisions](Pending-Owner-Decisions) against current docs/source and canonical DR pages before editing.
 - Corrected the DR-43 owner row from "duplicate `Init_Server` function binds (6)" to the actual shape: three live duplicate binds (`LogGameEnd`, `PlayerObjectsList`, `AwardScorePlayer`) plus three commented remnants (AFK kick, server FPS, MASH marker), with line evidence from `Server/Init/Init_Server.sqf:64,69,83,88-93`.
 - Clarified that `version.sqf` is absent from tracked source even though `description.ext:39` and `initJIPCompatible.sqf:4` include it, and branch-scoped the DR-19 hosted-FPS row: docs/source Chernarus/Vanilla are patched, stable master is not, release `a9219d88` is Chernarus-only, and Arma smoke remains.
+
+## 2026-06-03T23:35:00+02:00 - Codex - Miksuu upstream wiki Community & Dev import
+- Cloned and inspected `Miksuu/a2waspwarfare.wiki` at HEAD `45ef3da367d65e6487de488bbe3b16a8a8b21ba3`; tracked content is 9 Markdown pages and no binary attachments.
+- Imported every current upstream wiki page into namespaced `Miksuu-Wiki-Archive-*` pages, preserving original content behind a provenance banner.
+- Added [Community & Dev](Community-And-Dev) and [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) so humans and agents can reach community lineage, contributors, donor/context notes, Discord/changelog culture, GPT history and current-source caveats without treating old upstream prose as current implementation truth.
+- Added [`agent-upstream-wiki-imports.jsonl`](agent-upstream-wiki-imports.jsonl) for machine-readable import records and candidate lessons.

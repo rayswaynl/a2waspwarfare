@@ -18,6 +18,20 @@ nav:
   - Feature Status: Feature-Status-Register.md
   - Progress Dashboard: Progress-Dashboard.md
   - Knowledge Platform Roadmap: Knowledge-Platform-Roadmap.md
+  - Community & Dev:
+      - Community & Dev: Community-And-Dev.md
+      - Miksuu Upstream Wiki Import: Miksuu-Upstream-Wiki-Import.md
+      - Project Welcome: Miksuu-Wiki-Archive-Welcome.md
+      - Big Announcements: Miksuu-Wiki-Archive-Big-Announcements.md
+      - Changelog: Miksuu-Wiki-Archive-Changelog.md
+      - Gameplay Videos: Miksuu-Wiki-Archive-Gameplay-Videos.md
+      - Discord Bot: Miksuu-Wiki-Archive-Discord-Bot.md
+      - Development Process: Miksuu-Wiki-Archive-Development-Process.md
+      - LoadoutManager: Miksuu-Wiki-Archive-LoadoutManager.md
+      - Chernarus Mission Script Architecture: Miksuu-Wiki-Archive-Project-Script-Architecture-Of-Chernarus-Mission.md
+      - Developer History And Upstream Lessons: Developer-History-And-Upstream-Lessons.md
+      - Upstream Miksuu Commit Intel: Upstream-Miksuu-Commit-Intel.md
+      - PR8 And Drone Upstream Lesson Match: PR8-And-Drone-Upstream-Lesson-Match.md
   - Architecture:
       - Overview: Architecture-Overview.md
       - Mission Entrypoints And Lifecycle: Mission-Entrypoints-And-Lifecycle.md

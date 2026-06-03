@@ -27,6 +27,23 @@ Important notes:
 - [Release-readiness ledger](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-release-readiness.json): Machine-readable source-only fix, generated propagation and smoke gate status.
 - [Knowledge platform roadmap](https://github.com/rayswaynl/a2waspwarfare/wiki/Knowledge-Platform-Roadmap): Why repo docs + GitHub Pages/MkDocs should become canonical.
 
+## Community & Dev
+
+- [Community & Dev](https://github.com/rayswaynl/a2waspwarfare/wiki/Community-And-Dev): WASP -> Miksuu lineage, Discord/changelog culture, contributor mentions and development practices.
+- [Miksuu upstream wiki import](https://github.com/rayswaynl/a2waspwarfare/wiki/Miksuu-Upstream-Wiki-Import): Import manifest, provenance, caveats and archive routing.
+- [Miksuu project welcome archive](https://github.com/rayswaynl/a2waspwarfare/wiki/Miksuu-Wiki-Archive-Welcome): CTI overview and upstream contribution culture.
+- [Miksuu big announcements archive](https://github.com/rayswaynl/a2waspwarfare/wiki/Miksuu-Wiki-Archive-Big-Announcements): 2023 community announcement, donors, contributors, GPT and HC history.
+- [Miksuu changelog archive](https://github.com/rayswaynl/a2waspwarfare/wiki/Miksuu-Wiki-Archive-Changelog): Primary upstream release-note and community timeline archive.
+- [Miksuu gameplay videos archive](https://github.com/rayswaynl/a2waspwarfare/wiki/Miksuu-Wiki-Archive-Gameplay-Videos): Upstream gameplay media link.
+- [Miksuu Discord Bot archive](https://github.com/rayswaynl/a2waspwarfare/wiki/Miksuu-Wiki-Archive-Discord-Bot): Historical DiscordBotFramework note.
+- [Miksuu development process archive](https://github.com/rayswaynl/a2waspwarfare/wiki/Miksuu-Wiki-Archive-Development-Process): SQF debugging, GPT, Trello, feature branch and performance process notes.
+- [Miksuu LoadoutManager archive](https://github.com/rayswaynl/a2waspwarfare/wiki/Miksuu-Wiki-Archive-LoadoutManager): Historical LoadoutManager rationale and examples; verify current generation scope before use.
+- [Miksuu Chernarus architecture archive](https://github.com/rayswaynl/a2waspwarfare/wiki/Miksuu-Wiki-Archive-Project-Script-Architecture-Of-Chernarus-Mission): Marty-era architecture overview and external diagram/PDF links.
+- [Developer history and upstream lessons](https://github.com/rayswaynl/a2waspwarfare/wiki/Developer-History-And-Upstream-Lessons): Source-backed upstream lessons from commits, PRs, branches and reverts.
+- [Upstream Miksuu commit intel](https://github.com/rayswaynl/a2waspwarfare/wiki/Upstream-Miksuu-Commit-Intel): Miksuu repo commit/PR context and current upstream comparison.
+- [PR8 and Drone upstream lesson match](https://github.com/rayswaynl/a2waspwarfare/wiki/PR8-And-Drone-Upstream-Lesson-Match): Upstream lesson checklist for PR #8 and drone branches.
+- [agent-upstream-wiki-imports.jsonl](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-upstream-wiki-imports.jsonl): Machine-readable upstream wiki import ledger.
+
 ## Architecture And Code
 
 - [Architecture overview](https://github.com/rayswaynl/a2waspwarfare/wiki/Architecture-Overview): Mission lifecycle and client/server/common/headless split.
