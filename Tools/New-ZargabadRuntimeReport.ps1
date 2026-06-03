@@ -154,6 +154,7 @@ $report.Add("| Base-axis midpoint and wall origin | UNCERTAIN | Check `3425,3375
 $report.Add("| Central wall gaps and pathing | UNCERTAIN | Test `4053,2725`, `3789,2998`, `3504,3293`, `3195,3613`, and `2903,3915`. |")
 $report.Add("| Side hills and rim behavior | UNCERTAIN | Reference edge-safe rows from the map audit packet when reporting legal objective fights vs rim abuse. |")
 $report.Add("| Town defense facing and movement blocking | UNCERTAIN |  |")
+$report.Add("| Priority defense mix arcs | UNCERTAIN | Use map audit Town Defenses rows: city MG/nest+GL+AT; airfield MG/nest+AT+2xAA; North/South District, Northwest Base and Rahim Villa MG-or-nest+AT; Northwest Base AA. Flag bad arcs, blocked routes or unusable terrain. |")
 $report.Add("| Economy and factory pricing feel | UNCERTAIN |  |")
 $report.Add("| Weapon/range pressure | UNCERTAIN | Confirm missile range 2000, UAV 800, town defense/mortar/patrol ranges 45/500/350, hangar 35, countermeasures 16/24 feel right on Zargabad. |")
 $report.Add("| Mystery feature behavior | UNCERTAIN |  |")

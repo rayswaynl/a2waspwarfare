@@ -393,6 +393,7 @@ $runtimeReportSource = Get-Content -Raw -LiteralPath $runtimeReportTool
 Assert-True "runtime report tool wraps runtime validator" ($runtimeReportSource -match 'Validate-ZargabadRuntimeEvidence\.ps1')
 Assert-True "runtime report tool checks town defense orientation" ($runtimeReportSource -match 'Town defense orientation')
 Assert-True "runtime report tool emits Claude notes" ($runtimeReportSource -match '## Claude Notes')
+Assert-True "runtime report tool asks Claude for priority defense mix arcs" ($runtimeReportSource -match 'Priority defense mix arcs' -and $runtimeReportSource -match 'city MG/nest\+GL\+AT' -and $runtimeReportSource -match 'airfield MG/nest\+AT\+2xAA')
 Assert-True "runtime report tool emits validator output" ($runtimeReportSource -match '## Validator Output')
 Assert-True "map audit packet tool exists" (Test-Path -LiteralPath $mapAuditPacketTool)
 $mapAuditPacketSource = Get-Content -Raw -LiteralPath $mapAuditPacketTool
@@ -410,6 +411,7 @@ Assert-True "Claude brief tool emits coordination cadence" ($claudeBriefSource -
 Assert-True "Claude brief tool requires post-commit updates" ($claudeBriefSource -match 'after every commit or material mission/tooling change')
 Assert-True "Claude brief tool listens to evidence-backed findings" ($claudeBriefSource -match 'RPT excerpts, screenshots, coordinates, or repeatable repro steps')
 Assert-True "Claude brief tool emits retest focus" ($claudeBriefSource -match '## Retest Focus')
+Assert-True "Claude brief tool emits defense mix retest focus" ($claudeBriefSource -match 'Town defenses: retest priority defense mix arcs')
 Assert-True "Claude brief tool carries stop/go ownership" ($claudeBriefSource -match 'Codex owns the stop/go call')
 Assert-True "Claude brief tool points to map audit packet" ($claudeBriefSource -match 'New-ZargabadMapAuditPacket\.ps1')
 Assert-True "Claude brief tool points to runtime report" ($claudeBriefSource -match 'New-ZargabadRuntimeReport\.ps1')
