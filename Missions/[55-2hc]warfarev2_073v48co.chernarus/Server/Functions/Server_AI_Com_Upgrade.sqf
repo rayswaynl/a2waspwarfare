@@ -24,7 +24,7 @@ _to_upgrade = [];
 //--- Found something to upgrade!
 if (count _to_upgrade > 0) then {
 	_upgrade = _to_upgrade select 0;
-	_cost = ((missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_COSTS", _side]) select _upgrade) select (_to_upgrade select 1);
+	_cost = ((missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_COSTS", _side]) select _upgrade) select ((_to_upgrade select 1) - 1); //--- fix: COSTS[upgrade] is 0-indexed by level; the AI_ORDER level is 1-based (matches Client_FNC_Special.sqf:116/122 _level-1). Raw level over-indexed by one -> nil -> "_cost undefined" crash at line 34 on top-level upgrades.
 	
 	//--- Validation.
 	_can_upgrade = false;
