@@ -9,7 +9,7 @@ Source root: `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
 | Area | Current coverage state | Why it still deserves attention |
 | --- | --- | --- |
 | Config data model | The assets/config page now has a source-backed config data-model checklist. | Keep using it before content edits; the remaining work is runtime smoke when actual classes/assets change. |
-| AI respawn/orders | Respawn atlas maps AI respawn; testing workflow now has a branch-specific AI respawn smoke pack. | Commander-order team variables still need a dedicated executor proof before AI order hardening. |
+| AI respawn/orders | Respawn atlas maps AI respawn; testing workflow now has a branch-specific AI respawn smoke pack. Commander-order variable proof now lives in the AI/headless page. | Runtime Arma smoke is still needed for AI respawn branches and commander Move/Patrol/Defense/Take Towns behavior. |
 | Direct-PV economy helpers | Economy authority pages map the DRs, but implementation agents still need a local rule of thumb before touching helpers. | Shared helpers can look local and harmless while publishing direct mutation payloads; read helpers show the safer server-derived pattern. |
 | Cleanup/garbage/empty vehicles | Marker/cleanup atlas is strong, but patch handoffs are scattered. | Cleanup code has short polling loops, global replicated queues, inconsistent flags and nested-pair array traps. |
 | Non-EASA modules | Modules atlas maps many modules. | Feature changes still need a "where to smoke" rule because modules are split across Common/Client/Server and often attach at unit creation. |
@@ -26,7 +26,7 @@ Concrete follow-up: `Server/AI/AI_SquadRespawn.sqf:1` has a private-list typo-li
 
 The commander UI writes orders directly through shared setters: move mode/position (`Client/GUI/GUI_Menu_Command.sqf:295-306`), force respawn (`:348-360`), autonomy toggles (`:364-389`) and AI respawn target (`:431-443`). Those setters publish group variables globally: `wfbe_autonomous`, `wfbe_respawn`, `wfbe_teammode`, and `wfbe_teamgoto` (`Common/Functions/Common_SetTeamAutonomous.sqf:8`; `Common/Functions/Common_SetTeamRespawn.sqf:8`; `Common/Functions/Common_SetTeamMoveMode.sqf:8`; `Common/Functions/Common_SetTeamMovePos.sqf:8`).
 
-Static source search found server-side reads mainly in respawn reset logic and support-spawn waypoint helpers, not a clearly owned general "server command queue." AI order helpers update group behavior and waypoints (`Server/AI/Orders/AI_MoveTo.sqf:6-21`; `AI_Patrol.sqf:7-37`; `AI_WPAdd.sqf:19-39`), while `CanUpdateTeam` suppresses automatic updates when a human commander exists (`Server/Functions/Server_CanUpdateTeam.sqf:13-17`).
+Static source search found server-side reads mainly in respawn reset logic, not a clearly owned general "server command queue." AI order helpers update group behavior and waypoints (`Server/AI/Orders/AI_MoveTo.sqf:6-21`; `AI_Patrol.sqf:7-37`; `AI_WPAdd.sqf:19-39`), but their static callers are support/resistance paths rather than the commander map-order variables (`Support_Paratroopers.sqf:92,122`; `Support_ParaAmmo.sqf:38,96`; `Support_ParaVehicles.sqf:39,78`; `AI_Resistance.sqf:14-16`). `CanUpdateTeam` suppresses automatic updates when a human commander exists (`Server/Functions/Server_CanUpdateTeam.sqf:13-17`).
 
 Development rule: before hardening or extending commander AI orders, prove the live executor path for `wfbe_teammode` and `wfbe_teamgoto` in the target scenario. Do not assume these variables imply server-authoritative validation.
 
@@ -87,7 +87,7 @@ Development rule: before moving or patching lifecycle waits, cite both the consu
 | Done | AI respawn branch smoke is now in the testing workflow. | `Testing-Debugging-And-Release-Workflow#minimal-smoke-packs` | Runtime evidence is still pending until vanilla and non-vanilla AI leader death/respawn are run in Arma 2 OA. |
 | P2 | Promote cleanup flag/nested-pair shape rules into the marker/cleanup atlas patch-ready section if not already accepted. | `Marker-Cleanup-Restoration-Systems-Atlas` | Mine expiry and unit-kill garbage smoke. |
 | Done | Cleanup/restorer cadence and cost interpretation added to the marker/cleanup atlas. | `Marker-Cleanup-Restoration-Systems-Atlas#cadence-and-cost-interpretation` | Runtime RPT samples still needed before performance tuning patches. |
-| P3 | Source-check whether commander `wfbe_teammode`/`wfbe_teamgoto` has a live general executor or is mostly UI/respawn/support state. | AI/order owner page | Dedicated commander AI order smoke. |
+| Done | Commander `wfbe_teammode`/`wfbe_teamgoto` source proof added to AI/headless and UI/feature pages. | `AI-Headless-And-Performance#commander-team-order-variables` | Dedicated commander AI order smoke is still pending. |
 
 ## Agent Handoff
 

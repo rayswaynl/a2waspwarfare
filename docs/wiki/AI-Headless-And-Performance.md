@@ -29,6 +29,18 @@ Boyle's second-pass autonomy review clarified the split between real AI plumbing
 
 Canonical revival/readiness detail lives in [AI commander autonomy audit](AI-Commander-Autonomy-Audit), including the mission-parameter/fallback-default distinction and the broken `UpdateSupplyTruck` / missing `supplytruck.fsm` path.
 
+### Commander Team Order Variables
+
+The command menu has three different order-like surfaces, and they should not be collapsed into one working system:
+
+| Surface | Current proof | Development implication |
+| --- | --- | --- |
+| Team properties | Live PVF path. The client sends `RequestTeamUpdate` from `GUI_Menu_Command.sqf:425-428`; the server handler applies behavior/combat/formation/speed to selected groups or the side teams at `Server/PVFunctions/RequestTeamUpdate.sqf:3-25`. | This is a real server-side effect, but still a high-trust registered handler that needs sender/role validation before public-server hardening. |
+| Map orders (`towns`, `MOVE`, `PATROL`, `DEFENSE`) | The command menu writes replicated group variables via `SetTeamMoveMode` / `SetTeamMovePos` (`GUI_Menu_Command.sqf:252-306`; setter writes at `Common_SetTeamMoveMode.sqf:8`, `Common_SetTeamMovePos.sqf:8`). Static source search found no general server loop that consumes `wfbe_teammode` + `wfbe_teamgoto` and dispatches `AIMoveTo` / `AIPatrol` / `AITownPatrol`; reads are UI display and AI-respawn reset (`AI_SquadRespawn.sqf:105-109`, `AI_AdvancedRespawn.sqf:120-124`). | Treat commander map-order execution as unproven until Arma smoke or a dynamic caller proves it. Do not use these variables as evidence of a server-owned order queue. |
+| Command tasks | The `SetTask` client PVF is registered and implemented (`Init_PublicVariables.sqf:33`; `Client/PVFunctions/SetTask.sqf:1-35`), but the command menu send calls are commented at `GUI_Menu_Command.sqf:335-337,343`. | Visible/dormant UI. Revive or hide deliberately; do not document task assignment as working. |
+
+The waypoint helpers themselves are real, but their static callers are support/resistance paths: paratrooper/para-ammo/para-vehicle support calls `AIMoveTo`, and resistance can call `AIWPAdd` / `AIPatrol` (`Server/Support/Support_Paratroopers.sqf:92,122`; `Server/Support/Support_ParaAmmo.sqf:38,96`; `Server/Support/Support_ParaVehicles.sqf:39,78`; `Server/AI/AI_Resistance.sqf:14-16`). That proves the helper family, not the commander map-order executor.
+
 ## Town AI
 
 Town AI is centralized through `Server/FSM/server_town_ai.sqf`. The server starts it once globally when defenders or occupation are enabled at `Server/Init/Init_Server.sqf:513-514`. `Server_GetTownGroups`, `Server_GetTownGroupsDefender`, `Server_SpawnTownDefense`, and `Server_ManageTownDefenses` are compiled at `Server/Init/Init_Server.sqf:49-60`.

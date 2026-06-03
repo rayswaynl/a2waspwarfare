@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T12:44:16+02:00",
+  "generatedAt": "2026-06-03T16:55:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Reconciled the stale scout-wave-g validation row and cleanup/restorer cadence gap after checking the owner-page harvest, marker-cleanup-restoration-atlas-deepening record and coverage ledger. Marker-Cleanup-Restoration-Systems-Atlas now has cadence/cost interpretation and RPT labels.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: commander AI-order executor proof."
+      "currentWork": "Documented commander map-order executor proof: command UI writes wfbe_teammode/wfbe_teamgoto, RequestTeamUpdate properties are live, SetTask sends are dormant and no static general executor was found for map-order variables.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: PR #1 supply-heli delta line-by-line."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "commander-map-order-executor-proof",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Closed the AI-order source-proof follow-up. AI-Headless-And-Performance, AI-Commander-Autonomy-Audit, Feature-Status-Register, Player-UI-Workflow-Map, Development-Lessons-Learned and machine records now distinguish live RequestTeamUpdate property updates, replicated map-order variables without a proven general executor, support/resistance-only waypoint helper callers and dormant SetTask sends."
+    },
     {
       "lane": "scout-wave-g-validation-reconciliation",
       "owner": "Codex",

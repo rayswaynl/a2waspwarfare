@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Commander Map-Order Executor Proof
+
+- Closed the Development Lessons commander-order source-proof follow-up without gameplay source edits.
+- Evidence checked: command menu writes move modes and positions at `Client/GUI/GUI_Menu_Command.sqf:252-306`; team property PVF send at `:425-428`; dormant `SetTask` sends at `:335-337,343`; replicated setter writes at `Common_SetTeamMoveMode.sqf:8` and `Common_SetTeamMovePos.sqf:8`; server compiles waypoint helpers at `Server/Init/Init_Server.sqf:13-18`; helper callers are support/resistance paths (`Support_Paratroopers.sqf:92,122`, `Support_ParaAmmo.sqf:38,96`, `Support_ParaVehicles.sqf:39,78`, `AI_Resistance.sqf:14-16`); static readers of `wfbe_teammode` / `wfbe_teamgoto` are UI display and AI-respawn reset (`AI_SquadRespawn.sqf:105-109`, `AI_AdvancedRespawn.sqf:120-124`).
+- Updated [AI/headless](AI-Headless-And-Performance#commander-team-order-variables), [AI commander audit](AI-Commander-Autonomy-Audit), [Feature status](Feature-Status-Register), [Player UI workflow](Player-UI-Workflow-Map), [Development lessons learned](Development-Lessons-Learned) and machine records. Runtime smoke remains needed before saying commander Move/Patrol/Defense/Take Towns orders execute.
+
 ## 2026-06-03 - Codex Documentation Finisher: Scout Wave G Validation Reconciliation
 
 - Closed the stale `scout-wave-g` validation-pending row without gameplay source edits.
