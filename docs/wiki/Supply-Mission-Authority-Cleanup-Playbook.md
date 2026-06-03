@@ -4,14 +4,19 @@ This page is the implementation handoff for the `supply-mission-authority-cleanu
 
 Scope: Chernarus source mission first, then generated mission propagation through `Tools/LoadoutManager` after code changes. Paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
-Branch split: current `master` has the truck mission flow, client-stamped `SupplyFromTown`/`SupplyAmount`, duplicate-start tracking risk and no supply-vehicle `Killed` handler. PR #1 / `feat/supply-helicopter` adds `SupplyByHeli`, supply-heli class/upgrade gates, cash-run semantics and an interdiction `Killed` handler guarded by `wfbe_supply_killed_eh_set`. Keep those branch-specific mechanics separate when auditing or patching.
+Branch split: current `master` has the truck mission flow, client-stamped `SupplyFromTown`/`SupplyAmount`, duplicate-start tracking risk and no supply-vehicle `Killed` handler. PR #1 / `feat/supply-helicopter` adds `SupplyByHeli`, supply-heli class/upgrade gates, cash-run semantics and an interdiction `Killed` handler guarded by `wfbe_supply_killed_eh_set` in the Chernarus source mission. Keep those branch-specific mechanics separate when auditing or patching.
+
+Merge-scope caveat: current local `origin/feat/supply-helicopter` at `ffeea4c2` is not a narrow supply-only branch. Against `origin/master`, it changes 82 files with 431 insertions and 2048 deletions across source Chernarus plus Vanilla Takistan, including unrelated service-menu, Valhalla/low-gear, static-defense/HC, performance-audit and UI/resource deltas. Review or isolate those before merging supply helicopters as baseline.
+
+Propagation caveat: the PR branch has the heli supply runtime in Chernarus source only. `git grep` found no `SupplyByHeli`, `WFBE_C_SUPPLY_HELI_TYPES`, `WFBE_C_SUPPLY_HELI_ENABLED` or `wfbe_supply_killed_eh_set` hits under `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan`; Vanilla propagation is still required before release.
 
 ## Status
 
 | Item | Status | Notes |
 | --- | --- | --- |
 | Truck supply mission map | Working but risky | Server tracks return-to-base, but start cargo facts are client-stamped. |
-| PR #1 supply helicopters | Partial / PR-ready risk | Additive feature; current branch has a guarded interdiction `Killed` handler, but still needs loaded/tracking state, authority cleanup and Arma smoke before baseline merge. |
+| PR #1 supply helicopters | Partial / PR-ready risk | Supply-heli feature path is additive and the current branch has a guarded interdiction `Killed` handler, but branch-wide non-supply drift, loaded/tracking state, authority cleanup and Arma smoke all need review before baseline merge. |
+| PR #1 Vanilla propagation | Missing for heli runtime | The current branch changes some Vanilla files, but the supply-heli constants, `SupplyByHeli` flow and guarded handler were not found in maintained Vanilla Takistan. |
 | Cooldown model | Partial | Pull-based JIP query is good, but casing and start-time race need cleanup. |
 | Dead twin script | Abandoned | `supplyMissionActive.sqf` is compiled but no static caller was found. |
 | Authority posture | Opportunity | Small server-owned record can improve integrity without redesigning all economy flows. |
@@ -46,7 +51,7 @@ Branch split: current `master` has the truck mission flow, client-stamped `Suppl
 4. Current `master` server start handler records town cooldown as `LastSupplyMissionRun`, starts the town timer and loops while the vehicle is alive. PR #1 additionally adds a guarded `Killed` event handler to the vehicle for interdiction rewards (`origin/feat/supply-helicopter` `supplyMissionStarted.sqf:13-30`).
 5. Branch-local/release source narrows the live command-center scan to `Base_WarfareBUAVterminal` (`docs/developer-wiki-index` `supplyMissionStarted.sqf:24-28`; release branch `:46-53`). `origin/master` still scans all object classes at `:24-28` and filters with `isKindOf`. The later nearby-player/object lookup remains a broad 8-meter scan because it resolves occupants/player objects, not command centers.
 6. On command-center proximity, the loop resolves a player through `WFBE_SE_PLAYERLIST`, nearby units and the vehicle leader/driver (`supplyMissionStarted.sqf:48-78`), then emits `WFBE_Server_PV_SupplyMissionCompleted` back to the server (`:80-82`).
-7. Current `master` completion reads `SupplyAmount` and `SupplyFromTown` from the vehicle object (`supplyMissionCompleted.sqf:9-28`), pays side supply, clears amount/source vars and broadcasts the message. PR #1 extends completion to read `SupplyByHeli`, decide whether a heli cash run applies from server-side Supply upgrade 3 state, and pay commander team funds or side supply.
+7. Current `master` completion reads `SupplyAmount` and `SupplyFromTown` from the vehicle object (`supplyMissionCompleted.sqf:9-28`), pays side supply, clears amount/source vars and broadcasts the message. PR #1 extends completion to read `SupplyByHeli`, decide whether a heli cash run applies from server-side Supply upgrade 3 state, and pay side supply only for non-cash runs. In the current branch, cash runs pay the commander-team tithe only when `GetCommanderTeam` returns a group; no-commander cash runs do not fall back to side supply (`origin/feat/supply-helicopter` `supplyMissionCompleted.sqf:29-35`).
 8. Client reward/score presentation is local after the completion broadcast. The pilot receives the reward through `ChangePlayerFunds` and score is requested with `RequestChangeScore` (`supplyMissionCompletedMessage.sqf:15-33`).
 
 ## Confirmed Findings
@@ -55,6 +60,8 @@ Branch split: current `master` has the truck mission flow, client-stamped `Suppl
 | --- | --- | --- |
 | Client-stamped cargo is still authority-bearing. | Current `master`: `supplyMissionStart.sqf:20-34`; `supplyMissionCompleted.sqf:9-28`. PR #1 adds `SupplyByHeli`. | Server completion trusts the object vars for source and amount. PR #1 adds more reward surfaces on top of that trust. |
 | The PR #1 interdiction handler is guarded, but not yet smoke-proven. | `origin/feat/supply-helicopter` `supplyMissionStarted.sqf:13-30` sets `wfbe_supply_killed_eh_set` before adding the `Killed` handler; the handler reads `SupplyAmount`, awards `WFBE_C_SUPPLY_INTERDICTION_CUT` once while amount is positive and clears `SupplyAmount`. | Earlier docs overstated a live stacking leak. Current PR code has a simple idempotency guard, but repeated load/death/reuse behavior still needs Arma smoke before merge. |
+| PR #1 cash-run no-commander fallback is absent. | `origin/feat/supply-helicopter` `supplyMissionCompleted.sqf:29-35` pays commander team funds only inside `if (!isNull _comTeam)` and has no `else` side-supply fallback. | Decide whether no-commander cash runs should intentionally pay only the pilot reward or should preserve side-supply value. |
+| PR #1 branch scope is broader than supply-heli. | `git diff --numstat origin/master..origin/feat/supply-helicopter` shows 82 changed files, 431 insertions and 2048 deletions. Examples include deleted `Client_WatchdogCommandBarDeadUnits.sqf`, large `GUI_Menu_Service.sqf` changes, Valhalla/low-gear edits, static-defense/HC edits and `Common_PerformanceAudit.sqf` default behavior. | Review or split unrelated branch drift before merge; do not treat this PR as supply-only just because the canonical page focuses on the supply-heli path. |
 | Duplicate mission starts for the same vehicle are not explicitly guarded. | Current `master`: `supplyMissionStart.sqf:32-39`; `supplyMissionStarted.sqf:20-65`. PR #1 extends this with handler attachment. | A reused or rapidly reloaded vehicle can create parallel tracking loops; on PR #1 it can also attach repeated handlers unless state gates are added. |
 | Cooldown key casing is inconsistent. | `Init_Town.sqf:35` seeds `lastSupplyMissionRun`; `isSupplyMissionActiveInTown.sqf:8` reads `LastSupplyMissionRun`; `supplyMissionStarted.sqf:8` writes `LastSupplyMissionRun`. | After the first start, the uppercase key exists; before that, the query path depends on nil behavior. Treat this as a source-confirmed mismatch and smoke-test after standardizing. |
 | Cooldown response model is good but the start flow races it. | Request at `supplyMissionStart.sqf:6-7`, local read at `:9`, second server request at `:61`; receiver stores result at `townSupplyStatus.sqf:5-8`. | Keep the pull-based JIP pattern, but do not make the immediate local cache read the final authority decision. |
@@ -97,7 +104,7 @@ Recommended branch: `hardening/supply-mission-authority-cleanup`.
 6. Keep PR #1 reward semantics unless the owner asks for a design change.
    - Truck and light-heli non-cash completion should add side supply.
    - Heli upgrade-3 cash run should pay commander team funds when commander exists.
-   - No-commander cash-run fallback to side supply is already coded and should remain unless redesigned.
+   - No-commander cash-run fallback to side supply is not coded in current `origin/feat/supply-helicopter`; decide whether to add one or intentionally document pilot-only reward behavior.
    - Interdiction reward should pay once per loaded vehicle death.
 
 7. Command-center detection narrowing is branch-local/release patched.
@@ -119,6 +126,7 @@ Source-only checks:
 - Confirm no code path still uses lowercase `lastSupplyMissionRun` after the casing cleanup.
 - Done for scan sub-step in branch-local/release source: Chernarus and maintained Vanilla Takistan command-center detection use one narrowed `["Base_WarfareBUAVterminal"]` scan outside `origin/master`; master adoption, `git diff --check` and Arma 2 OA smoke remain validation gates.
 - Confirm `WFBE_SE_PLAYERLIST` has one row per active UID after join/reconnect/disconnect churn and no stale `objNull`/deleted rows are used for completion.
+- Confirm PR #1 supply-heli code is propagated to maintained Vanilla Takistan before any release-complete claim; current branch evidence shows the heli runtime is Chernarus-only.
 
 Hosted/dedicated smoke:
 
@@ -135,6 +143,7 @@ PR #1 helicopter smoke:
 - Heli upgrade-3 cash run pays commander team funds; no-commander fallback banks as side supply.
 - Destroying a loaded enemy supply vehicle pays interdiction exactly once; repeated missions on the same vehicle reuse or preserve the guarded handler without duplicate awards.
 - Air delivery still gives the pilot 25 percent reward/score bonus.
+- Maintained Vanilla Takistan contains the same supply-heli constants, start/completion flow, command-center handling and guarded `Killed` handler after propagation.
 
 JIP/disconnect/HC smoke:
 

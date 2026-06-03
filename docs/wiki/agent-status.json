@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T16:55:00+02:00",
+  "generatedAt": "2026-06-03T13:03:28+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Documented commander map-order executor proof: command UI writes wfbe_teammode/wfbe_teamgoto, RequestTeamUpdate properties are live, SetTask sends are dormant and no static general executor was found for map-order variables.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: PR #1 supply-heli delta line-by-line."
+      "currentWork": "Documented PR #1 supply-heli line delta and propagation caveat at origin/feat/supply-helicopter ffeea4c2: Chernarus source has constants/toggle, action gate, SupplyByHeli, cash-run and guarded interdiction path; maintained Vanilla lacks the runtime heli symbols. Branch diff remains 82 files / 431 insertions / 2048 deletions and includes broad non-supply drift.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: cleanup flag/nested-pair shape promotion or another P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -48,6 +48,12 @@
       "owner": "Codex",
       "status": "published-validated",
       "output": "Closed the AI-order source-proof follow-up. AI-Headless-And-Performance, AI-Commander-Autonomy-Audit, Feature-Status-Register, Player-UI-Workflow-Map, Development-Lessons-Learned and machine records now distinguish live RequestTeamUpdate property updates, replicated map-order variables without a proven general executor, support/resistance-only waypoint helper callers and dormant SetTask sends."
+    },
+    {
+      "lane": "pr1-supply-heli-line-delta-propagation-audit",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Rechecked local origin/feat/supply-helicopter at ffeea4c2 against origin/master 2cdf5fb8. Current-Work-Supply-Helicopters-PR1 now has a line-by-line Chernarus delta for constants/toggle, action gate, SupplyByHeli start state, guarded interdiction handler, heli command-center handling, cash-run funds, pilot reward and buy-menu hints. Supply-Mission-Architecture, Supply-Mission-Authority-Cleanup-Playbook and Feature-Status-Register now record that maintained Vanilla lacks the runtime heli symbols, while branch-wide diff remains 82 files, 431 insertions and 2048 deletions."
     },
     {
       "lane": "scout-wave-g-validation-reconciliation",

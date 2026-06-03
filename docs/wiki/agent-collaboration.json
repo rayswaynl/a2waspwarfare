@@ -783,9 +783,10 @@
         "Reviewed, validated and published scoped documentation batches with docs/wiki and wiki checkout parity",
         "Closed the AI respawn branch smoke-plan follow-up by adding a vanilla/non-vanilla AI leader death/respawn smoke pack to Testing-Debugging-And-Release-Workflow",
         "Closed the config data-model checklist follow-up by adding concrete content/config verification gates to Assets-Config-Localization-And-Parameters-Atlas",
-        "Closed the commander map-order executor source-proof follow-up by documenting live RequestTeamUpdate, unproven wfbe_teammode/wfbe_teamgoto executor state and dormant SetTask sends"
+        "Closed the commander map-order executor source-proof follow-up by documenting live RequestTeamUpdate, unproven wfbe_teammode/wfbe_teamgoto executor state and dormant SetTask sends",
+        "Closed PR #1 supply-heli line-delta/propagation audit: Chernarus source has the heli constants/action gate/SupplyByHeli/cash-run/interdiction path, but maintained Vanilla lacks those runtime symbols on this branch; local branch diff is broad and no-commander cash-run side-supply fallback is absent"
       ],
-      "handoff": "Continue from the highest-value open docs item after validation and publish. Cleanup/restorer cadence, scout-wave-g validation and commander map-order source proof are reconciled; next bounded candidate is PR #1 supply-heli delta line-by-line. Do not overlap active Codex, Claude or other agent claims."
+      "handoff": "Continue from the highest-value open docs item after validation and publish. Cleanup/restorer cadence, scout-wave-g validation, commander map-order source proof and PR #1 supply-heli line-delta/propagation audit are reconciled; next bounded candidate is cleanup flag/nested-pair shape promotion or another P0/P1 accuracy drift. Do not overlap active Codex, Claude or other agent claims."
     },
     {
       "lane": "lesson-aware-codebase-indexer",

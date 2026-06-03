@@ -302,11 +302,12 @@
   "pr1SupplyHeliContext": {
     "page": "Current-Work-Supply-Helicopters-PR1.md",
     "branchScope": "PR #1 / feat/supply-helicopter is in scope for docs; master remains the stable baseline.",
-    "summary": "PR #1 adds supply helicopters, cash runs and interdiction rewards on top of the existing supply mission trust model.",
+    "summary": "PR #1 adds supply helicopters, cash runs and interdiction rewards on top of the existing supply mission trust model. Current branch evidence has the supply-heli runtime in Chernarus source, not maintained Vanilla Takistan.",
     "knownRisks": [
       "Supply mission start/completion still trusts vehicle object variables set by client-started flow.",
       "Cooldown casing mismatch LastSupplyMissionRun vs lastSupplyMissionRun remains unresolved.",
-      "Supply vehicle Killed event handlers can stack on reused vehicles; current double-payment is bounded but the handler leak is real.",
+      "Current PR branch sets wfbe_supply_killed_eh_set before adding the interdiction Killed handler, so the old stacked-handler wording is stale; repeated load/deliver/destroy behavior still needs Arma smoke and any future removal/re-arm behavior needs a handler-ID plan.",
+      "Maintained Vanilla Takistan does not contain SupplyByHeli, WFBE_C_SUPPLY_HELI_TYPES, WFBE_C_SUPPLY_HELI_ENABLED or wfbe_supply_killed_eh_set on the current PR branch; generated-target propagation remains a release gate.",
       "Autonomous AI supply heli work is deferred because the underlying AI supply logistics path is already incomplete/broken."
     ]
   },

@@ -2,11 +2,25 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: PR #1 Supply-Heli Line Delta / Propagation Audit
+
+- Source-diffed `origin/feat/supply-helicopter` `ffeea4c2` against `origin/master` `2cdf5fb8` without checking out the PR branch.
+- Added a line-by-line Chernarus supply-heli delta table to [Current supply heli PR](Current-Work-Supply-Helicopters-PR1): `Rsc/Parameters.hpp:5-11`; `Init_CommonConstants.sqf:169-178`; `Skill_Apply.sqf:65,72`; `supplyMissionStart.sqf:21-34`; `supplyMissionStarted.sqf:7,13-30,36-43`; `supplyMissionCompleted.sqf:24-35`; `supplyMissionCompletedMessage.sqf:13-31`; `Client_UIFillListBuyUnits.sqf:102`; `GUI_Menu_BuyUnits.sqf:451-456`.
+- Confirmed the current branch-wide caveat remains: `git diff --numstat origin/master..origin/feat/supply-helicopter` shows 82 files, 431 insertions and 2048 deletions, so PR #1 is not a clean supply-only branch.
+- New propagation finding: the supply-heli runtime is Chernarus-only on the current PR branch. `git grep` found no `SupplyByHeli`, `WFBE_C_SUPPLY_HELI_TYPES`, `WFBE_C_SUPPLY_HELI_ENABLED` or `wfbe_supply_killed_eh_set` under `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan`; among supply/parameter path checks, only Vanilla `Rsc/Parameters.hpp` appeared in the diff.
+- Updated [Supply mission architecture](Supply-Mission-Architecture), [Supply authority cleanup](Supply-Mission-Authority-Cleanup-Playbook), [Feature status](Feature-Status-Register) and the dashboard so future merge/release work treats Vanilla propagation as an explicit gate alongside no-commander cash-run behavior, repeated load/destroy smoke and broad non-supply branch drift.
+
 ## 2026-06-03 - Codex Documentation Finisher: Commander Map-Order Executor Proof
 
 - Closed the Development Lessons commander-order source-proof follow-up without gameplay source edits.
 - Evidence checked: command menu writes move modes and positions at `Client/GUI/GUI_Menu_Command.sqf:252-306`; team property PVF send at `:425-428`; dormant `SetTask` sends at `:335-337,343`; replicated setter writes at `Common_SetTeamMoveMode.sqf:8` and `Common_SetTeamMovePos.sqf:8`; server compiles waypoint helpers at `Server/Init/Init_Server.sqf:13-18`; helper callers are support/resistance paths (`Support_Paratroopers.sqf:92,122`, `Support_ParaAmmo.sqf:38,96`, `Support_ParaVehicles.sqf:39,78`, `AI_Resistance.sqf:14-16`); static readers of `wfbe_teammode` / `wfbe_teamgoto` are UI display and AI-respawn reset (`AI_SquadRespawn.sqf:105-109`, `AI_AdvancedRespawn.sqf:120-124`).
 - Updated [AI/headless](AI-Headless-And-Performance#commander-team-order-variables), [AI commander audit](AI-Commander-Autonomy-Audit), [Feature status](Feature-Status-Register), [Player UI workflow](Player-UI-Workflow-Map), [Development lessons learned](Development-Lessons-Learned) and machine records. Runtime smoke remains needed before saying commander Move/Patrol/Defense/Take Towns orders execute.
+
+## 2026-06-03 - Codex Documentation Finisher: PR #1 Supply-Heli Branch Scope Recheck
+
+- Rechecked local `origin/feat/supply-helicopter` at `ffeea4c2` against `origin/master`: the branch-wide diff is 82 files, 431 insertions and 2048 deletions across source Chernarus and Vanilla Takistan, not a narrow supply-only PR.
+- Evidence checked: constants/reward knobs at `Init_CommonConstants.sqf:169-178`, load action gate at `Skill_Apply.sqf:65-72`, client `SupplyByHeli` stamp at `supplyMissionStart.sqf:22-34`, guarded interdiction handler at `supplyMissionStarted.sqf:13-30`, widened heli command-center scan at `:53`, and cash-run commander-team payout at `supplyMissionCompleted.sqf:29-35`.
+- Corrected docs that implied a no-commander cash-run side-supply fallback; current PR code has no such fallback. Added branch-scope caveats to the PR page, architecture page, cleanup playbook and Feature Status. Scope remained docs-only.
 
 ## 2026-06-03 - Codex Documentation Finisher: Scout Wave G Validation Reconciliation
 

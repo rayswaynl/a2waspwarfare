@@ -54,9 +54,13 @@ Claude DR-39 split the Perf/JIP status cleanly:
 
 ## PR #1 Changes
 
-PR #1 improves the system by centralizing supply vehicle types, adding `SupplyByHeli`, changing labels to `LOAD SUPPLIES`, adding air rewards/cash runs/interdiction, and highlighting supply helicopters in buy menus. It is additive: it extends the same client-started, server-completed object-var flow rather than replacing the trust model.
+PR #1 improves the Chernarus source supply system by centralizing supply vehicle types, adding `SupplyByHeli`, changing labels to `LOAD SUPPLIES`, adding air rewards/cash runs/interdiction, and highlighting supply helicopters in buy menus. The supply-heli feature path is additive: it extends the same client-started, server-completed object-var flow rather than replacing the trust model.
 
 Current `origin/feat/supply-helicopter` has already addressed the older handler-stacking review risk with a `wfbe_supply_killed_eh_set` guard before adding the interdiction `Killed` handler. Keep that guarded shape and smoke repeated load/deliver/destroy cycles before merge.
+
+Propagation caveat: the current PR branch has the supply-heli runtime symbols in `Missions/[55-2hc]warfarev2_073v48co.chernarus` only. A branch grep found no `SupplyByHeli`, `WFBE_C_SUPPLY_HELI_TYPES`, `WFBE_C_SUPPLY_HELI_ENABLED` or `wfbe_supply_killed_eh_set` symbols under maintained Vanilla Takistan, so Vanilla propagation remains a merge/release gate.
+
+Merge-scope caveat: current local `origin/feat/supply-helicopter` at `ffeea4c2` is broader than this feature path. The branch diff against `origin/master` changes 82 files with 431 insertions and 2048 deletions, including service-menu, Valhalla/low-gear, static-defense/HC, performance-audit and UI/resource changes. Review or isolate those separately before treating the branch as a supply-only merge.
 
 ## Master vs PR #1 Authority Matrix
 
@@ -65,10 +69,11 @@ Current `origin/feat/supply-helicopter` has already addressed the older handler-
 | Vehicle type | Truck-only hardcoded class checks. | Centralized `WFBE_C_SUPPLY_TRUCK_TYPES`, `WFBE_C_SUPPLY_HELI_TYPES` and `WFBE_C_SUPPLY_VEHICLE_TYPES`. |
 | Start authority | Client chooses eligible vehicle, stamps `SupplyFromTown` / `SupplyAmount`, then notifies server. | Same trust model, plus `SupplyByHeli` and heli class/upgrade gates. |
 | Completion authority | Server loop verifies command-center proximity, then trusts the vehicle object vars. | Same server-completion pattern; reward path branches for truck, heli and cash run. |
-| Reward | Side supply on completion; player message/score path follows completion broadcast. | Heli rewards add the air bonus; heli deliveries at Supply upgrade 3 become cash runs that pay commander team funds when a commander exists. |
+| Reward | Side supply on completion; player message/score path follows completion broadcast. | Heli rewards add the air bonus; heli deliveries at Supply upgrade 3 become cash runs that pay commander team funds when a commander exists. Current PR code does not fall back to side supply when no commander team exists. |
 | Cooldown | Town object cooldown uses `LastSupplyMissionRun`, with source casing mismatch against seeded `lastSupplyMissionRun`. | Same cooldown foundation; PR does not redesign cooldown ownership. |
 | AI logistics | Broken/deferred `UpdateSupplyTruck` / missing `supplytruck.fsm`. | Still deferred; PR covers player-run vehicles, not autonomous AI-flown supply helicopters. |
 | Known PR risk | Not applicable. | Current branch guards the interdiction `Killed` handler; repeated load/deliver/destroy behavior still needs Arma smoke before merge. |
+| Generated target | Truck flow exists in maintained Vanilla. | Supply-heli runtime is not propagated to maintained Vanilla on the current PR branch; run LoadoutManager or explicitly hand-review generated target drift before release. |
 
 ## Future Design Direction
 
