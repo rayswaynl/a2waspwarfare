@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Config Data-Model Checklist
+
+- Closed the open Development Lessons follow-up to add a config data-model checklist to [Assets/config/localization/parameters atlas](Assets-Config-Localization-And-Parameters-Atlas#config-data-model-checklist).
+- Evidence checked: `Common/Config/readme.txt:7-65`; config load/root import in `Common/Init/Init_Common.sqf:263-308`; factory-derived longest-build-time and price mutation at `:325-348`; money-only structure cost mutation at `:350-357`; repair-truck aggregation at `:359-366`; gear class validation helpers at `Config_Weapons.sqf:12-44`, `Config_Magazines.sqf:11-34`, `Config_Backpack.sqf:11-65,70-82`; template derivation at `Config_SetTemplates.sqf:33-123`; representative roots at `Root_US.sqf:13-17,69-117,128-137`; structures at `Structures_CO_US.sqf:10,20,103-113`.
+- Updated [Development lessons learned](Development-Lessons-Learned), dashboard and machine records so future content agents verify side roots, factory arrays, gear registries, loadout templates, structure arrays, AI loadouts and LoadoutManager propagation before claiming a class/content edit complete.
+
 ## 2026-06-03 - Codex Documentation Finisher: Stale Claude Audit Machine-Record Cleanup
 
 - Closed stale 2026-06-02 `agent-knowledge.jsonl` records whose owning docs had already been reconciled: BattlEye A2 OA filter wording, ICBM normative validation wording, Core Systems Discord integration scope, factory depot range constants, supply PR #1 scoping and the old patched-status drift capstone rows.

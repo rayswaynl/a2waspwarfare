@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T12:29:47+02:00",
+  "generatedAt": "2026-06-03T12:29:48+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed the AI respawn branch smoke-plan follow-up: Testing-Debugging-And-Release-Workflow now has a concrete vanilla/non-vanilla AI leader death/respawn smoke pack, and Development-Lessons-Learned points to it while keeping runtime proof pending.",
-      "nextExpectedOutput": "Pick the next highest-value stale validation/status row or fresh source-backed docs gap; good candidates are the config data-model checklist, cleanup/restorer perf cadence or scout-wave-g validation reconciliation."
+      "currentWork": "Closed the config data-model checklist follow-up: Assets-Config-Localization-And-Parameters-Atlas now gives content agents source-backed gates for unit/factory data, gear registries, loadout templates, side roots, structures and LoadoutManager propagation.",
+      "nextExpectedOutput": "Pick the next highest-value stale validation/status row or fresh source-backed docs gap; good candidates are cleanup/restorer perf cadence, scout-wave-g validation reconciliation or commander AI-order executor proof."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "config-data-model-checklist",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Closed the Development-Lessons-Learned config follow-up by adding a source-backed Config Data-Model Checklist to Assets-Config-Localization-And-Parameters-Atlas. The checklist covers unit/factory data, gear registries, loadout templates, side roots/support assets, structures/command centers and LoadoutManager propagation."
+    },
     {
       "lane": "ai-respawn-branch-smoke-plan",
       "owner": "Codex",

@@ -8,7 +8,7 @@ Source root: `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
 
 | Area | Current coverage state | Why it still deserves attention |
 | --- | --- | --- |
-| Config data model | The assets/config page covers parameters, media and high-level assets, but `Common/Config` is much deeper than media/config shell coverage. | Content changes propagate through root faction files, unit arrays, gear registries, squad derivation, loadouts, upgrades, factory timers and generated missions. |
+| Config data model | The assets/config page now has a source-backed config data-model checklist. | Keep using it before content edits; the remaining work is runtime smoke when actual classes/assets change. |
 | AI respawn/orders | Respawn atlas maps AI respawn; testing workflow now has a branch-specific AI respawn smoke pack. | Commander-order team variables still need a dedicated executor proof before AI order hardening. |
 | Direct-PV economy helpers | Economy authority pages map the DRs, but implementation agents still need a local rule of thumb before touching helpers. | Shared helpers can look local and harmless while publishing direct mutation payloads; read helpers show the safer server-derived pattern. |
 | Cleanup/garbage/empty vehicles | Marker/cleanup atlas is strong, but patch handoffs are scattered. | Cleanup code has short polling loops, global replicated queues, inconsistent flags and nested-pair array traps. |
@@ -83,7 +83,7 @@ Development rule: before moving or patching lifecycle waits, cite both the consu
 | Priority | Patch | Owner page target | Validation |
 | --- | --- | --- | --- |
 | P1 | Add this page and `agent-development-lessons.jsonl` to navigation/agent context after orchestrator review. | `Home`, `_Sidebar`, `Agent-Context`, `agent-context.json` | Link check and JSON parse. |
-| P1 | Add a config data-model checklist to the assets/config or a dedicated config atlas page. | `Assets-Config-Localization-And-Parameters-Atlas` or new `Config-Data-Model-Atlas` | Source-only plus one content-change smoke scenario. |
+| Done | Config data-model checklist added to the assets/config atlas. | `Assets-Config-Localization-And-Parameters-Atlas#config-data-model-checklist` | Runtime content-change smoke remains per feature change. |
 | Done | AI respawn branch smoke is now in the testing workflow. | `Testing-Debugging-And-Release-Workflow#minimal-smoke-packs` | Runtime evidence is still pending until vanilla and non-vanilla AI leader death/respawn are run in Arma 2 OA. |
 | P2 | Promote cleanup flag/nested-pair shape rules into the marker/cleanup atlas patch-ready section if not already accepted. | `Marker-Cleanup-Restoration-Systems-Atlas` | Mine expiry and unit-kill garbage smoke. |
 | P3 | Source-check whether commander `wfbe_teammode`/`wfbe_teamgoto` has a live general executor or is mostly UI/respawn/support state. | AI/order owner page | Dedicated commander AI order smoke. |
