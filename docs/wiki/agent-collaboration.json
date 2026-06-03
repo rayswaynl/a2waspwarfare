@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T18:20:00+02:00",
+  "generatedAt": "2026-06-03T18:30:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "dashboard-ready-to-publish-row-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Deep-Review-Findings.md",
+        "docs/wiki/External-Research-Reports.md",
+        "docs/wiki/external-research-report-manifest.json",
+        "docs/wiki/Attack-Wave-Authority-Playbook.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/agent-hardening-backlog.jsonl"
+      ],
+      "outputs": [
+        "Closed stale Ready to publish dashboard rows for DR42/43 reconciliation, Markdown report intake and attack-wave playbook",
+        "Preserved source-patch status: these are docs/playbook publications, not gameplay source fixes"
+      ],
+      "handoff": "Future agents should treat those three dashboard rows as published/validated status history, not open publish tasks."
+    },
     {
       "lane": "side-supply-dr44-feature-status-reconciliation",
       "owner": "Codex",

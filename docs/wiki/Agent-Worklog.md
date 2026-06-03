@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Dashboard Ready-To-Publish Row Closure
+
+- Closed three stale [Progress dashboard](Progress-Dashboard) rows that still said "Ready to publish": `dr42-dr43-reconciliation`, `markdown-research-report-intake` and `attack-wave-authority-playbook`.
+- Evidence checked: [Deep review findings](Deep-Review-Findings) DR-42/DR-43; `Init_Server.sqf:64,69,83,89,91,93` duplicate binds; [Feature status](Feature-Status-Register) DR-42/43 rows; [External research reports](External-Research-Reports) and [`external-research-report-manifest.json`](external-research-report-manifest.json) for nine Markdown reports; [Attack-wave authority](Attack-Wave-Authority-Playbook) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) for DR-41 playbook publication.
+- Scope remained docs/status only; no gameplay source files were edited.
+
 ## 2026-06-03 - Codex Documentation Finisher: Side-Supply DR-44 Feature-Status Reconciliation
 
 - Reconciled [Feature status](Feature-Status-Register) and [`agent-feature-status.jsonl`](agent-feature-status.jsonl) so the side-supply first-cut row now includes both DR-22 negative-floor correctness and DR-44 direct-PV payload authority.

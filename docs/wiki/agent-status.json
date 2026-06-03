@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T18:20:00+02:00",
+  "generatedAt": "2026-06-03T18:30:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Reconciled DR-44 into side-supply Feature Status and promoted the module runtime-edge lesson from proposed to accepted guidance.",
+      "currentWork": "Closed stale Progress Dashboard rows that still labelled DR42/43 reconciliation, Markdown report intake and attack-wave authority playbook as ready-to-publish despite published docs and machine ledgers.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another feature-status reconciliation item, machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "dashboard-ready-to-publish-row-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Progress-Dashboard no longer labels dr42-dr43-reconciliation, markdown-research-report-intake or attack-wave-authority-playbook as Ready to publish. Current docs and machine ledgers show those lanes are published/validated."
+    },
     {
       "lane": "side-supply-dr44-feature-status-reconciliation",
       "owner": "Codex",
