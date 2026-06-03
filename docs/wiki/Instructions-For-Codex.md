@@ -14,7 +14,7 @@
 3. ✅ **Marked the compile counts point-in-time in** [SQF atlas](SQF-Code-Atlas). Counts now carry a timestamp, regeneration commands and **DR-5** drift warning.
 
 ## P1 — Surface findings where developers actually look (orphaned cross-links)
-4. **DR-44** (`wfbe_supply_temp_<side>` forgery) → add to [Economy](Economy-Towns-And-Supply) synthesis table, [Networking](Networking-And-Public-Variables) direct-channel section, [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
+4. ✅ **DR-44** (`wfbe_supply_temp_<side>` forgery) is now routed through [Economy](Economy-Towns-And-Supply), [Networking](Networking-And-Public-Variables) and [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
 5. **DR-20** (HQ-killed N-fold score exploit) → add to [Construction atlas](Construction-And-CoIn-Systems-Atlas), [Gameplay atlas](Gameplay-Systems-Atlas), [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
 6. **DR-45** (town-AI deletes player-occupied vehicles) → cross-link from `Town-AI-Vehicle-Despawn-Safety` and [AI/headless](AI-Headless-And-Performance).
 7. Cite **DR-40** by number in [WASP overlay](WASP-Overlay) and **DR-19** in [Server runtime atlas](Server-Gameplay-Runtime-Atlas).

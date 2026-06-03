@@ -53,7 +53,7 @@ Lifecycle ownership note: [Lifecycle wait-chain](Lifecycle-Wait-Chain) owns the 
 | Side/commander state | Side logic objects: `wfbe_commander`, `wfbe_hq`, `wfbe_structures`, `wfbe_aicom_running`, `wfbe_aicom_funds`, `wfbe_upgrades`, `wfbe_upgrading`, `wfbe_votetime`, `wfbe_ai_supplytrucks`, `wfbe_commander_percent`. | `Init_Server.sqf:356-389` |
 | Team list | Side logic `wfbe_teams`. | `Init_Server.sqf:500-501` |
 | Team/group vars | Group variables: `wfbe_funds`, `wfbe_side`, `wfbe_queue`, `wfbe_vote`, `wfbe_autonomous`, `wfbe_respawn`, `wfbe_teamtype`, `wfbe_teammode`, `wfbe_teamgoto`. | `Init_Server.sqf:474-483` |
-| Side supply | Mission namespace `wfbe_supply_<side>` plus temporary public variables `wfbe_supply_temp_<side>`. | `Init_Server.sqf:386`, `Common_ChangeSideSupply.sqf:28-30`, `Server_ChangeSideSupply.sqf:1-47` |
+| Side supply | Mission namespace `wfbe_supply_<side>` plus temporary public variables `wfbe_supply_temp_<side>`. DR-44 confirms these direct temp channels are client-forgeable unless the server re-derives/validates the delta. | `Init_Server.sqf:386`, `Common_ChangeSideSupply.sqf:28-30`, `Server_ChangeSideSupply.sqf:1-47` |
 
 ## Long-Running Loop Notes
 
@@ -134,6 +134,7 @@ Canonical correctness findings are routed through [Victory/endgame atlas](Victor
 | Supply mission cooldown casing | DR-18 confirms `lastSupplyMissionRun` / `LastSupplyMissionRun` mismatch. | Correctness bug; route details through [Supply mission architecture](Supply-Mission-Architecture) and DR-18. |
 | Supply mission reward authority | Client sets truck `SupplyFromTown` and `SupplyAmount`; server completion trusts truck vars. | Hardening gap. |
 | Supply mission duplicate starts | `supplyMissionStarted.sqf` can start parallel tracking loops for one vehicle; completion clears truck vars but does not prove idempotency. | Correctness/hardening gap; add an already-tracked guard before PR #1 supply-heli interdiction work is merged. |
+| Side-supply direct PV forgery | `Common_ChangeSideSupply.sqf:28-30` sends `wfbe_supply_temp_<side>` directly; `Server_ChangeSideSupply.sqf:1-47` trusts payload side/amount and writes `wfbe_supply_<side>`. | DR-44. Re-derive the side and authorized delta server-side; also fix DR-22's negative-floor bug in the same handler. |
 | Resistance supply handler gap | Common sender can format `wfbe_supply_temp_<side>` generically, but server handlers only exist for west/east. | Partially scaffolded but unsupported for live economy; use [resistance supply scaffold](Resistance-Supply-Scaffold). |
 | Paratrooper markers | Server sends `HandleParatrooperMarkerCreation`; source Chernarus and maintained Vanilla Takistan now register the client PVF and ship the handler file. | Propagated, smoke pending; modded folders still drift. Use [Paratrooper marker revival](Paratrooper-Marker-Revival). |
 | MASH markers | Server rebroadcast exists, client receiver compile is commented, and DR-34 found no client broadcast of `WFBE_CL_MASH_MARKER_CREATED`. | Broken/dead on both ends; MASH respawn itself is separate and mapped in [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas). Revive markers with a server-held marker list and JIP replay, or remove. |
