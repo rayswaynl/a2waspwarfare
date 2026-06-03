@@ -84,11 +84,31 @@ function Get-ScreenshotReferences {
 function Test-ScreenshotReference {
 	param([string]$Reference, [string[]]$Roots)
 	if ([System.IO.Path]::IsPathRooted($Reference)) {
-		return (Test-Path -LiteralPath $Reference -PathType Leaf)
+		return (Test-ScreenshotImageFile -Path $Reference)
 	}
 	foreach ($root in $Roots) {
 		$fullPath = Join-Path $root $Reference
-		if (Test-Path -LiteralPath $fullPath -PathType Leaf) { return $true }
+		if (Test-ScreenshotImageFile -Path $fullPath) { return $true }
+	}
+	return $false
+}
+
+function Test-ScreenshotImageFile {
+	param([string]$Path)
+	if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $false }
+	$resolvedPath = (Resolve-Path -LiteralPath $Path).Path
+	$bytes = [System.IO.File]::ReadAllBytes($resolvedPath)
+	$extension = [System.IO.Path]::GetExtension($resolvedPath).ToLowerInvariant()
+	if ($extension -eq ".png") {
+		$pngHeader = [byte[]](0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
+		if ($bytes.Length -lt $pngHeader.Length) { return $false }
+		for ($i = 0; $i -lt $pngHeader.Length; $i++) {
+			if ($bytes[$i] -ne $pngHeader[$i]) { return $false }
+		}
+		return $true
+	}
+	if ($extension -eq ".jpg" -or $extension -eq ".jpeg") {
+		return ($bytes.Length -ge 3 -and $bytes[0] -eq 0xFF -and $bytes[1] -eq 0xD8 -and $bytes[2] -eq 0xFF)
 	}
 	return $false
 }
@@ -225,7 +245,7 @@ if ($EvidenceRoot.Trim().Length -gt 0) {
 	$screenshotRefs = @(Get-ScreenshotReferences -Rows $noteRows)
 	Assert-True "Claude Notes screenshot references are present when evidence root is supplied" ($screenshotRefs.Count -gt 0)
 	$missingScreenshotRefs = @($screenshotRefs | Where-Object { -not (Test-ScreenshotReference -Reference $_ -Roots $evidenceRoots) })
-	Assert-True "Claude Notes screenshot references exist under evidence root" ($missingScreenshotRefs.Count -eq 0)
+	Assert-True "Claude Notes screenshot references are real PNG/JPEG files under evidence root" ($missingScreenshotRefs.Count -eq 0)
 }
 
 Write-Host ""
