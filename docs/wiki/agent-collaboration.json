@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T00:40:00+02:00",
+  "generatedAt": "2026-06-04T01:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,33 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wf-menu-ops-console-branch-index",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "origin/feat/wf-menu-ops-console",
+        "origin/master",
+        "docs/wiki/Current-Source-Status-Snapshot.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Client-UI-Systems-Atlas.md",
+        "docs/wiki/Pending-Owner-Decisions.md",
+        "docs/wiki/Testing-Debugging-And-Release-Workflow.md",
+        "docs/wiki/agent-feature-status.jsonl",
+        "docs/wiki/agent-release-readiness.json",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/agent-events.jsonl",
+        "docs/wiki/agent-knowledge.jsonl"
+      ],
+      "outputs": [
+        "Indexed origin/feat/wf-menu-ops-console head 0767c0b5 as a UI-only branch-review lane",
+        "Recorded Chernarus and maintained Vanilla Rsc/GUI/HUD reskin scope plus docs/superpowers artifacts",
+        "Recorded visual smoke, packed texture/font validation and Chernarus/Vanilla parity gates",
+        "Recorded branch static-check caveat: trailing whitespace in docs/superpowers/plans/2026-06-03-wf-menu-ops-console.md:78,179"
+      ],
+      "handoff": "Future UI owner should clean branch whitespace, verify PuristaBold/EtelkaMonospacePro and Client\\images\\brand_chevron.jpg in Arma 2 OA, smoke WF_Menu/buy/gear/upgrade/tactical/help/RHUD/FPS HUD in Chernarus and Vanilla, then update planned-not-run smoke status before calling the branch merge/release-ready."
+    },
     {
       "lane": "branch-feature-agent-ledger-crosslink",
       "owner": "Codex",

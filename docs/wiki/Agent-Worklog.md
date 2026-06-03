@@ -1,5 +1,14 @@
 # Agent Worklog
 
+## 2026-06-04T01:05:00+0200 - Codex - wf-menu-ops-console-branch-index
+
+- `git pull` fetched new branch `origin/feat/wf-menu-ops-console`; source-checked head `0767c0b5` against stable `origin/master` merge base `2cdf5fb8`.
+- Branch shape: 23 files, +1033/-154. It is UI-only: Chernarus + maintained Vanilla Rsc/GUI/HUD reskin files, new `Client/Images/brand_chevron.jpg` in both maintained missions and `docs/superpowers/*` plan/spec/mockup files.
+- Evidence checked: `Rsc/Styles.hpp:10-40`, `Rsc/Ressources.hpp:117-131,274-277`, `Rsc/Dialogs.hpp:1057-1064,1173-1179,1240-1249`, `Rsc/Titles.hpp:178-179`, plus matching Vanilla `Rsc/Dialogs.hpp:1057-1064,1240` and `Rsc/Styles.hpp:10-40`.
+- Static branch caveat: `git diff --check origin/master..origin/feat/wf-menu-ops-console` reports trailing whitespace in `docs/superpowers/plans/2026-06-03-wf-menu-ops-console.md:78,179`; record this as a branch cleanup gate before merge.
+- Updated [Current source status snapshot](Current-Source-Status-Snapshot), [Feature status](Feature-Status-Register), [Client UI systems atlas](Client-UI-Systems-Atlas), [Pending owner decisions](Pending-Owner-Decisions), [Testing workflow](Testing-Debugging-And-Release-Workflow) and machine ledgers with branch-review gates.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-04T00:55:00+0200 - Codex - source-status-docs-head-wording-cleanup
 
 - Cleaned up current summary wording after the branch-feature ledger pass: [Progress dashboard](Progress-Dashboard) and [`agent-status.json`](agent-status.json) now describe docs branch `154b7f38` as the source-check basis for the feature matrix, not the current durable head of `origin/docs/developer-wiki-index`.

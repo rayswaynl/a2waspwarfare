@@ -72,6 +72,12 @@ flowchart TD
 - The main menu and most submenus are not event-driven state machines. They are `while {alive player && dialog}` polling loops with `sleep` delays. Keep new work small inside those loops and reuse existing update flags.
 - Several menu files return to `WF_Menu` by `closeDialog 0; createDialog "WF_Menu"` rather than maintaining a stack. Adding nested dialogs must preserve those return paths.
 
+### Branch-Only UI Theme Work
+
+`origin/feat/wf-menu-ops-console` head `0767c0b5` is a branch-only UI reskin, not stable-master truth. It changes the palette/control layer in Chernarus and maintained Vanilla (`Rsc/Styles.hpp:10-40`, `Rsc/Ressources.hpp:117-131,274-277`), adds a chevron and footer to `WF_Menu` (`Rsc/Dialogs.hpp:1057-1064,1240-1249`), sets `PuristaBold` on the hub title (`Dialogs.hpp:1173-1179`) and sets `EtelkaMonospacePro` on RHUD numeric values (`Rsc/Titles.hpp:178-179`). Treat it as visual/theme evidence until Arma 2 OA smoke proves the fonts, texture path, contrast and both Chernarus/Vanilla menu surfaces.
+
+Static caveat for the branch: `git diff --check origin/master..origin/feat/wf-menu-ops-console` currently reports trailing whitespace in `docs/superpowers/plans/2026-06-03-wf-menu-ops-console.md:78,179`. Clean that before merge even though it is not mission runtime code.
+
 ## Title And HUD Resource Map
 
 `Rsc/Titles.hpp` defines long-lived non-modal resources.
