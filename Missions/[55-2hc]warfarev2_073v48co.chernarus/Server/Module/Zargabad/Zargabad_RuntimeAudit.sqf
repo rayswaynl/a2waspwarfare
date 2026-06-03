@@ -44,6 +44,12 @@ _eastBasePos = missionNamespace getVariable ["WFBE_ZARGABAD_BASE_POS_EAST", [0,0
 	count (missionNamespace getVariable ["WFBE_ZARGABAD_CENTRAL_WALL", []])
 ]] Call WFBE_CO_FNC_LogContent;
 
+["INFORMATION", Format [
+	"Zargabad_RuntimeAudit.sqf: baseStaticTemplates WEST %1 EAST %2.",
+	missionNamespace getVariable ["WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_WEST", []],
+	missionNamespace getVariable ["WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_EAST", []]
+]] Call WFBE_CO_FNC_LogContent;
+
 _westLight = missionNamespace getVariable ["WFBE_WESTLIGHTUNITS", []];
 _westHeavy = missionNamespace getVariable ["WFBE_WESTHEAVYUNITS", []];
 _westAircraft = missionNamespace getVariable ["WFBE_WESTAIRCRAFTUNITS", []];

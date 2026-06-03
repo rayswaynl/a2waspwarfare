@@ -33,6 +33,7 @@ Claude/runtime tester should keep going until there is RPT and short note eviden
 | Town defense orientation | RPT contains `Init_Zargabad.sqf: Oriented [33] town defense logics toward linked town centers`. |
 | Edge guard init | RPT contains `Zargabad_EdgeGuard.sqf: outer [120]m rim timeout [45]s safe range [325]m`. |
 | Runtime audit | RPT contains `Zargabad_RuntimeAudit.sqf` lines with 13 towns, 19 camps, 1 airport, 33 defenses, start SV 185, max SV 648, base/static/wall counts, factory restriction counts, price multipliers/samples, and the Zargabad economy/range constants. |
+| Base static templates | RPT contains `Zargabad_RuntimeAudit.sqf: baseStaticTemplates` with the WEST M2/TOW/Stinger and EAST KORD/Metis/Igla static layouts; screenshot notes should call out any mismatch between template, spawned objects, and usable firing arcs. |
 | JIP | A second client joins after time > 30 and RPT shows player join/JIP storage; markers and town colors still match current ownership. |
 | HC | If the server uses HC, RPT shows `Headless client is now connected` and town AI/static defense still wakes. |
 | Base safety | WEST/EAST starts cannot trivially spawn-kill each other or suppress city routes from spawn. |
@@ -88,7 +89,7 @@ Use `-AllowKnownDisconnectScoreErrors` only if the only RPT `ERROR` lines are th
 - Screenshot or coordinates for the central wall gaps that were driven/walked through.
 - RPT excerpt for edge-guard init and, if tested, removal.
 - RPT excerpt for `Init_Zargabad.sqf: Oriented [33] town defense logics toward linked town centers`.
-- RPT excerpt for the `Zargabad_RuntimeAudit.sqf` count/SV, base/static/wall, factory restriction, price multiplier/sample, and economy/range lines.
+- RPT excerpt for the `Zargabad_RuntimeAudit.sqf` count/SV, base/static/wall, base static template, factory restriction, price multiplier/sample, and economy/range lines.
 - RPT excerpt for black-market cache surfacing.
 - Any observed town where static defenses still face the wrong route or block normal movement after the orientation pass.
 - Any economy issue where city/airfield income or vehicle pricing snowballs too fast in a 5v5-style test.

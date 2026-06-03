@@ -63,6 +63,7 @@
     "Inspect the WDDM-compatible central H-barrier wall around 3425,3375 and confirm the pass-through gaps preserve normal infantry, light armor and AI movement.",
     "Drive a ground vehicle into the outer Zargabad rim away from starts/towns/camps/airport and confirm Zargabad_EdgeGuard removes it after the configured timeout, while aircraft and objective-near ground fights are ignored.",
     "Verify WEST/EAST Zargabad fortifications and statics spawn, are side-owned, manned, and do not block commander construction in normal base flow.",
+    "Compare the RPT baseStaticTemplates line with screenshots/coordinates for spawned WEST/EAST base statics and flag mismatched classes, bad arcs, or blocked commander movement.",
     "Wake city, airfield and one outer farm with ground units; confirm town AI and static defenses activate, face useful approaches after the Zargabad orientation pass, fight, and clean up after inactivity.",
     "Capture camps and then a town from both WEST and EAST; confirm camp/town SV drains, resets on capture, and income ticks reflect ownership.",
     "Buy representative infantry, light, heavy, aircraft and airport units; confirm Zargabad lists exclude MBTs/heavy attack aircraft and price multipliers feel sane.",
@@ -114,6 +115,10 @@
     },
     {
       "type": "source-audit",
+      "summary": "Init_Zargabad stores exact WEST/EAST base static templates in missionNamespace and Zargabad_RuntimeAudit logs them so Claude can compare RPT evidence against screenshots, firing arcs, and commander construction space."
+    },
+    {
+      "type": "source-audit",
       "summary": "Init_Zargabad builds WFBE_ZARGABAD_CENTRAL_WALL through CreateDefenseTemplate with six separated H-barrier spans centered at 3425,3375 and angled 316 degrees across the flat middle."
     },
     {
@@ -123,6 +128,6 @@
   ],
   "result": "partial",
   "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports after each Codex commit or runtime gate.",
-  "updatedAt": "2026-06-03T04:20:00+02:00",
+  "updatedAt": "2026-06-03T04:38:00+02:00",
   "updatedBy": "Codex"
 }

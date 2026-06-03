@@ -81,6 +81,7 @@ $gates = @(
 	[ordered]@{ Name = "Edge guard init"; Pattern = 'Zargabad_EdgeGuard\.sqf: outer \[[0-9]+\]m rim timeout \[[0-9]+\]s safe range \[[0-9]+\]m'; Required = $true },
 	[ordered]@{ Name = "Runtime count/SV audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: towns \[13\] camps \[19\] airports \[1\] defenses \[33\] startSV \[185\] maxSV \[648\]'; Required = $true },
 	[ordered]@{ Name = "Runtime base/fortification audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: bases WEST .* EAST .* distance \[[0-9]+\] westStatic \[4\] eastStatic \[4\] baseWalls \[13\] centralWallPieces \[60\]'; Required = $true },
+	[ordered]@{ Name = "Runtime base static template audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: baseStaticTemplates WEST .*M2StaticMG_US_EP1.*TOW_TriPod_US_EP1.*Stinger_Pod_US_EP1.* EAST .*KORD_high_TK_EP1.*Metis_TK_EP1.*Igla_AA_pod_TK_EP1'; Required = $true },
 	[ordered]@{ Name = "Runtime factory audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: factoryCounts WEST L/H/A/AP \[[0-9]+,3,7,2\] EAST L/H/A/AP \[[0-9]+,4,3,3\] forbiddenNormal \[\]'; Required = $true },
 	[ordered]@{ Name = "Runtime price audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: priceMultipliers .*priceSamples'; Required = $true },
 	[ordered]@{ Name = "Runtime economy audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: economy supplyCap .*teamSupplyCap \[30000\].*edgeGuard \[120,325,45\]'; Required = $true },

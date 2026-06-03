@@ -1,6 +1,6 @@
 if (!isServer || !IS_zargabad_lowpop_map) exitWith {};
 
-Private ["_buildBase", "_buildCentralWall", "_orientTownDefenses", "_baseWalls", "_centralWall", "_centralWallSpans", "_mgWall", "_sides"];
+Private ["_buildBase", "_buildCentralWall", "_orientTownDefenses", "_baseWalls", "_centralWall", "_centralWallSpans", "_eastStatics", "_mgWall", "_sides", "_westStatics"];
 
 _baseWalls = [
 	["Land_HBarrier_large",[-55,-55,0],45],["Land_HBarrier_large",[-30,-70,0],15],
@@ -22,6 +22,11 @@ _centralWallSpans = [[-1180,-1018],[-790,-628],[-420,-258],[30,192],[470,632],[8
 	};
 } forEach _centralWallSpans;
 missionNamespace setVariable ["WFBE_ZARGABAD_CENTRAL_WALL", _centralWall];
+
+_westStatics = [["M2StaticMG_US_EP1",[-45,0,0],270],["M2StaticMG_US_EP1",[45,0,0],90],["TOW_TriPod_US_EP1",[0,58,0],0],["Stinger_Pod_US_EP1",[0,-58,0],180]];
+_eastStatics = [["KORD_high_TK_EP1",[-45,0,0],270],["KORD_high_TK_EP1",[45,0,0],90],["Metis_TK_EP1",[0,-58,0],180],["Igla_AA_pod_TK_EP1",[0,58,0],0]];
+missionNamespace setVariable ["WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_WEST", _westStatics];
+missionNamespace setVariable ["WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_EAST", _eastStatics];
 
 _buildCentralWall = {
 	Private ["_origin", "_pos"];
@@ -70,11 +75,7 @@ _buildBase = {
 	_sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 	_team = missionNamespace getVariable Format ["WFBE_%1_DefenseTeam", _side];
 	if (isNull _team) then {_team = createGroup _side; missionNamespace setVariable [Format ["WFBE_%1_DefenseTeam", _side], _team]};
-	_statics = if (_side == west) then {
-		[["M2StaticMG_US_EP1",[-45,0,0],270],["M2StaticMG_US_EP1",[45,0,0],90],["TOW_TriPod_US_EP1",[0,58,0],0],["Stinger_Pod_US_EP1",[0,-58,0],180]]
-	} else {
-		[["KORD_high_TK_EP1",[-45,0,0],270],["KORD_high_TK_EP1",[45,0,0],90],["Metis_TK_EP1",[0,-58,0],180],["Igla_AA_pod_TK_EP1",[0,58,0],0]]
-	};
+	_statics = if (_side == west) then {_westStatics} else {_eastStatics};
 	missionNamespace setVariable [Format ["WFBE_ZARGABAD_BASE_STATIC_COUNT_%1", _side], count _statics];
 
 	{
