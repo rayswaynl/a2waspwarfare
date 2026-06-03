@@ -8,6 +8,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Confirmed the reassignment call-shape bug, HQ-kill duplicate/idempotency risk and MHQ repair authority gap are already canonical in the commander/HQ, reassignment, Feature Status and deep-review pages.
 - Added the missing commander-disconnect fallback note: disconnect clears `wfbe_commander` and broadcasts `CommanderDisconnected`, but no automatic vote/reassignment call is proven in that block. Updated the discovery swarm, dashboard and machine records so Lorentz is no longer stale `harvest pending`.
 
+## 2026-06-03 - Codex Documentation Finisher: Scout Wave J Status Reconciliation
+
+- Reconciled stale `scout-wave-j` / `scout-wave-j-integration` status wording from harvested-validation-pending to published-validated.
+- Evidence checked: [Discovery swarm](Subagent-Discovery-Swarm) marks all six Wave J reports returned/integrated, [Agent worklog](Agent-Worklog) has the Wave J harvest record, `agent-events.jsonl` has `scout-wave-j-started` and `scout-wave-j-harvest` events, `agent-knowledge.jsonl` has `scout-wave-j-harvest-2026-06-02`, and the affected docs/wiki files match the wiki checkout by SHA parity.
+- Kept Arma 2 OA runtime smoke separate: the propagated-fix smoke pack remains runtime-pending, but the Wave J documentation harvest itself is no longer a validation/parity blocker.
+
 ## 2026-06-03 - Codex Documentation Finisher: Wave Q Hubble Factory Buy Routing Harvest
 
 - Source-checked Hubble's Wave Q factory/purchase lead against `Client/GUI/GUI_Menu_BuyUnits.sqf:102-156`, `Client/Functions/Client_BuildUnit.sqf:167-208,365,467-469`, `Common/Init/Init_PublicVariables.sqf:9-21` and `Server/Init/Init_Server.sqf:10`.

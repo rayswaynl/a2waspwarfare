@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T16:10:00+02:00",
+  "generatedAt": "2026-06-03T16:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Lorentz's Wave Q commander/HQ lifecycle lead as source-checked and canonical, adding the missing commander-disconnect fallback owner-decision note.",
-      "nextExpectedOutput": "Pick the next highest-value stale validation/status row or fresh source-backed docs gap; Wave Q rows no longer have a harvest-pending lead."
+      "currentWork": "Reconciled stale Scout Wave J status from validation-pending to published-validated after checking discovery, worklog, event and knowledge records plus mirror parity.",
+      "nextExpectedOutput": "Pick the next highest-value stale validation/status row or fresh source-backed docs gap; Wave J docs harvest and Wave Q rows are no longer pending."
     },
     "Codex-2": {
       "status": "ready",
@@ -436,8 +436,8 @@
     {
       "lane": "scout-wave-j",
       "owner": "Codex sub-agents",
-      "status": "returned-harvested-validation-pending",
-      "output": "Six scoped explorers returned. Tesla, Socrates, Boyle, Zeno, Carver and Gibbs findings are folded into owner pages and machine records; validation and mirror parity remain pending."
+      "status": "published-validated",
+      "output": "Six scoped explorers returned. Tesla, Socrates, Boyle, Zeno, Carver and Gibbs findings are folded into owner pages and machine records; documentation validation and mirror parity are complete. Runtime smoke remains tracked separately in the propagated-fix smoke pack."
     },
     {
       "lane": "propagated-fix-smoke-pack",

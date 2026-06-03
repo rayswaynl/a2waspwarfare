@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T16:10:00+02:00",
+  "generatedAt": "2026-06-03T16:20:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -1945,7 +1945,7 @@
     {
       "lane": "scout-wave-j-integration",
       "owner": "Codex",
-      "status": "harvested-validation-pending",
+      "status": "published-validated",
       "sourceScope": [
         "docs/wiki/Feature-Status-Register.md",
         "docs/wiki/Testing-Debugging-And-Release-Workflow.md",
@@ -1959,7 +1959,7 @@
         "Testing-Debugging-And-Release-Workflow.md propagated fix smoke pack",
         "Feature Status and adjacent owner-page updates after source-backed harvest"
       ],
-      "handoff": "Wave J reports are harvested into owner pages and machine records. Other agents should use the promoted findings rather than the raw reports; remaining work is validation, mirror parity and future implementation lanes."
+      "handoff": "Wave J reports are harvested into owner pages and machine records, and documentation validation/mirror parity are complete. Other agents should use the promoted findings rather than the raw reports; remaining work is future implementation lanes and Arma runtime smoke tracked by the propagated-fix smoke pack."
     },
     {
       "lane": "source-fix-propagation-queue",
