@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-04T00:24:00+0200 - Codex - source-status-feature-branch-matrix-refresh
+
+- Fetched `origin` and `miksuu` with prune, then rechecked current branch heads.
+- Updated [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-04-feature-branch-matrix) with a compact branch-feature matrix for docs branch `154b7f38`, `miksuu/master` `8bcc42b1`, `origin/feat/ai-commander` `4dba060e`, `origin/feat/drone-saturation-strike` `8ca4be90` and `origin/feat/recon-uav` `563418ea`.
+- Confirmed all four comparison refs share stable `origin/master` merge base `2cdf5fb8`; Miksuu master remains the town-defense diagnostics merge line, while local AI/drone/recon branches remain branch-only evidence.
+- The snapshot now routes branch merge/release claims to [Pending owner decisions](Pending-Owner-Decisions), [`agent-release-readiness.json`](agent-release-readiness.json) and the [branch-only feature smoke pack](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack).
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-04T00:12:00+0200 - Codex - branch-feature-smoke-pack
 
 - Added a planned [branch-only feature smoke pack](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) for branch features that now have promotion gates.

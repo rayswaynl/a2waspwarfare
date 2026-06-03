@@ -28,6 +28,9 @@ If any item is missing, use `patch-ready`, `branch-local`, `propagated-smoke-pen
 | Supply mission command-center scan | Whether the 80-meter command-center scan is class-filtered to `Base_WarfareBUAVterminal`; keep the nearby-player/object scan separate. | [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) |
 | WASP marker wait cleanup | Whether the display-54 wait is throttled like the display-12 sibling. | [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup) |
 | Source/Vanilla propagation | Whether Chernarus, maintained Vanilla and skipped/generated files all carry the same intended behavior. | [Source fix propagation queue](Source-Fix-Propagation-Queue) |
+| AI commander branch revival | Whether `feat/ai-commander` is still branch-only, whether default-on behavior is accepted, and whether maintained Vanilla/smoke evidence exists. | [AI commander autonomy audit](AI-Commander-Autonomy-Audit) |
+| DroneStrike branch | Whether the latest drone tuning branch is the target, whether paid-support authority moved server-side, and whether generated scope/smoke exists. | [PR8 and drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match) |
+| ReconUAV branch | Whether ReconUAV replaces the old UAV module, whether it is rebased onto latest DroneStrike tuning, and whether recall/reveal/JIP cleanup is smoked. | [PR8 and drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match) |
 
 ## 2026-06-03 Branch Matrix
 
@@ -40,11 +43,24 @@ Checked refs: docs/source `HEAD` `4163faba`, stable `origin/master` `2cdf5fb8`, 
 | Client `Skill_Init` idempotency | Chernarus and Vanilla have one `Skill_Init.sqf` call at `Client/Init/Init_Client.sqf:547`, followed by `WFBE_SK_FNC_Apply` at `:571`. | Chernarus and Vanilla still call `Skill_Init.sqf` twice (`:561` and `:585`) before apply at `:586`. | Chernarus still calls `Skill_Init.sqf` twice (`:565` and `:589`); Vanilla still calls it twice (`:561` and `:585`). | docs/source carries the single-init shape; stable master and current release do not. |
 | Paratrooper marker registration | Chernarus and Vanilla `Common/Init/Init_PublicVariables.sqf:39` include `HandleParatrooperMarkerCreation`. | Chernarus and Vanilla omit the handler; the same slot is `NukeIncoming` only at `Init_PublicVariables.sqf:39`. | Chernarus omits the handler (`NukeIncoming` at `:41`); Vanilla omits it (`NukeIncoming` at `:39`). | docs/source carries the registration; stable master and current release do not. |
 
+## 2026-06-04 Feature Branch Matrix
+
+Checked after `git fetch --all --prune`. Merge base for all rows below is stable `origin/master` `2cdf5fb8`. These rows are **branch evidence**, not shipped-status proof. Use [Pending owner decisions](Pending-Owner-Decisions#branch-only-feature-promotion-decisions), [`agent-release-readiness.json`](agent-release-readiness.json) and the [branch-only feature smoke pack](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) before merge/release claims.
+
+| Branch / upstream ref | Checked head | Delta from `origin/master` | Current interpretation |
+| --- | --- | --- | --- |
+| docs mirror branch `origin/docs/developer-wiki-index` | `154b7f38` | Documentation-only commits since the source-fix batch; source line shapes for the 2026-06-03 propagated-fix matrix remain the same as the earlier docs/source check. | Current wiki/docs mirror truth for documentation. Do not treat this branch name alone as gameplay release proof. |
+| `miksuu/master` | `8bcc42b1` | Three commits ahead of `origin/master`: `913ecdf6` town-defense diagnostics/creation guards, `d5bfe3a2` Takistan propagation and merge `8bcc42b1`. Diff touches Chernarus and maintained Vanilla town-defense creation/diagnostic paths. | Upstream mainline lesson source, not automatically rayswaynl stable. Use [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel) before importing. |
+| `origin/feat/ai-commander` | `4dba060e` | Source-Chernarus-only: 9 files, +366/-5. Adds default-on AI commander, supervisor/workers/order executor and upgrade cost fixes; guards but does not restore old `UpdateSupplyTruck`. | Branch-review needed. Stable `origin/master` remains partial/latent; no maintained Vanilla propagation or runtime smoke proof. |
+| `origin/feat/drone-saturation-strike` | `8ca4be90` | Source-Chernarus-only: 15 files, +379/-4. Latest drone tuning branch: 4-Ka package, HP 20, cruise altitude 300, scatter 6 and cooldown 300. | Branch-review needed. Treat as paid support; server-side authority, generated scope and runtime smoke remain gates. |
+| `origin/feat/recon-uav` | `563418ea` | Source-Chernarus-only: 22 files, +593/-657. Adds `ReconUAV`/`ReconUAVRecall`, removes old `Client/Module/UAV/uav*.sqf` and old `Server/Support/Support_UAV.sqf`; includes drone history only through `93b47594`. | Branch-review needed. Resolve latest DroneStrike tuning baseline and old-UAV replacement behavior before merge claims. |
+
 ## Current Interpretation
 
 - `origin/master` is the stable baseline unless a page explicitly names another branch.
 - Branch-local or release-branch code changes are not shipped on `origin/master` until source evidence proves that branch was merged.
 - "Propagated" means source Chernarus and maintained Vanilla Takistan both carry the change; it does not mean Arma 2 OA runtime smoke passed.
+- Branch-feature smoke packs are planned gates, not proof of in-game behavior.
 - Old worklog/event/knowledge lines are append-only history. Newer source-checked pages and explicit supersession records beat old timestamps.
 
 ## Continue Reading

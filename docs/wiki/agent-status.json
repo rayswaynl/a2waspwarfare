@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T00:12:00+02:00",
+  "generatedAt": "2026-06-04T00:24:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Added a concrete planned branch-feature smoke pack for AI commander, DroneStrike and ReconUAV so release owners can distinguish source review from actual dedicated/JIP/HC/live-server-sensitive evidence.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: remaining feature-status reconciliation, P0/P1 accuracy drift with exact source refs, or source-status refresh for newly fetched branches."
+      "currentWork": "Refreshed the fast source-status snapshot with current docs, Miksuu, AI commander, DroneStrike and ReconUAV branch heads so branch evidence cannot be mistaken for shipped status.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: remaining feature-status reconciliation or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "source-status-feature-branch-matrix-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Current-Source-Status-Snapshot now has a 2026-06-04 feature branch matrix for origin/docs/developer-wiki-index 154b7f38, miksuu/master 8bcc42b1, origin/feat/ai-commander 4dba060e, origin/feat/drone-saturation-strike 8ca4be90 and origin/feat/recon-uav 563418ea. It explicitly treats these as branch evidence until owner decisions, release-readiness gates and smoke evidence are recorded."
+    },
     {
       "lane": "branch-feature-smoke-pack",
       "owner": "Codex",
