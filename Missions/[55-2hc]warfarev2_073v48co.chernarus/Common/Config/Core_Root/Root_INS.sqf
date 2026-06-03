@@ -15,7 +15,7 @@ missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCKS", _side], ['UralRepair
 missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_INS']];
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCKS", _side], ['WarfareSupplyTruck_INS']];
 missionNamespace setVariable [Format["WFBE_%1UAV", _side], 'Pchela1T'];
-missionNamespace setVariable [Format["WFBE_%1DRONE", _side], (missionNamespace getVariable Format["WFBE_%1UAV", _side])];
+missionNamespace setVariable [Format["WFBE_%1DRONE", _side], 'Ka137_PMC']; //--- PMC Ka-137: kamikaze drone, same on both teams
 
 //--- Radio Announcers.
 missionNamespace setVariable [Format ["WFBE_%1_RadioAnnouncers", _side], ['WFHQ_CZ0','WFHQ_CZ1','WFHQ_CZ2']];
