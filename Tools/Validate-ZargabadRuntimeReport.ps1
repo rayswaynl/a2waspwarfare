@@ -140,7 +140,8 @@ Assert-True "runtime report failure scan is clear" ($foundFailures.Count -eq 0)
 $noteRows = Get-MarkdownRows (Get-SectionText -Content $content -Name "Claude Notes")
 Assert-True "Claude Notes table has rows" ($noteRows.Count -gt 1)
 $expectedNoteRows = @(
-	"Hosted/dedicated context",
+	"Hosted boot context",
+	"Dedicated boot context",
 	"Map audit packet attached",
 	"Base safety and spawn sightlines",
 	"Base static runtime positions and arcs",
@@ -172,7 +173,8 @@ $notesWithoutEvidence = @($noteRows | Where-Object {
 Assert-True "Claude Notes PASS rows include evidence" ($notesWithoutEvidence.Count -eq 0)
 
 $coordinateOrScreenshot = '(\b[0-9]{2,4}\s*,\s*[0-9]{2,4}\b|\[[0-9]{2,4}\s*,\s*[0-9]{2,4}|[A-Za-z0-9_. -]+\.(png|jpg|jpeg))'
-Assert-NoteEvidence -Rows $noteRows -Key "Hosted/dedicated context" -Pattern '(hosted|dedicated|server|RPT|Arma)'
+Assert-NoteEvidence -Rows $noteRows -Key "Hosted boot context" -Pattern '(hosted|listen|local host|local-host|non-dedicated).*(RPT|Init_Server|server initialization ended|Arma)|((RPT|Init_Server|server initialization ended|Arma).*(hosted|listen|local host|local-host|non-dedicated))'
+Assert-NoteEvidence -Rows $noteRows -Key "Dedicated boot context" -Pattern '(dedicated|arma2oaserver|server\.exe).*(RPT|Init_Server|server initialization ended|Arma)|((RPT|Init_Server|server initialization ended|Arma).*(dedicated|arma2oaserver|server\.exe))'
 Assert-NoteEvidence -Rows $noteRows -Key "Map audit packet attached" -Pattern 'zargabad-map-audit\.md'
 Assert-NoteEvidence -Rows $noteRows -Key "Base safety and spawn sightlines" -Pattern $coordinateOrScreenshot
 Assert-NoteEvidence -Rows $noteRows -Key "Base static runtime positions and arcs" -Pattern '(baseFootprint|base static|Init_Zargabad|static).*([0-9]{2,4}\s*,\s*[0-9]{2,4}|[0-9]{1,3}\])'
