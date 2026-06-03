@@ -204,4 +204,16 @@ Random wiki-seeded pick (Supply-Mission-Architecture + the two cleanup/scan play
 
 **Known/deferred (confirmed, NOT new):** TR1/TR2/XR12 — AI truck supply mode is dead (`UpdateSupplyTruck` compile commented at `Init_Server.sqf:37`; `supplytruck.fsm` missing). Wiki already documents this.
 
-Lower-value/cleanup: TR3/7/8/9/13/15, SM4/5/10/13/16/17, XR10/11/13 — see chat; cross-check as capacity allows. Nothing from Round 4 built yet — awaiting owner pick.
+Lower-value/cleanup: TR3/7/8/9/13/15, SM4/5/10/13/16/17, XR10/11/13 — see chat; cross-check as capacity allows.
+
+**✅ FIXED & shipped to PR #8 (release commit `4cf443fe`):**
+- **TR12** — `Server_AI_Com_Upgrade.sqf:47,50` indices swapped to match the check (`:34`): funds price (`cost[1]`) now debited from funds, supply price (`cost[0]`) from supply.
+- **XR4** — `Init_Town.sqf` now seeds `LastSupplyMissionRun` (was lowercase) → cooldown casing matches the read/write key (DR-18 closed).
+- **XR3** — `supplyMissionCompleted.sqf` now clears `SupplyByHeli` alongside `SupplyAmount`/`SupplyFromTown`.
+- **SM8/XR9** — dead `supplyMissionActive.sqf` deleted + `Init_Server.sqf:82` compile removed.
+- **SM9/XR2** — dead `checkCCProximity.sqf` deleted + `Init_Client.sqf` compile + dead `WFBE_Client_SupplyMissionActive` var removed.
+- **Dropped XR5** after deeper analysis: the "duplicate" cooldown PV at `supplyMissionStart.sqf:73` actually refreshes the client cooldown cache *after* start (the first send's response lands after the local read), so it's not safely redundant.
+
+**✅ Wiki DRIFT fixed (docs commit below):** Supply-Mission-Architecture / -Scan-Narrowing / -Authority-Cleanup-Playbook updated — scan-narrowing marked SHIPPED (class-filtered + heli 400 m/2D), casing/dead-twin/SupplyByHeli marked done, heli 2D gate + `supplyMissionTimerForTown` push-timer documented.
+
+Still open for a future pick: XR6 (duplicate-start guard), XR15/SM2 (friendly-side check on delivery CC), and the exploit-class cluster (deferred per owner priority).

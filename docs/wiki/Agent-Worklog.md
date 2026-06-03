@@ -1414,9 +1414,16 @@ Key conclusions:
 - Refreshed [Bottleneck removal queue](Bottleneck-Removal-Queue) latest-validation notes with the most recent validated state: 7 JSON files, 4 JSONL files, 555 JSONL entries, 93-file mirror parity and normal Windows LF-to-CRLF warnings only.
 - This is a coordination/status cleanup; no command-reference files or gameplay source changed.
 
+## 2026-06-03T15:15:32+02:00 - Codex - Field-note command trap correction
+
+- Re-checked BI command/function pages for `distance2D`, `BIS_fnc_distance2D`, `lnbSetTooltip` and `try`.
+- Corrected [Self-host testing field notes](Self-Host-Testing-Field-Notes): the Arma 3-only trap is the `distance2D` command, while Wasp source uses OA-compatible `BIS_fnc_distance2D`; `lnbSetTooltip` remains Arma 3-only; basic `try`/`catch` is OA-compatible, but `args try code` is Arma 3-era.
+- Updated [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit), `agent-compatibility-audit.json` and the doc-only comment in `Missions/[55-2hc]warfarev2_073v48co.chernarus/test/wasp_selftest.sqf` with the same distinction. No gameplay behavior changed.
+- Refreshed `agent-context.json.documentation.pages` after validation found the active wiki surface now includes `Self-Host-Testing-Field-Notes`, `Audit-Findings-Queue-2026-06-03` and `Client-UI-And-Server-Loop-Perf-Findings`.
+
 ## 2026-06-03T01:18:42+02:00 - Claude - Self-host testing field notes + WDDM/heli fixes shipped
 
-- Added [Self-host testing field notes](Self-Host-Testing-Field-Notes) (linked from Home -> Current Map -> Operations): the listen-server `Tmp<port>\__cur_mp.pbo` pack-cache trap, "builds but invisible" = spawn coordinate (not locality), supply delivery is proximity-based (no unload action; 2D-for-air fix), HC `-password` symmetry against a no-pw host, RPT line-vs-frameno forensics, folder-vs-PBO browser poisoning, benign local AntiStack/CoIn errors, and A2 OA scripting traps (no `distance2D` / `lnbSetTooltip` / `try`-`catch`).
+- Added [Self-host testing field notes](Self-Host-Testing-Field-Notes) (linked from Home -> Current Map -> Operations): the listen-server `Tmp<port>\__cur_mp.pbo` pack-cache trap, "builds but invisible" = spawn coordinate (not locality), supply delivery is proximity-based (no unload action; 2D-for-air fix), HC `-password` symmetry against a no-pw host, RPT line-vs-frameno forensics, folder-vs-PBO browser poisoning, benign local AntiStack/CoIn errors, and A2 OA scripting traps (no `distance2D` command / no `lnbSetTooltip` / avoid Arma 3 `args try code` syntax).
 - Two source fixes verified live on a self-host and shipped: (1) WDDM commander positions now build at the placement point — a `Land_HelipadEmpty` transform origin spawned at `[0,0,0]`, so every composition (player and AI) built ~12 km away at the SW map corner; replaced with direct rotation about `_pos` -> PR #10 (`feat/commander-positions`). (2) Supply-heli unload now works from a hover via 2D Command-Center proximity -> pushed to PR #1 (`feat/supply-helicopter`).
 - This docs change only adds the new wiki page + the Home link; no gameplay source touched on this branch.
 
@@ -1459,3 +1466,9 @@ Key conclusions:
 - FALSE POSITIVE: SM6 (_friendlyCommandCenterInProximity IS reset each loop iteration in the live file; agent read the dead twin).
 - Exploit-class (deferred per owner gameplay>exploit): SM1/14/15, TR4/5/6/10/11.
 - Docs-only here.
+
+## ROUND 4 FIXES + WIKI DRIFT - Claude
+- Shipped to PR #8 (release 4cf443fe): TR12 (AI-cmd upgrade cost-pool swap), XR4 (cooldown casing seed LastSupplyMissionRun), XR3 (clear SupplyByHeli on completion), SM8/XR9 (deleted supplyMissionActive.sqf + compile), SM9/XR2 (deleted checkCCProximity.sqf + compile + dead WFBE_Client_SupplyMissionActive). Dropped XR5 (the "duplicate" cooldown PV refreshes the client cache post-start; not safely redundant).
+- ALSO carried 2 pre-existing local supply-heli commits (262dc431, c878bbca) to origin in that push (fast-forward, authorship intact).
+- FIXED WIKI DRIFT in Supply-Mission-Architecture / -Scan-Narrowing / -Authority-Cleanup-Playbook: scan-narrowing was described as unpatched but is SHIPPED (class-filtered + heli 400m + 2D gate, supplyMissionStarted.sqf:48-56); marked casing/dead-twin/SupplyByHeli DONE; documented the heli 2D gate + supplyMissionTimerForTown push-timer (were undocumented). Added dated UPDATE banners.
+- Still open (future pick): XR6 (duplicate-start guard), XR15/SM2 (friendly-side check on delivery CC), exploit-class cluster (deferred).

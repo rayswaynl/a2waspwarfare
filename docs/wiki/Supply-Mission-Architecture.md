@@ -4,6 +4,8 @@ Page ownership: this page owns the supply-mission flow, cooldown/JIP pattern and
 
 Supply missions are one of the most cross-cutting systems in the mission. They touch client actions, skill roles, town cooldown state, server tracking loops, side supply, commander/team funds in PR #1, player rewards, public variables and buy-menu affordances.
 
+> **✅ UPDATE 2026-06-03 (Claude):** parts of this page are superseded by code. Now live (release `4cf443fe` + earlier): the command-center scan is **class-filtered + heli-aware** (`supplyMissionStarted.sqf:56`, heli 400 m / truck 80 m, + a heli 2D-distance gate at `:48-54`); cooldown casing **fixed** (DR-18 — `Init_Town.sqf` seeds `LastSupplyMissionRun`); dead twin `supplyMissionActive.sqf` **removed**; `SupplyByHeli` is stamped at start and now **cleared on completion** (XR3). The "unpatched / still broad / dead-twin-present / casing-mismatch" notes below are historical. Also live but undocumented: `supplyMissionTimerForTown.sqf` pushes a cooldown-expiry broadcast (in addition to the pull-based query).
+
 ## Master Branch Flow
 
 1. SpecOps receives the supply action in `Client/Module/Skill/Skill_Apply.sqf` when role/module conditions are met.
@@ -15,7 +17,7 @@ Supply missions are one of the most cross-cutting systems in the mission. They t
 7. If allowed, client validates cursor target against hardcoded supply-truck classes and distance < 50m.
 8. Client writes object variables on the vehicle: `SupplyFromTown` and `SupplyAmount`.
 9. Client broadcasts `WFBE_Client_PV_SupplyMissionStarted`.
-10. Server `supplyMissionStarted.sqf` starts a loop against the vehicle object, checking for command center proximity within 80m with a narrowed `Base_WarfareBUAVterminal` object scan.
+10. Server `supplyMissionStarted.sqf` starts a loop against the vehicle object, checking for command-center proximity with a **class-filtered** scan (`nearestObjects [..., ["Base_WarfareBUAVterminal"], heli ? 400 : 80]`, `:56`) plus a heli horizontal-2D gate (`:48-54`), keeping the `isKindOf` guard.
 11. On match, server broadcasts `WFBE_Server_PV_SupplyMissionCompleted`.
 12. Server `supplyMissionCompleted.sqf` reads the vehicle object variables, calls `ChangeSideSupply`, clears the vehicle vars and broadcasts completion message.
 13. Client `supplyMissionCompletedMessage.sqf` displays the message and requests score reward.
@@ -34,7 +36,7 @@ Supply missions are one of the most cross-cutting systems in the mission. They t
 
 - `supplyMissionStart.sqf` on master uses duplicated hardcoded supply-truck classname arrays.
 - The client asks for cooldown and immediately reads local town state; timing/race behavior depends on the server response arriving quickly enough.
-- Cooldown variable casing is a confirmed DR-18 defect: town init seeds `lastSupplyMissionRun`, while server supply code reads/writes `LastSupplyMissionRun`.
+- Cooldown variable casing was a confirmed DR-18 defect (town init seeded `lastSupplyMissionRun` while server code reads/writes `LastSupplyMissionRun`). **✅ FIXED 2026-06-03 (release `4cf443fe`)** — `Init_Town.sqf` now seeds `LastSupplyMissionRun`.
 - `supplyMissionStarted.sqf` loops until the vehicle dies; it should avoid creating duplicate tracking loops for the same loaded vehicle.
 - Completion trusts object variables on the supply vehicle, so any feature that reuses those vars must clear them reliably.
 - Player resolution depends on `WFBE_SE_PLAYERLIST` and proximity/driver checks.
@@ -43,8 +45,8 @@ Claude DR-39 split the Perf/JIP status cleanly:
 
 | Item | Status | Development note |
 | --- | --- | --- |
-| `supplyMissionActive.sqf` | Dead twin. It is compiled as `WFBE_SE_FNC_SupplyMissionActive`, but the live path is `supplyMissionStarted.sqf`, which self-registers the `WFBE_Client_PV_SupplyMissionStarted` handler. | Remove the dead compile/function or keep it explicitly marked as retired. |
-| Command-center detection loop | Source/Vanilla patched. The live loop still sleeps 3 seconds, but now uses `nearestObjects [pos, ["Base_WarfareBUAVterminal"], 80]` for command-center detection. | Smoke delivery at command centers and no-completion near unrelated objects; authority cleanup remains separate. |
+| `supplyMissionActive.sqf` | ✅ Removed 2026-06-03 (release `4cf443fe`). Was a dead twin compiled as `WFBE_SE_FNC_SupplyMissionActive`; live path is `supplyMissionStarted.sqf`. | File deleted + compile line removed from `Init_Server.sqf`. |
+| Command-center detection loop | ✅ Narrowed (shipped). The live loop is class-filtered (`nearestObjects [pos, ["Base_WarfareBUAVterminal"], heli ? 400 : 80]`, `:56`) with the `isKindOf` guard + a heli 2D gate (`:48-54`). | Smoke delivery at command centers and no-completion near unrelated objects; authority cleanup remains separate. |
 | Cooldown JIP behavior | Pull-based and good. Clients ask `WFBE_Client_PV_IsSupplyMissionActiveInTown`; server computes from `LastSupplyMissionRun`; clients store the answer locally. | This is a positive pattern for JIP state: query current state instead of relying on replayed events. The response is broadcast to all clients today, not targeted to the requester. |
 
 ## PR #1 Changes
@@ -71,7 +73,7 @@ Review risk from the independent doc reviewer: the PR adds a `Killed` event hand
 - Add an explicit loaded/unloaded state variable to prevent duplicate loops and duplicate event handlers.
 - Split client affordance, server validation and reward calculation into documented helper functions.
 - Keep the pull-based cooldown request/response pattern for JIP-visible state, but target responses where possible.
-- Command-center scan narrowing is patched in source/Vanilla; keep smoke evidence on [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing).
+- Command-center scan narrowing remains patch-ready/current-source-unpatched; keep source evidence, patch notes and Arma smoke evidence on [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing).
 - Redesign autonomous AI logistics separately from the broken `AI_UpdateSupplyTruck` / missing `supplytruck.fsm` path.
 
 ## Continue Reading
