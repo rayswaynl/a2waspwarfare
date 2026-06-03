@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Pending Owner Decision Path Typos
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 47.
+- Source-checked the PVF dispatcher files at `Client/Functions/Client_HandlePVF.sqf:22` and `Server/Functions/Server_HandlePVF.sqf:14`.
+- Source-checked the dead WASP action spelling at `WASP/actions/AddActions.sqf:4`: the commented file is `GearYouUnit.sqf`, not `GearYourUnit.sqf`.
+- Corrected [Pending owner decisions](Pending-Owner-Decisions) so future agents land on real files.
+
 ## 2026-06-03 - Codex Documentation Finisher: Abandoned Feature MASH Range Fix
 
 - Closed [Instructions for Codex](Instructions-For-Codex) item 41.

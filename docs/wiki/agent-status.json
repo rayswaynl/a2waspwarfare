@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T14:20:00+02:00",
+  "generatedAt": "2026-06-03T14:25:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Instructions-For-Codex item 41: Abandoned-Feature-Revival-Review now cites receiverMASHmarker.sqf:1-29 and MASHMarker.sqf:1-13.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 47: Pending-Owner-Decisions PVF dispatcher path and GearYouUnit typo correction."
+      "currentWork": "Closed Instructions-For-Codex item 47: Pending-Owner-Decisions now uses the real PVF dispatcher paths and GearYouUnit spelling.",
+      "nextExpectedOutput": "Re-read Instructions-For-Codex for any newly appended handoffs; otherwise continue with optional item 49 or 50 guardrail work."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "pending-owner-decisions-path-typos",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 47 is resolved: Pending-Owner-Decisions.md now names Server/Functions/Server_HandlePVF.sqf and Client/Functions/Client_HandlePVF.sqf, and spells GearYouUnit with WASP/actions/AddActions.sqf:4 evidence."
+    },
     {
       "lane": "abandoned-feature-mash-range-fix",
       "owner": "Codex",

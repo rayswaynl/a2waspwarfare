@@ -26,7 +26,7 @@ Quick path:
 ## 1. The big one — economy/forgery authority (one decision, whole class)
 
 **Decision:** add server-side authority to spend/effect paths, **or** accept client-authoritative economy and ship a real BattlEye filter set. The forgery class has **two surfaces** and the decision must cover both:
-- **PVF dispatcher** — `Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` `Call Compile` the sender's command string (DR-1). Fix: validate against the known `SRVFNC*`/`CLTFNC*` set + re-derive authority in each handler. (Same change removes a per-message recompile, DR-38.)
+- **PVF dispatcher** — `Server/Functions/Server_HandlePVF.sqf` / `Client/Functions/Client_HandlePVF.sqf` `Call Compile` the sender's command string (DR-1). Fix: validate against the known `SRVFNC*`/`CLTFNC*` set + re-derive authority in each handler. (Same change removes a per-message recompile, DR-38.)
 - **Direct `publicVariableServer` channels** — e.g. `ATTACK_WAVE_INIT` (DR-41); each needs its own server re-derivation. See [Public variable channel index](Public-Variable-Channel-Index).
 
 | Path | Finding | Severity |
@@ -70,7 +70,7 @@ Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) for the source
 | 4 abandoned stub missions: complete or delete | DR-32 | sahrani/dingor/tavi/isladuala are non-runnable (1–20 files) |
 | MASH map-marker feature: revive or remove | DR-34 | dead both ends; revive needs server-held list + JIP re-send |
 | Paratrooper drop markers: smoke propagated fix / decide modded drift | DR-2 | source Chernarus + maintained Vanilla now register the callback and ship the handler; Arma smoke and divergent modded folders remain |
-| Dead WASP actions (OnArmor, GearYourUnit) | DR-35 | commented in `AddActions.sqf` |
+| Dead WASP actions (OnArmor, GearYouUnit) | DR-35 | commented in `WASP/actions/AddActions.sqf:4` |
 | `supplyMissionActive.sqf` dead twin | DR-39 | compiled but never called |
 | Duplicate `Init_Server` function binds (6) | DR-43b | de-duplicate; `LogGameEnd` dup relates to DR-13 |
 | `version.sqf` referenced by `description.ext:39` but absent from source | DR-43a | commit a source `version.sqf` or document pack-time generation |
