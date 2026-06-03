@@ -60,8 +60,22 @@ switch (_args select 0) do {
 		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] Supply Trucks were forced respawn.", str _side]] Call WFBE_CO_FNC_LogContent;
 	};
 
-	case "uav": {
-		_args spawn KAT_UAV;
+	case "ReconUAV": {
+		_args spawn KAT_ReconUAV;
+	};
+
+	case "ReconUAVRecall": {
+		Private ["_side","_uavKey","_uav"];
+		_side = _args select 1;
+		_uavKey = Format ["WFBE_RECON_UAV_%1", str _side];
+		_uav = missionNamespace getVariable [_uavKey, objNull];
+		if (!isNull _uav) then {
+			//--- Clean despawn (no Killed EH -> no enemy bounty). Support_ReconUAV's cleanup thread frees the side slot.
+			{deleteVehicle _x} forEach (crew _uav);
+			deleteVehicle _uav;
+			missionNamespace setVariable [_uavKey, objNull, false];
+			["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] recalled its recon UAV.", str _side]] Call WFBE_CO_FNC_LogContent;
+		};
 	};
 
 	case "DroneStrike": {

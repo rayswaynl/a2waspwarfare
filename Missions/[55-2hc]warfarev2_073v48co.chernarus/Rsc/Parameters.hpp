@@ -15,6 +15,13 @@
 		texts[] = {"Off","On"};
 		default = 1;
 	};
+	// Recon UAV (remade UAV deploy): AI-flown drone that orbits the nearest contested town and reveals enemies. Shelvable like the strike.
+	class WFBE_C_RECON_ENABLED {
+		title = "Recon UAV Deploy";
+		values[] = {0,1};
+		texts[] = {"Disabled","Enabled"};
+		default = 1;
+	};
 	// Marty: Allow admins to run the mission with or without the accelerated day/night cycle.
 	class WFBE_DAYNIGHT_ENABLED {
 		title = "$STR_WF_PARAMETER_DAYNIGHT_ENABLED";

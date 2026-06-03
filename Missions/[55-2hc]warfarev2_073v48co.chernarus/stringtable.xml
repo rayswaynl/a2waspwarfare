@@ -3329,6 +3329,20 @@
         <Russian>БЛА - удаленный доступ</Russian>
         <Italian>UAV - Remote Control</Italian>
       </Key>
+      <Key ID="STR_WF_TACTICAL_UAVRecall">
+        <English>UAV - Recall</English>
+        <French>Drone - Rappeler</French>
+        <German>UAV - Zurückrufen</German>
+        <Russian>БЛА - отозвать</Russian>
+        <Italian>UAV - Recall</Italian>
+      </Key>
+      <Key ID="STR_WF_TACTICAL_UAV_Info">
+        <English>Recon UAV inbound. It will scout the nearest contested town.</English>
+        <French>Drone de reconnaissance en approche. Il surveillera la ville disputée la plus proche.</French>
+        <German>Aufklärungs-UAV im Anflug. Es überwacht die nächste umkämpfte Stadt.</German>
+        <Russian>Разведывательный БЛА в пути. Он разведает ближайший спорный город.</Russian>
+        <Italian>Recon UAV inbound. It will scout the nearest contested town.</Italian>
+      </Key>
 
 <!--Team Menu - ALL DONE-->
 	  <Key ID="STR_WF_TEAM_DisbandLabel">
