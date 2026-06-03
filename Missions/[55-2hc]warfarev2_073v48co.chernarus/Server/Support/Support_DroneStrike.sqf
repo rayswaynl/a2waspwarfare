@@ -3,7 +3,7 @@
 //--- Reuses mission systems:
 //---   WFBE_PRESENTSIDES          -> threeway-safe enemy sides
 //---   WFBE_%1_Defenses_AA        -> real AA classnames (prioritise true AA, not "any static")
-//---   WFBE_CO_FNC_SendToClients + the existing "uav-reveal" HandleSpecial case -> reveal-on-fire payoff
+//---   WFBE_CO_FNC_SendToClients + a "drone-strike-fx" HandleSpecial case -> friendly marker + inbound announcer
 //---   IRS deflection technique   -> flare drones actually spoof incoming missiles
 //--- Arma 2 OA SQF only (no pushBack / params / distance2D / setVelocityModelSpace / vector* A3 / code-select).
 
