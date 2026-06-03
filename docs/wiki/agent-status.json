@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T18:35:00+02:00",
+  "generatedAt": "2026-06-03T18:45:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Promoted the gear profile import bounds bug into Feature Status, Gear template profile filter and machine ledgers after source-checking Chernarus and maintained Vanilla Init_ProfileGear.sqf.",
+      "currentWork": "Closed stale PVF dispatch dashboard status after confirming the playbook is published/linked while source dispatchers still use Call Compile and remain patch-ready/source-unpatched.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another feature-status reconciliation item, machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "pvf-dispatch-dashboard-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Progress-Dashboard now treats pvf-dispatch-implementation-playbook as published/validated rather than Surfaced / Ready for review. Source dispatchers remain patch-ready/source-unpatched: Server_HandlePVF.sqf:14 and Client_HandlePVF.sqf:22 still use Spawn (Call Compile _script), while Init_PublicVariables.sqf:44-51 precompiles the handler globals used by the playbook's allowlisted missionNamespace lookup."
+    },
     {
       "lane": "gear-profile-import-bounds-reconciliation",
       "owner": "Codex",

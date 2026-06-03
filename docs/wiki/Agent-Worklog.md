@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: PVF Dispatch Dashboard Status Closure
+
+- Closed stale [Progress dashboard](Progress-Dashboard) rows that still labelled [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook) as `Surfaced` / `Ready for review` even though the playbook is mirrored, linked and already recorded as published in machine status.
+- Evidence checked: `PVF-Dispatch-Implementation-Playbook.md` carries the DR-1/DR-38 allowlist plus `missionNamespace getVariable` repair shape; `Init_PublicVariables.sqf:44-51` precompiles `CLTFNC*`/`SRVFNC*` globals; current `Server_HandlePVF.sqf:14` and `Client_HandlePVF.sqf:22` still dispatch through `Spawn (Call Compile _script)`.
+- Scope remained docs/status only; no gameplay source files were edited.
+
 ## 2026-06-03 - Codex Documentation Finisher: Gear Profile Import Bounds Reconciliation
 
 - Promoted the buy-gear profile import bound from a gear-atlas risk row into [Feature status](Feature-Status-Register), [Gear template profile filter](Gear-Template-Profile-Filter#import-bounds-paired-fix), [`agent-feature-status.jsonl`](agent-feature-status.jsonl) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl).
