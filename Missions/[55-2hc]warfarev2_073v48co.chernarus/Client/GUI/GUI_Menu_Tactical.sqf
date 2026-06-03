@@ -55,10 +55,10 @@ _currentFee = -1;
 
 //--- Support List.
 _lastSel = -1;
-_addToList = [localize 'STR_WF_TACTICAL_FastTravel',localize 'STR_WF_ICBM',localize 'STR_WF_TACTICAL_ParadropAmmo',localize 'STR_WF_TACTICAL_ParadropVehicle',localize 'STR_WF_TACTICAL_Paratroop',localize 'STR_WF_TACTICAL_UnitCam',localize 'STR_WF_TACTICAL_UAV',localize 'STR_WF_TACTICAL_UAVDestroy',localize 'STR_WF_TACTICAL_UAVRemoteControl',localize 'STR_WF_TACTICAL_DroneStrike'];
-_addToListID = ["Fast_Travel","ICBM","Paradrop_Ammo","Paradrop_Vehicle","Paratroopers","Units_Camera","UAV","UAV_Destroy","UAV_Remote_Control","DroneStrike"];
-_addToListFee = [0,75000,9500,3500,8500,0,12500,0,0,22000];
-_addToListInterval = [0,1000,800,600,900,0,0,0,0,300];
+_addToList = [localize 'STR_WF_TACTICAL_FastTravel',localize 'STR_WF_ICBM',localize 'STR_WF_TACTICAL_ParadropAmmo',localize 'STR_WF_TACTICAL_ParadropVehicle',localize 'STR_WF_TACTICAL_Paratroop',localize 'STR_WF_TACTICAL_UnitCam',localize 'STR_WF_TACTICAL_UAV',localize 'STR_WF_TACTICAL_UAVRecall',localize 'STR_WF_TACTICAL_DroneStrike'];
+_addToListID = ["Fast_Travel","ICBM","Paradrop_Ammo","Paradrop_Vehicle","Paratroopers","Units_Camera","UAV","UAV_Recall","DroneStrike"];
+_addToListFee = [0,75000,9500,3500,8500,0,(missionNamespace getVariable ["WFBE_C_RECON_COST",12500]),0,22000];
+_addToListInterval = [0,1000,800,600,900,0,0,0,300];
 
 for '_i' from 0 to count(_addToList)-1 do {
 	lbAdd [_listBox,_addToList select _i];
@@ -272,14 +272,15 @@ while {alive player && dialog} do {
 				_controlEnable = if (_funds >= _currentFee && _currentLevel > 0 && time - lastSupplyCall > _currentInterval) then {true} else {false};
 			};
 			case "UAV": {
+				//--- Remade recon UAV: server-spawned, one per side. Gate on funds + UAV upgrade + the broadcast per-side active count + lobby toggle.
 				_currentLevel = _currentUpgrades select WFBE_UP_UAV;
-				_controlEnable = if (_funds >= _currentFee && _currentLevel > 0 && !(alive playerUAV)) then {true} else {false};
+				_reconActive = missionNamespace getVariable [Format ["WFBE_RECON_ACTIVE_%1", str sideJoined], 0];
+				_reconCap = missionNamespace getVariable ["WFBE_C_RECON_CONCURRENT_CAP", 1];
+				_controlEnable = if (_funds >= _currentFee && _currentLevel > 0 && _reconActive < _reconCap && (missionNamespace getVariable ["WFBE_C_RECON_ENABLED",1]) == 1) then {true} else {false};
 			};
-			case "UAV_Destroy": {
-				_controlEnable = if (alive playerUAV) then {true} else {false};
-			};
-			case "UAV_Remote_Control": {
-				_controlEnable = if (alive playerUAV) then {true} else {false};
+			case "UAV_Recall": {
+				_reconActive = missionNamespace getVariable [Format ["WFBE_RECON_ACTIVE_%1", str sideJoined], 0];
+				_controlEnable = if (_reconActive > 0) then {true} else {false};
 			};
 			case "Units_Camera": {
 				_controlEnable = commandInRange;
@@ -328,19 +329,16 @@ while {alive player && dialog} do {
 				_textAnimHandler = [17022,localize 'STR_WF_TACTICAL_ClickOnMap',10,"ff9900"] spawn SetControlFadeAnim;
 			};
 			case "UAV": {
+				//--- Fire-and-forget: no map click. The server spawns the recon UAV and flies it to the nearest contested town.
 				closeDialog 0;
-				ExecVM "Client\Module\UAV\uav.sqf";
+				-(_currentFee) Call ChangePlayerFunds;
+				["RequestSpecial", ["ReconUAV",sideJoined,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+				hint localize "STR_WF_TACTICAL_UAV_Info";
 			};
-			case "UAV_Destroy": {
-				if !(isNull playerUAV) then {
-					{_x setDammage 1} forEach (crew playerUAV);
-					playerUAV setDammage 1;
-					playerUAV = objNull;
-				};
-			};
-			case "UAV_Remote_Control": {
+			case "UAV_Recall": {
+				//--- Server-authoritative recall: despawns the side's live recon UAV (no enemy kill bounty).
 				closeDialog 0;
-				ExecVM "Client\Module\UAV\uav.sqf";
+				["RequestSpecial", ["ReconUAVRecall",sideJoined,clientTeam]] Call WFBE_CO_FNC_SendToServer;
 			};
 			case "Units_Camera": {
 				closeDialog 0;

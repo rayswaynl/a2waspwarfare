@@ -262,6 +262,16 @@ with missionNamespace do {
 	if (isNil "WFBE_C_DRONE_COOLDOWN") then {WFBE_C_DRONE_COOLDOWN = 300}; //--- s cooldown
 	if (isNil "WFBE_C_DRONE_CONCURRENT_CAP") then {WFBE_C_DRONE_CONCURRENT_CAP = 1}; //--- max packages/side in flight
 
+//--- Recon UAV (remade UAV deploy — AI-flown, server-authoritative; reuses the Ka-137 drone airframe + scripted-HP model).
+	if (isNil "WFBE_C_RECON_ENABLED") then {WFBE_C_RECON_ENABLED = 1}; //--- lobby toggle: shelve the recon UAV without a repack
+	if (isNil "WFBE_C_RECON_COST") then {WFBE_C_RECON_COST = 12500}; //--- deploy cost (single source of truth; old uav.sqf hardcoded it twice)
+	if (isNil "WFBE_C_RECON_CONCURRENT_CAP") then {WFBE_C_RECON_CONCURRENT_CAP = 1}; //--- max live recon UAVs per side (team asset, not per-player)
+	if (isNil "WFBE_C_RECON_ALT") then {WFBE_C_RECON_ALT = 250}; //--- m AGL orbit altitude (low enough that alert AA can engage)
+	if (isNil "WFBE_C_RECON_ORBIT_RADIUS") then {WFBE_C_RECON_ORBIT_RADIUS = 450}; //--- m orbit radius around the scouted town (town range is 600)
+	if (isNil "WFBE_C_RECON_SPEED") then {WFBE_C_RECON_SPEED = 28}; //--- m/s loiter speed (slow = more dwell + easier to shoot down)
+	if (isNil "WFBE_C_RECON_HP") then {WFBE_C_RECON_HP = 12}; //--- scripted hit points (~ .50-cal hits to down)
+	if (isNil "WFBE_C_RECON_MIN_HIT") then {WFBE_C_RECON_MIN_HIT = 0.08}; //--- min HandleDamage delta that counts (>=.50); reuses the spotting constants for the reveal scan
+
 //--- Players.
 	if (isNil "WFBE_C_PLAYERS_AI_MAX") then {WFBE_C_PLAYERS_AI_MAX = 16}; //--- Max AI allowed on each player groups.
 	WFBE_C_PLAYERS_BOUNTY_CAPTURE = 2000;
