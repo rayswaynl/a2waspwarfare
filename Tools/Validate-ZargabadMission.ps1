@@ -60,6 +60,22 @@ function Get-ParameterDefault {
 	return $match.Groups[1].Value.Trim()
 }
 
+function Get-DefenseKinds {
+	param($Defense)
+	$matches = [regex]::Matches($Defense.Init, "['""]([^'""]+)['""]")
+	return @($matches | ForEach-Object { $_.Groups[1].Value } | Where-Object { $_ -ne "wfbe_defense_kind" })
+}
+
+function Test-TownHasAnyDefenseKind {
+	param($Town, [string[]]$Kinds)
+	return @($Town.DefenseKindList | Where-Object { $_ -in $Kinds }).Count -gt 0
+}
+
+function Get-TownDefenseKindCount {
+	param($Town, [string]$Kind)
+	return @($Town.DefenseKindList | Where-Object { $_ -eq $Kind }).Count
+}
+
 function Get-ZargabadOverrideUnits {
 	param([string]$Content, [string]$Factory)
 	$pattern = 'if\s*\(IS_zargabad_lowpop_map\)\s*then\s*\{\s*_u\s*=\s*\[([^\]]*)\];\s*\};\s*missionNamespace\s+setVariable\s+\[Format\s+\["WFBE_%1' + [regex]::Escape($Factory) + 'UNITS"'
@@ -183,6 +199,7 @@ foreach ($town in $towns) {
 	$defenseDistances = @($defenseLinks | ForEach-Object {
 		[math]::Round([math]::Sqrt([math]::Pow($_.X - $town.X, 2) + [math]::Pow($_.Y - $town.Y, 2)), 1)
 	})
+	$defenseKindList = @($defenseLinks | ForEach-Object { Get-DefenseKinds $_ })
 	$parsedTowns += [pscustomobject]@{
 		Id = $town.Id
 		Name = $match.Groups["name"].Value
@@ -195,6 +212,8 @@ foreach ($town in $towns) {
 		MinCampDistance = if ($campDistances.Count -gt 0) { ($campDistances | Measure-Object -Minimum).Minimum } else { -1 }
 		MaxCampDistance = if ($campDistances.Count -gt 0) { ($campDistances | Measure-Object -Maximum).Maximum } else { -1 }
 		DefenseDistances = $defenseDistances
+		DefenseKindList = $defenseKindList
+		DefenseKinds = @($defenseKindList | Sort-Object -Unique)
 		MinDefenseDistance = if ($defenseDistances.Count -gt 0) { ($defenseDistances | Measure-Object -Minimum).Minimum } else { -1 }
 		MaxDefenseDistance = if ($defenseDistances.Count -gt 0) { ($defenseDistances | Measure-Object -Maximum).Maximum } else { -1 }
 		X = $town.X
@@ -220,6 +239,17 @@ Assert-True "airfield has beefy defense coverage" (($parsedTowns | Where-Object 
 foreach ($townName in @("Zargabad North District", "Zargabad South District", "Northwest Base", "Rahim Villa")) {
 	Assert-True "$townName has layered defense coverage" (($parsedTowns | Where-Object { $_.Name -eq $townName }).Defenses -ge 3)
 }
+$cityCenter = ($parsedTowns | Where-Object { $_.Name -eq "Zargabad City Center" })
+$airfield = ($parsedTowns | Where-Object { $_.Name -eq "Zargabad Airfield" })
+Assert-True "city center defense mix covers infantry and armor approaches" ((Test-TownHasAnyDefenseKind -Town $cityCenter -Kinds @("MG", "MGNest")) -and (Test-TownHasAnyDefenseKind -Town $cityCenter -Kinds @("GL")) -and (Test-TownHasAnyDefenseKind -Town $cityCenter -Kinds @("AT")))
+Assert-True "airfield defense mix covers infantry armor and aircraft approaches" ((Test-TownHasAnyDefenseKind -Town $airfield -Kinds @("MG", "MGNest")) -and (Test-TownHasAnyDefenseKind -Town $airfield -Kinds @("AT")) -and ((Get-TownDefenseKindCount -Town $airfield -Kind "AA") -ge 2))
+foreach ($townName in @("Zargabad North District", "Zargabad South District", "Northwest Base", "Rahim Villa")) {
+	$town = ($parsedTowns | Where-Object { $_.Name -eq $townName })
+	Assert-True "$townName defense mix covers infantry and armor approaches" ((Test-TownHasAnyDefenseKind -Town $town -Kinds @("MG", "MGNest")) -and (Test-TownHasAnyDefenseKind -Town $town -Kinds @("AT")))
+}
+$priorityDefenseTowns = @("Zargabad City Center", "Zargabad Airfield", "Zargabad North District", "Zargabad South District", "Northwest Base", "Rahim Villa")
+Assert-Equal "priority objectives with single-kind defense mix" @($parsedTowns | Where-Object { $_.Name -in $priorityDefenseTowns -and $_.DefenseKinds.Count -lt 2 }).Count 0
+Assert-True "Northwest Base defense mix covers northern air approach" ((Get-TownDefenseKindCount -Town ($parsedTowns | Where-Object { $_.Name -eq "Northwest Base" }) -Kind "AA") -ge 1)
 
 $westStart = @($starts | Where-Object { $_.Init -match 'wfbe_default"", west' })
 $eastStart = @($starts | Where-Object { $_.Init -match 'wfbe_default"", east' })
