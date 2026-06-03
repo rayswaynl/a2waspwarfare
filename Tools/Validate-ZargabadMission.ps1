@@ -744,6 +744,7 @@ Assert-True "map audit packet emits base fortification footprint" ($mapAuditPack
 Assert-True "map audit packet emits base static anchor table" ($mapAuditPacketSource -match 'Expected runtime position' -and $mapAuditPacketSource -match 'Base static runtime positions WEST \.\.\. EAST \.\.\.')
 Assert-True "map audit packet emits rim test points" ($mapAuditPacketSource -match '## Rim Test Points' -and $mapAuditPacketSource -match 'West illegal rim' -and $mapAuditPacketSource -match 'East Farms legal rim')
 Assert-True "map audit packet emits WDDM fortification review" ($mapAuditPacketSource -match '## WDDM Fortification Review' -and $mapAuditPacketSource -match 'https://rayswaynl\.github\.io/WDDM/' -and $mapAuditPacketSource -match '\+Y as front' -and $mapAuditPacketSource -match '\+X as right')
+Assert-True "map audit packet warns WDDM Z offsets are not runtime proof" ($mapAuditPacketSource -match 'WDDM exports are flattened' -and $mapAuditPacketSource -match 'runtime screenshots/coordinates')
 Assert-True "map audit packet emits Claude screenshot targets" ($mapAuditPacketSource -match '## Claude Screenshot Targets')
 Assert-True "map audit packet emits central wall gap checkpoints" ($mapAuditPacketSource -match '4053,2725' -and $mapAuditPacketSource -match '2903,3915')
 Assert-True "map audit packet emits uncrewed central wall focus" ($mapAuditPacketSource -match 'centralWallCrewed \[0\]' -and $mapAuditPacketSource -match 'uncrewed WDDM-compatible fortification')

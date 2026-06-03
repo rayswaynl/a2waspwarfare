@@ -42,7 +42,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadMapAuditPa
 
 Use the packet's objective, camp, defense, start, base-axis, rim-test and central-wall checkpoint coordinates as the shared reference for screenshots and repro notes.
 
-For fortification changes, use Steff's WDDM tool at https://rayswaynl.github.io/WDDM/ beside the map audit packet. WDDM/`CreateDefenseTemplate` coordinates are relative to the template origin, with `+Y` as front and `+X` as right. If Claude proposes a base wall or central-wall change, paste the WDDM-exported SQF or coordinate deltas back with screenshots/RPT evidence before Codex edits the template.
+For fortification changes, use Steff's WDDM tool at https://rayswaynl.github.io/WDDM/ beside the map audit packet. WDDM/`CreateDefenseTemplate` coordinates are relative to the template origin, with `+Y` as front and `+X` as right. Treat exported Z offsets as documentation only because `CreateDefenseTemplate` flattens spawned objects; side-hill or slope fixes need runtime screenshots/coordinates, not vertical template values. If Claude proposes a base wall or central-wall change, paste the WDDM-exported SQF or coordinate deltas back with screenshots/RPT evidence before Codex edits the template.
 
 ## Do Not Stop Until
 

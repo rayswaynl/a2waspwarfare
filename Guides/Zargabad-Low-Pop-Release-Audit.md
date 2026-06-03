@@ -72,7 +72,7 @@ Static validation now checks town-defense placement quality, not only count: eve
 
 The same init now builds a WDDM-compatible `WFBE_ZARGABAD_CENTRAL_WALL` defense template centered at `3425,3375` and angled at `316` degrees, roughly perpendicular to the southwest-to-northeast base axis. It uses six separated H-barrier runs with pass-through gaps, so the flat middle has broken sightlines without turning the map into two sealed halves. Runtime audit records gap checkpoints near `[4053,2725]`, `[3789,2998]`, `[3504,3293]`, `[3195,3613]`, and `[2903,3915]` for Claude's infantry, light armor and AI pathing screenshots.
 
-Fortification review should use Steff's WDDM tool at https://rayswaynl.github.io/WDDM/ for any proposed base-wall or central-wall edits. The map audit packet records the WDDM review anchor and coordinate convention (`+Y` front, `+X` right), so Claude can return exported SQF or coordinate deltas instead of ambiguous visual notes.
+Fortification review should use Steff's WDDM tool at https://rayswaynl.github.io/WDDM/ for any proposed base-wall or central-wall edits. The map audit packet records the WDDM review anchor and coordinate convention (`+Y` front, `+X` right), and warns that `CreateDefenseTemplate` flattens exported Z offsets, so Claude can return exported SQF or coordinate deltas plus runtime screenshots instead of ambiguous visual notes.
 
 Static validation currently proves the editor data shape, not tactical effectiveness. Dedicated playtest still needs to verify:
 
