@@ -55,9 +55,12 @@ missionNamespace setVariable [_activeKey, _active + 1];
 
 //--- Scripted survivability. Only >=.50-cal hits count toward the drone's HP; sub-.50 fire is ignored.
 WFBE_DroneHandleDamage = {
-    private ["_unit","_dmg","_prev","_delta","_h"];
+    private ["_unit","_dmg","_src","_prev","_delta","_h"];
     _unit = _this select 0;
     _dmg  = _this select 2;
+    _src  = _this select 3;
+    //--- Ignore crash / sibling-collision / self / terrain damage (the package can bunch up + chain-explode); only a real enemy shooter chips HP.
+    if (isNull _src || {_src == _unit} || {!isNil {_src getVariable "wfbe_drone_role"}}) exitWith {0};
     _prev = damage _unit;
     _delta = _dmg - _prev;
     if (_delta < WFBE_C_DRONE_MIN_HIT) exitWith {0};   //--- sub-.50 plink -> ignored, stays pristine
@@ -100,7 +103,7 @@ _drones = [];
 for "_i" from 0 to (_total - 1) do {
     _role = if (_i < _flareN) then {"flare"} else {"munition"};
     _drone = createVehicle [_model, _spawnPos, [], 0, "FLY"];
-    _drone setPosATL [(_spawnPos select 0) + (_i * 22), (_spawnPos select 1) + (_i * 16), _alt];
+    _drone setPosATL [(_spawnPos select 0) + (_i * 35), (_spawnPos select 1) + (_i * 26), _alt + (_i * 22)]; //--- spread + altitude-tier at spawn so the package never piles up
     _drone setVariable ["wfbe_drone_role", _role, true];
     _drone setVariable ["wfbe_drone_hp", _hp, true];
     _drone setVariable ["wfbe_phase", _i, true];
@@ -134,6 +137,7 @@ processInitCommands;
         _aaTypes    = _this select 11;
         _role  = _d getVariable "wfbe_drone_role";
         _phase = _d getVariable "wfbe_phase";
+        _alt = _alt + (_phase * 22);   //--- per-drone altitude tier: keep the package vertically separated so it can't collide/chain-explode
 
         //--- INGRESS to the zone (safety deadline so a stuck drone can't loop forever).
         _tgt = [_dest select 0, _dest select 1, _alt];
