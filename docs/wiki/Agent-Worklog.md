@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Client UI WF_Menu Line Reference
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 35.
+- Source-checked `Rsc/Dialogs.hpp:1019-1022`: `class WF_Menu`, `idd = 11000` and `onLoad = ExecVM "Client\GUI\GUI_Menu.sqf"`.
+- Corrected [Client UI HUD and menus](Client-UI-HUD-And-Menus) so the main Warfare menu row cites the owning class/onLoad range rather than the background-control line.
+
 ## 2026-06-03 - Codex Documentation Finisher: PVF Dispatch Playbook List / Range Correction
 
 - Closed [Instructions for Codex](Instructions-For-Codex) item 22.

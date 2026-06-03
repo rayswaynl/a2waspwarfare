@@ -93,7 +93,7 @@ Read-only wiki↔source audit of 7 playbook/index pages (~190 claims, 29 confirm
 
 34. ✅ **[Supply-mission architecture](Supply-Mission-Architecture) — AI logistics runtime name corrected.** The page now uses `UpdateSupplyTruck` for the broken/deferred runtime path and cites `Init_Server.sqf:36,383`; `AI_UpdateSupplyTruck.sqf` remains only the filename/log label. The missing `supplytruck.fsm` note remains.
 
-35. **[Client-UI HUD and menus](Client-UI-HUD-And-Menus) — LOW.** `GUI_Menu.sqf` main Warfare menu cited at `Dialogs.hpp:1025`; the `WF_Menu` class is `:1019`, `idd = 11000` `:1021`, `onLoad` → `GUI_Menu.sqf` `:1022` (same drift batch 3 flagged for this page). *Acceptance:* cite `:1019-1022`.
+35. ✅ **[Client-UI HUD and menus](Client-UI-HUD-And-Menus) — WF_Menu source anchor corrected.** The quick-reference row now cites `Rsc/Dialogs.hpp:1019-1022`, covering `class WF_Menu`, `idd = 11000` and the `onLoad` into `Client\GUI\GUI_Menu.sqf`.
 
 ## Batch-7 consistency findings — document / correct (2026-06-02, Claude)
 

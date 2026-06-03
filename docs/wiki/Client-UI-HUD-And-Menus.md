@@ -6,7 +6,7 @@ This is the quick-reference gateway for client UI work. Start with the [player U
 
 | Need | Start here | Source anchors | Canonical detail |
 | --- | --- | --- | --- |
-| Main Warfare menu routing | `Client/GUI/GUI_Menu.sqf` | `Rsc/Dialogs.hpp:1019`, `GUI_Menu.sqf:33-43`, `:162-179`, `:191-199` | [Client UI systems atlas](Client-UI-Systems-Atlas) Main Menu Router |
+| Main Warfare menu routing | `Client/GUI/GUI_Menu.sqf` | `Rsc/Dialogs.hpp:1019-1022`, `GUI_Menu.sqf:33-43`, `:162-179`, `:191-199` | [Client UI systems atlas](Client-UI-Systems-Atlas) Main Menu Router |
 | Buy units / factories | `Client/GUI/GUI_Menu_BuyUnits.sqf` -> `Client/Functions/Client_BuildUnit.sqf` | `Rsc/Dialogs.hpp:1445-1447`, `GUI_Menu_BuyUnits.sqf:89-156` | [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) |
 | Gear, service and EASA | `GUI_BuyGearMenu.sqf`, `GUI_Menu_Service.sqf`, `GUI_Menu_EASA.sqf` | `Rsc/Dialogs.hpp:530-532`, `:2870-2872`, `:3209-3211` | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
 | Upgrades and economy menu | `GUI_UpgradeMenu.sqf`, `GUI_Menu_Economy.sqf` | `Rsc/Dialogs.hpp:4-6`, `:3287-3289`, `GUI_UpgradeMenu.sqf:137-171` | [Gameplay systems atlas](Gameplay-Systems-Atlas) and [Economy](Economy-Towns-And-Supply) |

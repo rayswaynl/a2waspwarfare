@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T13:50:00+02:00",
+  "generatedAt": "2026-06-03T13:55:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,21 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "client-ui-wf-menu-line-ref",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Client-UI-HUD-And-Menus.md",
+        "docs/wiki/Instructions-For-Codex.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp"
+      ],
+      "outputs": [
+        "Marked Instructions-For-Codex item 35 complete",
+        "Corrected Client-UI-HUD-And-Menus main Warfare menu source anchor to Rsc/Dialogs.hpp:1019-1022"
+      ],
+      "handoff": "Re-read Instructions-For-Codex and claim the next source-backed docs backlog item or owner-decision surfacing task."
+    },
     {
       "lane": "supply-architecture-update-truck-name",
       "owner": "Codex",
