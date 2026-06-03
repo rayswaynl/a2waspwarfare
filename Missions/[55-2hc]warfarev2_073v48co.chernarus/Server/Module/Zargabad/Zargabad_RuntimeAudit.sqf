@@ -89,7 +89,7 @@ _priceSamples = [];
 ]] Call WFBE_CO_FNC_LogContent;
 
 ["INFORMATION", Format [
-	"Zargabad_RuntimeAudit.sqf: economy supplyCap [%1] teamSupplyCap [%2] fastTravelMax [%3] respawnCampRange [%4] respawnRanges [%5] supportRange [%6] artilleryIntervals [%7] baseDefenseAI [%8] baseDefenseRange [%9] edgeGuard [%10,%11,%12].",
+	"Zargabad_RuntimeAudit.sqf: economy supplyCap [%1] teamSupplyCap [%2] fastTravelMax [%3] respawnCampRange [%4] respawnRanges [%5] supportRange [%6] artilleryIntervals [%7] baseDefenseAI [%8] baseDefenseRange [%9] edgeGuard [%10,%11,%12] weapons missileRange [%13] uavRange [%14] townRanges [%15,%16,%17] purchaseHangar [%18] countermeasures [%19,%20].",
 	missionNamespace getVariable ["WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT", -1],
 	missionNamespace getVariable ["WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT", -1],
 	missionNamespace getVariable ["WFBE_C_GAMEPLAY_FAST_TRAVEL_RANGE_MAX", -1],
@@ -101,5 +101,13 @@ _priceSamples = [];
 	missionNamespace getVariable ["WFBE_C_BASE_DEFENSE_MANNING_RANGE", -1],
 	missionNamespace getVariable ["WFBE_C_ZARGABAD_EDGE_GUARD_BAND", -1],
 	missionNamespace getVariable ["WFBE_C_ZARGABAD_EDGE_GUARD_SAFE_RANGE", -1],
-	missionNamespace getVariable ["WFBE_C_ZARGABAD_EDGE_GUARD_TIMEOUT", -1]
+	missionNamespace getVariable ["WFBE_C_ZARGABAD_EDGE_GUARD_TIMEOUT", -1],
+	missionNamespace getVariable ["WFBE_C_GAMEPLAY_MISSILES_RANGE", -1],
+	missionNamespace getVariable ["WFBE_C_PLAYERS_UAV_SPOTTING_RANGE", -1],
+	missionNamespace getVariable ["WFBE_C_TOWNS_DEFENSE_RANGE", -1],
+	missionNamespace getVariable ["WFBE_C_TOWNS_MORTARS_RANGE_MAX", -1],
+	missionNamespace getVariable ["WFBE_C_TOWNS_PATROL_RANGE", -1],
+	missionNamespace getVariable ["WFBE_C_UNITS_PURCHASE_HANGAR_RANGE", -1],
+	missionNamespace getVariable ["WFBE_C_UNITS_COUNTERMEASURE_CHOPPERS", -1],
+	missionNamespace getVariable ["WFBE_C_UNITS_COUNTERMEASURE_PLANES", -1]
 ]] Call WFBE_CO_FNC_LogContent;

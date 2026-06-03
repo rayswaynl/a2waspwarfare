@@ -322,7 +322,7 @@ Assert-True "runtime audit logs counts and SV totals" ($runtimeAuditSource -matc
 Assert-True "runtime audit logs Zargabad base and fortification counts" ($runtimeAuditSource -match 'bases WEST %1 EAST %2 distance \[%3\] westStatic \[%4\] eastStatic \[%5\] baseWalls \[%6\] centralWallPieces \[%7\]')
 Assert-True "runtime audit logs central wall gap checkpoints" ($runtimeAuditSource -match 'centralWallGaps %8')
 Assert-True "runtime audit logs Zargabad base static templates" ($runtimeAuditSource -match 'baseStaticTemplates WEST %1 EAST %2')
-Assert-True "runtime audit logs Zargabad economy and range constants" ($runtimeAuditSource -match 'supplyCap \[%1\] teamSupplyCap \[%2\] fastTravelMax \[%3\] respawnCampRange \[%4\].*edgeGuard \[%10,%11,%12\]')
+Assert-True "runtime audit logs Zargabad economy, range, and weapon-pressure constants" ($runtimeAuditSource -match 'supplyCap \[%1\] teamSupplyCap \[%2\] fastTravelMax \[%3\] respawnCampRange \[%4\].*edgeGuard \[%10,%11,%12\] weapons missileRange \[%13\] uavRange \[%14\] townRanges \[%15,%16,%17\] purchaseHangar \[%18\] countermeasures \[%19,%20\]')
 Assert-True "runtime audit logs Zargabad factory restrictions" ($runtimeAuditSource -match 'factoryCounts WEST L/H/A/AP')
 Assert-True "runtime audit logs exact Zargabad factory lists" ($runtimeAuditSource -match 'factoryLists WEST H %1 A %2 EAST H %3 A %4')
 Assert-True "runtime audit checks expanded forbidden normal factory set" ($runtimeAuditSource -match 'M1A1' -and $runtimeAuditSource -match 'T90' -and $runtimeAuditSource -match 'Ka52' -and $runtimeAuditSource -match 'Su34' -and $runtimeAuditSource -match 'F35B')

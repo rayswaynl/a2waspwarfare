@@ -85,7 +85,7 @@ $gates = @(
 	[ordered]@{ Name = "Runtime factory audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: factoryCounts WEST L/H/A/AP \[[0-9]+,3,7,2\] EAST L/H/A/AP \[[0-9]+,4,3,3\] forbiddenNormal \[\]'; Required = $true },
 	[ordered]@{ Name = "Runtime compact factory lists"; Pattern = 'Zargabad_RuntimeAudit\.sqf: factoryLists WEST H .*M2A2_EP1.*M2A3_EP1.*BAF_FV510_D.* A .*MH6J_EP1.*UH60M_EP1.*UH60M_MEV_EP1.*CH_47F_EP1.*CH_47F_BAF.*BAF_Merlin_HC3_D.*AH6J_EP1.* EAST H .*M113_TK_EP1.*BMP2_TK_EP1.*T34_TK_EP1.*BMP3.* A .*UH1H_TK_EP1.*Mi17_TK_EP1.*Mi17_medevac_RU.*An2_TK_EP1'; Required = $true },
 	[ordered]@{ Name = "Runtime price audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: priceMultipliers .*priceSamples'; Required = $true },
-	[ordered]@{ Name = "Runtime economy audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: economy supplyCap .*teamSupplyCap \[30000\].*edgeGuard \[120,325,45\]'; Required = $true },
+	[ordered]@{ Name = "Runtime economy/range/weapons audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: economy supplyCap .*teamSupplyCap \[30000\].*edgeGuard \[120,325,45\] weapons missileRange \[2000\] uavRange \[800\] townRanges \[45,500,350\] purchaseHangar \[35\] countermeasures \[16,24\]'; Required = $true },
 	[ordered]@{ Name = "JIP"; Pattern = 'Server_PlayerConnected\.sqf: Player \[[^\r\n]+\] \[[^\r\n]+\] has joined the game|JIP Information have been stored'; Required = [bool]$RequireJip },
 	[ordered]@{ Name = "Headless client"; Pattern = 'Server_HandleSpecial\.sqf: Headless client is now connected'; Required = [bool]$RequireHeadlessClient },
 	[ordered]@{ Name = "Edge guard removal"; Pattern = 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] removed from edge rim'; Required = [bool]$RequireEdgeGuardRemoval },
@@ -155,6 +155,7 @@ $report.Add("| Central wall gaps and pathing | UNCERTAIN | Test `4053,2725`, `37
 $report.Add("| Side hills and rim behavior | UNCERTAIN | Reference edge-safe rows from the map audit packet when reporting legal objective fights vs rim abuse. |")
 $report.Add("| Town defense facing and movement blocking | UNCERTAIN |  |")
 $report.Add("| Economy and factory pricing feel | UNCERTAIN |  |")
+$report.Add("| Weapon/range pressure | UNCERTAIN | Confirm missile range 2000, UAV 800, town defense/mortar/patrol ranges 45/500/350, hangar 35, countermeasures 16/24 feel right on Zargabad. |")
 $report.Add("| Mystery feature behavior | UNCERTAIN |  |")
 $report.Add("| Recommended Codex action | UNCERTAIN | Keep / tune / revert / investigate:  |")
 $report.Add("")

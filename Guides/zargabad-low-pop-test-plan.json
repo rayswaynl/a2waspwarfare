@@ -118,7 +118,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/Validate-ZargabadRuntimeEvidence.ps1 is ready for Claude/runtime RPT validation and checks server/town/Zargabad/edge-guard/runtime-audit init, expected runtime count/SV/base/fortification/factory restriction/compact factory list/price multiplier/economy/range evidence, optional JIP/HC/edge-removal/black-market spawn and cleanup evidence, and common missing-script/dependency/expression failures."
+      "summary": "Tools/Validate-ZargabadRuntimeEvidence.ps1 is ready for Claude/runtime RPT validation and checks server/town/Zargabad/edge-guard/runtime-audit init, expected runtime count/SV/base/fortification/factory restriction/compact factory list/price multiplier/economy/range/weapon-pressure evidence, optional JIP/HC/edge-removal/black-market spawn and cleanup evidence, and common missing-script/dependency/expression failures."
     },
     {
       "type": "source-audit",
@@ -134,7 +134,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Zargabad_RuntimeAudit logs runtime towns/camps/airports/defenses, start/max SV totals, WEST/EAST base positions and separation, base static/wall counts, factory restriction counts, exact compact normal factory lists, price multiplier/sample values, and smaller-map economy/range/base-defense/edge-guard constants into RPT."
+      "summary": "Zargabad_RuntimeAudit logs runtime towns/camps/airports/defenses, start/max SV totals, WEST/EAST base positions and separation, base static/wall counts, factory restriction counts, exact compact normal factory lists, price multiplier/sample values, and smaller-map economy/range/base-defense/edge-guard/weapon-pressure constants into RPT."
     },
     {
       "type": "source-audit",
