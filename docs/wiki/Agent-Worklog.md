@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Progress Dashboard At A Glance Refresh
+
+- Claimed [Instructions for Codex](Instructions-For-Codex) item 10.
+- Rechecked [Codebase coverage ledger](Codebase-Coverage-Ledger): Map, Perf, JIP/HC and Drift are complete; remaining yellow cells are Auth/PV owner decisions, not open review gaps.
+- Updated [Progress dashboard](Progress-Dashboard) At A Glance so Claude is `Autonomous-ready / coverage-follow` and readers are routed to [Pending owner decisions](Pending-Owner-Decisions) for the remaining Auth/PV choices.
+- Kept the larger patched-vs-proposed status drift from Instructions item 46 separate for a future dashboard reconciliation pass.
+
 ## 2026-06-03 - Codex Documentation Finisher: Coordination Board Current-State Cleanup
 
 - Claimed [Instructions for Codex](Instructions-For-Codex) item 9 and rechecked [Coordination board](Coordination-Board) against `agent-status.json`, `agent-collaboration.json` and [Progress dashboard](Progress-Dashboard).
@@ -1180,6 +1187,14 @@ Key conclusions:
 - Closed Instructions-for-Codex item 9 by reconciling [Coordination board](Coordination-Board) against current machine status and discovery-swarm history.
 - Updated Roles so Codex is the active documentation finisher/orchestrator, Claude is `collaboration-follow-autonomous-ready` after DR-45+ / DR-46 handoffs, Codex-2 is a patch-ready/playbook lane, and old named sub-agent waves are read-only harvested/closed scouts rather than active owners.
 - Updated Active Lanes so `victory-endgame-runtime-atlas` is integrated, old Faraday/Mencius/Hilbert/Cicero/Curie/Meitner active rows are no longer shown as live work, and only current/open lanes remain visible.
+- Scope remained docs-only; no gameplay source files were edited.
+
+# 2026-06-03 - Progress Dashboard Status-Legend Reconciliation
+
+- Closed Instructions-for-Codex item 10 by reconciling [Progress dashboard](Progress-Dashboard) against the current source snapshot and [Codebase coverage ledger](Codebase-Coverage-Ledger).
+- Confirmed the three disputed propagated-fix rows are now accurate in current source/Vanilla: `Init_Client.sqf` has one `Skill_Init.sqf` compile at `:547` and `WFBE_SK_FNC_Apply` at `:571`; both FPS publisher files have top-level `if (!isDedicated) exitWith {};`; supply mission command-center scans use `nearestObjects [..., ["Base_WarfareBUAVterminal"], 80]` at `supplyMissionStarted.sqf:28`.
+- Added a dashboard status legend so readers can distinguish docs publication, source/Vanilla propagation, patch-ready proposed work, opportunity notes and proposed/no-branch work.
+- Fixed the stale DR-46 dashboard row from "Local / validation pending" to published/validated while keeping the source patch open in the hardening backlog.
 - Scope remained docs-only; no gameplay source files were edited.
 
 # 2026-06-02 - WASP Overlay Self-Test Documentation Correction

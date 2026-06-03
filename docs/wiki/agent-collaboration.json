@@ -22,6 +22,23 @@
   },
   "activeClaims": [
     {
+      "lane": "progress-dashboard-at-a-glance-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Instructions-For-Codex.md",
+        "docs/wiki/Codebase-Coverage-Ledger.md",
+        "docs/wiki/Pending-Owner-Decisions.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/agent-collaboration.json"
+      ],
+      "outputs": [
+        "Updated Progress Dashboard At A Glance so Claude coverage-follow status matches the coverage ledger milestone and owner-decision routing"
+      ],
+      "handoff": "Scoped docs-only dashboard refresh is validated and ready to continue with Instructions-For-Codex item 11."
+    },
+    {
       "lane": "coordination-board-current-state",
       "owner": "Codex",
       "status": "published-validated",

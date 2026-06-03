@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T09:35:00+02:00",
+  "generatedAt": "2026-06-03T09:55:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Instructions-For-Codex item 9 is published and validated: Coordination Board roles and active lanes now show Codex as the documentation finisher/orchestrator, Claude in collaboration-follow-autonomous-ready after DR-45+/DR-46 handoffs, and old named scout lanes as harvested/closed rather than active.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 10: reconcile Progress Dashboard At-a-glance Claude row and patched-vs-proposed status drift against current source/status conventions."
+      "currentWork": "Instructions-For-Codex item 10 is being published: Progress Dashboard At A Glance shows Claude in coverage-follow mode, routes remaining yellow Auth/PV cells to owner decisions, adds a status legend separating docs publication from source/Vanilla patches, and fixes the stale DR-46 local row.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 11: de-duplicate the repeated Headless-Delegation-And-Failover-Playbook sidebar entry."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "progress-dashboard-status-reconciliation",
+      "owner": "Codex",
+      "status": "validation-pending",
+      "output": "Instructions-For-Codex item 10 is resolved locally: Progress-Dashboard.md now includes a status legend, keeps the Claude row aligned to the Codebase-Coverage-Ledger milestone, and corrects send-message-rce-dr46-crosslink from Local/validation pending to Published/validated while keeping the source patch open in agent-hardening-backlog.jsonl."
+    },
     {
       "lane": "coordination-board-current-state",
       "owner": "Codex",
