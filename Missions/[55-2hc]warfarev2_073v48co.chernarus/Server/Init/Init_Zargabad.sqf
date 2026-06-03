@@ -1,6 +1,6 @@
 if (!isServer || !IS_zargabad_lowpop_map) exitWith {};
 
-Private ["_buildBase", "_buildCentralWall", "_orientTownDefenses", "_baseWalls", "_centralWall", "_centralWallGapOffsets", "_centralWallSpans", "_eastStatics", "_mgWall", "_sides", "_westStatics"];
+Private ["_buildBase", "_buildCentralWall", "_orientTownDefenses", "_baseStaticPositions", "_baseWalls", "_centralWall", "_centralWallGapOffsets", "_centralWallSpans", "_eastStatics", "_mgWall", "_sides", "_westStatics"];
 
 _baseWalls = [
 	["Land_HBarrier_large",[-55,-55,0],45],["Land_HBarrier_large",[-30,-70,0],15],
@@ -64,7 +64,7 @@ _orientTownDefenses = {
 };
 
 _buildBase = {
-	Private ["_def", "_dir", "_logic", "_origin", "_pos", "_side", "_sideID", "_statics", "_team", "_unit"];
+	Private ["_def", "_dir", "_logic", "_origin", "_pos", "_side", "_sideID", "_staticPositions", "_statics", "_team", "_unit"];
 	_side = _this select 0;
 	_dir = _this select 1;
 	_logic = (_side Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_startpos";
@@ -82,10 +82,12 @@ _buildBase = {
 	if (isNull _team) then {_team = createGroup _side; missionNamespace setVariable [Format ["WFBE_%1_DefenseTeam", _side], _team]};
 	_statics = if (_side == west) then {_westStatics} else {_eastStatics};
 	missionNamespace setVariable [Format ["WFBE_ZARGABAD_BASE_STATIC_COUNT_%1", _side], count _statics];
+	_staticPositions = [];
 
 	{
 		_pos = _origin modelToWorld (_x select 1);
 		_pos set [2, 0];
+		_staticPositions = _staticPositions + [[_x select 0, [round (_pos select 0), round (_pos select 1), 0], round (_dir + (_x select 2))]];
 		_def = createVehicle [_x select 0, _pos, [], 0, "NONE"];
 		_def setDir (_dir + (_x select 2));
 		_def setPos _pos;
@@ -101,6 +103,7 @@ _buildBase = {
 		[_def] Spawn WFBE_SE_FNC_HandleEmptyVehicle;
 	} forEach _statics;
 
+	missionNamespace setVariable [Format ["WFBE_ZARGABAD_BASE_STATIC_POSITIONS_%1", _side], _staticPositions];
 	deleteVehicle _origin;
 };
 
@@ -108,6 +111,8 @@ _sides = [[west, 45], [east, 225]];
 [] call _orientTownDefenses;
 {_x call _buildBase} forEach _sides;
 [] call _buildCentralWall;
+_baseStaticPositions = [missionNamespace getVariable ["WFBE_ZARGABAD_BASE_STATIC_POSITIONS_WEST", []], missionNamespace getVariable ["WFBE_ZARGABAD_BASE_STATIC_POSITIONS_EAST", []]];
+["INITIALIZATION", Format ["Init_Zargabad.sqf: Base static runtime positions WEST %1 EAST %2.", (_baseStaticPositions select 0), (_baseStaticPositions select 1)]] Call WFBE_CO_FNC_LogContent;
 
 [] execVM "Server\Module\Zargabad\Zargabad_EdgeGuard.sqf";
 [] execVM "Server\Module\Zargabad\Zargabad_BlackMarket.sqf";

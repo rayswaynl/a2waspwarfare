@@ -67,7 +67,7 @@
     "Drive a ground vehicle into the outer Zargabad rim away from starts/towns/camps/airport and confirm Zargabad_EdgeGuard removes it after the configured timeout, while aircraft and objective-near ground fights are ignored.",
     "Probe the seven intended north/east edge-safe bubbles near starts/objectives and confirm they allow legitimate objective fights without becoming broad safe hill-camping corridors.",
     "Verify WEST/EAST Zargabad fortifications and statics spawn, are side-owned, manned, and do not block commander construction in normal base flow.",
-    "Compare the RPT baseStaticTemplates line with screenshots/coordinates for spawned WEST/EAST base statics and flag mismatched classes, bad arcs, or blocked commander movement.",
+    "Compare the RPT baseStaticTemplates line and Init_Zargabad base static runtime positions line with screenshots/coordinates for spawned WEST/EAST base statics and flag mismatched classes, bad arcs, bad facing, unmanned statics, or blocked commander movement.",
     "Wake city, airfield and one outer farm with ground units; confirm town AI and static defenses activate, face useful approaches after the Zargabad orientation pass, fight, and clean up after inactivity.",
     "Capture camps and then a town from both WEST and EAST; confirm camp/town SV drains, resets on capture, and income ticks reflect ownership.",
     "Buy representative infantry, light, heavy, aircraft and airport units; confirm runtime buy menus match the statically validated compact Zargabad normal heavy/aircraft lists, exclude MBTs/MLRS/SPAAGs/attack helicopters/attack jets from normal factories, and make price multipliers feel sane.",
@@ -131,7 +131,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/New-ZargabadRuntimeReport.ps1 generates a Codex-ready markdown report with gate state, town-defense orientation state, base/fortification audit state, failure scan, key RPT excerpts, validator output, and a structured Claude Notes verdict table requiring PASS/FAIL/UNCERTAIN plus concrete evidence for ambiguous or failing runtime checks, including a priority defense mix arcs row for city, airfield, district, Northwest Base and Rahim Villa defense screenshots/coordinate notes."
+      "summary": "Tools/New-ZargabadRuntimeReport.ps1 generates a Codex-ready markdown report with gate state, town-defense orientation state, base/fortification audit state, base static runtime position state, failure scan, key RPT excerpts, validator output, and a structured Claude Notes verdict table requiring PASS/FAIL/UNCERTAIN plus concrete evidence for ambiguous or failing runtime checks, including base static runtime position/arcs and priority defense mix arcs rows for city, airfield, district, Northwest Base and Rahim Villa defense screenshots/coordinate notes."
     },
     {
       "type": "source-audit",
@@ -155,7 +155,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Init_Zargabad stores exact WEST/EAST base static templates in missionNamespace and Zargabad_RuntimeAudit logs them so Claude can compare RPT evidence against screenshots, firing arcs, and commander construction space."
+      "summary": "Init_Zargabad stores exact WEST/EAST base static templates in missionNamespace and now logs actual spawned static positions/facing. Zargabad_RuntimeAudit logs the templates so Claude can compare RPT evidence against screenshots, firing arcs, manning, and commander construction space."
     },
     {
       "type": "source-audit",

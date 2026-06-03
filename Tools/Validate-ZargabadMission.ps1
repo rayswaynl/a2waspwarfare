@@ -302,6 +302,7 @@ foreach ($path in @($sourceMissionFullPath, $missionFullPath)) {
 	Assert-True "$path central wall is centered and diagonal" ($initZargabad -match '\[3425,3375,0\][\s\S]*setDir 316;')
 	Assert-True "$path records Zargabad base audit counts" ($initZargabad -match 'WFBE_ZARGABAD_BASE_WALL_COUNT' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_COUNT_%1' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_POS_%1')
 	Assert-True "$path records Zargabad base static templates" ($initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_WEST' -and $initZargabad -match 'M2StaticMG_US_EP1' -and $initZargabad -match 'TOW_TriPod_US_EP1' -and $initZargabad -match 'Stinger_Pod_US_EP1' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_EAST' -and $initZargabad -match 'KORD_high_TK_EP1' -and $initZargabad -match 'Metis_TK_EP1' -and $initZargabad -match 'Igla_AA_pod_TK_EP1')
+	Assert-True "$path records Zargabad base static runtime positions" ($initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_POSITIONS_%1' -and $initZargabad -match '_staticPositions = _staticPositions \+' -and $initZargabad -match 'Base static runtime positions WEST %1 EAST %2')
 	$constants = Get-Content -Raw -LiteralPath (Join-Path $path "Common/Init/Init_CommonConstants.sqf")
 	$economyRangeConstants = @(
 		"WFBE_C_ARTILLERY_INTERVALS = [700, 650, 600, 550, 500, 450, 400];",
@@ -393,6 +394,7 @@ Assert-True "runtime report tool exists" (Test-Path -LiteralPath $runtimeReportT
 $runtimeReportSource = Get-Content -Raw -LiteralPath $runtimeReportTool
 Assert-True "runtime report tool wraps runtime validator" ($runtimeReportSource -match 'Validate-ZargabadRuntimeEvidence\.ps1')
 Assert-True "runtime report tool checks town defense orientation" ($runtimeReportSource -match 'Town defense orientation')
+Assert-True "runtime report tool checks base static runtime positions" ($runtimeReportSource -match 'Base static runtime positions')
 Assert-True "runtime report tool emits Claude notes" ($runtimeReportSource -match '## Claude Notes')
 Assert-True "runtime report tool asks Claude for priority defense mix arcs" ($runtimeReportSource -match 'Priority defense mix arcs' -and $runtimeReportSource -match 'city MG/nest\+GL\+AT' -and $runtimeReportSource -match 'airfield MG/nest\+AT\+2xAA')
 Assert-True "runtime report tool emits validator output" ($runtimeReportSource -match '## Validator Output')
