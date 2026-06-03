@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T00:40:00+02:00",
+  "generatedAt": "2026-06-04T00:55:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Aligned the branch-feature machine ledgers with the human wiki route: source-status snapshot, owner decisions, release-readiness gates and planned smoke pack now line up for AI commander, DroneStrike and ReconUAV.",
+      "currentWork": "Cleaned current summary wording so docs branch 154b7f38 is treated as the feature-matrix source-check basis, not the durable current head of origin/docs/developer-wiki-index.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: remaining feature-status reconciliation, stale machine-record cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
@@ -53,7 +53,7 @@
       "lane": "source-status-feature-branch-matrix-refresh",
       "owner": "Codex",
       "status": "published-validated",
-      "output": "Current-Source-Status-Snapshot now has a 2026-06-04 feature branch matrix for origin/docs/developer-wiki-index 154b7f38, miksuu/master 8bcc42b1, origin/feat/ai-commander 4dba060e, origin/feat/drone-saturation-strike 8ca4be90 and origin/feat/recon-uav 563418ea. It explicitly treats these as branch evidence until owner decisions, release-readiness gates and smoke evidence are recorded."
+      "output": "Current-Source-Status-Snapshot now has a 2026-06-04 feature branch matrix for origin/docs/developer-wiki-index source-check basis 154b7f38, miksuu/master 8bcc42b1, origin/feat/ai-commander 4dba060e, origin/feat/drone-saturation-strike 8ca4be90 and origin/feat/recon-uav 563418ea. It explicitly treats these as branch evidence until owner decisions, release-readiness gates and smoke evidence are recorded."
     },
     {
       "lane": "branch-feature-smoke-pack",

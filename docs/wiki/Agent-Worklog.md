@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T00:55:00+0200 - Codex - source-status-docs-head-wording-cleanup
+
+- Cleaned up current summary wording after the branch-feature ledger pass: [Progress dashboard](Progress-Dashboard) and [`agent-status.json`](agent-status.json) now describe docs branch `154b7f38` as the source-check basis for the feature matrix, not the current durable head of `origin/docs/developer-wiki-index`.
+- Updated [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-04-feature-branch-matrix) to avoid hardcoding a follow-up docs-only branch head that would immediately stale again.
+- Updated the machine knowledge record for `source-status-feature-branch-matrix-2026-06-04` so future agents load the same source-check-basis model.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-04T00:40:00+0200 - Codex - branch-feature-agent-ledger-crosslink
 
 - Re-fetched `origin` and `miksuu` and confirmed branch heads for the current branch-feature matrix: docs branch `d9416609` after docs-only commits, `miksuu/master` `8bcc42b1`, stable `origin/master` `2cdf5fb8`, `origin/feat/ai-commander` `4dba060e`, `origin/feat/drone-saturation-strike` `8ca4be90` and `origin/feat/recon-uav` `563418ea`.
