@@ -127,13 +127,12 @@ for "_i" from 0 to (_total - 1) do {
 };
 processInitCommands;
 ["INFORMATION", Format ["Support_DroneStrike.sqf : spawned %1 drones (%2 flare / %3 munition, AI-flown) at %4, target %5.", count _drones, _flareN, (_total - _flareN), _spawnPos, _destination]] Call WFBE_CO_FNC_LogContent;
-if (_enhanced && {!isNil "UpdateStatistics"}) then {[str _side, 'VehiclesCreated', count _drones] Call UpdateStatistics};
 
 //--- Drive each drone: AI flies it; the script picks targets + detonates.
 {
     private "_d"; _d = _x;
-    [_d, _destination, _zoneR, _loiterTime, _warhead, _warhead2, _scatter, _stagger, _enemySides, _aaTypes, _diveSound] spawn {
-        private ["_d","_dest","_zoneR","_loiterTime","_warhead","_warhead2","_scatter","_stagger","_enemySides","_aaTypes","_diveSound","_enhanced","_ms",
+    [_d, _destination, _zoneR, _loiterTime, _warhead, _warhead2, _scatter, _stagger, _enemySides, _aaTypes, _diveSound, _enhanced, leader _playerTeam] spawn {
+        private ["_d","_dest","_zoneR","_loiterTime","_warhead","_warhead2","_scatter","_stagger","_enemySides","_aaTypes","_diveSound","_enhanced","_caller",
                 "_role","_phase","_pilot","_loiterPt","_loiterAng","_endT","_idl","_target","_cands","_valid","_aa","_aimObj","_aimPos","_t0","_imp","_ang","_x"];
         _d          = _this select 0;
         _dest       = _this select 1;
@@ -147,7 +146,7 @@ if (_enhanced && {!isNil "UpdateStatistics"}) then {[str _side, 'VehiclesCreated
         _aaTypes    = _this select 9;
         _diveSound  = _this select 10;
         _enhanced   = _this select 11;
-        _ms         = _this select 12;
+        _caller     = _this select 12;   //--- the player who called the strike (for normal kill-bounty credit).
         _role  = _d getVariable "wfbe_drone_role";
         _phase = _d getVariable "wfbe_phase";
         _pilot = driver _d;
@@ -209,6 +208,13 @@ if (_enhanced && {!isNil "UpdateStatistics"}) then {[str _side, 'VehiclesCreated
                 if (!isNull _aimObj && {alive _aimObj}) then {_aimPos = getPos _aimObj};   //--- re-aim if it moved.
                 _ang = random 360;
                 _imp = [(_aimPos select 0) + (random _scatter) * sin _ang, (_aimPos select 1) + (random _scatter) * cos _ang, 0];
+                //--- Kill credit: a createVehicle warhead has no shooter, so the engine would credit nobody. Stamp the
+                //--- target as last-hit by the CALLER; the mission's own RequestOnUnitKilled then pays the standard cash
+                //--- bounty to that player -- identical to killing the vehicle any other way. No special currency, no flat reward.
+                if (!isNull _aimObj && {alive _aimObj} && {!isNull _caller}) then {
+                    _aimObj setVariable ["wfbe_lasthitby", _caller, true];
+                    _aimObj setVariable ["wfbe_lasthittime", time, true];
+                };
                 //--- 50/50 warhead: even munition = direct HE at ground; odd = a top-attack drop (bomb/SADARM) from altitude.
                 if (_phase mod 2 == 0) then {
                     _warhead createVehicle _imp;
@@ -216,16 +222,6 @@ if (_enhanced && {!isNil "UpdateStatistics"}) then {[str _side, 'VehiclesCreated
                     _warhead2 createVehicle [_imp select 0, _imp select 1, 130];
                 };
                 ["INFORMATION", Format ["Support_DroneStrike.sqf : munition phase %1 struck %2 (warhead %3).", _phase, _imp, (if (_phase mod 2 == 0) then {_warhead} else {_warhead2})]] Call WFBE_CO_FNC_LogContent;
-                if (_enhanced && {!isNull _aimObj}) then {
-                    [_aimObj, _ms] spawn {
-                        private ["_tg","_sd"]; _tg = _this select 0; _sd = _this select 1;
-                        sleep 5;
-                        if (!alive _tg && {!isNil "ChangeSideSupply"}) then {
-                            [_sd, WFBE_C_DRONE_KILL_REWARD, "Drone strike interdiction", false] call ChangeSideSupply;
-                            if (!isNil "UpdateStatistics") then {[str _sd, 'VehiclesDestroyed', 1] Call UpdateStatistics};
-                        };
-                    };
-                };
                 {deleteVehicle _x} forEach (crew _d); deleteVehicle _d;
             };
         };

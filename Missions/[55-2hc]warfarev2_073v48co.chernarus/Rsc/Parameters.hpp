@@ -8,9 +8,9 @@
 		texts[] = {"Disabled","Enabled"};
 		default = 1;
 	};
-	// Drone enhanced layer: contrail/flare FX + smooth orbit + kill rewards/stats (off = lean mode).
+	// Drone enhanced layer: contrail/flare FX + smooth circling orbit (off = lean mode). Kill cash bounty is core, always on.
 	class WFBE_C_DRONE_ENHANCED {
-		title = "Drone Enhanced Layer (FX / orbit / rewards)";
+		title = "Drone Enhanced Layer (contrails / smooth orbit)";
 		values[] = {0,1};
 		texts[] = {"Off","On"};
 		default = 1;
