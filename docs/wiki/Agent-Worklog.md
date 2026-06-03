@@ -1437,3 +1437,7 @@ Key conclusions:
 - Triple-checked the audit queue. SHIPPED to PR #8 (release commit 97370acb): SG5 (camp flag _newSide), AI7 (attack approach WP kept), AI11 (water-loop cap+fallback x2), AI2 (town mortars removed - orphan file deleted).
 - Corrections recorded in Audit-Findings-Queue-2026-06-03: V2 real-dup-but-idempotent (low impact, not double-ammo), AI1 confirmed, AI8 confirmed-gated, NJ11 real-but-low-risk (atomic in-tick + client-gated), AI15 NON-ISSUE (SpeedMode NORMAL not LIMITED) -> close, NJ3/AI3/AI5 owner-deferred.
 - Docs-only change (queue page + this worklog line); no gameplay source on this branch.
+
+## VERIFICATION RUN 2b - Claude - V2/AI1/AI8 shipped
+- After re-verify, also fixed on PR #8 (release commit 0bb16513): V2 (dedupe IFV HandleReload EH), AI1 (||->&& zombie patrol loops in server_town_patrol.sqf + server_patrols.sqf), AI8 (Server_BuyUnit.sqf IR-smoke uses _side not sideJoined for dedicated servers). Triple-checked: AI1 && is safe because both files init the alive flag before the loop.
+- Docs-only change here; no gameplay source on this branch.

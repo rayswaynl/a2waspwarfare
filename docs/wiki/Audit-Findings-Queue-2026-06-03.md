@@ -132,3 +132,8 @@ Re-verified against the release tree (triple-check). Outcomes:
 - **AI5** — skip (marginal).
 
 Maintainers: SG5/AI7/AI11/AI2 are done on PR #8 — please cross-check and close those rows; AI15 → mark non-issue; the rest of the UNVERIFIED rows above still need cross-referencing.
+
+**✅ Also now FIXED & shipped to PR #8 (commit `0bb16513`):**
+- **V2** — removed the duplicate IFV `fired`→HandleReload EH (`Client_BuildUnit.sqf`); one fewer spawn/shot, no behaviour change (idempotent).
+- **AI1** — `||`→`&&` in `server_town_patrol.sqf:18` and `server_patrols.sqf:26`; wiped patrol-team loops now exit instead of running forever. (Triple-check: both files init the alive flag before the loop, so `&&` is safe — verified `server_patrols.sqf:7` `_team_alive=false` precedes the loop.)
+- **AI8** — `Server_BuyUnit.sqf:117` now uses the buying side `_side` (not client `sideJoined`); AI Tank/Car get IR-smoke on dedicated servers, still gated on the researched upgrade.
