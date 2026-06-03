@@ -62,6 +62,7 @@
     "Inspect WEST southwest and EAST northeast starts for direct spawn-to-spawn fire, spawn-to-city fire and hill-edge overwatch abuse.",
     "Inspect the WDDM-compatible central H-barrier wall around 3425,3375 and confirm the pass-through gaps preserve normal infantry, light armor and AI movement.",
     "Drive a ground vehicle into the outer Zargabad rim away from starts/towns/camps/airport and confirm Zargabad_EdgeGuard removes it after the configured timeout, while aircraft and objective-near ground fights are ignored.",
+    "Probe the seven intended north/east edge-safe bubbles near starts/objectives and confirm they allow legitimate objective fights without becoming broad safe hill-camping corridors.",
     "Verify WEST/EAST Zargabad fortifications and statics spawn, are side-owned, manned, and do not block commander construction in normal base flow.",
     "Compare the RPT baseStaticTemplates line with screenshots/coordinates for spawned WEST/EAST base statics and flag mismatched classes, bad arcs, or blocked commander movement.",
     "Wake city, airfield and one outer farm with ground units; confirm town AI and static defenses activate, face useful approaches after the Zargabad orientation pass, fight, and clean up after inactivity.",
@@ -94,8 +95,12 @@
       "summary": "Zargabad_EdgeGuard is server-only, Zargabad-gated, skips Air vehicles, exempts nearby starts/towns/camps/airport and uses the 6000m boundary plus a 120m rim band."
     },
     {
+      "type": "source-audit",
+      "summary": "Static edge-footprint validation found zero objective safe-zone logics inside the 120m kill rim and exactly seven north/east edge-safe start/objective bubbles inside the 325m safe range."
+    },
+    {
       "type": "command-output",
-      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, intended default start anchors/headings and WEST/EAST separation, no out-of-6000 logic positions, start SV 185, max SV 648, all towns have camps and defenses, each camp links to exactly one town, all camps sit in the 90m-225m town-flow band, high-value objectives have two camp approaches and layered defense coverage, synchronized defenses sit in the 90m-325m town approach band, exact smaller-map economy/range/cap constants are locked in source and generated Zargabad mission copies, the runtime town-defense orientation hook is present, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
+      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, intended default start anchors/headings and WEST/EAST separation, no out-of-6000 logic positions, no objective safe-zone logics inside the 120m edge kill rim, exactly seven north/east edge-safe objective/start bubbles, start SV 185, max SV 648, all towns have camps and defenses, each camp links to exactly one town, all camps sit in the 90m-225m town-flow band, high-value objectives have two camp approaches and layered defense coverage, synchronized defenses sit in the 90m-325m town approach band, exact smaller-map economy/range/cap constants are locked in source and generated Zargabad mission copies, the runtime town-defense orientation hook is present, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
     },
     {
       "type": "source-audit",
@@ -132,6 +137,6 @@
   ],
   "result": "partial",
   "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports after each Codex commit or runtime gate.",
-  "updatedAt": "2026-06-03T04:52:00+02:00",
+  "updatedAt": "2026-06-03T05:05:00+02:00",
   "updatedBy": "Codex"
 }

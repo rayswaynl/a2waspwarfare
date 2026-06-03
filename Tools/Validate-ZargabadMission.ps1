@@ -37,6 +37,13 @@ function Get-FlatDistance {
 	return [math]::Sqrt([math]::Pow($A.X - $B.X, 2) + [math]::Pow($A.Y - $B.Y, 2))
 }
 
+function Get-EdgeDistance {
+	param($LogicObject, [double]$Boundary)
+	$x = [double]$LogicObject.X
+	$y = [double]$LogicObject.Y
+	return (@($x, $y, ($Boundary - $x), ($Boundary - $y)) | Measure-Object -Minimum).Minimum
+}
+
 function Test-ContainsAll {
 	param([string]$Content, [string[]]$Needles)
 	foreach ($needle in $Needles) {
@@ -122,6 +129,12 @@ Assert-Equal "town defense logic count" $defenses.Count 33
 $logicObjects = @($towns + $camps + $airports + $starts + $defenses)
 $outOfBounds = @($logicObjects | Where-Object { $_.X -lt 0 -or $_.X -gt 6000 -or $_.Y -lt 0 -or $_.Y -gt 6000 })
 Assert-Equal "out-of-6000 Zargabad logic positions" $outOfBounds.Count 0
+$safeZoneObjects = @($towns + $camps + $airports + $starts)
+$killRimObjects = @($safeZoneObjects | Where-Object { (Get-EdgeDistance -LogicObject $_ -Boundary 6000) -lt 120 })
+$edgeSafeObjects = @($safeZoneObjects | Where-Object { (Get-EdgeDistance -LogicObject $_ -Boundary 6000) -le 325 })
+Assert-Equal "objective safe-zone logics inside edge guard kill rim" $killRimObjects.Count 0
+Assert-Equal "bounded edge-safe objective/start logic count" $edgeSafeObjects.Count 7
+Assert-Equal "edge-safe logics limited to north/east flank" @($edgeSafeObjects | Where-Object { $_.Y -lt 5680 -and $_.X -lt 5770 }).Count 0
 
 $campTownLinkCounts = @($camps | ForEach-Object {
 	$camp = $_
@@ -258,6 +271,9 @@ Assert-True "source mystery feature under 100 non-empty LOC" ((Get-NonEmptyLineC
 Assert-True "generated mystery feature under 100 non-empty LOC" ((Get-NonEmptyLineCount $generatedBlackMarket) -le 100)
 Assert-True "source edge guard under 100 non-empty LOC" ((Get-NonEmptyLineCount $sourceEdgeGuard) -le 100)
 Assert-True "generated edge guard under 100 non-empty LOC" ((Get-NonEmptyLineCount $generatedEdgeGuard) -le 100)
+$edgeGuardSource = Get-Content -Raw -LiteralPath $sourceEdgeGuard
+Assert-True "edge guard watches objective safe-zone types" ($edgeGuardSource -match '"LocationLogicStart", "LocationLogicDepot", "LocationLogicCamp", "LocationLogicAirport"')
+Assert-True "edge guard removes ground rim abuse but skips aircraft" ($edgeGuardSource -match '!\(_vehicle isKindOf "Air"\)' -and $edgeGuardSource -match '_edge && !_safe' -and $edgeGuardSource -match 'setDamage 1')
 Assert-True "source runtime audit under 100 non-empty LOC" ((Get-NonEmptyLineCount $sourceRuntimeAudit) -le 100)
 Assert-True "generated runtime audit under 100 non-empty LOC" ((Get-NonEmptyLineCount $generatedRuntimeAudit) -le 100)
 
