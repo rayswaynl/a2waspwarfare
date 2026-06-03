@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T18:55:00+02:00",
+  "generatedAt": "2026-06-03T19:00:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,30 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "send-message-agent-feature-status-reconciliation",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/agent-feature-status.jsonl",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Networking-And-Public-Variables.md",
+        "docs/wiki/Public-Variable-Channel-Index.md",
+        "docs/wiki/SQF-Code-Atlas.md",
+        "docs/wiki/Hardening-Implementation-Roadmap.md",
+        "docs/wiki/Pending-Owner-Decisions.md",
+        "docs/wiki/agent-hardening-backlog.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateclient.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendMessage.sqf"
+      ],
+      "outputs": [
+        "Added P0 send-message-direct-pv-rce to agent-feature-status.jsonl",
+        "Kept gameplay source patch-ready/source-unpatched",
+        "Preserved DR-46 distinction from PVF dispatcher hardening"
+      ],
+      "handoff": "Future network hardening owner should patch SEND_MESSAGE separately from PVF dispatcher lookup: replace call compile localization text with structured stringtable key/args, then smoke normal artillery/ICBM messages plus forged SQF text."
+    },
     {
       "lane": "stale-collaboration-claim-closure",
       "owner": "Codex",

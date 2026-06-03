@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: SEND_MESSAGE Agent Feature-Status Reconciliation
+
+- Added the missing P0 `send-message-direct-pv-rce` record to [`agent-feature-status.jsonl`](agent-feature-status.jsonl) so agent-readable feature triage matches [Feature status](Feature-Status-Register), [Public variable channel index](Public-Variable-Channel-Index), [Networking/PV](Networking-And-Public-Variables), [Hardening roadmap](Hardening-Implementation-Roadmap), [Pending owner decisions](Pending-Owner-Decisions) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl#send-message-call-compile-rce).
+- Evidence checked: `Client/FSM/updateclient.sqf:10-12` registers the direct `SEND_MESSAGE` handler; `Client_onEventHandler_SEND_MESSAGE.sqf:18-27` reads payload text/side/compile flag and `call compile`s message text when the multi-language flag is true; `Common_SendMessage.sqf:17-26,34-38` repeats the compile branch and broadcasts `SEND_MESSAGE`.
+- Scope remained docs/status only; no gameplay source files were edited.
+
 ## 2026-06-03 - Codex Documentation Finisher: Stale Collaboration Claim Closure
 
 - Closed stale machine-readable claims in [`agent-collaboration.json`](agent-collaboration.json): `latest-doc-batch-validation-publish` no longer represents an active publish task, `attack-wave-authority-playbook` is already published/validated, and `paratrooper-marker-revival` is published/propagated with Arma smoke pending.

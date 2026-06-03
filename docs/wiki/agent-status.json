@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T18:55:00+02:00",
+  "generatedAt": "2026-06-03T19:00:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed stale machine-readable collaboration claims: latest-doc-batch-validation-publish is no longer active, attack-wave-authority-playbook is published/validated, and paratrooper-marker-revival is propagated with smoke pending.",
+      "currentWork": "Reconciled DR-46 SEND_MESSAGE direct-PV RCE into agent-feature-status.jsonl so machine-readable feature triage now carries the same P0 item as Feature Status and the hardening backlog.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another feature-status reconciliation item, remaining machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "send-message-agent-feature-status-reconciliation",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "agent-feature-status.jsonl now has P0 send-message-direct-pv-rce matching Feature Status, Networking/PV, Public Variable Channel Index, SQF atlas, Hardening Roadmap, Pending Owner Decisions and agent-hardening-backlog.jsonl. Source evidence remains updateclient.sqf:10-12, Client_onEventHandler_SEND_MESSAGE.sqf:18-27 and Common_SendMessage.sqf:17-26,34-38; gameplay source remains patch-ready/source-unpatched."
+    },
     {
       "lane": "stale-collaboration-claim-closure",
       "owner": "Codex",
