@@ -55,8 +55,8 @@ while {true} do {
 				_veh = createVehicle [_truckCls, getPos _start, [], 14, "NONE"];
 				if (!isNull _veh) then {
 					_veh setVariable ["wfbe_claude_convoy", true, true];
-					createVehicleCrew _veh;
-					_g = group (driver _veh);
+					_g = createGroup _side;   //--- A2 OA has no createVehicleCrew; crew the driver manually (and on _side)
+					(_g createUnit [missionNamespace getVariable [format ["WFBE_%1CREW", _side], "TK_GUE_Soldier_EP1"], getPos _veh, [], 0, "FORM"]) moveInDriver _veh;
 					_g move _destPos; _g setBehaviour "SAFE"; _g setSpeedMode "LIMITED"; _g setCombatMode "YELLOW";
 					_veh addEventHandler ["Killed", {
 						private "_k"; _k = _this select 1;
