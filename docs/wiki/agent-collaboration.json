@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T15:50:00+02:00",
+  "generatedAt": "2026-06-03T16:00:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,28 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "wave-q-hubble-factory-buy-routing-harvest",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Subagent-Discovery-Swarm.md",
+        "docs/wiki/Factory-And-Purchase-Systems-Atlas.md",
+        "docs/wiki/Factory-Queue-Counter-Token-Cleanup.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Deep-Review-Findings.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_BuyUnit.sqf"
+      ],
+      "outputs": [
+        "Closed Wave Q Hubble factory/player-buy lead as already canonical after source recheck",
+        "Updated swarm/dashboard/worklog and machine records to remove pending rediscovery"
+      ],
+      "handoff": "No new factory owner page is needed for this lead. Future code owner should use Factory-And-Purchase-Systems-Atlas and Factory-Queue-Counter-Token-Cleanup before patching queue counters, token identity, public queu broadcasts or any server-owned purchase redesign."
+    },
     {
       "lane": "wave-q-economy-authority-harvest",
       "owner": "Codex",

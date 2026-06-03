@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T15:50:00+02:00",
+  "generatedAt": "2026-06-03T16:00:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Banach's Wave Q town/camp lead as source-checked and already canonical across town, server-runtime, supply cleanup and abandoned-feature pages.",
-      "nextExpectedOutput": "Continue Wave Q owner-page harvest with Hubble player-buy path correction, or switch to the next stale validation/status row if higher value."
+      "currentWork": "Closed Hubble's Wave Q factory/player-buy lead as source-checked and already canonical across factory, queue, feature-status and deep-review pages.",
+      "nextExpectedOutput": "Pick the next highest-value stale validation/status row or fresh source-backed docs gap."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wave-q-hubble-factory-buy-routing-harvest",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Hubble's Wave Q factory/purchase lead is source-checked and closed as already canonical: normal player buys are GUI_Menu_BuyUnits -> local Client_BuildUnit, no RequestBuyUnit PVF exists, AIBuyUnit/Server_BuyUnit has no proven live caller, and DR-33 queue counter/token hazards remain patch-ready/source-unpatched."
+    },
     {
       "lane": "wave-q-economy-authority-harvest",
       "owner": "Codex",

@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Wave Q Hubble Factory Buy Routing Harvest
+
+- Source-checked Hubble's Wave Q factory/purchase lead against `Client/GUI/GUI_Menu_BuyUnits.sqf:102-156`, `Client/Functions/Client_BuildUnit.sqf:167-208,365,467-469`, `Common/Init/Init_PublicVariables.sqf:9-21` and `Server/Init/Init_Server.sqf:10`.
+- Confirmed the owner docs are already canonical: player purchases spawn local `BuildUnit` and deduct client funds, no `RequestBuyUnit` PVF exists, `AIBuyUnit`/`Server_BuyUnit.sqf` has no proven live caller, and the DR-33 queue counter/token hazards remain patch-ready/source-unpatched.
+- Updated [Discovery swarm](Subagent-Discovery-Swarm), [Progress dashboard](Progress-Dashboard) and machine records so future agents treat the Hubble Wave Q note as selected-harvested instead of rediscovering the player-buy path split.
+
 ## 2026-06-03 - Codex Documentation Finisher: Wave Q Town/Camp Routing Harvest
 
 - Source-checked Banach's Wave Q town/camp lead against `Client/Action/Action_RepairCamp.sqf:33-66`, `Client/Action/Action_RepairCampEngineer.sqf:33-67`, `Server/Functions/Server_HandleSpecial.sqf:147-168`, `Server/FSM/server_patrols.sqf:26-68`, `Server/FSM/server_town_patrol.sqf:18-53`, supply mission start/tracking files and the AI supply-truck compile/spawn pair.
