@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T19:10:00+02:00",
+  "generatedAt": "2026-06-03T19:15:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,34 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "respawn-mash-review-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Respawn-And-Death-Lifecycle-Atlas.md",
+        "docs/wiki/Abandoned-Feature-Revival-Review.md",
+        "docs/wiki/Networking-And-Public-Variables.md",
+        "docs/wiki/agent-hardening-backlog.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/MASH/MASHMarker.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/MASH/receiverMASHmarker.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Init/Init_Server.sqf"
+      ],
+      "outputs": [
+        "Closed stale respawn-mash-review ready-for-review status",
+        "Confirmed current docs already separate live local MASH respawn from dead marker synchronization",
+        "Preserved future owner decision: revive with server-held/JIP-safe marker records or remove the orphan relay"
+      ],
+      "handoff": "Future marker/respawn owner should not reopen this as a documentation integration task. If gameplay work is requested, use Respawn-And-Death-Lifecycle-Atlas and Abandoned-Feature-Revival-Review: revive MASH markers with server-held records, unique marker names and JIP replay, or remove/annotate the orphan receiver/server relay."
+    },
     {
       "lane": "integration-collaboration-status-closure",
       "owner": "Codex",
@@ -2058,7 +2086,7 @@
     {
       "lane": "respawn-mash-review",
       "owner": "Claude",
-      "status": "ready-for-review",
+      "status": "published-validated",
       "sourceScope": [
         "Missions/[55-2hc]...chernarus/Client/Functions/Client_UI_Respawn_Selector.sqf",
         "Missions/[55-2hc]...chernarus/Server/Module/MASH/MASHMarker.sqf",
@@ -2069,7 +2097,7 @@
         "Deep-Review-Findings.md (Round 25 / DR-34)",
         "Codebase-Coverage-Ledger.md (Markers row PV+JIP-HC)"
       ],
-      "handoff": "Codex: mark the MASH map-marker feature dead/abandoned in Feature-Status-Register + marker/respawn docs. Revival recipe: server-held list + JIP re-send (like construction set-hq-killed re-sends) + unique marker names + fix publicVariable JIP gap. Owner decision: revive or remove dead receiverMASHmarker.sqf + the orphaned Init_Server.sqf:70 registration."
+      "handoff": "Historical Claude review now closed by respawn-mash-review-status-closure. Feature Status, Respawn/death lifecycle, Abandoned feature revival, Networking/PV and agent-hardening-backlog already document the dead/orphaned MASH marker relay and future revive/remove decision."
     },
     {
       "lane": "factory-perf-jip-review",

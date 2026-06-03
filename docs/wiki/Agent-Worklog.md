@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Respawn MASH Review Status Closure
+
+- Closed the stale `respawn-mash-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); the requested docs state is already published in [Feature status](Feature-Status-Register), [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas), [Abandoned feature revival](Abandoned-Feature-Revival-Review), [Networking/PV](Networking-And-Public-Variables) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl#marker-support-cleanups).
+- Evidence checked: source Chernarus and maintained Vanilla both keep `Client/Init/Init_Client.sqf:132` commented for the MASH marker receiver, both compile the orphan server relay at `Server/Init/Init_Server.sqf:70`, both relay files send `WFBE_SE_MASH_MARKER_SENT` from `Server/Module/MASH/MASHMarker.sqf:1-13`, and the dead receiver body remains `Client/Module/MASH/receiverMASHmarker.sqf:1-29`.
+- Scope remained docs/status only; local MASH respawn stays documented as live/proven only for the deploying client, while marker revival/removal remains future owner work.
+
 ## 2026-06-03 - Codex Documentation Finisher: Integration Collaboration Status Closure
 
 - Closed three stale [`agent-collaboration.json`](agent-collaboration.json) records: `integration-backlog-batch-a` is no longer mid-publish, and `discord-datapath-review` / `battleye-posture-review` are no longer ready-for-review documentation blockers.

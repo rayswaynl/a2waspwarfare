@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T19:10:00+02:00",
+  "generatedAt": "2026-06-03T19:15:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed stale integration collaboration claims: integration-backlog-batch-a is no longer publishing, and discord-datapath-review / battleye-posture-review are no longer ready-for-review docs blockers. Canonical docs now carry the integration trust-boundary evidence while source hardening remains open.",
+      "currentWork": "Closed stale respawn-mash-review collaboration status: Feature Status, Respawn/death lifecycle, Abandoned feature revival, Networking/PV and agent-hardening-backlog already publish the dead MASH marker relay state and revival/removal handoff.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another feature-status reconciliation item, remaining machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "respawn-mash-review-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "agent-collaboration.json no longer advertises respawn-mash-review as ready-for-review. Current docs already distinguish local MASH respawn from dead/orphaned MASH marker sync and route any revival through server-held marker records, unique names and JIP replay. Source evidence remains source/Vanilla Init_Client.sqf:132 commented receiver compile, Init_Server.sqf:70 orphan server relay compile, MASHMarker.sqf:1-13 relay broadcast and receiverMASHmarker.sqf:1-29 uncompiled receiver."
+    },
     {
       "lane": "integration-collaboration-status-closure",
       "owner": "Codex",
