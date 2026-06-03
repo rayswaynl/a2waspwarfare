@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T13:55:00+02:00",
+  "generatedAt": "2026-06-03T14:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "client-skill-init-branch-status-recheck",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Client-Skill-Init-Idempotency.md",
+        "docs/wiki/Instructions-For-Codex.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf",
+        "origin/master",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Marked Instructions-For-Codex item 37 complete",
+        "Corrected Client-Skill-Init-Idempotency branch status and line references",
+        "Clarified Instructions-For-Codex item 36 as status-convention work after branch rechecks"
+      ],
+      "handoff": "Continue with Instructions-For-Codex item 38: Commander-Reassignment-Call-Shape status and line-reference recheck."
+    },
     {
       "lane": "client-ui-wf-menu-line-ref",
       "owner": "Codex",

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T13:55:00+02:00",
+  "generatedAt": "2026-06-03T14:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Instructions-For-Codex item 35: Client-UI-HUD-And-Menus now cites Rsc/Dialogs.hpp:1019-1022 for WF_Menu, idd 11000 and the GUI_Menu.sqf onLoad.",
-      "nextExpectedOutput": "Continue with the next source-backed documentation backlog item after re-reading Instructions-For-Codex for new Claude/Codex handoffs."
+      "currentWork": "Closed Instructions-For-Codex item 37: Client-Skill-Init-Idempotency now distinguishes docs-branch/Vanilla propagated status from origin/master and release-branch duplicate Skill_Init state.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 38: Commander-Reassignment-Call-Shape status and line-reference recheck."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "client-skill-init-branch-status-recheck",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 37 is resolved: Client-Skill-Init-Idempotency.md now says this docs branch and maintained Vanilla have one Skill_Init at Init_Client.sqf:547 and Apply at :571, while origin/master and origin/release/2026-06-feature-bundle still duplicate the init."
+    },
     {
       "lane": "client-ui-wf-menu-line-ref",
       "owner": "Codex",

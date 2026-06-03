@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Client Skill Init Branch Status
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 37 and clarified the item 36 systemic-status note.
+- Source-checked current source Chernarus and maintained Vanilla `Client/Init/Init_Client.sqf:547,551,571`, `origin/master` `:561,565,585-586`, and `origin/release/2026-06-feature-bundle` `:562,566,586-587`.
+- Corrected [Client skill init idempotency](Client-Skill-Init-Idempotency) so it says branch-local/Vanilla propagated and smoke pending, not master-shipped; fixed `WFBE_C_PLAYERS_AI_MAX` to `Init_CommonConstants.sqf:243`.
+
 ## 2026-06-03 - Codex Documentation Finisher: Client UI WF_Menu Line Reference
 
 - Closed [Instructions for Codex](Instructions-For-Codex) item 35.
