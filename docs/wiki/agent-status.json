@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T13:25:00+02:00",
+  "generatedAt": "2026-06-03T13:40:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Instructions-For-Codex item 31 with branch-aware status: origin/master still has the DR-19 branch-only FPS sleep shape, this docs branch has early !isDedicated exits in both publishers, and origin/release/2026-06-feature-bundle keeps a guarded serverFpsGUI publisher while removing/commenting the redundant monitor path.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 32: Supply-Mission-Scan-Narrowing specific status/path/line recheck."
+      "currentWork": "Closed Instructions-For-Codex item 32: Supply-Mission-Scan-Narrowing now distinguishes origin/master broad-scan status from docs-branch and release-branch narrowed scans, uses the real Core_Structures path and has current 80m/8m scan line refs.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 33: Performance-Opportunity-Sweep DR-19/DR-39 and Skill_Init line-ref reconciliation."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "supply-scan-branch-status-recheck",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 32 is resolved: Supply-Mission-Scan-Narrowing.md now distinguishes origin/master broad-scan status from docs-branch and release-branch narrowed scans, uses the real Common/Config/Core_Structures/Structures_*.sqf path and has current line refs for the 80m command-center and 8m nearby-player scans."
+    },
     {
       "lane": "hosted-fps-loop-status-recheck",
       "owner": "Codex",

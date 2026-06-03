@@ -1380,3 +1380,10 @@ Key conclusions:
 - Closed [Instructions for Codex](Instructions-For-Codex) item 31 after a focused recheck of [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep).
 - Confirmed `origin/master` FPS publishers still have the old branch-only `sleep 8` shape.
 - Confirmed this docs branch has early `if (!isDedicated) exitWith {};` guards in both FPS publishers, while `origin/release/2026-06-feature-bundle` keeps a guarded `serverFpsGUI.sqf` publisher and removes/comments the redundant Chernarus monitor path.
+
+# 2026-06-03 - Supply Scan Branch Status Recheck
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 32 after source-checking [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) against this docs branch, stable `origin/master` and `origin/release/2026-06-feature-bundle`.
+- Confirmed `origin/master` still uses `nearestObjects [..., [], 80]` at `supplyMissionStarted.sqf:24-28`.
+- Confirmed this docs branch uses `nearestObjects [..., ["Base_WarfareBUAVterminal"], 80]` at `:28`, with the intentionally broad nearby-player/object scan at `:44`.
+- Confirmed the release branch carries a PR #1-compatible narrowed scan at `:46-53`, and the page uses the real `Common/Config/Core_Structures/Structures_*.sqf` path.

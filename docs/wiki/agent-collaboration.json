@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T13:25:00+02:00",
+  "generatedAt": "2026-06-03T13:40:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "supply-scan-branch-status-recheck",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Supply-Mission-Scan-Narrowing.md",
+        "docs/wiki/Instructions-For-Codex.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Structures/Structures_*.sqf",
+        "origin/master",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Marked Instructions-For-Codex item 32 complete",
+        "Confirmed origin/master broad-scan, docs-branch narrowed scan and release-branch PR #1-compatible narrowed scan",
+        "Confirmed config path and branch-local line refs are corrected on Supply-Mission-Scan-Narrowing"
+      ],
+      "handoff": "Continue with Instructions-For-Codex item 33: Performance-Opportunity-Sweep DR-19/DR-39 and Skill_Init line-ref reconciliation."
+    },
     {
       "lane": "hosted-fps-loop-status-recheck",
       "owner": "Codex",

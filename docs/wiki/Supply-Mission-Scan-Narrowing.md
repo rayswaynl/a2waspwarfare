@@ -13,7 +13,7 @@ Source:
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf`
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf`
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf`
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/*/Config_Structures.sqf`
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Structures/Structures_*.sqf`
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/baserep/data.sqf`
 
 Wiki/docs:
@@ -27,13 +27,13 @@ Wiki/docs:
 
 The server supply-mission start handler owns the live return-to-base loop. Every 3 seconds, while the associated supply vehicle is alive, it looked for a nearby command center with:
 
-- `Server/Module/supplyMission/supplyMissionStarted.sqf:37`: `while { alive _associatedSupplyTruck }`
-- `Server/Module/supplyMission/supplyMissionStarted.sqf:42`: `_x isKindOf "Base_WarfareBUAVterminal"`
-- Former `Server/Module/supplyMission/supplyMissionStarted.sqf:45`: `nearestObjects [(getPos _associatedSupplyTruck), [], 80]`
+- Branch-local `Server/Module/supplyMission/supplyMissionStarted.sqf:20`: `while { alive _associatedSupplyTruck }`
+- Branch-local `Server/Module/supplyMission/supplyMissionStarted.sqf:25`: `_x isKindOf "Base_WarfareBUAVterminal"`
+- Branch-local `Server/Module/supplyMission/supplyMissionStarted.sqf:28`: `nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]`
 
-That meant each active supply mission scanned all nearby object classes inside 80 meters, then filtered the result in SQF. The intent was already one class family: command-center terminal objects. The mission's side configs define command centers as `*_WarfareBUAVterminal` classes, other mission code uses `Base_WarfareBUAVterminal`, and `WASP/baserep/data.sqf` labels `Base_WarfareBUAVterminal` as the Command Center base class.
+On `origin/master`, each active supply mission scanned all nearby object classes inside 80 meters, then filtered the result in SQF at `supplyMissionStarted.sqf:24-28`. The intent was already one class family: command-center terminal objects. The mission's side configs define command centers as `*_WarfareBUAVterminal` classes in `Common/Config/Core_Structures/Structures_*.sqf:10`, other mission code uses `Base_WarfareBUAVterminal`, and `WASP/baserep/data.sqf:6` labels `Base_WarfareBUAVterminal` as the Command Center base class.
 
-The nearby-player check at `supplyMissionStarted.sqf:61` still uses `nearestObjects [..., [], 8]`; that scan is intentionally left broad because it is looking for player objects/vehicle occupants near the truck, not command-center terminals.
+The nearby-player check at branch-local `supplyMissionStarted.sqf:44` still uses `nearestObjects [..., [], 8]`; that scan is intentionally left broad because it is looking for player objects/vehicle occupants near the truck, not command-center terminals.
 
 Scope note: this patch applies to the live supply mission return-to-base handler in `supplyMissionStarted.sqf`. The compiled dead twin `supplyMissionActive.sqf` still carries the older broad-scan logic; retire or annotate that path during the broader cleanup instead of treating it as a second live implementation.
 
