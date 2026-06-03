@@ -12,7 +12,7 @@
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Client_UpdateRHUD.sqf`
 - Source/Vanilla/modded search results for `SERVER_FPS_GUI` and `WFBE_VAR_SERVER_FPS`
 
-## What The Code Did
+## Original Bug Shape
 
 Before the DR-19 patch, `Init_Server.sqf` started two FPS publisher scripts:
 

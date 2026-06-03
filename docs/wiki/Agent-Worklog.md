@@ -1837,3 +1837,8 @@ Key conclusions:
 - Rechecked [Progress Dashboard](Progress-Dashboard) against `agent-status.json` and `agent-events.jsonl` after the cheap scout wave publish.
 - Corrected the visible **At A Glance** rows: Codex now points to the published cheap scout wave rather than the older micro-scout batch, Claude uses `collaboration-follow-autonomous-ready`, and Sub-agents summarizes the latest closed cheap scout wave.
 - Docs-only coordination cleanup; no gameplay source files changed.
+
+## 2026-06-04T01:24:00+02:00 - Codex - fallback scout wave PV/AI/ops harvest
+- Spark quota was still blocked, so Codex launched five low-effort read-only scouts instead: economy/supply-money loops, AI group caps, networking/direct PVs, UI/HUD/dialogs and ops/runtime/admin features.
+- Promoted the bounded, source-backed findings that were safest to land now: exact PV channel inventory fixes, corrected `PLAYER_RADIATED` direction, side-supply mirror/JIP wording, normal-commander AI cap table, crew-slot group-cap note and hosted-FPS old-shape wording.
+- Queued broader leads for later passes rather than overloading this batch: live supply reward vs stale stringtable text, UI alias/path cleanup, server ops runbook, AFK ops split and runtime telemetry checklist. No gameplay source files changed.

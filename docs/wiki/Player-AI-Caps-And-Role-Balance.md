@@ -13,8 +13,8 @@ The live buy menu and RHUD use the same shape:
 | Source | Behavior |
 | --- | --- |
 | `Client/Module/Skill/Skill_Init.sqf:49` | Soldier-slot players multiply local `WFBE_C_PLAYERS_AI_MAX` by `1.5` with `ceil`. With the default lobby value, `15` becomes `23`. |
-| `Client/GUI/GUI_Menu_BuyUnits.sqf:112-122` | Barracks upgrade scales the cap as `round(max/4)`, `round(max/4)*2`, `round(max/4)*3`, then full `max`. |
-| `Client/GUI/GUI_Menu_BuyUnits.sqf:123-128` | If the player's group is the commander team, the cap gets `+10`. |
+| `Client/GUI/GUI_Menu_BuyUnits.sqf:116-128` | Barracks upgrade scales the cap as `round(max/4)`, `round(max/4)*2`, `round(max/4)*3`, then full `max`. |
+| `Client/GUI/GUI_Menu_BuyUnits.sqf:130-140` | If the player's group is the commander team, the cap gets `+10`; the menu checks queued units plus live group units plus requested crew slots against the final cap. |
 | `Client/Client_UpdateRHUD.sqf:312-325` | RHUD mirrors the same visible max-units formula. |
 
 The cap is checked against live group units plus queued units. A solo player already counts as one live group unit, so the number of AI followers is usually `group cap - 1`.
@@ -26,28 +26,30 @@ Default lobby baseline: `GroupSizePlayer = 15`. Values below are AI followers fo
 ```text
 A2 Wasp Warfare - player AI follower caps
 
-Barracks        Normal player   Soldier slot   Soldier + Commander
-Level 0         3 AI            5 AI           15 AI
-Level 1         7 AI            11 AI          21 AI
-Level 2         11 AI           17 AI          27 AI
-Level 3         14 AI           22 AI          32 AI
+Barracks        Normal player   Commander   Soldier slot   Soldier + Commander
+Level 0         3 AI            13 AI       5 AI           15 AI
+Level 1         7 AI            17 AI       11 AI          21 AI
+Level 2         11 AI           21 AI       17 AI          27 AI
+Level 3         14 AI           24 AI       22 AI          32 AI
 ```
 
-| Barracks level | Normal player | Soldier slot | Soldier + Commander |
-| --- | ---: | ---: | ---: |
-| Level 0 | 3 AI | 5 AI | 15 AI |
-| Level 1 | 7 AI | 11 AI | 21 AI |
-| Level 2 | 11 AI | 17 AI | 27 AI |
-| Level 3 | 14 AI | 22 AI | 32 AI |
+| Barracks level | Normal player | Commander | Soldier slot | Soldier + Commander |
+| --- | ---: | ---: | ---: | ---: |
+| Level 0 | 3 AI | 13 AI | 5 AI | 15 AI |
+| Level 1 | 7 AI | 17 AI | 11 AI | 21 AI |
+| Level 2 | 11 AI | 21 AI | 17 AI | 27 AI |
+| Level 3 | 14 AI | 24 AI | 22 AI | 32 AI |
 
 Group-slot version, including the player:
 
-| Barracks level | Normal group cap | Soldier group cap | Soldier commander group cap |
-| --- | ---: | ---: | ---: |
-| Level 0 | 4 | 6 | 16 |
-| Level 1 | 8 | 12 | 22 |
-| Level 2 | 12 | 18 | 28 |
-| Level 3 | 15 | 23 | 33 |
+| Barracks level | Normal group cap | Commander group cap | Soldier group cap | Soldier commander group cap |
+| --- | ---: | ---: | ---: | ---: |
+| Level 0 | 4 | 14 | 6 | 16 |
+| Level 1 | 8 | 18 | 12 | 22 |
+| Level 2 | 12 | 22 | 18 | 28 |
+| Level 3 | 15 | 25 | 23 | 33 |
+
+Lobby/default note: the lobby parameters default AI teams and AI commander to off, while the fallback constants in `Init_CommonConstants.sqf` default them on if the parameter layer is absent. Do not use the fallback defaults as proof of live multiplayer settings unless the parameter include failed or was intentionally bypassed.
 
 ## Balance Suggestions
 
@@ -68,7 +70,7 @@ For a public server, the cleanest tuning lever is the lobby `WFBE_C_PLAYERS_AI_M
 
 - Do not use the unused `WFBE_C_PLAYERS_SKILL_SOLDIER_UNITS_MAX = 6` constant as proof of current behavior. The live Soldier cap path uses `ceil (1.5 * WFBE_C_PLAYERS_AI_MAX)`.
 - If `Skill_Init.sqf` ever runs more than once, Soldier cap inflation can compound. Current source calls `Skill_Init.sqf` once before `WFBE_SK_FNC_Apply`; keep [Client skill init idempotency](Client-Skill-Init-Idempotency) in the smoke plan.
-- Vehicle crew counts also consume group slots when selected in the buy menu.
+- Vehicle crew counts also consume group slots when selected in the buy menu (`Client_BuildUnit.sqf:216-235,237-240,364-460`); empty vehicles do not consume follower slots, but crewed heavy vehicles can fill a group quickly.
 
 ## Continue Reading
 

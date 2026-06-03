@@ -197,7 +197,7 @@ When `MenuAction == 1`, `GUI_Menu_BuyUnits.sqf` performs these checks before spa
 | Queue cap | Checks `WFBE_C_QUEUE_<type>` against `WFBE_C_QUEUE_<type>_MAX`. |
 | Factory queue text | Reads the selected building's `queu` variable to show immediate or queued purchase hint. |
 
-For the exact default AI-follower table and role-balance notes, use [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance). The important source rule is that the lobby player-AI cap is scaled by barracks level, Soldier slots apply a `1.5x` multiplier before that scaling, and commander team players get `+10` total group slots.
+For the exact default AI-follower table and role-balance notes, use [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance). The important source rule is that the lobby player-AI cap is scaled by barracks level, Soldier slots apply a `1.5x` multiplier before that scaling, and commander team players get `+10` total group slots. Vehicle crew selected in the buy menu consumes the same group cap, so a driver/gunner/commander/extra-turret purchase can fill several follower slots at once.
 
 If accepted:
 

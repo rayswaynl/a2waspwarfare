@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T01:15:32+02:00",
+  "generatedAt": "2026-06-04T01:24:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated the Progress Dashboard At A Glance reconciliation after the cheap scout wave publish so the visible handoff matches this machine status and the latest event feed.",
-      "nextExpectedOutput": "Pick the next bounded Feature Status or machine-ledger reconciliation item with exact source refs."
+      "currentWork": "Harvested the fallback scout wave after Spark quota was blocked again: promoted exact PV channel inventory fixes, corrected PLAYER_RADIATED direction, refreshed Player AI cap tables with the commander-only column, added crew-slot cap notes and clarified hosted-FPS original bug wording.",
+      "nextExpectedOutput": "Pick the next queued scout lead: economy reward/stringtable drift, UI alias/path cleanup, server ops runbook, AFK ops split or runtime telemetry checklist."
     },
     "Codex-2": {
       "status": "ready",
@@ -38,11 +38,17 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "Cheap scout wave is closed. Reports confirmed canonical wiki coverage across PV/direct channels, MASH/respawn, commander/HQ, integrations, modded mission caveats, tooling and support-special authority boundaries.",
+      "currentWork": "Fallback scout wave is closed. Five read-only scouts covered economy/supply, AI caps, networking/PV, UI/HUD and ops/runtime; clean PV/AI/ops findings were promoted and broader leads were queued.",
       "nextExpectedOutput": "No active sub-agent output pending."
     }
   },
   "laneSummary": [
+    {
+      "lane": "scout-wave-pv-ai-ops-harvest",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "output": "Spark quota was still blocked, so Codex ran five low-effort read-only scouts for economy/supply, AI caps, networking/PV, UI/HUD and ops/runtime. Promoted exact Public Variable Channel Index corrections for WFBE_Server_PV_SupplyMissionCompletedMessage, wfbe_supply_WEST/EAST, CBA_display_ingame_warnings and PLAYER_RADIATED direction; Networking now separates temp side-supply mutation from JIP mirror state; Player AI caps now include normal commander caps and refreshed line anchors; Factory/purchase notes crew-selected vehicles consume group cap; Hosted FPS labels the old busy-loop section as original bug shape. Remaining economy/UI/ops leads are queued, not treated as implemented."
+    },
     {
       "lane": "dashboard-at-a-glance-reconciliation",
       "owner": "Codex",
