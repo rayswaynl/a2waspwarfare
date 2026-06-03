@@ -11,7 +11,7 @@ switch (_action) do {
 		_changeTo = _this select 1;
 _helps = [
 //-------------------------------------Introductions
-"<t size='1.4' color='#2394ef' underline='true'>Introduction</t><br />
+"<t size='1.4' color='#b85f2a' underline='true'>Introduction</t><br />
 <br />
 <br />
 <br />
@@ -32,7 +32,7 @@ For optional victory-conditions, check parameters <br />
 <br />
 ",
 //----------------------------------------RESPAWN
-"<t size='1.4' color='#2394ef' underline='true'>Respawn</t><br />
+"<t size='1.4' color='#b85f2a' underline='true'>Respawn</t><br />
 <br />
 <br />
 <t size='1.2' color='#ffec1c' align='left'>Respawnpoints:</t><br />
@@ -54,14 +54,14 @@ You can spawn there, no matter where you die on map.<br />
 <br />
 <br />
 <br />
-<t size='1.4' color='#2394ef' underline='true'>So:</t><br /><br />
+<t size='1.4' color='#b85f2a' underline='true'>So:</t><br /><br />
 be careful when you die and where you die. Always be aware of your spawn-locations. <br />
 It might save time, if you wait with the attack on a town untill spawn is established. <br />
 An existing spawnpoint prevents players from having to travel all the way from base to town over and over again.<br />
 
 ",
 //--------------------------------------------------Towns
-"<t size='1.4' color='#2394ef' underline='true'>Towns</t><br />
+"<t size='1.4' color='#b85f2a' underline='true'>Towns</t><br />
 <br />
 <br />
 <br />
@@ -86,7 +86,7 @@ Most of explanations refer to default parameters. If params are changed, some ex
 <br />
 ",
 //------------------------------Base Structures
-"<t size='1.4' color='#2394ef' underline='true'>Base Structures and Functions</t><br />
+"<t size='1.4' color='#b85f2a' underline='true'>Base Structures and Functions</t><br />
 <br />
 <br />
 <br />
@@ -146,7 +146,7 @@ Usefull Fast Commands From Construction Menu:<br />
 ",
 //--------------------WarFare Info
 "<br />
-<t size='1.2' color='#2394ef' align='center'>Warfare WASP-AWESOME EDITION | v48 | - CO - Chernarus</t><br />
+<t size='1.2' color='#b85f2a' align='center'>Warfare WASP-AWESOME EDITION | v48 | - CO - Chernarus</t><br />
 <t align='center'>
 <br />
 <br />
@@ -204,7 +204,7 @@ Changelog (47): <br/>
 <br/>
 ",
 //--------------------Server Rules
-"<t size='1.4' color='#2394ef' underline='true'>SERVER RULES</t><br />
+"<t size='1.4' color='#b85f2a' underline='true'>SERVER RULES</t><br />
 <br />
 <br />
 <br />

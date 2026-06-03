@@ -405,15 +405,15 @@ while {alive player && dialog} do {
 						_classMagsAmount set [_findAt, (_classMagsAmount select _findAt) + 1];
 					};
 				} forEach _magazines;
-				_txt = "<t color='#42b6ff' shadow='1'>" + (localize 'STR_WF_UNITS_Weapons') + ":</t><br />";
+				_txt = "<t color='#d9763c' shadow='1'>" + (localize 'STR_WF_UNITS_Weapons') + ":</t><br />";
 				for [{_i = 0},{_i < count _weapons},{_i = _i + 1}] do {
 					_txt = _txt + "<t color='#eee58b' shadow='2'>" + ([(_weapons select _i),'displayName','CfgWeapons'] Call GetConfigInfo) + "</t>";
 					if ((_i+1) < count _weapons) then {_txt = _txt + "<t color='#D3A119' shadow='2'>,</t> "}; 
 				};
 				_txt = _txt + "<t color='#D3A119' shadow='2'></t><br /><br />";
-				_txt = _txt + "<t color='#42b6ff' shadow='1'>" + (localize 'STR_WF_UNITS_Magazines') + ":</t><br />";
+				_txt = _txt + "<t color='#d9763c' shadow='1'>" + (localize 'STR_WF_UNITS_Magazines') + ":</t><br />";
 				for [{_i = 0},{_i < count _MagsLabel},{_i = _i + 1}] do {
-					_txt = _txt + "<t color='#eee58b' shadow='2'>" + ((_MagsLabel select _i) + "</t> <t color='#42b6ff' shadow='1'>x</t><t color='#42b6ff' shadow='1'>" + str (_classMagsAmount select _i)) + "</t>";
+					_txt = _txt + "<t color='#eee58b' shadow='2'>" + ((_MagsLabel select _i) + "</t> <t color='#d9763c' shadow='1'>x</t><t color='#d9763c' shadow='1'>" + str (_classMagsAmount select _i)) + "</t>";
 					if ((_i+1) < count _MagsLabel) then {_txt = _txt + "<t color='#D3A119' shadow='2'>,</t> "}; 
 				};
 				_txt = _txt + "<t color='#D3A119' shadow='2'></t>";

@@ -158,14 +158,14 @@ while {alive player && dialog} do {
 			_funds = call WFBE_CL_FNC_GetClientFunds;
 			_supply = if (_currency_system == 0) then {(WFBE_Client_SideJoined) call WFBE_CO_FNC_GetSideSupply} else {9000000};
 			_html = "";
-			_html2 = "<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Dependencies:</t><br /><br />";
+			_html2 = "<t color='#d9763c' size='1.2' underline='1' shadow='1'>Dependencies:</t><br /><br />";
 			if (_upgrade_current < (_upgrade_levels select _id)) then {
 				_upgrade_supply = ((_upgrade_costs select _id) select _upgrade_current) select 0;
 				_upgrade_price = ((_upgrade_costs select _id) select _upgrade_current) select 1;
 				if (_currency_system == 0) then {
-					_html = Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>%1:</t><br /><br /><t color='#42b6ff' shadow='1'>Upgrade Level :</t><t shadow='1' align='right'><t color='#F5D363'>%2</t>/<t color='#F5D363'>%3</t></t><br /><t color='#42b6ff' shadow='1'>Needed Funds :</t><t shadow='1' align='right'><t color='#F5D363'>%4</t>/<t color='%5'>%6</t> $</t><br /><t color='#42b6ff' shadow='1'>Needed Supply :</t><t shadow='1' align='right'><t color='#F5D363'>%7</t>/<t color='%8'>%9</t> S</t><br /><t color='#42b6ff' shadow='1'>Needed Time :</t><t shadow='1' align='right'><t color='#F5D363'>%10</t> Seconds</t><br />",_upgrade_labels select _id,_upgrade_current, _upgrade_levels select _id,_upgrade_price,if(_funds >= _upgrade_price) then {'#76F563'} else {'#F56363'},_funds,_upgrade_supply,if(_supply >= _upgrade_supply) then {'#76F563'} else {'#F56363'},_supply,(_upgrade_times select _id) select _upgrade_current];
+					_html = Format["<t color='#d9763c' size='1.2' underline='1' shadow='1'>%1:</t><br /><br /><t color='#d9763c' shadow='1'>Upgrade Level :</t><t shadow='1' align='right'><t color='#F5D363'>%2</t>/<t color='#F5D363'>%3</t></t><br /><t color='#d9763c' shadow='1'>Needed Funds :</t><t shadow='1' align='right'><t color='#F5D363'>%4</t>/<t color='%5'>%6</t> $</t><br /><t color='#d9763c' shadow='1'>Needed Supply :</t><t shadow='1' align='right'><t color='#F5D363'>%7</t>/<t color='%8'>%9</t> S</t><br /><t color='#d9763c' shadow='1'>Needed Time :</t><t shadow='1' align='right'><t color='#F5D363'>%10</t> Seconds</t><br />",_upgrade_labels select _id,_upgrade_current, _upgrade_levels select _id,_upgrade_price,if(_funds >= _upgrade_price) then {'#76F563'} else {'#F56363'},_funds,_upgrade_supply,if(_supply >= _upgrade_supply) then {'#76F563'} else {'#F56363'},_supply,(_upgrade_times select _id) select _upgrade_current];
 				} else {
-					_html = Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>%1:</t><br /><br /><t color='#42b6ff' shadow='1'>Upgrade Level :</t><t shadow='1' align='right'><t color='#F5D363'>%2</t>/<t color='#F5D363'>%3</t></t><br /><t color='#42b6ff' shadow='1'>Needed Funds :</t><t shadow='1' align='right'><t color='#F5D363'>%4</t>/<t color='%5'>%6</t> $</t><br /><br /><t color='#42b6ff' shadow='1'>Needed Time :</t><t shadow='1' align='right'><t color='#F5D363'>%7</t> Seconds</t><br />",_upgrade_labels select _id,_upgrade_current, _upgrade_levels select _id,_upgrade_price,if(_funds >= _upgrade_price) then {'#76F563'} else {'#F56363'},_funds,(_upgrade_times select _id) select _upgrade_current];
+					_html = Format["<t color='#d9763c' size='1.2' underline='1' shadow='1'>%1:</t><br /><br /><t color='#d9763c' shadow='1'>Upgrade Level :</t><t shadow='1' align='right'><t color='#F5D363'>%2</t>/<t color='#F5D363'>%3</t></t><br /><t color='#d9763c' shadow='1'>Needed Funds :</t><t shadow='1' align='right'><t color='#F5D363'>%4</t>/<t color='%5'>%6</t> $</t><br /><br /><t color='#d9763c' shadow='1'>Needed Time :</t><t shadow='1' align='right'><t color='#F5D363'>%7</t> Seconds</t><br />",_upgrade_labels select _id,_upgrade_current, _upgrade_levels select _id,_upgrade_price,if(_funds >= _upgrade_price) then {'#76F563'} else {'#F56363'},_funds,(_upgrade_times select _id) select _upgrade_current];
 				};
 				_links = (_upgrade_links select _id) select _upgrade_current;
 				if (count _links > 0) then {
@@ -185,7 +185,7 @@ while {alive player && dialog} do {
 					_html2 = _html2 + "<t color='#76F563' shadow='1'>None</t>";
 				};
 			} else {
-				_html = Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>%1:</t><br /><br /><t color='#76F563' shadow='1'>The maximum upgrade level has been reached.</t>",_upgrade_labels select _id];
+				_html = Format["<t color='#d9763c' size='1.2' underline='1' shadow='1'>%1:</t><br /><br /><t color='#76F563' shadow='1'>The maximum upgrade level has been reached.</t>",_upgrade_labels select _id];
 				_html2 = _html2 + "<t color='#76F563' shadow='1'>None</t>";
 			};
 			((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504003) ctrlSetStructuredText (parseText _html);
@@ -241,22 +241,22 @@ while {alive player && dialog} do {
 									["RequestSpecial", ["upgrade-sync", WFBE_Client_SideJoined, _this select 0, _this select 1]] Call WFBE_CO_FNC_SendToServer;
 								};
 							};
-							hint parseText(Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Upgrading <t color='#B6F563'>%1</t> to level <t color='#F5D363'>%2</t></t>",_upgrade_labels select _id,_upgrade_current + 1]);
+							hint parseText(Format["<t color='#d9763c' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Upgrading <t color='#B6F563'>%1</t> to level <t color='#F5D363'>%2</t></t>",_upgrade_labels select _id,_upgrade_current + 1]);
 						} else {
-							hint parseText("<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>One or more <t color='#F56363'>dependencies</t> are needed in order to process this upgrade.");
+							hint parseText("<t color='#d9763c' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>One or more <t color='#F56363'>dependencies</t> are needed in order to process this upgrade.");
 						};
 					} else {
-						hint parseText(Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t> There is not enough resources to process this upgrade (<t color='#F56363'>Funds</t> or <t color='#F56363'>Supply</t>)</t>",_upgrade_labels select _id,_upgrade_current]);
+						hint parseText(Format["<t color='#d9763c' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t> There is not enough resources to process this upgrade (<t color='#F56363'>Funds</t> or <t color='#F56363'>Supply</t>)</t>",_upgrade_labels select _id,_upgrade_current]);
 					};
 				} else {
-					hint parseText("<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>The upgrade has reached it's <t color='#76F563'>maximum level</t></t>");
+					hint parseText("<t color='#d9763c' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>The upgrade has reached it's <t color='#76F563'>maximum level</t></t>");
 				};
 			} else {
 				// Marty: Name the running upgrade when another purchase is attempted.
 				_running_id = WFBE_Client_Logic getVariable "wfbe_upgrading_id";
 				if (isNil "_running_id") then {_running_id = -1};
 				_running_label = if (_running_id >= 0 && _running_id < count _upgrade_labels) then {_upgrade_labels select _running_id} else {"An upgrade"};
-				hint parseText(Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t><t color='#B6F563'>%1</t> is already running</t>", _running_label]);
+				hint parseText(Format["<t color='#d9763c' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t><t color='#B6F563'>%1</t> is already running</t>", _running_label]);
 			};
 		};
 	};
