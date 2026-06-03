@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T11:00:00+02:00",
+  "generatedAt": "2026-06-03T11:15:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published Progress-Dashboard.md status-drift recheck: Instructions-For-Codex item 46 was a stale false-positive because current source/Vanilla agree with the dashboard for client skill init idempotency, supply scan narrowing and hosted/server FPS loop exits.",
-      "nextExpectedOutput": "Continue with the next highest-value open Instructions item after the published status-drift recheck."
+      "currentWork": "Published Progress-Dashboard.md status-drift recheck and maintainability-leads routing: Instructions-For-Codex items 46 and 17 are closed against current source evidence.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 18: correct BattlEye filter documentation for Arma 2 OA and remove any remoteexec.txt missing-filter claims."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "maintainability-leads-routing",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 17 is resolved: Variable-And-Naming-Conventions.md and SQF-Code-Atlas.md now route dual helper naming, GetClosestEntity helper-family, copy-paste support/construction/loadout families and hardcoded English hint cleanup guidance."
+    },
     {
       "lane": "progress-dashboard-status-drift-recheck",
       "owner": "Codex",

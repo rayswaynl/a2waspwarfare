@@ -34,6 +34,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Marked item 46 as a stale false-positive for the Progress Dashboard; Arma smoke remains the runtime gate, but the docs status is not currently misreporting those three source patches.
 - Validation passed: `docs/validate-wiki.ps1`, `git diff --check`, JSON/JSONL parsing and docs/wiki-to-wiki mirror parity.
 
+## 2026-06-03 - Codex Documentation Finisher: Maintainability Leads Routing
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 17 by verifying the maintenance leads against source and routing them to existing owner pages instead of filing them as new gameplay defects.
+- Evidence checked: legacy short helper names and newer `WFBE_CO_FNC_*` helper names overlap in `Init_Common.sqf:24-63` and `:94-160`; `GetClosestEntity{,2,3,4}` is registered at `Init_Common.sqf:116-119`; support, construction and loadout sibling families are visible in `Client_Support*`, `Construction_*Site` and the ten `Common/Config/Loadout/Loadout_*.sqf` files.
+- Added the guidance to [Variable/naming conventions](Variable-And-Naming-Conventions) and [SQF code atlas](SQF-Code-Atlas), including hardcoded English hint examples as localization/UX cleanup notes rather than new broken-feature findings.
+
 ## 2026-06-03 - Codex Documentation Finisher: Progress Dashboard At A Glance Refresh
 
 - Claimed [Instructions for Codex](Instructions-For-Codex) item 10.

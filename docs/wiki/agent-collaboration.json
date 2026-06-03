@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T11:00:00+02:00",
+  "generatedAt": "2026-06-03T11:15:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "maintainability-leads-routing",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Variable-And-Naming-Conventions.md",
+        "docs/wiki/SQF-Code-Atlas.md",
+        "docs/wiki/Instructions-For-Codex.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_SupportRepair.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_SupportRefuel.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_SupportRearm.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_SupportHeal.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_SmallSite.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_MediumSite.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Loadout/Loadout_*.sqf"
+      ],
+      "outputs": [
+        "Routed verified maintainability leads into Variable/naming conventions and SQF code atlas",
+        "Marked Instructions-For-Codex item 17 complete without treating maintenance debt as a new gameplay defect"
+      ],
+      "handoff": "Maintainability routing is validated and published. Continue with Instructions-For-Codex item 18 BattlEye/remoteexec correction."
+    },
     {
       "lane": "progress-dashboard-status-drift-recheck",
       "owner": "Codex",
