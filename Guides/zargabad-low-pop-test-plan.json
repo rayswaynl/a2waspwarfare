@@ -71,7 +71,7 @@
     "Wake city, airfield and one outer farm with ground units; confirm town AI and static defenses activate, face useful approaches after the Zargabad orientation pass, fight, and clean up after inactivity.",
     "Capture camps and then a town from both WEST and EAST; confirm camp/town SV drains, resets on capture, and income ticks reflect ownership.",
     "Buy representative infantry, light, heavy, aircraft and airport units; confirm runtime buy menus match the statically validated compact Zargabad normal heavy/aircraft lists, exclude MBTs/MLRS/SPAAGs/attack helicopters/attack jets from normal factories, and make price multipliers feel sane.",
-    "Own Zargabad Airfield as WEST or EAST and wait for the black-market cache event; confirm crate/smoke spawn, ownership gating, RPT spawn evidence and RPT cleanup-release evidence.",
+    "Confirm the black-market armed RPT line appears after town init, then own Zargabad Airfield as WEST or EAST and wait for the black-market cache event; confirm crate/smoke spawn, ownership gating, RPT spawn evidence and RPT cleanup-release evidence.",
     "Run one HC-enabled smoke if headless client is used by the server and confirm town AI/static defense behavior does not regress."
   ],
   "expected": [
@@ -92,6 +92,10 @@
     {
       "type": "command-output",
       "summary": "dotnet build Tools/LoadoutManager/LoadoutManager.csproj --no-restore completed with existing warnings and 0 errors."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Zargabad_BlackMarket waits for server-side town init, logs its armed cache positions and delay/hold timing immediately, then later requires WEST/EAST ownership of Zargabad Airfield before surfacing a para-ammo cache."
     },
     {
       "type": "source-audit",

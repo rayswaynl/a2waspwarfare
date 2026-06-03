@@ -64,7 +64,7 @@ Claude/runtime tester should keep going until there is RPT and short note eviden
 | Economy | City/airfield are valuable without runaway snowball; farms/outskirts stay lower-value flank objectives. |
 | Factory lists/costs | Source/static validation proves exact compact WEST/EAST normal heavy/aircraft lists with MBTs, MLRS, SPAAGs, attack helicopters and attack jets excluded; runtime confirms buy-menu availability and price feel. |
 | Weapon/range pressure | Runtime audit shows missile range 2000, UAV range 800, town defense/mortar/patrol ranges 45/500/350, hangar range 35, and countermeasures 16/24; Claude confirms they feel sane on the smaller map. |
-| Mystery feature | Owning Zargabad Airfield can surface the black-market cache; RPT proves cache spawn and cleanup release. |
+| Mystery feature | RPT contains `Zargabad_BlackMarket.sqf: armed near Zargabad Airfield positions` after town init; owning Zargabad Airfield can surface the black-market cache; RPT proves cache spawn and cleanup release. |
 
 ## Commands For Evidence
 
@@ -118,6 +118,7 @@ Use `-AllowKnownDisconnectScoreErrors` only if the only RPT `ERROR` lines are th
 - RPT excerpt for `Init_Zargabad.sqf: Oriented [33] town defense logics toward linked town centers`.
 - RPT excerpt for the `Zargabad_RuntimeAudit.sqf` count/SV, base/static/wall with `centralWallGaps`, base static template, factory restriction, price multiplier/sample, and economy/range/weapon-pressure lines.
 - RPT excerpt for `Init_Zargabad.sqf: Base static runtime positions WEST ... EAST ...`, plus screenshot/coordinate notes for spawned position/facing and usable arcs.
+- RPT excerpt for `Zargabad_BlackMarket.sqf: armed near Zargabad Airfield positions` before waiting for the ownership-gated cache roll.
 - RPT excerpts for black-market cache surfacing and cleanup release.
 - Buy-menu notes for the exact compact normal factory lists: WEST heavy `M2A2_EP1/M2A3_EP1/BAF_FV510_D`, EAST heavy `M113_TK_EP1/BMP2_TK_EP1/T34_TK_EP1/BMP3`, WEST aircraft utility/light transport only, and EAST aircraft utility/light transport only.
 - Weapon/range notes for missile range, UAV spotting, town defense/mortar/patrol ranges, purchase hangar range, and reduced aircraft countermeasures.

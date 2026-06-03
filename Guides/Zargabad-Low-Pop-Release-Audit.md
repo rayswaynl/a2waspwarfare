@@ -86,7 +86,7 @@ Static validation currently proves the editor data shape, not tactical effective
 `Server/Module/Zargabad/Zargabad_BlackMarket.sqf` is a Zargabad-only airfield cache event:
 
 - Server-only and Zargabad-guarded.
-- Waits for town initialization.
+- Waits for server-side town initialization and logs its armed cache positions/timing before the random ownership-gated roll.
 - Requires WEST or EAST ownership of `Zargabad Airfield`.
 - Reuses existing side para-ammo arrays and smoke/trash handling.
 - Keeps the crate out of normal trash cleanup during the event, releases it after 300 seconds, and logs both the cache surfacing and cleanup release to RPT.

@@ -2,7 +2,7 @@ if (!isServer || !IS_zargabad_lowpop_map) exitWith {};
 
 Private ["_airfield", "_ammos", "_box", "_cachePositions", "_pos", "_side", "_sideID", "_smoke", "_type"];
 
-waitUntil {townInit && !isNil "towns"};
+waitUntil {townInitServer && !isNil "towns"};
 
 _airfield = objNull;
 {
@@ -18,6 +18,7 @@ _cachePositions = [
 	[4970,3890,0],
 	[3310,3865,0]
 ];
+["INFORMATION", Format ["Zargabad_BlackMarket.sqf: armed near Zargabad Airfield positions %1 delay [600,960] hold [300].", _cachePositions]] Call WFBE_CO_FNC_LogContent;
 
 while {true} do {
 	sleep (600 + random 360);

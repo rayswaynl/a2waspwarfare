@@ -73,6 +73,7 @@ Assert-Pattern "runtime audit reports Zargabad economy and range constants" $con
 Assert-Pattern "runtime audit reports Zargabad factory restrictions" $content 'Zargabad_RuntimeAudit\.sqf: factoryCounts WEST L/H/A/AP \[[0-9]+,3,7,2\] EAST L/H/A/AP \[[0-9]+,4,3,3\] forbiddenNormal \[\]'
 Assert-Pattern "runtime audit reports exact Zargabad compact factory lists" $content 'Zargabad_RuntimeAudit\.sqf: factoryLists WEST H .*M2A2_EP1.*M2A3_EP1.*BAF_FV510_D.* A .*MH6J_EP1.*UH60M_EP1.*UH60M_MEV_EP1.*CH_47F_EP1.*CH_47F_BAF.*BAF_Merlin_HC3_D.*AH6J_EP1.* EAST H .*M113_TK_EP1.*BMP2_TK_EP1.*T34_TK_EP1.*BMP3.* A .*UH1H_TK_EP1.*Mi17_TK_EP1.*Mi17_medevac_RU.*An2_TK_EP1'
 Assert-Pattern "runtime audit reports Zargabad price multipliers and samples" $content 'Zargabad_RuntimeAudit\.sqf: priceMultipliers .*0\.9.*1\.1.*1\.2.*1\.35.*1\.5.*0\.95.*priceSamples .*US_Soldier_EP1.*M1126_ICV_M2_EP1.*M2A2_EP1.*MH6J_EP1.*C130J_US_EP1'
+Assert-Pattern "black-market feature arms after town init" $content 'Zargabad_BlackMarket\.sqf: armed near Zargabad Airfield positions .*3930.*3995.*4100.*3825.*4235.*4040.*4970.*3890.*3310.*3865.* delay \[600,960\] hold \[300\]'
 Assert-Pattern "server initialization ends" $content 'Init_Server\.sqf: Server initialization ended'
 
 if ($RequireJip) {
