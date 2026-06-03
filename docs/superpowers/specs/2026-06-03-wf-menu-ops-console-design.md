@@ -58,6 +58,14 @@ the macro being replaced.
 
 **Felt change:** blue → orange accent, black → gunmetal, gold → bone, green-sub → olive.
 
+### 5.1 Intent: dark and gritty — orange is sparing (locked)
+
+The overall impression **must stay dark to match the grit of the game.** Backgrounds remain near-black
+(gunmetal bodies, steel bands); **orange is a hot accent only** — used on titles, selection highlights,
+focus states, and thin accent rules, never as a large background fill. Button *rest* state = dark steel;
+*focus/hover* = orange. If a choice is ever between "more orange" and "darker," choose darker. The result
+should read as a dim ops-console with orange embers, not an orange UI.
+
 ## 6. Typography (bundled fonts only — zero cost)
 
 | Surface | Font | Rationale |
