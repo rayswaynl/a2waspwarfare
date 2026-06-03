@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T12:55:00+02:00",
+  "generatedAt": "2026-06-03T13:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Instructions-For-Codex item 24: Variable-And-Naming-Conventions now treats WFBE_CO_FNC_* as mostly-common shared names with early/server compile exceptions, documents wfbe_funds as team/group state and moves legacy queu out of the wfbe_* example row.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 25: batch-2 recovery corrections across Modules-Atlas and Economy-Towns-And-Supply."
+      "currentWork": "Closed Instructions-For-Codex item 25: Modules-Atlas now separates generic AT missile vs IRS handlers, fixes CM vanilla/OA wording, changes Soldier from double team size to 1.5x AI cap and treats CIPHER_Sort.sqf as an ExecVM data-prep script; Economy-Towns-And-Supply already had the dead delivery-funds constant note.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 30: claimed-patched/unmerged status drift recheck across DR-19 and DR-39 remediation pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "batch2-modules-economy-recovery",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 25 is resolved: Modules-Atlas.md now separates generic HandleATMissiles from IRS-specific incomingMissile handling, fixes CM vanilla/OA wording, changes Soldier skill to 1.5x AI cap and treats CIPHER_Sort.sqf as an ExecVM data-prep script; Economy-Towns-And-Supply.md already had the dead delivery-funds constant note."
+    },
     {
       "lane": "variable-naming-prefix-ownership",
       "owner": "Codex",

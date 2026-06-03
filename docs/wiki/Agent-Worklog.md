@@ -1359,3 +1359,11 @@ Key conclusions:
 - Closed [Instructions for Codex](Instructions-For-Codex) item 24 by source-checking [Variable/naming conventions](Variable-And-Naming-Conventions) against `initJIPCompatible.sqf`, `Init_Common.sqf`, `Init_Server.sqf`, `Common_ChangeTeamFunds.sqf` and the factory queue keys.
 - Corrected `WFBE_CO_FNC_*` from an exclusive `Init_Common.sqf` compile family to mostly-common shared names with early `WFBE_CO_FNC_LogContent` and server-compiled AFK/game-end/HC delegation exceptions.
 - Corrected lowercase `wfbe_*` ownership to include team/group objects for `wfbe_funds`, and moved `"queu"` into a separate non-prefixed legacy-key note.
+
+# 2026-06-03 - Batch-2 Modules/Economy Recovery
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 25 by source-checking [Modules atlas](Modules-Atlas) and [Economy towns and supply](Economy-Towns-And-Supply).
+- Corrected [Modules atlas](Modules-Atlas): `Client_BuildUnit.sqf:342` is the generic `HandleATMissiles` handler, while `:356` is the IRS-specific `WFBE_CO_MOD_IRS_OnIncomingMissile` handler.
+- Corrected CM wording: `CM_Init.sqf` is vanilla-gated at client init, but the aircraft CM-removal block at `Client_BuildUnit.sqf:275-283` is the OA/non-vanilla path.
+- Corrected Soldier skill from "double team size" to `ceil(1.5 * WFBE_C_PLAYERS_AI_MAX)` at `Skill_Init.sqf:49`, and corrected CIPHER wording so `CIPHER_Sort.sqf` is an `ExecVM`d data-prep script using compiled `CIPHER_SortArrayIndex`.
+- Rechecked [Economy towns and supply](Economy-Towns-And-Supply): it already states that `WFBE_C_PLAYERS_SUPPLY_TRUCKS_DELIVERY_FUNDS_COEF` is defined but unused and the personal cash award uses raw `_supplyAmount`.

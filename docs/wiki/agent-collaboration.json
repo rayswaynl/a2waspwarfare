@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T12:55:00+02:00",
+  "generatedAt": "2026-06-03T13:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "batch2-modules-economy-recovery",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Modules-Atlas.md",
+        "docs/wiki/Economy-Towns-And-Supply.md",
+        "docs/wiki/Instructions-For-Codex.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Init.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Upgrades/Labels_Upgrades.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Module/CIPHER/CIPHER_Init.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Module/CIPHER/CIPHER_Sort.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionCompletedMessage.sqf"
+      ],
+      "outputs": [
+        "Marked Instructions-For-Codex item 25 complete",
+        "Corrected Modules-Atlas generic AT versus IRS, CM vanilla/OA, Soldier skill and CIPHER script wording",
+        "Rechecked Economy-Towns-And-Supply dead delivery-funds constant note as already current"
+      ],
+      "handoff": "Continue with Instructions-For-Codex item 30: claimed-patched/unmerged status drift recheck across DR-19 and DR-39 remediation pages."
+    },
     {
       "lane": "variable-naming-prefix-ownership",
       "owner": "Codex",
