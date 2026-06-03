@@ -27,7 +27,7 @@ Claude/runtime tester should keep going until there is RPT and short note eviden
 | Town init | RPT contains `Init_Server.sqf: Town starting mode is done`. |
 | Zargabad init | RPT contains `Init_Zargabad.sqf: Spawn fortifications, central wall gaps, and side defenses are placed`. |
 | Edge guard init | RPT contains `Zargabad_EdgeGuard.sqf: outer [120]m rim timeout [45]s safe range [325]m`. |
-| Runtime audit | RPT contains `Zargabad_RuntimeAudit.sqf` lines with 13 towns, 19 camps, 1 airport, 33 defenses, start SV 185, max SV 648, factory restriction counts, price multipliers/samples, and the Zargabad economy/range constants. |
+| Runtime audit | RPT contains `Zargabad_RuntimeAudit.sqf` lines with 13 towns, 19 camps, 1 airport, 33 defenses, start SV 185, max SV 648, base/static/wall counts, factory restriction counts, price multipliers/samples, and the Zargabad economy/range constants. |
 | JIP | A second client joins after time > 30 and RPT shows player join/JIP storage; markers and town colors still match current ownership. |
 | HC | If the server uses HC, RPT shows `Headless client is now connected` and town AI/static defense still wakes. |
 | Base safety | WEST/EAST starts cannot trivially spawn-kill each other or suppress city routes from spawn. |
@@ -82,7 +82,7 @@ Use `-AllowKnownDisconnectScoreErrors` only if the only RPT `ERROR` lines are th
 - Screenshot or coordinates for WEST/EAST start sightlines.
 - Screenshot or coordinates for the central wall gaps that were driven/walked through.
 - RPT excerpt for edge-guard init and, if tested, removal.
-- RPT excerpt for the `Zargabad_RuntimeAudit.sqf` count/SV, factory restriction, price multiplier/sample, and economy/range lines.
+- RPT excerpt for the `Zargabad_RuntimeAudit.sqf` count/SV, base/static/wall, factory restriction, price multiplier/sample, and economy/range lines.
 - RPT excerpt for black-market cache surfacing.
 - Any observed town where static defenses face the wrong route or block normal movement.
 - Any economy issue where city/airfield income or vehicle pricing snowballs too fast in a 5v5-style test.

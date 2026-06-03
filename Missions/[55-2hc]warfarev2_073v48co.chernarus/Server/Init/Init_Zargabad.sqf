@@ -11,6 +11,7 @@ _baseWalls = [
 	["Land_HBarrier_large",[-55,55,0],135],["Land_HBarrier_large",[-70,25,0],90],
 	["Land_HBarrier_large",[-70,-25,0],90]
 ];
+missionNamespace setVariable ["WFBE_ZARGABAD_BASE_WALL_COUNT", count _baseWalls];
 
 _mgWall = missionNamespace getVariable ["WFBE_NEURODEF_MG", []];
 _centralWall = [];
@@ -38,6 +39,7 @@ _buildBase = {
 	_logic = (_side Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_startpos";
 	if (isNil "_logic" || {isNull _logic}) exitWith {};
 	_pos = getPos _logic;
+	missionNamespace setVariable [Format ["WFBE_ZARGABAD_BASE_POS_%1", _side], _pos];
 	_origin = (createGroup sideLogic) createUnit ["Logic", _pos, [], 0, "NONE"];
 	_origin setDir _dir;
 
@@ -52,6 +54,7 @@ _buildBase = {
 	} else {
 		[["KORD_high_TK_EP1",[-45,0,0],270],["KORD_high_TK_EP1",[45,0,0],90],["Metis_TK_EP1",[0,-58,0],180],["Igla_AA_pod_TK_EP1",[0,58,0],0]]
 	};
+	missionNamespace setVariable [Format ["WFBE_ZARGABAD_BASE_STATIC_COUNT_%1", _side], count _statics];
 
 	{
 		_pos = _origin modelToWorld (_x select 1);

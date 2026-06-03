@@ -98,15 +98,15 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/Validate-ZargabadRuntimeEvidence.ps1 is ready for Claude/runtime RPT validation and checks server/town/Zargabad/edge-guard/runtime-audit init, expected runtime count/SV/factory restriction/price multiplier/economy/range evidence, optional JIP/HC/edge-removal/black-market evidence, and common missing-script/dependency/expression failures."
+      "summary": "Tools/Validate-ZargabadRuntimeEvidence.ps1 is ready for Claude/runtime RPT validation and checks server/town/Zargabad/edge-guard/runtime-audit init, expected runtime count/SV/base/fortification/factory restriction/price multiplier/economy/range evidence, optional JIP/HC/edge-removal/black-market evidence, and common missing-script/dependency/expression failures."
     },
     {
       "type": "source-audit",
-      "summary": "Tools/New-ZargabadRuntimeReport.ps1 generates a Codex-ready markdown report with gate state, failure scan, key RPT excerpts, validator output, and Claude note prompts."
+      "summary": "Tools/New-ZargabadRuntimeReport.ps1 generates a Codex-ready markdown report with gate state, base/fortification audit state, failure scan, key RPT excerpts, validator output, and Claude note prompts."
     },
     {
       "type": "source-audit",
-      "summary": "Zargabad_RuntimeAudit logs runtime towns/camps/airports/defenses, start/max SV totals, factory restriction counts, price multiplier/sample values, and smaller-map economy/range/base-defense/edge-guard constants into RPT."
+      "summary": "Zargabad_RuntimeAudit logs runtime towns/camps/airports/defenses, start/max SV totals, WEST/EAST base positions and separation, base static/wall counts, factory restriction counts, price multiplier/sample values, and smaller-map economy/range/base-defense/edge-guard constants into RPT."
     },
     {
       "type": "source-audit",
@@ -119,6 +119,6 @@
   ],
   "result": "partial",
   "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports.",
-  "updatedAt": "2026-06-03T02:28:00+02:00",
+  "updatedAt": "2026-06-03T02:45:00+02:00",
   "updatedBy": "Codex"
 }
