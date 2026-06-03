@@ -232,7 +232,9 @@ The `RequestSpecial`→`Server_HandleSpecial` path must validate: side, upgrade 
 1. **Spike** (½ day) — prove one crewless airframe loiters a clean circle server-side. De-risks everything.
 2. **v1 core** — map-click launch + 5-ship package + flare screen + acquire + staggered hard-kill dives (`Sh_125_HE`) + Stuka dive siren + `.50` survivability + cap/despawn. Reuse UAV/Air gate. Mirror balance. Mid-tier cost. **Shippable.**
 3. **Juice pass** — smoke contrails, looped drone buzz, announcer/radio calls, impact-chain FX, FPV money-shot cam.
-4. **Follow-ups** (separate PRs): reveal-on-bait (paint the AA on the team map when it fires), laser-designate (Option C — `LaserTarget` homing), operator FPV cam (Option 2 money-shot).
+4. **Follow-ups** (separate PRs): laser-designate (Option C — `LaserTarget` homing), operator FPV cam (Option 2 money-shot).
+
+> **Decision 2026-06-03 — reveal-on-bait CUT.** It was prototyped in the hardening pass (shooting a drone pinged the shooter onto the attacker's team map, reusing `uav-reveal`) but **rejected as too punishing vs AA**. Removed from the build; the fair counterplay (scatter, `.50`-cal+ shoot-down, concurrent cap) is unchanged.
 
 ## 12. To confirm at build time
 
