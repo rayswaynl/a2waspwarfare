@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T14:55:00+02:00",
+  "generatedAt": "2026-06-03T22:25:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed branch-scoped source-status docs so docs/source propagation is separated from stable master and release/2026-06-feature-bundle coverage for hosted FPS, supply scan narrowing, client Skill_Init and paratrooper markers.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: machine-readable stale-status cleanup, owner-decision consolidation, or another P0/P1 accuracy drift with exact source refs."
+      "currentWork": "Refreshed machine-readable ledgers so docs/source propagation is separated from stable master and release/2026-06-feature-bundle coverage for hosted FPS, supply scan narrowing, client Skill_Init and paratrooper markers.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: owner-decision consolidation, another P0/P1 accuracy drift with exact source refs, or deeper release/readiness smoke planning."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "machine-ledger-branch-scope-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "agent-release-readiness.json, agent-feature-status.jsonl, agent-hardening-backlog.jsonl, agent-context.json, agent-entrypoint.json and Development-Lessons-Learned now mirror the branch matrix. They distinguish docs/source propagation from stable master absence and release a9219d88 partial coverage for hosted FPS, supply scan narrowing, client Skill_Init and paratrooper marker registration."
+    },
     {
       "lane": "source-status-branch-matrix-refresh",
       "owner": "Codex",

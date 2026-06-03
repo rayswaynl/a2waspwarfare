@@ -1,8 +1,8 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-02T16:39:06+02:00",
-  "lastVerifiedAt": "2026-06-02T16:39:06+02:00",
-  "purpose": "Machine-readable release-readiness ledger for source fixes, generated mission propagation and Arma 2 OA smoke gates.",
+  "generatedAt": "2026-06-03T22:25:00+02:00",
+  "lastVerifiedAt": "2026-06-03T22:25:00+02:00",
+  "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
   "generatedTargets": [
@@ -20,7 +20,11 @@
     "requirement": "Run from a checkout with either an ancestor folder named a2waspwarfare or repo-root markers: Missions, Missions_Vanilla and Tools/LoadoutManager/LoadoutManager.csproj.",
     "skipZipForPropagationOnly": {
       "environmentVariable": "A2WASP_SKIP_ZIP",
-      "acceptedValues": ["1", "true", "yes"],
+      "acceptedValues": [
+        "1",
+        "true",
+        "yes"
+      ],
       "effect": "Skips _MISSIONS.7z packaging after generation/copy."
     },
     "evidenceRefs": [
@@ -34,8 +38,8 @@
     "checkedAt": "2026-06-02T16:18:32+02:00",
     "checkedBy": "Codex",
     "command": "$env:A2WASP_SKIP_ZIP = \"1\"; dotnet run --project Tools\\LoadoutManager\\LoadoutManager.csproj",
-    "scope": "Generated/copied Chernarus and maintained Vanilla Takistan after source fixes.",
-    "result": "All five tracked source fixes are present in Chernarus and propagated to maintained Vanilla Takistan; Arma 2 OA smoke remains pending.",
+    "scope": "Generated/copied Chernarus and maintained Vanilla Takistan on the docs/source branch after source fixes.",
+    "result": "All five tracked fixes are present in docs/source Chernarus and propagated to docs/source maintained Vanilla Takistan; this is not a stable-master or release-branch guarantee, and Arma 2 OA smoke remains pending.",
     "packagingStatus": "skipped-by-A2WASP_SKIP_ZIP",
     "nonFatalWarnings": [
       {
@@ -46,13 +50,13 @@
     ],
     "canonicalDoc": "Source-Fix-Propagation-Queue.md#latest-propagation-run"
   },
-  "globalReleaseRule": "A source fix is not release-complete until the Chernarus source patch is present, LoadoutManager propagation has run, generated diffs are inspected and the relevant Arma 2 OA smoke is recorded.",
+  "globalReleaseRule": "A fix is not release-complete until the target branch is named, Chernarus source carries the intended change, maintained Vanilla carries the same intended change when propagation matters, generated diffs are inspected and the relevant Arma 2 OA smoke is recorded.",
   "sourceOnlyFixes": [
     {
       "id": "paratrooper-marker-revival",
       "priority": "P2",
-      "sourceStatus": "patched",
-      "vanillaStatus": "propagated-diff-inspected",
+      "sourceStatus": "docs-source-carries-change",
+      "vanillaStatus": "docs-source-vanilla-carries-change",
       "smokeStatus": "pending",
       "canonicalDocs": [
         "Paratrooper-Marker-Revival.md",
@@ -64,13 +68,19 @@
         "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_PublicVariables.sqf:39",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_Paratroopers.sqf:117"
       ],
-      "releaseGate": "Trigger paratrooper support and confirm the client marker appears without an unregistered-client-PVF error."
+      "releaseGate": "Trigger paratrooper support and confirm the client marker appears without an unregistered-client-PVF error.",
+      "branchStatus": {
+        "stableMaster": "absent",
+        "releaseBranch": "absent-in-chernarus-and-vanilla",
+        "docsSource": "chernarus-and-vanilla-carry-registration",
+        "evidence": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+      }
     },
     {
       "id": "client-skill-init-idempotency",
       "priority": "P2",
-      "sourceStatus": "patched",
-      "vanillaStatus": "propagated-diff-inspected",
+      "sourceStatus": "docs-source-carries-change",
+      "vanillaStatus": "docs-source-vanilla-carries-change",
       "smokeStatus": "pending",
       "canonicalDocs": [
         "Client-Skill-Init-Idempotency.md",
@@ -84,13 +94,19 @@
         "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf:571",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Init.sqf:49"
       ],
-      "releaseGate": "Smoke Soldier/non-Soldier AI caps and respawn skill reapply."
+      "releaseGate": "Smoke Soldier/non-Soldier AI caps and respawn skill reapply.",
+      "branchStatus": {
+        "stableMaster": "duplicate-skill-init-remains",
+        "releaseBranch": "duplicate-skill-init-remains-in-chernarus-and-vanilla",
+        "docsSource": "single-init-in-chernarus-and-vanilla",
+        "evidence": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+      }
     },
     {
       "id": "hosted-server-fps-loop-sleep",
       "priority": "P2",
-      "sourceStatus": "patched",
-      "vanillaStatus": "propagated-diff-inspected",
+      "sourceStatus": "docs-source-carries-change",
+      "vanillaStatus": "docs-source-vanilla-carries-change",
       "smokeStatus": "pending",
       "canonicalDocs": [
         "Hosted-Server-FPS-Loop-Sleep.md",
@@ -103,13 +119,19 @@
         "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/GUI/serverFpsGUI.sqf:1",
         "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/serverFPS/monitorServerFPS.sqf:1"
       ],
-      "releaseGate": "Smoke dedicated FPS publishing and confirm hosted/listen servers do not spin the FPS publisher loops."
+      "releaseGate": "Smoke dedicated FPS publishing and confirm hosted/listen servers do not spin the FPS publisher loops.",
+      "branchStatus": {
+        "stableMaster": "old-loop-shape-remains",
+        "releaseBranch": "chernarus-only-vanilla-old-loop-shape",
+        "docsSource": "chernarus-and-vanilla-early-exit",
+        "evidence": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+      }
     },
     {
       "id": "supply-mission-scan-narrowing",
       "priority": "P2",
-      "sourceStatus": "patched",
-      "vanillaStatus": "propagated-diff-inspected",
+      "sourceStatus": "docs-source-carries-change",
+      "vanillaStatus": "docs-source-vanilla-carries-change",
       "smokeStatus": "pending",
       "canonicalDocs": [
         "Supply-Mission-Scan-Narrowing.md",
@@ -120,13 +142,19 @@
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf:25-28",
         "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/supplyMission/supplyMissionStarted.sqf:25-28"
       ],
-      "releaseGate": "Smoke delivery at a real command center and no completion near unrelated objects."
+      "releaseGate": "Smoke delivery at a real command center and no completion near unrelated objects.",
+      "branchStatus": {
+        "stableMaster": "broad-command-center-scan-remains",
+        "releaseBranch": "chernarus-only-vanilla-broad-scan",
+        "docsSource": "chernarus-and-vanilla-narrowed-scan",
+        "evidence": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+      }
     },
     {
       "id": "supply-player-object-list-indexing",
       "priority": "P1",
-      "sourceStatus": "patched",
-      "vanillaStatus": "propagated-diff-inspected",
+      "sourceStatus": "docs-source-carries-change",
+      "vanillaStatus": "docs-source-vanilla-carries-change",
       "smokeStatus": "pending",
       "canonicalDocs": [
         "Player-Join-Disconnect-And-AntiStack-Lifecycle.md",
@@ -139,39 +167,64 @@
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf:57",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionActive.sqf:51"
       ],
-      "releaseGate": "Smoke reconnect/JIP player-object replacement and supply mission completion lookup."
+      "releaseGate": "Smoke reconnect/JIP player-object replacement and supply mission completion lookup.",
+      "branchStatus": {
+        "stableMaster": "not-rechecked-in-2026-06-03-branch-matrix",
+        "releaseBranch": "not-rechecked-in-2026-06-03-branch-matrix",
+        "docsSource": "chernarus-and-vanilla-carry-index-initialization",
+        "evidence": "Source-Fix-Propagation-Queue.md#latest-propagation-run"
+      }
     }
   ],
   "patchReadyNotSourcePatched": [
     {
       "id": "factory-queue-counter-token-cleanup",
       "canonicalDoc": "Factory-Queue-Counter-Token-Cleanup.md",
-      "status": "patch-ready-not-source-patched"
+      "status": "patch-ready-not-current-code-change"
     },
     {
       "id": "commander-reassignment-call-shape",
       "canonicalDoc": "Commander-Reassignment-Call-Shape.md",
-      "status": "patch-ready-not-source-patched"
+      "status": "patch-ready-not-current-code-change"
     },
     {
       "id": "gear-template-profile-filter",
       "canonicalDoc": "Gear-Template-Profile-Filter.md",
-      "status": "patch-ready-not-source-patched"
+      "status": "patch-ready-not-current-code-change"
     },
     {
       "id": "vehicle-cargo-equip-loop-bounds",
       "canonicalDoc": "Vehicle-Cargo-Equip-Loop-Bounds.md",
-      "status": "patch-ready-not-source-patched"
+      "status": "patch-ready-not-current-code-change"
     },
     {
       "id": "service-menu-affordability-guards",
       "canonicalDoc": "Service-Menu-Affordability-Guards.md",
-      "status": "patch-ready-not-source-patched"
+      "status": "patch-ready-not-current-code-change"
     },
     {
       "id": "wasp-marker-wait-cleanup",
       "canonicalDoc": "WASP-Marker-Wait-Cleanup.md",
-      "status": "opportunity-not-source-patched"
+      "status": "opportunity-not-current-code-change"
     }
-  ]
+  ],
+  "branchScope": {
+    "checkedAt": "2026-06-03T22:05:00+02:00",
+    "docsSource": {
+      "commit": "4163faba",
+      "branch": "docs/developer-wiki-index",
+      "meaning": "Chernarus and maintained Vanilla carry the documented propagation batch."
+    },
+    "stableMaster": {
+      "commit": "2cdf5fb8",
+      "branch": "origin/master",
+      "meaning": "Stable baseline; does not carry hosted FPS loop exit, supply scan narrowing, client Skill_Init idempotency or paratrooper marker registration."
+    },
+    "releaseBranch": {
+      "commit": "a9219d88",
+      "branch": "origin/release/2026-06-feature-bundle",
+      "meaning": "Chernarus-only for hosted FPS and supply scan narrowing; lacks client Skill_Init idempotency and paratrooper marker registration in both maintained missions."
+    },
+    "canonicalDoc": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+  }
 }

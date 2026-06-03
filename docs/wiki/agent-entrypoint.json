@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-entrypoint-v1",
-  "generatedAt": "2026-06-02T17:35:00+02:00",
+  "generatedAt": "2026-06-03T22:25:00+02:00",
   "repo": {
     "owner": "rayswaynl",
     "name": "a2waspwarfare",
@@ -11,9 +11,10 @@
   "statusConvention": {
     "sourceStatus": [
       "master_current",
+      "docs_source_propagated_smoke_pending",
+      "release_branch_partial",
       "proposed_no_branch",
       "proposed_pr",
-      "propagated_smoke_pending",
       "shipped_master",
       "owner_decision",
       "superseded"
@@ -55,8 +56,9 @@
     },
     {
       "id": "source-fix-propagation-queue",
-      "status": "propagated_smoke_pending",
-      "page": "Source-Fix-Propagation-Queue.md"
+      "status": "docs_source_propagated_smoke_pending",
+      "page": "Source-Fix-Propagation-Queue.md",
+      "branchScope": "See agent-release-readiness.json branchScope and Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix; do not infer stable master or release branch completion."
     }
   ],
   "machineFiles": {
@@ -73,6 +75,6 @@
     "Run docs/validate-wiki.ps1 from the repo root.",
     "Parse all docs/wiki/*.json and docs/wiki/*.jsonl.",
     "Keep docs/wiki and the GitHub wiki checkout in parity before publishing.",
-    "Any shipped_master or source-patched claim must cite branch/commit evidence or a source assertion."
+    "Any shipped_master, release-ready, or source-status claim must cite branch/commit evidence and Chernarus/Vanilla line-shape proof when propagation matters."
   ]
 }

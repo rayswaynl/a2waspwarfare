@@ -78,6 +78,12 @@ The lifecycle boot path uses hand-rolled `waitUntil` barriers instead of engine-
 
 Development rule: before moving or patching lifecycle waits, cite both the consumer wait and the producer set/publicVariable. Do not copy the 30-second retry language onto raw `waitUntil` gates unless the code actually retries. Use [Lifecycle wait-chain](Lifecycle-Wait-Chain#post-join-wait-audit) as the owner table for condition, producer, timeout/logging and failure mode.
 
+## Lesson 9: Machine Ledgers Need Branch Scope, Not Just Fix Scope
+
+Human pages can be correct while JSON/JSONL agent ledgers still mislead future agents. The 2026-06-03 branch matrix found that docs/source `HEAD` `4163faba` carries hosted FPS loop exits, supply command-center scan narrowing, client `Skill_Init` idempotency and paratrooper marker registration in both maintained missions, while stable `origin/master` `2cdf5fb8` carries none of those four shapes. Release `origin/release/2026-06-feature-bundle` `a9219d88` is mixed: Chernarus carries FPS/supply scan changes, release Vanilla does not, and the release branch still lacks client `Skill_Init` idempotency plus paratrooper marker registration in both maintained missions.
+
+Development rule: a machine record that says `patched`, `propagated`, `release-ready` or similar must name the branch/commit it describes and whether Chernarus and maintained Vanilla both carry the same line shape. If branch scope is missing, treat the record as a lead and re-open [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-03-branch-matrix) before planning code work.
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |
