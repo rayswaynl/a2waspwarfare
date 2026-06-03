@@ -28,8 +28,8 @@ What was read:
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Actions/Officer_Undeploy_MASH.sqf:19-21`
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf:128-132`
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf:70`
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/MASH/MASHMarker.sqf:1-11`
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/MASH/receiverMASHmarker.sqf:1-28`
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/MASH/MASHMarker.sqf:1-13`
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/MASH/receiverMASHmarker.sqf:1-29`
 
 What the code does:
 

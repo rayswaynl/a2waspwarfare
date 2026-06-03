@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Abandoned Feature MASH Range Fix
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 41.
+- Source-checked `Client/Module/MASH/receiverMASHmarker.sqf:1-29` and `Server/Module/MASH/MASHMarker.sqf:1-13`.
+- Corrected [Abandoned feature revival](Abandoned-Feature-Revival-Review) evidence ranges only; the dead MASH marker feature conclusion remains unchanged.
+
 ## 2026-06-03 - Codex Documentation Finisher: Status Drift Remediation Pages
 
 - Closed [Instructions for Codex](Instructions-For-Codex) items 36 and 38-40.

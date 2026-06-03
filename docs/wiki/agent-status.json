@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T14:15:00+02:00",
+  "generatedAt": "2026-06-03T14:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Instructions-For-Codex items 36 and 38-40: remediation pages now distinguish branch-local/Vanilla propagated status from origin/master and patch-ready/source-unpatched status.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 41: Abandoned-Feature-Revival-Review MASH marker range fixes."
+      "currentWork": "Closed Instructions-For-Codex item 41: Abandoned-Feature-Revival-Review now cites receiverMASHmarker.sqf:1-29 and MASHMarker.sqf:1-13.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 47: Pending-Owner-Decisions PVF dispatcher path and GearYouUnit typo correction."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "abandoned-feature-mash-range-fix",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 41 is resolved: Abandoned-Feature-Revival-Review.md now cites receiverMASHmarker.sqf:1-29 and MASHMarker.sqf:1-13 while preserving the dead MASH marker conclusion."
+    },
     {
       "lane": "status-drift-remediation-pages",
       "owner": "Codex",

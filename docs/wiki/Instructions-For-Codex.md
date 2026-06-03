@@ -109,7 +109,7 @@ Read-only wiki↔source audit of 7 playbook/index pages (~190 claims, 29 confirm
 
 40. ✅ **[Paratrooper marker revival](Paratrooper-Marker-Revival) — branch scope corrected.** The page now says this docs branch and maintained Vanilla register `HandleParatrooperMarkerCreation` at `Init_PublicVariables.sqf:39`, while `origin/master` still has `NukeIncoming` at `:39` and no paratrooper-marker client PVF registration.
 
-41. **[Abandoned feature revival review](Abandoned-Feature-Revival-Review) — LOW (page otherwise accurate).** `receiverMASHmarker.sqf` cited `:1-28` (file ends `:29`); `MASHMarker.sqf` cited `:1-11` (ends `:13`). The dead-feature claims themselves check out. *Acceptance:* minor range fixes.
+41. ✅ **[Abandoned feature revival review](Abandoned-Feature-Revival-Review) — MASH marker ranges corrected.** The MASH evidence list now cites `receiverMASHmarker.sqf:1-29` and `MASHMarker.sqf:1-13`. The dead-feature claims themselves remain unchanged.
 
 ## Batch-8 consistency findings — document / correct (2026-06-02, Claude) — COMPLETES content coverage
 
