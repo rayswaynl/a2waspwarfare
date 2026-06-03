@@ -172,61 +172,49 @@ processInitCommands;
                     [_this select 0, _this select 1, _this select 2] spawn WFBE_DroneSpoofMissile;
                 };
             }];
-            while {alive _d && time < (_endT + 25)} do {
-                if (_enhanced) then { _loiterAng = _loiterAng + 28; _pilot doMove [(_dest select 0) + _zoneR * sin _loiterAng, (_dest select 1) + _zoneR * cos _loiterAng, 0]; } else { _pilot doMove _loiterPt; };
-                "F_40mm_White" createVehicle (getPosATL _d);   //--- conspicuous flare pop.
-                if (_enhanced) then {[nil, "HandleSpecial", ["drone-fx", "flarepop", _d]] Call WFBE_CO_FNC_SendToClients};
-                sleep 8;
-            };
-            if (alive _d) then { {deleteVehicle _x} forEach (crew _d); deleteVehicle _d };
-        } else {
-            //--- MUNITION: search an enemy ground vehicle (AA first), then dive + detonate.
-            _target = objNull;
-            while {alive _d && isNull _target && time < _endT} do {
-                _cands = nearestObjects [_dest, ["LandVehicle","StaticWeapon"], _zoneR];
-                _valid = []; _aa = [];
-                {
-                    if (alive _x && {(side _x) in _enemySides} && {!(_x isKindOf "Air")}) then {
-                        _valid set [count _valid, _x];
-                        if ((typeOf _x) in _aaTypes || {_x isKindOf "StaticWeapon"}) then {_aa set [count _aa, _x]};
-                    };
-                } forEach _cands;
-                if (count _aa > 0) then {_target = _aa select 0} else {if (count _valid > 0) then {_target = _valid select 0}};
-                if (isNull _target) then { { if (isNull _target && {alive _x} && {(side _x) in _enemySides} && {vehicle _x == _x}) then {_target = _x} } forEach (nearestObjects [_dest, ["Man"], _zoneR]) };   //--- FIX: infantry fallback - if no vehicles/static in the zone, dive on the nearest enemy foot soldier (was: loitered doing nothing in infantry-only towns)
-                if (isNull _target) then { if (_enhanced) then { _loiterAng = _loiterAng + 28; _pilot doMove [(_dest select 0) + _zoneR * sin _loiterAng, (_dest select 1) + _zoneR * cos _loiterAng, 0]; } else { _pilot doMove _loiterPt; } };
-                sleep 2;
-            };
-
-            sleep (_phase * _stagger);   //--- chain the dives.
-            if (!alive _d) exitWith {};
-            _aimObj = _target;
-            _aimPos = if (!isNull _target && {alive _target}) then {getPos _target} else {_dest};
-            _d say3D _diveSound;          //--- dive siren.
-            if (_enhanced) then {[nil, "HandleSpecial", ["drone-fx", "flame", _d]] Call WFBE_CO_FNC_SendToClients};
-            _d flyInHeight 16;            //--- descend onto it.
-            _pilot doMove _aimPos;
-            _t0 = time;
-            waitUntil { sleep 0.3; !alive _d || ((_d distance _aimPos) < 45) || (time - _t0 > 16) };
-            if (alive _d) then {
-                if (!isNull _aimObj && {alive _aimObj}) then {_aimPos = getPos _aimObj};   //--- re-aim if it moved.
-                _ang = random 360;
-                _imp = [(_aimPos select 0) + (random _scatter) * sin _ang, (_aimPos select 1) + (random _scatter) * cos _ang, 0];
-                //--- Kill credit: a createVehicle warhead has no shooter, so the engine would credit nobody. Stamp the
-                //--- target as last-hit by the CALLER; the mission's own RequestOnUnitKilled then pays the standard cash
-                //--- bounty to that player -- identical to killing the vehicle any other way. No special currency, no flat reward.
-                if (!isNull _aimObj && {alive _aimObj} && {!isNull _caller}) then {
-                    _aimObj setVariable ["wfbe_lasthitby", _caller, true];
-                    _aimObj setVariable ["wfbe_lasthittime", time, true];
+        };
+        //--- MUNITION: EVERY drone carries ordnance now (the 2 flare drones also drop CM flares while hunting). Vehicles/static first, infantry fallback, then dive + detonate.
+        _target = objNull;
+        while {alive _d && isNull _target && time < _endT} do {
+            _cands = nearestObjects [_dest, ["LandVehicle","StaticWeapon"], _zoneR];
+            _valid = []; _aa = [];
+            {
+                if (alive _x && {(side _x) in _enemySides} && {!(_x isKindOf "Air")}) then {
+                    _valid set [count _valid, _x];
+                    if ((typeOf _x) in _aaTypes || {_x isKindOf "StaticWeapon"}) then {_aa set [count _aa, _x]};
                 };
-                //--- 50/50 warhead: even munition = direct HE at ground; odd = a top-attack drop (bomb/SADARM) from altitude.
-                if (_phase mod 2 == 0) then {
-                    _warhead createVehicle _imp;
-                } else {
-                    _warhead2 createVehicle [_imp select 0, _imp select 1, 130];
-                };
-                ["INFORMATION", Format ["Support_DroneStrike.sqf : munition phase %1 struck %2 (warhead %3).", _phase, _imp, (if (_phase mod 2 == 0) then {_warhead} else {_warhead2})]] Call WFBE_CO_FNC_LogContent;
-                {deleteVehicle _x} forEach (crew _d); deleteVehicle _d;
+            } forEach _cands;
+            if (count _aa > 0) then {_target = _aa select 0} else {if (count _valid > 0) then {_target = _valid select 0}};
+            if (isNull _target) then { { if (isNull _target && {alive _x} && {(side _x) in _enemySides} && {vehicle _x == _x}) then {_target = _x} } forEach (nearestObjects [_dest, ["Man"], _zoneR]) };
+            if (_role == "flare") then { "F_40mm_White" createVehicle (getPosATL _d); if (_enhanced) then {[nil, "HandleSpecial", ["drone-fx", "flarepop", _d]] Call WFBE_CO_FNC_SendToClients} };
+            if (isNull _target) then { if (_enhanced) then { _loiterAng = _loiterAng + 28; _pilot doMove [(_dest select 0) + _zoneR * sin _loiterAng, (_dest select 1) + _zoneR * cos _loiterAng, 0]; } else { _pilot doMove _loiterPt; } };
+            sleep 2;
+        };
+        sleep (_phase * _stagger);
+        if (!alive _d) exitWith {};
+        _aimObj = _target;
+        _aimPos = if (!isNull _target && {alive _target}) then {getPos _target} else {_dest};
+        _d say3D _diveSound;
+        if (_enhanced) then {[nil, "HandleSpecial", ["drone-fx", "flame", _d]] Call WFBE_CO_FNC_SendToClients};
+        _d flyInHeight 16;
+        _pilot doMove _aimPos;
+        _t0 = time;
+        waitUntil { sleep 0.3; !alive _d || ((_d distance _aimPos) < 45) || (time - _t0 > 16) };
+        if (alive _d) then {
+            if (!isNull _aimObj && {alive _aimObj}) then {_aimPos = getPos _aimObj};
+            _ang = random 360;
+            _imp = [(_aimPos select 0) + (random _scatter) * sin _ang, (_aimPos select 1) + (random _scatter) * cos _ang, 0];
+            if (!isNull _aimObj && {alive _aimObj} && {!isNull _caller}) then {
+                _aimObj setVariable ["wfbe_lasthitby", _caller, true];
+                _aimObj setVariable ["wfbe_lasthittime", time, true];
             };
+            if (_phase mod 2 == 0) then {
+                _warhead createVehicle _imp;
+            } else {
+                _warhead2 createVehicle [_imp select 0, _imp select 1, 130];
+            };
+            ["INFORMATION", Format ["Support_DroneStrike.sqf : munition phase %1 struck %2 (warhead %3).", _phase, _imp, (if (_phase mod 2 == 0) then {_warhead} else {_warhead2})]] Call WFBE_CO_FNC_LogContent;
+            {deleteVehicle _x} forEach (crew _d); deleteVehicle _d;
         };
     };
 } forEach _drones;
