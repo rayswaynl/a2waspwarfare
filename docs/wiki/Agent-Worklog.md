@@ -15,6 +15,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Marked the P2 structure items complete in the queue because the current docs already implement the intended ownership split: roadmap versus server-authority design map, HUD/menus quick-ref versus full UI atlas, and mission entrypoints versus lifecycle wait-chain.
 - Scope remained docs-only; no gameplay source files were edited.
 
+## 2026-06-03 - Codex Documentation Finisher: Core / Architecture / Content Citation Uplift
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 15 by adding representative `path:line` anchors to [Core systems index](Core-Systems-Index), [Architecture overview](Architecture-Overview) and [Content structure and maps](Content-Structure-And-Maps).
+- Folded same-page audit fixes into the pass: Core Systems now treats Discord publishing as a separate `DiscordBot/` integration that consumes mission export data, and Architecture now says `initJIPCompatible.sqf` logs max player slots, not live player count.
+- Evidence checked: `initJIPCompatible.sqf:26-32,52-56,111-123,214-238`, `description.ext:39-67`, `Common/Init/Init_Common.sqf:217-323`, `Server/Init/Init_Server.sqf:10-57,298,510-531,578`, `Client/Init/Init_Client.sqf:52,958`, `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:102,139-145,194-212,246-256`, mission Discord text refs and `DiscordBot/src/*` status updater refs.
+
 ## 2026-06-03 - Codex Documentation Finisher: Progress Dashboard At A Glance Refresh
 
 - Claimed [Instructions for Codex](Instructions-For-Codex) item 10.

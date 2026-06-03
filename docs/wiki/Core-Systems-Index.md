@@ -44,7 +44,18 @@ Support includes artillery, paratroopers, para ammo, para vehicles, UAV, fast tr
 
 ## Administrative/Operational Systems
 
-Operational systems include anti-stack, AFK kick through BattlEye publicVariable filters, server FPS publication, performance audit logs, global game stats extension export, and Discord bot status publishing.
+Operational systems include anti-stack, AFK kick through BattlEye publicVariable filters, server FPS publication, performance audit logs and global game stats extension export. Discord status publishing is a separate `DiscordBot/` integration that consumes exported data; the mission itself only contains Discord help text / community links.
+
+## Representative Source Anchors
+
+| System | Source anchors |
+| --- | --- |
+| Towns/capture | `initJIPCompatible.sqf:215`; `Server/Init/Init_Server.sqf:510,514,519`; `Server/FSM/server_town.sqf:222,227,235,240,265`; `Server/FSM/server_town_ai.sqf:211-216,247` |
+| Economy and resources | `Common/Init/Init_Common.sqf:19-20,42,53,61-63`; `Server/Init/Init_Server.sqf:531` |
+| Factories/purchases | `Rsc/Dialogs.hpp:1448`; `Client/Init/Init_Client.sqf:52`; `Server/Init/Init_Server.sqf:10`; `Server/Functions/Server_BuyUnit.sqf:19` |
+| Upgrades | `Common/Init/Init_CommonConstants.sqf:37,58`; `Server/Init/Init_Server.sqf:57`; `Common/Init/Init_Common.sqf:323` |
+| Support/admin ops | `Server/Init/Init_Server.sqf:39-42,298,578`; `Client/FSM/updateclient.sqf:153-160`; `Common/Functions/Common_PerformanceAudit.sqf:4` |
+| Discord integration boundary | Mission text mentions Discord at `briefing.sqf:17,19`, `Client/Init/Init_Client.sqf:958` and `stringtable.xml:416`; status publishing code lives in `DiscordBot/src/ProgramRuntime.cs:69-70`, `DiscordBot/src/GameStatusUpdater.cs:14,52` and `DiscordBot/src/ExtensionData/GameData/GameData.cs:36,159`. |
 
 ## Continue Reading
 

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T10:05:00+02:00",
+  "generatedAt": "2026-06-03T10:30:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,27 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "core-architecture-content-citation-uplift",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Core-Systems-Index.md",
+        "docs/wiki/Architecture-Overview.md",
+        "docs/wiki/Content-Structure-And-Maps.md",
+        "docs/wiki/Instructions-For-Codex.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs",
+        "DiscordBot/src"
+      ],
+      "outputs": [
+        "Representative source anchors added to three broad index pages; Core Systems Discord boundary and Architecture max-player-slots wording corrected"
+      ],
+      "handoff": "Scoped docs-only citation/accuracy batch is validated and ready to continue with Instructions-For-Codex item 27."
+    },
     {
       "lane": "instructions-p2-structure-reconciliation",
       "owner": "Codex",

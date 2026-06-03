@@ -31,7 +31,7 @@
 14. ✅ **[Mission entrypoints](Mission-Entrypoints-And-Lifecycle) ↔ [Lifecycle wait-chain](Lifecycle-Wait-Chain):** reconciled as already resolved by [Wiki quality audit](Wiki-Quality-Audit) MERGE-3. Entrypoints owns include graph, role dispatch and mission-object init orientation; Lifecycle wait-chain owns boot order, JIP waits and global flag dependencies.
 
 ## P3 — Thin citations (lower priority)
-15. Add representative `path:line` anchors to [Core systems index](Core-Systems-Index), [Architecture overview](Architecture-Overview), [Content structure and maps](Content-Structure-And-Maps).
+15. ✅ Added representative `path:line` anchors to [Core systems index](Core-Systems-Index), [Architecture overview](Architecture-Overview), [Content structure and maps](Content-Structure-And-Maps). Also corrected the related Core Systems Discord integration boundary and Architecture max-player-slots wording while those pages were open.
 
 ## Do NOT change (audit false positives — verified at source)
 - [Public variable channel index](Public-Variable-Channel-Index) PVF list ranges `:8-20` (server) / `:23-37` (client) are **correct**.
@@ -75,11 +75,11 @@ Read-only wiki↔source audit of 7 playbook/index pages (~190 claims, 29 confirm
 
 4 pages, 133 claims, 4 confirmed (all re-verified at source). [Headless delegation and failover playbook](Headless-Delegation-And-Failover-Playbook) auditor returned 0 claims (a whiff, not a clean pass) — re-audited in batch 6.
 
-26. **[Core systems index](Core-Systems-Index) — HIGH: an external component listed as an in-mission operational system.** The "Administrative/Operational Systems" line ends "…and Discord bot status publishing", bundled with genuine in-mission systems (anti-stack, AFK-kick via BattlEye publicvariable filter, server-FPS publication, performance-audit logs, global-game-stats extension export). **No Discord publishing code exists in the mission** — only plain-text mentions (`Init_Client.sqf:959` community-link hint, `briefing.sqf`, `stringtable.xml`). The mission's actual role is the already-listed "global game stats extension export"; Discord publishing is the separate **`DiscordBot/`** repo component that consumes that export. *Acceptance:* drop "Discord bot status publishing" from the in-mission list, or relabel it an external `DiscordBot/` integration.
+26. ✅ **[Core systems index](Core-Systems-Index) — HIGH: external component boundary corrected.** The page no longer lists Discord bot status publishing as an in-mission operational system; it now says the mission exports global game stats and the separate `DiscordBot/` integration consumes exported data. Source anchors distinguish mission Discord help text (`briefing.sqf:17,19`, `Client/Init/Init_Client.sqf:958`, `stringtable.xml:416`) from Discord publishing code (`DiscordBot/src/ProgramRuntime.cs:69-70`, `DiscordBot/src/GameStatusUpdater.cs:14,52`, `DiscordBot/src/ExtensionData/GameData/GameData.cs:36,159`).
 
 27. **[Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) — HIGH + MED.** (HIGH) the table labels `WFBE_C_TOWNS_PURCHASE_RANGE` (60) the "depot purchase range" for `updateavailableactions.fsm`, but the FSM's `depotInRange` gate (`:194`) uses `_tcr = WFBE_C_TOWNS_CAPTURE_RANGE` (**40**, read at `:39`; constant `Init_CommonConstants.sqf:323`). `PURCHASE_RANGE` (60, `:338`) is used only by `GUI_Menu_BuyUnits.sqf` for the factory dropdown — different constant, different default, tighter gate than the page implies. (MED, **DR-33b**) line 219's "Current source/Vanilla `Client_BuildUnit.sqf:167-172` uses a UID/player/counter token" is wrong — it is still `_unique = varQueu` where `varQueu = random(10)+random(100)+random(1000)` (`:167-168`, init `Init_Common.sqf:164`, comment "to remove with new sys later on"). Random token, fix not applied. *Acceptance:* correct the FSM depot-range row to `CAPTURE_RANGE` (40); reframe the token row as still-random (DR-33b open).
 
-28. **[Architecture overview](Architecture-Overview) — LOW.** `initJIPCompatible.sqf:31` is described as logging "player count"; it logs `WF_MAXPLAYERS` with the label "Max players Defined" — a mission-slot ceiling, not a live connected-player count. *Acceptance:* reword to "max player slots".
+28. ✅ **[Architecture overview](Architecture-Overview) — LOW.** Reworded the bootstrap log summary from "player count" to "max player slots" and cited `initJIPCompatible.sqf:26-32`, where line `:31` logs `WF_MAXPLAYERS` as "Max players Defined".
 
 ## Batch-6 consistency findings — document / correct (2026-06-02, Claude)
 

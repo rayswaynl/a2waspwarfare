@@ -6,9 +6,13 @@
 - `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan`: vanilla Takistan generated/copy target.
 - `Modded_Missions/*`: modded terrain variants.
 
+Source anchors: LoadoutManager chooses target roots in `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:139-145`, copies Chernarus to Takistan at `:194-201`, copies modded terrain sources at `:205-212`, and computes modded source roots at `:246-256`.
+
 ## Terrain Support In LoadoutManager
 
 Terrain classes include Chernarus, Takistan and modded maps such as Dingor, Eden, Lingor, SMD Sahrani, Tavi, Isla Duala and Napf. The operational generation rules, skip-list and modded-mission status table live in [Tools and build workflow](Tools-And-Build-Workflow); this page only orients the folder layout.
+
+Source anchors: terrain implementations live under `Tools/LoadoutManager/Data/Terrains/Implementations/`; generated `version.sqf` is written by `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:102`, with helper comments at `:168-183`.
 
 ## Assets
 
@@ -22,13 +26,19 @@ Mission assets include:
 - `mission.sqm`;
 - `Rsc` dialog/resource headers.
 
+Source anchors: `description.ext:39-58` includes `version.sqf`, Sounds, Music and Rsc headers; `description.ext:64-67` points at `loadScreen.jpg` and mission-level channel/AI settings.
+
 ## Config Layout
 
 `Common/Config` contains the faction, core, defense, gear, group and root configuration loaded during common init. This is the primary data surface for unit availability, faction selection and side-specific content.
 
+Source anchors: `Common/Init/Init_Common.sqf:217-253` loads model/gear/core files, `:290-300` loads root and defense config, `:305-307` loads group config, and `:323` initializes the CIPHER module.
+
 ## Chernarus/Takistan Faction Switch
 
 `Init_CommonConstants.sqf` sets faction defaults based on `IS_chernarus_map_dependent`: Chernarus uses USMC/RU/GUE style defaults, while Takistan uses US/TKA/TKGUE style defaults. The west side remains American on both map families.
+
+Source anchors: `initJIPCompatible.sqf:111-113` sets `IS_chernarus_map_dependent`; `Common/Init/Init_CommonConstants.sqf:383-395` lists west/east/guer faction arrays and sets Chernarus versus Takistan defaults.
 
 ## Generated Folder Warning
 

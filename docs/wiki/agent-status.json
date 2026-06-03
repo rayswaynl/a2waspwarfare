@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T10:05:00+02:00",
+  "generatedAt": "2026-06-03T10:30:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Instructions-For-Codex P2 structure items 12-14 are published/validated: Wiki quality audit MERGE-1/2/3 already show the intended page ownership split for authority, UI and lifecycle docs.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 15: add representative path:line anchors to Core systems index, Architecture overview and Content structure/maps."
+      "currentWork": "Instructions-For-Codex item 15 plus same-page items 26 and 28 are published/validated: Core systems, Architecture overview and Content structure/maps now have representative source anchors; Discord publishing is separated as external DiscordBot integration; Architecture says max player slots.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 27 for Factory and purchase systems atlas range/token corrections."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "core-architecture-content-citation-uplift",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 15 is resolved locally with representative path:line anchors in Core-Systems-Index.md, Architecture-Overview.md and Content-Structure-And-Maps.md; same-page items 26 and 28 are also corrected."
+    },
     {
       "lane": "instructions-p2-structure-reconciliation",
       "owner": "Codex",

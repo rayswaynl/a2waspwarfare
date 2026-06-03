@@ -10,6 +10,8 @@ The repository is an Arma 2 OA Warfare/CTI mission derived from Benny's Warfare 
 - `Headless`: detection and initialization for headless clients. The mission disables headless delegation when the OA build is too old.
 - `WASP`: older/custom gameplay layer with MHQ repair, RPG dropping, base repair and marker monitor scripts. Some of it is still present but one old init block is commented out.
 
+Representative anchors: `initJIPCompatible.sqf:214-238` dispatches Common/Server/Client/Headless entrypoints; `Common/Init/Init_Common.sqf:6-160,209-323` compiles shared functions/config/modules; `Server/Init/Init_Server.sqf:10-57,298,510-531,578` compiles server functions and starts extension/town/economy/FPS loops; `Client/Init/Init_Client.sqf:52,958` compiles client build/UI helpers and shows client onboarding text; the old WASP init block is commented at `initJIPCompatible.sqf:241-245`.
+
 ## Source Mission Versus Generated Missions
 
 `Missions/[55-2hc]warfarev2_073v48co.chernarus` is the authoritative mission folder. The Takistan vanilla folder and modded mission folders are copy/generation outputs. The repo instructions say mission edits should be made in Chernarus, then copied with `Tools/LoadoutManager` via `dotnet run`.
@@ -18,13 +20,15 @@ The repository is an Arma 2 OA Warfare/CTI mission derived from Benny's Warfare 
 
 `initJIPCompatible.sqf` is the main bootstrap. It:
 
-- logs map, mission name, start distance, player count and log-content state;
+- logs map, mission name, start distance, max player slots and log-content state;
 - detects hosted server, dedicated server, normal client and headless client;
 - reads mission parameters and common constants;
 - starts `Common/Init/Init_Common.sqf` and `Common/Init/Init_Towns.sqf`;
 - starts `Server/Init/Init_Server.sqf` on server/host;
 - starts `Client/Init/Init_Client.sqf` on clients after side logic is ready;
 - starts `Headless/Init/Init_HC.sqf` on headless clients.
+
+Source anchors: `initJIPCompatible.sqf:26-32` writes the boot log, including `WF_MAXPLAYERS` as "Max players Defined"; `:52-56` detects hosted/headless role state; `:123` loads common constants; `:214-238` starts Common, town, server, client and headless init scripts.
 
 ## Data Flow At A Glance
 
@@ -33,6 +37,8 @@ The repository is an Arma 2 OA Warfare/CTI mission derived from Benny's Warfare 
 3. `Init_Common.sqf` compiles shared functions, loads faction/core/gear/defense/group config, and registers PVF handlers.
 4. `Init_Server.sqf` creates side logic state, server functions, AI/town loops, cleanup loops, anti-stack, server FPS publishing and day/night authority.
 5. `Init_Client.sqf` compiles local functions, wires player event handlers, UI actions, hotkeys, skill/action modules, client marker loops and HUD behavior.
+
+Source anchors: `description.ext:39-58` includes generated version, Sounds, Music and Rsc bundles; `description.ext:64-67` sets load screen, disabled channels and `disabledAI`; `Common/Init/Init_Common.sqf:295` registers public variables; `Server/Init/Init_Server.sqf:510-531` starts town/resource loops; `Client/Init/Init_Client.sqf:52` compiles `Client_BuildUnit.sqf`.
 
 ## Development Philosophy
 
