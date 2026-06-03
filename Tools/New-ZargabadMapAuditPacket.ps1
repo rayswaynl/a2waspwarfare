@@ -133,6 +133,20 @@ function Get-TemplateRuntimeAnchors {
 	})
 }
 
+function Get-StartRole {
+	param($Start)
+	if ($Start.Init -match 'wfbe_default"",\s*(west|east|resistance)') { return $Matches[1].ToUpperInvariant() }
+	switch ($Start.Id) {
+		39 { return "WEST alternate northwest road" }
+		40 { return "Northern alternate airfield flank" }
+		41 { return "EAST alternate north-east approach" }
+		42 { return "EAST alternate south-east approach" }
+		43 { return "WEST alternate south-west approach" }
+		44 { return "Northern alternate city flank" }
+		default { return "alternate" }
+	}
+}
+
 $missionFullPath = Resolve-RepoPath $MissionPath
 $sqmPath = Join-Path $missionFullPath "mission.sqm"
 if (-not (Test-Path -LiteralPath $sqmPath)) { throw "mission.sqm not found: $sqmPath" }
@@ -196,10 +210,10 @@ foreach ($town in ($parsedTowns | Sort-Object Name)) {
 $report.Add("")
 $report.Add("## Starts And Edge Safety")
 $report.Add("")
-$report.Add("| Start id | Side hint | Position | Azimut | Edge distance |")
+$report.Add("| Start id | Role | Position | Azimut | Edge distance |")
 $report.Add("| ---: | --- | ---: | ---: | ---: |")
 foreach ($start in ($starts | Sort-Object Y, X)) {
-	$side = if ($start.Init -match 'wfbe_default"",\s*(west|east|resistance)') { $Matches[1].ToUpperInvariant() } else { "alternate" }
+	$side = Get-StartRole $start
 	$azimut = if ($null -ne $start.Azimut) { [math]::Round($start.Azimut, 1) } else { "" }
 	$report.Add("| $($start.Id) | $side | ``$(Get-PositionText $start)`` | $azimut | $([math]::Round((Get-EdgeDistance $start 6000), 1)) |")
 }

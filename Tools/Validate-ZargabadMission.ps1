@@ -476,6 +476,34 @@ Assert-NearPosition "default Resistance start remains central" $resistanceStart 
 Assert-True "WEST start points toward center" ([math]::Abs($westStart.Azimut - 45) -le 0.1)
 Assert-True "EAST start points toward center" ([math]::Abs($eastStart.Azimut - 225) -le 0.1)
 Assert-True "WEST/EAST starts are separated for spawn safety" ((Get-FlatDistance $westStart $eastStart) -ge 5000)
+$expectedStartPlacement = @(
+	[pscustomobject]@{ Id = 37; Role = "WEST default southwest base"; X = 1500; Y = 1550; Azimut = 45; MinEdge = 1450; MaxEdge = 1550 },
+	[pscustomobject]@{ Id = 43; Role = "WEST alternate south-west approach"; X = 2300; Y = 2500; Azimut = 45; MinEdge = 2250; MaxEdge = 2350 },
+	[pscustomobject]@{ Id = 39; Role = "WEST alternate northwest road"; X = 1550; Y = 5200; Azimut = 90; MinEdge = 750; MaxEdge = 850 },
+	[pscustomobject]@{ Id = 38; Role = "EAST default northeast base"; X = 5350; Y = 5200; Azimut = 225; MinEdge = 600; MaxEdge = 700 },
+	[pscustomobject]@{ Id = 41; Role = "EAST alternate north-east approach"; X = 5450; Y = 5050; Azimut = 225; MinEdge = 500; MaxEdge = 600 },
+	[pscustomobject]@{ Id = 42; Role = "EAST alternate south-east approach"; X = 5520; Y = 2450; Azimut = 270; MinEdge = 430; MaxEdge = 530 },
+	[pscustomobject]@{ Id = 40; Role = "northern alternate airfield flank"; X = 2450; Y = 5750; Azimut = 135; MinEdge = 200; MaxEdge = 300 },
+	[pscustomobject]@{ Id = 44; Role = "northern alternate city flank"; X = 4000; Y = 5750; Azimut = 180; MinEdge = 200; MaxEdge = 300 },
+	[pscustomobject]@{ Id = 36; Role = "Resistance central init"; X = 4100; Y = 3950; Azimut = $null; MinEdge = 1850; MaxEdge = 1950 }
+)
+$expectedStartIds = @($expectedStartPlacement | ForEach-Object { $_.Id })
+Assert-Equal "exact start anchor row count" $expectedStartPlacement.Count 9
+Assert-Equal "unexpected start logic ids" @($starts | Where-Object { $_.Id -notin $expectedStartIds }).Count 0
+foreach ($expectedStart in $expectedStartPlacement) {
+	$start = @($starts | Where-Object { $_.Id -eq $expectedStart.Id })
+	Assert-Equal "start $($expectedStart.Id) placement row count" $start.Count 1
+	Assert-NearPosition "start $($expectedStart.Id) stays at $($expectedStart.Role)" $start[0] $expectedStart.X $expectedStart.Y 5
+	if ($null -ne $expectedStart.Azimut) {
+		Assert-True "start $($expectedStart.Id) heading" ([math]::Abs($start[0].Azimut - $expectedStart.Azimut) -le 0.1)
+	}
+	$edgeDistance = [math]::Round((Get-EdgeDistance -LogicObject $start[0] -Boundary 6000), 1)
+	Assert-True "start $($expectedStart.Id) edge-distance band" ($edgeDistance -ge $expectedStart.MinEdge -and $edgeDistance -le $expectedStart.MaxEdge)
+}
+Assert-Equal "north-edge alternate start count" @($starts | Where-Object { $_.Y -ge 5700 -and $_.Y -le 5800 }).Count 2
+Assert-Equal "east-flank default-or-alternate start count" @($starts | Where-Object { $_.X -ge 5300 -and $_.X -le 5550 }).Count 3
+Assert-True "alternate starts stay out of the 120m kill rim" (@($starts | Where-Object { (Get-EdgeDistance -LogicObject $_ -Boundary 6000) -lt 120 }).Count -eq 0)
+Assert-True "alternate starts avoid city core overlap" (@($starts | Where-Object { (Get-FlatDistance $_ $resistanceStart) -lt 900 -and $_.Id -ne $resistanceStart.Id }).Count -eq 0)
 
 $boundarySource = Get-Content -Raw -LiteralPath (Join-Path $sourceMissionFullPath "Common/Init/Init_Boundaries.sqf")
 Assert-True "source declares 6000m Zargabad boundary" ($boundarySource -match "case 'zargabad': \{_boundariesXY = 6000\};")
@@ -722,6 +750,7 @@ $mapAuditPacketOutput = (& $mapAuditPacketTool) -join "`n"
 Assert-True "map audit packet runs and reports Zargabad counts" ($mapAuditPacketOutput -match '# Zargabad Map Audit Packet' -and $mapAuditPacketOutput -match 'Counts: towns \[13\], camps \[19\], airports \[1\], starts \[9\], town defenses \[33\]')
 Assert-True "map audit packet runs and reports core screenshot targets" ($mapAuditPacketOutput -match 'Zargabad City Center' -and $mapAuditPacketOutput -match 'Claude Screenshot Targets' -and $mapAuditPacketOutput -match '4053,2725' -and $mapAuditPacketOutput -match 'central wall origin' -and $mapAuditPacketOutput -match 'West illegal rim' -and $mapAuditPacketOutput -match 'East Farms legal rim' -and $mapAuditPacketOutput -match 'WDDM Fortification Review')
 Assert-True "map audit packet runs and reports exact base static anchors" ($mapAuditPacketOutput -match 'TOW_TriPod_US_EP1' -and $mapAuditPacketOutput -match '1541,1591' -and $mapAuditPacketOutput -match 'Metis_TK_EP1' -and $mapAuditPacketOutput -match '5309,5159')
+Assert-True "map audit packet runs and reports alternate start roles" ($mapAuditPacketOutput -match 'WEST alternate northwest road' -and $mapAuditPacketOutput -match 'EAST alternate south-east approach' -and $mapAuditPacketOutput -match 'Northern alternate airfield flank')
 Assert-True "Claude brief tool exists" (Test-Path -LiteralPath $claudeBriefTool)
 $claudeBriefSource = Get-Content -Raw -LiteralPath $claudeBriefTool
 Assert-True "Claude brief tool emits coordination cadence" ($claudeBriefSource -match '## Coordination Cadence')

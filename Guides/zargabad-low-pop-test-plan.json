@@ -107,7 +107,7 @@
     },
     {
       "type": "command-output",
-      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, exact named town population/value anchors with intended coordinates/start SV/max SV/ranges, exact camp approach anchors with intended coordinates, linked towns and distance bands, exact defense firing anchors with intended coordinates, linked towns, kind mixes and distance bands, intended default start anchors/headings and WEST/EAST separation, no out-of-6000 logic positions, no objective safe-zone logics inside the 120m edge kill rim, exactly seven north/east edge-safe objective/start bubbles, start SV 185, max SV 648, all towns have camps and defenses, each camp links to exactly one town, all camps sit in the 90m-225m town-flow band, high-value objectives have two camp approaches and layered defense coverage, priority objective defense-kind mixes cover infantry, armor and air approaches where appropriate, generated low-pop parameter defaults, exact smaller-map economy/range/cap constants and exact compact normal heavy/aircraft lists are locked in source and generated Zargabad mission copies, the runtime town-defense orientation hook is present, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
+      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, exact named town population/value anchors with intended coordinates/start SV/max SV/ranges, exact camp approach anchors with intended coordinates, linked towns and distance bands, exact defense firing anchors with intended coordinates, linked towns, kind mixes and distance bands, all nine start anchors with intended coordinates, headings and edge-distance bands, intended WEST/EAST separation, no out-of-6000 logic positions, no objective safe-zone logics inside the 120m edge kill rim, exactly seven north/east edge-safe objective/start bubbles, start SV 185, max SV 648, all towns have camps and defenses, each camp links to exactly one town, all camps sit in the 90m-225m town-flow band, high-value objectives have two camp approaches and layered defense coverage, priority objective defense-kind mixes cover infantry, armor and air approaches where appropriate, generated low-pop parameter defaults, exact smaller-map economy/range/cap constants and exact compact normal heavy/aircraft lists are locked in source and generated Zargabad mission copies, the runtime town-defense orientation hook is present, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
     },
     {
       "type": "source-audit",
@@ -120,6 +120,10 @@
     {
       "type": "source-audit",
       "summary": "Static validation now locks the 13-piece base H-barrier ring, exact WEST/EAST base static templates, and computed default-start runtime anchors for Claude screenshot/RPT comparison: WEST TOW 1541,1591 facing 45, WEST Stinger 1459,1509 facing 225, EAST Metis 5309,5159 facing 225, and EAST Igla 5391,5241 facing 45."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Static validation now locks all nine start logics by id, role, coordinate, heading where present, and edge-distance band, including WEST/EAST defaults, Resistance central init, WEST/EAST alternates, and the two northern flank starts used near the airfield/city edge."
     },
     {
       "type": "source-audit",
@@ -167,7 +171,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/New-ZargabadMapAuditPacket.ps1 generates a Claude-facing coordinate packet from mission.sqm with population-flow objective values, camp links/distances, town-defense kind/position/distance rows, starts, base-axis midpoint, expected base static runtime anchors, edge-safe bubbles, named rim test points, central-wall gap checkpoints, and screenshot targets for map-placement, pathing, sightline, base-static and defense-facing notes."
+      "summary": "Tools/New-ZargabadMapAuditPacket.ps1 generates a Claude-facing coordinate packet from mission.sqm with population-flow objective values, camp links/distances, town-defense kind/position/distance rows, labeled start roles, base-axis midpoint, expected base static runtime anchors, edge-safe bubbles, named rim test points, central-wall gap checkpoints, and screenshot targets for map-placement, pathing, sightline, base-static and defense-facing notes."
     },
     {
       "type": "source-audit",
@@ -187,7 +191,7 @@
     },
     {
       "type": "command-output",
-      "summary": "Static mission validation found unique ids, all sync ids resolvable, zero out-of-6000 logic positions, intended WEST/EAST/Resistance start anchors, WEST/EAST start headings toward center, WEST/EAST start separation at least 5000m, 13 towns, 19 camps, 1 airport, 33 defense logics, exact town, camp, defense and base static anchors, runtime defense-orientation hook present, start SV 185 and max SV 648."
+      "summary": "Static mission validation found unique ids, all sync ids resolvable, zero out-of-6000 logic positions, all nine intended start anchors and headings, WEST/EAST start separation at least 5000m, 13 towns, 19 camps, 1 airport, 33 defense logics, exact town, camp, defense and base static anchors, runtime defense-orientation hook present, start SV 185 and max SV 648."
     }
   ],
   "result": "partial",
