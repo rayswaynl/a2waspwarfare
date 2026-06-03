@@ -222,6 +222,14 @@ $notesWithoutEvidence = @($noteRows | Where-Object {
 	)
 })
 Assert-True "Claude Notes PASS rows include evidence" ($notesWithoutEvidence.Count -eq 0)
+$recommendationPattern = '(?i)\b(keep|tune|revert|investigate|patch|retest)\b'
+$notesWithoutRecommendation = @($noteRows | Where-Object {
+	$_[0] -ne "Runtime check" -and (
+		$_.Count -lt 3 -or
+		$_[2] -notmatch $recommendationPattern
+	)
+})
+Assert-True "Claude Notes PASS rows include Codex action recommendation" ($notesWithoutRecommendation.Count -eq 0)
 
 $coordinateOrScreenshot = '(\b[0-9]{2,4}\s*,\s*[0-9]{2,4}\b|\[[0-9]{2,4}\s*,\s*[0-9]{2,4}|[A-Za-z0-9_. -]+\.(png|jpg|jpeg))'
 Assert-NoteEvidence -Rows $noteRows -Key "Hosted boot context" -Pattern '(hosted|listen|local host|local-host|non-dedicated).*(RPT|Init_Server|server initialization ended|Arma)|((RPT|Init_Server|server initialization ended|Arma).*(hosted|listen|local host|local-host|non-dedicated))'
