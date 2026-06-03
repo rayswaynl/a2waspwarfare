@@ -740,6 +740,7 @@ Assert-True "runtime report tool checks black-market arming" ($runtimeReportSour
 Assert-True "runtime report tool emits Claude notes" ($runtimeReportSource -match '## Claude Notes')
 Assert-True "runtime report tool splits hosted and dedicated boot notes" ($runtimeReportSource -match 'Hosted boot context' -and $runtimeReportSource -match 'Dedicated boot context')
 Assert-True "runtime report tool points screenshots to evidence root" ($runtimeReportSource -match 'zargabad-evidence' -and $runtimeReportSource -match 'EvidenceRoot')
+Assert-True "runtime report tool emits evidence bundle checklist" ($runtimeReportSource -match '### Evidence Bundle Checklist' -and $runtimeReportSource -match 'population-city-airfield\.png' -and $runtimeReportSource -match 'base-static-arcs\.png' -and $runtimeReportSource -match 'wall-gaps-pathing\.png' -and $runtimeReportSource -match 'priority-defense-arcs\.png')
 Assert-True "runtime report tool asks Claude for population SP/SV placement feel" ($runtimeReportSource -match 'Population and SP/SV placement feel' -and $runtimeReportSource -match 'Population Flow' -and $runtimeReportSource -match 'farms/outskirts')
 Assert-True "runtime report tool asks Claude for priority defense mix arcs" ($runtimeReportSource -match 'Priority defense mix arcs' -and $runtimeReportSource -match 'city MG/nest\+GL\+AT' -and $runtimeReportSource -match 'airfield MG/nest\+AT\+2xAA')
 Assert-True "runtime report tool emits validator output" ($runtimeReportSource -match '## Validator Output')
@@ -784,7 +785,7 @@ Assert-True "map audit packet runs and reports alternate start roles" ($mapAudit
 Assert-True "evidence folder tool exists" (Test-Path -LiteralPath $evidenceFolderTool)
 $evidenceFolderSource = Get-Content -Raw -LiteralPath $evidenceFolderTool
 Assert-True "evidence folder tool generates map audit packet" ($evidenceFolderSource -match 'New-ZargabadMapAuditPacket\.ps1' -and $evidenceFolderSource -match 'zargabad-map-audit\.md')
-Assert-True "evidence folder tool writes screenshot README" ($evidenceFolderSource -match 'README-zargabad-evidence\.md' -and $evidenceFolderSource -match 'Suggested Screenshot Names' -and $evidenceFolderSource -match 'Validate-ZargabadRuntimeReport\.ps1')
+Assert-True "evidence folder tool writes screenshot README" ($evidenceFolderSource -match 'README-zargabad-evidence\.md' -and $evidenceFolderSource -match 'Suggested Screenshot Names' -and $evidenceFolderSource -match 'Screenshot Row Mapping' -and $evidenceFolderSource -match 'Validate-ZargabadRuntimeReport\.ps1')
 $evidenceFolderOutput = Join-Path ([System.IO.Path]::GetTempPath()) ("zargabad-evidence-folder-" + [guid]::NewGuid().ToString("N"))
 & $evidenceFolderTool -OutputPath $evidenceFolderOutput | Out-Null
 Assert-True "evidence folder tool runs and writes map audit packet" (Test-Path -LiteralPath (Join-Path $evidenceFolderOutput "zargabad-map-audit.md") -PathType Leaf)
