@@ -19,7 +19,7 @@ waitUntil {!isNil "serverInitComplete" && {serverInitComplete}};
 
 //--- A map overlay that fades in while a storm is active (createMarker is global in A2).
 private "_mk";
-_mk = createMarker ["WFBE_Claude_Sandstorm", [4096,0,4096]];
+_mk = createMarker ["WFBE_Claude_Sandstorm", [4096,4096,0]];   //--- map centre (x,y,z) - not [x,0,z]
 _mk setMarkerShape "ELLIPSE"; _mk setMarkerBrush "Solid"; _mk setMarkerColor "ColorOrange";
 _mk setMarkerSize [0,0]; _mk setMarkerAlpha 0;
 

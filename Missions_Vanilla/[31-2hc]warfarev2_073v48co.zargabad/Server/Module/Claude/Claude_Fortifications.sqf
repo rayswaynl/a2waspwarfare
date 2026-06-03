@@ -53,7 +53,8 @@ missionNamespace setVariable ["WFBE_CLAUDE_FOB_WEST", [
 	// rear wall with central vehicle gate (gap at x=0)
 	["Land_HBarrier_large",[-17.5,-20,0],0],["Land_HBarrier_large",[-12.5,-20,0],0],["Land_HBarrier_large",[-7.5,-20,0],0],["Land_HBarrier_large",[7.5,-20,0],0],["Land_HBarrier_large",[12.5,-20,0],0],["Land_HBarrier_large",[17.5,-20,0],0],
 	// corners
-	["Land_HBarrier_corner",[-20,20,0],0],["Land_HBarrier_corner",[20,20,0],90],["Land_HBarrier_corner",[-20,-20,0],270],["Land_HBarrier_corner",[20,-20,0],180],
+	// corner closures (Land_HBarrier_corner is NOT a valid A2 OA class -> use large barriers to seal the gaps)
+	["Land_HBarrier_large",[-20,17.5,0],90],["Land_HBarrier_large",[20,17.5,0],90],["Land_HBarrier_large",[-20,-17.5,0],90],["Land_HBarrier_large",[20,-17.5,0],90],
 	// corner watchtowers
 	["Land_fort_watchtower_EP1",[-16,16,0],0],["Land_fort_watchtower_EP1",[16,16,0],0],["Land_fort_watchtower_EP1",[-16,-16,0],0],["Land_fort_watchtower_EP1",[16,-16,0],0],
 	// weapons (crewed by the builder): 2 front MG, front TOW, side MGs, central Stinger, rear gate MG
@@ -62,7 +63,7 @@ missionNamespace setVariable ["WFBE_CLAUDE_FOB_WEST", [
 	["Stinger_Pod_US_EP1",[0,2,0],0],["M2StaticMG",[0,-16,0],180],
 	// weapon pits + interior
 	["Land_fort_bagfence_round",[-11,17,0],0],["Land_fort_bagfence_round",[11,17,0],0],["Land_fort_bagfence_round",[0,2,0],0],
-	["Land_CamoNetVar_NATO",[-9,9,0],0],["Land_CamoNetVar_NATO",[9,9,0],0],
+	["Land_CamoNetVar_NATO_EP1",[-9,9,0],0],["Land_CamoNetVar_NATO_EP1",[9,9,0],0],
 	["USBasicAmmunitionBox_EP1",[-4,-2,0],0],["USBasicAmmunitionBox_EP1",[4,-2,0],0],["USLaunchers_EP1",[0,-5,0],0],
 	// forward obstacle belt
 	["Fort_RazorWire",[-15,25,0],0],["Fort_RazorWire",[-5,25,0],0],["Fort_RazorWire",[5,25,0],0],["Fort_RazorWire",[15,25,0],0],
@@ -79,10 +80,10 @@ missionNamespace setVariable ["WFBE_CLAUDE_FOB_EAST", [
 	["Land_HBarrier_large",[-7.5,-10,0],0],["Land_HBarrier_large",[-2.5,-10,0],0],["Land_HBarrier_large",[2.5,-10,0],0],["Land_HBarrier_large",[7.5,-10,0],0],
 	["Land_HBarrier_large",[-10,-7.5,0],90],["Land_HBarrier_large",[-10,-2.5,0],90],["Land_HBarrier_large",[-10,2.5,0],90],["Land_HBarrier_large",[-10,7.5,0],90],
 	["Land_HBarrier_large",[10,-7.5,0],90],["Land_HBarrier_large",[10,-2.5,0],90],["Land_HBarrier_large",[10,2.5,0],90],["Land_HBarrier_large",[10,7.5,0],90],
-	["Land_HBarrier_corner",[-10,10,0],0],["Land_HBarrier_corner",[10,10,0],90],["Land_HBarrier_corner",[-10,-10,0],270],["Land_HBarrier_corner",[10,-10,0],180],
+	// (keep corners are already sealed where the full-span front/rear + side walls meet; no Land_HBarrier_corner - not a valid A2 OA class)
 	// keep contents: massed AA + command + ammo
 	["ZU23_TK_EP1",[0,0,0],0],["Igla_AA_pod_TK_EP1",[-4,3,0],0],
-	["Land_CamoNetVar_EAST",[-5,-4,0],0],["Land_CamoNetVar_EAST",[5,-4,0],0],
+	["Land_CamoNetVar_EAST_EP1",[-5,-4,0],0],["Land_CamoNetVar_EAST_EP1",[5,-4,0],0],
 	["TKVehicleBox_EP1",[-3,-6,0],0],["TKBasicAmmunitionBox_EP1",[3,-6,0],0],
 	// --- massed front gun line (between keep and belt) ---
 	["KORD_high_TK_EP1",[-12,15,0],0],["KORD_high_TK_EP1",[-4,15,0],0],["KORD_high_TK_EP1",[4,15,0],0],["KORD_high_TK_EP1",[12,15,0],0],
