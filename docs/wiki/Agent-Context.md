@@ -1,6 +1,6 @@
 # Agent Context
 
-This is the compact human-readable context file for AI coding agents. Start machine readers with [`agent-entrypoint.json`](agent-entrypoint.json), then use `agent-context.json` for the larger snapshot and `agent-knowledge.jsonl` for durable source knowledge records.
+This is the compact human-readable context file for AI coding agents. Start machine readers with [`agent-entrypoint.json`](agent-entrypoint.json), then use `agent-context.json` for the larger snapshot, `agent-knowledge.jsonl` for durable source knowledge records and `agent-development-lessons.jsonl` for implementation lessons.
 
 ## Identity
 
@@ -8,8 +8,9 @@ This is the compact human-readable context file for AI coding agents. Start mach
 - Game/runtime: Arma 2 Operation Arrowhead 1.64
 - Mission type: Warfare / CTI TvT PvE, forked from Benny's Warfare and modernized for WASP/Miksuu.
 - Documentation target: GitHub wiki plus `docs/wiki` mirror.
-- Progress surface: `Progress-Dashboard.md` plus `agent-status.json` and `agent-knowledge.jsonl`.
+- Progress surface: `Progress-Dashboard.md` plus `agent-status.json`, `agent-knowledge.jsonl` and `agent-development-lessons.jsonl`.
 - Agent-actionable backlog: `agent-hardening-backlog.jsonl`.
+- Lesson capture: `Development-Lessons-Learned.md` plus `agent-development-lessons.jsonl`.
 - Release-readiness ledger: `agent-release-readiness.json` for tracked source fixes, generated propagation and smoke gates.
 - External report manifest: `external-research-report-manifest.json`; raw extracted report text is local cache only.
 
@@ -71,6 +72,7 @@ This is the compact human-readable context file for AI coding agents. Start mach
 - External Claude review: use `Claude-Goal.md` for a focused pass or `Claude-Long-Term-Goal.md` for a long-running counterpart, then update `Agent-Worklog.md`.
 - Cross-agent progress: read `Progress-Dashboard.md`, `agent-status.json` and `agent-release-readiness.json` first when you need the current Codex/Claude and release-readiness state.
 - Cross-agent coordination: read `Agent-Collaboration-Protocol.md`, `agent-collaboration.json`, `agent-knowledge.jsonl` and `agent-events.jsonl` before starting a parallel pass.
+- Implementation lessons: read `Development-Lessons-Learned.md` before touching AI respawn/orders, cleanup queues, `Common/Config`, module wiring or other areas already indexed by the lesson-aware lane.
 - Independent review findings: `Deep-Review-Findings.md` records source-cited Claude findings that still need to be reconciled into owning atlas pages.
 - Implementation-ready work packages: `Hardening-Implementation-Roadmap.md` plus machine-readable `agent-hardening-backlog.jsonl`. Current added backlog items include attack-wave authority, static-defense HC sync, hosted FPS loop sleep, town-AI vehicle despawn verification, tooling operator checklist, JIP wait-chain timeout polish and UI/player-map debt.
 

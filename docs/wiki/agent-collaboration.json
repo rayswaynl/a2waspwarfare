@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T22:55:00+02:00",
+  "generatedAt": "2026-06-03T08:16:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,36 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "documentation-finisher-loop",
+      "owner": "Codex",
+      "status": "active",
+      "sourceScope": [
+        "docs/wiki developer-wiki mirror",
+        "a2waspwarfare.wiki checkout",
+        "source-backed documentation accuracy and lesson capture"
+      ],
+      "outputs": [
+        "Reviewed, validated and published scoped documentation batches with docs/wiki and wiki checkout parity"
+      ],
+      "handoff": "Continue from the highest-value open docs item after validation and publish; do not overlap active Codex, Claude or other agent claims."
+    },
+    {
+      "lane": "lesson-aware-codebase-indexer",
+      "owner": "Codex",
+      "status": "published-integrated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config",
+        "docs/wiki coverage gaps outside DR-44-owned files"
+      ],
+      "outputs": [
+        "Added Development-Lessons-Learned.md and agent-development-lessons.jsonl as source-backed lesson-capture artifacts for AI respawn/orders, cleanup queues, config data model and module runtime-edge rules"
+      ],
+      "handoff": "Accepted by main orchestrator: lesson artifacts are linked from Home, _Sidebar, Agent-Context and agent-context.json, mirrored to the wiki checkout and ready for future lesson records. DR-44-owned networking/server atlas/instructions files were not edited by the indexer."
+    },
     {
       "lane": "orchestrator-code-discovery-wave-s",
       "owner": "Codex sub-agents",

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T22:55:00+02:00",
+  "generatedAt": "2026-06-03T08:16:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -9,6 +9,8 @@
     "worklog": "Agent-Worklog.md",
     "collaborationState": "agent-collaboration.json",
     "knowledgeRecords": "agent-knowledge.jsonl",
+    "developmentLessons": "Development-Lessons-Learned.md",
+    "developmentLessonRecords": "agent-development-lessons.jsonl",
     "eventFeed": "agent-events.jsonl",
     "repoContext": "agent-context.json",
     "releaseReadiness": "agent-release-readiness.json",
@@ -17,9 +19,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "send-message-rce-dr46-crosslink",
-      "currentWork": "Acting as main LLM orchestrator and publisher. Wave S is published. Current slice source-checked Claude DR-46 and cross-linked SEND_MESSAGE direct-PV RCE from Networking, Public Variable Channel Index, SQF Code Atlas, Feature Status, Pending Owner Decisions and Hardening Roadmap.",
-      "nextExpectedOutput": "Validate docs/wiki mirror parity, JSON/JSONL and wiki links, then publish the scoped DR-46 cross-link update."
+      "currentLane": "documentation-finisher-loop",
+      "currentWork": "Acting as long-running documentation finisher. Current slice accepted the lesson-aware codebase indexer handoff, source-checked its lesson claims and wired Development-Lessons-Learned plus agent-development-lessons.jsonl into the human and machine entrypoints.",
+      "nextExpectedOutput": "Validate docs/wiki mirror parity, JSON/JSONL and wiki links, then publish the scoped lesson-integration update."
     },
     "Codex-2": {
       "status": "ready",
@@ -41,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "documentation-finisher-loop",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Lesson-aware development artifacts accepted and wired: Development-Lessons-Learned.md and agent-development-lessons.jsonl are linked from Home, _Sidebar, Agent-Context, agent-context.json and Progress-Dashboard after source checks across AI respawn/orders, cleanup queues, config-derived tables and module wiring."
+    },
     {
       "lane": "send-message-rce-dr46-crosslink",
       "owner": "Codex",

@@ -66,6 +66,7 @@
       "Coordination-Board",
       "Agent-Collaboration-Protocol",
       "Agent-Worklog",
+      "Development-Lessons-Learned",
       "Deep-Review-Findings",
       "External-Research-Reports",
       "Codebase-Coverage-Ledger",
@@ -83,6 +84,7 @@
       "agent-status.json",
       "agent-collaboration.json",
       "agent-events.jsonl",
+      "agent-development-lessons.jsonl",
       "external-research-report-manifest.json"
     ],
     "navigation": {
@@ -136,6 +138,7 @@
         "Coordination-Board",
         "Agent-Collaboration-Protocol",
         "Agent-Worklog",
+        "Development-Lessons-Learned",
         "Deep-Review-Findings",
         "External-Research-Reports",
         "Codebase-Coverage-Ledger",
@@ -157,6 +160,8 @@
       "Progress-Dashboard.md",
       "Agent-Worklog.md",
       "agent-knowledge.jsonl",
+      "Development-Lessons-Learned.md",
+      "agent-development-lessons.jsonl",
       "agent-hardening-backlog.jsonl",
       "agent-test-plan.schema.json",
       "Testing-Debugging-And-Release-Workflow.md",
@@ -176,7 +181,8 @@
       "Treat external reports as leads until repo evidence confirms them.",
       "Use ICBM-Authority-Playbook.md before patching RequestSpecial \"ICBM\", NukeIncoming, NukeDammage or ICBM Tactical UI/marker flow.",
       "Use External-Integrations.md BattlEye Filter before claiming shipped BattlEye/public-server hardening; it owns DR-30 posture evidence and production BEpath caveats.",
-      "For attack-wave authority work, use Attack-Wave-Authority-Playbook.md and preserve the current all-side-supply spend model unless the owner approves a design change."
+      "For attack-wave authority work, use Attack-Wave-Authority-Playbook.md and preserve the current all-side-supply spend model unless the owner approves a design change.",
+      "Use Development-Lessons-Learned.md before touching AI respawn/orders, cleanup queues, Common/Config content propagation or module wiring; mirror new lessons into agent-development-lessons.jsonl."
     ],
     "ownerSplit": {
       "Codex": "Navigation, atlas integration, machine-readable context, docs/wiki mirror and publish validation.",
@@ -469,6 +475,8 @@
     "protocol": "Agent-Collaboration-Protocol.md",
     "machineState": "agent-collaboration.json",
     "eventFeed": "agent-events.jsonl",
+    "developmentLessons": "Development-Lessons-Learned.md",
+    "developmentLessonsMachine": "agent-development-lessons.jsonl",
     "deepReviewFindings": "Deep-Review-Findings.md",
     "worklog": "Agent-Worklog.md",
     "progressDashboard": "Progress-Dashboard.md",
@@ -1192,6 +1200,7 @@
     "upgradesResearchAtlas": "Upgrades-And-Research-Atlas.md",
     "townsCampsCaptureAtlas": "Towns-Camps-And-Capture-Atlas.md",
     "commanderHqLifecycleAtlas": "Commander-HQ-Lifecycle-Atlas.md",
-    "victoryEndgameAtlas": "Victory-And-Endgame-Atlas.md"
+    "victoryEndgameAtlas": "Victory-And-Endgame-Atlas.md",
+    "developmentLessonsLearned": "Development-Lessons-Learned.md"
   }
 }

@@ -1197,3 +1197,16 @@ Key conclusions:
 - Corrected the DR-1 note in [Deep-review findings](Deep-Review-Findings): "no second-order injection" now explicitly applies only to the registered PVF path; the repo has a second network-data compile surface in direct `SEND_MESSAGE`.
 - Promoted DR-46 into [Networking/PV](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index), [SQF code atlas](SQF-Code-Atlas), [Feature status](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions) and [Hardening roadmap](Hardening-Implementation-Roadmap).
 - Updated [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), [`agent-status.json`](agent-status.json), [`agent-collaboration.json`](agent-collaboration.json) and [Instructions for Codex](Instructions-For-Codex) so future agents treat DR-46 cross-linking as complete and the source patch as P0 patch-ready/source-unpatched.
+
+# 2026-06-03 - Lesson-Aware Codebase Indexer
+
+- Claimed `lesson-aware-codebase-indexer` and avoided the DR-44-owned files while source-reading under-covered AI respawn/orders, cleanup queues and `Common/Config` data-model paths.
+- Added [Development lessons learned](Development-Lessons-Learned) as a scoped integration proposal, plus [`agent-development-lessons.jsonl`](agent-development-lessons.jsonl) for machine-readable lesson records.
+- Source-backed lessons captured: vanilla/non-vanilla AI respawn branches need separate smoke; commander AI order variables are public group variables and need executor proof before hardening; cleanup loops can be server-owned while draining client-replicated queues; cleanup patches must cite producer/consumer array shapes; config edits propagate through derived runtime tables; module patches need runtime-edge smoke.
+- Handoff: main orchestrator should review/link the new artifacts into navigation/agent context and mirror to the wiki checkout if accepted. No gameplay source edits and no commits were made.
+
+# 2026-06-03 - Documentation Finisher Lesson Integration
+
+- Reviewed the `lesson-aware-codebase-indexer` handoff and source-checked the lesson claims against the cited AI respawn/orders, cleanup queue, `Common/Config` and module-wiring paths.
+- Accepted and wired [Development lessons learned](Development-Lessons-Learned) plus [`agent-development-lessons.jsonl`](agent-development-lessons.jsonl) into [Home](Home), `_Sidebar`, [Agent context](Agent-Context), [`agent-context.json`](agent-context.json) and [Progress dashboard](Progress-Dashboard).
+- Scope remained docs-only; no gameplay source files were edited.
