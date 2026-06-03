@@ -1,5 +1,7 @@
 ﻿# SQF Code Atlas
 
+Historical guardrail: before changing supply mission, JIP, town-AI, marker or performance-sensitive SQF, read [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons). Miksuu history shows repeated follow-up fixes in those areas, so code changes should cite current source and upstream evidence separately.
+
 This page is the first deeper code-level atlas for the Chernarus source mission. It is generated from source inspection, not memory.
 
 Source mission: `Missions/[55-2hc]warfarev2_073v48co.chernarus`
@@ -245,4 +247,3 @@ Server-side long-running systems are mostly `.sqf` loop scripts under `Server/FS
 Previous: [Gameplay systems atlas](Gameplay-Systems-Atlas) | Next: [Public variable channel index](Public-Variable-Channel-Index)
 
 Main map: [Home](Home) | Fast path: [Feature status register](Feature-Status-Register) | Agent file: [`agent-context.json`](agent-context.json)
-

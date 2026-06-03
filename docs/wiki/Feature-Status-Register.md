@@ -37,6 +37,7 @@ This register separates working systems from partial, deferred or risky systems 
 - Keep patch-risk edits in-place and one-way: add proof to canonical pages instead of repeating deep call stacks in this register.
 - Treat entries marked "patch-ready-current-source-unpatched" as live claims requiring source+vanilla validation before changing status to published.
 - If a finding is promoted or closed, update this register and the corresponding lane record in `agent-feature-status.jsonl` first, then mirrors and progress pages.
+- Use [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) when a risky feature overlaps upstream supply, JIP, marker, town-AI, performance or reverted-branch history.
 
 ## Working / Active Systems
 
@@ -68,6 +69,9 @@ This lane tracks direct channels, PVF authority boundaries, and JIP semantics th
 
 | Area | Evidence | Status |
 | --- | --- | --- |
+| Upstream supply-run exploit/JIP regression pattern | Miksuu PR #10 / merge `97dfff26` fixed remote supply-truck activation; PR #11 / `8164cc33` added a 50 m "too far" notification; PR #12 / `86ec28d6` fixed that notification firing during JIP. | **Confirmed historical risk.** Keep supply mission start/reward hardening server-owned and test late join + remote-start behavior before merging new supply/cash-run variants. |
+| Upstream town-defense activation regression pattern | `4aaa814a` and `6189f3c5` optimized town/camp/town-AI scans; follow-ups `a20a5a0f`, `84b1b684`, `ea0bff2e` restored reliable/pre-capture activation and prevented defenders from waking enemy towns. | **Confirmed historical risk.** Town-AI optimizations need capture-driven wakeup, defender-origin filtering and diagnostics, not scan reduction alone. |
+| Upstream marker locality/cache regression pattern | `9a550b7a` reverted a group-leader marker global-var experiment; `9c72a281`, `951e72cb`, `332874fd` fixed marker tracking, disconnect staleness and side visibility leaks. | **Confirmed historical risk.** Marker/cache changes need side-visibility and disconnect/reconnect validation. |
 | Direct attack-wave request trust (`ATTACK_WAVE_INIT`) | `Common/Functions/Common_AttackWaveActivate.sqf`, `Server/Functions/Server_AttackWave.sqf`, DR-41 | **Live + open**: client payload directly drives discount and timing |
 | Direct side-supply mutation (`wfbe_supply_temp_*`) | `Common/Functions/Common_ChangeSideSupply.sqf`, `Server/Functions/Server_ChangeSideSupply.sqf`, DR-22/DR-44 | **Live + open**: side/amount trust and clamp behavior are not secure |
 | MASH marker relay health | `Server/Module/MASH/MASHMarker.sqf`, `Client/Module/MASH/receiverMASHmarker.sqf`, `Client/Init/Init_Client.sqf` | **Confirmed dead/partial**: server and client halves are mismatched |

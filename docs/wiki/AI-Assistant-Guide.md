@@ -23,6 +23,7 @@ Minimal first-touch page for humans and AI agents working on docs and orchestrat
 5. [Public Variable Channel Index](Public-Variable-Channel-Index) for sender/receiver mapping before proposing any network edit.
 6. [Feature status register](Feature-Status-Register) for patch-risk context.
 7. [SQF code atlas](SQF-Code-Atlas) if you need compile-owner/entrypoint checks.
+8. [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) before reviving old branches, copying unmerged upstream work, or touching supply/JIP/town-AI/marker systems that have repeated historical fixes.
 
 ## Verification behavior
 
@@ -58,6 +59,13 @@ Use this checklist before adding a new networking channel:
    - Verify client handler compiles are active in init flows.
 6. **Document in index first.**
    - Update the command in [Public-Variable-Channel-Index](Public-Variable-Channel-Index) with sender, receiver, payload, authority, and JIP risk.
+
+## Upstream-history guidance
+
+- Treat upstream `master`, merged PRs and concrete commit/file evidence as stronger than branch names.
+- Treat closed PRs, reverted commits and old branch families as negative knowledge until current-source testing proves they are safe to revive.
+- For supply, attack-wave, town-AI, marker and JIP work, read [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) before proposing code. Those systems have repeated exploit, lifecycle, locality or performance follow-up fixes in Miksuu history.
+- If citing an upstream lesson, include a PR number, commit hash, file path or short commit/PR wording, and label the confidence as confirmed, likely or speculative.
 
 ## missionNamespace, player lifecycle, and JIP guidance
 

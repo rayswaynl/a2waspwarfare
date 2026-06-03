@@ -4,6 +4,8 @@ This is the implementation handoff for the `supply-mission-authority-cleanup` la
 
 Scope: patch source Chernarus first, then propagate generated missions with `Tools/LoadoutManager`. Paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
+Upstream-history companion: [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) documents the PR #10 -> #11 -> #12 supply-run sequence: remote activation exploit fix, too-far feedback, then JIP notification regression fix. Keep that sequence in mind when changing supply mission start/reward behavior.
+
 > **✅ UPDATE 2026-06-03 (Claude): several items below are now DONE** (release `4cf443fe`): (1) cooldown casing standardized on `LastSupplyMissionRun` — `Init_Town.sqf` now seeds the correct key (XR4 / DR-18); (2) dead twin `supplyMissionActive.sqf` **removed** (plus `checkCCProximity.sqf`); (3) the command-center scan is **already narrowed** (class-filtered + heli 400 m / truck 80 m + heli 2D gate, `supplyMissionStarted.sqf:48-56`); (4) `SupplyByHeli` is now **cleared on completion** (XR3). **Still open:** server-owned mission state, `Killed`-handler idempotency, duplicate-start guard (XR6), server-side cargo validation, friendly-side check on the delivery CC (XR15).
 
 ## Current Status

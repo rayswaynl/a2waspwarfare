@@ -20,6 +20,8 @@
   - [Knowledge platform roadmap](Knowledge-Platform-Roadmap)
   - [Wiki quality audit](Wiki-Quality-Audit)
 - Compatibility and references
+  - [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons)
+  - [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel)
   - [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit)
   - [Arma 2 OA command versions](Arma-2-OA-Command-Version-Reference)
   - [Wiki source consistency](Wiki-Source-Consistency-Findings)

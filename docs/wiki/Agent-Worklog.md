@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-03T18:40:00+0200 - Codex - upstream-developer-lessons-and-history
+
+- Researched `Miksuu/a2waspwarfare` upstream `master` through `8bcc42b1`, GitHub PRs #1-#12, branch list, merge/revert commits and file-level commit clusters.
+- Published [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) plus [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel).
+- Confirmed practical patterns: supply-run exploit -> UX -> JIP follow-up sequence (PR #10/#11/#12), heavy-attack JIP server migration, performance audit before scan reductions, town-defense activation regressions after optimization, marker locality/cache regressions, Takistan propagation churn and negative knowledge from reverts/closed PRs.
+- Updated Home, `_Sidebar`, AI guide, Feature Status, Progress Dashboard and relevant subsystem pages with developer-history routing.
+- Documentation only; no gameplay code changed.
+
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
 Read this file as append-only history, not as a strict timestamp-sorted truth source. For the contested cleanup lanes, trust [Current source status snapshot](Current-Source-Status-Snapshot) plus `agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851` until a newer source re-check with file/line evidence replaces them. Older lines that say those lanes are source/Vanilla patched are stale-wave history.

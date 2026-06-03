@@ -1,5 +1,7 @@
 # Architecture Overview
 
+For upstream development patterns and negative knowledge from Miksuu PRs, reverts and branch history, start with [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons). It helps distinguish current architecture from old experiments and abandoned merge attempts.
+
 The repository is an Arma 2 OA Warfare/CTI mission derived from Benny's Warfare and actively modernized for the Miksuu/WASP server. The core runtime is SQF in a mission folder, surrounded by C# helper tools, a Discord status bot, and a Windows extension bridge.
 
 ## Runtime Partitions

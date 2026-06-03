@@ -1,5 +1,7 @@
 # Server Gameplay Runtime Atlas
 
+Upstream-history note: Miksuu commit clusters show that server runtime changes around town AI, JIP and performance often need follow-up fixes. Read [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) before altering long-running server loops or wakeup logic.
+
 This atlas maps long-running server gameplay loops and runtime surfaces that future owners should treat carefully. Paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
 ## Runtime Loops
@@ -36,4 +38,3 @@ This atlas maps long-running server gameplay loops and runtime surfaces that fut
 ## Continue Reading
 
 Systems: [Gameplay systems atlas](Gameplay-Systems-Atlas) | Performance: [Performance opportunity sweep](Performance-Opportunity-Sweep) | Current truth: [Current source status snapshot](Current-Source-Status-Snapshot)
-
