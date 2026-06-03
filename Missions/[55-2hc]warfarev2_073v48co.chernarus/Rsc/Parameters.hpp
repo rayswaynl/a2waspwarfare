@@ -93,7 +93,7 @@
 		title = "$STR_WF_PARAMETER_AICommander";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_PARAMETER_No","$STR_WF_PARAMETER_Yes"};//{"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1; //--- feat/ai-commander: default-ON (admins can still disable in the lobby).
 	};
 	class WFBE_C_STRUCTURES_ANTIAIRRADAR {
 		title = "$STR_WF_PARAMETER_AntiAirRadar";

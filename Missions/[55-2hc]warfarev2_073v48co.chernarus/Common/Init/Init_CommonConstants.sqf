@@ -95,6 +95,13 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AI_TEAMS_JIP_PRESERVE") then {WFBE_C_AI_TEAMS_JIP_PRESERVE = 1}; //--- Keep the AI Teams units on JIP.
 	WFBE_C_AI_COMMANDER_MOVE_INTERVALS = 3600;
 	WFBE_C_AI_COMMANDER_SUPPLY_TRUCKS_MAX = 5;
+	//--- AI Commander revival (feat/ai-commander).
+	WFBE_C_AI_COMMANDER_TOTAL_AI_MAX = 60;     //--- Per-side AI ceiling for AI-commander unit production (FPS safety cap).
+	WFBE_C_AI_COMMANDER_USE_ARC_APPROACH = 1;  //--- 1: SetTownAttackPath arc approach; 0: simple AIMoveTo fallback.
+	WFBE_C_AI_COMMANDER_UPGRADE_INTERVAL = 120;
+	WFBE_C_AI_COMMANDER_TOWN_INTERVAL = 120;
+	WFBE_C_AI_COMMANDER_PRODUCE_INTERVAL = 45;
+	WFBE_C_AI_COMMANDER_TYPES_INTERVAL = 30;
 	WFBE_C_AI_DELEGATION_FPS_INTERVAL = 60 * 3; //--- A client send it's FPS average each x seconds to the server.
 	WFBE_C_AI_DELEGATION_FPS_MIN = 25; //--- A client can handle groups if it's FPS average is above x.
 	WFBE_C_AI_DELEGATION_GROUPS_MAX = 1; //--- A client max have up to x groups managed on his computer (high values may makes lag, be careful).

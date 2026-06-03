@@ -380,7 +380,7 @@ emptyQueu = [];
 		if ((missionNamespace getVariable "WFBE_C_BASE_AREA") > 0) then {_logik setVariable ["wfbe_basearea", [], true]};
 		if ((missionNamespace getVariable "WFBE_C_ECONOMY_SUPPLY_SYSTEM") == 0 && (missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0) then {
 			_logik setVariable ["wfbe_ai_supplytrucks", []];
-			[_side] Spawn UpdateSupplyTruck;
+			if (!isNil "UpdateSupplyTruck") then {[_side] Spawn UpdateSupplyTruck}; //--- guard: the compile is commented out, so this would call nil-code otherwise (AI-commander + truck-supply config).
 		};
 		if ((missionNamespace getVariable "WFBE_C_RESPAWN_MASH") > 0) then {_logik setVariable ["wfbe_mash", objNull, true]};
 		if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {missionNamespace setVariable [format ["wfbe_supply_%1", str _side], missionNamespace getVariable Format ["WFBE_C_ECONOMY_SUPPLY_START_%1", _side]]};
