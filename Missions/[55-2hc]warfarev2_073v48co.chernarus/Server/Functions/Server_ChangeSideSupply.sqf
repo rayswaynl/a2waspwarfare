@@ -9,7 +9,7 @@
 	_currentSupply = (_side) Call GetSideSupply;
 	if (isNil '_currentSupply') then {_currentSupply = 0};
 	_change = _currentSupply + _amount;
-	if (_change < 0) then {_change = _currentSupply - _amount};
+	if (_change < 0) then {_change = 0}; //--- bug/economy (DR-22): was "_currentSupply - _amount" which, since _amount is negative on a deduction, ADDED the overspend back as a credit. Floor at 0.
 	if (_change >= _maxSupplyLimit) then {_change = _maxSupplyLimit};
 
 	// (_side Call WFBE_CO_FNC_GetSideLogic) setVariable ["wfbe_supply", _change, true];
@@ -33,7 +33,7 @@
 	_currentSupply = (_side) Call GetSideSupply;
 	if (isNil '_currentSupply') then {_currentSupply = 0};
 	_change = _currentSupply + _amount;
-	if (_change < 0) then {_change = _currentSupply - _amount};
+	if (_change < 0) then {_change = 0}; //--- bug/economy (DR-22): was "_currentSupply - _amount" which, since _amount is negative on a deduction, ADDED the overspend back as a credit. Floor at 0.
 	if (_change >= _maxSupplyLimit) then {_change = _maxSupplyLimit};
 
 	// (_side Call WFBE_CO_FNC_GetSideLogic) setVariable ["wfbe_supply", _change, true];

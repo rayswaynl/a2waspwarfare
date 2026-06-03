@@ -15,7 +15,7 @@ _defense_range = missionNamespace getVariable 'WFBE_C_TOWNS_DEFENSE_RANGE';
 _aliveTeam = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
 
-while {!WFBE_GameOver || _aliveTeam} do {
+while {!WFBE_GameOver && _aliveTeam} do { //--- bug: was "||" -> loop kept running post-game while the team survived.
 	// Marty: Performance Audit for per-town-team patrol scripts spawned by town AI.
 	_perfStart = diag_tickTime;
 	_perfModeChange = 0;

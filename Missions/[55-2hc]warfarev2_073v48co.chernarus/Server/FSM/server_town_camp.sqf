@@ -132,7 +132,7 @@ while {!WFBE_GameOver} do {
 						_camp setVariable ["sideID", _newSID, true];
 						_perfNetworkWrites = _perfNetworkWrites + 1;
 						_perfCaptures = _perfCaptures + 1;
-						_flag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG", str _side]);
+						_flag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG", str _newSide]); //--- bug: flag must show the CAPTURING side (_newSide), not the losing side (_side).
 
 						[nil, "CampCaptured", [_camp, _newSID, _sideID]] Call WFBE_CO_FNC_SendToClients;
 					};
