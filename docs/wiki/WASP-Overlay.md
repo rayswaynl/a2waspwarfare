@@ -54,7 +54,7 @@ The original single entry point (`WASP/Init_Client.sqf`, formerly called from th
 | Start vehicles | Server-owned spawn state from `WASP/unsort/StartVeh.sqf`, compiled/used in `Init_Server.sqf`. | Not a JIP UI feature; changes affect initial server-side vehicle spawning and generated mission skip-list mirroring. |
 | Respawn action re-add | `WASP/actions/OnKilled.sqf` re-runs `AddActions.sqf`; current wiring comes through `Client_PreRespawnHandler.sqf`. | Keep this dependency when changing respawn handlers, or the active HQ recovery action can disappear after respawn. |
 
-Claude DR-40 reviewed the WASP Perf + JIP/HC cells. The live WASP wiring is JIP/HC-clean because it runs per player from `Init_Client.sqf`, and headless clients skip these player-local features. The DR-40 perf nit in `WASP/global_marking_monitor.sqf:62` remains a small local cleanup opportunity: add a tiny sleep/backoff to the display-54 wait before expanding marker behavior. See [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup).
+[Deep-review findings](Deep-Review-Findings) DR-40 reviewed the WASP Perf + JIP/HC cells. The live WASP wiring is JIP/HC-clean because it runs per player from `Init_Client.sqf`, and headless clients skip these player-local features. The DR-40 perf nit in `WASP/global_marking_monitor.sqf:62-72` remains a small local cleanup opportunity: add a tiny sleep/backoff to the display-54 wait before expanding marker behavior. See [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup).
 
 ## Wave N Fragility Checks
 

@@ -65,7 +65,7 @@ Lifecycle ownership note: [Lifecycle wait-chain](Lifecycle-Wait-Chain) owns the 
 
 `Common/Functions/Common_PerformanceAudit.sqf` is local RPT logging, not network sync. It snapshots FPS/player/AI/unit/vehicle/town-active counts (`:28-105`), records aggregate call stats (`:159-193`) and flushes every 60 seconds by default (`:221-239`).
 
-Ampere's runtime pass confirmed that the major loops are cooperative rather than tight in the normal dedicated-server path: town capture, town AI, camps, resources, victory, garbage and empty-vehicle collection all have sleeps or per-cycle yields. The FPS publisher hosted/listen exception is now patched in source Chernarus and maintained Vanilla Takistan; Arma smoke and any restored AI supply-truck path remain review targets.
+Ampere's runtime pass confirmed that the major loops are cooperative rather than tight in the normal dedicated-server path: town capture, town AI, camps, resources, victory, garbage and empty-vehicle collection all have sleeps or per-cycle yields. [Deep-review findings](Deep-Review-Findings) DR-19 owns the FPS publisher hosted/listen exception; it is now patched in source Chernarus and maintained Vanilla Takistan, with Arma smoke and any restored AI supply-truck path still review targets.
 
 Patrol loop caveat: `server_patrols.sqf` and `server_town_patrol.sqf` use `while {!WFBE_GameOver || _team_alive}` / `while {!WFBE_GameOver || _aliveTeam}`, so after game over they can keep polling/sleeping while their team remains alive. Their active behavior branches are still guarded by `!WFBE_GameOver`, so document this as mostly inert post-game polling rather than continued active patrol assignment.
 
@@ -74,7 +74,7 @@ Patrol loop caveat: `server_patrols.sqf` and `server_town_patrol.sqf` use `while
 | Risk | Evidence | Development note |
 | --- | --- | --- |
 | Low-FPS sleep inversion | `Common_GetSleepFPS.sqf:5-9` shortens sleeps under lower FPS. | Overloaded servers may run some loops more often, not less. Verify before reusing this helper. |
-| Hosted-server FPS busy loop | Init_Server.sqf:578 starts Server/GUI/serverFpsGUI.sqf and :595 starts Server/Module/serverFPS/monitorServerFPS.sqf; source Chernarus and maintained Vanilla Takistan now exit on !isDedicated before entering their loops. | Propagated, smoke pending. Dedicated publishing is preserved. See [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep). |
+| Hosted-server FPS busy loop | DR-19: `Init_Server.sqf:578` starts `Server/GUI/serverFpsGUI.sqf` and `:595` starts `Server/Module/serverFPS/monitorServerFPS.sqf`; source Chernarus and maintained Vanilla Takistan now exit on `!isDedicated` before entering their loops (`serverFpsGUI.sqf:1`, `monitorServerFPS.sqf:1`). | Propagated, smoke pending. Dedicated publishing is preserved. See [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep). |
 | Post-game patrol loop polling | `server_patrols.sqf` and `server_town_patrol.sqf` keep looping while their team remains alive, but active work is behind `!WFBE_GameOver` checks. | Low/medium cleanup. If post-game polling is unwanted, exit on game-over after confirming no cleanup semantics are being preserved. |
 | Town scans | `server_town.sqf:57` uses `nearEntities` per town. | Preserve per-town/per-cycle sleeps and audit records. |
 | Garbage scan | `server_collector_garbage.sqf:4-32` scans `allDead` every 0.5s. | Avoid adding more all-world scans nearby. |

@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: DR-40/DR-19 Citation Routing
+
+- Claimed [Instructions for Codex](Instructions-For-Codex) item 7.
+- Source-checked DR-40 against `WASP/global_marking_monitor.sqf:62-72`, `Client/Init/Init_Client.sqf:15,267,573-574` and the dead old WASP bootstrap at `initJIPCompatible.sqf:241-245`.
+- Source-checked DR-19 against current source Chernarus and maintained Vanilla Takistan: both `serverFpsGUI.sqf` and `monitorServerFPS.sqf` now have `if (!isDedicated) exitWith {};` at `:1`, while `Init_Server.sqf:578,595` still starts both publisher scripts.
+- Routed DR-40 through [WASP overlay](WASP-Overlay), DR-19 through [Server runtime](Server-Gameplay-Runtime-Atlas), and corrected [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) so its historical pre-patch table is not read as current source.
+
 ## 2026-06-03 - Codex Documentation Finisher: DR-45 Town-AI Vehicle Despawn Routing
 
 - Claimed [Instructions for Codex](Instructions-For-Codex) item 6 and source-checked DR-45 against the Chernarus town inactivity cleanup path.

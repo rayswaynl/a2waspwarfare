@@ -14,14 +14,14 @@
 
 ## What The Code Did
 
-Before the patch, `Init_Server.sqf` started two FPS publisher scripts:
+Before the DR-19 patch, `Init_Server.sqf` started two FPS publisher scripts:
 
 | Source | Behavior |
 | --- | --- |
 | `Server/Init/Init_Server.sqf:578` | Starts `Server\GUI\serverFpsGUI.sqf`. |
 | `Server/Init/Init_Server.sqf:595` | Starts `Server\Module\serverFPS\monitorServerFPS.sqf`. |
-| `Server/GUI/serverFpsGUI.sqf:1-11` | Runs `while {true}`; publishes `SERVER_FPS_GUI` only inside `if (isDedicated)`; sleeps only inside that same branch. |
-| `Server/Module/serverFPS/monitorServerFPS.sqf:1-8` | Runs `while {true}`; publishes `WFBE_VAR_SERVER_FPS` only inside `if (isDedicated)`; sleeps only inside that same branch. |
+| Historical `Server/GUI/serverFpsGUI.sqf:1-11` | Ran `while {true}`; published `SERVER_FPS_GUI` only inside `if (isDedicated)`; slept only inside that same branch. Current source now has the early `!isDedicated` exit described below. |
+| Historical `Server/Module/serverFPS/monitorServerFPS.sqf:1-8` | Ran `while {true}`; published `WFBE_VAR_SERVER_FPS` only inside `if (isDedicated)`; slept only inside that same branch. Current source now has the early `!isDedicated` exit described below. |
 | `Client/Client_UpdateRHUD.sqf:113-125` | Source/Vanilla RHUD reads `SERVER_FPS_GUI`. |
 
 That means dedicated servers published every 8 seconds, but hosted/listen servers entered both loops and skipped the only sleep. The result was two unslept scheduled loops doing no useful work.

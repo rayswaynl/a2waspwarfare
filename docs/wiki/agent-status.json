@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T08:55:00+02:00",
+  "generatedAt": "2026-06-03T09:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "DR-45 town-AI occupied-vehicle deletion is explicitly routed through the Town-AI vehicle despawn playbook and AI/headless atlas with source anchors for the unsafe inactivity cleanup and separate crew-aware empty-vehicle handler.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 7: cite DR-40 by number in WASP overlay and DR-19 in Server runtime atlas."
+      "currentWork": "Instructions-For-Codex item 7 is resolved locally: DR-40 is explicitly cited from WASP overlay and DR-19 from Server runtime atlas, with hosted-FPS historical/current wording corrected.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 8: add the remaining missing DR cross-links called out in audit section C2."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "dr40-dr19-citation-routing",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 7 is resolved: WASP-Overlay.md links DR-40, Server-Gameplay-Runtime-Atlas.md names DR-19, and Hosted-Server-FPS-Loop-Sleep.md now marks the old inner-isDedicated FPS publisher shape as historical pre-patch behavior."
+    },
     {
       "lane": "dr45-town-ai-vehicle-despawn-crosslinks",
       "owner": "Codex",

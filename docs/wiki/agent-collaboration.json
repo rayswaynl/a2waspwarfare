@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T08:55:00+02:00",
+  "generatedAt": "2026-06-03T09:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,23 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "dr40-dr19-citation-routing",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/WASP-Overlay.md",
+        "docs/wiki/Server-Gameplay-Runtime-Atlas.md",
+        "docs/wiki/Hosted-Server-FPS-Loop-Sleep.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/global_marking_monitor.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf"
+      ],
+      "outputs": [
+        "Cited DR-40 from WASP overlay and DR-19 from Server runtime atlas; corrected hosted-FPS historical table wording"
+      ],
+      "handoff": "Scoped docs-only citation batch is validated and ready to continue with Instructions-For-Codex item 8."
+    },
     {
       "lane": "dr45-town-ai-vehicle-despawn-crosslinks",
       "owner": "Codex",
