@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: SEND_MESSAGE DR-46 Status Reconciliation
+
+- Reconciled the stale `send-message-rce-dr46-crosslink` row in `agent-status.json`; the cross-linking work is published/validated, while the gameplay source patch remains open.
+- Source-checked `Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf:18-21,27` and `Common/Functions/Common_SendMessage.sqf:26,37-38`: the direct `SEND_MESSAGE` payload path still call-compiles message text when the multi-language flag is true.
+- Verified DR-46 is routed from [Deep-review findings](Deep-Review-Findings) into Networking/PV, Public Variable Channel Index, SQF atlas, Feature Status, Pending Owner Decisions, Hardening Roadmap and `agent-hardening-backlog.jsonl#send-message-call-compile-rce`.
+- Scope remained docs/status only; no gameplay source files were edited.
+
 ## 2026-06-03 - Codex Documentation Finisher: Construction Logic Cleanup Playbook Validation
 
 - Closed the stale `construction-logic-list-cleanup-playbook` validation status without editing gameplay source.

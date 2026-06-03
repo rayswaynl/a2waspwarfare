@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T15:15:00+02:00",
+  "generatedAt": "2026-06-03T15:25:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Corrected stale DR-39 agent-readable breadcrumbs in Agent-Worklog and agent-knowledge.jsonl to branch-aware supply scan refs.",
+      "currentWork": "Reconciled the stale send-message-rce-dr46-crosslink machine status: DR-46 cross-linking is published/validated, while the SEND_MESSAGE source patch remains P0 open.",
       "nextExpectedOutput": "Re-read Instructions-For-Codex and status pages for newly appended handoffs, then continue the documentation finisher loop."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "send-message-rce-dr46-crosslink",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "DR-46 SEND_MESSAGE cross-linking is validated in the machine status: Deep-Review-Findings, Networking/PV, Public Variable Channel Index, SQF atlas, Feature Status, Pending Owner Decisions, Hardening Roadmap and agent-hardening-backlog.jsonl all route the direct-PV call-compile RCE; gameplay source remains patch-ready/source-unpatched."
+    },
     {
       "lane": "dr39-agent-readable-ref-cleanup",
       "owner": "Codex",
@@ -256,8 +262,8 @@
     {
       "lane": "send-message-rce-dr46-crosslink",
       "owner": "Codex",
-      "status": "local-validation-pending",
-      "output": "Claude DR-46 source-checked and cross-linked: SEND_MESSAGE direct publicVariable message text is a second network-data compile RCE independent of PVF dispatch. Owner pages and backlog now route it as P0 patch-ready source-unpatched."
+      "status": "published-validated",
+      "output": "Claude DR-46 source-checked and cross-linked: SEND_MESSAGE direct publicVariable message text is a second network-data compile RCE independent of PVF dispatch. Owner pages and backlog route it as P0 patch-ready/source-unpatched; no gameplay patch has been applied."
     },
     {
       "lane": "orchestrator-code-discovery-wave-s",
