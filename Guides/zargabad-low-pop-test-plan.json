@@ -119,6 +119,10 @@
     },
     {
       "type": "source-audit",
+      "summary": "Static validation calculates the central wall geometry from Init_Zargabad: six spans, five gap checkpoints, exactly 60 H-barrier pieces, and pass-through gaps bounded between 180m and 320m with each checkpoint inside its gap."
+    },
+    {
+      "type": "source-audit",
       "summary": "The static validator now checks Zargabad AI caps, player squad caps, team supply cap, fast travel, UAV spotting, respawn, command-center, town build/defense/mortar/patrol, support/service, aircraft countermeasure, and base-defense manning/protection constants before runtime testers spend effort on gameplay feel."
     },
     {

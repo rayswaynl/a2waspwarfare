@@ -99,6 +99,18 @@ function Assert-NearPosition {
 	Assert-True $Name ($distance -le $Tolerance)
 }
 
+function Get-NumberPairs {
+	param([string]$Line)
+	return @([regex]::Matches($Line, '\[(-?\d+),(-?\d+)\]') | ForEach-Object {
+		[pscustomobject]@{ A = [int]$_.Groups[1].Value; B = [int]$_.Groups[2].Value }
+	})
+}
+
+function Get-Numbers {
+	param([string]$Line)
+	return @([regex]::Matches($Line, '-?\d+') | ForEach-Object { [int]$_.Value })
+}
+
 $missionFullPath = Resolve-RepoPath $MissionPath
 $sourceMissionFullPath = Resolve-RepoPath $SourceMissionPath
 $sqmPath = Join-Path $missionFullPath "mission.sqm"
@@ -299,6 +311,28 @@ foreach ($path in @($sourceMissionFullPath, $missionFullPath)) {
 	Assert-True "$path orients Zargabad town defense logics" ($initZargabad.Contains('WFBE_ZARGABAD_TOWN_DEFENSE_ORIENTED_COUNT') -and $initZargabad.Contains('atan2') -and $initZargabad.Contains('_synced setDir _dir;') -and $initZargabad.Contains('Oriented [%1] town defense logics'))
 	Assert-True "$path central wall has pass-through gaps" ($initZargabad -match '\[-1180,-1018\][\s\S]*\[-790,-628\][\s\S]*\[-420,-258\][\s\S]*\[30,192\][\s\S]*\[470,632\][\s\S]*\[870,1032\]')
 	Assert-True "$path records central wall gap checkpoints" ($initZargabad -match 'WFBE_ZARGABAD_CENTRAL_WALL_GAP_OFFSETS' -and $initZargabad -match '\[-904,-524,-114,331,751\]' -and $initZargabad -match 'WFBE_ZARGABAD_CENTRAL_WALL_GAPS')
+	$centralWallSpanLine = @($initZargabad -split "`r?`n" | Where-Object { $_ -match '^\s*_centralWallSpans\s*=' } | Select-Object -First 1)[0]
+	$centralWallGapLine = @($initZargabad -split "`r?`n" | Where-Object { $_ -match '^\s*_centralWallGapOffsets\s*=' } | Select-Object -First 1)[0]
+	$centralWallSpans = Get-NumberPairs $centralWallSpanLine
+	$centralWallGapOffsets = Get-Numbers $centralWallGapLine
+	$centralWallPieceCount = 0
+	$centralWallGapWidths = @()
+	$centralWallGapsCentered = $true
+	for ($spanIndex = 0; $spanIndex -lt $centralWallSpans.Count; $spanIndex++) {
+		$span = $centralWallSpans[$spanIndex]
+		$centralWallPieceCount += [int]([math]::Floor(($span.B - $span.A) / 18) + 1)
+		if ($spanIndex -gt 0) {
+			$previous = $centralWallSpans[$spanIndex - 1]
+			$gapWidth = $span.A - $previous.B
+			$centralWallGapWidths += $gapWidth
+			$gapOffset = $centralWallGapOffsets[$spanIndex - 1]
+			if ($gapOffset -le $previous.B -or $gapOffset -ge $span.A) { $centralWallGapsCentered = $false }
+		}
+	}
+	Assert-Equal "$path central wall span count" $centralWallSpans.Count 6
+	Assert-Equal "$path central wall gap checkpoint count" $centralWallGapOffsets.Count 5
+	Assert-Equal "$path central wall template piece count" $centralWallPieceCount 60
+	Assert-True "$path central wall pass-through gaps are bounded" ((@($centralWallGapWidths | Where-Object { $_ -lt 180 -or $_ -gt 320 }).Count -eq 0) -and $centralWallGapsCentered)
 	Assert-True "$path central wall is centered and diagonal" ($initZargabad -match '\[3425,3375,0\][\s\S]*setDir 316;')
 	Assert-True "$path records Zargabad base audit counts" ($initZargabad -match 'WFBE_ZARGABAD_BASE_WALL_COUNT' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_COUNT_%1' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_POS_%1')
 	Assert-True "$path records Zargabad base static templates" ($initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_WEST' -and $initZargabad -match 'M2StaticMG_US_EP1' -and $initZargabad -match 'TOW_TriPod_US_EP1' -and $initZargabad -match 'Stinger_Pod_US_EP1' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_TEMPLATE_EAST' -and $initZargabad -match 'KORD_high_TK_EP1' -and $initZargabad -match 'Metis_TK_EP1' -and $initZargabad -match 'Igla_AA_pod_TK_EP1')
