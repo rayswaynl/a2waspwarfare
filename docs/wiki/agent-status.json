@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T00:46:40+02:00",
+  "generatedAt": "2026-06-04T00:51:57+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated the micro-scout wave after Spark context/quota limits; source-backed factory, construction, economy and modded-mission findings are in the owning pages and mirrored.",
+      "currentWork": "Published and validated the micro-scout wave, then cleaned the remaining dashboard/machine-status drift so current coordination files point to the next bounded finisher item.",
       "nextExpectedOutput": "Pick the next highest-value docs finisher item: feature-status reconciliation, machine-readable stale-status cleanup, or a P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "coordination-stale-status-cleanup",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Progress-Dashboard At A Glance no longer says Codex is validating the already-published micro-scout batch. agent-context.json now marks DR42/DR43 reconciliation and HC delegation/failover as published instead of ready-to-publish, and agent-collaboration.json no longer says cheap-explorer wave E has publish validation remaining. Pushed as docs mirror a44cf5fc and wiki f78943f after wiki validation, JSON/JSONL parsing, git diff --check and mirror parity."
+    },
     {
       "lane": "micro-scout-wave-factory-construction-economy-modded",
       "owner": "Codex/Sub-agents",

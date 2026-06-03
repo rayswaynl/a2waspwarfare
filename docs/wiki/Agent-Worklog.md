@@ -16,6 +16,13 @@
 - Corrected `agent-context.json` for the already-published DR42/DR43 reconciliation and HC delegation/failover playbook lanes, and removed old "publish validation remains" wording from the integrated cheap-explorer wave E record.
 - Documentation only; no gameplay source files were edited.
 
+## 2026-06-04T00:51:57+02:00 - Codex - latest-batch machine handoff refresh
+
+- Rechecked current git heads after the stale-status cleanup: docs mirror `a44cf5fc`, wiki `f78943f`.
+- Added the cleanup batch to [Progress dashboard](Progress-Dashboard) Latest Batch and updated `agent-status.json` so the machine handoff no longer treats the micro-scout harvest as the freshest Codex output.
+- Refreshed `agent-collaboration.json` `generatedAt` after the coordination file edits.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-04T00:13:27+02:00 - Codex - Spark scout wave harvest and micro-lane split
 
 - Harvested completed Spark scouts from the economy/factory/respawn/UI/HC/tooling/entrypoint/camp/paratrooper/content/variant/RequestSpecial lanes. Most economy, factory, respawn/MASH, HC and paratrooper results confirmed existing canonical pages, so they were treated as validation instead of duplicated.
