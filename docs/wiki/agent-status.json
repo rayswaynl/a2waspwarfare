@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T00:56:35+02:00",
+  "generatedAt": "2026-06-04T01:10:42+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated the DroneStrike/ReconUAV branch diff-scope clarification so total branch diff and Chernarus-only mission-runtime scope are distinct.",
-      "nextExpectedOutput": "Pick the next bounded Feature Status or machine-ledger reconciliation item, preferably another branch-only promotion gate with exact source refs."
+      "currentWork": "Published and validated a cheap mini scout wave after Spark quota blocked: towns/supply, economy, AI/HC, PV/direct channels, UI, construction/factory, support specials, tooling/generated missions, integrations, commander/HQ, entrypoints/modded forks and respawn/service/gear. Harvest check found most useful deltas already represented in canonical pages.",
+      "nextExpectedOutput": "Pick the next bounded Feature Status or machine-ledger reconciliation item with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -38,11 +38,17 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "Current scout wave is closed. Useful findings were promoted; UI/PV/respawn confirmation reports were treated as validation notes; broad AI-cap scout overflowed and should be retried only with a tiny file set.",
+      "currentWork": "Cheap scout wave is closed. Reports confirmed canonical wiki coverage across PV/direct channels, MASH/respawn, commander/HQ, integrations, modded mission caveats, tooling and support-special authority boundaries.",
       "nextExpectedOutput": "No active sub-agent output pending."
     }
   },
   "laneSummary": [
+    {
+      "lane": "cheap-scout-wave-depth-confirmation",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "output": "Spark quota was blocked, so Codex replaced the requested Spark scout wave with cheap mini explorers. Lanes covered towns/supply, economy, AI/HC, PV/direct channels, UI/HUD, construction/factory/upgrades, support specials, tooling/generated missions, integrations/ops, commander/HQ/endgame, entrypoints/modded forks and respawn/service/gear. The reports mostly confirmed current canonical docs instead of adding new page content: direct PV channels remain separate from PVF dispatcher hardening; MASH respawn is local-live while marker sync is dead; paratrooper marker registration is docs/source propagated but not stable-master/release proof; commander disconnect clears but does not auto-reassign; DiscordBot JSON reader is the active integration trust sink; modded mission folders remain non-authoritative and can miss boot-critical generated files."
+    },
     {
       "lane": "drone-recon-branch-diff-scope-clarification",
       "owner": "Codex",

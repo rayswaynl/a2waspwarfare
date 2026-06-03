@@ -1827,3 +1827,8 @@ Key conclusions:
 - Launched a new read-only Spark scout wave for economy, construction/factory, respawn/MASH, AI/HC, networking/PVF and UI/dialog correctness.
 - Replaced the first broad economy scout and the broad UI/dialog scout after Spark context overflows with tighter economy-only and resource/dialog-only lanes.
 - Updated [Progress Dashboard](Progress-Dashboard) and `agent-status.json` so Steff and future agents can see the live wave and harvest status. No gameplay source files changed.
+
+## 2026-06-04T01:10:42+02:00 - Codex - cheap scout wave depth confirmation
+- Spark quota was blocked, so Codex ran the same read-only scout pattern on cheap mini explorers instead of waiting: towns/supply, economy, AI/HC, PV/direct channels, UI/HUD, construction/factory/upgrades, support specials, tooling/generated missions, integrations/ops, commander/HQ/endgame, entrypoints/modded forks and respawn/service/gear.
+- Harvest check found the major deltas already represented in canonical pages: PVF hardening does not cover direct channels, paratrooper markers are docs/source propagated but not stable/release proof, MASH respawn and marker sync are separate, commander disconnect does not auto-reassign, DiscordBot JSON intake is the live integration sink, and modded mission folders are not maintained/generated release targets.
+- Published the wave record in [Progress Dashboard](Progress-Dashboard), `agent-events.jsonl` and `agent-status.json`; validation/parity passed, no gameplay source files changed, and no subsystem page was expanded with duplicate prose.
