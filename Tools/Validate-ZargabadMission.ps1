@@ -690,6 +690,7 @@ $runtimeReportTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadRuntimeRe
 $runtimeReportValidatorTool = Join-Path (Resolve-RepoPath "Tools") "Validate-ZargabadRuntimeReport.ps1"
 $mapAuditPacketTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadMapAuditPacket.ps1"
 $claudeBriefTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadClaudeBrief.ps1"
+$completionGatesGuide = Join-Path (Resolve-RepoPath "Guides") "Zargabad-Completion-Gates.md"
 
 Assert-True "source mystery feature under 100 non-empty LOC" ((Get-NonEmptyLineCount $sourceBlackMarket) -le 100)
 Assert-True "generated mystery feature under 100 non-empty LOC" ((Get-NonEmptyLineCount $generatedBlackMarket) -le 100)
@@ -798,6 +799,12 @@ Assert-True "Claude brief tool requires real screenshot files" ($claudeBriefSour
 Assert-True "Claude brief tool requests population placement evidence" ($claudeBriefSource -match 'Population/SP-SV placement screenshot filenames plus useful coordinates' -and $claudeBriefSource -match 'low-density farm/outskirt routes')
 Assert-True "Claude brief tool requests key visual screenshots" ($claudeBriefSource -match 'Key visual row screenshot filenames plus useful coordinates' -and $claudeBriefSource -match 'priority defense arcs')
 Assert-True "Claude brief tool requires Codex action recommendations" ($claudeBriefSource -match 'Every `PASS` row must also include an explicit Codex action recommendation' -and $claudeBriefSource -match 'keep, tune, revert, investigate, patch, or retest')
+Assert-True "completion gates guide exists" (Test-Path -LiteralPath $completionGatesGuide)
+$completionGatesSource = Get-Content -Raw -LiteralPath $completionGatesGuide
+Assert-True "completion gates guide maps objective to static and runtime proof" ($completionGatesSource -match '## Objective Coverage' -and $completionGatesSource -match 'Static proof' -and $completionGatesSource -match 'Runtime proof')
+Assert-True "completion gates guide covers placement economy defenses and ranges" ($completionGatesSource -match 'SP/SV, town centers, and camps match likely population' -and $completionGatesSource -match 'Defense units spawn where they make sense' -and $completionGatesSource -match 'Economy is balanced for the smaller map' -and $completionGatesSource -match 'Weapons, vehicles, units, ranges, costs, and maximums fit map size')
+Assert-True "completion gates guide covers side hills WDDM fortifications and mystery" ($completionGatesSource -match 'Flat middle and steep side hills cannot be abused' -and $completionGatesSource -match 'Fortification review uses WDDM' -and $completionGatesSource -match 'Beefier defenses and fortifications prevent easy base hits' -and $completionGatesSource -match 'Mystery feature uses existing mission code cheaply and stays under 100 LOC')
+Assert-True "completion gates guide carries Claude stop rule" ($completionGatesSource -match 'Codex and Claude work together until Codex says stop' -and $completionGatesSource -match 'Validate-ZargabadRuntimeReport\.ps1' -and $completionGatesSource -match 'keep/tune/revert/investigate/patch/retest')
 
 $takistanZargabadModule = Resolve-RepoPath "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/Zargabad"
 Assert-True "Takistan has no generated Zargabad module spillover" (-not (Test-Path -LiteralPath $takistanZargabadModule))
