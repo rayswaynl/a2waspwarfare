@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T09:35:00+02:00",
+  "generatedAt": "2026-06-03T10:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,25 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "instructions-p2-structure-reconciliation",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Instructions-For-Codex.md",
+        "docs/wiki/Wiki-Quality-Audit.md",
+        "docs/wiki/Hardening-Implementation-Roadmap.md",
+        "docs/wiki/Server-Authority-Migration-Map.md",
+        "docs/wiki/Client-UI-HUD-And-Menus.md",
+        "docs/wiki/Client-UI-Systems-Atlas.md",
+        "docs/wiki/Mission-Entrypoints-And-Lifecycle.md",
+        "docs/wiki/Lifecycle-Wait-Chain.md"
+      ],
+      "outputs": [
+        "Marked Instructions-For-Codex P2 items 12-14 as resolved because the current wiki already implements MERGE-1/2/3 ownership splits"
+      ],
+      "handoff": "Queue reconciliation is validated and published. Continue with Instructions-For-Codex item 15 citation uplift."
+    },
     {
       "lane": "sidebar-hc-delegation-dedupe",
       "owner": "Codex",

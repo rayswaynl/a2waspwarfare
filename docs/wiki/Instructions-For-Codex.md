@@ -26,9 +26,9 @@
 11. ✅ **`_Sidebar.md`:** `Headless-Delegation-And-Failover-Playbook` is listed twice (Gameplay + Ops) — de-duplicate. Kept the Gameplay entry next to AI/headless and removed the Ops duplicate.
 
 ## P2 — Structure (page merges, audit section B)
-12. Merge [Hardening roadmap](Hardening-Implementation-Roadmap) + [Server authority map](Server-Authority-Migration-Map) (~70% overlap) — Migration-Map's *Authority Principles* + *Handler Validation Checklist* as preamble, Roadmap's *work packages* as body.
-13. Reduce [Client UI HUD and menus](Client-UI-HUD-And-Menus) to a quick-ref/redirect into [Client UI systems atlas](Client-UI-Systems-Atlas) (it is a strict subset).
-14. Trim [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) ↔ [Lifecycle wait-chain](Lifecycle-Wait-Chain) overlap (~50%): keep the `description.ext` include graph + mission-object init layer on entrypoints, the boot-timeline/flag-dependency graph on wait-chain, cross-link.
+12. ✅ **[Hardening roadmap](Hardening-Implementation-Roadmap) + [Server authority map](Server-Authority-Migration-Map):** reconciled as already resolved by [Wiki quality audit](Wiki-Quality-Audit) MERGE-1. The current split is intentional: Roadmap owns patch order, branch discipline and validation gates; Server authority map owns authority principles, migration table, handler checklist and design-review routing.
+13. ✅ **[Client UI HUD and menus](Client-UI-HUD-And-Menus) → [Client UI systems atlas](Client-UI-Systems-Atlas):** reconciled as already resolved by [Wiki quality audit](Wiki-Quality-Audit) MERGE-2. HUD/menus is now a quick-reference gateway with source anchors; the UI systems atlas remains the canonical implementation map.
+14. ✅ **[Mission entrypoints](Mission-Entrypoints-And-Lifecycle) ↔ [Lifecycle wait-chain](Lifecycle-Wait-Chain):** reconciled as already resolved by [Wiki quality audit](Wiki-Quality-Audit) MERGE-3. Entrypoints owns include graph, role dispatch and mission-object init orientation; Lifecycle wait-chain owns boot order, JIP waits and global flag dependencies.
 
 ## P3 — Thin citations (lower priority)
 15. Add representative `path:line` anchors to [Core systems index](Core-Systems-Index), [Architecture overview](Architecture-Overview), [Content structure and maps](Content-Structure-And-Maps).

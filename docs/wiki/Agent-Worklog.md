@@ -8,6 +8,13 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Verified `_Sidebar.md` listed `Headless-Delegation-And-Failover-Playbook` twice: once under Gameplay next to AI/headless and once under Ops.
 - Kept the Gameplay entry, because developers following AI/headless delegation source routing will naturally look there first, and removed the Ops duplicate.
 
+## 2026-06-03 - Codex Documentation Finisher: P2 Structure Queue Reconciliation
+
+- Claimed [Instructions for Codex](Instructions-For-Codex) items 12-14 after the sidebar de-duplication batch.
+- Checked [Wiki quality audit](Wiki-Quality-Audit) MERGE-1, MERGE-2 and MERGE-3 against the current pages.
+- Marked the P2 structure items complete in the queue because the current docs already implement the intended ownership split: roadmap versus server-authority design map, HUD/menus quick-ref versus full UI atlas, and mission entrypoints versus lifecycle wait-chain.
+- Scope remained docs-only; no gameplay source files were edited.
+
 ## 2026-06-03 - Codex Documentation Finisher: Progress Dashboard At A Glance Refresh
 
 - Claimed [Instructions for Codex](Instructions-For-Codex) item 10.

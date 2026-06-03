@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `instructions-p2-structure-reconciliation` | Published / validated | Codex reconciled [Instructions for Codex](Instructions-For-Codex) P2 items 12-14 against [Wiki quality audit](Wiki-Quality-Audit): MERGE-1, MERGE-2 and MERGE-3 were already resolved. The queue now preserves the intentional page ownership split for authority, UI and lifecycle docs instead of asking future agents to redo stale merge work. Validation passed for wiki links, whitespace, JSON/JSONL and mirror parity. |
 | `sidebar-hc-delegation-dedupe` | Published / validated | Codex resolved [Instructions for Codex](Instructions-For-Codex) item 11: `_Sidebar.md` now lists [HC delegation/failover](Headless-Delegation-And-Failover-Playbook) once, under Gameplay next to AI/headless, with the Ops duplicate removed. Validation passed for wiki links, whitespace, JSON/JSONL and mirror parity. |
 | `progress-dashboard-at-a-glance-refresh` | Published / validated | Codex reconciled the At A Glance Claude row with [Codebase coverage ledger](Codebase-Coverage-Ledger): Map, Perf, JIP/HC and Drift coverage are complete; remaining yellow Auth/PV cells are explicit owner decisions routed through [Pending owner decisions](Pending-Owner-Decisions), not open review gaps. Validation passed for wiki links, whitespace, JSON/JSONL and mirror parity. |
 | `coordination-board-current-state` | Published / validated | Codex reconciled [Coordination board](Coordination-Board) item 9: Roles now show Codex as orchestrator/documentation finisher, Claude in `collaboration-follow-autonomous-ready` after DR-45+ / DR-46 handoffs, and old named scout lanes as harvested/closed rather than active. Validation passed for wiki links, whitespace, JSON/JSONL and mirror parity. |
@@ -113,7 +114,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active / documentation finisher | `documentation-finisher-loop` | Continue [Instructions for Codex](Instructions-For-Codex) top-to-bottom with source-backed docs, mirror parity, validation and scoped publish batches. |
+| Codex | Active / documentation finisher | `documentation-finisher-loop` | Continue [Instructions for Codex](Instructions-For-Codex) top-to-bottom; next item is P3 citation uplift for core source-map pages. |
 | Codex-2 | Ready | None claimed | Published [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup); next bounded candidates are PVF dispatcher lookup, side-supply clamp first or commander reassignment call-shape repair. |
 | Claude | Autonomous-ready / coverage-follow | `autonomous-claude-research` | Coverage ledger Map/Perf/JIP-HC/Drift columns are complete; remaining yellow Auth/PV cells are owner decisions in [Pending owner decisions](Pending-Owner-Decisions), not open review gaps. Claude can still claim bounded source-backed follow-ups after checking current Codex handoffs. |
 | Sub-agents | Published / validated | Wave S sidecar | Hilbert, Dirac, Descartes and Nash returned; selected findings are promoted into owner pages and machine files. |
