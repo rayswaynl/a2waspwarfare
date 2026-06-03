@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T19:05:00+02:00",
+  "generatedAt": "2026-06-03T19:10:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed stale machine-readable collaboration claims: hc-delegation-failover-playbook and dr42-dr43-reconciliation are no longer ready-to-publish docs tasks; both are already published/validated in dashboard/status and owner pages.",
+      "currentWork": "Closed stale integration collaboration claims: integration-backlog-batch-a is no longer publishing, and discord-datapath-review / battleye-posture-review are no longer ready-for-review docs blockers. Canonical docs now carry the integration trust-boundary evidence while source hardening remains open.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another feature-status reconciliation item, remaining machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "integration-collaboration-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "agent-collaboration.json no longer advertises integration-backlog-batch-a as publishing or discord-datapath-review / battleye-posture-review as ready-for-review documentation blockers. Canonical docs are Integration-Trust-Boundary-Audit, External-Integrations, Feature-Status-Register, agent-feature-status.jsonl and agent-hardening-backlog.jsonl. Source hardening remains open: DiscordBot still needs TypeNameHandling.None for the active reader, broader BattlEye/server-filter evidence is an owner/deployment question, and server-authority fixes are separate."
+    },
     {
       "lane": "send-message-agent-feature-status-reconciliation",
       "owner": "Codex",

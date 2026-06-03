@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T19:05:00+02:00",
+  "generatedAt": "2026-06-03T19:10:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,35 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "integration-collaboration-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/Integration-Trust-Boundary-Audit.md",
+        "docs/wiki/External-Integrations.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/agent-feature-status.jsonl",
+        "docs/wiki/agent-hardening-backlog.jsonl",
+        "DiscordBot/src/ExtensionData/GameData/GameData.cs",
+        "DiscordBot/src/ExtensionData/GameData/GameDataDeSerialization.cs",
+        "Extension/src/SerializationManager.cs",
+        "BattlEyeFilter/publicvariable.txt",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateclient.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/CallExtensions/GlobalGameStats.sqf"
+      ],
+      "outputs": [
+        "Closed stale integration-backlog-batch-a publishing status",
+        "Closed stale discord-datapath-review ready-for-review status",
+        "Closed stale battleye-posture-review ready-for-review status",
+        "Preserved source-hardening boundary for DiscordBot, BattlEye and server-authority work"
+      ],
+      "handoff": "Future integration/security owners should use Integration-Trust-Boundary-Audit and External-Integrations as the canonical docs. This closure is status-only: DiscordBot still needs TypeNameHandling.None on the active reader, broader BattlEye/server filter evidence remains an owner/deployment question, and gameplay authority fixes remain separate code lanes."
+    },
     {
       "lane": "send-message-agent-feature-status-reconciliation",
       "owner": "Codex",
@@ -2074,7 +2103,7 @@
     {
       "lane": "integration-backlog-batch-a",
       "owner": "Codex",
-      "status": "partially-integrated; publishing",
+      "status": "published-validated",
       "outputs": [
         "Networking-And-Public-Variables.md",
         "External-Integrations.md",
@@ -2082,12 +2111,12 @@
         "Gear-Loadout-And-EASA-Atlas.md",
         "Economy-Towns-And-Supply.md"
       ],
-      "handoff": "PV/direct-channel matrix, external integration trust, DR-27 through DR-31, explorer wave C and PDF reconciliation wave D are folded/cross-linked locally. Validate and publish wiki + docs mirror."
+      "handoff": "Historical integration batch is published and validated in current docs. Use Integration-Trust-Boundary-Audit, External-Integrations, Feature-Status-Register and hardening backlog records for canonical state; source hardening and owner/deployment decisions remain open where those pages say so."
     },
     {
       "lane": "discord-datapath-review",
       "owner": "Claude",
-      "status": "ready-for-review; Codex cross-link integrated",
+      "status": "published-crosslinked-source-unpatched",
       "sourceScope": [
         "DiscordBot/src/ExtensionData/GameData/GameData.cs",
         "DiscordBot/src/ExtensionData/GameData/GameDataDeSerialization.cs",
@@ -2100,18 +2129,18 @@
         "External-Integrations.md",
         "Feature-Status-Register.md"
       ],
-      "handoff": "DiscordBot reads GLOBALGAMESTATS database.json on a 60s timer with TypeNameHandling.All. Fix All->None and remove the dead Auto path; command auth and secret hygiene are otherwise documented as good."
+      "handoff": "Historical review is published/cross-linked. Source remains unpatched: DiscordBot reads GLOBALGAMESTATS database.json on a 60s timer with TypeNameHandling.All. Future code owner should change All->None and remove or safe-private the dead Auto helper; command auth and secret hygiene are otherwise documented as good."
     },
     {
       "lane": "battleye-posture-review",
       "owner": "Claude",
-      "status": "ready-for-review; Codex cross-link integrated",
+      "status": "published-crosslinked-owner-question",
       "outputs": [
         "Deep-Review-Findings.md Round 21 / DR-30",
         "External-Integrations.md",
         "Feature-Status-Register.md"
       ],
-      "handoff": "As shipped, option (b) rely on BattlEye is not present in the repo; production BEpath/server config remains an owner question."
+      "handoff": "Historical review is published/cross-linked. As shipped, option (b) rely on BattlEye is not present in the repo beyond the AFK kick publicvariable.txt rule; production BEpath/server config and broader filters remain owner/deployment questions."
     },
     {
       "lane": "latest-doc-batch-validation-publish",

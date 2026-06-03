@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Integration Collaboration Status Closure
+
+- Closed three stale [`agent-collaboration.json`](agent-collaboration.json) records: `integration-backlog-batch-a` is no longer mid-publish, and `discord-datapath-review` / `battleye-posture-review` are no longer ready-for-review documentation blockers.
+- Evidence checked: [Feature status](Feature-Status-Register) lists the shipped BattlEye posture and integration trust-boundary rows; [External integrations](External-Integrations) owns the DiscordBot data path and BattlEye filter posture; [Integration trust boundary audit](Integration-Trust-Boundary-Audit) separates the active DiscordBot `TypeNameHandling.All` reader from the in-repo extension writer and AFK-only BattlEye filter; [`agent-feature-status.jsonl`](agent-feature-status.jsonl) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) carry the canonical hardening records.
+- Source evidence checked: `DiscordBot/src/ExtensionData/GameData/GameData.cs:36,52`, `DiscordBot/src/ExtensionData/GameData/GameDataDeSerialization.cs:32`, `Extension/src/SerializationManager.cs:33,116`, `BattlEyeFilter/publicvariable.txt:2`, `Client/FSM/updateclient.sqf:153-160`, `Server/CallExtensions/GlobalGameStats.sqf:2` and `Extension/src/BaseExtensionClass/ExtensionName.cs:3`.
+- Scope remained docs/status only; DiscordBot serializer hardening, production BattlEye/server filter evidence and server-authority source fixes remain open owner/code lanes.
+
 ## 2026-06-03 - Codex Documentation Finisher: SEND_MESSAGE Agent Feature-Status Reconciliation
 
 - Added the missing P0 `send-message-direct-pv-rce` record to [`agent-feature-status.jsonl`](agent-feature-status.jsonl) so agent-readable feature triage matches [Feature status](Feature-Status-Register), [Public variable channel index](Public-Variable-Channel-Index), [Networking/PV](Networking-And-Public-Variables), [Hardening roadmap](Hardening-Implementation-Roadmap), [Pending owner decisions](Pending-Owner-Decisions) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl#send-message-call-compile-rce).
