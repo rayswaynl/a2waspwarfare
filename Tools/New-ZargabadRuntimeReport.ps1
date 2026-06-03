@@ -151,7 +151,7 @@ foreach ($item in @(
 $report.Add("")
 $report.Add("## Claude Notes")
 $report.Add("")
-$report.Add("Use `PASS`, `FAIL`, or `UNCERTAIN`. Every `PASS` row must include concrete evidence; every `FAIL` or `UNCERTAIN` row must include coordinates, screenshot filenames, RPT line excerpts, or exact repro steps.")
+$report.Add("Use `PASS`, `FAIL`, or `UNCERTAIN`. Every `PASS` row must include concrete row-specific evidence: coordinates or screenshot filenames for spatial checks, RPT excerpts or runtime values for init/balance/feature checks, and an explicit keep/tune/revert/investigate recommendation. Every `FAIL` or `UNCERTAIN` row must include coordinates, screenshot filenames, RPT line excerpts, or exact repro steps.")
 $report.Add("")
 $report.Add("| Runtime check | Verdict | Evidence / notes |")
 $report.Add("| --- | --- | --- |")

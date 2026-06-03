@@ -47,6 +47,23 @@ function Get-TableValue {
 	throw "Missing table row: $Key"
 }
 
+function Get-NoteEvidence {
+	param($Rows, [string]$Key)
+	foreach ($row in $Rows) {
+		if ($row[0] -eq $Key) {
+			if ($row.Count -lt 3) { return "" }
+			return $row[2]
+		}
+	}
+	throw "Missing Claude Notes row: $Key"
+}
+
+function Assert-NoteEvidence {
+	param($Rows, [string]$Key, [string]$Pattern)
+	$evidence = Get-NoteEvidence -Rows $Rows -Key $Key
+	Assert-True "Claude Notes $Key evidence is specific" ([regex]::IsMatch($evidence, $Pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase))
+}
+
 Assert-True "runtime report exists" (Test-Path -LiteralPath $ReportPath -PathType Leaf)
 $content = Get-Content -Raw -LiteralPath $ReportPath
 Assert-True "runtime report header present" ($content -match '^# Zargabad Runtime Report')
@@ -108,6 +125,21 @@ $notesWithoutEvidence = @($noteRows | Where-Object {
 	)
 })
 Assert-True "Claude Notes PASS rows include evidence" ($notesWithoutEvidence.Count -eq 0)
+
+$coordinateOrScreenshot = '(\b[0-9]{2,4}\s*,\s*[0-9]{2,4}\b|\[[0-9]{2,4}\s*,\s*[0-9]{2,4}|[A-Za-z0-9_. -]+\.(png|jpg|jpeg))'
+Assert-NoteEvidence -Rows $noteRows -Key "Hosted/dedicated context" -Pattern '(hosted|dedicated|server|RPT|Arma)'
+Assert-NoteEvidence -Rows $noteRows -Key "Map audit packet attached" -Pattern 'zargabad-map-audit\.md'
+Assert-NoteEvidence -Rows $noteRows -Key "Base safety and spawn sightlines" -Pattern $coordinateOrScreenshot
+Assert-NoteEvidence -Rows $noteRows -Key "Base static runtime positions and arcs" -Pattern '(baseFootprint|base static|Init_Zargabad|static).*([0-9]{2,4}\s*,\s*[0-9]{2,4}|[0-9]{1,3}\])'
+Assert-NoteEvidence -Rows $noteRows -Key "Base-axis midpoint and wall origin" -Pattern '(3425\s*,\s*3375|base-axis|wall origin)'
+Assert-NoteEvidence -Rows $noteRows -Key "Central wall gaps and pathing" -Pattern '(4053\s*,\s*2725|3789\s*,\s*2998|3504\s*,\s*3293|3195\s*,\s*3613|2903\s*,\s*3915|\.png|\.jpg|\.jpeg)'
+Assert-NoteEvidence -Rows $noteRows -Key "Side hills and rim behavior" -Pattern '(80\s*,\s*3000|3000\s*,\s*80|5900\s*,\s*3000|3000\s*,\s*5900|3600\s*,\s*5900|4330\s*,\s*5900|5900\s*,\s*4340|removed from edge rim|allowed at safe edge rim)'
+Assert-NoteEvidence -Rows $noteRows -Key "Town defense facing and movement blocking" -Pattern $coordinateOrScreenshot
+Assert-NoteEvidence -Rows $noteRows -Key "Priority defense mix arcs" -Pattern '(City|Airfield|North District|South District|Northwest Base|Rahim Villa|MG|AT|AA|GL|[0-9]{2,4}\s*,\s*[0-9]{2,4}|\.png|\.jpg|\.jpeg)'
+Assert-NoteEvidence -Rows $noteRows -Key "Economy and factory pricing feel" -Pattern '(economy|factory|price|supply|income|SV|RPT|Zargabad_RuntimeAudit|[0-9])'
+Assert-NoteEvidence -Rows $noteRows -Key "Weapon/range pressure" -Pattern '(missile|UAV|range|countermeasure|hangar|2000|800|45|500|350|35|16|24)'
+Assert-NoteEvidence -Rows $noteRows -Key "Mystery feature behavior" -Pattern '(black-market|black market|cache|Airfield|Zargabad_BlackMarket|armed|cleanup)'
+Assert-NoteEvidence -Rows $noteRows -Key "Recommended Codex action" -Pattern '(keep|tune|revert|investigate|patch|retest)'
 
 Write-Host ""
 Write-Host "Zargabad runtime report is complete enough for Codex review."

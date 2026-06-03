@@ -98,7 +98,7 @@ $brief.Add("- Runtime report markdown from `Tools/New-ZargabadRuntimeReport.ps1`
 $brief.Add("- RPT paths and exact excerpts for any failing or uncertain validator gate.")
 $brief.Add("- The `Init_Zargabad.sqf: Base static runtime positions WEST ... EAST ...` excerpt and ``baseFootprint [35,45,74,78]`` runtime audit evidence when base safety, spawn sightlines, or commander construction space are being judged.")
 $brief.Add("- Screenshot filenames or map coordinates for base sightlines, central-wall gaps, rim abuse, defense arcs, pathing, and economy/factory observations.")
-$brief.Add("- Clear `PASS`, `FAIL`, or `UNCERTAIN` verdicts for each row in the report's Claude Notes table; `PASS` rows must include concrete evidence, not blank notes.")
+$brief.Add("- Clear `PASS`, `FAIL`, or `UNCERTAIN` verdicts for each row in the report's Claude Notes table; `PASS` rows must include row-specific evidence, not blank notes: coordinates or screenshot filenames for spatial checks, RPT excerpts or runtime values for balance/init/feature checks.")
 $brief.Add("")
 $brief.Add("## Dirty Local State Warning")
 if ($dirtyFiles.Count -eq 0) {
