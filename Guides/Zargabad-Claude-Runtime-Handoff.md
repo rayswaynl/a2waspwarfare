@@ -40,7 +40,7 @@ For map-placement, defense-facing, pathing, or sightline notes, generate a coord
 powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadMapAuditPacket.ps1 -OutputPath ".\zargabad-map-audit.md"
 ```
 
-Use the packet's objective, camp, defense, start, base-axis, edge-safe and central-wall checkpoint coordinates as the shared reference for screenshots and repro notes.
+Use the packet's objective, camp, defense, start, base-axis, rim-test and central-wall checkpoint coordinates as the shared reference for screenshots and repro notes.
 
 ## Do Not Stop Until
 
@@ -60,7 +60,7 @@ Claude/runtime tester should keep going until there is RPT and short note eviden
 | HC | If the server uses HC, RPT shows `Headless client is now connected` and town AI/static defense still wakes. |
 | Base safety | WEST/EAST starts cannot trivially spawn-kill each other or suppress city routes from spawn. |
 | Central wall | Wall around `3425,3375` interrupts flat middle sightlines, reports `centralWallCrewed [0]`, and does not create an armed middle-map kill strip; gap checkpoints around `[4053,2725]`, `[3789,2998]`, `[3504,3293]`, `[3195,3613]`, and `[2903,3915]` pass infantry, light armor and AI. |
-| Side hills/rim | Extreme-rim ground camping is removed after the configured timeout; objective-near fights and aircraft are not punished. |
+| Side hills/rim | The map audit Rim Test Points pass: ground vehicles at `80,3000`, `3000,80`, `5900,3000`, and `3000,5900` are removed after the configured timeout, while `3600,5900`, `4330,5900`, `5900,4340`, and aircraft/objective-near fights are not punished. |
 | Economy | City/airfield are valuable without runaway snowball; farms/outskirts stay lower-value flank objectives. |
 | Factory lists/costs | Source/static validation proves exact compact WEST/EAST normal heavy/aircraft lists with MBTs, MLRS, SPAAGs, attack helicopters and attack jets excluded; runtime confirms buy-menu availability and price feel. |
 | Weapon/range pressure | Runtime audit shows missile range 2000, UAV range 800, town defense/mortar/patrol ranges 45/500/350, hangar range 35, and countermeasures 16/24; Claude confirms they feel sane on the smaller map. |
@@ -114,7 +114,7 @@ Use `-AllowKnownDisconnectScoreErrors` only if the only RPT `ERROR` lines are th
 - Screenshot or coordinates for WEST/EAST start sightlines.
 - Screenshot from the base-axis midpoint/wall origin `3425,3375` toward both default starts, and from both default starts back toward `3425,3375`.
 - Screenshot or coordinates for the central wall gaps that were driven/walked through, especially `[4053,2725]`, `[3789,2998]`, `[3504,3293]`, `[3195,3613]`, and `[2903,3915]`.
-- RPT excerpt for edge-guard init and, if tested, removal.
+- RPT excerpt for edge-guard init and removal at the illegal rim points; screenshot/coordinate notes for the legal North Camp, Rahim Villa and East Farms rim points that did not get removed.
 - RPT excerpt for `Init_Zargabad.sqf: Oriented [33] town defense logics toward linked town centers`.
 - RPT excerpt for the `Zargabad_RuntimeAudit.sqf` count/SV, base/static/wall with `baseFootprint [35,45,74,78]`, `centralWallCrewed [0]` and `centralWallGaps`, base static template, factory restriction, price multiplier/sample, and economy/range/weapon-pressure lines.
 - RPT excerpt for `Init_Zargabad.sqf: Base static runtime positions WEST ... EAST ...`, plus screenshot/coordinate notes for spawned position/facing and usable arcs.

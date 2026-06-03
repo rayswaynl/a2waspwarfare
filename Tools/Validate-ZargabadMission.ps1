@@ -190,6 +190,24 @@ $edgeSafeObjects = @($safeZoneObjects | Where-Object { (Get-EdgeDistance -LogicO
 Assert-Equal "objective safe-zone logics inside edge guard kill rim" $killRimObjects.Count 0
 Assert-Equal "bounded edge-safe objective/start logic count" $edgeSafeObjects.Count 7
 Assert-Equal "edge-safe logics limited to north/east flank" @($edgeSafeObjects | Where-Object { $_.Y -lt 5680 -and $_.X -lt 5770 }).Count 0
+$rimTestPoints = @(
+	[pscustomobject]@{ Name = "West illegal rim"; X = 80; Y = 3000; Expected = "remove" },
+	[pscustomobject]@{ Name = "South illegal rim"; X = 3000; Y = 80; Expected = "remove" },
+	[pscustomobject]@{ Name = "East illegal rim"; X = 5900; Y = 3000; Expected = "remove" },
+	[pscustomobject]@{ Name = "North illegal rim"; X = 3000; Y = 5900; Expected = "remove" },
+	[pscustomobject]@{ Name = "North Camp legal rim"; X = 3600; Y = 5900; Expected = "allow" },
+	[pscustomobject]@{ Name = "Rahim Villa legal rim"; X = 4330; Y = 5900; Expected = "allow" },
+	[pscustomobject]@{ Name = "East Farms legal rim"; X = 5900; Y = 4340; Expected = "allow" }
+)
+$badRimTests = @()
+foreach ($point in $rimTestPoints) {
+	$edgeDistance = Get-EdgeDistance -LogicObject $point -Boundary 6000
+	$nearestSafeDistance = (@($safeZoneObjects | ForEach-Object { Get-FlatDistance $point $_ }) | Measure-Object -Minimum).Minimum
+	if ($edgeDistance -gt 120) { $badRimTests += "$($point.Name): outside edge band" }
+	if ($point.Expected -eq "remove" -and $nearestSafeDistance -le 325) { $badRimTests += "$($point.Name): remove point inside safe bubble" }
+	if ($point.Expected -eq "allow" -and $nearestSafeDistance -gt 325) { $badRimTests += "$($point.Name): allow point outside safe bubble" }
+}
+Assert-Equal "rim test point geometry mismatches" $badRimTests.Count 0
 
 $campTownLinkCounts = @($camps | ForEach-Object {
 	$camp = $_
@@ -454,18 +472,20 @@ Assert-True "map audit packet emits population flow table" ($mapAuditPacketSourc
 Assert-True "map audit packet emits camp and defense coordinates" ($mapAuditPacketSource -match '## Camps' -and $mapAuditPacketSource -match '## Town Defenses')
 Assert-True "map audit packet emits base-axis sightline section" ($mapAuditPacketSource -match '## Base Axis And Sightlines' -and $mapAuditPacketSource -match 'central wall origin')
 Assert-True "map audit packet emits base fortification footprint" ($mapAuditPacketSource -match 'baseFootprint \[35,45,74,78\]' -and $mapAuditPacketSource -match 'commander-clear radius')
+Assert-True "map audit packet emits rim test points" ($mapAuditPacketSource -match '## Rim Test Points' -and $mapAuditPacketSource -match 'West illegal rim' -and $mapAuditPacketSource -match 'East Farms legal rim')
 Assert-True "map audit packet emits Claude screenshot targets" ($mapAuditPacketSource -match '## Claude Screenshot Targets')
 Assert-True "map audit packet emits central wall gap checkpoints" ($mapAuditPacketSource -match '4053,2725' -and $mapAuditPacketSource -match '2903,3915')
 Assert-True "map audit packet emits uncrewed central wall focus" ($mapAuditPacketSource -match 'centralWallCrewed \[0\]' -and $mapAuditPacketSource -match 'uncrewed WDDM-compatible fortification')
 $mapAuditPacketOutput = (& $mapAuditPacketTool) -join "`n"
 Assert-True "map audit packet runs and reports Zargabad counts" ($mapAuditPacketOutput -match '# Zargabad Map Audit Packet' -and $mapAuditPacketOutput -match 'Counts: towns \[13\], camps \[19\], airports \[1\], starts \[9\], town defenses \[33\]')
-Assert-True "map audit packet runs and reports core screenshot targets" ($mapAuditPacketOutput -match 'Zargabad City Center' -and $mapAuditPacketOutput -match 'Claude Screenshot Targets' -and $mapAuditPacketOutput -match '4053,2725' -and $mapAuditPacketOutput -match 'central wall origin')
+Assert-True "map audit packet runs and reports core screenshot targets" ($mapAuditPacketOutput -match 'Zargabad City Center' -and $mapAuditPacketOutput -match 'Claude Screenshot Targets' -and $mapAuditPacketOutput -match '4053,2725' -and $mapAuditPacketOutput -match 'central wall origin' -and $mapAuditPacketOutput -match 'West illegal rim' -and $mapAuditPacketOutput -match 'East Farms legal rim')
 Assert-True "Claude brief tool exists" (Test-Path -LiteralPath $claudeBriefTool)
 $claudeBriefSource = Get-Content -Raw -LiteralPath $claudeBriefTool
 Assert-True "Claude brief tool emits coordination cadence" ($claudeBriefSource -match '## Coordination Cadence')
 Assert-True "Claude brief tool requires post-commit updates" ($claudeBriefSource -match 'after every commit or material mission/tooling change')
 Assert-True "Claude brief tool listens to evidence-backed findings" ($claudeBriefSource -match 'RPT excerpts, screenshots, coordinates, or repeatable repro steps')
 Assert-True "Claude brief tool emits retest focus" ($claudeBriefSource -match '## Retest Focus')
+Assert-True "Claude brief tool emits rim test point retest focus" ($claudeBriefSource -match 'rim test points')
 Assert-True "Claude brief tool emits base footprint retest focus" ($claudeBriefSource -match 'baseFootprint evidence')
 Assert-True "Claude brief tool emits uncrewed wall retest focus" ($claudeBriefSource -match 'uncrewed central-wall evidence')
 Assert-True "Claude brief tool emits mystery armed retest focus" ($claudeBriefSource -match 'Mystery feature: confirm the armed RPT line after town init')

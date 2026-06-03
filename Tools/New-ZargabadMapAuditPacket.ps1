@@ -172,11 +172,29 @@ if ($westStart.Count -gt 0 -and $eastStart.Count -gt 0) {
 }
 $safeObjects = @($towns) + @($camps) + @($airports) + @($starts)
 $edgeSafe = @($safeObjects | Where-Object { (Get-EdgeDistance $_ 6000) -le 325 } | Sort-Object Y, X)
+$rimTests = @(
+	[pscustomobject]@{ Name = "West illegal rim"; X = 80; Y = 3000; Expected = "remove"; Reason = "outer west rim away from objective safe bubbles" },
+	[pscustomobject]@{ Name = "South illegal rim"; X = 3000; Y = 80; Expected = "remove"; Reason = "outer south rim away from objective safe bubbles" },
+	[pscustomobject]@{ Name = "East illegal rim"; X = 5900; Y = 3000; Expected = "remove"; Reason = "outer east rim away from East Farms safe bubble" },
+	[pscustomobject]@{ Name = "North illegal rim"; X = 3000; Y = 5900; Expected = "remove"; Reason = "outer north rim between legal objective bubbles" },
+	[pscustomobject]@{ Name = "North Camp legal rim"; X = 3600; Y = 5900; Expected = "allow"; Reason = "inside North Camp camp safe bubble" },
+	[pscustomobject]@{ Name = "Rahim Villa legal rim"; X = 4330; Y = 5900; Expected = "allow"; Reason = "inside Rahim Villa camp safe bubble" },
+	[pscustomobject]@{ Name = "East Farms legal rim"; X = 5900; Y = 4340; Expected = "allow"; Reason = "inside East Farms camp safe bubble" }
+)
 $report.Add("")
 $report.Add("Edge-safe objective/start bubbles within 325m of the 6000m border:")
 foreach ($logic in $edgeSafe) {
 	$name = if ($logic.Vehicle -eq "LocationLogicDepot") { (@($parsedTowns | Where-Object { $_.Id -eq $logic.Id })[0]).Name } else { $logic.Vehicle }
 	$report.Add("- $name id [$($logic.Id)] at ``$(Get-PositionText $logic)``, edge distance [$([math]::Round((Get-EdgeDistance $logic 6000), 1))].")
+}
+$report.Add("")
+$report.Add("## Rim Test Points")
+$report.Add("")
+$report.Add("| Point | Position | Expected | Edge distance | Nearest safe distance | Reason |")
+$report.Add("| --- | ---: | --- | ---: | ---: | --- |")
+foreach ($point in $rimTests) {
+	$nearest = @($safeObjects | ForEach-Object { [pscustomobject]@{ Logic = $_; Distance = [math]::Round((Get-FlatDistance $point $_), 1) } } | Sort-Object Distance | Select-Object -First 1)[0]
+	$report.Add("| $($point.Name) | ``$($point.X),$($point.Y)`` | $($point.Expected) | $([math]::Round((Get-EdgeDistance $point 6000), 1)) | $($nearest.Distance) | $($point.Reason) |")
 }
 $report.Add("")
 $report.Add("## Central Wall")
@@ -192,7 +210,7 @@ $report.Add("- WEST/EAST base interiors: compare runtime ``baseFootprint [35,45,
 $report.Add("- Base-axis midpoint `3425,3375`: screenshot toward both default starts and toward city routes.")
 $report.Add("- City/airfield high-value flow: `4075,3950` and `2980,5200`, including their two camp approaches.")
 $report.Add("- Central wall gap checkpoints listed above, tested with infantry, light armor and AI pathing.")
-$report.Add("- Edge-safe north/east objectives listed above, especially any place that still permits unfair side-hill overwatch.")
+$report.Add("- Rim test points listed above: removal points should log `Zargabad_EdgeGuard.sqf: ... removed from edge rim`, while legal points should allow objective-side fights without removal.")
 $report.Add("- Any defense row above that faces the wrong route, blocks movement, or spawns on unusable terrain.")
 
 $reportText = $report -join "`r`n"

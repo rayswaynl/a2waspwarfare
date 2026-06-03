@@ -45,7 +45,7 @@ Zargabad uses a `6000` boundary in `Common/Init/Init_Boundaries.sqf`; the curren
 
 `Server/Module/Zargabad/Zargabad_EdgeGuard.sqf` adds a server-side rim guard for the extreme outer 120m of that square. Ground players and their vehicles are removed after 45s in the rim unless they are within 325m of a start, town, camp or airport logic. This is deliberately conservative: it backs up the client off-map kill and deters side-hill/edge camping without banning legitimate fights around Rahim Villa, North Camp, East Farms or the airfield.
 
-Static validation now also checks the edge-safe footprint: no start/town/camp/airport logic sits inside the 120m kill rim, exactly seven objective/start logics create 325m edge-safe bubbles, and those bubbles are limited to the north/east flank (`y >= 5680` or `x >= 5770`). This keeps side-hill fights near real objectives legal while preventing broad safe corridors around the outer map.
+Static validation now also checks the edge-safe footprint: no start/town/camp/airport logic sits inside the 120m kill rim, exactly seven objective/start logics create 325m edge-safe bubbles, and those bubbles are limited to the north/east flank (`y >= 5680` or `x >= 5770`). The map audit packet also emits named rim test points: illegal ground tests at `80,3000`, `3000,80`, `5900,3000`, and `3000,5900`, plus legal objective-side tests inside the rim at `3600,5900`, `4330,5900`, and `5900,4340`. This keeps side-hill fights near real objectives legal while preventing broad safe corridors around the outer map.
 
 ## Balance Audit
 
@@ -79,7 +79,7 @@ Static validation currently proves the editor data shape, not tactical effective
 - Whether the uncrewed central wall reports `centralWallCrewed [0]`, keeps gaps wide enough for normal infantry, light armor and AI movement, and still interrupts easy flat-map fire lanes without creating an armed middle-map kill strip.
 - Whether extra town AT/AA/MG/GL defenses face useful routes after the runtime orientation pass and terrain placement.
 - Whether north/east side hills still allow unfair shelling or overwatch outside the guarded rim.
-- Whether the edge guard logs once on init, ignores objective-side fights, and removes only sustained extreme-rim ground abuse.
+- Whether the edge guard logs once on init, removes the illegal rim test points after the configured timeout, ignores the legal objective-side rim test points, and removes only sustained extreme-rim ground abuse.
 
 ## Mystery Feature
 
@@ -110,7 +110,7 @@ Static validation currently proves the editor data shape, not tactical effective
 
 `Tools/Validate-ZargabadRuntimeReport.ps1` is the stop/go checker for Claude's edited markdown report. It fails if the runtime validator did not pass, required gates are still `MISSING`, the failure scan contains `FOUND`, `_missing_` key-evidence placeholders remain, optional JIP/HC/edge/black-market gates requested by switches did not pass, or any Claude Notes row is still not `PASS`.
 
-`Tools/New-ZargabadMapAuditPacket.ps1` emits a Claude-facing coordinate packet from the generated Zargabad `mission.sqm`: population-flow objectives, camp links/distances, defense kind/position/distance rows, start positions, base-axis midpoint, edge-safe objective/start bubbles, central-wall gap checkpoints, and screenshot targets. Use it beside runtime screenshots so map-placement, sightline, pathing and defense-facing feedback points to exact coordinates.
+`Tools/New-ZargabadMapAuditPacket.ps1` emits a Claude-facing coordinate packet from the generated Zargabad `mission.sqm`: population-flow objectives, camp links/distances, defense kind/position/distance rows, start positions, base-axis midpoint, edge-safe objective/start bubbles, rim test points, central-wall gap checkpoints, and screenshot targets. Use it beside runtime screenshots so map-placement, sightline, pathing and defense-facing feedback points to exact coordinates.
 
 `Tools/New-ZargabadClaudeBrief.ps1` emits the current Codex-to-Claude context packet: latest commit, PR head, changed files, inferred retest focus, required runtime commands, dirty local state warning, and the rule that Codex owns final stop/go while accepting Claude's evidence-backed findings.
 

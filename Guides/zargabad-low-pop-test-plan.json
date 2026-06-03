@@ -64,8 +64,8 @@
     "Join a second client after time > 30 and confirm current town/camp colors and SV visibility rules are preserved.",
     "Inspect WEST southwest and EAST northeast starts for direct spawn-to-spawn fire, spawn-to-city fire and hill-edge overwatch abuse.",
     "Inspect the WDDM-compatible central H-barrier wall around 3425,3375 and confirm the pass-through gaps preserve normal infantry, light armor and AI movement.",
-    "Drive a ground vehicle into the outer Zargabad rim away from starts/towns/camps/airport and confirm Zargabad_EdgeGuard removes it after the configured timeout, while aircraft and objective-near ground fights are ignored.",
-    "Probe the seven intended north/east edge-safe bubbles near starts/objectives and confirm they allow legitimate objective fights without becoming broad safe hill-camping corridors.",
+    "Drive a ground vehicle to the map-audit illegal rim test points 80,3000; 3000,80; 5900,3000; and 3000,5900 and confirm Zargabad_EdgeGuard removes it after the configured timeout.",
+    "Probe the legal rim test points 3600,5900; 4330,5900; and 5900,4340 plus aircraft near the rim, and confirm legitimate objective-side fights are ignored without becoming broad safe hill-camping corridors.",
     "Verify WEST/EAST Zargabad fortifications and statics spawn, are side-owned, manned, match runtime baseFootprint [35,45,74,78], and do not block commander construction in normal base flow.",
     "Compare the RPT baseStaticTemplates line and Init_Zargabad base static runtime positions line with screenshots/coordinates for spawned WEST/EAST base statics and flag mismatched classes, bad arcs, bad facing, unmanned statics, or blocked commander movement.",
     "Wake city, airfield and one outer farm with ground units; confirm town AI and static defenses activate, face useful approaches after the Zargabad orientation pass, fight, and clean up after inactivity.",
@@ -103,7 +103,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Static edge-footprint validation found zero objective safe-zone logics inside the 120m kill rim and exactly seven north/east edge-safe start/objective bubbles inside the 325m safe range."
+      "summary": "Static edge-footprint validation found zero objective safe-zone logics inside the 120m kill rim, exactly seven north/east edge-safe start/objective bubbles inside the 325m safe range, and named rim test points whose remove/allow expectations match the edge-guard geometry."
     },
     {
       "type": "command-output",
@@ -159,7 +159,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/New-ZargabadMapAuditPacket.ps1 generates a Claude-facing coordinate packet from mission.sqm with population-flow objective values, camp links/distances, town-defense kind/position/distance rows, starts, base-axis midpoint, edge-safe bubbles, central-wall gap checkpoints, and screenshot targets for map-placement, pathing, sightline and defense-facing notes."
+      "summary": "Tools/New-ZargabadMapAuditPacket.ps1 generates a Claude-facing coordinate packet from mission.sqm with population-flow objective values, camp links/distances, town-defense kind/position/distance rows, starts, base-axis midpoint, edge-safe bubbles, named rim test points, central-wall gap checkpoints, and screenshot targets for map-placement, pathing, sightline and defense-facing notes."
     },
     {
       "type": "source-audit",
