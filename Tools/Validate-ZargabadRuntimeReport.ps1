@@ -65,18 +65,24 @@ function Assert-NoteEvidence {
 	Assert-True "Claude Notes $Key evidence is specific" ([regex]::IsMatch($evidence, $Pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase))
 }
 
+function Get-ScreenshotReferencesFromText {
+	param([string]$Text)
+	$refs = New-Object System.Collections.Generic.List[string]
+	foreach ($match in [regex]::Matches($Text, '(?i)!?\[[^\]]*\]\(([^)]+\.(png|jpg|jpeg))\)')) {
+		$refs.Add($match.Groups[1].Value.Trim(" `"'"))
+	}
+	foreach ($match in [regex]::Matches($Text, '(?i)(?<![\w:/\\.-])([A-Za-z]:[^\s\|<>"'']+\.(png|jpg|jpeg)|[A-Za-z0-9_.-]+([\\/][A-Za-z0-9_.-]+)*\.(png|jpg|jpeg))')) {
+		$refs.Add($match.Groups[1].Value.Trim(" `"'"))
+	}
+	return @($refs | Where-Object { $_ -notmatch '^(?i:https?://)' } | Sort-Object -Unique)
+}
+
 function Get-ScreenshotReferences {
 	param($Rows)
 	$refs = New-Object System.Collections.Generic.List[string]
 	foreach ($row in $Rows) {
 		if ($row[0] -eq "Runtime check" -or $row.Count -lt 3) { continue }
-		$evidence = $row[2]
-		foreach ($match in [regex]::Matches($evidence, '(?i)!?\[[^\]]*\]\(([^)]+\.(png|jpg|jpeg))\)')) {
-			$refs.Add($match.Groups[1].Value.Trim(" `"'"))
-		}
-		foreach ($match in [regex]::Matches($evidence, '(?i)(?<![\w:/\\.-])([A-Za-z]:[^\s\|<>"'']+\.(png|jpg|jpeg)|[A-Za-z0-9_.-]+([\\/][A-Za-z0-9_.-]+)*\.(png|jpg|jpeg))')) {
-			$refs.Add($match.Groups[1].Value.Trim(" `"'"))
-		}
+		foreach ($ref in (Get-ScreenshotReferencesFromText -Text $row[2])) { $refs.Add($ref) }
 	}
 	return @($refs | Where-Object { $_ -notmatch '^(?i:https?://)' } | Sort-Object -Unique)
 }
@@ -256,6 +262,20 @@ if ($EvidenceRoot.Trim().Length -gt 0) {
 	Assert-True "Claude Notes screenshot references are present when evidence root is supplied" ($screenshotRefs.Count -gt 0)
 	$missingScreenshotRefs = @($screenshotRefs | Where-Object { -not (Test-ScreenshotReference -Reference $_ -Roots $evidenceRoots) })
 	Assert-True "Claude Notes screenshot references are real PNG/JPEG files under evidence root" ($missingScreenshotRefs.Count -eq 0)
+	$visualNoteRows = @(
+		"Population and SP/SV placement feel",
+		"Base safety and spawn sightlines",
+		"Base static runtime positions and arcs",
+		"Base-axis midpoint and wall origin",
+		"Central wall gaps and pathing",
+		"Town defense facing and movement blocking",
+		"Priority defense mix arcs"
+	)
+	$visualRowsWithoutScreenshots = @($visualNoteRows | Where-Object {
+		$evidence = Get-NoteEvidence -Rows $noteRows -Key $_
+		@(Get-ScreenshotReferencesFromText -Text $evidence).Count -eq 0
+	})
+	Assert-True "key visual Claude Notes rows include screenshot references" ($visualRowsWithoutScreenshots.Count -eq 0)
 }
 
 Write-Host ""

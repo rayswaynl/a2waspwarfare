@@ -153,7 +153,7 @@ foreach ($item in @(
 $report.Add("")
 $report.Add("## Claude Notes")
 $report.Add("")
-$report.Add("Use `PASS`, `FAIL`, or `UNCERTAIN`. Every `PASS` row must include concrete row-specific evidence: coordinates or screenshot filenames for spatial checks, RPT excerpts or runtime values for init/balance/feature checks, and an explicit keep/tune/revert/investigate recommendation. Every `FAIL` or `UNCERTAIN` row must include coordinates, screenshot filenames, RPT line excerpts, or exact repro steps. Put referenced PNG/JPEG screenshots in `.\zargabad-evidence` or pass their folder with `Validate-ZargabadRuntimeReport.ps1 -EvidenceRoot`.")
+$report.Add("Use `PASS`, `FAIL`, or `UNCERTAIN`. Every `PASS` row must include concrete row-specific evidence: coordinates or screenshot filenames for spatial checks, RPT excerpts or runtime values for init/balance/feature checks, and an explicit keep/tune/revert/investigate recommendation. Key visual rows need screenshot filenames when validating with `-EvidenceRoot`: population placement, base sightlines/statics, wall origin/gaps, town-defense blocking, and priority defense arcs. Every `FAIL` or `UNCERTAIN` row must include coordinates, screenshot filenames, RPT line excerpts, or exact repro steps. Put referenced PNG/JPEG screenshots in `.\zargabad-evidence` or pass their folder with `Validate-ZargabadRuntimeReport.ps1 -EvidenceRoot`.")
 $report.Add("")
 $report.Add("| Runtime check | Verdict | Evidence / notes |")
 $report.Add("| --- | --- | --- |")

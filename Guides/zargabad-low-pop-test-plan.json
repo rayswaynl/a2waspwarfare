@@ -163,7 +163,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/Validate-ZargabadRuntimeReport.ps1 validates Claude's edited runtime report before Codex stop/go: validator PASS, every expected gate and failure-scan row present, no MISSING required gates, no FOUND failure-scan rows, no _missing_ key evidence placeholders, requested JIP/HC/edge/black-market gates PASS, every expected Claude Notes row present including population/SP-SV placement feel, hosted and dedicated boot rows proven separately, every Claude Notes row PASS, every PASS row includes concrete row-specific evidence plus a keep/tune/revert/investigate/patch/retest recommendation, and screenshot filenames resolve to PNG/JPEG files when -EvidenceRoot is supplied."
+      "summary": "Tools/Validate-ZargabadRuntimeReport.ps1 validates Claude's edited runtime report before Codex stop/go: validator PASS, every expected gate and failure-scan row present, no MISSING required gates, no FOUND failure-scan rows, no _missing_ key evidence placeholders, requested JIP/HC/edge/black-market gates PASS, every expected Claude Notes row present including population/SP-SV placement feel, hosted and dedicated boot rows proven separately, every Claude Notes row PASS, every PASS row includes concrete row-specific evidence plus a keep/tune/revert/investigate/patch/retest recommendation, key visual rows include screenshot filenames, and screenshot filenames resolve to PNG/JPEG files when -EvidenceRoot is supplied."
     },
     {
       "type": "source-audit",
