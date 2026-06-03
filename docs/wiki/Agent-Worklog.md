@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Generated Mission Drift Status Closure
+
+- Closed the stale `generated-mission-drift-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); DR-4/DR-32 are already integrated into [Tools/build workflow](Tools-And-Build-Workflow#generated-mission-status-table), [Source inventory](Source-Inventory), [Codebase coverage ledger](Codebase-Coverage-Ledger#drift-dimension--campaign-wide-result-dr-32), [Content structure/maps](Content-Structure-And-Maps) and [Deep review findings](Deep-Review-Findings).
+- Evidence checked: tracked mission counts are Vanilla Takistan 786, Napf 507, eden 502, lingor 438, dingor 20, sahrani 4, tavi 3 and isladuala 1; `SqfFileGenerator.cs:132` still comments out `WriteAndUpdateToFilesForModdedTerrains`; `ZipManager.cs:16` still packages only `Missions` and `Missions_Vanilla`; `FileManager.cs:89-100` still skip-lists `mission.sqm`, `version.sqf`, help/start-vehicle/load-screen paths; `git ls-files "*version.sqf"` returns no tracked rows.
+- Scope remained docs/status only. Future release owner still needs an owner decision for modded forks/stubs and must apply DR fixes to Chernarus source first, then propagate maintained Vanilla and hand-mirror skip-listed files.
+
 ## 2026-06-03 - Codex Documentation Finisher: Factory Review Status Closure
 
 - Closed the stale `factory-perf-jip-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); DR-33 is already integrated into [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Feature status](Feature-Status-Register), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Deep review findings](Deep-Review-Findings#round-24--2026-06-02-claude--factoryproduction-perf--jiphc-dr-33) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl#factory-queue-cleanups).

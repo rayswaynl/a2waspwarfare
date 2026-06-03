@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T19:45:00+02:00",
+  "generatedAt": "2026-06-03T19:50:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed stale factory-perf-jip-review collaboration status: Factory atlas, cleanup playbook, Performance Sweep, Feature Status, Coverage Ledger and hardening backlog already route DR-33; source still needs the queue counter/token patch.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: generated-mission drift review, another feature-status reconciliation item or remaining machine-readable stale-status cleanup with exact source refs."
+      "currentWork": "Closed stale generated-mission-drift-review collaboration status: Tools/build workflow, Source Inventory, Coverage Ledger, Content Structure and Deep Review already route DR-4/DR-32 and the generated-mission status table.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: another feature-status reconciliation item, machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "generated-mission-drift-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "agent-collaboration.json no longer advertises generated-mission-drift-review as ready-for-review. Tools-And-Build-Workflow already has the generated-mission status table requested by the handoff, Source Inventory carries tracked mission counts, and Coverage Ledger/Deep Review route DR-4/DR-32. Source evidence remains SqfFileGenerator.cs:132 commented modded propagation, ZipManager.cs:16 packaging only Missions/Missions_Vanilla, FileManager.cs:89-100 skip-list behavior and no tracked version.sqf files."
+    },
     {
       "lane": "factory-review-status-closure",
       "owner": "Codex",

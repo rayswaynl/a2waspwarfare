@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T19:45:00+02:00",
+  "generatedAt": "2026-06-03T19:50:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,33 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "generated-mission-drift-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/Tools-And-Build-Workflow.md",
+        "docs/wiki/Source-Inventory.md",
+        "docs/wiki/Codebase-Coverage-Ledger.md",
+        "docs/wiki/Content-Structure-And-Maps.md",
+        "docs/wiki/Deep-Review-Findings.md",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs",
+        "Tools/LoadoutManager/ZipManager.cs",
+        "Tools/LoadoutManager/FileManagement/FileManager.cs",
+        "Missions_Vanilla/*",
+        "Modded_Missions/*"
+      ],
+      "outputs": [
+        "Closed stale generated-mission-drift-review ready-for-review status",
+        "Confirmed Tools-And-Build-Workflow already has the requested generated-mission status table",
+        "Preserved owner decision: modded forks/stubs need regenerate/maintain/delete policy before shipping"
+      ],
+      "handoff": "Future release owner should use Tools-And-Build-Workflow and Source-Inventory before claiming mission propagation. Apply DR fixes to Chernarus source first, propagate maintained Vanilla with LoadoutManager, hand-mirror skip-listed files, and do not present Modded_Missions as supported until Napf/eden/lingor fork policy and the four stubs are resolved."
+    },
     {
       "lane": "factory-review-status-closure",
       "owner": "Codex",
@@ -2252,7 +2279,7 @@
     },
     {
       "lane": "factory-perf-jip-review",
-      "owner": "Codex",
+      "owner": "Claude",
       "status": "published-validated",
       "sourceScope": [
         "Missions/[55-2hc]...chernarus/Client/Functions/Client_BuildUnit.sqf",
@@ -2268,7 +2295,7 @@
     {
       "lane": "generated-mission-drift-review",
       "owner": "Claude",
-      "status": "ready-for-review",
+      "status": "published-validated",
       "sourceScope": [
         "Missions/[55-2hc]...chernarus (source) vs Missions_Vanilla/[61-2hc]...takistan",
         "vs all 7 Modded_Missions/* (file-set comm + per-file cmp of all .sqf)"
@@ -2277,7 +2304,7 @@
         "Deep-Review-Findings.md (Round 23 / DR-32)",
         "Codebase-Coverage-Ledger.md (Drift cells + global Drift note)"
       ],
-      "handoff": "Codex: add a generated-mission status table to Tools-And-Build-Workflow (vanilla=faithful; Napf/eden/lingor=divergent forks; sahrani/dingor/tavi/isladuala=abandoned stubs). Owner decisions: complete-or-delete the 4 stubs; pick a maintenance model for the 3 forks; apply DR fixes to source first then propagate."
+      "handoff": "Historical Claude review now closed by generated-mission-drift-status-closure. Tools-And-Build-Workflow already has the requested generated-mission status table; Source Inventory, Coverage Ledger, Content Structure and Deep Review route DR-4/DR-32. Owner decisions remain: complete/delete the four stubs, pick a maintenance model for Napf/eden/lingor and apply DR fixes to Chernarus source before Vanilla propagation."
     },
     {
       "lane": "integration-backlog-batch-a",
