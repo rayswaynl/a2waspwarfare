@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T15:00:00+02:00",
+  "generatedAt": "2026-06-03T15:15:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Corrected Deep-Review-Findings DR-39 branch scope: origin/master still has the all-object supply command-center scan; docs branch and Vanilla are narrowed.",
+      "currentWork": "Corrected stale DR-39 agent-readable breadcrumbs in Agent-Worklog and agent-knowledge.jsonl to branch-aware supply scan refs.",
       "nextExpectedOutput": "Re-read Instructions-For-Codex and status pages for newly appended handoffs, then continue the documentation finisher loop."
     },
     "Codex-2": {
@@ -44,10 +44,22 @@
   },
   "laneSummary": [
     {
+      "lane": "dr39-agent-readable-ref-cleanup",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Agent-Worklog.md and agent-knowledge.jsonl no longer use stale two-line supply-scan refs for DR-39; they now distinguish origin/master broad :24-28 from current branch/Vanilla narrowed :28."
+    },
+    {
       "lane": "dr39-register-branch-scope",
       "owner": "Codex",
       "status": "published-validated",
       "output": "Deep-Review-Findings.md DR-39 now scopes the all-object supply command-center scan to origin/master, documents branch/Vanilla narrowing and keeps master adoption plus Arma smoke pending."
+    },
+    {
+      "lane": "construction-logic-list-cleanup-playbook",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Construction-Logic-List-Cleanup.md is validated as a docs-only patch-ready/source-unpatched playbook: Chernarus and maintained Vanilla both have SmallSite add/add at Construction_SmallSite.sqf:70/:99 while MediumSite removes at Construction_MediumSite.sqf:114; future code owner still needs the one-line SmallSite patch, Vanilla propagation and Arma smoke."
     },
     {
       "lane": "a3-string-selection-command-guardrails",
@@ -264,12 +276,6 @@
       "owner": "Codex",
       "status": "published-validated",
       "output": "Wave Q UI lead published: OptionsAvailable/RHUD/action icons and EndOfGameStats both use uiNamespace currentCutDisplay, so the patch lane must split title display handles or gate RHUD/action recreation during endgame."
-    },
-    {
-      "lane": "construction-logic-list-cleanup-playbook",
-      "owner": "Codex",
-      "status": "local-validation-pending",
-      "output": "Construction-Logic-List-Cleanup.md turns the SmallSite/MediumSite wfbe_structures_logic asymmetry into a patch-ready guide with exact source evidence, one-line source patch shape, Vanilla propagation plan and smoke checklist."
     },
     {
       "lane": "orchestrator-code-discovery-wave-q",

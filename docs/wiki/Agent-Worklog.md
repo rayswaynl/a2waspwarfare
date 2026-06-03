@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Construction Logic Cleanup Playbook Validation
+
+- Closed the stale `construction-logic-list-cleanup-playbook` validation status without editing gameplay source.
+- Source-checked source Chernarus `Construction_SmallSite.sqf:70,98-99` and `Construction_MediumSite.sqf:70,113-114`: SmallSite adds `_nearLogic` again where its comment says remove; MediumSite removes it.
+- Source-checked maintained Vanilla Takistan with the same SmallSite add/add and MediumSite add/remove shape.
+- Confirmed [Construction logic list cleanup](Construction-Logic-List-Cleanup) remains a docs-only patch-ready/source-unpatched playbook; future code owners still need the one-line SmallSite source patch, Vanilla propagation and Arma construction smoke.
+
 ## 2026-06-03 - Codex Documentation Finisher: DR-39 Scan Guardrail
 
 - Closed [Instructions for Codex](Instructions-For-Codex) item 49.
@@ -1317,7 +1324,7 @@ Key conclusions:
 # 2026-06-02 - Scripting-Reference Pass 2: Object-Scan Family + A3 Trap-Check (Claude)
 
 - Second BIKI version cross-check, theme = object-scan/spatial commands and a sweep for A3-only "looks-useful" commands. All grounded in source usage.
-- Added an **Object scans & spatial queries** section to [Arma-2-OA command version reference](Arma-2-OA-Command-Version-Reference): `nearestObjects` (A2 1.00, sorted, `[]`=all/slow), `nearEntities` (A2 1.00, unsorted, **alive units/vehicles/logics only** — no buildings/dead/crew, BI "much faster"), `nearObjects` (ArmA 1.00), `nearestObject` (OFP 1.00). Key guardrail: the DR-39 supply scan targets the `Base_WarfareBUAVterminal` **structure** (`supplyMissionStarted.sqf:45,61`), so it must stay a class-filtered `nearestObjects` — it cannot be swapped to `nearEntities` (returns no buildings).
+- Added an **Object scans & spatial queries** section to [Arma-2-OA command version reference](Arma-2-OA-Command-Version-Reference): `nearestObjects` (A2 1.00, sorted, `[]`=all/slow), `nearEntities` (A2 1.00, unsorted, **alive units/vehicles/logics only** — no buildings/dead/crew, BI "much faster"), `nearObjects` (ArmA 1.00), `nearestObject` (OFP 1.00). Key guardrail: the DR-39 supply scan targets the `Base_WarfareBUAVterminal` **structure** (`origin/master` broad scan at `supplyMissionStarted.sqf:24-28`; docs branch narrowed scan at `:28`), so it must stay a class-filtered `nearestObjects` — it cannot be swapped to `nearEntities` (returns no buildings).
 - Added confirmed-available rows: `getPosATL`/`setPosATL` (A2 1.03), `createVehicleLocal` (ArmA 1.00, client-local/not network-synced, netId 0:0), `addWeaponCargoGlobal`/`addMagazineCargoGlobal` (**OA 1.55**, Global effect, not A3-only; repo gear-equip path), `setVectorDirAndUp` (ArmA 1.09).
 - Extended the A3-only table with two **confirmed-absent** traps (positive assurance, 0 source hits each): `setUnitLoadout`/`getUnitLoadout` (A3 1.58 — LoadoutManager is config-driven, not the A3 loadout API) and `hideObjectGlobal`/`enableSimulationGlobal` (A3 1.12 — OA only has the local `hideObject`/`enableSimulation`).
 - Item 48 confirmed DONE by Codex (inverse-trap classes canonicalized in the compatibility audit + `agent-compatibility-audit.json`). Routed item 49: a one-line DR-39 guardrail for the Codex-owned Supply-Mission-Scan-Narrowing / Performance-Opportunity-Sweep pages.

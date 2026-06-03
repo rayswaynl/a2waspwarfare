@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T15:00:00+02:00",
+  "generatedAt": "2026-06-03T15:15:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,22 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "dr39-agent-readable-ref-cleanup",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-knowledge.jsonl",
+        "origin/master:Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf"
+      ],
+      "outputs": [
+        "Removed stale two-line DR-39 supply-scan refs from agent-readable records",
+        "Updated object-scan knowledge record with branch-aware scan status"
+      ],
+      "handoff": "Future agents should use Deep-Review-Findings DR-39 and the command-version reference for branch-aware scan status."
+    },
     {
       "lane": "dr39-register-branch-scope",
       "owner": "Codex",
@@ -742,7 +758,7 @@
     {
       "lane": "construction-logic-list-cleanup-playbook",
       "owner": "Codex",
-      "status": "local-validation-pending",
+      "status": "published-validated",
       "sourceScope": [
         "docs/wiki/Construction-Logic-List-Cleanup.md",
         "docs/wiki/Construction-And-CoIn-Systems-Atlas.md",
@@ -761,7 +777,7 @@
         "agent-events.jsonl",
         "agent-knowledge.jsonl"
       ],
-      "handoff": "Codex owns publication of the construction logic cleanup playbook. Future code owner should patch source Chernarus first, propagate maintained Vanilla with LoadoutManager, and smoke small/medium construction before claiming runtime impact. Keep this lane separate from DR-6 construction authority hardening."
+      "handoff": "Publication is validated. Future code owner should patch source Chernarus first by changing the post-completion SmallSite append to a remove, propagate maintained Vanilla with LoadoutManager, and smoke small/medium construction before claiming runtime impact. Keep this lane separate from DR-6 construction authority hardening."
     },
     {
       "lane": "orchestrator-code-discovery-wave-q",
