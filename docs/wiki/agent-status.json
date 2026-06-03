@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Instructions-For-Codex item 8 is resolved locally: C2 cross-link coverage was verified and Client UI systems atlas now names DR-16/17/24/25a/25b on the canonical UI risk sections.",
+      "currentWork": "Instructions-For-Codex item 8 is published and validated: C2 cross-link coverage was verified and Client UI systems atlas now names DR-16/17/24/25a/25b on the canonical UI risk sections.",
       "nextExpectedOutput": "Continue with Instructions-For-Codex item 9: reconcile Coordination board active lanes and roles against current closed lanes and Claude DR-45+ status."
     },
     "Codex-2": {
