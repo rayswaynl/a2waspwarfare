@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Function / Module Index Reaktiv Correction
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 21.
+- Source-checked `Common/Module/Reaktiv`: `Common/Module/Reaktiv/Reaktiv_Init.sqf:5` compiles `WFBE_CO_MOD_Reaktiv_OnDamageReceived`, but `rg` finds no caller outside the Reaktiv folder. `Init_Common.sqf:319-323` initializes ICBM, IRS and CIPHER but not Reaktiv.
+- Corrected [Function and module index](Function-And-Module-Index): depot lookup is client-side (`WFBE_CL_FNC_GetClosestDepot` at `Init_Client.sqf:102`), `Common_Set*` describes team move-position/state setters, `Common_Handle*` no longer claims generic damage handling, and `Server_AI_Com_Upgrade.sqf:12` uses `Format ["WFBE_C_UPGRADES_%1_AI_ORDER", _side]`.
+- Corrected [Modules atlas](Modules-Atlas) so Reaktiv is described as dormant/unreachable unless deliberately wired back in.
+
 ## 2026-06-03 - Codex Documentation Finisher: ICBM Authority Wording Recheck
 
 - Closed [Instructions for Codex](Instructions-For-Codex) item 20 after source and page recheck.

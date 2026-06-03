@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T12:10:00+02:00",
+  "generatedAt": "2026-06-03T12:25:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,24 @@
   },
   "activeClaims": [
     {
+      "lane": "function-module-index-reaktiv-correction",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Function-And-Module-Index.md",
+        "docs/wiki/Modules-Atlas.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Module/Reaktiv/Reaktiv_Init.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AI_Com_Upgrade.sqf"
+      ],
+      "outputs": [
+        "Marked Reaktiv dead/unreachable in the function/module index and modules atlas",
+        "Corrected Common_Get/Common_Set/Common_Handle and Server_AI_Com_Upgrade family descriptions"
+      ],
+      "handoff": "Continue with Instructions-For-Codex item 22: PVF dispatch playbook client-command enumeration and line-reference drift."
+    },
+    {
       "lane": "icbm-authority-wording-recheck",
       "owner": "Codex",
       "status": "published-validated",
@@ -34,7 +52,7 @@
         "Marked Instructions-For-Codex item 20 complete after correcting the ICBM validation-gate wording",
         "Verified the current ICBM playbook treats Tactical-menu checks as local affordances and names the missing server commander/upgrade/funds/cooldown/shape/range/side validation"
       ],
-      "handoff": "Continue with Instructions-For-Codex item 21: Function-And-Module-Index Reaktiv and family-summary drift."
+      "handoff": "Item 21 is now closed; continue with Instructions-For-Codex item 22: PVF dispatch playbook client-command enumeration and line-reference drift."
     },
     {
       "lane": "supply-pr1-master-scoping-recheck",

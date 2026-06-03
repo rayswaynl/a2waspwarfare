@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T12:10:00+02:00",
+  "generatedAt": "2026-06-03T12:25:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Instructions-For-Codex item 20: the ICBM authority playbook now says Tactical-menu checks are local affordances, Server_HandleSpecial.sqf lacks DR-27 server validation, and the RequestSpecial validation gate is future-tense/normative.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 21: Function-And-Module-Index Reaktiv and family-summary drift."
+      "currentWork": "Closed Instructions-For-Codex item 21: Function-And-Module-Index and Modules-Atlas now mark Common/Module/Reaktiv dead/unreachable and correct the Common_Get/Common_Set/Common_Handle/Server_AI_Com_Upgrade family summaries.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 22: PVF dispatch playbook client-command list and line-reference drift."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "function-module-index-reaktiv-correction",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 21 is resolved: Function-And-Module-Index.md and Modules-Atlas.md now mark Common/Module/Reaktiv dead/unreachable and correct depot/client lookup, Common_Set team state, Common_Handle event-family and Server_AI_Com_Upgrade variable-name wording."
+    },
     {
       "lane": "icbm-authority-wording-recheck",
       "owner": "Codex",

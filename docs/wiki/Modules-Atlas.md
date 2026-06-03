@@ -21,7 +21,7 @@ Compiles `WFBE_CO_MOD_IRS_CreateSmoke/DeploySmoke/HandleMissile/OnIncomingMissil
 `CM_Init.sqf:1-3` compiles `CM_Countermeasures`, `CM_Flares`, `CM_Spoofing`. **Gate:** `WFBE_C_MODULE_WFBE_FLARES > 0 && WF_A2_Vanilla` (`Init_Client.sqf:590`); on built aircraft, CM is removed unless enabled + the side owns `WFBE_UP_FLARESCM` (`Client_BuildUnit.sqf:276-283`). Vanilla-only by design.
 
 ### Reaktiv — reactive (ERA) armor (`Common/Module/Reaktiv/`)
-`Reaktiv_Init.sqf:5` compiles `WFBE_CO_MOD_Reaktiv_OnDamageReceived` (`Reaktiv_OnHandleDamage.sqf`). Applies a `HandleDamage`-based per-hit-selection damage model (the init's comment block enumerates hull/turret/track/engine selections for an Abrams under `R_M136_AT`). Modifies how AT hits map to vehicle hitpoints.
+Current source status: **dead / unreachable**. `Common/Module/Reaktiv/Reaktiv_Init.sqf:5` compiles `WFBE_CO_MOD_Reaktiv_OnDamageReceived` (`Reaktiv_OnHandleDamage.sqf`), but no current init or runtime file calls `Reaktiv_Init.sqf`. `Init_Common.sqf:319-323` initializes ICBM, IRS and CIPHER, with no Reaktiv compile path. If revived, it would apply a `HandleDamage`-based per-hit-selection damage model (the init's comment block enumerates hull/turret/track/engine selections for an Abrams under `R_M136_AT`) and alter how AT hits map to vehicle hitpoints.
 
 ### Engines — "stealth" engine-off (`Client/Module/Engines/`)
 `Engine.sqf` toggles a stealth mode: saves current fuel into the vehicle's `Fuel` variable and `setFuel 0` (engine cannot run), swapping the addAction to `STEALTH OFF` → `Startengine.sqf` which restores fuel. Added to built tanks/wheeled-APCs (`Client_BuildUnit.sqf:336-337`). Client addAction-driven, local.
@@ -48,7 +48,7 @@ Pure utility library: `CIPHER_CompareString` (lexicographic compare via `toArray
 
 ## Notes for hardening / review
 - Module **gates** are config constants (`WFBE_C_MODULE_WFBE_*`) read at boot; toggling them is the supported on/off switch.
-- Combat modules attach their EHs at **unit creation** in `Client/Functions/Client_BuildUnit.sqf` (IRS/CM/Engines/Reaktiv-class), so they are client-local on the buyer's machine — consistent with the factory locality model (DR-33).
+- Combat modules attach their EHs at **unit creation** in `Client/Functions/Client_BuildUnit.sqf` (IRS/CM/Engines and inline rearmor handlers), so they are client-local on the buyer's machine — consistent with the factory locality model (DR-33). Do not count Reaktiv in that live set unless `Reaktiv_Init.sqf` is deliberately wired back in.
 - The only module with an authority/forgery defect is **Nuke/ICBM** (DR-27); the rest are cosmetic/QoL or AI behavior with no client→server trust surface beyond the shared PVF dispatcher.
 
 ## Continue Reading
