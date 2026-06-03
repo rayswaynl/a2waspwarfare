@@ -167,7 +167,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/New-ZargabadClaudeBrief.ps1 now infers a town-defense retest focus when the latest commit touches mission placement, the static validator, the map audit packet or Zargabad audit/test-plan docs, so Claude is nudged to retest priority defense mix arcs after every relevant Codex checkpoint."
+      "summary": "Tools/New-ZargabadClaudeBrief.ps1 now infers population/SP-SV placement and town-defense retest focuses when the latest commit touches mission placement, the static validator, the runtime report, the map audit packet or Zargabad audit/test-plan docs, so Claude is nudged to retest population flow/value tiers and priority defense mix arcs after every relevant Codex checkpoint."
     },
     {
       "type": "source-audit",
@@ -175,7 +175,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/New-ZargabadClaudeBrief.ps1 generates a fresh Codex-to-Claude packet after each commit or material change, including latest commit/PR head, coordination cadence, changed files, inferred retest focus, required runtime commands, dirty local state warning, and the Codex stop/go rule. It also tells Claude which runtime gates should trigger status updates and tells Codex to treat RPT/screenshot/coordinate/repro-backed findings as actionable."
+      "summary": "Tools/New-ZargabadClaudeBrief.ps1 generates a fresh Codex-to-Claude packet after each commit or material change, including latest commit/PR head, coordination cadence, changed files, inferred retest focus, required runtime commands, dirty local state warning, and the Codex stop/go rule. It also tells Claude which runtime gates should trigger status updates, including population/SP-SV placement, and tells Codex to treat RPT/screenshot/coordinate/repro-backed findings as actionable."
     },
     {
       "type": "source-audit",

@@ -785,6 +785,7 @@ Assert-True "Claude brief tool emits WDDM review focus" ($claudeBriefSource -mat
 Assert-True "Claude brief tool emits uncrewed wall retest focus" ($claudeBriefSource -match 'uncrewed central-wall evidence')
 Assert-True "Claude brief tool emits mystery armed retest focus" ($claudeBriefSource -match 'Mystery feature: confirm the armed RPT line after town init')
 Assert-True "Claude brief tool emits base static runtime position retest focus" ($claudeBriefSource -match 'Base statics: compare the Init_Zargabad base static runtime positions line' -and $claudeBriefSource -match 'Base static runtime positions WEST \.\.\. EAST \.\.\.')
+Assert-True "Claude brief tool emits population SP/SV placement retest focus" ($claudeBriefSource -match 'Population/SP-SV placement: compare map-audit Population Flow/value tiers' -and $claudeBriefSource -match 'town center that feels misplaced')
 Assert-True "Claude brief tool emits defense mix retest focus" ($claudeBriefSource -match 'Town defenses: retest priority defense mix arcs')
 Assert-True "Claude brief tool carries stop/go ownership" ($claudeBriefSource -match 'Codex owns the stop/go call')
 Assert-True "Claude brief tool points to map audit packet" ($claudeBriefSource -match 'New-ZargabadMapAuditPacket\.ps1')
@@ -792,6 +793,7 @@ Assert-True "Claude brief tool points to runtime report" ($claudeBriefSource -ma
 Assert-True "Claude brief tool points to runtime validator" ($claudeBriefSource -match 'Validate-ZargabadRuntimeEvidence\.ps1')
 Assert-True "Claude brief tool points to runtime report validator" ($claudeBriefSource -match 'Validate-ZargabadRuntimeReport\.ps1' -and $claudeBriefSource -match 'EvidenceRoot')
 Assert-True "Claude brief tool requires real screenshot files" ($claudeBriefSource -match 'real PNG/JPEG files' -and $claudeBriefSource -match 'validates image signatures')
+Assert-True "Claude brief tool requests population placement evidence" ($claudeBriefSource -match 'Population/SP-SV placement screenshots or coordinates' -and $claudeBriefSource -match 'low-density farm/outskirt routes')
 
 $takistanZargabadModule = Resolve-RepoPath "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/Zargabad"
 Assert-True "Takistan has no generated Zargabad module spillover" (-not (Test-Path -LiteralPath $takistanZargabadModule))

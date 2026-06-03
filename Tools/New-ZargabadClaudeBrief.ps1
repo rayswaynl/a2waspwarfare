@@ -51,6 +51,7 @@ if ($changedFiles -match 'Zargabad_EdgeGuard|Init_Boundaries|edge|New-ZargabadMa
 if ($changedFiles -match 'Init_Zargabad|Zargabad_RuntimeAudit|mission\.sqm|New-ZargabadMapAuditPacket|Validate-ZargabadMission|Zargabad-Low-Pop-Release-Audit|zargabad-low-pop-test-plan|New-ZargabadClaudeBrief') { $focus.Add("Map/runtime init: retest fortifications, central wall gaps, uncrewed central-wall evidence, town-defense orientation, and runtime audit lines.") }
 if ($changedFiles -match 'WDDM|Init_Zargabad|New-ZargabadMapAuditPacket|Zargabad-Claude-Runtime-Handoff|Zargabad-Low-Pop-Release-Audit|Validate-ZargabadMission') { $focus.Add("WDDM fortification review: use https://rayswaynl.github.io/WDDM/ and return exported SQF or coordinate deltas for any proposed base or central-wall changes.") }
 if ($changedFiles -match 'Init_Zargabad|New-ZargabadRuntimeReport|Validate-ZargabadRuntimeEvidence|New-ZargabadClaudeBrief|Validate-ZargabadMission') { $focus.Add("Base statics: compare the Init_Zargabad base static runtime positions line and baseFootprint evidence against screenshots/coordinates for facing, manning, arcs, and commander construction space.") }
+if ($changedFiles -match 'mission\.sqm|Validate-ZargabadMission|New-ZargabadMapAuditPacket|New-ZargabadRuntimeReport|Validate-ZargabadRuntimeReport|Zargabad-Claude-Runtime-Handoff|Zargabad-Low-Pop-Release-Audit|zargabad-low-pop-test-plan|New-ZargabadClaudeBrief') { $focus.Add("Population/SP-SV placement: compare map-audit Population Flow/value tiers against runtime screenshots or coordinates for city, district/market belt, airfield, farms, outskirts, camps, and any town center that feels misplaced.") }
 if ($changedFiles -match 'mission\.sqm|Validate-ZargabadMission|New-ZargabadMapAuditPacket|Zargabad-Low-Pop-Release-Audit|zargabad-low-pop-test-plan') { $focus.Add("Town defenses: retest priority defense mix arcs at city, airfield, North/South District, Northwest Base and Rahim Villa using map-audit defense rows.") }
 if ($changedFiles -match 'Init_Common|CommonConstants|Balance|Units_|Vehicles|LoadoutManager|Zargabad_RuntimeAudit|Validate-ZargabadMission') { $focus.Add("Balance/economy: retest factory lists, price multipliers, caps, ranges, and 5v5-style snowball feel.") }
 if ($changedFiles -match 'Validate-ZargabadRuntimeEvidence|New-ZargabadRuntimeReport') { $focus.Add("RPT tooling: rerun runtime validator/report with the same required switches as the pass being tested.") }
@@ -68,7 +69,7 @@ foreach ($line in ($prInfo -split "`n")) { $brief.Add("- $line") }
 $brief.Add("")
 $brief.Add("## Coordination Cadence")
 $brief.Add("- Codex should send this fresh brief to Claude after every commit or material mission/tooling change.")
-$brief.Add("- Claude should report back after each runtime gate: hosted boot, dedicated boot, JIP, HC, base safety, central wall/pathing, side hills/rim, economy/factory feel, and mystery feature.")
+$brief.Add("- Claude should report back after each runtime gate: hosted boot, dedicated boot, JIP, HC, population/SP-SV placement, base safety, central wall/pathing, side hills/rim, economy/factory feel, and mystery feature.")
 $brief.Add("- Claude findings with RPT excerpts, screenshots, coordinates, or repeatable repro steps should be treated as actionable. Codex should patch or retest the mission instead of defending stale assumptions.")
 $brief.Add("")
 $brief.Add("## What Changed Last")
@@ -97,6 +98,7 @@ $brief.Add("- Map audit markdown from `Tools/New-ZargabadMapAuditPacket.ps1` whe
 $brief.Add("- Runtime report markdown from `Tools/New-ZargabadRuntimeReport.ps1`.")
 $brief.Add("- RPT paths and exact excerpts for any failing or uncertain validator gate.")
 $brief.Add("- The `Init_Zargabad.sqf: Base static runtime positions WEST ... EAST ...` excerpt and ``baseFootprint [35,45,74,78]`` runtime audit evidence when base safety, spawn sightlines, or commander construction space are being judged.")
+$brief.Add("- Population/SP-SV placement screenshots or coordinates for the city, airfield, district/market belt, low-density farm/outskirt routes, nearby camps, and any town center that feels off.")
 $brief.Add("- Screenshot filenames or map coordinates for base sightlines, central-wall gaps, rim abuse, defense arcs, pathing, and economy/factory observations.")
 $brief.Add("- If screenshot filenames are used, put real PNG/JPEG files in `.\zargabad-evidence`; Codex validates image signatures with `-EvidenceRoot`.")
 $brief.Add("- Clear `PASS`, `FAIL`, or `UNCERTAIN` verdicts for each row in the report's Claude Notes table; `PASS` rows must include row-specific evidence, not blank notes: coordinates or screenshot filenames for spatial checks, RPT excerpts or runtime values for balance/init/feature checks.")
