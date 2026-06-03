@@ -126,16 +126,16 @@ class RscButton {
 	font = "Zeppelin32";
 	sizeEx = 0.035;
 	shadow = 2;
-	colorText[] = {1, 1, 1, 0.8};
-	colorBackground[] = {0.5882, 0.5882, 0.3529, 0.7};
-	colorBackgroundActive[] = {0.5882, 0.5882, 0.3529, 1};
-	colorDisabled[] = {0.5, 0.5, 0.5, 0.8};
-	colorBackgroundDisabled[] = {0, 0, 0, 0.6};
+	colorText[] = {0.9059, 0.8902, 0.8392, 0.9};
+	colorBackground[] = {0.1647, 0.1843, 0.2118, 0.85};
+	colorBackgroundActive[] = {0.851, 0.4627, 0.2353, 1};
+	colorDisabled[] = {0.5, 0.5, 0.5, 0.6};
+	colorBackgroundDisabled[] = {0.0784, 0.0902, 0.1059, 0.6};
 	offsetX = 0.003;
 	offsetY = 0.003;
 	offsetPressedX = 0.002;
 	offsetPressedY = 0.002;
-	colorFocused[] = {0.5882, 0.5882, 0.3529, 0.7};
+	colorFocused[] = {0.7216, 0.3725, 0.1647, 0.9};
 	colorShadow[] = {0.023529, 0, 0.0313725, 1};
 	colorBorder[] = {0.023529, 0, 0.0313725, 1};
 	borderSize = 0.0;
@@ -274,7 +274,7 @@ class RscIGUIShortcutButton : RscShortcutButton {
 class RscShortcutButtonMain: RscShortcutButton {
 	w = 0.313726;
 	h = 0.104575;
-	color[] = {0.2588, 0.7137, 1, 1};
+	color[] = {0.851, 0.4627, 0.2353, 1};
 	colorDisabled[] = {1, 1, 1, 0.25};
 	class HitZone {
 		left = 0.0;
@@ -333,13 +333,13 @@ class RscListBox {
 	style = 0 + 0x10;
 	font = "Zeppelin32";
 	sizeEx = 0.04221;
-	color[] = {0.2588, 0.7137, 1, 1};
+	color[] = {0.851, 0.4627, 0.2353, 1};
 	colorText[] = {1, 1, 1, 0.75};
 	colorScrollbar[] = {0.95, 0, 0, 1};
 	colorSelect[] = {0, 0, 0, 0.7};
 	colorSelect2[] = {0, 0, 0, 0.7};
-	colorSelectBackground[] = {0.2588, 0.7137, 1, 1};
-	colorSelectBackground2[] = {0.2588, 0.7137, 1, 1};
+	colorSelectBackground[] = {0.851, 0.4627, 0.2353, 1};
+	colorSelectBackground2[] = {0.851, 0.4627, 0.2353, 1};
 	columns[] = {0.1, 0.7, 0.1, 0.1};
 	period = 0;
 	colorBackground[] = {0, 0, 0, 1};
@@ -393,24 +393,24 @@ class RscText {
 	text = "";
 	sizeEx = 0.03;
 	shadow = 2;
-	colorText[] = {0.9333, 0.8980, 0.5451, 0.9};
+	colorText[] = {0.9059, 0.8902, 0.8392, 0.9};
 	colorBackground[] = {0, 0, 0, 0};
 };
 class RscText_Title : RscText {
 	h = 0.04;
-	colorText[] = {0.2588, 0.7137, 1, 1};
+	colorText[] = {0.851, 0.4627, 0.2353, 1};
 	sizeEx = 0.045;
 	shadow = 1;
 };
 class RscText_SubTitle : RscText {
 	h = 0.04;
-	colorText[] = {0.2588, 0.7137, 1, 0.9};
+	colorText[] = {0.851, 0.4627, 0.2353, 0.9};
 	sizeEx = 0.035;
 	shadow = 1;
 };
 class RscText_Small : RscText {
 	h = 0.037;
-	colorText[] = {0.9333, 0.8980, 0.5451, 0.9};
+	colorText[] = {0.9059, 0.8902, 0.8392, 0.9};
 	sizeEx = 0.025;
 	shadow = 2;
 };
@@ -420,7 +420,7 @@ class RscEdit : RscText {
 	font = "Zeppelin32";
 	sizeEx = 0.03;
 	colorText[] = {1, 1, 1, 0.75};
-	colorSelection[] = {0.2588, 0.7137, 1, 1};
+	colorSelection[] = {0.851, 0.4627, 0.2353, 1};
 	autocomplete = true;
 };
 
@@ -512,12 +512,12 @@ class RscCombo {
 	colorSelect[] = {0, 0, 0, 0.7};
 	colorText[] = {1, 1, 1, 0.75};
 	colorBackground[] = {0,0,0,0.75};
-	colorSelectBackground[] = {0.2588, 0.7137, 1, 1};
+	colorSelectBackground[] = {0.851, 0.4627, 0.2353, 1};
 	colorScrollbar[] = {0.023529, 0, 0.0313725, 1};
 	arrowEmpty = "\ca\ui\data\ui_arrow_combo_ca.paa";
 	arrowFull = "\ca\ui\data\ui_arrow_combo_active_ca.paa";
 	wholeHeight = 0.45;
-	color[] = {0.2588, 0.7137, 1, 1};
+	color[] = {0.851, 0.4627, 0.2353, 1};
 	colorActive[] = {0, 0, 0, 1};
 	colorDisabled[] = {0, 0, 0, 0.3};
 	font = "Zeppelin32";
