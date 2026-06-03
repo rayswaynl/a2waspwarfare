@@ -473,12 +473,13 @@ Assert-True "map audit packet emits camp and defense coordinates" ($mapAuditPack
 Assert-True "map audit packet emits base-axis sightline section" ($mapAuditPacketSource -match '## Base Axis And Sightlines' -and $mapAuditPacketSource -match 'central wall origin')
 Assert-True "map audit packet emits base fortification footprint" ($mapAuditPacketSource -match 'baseFootprint \[35,45,74,78\]' -and $mapAuditPacketSource -match 'commander-clear radius')
 Assert-True "map audit packet emits rim test points" ($mapAuditPacketSource -match '## Rim Test Points' -and $mapAuditPacketSource -match 'West illegal rim' -and $mapAuditPacketSource -match 'East Farms legal rim')
+Assert-True "map audit packet emits WDDM fortification review" ($mapAuditPacketSource -match '## WDDM Fortification Review' -and $mapAuditPacketSource -match 'https://rayswaynl\.github\.io/WDDM/' -and $mapAuditPacketSource -match '\+Y as front' -and $mapAuditPacketSource -match '\+X as right')
 Assert-True "map audit packet emits Claude screenshot targets" ($mapAuditPacketSource -match '## Claude Screenshot Targets')
 Assert-True "map audit packet emits central wall gap checkpoints" ($mapAuditPacketSource -match '4053,2725' -and $mapAuditPacketSource -match '2903,3915')
 Assert-True "map audit packet emits uncrewed central wall focus" ($mapAuditPacketSource -match 'centralWallCrewed \[0\]' -and $mapAuditPacketSource -match 'uncrewed WDDM-compatible fortification')
 $mapAuditPacketOutput = (& $mapAuditPacketTool) -join "`n"
 Assert-True "map audit packet runs and reports Zargabad counts" ($mapAuditPacketOutput -match '# Zargabad Map Audit Packet' -and $mapAuditPacketOutput -match 'Counts: towns \[13\], camps \[19\], airports \[1\], starts \[9\], town defenses \[33\]')
-Assert-True "map audit packet runs and reports core screenshot targets" ($mapAuditPacketOutput -match 'Zargabad City Center' -and $mapAuditPacketOutput -match 'Claude Screenshot Targets' -and $mapAuditPacketOutput -match '4053,2725' -and $mapAuditPacketOutput -match 'central wall origin' -and $mapAuditPacketOutput -match 'West illegal rim' -and $mapAuditPacketOutput -match 'East Farms legal rim')
+Assert-True "map audit packet runs and reports core screenshot targets" ($mapAuditPacketOutput -match 'Zargabad City Center' -and $mapAuditPacketOutput -match 'Claude Screenshot Targets' -and $mapAuditPacketOutput -match '4053,2725' -and $mapAuditPacketOutput -match 'central wall origin' -and $mapAuditPacketOutput -match 'West illegal rim' -and $mapAuditPacketOutput -match 'East Farms legal rim' -and $mapAuditPacketOutput -match 'WDDM Fortification Review')
 Assert-True "Claude brief tool exists" (Test-Path -LiteralPath $claudeBriefTool)
 $claudeBriefSource = Get-Content -Raw -LiteralPath $claudeBriefTool
 Assert-True "Claude brief tool emits coordination cadence" ($claudeBriefSource -match '## Coordination Cadence')
@@ -487,6 +488,7 @@ Assert-True "Claude brief tool listens to evidence-backed findings" ($claudeBrie
 Assert-True "Claude brief tool emits retest focus" ($claudeBriefSource -match '## Retest Focus')
 Assert-True "Claude brief tool emits rim test point retest focus" ($claudeBriefSource -match 'rim test points')
 Assert-True "Claude brief tool emits base footprint retest focus" ($claudeBriefSource -match 'baseFootprint evidence')
+Assert-True "Claude brief tool emits WDDM review focus" ($claudeBriefSource -match 'WDDM fortification review' -and $claudeBriefSource -match 'https://rayswaynl\.github\.io/WDDM/')
 Assert-True "Claude brief tool emits uncrewed wall retest focus" ($claudeBriefSource -match 'uncrewed central-wall evidence')
 Assert-True "Claude brief tool emits mystery armed retest focus" ($claudeBriefSource -match 'Mystery feature: confirm the armed RPT line after town init')
 Assert-True "Claude brief tool emits base static runtime position retest focus" ($claudeBriefSource -match 'Base statics: compare the Init_Zargabad base static runtime positions line' -and $claudeBriefSource -match 'Base static runtime positions WEST \.\.\. EAST \.\.\.')

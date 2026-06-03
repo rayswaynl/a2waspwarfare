@@ -42,6 +42,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadMapAuditPa
 
 Use the packet's objective, camp, defense, start, base-axis, rim-test and central-wall checkpoint coordinates as the shared reference for screenshots and repro notes.
 
+For fortification changes, use Steff's WDDM tool at https://rayswaynl.github.io/WDDM/ beside the map audit packet. WDDM/`CreateDefenseTemplate` coordinates are relative to the template origin, with `+Y` as front and `+X` as right. If Claude proposes a base wall or central-wall change, paste the WDDM-exported SQF or coordinate deltas back with screenshots/RPT evidence before Codex edits the template.
+
 ## Do Not Stop Until
 
 Claude/runtime tester should keep going until there is RPT and short note evidence for every required gate below:
@@ -114,6 +116,7 @@ Use `-AllowKnownDisconnectScoreErrors` only if the only RPT `ERROR` lines are th
 - Screenshot or coordinates for WEST/EAST start sightlines.
 - Screenshot from the base-axis midpoint/wall origin `3425,3375` toward both default starts, and from both default starts back toward `3425,3375`.
 - Screenshot or coordinates for the central wall gaps that were driven/walked through, especially `[4053,2725]`, `[3789,2998]`, `[3504,3293]`, `[3195,3613]`, and `[2903,3915]`.
+- WDDM-exported SQF or coordinate deltas for any proposed central-wall or base-fortification change, with the origin/direction used for review.
 - RPT excerpt for edge-guard init and removal at the illegal rim points; screenshot/coordinate notes for the legal North Camp, Rahim Villa and East Farms rim points that did not get removed.
 - RPT excerpt for `Init_Zargabad.sqf: Oriented [33] town defense logics toward linked town centers`.
 - RPT excerpt for the `Zargabad_RuntimeAudit.sqf` count/SV, base/static/wall with `baseFootprint [35,45,74,78]`, `centralWallCrewed [0]` and `centralWallGaps`, base static template, factory restriction, price multiplier/sample, and economy/range/weapon-pressure lines.
