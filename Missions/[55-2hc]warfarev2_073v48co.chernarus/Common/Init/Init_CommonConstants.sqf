@@ -250,7 +250,9 @@ with missionNamespace do {
 	if (isNil "WFBE_C_DRONE_CRUISE_ALT") then {WFBE_C_DRONE_CRUISE_ALT = 200}; //--- m AGL
 	if (isNil "WFBE_C_DRONE_LOITER_TIME") then {WFBE_C_DRONE_LOITER_TIME = 90}; //--- s before forced commit
 	if (isNil "WFBE_C_DRONE_ZONE_RADIUS") then {WFBE_C_DRONE_ZONE_RADIUS = 250}; //--- m acquisition radius
-	if (isNil "WFBE_C_DRONE_WARHEAD") then {WFBE_C_DRONE_WARHEAD = "Sh_125_HE"}; //--- survivable warhead
+	if (isNil "WFBE_C_DRONE_WARHEAD") then {WFBE_C_DRONE_WARHEAD = "Sh_125_HE"}; //--- warhead A (even munitions, direct ground burst)
+	if (isNil "WFBE_C_DRONE_WARHEAD2") then {WFBE_C_DRONE_WARHEAD2 = "Bo_GBU12_LGB"}; //--- warhead B (odd munitions, top-attack drop from altitude). Set to a SADARM class (e.g. Sh_105_SADARM) to experiment.
+	if (isNil "WFBE_C_DRONE_DIVE_SOUND") then {WFBE_C_DRONE_DIVE_SOUND = "inboundMissileGround_cont"}; //--- dive siren (existing CfgSound; swap to "drone_stuka" once a real Ju-87 .ogg is dropped in)
 	if (isNil "WFBE_C_DRONE_SCATTER") then {WFBE_C_DRONE_SCATTER = 12}; //--- m impact scatter
 	if (isNil "WFBE_C_DRONE_HP") then {WFBE_C_DRONE_HP = 6}; //--- ~ .50-cal hits to down
 	if (isNil "WFBE_C_DRONE_MIN_HIT") then {WFBE_C_DRONE_MIN_HIT = 0.08}; //--- min HandleDamage delta that counts (>=.50)
