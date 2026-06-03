@@ -65,6 +65,12 @@ function Assert-NoteEvidence {
 	Assert-True "Claude Notes $Key evidence is specific" ([regex]::IsMatch($evidence, $Pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase))
 }
 
+function Assert-TableEvidence {
+	param($Rows, [string]$TableName, [string]$Key, [string]$Pattern)
+	$evidence = Get-NoteEvidence -Rows $Rows -Key $Key
+	Assert-True "$TableName $Key evidence is specific" ([regex]::IsMatch($evidence, $Pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase))
+}
+
 function Get-ScreenshotReferencesFromText {
 	param([string]$Text)
 	$refs = New-Object System.Collections.Generic.List[string]
@@ -254,11 +260,61 @@ Assert-NoteEvidence -Rows $noteRows -Key "Weapon/range pressure" -Pattern '(miss
 Assert-NoteEvidence -Rows $noteRows -Key "Mystery feature behavior" -Pattern '(black-market|black market|cache|Airfield|Zargabad_BlackMarket|armed|cleanup)'
 Assert-NoteEvidence -Rows $noteRows -Key "Recommended Codex action" -Pattern '(keep|tune|revert|investigate|patch|retest)'
 
+$objectiveRows = Get-MarkdownRows (Get-SectionText -Content $content -Name "Objective Coverage")
+Assert-True "Objective Coverage table has rows" ($objectiveRows.Count -gt 1)
+$expectedObjectiveRows = @(
+	"Fully build out the Zargabad mission",
+	"Bases are safe and meaningful",
+	"SP/SV, town centers, and camps match likely population",
+	"Defense units spawn where they make sense",
+	"Economy is balanced for the smaller map",
+	"Weapons, vehicles, units, ranges, costs, and maximums fit map size",
+	"Flat middle and steep side hills cannot be abused",
+	"Beefier defenses and fortifications prevent easy base hits",
+	"Fortification review uses WDDM when changes are proposed",
+	"Mystery feature uses existing mission code cheaply and stays under 100 LOC",
+	"Codex and Claude work together until Codex says stop"
+)
+$actualObjectiveRows = @{}
+foreach ($row in $objectiveRows) {
+	if ($row[0] -ne "Objective row") { $actualObjectiveRows[$row[0]] = $true }
+}
+$missingObjectiveRows = @($expectedObjectiveRows | Where-Object { -not $actualObjectiveRows.ContainsKey($_) })
+Assert-True "Objective Coverage required rows are present" ($missingObjectiveRows.Count -eq 0)
+$unfinishedObjectiveRows = @($objectiveRows | Where-Object { $_[0] -ne "Objective row" -and $_[1] -ne "PASS" })
+Assert-True "Objective Coverage rows are all PASS" ($unfinishedObjectiveRows.Count -eq 0)
+$objectiveRowsWithoutEvidence = @($objectiveRows | Where-Object {
+	$_[0] -ne "Objective row" -and (
+		$_.Count -lt 3 -or
+		[string]::IsNullOrWhiteSpace($_[2]) -or
+		$_[2] -match '^(?i:pass|ok|n/?a|none)$'
+	)
+})
+Assert-True "Objective Coverage PASS rows include evidence" ($objectiveRowsWithoutEvidence.Count -eq 0)
+$objectiveRowsWithoutRecommendation = @($objectiveRows | Where-Object {
+	$_[0] -ne "Objective row" -and (
+		$_.Count -lt 3 -or
+		$_[2] -notmatch $recommendationPattern
+	)
+})
+Assert-True "Objective Coverage PASS rows include Codex action recommendation" ($objectiveRowsWithoutRecommendation.Count -eq 0)
+Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Fully build out the Zargabad mission" -Pattern '(hosted|dedicated|RPT|validator|server initialization ended|mission load|Zargabad)'
+Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Bases are safe and meaningful" -Pattern '(base|spawn|sightline|static|baseFootprint|commander|manning|\.png|\.jpg|\.jpeg|[0-9]{2,4}\s*,\s*[0-9]{2,4})'
+Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "SP/SV, town centers, and camps match likely population" -Pattern '(population|SP/SV|SV|town center|camp|city|airfield|district|market|farm|outskirt|Population Flow|value tiers)'
+Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Defense units spawn where they make sense" -Pattern '(defense|oriented|33|wake|fight|route|arc|MG|AT|AA|GL|\.png|\.jpg|\.jpeg)'
+Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Economy is balanced for the smaller map" -Pattern '(economy|factory|price|supply|income|5v5|snowball|Zargabad_RuntimeAudit)'
+Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Weapons, vehicles, units, ranges, costs, and maximums fit map size" -Pattern '(weapon|vehicle|unit|range|cost|cap|maximum|missile|UAV|countermeasure|factory list|2000|800|30000)'
+Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Flat middle and steep side hills cannot be abused" -Pattern '(flat middle|side hill|rim|edge|wall|pathing|removed from edge rim|allowed at safe edge rim|named rim|3425\s*,\s*3375)'
+Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Beefier defenses and fortifications prevent easy base hits" -Pattern '(fortification|base|central wall|centralWallCrewed|H-barrier|spawn|suppress|gap|defense)'
+Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Fortification review uses WDDM when changes are proposed" -Pattern '(WDDM|CreateDefenseTemplate|SQF|coordinate delta|map-audit|no-change|no change|keep)'
+Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Mystery feature uses existing mission code cheaply and stays under 100 LOC" -Pattern '(mystery|black-market|black market|Zargabad_BlackMarket|under 100|LOC|cache|Airfield|cleanup)'
+Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Codex and Claude work together until Codex says stop" -Pattern '(Codex|Claude|completion-gates|runtime report|stop|keep|tune|revert|investigate|patch|retest)'
+
 if ($EvidenceRoot.Trim().Length -gt 0) {
 	Assert-True "runtime report evidence root exists" (Test-Path -LiteralPath $EvidenceRoot -PathType Container)
 	$resolvedEvidenceRoot = (Resolve-Path -LiteralPath $EvidenceRoot).Path
 	$evidenceRoots = @($resolvedEvidenceRoot, $reportFile.Directory.FullName)
-	$screenshotRefs = @(Get-ScreenshotReferences -Rows $noteRows)
+	$screenshotRefs = @((Get-ScreenshotReferences -Rows $noteRows) + (Get-ScreenshotReferences -Rows $objectiveRows) | Sort-Object -Unique)
 	Assert-True "Claude Notes screenshot references are present when evidence root is supplied" ($screenshotRefs.Count -gt 0)
 	$missingScreenshotRefs = @($screenshotRefs | Where-Object { -not (Test-ScreenshotReference -Reference $_ -Roots $evidenceRoots) })
 	Assert-True "Claude Notes screenshot references are real PNG/JPEG files under evidence root" ($missingScreenshotRefs.Count -eq 0)
