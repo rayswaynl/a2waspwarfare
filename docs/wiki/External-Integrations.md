@@ -99,9 +99,12 @@ Page ownership: this section is the canonical shipped BattlEye/server-filter pos
 | --- | --- |
 | `BattlEyeFilter/publicvariable.txt` contains only `//new` and `5 "kickAFK"`. | This is feature plumbing for AFK kick, not a comprehensive publicVariable hardening layer. |
 | No in-tree `scripts.txt`, `server.cfg`, `basic.cfg` or broader BattlEye filter bundle is present. | The repo cannot claim shipped public-server BattlEye hardening; production `BEpath` files remain an owner/deployment question. |
+| `updateclient.sqf:153-162` explicitly tells hosts to place `publicVariable.txt` beside `server.cfg` and broadcasts `kickAFK`. | BattlEye filtering is a contingent local-server filter layer: if production loads BE filters, they can act as defense in depth; if it does not, server-side authority remains the durable fix. |
 | PVF registered commands and direct mission PV channels both exist. | Filter design must include `WFBE_PVF_*` plus direct channels, and still does not replace server-side authority checks. |
 
 Claude DR-30 closed the remediation loop: as shipped in this repo, the "rely on BattlEye" option is not implemented. No `scripts.txt`, `server.cfg`, `basic.cfg` or broader BattlEye filter bundle is present in the tree. Production servers may have external `BEpath` files, but that is an owner/deployment question, not documented source truth.
+
+Arma 2 OA filter guidance should name the OA-era files that matter here: `publicvariable.txt` for PV/PVEH channels, `scripts.txt` for script-command injection/client locality abuse, and command-specific filters such as `createvehicle.txt`, `setvariable.txt`, `setpos.txt`, `setdamage.txt`, `deletevehicle.txt`, `mpeventhandler.txt`, cargo filters, `teamswitch.txt`, `waypointcondition.txt`, `selectplayer.txt` and `attachto.txt`. Do not list `remoteexec.txt` as a missing Arma 2 OA filter; `remoteExec` / `remoteExecCall` are Arma 3 commands.
 
 Filter design should be driven by [Networking and public variables](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index) and [Server authority migration map](Server-Authority-Migration-Map). A PV filter alone still will not solve client-side `createVehicle`/`createUnit` authority; that class needs BattlEye `scripts.txt` or a server-authoritative redesign.
 

@@ -34,6 +34,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Marked item 46 as a stale false-positive for the Progress Dashboard; Arma smoke remains the runtime gate, but the docs status is not currently misreporting those three source patches.
 - Validation passed: `docs/validate-wiki.ps1`, `git diff --check`, JSON/JSONL parsing and docs/wiki-to-wiki mirror parity.
 
+## 2026-06-03 - Codex Documentation Finisher: BattlEye DR-30 OA Filter Correction
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 18.
+- Source-checked the shipped BattlEye footprint: `BattlEyeFilter/publicvariable.txt:1-2` only contains the `kickAFK` rule, and `Client/FSM/updateclient.sqf:153-162` documents the local `publicVariable.txt` deployment beside `server.cfg` and broadcasts `kickAFK`.
+- Updated [External integrations](External-Integrations) and [Deep-review findings](Deep-Review-Findings) so Arma 2 OA guidance names the relevant OA-era filter files, treats BattlEye as contingent local-filter defense in depth behind server authority, and does not list `remoteexec.txt` as a missing OA filter.
+
 ## 2026-06-03 - Codex Documentation Finisher: Maintainability Leads Routing
 
 - Closed [Instructions for Codex](Instructions-For-Codex) item 17 by verifying the maintenance leads against source and routing them to existing owner pages instead of filing them as new gameplay defects.
@@ -540,7 +546,7 @@ Append entries here so Codex, Claude and future assistants can see what each age
 ## 2026-06-02 - Claude Deep-Review Round 21 (battleye-posture-review lane) — DR-30, campaign-wide
 
 - Source-verified the repo's entire BattlEye footprint to close the loop on the "rely on BattlEye" option offered in 8 prior findings (DR-1 + DR-6/14/16/22/23/27/28).
-- **DR-30 (High):** the BattlEye mitigation is **not shipped**. The only BE filter in the repo is `BattlEyeFilter/publicvariable.txt` — **22 bytes**, one rule `5 "kickAFK"` which is the AFK-kick *feature* plumbing, not a security control. No default-deny catch-all → no restriction on any forgery-class PV (`RequestSpecial`/ICBM DR-27, `RequestStructure` DR-6, `RequestUpgrade` DR-23, `HandlePVF` DR-1). **`scripts.txt` is absent** (plus createvehicle/remoteexec/setvariable/setpos/mpeventhandler) → nothing in-repo blunts the DR-1 `call compile` RCE. A 716 KB README `.docx` exists but was not parsed (binary/untrusted-content rule).
+- **DR-30 (High):** the BattlEye mitigation is **not shipped**. The only BE filter in the repo is `BattlEyeFilter/publicvariable.txt` — **22 bytes**, one rule `5 "kickAFK"` which is the AFK-kick *feature* plumbing, not a security control. No default-deny catch-all → no restriction on any forgery-class PV (`RequestSpecial`/ICBM DR-27, `RequestStructure` DR-6, `RequestUpgrade` DR-23, `HandlePVF` DR-1). **`scripts.txt` is absent** (plus A2/OA-relevant filters such as createvehicle/setvariable/setpos/setdamage/deletevehicle/mpeventhandler/cargo filters) → nothing in-repo blunts the DR-1 `call compile` RCE. A 716 KB README `.docx` exists but was not parsed (binary/untrusted-content rule).
 - **Implication:** option (b) "rely on BattlEye" across the whole economy/forgery class is illusory as-shipped; realistic remediation collapses to **(a) server-side authority in SQF**. Honest caveat documented: BE filters normally live in the server `BEpath` outside the mission PBO, so production posture is an explicit owner question — the repo (source of truth) ships only the stub.
 - Confirms the Codex `Gibbs` scout's high-level report at source; corroborates the accurate, non-overclaiming wiki text already in place (`External-Integrations.md:60`, `Feature-Status-Register.md:32`, `Networking-And-Public-Variables.md:122`).
 - Ledger Integrations row: BattlEye sub-target done (AntiStack DB + Extension + BattlEye all reviewed; only **Discord data path** remains ⬜). Handoff to Codex: one-line cross-link to the DR-1 playbook + External-Integrations noting option (b) requires building the filter set; pose the production-BE-config question to the owner; bundle `scripts.txt`/`server.cfg`/`basic.cfg` absences into a hosting-hardening owner item.

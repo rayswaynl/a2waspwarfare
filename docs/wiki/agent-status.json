@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T11:15:00+02:00",
+  "generatedAt": "2026-06-03T11:25:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published Progress-Dashboard.md status-drift recheck and maintainability-leads routing: Instructions-For-Codex items 46 and 17 are closed against current source evidence.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 18: correct BattlEye filter documentation for Arma 2 OA and remove any remoteexec.txt missing-filter claims."
+      "currentWork": "Published Instructions-For-Codex item 18: External-Integrations.md and Deep-Review-Findings.md now name Arma 2 OA BattlEye filters, treat BE as contingent local-filter defense in depth, and do not present remoteexec.txt as a missing OA filter.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 19: reconcile Supply-Mission-Authority-Cleanup-Playbook PR-vs-master scoping."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "battleye-dr30-oa-filter-correction",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 18 is resolved: External-Integrations.md and Deep-Review-Findings.md now use the Arma 2 OA filter set, cite kickAFK/publicVariable shipped evidence and remove remoteexec.txt from missing-OA-filter framing."
+    },
     {
       "lane": "maintainability-leads-routing",
       "owner": "Codex",
