@@ -95,7 +95,11 @@
     },
     {
       "type": "command-output",
-      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, intended default start anchors/headings and WEST/EAST separation, no out-of-6000 logic positions, start SV 185, max SV 648, all towns have camps and defenses, synchronized defenses sit in the 90m-325m town approach band, high-value objectives have layered defense coverage, exact smaller-map economy/range/cap constants are locked in source and generated Zargabad mission copies, the runtime town-defense orientation hook is present, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
+      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, intended default start anchors/headings and WEST/EAST separation, no out-of-6000 logic positions, start SV 185, max SV 648, all towns have camps and defenses, each camp links to exactly one town, all camps sit in the 90m-225m town-flow band, high-value objectives have two camp approaches and layered defense coverage, synchronized defenses sit in the 90m-325m town approach band, exact smaller-map economy/range/cap constants are locked in source and generated Zargabad mission copies, the runtime town-defense orientation hook is present, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Camp placement audit measured 19 linked camps at 111.8m-192.4m from their town centers, with two camp approaches for the city center, airfield, north/south districts, Northwest Base and Rahim Villa."
     },
     {
       "type": "source-audit",
@@ -128,6 +132,6 @@
   ],
   "result": "partial",
   "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports after each Codex commit or runtime gate.",
-  "updatedAt": "2026-06-03T04:38:00+02:00",
+  "updatedAt": "2026-06-03T04:52:00+02:00",
   "updatedBy": "Codex"
 }

@@ -123,6 +123,12 @@ $logicObjects = @($towns + $camps + $airports + $starts + $defenses)
 $outOfBounds = @($logicObjects | Where-Object { $_.X -lt 0 -or $_.X -gt 6000 -or $_.Y -lt 0 -or $_.Y -gt 6000 })
 Assert-Equal "out-of-6000 Zargabad logic positions" $outOfBounds.Count 0
 
+$campTownLinkCounts = @($camps | ForEach-Object {
+	$camp = $_
+	[pscustomobject]@{ Id = $camp.Id; TownLinks = @($towns | Where-Object { $camp.Sync -contains $_.Id }).Count }
+})
+Assert-Equal "camps linked to exactly one town" @($campTownLinkCounts | Where-Object { $_.TownLinks -ne 1 }).Count 0
+
 $parsedTowns = @()
 foreach ($town in $towns) {
 	$match = [regex]::Match($town.Init, '\[this,""(?<name>[^""]+)"",.*?,(?<start>\d+),(?<max>\d+),(?<range>\d+),')
@@ -131,6 +137,9 @@ foreach ($town in $towns) {
 	}
 	$campLinks = @($camps | Where-Object { $_.Sync -contains $town.Id })
 	$defenseLinks = @($defenses | Where-Object { $_.Sync -contains $town.Id })
+	$campDistances = @($campLinks | ForEach-Object {
+		[math]::Round([math]::Sqrt([math]::Pow($_.X - $town.X, 2) + [math]::Pow($_.Y - $town.Y, 2)), 1)
+	})
 	$defenseDistances = @($defenseLinks | ForEach-Object {
 		[math]::Round([math]::Sqrt([math]::Pow($_.X - $town.X, 2) + [math]::Pow($_.Y - $town.Y, 2)), 1)
 	})
@@ -142,6 +151,9 @@ foreach ($town in $towns) {
 		Range = [int]$match.Groups["range"].Value
 		Camps = $campLinks.Count
 		Defenses = $defenseLinks.Count
+		CampDistances = $campDistances
+		MinCampDistance = if ($campDistances.Count -gt 0) { ($campDistances | Measure-Object -Minimum).Minimum } else { -1 }
+		MaxCampDistance = if ($campDistances.Count -gt 0) { ($campDistances | Measure-Object -Maximum).Maximum } else { -1 }
 		DefenseDistances = $defenseDistances
 		MinDefenseDistance = if ($defenseDistances.Count -gt 0) { ($defenseDistances | Measure-Object -Minimum).Minimum } else { -1 }
 		MaxDefenseDistance = if ($defenseDistances.Count -gt 0) { ($defenseDistances | Measure-Object -Maximum).Maximum } else { -1 }
@@ -153,9 +165,14 @@ foreach ($town in $towns) {
 Assert-Equal "town start SV total" (@($parsedTowns | Measure-Object -Property StartSV -Sum).Sum) 185
 Assert-Equal "town max SV total" (@($parsedTowns | Measure-Object -Property MaxSV -Sum).Sum) 648
 Assert-Equal "towns without camps" @($parsedTowns | Where-Object { $_.Camps -lt 1 }).Count 0
+Assert-Equal "town-linked camp count" (@($parsedTowns | Measure-Object -Property Camps -Sum).Sum) 19
+Assert-Equal "camps outside 90m-225m population flow band" @($parsedTowns | Where-Object { $_.MinCampDistance -lt 90 -or $_.MaxCampDistance -gt 225 }).Count 0
 Assert-Equal "towns without defenses" @($parsedTowns | Where-Object { $_.Defenses -lt 1 }).Count 0
 Assert-True "city center is highest max SV" (($parsedTowns | Sort-Object MaxSV -Descending | Select-Object -First 1).Name -eq "Zargabad City Center")
 Assert-True "airfield is second highest max SV" (($parsedTowns | Sort-Object MaxSV -Descending | Select-Object -Skip 1 -First 1).Name -eq "Zargabad Airfield")
+foreach ($townName in @("Zargabad City Center", "Zargabad Airfield", "Zargabad North District", "Zargabad South District", "Northwest Base", "Rahim Villa")) {
+	Assert-True "$townName has two camp approaches" (($parsedTowns | Where-Object { $_.Name -eq $townName }).Camps -ge 2)
+}
 Assert-Equal "defenses outside 325m town approach band" @($parsedTowns | Where-Object { $_.MaxDefenseDistance -gt 325 }).Count 0
 Assert-Equal "defenses piled inside 90m town core" @($parsedTowns | Where-Object { $_.MinDefenseDistance -lt 90 }).Count 0
 Assert-True "city center has beefy defense coverage" (($parsedTowns | Where-Object { $_.Name -eq "Zargabad City Center" }).Defenses -ge 5)
@@ -264,4 +281,4 @@ Assert-True "Takistan has no generated Zargabad module spillover" (-not (Test-Pa
 
 Write-Host ""
 Write-Host "Zargabad town/SV summary:"
-$parsedTowns | Sort-Object MaxSV -Descending | Format-Table Name, StartSV, MaxSV, Range, Camps, Defenses, MinDefenseDistance, MaxDefenseDistance, X, Y -AutoSize
+$parsedTowns | Sort-Object MaxSV -Descending | Format-Table Name, StartSV, MaxSV, Range, Camps, MinCampDistance, MaxCampDistance, Defenses, MinDefenseDistance, MaxDefenseDistance, X, Y -AutoSize
