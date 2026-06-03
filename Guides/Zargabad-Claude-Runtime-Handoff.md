@@ -28,6 +28,14 @@ Use the same required switches as the validator for the gate being tested, then 
 
 The `Claude Notes` table in the report is part of the gate, not optional commentary. Mark each runtime check `PASS`, `FAIL`, or `UNCERTAIN`; every `FAIL` or `UNCERTAIN` row should include coordinates, screenshot filenames, RPT excerpts, or repeatable repro steps. Codex should listen to that evidence: if Claude proves the mission is wrong, Codex updates mission code or validators before asking Claude to repeat the same pass.
 
+For map-placement, defense-facing, pathing, or sightline notes, generate a coordinate packet before the playtest and paste it beside the runtime report:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadMapAuditPacket.ps1 -OutputPath ".\zargabad-map-audit.md"
+```
+
+Use the packet's objective, camp, defense, start, edge-safe and central-wall checkpoint coordinates as the shared reference for screenshots and repro notes.
+
 ## Do Not Stop Until
 
 Claude/runtime tester should keep going until there is RPT and short note evidence for every required gate below:
@@ -87,6 +95,7 @@ For a Codex-ready handoff report:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadClaudeBrief.ps1 -OutputPath ".\zargabad-claude-brief.md"
+powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadMapAuditPacket.ps1 -OutputPath ".\zargabad-map-audit.md"
 powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadRuntimeReport.ps1 -RptPath "C:\path\to\rpts" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireBlackMarket -OutputPath ".\zargabad-runtime-report.md"
 ```
 

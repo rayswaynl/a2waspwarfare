@@ -48,7 +48,7 @@ if ($prJson.Trim().Length -gt 0) {
 $focus = New-Object System.Collections.Generic.List[string]
 if ($changedFiles -match 'Zargabad_BlackMarket') { $focus.Add("Mystery feature: own Zargabad Airfield, confirm cache surfacing and cleanup-release RPT lines.") }
 if ($changedFiles -match 'Zargabad_EdgeGuard|Init_Boundaries|edge') { $focus.Add("Side hills/rim: retest outer-rim removal, aircraft exemption, and objective-near safe bubbles.") }
-if ($changedFiles -match 'Init_Zargabad|Zargabad_RuntimeAudit|mission\.sqm') { $focus.Add("Map/runtime init: retest fortifications, central wall gaps, town-defense orientation, and runtime audit lines.") }
+if ($changedFiles -match 'Init_Zargabad|Zargabad_RuntimeAudit|mission\.sqm|New-ZargabadMapAuditPacket') { $focus.Add("Map/runtime init: retest fortifications, central wall gaps, town-defense orientation, and runtime audit lines.") }
 if ($changedFiles -match 'Init_Common|CommonConstants|Balance|Units_|Vehicles|LoadoutManager|Zargabad_RuntimeAudit|Validate-ZargabadMission') { $focus.Add("Balance/economy: retest factory lists, price multipliers, caps, ranges, and 5v5-style snowball feel.") }
 if ($changedFiles -match 'Validate-ZargabadRuntimeEvidence|New-ZargabadRuntimeReport') { $focus.Add("RPT tooling: rerun runtime validator/report with the same required switches as the pass being tested.") }
 if ($changedFiles -match 'Zargabad-Claude-Runtime-Handoff|zargabad-low-pop-test-plan|Zargabad-Low-Pop-Release-Audit|New-ZargabadClaudeBrief') { $focus.Add("Coordination: use the current handoff/test plan and paste PASS/FAIL/UNCERTAIN notes with evidence.") }
@@ -78,6 +78,7 @@ $brief.Add("## Required Runtime Commands")
 $brief.Add("")
 $brief.Add('```powershell')
 $brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadMission.ps1")
+$brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadMapAuditPacket.ps1 -OutputPath `".\zargabad-map-audit.md`"")
 $brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadRuntimeEvidence.ps1 -RptPath `"C:\path\to\rpts`"")
 $brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadRuntimeReport.ps1 -RptPath `"C:\path\to\rpts`" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireBlackMarket -OutputPath `".\zargabad-runtime-report.md`"")
 $brief.Add('```')
@@ -88,6 +89,7 @@ $brief.Add("Codex owns the stop/go call. Claude should keep testing until Codex 
 $brief.Add("")
 $brief.Add("## Evidence To Paste Back")
 $brief.Add("")
+$brief.Add("- Map audit markdown from `Tools/New-ZargabadMapAuditPacket.ps1` when placement, pathing, sightline, or defense-coordinate notes are involved.")
 $brief.Add("- Runtime report markdown from `Tools/New-ZargabadRuntimeReport.ps1`.")
 $brief.Add("- RPT paths and exact excerpts for any failing or uncertain validator gate.")
 $brief.Add("- Screenshot filenames or map coordinates for base sightlines, central-wall gaps, rim abuse, defense arcs, pathing, and economy/factory observations.")

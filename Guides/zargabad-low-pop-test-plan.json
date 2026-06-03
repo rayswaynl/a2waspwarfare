@@ -33,6 +33,7 @@
     "Tools/Validate-ZargabadMission.ps1",
     "Tools/Validate-ZargabadRuntimeEvidence.ps1",
     "Tools/New-ZargabadRuntimeReport.ps1",
+    "Tools/New-ZargabadMapAuditPacket.ps1",
     "Tools/New-ZargabadClaudeBrief.ps1",
     "Guides/Zargabad-Claude-Runtime-Handoff.md",
     "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs"
@@ -122,6 +123,10 @@
     {
       "type": "source-audit",
       "summary": "Tools/New-ZargabadRuntimeReport.ps1 generates a Codex-ready markdown report with gate state, town-defense orientation state, base/fortification audit state, failure scan, key RPT excerpts, validator output, and a structured Claude Notes verdict table requiring PASS/FAIL/UNCERTAIN plus concrete evidence for ambiguous or failing runtime checks."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Tools/New-ZargabadMapAuditPacket.ps1 generates a Claude-facing coordinate packet from mission.sqm with population-flow objective values, camp links/distances, town-defense kind/position/distance rows, starts, edge-safe bubbles, central-wall gap checkpoints, and screenshot targets for map-placement, pathing, sightline and defense-facing notes."
     },
     {
       "type": "source-audit",

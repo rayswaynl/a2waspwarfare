@@ -298,6 +298,7 @@ $generatedEdgeGuard = Join-Path $missionFullPath "Server/Module/Zargabad/Zargaba
 $sourceRuntimeAudit = Join-Path $sourceMissionFullPath "Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf"
 $generatedRuntimeAudit = Join-Path $missionFullPath "Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf"
 $runtimeReportTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadRuntimeReport.ps1"
+$mapAuditPacketTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadMapAuditPacket.ps1"
 $claudeBriefTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadClaudeBrief.ps1"
 
 Assert-True "source mystery feature under 100 non-empty LOC" ((Get-NonEmptyLineCount $sourceBlackMarket) -le 100)
@@ -333,6 +334,15 @@ Assert-True "runtime report tool wraps runtime validator" ($runtimeReportSource 
 Assert-True "runtime report tool checks town defense orientation" ($runtimeReportSource -match 'Town defense orientation')
 Assert-True "runtime report tool emits Claude notes" ($runtimeReportSource -match '## Claude Notes')
 Assert-True "runtime report tool emits validator output" ($runtimeReportSource -match '## Validator Output')
+Assert-True "map audit packet tool exists" (Test-Path -LiteralPath $mapAuditPacketTool)
+$mapAuditPacketSource = Get-Content -Raw -LiteralPath $mapAuditPacketTool
+Assert-True "map audit packet emits population flow table" ($mapAuditPacketSource -match '## Population Flow')
+Assert-True "map audit packet emits camp and defense coordinates" ($mapAuditPacketSource -match '## Camps' -and $mapAuditPacketSource -match '## Town Defenses')
+Assert-True "map audit packet emits Claude screenshot targets" ($mapAuditPacketSource -match '## Claude Screenshot Targets')
+Assert-True "map audit packet emits central wall gap checkpoints" ($mapAuditPacketSource -match '4053,2725' -and $mapAuditPacketSource -match '2903,3915')
+$mapAuditPacketOutput = (& $mapAuditPacketTool) -join "`n"
+Assert-True "map audit packet runs and reports Zargabad counts" ($mapAuditPacketOutput -match '# Zargabad Map Audit Packet' -and $mapAuditPacketOutput -match 'Counts: towns \[13\], camps \[19\], airports \[1\], starts \[9\], town defenses \[33\]')
+Assert-True "map audit packet runs and reports core screenshot targets" ($mapAuditPacketOutput -match 'Zargabad City Center' -and $mapAuditPacketOutput -match 'Claude Screenshot Targets' -and $mapAuditPacketOutput -match '4053,2725')
 Assert-True "Claude brief tool exists" (Test-Path -LiteralPath $claudeBriefTool)
 $claudeBriefSource = Get-Content -Raw -LiteralPath $claudeBriefTool
 Assert-True "Claude brief tool emits coordination cadence" ($claudeBriefSource -match '## Coordination Cadence')
@@ -340,6 +350,7 @@ Assert-True "Claude brief tool requires post-commit updates" ($claudeBriefSource
 Assert-True "Claude brief tool listens to evidence-backed findings" ($claudeBriefSource -match 'RPT excerpts, screenshots, coordinates, or repeatable repro steps')
 Assert-True "Claude brief tool emits retest focus" ($claudeBriefSource -match '## Retest Focus')
 Assert-True "Claude brief tool carries stop/go ownership" ($claudeBriefSource -match 'Codex owns the stop/go call')
+Assert-True "Claude brief tool points to map audit packet" ($claudeBriefSource -match 'New-ZargabadMapAuditPacket\.ps1')
 Assert-True "Claude brief tool points to runtime report" ($claudeBriefSource -match 'New-ZargabadRuntimeReport\.ps1')
 Assert-True "Claude brief tool points to runtime validator" ($claudeBriefSource -match 'Validate-ZargabadRuntimeEvidence\.ps1')
 
