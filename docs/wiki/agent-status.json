@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T12:29:48+02:00",
+  "generatedAt": "2026-06-03T12:44:16+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed the config data-model checklist follow-up: Assets-Config-Localization-And-Parameters-Atlas now gives content agents source-backed gates for unit/factory data, gear registries, loadout templates, side roots, structures and LoadoutManager propagation.",
-      "nextExpectedOutput": "Pick the next highest-value stale validation/status row or fresh source-backed docs gap; good candidates are cleanup/restorer perf cadence, scout-wave-g validation reconciliation or commander AI-order executor proof."
+      "currentWork": "Reconciled the stale scout-wave-g validation row and cleanup/restorer cadence gap after checking the owner-page harvest, marker-cleanup-restoration-atlas-deepening record and coverage ledger. Marker-Cleanup-Restoration-Systems-Atlas now has cadence/cost interpretation and RPT labels.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: commander AI-order executor proof."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "scout-wave-g-validation-reconciliation",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Closed the stale Wave G validation-pending status and cleanup/restorer cadence gap. Evidence checked: Subagent-Discovery-Swarm Wave G owner-page rows, Progress-Dashboard Wave G rows, agent-events.jsonl wave-g integration and marker-cleanup-restoration-atlas-deepening records, git commit 1a75583e for Marker-Cleanup-Restoration-Systems-Atlas, source refs in the cadence/cost section, and Codebase-Coverage-Ledger's markers/cleaners/restorers Map status."
+    },
     {
       "lane": "config-data-model-checklist",
       "owner": "Codex",
@@ -484,8 +490,8 @@
     {
       "lane": "scout-wave-g",
       "owner": "Codex sub-agents",
-      "status": "integrated-locally-validation-pending",
-      "output": "Godel, Rawls, Jason and Locke reports are integrated into owner pages for marker cleanup/restorer flows, parameters/localization/build hazards, support/special modules and join/disconnect/AntiStack lifecycle."
+      "status": "published-validated",
+      "output": "Godel, Rawls, Jason and Locke reports are integrated into owner pages for marker cleanup/restorer flows, parameters/localization/build hazards, support/special modules and join/disconnect/AntiStack lifecycle. The stale validation-pending row was closed on 2026-06-03 after checking owner pages, event records, commit 1a75583e and docs/wiki mirror parity."
     },
     {
       "lane": "victory-endgame-atlas",

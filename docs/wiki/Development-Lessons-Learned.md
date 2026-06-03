@@ -86,6 +86,7 @@ Development rule: before moving or patching lifecycle waits, cite both the consu
 | Done | Config data-model checklist added to the assets/config atlas. | `Assets-Config-Localization-And-Parameters-Atlas#config-data-model-checklist` | Runtime content-change smoke remains per feature change. |
 | Done | AI respawn branch smoke is now in the testing workflow. | `Testing-Debugging-And-Release-Workflow#minimal-smoke-packs` | Runtime evidence is still pending until vanilla and non-vanilla AI leader death/respawn are run in Arma 2 OA. |
 | P2 | Promote cleanup flag/nested-pair shape rules into the marker/cleanup atlas patch-ready section if not already accepted. | `Marker-Cleanup-Restoration-Systems-Atlas` | Mine expiry and unit-kill garbage smoke. |
+| Done | Cleanup/restorer cadence and cost interpretation added to the marker/cleanup atlas. | `Marker-Cleanup-Restoration-Systems-Atlas#cadence-and-cost-interpretation` | Runtime RPT samples still needed before performance tuning patches. |
 | P3 | Source-check whether commander `wfbe_teammode`/`wfbe_teamgoto` has a live general executor or is mostly UI/respawn/support state. | AI/order owner page | Dedicated commander AI order smoke. |
 
 ## Agent Handoff

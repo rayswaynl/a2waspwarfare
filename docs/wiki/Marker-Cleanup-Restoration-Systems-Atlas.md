@@ -66,6 +66,29 @@ Current audit nuance: the repair path calls the marker helper, but that helper s
 
 The code intentionally separates active work time from wall-clock cycle time in PerformanceAudit records: wide scans and delete/restore calls are timed, but cooperative per-object sleeps are excluded and captured only indirectly in `cycleMs`. This is useful when testing because a low active time can still produce a long real-world cycle if a large delete queue is spread across many half-second pauses.
 
+### Cadence And Cost Interpretation
+
+This closes the old "cleaners/restorers perf is map-only" gap with source-level cadence evidence. It still does not replace live RPT measurement: use the PerformanceAudit rows below to decide whether a patch is worth taking.
+
+| Class | Loops | Cost shape | First action |
+| --- | --- | --- | --- |
+| High-cadence registry drains | Garbage collector and empty-vehicle collector run every 0.5 seconds (`server_collector_garbage.sqf:4,32`; `emptyvehiclescollector.sqf:4,30`). | Garbage scans `allDead` and dedupes through `gc_collector`; empty vehicles drains `WF_Logic emptyVehicles`, which can be written by clients after buys (`Client_BuildUnit.sqf:252-253`). | Keep predicates cheap and idempotent. Fix queue/flag correctness before changing cadence. |
+| Wide scan, long timer | Dropped items scans three class families in a 20000 radius and defaults to 120 seconds (`droppeditems_cleaner.sqf:14-44`; `Parameters.hpp:527-531`). Craters/ruins use the same broad center/radius with 1800-second defaults (`crater_cleaner.sqf:14-50`; `ruins_cleaner.sqf:9-29`; `Parameters.hpp:521-525,539-543`). | Broad `nearestObjects` scans, followed by `sleep 0.5` per deleted object. Active scan/delete time is recorded separately from wall-clock cycle time. | Audit first. If RPT rows show sustained high active time or huge cycle time, then consider terrain-aware centers/radii or producer-owned registries. |
+| Restorer, long timer | Building restorer scans `WarfareBBaseStructure` within 10500 m from `[7500,7900,0]`, defaults to parameter 1800 seconds but falls back to 600 if missing (`buildings_restorer.sqf:3,10-26`; `Parameters.hpp:515-519`). | Repairs every matching class with `setdamage 0`, regardless of side-owned structure registry. | Treat behavior as gameplay-sensitive. Narrowing the scan or registry-filtering needs construction/base smoke, not only perf evidence. |
+| Tracked mine queue | Mine cleaner iterates global `[mine, createdAt]` pairs and defaults to 5400 seconds (`mines_cleaner.sqf:3-32`; `Parameters.hpp:533-537`). Producers append pairs in RPG dropping and minefield construction (`DropRPG.sqf:65-68`; `Construction_StationaryDefense.sqf:31-55`). | Runtime cost is queue length, not map radius. Current removal uses `mines = mines - _x`, which is the wrong shape for nested pairs. | Patch pair removal before tuning cadence. Smoke mine expiry and repeated mine creation. |
+
+PerformanceAudit labels to search in the server RPT:
+
+| Label | Source | Fields |
+| --- | --- | --- |
+| `server_garbage_collector` | `server_collector_garbage.sqf:26-28` | `dead`, `tracked`, `spawned` |
+| `emptyvehiclescollector` | `emptyvehiclescollector.sqf:23-27` | `queued`, `handled` |
+| `cleaner_droppeditems` | `droppeditems_cleaner.sqf:35-37` | `scanned`, `deleted`, `weaponholders`, `mines`, `mineE`, `cycleMs` |
+| `cleaner_craters` | `crater_cleaner.sqf:40-42` | `scanned`, `deleted`, `small`, `long`, `cycleMs` |
+| `cleaner_ruins` | `ruins_cleaner.sqf:20-22` | `scanned`, `deleted`, `cycleMs` |
+| `restorer_buildings` | `buildings_restorer.sqf:21-23` | `scanned`, `restored`, `cycleMs` |
+| `cleaner_mines` | `mines_cleaner.sqf:24-26` | `tracked`, `scanned`, `deleted`, `cycleMs` |
+
 ### Ownership And Data-Flow Notes
 
 - `gc_collector` is a server global dedupe list for `allDead` objects already handed to `TrashObject`.
@@ -97,6 +120,7 @@ The code intentionally separates active work time from wall-clock cycle time in 
 - Minefield cleanup removes expired tracked pairs.
 - Garbage collector does not double-trash killed objects already handled by `RequestOnUnitKilled`.
 - Building restorer repairs only the intended structure set.
+- For cleaner/restorer tuning, capture at least one server RPT sample for the relevant PerformanceAudit label before and after the change. Compare active time and `cycleMs`; do not optimize from scan width alone.
 
 Previous: [Client UI systems atlas](Client-UI-Systems-Atlas) | Next: [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas)
 

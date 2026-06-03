@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Scout Wave G Validation Reconciliation
+
+- Closed the stale `scout-wave-g` validation-pending row without gameplay source edits.
+- Evidence checked: [Subagent discovery swarm](Subagent-Discovery-Swarm) Wave G owner-page rows; [Progress dashboard](Progress-Dashboard) stale Wave G rows; `agent-events.jsonl` `scout-wave-g` integration event and `marker-cleanup-restoration-atlas-deepening` event; git commit `1a75583e` (`docs: deepen marker cleanup atlas`); [Codebase coverage ledger](Codebase-Coverage-Ledger) markers/cleaners/restorers row; [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas) server cleanup/restoration runtime contracts.
+- Also accepted the cleanup/restorer cadence additions: high-cadence registry drains, wide-scan long timers, building restorer behavior, tracked mine queue shape and PerformanceAudit labels are now in [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas#cadence-and-cost-interpretation), [Performance opportunity sweep](Performance-Opportunity-Sweep) and [Development lessons learned](Development-Lessons-Learned).
+- Outcome: Wave G is now published/validated in human and machine status. Cleanup/restorer cadence is source-mapped; remaining work is patch-ready owner decisions and runtime evidence, not a Wave G validation blocker.
+
 ## 2026-06-03 - Codex Documentation Finisher: Config Data-Model Checklist
 
 - Closed the open Development Lessons follow-up to add a config data-model checklist to [Assets/config/localization/parameters atlas](Assets-Config-Localization-And-Parameters-Atlas#config-data-model-checklist).

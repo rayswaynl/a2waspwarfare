@@ -141,12 +141,12 @@ Spawned on 2026-06-02 after Steff asked Codex to bring an agent team back into t
 
 | Agent | Lane | Result |
 | --- | --- | --- |
-| Godel | `markers-cleaners-restorers-atlas-scout` | Integrated locally into [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas). |
-| Rawls | `parameters-localization-build-scout` | Integrated locally into [Parameters/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs). |
-| Jason | `supports-specials-modules-scout` | Integrated locally into [Support/specials/modules atlas](Support-Specials-And-Tactical-Modules-Atlas). |
-| Locke | `disconnect-join-antistack-lifecycle-scout` | Integrated locally into [Join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle). |
+| Godel | `markers-cleaners-restorers-atlas-scout` | Published / validated in [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas). |
+| Rawls | `parameters-localization-build-scout` | Published / validated in [Parameters/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs). |
+| Jason | `supports-specials-modules-scout` | Published / validated in [Support/specials/modules atlas](Support-Specials-And-Tactical-Modules-Atlas). |
+| Locke | `disconnect-join-antistack-lifecycle-scout` | Published / validated in [Join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle). |
 
-Harvest rule: scout output becomes canonical only after Codex integrates it into the owning atlas, [Feature status](Feature-Status-Register) and machine-readable records with source evidence. Wave G has owner pages now; validation and mirror parity are the remaining gates.
+Harvest rule: scout output becomes canonical only after Codex integrates it into the owning atlas, [Feature status](Feature-Status-Register) and machine-readable records with source evidence. Wave G is now closed as published/validated; future agents should start from the owner pages and the 2026-06-03 validation record rather than treating these reports as pending.
 
 ## Latest Harvest: Wave I
 
