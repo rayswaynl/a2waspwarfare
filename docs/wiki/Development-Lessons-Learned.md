@@ -124,6 +124,12 @@ The current-head recheck also found a small but important state-cleanup decision
 
 Development rule: when a branch-head note says older line refs are superseded, refresh the canonical table and all adjacent machine/status rows in the same batch. A note is not enough once owners are using the page for merge gates. See [Current supply heli PR](Current-Work-Supply-Helicopters-PR1).
 
+## Lesson 15: Map Branches Need Static And Runtime Done States
+
+`origin/feature/zargabad-map` is a useful example of a strong static map branch that is still not runtime-complete. `Tools\Validate-ZargabadMission.ps1` passed on head `1fdcb37a`, proving object/sync/count/value/layout invariants: 13 towns, 19 camps, 1 airport, 9 start logics, 33 town-defense logics, no duplicate mission object ids, no missing synchronization targets and no Takistan Zargabad-module spillover.
+
+That does not prove the mission is playable. The branch's own completion gates require hosted/dedicated Arma 2 OA runtime evidence, plus JIP/HC evidence when those claims are made, screenshot packets for visual/pathing/balance rows and runtime-report validation. Future agents should say "static validation passed" and "runtime evidence open" separately for terrain branches. See [Zargabad branch audit](Zargabad-Branch-Audit).
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |

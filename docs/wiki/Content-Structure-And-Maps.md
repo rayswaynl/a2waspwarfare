@@ -15,7 +15,7 @@ Terrain classes include Chernarus, Takistan and modded maps such as Dingor, Eden
 
 Source anchors: terrain implementations live under `Tools/LoadoutManager/Data/Terrains/Implementations/`; generated `version.sqf` is written by `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:102`, with helper comments at `:168-183`.
 
-Branch-only Zargabad note: `origin/feature/zargabad-map` head `1fdcb37a` adds `DiscordBot/src/ExtensionData/GameData/SharedWithLoadoutManager/Terrains/Implementations/VanillaMaps/ZARGABAD.cs:1-5`, source hooks at `initJIPCompatible.sqf:121-123` and Zargabad-specific runtime setup under `Server/Init/Init_Zargabad.sqf`. Treat that branch as a full terrain release candidate; use [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-04-feature-branch-matrix) and the [branch-only feature smoke pack](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) before calling Zargabad playable or maintained.
+Branch-only Zargabad note: `origin/feature/zargabad-map` head `1fdcb37a` adds `DiscordBot/src/ExtensionData/GameData/SharedWithLoadoutManager/Terrains/Implementations/VanillaMaps/ZARGABAD.cs`, `Tools/LoadoutManager/Data/Terrains/Implementations/VanillaMaps/ZARGABAD.cs:1-13`, source hooks at `initJIPCompatible.sqf:121-124` and Zargabad-specific runtime setup under `Server/Init/Init_Zargabad.sqf:1-125`. Treat that branch as a full terrain release candidate; use [Zargabad branch audit](Zargabad-Branch-Audit), [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-04-feature-branch-matrix) and the [branch-only feature smoke pack](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) before calling Zargabad playable or maintained.
 
 ## Assets
 
@@ -53,7 +53,7 @@ Generated-mission maintenance tiers:
 | --- | --- | --- |
 | Chernarus source mission | Authoritative source | Gameplay edits belong here first. |
 | Vanilla Takistan | Faithful generated target | Logic drift is characterized and currently limited to documented map-config/skip-list differences. |
-| Branch-only Zargabad | Candidate Vanilla low-pop target | `origin/feature/zargabad-map` adds terrain/tooling support and a `[31-2hc]` mission folder, but runtime evidence, class-load checks, screenshot/RPT packet validation and generated whitespace cleanup are still required. |
+| Branch-only Zargabad | Candidate Vanilla low-pop target | `origin/feature/zargabad-map` adds terrain/tooling support and a `[31-2hc]` mission folder. Static branch validation passed locally; see [Zargabad branch audit](Zargabad-Branch-Audit). Runtime evidence, class-load checks, screenshot/RPT packet validation and generated whitespace cleanup are still required. |
 | Napf, Eden, Lingor | Divergent forks | They need their own maintenance/audit decision before source hardening can be considered shipped there. |
 | Sahrani, Dingor, Tavi, Isla Duala | Abandoned stubs | They should not be treated as playable/supportable until completed or retired. |
 

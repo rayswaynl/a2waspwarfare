@@ -20,6 +20,7 @@ Important notes:
 - [Feature status register](https://github.com/rayswaynl/a2waspwarfare/wiki/Feature-Status-Register): Triage dashboard for working, broken, partial, dormant and high-risk systems.
 - [Player stats branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Player-Stats-Branch-Audit): Branch-only SQF-to-RPT-to-DiscordBot stats pipeline audit and enablement gates.
 - [Commander positions branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Commander-Positions-Branch-Audit): Branch-only WDDM commander positions audit, with Chernarus-only runtime scope, merge baggage and smoke gates.
+- [Zargabad branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Zargabad-Branch-Audit): Branch-only low-pop Zargabad terrain release audit, static validation result and runtime evidence gates.
 - [Progress dashboard](https://github.com/rayswaynl/a2waspwarfare/wiki/Progress-Dashboard): Current Codex/Claude lanes and shared status.
 - [Release-readiness ledger](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-release-readiness.json): Machine-readable source-only fix, generated propagation and smoke gate status.
 - [Knowledge platform roadmap](https://github.com/rayswaynl/a2waspwarfare/wiki/Knowledge-Platform-Roadmap): Why repo docs + GitHub Pages/MkDocs should become canonical.

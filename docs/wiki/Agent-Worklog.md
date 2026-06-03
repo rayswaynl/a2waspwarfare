@@ -1,5 +1,14 @@
 # Agent Worklog
 
+## 2026-06-03T22:11:05+0200 - Codex - zargabad-branch-deep-audit
+
+- Deep-audited `origin/feature/zargabad-map` head `1fdcb37a` after branch intake identified it as the remaining high-value map branch.
+- Source evidence checked: merge base `2cdf5fb8`; branch diff `832 files, +77702/-95`; changed path counts 792 generated Zargabad mission files, 15 source Chernarus files, 14 tools, 4 DiscordBot terrain files, 4 guides and 3 Takistan files; `ZARGABAD.cs:1-13`; `SqfFileGenerator.cs:127-130`; `ZipManager.cs:15-44`; `initJIPCompatible.sqf:121-124`; `Init_Boundaries.sqf:4-10`; `Init_CommonConstants.sqf:430-446`; `Init_Zargabad.sqf:1-125`; `Zargabad_EdgeGuard.sqf:1-45`; `Zargabad_BlackMarket.sqf:1-43`; `Zargabad_RuntimeAudit.sqf:1-114`; and `Guides/Zargabad-Completion-Gates.md:8-20`.
+- Ran branch static validation in detached worktree `work\zargabad-audit-worktree`: `powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadMission.ps1` passed, including 13 towns, 19 camps, 1 airport, 9 starts, 33 town-defense logics, no duplicate object ids, no missing sync targets, no out-of-6000 logic positions and no Takistan Zargabad-module spillover.
+- Static cleanup caveat recorded: `git diff --check origin/master..origin/feature/zargabad-map` reports 3542 whitespace findings in generated Zargabad mission files.
+- Added [Zargabad branch audit](Zargabad-Branch-Audit) and routed it through Home, sidebar, mkdocs, llms, Content Structure, Feature Status, Pending Owner Decisions, Testing workflow and machine ledgers.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-04T01:55:00+0200 - Codex - supply-heli-current-head-refresh
 
 - Refreshed the PR #1 supply-heli page against current `origin/feat/supply-helicopter` head `262dc431`, replacing older-head line-table wording instead of leaving only a drift note.

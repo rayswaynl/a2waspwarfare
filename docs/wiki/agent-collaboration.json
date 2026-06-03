@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T01:55:00+02:00",
+  "generatedAt": "2026-06-03T22:11:05+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,34 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "zargabad-branch-deep-audit",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "origin/feature/zargabad-map",
+        "origin/master",
+        "Tools/LoadoutManager/Data/Terrains/Implementations/VanillaMaps/ZARGABAD.cs",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs",
+        "Tools/LoadoutManager/ZipManager.cs",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Boundaries.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Zargabad.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/Zargabad",
+        "Guides/Zargabad-Completion-Gates.md",
+        "Tools/Validate-ZargabadMission.ps1",
+        "docs/wiki/Zargabad-Branch-Audit.md"
+      ],
+      "outputs": [
+        "Added Zargabad branch audit for origin/feature/zargabad-map head 1fdcb37a",
+        "Recorded LoadoutManager/DiscordBot terrain registration and generated mission scope",
+        "Recorded local static validation pass with Tools\\Validate-ZargabadMission.ps1",
+        "Recorded runtime hosted/dedicated/JIP/HC evidence as the open promotion gate",
+        "Recorded 3542 git diff --check whitespace findings in generated mission files"
+      ],
+      "handoff": "Future map owner should start at Zargabad-Branch-Audit. Do not call Zargabad playable or maintained until generated whitespace is cleaned/accepted, static validation is rerun on the candidate head, hosted/dedicated/JIP/HC runtime evidence is collected, class/texture/script load is clean and screenshot/RPT packet validation passes."
+    },
     {
       "lane": "supply-heli-current-head-refresh",
       "owner": "Codex",

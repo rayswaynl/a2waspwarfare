@@ -326,9 +326,10 @@
       "branch": "origin/feature/zargabad-map",
       "head": "1fdcb37a",
       "base": "origin/master@2cdf5fb8",
-      "state": "branch-review-needed-map-release-candidate-open",
+      "state": "branch-review-needed-static-validated-runtime-open",
       "sourceScope": "new-vanilla-zargabad-mission-plus-terrain-tooling",
       "canonicalDocs": [
+        "Zargabad-Branch-Audit.md",
         "Content-Structure-And-Maps.md",
         "Feature-Status-Register.md",
         "Pending-Owner-Decisions.md",
@@ -337,14 +338,17 @@
       ],
       "evidenceRefs": [
         "origin/master..origin/feature/zargabad-map: 832 files +77702/-95",
-        "DiscordBot/src/ExtensionData/GameData/SharedWithLoadoutManager/Terrains/Implementations/VanillaMaps/ZARGABAD.cs:1-5 on origin/feature/zargabad-map",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf:121-123 on origin/feature/zargabad-map",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Zargabad.sqf:1-119 on origin/feature/zargabad-map",
-        "Guides/Zargabad-Completion-Gates.md:11-20 on origin/feature/zargabad-map",
-        "git diff --check origin/master..origin/feature/zargabad-map reports trailing whitespace in generated Zargabad mission files"
+        "Tools/LoadoutManager/Data/Terrains/Implementations/VanillaMaps/ZARGABAD.cs:1-13 on origin/feature/zargabad-map",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs:127-130 on origin/feature/zargabad-map",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf:121-124 on origin/feature/zargabad-map",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Boundaries.sqf:4-10 on origin/feature/zargabad-map",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Zargabad.sqf:1-125 on origin/feature/zargabad-map",
+        "Guides/Zargabad-Completion-Gates.md:8-20 on origin/feature/zargabad-map",
+        "Tools/Validate-ZargabadMission.ps1 passed locally in detached worktree",
+        "git diff --check origin/master..origin/feature/zargabad-map reports 3542 whitespace findings in generated Zargabad mission files"
       ],
       "ownerDecision": "Decide whether Zargabad becomes a maintained Vanilla target, a low-pop experiment or a branch-only playtest.",
-      "promotionGate": "Clean generated whitespace, validate terrain generation/class loads, collect hosted/dedicated/JIP/HC runtime plus screenshot/RPT evidence and pass the Zargabad completion gates before playable/maintained wording.",
+      "promotionGate": "Clean or accept generated whitespace, rerun static validation on candidate head, validate terrain generation/class loads, collect hosted/dedicated/JIP/HC runtime plus screenshot/RPT evidence, smoke edge guard and black market, and pass the Zargabad completion gates before playable/maintained wording.",
       "plannedSmoke": {
         "status": "planned-not-run",
         "coverageLevel": [

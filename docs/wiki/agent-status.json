@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T01:55:00+02:00",
+  "generatedAt": "2026-06-03T22:11:05+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed Current-Work-Supply-Helicopters-PR1 against origin/feat/supply-helicopter head 262dc431. Current PR #1 docs now carry current line refs for Air 3 load/action gates, Air 4 cash run, load/unload timers, guarded interdiction, missing Vanilla runtime symbols and retained SupplyByHeli state after completion.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: Zargabad branch deep audit, supply-heli runtime smoke evidence intake, stale machine-record cleanup or P0/P1 accuracy drift with exact source refs."
+      "currentWork": "Deep-audited origin/feature/zargabad-map head 1fdcb37a. Added Zargabad branch audit with terrain/tooling registration, source hooks, Init_Zargabad runtime setup, edge guard, black market, runtime-audit helpers, completion gates, local static validation pass and the remaining hosted/dedicated/JIP/HC runtime evidence gates.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: supply-heli runtime smoke evidence intake, stale machine-record cleanup, P0/P1 accuracy drift with exact source refs or perf quick-wins branch audit."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "zargabad-branch-deep-audit",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Zargabad-Branch-Audit now source-maps origin/feature/zargabad-map head 1fdcb37a: LoadoutManager/DiscordBot terrain registration, generated [31-2hc] Vanilla mission scope, source Zargabad flag/boundary/constants, Init_Zargabad fortifications/statics/wall/modules, edge guard, black market, runtime audit, completion gates and runtime report validation workflow. Local static validation passed with Tools\\Validate-ZargabadMission.ps1 in a detached worktree; runtime hosted/dedicated/JIP/HC proof remains open, and git diff --check reports 3542 generated whitespace findings."
+    },
     {
       "lane": "supply-heli-current-head-refresh",
       "owner": "Codex",
