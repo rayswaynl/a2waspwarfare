@@ -217,3 +217,14 @@ Lower-value/cleanup: TR3/7/8/9/13/15, SM4/5/10/13/16/17, XR10/11/13 — see chat
 **✅ Wiki DRIFT fixed (docs commit below):** Supply-Mission-Architecture / -Scan-Narrowing / -Authority-Cleanup-Playbook updated — scan-narrowing marked SHIPPED (class-filtered + heli 400 m/2D), casing/dead-twin/SupplyByHeli marked done, heli 2D gate + `supplyMissionTimerForTown` push-timer documented.
 
 Still open for a future pick: XR6 (duplicate-start guard), XR15/SM2 (friendly-side check on delivery CC), and the exploit-class cluster (deferred per owner priority).
+
+---
+
+## Round 5 (2026-06-03) — Drone feature branch (`feat/drone-saturation-strike`)
+Reported from an owner-run in-engine RPT review of the combined test build (`test/rebuild-jun` = release #8 + drone). **These refs are against the DRONE branch, not the release tree** — the drone is an experimental, off-by-default toggle and is NOT part of PR #8. Related: [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match).
+
+| Label | File:line | Claim | Verdict | Note |
+|---|---|---|---|---|
+| DRN1 | `Server/Functions/Server_HandleSpecial.sqf:67-68` | `case "DroneStrike": { _args spawn KAT_DroneStrike; }` — RPT shows `Error Undefined variable in expression: kat_dronestrike` | ⚠️ | Load-order / boot race, **not** a missing definition. `KAT_DroneStrike` IS compiled at `Server/Init/Init_Server.sqf:44` (`Compile preprocessFile "Server\Support\Support_DroneStrike.sqf"`), so the global exists once `Init_Server` has run. The RPT hit is from an early session and lands in the `Init_Server`/`initJIPCompatible` window (the run's deepest FPS dips, 1.6–5 fps, are all init/JIP), consistent with a strike dispatched before the compile completed — or a build that predated line 44. The strike otherwise works in later sessions (`Support_DroneStrike.sqf : spawned N drones`). **Fix (defence-in-depth):** guard the dispatch — `case "DroneStrike": { if (isNil "KAT_DroneStrike") exitWith {}; _args spawn KAT_DroneStrike; };` — and re-host to confirm the error no longer reproduces. |
+
+**Perf note (same RPT):** server simulation is scheduler-bound at ~19–20 fps under a full AI-Commander battle on the local self-host (DB-stub / AntiStack noise depresses the absolute numbers vs a dedicated box); every sub-10 fps sample is `Init_Server` / `Init_Town` / JIP, not steady-state gameplay. A captured drone strike held 37–59 fps across its window — no death spiral.
