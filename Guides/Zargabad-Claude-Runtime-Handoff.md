@@ -48,7 +48,7 @@ Claude/runtime tester should keep going until there is RPT and short note eviden
 | Central wall | Wall around `3425,3375` interrupts flat middle sightlines; gaps pass infantry, light armor and AI. |
 | Side hills/rim | Extreme-rim ground camping is removed after the configured timeout; objective-near fights and aircraft are not punished. |
 | Economy | City/airfield are valuable without runaway snowball; farms/outskirts stay lower-value flank objectives. |
-| Factory lists/costs | MBTs/heavy attack aircraft are absent from normal Zargabad factory flow; light/heavy/air/airport price multipliers are visible. |
+| Factory lists/costs | Source/static validation proves exact compact WEST/EAST normal heavy/aircraft lists with MBTs, MLRS, SPAAGs, attack helicopters and attack jets excluded; runtime confirms buy-menu availability and price feel. |
 | Mystery feature | Owning Zargabad Airfield can surface the black-market cache; RPT proves cache spawn and cleanup release. |
 
 ## Commands For Evidence
@@ -100,6 +100,7 @@ Use `-AllowKnownDisconnectScoreErrors` only if the only RPT `ERROR` lines are th
 - RPT excerpt for `Init_Zargabad.sqf: Oriented [33] town defense logics toward linked town centers`.
 - RPT excerpt for the `Zargabad_RuntimeAudit.sqf` count/SV, base/static/wall, base static template, factory restriction, price multiplier/sample, and economy/range lines.
 - RPT excerpts for black-market cache surfacing and cleanup release.
+- Buy-menu notes for the exact compact normal factory lists: WEST heavy `M2A2_EP1/M2A3_EP1/BAF_FV510_D`, EAST heavy `M113_TK_EP1/BMP2_TK_EP1/T34_TK_EP1/BMP3`, WEST aircraft utility/light transport only, and EAST aircraft utility/light transport only.
 - Any observed town where static defenses still face the wrong route or block normal movement after the orientation pass.
 - Any economy issue where city/airfield income or vehicle pricing snowballs too fast in a 5v5-style test.
 

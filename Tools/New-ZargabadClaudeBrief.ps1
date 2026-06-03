@@ -49,7 +49,7 @@ $focus = New-Object System.Collections.Generic.List[string]
 if ($changedFiles -match 'Zargabad_BlackMarket') { $focus.Add("Mystery feature: own Zargabad Airfield, confirm cache surfacing and cleanup-release RPT lines.") }
 if ($changedFiles -match 'Zargabad_EdgeGuard|Init_Boundaries|edge') { $focus.Add("Side hills/rim: retest outer-rim removal, aircraft exemption, and objective-near safe bubbles.") }
 if ($changedFiles -match 'Init_Zargabad|Zargabad_RuntimeAudit|mission\.sqm') { $focus.Add("Map/runtime init: retest fortifications, central wall gaps, town-defense orientation, and runtime audit lines.") }
-if ($changedFiles -match 'Init_Common|CommonConstants|Balance|Units_|Vehicles|LoadoutManager') { $focus.Add("Balance/economy: retest factory lists, price multipliers, caps, ranges, and 5v5-style snowball feel.") }
+if ($changedFiles -match 'Init_Common|CommonConstants|Balance|Units_|Vehicles|LoadoutManager|Zargabad_RuntimeAudit|Validate-ZargabadMission') { $focus.Add("Balance/economy: retest factory lists, price multipliers, caps, ranges, and 5v5-style snowball feel.") }
 if ($changedFiles -match 'Validate-ZargabadRuntimeEvidence|New-ZargabadRuntimeReport') { $focus.Add("RPT tooling: rerun runtime validator/report with the same required switches as the pass being tested.") }
 if ($changedFiles -match 'Zargabad-Claude-Runtime-Handoff|zargabad-low-pop-test-plan|Zargabad-Low-Pop-Release-Audit|New-ZargabadClaudeBrief') { $focus.Add("Coordination: use the current handoff/test plan and paste PASS/FAIL/UNCERTAIN notes with evidence.") }
 if ($focus.Count -eq 0) { $focus.Add("Run the normal hosted/dedicated/JIP/HC gates from the handoff; no narrower retest focus was inferred from the last commit.") }

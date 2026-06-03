@@ -68,7 +68,7 @@
     "Compare the RPT baseStaticTemplates line with screenshots/coordinates for spawned WEST/EAST base statics and flag mismatched classes, bad arcs, or blocked commander movement.",
     "Wake city, airfield and one outer farm with ground units; confirm town AI and static defenses activate, face useful approaches after the Zargabad orientation pass, fight, and clean up after inactivity.",
     "Capture camps and then a town from both WEST and EAST; confirm camp/town SV drains, resets on capture, and income ticks reflect ownership.",
-    "Buy representative infantry, light, heavy, aircraft and airport units; confirm Zargabad lists exclude MBTs/heavy attack aircraft and price multipliers feel sane.",
+    "Buy representative infantry, light, heavy, aircraft and airport units; confirm runtime buy menus match the statically validated compact Zargabad normal heavy/aircraft lists, exclude MBTs/MLRS/SPAAGs/attack helicopters/attack jets from normal factories, and make price multipliers feel sane.",
     "Own Zargabad Airfield as WEST or EAST and wait for the black-market cache event; confirm crate/smoke spawn, ownership gating, RPT spawn evidence and RPT cleanup-release evidence.",
     "Run one HC-enabled smoke if headless client is used by the server and confirm town AI/static defense behavior does not regress."
   ],
@@ -101,7 +101,7 @@
     },
     {
       "type": "command-output",
-      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, intended default start anchors/headings and WEST/EAST separation, no out-of-6000 logic positions, no objective safe-zone logics inside the 120m edge kill rim, exactly seven north/east edge-safe objective/start bubbles, start SV 185, max SV 648, all towns have camps and defenses, each camp links to exactly one town, all camps sit in the 90m-225m town-flow band, high-value objectives have two camp approaches and layered defense coverage, synchronized defenses sit in the 90m-325m town approach band, exact smaller-map economy/range/cap constants are locked in source and generated Zargabad mission copies, the runtime town-defense orientation hook is present, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
+      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, intended default start anchors/headings and WEST/EAST separation, no out-of-6000 logic positions, no objective safe-zone logics inside the 120m edge kill rim, exactly seven north/east edge-safe objective/start bubbles, start SV 185, max SV 648, all towns have camps and defenses, each camp links to exactly one town, all camps sit in the 90m-225m town-flow band, high-value objectives have two camp approaches and layered defense coverage, synchronized defenses sit in the 90m-325m town approach band, exact smaller-map economy/range/cap constants and exact compact normal heavy/aircraft lists are locked in source and generated Zargabad mission copies, the runtime town-defense orientation hook is present, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
     },
     {
       "type": "source-audit",
@@ -110,6 +110,10 @@
     {
       "type": "source-audit",
       "summary": "The static validator now checks Zargabad AI caps, player squad caps, team supply cap, fast travel, UAV spotting, respawn, command-center, town build/defense/mortar/patrol, support/service, aircraft countermeasure, and base-defense manning/protection constants before runtime testers spend effort on gameplay feel."
+    },
+    {
+      "type": "source-audit",
+      "summary": "The static validator parses source and generated Zargabad WEST/EAST normal heavy/aircraft override arrays, requires exact compact factory lists, and fails if MBTs, MLRS, SPAAGs, attack helicopters or attack jets return to normal factory flow."
     },
     {
       "type": "source-audit",
@@ -142,6 +146,6 @@
   ],
   "result": "partial",
   "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Codex should send Tools/New-ZargabadClaudeBrief.ps1 output after each commit, and Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports after each Codex commit or runtime gate.",
-  "updatedAt": "2026-06-03T05:32:00+02:00",
+  "updatedAt": "2026-06-03T05:45:00+02:00",
   "updatedBy": "Codex"
 }

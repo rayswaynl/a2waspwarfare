@@ -52,6 +52,23 @@ function Test-ContainsAll {
 	return $true
 }
 
+function Get-ZargabadOverrideUnits {
+	param([string]$Content, [string]$Factory)
+	$pattern = 'if\s*\(IS_zargabad_lowpop_map\)\s*then\s*\{\s*_u\s*=\s*\[([^\]]*)\];\s*\};\s*missionNamespace\s+setVariable\s+\[Format\s+\["WFBE_%1' + [regex]::Escape($Factory) + 'UNITS"'
+	$match = [regex]::Match($Content, $pattern, [System.Text.RegularExpressions.RegexOptions]::Singleline)
+	if (-not $match.Success) { return @() }
+	return @([regex]::Matches($match.Groups[1].Value, "['""]([^'""]+)['""]") | ForEach-Object { $_.Groups[1].Value })
+}
+
+function Test-SequenceEqual {
+	param([string[]]$Actual, [string[]]$Expected)
+	if ($Actual.Count -ne $Expected.Count) { return $false }
+	for ($i = 0; $i -lt $Expected.Count; $i++) {
+		if ($Actual[$i] -ne $Expected[$i]) { return $false }
+	}
+	return $true
+}
+
 function Assert-NearPosition {
 	param([string]$Name, $Object, [double]$X, [double]$Y, [double]$Tolerance)
 	$distance = [math]::Sqrt([math]::Pow($Object.X - $X, 2) + [math]::Pow($Object.Y - $Y, 2))
@@ -257,6 +274,20 @@ foreach ($path in @($sourceMissionFullPath, $missionFullPath)) {
 	Assert-True "$path edge guard constants are present" ($constants -match "WFBE_C_ZARGABAD_EDGE_GUARD_BAND = 120;[\s\S]*WFBE_C_ZARGABAD_EDGE_GUARD_SAFE_RANGE = 325;[\s\S]*WFBE_C_ZARGABAD_EDGE_GUARD_TIMEOUT = 45;")
 	$commonInit = Get-Content -Raw -LiteralPath (Join-Path $path "Common/Init/Init_Common.sqf")
 	Assert-True "$path declares Zargabad price multipliers" ($commonInit -match 'WFBE_ZARGABAD_PRICE_MULTIPLIERS[\s\S]*\["BARRACKS",0\.9\][\s\S]*\["LIGHT",1\.1\][\s\S]*\["HEAVY",1\.2\][\s\S]*\["AIRCRAFT",1\.35\][\s\S]*\["AIRPORT",1\.5\][\s\S]*\["DEPOT",0\.95\]')
+	$westUnits = Get-Content -Raw -LiteralPath (Join-Path $path "Common/Config/Core_Units/Units_CO_US.sqf")
+	$eastUnits = Get-Content -Raw -LiteralPath (Join-Path $path "Common/Config/Core_Units/Units_CO_RU.sqf")
+	$westHeavy = Get-ZargabadOverrideUnits -Content $westUnits -Factory "HEAVY"
+	$westAircraft = Get-ZargabadOverrideUnits -Content $westUnits -Factory "AIRCRAFT"
+	$eastHeavy = Get-ZargabadOverrideUnits -Content $eastUnits -Factory "HEAVY"
+	$eastAircraft = Get-ZargabadOverrideUnits -Content $eastUnits -Factory "AIRCRAFT"
+	Assert-True "$path applies exact WEST Zargabad heavy list" (Test-SequenceEqual -Actual $westHeavy -Expected @("M2A2_EP1","M2A3_EP1","BAF_FV510_D"))
+	Assert-True "$path applies exact EAST Zargabad heavy list" (Test-SequenceEqual -Actual $eastHeavy -Expected @("M113_TK_EP1","BMP2_TK_EP1","T34_TK_EP1","BMP3"))
+	Assert-True "$path applies exact WEST Zargabad aircraft list" (Test-SequenceEqual -Actual $westAircraft -Expected @("MH6J_EP1","UH60M_EP1","UH60M_MEV_EP1","CH_47F_EP1","CH_47F_BAF","BAF_Merlin_HC3_D","AH6J_EP1"))
+	Assert-True "$path applies exact EAST Zargabad aircraft list" (Test-SequenceEqual -Actual $eastAircraft -Expected @("UH1H_TK_EP1","Mi17_TK_EP1","Mi17_medevac_RU","An2_TK_EP1"))
+	$forbiddenNormalFactoryUnits = @("M1A1","M1A1_US_DES_EP1","MLRS","MLRS_DES_EP1","M1A2_TUSK_MG","M1A2_US_TUSK_MG_EP1","M6_EP1","ZSU_INS","ZSU_TK_EP1","T55_TK_EP1","T72_RU","T72_TK_EP1","T90","2S6M_Tunguska","AW159_Lynx_BAF","Mi24_D_CZ_ACR","Mi24_D_TK_EP1","Mi24_P","Mi24_V","Ka52","Ka52Black","AH64D","AH64D_EP1","BAF_Apache_AH1_D","AH1Z","L39_TK_EP1","Su25_Ins","Su25_TK_EP1","Su39","Su34","A10","A10_US_EP1","AV8B","AV8B2","F35B","C130J_US_EP1")
+	$normalFactoryUnits = @($westHeavy + $westAircraft + $eastHeavy + $eastAircraft)
+	$forbiddenFound = @($normalFactoryUnits | Where-Object { $_ -in $forbiddenNormalFactoryUnits })
+	Assert-Equal "$path forbidden heavy/attack normal-factory units" $forbiddenFound.Count 0
 }
 
 $sourceBlackMarket = Join-Path $sourceMissionFullPath "Server/Module/Zargabad/Zargabad_BlackMarket.sqf"
@@ -290,6 +321,7 @@ Assert-True "runtime audit logs Zargabad base and fortification counts" ($runtim
 Assert-True "runtime audit logs Zargabad base static templates" ($runtimeAuditSource -match 'baseStaticTemplates WEST %1 EAST %2')
 Assert-True "runtime audit logs Zargabad economy and range constants" ($runtimeAuditSource -match 'supplyCap \[%1\] teamSupplyCap \[%2\] fastTravelMax \[%3\] respawnCampRange \[%4\].*edgeGuard \[%10,%11,%12\]')
 Assert-True "runtime audit logs Zargabad factory restrictions" ($runtimeAuditSource -match 'factoryCounts WEST L/H/A/AP')
+Assert-True "runtime audit checks expanded forbidden normal factory set" ($runtimeAuditSource -match 'M1A1' -and $runtimeAuditSource -match 'T90' -and $runtimeAuditSource -match 'Ka52' -and $runtimeAuditSource -match 'Su34' -and $runtimeAuditSource -match 'F35B')
 Assert-True "runtime audit logs Zargabad price multipliers and samples" ($runtimeAuditSource -match 'priceMultipliers %1 priceSamples %2')
 
 Assert-True "runtime report tool exists" (Test-Path -LiteralPath $runtimeReportTool)

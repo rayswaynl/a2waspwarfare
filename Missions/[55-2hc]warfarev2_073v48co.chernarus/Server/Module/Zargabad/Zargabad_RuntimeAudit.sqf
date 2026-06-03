@@ -58,7 +58,7 @@ _eastLight = missionNamespace getVariable ["WFBE_EASTLIGHTUNITS", []];
 _eastHeavy = missionNamespace getVariable ["WFBE_EASTHEAVYUNITS", []];
 _eastAircraft = missionNamespace getVariable ["WFBE_EASTAIRCRAFTUNITS", []];
 _eastAirport = missionNamespace getVariable ["WFBE_EASTAIRPORTUNITS", []];
-_forbiddenNormal = ["M1A1_US_DES_EP1","MLRS_DES_EP1","M1A2_US_TUSK_MG_EP1","M6_EP1","BAF_FV510_W","AW159_Lynx_BAF","AH64D_EP1","BAF_Apache_AH1_D","C130J_US_EP1","A10_US_EP1","ZSU_TK_EP1","T55_TK_EP1","T72_TK_EP1","Mi24_D_TK_EP1","L39_TK_EP1","Su25_TK_EP1"];
+_forbiddenNormal = ["M1A1","M1A1_US_DES_EP1","MLRS","MLRS_DES_EP1","M1A2_TUSK_MG","M1A2_US_TUSK_MG_EP1","M6_EP1","ZSU_INS","ZSU_TK_EP1","T55_TK_EP1","T72_RU","T72_TK_EP1","T90","2S6M_Tunguska","AW159_Lynx_BAF","Mi24_D_CZ_ACR","Mi24_D_TK_EP1","Mi24_P","Mi24_V","Ka52","Ka52Black","AH64D","AH64D_EP1","BAF_Apache_AH1_D","AH1Z","L39_TK_EP1","Su25_Ins","Su25_TK_EP1","Su39","Su34","A10","A10_US_EP1","AV8B","AV8B2","F35B","C130J_US_EP1"];
 _forbiddenPresent = [];
 {if ((_x in _westHeavy) || (_x in _westAircraft) || (_x in _eastHeavy) || (_x in _eastAircraft)) then {_forbiddenPresent = _forbiddenPresent + [_x]}} forEach _forbiddenNormal;
 

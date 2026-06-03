@@ -60,7 +60,7 @@ Runtime Zargabad overrides in `Init_CommonConstants.sqf` reduce smaller-map abus
 
 Runtime Zargabad price multipliers in `Init_Common.sqf` make infantry slightly cheaper while raising light, heavy, air and airport unit costs. This reduces vehicle spam without removing the low-pop infantry fight.
 
-The normal factory lists are restricted away from MBTs and heavy attack aircraft. Airport ownership remains valuable, and the black-market cache gives the airfield a cheap extra reason to contest it.
+The normal factory lists are restricted away from MBTs, MLRS, SPAAGs, attack helicopters and attack jets. Static validation now parses the Zargabad override arrays in source and generated mission copies and requires the exact compact WEST/EAST heavy and aircraft lists before runtime testers spend time on buy-menu feel. Airport ownership remains valuable, and the black-market cache gives the airfield a cheap extra reason to contest it.
 
 ## Fortification And Defense Audit
 
@@ -100,7 +100,7 @@ Static validation currently proves the editor data shape, not tactical effective
 - `git diff --cached --check`
 - Static mission validation: unique ids, all sync ids resolvable, no out-of-6000 Zargabad logic positions, no objective safe-zone logic inside the 120m edge kill rim, exactly seven north/east edge-safe objective/start bubbles, intended default starts/headings and WEST/EAST separation, 13 towns, 19 camps, 1 airport, 33 defense logics, each camp linked to one town, camps in the 90m-225m town-flow band, high-value towns with two camp approaches, start SV 185, max SV 648, defense orientation hook present.
 
-`Tools/Validate-ZargabadMission.ps1` is the repeatable local validator for this PR. It parses the generated Zargabad `mission.sqm`, checks town/camp/airport/start/defense counts, sync targets, 6000m boundary containment, edge-rim safe-zone footprint, default start anchors/headings/separation, SV totals, town camp/defense coverage, camp distance bands, defense approach distances, high-value objective defense depth, smaller-map economy/range/cap constants, runtime defense-orientation hook, mystery feature LOC, edge-guard LOC/hooks, central-wall template/gaps, and Takistan spillover.
+`Tools/Validate-ZargabadMission.ps1` is the repeatable local validator for this PR. It parses the generated Zargabad `mission.sqm`, checks town/camp/airport/start/defense counts, sync targets, 6000m boundary containment, edge-rim safe-zone footprint, default start anchors/headings/separation, SV totals, town camp/defense coverage, camp distance bands, defense approach distances, high-value objective defense depth, smaller-map economy/range/cap constants, exact compact normal heavy/aircraft factory lists, forbidden heavy/attack normal-factory exclusions, runtime defense-orientation hook, mystery feature LOC, edge-guard LOC/hooks, central-wall template/gaps, and Takistan spillover.
 
 `Tools/Validate-ZargabadRuntimeEvidence.ps1` is the repeatable RPT validator for Claude/runtime testers. It checks that Zargabad appears in supplied RPT logs, server/town/Zargabad/edge-guard init completed, the town-defense orientation pass handled all 33 defense logics, runtime audit count/SV/base/factory/price/economy evidence appears, optional JIP/HC/edge-removal/black-market spawn and cleanup evidence appears when requested, and common Arma missing-script/dependency/expression failures are absent.
 
