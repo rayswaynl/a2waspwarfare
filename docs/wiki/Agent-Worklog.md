@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: PV Dispatch Perf Review Status Closure
+
+- Closed the stale `pv-dispatch-perf-jip-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); the requested DR-38 performance observation is already integrated into [Networking/PV](Networking-And-Public-Variables), [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Hardening roadmap](Hardening-Implementation-Roadmap) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl#pvf-dispatch-lookup).
+- Evidence checked: `Server/Functions/Server_HandlePVF.sqf:14` and `Client/Functions/Client_HandlePVF.sqf:22` still dispatch with `Spawn (Call Compile _script)`, while `Common/Init/Init_PublicVariables.sqf:45,50` already precompiles the registered `CLTFNC*` and `SRVFNC*` handler globals.
+- Scope remained docs/status only; future network hardening still needs the source patch and smoke, and per-handler authority/direct-PV risks remain separate from the dispatcher lookup.
+
 ## 2026-06-03 - Codex Documentation Finisher: Respawn MASH Review Status Closure
 
 - Closed the stale `respawn-mash-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); the requested docs state is already published in [Feature status](Feature-Status-Register), [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas), [Abandoned feature revival](Abandoned-Feature-Revival-Review), [Networking/PV](Networking-And-Public-Variables) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl#marker-support-cleanups).

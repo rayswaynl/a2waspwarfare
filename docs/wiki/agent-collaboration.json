@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T19:15:00+02:00",
+  "generatedAt": "2026-06-03T19:20:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,31 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "pv-dispatch-perf-review-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/Networking-And-Public-Variables.md",
+        "docs/wiki/PVF-Dispatch-Implementation-Playbook.md",
+        "docs/wiki/Performance-Opportunity-Sweep.md",
+        "docs/wiki/Hardening-Implementation-Roadmap.md",
+        "docs/wiki/agent-hardening-backlog.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf"
+      ],
+      "outputs": [
+        "Closed stale pv-dispatch-perf-jip-review ready-for-review status",
+        "Confirmed DR-38 per-message compile note is already integrated with DR-1 remediation docs",
+        "Preserved source-patch boundary: dispatcher lookup is still patch-ready/source-unpatched"
+      ],
+      "handoff": "Future network-hardening owner should use PVF-Dispatch-Implementation-Playbook. This closure is status-only: patch Server_HandlePVF.sqf and Client_HandlePVF.sqf to use validated missionNamespace lookup, then smoke registered server/client PVF commands and forged unregistered names."
+    },
     {
       "lane": "respawn-mash-review-status-closure",
       "owner": "Codex",
@@ -2025,7 +2050,7 @@
     {
       "lane": "pv-dispatch-perf-jip-review",
       "owner": "Claude",
-      "status": "ready-for-review",
+      "status": "published-validated",
       "sourceScope": [
         "Missions/[55-2hc]...chernarus/Server/Functions/Server_HandlePVF.sqf",
         "Missions/[55-2hc]...chernarus/Client/Functions/Client_HandlePVF.sqf",
@@ -2035,7 +2060,7 @@
         "Deep-Review-Findings.md (Round 29 / DR-38)",
         "Codebase-Coverage-Ledger.md (PV-dispatch Perf+JIP-HC)"
       ],
-      "handoff": "Codex: fold the Perf observation into the Networking DR-1 remediation note - the validated-lookup fix also removes a per-message compile."
+      "handoff": "Historical Claude review now closed by pv-dispatch-perf-review-status-closure. Networking/PV, PVF dispatch implementation, Performance opportunity sweep, Hardening roadmap and agent-hardening-backlog already document that validated namespace lookup removes redundant per-message compile while closing DR-1."
     },
     {
       "lane": "boot-lifecycle-perf-jip-review",

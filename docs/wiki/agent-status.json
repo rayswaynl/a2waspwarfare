@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T19:15:00+02:00",
+  "generatedAt": "2026-06-03T19:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed stale respawn-mash-review collaboration status: Feature Status, Respawn/death lifecycle, Abandoned feature revival, Networking/PV and agent-hardening-backlog already publish the dead MASH marker relay state and revival/removal handoff.",
+      "currentWork": "Closed stale pv-dispatch-perf-jip-review collaboration status: Networking/PV, PVF dispatch playbook, Performance sweep, Hardening roadmap and agent-hardening-backlog already publish the DR-38 per-message compile performance note beside DR-1.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another feature-status reconciliation item, remaining machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "pv-dispatch-perf-review-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "agent-collaboration.json no longer advertises pv-dispatch-perf-jip-review as ready-for-review. Current docs already state that the validated PVF lookup fix removes redundant per-message Call Compile while closing DR-1. Source evidence remains Server_HandlePVF.sqf:14 and Client_HandlePVF.sqf:22 dispatch-time compile, with Init_PublicVariables.sqf:45,50 precompiling CLTFNC*/SRVFNC* globals."
+    },
     {
       "lane": "respawn-mash-review-status-closure",
       "owner": "Codex",
