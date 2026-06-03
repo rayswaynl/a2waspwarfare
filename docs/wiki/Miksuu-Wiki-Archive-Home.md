@@ -9,4 +9,10 @@ Archive category: `upstream-wiki-stub`
 
 ---
 
+## Archive Navigation
+
+Previous: [Miksuu Wiki Archive: Chernarus Mission Script Architecture](Miksuu-Wiki-Archive-Project-Script-Architecture-Of-Chernarus-Mission) | Next: [Community & Dev](Community-And-Dev)
+
+Related: [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) | [Home](Home)
+
 Welcome to the a2waspwarfare wiki!

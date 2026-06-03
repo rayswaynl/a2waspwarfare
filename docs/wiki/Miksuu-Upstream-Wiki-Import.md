@@ -59,6 +59,9 @@ Do not rewrite or mirror external media without a separate asset-preservation pa
 | Architecture folder walkthrough | The upstream architecture page is broad and partly stale; current file names and compile ownership should be taken from source-backed atlases. | [Architecture overview](Architecture-Overview), [SQF code atlas](SQF-Code-Atlas), [Function and module index](Function-And-Module-Index) |
 | Discord bot page | Upstream page is a stub and does not document the current in-repo `.NET` bot shape. | [External integrations](External-Integrations), [Integration trust boundary audit](Integration-Trust-Boundary-Audit) |
 | Changelog feature status | Old release notes may describe old server state, branch state or reverted work. | [Feature status register](Feature-Status-Register), [Current source status snapshot](Current-Source-Status-Snapshot) |
+| Modded-map event notes | Upstream V9/V10/modpack sections describe event-era terrain and vehicle propagation. Current generated/release scope is not the same as those event notes. | [Tools and build workflow](Tools-And-Build-Workflow), [Content structure and maps](Content-Structure-And-Maps) |
+| Server ops and HC/performance anecdotes | Upstream announcements include live host, player-count, view-distance, HC and multithreading experiments. Treat them as historical ops snapshots, not current topology or policy. | [AI, headless and performance](AI-Headless-And-Performance), [Headless delegation/failover](Headless-Delegation-And-Failover-Playbook), [Current source status snapshot](Current-Source-Status-Snapshot) |
+| Time-variant feature notes | Some changelog entries intentionally describe temporary removals/readds, reverted features, tournament/event settings or next-restart deployments. | [Feature status register](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions) |
 
 ## Agent rules
 

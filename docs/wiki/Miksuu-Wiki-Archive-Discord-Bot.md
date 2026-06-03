@@ -9,6 +9,12 @@ Archive category: `integration-provenance`
 
 ---
 
+## Archive Navigation
+
+Previous: [Miksuu Wiki Archive: Gameplay Videos](Miksuu-Wiki-Archive-Gameplay-Videos) | Next: [Miksuu Wiki Archive: Development Process](Miksuu-Wiki-Archive-Development-Process)
+
+Related: [Community & Dev](Community-And-Dev) | [External integrations](External-Integrations) | [Integration trust boundary audit](Integration-Trust-Boundary-Audit)
+
 # DiscordBotFramework
 
 This project uses [DiscordBotFramework](https://github.com/Miksuu/DiscordBotFramework) (created by Miksuu).

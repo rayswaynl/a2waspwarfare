@@ -38,15 +38,26 @@ The upstream wiki shows a Discord-first development culture:
 
 This is a non-exhaustive "mentioned in upstream sources" ledger, not an ownership or current-role claim.
 
-| Name / handle | Mentioned role or context | Source route |
-| --- | --- | --- |
-| Miksuu | Maintainer, changelog author, LoadoutManager and Discord/tooling context. | [Changelog archive](Miksuu-Wiki-Archive-Changelog), [LoadoutManager archive](Miksuu-Wiki-Archive-LoadoutManager), [Development process archive](Miksuu-Wiki-Archive-Development-Process) |
-| Marty / `@marty0007` | Architecture wiki author and repeated feature/code contributor in upstream notes. | [Project architecture archive](Miksuu-Wiki-Archive-Project-Script-Architecture-Of-Chernarus-Mission), [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
-| `@rayswaycx`, `@rainbowbier`, `@eirik4461` | Donor/server-support gratitude in the 2023 announcement. | [Big announcements archive](Miksuu-Wiki-Archive-Big-Announcements) |
-| `@DMR#1208`, `0=1`, `@cleinstein`, `@quadxd`, Panovich | Contributor thanks and patch/community context in upstream notes. | [Big announcements archive](Miksuu-Wiki-Archive-Big-Announcements), [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
-| Quad, Net_2, nonotgulag, opftafel007, malialek, Blu | Names surfaced by upstream changelog scout as reporters, contributors or community participants. | [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
-| Ray Reijnders | Recent upstream wiki git history: created then deleted `Raysway-Update-Notes.md` on 2026-06-02; no content remains at HEAD beyond history. | [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) |
-| `@ezcoo` | Appears in mixed upstream contexts, including older contributor thanks and later recovery/conflict wording. Treat as history-source evidence only. | [Changelog archive](Miksuu-Wiki-Archive-Changelog), [Big announcements archive](Miksuu-Wiki-Archive-Big-Announcements) |
+| Canonical name | Aliases seen | Mentioned role or context | Source route |
+| --- | --- | --- | --- |
+| Miksuu | `@miksuu` | Core maintainer, release lead, changelog author, LoadoutManager and Discord/tooling context. | [Changelog archive](Miksuu-Wiki-Archive-Changelog), [LoadoutManager archive](Miksuu-Wiki-Archive-LoadoutManager), [Development process archive](Miksuu-Wiki-Archive-Development-Process) |
+| Marty | `@marty0007` | Architecture wiki author, core developer and repeated feature/balance contributor in upstream notes. | [Project architecture archive](Miksuu-Wiki-Archive-Project-Script-Architecture-Of-Chernarus-Mission), [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
+| Rayswaycx | `@Rayswaycx#3767`, `@rayswaycx` | Donor, server-support and event context in upstream notes. | [Big announcements archive](Miksuu-Wiki-Archive-Big-Announcements), [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
+| DMR | `@DMR#1208` | Long-running contributor and patch/air-balance context. | [Big announcements archive](Miksuu-Wiki-Archive-Big-Announcements), [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
+| Quad | `@quadxd` | Contributor across scripts, ideas, QA/testing and community feedback. | [Big announcements archive](Miksuu-Wiki-Archive-Big-Announcements), [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
+| Cleinstein | `@cleinstein` | Contributor, air balance and loadout context. | [Big announcements archive](Miksuu-Wiki-Archive-Big-Announcements), [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
+| 0=1 | `0=1` | Contributor, marker and feature-authoring context. | [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
+| Panovich | `Panovich` | Contributor, FPS optimization note. | [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
+| Net_2 | `Net_2` | Contributor/release-tag context. | [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
+| nonotgulag | `@nonotgulag` | Feature patch contributor. | [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
+| opftafel007 | `@opftafel007` | Bug report and feedback contributor. | [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
+| malialek | `@malialek` | Suggestion contributor. | [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
+| rainbowbier | `@rainbowbier` | Donor and QA/feedback context. | [Big announcements archive](Miksuu-Wiki-Archive-Big-Announcements), [Changelog archive](Miksuu-Wiki-Archive-Changelog) |
+| eirik4461 | `@eirik4461` | Donor and Patreon context. | [Big announcements archive](Miksuu-Wiki-Archive-Big-Announcements) |
+| Ray Reijnders | Ray | Recent upstream wiki git history: created then deleted `Raysway-Update-Notes.md` on 2026-06-02; no content remains at HEAD beyond history. | [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) |
+| ezcoo | `@ezcoo`, `@ezcoo's old code` | Legacy contributor/code-source context plus later recovery/conflict wording. Treat as history-source evidence only. | [Changelog archive](Miksuu-Wiki-Archive-Changelog), [Big announcements archive](Miksuu-Wiki-Archive-Big-Announcements) |
+
+Do not treat `Arma2Warfare GPT`, `Mr. James`, `Contributor`, `Game Admin` or `Veteran` as individual contributor rows unless a later source proves they are handles rather than tools/roles/context.
 
 ## Development culture
 
@@ -81,6 +92,9 @@ Imported from `Miksuu/a2waspwarfare.wiki` at commit `45ef3da367d65e6487de488bbe3
 - Do not promote upstream wiki claims to current truth without checking current source, branch and mission target.
 - The old LoadoutManager pages describe broad terrain propagation; current docs/source treat modded mission propagation as inactive or non-authoritative.
 - The old architecture page is useful as a historical checklist, but current canonical structure lives in [Architecture overview](Architecture-Overview), [SQF code atlas](SQF-Code-Atlas) and [Source inventory](Source-Inventory).
+- Old modded-map and V9/V10 event notes are event history, not current release propagation rules; route current generated-mission claims through [Tools and build workflow](Tools-And-Build-Workflow).
+- Server ops, HC and performance anecdotes are live-ops snapshots; route current HC/failover/runtime claims through [AI, headless and performance](AI-Headless-And-Performance) and [Headless delegation/failover](Headless-Delegation-And-Failover-Playbook).
+- DiscordBot archive notes are provenance only; route current bot/security/trust claims through [External integrations](External-Integrations) and [Integration trust boundary audit](Integration-Trust-Boundary-Audit).
 - The changelog and announcements are primary community history, not a release-readiness ledger.
 - Names in upstream prose can be Discord handles, display names, authors, donors or reporters; cite them as "mentioned in source" unless separately verified.
 

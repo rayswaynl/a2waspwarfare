@@ -9,4 +9,10 @@ Archive category: `community-media`
 
 ---
 
+## Archive Navigation
+
+Previous: [Miksuu Wiki Archive: Changelog](Miksuu-Wiki-Archive-Changelog) | Next: [Miksuu Wiki Archive: Discord Bot](Miksuu-Wiki-Archive-Discord-Bot)
+
+Related: [Community & Dev](Community-And-Dev) | [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import)
+
 https://www.youtube.com/live/Jt_TyTyPXmw

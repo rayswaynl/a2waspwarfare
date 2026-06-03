@@ -9,6 +9,12 @@ Archive category: `tool-history`
 
 ---
 
+## Archive Navigation
+
+Previous: [Miksuu Wiki Archive: Development Process](Miksuu-Wiki-Archive-Development-Process) | Next: [Miksuu Wiki Archive: Chernarus Mission Script Architecture](Miksuu-Wiki-Archive-Project-Script-Architecture-Of-Chernarus-Mission)
+
+Related: [Community & Dev](Community-And-Dev) | [Tools and build workflow](Tools-And-Build-Workflow) | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) | [Source fix propagation queue](Source-Fix-Propagation-Queue)
+
 Author: Miksuu
 
 # Introduction

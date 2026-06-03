@@ -1772,3 +1772,8 @@ Key conclusions:
 - Imported every current upstream wiki page into namespaced `Miksuu-Wiki-Archive-*` pages, preserving original content behind a provenance banner.
 - Added [Community & Dev](Community-And-Dev) and [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) so humans and agents can reach community lineage, contributors, donor/context notes, Discord/changelog culture, GPT history and current-source caveats without treating old upstream prose as current implementation truth.
 - Added [`agent-upstream-wiki-imports.jsonl`](agent-upstream-wiki-imports.jsonl) for machine-readable import records and candidate lessons.
+
+## 2026-06-03T23:50:00+02:00 - Codex - Community & Dev scout harvest
+- Ran a follow-up Spark scout wave over the published Community & Dev cluster.
+- Folded the useful scout findings into [Community & Dev](Community-And-Dev) and [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import): normalized contributor aliases, stronger stale-claim caveats for modded-map event notes, server ops/HC/performance anecdotes and DiscordBot provenance, plus archive-page previous/next/related navigation.
+- No gameplay source files changed.

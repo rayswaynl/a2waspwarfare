@@ -9,6 +9,12 @@ Archive category: `developer-process-history`
 
 ---
 
+## Archive Navigation
+
+Previous: [Miksuu Wiki Archive: Discord Bot](Miksuu-Wiki-Archive-Discord-Bot) | Next: [Miksuu Wiki Archive: LoadoutManager](Miksuu-Wiki-Archive-LoadoutManager)
+
+Related: [Community & Dev](Community-And-Dev) | [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) | [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow)
+
 The development process was complicated due to the different environment compared to the regular game programming due to the old architecture of the game. For example, there isn't a possibility to use breakpoints at all. We used ``WFBE_CO_FNC_LogContent`` function to get the values of certain variables to debug the mission. This with my lack of experience in SQF language, made the mission development a little bit complicated. To solve the common problems I referred to the [official documentation](https://community.bistudio.com/wiki/SQF_Syntax).
 
 For the automation program, called [LoadoutManager](https://github.com/Miksuu/a2waspwarfare/tree/master/Tools/LoadoutManager), development was a lot easier since I was already quite familiar with the C# language. I re-used parts of the code from my previous projects to help build this program. A lot of the code was written using GPT-4, including the most complex algorithmic problem solving, such as when calculating all of the possible combinations for the aircraft loadouts, which speeded up the development overall. In the end we used this program for general automation too, so only one of the missions needs to be edited and the code is copied to every other map. More info on the the [LoadoutManager wiki page.](https://github.com/Miksuu/a2waspwarfare/wiki/LoadoutManager)

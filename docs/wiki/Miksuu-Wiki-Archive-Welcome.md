@@ -9,6 +9,12 @@ Archive category: `project-lineage`
 
 ---
 
+## Archive Navigation
+
+Previous: [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) | Next: [Miksuu Wiki Archive: Big Announcements](Miksuu-Wiki-Archive-Big-Announcements)
+
+Related: [Community & Dev](Community-And-Dev) | [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons)
+
 Welcome to the wiki of the Miksuu Warfare project for Arma 2: Operation Arrowhead. This project is a CTI (Capture The Island) mode that was initially revised by the development team WASP and later continued and enhanced by the Miksuu community.
 # What is CTI Warfare mode?
 

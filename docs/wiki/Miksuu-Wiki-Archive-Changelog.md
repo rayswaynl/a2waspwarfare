@@ -9,6 +9,12 @@ Archive category: `community-release-history`
 
 ---
 
+## Archive Navigation
+
+Previous: [Miksuu Wiki Archive: Big Announcements](Miksuu-Wiki-Archive-Big-Announcements) | Next: [Miksuu Wiki Archive: Gameplay Videos](Miksuu-Wiki-Archive-Gameplay-Videos)
+
+Related: [Community & Dev](Community-And-Dev) | [Feature status register](Feature-Status-Register) | [Current source status snapshot](Current-Source-Status-Snapshot)
+
 Here you can find the changelogs for the released patches (from our [Discord](https://discord.gg/7QcCKVmrcV))
 
 Todo:

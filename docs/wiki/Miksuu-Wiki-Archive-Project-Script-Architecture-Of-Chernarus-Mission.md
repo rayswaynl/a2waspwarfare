@@ -9,6 +9,12 @@ Archive category: `architecture-history`
 
 ---
 
+## Archive Navigation
+
+Previous: [Miksuu Wiki Archive: LoadoutManager](Miksuu-Wiki-Archive-LoadoutManager) | Next: [Miksuu Wiki Archive: Wiki Home Stub](Miksuu-Wiki-Archive-Home)
+
+Related: [Community & Dev](Community-And-Dev) | [Architecture overview](Architecture-Overview) | [SQF code atlas](SQF-Code-Atlas) | [Source inventory](Source-Inventory)
+
 Welcome to the documentation page dedicated to the architecture of the script project of the Chernarus mission. This page aims to present the hierarchical structure of folders and files that make up the project. The project architecture has been designed to organize and facilitate the management of over 500 SQF files.
 
 # Hierarchical Diagram

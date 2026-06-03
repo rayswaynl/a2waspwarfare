@@ -30,6 +30,7 @@
   - [Development process](Miksuu-Wiki-Archive-Development-Process)
   - [LoadoutManager](Miksuu-Wiki-Archive-LoadoutManager)
   - [Chernarus mission script architecture](Miksuu-Wiki-Archive-Project-Script-Architecture-Of-Chernarus-Mission)
+  - [Upstream wiki home stub](Miksuu-Wiki-Archive-Home)
   - [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons)
   - [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel)
   - [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match)
