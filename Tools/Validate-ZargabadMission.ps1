@@ -339,9 +339,24 @@ foreach ($expectedTown in $expectedTownPlacement) {
 $primaryTowns = @($expectedTownPlacement | Where-Object { $_.Tier -eq "primary" } | ForEach-Object { $_.Name })
 $districtTowns = @($expectedTownPlacement | Where-Object { $_.Tier -eq "district" } | ForEach-Object { $_.Name })
 $flankTowns = @($expectedTownPlacement | Where-Object { $_.Tier -eq "flank" } | ForEach-Object { $_.Name })
+$primaryTownRows = @($parsedTowns | Where-Object { $_.Name -in $primaryTowns })
+$districtTownRows = @($parsedTowns | Where-Object { $_.Name -in $districtTowns })
+$flankTownRows = @($parsedTowns | Where-Object { $_.Name -in $flankTowns })
+$cityCenterValueAnchor = ($parsedTowns | Where-Object { $_.Name -eq "Zargabad City Center" })
 Assert-Equal "primary population/value anchor count" @($parsedTowns | Where-Object { $_.Name -in $primaryTowns -and $_.MaxSV -ge 75 }).Count 2
 Assert-Equal "district or market value anchor count" @($parsedTowns | Where-Object { $_.Name -in $districtTowns -and $_.MaxSV -ge 50 -and $_.MaxSV -le 60 }).Count 5
 Assert-Equal "lower-value flank route count" @($parsedTowns | Where-Object { $_.Name -in $flankTowns -and $_.MaxSV -le 40 }).Count 6
+Assert-True "population value tiers strictly descend" ((@($primaryTownRows | Measure-Object -Property MaxSV -Minimum).Minimum -gt @($districtTownRows | Measure-Object -Property MaxSV -Maximum).Maximum) -and (@($districtTownRows | Measure-Object -Property MaxSV -Minimum).Minimum -gt @($flankTownRows | Measure-Object -Property MaxSV -Maximum).Maximum))
+Assert-True "urban population belt carries most Zargabad max SV" (((@($primaryTownRows + $districtTownRows) | Measure-Object -Property MaxSV -Sum).Sum / (@($parsedTowns | Measure-Object -Property MaxSV -Sum).Sum)) -ge 0.69)
+Assert-True "urban population belt carries most Zargabad start SV" (((@($primaryTownRows + $districtTownRows) | Measure-Object -Property StartSV -Sum).Sum / (@($parsedTowns | Measure-Object -Property StartSV -Sum).Sum)) -ge 0.67)
+foreach ($townName in @("Zargabad North District", "Zargabad South District", "East Market", "West Suburbs")) {
+	$town = ($parsedTowns | Where-Object { $_.Name -eq $townName })
+	Assert-True "$townName stays in city population belt" ((Get-FlatDistance $town $cityCenterValueAnchor) -le 950)
+}
+foreach ($townName in @("East Farms", "South Farms", "West Farms", "Southern Outskirts")) {
+	$town = ($parsedTowns | Where-Object { $_.Name -eq $townName })
+	Assert-True "$townName remains low-density SP/SV route" ($town.StartSV -eq 10 -and $town.MaxSV -le 30 -and $town.Range -le 130)
+}
 
 Assert-Equal "town start SV total" (@($parsedTowns | Measure-Object -Property StartSV -Sum).Sum) 185
 Assert-Equal "town max SV total" (@($parsedTowns | Measure-Object -Property MaxSV -Sum).Sum) 648
@@ -740,6 +755,7 @@ Assert-True "runtime report failure scan rejects class and vehicle creation fail
 Assert-True "map audit packet tool exists" (Test-Path -LiteralPath $mapAuditPacketTool)
 $mapAuditPacketSource = Get-Content -Raw -LiteralPath $mapAuditPacketTool
 Assert-True "map audit packet emits population flow table" ($mapAuditPacketSource -match '## Population Flow')
+Assert-True "map audit packet emits population tier summary" ($mapAuditPacketSource -match 'Population value tiers' -and $mapAuditPacketSource -match 'SP/SV intent')
 Assert-True "map audit packet emits camp and defense coordinates" ($mapAuditPacketSource -match '## Camps' -and $mapAuditPacketSource -match '## Town Defenses')
 Assert-True "map audit packet emits base-axis sightline section" ($mapAuditPacketSource -match '## Base Axis And Sightlines' -and $mapAuditPacketSource -match 'central wall origin')
 Assert-True "map audit packet emits base fortification footprint" ($mapAuditPacketSource -match 'baseFootprint \[35,45,74,78\]' -and $mapAuditPacketSource -match 'commander-clear radius')
@@ -752,6 +768,7 @@ Assert-True "map audit packet emits central wall gap checkpoints" ($mapAuditPack
 Assert-True "map audit packet emits uncrewed central wall focus" ($mapAuditPacketSource -match 'centralWallCrewed \[0\]' -and $mapAuditPacketSource -match 'uncrewed WDDM-compatible fortification')
 $mapAuditPacketOutput = (& $mapAuditPacketTool) -join "`n"
 Assert-True "map audit packet runs and reports Zargabad counts" ($mapAuditPacketOutput -match '# Zargabad Map Audit Packet' -and $mapAuditPacketOutput -match 'Counts: towns \[13\], camps \[19\], airports \[1\], starts \[9\], town defenses \[33\]')
+Assert-True "map audit packet runs and reports population tiers" ($mapAuditPacketOutput -match 'Population value tiers: primary \[2\] maxSV \[170\], district/market \[5\] maxSV \[280\], flank \[6\] maxSV \[198\]' -and $mapAuditPacketOutput -match 'Population/SV sanity')
 Assert-True "map audit packet runs and reports core screenshot targets" ($mapAuditPacketOutput -match 'Zargabad City Center' -and $mapAuditPacketOutput -match 'Claude Screenshot Targets' -and $mapAuditPacketOutput -match '4053,2725' -and $mapAuditPacketOutput -match 'central wall origin' -and $mapAuditPacketOutput -match 'West illegal rim' -and $mapAuditPacketOutput -match 'East Farms legal rim' -and $mapAuditPacketOutput -match 'WDDM Fortification Review')
 Assert-True "map audit packet runs and reports exact base static anchors" ($mapAuditPacketOutput -match 'TOW_TriPod_US_EP1' -and $mapAuditPacketOutput -match '1541,1591' -and $mapAuditPacketOutput -match 'Metis_TK_EP1' -and $mapAuditPacketOutput -match '5309,5159')
 Assert-True "map audit packet runs and reports alternate start roles" ($mapAuditPacketOutput -match 'WEST alternate northwest road' -and $mapAuditPacketOutput -match 'EAST alternate south-east approach' -and $mapAuditPacketOutput -match 'Northern alternate airfield flank')
