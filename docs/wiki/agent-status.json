@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T15:25:00+02:00",
+  "generatedAt": "2026-06-03T15:40:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Reconciled the stale send-message-rce-dr46-crosslink machine status: DR-46 cross-linking is published/validated, while the SEND_MESSAGE source patch remains P0 open.",
-      "nextExpectedOutput": "Re-read Instructions-For-Codex and status pages for newly appended handoffs, then continue the documentation finisher loop."
+      "currentWork": "Harvested Linnaeus's Wave Q side-supply authority lead into Economy-Authority-First-Cut and Development-Lessons-Learned.",
+      "nextExpectedOutput": "Continue Wave Q owner-page harvest with Banach town/camp authority notes or Hubble player-buy path correction."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,18 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "wave-q-economy-authority-harvest",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Linnaeus's Wave Q side-supply lead is promoted: Economy-Authority-First-Cut and Development-Lessons-Learned now state that negative amounts are normal spend deltas but direct-PV payload data, so the first patch must clamp result arithmetic and validate side/channel/shape without treating sign checks as full authority."
+    },
+    {
+      "lane": "scout-wave-i",
+      "owner": "Codex sub-agents / Codex",
+      "status": "published-validated",
+      "output": "Wave I Kepler/Copernicus/Kierkegaard/Laplace/Aquinas harvest is source-checked and published: owner pages and agent-feature-status/agent-knowledge records cover economy authority, AntiStack identity, UI/HUD/dialog risks, commander/HQ authority edges and respawn/MASH/HQ marker cleanup."
+    },
     {
       "lane": "send-message-rce-dr46-crosslink",
       "owner": "Codex",
@@ -418,8 +430,8 @@
     {
       "lane": "scout-wave-i",
       "owner": "Codex sub-agents",
-      "status": "harvested-locally-validation-pending",
-      "output": "Kepler, Copernicus, Kierkegaard, Laplace and Aquinas reports are integrated into economy, AntiStack, UI, commander/HQ, respawn/MASH, marker cleanup and Feature Status pages plus JSONL machine records."
+      "status": "published-validated",
+      "output": "Kepler, Copernicus, Kierkegaard, Laplace and Aquinas reports are integrated and source-checked in economy, AntiStack, UI, commander/HQ, respawn/MASH, marker cleanup and Feature Status pages plus JSONL machine records."
     },
     {
       "lane": "loadoutmanager-propagation-run",

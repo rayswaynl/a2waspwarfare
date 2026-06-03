@@ -37,13 +37,13 @@ Spawned from the main orchestrator after Wave P was published. Fresh spawns were
 | Agent | Lane | Status | Harvest summary |
 | --- | --- | --- | --- |
 | Tesla | `construction-logic-cleanup-propagation` | Returned / partially harvested | Reconfirmed SmallSite add/add versus MediumSite add/remove, plus suggested a possible `wfbe_structures_logic` initializer. The SmallSite cleanup is already captured in [Construction logic list cleanup](Construction-Logic-List-Cleanup); initializer advice needs a separate runtime check before becoming canonical. |
-| Linnaeus | `economy-authority-trust-boundaries` | Returned / harvest pending | Reconfirmed side-supply temp-channel trust, negative amount risk, upgrade/construction/client-buy authority gaps and safer server-derived supply read pattern. Route to [Economy authority first cut](Economy-Authority-First-Cut), [Server authority map](Server-Authority-Migration-Map) and [Public variable channel index](Public-Variable-Channel-Index). |
+| Linnaeus | `economy-authority-trust-boundaries` | Returned / selected harvest local | Reconfirmed side-supply temp-channel trust, negative amount risk, upgrade/construction/client-buy authority gaps and safer server-derived supply read pattern. Codex folded the negative-delta/direct-PV helper nuance into [Economy authority first cut](Economy-Authority-First-Cut) and [Development lessons learned](Development-Lessons-Learned); the broader authority gaps were already routed through [Server authority map](Server-Authority-Migration-Map) and [Public variable channel index](Public-Variable-Channel-Index). |
 | Lorentz | `commander-hq-lifecycle-edge-cases` | Returned / harvest pending | Reconfirmed commander reassignment call-shape/trust issues, HQ death killer assumptions, MHQ repair client authority/split counters and commander-disconnect no-auto-reassign behavior. Route to [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) and [Commander reassignment](Commander-Reassignment-Call-Shape). |
 | Hubble | `factories-purchase-queue-integrity` | Returned / harvest pending | Confirmed normal player purchase path is client UI -> local `Client_BuildUnit.sqf`, not a server factory queue; reaffirmed counter/token cleanup and no cancel/refund semantics. Route to [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) and [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas). |
 | Banach | `town-ai-camp-capture-delegation` | Returned / harvest pending | Reconfirmed town/camp capture runtime, town AI despawn safety, client-stamped supply amount/source, client-gated camp repair and stale AI supply-truck/supplyMissionActive paths. Route to [Towns/camps/capture atlas](Towns-Camps-And-Capture-Atlas), [Town AI safety](Town-AI-Vehicle-Despawn-Safety) and [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook). |
 | Curie | `client-ui-action-rhud-state` | Returned / selected harvest local | RHUD/endgame `currentCutDisplay` collision was source-checked and promoted into [Client UI systems atlas](Client-UI-Systems-Atlas), [UI IDD collision repair](UI-IDD-Collision-Repair), [Client UI/HUD](Client-UI-HUD-And-Menus), [Feature status](Feature-Status-Register) and [Source fix queue](Source-Fix-Propagation-Queue). Service action-time guards, EASA exact-funds/stale-vehicle context and stale old upgrade resource remain routed to the existing service/gear/UI owner pages. |
 
-Harvest rule: Wave Q reports are leads until Codex source-checks and promotes them into owner pages. Curie's RHUD/endgame display-var collision is now promoted; the next owner-page harvest candidates are Linnaeus's negative side-supply amount risk, Banach's town patrol reset / camp repair authority notes and Hubble's player-buy path correction.
+Harvest rule: Wave Q reports are leads until Codex source-checks and promotes them into owner pages. Curie's RHUD/endgame display-var collision and Linnaeus's side-supply negative-delta/direct-PV helper lesson are now promoted; the next owner-page harvest candidates are Banach's town patrol reset / camp repair authority notes and Hubble's player-buy path correction.
 
 ## Previous Wave: Wave P
 
@@ -154,14 +154,14 @@ Spawned on 2026-06-02 after Steff asked Codex to spin up another agent team. Thi
 
 | Agent | Lane | Status | Integrated output |
 | --- | --- | --- | --- |
-| Kepler | `economy-reward-integrity-small` | Harvested | Economy/score/funds/side-supply trust boundaries integrated into [Economy authority first cut](Economy-Authority-First-Cut), [Economy/towns/supply](Economy-Towns-And-Supply), [Public variable channel index](Public-Variable-Channel-Index) and [Feature status](Feature-Status-Register). |
-| Kierkegaard | `ui-hud-dialog-feature-status-small` | Harvested | Stale upgrade resource, IDD collisions, RHUD ownership, service/EASA stale TODO and economy cleanup notes integrated into [Client UI systems atlas](Client-UI-Systems-Atlas) and [UI IDD collision repair](UI-IDD-Collision-Repair). |
-| Copernicus | `antistack-database-identity-lifecycle-small` | Harvested | UID/object/owner identity model, launch-connect client-pushed signal and unchecked disconnect persistence integrated into [AntiStack database audit](AntiStack-Database-Extension-Audit) and [Join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle). |
-| Laplace | `commander-ai-autonomy-privilege-small` | Harvested | Human commander live vs AI autonomy partial split, commander percent/sell/MHQ repair authority edges integrated into [AI commander autonomy audit](AI-Commander-Autonomy-Audit) and [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas). |
-| Aquinas | `respawn-mash-hq-marker-cleanup-small` | Harvested | Local MASH respawn vs dead marker sync, HQ marker cleanup/stale marker/resistance gap integrated into [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas), [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) and [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas). |
+| Kepler | `economy-reward-integrity-small` | Published / validated | Economy/score/funds/side-supply trust boundaries integrated into [Economy authority first cut](Economy-Authority-First-Cut), [Economy/towns/supply](Economy-Towns-And-Supply), [Public variable channel index](Public-Variable-Channel-Index) and [Feature status](Feature-Status-Register). |
+| Kierkegaard | `ui-hud-dialog-feature-status-small` | Published / validated | Stale upgrade resource, IDD collisions, RHUD ownership, service/EASA stale TODO and economy cleanup notes integrated into [Client UI systems atlas](Client-UI-Systems-Atlas) and [UI IDD collision repair](UI-IDD-Collision-Repair). |
+| Copernicus | `antistack-database-identity-lifecycle-small` | Published / validated | UID/object/owner identity model, launch-connect client-pushed signal and unchecked disconnect persistence integrated into [AntiStack database audit](AntiStack-Database-Extension-Audit) and [Join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle). |
+| Laplace | `commander-ai-autonomy-privilege-small` | Published / validated | Human commander live vs AI autonomy partial split, commander percent/sell/MHQ repair authority edges integrated into [AI commander autonomy audit](AI-Commander-Autonomy-Audit) and [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas). |
+| Aquinas | `respawn-mash-hq-marker-cleanup-small` | Published / validated | Local MASH respawn vs dead marker sync, HQ marker cleanup/stale marker/resistance gap integrated into [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas), [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) and [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas). |
 | n/a | `generated-mission-drift-small` | Could not spawn | Thread limit reached; Codex owns this deterministic local drift check. |
 
-Harvest rule: keep reports compact, promote only source-backed findings into owner pages, then mirror them into `agent-feature-status.jsonl`, `agent-hardening-backlog.jsonl` or `agent-knowledge.jsonl` when they affect future work.
+Harvest status: Wave I is published/validated. Keep future reports compact, promote only source-backed findings into owner pages, then mirror them into `agent-feature-status.jsonl`, `agent-hardening-backlog.jsonl` or `agent-knowledge.jsonl` when they affect future work.
 
 ## Latest Harvest: Wave H
 
@@ -232,7 +232,7 @@ Spawned on 2026-06-02 after Steff re-shared three external research PDFs. All wa
 
 ## Rotation Queue
 
-Wave I is harvested. Next scout wave should be smaller again, and should wait until validation/mirror parity is clean unless Steff explicitly asks for more parallel discovery.
+Wave I is published/validated. Next scout wave should be smaller again, and should wait unless Steff explicitly asks for more parallel discovery.
 
 | Priority | Lane | Scope |
 | --- | --- | --- |

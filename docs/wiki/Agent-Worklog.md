@@ -2,6 +2,20 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Scout Wave I Validation
+
+- Reconciled the stale `scout-wave-i` validation-pending rows in [Progress dashboard](Progress-Dashboard), [Discovery swarm](Subagent-Discovery-Swarm) and `agent-status.json`.
+- Source-checked representative Wave I anchors: `RequestChangeScore.sqf:3-8,13`, `Common_ChangeSideSupply.sqf:28-30`, `Server_ChangeSideSupply.sqf:5,11-12,29,35-36`, `Server_PV_RequestSupplyValue.sqf:6,8`, AntiStack UID/session rows in `clientHasConnectedAtLaunch.sqf:5-15` and `flushLoop.sqf:32-39`, UI/RHUD/EASA anchors in `Client_UpdateRHUD.sqf:89-92,113`, `GUI_Menu_Service.sqf:240-244`, `GUI_Menu_Economy.sqf:93-96,136`, commander/MHQ anchors in `Init_Server.sqf:356,381-383,388`, `updateresources.sqf:38-43,67` and `Action_RepairMHQ.sqf:35`, plus MASH/HQ marker anchors in `Init_Client.sqf:132`, `receiverMASHmarker.sqf:1,16,27`, `Client_GetRespawnAvailable.sqf:47-48`, `Server_MHQRepair.sqf:57`, `Client_Delete_Marker.sqf:24-25` and `Common_UpdateMarker.sqf:25`.
+- Confirmed the Wave I machine records remain present in `agent-feature-status.jsonl` and `agent-knowledge.jsonl`.
+- Scope remained docs/status only; no gameplay source files were edited.
+
+## 2026-06-03 - Codex Documentation Finisher: Wave Q Economy Authority Harvest
+
+- Source-checked `Common/Functions/Common_ChangeSideSupply.sqf:24-30`, `Server/Functions/Server_ChangeSideSupply.sqf:4-13,28-37`, `Common/Functions/Common_GetSideSupply.sqf:11-18,24-31,37-44` and `Server/Functions/Server_PV_RequestSupplyValue.sqf:1-8`.
+- Promoted Linnaeus's Wave Q side-supply note into [Economy authority first cut](Economy-Authority-First-Cut): negative `_amount` values are legitimate spend deltas, but the same signed amount is also trusted direct-PV payload data, so the first patch must clamp results and validate side/channel/shape without pretending sign checks are full authority.
+- Added a matching [Development lessons learned](Development-Lessons-Learned) entry and `agent-development-lessons.jsonl` record so future agents inspect shared `Common_Change*` helpers for direct publicVariable mutation paths.
+- Updated [Discovery swarm](Subagent-Discovery-Swarm), [Progress dashboard](Progress-Dashboard) and machine status to mark the Linnaeus Wave Q economy lead as selected-harvested.
+
 ## 2026-06-03 - Codex Documentation Finisher: SEND_MESSAGE DR-46 Status Reconciliation
 
 - Reconciled the stale `send-message-rce-dr46-crosslink` row in `agent-status.json`; the cross-linking work is published/validated, while the gameplay source patch remains open.

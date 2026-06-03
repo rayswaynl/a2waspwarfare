@@ -8,9 +8,10 @@ Scope: Chernarus source mission first, Arma 2 Operation Arrowhead 1.64 only, the
 
 | Item | State |
 | --- | --- |
-| Finding class | Confirmed economy/server-authority class across DR-6, DR-14, DR-16, DR-22, DR-23, DR-27, DR-28 and DR-41. |
+| Finding class | Confirmed economy/server-authority class across DR-6, DR-14, DR-16, DR-22, DR-23, DR-27, DR-28, DR-41 and DR-44. |
 | New value from this pass | First safe code sequence: side-supply arithmetic/validation first, then existing PVF spend handlers, then player-buy redesign. |
 | Wave I refinement | Kepler split client-trusted score/funds/supply mutation from safer server-derived read and award helpers. |
+| Wave Q refinement | Linnaeus's side-supply follow-up is now folded in: negative amounts are legitimate spend deltas, but the same signed `_amount` is also direct-PV payload data, so the first patch must clamp the result and validate channel/side/shape without pretending sign checks are authority. |
 | Immediate patch candidate | `Common_ChangeSideSupply.sqf` and `Server_ChangeSideSupply.sqf` negative clamp and side/channel validation. |
 | Smallest server-led migration candidate | Upgrade purchase, because `RequestUpgrade` already reaches a server process but currently trusts client-side debit and dependency checks. |
 | Do not treat as small | Player factory buys. They create units/vehicles from the client and have no `RequestBuyUnit` PVF. |
@@ -78,6 +79,8 @@ if (_change < 0) then {_change = _currentSupply - _amount};
 
 For `_currentSupply = 100` and `_amount = -1000`, this produces `1100`, not `0`. The direct-PV authority issue remains, but the arithmetic bug is a small, real first patch.
 
+Important subtlety: negative `_amount` values are not inherently malicious. Normal spend paths use negative deltas, such as MHQ repair (`Client/Action/Action_RepairMHQ.sqf:30`), WASP base repair (`WASP/baserep/repair.sqf:24`), attack waves (`Server/PVFunctions/AttackWave.sqf:40`), upgrades (`Client/GUI/GUI_UpgradeMenu.sqf:159`), construction (`Client/Module/CoIn/coin_interface.sqf:500,672`) and building repair (`Server/Functions/Server_HandleBuildingRepair.sqf:71`). The problem is that the same signed amount is also the payload sent on `wfbe_supply_temp_<side>` (`Common_ChangeSideSupply.sqf:28-30`) and then trusted by the west/east handlers (`Server_ChangeSideSupply.sqf:4-13,28-37`). Do not "fix" this by rejecting all negative amounts; fix the result clamp and channel/side/shape validation first, then move spend acceptance server-side flow by flow.
+
 The live source of truth for side supply is the side-keyed mission variable `wfbe_supply_%1` read by `Common_GetSideSupply.sqf`. The generic `wfbe_supply` value initialized in `Client/Init/Init_Client.sqf:371` is a legacy alias/cache and should not be used as the target for new authority work.
 
 ### Score and supply reads show mixed authority patterns
@@ -140,6 +143,7 @@ Also validate the direct temp channel:
 - reject malformed `_amount` or `_side` values with one compact `WARNING`;
 - reject side/channel mismatches, not just negative amounts;
 - keep positive rewards and normal spend behavior unchanged.
+- treat negative deltas as valid only after the flow itself has been authorized; the first clamp patch should not become the whole economy authority story.
 
 Why first: this is the smallest source-backed exploit fix. It does not solve who is allowed to mutate supply, but it prevents overspend from becoming a windfall while future authority work is designed.
 

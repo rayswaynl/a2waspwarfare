@@ -10,6 +10,7 @@ Source root: `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
 | --- | --- | --- |
 | Config data model | The assets/config page covers parameters, media and high-level assets, but `Common/Config` is much deeper than media/config shell coverage. | Content changes propagate through root faction files, unit arrays, gear registries, squad derivation, loadouts, upgrades, factory timers and generated missions. |
 | AI respawn/orders | Respawn atlas maps AI respawn; AI pages map HC/town AI. | Vanilla/non-vanilla respawn branches and commander-order team variables need a single maintainer checklist before AI feature work. |
+| Direct-PV economy helpers | Economy authority pages map the DRs, but implementation agents still need a local rule of thumb before touching helpers. | Shared helpers can look local and harmless while publishing direct mutation payloads; read helpers show the safer server-derived pattern. |
 | Cleanup/garbage/empty vehicles | Marker/cleanup atlas is strong, but patch handoffs are scattered. | Cleanup code has short polling loops, global replicated queues, inconsistent flags and nested-pair array traps. |
 | Non-EASA modules | Modules atlas maps many modules. | Feature changes still need a "where to smoke" rule because modules are split across Common/Client/Server and often attach at unit creation. |
 
@@ -29,7 +30,15 @@ Static source search found server-side reads mainly in respawn reset logic and s
 
 Development rule: before hardening or extending commander AI orders, prove the live executor path for `wfbe_teammode` and `wfbe_teamgoto` in the target scenario. Do not assume these variables imply server-authoritative validation.
 
-## Lesson 3: Cleanup Loops Are Server-Owned But Some Inputs Are Client-Replicated
+## Lesson 3: Shared Economy Mutation Helpers May Publish Direct PV Payloads
+
+`Common_ChangeSideSupply.sqf` looks like a normal shared helper, but its final step writes `wfbe_supply_temp_<side>` and calls `publicVariableServer` (`Common/Functions/Common_ChangeSideSupply.sqf:28-30`). The server handlers then trust payload `_side` and `_amount` from `wfbe_supply_temp_west` / `wfbe_supply_temp_east` (`Server/Functions/Server_ChangeSideSupply.sqf:4-13,28-37`). That is why DR-22 and DR-44 are tied together: the same negative-delta arithmetic bug and direct-PV trust boundary meet in one helper.
+
+Do not treat signed amounts as authority. Negative deltas are normal spend data, but the server still has to clamp the resulting balance, validate side/channel/shape, and eventually re-derive whether that spend was allowed. Use `REQUEST_SUPPLY_VALUE` / `Server_PV_RequestSupplyValue.sqf:1-8` as the safer read pattern: the client requests, and the server derives the value from server-side side state before replying.
+
+Development rule: before editing any `Common_Change*` helper, check whether it mutates local state, replicated object/group state, or a direct publicVariable channel. If it publishes a mutation, document and smoke it like a network authority path, not a harmless utility.
+
+## Lesson 4: Cleanup Loops Are Server-Owned But Some Inputs Are Client-Replicated
 
 The server starts the garbage collector, empty-vehicle collector, dropped-item cleaner, crater cleaner, ruins cleaner, building restorer and mine cleaner after init (`Server/Init/Init_Server.sqf:521-560`). Several loops run frequently or over broad areas:
 
@@ -39,7 +48,7 @@ The server starts the garbage collector, empty-vehicle collector, dropped-item c
 
 Development rule: queue-processing fixes must be idempotent under repeated client publications and hosted/dedicated locality. Do not treat a server loop as fully server-owned just because it runs on the server.
 
-## Lesson 4: Cleanup Flags And Nested Arrays Need Shape Checks
+## Lesson 5: Cleanup Flags And Nested Arrays Need Shape Checks
 
 The garbage collector skips `wfbe_trashable`, but kill handling marks `wfbe_trashed` before spawning `TrashObject` (`Server/FSM/server_collector_garbage.sqf:17`; `Server/PVFunctions/RequestOnUnitKilled.sqf:50-54`). That is a flag-contract mismatch and a good example of why cleanup patches need source shape checks.
 
@@ -47,7 +56,7 @@ The mine cleaner initializes `mines = []`, expects `[mine, time]` pairs, and del
 
 Development rule: before changing cleanup arrays, cite both producer and consumer shapes.
 
-## Lesson 5: Config Changes Propagate Through Derived Runtime Tables
+## Lesson 6: Config Changes Propagate Through Derived Runtime Tables
 
 `Common/Config/readme.txt` describes a modular core system: gear registers weapons/magazines/backpacks, group config defines town groups, loadout files define gear-menu templates, model/root files define side support assets and defaults (`Common/Config/readme.txt:7-26`, `:28-42`, `:50-65`). Runtime init then chooses faction roots from parameters and loads root, defense and group files (`Common/Init/Init_Common.sqf:263-308`).
 
@@ -55,7 +64,7 @@ The config layer is not static data only. `Init_Common` mutates derived values: 
 
 Development rule: content changes are not complete when the class appears in one list. Verify the side root, factory list, gear registry, loadout template, AI loadout or squad data, upgrade level, pricing, and generated mission propagation.
 
-## Lesson 6: Module Wiring Often Happens At Creation Or Init Time
+## Lesson 7: Module Wiring Often Happens At Creation Or Init Time
 
 Client init compiles supply/MASH/AntiStack/PV helpers and module gates near the main function registry (`Client/Init/Init_Client.sqf:127-135`), then later applies skill, WASP actions, AutoFlip, artillery UI, EASA and CM gates (`Client/Init/Init_Client.sqf:570-589`). Common init wires ICBM, IRS and CIPHER after config loading (`Common/Init/Init_Common.sqf:319-323`).
 
