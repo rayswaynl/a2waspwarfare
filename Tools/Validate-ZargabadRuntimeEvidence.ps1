@@ -66,6 +66,8 @@ Assert-Pattern "Zargabad fortifications and central wall init runs" $content 'In
 Assert-Pattern "Zargabad edge guard initializes" $content 'Zargabad_EdgeGuard\.sqf: outer \[[0-9]+\]m rim timeout \[[0-9]+\]s safe range \[[0-9]+\]m'
 Assert-Pattern "runtime audit reports town/camp/airport/defense and SV totals" $content 'Zargabad_RuntimeAudit\.sqf: towns \[13\] camps \[19\] airports \[1\] defenses \[33\] startSV \[185\] maxSV \[648\]'
 Assert-Pattern "runtime audit reports Zargabad economy and range constants" $content 'Zargabad_RuntimeAudit\.sqf: economy supplyCap \[[0-9]+\] teamSupplyCap \[30000\] fastTravelMax \[1800\] respawnCampRange \[400\].*supportRange \[55\].*baseDefenseAI \[56\] baseDefenseRange \[500\] edgeGuard \[120,325,45\]'
+Assert-Pattern "runtime audit reports Zargabad factory restrictions" $content 'Zargabad_RuntimeAudit\.sqf: factoryCounts WEST L/H/A/AP \[[0-9]+,3,7,2\] EAST L/H/A/AP \[[0-9]+,4,3,3\] forbiddenNormal \[\]'
+Assert-Pattern "runtime audit reports Zargabad price multipliers and samples" $content 'Zargabad_RuntimeAudit\.sqf: priceMultipliers .*0\.9.*1\.1.*1\.2.*1\.35.*1\.5.*0\.95.*priceSamples .*US_Soldier_EP1.*M1126_ICV_M2_EP1.*M2A2_EP1.*MH6J_EP1.*C130J_US_EP1'
 Assert-Pattern "server initialization ends" $content 'Init_Server\.sqf: Server initialization ended'
 
 if ($RequireJip) {

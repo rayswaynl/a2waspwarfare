@@ -2,6 +2,12 @@
 
 This is the runtime half of PR #9. Static mission validation is already covered by `Tools/Validate-ZargabadMission.ps1`; this file is for the Arma 2 OA hosted/dedicated/JIP/HC evidence that cannot be proven from source alone.
 
+## Coordination Cadence
+
+Claude should send Codex a short status after each major gate: hosted boot, dedicated boot, JIP, HC, base safety, central wall/pathing, rim abuse, economy/factory pricing, and mystery feature. Include the RPT path or excerpt, screenshot/coordinate notes when visual, and a clear pass/fail/uncertain label.
+
+Codex should treat Claude's runtime findings as authoritative when they include RPT evidence, screenshots, coordinates, or repeatable repro steps. If Claude finds a real issue, update the mission or validators instead of trying to preserve the current implementation.
+
 ## Do Not Stop Until
 
 Claude/runtime tester should keep going until there is RPT and short note evidence for every required gate below:
@@ -13,7 +19,7 @@ Claude/runtime tester should keep going until there is RPT and short note eviden
 | Town init | RPT contains `Init_Server.sqf: Town starting mode is done`. |
 | Zargabad init | RPT contains `Init_Zargabad.sqf: Spawn fortifications, central wall gaps, and side defenses are placed`. |
 | Edge guard init | RPT contains `Zargabad_EdgeGuard.sqf: outer [120]m rim timeout [45]s safe range [325]m`. |
-| Runtime audit | RPT contains `Zargabad_RuntimeAudit.sqf` lines with 13 towns, 19 camps, 1 airport, 33 defenses, start SV 185, max SV 648, and the Zargabad economy/range constants. |
+| Runtime audit | RPT contains `Zargabad_RuntimeAudit.sqf` lines with 13 towns, 19 camps, 1 airport, 33 defenses, start SV 185, max SV 648, factory restriction counts, price multipliers/samples, and the Zargabad economy/range constants. |
 | JIP | A second client joins after time > 30 and RPT shows player join/JIP storage; markers and town colors still match current ownership. |
 | HC | If the server uses HC, RPT shows `Headless client is now connected` and town AI/static defense still wakes. |
 | Base safety | WEST/EAST starts cannot trivially spawn-kill each other or suppress city routes from spawn. |
@@ -62,7 +68,7 @@ Use `-AllowKnownDisconnectScoreErrors` only if the only RPT `ERROR` lines are th
 - Screenshot or coordinates for WEST/EAST start sightlines.
 - Screenshot or coordinates for the central wall gaps that were driven/walked through.
 - RPT excerpt for edge-guard init and, if tested, removal.
-- RPT excerpt for the `Zargabad_RuntimeAudit.sqf` count/SV and economy/range lines.
+- RPT excerpt for the `Zargabad_RuntimeAudit.sqf` count/SV, factory restriction, price multiplier/sample, and economy/range lines.
 - RPT excerpt for black-market cache surfacing.
 - Any observed town where static defenses face the wrong route or block normal movement.
 - Any economy issue where city/airfield income or vehicle pricing snowballs too fast in a 5v5-style test.

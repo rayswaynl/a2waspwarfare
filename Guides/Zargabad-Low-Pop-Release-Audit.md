@@ -93,9 +93,9 @@ Static validation currently proves the editor data shape, not tactical effective
 
 `Tools/Validate-ZargabadMission.ps1` is the repeatable local validator for this PR. It parses the generated Zargabad `mission.sqm`, checks town/camp/airport/start/defense counts, sync targets, 6000m boundary containment, SV totals, town camp/defense coverage, mystery feature LOC, edge-guard LOC/hooks, central-wall template/gaps, and Takistan spillover.
 
-`Tools/Validate-ZargabadRuntimeEvidence.ps1` is the repeatable RPT validator for Claude/runtime testers. It checks that Zargabad appears in supplied RPT logs, server/town/Zargabad/edge-guard init completed, optional JIP/HC/edge-removal/black-market evidence appears when requested, and common Arma missing-script/dependency/expression failures are absent.
+`Tools/Validate-ZargabadRuntimeEvidence.ps1` is the repeatable RPT validator for Claude/runtime testers. It checks that Zargabad appears in supplied RPT logs, server/town/Zargabad/edge-guard init completed, runtime audit count/SV/factory/price/economy evidence appears, optional JIP/HC/edge-removal/black-market evidence appears when requested, and common Arma missing-script/dependency/expression failures are absent.
 
-`Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf` is launched from `Init_Zargabad.sqf` and logs the runtime town/camp/airport/defense counts, start/max SV totals, and core Zargabad economy/range/base-defense/edge-guard constants. This gives Claude a concrete RPT target for checking that the in-game mission matches the static map audit.
+`Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf` is launched from `Init_Zargabad.sqf` and logs the runtime town/camp/airport/defense counts, start/max SV totals, normal factory restriction counts, price multiplier/sample values, and core Zargabad economy/range/base-defense/edge-guard constants. This gives Claude a concrete RPT target for checking that the in-game mission matches the static map audit.
 
 Known verification gap: no in-game Arma 2 OA hosted/dedicated/JIP/HC smoke has been run from this environment.
 

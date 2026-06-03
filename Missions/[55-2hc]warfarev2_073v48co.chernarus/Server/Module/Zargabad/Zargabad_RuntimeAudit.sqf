@@ -2,7 +2,7 @@ if (!isServer || !IS_zargabad_lowpop_map) exitWith {};
 
 waitUntil {townInitServer};
 
-Private ["_airports", "_campCount", "_defenseCount", "_maxSV", "_startSV", "_townNames"];
+Private ["_airports", "_campCount", "_cfg", "_defenseCount", "_eastAircraft", "_eastAirport", "_eastHeavy", "_eastLight", "_forbiddenNormal", "_forbiddenPresent", "_maxSV", "_priceSamples", "_startSV", "_townNames", "_westAircraft", "_westAirport", "_westHeavy", "_westLight"];
 
 _campCount = 0;
 _defenseCount = 0;
@@ -28,6 +28,37 @@ _airports = [0,0,0] nearEntities [["LocationLogicAirport"], 100000];
 	_startSV,
 	_maxSV,
 	_townNames
+]] Call WFBE_CO_FNC_LogContent;
+
+_westLight = missionNamespace getVariable ["WFBE_WESTLIGHTUNITS", []];
+_westHeavy = missionNamespace getVariable ["WFBE_WESTHEAVYUNITS", []];
+_westAircraft = missionNamespace getVariable ["WFBE_WESTAIRCRAFTUNITS", []];
+_westAirport = missionNamespace getVariable ["WFBE_WESTAIRPORTUNITS", []];
+_eastLight = missionNamespace getVariable ["WFBE_EASTLIGHTUNITS", []];
+_eastHeavy = missionNamespace getVariable ["WFBE_EASTHEAVYUNITS", []];
+_eastAircraft = missionNamespace getVariable ["WFBE_EASTAIRCRAFTUNITS", []];
+_eastAirport = missionNamespace getVariable ["WFBE_EASTAIRPORTUNITS", []];
+_forbiddenNormal = ["M1A1_US_DES_EP1","MLRS_DES_EP1","M1A2_US_TUSK_MG_EP1","M6_EP1","BAF_FV510_W","AW159_Lynx_BAF","AH64D_EP1","BAF_Apache_AH1_D","C130J_US_EP1","A10_US_EP1","ZSU_TK_EP1","T55_TK_EP1","T72_TK_EP1","Mi24_D_TK_EP1","L39_TK_EP1","Su25_TK_EP1"];
+_forbiddenPresent = [];
+{if ((_x in _westHeavy) || (_x in _westAircraft) || (_x in _eastHeavy) || (_x in _eastAircraft)) then {_forbiddenPresent = _forbiddenPresent + [_x]}} forEach _forbiddenNormal;
+
+["INFORMATION", Format [
+	"Zargabad_RuntimeAudit.sqf: factoryCounts WEST L/H/A/AP [%1,%2,%3,%4] EAST L/H/A/AP [%5,%6,%7,%8] forbiddenNormal %9.",
+	count _westLight, count _westHeavy, count _westAircraft, count _westAirport,
+	count _eastLight, count _eastHeavy, count _eastAircraft, count _eastAirport,
+	_forbiddenPresent
+]] Call WFBE_CO_FNC_LogContent;
+
+_priceSamples = [];
+{
+	_cfg = missionNamespace getVariable _x;
+	_priceSamples = _priceSamples + [[_x, if (isNil "_cfg") then {-1} else {_cfg select QUERYUNITPRICE}]];
+} forEach ["US_Soldier_EP1","M1126_ICV_M2_EP1","M2A2_EP1","MH6J_EP1","C130J_US_EP1"];
+
+["INFORMATION", Format [
+	"Zargabad_RuntimeAudit.sqf: priceMultipliers %1 priceSamples %2.",
+	missionNamespace getVariable ["WFBE_ZARGABAD_PRICE_MULTIPLIERS", []],
+	_priceSamples
 ]] Call WFBE_CO_FNC_LogContent;
 
 ["INFORMATION", Format [
