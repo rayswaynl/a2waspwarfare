@@ -4,9 +4,11 @@ This is the runtime half of PR #9. Static mission validation is already covered 
 
 ## Coordination Cadence
 
-Claude should send Codex a short status after each major gate: hosted boot, dedicated boot, JIP, HC, base safety, central wall/pathing, rim abuse, economy/factory pricing, and mystery feature. Include the RPT path or excerpt, screenshot/coordinate notes when visual, and a clear pass/fail/uncertain label.
+Claude should send Codex a short status after each Codex commit or major runtime gate: hosted boot, dedicated boot, JIP, HC, base safety, central wall/pathing, rim abuse, economy/factory pricing, and mystery feature. Include the RPT path or excerpt, screenshot/coordinate notes when visual, and a clear pass/fail/uncertain label.
 
 Codex should treat Claude's runtime findings as authoritative when they include RPT evidence, screenshots, coordinates, or repeatable repro steps. If Claude finds a real issue, update the mission or validators instead of trying to preserve the current implementation.
+
+Static claims from Codex should be handed back to Claude with the command evidence that proved them. Runtime or design claims from Claude should be accepted when they include reproducible evidence, then converted into a source patch, validator check, or explicit retest request.
 
 After each RPT-producing pass, Claude should generate a compact markdown status with:
 

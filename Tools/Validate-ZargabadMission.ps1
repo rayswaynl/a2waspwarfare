@@ -37,6 +37,14 @@ function Get-FlatDistance {
 	return [math]::Sqrt([math]::Pow($A.X - $B.X, 2) + [math]::Pow($A.Y - $B.Y, 2))
 }
 
+function Test-ContainsAll {
+	param([string]$Content, [string[]]$Needles)
+	foreach ($needle in $Needles) {
+		if (-not $Content.Contains($needle)) { return $false }
+	}
+	return $true
+}
+
 function Assert-NearPosition {
 	param([string]$Name, $Object, [double]$X, [double]$Y, [double]$Tolerance)
 	$distance = [math]::Sqrt([math]::Pow($Object.X - $X, 2) + [math]::Pow($Object.Y - $Y, 2))
@@ -186,6 +194,35 @@ foreach ($path in @($sourceMissionFullPath, $missionFullPath)) {
 	Assert-True "$path central wall is centered and diagonal" ($initZargabad -match '\[3425,3375,0\][\s\S]*setDir 316;')
 	Assert-True "$path records Zargabad base audit counts" ($initZargabad -match 'WFBE_ZARGABAD_BASE_WALL_COUNT' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_STATIC_COUNT_%1' -and $initZargabad -match 'WFBE_ZARGABAD_BASE_POS_%1')
 	$constants = Get-Content -Raw -LiteralPath (Join-Path $path "Common/Init/Init_CommonConstants.sqf")
+	$economyRangeConstants = @(
+		"WFBE_C_ARTILLERY_INTERVALS = [700, 650, 600, 550, 500, 450, 400];",
+		"WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT = 30000;",
+		"WFBE_C_GAMEPLAY_FAST_TRAVEL_RANGE_MAX = 1800;",
+		"WFBE_C_PLAYERS_UAV_SPOTTING_RANGE = 800;",
+		"WFBE_C_RESPAWN_CAMPS_RANGE = 400;",
+		"WFBE_C_RESPAWN_RANGES = [150, 225, 325];",
+		"WFBE_C_STRUCTURES_COMMANDCENTER_RANGE = 3200;",
+		"WFBE_C_TOWNS_BUILD_PROTECTION_RANGE = 300;",
+		"WFBE_C_TOWNS_DEFENSE_RANGE = 45;",
+		"WFBE_C_TOWNS_MORTARS_RANGE_MAX = 500;",
+		"WFBE_C_TOWNS_PATROL_RANGE = 350;",
+		"WFBE_C_UNITS_PURCHASE_HANGAR_RANGE = 35;",
+		"WFBE_C_UNITS_REPAIR_TRUCK_RANGE = 35;",
+		"WFBE_C_UNITS_SALVAGER_SCAVENGE_RANGE = 45;",
+		"WFBE_C_UNITS_SUPPORT_RANGE = 55;"
+	)
+	$aiCapConstants = @(
+		"WFBE_C_AI_MAX = 8;",
+		"WFBE_C_BASE_DEFENSE_MAX_AI = 56;",
+		"WFBE_C_BASE_DEFENSE_MANNING_RANGE = 500;",
+		"WFBE_C_BASE_PROTECTION_RANGE = 900;",
+		"WFBE_C_PLAYERS_AI_MAX = 10;",
+		"WFBE_C_PLAYERS_SKILL_SOLDIER_UNITS_MAX = 4;",
+		"WFBE_C_UNITS_COUNTERMEASURE_CHOPPERS = 16;",
+		"WFBE_C_UNITS_COUNTERMEASURE_PLANES = 24;"
+	)
+	Assert-True "$path applies Zargabad smaller-map economy and range constants" (Test-ContainsAll -Content $constants -Needles $economyRangeConstants)
+	Assert-True "$path applies Zargabad smaller-map AI and base-defense caps" (Test-ContainsAll -Content $constants -Needles $aiCapConstants)
 	Assert-True "$path edge guard constants are present" ($constants -match "WFBE_C_ZARGABAD_EDGE_GUARD_BAND = 120;[\s\S]*WFBE_C_ZARGABAD_EDGE_GUARD_SAFE_RANGE = 325;[\s\S]*WFBE_C_ZARGABAD_EDGE_GUARD_TIMEOUT = 45;")
 	$commonInit = Get-Content -Raw -LiteralPath (Join-Path $path "Common/Init/Init_Common.sqf")
 	Assert-True "$path declares Zargabad price multipliers" ($commonInit -match 'WFBE_ZARGABAD_PRICE_MULTIPLIERS[\s\S]*\["BARRACKS",0\.9\][\s\S]*\["LIGHT",1\.1\][\s\S]*\["HEAVY",1\.2\][\s\S]*\["AIRCRAFT",1\.35\][\s\S]*\["AIRPORT",1\.5\][\s\S]*\["DEPOT",0\.95\]')
