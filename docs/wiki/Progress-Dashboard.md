@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `ai-commander-branch-intel-refresh` | Published / validated | [AI commander autonomy audit](AI-Commander-Autonomy-Audit), [Feature status](Feature-Status-Register) and [Development lessons](Development-Lessons-Learned) now capture `feat/ai-commander` head `4dba060e`: a source-Chernarus-only revival attempt with default-on AI commander, per-side supervisor, assign/produce workers and explicit order executor. Stable `origin/master` remains partial/latent, and old autonomous supply trucks remain guarded rather than restored. |
 | `drone-recon-branch-intel-refresh` | Published / validated | [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match) and [Feature status](Feature-Status-Register) now capture the new support-branch split: `feat/drone-saturation-strike` head `8ca4be90` carries the latest 4-Ka/HP20/300-alt drone tuning, while `feat/recon-uav` head `563418ea` replaces the old UAV module with AI-flown `ReconUAV`/`ReconUAVRecall` but only includes drone history through `93b47594`. |
 | `owner-decision-branch-scope-refresh` | Published / validated | [Pending owner decisions](Pending-Owner-Decisions) now matches the corrected DR-43 and DR-19 evidence: `Init_Server.sqf` has three live duplicate binds plus three commented remnants, `version.sqf` is absent from tracked source despite `description.ext:39` and `initJIPCompatible.sqf:4`, and hosted-FPS work is docs/source propagated but stable-master absent / release `a9219d88` Chernarus-only. |
 | `dashboard-active-handoff-refresh` | Published / validated | Reconciled this page's top ownership/status rows with `agent-status.json`: Codex is on `documentation-finisher-loop`, Codex-2 is ready rather than actively owning WASP cleanup, Wave S sub-agent work is closed, and old "ready to publish" rows now match their published/validated machine state. |
@@ -91,7 +92,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` | Keep closing stale docs/machine-status gaps; latest branch-intel refresh captured drone/recon support drift. Current best next candidates are feature-status reconciliation, owner-decision consolidation or release/readiness smoke planning with branch evidence. |
+| Codex | Active | `documentation-finisher-loop` | Keep closing stale docs/machine-status gaps; latest branch-intel refresh captured AI commander revival scope. Current best next candidates are feature-status reconciliation, owner-decision consolidation or release/readiness smoke planning with branch evidence. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave S closed | Latest scout outputs were harvested into owner pages and machine ledgers; future waves should claim new non-overlapping lanes. |

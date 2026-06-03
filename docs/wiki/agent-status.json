@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T23:30:00+02:00",
+  "generatedAt": "2026-06-03T23:55:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed drone/recon support branch intelligence so PR8/drone lessons and Feature Status distinguish latest DroneStrike tuning from the separate ReconUAV replacement branch.",
+      "currentWork": "Refreshed AI commander branch intelligence so AI Commander Autonomy Audit and Feature Status distinguish stable-master partial/latent status from feat/ai-commander head 4dba060e revival evidence.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: feature-status reconciliation, owner-decision consolidation, P0/P1 accuracy drift with exact source refs, or deeper release/readiness smoke planning."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "ai-commander-branch-intel-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "AI-Commander-Autonomy-Audit, Feature-Status-Register, AI-Headless-And-Performance, Abandoned-Feature-Revival-Review, developer-history pages and lessons ledgers now capture origin/feat/ai-commander head 4dba060e. The branch adds source-Chernarus-only supervisor/workers/order execution and default-on AI commander behavior, while stable origin/master remains partial/latent and old autonomous supply trucks remain guarded rather than restored."
+    },
     {
       "lane": "drone-recon-branch-intel-refresh",
       "owner": "Codex",

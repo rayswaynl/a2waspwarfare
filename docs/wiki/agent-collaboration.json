@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T23:30:00+02:00",
+  "generatedAt": "2026-06-03T23:55:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,41 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "ai-commander-branch-intel-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/AI-Commander-Autonomy-Audit.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/AI-Headless-And-Performance.md",
+        "docs/wiki/Abandoned-Feature-Revival-Review.md",
+        "docs/wiki/Developer-History-And-Upstream-Lessons.md",
+        "docs/wiki/Upstream-Miksuu-Commit-Intel.md",
+        "docs/wiki/Development-Lessons-Learned.md",
+        "docs/wiki/agent-development-lessons.jsonl",
+        "docs/wiki/agent-feature-status.jsonl",
+        "docs/wiki/agent-knowledge.jsonl",
+        "docs/wiki/agent-events.jsonl",
+        "origin/feat/ai-commander",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTypes.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Execute.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Produce.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AI_Com_Upgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf"
+      ],
+      "outputs": [
+        "Captured that feat/ai-commander head 4dba060e is source-Chernarus-only branch evidence",
+        "Captured stable origin/master remains partial/latent for AI commander automation",
+        "Documented default-on AI commander behavior, per-side supervisor, assign/produce workers, explicit order executor and upgrade cost/debit fixes",
+        "Recorded that the old UpdateSupplyTruck path is guarded but not restored because supplytruck.fsm remains absent"
+      ],
+      "handoff": "Future AI commander owner should not call the feature revived until default-on behavior is accepted, maintained Vanilla is propagated/reviewed, and dedicated/JIP smoke proves no-human full command, human-command assist/no-spend, explicit order execution, town assignment, production cap, upgrade costs, commander handoff and HQ-death cleanup."
+    },
     {
       "lane": "drone-recon-branch-intel-refresh",
       "owner": "Codex",

@@ -6,7 +6,7 @@ Paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
 ## Verdict
 
-AI commander support is **partial, not absent**:
+Current `origin/master` AI commander support is **partial, not absent**:
 
 - Real side-level AI commander state exists.
 - AI commander funds are initialized and can receive income.
@@ -18,6 +18,28 @@ But the source audit did **not** find a live owner loop/FSM that starts full aut
 Human commander state is live: vote/reassignment, commander-side economy controls, HQ/MHQ affordances and income split all run through the normal Warfare flow. Full autonomous commander behavior is the partial/latent part.
 
 Autonomous supply trucks are worse than partial: the old `UpdateSupplyTruck` compile is commented, the gated spawn remains, and the referenced `Server\FSM\supplytruck.fsm` file is absent.
+
+`origin/feat/ai-commander` is the current branch-only revival attempt. It changes the status of the branch, not stable `master`: the branch adds a server-side commander supervisor, assignment workers, production worker and explicit order executor, but it is source-Chernarus-only and needs dedicated/JIP/Vanilla smoke before the wiki can call AI commander revived.
+
+## Branch Refresh - `feat/ai-commander`
+
+Snapshot: 2026-06-03. Branch head `4dba060e` splits from `origin/master` at `2cdf5fb8`. Diff from stable master is 9 Chernarus-source files, +366/-5; no `Missions_Vanilla` files are touched.
+
+| Branch piece | Evidence | Meaning |
+| --- | --- | --- |
+| Phase-0 safety and economics | `585c3519`; `Rsc/Parameters.hpp:92-96`; `Common/Init/Init_CommonConstants.sqf:98-105`; `Server/Functions/Server_AI_Com_Upgrade.sqf:27,47,50`; `Server/Init/Init_Server.sqf:387-389` | Makes AI commander default-on in the lobby, adds new cadence/cap constants, fixes the funds/supply debit swap, and guards the old `UpdateSupplyTruck` nil-code spawn. The missing `supplytruck.fsm` is still not restored. |
+| Supervisor and workers | `1a3e3def`; `Server/Init/Init_Server.sqf:49-54,630-631`; `Server/AI/Commander/AI_Commander.sqf:29-81` | Compiles and spawns one per-side supervisor that self-gates on AI commander enablement and live HQ state. |
+| Upgrade cost lookup fix | `4c2abced`; `Server/Functions/Server_AI_Com_Upgrade.sqf:27` | Corrects AI upgrade cost indexing from 1-based order level to 0-based cost array index. |
+| Hybrid co-op command | `4dba060e`; `AI_Commander.sqf:43-72`; `AI_Commander_Execute.sqf:1-41`; `AI_Commander_AssignTowns.sqf:23-42` | Full mode runs economy only when no human commander exists; assist mode still executes explicit Move/Patrol/Defend orders and can auto-assign delegated AI teams while a human commander is present. |
+| AI team production | `AI_Commander_Produce.sqf:18-21,73-80`; `Server/Init/Init_Server.sqf:10` | Produces under-strength AI teams through `AIBuyUnit` while respecting a per-side AI cap and AI commander funds. Review this alongside factory queue/token cleanup before merge. |
+
+Branch-only review risks:
+
+- The branch changes gameplay defaults by setting `WFBE_C_AI_COMMANDER_ENABLED` default to `1` in `Rsc/Parameters.hpp:96`.
+- It is source-Chernarus-only until LoadoutManager/Vanilla propagation is performed and reviewed.
+- It revives AI commander production/order execution, but **does not** revive the old autonomous supply-truck FSM path; `UpdateSupplyTruck` remains commented and only guarded.
+- It adds always-running per-side supervisors after `VoteForCommander` startup; smoke must prove exactly one supervisor per side, no duplicate loops after commander vote/revote and clean stop behavior after HQ death.
+- The production worker uses `AIBuyUnit`; smoke must include AI team queue cleanup, insufficient funds, destroyed factory, full AI cap, vehicle/man production and human takeover of a team.
 
 ## What Exists
 

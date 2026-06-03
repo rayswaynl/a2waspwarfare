@@ -27,7 +27,7 @@ Boyle's second-pass autonomy review clarified the split between real AI plumbing
 | AI buy worker | Latent. `AIBuyUnit` is compiled from `Server_BuyUnit.sqf`, but no static caller was found outside that file family. | Do not document AI unit production as fully operational until a dynamic caller is proven. |
 | AI commander run flag | Partial. `wfbe_aicom_running` is initialized and cleared by commander reassignment/vote code, but no visible owner loop was found that starts autonomous commander behavior. | Scaffolding plus workers, not a complete self-driving commander brain. |
 
-Canonical revival/readiness detail lives in [AI commander autonomy audit](AI-Commander-Autonomy-Audit), including the mission-parameter/fallback-default distinction and the broken `UpdateSupplyTruck` / missing `supplytruck.fsm` path.
+Canonical revival/readiness detail lives in [AI commander autonomy audit](AI-Commander-Autonomy-Audit), including the mission-parameter/fallback-default distinction, the broken `UpdateSupplyTruck` / missing `supplytruck.fsm` path, and the branch-only `origin/feat/ai-commander` head `4dba060e` revival attempt.
 
 ### Commander Team Order Variables
 

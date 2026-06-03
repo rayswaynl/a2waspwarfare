@@ -230,4 +230,4 @@ Research snapshot: upstream `master` at `8bcc42b1` (2026-06-02), GitHub PRs #1-#
 | `ea0bff2e` | `WFBE_IsTownDefenderAI` | Defender units, crews, vehicles and groups must be tagged so they do not wake enemy towns. |
 | `823ad0da`, `a6f5020e`, `99bd4be8`, `8372f5ce` | RHUD/server FPS publishing | Diagnostics can become performance bugs; FPS HUD fixes and server loops both had reverts/guards. |
 | `95481b37`, DR-45 | mines cleanup, `wfbe_trashed`, town-AI despawn | Cleanup bugs are array-shape, idempotency and full-occupancy checks, not only missing deletes. |
-| local `feat/ai-commander` commits `585c3519`, `1a3e3def` | `Server/AI/Commander/*` | AI commander revival is branch-only/local evidence until merged, propagated and smoked. |
+| local `feat/ai-commander` head `4dba060e` (`585c3519`, `1a3e3def`, `4c2abced`, `4dba060e`) | `Server/AI/Commander/*`, `Server_AI_Com_Upgrade.sqf`, `Init_Server.sqf`, `Parameters.hpp` | AI commander revival is branch-only/local evidence until merged, propagated and smoked: default-on AI commander, per-side supervisor, assign/produce workers, explicit order executor and upgrade cost fixes are source-Chernarus-only. |

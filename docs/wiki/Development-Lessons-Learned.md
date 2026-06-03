@@ -84,6 +84,14 @@ Human pages can be correct while JSON/JSONL agent ledgers still mislead future a
 
 Development rule: a machine record that says `patched`, `propagated`, `release-ready` or similar must name the branch/commit it describes and whether Chernarus and maintained Vanilla both carry the same line shape. If branch scope is missing, treat the record as a lead and re-open [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-03-branch-matrix) before planning code work.
 
+## Lesson 10: Revival Branches Need Default, Propagation And Smoke Labels
+
+`origin/feat/ai-commander` is useful branch evidence, but it is not stable-master truth. Current head `4dba060e` adds a server-side AI commander supervisor, assignment workers, production worker and order executor; earlier branch commits `585c3519`, `1a3e3def` and `4c2abced` add AI commander constants, default-on parameter behavior, upgrade debit/index fixes and compile/start wiring. The diff is source-Chernarus-only: no maintained Vanilla files are touched.
+
+The branch also changes behavior, not only missing plumbing. `Rsc/Parameters.hpp:96` defaults AI commander to on, `Init_Server.sqf:630-631` spawns one supervisor per side, `AI_Commander.sqf:43-72` chooses full-vs-assist mode, and `AI_Commander_Produce.sqf:73-80` spends AI commander funds through `AIBuyUnit`. At the same time, the old autonomous supply-truck path is only guarded: `UpdateSupplyTruck` remains commented and the missing `Server/FSM/supplytruck.fsm` is not restored.
+
+Development rule: when a branch revives a dormant feature, document three labels before anyone merges or builds on it: default behavior change, propagation scope and runtime smoke state. For AI commander, smoke no-human full command, human-commander assist/no-spend, order execution, AI production cap, upgrade funds/supply, commander vote/revote, HQ death, JIP and Vanilla propagation before calling the feature revived.
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |

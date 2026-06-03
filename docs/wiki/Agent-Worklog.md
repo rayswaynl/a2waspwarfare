@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-03T23:55:00+0200 - Codex - ai-commander-branch-intel-refresh
+
+- Pulled latest remotes and found new `origin/feat/ai-commander` at head `4dba060e`.
+- Source-checked the branch against stable `origin/master` merge base `2cdf5fb8`: 9 source-Chernarus files, +366/-5, no maintained Vanilla files touched.
+- Confirmed branch adds a per-side AI commander supervisor, assign-types/assign-towns/produce workers, explicit order executor, default-on AI commander parameter, upgrade cost/debit fixes and a nil guard around the old `UpdateSupplyTruck` path.
+- Updated [AI commander autonomy audit](AI-Commander-Autonomy-Audit), [Feature status register](Feature-Status-Register), [AI/headless](AI-Headless-And-Performance), [Abandoned feature revival](Abandoned-Feature-Revival-Review), developer-history pages and machine lesson ledgers so future agents keep stable-master status separate from branch revival evidence.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-03T23:30:00+0200 - Codex - drone-recon-branch-intel-refresh
 
 - Pulled both docs surfaces and source-checked newly fetched support branches before changing docs.
