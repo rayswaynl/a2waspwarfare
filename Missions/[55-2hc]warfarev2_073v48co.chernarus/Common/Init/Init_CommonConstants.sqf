@@ -259,7 +259,7 @@ with missionNamespace do {
 	if (isNil "WFBE_C_DRONE_MIN_HIT") then {WFBE_C_DRONE_MIN_HIT = 0.08}; //--- min HandleDamage delta that counts (>=.50)
 	if (isNil "WFBE_C_DRONE_DIVE_STAGGER") then {WFBE_C_DRONE_DIVE_STAGGER = 1.5}; //--- s between dives
 	if (isNil "WFBE_C_DRONE_COST") then {WFBE_C_DRONE_COST = 22000}; //--- server-validated cost
-	if (isNil "WFBE_C_DRONE_COOLDOWN") then {WFBE_C_DRONE_COOLDOWN = 360}; //--- s cooldown
+	if (isNil "WFBE_C_DRONE_COOLDOWN") then {WFBE_C_DRONE_COOLDOWN = 300}; //--- s cooldown
 	if (isNil "WFBE_C_DRONE_CONCURRENT_CAP") then {WFBE_C_DRONE_CONCURRENT_CAP = 1}; //--- max packages/side in flight
 
 //--- Players.
