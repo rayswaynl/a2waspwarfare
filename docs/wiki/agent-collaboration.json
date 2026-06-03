@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T19:00:00+02:00",
+  "generatedAt": "2026-06-03T19:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -44,6 +44,27 @@
         "Preserved DR-46 distinction from PVF dispatcher hardening"
       ],
       "handoff": "Future network hardening owner should patch SEND_MESSAGE separately from PVF dispatcher lookup: replace call compile localization text with structured stringtable key/args, then smoke normal artillery/ICBM messages plus forged SQF text."
+    },
+    {
+      "lane": "hc-dr42-collaboration-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/Headless-Delegation-And-Failover-Playbook.md",
+        "docs/wiki/AI-Headless-And-Performance.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Hardening-Implementation-Roadmap.md",
+        "docs/wiki/agent-hardening-backlog.jsonl"
+      ],
+      "outputs": [
+        "Closed stale hc-delegation-failover-playbook ready-to-publish claim",
+        "Closed stale dr42-dr43-reconciliation ready-to-publish claim",
+        "Preserved DR-21/DR-42/DR-43 implementation lanes as future code-owner work"
+      ],
+      "handoff": "Future agents should treat HC delegation/failover and DR-42/DR-43 reconciliation as published documentation, not open publish blockers. Implementation remains in the named backlog/playbook lanes: hc-static-defense-sync, source-version-sqf-build-gap and init-server-duplicate-binds."
     },
     {
       "lane": "stale-collaboration-claim-closure",
@@ -1704,7 +1725,7 @@
     {
       "lane": "hc-delegation-failover-playbook",
       "owner": "Codex",
-      "status": "ready-to-publish",
+      "status": "published-validated",
       "sourceScope": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_DelegateAI*.sqf",
@@ -1718,7 +1739,7 @@
         "Headless-Delegation-And-Failover-Playbook.md",
         "AI/headless, roadmap, dashboard and agent context links"
       ],
-      "handoff": "Create a source-backed implementation playbook for HC delegation/failover that separates town AI, team AI and static-defense behavior."
+      "handoff": "Historical publish claim now closed. The source-backed HC delegation/failover playbook is published; future code owners should use it before changing town AI, static-defense HC update-back, HC work records, disconnect policy or late-HC behavior."
     },
     {
       "lane": "pvf-dispatch-implementation-playbook",
@@ -1754,7 +1775,7 @@
     {
       "lane": "dr42-dr43-reconciliation",
       "owner": "Codex",
-      "status": "ready-to-publish",
+      "status": "published-validated",
       "sourceScope": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_DelegateAIStaticDefence.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_DelegateTownAI.sqf",
@@ -1768,7 +1789,7 @@
         "DR-43 corrected duplicate-bind count and two cleanup backlog records",
         "server-fps-hosted-loop-sleep marked duplicate-of-dr19"
       ],
-      "handoff": "Future code owners: use agent-hardening-backlog.jsonl ids hc-static-defense-sync, source-version-sqf-build-gap and init-server-duplicate-binds for implementation. Treat server-fps-hosted-loop-sleep as part of DR-19."
+      "handoff": "Historical publish claim now closed. Future code owners should still use agent-hardening-backlog.jsonl ids hc-static-defense-sync, source-version-sqf-build-gap and init-server-duplicate-binds for implementation. Treat server-fps-hosted-loop-sleep as part of DR-19."
     },
     {
       "lane": "server-authority-migration-map",

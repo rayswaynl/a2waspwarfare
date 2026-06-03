@@ -8,6 +8,12 @@ Append entries here so Codex, Claude and future assistants can see what each age
 - Evidence checked: `Client/FSM/updateclient.sqf:10-12` registers the direct `SEND_MESSAGE` handler; `Client_onEventHandler_SEND_MESSAGE.sqf:18-27` reads payload text/side/compile flag and `call compile`s message text when the multi-language flag is true; `Common_SendMessage.sqf:17-26,34-38` repeats the compile branch and broadcasts `SEND_MESSAGE`.
 - Scope remained docs/status only; no gameplay source files were edited.
 
+## 2026-06-03 - Codex Documentation Finisher: HC / DR42-43 Collaboration Status Closure
+
+- Closed two stale machine-readable claims in [`agent-collaboration.json`](agent-collaboration.json): `hc-delegation-failover-playbook` and `dr42-dr43-reconciliation` no longer represent `ready-to-publish` docs tasks.
+- Evidence checked: [Progress dashboard](Progress-Dashboard) lists `hc-delegation-failover-playbook` as published and `dr42-dr43-reconciliation` as published/validated; [`agent-status.json`](agent-status.json) has both lanes as `published`; [Headless delegation/failover](Headless-Delegation-And-Failover-Playbook) owns DR-21/DR-42 implementation policy; [Feature status](Feature-Status-Register) lists DR-42 static-defense HC update-back, DR-43 server-init duplicate binds and generated `version.sqf` boot dependency; [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) carries `hc-static-defense-sync`, `source-version-sqf-build-gap` and `init-server-duplicate-binds`.
+- Scope remained docs/status only; no gameplay source files were edited.
+
 ## 2026-06-03 - Codex Documentation Finisher: Stale Collaboration Claim Closure
 
 - Closed stale machine-readable claims in [`agent-collaboration.json`](agent-collaboration.json): `latest-doc-batch-validation-publish` no longer represents an active publish task, `attack-wave-authority-playbook` is already published/validated, and `paratrooper-marker-revival` is published/propagated with Arma smoke pending.
