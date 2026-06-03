@@ -48,26 +48,14 @@ if (_active >= WFBE_C_DRONE_CONCURRENT_CAP) exitWith {
 };
 missionNamespace setVariable [_activeKey, _active + 1];
 
-//--- Scripted survivability + (3) reveal-on-fire. Only >=.50-cal hits count; the shooter is pinged to the friendly team.
+//--- Scripted survivability. Only >=.50-cal hits count toward the drone's HP; sub-.50 fire is ignored.
 WFBE_DroneHandleDamage = {
-    private ["_unit","_dmg","_src","_prev","_delta","_h","_dside","_last"];
+    private ["_unit","_dmg","_prev","_delta","_h"];
     _unit = _this select 0;
     _dmg  = _this select 2;
-    _src  = _this select 3;
     _prev = damage _unit;
     _delta = _dmg - _prev;
     if (_delta < WFBE_C_DRONE_MIN_HIT) exitWith {0};   //--- sub-.50 plink -> ignored, stays pristine
-
-    //--- Engage-or-eat-it: reveal the shooter on the friendly team map (reuse uav-reveal), rate-limited.
-    if (!isNull _src && {_src != _unit} && {typeName _src == "OBJECT"}) then {
-        _last = _unit getVariable ["wfbe_reveal_t", -100];
-        if (time - _last > 3) then {
-            _dside = _unit getVariable ["wfbe_side", west];
-            [_dside, "HandleSpecial", ["uav-reveal", _unit, _src]] Call WFBE_CO_FNC_SendToClients;
-            _unit setVariable ["wfbe_reveal_t", time];
-        };
-    };
-
     _h = (_unit getVariable ["wfbe_drone_hp", WFBE_C_DRONE_HP]) - 1;
     _unit setVariable ["wfbe_drone_hp", _h, true];
     if (_h <= 0) exitWith {1};   //--- depleted -> destroy
@@ -113,7 +101,6 @@ for "_i" from 0 to (_total - 1) do {
     _drone setVariable ["wfbe_drone_hp", _hp, true];
     _drone setVariable ["wfbe_phase", _i, true];
     _drone setVariable ["wfbe_sideID", _sideID, false];
-    _drone setVariable ["wfbe_side", _side, false];
     _drone flyInHeight _alt;
     _drone addEventHandler ["HandleDamage", {_this call WFBE_DroneHandleDamage}];
     _drone addEventHandler ["Killed", {[_this select 0, _this select 1, (_this select 0) getVariable "wfbe_sideID"] Spawn WFBE_CO_FNC_OnUnitKilled}];
