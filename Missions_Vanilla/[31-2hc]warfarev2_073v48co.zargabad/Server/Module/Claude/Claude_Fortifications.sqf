@@ -69,22 +69,35 @@ missionNamespace setVariable ["WFBE_CLAUDE_FOB_WEST", [
 	["Hedgehog",[-10,24,0],0],["Hedgehog",[0,24,0],0],["Hedgehog",[10,24,0],0]
 ]];
 
-//--- Fortress FOB - WarPac (EAST). Same curtain geometry, Takistani guns.
+//--- Fortress FOB - WarPac (EAST): "belted redoubt" doctrine. An inner H-barrier KEEP
+//--- (with the AA + ammo) ringed by an outer SANDBAG BELT, a MASSED front gun line
+//--- (4 KORD + 2 Metis), outer corner towers, and a deep wire/hedgehog belt. Defence
+//--- in depth - reads distinctly different from the NATO single-curtain fort.
 missionNamespace setVariable ["WFBE_CLAUDE_FOB_EAST", [
-	["Land_HBarrier_large",[-17.5,20,0],0],["Land_HBarrier_large",[-12.5,20,0],0],["Land_HBarrier_large",[-7.5,20,0],0],["Land_HBarrier_large",[-2.5,20,0],0],["Land_HBarrier_large",[2.5,20,0],0],["Land_HBarrier_large",[7.5,20,0],0],["Land_HBarrier_large",[12.5,20,0],0],["Land_HBarrier_large",[17.5,20,0],0],
-	["Land_HBarrier_large",[-20,-15,0],90],["Land_HBarrier_large",[-20,-10,0],90],["Land_HBarrier_large",[-20,-5,0],90],["Land_HBarrier_large",[-20,0,0],90],["Land_HBarrier_large",[-20,5,0],90],["Land_HBarrier_large",[-20,10,0],90],["Land_HBarrier_large",[-20,15,0],90],
-	["Land_HBarrier_large",[20,-15,0],90],["Land_HBarrier_large",[20,-10,0],90],["Land_HBarrier_large",[20,-5,0],90],["Land_HBarrier_large",[20,0,0],90],["Land_HBarrier_large",[20,5,0],90],["Land_HBarrier_large",[20,10,0],90],["Land_HBarrier_large",[20,15,0],90],
-	["Land_HBarrier_large",[-17.5,-20,0],0],["Land_HBarrier_large",[-12.5,-20,0],0],["Land_HBarrier_large",[-7.5,-20,0],0],["Land_HBarrier_large",[7.5,-20,0],0],["Land_HBarrier_large",[12.5,-20,0],0],["Land_HBarrier_large",[17.5,-20,0],0],
-	["Land_HBarrier_corner",[-20,20,0],0],["Land_HBarrier_corner",[20,20,0],90],["Land_HBarrier_corner",[-20,-20,0],270],["Land_HBarrier_corner",[20,-20,0],180],
-	["Land_fort_watchtower_EP1",[-16,16,0],0],["Land_fort_watchtower_EP1",[16,16,0],0],["Land_fort_watchtower_EP1",[-16,-16,0],0],["Land_fort_watchtower_EP1",[16,-16,0],0],
-	["KORD_high_TK_EP1",[-11,17,0],0],["KORD_high_TK_EP1",[11,17,0],0],["Metis_TK_EP1",[0,17,0],0],
-	["KORD_high_TK_EP1",[-17,0,0],270],["KORD_high_TK_EP1",[17,0,0],90],
-	["ZU23_TK_EP1",[0,3,0],0],["KORD_high_TK_EP1",[0,-16,0],180],
-	["Land_fort_bagfence_round",[-11,17,0],0],["Land_fort_bagfence_round",[11,17,0],0],
-	["Land_CamoNetVar_EAST",[-9,9,0],0],["Land_CamoNetVar_EAST",[9,9,0],0],
-	["TKBasicAmmunitionBox_EP1",[-4,-2,0],0],["TKBasicAmmunitionBox_EP1",[4,-2,0],0],["TKVehicleBox_EP1",[0,-5,0],0],
+	// --- inner keep (H-barrier square, half-extent 10) ---
+	["Land_HBarrier_large",[-7.5,10,0],0],["Land_HBarrier_large",[-2.5,10,0],0],["Land_HBarrier_large",[2.5,10,0],0],["Land_HBarrier_large",[7.5,10,0],0],
+	["Land_HBarrier_large",[-7.5,-10,0],0],["Land_HBarrier_large",[-2.5,-10,0],0],["Land_HBarrier_large",[2.5,-10,0],0],["Land_HBarrier_large",[7.5,-10,0],0],
+	["Land_HBarrier_large",[-10,-7.5,0],90],["Land_HBarrier_large",[-10,-2.5,0],90],["Land_HBarrier_large",[-10,2.5,0],90],["Land_HBarrier_large",[-10,7.5,0],90],
+	["Land_HBarrier_large",[10,-7.5,0],90],["Land_HBarrier_large",[10,-2.5,0],90],["Land_HBarrier_large",[10,2.5,0],90],["Land_HBarrier_large",[10,7.5,0],90],
+	["Land_HBarrier_corner",[-10,10,0],0],["Land_HBarrier_corner",[10,10,0],90],["Land_HBarrier_corner",[-10,-10,0],270],["Land_HBarrier_corner",[10,-10,0],180],
+	// keep contents: massed AA + command + ammo
+	["ZU23_TK_EP1",[0,0,0],0],["Igla_AA_pod_TK_EP1",[-4,3,0],0],
+	["Land_CamoNetVar_EAST",[-5,-4,0],0],["Land_CamoNetVar_EAST",[5,-4,0],0],
+	["TKVehicleBox_EP1",[-3,-6,0],0],["TKBasicAmmunitionBox_EP1",[3,-6,0],0],
+	// --- massed front gun line (between keep and belt) ---
+	["KORD_high_TK_EP1",[-12,15,0],0],["KORD_high_TK_EP1",[-4,15,0],0],["KORD_high_TK_EP1",[4,15,0],0],["KORD_high_TK_EP1",[12,15,0],0],
+	["Metis_TK_EP1",[-17,14,0],345],["Metis_TK_EP1",[17,14,0],15],
+	["Land_fort_bagfence_round",[-12,15,0],0],["Land_fort_bagfence_round",[-4,15,0],0],["Land_fort_bagfence_round",[4,15,0],0],["Land_fort_bagfence_round",[12,15,0],0],
+	// --- outer sandbag belt (front + flanks) ---
+	["Land_fort_bagfence_long",[-15,20,0],0],["Land_fort_bagfence_long",[-9,20,0],0],["Land_fort_bagfence_long",[-3,20,0],0],["Land_fort_bagfence_long",[3,20,0],0],["Land_fort_bagfence_long",[9,20,0],0],["Land_fort_bagfence_long",[15,20,0],0],
+	["Land_fort_bagfence_long",[-20,-9,0],90],["Land_fort_bagfence_long",[-20,-3,0],90],["Land_fort_bagfence_long",[-20,3,0],90],["Land_fort_bagfence_long",[-20,9,0],90],["Land_fort_bagfence_long",[-20,15,0],90],
+	["Land_fort_bagfence_long",[20,-9,0],90],["Land_fort_bagfence_long",[20,-3,0],90],["Land_fort_bagfence_long",[20,3,0],90],["Land_fort_bagfence_long",[20,9,0],90],["Land_fort_bagfence_long",[20,15,0],90],
+	["KORD_high_TK_EP1",[-20,-13,0],270],["KORD_high_TK_EP1",[20,-13,0],90],   // flank-guard MGs on the belt
+	// --- outer corner watchtowers ---
+	["Land_fort_watchtower_EP1",[-19,19,0],0],["Land_fort_watchtower_EP1",[19,19,0],0],["Land_fort_watchtower_EP1",[-19,-19,0],0],["Land_fort_watchtower_EP1",[19,-19,0],0],
+	// --- deep forward obstacle belt ---
 	["Fort_RazorWire",[-15,25,0],0],["Fort_RazorWire",[-5,25,0],0],["Fort_RazorWire",[5,25,0],0],["Fort_RazorWire",[15,25,0],0],
-	["Hedgehog",[-10,24,0],0],["Hedgehog",[0,24,0],0],["Hedgehog",[10,24,0],0]
+	["Hedgehog",[-12,24,0],0],["Hedgehog",[-4,24,0],0],["Hedgehog",[4,24,0],0],["Hedgehog",[12,24,0],0]
 ]];
 
 //==================== BUILDER ====================
