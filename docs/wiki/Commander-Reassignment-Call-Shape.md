@@ -48,7 +48,7 @@ _commander = _this select 1;
 | --- | --- |
 | `Client/GUI/GUI_Commander_VoteMenu.sqf:46` | Sends `["RequestNewCommander", [side group player, _voted_commander]]`. |
 | `Common/Init/Init_PublicVariables.sqf:13,50` | Registers and compiles `RequestNewCommander` as a server PVF command. |
-| `Server/Functions/Server_HandlePVF.sqf:11` | Spawns PVF parameters into the compiled handler. |
+| `Server/Functions/Server_HandlePVF.sqf:14` | Spawns PVF parameters into the compiled handler. |
 | `Server/PVFunctions/RequestNewCommander.sqf:3,12-14` | Reads `_side = _this select 0`, sets `wfbe_commander`, calls `AssignNewCommander`, and sends a `new-commander-assigned` message. |
 | `Server/Functions/Server_AssignNewCommander.sqf:3-5` | Uses `_side = _this` while also indexing `_this select 1`. |
 | `Common/Functions/Common_GetSideLogic.sqf:7` | Side-logic lookup only handles actual side values and defaults to `objNull`. |

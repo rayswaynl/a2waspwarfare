@@ -4,9 +4,12 @@ This lane turns the abandoned-feature note for paratrooper drop markers into a m
 
 ## Status
 
+Branch-local source and maintained Vanilla are propagated; `origin/master` is **not** patched. On stable master, `Common/Init/Init_PublicVariables.sqf:39` is still `NukeIncoming` and `HandleParatrooperMarkerCreation` is absent from `_clientCommandPV`.
+
 | Surface | Status | Evidence |
 | --- | --- | --- |
-| Source Chernarus mission | Patched | `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:39` now registers `HandleParatrooperMarkerCreation`. |
+| `origin/master` | Not patched | `Common/Init/Init_PublicVariables.sqf:39` is `NukeIncoming`; no `HandleParatrooperMarkerCreation` registration exists. |
+| Source Chernarus mission on this docs branch | Branch-local patched | `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:39` now registers `HandleParatrooperMarkerCreation`. |
 | Vanilla Takistan mission | Propagated | `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_PublicVariables.sqf:39` now has the same registration after the LoadoutManager propagation run. |
 | Modded mission folders | Still drifted / not patched | Napf, eden and lingor register `HandleParatrooperMarkerCreation`, but no `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` file exists in those folders. Per `AGENTS.md`, direct mission edits should only touch Chernarus; modded propagation needs an owner decision. |
 | Runtime validation | Pending hosted/dedicated smoke | Source checks prove the handler now compiles/registers in Chernarus source and maintained Vanilla; Arma 2 OA gameplay smoke is still needed to prove marker visibility and side filtering in-engine. |
@@ -37,7 +40,7 @@ The server-side paratrooper support flow creates transport aircraft, spawns para
 - `HandleParatrooperMarkerCreation.sqf:29-40` creates a local marker name and spawns `MarkerUpdate`.
 - `Common_MarkerUpdate.sqf:21` has an additional same-side/alive/null guard before creating the local marker.
 
-Before this patch, source Chernarus had the sender and handler file but not the registration entry, so `Init_PublicVariables.sqf` never compiled `CLTFNCHandleParatrooperMarkerCreation` and never attached a PVEH for `WFBE_PVF_HandleParatrooperMarkerCreation`. Vanilla Takistan showed the same missing registration before propagation; it is now aligned with source.
+On `origin/master`, source Chernarus has the sender and handler file but not the registration entry, so `Init_PublicVariables.sqf` never compiles `CLTFNCHandleParatrooperMarkerCreation` and never attaches a PVEH for `WFBE_PVF_HandleParatrooperMarkerCreation`. Vanilla Takistan showed the same missing registration before branch-local propagation; it is now aligned with this docs branch's source.
 
 ## Why It Matters
 
@@ -51,7 +54,7 @@ This patch does not harden `RequestSpecial` or make paratrooper support server-a
 
 ## Patch Shape
 
-Applied source change:
+Applied branch-local source change:
 
 ```sqf
 _l = _l + ["RequestBaseArea"];
@@ -67,10 +70,11 @@ The maintained Vanilla Takistan mission has been regenerated/propagated and now 
 
 ## Validation
 
-Source/Vanilla checks completed:
+Branch-local source/Vanilla checks completed:
 
 - Chernarus source mission now has sender + registered client PVF + handler file.
 - Vanilla Takistan now has sender + handler file + registration after the propagation run.
+- `origin/master` still lacks the registration at `Init_PublicVariables.sqf:39`; do not call the revive shipped on master until that branch adopts it.
 - Diff is scoped to one source `Init_PublicVariables.sqf` insertion plus docs/machine-readable handoff updates.
 - Earlier propagation was blocked by the checkout path, but `Tools/LoadoutManager` root discovery and `A2WASP_SKIP_ZIP=1` support were later patched; generation/copy completed for maintained Vanilla Takistan.
 

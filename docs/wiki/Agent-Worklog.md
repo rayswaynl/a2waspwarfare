@@ -2,6 +2,14 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Status Drift Remediation Pages
+
+- Closed [Instructions for Codex](Instructions-For-Codex) items 36 and 38-40.
+- Source-checked paratrooper marker registration against this docs branch and `origin/master`: this branch has `HandleParatrooperMarkerCreation` at `Common/Init/Init_PublicVariables.sqf:39`, while `origin/master` still has `NukeIncoming` at `:39`.
+- Corrected [Paratrooper marker revival](Paratrooper-Marker-Revival) so it says branch-local source + maintained Vanilla are propagated, not master-shipped.
+- Rechecked [Commander reassignment call shape](Commander-Reassignment-Call-Shape): the page was already patch-ready/source-unpatched; corrected the `Server_HandlePVF.sqf` spawn evidence from `:11` to `:14`.
+- Rechecked [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup): current source still has random `varQueu` at `Client_BuildUnit.sqf:167-168` and the bare crewless exit at `:365`, and the page already says DR-33a/b remain open.
+
 ## 2026-06-03 - Codex Documentation Finisher: Client Skill Init Branch Status
 
 - Closed [Instructions for Codex](Instructions-For-Codex) item 37 and clarified the item 36 systemic-status note.

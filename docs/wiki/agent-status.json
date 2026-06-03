@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T14:05:00+02:00",
+  "generatedAt": "2026-06-03T14:15:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Instructions-For-Codex item 37: Client-Skill-Init-Idempotency now distinguishes docs-branch/Vanilla propagated status from origin/master and release-branch duplicate Skill_Init state.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 38: Commander-Reassignment-Call-Shape status and line-reference recheck."
+      "currentWork": "Closed Instructions-For-Codex items 36 and 38-40: remediation pages now distinguish branch-local/Vanilla propagated status from origin/master and patch-ready/source-unpatched status.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 41: Abandoned-Feature-Revival-Review MASH marker range fixes."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "status-drift-remediation-pages",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex items 36 and 38-40 are resolved: Paratrooper-Marker-Revival.md now distinguishes branch-local/Vanilla registration from origin/master, Commander-Reassignment-Call-Shape.md keeps DR-15 patch-ready and fixes Server_HandlePVF.sqf:14, and Factory-Queue-Counter-Token-Cleanup.md was rechecked as patch-ready/source-unpatched."
+    },
     {
       "lane": "client-skill-init-branch-status-recheck",
       "owner": "Codex",
