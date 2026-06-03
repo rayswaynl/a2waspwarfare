@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T09:20:00+02:00",
+  "generatedAt": "2026-06-03T09:35:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Instructions-For-Codex item 8 is published and validated: C2 cross-link coverage was verified and Client UI systems atlas now names DR-16/17/24/25a/25b on the canonical UI risk sections.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 9: reconcile Coordination board active lanes and roles against current closed lanes and Claude DR-45+ status."
+      "currentWork": "Instructions-For-Codex item 9 is published and validated: Coordination Board roles and active lanes now show Codex as the documentation finisher/orchestrator, Claude in collaboration-follow-autonomous-ready after DR-45+/DR-46 handoffs, and old named scout lanes as harvested/closed rather than active.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 10: reconcile Progress Dashboard At-a-glance Claude row and patched-vs-proposed status drift against current source/status conventions."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "coordination-board-current-state",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 9 is resolved: Coordination-Board.md roles and active lanes were reconciled against agent-status.json, agent-collaboration.json and Subagent-Discovery-Swarm.md. Old Faraday/Mencius/Hilbert/Cicero/Curie/Meitner rows are no longer presented as active owners, victory-endgame-runtime-atlas is integrated, and Claude is listed as collaboration-follow-autonomous-ready after DR-45+/DR-46 handoffs."
+    },
     {
       "lane": "wiki-quality-c2-crosslink-completion",
       "owner": "Codex",

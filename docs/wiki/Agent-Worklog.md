@@ -2,6 +2,13 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Coordination Board Current-State Cleanup
+
+- Claimed [Instructions for Codex](Instructions-For-Codex) item 9 and rechecked [Coordination board](Coordination-Board) against `agent-status.json`, `agent-collaboration.json` and [Progress dashboard](Progress-Dashboard).
+- Replaced stale active-role wording for old named scout lanes: Faraday, Mencius, Hilbert, Cicero, Curie and Meitner are harvested/closed unless explicitly respawned.
+- Marked `victory-endgame-runtime-atlas` integrated, kept `documentation-finisher-loop` as the active Codex docs lane and updated Claude to `collaboration-follow-autonomous-ready` after DR-45+ / DR-46 handoffs.
+- Updated the dashboard At A Glance Codex row away from the old DR-46 slice so it points back to this long-running documentation finisher lane.
+
 ## 2026-06-03 - Codex Documentation Finisher: C2 Cross-Link Completion
 
 - Claimed [Instructions for Codex](Instructions-For-Codex) item 8 and checked the requested target pages for their DR labels.
@@ -1167,6 +1174,13 @@ Key conclusions:
 - Closed Claude's Instructions-For-Codex item 42 by replacing the former Arma 3-only `apply` example in [Deep-review findings](Deep-Review-Findings) DR-1 Fix 2 with an Arma 2 OA-safe `forEach` allowlist build.
 - Confirmed the newer [PVF dispatch implementation playbook](PVF-Dispatch-Implementation-Playbook#1-export-allowlists-at-pvf-init) already used the safe pattern and left it unchanged.
 - Updated [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide), [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference), [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit), [`agent-compatibility-audit.json`](agent-compatibility-audit.json), [Instructions for Codex](Instructions-For-Codex) and [`agent-knowledge.jsonl`](agent-knowledge.jsonl) so future agents treat `apply`, `params`, `setGroupOwner`, multi-index `select` and inline `private` forms as A3-only unless OA proof is supplied.
+
+# 2026-06-03 - Coordination Board Current-State Reconciliation
+
+- Closed Instructions-for-Codex item 9 by reconciling [Coordination board](Coordination-Board) against current machine status and discovery-swarm history.
+- Updated Roles so Codex is the active documentation finisher/orchestrator, Claude is `collaboration-follow-autonomous-ready` after DR-45+ / DR-46 handoffs, Codex-2 is a patch-ready/playbook lane, and old named sub-agent waves are read-only harvested/closed scouts rather than active owners.
+- Updated Active Lanes so `victory-endgame-runtime-atlas` is integrated, old Faraday/Mencius/Hilbert/Cicero/Curie/Meitner active rows are no longer shown as live work, and only current/open lanes remain visible.
+- Scope remained docs-only; no gameplay source files were edited.
 
 # 2026-06-02 - WASP Overlay Self-Test Documentation Correction
 

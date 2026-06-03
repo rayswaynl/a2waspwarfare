@@ -10,14 +10,10 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 
 | Agent | Current ownership | Expected output |
 | --- | --- | --- |
-| Codex | Orchestrator, wiki UX owner, source-atlas maintainer, repo/wiki publishing, validation runner. | Wiki pages, `docs/wiki` mirror, `agent-context.json`, worklog entries and integrated sub-agent findings. |
-| Claude | Autonomous review/deepening passes, contradiction hunting and subsystem archaeology. | Latest completed reviews are Victory/endgame DR-11..DR-13 and Factory/purchase DR-14..DR-15; may self-select the next bounded lane. |
-| Faraday | Codex sub-agent: economy, gear, loadout and EASA scout. | Active on gear/EASA/balance; prior economy report is pending Codex integration. |
-| Mencius | Codex sub-agent: client lifecycle, respawn, MASH and support scout. | Active on MASH/support; prior client/JIP report is pending Codex integration. |
-| Hilbert | Codex sub-agent: previously network/PV; now server runtime scheduler scout. | Active read-only discovery report; previous PV findings are integrated. |
-| Cicero | Codex sub-agent: previously server runtime; now AI/headless delegation scout. | Active read-only discovery report; previous server findings are integrated. |
-| Curie | Codex sub-agent: previously UI/HUD; now wiki UX/navigation scout. | Active read-only discovery report; previous UI findings are integrated. |
-| Meitner | Codex sub-agent: previously tooling/integration; now content drift/generation scout. | Active read-only discovery report; previous tooling findings are integrated. |
+| Codex | Main orchestrator, documentation finisher, wiki UX owner, source-atlas maintainer, repo/wiki publisher and validation runner. | Scoped docs/wiki + wiki batches, mirror parity, status files, worklog entries and selected sub-agent harvests promoted into owner pages. |
+| Claude | Autonomous review/deepening lane, contradiction hunter and subsystem archaeologist. | Claude is now in `collaboration-follow-autonomous-ready` mode after DR-45+ / DR-46 handoffs; it should follow Codex handoffs first, then self-select another bounded source-backed review if idle. |
+| Codex-2 | Patch-ready docs/playbook lane and implementation-readiness scout when available. | Keep patch-ready pages scoped, avoid source edits unless explicitly asked, and leave validation/publish state visible in dashboard/status files. |
+| Codex sub-agent waves | Read-only discovery scouts only; raw packets are not canonical until Codex source-checks and promotes them. | Current named waves through Wave S are returned/harvested or partially harvested; use [Discovery swarm](Subagent-Discovery-Swarm) for details and owner pages for canonical facts. |
 | Future agents | Feature-specific docs upkeep and code-change handoffs. | Update relevant wiki pages and `agent-context.json` when architecture or workflows change. |
 
 ## Shared Files
@@ -106,27 +102,25 @@ Async mailbox between agents. Newest at the top. Format: `### [YYYY-MM-DD] From 
 
 ## Active Lanes
 
+This table shows only current/open coordination state. Older named scout lanes such as Faraday, Mencius, Hilbert, Cicero, Curie and Meitner are no longer active work owners; their reports were harvested or closed in later waves and should be read through [Discovery swarm](Subagent-Discovery-Swarm) plus the canonical owner pages.
+
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
 | `progress-interface` | Codex | Integrated | Progress dashboard and `agent-status.json` are published for human/AI status checks. |
 | `coordination-protocol` | Codex | Integrated | Shared protocol and machine-readable sync files are published. |
 | `deep-review-findings` | Claude | Integrated | Confirmed findings have been reconciled into owning atlas/risk pages. |
 | `construction-coin-atlas` | Codex | Integrated | Construction/CoIn atlas added and wired into navigation/context. |
-| `factory-purchase-atlas` | Codex | Integrated | Factory/purchase atlas added; Claude/Hilbert/Cicero should review purchase authority and latent AIBuyUnit follow-ups. |
-| `victory-endgame-runtime-atlas` | Codex | Active | Source-read victory conditions, endgame broadcast, game-over flags, stats/logging, AntiStack flush and mission termination. |
-| `economy-town-factory-upgrade-discovery` | Faraday | Reported, pending integration | Scout report received; integrate negative supply delta, upgrade authority, resistance supply handler gap and AI supply truck evidence. |
-| `gear-loadout-easa-balance-discovery` | Faraday | Active | Read-only source report for gear templates, EASA, loadout generation, balance configs and dangerous loadout metadata. |
-| `client-jip-lifecycle-discovery` | Mencius | Reported, pending integration | Scout report received; integrate duplicated `Skill_Init`, legacy WASP leftovers, join ACK sensitivity and respawn-loop cost. |
-| `respawn-medical-mash-support-discovery` | Mencius | Active | Read-only source report for respawn sources, MASH, ambulances, service/repair/heal/rearm, support actions and marker wiring. |
-| `server-runtime-scheduler-discovery` | Hilbert | Active | Read-only source report for server loops, FSMs, scheduler/FPS, cleanup and town processing. |
-| `ai-headless-delegation-discovery` | Cicero | Active | Read-only source report for AI squads, autonomous teams, AI commander, HC delegation and town AI lifecycle. |
-| `wiki-ux-navigation-discovery` | Curie | Active | Read-only wiki report for click-through usability, link graph and LLM entry points. |
-| `content-drift-generation-discovery` | Meitner | Active | Read-only source report for source/generated/stale mission folders, assets and drift. |
+| `factory-purchase-atlas` | Codex | Integrated | Factory/purchase atlas is published; later authority, queue and player-buy findings route through [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas), DR-14/15 and [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup). |
+| `victory-endgame-runtime-atlas` | Codex | Integrated | Victory/endgame runtime is now covered by [Victory and endgame atlas](Victory-And-Endgame-Atlas), DR-11/12/13/36 and later Wave S semantics corrections. |
+| `documentation-finisher-loop` | Codex | Active | Continue the queue in [Instructions for Codex](Instructions-For-Codex), source-check each item, mirror, validate and publish scoped batches. |
+| `autonomous-claude-research` | Claude | Open / autonomous-ready | Claude may continue in `collaboration-follow-autonomous-ready` mode after checking the dashboard, Codex handoffs and owner pages. |
+| `feature-status-reconciliation` | Codex / future agent | Open | Keep newly confirmed findings reflected in [Feature status](Feature-Status-Register), owner pages and machine-readable records. |
+| `implementation-hardening-from-backlog` | Future code owner | Open | Pick implementation work from [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl); docs-only agents should not patch gameplay code unless Steff asks. |
+| `testing-debugging-release-workflow` | Codex / future agent | Active release gate | Use [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow) to distinguish source review, propagation and actual Arma smoke evidence. |
 | `network-pv-boundary-deep-index` | Hilbert | Completed + integrated | Direct PV channels and registered-command forgery risks documented. |
 | `server-gameplay-loops-deep-index` | Cicero | Completed + integrated | Server runtime atlas added; commander/supply/performance risks documented. |
 | `ui-hud-dialogs-deep-index` | Curie | Completed + integrated | UI stale/partial/broken findings documented. |
 | `tooling-integrations-deep-index` | Meitner | Completed + integrated | Tooling and integration run hazards documented. |
-| `autonomous-claude-research` | Claude | Open | Claude may self-select the next bounded source-backed subsystem/risk lane. |
 | `pvf-hardening-review` | Claude | Ready-for-review | Claude published a behavior-preserving PVF dispatch hardening playbook; code owners should review before implementation. |
 | `victory-endgame-review` | Claude | Ready-for-review | Claude published DR-11..DR-13 on winner inversion, broken threeway mode and stale `LogGameEnd`. |
 | `factory-purchase-authority` | Claude | Ready-for-review | Claude published DR-14..DR-15 on client-authoritative purchasing and the commander assignment bug. |

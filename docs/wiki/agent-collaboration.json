@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T09:20:00+02:00",
+  "generatedAt": "2026-06-03T09:35:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,23 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "coordination-board-current-state",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Coordination-Board.md",
+        "docs/wiki/Instructions-For-Codex.md",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/Subagent-Discovery-Swarm.md"
+      ],
+      "outputs": [
+        "Reconciled Coordination Board roles and active lanes against current machine status and harvested scout-wave history"
+      ],
+      "handoff": "Continue with Instructions-For-Codex item 10: Progress Dashboard At-a-glance and patched-vs-proposed status drift."
+    },
     {
       "lane": "wiki-quality-c2-crosslink-completion",
       "owner": "Codex",

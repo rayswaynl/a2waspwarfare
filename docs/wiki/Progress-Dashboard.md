@@ -8,6 +8,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `coordination-board-current-state` | Published / validated | Codex reconciled [Coordination board](Coordination-Board) item 9: Roles now show Codex as orchestrator/documentation finisher, Claude in `collaboration-follow-autonomous-ready` after DR-45+ / DR-46 handoffs, and old named scout lanes as harvested/closed rather than active. Validation passed for wiki links, whitespace, JSON/JSONL and mirror parity. |
 | `wiki-quality-c2-crosslink-completion` | Published / validated | Codex verified item 8 cross-link coverage. Most target pages already routed the requested DRs; the missing canonical gap was [Client UI systems atlas](Client-UI-Systems-Atlas), now labelled with DR-16, DR-17, DR-24 and DR-25a/b on the relevant dialog/title/control risks. Validation passed for wiki links, whitespace, JSON/JSONL and mirror parity. |
 | `dr40-dr19-citation-routing` | Published / validated | Codex source-checked DR-40 and DR-19 citation routing. [WASP overlay](WASP-Overlay) now links DR-40 for WASP Perf/JIP-HC review and [Server runtime](Server-Gameplay-Runtime-Atlas) names DR-19 for hosted/listen FPS publishers; [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) now labels the old inner-`isDedicated` branch as historical pre-patch behavior. |
 | `dr45-town-ai-vehicle-despawn-crosslinks` | Published / validated | Codex source-checked DR-45 and made it explicit from [Town AI vehicle despawn safety](Town-AI-Vehicle-Despawn-Safety) and [AI/headless](AI-Headless-And-Performance). Evidence: town inactivity cleanup deletes tracked vehicles at `server_town_ai.sqf:211-216` with only a group-leader player guard, while `Server_HandleEmptyVehicle.sqf:26-30` is a separate crew-aware empty-vehicle timer. |
@@ -110,7 +111,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active / main orchestrator | `send-message-rce-dr46-crosslink` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Current slice closes Claude's DR-46 cross-link handoff; Wave S and Wave R/player-AI-cap docs are published. |
+| Codex | Active / documentation finisher | `documentation-finisher-loop` | Continue [Instructions for Codex](Instructions-For-Codex) top-to-bottom with source-backed docs, mirror parity, validation and scoped publish batches. |
 | Codex-2 | Ready | None claimed | Published [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup); next bounded candidates are PVF dispatcher lookup, side-supply clamp first or commander reassignment call-shape repair. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | Published / validated | Wave S sidecar | Hilbert, Dirac, Descartes and Nash returned; selected findings are promoted into owner pages and machine files. |

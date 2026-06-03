@@ -21,7 +21,7 @@
 8. ✅ Added / verified the missing DR cross-links called out in audit section C2: [Gameplay atlas](Gameplay-Systems-Atlas) routes DR-6/14/11/22/23/15; UI atlases route DR-16/17/24/25; [AI/headless](AI-Headless-And-Performance) routes DR-21/42; [Construction atlas](Construction-And-CoIn-Systems-Atlas) routes DR-6; [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) routes DR-37/43a.
 
 ## P1 — Reconcile "current work" status pages (they're stale)
-9. **[Coordination board](Coordination-Board):** the "Active Lanes" + "Roles" tables are stale — sub-agent lanes (Faraday/Mencius/Hilbert/Cicero/Curie/Meitner) shown "Active" were harvested/closed in Wave F; `victory-endgame-runtime-atlas` shown "Active" is integrated; the Roles line says "Claude's latest reviews are DR-11..DR-15" but Claude is at **DR-45** and in collaboration-follow mode. *Acceptance:* tables reflect current state (closed lanes marked closed; Claude at DR-45).
+9. ✅ **[Coordination board](Coordination-Board):** reconciled the stale "Active Lanes" + "Roles" tables. Older sub-agent names (Faraday/Mencius/Hilbert/Cicero/Curie/Meitner) are now explicitly described as harvested/closed scout lanes, `victory-endgame-runtime-atlas` is marked integrated, and Claude is shown in `collaboration-follow-autonomous-ready` mode after DR-45+ / DR-46 handoffs.
 10. **[Progress dashboard](Progress-Dashboard):** the "At A Glance" Claude row predates Phase-1 completion + the collaboration-follow operating mode; update to reflect that the coverage ledger's Map/Perf/JIP-HC columns are complete and only Auth/PV owner-decisions remain.
 11. **`_Sidebar.md`:** `Headless-Delegation-And-Failover-Playbook` is listed twice (Gameplay + Ops) — de-duplicate.
 
