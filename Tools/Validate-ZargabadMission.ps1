@@ -773,6 +773,7 @@ Assert-True "Claude brief tool points to map audit packet" ($claudeBriefSource -
 Assert-True "Claude brief tool points to runtime report" ($claudeBriefSource -match 'New-ZargabadRuntimeReport\.ps1')
 Assert-True "Claude brief tool points to runtime validator" ($claudeBriefSource -match 'Validate-ZargabadRuntimeEvidence\.ps1')
 Assert-True "Claude brief tool points to runtime report validator" ($claudeBriefSource -match 'Validate-ZargabadRuntimeReport\.ps1' -and $claudeBriefSource -match 'EvidenceRoot')
+Assert-True "Claude brief tool requires real screenshot files" ($claudeBriefSource -match 'real PNG/JPEG files' -and $claudeBriefSource -match 'validates image signatures')
 
 $takistanZargabadModule = Resolve-RepoPath "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/Zargabad"
 Assert-True "Takistan has no generated Zargabad module spillover" (-not (Test-Path -LiteralPath $takistanZargabadModule))
