@@ -51,6 +51,7 @@ The scout pass found no live missing `$STR_...` keys for `Rsc/Parameters.hpp` re
 
 - `WFBE_C_ANTISTACK_ENABLED` and `WFBE_C_PERFORMANCE_AUDIT_ENABLED` use literal English titles in `Parameters.hpp:547-555`.
 - `WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION` reuses `$STR_WF_PARAMETER_BombAltitude` at `Parameters.hpp:290-291`, while the consumer is distance-based.
+- `STR_Supplies_2` in `stringtable.xml:188-193` still tells players supply-truck deliveries pay `4 x the actual value`; current source grants raw `_supplyAmount` from the supply mission cargo calculation (`supplyMissionStart.sqf:32`, `supplyMissionCompletedMessage.sqf:13-14`), while `WFBE_C_PLAYERS_SUPPLY_TRUCKS_DELIVERY_FUNDS_COEF = 4` is defined but not consumed in that live flow.
 - Several translated parameter/help strings fall back to English or contain stale text; treat `stringtable.xml` as functional but not polished.
 
 ## Version And Include Generation
@@ -80,6 +81,7 @@ This is why the current `work\a` checkout cannot run LoadoutManager cleanly: it 
 | Bomb distance title reuses altitude text | Add `STR_WF_PARAMETER_BombDistanceRestriction` and use it for `WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION`. | Host parameter list and in-game parameter display distinguish altitude from distance. |
 | Bomb altitude parameter is visible but dormant | Either revive/smoke the commented `Common_HandleShootBombs.sqf` altitude block or hide/rename the host parameter as historical. | Host/admin UX does not imply an active restriction that the runtime does not enforce. |
 | Missing fallback for bomb distance | Add an `Init_CommonConstants.sqf` fallback or use `getVariable` default in the consumer. | Bomb-distance handling works in SP, MP and generated missions. |
+| Supply reward stringtable drift | Update `STR_Supplies_2` to match live reward math, or change the reward implementation and stringtable together during supply-authority redesign. | Player help text, runtime load message and completion reward agree for default supply upgrades and upgraded supply-rate cases. |
 | Literal `a2waspwarfare` root requirement | Discover repo root by project file, git root or explicit config rather than folder name. | LoadoutManager runs from `work\a` and a normal `a2waspwarfare` clone. |
 | Missing `7za` aborts after generation | Split generation/copy from packaging or make missing `7za` a non-fatal packaging-only warning. | Generated files land even when package creation is skipped. |
 | Generated files lack banners | Add generated-file banners to generated SQF/description/version outputs. | Future agents avoid hand-editing generated targets. |

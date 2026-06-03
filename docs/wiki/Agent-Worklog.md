@@ -1842,3 +1842,8 @@ Key conclusions:
 - Spark quota was still blocked, so Codex launched five low-effort read-only scouts instead: economy/supply-money loops, AI group caps, networking/direct PVs, UI/HUD/dialogs and ops/runtime/admin features.
 - Promoted the bounded, source-backed findings that were safest to land now: exact PV channel inventory fixes, corrected `PLAYER_RADIATED` direction, side-supply mirror/JIP wording, normal-commander AI cap table, crew-slot group-cap note and hosted-FPS old-shape wording.
 - Queued broader leads for later passes rather than overloading this batch: live supply reward vs stale stringtable text, UI alias/path cleanup, server ops runbook, AFK ops split and runtime telemetry checklist. No gameplay source files changed.
+
+## 2026-06-04T01:32:00+02:00 - Codex - supply reward stringtable drift
+- Source-checked the queued economy scout lead against supply mission start, completion, player reward and stringtable files.
+- Confirmed live supply-truck reward math grants raw `SupplyAmount`, where `SupplyAmount = floor(town supplyValue * WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER * supplyUpgradeModifier)`, while `stringtable.xml` `STR_Supplies_2` still says players receive `4 x actual value`.
+- Updated economy/supply/localization/feature-status pages plus development lesson and machine records. No gameplay source files changed.

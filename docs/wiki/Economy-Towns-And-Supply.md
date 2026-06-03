@@ -33,6 +33,12 @@ Routing note: [Supply mission architecture](Supply-Mission-Architecture) owns th
 
 Funds and supply are separate systems unless the mission parameter switches currency behavior. Commander income can be limited and distributed. On current `master`, supply mission side reward is applied by `supplyMissionCompleted.sqf`, while the personal player cash message path grants raw `_supplyAmount`; the constant `WFBE_C_PLAYERS_SUPPLY_TRUCKS_DELIVERY_FUNDS_COEF` is defined but no live consumer was found in this flow.
 
+### Supply Mission Reward Formula And Stale Copy
+
+The live truck reward path is not the old "4 x actual value" player-help rule. Current source computes loaded cargo as `floor((town supplyValue) * WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER * supplyUpgradeModifier)` in `Client/Module/supplyMission/supplyMissionStart.sqf:22-34`; the multiplier constant is `20` at `Common/Init/Init_CommonConstants.sqf:167`. Completion then sends the same `_supplyAmount` to the player message path, where `Client/Module/supplyMission/supplyMissionCompletedMessage.sqf:8,13-14` grants that raw amount as local cash.
+
+The stale copy is in `stringtable.xml:188-193`: `STR_Supplies_2` still tells players they receive "4 x the actual value as cash". The matching constant, `WFBE_C_PLAYERS_SUPPLY_TRUCKS_DELIVERY_FUNDS_COEF = 4`, remains defined at `Init_CommonConstants.sqf:268`, but this source pass found no live consumer in the current supply-mission completion flow. Treat the stringtable text as player-facing docs debt, not runtime authority.
+
 ## Economy Authority Synthesis
 
 The economy authority class is now fully characterized by source review. Every confirmed spend or value-changing path is client-authoritative or trusts client-originated payload/state:

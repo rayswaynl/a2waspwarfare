@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T01:24:00+02:00",
+  "generatedAt": "2026-06-04T01:32:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Harvested the fallback scout wave after Spark quota was blocked again: promoted exact PV channel inventory fixes, corrected PLAYER_RADIATED direction, refreshed Player AI cap tables with the commander-only column, added crew-slot cap notes and clarified hosted-FPS original bug wording.",
-      "nextExpectedOutput": "Pick the next queued scout lead: economy reward/stringtable drift, UI alias/path cleanup, server ops runbook, AFK ops split or runtime telemetry checklist."
+      "currentWork": "Published the supply reward/stringtable drift lane: live supply-truck rewards grant raw SupplyAmount from the town supply value * mission multiplier * upgrade modifier formula, while STR_Supplies_2 still says 4 x actual value and the old coefficient constant is unused in this flow.",
+      "nextExpectedOutput": "Pick the next queued scout lead: UI alias/path cleanup, server ops runbook, AFK ops split or runtime telemetry checklist."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "supply-reward-stringtable-drift",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Source-checked the queued economy scout lead. Current supply mission cargo is computed in supplyMissionStart.sqf as town supplyValue * WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER * supply upgrade modifier, and supplyMissionCompletedMessage.sqf grants raw SupplyAmount as player cash. stringtable.xml STR_Supplies_2 still says 4 x actual value, and WFBE_C_PLAYERS_SUPPLY_TRUCKS_DELIVERY_FUNDS_COEF = 4 has no live consumer in this flow. Updated Economy, Supply Mission Architecture, Mission Parameters/Localization, Feature Status, Development Lessons and machine records."
+    },
     {
       "lane": "scout-wave-pv-ai-ops-harvest",
       "owner": "Codex/Sub-agents",

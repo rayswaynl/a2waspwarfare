@@ -15,7 +15,7 @@ Authority summary: the live path is still client-authored at start and partly cl
 5. Server `isSupplyMissionActiveInTown.sqf` checks `LastSupplyMissionRun` against `WFBE_CO_VAR_SupplyMissionRegenInterval` and broadcasts `WFBE_Server_PV_IsSupplyMissionActiveInTown`.
 6. Client stores cooldown on the town as `supplyMissionCoolDownEnabled`.
 7. If allowed, client validates cursor target against hardcoded supply-truck classes and distance < 50m.
-8. Client writes object variables on the vehicle: `SupplyFromTown` and `SupplyAmount`.
+8. Client writes object variables on the vehicle: `SupplyFromTown` and `SupplyAmount`. The live amount is `floor((town supplyValue) * WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER * supplyUpgradeModifier)` (`supplyMissionStart.sqf:22-34`; multiplier `20` at `Init_CommonConstants.sqf:167`).
 9. Client broadcasts `WFBE_Client_PV_SupplyMissionStarted`.
 10. Server `supplyMissionStarted.sqf` starts a loop against the vehicle object, checking for command center proximity within 80m with a narrowed `Base_WarfareBUAVterminal` object scan.
 11. On match, server broadcasts `WFBE_Server_PV_SupplyMissionCompleted`.
@@ -40,7 +40,7 @@ Authority summary: the live path is still client-authored at start and partly cl
 - Cooldown variable casing is a confirmed DR-18 defect: town init seeds `lastSupplyMissionRun`, while server supply code reads/writes `LastSupplyMissionRun`.
 - `supplyMissionStarted.sqf` loops until the vehicle dies; it should avoid creating duplicate tracking loops for the same loaded vehicle.
 - Completion trusts object variables on the supply vehicle, so any feature that reuses those vars must clear them reliably.
-- Completion reward is split: the server mutates side supply, while the client completion message path grants personal funds locally and requests score reward.
+- Completion reward is split: the server mutates side supply, while the client completion message path grants personal funds locally and requests score reward. The personal cash award is raw `_supplyAmount` (`supplyMissionCompletedMessage.sqf:8,13-14`), not the stale `STR_Supplies_2` stringtable claim of `4 x actual value`.
 - Player resolution depends on `WFBE_SE_PLAYERLIST` and proximity/driver checks; stale rows can survive disconnects until the lifecycle cleanup lane is patched.
 
 Claude DR-39 split the Perf/JIP status cleanly:
