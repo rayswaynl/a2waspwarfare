@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Documented PR #1 supply-heli line delta and propagation caveat at origin/feat/supply-helicopter ffeea4c2: Chernarus source has constants/toggle, action gate, SupplyByHeli, cash-run and guarded interdiction path; maintained Vanilla lacks the runtime heli symbols. Branch diff remains 82 files / 431 insertions / 2048 deletions and includes broad non-supply drift.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: cleanup flag/nested-pair shape promotion or another P0/P1 accuracy drift with exact source refs."
+      "currentWork": "Closed the stale cleanup flag/nested-pair shape promotion row after source-checking the existing marker/cleanup atlas owner section. The atlas already owns the mine nested-pair removal and garbage flag mismatch patch shapes; Development Lessons now marks that backlog item done.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another P0/P1 accuracy drift, owner-decision surfacing item or machine-readable stale-status cleanup with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "cleanup-flag-nested-pair-shape-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Closed the Development Lessons cleanup follow-up as already accepted in Marker-Cleanup-Restoration-Systems-Atlas. Source evidence confirms the garbage flag mismatch (collector skips wfbe_trashable; kill handling sets wfbe_trashed) and mine nested-pair issue (producers append [mine,time] pairs; mines_cleaner removes with mines = mines - _x)."
+    },
     {
       "lane": "commander-map-order-executor-proof",
       "owner": "Codex",

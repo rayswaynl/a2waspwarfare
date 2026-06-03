@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Cleanup Flag / Nested-Pair Shape Closure
+
+- Closed the stale Development Lessons P2 follow-up without gameplay source edits: [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas#patch-ready-findings) already owns both patch-ready rows.
+- Evidence checked: `server_collector_garbage.sqf:17` skips objects carrying `wfbe_trashable`; `RequestOnUnitKilled.sqf:51,53-54` sets `wfbe_trashed` before spawning `TrashObject`; `mines_cleaner.sqf:3,14-17,23-30` initializes and iterates global `[mine, time]` pairs but removes with `mines = mines - _x`; producers append nested pairs at `DropRPG.sqf:66-67` and `Construction_StationaryDefense.sqf:31-32,43-44,54-55`.
+- Updated [Development lessons learned](Development-Lessons-Learned#proposed-backlog-patches), dashboard and machine records so future cleanup work starts from the owner atlas and runtime smoke gates instead of reopening the backlog row.
+
 ## 2026-06-03 - Codex Documentation Finisher: PR #1 Supply-Heli Line Delta / Propagation Audit
 
 - Source-diffed `origin/feat/supply-helicopter` `ffeea4c2` against `origin/master` `2cdf5fb8` without checking out the PR branch.

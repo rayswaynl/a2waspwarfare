@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T16:35:00+02:00",
+  "generatedAt": "2026-06-03T17:50:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "cleanup-flag-nested-pair-shape-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Development-Lessons-Learned.md",
+        "docs/wiki/Marker-Cleanup-Restoration-Systems-Atlas.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_collector_garbage.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestOnUnitKilled.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/cleaners/mines_cleaner.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/rpg_dropping/DropRPG.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_StationaryDefense.sqf"
+      ],
+      "outputs": [
+        "Marked the Development Lessons cleanup flag/nested-pair backlog row done",
+        "Confirmed Marker-Cleanup-Restoration-Systems-Atlas already owns both patch-ready shapes",
+        "Recorded runtime smoke gates for future code owners"
+      ],
+      "handoff": "Future cleanup code owner should patch garbage flag alignment and mine pair removal from Marker-Cleanup-Restoration-Systems-Atlas, then smoke unit-kill garbage handling and mine expiry/repeated mine creation before tuning cadence."
+    },
     {
       "lane": "lifecycle-wait-chain-timeout-gap-closure",
       "owner": "Codex",

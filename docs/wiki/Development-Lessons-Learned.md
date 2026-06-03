@@ -85,7 +85,7 @@ Development rule: before moving or patching lifecycle waits, cite both the consu
 | P1 | Add this page and `agent-development-lessons.jsonl` to navigation/agent context after orchestrator review. | `Home`, `_Sidebar`, `Agent-Context`, `agent-context.json` | Link check and JSON parse. |
 | Done | Config data-model checklist added to the assets/config atlas. | `Assets-Config-Localization-And-Parameters-Atlas#config-data-model-checklist` | Runtime content-change smoke remains per feature change. |
 | Done | AI respawn branch smoke is now in the testing workflow. | `Testing-Debugging-And-Release-Workflow#minimal-smoke-packs` | Runtime evidence is still pending until vanilla and non-vanilla AI leader death/respawn are run in Arma 2 OA. |
-| P2 | Promote cleanup flag/nested-pair shape rules into the marker/cleanup atlas patch-ready section if not already accepted. | `Marker-Cleanup-Restoration-Systems-Atlas` | Mine expiry and unit-kill garbage smoke. |
+| Done | Cleanup flag/nested-pair shape rules are already accepted in the marker/cleanup atlas patch-ready section. | `Marker-Cleanup-Restoration-Systems-Atlas#patch-ready-findings` | Mine expiry and unit-kill garbage smoke remain the runtime gates before source patch acceptance. |
 | Done | Cleanup/restorer cadence and cost interpretation added to the marker/cleanup atlas. | `Marker-Cleanup-Restoration-Systems-Atlas#cadence-and-cost-interpretation` | Runtime RPT samples still needed before performance tuning patches. |
 | Done | Commander `wfbe_teammode`/`wfbe_teamgoto` source proof added to AI/headless and UI/feature pages. | `AI-Headless-And-Performance#commander-team-order-variables` | Dedicated commander AI order smoke is still pending. |
 
