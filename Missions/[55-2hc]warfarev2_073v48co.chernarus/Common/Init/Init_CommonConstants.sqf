@@ -241,6 +241,8 @@ with missionNamespace do {
 
 //--- Drone Saturation Strike (System B).
 	if (isNil "WFBE_C_DRONE_ENABLED") then {WFBE_C_DRONE_ENABLED = 1}; //--- lobby toggle: shelve the feature without a repack
+	if (isNil "WFBE_C_DRONE_ENHANCED") then {WFBE_C_DRONE_ENHANCED = 1}; //--- optional layer: contrail/flare FX + smooth circling orbit + kill rewards/stats (toggle off = lean mode)
+	if (isNil "WFBE_C_DRONE_KILL_REWARD") then {WFBE_C_DRONE_KILL_REWARD = 600}; //--- supply to the calling side per confirmed drone kill (enhanced layer)
 	if (isNil "WFBE_C_DRONE_FLARE_COUNT") then {WFBE_C_DRONE_FLARE_COUNT = 2}; //--- # flare/CM drones
 	if (isNil "WFBE_C_DRONE_MUNITION_COUNT") then {WFBE_C_DRONE_MUNITION_COUNT = 3}; //--- # loitering munitions
 	if (isNil "WFBE_C_DRONE_INGRESS_SPEED") then {WFBE_C_DRONE_INGRESS_SPEED = 60}; //--- m/s transit

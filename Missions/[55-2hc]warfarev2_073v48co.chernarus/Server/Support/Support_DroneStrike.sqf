@@ -4,7 +4,7 @@
 //--- picks targets, and detonates. Payload: ["DroneStrike", side, callPos, playerTeam].
 
 private ["_side","_destination","_playerTeam","_sideID","_enemySides","_aaTypes","_model","_pilotType","_alt",
-        "_flareN","_total","_zoneR","_warhead","_warhead2","_scatter","_hp","_stagger","_loiterTime","_diveSound",
+        "_flareN","_total","_zoneR","_warhead","_warhead2","_scatter","_hp","_stagger","_loiterTime","_diveSound","_enhanced",
         "_coastDir","_coastDist","_a","_w","_r","_spawnDist","_spawnPos","_drones","_groups","_i","_role","_myAlt",
         "_grp","_drone","_pilot","_activeKey","_active","_x"];
 
@@ -39,6 +39,7 @@ _hp         = WFBE_C_DRONE_HP;
 _stagger    = WFBE_C_DRONE_DIVE_STAGGER;
 _loiterTime = WFBE_C_DRONE_LOITER_TIME;
 _diveSound  = missionNamespace getVariable ["WFBE_C_DRONE_DIVE_SOUND", "inboundMissileGround_cont"];
+_enhanced   = (missionNamespace getVariable ["WFBE_C_DRONE_ENHANCED", 1]) == 1;   //--- optional FX/orbit/reward layer.
 
 ["INFORMATION", Format ["Support_DroneStrike.sqf : [%1] Team [%2] strike at %3 (model %4, enemies %5).", str _side, _playerTeam, _destination, _model, _enemySides]] Call WFBE_CO_FNC_LogContent;
 
@@ -120,18 +121,20 @@ for "_i" from 0 to (_total - 1) do {
     _drone setVariable ["wfbe_sideID", _sideID, false];
     _drone addEventHandler ["HandleDamage", {_this call WFBE_DroneHandleDamage}];
     _drone addEventHandler ["Killed", {[_this select 0, _this select 1, (_this select 0) getVariable "wfbe_sideID"] Spawn WFBE_CO_FNC_OnUnitKilled}];
+    if (_enhanced) then {[nil, "HandleSpecial", ["drone-fx", "trail", _drone]] Call WFBE_CO_FNC_SendToClients};   //--- client-side smoke contrail.
     _drones set [count _drones, _drone];
     _groups set [count _groups, _grp];
 };
 processInitCommands;
 ["INFORMATION", Format ["Support_DroneStrike.sqf : spawned %1 drones (%2 flare / %3 munition, AI-flown) at %4, target %5.", count _drones, _flareN, (_total - _flareN), _spawnPos, _destination]] Call WFBE_CO_FNC_LogContent;
+if (_enhanced && {!isNil "UpdateStatistics"}) then {[str _side, 'VehiclesCreated', count _drones] Call UpdateStatistics};
 
 //--- Drive each drone: AI flies it; the script picks targets + detonates.
 {
     private "_d"; _d = _x;
     [_d, _destination, _zoneR, _loiterTime, _warhead, _warhead2, _scatter, _stagger, _enemySides, _aaTypes, _diveSound] spawn {
-        private ["_d","_dest","_zoneR","_loiterTime","_warhead","_warhead2","_scatter","_stagger","_enemySides","_aaTypes","_diveSound",
-                "_role","_phase","_pilot","_loiterPt","_endT","_idl","_target","_cands","_valid","_aa","_aimObj","_aimPos","_t0","_imp","_ang","_x"];
+        private ["_d","_dest","_zoneR","_loiterTime","_warhead","_warhead2","_scatter","_stagger","_enemySides","_aaTypes","_diveSound","_enhanced","_ms",
+                "_role","_phase","_pilot","_loiterPt","_loiterAng","_endT","_idl","_target","_cands","_valid","_aa","_aimObj","_aimPos","_t0","_imp","_ang","_x"];
         _d          = _this select 0;
         _dest       = _this select 1;
         _zoneR      = _this select 2;
@@ -143,11 +146,14 @@ processInitCommands;
         _enemySides = _this select 8;
         _aaTypes    = _this select 9;
         _diveSound  = _this select 10;
+        _enhanced   = _this select 11;
+        _ms         = _this select 12;
         _role  = _d getVariable "wfbe_drone_role";
         _phase = _d getVariable "wfbe_phase";
         _pilot = driver _d;
         //--- a distinct holding point around the target per drone (spread; no pile-up).
         _loiterPt = [(_dest select 0) + (_zoneR * 0.7) * sin (_phase * 72), (_dest select 1) + (_zoneR * 0.7) * cos (_phase * 72), 0];
+        _loiterAng = _phase * 72;
 
         //--- INGRESS: AI flies to the zone.
         _pilot doMove _loiterPt;
@@ -166,8 +172,9 @@ processInitCommands;
                 };
             }];
             while {alive _d && time < (_endT + 25)} do {
-                _pilot doMove _loiterPt;                       //--- hold station (AI loiters naturally).
+                if (_enhanced) then { _loiterAng = _loiterAng + 28; _pilot doMove [(_dest select 0) + _zoneR * sin _loiterAng, (_dest select 1) + _zoneR * cos _loiterAng, 0]; } else { _pilot doMove _loiterPt; };
                 "F_40mm_White" createVehicle (getPosATL _d);   //--- conspicuous flare pop.
+                if (_enhanced) then {[nil, "HandleSpecial", ["drone-fx", "flarepop", _d]] Call WFBE_CO_FNC_SendToClients};
                 sleep 8;
             };
             if (alive _d) then { {deleteVehicle _x} forEach (crew _d); deleteVehicle _d };
@@ -184,7 +191,7 @@ processInitCommands;
                     };
                 } forEach _cands;
                 if (count _aa > 0) then {_target = _aa select 0} else {if (count _valid > 0) then {_target = _valid select 0}};
-                if (isNull _target) then { _pilot doMove _loiterPt };
+                if (isNull _target) then { if (_enhanced) then { _loiterAng = _loiterAng + 28; _pilot doMove [(_dest select 0) + _zoneR * sin _loiterAng, (_dest select 1) + _zoneR * cos _loiterAng, 0]; } else { _pilot doMove _loiterPt; } };
                 sleep 2;
             };
 
@@ -193,6 +200,7 @@ processInitCommands;
             _aimObj = _target;
             _aimPos = if (!isNull _target && {alive _target}) then {getPos _target} else {_dest};
             _d say3D _diveSound;          //--- dive siren.
+            if (_enhanced) then {[nil, "HandleSpecial", ["drone-fx", "flame", _d]] Call WFBE_CO_FNC_SendToClients};
             _d flyInHeight 16;            //--- descend onto it.
             _pilot doMove _aimPos;
             _t0 = time;
@@ -208,6 +216,16 @@ processInitCommands;
                     _warhead2 createVehicle [_imp select 0, _imp select 1, 130];
                 };
                 ["INFORMATION", Format ["Support_DroneStrike.sqf : munition phase %1 struck %2 (warhead %3).", _phase, _imp, (if (_phase mod 2 == 0) then {_warhead} else {_warhead2})]] Call WFBE_CO_FNC_LogContent;
+                if (_enhanced && {!isNull _aimObj}) then {
+                    [_aimObj, _ms] spawn {
+                        private ["_tg","_sd"]; _tg = _this select 0; _sd = _this select 1;
+                        sleep 5;
+                        if (!alive _tg && {!isNil "ChangeSideSupply"}) then {
+                            [_sd, WFBE_C_DRONE_KILL_REWARD, "Drone strike interdiction", false] call ChangeSideSupply;
+                            if (!isNil "UpdateStatistics") then {[str _sd, 'VehiclesDestroyed', 1] Call UpdateStatistics};
+                        };
+                    };
+                };
                 {deleteVehicle _x} forEach (crew _d); deleteVehicle _d;
             };
         };

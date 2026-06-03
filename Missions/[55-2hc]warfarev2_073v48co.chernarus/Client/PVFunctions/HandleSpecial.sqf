@@ -49,6 +49,34 @@ switch (_request) do {
 			};
 		};
 	};
+	case "drone-fx": {
+		_args spawn {
+			private ["_t","_o","_src","_li"];
+			_t = _this select 0;
+			_o = _this select 1;
+			if (isNull _o) exitWith {};
+			switch (_t) do {
+				case "trail": {
+					_src = "#particlesource" createVehicleLocal (getPosASL _o);
+					_src setDropInterval 0.04;
+					_src setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 0, 1], "", "Billboard", 0.1, 1.4, [0,0,0], [0, 0, 4], 0, 12, 7.9, 0.07, [0.35], [[1,1,1,0.55],[1,1,1,0]], [0], 1, 0, "\CA\Data\ParticleEffects\SCRIPTS\WPTrail.sqf", "", _o];
+					_src setParticleRandom [0.1, [0.25, 0.25, 0], [6, 6, 3], 0, 0.15, [0, 0, 0, 0], 0, 0];
+					[_src, _o] spawn { waitUntil {sleep 1.5; isNull (_this select 1) || !alive (_this select 1)}; deleteVehicle (_this select 0); };
+				};
+				case "flame": {
+					_li = "#lightpoint" createVehicleLocal (getPosASL _o);
+					_li setLightBrightness 1.1; _li setLightAmbient [1,0.5,0.15]; _li setLightColor [1,0.55,0.2];
+					_li lightAttachObject [_o, [0,0,0]];
+					[_li, _o] spawn { waitUntil {sleep 0.4; isNull (_this select 1) || !alive (_this select 1)}; deleteVehicle (_this select 0); };
+				};
+				case "flarepop": {
+					_li = "#lightpoint" createVehicleLocal (getPosASL _o);
+					_li setLightBrightness 1.4; _li setLightAmbient [1,0.92,0.6]; _li setLightColor [1,0.95,0.7];
+					[_li] spawn { sleep 2.5; deleteVehicle (_this select 0); };
+				};
+			};
+		};
+	};
 	case "upgrade-started": {_args spawn WFBE_CL_FNC_Upgrade_Started};
 	case "upgrade-complete": {_args spawn WFBE_CL_FNC_Upgrade_Complete};
 	case "building-started": {_args spawn WFBE_CL_FNC_Building_Started};

@@ -8,6 +8,13 @@
 		texts[] = {"Disabled","Enabled"};
 		default = 1;
 	};
+	// Drone enhanced layer: contrail/flare FX + smooth orbit + kill rewards/stats (off = lean mode).
+	class WFBE_C_DRONE_ENHANCED {
+		title = "Drone Enhanced Layer (FX / orbit / rewards)";
+		values[] = {0,1};
+		texts[] = {"Off","On"};
+		default = 1;
+	};
 	// Marty: Allow admins to run the mission with or without the accelerated day/night cycle.
 	class WFBE_DAYNIGHT_ENABLED {
 		title = "$STR_WF_PARAMETER_DAYNIGHT_ENABLED";
