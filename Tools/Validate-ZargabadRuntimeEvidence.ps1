@@ -64,6 +64,8 @@ Assert-Pattern "server initialization begins" $content 'Init_Server\.sqf: Server
 Assert-Pattern "town starting mode completes" $content 'Init_Server\.sqf: Town starting mode is done'
 Assert-Pattern "Zargabad fortifications and central wall init runs" $content 'Init_Zargabad\.sqf: Spawn fortifications, central wall gaps, and side defenses are placed'
 Assert-Pattern "Zargabad edge guard initializes" $content 'Zargabad_EdgeGuard\.sqf: outer \[[0-9]+\]m rim timeout \[[0-9]+\]s safe range \[[0-9]+\]m'
+Assert-Pattern "runtime audit reports town/camp/airport/defense and SV totals" $content 'Zargabad_RuntimeAudit\.sqf: towns \[13\] camps \[19\] airports \[1\] defenses \[33\] startSV \[185\] maxSV \[648\]'
+Assert-Pattern "runtime audit reports Zargabad economy and range constants" $content 'Zargabad_RuntimeAudit\.sqf: economy supplyCap \[[0-9]+\] teamSupplyCap \[30000\] fastTravelMax \[1800\] respawnCampRange \[400\].*supportRange \[55\].*baseDefenseAI \[56\] baseDefenseRange \[500\] edgeGuard \[120,325,45\]'
 Assert-Pattern "server initialization ends" $content 'Init_Server\.sqf: Server initialization ended'
 
 if ($RequireJip) {

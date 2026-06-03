@@ -29,6 +29,7 @@
     "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Init/Init_Zargabad.sqf",
     "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Module/Zargabad/Zargabad_EdgeGuard.sqf",
     "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Module/Zargabad/Zargabad_BlackMarket.sqf",
+    "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf",
     "Tools/Validate-ZargabadMission.ps1",
     "Tools/Validate-ZargabadRuntimeEvidence.ps1",
     "Guides/Zargabad-Claude-Runtime-Handoff.md",
@@ -96,7 +97,11 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/Validate-ZargabadRuntimeEvidence.ps1 is ready for Claude/runtime RPT validation and checks server/town/Zargabad/edge-guard init, optional JIP/HC/edge-removal/black-market evidence, and common missing-script/dependency/expression failures."
+      "summary": "Tools/Validate-ZargabadRuntimeEvidence.ps1 is ready for Claude/runtime RPT validation and checks server/town/Zargabad/edge-guard/runtime-audit init, expected runtime count/SV/economy/range evidence, optional JIP/HC/edge-removal/black-market evidence, and common missing-script/dependency/expression failures."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Zargabad_RuntimeAudit logs runtime towns/camps/airports/defenses, start/max SV totals, and smaller-map economy/range/base-defense/edge-guard constants into RPT."
     },
     {
       "type": "source-audit",
@@ -109,6 +114,6 @@
   ],
   "result": "partial",
   "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md and Tools/Validate-ZargabadRuntimeEvidence.ps1 for RPT evidence.",
-  "updatedAt": "2026-06-03T01:50:13+02:00",
+  "updatedAt": "2026-06-03T01:56:44+02:00",
   "updatedBy": "Codex"
 }

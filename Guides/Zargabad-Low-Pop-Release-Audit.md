@@ -95,6 +95,8 @@ Static validation currently proves the editor data shape, not tactical effective
 
 `Tools/Validate-ZargabadRuntimeEvidence.ps1` is the repeatable RPT validator for Claude/runtime testers. It checks that Zargabad appears in supplied RPT logs, server/town/Zargabad/edge-guard init completed, optional JIP/HC/edge-removal/black-market evidence appears when requested, and common Arma missing-script/dependency/expression failures are absent.
 
+`Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf` is launched from `Init_Zargabad.sqf` and logs the runtime town/camp/airport/defense counts, start/max SV totals, and core Zargabad economy/range/base-defense/edge-guard constants. This gives Claude a concrete RPT target for checking that the in-game mission matches the static map audit.
+
 Known verification gap: no in-game Arma 2 OA hosted/dedicated/JIP/HC smoke has been run from this environment.
 
 ## Required Playtest Gates

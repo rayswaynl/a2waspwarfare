@@ -80,5 +80,6 @@ _sides = [[west, 45], [east, 225]];
 
 [] execVM "Server\Module\Zargabad\Zargabad_EdgeGuard.sqf";
 [] execVM "Server\Module\Zargabad\Zargabad_BlackMarket.sqf";
+[] execVM "Server\Module\Zargabad\Zargabad_RuntimeAudit.sqf";
 
 ["INITIALIZATION", "Init_Zargabad.sqf: Spawn fortifications, central wall gaps, and side defenses are placed."] Call WFBE_CO_FNC_LogContent;
