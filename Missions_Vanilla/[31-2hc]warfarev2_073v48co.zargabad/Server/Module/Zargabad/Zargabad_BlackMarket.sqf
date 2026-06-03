@@ -36,6 +36,7 @@ while {true} do {
 			sleep 300;
 			if (!isNull _smoke) then {deleteVehicle _smoke};
 			if (!isNull _box) then {_box setVariable ["wfbe_trashable", true]};
+			["INFORMATION", Format ["Zargabad_BlackMarket.sqf: cache [%1] cleanup released near [%2].", _type, _pos]] Call WFBE_CO_FNC_LogContent;
 		};
 	};
 };

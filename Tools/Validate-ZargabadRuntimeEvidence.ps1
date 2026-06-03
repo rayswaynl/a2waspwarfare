@@ -84,6 +84,7 @@ if ($RequireEdgeGuardRemoval) {
 }
 if ($RequireBlackMarket) {
 	Assert-Pattern "black-market cache event evidence" $content 'Zargabad_BlackMarket\.sqf: \[[^\r\n]+\] cache \[[^\r\n]+\] surfaced near'
+	Assert-Pattern "black-market cache cleanup evidence" $content 'Zargabad_BlackMarket\.sqf: cache \[[^\r\n]+\] cleanup released near'
 }
 
 Assert-NoPattern "missing script or include file" $content 'Script [^\r\n]+ not found|Include file [^\r\n]+ not found'

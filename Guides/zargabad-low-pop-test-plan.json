@@ -68,7 +68,7 @@
     "Wake city, airfield and one outer farm with ground units; confirm town AI and static defenses activate, face useful approaches after the Zargabad orientation pass, fight, and clean up after inactivity.",
     "Capture camps and then a town from both WEST and EAST; confirm camp/town SV drains, resets on capture, and income ticks reflect ownership.",
     "Buy representative infantry, light, heavy, aircraft and airport units; confirm Zargabad lists exclude MBTs/heavy attack aircraft and price multipliers feel sane.",
-    "Own Zargabad Airfield as WEST or EAST and wait for the black-market cache event; confirm crate/smoke spawn, ownership gating and cleanup.",
+    "Own Zargabad Airfield as WEST or EAST and wait for the black-market cache event; confirm crate/smoke spawn, ownership gating, RPT spawn evidence and RPT cleanup-release evidence.",
     "Run one HC-enabled smoke if headless client is used by the server and confirm town AI/static defense behavior does not regress."
   ],
   "expected": [
@@ -112,7 +112,7 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/Validate-ZargabadRuntimeEvidence.ps1 is ready for Claude/runtime RPT validation and checks server/town/Zargabad/edge-guard/runtime-audit init, expected runtime count/SV/base/fortification/factory restriction/price multiplier/economy/range evidence, optional JIP/HC/edge-removal/black-market evidence, and common missing-script/dependency/expression failures."
+      "summary": "Tools/Validate-ZargabadRuntimeEvidence.ps1 is ready for Claude/runtime RPT validation and checks server/town/Zargabad/edge-guard/runtime-audit init, expected runtime count/SV/base/fortification/factory restriction/price multiplier/economy/range evidence, optional JIP/HC/edge-removal/black-market spawn and cleanup evidence, and common missing-script/dependency/expression failures."
     },
     {
       "type": "source-audit",
@@ -137,6 +137,6 @@
   ],
   "result": "partial",
   "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports after each Codex commit or runtime gate.",
-  "updatedAt": "2026-06-03T05:05:00+02:00",
+  "updatedAt": "2026-06-03T05:18:00+02:00",
   "updatedBy": "Codex"
 }

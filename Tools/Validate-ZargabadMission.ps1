@@ -269,6 +269,12 @@ $runtimeReportTool = Join-Path (Resolve-RepoPath "Tools") "New-ZargabadRuntimeRe
 
 Assert-True "source mystery feature under 100 non-empty LOC" ((Get-NonEmptyLineCount $sourceBlackMarket) -le 100)
 Assert-True "generated mystery feature under 100 non-empty LOC" ((Get-NonEmptyLineCount $generatedBlackMarket) -le 100)
+$blackMarketSource = Get-Content -Raw -LiteralPath $sourceBlackMarket
+Assert-True "mystery feature is airfield ownership gated" ($blackMarketSource -match 'Zargabad Airfield' -and $blackMarketSource -match 'sideID' -and $blackMarketSource -match 'WFBE_C_WEST_ID, WFBE_C_EAST_ID')
+Assert-True "mystery feature reuses side para-ammo arrays" ($blackMarketSource -match 'WFBE_%1PARAAMMO')
+Assert-True "mystery feature uses smoke and trash cleanup lifecycle" ($blackMarketSource -match 'SmokeShellYellow' -and $blackMarketSource -match 'wfbe_trashable", false' -and $blackMarketSource -match 'deleteVehicle _smoke' -and $blackMarketSource -match 'wfbe_trashable", true')
+Assert-True "mystery feature logs cache spawn and cleanup evidence" ($blackMarketSource -match 'surfaced near' -and $blackMarketSource -match 'cleanup released')
+Assert-True "mystery feature has five bounded cache positions" (Test-ContainsAll -Content $blackMarketSource -Needles @("[3930,3995,0]", "[4100,3825,0]", "[4235,4040,0]", "[4970,3890,0]", "[3310,3865,0]"))
 Assert-True "source edge guard under 100 non-empty LOC" ((Get-NonEmptyLineCount $sourceEdgeGuard) -le 100)
 Assert-True "generated edge guard under 100 non-empty LOC" ((Get-NonEmptyLineCount $generatedEdgeGuard) -le 100)
 $edgeGuardSource = Get-Content -Raw -LiteralPath $sourceEdgeGuard

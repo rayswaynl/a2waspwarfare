@@ -87,7 +87,8 @@ Static validation currently proves the editor data shape, not tactical effective
 - Waits for town initialization.
 - Requires WEST or EAST ownership of `Zargabad Airfield`.
 - Reuses existing side para-ammo arrays and smoke/trash handling.
-- Current non-empty line count: 35.
+- Keeps the crate out of normal trash cleanup during the event, releases it after 300 seconds, and logs both the cache surfacing and cleanup release to RPT.
+- Current non-empty line count: 36.
 
 ## Verification Completed
 
@@ -101,7 +102,7 @@ Static validation currently proves the editor data shape, not tactical effective
 
 `Tools/Validate-ZargabadMission.ps1` is the repeatable local validator for this PR. It parses the generated Zargabad `mission.sqm`, checks town/camp/airport/start/defense counts, sync targets, 6000m boundary containment, edge-rim safe-zone footprint, default start anchors/headings/separation, SV totals, town camp/defense coverage, camp distance bands, defense approach distances, high-value objective defense depth, smaller-map economy/range/cap constants, runtime defense-orientation hook, mystery feature LOC, edge-guard LOC/hooks, central-wall template/gaps, and Takistan spillover.
 
-`Tools/Validate-ZargabadRuntimeEvidence.ps1` is the repeatable RPT validator for Claude/runtime testers. It checks that Zargabad appears in supplied RPT logs, server/town/Zargabad/edge-guard init completed, the town-defense orientation pass handled all 33 defense logics, runtime audit count/SV/base/factory/price/economy evidence appears, optional JIP/HC/edge-removal/black-market evidence appears when requested, and common Arma missing-script/dependency/expression failures are absent.
+`Tools/Validate-ZargabadRuntimeEvidence.ps1` is the repeatable RPT validator for Claude/runtime testers. It checks that Zargabad appears in supplied RPT logs, server/town/Zargabad/edge-guard init completed, the town-defense orientation pass handled all 33 defense logics, runtime audit count/SV/base/factory/price/economy evidence appears, optional JIP/HC/edge-removal/black-market spawn and cleanup evidence appears when requested, and common Arma missing-script/dependency/expression failures are absent.
 
 `Tools/New-ZargabadRuntimeReport.ps1` wraps the runtime validator and emits a compact markdown gate snapshot, failure scan, key RPT excerpts, and Claude note prompts. Claude should paste this report back to Codex after each hosted/dedicated/JIP/HC pass so runtime findings are frequent, evidence-backed, and easy to act on.
 

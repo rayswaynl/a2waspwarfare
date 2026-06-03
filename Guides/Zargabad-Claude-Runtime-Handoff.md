@@ -41,7 +41,7 @@ Claude/runtime tester should keep going until there is RPT and short note eviden
 | Side hills/rim | Extreme-rim ground camping is removed after the configured timeout; objective-near fights and aircraft are not punished. |
 | Economy | City/airfield are valuable without runaway snowball; farms/outskirts stay lower-value flank objectives. |
 | Factory lists/costs | MBTs/heavy attack aircraft are absent from normal Zargabad factory flow; light/heavy/air/airport price multipliers are visible. |
-| Mystery feature | Owning Zargabad Airfield can surface the black-market cache; crate/smoke cleanup behaves normally. |
+| Mystery feature | Owning Zargabad Airfield can surface the black-market cache; RPT proves cache spawn and cleanup release. |
 
 ## Commands For Evidence
 
@@ -90,7 +90,7 @@ Use `-AllowKnownDisconnectScoreErrors` only if the only RPT `ERROR` lines are th
 - RPT excerpt for edge-guard init and, if tested, removal.
 - RPT excerpt for `Init_Zargabad.sqf: Oriented [33] town defense logics toward linked town centers`.
 - RPT excerpt for the `Zargabad_RuntimeAudit.sqf` count/SV, base/static/wall, base static template, factory restriction, price multiplier/sample, and economy/range lines.
-- RPT excerpt for black-market cache surfacing.
+- RPT excerpts for black-market cache surfacing and cleanup release.
 - Any observed town where static defenses still face the wrong route or block normal movement after the orientation pass.
 - Any economy issue where city/airfield income or vehicle pricing snowballs too fast in a 5v5-style test.
 

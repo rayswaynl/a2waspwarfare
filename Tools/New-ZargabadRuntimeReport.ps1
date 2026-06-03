@@ -89,6 +89,7 @@ $gates = @(
 	[ordered]@{ Name = "Headless client"; Pattern = 'Server_HandleSpecial\.sqf: Headless client is now connected'; Required = [bool]$RequireHeadlessClient },
 	[ordered]@{ Name = "Edge guard removal"; Pattern = 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] removed from edge rim'; Required = [bool]$RequireEdgeGuardRemoval },
 	[ordered]@{ Name = "Black-market cache"; Pattern = 'Zargabad_BlackMarket\.sqf: \[[^\r\n]+\] cache \[[^\r\n]+\] surfaced near'; Required = [bool]$RequireBlackMarket },
+	[ordered]@{ Name = "Black-market cleanup"; Pattern = 'Zargabad_BlackMarket\.sqf: cache \[[^\r\n]+\] cleanup released near'; Required = [bool]$RequireBlackMarket },
 	[ordered]@{ Name = "Server init ends"; Pattern = 'Init_Server\.sqf: Server initialization ended'; Required = $true }
 )
 
