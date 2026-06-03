@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Boot/Lifecycle Review Status Closure
+
+- Closed the stale `boot-lifecycle-perf-jip-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); DR-37 is already integrated into [Lifecycle wait-chain](Lifecycle-Wait-Chain), [Development lessons learned](Development-Lessons-Learned), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Agent context](Agent-Context) and [Deep review findings](Deep-Review-Findings#round-28--2026-06-02-claude--bootlifecycle-perf--jiphc-dr-37-reviewed-clean-one-robustness-note).
+- Evidence checked: `Init_Client.sqf:367-502` still has timeout-less post-join waits for replicated `wfbe_*`/town state, while `Init_Client.sqf:416-456` uses retrying 30-second join/launch ACK handshakes. `initJIPCompatible.sqf:224-238` still routes client and HC roles through separate branches.
+- Corrected [Lifecycle wait-chain](Lifecycle-Wait-Chain)'s residual self-test drift: current tracked source has no root `init.sqf`, no `test/` directory, no `*selftest*` file and no `WASP-SELFTEST`; `rg --files` only finds nested feature init files such as `WASP/baserep/init.sqf`.
+
 ## 2026-06-03 - Codex Documentation Finisher: Victory Review Status Closure
 
 - Closed the stale `victory-perf-jip-review` ready-for-review record in [`agent-collaboration.json`](agent-collaboration.json); the requested DR-36 cross-linking is already published in [Feature status](Feature-Status-Register), [Hardening roadmap](Hardening-Implementation-Roadmap), [Victory/endgame atlas](Victory-And-Endgame-Atlas), [Server runtime atlas](Server-Gameplay-Runtime-Atlas), [Codebase coverage ledger](Codebase-Coverage-Ledger) and [Deep review findings](Deep-Review-Findings#round-27--2026-06-02-claude--victoryendgame-perf--jiphc-dr-36-source-mechanism-for-dr-11dr-13).

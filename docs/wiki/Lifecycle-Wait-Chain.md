@@ -25,7 +25,7 @@ Role is computed in `initJIPCompatible.sqf:52-56`. `isHeadLessClient` comes from
 ## Engine-driven entry order (every machine)
 
 1. Engine parses `description.ext` → `#include "version.sqf"` (preprocessor `#define`s) + all `Rsc/*.hpp`, `Sounds/`, `Music/` includes.
-2. Engine runs `init.sqf` (server-only: spawns `test/wasp_selftest.sqf`).
+2. Current tracked source has no root `init.sqf`; `rg --files` finds only nested feature init files such as `WASP/baserep/init.sqf`, and [WASP overlay](WASP-Overlay) records the old `test/wasp_selftest.sqf` description as a documentation error.
 3. Engine runs `initJIPCompatible.sqf` — the **master bootstrap**, including on JIP clients.
 
 Mission object init fields are also part of startup. In the Chernarus source mission, town logic objects call `Common\Init\Init_Town.sqf` from `mission.sqm`, while the `WF_Logic` object at `mission.sqm:3265` seeds town-mode lists and starts `Common\Init\Init_TownMode.sqf`. Treat `mission.sqm` as an init source when auditing town lifecycle, not just as map placement data.
@@ -52,7 +52,7 @@ Each row: a flag, where it is **set**, and the `waitUntil` barriers it **unblock
 | `WFBE_Parameters_Ready` | `initJIPCompatible.sqf:212` | `Common/Init/Init_TownMode.sqf:3`, `Init_Town.sqf:18` |
 | `townModeSet` | `Common/Init/Init_TownMode.sqf:21`, started by `mission.sqm:3265` | `Init_Towns.sqf:3`, `Init_Town.sqf:18` |
 | `BIS_fnc_init` (engine) | engine | `Common/Init/Init_Common.sqf:205-206` |
-| `WFBE_PRESENTSIDES` | `Common/Init/Init_Common.sqf:282` | client branch `initJIPCompatible.sqf:235`; `test/wasp_selftest.sqf` |
+| `WFBE_PRESENTSIDES` | `Common/Init/Init_Common.sqf:282` | client branch `initJIPCompatible.sqf:225`; no live self-test consumer exists in current tracked source |
 | `commonInitComplete` | `Common/Init/Init_Common.sqf:371` | `Init_Server.sqf:127`, `Init_Client.sqf:165`, `Init_Town.sqf:42`, `Init_Unit.sqf:18` |
 | `townInit` | `Common/Init/Init_Towns.sqf:13` | `Init_Server.sqf:127`, client FSM launches, `Init_Client.sqf:596` |
 | `serverInitComplete` | `Init_Server.sqf:117` | town model creation in `Init_Town.sqf:92` |

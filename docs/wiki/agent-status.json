@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T19:35:00+02:00",
+  "generatedAt": "2026-06-03T19:40:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed stale victory-perf-jip-review collaboration status: Feature Status, Hardening Roadmap, Victory/endgame atlas, Server runtime atlas and Coverage Ledger already route DR-11/DR-36; source still needs the P1 victory correctness patch.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another feature-status reconciliation item, remaining machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
+      "currentWork": "Closed stale boot-lifecycle-perf-jip-review collaboration status and corrected Lifecycle wait-chain self-test drift: DR-37 is already published; source still has timeout-less post-join waits as a robustness owner choice.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: factory perf-JIP review, generated-mission drift review, another feature-status reconciliation item or remaining machine-readable stale-status cleanup with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "boot-lifecycle-review-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "agent-collaboration.json no longer advertises boot-lifecycle-perf-jip-review as ready-for-review. Lifecycle-Wait-Chain, Development Lessons, Coverage Ledger, Agent Context and Deep Review already document DR-37: boot/JIP clean, 30-second join/launch ACK retries are distinct from raw timeout-less post-join waits. Lifecycle-Wait-Chain also no longer claims a root init.sqf/test/wasp_selftest.sqf path exists."
+    },
     {
       "lane": "victory-review-status-closure",
       "owner": "Codex",

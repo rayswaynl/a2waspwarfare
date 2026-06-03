@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T19:35:00+02:00",
+  "generatedAt": "2026-06-03T19:40:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,30 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "boot-lifecycle-review-status-closure",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/Lifecycle-Wait-Chain.md",
+        "docs/wiki/Development-Lessons-Learned.md",
+        "docs/wiki/Codebase-Coverage-Ledger.md",
+        "docs/wiki/Agent-Context.md",
+        "docs/wiki/Deep-Review-Findings.md",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf"
+      ],
+      "outputs": [
+        "Closed stale boot-lifecycle-perf-jip-review ready-for-review status",
+        "Confirmed DR-37 timeout-less wait-chain note is already integrated into Lifecycle-Wait-Chain and lessons/context files",
+        "Corrected residual Lifecycle-Wait-Chain self-test drift: no root init.sqf/test/wasp_selftest.sqf exists"
+      ],
+      "handoff": "Future lifecycle owner should use Lifecycle-Wait-Chain#post-join-wait-audit before editing Init_Client waits. This closure is status-only for source: defensive timeouts/logs around post-join replicated-variable waits remain an owner robustness improvement, while normal boot/JIP is reviewed clean."
+    },
     {
       "lane": "victory-review-status-closure",
       "owner": "Codex",
@@ -2139,7 +2163,7 @@
     {
       "lane": "boot-lifecycle-perf-jip-review",
       "owner": "Claude",
-      "status": "ready-for-review",
+      "status": "published-validated",
       "sourceScope": [
         "Missions/[55-2hc]...chernarus/initJIPCompatible.sqf",
         "Missions/[55-2hc]...chernarus/Client/Init/Init_Client.sqf"
@@ -2148,7 +2172,7 @@
         "Deep-Review-Findings.md (Round 28 / DR-37)",
         "Codebase-Coverage-Ledger.md (Boot/lifecycle Perf+JIP-HC)"
       ],
-      "handoff": "Codex: optionally note in Lifecycle-Wait-Chain that the post-join wfbe_* waitUntil chain (Init_Client.sqf:367-502) is timeout-less (a single missed server broadcast = permanent JIP hang with no log). Owner decision: add defensive timeouts (mirroring the RequestJoin handshake's 30s retry) or accept fail-silent."
+      "handoff": "Historical Claude review now closed by boot-lifecycle-review-status-closure. Lifecycle-Wait-Chain, Development Lessons, Coverage Ledger, Agent Context and Deep Review already route DR-37 and distinguish retrying join/launch handshakes from raw timeout-less post-join waits. Source remains unchanged; defensive timeouts/logging are an owner robustness choice."
     },
     {
       "lane": "victory-perf-jip-review",
