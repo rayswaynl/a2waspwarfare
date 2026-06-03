@@ -1,5 +1,14 @@
 # Agent Worklog
 
+## 2026-06-04T00:12:00+0200 - Codex - branch-feature-smoke-pack
+
+- Added a planned [branch-only feature smoke pack](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) for branch features that now have promotion gates.
+- Covered `origin/feat/ai-commander` head `4dba060e`: no-human full command, human assist/no-spend, order execution, production cap, upgrade debit/costs, commander handoff, HQ death, JIP and optional HC smoke.
+- Covered `origin/feat/drone-saturation-strike` head `8ca4be90`: paid-support authority, server-side debit/cooldown/upgrade/caller validation, active-cap cleanup, JIP cooldown, targeting/audience/score effects, performance and generated scope.
+- Covered `origin/feat/recon-uav` head `563418ea`: old-UAV replacement, deploy/recall, reveal audience, cap cleanup, destroyed-UAV cleanup, HQ-loss cleanup, JIP and generated scope.
+- Updated [Feature status register](Feature-Status-Register), [Progress dashboard](Progress-Dashboard) and [`agent-release-readiness.json`](agent-release-readiness.json) so agents can find the planned smoke matrix before merge/release claims.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-03T23:59:00+0200 - Codex - branch-feature-promotion-gates
 
 - Converted the latest branch-intel findings into explicit owner/release gates so useful branch evidence does not read as stable-master or release-ready truth.

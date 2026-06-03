@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T23:59:00+02:00",
+  "generatedAt": "2026-06-04T00:12:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Promoted branch-only AI commander, DroneStrike and ReconUAV findings into explicit owner-decision and release-readiness gates so useful branch evidence cannot be mistaken for stable-master or release-ready truth.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: remaining feature-status reconciliation, P0/P1 accuracy drift with exact source refs, or deeper release/readiness smoke planning."
+      "currentWork": "Added a concrete planned branch-feature smoke pack for AI commander, DroneStrike and ReconUAV so release owners can distinguish source review from actual dedicated/JIP/HC/live-server-sensitive evidence.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: remaining feature-status reconciliation, P0/P1 accuracy drift with exact source refs, or source-status refresh for newly fetched branches."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "branch-feature-smoke-pack",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Testing-Debugging-And-Release-Workflow now has a Branch-Only Feature Smoke Pack for origin/feat/ai-commander, origin/feat/drone-saturation-strike and origin/feat/recon-uav. Feature Status links to it, and agent-release-readiness.json records planned-not-run coverage levels for AI commander dedicated/JIP/HC, DroneStrike dedicated/JIP/live-server-sensitive and ReconUAV dedicated/JIP checks."
+    },
     {
       "lane": "branch-feature-promotion-gates",
       "owner": "Codex",

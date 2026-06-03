@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T23:59:00+02:00",
+  "generatedAt": "2026-06-04T00:12:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,27 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "branch-feature-smoke-pack",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Testing-Debugging-And-Release-Workflow.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/agent-release-readiness.json",
+        "docs/wiki/Progress-Dashboard.md",
+        "origin/feat/ai-commander",
+        "origin/feat/drone-saturation-strike",
+        "origin/feat/recon-uav"
+      ],
+      "outputs": [
+        "Added planned dedicated/JIP/HC smoke gates for feat/ai-commander",
+        "Added planned dedicated/JIP/live-server-sensitive smoke gates for paid DroneStrike support",
+        "Added planned dedicated/JIP smoke gates for ReconUAV old-module replacement and reveal/recall cleanup",
+        "Linked Feature Status rows and agent-release-readiness.json to the branch-only feature smoke pack"
+      ],
+      "handoff": "Future branch/release owners should record actual test evidence against the Branch-Only Feature Smoke Pack before changing planned-not-run status to passed, failed or blocked. The current update is a smoke plan, not runtime proof."
+    },
     {
       "lane": "branch-feature-promotion-gates",
       "owner": "Codex",

@@ -92,6 +92,12 @@ The branch also changes behavior, not only missing plumbing. `Rsc/Parameters.hpp
 
 Development rule: when a branch revives a dormant feature, document three labels before anyone merges or builds on it: default behavior change, propagation scope and runtime smoke state. For AI commander, smoke no-human full command, human-commander assist/no-spend, order execution, AI production cap, upgrade funds/supply, commander vote/revote, HQ death, JIP and Vanilla propagation before calling the feature revived.
 
+## Lesson 11: Smoke Plans Are Not Runtime Proof
+
+The branch-only feature smoke pack is intentionally marked planned. It tells release owners how to test `feat/ai-commander`, `feat/drone-saturation-strike` and `feat/recon-uav`, but it is not evidence that those features work in Arma 2 OA. The matching machine ledger keeps `plannedSmoke.status = planned-not-run` for each branch gate until a tester records RPT snippets, manual observations or artifacts against the [agent test schema](agent-test-plan.schema.json).
+
+Development rule: never promote `planned`, `source-only` or checklist text into `passed`, `stable`, `release-ready` or `smoked` wording. A smoke claim needs target branch/commit, mission variant, server mode, relevant params, steps, observations and failure-signal review. If those are missing, keep the state as planned and link the checklist.
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |

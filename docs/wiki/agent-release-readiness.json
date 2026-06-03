@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-03T23:59:00+02:00",
-  "lastVerifiedAt": "2026-06-03T23:59:00+02:00",
+  "generatedAt": "2026-06-04T00:12:00+02:00",
+  "lastVerifiedAt": "2026-06-04T00:12:00+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -71,7 +71,16 @@
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:29-81 on origin/feat/ai-commander"
       ],
       "ownerDecision": "Accept or reject default-on AI commander and human-assist mode; decide autonomous logistics scope separately because the old UpdateSupplyTruck path is guarded, not restored.",
-      "promotionGate": "Propagate/review maintained Vanilla, then smoke no-human full command, human assist/no-spend, order execution, town assignment, production cap, upgrade debit/costs, commander handoff, HQ death and JIP before calling AI commander revived."
+      "promotionGate": "Propagate/review maintained Vanilla, then smoke no-human full command, human assist/no-spend, order execution, town assignment, production cap, upgrade debit/costs, commander handoff, HQ death and JIP before calling AI commander revived.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "dedicated-smoke",
+          "jip-smoke",
+          "hc-smoke"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
     },
     {
       "id": "drone-saturation-strike-branch",
@@ -91,7 +100,16 @@
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf DroneStrike/ChangePlayerFunds/RequestSpecial on origin/feat/drone-saturation-strike"
       ],
       "ownerDecision": "Decide whether DroneStrike is a paid economy-affecting support. If yes, server must own acceptance, debit, cooldown, upgrade, caller/team/side and map validation.",
-      "promotionGate": "Move paid-support authority server-side, choose generated Vanilla propagation or explicit Chernarus-only scope, then smoke active cap cleanup, JIP cooldown, marker/audience behavior, resistance targeting, score effects and performance."
+      "promotionGate": "Move paid-support authority server-side, choose generated Vanilla propagation or explicit Chernarus-only scope, then smoke active cap cleanup, JIP cooldown, marker/audience behavior, resistance targeting, score effects and performance.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "dedicated-smoke",
+          "jip-smoke",
+          "live-server-sensitive"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
     },
     {
       "id": "recon-uav-branch",
@@ -112,7 +130,15 @@
         "origin/feat/recon-uav includes drone history only through 93b47594, not origin/feat/drone-saturation-strike head 8ca4be90"
       ],
       "ownerDecision": "Decide whether ReconUAV replaces the old UAV feature or remains experimental.",
-      "promotionGate": "Resolve drone tuning baseline, then smoke old-UAV removal, deploy/recall, cap decrement, destroyed-UAV cleanup, side-only reveal audience, JIP during active orbit, HQ-loss cleanup and generated Vanilla propagation."
+      "promotionGate": "Resolve drone tuning baseline, then smoke old-UAV removal, deploy/recall, cap decrement, destroyed-UAV cleanup, side-only reveal audience, JIP during active orbit, HQ-loss cleanup and generated Vanilla propagation.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "dedicated-smoke",
+          "jip-smoke"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
     }
   ],
   "sourceOnlyFixes": [
