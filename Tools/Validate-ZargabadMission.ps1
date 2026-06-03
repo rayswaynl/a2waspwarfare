@@ -419,6 +419,7 @@ Assert-True "Claude brief tool emits coordination cadence" ($claudeBriefSource -
 Assert-True "Claude brief tool requires post-commit updates" ($claudeBriefSource -match 'after every commit or material mission/tooling change')
 Assert-True "Claude brief tool listens to evidence-backed findings" ($claudeBriefSource -match 'RPT excerpts, screenshots, coordinates, or repeatable repro steps')
 Assert-True "Claude brief tool emits retest focus" ($claudeBriefSource -match '## Retest Focus')
+Assert-True "Claude brief tool emits base static runtime position retest focus" ($claudeBriefSource -match 'Base statics: compare the Init_Zargabad base static runtime positions line' -and $claudeBriefSource -match 'Base static runtime positions WEST \.\.\. EAST \.\.\.')
 Assert-True "Claude brief tool emits defense mix retest focus" ($claudeBriefSource -match 'Town defenses: retest priority defense mix arcs')
 Assert-True "Claude brief tool carries stop/go ownership" ($claudeBriefSource -match 'Codex owns the stop/go call')
 Assert-True "Claude brief tool points to map audit packet" ($claudeBriefSource -match 'New-ZargabadMapAuditPacket\.ps1')
