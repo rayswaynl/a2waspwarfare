@@ -1,37 +1,70 @@
-# SQF Code Atlas
+﻿# SQF Code Atlas
 
 This page is the first deeper code-level atlas for the Chernarus source mission. It is generated from source inspection, not memory.
 
 Source mission: `Missions/[55-2hc]warfarev2_073v48co.chernarus`
 
+## What this atlas is
+
+- A source-first map of compile registration and execution owners.
+- A dependency map for how mission-side systems wire into runtime, plus canonical link targets for deeper subsystem playbooks.
+- A duplicate-control surface: it keeps authoritative pointers but avoids re-stating full deep-review evidence in every feature page.
+
+## Where it lives and how it runs
+
+- Path: `docs/wiki/SQF-Code-Atlas.md`.
+- Source owner: `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
+- Runtime anchors: `initJIPCompatible.sqf`, `Common/Init/Init_Common.sqf`, `Init_Server.sqf`, `Init_Client.sqf`, `Init_HC.sqf`.
+- Scope boundary: this atlas maps compile ownership and risk hotspots; implementation order and authority behavior live in subsystem atlases and feature lanes.
+
+## Related routing
+
+- Launch path: [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle) and [Lifecycle wait-chain](Lifecycle-Wait-Chain).
+- Networking and authority: [Public variable channel index](Public-Variable-Channel-Index), [Networking and public variables](Networking-And-Public-Variables), [Feature status register](Feature-Status-Register).
+- Subsystem follow-up:
+  - [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas)
+  - [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas)
+  - [Economy, towns and supply](Economy-Towns-And-Supply)
+
 ## Compile Registry Summary
 
-The source mission contains 659 `preprocessFile` references:
+Point-in-time recount: 2026-06-02, source mission `Missions/[55-2hc]warfarev2_073v48co.chernarus`, all `.sqf` files, `Select-String -SimpleMatch 'preprocessFile'`. This deliberately counts `preprocessFile` as a substring of `preprocessFileLineNumbers`, so plain `preprocessFile` is `total - preprocessFileLineNumbers`. See [Deep-review findings](Deep-Review-Findings) DR-5 for why these counts must be regenerated before relying on them.
+
+The source mission currently contains 739 `preprocessFile` references:
 
 | Kind | Count | Notes |
 | --- | ---: | --- |
-| `preprocessFileLineNumbers` | 452 | Preferred for source-backed runtime errors and debugging. |
-| plain `preprocessFile` | 207 | Older or performance/legacy style compiles; still common in init files. |
+| `preprocessFileLineNumbers` | 460 | Preferred for source-backed runtime errors and debugging. |
+| plain `preprocessFile` | 279 | Older or performance/legacy style compiles; still common in init files. |
 | commented compile references | 21 | Includes disabled systems, duplicate old lines and experiments. |
+
+Regenerate from the mission root with:
+
+```powershell
+$files = Get-ChildItem -Recurse -Filter *.sqf
+$total = ($files | Select-String -SimpleMatch 'preprocessFile').Count
+$lineNumbers = ($files | Select-String -SimpleMatch 'preprocessFileLineNumbers').Count
+[pscustomobject]@{ Total = $total; PreprocessFileLineNumbers = $lineNumbers; PlainPreprocessFile = $total - $lineNumbers }
+```
 
 Target area counts:
 
 | Target area | Count |
 | --- | ---: |
-| `Common` | 424 |
-| `Client` | 140 |
-| `Server` | 90 |
-| `WASP` / `Wasp` | 3 |
-| `Headless` | 1 |
-| `briefing.sqf` | 1 |
+| root/bootstrap `.sqf` files | 7 |
+| `Common` | 492 |
+| `Client` | 143 |
+| `Server` | 92 |
+| `Headless` | 4 |
+| `WASP` | 1 |
 
 Top source registrars:
 
 | Registrar | Count |
 | --- | ---: |
-| `Common/Init/Init_Common.sqf` | 187 |
+| `Common/Init/Init_Common.sqf` | 196 |
 | `Client/Init/Init_Client.sqf` | 112 |
-| `Server/Init/Init_Server.sqf` | 89 |
+| `Server/Init/Init_Server.sqf` | 90 |
 | `Common/Config/Core_Root/Root_GUE.sqf` | 12 |
 | `Common/Config/Core_Root/Root_TKA.sqf` | 12 |
 | `Common/Config/Core_Root/Root_USMC.sqf` | 12 |
@@ -90,7 +123,7 @@ Risk notes:
 
 - `UpdateSupplyTruck` is commented while `Server/AI/AI_UpdateSupplyTruck.sqf` still exists and references a missing `Server/FSM/supplytruck.fsm`; treat autonomous AI supply logistics as broken/deferred.
 - `WFBE_CO_FNC_monitorServerFPS` is commented as a compile target but server FPS is still run directly elsewhere.
-- `WFBE_SE_FNC_MASH_MARKER` appears once active and once commented in the init file; MASH marker status requires careful source verification before changes.
+- `WFBE_SE_FNC_MASH_MARKER` appears once active and once commented in server init, but DR-34 resolves the status: the MASH map-marker feature is dead/abandoned. `Client/Init/Init_Client.sqf:132` comments out the receiver compile, `WFBE_CL_MASH_MARKER_CREATED` has no emitter, and the live server PVEH in `Server/Module/MASH/MASHMarker.sqf` is orphaned. MASH tents remain a separate deployable officer feature.
 
 ### `Client/Init/Init_Client.sqf`
 
@@ -156,7 +189,7 @@ Client-bound PVF commands:
 
 PVF dispatch mechanics:
 
-- Server-bound packets start as `[Command, params...]`; `Common_SendToServer`/`Common_SendToServerOptimized` rewrites index 0 to `SRVFNC<Command>`.
+- Server-bound packets start as `[Command, payload...]`; `Common_SendToServer`/`Common_SendToServerOptimized` rewrites index 0 to `SRVFNC<Command>`.
 - Client-bound packets use the command at index 1; `Common_SendToClient` and `Common_SendToClients` rewrite it to `CLTFNC<Command>`.
 - Hosted server paths call the handler locally and may also broadcast in multiplayer.
 - Client filtering in `Client_HandlePVF.sqf` supports side destinations and player UID destinations.
@@ -164,8 +197,8 @@ PVF dispatch mechanics:
 
 PV function files outside the standard PVF command lists:
 
-- `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` is now registered in source Chernarus and Vanilla Takistan; see [Paratrooper marker revival](Paratrooper-Marker-Revival) for the smoke plan and modded-mission drift.
-- `Server/PVFunctions/AttackWave.sqf` and `Server/PVFunctions/LogGameEnd.sqf` are compiled directly in server init rather than through the standard PVF command list.
+- `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` exists in current source/Vanilla, but `HandleParatrooperMarkerCreation` is still missing from `_clientCommandPV`; see [Paratrooper marker revival](Paratrooper-Marker-Revival) for the patch shape, smoke plan and modded-mission drift.
+- `Server/PVFunctions/AttackWave.sqf` and `Server/Functions/Server_AttackWave.sqf` are compiled directly in server init rather than through the standard PVF command list (`Init_Server.sqf:94-95`). `WFBE_CO_FNC_LogGameEnd` is wired to `Server/Functions/Server_LogGameEnd.sqf` at `Init_Server.sqf:64` and `:89`; the `Server/PVFunctions/LogGameEnd.sqf` twin exists as the DR-13 cleanup target but is not the live compile target.
 
 ## Direct Public Variable Channels
 
@@ -206,4 +239,10 @@ Server-side long-running systems are mostly `.sqf` loop scripts under `Server/FS
 - If adding a PVF command, update both the command list and the corresponding `Client/PVFunctions` or `Server/PVFunctions` file, then document payload shape.
 - Avoid `Call Compile` on data strings unless following an established PVF/localization pattern and the source is controlled.
 - For performance-sensitive loops, preserve existing parameter guards and `WF_Debug` logging style.
+
+## Continue Reading
+
+Previous: [Gameplay systems atlas](Gameplay-Systems-Atlas) | Next: [Public variable channel index](Public-Variable-Channel-Index)
+
+Main map: [Home](Home) | Fast path: [Feature status register](Feature-Status-Register) | Agent file: [`agent-context.json`](agent-context.json)
 

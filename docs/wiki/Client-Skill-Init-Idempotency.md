@@ -2,7 +2,7 @@
 
 ## Status
 
-`client-skill-init-idempotency` is source/Vanilla patched and smoke pending as of 2026-06-02. The patch removes the second `Skill_Init.sqf` call in client init while preserving the immediate `WFBE_SK_FNC_Apply` call.
+`client-skill-init-idempotency` is patch-ready/current-source-unpatched. Current source Chernarus and generated Vanilla Takistan still call `Skill_Init.sqf` at `Client/Init/Init_Client.sqf:547` and again at `:571`, then call `WFBE_SK_FNC_Apply` at `:572`.
 
 ## What I Read
 
@@ -11,49 +11,48 @@
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Apply.sqf`
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_PreRespawnHandler.sqf`
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf`
-- Vanilla Takistan `Client/Init/Init_Client.sqf` after LoadoutManager propagation.
+- `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf`
 
-## What The Code Did
+## What The Code Does Now
 
-Before the patch, `Init_Client.sqf` ran `Client\Module\Skill\Skill_Init.sqf` twice:
+Current source/Vanilla still run `Client\Module\Skill\Skill_Init.sqf` twice before applying the selected class effects:
 
 | Source | Behavior |
 | --- | --- |
 | `Client/Init/Init_Client.sqf:547` | First `Skill_Init.sqf` call. This is needed before default gear selection because `:551` switches on `WFBE_SK_V_Type`. |
-| `Client/Init/Init_Client.sqf:571-572` | Second `Skill_Init.sqf` call immediately before `(player) Call WFBE_SK_FNC_Apply`. |
+| `Client/Init/Init_Client.sqf:571` | Second `Skill_Init.sqf` call; this is the duplicate to remove. |
+| `Client/Init/Init_Client.sqf:572` | `(player) Call WFBE_SK_FNC_Apply`; this apply call should remain after the duplicate init is removed. |
 | `Client/Module/Skill/Skill_Init.sqf:10` | Compiles `WFBE_SK_FNC_Apply`. |
 | `Client/Module/Skill/Skill_Init.sqf:39-49` | Sets `WFBE_SK_V_Type` and multiplies local `WFBE_C_PLAYERS_AI_MAX` by `1.5` for Soldier class. |
 | `Common/Init/Init_CommonConstants.sqf:249` | Default `WFBE_C_PLAYERS_AI_MAX` is `16`. |
 | `Client/Functions/Client_PreRespawnHandler.sqf:5` | Respawn reapply calls `WFBE_SK_FNC_Apply` without rerunning `Skill_Init.sqf`. |
 
-Because `Skill_Init.sqf:49` has no applied flag or base-value reset, a Soldier client could compound the local AI cap from 16 -> 24 -> 36 during one init path. The likely intended one-time Soldier boost is 16 -> 24.
+Because `Skill_Init.sqf:49` has no applied flag or base-value reset, the duplicated init path can compound a Soldier client's local AI cap from 16 -> 24 -> 36 during one client init path. The likely intended one-time 16 -> 24 behavior still needs the source patch and Arma smoke.
 
 ## Patch Shape
 
-The source mission patch removes only the second `Skill_Init.sqf` call:
+The source/Vanilla patch should remove only the second `Skill_Init.sqf` call:
 
 - Keep `Client/Init/Init_Client.sqf:547` so `WFBE_SK_V_Type` exists before class-based default gear selection.
 - Keep `(player) Call WFBE_SK_FNC_Apply` in the later skill block so the selected class still gets skill effects/actions before play.
-- Do not change `Skill_Init.sqf` internals, because a single init call is enough for the current path.
-- Propagate with `Tools/LoadoutManager` so Vanilla Takistan matches source.
+- Do not change `Skill_Init.sqf` internals, because a single init call should be enough after the patch.
+- Propagate or patch Vanilla Takistan to the same single-init shape.
 
-Changed source files:
+Expected changed maintained files:
 
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf`
 - `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf`
 
 ## Validation
 
-Source-only validation done:
+Source-only after patch:
 
-- Chernarus `Init_Client.sqf` has exactly one `Skill_Init.sqf` call and one immediate `WFBE_SK_FNC_Apply` call.
-- Vanilla Takistan `Init_Client.sqf` has exactly one `Skill_Init.sqf` call and one immediate `WFBE_SK_FNC_Apply` call.
+- After patching, Chernarus `Init_Client.sqf:547` should call `Skill_Init.sqf`; the later skill block should call `WFBE_SK_FNC_Apply` rather than compiling `Skill_Init.sqf` again.
+- Vanilla Takistan is propagated to the same single-init shape.
 - `Skill_Init.sqf` still compiles `WFBE_SK_FNC_Apply`.
 - `Client_PreRespawnHandler.sqf` still applies skill effects on respawn.
-- `git diff --check` passes.
-- `dotnet run` in `Tools/LoadoutManager` reached `CHERNARUS DONE` and `TAKISTAN DONE`, then failed at the known missing `7za` environment variable described in repo instructions.
 
-Pending smoke:
+Pending Arma smoke:
 
 - Local/hosted: join as Soldier and confirm the visible/local AI cap is the one-time boosted value, not the compounded value.
 - Local/hosted: join as non-Soldier and confirm normal cap/class behavior.
@@ -68,13 +67,13 @@ Modded mission folders also show duplicate `Skill_Init.sqf` calls in some varian
 
 For Codex/future code owner:
 
-- Keep this as a small client-init cleanup unless future evidence shows another `Skill_Init.sqf` entrypoint can run more than once.
+- Run Arma smoke for Soldier/non-Soldier caps, respawn skill reapply and JIP client init before closing the lane as runtime-verified.
 - If another path must call `Skill_Init.sqf`, guard only the Soldier AI-cap mutation or store a base cap before applying the 1.5x boost.
 - Pair any future modded propagation with the generated mission cleanup work from `Tools-And-Build-Workflow`, DR-4 and DR-32.
 
 For Claude:
 
-- Good contradiction check: prove whether any UI or respawn path expects cooldown variables from the removed second init call. Current source evidence says respawn uses `WFBE_SK_FNC_Apply` only.
+- Good contradiction check: prove whether any UI or respawn path expects cooldown variables from the second init call after it is removed. Current source evidence says respawn uses `WFBE_SK_FNC_Apply` only.
 
 ## Continue Reading
 

@@ -2,6 +2,47 @@
 
 This page is written for Codex, Claude and future coding agents.
 
+## What this page is
+
+This page is the execution playbook for humans and AI agents who are already in the repository and need to *do* edits. It is not the first page to open for pure bootstrap: start at [AI Assistant Guide](AI-Assistant-Guide) first.
+
+## Where this page lives
+
+- Wiki page: `docs/wiki/AI-Assistant-Developer-Guide.md`
+- Machine source-of-truth pointers: [`agent-context.json`](agent-context.json), [`agent-status.json`](agent-status.json), [`agent-knowledge.jsonl`](agent-knowledge.jsonl)
+- Runtime source lives in: `Missions/[55-2hc]warfarev2_073v48co.chernarus`
+
+## How this page runs in your workflow
+
+- Start with source validation files before editing behavior:
+  - [`Current source status snapshot`](Current-Source-Status-Snapshot)
+  - `agent-knowledge.jsonl` entries covering active findings
+  - [`agent-events.jsonl`](agent-events.jsonl) for latest open/complete claims
+- Use this page for:
+  - edit safety constraints,
+  - recurring engine assumptions (OA vs A3),
+  - and where to go for focused subsystem drill-down.
+- For LLM bootstrap and page routing only, use [AI Assistant Guide](AI-Assistant-Guide).
+
+## Related systems and source files
+
+- Gameplay system orientation:
+  - [SQF code atlas](SQF-Code-Atlas)
+  - [Feature status register](Feature-Status-Register)
+  - [SQF Code Atlas: Source owners list](SQF-Code-Atlas#init-owners)
+- Hardening paths:
+  - [Hardening implementation roadmap](Hardening-Implementation-Roadmap)
+  - [Server authority migration map](Server-Authority-Migration-Map)
+  - [Pending owner decisions](Pending-Owner-Decisions)
+- Reliability and review:
+  - [Testing, debugging and release workflow](Testing-Debugging-And-Release-Workflow)
+  - [Current source status snapshot](Current-Source-Status-Snapshot)
+
+## Risk notes for this page
+
+- This page can become stale faster than source if edits happen in source quickly; rely on the two files above before acting on lane state.
+- Keep this page evidence-backed and route new findings back to their canonical pages rather than duplicating full proofs.
+
 ## Always Start Here
 
 1. Read `AGENTS.md`.
@@ -24,8 +65,10 @@ This page is written for Codex, Claude and future coding agents.
 ## Common Pitfalls
 
 - Arma 2 OA SQF differs from Arma 3; avoid using newer commands unless verified for OA 1.64.
-- When adapting snippets, reject Arma 3-only syntax such as `params`, `isEqualTo`, `remoteExec`, `BIS_fnc_MP` and `parseSimpleArray` unless an official OA command page proves availability.
+- When adapting snippets, reject Arma 3-era or non-OA-proven syntax such as `params`, `isEqualTo`, `remoteExec`, `remoteExecCall`, `remoteExecutedOwner`, `isRemoteExecuted`, `allPlayers`, `parseSimpleArray`, `setGroupOwner`, `groupOwner`, modern `select [start,count]` / `select {condition}` forms and `BIS_fnc_MP` unless an official OA command/function page proves availability. This mission already uses OA public-variable/PVF wrappers instead of `BIS_fnc_MP`.
+- Use [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) when checking whether a scripting example is safe for OA 1.64.
 - External references explain engine primitives; they do not prove this fork's server authority, payload validation or JIP behavior.
+- `publicVariable` and `setVariable [..., true]` can replicate last-value state, but they do not provide server authority, event-history replay or full marker/queue collection sync.
 - Machine files can outlive renamed or retired wiki pages; verify against `agent-context.json` and the current page list before routing work from any artifact not listed there.
 - Hosted server paths often need local handler calls as well as public-variable dispatch.
 - Client-side UI/marker loops are performance-sensitive.

@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `networking-publicvariable-atlas` | Verified | [Public variable channel index](Public-Variable-Channel-Index) and [Networking and public variables](Networking-And-Public-Variables) now include source-backed sender/receiver maps, JIP/authority notes, and direct-channel risk classifications for the current mission and generated Vanilla path. |
 | `docs-knowledge-entrypoint` | Verified | Added final docs pass wrap-up: validated `Home`, `_Sidebar`, `AI-Assistant-Guide`, `SQF-Code-Atlas`, `Feature-Status-Register`, `Agent-Worklog`, machine-readable JSON/JSONL records, and mirror parity for this lane. |
 | `economy-supply-commander-audit` | Published | [Economy authority first cut](Economy-Authority-First-Cut) documents the full economy boundary map for supply mission trust, commander request validation and upgrade/factory/support spend, then links follow-through into [Commander-Reassignment-Call-Shape](Commander-Reassignment-Call-Shape), [Supply Mission Authority Cleanup](Supply-Mission-Authority-Cleanup-Playbook), [Feature-Status-Register](Feature-Status-Register) and [Deep-Review Findings](Deep-Review-Findings). |
 | `docs-knowledge-entrypoint` | Integrated | [AI-Assistant-Guide](AI-Assistant-Guide) is now the canonical first-touch docs/LLM entrypoint, with Home, `_Sidebar` and `llms.txt` routing execution guidance to subsystem atlases instead of duplicating bootstrap text. |
@@ -79,7 +80,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `docs-knowledge-entrypoint` | Keep source-backed docs, machine files and implementation backlog aligned as new findings or gameplay work appear. Current docs pass keeps AI/agent onboarding stable and routes execution guidance through subsystem atlases. |
+| Codex | Active | `networking-publicvariable-atlas` | Deep-source networking map lane: PVF table expansion, direct-channel risk inventory, and feature-status/JSONL backlog sync pending verification. |
 | Codex-2 | Active | `wasp-marker-wait-cleanup` | Source-checking `WASP/global_marking_monitor.sqf` marker-dialog display polling and preparing the smallest safe wait cleanup. |
 | Claude | Autonomous-ready | `autonomous-claude-research` | Can self-select the next bounded source-backed review lane from the coverage ledger or hardening backlog. |
 | Sub-agents | None running | Wave F harvested | Latest scout outputs are summarized in [Discovery swarm](Subagent-Discovery-Swarm); all Wave F agents were closed after harvest. |
@@ -105,6 +106,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `networking-publicvariable-atlas` | Codex | Verified | Source-backed networking atlas update landed: [Public variable channel index](Public-Variable-Channel-Index), [Networking and public variables](Networking-And-Public-Variables), and AI guide updates now include authority/JIP validation guidance and bug candidates in [Feature status register](Feature-Status-Register). |
 | `wasp-marker-wait-cleanup` | Codex-2 | Active | Source-check `WASP/global_marking_monitor.sqf:57-73`; replace the sleepless display-54 wait with a throttled wait if source-safe. |
 | `supply-mission-scan-narrowing` | Codex-2 | Published/source patched | [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) narrows the server command-center proximity scan to `Base_WarfareBUAVterminal` in source Chernarus and generated Vanilla Takistan; Arma smoke remains. |
 | `hosted-server-fps-loop-sleep` | Codex-2 | Published/source patched | [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) exits FPS publishers on hosted/listen servers and keeps dedicated publishing unchanged; smoke remains. |
@@ -194,6 +196,7 @@ Historic scout rosters and harvested reports live in [Discovery swarm](Subagent-
 
 ### Canonical onboarding lane
 
+- `docs-knowledge-clickthrough-2026-06-03-1829` is the latest active docs/navigation watch for Home/AI Assistant entrypoint drift, duplicate-onboarding risk and machine-record sync checks.
 - `docs-knowledge-clickthrough-2026-06-03-1707` remains the active compactness/duplication pass for Home/_Sidebar/AI Assistant entrypoint flow.
 - This lane is documentation-only and coordinates click-through path quality, source links and machine-readable evidence.
 

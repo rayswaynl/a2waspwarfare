@@ -48,6 +48,8 @@ For code or source-backed gameplay changes:
 
 `agent-events.jsonl` and `agent-collaboration.json` preserve imported and concurrent-agent state. They are useful for collision checks and machine history, but the board and worklog should remain readable enough for a human to resume the project without decoding every event row.
 
+In `agent-collaboration.json`, `activeClaims` is reserved for live ownership only. Historical published, ready-for-review, superseded or signed-off lane objects belong in `archivedClaims`; use them for provenance, not current ownership.
+
 ## Validation
 
 After meaningful docs or machine-context edits, run:
@@ -56,7 +58,7 @@ After meaningful docs or machine-context edits, run:
 powershell -ExecutionPolicy Bypass -File .\Tools\ValidateWiki.ps1
 ```
 
-The validator checks JSON/JSONL parsing, page-list parity, Markdown links, selected machine references, exact machine references, retired route hygiene and `git diff --check`.
+The validator checks full JSON/JSONL parsing, page-list parity, Markdown and machine references, retired route hygiene, stale false-patched current-state wording, warning-framed Arma 2 OA compatibility guardrails and `git diff --check`. After syncing `docs/wiki` to the GitHub wiki checkout, run `Tools/TestWikiParity.ps1` before mirror validation.
 
 ## Continue Reading
 

@@ -94,3 +94,9 @@ Future code owner:
 Previous: [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) | Next: [Performance opportunity sweep](Performance-Opportunity-Sweep)
 
 Main map: [Home](Home) | Fast path: [Feature status](Feature-Status-Register) | Agent file: [`agent-context.json`](agent-context.json)
+
+## 2026-06-03 verification note
+
+- Source confirms scan narrowing logic is present in mission start flow and currently marked as shipped from recent history.
+- Relevant upstream commits: 97dfff26 (PR #10), 8164cc33 (PR #11), 86ec28d6 (PR #12).
+- Completion side is still trust-sensitive until supply amount/state is fully server-authored.

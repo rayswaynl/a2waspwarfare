@@ -102,7 +102,7 @@ WFBE_SE_PVF_ALLOWED = [];
 
 Why not only `getVariable`? A plain namespace lookup prevents arbitrary SQF text from being compiled, but it could still resolve another global `CODE` variable if a forged payload names it. The allowlist limits dispatch to exactly the registered PVF handlers.
 
-Arma 2 OA syntax guardrail: do not use `isEqualTo`, `params`, `remoteExec`, `remoteExecCall`, `BIS_fnc_MP`, `parseSimpleArray` or CBA helpers in this patch unless an official OA command page proves availability. `missionNamespace getVariable _script` plus `typeName _handler != "CODE"` is the intended OA-safe shape.
+Arma 2 OA syntax guardrail: do not use `isEqualTo`, SQF `params`, `remoteExec`, `remoteExecCall`, `parseSimpleArray`, `private _var = value`, `BIS_fnc_MP` or CBA helpers in this patch unless an official OA command/function page proves availability. `missionNamespace getVariable _script` plus `typeName _handler != "CODE"` is the intended OA-safe shape.
 
 ### 2. Harden the server dispatcher
 
@@ -199,7 +199,7 @@ Source-only checks:
 2. Confirm `WFBE_CL_PVF_ALLOWED` contains one `CLTFNC*` name for every `_clientCommandPV` entry.
 3. Confirm every allowlisted name resolves to `typeName == "CODE"` after `Init_PublicVariables.sqf`.
 4. Confirm `Server_HandlePVF.sqf` and `Client_HandlePVF.sqf` no longer contain `Spawn (Call Compile _script)`.
-5. Confirm no new Arma 3-only syntax such as `isEqualTo`, `params`, `remoteExec`, `BIS_fnc_MP` or CBA helpers was introduced.
+5. Confirm no new Arma 3-era or non-OA-proven syntax such as `isEqualTo`, SQF `params`, `remoteExec`, `remoteExecCall`, `private _var = value`, `BIS_fnc_MP` or CBA helpers was introduced.
 
 Hosted/local smoke:
 

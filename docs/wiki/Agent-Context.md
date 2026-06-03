@@ -17,6 +17,7 @@ Current mirror authority: `agent-context.json`, `agent-status.json` and `agent-h
 - Generated vanilla mission: `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan`
 - Modded generated missions: `Modded_Missions/*`
 - Generator/tool: `Tools/LoadoutManager`
+- Current disputed cleanup status: [Current source status snapshot](Current-Source-Status-Snapshot) records the seven disputed lanes as patch-ready/current-source-unpatched or opportunity-not-patched in current source/Vanilla.
 
 ## Must-Follow Rules
 
@@ -25,6 +26,7 @@ Current mirror authority: `agent-context.json`, `agent-status.json` and `agent-h
 - Run `dotnet run` from `Tools/LoadoutManager` after mission edits; missing `7za` only blocks packaging.
 - Do not casually alter anti-stack/database, extension, live-server or runtime mode behavior.
 - Use `WF_Debug`-gated logs for detailed debug output.
+- Read `Agent-Worklog.md` as append-only history: append-order supersessions and the current source snapshot beat stale timestamped notes.
 
 ## Primary Entrypoints
 
@@ -51,6 +53,7 @@ Current mirror authority: `agent-context.json`, `agent-status.json` and `agent-h
 ## Current Open Work
 
 - PR #1 `feat/supply-helicopter`: documents supply helicopters, upgrade gating, cash runs, interdiction reward and deferred AI supply heli work.
+- Current cleanup lanes: commander DR-15, factory DR-33, paratrooper marker registration, duplicate `Skill_Init`, hosted FPS loop sleep and supply scan narrowing remain patch-ready/current-source-unpatched; WASP marker wait cleanup remains opportunity-not-patched. See [Current source status snapshot](Current-Source-Status-Snapshot).
 - Implementation roadmap: `Documentation-Implementation-Plan.md`.
 - External Claude review: use `Claude-Goal.md` and update `Agent-Worklog.md`.
 

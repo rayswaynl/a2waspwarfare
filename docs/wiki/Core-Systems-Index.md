@@ -46,3 +46,16 @@ Support includes artillery, paratroopers, para ammo, para vehicles, UAV, fast tr
 
 Operational systems include anti-stack, AFK kick through BattlEye publicVariable filters, server FPS publication, performance audit logs, global game stats extension export, and Discord bot status publishing.
 
+## Representative Source Anchors
+
+| System | Source anchors |
+| --- | --- |
+| Towns and capture | `Common/Init/Init_Town.sqf:31-40` seeds town variables; `Server/FSM/server_town.sqf:34-58` runs the town scan/capture loop; `:149-189` enforces all-camp capture mode. |
+| Economy | `Server/FSM/updateresources.sqf:20-67` converts town supply into side/player/commander income; `Common/Init/Init_CommonConstants.sqf:276-278` defines supply-truck delivery reward/range settings. |
+| Commander and teams | `Server/PVFunctions/RequestNewCommander.sqf:3-14` handles manual reassignment input; `Server/Functions/Server_AssignNewCommander.sqf:3-9` is the current DR-15 call-shape hazard. |
+| Construction and base | `Server/PVFunctions/RequestStructure.sqf:3-22` dispatches structure creation; `Server/Construction/Construction_HQSite.sqf:20-38` deploys HQs and `:72-91` mobilizes MHQs plus killed-EH broadcasts. |
+| Factories and purchases | `Client/GUI/GUI_Menu_BuyUnits.sqf:83,155` feeds player purchase UI; `Client/Functions/Client_BuildUnit.sqf:167-172,463-469` covers player queue/waypoint/decrement behavior; `Server/Functions/Server_BuyUnit.sqf:21-76` covers AI queue handling. |
+| Upgrades | `Common/Init/Init_CommonConstants.sqf:37-58` defines upgrade indices; `Server/PVFunctions/RequestUpgrade.sqf:1-5` forwards requests; `Server/Functions/Server_ProcessUpgrade.sqf:17-47` publishes upgrade progress/completion state. |
+| Respawn | `Common/Init/Init_CommonConstants.sqf:283-294` defines camp/leader/MASH/mobile respawn settings; `Client/Init/Init_Client.sqf:470-487` chooses the initial player spawn location. |
+| Support systems | `Client/GUI/GUI_Menu_Tactical.sqf:58-59` lists tactical support actions; `Server/Functions/Server_HandleSpecial.sqf:43-49` routes para support; `Client/Init/Init_Client.sqf:534-535,589` initializes Zeta cargo and EASA. |
+| Administrative/operational systems | `Server/Module/AntiStack/mainLoop.sqf:8-18` gates AntiStack DB loops and performance timing; `Server/Init/Init_Server.sqf:591-595` starts AFK/FPS operational hooks. |

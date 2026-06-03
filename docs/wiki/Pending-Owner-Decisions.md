@@ -1,66 +1,43 @@
 # Pending Owner Decisions
 
-> Claude-owned (2026-06-02). The single place a code owner can see every open decision the deep-review campaign surfaced, each with its finding(s) and the affected subsystem. The [Codebase coverage ledger](Codebase-Coverage-Ledger) is "green except Auth/PV cells"; **those residual cells are exactly the decisions below** — review work is complete, what remains is choosing and applying fixes. Severity uses the [Deep-review findings](Deep-Review-Findings) tiers.
+This page keeps open code-owner decisions in one place. Review work is not the blocker for these rows; choosing and applying fixes is.
 
-## 1. The big one — economy/forgery authority (one decision, whole class)
+## Authority And Forgery
 
-**Decision:** add server-side authority to spend/effect paths, **or** accept client-authoritative economy and ship a real BattlEye filter set. The forgery class has **two surfaces** and the decision must cover both:
-- **PVF dispatcher** — `Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` `Call Compile` the sender's command string (DR-1). Fix: validate against the known `SRVFNC*`/`CLTFNC*` set + re-derive authority in each handler. (Same change removes a per-message recompile, DR-38.)
-- **Direct `publicVariableServer` channels** — e.g. `ATTACK_WAVE_INIT` (DR-41); each needs its own server re-derivation. See [Public variable channel index](Public-Variable-Channel-Index).
-
-| Path | Finding | Severity |
-| --- | --- | --- |
-| PVF dispatch RCE/forgery | DR-1 | High |
-| Construction (`RequestStructure`/`RequestDefense`/MHQ) | DR-6 | High |
-| Unit purchase | DR-14 | High (architectural) |
-| Structure sale | DR-16 | High |
-| Side-supply transfer (overspend floor) | DR-22 | High |
-| Side-supply ledger directly client-writable (forged `wfbe_supply_temp_<side>`) | DR-44 | High |
-| Upgrades | DR-23 | High |
-| ICBM superweapon (forged `RequestSpecial`) | DR-27 | **Critical** |
-| Gear/EASA + vehicle rearm/repair/refuel/heal | DR-28 | High |
-| Attack-wave price modifier (direct PV) | DR-41 | High |
-| BattlEye option is **not shipped** (22-byte `kickAFK` stub only, no `scripts.txt`) | DR-30 | informs the choice |
-
-> Caveat (DR-30): BattlEye filter files normally live in the server's `BEpath` outside the mission PBO, so confirm the production posture with the server owner before assuming it is unprotected.
-
-## 2. Other correctness fixes (owner-scoped, source-cited)
-
-| Decision | Finding | Severity | Note |
+| Decision | Findings | Severity | Owner note |
 | --- | --- | --- | --- |
-| Victory winner-inversion + duplicate game-end | DR-11, DR-13 (mechanism DR-36) | High | one-line: parenthesize/guard both win clauses with `!WFBE_GameOver` + `exitWith` the side `forEach` on win |
-| Threeway mode has no victory detection | DR-12 | Medium | enable detection when `WFBE_C_VICTORY_THREEWAY != 0` |
-| Commander-assign call-shape bug | DR-15 | Medium | `_side = _this` → `_this select 0` |
-| Supply-mission cooldown key casing | DR-18 | Medium | align `lastSupplyMissionRun` vs `LastSupplyMissionRun` (case-sensitive getVariable) |
-| HQ-killed non-idempotent score exploit | DR-20 | Medium | idempotency guard on the killed-EH |
-| Factory queue soft-lock + broadcast churn | DR-33 | Medium | decrement `WFBE_C_QUEUE` on all exit paths; unique token |
-| HC static-defence update-back commented out | DR-42 | Low/Med | restore the update-back or document as fire-and-forget |
-| DiscordBot `TypeNameHandling.All` insecure deser | DR-31 | High (latent) | `.All` → `.None` (data is a flat DTO) |
-| GLOBALGAMESTATS extension dormant deser + async-void race | DR-29 | Med | delete dead `.Auto` load; fix `File.Replace` race |
+| PVF dispatcher allowlist plus handler authority | DR-1, DR-38 | High | `Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` still compile sender-chosen command strings. Use [PVF dispatch implementation playbook](PVF-Dispatch-Implementation-Playbook). |
+| Direct publicVariable authority | DR-41, DR-44 | High | Channels such as `ATTACK_WAVE_INIT` and `wfbe_supply_temp_<side>` are outside the PVF dispatcher. Each direct PVEH needs server-side re-derivation. |
+| Economy spend/effect paths | DR-6, DR-14, DR-16, DR-22, DR-23, DR-27, DR-28 | High/Critical | Construction, buy/sell, upgrades, ICBM, gear/EASA/service and supply rewards are still legacy/client-authoritative in important places. |
+| BattlEye posture | DR-30 | High if public | In-repo evidence only proves the AFK publicVariable rule. Production `BEpath` filters need server-owner confirmation. |
 
-## 3. Keep-or-remove / maintenance-model decisions
+## Correctness And Runtime Robustness
 
-Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) for the source-backed revive/remove matrix behind the MASH, paratrooper, WASP, AI supply truck, stale UI and modded-mission rows.
+| Decision | Finding | Severity | Status |
+| --- | --- | --- | --- |
+| Commander reassignment helper/caller bug and duplicate notification | DR-15 | Medium | Patch-ready/current-source-unpatched; see [Commander reassignment call shape](Commander-Reassignment-Call-Shape). |
+| Factory queue soft-lock and token churn | DR-33 | Medium | Patch-ready/current-source-unpatched; see [Factory queue counter token cleanup](Factory-Queue-Counter-Token-Cleanup). |
+| Paratrooper drop marker registration | DR-2 | Medium | Sender and handler exist, but client PVF registration is still missing; see [Paratrooper marker revival](Paratrooper-Marker-Revival). |
+| Duplicate client `Skill_Init` | current-source snapshot | Medium | Current source/Vanilla still call `Skill_Init` twice before `WFBE_SK_FNC_Apply`. |
+| Hosted/listen server FPS loop spin | DR-19 | Low/Medium | Current source/Vanilla still enter both loops before checking `isDedicated`; see [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep). |
+| Supply cooldown casing and reward authority | DR-18 plus supply review | Medium/High | Standardize cooldown key and move mission state/reward authority server-side; see [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook). |
+| Supply command-center scan narrowing | performance sweep | Low | Patch-ready/current-source-unpatched; see [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing). |
+| Victory winner inversion / duplicate game-end | DR-11, DR-13, DR-36 | High | Parenthesize/guard win clauses and prevent same-tick double-fire. |
+| JIP wait-chain timeouts | DR-37 | Medium | Add defensive timeouts without breaking OA JIP synchronization. |
+| WASP marker wait cleanup | DR-40 | Low | Opportunity-not-patched; add throttled wait/sleep after OA display smoke. |
 
-| Decision | Finding | Note |
-| --- | --- | --- |
-| Modded missions: regenerate from source vs maintain as forks | DR-32 | Napf/eden/lingor are divergent hand-edited forks; source fixes don't reach them |
-| 4 abandoned stub missions: complete or delete | DR-32 | sahrani/dingor/tavi/isladuala are non-runnable (1–20 files) |
-| MASH map-marker feature: revive or remove | DR-34 | dead both ends; revive needs server-held list + JIP re-send |
-| Paratrooper drop markers: revive or remove | DR-2 | dead receive path |
-| Dead WASP actions (OnArmor, GearYourUnit) | DR-35 | commented in `AddActions.sqf` |
-| `supplyMissionActive.sqf` dead twin | DR-39 | compiled but never called |
-| Duplicate `Init_Server` function binds (6) | DR-43b | de-duplicate; `LogGameEnd` dup relates to DR-13 |
-| `version.sqf` referenced by `description.ext:39` but absent from source | DR-43a | commit a source `version.sqf` or document pack-time generation |
-
-## 4. Robustness / defense-in-depth (optional)
+## Maintenance Model Decisions
 
 | Decision | Finding | Note |
 | --- | --- | --- |
-| Post-join `wfbe_*` `waitUntil` chain has no timeouts | DR-37 | a never-set synced var hangs the JIP client; add defensive timeouts |
-| Server-FPS hosted/listen busy-loop | DR-19 | move `sleep` outside the `isDedicated` guard |
-| WASP `global_marking_monitor.sqf:62` sleepless display-wait | DR-40 | use the throttled `waitUntil {sleep …; cond}` idiom |
+| Modded missions: regenerate from source vs maintain as forks | DR-32 | Napf/eden/lingor are divergent hand-edited forks; source fixes do not automatically reach them. |
+| Abandoned stub missions: complete or delete | DR-32 | Sahrani/dingor/tavi/isladuala are non-runnable stubs. |
+| MASH map marker feature: revive or remove | DR-34 | Dead both ends; revive needs server-held list, JIP re-send and unique marker names. |
+| Dead WASP actions | DR-35 | `OnArmor` and `GearYourUnit` are commented in `AddActions.sqf`. |
+| `supplyMissionActive.sqf` dead twin | DR-39 | Compiled but no static caller found. |
+| Duplicate `Init_Server` binds | DR-43b | Low-risk cleanup, especially around endgame logging. |
+| `version.sqf` source/packaging policy | DR-43a | Referenced by mission boot but generated/ignored in the current workflow. |
 
 ## Continue Reading
 
-Scoreboard: [Codebase coverage ledger](Codebase-Coverage-Ledger) | Evidence: [Deep-review findings](Deep-Review-Findings) | Channels: [Public variable channel index](Public-Variable-Channel-Index)
+Coverage: [Codebase coverage ledger](Codebase-Coverage-Ledger) | Findings: [Deep-review findings](Deep-Review-Findings) | Feature register: [Feature status register](Feature-Status-Register)

@@ -8,7 +8,7 @@
 - `1`: client-side AI creation/delegation
 - `2`: headless client
 
-`initJIPCompatible.sqf:176-180` downgrades headless delegation to disabled when the detected OA version does not support headless clients. Server functions `Server_DelegateAITownHeadless`, `Server_DelegateAIStaticDefenceHeadless` and `Server_FNC_Delegation` are compiled at `Server/Init/Init_Server.sqf:99-103`, with the HC candidate list initialized at `:109-110`. HC-side receivers compile through `Headless/Init/Init_HC.sqf:4-6`, announce themselves with `:15`, and receive `delegate-townai`, `delegate-ai` and `delegate-ai-static-defence` through `Client/PVFunctions/HandleSpecial.sqf:13-15`.
+`initJIPCompatible.sqf:165-171` downgrades headless delegation to disabled only when the detected OA version does not support headless clients; the adjacent `:176-184` block is day/night PVEH setup, not delegation. Server functions `Server_DelegateAITownHeadless`, `Server_DelegateAIStaticDefenceHeadless` and `Server_FNC_Delegation` are compiled at `Server/Init/Init_Server.sqf:99-103`, with the HC candidate list initialized at `:109-110`. HC-side receivers compile through `Headless/Init/Init_HC.sqf:4-6`, announce themselves with `:15`, and receive `delegate-townai`, `delegate-ai` and `delegate-ai-static-defence` through `Client/PVFunctions/HandleSpecial.sqf:13-15`.
 
 ## Town AI
 
@@ -22,7 +22,7 @@ Town AI is centralized through `Server/FSM/server_town_ai.sqf`. The server start
 
 The mission writes structured `[Performance Audit]` RPT lines through `PerformanceAudit_Record` / `PerformanceAudit_Run`, compiled by `Common/Init/Init_Common.sqf:47` and defined in `Common/Functions/Common_PerformanceAudit.sqf:159` / `:221`. Clients wait for and start the audit runner at `Client/Init/Init_Client.sqf:343-344`; the server does the same at `Server/Init/Init_Server.sqf:587-588`. The analyzer in `Tools/PerformanceAuditAnalyzer` converts RPT lines into CSV, Markdown, HTML and Word-friendly reports.
 
-For ranked, source-backed patch candidates, use [Performance opportunity sweep](Performance-Opportunity-Sweep). It keeps quick fixes such as PVF dispatcher lookup, supply mission scan status, factory queue churn and WASP marker wait cleanup in one place instead of scattering patch order across subsystem pages. The duplicate `Skill_Init`, hosted FPS busy-spin and supply command-center scan cleanups are already patched in source/Vanilla and now need only their smoke plans.
+For ranked, source-backed patch candidates, use [Performance opportunity sweep](Performance-Opportunity-Sweep). It keeps quick fixes such as PVF dispatcher lookup, duplicate `Skill_Init`, hosted FPS loop sleep, supply mission scan narrowing, factory queue churn and WASP marker wait cleanup in one place instead of scattering patch order across subsystem pages. As of the current source snapshot, duplicate `Skill_Init`, hosted FPS loop sleep, supply mission scan narrowing, factory queue counter/token cleanup and WASP marker wait cleanup remain source/Vanilla patch candidates, not completed source patches. PVF dispatcher lookup remains a P0 code-work opportunity.
 
 Instrumented areas include:
 
@@ -64,7 +64,7 @@ Safety note: these loops are server-owned maintenance, not headless delegation. 
 
 ## Server FPS
 
-`Server/GUI/serverFpsGUI.sqf` and `Server/Module/serverFPS/monitorServerFPS.sqf` publish server FPS data used by HUD/status surfaces. Earlier compile lines for `WFBE_CO_FNC_monitorServerFPS` are commented (`Server/Init/Init_Server.sqf:65`, `:90`), but `Init_Server.sqf` later executes `serverFpsGUI.sqf` and the FPS module directly (`:578`, `:595`). Historical DR-19 found both files put `sleep 8` inside the `isDedicated` branch, so hosted/listen servers could spin without yielding. Current source Chernarus and Vanilla Takistan now exit immediately on `!isDedicated`, keep one dedicated `while {true}` publisher loop and retain the 8-second cadence; see [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep). Remaining work is Arma smoke for dedicated RHUD updates and hosted/listen no-spin behavior.
+`Server/GUI/serverFpsGUI.sqf` and `Server/Module/serverFPS/monitorServerFPS.sqf` publish server FPS data used by HUD/status surfaces. Earlier compile lines for `WFBE_CO_FNC_monitorServerFPS` are commented (`Server/Init/Init_Server.sqf:65`, `:90`), but `Init_Server.sqf` later executes `serverFpsGUI.sqf` and the FPS module directly (`:578`, `:595`). DR-19 found both files put `sleep 8` inside the `isDedicated` branch, so hosted/listen servers can spin without yielding. Current source Chernarus and Vanilla Takistan still have that loop-first shape; see [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep). Remaining work is source/Vanilla patch, and Arma smoke for dedicated RHUD updates and hosted/listen no-spin behavior.
 
 ## Performance Caveats
 
@@ -82,19 +82,19 @@ Town AI is **not** simulation-cached (`enableSimulation false` is used only on t
 
 - **Spawn:** `_town nearEntities [["Man","Car","Motorcycle","Tank","Ship"], _dynRange]` at `server_town_ai.sqf:85`, with aircraft explicitly filtered out at `:90` so fly-overs do not trigger spawns.
 - **Despawn:** after `time - wfbe_inactivity > WFBE_C_TOWNS_UNITS_INACTIVE` (`server_town_ai.sqf:15`, `:192`) with no enemies, `{deleteVehicle _x} forEach units _x; deleteGroup _x;` at `:205-206`.
-- **Gotcha:** the despawn deletes active vehicles when `!(isPlayer leader group _x)` (`server_town_ai.sqf:214`). A player riding as cargo/gunner (not leader) can have their vehicle deleted under them.
+- **DR-45 gotcha:** the despawn deletes active vehicles when `!(isPlayer leader group _x)` (`server_town_ai.sqf:214`). A player riding as cargo/gunner (not leader) can have their vehicle deleted under them; route patch details through [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) and [Deep-review findings](Deep-Review-Findings) DR-45.
 
 ### HC delegation routing
 
-There is **no `setGroupOwner` anywhere in the mission**. The HC owns AI because the HC's machine *creates* the units locally when it receives a delegation message (`delegate-townai`, `delegate-ai`, `delegate-ai-static-defence`) via `WFBE_CO_FNC_SendToClient` to the HC leader.
+There is **no `setGroupOwner` anywhere in the mission**, and BI marks `setGroupOwner` / `groupOwner` as Arma 3 1.40 commands rather than OA 1.64 commands. The HC owns AI because the HC's machine *creates* the units locally when it receives a delegation message (`delegate-townai`, `delegate-ai`, `delegate-ai-static-defence`) via `WFBE_CO_FNC_SendToClient` to the HC leader.
 
 - HC registration: on `["RequestSpecial", ["connected-hc", player]]` (`Headless/Init/Init_HC.sqf:15`), `Server/Functions/Server_HandleSpecial.sqf:117-128` appends `group _hc` to `WFBE_HEADLESSCLIENTS_ID` — **but only if `owner _hc != 0`** (`:120`, `:125`); an HC that connects before the engine assigns a distinct owner ID is logged and skipped (`:129-130`).
 - HC disconnect removes the HC group from the candidate pool (`Server/Functions/Server_OnPlayerDisconnected.sqf:23-28`). The full no-failover finding and code-owner options live in [Deep-review findings](Deep-Review-Findings) DR-21; keep that as the canonical wording so this page does not grow a second failover analysis.
 - Static-defence delegation has an extra tracking gap (DR-42): `Server_DelegateAIStaticDefenceHeadless.sqf:26` sends `delegate-ai-static-defence`, and `Client_DelegateAIStaticDefence.sqf:25` creates the units, but the server update-back line at `:28` is commented (`update-delegation-static_defence`). Town AI does report back through `Client_DelegateTownAI.sqf:35` and `Server_HandleSpecial.sqf`'s `update-town-delegation` case. Result: HC-created static-defence units are invisible to server cleanup/accounting/re-delegation unless code owners restore and define that update-back path. See [Deep-review findings](Deep-Review-Findings) DR-42.
 
-### Delegation mode can silently downgrade at init
+### Delegation fallback is split between init and runtime
 
-`WFBE_C_AI_DELEGATION` is set to `2` (HC) at `initJIPCompatible.sqf:155`, then downgraded to `0` at `:178-179` if the OA version doesn't support HC **or** no HC has connected at init time. The downgrade happens once at boot and is not re-upgraded if an HC joins later — so an HC connecting after server init may never receive delegated work. (This refines the version-only framing above.)
+`WFBE_C_AI_DELEGATION` is set to `2` (HC) at `initJIPCompatible.sqf:155`, then downgraded to `0` at `:169` only when the OA version check fails. A missing HC at town-activation time is handled later by `server_town_ai.sqf:165-170`: the server delegates to HC only when `WFBE_HEADLESSCLIENTS_ID` is non-empty, otherwise `_use_server` stays true and the server creates the town AI. Do not document "no HC connected at init" as a boot-time downgrade.
 
 ### `GetSleepFPS` is inverted by design
 

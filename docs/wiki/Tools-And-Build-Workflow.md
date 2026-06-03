@@ -95,14 +95,25 @@ It checks:
 
 - `agent-context.json` and `agent-status.json` parse as JSON;
 - `agent-hardening-backlog.jsonl` parses line by line;
+- all wiki `*.json` files and every non-empty line of all wiki `*.jsonl` files parse;
 - `agent-context.json` page lists match the actual Markdown files in `docs/wiki`;
 - Markdown links resolve to existing wiki pages or machine files;
 - machine-file references point to existing pages, machine files or repo tool paths;
 - exact machine-file string references such as `Some-Page.md`, `agent-context.json` and `Tools/ValidateWiki.ps1` resolve;
 - active machine files do not route to retired page/file names;
+- current-state pages do not contain stale false-patched wording for disputed cleanup lanes;
+- high-traffic onboarding/current-state files do not contain modern Arma 3/SQF terms unless they are warning-framed;
 - `git diff --check` exits clean.
 
 Use `-SkipGitDiffCheck` only when running outside a git worktree or when another command already owns whitespace validation.
+
+`Tools/TestWikiParity.ps1` is the read-only docs/wiki <-> GitHub wiki checkout parity check. Run it after syncing the mirror:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Tools\TestWikiParity.ps1 -WikiPath C:\Users\Steff\_wasp_wiki_tmp
+```
+
+It compares root-level file names and SHA-256 hashes and reports exact missing, extra or mismatched files.
 
 ## Packaging And Deployment Notes
 

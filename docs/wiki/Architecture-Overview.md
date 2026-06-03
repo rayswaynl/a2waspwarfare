@@ -34,7 +34,18 @@ The repository is an Arma 2 OA Warfare/CTI mission derived from Benny's Warfare 
 4. `Init_Server.sqf` creates side logic state, server functions, AI/town loops, cleanup loops, anti-stack, server FPS publishing and day/night authority.
 5. `Init_Client.sqf` compiles local functions, wires player event handlers, UI actions, hotkeys, skill/action modules, client marker loops and HUD behavior.
 
+
+## Representative Source Anchors
+
+| Claim | Source anchors |
+| --- | --- |
+| Mission front door and include graph | `description.ext:37-69` defines version/debug switches and includes sounds, music, resource/dialog/title/parameter headers. |
+| Runtime role detection and shared constants | `initJIPCompatible.sqf:132-134` loads MP parameters and common constants; `:185-193` gates headless-client support by OA build. |
+| Common compile/config layer | `Common/Init/Init_Common.sqf:19-63` compiles economy/town/helper functions; `:147-149` selects the OA/vanilla server-send wrapper. |
+| Server-owned loops | `Server/Init/Init_Server.sqf:509-531` launches town, town-AI, victory and resource loops; `:577-595` starts FPS publishers and performance helpers. |
+| Client-owned UI/action layer | `Client/Init/Init_Client.sqf:49-65` compiles local UI/player helpers; `:492-503` initializes CoIn and JIP HQ killed handling. |
+| Headless entry point | `Headless/Init/Init_HC.sqf:4-15` compiles delegation handlers and announces the HC to the server through `RequestSpecial`. |
+
 ## Development Philosophy
 
 This mission values runtime performance and live-server stability. Many systems have explicit audit logging, cached UI writes, deferred loops, and optional switches. Documentation and feature work should preserve those patterns instead of reintroducing large per-frame scans or unconditional global broadcasts.
-

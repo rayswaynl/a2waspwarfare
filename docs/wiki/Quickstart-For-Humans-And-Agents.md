@@ -8,7 +8,8 @@ This is the first-10-minutes path for `rayswaynl/a2waspwarfare`. It is for orien
 2. `CLAUDE.md`, if present in the worktree
 3. [Agent context](Agent-Context) and [`agent-context.json`](agent-context.json)
 4. [Home](Home), then [Architecture overview](Architecture-Overview)
-5. [Codebase coverage ledger](Codebase-Coverage-Ledger) and [Deep-review findings](Deep-Review-Findings) before touching risky systems
+5. [Current source status snapshot](Current-Source-Status-Snapshot) before trusting older patched/unpatched pulses
+6. [Codebase coverage ledger](Codebase-Coverage-Ledger) and [Deep-review findings](Deep-Review-Findings) before touching risky systems
 
 ## Worktree Map
 
@@ -24,7 +25,9 @@ This is the first-10-minutes path for `rayswaynl/a2waspwarfare`. It is for orien
 - Gameplay edits start in the Chernarus source mission.
 - After mission code edits, run `dotnet run` from `Tools/LoadoutManager`; missing `7za` only blocks packaging.
 - For skip-listed generated files, `LoadoutManager` is not enough. See [Tools and build workflow](Tools-And-Build-Workflow).
+- For generated-folder questions, use [Content structure and maps](Content-Structure-And-Maps): Chernarus is source, Takistan is generated vanilla, and modded missions are forks/stubs until the owner decides otherwise.
 - External references explain engine behavior; repo source proves what this fork actually does.
+- `publicVariable` and `setVariable [..., true]` can replicate last-value state; they do not prove server authority or replay complete marker/queue state for JIP clients.
 
 ## Fast Source Checks
 
@@ -54,7 +57,7 @@ Use `-LiteralPath` with PowerShell cmdlets for mission paths containing `[55-2hc
 - Keep [Coordination board](Coordination-Board) current for active or completed lanes.
 - Update [`agent-context.json`](agent-context.json) when page lists, high-level facts or durable risks change.
 - Use [`agent-status.json`](agent-status.json) for the compact current progress snapshot and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) for implementation-sized handoffs.
-- Run `powershell -ExecutionPolicy Bypass -File .\Tools\ValidateWiki.ps1` before handing off.
+- Run `powershell -ExecutionPolicy Bypass -File docs\validate-wiki.ps1` before handing off; this includes JSON/JSONL parse checks. After syncing the GitHub wiki checkout, run `powershell -ExecutionPolicy Bypass -File .\Tools\TestWikiParity.ps1 -WikiPath C:\Users\Steff\_wasp_wiki_tmp` and `powershell -ExecutionPolicy Bypass -File .\Tools\ValidateWiki.ps1 -WikiPath C:\Users\Steff\_wasp_wiki_tmp -SkipGitDiffCheck`.
 
 ## Continue Reading
 

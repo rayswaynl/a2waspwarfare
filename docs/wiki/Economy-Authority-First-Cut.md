@@ -214,6 +214,59 @@ Future code owner:
 4. Only then migrate upgrades and construction as separate branches. Do not bundle player-buy locality redesign into the clamp patch.
 5. After mission edits, run `Tools/LoadoutManager` to propagate generated mission changes.
 
+## Economy data flow + authority boundaries
+
+### What currently starts in client vs server
+
+- Player-side funds (cash): `Client/Functions/Client_ChangePlayerFunds.sqf` and helper flows call `Common_ChangeTeamFunds` directly, so the client can both validate affordability and mutate the replicated `wfbe_funds` value on the owning team object.
+- Side supply:
+  - Live requests from client go through `Common/ChangeSideSupply` and `WFBE_RequestSupplyValue` temp-variable/publicVariableServer handoff.
+  - Server-side finalizers are in `Server_ChangeSideSupply.sqf` and `Server_PV_RequestSupplyValue.sqf`, but there is no requester proof in the temp-path.
+- Commander authority:
+  - `GUI_Commander_VoteMenu.sqf` sends `RequestNewCommander` through PVF.
+  - `Server_AssignNewCommander.sqf` still reads handler args incorrectly and both call-path and helper still emit `new-commander-assigned` notifications.
+- Construction/defense/upgrade:
+  - `RequestStructure`, `RequestDefense`, and `RequestUpgrade` are server-request entrypoints.
+  - Their handlers execute server-side side-effects after a local client affordability pre-check and existing payload checks.
+  - The payload-to-server trust boundary still depends on handler behavior and not full sender-side identity/replay guardrails.
+- Rewards:
+  - Kill/town/camp/reward flows call mixed paths:
+    - `RequestOnUnitKilled` and nearby bounty helpers still perform server-side effects for some classes of reward.
+    - Other reward paths are client-initiated and mutate funds through `ChangePlayerFunds` or `WFBE_CL_FNC_ChangeClientFunds` for the local HUD/client message flow.
+  - Supply mission `supplyMissionCompleted` still consumes vehicle vars set in client start path unless owner-approved redesign.
+- Support and service:
+  - `GUI_Menu_Service.sqf`, `GUI_Menu_EASA.sqf`, `GUI_BuyGearMenu.sqf`, Wasp repair actions and service timers debit `ChangePlayerFunds` locally and then trigger action/animation side effects.
+
+### Boundary matrix
+
+| Economic class | Client can request | Server currently validates | Server currently finalises mutation |
+| --- | --- | --- | --- |
+| Upgrade start | yes | side/class/basic affordability only via payload context | `Server_ProcessUpgrade` increments upgrade state after receiving `RequestUpgrade`; dependency re-check and requester proof are weak |
+| Construction/defense | yes | side, class and some existence checks are present | `RequestStructure`/`RequestDefense` execute placement and side effects |
+| Factory production | yes | local queue token/cost checks only | queue dequeue and build are still local in `Client_BuildUnit.sqf` |
+| Supply mission reward | yes | cooldown and proximity checks are partially server-owned | `supplyMissionCompleted` applies completion and payout |
+| Side supply mutation | yes (`_temp_*` pubVar) | minimal numeric/sidelane checks only in current `Server_ChangeSideSupply.sqf` | server writes `wfbe_supply_<side>` directly |
+| Commander request/assignment | yes | cooldown/eligibility check exists in request wrapper; no sender identity proof | assignment helper performs side logic resolution and team update |
+| Bounty/town/camp payout | partial | mixed: some server-side, some client-side helpers | mixed across client HUD and dedicated handlers |
+
+### Known broken / exploitable / undocumented edges
+
+- Broken: side-supply debit inversion in both common and server handlers (`_change = _currentSupply - _amount` path).
+- Exploitable: supply mission completion uses client-stamped `SupplyFromTown/SupplyAmount/SupplyByHeli` without a server-owned canonical transaction object.
+- Exploitable: commander-related payload mismatch risks double-notify and mis-shaped request arguments in reassignment flow.
+- Exploitable: direct publicVariable command surfaces (`ATTACK_WAVE_INIT`, `wfbe_supply_temp_*`) still lack sender-verifiable requester anchors.
+- Partial: upgrade/structure/defense handlers still trust payload shape and do not own full anti-forgery request schema today.
+- Undocumented: unified ledger map for bounty, salvage, camp/town and side-income paths is still scattered across kill/town/supply/client-reward files.
+
+### Safer future change shape
+
+- Introduce a requester-aware transaction shape at each high-risk boundary:
+  - include requester UID/player object in a way that is canonical in `WFBE_CO_FNC_SendToServer` payloads for spend and reward operations
+  - derive side/funds/supply/ownership strictly from server state
+  - validate idempotency and reject replay/stacked completion.
+- Keep client-side UI code as affordance and immediate feedback only; move final mutation+audit fields to server-owned transition records.
+- Preserve local gameplay responsiveness by returning clear rejection reasons over current reward/status channels.
+
 Codex/Claude follow-up:
 
 - Review whether `Common_ChangeSideSupply.sqf` can be split into a server-local mutation helper plus a client request helper. That would reduce future direct-PV confusion.
@@ -224,3 +277,37 @@ Codex/Claude follow-up:
 Previous: [Pending owner decisions](Pending-Owner-Decisions) | Next: [Documentation implementation plan](Documentation-Implementation-Plan)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
+
+## Economy authority and reward boundary map (deep audit follow-up, 2026-06-03)
+
+### Core flow summary
+1) Team funds (money)
+- Client intent starts in request wrappers (for example Client/Functions/Client_ChangePlayerFunds.sqf) and is consolidated through Common_ChangeTeamFunds.
+- Real sinks in server reward paths include Server/PVFunctions/RequestOnUnitKilled.sqf and Server/Module/supplyMission/supplyMissionCompleted.sqf.
+- Trust boundary: most high-impact monetary mutations are server-side, but several client-originated payload values must still be validated before applying changes.
+
+2) Side supply
+- Common_GetSideSupply can request server value via WFBE_RequestSupplyValue when cache is stale.
+- Mutations are in Common_ChangeSideSupply and Server/Functions/Server_ChangeSideSupply; both currently compute negative deltas by formula that can reward players instead of draining.
+- Trust boundary: some supply flows are safe when called from server request handlers, but command-run values can be introduced by client mission state.
+
+3) Commander voting / new commander authority
+- Request route: Server/PVFunctions/RequestNewCommander.sqf checks vote cooldown then forwards side/candidate to assignment helper.
+- Assignment sink: Server/Functions/Server_AssignNewCommander.sqf.
+- Trust boundary: missing strong identity/ownership proof and helper arg parsing mismatch risk.
+
+4) Construction / factory / upgrade
+- Requests route through Server/PVFunctions/RequestStructure.sqf, Server/PVFunctions/RequestDefense.sqf, and Server/PVFunctions/RequestUpgrade.sqf.
+- Funding checks and cost lookups generally happen in these server handlers, but malformed or maliciously crafted requests can still pass through weaker front-door wrappers.
+
+### Broken, exploitable, partial, undocumented reward paths
+- Broken: Negative supply mutation inversion in both common/server supply mutators.
+- Exploitable: supply mission completion trusts SupplyAmount and branch flags carried from client-owned vehicle vars.
+- Exploitable: Common_AttackWaveActivate.sqf/Server_AttackWave.sqf bridge can transport client-supplied wave parameters into server pricing/state through ATTACK_WAVE_INIT.
+- Partial: commander assignment emits duplicate notifications from request + assign phases, creating duplicate authority events.
+- Undocumented: unified reward-index remains fragmented across kill handling, mission completion, salvage recovery, and side-income entry points.
+
+### Safer future changes
+- Canonicalize one server-owned ledger object per economic event (mission, upgrade, bounty, kill) before applying side effects.
+- Validate side, player identity, and request intent at the earliest server boundary.
+- Reject or ignore all mutable client-supplied numeric/side payload values until normalized by server checks.

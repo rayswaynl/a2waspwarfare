@@ -1,0 +1,42 @@
+{
+  "schema": "a2waspwarfare-agent-release-readiness-v1",
+  "generatedAt": "2026-06-02T20:20:00+02:00",
+  "status": "not-release-ready-docs-only",
+  "basis": "Created because the mission brief names agent-release-readiness.json but no such file existed in docs/wiki before this bottleneck pass.",
+  "currentSourceTruth": "Current-Source-Status-Snapshot.md",
+  "readinessBlockers": [
+    {
+      "priority": "P0",
+      "id": "false-patched-status-history",
+      "summary": "Older append-only records still contain superseded source/Vanilla patched claims; current source snapshot says the disputed cleanup lanes are unpatched or opportunity-only.",
+      "nextAction": "Keep current-source truth centralized and require direct source+Vanilla evidence plus OA smoke before patched wording returns."
+    },
+    {
+      "priority": "P0",
+      "id": "server-authority-hardening",
+      "summary": "PVF dispatch, ICBM RequestSpecial and side-supply authority remain open hardening work.",
+      "nextAction": "Use agent-hardening-backlog.jsonl and Pending-Owner-Decisions.md; do not claim public-server readiness before owner-approved patches and negative tests."
+    },
+    {
+      "priority": "P1",
+      "id": "runtime-smoke-pending",
+      "summary": "Commander, factory, paratrooper, skill init, hosted FPS, supply scan and WASP marker lanes require Arma 2 OA smoke after source patches.",
+      "nextAction": "Patch source Chernarus first, propagate generated Vanilla where applicable, then record hosted/dedicated/JIP smoke."
+    },
+    {
+      "priority": "P1",
+      "id": "mirror-validation",
+      "summary": "Docs validation and wiki parity gates exist but must be run after each docs/wiki sync.",
+      "nextAction": "Run docs/validate-wiki.ps1, Tools/TestWikiParity.ps1 and mirror Tools/ValidateWiki.ps1 -SkipGitDiffCheck after sync."
+    }
+  ],
+  "validationGates": [
+    "docs/validate-wiki.ps1",
+    "Tools/TestWikiParity.ps1",
+    "Tools/ValidateWiki.ps1 -SkipGitDiffCheck in the mirror after sync",
+    "git diff --check",
+    "LoadoutManager propagation after gameplay source edits",
+    "Arma 2 OA hosted/dedicated/JIP smoke after gameplay source edits"
+  ],
+  "linkedQueue": "Bottleneck-Removal-Queue.md"
+}

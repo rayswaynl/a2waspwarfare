@@ -49,7 +49,7 @@ Pure utility library: `CIPHER_CompareString` (lexicographic compare via `toArray
 ## Notes for hardening / review
 - Module **gates** are config constants (`WFBE_C_MODULE_WFBE_*`) read at boot; toggling them is the supported on/off switch.
 - Combat modules such as IRS/CM/Engines attach their EHs or actions at **unit creation** in `Client/Functions/Client_BuildUnit.sqf`, so they are client-local on the buyer's machine — consistent with the factory locality model (DR-33). Reaktiv is different: current source evidence shows a compiled damage handler, but no live attachment point outside `Common/Module/Reaktiv/`.
-- The only module with a dedicated authority finding is **Nuke/ICBM** (DR-27); the rest are cosmetic/QoL or AI behavior with no client-to-server trust surface beyond the shared PVF dispatcher.
+- Do not read this page as a blanket trust-surface closure. Dedicated authority/integration findings already live on Nuke/ICBM (DR-27), EASA/service (DR-28), AntiStack (DR-7..DR-10), supplyMission (DR-39 plus DR-44's final side-supply mutation channel), MASH markers (DR-34) and serverFPS (DR-19). The previously-undocumented modules below are mostly cosmetic/QoL or AI behavior, but any new client-to-server path still needs its own source review.
 
 ## Continue Reading
 

@@ -60,3 +60,26 @@ Scope: patch source Chernarus first, then propagate generated missions with `Too
 ## Continue Reading
 
 Architecture: [Supply mission architecture](Supply-Mission-Architecture) | Scan sub-step: [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) | Current truth: [Current source status snapshot](Current-Source-Status-Snapshot)
+
+## Supply authority playbook addendum (2026-06-03)
+
+### Miksuu commit mapping
+- PR #5 / commit 91d0f36
+- PR #10 / commit 97dfff26
+- PR #11 / commit 8164cc33
+- PR #12 / commit 86ec28d6
+
+### Glitch-fix ledger
+
+- PR #5/10/11/12 fixed multiple transport/runtime edges that were then moved out of the "unpatched" lane state.
+- Remaining source-hardening priorities are replay/idempotency and one-sided authority proof: loaded-state record, duplicate handler dedupe and command-origin validation.
+
+### Current known gaps after this set
+- Supply completion path still uses client-attached mission vars (SupplyAmount, SupplyByHeli, SupplyFromTown) as direct reward inputs.
+- Start/dead handlers can register repeatedly depending on mission restart behavior, creating duplicate event paths.
+- Commander assignment still emits duplicate new-commander events in request + assign layers.
+
+### Required next actions
+- Introduce server-owned mission state object; deny completion when client vars do not match the server snapshot.
+- Keep supply run completion reward logic single-entry only in supplyMissionCompleted.sqf with explicit idempotent transaction flags.
+- Gate commander assignment/notification flow to one authoritative branch.

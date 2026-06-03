@@ -1,9 +1,25 @@
 # Sidebar
 
-- [Home](Home)
-- [Quickstart](Quickstart-For-Humans-And-Agents)
-- [Agent context](Agent-Context)
-- [Coordination board](Coordination-Board)
-- [Feature status](Feature-Status-Register)
-- [Documentation plan](Documentation-Implementation-Plan)
-
+- Getting started
+  - [Home](Home)
+  - [Quickstart](Quickstart-For-Humans-And-Agents)
+  - [AI assistant guide](AI-Assistant-Guide)
+  - [AI assistant developer guide](AI-Assistant-Developer-Guide)
+  - [LLM agent entry pack](LLM-Agent-Entry-Pack)
+  - [llms.txt](llms.txt)
+- Status and coordination
+  - [Agent context](Agent-Context)
+  - [Progress dashboard](Progress-Dashboard)
+  - [Coordination board](Coordination-Board)
+  - [Bottleneck removal queue](Bottleneck-Removal-Queue)
+  - [Current source status](Current-Source-Status-Snapshot)
+  - [Wiki mirror reconciliation](Wiki-Mirror-Reconciliation-Plan)
+- Quality and operations
+  - [Feature status](Feature-Status-Register)
+  - [Documentation plan](Documentation-Implementation-Plan)
+  - [Knowledge platform roadmap](Knowledge-Platform-Roadmap)
+  - [Wiki quality audit](Wiki-Quality-Audit)
+- Compatibility and references
+  - [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit)
+  - [Arma 2 OA command versions](Arma-2-OA-Command-Version-Reference)
+  - [Wiki source consistency](Wiki-Source-Consistency-Findings)

@@ -10,9 +10,19 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 
 | Agent | Current ownership | Expected output |
 | --- | --- | --- |
-| Codex | Initial wiki implementation, repo/wiki publishing, source inventory, agent context artifact. | Wiki pages, `docs/wiki` mirror, `agent-context.json`, worklog entry. |
-| Claude | Independent review/deepening pass after Codex publish. | Add findings to `Agent-Worklog.md`; propose or commit wiki improvements without overwriting Codex work. |
-| Future agents | Feature-specific docs upkeep and code-change handoffs. | Update relevant wiki pages and `agent-context.json` when architecture or workflows change. |
+| Codex | Active `bottleneck-reducer-progress-accelerator` lane: current-source truth, bloat reduction, mirror/wiki coordination, validation gates and next-action queues. | Source-backed wiki edits, current-state/machine-context refreshes, bottleneck queue upkeep, worklog/event/knowledge records and validator results. |
+| Claude | Autonomous collaboration-follow reviewer; latest recorded deep-review finding is DR-45, and `Claude-Loop-Goal.md` / `Claude-Goal.md` define the next review loop. | New or reconciled DR findings, source-backed contradiction reports and handoffs that do not overwrite Codex/current-source state. |
+| Codex-2 | Active `oa-object-lifecycle-command-addendum`; prior command-reference addenda remain archived under `archivedClaims`. | Source-backed OA object lifecycle/create/delete/init guardrails without overlapping Codex bottleneck coordination. |
+| Future agents | Feature-specific docs upkeep or code-change handoffs after reading current snapshot/status first. | Update the relevant wiki pages plus machine context; for gameplay code, patch source Chernarus first, propagate generated Vanilla and smoke in Arma 2 OA. |
+
+## Current Coordination Snapshot
+
+- Live status surfaces: `agent-status.json`, `agent-collaboration.json`, `Agent-Worklog.md`, `agent-events.jsonl`, `agent-knowledge.jsonl` and [Current source status snapshot](Current-Source-Status-Snapshot).
+- Current live claims in `agent-collaboration.json`: `activeClaims` contains `bottleneck-reducer-progress-accelerator` plus Codex-2's `oa-object-lifecycle-command-addendum`; Codex-2's config/params, role/locality and scheduler addenda plus older published/review lanes are preserved under `archivedClaims`.
+- Current source truth: the disputed cleanup lanes remain patch-ready/current-source-unpatched or opportunity-not-patched until source Chernarus and generated Vanilla evidence proves otherwise.
+- Current bottleneck truth: use [Bottleneck removal queue](Bottleneck-Removal-Queue) for the ranked P0/P1/P2 queue, next five actions, returned-report harvest queue and validation gaps.
+- Current mirror/wiki truth: active `_wasp_wiki_tmp` parity is restored after the latest scoped sync; [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) is the no-blind-copy policy for future drift or alternate-checkout reconciliation.
+- The old Faraday/Mencius/Hilbert/Cicero/Curie/Meitner scout lanes and the `victory-endgame-runtime-atlas` lane are harvested history, not current claims in this board.
 
 ## Shared Files
 
@@ -22,33 +32,51 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 - `docs/wiki/Documentation-Implementation-Plan.md`: implementation roadmap for future documentation passes.
 - `docs/wiki/Agent-Worklog.md`: append-only agent-visible worklog.
 - `docs/wiki/Feature-Status-Register.md`: open risks, partial features and missing features.
+- `docs/wiki/Current-Source-Status-Snapshot.md`: current source/Vanilla truth for disputed cleanup lanes; latest snapshot says six cleanup lanes are patch-ready/current-source-unpatched and WASP marker wait cleanup is opportunity-not-patched.
+- `docs/wiki/Bottleneck-Removal-Queue.md`: current bottleneck/action queue for docs/process cleanup.
+- docs/wiki/Wiki-Mirror-Reconciliation-Plan.md: no-blind-copy policy, historical alternate-checkout drift inventory and validation commands for repo mirror/wiki checkout reconciliation.
+- `docs/wiki/agent-release-readiness.json`: evidence-only release-readiness gate record.
 - `Tools/ValidateWiki.ps1`: docs/machine-context validation gate.
+- `Tools/TestWikiParity.ps1`: read-only `docs/wiki` to GitHub wiki checkout parity gate after mirror sync.
 
-## Active Lanes
+## Historical Lane Ledger
+
+This append-only table is lane history, not the live claim board. Use the current coordination snapshot and machine-status files above for live ownership; historical rows remain useful for audit trail and supersession context.
 
 | Date | Agent | Lane | Status |
 | --- | --- | --- | --- |
+| 2026-06-02 | Codex | wiki-mirror-reconciliation-plan | Published: documented no-blind-copy owner policy; later `_wasp_wiki_tmp` scoped sync restored active mirror parity while retaining older `_wasp_wiki_claude` drift as historical/alternate-checkout evidence. |
+| 2026-06-02 | Codex | current-source-status-snapshot-supersession | Complete: direct source inspection superseded the false 18:40/18:45 patched pulse. Commander, factory, paratrooper registration, duplicate Skill_Init, hosted FPS and supply scan lanes remain patch-ready/current-source-unpatched; WASP marker wait cleanup remains opportunity-not-patched. |
+| 2026-06-02 | Codex | `source-patched-claim-current-correction` | Corrected by the direct source re-check: commander reassignment, factory queue counter/token cleanup, paratrooper marker registration, client `Skill_Init`, hosted FPS loop sleep and supply command-center scan narrowing remain patch-ready/current-source-unpatched; WASP marker wait cleanup remains opportunity-not-patched. |
+| 2026-06-02 | Codex | `client-skill-current-state-rereconcile` | Corrected by the direct source re-check: current source still calls `Skill_Init.sqf` at `:547` and `:571`, then `WFBE_SK_FNC_Apply` at `:572`; source patch and Arma smoke remain. |
+| 2026-06-02 | Codex | `factory-queue-current-state-reconcile` | Corrected by the direct source re-check: current source still uses random `varQueu` tokens and the crewless branch exits before the normal queue decrement; source patch and public `queu` broadcast review remain separate. |
+| 2026-06-02 | Codex | `commander-page-current-state-reconcile` | Corrected by the direct source re-check: current source still assigns `_side = _this` and `RequestNewCommander.sqf` still sends a caller-side duplicate notification; source patch, Arma smoke and requester/role validation remain. |
+| 2026-06-02 | Codex | `docs-platform-scaffold-state-correction` | Complete: filesystem check confirmed no MkDocs/docs-CI scaffold is present; [Knowledge platform roadmap](Knowledge-Platform-Roadmap) now names `Tools/ValidateWiki.ps1` as the active validator and keeps MkDocs/Pages/docs CI future-only. |
+| 2026-06-02 | Codex | `home-current-map-dedup` | Complete: split Home Current Map into shorter runtime, cleanup, risk, authority and documentation-quality route rows; removed repeated supply-scan routing inside the map; restored LLM bootstrap artifacts and page parity needed for validation. |
+| 2026-06-02 | Codex | `knowledge-platform-navigation-route` | Complete: surfaced `Knowledge-Platform-Roadmap.md` in `_Sidebar.md` and `_Footer.md` so docs-platform decisions are reachable outside Home. |
+| 2026-06-02 | Codex | `generated-mission-mental-model` | Complete: clarified `Content-Structure-And-Maps.md` with mission ownership tiers for source Chernarus, generated Takistan, divergent modded forks and abandoned modded stubs. |
+| 2026-06-02 | Codex | `networking-mental-model-gateway` | Complete: clarified `Networking-And-Public-Variables.md` with a source-backed layer model separating engine broadcasts, PVEH receipt, Wasp PVF dispatch and gameplay handler authority. |
 | 2026-06-02 | Codex | `external-reference-gateway-upgrade` | Complete: expanded `Arma-2-OA-External-Reference-Guide.md` into a compact first-stop router for official BI OA command docs, Wasp subsystem pages and common engine-claim mistakes. |
 | 2026-06-02 | Codex | `collaboration-protocol-gateway-upgrade` | Complete: expanded `Agent-Collaboration-Protocol.md` into a concise read-order, collision-check, update-surface and validation guide. |
 | 2026-06-02 | Codex | `wiki-mirror-route-parity-repair` | Complete: added gateway pages/files for concurrently restored route links, refreshed `agent-context.json` page arrays and restored full `Tools/ValidateWiki.ps1` pass. |
 | 2026-06-02 | Codex | `agent-status-concurrent-state-reconcile` | Complete: reconciled with the newer `agent-status.json` shape; `agents.Codex` and `agents.Codex-2` are intentional separate status surfaces, so no active-agent cleanup is pending. |
-| 2026-06-02 | Codex | `supply-scan-patch-status-reconcile` | Complete: reconciled docs and machine context with current Chernarus source plus Vanilla Takistan `["Base_WarfareBUAVterminal"]` scan patch; Arma smoke remains. |
-| 2026-06-02 | Codex | `backlog-supply-scan-candidate-sync` | Complete: synced `agent-hardening-backlog.jsonl` supply cleanup entry with the exact `["Base_WarfareBUAVterminal"]` scan candidate and validation notes. |
-| 2026-06-02 | Codex | `supply-scan-class-filter-handoff` | Complete: grounded supply command-center scan narrowing in source and BI nearestObjects/isKindOf docs; later source/Vanilla patch status is captured by `supply-scan-patch-status-reconcile`. |
-| 2026-06-02 | Codex | `hosted-fps-current-status-reconcile` | Complete: reconciled AI/headless, performance sweep and machine context with the source/Vanilla hosted-FPS early-exit patch; Arma smoke remains. |
+| 2026-06-02 | Codex | `supply-scan-patch-status-reconcile` | Corrected by the current source snapshot: current source still uses a broad `nearestObjects [..., [], 80]` command-center scan before filtering; source patch, Vanilla propagation and Arma smoke remain. |
+| 2026-06-02 | Codex | `backlog-supply-scan-candidate-sync` | Corrected by source re-check: `agent-hardening-backlog.jsonl` should treat scan narrowing as patch-ready/current-source-unpatched inside the still-open supply authority cleanup. |
+| 2026-06-02 | Codex | `supply-scan-class-filter-handoff` | Corrected by the current source snapshot: scan narrowing is patch-ready/current-source-unpatched; runtime smoke follows after implementation. |
+| 2026-06-02 | Codex | `hosted-fps-current-status-reconcile` | Corrected by source re-check: current source still checks `isDedicated` inside both FPS publisher scripts; source patch, Vanilla propagation and Arma smoke remain. |
 | 2026-06-02 | Codex | `tool-command-smoke-notes` | Complete: locally verified LoadoutManager build and PerformanceAuditAnalyzer command shape, then documented remaining real generation/RPT audit gates. |
 | 2026-06-02 | Codex | `windows-safe-search-snippets` | Complete: updated Quickstart and AI guide source-search examples to use `$SourceMission` plus `Test-Path -LiteralPath` for bracketed mission paths. |
 | 2026-06-02 | Codex | `home-route-map-compression` | Complete: compressed Home into task-oriented routes and moved current source/Vanilla patch follow-ups into a clean current-state block. |
-| 2026-06-02 | Codex | `deep-review-current-status-notes` | Complete: added current-status notes to DR-2 and related handoffs so paratrooper marker registration is source/Vanilla patched, smoke pending. |
-| 2026-06-02 | Codex | `atlas-source-status-reconcile` | Complete: updated SQF atlas and AI/headless wording to match current paratrooper PVF and duplicate `Skill_Init` source/Vanilla patch state. |
+| 2026-06-02 | Codex | `deep-review-current-status-notes` | Corrected by the current source snapshot: paratrooper marker sender and handler file exist, but `HandleParatrooperMarkerCreation` registration is still missing in current source/Vanilla; source patch, smoke and modded drift cleanup remain. |
+| 2026-06-02 | Codex | `atlas-source-status-reconcile` | Corrected by the direct source re-check: current source still has duplicate `Skill_Init` calls and still lacks `HandleParatrooperMarkerCreation` registration; source/Vanilla patch and smoke remain. |
 | 2026-06-02 | Codex | `wiki-validation-exact-machine-refs` | Complete: strengthened `Tools/ValidateWiki.ps1` to validate exact machine-file references to wiki pages, agent JSON/JSONL files and repo PowerShell tools. |
-| 2026-06-02 | Codex | `client-skill-context-reconcile` | Complete: reconciled Function/Module, Performance Sweep and machine context with the source/Vanilla duplicate `Skill_Init` cleanup; Arma smoke remains. |
+| 2026-06-02 | Codex | `client-skill-context-reconcile` | Corrected by the direct source re-check: current source still has duplicate `Skill_Init` calls before skill apply; source patch and Arma smoke remain. |
 | 2026-06-02 | Codex | `coordination-routing-refresh` | Complete: updated live coordination guidance away from retired auxiliary coordination files and toward current board/worklog/status/backlog artifacts. |
 | 2026-06-02 | Codex | `wiki-validation-page-parity` | Complete: strengthened `Tools/ValidateWiki.ps1` to require `agent-context.json` page-list parity with the actual wiki mirror and validate repo tool references. |
 | 2026-06-02 | Codex | `wiki-validation-tooling` | Complete: added `Tools/ValidateWiki.ps1` and routed docs-only handoff validation through one reusable command. |
 | 2026-06-02 | Codex | `machine-file-refresh` | Complete: replaced stale `agent-status.json` and `agent-hardening-backlog.jsonl` with concise current machine artifacts and wired them back into `agent-context.json`. |
 | 2026-06-02 | Codex | `machine-file-authority-note` | Complete: fixed duplicate `agent-context.json` machine-file listing and clarified that local untracked `agent-hardening-backlog.jsonl` / `agent-status.json` are legacy or inactive unless refreshed against the current mirror. |
-| 2026-06-02 | Codex | `paratrooper-marker-context-reconcile` | Complete: reconciled abandoned-feature and machine-context notes with current source/Vanilla `HandleParatrooperMarkerCreation` registration; remaining work is Arma smoke and modded-mission propagation cleanup. |
+| 2026-06-02 | Codex | `paratrooper-marker-context-reconcile` | Corrected by source re-check: current source/Vanilla include sender and handler file, but still omit `HandleParatrooperMarkerCreation` registration; source patch, Arma smoke and modded cleanup remain. |
 | 2026-06-02 | Codex | `antistack-trust-loop-drilldown` | Complete: added AntiStack external DB trust, response parsing, polling, scoring/player-list loops, join/disconnect/endgame persistence, skill compensation and launch-ACK routing notes. |
 | 2026-06-02 | Codex | `pvf-handler-payload-drilldown` | Complete: added registered server-bound PVF payload trust/mutation notes for construction/MHQ repair, RequestSpecial tags, upgrades, score mutation, commander/vote, team updates, vehicle lock/auto-wall and join handshake. |
 | 2026-06-02 | Codex | `direct-pv-handler-drilldown` | Complete: added handler-family trust/mutation notes for attack-wave, side-supply temp, supply missions, supply value/cooldown pulls, AntiStack launch ACK, AFK/BattlEye, marker/message/display events and server-origin status broadcasts. |
@@ -99,8 +127,7 @@ Create and maintain a deep developer wiki for `rayswaynl/a2waspwarfare`, coverin
 ## Review Gates
 
 - Wiki pages link-check cleanly.
-- `docs/wiki` mirror matches the wiki pages.
+- `docs/wiki` mirror/wiki parity status is explicit: run `Tools\TestWikiParity.ps1` after intended syncs and use [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) while divergence is open.
 - `agent-context.json` stays valid JSON.
 - Any broken/partial feature claim cites concrete source evidence.
 - No Arma 3-only scripting assumptions are introduced.
-

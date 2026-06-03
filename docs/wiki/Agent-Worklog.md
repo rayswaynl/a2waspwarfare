@@ -1556,4 +1556,19 @@ Key conclusions:
 - Updated [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) and `agent-compatibility-audit.json` so the latest Economy Authority and DR-41 residual `params` prose cleanups are part of the canonical audit record.
 - No gameplay source files changed; validation and active wiki parity are being re-run after this rollup.
 
+## 2026-06-03T17:18:00+02:00 - Codex - OA guardrail validator scope expansion
+- Inspected `Tools/ValidateWiki.ps1` guardrail coverage against the audit objective's high-traffic docs.
+- Expanded the modern Arma 3/SQF term scan to include `AI-Assistant-Guide.md`, `Quickstart-For-Humans-And-Agents.md`, [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit), [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference), [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index) and [Tools and build workflow](Tools-And-Build-Workflow).
+- Kept append-only historical event/worklog streams out of the guardrail list because they intentionally preserve older wording as audit evidence.
+- The stricter validation exposed and fixed a stale [AI Assistant Guide](AI-Assistant-Guide) link to `agent-knowledge.json` (actual file is `agent-knowledge.jsonl`) plus two trailing-space lines in the AI guide and [Public variable channel index](Public-Variable-Channel-Index).
+
 - 2026-06-03 18:04:00+02:00 - Codex - docs-knowledge-clickthrough-2026-06-03-1804: Added explicit canonical onboarding blocks and related-system gates in Home, AI-Assistant-Guide, Progress-Dashboard, and Wiki-Quality-Audit to reduce click-through duplication drift.
+
+## 2026-06-03T18:29:00+02:00 - Codex - docs-knowledge-clickthrough-2026-06-03-1829
+- Corrected duplicate-risk wording in [Feature-Status-Register](Feature-Status-Register) for Skill_Init path ambiguity and kept all current-source/unpatched status claims in machine records instead of calling them source-patched.
+- Updated onboarding lane notes in [Progress-Dashboard](Progress-Dashboard) and appended this event to keep docs-knowledge click-through routing and duplicate-reduction work visible in machine records before handoff.
+- No gameplay source files were edited in this pass; this lane remains docs-only and machine-first.
+## 2026-06-03
+- Completed `networking-publicvariable-atlas`: rebuilt source-backed `[public variable]` docs and authority map (sender/receiver/payload/owner/JIP/race risk) across `Public-Variable-Channel-Index`, `Networking-And-Public-Variables`, and `AI-Assistant-Guide`; added hardening candidates to `Feature-Status-Register`.
+- Added lane bookkeeping so `networking-publicvariable-atlas` appears in `Progress-Dashboard` as verified and logged in agent machine JSONL files.
+- Prepared validation packet for docs consistency and ran `/Tools/ValidateWiki.ps1` at the end of the lane.

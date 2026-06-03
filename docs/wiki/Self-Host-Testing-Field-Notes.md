@@ -61,9 +61,9 @@ A single broken PBO in `MPMissions` **poisons the MP-browser scan for every miss
 
 ## 8. Arma 2 OA scripting reminders (bit us this run)
 
-- **No `distance2D`** (Arma 3 only) — compute horizontal distance manually (`sqrt(dx*dx + dy*dy)`, or compare squared distances to avoid the `sqrt`).
+- **No `distance2D` command** (Arma 3 only) — use OA-safe `BIS_fnc_distance2D` when available, or compute horizontal distance manually (`sqrt(dx*dx + dy*dy)`, or compare squared distances to avoid the `sqrt`).
 - **No `lnbSetTooltip`** — list boxes cannot show per-row hover tooltips; use a click hint instead.
-- **No `try`/`catch`** — guard with `isNil` / `isNull` and lazy `&&`/`||` short-circuit blocks.
+- **`try`/`catch` basic form is OA-compatible** per BI, but the `args try code` alternate syntax is Arma 3-era. For small local test helpers, simple `isNil` / `isNull` guards and lazy `&&`/`||` short-circuit blocks are still easier to debug in RPTs.
 
 See the [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) for the full command-availability scan.
 

@@ -2,6 +2,42 @@
 
 This register separates working systems from partial, deferred or risky systems found during indexing. For revive/remove decisions on dormant feature paths, use [Abandoned feature revival](Abandoned-Feature-Revival-Review).
 
+## What this page is
+
+- Canonical risk-and-readiness map for current gameplay feature health.
+- Evidence-first patch status for active systems, partial systems and likely regressions.
+- Canonical cross-link hub so subsystem pages and playbooks route users here for current patch risk and ownership.
+
+## Where it lives
+
+- Wiki: `docs/wiki/Feature-Status-Register.md`
+- Source-of-truth inputs: [`agent-events.jsonl`](agent-events.jsonl), [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-knowledge.jsonl`](agent-knowledge.jsonl), [`agent-status.json`](agent-status.json)
+- Runtime owner: the mission source at `Missions/[55-2hc]warfarev2_073v48co.chernarus`
+
+## How this page runs in the workflow
+
+1. Read this register first for **risk ranking** before opening a subsystem playbook.
+2. Use `[Area]` rows to pick the current highest-impact lane and then open:
+   - Source index / atlas pages (e.g., `SQF-Code-Atlas.md`, `Server-Gameplay-Runtime-Atlas.md`)
+   - Hardening roadmap
+   - DR/cross-link pages (`Deep-review findings`, `Public-variable channel index`, feature atlases)
+3. Prefer this page for the latest patch status and known open dependencies before editing source.
+
+## What depends on this page
+
+- Navigation pages that route readers to risk-first playbooks:
+  - [Home](Home)
+  - [Progress dashboard](Progress-Dashboard)
+  - [Hardening roadmap](Hardening-Implementation-Roadmap)
+  - [Server authority migration map](Server-Authority-Migration-Map)
+  - Feature-specific atlases and subsystem pages: [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas), [SQF code atlas](SQF-Code-Atlas), [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Economy, towns and supply](Economy-Towns-And-Supply)
+
+## Risk notes
+
+- Keep patch-risk edits in-place and one-way: add proof to canonical pages instead of repeating deep call stacks in this register.
+- Treat entries marked "patch-ready-current-source-unpatched" as live claims requiring source+vanilla validation before changing status to published.
+- If a finding is promoted or closed, update this register and the corresponding lane record in `agent-feature-status.jsonl` first, then mirrors and progress pages.
+
 ## Working / Active Systems
 
 - Core Warfare loop: towns, commanders, bases, factories, upgrades, resources and victory checks.
@@ -22,6 +58,22 @@ This register separates working systems from partial, deferred or risky systems 
 
 ## Partial / Deferred / Needs Review
 
+## Networking / Public-variable hardening lane (source-backed)
+
+This lane tracks direct channels, PVF authority boundaries, and JIP semantics that are still open after the PVF dispatch trust patch lane.
+
+- `publicVariable`/`publicVariableServer` direct request channels are not hardened by PVF allowlisting.
+- `request` handlers still need explicit side/team/ownership checks even after dispatch is fixed.
+- missionNamespace/JIP handling differs by channel; some flows are request-response only and are not replay-safe.
+
+| Area | Evidence | Status |
+| --- | --- | --- |
+| Direct attack-wave request trust (`ATTACK_WAVE_INIT`) | `Common/Functions/Common_AttackWaveActivate.sqf`, `Server/Functions/Server_AttackWave.sqf`, DR-41 | **Live + open**: client payload directly drives discount and timing |
+| Direct side-supply mutation (`wfbe_supply_temp_*`) | `Common/Functions/Common_ChangeSideSupply.sqf`, `Server/Functions/Server_ChangeSideSupply.sqf`, DR-22/DR-44 | **Live + open**: side/amount trust and clamp behavior are not secure |
+| MASH marker relay health | `Server/Module/MASH/MASHMarker.sqf`, `Client/Module/MASH/receiverMASHmarker.sqf`, `Client/Init/Init_Client.sqf` | **Confirmed dead/partial**: server and client halves are mismatched |
+| Paratrooper marker registration gap | `Server/Support/Support_Paratroopers.sqf`, `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf`, `Common/Init/Init_PublicVariables.sqf` | **Patch-ready-source**: sender + handler exist; registration is inconsistent |
+| Spawn/race behavior in PVF dispatchers | `Common/Functions/Common_SendToServer*.sqf`, `Server/Functions/Server_HandlePVF.sqf`, `Client/Functions/Client_HandlePVF.sqf` | **Open**: dispatch and execution ordering still non-deterministic for burst traffic |
+
 | Area | Evidence | Status |
 | --- | --- | --- |
 | Autonomous AI supply trucks | `UpdateSupplyTruck` compile is commented at `Server/Init/Init_Server.sqf:36`, but the live call `[_side] Spawn UpdateSupplyTruck;` remains at `:383`, gated by `WFBE_C_ECONOMY_SUPPLY_SYSTEM == 0 && WFBE_C_AI_COMMANDER_ENABLED > 0`. `AI_UpdateSupplyTruck.sqf` also references missing `Server/FSM/supplytruck.fsm`. | Config-gated latent breakage. Default supply system 1 is safe; supply system 0 with AI commanders is broken until the compile and FSM are restored or redesigned. |
@@ -40,11 +92,14 @@ This register separates working systems from partial, deferred or risky systems 
 | Server `AIBuyUnit` path | `Init_Server.sqf` compiles `AIBuyUnit = Server_BuyUnit.sqf`, but source search only finds the compile and `Server_BuyUnit.sqf` itself. | Latent/unused until a dynamic caller is proven. Decide whether to revive for AI commander production or retire. |
 | Factory queue counter leak | Claude DR-33 confirmed `Client_BuildUnit.sqf:365` can exit an empty-vehicle purchase before the later `WFBE_C_QUEUE` decrement at `:469`. | Repeated empty-vehicle buys can locally soft-lock a factory category for that player. Decrement queue counters on every exit path. |
 | Factory FIFO token churn | `Client_BuildUnit.sqf` uses a random queue token and broadcasts the building `queu` array on each mutation. | Perf/JIP hardening gap. Use unique queue tokens and reduce public broadcasts before expanding factory side effects. |
-| Duplicate client skill init | Client/Init/Init_Client.sqf:547 still initializes skills before default gear selection; the former duplicate at :571 was removed in source Chernarus and propagated to Vanilla Takistan. Skill_Init.sqf:49 remains non-idempotent if future paths call it more than once. | Source/Vanilla patched; smoke pending. See [Client skill init idempotency](Client-Skill-Init-Idempotency). |
+| Duplicate client skill init | Client/Init/Init_Client.sqf calls `Skill_Init.sqf` at both `:547` and `:571` before default-gear selection and then calls `WFBE_SK_FNC_Apply` at `:572`. | Current-source status is still live-path ambiguous; do not mark as source-patched until gameplay smoke confirms single-path behavior. See [Client skill init idempotency](Client-Skill-Init-Idempotency). |
 | Commander reassignment call shape | `Server_AssignNewCommander.sqf` assigns `_side = _this`, then `_commander = _this select 1`; `RequestNewCommander.sqf` calls it with `[_side, _assigned_commander]`. | Likely bug. `_side` should probably be `_this select 0`; verify before relying on manual commander reassignment. |
+| Commander authority and requester validation | `RequestNewCommander` currently uses PVF wrapper cooldown logic but does not prove sender authority before mutate-eligible command-side transitions. `Server_AssignNewCommander.sqf` still emits duplicate `new-commander-assigned` paths. | High. Fix assignment call-shape and keep sender/side/role checks in one follow-up owner-validation pass; do not close commander-authority until both layers are patched. |
 | Supply mission cooldown casing | DR-18 confirms the town seed key and server read/write key differ by case. | Correctness bug. Use [Supply mission architecture](Supply-Mission-Architecture) for flow and [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) for patch shape. |
 | Supply mission reward authority | Client supply mission start sets truck `SupplyFromTown` and `SupplyAmount`; server completion trusts those truck variables. | Hardening gap. Recompute reward/cooldown server-side from trusted town/truck state. |
 | Supply mission command-center scan | `supplyMissionStarted.sqf:37-45` now filters the 80-meter command-center scan to `Base_WarfareBUAVterminal`; the 8-meter player/object scan remains broad by design. | Source/Vanilla patched; smoke pending. See [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing). |
+| Upgrade request authority | `RequestUpgrade` accepts side/id/level from clients after local UI checks, then `Server_ProcessUpgrade` applies progress/state transitions. | High. Local checks are partial; server-side side, owner, dependency and idempotency checks are still needed before trust assumptions are raised. |
+| Support/repair/rearm reward authority | `GUI_Menu_Service`, `GUI_Menu_EASA`, `GUI_BuyGearMenu`, bounty handlers and WASP repair actions still mutate/announce client-funds paths in places; HQ/camp/town reward emitters are mixed. | Medium. This is a shared non-isolated economy lane and should follow the upgrade/construction authority design rather than isolated local guards only. |
 | Victory/endgame winner inversion and double-fire | DR-11 is the canonical winner-inversion / persisted win-tally finding; DR-36 owns the `server_victory_threeway.sqf:23` mechanism and fix shape. | Correctness bug. Same-tick eliminations can double-fire endgame and overwrite/log the opposite winner. Route implementation through [Deep-review findings](Deep-Review-Findings) DR-11/DR-36 and the [Hardening roadmap](Hardening-Implementation-Roadmap). |
 | Threeway victory mode | Earlier DR-12 found `WFBE_C_VICTORY_THREEWAY` selection can skip the only auto-end detection path. | Broken/abandoned mode until end conditions are implemented for non-default victory modes. |
 | Resistance side supply updates | `Common_ChangeSideSupply.sqf` formats `wfbe_supply_temp_<side>` generically, but server handlers exist only for west/east. | Resistance side supply not fully wired. |
@@ -99,3 +154,25 @@ PR #1 adds or extends `Server/Module/supplyMission/supplyMissionStarted.sqf` so 
 Previous: [External integrations](External-Integrations) | Next: [Hardening roadmap](Hardening-Implementation-Roadmap)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
+
+## Deep Audit Addendum: Economy / Supply / Commander / Upgrades (2026-06-03)
+
+### Status evidence
+- Supply run detection and scan narrowing: Server/Module/supplyMission/supplyMissionStarted.sqf now applies command-center/town proximity checks and vehicle-class narrowing logic with WFBE_Command_Center_Class and WFBE_Supply_Truck_Classes; this aligns with PR-introduced tightening from Miksuu PR #10/11/12.
+- Supply mission value flow remains client-triggered: Client/Module/supplyMission/supplyMissionStart.sqf sets SupplyFromTown / SupplyByHeli / SupplyAmount on truck objects and server handlers consume those object vars in Server/Module/supplyMission/supplyMissionCompleted.sqf.
+- Side-supply authority has known defect: both Common/Functions/Common_ChangeSideSupply.sqf and Server/Functions/Server_ChangeSideSupply.sqf use the same negative-amount clamp pattern that can invert debits into credits.
+- Commander requests remain request-driven from client: Server/PVFunctions/RequestNewCommander.sqf accepts side/candidate and delegates to assignment helper without strong requester identity checks.
+- Commander assignment path still has a known helper issue: Server/Functions/Server_AssignNewCommander.sqf reads _this as side but calls helper with _this select 1 expectations, matching DR-15 risk shape.
+- Construction/defense/upgrade request handlers (Server/PVFunctions/RequestStructure.sqf, Server/PVFunctions/RequestDefense.sqf, Server/PVFunctions/RequestUpgrade.sqf) rely on server-side funding checks but still depend on client-originated request payload shape.
+
+### Hardening priority (economy-focused)
+- P0: Fix Common_ChangeSideSupply / Server_ChangeSideSupply negative change inversion.
+- P0: Move side-supply, commander vote/assign, and supply-reward side effects to explicit server entrypoints with requester auth context.
+- P1: Remove publicVariable ATTACK_WAVE_INIT payload trust; validate all side/supply parameters by server-owned command state.
+- P1: Deduplicate commander assignment notifications to avoid duplicate authority-emitting events.
+
+### PR/context linkage
+- PR #5 baseline supply branch work referenced in commit 91d0f36.
+- PR #10 / commit 97dfff26: interdiction distance guard and reward cleanup around supply completion.
+- PR #11 / commit 8164cc33: scan narrowing and start-declare branch adjustments.
+- PR #12 / commit 86ec28d6: further supply mission hardening and edge-case cleanup.

@@ -23,7 +23,7 @@ WASP is the community/server identity this fork is built for. The mission credit
 | `WASP/baserep/data.sqf` | Table mapping base building classnames → display name, interaction distance, repair-rate %. | Data include. |
 | `WASP/baserep/viem.sqf` | Commander-only loop: HUD building-health overlay; attaches/removes a "Repair" action near damaged structures. Spotters also see enemy building health at range. | Main baserep loop. |
 | `WASP/baserep/repair.sqf` | Performs the repair: medic animation, drains side supply, increments building HP per tick. | Called by `viem.sqf`. |
-| `WASP/global_marking_monitor.sqf` | Intercepts map double-click to auto-prefix the player's name onto marker text. | **Live** (`Init_Client.sqf:267`). |
+| `WASP/global_marking_monitor.sqf` | Intercepts map double-click to auto-prefix the player's name onto marker text. | **Live** (`Init_Client.sqf:267`). Display wait still has a short busy-poll opportunity; see [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup). |
 | `WASP/rpg_dropping/DropRPG.sqf` | By DeraKOren (2012). (a) single-use AT-launcher weapon-swap, (b) pipe-bomb TK prevention near friendly bases, (c) mine time-tracking. | **Live** (`Init_Client.sqf:15` + recompiled on respawn at `Client_PreRespawnHandler.sqf:12`). |
 | `WASP/unsort/StartVeh.sqf` | Defines `EAST_StartVeh` / `WEST_StartVeh` classname pools for one random extra starting vehicle per side. | **Live** (compiled `Init_Server.sqf:306`, used `:425-459`). |
 | `test/wasp_selftest.sqf` | Server-only read-only diagnostic observer. | **Live** (`init.sqf:4`). See below. |
@@ -45,11 +45,16 @@ The original single entry point (`WASP/Init_Client.sqf`, called from `initJIPCom
 | `Init_Server.sqf:306,425-459` | `WASP/unsort/StartVeh.sqf` |
 | `updateclient.sqf:124-145` / `updateteamsmarkers.sqf:88` | `WASP_AFK` player variable (AFK detection + "(AFK)" marker suffix) |
 
-## DR-40 Perf And JIP Notes
+## Locality / JIP Notes
 
-DR-40 re-checked the live WASP wiring and found JIP/HC behavior clean: the live WASP pieces are initialized from `Client/Init/Init_Client.sqf`, so every joining player runs the local setup, while headless clients skip player-local branches through `local player` / player-scoped calls.
+| WASP feature | Locality status | Development note |
+| --- | --- | --- |
+| HQ recovery action | Mostly client-side. `Action_RepairMHQDepot.sqf` checks funds/HQ state, deducts player cash, moves the HQ and mutates town supply locally before sending the repair request. | Treat as an authority-light legacy action. If hardened, move commander/funds/HQ/town-SV validation to the server side. |
+| Global marking monitor | Intentionally client-local map double-click helper. | Safe for UI behavior; do not expect it on HC/server. |
+| Start vehicles | Server-owned spawn state from `WASP/unsort/StartVeh.sqf`, compiled/used in `Init_Server.sqf`. | Not a JIP UI feature; changes affect initial server-side vehicle spawning and generated mission skip-list mirroring. |
+| Respawn action re-add | `WASP/actions/OnKilled.sqf` re-runs `AddActions.sqf`; current wiring comes through `Client_PreRespawnHandler.sqf`. | Keep this dependency when changing respawn handlers, or the active HQ recovery action can disappear after respawn. |
 
-The one confirmed perf nit is in `WASP/global_marking_monitor.sqf`: line `:62` busy-spins on `findDisplay 54` until a short timeout, while the same file uses the better throttled form at `:80` (`waitUntil {sleep 0.1; !isNull (findDisplay 12)}`). Code-owner fix: replace the `:62` sleepless loop with the same throttled `waitUntil` idiom. The old monolithic WASP init in `initJIPCompatible.sqf:243-244` is commented/dead and can be removed when doing cleanup. See [Deep-review findings](Deep-Review-Findings) DR-40.
+[Deep-review findings](Deep-Review-Findings) DR-40 reviewed the WASP Perf + JIP/HC cells. The live WASP wiring is JIP/HC-clean because it runs per player from `Init_Client.sqf`, and headless clients skip these player-local features. The DR-40 perf nit in `WASP/global_marking_monitor.sqf:62` remains a small local cleanup opportunity: add a tiny sleep/backoff to the display-54 wait before expanding marker behavior. See [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup).
 
 ## `test/wasp_selftest.sqf`
 
@@ -67,4 +72,18 @@ These are referenced only from commented-out lines, or point at files that no lo
 - `WASP/Init_Client.sqf` body — fully commented (Killed EH, OnArmor timer, KeyDown handler, trigger creation).
 - `WASP/actions/OnArmor/` and `WASP/actions/SitsOnArmor/` directories — **deleted**; still referenced by commented `AddActions.sqf:10-12` and `Init_Client.sqf:7,21`.
 - `WASP/KeyDown.sqf` — **missing**; referenced by commented `Init_Client.sqf:12-13`.
-- `WASP_procInitComm` — compile line commented (`initJIPCompatible.sqf:253`), so `car_wheel_new.sqf` (its only consumer) is a dead chain.
+- `WASP_procInitComm` — compile line commented (`initJIPCompatible.sqf:253` in this checkout's line map; Gauss also observed the old block around `:241-245`), so `car_wheel_new.sqf` (its only consumer) is a dead chain.
+- `WASP/actions/GearYouUnit.sqf` is still present, but the action that opens it is commented at `WASP/actions/AddActions.sqf:4`; DR-35 also found this dead action was one of the apparent localization misses.
+- The commented OnArmor actions reference missing localization keys and missing scripts, but DR-35 verified these are dead-code misses rather than live broken strings.
+
+## Parameters And Localization Notes
+
+The mission parameter system is live and index-aligned: `Common/Init/Init_Parameters.sqf:5-10` iterates `missionConfigFile >> "Params"` and reads `paramsArray select _i` in multiplayer. Keep `class Params` ordering stable when inserting or removing parameters, or every later parameter value can silently shift.
+
+Localization was reviewed clean in DR-35 after case-folding and dead-code filtering. Do not spend time chasing the WASP OnArmor/Gear string keys as live UI bugs unless the dead actions are deliberately revived.
+
+## Continue Reading
+
+Previous: [Content/maps](Content-Structure-And-Maps) | Next: [SQF code atlas](SQF-Code-Atlas)
+
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

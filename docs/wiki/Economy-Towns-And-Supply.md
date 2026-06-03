@@ -42,6 +42,7 @@ Source-backed examples from the deep-review trail:
 - ICBM launch request: `Client/Module/Nuke/nukeincoming.sqf:23` -> `Server/Functions/Server_HandleSpecial.sqf:97-111` (DR-27).
 - Gear, EASA and support service menus: `Client/GUI/GUI_Menu_EASA.sqf:40-49`, `Client/Module/EASA/EASA_Equip.sqf`, and `Client/GUI/GUI_Menu_Service.sqf:198-233` (DR-28).
 - Attack-wave discount: `Common/Functions/Common_AttackWaveActivate.sqf:6-8` -> `Server/Functions/Server_AttackWave.sqf:1-27` (DR-41).
+- Direct side-supply ledger mutation: `Common_ChangeSideSupply.sqf:28-30` publishes `wfbe_supply_temp_<side>`, and `Server_ChangeSideSupply.sqf:1-45` trusts payload side/amount before writing `wfbe_supply_<side>` (DR-44).
 
 Owner decision: either redesign around a server-side economy ledger that derives costs/eligibility from trusted state, or explicitly accept client-authoritative economy behavior and compensate with BattlEye/script filters plus operational monitoring. Mixing the two approaches leaves false confidence.
 
@@ -53,3 +54,46 @@ Owner decision: either redesign around a server-side economy ledger that derives
 
 The open PR extends this flow to helicopters. See [Current work: supply helicopters PR #1](Current-Work-Supply-Helicopters-PR1).
 
+
+## Supply run and town-income interaction (2026-06-03 audit update)
+
+### Supply mission reward path (source-backed)
+- Client start sets mission variables (SupplyFromTown, SupplyByHeli, SupplyAmount) on supply vehicle.
+- Server completion resolves these fields in Server/Module/supplyMission/supplyMissionCompleted.sqf to apply side supply or side funds rewards.
+- This is the highest-value trust boundary for cash/supply integrity and needs authoritative server replay protection.
+
+## Commander, upgrade and support authority continuation (2026-06-03)
+
+### Commander flow
+- Commander vote menu flow is server-bound (`RequestNewCommander`) but does not include a strong sender-role proof yet.
+- `Server_AssignNewCommander.sqf` still reads handler args as a plain side value (`_side = _this`) and `RequestNewCommander.sqf` still emits assignment UI notify on the caller edge, then helper edge also emits notify.
+- This is a known correctness + authority edge: command transfer can be malformed or duplicated even when cost/supply checks are not the primary issue.
+
+### Upgrade / construction / defense and spend gates
+- Upgrade path today:
+  - client checks funds/supply and dependencies in `GUI_UpgradeMenu.sqf`,
+  - client mutates side funds/supply locally,
+  - then `RequestUpgrade` asks the server to apply the change.
+- Construction/defense:
+  - client debit is local in `coin_interface.sqf`, then `RequestStructure`/`RequestDefense` hit server.
+  - both handlers still depend on payload shape for side/class/position gating.
+- This keeps these systems in the same economy-authority class as supply missions: request intent is client-originated, authoritative result is partially server-side and still partially payload-trusted.
+
+### Support and other reward paths
+- Support menus (`GUI_Menu_Service.sqf`, `GUI_Menu_EASA.sqf`, `GUI_BuyGearMenu.sqf`) and local HQ repair action classes debit money locally through client funds helpers.
+- Bounty/camp/town reward flows are similarly split: some are server-originating award logic, while others still call client funds helpers through `WFBE_CL_FNC_ChangeClientFunds`/`ChangePlayerFunds`.
+- Owner-facing effect: gameplay UI remains responsive, but exploit audits must treat these as partial because final-effect trust is not uniformly server-owned.
+
+### Risk list
+- Side-supply negative delta inversion in Common_ChangeSideSupply and Server_ChangeSideSupply.
+- Supply mission completion trust of client-written vars and weak KIA/dead handler idempotency can over/under-credit if mission lifecycle handling is replayed.
+- Attack-wave price modifiers and mission branch flags can be influenced by public variable payloads (ATTACK_WAVE_INIT) and should be normalized server-side.
+
+### Miksuu PR references
+- PR #5 commit 91d0f36: baseline supply-branch integration and cleanup.
+- PR #10 commit 97dfff26: adds 50m distance guard and reward cleanup.
+- PR #11 commit 8164cc33: scan narrowing and one-shot too-far notification changes.
+- PR #12 commit 86ec28d6: additional mission start/completion cleanup.
+
+### Recommendation
+- Add server-generated mission IDs and immutable reward ledger entries; client fields become hints only.

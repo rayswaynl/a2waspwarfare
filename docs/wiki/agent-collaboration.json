@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-02T11:05:29+02:00",
+  "generatedAt": "2026-06-02T21:16:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -12,15 +12,244 @@
     "repoContext": "agent-context.json",
     "knowledgeRecords": "agent-knowledge.jsonl",
     "hardeningBacklog": "agent-hardening-backlog.jsonl",
-    "externalResearchManifest": "external-research-report-manifest.json"
+    "externalResearchManifest": "external-research-report-manifest.json",
+    "currentSourceStatus": "Current-Source-Status-Snapshot.md",
+    "currentSourceStatusKnowledge": "agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851",
+    "currentSourceStatusEvent": "agent-events.jsonl#current-source-status-pointer-refresh-2026-06-02-1851",
+    "bottleneckQueue": "Bottleneck-Removal-Queue.md",
+    "wikiMirrorReconciliation": "Wiki-Mirror-Reconciliation-Plan.md"
   },
   "Claude": {
     "role": "Autonomous independent reviewer, contradiction hunter, subsystem archaeologist and implementation-readiness reviewer.",
-    "currentLane": "hc-static-defense-verify (DR-42) — collaboration-follow",
+    "currentLane": "collaboration-follow-autonomous-ready (latest recorded finding DR-45)",
     "status": "autonomous-ready",
-    "operatingMode": "Claude-Loop-Goal.md"
+    "operatingMode": "Claude-Loop-Goal.md; latest recorded deep-review finding DR-45; read current-source snapshot before older activeClaims history"
   },
   "activeClaims": [
+    {
+      "lane": "oa-object-lifecycle-command-addendum",
+      "owner": "Codex-2",
+      "status": "active-docs-source-crosscheck",
+      "sourceScope": [
+        "docs/wiki/Arma-2-OA-Command-Version-Reference.md",
+        "docs/wiki/Arma-2-OA-External-Reference-Guide.md",
+        "docs/wiki/agent-compatibility-audit.json",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus object lifecycle/create/delete/init callsites"
+      ],
+      "outputs": [
+        "OA object lifecycle command addendum",
+        "create/delete/init source anchors",
+        "A3-only global/deletion false-friend warnings"
+      ],
+      "handoff": "Document OA-safe createVehicle/createUnit/deleteVehicle/setVehicleInit/processInitCommands/hideObject/enableSimulation patterns; distinguish local/global effects and keep A3-only global helpers or deletion shortcuts out of mission SQF unless OA proof exists."
+    },
+    {
+      "lane": "bottleneck-reducer-progress-accelerator",
+      "owner": "Codex",
+      "status": "active-docs-process-bottleneck-removal",
+      "sourceScope": [
+        "docs/wiki/Bottleneck-Removal-Queue.md",
+        "docs/wiki/Wiki-Mirror-Reconciliation-Plan.md",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Coordination-Board.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/agent-events.jsonl",
+        "docs/wiki/agent-knowledge.jsonl"
+      ],
+      "outputs": [
+        "Ranked P0/P1/P2 bottleneck list",
+        "Next five best actions",
+        "Returned-report harvest queue",
+        "Validation gate list",
+        "Dashboard/coordination routing",
+        "Mirror/wiki reconciliation plan"
+      ],
+      "handoff": "Use Bottleneck-Removal-Queue.md and Wiki-Mirror-Reconciliation-Plan.md before opening broad docs work. Treat Current-Source-Status-Snapshot.md as current truth for disputed cleanup lanes until a newer direct source+Vanilla check supersedes it."
+    }
+  ],
+  "lanes": [
+    {
+      "lane": "bottleneck-reducer-progress-accelerator",
+      "suggestedOwner": "Codex",
+      "status": "active",
+      "summary": "Ranks and removes docs/process bottlenecks, stale status contradictions, mirror/wiki divergence, unclear ownership and missing validation gates."
+    },
+    {
+      "lane": "cheap-discovery-swarm-v2",
+      "suggestedOwner": "Codex",
+      "status": "harvested",
+      "summary": "Earlier cheap scout wave is complete."
+    },
+    {
+      "lane": "cheap-explorer-wave-c",
+      "suggestedOwner": "Codex",
+      "status": "integrated",
+      "summary": "Wave C reports from Newton, Linnaeus, Ampere, Pascal, Boyle and Peirce are folded into owner pages or agent-knowledge.jsonl where useful."
+    },
+    {
+      "lane": "autonomous-claude-research",
+      "suggestedOwner": "Claude",
+      "status": "open",
+      "summary": "Claude may self-select the next bounded, source-backed subsystem or verification lane without waiting for Codex assignment."
+    },
+    {
+      "lane": "external-pdf-reconciliation-wave-d",
+      "suggestedOwner": "Codex",
+      "status": "integrated",
+      "summary": "Second PDF reconciliation wave integrated into External-Research-Reports, UI hub, lifecycle/integration/supply pages and agent-knowledge.jsonl."
+    },
+    {
+      "lane": "cheap-explorer-wave-e",
+      "suggestedOwner": "Codex",
+      "status": "integrated",
+      "summary": "Godel/Gauss/Popper/Locke/Planck/Schrodinger reports folded into owner docs and machine-readable context; publish validation remains."
+    },
+    {
+      "lane": "implementation-hardening-planning",
+      "suggestedOwner": "Codex",
+      "status": "roadmap-published",
+      "summary": "Hardening-Implementation-Roadmap.md turns residual Auth/PV owner decisions into concrete patch order, source files and validation gates."
+    }
+  ],
+  "rules": [
+    "Update Progress-Dashboard.md and agent-status.json when visible ownership or lane state changes.",
+    "Append, do not overwrite, Agent-Worklog.md and agent-events.jsonl.",
+    "Use source-cited evidence for broken/partial-feature claims.",
+    "Treat external PDFs as downstream corroboration unless independently source-checked.",
+    "If a branch is stale, integrate targeted findings instead of merging over newer navigation.",
+    "Keep docs/wiki and the GitHub wiki checkout reconciliation explicit before publishing; after scoped sync run Tools/TestWikiParity.ps1 and the mirror validator, and follow Wiki-Mirror-Reconciliation-Plan.md if future drift appears.",
+    "Use Arma 2 OA scripting references only."
+  ],
+  "archivedClaims": [
+    {
+      "lane": "oa-config-params-command-addendum",
+      "owner": "Codex-2",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Arma-2-OA-Command-Version-Reference.md",
+        "docs/wiki/Arma-2-OA-External-Reference-Guide.md",
+        "docs/wiki/agent-compatibility-audit.json",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus config and parameter lookup callsites"
+      ],
+      "outputs": [
+        "OA config/mission-parameter command addendum",
+        "config lookup source anchors",
+        "A3-only config helper false-friend warnings",
+        "agent-knowledge.jsonl compatibility guardrail"
+      ],
+      "handoff": "Use Arma-2-OA-Command-Version-Reference.md before patching mission parameters, gear/config readers, squad/backpack/EASA config walking or optional config defaults. Keep class Params order stable, keep OA manual count/select scans, and do not import Arma 3 getMissionConfigValue/configClasses/configProperties/apply or \\a3\\ parameter templates."
+    },
+    {
+      "lane": "oa-role-locality-command-addendum",
+      "owner": "Codex-2",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Arma-2-OA-Command-Version-Reference.md",
+        "docs/wiki/Arma-2-OA-External-Reference-Guide.md",
+        "docs/wiki/agent-compatibility-audit.json",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus role/locality callsites"
+      ],
+      "outputs": [
+        "OA role/locality command addendum",
+        "HC/server/client locality guardrails",
+        "A3-only locality false-friend warnings",
+        "agent-knowledge.jsonl compatibility guardrail"
+      ],
+      "handoff": "Use Arma-2-OA-Command-Version-Reference.md before patching server/client/hosted/HC role gates, owner-targeted public variables, direct publicVariableServer channels or player/playable cleanup logic. Runtime validation still needs hosted, dedicated, JIP and HC smoke before mission code changes."
+    },
+    {
+      "lane": "oa-script-execution-scheduler-command-addendum",
+      "owner": "Codex-2",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Arma-2-OA-Command-Version-Reference.md",
+        "docs/wiki/Arma-2-OA-External-Reference-Guide.md",
+        "docs/wiki/agent-compatibility-audit.json",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus script execution/scheduler callsites"
+      ],
+      "outputs": [
+        "OA script execution/scheduler command addendum",
+        "A3-only execution-command trap warnings",
+        "source-backed validation handoff"
+      ],
+      "handoff": "Use Arma-2-OA-Command-Version-Reference.md before patching dynamic compile, PVF dispatch scheduling, execVM/execFSM launch ownership, waits or script handles. Keep Arma 3-only compileFinal/canSuspend/modern waitUntil forms out of OA mission SQF."
+    },
+    {
+      "lane": "commander-page-current-state-reconcile",
+      "owner": "Codex",
+      "status": "published-patch-ready-current-source-unpatched",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AssignNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestNewCommander.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_AssignNewCommander.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/PVFunctions/RequestNewCommander.sqf",
+        "Commander-Reassignment-Call-Shape.md",
+        "agent-context.json"
+      ],
+      "outputs": [
+        "Commander page current-state reconciliation",
+        "agent-context stale commander bug language refresh"
+      ],
+      "handoff": "Current source Chernarus still needs the DR-15 call-shape/duplicate-notification fix: Server_AssignNewCommander.sqf still assigns _side = _this and RequestNewCommander still sends a caller-side duplicate notification. Patch source, propagate Vanilla, smoke reassignment, then handle requester/role validation separately."
+    },
+    {
+      "lane": "docs-platform-scaffold-state-correction",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Knowledge-Platform-Roadmap.md",
+        "Progress-Dashboard.md",
+        "Resistance-Supply-Scaffold.md",
+        "UI-IDD-Collision-Repair.md",
+        "agent-feature-status.jsonl",
+        "Tools/ValidateWiki.ps1",
+        "Tools/TestWikiParity.ps1"
+      ],
+      "outputs": [
+        "Docs-platform current-state correction",
+        "Missing route/machine artifact restoration",
+        "feature-status JSONL parse validation"
+      ],
+      "handoff": "Do not treat MkDocs, GitHub Pages or docs CI as shipped until actual scaffold/config/workflow files exist and validation covers them. Current active validator remains Tools/ValidateWiki.ps1, and post-sync wiki mirror parity uses Tools/TestWikiParity.ps1."
+    },
+    {
+      "lane": "home-current-map-dedup",
+      "owner": "Codex",
+      "status": "published",
+      "sourceScope": [
+        "Home.md Current Map",
+        "LLM-Agent-Entry-Pack.md",
+        "llms.txt",
+        "Tools/ValidateWiki.ps1",
+        "agent-context.json",
+        "agent-hardening-backlog.jsonl"
+      ],
+      "outputs": [
+        "Home.md runtime/risk route split",
+        "LLM bootstrap artifact restoration",
+        "wiki validation page/link parity repair"
+      ],
+      "handoff": "Future Home navigation additions should keep patch/playbook links in one purpose-built route row where possible; avoid re-adding the same follow-up page twice inside Current Map."
+    },
+    {
+      "lane": "factory-queue-counter-token-cleanup",
+      "owner": "Codex-2",
+      "status": "published-patch-ready-current-source-unpatched",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Factory-And-Purchase-Systems-Atlas.md",
+        "Deep-Review-Findings.md DR-33"
+      ],
+      "outputs": [
+        "Factory-Queue-Counter-Token-Cleanup.md",
+        "source Chernarus Client_BuildUnit.sqf counter/token current-state handoff",
+        "generated Vanilla parity handoff",
+        "Factory/Performance/Feature/backlog/dashboard/context updates"
+      ],
+      "handoff": "Current source Chernarus and Vanilla Takistan still need the DR-33 local counter/token fix: Client_BuildUnit.sqf still uses random varQueu token identity and the crewless branch still exits before the normal queue decrement. Patch source, propagate Vanilla, then smoke repeated crewless/crewed buys, concurrent buyers and factory-dead cleanup. Broadcast reduction remains separate."
+    },
     {
       "lane": "wiki-quality-dup8-construction-routing",
       "owner": "Codex",
@@ -700,7 +929,7 @@
         "Deep-Review-Findings.md (Round 31 / DR-40)",
         "Codebase-Coverage-Ledger.md (WASP overlay Perf+JIP-HC)"
       ],
-      "handoff": "Codex: on the WASP-Overlay page note global_marking_monitor.sqf:62 should use the throttled waitUntil idiom (as :80 does) and that the initJIPCompatible.sqf:243-244 WASP init is dead/commented. MILESTONE: all Perf/JIP-HC cells across the matrix are now reviewed; residual 🟡 is exclusively Auth/PV owner decisions."
+      "handoff": "Codex: on the WASP-Overlay page note global_marking_monitor.sqf:62 should use the throttled waitUntil idiom (as :80 does) and that the initJIPCompatible.sqf:243-244 WASP init is dead/commented. MILESTONE: all Perf/JIP-HC cells across the matrix are now reviewed; residual ðŸŸ¡ is exclusively Auth/PV owner decisions."
     },
     {
       "lane": "supply-missions-perf-jip-review",
@@ -776,7 +1005,7 @@
         "Deep-Review-Findings.md (Round 26 / DR-35)",
         "Codebase-Coverage-Ledger.md (new Parameters/localization row)"
       ],
-      "handoff": "Codex: optionally note dead OnArmor/GearYourUnit WASP actions in WASP-Overlay, and a 'keep class Params order stable (index-aligned to paramsArray)' caution in params docs. No code defect."
+      "handoff": "Integrated in WASP-Overlay and DR-35 docs: dead OnArmor/GearYourUnit WASP actions are documented, and the mission-parameter caution is keep class Params order stable because it is index-aligned to paramsArray. This is not SQF params syntax. No code defect."
     },
     {
       "lane": "respawn-mash-review",
@@ -792,7 +1021,7 @@
         "Deep-Review-Findings.md (Round 25 / DR-34)",
         "Codebase-Coverage-Ledger.md (Markers row PV+JIP-HC)"
       ],
-      "handoff": "Codex: mark the MASH map-marker feature dead/abandoned in Feature-Status-Register + marker/respawn docs. Revival recipe: server-held list + JIP re-send (like construction set-hq-killed re-sends) + unique marker names + fix publicVariable JIP gap. Owner decision: revive or remove dead receiverMASHmarker.sqf + the orphaned Init_Server.sqf:70 registration."
+      "handoff": "Codex: mark the MASH map-marker feature dead/abandoned in Feature-Status-Register + marker/respawn docs. Revival recipe: server-held list + JIP re-send/pull (like construction set-hq-killed re-sends) + unique marker names + do not rely on one overwritten publicVariable value as the full marker set. Owner decision: revive or remove dead receiverMASHmarker.sqf + the orphaned Init_Server.sqf:70 registration."
     },
     {
       "lane": "factory-perf-jip-review",
@@ -953,7 +1182,7 @@
     {
       "lane": "paratrooper-marker-revival",
       "owner": "Codex-2",
-      "status": "published-source-patched",
+      "status": "published-patch-ready-current-source-unpatched",
       "sourceScope": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_Paratroopers.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/PVFunctions/HandleParatrooperMarkerCreation.sqf",
@@ -964,16 +1193,16 @@
       ],
       "outputs": [
         "Paratrooper-Marker-Revival.md",
-        "source Chernarus Init_PublicVariables.sqf registration patch",
-        "Vanilla Takistan propagation handoff after LoadoutManager path failure",
+        "source Chernarus Init_PublicVariables.sqf registration missing",
+        "Vanilla Takistan registration missing",
         "Feature/Networking/PV/backlog/dashboard/context updates"
       ],
-      "handoff": "Run LoadoutManager from a correctly named a2waspwarfare checkout to propagate Vanilla Takistan, then smoke paratrooper support in Arma 2 OA. Source Chernarus now registers the marker callback; do not treat this as RequestSpecial authority hardening. Modded missions still need propagation-model cleanup."
+      "handoff": "Current source Chernarus and Vanilla Takistan include the HandleParatrooperMarkerCreation sender and handler file, but still omit _clientCommandPV registration. Patch source, propagate Vanilla, smoke in Arma 2 OA, keep RequestSpecial authority separate, and treat modded mission drift as a separate owner decision."
     },
     {
       "lane": "client-skill-init-idempotency",
       "owner": "Codex-2",
-      "status": "published-source-patched",
+      "status": "published-patch-ready-current-source-unpatched",
       "sourceScope": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Init.sqf",
@@ -984,16 +1213,16 @@
       ],
       "outputs": [
         "Client-Skill-Init-Idempotency.md",
-        "source Chernarus Init_Client.sqf duplicate Skill_Init removal",
-        "Vanilla Takistan propagated Init_Client.sqf duplicate Skill_Init removal",
+        "current-state correction that source Chernarus still has duplicate Skill_Init calls",
+        "current-state correction that Vanilla Takistan still has duplicate Skill_Init calls",
         "Performance/Feature/backlog/dashboard/context updates"
       ],
-      "handoff": "Smoke Soldier/non-Soldier AI caps, respawn skill reapply and dedicated/JIP client init. If future paths rerun Skill_Init.sqf, guard the Soldier cap mutation. Do not hand-edit modded mission folders until generated/forked maintenance is resolved."
+      "handoff": "Current-state correction: source Chernarus and Vanilla Takistan still call Skill_Init.sqf at Init_Client.sqf:547 and :571, then WFBE_SK_FNC_Apply at :572. Future owner should patch source, propagate Vanilla, then smoke Soldier/non-Soldier AI caps, respawn skill reapply and dedicated/JIP client init."
     },
     {
       "lane": "hosted-server-fps-loop-sleep",
       "owner": "Codex-2",
-      "status": "published-source-patched",
+      "status": "published-patch-ready-current-source-unpatched",
       "sourceScope": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf",
@@ -1005,16 +1234,16 @@
       ],
       "outputs": [
         "Hosted-Server-FPS-Loop-Sleep.md",
-        "source Chernarus serverFpsGUI/monitorServerFPS early-exit patch",
-        "Vanilla Takistan propagated FPS patch",
+        "current-state correction: source/Vanilla still enter FPS publisher loops before isDedicated on non-dedicated hosts",
+        "source Chernarus and Vanilla Takistan FPS smoke handoff",
         "Performance/AI/Server runtime/Feature/backlog/status updates"
       ],
-      "handoff": "Smoke dedicated RHUD/server FPS updates and hosted/listen no-spin behavior. Defer publisher consolidation until SERVER_FPS_GUI vs WFBE_VAR_SERVER_FPS compatibility is decided."
+      "handoff": "Current-state correction: source Chernarus still checks isDedicated inside both FPS publisher scripts instead of exiting non-dedicated hosts before the loops. Future owner should patch source, propagate Vanilla, then smoke dedicated RHUD/server FPS updates and hosted/listen no-spin behavior. Publisher consolidation remains a separate compatibility decision."
     },
     {
       "lane": "supply-mission-scan-narrowing",
       "owner": "Codex-2",
-      "status": "published-source-patched",
+      "status": "published-patch-ready-current-source-unpatched",
       "sourceScope": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf",
@@ -1026,110 +1255,60 @@
       ],
       "outputs": [
         "Supply-Mission-Scan-Narrowing.md",
-        "source Chernarus supplyMissionStarted.sqf command-center scan narrowing",
-        "Vanilla Takistan propagated supplyMissionStarted.sqf scan narrowing and source parity",
+        "current-state correction: source/Vanilla still use nearestObjects [..., [], 80] before the guard",
+        "source Chernarus and Vanilla Takistan scan-narrowing smoke handoff",
         "Performance/Supply/Feature/backlog/dashboard/context updates"
       ],
-      "handoff": "Smoke truck/heli delivery at command centers and no-completion near unrelated objects. Continue larger supply cleanup separately: loaded/tracking state, Killed handler idempotency, cooldown casing and server-side cargo validation."
+      "handoff": "Current-state correction: source Chernarus and Vanilla Takistan still use [] for the 80-meter command-center scan and preserve the broad 8-meter nearby-player scan. Future owner should patch source, propagate Vanilla, then smoke truck/heli delivery at command centers plus no-completion near unrelated objects. Continue larger supply cleanup separately: loaded/tracking state, Killed handler idempotency, cooldown casing and server-side cargo validation."
     },
     {
       "lane": "wasp-marker-wait-cleanup",
       "owner": "Codex-2",
-      "status": "active",
+      "status": "published-patch-ready-current-source-unpatched",
       "sourceScope": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/global_marking_monitor.sqf",
-        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/WASP/global_marking_monitor.sqf",
         "Performance-Opportunity-Sweep.md",
         "WASP-Overlay.md",
         "Feature-Status-Register.md"
       ],
       "outputs": [
-        "source trace and low-risk wait cleanup patch or handoff"
+        "WASP-Marker-Wait-Cleanup.md",
+        "opportunity-not-patched global_marking_monitor.sqf sleepless display wait handoff",
+        "Vanilla Takistan parity handoff",
+        "Performance/WASP/Feature/backlog/dashboard/context updates"
       ],
-      "handoff": "Replace the 2-second sleepless marker-dialog display polling loop with a throttled wait that still re-enables input on timeout."
+      "handoff": "Current source and generated Vanilla still use the sleepless display-54 wait. Patch source, propagate Vanilla, then smoke map double-click marker naming in Arma 2 OA: Enter prefixing, empty text, Escape cleanup and timeout/no-dialog input re-enable."
+    },
+    {
+      "lane": "dr44-direct-supply-forgery-crosslinks",
+      "status": "closed",
+      "target": "Economy / Networking / Public variable channel index / Server runtime / Feature status",
+      "nextAction": "No further harvest action; detailed proof remains in Deep-review findings."
+    },
+    {
+      "lane": "dr20-hq-killed-crosslinks",
+      "status": "closed",
+      "target": "Construction / Gameplay / Server runtime",
+      "nextAction": "No further docs action; source idempotency remains a future code-owner lane."
+    },
+    {
+      "lane": "string-selection-command-traps",
+      "status": "closed",
+      "target": "agent-compatibility-audit.json / Arma-2-OA-Compatibility-Audit.md",
+      "nextAction": "No further docs action; machine and human compatibility audits already include the trap."
     }
   ],
-  "integratedReports": [
-    "wiki-quality-dup8-construction-routing",
-    "wiki-quality-dup7-supply-cooldown-routing",
-    "gear-loadout-easa-balance-discovery",
-    "external-pdf-research-intake",
-    "pv-matrix-second-pass-v2",
-    "common-pv-network-authority-v2",
-    "discord-extension-antistack-integration-discovery",
-    "modules-review-dr27",
-    "gear-easa-review-dr28",
-    "extension-globalgamestats-dr29",
-    "battleye-posture-dr30",
-    "discord-datapath-dr31",
-    "cheap-explorer-wave-c",
-    "external-pdf-reconciliation-wave-d",
-    "agent-readable-artifact-v3",
-    "supply-mission-authority-matrix-v2",
-    "cheap-explorer-wave-e",
-    "implementation-hardening-planning",
-    "server-authority-migration-map",
-    "attack-wave-authority-dr41",
-    "abandoned-feature-revival-review",
-    "performance-opportunity-sweep",
-    "external-arma2-reference-guide",
-    "wiki-quality-dup10-hc-routing",
-    "wiki-quality-merge1-authority-routing",
-    "icbm-authority-playbook-routing",
-    "wiki-quality-dup5-battleye-routing",
-    "wiki-quality-dup9-victory-routing",
-    "wiki-quality-dup6-lifecycle-routing",
-    "wiki-quality-dup4-generated-mission-routing",
-    "client-skill-init-idempotency",
-    "hosted-server-fps-loop-sleep",
-    "supply-mission-scan-narrowing"
-  ],
-  "queuedReports": [],
-  "lanes": [
+  "claimModel": {
+    "activeClaims": "Only genuinely live ownership claims. Historical published, ready-for-review or superseded lane objects live in archivedClaims.",
+    "archivedClaims": "Append-only claim history retained for provenance, handoff details and collision audits; do not treat these rows as current ownership.",
+    "currentTruth": "Use agent-status.json, Coordination-Board.md, Bottleneck-Removal-Queue.md and Current-Source-Status-Snapshot.md before opening source or docs lanes."
+  },
+  "queuedReports": [
     {
-      "lane": "cheap-discovery-swarm-v2",
-      "suggestedOwner": "Codex",
-      "status": "harvested",
-      "summary": "Earlier cheap scout wave is complete."
-    },
-    {
-      "lane": "cheap-explorer-wave-c",
-      "suggestedOwner": "Codex",
-      "status": "integrated",
-      "summary": "Wave C reports from Newton, Linnaeus, Ampere, Pascal, Boyle and Peirce are folded into owner pages or agent-knowledge.jsonl where useful."
-    },
-    {
-      "lane": "autonomous-claude-research",
-      "suggestedOwner": "Claude",
-      "status": "open",
-      "summary": "Claude may self-select the next bounded, source-backed subsystem or verification lane without waiting for Codex assignment."
-    },
-    {
-      "lane": "external-pdf-reconciliation-wave-d",
-      "suggestedOwner": "Codex",
-      "status": "integrated",
-      "summary": "Second PDF reconciliation wave integrated into External-Research-Reports, UI hub, lifecycle/integration/supply pages and agent-knowledge.jsonl."
-    },
-    {
-      "lane": "cheap-explorer-wave-e",
-      "suggestedOwner": "Codex",
-      "status": "integrated",
-      "summary": "Godel/Gauss/Popper/Locke/Planck/Schrodinger reports folded into owner docs and machine-readable context; publish validation remains."
-    },
-    {
-      "lane": "implementation-hardening-planning",
-      "suggestedOwner": "Codex",
-      "status": "roadmap-published",
-      "summary": "Hardening-Implementation-Roadmap.md turns residual Auth/PV owner decisions into concrete patch order, source files and validation gates."
+      "lane": "scout-wave-k-j-validation-residue",
+      "status": "harvested-reconciliation-plan-published",
+      "target": "Subagent-Discovery-Swarm.md / Progress-Dashboard.md / Wiki-Mirror-Reconciliation-Plan.md / agent-status.json",
+      "nextAction": "No further scout-harvest action; active _wasp_wiki_tmp parity passes, and Wiki-Mirror-Reconciliation-Plan.md remains the policy for future drift."
     }
-  ],
-  "rules": [
-    "Update Progress-Dashboard.md and agent-status.json when visible ownership or lane state changes.",
-    "Append, do not overwrite, Agent-Worklog.md and agent-events.jsonl.",
-    "Use source-cited evidence for broken/partial-feature claims.",
-    "Treat external PDFs as downstream corroboration unless independently source-checked.",
-    "If a branch is stale, integrate targeted findings instead of merging over newer navigation.",
-    "Keep docs/wiki and the GitHub wiki checkout in parity before publishing.",
-    "Use Arma 2 OA scripting references only."
   ]
 }

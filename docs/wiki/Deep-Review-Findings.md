@@ -83,7 +83,9 @@ The [SQF code atlas](SQF-Code-Atlas) states "659 `preprocessFile` references (45
 ```powershell
 (Get-ChildItem -Recurse -Filter *.sqf | Select-String -SimpleMatch 'preprocessFileLineNumbers').Count
 ```
-**Verified-accurate cross-checks (for trust calibration):** the atlas's FSM inventory is correct — exactly three `.fsm` files exist (`Client/FSM/updateactions.fsm`, `Client/FSM/updateavailableactions.fsm`, `Client/kb/hq.fsm`); and `HandleParatrooperMarkerCreation` / `AttackWave` / `LogGameEnd` are indeed outside the standard PVF list as the atlas notes.
+**Verified-accurate cross-checks (for trust calibration):** the atlas's FSM inventory is correct — exactly three `.fsm` files exist (`Client/FSM/updateactions.fsm`, `Client/FSM/updateavailableactions.fsm`, `Client/kb/hq.fsm`); `HandleParatrooperMarkerCreation` and `AttackWave` are outside the standard PVF list. `WFBE_CO_FNC_LogGameEnd` is wired to `Server/Functions/Server_LogGameEnd.sqf` in server init; `Server/PVFunctions/LogGameEnd.sqf` exists as the DR-13 duplicate/cleanup target but is not the live compile target.
+
+**Codex follow-up:** [SQF code atlas](SQF-Code-Atlas) now labels compile counts as point-in-time, includes a regeneration command, and cites this DR-5 caveat instead of presenting hardcoded counts as stable.
 
 ---
 
@@ -114,8 +116,12 @@ Replace the compile-the-string dispatch with a name lookup that defaults to a no
 
 `Server/Functions/Server_HandlePVF.sqf` (current `_parameters Spawn (Call Compile _script);`):
 ```sqf
-private _fn = missionNamespace getVariable [_script, {}];   // resolve SRVFNC<cmd>; unknown -> {}
-if (_fn isEqualTo {}) exitWith {
+Private ["_fn"];
+_fn = missionNamespace getVariable _script;   // resolve SRVFNC<cmd>; unknown -> nil
+if (isNil "_fn") exitWith {
+    ["WARNING", format ["Server_HandlePVF: rejected unknown PVF command '%1' from network", _script]] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _fn != "CODE") exitWith {
     ["WARNING", format ["Server_HandlePVF: rejected unknown PVF command '%1' from network", _script]] Call WFBE_CO_FNC_LogContent;
 };
 _parameters Spawn _fn;
@@ -124,15 +130,17 @@ _parameters Spawn _fn;
 
 Why this is safe and behavior-identical:
 - Legitimate traffic sets `_script` to exactly `"SRVFNC"+cmd` / `"CLTFNC"+cmd` (see `Common/Functions/Common_SendToServerOptimized.sqf:15`, `Common/Functions/Common_SendToClient.sqf`), which resolves to the compiled function — unchanged.
-- A hostile value such as `"hint 'x'; <server-side effect>"` is not a defined variable, so `getVariable` returns the default `{}` → `Spawn {}` → no-op (plus a WARNING that surfaces probing in the RPT). No `compile` ever runs on attacker text.
-- `isEqualTo {}` is a valid Arma 2 OA `code` comparison; use it (not `isNil`) because the default is empty code, not nil.
+- A hostile value such as `"hint 'x'; <server-side effect>"` is not a defined variable, so `getVariable` returns nil and the `typeName` guard rejects it with a WARNING that surfaces probing in the RPT. No `compile` ever runs on attacker text.
+- Use OA-safe guards such as `isNil` plus `typeName != "CODE"` or an explicit allowlist membership check. Do not use `isEqualTo` in this patch; BI documents that comparison command as Arma 3-era, not OA 1.64.
 
 ### Fix 2 — Optional explicit allow-list (defense-in-depth + clarity)
 
 At the end of `Init_PublicVariables.sqf`, snapshot the legal command set so the handler check is explicit rather than implicit:
 ```sqf
-WFBE_SE_PVF_ALLOWED = _serverCommandPV apply {format ["SRVFNC%1", _x]};
-WFBE_CL_PVF_ALLOWED = _clientCommandPV apply {format ["CLTFNC%1", _x]};
+WFBE_SE_PVF_ALLOWED = [];
+{WFBE_SE_PVF_ALLOWED set [count WFBE_SE_PVF_ALLOWED, format ["SRVFNC%1", _x]]} forEach _serverCommandPV;
+WFBE_CL_PVF_ALLOWED = [];
+{WFBE_CL_PVF_ALLOWED set [count WFBE_CL_PVF_ALLOWED, format ["CLTFNC%1", _x]]} forEach _clientCommandPV;
 publicVariable "WFBE_SE_PVF_ALLOWED"; // optional; or keep server-local
 ```
 Then guard with `if !(_script in WFBE_SE_PVF_ALLOWED) exitWith { ...log... };` before resolving. Fix 1 already covers the same cases; use Fix 2 only if you want a named, auditable whitelist.
@@ -152,7 +160,7 @@ The shipped `BattlEyeFilter/publicvariable.txt` is a single line, `5 "kickAFK"`,
 
 ### Residual risk this playbook does NOT close (scope honesty)
 
-Fix 1 stops arbitrary **code execution**, but the PVF model still **trusts client-sent commands and parameters**. A malicious client can broadcast a *legitimate* command with chosen arguments — e.g. `RequestChangeScore` (`Server/PVFunctions/RequestChangeScore.sqf` sets a player's score directly from the payload) or `RequestStructure` — because the server handlers largely don't authenticate the sender against the payload. Closing that is a larger, per-handler effort (validate that `owner`/sender matches the acting player, clamp economy/score deltas, range-check structure requests). Treat this as a separate follow-up lane, not part of the dispatch fix. Documented here so the dispatch fix isn't mistaken for full PVF authorization.
+Fix 1 stops arbitrary **code execution**, but the PVF model still **trusts client-sent commands and parameters**. A malicious client can broadcast a *legitimate* command with chosen arguments — e.g. `RequestChangeScore` (`Server/PVFunctions/RequestChangeScore.sqf` sets a player's score directly from the payload) or `RequestStructure` — because the server handlers largely don't authenticate the requested action against server-side state. Closing that is a larger, per-handler effort: add a requester object or another server-verifiable anchor to the payload where needed, validate that object against side/role/funds/range on the server, and clamp economy/score deltas. Do not assume OA PVEHs expose a trusted sender identity. Treat this as a separate follow-up lane, not part of the dispatch fix. Documented here so the dispatch fix isn't mistaken for full PVF authorization.
 
 ### Verification notes (this pass)
 
@@ -177,7 +185,7 @@ All three construction PVF handlers derive trust from the **client-supplied payl
 
 1. **`_side` is taken from the payload, not derived from the sender.** A client can act on any side's behalf.
 2. **The payloads don't even include the requesting player object**, so the handlers *cannot* identify or authorize the sender as written.
-3. **Arma 2 OA `addPublicVariableEventHandler` provides no sender identity** — `_this` is `[varName, value]` only (unlike Arma 3 `remoteExecutedOwner`/`RE` ownership). So authority must be reconstructed: the payload must carry the player, and the server must validate that player's role/side/funds against **server-side** state. (This is also why DR-1's command-validation fix does not, by itself, stop forgery.)
+3. **Arma 2 OA `addPublicVariableEventHandler` provides no trusted sender identity** — Wasp's OA/source pattern consumes the broadcast variable name/value, not an authenticated requester (unlike Arma 3 `remoteExecutedOwner`/`RE` ownership). So authority must be reconstructed: the payload must carry the player, and the server must validate that player's role/side/funds against **server-side** state. (This is also why DR-1's command-validation fix does not, by itself, stop forgery.)
 
 ### Validation playbook (behavior-preserving for legit CoIn UX)
 
@@ -192,7 +200,8 @@ _player = _this select 0; _side = _this select 1; _structureType = _this select 
 if (isNull _player) exitWith {};
 if (side _player != _side) exitWith {};                                   // can't build for another side
 if (_player != leader ((_side) call WFBE_CO_FNC_GetCommanderTeam)) exitWith {};  // commander-only
-private _cost = /* look up WFBE_<side>STRUCTURECOSTS[index] */;
+private "_cost";
+_cost = /* look up WFBE_<side>STRUCTURECOSTS[index] */;
 if ((_side call WFBE_CO_FNC_GetSideSupply) < _cost) exitWith {};          // server-authoritative funds
 [_side, -_cost, "structure build", false] call WFBE_CO_FNC_ChangeSideSupply;  // debit on server
 // ...then the existing class-exists lookup + ExecVM construction script
@@ -227,7 +236,7 @@ _responseCode = _response select 0;
 - **Echo-to-code latent risk.** Only UID/score/side/map round-trip today (all constrained, low risk). But the pattern means *any* future free-text field persisted and echoed back becomes executable.
 
 **Engine caveat (why the pattern exists):** Arma 2 OA 1.64 has **no `parseSimpleArray`** (that is Arma 3), so `call compile` is the idiomatic string→array path for extensions. The A2-correct hardening is defensive validation, not a parser swap:
-1. Guard the raw string first: `if (isNil "_response" || {_response isEqualTo ""}) exitWith { /* neutral fallback + WARNING */ };`
+1. Guard the raw string first: `if (isNil "_response" || {typeName _response != "STRING" || _response == ""}) exitWith { /* neutral fallback + WARNING */ };`
 2. Compile, then **shape-check before use**: `_response = call compile _response; if (typeName _response != "ARRAY") exitWith {...}; if ({ typeName _x != "SCALAR" } count _response > 0) exitWith {...};`
 3. Only then read `_response select 0/1/2`. This keeps the DLL contract (numeric arrays) but refuses to execute anything that isn't one.
 
@@ -400,7 +409,7 @@ Round 1 listed, as an unverified gotcha, "HC disconnect orphans units it created
 - If `WFBE_C_AI_DELEGATION == 2` and `WFBE_HEADLESS_<uid>` exists, it removes the HC's group from `WFBE_HEADLESSCLIENTS_ID` and clears `WFBE_HEADLESS_<uid>`.
 - `WFBE_JIP_USER<uid>` is nil for an HC (HCs don't register as players via `RequestJoin`), so the handler `exitWith`s before the player-team/unit logic. (It does also delete any `WFBE_CLIENT_<uid>_OBJECTS` registered to that uid earlier in the handler.)
 
-What actually happens to the AI the HC was simulating: the **engine transfers those units/groups to the server**, so the server's load spikes by exactly the amount the HC was offloading — the opposite of the delegation benefit, precisely when you least want it. There is **no re-delegation**: the disconnect handler does not hand the migrated AI to a surviving HC, and (per the round-1 init finding) `WFBE_C_AI_DELEGATION` is only evaluated/downgraded at boot, so a later HC reconnect does not resume offloading either. **Net:** HC delegation has no failover/rebalancing — a single HC drop silently re-loads the server for the rest of the match. **Suggested handling:** on HC disconnect, if other HCs remain, re-`setGroupOwner` the migrated town-AI groups to a surviving HC (a periodic rebalancer is cleaner than doing it in the disconnect handler); and make delegation re-evaluate when an HC (re)connects rather than only at boot. (Arma 2 OA *does* support `setGroupOwner`; note the mission currently never uses it — see [AI, headless and performance](AI-Headless-And-Performance).)
+What actually happens to the AI the HC was simulating: the **engine transfers those units/groups to the server**, so the server's load spikes by exactly the amount the HC was offloading — the opposite of the delegation benefit, precisely when you least want it. There is **no re-delegation**: the disconnect handler does not redirect future delegation to a surviving HC, and (per the round-1 init finding) `WFBE_C_AI_DELEGATION` is only evaluated/downgraded at boot, so a later HC reconnect does not resume offloading either. **Net:** HC delegation has no failover/rebalancing — a single HC drop silently re-loads the server for the rest of the match. **Corrected OA handling:** `setGroupOwner` / `groupOwner` are Arma 3 1.40 commands, not OA 1.64 commands. Wasp can redirect **future** town/player AI spawns to a surviving HC, but it cannot live-transfer already-running groups between machines in OA SQF. See [AI, headless and performance](AI-Headless-And-Performance) and [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference).
 
 ### Handoff
 Code owners: treat HC delegation as best-effort with no failover today; if HC stability matters, add re-delegation/rebalancing on HC disconnect/connect. Ledger: AI/Headless JIP/HC cell advanced; round-1 "orphan" hypothesis corrected.
@@ -521,7 +530,7 @@ End-to-end chain (all `path:line` in the Chernarus source mission):
 **Impact.** Any connected client can hand-craft the publicVariable `RequestSpecial = ["ICBM", <anySide>, <objAtChosenPos>, <liveObjThenKilled>, <anyTeam>]` and the **server** applies a map-wide nuke at coordinates of the attacker's choosing — repeatable, no upgrade, no commander role, no real cost. This is the apex of the client-authoritative class (DR-6 build, DR-14 buy, DR-16 sell, DR-22 supply, DR-23 upgrade): same root cause (server PVF handlers trust payload fields without re-deriving authority server-side), but the blast radius is the entire match rather than one player's wallet.
 
 **Owner decision (same lever as the economy class, higher priority).** Two non-exclusive fixes:
-- *Server-side authority in the `"ICBM"` case:* re-derive the requester from the PV sender, verify `_remoteSender` is the commander of `_side`, verify the side's `WFBE_upgrade_…_ICBM` level > 0 and a server-tracked cooldown/funds ledger, before `Spawn NukeDammage`. (The same `_remoteSender`-vs-payload pattern recommended in DR-1/DR-6.)
+- *Server-side authority in the `"ICBM"` case:* change the request shape so the server has a verifiable requester object or team anchor, then validate that object against `_side`, commander status, the side's `WFBE_upgrade_..._ICBM` level, cooldown and funds before `Spawn NukeDammage`. OA PVEHs do not provide a hidden `_remoteSender`; do not copy Arma 3 remote-execution sender patterns here.
 - *BattlEye `scripts.txt`/`publicvariable.txt`:* restrict/snapshot the `RequestSpecial` PV so the `"ICBM"` selector can't be hand-injected. Defense-in-depth, not a substitute for server validation.
 
 Handoff for Codex: this belongs in the [Networking](Networking-And-Public-Variables) PVF-hazard table and a Feature-Status/atlas note on the Nuke module; the actionable fix is an owner decision shared with the economy-authority item already logged (DR-6/14/16/22/23).
@@ -585,7 +594,7 @@ Source facts (full repo sweep):
   5 "kickAFK"
   ```
   This is not a security control. The single rule is the **AFK-kick feature plumbing** itself: `Client/.../updateclient.sqf` intentionally broadcasts `kickAFK` and BattlEye acts on it because `serverCommand` kick paths are unavailable (correctly documented at `External-Integrations.md:58` and `Networking-And-Public-Variables.md:66`). There is **no default-deny catch-all line** (e.g. `5 "" !="legitPV1" !="legitPV2" …`) and therefore **no restriction on any forgery-class PV** — `RequestSpecial` (the DR-27 ICBM vector), `RequestStructure`/`RequestDefense` (DR-6), `RequestUpgrade` (DR-23), `RequestNewCommander` (DR-15), or the raw `Server_HandlePVF`/`Client_HandlePVF` channels (DR-1). Every dangerous PV passes BattlEye unfiltered.
-- **`scripts.txt` is absent** (verified by name across the whole repo), as are `createvehicle.txt`, `remoteexec.txt`, `setvariable.txt`, `setpos.txt`, `mpeventhandler.txt`, etc. `scripts.txt` is the filter that would blunt the **DR-1 `call compile` RCE** and script-command injection (`createVehicle`/`setDamage`/`call compile`), so its absence is the more security-relevant gap of the two.
+- **`scripts.txt` is absent** (verified by name across the whole repo), as are `createvehicle.txt`, `setvariable.txt`, `setpos.txt`, `mpeventhandler.txt`, etc. `scripts.txt` is the filter that would blunt the **DR-1 `call compile` RCE** and script-command injection (`createVehicle`/`setDamage`/`call compile`), so its absence is the more security-relevant OA gap. `remoteexec.txt` is an Arma 3 remote-execution filter surface, not an OA 1.64 mitigation path.
 - The directory also contains a 716 KB `READ ME FIRST - Using BattlEye filter to auto kick.docx`. Per the project's untrusted-content rule it was **not parsed** (binary Office doc); regardless, the *operative deployed artifact* is the 22-byte stub, and admin documentation is not a control.
 
 **Campaign-wide implication (the point of this pass).** The two-option framing in DR-1/6/14/16/22/23/27/28 is misleading as-shipped: option (b) "rely on BattlEye" is **not a deployed reality** — choosing it means authoring and maintaining a full BE filter set from scratch (a restrictive `publicvariable.txt` default-deny + whitelist of the legitimate `WFBE_PVF_*`/direct channels keeping `kickAFK`, **plus** a `scripts.txt`), which is a non-trivial, error-prone, separate workstream for a Warfare mission with hundreds of PVs and easy to break legitimate play. The realistic remediation for the entire forgery/economy class therefore collapses toward **(a) server-side authority in SQF** (re-derive the requester/role/funds in each PVF handler before applying effects, per DR-1/DR-6), with a real BE filter set as defense-in-depth only if someone owns it.
@@ -687,19 +696,19 @@ MASH tents are a real deployable officer feature (`Client/Module/Skill/Actions/O
 
 Net: deployed MASH tents produce **no map markers** for the owning side. Confirms and extends DR-2.
 
-**Latent JIP gap if revived (note for whoever fixes it).** Even with both ends re-enabled, the marker is delivered by `publicVariable "WFBE_SE_MASH_MARKER_SENT"` — a single global **overwritten on each deploy** (not a list) and **not replayed to join-in-progress clients**. So a revived feature would: (a) show JIP joiners no markers for MASH deployed before they joined, and (b) only ever carry the most-recent MASH in the synced value. A correct revival needs a server-held list + a JIP re-send on join (the same pattern the construction/HQ-killed code uses via `Server_HandleSpecial` "set-…" re-sends).
+**Latent JIP gap if revived (note for whoever fixes it).** Even with both ends re-enabled, the marker is delivered by `publicVariable "WFBE_SE_MASH_MARKER_SENT"` — a single global **overwritten on each deploy** (not a list). OA `publicVariable` can make the last missionNamespace value available to JIP clients, but that still gives a joiner at most the most-recent marker payload, not the deployed MASH marker set. A correct revival needs a server-held list + a JIP re-send or pull on join (the same pattern the construction/HQ-killed code uses via `Server_HandleSpecial` "set-…" re-sends).
 
 **Secondary (Low):**
 - **Respawn selector is a ~33 Hz local loop.** `Client_UI_Respawn_Selector.sqf:19-33` runs `while {!isNil 'WFBE_MarkerTracking'} do { sleep 0.03; … }`, animating a pulsing **local** marker (`setMarkerDirLocal`/`SizeLocal`/`PosLocal`) — network-free and bounded to while the respawn UI is open, but `sleep 0.03` cannot be honored by the SQF scheduler so it effectively runs every frame. Acceptable for a transient UI; flagged for completeness.
 - **Non-unique marker name (dead code, DR-33b class).** `receiverMASHmarker.sqf:12` builds the marker name with `round random 50000` (collision-prone) and later deletes a `createMarkerLocal` marker with the global `deleteMarker` (local/global mismatch). Moot while the receiver is disabled; fix if revived.
 
-**Handoff for Codex.** Mark the MASH map-marker feature as **dead/abandoned** in the [Feature status register](Feature-Status-Register) and the relevant marker/respawn docs (Codex's lane), with the revival recipe above (server-held list + JIP re-send + unique names + fix `publicVariable` JIP gap). Owner decision: revive the feature or remove the dead `receiverMASHmarker.sqf` + orphaned `Init_Server.sqf:70` registration.
+**Handoff for Codex.** Mark the MASH map-marker feature as **dead/abandoned** in the [Feature status register](Feature-Status-Register) and the relevant marker/respawn docs (Codex's lane), with the revival recipe above (server-held list + JIP re-send/pull + unique names + avoid relying on a single overwritten `publicVariable` value as full feature state). Owner decision: revive the feature or remove the dead `receiverMASHmarker.sqf` + orphaned `Init_Server.sqf:70` registration.
 
 **Outcome:** Markers/respawn — MASH marker chain reviewed (DR-34): dead both ends + orphaned server PVEH; respawn selector Perf characterized. Markers row PV/JIP-HC cells reference DR-34.
 
 ## Round 26 — 2026-06-02 (Claude) — parameters / localization integrity (DR-35): clean, with 2 dead-action confirmations
 
-Lane `params-localization-review`. Reviewed the two never-covered cross-cutting areas: **localization integrity** (do `localize`/`$STR_` references resolve?) and the **mission parameters** system. Result: localization is clean once case-folding and dead-code are accounted for; the params system is live and correctly wired.
+Lane `params-localization-review`. Reviewed the two never-covered cross-cutting areas: **localization integrity** (do `localize`/`$STR_` references resolve?) and the **mission parameters** system. Result: localization is clean once case-folding and dead-code are accounted for; the mission parameter system is live and correctly wired. This is `class Params` / `paramsArray`, not the SQF `params` command that remains unsafe for OA patches without proof.
 
 ### DR-35 — Localization integrity is clean (no live broken strings); parameters system is live and correctly wired; 2 dead WASP actions confirmed — **Informational (reviewed clean + abandoned-code)**
 
@@ -710,13 +719,13 @@ Lane `params-localization-review`. Reviewed the two never-covered cross-cutting 
 
 Config-side `$STR_` references in `.hpp`/`.ext` (excluding engine `STR_EP1_`/`STR_DN_`/`STR_USRACT` prefixes) all resolve. So **no live missing-localization display bug exists.** The stringtable carries ~1085 keys not hit by any static `localize` — a large legacy surface typical of a long-lived WFBE fork, not a defect (some are reached by config `$STR_`, engine, or removed features).
 
-**Parameters system — live and correct.** `Common/Init/Init_Parameters.sqf` iterates `missionConfigFile >> "Params"` and sets each `configName` as a `missionNamespace` variable, taking `paramsArray select _i` in multiplayer and the param's `default` in single-player. Wiring confirmed: `initJIPCompatible.sqf:121` runs it in MP; the parameter-display dialog is loaded via `Rsc/Dialogs.hpp:3136` (`onLoad ExecVM GUI_Display_Parameters.sqf`), defined in `Rsc/Parameters.hpp`. This is the canonical A2 OA pattern. One **fragility note** (not a defect): the `paramsArray select _i` ↔ `Params` iteration is **index-aligned**, so inserting/removing a param without keeping `class Params` order in sync would silently shift every later parameter's value — worth a comment in the config for future editors.
+**Parameters system — live and correct.** `Common/Init/Init_Parameters.sqf` iterates `missionConfigFile >> "Params"` and sets each `configName` as a `missionNamespace` variable, taking `paramsArray select _i` in multiplayer and the param's `default` in single-player. Wiring confirmed: source Chernarus `initJIPCompatible.sqf:132` runs it in MP, and generated Vanilla Takistan has the same call at `:121`; the parameter-display dialog is loaded via `Rsc/Dialogs.hpp:3136` (`onLoad ExecVM GUI_Display_Parameters.sqf`), defined in `Rsc/Parameters.hpp`. This is the canonical A2 OA pattern. One **fragility note** (not a defect): the `paramsArray select _i` ↔ `Params` iteration is **index-aligned**, so inserting/removing a param without keeping `class Params` order in sync would silently shift every later parameter's value — worth a comment in the config for future editors.
 
 **Abandoned-code inventory (adds to DR-32/DR-34).** `WASP/actions/AddActions.sqf` contains commented-out `OnArmor` (ride-on-tank: `GetOnArmor.sqf`/`GetOnArmorBots.sqf`/`GetOutBots.sqf`) and `GearYourUnit` actions — dead WASP features whose localization keys were never added. Confirms the earlier "WASP OnArmor/KeyDown abandoned" suspicion.
 
 **Handoff for Codex.** Optionally note in the [WASP overlay](WASP-Overlay) page that `AddActions.sqf` carries dead OnArmor/Gear actions, and add a one-line "keep `class Params` order stable (index-aligned to `paramsArray`)" caution to any parameters documentation (Codex's lane). No code defect to fix; the dead WASP actions are an owner cleanup decision (remove vs revive).
 
-**Outcome:** parameters/localization reviewed — **clean**; localization integrity verified (no live broken keys), params system confirmed live/wired, 2 dead WASP actions logged. New ledger row **Parameters / localization** → reviewed-clean (DR-35).
+**Outcome:** parameters/localization reviewed — **clean**; localization integrity verified (no live broken keys), mission parameter system confirmed live/wired, 2 dead WASP actions logged. New ledger row **Parameters / localization** → reviewed-clean (DR-35).
 
 ## Round 27 — 2026-06-02 (Claude) — victory/endgame Perf + JIP/HC (DR-36); source mechanism for DR-11/DR-13
 
@@ -753,7 +762,7 @@ Lane `boot-lifecycle-perf-jip-review`. Filled the Boot/lifecycle Perf + JIP/HC c
 **JIP/HC — comprehensive and correct.** `initJIPCompatible.sqf` routes roles cleanly: server (`isHostedServer || isDedicated`), client part II (`isHostedServer || (!isHeadLessClient && !isDedicated)`), headless (`isHeadLessClient`). A JIP client:
 - syncs time/date via the engine-synced `WFBE_DAYNIGHT_DATE` (or `skipTime (time/3600)` catch-up on the disabled path) — `:189-205`, reviewed clean in Round 17;
 - syncs teams by waiting on the synced `WFBE_PRESENTSIDES` then per-side `wfbe_teams` (`:225-234`);
-- pulls all remaining client state from broadcast logic-object variables via a serial `waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_…"}}` chain (`Init_Client.sqf:367-502`: structures, commander, radio_hq(+id), startpos, hq, hq_deployed, votetime).
+- pulls most remaining client state from broadcast logic-object variables via a serial `waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_…"}}` chain (`Init_Client.sqf:367-502`: structures, commander, radio_hq(+id), startpos, hq and hq_deployed); the later `wfbe_votetime` wait is at `Init_Client.sqf:788`.
 - **Robust join handshake:** the `RequestJoin`→ACK poll (`:416-429`) polls at 10 Hz, **re-sends after a 30 s timeout**, and fails the client back to the lobby on team-stack/swap — a well-defended one-time handshake.
 
 **The one robustness gap.** Unlike the join handshake, the **post-join state-sync `waitUntil` chain has no timeouts**. Each step blocks on a synced `wfbe_*` logic variable; in normal operation all are reliably `setVariable [...,true]` server-side so the chain completes, but if a server-side regression ever fails to set one (e.g. `wfbe_radio_hq_id`, `:397`), the JIP client **hangs forever at that step with no fallback or log past it** — presenting as a "stuck on black screen at join" with no diagnostic. Not a live bug (the variables are set today), but a fragility: consider a `waitUntil {!isNil … || (_t = _t + …; _t > N)}` timeout with a logged warning, mirroring the handshake's own retry discipline.
@@ -786,7 +795,7 @@ Lane `supply-missions-perf-jip-review`. Filled the Supply-missions Perf + JIP/HC
 
 **Perf (live path).** Each active supply mission spawns one server-side `while {alive _associatedSupplyTruck} { sleep 3; … }` loop (`supplyMissionStarted.sqf:20-69`). The per-tick cost is `nearestObjects [(getPos _truck), [], 80]` (`:28`) — an **all-object-types** scan in an 80 m radius every 3 s, just to detect a `Base_WarfareBUAVterminal`. Bounded by the number of concurrent supply missions (usually few), so not severe, but the empty type filter `[]` is wasteful: narrowing to `nearestObjects [pos, ["Base_WarfareBUAVterminal"], 80]` lets the engine cull by type and avoids walking every nearby object. The heavy nested `WFBE_SE_PLAYERLIST × nearestObjects[...,8]` scan (`:31-57`) runs only once at delivery (inside `exitWith`), so it's fine.
 
-**JIP/HC — handled well (the positive counterexample to DR-34).** Supply-mission *cooldown status* uses an **on-demand request/response**, not a fire-and-forget push: a client broadcasts `WFBE_Client_PV_IsSupplyMissionActiveInTown`; the server PVEH (`isSupplyMissionActiveInTown.sqf`) computes the cooldown from `_sourceTown getVariable "LastSupplyMissionRun"` vs `WFBE_CO_VAR_SupplyMissionRegenInterval` and answers via `WFBE_Server_PV_IsSupplyMissionActiveInTown`; the client (`townSupplyStatus.sqf`) stores it per-town. So a **JIP joiner gets correct state simply by asking** — no replay logic needed, unlike the MASH marker (DR-34) which pushed once and missed joiners. The per-mission tracking loop is **server-side** and keyed on the truck object, so it correctly survives the starting player's disconnect (truck ownership migrates to the server, DR-21). Minor: the cooldown answer is broadcast to *all* clients (`publicVariable`, `:18`) rather than targeted to the requester — every client re-stores the town's cooldown on each query (small redundant network; could target the asker). The DR-18 `LastSupplyMissionRun` casing concern lives in this subsystem and is already filed.
+**JIP/HC — handled well (the positive counterexample to DR-34).** Supply-mission *cooldown status* uses an **on-demand request/response**, not a fire-and-forget push: a client broadcasts `WFBE_Client_PV_IsSupplyMissionActiveInTown`; the server PVEH (`isSupplyMissionActiveInTown.sqf`) computes the cooldown from `_sourceTown getVariable "LastSupplyMissionRun"` vs `WFBE_CO_VAR_SupplyMissionRegenInterval` and answers via `WFBE_Server_PV_IsSupplyMissionActiveInTown`; the client (`townSupplyStatus.sqf`) stores it per-town. So a **JIP joiner gets correct state after its request/response completes** — no event-history replay logic needed, unlike the MASH marker (DR-34) which pushed once and missed joiners. The per-mission tracking loop is **server-side** and keyed on the truck object, so it correctly survives the starting player's disconnect (truck ownership migrates to the server, DR-21). Minor: the cooldown answer is broadcast to *all* clients (`publicVariable`, `:18`) rather than targeted to the requester — every client re-stores the town's cooldown on each query (small redundant network; could target the asker). The DR-18 `LastSupplyMissionRun` casing concern lives in this subsystem and is already filed.
 
 **Handoff for Codex.** Note the dead `supplyMissionActive.sqf`/`WFBE_SE_FNC_SupplyMissionActive` in the [Supply mission architecture](Supply-Mission-Architecture) page (Codex's lane) as an abandoned duplicate; record the pull-based cooldown query as the JIP-correct pattern. Code-owner items: remove the dead twin; narrow the `nearestObjects` filter; optionally target the cooldown response.
 
@@ -819,13 +828,13 @@ Lane `attack-wave-authority-verify` (collaboration-follow: source-verifying Code
 ### DR-41 — `ATTACK_WAVE_INIT` is a forgeable direct publicVariable: server trusts client `_supply`/`_side`, no re-derivation/authority/cost → side-wide free units — **High (economy authority / forgery; new direct-PV channel)**
 
 Chain (source-cited):
-- **Client gate is advisory only.** `Client/FSM/updateclient.sqf:240` adds the "HEAVY ATTACK MODE" action with params `[(sideJoined) call GetSideSupply, sideJoined]` and condition `((sideJoined) Call GetSideSupply) >= 25000` — a **client-side** visibility/eligibility check.
+- **Client gate is advisory only.** `Client/FSM/updateclient.sqf:240` adds the "HEAVY ATTACK MODE" action with addAction arguments `[(sideJoined) call GetSideSupply, sideJoined]` and condition `((sideJoined) Call GetSideSupply) >= 25000` — a **client-side** visibility/eligibility check.
 - **Client sends its own numbers.** `Common/Functions/Common_AttackWaveActivate.sqf:6-8`: `ATTACK_WAVE_INIT = [_supply, _side]; publicVariableServer "ATTACK_WAVE_INIT";` — a **direct** publicVariable to the server (not via the WFBE_PVF dispatcher).
-- **Server trusts the payload wholesale.** `Server/Functions/Server_AttackWave.sqf:1-27` (`"ATTACK_WAVE_INIT" addPublicVariableEventHandler`): `_supply = _this select 1 select 0; _side = _this select 1 select 1;` then `_discountPercentage = 0.7 * (0.4 + ((WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT - _supply) * (1/50000)))` → sets `ATTACK_WAVE_PRICE_MODIFIER` (a **side-wide unit-price multiplier**, read by `GUI_Menu_BuyUnits.sqf:90/261` and `Client_UIFillListBuyUnits.sqf:60`) and `_attackWaveLength = (1 - _discountPercentage) * 1500` (a server-side `sleep`). **No re-derivation of the side's real supply (never calls `GetSideSupply`), no check that `_side` matches the PV sender, and no server-side supply deduction.**
+- **Server trusts the payload wholesale.** `Server/Functions/Server_AttackWave.sqf:1-27` (`"ATTACK_WAVE_INIT" addPublicVariableEventHandler`): `_supply = _this select 1 select 0; _side = _this select 1 select 1;` then `_discountPercentage = 0.7 * (0.4 + ((WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT - _supply) * (1/50000)))` -> sets `ATTACK_WAVE_PRICE_MODIFIER` (a **side-wide unit-price multiplier**, read by `GUI_Menu_BuyUnits.sqf:90/261` and `Client_UIFillListBuyUnits.sqf:60`) and `_attackWaveLength = (1 - _discountPercentage) * 1500` (a server-side `sleep`). **No re-derivation of the side's real supply (never calls `GetSideSupply`), no requester object or other server-verifiable authority anchor in the payload, and no server-side supply deduction.**
 
 **Impact.** `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT = 50000` (`Init_CommonConstants.sqf:166`), so legitimately `_supply ∈ [0,50000]` → modifier `∈ [0.28, 0.98]` (a discount). But `_supply` is attacker-controlled and unvalidated: forging `_supply = 50000 + 0.4·50000 = 70000` drives `_discountPercentage → 0` → `ATTACK_WAVE_PRICE_MODIFIER → 0` → **every unit costs `price × 0 = free` for the chosen `_side`**; larger forged values make the modifier **negative** (negative-priced units / broken pricing). The 25 000-supply cost is **never deducted server-side** (client gate only), so the forger pays nothing, and `_side` is attacker-chosen. `ATTACK_WAVE_INIT` is **not** in `BattlEyeFilter/publicvariable.txt` (only `kickAFK`, DR-30), so the channel is unfiltered. `_attackWaveLength` is also attacker-influenced (a `sleep` of forged length).
 
-**Architectural significance — the forgery class has two surfaces.** This is the first confirmed exploit on a **direct publicVariable channel** rather than the registered PVF dispatcher. The DR-1 remediation (validate the PVF command string before `compile`) does **not** protect direct channels like `ATTACK_WAVE_INIT`. So the economy/forgery owner decision must cover **both**: (1) the PVF dispatcher (DR-1, validated lookup) **and** (2) each direct `publicVariableServer` PVEH must re-derive trusted values server-side — here: take `_side` from the PV sender/`owner`, compute `_supply` from `GetSideSupply _side` on the server, and deduct the cost there — ignoring the payload's economic fields. Other direct channels (side-supply, supply-mission, MASH) share this surface and warrant the same treatment.
+**Architectural significance — the forgery class has two surfaces.** This is the first confirmed exploit on a **direct publicVariable channel** rather than the registered PVF dispatcher. The DR-1 remediation (validate the PVF command string before `compile`) does **not** protect direct channels like `ATTACK_WAVE_INIT`. So the economy/forgery owner decision must cover **both**: (1) the PVF dispatcher (DR-1, validated lookup) **and** (2) each direct `publicVariableServer` PVEH must re-derive trusted values server-side. For `ATTACK_WAVE_INIT`, the current payload lacks a requester, so a real fix must either add a server-verifiable requester/team anchor or redesign the request around server-owned side state; the server should compute `_supply` from trusted side state and deduct cost there, ignoring client-supplied economic fields. Other direct channels (side-supply, supply-mission, MASH) share this surface and warrant the same treatment. OA PVEHs expose variable name/value, not a trusted sender identity.
 
 **Handoff for Codex.** Confirms backlog item `attack-wave-authority` (was `new-from-2026-06-02-pv-scout`) → **confirmed, High**; flip its status and cross-link DR-41 from [Networking](Networking-And-Public-Variables) (direct-PV hazard table) and the economy-authority roadmap entry. Fold into the same owner decision as the economy class, with the explicit "two surfaces (PVF + direct PV)" note so the server-authority redesign covers direct channels too.
 
@@ -872,13 +881,13 @@ Lane `direct-pv-supply-authority` (research autonomy: walking the direct `public
 Chain (source-cited):
 - **Client sender** `Common/Functions/Common_ChangeSideSupply.sqf:28-30`: `missionNamespace setVariable [format ["wfbe_supply_temp_%1", _side], [_side, _amount, _reason]]; publicVariableServer format ["wfbe_supply_temp_%1", _side];` — a **direct** channel (not via the PVF dispatcher).
 - **Server handler** `Server/Functions/Server_ChangeSideSupply.sqf` (`addPublicVariableEventHandler` on `wfbe_supply_temp_west` `:1` and `wfbe_supply_temp_east` `:25`): takes `_side = _this select 1 select 0` and **`_amount = _this select 1 select 1` straight from the payload** (`:4-5`/`:28-29`), computes `_change = _currentSupply + _amount` (`:11`/`:35`), caps at `WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT`, then `missionNamespace setVariable ["wfbe_supply_<side>", _change]` + `publicVariable` (`:19-21`/`:43-45`).
-- **No authority:** the handler never checks the PV sender, never verifies `_side` belongs to the sender, and never re-derives `_amount` server-side. So a forged `wfbe_supply_temp_west = [west, 999999, "x"]` makes the **server** set west's supply to (current + 999999), capped at the max — **arbitrary side-supply inflation from any client**.
+- **No authority:** the handler has no requester object or other server-verifiable authority anchor, trusts payload `_side`/`_amount`, and never re-derives `_amount` server-side. So a forged `wfbe_supply_temp_west = [west, 999999, "x"]` makes the **server** set west's supply to (current + 999999), capped at the max — **arbitrary side-supply inflation from any client**.
 
 **Impact.** Supply gates attack-wave eligibility (≥25000, DR-41), funds/income, and production — so writing the supply balance is a high-leverage economy exploit. The author was aware: the `_reason` fallback string is literally *"This might indicate a malicious supply update request. Check stuff if you see this message."* (`:6`/`:30`) — i.e. a log breadcrumb was added **instead of** authority validation.
 
 **Relationship to other findings.** Same files as **DR-22** but a **different axis**: DR-22 is the broken overspend *floor* (`if (_change<0) then {_change=_currentSupply-_amount}` should be `{_change=0}`, a correctness bug present here too at `:12`/`:36`); DR-44 is the *authority/forgery* gap (payload-trusted `_amount`, no sender/side check). And it is the **second confirmed direct-PV forgery** after DR-41 — establishing that the direct-channel surface is a class, not a one-off. Sharpens the economy thesis: not only is *spending* client-authoritative (DR-6/14/16/22/23/27/28), the **supply ledger itself is directly client-writable**.
 
-**Owner decision.** Folds into the economy-authority decision (server-side authority vs BattlEye) with the **two-surfaces** note (PVF dispatcher DR-1 **+** direct channels DR-41/DR-44). The direct fix: the `wfbe_supply_temp_<side>` handler must derive the authorized delta server-side (or validate the sender is the side's commander/server) and ignore the payload's `_amount` as an authority. BattlEye `publicvariable.txt` should also restrict `wfbe_supply_temp_*` (not shipped, DR-30).
+**Owner decision.** Folds into the economy-authority decision (server-side authority vs BattlEye) with the **two-surfaces** note (PVF dispatcher DR-1 **+** direct channels DR-41/DR-44). The direct fix: the `wfbe_supply_temp_<side>` handler must derive the authorized delta server-side from trusted state or change the request shape so a requester can be validated against side/role/funds on the server. Ignore the payload's `_amount` as an authority. BattlEye `publicvariable.txt` should also restrict `wfbe_supply_temp_*` (not shipped, DR-30).
 
 **Handoff for Codex.** Update the [Public variable channel index](Public-Variable-Channel-Index) `wfbe_supply_temp_*` row to cite DR-44; add DR-44 to the economy-authority class wherever the class is listed (it's a new member); the [Pending owner decisions](Pending-Owner-Decisions) economy table gains a row.
 
@@ -896,13 +905,13 @@ Lane `wiki-audit-followthrough`. Three parallel audits of all 60 wiki pages (dup
 ```
 The guard `!(isPlayer leader group _x)` only spares a vehicle whose **group leader** is a player. It does **not** inspect crew/cargo/turret occupants, so an AI-led (or empty-group) vehicle that a **player is riding as a passenger/cargo** is deleted under them during the despawn sweep. Promotes the existing (un-numbered) `Town-AI-Vehicle-Despawn-Safety` playbook — confirmed by Codex's Einstein verifier and now re-confirmed at source — to a formal DR. **Fix:** before delete, also check `crew _x` / `assignedCargo _x` for any `isPlayer`, or skip vehicles with any player occupant.
 
-### Direct-PV forgery surface — closed (coverage-clean)
+### Direct-PV forgery surface — reviewed as bounded in this pass
 
 Following DR-41/DR-44, the remaining client-touchable **direct** `publicVariable` channels were source-checked for the same forgery class:
 - `REQUEST_SUPPLY_VALUE` (`Server/Functions/Server_PV_RequestSupplyValue.sqf`) — **clean**: a read-only query (`SUPPLY_VALUE_REQUESTED = (side _player) call GetSideSupply; (owner _player) publicVariableClient …`); no mutation, no authority surface (worst case: a client reads another side's public supply — negligible).
 - `MARKER_CREATION` (`Client/Functions/Client_onEventHandler_MARKER_CREATION.sqf`) — **clean/cosmetic**: creates a side-visible **local** map marker from the payload; worst case is cosmetic marker spam, no gameplay/authority impact.
 
-**Conclusion:** the direct-PV **forgery** surface is fully enumerated and **bounded to the two mutation channels** (DR-41 `ATTACK_WAVE_INIT`, DR-44 `wfbe_supply_temp_<side>`); the read/cosmetic direct channels are safe. No further direct-PV forgery findings.
+**Conclusion for the current direct-channel inventory:** the direct-PV **forgery** class is bounded to the two mutation channels found in this pass (DR-41 `ATTACK_WAVE_INIT`, DR-44 `wfbe_supply_temp_<side>`); the read/cosmetic direct channels above do not mutate authoritative gameplay state. Future channels or source drift still need a fresh grep against [Public variable channel index](Public-Variable-Channel-Index).
 
 ### Coverage-gap & code-depth assessment (what remains unreviewed)
 
@@ -916,7 +925,7 @@ Honest accounting of where the campaign has **not** gone deep, for the owner/Cod
 
 **Handoff for Codex.** Audit punch-list (Codex-lane accuracy fixes) recorded in [Wiki quality audit](Wiki-Quality-Audit) "Round 2"; DR-45 should be cross-linked from the Town-AI playbook + AI/headless atlas; the coverage-gap list seeds the next review queue.
 
-**Outcome:** DR-45 filed (town-AI passenger-vehicle deletion); direct-PV forgery surface closed as bounded; coverage gaps enumerated for the next phase.
+**Outcome:** DR-45 filed (town-AI passenger-vehicle deletion); direct-PV forgery surface reviewed as bounded for the current inventory; coverage gaps enumerated for the next phase.
 
 ## Continue Reading
 

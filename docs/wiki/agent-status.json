@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T11:05:29+02:00",
+  "generatedAt": "2026-06-02T21:58:14+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -10,29 +10,101 @@
     "collaborationState": "agent-collaboration.json",
     "knowledgeRecords": "agent-knowledge.jsonl",
     "eventFeed": "agent-events.jsonl",
-    "repoContext": "agent-context.json"
+    "repoContext": "agent-context.json",
+    "bottleneckQueue": "Bottleneck-Removal-Queue.md",
+    "releaseReadiness": "agent-release-readiness.json",
+    "currentSourceStatus": "Current-Source-Status-Snapshot.md",
+    "currentSourceStatusKnowledge": "agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851",
+    "currentSourceStatusEvent": "agent-events.jsonl#current-source-status-pointer-refresh-2026-06-02-1851",
+    "wikiMirrorReconciliation": "Wiki-Mirror-Reconciliation-Plan.md"
   },
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "long-running-archivist-continuation",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; latest pass resolved Wiki Quality DUP-8 by routing construction authority detail to Deep-Review-Findings.md DR-6, Construction-And-CoIn-Systems-Atlas.md and Server-Authority-Migration-Map.md.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed lane; likely candidates are remaining duplicate reductions, Arma 2 OA external-reference integration into subsystem pages, or more implementation-readiness playbooks."
+      "currentLane": "bottleneck-reducer-progress-accelerator",
+      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; recent pass added first-read active-claim collision guidance and removed ambiguous PVF params wording while preserving Codex-2's object lifecycle command-reference claim.",
+      "nextExpectedOutput": "Continue bottleneck coordination, parity checks after scoped syncs and handoff routing; leave active command-reference/compatibility claim files to their owner unless sign-off or user redirection is recorded."
     },
     "Codex-2": {
       "status": "active",
-      "currentLane": "wasp-marker-wait-cleanup",
-      "currentWork": "Source-checking WASP map marker dialog display polling and replacing the sleepless display-54 wait with a throttled wait if safe.",
-      "nextExpectedOutput": "Source/Vanilla patch or patch-ready handoff for WASP marker display wait cleanup, plus wiki/backlog/status updates."
+      "currentLane": "oa-object-lifecycle-command-addendum",
+      "currentWork": "Source-backed OA object lifecycle/create/delete/init command addendum for createVehicle/createUnit/deleteVehicle/setVehicleInit/processInitCommands/hideObject/enableSimulation patterns.",
+      "nextExpectedOutput": "Complete or hand off the OA object lifecycle command addendum, then update agent-collaboration.json activeClaims and validation records."
     },
     "Claude": {
       "status": "autonomous-ready",
       "currentLane": "collaboration-follow-autonomous-ready",
-      "currentWork": "DR-41 attack-wave authority finding has a dedicated playbook; Claude can continue with the next source-backed review under Claude-Loop-Goal.md or inspect implementation readiness.",
-      "nextExpectedOutput": "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
+      "currentWork": "Latest recorded deep-review finding is DR-45 (town-AI passenger-vehicle deletion); Claude is in collaboration-follow/autonomous-ready mode and should read current-source snapshot plus Codex handoffs before the next source-backed review.",
+      "nextExpectedOutput": "Read shared state, follow Codex handoffs/current-source truth first, then continue the next source-backed review or implementation-readiness pass without importing Arma 3-only assumptions."
     }
   },
   "laneSummary": [
+    {
+      "lane": "oa-object-lifecycle-command-addendum",
+      "owner": "Codex-2",
+      "status": "active-docs-source-crosscheck",
+      "output": "Active command-reference addendum covering OA-safe object lifecycle/create/delete/init primitives and A3-only global/deletion false-friend warnings."
+    },
+    {
+      "lane": "oa-config-params-command-addendum",
+      "owner": "Codex-2",
+      "status": "archived-published-validated",
+      "output": "Archived command-reference addendum covering OA-safe config and mission-parameter lookup primitives with A3-only config-helper warnings; not a live claim."
+    },
+    {
+      "lane": "oa-role-locality-command-addendum",
+      "owner": "Codex-2",
+      "status": "published-validated",
+      "output": "Archived command-reference addendum covering OA-safe role/locality primitives and A3-only locality false-friend warnings; repo validation and active wiki mirror parity passed."
+    },
+    {
+      "lane": "oa-script-execution-scheduler-command-addendum",
+      "owner": "Codex-2",
+      "status": "published-validated",
+      "output": "Archived command-reference addendum covering OA-safe script execution and scheduler primitives with A3-only contrast warnings."
+    },
+    {
+      "lane": "wiki-mirror-reconciliation-plan",
+      "owner": "Codex",
+      "status": "published-active-parity-restored",
+      "output": "Wiki-Mirror-Reconciliation-Plan.md defines the file-by-file no-blind-copy policy; active _wasp_wiki_tmp parity now passes across 93 files after scoped sync, while older _wasp_wiki_claude divergence remains historical/alternate-checkout inventory."
+    },
+    {
+      "lane": "bottleneck-reducer-progress-accelerator",
+      "owner": "Codex",
+      "status": "active-docs-process-bottleneck-removal",
+      "output": "Bottleneck-Removal-Queue.md ranks P0/P1/P2 drag, next five actions, returned-report harvest queue and validation gates; dashboard/coordination surfaces route to it."
+    },
+    {
+      "lane": "commander-page-current-state-reconcile",
+      "owner": "Codex",
+      "status": "published-patch-ready-current-source-unpatched",
+      "output": "Superseded: 14:35 re-check found current source/Vanilla still carry DR-15 call-shape and duplicate notification."
+    },
+    {
+      "lane": "docs-platform-scaffold-state-correction",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Knowledge-Platform-Roadmap.md now treats Tools/ValidateWiki.ps1 as the active validator, Tools/TestWikiParity.ps1 as the post-sync mirror parity gate, and keeps MkDocs/Pages/docs CI future-only; missing resistance/UI route pages and agent-feature-status.jsonl were restored for current links"
+    },
+    {
+      "lane": "home-current-map-dedup",
+      "owner": "Codex",
+      "status": "published",
+      "output": "Home.md Current Map now has shorter runtime, cleanup, risk, authority and documentation-quality route rows; LLM-Agent-Entry-Pack.md, llms.txt and validation/page parity were restored"
+    },
+    {
+      "lane": "commander-reassignment-call-shape",
+      "owner": "Codex-2",
+      "status": "published-patch-ready-current-source-unpatched",
+      "output": "Commander-Reassignment-Call-Shape.md reflects current source still assigns _side = _this and still has the duplicate caller-side notification; source patch, Vanilla propagation, Arma smoke and requester/role validation remain."
+    },
+    {
+      "lane": "factory-queue-counter-token-cleanup",
+      "owner": "Codex-2",
+      "status": "published-patch-ready-current-source-unpatched",
+      "output": "Factory-Queue-Counter-Token-Cleanup.md reflects current source/Vanilla still use random varQueu token identity and still exit crewless vehicles before normal queue decrement; Arma smoke and public queu broadcast review remain."
+    },
     {
       "lane": "wiki-quality-dup8-construction-routing",
       "owner": "Codex",
@@ -276,23 +348,54 @@
     {
       "lane": "client-skill-init-idempotency",
       "owner": "Codex-2",
-      "status": "published-source-patched",
-      "output": "Client-Skill-Init-Idempotency.md plus source Chernarus and Vanilla Takistan Init_Client.sqf duplicate Skill_Init removal; Arma smoke pending."
+      "status": "published-patch-ready-current-source-unpatched",
+      "output": "Client-Skill-Init-Idempotency.md reflects current source/Vanilla still call Skill_Init.sqf at Init_Client.sqf:547 and :571, then WFBE_SK_FNC_Apply at :572; source patch, Vanilla propagation and Arma smoke remain."
     },
     {
       "lane": "hosted-server-fps-loop-sleep",
       "owner": "Codex-2",
-      "status": "published-source-patched",
-      "output": "Hosted-Server-FPS-Loop-Sleep.md plus source/Vanilla FPS publisher early non-dedicated exits; Arma smoke pending."
+      "status": "published-patch-ready-current-source-unpatched",
+      "output": "Hosted-Server-FPS-Loop-Sleep.md reflects current source/Vanilla still enter both FPS publisher loops before checking isDedicated; source patch, Vanilla propagation and Arma smoke remain."
     },
     {
       "lane": "supply-mission-scan-narrowing",
       "owner": "Codex-2",
-      "status": "published-source-patched",
-      "output": "Supply-Mission-Scan-Narrowing.md plus source Chernarus and Vanilla Takistan supplyMissionStarted.sqf command-center scan narrowing; Arma smoke pending."
+      "status": "published-patch-ready-current-source-unpatched",
+      "output": "Supply-Mission-Scan-Narrowing.md reflects current source/Vanilla still use nearestObjects [..., [], 80] for the command-center scan before filtering; Arma smoke and broader supply authority cleanup remain."
+    },
+    {
+      "lane": "wasp-marker-wait-cleanup",
+      "owner": "Codex-2",
+      "status": "published-patch-ready-current-source-unpatched",
+      "output": "WASP-Marker-Wait-Cleanup.md documents current source/Vanilla still use the sleepless display-54 wait; source patch, Vanilla propagation and Arma marker smoke remain."
     }
   ],
-  "queuedReports": [],
+  "queuedReports": [
+    {
+      "lane": "scout-wave-k-j-validation-residue",
+      "priority": "Plan published",
+      "target": "Subagent-Discovery-Swarm.md / Progress-Dashboard.md / Wiki-Mirror-Reconciliation-Plan.md / agent-status.json",
+      "nextAction": "No further scout-harvest action; active _wasp_wiki_tmp mirror/wiki parity passes, and Wiki-Mirror-Reconciliation-Plan.md remains the policy for future drift."
+    },
+    {
+      "lane": "dr44-direct-supply-forgery-crosslinks",
+      "priority": "Closed",
+      "target": "Economy-Towns-And-Supply.md / Networking-And-Public-Variables.md / Public-Variable-Channel-Index.md / Server-Gameplay-Runtime-Atlas.md / Feature-Status-Register.md",
+      "nextAction": "No further harvest action; keep detailed proof in Deep-Review-Findings.md and avoid duplicating it."
+    },
+    {
+      "lane": "dr20-hq-killed-crosslinks",
+      "priority": "Closed",
+      "target": "Construction-And-CoIn-Systems-Atlas.md / Gameplay-Systems-Atlas.md / Server-Gameplay-Runtime-Atlas.md",
+      "nextAction": "No further docs action; concise routes already exist from construction, gameplay and server-runtime pages."
+    },
+    {
+      "lane": "string-selection-command-traps",
+      "priority": "Closed",
+      "target": "agent-compatibility-audit.json",
+      "nextAction": "No further docs action; agent-compatibility-audit.json and Arma-2-OA-Compatibility-Audit.md already carry the trap."
+    }
+  ],
   "updateProtocol": [
     "Before substantial work, update agent-collaboration.json and append a claim event to agent-events.jsonl.",
     "For long work, append heartbeat events with current source scope.",
@@ -329,6 +432,13 @@
     "performanceOpportunitySweep": "Performance-Opportunity-Sweep.md",
     "clientSkillInitIdempotency": "Client-Skill-Init-Idempotency.md",
     "hostedServerFpsLoopSleep": "Hosted-Server-FPS-Loop-Sleep.md",
-    "supplyMissionScanNarrowing": "Supply-Mission-Scan-Narrowing.md"
+    "supplyMissionScanNarrowing": "Supply-Mission-Scan-Narrowing.md",
+    "waspMarkerWaitCleanup": "WASP-Marker-Wait-Cleanup.md",
+    "factoryQueueCleanup": "Factory-Queue-Counter-Token-Cleanup.md",
+    "currentSourceStatusSnapshot": "Current-Source-Status-Snapshot.md",
+    "bottleneckRemovalQueue": "Bottleneck-Removal-Queue.md",
+    "releaseReadiness": "agent-release-readiness.json",
+    "bottleneckQueue": "Bottleneck-Removal-Queue.md",
+    "claimArchive": "agent-collaboration.json#archivedClaims"
   }
 }

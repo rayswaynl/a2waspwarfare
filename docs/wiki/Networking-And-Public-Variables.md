@@ -1,91 +1,179 @@
 # Networking And Public Variables
 
-Arma 2 OA networking here is built around public variables, public-variable event handlers and wrapper functions that dispatch named PVF commands.
+Arma 2 OA networking here is built around:
 
-For external engine grounding, see [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index). In short: `publicVariable` broadcasts and is JIP-persistent; `publicVariableServer` and `publicVariableClient` target one direction; `addPublicVariableEventHandler` reacts to broadcasts but does not provide a trusted sender identity. This is why DR-1 (PVF command-string validation) and DR-41 (direct-PV server authority) are separate hardening layers.
+- `publicVariable`, `publicVariableServer`, `publicVariableClient`
+- `addPublicVariableEventHandler`
+- `missionNamespace setVariable`/`getVariable`
+- PVF registration and dispatch wrappers
 
-## Central PVF Registration
+Use this page before adding or changing any client/server channel.
 
-`Common/Init/Init_PublicVariables.sqf` creates two command lists: 13 server-bound commands and 14 client-bound commands. Use [Public variable channel index](Public-Variable-Channel-Index#1-registered-pvf-commands) as the canonical inventory; it includes purpose notes, notable DR findings and source anchors for every registered `WFBE_PVF_*` command.
+For engine grounding, use [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide), then [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index) and [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) for command behavior caveats.
 
-Each command is compiled into either `SRVFNC...` or `CLTFNC...`, and `WFBE_PVF_<Command>` receives an event handler that passes payloads to `Server_HandlePVF` or `Client_HandlePVF`.
+## Source-backed model
 
-## Network Helper Layer
+In this codebase, three boundaries matter:
 
-- `Common_SendToServer`: sends a server PVF; uses optimized `publicVariableServer` outside vanilla mode.
-- `Common_SendToClients`: broadcasts client PVF to all clients.
-- `Common_SendToClient`: targets one client where supported.
+1. **Transport boundary** (`publicVariable*`) — moves a variable/value.
+2. **Dispatch boundary** (`WFBE_PVF_*`) — chooses which handler runs.
+3. **Authority boundary** (handler code) — decides whether to mutate state.
 
-These wrappers are preferred over hand-coded public variable dispatch for new features.
+This split is why DR-1 (dispatch trust), DR-38 (dispatch performance/race), DR-41 (attack wave), DR-27 (ICBM), and DR-44 (supply temp channels) are separate lanes.
 
-## Direct Public Variables
+## Primitive comparison in this repo
 
-Some systems use explicit public-variable channels outside the generic PVF list. Do not maintain a second channel table here; use [Public variable channel index](Public-Variable-Channel-Index#2-direct-publicvariable-channels-own-event-handlers) as the canonical inventory for BattlEye whitelist work and direct-PV authority hardening.
+### `publicVariable`
 
-High-risk examples to keep visible on this networking page:
+- Full fan-out to all peers.
+- Last-value replication semantics when a variable is public and named in mission namespace.
+- JIP gets the latest known value, not guaranteed event history.
 
-- **Attack wave:** `ATTACK_WAVE_INIT` is broadcast with `publicVariableServer` from `Common/Functions/Common_AttackWaveActivate.sqf` and is the confirmed DR-41 direct-PV authority issue.
-- **MASH markers:** the intended `WFBE_CL_MASH_MARKER_CREATED` -> `WFBE_SE_MASH_MARKER_SENT` relay is not currently a working channel. The client receiver compile is commented and the send trigger is absent, leaving an orphaned server PVEH. See [Deep-review findings](Deep-Review-Findings) DR-34.
-- **AFK kick:** `kickAFK` is intentionally caught by BattlEye filters because `serverCommand` is unavailable; [External integrations](External-Integrations) and [Deep-review findings](Deep-Review-Findings) DR-30 cover the current filter posture.
+### `publicVariableServer`
 
-## Safety Notes
+- Client- or hosted-client-initiated send toward server.
+- Transport-only in OA context; handler trust is still a separate problem.
 
-- Keep payloads small and structured; Arma 2 public-variable traffic can be expensive.
-- Prefer server authority for state changes. Client scripts should request, not mutate, team/base/economy state directly.
-- When adding a PVF command, update both the registration list and the target `Client/PVFunctions` or `Server/PVFunctions` file.
-- Hosted-server paths often call the handler locally in addition to broadcasting. Preserve those branches when modernizing code.
+### `publicVariableClient`
 
-## Authority Surfaces To Audit Together
+- Targeted send to one client (`owner _player`) in this source.
+- OA docs treat this as not persistent/JIP by default.
 
-DR-1 closes the most dangerous PVF issue, but it does not by itself make gameplay requests authoritative. Two server-facing surfaces need separate hardening:
+### `addPublicVariableEventHandler`
 
-- **PVF command surface.** ICBM uses `RequestSpecial`: `Client/Module/Nuke/nukeincoming.sqf:23` reaches `Server/Functions/Server_HandleSpecial.sqf:97-111`. Keep payload/impact/fix details in [Deep-review findings](Deep-Review-Findings) DR-27; the networking takeaway is that legitimate PVF commands still need per-handler authority validation after the DR-1 dispatch lookup is fixed.
-- **Direct public-variable surface.** Attack wave does not use PVF. `Common/Functions/Common_AttackWaveActivate.sqf:6-8` writes `ATTACK_WAVE_INIT = [_supply, _side]` and sends it with `publicVariableServer`; `Server/Functions/Server_AttackWave.sqf:1-27` trusts that supplied side/supply to calculate `ATTACK_WAVE_PRICE_MODIFIER` and broadcast `ATTACK_WAVE_DETAILS`. Server-side validation should derive current side supply and authority from trusted state, not from the payload.
+- Triggers logic when a variable arrives.
+- It does not prove who sent the payload or that the sender had gameplay authority.
 
-Treat these as sibling work items when refactoring economy authority. A validated PVF lookup prevents arbitrary function-string execution; it does not validate that the requested game action is allowed.
+### mission namespace
 
-## PVF dispatch internals (Claude deep-dive, source-cited)
+- `missionNamespace setVariable [name, value, true]` is state replication, not command transport.
+- `missionNamespace getVariable` is retrieval from shared runtime state (not a network trust claim by itself).
+- Use this for durable state (scores/supply/day-night/HQ), then route UI with explicit commands.
 
-The registry above tells you *which* commands exist; this section documents *how a message is actually routed and executed* once it arrives. Paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
+## Central PVF registration
 
-### One PV variable per command — no numeric multiplexing
+`Common/Init/Init_PublicVariables.sqf` creates:
 
-Registration (`Common/Init/Init_PublicVariables.sqf:43-51`) creates one PV name per command (`WFBE_PVF_RequestJoin`, `WFBE_PVF_TownCaptured`, …), each with its own `addPublicVariableEventHandler`. There is **no** single multiplexed channel with a numeric protocol ID. The handlers are gated by role: client handlers register under `if (!isServer || local player)`; server handlers under `if (isServer)`.
+- 13 server-bound command entries.
+- 14 client-bound command entries.
+- two dispatch binders (`WFBE_SE_FNC_HandlePVF`, `WFBE_CL_FNC_HandlePVF`).
 
-### Index-0 routing on the client side
+Each command becomes a separate `WFBE_PVF_<Command>` variable with its own event handler; there is no single numeric multiplexing channel. Compiled handler references are stored in mission namespace as `SRVFNC*` / `CLTFNC*`.
 
-`Client/Functions/Client_HandlePVF.sqf` inspects element 0 of the payload to decide whether *this* client should run the function:
+## Mission namespace and helper wrappers
 
-- `nil` → run on **all** clients.
-- a `SIDE` value → run only if `sideJoined == destination` (`:14`).
-- a `STRING` (player UID) → run only if `getPlayerUID player == destination` (`:15`).
+| Wrapper | Direction | Engine primitive | Engine behavior | Typical use |
+| --- | --- | --- | --- | --- |
+| `Common_SendToServer` | client -> server | `publicVariable` / hosted local dispatch | One wrapper name, no dedicated `isServer` transport call | Standard safe baseline for request channels in mixed/locality environments |
+| `Common_SendToServerOptimized` | client -> server | `publicVariableServer` in supported paths | Uses OA direct server API where possible | Performance-oriented request lane |
+| `Common_SendToClients` | server -> clients | `publicVariable` | Optional target filter (nil/SIDE/UID) applied in `Client_HandlePVF.sqf` | Broad/conditional broadcasts and state sync |
+| `Common_SendToClient` | server -> one client | `owner _player publicVariableClient` | Writes player UID in payload to preserve filters | One-client replies and direct UX updates |
 
-The actual function is resolved from element 1 (`"CLTFNC<Command>"`) and executed by the generic PVF dispatcher. The current generic dispatch trust/perf issue is tracked in [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) and [Deep-review findings](Deep-Review-Findings) DR-1/DR-38.
+## Direct publicVariable channels are separate
 
-### The four send wrappers map to four engine primitives
+`Public-Variable-Channel-Index.md` owns the canonical direct channel table with sender/receiver/payload/JIP-risk and source references.
 
-| Wrapper (compiled name `WFBE_CO_FNC_…`) | Direction | Engine primitive | Element 0 |
-| --- | --- | --- | --- |
-| `Common_SendToServer` / `…Optimized` → `SendToServer` | client→server | `publicVariable` (vanilla) / `publicVariableServer` (OA/CO) | n/a |
-| `Common_SendToClients` → `SendToClients` | server→clients | `publicVariable` | destination (`nil`/SIDE/UID) |
-| `Common_SendToClient` → `SendToClient` | server→one client | `publicVariableClient` to `owner _player` | player object (rewritten to UID for the client filter) |
+Use this map when you are tempted to add a new `publicVariable` call:
+- Is the receiver local/client-specific?
+- Is the payload directly mutable game state?
+- Is the channel recoverable for late joiners?
+- Can sender identity be proven in server logic?
+- Does retry or dedupe matter?
 
-### Two layers of multiplexing
+## Remote-style function dispatch pattern (not Arma 3 remoteExec)
 
-A second routing layer lives *inside* two god-functions, dispatched by a runtime string tag:
+Two layers exist:
 
-- `Client/PVFunctions/HandleSpecial.sqf:8-37` — `switch (_request)` over 20+ cases (`join-answer`, `attack-wave`, `commander-vote`, `endgame`, …). Server side mirrors this in `Server/Functions/Server_HandleSpecial.sqf`.
-- `Client/PVFunctions/LocalizeMessage.sqf:10-113` — `switch` over message keys (`Teamkill`, `FundsTransfer`, `AttackModeActivated`, …).
+1. **First dispatch layer:** one `WFBE_PVF_<Command>` selects one handler entry.
+2. **Second in-handler layer:** some client handlers switch internally (`HandleSpecial`, `LocalizeMessage`) and treat payload key as local action type.
 
-When tracing a feature, a single registered command (`WFBE_PVF_HandleSpecial`) can carry many heterogeneous messages — grep for the string tag, not just the command name.
+This pattern means a trusted handler can still execute many side effects from one transport route. Treat each case as an independent authority boundary.
 
-### Gotchas
+## `onPlayerConnected` / `onPlayerDisconnected` and authority context
 
-- **UID-targeted broadcast is wasteful.** `SendToClients` with a UID at element 0 (e.g. `Server/PVFunctions/RequestOnUnitKilled.sqf:86` awarding bounty) still `publicVariable`s to *every* client; each non-matching client deserializes and discards it in `Client_HandlePVF.sqf:15`. For true unicast prefer `SendToClient` (`publicVariableClient`).
-- **All handlers `Spawn` (not `Call`).** Messages run in fresh scheduled threads with no ordering guarantee; two rapid messages mutating the same state (e.g. back-to-back `ChangeScore`) can race.
-- **PVF dispatch boundary.** Both generic handlers still compile the registered handler-name string per message. Keep source proof and fix shape in [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) and DR-1/DR-38.
-- **Per-side copy-paste channels.** Some bare-PV channels are duplicated per side rather than parameterized, e.g. `wfbe_supply_temp_west` / `wfbe_supply_temp_east` each get their own event handler in `Server/Functions/Server_ChangeSideSupply.sqf` (no resistance handler).
+Lifecycle handlers in this repo:
 
-### Security: generic PVF dispatch boundary
+- `Server/Functions/Server_OnPlayerConnected.sqf`
+- `Server/Functions/Server_OnPlayerDisconnected.sqf`
 
-`Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` are the DR-1 generic dispatch trust boundary. Keep the source proof and behavior-preserving patch shape in [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) and [Deep-review findings](Deep-Review-Findings) DR-1/DR-38; this page only tracks the boundary and the residual: validated dispatch does not authorize legitimate handler payloads or direct `publicVariable` channels.
+Typical roles in live flows:
+
+- initialize player state and side ownership tracking;
+- initialize JIP fallback paths and retry handshakes;
+- publish or clear session-owned replicated values.
+
+For audit, classify each player lifecycle variable as:
+
+- `publicVariable`-transported event,
+- mission namespace state,
+- or server-owned cached bookkeeping not yet mirrored to clients.
+
+## Replication and JIP risk map (concise)
+
+- `publicVariable` for `setVariable true` state variables: late joiners can recover the latest value.
+- pure `publicVariableClient`: targeted ephemeral event, not state/JIP.
+- pure `addPublicVariableEventHandler` request channels: event-only unless state is republished.
+- command paths with pull responses (for example, supply value request/response): robust for late-join when implemented as query+response.
+
+## Safe conventions for future networking edits
+
+1. Keep mutation flows in `publicVariableServer`/PVF request channels unless explicit state needs broad fan-out.
+2. Use `missionNamespace` state + explicit re-broadcast for durable shared state.
+3. Treat every direct channel as untrusted input; validate side, ownership, object locality, and payload shape server-side.
+4. Include sender/receiver and JIP behavior in any changelist and in `Public-Variable-Channel-Index.md`.
+5. Prefer `publicVariableClient` only for one-client responses; avoid using it as primary state replication.
+6. For multiplexer handlers (`HandleSpecial`, `LocalizeMessage`) add idempotency for repeated packets.
+7. Preserve hosted-listen behavior (`isServer`/`local`) when touching helper wrappers.
+8. Do not introduce Arma 3-only APIs (`remoteExec`, `remoteExecCall`, `CfgRemoteExec`, `remoteExecutedOwner`, `isRemoteExecuted`) in this OA branch.
+
+## Unclear ownership / likely risk patterns
+
+- `ATTACK_WAVE_INIT` direct payload trust remains live: not in PVF dispatch and still trusts client-side price/side parameters.
+- `wfbe_supply_temp_*` direct channels remain direct client-writable mutation attempts with arithmetic and auth gaps.
+- MASH marker relay path has sender/receiver inconsistencies and appears effectively dormant.
+- `Client_HandlePVF.sqf` destination filtering still runs after broadcast, not before send.
+- `Spawn` dispatch remains non-deterministic in packet ordering for rapid-fire events.
+
+## Replication checklist (when auditing an issue)
+
+1. **Name the primitive first** (who uses transport, who reads state).
+2. **Separate event vs state.**
+3. **Prove authority in handler** (requester side, funds, role, range, ownership).
+4. **Prove JIP behavior** (latest-value state, pull-response, or event-only).
+5. **Check handler idempotency** (`Spawn`, duplicate packets, and multi-key switches).
+
+## Safety notes
+
+- `publicVariableClient` is for targeted, one-client response flow; treat as non-persistent.
+- `publicVariable` with `setVariable true` can carry state snapshots and can be recovered by JIP.
+- PVF dispatch validation and handler validation are separate; closing one gap does not close the other.
+- Multiple wrapper paths must preserve hosted/listen behavior (`if (local)` and local dispatch branches in handlers).
+
+## Source and follow-up indexes
+
+- Command inventory and direct channel map: [Public Variable Channel Index](Public-Variable-Channel-Index)
+- Deep findings and status lanes: [Deep-review findings](Deep-Review-Findings), [Feature-Status-Register](Feature-Status-Register)
+- Implementation sequence and validation gates: [PVF Dispatch Implementation Playbook](PVF-Dispatch-Implementation-Playbook), [Server-Authority-Migration-Map](Server-Authority-Migration-Map)
+
+## PVF dispatch internals (source-cited deep dive)
+
+### One PV variable per command
+
+There is no shared numeric multiplexing channel. Each registered command owns its own `WFBE_PVF_*` name and handler branch.
+
+### Destination filter semantics
+
+Client side destination is in `_requestDestination`:
+
+- `nil` -> all clients
+- `SIDE` -> side-only
+- `STRING` -> uid-only
+
+### `Client_HandlePVF` / `Server_HandlePVF` execution shape
+
+Both dispatchers compile the sender-shape string before running the resolved handler. The command lookup issue (DR-1) is addressed separately in the dispatch playbook, but no dispatch fix currently validates the semantic correctness of mutable commands.
+
+## Ongoing lanes
+
+- `PVF-Dispatch-Implementation-Playbook` for DR-1/DR-38 boundary hardening.
+- `Feature-Status-Register` for live patch backlog and open authority lanes.
