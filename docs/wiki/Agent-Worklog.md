@@ -4,8 +4,8 @@ Append entries here so Codex, Claude and future assistants can see what each age
 
 ## 2026-06-03 - Codex Documentation Finisher: ICBM Authority Wording Recheck
 
-- Closed [Instructions for Codex](Instructions-For-Codex) item 20 as a stale handoff after source and page recheck.
-- Verified the current [ICBM authority playbook](ICBM-Authority-Playbook) already avoids implying server validation exists. It says Tactical-menu checks are local affordances only and lists the missing server commander, upgrade, funds, cooldown, target-shape, range and side/ownership checks.
+- Closed [Instructions for Codex](Instructions-For-Codex) item 20 after source and page recheck.
+- Corrected the [ICBM authority playbook](ICBM-Authority-Playbook) validation gate so `RequestSpecial` stays documented as a legitimate PVF command only after a future `"ICBM"` server-authority patch; it no longer reads as though live server validation already exists.
 - Source evidence remains `Server/Functions/Server_HandleSpecial.sqf:97-111`: the `"ICBM"` case accepts `_side`, `_base`, `_target` and `_playerTeam` from the payload, only guards null/dead `_target`, waits on `_target` death/null and then spawns `NukeDammage` from `_base`.
 - Scope remained docs-only; no gameplay source files were edited. Next queue item is [Instructions for Codex](Instructions-For-Codex) item 21: [Function and module index](Function-And-Module-Index) Reaktiv/family-summary drift.
 

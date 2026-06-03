@@ -33,7 +33,7 @@ Scope: `Missions/[55-2hc]warfarev2_073v48co.chernarus`. Apply gameplay patches t
 
 ## Current Trust Boundary
 
-The UI path has local affordance checks, but those checks are not server authority. `GUI_Menu_Tactical.sqf:252-260` is useful UX: it hides the button unless the player appears to be the commander, has the ICBM upgrade and can afford the fee. A forged PVF does not have to use that UI path.
+Per DR-27, the UI path has local affordance checks, but those checks are not server authority. `GUI_Menu_Tactical.sqf:252-260` is useful UX: it hides the button unless the player appears to be the commander, has the ICBM upgrade and can afford the fee. A forged PVF does not have to use that UI path.
 
 The unsafe boundary is the server's `"ICBM"` case in `Server_HandleSpecial.sqf:97-111`:
 
@@ -96,7 +96,7 @@ If no reliable `GetCommanderTeam` helper exists for this exact call shape, inspe
 | Gate | Check |
 | --- | --- |
 | Static source check | `Server_HandleSpecial.sqf` no longer trusts payload `_side`, `_base`, `_target` or `_playerTeam` as final authority for `"ICBM"`. |
-| Static dispatch check | `RequestSpecial` remains documented as a legitimate PVF command, but the `"ICBM"` branch has its own server validation. |
+| Static dispatch check | `RequestSpecial` should remain documented as a legitimate PVF command, but only after the `"ICBM"` branch re-derives commander, upgrade, funds, cooldown, impact and object authority server-side instead of trusting payload fields. |
 | Legit smoke | Commander with ICBM upgrade and enough funds can launch once; marker/message timing still feels correct. |
 | Role negative | Non-commander, wrong-side, dead/disconnected or forged requester cannot start a nuke. |
 | Upgrade/funds negative | Missing ICBM upgrade, disabled ICBM module, air-war event, insufficient funds or cooldown/active guard rejects. |

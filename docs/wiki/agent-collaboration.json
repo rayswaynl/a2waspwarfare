@@ -31,8 +31,8 @@
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf"
       ],
       "outputs": [
-        "Marked Instructions-For-Codex item 20 complete as a stale handoff",
-        "Verified the current ICBM playbook already treats Tactical-menu checks as local affordances and names the missing server commander/upgrade/funds/cooldown/shape/range/side validation"
+        "Marked Instructions-For-Codex item 20 complete after correcting the ICBM validation-gate wording",
+        "Verified the current ICBM playbook treats Tactical-menu checks as local affordances and names the missing server commander/upgrade/funds/cooldown/shape/range/side validation"
       ],
       "handoff": "Continue with Instructions-For-Codex item 21: Function-And-Module-Index Reaktiv and family-summary drift."
     },
