@@ -176,3 +176,32 @@ Lower-value/cleanup: SK5/6/7/8/9/10/11/12/13/14, CN2/5/7/9/10/12/13, FC4/6/7/8/9
 **✅ FIXED & shipped to PR #8 (commit `b8a895b0`):**
 - **FC2** — destroyed-factory builds now refund the purchase price. `_currentCost` is passed into `BuildUnit` (`GUI_Menu_BuyUnits.sqf:162`) and refunded in the factory-destroyed `exitWith` (`Client_BuildUnit.sqf`), mirroring the deduction. Guarded so it's a no-op for other callers / never double-refunds.
 - **SP4** — `uav.sqf` now deletes the crew group(s) after the UAV lifecycle ends (incl. the driver's split-off group), closing the per-UAV group leak toward the 288-group cap. Residual: a UAV active at *player disconnect* still leaks its group (server has no group ref) — minor follow-up.
+
+---
+
+## Round 4 (2026-06-03) — Supply-Mission / Logistics subsystem
+Random wiki-seeded pick (Supply-Mission-Architecture + the two cleanup/scan playbooks). 3-agent sweep: SM (lifecycle, 16), TR (trucks/economy, 15), XR (wiki-vs-code cross-reference, 15). Headline items verified by direct read.
+
+**✅ Verified REAL — recommend (low-LOC correctness):**
+- **TR12** — `Server_AI_Com_Upgrade.sqf:47,50` deducts SWAPPED cost indices vs the check at `:34`. `_cost = [supply, funds]`; check is `supply>=cost[0] && funds>=cost[1]`, but line 47 takes `cost[0]` (supply price) from **funds** and line 50 takes `cost[1]` (funds price) from **supply**. AI commander is ON by default (`WFBE_C_AI_COMMANDER_ENABLED=1`); bites in currency-system 0. Fix: 47→`_cost select 1`, 50→`_cost select 0`. 2 LOC. HIGH.
+- **XR4** — cooldown var casing: `Init_Town.sqf:35` seeds `lastSupplyMissionRun` (lowercase) but `isSupplyMissionActiveInTown.sqf:8` reads `LastSupplyMissionRun`. First check reads nil → nil arithmetic (benign-by-accident, allows first mission). The wiki's own DR-18. 1-char fix.
+- **XR3** — `supplyMissionCompleted.sqf:40-41` clears `SupplyAmount`+`SupplyFromTown` but NOT `SupplyByHeli` → stale heli flag mis-classifies a reused vehicle's next run as a cash-run. 1 LOC (the cleanup playbook itself says "clear state on completion"). Add `setVariable ["SupplyByHeli", false, true]`.
+- **SM8/XR9** — `supplyMissionActive.sqf` is DEAD (compiled `Init_Server.sqf:82` as `WFBE_SE_FNC_SupplyMissionActive`, zero callers — confirmed by grep). The cleanup playbook asked to retire it; never done. ~68 LOC removable.
+- **SM9/XR2** — `checkCCProximity.sqf` is DEAD (compiled `Init_Client.sqf:134` as `WFBE_CL_FNC_CheckCCProximity`, zero callers). Not even mentioned in the wiki. ~16 LOC removable.
+- **XR5/SM7** — `supplyMissionStart.sqf:73` re-sends `WFBE_Client_PV_IsSupplyMissionActiveInTown` a second time (first at :6-7). Redundant network + server-handler invocation. −1 LOC.
+- **XR6** — `supplyMissionStarted.sqf` (PVEH) spawns a NEW tracking loop on every `WFBE_Client_PV_SupplyMissionStarted` with no per-vehicle guard → reloading the same vehicle runs parallel loops. ~8 LOC (add a `wfbe_supply_tracking` flag).
+- **XR15/SM2** — `supplyMissionStarted.sqf:50,56` CC-proximity scan filters by CLASS only (`Base_WarfareBUAVterminal`), no friendly-side check → a supply run can complete at the ENEMY CC and still credit the deliverer's own side. ~5 LOC (verify CC side). Borderline exploit.
+
+**🔎 Wiki DRIFT (cross-ref; docs-only fix, HIGH value — prevents re-doing shipped work):**
+- **XR1/XR7** — all 3 Supply-Mission wiki pages claim the CC scan "still uses broad `nearestObjects [pos,[],80]`". Live `supplyMissionStarted.sqf:56` is ALREADY class-filtered with a heli 400m radius. Scan-narrowing is SHIPPED; wiki is stale.
+- **XR8** — heli 2D horizontal-distance qualifier (`supplyMissionStarted.sqf:51-54`, `<6400`) undocumented.
+- **XR14** — `supplyMissionTimerForTown.sqf` push-based cooldown-expiry broadcast undocumented.
+
+**❌ FALSE POSITIVE (verified by direct read):**
+- **SM6** — "`_friendlyCommandCenterInProximity` never reset in the loop": the LIVE `supplyMissionStarted.sqf:48` DOES reset it each iteration. The agent described the dead twin `supplyMissionActive.sqf`. NOT a live bug.
+
+**🛑 Exploit-class (owner priority = gameplay over exploit → defer):** SM1/SM14/SM15 (client-authoritative supply amount / score / funds), TR4 (free upgrades — `RequestUpgrade` no server affordability check), TR5 (free structures + infinite supply via client-side sell), TR6 (`Action_RepairMHQDepot.sqf:28` client-side broadcast nuke of all friendly town SVs to 10), TR10 (`Server_AttackWave.sqf:15` discount uses stale client-supplied supply), TR11 (client-side repair supply drain), SM3/SM11 (cooldown checked client-side). Root cause shared: supply mutations are client-authoritative with no server re-validation.
+
+**Known/deferred (confirmed, NOT new):** TR1/TR2/XR12 — AI truck supply mode is dead (`UpdateSupplyTruck` compile commented at `Init_Server.sqf:37`; `supplytruck.fsm` missing). Wiki already documents this.
+
+Lower-value/cleanup: TR3/7/8/9/13/15, SM4/5/10/13/16/17, XR10/11/13 — see chat; cross-check as capacity allows. Nothing from Round 4 built yet — awaiting owner pick.

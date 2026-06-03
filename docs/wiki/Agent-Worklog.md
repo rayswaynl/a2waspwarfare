@@ -1451,3 +1451,11 @@ Key conclusions:
 ## ROUND 3 FIXES - Claude - FC2 + SP4 shipped
 - FC2 (refund purchase price when factory destroyed mid-build) + SP4 (delete leaked UAV crew groups) shipped to PR #8 (release commit b8a895b0). Other round-3 findings left for cross-reference/owner pick.
 - Docs-only here.
+
+## ROUND 4 - Claude - Supply-Mission/Logistics sweep + wiki cross-reference
+- Random wiki-seeded pick. Logged SM1-16, TR1-15, XR1-15 to Audit-Findings-Queue (Round 4). Nothing built yet (awaiting owner pick).
+- Verified REAL: TR12 (AI-commander upgrade pays SWAPPED supply/funds pools, Server_AI_Com_Upgrade.sqf:47,50 vs :34; AI commander on by default), XR4 (cooldown casing lastSupplyMissionRun vs LastSupplyMissionRun, the DR-18), XR3 (SupplyByHeli not cleared on completion), SM8/XR9 (supplyMissionActive.sqf dead - playbook asked to retire, never done), SM9/XR2 (checkCCProximity.sqf dead), XR5 (duplicate cooldown PV), XR6 (no duplicate-start guard), XR15/SM2 (no friendly-side check on CC delivery).
+- WIKI DRIFT (these pages are stale vs code): Supply-Mission-Architecture / -Scan-Narrowing / -Authority-Cleanup-Playbook all say the CC scan "still uses broad nearestObjects[pos,[],80]" but supplyMissionStarted.sqf:56 is ALREADY class-filtered + heli 400m. Scan-narrowing is SHIPPED. Heli 2D check + supplyMissionTimerForTown push-timer are undocumented. RECOMMEND updating those 3 pages.
+- FALSE POSITIVE: SM6 (_friendlyCommandCenterInProximity IS reset each loop iteration in the live file; agent read the dead twin).
+- Exploit-class (deferred per owner gameplay>exploit): SM1/14/15, TR4/5/6/10/11.
+- Docs-only here.
