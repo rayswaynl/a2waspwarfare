@@ -1374,3 +1374,9 @@ Key conclusions:
 - Confirmed both FPS publishers in source and maintained Vanilla start with `if (!isDedicated) exitWith {};` at line `:1`, matching [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) and [Source fix propagation queue](Source-Fix-Propagation-Queue).
 - Confirmed both live supply mission handlers use `nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]` at `supplyMissionStarted.sqf:28`, matching [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) and [Performance opportunity sweep](Performance-Opportunity-Sweep).
 - Noted that the older branch-landscape claim was stale: local remote refs now include additional feature/release branches beyond the old four-branch snapshot.
+
+# 2026-06-03 - Hosted FPS Loop Status Recheck
+
+- Closed [Instructions for Codex](Instructions-For-Codex) item 31 as stale after a focused recheck of [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep).
+- Confirmed source and maintained Vanilla `serverFpsGUI.sqf` and `monitorServerFPS.sqf` all have early `if (!isDedicated) exitWith {};` at line `:1`, one publisher loop and `sleep 8`.
+- Confirmed the page already treats the old inner-`isDedicated` / branch-only sleep shape as historical and leaves only Arma hosted/dedicated smoke pending.

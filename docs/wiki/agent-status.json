@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T13:15:00+02:00",
+  "generatedAt": "2026-06-03T13:25:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Instructions-For-Codex item 30 as stale false-positive: current Chernarus and maintained Vanilla source contain the DR-19 FPS !isDedicated exits and DR-39 Base_WarfareBUAVterminal scan narrowing, while remediation pages already say source/Vanilla propagated with Arma smoke pending.",
-      "nextExpectedOutput": "Continue with Instructions-For-Codex item 31: Hosted-Server-FPS-Loop-Sleep specific status-drift recheck."
+      "currentWork": "Closed Instructions-For-Codex item 31 as stale: Hosted-Server-FPS-Loop-Sleep already matches current Chernarus and maintained Vanilla FPS publishers, with early !isDedicated exits at line 1, one loop, sleep 8 and Arma smoke still pending.",
+      "nextExpectedOutput": "Continue with Instructions-For-Codex item 32: Supply-Mission-Scan-Narrowing specific status/path/line recheck."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "hosted-fps-loop-status-recheck",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Instructions-For-Codex item 31 is resolved as stale: Hosted-Server-FPS-Loop-Sleep.md already matches current Chernarus and maintained Vanilla FPS publishers, with early !isDedicated exits at line 1, one loop, sleep 8 and Arma smoke still pending."
+    },
     {
       "lane": "dr19-dr39-status-drift-recheck",
       "owner": "Codex",

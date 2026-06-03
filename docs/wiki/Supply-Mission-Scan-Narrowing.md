@@ -1,10 +1,10 @@
 # Supply Mission Scan Narrowing
 
-This page records the source patch for the `supply-mission-scan-narrowing` lane. It is a contained performance cleanup inside the broader supply-mission authority cleanup work.
+This page records the branch-local source patch for the `supply-mission-scan-narrowing` lane. It is a contained performance cleanup inside the broader supply-mission authority cleanup work.
 
 ## Status
 
-Source Chernarus and maintained Vanilla Takistan are patched. Hosted/dedicated Arma 2 OA smoke is still pending.
+`origin/master` is still broad-scan (`supplyMissionStarted.sqf:24-28` uses `nearestObjects [..., [], 80]`). This docs branch narrows the scan at `:24-28`, and `origin/release/2026-06-feature-bundle` carries a PR #1-compatible narrowed scan at `:46-53` with heli-aware radius logic. Hosted/dedicated Arma 2 OA smoke is still pending.
 
 ## What I Read
 
@@ -39,26 +39,27 @@ Scope note: this patch applies to the live supply mission return-to-base handler
 
 ## Patch Shape
 
-Patched source Chernarus:
+Patched branch-local source Chernarus:
 
 ```sqf
 } forEach (nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]);
 ```
 
-Maintained Vanilla Takistan was propagated by `Tools/LoadoutManager` on 2026-06-02 after the root-discovery and `A2WASP_SKIP_ZIP` tooling patch. `Modded_Missions/*` are not claimed by this propagation lane.
+Maintained Vanilla Takistan was propagated by `Tools/LoadoutManager` on 2026-06-02 after the root-discovery and `A2WASP_SKIP_ZIP` tooling patch in this docs/source branch. `Modded_Missions/*` are not claimed by this propagation lane.
 
 ## Why It Matters
 
 This removes an avoidable broad object scan from the live active supply mission handler without changing the completion trigger, cadence or reward path. It is small, source-backed and low-risk compared with the remaining supply-mission authority work.
 
-Status: **source and maintained Vanilla propagated; hosted/dedicated smoke pending**.
+Status: **branch-local source and maintained Vanilla propagated; not merged to `origin/master`; hosted/dedicated smoke pending**.
 
 ## Validation
 
 Source/Vanilla checks completed:
 
-- Source Chernarus has zero 80-meter broad command-center scans and one narrowed `["Base_WarfareBUAVterminal"]` 80-meter scan.
+- This docs branch's source Chernarus has zero 80-meter broad command-center scans and one narrowed `["Base_WarfareBUAVterminal"]` 80-meter scan.
 - Maintained Vanilla Takistan contains the same narrowed 80-meter command-center scan after the 2026-06-02 propagation run.
+- `origin/master` still has the broad command-center scan at `supplyMissionStarted.sqf:24-28`; `origin/release/2026-06-feature-bundle` has the narrowed PR #1-compatible scan at `:46-53`.
 - Source Chernarus still has the 8-meter broad nearby-player scan.
 - `git diff --check` passed.
 - `Tools/LoadoutManager` generation/copy now works from this checkout by detecting repo-root markers; set `A2WASP_SKIP_ZIP=1` for propagation-only runs.
@@ -77,7 +78,7 @@ Hosted/dedicated/JIP smoke still needed:
 Codex:
 
 - Keep this page linked from the performance sweep, supply mission pages, dashboard/status files, backlog and [propagated fix smoke pack](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack).
-- Do not mark `supply-mission-authority-cleanup` complete; only the command-center scan sub-step is patched.
+- Do not mark `supply-mission-authority-cleanup` complete; only the command-center scan sub-step is patched in branch-local/release source, not in `origin/master`.
 
 Claude:
 

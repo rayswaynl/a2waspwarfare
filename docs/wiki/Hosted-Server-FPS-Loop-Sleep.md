@@ -2,7 +2,7 @@
 
 ## Status
 
-`hosted-server-fps-loop-sleep` is source + maintained Vanilla propagated and smoke pending as of 2026-06-02. This is the implementation pass for DR-19 / backlog id `server-fps-hosted-loop-sleep`. The earlier checkout-root blocker was removed by the LoadoutManager root-discovery patch, and propagation now works from this Codex checkout with `A2WASP_SKIP_ZIP=1`.
+`hosted-server-fps-loop-sleep` is **branch-local patched / not on `origin/master`** as of 2026-06-03. `origin/master` still has the DR-19 loop shape (`serverFpsGUI.sqf:1-12`, `monitorServerFPS.sqf:1-8`) with `sleep 8` inside `if (isDedicated)`. This docs branch has early `if (!isDedicated) exitWith {};` guards in both publishers, and `origin/release/2026-06-feature-bundle` keeps a single guarded `serverFpsGUI.sqf` publisher while removing the redundant Chernarus `monitorServerFPS.sqf` path. Arma 2 OA smoke is still pending.
 
 ## What I Read
 
@@ -20,8 +20,8 @@ Before the DR-19 patch, `Init_Server.sqf` started two FPS publisher scripts:
 | --- | --- |
 | `Server/Init/Init_Server.sqf:578` | Starts `Server\GUI\serverFpsGUI.sqf`. |
 | `Server/Init/Init_Server.sqf:595` | Starts `Server\Module\serverFPS\monitorServerFPS.sqf`. |
-| Historical `Server/GUI/serverFpsGUI.sqf:1-11` | Ran `while {true}`; published `SERVER_FPS_GUI` only inside `if (isDedicated)`; slept only inside that same branch. Current source now has the early `!isDedicated` exit described below. |
-| Historical `Server/Module/serverFPS/monitorServerFPS.sqf:1-8` | Ran `while {true}`; published `WFBE_VAR_SERVER_FPS` only inside `if (isDedicated)`; slept only inside that same branch. Current source now has the early `!isDedicated` exit described below. |
+| `origin/master` `Server/GUI/serverFpsGUI.sqf:1-12` | Runs `while {true}`; publishes `SERVER_FPS_GUI` only inside `if (isDedicated)`; sleeps only inside that same branch. |
+| `origin/master` `Server/Module/serverFPS/monitorServerFPS.sqf:1-8` | Runs `while {true}`; publishes `WFBE_VAR_SERVER_FPS` only inside `if (isDedicated)`; sleeps only inside that same branch. |
 | `Client/Client_UpdateRHUD.sqf:113-125` | Source/Vanilla RHUD reads `SERVER_FPS_GUI`. |
 
 That means dedicated servers published every 8 seconds, but hosted/listen servers entered both loops and skipped the only sleep. The result was two unslept scheduled loops doing no useful work.
@@ -35,7 +35,7 @@ The patch keeps dedicated behavior and removes the hosted/listen busy-spin:
 - Leave `SERVER_FPS_GUI` and `WFBE_VAR_SERVER_FPS` publishing cadence unchanged on dedicated servers.
 - Do not consolidate the two publishers yet; source/Vanilla only consume `SERVER_FPS_GUI`, but stale/modded mission folders still contain `WFBE_VAR_SERVER_FPS` consumers.
 
-Changed source files:
+Changed branch-local source files (`docs/developer-wiki-index`; release branch differs by deleting/redundancy-removing Chernarus `monitorServerFPS.sqf`):
 
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf`
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf`
@@ -47,10 +47,11 @@ Propagated maintained Vanilla files:
 
 ## Validation
 
-Source/Vanilla validation done:
+Branch-local source/Vanilla validation done:
 
-- Chernarus `serverFpsGUI.sqf` has one early `!isDedicated` exit, one loop, one `sleep 8` and no inner `if (isDedicated)` branch.
-- Chernarus `monitorServerFPS.sqf` has one early `!isDedicated` exit, one loop, one `sleep 8` and no inner `if (isDedicated)` branch.
+- This docs branch's Chernarus `serverFpsGUI.sqf` has one early `!isDedicated` exit, one loop, one `sleep 8` and no inner `if (isDedicated)` branch.
+- This docs branch's Chernarus `monitorServerFPS.sqf` has one early `!isDedicated` exit, one loop, one `sleep 8` and no inner `if (isDedicated)` branch.
+- `origin/release/2026-06-feature-bundle` has the guarded `serverFpsGUI.sqf` shape at `:4-12` and comments `monitorServerFPS.sqf` out as redundant from `Init_Server.sqf:594-596`.
 - Vanilla Takistan has the same early-exit shape after the propagation run.
 - `dotnet run` in `Tools/LoadoutManager` now works from `work\a`; use `A2WASP_SKIP_ZIP=1` for propagation-only runs so missing `7za` remains non-blocking.
 - `git diff --check` passes.

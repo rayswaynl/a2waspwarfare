@@ -15,7 +15,7 @@ Branch split: current `master` has the truck mission flow, client-stamped `Suppl
 | Cooldown model | Partial | Pull-based JIP query is good, but casing and start-time race need cleanup. |
 | Dead twin script | Abandoned | `supplyMissionActive.sqf` is compiled but no static caller was found. |
 | Authority posture | Opportunity | Small server-owned record can improve integrity without redesigning all economy flows. |
-| Command-center scan narrowing | Source and maintained Vanilla propagated; smoke pending | The 80-meter return-to-base scan now filters to `Base_WarfareBUAVterminal` in the live Chernarus and maintained Vanilla handlers; see [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing). |
+| Command-center scan narrowing | Branch-local/release patched; not on `origin/master`; smoke pending | `origin/master` still uses `nearestObjects [..., [], 80]`; this docs branch and `origin/release/2026-06-feature-bundle` narrow the command-center scan to `Base_WarfareBUAVterminal`. See [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing). |
 | Player-object list lifecycle | Partial propagated patch; smoke pending | Row replacement indexing is fixed in Chernarus source and maintained Vanilla Takistan, but `WFBE_SE_PLAYERLIST` still has no disconnect pruning or stale object cleanup. |
 
 ## What Was Read
@@ -44,7 +44,7 @@ Branch split: current `master` has the truck mission flow, client-stamped `Suppl
 2. Mission start asks the server for town cooldown (`supplyMissionStart.sqf:6-7`), immediately reads local `supplyMissionCoolDownEnabled` (`:9-14`), then checks cursor target class/distance (`:16-32`).
 3. Current `master` stamps authority-bearing object vars on the vehicle: `SupplyFromTown` and `SupplyAmount` (`supplyMissionStart.sqf:20-34`), then sends `WFBE_Client_PV_SupplyMissionStarted` (`:38-39`). PR #1 also stamps `SupplyByHeli`.
 4. Current `master` server start handler records town cooldown as `LastSupplyMissionRun`, starts the town timer and loops while the vehicle is alive. PR #1 additionally adds a guarded `Killed` event handler to the vehicle for interdiction rewards (`origin/feat/supply-helicopter` `supplyMissionStarted.sqf:13-30`).
-5. The live loop scans command-center terminals every 3 seconds with `nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]` (`supplyMissionStarted.sqf:41-45`). The later nearby-player/object lookup remains a broad 8-meter scan because it resolves occupants/player objects, not command centers.
+5. Branch-local/release source narrows the live command-center scan to `Base_WarfareBUAVterminal` (`docs/developer-wiki-index` `supplyMissionStarted.sqf:24-28`; release branch `:46-53`). `origin/master` still scans all object classes at `:24-28` and filters with `isKindOf`. The later nearby-player/object lookup remains a broad 8-meter scan because it resolves occupants/player objects, not command centers.
 6. On command-center proximity, the loop resolves a player through `WFBE_SE_PLAYERLIST`, nearby units and the vehicle leader/driver (`supplyMissionStarted.sqf:48-78`), then emits `WFBE_Server_PV_SupplyMissionCompleted` back to the server (`:80-82`).
 7. Current `master` completion reads `SupplyAmount` and `SupplyFromTown` from the vehicle object (`supplyMissionCompleted.sqf:9-28`), pays side supply, clears amount/source vars and broadcasts the message. PR #1 extends completion to read `SupplyByHeli`, decide whether a heli cash run applies from server-side Supply upgrade 3 state, and pay commander team funds or side supply.
 8. Client reward/score presentation is local after the completion broadcast. The pilot receives the reward through `ChangePlayerFunds` and score is requested with `RequestChangeScore` (`supplyMissionCompletedMessage.sqf:15-33`).
@@ -58,7 +58,7 @@ Branch split: current `master` has the truck mission flow, client-stamped `Suppl
 | Duplicate mission starts for the same vehicle are not explicitly guarded. | Current `master`: `supplyMissionStart.sqf:32-39`; `supplyMissionStarted.sqf:20-65`. PR #1 extends this with handler attachment. | A reused or rapidly reloaded vehicle can create parallel tracking loops; on PR #1 it can also attach repeated handlers unless state gates are added. |
 | Cooldown key casing is inconsistent. | `Init_Town.sqf:35` seeds `lastSupplyMissionRun`; `isSupplyMissionActiveInTown.sqf:8` reads `LastSupplyMissionRun`; `supplyMissionStarted.sqf:8` writes `LastSupplyMissionRun`. | After the first start, the uppercase key exists; before that, the query path depends on nil behavior. Treat this as a source-confirmed mismatch and smoke-test after standardizing. |
 | Cooldown response model is good but the start flow races it. | Request at `supplyMissionStart.sqf:6-7`, local read at `:9`, second server request at `:61`; receiver stores result at `townSupplyStatus.sqf:5-8`. | Keep the pull-based JIP pattern, but do not make the immediate local cache read the final authority decision. |
-| Command-center scan was broader than needed. | `supplyMissionStarted.sqf:41-45` now uses `nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 80]` in Chernarus source and maintained Vanilla Takistan. | Source and maintained Vanilla are propagated; Arma 2 OA smoke and remaining authority/idempotency work are still open. |
+| Command-center scan was broader than needed. | `origin/master` `supplyMissionStarted.sqf:24-28` still uses `nearestObjects [..., [], 80]`; this docs branch narrows it at `:24-28`, and `origin/release/2026-06-feature-bundle` narrows it at `:46-53`. | Branch-local/release source is patched; master merge/adoption, Arma 2 OA smoke and remaining authority/idempotency work are still open. |
 | `supplyMissionActive.sqf` is a dead twin. | `Init_Server.sqf:81` compiles it; repository search found no static caller. Live PVEH is in `supplyMissionStarted.sqf:1-2`. The dead twin still carries older broad-scan logic. | Removes a second, similar implementation from future readers and avoids patching the wrong file. |
 | `WFBE_SE_PLAYERLIST` lacks disconnect cleanup. | `playerObjectsList.sqf:11-35` updates by UID; `Server_OnPlayerDisconnected.sqf:1-175` never prunes it. | Source indexing is patched, but stale/deleted object rows can persist. Add UID cleanup on disconnect and skip/repair null rows before completion lookup. |
 | Completion uses server-to-server public variable routing. | `supplyMissionStarted.sqf:81-82`; `supplyMissionCompleted.sqf:2`. | It works as a registered server PVEH, but an implementation patch can call a server function directly once the completion path is refactored. |
@@ -100,8 +100,8 @@ Recommended branch: `hardening/supply-mission-authority-cleanup`.
    - No-commander cash-run fallback to side supply is already coded and should remain unless redesigned.
    - Interdiction reward should pay once per loaded vehicle death.
 
-7. Command-center detection narrowing is patched.
-   - Source Chernarus and maintained Vanilla Takistan now use `["Base_WarfareBUAVterminal"]` for the live 80-meter command-center scan.
+7. Command-center detection narrowing is branch-local/release patched.
+   - This docs branch's source Chernarus and maintained Vanilla Takistan use `["Base_WarfareBUAVterminal"]` for the live 80-meter command-center scan; `origin/release/2026-06-feature-bundle` carries a PR #1-compatible narrowed scan; `origin/master` still needs adoption.
    - Keep the 3-second cadence unless a performance test proves a need to change it.
 
 8. Retire the dead twin.
@@ -117,7 +117,7 @@ Source-only checks:
 - Confirm repeated start attempts cannot create duplicate loops; on PR #1, confirm the `wfbe_supply_killed_eh_set` guard prevents duplicate `Killed` handlers.
 - Confirm `SupplyAmount` is cleared only after server-owned reward state has already been consumed.
 - Confirm no code path still uses lowercase `lastSupplyMissionRun` after the casing cleanup.
-- Done for scan sub-step: source Chernarus and maintained Vanilla Takistan command-center detection use one narrowed `["Base_WarfareBUAVterminal"]` 80-meter scan; `git diff --check` and Arma 2 OA smoke remain validation gates.
+- Done for scan sub-step in branch-local/release source: Chernarus and maintained Vanilla Takistan command-center detection use one narrowed `["Base_WarfareBUAVterminal"]` scan outside `origin/master`; master adoption, `git diff --check` and Arma 2 OA smoke remain validation gates.
 - Confirm `WFBE_SE_PLAYERLIST` has one row per active UID after join/reconnect/disconnect churn and no stale `objNull`/deleted rows are used for completion.
 
 Hosted/dedicated smoke:
