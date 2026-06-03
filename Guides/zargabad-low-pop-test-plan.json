@@ -159,11 +159,11 @@
     },
     {
       "type": "source-audit",
-      "summary": "Tools/New-ZargabadRuntimeReport.ps1 generates a Codex-ready markdown report with gate state, town-defense orientation state, base/fortification audit state, base static runtime position state, failure scan, key RPT excerpts, validator output, and a structured Claude Notes verdict table requiring PASS/FAIL/UNCERTAIN plus concrete evidence for ambiguous or failing runtime checks, including separate hosted boot and dedicated boot context rows, base static runtime position/arcs, and priority defense mix arcs rows for city, airfield, district, Northwest Base and Rahim Villa defense screenshots/coordinate notes."
+      "summary": "Tools/New-ZargabadRuntimeReport.ps1 generates a Codex-ready markdown report with gate state, town-defense orientation state, base/fortification audit state, base static runtime position state, failure scan, key RPT excerpts, validator output, and a structured Claude Notes verdict table requiring PASS/FAIL/UNCERTAIN plus concrete evidence for ambiguous or failing runtime checks, including separate hosted boot and dedicated boot context rows, base static runtime position/arcs, and priority defense mix arcs rows for city, airfield, district, Northwest Base and Rahim Villa defense screenshots/coordinate notes. It tells Claude to place referenced screenshots in zargabad-evidence or pass their folder with -EvidenceRoot."
     },
     {
       "type": "source-audit",
-      "summary": "Tools/Validate-ZargabadRuntimeReport.ps1 validates Claude's edited runtime report before Codex stop/go: validator PASS, every expected gate and failure-scan row present, no MISSING required gates, no FOUND failure-scan rows, no _missing_ key evidence placeholders, requested JIP/HC/edge/black-market gates PASS, every expected Claude Notes row present, hosted and dedicated boot rows proven separately, every Claude Notes row PASS, and every PASS row includes concrete row-specific evidence."
+      "summary": "Tools/Validate-ZargabadRuntimeReport.ps1 validates Claude's edited runtime report before Codex stop/go: validator PASS, every expected gate and failure-scan row present, no MISSING required gates, no FOUND failure-scan rows, no _missing_ key evidence placeholders, requested JIP/HC/edge/black-market gates PASS, every expected Claude Notes row present, hosted and dedicated boot rows proven separately, every Claude Notes row PASS, every PASS row includes concrete row-specific evidence, and screenshot filenames exist when -EvidenceRoot is supplied."
     },
     {
       "type": "source-audit",

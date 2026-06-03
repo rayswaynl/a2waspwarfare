@@ -6,7 +6,8 @@ param(
 	[switch]$RequireEdgeGuardRemoval,
 	[switch]$RequireEdgeGuardSafeAllow,
 	[switch]$RequireNamedRimPoints,
-	[switch]$RequireBlackMarket
+	[switch]$RequireBlackMarket,
+	[string]$EvidenceRoot = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -64,7 +65,36 @@ function Assert-NoteEvidence {
 	Assert-True "Claude Notes $Key evidence is specific" ([regex]::IsMatch($evidence, $Pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase))
 }
 
+function Get-ScreenshotReferences {
+	param($Rows)
+	$refs = New-Object System.Collections.Generic.List[string]
+	foreach ($row in $Rows) {
+		if ($row[0] -eq "Runtime check" -or $row.Count -lt 3) { continue }
+		$evidence = $row[2]
+		foreach ($match in [regex]::Matches($evidence, '(?i)!?\[[^\]]*\]\(([^)]+\.(png|jpg|jpeg))\)')) {
+			$refs.Add($match.Groups[1].Value.Trim(" `"'"))
+		}
+		foreach ($match in [regex]::Matches($evidence, '(?i)(?<![\w:/\\.-])([A-Za-z]:[^\s\|<>"'']+\.(png|jpg|jpeg)|[A-Za-z0-9_.-]+([\\/][A-Za-z0-9_.-]+)*\.(png|jpg|jpeg))')) {
+			$refs.Add($match.Groups[1].Value.Trim(" `"'"))
+		}
+	}
+	return @($refs | Where-Object { $_ -notmatch '^(?i:https?://)' } | Sort-Object -Unique)
+}
+
+function Test-ScreenshotReference {
+	param([string]$Reference, [string[]]$Roots)
+	if ([System.IO.Path]::IsPathRooted($Reference)) {
+		return (Test-Path -LiteralPath $Reference -PathType Leaf)
+	}
+	foreach ($root in $Roots) {
+		$fullPath = Join-Path $root $Reference
+		if (Test-Path -LiteralPath $fullPath -PathType Leaf) { return $true }
+	}
+	return $false
+}
+
 Assert-True "runtime report exists" (Test-Path -LiteralPath $ReportPath -PathType Leaf)
+$reportFile = Get-Item -LiteralPath $ReportPath
 $content = Get-Content -Raw -LiteralPath $ReportPath
 Assert-True "runtime report header present" ($content -match '^# Zargabad Runtime Report')
 Assert-True "runtime validator passed in report" ($content -match '- Validator: PASS')
@@ -187,6 +217,16 @@ Assert-NoteEvidence -Rows $noteRows -Key "Economy and factory pricing feel" -Pat
 Assert-NoteEvidence -Rows $noteRows -Key "Weapon/range pressure" -Pattern '(missile|UAV|range|countermeasure|hangar|2000|800|45|500|350|35|16|24)'
 Assert-NoteEvidence -Rows $noteRows -Key "Mystery feature behavior" -Pattern '(black-market|black market|cache|Airfield|Zargabad_BlackMarket|armed|cleanup)'
 Assert-NoteEvidence -Rows $noteRows -Key "Recommended Codex action" -Pattern '(keep|tune|revert|investigate|patch|retest)'
+
+if ($EvidenceRoot.Trim().Length -gt 0) {
+	Assert-True "runtime report evidence root exists" (Test-Path -LiteralPath $EvidenceRoot -PathType Container)
+	$resolvedEvidenceRoot = (Resolve-Path -LiteralPath $EvidenceRoot).Path
+	$evidenceRoots = @($resolvedEvidenceRoot, $reportFile.Directory.FullName)
+	$screenshotRefs = @(Get-ScreenshotReferences -Rows $noteRows)
+	Assert-True "Claude Notes screenshot references are present when evidence root is supplied" ($screenshotRefs.Count -gt 0)
+	$missingScreenshotRefs = @($screenshotRefs | Where-Object { -not (Test-ScreenshotReference -Reference $_ -Roots $evidenceRoots) })
+	Assert-True "Claude Notes screenshot references exist under evidence root" ($missingScreenshotRefs.Count -eq 0)
+}
 
 Write-Host ""
 Write-Host "Zargabad runtime report is complete enough for Codex review."

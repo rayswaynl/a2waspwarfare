@@ -84,7 +84,7 @@ $brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-Z
 $brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadMapAuditPacket.ps1 -OutputPath `".\zargabad-map-audit.md`"")
 $brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadRuntimeEvidence.ps1 -RptPath `"C:\path\to\rpts`"")
 $brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\New-ZargabadRuntimeReport.ps1 -RptPath `"C:\path\to\rpts`" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireEdgeGuardSafeAllow -RequireNamedRimPoints -RequireBlackMarket -OutputPath `".\zargabad-runtime-report.md`"")
-$brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadRuntimeReport.ps1 -ReportPath `".\zargabad-runtime-report.md`" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireEdgeGuardSafeAllow -RequireNamedRimPoints -RequireBlackMarket")
+$brief.Add("powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadRuntimeReport.ps1 -ReportPath `".\zargabad-runtime-report.md`" -EvidenceRoot `".\zargabad-evidence`" -RequireJip -RequireHeadlessClient -RequireEdgeGuardRemoval -RequireEdgeGuardSafeAllow -RequireNamedRimPoints -RequireBlackMarket")
 $brief.Add('```')
 $brief.Add("")
 $brief.Add("## Stop/Go Rule")
