@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Dashboard Next-Candidate Refresh
+
+- Refreshed the stale Codex actor handoff in [Progress dashboard](Progress-Dashboard): the row still pointed at cleanup flag/nested-pair promotion even though Latest Batch already marks both `cleanup-flag-nested-pair-shape-closure` and `dr15-false-positive-correction` as published/validated.
+- Evidence checked: `Progress-Dashboard.md:12,14` for the already-published rows, `Progress-Dashboard.md:158` for the actor handoff and `Progress-Dashboard.md:246` for the remaining open `feature-status-reconciliation` docs lane.
+- Scope remained docs/status only; no gameplay source files were edited.
+
 ## 2026-06-03 - Codex Documentation Finisher: DR-15 False-Positive Correction
 
 - Corrected stale audit guidance that had wrongly listed DR-15's `Server_AssignNewCommander.sqf:3` `_side = _this` as a false positive in [Instructions for Codex](Instructions-For-Codex), [Wiki quality audit](Wiki-Quality-Audit) and [Deep review findings](Deep-Review-Findings).

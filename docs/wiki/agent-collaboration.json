@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T18:00:00+02:00",
+  "generatedAt": "2026-06-03T18:10:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,24 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "dashboard-next-candidate-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/agent-events.jsonl"
+      ],
+      "outputs": [
+        "Refreshed stale Codex actor handoff in Progress Dashboard",
+        "Recorded that DR-15 false-positive cleanup and cleanup flag/nested-pair closure are already published/validated",
+        "Routed the next bounded docs candidate toward feature-status reconciliation or machine-readable stale-status cleanup"
+      ],
+      "handoff": "Future documentation finisher should start from feature-status reconciliation or another exact-evidence stale-status cleanup item; do not reopen cleanup flag/nested-pair promotion or DR-15 false-positive cleanup unless source changes."
+    },
     {
       "lane": "dr15-false-positive-correction",
       "owner": "Codex",

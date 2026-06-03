@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T18:00:00+02:00",
+  "generatedAt": "2026-06-03T18:10:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Corrected stale audit guidance that had wrongly treated DR-15 commander reassignment call shape as a false positive. Instructions, Wiki Quality Audit, Deep Review and the commander playbook now agree that the helper remains patch-ready/source-unpatched.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another owner-decision surfacing item, machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
+      "currentWork": "Refreshed the Progress Dashboard actor handoff after DR-15 false-positive cleanup and cleanup flag/nested-pair closure were both published/validated.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: feature-status reconciliation for newly confirmed findings, machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "dashboard-next-candidate-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed the stale Progress Dashboard Codex actor handoff. Latest Batch already shows DR-15 false-positive cleanup and cleanup flag/nested-pair closure as published/validated, so the handoff now points future docs agents at feature-status reconciliation or machine-readable stale-status cleanup."
+    },
     {
       "lane": "dr15-false-positive-correction",
       "owner": "Codex",
