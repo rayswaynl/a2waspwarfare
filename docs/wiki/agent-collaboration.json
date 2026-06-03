@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T22:05:00+02:00",
+  "generatedAt": "2026-06-04T01:25:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,35 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "commander-positions-branch-deep-audit",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "origin/feat/commander-positions",
+        "origin/master",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Structures/Structures_CO_US.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Structures/Structures_CO_RU.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Defenses.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestDefense.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ConstructPosition.sqf",
+        "docs/wiki/Commander-Positions-Branch-Audit.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Pending-Owner-Decisions.md",
+        "docs/wiki/Testing-Debugging-And-Release-Workflow.md",
+        "docs/wiki/Development-Lessons-Learned.md",
+        "docs/wiki/agent-feature-status.jsonl",
+        "docs/wiki/agent-release-readiness.json"
+      ],
+      "outputs": [
+        "Added a dedicated Commander positions branch audit page for origin/feat/commander-positions head 560db61c",
+        "Recorded branch payload: source-Chernarus WDDM anchors, template map, compile, RequestDefense routing and Server_ConstructPosition placement math",
+        "Recorded branch baggage: 83 files +524/-2025 with unrelated Valhalla/UI/AFK/HC/perf deltas and git diff --check whitespace hits",
+        "Corrected propagation scope: maintained Vanilla has broad branch deltas but no Server_ConstructPosition or WFBE_POSITION_TEMPLATE_MAP hits"
+      ],
+      "handoff": "Future construction owner should start at Commander-Positions-Branch-Audit. Do not merge or call this Vanilla-propagated until unrelated deltas are split/audited, whitespace is clean, DR-6 construction authority is addressed or accepted, and runtime smoke proves placement, CoIn/HQ cleanup, manning/artillery behavior and the chosen Chernarus/Vanilla scope."
+    },
     {
       "lane": "player-stats-branch-deep-audit",
       "owner": "Codex",

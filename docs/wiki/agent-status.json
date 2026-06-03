@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T22:05:00+02:00",
+  "generatedAt": "2026-06-04T01:25:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Deep-audited origin/feat/player-stats head e01e47e1. Added a dedicated Player stats branch audit with SQF, DiscordBot, test, privacy, runtime-smoke and Vanilla-scope evidence; local DiscordBot.Tests passed 13/13 on .NET 9.",
-      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: deeper branch-specific line audits for Zargabad or commander positions, stale machine-record cleanup or P0/P1 accuracy drift with exact source refs."
+      "currentWork": "Deep-audited origin/feat/commander-positions head 560db61c. Added Commander positions branch audit with Chernarus WDDM anchor/template/builder refs, map-corner placement fix evidence, broad branch baggage, DR-6 authority reminder and a corrected Vanilla-scope finding: the branch touches Vanilla broadly but does not carry Server_ConstructPosition or WFBE_POSITION_TEMPLATE_MAP there.",
+      "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidates: Zargabad branch deep audit, supply-heli current-head refresh, stale machine-record cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "commander-positions-branch-deep-audit",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Commander-Positions-Branch-Audit now source-maps origin/feat/commander-positions head 560db61c: Chernarus WDDM build-menu anchors, Init_Defenses template map, Init_Server compile, RequestDefense routing, Server_ConstructPosition placement math, CoIn/HQ event-handler cleanup, debug hint removal, branch whitespace hits and broad unrelated branch baggage. It corrects the important propagation trap: maintained Vanilla is touched by the branch, but grep finds no Server_ConstructPosition or WFBE_POSITION_TEMPLATE_MAP there, so the new position runtime is source-Chernarus only until propagated."
+    },
     {
       "lane": "player-stats-branch-deep-audit",
       "owner": "Codex",

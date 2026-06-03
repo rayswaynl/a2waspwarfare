@@ -106,6 +106,16 @@ That does not make the feature ready for public enablement. The branch crosses s
 
 Development rule: for dark-launched integration branches, document two separate states: "safe when disabled" and "safe to enable." The second state needs runtime smoke, privacy/retention decisions, file/state ownership, failure/recovery policy, log-volume review and propagation scope. See [Player stats branch audit](Player-Stats-Branch-Audit).
 
+## Lesson 13: Broad Feature Branches Need Payload, Baggage And Propagation Labels
+
+`origin/feat/commander-positions` is useful branch evidence, but the branch name hides three separate facts. The feature payload is source-Chernarus WDDM commander-position construction: side defense anchors in `Structures_CO_US.sqf:168-174` and `Structures_CO_RU.sqf:166-172`, template variables and `WFBE_POSITION_TEMPLATE_MAP` in `Server/Init/Init_Defenses.sqf:93-183`, compile wiring at `Server/Init/Init_Server.sqf:26`, request routing at `Server/PVFunctions/RequestDefense.sqf:11-14`, and composition placement in `Server/Functions/Server_ConstructPosition.sqf:1-66`.
+
+The baggage is broad. The branch has merge base `f5985b77`, not stable `origin/master` `2cdf5fb8`; `git diff --stat origin/master..origin/feat/commander-positions` reports 83 files, +524/-2025, with unrelated Valhalla, AFK/profile, service/team/upgrade UI, `Server_HandleSpecial`, `Server_AssignNewCommander`, town-AI and static-defense delegation deltas. `git diff --check` also reports trailing whitespace in Chernarus and maintained Vanilla source files.
+
+The propagation scope is narrower than the branch footprint. Branch grep found no `Server_ConstructPosition`, `WFBE_POSITION_TEMPLATE_MAP` or WDDM commander-position anchor registrations under `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan`. The branch touches Vanilla, but the new commander-position runtime is not propagated there.
+
+Development rule: before merge/release claims for a broad feature branch, document three labels separately: feature payload, branch baggage and propagation scope. See [Commander positions branch audit](Commander-Positions-Branch-Audit).
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |

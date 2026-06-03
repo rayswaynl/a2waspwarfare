@@ -290,8 +290,9 @@
       "head": "560db61c",
       "base": "f5985b77",
       "state": "branch-review-needed-broad-construction-scope-open",
-      "sourceScope": "source-chernarus-and-maintained-vanilla-plus-unrelated-deltas",
+      "sourceScope": "source-chernarus-wddm-runtime-plus-maintained-vanilla-unrelated-deltas",
       "canonicalDocs": [
+        "Commander-Positions-Branch-Audit.md",
         "Feature-Status-Register.md",
         "Pending-Owner-Decisions.md",
         "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
@@ -300,12 +301,16 @@
       "evidenceRefs": [
         "origin/master..origin/feat/commander-positions: 83 files +524/-2025",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Structures/Structures_CO_US.sqf:168-174 on origin/feat/commander-positions",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Structures/Structures_CO_RU.sqf:166-172 on origin/feat/commander-positions",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Defenses.sqf:93-183 on origin/feat/commander-positions",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf:26 on origin/feat/commander-positions",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestDefense.sqf:11-14 on origin/feat/commander-positions",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ConstructPosition.sqf on origin/feat/commander-positions",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ConstructPosition.sqf:1-66 on origin/feat/commander-positions",
+        "git grep found no Server_ConstructPosition or WFBE_POSITION_TEMPLATE_MAP under Missions_Vanilla/[61-2hc] on origin/feat/commander-positions",
         "git diff --check origin/master..origin/feat/commander-positions reports trailing whitespace in source files"
       ],
-      "ownerDecision": "Split construction-position work from unrelated Valhalla/UI/HC/perf deltas or accept the branch as a broad feature bundle.",
-      "promotionGate": "Clean whitespace, recheck DR-6 construction authority, smoke position placement at clicked point, CoIn/HQ undeploy cleanup, modular wall pathing and Chernarus/Vanilla parity.",
+      "ownerDecision": "Split construction-position work from unrelated Valhalla/UI/HC/perf deltas or accept the branch as a broad feature bundle; decide whether the actual WDDM runtime should be propagated to maintained Vanilla.",
+      "promotionGate": "Clean whitespace, recheck DR-6 construction authority, smoke position placement at clicked point, CoIn/HQ undeploy cleanup, modular wall pathing and Chernarus/Vanilla scope.",
       "plannedSmoke": {
         "status": "planned-not-run",
         "coverageLevel": [

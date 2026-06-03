@@ -1,5 +1,14 @@
 # Agent Worklog
 
+## 2026-06-04T01:25:00+0200 - Codex - commander-positions-branch-deep-audit
+
+- Deep-audited `origin/feat/commander-positions` head `560db61c` after branch intake identified it as useful but under-documented construction work.
+- Source evidence checked: branch commits `98b15e97`, `b28b351f`, `560db61c`; merge base `f5985b77`; diff stat 83 files, +524/-2025; Chernarus anchors in `Structures_CO_US.sqf:168-174` and `Structures_CO_RU.sqf:166-172`; template map in `Init_Defenses.sqf:93-183`; compile in `Init_Server.sqf:26`; routing in `RequestDefense.sqf:1-16`; builder in `Server_ConstructPosition.sqf:1-66`; CoIn/HQ event-handler cleanup in commit `b28b351f`; and construction debug-hint removal in the same commit.
+- Corrected an important scope trap: branch grep finds no maintained Vanilla `Server_ConstructPosition`, `WFBE_POSITION_TEMPLATE_MAP` or WDDM commander-position anchor registrations. The branch touches Vanilla broadly, but the actual new position runtime is source-Chernarus only.
+- Static branch caveats recorded: `git diff --check origin/master..origin/feat/commander-positions` reports trailing whitespace in Chernarus and maintained Vanilla source files; the branch also carries unrelated Valhalla, AFK/profile, service/team/upgrade UI, `Server_HandleSpecial`, commander assignment, town-AI and static-defense delegation deltas.
+- Added [Commander positions branch audit](Commander-Positions-Branch-Audit), linked it from Home/sidebar/mkdocs/llms/source snapshot/Feature Status/Pending owner decisions/Testing workflow/PR8 WDDM routing, and added a development lesson for payload-vs-baggage-vs-propagation labels on broad feature branches.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-03T22:05:00+0200 - Codex - player-stats-branch-deep-audit
 
 - Deep-audited `origin/feat/player-stats` head `e01e47e1` after the second-wave branch intake identified it as a useful but under-documented branch.
