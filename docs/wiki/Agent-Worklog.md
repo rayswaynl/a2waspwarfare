@@ -2,6 +2,12 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
+## 2026-06-03 - Codex Documentation Finisher: Gear Profile Import Bounds Reconciliation
+
+- Promoted the buy-gear profile import bound from a gear-atlas risk row into [Feature status](Feature-Status-Register), [Gear template profile filter](Gear-Template-Profile-Filter#import-bounds-paired-fix), [`agent-feature-status.jsonl`](agent-feature-status.jsonl) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl).
+- Evidence checked: source Chernarus and maintained Vanilla both have `Client/Init/Init_ProfileGear.sqf:17` accepting stored template rows with `count _x >= 6`, then `:25` reads `_x select 6` for backpack data. Six-field legacy rows therefore need an explicit empty-backpack compatibility path or a stricter seven-field guard before index 6 is read.
+- Scope remained docs/status only; no gameplay source files were edited.
+
 ## 2026-06-03 - Codex Documentation Finisher: Dashboard Ready-To-Publish Row Closure
 
 - Closed three stale [Progress dashboard](Progress-Dashboard) rows that still said "Ready to publish": `dr42-dr43-reconciliation`, `markdown-research-report-intake` and `attack-wave-authority-playbook`.

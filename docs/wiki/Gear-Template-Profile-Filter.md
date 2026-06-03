@@ -1,6 +1,6 @@
 # Gear Template Profile Filter
 
-This page documents the profile-template save filter bug in the buy-gear system. It is a focused implementation note for the row in [Feature status](Feature-Status-Register) and the gear atlas.
+This page documents two profile-template persistence bugs in the buy-gear system: the save filter's undefined upgrade variable, and the load/import guard that accepts six-field rows before reading backpack data. It is a focused implementation note for the rows in [Feature status](Feature-Status-Register) and the gear atlas.
 
 All mission paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
@@ -26,6 +26,7 @@ flowchart TD
 | `Client/Init/Init_Client.sqf:116-126` | Compiles gear UI helpers including add/delete/fill/template functions. |
 | `Client/Init/Init_Client.sqf:169-172` | Under the OA version gate, compiles `WFBE_CL_FNC_UI_Gear_SaveTemplateProfile` and runs profile variable loading. |
 | `Client/Init/Init_ProfileVariables.sqf:37-42` | Reads `WFBE_PERSISTENT_%SIDE_GEAR_TEMPLATE` from `profileNamespace` and validates through `Init_ProfileGear.sqf`. |
+| `Client/Init/Init_ProfileGear.sqf:17,25` | Accepts stored rows with `count _x >= 6`, then reads `_x select 6` as backpack data. |
 | `Client/Init/Init_ProfileGear.sqf:25-136` | Re-validates stored profile templates for shape, side membership, price and max upgrade before replacing mission templates. |
 | `Client/Functions/Client_UI_Gear_AddTemplate.sqf:15,37,83,110,136-148` | Builds `_u_upgrade` as the maximum required upgrade in the new template, then appends the template and sets `_need_save = true`. |
 | `Client/GUI/GUI_BuyGearMenu.sqf:509` | Spawns `WFBE_CL_FNC_UI_Gear_SaveTemplateProfile` after the dialog closes when `_need_save` is true. |
@@ -66,6 +67,31 @@ if ((_get select 3) > _upgrade_barracks && (_get select 3) > _upgrade_gear) then
 
 Apply that replacement at the weapon, magazine and backpack-content checks. Keep `Init_ProfileGear.sqf` load validation unchanged unless a smoke test proves it filters too aggressively or too loosely.
 
+## Import Bounds Paired Fix
+
+`Client/Init/Init_ProfileGear.sqf` has a separate profile-load compatibility bug. It accepts any stored template row with at least six fields, then reads field 6 as backpack data:
+
+```sqf
+if (count _x >= 6) then {
+    ...
+    _magazines = _x select 5;
+    _backpack = _x select 6;
+```
+
+Arrays are zero-indexed, so a six-field legacy row has valid indexes `0..5`; reading index 6 is one past the end. Maintained Vanilla Takistan carries the same `:17`/`:25` shape. Patch this in the same profile-template pass as the save filter, but keep the behavior choice explicit:
+
+| Option | Shape | Tradeoff |
+| --- | --- | --- |
+| Require current seven-field rows | Change the guard to `if (count _x >= 7) then { ... }`. | Smallest correctness patch; drops old six-field rows instead of trying to repair them. |
+| Preserve legacy six-field rows | If `count _x == 6`, inject `_backpack = []` or normalize the row before validation. | More compatible for old profiles, but needs smoke for both old and current row shapes. |
+
+Validation for this paired fix:
+
+1. `Init_ProfileGear.sqf` never reads `_x select 6` unless the row has at least seven fields, or it intentionally supplies an empty backpack default for six-field rows.
+2. Current seven-field templates still load and recalculate price/upgrade fields.
+3. Old six-field profile rows either fail closed without an RPT out-of-range error or load with an explicit empty backpack default.
+4. Maintained Vanilla receives the same profile-load fix after propagation.
+
 ## Validation Plan
 
 Source checks:
@@ -74,6 +100,7 @@ Source checks:
 2. The function still writes `WFBE_PERSISTENT_%SIDE_GEAR_TEMPLATE`.
 3. `Client_UI_Gear_AddTemplate.sqf` still computes and stores template max upgrade in field 3.
 4. `Init_ProfileGear.sqf` still recalculates stored profile price and max upgrade on load.
+5. `Init_ProfileGear.sqf` no longer accepts six-field rows and then reads index 6 without a compatibility default.
 
 Arma smoke:
 
@@ -91,6 +118,7 @@ Generated mission:
 ## Agent Notes
 
 - This is a correctness and persistence bug in profile-template filtering.
+- The import-bound issue is a paired profile persistence bug, not proof that live gear purchase authority is hardened or broken in a new way.
 - It is not the same as full gear purchase authority. Do not claim public-server gear hardening after this patch.
 - Keep this page paired with [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Client UI systems atlas](Client-UI-Systems-Atlas) and [Feature status](Feature-Status-Register).
 

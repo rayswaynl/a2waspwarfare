@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-03T18:30:00+02:00",
+  "generatedAt": "2026-06-03T18:35:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed stale Progress Dashboard rows that still labelled DR42/43 reconciliation, Markdown report intake and attack-wave authority playbook as ready-to-publish despite published docs and machine ledgers.",
+      "currentWork": "Promoted the gear profile import bounds bug into Feature Status, Gear template profile filter and machine ledgers after source-checking Chernarus and maintained Vanilla Init_ProfileGear.sqf.",
       "nextExpectedOutput": "Pick the next highest-value bounded docs gap; good candidate: another feature-status reconciliation item, machine-readable stale-status cleanup or P0/P1 accuracy drift with exact source refs."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "gear-profile-import-bounds-reconciliation",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Feature Status, Gear-Template-Profile-Filter, agent-feature-status.jsonl and agent-hardening-backlog.jsonl now carry the profile import bound: source Chernarus and maintained Vanilla accept count _x >= 6 rows in Init_ProfileGear.sqf before reading _x select 6 for backpack data."
+    },
     {
       "lane": "dashboard-ready-to-publish-row-closure",
       "owner": "Codex",

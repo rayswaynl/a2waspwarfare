@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-03T18:30:00+02:00",
+  "generatedAt": "2026-06-03T18:35:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,26 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "gear-profile-import-bounds-reconciliation",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_ProfileGear.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_ProfileGear.sqf",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Gear-Template-Profile-Filter.md",
+        "docs/wiki/Gear-Loadout-And-EASA-Atlas.md",
+        "docs/wiki/agent-feature-status.jsonl",
+        "docs/wiki/agent-hardening-backlog.jsonl"
+      ],
+      "outputs": [
+        "Promoted gear profile import bounds into Feature Status and machine ledgers",
+        "Added Import Bounds paired-fix guidance to Gear-Template-Profile-Filter",
+        "Kept profile persistence correctness separate from public-server gear authority"
+      ],
+      "handoff": "Future gear UI owner should patch Init_ProfileGear.sqf with either a seven-field guard or six-field empty-backpack compatibility normalization, propagate Vanilla and smoke old six-field plus current seven-field profile templates."
+    },
     {
       "lane": "dashboard-ready-to-publish-row-closure",
       "owner": "Codex",
