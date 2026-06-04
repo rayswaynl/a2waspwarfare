@@ -2319,6 +2319,7 @@ Key conclusions:
 - Focused Codex thread `WASP commander artillery ownership` finished and landed the commander-built ARTY fix.
 - Evidence checked by the focused lane: commander defense construction through `Server/PVFunctions/RequestDefense.sqf`, `Server/Construction/Construction_StationaryDefense.sqf`, `Server/Functions/Server_HandleDefense.sqf`, `Client/GUI/GUI_Menu_Tactical.sqf`, `Client/Functions/Client_RequestFireMission.sqf` and `Common/Functions/Common_GetTeamArtillery.sqf`.
 - Source result: artillery-class stationary defenses built through the commander defense path are assigned to the side commander team before manning, so the commander's Tactical artillery workflow can discover them instead of leaving them as direct-fire-only defenses.
+- Follow-up docs added a concrete smoke pack to [Testing workflow](Testing-Debugging-And-Release-Workflow#minimal-smoke-packs): commander-built ARTY discovery/fire mission, ammo loading, direct fire, non-artillery `DefenseTeam`, unmanned toggle, HC delegation and maintained Vanilla Takistan parity.
 - Validation before push: `docs/validate-wiki.ps1`, `git diff --check`, touched JSONL parsing, mirror/wiki SHA256 parity and Chernarus/Takistan `Construction_StationaryDefense.sqf` parity all passed.
 - Pushed as docs `b5feed5f` / wiki `819d41c`. Arma smoke remains pending.
 
