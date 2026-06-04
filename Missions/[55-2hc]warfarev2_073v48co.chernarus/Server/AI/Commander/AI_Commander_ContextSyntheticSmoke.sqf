@@ -7,7 +7,7 @@
 		west Call WFBE_SE_FNC_AI_Com_ContextSyntheticSmoke;
 */
 
-Private ["_side","_logik","_teams","_team","_anchor","_pos","_enemy","_label"];
+Private ["_side","_logik","_teams","_team","_anchor","_pos","_enemy","_label","_context"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -35,5 +35,10 @@ _enemy = if (_side == west) then {east} else {west};
 [_side, "LOSS", "SYNTHETIC-LOSS", [_team, [(_pos select 0) + 300, (_pos select 1) + 150, 0], "vehicle-destroyed", "armor", 0.45]] Call WFBE_SE_FNC_AI_Com_LogAppend;
 
 ["INFORMATION", Format ["AI_Commander_ContextSyntheticSmoke: [%1] appended CONTACT/INTEL/LOSS synthetic records near %2.", str _side, _label]] Call WFBE_CO_FNC_LogContent;
+
+if (!isNil "WFBE_SE_FNC_AI_Com_ContextUpdate") then {
+	_context = (_side) Call WFBE_SE_FNC_AI_Com_ContextUpdate;
+	if (!isNil "WFBE_SE_FNC_AI_Com_ContextDebug") then {[_side, _context] Call WFBE_SE_FNC_AI_Com_ContextDebug};
+};
 
 true;
