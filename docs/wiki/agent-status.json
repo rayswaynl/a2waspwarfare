@@ -20,8 +20,8 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Harvested fallback scout reports after Spark quota blocked new GPT-5.3-Codex-Spark starts. Added non-duplicate construction/UI/integration/community details to owning pages and coordination files. Validation and mirror parity passed.",
-                                 "nextExpectedOutput":  "Commit and push the fallback scout wave docs batch, then continue documentation finisher loop."
+                                 "currentWork":  "Harvested fallback scout reports after Spark quota blocked new GPT-5.3-Codex-Spark starts. Added non-duplicate construction/UI/integration/community details to owning pages and coordination files. Validation and mirror parity passed, then pushed as docs 16f2ce8c / wiki c66ed93.",
+                                 "nextExpectedOutput":  "Continue documentation finisher loop with the next bounded source-backed docs item."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -46,8 +46,8 @@
                         {
                             "lane":  "fallback-scout-wave-construction-ui-integrations-community",
                             "owner":  "Codex/Sub-agents",
-                            "status":  "published-validated",
-                            "output":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked six starts until 13:06, so Codex launched four gpt-5.4-mini fallback scouts for construction, UI, tooling/integrations and community/upstream history. Harvested non-duplicate additions into Construction/CoIn, External Integrations, Community & Dev, Gear/Loadout/EASA and Player UI Workflow. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. Most other scout findings confirmed existing canonical pages. No gameplay source changed."
+                            "status":  "published-validated-pushed",
+                            "output":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked six starts until 13:06, so Codex launched four gpt-5.4-mini fallback scouts for construction, UI, tooling/integrations and community/upstream history. Harvested non-duplicate additions into Construction/CoIn, External Integrations, Community & Dev, Gear/Loadout/EASA and Player UI Workflow. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed; pushed as docs 16f2ce8c / wiki c66ed93. Most other scout findings confirmed existing canonical pages. No gameplay source changed."
                         },
                         {
                             "lane":  "server-sidemessage-runtime-pipeline",

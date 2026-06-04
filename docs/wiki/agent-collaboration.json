@@ -24,7 +24,7 @@
                          {
                              "lane":  "fallback-scout-wave-construction-ui-integrations-community",
                              "owner":  "Codex/Sub-agents",
-                             "status":  "published-validated",
+                             "status":  "published-validated-pushed",
                              "sourceScope":  [
                                                  "Construction/CoIn base-area and repair-state ownership",
                                                  "Client UI map-click, command, gear-template and dialog surfaces",
@@ -38,9 +38,10 @@
                                              "Added Discord GatewayIntents.All deployment caveat to External-Integrations.",
                                              "Added upstream process capsule to Community-And-Dev.",
                                              "Added gear-template creation refusal semantics and map-click modifier behavior to player/UI docs.",
-                                             "docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed."
+                                             "docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed.",
+                                             "Pushed as docs 16f2ce8c / wiki c66ed93."
                                          ],
-                             "handoff":  "After push, treat this fallback scout wave as closed. Future scout waves should avoid Spark until quota resets or use gpt-5.4-mini for cheap read-only discovery."
+                             "handoff":  "This fallback scout wave is closed. Future scout waves should avoid Spark until quota resets or use gpt-5.4-mini for cheap read-only discovery."
                          },
                          {
                              "lane":  "server-sidemessage-runtime-pipeline",

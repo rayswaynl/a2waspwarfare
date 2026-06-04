@@ -5,7 +5,7 @@
 - Steff asked for another bunch of Spark scouts. Six GPT-5.3-Codex-Spark starts hit quota until 13:06, so Codex closed the failed threads and relaunched four read-only `gpt-5.4-mini` fallback scouts.
 - Harvested all returned scout reports and closed the scout threads. Construction and UI scouts mostly confirmed already-canonical rows; tooling/integration and community scouts added a few sharper operational/process details.
 - Updated [Construction/CoIn](Construction-And-CoIn-Systems-Atlas) with a construction state ownership synthesis, [External integrations](External-Integrations) with the Discord `GatewayIntents.All` privileged-intents deployment caveat, [Community & Dev](Community-And-Dev) with an upstream process capsule, [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas) with template creation refusal semantics and [Player UI workflow](Player-UI-Workflow-Map) with the map-click modifier model.
-- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and mirror parity. Documentation only; no gameplay source files were edited.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and mirror parity. Pushed as docs `16f2ce8c` / wiki `c66ed93`. Documentation only; no gameplay source files were edited.
 
 ## 2026-06-04T10:55:00+02:00 - Codex - server SideMessage runtime pipeline
 
