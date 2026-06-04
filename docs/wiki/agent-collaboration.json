@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T11:50:00+02:00",
+    "generatedAt":  "2026-06-04T12:00:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -35,9 +35,10 @@
                                              "Dashboard update ritual now names docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 parity.",
                                              "Mirror reconciliation page now shows current checkout commands first and labels old Tools helper names historical.",
                                              "docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed.",
+                                             "Pushed as docs 35334d83 / wiki c9f63d5.",
                                              "No gameplay source changed."
                                          ],
-                             "handoff":  "Future agents should verify tool existence on the branch/worktree before telling Steff or another agent to run a validation script."
+                             "handoff":  "This validation-command cleanup is closed and pushed. Future agents should verify tool existence on the branch/worktree before telling Steff or another agent to run a validation script."
                          },
                          {
                              "lane":  "fallback-scout-wave-construction-ui-integrations-community",

@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T12:00:00+02:00 - Codex - validation command post-push closure
+
+- Continued the documentation finisher loop and found the usual post-push machine-status drift after the validation-command cleanup: `agent-status.json` still said the next output was to push that already-pushed batch.
+- Source state checked first: docs branch is at `35334d83` (`docs: clarify current wiki validation commands`) and live wiki is at `c9f63d5` (`wiki: clarify current validation commands`).
+- Updated [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` so future agents see the command-guidance cleanup as pushed and closed. Coordination cleanup only; no gameplay source files were edited.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for the five changed coordination files.
+
 ## 2026-06-04T11:50:00+02:00 - Codex - validation command drift cleanup
 
 - Continued the documentation finisher loop into a tooling-docs mismatch: [Progress dashboard](Progress-Dashboard) still told agents to rerun removed `Tools/ValidateWiki.ps1` / `Tools/TestWikiParity.ps1` helpers.
