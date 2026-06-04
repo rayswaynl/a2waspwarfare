@@ -49,5 +49,6 @@ if (count _to_upgrade > 0) then {
 		if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
 			[_side,-(_cost select 0),"AI commander tech upgrade.", false] Call ChangeSideSupply; //--- fix: debit the SUPPLY cost (was _cost select 1, the funds cost).
 		};
+		if (!isNil "WFBE_SE_FNC_AI_Com_LogAppend") then {[_side, "UPGRADE", "Server_AI_Com_Upgrade", [_upgrade, (_upgrades select _upgrade), (_to_upgrade select 1), (_cost select 0), (_cost select 1)]] Call WFBE_SE_FNC_AI_Com_LogAppend};
 	};
 };

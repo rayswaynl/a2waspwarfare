@@ -1,5 +1,5 @@
 /*
-	AI Commander — per-side supervisor.
+	AI Commander - per-side supervisor.
 	feat/ai-commander. Server-side; one instance spawned per present side from Init_Server.
 	Parameter: _this = side.
 
@@ -7,7 +7,7 @@
 	  - No human commander -> FULL: executor + town auto-assign + economy (types/upgrade/produce).
 	  - Human commander     -> ASSIST (hybrid): executor + town auto-assign for DELEGATED teams only,
 	                           no economy (rule A: the AI never spends while a human commands).
-	The executor (every tick) turns explicit Move/Patrol/Defend orders into waypoints — for the AI's own
+	The executor (every tick) turns explicit Move/Patrol/Defend orders into waypoints - for the AI's own
 	orders AND the human commander's (which are otherwise inert). Covers every takeover path (vote, re-vote,
 	disconnect) with no edits to the vote/assign files.
 */
@@ -17,6 +17,11 @@ private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_hum
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNil "_logik") exitWith {};
+
+//--- Phase 1 logs: compile helpers lazily so instrumentation cannot break server init ordering.
+if (isNil "WFBE_SE_FNC_AI_Com_LogAppend") then {WFBE_SE_FNC_AI_Com_LogAppend = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_LogAppend.sqf"};
+if (isNil "WFBE_SE_FNC_AI_Com_LogDrain") then {WFBE_SE_FNC_AI_Com_LogDrain = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_LogDrain.sqf"};
+if (isNil "WFBE_SE_FNC_AI_Com_LogPrune") then {WFBE_SE_FNC_AI_Com_LogPrune = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_LogPrune.sqf"};
 
 //--- Wait for full server init before commanding.
 waitUntil {sleep 1; !(isNil "serverInitFull")};
@@ -44,8 +49,14 @@ while {!gameOver} do {
 		_state = if (_humanCmd) then {"assist"} else {"full"};
 		if (_state != _prevState) then {
 			_logik setVariable ["wfbe_aicom_running", !_humanCmd];
-			if (_state == "full")   then {["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ACTIVE (full command).", str _side]] Call WFBE_CO_FNC_LogContent};
-			if (_state == "assist") then {["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ASSIST (hybrid — human commander, executor only).", str _side]] Call WFBE_CO_FNC_LogContent};
+			if (_state == "full") then {
+				["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ACTIVE (full command).", str _side]] Call WFBE_CO_FNC_LogContent;
+				if (!isNil "WFBE_SE_FNC_AI_Com_LogAppend") then {[_side, "STATE", "AI_Commander", ["full", "no-human-commander"]] Call WFBE_SE_FNC_AI_Com_LogAppend};
+			};
+			if (_state == "assist") then {
+				["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ASSIST (hybrid - human commander, executor only).", str _side]] Call WFBE_CO_FNC_LogContent;
+				if (!isNil "WFBE_SE_FNC_AI_Com_LogAppend") then {[_side, "STATE", "AI_Commander", ["assist", "human-commander"]] Call WFBE_SE_FNC_AI_Com_LogAppend};
+			};
 			_prevState = _state;
 		};
 
@@ -57,7 +68,7 @@ while {!gameOver} do {
 			(_side) Call WFBE_SE_FNC_AI_Com_AssignTowns; _ltTown = time;
 		};
 
-		//--- Economy: full command only (rule A — AI never spends under a human commander).
+		//--- Economy: full command only (rule A - AI never spends under a human commander).
 		if (!_humanCmd) then {
 			if (time - _ltTypes > (missionNamespace getVariable "WFBE_C_AI_COMMANDER_TYPES_INTERVAL")) then {
 				(_side) Call WFBE_SE_FNC_AI_Com_AssignTypes; _ltTypes = time;
@@ -74,6 +85,7 @@ while {!gameOver} do {
 		if (_prevState != "stopped") then {
 			_logik setVariable ["wfbe_aicom_running", false];
 			["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander STOPPED (disabled / HQ down).", str _side]] Call WFBE_CO_FNC_LogContent;
+			if (!isNil "WFBE_SE_FNC_AI_Com_LogAppend") then {[_side, "STATE", "AI_Commander", ["stopped", "disabled-or-hq-down"]] Call WFBE_SE_FNC_AI_Com_LogAppend};
 			_prevState = "stopped"; _prevHuman = false;
 		};
 	};
