@@ -5,7 +5,7 @@
 - All six depth-leftovers mini scouts returned and were closed after the Spark quota fallback wave.
 - Promoted source-checked deltas into owner pages: [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map), [AI/headless/performance](AI-Headless-And-Performance), [HC delegation/failover](Headless-Delegation-And-Failover-Playbook), [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas), [PerformanceAuditAnalyzer](PerformanceAuditAnalyzer), [Tools/build workflow](Tools-And-Build-Workflow), [Server ops runbook](Server-Ops-Runbook), [Tooling release readiness audit](Tooling-Release-Readiness-Audit) and [Server authority migration map](Server-Authority-Migration-Map).
 - Rejected Ampere's `smd_sahrani_a2` `mission.sqm` correction after source check: the tracked stub still lacks `mission.sqm`, `description.ext` and `initJIPCompatible.sqf`.
-- This is documentation/status only. No gameplay source files changed. Validation and mirror parity are next.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 15 files. Content pushed as docs `d02f3709` / wiki `7be237f`. Documentation/status only; no gameplay source files changed.
 
 ## 2026-06-04T22:35:00+02:00 - Codex - depth leftovers mini scout launch
 

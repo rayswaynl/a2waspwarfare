@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T22:55:00+02:00",
+    "generatedAt":  "2026-06-04T23:05:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -24,7 +24,7 @@
                          {
                              "lane":  "mini-scout-wave-depth-leftovers-2026-06-04",
                              "owner":  "Codex/Sub-agents",
-                             "status":  "harvested-validation-pending",
+                             "status":  "published-validated-pushed",
                              "sourceScope":  [
                                                  "docs/wiki/Feature-Status-Register.md and adjacent owner pages",
                                                  "mission roots, generated mission drift and tooling release-readiness docs",
@@ -39,9 +39,10 @@
                                              "All six fallback scouts returned and were closed.",
                                              "Codex promoted source-checked deltas into AI/order, HC failover, gear templates, PerformanceAuditAnalyzer, server ops, tooling readiness and authority-migration owner pages.",
                                              "Ampere's smd_sahrani_a2 mission.sqm correction was rejected because the tracked stub still lacks mission.sqm, description.ext and initJIPCompatible.sqf.",
+                                             "Validation passed and content pushed as docs d02f3709 / wiki 7be237f.",
                                              "No gameplay source changed."
                                          ],
-                             "handoff":  "Validation and mirror parity are next; after push, reconcile this lane to published/validated/pushed with commit heads."
+                             "handoff":  "This scout wave is closed. Future agents should start from the promoted owner pages rather than raw scout notes."
                          },
                          {
                              "lane":  "requestspecial-non-icbm-support-effects-route",

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T22:55:00+02:00",
+  "generatedAt": "2026-06-04T23:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Depth leftovers mini scouts returned and were closed. Codex promoted source-checked deltas into AI/order, HC failover, gear templates, PerformanceAuditAnalyzer, server ops, tooling readiness and authority-migration owner pages, while rejecting a false smd_sahrani_a2 mission.sqm correction. No gameplay source changed.",
-      "nextExpectedOutput": "Validate wiki structure, JSON/JSONL, diff cleanliness and wiki/docs mirror parity, then commit and push the scoped docs batch."
+      "currentWork": "Depth leftovers mini scout wave is published, validated and pushed as docs d02f3709 / wiki 7be237f. Useful findings were source-checked into owner pages; duplicate and false leads remain non-canonical. No gameplay source changed.",
+      "nextExpectedOutput": "Continue the documentation-finisher loop from the next highest-value source-backed docs lane."
     },
     "Codex-2": {
       "status": "ready",
@@ -46,8 +46,8 @@
     {
       "lane": "mini-scout-wave-depth-leftovers-2026-06-04",
       "owner": "Codex/Sub-agents",
-      "status": "harvested-validation-pending",
-      "output": "Three gpt-5.3-codex-spark starts hit quota before evidence, so Codex closed the dead slots and launched six gpt-5.4-mini read-only scouts. All six returned and were closed. Promoted source-checked deltas into AI/order, HC failover, gear templates, PerformanceAuditAnalyzer, server ops, tooling readiness and authority-migration owner pages. Rejected the smd_sahrani_a2 mission.sqm correction because the tracked stub still lacks mission.sqm, description.ext and initJIPCompatible.sqf. No gameplay source changed."
+      "status": "published-validated-pushed",
+      "output": "Three gpt-5.3-codex-spark starts hit quota before evidence, so Codex closed the dead slots and launched six gpt-5.4-mini read-only scouts. All six returned and were closed. Promoted source-checked deltas into AI/order, HC failover, gear templates, PerformanceAuditAnalyzer, server ops, tooling readiness and authority-migration owner pages. Rejected the smd_sahrani_a2 mission.sqm correction because the tracked stub still lacks mission.sqm, description.ext and initJIPCompatible.sqf. Validation passed and content pushed as docs d02f3709 / wiki 7be237f. No gameplay source changed."
     },
     {
       "lane": "mini-scout-wave-community-config-ai-ui-tooling",
