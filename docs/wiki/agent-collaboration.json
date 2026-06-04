@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T08:45:00+02:00",
+    "generatedAt":  "2026-06-04T09:10:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -22,9 +22,31 @@
                },
     "activeClaims":  [
                          {
+                             "lane":  "runtime-ops-scout-split-harvest",
+                             "owner":  "Codex/Sub-agents",
+                             "status":  "published-validated",
+                             "sourceScope":  [
+                                                 "External-Integrations DiscordBot runtime/config sections",
+                                                 "Server-Ops-Runbook DiscordBot deployment checklist",
+                                                 "Tooling-Release-Readiness-Audit DiscordBot rows",
+                                                 "Feature-Status-Register Discord sample/config hygiene row",
+                                                 "agent-hardening-backlog.jsonl",
+                                                 "DiscordBot Preferences, GameStatusUpdater, CommandHandler and ProgramRuntime source"
+                                             ],
+                             "outputs":  [
+                                             "Closed the overflowing runtime/server-ops scout and relaunched two tiny scouts.",
+                                             "Harvested DiscordBot preferences.json preflight gap: Preferences.Instance reads/deserializes preferences.json without parse/null guard and later command/status paths assume non-null preferences.",
+                                             "Expanded DiscordBot presence timeout scope: both GameStatusUpdater timer path and CommandHandler /setup call SetGameAsync without a real timeout/cancel token.",
+                                             "Tooling scout confirmed PVF dispatcher compile, ZipManager packaging exit-code and BaseTerrain missing replacement-target risks are already documented; no duplicate prose added for those.",
+                                             "Validation/parity passed.",
+                                             "Documentation only; no gameplay source changed."
+                                         ],
+                             "handoff":  "This runtime/ops harvest is validated. Future integration owner should implement fail-fast preferences validation and bounded presence-update behavior in both timer and /setup paths."
+                         },
+                         {
                              "lane":  "spark-scout-wave-wiki-drift-community-feature-depth",
                              "owner":  "Codex/Sub-agents",
-                             "status":  "partial-harvest-validated-runtime-scout-pending",
+                             "status":  "partial-harvest-validated-runtime-followup-split",
                              "sourceScope":  [
                                                  "Instructions-For-Codex and Performance-Opportunity-Sweep stale line refs",
                                                  "Miksuu upstream/community/developer history and imported wiki archive",
@@ -41,9 +63,9 @@
                                              "Feature Status now treats RequestSpecial upgrade-sync as consistency debt, sharpens HC registration/formation/base-area statuses and confirms vote row coloring as a concrete offset bug.",
                                              "Knowledge Platform Roadmap now records missing Agent-Development-Pack alias, fat active-state snapshots, mixed JSONL envelopes and missing page-to-source machine index.",
                                              "Validation/parity passed for the partial harvest.",
-                                             "Runtime/server-ops integration scout remains pending; no gameplay source changed."
+                                             "Runtime/server-ops integration follow-up was split into runtime-ops-scout-split-harvest; no gameplay source changed."
                                          ],
-                             "handoff":  "Partial harvest is validated. Do not duplicate the harvested stale-ref/community/platform/Feature Status/UI lanes. Wait for the remaining runtime/server-ops scout, then source-check and promote only compact non-duplicate deltas."
+                             "handoff":  "Partial harvest is validated. Do not duplicate the harvested stale-ref/community/platform/Feature Status/UI lanes. Runtime/server-ops follow-up is owned by runtime-ops-scout-split-harvest."
                          },
                          {
                              "lane":  "supply-scan-reference-cleanup",

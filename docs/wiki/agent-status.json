@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T08:45:00+02:00",
+    "generatedAt":  "2026-06-04T09:10:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -19,9 +19,9 @@
     "agents":  {
                    "Codex":  {
                                  "status":  "active",
-                                 "currentLane":  "spark-scout-wave-wiki-drift-community-feature-depth",
-                                 "currentWork":  "Partially harvested the Spark scout wave: patched release supply-scan refs, sharpened Feature Status rows for upgrade-sync, HC registration, AI formation picker, base-area seeding and vote UI row-offset; added Knowledge Platform agent-state debt and Community & Dev upstream decision-ledger gap. Runtime/server-ops scout remains pending.",
-                                 "nextExpectedOutput":  "Validate and publish partial harvest, then harvest the remaining runtime/server-ops scout when it returns."
+                                 "currentLane":  "runtime-ops-scout-split-harvest",
+                                 "currentWork":  "Closed the overflowing runtime/server-ops scout, split it into two tiny scouts, and harvested DiscordBot reliability deltas: preferences.json needs parse/null preflight before command/status handlers, and SetGameAsync timeout guidance covers both timer and /setup paths. Tooling scout confirmed PVF/packaging/replacement risks are already documented.",
+                                 "nextExpectedOutput":  "Mirror, commit and push the validated runtime/ops docs harvest."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -36,18 +36,24 @@
                                   "nextExpectedOutput":  "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
                               },
                    "Sub-agents":  {
-                                      "status":  "active",
-                                      "currentLane":  "spark-scout-wave-wiki-drift-community-feature-depth",
-                                      "currentWork":  "Most Spark scouts are harvested or closed. Broad stale-ref, Feature Status and UI lanes overflowed and were replaced with tiny scouts; runtime/server-ops integration scout remains pending.",
-                                      "nextExpectedOutput":  "Return runtime/server-ops integration report for Codex source-checking."
+                                      "status":  "closed",
+                                      "currentLane":  "runtime-ops-scout-split-harvest",
+                                      "currentWork":  "All scouts from this wave are now harvested or closed. The runtime/server-ops overflow was replaced with two tiny scouts; DiscordBot deltas were promoted and tooling deltas confirmed existing pages.",
+                                      "nextExpectedOutput":  "No pending scout output remains from this batch."
                                   }
                },
     "laneSummary":  [
                         {
+                            "lane":  "runtime-ops-scout-split-harvest",
+                            "owner":  "Codex/Sub-agents",
+                            "status":  "published-validated",
+                            "output":  "The original runtime/server-ops Spark scout overflowed and was replaced with two tiny read-only scouts. Harvested DiscordBot reliability deltas into External-Integrations, Server-Ops-Runbook, Tooling-Release-Readiness-Audit, Feature-Status-Register and agent-hardening-backlog.jsonl: preferences.json needs explicit parse/null preflight before command/status handlers, and uncapped SetGameAsync presence update risk applies to both timer and /setup paths. Tooling scout confirmed PVF dispatcher, packaging exit-code and missing replacement-target risks are already documented. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. No gameplay source changed."
+                        },
+                        {
                             "lane":  "spark-scout-wave-wiki-drift-community-feature-depth",
                             "owner":  "Codex/Sub-agents",
-                            "status":  "partial-harvest-validated-runtime-scout-pending",
-                            "output":  "Steff asked for another Spark scout wave. Codex harvested the stale-ref replacement, community/upstream, agent-readable platform, Feature Status window and UI window scouts; broad prompts that overflowed were replaced with tiny row/window scouts. Docs now record the :50-56 release supply scan refs, upgrade-sync as consistency debt, sharper HC registration/formation/base-area/vote UI statuses, Knowledge Platform active-state/machine-index debt and a Community & Dev upstream decision-ledger gap. Runtime/server-ops integration scout remains pending. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. No gameplay source changed."
+                            "status":  "partial-harvest-validated-runtime-followup-split",
+                            "output":  "Steff asked for another Spark scout wave. Codex harvested the stale-ref replacement, community/upstream, agent-readable platform, Feature Status window and UI window scouts; broad prompts that overflowed were replaced with tiny row/window scouts. Docs now record the :50-56 release supply scan refs, upgrade-sync as consistency debt, sharper HC registration/formation/base-area/vote UI statuses, Knowledge Platform active-state/machine-index debt and a Community & Dev upstream decision-ledger gap. Runtime/server-ops follow-up was split into the runtime-ops-scout-split-harvest lane. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. No gameplay source changed."
                         },
                         {
                             "lane":  "supply-scan-reference-cleanup",

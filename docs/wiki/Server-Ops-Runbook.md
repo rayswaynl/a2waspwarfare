@@ -45,7 +45,7 @@ Before calling a host reproducible, record these owner-provided paths/versions i
 4. Copy or package mission folders only after source Chernarus and maintained Vanilla scope are clear.
 5. Deploy BattlEye filters from the actual server `BEpath`. Do not assume the repo's `kickAFK` filter is comprehensive.
 6. Deploy `a2waspwarfare_Extension` and the separate `A2WaspDatabase` only with their expected x86/.NET Framework/runtime dependencies.
-7. Provide DiscordBot `token.txt`, `preferences.json` and a readable `database.json` data source outside git. `database.json` can fall back to default bot data if absent, but `preferences.json` is read before the token check in the current bot startup path. The active status reader uses `Preferences.Instance.DataSourcePath` / default data path; `FileConfiguration.cs` is a secondary config helper and should not be treated as the one source of truth until integration cleanup picks a single path.
+7. Provide DiscordBot `token.txt`, a valid parseable `preferences.json` and a readable `database.json` data source outside git. `database.json` can fall back to default bot data if absent, but `preferences.json` is read before the token check in the current bot startup path; malformed or JSON-null preferences can also break later command/status paths because runtime code assumes `Preferences.Instance` is non-null. The active status reader uses `Preferences.Instance.DataSourcePath` / default data path; `FileConfiguration.cs` is a secondary config helper and should not be treated as the one source of truth until integration cleanup picks a single path.
 8. Preserve rollback copies of the previous mission package and server configuration.
 
 ## Runtime Telemetry Contracts

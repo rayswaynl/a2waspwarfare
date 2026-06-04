@@ -19,7 +19,7 @@ Required local files are intentionally absent from the repo:
 
 `preferences_sample.json` points `DataSourcePath` at `C:\a2waspwarfare\Data`. Runtime refuses to continue if `token.txt` is missing or empty, so do not treat a local bot run failure as a mission-code failure until those files are supplied.
 
-Important startup nuance from the 2026-06-04 integration scout: `ProgramRuntime.cs:14-21` loads `GameData` before it checks `token.txt`. `GameData.LoadFromFile()` reads `Preferences.Instance.DataSourcePath` first (`GameData.cs:32-37`), and `Preferences.Instance` unguardedly reads `preferences.json` (`Preferences.cs:22-25`). A missing `database.json` falls back to default game data, but a missing malformed `preferences.json` can fail earlier than the clean missing-token exit. Operators should provide `preferences.json` before interpreting bot startup failures.
+Important startup nuance from the 2026-06-04 integration scout: `ProgramRuntime.cs:14-21` loads `GameData` before it checks `token.txt`. `GameData.LoadFromFile()` reads `Preferences.Instance.DataSourcePath` first (`GameData.cs:32-37`), and `Preferences.Instance` unguardedly reads and deserializes `preferences.json` (`Preferences.cs:24-25`) with a nullable return suppressed at `Preferences.cs:28-30`. A missing `database.json` falls back to default game data, but a missing or malformed `preferences.json` can fail earlier than the clean missing-token exit. Runtime code later assumes a non-null preferences instance in command and status paths (`GameStatusUpdater.cs:60-61`, `CommandHandler.cs:49,127`), so operators should provide a valid `preferences.json` before interpreting bot startup failures.
 
 ### Discord Config Hygiene
 
@@ -68,7 +68,7 @@ The current file contract is not pinned in one code type. The mission sends six 
 
 ### Discord Update Timeout Caveat
 
-`GameStatusUpdater.cs:91-106` creates a `CancellationTokenSource` around both the Discord channel-name update and bot-presence update. The channel rename passes `RequestOptions { CancelToken = cts.Token }` to `ModifyAsync`, but `client.SetGameAsync(newChannelName, null, ActivityType.Playing)` does not receive the token. Treat the presence update as still uncapped until the Discord API call is wrapped with a real timeout/fallback.
+`GameStatusUpdater.cs:91-106` creates a `CancellationTokenSource` around both the Discord channel-name update and bot-presence update. The channel rename passes `RequestOptions { CancelToken = cts.Token }` to `ModifyAsync`, but `client.SetGameAsync(newChannelName, null, ActivityType.Playing)` does not receive the token. The `/setup` command has the same direct presence-update shape at `CommandHandler.cs:70-75`. Treat bot presence updates as still uncapped until both timer and command paths have a real timeout/fallback.
 
 Implementation notes from the source:
 
