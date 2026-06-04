@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T12:30:00+02:00",
+    "generatedAt":  "2026-06-04T12:45:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -20,8 +20,8 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Published the mini-scout-wave-town-respawn-upstream-performance docs harvest. All scout slots were closed. Non-duplicate deltas landed for latent AIBuyUnit wording, resource-cap payout suppression, capture reward authority, respawn penalty mode 5 gear loss, EASA/service stale-context risks, upstream contributor/head provenance and loop-topology guidance.",
-                                 "nextExpectedOutput":  "Commit and push the validated docs mirror and live wiki checkout."
+                                 "currentWork":  "Latest pushed batch: docs eac4a8f6 / wiki fa9d2a5 harvested the mini-scout-wave-town-respawn-upstream-performance wave. All scout slots were closed. Non-duplicate deltas landed for latent AIBuyUnit wording, resource-cap payout suppression, capture reward authority, respawn penalty mode 5 gear loss, EASA/service stale-context risks, upstream contributor/head provenance and loop-topology guidance.",
+                                 "nextExpectedOutput":  "Continue the documentation finisher loop with the next bounded source-backed docs item or scout wave Steff requests."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -46,8 +46,8 @@
                         {
                             "lane":  "mini-scout-wave-town-respawn-upstream-performance",
                             "owner":  "Codex/Sub-agents",
-                            "status":  "validated-mirrored-push-pending",
-                            "output":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked the first two starts, so Codex relaunched four gpt-5.4-mini read-only scouts; a fifth mission-config scout was blocked by the active-agent ceiling. All scout slots were closed after return/error. Harvested non-duplicate deltas into Gameplay-Systems-Atlas, Feature-Status-Register, Server-Gameplay-Runtime-Atlas, Community-And-Dev, AI-Runtime-HC-Loop-Map, AI-Headless-And-Performance, Client-UI-And-Server-Loop-Perf-Findings, Performance-Opportunity-Sweep, Service-Menu-Affordability-Guards, Player-UI-Workflow-Map and agent-feature-status.jsonl. docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check and 15-file SHA256 mirror parity passed. No gameplay source changed."
+                            "status":  "published-validated-pushed",
+                            "output":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked the first two starts, so Codex relaunched four gpt-5.4-mini read-only scouts; a fifth mission-config scout was blocked by the active-agent ceiling. All scout slots were closed after return/error. Harvested non-duplicate deltas into Gameplay-Systems-Atlas, Feature-Status-Register, Server-Gameplay-Runtime-Atlas, Community-And-Dev, AI-Runtime-HC-Loop-Map, AI-Headless-And-Performance, Client-UI-And-Server-Loop-Perf-Findings, Performance-Opportunity-Sweep, Service-Menu-Affordability-Guards, Player-UI-Workflow-Map and agent-feature-status.jsonl. docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check and 15-file SHA256 mirror parity passed. Pushed as docs eac4a8f6 / wiki fa9d2a5. No gameplay source changed."
                         },
                         {
                             "lane":  "mini-scout-wave-requestspecial-economy-construction-ui-tooling-abandoned",
