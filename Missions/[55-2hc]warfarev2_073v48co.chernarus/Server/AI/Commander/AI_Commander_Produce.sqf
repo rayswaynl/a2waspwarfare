@@ -8,7 +8,7 @@
 	affordable. One order per team per call. No-ops when the factory does not exist.
 */
 
-private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q"];
+private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds"];
 
 _side = _this;
 _sideText = str _side;
@@ -36,7 +36,15 @@ _facDefs = [["Barracks","BARRACKSUNITS",WFBE_UP_BARRACKS], ["Light","LIGHTUNITS"
 {
 	_team = _x;
 	_type = _team getVariable ["wfbe_teamtype", -1];
-	if (!isPlayer (leader _team) && {_type >= 0 && _type < count _templates} && {count (_team getVariable ["wfbe_queue", []]) == 0}) then {
+	_canProduce = false;
+	if (!isPlayer (leader _team)) then {
+		if (_type >= 0) then {
+			if (_type < count _templates) then {
+				if (count (_team getVariable ["wfbe_queue", []]) == 0) then {_canProduce = true};
+			};
+		};
+	};
+	if (_canProduce) then {
 		_template = _templates select _type;
 		_want = (count _template) min (missionNamespace getVariable "WFBE_C_AI_MAX");
 		_cur  = {alive _x} count (units _team);
@@ -70,15 +78,18 @@ _facDefs = [["Barracks","BARRACKSUNITS",WFBE_UP_BARRACKS], ["Light","LIGHTUNITS"
 							_kind = _structTypes find _typeName;
 							if (_kind >= 0) then {
 								_factories = [_side, _kind, _buildings] Call GetFactories;
-								if (count _factories > 0 && {((_side) Call GetAICommanderFunds) >= _price}) then {
-									[_side, -_price] Call ChangeAICommanderFunds;
-									_isVeh = if (_toBuild isKindOf "Man") then {[]} else {[true,true,true,true]};
-									_id = [floor (random 1000000)];
-									_q = (_team getVariable ["wfbe_queue", []]) + [_id];
-									_team setVariable ["wfbe_queue", _q];
-									[_id, (_factories select 0), _toBuild, _side, _team, _isVeh] Spawn AIBuyUnit;
-									["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] ordering [%3] at %4 factory (cost %5).", _sideText, _team, _toBuild, _typeName, _price]] Call WFBE_CO_FNC_LogContent;
-									if (!isNil "WFBE_SE_FNC_AI_Com_LogAppend") then {[_side, "PRODUCTION", _team, [_team, _toBuild, _typeName, _price]] Call WFBE_SE_FNC_AI_Com_LogAppend};
+								_funds = (_side) Call GetAICommanderFunds;
+								if (count _factories > 0) then {
+									if (_funds >= _price) then {
+										[_side, -_price] Call ChangeAICommanderFunds;
+										_isVeh = if (_toBuild isKindOf "Man") then {[]} else {[true,true,true,true]};
+										_id = [floor (random 1000000)];
+										_q = (_team getVariable ["wfbe_queue", []]) + [_id];
+										_team setVariable ["wfbe_queue", _q];
+										[_id, (_factories select 0), _toBuild, _side, _team, _isVeh] Spawn AIBuyUnit;
+										["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] ordering [%3] at %4 factory (cost %5).", _sideText, _team, _toBuild, _typeName, _price]] Call WFBE_CO_FNC_LogContent;
+										if (!isNil "WFBE_SE_FNC_AI_Com_LogAppend") then {[_side, "PRODUCTION", _team, [_team, _toBuild, _typeName, _price]] Call WFBE_SE_FNC_AI_Com_LogAppend};
+									};
 								};
 							};
 						};
