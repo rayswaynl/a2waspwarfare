@@ -72,7 +72,7 @@ Use this page first, then jump into the canonical pages and machine files it nam
 - Commander/HQ lifecycle now has a canonical atlas. It maps commander vote/reassignment, client commander affordances, HQ deploy/mobilize, HQ destruction, allied wreck markers, normal MHQ repair, WASP cash HQ recovery and base-area/JIP-sensitive risk edges.
 - Victory/endgame now has a canonical atlas. It maps the default 80-second server victory loop, loser-side client payload semantics, all-towns winner inversion, same-tick double-fire, non-zero threeway no-detection, stale `PVFunctions/LogGameEnd.sqf` and smoke gates.
 - Wave G scout outputs now have owner pages: [Join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle), [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas), [Parameters/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs) and [Support/specials/modules atlas](Support-Specials-And-Tactical-Modules-Atlas).
-- Checked-in source has no `version.sqf`; generation/pack inputs must supply it before source-mission boot or release packaging.
+- Checked-in source has no tracked `version.sqf`; local ignored generated copies may exist, but clean checkout generation/pack inputs must supply it before source-mission boot or release packaging.
 
 ## Agent Output Rules
 

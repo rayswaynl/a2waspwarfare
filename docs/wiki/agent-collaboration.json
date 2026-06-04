@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T05:20:00+02:00",
+  "generatedAt": "2026-06-04T05:45:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,27 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "version-sqf-ignore-target-root-correction",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        ".gitignore",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf",
+        "Tools/LoadoutManager/FileManagement/FileManager.cs",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs",
+        "docs/wiki/* version.sqf references"
+      ],
+      "outputs": [
+        "Correct previous tracked-source wording",
+        "Clarify local ignored/generated Chernarus and Vanilla files are not tracked by Git",
+        "Keep clean-checkout and generated target-root verification open",
+        "Validation/parity passed",
+        "No gameplay source changed"
+      ],
+      "handoff": "This correction is validated. Future agents should not infer tracked source completeness from local ignored version.sqf files."
+    },
     {
       "lane": "post-dispatch-pvf-handler-authority-recheck",
       "owner": "Codex",
@@ -60,7 +81,7 @@
       ],
       "outputs": [
         "Closed Spark path after quota block and harvested six cheap mini scouts",
-        "Corrected current source Chernarus version.sqf state while keeping generated target-root verification open",
+        "Corrected local ignored/generated version.sqf state while keeping clean-checkout and generated target-root verification open",
         "Clarified stable truck-only supply scope and PR/branch-only SupplyByHeli evidence",
         "Queued thin registered PVF handler authority review",
         "Added CoIn base-area null-guard companion issue and salvage authority/cleanup lead",

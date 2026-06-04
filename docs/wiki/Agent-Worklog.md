@@ -8,11 +8,18 @@
 - Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
 - No gameplay source files were edited.
 
+## 2026-06-04T05:45:00+02:00 - Codex - version.sqf ignore/target-root correction
+
+- Correcting the previous version-file wording across human and machine docs: local Chernarus and Vanilla `version.sqf` files exist in this workspace, but `.gitignore:1` and `.gitignore:23` ignore them and literal-path `git ls-files` returns no tracked rows.
+- Keep the release lesson intact: clean checkouts and generated/target mission roots still need explicit version-file generation or verification before pack/test claims.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T05:05:00+02:00 - Codex - mini scout wave init/PV/supply/construction/UI/ops
 
 - Spark quota blocked another Spark scout wave, so Codex launched six cheap mini discovery scouts instead.
 - Scout lanes covered init/compile/parameter wiring, PV/security/authority, towns/economy/supply, construction/CoIn/base structures, UI/dialog wiring and tools/extensions/ops.
-- Promoted source-backed corrections and leads: current source Chernarus now tracks `version.sqf` while generated/target roots still need verification; stable checked-in supply mission code is truck-only and `SupplyByHeli` belongs to PR/branch evidence; thinner registered PVF handlers still need handler/effect authority review; CoIn mirrors the stationary-defense base-area null-guard issue; salvage has a local payout/deletion authority edge and suspect cleanup loop; main-menu GPS zoom actions are orphaned; DiscordBot/Extension/DiscordBot `database.json` field counts drift.
+- Promoted source-backed corrections and leads: local ignored/generated Chernarus and Vanilla `version.sqf` files exist but are not tracked by Git, so clean checkout/generated target roots still need verification; stable checked-in supply mission code is truck-only and `SupplyByHeli` belongs to PR/branch evidence; thinner registered PVF handlers still need handler/effect authority review; CoIn mirrors the stationary-defense base-area null-guard issue; salvage has a local payout/deletion authority edge and suspect cleanup loop; main-menu GPS zoom actions are orphaned; DiscordBot/Extension/DiscordBot `database.json` field counts drift.
 - Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
 - Documentation/machine-state cleanup only; no gameplay source files were edited.
 

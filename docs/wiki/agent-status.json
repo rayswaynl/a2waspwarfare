@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T05:20:00+02:00",
+  "generatedAt": "2026-06-04T05:45:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated the post-dispatch PVF handler authority recheck. Server authority docs now name active caller examples for thin registered handlers and the lessons ledger captures the rule that dispatcher lookup hardening closes handler-name RCE, not payload/effect authority.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed documentation gap."
+      "currentWork": "Published and validated the version.sqf ignore/target-root correction. Human and machine docs now state local Chernarus and Vanilla generated files exist but are ignored/untracked; clean checkout and target-root verification remain required.",
+      "nextExpectedOutput": "Harvest the latest commander/PVF/economy/UI scout reports into the appropriate docs pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -44,6 +44,12 @@
   },
   "laneSummary": [
     {
+      "lane": "version-sqf-ignore-target-root-correction",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Corrected the previous version.sqf wording across human and machine docs. Local ignored/generated Chernarus and Vanilla version.sqf files exist in this workspace, but Git does not track them; clean checkout and generated/target-root verification remain required before pack/test claims. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed. No gameplay source changed."
+    },
+    {
       "lane": "post-dispatch-pvf-handler-authority-recheck",
       "owner": "Codex",
       "status": "published-validated",
@@ -53,7 +59,7 @@
       "lane": "mini-scout-wave-init-pv-supply-construction-ui-ops",
       "owner": "Codex/Sub-agents",
       "status": "published-validated",
-      "output": "Spark quota blocked new Spark starts, so Codex launched six cheap mini discovery scouts. Source-backed corrections/leads landed across entrypoint, parameter/build, content, Feature Status, supply, construction/CoIn, UI, PV/networking, external integrations and machine ledgers: current source Chernarus now tracks version.sqf while generated/target roots still need verification; current stable supply is truck-only while SupplyByHeli is PR/branch evidence; thin PVF handlers need authority review; CoIn has a base-area null-guard companion issue; salvage has local payout/deletion plus a suspect cleanup loop; main-menu GPS actions are orphaned; DiscordBot/Extension database.json field counts drift. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed. No gameplay source changed."
+      "output": "Spark quota blocked new Spark starts, so Codex launched six cheap mini discovery scouts. Source-backed corrections/leads landed across entrypoint, parameter/build, content, Feature Status, supply, construction/CoIn, UI, PV/networking, external integrations and machine ledgers: local ignored/generated Chernarus and Vanilla version.sqf files exist but are not tracked by Git, so clean checkout/generated target roots still need verification; current stable supply is truck-only while SupplyByHeli is PR/branch evidence; thin PVF handlers need authority review; CoIn has a base-area null-guard companion issue; salvage has local payout/deletion plus a suspect cleanup loop; main-menu GPS actions are orphaned; DiscordBot/Extension database.json field counts drift. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed. No gameplay source changed."
     },
     {
       "lane": "mini-scout-wave-towns-construction-respawn-supports-ai-runtime",
@@ -263,7 +269,7 @@
       "lane": "owner-decision-branch-scope-refresh",
       "owner": "Codex",
       "status": "published-validated",
-      "output": "Pending-Owner-Decisions matched corrected DR-43 and DR-19 evidence at publication time. Later 2026-06-04 init scout corrected the version.sqf subclaim: source Chernarus now tracks version.sqf, so the remaining gate is generated/target-root verification. Init_Server duplicate binds and hosted-FPS branch scope remain as documented."
+      "output": "Pending-Owner-Decisions matched corrected DR-43 and DR-19 evidence at publication time. Later 2026-06-04 target-root correction refined the version.sqf subclaim: local ignored/generated Chernarus and Vanilla files exist, but Git does not track them, so the remaining gate is clean-checkout and generated/target-root verification. Init_Server duplicate binds and hosted-FPS branch scope remain as documented."
     },
     {
       "lane": "dashboard-active-handoff-refresh",

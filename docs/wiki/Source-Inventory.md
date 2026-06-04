@@ -40,7 +40,7 @@ $files | ForEach-Object { $ext = [IO.Path]::GetExtension($_).ToLowerInvariant();
 
 ## Mission Parity Snapshot
 
-Tracked-file counts are from `git ls-files` only, not filesystem recursion. Current source Chernarus now tracks `version.sqf`, but generated/modded target roots still need explicit verification because LoadoutManager owns terrain-version output.
+Tracked-file counts are from `git ls-files` only, not filesystem recursion. Current local Chernarus and Vanilla Takistan roots have ignored generated `version.sqf` files on disk, but they are not tracked by Git; generated/modded target roots still need explicit verification because LoadoutManager owns terrain-version output.
 
 | Mission tree | Tracked files | Parity posture |
 | --- | ---: | --- |
@@ -54,7 +54,7 @@ Tracked-file counts are from `git ls-files` only, not filesystem recursion. Curr
 | `Modded_Missions/[61-2hc]warfarev2_073v48co.dingor` | 20 | Overlay/stub. |
 | `Modded_Missions/[61-2hc]warfarev2_073v48co.isladuala` | 1 | Stub. |
 
-`git ls-files "*version.sqf"` returns no tracked rows, but both `description.ext:39` and `initJIPCompatible.sqf:4` include it at runtime. Treat `version.sqf` as generated input, not a missing tracked file.
+`git --literal-pathspecs ls-files -- 'Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf' 'Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf'` returns no tracked rows, while `git status --ignored --short -- .../version.sqf` shows ignored local files for those two maintained mission roots. Both `description.ext:39` and `initJIPCompatible.sqf:4` include it at runtime. Treat `version.sqf` as generated input, not durable checked-in source.
 
 ## Extension Inventory
 
