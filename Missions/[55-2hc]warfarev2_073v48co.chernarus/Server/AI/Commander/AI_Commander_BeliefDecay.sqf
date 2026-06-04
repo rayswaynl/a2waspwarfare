@@ -4,7 +4,7 @@
 	Parameter: [_side, _context]
 */
 
-Private ["_side","_context","_out","_belief","_age","_conf","_status","_decay","_limit"];
+Private ["_side","_context","_out","_belief","_age","_conf","_status","_decay","_expired","_limit"];
 
 if (count _this < 2) exitWith {[]};
 
@@ -26,7 +26,10 @@ _out = [];
 			if (_age > 600) then {_decay = 0.16};
 			_conf = 0 max (_conf - _decay);
 			if (_conf < 0.25) then {_status = "stale"};
-			if (_conf < 0.10 || {_age > 900}) then {_status = "expired"};
+			_expired = false;
+			if (_conf < 0.10) then {_expired = true};
+			if (_age > 900) then {_expired = true};
+			if (_expired) then {_status = "expired"};
 			_belief set [8, _conf];
 			_belief set [12, _status];
 			if (_status != "expired") then {_out set [count _out, _belief]};
