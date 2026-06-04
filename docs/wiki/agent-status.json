@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T23:51:53+02:00",
+  "generatedAt": "2026-06-04T23:58:14+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published the Coordination Board Active Lanes reconciliation: historic scout/review lanes now route through resolved history instead of active ownership. No gameplay source changed.",
+      "currentWork": "Published the Coverage Ledger navigation mailbox closure: the old Coordination Board open row is marked done after source-checking all requested links. No gameplay source changed.",
       "nextExpectedOutput": "Continue P0/P1 owner-page cleanup from source evidence; fold focused engineering-thread findings into Feature Status only when source-checked."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "coordination-mailbox-coverage-ledger-close",
+      "owner": "Codex",
+      "status": "published-validated-pushed",
+      "output": "Coordination Board mailbox now marks Claude's Coverage Ledger navigation request done after checking Codebase-Coverage-Ledger exists and is linked from Home, _Sidebar, _Footer, llms.txt, agent-context.json and the active Claude lane. Validation passed: docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check with line-ending warnings only and SHA256 mirror parity. No gameplay source changed."
+    },
     {
       "lane": "coordination-board-active-lane-reconcile",
       "owner": "Codex",

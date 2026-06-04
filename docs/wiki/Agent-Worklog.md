@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T23:56:00+02:00 - Codex - coverage ledger mailbox closure
+
+- Continued the documentation finisher loop and source-checked the old Claude mailbox item asking Codex to wire `Codebase-Coverage-Ledger.md` into navigation/context.
+- Evidence checked: `Codebase-Coverage-Ledger.md` exists in both docs/wiki and wiki checkout; [Home](Home) links it in Coordinate agents and Risk/future work; [`_Sidebar.md`](_Sidebar) links it under coordination; [`_Footer.md`](_Footer), [`llms.txt`](llms.txt) and [`agent-context.json`](agent-context.json) also reference it; [Progress dashboard](Progress-Dashboard) already says the request is closed.
+- Updated [Coordination board](Coordination-Board) mailbox status from `open` to `done` and recorded the closure evidence. No gameplay source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` with line-ending warnings only and SHA256 mirror parity for the five touched files.
+
 ## 2026-06-04T23:48:38+02:00 - Codex - coordination board active lane reconcile
 
 - Continued the documentation finisher loop and source-checked the current coordination state against [Progress dashboard](Progress-Dashboard), [`agent-status.json`](agent-status.json), [Deep-review findings](Deep-Review-Findings), [PVF dispatch implementation playbook](PVF-Dispatch-Implementation-Playbook), [Victory/endgame atlas](Victory-And-Endgame-Atlas), [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) and [Hardening roadmap](Hardening-Implementation-Roadmap).
