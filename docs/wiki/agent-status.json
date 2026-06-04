@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T07:15:00+02:00",
+  "generatedAt": "2026-06-04T07:19:31+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published, validated and pushed mini-scout-wave-ai-construction-respawn-pv-ui-depth-2 after harvesting five gpt-5.4-mini reports: wfbe_autonomous wording, AI formation picker, server base-area seeding, CoIn null reads, supply completion reward authority, supply cache timeout/cache-poisoning, RequestSpecial group-query authority, threeway zero-camp respawn, duplicate HandleAT Fired handlers, WASP base-repair traps and compact UI TODOs.",
+      "currentWork": "Promoted the AntiStack A2WaspDatabase deployment gate after source-checking DR-7 through DR-10 against current code. Existing technical pages already covered the wrapper risks; Codex added the missing owner-facing decision: confirm/install and harden the separate A2WaspDatabase extension, or operate/default AntiStack disabled until the dependency is real.",
       "nextExpectedOutput": "Continue the documentation finisher loop with the next bounded source-backed gap."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "antistack-a2waspdatabase-owner-gate",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Source-checked AntiStack external DB evidence: Init_Server compiles the wrappers and starts loops when enabled, Init_CommonConstants fallback defaults WFBE_C_ANTISTACK_ENABLED to 1, and callDatabase*.sqf wrappers call A2WaspDatabase then call compile returned strings. Existing pages already covered the technical audit; Codex added the owner-facing public-hosting gate to Pending Owner Decisions, AntiStack Database Extension Audit and Feature Status. No gameplay source changed."
+    },
     {
       "lane": "mini-scout-wave-ai-construction-respawn-pv-ui-depth-2",
       "owner": "Codex/Sub-agents",

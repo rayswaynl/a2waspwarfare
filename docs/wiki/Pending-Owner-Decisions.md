@@ -78,6 +78,7 @@ These rows are merge/release gates for useful branch work. They are not stable-`
 | HC static-defence update-back commented out | DR-42 | Low/Med | restore the update-back or document as fire-and-forget |
 | DiscordBot `TypeNameHandling.All` insecure deser | DR-31 | High (latent) | `.All` → `.None` (data is a flat DTO) |
 | GLOBALGAMESTATS extension dormant deser + async-void race | DR-29 | Med | delete dead `.Auto` load; fix `File.Replace` race |
+| AntiStack external DB deployment mode | DR-7, DR-8, DR-9, DR-10 | High/ops | choose one: keep AntiStack enabled only with the separate `A2WaspDatabase` DLL installed plus return-shape/circuit-breaker hardening, or default/operate AntiStack disabled until that dependency is confirmed; building the in-repo `Extension` project does not satisfy this dependency |
 
 ## 3. Keep-or-remove / maintenance-model decisions
 

@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T07:19:31+02:00 - Codex - AntiStack A2WaspDatabase owner gate
+
+- Followed the documentation finisher loop into DR-7 through DR-10 and source-checked the AntiStack external DB path.
+- Current source evidence: server init compiles AntiStack wrappers at `Init_Server.sqf:72-80,85-87`, the ON/OFF fallback defaults `WFBE_C_ANTISTACK_ENABLED` to `1` at `Init_CommonConstants.sqf:170-171`, enabled server init starts AntiStack loops and calls `SET_MAP` at `Init_Server.sqf:597-613`, and the DB wrappers call `"A2WaspDatabase" callExtension` then `call compile` returned strings.
+- Existing pages already carried the main technical audit. Codex added the missing owner-facing gate to [Pending owner decisions](Pending-Owner-Decisions), [AntiStack database extension audit](AntiStack-Database-Extension-Audit) and [Feature status](Feature-Status-Register): before public hosting, either confirm/install the separate `A2WaspDatabase` and harden enabled-mode returns, or operate/default AntiStack disabled until that dependency is real.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T06:55:00+02:00 - Codex - mini scout wave AI/construction/respawn/PV/UI depth 2
 
 - Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked the first two starts until reset, so Codex closed the failed Spark slots and relaunched the wave with five gpt-5.4-mini read-only scouts.

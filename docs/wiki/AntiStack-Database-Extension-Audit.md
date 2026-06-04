@@ -92,6 +92,7 @@ Spark AFK/AntiStack scout nuance (2026-06-04): the launch ACK client receiver cu
 
 | Priority | Work | Patch shape |
 | --- | --- | --- |
+| P0/P1 | Make the owner deployment choice explicit before public hosting. | If `A2WaspDatabase` is installed and supported, harden enabled-mode return handling before relying on AntiStack for balancing. If the DLL is absent or unknown, run with AntiStack disabled or add a startup/degraded-mode circuit breaker. Building `Extension` / `GLOBALGAMESTATS` is not enough. |
 | P1 | Replace raw `call compile` return handling with a small parser/validator wrapper. | Centralize DB response handling in one SQF helper that checks non-empty string, expected array form, expected count, scalar response code and scalar/string payload types before returning a safe fallback. Do not use Arma 3-only `parseSimpleArray`. |
 | P1 | Add missing/slow extension circuit breaker. | After repeated malformed or timeout responses, set a missionNamespace degraded flag, log once per interval and fall back to disabled-mode behavior for join skill checks and compensation while keeping team-swap protection. |
 | P1 | Fix timeout return-shape mismatch in `callDatabaseRequestSideTotalSkill.sqf`. | If callers expect scalar skill, timeout fallback should be scalar `0` or the caller should explicitly handle array fallback. Do not feed `[1,1]` into skill-difference math. |
