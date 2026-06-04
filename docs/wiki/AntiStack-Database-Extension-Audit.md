@@ -86,6 +86,8 @@ flowchart TD
 
 Wave S nuance for endgame readers: the main/flush AntiStack loops observe `WFBE_GameOver`, but `updateScoreInternal.sqf:13` runs `while { true }`. Mission teardown follows shortly after victory, so this is a low-risk cleanup item; do not overread the docs as "every AntiStack loop stops immediately on game over."
 
+Spark AFK/AntiStack scout nuance (2026-06-04): the launch ACK client receiver currently stores the whole public-variable event tuple (`_this`) in `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK` instead of `_this select 1` (`Client/Module/AntiStack/hasConnectedAtLaunchACK.sqf:1-7`). The player-list flush also prefers confirmed `WFBE_JIP_USER%UID_TEAM_JOINED`, but when only a launch record exists it sends current `side _x`, not the stored launch-side value (`AntiStack/flushLoop.sqf:32-40`). Keep those shapes in mind before changing join/teamswap state.
+
 ## Remaining Hardening Work
 
 | Priority | Work | Patch shape |
@@ -95,6 +97,7 @@ Wave S nuance for endgame readers: the main/flush AntiStack loops observe `WFBE_
 | P1 | Fix timeout return-shape mismatch in `callDatabaseRequestSideTotalSkill.sqf`. | If callers expect scalar skill, timeout fallback should be scalar `0` or the caller should explicitly handle array fallback. Do not feed `[1,1]` into skill-difference math. |
 | P2 | Bound player-list payload size and validate GUID/side entries. | Keep only known player UIDs and west/east side codes; log skipped malformed entries. |
 | P2 | Validate launch-connect raw PV payloads. | `clientHasConnectedAtLaunch.sqf` records a client-pushed player object and owner-targets an ACK. Confirm the object/UID/side match the sender before storing `WFBE_PLAYER_%UID_CONNECTED_AT_LAUNCH`. |
+| P2 | Normalize or document launch ACK value shape. | `hasConnectedAtLaunchACK.sqf` assigns `_this` to `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK`, so the variable is an event tuple rather than a plain boolean even though the server payload is `true`. |
 | P2 | Check and retry disconnect database persistence. | `Server_OnPlayerDisconnected.sqf:151-176` calls store-side and store-score paths but does not act on return codes. Log failures and consider one bounded retry before clearing durable state. |
 | P2 | Replace stale all-units snapshots in skill balancing. | `flushLoop.sqf` and score-monitor helpers can operate on stale `allUnits`/fallback snapshots. Prefer confirmed session records keyed by UID where practical. |
 | P2 | Add performance audit fields for DB degraded state. | Existing `antistack_main`, `antistack_flush`, `antistack_update_score` and `antistack_state` records are good anchors; add malformed/timeout counters if hardening is implemented. |

@@ -25,6 +25,18 @@ This page is the operator entrypoint for running, packaging and observing Wasp W
 | Separate `A2WaspDatabase` extension | AntiStack uses this out-of-repo DLL; the in-repo `Extension` project is the global game stats writer. |
 | Production `BEpath`, extension install path and profile/RPT locations | Needed before release or live-server support claims are reproducible. |
 
+## Deployment Inventory Fields
+
+Before calling a host reproducible, record these owner-provided paths/versions in the deployment notes:
+
+| Artifact | Record |
+| --- | --- |
+| Arma server config | Absolute paths for `server.cfg`, `basic.cfg`, profile directory and active mission/PBO location. |
+| BattlEye | Active `BEpath`, `publicvariable.txt`, `scripts.txt` and any command-specific filters such as `createvehicle.txt`, `setvariable.txt`, `setdamage.txt`, `deletevehicle.txt` and `mpeventhandler.txt`. |
+| Extensions | Installed x86 `a2waspwarfare_Extension` DLL path/version and separate `A2WaspDatabase` DLL path/version when AntiStack is enabled. |
+| DiscordBot | Runtime folder, `token.txt`, `preferences.json`, selected `DataSourcePath` and readable `database.json` location. |
+| Logs | Server RPT path, client RPT capture plan, extension logs and DiscordBot logs. |
+
 ## Release Artifact Checklist
 
 1. Generate/copy missions with LoadoutManager from a repo root that contains `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`, or from a normal `a2waspwarfare` clone.
@@ -33,7 +45,7 @@ This page is the operator entrypoint for running, packaging and observing Wasp W
 4. Copy or package mission folders only after source Chernarus and maintained Vanilla scope are clear.
 5. Deploy BattlEye filters from the actual server `BEpath`. Do not assume the repo's `kickAFK` filter is comprehensive.
 6. Deploy `a2waspwarfare_Extension` and the separate `A2WaspDatabase` only with their expected x86/.NET Framework/runtime dependencies.
-7. Provide DiscordBot `token.txt`, `preferences.json` and a readable `database.json` data source outside git.
+7. Provide DiscordBot `token.txt`, `preferences.json` and a readable `database.json` data source outside git. `database.json` can fall back to default bot data if absent, but `preferences.json` is read before the token check in the current bot startup path.
 8. Preserve rollback copies of the previous mission package and server configuration.
 
 ## Runtime Telemetry Contracts

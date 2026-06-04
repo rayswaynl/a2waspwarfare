@@ -207,6 +207,22 @@ Help dialog lifecycle edge: `RscMenu_Help` stores the display as `uiNamespace["d
 
 `GUI_Menu_Economy.sqf` handles commander income percentage, structure selling and supply-truck respawn. The respawn supply-truck action sends `["RequestSpecial", ["RespawnST", sideJoined]]` (`:90-96`), which ties this UI directly to the partially broken AI/supply-truck feature described in [Feature status register](Feature-Status-Register).
 
+Spark UI scout 2026-06-04 control/action map:
+
+| Menu | Control/action | Runtime effect |
+| --- | --- | --- |
+| Main menu | `MenuAction == 7` | Opens `WFBE_UpgradeMenu` (`GUI_Menu.sqf:161-166`). |
+| Main menu | `MenuAction == 8` | Opens `RscMenu_Economy` (`GUI_Menu.sqf:168-173`). |
+| `WFBE_UpgradeMenu` | `idc 504001` | Upgrade list selection/double-click drives `WFBE_MenuAction = 1` or `2` (`Rsc/Dialogs.hpp:75-86`; `GUI_UpgradeMenu.sqf:73-83,129-161`). |
+| `WFBE_UpgradeMenu` | `idc 504007` | Purchase button sets `WFBE_MenuAction = 1`; the controller validates locally and sends `RequestUpgrade` (`Rsc/Dialogs.hpp:122-131`; `GUI_UpgradeMenu.sqf:129-161`). |
+| `WFBE_UpgradeMenu` | `WFBE_MenuAction == 1000` | Returns to `WF_Menu` (`GUI_UpgradeMenu.sqf:206-210`). |
+| `RscMenu_Economy` | `idc 23010`, `23011`, `23012` | Income slider, percent label and Set Income button; `MenuAction == 3` applies the split (`Rsc/Dialogs.hpp:3360-3380`; `GUI_Menu_Economy.sqf:74-81`). |
+| `RscMenu_Economy` | `idc 23013`, `23014` | Commander/player income labels (`Rsc/Dialogs.hpp:3381-3391`; `GUI_Menu_Economy.sqf:70-71`). |
+| `RscMenu_Economy` | `idc 23015` | Sell Structure button; `MenuAction == 105` runs map-pick, refund and damage/destroy flow (`Rsc/Dialogs.hpp:3394-3401`; `GUI_Menu_Economy.sqf:105-151`). |
+| `RscMenu_Economy` | `idc 23016` | Respawn supply-truck control; `MenuAction == 4` sends `RequestSpecial ["RespawnST", sideJoined]` (`Rsc/Dialogs.hpp:3407-3415`; `GUI_Menu_Economy.sqf:91-97`). |
+
+Localization note: Economy labels are mostly `STR_*` backed, but the live `WFBE_UpgradeMenu` resource still hardcodes `"Upgrade Menu :"` and `"Upgrade"` in `Rsc/Dialogs.hpp:36,129-130`. Treat that as a UI consistency issue, not a gameplay bug.
+
 ### EASA
 
 EASA opens from `GUI_Menu_Service.sqf` and uses generated arrays from `Client/Module/EASA/EASA_Init.sqf`. Its dialog shares `idd=23000` with Economy, and the detailed runtime is documented in [Gear, loadout and EASA atlas](Gear-Loadout-And-EASA-Atlas).

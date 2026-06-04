@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T03:23:25+02:00",
+  "generatedAt": "2026-06-04T03:48:10+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "spark-scout-wave-afk-config-victory-ui-runtime-integrations",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus AFK/AntiStack families",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config and loadout/template families",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus victory/endgame and game-over families",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus Client GUI/Rsc economy/resource dialog families",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus Server FSM/module cleaner/runtime-loop families",
+        "BattlEyeFilter, DiscordBot, Extension, A2WaspDatabase and deployment/tooling docs"
+      ],
+      "outputs": [
+        "Harvested AFK/AntiStack launch ACK tuple and flush-side nuance",
+        "Added economy/upgrade control-action map",
+        "Tightened modded mission boot-incomplete artifact lists",
+        "Clarified DiscordBot startup config caveat, AntiStack procedure/retry summary and deployment inventory fields",
+        "Victory/endgame, runtime cleanup and root support constants mostly confirmed existing canonical pages",
+        "Validation/parity passed for 12 files",
+        "No gameplay source changed"
+      ],
+      "handoff": "This scout wave is validated and ready to publish. No sub-agent output remains pending."
+    },
     {
       "lane": "spark-scout-wave-respawn-towns-ai-construction-supports-runtime",
       "owner": "Codex/Sub-agents",

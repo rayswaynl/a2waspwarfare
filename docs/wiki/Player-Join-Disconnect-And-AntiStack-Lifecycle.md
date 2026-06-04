@@ -34,7 +34,7 @@ This is why reconnect hardening should re-check UID and object identity at the p
 
 The client derives `sideJoined` from `side player` early in `Client/Init/Init_Client.sqf`. If teamswap protection is active and mission time is past the early-launch grace window, the client sends `RequestJoin` and waits up to repeated 30-second cycles for `WFBE_P_CANJOIN`.
 
-When the join request path is skipped at launch, the client instead publishes `WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH = player`. The server records `WFBE_PLAYER_%UID_CONNECTED_AT_LAUNCH = side _player` and ACKs the owner with `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK`.
+When the join request path is skipped at launch, the client instead publishes `WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH = player`. The server records `WFBE_PLAYER_%UID_CONNECTED_AT_LAUNCH = side _player` and ACKs the owner with `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK`. The client ACK receiver stores the full public-variable event tuple (`_this`) into `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK`, not only the boolean payload, so consumers that only need truthiness work but future code should not assume the variable is a plain bool (`Client/Module/AntiStack/hasConnectedAtLaunchACK.sqf:1-7`).
 
 For JIP/reconnect, `Server_OnPlayerConnected.sqf` waits for server init, matches groups by UID in `playableUnits`, assigns `wfbe_uid` and `wfbe_teamleader`, and creates or updates the `WFBE_JIP_USER%UID` session record.
 
@@ -81,6 +81,8 @@ AntiStack enabled mode stores join side, samples score frequently, flushes perio
 
 Disconnect persistence is currently fire-and-forget: `Server_OnPlayerDisconnected.sqf:151-176` calls the DB wrappers but does not act on failure return codes. If the extension is slow, missing or malformed, a disconnect can look clean in mission flow while persistence silently fails.
 
+The periodic player-list flush prefers confirmed join side from `WFBE_JIP_USER%UID_TEAM_JOINED`. If that does not exist but a launch-side record exists, the current code uses the launch record only as an existence check and sends current `side _x`, not the stored `WFBE_PLAYER_%UID_CONNECTED_AT_LAUNCH` value (`AntiStack/flushLoop.sqf:32-40`). That distinction matters for teamswap/side-audit fixes.
+
 Use [AntiStack database extension audit](AntiStack-Database-Extension-Audit) for the wrapper return-shape risks and external `A2WaspDatabase` dependency. This page owns the lifecycle edges around when those calls happen.
 
 ## Raw Public Variable Edges
@@ -96,6 +98,8 @@ Several lifecycle signals use global variable names rather than UID-scoped varia
 Owner-targeted sends reduce some blast radius, but the names themselves are shared. Future hardening should prefer UID/payload-scoped values where possible and validate sender/player ownership in handlers.
 
 The launch-connect path is especially important because the client publishes a player object through `WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH`, and the shipped BattlEye filter only covers `kickAFK`. Treat launch-side storage as client-pushed until the handler validates sender/UID/side/object consistency.
+
+BattlEye asymmetry is deliberate in the shipped tree: `BattlEyeFilter/publicvariable.txt` contains only `5 "kickAFK"`, while `AFKthresholdExceededName`, `WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH` and `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK` are unfiltered mission public variables. Do not describe the included filter as broad lifecycle hardening.
 
 ## AFK Kick Intersection
 
@@ -115,8 +119,10 @@ For public hosting, treat AFK as client UX plus BattlEye/logging signals, not a 
 | Stale supply player rows | `playerObjectsList.sqf:31-35` appends when no valid match updates; `Server_OnPlayerDisconnected.sqf` does not remove `WFBE_SE_PLAYERLIST` rows. | Add UID-based disconnect cleanup and ignore/null-prune stale object refs before supply completion lookup. |
 | Stale disconnect cleanup race | `Server_OnPlayerDisconnected.sqf:128-129` clears `wfbe_uid` / `wfbe_teamleader` after a 0.5-second delay. | Before clearing, confirm the variables still match the disconnecting UID and old player object. |
 | Raw lifecycle ACK names are global | Lifecycle ACK/request names above are not UID-scoped. | Use payload arrays or UID-scoped state; validate owner/player when Arma 2 OA gives enough context. |
+| Launch ACK stores the event tuple | `hasConnectedAtLaunchACK.sqf:4-6` assigns `_this` to `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK`, while `clientHasConnectedAtLaunch.sqf:13-15` publishes boolean `true` as the payload. | Normalize the ACK receiver to `_this select 1` or document tuple truthiness wherever it is consumed. |
 | Join and launch ACK retries are unbounded | `Init_Client.sqf:416-430` resends `RequestJoin` every 30-second warning cycle until `WFBE_P_CANJOIN`; `:442-456` repeats `WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH` until `WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK`. | Add bounded retry/backoff and a clear degraded-server message/log path so missing PV handlers do not leave clients in an endless retry loop. |
 | Launch-connect side signal is client-pushed | `clientHasConnectedAtLaunch.sqf:1-15` records side from the client-published player object and owner-targets the ACK. | Validate sender/UID/side/object consistency before storing `WFBE_PLAYER_%UID_CONNECTED_AT_LAUNCH`; log mismatches once per UID. |
+| Player-list flush does not reuse stored launch side | `flushLoop.sqf:32-40` sends confirmed `WFBE_JIP_USER%UID_TEAM_JOINED` when present, otherwise checks for a launch record and sends current `side _x`. | Decide whether the DB player list should represent confirmed accepted side, current engine side or stored launch side, then make the fallback explicit. |
 | AntiStack disconnect writes are unchecked | `Server_OnPlayerDisconnected.sqf:151-176` calls store-side/score wrappers and ignores return codes. | Log failures, consider one bounded retry and expose degraded persistence in the AntiStack audit/performance state. |
 | AFK has two active client-local enforcement paths | `Init_Client.sqf:256-264` starts the older `monitorAFK.sqf` path, while `updateclient.sqf:28-31,117-160` also runs the parameterized `kickAFK` BattlEye path. | Pick one canonical AFK owner or deliberately document the two-stage policy. If keeping both, align thresholds, warning cadence, logging and disconnect validation. |
 | AFK PV trusts a name string | `AFKthresholdExceededName` carries the client-reported name and `kickAFK` carries a client-formatted name string. | Send `[player, uid, name]` or derive from owner where possible; log mismatches rather than trusting the string. |

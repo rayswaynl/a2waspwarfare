@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T03:23:25+02:00",
+  "generatedAt": "2026-06-04T03:48:10+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Validated the Spark scout harvest locally: five useful reports landed in support, respawn, AI commander, construction and town/capture pages plus machine ledgers. Broad bounces and the timed-out AFK lane are recorded as prompt-scope/orchestration lessons.",
-      "nextExpectedOutput": "Push the validated harvest batch, then continue with the next bounded source-backed documentation gap."
+      "currentWork": "Validated the latest GPT-5.3-Codex-Spark wave. Promoted AFK/AntiStack launch ACK tuple and flush-side nuance, UI control-action map, modded mission boot-incomplete artifact lists, DiscordBot startup config caveat, AntiStack procedure/retry summary and deployment inventory fields. Victory, runtime cleanup and RU root constants mostly confirmed existing canonical pages.",
+      "nextExpectedOutput": "Commit and push the validated wiki/mirror batch, then continue with the next bounded source-backed documentation gap."
     },
     "Codex-2": {
       "status": "ready",
@@ -38,11 +38,17 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "Spark scout wave harvested and closed. Useful reports landed for supports/services, respawn/MASH/gear, AI commander upgrades, construction/base defenses and town/camp capture. Broad AI/runtime/town prompts overflowed until narrowed; AFK/AntiStack timed out and was closed.",
-      "nextExpectedOutput": "No active sub-agent output pending. Future Spark waves should be file-family scoped with capped output."
+      "currentWork": "Latest Spark scout wave harvested and closed. One broad config scout overflowed and was replaced with a narrower root-constants scout; other reports were harvested or treated as confirmation of existing canonical docs.",
+      "nextExpectedOutput": "No active sub-agent output pending."
     }
   },
   "laneSummary": [
+    {
+      "lane": "spark-scout-wave-afk-config-victory-ui-runtime-integrations",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "output": "Harvested source-backed deltas from the latest Spark wave: AFK/AntiStack launch ACK tuple and flush-side nuance, economy/upgrade control-action map, modded mission boot-incomplete artifact list, DiscordBot startup config caveat, AntiStack procedure/retry summary and deployment inventory fields. Victory/endgame, runtime cleanup and root support constants mostly confirmed existing canonical pages. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed for 12 files."
+    },
     {
       "lane": "spark-scout-wave-respawn-towns-ai-construction-supports-runtime",
       "owner": "Codex/Sub-agents",

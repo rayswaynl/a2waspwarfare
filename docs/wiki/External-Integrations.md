@@ -19,9 +19,11 @@ Required local files are intentionally absent from the repo:
 
 `preferences_sample.json` points `DataSourcePath` at `C:\a2waspwarfare\Data`. Runtime refuses to continue if `token.txt` is missing or empty, so do not treat a local bot run failure as a mission-code failure until those files are supplied.
 
+Important startup nuance from the 2026-06-04 integration scout: `ProgramRuntime.cs:14-21` loads `GameData` before it checks `token.txt`. `GameData.LoadFromFile()` reads `Preferences.Instance.DataSourcePath` first (`GameData.cs:32-37`), and `Preferences.Instance` unguardedly reads `preferences.json` (`Preferences.cs:22-25`). A missing `database.json` falls back to default game data, but a missing malformed `preferences.json` can fail earlier than the clean missing-token exit. Operators should provide `preferences.json` before interpreting bot startup failures.
+
 ### Discord Config Hygiene
 
-Claude Round 16 verified that `DiscordBot/preferences_sample.json` currently includes concrete sample IDs (`GuildID`, `AuthorizedUserIDs`) plus the production-style `DataSourcePath`. `DiscordBot/FileConfiguration.cs` also has `DataSourcePath`/`botconfig.json` support, but the active status-data reader bypasses it: `DiscordBot/src/ExtensionData/GameData/GameData.cs` resolves `Preferences.Instance.DataSourcePath ?? C:\a2waspwarfare\Data`. Static usage review found only `FileConfiguration.LogsPath` used by the live logging path, not by the live game-status JSON reader.
+Claude Round 16 verified that `DiscordBot/preferences_sample.json` currently includes concrete sample IDs (`GuildID`, `AuthorizedUserIDs`) plus the production-style `DataSourcePath`. `DiscordBot/FileConfiguration.cs` also has `DataSourcePath`/`botconfig.json` support, but the active status-data reader bypasses it: `DiscordBot/src/ExtensionData/GameData/GameData.cs` resolves `Preferences.Instance.DataSourcePath ?? C:\a2waspwarfare\Data`. Static usage review found only `FileConfiguration.LogsPath` used by the live logging path, not by the live game-status JSON reader. Deployment should choose one source of truth for the data path; until then, prefer `preferences.json` for the live bot and treat `botconfig.json` support as secondary/ambiguous.
 
 No token is committed, which is good. Still, treat the sample identifiers and hardcoded path as governance cleanup:
 
@@ -84,6 +86,8 @@ Server AntiStack scripts call `"A2WaspDatabase" callExtension` for player/team s
 - `callDatabaseSetMap.sqf`
 
 This is live-server sensitive because extension/database latency can affect monitoring loops and team-balance decisions.
+
+Procedure and retry contract lives in the AntiStack audit: current wrapper codes are `101`, `202`, `303`, `404`, `505`, `606`, `707`, `808` and `909`; score retrieval polls up to 120 attempts with `_sleep = 0.10`, while side-skill requests poll up to 9 attempts with `_sleep = 3`. Any operator smoke or rewrite should preserve/replace those timing assumptions deliberately.
 
 Claude DR-7 through DR-10 found that all seven AntiStack DB wrappers `call compile` the `A2WaspDatabase` extension return. The `A2WaspDatabase` DLL is not in this repo, and `WFBE_C_ANTISTACK_ENABLED` defaults on in mission constants. In Arma 2 OA there is no `parseSimpleArray`, so hardening has to guard and shape-check the compiled value before reading it, plus add a circuit breaker for missing/slow extension responses.
 
