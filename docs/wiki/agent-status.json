@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T20:30:00+02:00",
+  "generatedAt": "2026-06-04T20:45:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Scout harvest batch is validated and docs mirror commit 47cf77a0 is pushed. Wiki rebase preserved the compact dashboard cleanup while adding the new version/lifecycle/tooling/Feature Status scout harvest row.",
-      "nextExpectedOutput": "Finish wiki push after rebase, then reconcile docs/wiki status if needed and harvest remaining active scouts only when concise source-backed reports return."
+      "currentWork": "Scout harvest batch is validated and pushed. Docs mirror commits 47cf77a0 / 654c1f0b and wiki commit 27309ef carry the version/lifecycle/tooling/Feature Status harvest plus compact dashboard reconciliation. Final fresh scouts were closed after confirming canonical coverage or overflowing without evidence.",
+      "nextExpectedOutput": "Continue bounded source-backed wiki maintenance as needed; relaunch any future scout lane narrowly before promoting new findings."
     },
     "Codex-2": {
       "status": "ready",
@@ -36,10 +36,10 @@
       "nextExpectedOutput": "Self-select the next bounded source-backed review from Coverage Ledger or the hardening backlog."
     },
     "Sub-agents": {
-      "status": "active-followup-scouts",
+      "status": "closed",
       "currentLane": "spark-scout-wave-version-lifecycle-tooling-feature-pv-caps",
-      "currentWork": "Peirce/version, Averroes/lifecycle, Nash/PV-PVF, Bacon/Feature Status and Hilbert/tooling returned and were harvested. Lovelace/player-AI-caps, Mill/UI, fresh construction/factories and fresh UI overflowed or errored without evidence. Fresh commander/economy returned mostly canonical coverage; one claim was rejected by local source recheck. Fresh respawn/MASH, server ops/integrations and missing-reference sweep are still active discovery lanes.",
-      "nextExpectedOutput": "Return concise source-backed reports for the remaining active lanes or be closed as unharvested; future UI/construction relaunches should be tiny file-family scouts."
+      "currentWork": "Peirce/version, Averroes/lifecycle, Nash/PV-PVF, Bacon/Feature Status and Hilbert/tooling returned and were harvested. Lovelace/player-AI-caps, Mill/UI, fresh construction/factories, fresh UI and fresh respawn/MASH overflowed or errored without evidence. Fresh commander/economy returned mostly canonical coverage and one claim was rejected by source recheck. Fresh server ops/integrations and missing-reference sweep confirmed canonical coverage; no additional non-duplicate docs were needed beyond this batch's tooling gates and supplyMissionActive dead-twin caution.",
+      "nextExpectedOutput": "No active scout wave. Relaunch future scouts as tiny file-family lanes before promotion."
     }
   },
   "laneSummary": [
@@ -52,8 +52,8 @@
     {
       "lane": "spark-scout-wave-version-lifecycle-tooling-feature-pv-caps",
       "owner": "Codex/Sub-agents",
-      "status": "harvest-validation-pending-active-followup-scouts",
-      "output": "Harvested version.sqf release gating, lifecycle/init caveats, PV/PVF canonical coverage confirmation, Feature Status missing-file/dead-twin deltas and machine-readable toolingAuditGates. AI-cap/UI/construction scouts failed without evidence. Fresh commander/economy mostly confirmed canonical coverage and one stale-context claim was rejected by source recheck; respawn/MASH, ops/integrations and missing-reference sweep remain active. No gameplay source changed."
+      "status": "published-validated-pushed-scouts-closed",
+      "output": "Harvested version.sqf release gating, lifecycle/init caveats, PV/PVF canonical coverage confirmation, Feature Status missing-file/dead-twin deltas and machine-readable toolingAuditGates. AI-cap/UI/construction/respawn scouts failed without evidence. Fresh commander/economy mostly confirmed canonical coverage and one stale-context claim was rejected by source recheck. Fresh server ops/integrations and missing-reference sweep confirmed already-canonical ops/dead-feature coverage. No gameplay source changed."
     },
     {
       "lane": "dashboard-open-item-cleanup",
