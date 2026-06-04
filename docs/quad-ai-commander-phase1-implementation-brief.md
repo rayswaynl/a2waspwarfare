@@ -2,10 +2,16 @@
 
 This is the kickoff brief for the first implementation branch after the current AI Commander execution substrate stabilizes.
 
+Active draft PR:
+
+```text
+#18 - [codex] Phase 1 AI Commander structured logs
+```
+
 Target branch name:
 
 ```text
-feat/ai-commander-logs
+codex/ai-commander-logs
 ```
 
 Base branch:
@@ -45,7 +51,6 @@ Takistan/variant propagation should wait until the Chernarus source is stable, u
 ## Files To Edit
 
 ```text
-Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf
 Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf
 Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Execute.sqf
 Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf
@@ -103,9 +108,9 @@ Required behavior:
 - update `wfbe_aicom_log_last_prune`
 - fail soft
 
-## Compile Lines
+## Compile Strategy
 
-Add near the current AI Commander worker compiles:
+Preferred local-edit path: compile the helpers in `Server/Init/Init_Server.sqf` near the current AI Commander worker compiles:
 
 ```sqf
 WFBE_SE_FNC_AI_Com_LogAppend = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_LogAppend.sqf";
@@ -113,7 +118,15 @@ WFBE_SE_FNC_AI_Com_LogDrain = Compile preprocessFileLineNumbers "Server\AI\Comma
 WFBE_SE_FNC_AI_Com_LogPrune = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_LogPrune.sqf";
 ```
 
-These must compile before `WFBE_SE_FNC_AI_Commander` supervisors spawn.
+Current PR #18 path: the helpers are lazily compiled from `AI_Commander.sqf` before the supervisor waits for full server init and before worker calls. This keeps the connector-authored diff small and still preserves fail-soft behavior:
+
+```sqf
+if (isNil "WFBE_SE_FNC_AI_Com_LogAppend") then {WFBE_SE_FNC_AI_Com_LogAppend = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_LogAppend.sqf"};
+if (isNil "WFBE_SE_FNC_AI_Com_LogDrain") then {WFBE_SE_FNC_AI_Com_LogDrain = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_LogDrain.sqf"};
+if (isNil "WFBE_SE_FNC_AI_Com_LogPrune") then {WFBE_SE_FNC_AI_Com_LogPrune = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_LogPrune.sqf"};
+```
+
+Either strategy is acceptable if the helpers exist before any log append/drain/prune call can matter and every caller remains guarded.
 
 ## Emission Points
 
@@ -171,7 +184,7 @@ Payload:
 
 ```sqf
 // [upgradeId, fromLevel, toLevel, supplyCost, fundsCost]
-[_upgrade, _upgrades select _upgrade, _to_upgrade select 1, _cost select 0, _cost select 1]
+[_upgrade, (_upgrades select _upgrade), (_to_upgrade select 1), (_cost select 0), (_cost select 1)]
 ```
 
 ## Guard Pattern
@@ -193,18 +206,18 @@ Do not use log return values to control behavior.
 Example:
 
 ```text
-AI_Commander_Log: [WEST] #17 TOWN_ASSIGN team=B 1-2 town=Gorka reason=nearest-uncaptured
+AI_Commander_Log: [WEST] #17 TOWN_ASSIGN
 ```
 
-Keep payload dumps out of normal logs.
+Keep payload dumps out of normal logs unless a later debug mode is added.
 
 ## Static Checks
 
-Before opening the PR:
+Before opening or updating the PR:
 
 - no Arma 3-only syntax
 - helper files compile with `preprocessFileLineNumbers`
-- compile lines appear before supervisor spawn
+- helpers compile before supervisor worker calls can append records
 - every log call uses `[_side, _kind, _source, _payload]`
 - no behavior condition depends on log success
 - log cap is enforced
@@ -273,4 +286,4 @@ Stop and fix before publishing if:
 
 ## Next Phase
 
-After Phase 1 passes, use `docs/quad-ai-commander-phase2-beliefs.md` to implement `feat/ai-commander-context`.
+After Phase 1 passes, use `docs/quad-ai-commander-phase2-beliefs.md` and `docs/quad-ai-commander-phase2-implementation-brief.md` to implement `codex/ai-commander-context`.
