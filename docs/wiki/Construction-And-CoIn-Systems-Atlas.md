@@ -222,6 +222,17 @@ Focused construction scout 2026-06-04 found a small guard-order bug here. `Const
 
 Client-side CoIn placement and sale have the companion risks noted above (`coin_interface.sqf:721-730` and `:256-263`). Do not call the guard fixed until the server construction worker, server base-area seeding, client placement availability/decrement and commander sale/refund path all handle missing/stale base-area logics.
 
+### Construction State Ownership Synthesis
+
+The 2026-06-04 fallback construction scout confirmed that several separate-looking issues share the same owner: base/construction state is split across client-visible logic objects, server-side side logic arrays and dormant repair helpers.
+
+| Symptom | Evidence | Development meaning |
+| --- | --- | --- |
+| Base areas are client-seeded but not clearly server-reseeded after HQ deploy. | `Server/Init/Init_Server.sqf:380`, `Construction_HQSite.sqf:50-58`, `Client/PVFunctions/RequestBaseArea.sqf:1-4`, `Server/FSM/basearea.sqf:55-77`. | Treat `wfbe_basearea` as a partial feature until server ownership is explicit. Patch grouped-base placement, cleanup and JIP as one lane. |
+| Base-area `avail` / `weapons` reads can happen before null guards. | `coin_interface.sqf:256-263`, `:721-730`; `Construction_StationaryDefense.sqf:12-13,74`. | Fix guard order on both client CoIn and server defense construction; then smoke empty, stale and race-pruned base-area lists. |
+| Small and medium construction disagree on repair logic cleanup. | `Construction_SmallSite.sqf:69-70,98-99`; `Construction_MediumSite.sqf:69-70,113-114`. | Keep [Construction logic list cleanup](Construction-Logic-List-Cleanup) separate from authority hardening; it is a one-line correctness patch with propagation/smoke gates. |
+| Damage/killed handlers are live, while progressive building repair is compiled but not reached by static search. | EH attachment in `Construction_SmallSite.sqf:123-129`, `Construction_MediumSite.sqf:138-144`, `Construction_HQSite.sqf:36-38,78-93`; repair compile at `Init_Server.sqf:26`; latent helper in `Server_HandleBuildingRepair.sqf`. | Do not call progressive building repair working until a live caller, parameter path and smoke evidence exist. Keep WASP base repair separate. |
+
 ## Repair Flows
 
 ### MHQ Repair

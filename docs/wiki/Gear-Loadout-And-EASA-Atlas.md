@@ -83,6 +83,8 @@ Evidence:
 
 The visible template list also filters by current gear upgrade (`Client_UI_Gear_FillTemplates.sqf:15-22`). Higher-upgrade saved templates can be valid but hidden until the side upgrades gear again; support/debug docs should distinguish hidden-by-upgrade from deleted profile data.
 
+Template creation has a separate UX/support trap. `Client_UI_Gear_AddTemplate.sqf:34-132` rejects foreign weapons, magazines and backpack items when `WFBE_Allow_HostileGearSaving` is false, then exits with a generic "foreign equipment" hint at `:132`. It can also reject an otherwise well-formed template when its max upgrade is above current gear or barracks level (`:150`). Because the current source initializes `WFBE_Allow_HostileGearSaving = true` in `Init_Client.sqf:10`, this foreign-equipment refusal is a dormant/config-sensitive behavior in the checked-in profile, not the default live path. If that flag is ever tightened, add clearer UI copy and smoke hostile gear, backpacks, saved profile rows and higher-upgrade templates together.
+
 ## EASA Runtime
 
 EASA is the aircraft loadout system. It is not an Arma 3 pylon system; it is Arma 2 OA weapon/magazine mutation.

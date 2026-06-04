@@ -20,6 +20,8 @@ Use it when you need to understand why the mission looks the way it does, who sh
 
 The upstream welcome page describes the mission as an Arma 2 OA CTI/Warfare project initially revised by the WASP team and continued by the Miksuu community. The current `rayswaynl/a2waspwarfare` wiki builds on that history rather than replacing it.
 
+The public upstream repo snapshot is useful as a culture anchor, not a release ledger: the project presents itself as development from a 2018 Benny's Warfare base, with Miksuu-era development beginning in June 2023 and older pre-2016 work attributed in upstream prose to Spayker-era history. The public GitHub surface is light on formal releases, so practical history lives in commits, branches, Discord/Trello-style notes and imported wiki pages more than in GitHub Releases.
+
 For implementation decisions, treat this lineage as context, not proof of current runtime behavior. Current technical claims still need source, branch and mission-target evidence.
 
 ## Community-driven development model
@@ -69,6 +71,18 @@ Do not treat `Arma2Warfare GPT`, `Mr. James`, `Contributor`, `Game Admin` or `Ve
 | Performance experiments | Server FPS, headless clients, hardware and view-distance notes are historically important but need current runtime proof. |
 | Tool-assisted generated missions | Treat source mission, maintained Vanilla target and historical modded propagation as different scopes. |
 | AI assistance | AI can accelerate archaeology and docs, but source verification is a project norm, not paperwork. |
+
+### Upstream Process Capsule
+
+The imported [Development process](Miksuu-Wiki-Archive-Development-Process) page gives a compact picture of how the mission was actually developed upstream:
+
+| Upstream practice | Lesson for current developers and agents |
+| --- | --- |
+| SQF had no breakpoint-driven workflow, so developers leaned on `WFBE_CO_FNC_LogContent` and official SQF docs. | Prefer small, targeted diagnostics and source-path evidence. Remove or gate noisy logs before release. |
+| LoadoutManager was easier to evolve than SQF because it is C# and could encode repeatable generation logic. | Treat generator changes as source-of-truth edits, then inspect generated mission diffs instead of hand-editing generated outputs. |
+| GPT-4 and Trello were used for complex LoadoutManager work and patch-note generation. | AI assistance is historically normal here, but every claim still needs source/branch/runtime scoping. |
+| Feature work used per-feature branches merged into a test branch, with fixes made back on the feature branch. | Keep branch-only docs explicit; do not flatten test-branch or feature-branch behavior into stable-master truth. |
+| Performance issues often came from always-running server/client loops, and scaling HC/server cores helped live performance. | Treat loop edits, headless delegation and runtime-performance claims as smoke-required; source shape alone is not enough. |
 
 ## Upstream and Decision-Ledger Gap
 

@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T10:55:00+02:00",
+    "generatedAt":  "2026-06-04T11:15:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -20,8 +20,8 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Source-checked and documented the server SideMessage HQ-radio pipeline in Server Gameplay Runtime Atlas, Feature Status and Development Lessons. The new section distinguishes SideMessage kbTell payload families from the LocalizeMessage client PVF/chat/economy-effect path. Validation passed for this scoped docs batch.",
-                                 "nextExpectedOutput":  "Continue documentation finisher loop with the next bounded source-backed docs item."
+                                 "currentWork":  "Harvested fallback scout reports after Spark quota blocked new GPT-5.3-Codex-Spark starts. Added non-duplicate construction/UI/integration/community details to owning pages and coordination files. Validation and mirror parity passed.",
+                                 "nextExpectedOutput":  "Commit and push the fallback scout wave docs batch, then continue documentation finisher loop."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -37,12 +37,18 @@
                               },
                    "Sub-agents":  {
                                       "status":  "closed",
-                                      "currentLane":  "spark-scout-wave-zargabad-refresh-and-deep-scouts",
-                                      "currentWork":  "Scout wave returned. One broad UI Spark overflowed and was relaunched as a gpt-5.4-mini fallback after Spark quota hit. Useful non-duplicate findings were source-checked and harvested; remaining results mostly confirmed existing canonical pages.",
+                                      "currentLane":  "fallback-scout-wave-construction-ui-integrations-community",
+                                      "currentWork":  "Spark quota blocked all six fresh GPT-5.3-Codex-Spark starts, so Codex closed them and relaunched four gpt-5.4-mini read-only fallback scouts. All four returned and were harvested; no pending scout output remains.",
                                       "nextExpectedOutput":  "No pending scout output remains from this batch."
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "fallback-scout-wave-construction-ui-integrations-community",
+                            "owner":  "Codex/Sub-agents",
+                            "status":  "published-validated",
+                            "output":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked six starts until 13:06, so Codex launched four gpt-5.4-mini fallback scouts for construction, UI, tooling/integrations and community/upstream history. Harvested non-duplicate additions into Construction/CoIn, External Integrations, Community & Dev, Gear/Loadout/EASA and Player UI Workflow. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. Most other scout findings confirmed existing canonical pages. No gameplay source changed."
+                        },
                         {
                             "lane":  "server-sidemessage-runtime-pipeline",
                             "owner":  "Codex",

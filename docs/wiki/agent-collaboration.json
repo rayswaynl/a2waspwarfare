@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T10:55:00+02:00",
+    "generatedAt":  "2026-06-04T11:15:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,27 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "fallback-scout-wave-construction-ui-integrations-community",
+                             "owner":  "Codex/Sub-agents",
+                             "status":  "published-validated",
+                             "sourceScope":  [
+                                                 "Construction/CoIn base-area and repair-state ownership",
+                                                 "Client UI map-click, command, gear-template and dialog surfaces",
+                                                 "DiscordBot runtime/config/deployment details",
+                                                 "Miksuu upstream wiki development-process archive"
+                                             ],
+                             "outputs":  [
+                                             "Closed six failed Spark starts after GPT-5.3-Codex-Spark quota blocked the requested scout wave.",
+                                             "Launched and harvested four gpt-5.4-mini read-only fallback scouts.",
+                                             "Added construction state ownership synthesis to Construction-And-CoIn-Systems-Atlas.",
+                                             "Added Discord GatewayIntents.All deployment caveat to External-Integrations.",
+                                             "Added upstream process capsule to Community-And-Dev.",
+                                             "Added gear-template creation refusal semantics and map-click modifier behavior to player/UI docs.",
+                                             "docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed."
+                                         ],
+                             "handoff":  "After push, treat this fallback scout wave as closed. Future scout waves should avoid Spark until quota resets or use gpt-5.4-mini for cheap read-only discovery."
+                         },
                          {
                              "lane":  "server-sidemessage-runtime-pipeline",
                              "owner":  "Codex",

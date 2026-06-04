@@ -36,6 +36,8 @@ No token is committed, which is good. Still, treat the sample identifiers and ha
 
 The bot currently blocks forever through `await Task.Delay(-1)` in `ProgramRuntime.cs:59-60`, without an explicit cancellation/shutdown path in that method. That is acceptable for a simple long-running process, but process managers should stop it externally and future code should add a real cancellation token before expecting graceful shutdown.
 
+Deployment also depends on Discord application permissions beyond the local files. `DiscordBot/src/BotReference.cs:51-59` configures the client with `GatewayIntents.All`, so a real bot needs the matching Discord privileged intents enabled on the application. Treat missing gateway intents as an environment/deployment failure until proven otherwise; it is not an Arma mission runtime bug.
+
 The `/cleanup` command uses a heuristic over the last 50 channel messages and deletes bot-authored embeds whose title contains `Chernarus`/`Takistan` or whose description contains `Score:` (`CommandHandler.cs:138-148`). That can over-delete older or related bot status embeds if the channel is shared. Prefer a stored status-message id or a narrower marker before relying on `/cleanup` in mixed channels.
 
 ### Discord Data Path Risk

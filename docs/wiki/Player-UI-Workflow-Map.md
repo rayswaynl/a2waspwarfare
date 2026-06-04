@@ -55,6 +55,10 @@ Canonical implementation pages remain [Client UI systems atlas](Client-UI-System
 | Stale upgrade dialog | `RscMenu_Upgrade` points at missing `Client/GUI/GUI_Menu_Upgrade.sqf`; live path is `WFBE_UpgradeMenu`. | Remove or repoint only with UI smoke. |
 | Hardcoded UI text | New-player hint (`Init_Client.sqf:958`), HUD tooltips (`Rsc/Dialogs.hpp:1208-1227`), buy-unit/gear hints, artillery ammo hints and WASP `RECOVER HQ`. | Move only in a dedicated localization pass; keep source copy stable during behavior patches. |
 
+## Map-Click Modifier Model
+
+The player map-click layer has more behavior than a plain `onMapSingleClick` grep suggests. `Init_Client.sqf:241-244` tracks Ctrl separately because Arma's map-click callback exposes Shift and Alt but not Ctrl; `Client_HandleMapSingleClick.sqf:19-90` uses Ctrl-click to disband a nearby AI from the player's group; `:95-164` handles plain-click selection behavior; `:165-173` stores leader shift-click move orders for newly spawned units; and `:174-179` preserves the debug teleport branch on plain clicks when `WF_Debug` is enabled. Smoke map UX with Ctrl, Shift, plain click, selected units and debug mode separately; they are intentionally multiplexed through one handler.
+
 ## Manual UI Smoke
 
 1. Join a fresh client and confirm the loading blackout clears, briefing appears, side/stack checks complete and the WF menu hint is visible.
