@@ -161,6 +161,24 @@ Gateway page: use [Economy, towns and supply](Economy-Towns-And-Supply) for the 
 
 Important parameters live in the resource loop: `WFBE_C_ECONOMY_INCOME_SYSTEM`, `WFBE_C_ECONOMY_INCOME_INTERVAL`, `WFBE_C_ECONOMY_INCOME_COEF`, `WFBE_C_ECONOMY_INCOME_DIVIDED`, `WFBE_C_ECONOMY_CURRENCY_SYSTEM`, `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` and side-logic `wfbe_commander_percent`.
 
+Current stable tuning constants worth checking before balance work:
+
+| Constant | Current value / source | Development meaning |
+| --- | --- | --- |
+| `WFBE_C_ECONOMY_CURRENCY_SYSTEM` | `0` at `Init_CommonConstants.sqf:151` | Funds plus side supply are both active. |
+| `WFBE_C_ECONOMY_INCOME_SYSTEM` | `3` at `Init_CommonConstants.sqf:156` | Commander-percent income split is the default. |
+| `WFBE_C_ECONOMY_SUPPLY_SYSTEM` | `1` at `Init_CommonConstants.sqf:161` | Supply increases automatically over time. |
+| `WFBE_C_ECONOMY_INCOME_COEF` / `WFBE_C_ECONOMY_INCOME_DIVIDED` | `8` / `1.2` at `Init_CommonConstants.sqf:162-163` | Town SV income is multiplied, then divided for commander/player split behavior. |
+| `WFBE_C_ECONOMY_INCOME_PERCENT_MAX` | `30` at `Init_CommonConstants.sqf:164` | Commander income UI should not exceed 30 percent without a balance decision. |
+| `WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT` | `40000`, or `900000` in debug, at `Init_CommonConstants.sqf:160` | Global economy supply ceiling differs sharply between debug and normal play. |
+| `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` | `50000` at `Init_CommonConstants.sqf:166` | Team supply cap is also used by attack-wave pricing assumptions. |
+| `WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER` | `20` at `Init_CommonConstants.sqf:167` | Supply mission rewards multiply town SV by this factor. |
+| `WFBE_C_AI_COMMANDER_MOVE_INTERVALS` / `WFBE_C_AI_COMMANDER_SUPPLY_TRUCKS_MAX` | `3600` / `5` at `Init_CommonConstants.sqf:96-97` | AI commander movement and supply-truck behavior are intentionally slow/coarse. |
+| `WFBE_C_AI_DELEGATION_FPS_INTERVAL` / `WFBE_C_AI_DELEGATION_FPS_MIN` / `WFBE_C_AI_DELEGATION_GROUPS_MAX` | `180` / `25` / `1` at `Init_CommonConstants.sqf:98-100` | Delegation is conservative: clients report every 3 minutes and can receive one group only when FPS is high enough. |
+| `WFBE_C_PLAYERS_AI_MAX` / `WFBE_C_PLAYERS_SQUADS_MAX_PLAYERS` | `16` / `4` at `Init_CommonConstants.sqf:243,264` | Player AI followers and human squad membership are separate caps. |
+
+Factory buy-cap note: the buy menu derives infantry queue capacity from `WFBE_C_PLAYERS_AI_MAX` and barracks upgrade level, then adds `+10` for the commander team and later Soldier role skill can scale the current cap by 1.5x. Vehicle crew can consume the same queue capacity when crew is bought with the vehicle. Use [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance) and [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas) before changing these numbers.
+
 `Common_StagnateSupplyIncomeNoPlayers.sqf` is a supply-income modifier that uses AntiStack database side-skill calls first; if a side has no skill data and no players, it increments no-player ticks and can reduce supply income. It publishes `TEAM_WEST_TICKS_NO_PLAYERS` and `TEAM_EAST_TICKS_NO_PLAYERS` (`Common/Functions/Common_StagnateSupplyIncomeNoPlayers.sqf:38-68`).
 
 Risk notes:

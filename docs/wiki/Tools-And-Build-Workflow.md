@@ -97,7 +97,7 @@ This is the operational summary of DR-32's three maintenance tiers. Use it befor
 | Project | Runtime | Entry point | Inputs | Outputs / side effects | Notes |
 | --- | --- | --- | --- | --- | --- |
 | `Tools/LoadoutManager` | .NET 8 executable | `Program.cs` -> `SqfFileGenerator.GenerateCommonBalanceInitAndTheEasaFileForEachTerrain()` | Terrain/loadout data classes, source Chernarus mission, terrain skip lists. | Generated `EASA_Init.sqf`, `Common_BalanceInit.sqf`, aircraft-name helper, per-terrain `version.sqf`, copied Takistan mission and optional `_MISSIONS.7z`. | Accepts named-root or repo-marker root discovery; set `A2WASP_SKIP_ZIP=1` to skip packaging. |
-| `Tools/PerformanceAuditAnalyzer` | PowerShell | `Analyze-PerformanceAudit.ps1`, GUI launcher | Existing Arma RPT/log files containing `[Performance Audit]`. | CSV, Markdown, HTML and Word-friendly performance reports. | Safe read-only analyzer for logs; no shipped live tailer service was found in the tree. |
+| `Tools/PerformanceAuditAnalyzer` | PowerShell | `Analyze-PerformanceAudit.ps1`, GUI launcher | Existing Arma RPT/log files containing `[Performance Audit]`. | CSV, Markdown, HTML and Word-friendly performance reports. | Safe read-only analyzer for logs; no shipped live tailer service was found in the tree. See [PerformanceAuditAnalyzer](PerformanceAuditAnalyzer). |
 | `DiscordBot` | .NET 9 executable | `DiscordBot/src/ProgramRuntime.cs` | `preferences.json`, `token.txt`, extension `database.json`. | Discord channel name, bot presence and status embed updates every 60 seconds. | Missing token/preferences are expected in repo; active status reads `Preferences.Instance.DataSourcePath` or the default data path, while `FileConfiguration.cs` is secondary until config ownership is cleaned up. |
 | `Extension` | .NET Framework 4.8 x86 Arma extension | `_RVExtension@12` export | Arma `callExtension` arguments from mission scripts. | Writes `C:\a2waspwarfare\Data\database.json` for DiscordBot. | Legacy Visual Studio/MSBuild target using `RGiesecke.DllExport`/`UnmanagedExports` from `../packages`; preserve x86. |
 | `Mods/mkswf_sidewinder_reload_time_fix` | Arma addon config | `CfgWeapons.hpp` | Sidewinder launcher class config. | Sets `magazineReloadTime = 1` for Sidewinder launchers. | External addon fragment, not mission SQF. |
@@ -111,6 +111,8 @@ This is the operational summary of DR-32's three maintenance tiers. Use it befor
 | `Extension/Extension.csproj` | `dotnet build -v minimal` failed locally with `MSB3644`: .NET Framework 4.8 reference assemblies were not found. | Treat as local toolchain missing targeting pack, not proof the legacy extension source is broken. Use Visual Studio/MSBuild with the .NET Framework 4.8 developer pack and x86/package layout before release claims. |
 
 ## PerformanceAuditAnalyzer
+
+Dedicated page: [PerformanceAuditAnalyzer](PerformanceAuditAnalyzer).
 
 `Tools/PerformanceAuditAnalyzer` parses existing Arma 2 RPT/log files containing `[Performance Audit]` and exports CSV/Markdown/HTML/Word-friendly reports. It has a GUI picker plus command-line script, but the current tree does not ship a live RPT tailer or background telemetry service.
 

@@ -224,7 +224,7 @@ PVF dispatch mechanics:
 
 PV function files outside the standard PVF command lists:
 
-- `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` exists in current source/Vanilla, but `HandleParatrooperMarkerCreation` is still missing from `_clientCommandPV`; see [Paratrooper marker revival](Paratrooper-Marker-Revival) for the patch shape, smoke plan and modded-mission drift.
+- `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` exists in current source/Vanilla and `HandleParatrooperMarkerCreation` is now registered in `_clientCommandPV` before `NukeIncoming`. The remaining work is Arma smoke and modded-mission drift; see [Paratrooper marker revival](Paratrooper-Marker-Revival).
 - `Server/PVFunctions/AttackWave.sqf` and `Server/Functions/Server_AttackWave.sqf` are compiled directly in server init rather than through the standard PVF command list (`Init_Server.sqf:94-95`). `WFBE_CO_FNC_LogGameEnd` is wired to `Server/Functions/Server_LogGameEnd.sqf` at `Init_Server.sqf:64` and `:89`; the `Server/PVFunctions/LogGameEnd.sqf` twin exists as the DR-13 cleanup target but is not the live compile target.
 
 ## Direct Public Variable Channels

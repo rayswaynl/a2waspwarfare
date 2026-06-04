@@ -21,7 +21,7 @@ A reader/agent would wrongly skip a still-live bug. Source verified still unpatc
 | `SERVER_FPS_GUI` lives in `Server/Module/serverFPS/serverFpsGUI.sqf` | It is `Server/GUI/serverFpsGUI.sqf:7`; `Server/Module/serverFPS/` holds only `monitorServerFPS.sqf` (the separate `WFBE_VAR_SERVER_FPS` channel). | `Server/GUI/serverFpsGUI.sqf:7` |
 | `ATTACK_WAVE_DETAILS` is **server → clients** | `Server_AttackWave.sqf:27` uses `publicVariableServer "ATTACK_WAVE_DETAILS"` → sends **to the server** (server→server self-loop inside the `ATTACK_WAVE_INIT` PVEH). Clients get effects indirectly via the `AttackWave.sqf` PVEH's HandleSpecial/LocalizeMessage dispatches. | `Server/Functions/Server_AttackWave.sqf:27` |
 | AFK channel handler at `Client/Module/AFK/monitorAFK.sqf` | Directory is `AFKkick`, not `AFK`. | `Client/Module/AFKkick/monitorAFK.sqf` |
-| Client-bound count "15"; list range `:25-40` | 14 client-bound commands; data range `:25-39` (line 40 blank). | `Common/Init/Init_PublicVariables.sqf:25-39` |
+| Client-bound count "15"; list range `:25-40` | **Resolved by current source.** `_clientCommandPV` has 15 active entries at `Common/Init/Init_PublicVariables.sqf:25-40`; `HandleParatrooperMarkerCreation` is present at `:39` and `NukeIncoming` is present at `:40`. | `Common/Init/Init_PublicVariables.sqf:25-40` |
 
 ## C. MEDIUM — file:line drift / wrong compile target
 | Page | Claim | Source reality | Ref |

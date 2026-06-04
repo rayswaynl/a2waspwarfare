@@ -50,11 +50,13 @@ Each command is compiled into either `SRVFNC...` or `CLTFNC...`, and `WFBE_PVF_<
 
 These wrappers are preferred over hand-coded public variable dispatch for new features.
 
+Transport is not authority. `publicVariable`, `publicVariableServer` and `publicVariableClient` only decide how a value moves; they do not prove who was allowed to request the effect. Treat client-authored request/state packets such as `CLIENT_INIT_READY`, `WFBE_C_PLAYER_OBJECT`, `WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH`, `WFBE_Client_PV_IsSupplyMissionActiveInTown`, `WFBE_Client_PV_SupplyMissionStarted`, `REQUEST_SUPPLY_VALUE`, `SUPPLY_VALUE_REQUESTED`, `MARKER_CREATION`, `SERVER_FPS_GUI` and `WFBE_VAR_SERVER_FPS` as transport channels whose receiver still needs explicit trust, replay and timeout rules.
+
 ## Direct Public Variables
 
 Some systems use explicit public-variable channels outside the generic PVF list. The canonical inventory is [Public variable channel index](Public-Variable-Channel-Index), including registered `WFBE_PVF_*` commands, direct channels, source anchors and notable findings.
 
-Why this matters: direct channels such as `ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS`, `SEND_MESSAGE`, supply mission PVs, side-supply temp variables, side-supply mirror state (`wfbe_supply_WEST` / `wfbe_supply_EAST`), MASH marker channels, HQ marker/state broadcasts, AntiStack compensation, server FPS and AFK kick are not automatically covered by a future PVF dispatcher fix. Treat them as separate review targets when hardening the network layer. DR-46 proves this is not only theoretical: `SEND_MESSAGE` compiles direct-PV payload text on receiving clients, and its common helper has the same local compile branch before broadcast.
+Why this matters: direct channels such as `ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS`, `SEND_MESSAGE`, supply mission PVs, side-supply temp variables, side-supply mirror state (`wfbe_supply_WEST` / `wfbe_supply_EAST`), MASH marker channels, request/reply state channels, HQ marker/state broadcasts, AntiStack compensation, server FPS and AFK kick are not automatically covered by a future PVF dispatcher fix. Treat them as separate review targets when hardening the network layer. DR-46 proves this is not only theoretical: `SEND_MESSAGE` compiles direct-PV payload text on receiving clients, and its common helper has the same local compile branch before broadcast.
 
 ### Direct PV Hardening Order
 
