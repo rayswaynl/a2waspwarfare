@@ -1,0 +1,119 @@
+# Tooling Release Readiness Audit
+
+This page records the current tooling, generated-mission, integration and release-readiness map from source. Use it before claiming generated propagation, packaging, public-server hardening, Discord/extension safety or release completeness.
+
+Canonical companion pages are [Tools/build workflow](Tools-And-Build-Workflow), [Source fix propagation queue](Source-Fix-Propagation-Queue), [`agent-release-readiness.json`](agent-release-readiness.json), [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow), [Mission parameters/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs), [External integrations](External-Integrations), [Integration trust boundary audit](Integration-Trust-Boundary-Audit) and [AntiStack DB audit](AntiStack-Database-Extension-Audit).
+
+## Tooling Architecture Map
+
+| Area | Current source state |
+| --- | --- |
+| Source mission | `Missions/[55-2hc]warfarev2_073v48co.chernarus` is the edit source; `CLAUDE.md:10` and `Testing-Debugging-And-Release-Workflow.md:7` agree. |
+| LoadoutManager entry | `.NET 8`; `Tools/LoadoutManager/Program.cs:6` calls `SqfFileGenerator.GenerateCommonBalanceInitAndTheEasaFileForEachTerrain()`. |
+| Active propagation | Current generator writes Chernarus and Vanilla Takistan: `Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs:128-129`. |
+| Inactive modded propagation | Modded write call is commented and TODO remains: `SqfFileGenerator.cs:132-133`; packaging only includes `Missions` and `Missions_Vanilla` at `ZipManager.cs:16`. |
+| Generated outputs | EASA init, balance init, aircraft-name helper, damage-model insert, `Sounds/description.ext` and per-terrain `version.sqf`: `BaseTerrain.cs:32-102`, `:346-364`. |
+| Fresh-checkout generated input | `version.sqf` is included by mission files but git-ignored: `.gitignore:1`, `:23`; `description.ext:39`; `initJIPCompatible.sqf:4`. |
+| Takistan copy rules | `FileManager.ShouldSkipFile()` excludes `mission.sqm`, `version.sqf`, help, `texHeaders.bin`, `StartVeh.sqf`, non-modded `loadScreen.jpg`: `FileManager.cs:89-101`. |
+| Takistan blacklist | Directory blacklist includes `Textures`, `Server\Config`, `Core_Artillery`: `FileManager.cs:20-36`. |
+| Current comparable drift | Read-only spot check found Chernarus -> Takistan comparable drift bounded to expected map/asset extras plus `Server/Init/Init_Server.sqf` `SET_MAP` `1` vs `2` at about `:613`. |
+| Modded drift posture | Modded folders remain divergent/stub/fork-like; do not treat them as maintained generated outputs while `SqfFileGenerator.cs:132-133` remains commented. 2026-06-03 scout evidence adds a harder gate: all tracked modded folders lack generated `version.sqf`, several lack core bootstrap/sound/music files, and Napf/Eden/Lingor contain 18 unresolved conflict-marker files. |
+| PerformanceAuditAnalyzer | Read-only RPT parser for `[Performance Audit]`, `SID`, legacy sessions and CSV/HTML/Markdown reports: `Tools/PerformanceAuditAnalyzer/Analyze-PerformanceAudit.ps1:14-18`, `:282`, `:1295`, `:1361-1393`. |
+
+## Release Consistency Findings
+
+| Priority | Finding | Evidence | Action |
+| --- | --- | --- | --- |
+| P1 | Canonical release ledger says the five tracked source fixes are Chernarus source-patched, maintained Vanilla propagated and Arma smoke pending. | `agent-release-readiness.json:33-44`, `:54-130`; `Source-Fix-Propagation-Queue.md:25-45`; `Feature-Status-Register.md:40`, `:111`, `:118`, `:126` | Treat runtime smoke, not propagation, as the remaining release gate. |
+| P1 | `agent-status.json` still has stale prose for some propagated lanes. | Status rows around the propagated fix lanes say Vanilla propagation pending while release readiness says propagated. | Update wording to "Vanilla propagated; Arma smoke pending" in the next status cleanup. |
+| P1 | Fresh-checkout boot/package hazard is real. | `version.sqf` is git-ignored/generated but included by mission boot files. | Add a machine-readable release gate for generated `version.sqf`. |
+| P1 | Docs CI validates wiki structure, not build/drift/security. | `.github/workflows/docs.yml:25-46`; `docs/validate-wiki.ps1:63-111` | Add separate build/drift/security checks rather than overloading docs validation. |
+| P2 | Modded release posture is cautious and source-consistent. | `Tools-And-Build-Workflow.md:63`, `:72-74`; `agent-release-readiness.json:13-118`; `SqfFileGenerator.cs:132-133`; `ZipManager.cs:16`; `rg -l "<<<<<<<|=======|>>>>>>>" Modded_Missions` finds 18 files. | Keep Modded_Missions out of generated-propagation claims unless generation is intentionally restored and conflict/bootstrap cleanup is validated. The agent ledger now splits source, maintained generated, branch-only candidate, divergent fork and skeletal/stub tiers. |
+| P2 | Packaging and replacement paths have operator-footgun behavior. | `ZipManager.cs:77-92` does not gate success on the `7za` exit code; `BaseTerrain.cs:275-301` warns on missing replacement files but still reads the missing path. | Add exit-code checks and fail-fast missing-file handling before relying on tool output as release evidence. |
+| P2 | Packaging can remove the last archive before proving the new archive exists. | `ZipManager.cs:26-33` deletes the existing `_MISSIONS.7z`; `ZipManager.cs:34-46` creates a temporary copy tree; `ZipManager.cs:77-92` does not gate on the 7-Zip exit code. | Keep rollback copies, add try/finally temp cleanup, and fail packaging on non-zero `7za` exit before release use. |
+| P2 | Aircraft damage generation depends on a marker contract. | `BaseTerrain.cs:84-86` registers `Common_ModifyAirVehicle.sqf` for generated insertion; `FileManager.cs:224-247` logs missing marker content instead of failing. | Add a release validator for marker presence or fail generation when required insertion content is absent. |
+| P3 | Takistan directory blacklist depends on target path naming. | `FileManager.cs:22-37` applies `Core_Artillery`, `Server\Config` and `Textures` blacklist behavior when the destination path contains `co.takistan`. | Re-test blacklist behavior before renaming generated target directories or adding new terrain folder patterns. |
+
+## Integration Risk Table
+
+| Boundary | Trust issue | Risk | Source refs |
+| --- | --- | --- | --- |
+| DiscordBot JSON intake | Reads `database.json` with `TypeNameHandling.All` despite a flat DTO. | High local-write-gated RCE in token-holding bot process. | `DiscordBot/src/ExtensionData/GameData/GameData.cs:32-56`; `GameStatusUpdater.cs:9`, `:84`; `CommandHandler.cs:211`; `ProgramRuntime.cs:15`. |
+| DiscordBot config/secrets | `token.txt` and `preferences.json` are ignored; sample contains real-looking IDs and prod-style paths. `Preferences.cs:24-30` reads/deserializes `preferences.json` without a guard and suppresses possible null return, while command/status paths assume a non-null instance. | Low/medium governance and reliability issue, no token committed. Add fail-fast config validation before installing Discord handlers. | `DiscordBot/.gitignore:7`, `:9`; `preferences_sample.json:3-8`; `Preferences.cs:24-43`; `GameStatusUpdater.cs:60-61`; `CommandHandler.cs:49,127`. |
+| DiscordBot server-info display | JSON controls map/player count/channel name; invalid map/player shape can break updates. | Medium reliability/spoofing inside trusted data path. | `GameData.cs:80-156`; `GameStatusUpdater.cs:92-119`. |
+| DiscordBot presence timeout | Channel rename passes a cancel token, but `SetGameAsync` sits inside a timeout-looking block without receiving the token. `/setup` also calls `SetGameAsync` directly. | Medium reliability issue if Discord presence update hangs from either timer or command setup path. | `GameStatusUpdater.cs:91-106`; `CommandHandler.cs:70-75`. |
+| `GLOBALGAMESTATS` extension | SQF output discarded, enum-gated selector, `TypeNameHandling.None`; but hardcoded path, `async void`, `File.Replace` race and stale arg shapes remain. | Medium reliability, low current SQF-RCE risk. | `GlobalGameStats.sqf:20-22`; `ExtensionMethods.cs:10-35`; `SerializationManager.cs:12-55`; `GameData.cs:29`. |
+| GlobalGameStats data shape | SQF sends class name plus west score, east score, map, uptime and player count; the extension DTO defaults `exportedArgs` to two strings and the Discord DTO defaults four while reading index `4`. | Medium fixture/contract drift risk; player count also subtracts one assumed HC before export. | `GlobalGameStats.sqf:20-22`; `Extension/src/GameData.cs:29`; `DiscordBot/src/ExtensionData/GameData/GameData.cs:30`, `:80-82`, `:112-114`. |
+| AntiStack DB extension | Separate absent `A2WaspDatabase`; default enabled; wrappers `call compile` extension strings and assume array shape. | High deployment/runtime trust risk. | `Init_CommonConstants.sqf:171`; `Parameters.hpp:547-551`; `callDatabaseRetrieve.sqf:24-40`; `callDatabaseRequestSideTotalSkill.sqf:30-64`; `callDatabaseSendPlayerList.sqf:58-65`. |
+| BattlEye filters | Shipped filter is AFK `kickAFK` plumbing only; no `scripts.txt`, `server.cfg` or `basic.cfg` bundle. | Medium release-claim risk, not comprehensive public-server hardening. | `BattlEyeFilter/publicvariable.txt:2`; `Client/FSM/updateclient.sqf:153-160`; `External-Integrations.md:96-104`. |
+| Deployment inventory | Actual server deployment still needs artifact/config locations for `a2waspwarfare_Extension`, separate `A2WaspDatabase`, DiscordBot secrets/preferences, production `BEpath` and external `server.cfg`/`basic.cfg` if used. | Medium reproducibility risk. | `Integration-Trust-Boundary-Audit.md#deployment-inventory-gate`; `Tools-And-Build-Workflow.md#operator-checklist`. |
+| Missing wrapper scripts | A scoped scan found no `.cmd`, `.ps1`, `.bat` or `.sh` files under `Tools/LoadoutManager`, `DiscordBot`, `Extension` or `BattlEyeFilter`. | Low/medium operator-expectation risk: release flow is direct tool invocation/manual deployment, not a hidden script pipeline. | `Tools-And-Build-Workflow.md#operator-checklist`; scout query `rg --files Tools/LoadoutManager DiscordBot Extension BattlEyeFilter -g "*.ps1" -g "*.cmd" -g "*.bat" -g "*.sh"`. |
+
+## GlobalGameStats Fixture Contract
+
+Wave P mapped the intended five-slot export contract after the class name:
+
+| Slot | Meaning | Evidence |
+| ---: | --- | --- |
+| 0 | BLUFOR score | `GlobalGameStats.sqf:22`; `DiscordBot/src/ExtensionData/GameData/GameData.cs:167-170` |
+| 1 | OPFOR score | `GlobalGameStats.sqf:22`; `GameData.cs:167-170` |
+| 2 | map / terrain enum string | `GlobalGameStats.sqf:22`; `GameData.cs:149-156` |
+| 3 | uptime seconds | `GlobalGameStats.sqf:22`; `GameData.cs:184-189` |
+| 4 | player count | `GlobalGameStats.sqf:20-22`; `GameData.cs:80-82`, `:112-114` |
+
+Recommended normal fixture:
+
+```json
+{
+  "exportedArgs": ["12", "9", "CHERNARUS", "3661", "7"]
+}
+```
+
+Expected assertions: Discord displays BLUFOR score `12`, OPFOR score `9`, terrain `CHERNARUS`, uptime from slot `3`, player count `7`, and Chernarus max player display `55`. Hardening should also stop collapsing empty CSV fields (`ArrayTools.cs:10` uses `RemoveEmptyEntries`), replace one-HC subtraction with explicit HC filtering, and read JSON with `TypeNameHandling.None`.
+
+## Validation Commands
+
+```powershell
+# Existing structural docs check.
+.\docs\validate-wiki.ps1
+
+# Fresh-checkout ignored/generated file check.
+git ls-files --others --ignored --exclude-standard
+
+# Propagation in a scratch/CI workspace, then inspect diffs.
+$env:A2WASP_SKIP_ZIP = "1"
+dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj
+
+# Build gates worth adding outside docs validation.
+dotnet build Tools\LoadoutManager\LoadoutManager.csproj -c DEBUG
+dotnet build DiscordBot\DiscordBot.csproj
+
+# Security grep gates.
+rg -n "TypeNameHandling\.(All|Auto)" DiscordBot Extension
+rg -n '"A2WaspDatabase" callExtension|call compile' Missions/*/Server/Module/AntiStack
+
+# BattlEye claim gate.
+rg --files | rg "(^|/)(publicvariable\.txt|scripts\.txt|server\.cfg|basic\.cfg)$"
+```
+
+## Backlog Seeds
+
+| Priority | Correction |
+| --- | --- |
+| P1 | Update stale `agent-status.json` lane prose to "Vanilla propagated; Arma smoke pending." |
+| P1 | Add `versionSqfGeneratedInput` or equivalent to `agent-release-readiness.json`. |
+| P1 | Add generated drift checker to CI or a separate release validator. |
+| Done 2026-06-04 | Expanded `agent-release-readiness.json` generated targets from wildcard `Modded_Missions/*` to tiered states: source Chernarus, maintained Vanilla Takistan, branch-only Zargabad candidate, divergent forks, hard-boot-blocked forks and skeletal/overlay stubs. |
+| P2 | Record current Takistan comparable drift and modded drift posture in [Tools/build workflow](Tools-And-Build-Workflow) or [Source fix propagation queue](Source-Fix-Propagation-Queue). |
+| P2 | Add GlobalGameStats fixture tests for the five-slot contract documented above, plus malformed/empty-field and no-HC/multi-HC cases. |
+| P2 | Note that `DiscordBot/FileConfiguration.cs` exists while active status JSON reader uses `Preferences.Instance.DataSourcePath ?? C:\a2waspwarfare\Data`. |
+| P2 | Choose and document ownership for `botconfig.json` versus `preferences.json`; do not leave both looking authoritative. |
+| P2 | Add a LoadoutManager packaging validator for `_MISSIONS.7z` existence, mission folder membership and non-zero `7za` exit handling. |
+| P3 | Add a marker-contract validator for generated aircraft damage insertion before changing `Common_ModifyAirVehicle.sqf`. |
+| P3 | Replace concrete `preferences_sample.json` snowflakes with placeholders. |
+
+## Continue Reading
+
+Previous: [Tools/build workflow](Tools-And-Build-Workflow) | Next: [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow)
+
+Related: [External integrations](External-Integrations) | [Integration trust boundary audit](Integration-Trust-Boundary-Audit) | [AntiStack DB audit](AntiStack-Database-Extension-Audit)

@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-02T21:58:14+02:00",
-  "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
+  "generatedAt": "2026-06-04T20:05:00+02:00",
+  "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
     "humanDashboard": "Progress-Dashboard.md",
@@ -9,436 +9,137 @@
     "worklog": "Agent-Worklog.md",
     "collaborationState": "agent-collaboration.json",
     "knowledgeRecords": "agent-knowledge.jsonl",
+    "developmentLessons": "Development-Lessons-Learned.md",
+    "developmentLessonRecords": "agent-development-lessons.jsonl",
     "eventFeed": "agent-events.jsonl",
     "repoContext": "agent-context.json",
-    "bottleneckQueue": "Bottleneck-Removal-Queue.md",
     "releaseReadiness": "agent-release-readiness.json",
-    "currentSourceStatus": "Current-Source-Status-Snapshot.md",
-    "currentSourceStatusKnowledge": "agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851",
-    "currentSourceStatusEvent": "agent-events.jsonl#current-source-status-pointer-refresh-2026-06-02-1851",
-    "wikiMirrorReconciliation": "Wiki-Mirror-Reconciliation-Plan.md"
+    "agentEntryPoint": "agent-entrypoint.json"
   },
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "bottleneck-reducer-progress-accelerator",
-      "currentWork": "Maintaining source-backed docs, machine-readable backlog/context and progress surfaces; recent pass added first-read active-claim collision guidance and removed ambiguous PVF params wording while preserving Codex-2's object lifecycle command-reference claim.",
-      "nextExpectedOutput": "Continue bottleneck coordination, parity checks after scoped syncs and handoff routing; leave active command-reference/compatibility claim files to their owner unless sign-off or user redirection is recorded."
+      "currentLane": "documentation-finisher-loop",
+      "currentWork": "Dashboard open-item cleanup is validated and the remote release-target scout push is preserved: Progress-Dashboard is compact, Coverage Ledger sidebar/mailbox routing is closed, stale review rows are reclassified, machine state is compact, and docs/wiki validation passed.",
+      "nextExpectedOutput": "Commit and push the validated wiki/mirror cleanup, then continue bounded source-backed wiki maintenance as needed."
     },
     "Codex-2": {
-      "status": "active",
-      "currentLane": "oa-object-lifecycle-command-addendum",
-      "currentWork": "Source-backed OA object lifecycle/create/delete/init command addendum for createVehicle/createUnit/deleteVehicle/setVehicleInit/processInitCommands/hideObject/enableSimulation patterns.",
-      "nextExpectedOutput": "Complete or hand off the OA object lifecycle command addendum, then update agent-collaboration.json activeClaims and validation records."
+      "status": "ready",
+      "currentLane": "none",
+      "currentWork": "Factory queue cleanup and related patch-ready pages are published; source-code work remains for future code owners.",
+      "nextExpectedOutput": "Pick a bounded source-backed lane such as PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening."
     },
     "Claude": {
       "status": "autonomous-ready",
       "currentLane": "collaboration-follow-autonomous-ready",
-      "currentWork": "Latest recorded deep-review finding is DR-45 (town-AI passenger-vehicle deletion); Claude is in collaboration-follow/autonomous-ready mode and should read current-source snapshot plus Codex handoffs before the next source-backed review.",
-      "nextExpectedOutput": "Read shared state, follow Codex handoffs/current-source truth first, then continue the next source-backed review or implementation-readiness pass without importing Arma 3-only assumptions."
+      "currentWork": "Coverage Ledger navigation request is closed; Claude can continue from the wired Codebase-Coverage-Ledger page when active.",
+      "nextExpectedOutput": "Self-select the next bounded source-backed review from Coverage Ledger or the hardening backlog."
+    },
+    "Sub-agents": {
+      "status": "none-canonical",
+      "currentLane": "follow-up-leads-only",
+      "currentWork": "No active canonical sub-agent wave is being treated as evidence. The release-target scout wave is published/validated/pushed into agent-release-readiness, UI and tooling docs; prior interrupted/error scout threads are non-evidence until relaunched or finalized.",
+      "nextExpectedOutput": "Relaunch narrowly before promotion; keep raw scout detail in Subagent-Discovery-Swarm and agent-events.jsonl."
     }
   },
   "laneSummary": [
     {
-      "lane": "oa-object-lifecycle-command-addendum",
-      "owner": "Codex-2",
-      "status": "active-docs-source-crosscheck",
-      "output": "Active command-reference addendum covering OA-safe object lifecycle/create/delete/init primitives and A3-only global/deletion false-friend warnings."
+      "lane": "documentation-finisher-loop",
+      "owner": "Codex",
+      "status": "active-ongoing",
+      "output": "Keep wiki/status pages current from source evidence, compact the dashboard, and publish scoped validation batches."
     },
     {
-      "lane": "oa-config-params-command-addendum",
-      "owner": "Codex-2",
-      "status": "archived-published-validated",
-      "output": "Archived command-reference addendum covering OA-safe config and mission-parameter lookup primitives with A3-only config-helper warnings; not a live claim."
-    },
-    {
-      "lane": "oa-role-locality-command-addendum",
-      "owner": "Codex-2",
+      "lane": "dashboard-open-item-cleanup",
+      "owner": "Codex",
       "status": "published-validated",
-      "output": "Archived command-reference addendum covering OA-safe role/locality primitives and A3-only locality false-friend warnings; repo validation and active wiki mirror parity passed."
+      "output": "Progress Dashboard debloated, Coverage Ledger nav request closed, stale review rows reclassified and compact machine state refreshed. No gameplay source changed."
     },
     {
-      "lane": "oa-script-execution-scheduler-command-addendum",
-      "owner": "Codex-2",
+      "lane": "spark-scout-wave-release-targets-hc-ai-caps-economy",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated-pushed",
+      "output": "Steff asked for more Spark scouts. Codex launched six GPT-5.3-Codex-Spark read-only scouts and recycled completed slots into tooling/integrations plus mission lifecycle/init. Returned reports confirmed existing Player AI caps, HC failover/static-defense/FPS and economy/town/supply findings without duplicating prose. The new durable deltas are generated mission release tiering in agent-release-readiness.json and missing old-upgrade-dialog wf_*.paa asset routing in UI pages. Validation/parity passed and content pushed as docs 058427d3 / wiki 4b72809. No gameplay source changed."
+    },
+    {
+      "lane": "ai-commander-branch-head-refresh-and-spark-scout-wave",
+      "owner": "Codex/Sub-agents",
       "status": "published-validated",
-      "output": "Archived command-reference addendum covering OA-safe script execution and scheduler primitives with A3-only contrast warnings."
+      "output": "origin/feat/ai-commander is c20ce153, source-Chernarus-only with no maintained Vanilla changes; origin/codex/quad-ai-commander is d4e0fa38 concept/report evidence only. Scout notes remain leads until source-checked."
     },
     {
-      "lane": "wiki-mirror-reconciliation-plan",
-      "owner": "Codex",
-      "status": "published-active-parity-restored",
-      "output": "Wiki-Mirror-Reconciliation-Plan.md defines the file-by-file no-blind-copy policy; active _wasp_wiki_tmp parity now passes across 93 files after scoped sync, while older _wasp_wiki_claude divergence remains historical/alternate-checkout inventory."
-    },
-    {
-      "lane": "bottleneck-reducer-progress-accelerator",
-      "owner": "Codex",
-      "status": "active-docs-process-bottleneck-removal",
-      "output": "Bottleneck-Removal-Queue.md ranks P0/P1/P2 drag, next five actions, returned-report harvest queue and validation gates; dashboard/coordination surfaces route to it."
-    },
-    {
-      "lane": "commander-page-current-state-reconcile",
-      "owner": "Codex",
-      "status": "published-patch-ready-current-source-unpatched",
-      "output": "Superseded: 14:35 re-check found current source/Vanilla still carry DR-15 call-shape and duplicate notification."
-    },
-    {
-      "lane": "docs-platform-scaffold-state-correction",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Knowledge-Platform-Roadmap.md now treats Tools/ValidateWiki.ps1 as the active validator, Tools/TestWikiParity.ps1 as the post-sync mirror parity gate, and keeps MkDocs/Pages/docs CI future-only; missing resistance/UI route pages and agent-feature-status.jsonl were restored for current links"
-    },
-    {
-      "lane": "home-current-map-dedup",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Home.md Current Map now has shorter runtime, cleanup, risk, authority and documentation-quality route rows; LLM-Agent-Entry-Pack.md, llms.txt and validation/page parity were restored"
-    },
-    {
-      "lane": "commander-reassignment-call-shape",
-      "owner": "Codex-2",
-      "status": "published-patch-ready-current-source-unpatched",
-      "output": "Commander-Reassignment-Call-Shape.md reflects current source still assigns _side = _this and still has the duplicate caller-side notification; source patch, Vanilla propagation, Arma smoke and requester/role validation remain."
-    },
-    {
-      "lane": "factory-queue-counter-token-cleanup",
-      "owner": "Codex-2",
-      "status": "published-patch-ready-current-source-unpatched",
-      "output": "Factory-Queue-Counter-Token-Cleanup.md reflects current source/Vanilla still use random varQueu token identity and still exit crewless vehicles before normal queue decrement; Arma smoke and public queu broadcast review remain."
-    },
-    {
-      "lane": "wiki-quality-dup8-construction-routing",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Deep-Review-Findings.md DR-6 owns exact construction-authority proof; Construction-And-CoIn-Systems-Atlas.md owns runtime map and safe extension checklist; Gameplay, Feature Status, Hardening roadmap and Server authority map now route instead of repeating class-existence evidence"
-    },
-    {
-      "lane": "wiki-quality-dup7-supply-cooldown-routing",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Supply-Mission-Architecture.md owns cooldown/JIP flow and state-owner map; Deep-Review-Findings.md DR-18 owns exact casing evidence; Economy, Server runtime, Feature Status and Hardening roadmap now route there instead of repeating the mismatch"
-    },
-    {
-      "lane": "wiki-quality-dup4-generated-mission-routing",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Tools-And-Build-Workflow.md owns operational LoadoutManager skip-list/generated-mission rules; Deep-Review-Findings.md DR-4/DR-32 own full drift evidence; Content structure now routes instead of duplicating"
-    },
-    {
-      "lane": "wiki-quality-dup6-lifecycle-routing",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Lifecycle-Wait-Chain.md owns lifecycle flags, boot ordering, JIP waits and HC wait hazards; Server runtime and SQF atlas now keep concise routing/owner summaries"
-    },
-    {
-      "lane": "wiki-quality-dup9-victory-routing",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Deep-Review-Findings.md DR-11/DR-36 now own victory/endgame double-fire detail; Server runtime, Hardening roadmap and Feature Status keep short routing summaries"
-    },
-    {
-      "lane": "wiki-quality-dup5-battleye-routing",
-      "owner": "Codex",
-      "status": "published",
-      "output": "External-Integrations.md now owns shipped BattlEye posture; Feature Status, Networking/PV, Hardening roadmap and Server authority map route there instead of repeating DR-30 evidence"
-    },
-    {
-      "lane": "icbm-authority-playbook-routing",
-      "owner": "Codex",
-      "status": "published",
-      "output": "ICBM-Authority-Playbook.md is the canonical DR-27 implementation guide; roadmap, authority map, feature status and navigation route there"
-    },
-    {
-      "lane": "performance-opportunity-sweep",
-      "owner": "Codex-2",
-      "status": "published",
-      "output": "Performance-Opportunity-Sweep.md ranked performance opportunity handoff plus client-skill-init-idempotency backlog item"
-    },
-    {
-      "lane": "wiki-quality-merge1-authority-routing",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Hardening-Implementation-Roadmap.md now owns canonical patch order, branch discipline and validation gates; Server-Authority-Migration-Map.md owns authority principles, flow table and handler checklist"
-    },
-    {
-      "lane": "wiki-quality-dup10-hc-routing",
-      "owner": "Codex",
-      "status": "published",
-      "output": "AI-Headless-And-Performance.md now keeps a concise HC runtime source router; Lifecycle-Wait-Chain.md owns HC boot timing only; Headless-Delegation-And-Failover-Playbook.md owns DR-21/DR-42 patch policy"
-    },
-    {
-      "lane": "external-arma2-reference-guide",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Arma-2-OA-External-Reference-Guide.md maps official BI OA docs to Wasp PV/PVEH, JIP, object-var, event-handler, object-scan and performance hotspots"
-    },
-    {
-      "lane": "abandoned-feature-revival-review",
-      "owner": "Codex-2",
-      "status": "published",
-      "output": "Abandoned-Feature-Revival-Review.md revive/remove decision matrix"
-    },
-    {
-      "lane": "wiki-quality-c3-gameplay-followups",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Gameplay-Systems-Atlas.md now has source-backed resolved follow-ups for DR-15, wfbe_structures_logic, build drift, live stagnation and range-global ownership"
-    },
-    {
-      "lane": "wiki-quality-dup11-pv-channel-index",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Public-Variable-Channel-Index.md is the canonical direct-PV inventory; Networking and SQF atlas now cross-link instead of duplicating tables"
-    },
-    {
-      "lane": "wiki-quality-merge3-lifecycle-split",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Mission-Entrypoints-And-Lifecycle.md owns include graph/role dispatch; Lifecycle-Wait-Chain.md owns boot ordering, JIP waits and global flag dependencies"
-    },
-    {
-      "lane": "wiki-quality-merge2-ui-quickref",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Client-UI-HUD-And-Menus.md is now a source-anchored quick router; Client-UI-Systems-Atlas.md remains the canonical implementation map"
-    },
-    {
-      "lane": "wiki-quality-reduce4-gameplay-gateway",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Gameplay-Systems-Atlas.md now routes detailed economy, construction and factory mechanics to canonical atlases while preserving source-backed orientation anchors"
-    },
-    {
-      "lane": "wiki-quality-c6-gameplay-citations",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Gameplay-Systems-Atlas.md now has path:line anchors for town init/capture/AI, economy, commander, upgrades, construction, factories and attack-wave production"
-    },
-    {
-      "lane": "supply-mission-authority-cleanup-playbook",
-      "owner": "Codex-2",
-      "status": "published",
-      "output": "Supply-Mission-Authority-Cleanup-Playbook.md turns truck and PR #1 helicopter supply flows, cargo/reward trust, cooldown casing, dead twin code and idempotency into a patch-ready playbook"
-    },
-    {
-      "lane": "wiki-quality-c6-ai-citations",
-      "owner": "Codex",
-      "status": "published",
-      "output": "AI-Headless-And-Performance.md now has path:line anchors for HC bootstrap, registry, delegation, disconnect, town-AI cleanup, server FPS and GetSleepFPS"
-    },
-    {
-      "lane": "economy-authority-first-cut",
-      "owner": "Codex-2",
-      "status": "published",
-      "output": "Economy-Authority-First-Cut.md and side-supply-clamp-first backlog item"
-    },
-    {
-      "lane": "wiki-quality-c6-ui-citations",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Client-UI-HUD-And-Menus.md now has path:line source anchors for dialogs, Rsc includes, RHUD/FPS and respawn marker tracking"
-    },
-    {
-      "lane": "wiki-quality-c4-victory-searchability",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Feature-Status-Register.md and Hardening-Implementation-Roadmap.md now cite DR-11 for the victory/endgame winner inversion bug"
-    },
-    {
-      "lane": "wiki-quality-c2-atlas-crosslinks",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Gameplay, Client UI, AI/headless, Construction and Mission lifecycle atlas pages now link directly to canonical DR findings"
-    },
-    {
-      "lane": "pvf-dispatch-implementation-playbook",
-      "owner": "Codex-2/Codex",
-      "status": "published",
-      "output": "PVF-Dispatch-Implementation-Playbook.md is mirrored and linked from Home/sidebar/footer/dashboard/context"
-    },
-    {
-      "lane": "wiki-quality-nav-c5",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Home/_Sidebar/_Footer and agent-context.json now expose Variable-And-Naming-Conventions, Public-Variable-Channel-Index, Modules-Atlas, Pending-Owner-Decisions and Wiki-Quality-Audit; Current Work sidebar duplicates removed"
-    },
-    {
-      "lane": "wiki-quality-c1-mash-networking",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Networking-And-Public-Variables.md now cites DR-34 for dead MASH marker networking and no longer describes the server relay as live"
-    },
-    {
-      "lane": "dashboard-current-state-cleanup",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Progress-Dashboard.md current-state-first cleanup"
-    },
-    {
-      "lane": "lifecycle-runtime-readout",
-      "owner": "Codex/Anscombe",
-      "status": "verified-published",
-      "output": "Mission-Entrypoints-And-Lifecycle.md, Lifecycle-Wait-Chain.md"
-    },
-    {
-      "lane": "testing-debugging-release-workflow",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Testing-Debugging-And-Release-Workflow.md, agent-test-plan.schema.json"
-    },
-    {
-      "lane": "agent-hardening-backlog-and-wave-f-integration",
-      "owner": "Codex",
-      "status": "published",
-      "output": "agent-hardening-backlog.jsonl, external-research-report-manifest.json, Wave F harvest docs"
-    },
-    {
-      "lane": "implementation-hardening-planning",
-      "owner": "Codex/future-code-owner",
-      "status": "published",
-      "output": "Hardening-Implementation-Roadmap.md plus agent-hardening-backlog.jsonl"
-    },
-    {
-      "lane": "town-ai-vehicle-despawn-safety",
-      "owner": "future-code-owner",
-      "status": "playbook-published",
-      "output": "Town-AI-Vehicle-Despawn-Safety.md, Feature-Status-Register.md, AI-Headless-And-Performance.md, agent-hardening-backlog.jsonl"
+      "lane": "fresh-background-spark-scout-wave-buy-menu-harvest",
+      "owner": "Codex/background Spark threads",
+      "status": "published-validated-pushed",
+      "output": "Five completed reports mostly confirmed canonical docs; interrupted/error threads are not evidence. Buy-menu driver-default profile key split was promoted and routed."
     },
     {
       "lane": "autonomous-claude-research",
       "owner": "Claude",
-      "status": "open",
-      "output": "Claude may continue with bounded source-backed reviews"
+      "status": "autonomous-ready",
+      "output": "Coverage Ledger is linked from Home, footer, llms, agent-context and sidebar; Claude may self-select bounded source-backed reviews."
     },
     {
       "lane": "feature-status-reconciliation",
       "owner": "Codex/future-agent",
-      "status": "open",
-      "output": "Keep confirmed findings reflected in owning atlas/risk pages"
+      "status": "watchlist",
+      "output": "Fold newly confirmed findings into Feature Status, owner pages and machine files; no untriaged dashboard blocker remains."
     },
     {
-      "lane": "server-authority-migration-map",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Server-Authority-Migration-Map.md source-backed migration guide for client-trusted authority flows"
+      "lane": "implementation-hardening-from-backlog",
+      "owner": "future-code-owner",
+      "status": "owner-decision-code-lane",
+      "output": "Pick implementation work from agent-hardening-backlog.jsonl only when Steff asks for gameplay patches or a code owner claims it."
     },
     {
-      "lane": "attack-wave-authority-dr41",
-      "owner": "Claude/Codex",
-      "status": "playbook-published",
-      "output": "Attack-Wave-Authority-Playbook.md plus cross-links through Networking/PV, Hardening roadmap, Server authority map, Economy, Feature status and agent-hardening-backlog.jsonl"
+      "lane": "testing-debugging-release-workflow",
+      "owner": "Codex/future-tester",
+      "status": "published-release-gate",
+      "output": "Use Testing-Debugging-And-Release-Workflow.md and agent-test-plan.schema.json for future source/propagation/Arma smoke evidence."
     },
     {
-      "lane": "markdown-research-report-intake",
-      "owner": "Codex",
-      "status": "published",
-      "output": "External-Research-Reports.md and external-research-report-manifest.json now track nine Markdown reports as research leads"
-    },
-    {
-      "lane": "dr42-dr43-reconciliation",
-      "owner": "Codex",
-      "status": "published",
-      "output": "AI/headless, Feature status, Hardening roadmap, Deep Review Findings, Agent Worklog and agent-hardening-backlog.jsonl updated for DR-42 and corrected DR-43 duplicate-bind count"
-    },
-    {
-      "lane": "hc-delegation-failover-playbook",
-      "owner": "Codex",
-      "status": "published",
-      "output": "Headless-Delegation-And-Failover-Playbook.md plus links from Home/sidebar/footer/AI/headless/roadmap/dashboard/context"
-    },
-    {
-      "lane": "client-skill-init-idempotency",
-      "owner": "Codex-2",
-      "status": "published-patch-ready-current-source-unpatched",
-      "output": "Client-Skill-Init-Idempotency.md reflects current source/Vanilla still call Skill_Init.sqf at Init_Client.sqf:547 and :571, then WFBE_SK_FNC_Apply at :572; source patch, Vanilla propagation and Arma smoke remain."
-    },
-    {
-      "lane": "hosted-server-fps-loop-sleep",
-      "owner": "Codex-2",
-      "status": "published-patch-ready-current-source-unpatched",
-      "output": "Hosted-Server-FPS-Loop-Sleep.md reflects current source/Vanilla still enter both FPS publisher loops before checking isDedicated; source patch, Vanilla propagation and Arma smoke remain."
-    },
-    {
-      "lane": "supply-mission-scan-narrowing",
-      "owner": "Codex-2",
-      "status": "published-patch-ready-current-source-unpatched",
-      "output": "Supply-Mission-Scan-Narrowing.md reflects current source/Vanilla still use nearestObjects [..., [], 80] for the command-center scan before filtering; Arma smoke and broader supply authority cleanup remain."
+      "lane": "source-propagated-smoke-pending",
+      "owner": "future-tester-release-owner",
+      "status": "smoke-pending",
+      "output": "Client skill init, hosted FPS, supply scan and paratrooper marker lanes are tracked on owner pages and Feature Status; not active dashboard cleanup blockers."
     },
     {
       "lane": "wasp-marker-wait-cleanup",
-      "owner": "Codex-2",
-      "status": "published-patch-ready-current-source-unpatched",
-      "output": "WASP-Marker-Wait-Cleanup.md documents current source/Vanilla still use the sleepless display-54 wait; source patch, Vanilla propagation and Arma marker smoke remain."
+      "owner": "future-code-owner",
+      "status": "source-needs-code",
+      "output": "Tiny wait/backoff patch remains documented in WASP-Marker-Wait-Cleanup.md."
     }
   ],
-  "queuedReports": [
-    {
-      "lane": "scout-wave-k-j-validation-residue",
-      "priority": "Plan published",
-      "target": "Subagent-Discovery-Swarm.md / Progress-Dashboard.md / Wiki-Mirror-Reconciliation-Plan.md / agent-status.json",
-      "nextAction": "No further scout-harvest action; active _wasp_wiki_tmp mirror/wiki parity passes, and Wiki-Mirror-Reconciliation-Plan.md remains the policy for future drift."
-    },
-    {
-      "lane": "dr44-direct-supply-forgery-crosslinks",
-      "priority": "Closed",
-      "target": "Economy-Towns-And-Supply.md / Networking-And-Public-Variables.md / Public-Variable-Channel-Index.md / Server-Gameplay-Runtime-Atlas.md / Feature-Status-Register.md",
-      "nextAction": "No further harvest action; keep detailed proof in Deep-Review-Findings.md and avoid duplicating it."
-    },
-    {
-      "lane": "dr20-hq-killed-crosslinks",
-      "priority": "Closed",
-      "target": "Construction-And-CoIn-Systems-Atlas.md / Gameplay-Systems-Atlas.md / Server-Gameplay-Runtime-Atlas.md",
-      "nextAction": "No further docs action; concise routes already exist from construction, gameplay and server-runtime pages."
-    },
-    {
-      "lane": "string-selection-command-traps",
-      "priority": "Closed",
-      "target": "agent-compatibility-audit.json",
-      "nextAction": "No further docs action; agent-compatibility-audit.json and Arma-2-OA-Compatibility-Audit.md already carry the trap."
-    }
-  ],
+  "queuedReports": [],
   "updateProtocol": [
     "Before substantial work, update agent-collaboration.json and append a claim event to agent-events.jsonl.",
     "For long work, append heartbeat events with current source scope.",
     "For source-backed issues, append finding events and add Agent-Worklog.md notes.",
-    "When done, append complete or handoff events and update dashboard/status files if visible progress changed."
+    "When done, append complete or handoff events and update dashboard/status files if visible progress changed.",
+    "Keep historic batch detail in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl instead of expanding this compact status file."
   ],
   "quickLinks": {
     "wiki": "https://github.com/rayswaynl/a2waspwarfare/wiki",
     "progressDashboard": "Progress-Dashboard.md",
+    "coordinationBoard": "Coordination-Board.md",
     "discoverySwarm": "Subagent-Discovery-Swarm.md",
-    "externalResearchReports": "External-Research-Reports.md",
-    "externalResearchManifest": "external-research-report-manifest.json",
-    "networking": "Networking-And-Public-Variables.md",
-    "externalIntegrations": "External-Integrations.md",
-    "battlEyePosture": "External-Integrations.md#battleye-filter",
-    "hardeningRoadmap": "Hardening-Implementation-Roadmap.md",
+    "codebaseCoverageLedger": "Codebase-Coverage-Ledger.md",
+    "featureStatus": "Feature-Status-Register.md",
     "hardeningBacklog": "agent-hardening-backlog.jsonl",
     "collaborationProtocol": "Agent-Collaboration-Protocol.md",
+    "collaborationState": "agent-collaboration.json",
+    "agentContext": "agent-context.json",
     "knowledgeRecords": "agent-knowledge.jsonl",
     "events": "agent-events.jsonl",
     "worklog": "Agent-Worklog.md",
-    "townAiVehicleSafety": "Town-AI-Vehicle-Despawn-Safety.md",
-    "lifecycleWaitChain": "Lifecycle-Wait-Chain.md",
     "testingWorkflow": "Testing-Debugging-And-Release-Workflow.md",
-    "agentTestPlanSchema": "agent-test-plan.schema.json",
     "serverAuthorityMap": "Server-Authority-Migration-Map.md",
-    "claudeLoopGoal": "Claude-Loop-Goal.md",
+    "pvfDispatchPlaybook": "PVF-Dispatch-Implementation-Playbook.md",
     "attackWaveAuthority": "Attack-Wave-Authority-Playbook.md",
     "icbmAuthority": "ICBM-Authority-Playbook.md",
-    "attackWaveBacklog": "agent-hardening-backlog.jsonl#attack-wave-authority",
-    "pvfDispatchPlaybook": "PVF-Dispatch-Implementation-Playbook.md",
-    "economyAuthorityFirstCut": "Economy-Authority-First-Cut.md",
-    "abandonedFeatureRevival": "Abandoned-Feature-Revival-Review.md",
-    "performanceOpportunitySweep": "Performance-Opportunity-Sweep.md",
-    "clientSkillInitIdempotency": "Client-Skill-Init-Idempotency.md",
-    "hostedServerFpsLoopSleep": "Hosted-Server-FPS-Loop-Sleep.md",
-    "supplyMissionScanNarrowing": "Supply-Mission-Scan-Narrowing.md",
-    "waspMarkerWaitCleanup": "WASP-Marker-Wait-Cleanup.md",
-    "factoryQueueCleanup": "Factory-Queue-Counter-Token-Cleanup.md",
-    "currentSourceStatusSnapshot": "Current-Source-Status-Snapshot.md",
-    "bottleneckRemovalQueue": "Bottleneck-Removal-Queue.md",
-    "releaseReadiness": "agent-release-readiness.json",
+    "aiCommanderAutonomyAudit": "AI-Commander-Autonomy-Audit.md",
+    "currentSourceStatus": "Current-Source-Status-Snapshot.md",
     "bottleneckQueue": "Bottleneck-Removal-Queue.md",
-    "claimArchive": "agent-collaboration.json#archivedClaims"
+    "wikiMirrorReconciliation": "Wiki-Mirror-Reconciliation-Plan.md"
   }
 }

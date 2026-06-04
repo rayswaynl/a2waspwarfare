@@ -1,42 +1,748 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-02T20:20:00+02:00",
-  "status": "not-release-ready-docs-only",
-  "basis": "Created because the mission brief names agent-release-readiness.json but no such file existed in docs/wiki before this bottleneck pass.",
-  "currentSourceTruth": "Current-Source-Status-Snapshot.md",
-  "readinessBlockers": [
+  "generatedAt": "2026-06-04T19:35:05+02:00",
+  "lastVerifiedAt": "2026-06-04T19:35:05+02:00",
+  "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
+  "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
+  "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+  "generatedTargets": [
     {
-      "priority": "P0",
-      "id": "false-patched-status-history",
-      "summary": "Older append-only records still contain superseded source/Vanilla patched claims; current source snapshot says the disputed cleanup lanes are unpatched or opportunity-only.",
-      "nextAction": "Keep current-source truth centralized and require direct source+Vanilla evidence plus OA smoke before patched wording returns."
+      "path": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+      "tier": "authoritative-source",
+      "status": "edit-source-mission",
+      "releaseGate": "Edit here first, then prove maintained generated targets carry intended fixes before release wording."
     },
     {
-      "priority": "P0",
-      "id": "server-authority-hardening",
-      "summary": "PVF dispatch, ICBM RequestSpecial and side-supply authority remain open hardening work.",
-      "nextAction": "Use agent-hardening-backlog.jsonl and Pending-Owner-Decisions.md; do not claim public-server readiness before owner-approved patches and negative tests."
+      "path": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+      "tier": "maintained-generated",
+      "status": "maintained-generated-target",
+      "maintenanceModel": "LoadoutManager writes/copied outputs for Vanilla Takistan while preserving documented terrain skips and SET_MAP differences.",
+      "releaseGate": "Run or inspect LoadoutManager propagation, verify generated version.sqf, inspect generated diffs and smoke Arma 2 OA before release wording."
     },
     {
-      "priority": "P1",
-      "id": "runtime-smoke-pending",
-      "summary": "Commander, factory, paratrooper, skill init, hosted FPS, supply scan and WASP marker lanes require Arma 2 OA smoke after source patches.",
-      "nextAction": "Patch source Chernarus first, propagate generated Vanilla where applicable, then record hosted/dedicated/JIP smoke."
+      "path": "origin/feature/zargabad-map:Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad",
+      "tier": "branch-only-candidate-generated",
+      "status": "not-in-stable-master-candidate-target",
+      "releaseGate": "Use the Zargabad branch audit; static validation passed on e9294ede, but runtime, screenshot, RPT, HC/JIP and whitespace gates remain open."
     },
     {
-      "priority": "P1",
-      "id": "mirror-validation",
-      "summary": "Docs validation and wiki parity gates exist but must be run after each docs/wiki sync.",
-      "nextAction": "Run docs/validate-wiki.ps1, Tools/TestWikiParity.ps1 and mirror Tools/ValidateWiki.ps1 -SkipGitDiffCheck after sync."
+      "path": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+      "tier": "divergent-boot-incomplete-fork",
+      "status": "not-release-target",
+      "fileCount": 502,
+      "conflictMarkerHits": 27,
+      "missingBootstrap": [
+        "version.sqf",
+        "loadScreen.jpg"
+      ],
+      "blockers": [
+        "modded generation call remains commented in Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs:132",
+        "ZipManager packages Missions and Missions_Vanilla only at Tools/LoadoutManager/ZipManager.cs:16",
+        "tracked version.sqf, stringtable.xml, loadScreen.jpg, Sounds/description.ext and Music/description.ext are absent",
+        "unresolved conflict markers exist in Client/Action/Action_RepairMHQ.sqf, Client/Module/Skill/* and Common/Config/Core_Structures/Structures_CO_RU.sqf",
+        "Common/Init/Init_Common.sqf compiles Common/Functions/Common_GetTotalCamps.sqf, but that helper is absent in the tracked fork"
+      ],
+      "releaseGate": "Regenerate or repair bootstrap, generated inputs, missing helpers and conflict markers before treating as runnable."
+    },
+    {
+      "path": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+      "tier": "hard-boot-blocked-fork",
+      "status": "not-release-target",
+      "fileCount": 438,
+      "conflictMarkerHits": 48,
+      "missingBootstrap": [
+        "mission.sqm",
+        "description.ext",
+        "initJIPCompatible.sqf",
+        "version.sqf",
+        "loadScreen.jpg"
+      ],
+      "blockers": [
+        "tracked description.ext and mission.sqm are absent",
+        "tracked initJIPCompatible.sqf, version.sqf, stringtable.xml, loadScreen.jpg, Sounds/description.ext and Music/description.ext are absent",
+        "unresolved conflict markers exist in Client/Client_UpdateRHUD.sqf, Client/Module/Nuke/nukeincoming.sqf and several Common/Config roots",
+        "Common/Init/Init_Common.sqf compiles Common/Functions/Common_GetTotalCamps.sqf, but that helper is absent in the tracked fork"
+      ],
+      "releaseGate": "Treat as archival or regenerate from a known-good terrain profile before any pack/test claim."
+    },
+    {
+      "path": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+      "tier": "divergent-boot-incomplete-fork",
+      "status": "not-release-target",
+      "fileCount": 507,
+      "conflictMarkerHits": 15,
+      "missingBootstrap": [
+        "mission.sqm",
+        "version.sqf",
+        "loadScreen.jpg"
+      ],
+      "blockers": [
+        "description.ext includes version.sqf, Sounds and Music, but tracked version.sqf, stringtable.xml, loadScreen.jpg, mission.sqm, Sounds/description.ext and Music/description.ext are absent",
+        "description.ext and multiple SQF/config files contain unresolved conflict markers",
+        "Common/Init/Init_Common.sqf compiles Common/Functions/Common_GetTotalCamps.sqf, but that helper is absent in the tracked fork"
+      ],
+      "releaseGate": "Resolve conflict markers, restore bootstrap/generated inputs and repair missing common helpers before any runnable claim."
+    },
+    {
+      "path": "Modded_Missions/[55-2hc]warfarev2_073v48co.smd_sahrani_a2",
+      "tier": "skeletal-stub",
+      "status": "not-release-target",
+      "fileCount": 4,
+      "conflictMarkerHits": 0,
+      "missingBootstrap": [
+        "mission.sqm",
+        "description.ext",
+        "initJIPCompatible.sqf",
+        "version.sqf",
+        "loadScreen.jpg"
+      ],
+      "blockers": [
+        "tracked folder is an overlay/stub, not a complete mission root",
+        "core mission bootstrap and generated inputs are absent from the tracked folder"
+      ],
+      "releaseGate": "Either regenerate into a complete mission root or document as retired/archive-only."
+    },
+    {
+      "path": "Modded_Missions/[55-2hc]warfarev2_073v48co.tavi",
+      "tier": "skeletal-stub",
+      "status": "not-release-target",
+      "fileCount": 3,
+      "conflictMarkerHits": 0,
+      "missingBootstrap": [
+        "description.ext",
+        "initJIPCompatible.sqf",
+        "version.sqf",
+        "loadScreen.jpg"
+      ],
+      "blockers": [
+        "tracked folder is an overlay/stub, not a complete mission root",
+        "core mission bootstrap and generated inputs are absent from the tracked folder"
+      ],
+      "releaseGate": "Either regenerate into a complete mission root or document as retired/archive-only."
+    },
+    {
+      "path": "Modded_Missions/[61-2hc]warfarev2_073v48co.dingor",
+      "tier": "overlay-stub",
+      "status": "not-release-target",
+      "fileCount": 20,
+      "conflictMarkerHits": 0,
+      "missingBootstrap": [
+        "mission.sqm",
+        "initJIPCompatible.sqf",
+        "version.sqf",
+        "briefing.sqf",
+        "loadScreen.jpg"
+      ],
+      "blockers": [
+        "description.ext includes version.sqf, but tracked version.sqf is absent",
+        "mission.sqm, initJIPCompatible.sqf, server init and Sounds are absent from the tracked folder"
+      ],
+      "releaseGate": "Restore complete bootstrap and generated inputs before calling Dingor runnable."
+    },
+    {
+      "path": "Modded_Missions/[61-2hc]warfarev2_073v48co.isladuala",
+      "tier": "skeletal-stub",
+      "status": "not-release-target",
+      "fileCount": 1,
+      "conflictMarkerHits": 0,
+      "missingBootstrap": [
+        "mission.sqm",
+        "description.ext",
+        "initJIPCompatible.sqf",
+        "version.sqf",
+        "briefing.sqf",
+        "loadScreen.jpg"
+      ],
+      "blockers": [
+        "tracked folder is an overlay/stub, not a complete mission root",
+        "core mission bootstrap and generated inputs are absent from the tracked folder"
+      ],
+      "releaseGate": "Either regenerate into a complete mission root or document as retired/archive-only."
     }
   ],
-  "validationGates": [
-    "docs/validate-wiki.ps1",
-    "Tools/TestWikiParity.ps1",
-    "Tools/ValidateWiki.ps1 -SkipGitDiffCheck in the mirror after sync",
-    "git diff --check",
-    "LoadoutManager propagation after gameplay source edits",
-    "Arma 2 OA hosted/dedicated/JIP smoke after gameplay source edits"
+  "generatedTargetPolicy": {
+    "defaultReleaseScope": "Stable release claims cover source Chernarus plus maintained generated Vanilla Takistan unless a branch-specific audit says otherwise.",
+    "moddedReleaseGate": "Do not claim Modded_Missions support while modded generation is commented, packaging omits Modded_Missions, generated version.sqf files are absent and conflict/bootstrap blockers remain.",
+    "freshCheckoutGate": "Because version.sqf is git-ignored but included by mission boot files, every target mission root needs generated version.sqf verification before pack/test claims.",
+    "packagingScope": "While Tools/LoadoutManager/ZipManager.cs:16 remains unchanged, _MISSIONS.7z packaging is expected to include Missions and Missions_Vanilla, not Modded_Missions."
+  },
+  "toolingGate": {
+    "tool": "Tools/LoadoutManager",
+    "requirement": "Run from a checkout with either an ancestor folder named a2waspwarfare or repo-root markers: Missions, Missions_Vanilla and Tools/LoadoutManager/LoadoutManager.csproj.",
+    "skipZipForPropagationOnly": {
+      "environmentVariable": "A2WASP_SKIP_ZIP",
+      "acceptedValues": [
+        "1",
+        "true",
+        "yes"
+      ],
+      "effect": "Skips _MISSIONS.7z packaging after generation/copy."
+    },
+    "evidenceRefs": [
+      "Tools/LoadoutManager/FileManagement/FileManager.cs",
+      "Tools/LoadoutManager/ZipManager.cs",
+      "Source-Fix-Propagation-Queue.md#rule"
+    ],
+    "currentLocalCheckoutStatus": "runnable-from-normal-repo-root-marker-checkouts"
+  },
+  "latestLoadoutManagerPropagationRun": {
+    "checkedAt": "2026-06-02T16:18:32+02:00",
+    "checkedBy": "Codex",
+    "command": "$env:A2WASP_SKIP_ZIP = \"1\"; dotnet run --project Tools\\LoadoutManager\\LoadoutManager.csproj",
+    "scope": "Generated/copied Chernarus and maintained Vanilla Takistan on the docs/source branch after source fixes.",
+    "result": "All five tracked fixes are present in docs/source Chernarus and propagated to docs/source maintained Vanilla Takistan; this is not a stable-master or release-branch guarantee, and Arma 2 OA smoke remains pending.",
+    "packagingStatus": "skipped-by-A2WASP_SKIP_ZIP",
+    "nonFatalWarnings": [
+      {
+        "message": "The specified content was not found in the file.",
+        "likelySource": "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs ReplaceGUIMenuHelp -> ReplaceContentOnASpecificFile",
+        "impact": "Did not stop Chernarus/Takistan generation or the tracked fix propagation; treat as help-menu title replacement drift unless future evidence says otherwise."
+      }
+    ],
+    "canonicalDoc": "Source-Fix-Propagation-Queue.md#latest-propagation-run"
+  },
+  "globalReleaseRule": "A fix or branch feature is not release-complete until the target branch is named, Chernarus source carries the intended change, maintained Vanilla carries the same intended change when propagation matters, generated diffs are inspected and the relevant Arma 2 OA smoke is recorded.",
+  "branchOnlyFeaturePromotionGates": [
+    {
+      "id": "ai-commander-branch-revival",
+      "branch": "origin/feat/ai-commander",
+      "head": "c20ce153",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-not-stable-master-truth",
+      "sourceScope": "source-chernarus-only",
+      "canonicalDocs": [
+        "AI-Commander-Autonomy-Audit.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/master..origin/feat/ai-commander: 9 Chernarus source files +416/-5",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp:96 on origin/feat/ai-commander",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf:49-54,387-389,630-631 on origin/feat/ai-commander",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:29-81 on origin/feat/ai-commander",
+        "lazy-condition cleanup series b4b0333f..c20ce153 touches the five Server/AI/Commander/AI_Commander*.sqf scripts"
+      ],
+      "ownerDecision": "Accept or reject default-on AI commander and human-assist mode; decide autonomous logistics scope separately because the old UpdateSupplyTruck path is guarded, not restored.",
+      "promotionGate": "Propagate/review maintained Vanilla, then smoke no-human full command, human assist/no-spend, order execution, town assignment, production cap, upgrade debit/costs, commander handoff, HQ death and JIP before calling AI commander revived.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "dedicated-smoke",
+          "jip-smoke",
+          "hc-smoke"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "drone-saturation-strike-branch",
+      "branch": "origin/feat/drone-saturation-strike",
+      "head": "8ca4be90",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-paid-support-authority-open",
+      "sourceScope": "source-chernarus-only",
+      "canonicalDocs": [
+        "PR8-And-Drone-Upstream-Lesson-Match.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:243-263 on origin/feat/drone-saturation-strike",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_DroneStrike.sqf:1-14,16-18,46-52 on origin/feat/drone-saturation-strike",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf DroneStrike/ChangePlayerFunds/RequestSpecial on origin/feat/drone-saturation-strike"
+      ],
+      "ownerDecision": "Decide whether DroneStrike is a paid economy-affecting support. If yes, server must own acceptance, debit, cooldown, upgrade, caller/team/side and map validation.",
+      "promotionGate": "Move paid-support authority server-side, choose generated Vanilla propagation or explicit Chernarus-only scope, then smoke active cap cleanup, JIP cooldown, marker/audience behavior, resistance targeting, score effects and performance.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "dedicated-smoke",
+          "jip-smoke",
+          "live-server-sensitive"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "recon-uav-branch",
+      "branch": "origin/feat/recon-uav",
+      "head": "563418ea",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-old-uav-replacement-open",
+      "sourceScope": "source-chernarus-only",
+      "canonicalDocs": [
+        "PR8-And-Drone-Upstream-Lesson-Match.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf:63-82 on origin/feat/recon-uav",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_ReconUAV.sqf:1-22,83-102,119-132,140-151 on origin/feat/recon-uav",
+        "origin/feat/recon-uav deletes old Client/Module/UAV/uav*.sqf and Server/Support/Support_UAV.sqf",
+        "origin/feat/recon-uav includes drone history only through 93b47594, not origin/feat/drone-saturation-strike head 8ca4be90"
+      ],
+      "ownerDecision": "Decide whether ReconUAV replaces the old UAV feature or remains experimental.",
+      "promotionGate": "Resolve drone tuning baseline, then smoke old-UAV removal, deploy/recall, cap decrement, destroyed-UAV cleanup, side-only reveal audience, JIP during active orbit, HQ-loss cleanup and generated Vanilla propagation.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "dedicated-smoke",
+          "jip-smoke"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "wf-menu-ops-console-branch",
+      "branch": "origin/feat/wf-menu-ops-console",
+      "head": "0767c0b5",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-ui-theme-smoke-open",
+      "sourceScope": "source-chernarus-and-maintained-vanilla-plus-docs-superpowers",
+      "canonicalDocs": [
+        "Client-UI-Systems-Atlas.md#branch-only-ui-theme-work",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/master..origin/feat/wf-menu-ops-console: 23 files +1033/-154",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Styles.hpp:10-40 on origin/feat/wf-menu-ops-console",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Ressources.hpp:117-131,274-277 on origin/feat/wf-menu-ops-console",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp:1057-1064,1173-1179,1240-1249 on origin/feat/wf-menu-ops-console",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Titles.hpp:178-179 on origin/feat/wf-menu-ops-console",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan carries matching Rsc/Dialogs.hpp and Rsc/Styles.hpp branch changes",
+        "git diff --check origin/master..origin/feat/wf-menu-ops-console reports trailing whitespace in docs/superpowers/plans/2026-06-03-wf-menu-ops-console.md:78,179"
+      ],
+      "ownerDecision": "Decide whether the ops-console reskin is acceptable as the full UI theme and whether the branch's docs/superpowers planning artifacts should merge with the mission branch.",
+      "promotionGate": "Clean branch whitespace, verify bundled font names or choose fallbacks, smoke texture loading from Client\\images\\brand_chevron.jpg in a packed mission, inspect main menu/buy gear/buy units/upgrades/tactical/help/RHUD/FPS HUD, and confirm Chernarus plus maintained Vanilla parity before calling the branch release-ready.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-visual-smoke",
+          "packed-mission-smoke",
+          "vanilla-parity-smoke"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "buymenu-easa-qol-branch",
+      "branch": "origin/feat/buymenu-easa-qol",
+      "head": "a66d4691",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-ui-qol-smoke-open",
+      "sourceScope": "source-chernarus-only",
+      "canonicalDocs": [
+        "BuyMenu-EASA-QoL-Branch-Audit.md",
+        "Client-UI-Systems-Atlas.md#branch-only-ui-theme-work",
+        "Gear-Loadout-And-EASA-Atlas.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/feat/buymenu-easa-qol@a66d4691; merge-base origin/master@2cdf5fb8",
+        "origin/master..origin/feat/buymenu-easa-qol: 3 files +42/-6; all changed files are source Chernarus UI",
+        "git diff --check origin/master..origin/feat/buymenu-easa-qol is clean",
+        "git diff --name-only origin/master..origin/feat/buymenu-easa-qol -- Missions_Vanilla returns no changed files",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UIFillListBuyUnits.sqf:1,61-62,104 on origin/feat/buymenu-easa-qol",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf:201-210 on origin/feat/buymenu-easa-qol",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf:280,335,388,444,487 on origin/feat/buymenu-easa-qol",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_EASA.sqf:29-40 on origin/feat/buymenu-easa-qol"
+      ],
+      "ownerDecision": "Accept UI-only BuyMenu/EASA QoL and decide maintained Vanilla propagation.",
+      "promotionGate": "Smoke affordability price color versus full/crew price, final idc 12034 price after later writes, queue-tab refresh/no flicker and EASA visible/filtered/unset current-loadout cases before merge; propagate maintained Vanilla or explicitly accept Chernarus-only scope.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "client-ui-smoke",
+          "vanilla-parity-smoke"
+        ],
+        "canonicalDoc": "BuyMenu-EASA-QoL-Branch-Audit.md#promotion-gates"
+      }
+    },
+    {
+      "id": "player-stats-branch",
+      "branch": "origin/feat/player-stats",
+      "head": "e01e47e1",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-integration-and-privacy-open",
+      "sourceScope": "source-chernarus-plus-discordbot-tests",
+      "canonicalDocs": [
+        "Player-Stats-Branch-Audit.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/master..origin/feat/player-stats: 23 files +1919/-1",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:443-444 on origin/feat/player-stats",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestOnUnitKilled.sqf:51-65 on origin/feat/player-stats",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Stats/StatsFlush.sqf:12-49 on origin/feat/player-stats",
+        "DiscordBot/src/Stats/StatsService.cs:6-23 on origin/feat/player-stats",
+        "DiscordBot/src/Stats/RptTailer.cs:24-45,57-71 on origin/feat/player-stats",
+        "DiscordBot/src/Stats/StatsDocument.cs:22-40 on origin/feat/player-stats",
+        "DiscordBot.Tests/* on origin/feat/player-stats",
+        "git diff --check origin/master..origin/feat/player-stats is clean",
+        "local dotnet test DiscordBot.Tests/DiscordBot.Tests.csproj passed 13/13 on .NET 9.0.314"
+      ],
+      "ownerDecision": "Decide RPT path/state-file ownership, UID/privacy policy, log volume, corrupt-stats.json recovery behavior, Chernarus-only versus Vanilla propagation and whether stats live in DiscordBot or the mission extension.",
+      "promotionGate": "Prove disabled-by-default silence, enabled RPT-to-stats.json accumulation, restart/tail-state behavior, RPT rotation behavior and Arma runtime smoke before enabling publicly.",
+      "plannedSmoke": {
+        "status": "discordbot-tests-passed-runtime-smoke-not-run",
+        "coverageLevel": [
+          "integration-smoke",
+          "discordbot-test",
+          "privacy-review",
+          "vanilla-scope-decision"
+        ],
+        "canonicalDoc": "Player-Stats-Branch-Audit.md#smoke-checklist"
+      }
+    },
+    {
+      "id": "perf-quick-wins-branch",
+      "branch": "origin/perf/quick-wins",
+      "head": "0076040f",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-fix-candidate-vanilla-open",
+      "sourceScope": "source-chernarus-only",
+      "canonicalDocs": [
+        "Perf-Quick-Wins-Branch-Audit.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/perf/quick-wins@0076040f; merge-base origin/master@2cdf5fb8",
+        "origin/master..origin/perf/quick-wins: 18 files +27/-27; all changed files are source Chernarus",
+        "git diff --check origin/master..origin/perf/quick-wins is clean",
+        "git diff --name-only origin/master..origin/perf/quick-wins -- Missions_Vanilla returns no changed files",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf:25 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf:12,36 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf:366-368 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:40 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/cleaners/mines_cleaner.sqf:17 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_collector_garbage.sqf:17 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/updateresources.sqf:74 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf:235-236 on origin/perf/quick-wins",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestOnUnitKilled.sqf:92 on origin/perf/quick-wins"
+      ],
+      "ownerDecision": "Cherry-pick, split or merge as one fix branch after reconciling with existing docs/source propagated fixes.",
+      "promotionGate": "Propagate maintained Vanilla or explicitly accept Chernarus-only scope, keep DR-44 side-supply authority separate from the DR-22 clamp, and smoke side-supply debit, factory queue counters, paratrooper marker registration, cleaner/resource/camp loops, kill-assist bounty and WASP action paths before release wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "dedicated-smoke",
+          "regression-smoke",
+          "vanilla-parity-smoke"
+        ],
+        "canonicalDoc": "Perf-Quick-Wins-Branch-Audit.md#promotion-gates"
+      }
+    },
+    {
+      "id": "commander-positions-branch",
+      "branch": "origin/feat/commander-positions",
+      "head": "560db61c",
+      "base": "f5985b77",
+      "state": "branch-review-needed-broad-construction-scope-open",
+      "sourceScope": "source-chernarus-wddm-runtime-plus-maintained-vanilla-unrelated-deltas",
+      "canonicalDocs": [
+        "Commander-Positions-Branch-Audit.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/master..origin/feat/commander-positions: 83 files +524/-2025",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Structures/Structures_CO_US.sqf:168-174 on origin/feat/commander-positions",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Structures/Structures_CO_RU.sqf:166-172 on origin/feat/commander-positions",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Defenses.sqf:93-183 on origin/feat/commander-positions",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf:26 on origin/feat/commander-positions",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestDefense.sqf:11-14 on origin/feat/commander-positions",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ConstructPosition.sqf:1-66 on origin/feat/commander-positions",
+        "git grep found no Server_ConstructPosition or WFBE_POSITION_TEMPLATE_MAP under Missions_Vanilla/[61-2hc] on origin/feat/commander-positions",
+        "git diff --check origin/master..origin/feat/commander-positions reports trailing whitespace in source files"
+      ],
+      "ownerDecision": "Split construction-position work from unrelated Valhalla/UI/HC/perf deltas or accept the branch as a broad feature bundle; decide whether the actual WDDM runtime should be propagated to maintained Vanilla.",
+      "promotionGate": "Clean whitespace, recheck DR-6 construction authority, smoke position placement at clicked point, CoIn/HQ undeploy cleanup, modular wall pathing and Chernarus/Vanilla scope.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "construction-smoke",
+          "client-ui-smoke",
+          "vanilla-parity-smoke"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "zargabad-map-branch",
+      "branch": "origin/feature/zargabad-map",
+      "head": "e9294ede",
+      "base": "origin/master@2cdf5fb8",
+      "state": "branch-review-needed-static-validated-runtime-open",
+      "sourceScope": "new-vanilla-zargabad-mission-plus-terrain-tooling-plus-low-pop-balance-defaults",
+      "canonicalDocs": [
+        "Zargabad-Branch-Audit.md",
+        "Content-Structure-And-Maps.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/master..origin/feature/zargabad-map: 832 files +77733/-95 at e9294ede",
+        "Tools/LoadoutManager/Data/Terrains/Implementations/VanillaMaps/ZARGABAD.cs:1-13 on origin/feature/zargabad-map",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs:127-130 on origin/feature/zargabad-map",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf:121-124 on origin/feature/zargabad-map",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Boundaries.sqf:4-10 on origin/feature/zargabad-map",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Zargabad.sqf:1-125 on origin/feature/zargabad-map",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:422,426,428-430,436-439 on origin/feature/zargabad-map",
+        "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Rsc/Parameters.hpp:56,62,164,176,230,284-296,314,363,369,387 on origin/feature/zargabad-map",
+        "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:74,361-393 on origin/feature/zargabad-map",
+        "Tools/Validate-ZargabadRuntimeEvidence.ps1:97-100 on origin/feature/zargabad-map",
+        "Tools/Validate-ZargabadRuntimeReport.ps1:285,332,346-363 on origin/feature/zargabad-map",
+        "Guides/Zargabad-Completion-Gates.md:8-20 on origin/feature/zargabad-map",
+        "Tools/Validate-ZargabadMission.ps1 passed locally in detached worktree at e9294ede",
+        "git diff --check origin/master..origin/feature/zargabad-map reports 3542 whitespace findings in generated Zargabad mission files"
+      ],
+      "ownerDecision": "Decide whether Zargabad becomes a maintained Vanilla target, a low-pop experiment or a branch-only playtest, and whether the tightened low-pop defaults are public-server defaults or a test profile.",
+      "promotionGate": "Clean or accept generated whitespace, rerun static validation on candidate head, validate terrain generation/class loads and low-pop defaults, collect hosted/dedicated/JIP/HC runtime plus screenshot/RPT evidence, smoke edge guard and black market, and pass the Zargabad completion gates before playable/maintained wording.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "hosted-smoke",
+          "dedicated-smoke",
+          "jip-smoke",
+          "hc-smoke",
+          "screenshot-evidence"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    },
+    {
+      "id": "supply-helicopter-current-head",
+      "branch": "origin/feat/supply-helicopter",
+      "head": "262dc431",
+      "base": "f5985b77",
+      "state": "branch-review-needed-current-head-reviewed-vanilla-open",
+      "sourceScope": "source-chernarus-supply-heli-plus-broad-branch-baggage",
+      "canonicalDocs": [
+        "Current-Work-Supply-Helicopters-PR1.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Current-Source-Status-Snapshot.md#2026-06-04-feature-branch-matrix",
+        "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      ],
+      "evidenceRefs": [
+        "origin/master..origin/feat/supply-helicopter: 82 files +462/-2056",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp:4-10 on origin/feat/supply-helicopter",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:168-180 on origin/feat/supply-helicopter",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Apply.sqf:62-72 on origin/feat/supply-helicopter",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf:16-60 on origin/feat/supply-helicopter",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf:7-30,42-60,93-95 on origin/feat/supply-helicopter",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf:24-41 on origin/feat/supply-helicopter",
+        "No SupplyByHeli/WFBE_C_SUPPLY_HELI/wfbe_supply_killed_eh_set hits under maintained Vanilla on origin/feat/supply-helicopter"
+      ],
+      "ownerDecision": "Decide Air upgrade 3/4 semantics, cash-run economy, timer UX, retained SupplyByHeli cleanup, Vanilla propagation and non-supply branch baggage.",
+      "promotionGate": "Smoke truck control, heli disabled/enabled, Air 2/3 load gate, Air 4 cash run, timer interruption, pilot/commander payout, interdiction, same-vehicle reload after completion and JIP before merge.",
+      "plannedSmoke": {
+        "status": "planned-not-run",
+        "coverageLevel": [
+          "supply-smoke",
+          "economy-smoke",
+          "vanilla-parity-smoke"
+        ],
+        "canonicalDoc": "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
+      }
+    }
   ],
-  "linkedQueue": "Bottleneck-Removal-Queue.md"
+  "sourceOnlyFixes": [
+    {
+      "id": "paratrooper-marker-revival",
+      "priority": "P2",
+      "sourceStatus": "docs-source-carries-change",
+      "vanillaStatus": "docs-source-vanilla-carries-change",
+      "smokeStatus": "pending",
+      "canonicalDocs": [
+        "Paratrooper-Marker-Revival.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Feature-Status-Register.md"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:39",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_PublicVariables.sqf:39",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_Paratroopers.sqf:117"
+      ],
+      "releaseGate": "Trigger paratrooper support and confirm the client marker appears without an unregistered-client-PVF error.",
+      "branchStatus": {
+        "stableMaster": "absent",
+        "releaseBranch": "absent-in-chernarus-and-vanilla",
+        "docsSource": "chernarus-and-vanilla-carry-registration",
+        "evidence": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+      }
+    },
+    {
+      "id": "client-skill-init-idempotency",
+      "priority": "P2",
+      "sourceStatus": "docs-source-carries-change",
+      "vanillaStatus": "docs-source-vanilla-carries-change",
+      "smokeStatus": "pending",
+      "canonicalDocs": [
+        "Client-Skill-Init-Idempotency.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Feature-Status-Register.md"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf:547",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf:571",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf:547",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf:571",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Init.sqf:49"
+      ],
+      "releaseGate": "Smoke Soldier/non-Soldier AI caps and respawn skill reapply.",
+      "branchStatus": {
+        "stableMaster": "duplicate-skill-init-remains",
+        "releaseBranch": "duplicate-skill-init-remains-in-chernarus-and-vanilla",
+        "docsSource": "single-init-in-chernarus-and-vanilla",
+        "evidence": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+      }
+    },
+    {
+      "id": "hosted-server-fps-loop-sleep",
+      "priority": "P2",
+      "sourceStatus": "docs-source-carries-change",
+      "vanillaStatus": "docs-source-vanilla-carries-change",
+      "smokeStatus": "pending",
+      "canonicalDocs": [
+        "Hosted-Server-FPS-Loop-Sleep.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Feature-Status-Register.md"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf:1",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf:1",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/GUI/serverFpsGUI.sqf:1",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/serverFPS/monitorServerFPS.sqf:1"
+      ],
+      "releaseGate": "Smoke dedicated FPS publishing and confirm hosted/listen servers do not spin the FPS publisher loops.",
+      "branchStatus": {
+        "stableMaster": "old-loop-shape-remains",
+        "releaseBranch": "chernarus-only-vanilla-old-loop-shape",
+        "docsSource": "chernarus-and-vanilla-early-exit",
+        "evidence": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+      }
+    },
+    {
+      "id": "supply-mission-scan-narrowing",
+      "priority": "P2",
+      "sourceStatus": "docs-source-carries-change",
+      "vanillaStatus": "docs-source-vanilla-carries-change",
+      "smokeStatus": "pending",
+      "canonicalDocs": [
+        "Supply-Mission-Scan-Narrowing.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Feature-Status-Register.md"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf:25-28",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/supplyMission/supplyMissionStarted.sqf:25-28"
+      ],
+      "releaseGate": "Smoke delivery at a real command center and no completion near unrelated objects.",
+      "branchStatus": {
+        "stableMaster": "broad-command-center-scan-remains",
+        "releaseBranch": "chernarus-only-vanilla-broad-scan",
+        "docsSource": "chernarus-and-vanilla-narrowed-scan",
+        "evidence": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+      }
+    },
+    {
+      "id": "supply-player-object-list-indexing",
+      "priority": "P1",
+      "sourceStatus": "docs-source-carries-change",
+      "vanillaStatus": "docs-source-vanilla-carries-change",
+      "smokeStatus": "pending",
+      "canonicalDocs": [
+        "Player-Join-Disconnect-And-AntiStack-Lifecycle.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Feature-Status-Register.md"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/playerObjectsList.sqf:17-29",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/supplyMission/playerObjectsList.sqf:17-29",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf:57",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionActive.sqf:51"
+      ],
+      "releaseGate": "Smoke reconnect/JIP player-object replacement and supply mission completion lookup.",
+      "branchStatus": {
+        "stableMaster": "not-rechecked-in-2026-06-03-branch-matrix",
+        "releaseBranch": "not-rechecked-in-2026-06-03-branch-matrix",
+        "docsSource": "chernarus-and-vanilla-carry-index-initialization",
+        "evidence": "Source-Fix-Propagation-Queue.md#latest-propagation-run"
+      }
+    }
+  ],
+  "patchReadyNotSourcePatched": [
+    {
+      "id": "factory-queue-counter-token-cleanup",
+      "canonicalDoc": "Factory-Queue-Counter-Token-Cleanup.md",
+      "status": "patch-ready-not-current-code-change"
+    },
+    {
+      "id": "commander-reassignment-call-shape",
+      "canonicalDoc": "Commander-Reassignment-Call-Shape.md",
+      "status": "patch-ready-not-current-code-change"
+    },
+    {
+      "id": "gear-template-profile-filter",
+      "canonicalDoc": "Gear-Template-Profile-Filter.md",
+      "status": "patch-ready-not-current-code-change"
+    },
+    {
+      "id": "vehicle-cargo-equip-loop-bounds",
+      "canonicalDoc": "Vehicle-Cargo-Equip-Loop-Bounds.md",
+      "status": "patch-ready-not-current-code-change"
+    },
+    {
+      "id": "service-menu-affordability-guards",
+      "canonicalDoc": "Service-Menu-Affordability-Guards.md",
+      "status": "patch-ready-not-current-code-change"
+    },
+    {
+      "id": "wasp-marker-wait-cleanup",
+      "canonicalDoc": "WASP-Marker-Wait-Cleanup.md",
+      "status": "opportunity-not-current-code-change"
+    }
+  ],
+  "branchScope": {
+    "checkedAt": "2026-06-03T22:05:00+02:00",
+    "docsSource": {
+      "commit": "4163faba",
+      "branch": "docs/developer-wiki-index",
+      "meaning": "Chernarus and maintained Vanilla carry the documented propagation batch."
+    },
+    "stableMaster": {
+      "commit": "2cdf5fb8",
+      "branch": "origin/master",
+      "meaning": "Stable baseline; does not carry hosted FPS loop exit, supply scan narrowing, client Skill_Init idempotency or paratrooper marker registration."
+    },
+    "releaseBranch": {
+      "commit": "a9219d88",
+      "branch": "origin/release/2026-06-feature-bundle",
+      "meaning": "Chernarus-only for hosted FPS and supply scan narrowing; lacks client Skill_Init idempotency and paratrooper marker registration in both maintained missions."
+    },
+    "canonicalDoc": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+  }
 }

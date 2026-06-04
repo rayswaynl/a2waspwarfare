@@ -1,86 +1,64 @@
 # Client UI, HUD And Menus
 
-## UI Resource Layer
+This is the quick-reference gateway for client UI work. Start with the [player UI workflow map](Player-UI-Workflow-Map) when you need a "what can the player click?" tour. The canonical implementation map is [Client UI systems atlas](Client-UI-Systems-Atlas); update that atlas for detailed dialog tables, title resources, controller loops, marker/action UI and UI risk analysis.
 
-`description.ext:46-62` includes the `Rsc` stack:
+## First Stops
 
-- `Header.hpp`
-- `Styles.hpp`
-- `Parameters.hpp`
-- `Ressources.hpp`
-- `Dialogs.hpp`
-- `Titles.hpp`
-- `Identities.hpp` outside vanilla mode
+| Need | Start here | Source anchors | Canonical detail |
+| --- | --- | --- | --- |
+| Main Warfare menu routing | `Client/GUI/GUI_Menu.sqf` | `Rsc/Dialogs.hpp:1019-1022`, `GUI_Menu.sqf:33-43`, `:162-179`, `:191-199` | [Client UI systems atlas](Client-UI-Systems-Atlas) Main Menu Router |
+| Buy units / factories | `Client/GUI/GUI_Menu_BuyUnits.sqf` -> `Client/Functions/Client_BuildUnit.sqf` | `Rsc/Dialogs.hpp:1445-1447`, `GUI_Menu_BuyUnits.sqf:89-156` | [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) |
+| Gear, service and EASA | `GUI_BuyGearMenu.sqf`, `GUI_Menu_Service.sqf`, `GUI_Menu_EASA.sqf` | `Rsc/Dialogs.hpp:530-532`, `:2870-2872`, `:3209-3211` | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
+| Upgrades and economy menu | `GUI_UpgradeMenu.sqf`, `GUI_Menu_Economy.sqf` | `Rsc/Dialogs.hpp:4-6`, `:3287-3289`, `GUI_UpgradeMenu.sqf:137-171` | [Gameplay systems atlas](Gameplay-Systems-Atlas) and [Economy](Economy-Towns-And-Supply) |
+| RHUD / FPS HUD / title resources | `Client/Client_UpdateRHUD.sqf`, `Rsc/Titles.hpp` | `Rsc/Titles.hpp:25`, `:44`, `:164-173`, `:532-540`, `Client_UpdateRHUD.sqf:3-7`, `:89-92`, `:183-190` | [Client UI systems atlas](Client-UI-Systems-Atlas) Title And HUD Resource Map |
+| Respawn selector and markers | `GUI_RespawnMenu.sqf`, client marker FSMs | `GUI_RespawnMenu.sqf:31`, `:100`, `:193`, `Client_UI_Respawn_Selector.sqf:19-31` | [Client UI systems atlas](Client-UI-Systems-Atlas) Map And Marker UI |
+| UI JIP/headless scope | `initJIPCompatible.sqf`, `Init_Client.sqf`, `Client_UpdateRHUD.sqf` | `initJIPCompatible.sqf:70-76`, `:224-238`, `Init_Client.sqf:730-734`, `Client_UpdateRHUD.sqf:87-95` | [Client UI systems atlas](Client-UI-Systems-Atlas) JIP And Headless-Client Verdict |
 
-Dialog definitions in `Rsc/Dialogs.hpp` then launch scripts under `Client/GUI` through `onLoad` handlers.
+## UI Safety Rules
 
-## Main Menus
+- UI code is usually client-local, but UI actions can still mutate server-visible state through PVF or direct publicVariable paths.
+- Treat any UI change that touches score, funds, supply, structures, upgrades, support, loadouts, HQ state or vehicle creation as a networking/economy change too.
+- Do not assume dialog IDs are unique: `RscMenu_EASA` and `RscMenu_Economy` share `idd = 23000`, and `RscOverlay` / `OptionsAvailable` both use `idd = 10200`.
+- Economy menu startup writes to `23004`/`23005`/`23006`, but the audited `RscMenu_Economy` control block does not declare those IDs; smoke disabled-state behavior before reusing this menu as a commander-control template.
+- Economy map-sell also has a stale-click risk: `GUI_Menu_Economy.sqf:10` does not reset `mouseButtonUp`, but `:101-106` consumes it for map sell. Reset the latch if touching Economy map controls.
+- EASA should close or recover on unsupported/stale vehicles: `GUI_Menu_EASA.sqf:3-4` exits early when the current vehicle type is not in `WFBE_EASA_Vehicles`, while the dialog may remain open from a stale service-menu context.
+- Do not reuse `currentCutDisplay` for unrelated title resources: current source lets `OptionsAvailable`/RHUD/action icons and `EndOfGameStats` share that key, so endgame display work needs the [UI IDD collision repair](UI-IDD-Collision-Repair) handle split as well as IDD cleanup.
+- Keep polling menu loops and marker/HUD loops light; reuse cached display handles and existing update flags.
+- Headless clients do not run the UI init path; "HC" calls inside `updateclient.sqf` are high-command player UI controls, not headless-client rendering.
+- Late-join UI support exists, but do not call it fully clean without feature smoke: several UI waits depend on synchronized variables with no timeout.
 
-Important GUI files:
+## Known UI Findings
 
-- `GUI_Menu.sqf`: main Warfare menu and HUD/FPS toggles (`Rsc/Dialogs.hpp:1025`, `GUI_Menu.sqf:193-199`).
-- `GUI_Menu_BuyUnits.sqf`: player unit purchasing list and factory interaction (`Rsc/Dialogs.hpp:1445-1448`).
-- `GUI_BuyGearMenu.sqf`: gear purchase and template UI (`Rsc/Dialogs.hpp:533`).
-- `GUI_Menu_Command.sqf`: commander/team command controls (`Rsc/Dialogs.hpp:1789-1792`).
-- `GUI_Menu_Tactical.sqf`: tactical actions such as fast travel and support-style commands (`Rsc/Dialogs.hpp:2161-2164`).
-- `GUI_UpgradeMenu.sqf`: upgrades (`Rsc/Dialogs.hpp:7`; dead duplicate `RscMenu_Upgrade` is tracked below).
-- `GUI_RespawnMenu.sqf`: respawn UI (`Rsc/Dialogs.hpp:317`).
-- `GUI_Menu_EASA.sqf`: aircraft loadout system (`Rsc/Dialogs.hpp:3209-3212`).
-- `GUI_Menu_Service.sqf`: service/repair support (`Rsc/Dialogs.hpp:2870-2873`).
+| Finding | Meaning | Canonical page |
+| --- | --- | --- |
+| DR-14 | Player unit purchase is client-authoritative; no `RequestBuyUnit` PVF exists. | [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) |
+| DR-16 | Structure sale is client-authoritative; this is an economy/server-authority finding, not a gear/template finding. | [Deep-review findings](Deep-Review-Findings) |
+| DR-17 | `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000`. | [UI IDD collision repair](UI-IDD-Collision-Repair) |
+| DR-24 | Stale `RscMenu_Upgrade` points at missing `Client/GUI/GUI_Menu_Upgrade.sqf`; the same old block also references missing `Client\Images\wf_*.paa` upgrade icons. Live upgrades use `WFBE_UpgradeMenu`. | [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog-review), [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| DR-25a/b | `RscOverlay` / `OptionsAvailable` share title `idd = 10200`, and `RscClickableText.soundPush[]` is malformed. | [UI IDD collision repair](UI-IDD-Collision-Repair), [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| DR-28 | Gear, EASA and service spend/effect paths are client-authoritative. | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
+| Duplicate IDDs/display handles | EASA/Economy share `23000`; overlay/title resources share `10200`; `OptionsAvailable` and `EndOfGameStats` both use `currentCutDisplay`. | [Client UI systems atlas](Client-UI-Systems-Atlas), [UI IDD collision repair](UI-IDD-Collision-Repair) |
+| Economy dialog missing controls | `GUI_Menu_Economy.sqf:7-8` targets `23004`/`23005`/`23006`, absent from audited `RscMenu_Economy` controls. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| Economy map-sell stale mouse latch | `GUI_Menu_Economy.sqf:10` does not reset `mouseButtonUp`; `:101-106` consumes it for map sell. | [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map) |
+| EASA unsupported-vehicle fail-open | `GUI_Menu_EASA.sqf:3-4` exits on unsupported current vehicle without closing the dialog. | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
+| Command task partial | Commander task controls are visible, but the `SetTask` send path is commented out. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| Main-menu GPS zoom orphan route | `GUI_Menu.sqf` still handles `MenuAction == 17/18`, but the current `WF_Menu` controls expose actions `1-13`, `16` and `19` only. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| Help dialog unload mismatch | `RscMenu_Help` sets `dialog_HelpPanel` on load but clears `cti_dialog_ui_onlinehelpmenu` on unload, and `GUI_Menu_Help.sqf` has no unload case. | [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map) |
 
-## Buy Unit Path
+## UI Risk Index
 
-Factory purchase flow:
+Use this as the fast route before touching UI:
 
-1. UI list is populated from config and current upgrade state.
-2. Player selection goes through `GUI_Menu_BuyUnits.sqf`.
-3. Spawn logic is handled by `Client_BuildUnit.sqf`.
-4. Factory-specific marker conventions determine spawn location.
+| Risk | Go to |
+| --- | --- |
+| Duplicate dialog/title IDs and title display handles | [UI IDD collision repair](UI-IDD-Collision-Repair) |
+| Service affordability and action-time guards | [Service menu affordability guards](Service-Menu-Affordability-Guards) |
+| Command task controls / dormant task system | [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| Gear/EASA/template/cargo partials | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Gear template profile filter](Gear-Template-Profile-Filter), [Vehicle cargo equip loop bounds](Vehicle-Cargo-Equip-Loop-Bounds) |
+| Stale legacy dialogs | [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog-review), [Feature status](Feature-Status-Register) |
 
-This is the UI-facing source path for DR-14: `GUI_Menu_BuyUnits.sqf:102` reads local funds, `:155` spawns `BuildUnit`, and `:156` debits player funds locally. Keep the full economy-class synthesis in [Economy](Economy-Towns-And-Supply#authority-model) and the redesign sequencing in [Economy authority first cut](Economy-Authority-First-Cut).
+## Continue Reading
 
-## Gear Templates
+Previous: [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) | Next: [Player UI workflow map](Player-UI-Workflow-Map)
 
-Gear files and UI helpers support profile gear templates:
-
-- `Client_UI_Gear_AddTemplate` (`Client/Init/Init_Client.sqf:116`)
-- `Client_UI_Gear_SaveTemplateProfile` (`Client/Init/Init_Client.sqf:171`)
-- `Client_UI_Gear_FillTemplates` (`Client/Init/Init_Client.sqf:121`)
-- `Client_UI_Gear_UpdatePrice` (`Client/Init/Init_Client.sqf:124`)
-- `Client_UI_Gear_UpdateTarget` (`Client/Init/Init_Client.sqf:125`)
-- `Init_ProfileGear.sqf` (`Client/Init/Init_ProfileVariables.sqf:41`)
-- `Init_ProfileVariables.sqf` (`Client/Init/Init_Client.sqf:172`)
-
-## Gear, EASA And Service Authority
-
-Gear/EASA/service screens are active UI and keep the UI source anchors here: EASA local funds/equip/debit at `Client/GUI/GUI_Menu_EASA.sqf:40-49`; service affordability/actions at `Client/GUI/GUI_Menu_Service.sqf:130-145`, `:198-201`, `:209-212`, `:219-222` and `:230-233`. Treat these as UI affordances; the authority class lives in [Economy](Economy-Towns-And-Supply#authority-model), [Economy authority first cut](Economy-Authority-First-Cut) and DR-28.
-
-## Confirmed UI Defects
-
-- Structure selling is the UI-side DR-16 source path from `Client/GUI/GUI_Menu_Economy.sqf:105-128`; see [Economy](Economy-Towns-And-Supply#authority-model) for the broader class.
-- `RscMenu_EASA` and `RscMenu_Economy` both use dialog IDD `23000` (`Rsc/Dialogs.hpp:3211`, `:3289`); see DR-17.
-- `RscMenu_Upgrade` starts at `Rsc/Dialogs.hpp:2425` and points at the missing `Client/GUI/GUI_Menu_Upgrade.sqf`; see DR-24.
-- `Rsc/Titles.hpp:165` duplicates title IDD `10200`, and `Rsc/Ressources.hpp:556` has a malformed `RscClickableText.soundPush[]`; see DR-25a/b.
-
-## RHUD And FPS HUD
-
-`Client/Init/Init_Client.sqf:332-339` initializes `RUBHUD` / `RUBFPSHUD` and starts `Client/Client_UpdateRHUD.sqf`. `GUI_Menu.sqf:193-199` toggles those flags. `Client_UpdateRHUD.sqf:113` reads `SERVER_FPS_GUI`, `:207-208` chooses FPS-only vs full HUD mode, and `:201` / `:369` records performance audit rows.
-
-## Map And Marker UI
-
-Client marker updates are split between:
-
-- `Client/FSM/updatetownmarkers.sqf` (`Client/Init/Init_Client.sqf:366`, audit row at `updatetownmarkers.sqf:121`)
-- `Client/FSM/updateteamsmarkers.sqf` (`Client/Init/Init_Client.sqf:356`, audit row at `updateteamsmarkers.sqf:220`)
-- `Client_BlinkMapIcon` (`Client/Init/Init_Client.sqf:139`)
-- `Client_BookkeepBlinkingIcons` (`Client/Init/Init_Client.sqf:781`)
-- `Client_SetMapIconStatusInCombat` (`Client/Init/Init_Client.sqf:137`)
-
-The combat icon blinking feature is guarded by `WFBE_C_MAP_ICON_BLINKING_ENABLED` in `Client/Init/Init_Client.sqf:20`, `:780-781`, `Client_BookkeepBlinkingIcons.sqf:6`, and `Client_SetMapIconStatusInCombat.sqf:8`.
-
-## UI Risk Notes
-
-- Avoid heavy work in display loops and map marker refresh.
-- Preserve cached-write patterns in RHUD and marker scripts.
-- Keep action label changes consistent with localized string usage where available.
-
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)

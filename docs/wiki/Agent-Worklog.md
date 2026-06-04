@@ -1,22 +1,145 @@
 # Agent Worklog
 
-## 2026-06-04T10:22:00+0200 - Codex - docs-knowledge / /goal loop closeout
+## 2026-06-04T19:45:00+02:00 - Codex - Spark scout wave release targets / HC / AI caps / economy
 
-- Closed the docs-knowledge / onboarding duplication / /goal loop as `docs-knowledge-clickthrough-2026-06-04-1022`.
-- Marked the LLM onboarding watchpoint in [Wiki-Quality-Audit](Wiki-Quality-Audit) as resolved: no duplicate "how to start" instructions remain across `AI-Assistant-Guide`, `AI-Assistant-Developer-Guide`, `Home`, and `llms.txt`.
-- Synced `Progress-Dashboard.md`, `agent-context.json`, and machine records (`agent-events.jsonl`, `agent-knowledge.jsonl`) so `docs-knowledge-clickthrough-2026-06-04-1008` remains the canonical active lane and older checkpoints are historical.
-- Validation and parity for this closeout: `Tools/ValidateWiki.ps1`, `docs/validate-wiki.ps1`, and `Tools/TestWikiParity.ps1` passed.
-- Docs-only change; no gameplay source edits.
+- Steff asked for another bunch of Spark scouts. Codex launched six `gpt-5.3-codex-spark` read-only lanes for player AI caps, support authority, UI/dialog hazards, generated/modded release tiers, town/economy/supply edge cases and HC/locality/FPS. The active thread ceiling blocked the seventh lane, so Codex closed completed scouts and refilled a slot with tooling/integrations plus mission lifecycle/init.
+- Returned reports were harvested duplicate-aware. AI caps confirmed the existing Player AI caps page and Discord table; HC/locality confirmed existing failover, static-defense update-back and dual-FPS telemetry pages; economy/town confirmed already-canonical camp flag, patrol latch, side-supply clamp, income-cap and supply-authority rows.
+- New durable delta: `agent-release-readiness.json` no longer collapses modded missions into one wildcard. It now splits release targets into source Chernarus, maintained generated Takistan, branch-only Zargabad candidate and each modded blocked/stub folder, including file counts, conflict-marker hits and missing bootstrap blockers from the scout scan.
+- UI scout delta: the stale old upgrade dialog already had a missing controller file documented; Codex added the matching missing `Client\Images\wf_*.paa` icon references from `Dialogs.hpp:2634-2821` to [Client UI systems](Client-UI-Systems-Atlas), [Client UI/HUD](Client-UI-HUD-And-Menus) and [UI IDD collision repair](UI-IDD-Collision-Repair).
+- Updated [Tooling release readiness audit](Tooling-Release-Readiness-Audit) to mark the generated-target tiering backlog item done. Documentation/status only; no gameplay source files were edited.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and SHA256 mirror parity for nine files. Pushed as docs `058427d3` / wiki `4b72809`.
 
-## 2026-06-04T10:08:00+0200 - Codex - docs-knowledge / onboarding split hardening
+## 2026-06-04T16:05:00+02:00 - Codex - AI commander branch-head refresh and Spark scout wave
 
-- Normalized LLM-onboarding duplication by clarifying roles between [AI-Assistant-Guide](AI-Assistant-Guide), [AI-Assistant-Developer-Guide](AI-Assistant-Developer-Guide), and [LLM-Agent-Entry-Pack](LLM-Agent-Entry-Pack).
-- Added source-file context and explicit route continuation to reduce repeated bootstrap explanation and make click-through deterministic.
-- Docs-only navigation updates only; updated `Progress-Dashboard.md`, `_Sidebar.md`, `AI-Assistant-Guide.md`, and `LLM-Agent-Entry-Pack.md`.
-- Closed the /goal loop checkpoint for `docs-knowledge-entrypoint`: promoted `docs-knowledge-clickthrough-2026-06-04-1008` as canonical in `Progress-Dashboard.md`, kept `...1829` and `...1707` historical, and updated this worklog entry with the same state.
-- Validation and parity for this checkpoint were completed in-machine: `Tools/ValidateWiki.ps1`, `docs/validate-wiki.ps1`, and `Tools/TestWikiParity.ps1` passed; machine logs were updated with loop evidence.
-- Also normalized `agent-context.json` page-list parity to keep machine validation clean after duplicate `HC-Upstream-History-And-Lessons` entries were removed.
-- No gameplay source changed in this checkpoint.
+- Steff asked for another bunch of Spark scouts. Codex launched narrow read-only Spark lanes for feature status evidence, mission entrypoints, PV/networking, UI/dialogs, tooling/integrations, generated/modded drift, dead references, economy/town loops, support authority and player-AI caps.
+- Returned reports already harvested as leads: mission startup barriers and mission-object town init, modded generation/packaging disabled plus structural incompleteness/conflict markers, LoadoutManager/DiscordBot/Extension/BattlEye tooling footguns, PVF `Call Compile`/direct-PV authority risks, UI duplicate IDD/orphaned upgrade dialog and Feature Status confirmations. Remaining scouts are still discovery leads until patched into canonical pages.
+- In parallel, source-checked moved branch refs. `origin/feat/ai-commander` is now `c20ce153`, still source-Chernarus-only: 9 files, +416/-5, no `Missions_Vanilla`. The post-`4dba060e` cleanup series `b4b0333f`..`c20ce153` only rewrites lazy condition blocks across the five AI commander scripts, improving branch readiness without changing branch-only/smoke status.
+- Also refreshed `origin/codex/quad-ai-commander` from stale `3179be6d` to `d4e0fa38`; it now includes documentation-side evidence audit/runtime report artifacts, still planning evidence only.
+- Updated current branch-head/status pages and machine ledgers first. Documentation/status only; no gameplay source files were edited.
+- Closure note: the branch-head/status refresh is now validated and mirrored. Evidence checked: `origin/master` is `2cdf5fb8`; `origin/feat/ai-commander` is `c20ce153`; `origin/codex/quad-ai-commander` is `d4e0fa38`; `origin/master..origin/feat/ai-commander` is 9 Chernarus files, +416/-5, with no `Missions_Vanilla` file changes; `4dba060e..c20ce153` touches only the five `Server/AI/Commander/AI_Commander*.sqf` scripts (+141/-91).
+
+## 2026-06-04T14:05:00+02:00 - Codex - fresh background Spark scout harvest status
+
+- Continued the documentation finisher loop after the fresh background Spark scout launch. Read completed thread reports for construction/base, PV/network, tools/content, abandoned features and upstream/community.
+- Harvest result: the completed reports mostly confirmed existing canonical coverage rather than adding new source-backed deltas. Construction auto-wall/base-area/SmallSite risks, PVF/direct-PV/SEND_MESSAGE risks, LoadoutManager packaging/modded path risks, AI supply truck/supplyMissionActive/Reaktiv/MASH dead-feature risks and branch-head/upstream routing were already present in their owner pages.
+- Four threads were interrupted before final reports (`commander/economy`, `respawn/MASH`, `runtime/HC`, `performance hot paths`) and the UI/dialogs thread hit a system error. Treat those as unharvested, not evidence. Relaunch as narrow micro-scouts if the lane is still valuable.
+- Updated [Progress dashboard](Progress-Dashboard), [Discovery swarm](Subagent-Discovery-Swarm), `agent-status.json` and `agent-events.jsonl` to make the wave visible without duplicating confirmed bug prose. Documentation/status only; no gameplay source files were edited.
+
+## 2026-06-04T13:45:00+02:00 - Codex - Spark scout startup failure and local buy-menu harvest
+
+- Steff asked for another Spark scout wave. Codex launched read-only subagents for commander/economy, construction, respawn/MASH, runtime/HC, PV networking and UI, but all failed during remote startup compaction because this long-running orchestration thread is now too large for the Spark compact path. Codex then switched to fresh background Codex Spark threads so the scouts start without inherited context.
+- Fresh scout threads: commander/economy `019e938d-feb1-7893-95d5-bdc0a3ea6fff`; construction/base `019e938e-4547-7310-8469-69bb3c1e31c5`; respawn/MASH `019e938e-52b5-7000-8ffa-8107d0b9560c`; runtime/HC `019e938e-61c3-7451-b207-31c9ff269b49`; PV/network `019e938e-ae10-7de1-9639-a432de30ad5c`; UI/dialogs `019e938e-be87-7740-9ce3-6218172e288f`; tools/content `019e938e-cf76-7ce0-8fb5-c73a8cf65d93`; abandoned features `019e938f-3386-70c3-a592-2c215fafb08d`; upstream/community `019e938f-4105-77f1-916f-3add88537f0f`; performance hot paths `019e938f-751c-7131-b518-4418f4f2d0cb`.
+- Kept the documentation loop moving locally instead of waiting on failed agents. Source evidence: `GUI_Menu_BuyUnits.sqf:39-42,173` initializes/toggles uppercase `WFBE_C_DRIVER_ENABLED_BY_DEFAULT`, while active cost, group-cap, build, refresh, max-out and reset paths mostly use lowercase `wfbe_c_driver_enabled_by_default` at `GUI_Menu_BuyUnits.sqf:95,136,154,284,308,328-341,366,373,385`.
+- Routed the finding into [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Development lessons learned](Development-Lessons-Learned), `agent-development-lessons.jsonl` and `agent-feature-status.jsonl`. Next scout waves should start from a fresh thread or shorter dedicated scout goal to avoid compact failures.
+
+## 2026-06-04T13:25:00+02:00 - Codex - scout harvest pushed-head breadcrumb correction
+
+- Continued the documentation finisher loop after the scout harvest and source-checked the current pushed heads.
+- Evidence: docs mirror `git log -3 --oneline` shows `180bb301 docs: record scout harvest push` after `1d7d0567 docs: harvest support ui tooling scout wave`; live wiki shows `6a49599 wiki: record scout harvest push` after `faaee0f wiki: harvest support ui tooling scout wave`.
+- Corrected [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-feature-status.jsonl` and the event feed so they distinguish content commits from final pushed heads. Coordination cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T13:10:00+02:00 - Codex - mini scout wave Quad AI/support/lifecycle/UI/tooling/upstream
+
+- Steff asked for more Spark scouts. Three GPT-5.3-Codex-Spark starts hit quota until 13:06 and were closed; Codex launched six `gpt-5.4-mini` read-only fallback scouts for Quad AI Commander branch intel, support/RequestSpecial authority, lifecycle/server-loop topology, UI/dialog lifecycle, tooling/release/deploy footguns and upstream/community-dev lessons.
+- All fallback scouts returned and were closed. Codex harvested source-backed non-duplicate deltas and left duplicate confirmations in the source-backed canonical pages.
+- Updated [Quad AI Commander](Quad-AI-Commander), [AI commander audit](AI-Commander-Autonomy-Audit), [Home](Home), [_Sidebar](_Sidebar), [client UI systems](Client-UI-Systems-Atlas), [client UI/HUD](Client-UI-HUD-And-Menus), [player UI workflow](Player-UI-Workflow-Map), [gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas), [support specials](Support-Specials-And-Tactical-Modules-Atlas), [server authority migration](Server-Authority-Migration-Map), [tools/build workflow](Tools-And-Build-Workflow), [tooling release readiness](Tooling-Release-Readiness-Audit), [external integrations](External-Integrations), [server ops](Server-Ops-Runbook), [developer history](Developer-History-And-Upstream-Lessons), [server runtime](Server-Gameplay-Runtime-Atlas), [performance sweep](Performance-Opportunity-Sweep) and machine coordination files.
+- Key source-backed additions: Quad AI Commander is branch/design evidence, not stable behavior; support effects still trust client-provided side/team/object payloads; Economy/EASA UI has stale-state and fail-open dialog risks; LoadoutManager packaging deletes an old archive before proving a new one and does not gate `7za` exit; `botconfig.json` ownership is ambiguous; AntiStack loop evidence belongs to the current `Missions` tree and should stay measurement-first.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 23 files. Content pushed as docs `1d7d0567` / wiki `faaee0f`. Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T12:10:00+02:00 - Codex - mini scout wave town/respawn/upstream/performance
+
+- Steff asked for more Spark scouts. Two GPT-5.3-Codex-Spark starts hit quota, so Codex relaunched four `gpt-5.4-mini` read-only scouts for town/economy loops, respawn/gear/EASA/MASH, upstream developer-history mining and performance/loop topology; a fifth mission-config scout was blocked by the active-agent ceiling.
+- Started a local harvest while scouts run. Source evidence: `Server/Init/Init_Server.sqf:10` compiles `AIBuyUnit`, but source search finds no current stable caller outside `Server_BuyUnit.sqf`; `Server_BuyUnit.sqf:15-16,53-54,81-82` also behaves like an AI/server worker that cancels if a player takes the team.
+- Updated [Gameplay systems atlas](Gameplay-Systems-Atlas) so the stable baseline does not imply live AI/server factory production. It now matches [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [AI commander autonomy audit](AI-Commander-Autonomy-Audit) and [Feature status](Feature-Status-Register): `Server_BuyUnit.sqf` is latent until a caller is proven or intentionally revived. Documentation only; no gameplay source files were edited.
+- All scout slots were closed after return/error. Harvested non-duplicate deltas into [Feature status](Feature-Status-Register), [Server runtime](Server-Gameplay-Runtime-Atlas), [Community & Dev](Community-And-Dev), [AI runtime/HC](AI-Runtime-HC-Loop-Map), [AI/headless/performance](AI-Headless-And-Performance), [Client UI/server-loop perf findings](Client-UI-And-Server-Loop-Perf-Findings), [Performance sweep](Performance-Opportunity-Sweep), [Service menu affordability guards](Service-Menu-Affordability-Guards), [Player UI workflow](Player-UI-Workflow-Map) and `agent-feature-status.jsonl`.
+- Key source-backed additions: resource cap suppresses side supply, paychecks and AI commander funds; town/camp capture rewards are client-local mixed authority; respawn penalty mode `5` can still strip custom gear on unpaid base/HQ respawn; EASA/service stale-context risks are sharper; Community & Dev now records contributor-density and upstream-head provenance; loop docs distinguish intentional throttled/cache-heavy loops from first-patch performance targets.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 15 files. Content landed as docs `eac4a8f6` / wiki `fa9d2a5`; the post-push status reconciliation advanced current heads to docs `699a891f` / wiki `ea8a4de`. Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T12:55:00+02:00 - Codex - scout harvest pushed-head reconciliation
+
+- Continued the documentation finisher loop after the scout harvest and found the usual post-push breadcrumb drift: [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-events.jsonl` and `agent-feature-status.jsonl` named the content commits (`eac4a8f6` / `fa9d2a5`) as the latest pushed heads even though the final pushed heads are docs `699a891f` and wiki `ea8a4de`.
+- Source evidence checked: `git log -2 --oneline` in the docs mirror shows `699a891f docs: record scout harvest push` followed by `eac4a8f6 docs: harvest town respawn upstream scout wave`; the live wiki shows `ea8a4de wiki: record scout harvest push` after `fa9d2a5`.
+- Reconciled the dashboard, worklog, machine status and event/feature-status records so future agents see both the content commit pair and the actual current pushed heads. Coordination cleanup only; no gameplay source files were edited.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for five status files.
+
+## 2026-06-04T12:00:00+02:00 - Codex - validation command post-push closure
+
+- Continued the documentation finisher loop and found the usual post-push machine-status drift after the validation-command cleanup: `agent-status.json` still said the next output was to push that already-pushed batch.
+- Source state checked first: docs branch is at `35334d83` (`docs: clarify current wiki validation commands`) and live wiki is at `c9f63d5` (`wiki: clarify current validation commands`).
+- Updated [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` so future agents see the command-guidance cleanup as pushed and closed. Coordination cleanup only; no gameplay source files were edited.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for the five changed coordination files.
+
+## 2026-06-04T11:50:00+02:00 - Codex - validation command drift cleanup
+
+- Continued the documentation finisher loop into a tooling-docs mismatch: [Progress dashboard](Progress-Dashboard) still told agents to rerun removed `Tools/ValidateWiki.ps1` / `Tools/TestWikiParity.ps1` helpers.
+- Source evidence checked: current docs branch has `docs\validate-wiki.ps1`; the old `Tools\ValidateWiki.ps1` and `Tools\TestWikiParity.ps1` helper paths are absent in this checkout, while branch-local Zargabad validators remain branch evidence only.
+- Updated [Progress dashboard](Progress-Dashboard), [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` so the current validation recipe is explicit before future agents publish. Documentation/tooling guidance only; no gameplay source files were edited.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for the six changed mirrored files.
+
+## 2026-06-04T11:40:00+02:00 - Codex - fallback scout final-head closure
+
+- Continued the documentation finisher loop and found one residual machine-status drift: `agent-status.json` still said the next output was to push the fallback-scout coordination correction.
+- Source state checked first: docs branch was already at `be754933`, live wiki was already at `3ae79fe`, and the fallback scout content batch remains `16f2ce8c` / `c66ed93`.
+- Updated [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` so future agents see the fallback scout wave as closed with no pending scout output. Coordination cleanup only; no gameplay source files were edited.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for the five changed coordination files.
+
+## 2026-06-04T11:30:00+02:00 - Codex - fallback scout push-head reconciliation
+
+- Continued the documentation finisher loop and source-checked current pushed heads after the previous status batch: main docs `2fdab599` (`docs: record fallback scout push`) and live wiki `3c9b796` (`wiki: record fallback scout push`).
+- Reconciled [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` so the current head values no longer stop at the earlier content commits (`16f2ce8c` / `c66ed93`).
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and mirror parity. Coordination cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T11:15:00+02:00 - Codex - fallback scout wave: construction/UI/integrations/community
+
+- Steff asked for another bunch of Spark scouts. Six GPT-5.3-Codex-Spark starts hit quota until 13:06, so Codex closed the failed threads and relaunched four read-only `gpt-5.4-mini` fallback scouts.
+- Harvested all returned scout reports and closed the scout threads. Construction and UI scouts mostly confirmed already-canonical rows; tooling/integration and community scouts added a few sharper operational/process details.
+- Updated [Construction/CoIn](Construction-And-CoIn-Systems-Atlas) with a construction state ownership synthesis, [External integrations](External-Integrations) with the Discord `GatewayIntents.All` privileged-intents deployment caveat, [Community & Dev](Community-And-Dev) with an upstream process capsule, [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas) with template creation refusal semantics and [Player UI workflow](Player-UI-Workflow-Map) with the map-click modifier model.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and mirror parity. Pushed as docs `16f2ce8c` / wiki `c66ed93`. Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T10:55:00+02:00 - Codex - server SideMessage runtime pipeline
+
+- Continued the documentation finisher loop into the Feature Status row for the hidden server side radio/message pipeline.
+- Source evidence checked: `SideMessage` compile in `Server/Init/Init_Server.sqf:32`; payload switch in `Server/Functions/Server_SideMessage.sqf:3-64`; town/camp/town-AI callers at `server_town.sqf:199,230,233`, `server_town_camp.sqf:127,130` and `server_town_ai.sqf:134`; base/building callers at `Server_BuildingDamaged.sqf:13` and `Server_BuildingKilled.sqf:92`; upgrade-complete caller at `Server_ProcessUpgrade.sqf:85`; `LocalizeMessage` client PVF registration/effects at `Init_PublicVariables.sqf:32` and `Client/PVFunctions/LocalizeMessage.sqf:49,53,57-68`.
+- Updated [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) with a canonical SideMessage pipeline shape section, updated [Feature status](Feature-Status-Register) to route there, and added a reusable [Development lesson](Development-Lessons-Learned) plus `agent-development-lessons.jsonl` record so future radio/chat/reward edits do not collapse `SideMessage` and `LocalizeMessage`.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and mirror parity. Documentation cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T10:45:00+02:00 - Codex - documentation finisher status refresh
+
+- Continued the long-running documentation finisher loop by checking both remotes (`git pull --ff-only` already up to date) and current heads: main docs branch `43beb7b6`, live wiki `a9d0d4e`.
+- Found coordination drift: `agent-status.json` still listed Codex on `spark-scout-wave-zargabad-refresh-and-deep-scouts` even though the dashboard/worklog and pushed commits show that scout wave is published, validated and closed.
+- Updated [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` so Codex is back on `documentation-finisher-loop` and the prior scout wave stays historical evidence rather than active ownership.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and mirror parity. Coordination cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T10:12:00+02:00 - Codex - Zargabad branch head refresh and new Spark scouts
+
+- Steff asked for a bunch more Spark scouts. Codex launched six `gpt-5.3-codex-spark` read-only scouts: town defense/mortars/artillery, AI/HC delegation/autonomy, UI/Rsc feature status, economy/supply/factory edge cases, tools/DiscordBot/Extension release footguns and docs/machine-ledger drift.
+- In parallel, Codex source-checked `origin/feature/zargabad-map` after fetch advanced it from the previously audited `1fdcb37a` to `e9294ede` (`Fix Claude brief screenshot filename escaping`), with `1ff04228` in between tuning Zargabad low-pop balance defaults.
+- Detached-worktree static validation passed at `e9294ede` with `Tools\Validate-ZargabadMission.ps1`. Branch scale is still 832 files, now +77733/-95 versus stable `origin/master`, with 3542 generated whitespace findings remaining from `git diff --check`.
+- Updated the Zargabad branch audit, source snapshot, Feature Status, owner decisions and branch smoke workflow so they name current head `e9294ede` and the new low-pop defaults: AI max `6`, player AI max `8`, Soldier cap `3`, team supply cap `30000`, UAV `650`, town mortar/patrol `420/300`, countermeasures `12/18`, start funds/supply `8000/3600`, ordnance range `1500`, ICBM off and price multipliers `0.95/1.15/1.4/1.75/2.0/1.0`.
+- Scout harvest: docs/machine drift scout caught the stale Zargabad machine row and a broken `Feature-Status-Register#owner-decision-queue` link; AI/HC and town/mortar scouts mostly confirmed existing canonical findings; economy/supply/factory scout added stale `_playerObject` matching and sharper factory debit/abort evidence; tooling scout added LoadoutManager soft-copy failure, PerformanceAuditAnalyzer scale/GUI caveats and DiscordBot/extension runtime footguns; fallback UI scout added command-menu tab/multi-select/two-step map-order behavior.
+- Updated [Supply mission architecture](Supply-Mission-Architecture), [Economy authority first cut](Economy-Authority-First-Cut), [Tools and build workflow](Tools-And-Build-Workflow), [External integrations](External-Integrations), [Client UI systems atlas](Client-UI-Systems-Atlas), [Feature status](Feature-Status-Register), `agent-hardening-backlog.jsonl` and coordination files. Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and mirror parity.
+
+## 2026-06-04T09:56:00+02:00 - Codex - Spark scout wave MASH/network depth
+
+- Steff asked for more Spark scouts. Codex launched six `gpt-5.3-codex-spark` read-only scouts before the active-agent limit rejected four additional starts.
+- Active scout lanes: commander voting/reassignment/take-command; town capture/supply/patrols; construction/base/HQ/factory dependencies; factory buy/equipment validation and rollback; respawn/MASH/camps/mobile respawn/JIP; and publicVariable channel health.
+- Broad commander/factory/construction/respawn prompts overflowed and were closed or replaced with micro-scouts. Useful reports returned from commander, towns, publicVariable networking and economy/factory micro-lanes.
+- Harvested source-backed deltas: maintained source/Vanilla MASH deploy creates/stores local MASH objects and adds undeploy, but does not broadcast `WFBE_CL_MASH_MARKER_CREATED`; the receiver compile is commented; the server relay is therefore orphaned; modded `eden`/`lingor` show sender-only drift. Commander duplicate `new-commander-assigned` wording is now scoped as a post-call-shape-fix risk. Factory docs now say the fix is a real request/accept/debit/cancel protocol, not just a refund patch. Networking docs now call out `REQUEST_SUPPLY_VALUE` no-timeout waits and modded/stale `WFBE_VAR_SERVER_FPS` consumers. Feature Status now surfaces town mortars as broken dormant scaffold.
+- Updated [Deep-review findings](Deep-Review-Findings), [Feature status](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions), [Public variable channel index](Public-Variable-Channel-Index), [Networking and public variables](Networking-And-Public-Variables), [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Commander/HQ lifecycle atlas](Commander-HQ-Lifecycle-Atlas), [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-feature-status.jsonl`. Validation/push pending.
+
+## 2026-06-04T09:55:00+02:00 - Codex - post-push status reconciliation for caps/economy/tooling/UI wave
+
+- Continued the documentation finisher loop after the scout-wave harvest was already validated and pushed.
+- Source-checked repository heads: main docs branch is `783f3d0a` (`docs: harvest caps economy tooling scout wave`) and wiki `master` is `75db0fa` (`wiki: harvest caps economy tooling scout wave`).
+- Reconciled [Progress dashboard](Progress-Dashboard) and `agent-status.json` so Codex no longer says the next expected output is validating/mirroring/pushing that already-pushed scout wave. Codex is back on `documentation-finisher-loop`.
+- Coordination cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T09:35:00+02:00 - Codex - Spark scout wave caps/economy/tooling/UI
+
+- Steff asked for more Spark scouts. Codex launched GPT-5.3-Codex-Spark read-only scouts for lifecycle/init, economy/factory, commander/AI caps, PV/security, towns/supply and UI, then added a tooling/runtime scout when a slot freed up.
+- Broad commander, economy and PV/security scouts overflowed during remote compaction; commander and economy were relaunched as micro-scouts. Lifecycle/init and towns/supply did not return within the useful window and were closed unharvested.
+- Harvested source-backed deltas: [Player AI caps](Player-AI-Caps-And-Role-Balance) now has explicit formula and fallback-baseline tables; [Commander/HQ](Commander-HQ-Lifecycle-Atlas) and [Feature status](Feature-Status-Register) now state manual reassignment is currently broken by the `Server_AssignNewCommander.sqf` payload-shape bug; [Economy authority](Economy-Authority-First-Cut) and [Factory/purchase](Factory-And-Purchase-Systems-Atlas) now frame player buys as a request/acceptance/rollback protocol redesign; [Tools/build](Tools-And-Build-Workflow) and [Server ops](Server-Ops-Runbook) now warn that LoadoutManager can delete destination-only files/directories during sync; [Client UI systems](Client-UI-Systems-Atlas) and [UI IDD repair](UI-IDD-Collision-Repair) now call the title issue a lifecycle-handle collision; [Instructions for Codex](Instructions-For-Codex) now names current `origin/feat/supply-helicopter` head `262dc431` instead of stale `ffeea4c2`.
+- Documentation and machine-state cleanup only; no gameplay source files were edited.
 
 ## 2026-06-04T09:13:15+0200 - Codex - hc-upstream-comments-history
 
@@ -25,12 +148,321 @@
 - Cross-linked the HC appendix from [AI/headless](AI-Headless-And-Performance), [HC delegation/failover](Headless-Delegation-And-Failover-Playbook), [Developer history](Developer-History-And-Upstream-Lessons), [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel), [Feature status](Feature-Status-Register), [AI Assistant Guide](AI-Assistant-Guide), Home and `_Sidebar.md`.
 - No gameplay code changed; this lane is documentation and machine-context only.
 
-## 2026-06-04T09:11:20+0200 - Codex - docs-knowledge / wiki-knowledge / /goal loop checkpoint
+## 2026-06-04T09:10:00+02:00 - Codex - runtime ops scout split harvest
 
-- Ran a documentation-only /goal loop checkpoint for `docs-knowledge-entrypoint` by refreshing `Progress-Dashboard.md` and this worklog note.
-- Verified no gameplay source files were changed; only navigation scaffolding / machine records were updated.
-- Confirmed the LLM entrypoint remains canonical via `LLM-Agent-Entry-Pack.md` and `llms.txt`, with links still routed through `Home`, `AI-Assistant-Guide`, and subsystem-facing sources where duplication risk remains high.
-- Validation commands planned for handoff: `docs/validate-wiki.ps1`, `Tools/ValidateWiki.ps1`, and `Tools/TestWikiParity.ps1` (all passed in this loop).
+- The original runtime/server-ops Spark scout overflowed during compaction, so Codex closed it and relaunched two tiny read-only scouts.
+- DiscordBot scout returned two source-backed deltas: `Preferences.Instance` reads/deserializes `preferences.json` without parse/null guard (`Preferences.cs:24-30`) while command/status paths assume it is non-null (`GameStatusUpdater.cs:60-61`, `CommandHandler.cs:49,127`), and `/setup` directly calls `SetGameAsync` at `CommandHandler.cs:70-75`, matching the already-known uncapped timer presence path in `GameStatusUpdater.cs:91-106`.
+- Tooling scout confirmed existing docs already cover the live PVF dispatcher compile gap, `ZipManager.cs:77-92` packaging exit-code weakness and `BaseTerrain.cs:281-289` missing-file dereference risk, so Codex did not duplicate those sections.
+- Updated [External integrations](External-Integrations), [Server ops runbook](Server-Ops-Runbook), [Tooling release readiness audit](Tooling-Release-Readiness-Audit), [Feature status](Feature-Status-Register) and `agent-hardening-backlog.jsonl`. Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T08:08:06+02:00 - Codex - Spark scout wave wiki drift / community / feature depth
+
+- Steff asked for another Spark scout wave.
+- Launched six `gpt-5.3-codex-spark` read-only scouts with narrow lanes: stale reference drift; Miksuu/community developer history; Feature Status depth; agent-readable knowledge-platform improvements; UI/HUD workflow traps; runtime/server-ops/external integration risks.
+- Patched two remaining stale release supply-scan refs in [Instructions for Codex](Instructions-For-Codex) and [Performance opportunity sweep](Performance-Opportunity-Sweep): release branch scan evidence is `origin/release/2026-06-feature-bundle` `supplyMissionStarted.sqf:50-56`, not `:46-53`.
+- The broad stale-ref, Feature Status and UI scouts overflowed and were replaced with smaller row/window scouts. The replacement stale-ref scout confirmed the two patched docs no longer contain stale release scan refs.
+- Harvested source-backed deltas: `RequestSpecial upgrade-sync` is consistency debt rather than a proven functional bug; HC registration owner-id/duplicate rows now say high reliability/idempotency debt; formation picker and server base-area seeding rows are sharper; vote menu row coloring is a concrete offset bug; Knowledge Platform now records active-state/machine-index debt; Community & Dev now records the upstream decision-ledger gap and the current local `miksuu/master` three-commit lead over `origin/master`.
+- Runtime/server-ops integration follow-up was later split and harvested in the `runtime-ops-scout-split-harvest` lane. Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T08:18:00+02:00 - Codex - supply scan reference cleanup
+
+- Continued the documentation finisher loop after noticing that `agent-status.json` still marked `supply-authority-branch-scope-correction` as `published-validating` even though the dashboard and prior validation evidence said validated.
+- Source-checked the supply scan wording against current docs/source, `origin/master` and `origin/release/2026-06-feature-bundle`: current docs/source uses `Base_WarfareBUAVterminal` with `nearestObjects [..., ["Base_WarfareBUAVterminal"], 80]` at `supplyMissionStarted.sqf:25-28`; `origin/master` still uses broad `nearestObjects [..., [], 80]`; release head `a9219d88` uses the heli-aware branch at `:50-56`.
+- Updated [Deep-review findings](Deep-Review-Findings) release line refs and [Feature status](Feature-Status-Register) supply addendum wording so future agents do not chase nonexistent `WFBE_Command_Center_Class` / `WFBE_Supply_Truck_Classes` symbols.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T08:05:00+02:00 - Codex - supply authority branch-scope correction
+
+- Continued the documentation finisher loop into a supply-mission status-drift lead from the worklog.
+- Source-checked current docs/source Chernarus: `supplyMissionStarted.sqf:25-28` already uses the narrowed `["Base_WarfareBUAVterminal"]` 80 m command-center scan, while `supplyMissionCompleted.sqf:27-28` clears only `SupplyAmount`/`SupplyFromTown` because the current source is truck-only.
+- Source-checked branch evidence: `origin/master` still has the broad `nearestObjects [..., [], 80]` command-center scan; `origin/feat/supply-helicopter` head `262dc431` adds `SupplyByHeli` but still does not clear it on completion; `origin/release/2026-06-feature-bundle` head `a9219d88` has the heli-aware `supplyMissionStarted.sqf:50-56` scan and clears `SupplyByHeli` after release commit `4cf443fe`.
+- Updated [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) so the current-status, findings and implementation steps no longer say scan narrowing is still open everywhere, and so the dead-twin/removal claim is branch-scoped. Updated [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) release line refs from `:46-53` to `:50-56`.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T07:34:37+02:00 - Codex - static-defense HC payload-shape lesson and scout wave
+
+- Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota was exhausted until 07:36, so Codex closed the errored Spark threads and launched four `gpt-5.4-mini` read-only scouts for static-defense HC, economy/supply/town capture, UI/HUD/dialogs and networking/PV/security.
+- Local source-check sharpened the static-defense HC finding: `Client_DelegateAIStaticDefence.sqf:25-26` assigns `_teams` from `_retVal select 0`, `Common_CreateUnitForStaticDefence.sqf:69` returns only `[_teams]`, and `Server_HandleSpecial.sqf:86-96` has only the town-vehicle `update-town-delegation` receiver.
+- Updated [Headless delegation and failover playbook](Headless-Delegation-And-Failover-Playbook), [Headless client scaling and topology](Headless-Client-Scaling-And-Topology), [Networking and public variables](Networking-And-Public-Variables), [Feature status](Feature-Status-Register) and [Development lessons](Development-Lessons-Learned): future code owners should not apply an uncomment-only patch; restoring static-defense HC accounting needs a deliberate payload and server receiver.
+- Networking/PV scout output led to a source-backed wording correction: `ATTACK_WAVE_DETAILS` is a server self-loop via `publicVariableServer`, while the later player-visible effects travel through `HandleSpecial`/`LocalizeMessage`.
+- UI and supply/economy scouts mostly confirmed existing canonical pages rather than opening new defects: the IDD/currentCutDisplay repair page, gear `_u_upgrade` finding, malformed `RscClickableText.soundPush`, supply reward split, cooldown casing and dead supply-truck scaffold already carry the needed details.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T07:27:13+02:00 - Codex - RU para-ammo config line-shape lesson
+
+- Source-checked the RU para-ammo support lead before adding duplicate prose.
+- Evidence: `Root_RU.sqf:36` keeps the `WFBE_%1PARAAMMO` assignment after a same-line `//--- Starting Vehicles` comment; peer root files place `WFBE_%1PARAAMMO` on separate executable lines; `Support_ParaAmmo.sqf:59-60` exits unless `WFBE_%1PARAAMMO` is an array.
+- Confirmed [Support specials and tactical modules atlas](Support-Specials-And-Tactical-Modules-Atlas) and [Feature status](Feature-Status-Register) already carry the concrete broken-feature finding.
+- Added the reusable [Development lessons](Development-Lessons-Learned) rule: config/content work needs line-shape checks for comments, merge markers and generator skip-list traps, not only variable-name greps.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T07:23:56+02:00 - Codex - AntiStack monitorTeamToJoin inert worker
+
+- Continued the documentation finisher loop into the next AntiStack-adjacent thin finding.
+- Source evidence: `Init_Server.sqf:606-608` starts `countPlayerScores.sqf`, `monitorTeamToJoin.sqf` and `skillDiffCompensation.sqf` when AntiStack is enabled; `monitorTeamToJoin.sqf:1-15` only computes monitored west/east skill totals and assigns a local `_side`.
+- Clarified [AntiStack database extension audit](AntiStack-Database-Extension-Audit) so the runtime diagram is not mistaken for a live policy loop, routed the Feature Status row to the AntiStack audit, and added a development lesson: `execVM` proves a file runs, not that the feature has a durable effect.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T07:19:31+02:00 - Codex - AntiStack A2WaspDatabase owner gate
+
+- Followed the documentation finisher loop into DR-7 through DR-10 and source-checked the AntiStack external DB path.
+- Current source evidence: server init compiles AntiStack wrappers at `Init_Server.sqf:72-80,85-87`, the ON/OFF fallback defaults `WFBE_C_ANTISTACK_ENABLED` to `1` at `Init_CommonConstants.sqf:170-171`, enabled server init starts AntiStack loops and calls `SET_MAP` at `Init_Server.sqf:597-613`, and the DB wrappers call `"A2WaspDatabase" callExtension` then `call compile` returned strings.
+- Existing pages already carried the main technical audit. Codex added the missing owner-facing gate to [Pending owner decisions](Pending-Owner-Decisions), [AntiStack database extension audit](AntiStack-Database-Extension-Audit) and [Feature status](Feature-Status-Register): before public hosting, either confirm/install the separate `A2WaspDatabase` and harden enabled-mode returns, or operate/default AntiStack disabled until that dependency is real.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T06:55:00+02:00 - Codex - mini scout wave AI/construction/respawn/PV/UI depth 2
+
+- Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked the first two starts until reset, so Codex closed the failed Spark slots and relaunched the wave with five gpt-5.4-mini read-only scouts.
+- Active scout lanes: AI commander/team behavior, construction/CoIn/factory/repair/salvage, respawn/MHQ/service/MASH, PV/security/authority and UI/HUD/dialog UX traps.
+- Reconciled the previous `mini-scout-wave-ai-commander-factory-ui-pv-runtime` status: it was already pushed as docs mirror `0d5b5063` and wiki `2428bfc`, so the dashboard no longer says push is next.
+- Closed and harvested all five mini-scout reports. Promoted source-backed deltas: `wfbe_autonomous` means respawn/order-reset state rather than full AI autonomy; `Server_UpdateTeam` has a formation picker bug candidate; grouped base-area state appears client-seeded but not server-seeded after HQ deploy; CoIn placement/sale has null-read guard-order risks; supply completion message is reward-affecting; supply response caches can hang/poison client gates; `RequestSpecial group-query` trusts payload player/group/side; threeway defender respawn can inherit the zero-camp helper fallback; respawn can stack `HandleAT` Fired handlers; WASP base repair has shared target globals and stale supply spend state; UI pages now carry compact service/gear/tactical/upgrade/help TODO rows.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
+- Documentation/machine-state cleanup only; no gameplay source files were edited. Batch was pushed to the docs mirror and wiki.
+
+## 2026-06-04T06:40:00+02:00 - Codex - mini scout wave AI/commander/factory/UI/PV/runtime
+
+- Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked all six starts, so Codex closed the failed threads and relaunched six read-only gpt-5.4-mini scouts.
+- Active scout lanes: AI squad caps/role balance, commander/voting/orders, factory economy purchase/spawn chain, UI/dialog/HUD broken references, networking/PV hardening follow-up and server runtime/HC/support lifecycle.
+- Local orchestration work source-checked the salvage payout typo again: `Skill_Salvage.sqf:38` and `updatesalvage.sqf:50` call `ChangePlayerfunds`, while `Init_Client.sqf:53,91` compiles `ChangePlayerFunds`.
+- Added the salvage casing defect to [Hardening roadmap](Hardening-Implementation-Roadmap) smaller confirmed fixes and routed it from [Pending owner decisions](Pending-Owner-Decisions) scoped hardening.
+- Runtime/HC/support scout returned first. Codex source-checked and promoted its strongest docs drift: current docs/source has both server-FPS publishers exiting on `!isDedicated`, so [AI runtime loop map](AI-Runtime-HC-Loop-Map) and [Performance opportunity sweep](Performance-Opportunity-Sweep) now distinguish `origin/master`'s old busy-loop shape from the docs-branch guarded source.
+- Remaining scouts were closed and harvested. AI caps re-confirmed the current default-lobby Discord table; UI recheck added missing Economy control `23006` beside `23004`/`23005`; PV hardening sharpened `RequestBaseArea` and both `SEND_MESSAGE` compile sites; factory/commander reports mostly confirmed canonical pages already cover purchase authority, queue/refund defects, commander vote/reassignment bugs, AI commander partiality and HC static-defense accounting.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T06:55:00+02:00 - Codex - cheap mini scout wave commander-adjacent depth
+
+- Spark quota blocked new GPT-5.3-Codex-Spark starts, so Codex launched six cheap mini scouts for construction/factories/upgrades, UI/dialogs/HUD, server ops/extensions, networking/PV security, respawn/supports and AI/team-order.
+- Source-checked and promoted the strongest new deltas: commander vote server/UI mismatch (DR-47), commander reassignment UI target-by-name fragility, gear-template hidden-by-upgrade UX trap, respawn selector helper in the player UI map, DiscordBot presence timeout caveat and spawned-unit order inheritance as partial client-side automation.
+- Construction, networking, AntiStack, support and respawn reports mostly confirmed already-canonical pages: SmallSite add/add, stationary-defense base-area null guard, MASH marker relay dead, direct-PV/PVF RCE surfaces and ZetaCargo detach argument risk were already represented.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T06:20:00+02:00 - Codex - mini scout wave factory/respawn/support/runtime/tooling
+
+- Harvested five read-only mini/high scouts after Spark quota remained unavailable.
+- Promoted only non-duplicate findings into canonical docs: current validator path is `docs\validate-wiki.ps1`; old `Tools\ValidateWiki.ps1`/`Tools\TestWikiParity.ps1` helpers are not present; Zargabad validators are branch-local to `origin/feature/zargabad-map`; buy-menu list/detail pricing can drift; EASA rejects exact-funds purchases; RU para-ammo config is swallowed by a same-line comment; AntiStack has a DB-error shape risk and an execVM'd stub worker; static-defence HC delegation still lacks update-back accounting; LoadoutManager packaging/replacement paths need release hardening.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T05:20:00+02:00 - Codex - post-dispatch PVF handler authority recheck
+
+- Rechecked the mini-scout "thin registered PVF handler" lead against current source rather than adding another loose queue item.
+- Source evidence confirmed active caller paths for `RequestVehicleLock`, `RequestTeamUpdate`, `RequestUpgrade`, `RequestAutoWallConstructinChange`, `RequestChangeScore` and `RequestSpecial` `update-clientfps`.
+- Updated [Server authority migration map](Server-Authority-Migration-Map), [Hardening roadmap](Hardening-Implementation-Roadmap), [Development lessons](Development-Lessons-Learned) and `agent-development-lessons.jsonl` with the key implementation rule: PVF dispatcher lookup hardening closes handler-name RCE, not payload/effect authority.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
+- No gameplay source files were edited.
+
+## 2026-06-04T05:45:00+02:00 - Codex - version.sqf ignore/target-root correction
+
+- Correcting the previous version-file wording across human and machine docs: local Chernarus and Vanilla `version.sqf` files exist in this workspace, but `.gitignore:1` and `.gitignore:23` ignore them and literal-path `git ls-files` returns no tracked rows.
+- Keep the release lesson intact: clean checkouts and generated/target mission roots still need explicit version-file generation or verification before pack/test claims.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T05:05:00+02:00 - Codex - mini scout wave init/PV/supply/construction/UI/ops
+
+- Spark quota blocked another Spark scout wave, so Codex launched six cheap mini discovery scouts instead.
+- Scout lanes covered init/compile/parameter wiring, PV/security/authority, towns/economy/supply, construction/CoIn/base structures, UI/dialog wiring and tools/extensions/ops.
+- Promoted source-backed corrections and leads: local ignored/generated Chernarus and Vanilla `version.sqf` files exist but are not tracked by Git, so clean checkout/generated target roots still need verification; stable checked-in supply mission code is truck-only and `SupplyByHeli` belongs to PR/branch evidence; thinner registered PVF handlers still need handler/effect authority review; CoIn mirrors the stationary-defense base-area null-guard issue; salvage has a local payout/deletion authority edge and suspect cleanup loop; main-menu GPS zoom actions are orphaned; DiscordBot/Extension/DiscordBot `database.json` field counts drift.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T04:32:00+02:00 - Codex - mini scout wave towns/construction/respawn/supports/AI/runtime
+
+- Spark quota blocked the first two GPT-5.3-Codex-Spark scout starts, so Codex closed those failed slots and relaunched six cheap mini scouts.
+- Scout lanes covered towns/voting, factories/buildings/repair, respawn/MHQ/camps, supports/artillery/UAV/ICBM, AI orders/autonomy and server loops/perf cleanup.
+- Promoted only source-backed deltas into canonical pages: `RequestSpecial` `upgrade-sync` mixed `_args`/`_this` reads, respawn candidate caveats, player-buy/no-PVF confirmation, SmallSite add/add logic-list bug candidate, stable-master order plumbing versus missing AI commander autonomy, runtime startup hub/dormant maintenance hooks and no direct town-capture to commander-election coupling.
+- Validation passed and the batch was pushed as docs mirror `16338f5d` and wiki `35479de`.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T02:31:14+02:00 - Codex - dashboard current-lanes reconciliation
+
+- Reconciled [Progress dashboard](Progress-Dashboard) after the authority/UI/HC scout harvest.
+- Updated **At A Glance** and **Current Lanes** so Codex/Sub-agents point to `authority-ui-hc-fallback-scout-wave`, matching `agent-status.json` and `agent-events.jsonl`.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T02:27:14+02:00 - Codex - authority/UI/HC fallback scout wave
+
+- Tried Spark scouts again, but GPT-5.3-Codex-Spark remained quota-blocked until 03:58. Relaunched five fallback explorers for economy authority, commander/HQ, AI/HC, client/UI and tooling/generated mission drift.
+- Source-checked and promoted only new or corrective findings: likely AI-commander upgrade debit-order bug, resource-income payout/display drift, commander vote restart and SetTask partials, HQ deploy/pack authority caveat, HC owner-id registration miss, client-FPS delegation UID/FPS trust, inert Arma high-command UI add path, vote/help/WASP UI edge cases and LoadoutManager summary wording for modded generation.
+- Updated canonical pages plus `agent-feature-status.jsonl` and `agent-hardening-backlog.jsonl`; gameplay source files were not edited.
+
+## 2026-06-04T02:13:25+02:00 - Codex - collaboration Claude lane refresh
+
+- Reconciled `agent-collaboration.json` against [Progress dashboard](Progress-Dashboard) and `agent-status.json`.
+- Claude's current lane now matches the active coordination state: `collaboration-follow-autonomous-ready`.
+- Preserved the older DR-46 send-message review wording only as historical worklog/event context, not as a current owner claim.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
+## 2026-06-04T00:37:08+02:00 - Codex - Micro-scout harvest after Spark quota/context limits
+
+- Ran a second scout wave, then switched from broad Spark prompts to bounded micro-scouts after context-window errors and Spark quota limits.
+- Promoted source-backed findings: modded Napf/Eden/Lingor compile missing `Common_GetTotalCamps.sqf`; `UNIT_COST_MODIFIER` can keep a stale discount when unit-cost upgrade level returns to `0`; destroyed-factory purchase abort cleans queue state but does not refund the already debited player; auto-wall construction uses a global `isAutoWallConstructingEnabled` toggle; and `Common_ChangeSideSupply.sqf` ignores three-argument reason strings.
+- Treated UI IDC/IDD, MASH marker, respawn charge, PV trust-boundary and broad economy findings as confirmation-only where canonical pages already covered them.
+- Published the batch as docs mirror `4580c2b1` and wiki `ebf043e`; `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and mirror parity passed.
+- Closed errored/overflowed scouts, including the AI-cap broad scout; future AI-cap scouting should receive only the already identified cap files rather than a whole subsystem prompt.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T00:49:12+02:00 - Codex - coordination stale-status cleanup
+
+- Re-scanned dashboard and machine context for stale `validating`, `ready-to-publish` and open publish wording after the micro-scout reconciliation.
+- Corrected [Progress dashboard](Progress-Dashboard) At A Glance so Codex no longer appears to be validating an already published micro-scout batch.
+- Corrected `agent-context.json` for the already-published DR42/DR43 reconciliation and HC delegation/failover playbook lanes, and removed old "publish validation remains" wording from the integrated cheap-explorer wave E record.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T00:51:57+02:00 - Codex - latest-batch machine handoff refresh
+
+- Rechecked current git heads after the stale-status cleanup: docs mirror `a44cf5fc`, wiki `f78943f`.
+- Added the cleanup batch to [Progress dashboard](Progress-Dashboard) Latest Batch and updated `agent-status.json` so the machine handoff no longer treats the micro-scout harvest as the freshest Codex output.
+- Refreshed `agent-collaboration.json` `generatedAt` after the coordination file edits.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T00:56:35+02:00 - Codex - drone/recon branch diff-scope clarification
+
+- Fetched all remotes and rechecked branch heads: `origin/feat/drone-saturation-strike` remains `8ca4be90`, `origin/feat/recon-uav` remains `563418ea`, both merge from stable `origin/master` `2cdf5fb8`.
+- Verified diff scopes from source: DroneStrike has 17 total files (+1133/-4), but only 15 source-Chernarus mission files (+379/-4) and 0 maintained Vanilla mission files; ReconUAV has 25 total files (+1461/-657), but only 22 source-Chernarus mission files (+593/-657) and 0 maintained Vanilla mission files.
+- Updated [Current source status snapshot](Current-Source-Status-Snapshot), [Feature status](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions) and `agent-feature-status.jsonl` so total branch diff and mission-runtime scope no longer look contradictory.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T00:13:27+02:00 - Codex - Spark scout wave harvest and micro-lane split
+
+- Harvested completed Spark scouts from the economy/factory/respawn/UI/HC/tooling/entrypoint/camp/paratrooper/content/variant/RequestSpecial lanes. Most economy, factory, respawn/MASH, HC and paratrooper results confirmed existing canonical pages, so they were treated as validation instead of duplicated.
+- Promoted new source-backed findings into docs and machine backlog: Economy dialog missing controls (`23004`/`23005`), 18 unresolved conflict-marker files across modded Napf/Eden/Lingor, camp count helper zero-to-one fallback, absence of wrapper scripts under the scoped tooling/integration folders and the undriven `RequestSpecial` `track-playerobject` branch.
+- Broad Spark prompts for PVF, supports/specials, towns/camps and commander/AI exceeded context. Replaced them with narrower micro-lanes where useful: RequestSpecial-only, camp-capture-only, paratrooper-marker-only and tactical-support-only.
+- Published as docs mirror `5e3507d8` and wiki `eda014e` after wiki validation, JSON/JSONL parsing, diff check and mirror parity.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-03T22:41:16+0200 - Codex - buymenu-easa-qol-branch-deep-audit
+
+- Deep-audited `origin/feat/buymenu-easa-qol` head `a66d4691` after the branch matrix identified it as the remaining small UI branch without a dedicated audit page.
+- Source evidence checked: merge base `2cdf5fb8`; branch diff `3 files, +42/-6`; all touched files are source Chernarus client UI files; no maintained Vanilla files are touched; `git diff --check origin/master..origin/feat/buymenu-easa-qol` is clean.
+- Commit evidence checked: `43a7849e` unaffordable Buy Units price tint; `6aacf0c9` full/crew cost display and live queue-tab labels; `a66d4691` EASA current-loadout highlight/preselect.
+- Line evidence checked: `Client_UIFillListBuyUnits.sqf:1,61-62,104`; `GUI_Menu_BuyUnits.sqf:201-210,280,335,388,444,487`; `GUI_Menu_EASA.sqf:29-40`; branch Vanilla absence by `git diff --name-only ... -- Missions_Vanilla`.
+- Added [BuyMenu EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit) and routed it through Home, sidebar, mkdocs, llms, Client UI Systems, Gear/Loadout/EASA, Feature Status, Pending Owner Decisions, source snapshot, Testing workflow and machine ledgers.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-03T22:25:52+0200 - Codex - perf-quick-wins-branch-deep-audit
+
+- Deep-audited `origin/perf/quick-wins` head `0076040f` after the branch matrix identified it as a high-value fix candidate.
+- Source evidence checked: merge base `2cdf5fb8`; branch diff `18 files, +27/-27`; all touched files are source Chernarus under `Missions/[55-2hc]warfarev2_073v48co.chernarus`; no maintained Vanilla files are touched; `git diff --check origin/master..origin/perf/quick-wins` is clean.
+- Commit evidence checked: `95481b37` server-loop/perf cleanup; `0a1e6165` eleven correctness fixes; `0076040f` factory queue, camp-bunker EH and paratrooper PV fixes.
+- Line evidence checked: `Client_BuildUnit.sqf:366-368`; `Init_PublicVariables.sqf:40`; `Common_ChangeSideSupply.sqf:25`; `Server_ChangeSideSupply.sqf:12,36`; `mines_cleaner.sqf:17`; `server_collector_garbage.sqf:17`; `server_patrols.sqf:26`; `server_town_patrol.sqf:18`; `server_town_camp.sqf:135`; `updateresources.sqf:74`; `Server_HandleSpecial.sqf:235-236`; `RequestOnUnitKilled.sqf:92`; `Common_EquipBackpack.sqf:35,41`; `Common_EquipVehicle.sqf:27,33,39`; `Action_RepairMHQDepot.sqf:6`; `viem.sqf:20,38`; `DropRPG.sqf:57`.
+- Added [Perf quick wins branch audit](Perf-Quick-Wins-Branch-Audit) and routed it through Home, sidebar, mkdocs, llms, Feature Status, Pending Owner Decisions, source snapshot, Testing workflow and machine ledgers.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-03T22:11:05+0200 - Codex - zargabad-branch-deep-audit
+
+- Deep-audited `origin/feature/zargabad-map` head `1fdcb37a` after branch intake identified it as the remaining high-value map branch.
+- Source evidence checked: merge base `2cdf5fb8`; branch diff `832 files, +77702/-95`; changed path counts 792 generated Zargabad mission files, 15 source Chernarus files, 14 tools, 4 DiscordBot terrain files, 4 guides and 3 Takistan files; `ZARGABAD.cs:1-13`; `SqfFileGenerator.cs:127-130`; `ZipManager.cs:15-44`; `initJIPCompatible.sqf:121-124`; `Init_Boundaries.sqf:4-10`; `Init_CommonConstants.sqf:430-446`; `Init_Zargabad.sqf:1-125`; `Zargabad_EdgeGuard.sqf:1-45`; `Zargabad_BlackMarket.sqf:1-43`; `Zargabad_RuntimeAudit.sqf:1-114`; and `Guides/Zargabad-Completion-Gates.md:8-20`.
+- Ran branch static validation in detached worktree `work\zargabad-audit-worktree`: `powershell -NoProfile -ExecutionPolicy Bypass -File Tools\Validate-ZargabadMission.ps1` passed, including 13 towns, 19 camps, 1 airport, 9 starts, 33 town-defense logics, no duplicate object ids, no missing sync targets, no out-of-6000 logic positions and no Takistan Zargabad-module spillover.
+- Static cleanup caveat recorded: `git diff --check origin/master..origin/feature/zargabad-map` reports 3542 whitespace findings in generated Zargabad mission files.
+- Added [Zargabad branch audit](Zargabad-Branch-Audit) and routed it through Home, sidebar, mkdocs, llms, Content Structure, Feature Status, Pending Owner Decisions, Testing workflow and machine ledgers.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T01:55:00+0200 - Codex - supply-heli-current-head-refresh
+
+- Refreshed the PR #1 supply-heli page against current `origin/feat/supply-helicopter` head `262dc431`, replacing older-head line-table wording instead of leaving only a drift note.
+- Source evidence checked: commit list `08664ebc` -> `262dc431`, merge base `f5985b77`, diff stat 82 files +462/-2056, branch whitespace hits, `Rsc/Parameters.hpp:4-10`, `Init_CommonConstants.sqf:168-180`, `Skill_Apply.sqf:62-72`, `supplyMissionStart.sqf:16-60`, `supplyMissionStarted.sqf:7-30,42-60,93-95`, `supplyMissionCompleted.sqf:24-41`, `supplyMissionCompletedMessage.sqf:10-32`, `Client_UIFillListBuyUnits.sqf:102` and `GUI_Menu_BuyUnits.sqf:451-456`.
+- Corrected stale adjacent wording: current head uses Aircraft Factory upgrade 3 for load/action visibility and Air 4 for cash runs, not older Supply-upgrade wording; maintained Vanilla still has no `SupplyByHeli`, `WFBE_C_SUPPLY_HELI_TYPES`, `WFBE_C_SUPPLY_HELI_ENABLED` or `wfbe_supply_killed_eh_set` hits.
+- Added a current-head gate: `SupplyByHeli` is written at mission start and read in started/completed handlers, but completion clears only `SupplyAmount` and `SupplyFromTown`; owner should either clear `SupplyByHeli` or accept/document retained state as harmless because amount is zeroed.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T01:25:00+0200 - Codex - commander-positions-branch-deep-audit
+
+- Deep-audited `origin/feat/commander-positions` head `560db61c` after branch intake identified it as useful but under-documented construction work.
+- Source evidence checked: branch commits `98b15e97`, `b28b351f`, `560db61c`; merge base `f5985b77`; diff stat 83 files, +524/-2025; Chernarus anchors in `Structures_CO_US.sqf:168-174` and `Structures_CO_RU.sqf:166-172`; template map in `Init_Defenses.sqf:93-183`; compile in `Init_Server.sqf:26`; routing in `RequestDefense.sqf:1-16`; builder in `Server_ConstructPosition.sqf:1-66`; CoIn/HQ event-handler cleanup in commit `b28b351f`; and construction debug-hint removal in the same commit.
+- Corrected an important scope trap: branch grep finds no maintained Vanilla `Server_ConstructPosition`, `WFBE_POSITION_TEMPLATE_MAP` or WDDM commander-position anchor registrations. The branch touches Vanilla broadly, but the actual new position runtime is source-Chernarus only.
+- Static branch caveats recorded: `git diff --check origin/master..origin/feat/commander-positions` reports trailing whitespace in Chernarus and maintained Vanilla source files; the branch also carries unrelated Valhalla, AFK/profile, service/team/upgrade UI, `Server_HandleSpecial`, commander assignment, town-AI and static-defense delegation deltas.
+- Added [Commander positions branch audit](Commander-Positions-Branch-Audit), linked it from Home/sidebar/mkdocs/llms/source snapshot/Feature Status/Pending owner decisions/Testing workflow/PR8 WDDM routing, and added a development lesson for payload-vs-baggage-vs-propagation labels on broad feature branches.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-03T22:05:00+0200 - Codex - player-stats-branch-deep-audit
+
+- Deep-audited `origin/feat/player-stats` head `e01e47e1` after the second-wave branch intake identified it as a useful but under-documented branch.
+- Source evidence checked: `Init_CommonConstants.sqf:442-461`, `Init_Server.sqf:300-302`, `RequestOnUnitKilled.sqf:50-69`, `RecordStat.sqf:1-39`, `StatsFlush.sqf:1-50`, `Preferences.cs:16-20`, `ProgramRuntime.cs:72-73`, `StatsService.cs:17-40`, `RptTailer.cs:24-45,57-71`, `StatsBatchParser.cs:10-41`, `StatsAccumulator.cs:9-30`, `StatsDocument.cs:22-40`, `PlayerStat.cs:6-25`, and `DiscordBot.Tests/*`.
+- Validation evidence: `git diff --check origin/master..origin/feat/player-stats` is clean; `git grep` found no stats hits on `origin/master` and no stats hits under `Missions_Vanilla` on the branch; local `.NET 9.0.314` `dotnet test DiscordBot.Tests\DiscordBot.Tests.csproj` passed 13/13 in a temporary detached worktree.
+- Added [Player stats branch audit](Player-Stats-Branch-Audit), linked it from Home/sidebar/source snapshot/Feature Status/Pending owner decisions/Testing workflow, and added a development lesson for dark-launched integration branches that are safe when disabled but still need ops/privacy/runtime gates before enablement.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-03T21:15:00+0200 - Codex - origin-branch-intake-second-wave
+
+- Fetched `origin`/`miksuu` and indexed the remaining visible branch-only feature lanes not yet represented in the wiki: `origin/feat/buymenu-easa-qol` `a66d4691`, `origin/feat/player-stats` `e01e47e1`, `origin/perf/quick-wins` `0076040f`, `origin/feat/commander-positions` `560db61c`, `origin/feature/zargabad-map` `1fdcb37a` and current `origin/feat/supply-helicopter` `262dc431`.
+- Added branch rows and promotion gates to [Current source status snapshot](Current-Source-Status-Snapshot), [Feature status](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions), the [branch-only smoke pack](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) and machine ledgers.
+- Source evidence checked: BuyMenu/EASA UI price/queue/current-loadout hints; player-stats off-by-default SQF instrumentation plus DiscordBot RPT tailer; perf quick-wins server/client bugfix bundle; commander-position/wall construction branch; branch-only Zargabad low-pop mission/guides; and supply-heli current-head drift from Supply upgrade wording to Aircraft Factory level 3/4 gating.
+- Static branch caveats recorded: commander-positions and supply-helicopter inherit trailing whitespace in source files, while Zargabad has trailing whitespace in generated mission files. These are cleanup gates before merge/release claims.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T01:05:00+0200 - Codex - wf-menu-ops-console-branch-index
+
+- `git pull` fetched new branch `origin/feat/wf-menu-ops-console`; source-checked head `0767c0b5` against stable `origin/master` merge base `2cdf5fb8`.
+- Branch shape: 23 files, +1033/-154. It is UI-only: Chernarus + maintained Vanilla Rsc/GUI/HUD reskin files, new `Client/Images/brand_chevron.jpg` in both maintained missions and `docs/superpowers/*` plan/spec/mockup files.
+- Evidence checked: `Rsc/Styles.hpp:10-40`, `Rsc/Ressources.hpp:117-131,274-277`, `Rsc/Dialogs.hpp:1057-1064,1173-1179,1240-1249`, `Rsc/Titles.hpp:178-179`, plus matching Vanilla `Rsc/Dialogs.hpp:1057-1064,1240` and `Rsc/Styles.hpp:10-40`.
+- Static branch caveat: `git diff --check origin/master..origin/feat/wf-menu-ops-console` reports trailing whitespace in `docs/superpowers/plans/2026-06-03-wf-menu-ops-console.md:78,179`; record this as a branch cleanup gate before merge.
+- Updated [Current source status snapshot](Current-Source-Status-Snapshot), [Feature status](Feature-Status-Register), [Client UI systems atlas](Client-UI-Systems-Atlas), [Pending owner decisions](Pending-Owner-Decisions), [Testing workflow](Testing-Debugging-And-Release-Workflow) and machine ledgers with branch-review gates.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T00:55:00+0200 - Codex - source-status-docs-head-wording-cleanup
+
+- Cleaned up current summary wording after the branch-feature ledger pass: [Progress dashboard](Progress-Dashboard) and [`agent-status.json`](agent-status.json) now describe docs branch `154b7f38` as the source-check basis for the feature matrix, not the current durable head of `origin/docs/developer-wiki-index`.
+- Updated [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-04-feature-branch-matrix) to avoid hardcoding a follow-up docs-only branch head that would immediately stale again.
+- Updated the machine knowledge record for `source-status-feature-branch-matrix-2026-06-04` so future agents load the same source-check-basis model.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T00:40:00+0200 - Codex - branch-feature-agent-ledger-crosslink
+
+- Re-fetched `origin` and `miksuu` and confirmed branch heads for the current branch-feature matrix: docs branch `d9416609` after docs-only commits, `miksuu/master` `8bcc42b1`, stable `origin/master` `2cdf5fb8`, `origin/feat/ai-commander` `4dba060e`, `origin/feat/drone-saturation-strike` `8ca4be90` and `origin/feat/recon-uav` `563418ea`.
+- Updated [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-04-feature-branch-matrix) so the docs mirror row labels `154b7f38` as the source-check basis rather than a durable branch-head claim.
+- Updated [`agent-feature-status.jsonl`](agent-feature-status.jsonl) and [`agent-release-readiness.json`](agent-release-readiness.json) so the AI commander and DroneStrike/ReconUAV branch records point agents to the feature branch matrix, owner decisions, promotion gates and planned smoke pack before any stable/release-ready wording.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T00:24:00+0200 - Codex - source-status-feature-branch-matrix-refresh
+
+- Fetched `origin` and `miksuu` with prune, then rechecked current branch heads.
+- Updated [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-04-feature-branch-matrix) with a compact branch-feature matrix for docs branch `154b7f38`, `miksuu/master` `8bcc42b1`, `origin/feat/ai-commander` `4dba060e`, `origin/feat/drone-saturation-strike` `8ca4be90` and `origin/feat/recon-uav` `563418ea`.
+- Confirmed all four comparison refs share stable `origin/master` merge base `2cdf5fb8`; Miksuu master remains the town-defense diagnostics merge line, while local AI/drone/recon branches remain branch-only evidence.
+- The snapshot now routes branch merge/release claims to [Pending owner decisions](Pending-Owner-Decisions), [`agent-release-readiness.json`](agent-release-readiness.json) and the [branch-only feature smoke pack](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack).
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-04T00:12:00+0200 - Codex - branch-feature-smoke-pack
+
+- Added a planned [branch-only feature smoke pack](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) for branch features that now have promotion gates.
+- Covered `origin/feat/ai-commander` head `4dba060e`: no-human full command, human assist/no-spend, order execution, production cap, upgrade debit/costs, commander handoff, HQ death, JIP and optional HC smoke.
+- Covered `origin/feat/drone-saturation-strike` head `8ca4be90`: paid-support authority, server-side debit/cooldown/upgrade/caller validation, active-cap cleanup, JIP cooldown, targeting/audience/score effects, performance and generated scope.
+- Covered `origin/feat/recon-uav` head `563418ea`: old-UAV replacement, deploy/recall, reveal audience, cap cleanup, destroyed-UAV cleanup, HQ-loss cleanup, JIP and generated scope.
+- Updated [Feature status register](Feature-Status-Register), [Progress dashboard](Progress-Dashboard) and [`agent-release-readiness.json`](agent-release-readiness.json) so agents can find the planned smoke matrix before merge/release claims.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-03T23:59:00+0200 - Codex - branch-feature-promotion-gates
+
+- Converted the latest branch-intel findings into explicit owner/release gates so useful branch evidence does not read as stable-master or release-ready truth.
+- Updated [Pending owner decisions](Pending-Owner-Decisions) with promotion decisions for `origin/feat/ai-commander` head `4dba060e`, `origin/feat/drone-saturation-strike` head `8ca4be90` and `origin/feat/recon-uav` head `563418ea`.
+- Updated [`agent-release-readiness.json`](agent-release-readiness.json) with machine-readable `branchOnlyFeaturePromotionGates` for default-on AI commander behavior, paid DroneStrike authority and ReconUAV old-UAV replacement scope.
+- Source evidence checked directly from branch files: `Parameters.hpp:96`, `Init_Server.sqf:49-54,387-389,630-631`, `AI_Commander.sqf:29-81`, Drone constants `Init_CommonConstants.sqf:243-263`, `Support_DroneStrike.sqf:1-14,16-18,46-52`, `Server_HandleSpecial.sqf:63-82` on recon and `Support_ReconUAV.sqf:1-22,83-102,119-132,140-151`.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-03T23:55:00+0200 - Codex - ai-commander-branch-intel-refresh
+
+- Pulled latest remotes and found new `origin/feat/ai-commander` at head `4dba060e`.
+- Source-checked the branch against stable `origin/master` merge base `2cdf5fb8`: 9 source-Chernarus files, +366/-5, no maintained Vanilla files touched.
+- Confirmed branch adds a per-side AI commander supervisor, assign-types/assign-towns/produce workers, explicit order executor, default-on AI commander parameter, upgrade cost/debit fixes and a nil guard around the old `UpdateSupplyTruck` path.
+- Updated [AI commander autonomy audit](AI-Commander-Autonomy-Audit), [Feature status register](Feature-Status-Register), [AI/headless](AI-Headless-And-Performance), [Abandoned feature revival](Abandoned-Feature-Revival-Review), developer-history pages and machine lesson ledgers so future agents keep stable-master status separate from branch revival evidence.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-03T23:30:00+0200 - Codex - drone-recon-branch-intel-refresh
+
+- Pulled both docs surfaces and source-checked newly fetched support branches before changing docs.
+- Confirmed `origin/feat/drone-saturation-strike` head `8ca4be90` is the latest drone tuning branch: 4-Ka package, HP 20, cruise altitude 300, scatter 6 and cooldown 300.
+- Confirmed `origin/feat/recon-uav` head `563418ea` adds AI-flown `ReconUAV`/`ReconUAVRecall`, removes the old `Client/Module/UAV/uav*.sqf` UI scripts and old `Server/Support/Support_UAV.sqf`, but only includes drone history through `93b47594`.
+- Updated [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match), [Feature status register](Feature-Status-Register), dashboard and machine ledgers so future agents treat drone strike and recon UAV as separate support-review lanes.
+- Documentation only; no gameplay source files were edited.
+
+## 2026-06-03T19:08:00+0200 - Codex - documentation-finisher-mirror-reconciliation
+
+- Pulled both documentation surfaces and found the live wiki had four direct commits after the mirror's `miksuu-upstream-commit-intel` batch: `f5c4ab6`, `2d73c5e`, `7c71b6a` and `69f48e4`.
+- Parity check found 17 wiki-vs-`docs/wiki` differences: upstream history pages, PR8/drone matching, AI guide routing, Feature Status, Home/sidebar, runtime/SQF/tools pages and agent machine records.
+- Validation also caught broken local links to historical coordination/reference pages; restored and synced [Bottleneck removal queue](Bottleneck-Removal-Queue), [Current source status snapshot](Current-Source-Status-Snapshot), [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan), [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index), [Self-host testing field notes](Self-Host-Testing-Field-Notes), [Audit findings queue](Audit-Findings-Queue-2026-06-03) and [Client UI/server-loop perf findings](Client-UI-And-Server-Loop-Perf-Findings).
+- Mechanically mirrored the live wiki versions into `docs/wiki/`, then recorded this reconciliation in the dashboard/worklog/event feed so future agents know the docs-branch commit is a mirror-catchup batch plus link repair.
+- Documentation only; no gameplay source files were edited.
 
 ## 2026-06-03T19:10:00+0200 - Codex - upstream-developer-lessons-and-history-deep-pass
 
@@ -50,7 +482,7 @@
 
 Append entries here so Codex, Claude and future assistants can see what each agent did.
 
-Read this file as append-only history, not as a strict timestamp-sorted truth source. For the contested cleanup lanes, trust [Current source status snapshot](Current-Source-Status-Snapshot) plus `agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851` until a newer source re-check with file/line evidence replaces them. Older lines that say those lanes are source/Vanilla patched are stale-wave history.
+Read this file as append-only history, not as a strict timestamp-sorted truth source. For the contested cleanup lanes, trust [Current source status snapshot](Current-Source-Status-Snapshot) plus `agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851` until a newer source re-check with file/line evidence replaces them. Older lines that say those lanes are older shipped-status are stale-wave history.
 
 ## 2026-06-03 - Codex Docs knowledge-pack quality follow-up
 
@@ -507,7 +939,7 @@ Read this file as append-only history, not as a strict timestamp-sorted truth so
 
 ## 2026-06-02T19:20:00+02:00 - Codex - DR-35 Mission Parameters Handoff Closure
 
-- Re-checked source Chernarus and generated Vanilla Takistan: `WASP/actions/AddActions.sqf:4,9-12` still has the Gear/OnArmor actions commented, while `:15` keeps only the HQ recovery action live.
+- Re-checked both maintained mission targets: `WASP/actions/AddActions.sqf:4,9-12` still has the Gear/OnArmor actions commented, while `:15` keeps only the HQ recovery action live.
 - Re-checked the mission parameter wiring: source Chernarus `Common/Init/Init_Parameters.sqf:5-10`, `initJIPCompatible.sqf:132`, `Rsc/Parameters.hpp:3` and the generated Vanilla equivalents use `class Params` / `paramsArray` order, not SQF `params` syntax.
 - Clarified DR-35 wording in [Deep-review findings](Deep-Review-Findings), [Codebase coverage ledger](Codebase-Coverage-Ledger), `agent-context.json` and `agent-collaboration.json` so the old "params docs" handoff no longer looks pending or like an invitation to use the Arma 3-era SQF `params` command. Gameplay code was left untouched.
 
@@ -852,7 +1284,7 @@ Key conclusions:
 
 ## 2026-06-02T12:52:23+02:00 - Codex - commander-page-current-state-reconcile
 
-- Source-checked source Chernarus and generated Vanilla Takistan `Server_AssignNewCommander.sqf` / `RequestNewCommander.sqf`.
+- Source-checked both maintained mission targets `Server_AssignNewCommander.sqf` / `RequestNewCommander.sqf`.
 - Superseded by the 2026-06-02T14:35 source-patched claim audit: current source/Vanilla still use `_side = _this` in `Server_AssignNewCommander.sqf` while `RequestNewCommander.sqf` passes `[_side,_assigned_commander]`.
 - Later source checks supersede the source-patched wording: this lane remains patch-ready/current-source-unpatched, and the duplicate `new-commander-assigned` notification remains part of the cleanup target.
 
@@ -871,21 +1303,21 @@ Key conclusions:
 
 ## 2026-06-02T13:45:00+02:00 - Codex - Client Skill Init Current-State Recheck
 
-- Source-checked source Chernarus and generated Vanilla Takistan `Client/Init/Init_Client.sqf`.
+- Source-checked both maintained mission targets `Client/Init/Init_Client.sqf`.
 - Current source still calls `Skill_Init.sqf` twice in both targets: first at `:547`, then again at `:571` immediately before `(player) Call WFBE_SK_FNC_Apply` at `:572`.
 - Corrected [Client skill init idempotency](Client-Skill-Init-Idempotency), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Feature status](Feature-Status-Register), [Progress dashboard](Progress-Dashboard), [AI/headless](AI-Headless-And-Performance) and machine records from "source patched" to "patch-ready/current source still duplicate".
 - Gameplay code was left untouched. Future owner should remove only the second source Chernarus init call, run LoadoutManager propagation, then smoke Soldier/non-Soldier AI caps and respawn skill reapply.
 
 ## 2026-06-02T13:50:00+02:00 - Codex - Client Skill Init Current-State Rereconcile
 
-- Source-checked current source Chernarus and generated Vanilla Takistan `Client/Init/Init_Client.sqf` again.
+- Source-checked current both maintained mission targets `Client/Init/Init_Client.sqf` again.
 - Superseded by the 2026-06-02T14:10 source-patched claim audit: both maintained targets still call `Skill_Init.sqf` at `:547` and `:571`, then call `WFBE_SK_FNC_Apply` at `:572`.
 - Reconciled [Client skill init idempotency](Client-Skill-Init-Idempotency), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Feature status](Feature-Status-Register), [Progress dashboard](Progress-Dashboard), [AI/headless](AI-Headless-And-Performance), `agent-feature-status.jsonl`, `agent-hardening-backlog.jsonl`, `agent-status.json`, `agent-collaboration.json`, `agent-context.json` and `agent-knowledge.jsonl`.
 - Handoff superseded by later source checks: duplicate client skill init remains patch-ready/current-source-unpatched; future owner should patch source Chernarus, propagate generated targets and smoke Soldier/non-Soldier AI caps, respawn skill reapply and dedicated/JIP client init.
 
 ## 2026-06-02T14:10:00+02:00 - Codex - Current-State Patch-Claim Audit
 
-- Superseded the 13:50 client-skill rereconcile after a literal-path source check: current source Chernarus and generated Vanilla Takistan still call `Skill_Init.sqf` at `:547` and `:571`, with `WFBE_SK_FNC_Apply` at `:572`.
+- Superseded the 13:50 client-skill rereconcile after a literal-path source check: current both maintained mission targets still call `Skill_Init.sqf` at `:547` and `:571`, with `WFBE_SK_FNC_Apply` at `:572`.
 - Re-checked hosted server FPS publishers and supply mission command-center scans: both maintained targets still sleep only inside `isDedicated` in the FPS publishers and still use the broad 80-meter supply scan before filtering for `Base_WarfareBUAVterminal`.
 - Corrected high-traffic docs, dashboards and machine records for all three lanes. Gameplay code was left untouched; future code owners should patch source Chernarus first, propagate Vanilla with LoadoutManager and run Arma smoke before marking these lanes source-patched.
 
@@ -897,7 +1329,7 @@ Key conclusions:
 
 ## 2026-06-02T14:40:00+02:00 - Codex - Client Skill Init Literal-Path Rerecheck
 
-- Re-ran literal-path source checks for current source Chernarus and generated Vanilla Takistan `Client/Init/Init_Client.sqf`.
+- Re-ran literal-path source checks for current both maintained mission targets `Client/Init/Init_Client.sqf`.
 - Superseded the one-call/no-second-call wording in this entry: current source/Vanilla still call `Skill_Init.sqf` at `:547` and `:571`, then call `WFBE_SK_FNC_Apply` at `:572`.
 - Reconciled [Client skill init idempotency](Client-Skill-Init-Idempotency), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Feature status](Feature-Status-Register), [Progress dashboard](Progress-Dashboard), `agent-feature-status.jsonl`, `agent-hardening-backlog.jsonl`, `agent-status.json`, `agent-collaboration.json`, `agent-context.json` and `agent-knowledge.jsonl` to patch-ready/current-source-still-duplicate wording.
 - Handoff: source patch, generated propagation and Arma smoke remain for Soldier/non-Soldier AI caps, respawn skill reapply and dedicated/JIP client init. Divergent modded folders still show duplicate/conflict-marker drift and should not be hand-edited.
@@ -920,7 +1352,7 @@ Key conclusions:
 
 ## 2026-06-02T14:55:00+02:00 - Codex - Source-Patched Claim Rereconcile
 
-- Re-ran literal-path source checks for current source Chernarus and generated Vanilla Takistan.
+- Re-ran literal-path source checks for current both maintained mission targets.
 - Superseded by the 2026-06-02T15:05 source check: this entry's source-patched conclusion was false.
 - Current source/Vanilla still have the old shapes for commander reassignment, factory queue counter/token cleanup, paratrooper marker registration and duplicate client `Skill_Init`.
 - Superseded wording: the canonical pages, progress dashboard and machine files now use patch-ready/current-source-unpatched wording until source patches land.
@@ -928,7 +1360,7 @@ Key conclusions:
 ## 2026-06-02T15:05:00+02:00 - Codex - Source-Patched Claim Audit Correction
 
 - Re-checked the 14:55 source-patched rereconcile against literal current source paths.
-- Confirmed current source Chernarus and generated Vanilla Takistan still use `_side = _this` in `Server_AssignNewCommander.sqf:3`, and `RequestNewCommander.sqf` still sends the caller-side duplicate `new-commander-assigned` notification.
+- Confirmed current both maintained mission targets still use `_side = _this` in `Server_AssignNewCommander.sqf:3`, and `RequestNewCommander.sqf` still sends the caller-side duplicate `new-commander-assigned` notification.
 - Confirmed current source/Vanilla `Client_BuildUnit.sqf` still use random `varQueu` at `:167-168`, and the crewless branch still exits at `:365` before the normal local queue decrement at `:467-469`.
 - Confirmed current source/Vanilla `Init_PublicVariables.sqf:25-41` still does not register `HandleParatrooperMarkerCreation`, though sender and handler files exist in maintained targets.
 - Confirmed current source/Vanilla `Init_Client.sqf` still calls `Skill_Init.sqf` at `:547` and `:571`, then `WFBE_SK_FNC_Apply` at `:572`.
@@ -938,7 +1370,7 @@ Key conclusions:
 ## 2026-06-02T15:10:00+02:00 - Codex - Source-Patched Claim Current Correction
 
 - Re-ran literal-path source checks after a contradictory 15:10 source-patched event/knowledge/worklog claim.
-- Corrected that claim: current source Chernarus and generated Vanilla Takistan still show the old unpatched shapes for all six checked lanes:
+- Corrected that claim: current both maintained mission targets still show the old unpatched shapes for all six checked lanes:
   - Commander reassignment still uses `_side = _this` in `Server_AssignNewCommander.sqf`, and `RequestNewCommander.sqf` still emits the duplicate caller-side notification.
   - Factory queue cleanup still uses random `varQueu` tokens and still exits crewless vehicles before the local queue decrement.
   - Paratrooper marker registration still omits `HandleParatrooperMarkerCreation` from `_clientCommandPV`, though sender and handler files exist in maintained targets.
@@ -978,21 +1410,21 @@ Key conclusions:
 
 ## 2026-06-02T16:10:00+02:00 - Codex - Superseded Source-Patched Claim Round 2
 
-- Re-ran literal-path source checks after the 15:25 stale sweep reintroduced source/Vanilla patched; smoke pending wording.
-- Superseded by later direct source checks: current source Chernarus and generated Vanilla Takistan are still patch-ready/current-source-unpatched for commander reassignment call-shape/duplicate caller notification, factory queue counter/token cleanup, paratrooper marker registration, duplicate client `Skill_Init`, hosted FPS loop sleep and supply command-center scan narrowing.
+- Re-ran literal-path source checks after the 15:25 stale sweep reintroduced older shipped-status; smoke pending wording.
+- Superseded by later direct source checks: current both maintained mission targets are still patch-ready/current-source-unpatched for commander reassignment call-shape/duplicate caller notification, factory queue counter/token cleanup, paratrooper marker registration, duplicate client `Skill_Init`, hosted FPS loop sleep and supply command-center scan narrowing.
 - The matching knowledge/event record is superseded by `scout-source-status-correction-2026-06-02-1715`.
 - Gameplay code was left untouched. Arma 2 OA hosted/dedicated/JIP smoke and the broader follow-up lanes remain open.
 
 ## 2026-06-02T17:05:00+02:00 - Codex - Scout Team Source Status Reconciliation
 
-- Integrated the sub-agent source audit and corrected the remaining false `source/Vanilla patched` claims for six lanes.
-- Superseded wording: current source Chernarus and generated Vanilla Takistan are still patch-ready/current-source-unpatched for commander reassignment DR-15, factory queue DR-33, paratrooper marker registration, duplicate client `Skill_Init`, hosted FPS loop sleep and supply command-center scan narrowing.
+- Integrated the sub-agent source audit and corrected the remaining false `older shipped-status` claims for six lanes.
+- Superseded wording: current both maintained mission targets are still patch-ready/current-source-unpatched for commander reassignment DR-15, factory queue DR-33, paratrooper marker registration, duplicate client `Skill_Init`, hosted FPS loop sleep and supply command-center scan narrowing.
 - Updated the six owner pages, dashboard/status pages, public-variable index, JSON/JSONL ledgers and event/knowledge records so future agents see the 17:15 scout-team correction as the current record.
 - Gameplay code was left untouched. Remaining uncertainty is runtime-only: Arma 2 OA smoke still needs to run after future source patches.
 
 ## 2026-06-02T17:15:00+02:00 - Codex - Agent Knowledge Current Record Repair
 
-- Audited `agent-knowledge.jsonl` after the scout-team reconciliation and found the latest knowledge record still falsely marked the six lanes as source/Vanilla patched.
+- Audited `agent-knowledge.jsonl` after the scout-team reconciliation and found the latest knowledge record still falsely marked the six lanes as older shipped-status.
 - Superseded the false 16:20, 17:05 and 17:10 machine records, then appended `scout-source-status-correction-2026-06-02-1715` as the current source-status record.
 - Superseded wording: current machine truth now treats commander reassignment DR-15, factory queue DR-33, paratrooper marker registration, duplicate client `Skill_Init`, hosted FPS loop sleep and supply command-center scan narrowing as patch-ready/current-source-unpatched. No gameplay code changed.
 
@@ -1003,7 +1435,7 @@ Key conclusions:
 - Tightened [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference) and [compatibility audit](Arma-2-OA-Compatibility-Audit): BI marks `isEqualTo` as Arma 3 1.16 and `isEqualType` as Arma 3 1.54, so OA patches should use `==`, `typeName` and explicit shape checks instead.
 - Gameplay code was left untouched.
 
-## 2026-06-02T17:25:00+02:00 - Codex - Source/Vanilla Patched Status Repair
+## 2026-06-02T17:25:00+02:00 - Codex - Source/Vanilla Status Repair
 
 - Spawned three helper agents: one source verifier, one machine-record auditor and one markdown consistency scout.
 - Superseded wording: later direct source checks found the dirty source worktree and generated Vanilla Takistan remain patch-ready/current-source-unpatched for commander reassignment DR-15, factory queue DR-33, paratrooper marker PVF registration, duplicate client `Skill_Init`, hosted FPS loop sleep and supply command-center scan narrowing.
@@ -1012,30 +1444,30 @@ Key conclusions:
 
 ## 2026-06-02T17:30:00+02:00 - Codex - Residual Source-Patched Claim Sweep
 
-- Re-scanned high-traffic docs and machine files for stale `source/Vanilla patched` wording after the previous source-status repair.
-- Re-checked current source Chernarus and generated Vanilla Takistan: later source checks supersede this line; those lanes remain patch-ready/current-source-unpatched until source patches land.
+- Re-scanned high-traffic docs and machine files for stale `older shipped-status` wording after the previous source-status repair.
+- Re-checked current both maintained mission targets: later source checks supersede this line; those lanes remain patch-ready/current-source-unpatched until source patches land.
 - Corrected current-facing pages, `agent-feature-status.jsonl` and `agent-hardening-backlog.jsonl`; historical superseded event/knowledge records remain append-only history.
 - Gameplay code was left untouched. Source patch, Vanilla propagation and Arma 2 OA smoke remain before any source-patched wording should return.
 
 ## 2026-06-02T17:45:00+02:00 - Codex - Current Source Unpatched Audit
 
-- Spawned a helper scan team and re-checked the contested source-status lanes against literal source Chernarus and generated Vanilla Takistan paths.
-- Corrected false current-facing `source/Vanilla patched` claims back to patch-ready/current-source-unpatched for commander reassignment DR-15, factory queue DR-33, paratrooper marker registration, duplicate `Skill_Init`, hosted FPS loop sleep and supply command-center scan narrowing.
-- Corrected WASP marker wait cleanup to opportunity-not-patched: `WASP/global_marking_monitor.sqf:62-64` still uses the sleepless display-54 wait in source and Vanilla.
+- Spawned a helper scan team and re-checked the contested source-status lanes against literal both maintained mission targets paths.
+- Corrected false current-facing `older shipped-status` claims back to patch-ready/current-source-unpatched for commander reassignment DR-15, factory queue DR-33, paratrooper marker registration, duplicate `Skill_Init`, hosted FPS loop sleep and supply command-center scan narrowing.
+- Corrected WASP display-54 wait to open-cleanup status: `WASP/global_marking_monitor.sqf:62-64` still uses the sleepless display-54 wait in source and Vanilla.
 - Gameplay code was left untouched. Future code owners should patch source Chernarus first, propagate generated Vanilla, then run Arma 2 OA hosted/dedicated/JIP smoke before any source-patched wording returns.
 
 ## 2026-06-02T18:00:00+02:00 - Codex - Agent Team Source Status Final Repair
 
 - Integrated the helper-agent source audit and re-ran literal source checks after a stale 17:30/17:45 current-source-unpatched wave reappeared in docs/machine files.
-- Superseded wording: current source Chernarus and generated Vanilla Takistan remain patch-ready/current-source-unpatched for commander reassignment call-shape/duplicate notification, factory queue counter/token cleanup, paratrooper marker registration, duplicate client Skill_Init removal, hosted FPS loop sleep and supply command-center scan narrowing; WASP marker wait cleanup remains opportunity-not-patched.
+- Superseded wording: current both maintained mission targets remain patch-ready/current-source-unpatched for commander reassignment call-shape/duplicate notification, factory queue counter/token cleanup, paratrooper marker registration, duplicate client Skill_Init removal, hosted FPS loop sleep and supply command-center scan narrowing; the WASP display-54 wait remains an open cleanup opportunity.
 - Arma 2 OA smoke remains pending; broader RequestNewCommander authority validation, public queu broadcast reduction, supply authority cleanup and modded mission drift remain separate follow-ups.
 - No gameplay code changed in this docs/machine correction pass.
 
 ## 2026-06-02T18:15:00+02:00 - Codex - Final Current Source Unpatched Audit
 
-- Re-ran the helper-agent source audit against current source Chernarus and generated Vanilla Takistan.
-- Corrected the latest false `source/Vanilla patched` wave back to patch-ready/current-source-unpatched for commander reassignment DR-15, factory queue DR-33, paratrooper marker registration, duplicate client `Skill_Init`, hosted FPS loop sleep and supply command-center scan narrowing.
-- WASP marker wait cleanup remains opportunity-not-patched; source/Vanilla still use the sleepless display-54 wait.
+- Re-ran the helper-agent source audit against current both maintained mission targets.
+- Corrected the latest false `older shipped-status` wave back to patch-ready/current-source-unpatched for commander reassignment DR-15, factory queue DR-33, paratrooper marker registration, duplicate client `Skill_Init`, hosted FPS loop sleep and supply command-center scan narrowing.
+- the WASP display-54 wait remains an open cleanup opportunity; source/Vanilla still use the sleepless display-54 wait.
 - Gameplay code was left untouched. Future code owners should patch source Chernarus first, propagate generated Vanilla, then run Arma 2 OA hosted/dedicated/JIP smoke before any source-patched wording returns.
 
 ## 2026-06-02T18:25:00+02:00 - Codex - Current Source Snapshot Wiring
@@ -1043,23 +1475,23 @@ Key conclusions:
 - Added `Current-Source-Status-Snapshot.md` as the current source/Vanilla truth anchor for the contested cleanup lanes.
 - Wired the snapshot into Home, LLM entry pack, sidebar/footer, Agent Context, `llms.txt`, `agent-context.json`, `agent-status.json`, `agent-collaboration.json`, `agent-feature-status.jsonl`, `agent-knowledge.jsonl` and `agent-events.jsonl`.
 - Corrected remaining current-facing stale source-patched wording found by the helper team in commander, factory, paratrooper, client skill, supply scan and wiki-quality pages; replaced an OA-unsafe `apply` sketch with `forEach` accumulation.
-- Older worklog/event/knowledge entries that say these lanes are source/Vanilla patched are stale-wave history. Use `Current-Source-Status-Snapshot.md` and `agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851` until a newer source re-check supersedes them.
+- Older worklog/event/knowledge entries that say these lanes are older shipped-status are stale-wave history. Use `Current-Source-Status-Snapshot.md` and `agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851` until a newer source re-check supersedes them.
 
-- 2026-06-02T18:20:00+02:00 - Codex - Superseded false patched pulse: this note incorrectly re-confirmed source/Vanilla patched status for the disputed cleanup lanes. Later direct source checks supersede it; use `Current-Source-Status-Snapshot.md` and `current-source-status-pointer-refresh-2026-06-02-1851`.
+- 2026-06-02T18:20:00+02:00 - Codex - Superseded false patched pulse: this note incorrectly re-confirmed older shipped-status status for the disputed cleanup lanes. Later direct source checks supersede it; use `Current-Source-Status-Snapshot.md` and `current-source-status-pointer-refresh-2026-06-02-1851`.
 
 ## 2026-06-02T17:11:04+02:00 - Codex - Worklog Source-Status Supersession
 
-- Append-order supersession for the immediately preceding `2026-06-02T18:20:00+02:00` worklog line: that line is a stale false source/Vanilla-patched note.
+- Append-order supersession for the immediately preceding `2026-06-02T18:20:00+02:00` worklog line: that line is a stale false older shipped-status note.
 - Current truth remains [Current source status snapshot](Current-Source-Status-Snapshot) and `agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851`.
-- Commander DR-15, factory DR-33, paratrooper marker registration, duplicate client `Skill_Init`, hosted FPS loop sleep and supply scan narrowing remain patch-ready/current-source-unpatched; WASP marker wait cleanup remains opportunity-not-patched.
+- Commander DR-15, factory DR-33, paratrooper marker registration, duplicate client `Skill_Init`, hosted FPS loop sleep and supply scan narrowing remain patch-ready/current-source-unpatched; the WASP display-54 wait remains an open cleanup opportunity.
 - Gameplay code was left untouched. Future code owners should patch Chernarus source first, propagate Vanilla Takistan, then run Arma 2 OA runtime smoke before any source-patched wording returns.
 
 ## 2026-06-02T17:15:26+02:00 - Codex - Current Snapshot Evidence Tightening
 
-- Re-verified the seven disputed cleanup lanes against literal source Chernarus and generated Vanilla Takistan paths.
+- Re-verified the seven disputed cleanup lanes against literal both maintained mission targets paths.
 - Tightened [Current source status snapshot](Current-Source-Status-Snapshot) evidence cells with exact source/Vanilla line clusters for commander DR-15, factory DR-33, paratrooper marker registration, duplicate `Skill_Init`, hosted FPS loop sleep, supply command-center scan narrowing and WASP marker wait cleanup.
 - Superseded pointer: the current precise evidence record is now `agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851`.
-- Status did not change: six lanes remain patch-ready/current-source-unpatched; WASP marker wait cleanup remains opportunity-not-patched. Gameplay code was left untouched.
+- Status did not change: six lanes remain patch-ready/current-source-unpatched; the WASP display-54 wait remains an open cleanup opportunity. Gameplay code was left untouched.
 
 ## 2026-06-02T17:19:12+02:00 - Codex - Append-Order Trust Rule
 
@@ -1072,14 +1504,14 @@ Key conclusions:
 - Spawned a three-agent read-only audit team: Boyle checked high-traffic docs, Anscombe checked machine-readable JSON/JSONL state and Socrates checked broader wiki/mirror terminology and parity.
 - Anscombe found no current-facing stale machine-readable claim; older false patched events/knowledge remain append-only superseded history.
 - Repaired high-traffic markdown after the scouts found current-facing drift: restored structured surfaces for [Feature status register](Feature-Status-Register) and [Public variable channel index](Public-Variable-Channel-Index), then corrected stale paratrooper marker, hosted FPS and supply-scan status rows.
-- Current truth remains unchanged: commander DR-15, factory DR-33, paratrooper marker registration, duplicate client `Skill_Init`, hosted FPS loop sleep and supply scan narrowing are patch-ready/current-source-unpatched; WASP marker wait cleanup remains opportunity-not-patched.
+- Current truth remains unchanged: commander DR-15, factory DR-33, paratrooper marker registration, duplicate client `Skill_Init`, hosted FPS loop sleep and supply scan narrowing are patch-ready/current-source-unpatched; the WASP display-54 wait remains an open cleanup opportunity.
 - Gameplay code was left untouched. Future code owners should patch source Chernarus first, propagate generated Vanilla Takistan, then run Arma 2 OA runtime smoke before any source-patched wording returns.
 
 ## 2026-06-02T17:35:17+02:00 - Codex - Collapsed Owner Page Repair
 
 - Scanned markdown line counts after the delegated OA status repair and found several high-value owner pages reduced to one-line fragments.
 - Rebuilt concise, navigable versions of [Gameplay systems atlas](Gameplay-Systems-Atlas), [Paratrooper marker revival](Paratrooper-Marker-Revival), [Pending owner decisions](Pending-Owner-Decisions), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Progress dashboard](Progress-Dashboard), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) and [Supply mission authority cleanup playbook](Supply-Mission-Authority-Cleanup-Playbook).
-- Corrected stale source-patched language while rebuilding: hosted FPS loop sleep, supply command-center scan narrowing, duplicate `Skill_Init`, paratrooper marker registration and factory queue cleanup remain patch-ready/current-source-unpatched; WASP marker wait cleanup remains opportunity-not-patched.
+- Corrected stale source-patched language while rebuilding: hosted FPS loop sleep, supply command-center scan narrowing, duplicate `Skill_Init`, paratrooper marker registration and factory queue cleanup remain patch-ready/current-source-unpatched; the WASP display-54 wait remains an open cleanup opportunity.
 - Gameplay code was left untouched. Validation passed locally before mirror sync: targeted stale-status scan clean and `docs\validate-wiki.ps1` passed with only CRLF warnings.
 
 ## 2026-06-02T17:38:59+02:00 - Codex - Testing Workflow Gate Repair
@@ -1101,9 +1533,9 @@ Key conclusions:
 - Directly re-checked the seven disputed cleanup lanes after the 18:40/18:45 current-source patched pulse reappeared in snapshot/progress/machine surfaces.
 - Source Chernarus still shows the unpatched shapes: `_side = _this` and duplicate commander notification, random `varQueu`, missing `HandleParatrooperMarkerCreation` registration, duplicate `Skill_Init`, hosted FPS `isDedicated` guards inside publisher scripts, broad 80m supply scan and sleepless WASP display-54 wait.
 - Repaired [Current source status snapshot](Current-Source-Status-Snapshot), [Feature status register](Feature-Status-Register) and [Progress dashboard](Progress-Dashboard) back to direct-source current-source-unpatched wording.
-- Gameplay code was left untouched. The 18:40/18:45 source/Vanilla patched pulse should be treated as false until a newer source check proves actual source changes.
+- Gameplay code was left untouched. The 18:40/18:45 older shipped-status pulse should be treated as false until a newer source check proves actual source changes.
 
-- 2026-06-02T18:45:00+02:00 - Codex - Superseded false patched pulse: this note incorrectly said the seven disputed cleanup lanes were source/Vanilla patched, smoke pending. Later direct source checks supersede it; six cleanup lanes remain patch-ready/current-source-unpatched and WASP marker wait cleanup remains opportunity-not-patched until source patches land.
+- 2026-06-02T18:45:00+02:00 - Codex - Superseded false patched pulse: this note incorrectly said the seven disputed cleanup lanes were older shipped-status, smoke pending. Later direct source checks supersede it; six cleanup lanes remain patch-ready/current-source-unpatched and the WASP display-54 wait remains an open cleanup opportunity until source patches land.
 
 - 2026-06-02T19:00:00+02:00 - Codex - Superseded validator note: the first semantic guard was inverted and treated current-source-unpatched wording as stale. The current validator now blocks stale false-patched wording on authoritative current-state surfaces.
 
@@ -1118,7 +1550,7 @@ Key conclusions:
 
 ## 2026-06-02T19:40:00+02:00 - Codex - Source/Vanilla Spot-Check Reinforcement
 
-- Re-checked the seven disputed cleanup lanes against both source Chernarus and generated Vanilla Takistan after spinning up a helper-agent team.
+- Re-checked the seven disputed cleanup lanes against both both maintained mission targets after spinning up a helper-agent team.
 - Confirmed both maintained targets still show the same unpatched shapes: commander helper call shape plus duplicate notification, random factory `varQueu`, missing paratrooper marker PVF registration, duplicate `Skill_Init`, hosted FPS loops with `isDedicated` inside the publisher scripts, broad 80m supply command-center scan and sleepless WASP display-54 wait.
 - Corrected two `agent-context.json` paratrooper summaries that said the missing `HandleParatrooperMarkerCreation` registration was included; they now say it is omitted/lacking.
 - Fixed `Tools/ValidateWiki.ps1` scalar recursion in exact machine-reference validation so the stale false-patched guard runs during handoff validation.
@@ -1170,7 +1602,7 @@ Key conclusions:
 - Future agents should now see before source work that `publicVariable` and `setVariable [..., true]` do not prove server authority, event-history replay or full marker/queue collection sync.
 - Gameplay code was left untouched.
 
-- 2026-06-02T18:08:00+02:00 - Codex - Current-source unpatched resume check: rechecked source Chernarus and generated Vanilla Takistan directly. The disputed cleanup lanes remain patch-ready/current-source-unpatched, and WASP marker wait remains opportunity-not-patched. Source git status only shows unrelated CommonConstants/Parameters edits, so the disputed lane files are currently not dirty patched files. Validators remain the gate after this snapshot refresh.
+- 2026-06-02T18:08:00+02:00 - Codex - Current-source unpatched resume check: rechecked both maintained mission targets directly. The disputed cleanup lanes remain patch-ready/current-source-unpatched, and WASP marker wait remains opportunity-not-patched. Source git status only shows unrelated CommonConstants/Parameters edits, so the disputed lane files are currently not dirty patched files. Validators remain the gate after this snapshot refresh.
 
 - 2026-06-02T18:12:00+02:00 - Codex - Quickstart/status-gate cleanup: added Current-Source-Status-Snapshot to the Quickstart first-read path, clarified that docs/validate-wiki.ps1 wraps Tools/ValidateWiki.ps1, and marked Progress Dashboard/sidebar cleanup items complete in Instructions-For-Codex after source/status verification.
 
@@ -1197,7 +1629,7 @@ Key conclusions:
 ## 2026-06-02T19:07:19+02:00 - Codex - Worklog Current-Truth Guardrail Refresh
 
 - Fresh source/Vanilla checks reconfirmed the contested cleanup lanes remain patch-ready/current-source-unpatched or opportunity-not-patched.
-- Tightened the top [Agent worklog](Agent-Worklog) warning and corrected the most misleading historical handoff lines that still read as current `source/Vanilla patched` instructions.
+- Tightened the top [Agent worklog](Agent-Worklog) warning and corrected the most misleading historical handoff lines that still read as current `older shipped-status` instructions.
 - Updated [Progress dashboard](Progress-Dashboard) and `agent-status.json` to route current-source truth to `current-source-status-pointer-refresh-2026-06-02-1851`.
 - Gameplay code was left untouched.
 
@@ -1227,7 +1659,7 @@ Key conclusions:
 
 ## 2026-06-02T19:31:00+02:00 - Codex - Object-Scan And String-Trap OA Guardrails
 
-- Re-checked BI command pages for `nearestObjects`, `nearEntities`, `nearObjects`, `selectRandom` and `BIS_fnc_selectRandom`, then source-grepped current source Chernarus and generated Vanilla.
+- Re-checked BI command pages for `nearestObjects`, `nearEntities`, `nearObjects`, `selectRandom` and `BIS_fnc_selectRandom`, then source-grepped current both maintained mission targets.
 - Added the DR-39 guardrail to [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) and [Performance opportunity sweep](Performance-Opportunity-Sweep): the command-center target is a structure, so the patch should use class-filtered `nearestObjects`; `nearEntities` is OA-safe for soldier/vehicle scans but is not a structure-scan substitute.
 - Folded the string/selection traps into [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) and `agent-compatibility-audit.json`: `selectRandom` command, `splitString`, `joinString`, `trim` and regex helpers remain unsafe to import into OA snippets; `BIS_fnc_selectRandom` remains OA-safe/source-backed. Gameplay code was left untouched.
 
@@ -1603,7 +2035,7 @@ Key conclusions:
 
 ## 2026-06-03T17:08:00+02:00 - Codex - addAction params wording cleanup
 - Narrowed the residual `params` scan after the broader Arma 3/OA audit. Current-facing hits were either `paramsArray`/`class Params`, explicit unsafe-SQF guardrails, source variable names, or one generic phrase in [Deep-review findings](Deep-Review-Findings).
-- Rechecked source Chernarus and generated Vanilla `Client/FSM/updateclient.sqf:240`: the attack-wave `addAction` uses an argument array. Reworded the generic params phrase to "with addAction arguments" to avoid implying SQF `params` syntax.
+- Rechecked both maintained mission targets `Client/FSM/updateclient.sqf:240`: the attack-wave `addAction` uses an argument array. Reworded the generic params phrase to "with addAction arguments" to avoid implying SQF `params` syntax.
 - Docs-only correction; no gameplay source files changed.
 
 ## 2026-06-03T17:12:00+02:00 - Codex - compatibility audit rollup refresh
@@ -1647,7 +2079,205 @@ Key conclusions:
 - Added [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match) with concrete merge checks for PR #8 supply-heli/JIP/rewards, upgrade queue PVs, WDDM/static-defense accounting, engineer EASA, delayed vehicle-kill rewards, Buy/EASA UI, and generated Takistan propagation.
 - Captured the drone-specific high-priority lesson: make `DroneStrike` server-authoritative for cost/cooldown/upgrade/caller validation before merge; also validate payload schema, JIP, marker audience, resistance targeting, score effects, cleanup, performance, sounds and generated mission propagation.
 
-## 2026-06-03T22:49:00+02:00 - Claude - drone RPT review finding (DRN1)
-- Owner-run RPT review of the combined test build (`test/rebuild-jun` = release #8 + drone). Logged a new drone-branch finding to [Audit Findings Queue 2026-06-03](Audit-Findings-Queue-2026-06-03) as **Round 5 / DRN1**.
-- **DRN1:** `Server/Functions/Server_HandleSpecial.sqf:67-68` `case "DroneStrike"` spawns `KAT_DroneStrike`; an early RPT session shows `Undefined variable in expression: kat_dronestrike`. The global is compiled at `Server/Init/Init_Server.sqf:44`, so this is a **load-order / boot race** (the error lands in the `Init_Server`/JIP window), not a missing definition. Recommended an `isNil "KAT_DroneStrike"` guard in the dispatch + re-host to confirm.
-- Perf (same RPT): server sim is scheduler-bound ~19–20 fps under a full AI-Commander battle on the self-host; every sub-10 fps sample is init/JIP, not gameplay; a captured strike held 37–59 fps (no spiral). No gameplay source files were edited in this pass (docs-only).
+## 2026-06-03T22:05:00+02:00 - Codex - source status branch matrix refresh
+- Rechecked docs/source `HEAD` `4163faba`, stable `origin/master` `2cdf5fb8`, and release `origin/release/2026-06-feature-bundle` `a9219d88` for hosted FPS, supply scan narrowing, client `Skill_Init` idempotency and paratrooper marker registration.
+- Updated [Current source status snapshot](Current-Source-Status-Snapshot), [Feature status register](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue) and [Progress dashboard](Progress-Dashboard) so docs/source propagation is not mistaken for stable-master or release-branch coverage.
+- Key correction: release `a9219d88` carries Chernarus-only versions of the FPS and supply-scan fixes, but its Vanilla target still has the old shapes; client `Skill_Init` and paratrooper marker registration are absent from both stable master and that release branch.
+
+## 2026-06-03T22:25:00+02:00 - Codex - machine ledger branch-scope refresh
+- Audited current machine-readable status files after the branch matrix landed; `agent-release-readiness.json`, `agent-feature-status.jsonl`, `agent-hardening-backlog.jsonl`, `agent-context.json` and `agent-entrypoint.json` still contained unscoped or stale current-source wording.
+- Updated those ledgers so docs/source propagation, stable `origin/master` absence and release `a9219d88` partial coverage are explicit for hosted FPS, supply scan narrowing, client `Skill_Init` idempotency and paratrooper marker registration.
+- Added [Development lessons learned](Development-Lessons-Learned) Lesson 9 plus `agent-development-lessons.jsonl#lesson-machine-ledgers-need-branch-scope-2026-06-03`: machine ledgers need branch/commit and Chernarus/Vanilla line-shape proof before `patched`, `propagated` or `release-ready` wording is trusted.
+
+## 2026-06-03T22:45:00+02:00 - Codex - dashboard active handoff refresh
+- Rechecked the visible [Progress Dashboard](Progress-Dashboard) after the machine-ledger branch-scope batch and found its top `At A Glance` panel still advertised Codex on `networking-publicvariable-atlas`, Codex-2 actively on `wasp-marker-wait-cleanup`, and Wave F as the latest sub-agent state.
+- Updated the dashboard to match `agent-status.json`: Codex is on `documentation-finisher-loop`, Codex-2 is ready/idle, Wave S is closed, and `wasp-marker-wait-cleanup` is a published opportunity/source-needs-code lane rather than active work.
+- Also reconciled visible stale rows for PVF dispatch, DR42/DR43, markdown intake, attack-wave authority, economy-supply commander audit and testing workflow from surfaced/ready/drafted wording to published/validated or published status.
+
+## 2026-06-03T23:05:00+02:00 - Codex - owner decision branch-scope refresh
+- Source-checked [Pending owner decisions](Pending-Owner-Decisions) against current docs/source and canonical DR pages before editing.
+- Corrected the DR-43 owner row from "duplicate `Init_Server` function binds (6)" to the actual shape: three live duplicate binds (`LogGameEnd`, `PlayerObjectsList`, `AwardScorePlayer`) plus three commented remnants (AFK kick, server FPS, MASH marker), with line evidence from `Server/Init/Init_Server.sqf:64,69,83,88-93`.
+- Clarified that `version.sqf` is absent from tracked source even though `description.ext:39` and `initJIPCompatible.sqf:4` include it, and branch-scoped the DR-19 hosted-FPS row: docs/source Chernarus/Vanilla are patched, stable master is not, release `a9219d88` is Chernarus-only, and Arma smoke remains.
+
+## 2026-06-03T23:35:00+02:00 - Codex - Miksuu upstream wiki Community & Dev import
+- Cloned and inspected `Miksuu/a2waspwarfare.wiki` at HEAD `45ef3da367d65e6487de488bbe3b16a8a8b21ba3`; tracked content is 9 Markdown pages and no binary attachments.
+- Imported every current upstream wiki page into namespaced `Miksuu-Wiki-Archive-*` pages, preserving original content behind a provenance banner.
+- Added [Community & Dev](Community-And-Dev) and [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) so humans and agents can reach community lineage, contributors, donor/context notes, Discord/changelog culture, GPT history and current-source caveats without treating old upstream prose as current implementation truth.
+- Added [`agent-upstream-wiki-imports.jsonl`](agent-upstream-wiki-imports.jsonl) for machine-readable import records and candidate lessons.
+
+## 2026-06-03T23:50:00+02:00 - Codex - Community & Dev scout harvest
+- Ran a follow-up Spark scout wave over the published Community & Dev cluster.
+- Folded the useful scout findings into [Community & Dev](Community-And-Dev) and [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import): normalized contributor aliases, stronger stale-claim caveats for modded-map event notes, server ops/HC/performance anecdotes and DiscordBot provenance, plus archive-page previous/next/related navigation.
+- Added [Upstream changelog feature leads](Upstream-Changelog-Feature-Leads) to preserve old changelog feature/status candidates for later source verification.
+- No gameplay source files changed.
+
+## 2026-06-04T00:20:00+02:00 - Codex - Spark scout source-verification wave
+- Ran focused Spark scouts for auto view-distance, AFK/BattlEye policy, aircraft ordnance guardrails, AI command caps, abandoned/partial features, UI/HUD/dialogs and tooling/external integrations. Broad scouts that overflowed were closed and replaced with tighter lanes.
+- Promoted source-checked findings: auto view distance is live with target FPS 60, map-visible guard and +/-4 band; AFK currently has both the parameterized `kickAFK` BattlEye path and the older `AFKthresholdExceededName`/`failMission` path; bomb distance and missile guardrails are live but bomb altitude is dormant; AA loadout gating is path-dependent.
+- Verified local tooling status: `LoadoutManager` builds with nullable warnings, `DiscordBot` builds cleanly, and the legacy `Extension` needs the .NET Framework 4.8 targeting pack in this environment.
+- Updated the owning wiki pages and kept this docs-only; no gameplay source files changed.
+
+## 2026-06-03T23:43:22+02:00 - Codex - Spark scout deep-index wave launch
+- Launched a new read-only Spark scout wave for economy, construction/factory, respawn/MASH, AI/HC, networking/PVF and UI/dialog correctness.
+- Replaced the first broad economy scout and the broad UI/dialog scout after Spark context overflows with tighter economy-only and resource/dialog-only lanes.
+- Updated [Progress Dashboard](Progress-Dashboard) and `agent-status.json` so Steff and future agents can see the live wave and harvest status. No gameplay source files changed.
+
+## 2026-06-04T01:10:42+02:00 - Codex - cheap scout wave depth confirmation
+- Spark quota was blocked, so Codex ran the same read-only scout pattern on cheap mini explorers instead of waiting: towns/supply, economy, AI/HC, PV/direct channels, UI/HUD, construction/factory/upgrades, support specials, tooling/generated missions, integrations/ops, commander/HQ/endgame, entrypoints/modded forks and respawn/service/gear.
+- Harvest check found the major deltas already represented in canonical pages: PVF hardening does not cover direct channels, paratrooper markers are docs/source propagated but not stable/release proof, MASH respawn and marker sync are separate, commander disconnect does not auto-reassign, DiscordBot JSON intake is the live integration sink, and modded mission folders are not maintained/generated release targets.
+- Published the wave record in [Progress Dashboard](Progress-Dashboard), `agent-events.jsonl` and `agent-status.json`; validation/parity passed, no gameplay source files changed, and no subsystem page was expanded with duplicate prose.
+
+## 2026-06-04T01:15:32+02:00 - Codex - dashboard at-a-glance reconciliation
+- Rechecked [Progress Dashboard](Progress-Dashboard) against `agent-status.json` and `agent-events.jsonl` after the cheap scout wave publish.
+- Corrected the visible **At A Glance** rows: Codex now points to the published cheap scout wave rather than the older micro-scout batch, Claude uses `collaboration-follow-autonomous-ready`, and Sub-agents summarizes the latest closed cheap scout wave.
+- Docs-only coordination cleanup; no gameplay source files changed.
+
+## 2026-06-04T01:24:00+02:00 - Codex - fallback scout wave PV/AI/ops harvest
+- Spark quota was still blocked, so Codex launched five low-effort read-only scouts instead: economy/supply-money loops, AI group caps, networking/direct PVs, UI/HUD/dialogs and ops/runtime/admin features.
+## 2026-06-04T19:35:00+02:00 - Codex - dashboard open-item cleanup
+- Compacted [Progress Dashboard](Progress-Dashboard) back into a live status surface and moved historic scout/batch detail behind [Discovery swarm](Subagent-Discovery-Swarm), [Agent worklog](Agent-Worklog) and [`agent-events.jsonl`](agent-events.jsonl).
+- Closed the stale Coverage Ledger sidebar/mailbox item: [Codebase coverage ledger](Codebase-Coverage-Ledger) is now linked from Home, footer, `llms.txt`, `agent-context.json` and `_Sidebar.md`; the Coordination Board mailbox status is done.
+- Reclassified old dashboard/board open rows as watchlist, owner-decision/code-lane, published release gate or published/integrated so the dashboard no longer advertises stale ready-for-review work.
+- Compacted `agent-status.json`, `agent-collaboration.json` and `agent-context.json.openLanes` so machine status files match the visible dashboard instead of carrying closed claim spam.
+- Closed the old OA object-lifecycle command addendum into [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference#object-lifecycle-commands--oa-safe-locality-sensitive). No gameplay source files changed.
+
+- Promoted the bounded, source-backed findings that were safest to land now: exact PV channel inventory fixes, corrected `PLAYER_RADIATED` direction, side-supply mirror/JIP wording, normal-commander AI cap table, crew-slot group-cap note and hosted-FPS old-shape wording.
+- Queued broader leads for later passes rather than overloading this batch: live supply reward vs stale stringtable text, UI alias/path cleanup, server ops runbook, AFK ops split and runtime telemetry checklist. No gameplay source files changed.
+
+## 2026-06-04T01:32:00+02:00 - Codex - supply reward stringtable drift
+- Source-checked the queued economy scout lead against supply mission start, completion, player reward and stringtable files.
+- Confirmed live supply-truck reward math grants raw `SupplyAmount`, where `SupplyAmount = floor(town supplyValue * WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER * supplyUpgradeModifier)`, while `stringtable.xml` `STR_Supplies_2` still says players receive `4 x actual value`.
+- Updated economy/supply/localization/feature-status pages plus development lesson and machine records. No gameplay source files changed.
+
+## 2026-06-04T01:53:04+02:00 - Codex - UI/ops/telemetry scout harvest
+- Spark quota was blocked, so Codex used default explorer scouts for UI alias/path cleanup, server ops, AFK/lifecycle, runtime telemetry, Feature Status adjacency and tooling/generated-mission drift.
+- Integrated bounded docs findings: added [UI HUD and dialogs](UI-HUD-And-Dialogs), corrected the player UI gear-helper path, added [Server ops runbook](Server-Ops-Runbook), patched telemetry collection and server-FPS/supply-scan branch-scope wording, corrected AFKkick/lifecycle side-surface docs, and exposed missing Feature Status links for `SEND_MESSAGE` and supply player-object list propagation.
+- Corrected tooling docs for LoadoutManager repo-marker root discovery, `A2WASP_SKIP_ZIP`, `version.sqf` release flag inspection and the full PerformanceAuditAnalyzer output list. No gameplay source files changed.
+
+## 2026-06-04T01:59:38+02:00 - Codex - deep-gap fallback scout wave launch
+- Claimed `deep-gap-spark-scout-wave` as the next read-only discovery lane after the UI/ops/telemetry harvest was published and validated, but the first three Spark scouts hit the usage limit until 03:58.
+- Renamed the live lane to `deep-gap-fallback-scout-wave` and launched fallback explorers for the remaining map-only or shallow-reviewed gaps called out by DR-45 and later docs passes: AI respawn/orders, cleaners/restorers, config/faction/loadout data, support/basearea/groups-monitor trigger chains, stale machine-ledger/tooling claims and Feature Status adjacency.
+- Scouts are instructed to return source paths/line evidence and already-documented status; Codex will only patch confirmed deltas into the wiki/mirror.
+
+## 2026-06-04T02:09:03+02:00 - Codex - deep-gap fallback scout harvest
+- Closed all fallback explorers and harvested only confirmed deltas. Most target areas were already well covered; the useful additions were scoped to startup/status precision and machine-ledger cleanup.
+- Updated [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas), [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [AI/headless](AI-Headless-And-Performance), [Respawn/death](Respawn-And-Death-Lifecycle-Atlas), [Assets/config/localization](Assets-Config-Localization-And-Parameters-Atlas), [Feature status](Feature-Status-Register), [Audit findings queue](Audit-Findings-Queue-2026-06-03), `agent-context.json` and `agent-hardening-backlog.jsonl`.
+- Key corrections: cleaners/restorers start outside the `townInit` wait; `groupsMonitor.sqf` is dormant; `basearea.sqf` is parameter-gated and has a low-risk `_unit` private-list nit; AI respawn should use `WFBE_UP_GEAR` plus bounds/empty-array guards; `AI_TLWPHandler.sqs` is a legacy/orphan candidate; LoadoutManager root discovery and `A2WASP_SKIP_ZIP=1` are current machine truth.
+- Validation/parity passed; no gameplay source files changed.
+
+## 2026-06-04T02:40:31+02:00 - Codex - Spark scout wave server/economy/UI/PV/AI launch
+- Launched a new GPT-5.3-Codex-Spark read-only scout wave after Steff asked for more scouts: server lifecycle/FSM authority, commander/economy/upgrades, UI/HUD/dialog workflows, networking/PV trust boundaries, AI/headless/delegation and construction/factory/base systems.
+- One construction/factory scout overflowed during compacting, so that lane should be relaunched as narrower build/production slices rather than one broad generated-mission scan.
+- Updated [Progress Dashboard](Progress-Dashboard) and `agent-status.json` so the active scout wave is visible while reports are pending. No gameplay source files changed.
+
+## 2026-06-04T02:47:27+02:00 - Codex - Spark micro-scout wave relaunch
+- Broad Spark scouts for economy, networking, UI and construction proved too wide for this repo and several failed during remote compacting with context-window errors.
+## 2026-06-04T12:05:00+02:00 - Codex - mini scout wave closure
+- Closed the six-scout fallback wave after all reports returned.
+- Harvested non-duplicate outputs into the pushed `requestspecial-non-icbm-support-effects-route` and `ui-scout-clickthrough-routing` batches.
+- Economy/AI-capacity formulas confirmed the existing Player AI caps and AI commander dormant-production caveats; construction/base, tooling/integrations, abandoned-feature and authority reports mostly confirmed already-canonical pages/backlog rows.
+- No gameplay source files changed.
+
+## 2026-06-04T11:58:00+02:00 - Codex - UI scout clickthrough routing
+- Harvested the returned UI scout as navigation/clickthrough polish instead of duplicate bug prose.
+- Updated [UI HUD and dialogs](UI-HUD-And-Dialogs), [Client UI, HUD and menus](Client-UI-HUD-And-Menus) and [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) so stale `RscMenu_Upgrade` and duplicate IDD/EASA rows route directly to [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog-review) and [UI IDD collision repair](UI-IDD-Collision-Repair).
+- No gameplay source files changed.
+
+## 2026-06-04T11:46:00+02:00 - Codex - RequestSpecial non-ICBM support authority route
+- Source-checked the non-ICBM `RequestSpecial` support-effects lane after the Spark quota fallback scout launch.
+- Evidence checked: `Client/GUI/GUI_Menu_Tactical.sqf:262-276,371-373,513-527`, `Client/Module/UAV/uav.sqf:27-52` and `Server/Functions/Server_HandleSpecial.sqf:43-64,147-170`.
+- Updated [Pending owner decisions](Pending-Owner-Decisions), [Feature status](Feature-Status-Register), [Server authority migration map](Server-Authority-Migration-Map), `agent-hardening-backlog.jsonl`, [Progress Dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` so non-ICBM support effects are routed separately from the P0 ICBM playbook.
+- The current mini-scout wave remains active; the construction/base scout returned and is queued for duplicate-aware harvest. No gameplay source files changed.
+
+- Closed failed lanes and relaunched a narrower GPT-5.3-Codex-Spark micro-wave: factory queue debit/refund behavior, upgrade cost tuple semantics, commander task/vote UI wiring and HC/delegation terminology.
+- Lesson for future orchestration: Spark scouts should be file-family scoped with explicit output caps, not whole-subsystem indexing prompts. No gameplay source files changed.
+
+## 2026-06-04T02:57:31+02:00 - Codex - Spark micro-scout wave harvest
+- Harvested all four micro-scout reports and closed the active agent threads.
+- Promoted only new/refined findings: source cost tables confirm upgrade tuple order `[supply, funds]`; factory buys have no `RequestBuyUnit`/`RequestBuildUnit` PVF and no refund owner on destroyed-factory abort; empty vehicles bypass the buyer group-cap check; vote row coloring likely has an offset in addition to inclusive loops; HC registration should be deduped before retry logic.
+- Updated [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Economy authority first cut](Economy-Authority-First-Cut), [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map), [Headless delegation and failover playbook](Headless-Delegation-And-Failover-Playbook), [Feature status register](Feature-Status-Register), `agent-feature-status.jsonl` and `agent-hardening-backlog.jsonl`. No gameplay source files changed.
+
+## 2026-06-04T02:40:31+02:00 - Codex - development lessons authority/UI/HC harvest
+- Converted recent source-backed findings into reusable development lessons: server-side spend paths can still have currency tuple bugs, income display is not payout proof, visible UI affordances can be partial/stale, and "HC" must be split into headless-client registration, delegation/client-FPS and Arma High Command UI meanings.
+- Updated [Development lessons learned](Development-Lessons-Learned) and [`agent-development-lessons.jsonl`](agent-development-lessons.jsonl) with exact source anchors and next-action guidance.
+- No gameplay source files changed.
+
+## 2026-06-04T03:01:14+02:00 - Codex - micro-scout status reconciliation
+- Reconciled current coordination state after the previous validated/pushed micro-scout batch: [Progress Dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` no longer show the Spark micro-scout and development-lessons lanes as validation-pending.
+- Validation evidence for that batch was already recorded and pushed: docs mirror commit `9b5bba5e`, wiki commit `dfcd399`, `docs/validate-wiki.ps1` passed, JSON/JSONL parsed, `git diff --check` passed and SHA256 parity passed for 15 mirrored files.
+- No gameplay source files changed.
+
+## 2026-06-04T03:09:45+02:00 - Codex - Spark scout wave respawn/towns/AI/construction/supports/runtime launch
+- Launched six GPT-5.3-Codex-Spark read-only scouts after Steff asked for another wave.
+- Active file-family lanes: respawn/MASH/loadout/gear; town lifecycle/capture/resistance/supply; AI commander/team orders; construction/base structures/defenses; supports/services; server runtime safety and maintenance loops.
+- The current sub-agent cap was reached after six active scouts, so config/map-variant drift and external integration/tooling scouts are queued for recycled slots.
+- Scouts are instructed to return exact source paths/line evidence, avoid edits, cap output, and treat Arma 2 OA as the only scripting baseline. No gameplay source files changed.
+
+## 2026-06-04T03:23:25+02:00 - Codex - Spark scout wave respawn/towns/AI/construction/supports/runtime harvest
+- Harvested five useful Spark reports and closed the active scout wave. Broad AI commander, town lifecycle and server-runtime prompts overflowed during compacting until relaunched as narrower slices; the final AFK/AntiStack scout was closed after timeout and should be rerun later only if AFK policy becomes the active lane.
+- Published source-backed deltas: support/services transport split and local artillery/service authority scope; explicit no-revive note for respawn/MASH; AI commander upgrade-only deterministic first-unmet upgrade selection; stationary-defense base-area null guard; town/camp capture ownership chain and side-supply pipeline pointer.
+- Added a reusable development lesson and JSONL record: future Spark scouts should be file-family scoped, capped to roughly 800-1200 words and relaunched narrower after context bounces rather than retried broadly.
+- Updated [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [Respawn/death](Respawn-And-Death-Lifecycle-Atlas), [AI commander autonomy audit](AI-Commander-Autonomy-Audit), [Construction/CoIn](Construction-And-CoIn-Systems-Atlas), [Towns/camps/capture](Towns-Camps-And-Capture-Atlas), [Feature status](Feature-Status-Register), [Development lessons](Development-Lessons-Learned), `agent-hardening-backlog.jsonl` and `agent-development-lessons.jsonl`. No gameplay source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 parity for 14 mirrored files.
+
+## 2026-06-04T07:25:00+02:00 - Codex - mini scout wave config/UI/cleanup/support/security harvest
+- Spark quota was still unavailable for GPT-5.3-Codex-Spark, so Codex launched five cheap mini scouts for config data, UI edge cases, cleanup/performance loops, support flows and PV/security.
+- Closed all scout threads and promoted only non-duplicate, source-backed deltas: IR-smoke lobby/runtime name split, hidden upgrade-clearance runtime switch, volumetric weather parameter forced off, orphan-looking BIS High Command parameter, buy-unit driver-default profileNamespace key split, gear-template creation-gate semantics and 24-hour supply-truck empty-cleanup behavior.
+- Support and security reports mostly confirmed canonical pages: PVF dispatch hardening remains separate from handler authority; direct attack-wave/side-supply/SEND_MESSAGE surfaces remain covered; support flows remain a mix of local client-led and server-backed-but-not-server-authoritative paths.
+- Updated [Assets/config/localization/parameters](Assets-Config-Localization-And-Parameters-Atlas), [Mission parameters/localization/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs), [Client UI systems](Client-UI-Systems-Atlas), [Gear template profile filter](Gear-Template-Profile-Filter), [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas), [Feature status](Feature-Status-Register), [Development lessons](Development-Lessons-Learned), `agent-development-lessons.jsonl`, `agent-feature-status.jsonl`, `agent-knowledge.jsonl`, `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl`. No gameplay source changed.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 parity for 15 mirrored files.
+
+## 2026-06-04T06:06:00+02:00 - Codex - mini scout wave AI caps/UI/economy/supports harvest
+- Spark quota blocked GPT-5.3-Codex-Spark, so Codex launched fallback mini scouts for player AI caps, UI/HUD/dialogs, economy flows and server support/special systems.
+- Source-checked and promoted only non-duplicate deltas: commander vote DR-47 is now routed through Pending Owner Decisions and Hardening Roadmap; Player AI caps now separates follower caps from factory queues, human squad size, AI-team joining, delegation and AI commander toggles; UI/localization pages now record hardcoded Buy Units/Tactical text; economy/networking pages now record the AI-team kill-bounty branch; server/economy pages now record `Common_ChangeSideSupply` 3-arg reason loss and the hidden `SideMessage` radio pipeline.
+- Verification correction: the side-supply reason bug affects 3-argument calls such as `AttackWave.sqf:40`; four-argument callers such as `supplyMissionCompleted.sqf:26` preserve their reason.
+- No gameplay source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 20 mirrored files.
+
+## 2026-06-04T06:30:00+02:00 - Codex - mini scout wave maps/ops/PV/factory/respawn harvest
+- Spark quota blocked GPT-5.3-Codex-Spark starts, so Codex launched five gpt-5.4-mini scouts for map/generated divergence, integrations/ops, PV/security, factory/economy spend paths and respawn/service lifecycle.
+- Source-checked and promoted only non-duplicate or sharper deltas: salvage payout uses the wrong `ChangePlayerfunds` casing in both salvage paths; service points are support nodes, not active respawn nodes; DiscordBot active status config is `Preferences.Instance.DataSourcePath`/default data path while `FileConfiguration.cs` is secondary; PerformanceAuditAnalyzer is parser/launcher tooling, not a shipped live RPT tailer.
+- The PV/security scout mostly confirmed canonical authority pages: PVF dispatcher hardening, thin registered handlers, `RequestSpecial`/ICBM, direct attack-wave/side-supply channels, `SEND_MESSAGE` and MASH marker relay already have owner pages.
+- The map scout confirmed current `Missions`/`Missions_Vanilla` roots, generated `version.sqf` dependency and modded mission boot blockers already documented in [Content structure](Content-Structure-And-Maps) and [Tools/build](Tools-And-Build-Workflow).
+- No gameplay source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 24 mirrored files.
+
+## 2026-06-04T11:05:00+02:00 - Codex - commander/town/PV mini scout playbook harvest
+- Spark quota blocked the requested GPT-5.3-Codex-Spark wave, so Codex launched four `gpt-5.4-mini` read-only scouts for commander/HQ, economy/supply, towns/capture and PV/networking authority.
+- Commander, towns and PV/networking returned; the economy scout timed out and was closed without output.
+- Published [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) as the canonical DR-47 + DR-15 adjacent implementation playbook, then routed Home, sidebar/footer, LLM entry pack, Feature Status, Pending Owner Decisions, Hardening Roadmap, Server Authority, Testing Workflow, Client UI, Player UI and Public Variable Channel Index through it.
+- Promoted new town deltas into [Towns/camps/capture](Towns-Camps-And-Capture-Atlas), [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) and [Feature status](Feature-Status-Register): independent camp capture can set the 3D flag texture to the old owner, camp repair can change `sideID` without refreshing the flag object, resistance patrols can stay `wfbe_patrol_active` latched after patrol death, and the zero-camp helper fallback affects capture mode 2, threeway defender respawn and depot infantry gating.
+- PV/networking scout confirmed existing canonical P0 authority risks. Supply completion matching was already documented in [Supply mission architecture](Supply-Mission-Architecture) and Feature Status, so no duplicate prose was added.
+- No gameplay source files changed. Validation passed for the docs mirror: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and 22-file mirror parity. Pushed as docs `b4d0ad90` / wiki `8ec41c3`.
+
+## 2026-06-04T12:20:00+02:00 - Codex - mini scout wave launch plus town lifecycle lesson
+- Steff asked for more Spark scouts. Two GPT-5.3-Codex-Spark starts hit quota limits, so Codex closed the failed slots and launched six `gpt-5.4-mini` read-only fallback scouts: commander/HQ, economy/supply, respawn/MASH, UI/HUD, supports/special weapons and AI commander/orders.
+- While the scout wave runs, Codex source-checked the latest town/camp findings and converted them into a reusable development lesson plus global smoke-pack routing.
+- Evidence checked: `server_town_camp.sqf:122-138`, `Server_HandleSpecial.sqf:147-168`, `server_town_ai.sqf:226-230`, `server_patrols.sqf:26,71-72`, `Common_GetTotalCamps.sqf:9-12` and `Common_GetTotalCampsOnSide.sqf:15-22`.
+- Updated [Development lessons learned](Development-Lessons-Learned), [`agent-development-lessons.jsonl`](agent-development-lessons.jsonl), [Testing workflow](Testing-Debugging-And-Release-Workflow) and [Progress Dashboard](Progress-Dashboard). No gameplay source files changed.
+- Validation and mirror publication are pending for this docs-only batch.
+
+## 2026-06-04T12:45:00+02:00 - Codex - mini scout wave HQ/economy/respawn/UI/support/AI harvest
+- All six fallback scouts returned. Codex source-checked their reports and promoted only deltas that were not already better covered by canonical pages.
+- Added or sharpened notes in [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas), [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas), [Gameplay systems](Gameplay-Systems-Atlas), [Towns/camps/capture](Towns-Camps-And-Capture-Atlas), [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) and [AI commander autonomy audit](AI-Commander-Autonomy-Audit).
+- Preserved false-positive guards: `RespawnST` has an economy-menu caller, `SetTask` is already documented as partial UI, stable-master AI commander upgrade has a worker but no proven scheduler, and support/ICBM authority risks already belong to the support/ICBM authority pages.
+- No gameplay source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 12 mirrored files.
+
+## 2026-06-04T11:35:00+02:00 - Codex - MHQ repair authority mutex routing
+- Source-checked the normal and WASP MHQ repair paths after the latest scout harvest sharpened the race risk.
+- Evidence checked: `Client/Action/Action_RepairMHQ.sqf:5-35`, `Client/Action/Action_RepairMHQ.sqf:8-9`, `WASP/actions/Action_RepairMHQDepot.sqf:7-29`, `WASP/actions/Action_RepairMHQDepot.sqf:10-11`, `Server/PVFunctions/RequestMHQRepair.sqf:1` and `Server/Functions/Server_MHQRepair.sqf:7-79,23-57`.
+- Updated [Server authority migration map](Server-Authority-Migration-Map), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), `agent-status.json` and `agent-collaboration.json` so future HQ repair hardening includes a server-side in-flight repair mutex and duplicate/concurrent repair smoke.
+- No gameplay source files changed. Validation passed: `docs/validate-wiki.ps1`, JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
+
+## 2026-06-04T12:35:00+02:00 - Codex - mini scout wave config/factory/UI/AI/cleanup/upstream harvest
+- Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked the first starts until 13:06, so Codex closed the failed Spark slots and launched six `gpt-5.4-mini` read-only scouts instead.
+- All six returned and were closed: mission config/version include graph, cleanup/restorer/corpses/markers, factory queue internals, commander AI/order chain, UI IDD/menu graph and upstream developer-history lessons.
+- Promoted only source-backed non-duplicate deltas: new [Mission config/version graph](Mission-Config-Version-Include-Graph); generated `version.sqf` map/naval/header contract; stable `AIBuyUnit` as latent and not player-buy parity; branch-local `feat/ai-commander` supervisor with `wfbe_aicom_running` as full-command latch; Help unload and orphan GPS zoom UI routes; unbounded client/HC delegated-group cleanup polls; repeated broad dropped-item cleaner scans; opt-in upstream diagnostics culture.
+- Updated the owning atlas/status pages plus `agent-feature-status.jsonl`. No gameplay source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 22 files. Content was pushed as docs `51153bf2` / wiki `152c52d`. No gameplay source changed.
+
+## 2026-06-04T13:00:00+02:00 - Codex - mini scout wave quad AI/support/lifecycle/UI/tooling/upstream launch
+- Steff asked for more Spark scouts. Three GPT-5.3-Codex-Spark starts hit the quota limit until 13:06 and were closed.
+- Launched six `gpt-5.4-mini` read-only fallback scouts: `quad-ai-commander` branch intel, support/RequestSpecial authority, lifecycle/server-loop topology, UI/dialog lifecycle, tooling/release/deploy footguns and upstream/community-dev lessons.
+- Codex remains the local integrator and will promote only source-backed, non-duplicate deltas into the wiki/docs mirror. No gameplay source files changed.
