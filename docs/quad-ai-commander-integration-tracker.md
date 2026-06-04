@@ -6,14 +6,14 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 
 | PR | Branch | Purpose | Status |
 |---|---|---|---|
-| #14 | `feat/ai-commander` | Execution substrate: supervisor, executor, town assignment, production, upgrades, hybrid command | Open draft; needs runtime smoke |
+| #14 | `feat/ai-commander` | Execution substrate: supervisor, executor, town assignment, production, upgrades, hybrid command | Open draft; full-auto smoke noted, hybrid/handoff/stopped evidence still needed |
 | #17 | `codex/quad-ai-commander` | Docs, roadmap, phase specs, validation plan, implementation brief | Open; docs-only |
 
 ## Phase Status
 
 | Phase | Branch | Depends On | Status | Decision Impact |
 |---|---|---|---|---|
-| 0 Execution substrate | `feat/ai-commander` | current AI commander PR | In progress | yes, current PR behavior |
+| 0 Execution substrate | `feat/ai-commander` | current AI commander PR | In progress; partial full-auto evidence | yes, current PR behavior |
 | 1 Structured logs | `feat/ai-commander-logs` | Phase 0 stable | Spec ready, implementation pending | no |
 | 2 Context/beliefs | `feat/ai-commander-context` | Phase 1 logs | Spec ready, implementation pending | no |
 | 3 Advisory planner | `feat/ai-commander-planner` | Phase 2 beliefs | Spec ready, implementation pending | no by default |
@@ -25,6 +25,7 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 |---|---|
 | `docs/quad-ai-commander.md` | Concept and architecture overview |
 | `docs/quad-ai-commander-implementation-roadmap.md` | Full staged roadmap |
+| `docs/quad-ai-commander-phase0-smoke-brief.md` | Current AI Commander smoke-test brief |
 | `docs/quad-ai-commander-phase1-logs.md` | Structured log API spec |
 | `docs/quad-ai-commander-phase1-implementation-brief.md` | First implementation branch runbook |
 | `docs/quad-ai-commander-phase2-beliefs.md` | Context and belief merge/decay spec |
@@ -36,16 +37,25 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 
 ## Next Best Action
 
-Stabilize and smoke-test PR #14 as Phase 0.
+Finish Phase 0 smoke-testing on PR #14.
 
-Required Phase 0 proof:
+Already noted in PR #14:
 
-- full-auto enters active command and assigns/produces/upgrades
+- full-auto boot gates
+- supervisor lifecycle
+- type assignment
+- town attacks
+- upgrades
+- supervisor disengages when a player takes commander
+
+Remaining Phase 0 proof:
+
 - hybrid mode executes human Move/Patrol/Defense waypoints
 - delegated teams auto-drive; non-delegated teams are not overwritten
 - AI economy remains frozen under human command
 - human-leaves handoff resumes full-auto cleanly
 - disabled/HQ-down state stops commander cleanly
+- watchlist has no blocking waypoint reset, stale `wfbe_exec_sig`, or stuck `wfbe_queue` issue
 
 After Phase 0 passes, start:
 
@@ -69,8 +79,9 @@ runbook: docs/quad-ai-commander-phase1-implementation-brief.md
 
 | Evidence | Needed For | Current State |
 |---|---|---|
-| Full-auto in-engine smoke | Phase 0 | pending |
+| Full-auto in-engine smoke | Phase 0 | partial evidence noted in PR #14 body |
 | Hybrid command-bar execution smoke | Phase 0 | pending |
+| Hybrid delegation/economy-freeze smoke | Phase 0 | pending |
 | Handoff smoke | Phase 0 | pending |
 | HQ-down/disabled smoke | Phase 0 | pending |
 | Phase 1 structured log RPT excerpts | Phase 1 | pending implementation |
@@ -94,7 +105,7 @@ Stop and fix before proceeding when:
 
 The Quad AI Commander integration is ready to implement and test when:
 
-1. PR #14 Phase 0 has positive runtime evidence.
+1. PR #14 Phase 0 has positive runtime evidence for full-auto, hybrid-assist, handoff, and stopped modes.
 2. PR #17 docs are merged or accepted as the source of truth.
 3. `feat/ai-commander-logs` can be opened from the implementation brief without unresolved design questions.
 4. Runtime validation expectations are agreed for each follow-up branch.
