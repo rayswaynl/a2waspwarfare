@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T04:32:00+02:00",
+  "generatedAt": "2026-06-04T04:47:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -43,7 +43,7 @@
         "Promoted server runtime startup hub and dormant maintenance-hook notes",
         "No gameplay source changed"
       ],
-      "handoff": "This docs batch is validated and ready to push. Future agents can treat the six mini-scout reports as harvested; no active sub-agent output remains pending."
+      "handoff": "This docs batch is validated and pushed as docs 16338f5d / wiki 35479de. Future agents can treat the six mini-scout reports as harvested; no active sub-agent output remains pending."
     },
     {
       "lane": "spark-scout-wave-afk-config-victory-ui-runtime-integrations",

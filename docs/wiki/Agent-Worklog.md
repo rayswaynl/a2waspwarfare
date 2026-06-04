@@ -5,6 +5,7 @@
 - Spark quota blocked the first two GPT-5.3-Codex-Spark scout starts, so Codex closed those failed slots and relaunched six cheap mini scouts.
 - Scout lanes covered towns/voting, factories/buildings/repair, respawn/MHQ/camps, supports/artillery/UAV/ICBM, AI orders/autonomy and server loops/perf cleanup.
 - Promoted only source-backed deltas into canonical pages: `RequestSpecial` `upgrade-sync` mixed `_args`/`_this` reads, respawn candidate caveats, player-buy/no-PVF confirmation, SmallSite add/add logic-list bug candidate, stable-master order plumbing versus missing AI commander autonomy, runtime startup hub/dormant maintenance hooks and no direct town-capture to commander-election coupling.
+- Validation passed and the batch was pushed as docs mirror `16338f5d` and wiki `35479de`.
 - Documentation/machine-state cleanup only; no gameplay source files were edited.
 
 ## 2026-06-04T02:31:14+02:00 - Codex - dashboard current-lanes reconciliation

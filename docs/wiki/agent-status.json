@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T04:32:00+02:00",
+  "generatedAt": "2026-06-04T04:47:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Validated the latest cheap mini scout wave after GPT-5.3-Codex-Spark quota blocked the first two starts. Promoted source-backed deltas for RequestSpecial upgrade-sync argument shape, respawn candidate caveats, player-buy/no-PVF confirmation, SmallSite logic-list add/add risk, stable-master AI order plumbing versus missing autonomy, server runtime startup hub/dormant hooks and town-capture/commander-vote separation.",
-      "nextExpectedOutput": "Commit and push the validated mini-scout wiki/mirror batch, then continue with the next bounded source-backed documentation gap."
+      "currentWork": "Published and validated the latest cheap mini scout wave after GPT-5.3-Codex-Spark quota blocked the first two starts. Promoted source-backed deltas for RequestSpecial upgrade-sync argument shape, respawn candidate caveats, player-buy/no-PVF confirmation, SmallSite logic-list add/add risk, stable-master AI order plumbing versus missing autonomy, server runtime startup hub/dormant hooks and town-capture/commander-vote separation. Pushed as docs 16338f5d and wiki 35479de.",
+      "nextExpectedOutput": "Continue with the next bounded source-backed documentation gap."
     },
     "Codex-2": {
       "status": "ready",
@@ -47,7 +47,7 @@
       "lane": "mini-scout-wave-towns-construction-respawn-supports-ai-runtime",
       "owner": "Codex/Sub-agents",
       "status": "published-validated",
-      "output": "Spark quota blocked the first two GPT-5.3-Codex-Spark starts, so Codex relaunched six cheap mini scouts. Source-backed deltas landed in support, respawn, factory, construction, AI commander, server runtime, towns/capture, Feature Status and coordination pages. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. No gameplay source changed."
+      "output": "Spark quota blocked the first two GPT-5.3-Codex-Spark starts, so Codex relaunched six cheap mini scouts. Source-backed deltas landed in support, respawn, factory, construction, AI commander, server runtime, towns/capture, Feature Status and coordination pages. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. Pushed as docs 16338f5d and wiki 35479de. No gameplay source changed."
     },
     {
       "lane": "spark-scout-wave-afk-config-victory-ui-runtime-integrations",
