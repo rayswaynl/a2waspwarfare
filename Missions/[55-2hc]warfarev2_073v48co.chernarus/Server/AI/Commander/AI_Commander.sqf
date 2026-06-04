@@ -32,16 +32,23 @@ _prevHuman = false; _prevState = "";
 ["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1.", str _side]] Call WFBE_CO_FNC_LogContent;
 
 while {!gameOver} do {
-	_active = ((missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0)
-		&& {alive ((_side) Call WFBE_CO_FNC_GetSideHQ)};
+	_active = false;
+	if ((missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0) then {
+		if (alive ((_side) Call WFBE_CO_FNC_GetSideHQ)) then {_active = true};
+	};
 
 	if (_active) then {
 		_cmdTeam  = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-		_humanCmd = (!isNull _cmdTeam) && {isPlayer (leader _cmdTeam)};
+		_humanCmd = false;
+		if (!isNull _cmdTeam) then {
+			if (isPlayer (leader _cmdTeam)) then {_humanCmd = true};
+		};
 
 		//--- Human just left -> clear leftover explicit orders so full-auto retakes cleanly.
-		if (_prevHuman && !_humanCmd) then {
-			{ [_x, "towns"] Call SetTeamMoveMode; _x setVariable ["wfbe_exec_sig", []] } forEach (_logik getVariable ["wfbe_teams", []]);
+		if (_prevHuman) then {
+			if (!_humanCmd) then {
+				{ [_x, "towns"] Call SetTeamMoveMode; _x setVariable ["wfbe_exec_sig", []] } forEach (_logik getVariable ["wfbe_teams", []]);
+			};
 		};
 		_prevHuman = _humanCmd;
 
