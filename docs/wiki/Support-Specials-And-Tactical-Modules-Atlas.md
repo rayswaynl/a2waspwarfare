@@ -20,6 +20,13 @@ RequestSpecial scout 2026-06-04: the active tag set in source Chernarus is `upda
 
 No live `RequestSupport` symbol was found in source Chernarus during the 2026-06-04 trigger-chain scout; support and special effects route through `RequestSpecial`.
 
+Transport split from the 2026-06-04 supports scout:
+
+- Registered support requests use the generic PVF envelope: `Common/Functions/Common_SendToServer.sqf:12-18` prepends the function tag, `Server/Functions/Server_HandlePVF.sqf:9-14` dispatches it, and `Server/PVFunctions/RequestSpecial.sqf:1` delegates into `Server_HandleSpecial.sqf`.
+- Client-bound support feedback uses the sibling path: `Common/Functions/Common_SendToClient.sqf:9-18` and `Client/Functions/Client_HandlePVF.sqf:19-22`.
+- Artillery is not the same server-accepted support path. `Client/GUI/GUI_Menu_Tactical.sqf:531-547` gates fire missions locally, `Client/Functions/Client_RequestFireMission.sqf:13-31,51-54` starts local fire/cooldown behavior, and `Common/Functions/Common_FireArtillery.sqf:9-23,53-72` validates gun/range/firing mechanics. The scout found no server-side fee or cooldown recheck in that route.
+- Service actions are another local support family. `Client/GUI/GUI_Menu_Service.sqf:196-234` debits/spawns rearm/refuel/repair/heal support locally; [Service menu affordability guards](Service-Menu-Affordability-Guards) owns the small local correctness patch, while full authority remains an economy-ledger redesign.
+
 Adjacent server runtime surfaces: grouped base areas are enabled only when `WFBE_C_BASE_AREA > 0` (`Server/Init/Init_Server.sqf:565`). Side logic seeds `wfbe_basearea` at `Init_Server.sqf:380`; `Server/FSM/basearea.sqf:46-80` then polls every 20 seconds, prunes invalid/remote base-area logics, and schedules delayed orphan-defense cleanup through `_onAreaRemoved` (`basearea.sqf:12-43`). `Server/FSM/groupsMonitor.sqf:1-14` is a dormant debug monitor that logs `allGroups` counts every 30 seconds; its only source start point found in this pass is commented at `Init_Server.sqf:567`.
 
 ## Support Feature Matrix
@@ -48,6 +55,12 @@ Use [Server authority migration map](Server-Authority-Migration-Map) before addi
 ## Economy Cooldown And Upgrade Gates
 
 The tactical UI keeps support fees and intervals locally. The scout observed fee examples `[0,75000,9500,3500,8500,0,12500,0,0]` and intervals `[0,1000,800,600,900,0,0,0,0]`. Button enabling checks funds/upgrades/cooldowns client-side; future patches should re-check the same facts on the server before spawning assets or applying map-wide effects.
+
+Do not treat those UI checks as security boundaries. For paradrops, UAV and ICBM, the server router currently assumes the client already did role, upgrade, fee and cooldown filtering. For artillery and services, much of the effect/debit path is client-local. Public-server hardening should therefore separate:
+
+- `RequestSpecial` server validation for server-spawned assets and map-wide effects.
+- local correctness guards for service/EASA/artillery UI paths.
+- a broader economy ledger decision for client-side funds/effects.
 
 ## Module Deep Dives
 

@@ -1907,3 +1907,16 @@ Key conclusions:
 - Reconciled current coordination state after the previous validated/pushed micro-scout batch: [Progress Dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` no longer show the Spark micro-scout and development-lessons lanes as validation-pending.
 - Validation evidence for that batch was already recorded and pushed: docs mirror commit `9b5bba5e`, wiki commit `dfcd399`, `docs/validate-wiki.ps1` passed, JSON/JSONL parsed, `git diff --check` passed and SHA256 parity passed for 15 mirrored files.
 - No gameplay source files changed.
+
+## 2026-06-04T03:09:45+02:00 - Codex - Spark scout wave respawn/towns/AI/construction/supports/runtime launch
+- Launched six GPT-5.3-Codex-Spark read-only scouts after Steff asked for another wave.
+- Active file-family lanes: respawn/MASH/loadout/gear; town lifecycle/capture/resistance/supply; AI commander/team orders; construction/base structures/defenses; supports/services; server runtime safety and maintenance loops.
+- The current sub-agent cap was reached after six active scouts, so config/map-variant drift and external integration/tooling scouts are queued for recycled slots.
+- Scouts are instructed to return exact source paths/line evidence, avoid edits, cap output, and treat Arma 2 OA as the only scripting baseline. No gameplay source files changed.
+
+## 2026-06-04T03:23:25+02:00 - Codex - Spark scout wave respawn/towns/AI/construction/supports/runtime harvest
+- Harvested five useful Spark reports and closed the active scout wave. Broad AI commander, town lifecycle and server-runtime prompts overflowed during compacting until relaunched as narrower slices; the final AFK/AntiStack scout was closed after timeout and should be rerun later only if AFK policy becomes the active lane.
+- Published source-backed deltas: support/services transport split and local artillery/service authority scope; explicit no-revive note for respawn/MASH; AI commander upgrade-only deterministic first-unmet upgrade selection; stationary-defense base-area null guard; town/camp capture ownership chain and side-supply pipeline pointer.
+- Added a reusable development lesson and JSONL record: future Spark scouts should be file-family scoped, capped to roughly 800-1200 words and relaunched narrower after context bounces rather than retried broadly.
+- Updated [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [Respawn/death](Respawn-And-Death-Lifecycle-Atlas), [AI commander autonomy audit](AI-Commander-Autonomy-Audit), [Construction/CoIn](Construction-And-CoIn-Systems-Atlas), [Towns/camps/capture](Towns-Camps-And-Capture-Atlas), [Feature status](Feature-Status-Register), [Development lessons](Development-Lessons-Learned), `agent-hardening-backlog.jsonl` and `agent-development-lessons.jsonl`. No gameplay source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 parity for 14 mirrored files.

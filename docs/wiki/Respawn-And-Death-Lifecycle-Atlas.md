@@ -56,6 +56,8 @@ flowchart TD
 | Threeway defender towns | `Client_GetRespawnAvailable.sqf:67-76`; `Common_GetRespawnThreeway.sqf:6-8`. | Not seen in AI respawn scripts except via camps. | Defender can respawn in fully-held side towns in threeway mode. |
 | Camps | `Client_GetRespawnAvailable.sqf:78-81`; `Common_GetRespawnCamps.sqf:11-94`. | `AI_AdvancedRespawn.sqf:37-40`; `AI_SquadRespawn.sqf:36-39`. | Modes: classic, nearby camps, defender-only; optional hostile safe-radius rules. |
 
+No revive framework is wired in the audited source. The 2026-06-04 respawn scout found no mission-script `revive`/`reviving`/`revived` path under source Chernarus, and the live architecture is kill event, custom death camera, respawn menu, then `Client_OnRespawnHandler.sqf`. Do not document MASH as a revive feature; it is a respawn candidate source with a dead marker-sharing edge.
+
 ## Gear And Penalty Rules
 
 `Client_OnRespawnHandler.sqf` moves the player to the chosen spawn and applies custom or default gear. It forces default gear for mobile, MASH or leader respawn when the corresponding parameter equals `2` (`:11-24`). Mobile respawn can put the player into the vehicle if cargo is free and it is unlocked (`:26-33`).

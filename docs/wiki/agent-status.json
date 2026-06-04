@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T03:01:14+02:00",
+  "generatedAt": "2026-06-04T03:23:25+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated the micro-scout status reconciliation: Spark micro-scout and development-lessons lanes now match their actual validation/push state instead of remaining pending.",
-      "nextExpectedOutput": "Pick the next bounded source-backed documentation/status gap or hand a patch owner a focused implementation playbook."
+      "currentWork": "Validated the Spark scout harvest locally: five useful reports landed in support, respawn, AI commander, construction and town/capture pages plus machine ledgers. Broad bounces and the timed-out AFK lane are recorded as prompt-scope/orchestration lessons.",
+      "nextExpectedOutput": "Push the validated harvest batch, then continue with the next bounded source-backed documentation gap."
     },
     "Codex-2": {
       "status": "ready",
@@ -38,11 +38,17 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "Micro-scout wave harvested and closed. Broad Spark prompts overflowed; narrow file-family scoped scouts returned useful reports for factory queues, upgrade tuple semantics, commander/vote UI and HC/delegation.",
-      "nextExpectedOutput": "No active sub-agent output pending. Future scout waves should be file-family scoped with capped output."
+      "currentWork": "Spark scout wave harvested and closed. Useful reports landed for supports/services, respawn/MASH/gear, AI commander upgrades, construction/base defenses and town/camp capture. Broad AI/runtime/town prompts overflowed until narrowed; AFK/AntiStack timed out and was closed.",
+      "nextExpectedOutput": "No active sub-agent output pending. Future Spark waves should be file-family scoped with capped output."
     }
   },
   "laneSummary": [
+    {
+      "lane": "spark-scout-wave-respawn-towns-ai-construction-supports-runtime",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "output": "Harvested five useful GPT-5.3-Codex-Spark reports after Steff requested another scout wave. Source-backed deltas landed for support/services transport split and authority scope, respawn/MASH no-revive note, AI commander upgrade-only deterministic selection, construction stationary-defense base-area null guard, and town/camp capture ownership chain. Broad bounces and a timed-out AFK/AntiStack lane produced a new Spark prompt-scope lesson. Validation/parity passed for 14 files. No gameplay source changed."
+    },
     {
       "lane": "micro-scout-status-reconciliation",
       "owner": "Codex",

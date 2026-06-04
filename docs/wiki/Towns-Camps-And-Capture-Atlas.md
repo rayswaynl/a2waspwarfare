@@ -111,6 +111,17 @@ This ordering matters. Capture/SV, town AI, resources and victory are separate l
 
 The capture loop is server-owned for town `sideID`, town `supplyValue`, attacker visibility state, camp reassignment and defense ownership.
 
+### Capture Ownership Chain
+
+The compact server-owned chain is:
+
+1. `server_town.sqf:149-196` decides whether a side has enough dominance to drain/capture the town, including camp-gated mode `2`.
+2. On capture, `server_town.sqf:226-241` writes the town `sideID`, broadcasts `TownCaptured` and calls `WFBE_SE_FNC_SetCampsToSide`.
+3. `Server_SetCampsToSide.sqf:18-27` sets every camp to the new side, resets camp SV to the town starting SV, changes flags and broadcasts `AllCampsCaptured`.
+4. Independent camp captures are handled by `server_town_camp.sqf:122-138`, which writes camp `sideID`, changes the flag and broadcasts `CampCaptured`.
+
+That means ownership is server-owned, but player bounty/funds reactions to those broadcasts still happen client-side in the PVF handlers below.
+
 ## Camp Capture
 
 Camps are not handled by one script per camp anymore. `server_town_camp.sqf` registers each town's camps into `WFBE_SE_TownCampWorkers`, then keeps exactly one global camp manager alive (`:8-14`).
@@ -191,6 +202,8 @@ Town ownership and SV feed the economy:
 - `Common_GetTownsIncome.sqf` does the same with optional income coefficient (`:4-16`);
 - `Common_GetTownsHeld.sqf` counts towns held by a side (`:3-8`);
 - `updateresources.sqf` reads town supply every income tick, optionally adds side supply, pays teams/commanders and AI commander funds (`updateresources.sqf:20-75`).
+
+Side supply itself is a separate mutation pipeline: callers use `Common_ChangeSideSupply.sqf:24-31` to publish `wfbe_supply_temp_<side>` to the server, and `Server_ChangeSideSupply.sqf:1-47` applies the change and mirrors `wfbe_supply_<side>` back to clients. Town income uses that pipeline from `updateresources.sqf:47-50`. Clamp/authority fixes belong in [Economy authority first cut](Economy-Authority-First-Cut), not inside town capture logic.
 
 Victory also depends on town ownership. The exact endgame bug/risk detail stays canonical in [Deep review findings](Deep-Review-Findings) DR-11/DR-36 and [Testing workflow](Testing-Debugging-And-Release-Workflow).
 

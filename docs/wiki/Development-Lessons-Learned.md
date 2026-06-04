@@ -176,6 +176,14 @@ The codebase uses "HC" for both headless-client delegation and Arma High Command
 
 Development rule: when an issue says "HC," first classify it as headless client registration, headless delegation, client-FPS delegation, or Arma High Command UI. Mixing those paths creates bad fixes and confusing docs. See [AI/headless and performance](AI-Headless-And-Performance) and [Headless delegation and failover playbook](Headless-Delegation-And-Failover-Playbook).
 
+## Lesson 23: Spark Scouts Need File-Family Scope And Output Caps
+
+The 2026-06-04 scout waves showed a reliable pattern: broad Spark prompts over this repo often overflow during remote compacting, even when the task is read-only. Whole-lane prompts for "AI commander/team orders", "server runtime safety" and full town lifecycle bounced with context-window errors. Narrow relaunches did better when they named exact file families and answer shape, such as `Server_AI_Com*.sqf` only, town capture/camp/supply only, or AFK/AntiStack only.
+
+The useful reports came from scouts with tight boundaries and capped output: supports/services produced a clean transport split, respawn/MASH/gear confirmed the no-revive architecture and profile-template bug, AI commander upgrade-only clarified deterministic first-unmet upgrade selection, construction found the stationary-defense null guard, and town capture produced a compact ownership chain.
+
+Development rule: launch Spark scouts as small drill cores, not subsystem encyclopedias. Each prompt should name exact files or search terms, forbid generated-mission scans unless needed, cap output under roughly 800-1200 words, ask for concrete file:line evidence, and say "no edits." If a scout bounces, relaunch with a smaller file family instead of retrying the same broad question. Use the dashboard/worklog to record failed broad scopes as orchestration evidence, not as source findings.
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |

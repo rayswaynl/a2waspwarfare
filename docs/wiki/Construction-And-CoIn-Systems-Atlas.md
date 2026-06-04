@@ -215,6 +215,8 @@ Notable paths:
 - `Server_HandleDefense.sqf` either delegates static defense crew creation to headless clients or creates a side soldier locally and moves it into the gunner seat.
 - Artillery defenses can receive BIS ARTY interface initialization and `EquipArtillery`.
 
+Focused construction scout 2026-06-04 found a small guard-order bug here. `Construction_StationaryDefense.sqf:12-13` finds the closest base-area logic and immediately reads `_area getVariable "weapons"` before the later `if (!isNull _area)` guard. If the base-area list is empty, stale or race-pruned, defense construction can hit a null-object variable read before the script reaches its guarded block. Patch this separately from DR-6 authority hardening: move the weapons read inside the non-null block or early-exit when no base-area logic exists, then smoke defense placement with grouped-base mode on and off.
+
 ## Repair Flows
 
 ### MHQ Repair
@@ -262,6 +264,7 @@ The server reaches this script by `setVehicleInit` in construction scripts (`Con
 | Server request validation | `RequestStructure` / `RequestDefense` trust client-side payment and placement checks; see [Deep-review findings](Deep-Review-Findings) DR-6. | Add server-side validation of side, commander/repair-truck authority, class membership, funds, radius, base-area availability and collision restrictions before creating objects. Start in request handlers, not in CoIn UI. |
 | PVF dispatch | Construction uses generic PVF channels; DR-1 already shows dispatch hardening is needed. | Validate PVF function strings and then validate construction payloads. |
 | Base-area availability | `avail`/`weapons` are updated through client-visible logic and direct client CoIn mutations. | Before changing limits, trace `RequestBaseArea`, `coin_interface`, `Construction_StationaryDefense` and JIP behavior together. |
+| Stationary defense base-area null guard | `Construction_StationaryDefense.sqf:12-13` reads `_area getVariable "weapons"` before checking `!isNull _area`. | Move the read inside the non-null block or early-exit when no base-area logic exists; smoke grouped-base defense placement and non-base defense placement. |
 | Auto-wall toggle is global | `RequestAutoWallConstructinChange.sqf:3-7` writes global `isAutoWallConstructingEnabled`; `Construction_SmallSite.sqf:110-112` and `Construction_MediumSite.sqf:125-128` use it for later construction. | If auto-wall should be a player/commander preference, key it by side or requester and validate the sender. If global behavior is intentional, label it in UI/docs and smoke two players toggling it from opposite sides. |
 | SmallSite/MediumSite repair logic asymmetry | SmallSite adds `_nearLogic` where its comment says remove; MediumSite removes it. `wfbe_structures_logic` has no obvious source initializer. | Use [Construction logic list cleanup](Construction-Logic-List-Cleanup) for the exact one-line patch, Vanilla propagation and smoke checklist; keep this separate from construction authority hardening. |
 | Progressive repair/construction path appears dormant | Progressive mode code remains in construction scripts and economy UI, but `Rsc/Parameters.hpp` exposes only construction-time mode `0`. | Do not expand progressive repair UI until the mission parameter and live caller model are restored intentionally. |

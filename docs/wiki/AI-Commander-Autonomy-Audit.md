@@ -54,7 +54,8 @@ Branch-only review risks:
 | AI commander income | `Server/FSM/updateresources.sqf:67` adds income to AI commander funds when no player commander exists and AI commander is enabled. | AI commander money can grow without a player commander. |
 | Upgrade worker compile | `Server/Init/Init_Server.sqf:48` compiles `WFBE_SE_FNC_AI_Com_Upgrade`. | The worker is available after server init. |
 | Upgrade order data | `Common/Config/Core_Upgrades/Upgrades_*.sqf` define `WFBE_C_UPGRADES_%SIDE_AI_ORDER`; `Check_Upgrades.sqf:7-40` fills missing enabled upgrade levels. | AI upgrade preference data exists. |
-| Upgrade worker behavior | `Server/Functions/Server_AI_Com_Upgrade.sqf:12-50` selects the next upgrade, checks funds/supply and calls `WFBE_SE_FNC_ProcessUpgrade`. | The worker is real, but needs a caller/owner cadence. |
+| Upgrade worker behavior | `Server/Functions/Server_AI_Com_Upgrade.sqf:12-50` reads `WFBE_C_UPGRADES_%SIDE_AI_ORDER`, selects the first upgrade whose current level is below the target level, checks funds/supply and calls `WFBE_SE_FNC_ProcessUpgrade`. | The worker is real and deterministic, but needs a caller/owner cadence. It is upgrade-only, not base building, defense, factory or unit-buy AI. |
+| Upgrade processing callee | `Server/Functions/Server_ProcessUpgrade.sqf:10-47,49-83` owns timing/state progression and artillery refresh side effects. | It does not create bases, defenses, factories or units; do not infer production behavior from the AI upgrade path. |
 | AI buy worker compile | `Server/Init/Init_Server.sqf:10` compiles `AIBuyUnit = Server_BuyUnit.sqf`. | Server-side AI production helper exists. |
 | AI buy worker behavior | `Server/Functions/Server_BuyUnit.sqf:1-180` queues, waits and creates units/vehicles for an AI team. | Useful if a future AI commander production loop intentionally calls it. |
 | Stop hooks | `Server_VoteForCommander.sqf:54-57` and `Server_AssignNewCommander.sqf:11-14` clear `wfbe_aicom_running` when a player commander exists. | Stop/reset hooks exist, but they do not prove a start loop exists. |
@@ -64,7 +65,7 @@ Branch-only review risks:
 | Missing/uncertain owner | Evidence | Development implication |
 | --- | --- | --- |
 | AI commander start loop | Source search found `wfbe_aicom_running` initialized and cleared, but not set to `true`. | Do not claim autonomous commander brain is live until a dynamic/runtime caller is proven. |
-| AI commander upgrade scheduler | Source search found the worker compile and function body, but no static caller for `WFBE_SE_FNC_AI_Com_Upgrade` outside docs. | Reviving upgrades needs an explicit server-owned cadence and stop conditions. |
+| AI commander upgrade scheduler | Source search found the worker compile and function body, but no static caller for `WFBE_SE_FNC_AI_Com_Upgrade` outside docs. `Init_Server.sqf:622` starts `WFBE_SE_FNC_VoteForCommander`, not the AI upgrade worker. | Reviving upgrades needs an explicit server-owned cadence and stop conditions. |
 | AI unit production scheduler | `AIBuyUnit` is compiled, but source search found no static caller outside `Server_BuyUnit.sqf` itself. | AI commander unit production needs an intentional design, not just a docs claim. |
 | AI commander movement scheduler | `WFBE_C_AI_COMMANDER_MOVE_INTERVALS` exists, but no audited source path uses it to move/command teams. | Treat movement autonomy as missing until a source owner is found or implemented. |
 

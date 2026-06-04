@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `spark-scout-wave-respawn-towns-ai-construction-supports-runtime` | Published / validated | Launched a file-family Spark wave and harvested five useful reports: supports/services transport split and authority scope, respawn/MASH no-revive note, AI commander upgrade-only deterministic behavior, construction stationary-defense base-area null guard, and town/camp capture ownership chain. Broad AI/runtime/town prompts overflowed until narrowed; the final AFK/AntiStack scout was closed after timeout. Added a development lesson that future Spark scouts need file-family scope and output caps. Validation/parity passed for 14 files. No gameplay source changed. |
 | `micro-scout-status-reconciliation` | Published / validated | Reconciled the dashboard and machine status after the Spark micro-scout publish. The previous two pending rows are now marked validated, matching the actual validation/push evidence: docs mirror commit `9b5bba5e`, wiki commit `dfcd399`, `docs/validate-wiki.ps1` passed, JSON/JSONL parsed, `git diff --check` passed and SHA256 parity passed for 15 mirrored files. |
 | `spark-micro-scout-wave-authority-ui-hc-factory` | Published / validated | Broad Spark scouts proved too large for this repo and several overflowed during compacting. Codex closed the failed lanes and harvested a tighter micro-wave: factory queue debit/refund, upgrade cost tuple semantics, commander task/vote UI and HC/delegation terminology. New deltas landed in factory, economy-authority, UI, HC/failover, Feature Status and machine ledgers. Future Spark work should stay file-family scoped. Validation/parity passed and was pushed as docs `9b5bba5e` / wiki `dfcd399`. |
 | `development-lessons-authority-ui-hc-harvest` | Published / validated | Converted the latest authority/UI/HC findings into reusable developer lessons and JSONL records: server-side spend paths can still have currency tuple bugs, income display is not payout proof, visible UI affordances can be partial/stale, and HC must be split into headless-client, delegation and Arma High Command UI meanings. Validation/parity passed and was pushed with the micro-scout batch. |
@@ -121,10 +122,10 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` | Micro-scout harvest and lessons harvest are validated/pushed; next step is the next bounded source-backed docs or status gap. |
+| Codex | Active | `documentation-finisher-loop` | Spark scout harvest is validated locally; push and next bounded docs gap are next. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle. |
-| Sub-agents | Closed | none | The micro-scout wave returned useful reports and is harvested; broad Spark prompts should be avoided in favor of file-family scoped scouts with capped output. |
+| Sub-agents | Closed | none | Five scout reports were harvested; broad bounces and the timed-out AFK lane are recorded as orchestration lessons rather than source findings. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
 
 ## One-Link Check
@@ -147,6 +148,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `spark-scout-wave-respawn-towns-ai-construction-supports-runtime` | Codex/Sub-agents | Published / validated | Harvested five useful reports into support, respawn, AI commander, construction and town/capture pages plus machine ledgers. Broad bounces and the timed-out AFK lane are recorded as a Spark prompt-scope lesson. Validation/parity passed. |
 | `micro-scout-status-reconciliation` | Codex | Published / validated | Coordination-only cleanup: dashboard, `agent-status.json`, `agent-collaboration.json`, worklog and event stream now mark the Spark micro-scout and development-lessons lanes as validated instead of pending. |
 | `spark-micro-scout-wave-authority-ui-hc-factory` | Codex/Sub-agents | Published / validated | Harvested micro-scouts into [Factory/purchase](Factory-And-Purchase-Systems-Atlas), [Economy authority](Economy-Authority-First-Cut), [Client UI systems](Client-UI-Systems-Atlas), [Player UI workflow](Player-UI-Workflow-Map), [HC delegation/failover](Headless-Delegation-And-Failover-Playbook), [Feature status](Feature-Status-Register), [`agent-feature-status.jsonl`](agent-feature-status.jsonl) and [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl). |
 | `spark-scout-wave-server-economy-ui-pv-ai` | Codex/Sub-agents | Superseded by micro-wave | Six broad Spark scouts were attempted for source-backed code indexing, but several failed at compact time because the subsystem prompts were too wide for the repo. Future Spark scout prompts should name exact file families and cap output size. |

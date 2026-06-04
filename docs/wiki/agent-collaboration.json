@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T03:01:14+02:00",
+  "generatedAt": "2026-06-04T03:23:25+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,27 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "spark-scout-wave-respawn-towns-ai-construction-supports-runtime",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/agent-events.jsonl"
+      ],
+      "outputs": [
+        "Harvested useful GPT-5.3-Codex-Spark reports for supports/services, respawn/MASH/gear, AI commander upgrades, construction/base defenses and town/camp capture",
+        "Published source-backed deltas to canonical pages plus Feature Status, Development Lessons and machine ledgers",
+        "Broad AI/runtime/town prompts overflowed until narrowed; AFK/AntiStack timed out and was closed",
+        "Validation/parity passed for 14 touched files",
+        "No gameplay source changed"
+      ],
+      "handoff": "This harvest is validated and ready to push. Future Spark scout waves should use file-family scope and capped output; rerun AFK/AntiStack only when that becomes the active documentation lane."
+    },
     {
       "lane": "micro-scout-status-reconciliation",
       "owner": "Codex",
