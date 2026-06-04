@@ -1,5 +1,11 @@
 # Agent Worklog
 
+## 2026-06-04T11:30:00+02:00 - Codex - fallback scout push-head reconciliation
+
+- Continued the documentation finisher loop and source-checked current pushed heads after the previous status batch: main docs `2fdab599` (`docs: record fallback scout push`) and live wiki `3c9b796` (`wiki: record fallback scout push`).
+- Reconciled [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` so the current head values no longer stop at the earlier content commits (`16f2ce8c` / `c66ed93`).
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and mirror parity. Coordination cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T11:15:00+02:00 - Codex - fallback scout wave: construction/UI/integrations/community
 
 - Steff asked for another bunch of Spark scouts. Six GPT-5.3-Codex-Spark starts hit quota until 13:06, so Codex closed the failed threads and relaunched four read-only `gpt-5.4-mini` fallback scouts.
