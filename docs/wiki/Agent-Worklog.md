@@ -1,5 +1,14 @@
 # Agent Worklog
 
+## 2026-06-04T07:34:37+02:00 - Codex - static-defense HC payload-shape lesson and scout wave
+
+- Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota was exhausted until 07:36, so Codex closed the errored Spark threads and launched four `gpt-5.4-mini` read-only scouts for static-defense HC, economy/supply/town capture, UI/HUD/dialogs and networking/PV/security.
+- Local source-check sharpened the static-defense HC finding: `Client_DelegateAIStaticDefence.sqf:25-26` assigns `_teams` from `_retVal select 0`, `Common_CreateUnitForStaticDefence.sqf:69` returns only `[_teams]`, and `Server_HandleSpecial.sqf:86-96` has only the town-vehicle `update-town-delegation` receiver.
+- Updated [Headless delegation and failover playbook](Headless-Delegation-And-Failover-Playbook), [Headless client scaling and topology](Headless-Client-Scaling-And-Topology), [Networking and public variables](Networking-And-Public-Variables), [Feature status](Feature-Status-Register) and [Development lessons](Development-Lessons-Learned): future code owners should not apply an uncomment-only patch; restoring static-defense HC accounting needs a deliberate payload and server receiver.
+- Networking/PV scout output led to a source-backed wording correction: `ATTACK_WAVE_DETAILS` is a server self-loop via `publicVariableServer`, while the later player-visible effects travel through `HandleSpecial`/`LocalizeMessage`.
+- UI and supply/economy scouts mostly confirmed existing canonical pages rather than opening new defects: the IDD/currentCutDisplay repair page, gear `_u_upgrade` finding, malformed `RscClickableText.soundPush`, supply reward split, cooldown casing and dead supply-truck scaffold already carry the needed details.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T07:27:13+02:00 - Codex - RU para-ammo config line-shape lesson
 
 - Source-checked the RU para-ammo support lead before adding duplicate prose.

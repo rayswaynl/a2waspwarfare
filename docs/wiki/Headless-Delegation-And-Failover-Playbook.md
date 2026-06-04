@@ -68,6 +68,8 @@ Static-defense delegation is triggered from two server paths:
 
 Unlike town AI, static-defense HC creation does not tell the server what was created. DR-42 confirms the server has no current record of HC-created static-defense units for cleanup, accounting, or re-delegation.
 
+Do not restore this by uncommenting it alone. `Client_DelegateAIStaticDefence.sqf:25-26` assigns `_teams` from `_retVal select 0`, and `Common_CreateUnitForStaticDefence.sqf:69` returns only `[_teams]`. That payload can identify created groups, but it does not carry the defense object, side, move-in mode or cleanup/accounting context, and `Server_HandleSpecial.sqf:86-96` only implements the town-vehicle `update-town-delegation` receiver. A real restore needs a deliberate payload and a new server branch.
+
 ### Client-FPS Delegation Mode
 
 Client delegation mode (`WFBE_C_AI_DELEGATION == 1`) is separate from HC mode. `Server_FNC_Delegation.sqf` selects player clients using `WFBE_AI_DELEGATION_<uid>` data:
@@ -109,7 +111,7 @@ Choose one of two designs:
 
 | Option | Implementation |
 | --- | --- |
-| Restore tracking | Re-enable a `RequestSpecial` update from `Client_DelegateAIStaticDefence.sqf` and add a server `update-delegation-static_defence` case. Store enough data to clean/reassign units later: defense object, created team/group, created units, side, and whether `moveInGunner` was used. |
+| Restore tracking | Add a deliberate `RequestSpecial` update from `Client_DelegateAIStaticDefence.sqf` and add a server `update-delegation-static_defence` case. Do not merely uncomment the current line: the current helper returns only `[_teams]` (`Common_CreateUnitForStaticDefence.sqf:69`), while the server will need enough data to clean/reassign units later: defense object, created team/group, created units, side, and whether `moveInGunner` was used. |
 | Declare fire-and-forget | Leave the one-way behavior, but remove or annotate the commented send-back and document that static HC units are only locally lifecycle-managed by the HC. |
 
 Prefer restore tracking if the mission will support public dedicated servers with HCs.
