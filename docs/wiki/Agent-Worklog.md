@@ -1,5 +1,11 @@
 # Agent Worklog
 
+## 2026-06-04T02:31:14+02:00 - Codex - dashboard current-lanes reconciliation
+
+- Reconciled [Progress dashboard](Progress-Dashboard) after the authority/UI/HC scout harvest.
+- Updated **At A Glance** and **Current Lanes** so Codex/Sub-agents point to `authority-ui-hc-fallback-scout-wave`, matching `agent-status.json` and `agent-events.jsonl`.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T02:27:14+02:00 - Codex - authority/UI/HC fallback scout wave
 
 - Tried Spark scouts again, but GPT-5.3-Codex-Spark remained quota-blocked until 03:58. Relaunched five fallback explorers for economy authority, commander/HQ, AI/HC, client/UI and tooling/generated mission drift.

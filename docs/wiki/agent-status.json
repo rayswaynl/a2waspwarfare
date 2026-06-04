@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T02:27:14+02:00",
+  "generatedAt": "2026-06-04T02:31:14+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated the authority/UI/HC fallback scout wave: economy authority, commander/HQ, AI/HC, client/UI and tooling drift findings were source-checked and added to canonical docs plus machine records.",
+      "currentWork": "Published and validated the dashboard current-lanes reconciliation: Progress-Dashboard At A Glance and Current Lanes now point to the authority-ui-hc-fallback-scout-wave instead of the older deep-gap scout wave.",
       "nextExpectedOutput": "Pick the next bounded source-backed code-indexing lane or hand a patch owner a focused fix playbook."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "dashboard-current-lanes-reconciliation",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Reconciled Progress-Dashboard At A Glance and Current Lanes after the authority/UI/HC scout harvest. Codex and Sub-agents now point to authority-ui-hc-fallback-scout-wave, matching agent-status.json and agent-events.jsonl instead of the older deep-gap scout wave. Wiki validation, JSON/JSONL parsing, git diff --check and mirror parity passed."
+    },
     {
       "lane": "authority-ui-hc-fallback-scout-wave",
       "owner": "Codex/Sub-agents",

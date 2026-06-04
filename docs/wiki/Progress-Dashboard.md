@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `dashboard-current-lanes-reconciliation` | Published / validated | Reconciled the dashboard's **At A Glance** and **Current Lanes** sections after the authority/UI/HC scout harvest. Codex and Sub-agents now point to `authority-ui-hc-fallback-scout-wave`, matching `agent-status.json` and the event feed instead of the older deep-gap scout wave. Validation/parity passed. |
 | `authority-ui-hc-fallback-scout-wave` | Published / validated | Spark quota blocked cheap model scouts again, so Codex ran five fallback explorers for economy authority, commander/HQ, AI/HC, client/UI and tooling drift. Source-checked and published new evidence: likely AI-commander upgrade debit-order bug, resource income payout/display drift, commander vote restart and SetTask partials, HQ deploy/pack authority caveat, HC owner-id registration miss, client-FPS delegation UID/FPS trust, inert Arma high-command UI group add path, vote/help/WASP UI edge cases, and a LoadoutManager summary correction for modded generation. Validation/parity passed. |
 | `collaboration-claude-lane-refresh` | Published / validated | Reconciled `agent-collaboration.json` with the visible dashboard and `agent-status.json`: Claude is now listed as `collaboration-follow-autonomous-ready`, not still on the older DR-46 send-message review lane. Historical DR-46 notes remain in event/worklog history. Validation/parity passed. |
 | `deep-gap-fallback-scout-wave` | Published / validated | Spark quota blocked the first three scouts until 03:58, so Codex ran fallback explorers for AI respawn/orders, cleaners/restorers, config data, support/basearea/groups-monitor triggers and stale machine ledgers. Harvested only source-backed deltas: corrected cleaner startup wording, added basearea/groupsMonitor routing, refined AI respawn loadout and legacy `AI_TLWPHandler.sqs` notes, added config load-order landmarks, removed stale LoadoutManager root/packaging claims from machine records, and superseded the old player-object-list indexing backlog row. Validation/parity passed. |
@@ -117,10 +118,10 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` | Deep-gap fallback scout wave is published/validated; next step is the next bounded Feature Status, authority or stale-machine-ledger lane. |
+| Codex | Active | `documentation-finisher-loop` | Authority/UI/HC fallback scout wave is published/validated; next step is the next bounded source-backed indexing lane or a focused patch-owner playbook. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle. |
-| Sub-agents | Closed | none | Latest fallback explorer wave covered AI respawn/orders, cleaners/restorers, config data, support/basearea/groups-monitor triggers and stale machine ledgers; useful findings are published and validated. |
+| Sub-agents | Closed | none | Latest fallback explorer wave covered economy authority, commander/HQ, AI/HC, client/UI and tooling/generated mission drift; useful findings are published and validated. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
 
 ## One-Link Check
@@ -143,6 +144,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `authority-ui-hc-fallback-scout-wave` | Codex/Sub-agents | Published / validated | Spark quota blocked cheap model scouts again, so Codex used fallback explorers. Harvested bounded deltas into Economy, Commander/HQ, Client UI, AI/headless, Tools/build, Feature Status and machine-ledger pages; validation and mirror parity passed. |
 | `deep-gap-fallback-scout-wave` | Codex/Sub-agents | Published / validated | Spark quota blocked the first three scouts, so Codex used fallback explorers. Harvested bounded deltas into AI/headless, respawn, cleanup/restorer, support/basearea, config, Feature Status and machine-ledger pages; validation and mirror parity passed. |
 | `networking-publicvariable-atlas` | Codex | Verified | Source-backed networking atlas update landed: [Public variable channel index](Public-Variable-Channel-Index), [Networking and public variables](Networking-And-Public-Variables), and AI guide updates now include authority/JIP validation guidance and bug candidates in [Feature status register](Feature-Status-Register). |
 | `wasp-marker-wait-cleanup` | Codex-2 / future code owner | Published opportunity / source needs code | [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup) documents the bounded `WASP/global_marking_monitor.sqf:57-73` wait/backoff patch; no active code lane owns it right now. |
