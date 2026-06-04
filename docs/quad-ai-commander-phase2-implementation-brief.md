@@ -2,6 +2,12 @@
 
 This is the kickoff brief for the first context/belief branch after Phase 1 structured logs are proven.
 
+Active draft PR:
+
+```text
+#19 - [codex] Phase 2 AI Commander context beliefs
+```
+
 Target branch name:
 
 ```text
@@ -155,12 +161,12 @@ Required behavior:
 
 - emit slow summary-only RPT output
 - never dump every belief every tick
-- include enough text to prove top belief category, town, confidence, age, and sources
+- include enough text to prove top belief status, category, town, confidence, age, and sources
 
-Example:
+Current draft output shape:
 
 ```text
-AI_Commander_Context: [WEST] 3 active beliefs, top=armor near Gorka conf=0.78 age=42s sources=BLUEFOR-C1,INTEL-FUZZY
+AI_Commander_Context: [WEST] 3 tracked beliefs, top=active/armor near Gorka conf=0.78 age=42s sources="BLUEFOR-C1","INTEL-FUZZY".
 ```
 
 ## Synthetic Log Inputs
@@ -213,7 +219,7 @@ Using synthetic logs:
 - `INTEL` creates low-confidence rumor/context and does not jump to high confidence alone
 - `LOSS` creates or reinforces a moderate-confidence threat belief
 - confidence decays over time
-- stale beliefs expire or stop appearing in active summaries
+- stale beliefs expire or stop appearing in tracked summaries
 - nearest town attaches correctly when position is near a town
 - debug summaries appear only on the slow interval
 - no team waypoints, production, upgrades, or assignment decisions change solely from Phase 2
