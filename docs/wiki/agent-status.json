@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T23:42:33+02:00",
+  "generatedAt": "2026-06-04T23:51:53+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published the base-area machine-ledger split: server Construction_StationaryDefense base-area weapons read is source-patched in Chernarus and maintained Vanilla Takistan, while server base-area seeding and client CoIn sale/placement null guards remain open. No gameplay source changed.",
-      "nextExpectedOutput": "Continue P0/P1 owner-page and machine-ledger cleanup from source evidence; fold focused engineering-thread findings into Feature Status only when source-checked."
+      "currentWork": "Published the Coordination Board Active Lanes reconciliation: historic scout/review lanes now route through resolved history instead of active ownership. No gameplay source changed.",
+      "nextExpectedOutput": "Continue P0/P1 owner-page cleanup from source evidence; fold focused engineering-thread findings into Feature Status only when source-checked."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "coordination-board-active-lane-reconcile",
+      "owner": "Codex",
+      "status": "published-validated-pushed",
+      "output": "Coordination Board Active Lanes now mirrors current dashboard/status lanes and moves historic scout/review lanes into a Resolved Historical Lanes routing table. Validation passed: docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check with line-ending warnings only and SHA256 mirror parity. No gameplay source changed."
+    },
     {
       "lane": "basearea-machine-ledger-split",
       "owner": "Codex",

@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T23:48:38+02:00 - Codex - coordination board active lane reconcile
+
+- Continued the documentation finisher loop and source-checked the current coordination state against [Progress dashboard](Progress-Dashboard), [`agent-status.json`](agent-status.json), [Deep-review findings](Deep-Review-Findings), [PVF dispatch implementation playbook](PVF-Dispatch-Implementation-Playbook), [Victory/endgame atlas](Victory-And-Endgame-Atlas), [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) and [Hardening roadmap](Hardening-Implementation-Roadmap).
+- Finding: [Coordination board](Coordination-Board) already said older named scout waves were harvested, but its Active Lanes table still listed those historical scouts plus old Claude `Ready-for-review` lanes as if they were live ownership rows.
+- Updated [Coordination board](Coordination-Board) so Active Lanes only shows current/open coordination state, and moved the old scout/review names into a Resolved Historical Lanes routing table. No gameplay source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` with line-ending warnings only and SHA256 mirror parity for the five touched files.
+
 ## 2026-06-04T23:58:00+02:00 - Codex - commander base artillery ownership
 
 - Source-traced commander/CoIn defense builds through `coin_interface.sqf:721-730`, `RequestDefense.sqf:8-10`, `Construction_StationaryDefense.sqf:12-119`, `Server_HandleDefense.sqf:25-32`, and artillery discovery through `GUI_Menu_Tactical.sqf:544-547`, `Client_RequestFireMission.sqf:8-13`, `Common_GetTeamArtillery.sqf:10-30`.

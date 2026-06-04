@@ -102,28 +102,27 @@ Async mailbox between agents. Newest at the top. Format: `### [YYYY-MM-DD] From 
 
 ## Active Lanes
 
-This table shows only current/open coordination state. Older named scout lanes such as Faraday, Mencius, Hilbert, Cicero, Curie and Meitner are no longer active work owners; their reports were harvested or closed in later waves and should be read through [Discovery swarm](Subagent-Discovery-Swarm) plus the canonical owner pages.
+This table shows only current/open coordination state. Historic scout lanes and old Claude review lanes are integrated into owner pages; use [Discovery swarm](Subagent-Discovery-Swarm), [Deep-review findings](Deep-Review-Findings) and the linked playbooks for evidence instead of treating those lane names as active work.
 
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
-| `progress-interface` | Codex | Integrated | Progress dashboard and `agent-status.json` are published for human/AI status checks. |
-| `coordination-protocol` | Codex | Integrated | Shared protocol and machine-readable sync files are published. |
-| `deep-review-findings` | Claude | Integrated | Confirmed findings have been reconciled into owning atlas/risk pages. |
-| `construction-coin-atlas` | Codex | Integrated | Construction/CoIn atlas added and wired into navigation/context. |
-| `factory-purchase-atlas` | Codex | Integrated | Factory/purchase atlas is published; later authority, queue and player-buy findings route through [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas), DR-14/15 and [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup). |
-| `victory-endgame-runtime-atlas` | Codex | Integrated | Victory/endgame runtime is now covered by [Victory and endgame atlas](Victory-And-Endgame-Atlas), DR-11/12/13/36 and later Wave S semantics corrections. |
-| `documentation-finisher-loop` | Codex | Active | Continue the queue in [Instructions for Codex](Instructions-For-Codex), source-check each item, mirror, validate and publish scoped batches. |
-| `autonomous-claude-research` | Claude | Open / autonomous-ready | Claude may continue in `collaboration-follow-autonomous-ready` mode after checking the dashboard, Codex handoffs and owner pages. |
-| `feature-status-reconciliation` | Codex / future agent | Open | Keep newly confirmed findings reflected in [Feature status](Feature-Status-Register), owner pages and machine-readable records. |
-| `implementation-hardening-from-backlog` | Future code owner | Open | Pick implementation work from [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl); docs-only agents should not patch gameplay code unless Steff asks. |
-| `testing-debugging-release-workflow` | Codex / future agent | Active release gate | Use [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow) to distinguish source review, propagation and actual Arma smoke evidence. |
-| `network-pv-boundary-deep-index` | Hilbert | Completed + integrated | Direct PV channels and registered-command forgery risks documented. |
-| `server-gameplay-loops-deep-index` | Cicero | Completed + integrated | Server runtime atlas added; commander/supply/performance risks documented. |
-| `ui-hud-dialogs-deep-index` | Curie | Completed + integrated | UI stale/partial/broken findings documented. |
-| `tooling-integrations-deep-index` | Meitner | Completed + integrated | Tooling and integration run hazards documented. |
-| `pvf-hardening-review` | Claude | Ready-for-review | Claude published a behavior-preserving PVF dispatch hardening playbook; code owners should review before implementation. |
-| `victory-endgame-review` | Claude | Ready-for-review | Claude published DR-11..DR-13 on winner inversion, broken threeway mode and stale `LogGameEnd`. |
-| `factory-purchase-authority` | Claude | Ready-for-review | Claude published DR-14..DR-15 on client-authoritative purchasing and the commander assignment bug. |
+| `documentation-finisher-loop` | Codex | Active / ongoing | Continue [Instructions for Codex](Instructions-For-Codex), source-check each item, mirror, validate and publish scoped docs batches. |
+| `autonomous-claude-research` | Claude | Open / autonomous-ready | Self-select a bounded source-backed review from [Codebase coverage ledger](Codebase-Coverage-Ledger), the dashboard or the hardening backlog after checking current claims. |
+| `feature-status-reconciliation` | Codex / future agent | Watchlist | Fold newly confirmed findings into [Feature status](Feature-Status-Register), owner pages and machine-readable records. No stale historical lane is a dashboard blocker. |
+| `implementation-hardening-from-backlog` | Future code owner | Owner decision / code lane | Pick implementation work from [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) or [Hardening roadmap](Hardening-Implementation-Roadmap) only when gameplay patches are requested or claimed. |
+| `testing-debugging-release-workflow` | Codex / future tester | Published release gate | Use [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow) to distinguish source review, propagated source fixes and actual Arma smoke evidence. |
+| `source-propagated-smoke-pending` | Future tester / release owner | Smoke pending | [Client skill init](Client-Skill-Init-Idempotency), [hosted FPS](Hosted-Server-FPS-Loop-Sleep), [supply scan](Supply-Mission-Scan-Narrowing), [paratrooper markers](Paratrooper-Marker-Revival) and commander-built ARTY need Arma smoke before release-complete claims. |
+| `wasp-marker-wait-cleanup` | Future code owner | Source needs code | [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup) remains a tiny patch-ready wait/backoff opportunity, not an active docs lane. |
+
+## Resolved Historical Lanes
+
+These lanes are kept here as routing history, not active ownership.
+
+| Lane family | Current routing |
+| --- | --- |
+| `progress-interface`, `coordination-protocol`, `deep-review-findings`, `construction-coin-atlas`, `factory-purchase-atlas`, `victory-endgame-runtime-atlas` | Integrated into the dashboard, collaboration protocol, [Deep-review findings](Deep-Review-Findings), [Construction/CoIn](Construction-And-CoIn-Systems-Atlas), [Factory/purchase](Factory-And-Purchase-Systems-Atlas) and [Victory/endgame](Victory-And-Endgame-Atlas) owner pages. |
+| `network-pv-boundary-deep-index`, `server-gameplay-loops-deep-index`, `ui-hud-dialogs-deep-index`, `tooling-integrations-deep-index` | Scout lanes completed or closed; source-checked findings were promoted into [Networking/PV](Networking-And-Public-Variables), [Server runtime](Server-Gameplay-Runtime-Atlas), [Client UI systems](Client-UI-Systems-Atlas), [Tools/build](Tools-And-Build-Workflow), [External integrations](External-Integrations) and related owner pages. |
+| `pvf-hardening-review`, `victory-endgame-review`, `factory-purchase-authority` | Published and integrated. Their next action is code-owner implementation/validation via [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook), [Victory/endgame atlas](Victory-And-Endgame-Atlas), [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) and [Hardening roadmap](Hardening-Implementation-Roadmap), not another generic review row. |
 
 ## Continue Reading
 
