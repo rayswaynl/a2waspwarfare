@@ -1,5 +1,18 @@
 # Agent Worklog
 
+## 2026-06-04T22:55:00+02:00 - Codex - depth leftovers mini scout harvest
+
+- All six depth-leftovers mini scouts returned and were closed after the Spark quota fallback wave.
+- Promoted source-checked deltas into owner pages: [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map), [AI/headless/performance](AI-Headless-And-Performance), [HC delegation/failover](Headless-Delegation-And-Failover-Playbook), [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas), [PerformanceAuditAnalyzer](PerformanceAuditAnalyzer), [Tools/build workflow](Tools-And-Build-Workflow), [Server ops runbook](Server-Ops-Runbook), [Tooling release readiness audit](Tooling-Release-Readiness-Audit) and [Server authority migration map](Server-Authority-Migration-Map).
+- Rejected Ampere's `smd_sahrani_a2` `mission.sqm` correction after source check: the tracked stub still lacks `mission.sqm`, `description.ext` and `initJIPCompatible.sqf`.
+- This is documentation/status only. No gameplay source files changed. Validation and mirror parity are next.
+
+## 2026-06-04T22:35:00+02:00 - Codex - depth leftovers mini scout launch
+
+- Steff asked to run more Spark scouts. Three `gpt-5.3-codex-spark` starts hit quota before returning evidence, so Codex closed those dead slots and launched six read-only `gpt-5.4-mini` scouts instead.
+- Active lanes: Feature Status gaps, generated/release drift, PV authority leftovers, UI/player workflow leftovers, AI/runtime/order leftovers and ops/tooling/integration leftovers.
+- Updated [Progress dashboard](Progress-Dashboard), [Discovery swarm](Subagent-Discovery-Swarm), `agent-status.json` and `agent-events.jsonl` so the active scout wave is visible. Scout reports remain non-canonical until Codex source-checks and promotes them into owner pages. No gameplay source files changed.
+
 ## 2026-06-04T22:15:00+02:00 - Codex - mini scout wave community/config/AI/UI/tooling
 
 - Steff asked for more Spark scouts. Spark quota/overflow blocked three `gpt-5.3-codex-spark` starts before evidence, so Codex closed the failed slots and launched six read-only `gpt-5.4-mini` scouts.

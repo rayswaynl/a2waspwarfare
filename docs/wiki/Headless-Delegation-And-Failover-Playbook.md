@@ -43,13 +43,15 @@ On HC disconnect, `Server_OnPlayerDisconnected.sqf:22-29` removes that group fro
 
 When town AI wakes in HC mode, `server_town_ai.sqf:164-170` checks whether `WFBE_HEADLESSCLIENTS_ID` is non-empty. If an HC exists, the server calls `Server_DelegateAITownHeadless.sqf`; otherwise it falls back to server-side `CreateTownUnits`.
 
-`Server_DelegateAITownHeadless.sqf:22-30` picks random HC groups and sends `['delegate-townai', ...]` to the HC leader. The HC/client receiver is `Client_DelegateTownAI.sqf`:
+`Server_DelegateAITownHeadless.sqf:22-30` picks a random HC group for each delegation batch and sends `['delegate-townai', ...]` to the HC leader. The HC/client receiver is `Client_DelegateTownAI.sqf`:
 
 - creates town units locally at `:26`;
 - records created vehicles in `_town_vehicles` at `:27`;
 - sends `["RequestSpecial", ["update-town-delegation", _town, _town_vehicles]]` back to the server at `:35`.
 
 The server handles that update in `Server_HandleSpecial.sqf:86-96`: it appends vehicles to `wfbe_active_vehicles`, starts empty-vehicle cleanup, and marks taxi prohibition. This is the most complete HC path, but still lacks disconnect failover.
+
+Random selection is load-spreading only, not work tracking. There is no visible server-side record tying a delegated town batch to the selected HC, and disconnect cleanup only removes the HC from the candidate list. A future failover patch needs work records before it can safely redistribute or clean orphaned groups.
 
 ### Static Defense Through HC
 
@@ -60,7 +62,7 @@ Static-defense delegation is triggered from two server paths:
 | `Server_OperateTownDefensesUnits.sqf:41-57` | Town defense spawn delegates gunners to HC when HC mode is enabled and a HC candidate exists. |
 | `Server_HandleDefense.sqf:19-24` | Base/structure defense remanning delegates a replacement gunner to HC when candidates exist. |
 
-`Server_DelegateAIStaticDefenceHeadless.sqf:21-27` sends `['delegate-ai-static-defence', ...]` to an HC leader. The receiver `Client_DelegateAIStaticDefence.sqf:25-28` creates units locally, but the intended server update-back is commented:
+`Server_DelegateAIStaticDefenceHeadless.sqf:21-27` also chooses a random HC group for the batch, then sends `['delegate-ai-static-defence', ...]` to that HC leader. The receiver `Client_DelegateAIStaticDefence.sqf:25-28` creates units locally, but the intended server update-back is commented:
 
 ```sqf
 //["RequestSpecial", ["update-delegation-static_defence", _teams]] Call WFBE_CO_FNC_SendToServer;

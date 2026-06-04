@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T11:46:00+02:00",
+    "generatedAt":  "2026-06-04T22:55:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,28 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "mini-scout-wave-depth-leftovers-2026-06-04",
+                             "owner":  "Codex/Sub-agents",
+                             "status":  "harvested-validation-pending",
+                             "sourceScope":  [
+                                                 "docs/wiki/Feature-Status-Register.md and adjacent owner pages",
+                                                 "mission roots, generated mission drift and tooling release-readiness docs",
+                                                 "PV/PVF/direct publicVariable authority docs and source",
+                                                 "Client GUI/RHUD/player workflow docs and source",
+                                                 "AI runtime/order/delegation docs and source",
+                                                 "Tools/LoadoutManager, PerformanceAuditAnalyzer, DiscordBot, Extension, BattlEye and server-ops docs"
+                                             ],
+                             "outputs":  [
+                                             "Three gpt-5.3-codex-spark starts hit quota before returning evidence.",
+                                             "Codex closed the dead Spark slots and launched six gpt-5.4-mini read-only scouts.",
+                                             "All six fallback scouts returned and were closed.",
+                                             "Codex promoted source-checked deltas into AI/order, HC failover, gear templates, PerformanceAuditAnalyzer, server ops, tooling readiness and authority-migration owner pages.",
+                                             "Ampere's smd_sahrani_a2 mission.sqm correction was rejected because the tracked stub still lacks mission.sqm, description.ext and initJIPCompatible.sqf.",
+                                             "No gameplay source changed."
+                                         ],
+                             "handoff":  "Validation and mirror parity are next; after push, reconcile this lane to published/validated/pushed with commit heads."
+                         },
                          {
                              "lane":  "requestspecial-non-icbm-support-effects-route",
                              "owner":  "Codex",

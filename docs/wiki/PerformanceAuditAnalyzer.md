@@ -18,7 +18,9 @@ powershell -ExecutionPolicy Bypass -File .\Tools\PerformanceAuditAnalyzer\Analyz
 
 ## Outputs
 
-The analyzer currently emits 14 named machine-readable and human-readable reports: raw/pivot/extra-fields/timeline/script/spike/FPS/player/map/session CSVs, Markdown, HTML, interpretation HTML and a Word-friendly `.doc` report (`Analyze-PerformanceAudit.ps1:1361-1393`).
+The analyzer currently emits 14 named machine-readable and human-readable reports: raw/pivot/extra-fields/timeline/script/spike/FPS/player/map/session CSVs, Markdown, HTML, interpretation HTML and a Word-friendly `performance_report_word.doc` copy of the HTML report (`Analyze-PerformanceAudit.ps1:1361-1395`).
+
+Session grouping is explicit. Logs with `SID=...` fields are grouped by that SID, while older records are assigned legacy session keys; the exported session CSV includes `session_index`, `session_key`, `session_start`, `session_start_source` and `sid` (`Analyze-PerformanceAudit.ps1:308-312`, `:1281-1295`).
 
 Use the outputs after changes to town loops, AI delegation, supply scanning, server FPS logic, UI polling loops or any other performance-sensitive system.
 
@@ -28,6 +30,7 @@ Use the outputs after changes to town loops, AI delegation, supply scanning, ser
 - The script creates the output directory before proving that useful input exists, so no-input runs can leave folders behind.
 - The input pass uses `Get-Content | ForEach-Object`; very large RPTs should be treated as latency/memory-sensitive until streaming behavior is improved and measured.
 - The analyzer only sees logs that already contain `[Performance Audit]` records. Missing instrumentation in mission code means missing report rows, not proof that a path is cheap.
+- The `.doc` output is produced by copying the HTML report to `performance_report_word.doc` (`Analyze-PerformanceAudit.ps1:1395`). Treat it as Word-friendly HTML, not a native Word document generator.
 
 ## Continue Reading
 

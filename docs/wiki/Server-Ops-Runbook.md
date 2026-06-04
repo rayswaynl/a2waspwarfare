@@ -20,7 +20,7 @@ This page is the operator entrypoint for running, packaging and observing Wasp W
 | --- | --- |
 | `server.cfg` / `basic.cfg` | Server identity, password, mission rotation, difficulty and network tuning are operator-owned. |
 | Complete BattlEye filter bundle | The repo only ships `publicvariable.txt` for `kickAFK`; no `scripts.txt`, `createvehicle.txt`, `setvariable.txt` or similar production bundle is present. |
-| Restart/deploy/launch wrapper | A repo scan found no tracked restart/deploy/copy/launch wrapper script. Use documented tools/manual deployment unless a new script is added later. |
+| Server restart/deploy wrapper | A repo scan found no tracked server restart/deploy/copy wrapper script. `Tools/PerformanceAuditAnalyzer` does ship local desktop/helper launchers, but those start the offline log analyzer only. Use documented tools/manual deployment unless a new server wrapper is added later. |
 | `DiscordBot/token.txt` and `DiscordBot/preferences.json` | Required for bot runtime and intentionally ignored. |
 | Separate `A2WaspDatabase` extension | AntiStack uses this out-of-repo DLL; the in-repo `Extension` project is the global game stats writer. |
 | Production `BEpath`, extension install path and profile/RPT locations | Needed before release or live-server support claims are reproducible. |

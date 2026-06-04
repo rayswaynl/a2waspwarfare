@@ -60,6 +60,8 @@ Registration source: `Common/Init/Init_PublicVariables.sqf:9-21` registers 13 se
 
 Patch boundary: the PVF dispatcher allowlist/name-lookup patch should be considered a prerequisite, not the finish line. It prevents forged handler names from executing, but it does not validate score values, vehicle objects, team arrays, side scalars, upgrade ids or delegation UID/FPS payloads inside legitimate handlers.
 
+Root-scope warning: the Chernarus source mission is the hardening baseline, but modded fork trees still carry live `RequestSpecial` and PVF helper surfaces. A 2026-06-04 scout rechecked `Modded_Missions` and found `RequestSpecial` sends in Eden/Lingor/Napf tactical, economy, UAV, nuke, repair-camp, teamleader, group-query and HC delegation paths, plus registered `RequestSpecial` entries in their `Common/Init/Init_PublicVariables.sqf`. Fixing one root is not a global hardening claim unless the owner chooses and validates a modded propagation/maintenance policy.
+
 | Handler | Current server behavior | Authority status | First validation rule |
 | --- | --- | --- | --- |
 | `RequestVehicleLock` | Applies `_vehicle lock _locked`, then broadcasts `SetVehicleLock` (`RequestVehicleLock.sqf:6-8`). | Payload-authoritative object effect. | Validate requester, side, ownership/role, lockable class and range before changing lock state. |

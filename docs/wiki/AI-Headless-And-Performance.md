@@ -64,6 +64,8 @@ The town-AI model is spawn/delete and delegation bookkeeping, not engine simulat
 
 `Client_WatchdogPlayerAI.sqf` and `Client_RecoverPlayerAI.sqf` are client-side resilience systems for AI units in player groups. They check locality, alive state, vehicle validity, movement destination quality and recovery cooldowns.
 
+Depth scout note: the automatic watchdog is intentionally conservative. Current source sets a 120 second recovery cooldown and a 50m minimum destination distance in `Client_WatchdogPlayerAI.sqf:69-70`, skips units with an intentional `STOP` order at `:203-207`, and records `Player_AI_Watchdog_Last_Recovery` at `:308`. `Client_RecoverPlayerAI.sqf:104-112` uses a much lower 2m threshold for manual recovery, while comments at `:12-14` and `:224-225` explain that `DoNotPlan` can still be a usable movement state when `expectedDestination` exists and is far enough away. Do not "simplify" these paths into one stuck-AI test without Arma smoke.
+
 ## Performance Audit
 
 The mission writes structured `[Performance Audit]` RPT lines through `PerformanceAudit_Record` / `PerformanceAudit_Run`. The analyzer in `Tools/PerformanceAuditAnalyzer` converts RPT lines into CSV, Markdown, HTML and Word-friendly reports.

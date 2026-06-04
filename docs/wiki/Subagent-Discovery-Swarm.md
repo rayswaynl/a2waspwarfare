@@ -4,6 +4,21 @@ This page tracks the cheap read-only Codex discovery agents currently digging th
 
 The swarm is intentionally evidence-first: agents read source, report path/line-backed findings, and avoid editing docs or mission code. Codex integrates the useful findings into the wiki, `agent-context.json`, the coverage ledger and the feature-status register after review.
 
+## Current Wave: Depth Leftovers Mini Scouts (2026-06-04)
+
+Spawned after Steff asked for more Spark scouts and three `gpt-5.3-codex-spark` starts hit the quota limit before returning evidence. Codex closed those dead starts and launched six read-only `gpt-5.4-mini` scouts with narrow file-family prompts. All six returned and were closed; the table records what was promoted or rejected.
+
+| Agent | Lane | Status | Expected output |
+| --- | --- | --- | --- |
+| Zeno | `mini-scout-feature-status-gaps-2026-06-04` | Returned / duplicate-routing harvest | Mostly confirmed Feature Status rows already point to the right owner pages. No new source defect was promoted; use this as a bloat/ownership cleanup lead, not new evidence. |
+| Ampere | `mini-scout-generated-release-drift-2026-06-04` | Returned / one correction rejected | Reconfirmed generated/modded caution. Its `smd_sahrani_a2` `mission.sqm` claim was rejected by source check: the tracked stub still lacks `mission.sqm`, `description.ext` and `initJIPCompatible.sqf`. |
+| James | `mini-scout-pv-authority-leftovers-2026-06-04` | Returned / selected harvest | Promoted the root-scope warning that modded forks still carry `RequestSpecial`/PVF surfaces, so Chernarus hardening is not automatically global. Some helper-migration claims were left unpromoted until better source proof exists. |
+| Banach | `mini-scout-ui-player-workflow-leftovers-2026-06-04` | Returned / selected harvest | Promoted the buy-gear vehicle/backpack template persistence gap to [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas). |
+| Planck | `mini-scout-ai-runtime-orders-leftovers-2026-06-04` | Returned / selected harvest | Promoted sharper AI runtime details: spawned-unit follow-up gates/fallbacks, watchdog cooldown/STOP/DoNotPlan semantics, AI leader respawn branch split and random HC selection caveats. |
+| Nietzsche | `mini-scout-ops-tooling-integrations-leftovers-2026-06-04` | Returned / selected harvest | Promoted PerformanceAuditAnalyzer session/output details, server-ops wrapper wording and GlobalGameStats five-slot fixture/default DTO risk. |
+
+Harvest rule: returned scout findings were treated as leads until Codex source-checked them. Non-duplicate deltas are now in owner pages; duplicate confirmations and false corrections remain non-canonical.
+
 ## Current Wave: Fresh Background Spark Threads (2026-06-04)
 
 Spawned after the long-running orchestrator thread became too large for normal Spark subagent startup compaction. Codex moved the scout work into fresh background Spark threads with absolute repo paths, then harvested only completed final reports.

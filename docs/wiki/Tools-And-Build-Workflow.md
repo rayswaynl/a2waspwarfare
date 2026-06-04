@@ -51,7 +51,7 @@ Before running tooling or deployment-adjacent pieces, check these first:
 | AntiStack has the separate `A2WaspDatabase` DLL if enabled. | The in-repo `Extension` project is `a2waspwarfare_Extension` / `GLOBALGAMESTATS`, not the AntiStack database extension. |
 | Deployment inventory records actual server artifacts and config paths. | Track `a2waspwarfare_Extension`, separate `A2WaspDatabase`, `token.txt`, `preferences.json`, production `BEpath`, and any external `server.cfg`/`basic.cfg` before calling a host reproducible. |
 | The in-repo `Extension` is built with legacy MSBuild tooling. | It targets .NET Framework 4.8 x86 with `RGiesecke.DllExport`/`UnmanagedExports` packages under `../packages`; do not treat it as a normal SDK-style `dotnet build` project. |
-| Do not expect wrapper scripts in the scoped tool folders. | A 2026-06-03 scout found no `.cmd`, `.ps1`, `.bat` or `.sh` files under `Tools/LoadoutManager`, `DiscordBot`, `Extension` or `BattlEyeFilter`; use the documented `dotnet`/MSBuild/manual deployment flow unless new scripts are added later. |
+| Do not expect server/deploy wrapper scripts in the scoped release folders. | A scoped scout found no `.cmd`, `.ps1`, `.bat` or `.sh` files under `Tools/LoadoutManager`, `DiscordBot`, `Extension` or `BattlEyeFilter`; use the documented `dotnet`/MSBuild/manual deployment flow unless new scripts are added later. `Tools/PerformanceAuditAnalyzer` is the exception: it has local analyzer launchers, not server deployment wrappers. |
 
 ## Propagation rules & the skip-list trap (verified)
 
@@ -114,7 +114,7 @@ This is the operational summary of DR-32's three maintenance tiers. Use it befor
 
 Dedicated page: [PerformanceAuditAnalyzer](PerformanceAuditAnalyzer).
 
-`Tools/PerformanceAuditAnalyzer` parses existing Arma 2 RPT/log files containing `[Performance Audit]` and exports CSV/Markdown/HTML/Word-friendly reports. It has a GUI picker plus command-line script, but the current tree does not ship a live RPT tailer or background telemetry service.
+`Tools/PerformanceAuditAnalyzer` parses existing Arma 2 RPT/log files containing `[Performance Audit]` and exports CSV/Markdown/HTML/Word-friendly reports. It has a GUI picker plus command-line script, but the current tree does not ship a live RPT tailer, background telemetry service or server restart/deploy helper.
 
 Operational caveats from the 2026-06-04 tooling scout:
 
