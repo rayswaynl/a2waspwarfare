@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltContext","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -23,10 +23,16 @@ if (isNil "WFBE_SE_FNC_AI_Com_LogAppend") then {WFBE_SE_FNC_AI_Com_LogAppend = C
 if (isNil "WFBE_SE_FNC_AI_Com_LogDrain") then {WFBE_SE_FNC_AI_Com_LogDrain = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_LogDrain.sqf"};
 if (isNil "WFBE_SE_FNC_AI_Com_LogPrune") then {WFBE_SE_FNC_AI_Com_LogPrune = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_LogPrune.sqf"};
 
+//--- Phase 2 context: advisory-only belief helpers, never used by workers in this phase.
+if (isNil "WFBE_SE_FNC_AI_Com_ContextUpdate") then {WFBE_SE_FNC_AI_Com_ContextUpdate = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_ContextUpdate.sqf"};
+if (isNil "WFBE_SE_FNC_AI_Com_BeliefMerge") then {WFBE_SE_FNC_AI_Com_BeliefMerge = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_BeliefMerge.sqf"};
+if (isNil "WFBE_SE_FNC_AI_Com_BeliefDecay") then {WFBE_SE_FNC_AI_Com_BeliefDecay = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_BeliefDecay.sqf"};
+if (isNil "WFBE_SE_FNC_AI_Com_ContextDebug") then {WFBE_SE_FNC_AI_Com_ContextDebug = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_ContextDebug.sqf"};
+
 //--- Wait for full server init before commanding.
 waitUntil {sleep 1; !(isNil "serverInitFull")};
 
-_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0;
+_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltContext = 0;
 _prevHuman = false; _prevState = "";
 
 ["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1.", str _side]] Call WFBE_CO_FNC_LogContent;
@@ -58,6 +64,12 @@ while {!gameOver} do {
 				if (!isNil "WFBE_SE_FNC_AI_Com_LogAppend") then {[_side, "STATE", "AI_Commander", ["assist", "human-commander"]] Call WFBE_SE_FNC_AI_Com_LogAppend};
 			};
 			_prevState = _state;
+		};
+
+		//--- Context is advisory-only in Phase 2 and must not drive workers yet.
+		if (time - _ltContext > 30) then {
+			if (!isNil "WFBE_SE_FNC_AI_Com_ContextUpdate") then {(_side) Call WFBE_SE_FNC_AI_Com_ContextUpdate};
+			_ltContext = time;
 		};
 
 		//--- Executor: every tick (responsive explicit orders, human or AI).
