@@ -31,10 +31,12 @@ The staged implementation is currently split across these PRs:
 
 #14 now includes a Phase 0 static compatibility pass that flattened lazy SQF condition-block patterns in the current AI Commander supervisor and workers. This is compatibility hardening only; it does not replace in-engine runtime proof.
 
-Because #14 moved after #18 was opened, #18 must be refreshed or rebased onto the current #14 head before Phase 1 runtime smoke. #19 should then be refreshed onto the refreshed #18 head before Phase 2 smoke. Keep the order strict:
+#18 has been content-refreshed onto that #14 hardening surface through GitHub contents-API commits. It preserves Phase 1 log emission while inheriting the hardened supervisor and worker checks, but it still needs a normal graph refresh/rebase before Phase 1 runtime smoke or ready review.
+
+#19 is stacked on #18 and is now behind the refreshed #18 head. It should be refreshed after #18 is graph-refreshed. Keep the order strict:
 
 1. Prove #14 Phase 0 runtime behavior.
-2. Refresh #18 onto current #14.
+2. Graph-refresh #18 onto current #14.
 3. Prove #18 structured logs.
 4. Refresh #19 onto current #18.
 5. Prove #19 context/beliefs.
@@ -151,10 +153,10 @@ The lobby parameter defaults the AI commander on. That makes the in-engine hybri
 
 After the current branch is stable, add Quad AI Commander as staged follow-up PRs:
 
-1. Refresh `codex/ai-commander-logs` onto current `feat/ai-commander`.
-2. Add and prove structured log append helpers.
+1. Graph-refresh `codex/ai-commander-logs` onto current `feat/ai-commander`.
+2. Prove structured log append helpers and event emission.
 3. Refresh `codex/ai-commander-context` onto the refreshed log branch.
-4. Add and prove the per-side context store.
+4. Prove the per-side context store and synthetic smoke helper.
 5. Merge contact/intel logs into beliefs.
 6. Add advisory planner priorities.
 7. Bias town assignment and template selection from beliefs only after advisory evidence exists and behavior gates are explicit.
