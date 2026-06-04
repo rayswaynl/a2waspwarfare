@@ -20,8 +20,8 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Commander vote/reassignment playbook plus commander/town/PV mini-scout harvest are validated and mirrored; commit and push remain.",
-                                 "nextExpectedOutput":  "Commit and push the validated commander/town/PV docs batch in both repos, then continue the documentation finisher loop."
+                                 "currentWork":  "Commander vote/reassignment playbook plus commander/town/PV mini-scout harvest are validated, mirrored and pushed as docs b4d0ad90 / wiki 8ec41c3.",
+                                 "nextExpectedOutput":  "Continue the documentation finisher loop with the next bounded source-backed docs item."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -46,8 +46,8 @@
                         {
                             "lane":  "mini-scout-wave-commander-town-pv-playbook",
                             "owner":  "Codex/Sub-agents",
-                            "status":  "validated-mirrored-push-pending",
-                            "output":  "Published Commander-Vote-And-Reassignment-Playbook and routed commander UI/PV/authority/testing pages through it. Harvested town scout deltas into Towns-Camps-And-Capture-Atlas, AI-Runtime-HC-Loop-Map and Feature-Status-Register: camp flag texture can stay on the old owner, camp repair can change side without refreshing flag visuals, resistance patrols can stay active-latched after death, and zero-camp helpers affect capture mode 2, threeway defender respawn and depot infantry gating. PV scout mostly confirmed existing P0 authority pages; supply completion matching was already documented. No gameplay source changed. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and 22-file mirror parity passed; push remains."
+                            "status":  "published-validated-pushed",
+                            "output":  "Published Commander-Vote-And-Reassignment-Playbook and routed commander UI/PV/authority/testing pages through it. Harvested town scout deltas into Towns-Camps-And-Capture-Atlas, AI-Runtime-HC-Loop-Map and Feature-Status-Register: camp flag texture can stay on the old owner, camp repair can change side without refreshing flag visuals, resistance patrols can stay active-latched after death, and zero-camp helpers affect capture mode 2, threeway defender respawn and depot infantry gating. PV scout mostly confirmed existing P0 authority pages; supply completion matching was already documented. No gameplay source changed. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and 22-file mirror parity passed. Pushed as docs b4d0ad90 / wiki 8ec41c3."
                         },
                         {
                             "lane":  "validation-command-drift-cleanup",
