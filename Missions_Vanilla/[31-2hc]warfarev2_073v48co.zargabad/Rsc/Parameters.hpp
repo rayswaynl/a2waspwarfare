@@ -57,13 +57,13 @@
 		title = "$STR_WF_PARAMETER_GroupSizeAI";
 		values[] = {2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,35,40,45,50,60,70,80,90,100};
 		texts[] = {"2","4","6","8","10","12","14","16","18","20","22","24","26","28","30","35","40","45","50","60","70","80","90","100"};
-		default = 4;
+		default = 6;
 	};
 	class WFBE_C_PLAYERS_AI_MAX {
 		title = "$STR_WF_PARAMETER_GroupSizePlayer";
 		values[] = {2,4,6,8,10,12,14,15,16};
 		texts[] = {"2","4","6","8","10","12","14","15","16"};
-		default = 15;
+		default = 8;
 	};
 	class WFBE_C_AI_TEAMS_JIP_PRESERVE {
 		title = "$STR_WF_PARAMETER_KeepAI";
@@ -165,25 +165,25 @@
 		title = "$STR_WF_PARAMETER_Funds_East";
 		values[] = {800,1600,2400,3200,4000,4800,6400,8000,12800,25600,51200,102400,204800,409600,819200};
 		texts[] = {"$ 800","$ 1600","$ 2400","$ 3200","$ 4000","$ 4800","$ 6400","$ 8000","$ 12800","$ 25600","$ 51200","$ 102400","$ 204800","$ 409600","$ 819200"};
-		default = 12800;
+		default = 8000;
 	};
 	class WFBE_C_ECONOMY_FUNDS_START_WEST {
 		title = "$STR_WF_PARAMETER_Funds_West";
 		values[] = {800,1600,2400,3200,4000,4800,6400,8000,12800,25600,51200,102400,204800,409600,819200};
 		texts[] = {"$ 800","$ 1600","$ 2400","$ 3200","$ 4000","$ 4800","$ 6400","$ 8000","$ 12800","$ 25600","$ 51200","$ 102400","$ 204800","$ 409600","$ 819200"};
-		default = 12800;
+		default = 8000;
 	};
 	class WFBE_C_ECONOMY_SUPPLY_START_EAST {
 		title = "$STR_WF_PARAMETER_Supply_East";
 		values[] = {1200,2400,3600,4800,6000,7200,8400,9600,12800,16000,19200,38400,76800};
 		texts[] = {"S 1200","S 2400","S 3600","S 4800","S 6000","S 7200","S 8400","S 9600","S 12800","S 16000","S 19200","S 38400","S 76800"};
-		default = 4800;
+		default = 3600;
 	};
 	class WFBE_C_ECONOMY_SUPPLY_START_WEST {
 		title = "$STR_WF_PARAMETER_Supply_West";
 		values[] = {1200,2400,3600,4800,6000,7200,8400,9600,12800,16000,19200,38400,76800};
 		texts[] = {"S 1200","S 2400","S 3600","S 4800","S 6000","S 7200","S 8400","S 9600","S 12800","S 16000","S 19200","S 38400","S 76800"};
-		default = 4800;
+		default = 3600;
 	};
 
 	class WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT {
@@ -231,7 +231,7 @@
 		title = "$STR_WF_PARAMETER_AirAA";
 		values[] = {0,1,2};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_PARAMETER_Enabled_Upgrade","$STR_WF_Enabled"};
-		default = 2;
+		default = 1;
 	};
 	class WFBE_C_GAMEPLAY_HANGARS_ENABLED {
 		title = "$STR_WF_PARAMETER_Hangars";
@@ -285,19 +285,19 @@
 		title = "$STR_WF_PARAMETER_BombAltitude";
 		values[] = {0,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,5500,6000,6500,7000,7500,8000,8500,9000,9500,10000};
 		texts[] = {"$STR_WF_Disabled","500m","1000m","1500m","2000m","2500m","3000m","3500m","4000m","4500m","5000m","5500m","6000m","6500m","7000m","7500m","8000m","8500m","9000m","9500m","10000m"};
-		default = 2000;
+		default = 1500;
 	};
 	class WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION {
 		title = "$STR_WF_PARAMETER_BombAltitude";
 		values[] = {0,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,5500,6000,6500,7000,7500,8000,8500,9000,9500,10000};
 		texts[] = {"$STR_WF_Disabled","500m","1000m","1500m","2000m","2500m","3000m","3500m","4000m","4500m","5000m","5500m","6000m","6500m","7000m","7500m","8000m","8500m","9000m","9500m","10000m"};
-		default = 2000;
+		default = 1500;
 	};
 	class WFBE_C_GAMEPLAY_MISSILES_RANGE {
 		title = "$STR_WF_PARAMETER_MissileRange";
 		values[] = {0,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,5500,6000,6500,7000,7500,8000,8500,9000,9500,10000};
 		texts[] = {"$STR_WF_Disabled","500m","1000m","1500m","2000m","2500m","3000m","3500m","4000m","4500m","5000m","5500m","6000m","6500m","7000m","7500m","8000m","8500m","9000m","9500m","10000m"};
-		default = 2000;
+		default = 1500;
 	};
 	class WFBE_C_GAMEPLAY_UID_SHOW {
 		title = "$STR_WF_PARAMETER_ShowUID";
@@ -315,7 +315,7 @@
 		title = "$STR_WF_PARAMETER_ThermalImaging";
 		values[] = {0,1,2,3};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_PARAMETER_Weapons","$STR_WF_PARAMETER_Vehicles","$STR_WF_Enabled"};
-		default = 3;
+		default = 1;
 	};
 	class WFBE_C_UNITS_TRACK_INFANTRY {
 		title = "$STR_WF_PARAMETER_TrackAI";
@@ -364,13 +364,13 @@
 		title = "$STR_WF_PARAMETER_ViewDistance";
 		values[] = {200,500,800,1000,1500,2000,2500,3000,3500,4000,4500,5000,6000};
 		texts[] = {"200m","500m","800m","1000m","1500m","2000m","2500m","3000m","3500m","4000m","4500m","5000m","6000m"};
-		default = 6000;
+		default = 3500;
 	};
 		class WFBE_C_MODULE_WFBE_FLARES {
 			title = "$STR_WF_PARAMETER_Countermeasures";
 		values[] = {0,1,2};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_PARAMETER_Enabled_Upgrade","$STR_WF_Enabled"};
-		default = 2;
+		default = 1;
 		};
 	class WFBE_C_MODULE_WFBE_EASA {
 		title = "$STR_WF_PARAMETER_EASA";
@@ -388,7 +388,7 @@
 		title = "$STR_WF_PARAMETER_ICBM";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 1;
+		default = 0;
 	};
 	class WFBE_C_MODULE_WFBE_IRS {
 		title = "$STR_WF_PARAMETER_IRS";

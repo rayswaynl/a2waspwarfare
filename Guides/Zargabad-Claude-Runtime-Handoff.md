@@ -68,7 +68,7 @@ Claude/runtime tester should keep going until there is RPT and short note eviden
 | Side hills/rim | The map audit Rim Test Points pass with `-RequireNamedRimPoints`: ground vehicles at `80,3000`, `3000,80`, `5900,3000`, and `3000,5900` are removed after the configured timeout, while `3600,5900`, `4330,5900`, `5900,4340`, and aircraft/objective-near fights are not punished; legal rim tests include `allowed at safe edge rim` RPT evidence. |
 | Economy | City/airfield are valuable without runaway snowball; farms/outskirts stay lower-value flank objectives. |
 | Factory lists/costs | Source/static validation proves exact compact WEST/EAST normal heavy/aircraft lists with MBTs, MLRS, SPAAGs, attack helicopters and attack jets excluded; runtime confirms buy-menu availability and price feel. |
-| Weapon/range pressure | Runtime audit shows missile range 2000, UAV range 800, town defense/mortar/patrol ranges 45/500/350, hangar range 35, and countermeasures 16/24; Claude confirms they feel sane on the smaller map. |
+| Weapon/range pressure | Runtime audit shows missile range 1500, UAV range 650, town defense/mortar/patrol ranges 45/420/300, hangar range 35, and countermeasures 12/18; Claude confirms they feel sane on the smaller map. |
 | Mystery feature | RPT contains `Zargabad_BlackMarket.sqf: armed near Zargabad Airfield positions` after town init; owning Zargabad Airfield can surface the black-market cache; RPT proves cache spawn and cleanup release. |
 
 ## Commands For Evidence

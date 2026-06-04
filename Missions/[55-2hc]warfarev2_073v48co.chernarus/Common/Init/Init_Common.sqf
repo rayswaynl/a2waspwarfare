@@ -348,7 +348,7 @@ _balancePrice = missionNamespace getVariable "WFBE_C_UNITS_PRICING";
 } forEach ["BARRACKS","LIGHT","HEAVY","AIRCRAFT","AIRPORT","DEPOT"];
 
 if (IS_zargabad_lowpop_map) then {
-	missionNamespace setVariable ["WFBE_ZARGABAD_PRICE_MULTIPLIERS", [["BARRACKS",0.9],["LIGHT",1.1],["HEAVY",1.2],["AIRCRAFT",1.35],["AIRPORT",1.5],["DEPOT",0.95]]];
+	missionNamespace setVariable ["WFBE_ZARGABAD_PRICE_MULTIPLIERS", [["BARRACKS",0.95],["LIGHT",1.15],["HEAVY",1.4],["AIRCRAFT",1.75],["AIRPORT",2.0],["DEPOT",1.0]]];
 	{
 		Private ["_multiplier","_structure"];
 		_structure = _x select 0;

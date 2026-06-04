@@ -282,7 +282,7 @@ Assert-NoteEvidence -Rows $noteRows -Key "Side hills and rim behavior" -Pattern 
 Assert-NoteEvidence -Rows $noteRows -Key "Town defense facing and movement blocking" -Pattern $coordinateOrScreenshot
 Assert-NoteEvidence -Rows $noteRows -Key "Priority defense mix arcs" -Pattern '(City|Airfield|North District|South District|Northwest Base|Rahim Villa|MG|AT|AA|GL|[0-9]{2,4}\s*,\s*[0-9]{2,4}|\.png|\.jpg|\.jpeg)'
 Assert-NoteEvidence -Rows $noteRows -Key "Economy and factory pricing feel" -Pattern '(economy|factory|price|supply|income|SV|RPT|Zargabad_RuntimeAudit|[0-9])'
-Assert-NoteEvidence -Rows $noteRows -Key "Weapon/range pressure" -Pattern '(missile|UAV|range|countermeasure|hangar|2000|800|45|500|350|35|16|24)'
+Assert-NoteEvidence -Rows $noteRows -Key "Weapon/range pressure" -Pattern '(missile|UAV|range|countermeasure|hangar|1500|650|45|420|300|35|12|18)'
 Assert-NoteEvidence -Rows $noteRows -Key "Mystery feature behavior" -Pattern '(black-market|black market|cache|Airfield|Zargabad_BlackMarket|armed|cleanup)'
 Assert-NoteEvidence -Rows $noteRows -Key "Recommended Codex action" -Pattern '(keep|tune|revert|investigate|patch|retest)'
 
@@ -329,7 +329,7 @@ Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "
 Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "SP/SV, town centers, and camps match likely population" -Pattern '(population|SP/SV|SV|town center|camp|city|airfield|district|market|farm|outskirt|Population Flow|value tiers)'
 Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Defense units spawn where they make sense" -Pattern '(defense|oriented|33|wake|fight|route|arc|MG|AT|AA|GL|\.png|\.jpg|\.jpeg)'
 Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Economy is balanced for the smaller map" -Pattern '(economy|factory|price|supply|income|5v5|snowball|Zargabad_RuntimeAudit)'
-Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Weapons, vehicles, units, ranges, costs, and maximums fit map size" -Pattern '(weapon|vehicle|unit|range|cost|cap|maximum|missile|UAV|countermeasure|factory list|2000|800|30000)'
+Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Weapons, vehicles, units, ranges, costs, and maximums fit map size" -Pattern '(weapon|vehicle|unit|range|cost|cap|maximum|missile|UAV|countermeasure|factory list|1500|650|30000)'
 Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Flat middle and steep side hills cannot be abused" -Pattern '(flat middle|side hill|rim|edge|wall|pathing|removed from edge rim|allowed at safe edge rim|named rim|3425\s*,\s*3375)'
 Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Beefier defenses and fortifications prevent easy base hits" -Pattern '(fortification|base|central wall|centralWallCrewed|H-barrier|spawn|suppress|gap|defense)'
 Assert-TableEvidence -Rows $objectiveRows -TableName "Objective Coverage" -Key "Fortification review uses WDDM when changes are proposed" -Pattern '(WDDM|CreateDefenseTemplate|SQF|coordinate delta|map-audit|no-change|no change|keep)'

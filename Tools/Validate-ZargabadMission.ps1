@@ -525,13 +525,22 @@ Assert-True "source declares 6000m Zargabad boundary" ($boundarySource -match "c
 
 $parametersSource = Get-Content -Raw -LiteralPath $parametersPath
 $expectedParameterDefaults = [ordered]@{
+	WFBE_C_AI_MAX = "6"
+	WFBE_C_PLAYERS_AI_MAX = "8"
 	WFBE_C_BASE_DEFENSE_MANNING_RANGE = "500"
-	WFBE_C_ECONOMY_FUNDS_START_EAST = "12800"
-	WFBE_C_ECONOMY_FUNDS_START_WEST = "12800"
-	WFBE_C_ECONOMY_SUPPLY_START_EAST = "4800"
-	WFBE_C_ECONOMY_SUPPLY_START_WEST = "4800"
+	WFBE_C_ECONOMY_FUNDS_START_EAST = "8000"
+	WFBE_C_ECONOMY_FUNDS_START_WEST = "8000"
+	WFBE_C_ECONOMY_SUPPLY_START_EAST = "3600"
+	WFBE_C_ECONOMY_SUPPLY_START_WEST = "3600"
 	WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT = "30000"
-	WFBE_C_GAMEPLAY_MISSILES_RANGE = "2000"
+	WFBE_C_GAMEPLAY_AIR_AA_MISSILES = "1"
+	WFBE_C_GAMEPLAY_BOMBS_ALTITUDE = "1500"
+	WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION = "1500"
+	WFBE_C_GAMEPLAY_MISSILES_RANGE = "1500"
+	WFBE_C_GAMEPLAY_THERMAL_IMAGING = "1"
+	WFBE_C_ENVIRONMENT_MAX_VIEW = "3500"
+	WFBE_C_MODULE_WFBE_FLARES = "1"
+	WFBE_C_MODULE_WFBE_ICBM = "0"
 	WFBE_C_TOWNS_DEFENDER = "3"
 	WFBE_C_TOWNS_OCCUPATION = "2"
 	WFBE_C_TOWNS_BUILD_PROTECTION_RANGE = "300"
@@ -541,7 +550,7 @@ foreach ($parameter in $expectedParameterDefaults.GetEnumerator()) {
 	Assert-Equal "Zargabad parameter default $($parameter.Key)" (Get-ParameterDefault -Content $parametersSource -Name $parameter.Key) $parameter.Value
 }
 $terrainGeneratorSource = Get-Content -Raw -LiteralPath (Resolve-RepoPath "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs")
-Assert-True "LoadoutManager carries Zargabad low-pop parameter defaults" (Test-ContainsAll -Content $terrainGeneratorSource -Needles @('["WFBE_C_ECONOMY_FUNDS_START_EAST"] = "12800"', '["WFBE_C_ECONOMY_SUPPLY_START_WEST"] = "4800"', '["WFBE_C_GAMEPLAY_MISSILES_RANGE"] = "2000"', '["WFBE_C_TOWNS_DEFENDER"] = "3"', '["WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER"] = "1"'))
+Assert-True "LoadoutManager carries Zargabad low-pop parameter defaults" (Test-ContainsAll -Content $terrainGeneratorSource -Needles @('["WFBE_C_AI_MAX"] = "6"', '["WFBE_C_PLAYERS_AI_MAX"] = "8"', '["WFBE_C_ECONOMY_FUNDS_START_EAST"] = "8000"', '["WFBE_C_ECONOMY_SUPPLY_START_WEST"] = "3600"', '["WFBE_C_GAMEPLAY_MISSILES_RANGE"] = "1500"', '["WFBE_C_ENVIRONMENT_MAX_VIEW"] = "3500"', '["WFBE_C_MODULE_WFBE_ICBM"] = "0"', '["WFBE_C_TOWNS_DEFENDER"] = "3"', '["WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER"] = "1"'))
 
 $expectedBaseWallTemplate = @(
 	[pscustomobject]@{ Class = "Land_HBarrier_large"; X = -55; Y = -55; Z = 0; Dir = 45 },
@@ -635,34 +644,34 @@ foreach ($path in @($sourceMissionFullPath, $missionFullPath)) {
 		"WFBE_C_ARTILLERY_INTERVALS = [700, 650, 600, 550, 500, 450, 400];",
 		"WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT = 30000;",
 		"WFBE_C_GAMEPLAY_FAST_TRAVEL_RANGE_MAX = 1800;",
-		"WFBE_C_PLAYERS_UAV_SPOTTING_RANGE = 800;",
+		"WFBE_C_PLAYERS_UAV_SPOTTING_RANGE = 650;",
 		"WFBE_C_RESPAWN_CAMPS_RANGE = 400;",
 		"WFBE_C_RESPAWN_RANGES = [150, 225, 325];",
 		"WFBE_C_STRUCTURES_COMMANDCENTER_RANGE = 3200;",
 		"WFBE_C_TOWNS_BUILD_PROTECTION_RANGE = 300;",
 		"WFBE_C_TOWNS_DEFENSE_RANGE = 45;",
-		"WFBE_C_TOWNS_MORTARS_RANGE_MAX = 500;",
-		"WFBE_C_TOWNS_PATROL_RANGE = 350;",
+		"WFBE_C_TOWNS_MORTARS_RANGE_MAX = 420;",
+		"WFBE_C_TOWNS_PATROL_RANGE = 300;",
 		"WFBE_C_UNITS_PURCHASE_HANGAR_RANGE = 35;",
 		"WFBE_C_UNITS_REPAIR_TRUCK_RANGE = 35;",
 		"WFBE_C_UNITS_SALVAGER_SCAVENGE_RANGE = 45;",
 		"WFBE_C_UNITS_SUPPORT_RANGE = 55;"
 	)
 	$aiCapConstants = @(
-		"WFBE_C_AI_MAX = 8;",
+		"WFBE_C_AI_MAX = 6;",
 		"WFBE_C_BASE_DEFENSE_MAX_AI = 56;",
 		"WFBE_C_BASE_DEFENSE_MANNING_RANGE = 500;",
 		"WFBE_C_BASE_PROTECTION_RANGE = 900;",
-		"WFBE_C_PLAYERS_AI_MAX = 10;",
-		"WFBE_C_PLAYERS_SKILL_SOLDIER_UNITS_MAX = 4;",
-		"WFBE_C_UNITS_COUNTERMEASURE_CHOPPERS = 16;",
-		"WFBE_C_UNITS_COUNTERMEASURE_PLANES = 24;"
+		"WFBE_C_PLAYERS_AI_MAX = 8;",
+		"WFBE_C_PLAYERS_SKILL_SOLDIER_UNITS_MAX = 3;",
+		"WFBE_C_UNITS_COUNTERMEASURE_CHOPPERS = 12;",
+		"WFBE_C_UNITS_COUNTERMEASURE_PLANES = 18;"
 	)
 	Assert-True "$path applies Zargabad smaller-map economy and range constants" (Test-ContainsAll -Content $constants -Needles $economyRangeConstants)
 	Assert-True "$path applies Zargabad smaller-map AI and base-defense caps" (Test-ContainsAll -Content $constants -Needles $aiCapConstants)
 	Assert-True "$path edge guard constants are present" ($constants -match "WFBE_C_ZARGABAD_EDGE_GUARD_BAND = 120;[\s\S]*WFBE_C_ZARGABAD_EDGE_GUARD_SAFE_RANGE = 325;[\s\S]*WFBE_C_ZARGABAD_EDGE_GUARD_TIMEOUT = 45;")
 	$commonInit = Get-Content -Raw -LiteralPath (Join-Path $path "Common/Init/Init_Common.sqf")
-	Assert-True "$path declares Zargabad price multipliers" ($commonInit -match 'WFBE_ZARGABAD_PRICE_MULTIPLIERS[\s\S]*\["BARRACKS",0\.9\][\s\S]*\["LIGHT",1\.1\][\s\S]*\["HEAVY",1\.2\][\s\S]*\["AIRCRAFT",1\.35\][\s\S]*\["AIRPORT",1\.5\][\s\S]*\["DEPOT",0\.95\]')
+	Assert-True "$path declares Zargabad price multipliers" ($commonInit -match 'WFBE_ZARGABAD_PRICE_MULTIPLIERS[\s\S]*\["BARRACKS",0\.95\][\s\S]*\["LIGHT",1\.15\][\s\S]*\["HEAVY",1\.4\][\s\S]*\["AIRCRAFT",1\.75\][\s\S]*\["AIRPORT",2\.0\][\s\S]*\["DEPOT",1\.0\]')
 	$westUnits = Get-Content -Raw -LiteralPath (Join-Path $path "Common/Config/Core_Units/Units_CO_US.sqf")
 	$eastUnits = Get-Content -Raw -LiteralPath (Join-Path $path "Common/Config/Core_Units/Units_CO_RU.sqf")
 	$westHeavy = Get-ZargabadOverrideUnits -Content $westUnits -Factory "HEAVY"
