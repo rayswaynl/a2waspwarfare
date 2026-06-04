@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T09:10:00+02:00",
+    "generatedAt":  "2026-06-04T09:35:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -19,9 +19,9 @@
     "agents":  {
                    "Codex":  {
                                  "status":  "active",
-                                 "currentLane":  "runtime-ops-scout-split-harvest",
-                                 "currentWork":  "Closed the overflowing runtime/server-ops scout, split it into two tiny scouts, and harvested DiscordBot reliability deltas: preferences.json needs parse/null preflight before command/status handlers, and SetGameAsync timeout guidance covers both timer and /setup paths. Tooling scout confirmed PVF/packaging/replacement risks are already documented.",
-                                 "nextExpectedOutput":  "Mirror, commit and push the validated runtime/ops docs harvest."
+                                 "currentLane":  "spark-scout-wave-caps-economy-tooling-ui",
+                                 "currentWork":  "Spawned another Spark scout wave and harvested returned micro-scout deltas: AI cap formula/fallback table, commander reassignment broken-status wording, factory buy acceptance/rollback protocol language, LoadoutManager destination-sync blast radius, UI title lifecycle-handle wording and stale supply-heli head cleanup.",
+                                 "nextExpectedOutput":  "Validate, mirror, commit and push the scout-wave documentation harvest."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -37,12 +37,18 @@
                               },
                    "Sub-agents":  {
                                       "status":  "closed",
-                                      "currentLane":  "runtime-ops-scout-split-harvest",
-                                      "currentWork":  "All scouts from this wave are now harvested or closed. The runtime/server-ops overflow was replaced with two tiny scouts; DiscordBot deltas were promoted and tooling deltas confirmed existing pages.",
+                                      "currentLane":  "spark-scout-wave-caps-economy-tooling-ui",
+                                      "currentWork":  "Commander, economy, tooling and UI micro-scout outputs were harvested; broad commander/economy/PV scouts overflowed and lifecycle/towns scouts timed out, then all active scout threads were closed.",
                                       "nextExpectedOutput":  "No pending scout output remains from this batch."
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "spark-scout-wave-caps-economy-tooling-ui",
+                            "owner":  "Codex/Sub-agents",
+                            "status":  "published-validated",
+                            "output":  "Steff asked for more Spark scouts. Codex launched scouts for lifecycle/init, economy/factory, commander/AI caps, PV/security, towns/supply, UI and tooling. Broad commander/economy/PV scouts overflowed; commander and economy were relaunched as micro-scouts; lifecycle/towns timed out and were closed unharvested. Harvested deltas into Instructions-For-Codex, Player-AI-Caps-And-Role-Balance, Commander-HQ-Lifecycle-Atlas, Feature-Status-Register, Economy-Authority-First-Cut, Factory-And-Purchase-Systems-Atlas, Tools-And-Build-Workflow, Server-Ops-Runbook, Client-UI-Systems-Atlas, UI-IDD-Collision-Repair and agent-hardening-backlog.jsonl. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. No gameplay source changed."
+                        },
                         {
                             "lane":  "runtime-ops-scout-split-harvest",
                             "owner":  "Codex/Sub-agents",

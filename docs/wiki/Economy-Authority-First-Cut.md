@@ -12,7 +12,7 @@ Scope: Chernarus source mission first, Arma 2 Operation Arrowhead 1.64 only, the
 | New value from this pass | First safe code sequence: side-supply arithmetic/validation first, then existing PVF spend handlers, then player-buy redesign. |
 | Wave I refinement | Kepler split client-trusted score/funds/supply mutation from safer server-derived read and award helpers. |
 | Wave Q refinement | Linnaeus's side-supply follow-up is now folded in: negative amounts are legitimate spend deltas, but the same signed `_amount` is also direct-PV payload data, so the first patch must clamp the result and validate channel/side/shape without pretending sign checks are authority. |
-| 2026-06-04 scout refinement | AI commander upgrade debit order is suspect, resource income can couple money payouts to the supply-cap guard, and client income display for income system `4` can differ from server paycheck math. |
+| 2026-06-04 scout refinement | AI commander upgrade debit order is suspect, resource income can couple money payouts to the supply-cap guard, client income display for income system `4` can differ from server paycheck math, and factory player buys need a protocol redesign rather than a narrow hardening patch. |
 | Immediate patch candidate | `Common_ChangeSideSupply.sqf` and `Server_ChangeSideSupply.sqf` negative clamp and side/channel validation. |
 | Smallest server-led migration candidate | Upgrade purchase, because `RequestUpgrade` already reaches a server process but currently trusts client-side debit and dependency checks. |
 | Do not treat as small | Player factory buys. They create units/vehicles from the client and have no `RequestBuyUnit` PVF. |
@@ -68,7 +68,7 @@ _team setVariable ["wfbe_funds", (_team getVariable "wfbe_funds") + _amount, tru
 
 `Client_ChangePlayerFunds.sqf:1` simply calls that with `clientTeam`, and `Client_GetPlayerFunds.sqf:1` reads the same team value. This is why many UI paths can debit or credit locally after client-side affordability checks.
 
-There is no `Server/PVFunctions/RequestChangeFunds.sqf` in the current source. Funds authority is a convention over replicated group variables and shared helpers, not a single server request wall.
+There is no `Server/PVFunctions/RequestChangeFunds.sqf` in the current source. Funds authority is a convention over replicated group variables and shared helpers, not a single server request wall. Treat this as client-authoritative unless the target server also carries explicit BattlEye/script-filter constraints.
 
 ### Side supply uses direct publicVariable temp channels
 
@@ -85,7 +85,7 @@ For `_currentSupply = 100` and `_amount = -1000`, this produces `1100`, not `0`.
 
 Important subtlety: negative `_amount` values are not inherently malicious. Normal spend paths use negative deltas, such as MHQ repair (`Client/Action/Action_RepairMHQ.sqf:30`), WASP base repair (`WASP/baserep/repair.sqf:24`), attack waves (`Server/PVFunctions/AttackWave.sqf:40`), upgrades (`Client/GUI/GUI_UpgradeMenu.sqf:159`), construction (`Client/Module/CoIn/coin_interface.sqf:500,672`) and building repair (`Server/Functions/Server_HandleBuildingRepair.sqf:71`). The problem is that the same signed amount is also the payload sent on `wfbe_supply_temp_<side>` (`Common_ChangeSideSupply.sqf:28-30`) and then trusted by the west/east handlers (`Server_ChangeSideSupply.sqf:4-13,28-37`). Do not "fix" this by rejecting all negative amounts; fix the result clamp and channel/side/shape validation first, then move spend acceptance server-side flow by flow.
 
-Small auditability bug: `Common_ChangeSideSupply.sqf:8-14` reads `_includeStagnation` and `_reason` only when `count _this > 3`. Three-argument calls such as `Server/PVFunctions/AttackWave.sqf:40` pass a reason string but still publish the default `"ERROR! No reason specified..."` reason. Fix this alongside the clamp/validation pass so economy logs keep useful provenance while malformed payloads still produce clear warnings.
+Small auditability bug: `Common_ChangeSideSupply.sqf:8-14` reads `_includeStagnation` and `_reason` only when `count _this > 3`. Three-argument calls such as `Server/PVFunctions/AttackWave.sqf:40` pass a reason string but still publish the default `"ERROR! No reason specified..."` reason. Fix this alongside the clamp/validation pass so economy logs keep useful provenance while malformed payloads still produce clear warnings: parse `_reason` at `count _this > 2`, then `_includeStagnation` at `count _this > 3`.
 
 The live source of truth for side supply is the side-keyed mission variable `wfbe_supply_%1` read by `Common_GetSideSupply.sqf`. The generic `wfbe_supply` value initialized in `Client/Init/Init_Client.sqf:371` is a legacy alias/cache and should not be used as the target for new authority work.
 
@@ -123,7 +123,7 @@ For income system `4`, server payout applies a `1.5` multiplier before commander
 
 `GUI_Menu_BuyUnits.sqf:102-108` checks funds locally, queues locally and at `:155-156` spawns `BuildUnit` and debits `ChangePlayerFunds`. `Client_BuildUnit.sqf:217` creates infantry through `WFBE_CO_FNC_CreateUnit`; `:249` creates vehicles through `WFBE_CO_FNC_CreateVehicle`; `:411-455` creates crew locally. There is no `RequestBuyUnit` PVF in `Init_PublicVariables.sqf` and no `Server/PVFunctions/RequestBuyUnit.sqf`.
 
-That means player buy authority is a redesign, not a tidy handler hardening patch. It needs a server request/acceptance model or an explicit BattlEye `scripts.txt` posture while preserving locality.
+That means player buy authority is a protocol redesign, not a tidy handler hardening patch. It needs a server request/acceptance/rollback contract or an explicit BattlEye `scripts.txt` posture while preserving locality. The debit should either commit only after build acceptance or be refunded on every post-queue abort path by one source-of-truth helper.
 
 ### Supply missions are a separate logistics authority lane
 
@@ -225,7 +225,7 @@ Validation:
 
 ### 4. Defer player factory buys until locality design is approved
 
-Do not try to hide DR-14 inside a small economy patch. The live path creates units and vehicles from the client. A proper server-authority version needs a request/acceptance model that accounts for factory queues, buyer group locality, vehicle locality, AI ownership, disconnects and crew creation.
+Do not try to hide DR-14 inside a small economy patch. The live path creates units and vehicles from the client. A proper server-authority version needs a request/acceptance/rollback model that accounts for factory queues, buyer group locality, vehicle locality, AI ownership, destroyed factories, disconnects and crew creation.
 
 Interim posture:
 

@@ -77,6 +77,8 @@ The vote UI refresh loops also have an inclusive-bound edge. `WFBE_Client_Teams_
 
 ## Manual Reassignment Flow
 
+Status: intended flow exists, but manual reassignment is currently broken by the helper payload-shape bug below. Do not treat commander reassignment as working until the DR-15 helper patch and commander-authority smoke are complete.
+
 The commander vote menu sends:
 
 ```sqf
@@ -85,7 +87,7 @@ The commander vote menu sends:
 
 `RequestNewCommander` is registered as a server PVF (`Init_PublicVariables.sqf:13`). The server handler reads the side and target commander correctly, only accepts reassignment when `wfbe_votetime <= 0`, sets `wfbe_commander`, spawns `AssignNewCommander` and sends a `new-commander-assigned` special message (`RequestNewCommander.sqf:3-16`).
 
-The helper currently has a confirmed call-shape bug: `Server_AssignNewCommander.sqf` uses `_side = _this` while also reading `_commander = _this select 1` (`Server_AssignNewCommander.sqf:3-5`). That means helper-side side-logic lookups and notification routing receive an array instead of a `SIDE`. Use [Commander reassignment call shape](Commander-Reassignment-Call-Shape) for the patch plan and generated-mission propagation notes.
+The helper currently has a confirmed call-shape bug: `Server_AssignNewCommander.sqf` uses `_side = _this` while also reading `_commander = _this select 1` (`Server_AssignNewCommander.sqf:3-5`), while `RequestNewCommander.sqf:13` calls it with `[_side, _assigned_commander]`. That means helper-side side-logic lookups and notification routing receive an array instead of a `SIDE`. The source-side precondition is simple: the helper must unpack the payload as side + commander before any side-logic lookup, and all callers must pass that same shape. Use [Commander reassignment call shape](Commander-Reassignment-Call-Shape) for the patch plan and generated-mission propagation notes.
 
 Client-side special handlers show commander vote/reassignment messages and, for null reassignment, locally mirror `wfbe_commander = objNull` on the player's side logic (`Client_FNC_Special.sqf:6-34`).
 

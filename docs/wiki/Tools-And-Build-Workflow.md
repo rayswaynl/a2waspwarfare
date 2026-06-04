@@ -68,6 +68,8 @@ Before running tooling or deployment-adjacent pieces, check these first:
 
 A recursive diff in [Deep-review findings](Deep-Review-Findings) DR-4 confirmed vanilla Takistan has no accidental drift outside this skip-list/blacklist and the `SET_MAP` rewrite. If you edit a skip-listed gameplay file, especially `mission.sqm` or `WASP/unsort/StartVeh.sqf`, hand-mirror it instead of assuming `dotnet run` will propagate it.
 
+Sync blast radius: LoadoutManager also deletes destination files and directories that do not exist in the source copy (`FileManager.cs:116-119,123-136`). Treat generated mission trees as disposable outputs. Manual edits or extra assets placed only in `Missions_Vanilla/*` can be removed by a later propagation run unless the generator/source tree owns them.
+
 **Modded missions are not maintained by the current `dotnet run` path.** The modded-terrain propagation call is commented out at `SqfFileGenerators/SqfFileGenerator.cs:132`, and `ZipManager.cs:10` packages only `Missions` plus `Missions_Vanilla`. Treat `Modded_Missions/*` as non-authoritative until the owner chooses regenerate-from-source or maintained-fork policy; see DR-32 for the full tier analysis.
 
 ## Generated Mission Status Table
@@ -129,7 +131,7 @@ Use it after performance-sensitive mission changes or live-server audits.
 - Missing `7za` causes the final packaging step to throw unless `A2WASP_SKIP_ZIP=1` is set; inspect generated/copied files before assuming the whole run did nothing.
 - Packaging success is not a strong release proof by itself: `ZipManager.cs:77-92` starts `7za` and prints the output but does not currently gate success on the process exit code. Confirm `_MISSIONS.7z` exists, has the expected mission folders and was produced by a successful 7-Zip run before calling a release archive complete.
 - File replacement warnings can still hard-fail later: `BaseTerrain.cs:275-301` logs "File not found!" for a missing expected file and then still calls `File.ReadAllText` on the same path. Treat missing replacement targets as real generator failures, not harmless warnings.
-- The source Chernarus mission is copied to target terrain folders. Avoid manual changes in generated targets unless the generator is being updated.
+- The source Chernarus mission is copied to target terrain folders, and extra destination-only files/directories can be deleted during sync (`FileManager.cs:116-119,123-136`). Avoid manual changes in generated targets unless the generator is being updated; snapshot generated mission trees before risky propagation runs.
 - `The specified content was not found in the file.` during the current run comes from the terrain help-menu title replacement path and did not stop Chernarus/Takistan generation/copy.
 
 ## Development Commands

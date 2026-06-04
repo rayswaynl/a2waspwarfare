@@ -17,6 +17,15 @@ The live buy menu and RHUD use the same shape:
 | `Client/GUI/GUI_Menu_BuyUnits.sqf:130-140` | If the player's group is the commander team, the cap gets `+10`; the menu checks queued units plus live group units plus requested crew slots against the final cap. |
 | `Client/Client_UpdateRHUD.sqf:312-325` | RHUD mirrors the same visible max-units formula. |
 
+Formula cheat sheet:
+
+```text
+base cap = WFBE_C_PLAYERS_AI_MAX
+soldier base cap = ceil(1.5 * base cap)
+commander group cap = barracks-scaled cap + 10
+AI followers for a solo player = final group cap - 1
+```
+
 The cap is checked against live group units plus queued units. A solo player already counts as one live group unit, so the number of AI followers is usually `group cap - 1`.
 
 Important naming trap: `WFBE_C_PLAYERS_AI_MAX` is the player follower cap. `WFBE_C_AI_MAX` is a separate AI-group knob exposed in `Rsc/Parameters.hpp:56-60` with a fallback at `Init_CommonConstants.sqf:92`; the latest scout did not prove a current Chernarus runtime consumer for that value. Do not use `WFBE_C_AI_MAX` when answering how many AI a normal player can personally command.
@@ -52,6 +61,15 @@ Group-slot version, including the player:
 | Level 1 | 8 | 18 | 12 | 22 |
 | Level 2 | 12 | 22 | 18 | 28 |
 | Level 3 | 15 | 25 | 23 | 33 |
+
+Fallback baseline if the lobby parameter layer is absent: `WFBE_C_PLAYERS_AI_MAX = 16` from `Init_CommonConstants.sqf:243`.
+
+| Barracks level | Normal player | Commander | Soldier slot | Soldier + Commander |
+| --- | ---: | ---: | ---: | ---: |
+| Level 0 | 3 AI | 13 AI | 5 AI | 15 AI |
+| Level 1 | 7 AI | 17 AI | 11 AI | 21 AI |
+| Level 2 | 11 AI | 21 AI | 17 AI | 27 AI |
+| Level 3 | 15 AI | 25 AI | 23 AI | 33 AI |
 
 Lobby/default note: the lobby parameters default AI teams and AI commander to off, while the fallback constants in `Init_CommonConstants.sqf` default them on if the parameter layer is absent. Do not use the fallback defaults as proof of live multiplayer settings unless the parameter include failed or was intentionally bypassed.
 

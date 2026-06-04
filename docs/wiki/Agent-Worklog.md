@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T09:35:00+02:00 - Codex - Spark scout wave caps/economy/tooling/UI
+
+- Steff asked for more Spark scouts. Codex launched GPT-5.3-Codex-Spark read-only scouts for lifecycle/init, economy/factory, commander/AI caps, PV/security, towns/supply and UI, then added a tooling/runtime scout when a slot freed up.
+- Broad commander, economy and PV/security scouts overflowed during remote compaction; commander and economy were relaunched as micro-scouts. Lifecycle/init and towns/supply did not return within the useful window and were closed unharvested.
+- Harvested source-backed deltas: [Player AI caps](Player-AI-Caps-And-Role-Balance) now has explicit formula and fallback-baseline tables; [Commander/HQ](Commander-HQ-Lifecycle-Atlas) and [Feature status](Feature-Status-Register) now state manual reassignment is currently broken by the `Server_AssignNewCommander.sqf` payload-shape bug; [Economy authority](Economy-Authority-First-Cut) and [Factory/purchase](Factory-And-Purchase-Systems-Atlas) now frame player buys as a request/acceptance/rollback protocol redesign; [Tools/build](Tools-And-Build-Workflow) and [Server ops](Server-Ops-Runbook) now warn that LoadoutManager can delete destination-only files/directories during sync; [Client UI systems](Client-UI-Systems-Atlas) and [UI IDD repair](UI-IDD-Collision-Repair) now call the title issue a lifecycle-handle collision; [Instructions for Codex](Instructions-For-Codex) now names current `origin/feat/supply-helicopter` head `262dc431` instead of stale `ffeea4c2`.
+- Documentation and machine-state cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T09:10:00+02:00 - Codex - runtime ops scout split harvest
 
 - The original runtime/server-ops Spark scout overflowed during compaction, so Codex closed it and relaunched two tiny read-only scouts.

@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T09:10:00+02:00",
+    "generatedAt":  "2026-06-04T09:35:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,33 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "spark-scout-wave-caps-economy-tooling-ui",
+                             "owner":  "Codex/Sub-agents",
+                             "status":  "published-validated",
+                             "sourceScope":  [
+                                                 "Player AI cap constants and Skill_Init soldier multiplier",
+                                                 "Commander reassignment/vote source and docs",
+                                                 "Factory buy queue/debit/refund and side-supply helpers",
+                                                 "LoadoutManager FileManager destination sync",
+                                                 "UI title lifecycle display-handle ownership",
+                                                 "Instructions-For-Codex supply-heli branch head note"
+                                             ],
+                             "outputs":  [
+                                             "Spawned a fresh Spark scout wave after Steff asked for more scouts.",
+                                             "Broad commander, economy and PV/security scouts overflowed; commander and economy were relaunched as micro-scouts.",
+                                             "Lifecycle/init and towns/supply scouts did not return within the useful window and were closed unharvested.",
+                                             "Player-AI-Caps-And-Role-Balance now has explicit formula and fallback-baseline tables.",
+                                             "Commander/HQ and Feature Status now state manual reassignment is currently broken by the helper payload-shape bug.",
+                                             "Economy/factory docs now frame player factory buys as request/acceptance/rollback protocol redesign and sharpen queue/refund wording.",
+                                             "Tools/build and Server Ops now warn that LoadoutManager can delete destination-only files/directories during sync.",
+                                             "UI docs now call the currentCutDisplay problem a title lifecycle-handle collision.",
+                                             "Instructions-For-Codex now names current supply-heli head 262dc431 instead of stale ffeea4c2.",
+                                             "Validation/parity passed.",
+                                             "Documentation only; no gameplay source changed."
+                                         ],
+                             "handoff":  "This docs harvest is validated. Future scouts should be micro-scoped; broad mission-family Spark prompts are still likely to overflow."
+                         },
                          {
                              "lane":  "runtime-ops-scout-split-harvest",
                              "owner":  "Codex/Sub-agents",
