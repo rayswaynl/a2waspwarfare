@@ -1,5 +1,5 @@
 /* Description: Creates Defenses. */
-Private ["_buildings","_defense","_direction","_isAIQuery","_isArtillery","_manned","_position","_side","_sideID","_type","_area","_availweapons"];
+Private ["_buildings","_commanderTeam","_defense","_direction","_isAIQuery","_isArtillery","_manned","_position","_side","_sideID","_type","_area","_availweapons"];
 _type = _this select 0;
 _side = _this select 1;
 _position = _this select 2;
@@ -10,7 +10,9 @@ _manRange = if (count _this > 6) then {_this select 6} else {missionNamespace ge
 _sideID = (_side) Call GetSideID;
 
 _area = [_position,((_side) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity4; hintsilent format ["%1",_area];
-_availweapons = _area getVariable "weapons";
+_availweapons = 0;
+if (!isNull _area) then {_availweapons = _area getVariable "weapons"};
+_isArtillery = [_type,_side] Call IsArtillery;
 
 _defense = createVehicle [_type, _position, [], 0, "NONE"];
 _defense setDir _direction;
@@ -86,6 +88,11 @@ if (!isNull _area) then {
 			_area setVariable ["DefenseTeam", _team];
 		};
 
+		if (_isArtillery != -1) then {
+			_commanderTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
+			if !(isNull _commanderTeam) then {_team = _commanderTeam};
+		};
+
 		emptyQueu = emptyQueu + [_defense];
 		[_defense] Spawn WFBE_SE_FNC_HandleEmptyVehicle;
 		if (_manned) then {
@@ -115,7 +122,6 @@ if (!isNull _area) then {
 };
 
 /* Are we dealing with an artillery unit ? */
-_isArtillery = [_type,_side] Call IsArtillery;
 if (_isArtillery != -1) then {[_defense,_isArtillery,_side] Call EquipArtillery};
 
 _defense

@@ -1,5 +1,11 @@
 # Agent Worklog
 
+## 2026-06-04T23:58:00+02:00 - Codex - commander base artillery ownership
+
+- Source-traced commander/CoIn defense builds through `coin_interface.sqf:721-730`, `RequestDefense.sqf:8-10`, `Construction_StationaryDefense.sqf:12-119`, `Server_HandleDefense.sqf:25-32`, and artillery discovery through `GUI_Menu_Tactical.sqf:544-547`, `Client_RequestFireMission.sqf:8-13`, `Common_GetTeamArtillery.sqf:10-30`.
+- Patched source Chernarus and maintained Vanilla Takistan so `Construction_StationaryDefense.sqf` guards the base-area `weapons` read and assigns manned artillery-class base defenses to the current commander team when one exists; non-artillery defenses still use `DefenseTeam`.
+- Updated construction/support/status docs in both docs mirror and wiki checkout. Validation passed: `docs/validate-wiki.ps1`, LoadoutManager propagation with `A2WASP_SKIP_ZIP=1`, targeted `git diff --check`, OA-unsafe pattern grep, brace-count check, and Chernarus/Takistan file parity. Arma smoke remains pending for commander ARTY inside/outside base area and tactical fire missions.
+
 ## 2026-06-04T23:35:00+02:00 - Codex - buy-unit price display correction
 
 - Continued the documentation finisher loop and source-rechecked the buy-unit pricing note after the prior correction. The first pass was too broad: it checked list and purchase/charge math, but missed the selected-detail refresh path.

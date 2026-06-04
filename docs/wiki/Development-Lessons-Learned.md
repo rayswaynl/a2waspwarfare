@@ -264,6 +264,12 @@ The Buy Units menu shows why a partial grep can create bad documentation. The li
 
 Development rule: when auditing UI formulas, grep every assignment to the reused variable and every display, guard and mutation sink before declaring parity. For price/cost work, smoke list rows, selected-detail display, affordability guards and the actual charged funds together. See [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) and [Feature status](Feature-Status-Register).
 
+## Lesson 29: Group Ownership Can Be The Feature Boundary
+
+Commander-built artillery shows why "same side" is not always enough. Before the 2026-06-04 patch, source auto-manned defenses through the nearest base area's `DefenseTeam` while `Server_HandleDefense.sqf:23-31` created the gunner in the passed team. The Tactical menu then requests and loads fire missions by asking `GetTeamArtillery` about `group player` (`GUI_Menu_Tactical.sqf:544,565,594`), and `GetTeamArtillery.sqf:10-30` scans only units in that group. So ARTY setup, a live AI gunner and direct-fire behavior do not prove commander fire-mission ownership.
+
+Development rule: when a UI or command feature says "owned", prove which identity it actually uses: side, player, group, commander team, object variable, owner id or local player. For artillery/static-defense work, smoke group-based discovery, ammo loading, direct-fire behavior and HC fallback together before calling commander ownership release-ready.
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |
