@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Mini scout wave for community/dev, config data model, AI runtime/orders, UI/player workflows and tooling has been harvested, validated and pushed. One feature-status scout overflowed without evidence. Content commits are docs b5a40dd4 / wiki 5699c82. No gameplay source changed.",
+      "currentWork": "Mini scout wave for community/dev, config data model, AI runtime/orders, UI/player workflows and tooling has been harvested, validated and pushed. One feature-status scout overflowed without evidence. Content commits are docs b5a40dd4 / wiki 5699c82; final breadcrumb heads are docs 82efba3a / wiki 3a87f2f. No gameplay source changed.",
       "nextExpectedOutput": "Continue bounded source-backed wiki maintenance and keep final-head breadcrumbs current."
     },
     "Codex-2": {
@@ -47,7 +47,7 @@
       "lane": "mini-scout-wave-community-config-ai-ui-tooling",
       "owner": "Codex/Sub-agents",
       "status": "published-validated-pushed",
-      "output": "Spark starts hit quota/overflow before evidence, so Codex launched six gpt-5.4-mini read-only scouts. Five returned and were source-checked into docs: config positional arrays and post-load mutation, player UI workflow details, AI order/recovery chain and PerformanceAuditAnalyzer 14-output contract. Community/dev scout confirmed existing hub coverage. One feature-status scout overflowed and is not evidence. Validation passed and content pushed as docs b5a40dd4 / wiki 5699c82. No gameplay source changed."
+      "output": "Spark starts hit quota/overflow before evidence, so Codex launched six gpt-5.4-mini read-only scouts. Five returned and were source-checked into docs: config positional arrays and post-load mutation, player UI workflow details, AI order/recovery chain and PerformanceAuditAnalyzer 14-output contract. Community/dev scout confirmed existing hub coverage. One feature-status scout overflowed and is not evidence. Validation passed; content commits are docs b5a40dd4 / wiki 5699c82, final breadcrumb heads are docs 82efba3a / wiki 3a87f2f. No gameplay source changed."
     },
     {
       "lane": "documentation-finisher-loop",
