@@ -962,6 +962,26 @@ Two refinements to **DR-30** (BattlEye posture), surfaced during the improvement
 
 **Codex closure.** External-Integrations and this DR-30 list now drop `remoteexec.txt` from the missing Arma 2 OA filter framing, name the OA-era filter set and reframe BattlEye as contingent local-filter defense in depth using `updateclient.sqf:153-162`. DR-30's substance — no security filters are shipped in the repo — **stands**; only the filter-name list and the "primary mitigation" framing changed.
 
+## Round 38 — Commander vote AI/no-commander outcome mismatch (Codex, 2026-06-04)
+
+Lane `commander-vote-ai-no-commander-outcome-mismatch`. A source pass over the commander election worker found a server/client disagreement around AI/no-commander votes.
+
+### DR-47 — Commander vote selects any non-tied player candidate even when AI/no-commander votes should win — **Medium (gameplay correctness / commander control)**
+
+`Server/Functions/Server_VoteForCommander.sqf:24-29` counts player-team votes and treats `wfbe_vote == -1` as `_aiVotes`. The final selection then uses:
+
+```sqf
+if ((!_tie && _highest >= _aiVotes && _highestTeam != -1) || (!_tie && _highest <= _aiVotes && _highestTeam != -1)) then {_commander = _teams select _highestTeam};
+```
+
+For numeric vote counts, `_highest >= _aiVotes` or `_highest <= _aiVotes` is always true. Therefore any non-tied player candidate with `_highestTeam != -1` becomes commander, including equal-vote and AI/no-commander-majority cases. The AI/no-commander fallback only remains reachable for ties, no player candidate, or the later "selected team is not player-led" guard at `:45-46`.
+
+The client vote dialog presents different semantics: `Client/GUI/GUI_VoteMenu.sqf:87-89` previews AI/no commander when the highest row is row 0 or when the leading option is not above half of counted player voters. That means clients can see "AI"/"No Commander" as the apparent outcome while the server assigns a player commander after the countdown.
+
+**Fix shape.** Decide the intended rule first: plurality, strict majority, AI/no-commander as a real candidate, or no-commander only on row-0 win. Patch the server condition to match that rule, then smoke player-majority, no-commander-majority, equal-vote, player tie and late-join/revote restart cases. Keep this separate from DR-15 manual reassignment call shape and commander-authority hardening, though they share the same UX surface.
+
+**Codex closure.** Cross-linked from [Feature status](Feature-Status-Register) and [Commander/HQ lifecycle atlas](Commander-HQ-Lifecycle-Atlas). Source remains unpatched.
+
 ## Continue Reading
 
 Previous: [Testing workflow](Testing-Debugging-And-Release-Workflow) | Next: [Implementation plan](Documentation-Implementation-Plan)

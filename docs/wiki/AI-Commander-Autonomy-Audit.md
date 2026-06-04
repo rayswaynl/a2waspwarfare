@@ -80,6 +80,8 @@ Mini-scout follow-up 2026-06-04 separated live order plumbing from missing auton
 
 The safe wording is therefore: stable master has usable order primitives and a human command UI, but no source-proven autonomous commander loop that schedules those primitives for the side.
 
+Final mini-scout follow-up 2026-06-04 found one partial automation nuance worth preserving: newly spawned units can inherit an existing client-side map/waypoint destination. `Client_SendSpawnedUnitsToLeaderWaypoint.sqf:24-35,73-92` reads the last team-leader map order or current waypoint/expected destination and issues `commandMove` to spawned units; `Client_SetAttackWaveDetails.sqf:24-35,73-92` has the same shape for attack-wave units. This is order inheritance at spawn time, not a general server-side commander scheduler, and it depends on client-side stored map-order state such as `WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_*`.
+
 ## Broken AI Supply Truck Path
 
 The old AI logistics path is config-gated latent breakage:

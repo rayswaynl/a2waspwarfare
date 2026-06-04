@@ -47,6 +47,7 @@ _commander = _this select 1;
 | File | Evidence |
 | --- | --- |
 | `Client/GUI/GUI_Commander_VoteMenu.sqf:46` | Sends `["RequestNewCommander", [side group player, _voted_commander]]`. |
+| `Client/GUI/GUI_Commander_VoteMenu.sqf:33-46` | Resolves the selected commander by visible leader name text before sending. |
 | `Common/Init/Init_PublicVariables.sqf:13,50` | Registers and compiles `RequestNewCommander` as a server PVF command. |
 | `Server/Functions/Server_HandlePVF.sqf:14` | Spawns PVF parameters into the compiled handler. |
 | `Server/PVFunctions/RequestNewCommander.sqf:3,12-14` | Reads `_side = _this select 0`, sets `wfbe_commander`, spawns `WFBE_SE_FNC_AssignForCommander` with `[_side, _assigned_commander]`, and sends a `new-commander-assigned` message. |
@@ -60,6 +61,8 @@ The assignment itself probably lands because `RequestNewCommander.sqf` sets the 
 - AI commander shutdown/reset logic resolves side logic from an array and can miss the intended side.
 - The helper's `new-commander-assigned` client notification uses the bad side destination.
 - The caller also sends a correct `new-commander-assigned` notification, so fixing the helper without choosing one notification owner can create duplicate messages.
+
+The client selector also needs a small identity cleanup while this flow is open. `GUI_Commander_VoteMenu.sqf` stores the team index in the list row, but on submit it reads `lnbText` and matches `name leader _x`. Duplicate player names or a name change while the dialog is open can select the wrong team or fail the intended lookup. Use the stored row value/team index when patching the reassignment flow.
 
 ## Patch Shape
 
@@ -86,6 +89,7 @@ Patch source Chernarus, then run `Tools/LoadoutManager` from a checkout with an 
 Source-only:
 
 - `Server_AssignNewCommander.sqf` uses `_this select 0` for `_side`.
+- `GUI_Commander_VoteMenu.sqf` resolves the selected commander by row value/team identity, not visible name text.
 - Exactly one `new-commander-assigned` message path remains for the reassignment.
 - Generated Vanilla diff is inspected after LoadoutManager propagation.
 

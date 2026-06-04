@@ -199,6 +199,8 @@ Vote menu cleanup edge: `WFBE_Client_Teams_Count` is initialized as `count WFBE_
 
 Vote row coloring has a second small indexing edge. In `GUI_VoteMenu.sqf:74-83`, the loop variable already tracks the list row while scanning `lnbSize`, but the color write uses `[_i+1,0]`. If touching vote refresh, audit both the backing team-array loop and this row-color mapping together.
 
+Commander reassignment has a separate selector fragility. `GUI_Commander_VoteMenu.sqf:33-46` reads the selected row text, then finds the target team by comparing `name leader _x`. Because the row already stores the team index with `lnbSetValue`, future fixes should use the stored value instead of visible names so duplicate names or mid-dialog name changes cannot select the wrong commander.
+
 Help dialog lifecycle edge: `RscMenu_Help` stores the display as `uiNamespace["dialog_HelpPanel"]` on load, but unload clears `uiNamespace["cti_dialog_ui_onlinehelpmenu"]` and calls `GUI_Menu_Help.sqf` with `onUnload` (`Dialogs.hpp:3446-3447`). The controller only implements `onLoad` and `onHelpLBSelChanged` (`GUI_Menu_Help.sqf:5-10`). This looks like stale namespace wiring, so avoid building new help-panel state on the old unload variable without cleaning it.
 
 `GUI_Menu_Tactical.sqf` is the support hub. It builds the support list from fast travel, ICBM, paratroopers, ammo/vehicle paradrops, UAV actions and unit camera (`:56-64`). Availability is recomputed from current upgrades, funds, cooldowns and selected support (`:144-290`), then requests are sent through `RequestSpecial` where needed (`:373` and later request branches).
@@ -301,6 +303,7 @@ The intro video is `Videos/intro720p.ogv`, started from `Init_Client.sqf:785`.
 | Respawn selector loop | `Client_UI_Respawn_Selector.sqf` sleeps `0.03`. | Do not add expensive marker or object scans inside it. |
 | Economy supply-truck UI | `GUI_Menu_Economy.sqf` can send `RespawnST`. | This touches the config-gated broken autonomous supply-truck path. |
 | Command task assignment UI | `Rsc/Dialogs.hpp:2052-2053` exposes the button and `GUI_Menu_Command.sqf:315-344` builds task data/HQ speech, but the `SetTask` sends are commented. | Visible partial feature; revive only with JIP/task-spam review, or hide the affordance. |
+| Commander reassignment selection by name | `GUI_Commander_VoteMenu.sqf:33-46` resolves the selected row by visible leader name instead of the row's stored team value. | Fold into [Commander reassignment call shape](Commander-Reassignment-Call-Shape); use row value/team identity when patching DR-15. |
 | Vote menu inclusive loops | `GUI_Commander_VoteMenu.sqf:58` and `GUI_VoteMenu.sqf:29,61` loop to `WFBE_Client_Teams_Count`, which equals `count WFBE_Client_Teams`. | Treat as UI correctness debt; use `count - 1` or `forEach` if touching vote refresh. |
 | Vote row color offset | `GUI_VoteMenu.sqf:74-83` scans list rows but colors row `[_i+1,0]`. | Fold into the vote-refresh cleanup; smoke multiple candidates and vote changes so the highlighted/current row still matches the selected team. |
 | Help menu stale unload state | `Dialogs.hpp:3446-3447` sets `dialog_HelpPanel` on load but clears `cti_dialog_ui_onlinehelpmenu` on unload; `GUI_Menu_Help.sqf` has no `onUnload` case. | Clean namespace key ownership before adding new help-menu state or controller behavior. |

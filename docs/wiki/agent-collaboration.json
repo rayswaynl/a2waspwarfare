@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T06:20:00+02:00",
+  "generatedAt": "2026-06-04T06:55:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,31 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "cheap-mini-scout-wave-commander-adjacent-depth",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "sourceScope": [
+        "Server/Functions/Server_VoteForCommander.sqf",
+        "Client/GUI/GUI_Commander_VoteMenu.sqf",
+        "Client/GUI/GUI_VoteMenu.sqf",
+        "Client/Functions/Client_UI_Gear_FillTemplates.sqf",
+        "Client/Functions/Client_UI_Respawn_Selector.sqf",
+        "DiscordBot/src/GameStatusUpdater.cs",
+        "Client/Functions/Client_SendSpawnedUnitsToLeaderWaypoint.sqf",
+        "construction/networking/respawn/support scout confirmations"
+      ],
+      "outputs": [
+        "Promoted commander vote AI/no-commander outcome mismatch as DR-47",
+        "Added commander reassignment row-name identity caveat",
+        "Added gear-template hidden-by-upgrade UX note",
+        "Added respawn selector helper to player UI map",
+        "Added DiscordBot presence timeout caveat",
+        "Clarified spawned-unit order inheritance is partial client-side automation, not AI commander scheduler",
+        "No gameplay source changed"
+      ],
+      "handoff": "This docs batch is validated. Treat scout reports as harvested unless implementing the queued source patches."
+    },
     {
       "lane": "mini-scout-wave-factory-respawn-support-runtime-tooling",
       "owner": "Codex/Sub-agents",

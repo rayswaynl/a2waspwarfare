@@ -19,7 +19,7 @@ Canonical implementation pages remain [Client UI systems atlas](Client-UI-System
 | Upgrade | Open live upgrade dialog and buy/sync upgrades. | `Rsc/Dialogs.hpp:4-7`; `GUI_Menu.sqf:161-165`; `GUI_UpgradeMenu.sqf:135-161` | Live. Old `RscMenu_Upgrade` is stale. |
 | Economy/build | Commander opens CoIn build, changes income %, sells structures and respawns supply trucks. | `Client/FSM/updateclient.sqf:220`; `Action_Build.sqf:1`; `coin_interface.sqf:29`, `:672-718`; `GUI_Menu_Economy.sqf:74-150` | Live; high authority surface. |
 | Service/EASA | Rearm, repair, refuel, heal and aircraft loadout dialog. | `Rsc/Dialogs.hpp:2870-2873`, `:3209-3212`; `GUI_Menu_Service.sqf:128-244`; `GUI_Menu_EASA.sqf:47-50` | Live; affordability/authority debt. |
-| Respawn/RHUD/map/WASP | Respawn source/gear choice, RHUD/FPS overlay, map-click AI shortcuts, capture/title overlays and WASP actions. | `Client_OnKilled.sqf:155`; `GUI_RespawnMenu.sqf:13-157`; `Client_UpdateRHUD.sqf:3-95`; `Client_HandleMapSingleClick.sqf:20-179`; `WASP/actions/AddActions.sqf:15`; `WASP/baserep/viem.sqf:13-53`; `WASP/global_marking_monitor.sqf:57-73` | Live with stale/commented WASP prototypes nearby; map double-click marker helper briefly disables all user input while polling for the marker dialog. |
+| Respawn/RHUD/map/WASP | Respawn source/gear choice, respawn marker selector, RHUD/FPS overlay, map-click AI shortcuts, capture/title overlays and WASP actions. | `Client_OnKilled.sqf:155`; `GUI_RespawnMenu.sqf:13-157`; `Client_UI_Respawn_Selector.sqf:19-35`; `Client_UpdateRHUD.sqf:3-95`; `Client_HandleMapSingleClick.sqf:20-179`; `WASP/actions/AddActions.sqf:15`; `WASP/baserep/viem.sqf:13-53`; `WASP/global_marking_monitor.sqf:57-73` | Live with stale/commented WASP prototypes nearby; map double-click marker helper briefly disables all user input while polling for the marker dialog. |
 
 ## Dialog And Action Surfaces
 
@@ -27,7 +27,7 @@ Canonical implementation pages remain [Client UI systems atlas](Client-UI-System
 | --- | --- | --- | --- |
 | Upgrade | `WFBE_UpgradeMenu`, IDD `504000` | `Rsc/Dialogs.hpp:4-7`; `GUI_UpgradeMenu.sqf:135-161` | Live. |
 | Vote | `WFBE_VoteMenu`, `WFBE_Commander_VoteMenu` | `Rsc/Dialogs.hpp:145-148`, `:237-240`; `GUI_Menu.sqf:56-96` | Live. |
-| Respawn | `WFBE_RespawnMenu`, IDD `511000` | `Rsc/Dialogs.hpp:314-317`; `GUI_RespawnMenu.sqf:103-157` | Live. |
+| Respawn | `WFBE_RespawnMenu`, IDD `511000`; selector marker loop | `Rsc/Dialogs.hpp:314-317`; `GUI_RespawnMenu.sqf:103-157`; `Client_UI_Respawn_Selector.sqf:19-35` | Live. |
 | Transfer | `WFBE_TransferMenu`, IDD `505000` | `Rsc/Dialogs.hpp:409-412`; `GUI_TransferMenu.sqf:57-75` | Live. |
 | Gear | `WFBE_BuyGearMenu`, IDD `503000` | `Rsc/Dialogs.hpp:530-533`; `GUI_BuyGearMenu.sqf:418-509` | Live, risky. |
 | Main | `WF_Menu`, IDD `11000` | `Rsc/Dialogs.hpp:1019-1022`; `GUI_Menu.sqf:32-208` | Live. |

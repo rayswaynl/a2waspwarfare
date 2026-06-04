@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-04T06:55:00+02:00 - Codex - cheap mini scout wave commander-adjacent depth
+
+- Spark quota blocked new GPT-5.3-Codex-Spark starts, so Codex launched six cheap mini scouts for construction/factories/upgrades, UI/dialogs/HUD, server ops/extensions, networking/PV security, respawn/supports and AI/team-order.
+- Source-checked and promoted the strongest new deltas: commander vote server/UI mismatch (DR-47), commander reassignment UI target-by-name fragility, gear-template hidden-by-upgrade UX trap, respawn selector helper in the player UI map, DiscordBot presence timeout caveat and spawned-unit order inheritance as partial client-side automation.
+- Construction, networking, AntiStack, support and respawn reports mostly confirmed already-canonical pages: SmallSite add/add, stationary-defense base-area null guard, MASH marker relay dead, direct-PV/PVF RCE surfaces and ZetaCargo detach argument risk were already represented.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T06:20:00+02:00 - Codex - mini scout wave factory/respawn/support/runtime/tooling
 
 - Harvested five read-only mini/high scouts after Spark quota remained unavailable.

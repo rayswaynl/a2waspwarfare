@@ -33,6 +33,7 @@ flowchart TD
 | `Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf:17-19` | Privates and sets `_template_upgrade = _x select 3`. |
 | `Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` | Uses `_u_upgrade`, which is not private or assigned in this function. |
 | `Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf:94-95` | Writes the filtered array to `profileNamespace` and calls `saveProfileNamespace`. |
+| `Client/Functions/Client_UI_Gear_FillTemplates.sqf:15-22` | The visible template list only adds templates whose stored upgrade level is at or below current `WFBE_UP_GEAR`. |
 
 ## Bug Shape
 
@@ -49,6 +50,7 @@ Practical impact:
 - The save pass can hit an undefined-variable script error when a template item's upgrade exceeds the current barracks upgrade and the expression evaluates the second operand.
 - Even when no error is hit, saved-template upgrade filtering cannot be trusted as written because the intended second comparison reads the wrong variable.
 - `Init_ProfileGear.sqf` still validates profile templates on load, so this is mainly a persistence/filter correctness bug, not proof that the live buy-gear UI lets locked gear equip by itself.
+- `Client_UI_Gear_FillTemplates.sqf` intentionally hides templates above the current gear upgrade instead of showing them as locked. This can make valid saved templates look missing until the side upgrades gear again.
 - The broader gear/EASA/service authority issue remains separate: purchases and effects are still client-authoritative legacy flows, covered by [Server authority migration map](Server-Authority-Migration-Map) and [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas).
 
 ## Patch Options
@@ -108,6 +110,7 @@ Arma smoke:
 2. Try to save a template containing gear above both barracks and gear upgrade levels; confirm it is not written and no RPT undefined-variable error appears.
 3. Upgrade barracks/gear and confirm the same template becomes saveable when the relevant level is unlocked.
 4. Confirm templates still disappear from the visible list when `Client_UI_Gear_FillTemplates.sqf` filters them above current `WFBE_UP_GEAR`.
+5. Decide whether hidden higher-upgrade templates should remain invisible or appear as locked rows so players understand they were not deleted.
 
 Generated mission:
 

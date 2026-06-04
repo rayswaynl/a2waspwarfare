@@ -62,12 +62,14 @@ At the end of server init, every present side starts `WFBE_SE_FNC_VoteForCommand
 1. reads the side's vote time (`Server_VoteForCommander.sqf:9-11`);
 2. counts down `wfbe_votetime` once per second and broadcasts it on side logic (`:13-14`);
 3. counts player-group `wfbe_vote` values from `wfbe_teams` (`:17-29`);
-4. resolves ties and AI votes (`:31-46`);
+4. resolves ties and AI/no-commander votes (`:31-46`);
 5. sets `wfbe_commander` to the selected player group or `objNull` for AI/no commander (`:48-49`);
 6. sends `HandleSpecial ["commander-vote", _commander]` to side clients (`:51-52`);
 7. stops any running AI commander flag when a player commander is selected (`:54-57`).
 
 `Common_SetCommanderVotes.sqf` is a helper that sets every team vote to a provided value (`Common_SetCommanderVotes.sqf:3-10`). It does not decide the winner.
+
+The current winner condition needs a source patch before vote behavior is trusted as majority/AI-fallback logic. The worker counts `wfbe_vote == -1` as AI/no-commander votes (`Server_VoteForCommander.sqf:24-29`), but the final selection uses `(!_tie && _highest >= _aiVotes && _highestTeam != -1) || (!_tie && _highest <= _aiVotes && _highestTeam != -1)` (`:43`). For numeric vote counts, `>=` or `<=` is always true, so any non-tied player candidate with `_highestTeam != -1` is selected even when AI/no-commander votes are equal or higher. The client vote dialog previews AI/no commander when the highest option is not above half of player voters or when row 0 wins (`GUI_VoteMenu.sqf:87-89`), so the UI and server can disagree on close/no-commander outcomes.
 
 There is also a client-triggered vote restart path. If the main menu sees `wfbe_votetime <= 0`, it sends `RequestCommanderVote` with `[sideJoined, name player]` (`GUI_Menu.sqf:75,91`). The server handler rechecks side logic vote time, resets team votes around the current commander team, spawns `VoteForCommander`, sends the side message and broadcasts `commander-vote-start` with the provided name (`RequestCommanderVote.sqf:3-22`). This is useful for recovery, but the handler does not prove requester identity beyond the payload, so keep it in commander-authority smoke when changing vote behavior.
 
@@ -180,6 +182,7 @@ This is not just "another repair UI." It mutates economy/town state and HQ posit
 
 | Status | Risk | Evidence | Next owner action |
 | --- | --- | --- | --- |
+| Patch-ready correctness | Commander vote selection effectively ignores AI/no-commander vote count when there is a non-tied player candidate. | `Server_VoteForCommander.sqf:24-29,43`; `GUI_VoteMenu.sqf:87-89` | Decide intended tie/AI/no-commander semantics, patch the server condition, then smoke player-majority, no-commander-majority, equal-vote and tie cases. |
 | Patch-ready correctness | Manual commander reassignment helper passes an array as `_side`. | `RequestNewCommander.sqf:13-14`; `Server_AssignNewCommander.sqf:3-5` | Patch via [Commander reassignment call shape](Commander-Reassignment-Call-Shape), then smoke one client notification. |
 | Authority-light | Normal MHQ repair is client-debited and sends only side to server. | `Action_RepairMHQ.sqf:24-35`; `RequestMHQRepair.sqf:1`; `Server_MHQRepair.sqf:7-79` | Server should validate requester, side, dead HQ, repair vehicle range, repair count and funds before creating the MHQ. |
 | Partial fallback | Commander disconnect clears `wfbe_commander` and warns the side, but does not prove automatic reassignment. | `Server_OnPlayerDisconnected.sqf:136-146`; `Server_VoteForCommander.sqf:48-57` | Decide whether disconnect should leave no commander, restart a vote, or restore AI commander behavior; smoke human commander disconnect and reconnect. |

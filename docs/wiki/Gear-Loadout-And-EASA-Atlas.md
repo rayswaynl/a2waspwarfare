@@ -81,6 +81,8 @@ Evidence:
 
 `Client_UI_Gear_SaveTemplateProfile.sqf` references `_u_upgrade` at `:33`, `:52` and `:75`, but the variable is not defined in that function. The focused patch and smoke plan live in [Gear template profile filter](Gear-Template-Profile-Filter). Treat profile-template save filtering as suspect until this variable is replaced with an item- or template-upgrade comparison.
 
+The visible template list also filters by current gear upgrade (`Client_UI_Gear_FillTemplates.sqf:15-22`). Higher-upgrade saved templates can be valid but hidden until the side upgrades gear again; support/debug docs should distinguish hidden-by-upgrade from deleted profile data.
+
 ## EASA Runtime
 
 EASA is the aircraft loadout system. It is not an Arma 3 pylon system; it is Arma 2 OA weapon/magazine mutation.

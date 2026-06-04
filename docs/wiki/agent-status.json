@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T06:20:00+02:00",
+  "generatedAt": "2026-06-04T06:55:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated the mini/high scout harvest across factory/upgrades, respawn/service, support/ordnance, runtime/HC/AntiStack and tooling/build.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed documentation gap or scout harvest."
+      "currentWork": "Harvested the cheap mini scout wave for commander-adjacent depth: commander vote DR-47, commander reassignment UI identity, gear-template visibility gate, respawn selector routing, DiscordBot presence timeout and spawned-unit order inheritance.",
+      "nextExpectedOutput": "Validate mirror parity and push the scoped docs/wiki batch, then continue with the next bounded source-backed documentation gap."
     },
     "Codex-2": {
       "status": "ready",
@@ -38,11 +38,17 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "Latest five mini/high scouts completed and were closed. Lanes covered factory/upgrades, respawn/service, support/ordnance, runtime/HC/AntiStack and tooling/build.",
+      "currentWork": "Latest six cheap mini scouts completed and were harvested. Lanes covered construction/factories/upgrades, UI/dialogs/HUD, server ops/extensions, networking/PV security, respawn/supports and AI/team-order.",
       "nextExpectedOutput": "No active sub-agent output pending."
     }
   },
   "laneSummary": [
+    {
+      "lane": "cheap-mini-scout-wave-commander-adjacent-depth",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "output": "Spark quota blocked GPT-5.3-Codex-Spark starts, so Codex launched six cheap mini scouts. Source-backed deltas landed for commander vote DR-47, commander reassignment UI identity, gear-template visibility gate, respawn selector routing, DiscordBot presence timeout and spawned-unit order inheritance. Construction/networking/respawn/support reports mostly confirmed existing canonical pages. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. No gameplay source changed."
+    },
     {
       "lane": "mini-scout-wave-factory-respawn-support-runtime-tooling",
       "owner": "Codex/Sub-agents",
