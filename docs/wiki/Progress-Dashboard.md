@@ -134,7 +134,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` | Validated `mini-scout-wave-ai-construction-respawn-pv-ui-depth-2`; push is next, then the finisher loop continues. |
+| Codex | Active | `documentation-finisher-loop` | Published, validated and pushed `mini-scout-wave-ai-construction-respawn-pv-ui-depth-2`; the finisher loop continues with the next bounded source-backed gap. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle. |
 | Sub-agents | Closed | none | Five gpt-5.4-mini scouts were closed after reports were harvested. No active sub-agent output pending. |
@@ -160,7 +160,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
-| `mini-scout-wave-ai-construction-respawn-pv-ui-depth-2` | Codex/Sub-agents | Published / validated | Five gpt-5.4-mini reports were closed and harvested after Spark quota blocked. Promoted only source-backed deltas into AI, construction, supply/PV, authority, respawn, UI, WASP and Feature Status pages. Validation/parity passed; push is next. |
+| `mini-scout-wave-ai-construction-respawn-pv-ui-depth-2` | Codex/Sub-agents | Published / validated | Five gpt-5.4-mini reports were closed and harvested after Spark quota blocked. Promoted only source-backed deltas into AI, construction, supply/PV, authority, respawn, UI, WASP and Feature Status pages. Validation/parity passed and the batch was pushed. |
 | `mini-scout-wave-ai-commander-factory-ui-pv-runtime` | Codex/Sub-agents | Published / validated | Spark quota blocked all GPT-5.3-Codex-Spark starts, so Codex closed the failed threads and launched six gpt-5.4-mini read-only scouts with narrow lanes. All reports are harvested; validation/parity passed. |
 | `mini-scout-wave-maps-ops-pv-factory-respawn` | Codex/Sub-agents | Published / validated | Five gpt-5.4-mini scouts were closed and source-checked. Promoted salvage payout casing, service-point respawn wording, DiscordBot config-source precedence and parser-only PerformanceAuditAnalyzer wording. Validation/parity passed. |
 | `mini-scout-wave-ai-caps-ui-economy-supports` | Codex/Sub-agents | Published / validated | Spark quota blocked, so Codex used four fallback mini scouts. Deltas landed for player AI cap boundaries, UI hardcoded text, AI-team kill bounty, side-supply reason logging, side-message pipeline and commander-vote owner routing. Validation/parity passed. |

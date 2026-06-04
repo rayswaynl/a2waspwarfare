@@ -7,7 +7,7 @@
 - Reconciled the previous `mini-scout-wave-ai-commander-factory-ui-pv-runtime` status: it was already pushed as docs mirror `0d5b5063` and wiki `2428bfc`, so the dashboard no longer says push is next.
 - Closed and harvested all five mini-scout reports. Promoted source-backed deltas: `wfbe_autonomous` means respawn/order-reset state rather than full AI autonomy; `Server_UpdateTeam` has a formation picker bug candidate; grouped base-area state appears client-seeded but not server-seeded after HQ deploy; CoIn placement/sale has null-read guard-order risks; supply completion message is reward-affecting; supply response caches can hang/poison client gates; `RequestSpecial group-query` trusts payload player/group/side; threeway defender respawn can inherit the zero-camp helper fallback; respawn can stack `HandleAT` Fired handlers; WASP base repair has shared target globals and stale supply spend state; UI pages now carry compact service/gear/tactical/upgrade/help TODO rows.
 - Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
-- Documentation/machine-state cleanup only; no gameplay source files were edited. Push is next.
+- Documentation/machine-state cleanup only; no gameplay source files were edited. Batch was pushed to the docs mirror and wiki.
 
 ## 2026-06-04T06:40:00+02:00 - Codex - mini scout wave AI/commander/factory/UI/PV/runtime
 

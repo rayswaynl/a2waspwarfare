@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T07:10:00+02:00",
+  "generatedAt": "2026-06-04T07:15:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -39,9 +39,10 @@
         "Previous mini-scout harvest was pushed as docs 0d5b5063 / wiki 2428bfc",
         "Promoted source-backed deltas into AI commander, AI/headless, construction/CoIn, supply mission, public-variable index, server-authority map, respawn/death, towns/camps, support specials, UI systems, WASP overlay and Feature Status pages",
         "No gameplay source changed",
-        "docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed"
+        "docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed",
+        "Docs mirror and wiki were pushed"
       ],
-      "handoff": "Treat the raw scout reports as harvested. Future agents should use the patched canonical pages and source paths; push is the only remaining step for this docs batch."
+      "handoff": "Treat the raw scout reports as harvested. Future agents should use the patched canonical pages and source paths; this docs batch is published."
     },
     {
       "lane": "mini-scout-wave-ai-commander-factory-ui-pv-runtime",
