@@ -9,6 +9,7 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 | #14 | `feat/ai-commander` | Execution substrate: supervisor, executor, town assignment, production, upgrades, hybrid command | Open draft; full-auto smoke noted, hybrid/handoff/stopped evidence still needed |
 | #17 | `codex/quad-ai-commander` | Docs, roadmap, phase specs, validation plan, implementation briefs | Open; docs-only source-of-truth |
 | #18 | `codex/ai-commander-logs` | Phase 1 structured log implementation stacked on `feat/ai-commander` | Open draft; implementation-only, runtime evidence pending |
+| #19 | `codex/ai-commander-context` | Phase 2 context/belief scaffold stacked on `codex/ai-commander-logs` | Open draft; advisory-only, synthetic/runtime evidence pending |
 
 ## Phase Status
 
@@ -16,7 +17,7 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 |---|---|---|---|---|
 | 0 Execution substrate | `feat/ai-commander` | current AI commander PR | In progress; partial full-auto evidence | yes, current PR behavior |
 | 1 Structured logs | `codex/ai-commander-logs` | Phase 0 stable | Draft PR #18 open; static surface clean, runtime evidence pending | no |
-| 2 Context/beliefs | `codex/ai-commander-context` | Phase 1 logs | Spec ready; implementation brief added; no code branch yet | no |
+| 2 Context/beliefs | `codex/ai-commander-context` | Phase 1 logs | Draft PR #19 open; advisory-only scaffold, synthetic/runtime evidence pending | no |
 | 3 Advisory planner | `codex/ai-commander-planner` | Phase 2 beliefs | Spec ready, implementation pending | no by default |
 | 4 Worker biasing | `codex/ai-commander-worker-biasing` | Phase 3 planner | Spec ready, implementation pending | yes, gated |
 
@@ -40,7 +41,7 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 
 ## Next Best Action
 
-Finish Phase 0 smoke-testing on PR #14, then collect Phase 1 log evidence on draft PR #18.
+Finish Phase 0 smoke-testing on PR #14, then collect Phase 1 log evidence on draft PR #18. Phase 2 draft PR #19 should stay advisory-only and behind those gates.
 
 Already noted in PR #14:
 
@@ -60,7 +61,7 @@ Remaining Phase 0 proof:
 - disabled/HQ-down state stops commander cleanly
 - watchlist has no blocking waypoint reset, stale `wfbe_exec_sig`, or stuck `wfbe_queue` issue
 
-Phase 1 is already drafted:
+Phase 1 is drafted:
 
 ```text
 PR: #18
@@ -79,13 +80,25 @@ Required Phase 1 proof before it can leave draft:
 - log sequence increases per side and stays capped
 - existing commander behavior remains unchanged
 
-After Phase 1 passes, start:
+Phase 2 is drafted:
 
 ```text
+PR: #19
 branch: codex/ai-commander-context
 base: codex/ai-commander-logs
 runbook: docs/quad-ai-commander-phase2-implementation-brief.md
 ```
+
+Required Phase 2 proof before it can leave draft:
+
+- synthetic `CONTACT` creates a tracked belief
+- nearby contact merges and raises confidence without exceeding the cap
+- synthetic `INTEL` appears as low-confidence rumor/tracked context
+- synthetic `LOSS` creates or reinforces a moderate threat belief
+- confidence decays and stale beliefs expire
+- nearest-town attachment appears in debug summary
+- no worker reads `wfbe_aicom_context` yet
+- no order, production, upgrade, or type-assignment behavior changes because context exists
 
 ## Invariants Across All Phases
 
@@ -107,7 +120,7 @@ runbook: docs/quad-ai-commander-phase2-implementation-brief.md
 | Handoff smoke | Phase 0 | pending |
 | HQ-down/disabled smoke | Phase 0 | pending |
 | Phase 1 structured log RPT excerpts | Phase 1 | draft implementation open in PR #18; runtime evidence pending |
-| Phase 2 belief merge/decay excerpts | Phase 2 | spec and implementation brief ready; implementation pending |
+| Phase 2 belief merge/decay excerpts | Phase 2 | draft implementation open in PR #19; synthetic/runtime evidence pending |
 | Phase 3 advisory priority excerpts | Phase 3 | pending implementation |
 | Phase 4 worker biasing advisory-on/off excerpts | Phase 4 | pending implementation |
 
@@ -130,7 +143,7 @@ The Quad AI Commander integration is ready to implement and test when:
 1. PR #14 Phase 0 has positive runtime evidence for full-auto, hybrid-assist, handoff, and stopped modes.
 2. PR #17 docs are merged or accepted as the source of truth.
 3. PR #18 Phase 1 structured logs have positive runtime evidence and remain behavior-neutral.
-4. `codex/ai-commander-context` can be opened from the Phase 2 implementation brief without unresolved design questions.
-5. Runtime validation expectations are agreed for each follow-up branch.
+4. PR #19 Phase 2 context/beliefs have synthetic/runtime evidence and remain advisory-only.
+5. Runtime validation expectations are agreed for the planner and worker-biasing follow-up branches.
 
 The full integration is not complete until the log, belief, planner, and worker-biasing branches are implemented and proven by runtime evidence.
