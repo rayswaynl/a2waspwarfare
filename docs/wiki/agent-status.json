@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T10:30:00+02:00",
+    "generatedAt":  "2026-06-04T10:45:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -19,8 +19,8 @@
     "agents":  {
                    "Codex":  {
                                  "status":  "active",
-                                 "currentLane":  "spark-scout-wave-zargabad-refresh-and-deep-scouts",
-                                 "currentWork":  "Launched a new scout wave, refreshed origin/feature/zargabad-map head e9294ede, reran branch-local static validation and harvested returned scout deltas into canonical pages: supply completion player-object rescan risk, factory debit/abort evidence, LoadoutManager soft copy failures, PerformanceAuditAnalyzer scale/GUI constraints, DiscordBot/extension runtime footguns and command-menu interaction model.",
+                                 "currentLane":  "documentation-finisher-loop",
+                                 "currentWork":  "Reconciled stale coordination state after the Zargabad scout wave and HC upstream-history merge were pushed. Current source of truth: main docs branch HEAD 43beb7b6 and live wiki HEAD a9d0d4e; the previous scout wave is published/validated and closed.",
                                  "nextExpectedOutput":  "Continue documentation finisher loop with the next bounded source-backed docs item."
                              },
                    "Codex-2":  {
@@ -43,6 +43,12 @@
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "documentation-finisher-status-refresh",
+                            "owner":  "Codex",
+                            "status":  "published-validated",
+                            "output":  "Reconciled visible and machine coordination state after the latest pushed batches. agent-status.json and agent-collaboration.json now put Codex back on documentation-finisher-loop, with the prior Zargabad scout wave treated as published/validated history. Evidence checked: main docs HEAD 43beb7b6 and wiki HEAD a9d0d4e. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. No gameplay source changed."
+                        },
                         {
                             "lane":  "spark-scout-wave-zargabad-refresh-and-deep-scouts",
                             "owner":  "Codex/Sub-agents",

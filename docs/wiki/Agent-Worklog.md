@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T10:45:00+02:00 - Codex - documentation finisher status refresh
+
+- Continued the long-running documentation finisher loop by checking both remotes (`git pull --ff-only` already up to date) and current heads: main docs branch `43beb7b6`, live wiki `a9d0d4e`.
+- Found coordination drift: `agent-status.json` still listed Codex on `spark-scout-wave-zargabad-refresh-and-deep-scouts` even though the dashboard/worklog and pushed commits show that scout wave is published, validated and closed.
+- Updated [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` so Codex is back on `documentation-finisher-loop` and the prior scout wave stays historical evidence rather than active ownership.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and mirror parity. Coordination cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T10:12:00+02:00 - Codex - Zargabad branch head refresh and new Spark scouts
 
 - Steff asked for a bunch more Spark scouts. Codex launched six `gpt-5.3-codex-spark` read-only scouts: town defense/mortars/artillery, AI/HC delegation/autonomy, UI/Rsc feature status, economy/supply/factory edge cases, tools/DiscordBot/Extension release footguns and docs/machine-ledger drift.

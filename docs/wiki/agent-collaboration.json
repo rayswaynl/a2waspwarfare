@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T10:30:00+02:00",
+    "generatedAt":  "2026-06-04T10:45:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,26 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "documentation-finisher-status-refresh",
+                             "owner":  "Codex",
+                             "status":  "published-validated",
+                             "sourceScope":  [
+                                                 "agent-status.json Codex current lane",
+                                                 "agent-collaboration.json active claim ordering",
+                                                 "Progress-Dashboard latest batch",
+                                                 "Agent-Worklog latest entry",
+                                                 "main docs HEAD 43beb7b6",
+                                                 "wiki HEAD a9d0d4e"
+                                             ],
+                             "outputs":  [
+                                             "Moved Codex visible ownership back to documentation-finisher-loop after the prior Zargabad scout wave was published and validated.",
+                                             "Recorded current pushed heads for the docs mirror and live wiki.",
+                                             "Kept the finished scout lane as historical published/validated evidence rather than active work.",
+                                             "docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed for this small coordination-only batch."
+                                         ],
+                             "handoff":  "Future agents should start from documentation-finisher-loop and treat spark-scout-wave-zargabad-refresh-and-deep-scouts as closed."
+                         },
                          {
                              "lane":  "spark-scout-wave-zargabad-refresh-and-deep-scouts",
                              "owner":  "Codex/Sub-agents",
