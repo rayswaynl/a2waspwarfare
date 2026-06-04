@@ -1,9 +1,9 @@
 /*
-	AI Commander — order executor.  feat/ai-commander. Server-side; runs every supervisor tick.
+	AI Commander - order executor.  feat/ai-commander. Server-side; runs every supervisor tick.
 	Parameter: _this = side.
 
 	Turns explicit Move/Patrol/Defend orders (set by a human commander via the Command Center, or by the
-	AI) into real waypoints for AI-led teams. SetTeamMoveMode/SetTeamMovePos only store vars — nothing else
+	AI) into real waypoints for AI-led teams. SetTeamMoveMode/SetTeamMovePos only store vars - nothing else
 	issues waypoints for them, so this is the path that finally makes the command bar work.
 	Idempotent: an unchanged order (wfbe_exec_sig) is not re-issued. "towns"/"" modes belong to AssignTowns.
 */
@@ -31,10 +31,11 @@ if (isNil "_teams") exitWith {};
 					[_team, _goto, _wpType, _radius] Call AIMoveTo;
 					_team setVariable ["wfbe_exec_sig", _sig];
 					["INFORMATION", Format ["AI_Commander_Execute.sqf: [%1] team [%2] executing %3 order at %4.", _side, _team, _modeL, _goto]] Call WFBE_CO_FNC_LogContent;
+					if (!isNil "WFBE_SE_FNC_AI_Com_LogAppend") then {[_side, "ORDER", _team, [_team, _modeL, _goto, _wpType, _radius]] Call WFBE_SE_FNC_AI_Com_LogAppend};
 				};
 			};
 		} else {
-			//--- Not an explicit order anymore — drop the signature so a later order always re-executes.
+			//--- Not an explicit order anymore - drop the signature so a later order always re-executes.
 			_team setVariable ["wfbe_exec_sig", []];
 		};
 	};
