@@ -45,15 +45,23 @@ That state is stack housekeeping, not a new Phase 1 behavior decision. Before Ph
 
 Phase 1 was also hardened in `AI_Commander_LogAppend.sqf` to avoid a code-block `isNil` check around `wfbe_aicom_log_last_prune`. The helper now sets the prune timestamp after append/prune, which keeps the behavior equivalent while reducing Arma 2/OA compatibility risk.
 
-The same `AI_Commander_LogAppend.sqf` content was mirrored onto #19 so Phase 2 manual smoke uses the hardened log append helper. Because #18 has now moved again, #19 can show as:
+#19 has now also received a contents-API refresh onto the refreshed #18 content surface. The branch still includes the Phase 2 advisory context hook and helpers, while its inherited hot-path files now match #18 content:
+
+- `AI_Commander.sqf` keeps the Phase 2 context helper compile and context interval, and inherits #18's flattened active/human/handoff checks.
+- `AI_Commander_AssignTowns.sqf`, `AI_Commander_AssignTypes.sqf`, `AI_Commander_Execute.sqf`, and `AI_Commander_Produce.sqf` match the refreshed #18 blobs.
+- `AI_Commander_LogAppend.sqf` already matches #18.
+
+Because this was also done as contents-API commits instead of a true git rebase, #19 can still compare as graph-diverged against `codex/ai-commander-logs`:
 
 ```text
 codex/ai-commander-context
-15 ahead / 6 behind codex/ai-commander-logs
-needs refresh after #18 is graph-refreshed
+20 ahead / 6 behind codex/ai-commander-logs
+needs graph refresh after #18 is graph-refreshed
 ```
 
-That #19 state is also stack housekeeping, not a behavior gate. Phase 2 remains advisory-only, but it should not be used for smoke until refreshed onto the current #18 head.
+GitHub compare may still display duplicated inherited hardening changes on #19 until the branch graph is refreshed. Treat blob equality and runtime proof as the meaningful content checks; do not treat this as ready for Phase 2 smoke yet.
+
+That #19 state is stack housekeeping, not a behavior gate. Phase 2 remains advisory-only, but it should not be used for smoke until refreshed onto the graph-refreshed #18 head.
 
 ## Ready-Review Order
 
