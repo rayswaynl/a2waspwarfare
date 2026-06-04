@@ -32,8 +32,8 @@ This is the quick-reference gateway for client UI work. Start with the [player U
 | DR-14 | Player unit purchase is client-authoritative; no `RequestBuyUnit` PVF exists. | [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) |
 | DR-16 | Structure sale is client-authoritative; this is an economy/server-authority finding, not a gear/template finding. | [Deep-review findings](Deep-Review-Findings) |
 | DR-17 | `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000`. | [UI IDD collision repair](UI-IDD-Collision-Repair) |
-| DR-24 | Stale `RscMenu_Upgrade` points at missing `Client/GUI/GUI_Menu_Upgrade.sqf`; live upgrades use `WFBE_UpgradeMenu`. | [Deep-review findings](Deep-Review-Findings) |
-| DR-25a/b | `RscOverlay` / `OptionsAvailable` share title `idd = 10200`, and `RscClickableText.soundPush[]` is malformed. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| DR-24 | Stale `RscMenu_Upgrade` points at missing `Client/GUI/GUI_Menu_Upgrade.sqf`; live upgrades use `WFBE_UpgradeMenu`. | [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog-review), [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| DR-25a/b | `RscOverlay` / `OptionsAvailable` share title `idd = 10200`, and `RscClickableText.soundPush[]` is malformed. | [UI IDD collision repair](UI-IDD-Collision-Repair), [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | DR-28 | Gear, EASA and service spend/effect paths are client-authoritative. | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
 | Duplicate IDDs/display handles | EASA/Economy share `23000`; overlay/title resources share `10200`; `OptionsAvailable` and `EndOfGameStats` both use `currentCutDisplay`. | [Client UI systems atlas](Client-UI-Systems-Atlas), [UI IDD collision repair](UI-IDD-Collision-Repair) |
 | Economy dialog missing controls | `GUI_Menu_Economy.sqf:7-8` targets `23004`/`23005`/`23006`, absent from audited `RscMenu_Economy` controls. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
@@ -49,7 +49,7 @@ Use this as the fast route before touching UI:
 | Service affordability and action-time guards | [Service menu affordability guards](Service-Menu-Affordability-Guards) |
 | Command task controls / dormant task system | [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | Gear/EASA/template/cargo partials | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Gear template profile filter](Gear-Template-Profile-Filter), [Vehicle cargo equip loop bounds](Vehicle-Cargo-Equip-Loop-Bounds) |
-| Stale legacy dialogs | [Deep-review findings](Deep-Review-Findings) DR-24 and [Feature status](Feature-Status-Register) |
+| Stale legacy dialogs | [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog-review), [Feature status](Feature-Status-Register) |
 
 ## Continue Reading
 

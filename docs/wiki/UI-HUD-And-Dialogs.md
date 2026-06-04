@@ -11,8 +11,8 @@ Use those pages instead of adding new UI findings here. This alias exists so hum
 
 ## Current UI Cautions
 
-- Live upgrades use `WFBE_UpgradeMenu` and `Client/GUI/GUI_UpgradeMenu.sqf`; the older `RscMenu_Upgrade` path is stale and points at missing `Client/GUI/GUI_Menu_Upgrade.sqf`.
-- `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000`; `RscOverlay` and `OptionsAvailable` both use `idd = 10200`.
+- Live upgrades use `WFBE_UpgradeMenu` and `Client/GUI/GUI_UpgradeMenu.sqf`; the older `RscMenu_Upgrade` path is stale and points at missing `Client/GUI/GUI_Menu_Upgrade.sqf`. Use [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog-review) before deleting or replacing it.
+- `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000`; `RscOverlay` and `OptionsAvailable` both use `idd = 10200`. Use [UI IDD collision repair](UI-IDD-Collision-Repair) before adding `findDisplay`-based UI automation.
 - Gear template helpers live under `Client/Functions`, not `Client/GUI`.
 
 ## Continue Reading
