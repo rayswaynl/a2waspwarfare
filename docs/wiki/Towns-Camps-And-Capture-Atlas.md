@@ -122,6 +122,8 @@ The compact server-owned chain is:
 
 That means ownership is server-owned, but player bounty/funds reactions to those broadcasts still happen client-side in the PVF handlers below.
 
+Mini-scout follow-up 2026-06-04 also checked commander voting adjacency. No direct source path was found from town/camp capture events into commander election state. `RequestCommanderVote.sqf:8-22`, `RequestNewCommander.sqf:8-14`, `Server_VoteForCommander.sqf:16-57` and the vote menus are separate commander-flow plumbing; town capture affects economy, defenses, camps and markers, not commander assignment.
+
 ## Camp Capture
 
 Camps are not handled by one script per camp anymore. `server_town_camp.sqf` registers each town's camps into `WFBE_SE_TownCampWorkers`, then keeps exactly one global camp manager alive (`:8-14`).

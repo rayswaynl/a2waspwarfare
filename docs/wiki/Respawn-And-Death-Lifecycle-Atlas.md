@@ -56,6 +56,11 @@ flowchart TD
 | Threeway defender towns | `Client_GetRespawnAvailable.sqf:67-76`; `Common_GetRespawnThreeway.sqf:6-8`. | Not seen in AI respawn scripts except via camps. | Defender can respawn in fully-held side towns in threeway mode. |
 | Camps | `Client_GetRespawnAvailable.sqf:78-81`; `Common_GetRespawnCamps.sqf:11-94`. | `AI_AdvancedRespawn.sqf:37-40`; `AI_SquadRespawn.sqf:36-39`. | Modes: classic, nearby camps, defender-only; optional hostile safe-radius rules. |
 
+Mini-scout follow-up 2026-06-04 confirmed two practical spawn-table caveats:
+
+- Service Point and Command Center base respawns are explicitly commented out in `Client_GetRespawnAvailable.sqf:23-26`; the live base set is HQ plus Barracks/Light/Heavy/Air factories.
+- Mobile respawn is conditional, not just object-based: `Client_GetRespawnAvailable.sqf:33-45` requires an ambulance-class vehicle inside the upgrade-gated range and with free cargo space before it enters the candidate list. Camp availability has its own hostile-safe filtering in `Common_GetRespawnCamps.sqf:11-94`.
+
 No revive framework is wired in the audited source. The 2026-06-04 respawn scout found no mission-script `revive`/`reviving`/`revived` path under source Chernarus, and the live architecture is kill event, custom death camera, respawn menu, then `Client_OnRespawnHandler.sqf`. Do not document MASH as a revive feature; it is a respawn candidate source with a dead marker-sharing edge.
 
 ## Gear And Penalty Rules
@@ -125,6 +130,8 @@ Both server AI paths:
 Team respawn state is `group setVariable ["wfbe_respawn", _respawn, true]` via `Common_SetTeamRespawn.sqf:1-8`; groups are initialized with blank respawn in `Server/Init/Init_Server.sqf:474-483`.
 
 AI loadout tier note: both AI respawn paths currently read `_upgrades select 13`, which matches `WFBE_UP_GEAR = 13` in `Common/Init/Init_CommonConstants.sqf:50`. Future cleanup should use the named constant, clamp the selected tier to available `WFBE_%SIDE_AI_Loadout_0..3` arrays and guard empty arrays before `random count`.
+
+There are two distinct AI leader respawn implementations. `AI_AddMultiplayerRespawnEH.sqf:1` routes non-player MPRespawn events to `AI_AdvancedRespawn.sqf`, while `AI_SquadRespawn.sqf:14-111` runs a loop for non-player team leaders. Treat this as parity-sensitive when changing camp/mobile/HQ fallback rules.
 
 ## Kill Scoring And Cleanup
 

@@ -209,6 +209,8 @@ There is no refund on the destroyed-factory abort path. The menu deducts funds a
 
 Important authority note: no server PVF request is sent for this player purchase. There is no `Server/PVFunctions/RequestBuyUnit.sqf` or `Server/PVFunctions/RequestBuildUnit.sqf` in the current source, and neither request is registered in `Init_PublicVariables.sqf`.
 
+Mini-scout follow-up 2026-06-04 rechecked the static footprint: `Init_Client.sqf:52` compiles `BuildUnit`, `GUI_Menu_BuyUnits.sqf:155` spawns it for player purchases, and `Init_Server.sqf:10` only compiles `AIBuyUnit = Server_BuyUnit.sqf`. A source grep found no active `RequestBuyUnit`/`RequestBuildUnit` PVF path and no static caller for `AIBuyUnit` beyond the compile. `Server_BuyUnit.sqf:12-17,47-55,78-83` repeatedly exits or cleans up when the team leader is a player, which matches a latent/AI helper rather than a player purchase authority surface.
+
 ## Queue Model
 
 There are two queue concepts:

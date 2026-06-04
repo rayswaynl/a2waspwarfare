@@ -182,6 +182,18 @@ This lane tracks direct channels, PVF authority boundaries, and JIP semantics th
 | CoIn border TODO | `Client/Module/CoIn/coin_interface.sqf` notes temporary border logic should move if logic position changes. | Construction UI risk. |
 | AI attack radio/combat tuning | `Server_AI_SetTownAttackPath.sqf` TODOs mention combat mode, speed and radio on waypoint completion. | Enhancement backlog. |
 
+## Mini Scout Wave: Towns / Construction / Respawn / Supports / AI / Runtime (2026-06-04)
+
+This wave used cheap mini explorers after GPT-5.3-Codex-Spark quota bounced the first two scouts. Codex source-checked the strongest claims before promotion; no gameplay source changed.
+
+| Finding | Status | Canonical route |
+| --- | --- | --- |
+| `RequestSpecial` `upgrade-sync` reads side from `_args` but id/level from `_this`, unlike the surrounding tag handlers. | Fragile branch / patch-ready cleanup. | [Support specials](Support-Specials-And-Tactical-Modules-Atlas) |
+| `Construction_SmallSite.sqf` keeps the add/add `wfbe_structures_logic` completion shape while `Construction_MediumSite.sqf` uses add/remove. | Confirmed bug candidate; source-unpatched. | [Construction and CoIn](Construction-And-CoIn-Systems-Atlas), [Construction logic list cleanup](Construction-Logic-List-Cleanup) |
+| Stable master order plumbing is human-commanded state plus waypoint helpers, not a proven autonomous commander scheduler. | Partial feature; avoid "AI commander is live" wording for stable master. | [AI commander autonomy audit](AI-Commander-Autonomy-Audit) |
+| Respawn candidates are conditional: service point/command center are commented out, mobile respawn requires free cargo and upgrade-gated range, and camp candidates have their own hostile-safe filtering. | Working with caveats; docs clarified. | [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas) |
+| Server runtime loops start from one dense `Init_Server.sqf` hub; dormant `UpdateSupplyTruck` and `groupsMonitor` hooks remain visible. | Runtime-maintenance caution. | [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) |
+
 ## Broken Feature Candidate: AI Supply Logistics
 
 This is the clearest broken/abandoned feature. `AI_UpdateSupplyTruck.sqf` is present and loops over `wfbe_ai_supplytrucks`, but it cannot run correctly because the compile is disabled and the referenced `supplytruck.fsm` is absent. PR #1 correctly defers autonomous supply helicopters because the AI logistics base is incomplete.

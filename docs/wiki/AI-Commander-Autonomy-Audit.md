@@ -69,6 +69,17 @@ Branch-only review risks:
 | AI unit production scheduler | `AIBuyUnit` is compiled, but source search found no static caller outside `Server_BuyUnit.sqf` itself. | AI commander unit production needs an intentional design, not just a docs claim. |
 | AI commander movement scheduler | `WFBE_C_AI_COMMANDER_MOVE_INTERVALS` exists, but no audited source path uses it to move/command teams. | Treat movement autonomy as missing until a source owner is found or implemented. |
 
+## Stable Master Order Plumbing
+
+Mini-scout follow-up 2026-06-04 separated live order plumbing from missing autonomy:
+
+- `Client/GUI/GUI_Menu_Command.sqf:19,270,298,305,428` exposes the human commander order surface and writes replicated team state.
+- `Common_SetTeamMoveMode.sqf:8` and `Common_SetTeamMovePos.sqf:8` set `wfbe_teammode` / `wfbe_teamgoto`; they store intent, they do not execute missions by themselves.
+- Waypoint execution lives in helpers such as `Server/AI/Orders/AI_MoveTo.sqf:13-17`, `AI_Patrol.sqf:14`, `AI_TownPatrol.sqf:23` and `Common_WaypointsAdd.sqf:18`.
+- `Server_UpdateTeam.sqf:5` is shallow behavior randomization, not a full order scheduler.
+
+The safe wording is therefore: stable master has usable order primitives and a human command UI, but no source-proven autonomous commander loop that schedules those primitives for the side.
+
 ## Broken AI Supply Truck Path
 
 The old AI logistics path is config-gated latent breakage:

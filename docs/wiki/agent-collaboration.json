@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T03:48:10+02:00",
+  "generatedAt": "2026-06-04T04:32:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,30 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "mini-scout-wave-towns-construction-respawn-supports-ai-runtime",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus town/camp/vote files",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus factory/construction/repair files",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus respawn/MHQ/camp files",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus support/artillery/UAV/ICBM files",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus AI order/autonomy files",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus server runtime/cleanup/perf files"
+      ],
+      "outputs": [
+        "Closed two failed Spark scout starts after quota limit",
+        "Harvested six cheap mini scouts with source-line reports",
+        "Promoted RequestSpecial upgrade-sync argument-shape risk",
+        "Promoted respawn candidate caveats and no-revive/conditional-spawn clarification",
+        "Promoted player buy/no-PVF confirmation and SmallSite logic-list bug candidate",
+        "Promoted stable-master AI order plumbing versus missing autonomous commander scheduler",
+        "Promoted server runtime startup hub and dormant maintenance-hook notes",
+        "No gameplay source changed"
+      ],
+      "handoff": "This docs batch is validated and ready to push. Future agents can treat the six mini-scout reports as harvested; no active sub-agent output remains pending."
+    },
     {
       "lane": "spark-scout-wave-afk-config-victory-ui-runtime-integrations",
       "owner": "Codex/Sub-agents",

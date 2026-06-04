@@ -18,6 +18,13 @@ Server dispatch starts at `Server/PVFunctions/RequestSpecial.sqf:1`, which forwa
 
 RequestSpecial scout 2026-06-04: the active tag set in source Chernarus is `update-teamleader`, `group-query`, `Paratroops`, `ParaVehi`, `ParaAmmo`, `RespawnST`, `uav`, `upgrade-sync`, `update-clientfps`, `update-town-delegation`, `ICBM`, `process-killed-hq`, `connected-hc` and `repair-camp`. `track-playerobject` has a server switch case around `Server_HandleSpecial.sqf:133-145`, but no active Chernarus `RequestSpecial` caller was found; treat it as an undriven bookkeeping branch unless a later dynamic caller proves otherwise.
 
+Mini-scout follow-up 2026-06-04 tightened the authority map:
+
+- Tactical menu gating is client-side first: `Client/GUI/GUI_Menu_Tactical.sqf:252-283,293-347,463-527` checks funds, upgrades, commander status, UAV state and local cooldowns before requests are sent.
+- Artillery is not a `RequestSpecial` asset-spawn path. `Client_RequestFireMission.sqf:50-72`, `Common_HandleArtillery.sqf:7-85` and `Common_FireArtillery.sqf:7-72` own local cooldown/fire-control/range behavior, with ammo options loaded through `Common_GetArtilleryAmmoOptions.sqf:41-72` and `Common_LoadArtilleryAmmo.sqf:18-53`.
+- UAV is client-spawned and client-paid in `Client/Module/UAV/uav.sqf:15-52`; `Server/Support/Support_UAV.sqf:6-20` mainly monitors and cleans it up.
+- `Server_HandleSpecial.sqf:67-74` has a fragile `upgrade-sync` branch: it reads `_side` from `_args select 1`, then `_upgrade_id` / `_upgrade_level` from `_this select 2/3`. Any caller-shape change can break that branch differently from the other `RequestSpecial` tags.
+
 No live `RequestSupport` symbol was found in source Chernarus during the 2026-06-04 trigger-chain scout; support and special effects route through `RequestSpecial`.
 
 Transport split from the 2026-06-04 supports scout:
@@ -121,6 +128,7 @@ Wave N rechecked the support router and found two source-level traps worth keepi
 | Ordnance guardrails depend on local target state | Test lock/no-lock, pilot/gunner, AI crew, JIP and remote locality cases before tightening bomb or missile restrictions. |
 | AA missile gating is path-dependent | Verify start vehicles, purchased aircraft, client-built aircraft, rearmed aircraft, SAMs and EASA loadouts all pass the same `WFBE_C_GAMEPLAY_AIR_AA_MISSILES` / `WFBE_UP_AIRAAM` policy before calling AA restrictions complete. |
 | RU ammo paradrop config is commented out | Split `Root_RU.sqf:36` so the starting-vehicle comment does not swallow `WFBE_%1PARAAMMO`; smoke RU para-ammo request after the fix. |
+| `upgrade-sync` mixed argument source | Normalize `Server_HandleSpecial.sqf:67-74` to read side/id/level from one payload shape, then smoke upgrade completion synchronization. |
 | Zeta detach missing vehicle arg | Pass `[_vehicle]` when adding the detach action in `Zeta_Hook.sqf`, or revise `Zeta_Unhook.sqf` to find the lifted object safely. |
 | Stale ICBM adjuncts | Either wire the `ICBM_launched` / `NukeIncoming` paths intentionally or remove/document them as dead. If revived, fix the missing `airRaid` sound reference first. |
 | MASH marker flow is split | Reconcile sender, server relay and client receiver, or remove the stale marker relay. |
