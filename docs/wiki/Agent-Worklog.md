@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-04T19:45:00+02:00 - Codex - Spark scout wave release targets / HC / AI caps / economy
+
+- Steff asked for another bunch of Spark scouts. Codex launched six `gpt-5.3-codex-spark` read-only lanes for player AI caps, support authority, UI/dialog hazards, generated/modded release tiers, town/economy/supply edge cases and HC/locality/FPS. The active thread ceiling blocked the seventh lane, so Codex closed completed scouts and refilled a slot with tooling/integrations plus mission lifecycle/init.
+- Returned reports were harvested duplicate-aware. AI caps confirmed the existing Player AI caps page and Discord table; HC/locality confirmed existing failover, static-defense update-back and dual-FPS telemetry pages; economy/town confirmed already-canonical camp flag, patrol latch, side-supply clamp, income-cap and supply-authority rows.
+- New durable delta: `agent-release-readiness.json` no longer collapses modded missions into one wildcard. It now splits release targets into source Chernarus, maintained generated Takistan, branch-only Zargabad candidate and each modded blocked/stub folder, including file counts, conflict-marker hits and missing bootstrap blockers from the scout scan.
+- UI scout delta: the stale old upgrade dialog already had a missing controller file documented; Codex added the matching missing `Client\Images\wf_*.paa` icon references from `Dialogs.hpp:2634-2821` to [Client UI systems](Client-UI-Systems-Atlas), [Client UI/HUD](Client-UI-HUD-And-Menus) and [UI IDD collision repair](UI-IDD-Collision-Repair).
+- Updated [Tooling release readiness audit](Tooling-Release-Readiness-Audit) to mark the generated-target tiering backlog item done. Documentation/status only; no gameplay source files were edited.
+
 ## 2026-06-04T16:05:00+02:00 - Codex - AI commander branch-head refresh and Spark scout wave
 
 - Steff asked for another bunch of Spark scouts. Codex launched narrow read-only Spark lanes for feature status evidence, mission entrypoints, PV/networking, UI/dialogs, tooling/integrations, generated/modded drift, dead references, economy/town loops, support authority and player-AI caps.

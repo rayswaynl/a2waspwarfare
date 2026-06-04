@@ -1,20 +1,171 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-04T01:05:00+02:00",
-  "lastVerifiedAt": "2026-06-04T01:05:00+02:00",
+  "generatedAt": "2026-06-04T19:35:05+02:00",
+  "lastVerifiedAt": "2026-06-04T19:35:05+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
   "generatedTargets": [
     {
-      "path": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
-      "status": "maintained-generated-target"
+      "path": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+      "tier": "authoritative-source",
+      "status": "edit-source-mission",
+      "releaseGate": "Edit here first, then prove maintained generated targets carry intended fixes before release wording."
     },
     {
-      "path": "Modded_Missions/*",
-      "status": "not-currently-maintained-by-generation-workflow"
+      "path": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+      "tier": "maintained-generated",
+      "status": "maintained-generated-target",
+      "maintenanceModel": "LoadoutManager writes/copied outputs for Vanilla Takistan while preserving documented terrain skips and SET_MAP differences.",
+      "releaseGate": "Run or inspect LoadoutManager propagation, verify generated version.sqf, inspect generated diffs and smoke Arma 2 OA before release wording."
+    },
+    {
+      "path": "origin/feature/zargabad-map:Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad",
+      "tier": "branch-only-candidate-generated",
+      "status": "not-in-stable-master-candidate-target",
+      "releaseGate": "Use the Zargabad branch audit; static validation passed on e9294ede, but runtime, screenshot, RPT, HC/JIP and whitespace gates remain open."
+    },
+    {
+      "path": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+      "tier": "divergent-boot-incomplete-fork",
+      "status": "not-release-target",
+      "fileCount": 502,
+      "conflictMarkerHits": 27,
+      "missingBootstrap": [
+        "version.sqf",
+        "loadScreen.jpg"
+      ],
+      "blockers": [
+        "modded generation call remains commented in Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs:132",
+        "ZipManager packages Missions and Missions_Vanilla only at Tools/LoadoutManager/ZipManager.cs:16",
+        "tracked version.sqf, stringtable.xml, loadScreen.jpg, Sounds/description.ext and Music/description.ext are absent",
+        "unresolved conflict markers exist in Client/Action/Action_RepairMHQ.sqf, Client/Module/Skill/* and Common/Config/Core_Structures/Structures_CO_RU.sqf",
+        "Common/Init/Init_Common.sqf compiles Common/Functions/Common_GetTotalCamps.sqf, but that helper is absent in the tracked fork"
+      ],
+      "releaseGate": "Regenerate or repair bootstrap, generated inputs, missing helpers and conflict markers before treating as runnable."
+    },
+    {
+      "path": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+      "tier": "hard-boot-blocked-fork",
+      "status": "not-release-target",
+      "fileCount": 438,
+      "conflictMarkerHits": 48,
+      "missingBootstrap": [
+        "mission.sqm",
+        "description.ext",
+        "initJIPCompatible.sqf",
+        "version.sqf",
+        "loadScreen.jpg"
+      ],
+      "blockers": [
+        "tracked description.ext and mission.sqm are absent",
+        "tracked initJIPCompatible.sqf, version.sqf, stringtable.xml, loadScreen.jpg, Sounds/description.ext and Music/description.ext are absent",
+        "unresolved conflict markers exist in Client/Client_UpdateRHUD.sqf, Client/Module/Nuke/nukeincoming.sqf and several Common/Config roots",
+        "Common/Init/Init_Common.sqf compiles Common/Functions/Common_GetTotalCamps.sqf, but that helper is absent in the tracked fork"
+      ],
+      "releaseGate": "Treat as archival or regenerate from a known-good terrain profile before any pack/test claim."
+    },
+    {
+      "path": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+      "tier": "divergent-boot-incomplete-fork",
+      "status": "not-release-target",
+      "fileCount": 507,
+      "conflictMarkerHits": 15,
+      "missingBootstrap": [
+        "mission.sqm",
+        "version.sqf",
+        "loadScreen.jpg"
+      ],
+      "blockers": [
+        "description.ext includes version.sqf, Sounds and Music, but tracked version.sqf, stringtable.xml, loadScreen.jpg, mission.sqm, Sounds/description.ext and Music/description.ext are absent",
+        "description.ext and multiple SQF/config files contain unresolved conflict markers",
+        "Common/Init/Init_Common.sqf compiles Common/Functions/Common_GetTotalCamps.sqf, but that helper is absent in the tracked fork"
+      ],
+      "releaseGate": "Resolve conflict markers, restore bootstrap/generated inputs and repair missing common helpers before any runnable claim."
+    },
+    {
+      "path": "Modded_Missions/[55-2hc]warfarev2_073v48co.smd_sahrani_a2",
+      "tier": "skeletal-stub",
+      "status": "not-release-target",
+      "fileCount": 4,
+      "conflictMarkerHits": 0,
+      "missingBootstrap": [
+        "mission.sqm",
+        "description.ext",
+        "initJIPCompatible.sqf",
+        "version.sqf",
+        "loadScreen.jpg"
+      ],
+      "blockers": [
+        "tracked folder is an overlay/stub, not a complete mission root",
+        "core mission bootstrap and generated inputs are absent from the tracked folder"
+      ],
+      "releaseGate": "Either regenerate into a complete mission root or document as retired/archive-only."
+    },
+    {
+      "path": "Modded_Missions/[55-2hc]warfarev2_073v48co.tavi",
+      "tier": "skeletal-stub",
+      "status": "not-release-target",
+      "fileCount": 3,
+      "conflictMarkerHits": 0,
+      "missingBootstrap": [
+        "description.ext",
+        "initJIPCompatible.sqf",
+        "version.sqf",
+        "loadScreen.jpg"
+      ],
+      "blockers": [
+        "tracked folder is an overlay/stub, not a complete mission root",
+        "core mission bootstrap and generated inputs are absent from the tracked folder"
+      ],
+      "releaseGate": "Either regenerate into a complete mission root or document as retired/archive-only."
+    },
+    {
+      "path": "Modded_Missions/[61-2hc]warfarev2_073v48co.dingor",
+      "tier": "overlay-stub",
+      "status": "not-release-target",
+      "fileCount": 20,
+      "conflictMarkerHits": 0,
+      "missingBootstrap": [
+        "mission.sqm",
+        "initJIPCompatible.sqf",
+        "version.sqf",
+        "briefing.sqf",
+        "loadScreen.jpg"
+      ],
+      "blockers": [
+        "description.ext includes version.sqf, but tracked version.sqf is absent",
+        "mission.sqm, initJIPCompatible.sqf, server init and Sounds are absent from the tracked folder"
+      ],
+      "releaseGate": "Restore complete bootstrap and generated inputs before calling Dingor runnable."
+    },
+    {
+      "path": "Modded_Missions/[61-2hc]warfarev2_073v48co.isladuala",
+      "tier": "skeletal-stub",
+      "status": "not-release-target",
+      "fileCount": 1,
+      "conflictMarkerHits": 0,
+      "missingBootstrap": [
+        "mission.sqm",
+        "description.ext",
+        "initJIPCompatible.sqf",
+        "version.sqf",
+        "briefing.sqf",
+        "loadScreen.jpg"
+      ],
+      "blockers": [
+        "tracked folder is an overlay/stub, not a complete mission root",
+        "core mission bootstrap and generated inputs are absent from the tracked folder"
+      ],
+      "releaseGate": "Either regenerate into a complete mission root or document as retired/archive-only."
     }
   ],
+  "generatedTargetPolicy": {
+    "defaultReleaseScope": "Stable release claims cover source Chernarus plus maintained generated Vanilla Takistan unless a branch-specific audit says otherwise.",
+    "moddedReleaseGate": "Do not claim Modded_Missions support while modded generation is commented, packaging omits Modded_Missions, generated version.sqf files are absent and conflict/bootstrap blockers remain.",
+    "freshCheckoutGate": "Because version.sqf is git-ignored but included by mission boot files, every target mission root needs generated version.sqf verification before pack/test claims.",
+    "packagingScope": "While Tools/LoadoutManager/ZipManager.cs:16 remains unchanged, _MISSIONS.7z packaging is expected to include Missions and Missions_Vanilla, not Modded_Missions."
+  },
   "toolingGate": {
     "tool": "Tools/LoadoutManager",
     "requirement": "Run from a checkout with either an ancestor folder named a2waspwarfare or repo-root markers: Missions, Missions_Vanilla and Tools/LoadoutManager/LoadoutManager.csproj.",
