@@ -25,7 +25,7 @@ Important startup nuance from the 2026-06-04 integration scout: `ProgramRuntime.
 
 Claude Round 16 verified that `DiscordBot/preferences_sample.json` currently includes concrete sample IDs (`GuildID`, `AuthorizedUserIDs`) plus the production-style `DataSourcePath`. `DiscordBot/FileConfiguration.cs` also has `DataSourcePath`/`botconfig.json` support, but the active status-data reader bypasses it: `DiscordBot/src/ExtensionData/GameData/GameData.cs` resolves `Preferences.Instance.DataSourcePath ?? C:\a2waspwarfare\Data`. Static usage review found only `FileConfiguration.LogsPath` used by the live logging path, not by the live game-status JSON reader. Deployment should choose one source of truth for the data path; until then, prefer `preferences.json` for the live bot and treat `botconfig.json` support as secondary/ambiguous.
 
-No token is committed, which is good. Still, treat the sample identifiers and hardcoded path as governance cleanup:
+No token is committed, which is good. `.logs/`, `token.txt` and `preferences.json` are ignored, but `botconfig.json` is not currently ignored; keep live secrets, IDs and host paths out of that helper unless config ownership is cleaned up. Still, treat the sample identifiers and hardcoded path as governance cleanup:
 
 - replace real-looking sample IDs with obvious placeholders;
 - prefer one config-loading path instead of multiple fallbacks;

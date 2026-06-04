@@ -20,6 +20,8 @@ This is the quick-reference gateway for client UI work. Start with the [player U
 - Treat any UI change that touches score, funds, supply, structures, upgrades, support, loadouts, HQ state or vehicle creation as a networking/economy change too.
 - Do not assume dialog IDs are unique: `RscMenu_EASA` and `RscMenu_Economy` share `idd = 23000`, and `RscOverlay` / `OptionsAvailable` both use `idd = 10200`.
 - Economy menu startup writes to `23004`/`23005`/`23006`, but the audited `RscMenu_Economy` control block does not declare those IDs; smoke disabled-state behavior before reusing this menu as a commander-control template.
+- Economy map-sell also has a stale-click risk: `GUI_Menu_Economy.sqf:10` does not reset `mouseButtonUp`, but `:101-106` consumes it for map sell. Reset the latch if touching Economy map controls.
+- EASA should close or recover on unsupported/stale vehicles: `GUI_Menu_EASA.sqf:3-4` exits early when the current vehicle type is not in `WFBE_EASA_Vehicles`, while the dialog may remain open from a stale service-menu context.
 - Do not reuse `currentCutDisplay` for unrelated title resources: current source lets `OptionsAvailable`/RHUD/action icons and `EndOfGameStats` share that key, so endgame display work needs the [UI IDD collision repair](UI-IDD-Collision-Repair) handle split as well as IDD cleanup.
 - Keep polling menu loops and marker/HUD loops light; reuse cached display handles and existing update flags.
 - Headless clients do not run the UI init path; "HC" calls inside `updateclient.sqf` are high-command player UI controls, not headless-client rendering.
@@ -37,6 +39,8 @@ This is the quick-reference gateway for client UI work. Start with the [player U
 | DR-28 | Gear, EASA and service spend/effect paths are client-authoritative. | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
 | Duplicate IDDs/display handles | EASA/Economy share `23000`; overlay/title resources share `10200`; `OptionsAvailable` and `EndOfGameStats` both use `currentCutDisplay`. | [Client UI systems atlas](Client-UI-Systems-Atlas), [UI IDD collision repair](UI-IDD-Collision-Repair) |
 | Economy dialog missing controls | `GUI_Menu_Economy.sqf:7-8` targets `23004`/`23005`/`23006`, absent from audited `RscMenu_Economy` controls. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| Economy map-sell stale mouse latch | `GUI_Menu_Economy.sqf:10` does not reset `mouseButtonUp`; `:101-106` consumes it for map sell. | [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map) |
+| EASA unsupported-vehicle fail-open | `GUI_Menu_EASA.sqf:3-4` exits on unsupported current vehicle without closing the dialog. | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
 | Command task partial | Commander task controls are visible, but the `SetTask` send path is commented out. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | Main-menu GPS zoom orphan route | `GUI_Menu.sqf` still handles `MenuAction == 17/18`, but the current `WF_Menu` controls expose actions `1-13`, `16` and `19` only. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | Help dialog unload mismatch | `RscMenu_Help` sets `dialog_HelpPanel` on load but clears `cti_dialog_ui_onlinehelpmenu` on unload, and `GUI_Menu_Help.sqf` has no unload case. | [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map) |

@@ -41,7 +41,9 @@ Before running tooling or deployment-adjacent pieces, check these first:
 | Checkout path resolves to the repo root. | LoadoutManager accepts either an ancestor named `a2waspwarfare` or root markers: `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`. |
 | `A2WASP_SKIP_ZIP=1` is set for propagation-only runs. | Skips `_MISSIONS.7z` packaging and avoids a packaging-only `7za` dependency during docs/code propagation work. |
 | `7za` is configured and available if packaging is required. | Required only when producing `_MISSIONS.7z` release archives. |
+| Existing `_MISSIONS.7z` is disposable or backed up before packaging. | `ZipManager.cs:26-33` deletes the existing archive before proving a new archive was created, while `ZipManager.cs:77-91` prints `7za` output without an exit-code gate. Keep a rollback copy before release packing. |
 | `version.sqf` exists for the mission being packed/tested. | It is generated and git-ignored, but included by `description.ext` and `initJIPCompatible.sqf`. |
+| Generated aircraft damage insertion markers still exist. | `BaseTerrain.cs:84-86` writes `Common_ModifyAirVehicle.sqf` through marker replacement, and `FileManager.cs:224-247` only logs missing marker content. A marker drift can produce a soft generator warning instead of a clear release failure. |
 | `Missions_Vanilla` is not confused with the `VANILLA` macro. | The folder name is a generated target label; the `#ifndef VANILLA` preprocessor gate in `description.ext` / `Rsc/Header.hpp` controls OA/CO config behavior inside mission headers. |
 | `stringtable.xml` and `loadScreen.jpg` exist for the mission being packed/tested. | They are ordinary runtime assets for playable mission roots; modded forks may lack them even when their `description.ext` includes generated/sound/music dependencies. |
 | Generated `version.sqf` has the intended release flags. | Current local generated files can contain debug/log-enabled values; inspect `WF_DEBUG` and `WF_LOG_CONTENT` before packaging a public release. |
@@ -68,6 +70,8 @@ Before running tooling or deployment-adjacent pieces, check these first:
 | `Server/Init/Init_Server.sqf` | copied **then patched** | `SET_MAP 1 → 2` rewrite post-copy. |
 
 A recursive diff in [Deep-review findings](Deep-Review-Findings) DR-4 confirmed vanilla Takistan has no accidental drift outside this skip-list/blacklist and the `SET_MAP` rewrite. If you edit a skip-listed gameplay file, especially `mission.sqm` or `WASP/unsort/StartVeh.sqf`, hand-mirror it instead of assuming `dotnet run` will propagate it.
+
+Takistan blacklist caveat: `FileManager.cs:22-37` applies the directory blacklist when the destination path contains `co.takistan`. If future generated target names change away from that substring, re-test the blacklist before trusting artillery/config/texture propagation behavior.
 
 Sync blast radius: LoadoutManager also deletes destination files and directories that do not exist in the source copy (`FileManager.cs:116-119,123-136`). Treat generated mission trees as disposable outputs. Manual edits or extra assets placed only in `Missions_Vanilla/*` can be removed by a later propagation run unless the generator/source tree owns them.
 
@@ -138,8 +142,9 @@ Use it after performance-sensitive mission changes or live-server audits.
 - `7za` environment variable points to `7za.exe`.
 - `ZipManager` packages mission directories after copy/generation and currently zips only `Missions` plus `Missions_Vanilla`, not `Modded_Missions`.
 - Missing `7za` causes the final packaging step to throw unless `A2WASP_SKIP_ZIP=1` is set; inspect generated/copied files before assuming the whole run did nothing.
-- Packaging success is not a strong release proof by itself: `ZipManager.cs:77-92` starts `7za` and prints the output but does not currently gate success on the process exit code. Confirm `_MISSIONS.7z` exists, has the expected mission folders and was produced by a successful 7-Zip run before calling a release archive complete.
+- Packaging success is not a strong release proof by itself: `ZipManager.cs:26-33` deletes an existing `_MISSIONS.7z`, `ZipManager.cs:34-44` stages a temp mission-copy directory, and `ZipManager.cs:77-92` starts `7za` and prints output but does not currently gate success on the process exit code. Confirm `_MISSIONS.7z` exists, has the expected mission folders and was produced by a successful 7-Zip run before calling a release archive complete.
 - File replacement warnings can still hard-fail later: `BaseTerrain.cs:275-301` logs "File not found!" for a missing expected file and then still calls `File.ReadAllText` on the same path. Treat missing replacement targets as real generator failures, not harmless warnings.
+- Generated aircraft damage insertion is marker-based: `BaseTerrain.cs:84-86` wires `Common_ModifyAirVehicle.sqf`, and `FileManager.cs:224-247` prints missing-content warnings without failing the run. Keep a marker-contract check in release validation before changing generated aircraft damage logic.
 - The source Chernarus mission is copied to target terrain folders, and extra destination-only files/directories can be deleted during sync (`FileManager.cs:116-119,123-136`). Avoid manual changes in generated targets unless the generator is being updated; snapshot generated mission trees before risky propagation runs.
 - `The specified content was not found in the file.` during the current run comes from the terrain help-menu title replacement path and did not stop Chernarus/Takistan generation/copy.
 - For the exact `version.sqf` -> `description.ext` / `Rsc/Header.hpp` / `initJIPCompatible.sqf` contract, use [Mission config/version include graph](Mission-Config-Version-Include-Graph).

@@ -30,6 +30,9 @@ Canonical companion pages are [Tools/build workflow](Tools-And-Build-Workflow), 
 | P1 | Docs CI validates wiki structure, not build/drift/security. | `.github/workflows/docs.yml:25-46`; `docs/validate-wiki.ps1:63-111` | Add separate build/drift/security checks rather than overloading docs validation. |
 | P2 | Modded release posture is cautious and source-consistent. | `Tools-And-Build-Workflow.md:63`, `:72-74`; `agent-release-readiness.json:14-15`; `SqfFileGenerator.cs:132-133`; `ZipManager.cs:16`; `rg -l "<<<<<<<|=======|>>>>>>>" Modded_Missions` finds 18 files. | Keep Modded_Missions out of generated-propagation claims unless generation is intentionally restored and conflict/bootstrap cleanup is validated. |
 | P2 | Packaging and replacement paths have operator-footgun behavior. | `ZipManager.cs:77-92` does not gate success on the `7za` exit code; `BaseTerrain.cs:275-301` warns on missing replacement files but still reads the missing path. | Add exit-code checks and fail-fast missing-file handling before relying on tool output as release evidence. |
+| P2 | Packaging can remove the last archive before proving the new archive exists. | `ZipManager.cs:26-33` deletes the existing `_MISSIONS.7z`; `ZipManager.cs:34-46` creates a temporary copy tree; `ZipManager.cs:77-92` does not gate on the 7-Zip exit code. | Keep rollback copies, add try/finally temp cleanup, and fail packaging on non-zero `7za` exit before release use. |
+| P2 | Aircraft damage generation depends on a marker contract. | `BaseTerrain.cs:84-86` registers `Common_ModifyAirVehicle.sqf` for generated insertion; `FileManager.cs:224-247` logs missing marker content instead of failing. | Add a release validator for marker presence or fail generation when required insertion content is absent. |
+| P3 | Takistan directory blacklist depends on target path naming. | `FileManager.cs:22-37` applies `Core_Artillery`, `Server\Config` and `Textures` blacklist behavior when the destination path contains `co.takistan`. | Re-test blacklist behavior before renaming generated target directories or adding new terrain folder patterns. |
 
 ## Integration Risk Table
 
@@ -104,6 +107,9 @@ rg --files | rg "(^|/)(publicvariable\.txt|scripts\.txt|server\.cfg|basic\.cfg)$
 | P2 | Record current Takistan comparable drift and modded drift posture in [Tools/build workflow](Tools-And-Build-Workflow) or [Source fix propagation queue](Source-Fix-Propagation-Queue). |
 | P2 | Add GlobalGameStats fixture tests for the five-slot contract documented above, plus malformed/empty-field and no-HC/multi-HC cases. |
 | P2 | Note that `DiscordBot/FileConfiguration.cs` exists while active status JSON reader uses `Preferences.Instance.DataSourcePath ?? C:\a2waspwarfare\Data`. |
+| P2 | Choose and document ownership for `botconfig.json` versus `preferences.json`; do not leave both looking authoritative. |
+| P2 | Add a LoadoutManager packaging validator for `_MISSIONS.7z` existence, mission folder membership and non-zero `7za` exit handling. |
+| P3 | Add a marker-contract validator for generated aircraft damage insertion before changing `Common_ModifyAirVehicle.sqf`. |
 | P3 | Replace concrete `preferences_sample.json` snowflakes with placeholders. |
 
 ## Continue Reading

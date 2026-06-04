@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-04T13:10:00+02:00 - Codex - mini scout wave Quad AI/support/lifecycle/UI/tooling/upstream
+
+- Steff asked for more Spark scouts. Three GPT-5.3-Codex-Spark starts hit quota until 13:06 and were closed; Codex launched six `gpt-5.4-mini` read-only fallback scouts for Quad AI Commander branch intel, support/RequestSpecial authority, lifecycle/server-loop topology, UI/dialog lifecycle, tooling/release/deploy footguns and upstream/community-dev lessons.
+- All fallback scouts returned and were closed. Codex harvested source-backed non-duplicate deltas and left duplicate confirmations in the source-backed canonical pages.
+- Updated [Quad AI Commander](Quad-AI-Commander), [AI commander audit](AI-Commander-Autonomy-Audit), [Home](Home), [_Sidebar](_Sidebar), [client UI systems](Client-UI-Systems-Atlas), [client UI/HUD](Client-UI-HUD-And-Menus), [player UI workflow](Player-UI-Workflow-Map), [gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas), [support specials](Support-Specials-And-Tactical-Modules-Atlas), [server authority migration](Server-Authority-Migration-Map), [tools/build workflow](Tools-And-Build-Workflow), [tooling release readiness](Tooling-Release-Readiness-Audit), [external integrations](External-Integrations), [server ops](Server-Ops-Runbook), [developer history](Developer-History-And-Upstream-Lessons), [server runtime](Server-Gameplay-Runtime-Atlas), [performance sweep](Performance-Opportunity-Sweep) and machine coordination files.
+- Key source-backed additions: Quad AI Commander is branch/design evidence, not stable behavior; support effects still trust client-provided side/team/object payloads; Economy/EASA UI has stale-state and fail-open dialog risks; LoadoutManager packaging deletes an old archive before proving a new one and does not gate `7za` exit; `botconfig.json` ownership is ambiguous; AntiStack loop evidence belongs to the current `Missions` tree and should stay measurement-first.
+- Validation is pending for this local harvest. Documentation only; no gameplay source files were edited.
+
 ## 2026-06-04T12:10:00+02:00 - Codex - mini scout wave town/respawn/upstream/performance
 
 - Steff asked for more Spark scouts. Two GPT-5.3-Codex-Spark starts hit quota, so Codex relaunched four `gpt-5.4-mini` read-only scouts for town/economy loops, respawn/gear/EASA/MASH, upstream developer-history mining and performance/loop topology; a fifth mission-config scout was blocked by the active-agent ceiling.

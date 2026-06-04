@@ -27,6 +27,13 @@ Mini-scout follow-up 2026-06-04 tightened the authority map:
 - UAV is client-spawned and client-paid in `Client/Module/UAV/uav.sqf:15-52`; `Server/Support/Support_UAV.sqf:6-20` mainly monitors and cleans it up.
 - `Server_HandleSpecial.sqf:67-74` has a fragile `upgrade-sync` branch: it reads `_side` from `_args select 1`, then `_upgrade_id` / `_upgrade_level` from `_this select 2/3`. Any caller-shape change can break that branch differently from the other `RequestSpecial` tags.
 
+Support-authority scout 2026-06-04 sharpened the non-ICBM payload-trust cases:
+
+- Paratrooper support passes payload `_playerTeam` into `Support_Paratroopers.sqf`; the dropped infantry are created into that team and the marker callback targets `leader _playerTeam`. A forged or stale team payload is therefore not just a notification issue.
+- `RespawnST` is called from `GUI_Menu_Economy.sqf:91-96` with `sideJoined`, while `Server_HandleSpecial.sqf:55-60` trusts the payload side and damages every current `wfbe_ai_supplytrucks` entry for that side. Treat wrong-side forged respawn requests as part of the non-ICBM support authority lane.
+- Camp repair action scripts send `["repair-camp", _camp, WFBE_Client_SideID]`; `Server_HandleSpecial.sqf:147-168` trusts the camp object and repair-side payload when changing camp `sideID` and broadcasting `CampCaptured`.
+- Old UAV cleanup is server-observed but client-created/client-paid: `Client/Module/UAV/uav.sqf:27-52` owns spawn/debit, and `Support_UAV.sqf:6-20` mainly tracks/cleans the payload object.
+
 No live `RequestSupport` symbol was found in source Chernarus during the 2026-06-04 trigger-chain scout; support and special effects route through `RequestSpecial`.
 
 Transport split from the 2026-06-04 supports scout:
@@ -53,7 +60,7 @@ Adjacent server runtime surfaces: grouped base areas are enabled only when `WFBE
 | ZetaCargo/airlift | Broken/partial | Hook attaches nearby unmanned land vehicle; detach action does not pass the lifted vehicle even though unhook expects it. |
 | Service menu | Working/partial | Repair/refuel/rearm/heal effects and deductions are client-side; local support scripts recheck world state but not full money authority. |
 | Supply mission | Partial | Server validates return proximity but trusts client-set `SupplyFromTown` / `SupplyAmount`. |
-| Supply truck respawn | Partial/unclear | Economy menu requests `RequestSpecial ["RespawnST", sideJoined]`; `Server_HandleSpecial.sqf:55-60` damages current `wfbe_ai_supplytrucks`, but actual recreation depends on the broken/config-gated `UpdateSupplyTruck` path. |
+| Supply truck respawn | Partial/unclear | Economy menu requests `RequestSpecial ["RespawnST", sideJoined]`; `Server_HandleSpecial.sqf:55-60` trusts the payload side and damages current `wfbe_ai_supplytrucks` for that side, but actual recreation depends on the broken/config-gated `UpdateSupplyTruck` path. |
 
 ## Server Dispatch And PV Paths
 

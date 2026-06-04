@@ -19,6 +19,8 @@ This atlas maps long-running server gameplay loops and runtime surfaces that fut
 
 Mini-scout follow-up 2026-06-04 mapped the startup cluster around `Server/Init/Init_Server.sqf:507-626`: town runtime, town AI, victory, resources, garbage and empty-vehicle collectors, cleaner/restorer workers, server FPS publishers, Performance Audit, AFK kick, AntiStack loops, player-count monitor, commander vote workers and day/night control all start from this hub. Runtime edits should therefore be reviewed as a worker set, not as isolated scripts.
 
+Lifecycle correction from the 2026-06-04 scout wave: the current checkout uses `Missions`, not an older `Migrations` path spelling. Current-source AntiStack loop evidence belongs under `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/AntiStack/`: `countPlayerScores.sqf` starts `updateScoreInternal.sqf`, `updateScoreInternal.sqf` runs a no-gameover score update loop, `skillDiffCompensation.sqf` loops while `!WFBE_GameOver`, and `clientHasConnectedAtLaunch` / `hasConnectedAtLaunchACK` form the launch-join ACK handshake. Keep path spelling and loop ownership exact when promoting scout notes into code tasks.
+
 ## SideMessage Pipeline Shape
 
 `SideMessage` is a server-compiled radio wrapper, not the same path as client `LocalizeMessage`. Server init compiles it from `Server/Functions/Server_SideMessage.sqf` (`Server/Init/Init_Server.sqf:32`). The handler reads the side, message key and optional parameters (`Server_SideMessage.sqf:3-5`), resolves the side radio HQ speaker/receiver/topic from side logic (`:7-11`) and then calls `kbTell` through a compact switch (`:13-64`).
@@ -47,6 +49,7 @@ Do not collapse this into `LocalizeMessage`. `LocalizeMessage` is registered as 
 | Direct PV authority | Open hardening | [Public variable channel index](Public-Variable-Channel-Index) |
 | Side-message payload shape | Source-cited runtime surface | Use [SideMessage pipeline shape](#sidemessage-pipeline-shape). `SideMessage` takes different parameter shapes for town, strongpoint, base/construction and no-parameter radio topics; keep it separate from `LocalizeMessage` before adding radio/dubbing or changing message text. |
 | AntiStack/database loops | High-sensitivity | [External integrations](External-Integrations) and [AI, headless and performance](AI-Headless-And-Performance) |
+| AntiStack loop family | Source-cited lifecycle surface | `countPlayerScores`, `updateScoreInternal`, `skillDiffCompensation` and launch ACK workers run from the server startup cluster. Measure and harden DB/loop behavior before changing cadence or join semantics. |
 | Dormant maintenance hooks | `Init_Server.sqf:36` comments `UpdateSupplyTruck`; `:567` comments `groupsMonitor`; `:65,88-92` retain older commented AFK/server-FPS/MASH compile remnants. | Keep disabled hooks documented as historical or deliberately revive them with owner-scoped smoke. |
 
 ## Safe Runtime Rules

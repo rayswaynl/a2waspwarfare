@@ -21,6 +21,8 @@ Autonomous supply trucks are worse than partial: the old `UpdateSupplyTruck` com
 
 `origin/feat/ai-commander` is the current branch-only revival attempt. It changes the status of the branch, not stable `master`: the branch adds a server-side commander supervisor, assignment workers, production worker and explicit order executor, but it is source-Chernarus-only and needs dedicated/JIP/Vanilla smoke before the wiki can call AI commander revived.
 
+Separate concept note: [Quad AI Commander concept](Quad-AI-Commander) indexes `origin/codex/quad-ai-commander` head `3179be6d`. It is a future log/intel/context-store design sketch, not stable source behavior and not proof that AI commander autonomy is implemented.
+
 ## Branch Refresh - `feat/ai-commander`
 
 Snapshot: 2026-06-03. Branch head `4dba060e` splits from `origin/master` at `2cdf5fb8`. Diff from stable master is 9 Chernarus-source files, +366/-5; no `Missions_Vanilla` files are touched.

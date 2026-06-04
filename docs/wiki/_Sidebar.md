@@ -48,6 +48,7 @@
   - [Perf quick wins branch audit](Perf-Quick-Wins-Branch-Audit)
   - [Commander positions branch audit](Commander-Positions-Branch-Audit)
   - [Zargabad branch audit](Zargabad-Branch-Audit)
+  - [Quad AI Commander concept](Quad-AI-Commander)
   - [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit)
   - [Arma 2 OA command versions](Arma-2-OA-Command-Version-Reference)
   - [Wiki source consistency](Wiki-Source-Consistency-Findings)

@@ -129,6 +129,12 @@ Validation:
 
 Patch only after RPT evidence shows these rows dominate. Changing detection cadence or class filters risks gameplay behavior: capture, town activation, despawn and patrol behavior depend on those scans.
 
+### AntiStack And Collector Loops
+
+AntiStack loop candidates are measurement-first, not first-patch simplifications. The server startup cluster launches `countPlayerScores`, `updateScoreInternal`, `skillDiffCompensation` and launch-join ACK workers, while garbage and empty-vehicle collectors drain registries at short cadence. These loops have correctness roles around join balance, skill totals, score persistence, cleanup idempotency and player-occupied object safety.
+
+Do not reduce cadence or remove waits before collecting RPT/DB latency evidence and checking disabled-AntiStack, teamswap, launch join, late join and match-end behavior. For collectors, validate array shape, idempotency flags and crew/player occupancy before optimizing queue drains.
+
 ### Client Marker Loops
 
 `updatetownmarkers.sqf` now caches marker names/text, delays closed-map refreshes, and records skipped text writes. `updateteamsmarkers.sqf` updates only when map/GPS/Warfare UI is visible, throttles AI leader updates to 1 second, and records marker operations.
