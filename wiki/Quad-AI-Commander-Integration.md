@@ -19,6 +19,19 @@ That means Quad AI Commander should be added as a planning and context layer abo
 structured logs -> contact beliefs -> planner priorities -> existing team orders -> executor / town worker
 ```
 
+## Long-Term Handoff
+
+The durable continuation prompt lives in `docs/quad-ai-commander-long-term-goal-prompt.md` on PR #17. Use it when resuming Codex or another implementation assistant so the integration keeps the same objective, evidence gates, branch order, and completion definition.
+
+The short version:
+
+- Do not redefine success as documentation, branch creation, or static review alone.
+- Treat #14 as the execution substrate and prove its runtime behavior first.
+- Keep #18 and #19 draft until their graph refreshes and runtime evidence are complete.
+- Keep Phase 3 planner work behind Phase 2 belief evidence.
+- Keep Phase 4 worker biasing behind Phase 3 advisory evidence and gated off by default.
+- Never claim runtime proof from static code review.
+
 ## Current Stack Status
 
 The staged implementation is currently split across these PRs:
