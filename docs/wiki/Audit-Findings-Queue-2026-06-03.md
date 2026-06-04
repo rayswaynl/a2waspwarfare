@@ -17,6 +17,17 @@ UNVERIFIED rows as *claims to check*, not facts.
 > Earlier sweeps already triaged/partly shipped to PR #8 (logged in the owner's notes, not repeated here):
 > bug pack BQ1-15, perf PF1-16, scrap S1-9 (S1/S5/S9 removed), recycle R1-7 (Tasks→Objective-Ping shipped).
 
+## Current Catch-Up Status
+
+Read this page as a historical audit queue, not as a current master bug register. The source scope is `origin/release/2026-06-feature-bundle` / PR #8 unless a row explicitly says otherwise. For current release decisions, promote only source-checked rows into [Feature status](Feature-Status-Register), [Deep-review findings](Deep-Review-Findings), a subsystem owner page, or [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl).
+
+| Area | Current status | Route |
+| --- | --- | --- |
+| PR #8 shipped branch fixes | `97370acb` fixes SG5, AI7, AI11 and removes the dead AI2 town-mortar chain on `origin/release/2026-06-feature-bundle`; `0bb16513` fixes V2, AI1 and AI8 on that same branch. Do not claim these are on current `master` without checking the branch head. | PR #8 / release branch evidence; mirror into owner pages only if the branch is merged or selected for release. |
+| Corrections and non-issues | V2 is real but low-impact/idempotent; AI8 is branch-fixed but later scout notes classify `Server_BuyUnit.sqf` as latent/dead `AIBuyUnit` code rather than the player-buy path; NJ11 is real but lower risk because of in-tick/client gating; AI15 is a non-issue; AI17 is a false positive. | Keep as false-positive/nuance guardrails here. |
+| Still-high unverified queue items | SG1, SG2, SG3, NJ8 and NJ10 are still high-value only as verification targets. They should not become release blockers or implementation tasks until source-checked against the current branch being changed. | [Victory/endgame](Victory-And-Endgame-Atlas), [Economy authority](Economy-Authority-First-Cut), [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas), [Hardening roadmap](Hardening-Implementation-Roadmap). |
+| Later worklog-only audit batches | Agent worklog entries mention later SK/CN/FC/SP and SM/TR/XR labels. This compact queue does not re-expand them; use those worklog entries as leads only, then source-check and route to owner pages. | [Agent worklog](Agent-Worklog), [Subagent discovery swarm](Subagent-Discovery-Swarm), owner pages. |
+
 ---
 
 ## Deep-dived by Claude (verdicts)
