@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T05:45:00+02:00",
+  "generatedAt": "2026-06-04T06:20:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "mini-scout-wave-factory-respawn-support-runtime-tooling",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "sourceScope": [
+        "Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Client/GUI/GUI_Menu_EASA.sqf",
+        "Common/Config/Core_Root/Root_RU.sqf",
+        "Server/Module/AntiStack/*",
+        "Client/Functions/Client_DelegateAIStaticDefence.sqf",
+        "Tools/LoadoutManager/*",
+        "docs/wiki validator and Zargabad branch-audit pages"
+      ],
+      "outputs": [
+        "Corrected current wiki validation command path",
+        "Labeled Zargabad validators as branch-local tooling",
+        "Added scout-harvest findings to Feature Status and tooling pages",
+        "Added development lesson for branch-scoped tool commands",
+        "Validation/parity passed",
+        "No gameplay source changed"
+      ],
+      "handoff": "This docs batch is validated. Future code owners should treat these as patch-ready/docs-backed leads, not implemented gameplay fixes."
+    },
     {
       "lane": "version-sqf-ignore-target-root-correction",
       "owner": "Codex",

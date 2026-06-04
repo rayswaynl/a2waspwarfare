@@ -127,6 +127,8 @@ Use it after performance-sensitive mission changes or live-server audits.
 - `7za` environment variable points to `7za.exe`.
 - `ZipManager` packages mission directories after copy/generation and currently zips only `Missions` plus `Missions_Vanilla`, not `Modded_Missions`.
 - Missing `7za` causes the final packaging step to throw unless `A2WASP_SKIP_ZIP=1` is set; inspect generated/copied files before assuming the whole run did nothing.
+- Packaging success is not a strong release proof by itself: `ZipManager.cs:77-92` starts `7za` and prints the output but does not currently gate success on the process exit code. Confirm `_MISSIONS.7z` exists, has the expected mission folders and was produced by a successful 7-Zip run before calling a release archive complete.
+- File replacement warnings can still hard-fail later: `BaseTerrain.cs:275-301` logs "File not found!" for a missing expected file and then still calls `File.ReadAllText` on the same path. Treat missing replacement targets as real generator failures, not harmless warnings.
 - The source Chernarus mission is copied to target terrain folders. Avoid manual changes in generated targets unless the generator is being updated.
 - `The specified content was not found in the file.` during the current run comes from the terrain help-menu title replacement path and did not stop Chernarus/Takistan generation/copy.
 

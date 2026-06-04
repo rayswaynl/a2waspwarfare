@@ -7,8 +7,8 @@ This page records the no-blind-copy policy for mirror/wiki drift. The active `_w
 | Check | Result | Evidence |
 | --- | --- | --- |
 | Repo mirror validation | Pass | `powershell -ExecutionPolicy Bypass -File .\docs\validate-wiki.ps1` passes in `C:\Users\Steff\a2waspwarfare-docs`. |
-| Active wiki checkout validation | Pass | `powershell -ExecutionPolicy Bypass -File .\Tools\ValidateWiki.ps1 -WikiPath 'C:\Users\Steff\_wasp_wiki_tmp' -SkipGitDiffCheck` passes. |
-| Active repo mirror/wiki checkout parity | Pass | `powershell -ExecutionPolicy Bypass -File .\Tools\TestWikiParity.ps1 -WikiPath 'C:\Users\Steff\_wasp_wiki_tmp'` passes across 93 files after the latest scoped sync. |
+| Active wiki checkout validation | Pass | Current checkout uses `powershell -ExecutionPolicy Bypass -File .\docs\validate-wiki.ps1` from the repo mirror; the old `Tools\ValidateWiki.ps1` helper is not present in this tree. |
+| Active repo mirror/wiki checkout parity | Pass | Current scoped-sync batches use SHA256 parity over changed files after copying `docs/wiki/<page>` to the wiki checkout. The old `Tools\TestWikiParity.ps1` helper is not present in this tree. |
 | Older alternate checkout inventory | Historical drift | `C:\Users\Steff\_wasp_wiki_claude` previously reported broad divergence. Use the inventory below only if reconciling that alternate checkout. |
 
 ## Historical Alternate-Checkout Inventory
@@ -96,6 +96,8 @@ powershell -ExecutionPolicy Bypass -File .\docs\validate-wiki.ps1
 powershell -ExecutionPolicy Bypass -File .\Tools\ValidateWiki.ps1 -WikiPath 'C:\Users\Steff\_wasp_wiki_tmp' -SkipGitDiffCheck
 powershell -ExecutionPolicy Bypass -File .\Tools\TestWikiParity.ps1 -WikiPath 'C:\Users\Steff\_wasp_wiki_tmp'
 ```
+
+Current checkout correction: only `docs\validate-wiki.ps1` exists here. Treat the `Tools\ValidateWiki.ps1` and `Tools\TestWikiParity.ps1` commands above as historical helper names unless those scripts are restored; for current batches, run `docs\validate-wiki.ps1`, `git diff --check`, JSON/JSONL parsing if touched, and SHA256 parity for every mirrored page.
 
 ## Guardrails
 

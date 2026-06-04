@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T06:20:00+02:00 - Codex - mini scout wave factory/respawn/support/runtime/tooling
+
+- Harvested five read-only mini/high scouts after Spark quota remained unavailable.
+- Promoted only non-duplicate findings into canonical docs: current validator path is `docs\validate-wiki.ps1`; old `Tools\ValidateWiki.ps1`/`Tools\TestWikiParity.ps1` helpers are not present; Zargabad validators are branch-local to `origin/feature/zargabad-map`; buy-menu list/detail pricing can drift; EASA rejects exact-funds purchases; RU para-ammo config is swallowed by a same-line comment; AntiStack has a DB-error shape risk and an execVM'd stub worker; static-defence HC delegation still lacks update-back accounting; LoadoutManager packaging/replacement paths need release hardening.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T05:20:00+02:00 - Codex - post-dispatch PVF handler authority recheck
 
 - Rechecked the mini-scout "thin registered PVF handler" lead against current source rather than adding another loose queue item.

@@ -199,6 +199,12 @@ The useful reports came from scouts with tight boundaries and capped output: sup
 
 Development rule: launch Spark scouts as small drill cores, not subsystem encyclopedias. Each prompt should name exact files or search terms, forbid generated-mission scans unless needed, cap output under roughly 800-1200 words, ask for concrete file:line evidence, and say "no edits." If a scout bounces, relaunch with a smaller file family instead of retrying the same broad question. Use the dashboard/worklog to record failed broad scopes as orchestration evidence, not as source findings.
 
+## Lesson 24: Tool Commands Are Branch-Scoped Evidence
+
+Tooling pages can drift just like mission code. The current docs branch contains `docs/validate-wiki.ps1` as the wiki validator; it does not contain the older `Tools\ValidateWiki.ps1` or `Tools\TestWikiParity.ps1` helper names that appear in historical reconciliation notes. The Zargabad map branch is the opposite shape: `git ls-tree -r --name-only origin/feature/zargabad-map` shows branch-local validators such as `Tools/Validate-ZargabadMission.ps1` and `Tools/Validate-ZargabadRuntimeReport.ps1`, but those files are not present on the current docs branch.
+
+Development rule: when a page says "run this tool," verify the script exists on the branch or worktree being used for the claim. For current wiki edits, use `powershell -ExecutionPolicy Bypass -File docs\validate-wiki.ps1`, `git diff --check`, JSON/JSONL parsing when touched, and SHA256 parity for mirrored pages. For branch-specific features such as Zargabad, run branch-local validators from a worktree at the exact candidate head and label them branch evidence, not current-checkout tooling.
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |

@@ -29,6 +29,7 @@ Canonical companion pages are [Tools/build workflow](Tools-And-Build-Workflow), 
 | P1 | Fresh-checkout boot/package hazard is real. | `version.sqf` is git-ignored/generated but included by mission boot files. | Add a machine-readable release gate for generated `version.sqf`. |
 | P1 | Docs CI validates wiki structure, not build/drift/security. | `.github/workflows/docs.yml:25-46`; `docs/validate-wiki.ps1:63-111` | Add separate build/drift/security checks rather than overloading docs validation. |
 | P2 | Modded release posture is cautious and source-consistent. | `Tools-And-Build-Workflow.md:63`, `:72-74`; `agent-release-readiness.json:14-15`; `SqfFileGenerator.cs:132-133`; `ZipManager.cs:16`; `rg -l "<<<<<<<|=======|>>>>>>>" Modded_Missions` finds 18 files. | Keep Modded_Missions out of generated-propagation claims unless generation is intentionally restored and conflict/bootstrap cleanup is validated. |
+| P2 | Packaging and replacement paths have operator-footgun behavior. | `ZipManager.cs:77-92` does not gate success on the `7za` exit code; `BaseTerrain.cs:275-301` warns on missing replacement files but still reads the missing path. | Add exit-code checks and fail-fast missing-file handling before relying on tool output as release evidence. |
 
 ## Integration Risk Table
 

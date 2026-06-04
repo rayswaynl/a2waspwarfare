@@ -27,7 +27,7 @@ Minimal first-touch page for humans and AI agents working on docs and orchestrat
 
 ## Verification behavior
 
-Run `Tools/ValidateWiki.ps1` after meaningful wiki changes.
+Run `powershell -ExecutionPolicy Bypass -File docs\validate-wiki.ps1` after meaningful wiki changes. The old `Tools\ValidateWiki.ps1` path is not present in the current checkout.
 
 ## What it depends on
 
@@ -102,7 +102,7 @@ Use this checklist before adding a new networking channel:
 ### How this page runs
 
 - Human/agent bootstrap path.
-- Validation path: `Tools/ValidateWiki.ps1` after docs changes.
+- Validation path: `powershell -ExecutionPolicy Bypass -File docs\validate-wiki.ps1` after docs changes.
 - Runtime scope: networking edits require updating both the channel index and feature status risk pages.
 
 ### What is risky

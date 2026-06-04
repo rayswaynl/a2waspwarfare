@@ -12,6 +12,7 @@ This page deep-audits `origin/feature/zargabad-map` as branch evidence, not stab
 - Changed path families: 792 files under `Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad`, 15 source Chernarus files, 14 `Tools/` files, 4 `DiscordBot/` terrain files, 4 `Guides/` files and 3 maintained Takistan files
 - Static branch validation: `Tools/Validate-ZargabadMission.ps1` passed locally in a detached worktree at `1fdcb37a`
 - Static cleanup gate: `git diff --check origin/master..origin/feature/zargabad-map` reports 3542 whitespace findings, concentrated in generated Zargabad mission files
+- Tooling scope note: `git ls-tree -r --name-only origin/feature/zargabad-map` shows `Tools/Validate-ZargabadMission.ps1`, `Tools/Validate-ZargabadRuntimeEvidence.ps1` and `Tools/Validate-ZargabadRuntimeReport.ps1` on that branch, but those validators are not present in the current docs branch checkout. Re-run them from the feature branch or a worktree at the exact candidate head.
 
 ## Where it lives
 
@@ -100,11 +101,11 @@ This is static confidence only. It proves the branch's own file/layout invariant
 Before anyone calls Zargabad playable, release-ready or maintained:
 
 1. Clean or accept the 3542 whitespace findings in generated mission files.
-2. Run and record `Tools\Validate-ZargabadMission.ps1` on the exact candidate head.
+2. Run and record branch-local `Tools\Validate-ZargabadMission.ps1` on the exact candidate head.
 3. Boot hosted and dedicated Arma 2 OA Zargabad and collect RPTs without missing script/class/texture/vehicle creation failures.
 4. Run JIP and HC smoke if those claims are made.
 5. Capture screenshots/coordinates for bases, town/camp placement, defenses, central wall gaps, rim tests, economy/factory lists and black-market behavior.
-6. Validate the runtime report with `Tools\Validate-ZargabadRuntimeReport.ps1`, using the required switches for the claimed test scope.
+6. Validate the runtime report with branch-local `Tools\Validate-ZargabadRuntimeReport.ps1`, using the required switches for the claimed test scope.
 7. Decide whether Zargabad joins the long-term maintained Vanilla set or stays a branch-only low-pop experiment.
 
 ## Development lesson

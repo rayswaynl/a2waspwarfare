@@ -221,7 +221,7 @@
       "Append events and worklog notes; do not overwrite another agent's entries.",
       "Treat Agent-Worklog.md as append-only history; append-order supersessions and Current-Source-Status-Snapshot.md beat stale timestamped notes.",
       "Use source-backed evidence for broken/partial feature claims.",
-      "Keep docs/wiki and the GitHub wiki checkout reconciliation explicit before publishing; after mirror sync run Tools/TestWikiParity.ps1 plus the mirror ValidateWiki pass, and use Wiki-Mirror-Reconciliation-Plan.md if future drift appears.",
+      "Keep docs/wiki and the GitHub wiki checkout reconciliation explicit before publishing; current checkout validation is docs/validate-wiki.ps1 plus git diff --check, JSON/JSONL parsing when touched, and SHA256 parity over mirrored files. The old Tools/ValidateWiki.ps1 and Tools/TestWikiParity.ps1 helper names are historical unless those scripts are restored.",
       "Treat external reports as leads until repo evidence confirms them.",
       "Use ICBM-Authority-Playbook.md before patching RequestSpecial \"ICBM\", NukeIncoming, NukeDammage or ICBM Tactical UI/marker flow.",
       "Use External-Integrations.md BattlEye Filter before claiming shipped BattlEye/public-server hardening; it owns DR-30 posture evidence and production BEpath caveats.",
