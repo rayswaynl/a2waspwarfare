@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T12:05:00+02:00",
+    "generatedAt":  "2026-06-04T12:30:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -20,8 +20,8 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Latest pushed batches: docs 89e4b7ea / wiki 93b071f routed non-ICBM RequestSpecial support authority; docs 94b96375 / wiki 5d9e87d improved UI scout clickthrough links. The six-scout fallback wave is closed; only non-duplicate outputs were promoted, while economy/AI caps, construction/base, tooling/integrations, abandoned-feature and authority reports mostly confirmed existing canonical pages.",
-                                 "nextExpectedOutput":  "Continue the documentation finisher loop with the next bounded source-backed docs item, likely a small Feature Status or owner-decision cleanup from remaining scout confirmations."
+                                 "currentWork":  "Published the mini-scout-wave-town-respawn-upstream-performance docs harvest. All scout slots were closed. Non-duplicate deltas landed for latent AIBuyUnit wording, resource-cap payout suppression, capture reward authority, respawn penalty mode 5 gear loss, EASA/service stale-context risks, upstream contributor/head provenance and loop-topology guidance.",
+                                 "nextExpectedOutput":  "Commit and push the validated docs mirror and live wiki checkout."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -37,12 +37,18 @@
                               },
                    "Sub-agents":  {
                                       "status":  "closed",
-                                      "currentLane":  "mini-scout-wave-requestspecial-economy-construction-ui-tooling-abandoned",
-                                      "currentWork":  "All six gpt-5.4-mini read-only scouts returned and were closed. Non-duplicate harvests this cycle were RequestSpecial support-effects authority routing and UI clickthrough routing; the rest mostly confirmed existing canonical pages/backlog rows.",
+                                      "currentLane":  "mini-scout-wave-town-respawn-upstream-performance",
+                                      "currentWork":  "Four gpt-5.4-mini read-only scouts returned and were harvested. Two Spark starts errored on quota and were closed; one mission-config scout was blocked by the thread ceiling. No pending scout output remains from this wave.",
                                       "nextExpectedOutput":  "No pending scout output remains from this wave."
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "mini-scout-wave-town-respawn-upstream-performance",
+                            "owner":  "Codex/Sub-agents",
+                            "status":  "validated-mirrored-push-pending",
+                            "output":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked the first two starts, so Codex relaunched four gpt-5.4-mini read-only scouts; a fifth mission-config scout was blocked by the active-agent ceiling. All scout slots were closed after return/error. Harvested non-duplicate deltas into Gameplay-Systems-Atlas, Feature-Status-Register, Server-Gameplay-Runtime-Atlas, Community-And-Dev, AI-Runtime-HC-Loop-Map, AI-Headless-And-Performance, Client-UI-And-Server-Loop-Perf-Findings, Performance-Opportunity-Sweep, Service-Menu-Affordability-Guards, Player-UI-Workflow-Map and agent-feature-status.jsonl. docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check and 15-file SHA256 mirror parity passed. No gameplay source changed."
+                        },
                         {
                             "lane":  "mini-scout-wave-requestspecial-economy-construction-ui-tooling-abandoned",
                             "owner":  "Codex/Sub-agents",

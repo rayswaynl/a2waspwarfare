@@ -40,6 +40,8 @@ The upstream wiki shows a Discord-first development culture:
 
 This is a non-exhaustive "mentioned in upstream sources" ledger, not an ownership or current-role claim.
 
+Git author density gives a second, repo-local signal about who shaped the project over time. On 2026-06-04, `git shortlog -sn --all --no-merges` showed the largest non-merge authors as: Miksuu `2770`, Ezcoo `1016`, rayswaynl `518`, Esa Oksman `293` and Marty865 `196`. Treat this as commit-volume evidence, not a current role or ownership claim.
+
 | Canonical name | Aliases seen | Mentioned role or context | Source route |
 | --- | --- | --- | --- |
 | Miksuu | `@miksuu` | Core maintainer, release lead, changelog author, LoadoutManager and Discord/tooling context. | [Changelog archive](Miksuu-Wiki-Archive-Changelog), [LoadoutManager archive](Miksuu-Wiki-Archive-LoadoutManager), [Development process archive](Miksuu-Wiki-Archive-Development-Process) |
@@ -86,7 +88,7 @@ The imported [Development process](Miksuu-Wiki-Archive-Development-Process) page
 
 ## Upstream and Decision-Ledger Gap
 
-The 2026-06-04 community scout verified the local remotes as `origin` = `rayswaynl/a2waspwarfare` and `miksuu` = `Miksuu/a2waspwarfare`. At that check, `miksuu/master` was three commits ahead of `origin/master`: `913ecdf6` town defense diagnostics, `d5bfe3a2` Takistan update and merge `8bcc42b1`.
+The 2026-06-04 community scout verified the local remotes as `origin` = `rayswaynl/a2waspwarfare` and `miksuu` = `Miksuu/a2waspwarfare`. At that check, `miksuu/master` was three commits ahead of `origin/master`: `913ecdf6` town defense diagnostics, `d5bfe3a2` Takistan update and merge `8bcc42b1`. The local `master` branch was also 29 commits behind `origin/master`, so use remote branch refs for provenance checks instead of trusting the local branch pointer.
 
 This page, [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) and [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel) now overlap enough that future upstream archaeology needs a single decision ledger. The missing page should track:
 

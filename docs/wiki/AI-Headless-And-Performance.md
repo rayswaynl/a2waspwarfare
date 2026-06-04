@@ -56,6 +56,8 @@ Town AI is centralized through `Server/FSM/server_town_ai.sqf`. The server start
 
 Source anchors: `server_town_ai.sqf:11-19` loads range, inactivity and delegation settings; `server_town_ai.sqf:35-51` owns the global loop and performance timing; `server_town_ai.sqf:157-179` switches between client delegation, HC delegation and server fallback; `server_town_ai.sqf:205-219` deletes inactive town groups/vehicles.
 
+The town-AI model is spawn/delete and delegation bookkeeping, not engine simulation caching. Preserve the active/delegated vehicle registries and cleanup checks when optimizing this loop; do not remove scans or cache state just because the loop is visible. The patch-ready risk is the incomplete player-occupancy test in `server_town_ai.sqf:211-216`, not the existence of the scheduled loop itself.
+
 ## Player AI Watchdog
 
 `Client_WatchdogPlayerAI.sqf` and `Client_RecoverPlayerAI.sqf` are client-side resilience systems for AI units in player groups. They check locality, alive state, vehicle validity, movement destination quality and recovery cooldowns.
@@ -79,6 +81,7 @@ Instrumented areas include:
 
 - RHUD caches controls, text and colors to avoid rewriting unchanged UI every second.
 - Team and town marker loops include local caches and audit counters.
+- Common marker helper loops (`Common_MarkerUpdate.sqf` and `Common_AARadarMarkerUpdate.sqf`) also use cached marker state and should remain measurement-led.
 - Volumetric clouds are force-disabled because of FPS/stutter cost with skipTime.
 - Day/night sync uses small client-side skipTime steps, server date broadcasts and hard sync only for excessive drift.
 - Anti-stack loops can be disabled by mission parameter for controlled audits.

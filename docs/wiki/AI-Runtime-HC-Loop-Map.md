@@ -14,7 +14,7 @@ This page is a focused runtime map for server loops, town AI, headless-client de
 | Server init waits | `SRC/Server/Init/Init_Server.sqf:1`, `:126-127`, `:507`, `:583` | Dedicated/hosted server | Waits for common/town/time gates | Stalls if common/town init never completes. |
 | Client init waits/JIP fanout | `SRC/Client/Init/Init_Client.sqf:164-165`, `:594-596`, `:757-770`, `:960-962` | Client/hosted player | Waits, then JIP queries | Heavy town-wide query fanout on join. |
 | Town state loop | `SRC/Server/FSM/server_town.sqf:34`, `:57`, `:259-270` | Server | Per-town `sleep 0.05`, outer `sleep 5`; exits on `WFBE_GameOver` | Core scan/capture/supply loop. |
-| Town AI activation loop | `SRC/Server/FSM/server_town_ai.sqf:35`, `:84-121`, `:157-185`, `:191-251` | Server | Per-town `sleep 0.05`, outer `sleep 5`; exits on `WFBE_GameOver` | Drives AI spawn/despawn and HC delegation. |
+| Town AI activation loop | `SRC/Server/FSM/server_town_ai.sqf:35`, `:84-121`, `:157-185`, `:191-251` | Server | Per-town `sleep 0.05`, outer `sleep 5`; exits on `WFBE_GameOver` | Drives AI spawn/despawn and HC delegation. This is an intentionally throttled scheduled loop, not a per-frame target. |
 | Camp capture manager | `SRC/Server/FSM/server_town_camp.sqf:8-13`, `:25`, `:150-157` | Server | About one-second global scan; exits on `WFBE_GameOver` | Continuous camp scan. |
 | Town patrol workers | `SRC/Common/Functions/Common_CreateTownUnits.sqf:42-63`; `SRC/Server/FSM/server_town_patrol.sqf:18`, `:47-53` | Server or delegated locality | `sleep 30`; `!WFBE_GameOver || _aliveTeam` | Lifecycle condition can keep workers alive after game over while the team lives. |
 | Ambient patrol workers | `SRC/Server/FSM/server_patrols.sqf:26`, `:68`, `:71-72`; launched from `SRC/Server/FSM/server_town_ai.sqf:226-230` | Server | `sleep 30`; `!WFBE_GameOver || _team_alive` | Patrol can remain active-latched after team death because the reset happens only after the loop exits. |
@@ -32,6 +32,8 @@ This page is a focused runtime map for server loops, town AI, headless-client de
 | AI town attack-path helper | `SRC/Server/Init/Init_Server.sqf:45-47`; `SRC/Server/Functions/Server_AI_SetTownAttackPath.sqf:18,41,80-109` | Compiled server helper for arced town attack waypoints | No static caller found in stable master scan | Helper clears existing waypoints before path generation; if a future caller revives it, smoke the early-exit branches before relying on generated attack routes. |
 
 ## HC Delegation Map
+
+HC delegation creates units on another machine through request/response helpers; it does not magically transfer already-created unit locality. The HC boot path in `SRC/Headless/Init/Init_HC.sqf:12-15` uses a fixed `sleep 20` before `connected-hc`, so treat HC startup as a timing hazard until a timeout/retry-backed registration exists.
 
 | Flow | Evidence | Completeness |
 | --- | --- | --- |

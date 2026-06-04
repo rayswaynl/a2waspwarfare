@@ -133,7 +133,7 @@ Patch only after RPT evidence shows these rows dominate. Changing detection cade
 
 `updatetownmarkers.sqf` now caches marker names/text, delays closed-map refreshes, and records skipped text writes. `updateteamsmarkers.sqf` updates only when map/GPS/Warfare UI is visible, throttles AI leader updates to 1 second, and records marker operations.
 
-These are not first-patch targets. Use PerformanceAudit output before touching cadence.
+Common marker helpers are in the same caution bucket: `Common_MarkerUpdate.sqf:73-109,182-229` and `Common_AARadarMarkerUpdate.sqf:54-75,105-106,184` already cache marker text/position/color or radar marker state. These are not first-patch targets. Use PerformanceAudit output before touching cadence.
 
 ### RHUD
 

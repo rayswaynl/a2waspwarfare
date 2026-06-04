@@ -18,7 +18,7 @@ flowchart TD
     Commander["commander vote/assign PVFs"] --> Upgrades["Server_ProcessUpgrade.sqf"]
     Construction["Client CoIn construction UI"] --> RequestStructure["Server/PVFunctions/RequestStructure.sqf"]
     RequestStructure --> BuildScripts["Server/Construction/Construction_*.sqf"]
-    Factories["Buy units menu / AI buy"] --> Units["Client_BuildUnit.sqf or Server_BuyUnit.sqf"]
+    Factories["Buy units menu / latent AI buy worker"] --> Units["Client_BuildUnit.sqf; Server_BuyUnit.sqf only if AIBuyUnit caller is proven or revived"]
 ```
 
 ## Town Initialization
@@ -286,15 +286,15 @@ There are two main production paths:
 | Path | Owner | Source | Use |
 | --- | --- | --- | --- |
 | Player local build | Client | `GUI_Menu_BuyUnits.sqf` -> `Client_BuildUnit.sqf` | Player buys units/vehicles near a factory. |
-| AI/server build | Server | `AIBuyUnit` -> `Server_BuyUnit.sqf` | AI teams and server-side production. |
+| Latent AI/server build worker | Server | `AIBuyUnit` -> `Server_BuyUnit.sqf` | Compiled helper for AI teams/server-side production, but current stable source search finds no active caller outside the compile and the worker itself. |
 
-The buy menu detects factory range globals, filters by tab/faction/upgrade, performs local funds/group/queue checks, spawns `BuildUnit` and deducts player funds (`Client/GUI/GUI_Menu_BuyUnits.sqf:89-156`, `:195-248`, `:257-369`). `Client_BuildUnit.sqf` owns local queue wait, build time, spawn placement and vehicle/crew initialization (`Client/Functions/Client_BuildUnit.sqf:149-217`, `:246-356`, `:368-469`). `Server_BuyUnit.sqf` mirrors much of that initialization for AI/server production (`Server/Functions/Server_BuyUnit.sqf:21-97`, `:98-214`).
+The buy menu detects factory range globals, filters by tab/faction/upgrade, performs local funds/group/queue checks, spawns `BuildUnit` and deducts player funds (`Client/GUI/GUI_Menu_BuyUnits.sqf:89-156`, `:195-248`, `:257-369`). `Client_BuildUnit.sqf` owns local queue wait, build time, spawn placement and vehicle/crew initialization (`Client/Functions/Client_BuildUnit.sqf:149-217`, `:246-356`, `:368-469`). `Init_Server.sqf:10` compiles `AIBuyUnit = Server_BuyUnit.sqf`, and that worker mirrors much of the vehicle initialization (`Server/Functions/Server_BuyUnit.sqf:21-97`, `:98-214`), but treat it as dormant unless a dynamic caller is proven or a future AI commander production loop intentionally revives it.
 
 Attack-wave production is a direct-PV side path rather than normal factory production; `Server/Functions/Server_AttackWave.sqf:1-38` publishes the request details before `Server/PVFunctions/AttackWave.sqf:19-55` consumes and resets active wave state.
 
 Risk notes:
 
-- Player and AI production paths duplicate substantial vehicle initialization logic. Any new vehicle feature may need both `Client_BuildUnit.sqf` and `Server_BuyUnit.sqf`.
+- Player and latent AI/server production paths duplicate substantial vehicle initialization logic. Any new vehicle feature may need both `Client_BuildUnit.sqf` and `Server_BuyUnit.sqf` only if the server worker is revived or a branch proves a live caller.
 - Building queue cleanup has timeout behavior based on longest build time; changing queue variables can strand factories.
 - Spawn pads are type-based helper objects near factories; pad class changes can alter spawn placement.
 - Buy menu affordability is client-side, so server-side validation should be considered before adding high-value or exploitable purchases.
@@ -315,7 +315,7 @@ Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-1
 | New commander action | Existing PVF command pattern plus `HandleSpecial` client notification where needed. |
 | New upgrade effect | `Server_ProcessUpgrade.sqf` for completion effects plus every direct upgrade-level consumer. |
 | New structure | Side `Structures_*.sqf`, `RequestStructure.sqf` script mapping, matching construction script and `Init_BaseStructure.sqf`. |
-| New purchasable unit | [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), unit metadata arrays, buy menu filtering, `Client_BuildUnit.sqf`, and `Server_BuyUnit.sqf` if AI can use it. |
+| New purchasable unit | [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), unit metadata arrays, buy menu filtering and `Client_BuildUnit.sqf`; include `Server_BuyUnit.sqf` only when reviving/proving AI commander production. |
 
 ## Resolved Follow-Ups
 
@@ -325,7 +325,7 @@ These were previously open questions on this page; they now have source-backed h
 | --- | --- |
 | Commander assignment call shape | `Server_AssignNewCommander.sqf` call-shape handling is confirmed as [Deep-review findings](Deep-Review-Findings) DR-15. Future code work should fix or explicitly preserve it, not re-open it as an unknown. |
 | `wfbe_structures_logic` consumer | Construction workers add/remove construction-site logic objects (`Server/Construction/Construction_SmallSite.sqf:70,99`; `Construction_MediumSite.sqf:70,114`). `Server_HandleBuildingRepair.sqf` can consume/remove those logic entries if called, but no active source caller was found; WASP base repair is a separate live flow. Use [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) for the owning map. |
-| Client/server unit-build drift | The first source-backed map lives in [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas); DR-33 tracks queue hazards. Treat vehicle feature changes as dual-path work across `Client/Functions/Client_BuildUnit.sqf` and `Server/Functions/Server_BuyUnit.sqf`. |
+| Client/server unit-build drift | The first source-backed map lives in [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas); DR-33 tracks queue hazards. Current stable source treats `Server/Functions/Server_BuyUnit.sqf` as a latent worker because `AIBuyUnit` has no static caller beyond `Init_Server.sqf:10`; only treat vehicle changes as dual-path work if that worker is revived, proven dynamic, or merged from an AI commander production branch. |
 | Supply-income stagnation | This helper is live when side-supply income is routed through `ChangeSideSupply`: `Server/FSM/updateresources.sqf:49` passes `_includeStagnation = true`, `Common/Functions/Common_ChangeSideSupply.sqf:15-17` calls `WFBE_CO_FNC_StagnateSupplyIncomeNoPlayers`, and `Common/Functions/Common_StagnateSupplyIncomeNoPlayers.sqf:38-68` updates/publicizes no-player counters and clamps the income amount. |
 | Base-structure markers vs range globals | `Client/Init/Init_BaseStructure.sqf` creates local base/command-center markers and command-center range ellipses; it does not own buy-menu range booleans. Range globals are initialized in `Client/Init/Init_Client.sqf:311-320`, updated by `Client/FSM/updateavailableactions.fsm:157-203`, and consumed by `Client/GUI/GUI_Menu.sqf:4-26` and `Client/GUI/GUI_Menu_BuyUnits.sqf:50,80,165-170`. |
 

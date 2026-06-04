@@ -35,7 +35,7 @@ The person heal branch has the same stale-price shape: `GUI_Menu_Service.sqf:130
 | Repair | `_repairPrice > 0`. | Fresh `_funds >= _repairPrice`, current `_canBeUsed`, valid selection/support context. |
 | Refuel | None before `-_refuelPrice Call ChangePlayerFunds`. | `_refuelPrice > 0`, fresh `_funds >= _refuelPrice`, current `_canBeUsed`, valid selection/support context. |
 | Heal | `_healPrice > 0`. | Fresh `_funds >= _healPrice`, current usable context for vehicles, valid selection/support context. |
-| EASA entry | Button is enabled by service/EASA context and driver/upgrade checks. | If EASA flow is hardened later, patch it with the broader gear/EASA authority work rather than this small guard. |
+| EASA entry | Button is enabled by service/EASA context and driver/upgrade checks, then `MenuAction == 7` opens EASA from the same loop snapshot. | Re-check current vehicle/support context before opening EASA; action-time EASA purchase/equip still belongs with the broader gear/EASA authority work. |
 
 ## Patch Shape
 

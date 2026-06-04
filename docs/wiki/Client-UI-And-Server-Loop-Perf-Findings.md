@@ -35,6 +35,8 @@ All items here are `sleep`/`uiSleep` loops, i.e. the **scheduled** SQF environme
 
 Owner reviewed this batch (2026-06-02) and **declined to patch** — not aligned with current priorities. Items 1 and 2 are the cleanest (behaviour-preserving, client-side, low risk) if ever revisited; items 4-7 are not worth the change-risk on their own. Revisit only with RPT `PerformanceAudit` evidence, consistent with the [Performance opportunity sweep](Performance-Opportunity-Sweep) "measurement-first" stance.
 
+2026-06-04 loop-topology scout note: `GUI_Menu_Service.sqf:117-185` remains the cleanest UI-loop win because it rebuilds service pricing while the menu is open. `GUI_RespawnMenu.sqf:34,113` is mostly cheap despite the 100 Hz poll because expensive marker/spawn work is gated, and `Client_UpdateRHUD.sqf:183-194,247-264,339-359` plus marker helpers are cache-heavy enough that they should stay measurement-led.
+
 ## Continue Reading
 
 Sibling: [Performance opportunity sweep](Performance-Opportunity-Sweep) | Runtime context: [AI, headless and performance](AI-Headless-And-Performance)

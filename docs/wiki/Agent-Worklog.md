@@ -1,5 +1,14 @@
 # Agent Worklog
 
+## 2026-06-04T12:10:00+02:00 - Codex - mini scout wave town/respawn/upstream/performance
+
+- Steff asked for more Spark scouts. Two GPT-5.3-Codex-Spark starts hit quota, so Codex relaunched four `gpt-5.4-mini` read-only scouts for town/economy loops, respawn/gear/EASA/MASH, upstream developer-history mining and performance/loop topology; a fifth mission-config scout was blocked by the active-agent ceiling.
+- Started a local harvest while scouts run. Source evidence: `Server/Init/Init_Server.sqf:10` compiles `AIBuyUnit`, but source search finds no current stable caller outside `Server_BuyUnit.sqf`; `Server_BuyUnit.sqf:15-16,53-54,81-82` also behaves like an AI/server worker that cancels if a player takes the team.
+- Updated [Gameplay systems atlas](Gameplay-Systems-Atlas) so the stable baseline does not imply live AI/server factory production. It now matches [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [AI commander autonomy audit](AI-Commander-Autonomy-Audit) and [Feature status](Feature-Status-Register): `Server_BuyUnit.sqf` is latent until a caller is proven or intentionally revived. Documentation only; no gameplay source files were edited.
+- All scout slots were closed after return/error. Harvested non-duplicate deltas into [Feature status](Feature-Status-Register), [Server runtime](Server-Gameplay-Runtime-Atlas), [Community & Dev](Community-And-Dev), [AI runtime/HC](AI-Runtime-HC-Loop-Map), [AI/headless/performance](AI-Headless-And-Performance), [Client UI/server-loop perf findings](Client-UI-And-Server-Loop-Perf-Findings), [Performance sweep](Performance-Opportunity-Sweep), [Service menu affordability guards](Service-Menu-Affordability-Guards), [Player UI workflow](Player-UI-Workflow-Map) and `agent-feature-status.jsonl`.
+- Key source-backed additions: resource cap suppresses side supply, paychecks and AI commander funds; town/camp capture rewards are client-local mixed authority; respawn penalty mode `5` can still strip custom gear on unpaid base/HQ respawn; EASA/service stale-context risks are sharper; Community & Dev now records contributor-density and upstream-head provenance; loop docs distinguish intentional throttled/cache-heavy loops from first-patch performance targets.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 15 files. Push is pending. Documentation only; no gameplay source files were edited.
+
 ## 2026-06-04T12:00:00+02:00 - Codex - validation command post-push closure
 
 - Continued the documentation finisher loop and found the usual post-push machine-status drift after the validation-command cleanup: `agent-status.json` still said the next output was to push that already-pushed batch.
