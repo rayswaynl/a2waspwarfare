@@ -9,8 +9,8 @@ This page is the operator entrypoint for running, packaging and observing Wasp W
 | Mission source | `Missions/[55-2hc]warfarev2_073v48co.chernarus` | Source mission for gameplay edits and source-backed docs. |
 | Generated maintained mission | `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` | LoadoutManager copy/generation target. Use the skip-list rules before hand-editing it. |
 | Build/generation tool | `Tools/LoadoutManager` | Generates EASA/balance/version outputs, copies Chernarus to maintained Vanilla and optionally packages `_MISSIONS.7z`. |
-| Performance parser | `Tools/PerformanceAuditAnalyzer` | Parses `[Performance Audit]` RPT lines into CSV, Markdown, HTML and Word-friendly reports. |
-| Discord status bot | `DiscordBot` | Reads `database.json` and updates Discord status every 60 seconds when `token.txt` and `preferences.json` are supplied outside git. |
+| Performance parser | `Tools/PerformanceAuditAnalyzer` | Parses existing `[Performance Audit]` RPT/log files into CSV, Markdown, HTML and Word-friendly reports; it is not a shipped live tailer service. |
+| Discord status bot | `DiscordBot` | Reads `database.json` through `Preferences.Instance.DataSourcePath` or `C:\a2waspwarfare\Data` and updates Discord status every 60 seconds when `token.txt` and `preferences.json` are supplied outside git. |
 | Global stats extension | `Extension` | Legacy .NET Framework 4.8 x86 Arma extension that writes `C:\a2waspwarfare\Data\database.json`. |
 | BattlEye stub | `BattlEyeFilter/publicvariable.txt` | Contains only the `kickAFK` publicVariable rule. It is AFK plumbing, not a complete public-server filter set. |
 
@@ -45,7 +45,7 @@ Before calling a host reproducible, record these owner-provided paths/versions i
 4. Copy or package mission folders only after source Chernarus and maintained Vanilla scope are clear.
 5. Deploy BattlEye filters from the actual server `BEpath`. Do not assume the repo's `kickAFK` filter is comprehensive.
 6. Deploy `a2waspwarfare_Extension` and the separate `A2WaspDatabase` only with their expected x86/.NET Framework/runtime dependencies.
-7. Provide DiscordBot `token.txt`, `preferences.json` and a readable `database.json` data source outside git. `database.json` can fall back to default bot data if absent, but `preferences.json` is read before the token check in the current bot startup path.
+7. Provide DiscordBot `token.txt`, `preferences.json` and a readable `database.json` data source outside git. `database.json` can fall back to default bot data if absent, but `preferences.json` is read before the token check in the current bot startup path. The active status reader uses `Preferences.Instance.DataSourcePath` / default data path; `FileConfiguration.cs` is a secondary config helper and should not be treated as the one source of truth until integration cleanup picks a single path.
 8. Preserve rollback copies of the previous mission package and server configuration.
 
 ## Runtime Telemetry Contracts
@@ -61,7 +61,7 @@ Before calling a host reproducible, record these owner-provided paths/versions i
 Operational caveats:
 
 - Collect the server RPT for server-scope performance and each client RPT for client/RHUD/UI performance. Client and server performance audit writers are local to their own RPTs.
-- The performance-audit contract is `[Performance Audit]`, not `PERF_RECORD`.
+- The performance-audit contract is `[Performance Audit]`, not `PERF_RECORD`, and current tooling is parser/launcher only rather than a daemon that tails live RPTs.
 - `GlobalGameStats.sqf` subtracts one assumed headless client from player count; smoke no-HC and multi-HC deployments before relying on Discord player counts.
 - `origin/feat/player-stats` has a branch-only `StatsService`/`stats.json` flow. Current source uses the global `database.json` status path.
 

@@ -39,6 +39,8 @@ The same scout found a client/server display mismatch for income system `4`: ser
 
 AI commander upgrades have a separate suspected debit bug. `Server_AI_Com_Upgrade.sqf:32-36` validates `_cost select 0` as side supply and `_cost select 1` as funds, matching the player upgrade menu (`GUI_UpgradeMenu.sqf:96-99,139-159`), but the deduction path subtracts `_cost select 0` from AI commander funds and `_cost select 1` from side supply (`Server_AI_Com_Upgrade.sqf:47-50`). Treat this as a likely split-currency bug before enabling or expanding autonomous AI commander upgrades.
 
+Kill-bounty detail: player-facing bounty awards are client PVF/local-money paths, but AI-led kill bounty has a separate server branch. `RequestOnUnitKilled.sqf:83-100` sends `AwardBountyPlayer`/`AwardBounty` to players for player kills and, when `WFBE_C_AI_TEAMS_ENABLED > 0`, credits the AI killer group directly with `ChangeTeamFunds` (`RequestOnUnitKilled.sqf:97-100`). Treat score/bounty changes as both player-economy and AI-team-economy work.
+
 ### Supply Mission Reward Formula And Stale Copy
 
 The live truck reward path is not the old "4 x actual value" player-help rule. Current source computes loaded cargo as `floor((town supplyValue) * WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER * supplyUpgradeModifier)` in `Client/Module/supplyMission/supplyMissionStart.sqf:22-34`; the multiplier constant is `20` at `Common/Init/Init_CommonConstants.sqf:167`. Completion then sends the same `_supplyAmount` to the player message path, where `Client/Module/supplyMission/supplyMissionCompletedMessage.sqf:8,13-14` grants that raw amount as local cash.
@@ -64,6 +66,8 @@ The economy authority class is now fully characterized by source review. Every c
 | Attack wave price modifier | `ATTACK_WAVE_INIT` is a direct client/common -> server publicVariable; server trusts `_supply` / `_side` and can apply a side-wide unit-price modifier from forged payload. | DR-41, [Networking/PV](Networking-And-Public-Variables), [Server authority map](Server-Authority-Migration-Map), [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) |
 
 This should be treated as one owner decision, not separate patch tracks. Either introduce a server-side funds/effects ledger and validate each spend handler before applying effects, or explicitly accept the legacy client-trusted model and lean on BattlEye script filters for public-server hardening. DR-41 adds an important architecture rule: the forgery class has two surfaces, registered PVF handlers and direct `publicVariableServer` channels, so a PVF dispatcher fix alone does not harden direct economy/support channels. Small parity fixes, such as adding affordability guards to service rearm/refuel, are useful correctness work but do not close the architectural authority gap.
+
+Side-supply logging caveat: `Common_ChangeSideSupply.sqf:8-13` only copies the human-readable `_reason` when `count _this > 3`. Four-argument callers such as `supplyMissionCompleted.sqf:26` preserve their reason, but 3-argument callers such as `AttackWave.sqf:40` fall back to the default error string in the published `wfbe_supply_temp_<side>` payload. Patch this as a logging/diagnostics cleanup alongside side-supply authority work.
 
 ## Supply-Related Partial Work
 

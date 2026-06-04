@@ -34,6 +34,7 @@ For the full per-handler checklist, use [Server authority migration map](Server-
 | P1 | Server-side economy authority design | Covers the confirmed class: build, buy, sell, supply, upgrade, ICBM and gear/service spend paths. |
 | P1 | Direct attack-wave authority | Claude DR-41 confirmed `ATTACK_WAVE_INIT` is a forgeable direct-PV channel that can drive side-wide unit prices to zero or negative values. |
 | P1 | Supply mission authority and cooldown cleanup | Needed before PR #1 supply helicopters/cash/interdiction become baseline. |
+| P2 | Commander vote semantics and reassignment correctness | DR-47 and DR-15 are small but match-visible commander/HQ correctness fixes. Decide no-commander/tie rules before code, then keep vote resolution separate from manual reassignment call-shape and requester-authority hardening. |
 | P2 | Factory queue, HC/static-defense and support-loop cleanups | Player-facing soft-lock/perf/partial-feature fixes once core authority is moving. |
 
 ## P0: PVF Dispatcher Lookup
@@ -163,6 +164,7 @@ Validation:
 
 | Fix | Source | Validation |
 | --- | --- | --- |
+| [Commander vote AI/no-commander semantics](Commander-HQ-Lifecycle-Atlas#commander-vote-flow) | `Server_VoteForCommander.sqf:24-29,43` counts AI/no-commander votes but the final condition selects any non-tied player candidate; `GUI_VoteMenu.sqf:87-89` can preview AI/no commander for a distribution the server assigns to a player. | Owner decides plurality/majority/tie/no-commander rules, then smoke player-majority, no-commander-majority, equal-vote, player-candidate tie and `RequestCommanderVote` restart cases. |
 | Factory empty-vehicle queue leak | `Client_BuildUnit.sqf` early empty-vehicle `exitWith` skips normal `WFBE_C_QUEUE` decrement. | Buy repeated crewless vehicles; queue cap returns to normal after each build attempt. |
 | Factory FIFO token/broadcast churn | `Client_BuildUnit.sqf` uses random token and broadcasts `queu` mutations. | Multiple simultaneous buyers cannot collide; queue UI remains correct. |
 | [Town AI occupied-vehicle despawn](Town-AI-Vehicle-Despawn-Safety) | `server_town_ai.sqf:211-216` deletes inactive town-AI vehicles based on `!(isPlayer leader group _x)` without checking crew/cargo/turret occupants. | Vehicles with any player occupant survive despawn while empty AI-only vehicles are still cleaned. |

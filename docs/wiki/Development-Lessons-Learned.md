@@ -211,6 +211,12 @@ Development rule: when a page says "run this tool," verify the script exists on 
 
 Development rule: for any parameter claim, cite three layers together: the lobby class, the constants fallback and the live consumer or forced assignment. A visible host setting can be a locked switch, an orphan, a stale name or internal boot state. Do not rebalance or document operator behavior from `Parameters.hpp` alone. See [Mission parameters, localization and generated build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs) and [Assets/config/localization/parameters atlas](Assets-Config-Localization-And-Parameters-Atlas).
 
+## Lesson 26: UI Outcome Preview Is Not Server Resolution
+
+The commander vote mismatch is a compact example of why UI prediction and server truth must be audited together. The server vote worker counts AI/no-commander votes where `wfbe_vote == -1` (`Server_VoteForCommander.sqf:24-29`), but the final condition selects any non-tied player candidate because `_highest >= _aiVotes` OR `_highest <= _aiVotes` is always true for numeric counts when `_highestTeam != -1` (`Server_VoteForCommander.sqf:43`). The client vote dialog can preview AI/no commander when no option has more than half the counted player voters or row 0 leads (`GUI_VoteMenu.sqf:87-89`).
+
+Development rule: when a dialog predicts a winner, price, reward, permission or cooldown, inspect the server resolver before claiming behavior. Treat mismatches as semantics decisions first, then source patches. For commander voting, owners must decide plurality, strict majority, tie and AI/no-commander rules before editing `Server_VoteForCommander.sqf`.
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |

@@ -247,7 +247,7 @@ Current status is latent/uncalled by static search: `Server_HandleBuildingRepair
 
 ### Salvage
 
-The engineer salvage flow is client-led. `Client/Module/Skill/Skill_Salvage.sqf:20-35` and `Client/FSM/updatesalvage.sqf:46-50` own wreck deletion and cash payout locally. The update loop condition in `updatesalvage.sqf:10-18` uses `while {!gameOver || !(alive _vehicle)}`, which keeps the loop alive while the game is running even if the vehicle state changes in surprising ways. Treat salvage as a small correctness + authority lane before increasing rewards or adding new salvage targets.
+The engineer salvage flow is client-led. `Client/Module/Skill/Skill_Salvage.sqf:20-38` and `Client/FSM/updatesalvage.sqf:46-50` own wreck deletion and cash payout locally. Both payout paths call `ChangePlayerfunds` with a lowercase `f` (`Skill_Salvage.sqf:38`, `updatesalvage.sqf:50`), while the compiled client function is `ChangePlayerFunds` in `Client/Init/Init_Client.sqf:53,91`. The update loop condition in `updatesalvage.sqf:10-18` uses `while {!gameOver || !(alive _vehicle)}`, which keeps the loop alive while the game is running even if the vehicle state changes in surprising ways. Treat salvage as a small correctness + authority lane before increasing rewards or adding new salvage targets.
 
 ## Sale And Deletion Flows
 

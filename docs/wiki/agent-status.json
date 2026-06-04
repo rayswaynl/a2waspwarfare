@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T07:35:00+02:00",
+  "generatedAt": "2026-06-04T06:34:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Harvested the mini-scout config/UI/cleanup/support/security wave: IR-smoke parameter/runtime name split, hidden upgrade-clearance switch, forced-off volumetric weather, orphan-looking BIS High Command parameter, buy-unit driver-default profile key split, gear-template creation-gate semantics and 24-hour supply-truck empty cleanup.",
-      "nextExpectedOutput": "Push the scoped docs/wiki batch, then continue with the next bounded source-backed documentation gap."
+      "currentWork": "Published and validated the mini-scout maps/ops/PV/factory/respawn wave: salvage payout casing, service-point respawn wording, DiscordBot config-source precedence and parser-only PerformanceAuditAnalyzer wording.",
+      "nextExpectedOutput": "Continue with the next bounded source-backed documentation gap."
     },
     "Codex-2": {
       "status": "ready",
@@ -38,11 +38,23 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "Latest five cheap mini scouts completed and were harvested. Lanes covered config data, UI edge cases, cleanup/performance, support flows and PV/security. Spark launches were quota-blocked and replaced with mini explorers.",
+      "currentWork": "Five gpt-5.4-mini scouts completed and were harvested. Lanes covered map/generated divergence, integrations/ops, PV/security, factory/economy spend paths and respawn/service lifecycle.",
       "nextExpectedOutput": "No active sub-agent output pending."
     }
   },
   "laneSummary": [
+    {
+      "lane": "mini-scout-wave-maps-ops-pv-factory-respawn",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "output": "Spark quota blocked GPT-5.3-Codex-Spark starts, so Codex launched five gpt-5.4-mini scouts. Source-backed deltas landed for salvage payout casing, service-point respawn wording, DiscordBot config-source precedence and parser-only PerformanceAuditAnalyzer wording. PV/security and map/generated reports mostly confirmed existing canonical pages. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed. No gameplay source changed."
+    },
+    {
+      "lane": "mini-scout-wave-ai-caps-ui-economy-supports",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "output": "Spark quota blocked GPT-5.3-Codex-Spark starts, so Codex launched four fallback mini scouts. Source-backed deltas landed for commander-vote owner routing, Player AI cap boundary documentation, hardcoded Buy Units/Tactical UI text, AI-team kill bounty, Common_ChangeSideSupply 3-arg reason loss and the hidden SideMessage radio pipeline. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed. No gameplay source changed."
+    },
     {
       "lane": "mini-scout-wave-config-ui-cleanup-support-security",
       "owner": "Codex/Sub-agents",

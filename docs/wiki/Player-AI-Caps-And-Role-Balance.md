@@ -19,6 +19,8 @@ The live buy menu and RHUD use the same shape:
 
 The cap is checked against live group units plus queued units. A solo player already counts as one live group unit, so the number of AI followers is usually `group cap - 1`.
 
+Important naming trap: `WFBE_C_PLAYERS_AI_MAX` is the player follower cap. `WFBE_C_AI_MAX` is a separate AI-group knob exposed in `Rsc/Parameters.hpp:56-60` with a fallback at `Init_CommonConstants.sqf:92`; the latest scout did not prove a current Chernarus runtime consumer for that value. Do not use `WFBE_C_AI_MAX` when answering how many AI a normal player can personally command.
+
 ## Discord Table
 
 Default lobby baseline: `GroupSizePlayer = 15`. Values below are AI followers for a solo player.
@@ -51,6 +53,29 @@ Group-slot version, including the player:
 
 Lobby/default note: the lobby parameters default AI teams and AI commander to off, while the fallback constants in `Init_CommonConstants.sqf` default them on if the parameter layer is absent. Do not use the fallback defaults as proof of live multiplayer settings unless the parameter include failed or was intentionally bypassed.
 
+## Adjacent Limits That Are Not The Player Cap
+
+Factory queue caps throttle production starts, not AI followers. They are initialized client-side at `Client/Init/Init_Client.sqf:185-196` and enforced by the buy menu at `GUI_Menu_BuyUnits.sqf:145-158`.
+
+```text
+Factory queue caps
+
+Barracks  10
+Light      5
+Heavy      5
+Aircraft   2
+Airport    2
+Depot      4
+```
+
+Human squad membership is separate again. `WFBE_C_PLAYERS_SQUADS_MAX_PLAYERS = 4` (`Init_CommonConstants.sqf:264-266`) limits how many human players can join one squad through `Client_FNC_Groups.sqf:111-147,172-210`; it does not change the follower table above.
+
+AI team joining is parameter-gated by `WFBE_C_AI_TEAMS_ENABLED` (`Rsc/Parameters.hpp:74-79`, `Init_CommonConstants.sqf:94-95`). The group UI checks that gate before letting a player request to join an AI-led group (`Client_FNC_Groups.sqf:129-136`), but that is not the same as increasing or reducing a player's own AI followers.
+
+Headless/delegated AI limits are locality and performance routing, not personal squad size. `WFBE_C_AI_DELEGATION` is imported/forced in the init path (`initJIPCompatible.sqf:155-169`), while `WFBE_C_AI_DELEGATION_GROUPS_MAX = 1` and the FPS gate live in `Init_CommonConstants.sqf:98-100` and `Server_FNC_Delegation.sqf:145-157`.
+
+AI commander behavior does not directly change the player follower cap in current source. `WFBE_C_AI_COMMANDER_ENABLED` is a lobby/runtime AI-commander toggle (`Rsc/Parameters.hpp:92-97`, `Init_CommonConstants.sqf:91-93`); stable source still treats full autonomous AI commander production as partial/latent, so do not answer player cap questions with AI commander production settings.
+
 ## Balance Suggestions
 
 The current table gives Soldier commanders a very large late-game squad. That is fun for infantry leadership, but it can become expensive for server FPS when many players fill their groups.
@@ -71,6 +96,7 @@ For a public server, the cleanest tuning lever is the lobby `WFBE_C_PLAYERS_AI_M
 - Do not use the unused `WFBE_C_PLAYERS_SKILL_SOLDIER_UNITS_MAX = 6` constant as proof of current behavior. The live Soldier cap path uses `ceil (1.5 * WFBE_C_PLAYERS_AI_MAX)`.
 - If `Skill_Init.sqf` ever runs more than once, Soldier cap inflation can compound. Current source calls `Skill_Init.sqf` once before `WFBE_SK_FNC_Apply`; keep [Client skill init idempotency](Client-Skill-Init-Idempotency) in the smoke plan.
 - Vehicle crew counts also consume group slots when selected in the buy menu (`Client_BuildUnit.sqf:216-235,237-240,364-460`); empty vehicles do not consume follower slots, but crewed heavy vehicles can fill a group quickly.
+- Factory queue maxima, human squad size, AI-team joining, headless delegation and AI-commander toggles are adjacent limits. Keep them out of Discord cap answers unless someone specifically asks about production queues, player squad joining or server locality.
 
 ## Continue Reading
 

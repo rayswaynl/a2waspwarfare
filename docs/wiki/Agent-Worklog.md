@@ -1973,3 +1973,18 @@ Key conclusions:
 - Support and security reports mostly confirmed canonical pages: PVF dispatch hardening remains separate from handler authority; direct attack-wave/side-supply/SEND_MESSAGE surfaces remain covered; support flows remain a mix of local client-led and server-backed-but-not-server-authoritative paths.
 - Updated [Assets/config/localization/parameters](Assets-Config-Localization-And-Parameters-Atlas), [Mission parameters/localization/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs), [Client UI systems](Client-UI-Systems-Atlas), [Gear template profile filter](Gear-Template-Profile-Filter), [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas), [Feature status](Feature-Status-Register), [Development lessons](Development-Lessons-Learned), `agent-development-lessons.jsonl`, `agent-feature-status.jsonl`, `agent-knowledge.jsonl`, `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl`. No gameplay source changed.
 - Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 parity for 15 mirrored files.
+
+## 2026-06-04T06:06:00+02:00 - Codex - mini scout wave AI caps/UI/economy/supports harvest
+- Spark quota blocked GPT-5.3-Codex-Spark, so Codex launched fallback mini scouts for player AI caps, UI/HUD/dialogs, economy flows and server support/special systems.
+- Source-checked and promoted only non-duplicate deltas: commander vote DR-47 is now routed through Pending Owner Decisions and Hardening Roadmap; Player AI caps now separates follower caps from factory queues, human squad size, AI-team joining, delegation and AI commander toggles; UI/localization pages now record hardcoded Buy Units/Tactical text; economy/networking pages now record the AI-team kill-bounty branch; server/economy pages now record `Common_ChangeSideSupply` 3-arg reason loss and the hidden `SideMessage` radio pipeline.
+- Verification correction: the side-supply reason bug affects 3-argument calls such as `AttackWave.sqf:40`; four-argument callers such as `supplyMissionCompleted.sqf:26` preserve their reason.
+- No gameplay source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 20 mirrored files.
+
+## 2026-06-04T06:30:00+02:00 - Codex - mini scout wave maps/ops/PV/factory/respawn harvest
+- Spark quota blocked GPT-5.3-Codex-Spark starts, so Codex launched five gpt-5.4-mini scouts for map/generated divergence, integrations/ops, PV/security, factory/economy spend paths and respawn/service lifecycle.
+- Source-checked and promoted only non-duplicate or sharper deltas: salvage payout uses the wrong `ChangePlayerfunds` casing in both salvage paths; service points are support nodes, not active respawn nodes; DiscordBot active status config is `Preferences.Instance.DataSourcePath`/default data path while `FileConfiguration.cs` is secondary; PerformanceAuditAnalyzer is parser/launcher tooling, not a shipped live RPT tailer.
+- The PV/security scout mostly confirmed canonical authority pages: PVF dispatcher hardening, thin registered handlers, `RequestSpecial`/ICBM, direct attack-wave/side-supply channels, `SEND_MESSAGE` and MASH marker relay already have owner pages.
+- The map scout confirmed current `Missions`/`Missions_Vanilla` roots, generated `version.sqf` dependency and modded mission boot blockers already documented in [Content structure](Content-Structure-And-Maps) and [Tools/build](Tools-And-Build-Workflow).
+- No gameplay source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 24 mirrored files.

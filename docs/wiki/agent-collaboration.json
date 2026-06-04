@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T07:35:00+02:00",
+  "generatedAt": "2026-06-04T06:34:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,51 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "mini-scout-wave-maps-ops-pv-factory-respawn",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "sourceScope": [
+        "map variants and generated mission divergence",
+        "external integrations and server ops",
+        "public variables, PVFunctions and trust boundaries",
+        "factories, upgrades, purchases and economy spend paths",
+        "respawn, service, MHQ, MASH, gear/loadout restoration and death lifecycle"
+      ],
+      "outputs": [
+        "Five gpt-5.4-mini read-only scouts launched and closed after GPT-5.3-Codex-Spark quota blocked starts",
+        "Promoted source-checked deltas for salvage payout casing, service-point respawn wording, DiscordBot config-source precedence and parser-only PerformanceAuditAnalyzer wording",
+        "PV/security and map/generated reports mostly confirmed existing canonical pages",
+        "No gameplay source changed"
+      ],
+      "handoff": "Validation and mirror parity passed. Future agents should use the promoted pages and machine records rather than raw scout reports."
+    },
+    {
+      "lane": "mini-scout-wave-ai-caps-ui-economy-supports",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_VoteForCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_VoteMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestOnUnitKilled.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_SideMessage.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "player AI cap/delegation/squad-size source paths"
+      ],
+      "outputs": [
+        "Routed commander vote DR-47 to Pending Owner Decisions and Hardening Roadmap",
+        "Expanded Player AI cap docs with adjacent non-cap limits",
+        "Recorded hardcoded Buy Units/Tactical UI text localization debt",
+        "Recorded AI-team kill bounty branch",
+        "Recorded Common_ChangeSideSupply 3-arg reason loss with verification correction",
+        "Recorded hidden SideMessage radio pipeline",
+        "No gameplay source changed"
+      ],
+      "handoff": "Validation and mirror parity passed. Future agents should use the promoted pages and knowledge records, not the raw scout reports."
+    },
     {
       "lane": "mini-scout-wave-config-ui-cleanup-support-security",
       "owner": "Codex/Sub-agents",

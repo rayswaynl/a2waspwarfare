@@ -111,6 +111,10 @@ Dead/broken marker edge:
 
 Do not call MASH respawn dead unless specifically talking about team-shared/JIP marker synchronization. The source-backed statement is: local officer MASH respawn exists; MASH marker sharing is dead/orphaned; team-wide MASH respawn is not proven. Deployment stores `wfbe_mash` on `WFBE_Client_Logic`, and respawn availability reads that same local variable, while the server only seeds the value to `objNull`.
 
+## Service Points Are Support Nodes
+
+Service points are not active respawn nodes in current Chernarus source. `Client_GetRespawnAvailable.sqf:23-26` still has commented command-center and service-point candidate code, but the live respawn list continues through HQ/base, mobile ambulance, local MASH, leader, threeway and camp candidates. Keep service-point behavior in the service/EASA support lane unless an owner deliberately revives service-point respawn and smokes the UI, JIP and default-gear rules.
+
 ## AI Respawn
 
 There are two audited AI leader paths:
