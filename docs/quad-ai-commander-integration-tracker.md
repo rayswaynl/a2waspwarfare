@@ -35,13 +35,19 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 | `docs/quad-ai-commander-phase2-implementation-brief.md` | Context/belief implementation runbook |
 | `docs/quad-ai-commander-phase3-planner.md` | Advisory planner priority spec |
 | `docs/quad-ai-commander-phase4-worker-biasing.md` | Behavior-changing worker biasing spec |
-| `docs/quad-ai-commander-runtime-validation.md` | Runtime evidence, RPT handoff, stop-go rules |
+| `docs/quad-ai-commander-runtime-validation.md` | Runtime evidence, stacked smoke handoff, RPT handoff, stop-go rules |
 | `wiki/Quad-AI-Commander.md` | Wiki-ready overview |
 | `wiki/Quad-AI-Commander-Integration.md` | Integration notes against `feat/ai-commander` |
 
 ## Next Best Action
 
-Finish Phase 0 smoke-testing on PR #14, then collect Phase 1 log evidence on draft PR #18. Phase 2 draft PR #19 should stay advisory-only and behind those gates, but its manual smoke helper is ready for synthetic context validation once #18 is runnable.
+Follow the stacked smoke handoff in `docs/quad-ai-commander-runtime-validation.md`:
+
+1. Finish Phase 0 smoke-testing on PR #14.
+2. Collect Phase 1 log evidence on draft PR #18.
+3. Use the manual Phase 2 smoke helper on draft PR #19 after #18 is runnable.
+
+Phase 3 should wait until Phase 2 has positive context evidence.
 
 Already noted in PR #14:
 
@@ -68,6 +74,7 @@ PR: #18
 branch: codex/ai-commander-logs
 base: feat/ai-commander
 runbook: docs/quad-ai-commander-phase1-implementation-brief.md
+runtime handoff: docs/quad-ai-commander-runtime-validation.md
 ```
 
 Required Phase 1 proof before it can leave draft:
@@ -87,6 +94,7 @@ PR: #19
 branch: codex/ai-commander-context
 base: codex/ai-commander-logs
 runbook: docs/quad-ai-commander-phase2-implementation-brief.md
+runtime handoff: docs/quad-ai-commander-runtime-validation.md
 manual smoke: west Call WFBE_SE_FNC_AI_Com_ContextSyntheticSmoke;
 ```
 
