@@ -2281,6 +2281,13 @@ Key conclusions:
 - Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 parity for 14 mirrored files.
 
 ## 2026-06-04T07:25:00+02:00 - Codex - mini scout wave config/UI/cleanup/support/security harvest
+## 2026-06-04T23:50:00+02:00 - Codex - navigation parity and scout wave launch/partial harvest
+- Steff asked to run more Spark scouts. Two `gpt-5.3-codex-spark` starts hit quota before evidence, so Codex closed those failed starts and launched five read-only `gpt-5.4-mini` scouts for supports, economy, UI/HUD/dialogs, AI/commander/HC and tooling/server ops.
+- While the scouts ran, Codex owned the non-overlapping navigation lane and reconciled GitHub wiki `_Sidebar.md` with `mkdocs.yml`. The two nav surfaces now have zero page-slug drift; the sidebar exposes the same major architecture, networking, gameplay, AI/HC, hardening, UI/tooling and coordination routes as MkDocs.
+- Returned scouts for supports, UI, tooling and AI mostly confirmed already-canonical owner pages. No duplicate prose was added for findings already documented in Support specials, Client UI systems, AI/headless/performance, Tools/build, Server ops, External integrations or PerformanceAuditAnalyzer.
+- Economy scout timed out twice and was closed without output, so it remains unharvested evidence. Relaunch a narrower economy micro-scout later if needed.
+- No gameplay source files changed. Validation and mirror publication are pending for this docs/navigation batch.
+
 - Spark quota was still unavailable for GPT-5.3-Codex-Spark, so Codex launched five cheap mini scouts for config data, UI edge cases, cleanup/performance loops, support flows and PV/security.
 - Closed all scout threads and promoted only non-duplicate, source-backed deltas: IR-smoke lobby/runtime name split, hidden upgrade-clearance runtime switch, volumetric weather parameter forced off, orphan-looking BIS High Command parameter, buy-unit driver-default profileNamespace key split, gear-template creation-gate semantics and 24-hour supply-truck empty-cleanup behavior.
 - Support and security reports mostly confirmed canonical pages: PVF dispatch hardening remains separate from handler authority; direct attack-wave/side-supply/SEND_MESSAGE surfaces remain covered; support flows remain a mix of local client-led and server-backed-but-not-server-authoritative paths.

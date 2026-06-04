@@ -15,6 +15,8 @@ nav:
   - Home: Home.md
   - LLM Agent Entry Pack: LLM-Agent-Entry-Pack.md
   - Quickstart: Quickstart-For-Humans-And-Agents.md
+  - AI Assistant Guide: AI-Assistant-Guide.md
+  - AI Assistant Developer Guide: AI-Assistant-Developer-Guide.md
   - Feature Status: Feature-Status-Register.md
   - Progress Dashboard: Progress-Dashboard.md
   - Knowledge Platform Roadmap: Knowledge-Platform-Roadmap.md
@@ -36,6 +38,7 @@ nav:
       - PR8 And Drone Upstream Lesson Match: PR8-And-Drone-Upstream-Lesson-Match.md
   - Architecture:
       - Overview: Architecture-Overview.md
+      - Mission Config Version Graph: Mission-Config-Version-Include-Graph.md
       - Mission Entrypoints And Lifecycle: Mission-Entrypoints-And-Lifecycle.md
       - Lifecycle Wait Chain: Lifecycle-Wait-Chain.md
       - Player Join Disconnect And AntiStack Lifecycle: Player-Join-Disconnect-And-AntiStack-Lifecycle.md
@@ -60,6 +63,7 @@ nav:
       - Marker Cleanup Restoration Systems Atlas: Marker-Cleanup-Restoration-Systems-Atlas.md
       - Support Specials And Tactical Modules Atlas: Support-Specials-And-Tactical-Modules-Atlas.md
       - Construction And CoIn Systems Atlas: Construction-And-CoIn-Systems-Atlas.md
+      - Factory And Purchase Systems Atlas: Factory-And-Purchase-Systems-Atlas.md
       - Commander Positions Branch Audit: Commander-Positions-Branch-Audit.md
       - Construction Logic List Cleanup: Construction-Logic-List-Cleanup.md
       - Resistance Supply Scaffold: Resistance-Supply-Scaffold.md
@@ -68,12 +72,15 @@ nav:
       - Supply Mission Authority Cleanup: Supply-Mission-Authority-Cleanup-Playbook.md
       - Current Supply Helicopters PR1: Current-Work-Supply-Helicopters-PR1.md
       - AI Headless And Performance: AI-Headless-And-Performance.md
+      - HC Upstream History And Lessons: HC-Upstream-History-And-Lessons.md
       - Perf Quick Wins Branch Audit: Perf-Quick-Wins-Branch-Audit.md
       - AI Runtime HC Loop Map: AI-Runtime-HC-Loop-Map.md
       - AI Commander Autonomy Audit: AI-Commander-Autonomy-Audit.md
       - Headless Delegation And Failover: Headless-Delegation-And-Failover-Playbook.md
+      - Quad AI Commander: Quad-AI-Commander.md
       - Commander Reassignment Call Shape: Commander-Reassignment-Call-Shape.md
   - UI And Tooling:
+      - UI HUD And Dialogs: UI-HUD-And-Dialogs.md
       - Client UI Systems Atlas: Client-UI-Systems-Atlas.md
       - BuyMenu EASA QoL Branch Audit: BuyMenu-EASA-QoL-Branch-Audit.md
       - Player UI Workflow Map: Player-UI-Workflow-Map.md
@@ -86,12 +93,15 @@ nav:
       - Service Menu Affordability Guards: Service-Menu-Affordability-Guards.md
       - WASP Overlay: WASP-Overlay.md
       - Tools And Build Workflow: Tools-And-Build-Workflow.md
+      - PerformanceAuditAnalyzer: PerformanceAuditAnalyzer.md
       - Tooling Release Readiness Audit: Tooling-Release-Readiness-Audit.md
       - Source Fix Propagation Queue: Source-Fix-Propagation-Queue.md
       - Agent Release Readiness Ledger: Agent-Release-Readiness-Ledger.md
       - Testing Debugging And Release Workflow: Testing-Debugging-And-Release-Workflow.md
+      - Server Ops Runbook: Server-Ops-Runbook.md
       - Player Stats Branch Audit: Player-Stats-Branch-Audit.md
       - Arma 2 OA Compatibility Audit: Arma-2-OA-Compatibility-Audit.md
+      - Arma 2 OA Command Version Reference: Arma-2-OA-Command-Version-Reference.md
       - External Integrations: External-Integrations.md
       - Integration Trust Boundary Audit: Integration-Trust-Boundary-Audit.md
       - AntiStack Database Extension Audit: AntiStack-Database-Extension-Audit.md
@@ -101,6 +111,7 @@ nav:
       - Economy Authority First Cut: Economy-Authority-First-Cut.md
       - Upgrades And Research Atlas: Upgrades-And-Research-Atlas.md
       - Attack Wave Authority: Attack-Wave-Authority-Playbook.md
+      - Commander Vote And Reassignment: Commander-Vote-And-Reassignment-Playbook.md
       - Abandoned Feature Revival: Abandoned-Feature-Revival-Review.md
       - Pending Owner Decisions: Pending-Owner-Decisions.md
   - Agent Coordination:
@@ -108,5 +119,10 @@ nav:
       - Agent Collaboration Protocol: Agent-Collaboration-Protocol.md
       - Agent Worklog: Agent-Worklog.md
       - Coordination Board: Coordination-Board.md
+      - Bottleneck Removal Queue: Bottleneck-Removal-Queue.md
       - Codebase Coverage Ledger: Codebase-Coverage-Ledger.md
+      - Current Source Status Snapshot: Current-Source-Status-Snapshot.md
+      - Documentation Implementation Plan: Documentation-Implementation-Plan.md
+      - Wiki Mirror Reconciliation Plan: Wiki-Mirror-Reconciliation-Plan.md
       - Wiki Quality Audit: Wiki-Quality-Audit.md
+      - Wiki Source Consistency Findings: Wiki-Source-Consistency-Findings.md

@@ -4,6 +4,20 @@ This page tracks the cheap read-only Codex discovery agents currently digging th
 
 The swarm is intentionally evidence-first: agents read source, report path/line-backed findings, and avoid editing docs or mission code. Codex integrates the useful findings into the wiki, `agent-context.json`, the coverage ledger and the feature-status register after review.
 
+## Current Wave: Navigation Parity And Deep Slice Scouts (2026-06-04)
+
+Spawned after Steff asked to run more Spark scouts. Two `gpt-5.3-codex-spark` starts hit quota before evidence, so Codex closed those failed starts and launched five read-only `gpt-5.4-mini` scouts. Codex kept the local work on navigation parity while the scouts ran.
+
+| Agent | Lane | Status | Harvest summary |
+| --- | --- | --- | --- |
+| Schrodinger | `supports-fire-missions` | Returned / duplicate-confirmation harvest | Confirmed the support split: `RequestSpecial` routes paratroops, paradrops, UAV, ICBM, supply-truck respawn and camp repair through server dispatch, while artillery and service actions remain largely client-local. Existing [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [Public variable channel index](Public-Variable-Channel-Index) and [Feature status](Feature-Status-Register) already carry the important risks. |
+| Beauvoir | `ui-hud-dialogs-buy-menus` | Returned / duplicate-confirmation harvest | Confirmed EASA/Economy `idd=23000`, title `idd=10200`, stale `RscMenu_Upgrade`, driver-default variable split, unsupported-EASA exit and command-task partials. Existing [Client UI systems](Client-UI-Systems-Atlas) already carries those source-backed notes. |
+| Feynman | `ai-commander-squads-hc` | Returned / duplicate-confirmation harvest | Confirmed AI cap constants, `No Commander = -1`, disabled high-command `HCSetGroup` UI branch, fixed 20s HC registration wait, `group-query` trust and command-task partials. Existing [AI/headless/performance](AI-Headless-And-Performance), [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) and [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) already route these. |
+| Mencius | `tooling-extensions-server-ops-battleye` | Returned / duplicate-confirmation harvest | Confirmed LoadoutManager root discovery, skip-list, `7za`/archive risk, PerformanceAuditAnalyzer offline parser shape, DiscordBot config path, legacy extension build and minimal BattlEye stub. Existing [Tools/build](Tools-And-Build-Workflow), [Server ops](Server-Ops-Runbook), [External integrations](External-Integrations) and [PerformanceAuditAnalyzer](PerformanceAuditAnalyzer) already carry the useful details. |
+| Locke | `economy-towns-supply-cash-flow` | Closed without output | Timed out twice and was closed while still running. Treat as unharvested; relaunch a narrower economy micro-scout later if needed. |
+
+Local harvest: Codex patched `_Sidebar.md` and `mkdocs.yml` so the GitHub wiki sidebar and MkDocs navigation have zero page-slug drift. The GitHub sidebar now exposes Architecture, Code and networking, Gameplay systems, AI/HC, Hardening/authority and Tooling/release/integrations groups instead of forcing readers through the sidebar's old shallow subset.
+
 ## Current Wave: Depth Leftovers Mini Scouts (2026-06-04)
 
 Spawned after Steff asked for more Spark scouts and three `gpt-5.3-codex-spark` starts hit the quota limit before returning evidence. Codex closed those dead starts and launched six read-only `gpt-5.4-mini` scouts with narrow file-family prompts. All six returned and were closed; the table records what was promoted or rejected.

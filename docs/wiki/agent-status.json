@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T23:35:00+02:00",
+  "generatedAt": "2026-06-04T23:50:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Buy-unit price-display correction is published in the docs mirror and live wiki. Source recheck found list rows and purchase/check/charge include UNIT_COST_MODIFIER, but selected-detail display recomputes _currentCost without it. No gameplay source changed.",
-      "nextExpectedOutput": "Continue from the next highest-value source-backed docs lane: broader _Sidebar.md / mkdocs.yml navigation parity and hub route blocks."
+      "currentWork": "Navigation parity batch is in validation: _Sidebar.md and mkdocs.yml now have zero page-slug drift and expose the same major reading routes. Current scout wave mostly confirmed existing canonical pages; economy scout timed out twice and was closed without output. No gameplay source changed.",
+      "nextExpectedOutput": "Validate, mirror, commit and push the navigation parity plus scout-status batch."
     },
     "Codex-2": {
       "status": "ready",
@@ -37,12 +37,18 @@
     },
     "Sub-agents": {
       "status": "returned-closed",
-      "currentLane": "mini-scout-wave-depth-leftovers-2026-06-04",
-      "currentWork": "Six read-only gpt-5.4-mini scouts returned. Useful findings were source-checked into owner pages; duplicate confirmations and false corrections remain non-canonical.",
+      "currentLane": "navigation-parity-and-scout-wave-2026-06-04",
+      "currentWork": "Two gpt-5.3-codex-spark starts hit quota before evidence; five read-only gpt-5.4-mini scouts were launched. Supports, UI, tooling and AI returned and mostly confirmed canonical owner pages. Economy timed out twice and was closed without output.",
       "nextExpectedOutput": "No active scout output remains for this wave."
     }
   },
   "laneSummary": [
+    {
+      "lane": "navigation-parity-and-scout-wave-2026-06-04",
+      "owner": "Codex/Sub-agents",
+      "status": "validation-pending",
+      "output": "Reconciled GitHub wiki _Sidebar.md and mkdocs.yml to zero page-slug drift; added sidebar groups for Architecture, Code and networking, Gameplay systems, AI/HC, Hardening/authority and Tooling/release/integrations. Spawned five gpt-5.4-mini read-only scouts after Spark quota blocked two starts; supports, UI, tooling and AI reports mostly confirmed existing canonical pages. Economy scout timed out twice and was closed without output. No gameplay source changed."
+    },
     {
       "lane": "buy-unit-price-display-correction",
       "owner": "Codex",
