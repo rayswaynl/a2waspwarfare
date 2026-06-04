@@ -14,7 +14,7 @@ Source anchors: `Rsc/Parameters.hpp:50-53` exposes the mission parameter; `Commo
 
 Server functions `Server_DelegateAITownHeadless.sqf`, `Server_DelegateAIStaticDefenceHeadless.sqf` and `Server_FNC_Delegation.sqf` are the core delegation hooks. Client handlers `Client_DelegateAI.sqf`, `Client_DelegateTownAI.sqf` and `Client_DelegateAIStaticDefence.sqf` receive delegated work through `Client/PVFunctions/HandleSpecial.sqf:13-15`.
 
-Page ownership: this atlas owns AI/performance runtime orientation and source routing. The implementation patch shape, work-record model, disconnect policy and DR-21/DR-42 decisions live in [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook).
+Page ownership: this atlas owns AI/performance runtime orientation and source routing. The implementation patch shape, work-record model, disconnect policy and DR-21/DR-42 decisions live in [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook). Older upstream branch evidence for typed HC routing, side-less PVF filtering, wrong-name errors and generated mission-slot drift lives in [HC upstream history and lessons](HC-Upstream-History-And-Lessons).
 
 Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-21 covers HC disconnect/no failover, DR-42 covers static-defense HC one-way delegation / missing update-back, and DR-45 covers town-AI vehicle despawn deleting vehicles with player passengers. Treat those as the canonical finding records and use the linked playbooks for patch shape. For AI commander/autonomous logistics revival decisions, use [AI commander autonomy audit](AI-Commander-Autonomy-Audit).
 

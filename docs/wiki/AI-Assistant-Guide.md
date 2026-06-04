@@ -74,6 +74,7 @@ Use this checklist before adding a new networking channel:
 - Treat release tooling as a separate risk surface: current packaging is source Chernarus plus generated Vanilla/Takistan unless modded packaging is explicitly re-enabled; LoadoutManager needs `7za`, generated `version.sqf`, sound filename contracts and terrain-specific post-copy checks.
 - For economy/ordnance work, branch names are especially dangerous: 75k nukes were live-test data, HQ repair escalation was reverted until server-owned, Mavericks-to-Spikes was not current truth, and bomb limits went through workaround/revert/re-add churn.
 - For marker blinking or HC work, prefer current default-off/conservative behavior. Per-player blinking toggles need an event-handler ownership registry; multi-HC changes need typed routing plus server update-back accounting.
+- For headless-client changes, read [HC upstream history and lessons](HC-Upstream-History-And-Lessons) before editing. The old branch evidence says to keep HC role names/capabilities explicit, test side-less HC PVF routing, preserve wrong-name/error logging, and verify generated mission slots as well as scripts.
 
 ## missionNamespace, player lifecycle, and JIP guidance
 

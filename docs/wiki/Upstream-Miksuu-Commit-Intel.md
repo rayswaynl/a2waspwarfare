@@ -73,6 +73,7 @@ Research snapshot: upstream `master` at `8bcc42b1` (2026-06-02), GitHub PRs #1-#
 ## Current Documentation Impact
 
 - [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) is the narrative lesson page built from this evidence.
+- [HC upstream history and lessons](HC-Upstream-History-And-Lessons) is the focused appendix for older headless-client branch/comment-message evidence.
 - [Feature status register](Feature-Status-Register) should keep supply/JIP/town-AI/marker/reverted-feature risks visible when they are still broken, partial or risky in the rayswaynl source.
 - [AI Assistant Guide](AI-Assistant-Guide) should route future agents here before they revive old branches or copy unmerged upstream work.
 
@@ -190,7 +191,7 @@ Research snapshot: upstream `master` at `8bcc42b1` (2026-06-02), GitHub PRs #1-#
 | --- | --- | --- |
 | `upstream/commonbalanceinit_Old` tip `37e08f33`; `upstream/AirReworkTestBranch` tip `9973ef27`; commits `5d9c4587`, `c5953651`, `ddcbd3ca` | LoadoutManager, EASA, `Common_BalanceInit.sqf` | Aircraft/loadout history contains branch-only pylon/default-tag validation lessons; generated surfaces must move together. |
 | `upstream/AutomationSystems` tip `25f2b5ab` | callExtension, restart automation, backend process handoff | Direct `RESTARTSERVER` extension work evolved toward pipe/backend process handoff, absolute paths and delayed priority changes. |
-| `upstream/HeadlessClientMultithreading`; `6760f1a3`, `1d79ba2a`, `6b90c872`, `f5e8fa47` | HC delegation, static defenses | Multi-HC work needed typed HC pools and side-less HC client-call filtering; update-back accounting remains a risk. |
+| `upstream/HeadlessClientMultithreading`; `a241ac75`, `6760f1a3`, `bb01ebfc`, `1937ac40`, `f95609dd`, `1d79ba2a`, `6b90c872`, `89aec0a2`, `fc805377`, `f5e8fa47`, `ec4086fc` | HC delegation, mission slots, static defenses, PVF routing | Multi-HC work needed role-specific mission slots, typed HC pools, wrong-name errors, debug/RPT visibility, side-less HC client-call filtering and generated-map slot checks; update-back accounting remains a risk. See [HC upstream history](HC-Upstream-History-And-Lessons). |
 | `upstream/MgNestRestriction` tip `498bd6c4` | static defense restrictions | Repeated wrong-block and `isKindOf` fixes show static-defense restrictions must sit in the correct class branch. |
 | `upstream/Tournament_SideSpeakerWIP` tip `8ddeb502` | spectator/tournament side speaker | Branch tip admits civilian side speaker may broadcast to all players; audience/channel scope is unresolved. |
 | `upstream/BlinkingDone`, `upstream/WorkingBlinking`, `upstream/BlinkingMapIconsV2`; `2f6ff43d`, `9a550b7a`, `9c1fe110` | marker blinking, event handlers | Marker blinking churned through refactor reverts, local/global marker vars, color restoration and a default-off mission parameter. |

@@ -39,6 +39,7 @@
 - Compatibility and references
   - [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons)
   - [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel)
+  - [HC upstream history and lessons](HC-Upstream-History-And-Lessons)
   - [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match)
   - [Player stats branch audit](Player-Stats-Branch-Audit)
   - [BuyMenu EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit)

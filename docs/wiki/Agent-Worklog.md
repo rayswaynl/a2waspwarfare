@@ -31,6 +31,13 @@
 - Harvested source-backed deltas: [Player AI caps](Player-AI-Caps-And-Role-Balance) now has explicit formula and fallback-baseline tables; [Commander/HQ](Commander-HQ-Lifecycle-Atlas) and [Feature status](Feature-Status-Register) now state manual reassignment is currently broken by the `Server_AssignNewCommander.sqf` payload-shape bug; [Economy authority](Economy-Authority-First-Cut) and [Factory/purchase](Factory-And-Purchase-Systems-Atlas) now frame player buys as a request/acceptance/rollback protocol redesign; [Tools/build](Tools-And-Build-Workflow) and [Server ops](Server-Ops-Runbook) now warn that LoadoutManager can delete destination-only files/directories during sync; [Client UI systems](Client-UI-Systems-Atlas) and [UI IDD repair](UI-IDD-Collision-Repair) now call the title issue a lifecycle-handle collision; [Instructions for Codex](Instructions-For-Codex) now names current `origin/feat/supply-helicopter` head `262dc431` instead of stale `ffeea4c2`.
 - Documentation and machine-state cleanup only; no gameplay source files were edited.
 
+## 2026-06-04T09:13:15+0200 - Codex - hc-upstream-comments-history
+
+- Deep-dived older upstream headless-client evidence, especially `HeadlessClientMultithreading` commit messages and previous DR-21/DR-40/DR-42 agent notes.
+- Added [HC upstream history and lessons](HC-Upstream-History-And-Lessons) with concrete evidence for role-specific HC slots, typed HC registration, side-less PVF filtering, wrong-name/error logging, generated mission-slot drift and static-defense update-back risk.
+- Cross-linked the HC appendix from [AI/headless](AI-Headless-And-Performance), [HC delegation/failover](Headless-Delegation-And-Failover-Playbook), [Developer history](Developer-History-And-Upstream-Lessons), [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel), [Feature status](Feature-Status-Register), [AI Assistant Guide](AI-Assistant-Guide), Home and `_Sidebar.md`.
+- No gameplay code changed; this lane is documentation and machine-context only.
+
 ## 2026-06-04T09:10:00+02:00 - Codex - runtime ops scout split harvest
 
 - The original runtime/server-ops Spark scout overflowed during compaction, so Codex closed it and relaunched two tiny read-only scouts.
