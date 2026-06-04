@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `hc-upstream-comments-history` | Published | Added [HC upstream history and lessons](HC-Upstream-History-And-Lessons) after a targeted deep dive into older headless-client branch/comment-message evidence. Key lessons: typed HC routing, side-less PVF tests, wrong-name logging, static-defense update-back risk and generated mission slot verification. |
 | `upstream-lessons-pr8-drone-match` | Published | Added [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match), mapping upstream developer-history lessons to PR #8 and drone branches with concrete review checks for supply heli, upgrade queue, WDDM, EASA, rewards, Buy/EASA UI, drone authority, markers, cleanup, performance and generated mission propagation. |
 | `upstream-developer-lessons-second-wave` | Published | Ran a second five-agent read-only sweep and added PR-afterlife, dormant-branch, tooling/deployment, economy/ordnance, AI/HC and cleanup lessons to [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons), [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel), [Feature status register](Feature-Status-Register), [AI Assistant Guide](AI-Assistant-Guide), and [Tools and build workflow](Tools-And-Build-Workflow). |
 | `upstream-developer-lessons-and-history-agent-team` | Published | Five read-only history agents expanded [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) and [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel): branch-family taxonomy, generated-map/version hazards, AntiStack generations, client-init/UI/marker lifecycle risks, construction/removal runtime lessons, reverted PRs and tombstone branches. |
@@ -201,8 +202,8 @@ Historic scout rosters and harvested reports live in [Discovery swarm](Subagent-
 
 ### Canonical onboarding lane
 
-- `docs-knowledge-clickthrough-2026-06-03-1829` is the current canonical docs/navigation lane for Home/AI Assistant entrypoint drift, duplicate-onboarding risk, and machine-record sync checks.
-- `docs-knowledge-clickthrough-2026-06-03-1707` is now historical and kept for audit trace only; its active checks are superseded by the latest `1829` pass.
+- `docs-knowledge-clickthrough-2026-06-04-1008` is the current canonical docs/navigation lane for Home/AI Assistant entrypoint drift, duplicate-onboarding risk, and machine-record sync checks.
+- `docs-knowledge-clickthrough-2026-06-03-1829` and `docs-knowledge-clickthrough-2026-06-03-1707` are historical and kept for audit trace only; their active checks are superseded by the latest `1008` pass.
 - This lane is documentation-only and coordinates click-through path quality, source links and machine-readable evidence.
 
 ### What this page is for this lane
@@ -264,3 +265,26 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Commander authority status: request path is server-handled but requester attribution is weak; RequestNewCommander trusts caller-provided _side and _assigned_commander and Server_AssignNewCommander has a parameter-index mismatch risk.
 - Upgrade/Construction/Factory status: request handlers perform server-side cost checks, but malformed/unauthorized payload handling is not fully normalized across all call sites.
 - Evidence links now added in Feature-Status-Register, Economy-Authority-First-Cut, Economy-Towns-And-Supply, Supply-Mission-Authority-Cleanup-Playbook, and machine JSONL logs.
+
+## Goal update: docs-knowledge-clickthrough-2026-06-04-0911
+
+- Completed a /goal loop checkpoint for the docs-knowledge lane with no gameplay code changes.
+- Confirmed canonical entrypoint flow is still: `Home` → `Quickstart-For-Humans-And-Agents` → `AI-Assistant-Guide`/`LLM-Agent-Entry-Pack` → subsystem/page-of-interest, and source files remain linked from lane pages.
+- Reaffirmed `LLM-Agent-Entry-Pack.md` presence and mirrored the loop in `Agent-Worklog.md`.
+- Validation and parity snapshot: `Tools/ValidateWiki.ps1` passed, `docs/validate-wiki.ps1` passed, and `Tools/TestWikiParity.ps1` passed after this checkpoint.
+- Next action: continue duplicate-reduction pass on onboarding wording in Home/AI-Assistant-Guide and update `agent-knowledge.jsonl` only if canonical source links change.
+
+## Goal update: docs-knowledge-clickthrough-2026-06-04-1008
+
+- Tightened onboarding routing so `AI-Assistant-Guide` and `LLM-Agent-Entry-Pack` now explicitly separate compact bootstrap, execution, and machine-route roles.
+- Added compact source/risk context in entry pages and preserved related-system links to reduce future onboarding duplication.
+- No gameplay code changed; changes are docs-only and machine-navigation focused.
+- Validation for this checkpoint is complete: `Tools/ValidateWiki.ps1`, `docs/validate-wiki.ps1`, and `Tools/TestWikiParity.ps1`.
+- Closed a /goal loop checkpoint with this lane sync (`current canonical lane set to 1008`) and appended matching machine-readable evidence.
+
+## Goal update: docs-knowledge-clickthrough-2026-06-04-1022
+
+- Closed the /goal loop checkpoint for `docs-knowledge-entrypoint` after confirming `Wiki-Quality-Audit`’s onboarding watchpoint is resolved.
+- Kept `docs-knowledge-clickthrough-2026-06-04-1008` as canonical and marked `...1829`/`...1707` as historical context only.
+- Updated `Progress-Dashboard`, `Agent-Worklog`, `agent-context.json`, and watchpoint status to match machine event/knowledge loop evidence.
+- Validation remains docs-only and clean: `Tools/ValidateWiki.ps1`, `docs/validate-wiki.ps1`, `Tools/TestWikiParity.ps1` all passed.

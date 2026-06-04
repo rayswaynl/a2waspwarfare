@@ -10,6 +10,7 @@ This page records the Arma 2 OA compatibility check for scripting assumptions. T
 - Modern remote-execution terms: `remoteExec`, `remoteExecCall`, `isRemoteExecuted`, `remoteExecutedOwner` and `CfgRemoteExec`.
 - Function/command assumptions around `BIS_fnc_MP`, SQF `params`, `private _var = ...`, `addMissionEventHandler`, `parseSimpleArray`, `isEqualTo`, `setGroupOwner`, `groupOwner`, modern `select` range/filter forms, A3-only string helpers, the A3 `selectRandom` command, `distance2D`, `lnbSetTooltip` and `try`/`catch` forms.
 - CBA/ACE and Eden references that could be mistaken for required Arma 3-era dependencies.
+- Source-root documentation outside `docs/wiki`, including `README.md`, `AGENTS.md`, `Guides/`, `Tools/*/README.md`, mission `Common/Config/readme.txt` files and machine-readable sample/config files.
 - High-traffic pages: [LLM agent entry pack](LLM-Agent-Entry-Pack), [AI assistant developer guide](AI-Assistant-Developer-Guide), [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide), [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index), [Networking and public variables](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index), [Testing workflow](Testing-Debugging-And-Release-Workflow), [Feature status](Feature-Status-Register), [`agent-context.json`](agent-context.json), [`agent-knowledge.jsonl`](agent-knowledge.jsonl), [`agent-events.jsonl`](agent-events.jsonl) and [`llms.txt`](llms.txt).
 
 ## Source Basis
@@ -52,6 +53,7 @@ This page records the Arma 2 OA compatibility check for scripting assumptions. T
 - `BIS_fnc_selectRandom` is OA-compatible and source-backed in `Client_BuildUnit.sqf`; the command `selectRandom` is the Arma 3-only trap.
 - `BIS_fnc_distance2D` is OA-compatible and source-backed in `Client/Module/CoIn/coin_interface.sqf`; the command `distance2D` is the Arma 3-only trap.
 - Eden mentions found in source/docs refer to an Arma 2 terrain/folder name such as `Modded_Missions/...eden`, not the Arma 3 Eden editor.
+- The source-root `Tools/PerformanceAuditAnalyzer/README.md` mentions [systemTime](https://community.bohemia.net/wiki/systemTime) only as a contrast; BI marks that command as introduced with Arma 3 2.00. The README correctly explains that Arma 2 OA mission-side audit anchors use SID/tick/frame instead of exporting a misleading wall-clock mission date.
 
 ## Inverse Traps
 

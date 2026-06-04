@@ -1,6 +1,18 @@
 # LLM Agent Entry Pack
 
-Use this page when starting a compact Codex, Claude or other LLM session against this wiki.
+Use this page as the compact machine-facing entrypoint for a new Codex, Claude, or other LLM session against this wiki.
+
+## What this pack is
+
+- Compact bootstrap for Codex/Claude/agent sessions.
+- A single destination before opening subsystem pages.
+- The machine-readable route mirror for duplicate-risk controls (keep deep guidance in subsystem/playbook pages).
+
+## Where this pack lives
+
+- Wiki page: `LLM-Agent-Entry-Pack.md`
+- Machine companion: [`llms.txt`](llms.txt)
+- Runtime source: `Missions/[55-2hc]warfarev2_073v48co.chernarus`
 
 ## Load Order
 
@@ -13,6 +25,25 @@ Use this page when starting a compact Codex, Claude or other LLM session against
 | 5 | [Current source status snapshot](Current-Source-Status-Snapshot) | Current source/Vanilla truth for recently disputed patch-ready lanes. |
 | 6 | [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) | Official-reference gateway before making engine claims. |
 | 7 | [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) | Recently checked Arma 3-era assumptions and remaining OA runtime caveats. |
+
+## Source files and risk context
+
+- Primary machine coordination files:
+  - [`agent-context.json`](agent-context.json)
+  - [`agent-status.json`](agent-status.json)
+  - [`agent-events.jsonl`](agent-events.jsonl)
+  - [`agent-knowledge.jsonl`](agent-knowledge.jsonl)
+  - [`agent-collaboration.json`](agent-collaboration.json)
+- Runtime validation gates:
+  - `Tools/ValidateWiki.ps1`
+  - `Tools/TestWikiParity.ps1`
+  - `Tools/ValidateWiki.ps1 -SkipGitDiffCheck`
+
+## Related systems and where to continue
+
+- [AI-Assistant-Guide](AI-Assistant-Guide) for compact bootstrap rules and risk lanes.
+- [AI-Assistant-Developer-Guide](AI-Assistant-Developer-Guide) for execution constraints.
+- [Feature status register](Feature-Status-Register) and [Progress dashboard](Progress-Dashboard) for lane-risk ordering.
 
 ## Safe Defaults
 

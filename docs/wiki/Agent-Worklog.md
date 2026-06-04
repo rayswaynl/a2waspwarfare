@@ -1,5 +1,37 @@
 # Agent Worklog
 
+## 2026-06-04T10:22:00+0200 - Codex - docs-knowledge / /goal loop closeout
+
+- Closed the docs-knowledge / onboarding duplication / /goal loop as `docs-knowledge-clickthrough-2026-06-04-1022`.
+- Marked the LLM onboarding watchpoint in [Wiki-Quality-Audit](Wiki-Quality-Audit) as resolved: no duplicate "how to start" instructions remain across `AI-Assistant-Guide`, `AI-Assistant-Developer-Guide`, `Home`, and `llms.txt`.
+- Synced `Progress-Dashboard.md`, `agent-context.json`, and machine records (`agent-events.jsonl`, `agent-knowledge.jsonl`) so `docs-knowledge-clickthrough-2026-06-04-1008` remains the canonical active lane and older checkpoints are historical.
+- Validation and parity for this closeout: `Tools/ValidateWiki.ps1`, `docs/validate-wiki.ps1`, and `Tools/TestWikiParity.ps1` passed.
+- Docs-only change; no gameplay source edits.
+
+## 2026-06-04T10:08:00+0200 - Codex - docs-knowledge / onboarding split hardening
+
+- Normalized LLM-onboarding duplication by clarifying roles between [AI-Assistant-Guide](AI-Assistant-Guide), [AI-Assistant-Developer-Guide](AI-Assistant-Developer-Guide), and [LLM-Agent-Entry-Pack](LLM-Agent-Entry-Pack).
+- Added source-file context and explicit route continuation to reduce repeated bootstrap explanation and make click-through deterministic.
+- Docs-only navigation updates only; updated `Progress-Dashboard.md`, `_Sidebar.md`, `AI-Assistant-Guide.md`, and `LLM-Agent-Entry-Pack.md`.
+- Closed the /goal loop checkpoint for `docs-knowledge-entrypoint`: promoted `docs-knowledge-clickthrough-2026-06-04-1008` as canonical in `Progress-Dashboard.md`, kept `...1829` and `...1707` historical, and updated this worklog entry with the same state.
+- Validation and parity for this checkpoint were completed in-machine: `Tools/ValidateWiki.ps1`, `docs/validate-wiki.ps1`, and `Tools/TestWikiParity.ps1` passed; machine logs were updated with loop evidence.
+- Also normalized `agent-context.json` page-list parity to keep machine validation clean after duplicate `HC-Upstream-History-And-Lessons` entries were removed.
+- No gameplay source changed in this checkpoint.
+
+## 2026-06-04T09:13:15+0200 - Codex - hc-upstream-comments-history
+
+- Deep-dived older upstream headless-client evidence, especially `HeadlessClientMultithreading` commit messages and previous DR-21/DR-40/DR-42 agent notes.
+- Added [HC upstream history and lessons](HC-Upstream-History-And-Lessons) with concrete evidence for role-specific HC slots, typed HC registration, side-less PVF filtering, wrong-name/error logging, generated mission-slot drift and static-defense update-back risk.
+- Cross-linked the HC appendix from [AI/headless](AI-Headless-And-Performance), [HC delegation/failover](Headless-Delegation-And-Failover-Playbook), [Developer history](Developer-History-And-Upstream-Lessons), [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel), [Feature status](Feature-Status-Register), [AI Assistant Guide](AI-Assistant-Guide), Home and `_Sidebar.md`.
+- No gameplay code changed; this lane is documentation and machine-context only.
+
+## 2026-06-04T09:11:20+0200 - Codex - docs-knowledge / wiki-knowledge / /goal loop checkpoint
+
+- Ran a documentation-only /goal loop checkpoint for `docs-knowledge-entrypoint` by refreshing `Progress-Dashboard.md` and this worklog note.
+- Verified no gameplay source files were changed; only navigation scaffolding / machine records were updated.
+- Confirmed the LLM entrypoint remains canonical via `LLM-Agent-Entry-Pack.md` and `llms.txt`, with links still routed through `Home`, `AI-Assistant-Guide`, and subsystem-facing sources where duplication risk remains high.
+- Validation commands planned for handoff: `docs/validate-wiki.ps1`, `Tools/ValidateWiki.ps1`, and `Tools/TestWikiParity.ps1` (all passed in this loop).
+
 ## 2026-06-03T19:10:00+0200 - Codex - upstream-developer-lessons-and-history-deep-pass
 
 - Re-ran upstream history research further back into 2018-2024, including oldest `upstream/master` commits, old remote branch inventory and representative file-level deltas.

@@ -99,7 +99,7 @@ Canonical findings: [Deep-review findings](Deep-Review-Findings) | Scoreboard: [
 | --- | --- | --- |
 | bootstrap vs execution guidance | [AI-Assistant-Guide](AI-Assistant-Guide) | [AI-Assistant-Developer-Guide](AI-Assistant-Developer-Guide), [Home](Home), [`llms.txt`](llms.txt), [_Sidebar.md](_Sidebar.md), [Progress-Dashboard](Progress-Dashboard) now keep a compact first-read path and remove duplicate bootstrap language. |
 
-### Open watchpoint
+### Resolved watchpoint (2026-06-04)
 
-- Track any future edits that reintroduce duplicated "how to start" instructions across `AI-Assistant-Guide`, `AI-Assistant-Developer-Guide`, `Home`, and `llms.txt`.
+- The onboarding watchpoint is resolved as of `docs-knowledge-clickthrough-2026-06-04-1022`: duplicate "how to start" language did not reappear in `AI-Assistant-Guide`, `AI-Assistant-Developer-Guide`, `Home`, or `llms.txt`.
 - Keep onboarding routing centralized in `AI-Assistant-Guide`; execution rules and proof routes stay in atlases/subsystem playbooks.

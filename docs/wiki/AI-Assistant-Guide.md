@@ -14,6 +14,12 @@ Minimal first-touch page for humans and AI agents working on docs and orchestrat
 - Machine source: [`agent-status.json`](agent-status.json), [`agent-events.jsonl`](agent-events.jsonl), [`agent-knowledge.jsonl`](agent-knowledge.jsonl)
 - Runtime source: `Missions/[55-2hc]warfarev2_073v48co.chernarus`
 
+## Canonical onboarding role
+
+- This page is the canonical first-touch for humans and LLM agents in this lane.
+- Execution guidance and editing constraints are in [AI-Assistant-Developer-Guide](AI-Assistant-Developer-Guide).
+- Machine-only bootstrap details are in [`llms.txt`](llms.txt) and [`agent-context.json`](agent-context.json).
+
 ## Read order (fastest path)
 
 1. [Home](Home) for map and task lanes.
@@ -36,6 +42,16 @@ Run `Tools/ValidateWiki.ps1` after meaningful wiki changes.
   - [Deep-review findings](Deep-Review-Findings)
   - [Public Variable Channel Index](Public-Variable-Channel-Index)
   - [Feature status register](Feature-Status-Register)
+
+### Related systems / source files
+
+- [Home](Home): high-level tours and audience routing.
+- [Current source status snapshot](Current-Source-Status-Snapshot): live status overlay for disputed claims.
+- [SQF-Code-Atlas](SQF-Code-Atlas) and [Function-and-Module-Index](Function-And-Module-Index): compile ownership.
+- Source mission files that validate these claims:
+  - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf`
+  - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf`
+  - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf`
   - [Networking and public variables](Networking-And-Public-Variables)
 
 ## Networking edit playbook (new or risky channels)
@@ -74,6 +90,7 @@ Use this checklist before adding a new networking channel:
 - Treat release tooling as a separate risk surface: current packaging is source Chernarus plus generated Vanilla/Takistan unless modded packaging is explicitly re-enabled; LoadoutManager needs `7za`, generated `version.sqf`, sound filename contracts and terrain-specific post-copy checks.
 - For economy/ordnance work, branch names are especially dangerous: 75k nukes were live-test data, HQ repair escalation was reverted until server-owned, Mavericks-to-Spikes was not current truth, and bomb limits went through workaround/revert/re-add churn.
 - For marker blinking or HC work, prefer current default-off/conservative behavior. Per-player blinking toggles need an event-handler ownership registry; multi-HC changes need typed routing plus server update-back accounting.
+- For headless-client changes, read [HC upstream history and lessons](HC-Upstream-History-And-Lessons) before editing. The old branch evidence says to keep HC role names/capabilities explicit, test side-less HC PVF routing, preserve wrong-name/error logging, and verify generated mission slots as well as scripts.
 
 ## missionNamespace, player lifecycle, and JIP guidance
 

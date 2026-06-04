@@ -262,6 +262,22 @@
       "agent-events.jsonl"
     ]
   },
+  "sourceRootDocumentationSweep": {
+    "timestamp": "2026-06-03T15:56:00+02:00",
+    "summary": "Searched source-root documentation outside docs/wiki for explicit Arma 3/A3 and modern SQF/networking terms. The only current suspicious hit was Tools/PerformanceAuditAnalyzer/README.md mentioning Arma 3 systemTime as a contrast to explain why OA mission-side audit anchors use SID/tick/frame instead of wall-clock time.",
+    "searchedGlobs": [
+      "*.md",
+      "*.txt",
+      "*.json",
+      "*.jsonl"
+    ],
+    "noDocChangeNeeded": [
+      "Tools/PerformanceAuditAnalyzer/README.md:70"
+    ],
+    "externalReferences": [
+      "https://community.bohemia.net/wiki/systemTime"
+    ]
+  },
   "validationGate": {
     "script": "Tools/ValidateWiki.ps1",
     "scope": "High-traffic onboarding and current-state wiki/machine files",
@@ -357,7 +373,8 @@
     "https://community.bohemia.net/wiki/createVehicleCrew",
     "https://community.bohemia.net/wiki/deleteVehicleCrew",
     "https://community.bohemia.net/wiki/hideObjectGlobal",
-    "https://community.bohemia.net/wiki/enableSimulationGlobal"
+    "https://community.bohemia.net/wiki/enableSimulationGlobal",
+    "https://community.bohemia.net/wiki/systemTime"
   ],
   "remainingUncertain": [
     "Future PVF dispatcher patches still need Arma 2 OA dedicated, hosted, JIP and HC smoke.",
