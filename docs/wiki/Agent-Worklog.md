@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T11:40:00+02:00 - Codex - fallback scout final-head closure
+
+- Continued the documentation finisher loop and found one residual machine-status drift: `agent-status.json` still said the next output was to push the fallback-scout coordination correction.
+- Source state checked first: docs branch was already at `be754933`, live wiki was already at `3ae79fe`, and the fallback scout content batch remains `16f2ce8c` / `c66ed93`.
+- Updated [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` so future agents see the fallback scout wave as closed with no pending scout output. Coordination cleanup only; no gameplay source files were edited.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for the five changed coordination files.
+
 ## 2026-06-04T11:30:00+02:00 - Codex - fallback scout push-head reconciliation
 
 - Continued the documentation finisher loop and source-checked current pushed heads after the previous status batch: main docs `2fdab599` (`docs: record fallback scout push`) and live wiki `3c9b796` (`wiki: record fallback scout push`).
