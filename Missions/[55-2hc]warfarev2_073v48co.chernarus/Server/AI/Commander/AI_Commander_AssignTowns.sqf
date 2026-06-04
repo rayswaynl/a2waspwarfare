@@ -1,5 +1,5 @@
 /*
-	AI Commander — send idle AI teams at the nearest uncaptured town.
+	AI Commander - send idle AI teams at the nearest uncaptured town.
 	feat/ai-commander. Server-side worker.
 	Parameter: _this = side.
 
@@ -76,6 +76,7 @@ _assigned = [];
 					};
 					_assigned set [count _assigned, _target];
 					["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] heading to attack town [%3].", _sideText, _team, _target getVariable ["name", "town"]]] Call WFBE_CO_FNC_LogContent;
+					if (!isNil "WFBE_SE_FNC_AI_Com_LogAppend") then {[_side, "TOWN_ASSIGN", _team, [_team, _target, _target getVariable ["name", "town"], "towns", "nearest-uncaptured"]] Call WFBE_SE_FNC_AI_Com_LogAppend};
 				};
 			};
 		};
