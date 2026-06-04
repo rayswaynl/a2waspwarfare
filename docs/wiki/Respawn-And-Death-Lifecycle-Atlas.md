@@ -122,6 +122,8 @@ Both server AI paths:
 
 Team respawn state is `group setVariable ["wfbe_respawn", _respawn, true]` via `Common_SetTeamRespawn.sqf:1-8`; groups are initialized with blank respawn in `Server/Init/Init_Server.sqf:474-483`.
 
+AI loadout tier note: both AI respawn paths currently read `_upgrades select 13`, which matches `WFBE_UP_GEAR = 13` in `Common/Init/Init_CommonConstants.sqf:50`. Future cleanup should use the named constant, clamp the selected tier to available `WFBE_%SIDE_AI_Loadout_0..3` arrays and guard empty arrays before `random count`.
+
 ## Kill Scoring And Cleanup
 
 The player `Killed` EH sends the common kill report path through `WFBE_CO_FNC_OnUnitKilled` (`Client_OnKilled.sqf:77-84`; `Common_OnUnitKilled.sqf:8-14`). The server handler `RequestOnUnitKilled.sqf` resolves last-hit fallback for suicide/null killer cases (`:16-23`), logs the death (`:25`), exits if the killer is not alive (`:27`), schedules trash cleanup (`:50-55`), updates side casualties/vehicles lost (`:57-59`), awards score/bounty for enemy kills (`:63-101`) and sends teamkill notices for player-led friendly kills (`:103-109`).
@@ -137,6 +139,7 @@ Known adjacent hazard: HQ death has its own redundant client EH/JIP path and ide
 | Broken/dead edge | MASH marker synchronization is orphaned. | `Init_Client.sqf:132`; `MASHMarker.sqf:1-13`; `receiverMASHmarker.sqf:1-29` | Revive with server-held marker records and deletion replay, or delete/comment the dead relay more clearly. |
 | Smoke pending | Source-only skill idempotency patch depends on respawn reapply still working. | `Client_PreRespawnHandler.sqf:5`; [Client skill init idempotency](Client-Skill-Init-Idempotency) | Smoke Soldier/non-Soldier cap and post-respawn skill actions after LoadoutManager propagation. |
 | Review target | Respawn UI loop sleeps `0.01` and selector sleeps `0.03`. | `GUI_RespawnMenu.sqf:113`; `Client_UI_Respawn_Selector.sqf:19-35` | Keep as bounded death-screen-only UI work; if optimizing, preserve marker responsiveness and cleanup. |
+| Cleanup target | AI respawn loadout tier uses a literal gear-upgrade index and assumes a non-empty loadout array. | `AI_AdvancedRespawn.sqf:68`; `AI_SquadRespawn.sqf:56`; `Init_CommonConstants.sqf:50` | Replace literal `13` with `WFBE_UP_GEAR`, clamp/bounds-check tier selection and smoke Vanilla plus non-Vanilla AI leader respawn. |
 
 ## Validation Checklist
 

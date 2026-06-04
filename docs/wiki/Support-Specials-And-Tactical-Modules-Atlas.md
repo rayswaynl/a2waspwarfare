@@ -18,6 +18,10 @@ Server dispatch starts at `Server/PVFunctions/RequestSpecial.sqf:1`, which forwa
 
 RequestSpecial scout 2026-06-04: the active tag set in source Chernarus is `update-teamleader`, `group-query`, `Paratroops`, `ParaVehi`, `ParaAmmo`, `RespawnST`, `uav`, `upgrade-sync`, `update-clientfps`, `update-town-delegation`, `ICBM`, `process-killed-hq`, `connected-hc` and `repair-camp`. `track-playerobject` has a server switch case around `Server_HandleSpecial.sqf:133-145`, but no active Chernarus `RequestSpecial` caller was found; treat it as an undriven bookkeeping branch unless a later dynamic caller proves otherwise.
 
+No live `RequestSupport` symbol was found in source Chernarus during the 2026-06-04 trigger-chain scout; support and special effects route through `RequestSpecial`.
+
+Adjacent server runtime surfaces: grouped base areas are enabled only when `WFBE_C_BASE_AREA > 0` (`Server/Init/Init_Server.sqf:565`). Side logic seeds `wfbe_basearea` at `Init_Server.sqf:380`; `Server/FSM/basearea.sqf:46-80` then polls every 20 seconds, prunes invalid/remote base-area logics, and schedules delayed orphan-defense cleanup through `_onAreaRemoved` (`basearea.sqf:12-43`). `Server/FSM/groupsMonitor.sqf:1-14` is a dormant debug monitor that logs `allGroups` counts every 30 seconds; its only source start point found in this pass is commented at `Init_Server.sqf:567`.
+
 ## Support Feature Matrix
 
 | Feature | Status | Notes |
@@ -99,6 +103,7 @@ Wave N rechecked the support router and found two source-level traps worth keepi
 | Finding | Patch shape |
 | --- | --- |
 | `RequestSpecial` trusts client-side gates | Add server-side requester/side/role/funds/cooldown/upgrade validation before dispatching assets or map-wide effects. |
+| Base-area cleanup private-list nit | If editing `basearea.sqf`, add `_unit` to the `_onAreaRemoved` private list before its static-gunner cleanup block. This is low-risk hygiene, not an urgent behavior bug. |
 | Bomb altitude parameter is dormant | Either revive and smoke the commented altitude block in `Common_HandleShootBombs.sqf`, or rename/document the parameter as historical so admins do not expect it to enforce. |
 | Ordnance guardrails depend on local target state | Test lock/no-lock, pilot/gunner, AI crew, JIP and remote locality cases before tightening bomb or missile restrictions. |
 | AA missile gating is path-dependent | Verify start vehicles, purchased aircraft, client-built aircraft, rearmed aircraft, SAMs and EASA loadouts all pass the same `WFBE_C_GAMEPLAY_AIR_AA_MISSILES` / `WFBE_UP_AIRAAM` policy before calling AA restrictions complete. |

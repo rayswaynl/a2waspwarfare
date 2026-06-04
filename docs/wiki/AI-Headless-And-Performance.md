@@ -41,6 +41,12 @@ The command menu has three different order-like surfaces, and they should not be
 
 The waypoint helpers themselves are real, but their static callers are support/resistance paths: paratrooper/para-ammo/para-vehicle support calls `AIMoveTo`, and resistance can call `AIWPAdd` / `AIPatrol` (`Server/Support/Support_Paratroopers.sqf:92,122`; `Server/Support/Support_ParaAmmo.sqf:38,96`; `Server/Support/Support_ParaVehicles.sqf:39,78`; `Server/AI/AI_Resistance.sqf:14-16`). That proves the helper family, not the commander map-order executor.
 
+Legacy AI order notes from the 2026-06-04 scout:
+
+- `Server/AI/AI_TLWPHandler.sqs:9-31` still exists and teleports stragglers toward a team leader, but no static Chernarus caller or compile reference was found. Treat it as a legacy/orphan candidate unless a dynamic caller is proven.
+- `Server/AI/Orders/AI_WPAdd.sqf:35-36` can apply waypoint scripts/statements, but current static callers pass empty script/statement values (`AI_MoveTo.sqf:21`; `AI_Patrol.sqf:32,37`; `AI_TownPatrol.sqf:64,69`; `AI_Resistance.sqf:14`). No current client/network-controlled path to those statement strings was found in this pass.
+- The queued water-avoidance finding remains branch-sensitive: current checked-out source still shows uncapped water-avoidance loops in `AI_Patrol.sqf:26-30` and `AI_TownPatrol.sqf:50-54`; if another branch claims it fixed, re-check that branch before closing the current-source row.
+
 ## Town AI
 
 Town AI is centralized through `Server/FSM/server_town_ai.sqf`. The server starts it once globally when defenders or occupation are enabled at `Server/Init/Init_Server.sqf:513-514`. `Server_GetTownGroups`, `Server_GetTownGroupsDefender`, `Server_SpawnTownDefense`, and `Server_ManageTownDefenses` are compiled at `Server/Init/Init_Server.sqf:49-60`.

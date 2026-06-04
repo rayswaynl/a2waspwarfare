@@ -35,6 +35,13 @@ This page maps the mission-facing configuration and media layer: `description.ex
 
 `Common/Config/readme.txt:7-65` is still the best map of the intended data model: gear files register weapons, magazines and backpacks; group files feed town groups; loadout files build gear-menu templates; model/root files select side assets, support vehicles, AI loadouts and faction defaults. Runtime init then chooses faction roots from mission parameters and imports root, defense and group files (`Common/Init/Init_Common.sqf:263-308`).
 
+Load-order landmarks for config work:
+
+- `initJIPCompatible.sqf:121-123` loads mission parameters and common constants, then `:214-215` starts common config and town initialization.
+- `Common/Init/Init_Common.sqf:217-253` loads model/class core records such as `Core_US.sqf`, while `:222-230` loads gear registries.
+- `Init_Common.sqf:290-300` loads faction root and defense files; `Server/Init/Init_Server.sqf:142` loads `Server/Init/Init_Defenses.sqf` for server-side defense templates.
+- LoadoutManager-generated files are a separate layer: `Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs:116-129` and `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:99-102` write EASA, balance, aircraft-name and `version.sqf` outputs.
+
 Use this checklist before claiming a content/config edit is complete:
 
 | Change type | Source anchors | What to verify |

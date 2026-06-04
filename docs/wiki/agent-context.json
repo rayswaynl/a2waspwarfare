@@ -501,8 +501,8 @@
     "Server_AssignNewCommander DR-15 current status: current source/Vanilla still use _side = _this in Server_AssignNewCommander.sqf and RequestNewCommander still sends the duplicate caller-side notification; source patch, Vanilla propagation, requester/role validation and Arma smoke remain.",
     "Supply mission cooldown casing mismatch: town init seeds lastSupplyMissionRun while server supply mission code reads/writes LastSupplyMissionRun.",
     "Hosted server FPS loop current status: docs/source Chernarus and maintained Vanilla now early-exit serverFpsGUI.sqf and monitorServerFPS.sqf on !isDedicated before the loops. Stable origin/master still has the old inner-isDedicated sleep shape; release a9219d88 carries Chernarus-only coverage while release Vanilla remains old. Arma smoke remains.",
-    "LoadoutManager local path hazard: the current Codex checkout is work/a, but the tool searches ancestor folders for a literal a2waspwarfare directory and will throw outside that shape.",
-    "LoadoutManager packaging hazard: dotnet run always attempts ZipManager.DoZipOperations after generation/copy, so missing 7za can fail the final run even after useful outputs were written.",
+    "LoadoutManager root discovery current status: the tool now accepts either an ancestor named a2waspwarfare or repo-root markers (Missions, Missions_Vanilla and Tools/LoadoutManager/LoadoutManager.csproj), so work/a style checkouts are runnable.",
+    "LoadoutManager packaging current status: dotnet run still calls ZipManager after generation/copy, but A2WASP_SKIP_ZIP=1 skips _MISSIONS.7z creation so propagation-only runs do not require 7za.",
     "BattlEyeFilter/publicvariable.txt is feature-specific for kickAFK and is not a comprehensive PV hardening layer.",
     "DR-11 (Med-High, correctness): server_victory_threeway.sqf merges a lose-test (HQ dead + no factories) and a win-test (holds all towns) into one if and calls WFBE_CO_FNC_LogGameEnd (arg=winner) with the OPPOSITE of _x, so the persisted *_WIN_CHERNARUS profile tally is inverted for all-towns victories. WF_Winner is a dead write. && before || + !WFBE_GameOver guards only the towns branch + no forEach break -> endgame can double-fire. DR-12 threeway victory mode has no detection (WFBE_C_VICTORY_THREEWAY default 0; detection gated if(_victory==0); sole gameOver/failMission setter). DR-13 duplicate buggy Server/PVFunctions/LogGameEnd.sqf. See Deep-Review-Findings Round 6.",
     "DR-14 (High, architectural): player unit purchasing has NO server authority Ã¢â‚¬â€ GUI_Menu_BuyUnits.sqf spawns BuildUnit (client createVehicle/createUnit) and deducts client-side; no RequestBuyUnit PVF. With wfbe_funds broadcast-writable, the player economy is fully client-trusted. This is the ceiling on DR-1/DR-6 hardening; only a BattlEye scripts.txt filter (not a PV filter) can constrain client createVehicle. DR-15 current status: Server_AssignNewCommander call-shape and duplicate notification remain patch-ready/current-source-unpatched; RequestNewCommander still needs requester/role validation and Arma smoke. See Deep-Review-Findings Round 7 and Commander-Reassignment-Call-Shape.md.",
@@ -664,8 +664,8 @@
       "lane": "tooling-integrations-deep-index",
       "type": "read-only sub-agent source report integrated by Codex",
       "findings": [
-        "LoadoutManager requires an ancestor folder named a2waspwarfare and the current work/a checkout cannot run it as-is.",
-        "LoadoutManager always attempts packaging after generation; missing 7za fails the final packaging step.",
+        "LoadoutManager supports work/a style checkouts through repo-root marker discovery; an ancestor literally named a2waspwarfare is no longer required.",
+        "LoadoutManager packaging can be skipped for propagation-only runs with A2WASP_SKIP_ZIP=1; release packaging still needs 7za.",
         "Mission game stats flow through a2waspwarfare_Extension to C:\\a2waspwarfare\\Data\\database.json, then DiscordBot polls that file every 60 seconds.",
         "Modded mission generation is disabled/commented; Modded_Missions/* are stale/non-authoritative."
       ]
@@ -1103,7 +1103,7 @@
         "7za on PATH or configured for packaging"
       ],
       "safeToRunInMirror": false,
-      "notes": "Requires an ancestor folder literally named a2waspwarfare; the current Codex checkout work/a will throw unless run from a correctly named checkout or the lookup is changed. dotnet run always attempts packaging after generation."
+      "notes": "Requires either an ancestor named a2waspwarfare or repo-root markers such as Missions, Missions_Vanilla and Tools/LoadoutManager/LoadoutManager.csproj; work/a style checkouts are supported. Set A2WASP_SKIP_ZIP=1 for propagation-only runs that should skip _MISSIONS.7z packaging."
     },
     {
       "name": "Tools/PerformanceAuditAnalyzer",

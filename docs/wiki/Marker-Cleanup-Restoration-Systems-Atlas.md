@@ -38,7 +38,7 @@ Current audit nuance: the repair path calls the marker helper, but that helper s
 
 ## Server Cleanup And Restoration Loops
 
-`Server/Init/Init_Server.sqf:521-560` starts the major maintenance loops after town initialization: garbage collection, empty vehicles, dropped item cleanup, crater cleanup, ruins cleanup, building restoration and tracked mine cleanup. Treat this as a server-owned runtime layer, not a client UI feature. The Chernarus source mission is the authoritative edit point; generated Vanilla/terrain copies should be produced through the LoadoutManager workflow after source changes.
+`Server/Init/Init_Server.sqf:526-533` waits for `townInit` before starting victory detection and resource updates. The lifecycle maintenance loops start outside that wait block at `Init_Server.sqf:535-560`: garbage collection, empty vehicles, dropped item cleanup, crater cleanup, ruins cleanup, building restoration and tracked mine cleanup. Treat this as a server-owned runtime layer, not a client UI feature. The Chernarus source mission is the authoritative edit point; generated Vanilla/terrain copies should be produced through the LoadoutManager workflow after source changes.
 
 ### Runtime Contracts
 
@@ -97,6 +97,8 @@ PerformanceAudit labels to search in the server RPT:
 - Dropped item, crater, ruins and building loops do not use registries; they use fixed map-center `nearestObjects` scans.
 - The building restorer repairs all scanned `WarfareBBaseStructure` class objects. Future gameplay changes must decide whether this should include only player-built structures, stock Warfare base objects, destroyed AI-built structures or all matching ambient objects.
 - These scripts exist in generated/terrain mission copies too. Patch Chernarus first, then run the LoadoutManager propagation workflow and inspect generated diffs.
+- Filename note: the live empty-vehicle collector is `Server/FSM/emptyvehiclescollector.sqf`; there is no `server_empty_vehicles_collector.sqf` in the audited source tree.
+- Modded mission drift note: old Lingor/Eden/Napf forks start the building restorer and mine cleaner, but their parameter files may lack the newer building/mine interval parameters. Treat Chernarus plus maintained Vanilla as authoritative until those forks are regenerated or explicitly maintained.
 
 ## Patch-Ready Findings
 

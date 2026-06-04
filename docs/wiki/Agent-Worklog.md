@@ -1852,3 +1852,14 @@ Key conclusions:
 - Spark quota was blocked, so Codex used default explorer scouts for UI alias/path cleanup, server ops, AFK/lifecycle, runtime telemetry, Feature Status adjacency and tooling/generated-mission drift.
 - Integrated bounded docs findings: added [UI HUD and dialogs](UI-HUD-And-Dialogs), corrected the player UI gear-helper path, added [Server ops runbook](Server-Ops-Runbook), patched telemetry collection and server-FPS/supply-scan branch-scope wording, corrected AFKkick/lifecycle side-surface docs, and exposed missing Feature Status links for `SEND_MESSAGE` and supply player-object list propagation.
 - Corrected tooling docs for LoadoutManager repo-marker root discovery, `A2WASP_SKIP_ZIP`, `version.sqf` release flag inspection and the full PerformanceAuditAnalyzer output list. No gameplay source files changed.
+
+## 2026-06-04T01:59:38+02:00 - Codex - deep-gap fallback scout wave launch
+- Claimed `deep-gap-spark-scout-wave` as the next read-only discovery lane after the UI/ops/telemetry harvest was published and validated, but the first three Spark scouts hit the usage limit until 03:58.
+- Renamed the live lane to `deep-gap-fallback-scout-wave` and launched fallback explorers for the remaining map-only or shallow-reviewed gaps called out by DR-45 and later docs passes: AI respawn/orders, cleaners/restorers, config/faction/loadout data, support/basearea/groups-monitor trigger chains, stale machine-ledger/tooling claims and Feature Status adjacency.
+- Scouts are instructed to return source paths/line evidence and already-documented status; Codex will only patch confirmed deltas into the wiki/mirror.
+
+## 2026-06-04T02:09:03+02:00 - Codex - deep-gap fallback scout harvest
+- Closed all fallback explorers and harvested only confirmed deltas. Most target areas were already well covered; the useful additions were scoped to startup/status precision and machine-ledger cleanup.
+- Updated [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas), [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [AI/headless](AI-Headless-And-Performance), [Respawn/death](Respawn-And-Death-Lifecycle-Atlas), [Assets/config/localization](Assets-Config-Localization-And-Parameters-Atlas), [Feature status](Feature-Status-Register), [Audit findings queue](Audit-Findings-Queue-2026-06-03), `agent-context.json` and `agent-hardening-backlog.jsonl`.
+- Key corrections: cleaners/restorers start outside the `townInit` wait; `groupsMonitor.sqf` is dormant; `basearea.sqf` is parameter-gated and has a low-risk `_unit` private-list nit; AI respawn should use `WFBE_UP_GEAR` plus bounds/empty-array guards; `AI_TLWPHandler.sqs` is a legacy/orphan candidate; LoadoutManager root discovery and `A2WASP_SKIP_ZIP=1` are current machine truth.
+- Validation/parity passed; no gameplay source files changed.

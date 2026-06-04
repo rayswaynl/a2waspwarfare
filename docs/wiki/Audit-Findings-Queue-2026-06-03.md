@@ -48,7 +48,7 @@ UNVERIFIED rows as *claims to check*, not facts.
 | AI10 | `Server_UpdateTeam.sqf:5` | `round(random N)` biased formation pick | 1 | ⬜ |
 | AI12 | `server_town_ai.sqf:96` | `ArrayPush` in hottest detection loop | 1 | ⬜ |
 | AI13 | `server_town_ai.sqf:157` | pre-created groups leak on invalid template (144-cap) | 3 | ⬜ |
-| AI14 | `AI_SquadRespawn.sqf:56`,`AI_AdvancedRespawn.sqf:68` | hardcoded upgrade index 13, no bounds check | 4 | ⬜ |
+| AI14 | `AI_SquadRespawn.sqf:56`,`AI_AdvancedRespawn.sqf:68` | literal gear-upgrade index and no loadout bounds/empty-array guard | 4 | ⚠️ real cleanup: `13` matches `WFBE_UP_GEAR`, but code should use the named constant, clamp tier selection and guard empty `WFBE_%SIDE_AI_Loadout_*` arrays before `random count`. |
 | AI16 | `Server_HandleDefense.sqf:8` | no side-change check → ghost defenders re-man captured towns | 3 | ⬜ |
 
 ## Vehicles & assets (V1-V18)

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T01:54:55+02:00",
+  "generatedAt": "2026-06-04T02:09:03+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated the UI/ops/telemetry scout harvest: UI alias/path cleanup, Server Ops Runbook, runtime telemetry checklist, AFK/lifecycle cross-links, Feature Status adjacency links and tooling/root-discovery corrections.",
-      "nextExpectedOutput": "Commit and push the ui-ops-telemetry scout harvest batch; then pick the next bounded Feature Status or abandoned-feature lane."
+      "currentWork": "Published and validated the deep-gap fallback scout wave: cleaner startup wording, basearea/groupsMonitor routing, AI respawn loadout and legacy order notes, config load-order landmarks, LoadoutManager machine-ledger cleanup and old player-object-list backlog superseding.",
+      "nextExpectedOutput": "Pick the next bounded Feature Status, authority or stale-machine-ledger lane."
     },
     "Codex-2": {
       "status": "ready",
@@ -38,11 +38,17 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "Latest explorer wave completed after Spark quota blocked. Lanes covered UI alias/path cleanup, server ops, AFK/lifecycle, runtime telemetry, Feature Status adjacency and tooling/generated mission drift; useful findings are published and validated.",
+      "currentWork": "Latest fallback explorer wave completed after Spark quota blocked. Lanes covered AI respawn/orders, cleaners/restorers, config data, support/basearea/groups-monitor triggers and stale machine-ledger/tooling claims; useful findings are published and validated.",
       "nextExpectedOutput": "No active sub-agent output pending."
     }
   },
   "laneSummary": [
+    {
+      "lane": "deep-gap-fallback-scout-wave",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "output": "Spark quota blocked the first three attempts, so Codex launched a fallback explorer wave for remaining depth gaps. Published bounded source-backed deltas: corrected cleaner startup wording, added basearea/groupsMonitor routing, refined AI respawn loadout and legacy AI_TLWPHandler notes, added config load-order landmarks, removed stale LoadoutManager root/packaging claims from machine records and superseded the old player-object-list indexing backlog row. Wiki validation, JSON/JSONL parsing, git diff --check and mirror parity passed."
+    },
     {
       "lane": "ui-ops-telemetry-scout-harvest",
       "owner": "Codex/Sub-agents",
