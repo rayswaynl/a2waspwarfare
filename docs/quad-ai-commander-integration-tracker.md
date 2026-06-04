@@ -26,6 +26,7 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 | Document | Purpose |
 |---|---|
 | `docs/quad-ai-commander.md` | Concept and architecture overview |
+| `docs/quad-ai-commander-long-term-goal-prompt.md` | Durable Codex/assistant handoff prompt with persistent objective, evidence gates, next-action order, and completion rules |
 | `docs/quad-ai-commander-implementation-roadmap.md` | Full staged roadmap |
 | `docs/quad-ai-commander-phase0-smoke-brief.md` | Current AI Commander smoke-test brief |
 | `docs/quad-ai-commander-phase0-rpt-patterns.md` | Concrete RPT anchors for Phase 0 smoke testing |
