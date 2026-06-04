@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T08:05:00+02:00",
+    "generatedAt":  "2026-06-04T08:18:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -22,9 +22,28 @@
                },
     "activeClaims":  [
                          {
+                             "lane":  "supply-scan-reference-cleanup",
+                             "owner":  "Codex",
+                             "status":  "published-validated",
+                             "sourceScope":  [
+                                                 "Deep-Review-Findings supply mission perf paragraph",
+                                                 "Feature-Status-Register supply audit addendum",
+                                                 "docs/source Chernarus supplyMissionStarted.sqf:25-28",
+                                                 "origin/master broad supplyMissionStarted.sqf nearestObjects scan",
+                                                 "origin/release/2026-06-feature-bundle supplyMissionStarted.sqf:50-56"
+                                             ],
+                             "outputs":  [
+                                             "Corrected release branch line refs in Deep Review from :46-53 to :50-56.",
+                                             "Replaced nonexistent WFBE_Command_Center_Class / WFBE_Supply_Truck_Classes wording in Feature Status with the literal Base_WarfareBUAVterminal nearestObjects source shape.",
+                                             "No gameplay source changed.",
+                                             "Validation passed: docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity."
+                                         ],
+                             "handoff":  "This correction is validated and ready as canonical branch-scoped supply scan wording. Future supply scan docs should cite actual class/list literals or proven branch symbols, not inferred convenience names."
+                         },
+                         {
                              "lane":  "supply-authority-branch-scope-correction",
                              "owner":  "Codex",
-                             "status":  "published-validating",
+                             "status":  "published-validated",
                              "sourceScope":  [
                                                  "docs/source Chernarus supplyMissionStarted.sqf:25-28",
                                                  "docs/source Chernarus supplyMissionCompleted.sqf:27-28",

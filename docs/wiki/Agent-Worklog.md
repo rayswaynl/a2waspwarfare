@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T08:18:00+02:00 - Codex - supply scan reference cleanup
+
+- Continued the documentation finisher loop after noticing that `agent-status.json` still marked `supply-authority-branch-scope-correction` as `published-validating` even though the dashboard and prior validation evidence said validated.
+- Source-checked the supply scan wording against current docs/source, `origin/master` and `origin/release/2026-06-feature-bundle`: current docs/source uses `Base_WarfareBUAVterminal` with `nearestObjects [..., ["Base_WarfareBUAVterminal"], 80]` at `supplyMissionStarted.sqf:25-28`; `origin/master` still uses broad `nearestObjects [..., [], 80]`; release head `a9219d88` uses the heli-aware branch at `:50-56`.
+- Updated [Deep-review findings](Deep-Review-Findings) release line refs and [Feature status](Feature-Status-Register) supply addendum wording so future agents do not chase nonexistent `WFBE_Command_Center_Class` / `WFBE_Supply_Truck_Classes` symbols.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T08:05:00+02:00 - Codex - supply authority branch-scope correction
 
 - Continued the documentation finisher loop into a supply-mission status-drift lead from the worklog.

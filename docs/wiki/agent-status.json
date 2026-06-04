@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T08:05:00+02:00",
+    "generatedAt":  "2026-06-04T08:18:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -20,8 +20,8 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Published a supply authority branch-scope correction: docs/source Chernarus is truck-only with narrowed 80 m scan; origin/master remains broad; origin/feat/supply-helicopter head 262dc431 adds SupplyByHeli but does not clear it; origin/release/2026-06-feature-bundle head a9219d88 has heli-aware scan and SupplyByHeli cleanup.",
-                                 "nextExpectedOutput":  "Continue the documentation finisher loop with the next source-backed status drift or owner-decision routing gap."
+                                 "currentWork":  "Published supply scan reference cleanup: Deep Review release refs now point at supplyMissionStarted.sqf:50-56, Feature Status names the actual Base_WarfareBUAVterminal nearestObjects source shape, and previous supply branch-scope state is marked validated.",
+                                 "nextExpectedOutput":  "Continue the documentation finisher loop with the next source-backed owner-decision or Feature Status routing gap."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -44,10 +44,16 @@
                },
     "laneSummary":  [
                         {
+                            "lane":  "supply-scan-reference-cleanup",
+                            "owner":  "Codex",
+                            "status":  "published-validated",
+                            "output":  "Corrected stale supply scan wording in Deep-Review-Findings and Feature-Status-Register. Source evidence: current docs/source Chernarus uses Base_WarfareBUAVterminal and nearestObjects [..., [\"Base_WarfareBUAVterminal\"], 80] at supplyMissionStarted.sqf:25-28; origin/master remains broad; origin/release/2026-06-feature-bundle head a9219d88 uses heli-aware scan at :50-56. Removed nonexistent WFBE_Command_Center_Class / WFBE_Supply_Truck_Classes wording. No gameplay source changed. Validation passed: docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity."
+                        },
+                        {
                             "lane":  "supply-authority-branch-scope-correction",
                             "owner":  "Codex",
-                            "status":  "published-validating",
-                            "output":  "Source-checked supply mission branch status and corrected Supply-Mission-Authority-Cleanup-Playbook plus Supply-Mission-Scan-Narrowing. Current docs/source Chernarus has the narrowed truck scan at supplyMissionStarted.sqf:25-28; origin/master remains broad; origin/feat/supply-helicopter head 262dc431 adds SupplyByHeli but does not clear it on completion; origin/release/2026-06-feature-bundle head a9219d88 has heli-aware scan at :50-56 and clears SupplyByHeli after commit 4cf443fe. No gameplay source changed."
+                            "status":  "published-validated",
+                            "output":  "Source-checked supply mission branch status and corrected Supply-Mission-Authority-Cleanup-Playbook plus Supply-Mission-Scan-Narrowing. Current docs/source Chernarus has the narrowed truck scan at supplyMissionStarted.sqf:25-28; origin/master remains broad; origin/feat/supply-helicopter head 262dc431 adds SupplyByHeli but does not clear it on completion; origin/release/2026-06-feature-bundle head a9219d88 has heli-aware scan at :50-56 and clears SupplyByHeli after commit 4cf443fe. No gameplay source changed. Validation passed: docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity."
                         },
                         {
                             "lane":  "mini-scout-wave-static-supply-ui-pv",
