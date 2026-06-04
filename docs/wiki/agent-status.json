@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop / research-catchup-synthesis-default-supported / relevance-pruning-and-archive-default-supported",
-      "currentWork": "Cleaning up pruning-batch residue after the first catch-up/debloat publish: dashboard chronology, duplicate Home navigation and repeated pruning-ledger rows.",
-      "nextExpectedOutput": "Validate, mirror, commit and push the dashboard/pruning-ledger cleanup, then continue scoped relevance pruning."
+      "currentWork": "Published the dashboard/pruning-ledger cleanup after the first catch-up/debloat batch: compact dashboard chronology, duplicate Home navigation removed and repeated pruning-ledger rows reconciled.",
+      "nextExpectedOutput": "Continue scoped relevance pruning from the pruning ledger without reopening already-harvested scout history."
     },
     "Codex-2": {
       "status": "ready",
@@ -53,8 +53,8 @@
     {
       "lane": "dashboard-pruning-ledger-cleanup",
       "owner": "Codex",
-      "status": "local-validation-pending",
-      "output": "Progress Dashboard Latest Batch is compacted back toward current-state use, duplicate Home mirror-policy navigation is removed, and repeated Subagent Discovery Swarm pruning-ledger rows are reconciled. No gameplay source changed."
+      "status": "published-validated",
+      "output": "Progress Dashboard Latest Batch is compacted back toward current-state use, duplicate Home mirror-policy navigation is removed, and repeated Subagent Discovery Swarm pruning-ledger rows are reconciled. Validation passed: docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check with line-ending warnings only and SHA256 mirror parity. No gameplay source changed."
     },
     {
       "lane": "wiki-pruning-loop-refresh-supported-agents",
