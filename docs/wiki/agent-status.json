@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Mini scout wave for community/dev, config data model, AI runtime/orders, UI/player workflows and tooling has been harvested into docs. One feature-status scout overflowed without evidence. Validation and push are pending. No gameplay source changed.",
-      "nextExpectedOutput": "Validate, mirror, commit and push the scoped docs batch, then record final heads."
+      "currentWork": "Mini scout wave for community/dev, config data model, AI runtime/orders, UI/player workflows and tooling has been harvested, validated and pushed. One feature-status scout overflowed without evidence. Content commits are docs b5a40dd4 / wiki 5699c82. No gameplay source changed.",
+      "nextExpectedOutput": "Continue bounded source-backed wiki maintenance and keep final-head breadcrumbs current."
     },
     "Codex-2": {
       "status": "ready",
@@ -38,16 +38,16 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "mini-scout-wave-community-config-ai-ui-tooling",
-      "currentWork": "Five mini scouts returned and were closed: community/dev provenance, config/data model, AI runtime/orders, UI/player workflows and tooling/integrations. One feature-status scout overflowed during compaction and is not evidence.",
-      "nextExpectedOutput": "No active scout wave; current harvested docs batch awaits validation/push."
+      "currentWork": "Five mini scouts returned and were closed: community/dev provenance, config/data model, AI runtime/orders, UI/player workflows and tooling/integrations. One feature-status scout overflowed during compaction and is not evidence. Harvested docs were validated and pushed.",
+      "nextExpectedOutput": "No active scout wave; future scouts should stay narrow and source-cited."
     }
   },
   "laneSummary": [
     {
       "lane": "mini-scout-wave-community-config-ai-ui-tooling",
       "owner": "Codex/Sub-agents",
-      "status": "harvested-validation-pending",
-      "output": "Spark starts hit quota/overflow before evidence, so Codex launched six gpt-5.4-mini read-only scouts. Five returned and were source-checked into docs: config positional arrays and post-load mutation, player UI workflow details, AI order/recovery chain and PerformanceAuditAnalyzer 14-output contract. Community/dev scout confirmed existing hub coverage. One feature-status scout overflowed and is not evidence. No gameplay source changed."
+      "status": "published-validated-pushed",
+      "output": "Spark starts hit quota/overflow before evidence, so Codex launched six gpt-5.4-mini read-only scouts. Five returned and were source-checked into docs: config positional arrays and post-load mutation, player UI workflow details, AI order/recovery chain and PerformanceAuditAnalyzer 14-output contract. Community/dev scout confirmed existing hub coverage. One feature-status scout overflowed and is not evidence. Validation passed and content pushed as docs b5a40dd4 / wiki 5699c82. No gameplay source changed."
     },
     {
       "lane": "documentation-finisher-loop",
