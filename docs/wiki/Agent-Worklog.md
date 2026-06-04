@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T07:23:56+02:00 - Codex - AntiStack monitorTeamToJoin inert worker
+
+- Continued the documentation finisher loop into the next AntiStack-adjacent thin finding.
+- Source evidence: `Init_Server.sqf:606-608` starts `countPlayerScores.sqf`, `monitorTeamToJoin.sqf` and `skillDiffCompensation.sqf` when AntiStack is enabled; `monitorTeamToJoin.sqf:1-15` only computes monitored west/east skill totals and assigns a local `_side`.
+- Clarified [AntiStack database extension audit](AntiStack-Database-Extension-Audit) so the runtime diagram is not mistaken for a live policy loop, routed the Feature Status row to the AntiStack audit, and added a development lesson: `execVM` proves a file runs, not that the feature has a durable effect.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T07:19:31+02:00 - Codex - AntiStack A2WaspDatabase owner gate
 
 - Followed the documentation finisher loop into DR-7 through DR-10 and source-checked the AntiStack external DB path.

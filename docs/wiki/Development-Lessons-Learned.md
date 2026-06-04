@@ -10,6 +10,8 @@ The depth-2 scout wave found a good example in AI teams: `wfbe_autonomous` sound
 
 The same rule applies to network messages that sound cosmetic. `WFBE_Server_PV_SupplyMissionCompletedMessage` looks like a notification channel, but the client handler grants funds and requests score (`Client/Module/supplyMission/supplyMissionCompletedMessage.sqf:11-23`). Treat names as clues, not proof of authority or side-effect scope.
 
+The same rule applies to launched scripts. AntiStack starts `monitorTeamToJoin.sqf` from server init when enabled (`Server/Init/Init_Server.sqf:606-608`), but the script only reads monitored west/east skill totals and assigns a local `_side` (`Server/Module/AntiStack/monitorTeamToJoin.sqf:1-15`). It has no loop, no `setVariable`, no `publicVariable`, no return consumer and no connection to `RequestJoin`. Treat `execVM` presence as "this file runs," not "this feature has an effect."
+
 ## Highest-Value Coverage Gaps
 
 | Area | Current coverage state | Why it still deserves attention |

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T07:19:31+02:00",
+  "generatedAt": "2026-06-04T07:23:56+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Promoted the AntiStack A2WaspDatabase deployment gate after source-checking DR-7 through DR-10 against current code. Existing technical pages already covered the wrapper risks; Codex added the missing owner-facing decision: confirm/install and harden the separate A2WaspDatabase extension, or operate/default AntiStack disabled until the dependency is real.",
+      "currentWork": "Promoted the AntiStack monitorTeamToJoin inert-worker clarification after source-checking Init_Server.sqf and Server/Module/AntiStack/monitorTeamToJoin.sqf. The launch line exists, but the script only computes a local preferred side and has no durable output or join-policy effect.",
       "nextExpectedOutput": "Continue the documentation finisher loop with the next bounded source-backed gap."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "antistack-monitor-teamtojoin-inert-worker",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Source-checked AntiStack monitorTeamToJoin: Init_Server.sqf starts it with enabled AntiStack loops, but monitorTeamToJoin.sqf only reads monitored west/east skill totals, assigns a local _side and exits. Updated AntiStack Database Extension Audit, Feature Status, Development Lessons and machine ledgers so future agents do not mistake an execVM launch for a live policy worker. No gameplay source changed."
+    },
     {
       "lane": "antistack-a2waspdatabase-owner-gate",
       "owner": "Codex",
