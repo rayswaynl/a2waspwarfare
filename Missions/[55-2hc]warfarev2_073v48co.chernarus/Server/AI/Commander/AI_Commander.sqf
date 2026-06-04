@@ -28,6 +28,7 @@ if (isNil "WFBE_SE_FNC_AI_Com_ContextUpdate") then {WFBE_SE_FNC_AI_Com_ContextUp
 if (isNil "WFBE_SE_FNC_AI_Com_BeliefMerge") then {WFBE_SE_FNC_AI_Com_BeliefMerge = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_BeliefMerge.sqf"};
 if (isNil "WFBE_SE_FNC_AI_Com_BeliefDecay") then {WFBE_SE_FNC_AI_Com_BeliefDecay = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_BeliefDecay.sqf"};
 if (isNil "WFBE_SE_FNC_AI_Com_ContextDebug") then {WFBE_SE_FNC_AI_Com_ContextDebug = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_ContextDebug.sqf"};
+if (isNil "WFBE_SE_FNC_AI_Com_ContextSyntheticSmoke") then {WFBE_SE_FNC_AI_Com_ContextSyntheticSmoke = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_ContextSyntheticSmoke.sqf"};
 
 //--- Wait for full server init before commanding.
 waitUntil {sleep 1; !(isNil "serverInitFull")};
