@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-04T16:05:00+02:00 - Codex - AI commander branch-head refresh and Spark scout wave
+
+- Steff asked for another bunch of Spark scouts. Codex launched narrow read-only Spark lanes for feature status evidence, mission entrypoints, PV/networking, UI/dialogs, tooling/integrations, generated/modded drift, dead references, economy/town loops, support authority and player-AI caps.
+- Returned reports already harvested as leads: mission startup barriers and mission-object town init, modded generation/packaging disabled plus structural incompleteness/conflict markers, LoadoutManager/DiscordBot/Extension/BattlEye tooling footguns, PVF `Call Compile`/direct-PV authority risks, UI duplicate IDD/orphaned upgrade dialog and Feature Status confirmations. Remaining scouts are still discovery leads until patched into canonical pages.
+- In parallel, source-checked moved branch refs. `origin/feat/ai-commander` is now `c20ce153`, still source-Chernarus-only: 9 files, +416/-5, no `Missions_Vanilla`. The post-`4dba060e` cleanup series `b4b0333f`..`c20ce153` only rewrites lazy condition blocks across the five AI commander scripts, improving branch readiness without changing branch-only/smoke status.
+- Also refreshed `origin/codex/quad-ai-commander` from stale `3179be6d` to `d4e0fa38`; it now includes documentation-side evidence audit/runtime report artifacts, still planning evidence only.
+- Updated current branch-head/status pages and machine ledgers first. Documentation/status only; no gameplay source files were edited.
+
 ## 2026-06-04T14:05:00+02:00 - Codex - fresh background Spark scout harvest status
 
 - Continued the documentation finisher loop after the fresh background Spark scout launch. Read completed thread reports for construction/base, PV/network, tools/content, abandoned features and upstream/community.

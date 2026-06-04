@@ -120,7 +120,7 @@ Development rule: a machine record that says `patched`, `propagated`, `release-r
 
 ## Lesson 10: Revival Branches Need Default, Propagation And Smoke Labels
 
-`origin/feat/ai-commander` is useful branch evidence, but it is not stable-master truth. Current head `4dba060e` adds a server-side AI commander supervisor, assignment workers, production worker and order executor; earlier branch commits `585c3519`, `1a3e3def` and `4c2abced` add AI commander constants, default-on parameter behavior, upgrade debit/index fixes and compile/start wiring. The diff is source-Chernarus-only: no maintained Vanilla files are touched.
+`origin/feat/ai-commander` is useful branch evidence, but it is not stable-master truth. Current head `c20ce153` adds a server-side AI commander supervisor, assignment workers, production worker and order executor; earlier branch commits `585c3519`, `1a3e3def` and `4c2abced` add AI commander constants, default-on parameter behavior, upgrade debit/index fixes and compile/start wiring, and the follow-up cleanup series `b4b0333f` through `c20ce153` rewrites lazy condition blocks across the five AI commander scripts. The diff is source-Chernarus-only: no maintained Vanilla files are touched.
 
 The branch also changes behavior, not only missing plumbing. `Rsc/Parameters.hpp:96` defaults AI commander to on, `Init_Server.sqf:630-631` spawns one supervisor per side, `AI_Commander.sqf:43-72` chooses full-vs-assist mode, and `AI_Commander_Produce.sqf:73-80` spends AI commander funds through `AIBuyUnit`. At the same time, the old autonomous supply-truck path is only guarded: `UpdateSupplyTruck` remains commented and the missing `Server/FSM/supplytruck.fsm` is not restored.
 

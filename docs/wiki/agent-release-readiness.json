@@ -55,7 +55,7 @@
     {
       "id": "ai-commander-branch-revival",
       "branch": "origin/feat/ai-commander",
-      "head": "4dba060e",
+      "head": "c20ce153",
       "base": "origin/master@2cdf5fb8",
       "state": "branch-review-needed-not-stable-master-truth",
       "sourceScope": "source-chernarus-only",
@@ -67,10 +67,11 @@
         "Testing-Debugging-And-Release-Workflow.md#branch-only-feature-smoke-pack"
       ],
       "evidenceRefs": [
-        "origin/master..origin/feat/ai-commander: 9 Chernarus source files +366/-5",
+        "origin/master..origin/feat/ai-commander: 9 Chernarus source files +416/-5",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp:96 on origin/feat/ai-commander",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf:49-54,387-389,630-631 on origin/feat/ai-commander",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:29-81 on origin/feat/ai-commander"
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:29-81 on origin/feat/ai-commander",
+        "lazy-condition cleanup series b4b0333f..c20ce153 touches the five Server/AI/Commander/AI_Commander*.sqf scripts"
       ],
       "ownerDecision": "Accept or reject default-on AI commander and human-assist mode; decide autonomous logistics scope separately because the old UpdateSupplyTruck path is guarded, not restored.",
       "promotionGate": "Propagate/review maintained Vanilla, then smoke no-human full command, human assist/no-spend, order execution, town assignment, production cap, upgrade debit/costs, commander handoff, HQ death and JIP before calling AI commander revived.",

@@ -1,6 +1,6 @@
 # Quad AI Commander Concept
 
-This page indexes `origin/codex/quad-ai-commander` head `3179be6d`. It is a **future design sketch**, not current stable mission behavior.
+This page indexes `origin/codex/quad-ai-commander` head `d4e0fa38`. It is a **future design sketch**, not current stable mission behavior.
 
 Use [AI commander autonomy audit](AI-Commander-Autonomy-Audit) for source-backed status. Stable `origin/master` still has partial AI commander state and workers, but no proven full autonomous commander loop. `origin/feat/ai-commander` is the current branch-level revival attempt. Quad AI Commander is a separate idea for an intelligence/log-driven command layer.
 
@@ -36,8 +36,10 @@ A safe first version would be advisory/debug-visible only:
 | --- | --- |
 | Stable master support | Not implemented as this concept. |
 | `feat/ai-commander` relation | Adjacent but separate: that branch adds a supervisor/workers/order executor, not this log/intel context store. |
-| Branch source | `origin/codex/quad-ai-commander:wiki/Quad-AI-Commander.md` at `3179be6d`. |
+| Branch source | `origin/codex/quad-ai-commander:wiki/Quad-AI-Commander.md` at `d4e0fa38`. |
 | Recommended use | Treat as product/design input for a future AI commander research branch. |
+
+The current branch head also adds documentation-side handoff material under `docs/quad-ai-commander-*`, including an evidence audit matrix (`999c3b35`) and runtime report template (`c4017789`, linked by `d4e0fa38`). Treat those as planning/checklist artifacts; they do not prove runtime implementation.
 
 ## Risks Before Implementation
 

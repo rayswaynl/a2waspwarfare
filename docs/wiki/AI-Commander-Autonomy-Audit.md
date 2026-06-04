@@ -21,19 +21,20 @@ Autonomous supply trucks are worse than partial: the old `UpdateSupplyTruck` com
 
 `origin/feat/ai-commander` is the current branch-only revival attempt. It changes the status of the branch, not stable `master`: the branch adds a server-side commander supervisor, assignment workers, production worker and explicit order executor, but it is source-Chernarus-only and needs dedicated/JIP/Vanilla smoke before the wiki can call AI commander revived.
 
-Separate concept note: [Quad AI Commander concept](Quad-AI-Commander) indexes `origin/codex/quad-ai-commander` head `3179be6d`. It is a future log/intel/context-store design sketch, not stable source behavior and not proof that AI commander autonomy is implemented.
+Separate concept note: [Quad AI Commander concept](Quad-AI-Commander) indexes `origin/codex/quad-ai-commander` head `d4e0fa38`. It is a future log/intel/context-store design sketch, not stable source behavior and not proof that AI commander autonomy is implemented.
 
 ## Branch Refresh - `feat/ai-commander`
 
-Snapshot: 2026-06-03. Branch head `4dba060e` splits from `origin/master` at `2cdf5fb8`. Diff from stable master is 9 Chernarus-source files, +366/-5; no `Missions_Vanilla` files are touched.
+Snapshot refreshed: 2026-06-04. Branch head `c20ce153` compares against `origin/master` `2cdf5fb8`. Diff from stable master is 9 Chernarus-source files, +416/-5; no `Missions_Vanilla` files are touched. The later cleanup series after `4dba060e` changes only the five AI commander scripts, adding 141 lines and removing 91 lines to avoid lazy condition blocks.
 
 | Branch piece | Evidence | Meaning |
 | --- | --- | --- |
 | Phase-0 safety and economics | `585c3519`; `Rsc/Parameters.hpp:92-96`; `Common/Init/Init_CommonConstants.sqf:98-105`; `Server/Functions/Server_AI_Com_Upgrade.sqf:27,47,50`; `Server/Init/Init_Server.sqf:387-389` | Makes AI commander default-on in the lobby, adds new cadence/cap constants, fixes the funds/supply debit swap, and guards the old `UpdateSupplyTruck` nil-code spawn. The missing `supplytruck.fsm` is still not restored. |
 | Supervisor and workers | `1a3e3def`; `Server/Init/Init_Server.sqf:49-54,630-631`; `Server/AI/Commander/AI_Commander.sqf:29-81` | Compiles and spawns one per-side supervisor that self-gates on AI commander enablement and live HQ state. |
 | Upgrade cost lookup fix | `4c2abced`; `Server/Functions/Server_AI_Com_Upgrade.sqf:27` | Corrects AI upgrade cost indexing from 1-based order level to 0-based cost array index. |
-| Hybrid co-op command | `4dba060e`; `AI_Commander.sqf:43-72`; `AI_Commander_Execute.sqf:1-41`; `AI_Commander_AssignTowns.sqf:23-42` | Full mode runs economy only when no human commander exists; assist mode still executes explicit Move/Patrol/Defend orders and can auto-assign delegated AI teams while a human commander is present. |
-| AI team production | `AI_Commander_Produce.sqf:18-21,73-80`; `Server/Init/Init_Server.sqf:10` | Produces under-strength AI teams through `AIBuyUnit` while respecting a per-side AI cap and AI commander funds. Review this alongside factory queue/token cleanup before merge. |
+| Hybrid co-op command | `4dba060e`; refreshed at `c20ce153`; `AI_Commander.sqf:42-78`; `AI_Commander_Execute.sqf:16-48`; `AI_Commander_AssignTowns.sqf:23-54,62-99` | Full mode runs economy only when no human commander exists; assist mode still executes explicit Move/Patrol/Defend orders and can auto-assign delegated AI teams while a human commander is present. |
+| AI team production | `c20ce153`; `AI_Commander_Produce.sqf:18-21,77-90`; `Server/Init/Init_Server.sqf:10` | Produces under-strength AI teams through `AIBuyUnit` while respecting a per-side AI cap and AI commander funds. Review this alongside factory queue/token cleanup before merge. |
+| Lazy-condition cleanup series | `b4b0333f`, `27d25a28`, `dbaf9150`, `4626c036`, `c20ce153`; files under `Server/AI/Commander/AI_Commander*.sqf` | Rewrites supervisor, town assignment, order executor, type assignment and production-worker condition paths into stepwise guards. This improves branch static/syntax readiness, but it does not change branch-only status, Vanilla propagation or smoke requirements. |
 
 2026-06-04 branch scout clarification: the branch supervisor keeps running in assist mode with a human commander, but `wfbe_aicom_running` is deliberately used as the **full-command latch**, not a simple "commander brain exists" marker. `AI_Commander.sqf:43-49` sets it false while a human commander exists even though the executor/assist loop continues. Stable master still only initializes/clears this flag (`Init_Server.sqf:364-365`, `Server_VoteForCommander.sqf:54-57`, `Server_AssignNewCommander.sqf:11-14`) and has no source-proven supervisor.
 
