@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T20:50:00+02:00",
+  "generatedAt": "2026-06-04T21:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Source-checked the remaining missing-reference lead and patched Source Inventory plus Development Lessons so static reference scans are treated as triage leads until line executability and caller reachability are proven. No gameplay source changed.",
-      "nextExpectedOutput": "Validate, mirror and push the static-reference triage lesson batch, then continue bounded source-backed wiki maintenance."
+      "currentWork": "Static-reference triage lesson batch is validated and pushed as docs a391a0f1 / wiki 9e08393. Spark quota blocked the newest scout request until 23:53, so Codex closed the failed Spark starts and launched six gpt-5.4-mini fallback read-only scouts. No gameplay source changed.",
+      "nextExpectedOutput": "Harvest fallback scout reports only after source-checking; keep status pages compact and branch/source evidence current."
     },
     "Codex-2": {
       "status": "ready",
@@ -36,10 +36,10 @@
       "nextExpectedOutput": "Self-select the next bounded source-backed review from Coverage Ledger or the hardening backlog."
     },
     "Sub-agents": {
-      "status": "closed",
-      "currentLane": "spark-scout-wave-version-lifecycle-tooling-feature-pv-caps",
-      "currentWork": "Peirce/version, Averroes/lifecycle, Nash/PV-PVF, Bacon/Feature Status and Hilbert/tooling returned and were harvested. Lovelace/player-AI-caps, Mill/UI, fresh construction/factories, fresh UI and fresh respawn/MASH overflowed or errored without evidence. Fresh commander/economy returned mostly canonical coverage and one claim was rejected by source recheck. Fresh server ops/integrations and missing-reference sweep confirmed canonical coverage; no additional non-duplicate docs were needed beyond this batch's tooling gates and supplyMissionActive dead-twin caution.",
-      "nextExpectedOutput": "No active scout wave. Relaunch future scouts as tiny file-family lanes before promotion."
+      "status": "active",
+      "currentLane": "fallback-mini-scout-wave-feature-lifecycle-economy-pv-ui-tooling",
+      "currentWork": "Six Spark starts failed on quota before evidence; closed those slots and relaunched as six gpt-5.4-mini read-only fallback scouts for Feature Status, lifecycle/init, economy/commander/factory/upgrades, PV/PVF networking, UI/HUD/dialogs and tooling/integrations.",
+      "nextExpectedOutput": "Return concise source-backed leads; Codex must verify before promotion."
     }
   },
   "laneSummary": [
@@ -50,10 +50,16 @@
       "output": "Keep wiki/status pages current from source evidence, compact the dashboard, and publish scoped validation batches."
     },
     {
+      "lane": "fallback-mini-scout-wave-feature-lifecycle-economy-pv-ui-tooling",
+      "owner": "Codex/Sub-agents",
+      "status": "active-scouts-running",
+      "output": "Spark quota blocked six requested scout starts until 23:53, so Codex closed the failed starts and launched six gpt-5.4-mini read-only fallback scouts. Output is not evidence until source-checked. No gameplay source changed."
+    },
+    {
       "lane": "static-reference-triage-lesson",
       "owner": "Codex",
-      "status": "validation-pending",
-      "output": "Clarified Source Inventory static-reference rows as triage leads rather than boot-blocker proof, with source examples for commented unitCaching, respatrol, WASP KeyDown and car_wheel_new/procInitComm paths. Added Development Lesson 15 and a matching agent-development-lessons.jsonl record. No gameplay source changed."
+      "status": "published-validated-pushed",
+      "output": "Clarified Source Inventory static-reference rows as triage leads rather than boot-blocker proof, with source examples for commented unitCaching, respatrol, WASP KeyDown and car_wheel_new/procInitComm paths. Added Development Lesson 15 and a matching agent-development-lessons.jsonl record. Validation passed and content pushed as docs a391a0f1 / wiki 9e08393. No gameplay source changed."
     },
     {
       "lane": "spark-scout-wave-version-lifecycle-tooling-feature-pv-caps",
