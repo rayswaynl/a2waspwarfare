@@ -105,7 +105,7 @@ There are also safer patterns worth reusing. `Common_AwardScorePlayer.sqf:17-27`
 
 `RequestUpgrade.sqf:5` just spawns `Server_ProcessUpgrade`. `Server_ProcessUpgrade.sqf:12-18` trusts side, id and level from the payload to look up time; `:40-44` increments the upgrade state and clears the running flag. It does not recompute commander, current level, dependencies, cost or funds before accepting the transition. See [Upgrades and research atlas](Upgrades-And-Research-Atlas) for the full live-menu/server-worker/AI-worker map.
 
-AI commander upgrades are server-side but not therefore automatically correct. `Server_AI_Com_Upgrade.sqf:32-36` validates `_cost select 0` as supply and `_cost select 1` as funds, matching the player upgrade menu, then deducts `_cost select 0` from AI commander funds and `_cost select 1` from side supply at `:47-50`. Before reviving autonomous AI commander upgrade loops, decide whether the tuple order is `[supply, funds]` everywhere and patch the AI debit path accordingly.
+AI commander upgrades are server-side but not therefore automatically correct. The upgrade cost tables use `[supply, funds]` convention in source config, including examples such as `Common/Config/Core_Upgrades/Upgrades_CO_US.sqf:30-42` and `Upgrades_OA_US.sqf:30-42`. `Server_AI_Com_Upgrade.sqf:32-36` validates `_cost select 0` as supply and `_cost select 1` as funds, matching the player upgrade menu, then deducts `_cost select 0` from AI commander funds and `_cost select 1` from side supply at `:47-50`. Before reviving autonomous AI commander upgrade loops, patch the AI debit path and keep player/AI/server validation on the same tuple convention.
 
 ### Resource income has payout/display edge cases
 

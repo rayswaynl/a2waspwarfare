@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T02:31:14+02:00",
+  "generatedAt": "2026-06-04T02:57:31+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -19,9 +19,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated the dashboard current-lanes reconciliation: Progress-Dashboard At A Glance and Current Lanes now point to the authority-ui-hc-fallback-scout-wave instead of the older deep-gap scout wave.",
-      "nextExpectedOutput": "Pick the next bounded source-backed code-indexing lane or hand a patch owner a focused fix playbook."
+      "currentLane": "development-lessons-authority-ui-hc-harvest",
+      "currentWork": "Capturing reusable development lessons from the latest authority/UI/HC findings while the new Spark scout wave runs in parallel.",
+      "nextExpectedOutput": "Validate and publish the lessons harvest, then harvest completed Spark scout reports or relaunch the overflowed construction/factory lane as narrower slices."
     },
     "Codex-2": {
       "status": "ready",
@@ -38,11 +38,29 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "Latest fallback explorer wave completed after Spark quota blocked. Lanes covered economy authority, commander/HQ, AI/HC, client/UI and tooling/generated mission drift; useful findings are published and validated.",
-      "nextExpectedOutput": "No active sub-agent output pending."
+      "currentWork": "Micro-scout wave harvested and closed. Broad Spark prompts overflowed; narrow file-family scoped scouts returned useful reports for factory queues, upgrade tuple semantics, commander/vote UI and HC/delegation.",
+      "nextExpectedOutput": "No active sub-agent output pending. Future scout waves should be file-family scoped with capped output."
     }
   },
   "laneSummary": [
+    {
+      "lane": "spark-micro-scout-wave-authority-ui-hc-factory",
+      "owner": "Codex/Sub-agents",
+      "status": "published-pending-validation",
+      "output": "After broad Spark scouts overflowed during remote compacting, Codex relaunched narrower GPT-5.3-Codex-Spark micro-scouts and harvested them. New/refined findings landed for factory buy authority/refund ownership, upgrade tuple source-table confirmation, vote row-color offset and HC registration dedupe. No gameplay source changed."
+    },
+    {
+      "lane": "spark-scout-wave-server-economy-ui-pv-ai",
+      "owner": "Codex/Sub-agents",
+      "status": "superseded-by-micro-wave",
+      "output": "Six broad GPT-5.3-Codex-Spark scouts were attempted for source-backed code indexing, but several subsystem prompts exceeded the model context during compacting. Future Spark lanes should name exact file families and cap output size."
+    },
+    {
+      "lane": "development-lessons-authority-ui-hc-harvest",
+      "owner": "Codex",
+      "status": "published-pending-validation",
+      "output": "Development-Lessons-Learned.md and agent-development-lessons.jsonl now capture four reusable guardrails from the authority/UI/HC findings: server-side spend paths can still have currency tuple bugs, income display is not payout proof, visible UI affordances can be partial/stale, and HC must be split into Arma High Command UI, headless registration and delegation/client-FPS meanings."
+    },
     {
       "lane": "dashboard-current-lanes-reconciliation",
       "owner": "Codex",

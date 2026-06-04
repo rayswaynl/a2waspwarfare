@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T02:31:14+02:00",
+  "generatedAt": "2026-06-04T02:57:31+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,72 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "spark-micro-scout-wave-authority-ui-hc-factory",
+      "owner": "Codex/Sub-agents",
+      "status": "published-pending-validation",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestBuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_UpgradeMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestUpgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AI_Com_Upgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Command.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Commander_VoteMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_VoteMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_FNC_Delegation.sqf"
+      ],
+      "outputs": [
+        "Relaunched Spark discovery as narrow file-family scouts after broad lanes overflowed",
+        "Harvested factory queue debit/refund, upgrade tuple semantics, commander task/vote UI and HC/delegation terminology",
+        "Updated canonical wiki pages plus agent-feature-status.jsonl and agent-hardening-backlog.jsonl"
+      ],
+      "handoff": "Validate this harvest before marking published-validated. Future Spark scouts should use the same file-family scoped pattern with capped output."
+    },
+    {
+      "lane": "spark-scout-wave-server-economy-ui-pv-ai",
+      "owner": "Codex/Sub-agents",
+      "status": "superseded-by-micro-wave",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc",
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json"
+      ],
+      "outputs": [
+        "Launched GPT-5.3-Codex-Spark scouts for server lifecycle, commander/economy, UI/HUD/dialogs, networking/PV, AI/headless and construction/factory/base systems",
+        "Construction/factory/base scout overflowed during compacting and should be relaunched as narrower slices",
+        "Harvest is pending; no gameplay source changed"
+      ],
+      "handoff": "Broad Spark scout questions were too wide for this repo and repeatedly overflowed during compacting. Prefer micro-scout prompts that name exact file families and cap output size."
+    },
+    {
+      "lane": "development-lessons-authority-ui-hc-harvest",
+      "owner": "Codex",
+      "status": "published-pending-validation",
+      "sourceScope": [
+        "docs/wiki/Development-Lessons-Learned.md",
+        "docs/wiki/agent-development-lessons.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AI_Com_Upgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_UpgradeMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/updateresources.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_GetIncome.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Command.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateavailableactions.fsm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf"
+      ],
+      "outputs": [
+        "Added lessons for currency tuple order, income display/runtime split, partial UI affordances and HC terminology separation",
+        "Added matching machine-readable lesson records"
+      ],
+      "handoff": "Validate docs/wiki links, JSON/JSONL parsing and mirror parity before marking this lane published-validated."
+    },
     {
       "lane": "buymenu-easa-qol-branch-deep-audit",
       "owner": "Codex",

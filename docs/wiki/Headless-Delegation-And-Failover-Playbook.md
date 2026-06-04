@@ -81,12 +81,21 @@ Authority edge: `Server_HandleSpecial.sqf:75-83` trusts the UID and FPS values f
 
 Do not copy this player-client session-counting model directly into HC mode without adapting it; HC mode currently stores HC groups, not per-HC delegated work records.
 
+## Mode Split Quick Reference
+
+| Runtime meaning | Mode / symbols | Live source path | Main risk |
+| --- | --- | --- | --- |
+| Headless-client registration | `WFBE_C_AI_DELEGATION == 2`, `WFBE_HEADLESS_<uid>`, `WFBE_HEADLESSCLIENTS_ID` | `Init_HC.sqf:15`; `Server_HandleSpecial.sqf:117-128`; town/static delegation call sites in `server_town_ai.sqf:165-170`, `Server_OperateTownDefensesUnits.sqf:53-57`, `Server_HandleDefense.sqf:19-23` | Owner-id `0` miss, no dedupe/retry and no work-record failover. |
+| Player-client FPS delegation | `WFBE_C_AI_DELEGATION == 1`, `WFBE_AI_DELEGATION_<uid>` | `updateavailableactions.fsm:121-129`; `Server_HandleSpecial.sqf:75-84`; `Server_GetDelegators.sqf:20-27`; `Server_FNC_Delegation.sqf:30-47,82-95,104-115` | Client-stated UID/FPS and group counts influence delegation selection. |
+| Arma High Command UI | `_hc_enabled`, `HCSetGroup`, `HCRemoveAllGroups` | `_hc_enabled = false` at `updateavailableactions.fsm:47`; `HCSetGroup` gated at `:115-119`; cleanup at `updateclient.sqf:204,228` | Add path is inert by default while removal still runs; do not confuse this with headless-client delegation. |
+
 ## Risks
 
 | Risk | Evidence | Impact |
 | --- | --- | --- |
 | HC disconnect has no mission-level re-delegation. | `Server_OnPlayerDisconnected.sqf:22-29` only removes the HC from the candidate pool. | Already-created HC-local groups may fall back to engine locality behavior, but the mission does not redistribute them to another HC. |
 | HC registration can miss the candidate pool. | `Headless/Init/Init_HC.sqf:11-15` sends one `connected-hc`; `Server_HandleSpecial.sqf:125-130` rejects owner id `0` with only a warning. | Add retry/delayed registration or a server-side reconciliation pass before relying on HC availability. |
+| HC registration can duplicate entries. | `Server_HandleSpecial.sqf:127-128` appends `group _hc` to `WFBE_HEADLESSCLIENTS_ID` without a visible dedupe guard; disconnect cleanup removes the stored group once through `Server_OnPlayerDisconnected.sqf:22-28`. | Repeated `connected-hc` publication could leave duplicate candidate rows. Make registration idempotent before adding retries. |
 | Client-FPS delegation trusts payload UID/FPS. | `updateavailableactions.fsm:121-125`; `Server_HandleSpecial.sqf:75-83`; `Server_FNC_Delegation.sqf:153-158`. | Treat mode `1` as authority-light; validate sender/UID/rate before using it on a hostile public server. |
 | Static-defense HC units are untracked server-side. | `Client_DelegateAIStaticDefence.sqf:28` comments out update-back; `Server_HandleSpecial.sqf` has `update-town-delegation` but no `update-delegation-static_defence` case. | Cleanup/accounting/re-delegation cannot reason about HC-created static-defense units. |
 | Late HC join does not automatically re-enable mode. | `initJIPCompatible.sqf:164-171` can downgrade unsupported HC mode once; the server initializes `WFBE_HEADLESSCLIENTS_ID` only when mode is `2`. | If HC mode was disabled or no candidate was present during spawn decisions, later HC presence does not retroactively move existing AI. |

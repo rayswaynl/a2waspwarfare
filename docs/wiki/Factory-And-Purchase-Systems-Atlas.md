@@ -207,7 +207,7 @@ If accepted:
 
 There is no refund on the destroyed-factory abort path. The menu deducts funds after spawning `BuildUnit` (`GUI_Menu_BuyUnits.sqf:145-156`), then `Client_BuildUnit.sqf:203-214` sleeps the build time, removes the queue token and exits if the factory is dead/null. That exit decrements the queue counters but does not restore the already deducted player funds. Smoke destroyed-factory and buyer-disconnect cases before changing purchase timing or adding cancellation UX.
 
-Important authority note: no server PVF request is sent for this player purchase. There is also no `Server/PVFunctions/RequestBuyUnit.sqf` in the current source and `RequestBuyUnit` is not registered in `Init_PublicVariables.sqf`.
+Important authority note: no server PVF request is sent for this player purchase. There is no `Server/PVFunctions/RequestBuyUnit.sqf` or `Server/PVFunctions/RequestBuildUnit.sqf` in the current source, and neither request is registered in `Init_PublicVariables.sqf`.
 
 ## Queue Model
 
@@ -221,6 +221,8 @@ There are two queue concepts:
 `Client_BuildUnit.sqf` appends a random `_unique` ID to `_building getVariable "queu"` and waits until that ID reaches the front. If the queue appears stuck longer than `WFBE_LONGEST<factory>BUILDTIME`, it removes the head entry. Longest build times are calculated in `Init_Common.sqf` by scanning the purchasable units for each structure and side.
 
 Queue cleanup is fragile by design: changing factory type labels, longest-build variables or queue mutation rules can strand entries or let concurrent purchases overlap.
+
+Factory-death cleanup is split. The client wait path exits when the building is dead/null (`Client_BuildUnit.sqf:180-182`) and later removes local counters/token state (`:211-214`), while `Server_BuyUnit.sqf` has its own queue-removal branches (`:47-55`, `:78-83`, `:213-214`) for the latent server buy worker. The building death handler itself only updates structure accounting (`Server_BuildingKilled.sqf:81-93`) and does not own queue cleanup or refunds.
 
 Claude DR-33 adds two concrete implementation hazards:
 
@@ -320,6 +322,7 @@ This means class metadata mistakes can break more than the visible buy menu:
 | Queue state is fragile | Building `queu` and client `WFBE_C_QUEUE_*` counters are manually incremented/decremented (`Client_BuildUnit.sqf:167-172`, `:205-207`, `:467-469`); DR-33 counter/token fixes are patch-ready but still absent from current source, while public queue broadcast churn also remains. Wave R added that extra-turret-crew-only vehicle buys, if exposed, can hit the same empty-exit before extra crew creation (`Client_BuildUnit.sqf:365`, `:443`). The buy menu has a close/back path (`GUI_Menu_BuyUnits.sqf:495-499`) but no visible cancel/refund branch for already spawned buy threads. | Always test factory destruction, menu close, empty-vehicle buys, extra-turret-crew selections, repeated purchases and queue hints when touching queues; do not assume cancel/refund semantics exist unless a new branch is added. |
 | Cost authority is local | Menu checks funds and calls `ChangePlayerFunds` locally after spawning build thread. | Do not add new economy side effects to purchase without tracing client funds, commander income, side supply and PV hardening. |
 | Destroyed-factory build abort has no refund | `GUI_Menu_BuyUnits.sqf:156` debits after spawning `BuildUnit`; `Client_BuildUnit.sqf:211-214` exits on dead/null factory after queue cleanup but before unit creation and without a refund. | Decide whether this is intended risk/reward or a bug. If fixing, make debit/acceptance atomic with build start or add a single refund path that cannot be abused by disconnects or factory-damage timing. |
+| Empty vehicles bypass this group-cap check | Buy menu vehicle-cap math computes optional crew count in `_cpt` (`GUI_Menu_BuyUnits.sqf:93-99,135-140`) and only blocks the purchase when `_cpt != 0`; infantry uses the direct cap check at `:132`. | This may be intentional because empty vehicles do not add AI to the buyer's group, but balance docs and Discord AI-cap tables should not count empty-vehicle purchases as squad slots. Smoke crew-toggle combinations if changing caps. |
 | Spawn pads are object-class conventions | Light/heavy/air/barracks pads depend on nearby helper object classes. | Document required map editor objects when adding or moving bases. |
 | Attack-wave cost is client-visible state | `ATTACK_WAVE_PRICE_MODIFIER` affects list display and purchase cost. | Keep JIP sync and local modifier state aligned before adding temporary discounts. |
 | Buy-list detail price can drift from actual list/purchase price | `Client_UIFillListBuyUnits.sqf:59-60` applies `UNIT_COST_MODIFIER`, while `GUI_Menu_BuyUnits.sqf:90-99` detail math does not before crew cost. | Extract or duplicate one exact price helper before changing unit-cost discounts or attack-wave modifiers. |

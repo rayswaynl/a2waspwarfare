@@ -1882,3 +1882,23 @@ Key conclusions:
 - Updated [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas), [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [AI/headless](AI-Headless-And-Performance), [Respawn/death](Respawn-And-Death-Lifecycle-Atlas), [Assets/config/localization](Assets-Config-Localization-And-Parameters-Atlas), [Feature status](Feature-Status-Register), [Audit findings queue](Audit-Findings-Queue-2026-06-03), `agent-context.json` and `agent-hardening-backlog.jsonl`.
 - Key corrections: cleaners/restorers start outside the `townInit` wait; `groupsMonitor.sqf` is dormant; `basearea.sqf` is parameter-gated and has a low-risk `_unit` private-list nit; AI respawn should use `WFBE_UP_GEAR` plus bounds/empty-array guards; `AI_TLWPHandler.sqs` is a legacy/orphan candidate; LoadoutManager root discovery and `A2WASP_SKIP_ZIP=1` are current machine truth.
 - Validation/parity passed; no gameplay source files changed.
+
+## 2026-06-04T02:40:31+02:00 - Codex - Spark scout wave server/economy/UI/PV/AI launch
+- Launched a new GPT-5.3-Codex-Spark read-only scout wave after Steff asked for more scouts: server lifecycle/FSM authority, commander/economy/upgrades, UI/HUD/dialog workflows, networking/PV trust boundaries, AI/headless/delegation and construction/factory/base systems.
+- One construction/factory scout overflowed during compacting, so that lane should be relaunched as narrower build/production slices rather than one broad generated-mission scan.
+- Updated [Progress Dashboard](Progress-Dashboard) and `agent-status.json` so the active scout wave is visible while reports are pending. No gameplay source files changed.
+
+## 2026-06-04T02:47:27+02:00 - Codex - Spark micro-scout wave relaunch
+- Broad Spark scouts for economy, networking, UI and construction proved too wide for this repo and several failed during remote compacting with context-window errors.
+- Closed failed lanes and relaunched a narrower GPT-5.3-Codex-Spark micro-wave: factory queue debit/refund behavior, upgrade cost tuple semantics, commander task/vote UI wiring and HC/delegation terminology.
+- Lesson for future orchestration: Spark scouts should be file-family scoped with explicit output caps, not whole-subsystem indexing prompts. No gameplay source files changed.
+
+## 2026-06-04T02:57:31+02:00 - Codex - Spark micro-scout wave harvest
+- Harvested all four micro-scout reports and closed the active agent threads.
+- Promoted only new/refined findings: source cost tables confirm upgrade tuple order `[supply, funds]`; factory buys have no `RequestBuyUnit`/`RequestBuildUnit` PVF and no refund owner on destroyed-factory abort; empty vehicles bypass the buyer group-cap check; vote row coloring likely has an offset in addition to inclusive loops; HC registration should be deduped before retry logic.
+- Updated [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Economy authority first cut](Economy-Authority-First-Cut), [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map), [Headless delegation and failover playbook](Headless-Delegation-And-Failover-Playbook), [Feature status register](Feature-Status-Register), `agent-feature-status.jsonl` and `agent-hardening-backlog.jsonl`. No gameplay source files changed.
+
+## 2026-06-04T02:40:31+02:00 - Codex - development lessons authority/UI/HC harvest
+- Converted recent source-backed findings into reusable development lessons: server-side spend paths can still have currency tuple bugs, income display is not payout proof, visible UI affordances can be partial/stale, and "HC" must be split into headless-client registration, delegation/client-FPS and Arma High Command UI meanings.
+- Updated [Development lessons learned](Development-Lessons-Learned) and [`agent-development-lessons.jsonl`](agent-development-lessons.jsonl) with exact source anchors and next-action guidance.
+- No gameplay source files changed.

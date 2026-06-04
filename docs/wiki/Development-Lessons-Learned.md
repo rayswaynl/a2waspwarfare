@@ -152,6 +152,30 @@ Localization integrity checks prove that referenced keys resolve; they do not pr
 
 Development rule: when a player-facing string describes economics, rewards, restrictions or server policy, verify it against the live consumer before treating it as design truth. If the string is stale, document it as copy/design drift and update stringtable plus behavior together when the owning system is rebalanced. See [Economy, towns and supply](Economy-Towns-And-Supply#supply-mission-reward-formula-and-stale-copy).
 
+## Lesson 19: Server-Side Spend Paths Can Still Have Currency Semantics Bugs
+
+The AI commander upgrade path is server-side, but the currency tuple ordering still has to match the human path. The player upgrade menu treats `WFBE_C_UPGRADES_COSTS` as `[supply, funds]`: it reads supply from element `0`, funds from element `1`, validates both, deducts client funds and then deducts side supply (`GUI_UpgradeMenu.sqf:96-99,139-159`). The AI commander server path validates the same tuple as supply then AI funds (`Server_AI_Com_Upgrade.sqf:32-36`), but its deduction reverses the semantics: it subtracts `_cost select 0` from AI commander funds and `_cost select 1` from side supply (`Server_AI_Com_Upgrade.sqf:47-50`).
+
+Development rule: do not assume "server-side" means "authority-correct." For every spend path, cite the tuple producer, the UI display/validation, and the mutation calls together. This belongs with [Economy authority first cut](Economy-Authority-First-Cut), [Economy, towns and supply](Economy-Towns-And-Supply) and [Feature status](Feature-Status-Register).
+
+## Lesson 20: Income Display Is Not Payout Proof
+
+`Client_GetIncome.sqf` is useful for the player-facing estimate, but it is not the payout owner. The server loop computes per-side supply, income, player/commander splits and side supply mutation in `updateresources.sqf:29-70`; the HUD/helper estimate recomputes the expected value in `Client_GetIncome.sqf:3-31`. Those formulas are close, but not identical in all modes. For example, income system 4 multiplies player income by `1.5` before commander split on the server (`updateresources.sqf:41-44`), while the client helper uses a simpler `_income - _ply` commander calculation (`Client_GetIncome.sqf:20-29`).
+
+Development rule: when auditing economy balance, separate "what the UI predicts" from "what the server mutates." Any fix or docs claim about income needs both files and a test note for the active income-system parameter.
+
+## Lesson 21: Visible UI Affordances Can Be Partial Or Stale
+
+Several UI surfaces look wired until the final send/cleanup edge is checked. The commander task menu builds task data and even plays HQ radio speech, but the actual `SetTask` send calls are commented out (`GUI_Menu_Command.sqf:315-344`) while the receiver still exists and creates a simple task (`SetTask.sqf:8-14`). Commander vote dialogs iterate from `0` to `WFBE_Client_Teams_Count` inclusively after `WFBE_Client_Teams_Count = count WFBE_Client_Teams` (`Init_Client.sqf:273`, `GUI_Commander_VoteMenu.sqf:58-66`, `GUI_VoteMenu.sqf:29,61-66`). The help dialog mixes `execVM` on load with `call compile preprocessFileLineNumbers` on unload (`Dialogs.hpp:3446-3447`, `GUI_Menu_Help.sqf:5-10`). WASP marker capture temporarily calls `disableUserInput true` while waiting for display `54` and only releases after the timed loop (`global_marking_monitor.sqf:57-73`).
+
+Development rule: for UI claims, trace the button/dialog surface to the receiver and the cleanup path. A receiver file existing is not proof the user can reach it, and a visible control is not proof the action survives final-control smoke. See [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map) and [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas).
+
+## Lesson 22: HC Means Two Different Things In This Mission
+
+The codebase uses "HC" for both headless-client delegation and Arma High Command UI, and those must stay separate in docs and fixes. The Arma High Command UI add path is effectively inert because `_hc_enabled = false` gates `HCSetGroup` additions (`updateavailableactions.fsm:47,115-117`), although cleanup still removes any high-command groups (`updateclient.sqf:204,228`). Headless-client registration is a different path: `Init_HC.sqf:11-15` publishes `connected-hc`, and the server only registers the HC when `owner _hc` is nonzero; owner id `0` logs a warning and has no retry in that handler (`Server_HandleSpecial.sqf:117-130`). Client FPS delegation is separate again: clients report UID/FPS through `update-clientfps` (`updateavailableactions.fsm:121-125`), the server stores the payload by UID (`Server_HandleSpecial.sqf:75-83`), and delegation selection trusts that stored FPS/slot count (`Server_FNC_Delegation.sqf:153-158`).
+
+Development rule: when an issue says "HC," first classify it as headless client registration, headless delegation, client-FPS delegation, or Arma High Command UI. Mixing those paths creates bad fixes and confusing docs. See [AI/headless and performance](AI-Headless-And-Performance) and [Headless delegation and failover playbook](Headless-Delegation-And-Failover-Playbook).
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |
