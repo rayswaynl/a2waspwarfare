@@ -184,6 +184,8 @@ Focused UI review found a display/detail drift: `Client_UIFillListBuyUnits.sqf:5
 
 The unit-cost modifier also has a reset trap: `Client_UIFillListBuyUnits.sqf:7-16` sets `UNIT_COST_MODIFIER` only when the upgrade level is `1` or `2`. It does not reset the global to `1` when the upgrade level is `0`, even though `Init_CommonConstants.sqf:203` initializes it that way. If the same client had already seen a discounted state, a later no-upgrade list fill can keep the stale discount. Patch by assigning the default before the `if (_unitCostUpgradeLevel > 0)` branch or by using a local price helper instead of a mutable global.
 
+The driver-default preference has a separate `profileNamespace` key split. `GUI_Menu_BuyUnits.sqf:39-42,173` initializes and toggles uppercase `WFBE_C_DRIVER_ENABLED_BY_DEFAULT`, while active cost preview, group-cap counting, `BuildUnit` parameters, refresh, max-out, and reset paths mostly read or write lowercase `wfbe_c_driver_enabled_by_default` at `GUI_Menu_BuyUnits.sqf:95,136,154,284,308,328-341,366,373,385`. Normalize one preference key before polishing crew UX, then smoke the checkbox state, preview cost, group-cap count, spawned driver, max-out, and reset paths together.
+
 ## Purchase Checks
 
 When `MenuAction == 1`, `GUI_Menu_BuyUnits.sqf` performs these checks before spawning:
@@ -335,6 +337,7 @@ This means class metadata mistakes can break more than the visible buy menu:
 | Attack-wave cost is client-visible state | `ATTACK_WAVE_PRICE_MODIFIER` affects list display and purchase cost. | Keep JIP sync and local modifier state aligned before adding temporary discounts. |
 | Buy-list detail price can drift from actual list/purchase price | `Client_UIFillListBuyUnits.sqf:59-60` applies `UNIT_COST_MODIFIER`, while `GUI_Menu_BuyUnits.sqf:90-99` detail math does not before crew cost. | Extract or duplicate one exact price helper before changing unit-cost discounts or attack-wave modifiers. |
 | Unit-cost discount can stay stale | `Client_UIFillListBuyUnits.sqf:7-16` mutates global `UNIT_COST_MODIFIER` for levels `1` and `2`, but does not restore `1` for level `0`. | Set default `1` on every list fill or replace the global with a local computed modifier shared by list, detail and purchase formulas. |
+| Driver-default profile key split | Buy Units initializes/toggles uppercase `WFBE_C_DRIVER_ENABLED_BY_DEFAULT`, but most cost/cap/build/reset paths use lowercase `wfbe_c_driver_enabled_by_default`. | Normalize one key and smoke visible checkbox state plus actual cost, cap, spawned crew, max-out, and reset behavior. |
 | Special-vehicle color/hint support is incomplete | The briefing claims colored special vehicles, `Client_UIFillListBuyUnits.sqf:67-100` colors many support classes, and `GUI_Menu_BuyUnits.sqf:442-458` has manual hints/conditions for special purchase classes. | Treat colored/hinted special vehicles as a UI affordance, not a complete feature registry. Add new support classes to list coloring, detail text, purchase checks and root arrays together. |
 
 ## Implementation Checklist

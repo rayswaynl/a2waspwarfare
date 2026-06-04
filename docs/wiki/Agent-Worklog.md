@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T13:45:00+02:00 - Codex - Spark scout startup failure and local buy-menu harvest
+
+- Steff asked for another Spark scout wave. Codex launched read-only subagents for commander/economy, construction, respawn/MASH, runtime/HC, PV networking and UI, but all failed during remote startup compaction because this long-running orchestration thread is now too large for the Spark compact path. Codex then switched to fresh background Codex Spark threads so the scouts start without inherited context.
+- Fresh scout threads: commander/economy `019e938d-feb1-7893-95d5-bdc0a3ea6fff`; construction/base `019e938e-4547-7310-8469-69bb3c1e31c5`; respawn/MASH `019e938e-52b5-7000-8ffa-8107d0b9560c`; runtime/HC `019e938e-61c3-7451-b207-31c9ff269b49`; PV/network `019e938e-ae10-7de1-9639-a432de30ad5c`; UI/dialogs `019e938e-be87-7740-9ce3-6218172e288f`; tools/content `019e938e-cf76-7ce0-8fb5-c73a8cf65d93`; abandoned features `019e938f-3386-70c3-a592-2c215fafb08d`; upstream/community `019e938f-4105-77f1-916f-3add88537f0f`; performance hot paths `019e938f-751c-7131-b518-4418f4f2d0cb`.
+- Kept the documentation loop moving locally instead of waiting on failed agents. Source evidence: `GUI_Menu_BuyUnits.sqf:39-42,173` initializes/toggles uppercase `WFBE_C_DRIVER_ENABLED_BY_DEFAULT`, while active cost, group-cap, build, refresh, max-out and reset paths mostly use lowercase `wfbe_c_driver_enabled_by_default` at `GUI_Menu_BuyUnits.sqf:95,136,154,284,308,328-341,366,373,385`.
+- Routed the finding into [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Development lessons learned](Development-Lessons-Learned), `agent-development-lessons.jsonl` and `agent-feature-status.jsonl`. Next scout waves should start from a fresh thread or shorter dedicated scout goal to avoid compact failures.
+
 ## 2026-06-04T13:25:00+02:00 - Codex - scout harvest pushed-head breadcrumb correction
 
 - Continued the documentation finisher loop after the scout harvest and source-checked the current pushed heads.

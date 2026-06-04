@@ -180,6 +180,10 @@ Those are useful changes, but the visible behavior depends on later control writ
 
 Development rule: for UI QoL branches, smoke the final rendered control state and interaction loop, not just the changed hunk. Include low/exact/high funds, crew toggles, tab switching, queue changes, filtered rows and maintained Vanilla propagation before release wording. See [BuyMenu EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit).
 
+## Lesson 17A: ProfileNamespace Keys Are UI Contracts
+
+`profileNamespace` preference names are persistent UI API. The buy-unit menu initializes and toggles uppercase `WFBE_C_DRIVER_ENABLED_BY_DEFAULT` at `Client/GUI/GUI_Menu_BuyUnits.sqf:39-42,173`, but cost preview, group-cap crew counting, `BuildUnit` parameters, refresh, max-out, and reset paths mostly read or write lowercase `wfbe_c_driver_enabled_by_default` at `Client/GUI/GUI_Menu_BuyUnits.sqf:95,136,154,284,308,328-341,366,373,385`. Before renaming or adding UI preferences, grep all reads and writes, decide whether old keys need migration or aliases, then smoke both the visible control and the effect it drives: previewed cost, AI cap count, spawned crew, max-out, and reset behavior.
+
 ## Lesson 18: Valid Stringtable Keys Can Still Be Stale Design Truth
 
 Localization integrity checks prove that referenced keys resolve; they do not prove that the copy describes current mechanics. The supply mission help text is the current example. `stringtable.xml:188-193` still says supply-truck delivery pays `4 x the actual value`, and `WFBE_C_PLAYERS_SUPPLY_TRUCKS_DELIVERY_FUNDS_COEF = 4` remains defined at `Init_CommonConstants.sqf:268`. Current source does something else: `supplyMissionStart.sqf:22-34` computes `SupplyAmount` as town supply value times the supply mission multiplier (`20`) times the supply upgrade modifier, and `supplyMissionCompletedMessage.sqf:8,13-14` grants raw `_supplyAmount` as the player's cash reward.
