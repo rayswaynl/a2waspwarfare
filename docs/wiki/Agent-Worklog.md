@@ -2286,7 +2286,7 @@ Key conclusions:
 - While the scouts ran, Codex owned the non-overlapping navigation lane and reconciled GitHub wiki `_Sidebar.md` with `mkdocs.yml`. The two nav surfaces now have zero page-slug drift; the sidebar exposes the same major architecture, networking, gameplay, AI/HC, hardening, UI/tooling and coordination routes as MkDocs.
 - Returned scouts for supports, UI, tooling and AI mostly confirmed already-canonical owner pages. No duplicate prose was added for findings already documented in Support specials, Client UI systems, AI/headless/performance, Tools/build, Server ops, External integrations or PerformanceAuditAnalyzer.
 - Economy scout timed out twice and was closed without output, so it remains unharvested evidence. Relaunch a narrower economy micro-scout later if needed.
-- No gameplay source files changed. Validation and mirror publication are pending for this docs/navigation batch.
+- No gameplay source files changed. Validation passed (`docs/validate-wiki.ps1`, JSON/JSONL parse, `git diff --check` with line-ending warnings only, sidebar/MkDocs slug parity and SHA256 mirror parity). Pushed as docs `bc710bcc` / wiki `7148406`.
 
 - Spark quota was still unavailable for GPT-5.3-Codex-Spark, so Codex launched five cheap mini scouts for config data, UI edge cases, cleanup/performance loops, support flows and PV/security.
 - Closed all scout threads and promoted only non-duplicate, source-backed deltas: IR-smoke lobby/runtime name split, hidden upgrade-clearance runtime switch, volumetric weather parameter forced off, orphan-looking BIS High Command parameter, buy-unit driver-default profileNamespace key split, gear-template creation-gate semantics and 24-hour supply-truck empty-cleanup behavior.
