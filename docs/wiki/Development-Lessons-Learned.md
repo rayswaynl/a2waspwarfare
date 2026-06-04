@@ -11,6 +11,7 @@ Source root: `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
 | Config data model | The assets/config page now has a source-backed config data-model checklist. | Keep using it before content edits; the remaining work is runtime smoke when actual classes/assets change. |
 | AI respawn/orders | Respawn atlas maps AI respawn; testing workflow now has a branch-specific AI respawn smoke pack. Commander-order variable proof now lives in the AI/headless page. | Runtime Arma smoke is still needed for AI respawn branches and commander Move/Patrol/Defense/Take Towns behavior. |
 | Direct-PV economy helpers | Economy authority pages map the DRs, but implementation agents still need a local rule of thumb before touching helpers. | Shared helpers can look local and harmless while publishing direct mutation payloads; read helpers show the safer server-derived pattern. |
+| Post-dispatch PVF handlers | The authority map has the server-bound PVF matrix and current caller examples. | Dispatcher allowlisting prevents forged handler names, but live handlers still accept payload score, vehicle, team, side, upgrade and UID/FPS data. |
 | Cleanup/garbage/empty vehicles | Marker/cleanup atlas is strong, but patch handoffs are scattered. | Cleanup code has short polling loops, global replicated queues, inconsistent flags and nested-pair array traps. |
 | Non-EASA modules | Modules atlas and testing workflow now carry the runtime-edge rule. | Use the edge type before module edits: boot init, respawn reapply, unit creation attach, PV/PVF event or server loop. Runtime Arma smoke is still needed when actual behavior changes. |
 
@@ -37,6 +38,20 @@ Development rule: before hardening or extending commander AI orders, prove the l
 Do not treat signed amounts as authority. Negative deltas are normal spend data, but the server still has to clamp the resulting balance, validate side/channel/shape, and eventually re-derive whether that spend was allowed. Use `REQUEST_SUPPLY_VALUE` / `Server_PV_RequestSupplyValue.sqf:1-8` as the safer read pattern: the client requests, and the server derives the value from server-side side state before replying.
 
 Development rule: before editing any `Common_Change*` helper, check whether it mutates local state, replicated object/group state, or a direct publicVariable channel. If it publishes a mutation, document and smoke it like a network authority path, not a harmless utility.
+
+## Lesson 3A: PVF Dispatch Hardening Is Not Handler Authority
+
+`Init_PublicVariables.sqf` registers 13 server-bound PVF commands and wires each to `WFBE_PVF_<Command>` (`Common/Init/Init_PublicVariables.sqf:9-21,49-52`). Replacing dispatch-time `Call Compile` with a safe namespace lookup is necessary, but it only validates the handler name. It does not validate the values inside a legitimate command.
+
+The current source still has active callers for several thin handlers:
+
+- `RequestVehicleLock`: MHQ lock path and spec-ops vehicle unlock (`Client/Action/Action_ToggleMHQLock.sqf:15`; `Client/Module/Skill/Skill_SpecOps.sqf:52`) reach `RequestVehicleLock.sqf:3-8`, which locks the payload vehicle.
+- `RequestTeamUpdate`: commander menu sends selected teams/side and behavior/combat/formation/speed (`Client/GUI/GUI_Menu_Command.sqf:428`) to `RequestTeamUpdate.sqf:3-26`.
+- `RequestUpgrade`: upgrade UI sends side/id/current level (`Client/GUI/GUI_UpgradeMenu.sqf:161`) to a wrapper that just spawns `WFBE_SE_FNC_ProcessUpgrade` (`RequestUpgrade.sqf:5`).
+- `RequestChangeScore`: reward paths send absolute score targets from clients (`TownCaptured.sqf:71,79`; `CampCaptured.sqf:38`; `supplyMissionCompletedMessage.sqf:22`; `Client_FNC_Special.sqf:118`) to `RequestChangeScore.sqf:3-13`, which removes old score and applies the payload value.
+- `update-clientfps`: the client FSM sends `getPlayerUID(player)` and averaged FPS (`Client/FSM/updateavailableactions.fsm:121-125`) to `Server_HandleSpecial.sqf:75-83`, and delegation later trusts that stored data.
+
+Development rule: after the PVF dispatcher patch, claim "dispatcher RCE closed" only. Handler authority needs a second pass per effect: requester, side, object, role, range, funds/supply, idempotency and payload-shape validation. Use [Server authority migration map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) as the work queue.
 
 ## Lesson 4: Cleanup Loops Are Server-Owned But Some Inputs Are Client-Replicated
 

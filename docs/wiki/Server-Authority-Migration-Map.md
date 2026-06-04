@@ -55,6 +55,10 @@ This table is the post-dispatch work queue. It assumes the generic PVF dispatche
 
 Registration source: `Common/Init/Init_PublicVariables.sqf:9-21` registers 13 server-bound commands, while `:50-51` compiles each `SRVFNC*` handler and adds `WFBE_PVF_<Command>` server PVEHs.
 
+2026-06-04 recheck: a focused mini-scout verified that the "thin" handlers are not just theoretical entries in the registry. Active client/source callers still send `RequestVehicleLock` from MHQ locking (`Client/Action/Action_ToggleMHQLock.sqf:15`) and spec-ops unlocking (`Client/Module/Skill/Skill_SpecOps.sqf:52`), `RequestTeamUpdate` from the commander menu (`Client/GUI/GUI_Menu_Command.sqf:428`), `RequestUpgrade` from the upgrade menu (`Client/GUI/GUI_UpgradeMenu.sqf:161`), `RequestAutoWallConstructinChange` from CoIn (`Client/Module/CoIn/coin_interface.sqf:217`), and `RequestChangeScore` from town/camp/supply/upgrade reward paths (`Client/PVFunctions/TownCaptured.sqf:71,79`; `Client/PVFunctions/CampCaptured.sqf:38`; `Client/Module/supplyMission/supplyMissionCompletedMessage.sqf:22`; `Client/Functions/Client_FNC_Special.sqf:118`). Treat these as live effect handlers, not dead registry leftovers.
+
+Patch boundary: the PVF dispatcher allowlist/name-lookup patch should be considered a prerequisite, not the finish line. It prevents forged handler names from executing, but it does not validate score values, vehicle objects, team arrays, side scalars, upgrade ids or delegation UID/FPS payloads inside legitimate handlers.
+
 | Handler | Current server behavior | Authority status | First validation rule |
 | --- | --- | --- | --- |
 | `RequestVehicleLock` | Applies `_vehicle lock _locked`, then broadcasts `SetVehicleLock` (`RequestVehicleLock.sqf:6-8`). | Payload-authoritative object effect. | Validate requester, side, ownership/role, lockable class and range before changing lock state. |

@@ -48,6 +48,8 @@ Validation:
 - Test one server request (`RequestJoin` or `RequestVehicleLock`) and one client message (`LocalizeMessage` or `HandleSpecial`) on a hosted/local mission if possible.
 - Re-run docs/update notes: this fixes dispatch execution risk only; it does not validate legitimate-command payload forgery.
 
+Post-dispatch handoff: immediately after this patch, use the [registered server PVF handler authority matrix](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) to plan handler/effect validation. The 2026-06-04 recheck confirmed active callers for `RequestVehicleLock`, `RequestTeamUpdate`, `RequestUpgrade`, `RequestAutoWallConstructinChange` and `RequestChangeScore`; do not label the network authority class closed until those handlers and direct-PV channels have their own validation or an explicit owner acceptance.
+
 ## P0: `SEND_MESSAGE` Direct-PV Compile Removal
 
 Raw evidence: [Deep-review findings](Deep-Review-Findings) DR-46. Channel inventory: [Public variable channel index](Public-Variable-Channel-Index).

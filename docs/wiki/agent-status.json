@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T05:05:00+02:00",
+  "generatedAt": "2026-06-04T05:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated the latest cheap mini scout wave after Spark quota blocked new Spark starts. Promoted source-backed corrections/leads for current source Chernarus version.sqf presence versus generated target-root verification, stable truck-only supply versus PR/branch SupplyByHeli evidence, thin registered PVF handler authority review, CoIn base-area null guard, salvage local payout/deletion and cleanup loop risk, orphaned GPS MenuAction 17/18 handlers and DiscordBot/Extension database.json contract drift.",
+      "currentWork": "Published and validated the post-dispatch PVF handler authority recheck. Server authority docs now name active caller examples for thin registered handlers and the lessons ledger captures the rule that dispatcher lookup hardening closes handler-name RCE, not payload/effect authority.",
       "nextExpectedOutput": "Continue with the next bounded source-backed documentation gap."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "post-dispatch-pvf-handler-authority-recheck",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Source-checked active callers for RequestVehicleLock, RequestTeamUpdate, RequestUpgrade, RequestAutoWallConstructinChange, RequestChangeScore and RequestSpecial update-clientfps. Updated Server-Authority-Migration-Map, Hardening-Implementation-Roadmap, Development-Lessons-Learned and agent-development-lessons.jsonl so future code owners treat PVF dispatcher lookup hardening as necessary but not sufficient. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed. No gameplay source changed."
+    },
     {
       "lane": "mini-scout-wave-init-pv-supply-construction-ui-ops",
       "owner": "Codex/Sub-agents",

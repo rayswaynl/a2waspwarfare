@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T05:05:00+02:00",
+  "generatedAt": "2026-06-04T05:20:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,31 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "post-dispatch-pvf-handler-authority-recheck",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Action/Action_ToggleMHQLock.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_SpecOps.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Command.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_UpgradeMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/CoIn/coin_interface.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/PVFunctions/TownCaptured.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/PVFunctions/CampCaptured.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionCompletedMessage.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateavailableactions.fsm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions and Server_HandleSpecial"
+      ],
+      "outputs": [
+        "Added active caller examples to registered server PVF handler authority matrix",
+        "Added post-dispatch handoff warning to hardening roadmap",
+        "Added Development Lessons rule that PVF dispatcher hardening is not handler authority",
+        "No gameplay source changed"
+      ],
+      "handoff": "This docs batch is validated and ready to push. Future implementation agents should patch PVF dispatch lookup first, then run handler/effect validation before claiming network authority complete."
+    },
     {
       "lane": "mini-scout-wave-init-pv-supply-construction-ui-ops",
       "owner": "Codex/Sub-agents",

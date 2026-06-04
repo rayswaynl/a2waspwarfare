@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-04T05:20:00+02:00 - Codex - post-dispatch PVF handler authority recheck
+
+- Rechecked the mini-scout "thin registered PVF handler" lead against current source rather than adding another loose queue item.
+- Source evidence confirmed active caller paths for `RequestVehicleLock`, `RequestTeamUpdate`, `RequestUpgrade`, `RequestAutoWallConstructinChange`, `RequestChangeScore` and `RequestSpecial` `update-clientfps`.
+- Updated [Server authority migration map](Server-Authority-Migration-Map), [Hardening roadmap](Hardening-Implementation-Roadmap), [Development lessons](Development-Lessons-Learned) and `agent-development-lessons.jsonl` with the key implementation rule: PVF dispatcher lookup hardening closes handler-name RCE, not payload/effect authority.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
+- No gameplay source files were edited.
+
 ## 2026-06-04T05:05:00+02:00 - Codex - mini scout wave init/PV/supply/construction/UI/ops
 
 - Spark quota blocked another Spark scout wave, so Codex launched six cheap mini discovery scouts instead.
