@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T12:45:00+02:00",
+    "generatedAt":  "2026-06-04T12:55:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -19,9 +19,9 @@
     "agents":  {
                    "Codex":  {
                                  "status":  "active",
-                                 "currentLane":  "documentation-finisher-loop / mini-scout-wave-config-factory-ui-ai-cleanup-upstream",
-                                 "currentWork":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked the first starts until 13:06, so Codex closed failed Spark slots and launched six gpt-5.4-mini read-only scouts. All six returned and were closed. Promoted non-duplicate deltas for version.sqf terrain/runtime contract, latent AIBuyUnit queue/crew semantics, feat/ai-commander branch-local supervisor semantics, Help/GPS UI cleanup, unbounded delegated-group cleanup polls, dropped-item cleaner broad scans and upstream opt-in diagnostics culture. docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check and 22-file SHA256 mirror parity passed. Push pending.",
-                                 "nextExpectedOutput":  "Commit and push the mini-scout-wave-config-factory-ui-ai-cleanup-upstream docs harvest, then continue the documentation finisher loop."
+                                 "currentLane":  "documentation-finisher-loop",
+                                 "currentWork":  "The mini-scout-wave-config-factory-ui-ai-cleanup-upstream harvest is published, validated and pushed. Content landed as docs 51153bf2 / wiki 152c52d. All scout slots are closed. Promoted non-duplicate deltas for version.sqf terrain/runtime contract, latent AIBuyUnit queue/crew semantics, feat/ai-commander branch-local supervisor semantics, Help/GPS UI cleanup, unbounded delegated-group cleanup polls, dropped-item cleaner broad scans and upstream opt-in diagnostics culture.",
+                                 "nextExpectedOutput":  "Continue the documentation finisher loop with the next bounded source-backed docs item or scout wave Steff requests."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -46,8 +46,8 @@
                         {
                             "lane":  "mini-scout-wave-config-factory-ui-ai-cleanup-upstream",
                             "owner":  "Codex/Sub-agents",
-                            "status":  "published-validated-push-pending",
-                            "output":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked the first starts until 13:06, so Codex closed the failed Spark slots and launched six gpt-5.4-mini read-only scouts. All six returned and were closed. Promoted non-duplicate deltas into Mission-Config-Version-Include-Graph, Mission Parameters, Content/Maps, Tools/Build, Factory/Purchase, AI Commander, AI Runtime/HC, Headless Delegation, Client UI, Player UI, Marker Cleanup, Performance, Community & Dev, Feature Status and agent-feature-status.jsonl. docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check and 22-file SHA256 mirror parity passed. No gameplay source changed. Push pending."
+                            "status":  "published-validated-pushed",
+                            "output":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked the first starts until 13:06, so Codex closed the failed Spark slots and launched six gpt-5.4-mini read-only scouts. All six returned and were closed. Promoted non-duplicate deltas into Mission-Config-Version-Include-Graph, Mission Parameters, Content/Maps, Tools/Build, Factory/Purchase, AI Commander, AI Runtime/HC, Headless Delegation, Client UI, Player UI, Marker Cleanup, Performance, Community & Dev, Feature Status and agent-feature-status.jsonl. docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check and 22-file SHA256 mirror parity passed. Content pushed as docs 51153bf2 / wiki 152c52d. No gameplay source changed."
                         },
                         {
                             "lane":  "mini-scout-wave-town-respawn-upstream-performance",
