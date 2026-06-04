@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T11:40:00+02:00",
+    "generatedAt":  "2026-06-04T11:50:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,24 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "validation-command-drift-cleanup",
+                             "owner":  "Codex",
+                             "status":  "published-validated",
+                             "sourceScope":  [
+                                                 "docs/validate-wiki.ps1 exists in the current docs branch",
+                                                 "Tools/ValidateWiki.ps1 and Tools/TestWikiParity.ps1 are not present in the current docs branch",
+                                                 "Progress-Dashboard.md update ritual",
+                                                 "Wiki-Mirror-Reconciliation-Plan.md validation commands"
+                                             ],
+                             "outputs":  [
+                                             "Dashboard update ritual now names docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 parity.",
+                                             "Mirror reconciliation page now shows current checkout commands first and labels old Tools helper names historical.",
+                                             "docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed.",
+                                             "No gameplay source changed."
+                                         ],
+                             "handoff":  "Future agents should verify tool existence on the branch/worktree before telling Steff or another agent to run a validation script."
+                         },
                          {
                              "lane":  "fallback-scout-wave-construction-ui-integrations-community",
                              "owner":  "Codex/Sub-agents",

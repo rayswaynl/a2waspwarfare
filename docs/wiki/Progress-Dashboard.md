@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `validation-command-drift-cleanup` | Published / validated | Current docs validation is `docs\validate-wiki.ps1` from the repo root, plus JSON/JSONL parsing when touched, `git diff --check` and SHA256 parity for mirrored files. The dashboard update ritual and mirror reconciliation page no longer present removed `Tools\ValidateWiki.ps1` / `Tools\TestWikiParity.ps1` helpers as current commands. Validation/parity passed. No gameplay source changed. |
 | `fallback-scout-wave-construction-ui-integrations-community` | Published / validated | Steff asked for more Spark scouts, but all six new Spark starts hit the GPT-5.3-Codex-Spark quota until 13:06, so Codex closed the failed starts and relaunched four `gpt-5.4-mini` fallback scouts. Harvested non-duplicate source-backed additions: construction state ownership synthesis, Discord privileged-intents deployment caveat, upstream process capsule, gear-template creation UX trap and map-click modifier model. Validation/parity passed; content batch was pushed as docs `16f2ce8c` / wiki `c66ed93`, later coordination cleanup reached docs `be754933` / wiki `3ae79fe`, and no pending scout output remains. Most other scout findings confirmed existing canonical pages. No gameplay source changed. |
 | `server-sidemessage-runtime-pipeline` | Published / validated | Source-checked the hidden server `SideMessage` HQ-radio pipeline and added a canonical [SideMessage pipeline shape](Server-Gameplay-Runtime-Atlas#sidemessage-pipeline-shape) section. Feature Status now routes there, and Development Lessons now warns that `SideMessage` kbTell payloads are separate from `LocalizeMessage` PVF/chat/economy-effect tags. Validation/parity passed. No gameplay source changed. |
 | `documentation-finisher-status-refresh` | Published / validated | Reconciled the visible + machine coordination state after the pushed Zargabad scout wave and HC upstream-history merge. `agent-status.json` now puts Codex back on `documentation-finisher-loop`; prior scout work stays published/validated history. Evidence checked: main docs `43beb7b6`, wiki `a9d0d4e`. `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and mirror parity passed. No gameplay source changed. |
@@ -294,7 +295,7 @@ Historic scout rosters and harvested reports live in [Discovery swarm](Subagent-
 ### What to do after updates
 
 1. Update machine records first (`agent-events.jsonl`, `agent-knowledge.jsonl`, `Agent-Worklog.md`).
-2. Re-run `Tools/ValidateWiki.ps1` and `Tools/TestWikiParity.ps1` for source/mirror checks.
+2. Re-run `docs\validate-wiki.ps1`, JSON/JSONL parsing when touched, `git diff --check` and SHA256 parity for changed mirror files.
 3. Keep this dashboard row in sync so future agents know the current docs-navigation state.
 
 ### Where to go next

@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T11:50:00+02:00 - Codex - validation command drift cleanup
+
+- Continued the documentation finisher loop into a tooling-docs mismatch: [Progress dashboard](Progress-Dashboard) still told agents to rerun removed `Tools/ValidateWiki.ps1` / `Tools/TestWikiParity.ps1` helpers.
+- Source evidence checked: current docs branch has `docs\validate-wiki.ps1`; the old `Tools\ValidateWiki.ps1` and `Tools\TestWikiParity.ps1` helper paths are absent in this checkout, while branch-local Zargabad validators remain branch evidence only.
+- Updated [Progress dashboard](Progress-Dashboard), [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` so the current validation recipe is explicit before future agents publish. Documentation/tooling guidance only; no gameplay source files were edited.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for the six changed mirrored files.
+
 ## 2026-06-04T11:40:00+02:00 - Codex - fallback scout final-head closure
 
 - Continued the documentation finisher loop and found one residual machine-status drift: `agent-status.json` still said the next output was to push the fallback-scout coordination correction.

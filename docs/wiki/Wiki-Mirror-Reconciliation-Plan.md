@@ -89,15 +89,15 @@ Only `Current-Source-Status-Snapshot.md` currently matches exactly. Several wiki
 
 ## Validation Commands
 
+Current checkout commands:
+
 ```powershell
-Set-Location 'C:\Users\Steff\a2waspwarfare-docs'
-powershell -ExecutionPolicy Bypass -File .\Tools\ValidateWiki.ps1
-powershell -ExecutionPolicy Bypass -File .\docs\validate-wiki.ps1
-powershell -ExecutionPolicy Bypass -File .\Tools\ValidateWiki.ps1 -WikiPath 'C:\Users\Steff\_wasp_wiki_tmp' -SkipGitDiffCheck
-powershell -ExecutionPolicy Bypass -File .\Tools\TestWikiParity.ps1 -WikiPath 'C:\Users\Steff\_wasp_wiki_tmp'
+Set-Location '<repo-root>'
+powershell -NoProfile -ExecutionPolicy Bypass -File .\docs\validate-wiki.ps1
+git diff --check
 ```
 
-Current checkout correction: only `docs\validate-wiki.ps1` exists here. Treat the `Tools\ValidateWiki.ps1` and `Tools\TestWikiParity.ps1` commands above as historical helper names unless those scripts are restored; for current batches, run `docs\validate-wiki.ps1`, `git diff --check`, JSON/JSONL parsing if touched, and SHA256 parity for every mirrored page.
+When JSON or JSONL machine files change, parse them before committing. After copying changed `docs\wiki\<page>` files into the wiki checkout, compare SHA256 hashes for every mirrored page in the batch. The old `Tools\ValidateWiki.ps1` and `Tools\TestWikiParity.ps1` helper names are historical unless those scripts are restored.
 
 ## Guardrails
 
