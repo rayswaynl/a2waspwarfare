@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T13:20:00+02:00",
+    "generatedAt":  "2026-06-04T13:25:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -20,7 +20,7 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Published and pushed the latest scout harvest after GPT-5.3-Codex-Spark quota blocked three starts and six gpt-5.4-mini fallback scouts returned. Content commits: docs 1d7d0567 / wiki faaee0f.",
+                                 "currentWork":  "Published and pushed the latest scout harvest after GPT-5.3-Codex-Spark quota blocked three starts and six gpt-5.4-mini fallback scouts returned. Content commits: docs 1d7d0567 / wiki faaee0f; current pushed heads after status reconciliation: docs 180bb301 / wiki 6a49599.",
                                  "nextExpectedOutput":  "Continue documentation finisher/orchestrator loop; pick the next source-backed discovery or hardening lane when Steff asks."
                              },
                    "Codex-2":  {
@@ -47,7 +47,7 @@
                             "lane":  "mini-scout-wave-quad-ai-support-lifecycle-ui-tooling-upstream",
                             "owner":  "Codex/Sub-agents",
                             "status":  "published-validated-pushed",
-                            "output":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked three starts until 13:06, so Codex closed the failed slots and launched six gpt-5.4-mini read-only fallback scouts. All six returned and were closed. Promoted non-duplicate deltas into Quad-AI-Commander, AI-Commander-Autonomy-Audit, Support-Specials-And-Tactical-Modules-Atlas, Server-Authority-Migration-Map, Client UI pages, Gear-Loadout-And-EASA-Atlas, Tools-And-Build-Workflow, Tooling-Release-Readiness-Audit, External-Integrations, Server-Ops-Runbook, Developer-History-And-Upstream-Lessons, Server-Gameplay-Runtime-Atlas, Performance-Opportunity-Sweep and machine ledgers. docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check and 23-file SHA256 mirror parity passed. Pushed as docs 1d7d0567 / wiki faaee0f. No gameplay source changed."
+                            "output":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked three starts until 13:06, so Codex closed the failed slots and launched six gpt-5.4-mini read-only fallback scouts. All six returned and were closed. Promoted non-duplicate deltas into Quad-AI-Commander, AI-Commander-Autonomy-Audit, Support-Specials-And-Tactical-Modules-Atlas, Server-Authority-Migration-Map, Client UI pages, Gear-Loadout-And-EASA-Atlas, Tools-And-Build-Workflow, Tooling-Release-Readiness-Audit, External-Integrations, Server-Ops-Runbook, Developer-History-And-Upstream-Lessons, Server-Gameplay-Runtime-Atlas, Performance-Opportunity-Sweep and machine ledgers. docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check and 23-file SHA256 mirror parity passed. Content pushed as docs 1d7d0567 / wiki faaee0f; status reconciliation advanced current heads to docs 180bb301 / wiki 6a49599. No gameplay source changed."
                         },
                         {
                             "lane":  "mini-scout-wave-config-factory-ui-ai-cleanup-upstream",

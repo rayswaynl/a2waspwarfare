@@ -1,5 +1,11 @@
 # Agent Worklog
 
+## 2026-06-04T13:25:00+02:00 - Codex - scout harvest pushed-head breadcrumb correction
+
+- Continued the documentation finisher loop after the scout harvest and source-checked the current pushed heads.
+- Evidence: docs mirror `git log -3 --oneline` shows `180bb301 docs: record scout harvest push` after `1d7d0567 docs: harvest support ui tooling scout wave`; live wiki shows `6a49599 wiki: record scout harvest push` after `faaee0f wiki: harvest support ui tooling scout wave`.
+- Corrected [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-feature-status.jsonl` and the event feed so they distinguish content commits from final pushed heads. Coordination cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T13:10:00+02:00 - Codex - mini scout wave Quad AI/support/lifecycle/UI/tooling/upstream
 
 - Steff asked for more Spark scouts. Three GPT-5.3-Codex-Spark starts hit quota until 13:06 and were closed; Codex launched six `gpt-5.4-mini` read-only fallback scouts for Quad AI Commander branch intel, support/RequestSpecial authority, lifecycle/server-loop topology, UI/dialog lifecycle, tooling/release/deploy footguns and upstream/community-dev lessons.
