@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T10:45:00+02:00",
+    "generatedAt":  "2026-06-04T10:55:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,30 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "server-sidemessage-runtime-pipeline",
+                             "owner":  "Codex",
+                             "status":  "published-validated",
+                             "sourceScope":  [
+                                                 "Server/Init/Init_Server.sqf:32",
+                                                 "Server/Functions/Server_SideMessage.sqf:3-64",
+                                                 "Server/FSM/server_town.sqf:199,230,233",
+                                                 "Server/FSM/server_town_camp.sqf:127,130",
+                                                 "Server/FSM/server_town_ai.sqf:134",
+                                                 "Server/Functions/Server_BuildingDamaged.sqf:13",
+                                                 "Server/Functions/Server_BuildingKilled.sqf:92",
+                                                 "Server/Functions/Server_ProcessUpgrade.sqf:85",
+                                                 "Common/Init/Init_PublicVariables.sqf:32",
+                                                 "Client/PVFunctions/LocalizeMessage.sqf:49,53,57-68"
+                                             ],
+                             "outputs":  [
+                                             "Expanded Server Gameplay Runtime Atlas with a SideMessage pipeline shape section.",
+                                             "Updated Feature Status row to route to the new section.",
+                                             "Added a reusable Development Lessons guardrail and JSONL record distinguishing SideMessage from LocalizeMessage.",
+                                             "docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed for this docs-only batch."
+                                         ],
+                             "handoff":  "Future radio/dubbing/chat edits should use Server-Gameplay-Runtime-Atlas#sidemessage-pipeline-shape before touching message helpers."
+                         },
                          {
                              "lane":  "documentation-finisher-status-refresh",
                              "owner":  "Codex",

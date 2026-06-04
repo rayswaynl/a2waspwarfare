@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T10:45:00+02:00",
+    "generatedAt":  "2026-06-04T10:55:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -20,7 +20,7 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Reconciled stale coordination state after the Zargabad scout wave and HC upstream-history merge were pushed. Current source of truth: main docs branch HEAD 43beb7b6 and live wiki HEAD a9d0d4e; the previous scout wave is published/validated and closed.",
+                                 "currentWork":  "Source-checked and documented the server SideMessage HQ-radio pipeline in Server Gameplay Runtime Atlas, Feature Status and Development Lessons. The new section distinguishes SideMessage kbTell payload families from the LocalizeMessage client PVF/chat/economy-effect path. Validation passed for this scoped docs batch.",
                                  "nextExpectedOutput":  "Continue documentation finisher loop with the next bounded source-backed docs item."
                              },
                    "Codex-2":  {
@@ -43,6 +43,12 @@
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "server-sidemessage-runtime-pipeline",
+                            "owner":  "Codex",
+                            "status":  "published-validated",
+                            "output":  "Source-checked the hidden server SideMessage radio pipeline and routed it through Server Gameplay Runtime Atlas, Feature Status and Development Lessons. Evidence covers Init_Server compile, Server_SideMessage payload switch, town/strongpoint/base/upgrade callers and the separate LocalizeMessage PVF/chat/economy-effect path. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. No gameplay source changed."
+                        },
                         {
                             "lane":  "documentation-finisher-status-refresh",
                             "owner":  "Codex",

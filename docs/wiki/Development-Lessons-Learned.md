@@ -10,6 +10,8 @@ The depth-2 scout wave found a good example in AI teams: `wfbe_autonomous` sound
 
 The same rule applies to network messages that sound cosmetic. `WFBE_Server_PV_SupplyMissionCompletedMessage` looks like a notification channel, but the client handler grants funds and requests score (`Client/Module/supplyMission/supplyMissionCompletedMessage.sqf:11-23`). Treat names as clues, not proof of authority or side-effect scope.
 
+The same rule applies to server message helpers that sound interchangeable. `SideMessage` is a server-owned HQ-radio/kbTell path compiled at `Server/Init/Init_Server.sqf:32`, with shape-sensitive town, strongpoint, base/construction and no-parameter topic payloads in `Server/Functions/Server_SideMessage.sqf:13-64`. `LocalizeMessage` is a client PVF/chat path and can mutate local funds for tags such as `Teamkill`, `SecondaryAward` and `HeadHunterReceiveBounty` (`Client/PVFunctions/LocalizeMessage.sqf:49,53,57-68`). Before editing radio text, dubbing classes or adjacent gameplay messages, identify which path owns the effect and smoke the right payload family.
+
 The same rule applies to launched scripts. AntiStack starts `monitorTeamToJoin.sqf` from server init when enabled (`Server/Init/Init_Server.sqf:606-608`), but the script only reads monitored west/east skill totals and assigns a local `_side` (`Server/Module/AntiStack/monitorTeamToJoin.sqf:1-15`). It has no loop, no `setVariable`, no `publicVariable`, no return consumer and no connection to `RequestJoin`. Treat `execVM` presence as "this file runs," not "this feature has an effect."
 
 ## Highest-Value Coverage Gaps

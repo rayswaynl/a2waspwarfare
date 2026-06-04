@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T10:55:00+02:00 - Codex - server SideMessage runtime pipeline
+
+- Continued the documentation finisher loop into the Feature Status row for the hidden server side radio/message pipeline.
+- Source evidence checked: `SideMessage` compile in `Server/Init/Init_Server.sqf:32`; payload switch in `Server/Functions/Server_SideMessage.sqf:3-64`; town/camp/town-AI callers at `server_town.sqf:199,230,233`, `server_town_camp.sqf:127,130` and `server_town_ai.sqf:134`; base/building callers at `Server_BuildingDamaged.sqf:13` and `Server_BuildingKilled.sqf:92`; upgrade-complete caller at `Server_ProcessUpgrade.sqf:85`; `LocalizeMessage` client PVF registration/effects at `Init_PublicVariables.sqf:32` and `Client/PVFunctions/LocalizeMessage.sqf:49,53,57-68`.
+- Updated [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) with a canonical SideMessage pipeline shape section, updated [Feature status](Feature-Status-Register) to route there, and added a reusable [Development lesson](Development-Lessons-Learned) plus `agent-development-lessons.jsonl` record so future radio/chat/reward edits do not collapse `SideMessage` and `LocalizeMessage`.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and mirror parity. Documentation cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T10:45:00+02:00 - Codex - documentation finisher status refresh
 
 - Continued the long-running documentation finisher loop by checking both remotes (`git pull --ff-only` already up to date) and current heads: main docs branch `43beb7b6`, live wiki `a9d0d4e`.
