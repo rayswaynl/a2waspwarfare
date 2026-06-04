@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T19:45:00+02:00",
+    "generatedAt":  "2026-06-04T20:05:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -20,8 +20,8 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Running and harvesting a fresh Spark scout wave. Duplicate confirmations were kept out of canonical prose; generated/modded release target tiers were promoted into agent-release-readiness.json with per-folder counts and blockers.",
-                                 "nextExpectedOutput":  "Validate, mirror, commit and push the release-target tiering/status batch; keep harvesting still-running scouts only when they add non-duplicate source-backed deltas."
+                                 "currentWork":  "Published and pushed the release-target Spark scout harvest: generated/modded target tiers are now in agent-release-readiness.json, and stale old-upgrade-dialog missing wf_*.paa assets are routed through UI pages.",
+                                 "nextExpectedOutput":  "Continue the documentation finisher loop from canonical pages; relaunch tooling or lifecycle scouts as fresh narrow lanes if needed."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -36,18 +36,18 @@
                                   "nextExpectedOutput":  "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
                               },
                    "Sub-agents":  {
-                                      "status":  "active-scout-wave-partial-harvest",
+                                      "status":  "closed-harvested-or-timed-out",
                                       "currentLane":  "spark-scout-wave-release-targets-hc-ai-caps-economy",
-                                      "currentWork":  "Spark scouts returned for player AI caps, HC/locality/FPS, generated/modded release tiers and town/economy/supply. AI caps, HC and economy mostly confirmed existing canonical docs; generated/modded release tiers produced a machine-readable ledger update.",
-                                      "nextExpectedOutput":  "Finish remaining support/UI/tooling/lifecycle scout harvests if they return useful non-duplicate evidence, then close or relaunch narrow lanes as needed."
+                                      "currentWork":  "Spark scouts returned for player AI caps, HC/locality/FPS, generated/modded release tiers, town/economy/supply, support authority and UI/dialog hazards. Tooling was closed unharvested after timeout; lifecycle errored during compaction.",
+                                      "nextExpectedOutput":  "No active scouts remain from this wave; relaunch any remaining lanes as fresh narrow scouts if needed."
                                   }
                },
     "laneSummary":  [
                         {
                             "lane":  "spark-scout-wave-release-targets-hc-ai-caps-economy",
                             "owner":  "Codex/Sub-agents",
-                            "status":  "partial-harvest-validating",
-                            "output":  "Steff asked for more Spark scouts. Codex launched six GPT-5.3-Codex-Spark read-only scouts and recycled completed slots into tooling/integrations plus mission lifecycle/init. Returned reports confirmed existing Player AI caps, HC failover/static-defense/FPS and economy/town/supply findings without duplicating prose. The new durable delta is generated mission release tiering: agent-release-readiness.json now splits source Chernarus, maintained generated Takistan, branch-only Zargabad candidate and each modded blocked/stub folder with file counts, conflict-marker hits and bootstrap blockers. No gameplay source changed."
+                            "status":  "published-validated-pushed",
+                            "output":  "Steff asked for more Spark scouts. Codex launched six GPT-5.3-Codex-Spark read-only scouts and recycled completed slots into tooling/integrations plus mission lifecycle/init. Returned reports confirmed existing Player AI caps, HC failover/static-defense/FPS and economy/town/supply findings without duplicating prose. The new durable deltas are generated mission release tiering in agent-release-readiness.json and missing old-upgrade-dialog wf_*.paa asset routing in UI pages. Validation/parity passed and content pushed as docs 058427d3 / wiki 4b72809. No gameplay source changed."
                         },
                         {
                             "lane":  "ai-commander-branch-head-refresh-and-spark-scout-wave",

@@ -7,6 +7,7 @@
 - New durable delta: `agent-release-readiness.json` no longer collapses modded missions into one wildcard. It now splits release targets into source Chernarus, maintained generated Takistan, branch-only Zargabad candidate and each modded blocked/stub folder, including file counts, conflict-marker hits and missing bootstrap blockers from the scout scan.
 - UI scout delta: the stale old upgrade dialog already had a missing controller file documented; Codex added the matching missing `Client\Images\wf_*.paa` icon references from `Dialogs.hpp:2634-2821` to [Client UI systems](Client-UI-Systems-Atlas), [Client UI/HUD](Client-UI-HUD-And-Menus) and [UI IDD collision repair](UI-IDD-Collision-Repair).
 - Updated [Tooling release readiness audit](Tooling-Release-Readiness-Audit) to mark the generated-target tiering backlog item done. Documentation/status only; no gameplay source files were edited.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and SHA256 mirror parity for nine files. Pushed as docs `058427d3` / wiki `4b72809`.
 
 ## 2026-06-04T16:05:00+02:00 - Codex - AI commander branch-head refresh and Spark scout wave
 
