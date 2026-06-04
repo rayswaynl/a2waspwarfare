@@ -6,7 +6,7 @@ Scope: Chernarus source mission first, then LoadoutManager propagation. All path
 
 Machine-readable backlog for agents and code owners: [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl). Validation workflow and test evidence schema: [Testing workflow](Testing-Debugging-And-Release-Workflow) and [`agent-test-plan.schema.json`](agent-test-plan.schema.json).
 
-Page ownership: this roadmap owns canonical patch order, branch discipline and validation gates. [Server authority migration map](Server-Authority-Migration-Map) owns the reusable authority principles, handler validation checklist and cross-system migration table. Focused playbooks own detailed patch shape for PVF dispatch, ICBM authority, attack waves, supply missions, economy first cut, HC failover and town-AI vehicle safety.
+Page ownership: this roadmap owns canonical patch order, branch discipline and validation gates. [Server authority migration map](Server-Authority-Migration-Map) owns the reusable authority principles, handler validation checklist and cross-system migration table. Focused playbooks own detailed patch shape for PVF dispatch, ICBM authority, attack waves, supply missions, economy first cut, commander vote/reassignment, HC failover and town-AI vehicle safety.
 
 ## Authority Design Preamble
 
@@ -34,7 +34,7 @@ For the full per-handler checklist, use [Server authority migration map](Server-
 | P1 | Server-side economy authority design | Covers the confirmed class: build, buy, sell, supply, upgrade, ICBM and gear/service spend paths. |
 | P1 | Direct attack-wave authority | Claude DR-41 confirmed `ATTACK_WAVE_INIT` is a forgeable direct-PV channel that can drive side-wide unit prices to zero or negative values. |
 | P1 | Supply mission authority and cooldown cleanup | Needed before PR #1 supply helicopters/cash/interdiction become baseline. |
-| P2 | Commander vote semantics and reassignment correctness | DR-47 and DR-15 are small but match-visible commander/HQ correctness fixes. Decide no-commander/tie rules before code, then keep vote resolution separate from manual reassignment call-shape and requester-authority hardening. |
+| P2 | Commander vote semantics and reassignment correctness | DR-47 and DR-15 are small but match-visible commander/HQ correctness fixes. Use [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook): decide no-commander/tie rules before code, then keep vote resolution separate from manual reassignment call-shape and requester-authority hardening. |
 | P2 | Factory queue, HC/static-defense and support-loop cleanups | Player-facing soft-lock/perf/partial-feature fixes once core authority is moving. |
 
 ## P0: PVF Dispatcher Lookup
@@ -164,7 +164,7 @@ Validation:
 
 | Fix | Source | Validation |
 | --- | --- | --- |
-| [Commander vote AI/no-commander semantics](Commander-HQ-Lifecycle-Atlas#commander-vote-flow) | `Server_VoteForCommander.sqf:24-29,43` counts AI/no-commander votes but the final condition selects any non-tied player candidate; `GUI_VoteMenu.sqf:87-89` can preview AI/no commander for a distribution the server assigns to a player. | Owner decides plurality/majority/tie/no-commander rules, then smoke player-majority, no-commander-majority, equal-vote, player-candidate tie and `RequestCommanderVote` restart cases. |
+| [Commander vote AI/no-commander semantics](Commander-Vote-And-Reassignment-Playbook) | `Server_VoteForCommander.sqf:24-29,43` counts AI/no-commander votes but the final condition selects any non-tied player candidate; `GUI_VoteMenu.sqf:87-89` can preview AI/no commander for a distribution the server assigns to a player. | Owner decides plurality/majority/tie/no-commander rules, then smoke player-majority, no-commander-majority, equal-vote, player-candidate tie and `RequestCommanderVote` restart cases. |
 | Factory empty-vehicle queue leak | `Client_BuildUnit.sqf` early empty-vehicle `exitWith` skips normal `WFBE_C_QUEUE` decrement. | Buy repeated crewless vehicles; queue cap returns to normal after each build attempt. |
 | Factory FIFO token/broadcast churn | `Client_BuildUnit.sqf` uses random token and broadcasts `queu` mutations. | Multiple simultaneous buyers cannot collide; queue UI remains correct. |
 | Salvage payout function casing | `Client/Module/Skill/Skill_Salvage.sqf:38` and `Client/FSM/updatesalvage.sqf:50` call `ChangePlayerfunds`, while `Client/Init/Init_Client.sqf:53,91` compiles `ChangePlayerFunds`. | Patch source Chernarus and maintained Vanilla casing first, then smoke manual engineer salvage and salvage-truck payout for one valid wreck before larger salvage authority work. |

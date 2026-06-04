@@ -138,11 +138,13 @@ Each camp cycle:
 
 When a town itself is captured, `Server_SetCampsToSide.sqf` resets every camp to the new side and starting SV, updates flag textures, then sends `AllCampsCaptured` (`Server_SetCampsToSide.sqf:15-27`).
 
+Camp flag texture caveat: the independent camp-capture path currently computes `_newSide` and `_side`, but the capture write uses `_flag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG", str _side])` at `server_town_camp.sqf:137`. `_side` is the old owner, so the 3D flag texture can remain visually on the previous side even though `sideID` and client markers move to `_newSID`. The camp repair path can also change `sideID` through `Server_HandleSpecial.sqf:158-164` without refreshing the flag object. Treat camp flag visuals as a source-unpatched correctness issue separate from marker color updates.
+
 ### Camp Helper Risks
 
 `Common_GetTotalCamps.sqf:10-11` and `Common_GetTotalCampsOnSide.sqf:16` both return `1` when the computed count is zero. That fallback may have been intended as a divide-by-zero guard for camp-ratio logic, but it can also inflate empty-camp totals in UI, metrics or future balance code. Before reusing these helpers, decide whether the caller needs a real count or a safe denominator.
 
-Respawn-specific caveat from the 2026-06-04 depth scout: `Common_GetRespawnThreeway.sqf:6-8` checks whether total camps equals side-owned camps, and `Client_GetRespawnAvailable.sqf:67-75` appends that list for threeway defender respawn. Because both helper functions return `1` for zero-camp towns, a side-owned zero-camp town can look fully camp-owned to the respawn system. If this fallback is meant only as a safe denominator for capture math, split a real-count helper or explicitly exclude zero-camp towns in threeway respawn.
+Depth scout expansion 2026-06-04: this is broader than a UI-counting footnote. The fallback feeds camp-gated capture mode 2 in `server_town.sqf:179-189`, threeway defender respawn in `Common_GetRespawnThreeway.sqf:6-8` plus `Client_GetRespawnAvailable.sqf:67-80`, and depot infantry purchase gating in `GUI_Menu_BuyUnits.sqf:109-114`. Because both helper functions return `1` for zero-camp towns, a side-owned zero-camp town can look fully camp-owned to callers that expected real camp counts. If the fallback is meant only as a safe denominator for capture math, split a real-count helper or explicitly exclude zero-camp towns in respawn/buy/capture gates.
 
 Camp capture marker events are also timing-sensitive: `CampCaptured.sqf:12-13` and `AllCampsCaptured.sqf:9-10` assume each camp already has a local `wfbe_camp_marker`. `Init_Town.sqf:149-158` creates those marker names on clients, so JIP or unusually early PVF delivery should be smoked before changing camp marker dispatch.
 
@@ -184,6 +186,8 @@ Source: `server_town_ai.sqf:21-32`.
 For each eligible town, the AI loop scans nearby `Man`, `Car`, `Motorcycle`, `Tank`, `Ship` and filters out air vehicles so flyovers do not wake towns (`:81-93`). If enemies are detected, it publishes only the side IDs that woke the town (`:101-108`), activates the town, selects defender or occupation group templates, chooses camp/town spawn positions, then creates groups through client delegation, headless delegation or server fallback (`:115-181`). It also mans static defenses (`:184-185`).
 
 When inactive long enough, it clears active state and deletes town teams/vehicles (`:191-223`). The current vehicle deletion check is known unsafe for player passengers; use [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) before touching that cleanup.
+
+Resistance patrols have a separate lifecycle trap. `server_town_ai.sqf:226-230` starts `server_patrols.sqf` only when `wfbe_patrol_enabled` is true and `wfbe_patrol_active` is false, then immediately latches `wfbe_patrol_active = true`. The patrol worker uses `while {!WFBE_GameOver || _team_alive}` at `server_patrols.sqf:26`, so during a normal running match the loop condition stays true even after the patrol dies. The reset at `server_patrols.sqf:71-72` is therefore not reached until game-over conditions permit exit. Treat patrol respawn as effectively blocked after first launch until this lifecycle condition is patched.
 
 ## Upstream Miksuu Town-Defense Diagnostics
 
@@ -227,6 +231,8 @@ The supply mission code later reads/writes `LastSupplyMissionRun` with a differe
 | Status | Finding | Evidence | Owner page |
 | --- | --- | --- | --- |
 | Patch-ready | Town AI inactivity cleanup can delete a town-AI vehicle with a player passenger/crew member aboard if the player is not group leader. | `server_town_ai.sqf:211-216` | [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) |
+| Patch-ready | Independent camp capture can set the world flag texture to the old owner, and camp repair can change camp `sideID` without refreshing the flag object. | `server_town_camp.sqf:122-138`; `Server_HandleSpecial.sqf:147-168` | This page, [Feature status](Feature-Status-Register) |
+| Patch-ready | Resistance patrols can stay latched active after the patrol dies because the worker loop runs while the game is not over, and `wfbe_patrol_active` is reset only after the loop exits. | `server_town_ai.sqf:226-230`; `server_patrols.sqf:26,71-72` | This page, [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) |
 | Upstream candidate | Miksuu's latest `master` adds focused town-defense diagnostics plus `grpNull`/`objNull` creation guards and Vanilla propagation. | [`913ecdf6`](https://github.com/Miksuu/a2waspwarfare/commit/913ecdf6b55698ad8ea5de70dc1ecb33193b17ce), [`d5bfe3a2`](https://github.com/Miksuu/a2waspwarfare/commit/d5bfe3a26d677d84c49188abe8d92c03b72f049f) | [Miksuu upstream commit intel](Upstream-Miksuu-Commit-Intel) |
 | Patch-ready | Supply mission cooldown key casing differs between town init and supply mission code. | `Init_Town.sqf:35`; supply pages trace `LastSupplyMissionRun` | [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) |
 | Authority gap | Town and camp capture bounties are awarded client-side after server capture broadcasts. | `TownCaptured.sqf:37-81`; `CampCaptured.sqf:19-40` | [Server authority map](Server-Authority-Migration-Map), [Feature status](Feature-Status-Register) |
@@ -254,9 +260,9 @@ The supply mission code later reads/writes `LastSupplyMissionRun` with a differe
 | Town init / mission.sqm / parameters | Hosted or dedicated boot, no `townInit` wait hang, towns appear with expected count and markers. |
 | Starting mode | Dedicated smoke for mode 0/1/2/3 as applicable; camps match town starting ownership. |
 | Town capture | Capture from west/east/resistance as enabled; SV drains/resets; marker color/text changes only for concerned sides. |
-| Camp capture | Capture/repair camp, flag texture and marker color update, bounty behavior remains understood. |
+| Camp capture | Capture/repair camp, flag texture and marker color update, bounty behavior remains understood; specifically verify the 3D flag uses the new owner after independent capture and repair. |
 | Marker visibility | JIP client sees current town/camp colors; enemy SV remains hidden unless active/attacked or nearby. |
-| Town AI | Wake town by ground unit, no flyover-only wake, despawn after inactivity, no occupied-vehicle deletion regression. |
+| Town AI | Wake town by ground unit, no flyover-only wake, despawn after inactivity, no occupied-vehicle deletion regression, and resistance patrols can relaunch or reset correctly after patrol death. |
 | Economy | Income tick still reflects town SV and ownership; side supply clamp/authority changes still use current town supply. |
 | Victory | All-town and HQ/factory elimination paths still produce one winner and one endgame/log path. |
 

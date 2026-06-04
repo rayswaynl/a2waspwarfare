@@ -16,6 +16,7 @@
   - [Wiki mirror reconciliation](Wiki-Mirror-Reconciliation-Plan)
 - Quality and operations
   - [Feature status](Feature-Status-Register)
+  - [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook)
   - [Server ops runbook](Server-Ops-Runbook)
   - [Documentation plan](Documentation-Implementation-Plan)
   - [Knowledge platform roadmap](Knowledge-Platform-Roadmap)

@@ -2155,3 +2155,11 @@ Key conclusions:
 - The map scout confirmed current `Missions`/`Missions_Vanilla` roots, generated `version.sqf` dependency and modded mission boot blockers already documented in [Content structure](Content-Structure-And-Maps) and [Tools/build](Tools-And-Build-Workflow).
 - No gameplay source files changed.
 - Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 24 mirrored files.
+
+## 2026-06-04T11:05:00+02:00 - Codex - commander/town/PV mini scout playbook harvest
+- Spark quota blocked the requested GPT-5.3-Codex-Spark wave, so Codex launched four `gpt-5.4-mini` read-only scouts for commander/HQ, economy/supply, towns/capture and PV/networking authority.
+- Commander, towns and PV/networking returned; the economy scout timed out and was closed without output.
+- Published [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) as the canonical DR-47 + DR-15 adjacent implementation playbook, then routed Home, sidebar/footer, LLM entry pack, Feature Status, Pending Owner Decisions, Hardening Roadmap, Server Authority, Testing Workflow, Client UI, Player UI and Public Variable Channel Index through it.
+- Promoted new town deltas into [Towns/camps/capture](Towns-Camps-And-Capture-Atlas), [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) and [Feature status](Feature-Status-Register): independent camp capture can set the 3D flag texture to the old owner, camp repair can change `sideID` without refreshing the flag object, resistance patrols can stay `wfbe_patrol_active` latched after patrol death, and the zero-camp helper fallback affects capture mode 2, threeway defender respawn and depot infantry gating.
+- PV/networking scout confirmed existing canonical P0 authority risks. Supply completion matching was already documented in [Supply mission architecture](Supply-Mission-Architecture) and Feature Status, so no duplicate prose was added.
+- No gameplay source files changed. Validation passed for the docs mirror: `docs/validate-wiki.ps1`, JSON/JSONL parsing and `git diff --check`.

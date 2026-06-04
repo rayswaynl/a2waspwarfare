@@ -21,8 +21,8 @@ For implementation work after PVF dispatch allowlisting, use the [registered ser
 | `RequestVehicleLock` | lock/unlock a payload-selected vehicle; owner/side/range validation is not visible in the handler |
 | `RequestOnUnitKilled` | report a kill for scoring |
 | `RequestChangeScore` | score mutation; accepts payload score and applies `addScore`, unlike safer server-derived award helpers |
-| `RequestCommanderVote` | commander vote |
-| `RequestNewCommander` | assign new commander — **DR-15** (`_side = _this` call-shape bug); flow map in [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) |
+| `RequestCommanderVote` | commander vote; DR-47 server/UI semantics mismatch and restart smoke route through [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) |
+| `RequestNewCommander` | assign new commander — **DR-15** (`_side = _this` call-shape bug); flow map in [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas), patch/smoke route in [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) |
 | `RequestStructure` | build a structure — **DR-6** (no commander/funds/placement check) |
 | `RequestDefense` | build a defense — **DR-6** |
 | `RequestJoin` | join handshake (robust 30s-retry, DR-37) |
@@ -53,6 +53,8 @@ For runtime/JIP behavior after these messages arrive, use the [registered client
 | `RequestBaseArea` | base-area (client-bound despite the name); moves an object, stamps `avail`/`side` and appends to `wfbe_basearea` with no local validation in the client callback; multiplayer-sensitive HQ deploy edge in [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) |
 | `HandleParatrooperMarkerCreation` | paratrooper-drop unit marker creation; source and maintained Vanilla are propagated, Arma smoke pending in [Paratrooper marker revival](Paratrooper-Marker-Revival) |
 | `NukeIncoming` | nuke-incoming broadcast (paired with the ICBM direct channels) |
+
+Commander-tag note: `HandleSpecial` also carries commander/HQ message tags such as `commander-vote-start`, `new-commander-assigned`, `hq-setstatus` and `set-hq-killed-eh` through the client-side special router. Use [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) for the vote/reassignment semantics and [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) for the broader HQ-status chain before changing those tags.
 
 > `DatabaseDebug` is registered-commented (`:30`).
 
