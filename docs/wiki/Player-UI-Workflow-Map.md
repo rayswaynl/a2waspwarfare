@@ -10,7 +10,7 @@ Canonical implementation pages remain [Client UI systems atlas](Client-UI-System
 | --- | --- | --- | --- |
 | Join/init | Loading blackout, side/stack request, briefing diary, intro video, optional commander vote and new-player menu hint. | `initJIPCompatible.sqf:70`, `:224`; `Client/Init/Init_Client.sqf:416`, `:787`, `:958`; `briefing.sqf:11` | Live. |
 | WF menu entry | Scroll `Options` opens the main Warfare menu; vehicle action mirror also exists. | `Client/Functions/Client_AddWFMenuAction.sqf:17`; `Client/Action/Action_Menu.sqf:1`; `Client/FSM/updateactions.fsm:114` | Live. |
-| Main menu | Buy units, gear, team, voting, command, tactical, upgrade, economy, service, help, params, unflip, headbug and HUD/FPS toggles. | `Rsc/Dialogs.hpp:1019-1022`; `Client/GUI/GUI_Menu.sqf:32-208` | Live; some help/tooltips are hardcoded. |
+| Main menu | Buy units, gear, team, voting, command, tactical, upgrade, economy, service, help, params, unflip, headbug and HUD/FPS toggles. | `Rsc/Dialogs.hpp:1019-1022`; `Client/GUI/GUI_Menu.sqf:32-208` | Live; some help/tooltips are hardcoded. GPS zoom router actions `17/18` remain in `GUI_Menu.sqf` but no audited `WF_Menu` control emits them. |
 | Buy units | Select factory/depot/airport, select unit and buy; client queues, debits and spawns. | `Rsc/Dialogs.hpp:1445-1448`; `Client/GUI/GUI_Menu_BuyUnits.sqf:90-156`; `Client/Functions/Client_BuildUnit.sqf:216-253` | Live; client-authoritative purchase surface. |
 | Buy gear/templates | Select target, gear tab/template, buy gear, create/delete/save templates. | `Rsc/Dialogs.hpp:530-533`; `Client/GUI/GUI_BuyGearMenu.sqf:418-509`; `Client/Functions/Client_UI_Gear_AddTemplate.sqf:132-150` | Live; client-authoritative and template-filter debt. |
 | Team/vote/transfer | View terrain/FX/distance, transfer funds, disband AI, toggle vote popup and vote/select commander. | `Rsc/Dialogs.hpp:1233-1236`, `:409-412`, `:145-148`, `:237-240`; `GUI_Menu_Team.sqf:86-160`; `GUI_TransferMenu.sqf:57-75`; `GUI_VoteMenu.sqf:31-36` | Live, with vote/reassignment cleanup routed through [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook): server/UI no-commander semantics, `GUI_VoteMenu.sqf:29,61` and `GUI_Commander_VoteMenu.sqf:58` inclusive loops, `GUI_VoteMenu.sqf:74-83` row coloring, and reassignment-by-name fragility. |
@@ -41,6 +41,7 @@ Canonical implementation pages remain [Client UI systems atlas](Client-UI-System
 | Economy | `RscMenu_Economy`, IDD `23000` | `Rsc/Dialogs.hpp:3287-3290`; `GUI_Menu_Economy.sqf:74-150` | Live; duplicate IDD/risky. |
 | RHUD/action title | `RscOverlay`, `OptionsAvailable`, both IDD `10200` | `Rsc/Titles.hpp:44-46`, `:164-171`; `Client_UpdateRHUD.sqf:7`, `:91` | Live; duplicate title IDD. |
 | Capture/end/build titles | `CaptureBar`, `EndOfGameStats`, `WFBE_ConstructionInterface` | `Rsc/Titles.hpp:126`, `:532`, `:723`; `coin_interface.sqf:29` | Live. |
+| Help | `RscMenu_Help`, IDD `508000` | `Rsc/Dialogs.hpp:3446-3447`; `GUI_Menu_Help.sqf:5-10` | Live display, but unload namespace cleanup is mismatched and the controller has no unload case. |
 | WASP scroll actions | Recover HQ, base repair and skill actions | `WASP/actions/AddActions.sqf:15`; `WASP/baserep/viem.sqf:52`; `Client/Module/Skill/Skill_Apply.sqf:14-160` | Mixed live/stale. |
 
 ## High-Risk Action Surfaces
@@ -52,6 +53,7 @@ Canonical implementation pages remain [Client UI systems atlas](Client-UI-System
 | Duplicate display/title IDs | EASA/Economy both use `idd=23000`; `RscOverlay`/`OptionsAvailable` both use `10200`. | Use [UI IDD collision repair](UI-IDD-Collision-Repair) before adding `findDisplay`-based automation or new resources. |
 | Visible command task partial | `GUI_Menu_Command.sqf:315-344` exposes task controls while `SetTask` sends are commented. | Hide or restore with server-backed task flow; do not document as working task assignment. |
 | Help dialog lifecycle mismatch | `Dialogs.hpp:3446-3447` sets `dialog_HelpPanel` on load but clears `cti_dialog_ui_onlinehelpmenu` on unload; `GUI_Menu_Help.sqf:5-10` has no unload case. | Clean namespace state before extending the help menu. |
+| Orphan main-menu GPS route | `GUI_Menu.sqf:202-208` handles `MenuAction == 17/18`, while the audited `WF_Menu` control set exposes actions `1-13`, `16` and `19`. | Remove the dead router cases or restore visible controls deliberately; smoke main-menu HUD/GPS actions either way. |
 | Stale upgrade dialog | `RscMenu_Upgrade` points at missing `Client/GUI/GUI_Menu_Upgrade.sqf`; live path is `WFBE_UpgradeMenu`. | Remove or repoint only with UI smoke. |
 | Hardcoded UI text | New-player hint (`Init_Client.sqf:958`), HUD tooltips (`Rsc/Dialogs.hpp:1208-1227`), buy-unit/gear hints, artillery ammo hints and WASP `RECOVER HQ`. | Move only in a dedicated localization pass; keep source copy stable during behavior patches. |
 

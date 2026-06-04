@@ -38,6 +38,8 @@ This is the quick-reference gateway for client UI work. Start with the [player U
 | Duplicate IDDs/display handles | EASA/Economy share `23000`; overlay/title resources share `10200`; `OptionsAvailable` and `EndOfGameStats` both use `currentCutDisplay`. | [Client UI systems atlas](Client-UI-Systems-Atlas), [UI IDD collision repair](UI-IDD-Collision-Repair) |
 | Economy dialog missing controls | `GUI_Menu_Economy.sqf:7-8` targets `23004`/`23005`/`23006`, absent from audited `RscMenu_Economy` controls. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | Command task partial | Commander task controls are visible, but the `SetTask` send path is commented out. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| Main-menu GPS zoom orphan route | `GUI_Menu.sqf` still handles `MenuAction == 17/18`, but the current `WF_Menu` controls expose actions `1-13`, `16` and `19` only. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| Help dialog unload mismatch | `RscMenu_Help` sets `dialog_HelpPanel` on load but clears `cti_dialog_ui_onlinehelpmenu` on unload, and `GUI_Menu_Help.sqf` has no unload case. | [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map) |
 
 ## UI Risk Index
 

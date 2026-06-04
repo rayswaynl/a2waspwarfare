@@ -1,6 +1,6 @@
 # Mission Parameters Localization And Generated Build Inputs
 
-This page owns mission parameter flow, localization hazards and generated include/build inputs. It complements [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle), [Tools and build workflow](Tools-And-Build-Workflow), [Content structure and maps](Content-Structure-And-Maps) and [Source fix propagation queue](Source-Fix-Propagation-Queue).
+This page owns mission parameter flow, localization hazards and generated include/build inputs. It complements [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle), [Mission config/version include graph](Mission-Config-Version-Include-Graph), [Tools and build workflow](Tools-And-Build-Workflow), [Content structure and maps](Content-Structure-And-Maps) and [Source fix propagation queue](Source-Fix-Propagation-Queue).
 
 ## Source Of Truth
 
@@ -62,6 +62,8 @@ The scout pass found no live missing `$STR_...` keys for `Rsc/Parameters.hpp` re
 ## Version And Include Generation
 
 `version.sqf` is included by both `description.ext` and `initJIPCompatible.sqf`. Current local generated copies exist at `Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf:1` and `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf:1`, but `.gitignore:1,23` ignores both paths and `git --literal-pathspecs ls-files -- .../version.sqf` returns no tracked rows. `Tools/LoadoutManager/FileManagement/FileManager.cs:92-100` treats it specially, and terrain generation writes version output from the C# terrain flow.
+
+The concrete contract lives in [Mission config/version include graph](Mission-Config-Version-Include-Graph): `description.ext:39` includes `version.sqf`, `Rsc/Header.hpp:5,9,21` uses `WF_RESPAWNDELAY`, `WF_MISSIONNAME` and `WF_MAXPLAYERS`, and `initJIPCompatible.sqf:4,31,111-113` includes/logs those values and converts `IS_CHERNARUS_MAP_DEPENDENT` into runtime `IS_chernarus_map_dependent`. The same graph also records that `IS_NAVAL_MAP` changes purchasable boat content through `IS_naval_map`.
 
 Practical rule: verify the target mission root, not just source Chernarus. A source checkout may be packable, while generated Vanilla or modded/stub folders still need LoadoutManager output or terrain-specific generated files. Use LoadoutManager from a normal `a2waspwarfare` clone or any repo root that contains `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`. For propagation-only work, set `A2WASP_SKIP_ZIP=1` so missing `7za` does not block generation/copy.
 

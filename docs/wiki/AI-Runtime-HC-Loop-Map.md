@@ -46,6 +46,8 @@ HC delegation creates units on another machine through request/response helpers;
 | Generic `delegate-ai` | `Client/PVFunctions/HandleSpecial.sqf:13-15`; `Client_DelegateAI.sqf:20-32`; `Common_CreateUnitsForResBases.sqf:35` | Stale/abandoned-looking; no clear live caller found. |
 | Locality transfer helper | `Server_SetLocalityOwner.sqf:13` | Not used by town/static HC AI delegation; delegation creates on remote rather than transferring existing locality. |
 
+Cleanup-loop edge: the client/HC delegation receivers each spin a local group cleanup poll after remote creation. `Client_DelegateTownAI.sqf:42-43`, `Client_DelegateAI.sqf:29-30` and `Client_DelegateAIStaticDefence.sqf:35-36` all wait while `count (units _team) > 0`, sleep one second, then `deleteGroup _team`. There is no timeout or server reconciliation in those receivers; a leaked unit can leave a long-lived local cleanup thread.
+
 ## Findings
 
 | Severity | Finding | Evidence | Safe next action |
@@ -53,6 +55,7 @@ HC delegation creates units on another machine through request/response helpers;
 | High | AI supply trucks are broken if enabled. | `Init_Server.sqf:36`, `:381-383`; `AI_UpdateSupplyTruck.sqf:5-17`; missing `Server/FSM/supplytruck.fsm`. | Guard/remove the branch or restore compile + FSM + smoke before enabling. |
 | High | Static-defense HC delegation has no completion/failback path. | `Server_DelegateAIStaticDefenceHeadless.sqf:22-27`; `Client_DelegateAIStaticDefence.sqf:28`. | Add callback/timeout or keep static-defense manning server-local. |
 | Medium | Town HC delegation lacks heartbeat/failback. | `Server_DelegateAITownHeadless.sqf:23-30`; `Client_DelegateTownAI.sqf:35`. | Smoke HC disconnect during active town and document orphan behavior. |
+| Medium | Client/HC delegated-group cleanup polls are unbounded. | `Client_DelegateTownAI.sqf:42-43`; `Client_DelegateAI.sqf:29-30`; `Client_DelegateAIStaticDefence.sqf:35-36`. | Add timeout/diagnostic/reconciliation when adding HC work records; smoke leaked/dead group cleanup on HC disconnect. |
 | Medium | FPS sleep helper may be inverted. | `Common_GetSleepFPS.sqf:5-9`; `updateresources.sqf:74-75`. | Decide intent before patching; record RPT/perf evidence. |
 | Medium | Patrol exit condition is lifecycle-hostile. | `server_town_patrol.sqf:18`; `server_patrols.sqf:26`; `server_town_ai.sqf:226-230`; `server_patrols.sqf:71-72`. | Replace with bounded lifecycle after confirming cleanup semantics; for ambient patrols, verify `wfbe_patrol_active` clears after patrol death so resistance patrols can relaunch. |
 | Medium | AI commander autonomy is scaffolded, not complete. | Funds at `Init_Server.sqf:356-365`; upgrade helper `Server_AI_Com_Upgrade.sqf:12-50`; no complete scheduler proven. | Treat as owner decision / disabled partial until scheduler and buy/upgrade smoke exist. |

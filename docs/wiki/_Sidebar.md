@@ -3,6 +3,7 @@
 - Getting started
   - [Home](Home)
   - [Quickstart](Quickstart-For-Humans-And-Agents)
+  - [Mission config/version graph](Mission-Config-Version-Include-Graph)
   - [AI assistant guide](AI-Assistant-Guide)
   - [AI assistant developer guide](AI-Assistant-Developer-Guide)
   - [LLM agent entry pack](LLM-Agent-Entry-Pack)

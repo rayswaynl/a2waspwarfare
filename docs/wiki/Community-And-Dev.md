@@ -74,6 +74,8 @@ Do not treat `Arma2Warfare GPT`, `Mr. James`, `Contributor`, `Game Admin` or `Ve
 | Tool-assisted generated missions | Treat source mission, maintained Vanilla target and historical modded propagation as different scopes. |
 | AI assistance | AI can accelerate archaeology and docs, but source verification is a project norm, not paperwork. |
 
+Upstream diagnostic style note: the freshest local `miksuu/master` delta on 2026-06-04 was the town-defense diagnostics branch (`913ecdf6` -> `d5bfe3a2` -> merge `8bcc42b1`). It added an opt-in `WFBE_C_TOWN_DEFENSE_DIAGNOSTICS` / `TownDefenseDiagnosticsEnabled` path around town-defense code rather than broad permanent logging. That is a useful pattern for hot-loop work: add narrow feature diagnostics, keep defaults quiet and propagate source-Chernarus changes deliberately to maintained Vanilla/Takistan.
+
 ### Upstream Process Capsule
 
 The imported [Development process](Miksuu-Wiki-Archive-Development-Process) page gives a compact picture of how the mission was actually developed upstream:
@@ -100,6 +102,8 @@ This page, [Developer history and upstream lessons](Developer-History-And-Upstre
 | Current action | Cherry-pick, source-check, document-only, owner decision, reject or archive. |
 
 Until that ledger exists, treat upstream commit/wiki findings as leads and route implementation truth through current source plus the relevant subsystem page.
+
+Archive caveat: imported upstream wiki history includes at least one very short-lived placeholder, `Raysway-Update-Notes.md`, which was created and deleted in the same small history window. Preserve its provenance in the archive ledger, but do not treat ephemeral pages as durable guidance without surviving content or matching source evidence.
 
 ## Upstream wiki archive
 

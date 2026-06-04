@@ -2216,3 +2216,10 @@ Key conclusions:
 - Evidence checked: `Client/Action/Action_RepairMHQ.sqf:5-35`, `Client/Action/Action_RepairMHQ.sqf:8-9`, `WASP/actions/Action_RepairMHQDepot.sqf:7-29`, `WASP/actions/Action_RepairMHQDepot.sqf:10-11`, `Server/PVFunctions/RequestMHQRepair.sqf:1` and `Server/Functions/Server_MHQRepair.sqf:7-79,23-57`.
 - Updated [Server authority migration map](Server-Authority-Migration-Map), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), `agent-status.json` and `agent-collaboration.json` so future HQ repair hardening includes a server-side in-flight repair mutex and duplicate/concurrent repair smoke.
 - No gameplay source files changed. Validation passed: `docs/validate-wiki.ps1`, JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
+
+## 2026-06-04T12:35:00+02:00 - Codex - mini scout wave config/factory/UI/AI/cleanup/upstream harvest
+- Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked the first starts until 13:06, so Codex closed the failed Spark slots and launched six `gpt-5.4-mini` read-only scouts instead.
+- All six returned and were closed: mission config/version include graph, cleanup/restorer/corpses/markers, factory queue internals, commander AI/order chain, UI IDD/menu graph and upstream developer-history lessons.
+- Promoted only source-backed non-duplicate deltas: new [Mission config/version graph](Mission-Config-Version-Include-Graph); generated `version.sqf` map/naval/header contract; stable `AIBuyUnit` as latent and not player-buy parity; branch-local `feat/ai-commander` supervisor with `wfbe_aicom_running` as full-command latch; Help unload and orphan GPS zoom UI routes; unbounded client/HC delegated-group cleanup polls; repeated broad dropped-item cleaner scans; opt-in upstream diagnostics culture.
+- Updated the owning atlas/status pages plus `agent-feature-status.jsonl`. No gameplay source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 22 files. Push is pending for this docs-only batch.

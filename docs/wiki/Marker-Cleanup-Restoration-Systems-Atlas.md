@@ -111,6 +111,7 @@ PerformanceAudit labels to search in the server RPT:
 | HQ wreck marker can stale after object loss | `updateclient.sqf:52` only updates dead HQ marker when the wreck object exists; `Common_UpdateMarker.sqf:25` exits on null object. | Delete the marker when a tracked HQ wreck becomes null, or keep a side-owned registry that can explicitly clear stale marker names. |
 | HQ marker state is west/east only | `Server_OnHQKilled.sqf:97`, `Server_MHQRepair.sqf:60`, `updateclient.sqf:42-100`. | Do not enable resistance HQ recovery without adding a resistance marker state machine and smoke. |
 | Global marker names with side-local styling need proof | `Common_CreateMarker.sqf:53,59,82-83` creates global names then broadcasts side-local details. | Add an MP smoke case before changing marker visibility, deletion or JIP replay. |
+| Dropped item cleaner repeats broad scans | `droppeditems_cleaner.sqf:15,22,29` runs three separate 20 km `nearestObjects` scans for `weaponholder`, `Mine` and `MineE`. | Correctness bugs such as mine pair removal still come first, but if RPT rows show this cleaner as costly, combine/narrow scan strategy without losing class-specific metrics. |
 | Single active marker animation global | `Client_MarkerAnim.sqf` uses one `activeAnimMarker`. | If command marker animations are still used, make animation state per marker to avoid concurrent stomp. |
 | Blink icon nil/default guards | `Client_BlinkMapIcon.sqf` uses marker/color state from bookkeeping. | Add nil/default guards before marker/color use and smoke combat marker blinking. |
 

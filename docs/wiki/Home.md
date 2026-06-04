@@ -53,7 +53,7 @@ Use these when you want to read the wiki like a connected handbook instead of ju
 
 | Tour | Path |
 | --- | --- |
-| First day in the repo | [Quickstart](Quickstart-For-Humans-And-Agents) -> [Architecture overview](Architecture-Overview) -> [Mission lifecycle](Mission-Entrypoints-And-Lifecycle) -> [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
+| First day in the repo | [Quickstart](Quickstart-For-Humans-And-Agents) -> [Architecture overview](Architecture-Overview) -> [Mission lifecycle](Mission-Entrypoints-And-Lifecycle) -> [Mission config/version graph](Mission-Config-Version-Include-Graph) -> [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
 | Implement a gameplay change | [Gameplay atlas](Gameplay-Systems-Atlas) -> [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas) -> [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas) -> [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) -> [Server runtime atlas](Server-Gameplay-Runtime-Atlas) -> [Core systems](Core-Systems-Index) -> [Feature status](Feature-Status-Register) |
 | Harden the mission | [Feature status](Feature-Status-Register) -> [Pending owner decisions](Pending-Owner-Decisions) -> [Abandoned feature revival](Abandoned-Feature-Revival-Review) -> [Paratrooper marker revival](Paratrooper-Marker-Revival) -> [Hardening roadmap](Hardening-Implementation-Roadmap) -> [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) -> [Server authority map](Server-Authority-Migration-Map) -> [Commander vote/reassignment playbook](Commander-Vote-And-Reassignment-Playbook) -> [ICBM authority playbook](ICBM-Authority-Playbook) -> [Economy authority first cut](Economy-Authority-First-Cut) -> [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) -> [Testing workflow](Testing-Debugging-And-Release-Workflow) -> [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) -> [Networking/PV](Networking-And-Public-Variables) -> [PV channel index](Public-Variable-Channel-Index) -> [Deep-review findings](Deep-Review-Findings) |
 | Trace SQF and networking | [SQF atlas](SQF-Code-Atlas) -> [Function index](Function-And-Module-Index) -> [Networking/PV](Networking-And-Public-Variables) -> [PV channel index](Public-Variable-Channel-Index) |
@@ -126,7 +126,7 @@ Use this sequence for low-risk orientation:
 
 | Task | Pages |
 | --- | --- |
-| Understand startup flow | [Architecture overview](Architecture-Overview) -> [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) -> [SQF code atlas](SQF-Code-Atlas) |
+| Understand startup flow | [Architecture overview](Architecture-Overview) -> [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) -> [Mission config/version graph](Mission-Config-Version-Include-Graph) -> [SQF code atlas](SQF-Code-Atlas) |
 | Work on networking | [Networking and public variables](Networking-And-Public-Variables) -> [Public variable channel index](Public-Variable-Channel-Index) -> [SQF code atlas](SQF-Code-Atlas) |
 | Work on economy or supply | [Economy, towns and supply](Economy-Towns-And-Supply) -> [Economy authority first cut](Economy-Authority-First-Cut) -> [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) -> [Supply mission architecture](Supply-Mission-Architecture) -> [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) -> [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) -> [Current supply heli PR](Current-Work-Supply-Helicopters-PR1) |
 | Work on AI/performance | [AI, headless and performance](AI-Headless-And-Performance) -> [Performance opportunity sweep](Performance-Opportunity-Sweep), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup), [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Client skill init idempotency](Client-Skill-Init-Idempotency), [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing), [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup) -> [HC delegation/failover playbook](Headless-Delegation-And-Failover-Playbook) -> [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) -> [Feature status register](Feature-Status-Register) |
@@ -142,7 +142,7 @@ Use this sequence for low-risk orientation:
 
 | Area | Page |
 | --- | --- |
-| Architecture | [Architecture overview](Architecture-Overview), [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) |
+| Architecture | [Architecture overview](Architecture-Overview), [Mission entrypoints](Mission-Entrypoints-And-Lifecycle), [Mission config/version graph](Mission-Config-Version-Include-Graph) |
 | Boot dependencies | [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
 | Inventory | [Source inventory](Source-Inventory), [Content structure and maps](Content-Structure-And-Maps) |
 | Code | [Function and module index](Function-And-Module-Index), [SQF code atlas](SQF-Code-Atlas), [Variable and naming conventions](Variable-And-Naming-Conventions) |

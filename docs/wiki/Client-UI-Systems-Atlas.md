@@ -215,6 +215,8 @@ Commander reassignment has a separate selector fragility. `GUI_Commander_VoteMen
 
 Help dialog lifecycle edge: `RscMenu_Help` stores the display as `uiNamespace["dialog_HelpPanel"]` on load, but unload clears `uiNamespace["cti_dialog_ui_onlinehelpmenu"]` and calls `GUI_Menu_Help.sqf` with `onUnload` (`Dialogs.hpp:3446-3447`). The controller only implements `onLoad` and `onHelpLBSelChanged` (`GUI_Menu_Help.sqf:5-10`). This looks like stale namespace wiring, so avoid building new help-panel state on the old unload variable without cleaning it.
 
+Main-menu orphan route: `GUI_Menu.sqf:202-208` still handles `MenuAction == 17/18` for GPS zoom, but the audited `WF_Menu` resource block exposes actions `1-13`, `16` and `19` only. Treat those router cases as dead UX baggage unless a hidden/branch control is deliberately reintroduced and smoke-tested.
+
 `GUI_Menu_Tactical.sqf` is the support hub. It builds the support list from fast travel, ICBM, paratroopers, ammo/vehicle paradrops, UAV actions and unit camera (`:56-64`). Availability is recomputed from current upgrades, funds, cooldowns and selected support (`:144-290`), then requests are sent through `RequestSpecial` where needed (`:373` and later request branches).
 
 ### Upgrade And Economy Menus

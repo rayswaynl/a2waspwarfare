@@ -211,7 +211,9 @@ Important authority note: no server PVF request is sent for this player purchase
 
 Mini-scout follow-up 2026-06-04 rechecked the static footprint: `Init_Client.sqf:52` compiles `BuildUnit`, `GUI_Menu_BuyUnits.sqf:155` spawns it for player purchases, and `Init_Server.sqf:10` only compiles `AIBuyUnit = Server_BuyUnit.sqf`. A source grep found no active `RequestBuyUnit`/`RequestBuildUnit` PVF path and no static caller for `AIBuyUnit` beyond the compile. `Server_BuyUnit.sqf:12-17,47-55,78-83` repeatedly exits or cleans up when the team leader is a player, which matches a latent/AI helper rather than a player purchase authority surface.
 
-This means the durable fix is not a small "refund missing" patch by itself. A public-server-safe redesign needs an explicit request/accept/debit/cancel protocol: the server should validate factory state, funds, side, queue capacity and spawn legality before accepting, then debit only at acceptance or refund every rejected/aborted post-accept path through one helper.
+This means the durable fix is not a small "refund missing" patch by itself. A public-server-safe redesign needs an explicit request/accept/debit/abort protocol: the server should validate factory state, funds, side, queue capacity and spawn legality before accepting, then debit only at acceptance or refund every rejected/aborted post-accept path through one helper.
+
+Terminology note from the 2026-06-04 factory queue scout: once the buy menu spawns `BuildUnit`, "cancel" is not a current UI operation. The Back button only returns to the main WF menu (`GUI_Menu_BuyUnits.sqf:495-499`), while the worker continues unless it reaches an abort path such as a dead/null factory. Use "abort/refund" for implementation work until an actual cancel command exists.
 
 ## Queue Model
 
@@ -272,7 +274,7 @@ Common creation behavior:
 AIBuyUnit = Compile preprocessFile "Server\Functions\Server_BuyUnit.sqf";
 ```
 
-`Server_BuyUnit.sqf` is a full server-side purchase worker:
+`Server_BuyUnit.sqf` is a server-side team/AI production worker, not a drop-in mirror of the player buy path:
 
 - expects `_id`, `_building`, `_unitType`, `_side`, `_team` and vehicle crew flags;
 - appends to the building `queu`;
@@ -282,7 +284,9 @@ AIBuyUnit = Compile preprocessFile "Server\Functions\Server_BuyUnit.sqf";
 - applies vehicle handlers and crew logic;
 - clears the team's `wfbe_queue` entry when done.
 
-Current status: a source search finds `AIBuyUnit` only in the compile line and `Server_BuyUnit.sqf` itself. No active caller was found in the source mission. Treat the server buy worker as latent or abandoned until a dynamic call path is proven.
+Current status: a source search finds `AIBuyUnit` only in the compile line and `Server_BuyUnit.sqf` itself on stable master. No active caller was found in the source mission. Treat the server buy worker as latent until a dynamic call path is proven or a branch intentionally revives it.
+
+Queue-model split: player purchases use client-local `WFBE_C_QUEUE_*` counters plus `unitQueu` (`Init_Client.sqf:185-196,288`; `Client_BuildUnit.sqf:10,212-214,467-469`). The server worker uses a separate group variable `wfbe_queue` initialized during server team setup (`Init_Server.sqf:477`) and cleaned in `Server_BuyUnit.sqf:12-16,47-55,78-83,213-214`. AI/player crew policy also diverges: the player path has an empty/crewless vehicle branch that can exit before crew creation (`Client_BuildUnit.sqf:211-214,365-367`), while `Server_BuyUnit.sqf:92-214` proceeds through server-side crew creation. Any revival of `AIBuyUnit` needs an explicit production policy rather than assuming player-buy parity.
 
 ## Attack Wave And Unit Cost Modifiers
 
@@ -321,7 +325,7 @@ This means class metadata mistakes can break more than the visible buy menu:
 | Risk / status | Evidence | Development guidance |
 | --- | --- | --- |
 | No player `RequestBuyUnit` server authority | `Init_PublicVariables.sqf:9-21` lists server-command PVFs and has no `RequestBuyUnit`; `GUI_Menu_BuyUnits.sqf:144-156` increments the local queue counter, spawns local `BuildUnit`, then deducts funds client-side. | For high-value or exploit-sensitive purchases, add a server-validated request path or at least document why client-local creation is acceptable for the target server model. |
-| `Server_BuyUnit.sqf` appears unused | `Init_Server.sqf:10` compiles `AIBuyUnit = Server_BuyUnit.sqf`, but source search finds no caller outside the compile and the function file. | Before reviving AI purchases, find intended caller history or design a new explicit AI commander production loop. |
+| `Server_BuyUnit.sqf` appears unused on stable master | `Init_Server.sqf:10` compiles `AIBuyUnit = Server_BuyUnit.sqf`, but source search finds no caller outside the compile and the function file. The `origin/feat/ai-commander` branch intentionally calls it from `AI_Commander_Produce.sqf`, so keep branch scope explicit. | Before reviving AI purchases, find intended caller history or design a new explicit AI commander production loop; do not assume the worker matches player buy semantics. |
 | Player/server build drift | `Client_BuildUnit.sqf` and `Server_BuyUnit.sqf` duplicate vehicle handler, missile, IRS, countermeasure and crew setup logic. | Any new vehicle behavior may need both paths unless server path is formally retired or refactored. |
 | Queue state is fragile | Building `queu` and client `WFBE_C_QUEUE_*` counters are manually incremented/decremented (`Client_BuildUnit.sqf:167-172`, `:205-207`, `:467-469`); DR-33 counter/token fixes are patch-ready but still absent from current source, while public queue broadcast churn also remains. Wave R added that extra-turret-crew-only vehicle buys, if exposed, can hit the same empty-exit before extra crew creation (`Client_BuildUnit.sqf:365`, `:443`). The buy menu has a close/back path (`GUI_Menu_BuyUnits.sqf:495-499`) but no visible cancel/refund branch for already spawned buy threads. | Always test factory destruction, menu close, empty-vehicle buys, extra-turret-crew selections, repeated purchases and queue hints when touching queues; do not assume cancel/refund semantics exist unless a new branch is added. |
 | Cost authority is local | Menu checks funds and calls `ChangePlayerFunds` locally after spawning build thread. | Do not add new economy side effects to purchase without tracing client funds, commander income, side supply and PV hardening. |

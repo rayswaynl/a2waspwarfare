@@ -33,6 +33,8 @@ Snapshot: 2026-06-03. Branch head `4dba060e` splits from `origin/master` at `2cd
 | Hybrid co-op command | `4dba060e`; `AI_Commander.sqf:43-72`; `AI_Commander_Execute.sqf:1-41`; `AI_Commander_AssignTowns.sqf:23-42` | Full mode runs economy only when no human commander exists; assist mode still executes explicit Move/Patrol/Defend orders and can auto-assign delegated AI teams while a human commander is present. |
 | AI team production | `AI_Commander_Produce.sqf:18-21,73-80`; `Server/Init/Init_Server.sqf:10` | Produces under-strength AI teams through `AIBuyUnit` while respecting a per-side AI cap and AI commander funds. Review this alongside factory queue/token cleanup before merge. |
 
+2026-06-04 branch scout clarification: the branch supervisor keeps running in assist mode with a human commander, but `wfbe_aicom_running` is deliberately used as the **full-command latch**, not a simple "commander brain exists" marker. `AI_Commander.sqf:43-49` sets it false while a human commander exists even though the executor/assist loop continues. Stable master still only initializes/clears this flag (`Init_Server.sqf:364-365`, `Server_VoteForCommander.sqf:54-57`, `Server_AssignNewCommander.sqf:11-14`) and has no source-proven supervisor.
+
 Branch-only review risks:
 
 - The branch changes gameplay defaults by setting `WFBE_C_AI_COMMANDER_ENABLED` default to `1` in `Rsc/Parameters.hpp:96`.
@@ -40,6 +42,7 @@ Branch-only review risks:
 - It revives AI commander production/order execution, but **does not** revive the old autonomous supply-truck FSM path; `UpdateSupplyTruck` remains commented and only guarded.
 - It adds always-running per-side supervisors after `VoteForCommander` startup; smoke must prove exactly one supervisor per side, no duplicate loops after commander vote/revote and clean stop behavior after HQ death.
 - The production worker uses `AIBuyUnit`; smoke must include AI team queue cleanup, insufficient funds, destroyed factory, full AI cap, vehicle/man production and human takeover of a team.
+- Team-order setters remain state replication, not the scheduler by themselves. On the branch, `AI_Commander_Execute.sqf:19-32` is the explicit-order waypoint owner and uses `wfbe_exec_sig` idempotency; `AI_Commander_AssignTowns.sqf:38-48,65-78` separately retargets no-human or delegated/autonomous AI teams toward uncaptured towns.
 
 ## What Exists
 

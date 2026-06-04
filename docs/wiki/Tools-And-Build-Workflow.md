@@ -42,6 +42,7 @@ Before running tooling or deployment-adjacent pieces, check these first:
 | `A2WASP_SKIP_ZIP=1` is set for propagation-only runs. | Skips `_MISSIONS.7z` packaging and avoids a packaging-only `7za` dependency during docs/code propagation work. |
 | `7za` is configured and available if packaging is required. | Required only when producing `_MISSIONS.7z` release archives. |
 | `version.sqf` exists for the mission being packed/tested. | It is generated and git-ignored, but included by `description.ext` and `initJIPCompatible.sqf`. |
+| `Missions_Vanilla` is not confused with the `VANILLA` macro. | The folder name is a generated target label; the `#ifndef VANILLA` preprocessor gate in `description.ext` / `Rsc/Header.hpp` controls OA/CO config behavior inside mission headers. |
 | `stringtable.xml` and `loadScreen.jpg` exist for the mission being packed/tested. | They are ordinary runtime assets for playable mission roots; modded forks may lack them even when their `description.ext` includes generated/sound/music dependencies. |
 | Generated `version.sqf` has the intended release flags. | Current local generated files can contain debug/log-enabled values; inspect `WF_DEBUG` and `WF_LOG_CONTENT` before packaging a public release. |
 | DiscordBot has real `preferences.json` and `token.txt` outside git. | Missing token/config is expected in repo and is not a mission-code failure. Current bot startup touches `preferences.json` through `GameData.LoadFromFile()` before the clean missing-token exit, so provide preferences before debugging token-only failures. |
@@ -141,6 +142,7 @@ Use it after performance-sensitive mission changes or live-server audits.
 - File replacement warnings can still hard-fail later: `BaseTerrain.cs:275-301` logs "File not found!" for a missing expected file and then still calls `File.ReadAllText` on the same path. Treat missing replacement targets as real generator failures, not harmless warnings.
 - The source Chernarus mission is copied to target terrain folders, and extra destination-only files/directories can be deleted during sync (`FileManager.cs:116-119,123-136`). Avoid manual changes in generated targets unless the generator is being updated; snapshot generated mission trees before risky propagation runs.
 - `The specified content was not found in the file.` during the current run comes from the terrain help-menu title replacement path and did not stop Chernarus/Takistan generation/copy.
+- For the exact `version.sqf` -> `description.ext` / `Rsc/Header.hpp` / `initJIPCompatible.sqf` contract, use [Mission config/version include graph](Mission-Config-Version-Include-Graph).
 
 ## Development Commands
 

@@ -19,9 +19,9 @@
     "agents":  {
                    "Codex":  {
                                  "status":  "active",
-                                 "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Latest pushed heads: docs 699a891f / wiki ea8a4de record the pushed state for the mini-scout-wave-town-respawn-upstream-performance wave; the content landed in docs eac4a8f6 / wiki fa9d2a5. All scout slots were closed. Non-duplicate deltas landed for latent AIBuyUnit wording, resource-cap payout suppression, capture reward authority, respawn penalty mode 5 gear loss, EASA/service stale-context risks, upstream contributor/head provenance and loop-topology guidance.",
-                                 "nextExpectedOutput":  "Continue the documentation finisher loop with the next bounded source-backed docs item or scout wave Steff requests."
+                                 "currentLane":  "documentation-finisher-loop / mini-scout-wave-config-factory-ui-ai-cleanup-upstream",
+                                 "currentWork":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked the first starts until 13:06, so Codex closed failed Spark slots and launched six gpt-5.4-mini read-only scouts. All six returned and were closed. Promoted non-duplicate deltas for version.sqf terrain/runtime contract, latent AIBuyUnit queue/crew semantics, feat/ai-commander branch-local supervisor semantics, Help/GPS UI cleanup, unbounded delegated-group cleanup polls, dropped-item cleaner broad scans and upstream opt-in diagnostics culture. docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check and 22-file SHA256 mirror parity passed. Push pending.",
+                                 "nextExpectedOutput":  "Commit and push the mini-scout-wave-config-factory-ui-ai-cleanup-upstream docs harvest, then continue the documentation finisher loop."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -37,12 +37,18 @@
                               },
                    "Sub-agents":  {
                                       "status":  "closed",
-                                      "currentLane":  "mini-scout-wave-town-respawn-upstream-performance",
-                                      "currentWork":  "Four gpt-5.4-mini read-only scouts returned and were harvested. Two Spark starts errored on quota and were closed; one mission-config scout was blocked by the thread ceiling. No pending scout output remains from this wave.",
+                                      "currentLane":  "mini-scout-wave-config-factory-ui-ai-cleanup-upstream",
+                                      "currentWork":  "Three GPT-5.3-Codex-Spark starts errored on quota and were closed. Six gpt-5.4-mini fallback scouts returned and were closed: mission config/version includes, cleanup/restorer loops, factory queue internals, commander AI/order chain, UI IDD/menu graph and upstream developer-history lessons. No pending scout output remains from this wave.",
                                       "nextExpectedOutput":  "No pending scout output remains from this wave."
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "mini-scout-wave-config-factory-ui-ai-cleanup-upstream",
+                            "owner":  "Codex/Sub-agents",
+                            "status":  "published-validated-push-pending",
+                            "output":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked the first starts until 13:06, so Codex closed the failed Spark slots and launched six gpt-5.4-mini read-only scouts. All six returned and were closed. Promoted non-duplicate deltas into Mission-Config-Version-Include-Graph, Mission Parameters, Content/Maps, Tools/Build, Factory/Purchase, AI Commander, AI Runtime/HC, Headless Delegation, Client UI, Player UI, Marker Cleanup, Performance, Community & Dev, Feature Status and agent-feature-status.jsonl. docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check and 22-file SHA256 mirror parity passed. No gameplay source changed. Push pending."
+                        },
                         {
                             "lane":  "mini-scout-wave-town-respawn-upstream-performance",
                             "owner":  "Codex/Sub-agents",
