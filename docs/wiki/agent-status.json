@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T07:23:56+02:00",
+  "generatedAt": "2026-06-04T07:27:13+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Promoted the AntiStack monitorTeamToJoin inert-worker clarification after source-checking Init_Server.sqf and Server/Module/AntiStack/monitorTeamToJoin.sqf. The launch line exists, but the script only computes a local preferred side and has no durable output or join-policy effect.",
+      "currentWork": "Source-checked the RU para-ammo config-line trap. The support atlas already carried the concrete broken-feature finding, so Codex added the reusable development lesson: content/config edits need line-shape checks for same-line comments, merge markers and generator skip-list traps, not only variable-name greps.",
       "nextExpectedOutput": "Continue the documentation finisher loop with the next bounded source-backed gap."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "ru-paraammo-config-line-shape-lesson",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Source-checked Root_RU.sqf:36 and Support_ParaAmmo.sqf:59-60. The support atlas and Feature Status already carried the concrete broken-feature finding, so Codex added the reusable Development Lessons rule that config/content edits need source line-shape checks across peer roots. No gameplay source changed."
+    },
     {
       "lane": "antistack-monitor-teamtojoin-inert-worker",
       "owner": "Codex",

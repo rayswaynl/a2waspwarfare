@@ -87,6 +87,8 @@ The config layer is not static data only. `Init_Common` mutates derived values: 
 
 Development rule: content changes are not complete when the class appears in one list. Verify the side root, factory list, gear registry, loadout template, AI loadout or squad data, upgrade level, pricing, and generated mission propagation.
 
+Also verify the source line shape, not only the intended variable name. `Root_RU.sqf:36` places the `WFBE_%1PARAAMMO` assignment after a `//--- Starting Vehicles` comment on the same physical line, so the assignment is commented out before `Support_ParaAmmo.sqf:59-60` can read it as an array. Other root files put `WFBE_%1PARAAMMO` on its own line. For config edits, run a quick grep for the variable across peer roots and inspect whether comments, merge markers or generator skip-list files changed the executable SQF.
+
 ## Lesson 7: Module Wiring Often Happens At Creation Or Init Time
 
 Client init compiles supply/MASH/AntiStack/PV helpers and module gates near the main function registry (`Client/Init/Init_Client.sqf:127-135`), then later applies skill, WASP actions, AutoFlip, artillery UI, EASA and CM gates (`Client/Init/Init_Client.sqf:570-589`). Common init wires ICBM, IRS and CIPHER after config loading (`Common/Init/Init_Common.sqf:319-323`).

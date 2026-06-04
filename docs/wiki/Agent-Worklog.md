@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-04T07:27:13+02:00 - Codex - RU para-ammo config line-shape lesson
+
+- Source-checked the RU para-ammo support lead before adding duplicate prose.
+- Evidence: `Root_RU.sqf:36` keeps the `WFBE_%1PARAAMMO` assignment after a same-line `//--- Starting Vehicles` comment; peer root files place `WFBE_%1PARAAMMO` on separate executable lines; `Support_ParaAmmo.sqf:59-60` exits unless `WFBE_%1PARAAMMO` is an array.
+- Confirmed [Support specials and tactical modules atlas](Support-Specials-And-Tactical-Modules-Atlas) and [Feature status](Feature-Status-Register) already carry the concrete broken-feature finding.
+- Added the reusable [Development lessons](Development-Lessons-Learned) rule: config/content work needs line-shape checks for comments, merge markers and generator skip-list traps, not only variable-name greps.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T07:23:56+02:00 - Codex - AntiStack monitorTeamToJoin inert worker
 
 - Continued the documentation finisher loop into the next AntiStack-adjacent thin finding.
