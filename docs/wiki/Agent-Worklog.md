@@ -2149,6 +2149,13 @@ Key conclusions:
 
 ## 2026-06-04T01:24:00+02:00 - Codex - fallback scout wave PV/AI/ops harvest
 - Spark quota was still blocked, so Codex launched five low-effort read-only scouts instead: economy/supply-money loops, AI group caps, networking/direct PVs, UI/HUD/dialogs and ops/runtime/admin features.
+## 2026-06-04T19:35:00+02:00 - Codex - dashboard open-item cleanup
+- Compacted [Progress Dashboard](Progress-Dashboard) back into a live status surface and moved historic scout/batch detail behind [Discovery swarm](Subagent-Discovery-Swarm), [Agent worklog](Agent-Worklog) and [`agent-events.jsonl`](agent-events.jsonl).
+- Closed the stale Coverage Ledger sidebar/mailbox item: [Codebase coverage ledger](Codebase-Coverage-Ledger) is now linked from Home, footer, `llms.txt`, `agent-context.json` and `_Sidebar.md`; the Coordination Board mailbox status is done.
+- Reclassified old dashboard/board open rows as watchlist, owner-decision/code-lane, published release gate or published/integrated so the dashboard no longer advertises stale ready-for-review work.
+- Compacted `agent-status.json`, `agent-collaboration.json` and `agent-context.json.openLanes` so machine status files match the visible dashboard instead of carrying closed claim spam.
+- Closed the old OA object-lifecycle command addendum into [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference#object-lifecycle-commands--oa-safe-locality-sensitive). No gameplay source files changed.
+
 - Promoted the bounded, source-backed findings that were safest to land now: exact PV channel inventory fixes, corrected `PLAYER_RADIATED` direction, side-supply mirror/JIP wording, normal-commander AI cap table, crew-slot group-cap note and hosted-FPS old-shape wording.
 - Queued broader leads for later passes rather than overloading this batch: live supply reward vs stale stringtable text, UI alias/path cleanup, server ops runbook, AFK ops split and runtime telemetry checklist. No gameplay source files changed.
 
