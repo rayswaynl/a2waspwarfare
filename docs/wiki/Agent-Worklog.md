@@ -2103,6 +2103,12 @@ Key conclusions:
 
 ## 2026-06-04T02:47:27+02:00 - Codex - Spark micro-scout wave relaunch
 - Broad Spark scouts for economy, networking, UI and construction proved too wide for this repo and several failed during remote compacting with context-window errors.
+## 2026-06-04T12:05:00+02:00 - Codex - mini scout wave closure
+- Closed the six-scout fallback wave after all reports returned.
+- Harvested non-duplicate outputs into the pushed `requestspecial-non-icbm-support-effects-route` and `ui-scout-clickthrough-routing` batches.
+- Economy/AI-capacity formulas confirmed the existing Player AI caps and AI commander dormant-production caveats; construction/base, tooling/integrations, abandoned-feature and authority reports mostly confirmed already-canonical pages/backlog rows.
+- No gameplay source files changed.
+
 ## 2026-06-04T11:58:00+02:00 - Codex - UI scout clickthrough routing
 - Harvested the returned UI scout as navigation/clickthrough polish instead of duplicate bug prose.
 - Updated [UI HUD and dialogs](UI-HUD-And-Dialogs), [Client UI, HUD and menus](Client-UI-HUD-And-Menus) and [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) so stale `RscMenu_Upgrade` and duplicate IDD/EASA rows route directly to [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog-review) and [UI IDD collision repair](UI-IDD-Collision-Repair).

@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T11:46:00+02:00",
+    "generatedAt":  "2026-06-04T12:05:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -20,8 +20,8 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Current finisher pass source-checked and routed the non-ICBM RequestSpecial support-effects authority lane through Pending Owner Decisions, Feature Status, Server Authority and the hardening backlog. A fresh mini-scout wave is active after Spark quota blocked the first two starts; construction/base output has returned and is queued for duplicate-aware harvest.",
-                                 "nextExpectedOutput":  "Validate, push this RequestSpecial support-routing batch, then harvest the returned scout reports into canonical pages without duplicating existing authority rows."
+                                 "currentWork":  "Latest pushed batches: docs 89e4b7ea / wiki 93b071f routed non-ICBM RequestSpecial support authority; docs 94b96375 / wiki 5d9e87d improved UI scout clickthrough links. The six-scout fallback wave is closed; only non-duplicate outputs were promoted, while economy/AI caps, construction/base, tooling/integrations, abandoned-feature and authority reports mostly confirmed existing canonical pages.",
+                                 "nextExpectedOutput":  "Continue the documentation finisher loop with the next bounded source-backed docs item, likely a small Feature Status or owner-decision cleanup from remaining scout confirmations."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -36,13 +36,19 @@
                                   "nextExpectedOutput":  "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
                               },
                    "Sub-agents":  {
-                                      "status":  "active",
+                                      "status":  "closed",
                                       "currentLane":  "mini-scout-wave-requestspecial-economy-construction-ui-tooling-abandoned",
-                                      "currentWork":  "Spark quota blocked the first two requested scout starts, so Codex launched gpt-5.4-mini read-only scouts for Request/PV authority, economy/AI capacity, construction/MHQ/base, UI/HUD/dialogs, tooling/integrations and abandoned/partial features. Construction/base scout output has returned; other scouts are still running or pending harvest.",
-                                      "nextExpectedOutput":  "Codex should harvest returned scout reports into Feature Status, Server Authority, Code Atlas or backlog only when they add non-duplicate source-backed deltas."
+                                      "currentWork":  "All six gpt-5.4-mini read-only scouts returned and were closed. Non-duplicate harvests this cycle were RequestSpecial support-effects authority routing and UI clickthrough routing; the rest mostly confirmed existing canonical pages/backlog rows.",
+                                      "nextExpectedOutput":  "No pending scout output remains from this wave."
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "mini-scout-wave-requestspecial-economy-construction-ui-tooling-abandoned",
+                            "owner":  "Codex/Sub-agents",
+                            "status":  "closed-harvested",
+                            "output":  "Spark quota blocked the first two starts, so Codex ran six gpt-5.4-mini read-only scouts. All returned and were closed. Promoted non-duplicate deltas into RequestSpecial non-ICBM support authority routing and UI clickthrough routing; economy/AI capacity, construction/base, tooling/integrations, abandoned-feature and authority reports mostly confirmed existing Player AI caps, construction authority/SmallSite cleanup, tooling/DiscordBot/Extension/BattlEye footguns, MASH/SEND_MESSAGE/dormant UI task paths and other canonical backlog rows. No gameplay source changed."
+                        },
                         {
                             "lane":  "requestspecial-non-icbm-support-effects-route",
                             "owner":  "Codex",
