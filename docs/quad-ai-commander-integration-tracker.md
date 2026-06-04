@@ -29,11 +29,14 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 | `docs/quad-ai-commander-long-term-goal-prompt.md` | Durable Codex/assistant handoff prompt with persistent objective, evidence gates, next-action order, and completion rules |
 | `docs/quad-ai-commander-implementation-roadmap.md` | Full staged roadmap |
 | `docs/quad-ai-commander-phase0-smoke-brief.md` | Current AI Commander smoke-test brief |
+| `docs/quad-ai-commander-phase0-evidence-checklist.md` | Phase 0 runtime evidence checklist for full-auto, hybrid, handoff, stopped, and watchlist proof |
+| `docs/quad-ai-commander-phase0-nonruntime-readiness.md` | Phase 0 non-runtime readiness items such as generated mission parity and label alignment |
 | `docs/quad-ai-commander-phase0-rpt-patterns.md` | Concrete RPT anchors for Phase 0 smoke testing |
 | `docs/quad-ai-commander-phase1-logs.md` | Structured log API spec |
 | `docs/quad-ai-commander-phase1-implementation-brief.md` | First implementation branch runbook |
 | `docs/quad-ai-commander-phase2-beliefs.md` | Context and belief merge/decay spec |
 | `docs/quad-ai-commander-phase2-implementation-brief.md` | Context/belief implementation runbook |
+| `docs/quad-ai-commander-phase2-smoke-update.md` | Manual Phase 2 synthetic smoke helper and expected RPT anchors |
 | `docs/quad-ai-commander-phase3-planner.md` | Advisory planner priority spec |
 | `docs/quad-ai-commander-phase3-implementation-brief.md` | Advisory planner implementation runbook |
 | `docs/quad-ai-commander-phase4-worker-biasing.md` | Behavior-changing worker biasing spec |
