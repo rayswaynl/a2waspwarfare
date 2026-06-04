@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T21:55:00+02:00",
+  "generatedAt": "2026-06-04T22:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Fallback mini-scout wave harvested, validated and pushed as docs b878f7e4 / wiki bad8646. Promoted source-checked deltas: sidebar UI cluster, stale PV inventory wording, PerformanceAuditAnalyzer page, economy constants table and networking transport-vs-authority wording. No gameplay source changed.",
-      "nextExpectedOutput": "Continue bounded source-backed wiki maintenance."
+      "currentWork": "Fallback mini-scout wave is harvested, validated and pushed. Content commits are docs b878f7e4 / wiki bad8646; final breadcrumb heads are docs b7f03baf / wiki 14a3a2d. No gameplay source changed.",
+      "nextExpectedOutput": "Continue bounded source-backed wiki maintenance and keep final-head breadcrumbs current."
     },
     "Codex-2": {
       "status": "ready",
@@ -53,7 +53,7 @@
       "lane": "fallback-mini-scout-wave-feature-lifecycle-economy-pv-ui-tooling",
       "owner": "Codex/Sub-agents",
       "status": "harvested-validated-pushed",
-      "output": "Spark quota blocked six requested scout starts until 23:53, so Codex closed the failed starts and launched six gpt-5.4-mini read-only fallback scouts. Promoted source-checked deltas into sidebar UI navigation, SQF/PV inventory wording, PerformanceAuditAnalyzer, Gameplay constants and Networking transport-vs-authority wording. Validation passed and content pushed as docs b878f7e4 / wiki bad8646; no gameplay source changed."
+      "output": "Spark quota blocked six requested scout starts until 23:53, so Codex closed the failed starts and launched six gpt-5.4-mini read-only fallback scouts. Promoted source-checked deltas into sidebar UI navigation, SQF/PV inventory wording, PerformanceAuditAnalyzer, Gameplay constants and Networking transport-vs-authority wording. Validation passed; content commits are docs b878f7e4 / wiki bad8646, final breadcrumb heads are docs b7f03baf / wiki 14a3a2d. No gameplay source changed."
     },
     {
       "lane": "static-reference-triage-lesson",

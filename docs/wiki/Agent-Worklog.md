@@ -7,7 +7,7 @@
 - Partial harvest: Feature Status mostly confirmed already-canonical rows (RU para-ammo, AntiStack inert worker, WASP wheel repair dead chain, unitCaching, resistance patrol latch). UI confirmed existing bug coverage but exposed a navigation gap, so `_Sidebar` now has a dedicated UI/player-workflows cluster. Lifecycle scout's `version.sqf` correction was rejected by source check because `initJIPCompatible.sqf` includes `version.sqf` and separately runs `Common/Init/Init_Version.sqf`; its PV inventory correction was accepted and patched in [SQF code atlas](SQF-Code-Atlas) and [Wiki source consistency](Wiki-Source-Consistency-Findings).
 - Final harvest: economy/commander/factory scout produced a compact constants table in [Gameplay systems](Gameplay-Systems-Atlas#economy-and-resource-loop); PV/PVF scout sharpened [Networking/PV](Networking-And-Public-Variables#network-helper-layer) so `publicVariableServer`/`publicVariableClient` are explicitly transport, not authority; tooling scout led to a dedicated [PerformanceAuditAnalyzer](PerformanceAuditAnalyzer) page plus links from [Tools/build](Tools-And-Build-Workflow), [Testing workflow](Testing-Debugging-And-Release-Workflow), [Home](Home) and `_Sidebar`.
 - Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 13 files. Documentation/status only; no gameplay source files were edited.
-- Content pushed as docs `b878f7e4` / wiki `bad8646`.
+- Content pushed as docs `b878f7e4` / wiki `bad8646`; final post-push breadcrumb heads are docs `b7f03baf` / wiki `14a3a2d`.
 
 ## 2026-06-04T20:50:00+02:00 - Codex - static reference triage lesson
 
