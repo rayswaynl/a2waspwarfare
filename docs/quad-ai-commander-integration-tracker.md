@@ -6,18 +6,18 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 
 | PR | Branch | Purpose | Status |
 |---|---|---|---|
-| #14 | `feat/ai-commander` | Execution substrate: supervisor, executor, town assignment, production, upgrades, hybrid command | Open draft; full-auto smoke noted, hybrid/handoff/stopped evidence still needed |
+| #14 | `feat/ai-commander` | Execution substrate: supervisor, executor, town assignment, production, upgrades, hybrid command | Open draft; full-auto smoke noted; Phase 0 static compatibility hardening landed; hybrid/handoff/stopped evidence still needed |
 | #17 | `codex/quad-ai-commander` | Docs, roadmap, phase specs, validation plan, implementation briefs | Open; docs-only source-of-truth |
-| #18 | `codex/ai-commander-logs` | Phase 1 structured log implementation stacked on `feat/ai-commander` | Open draft; implementation-only, runtime evidence pending |
-| #19 | `codex/ai-commander-context` | Phase 2 context/belief scaffold stacked on `codex/ai-commander-logs` | Open draft; advisory-only, synthetic/runtime evidence pending |
+| #18 | `codex/ai-commander-logs` | Phase 1 structured log implementation stacked on `feat/ai-commander` | Open draft; implementation-only, runtime evidence pending; needs refresh/rebase onto current #14 after Phase 0 hardening |
+| #19 | `codex/ai-commander-context` | Phase 2 context/belief scaffold stacked on `codex/ai-commander-logs` | Open draft; advisory-only, synthetic/runtime evidence pending; refresh after #18 is refreshed |
 
 ## Phase Status
 
 | Phase | Branch | Depends On | Status | Decision Impact |
 |---|---|---|---|---|
-| 0 Execution substrate | `feat/ai-commander` | current AI commander PR | In progress; partial full-auto evidence | yes, current PR behavior |
-| 1 Structured logs | `codex/ai-commander-logs` | Phase 0 stable | Draft PR #18 open; static surface clean, runtime evidence pending | no |
-| 2 Context/beliefs | `codex/ai-commander-context` | Phase 1 logs | Draft PR #19 open; advisory-only scaffold with manual smoke helper, synthetic/runtime evidence pending | no |
+| 0 Execution substrate | `feat/ai-commander` | current AI commander PR | In progress; partial full-auto evidence; static compatibility hardening landed | yes, current PR behavior |
+| 1 Structured logs | `codex/ai-commander-logs` | Phase 0 stable | Draft PR #18 open; static surface clean, but currently behind #14 and must be refreshed before runtime smoke | no |
+| 2 Context/beliefs | `codex/ai-commander-context` | Phase 1 logs | Draft PR #19 open; advisory-only scaffold with manual smoke helper, synthetic/runtime evidence pending; wait for #18 refresh | no |
 | 3 Advisory planner | `codex/ai-commander-planner` | Phase 2 beliefs | Spec and implementation brief ready; implementation pending until Phase 2 evidence | no by default |
 | 4 Worker biasing | `codex/ai-commander-worker-biasing` | Phase 3 planner | Spec and implementation brief ready; behavior-changing implementation pending until Phase 3 evidence | yes, gated off by default |
 
@@ -38,16 +38,19 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 | `docs/quad-ai-commander-phase4-worker-biasing.md` | Behavior-changing worker biasing spec |
 | `docs/quad-ai-commander-phase4-implementation-brief.md` | Guarded worker-biasing implementation runbook |
 | `docs/quad-ai-commander-runtime-validation.md` | Runtime evidence, stacked smoke handoff, RPT handoff, stop-go rules |
+| `docs/quad-ai-commander-stack-hygiene.md` | Stack refresh state, branch divergence, ready-review order |
 | `wiki/Quad-AI-Commander.md` | Wiki-ready overview |
 | `wiki/Quad-AI-Commander-Integration.md` | Integration notes against `feat/ai-commander` |
 
 ## Next Best Action
 
-Follow the stacked smoke handoff in `docs/quad-ai-commander-runtime-validation.md`:
+Follow the stacked smoke handoff in `docs/quad-ai-commander-runtime-validation.md` and the refresh order in `docs/quad-ai-commander-stack-hygiene.md`:
 
 1. Finish Phase 0 smoke-testing on PR #14.
-2. Collect Phase 1 log evidence on draft PR #18.
-3. Use the manual Phase 2 smoke helper on draft PR #19 after #18 is runnable.
+2. Refresh/rebase PR #18 onto the current #14 head before Phase 1 runtime smoke.
+3. Collect Phase 1 log evidence on draft PR #18.
+4. Refresh/rebase PR #19 onto the refreshed #18 head.
+5. Use the manual Phase 2 smoke helper on draft PR #19 after #18 is runnable.
 
 Phase 3 implementation guidance is ready in `docs/quad-ai-commander-phase3-implementation-brief.md`, but a planner branch should wait until Phase 2 has positive context evidence. Phase 4 implementation guidance is ready in `docs/quad-ai-commander-phase4-implementation-brief.md`, but worker biasing must wait until Phase 3 priorities are proven in advisory mode.
 
@@ -59,6 +62,7 @@ Already noted in PR #14:
 - town attacks
 - upgrades
 - supervisor disengages when a player takes commander
+- Phase 0 static compatibility hardening across the AI Commander hot path
 
 Remaining Phase 0 proof:
 
@@ -68,6 +72,7 @@ Remaining Phase 0 proof:
 - human-leaves handoff resumes full-auto cleanly
 - disabled/HQ-down state stops commander cleanly
 - watchlist has no blocking waypoint reset, stale `wfbe_exec_sig`, or stuck `wfbe_queue` issue
+- Takistan/generated mission parity and Command Center label readiness are resolved separately from runtime smoke
 
 Phase 1 is drafted:
 
@@ -77,6 +82,7 @@ branch: codex/ai-commander-logs
 base: feat/ai-commander
 runbook: docs/quad-ai-commander-phase1-implementation-brief.md
 runtime handoff: docs/quad-ai-commander-runtime-validation.md
+current stack state: refresh/rebase onto current #14 before runtime smoke
 ```
 
 Required Phase 1 proof before it can leave draft:
@@ -98,6 +104,7 @@ base: codex/ai-commander-logs
 runbook: docs/quad-ai-commander-phase2-implementation-brief.md
 runtime handoff: docs/quad-ai-commander-runtime-validation.md
 manual smoke: west Call WFBE_SE_FNC_AI_Com_ContextSyntheticSmoke;
+current stack state: refresh/rebase after #18 is refreshed onto current #14
 ```
 
 Required Phase 2 proof before it can leave draft:
@@ -165,8 +172,8 @@ Required Phase 4 guardrails:
 | Hybrid delegation/economy-freeze smoke | Phase 0 | pending |
 | Handoff smoke | Phase 0 | pending |
 | HQ-down/disabled smoke | Phase 0 | pending |
-| Phase 1 structured log RPT excerpts | Phase 1 | draft implementation open in PR #18; runtime evidence pending |
-| Phase 2 belief merge/decay excerpts | Phase 2 | draft implementation open in PR #19 with manual smoke helper; synthetic/runtime evidence pending |
+| Phase 1 structured log RPT excerpts | Phase 1 | draft implementation open in PR #18; branch refresh and runtime evidence pending |
+| Phase 2 belief merge/decay excerpts | Phase 2 | draft implementation open in PR #19 with manual smoke helper; stack refresh and synthetic/runtime evidence pending |
 | Phase 3 advisory priority excerpts | Phase 3 | implementation brief ready; code pending Phase 2 smoke evidence |
 | Phase 4 worker biasing advisory-on/off excerpts | Phase 4 | implementation brief ready; code pending Phase 3 advisory evidence |
 
