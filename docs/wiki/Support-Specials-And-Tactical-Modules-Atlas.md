@@ -55,6 +55,7 @@ Adjacent server runtime surfaces: grouped base areas are enabled only when `WFBE
 | Vehicle paradrop | Working/partial | Similar to ammo paradrop; server creates cargo vehicle and empty-vehicle cleanup. |
 | UAV | Partial | Client creates UAV, deducts funds and sends tracking request; server mostly monitors cleanup and reveal broadcasts. |
 | Artillery | Working/partial | Local/client fire authority with upgrade-gated UI/ammo/timeout behavior. |
+| Anti-air radar (AAR) | Working/partial | Base structure and client marker feature are live when enabled; upgrade levels change marker detail and refresh rate, but the per-aircraft marker loops are client-local and should be performance-smoked on busy air games. |
 | ICBM/Nuke | Partial/high-risk | Client deducts funds and sends `RequestSpecial ["ICBM", ...]`; server applies nuke damage from payload. Stale adjunct paths remain. |
 | MASH | Partial/stale | Local officer deploy path supports respawn lookup, but marker sender/relay/receiver are split or disabled. |
 | ZetaCargo/airlift | Broken/partial | Hook attaches nearby unmanned land vehicle; detach action does not pass the lifted vehicle even though unhook expects it. |
@@ -79,6 +80,10 @@ Do not treat those UI checks as security boundaries. For paradrops, UAV and ICBM
 - a broader economy ledger decision for client-side funds/effects.
 
 ## Module Deep Dives
+
+### Anti-Air Radar
+
+AAR is a live base-support system, not only a historical changelog item. The build/action layer recognizes `AARadar` structures (`RequestStructure.sqf:14`; `updateavailableactions.fsm:189-222`), and unit init starts `Common_AARadarMarkerUpdate.sqf` for opposite-side aircraft when `WFBE_C_STRUCTURES_ANTIAIRRADAR > 0` (`Init_Unit.sqf:111-114`). The marker loop hides work while the map is closed, requires an AAR in range, applies the configured detection altitude, and reads `WFBE_UP_AAR` to move from speed-only markers at 5 seconds to altitude at 3 seconds and aircraft type at 1 second (`Common_AARadarMarkerUpdate.sqf:53-121`). It also records `PerformanceAuditAARMarkerScripts` and `aar_marker_update` samples, so large-aircraft smoke should include map-open/map-closed performance.
 
 ### UAV
 
