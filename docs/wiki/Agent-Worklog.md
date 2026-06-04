@@ -2249,6 +2249,12 @@ Key conclusions:
 - Updated [UI HUD and dialogs](UI-HUD-And-Dialogs), [Client UI, HUD and menus](Client-UI-HUD-And-Menus) and [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) so stale `RscMenu_Upgrade` and duplicate IDD/EASA rows route directly to [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog-review) and [UI IDD collision repair](UI-IDD-Collision-Repair).
 - No gameplay source files changed.
 
+## 2026-06-04T23:40:22+02:00 - Codex - base-area machine ledger split
+- Source-checked the grouped-base/stationary-defense/CoIn split so future agents do not reopen an already-patched server guard from an older aggregate backlog record.
+- Evidence checked: `Init_Server.sqf:380` initializes server `wfbe_basearea` to `[]`; `Construction_HQSite.sqf:50-58` creates the base-area logic and sends client `RequestBaseArea` while the older direct server append remains commented; `basearea.sqf:55-77` prunes but does not seed the server list; `coin_interface.sqf:256-263` and `:721-730` still read `_area getVariable "avail"` before `!isNull _area`; Chernarus and maintained Vanilla `Construction_StationaryDefense.sqf:12-15` now guard the server `weapons` read.
+- Updated `agent-hardening-backlog.jsonl`, `agent-feature-status.jsonl`, [Progress Dashboard](Progress-Dashboard), `agent-status.json` and `agent-events.jsonl`. No gameplay source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for the six touched mirrored files.
+
 ## 2026-06-04T11:46:00+02:00 - Codex - RequestSpecial non-ICBM support authority route
 - Source-checked the non-ICBM `RequestSpecial` support-effects lane after the Spark quota fallback scout launch.
 - Evidence checked: `Client/GUI/GUI_Menu_Tactical.sqf:262-276,371-373,513-527`, `Client/Module/UAV/uav.sqf:27-52` and `Server/Functions/Server_HandleSpecial.sqf:43-64,147-170`.

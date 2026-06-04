@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T23:28:00+02:00",
+  "generatedAt": "2026-06-04T23:42:33+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Reconciled agent-hardening-backlog.jsonl after the commander artillery patch: the stationary-defense server base-area null guard is source-patched in Chernarus and maintained Vanilla Takistan; the client-side CoIn companion remains source-unpatched. No gameplay source changed in this docs batch.",
-      "nextExpectedOutput": "Continue from the next source-backed docs lane: fold newly returned focused engineering-thread findings into owner pages/Feature Status if they produce evidence, otherwise continue P0/P1 owner-page cleanup."
+      "currentWork": "Published the base-area machine-ledger split: server Construction_StationaryDefense base-area weapons read is source-patched in Chernarus and maintained Vanilla Takistan, while server base-area seeding and client CoIn sale/placement null guards remain open. No gameplay source changed.",
+      "nextExpectedOutput": "Continue P0/P1 owner-page and machine-ledger cleanup from source evidence; fold focused engineering-thread findings into Feature Status only when source-checked."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "basearea-machine-ledger-split",
+      "owner": "Codex",
+      "status": "published-validated-pushed",
+      "output": "Machine ledgers now split the source-patched server stationary-defense base-area guard from still-open server base-area seeding and client CoIn sale/placement null guards. Validation passed: docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check and SHA256 mirror parity. No gameplay source changed."
+    },
     {
       "lane": "stationary-defense-guard-backlog-reconciliation",
       "owner": "Codex",
