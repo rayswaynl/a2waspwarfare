@@ -4,7 +4,7 @@
 	Parameter: [_side, _context, _candidate]
 */
 
-Private ["_side","_context","_candidate","_enemy","_category","_pos","_town","_best","_bestIndex","_idx","_belief","_bEnemy","_bCategory","_bPos","_bTown","_radius","_matchCategory","_oldConf","_newConf","_bonus","_sources","_newSources","_src","_countMin","_countMax","_status","_limit"];
+Private ["_side","_context","_candidate","_enemy","_category","_pos","_town","_best","_bestIndex","_idx","_belief","_bEnemy","_bCategory","_bPos","_bTown","_radius","_matchCategory","_sameTown","_oldConf","_newConf","_bonus","_sources","_newSources","_src","_countMin","_countMax","_status","_limit"];
 
 if (count _this < 3) exitWith {[]};
 
@@ -37,13 +37,24 @@ _idx = 0;
 			_bCategory = _belief select 2;
 			_bPos = _belief select 3;
 			_bTown = _belief select 4;
-			_matchCategory = (_bCategory == _category) || {_bCategory == "unknown"} || {_category == "unknown"};
-			if (_bEnemy == _enemy && {_matchCategory}) then {
-				if (typeName _pos == "ARRAY" && {typeName _bPos == "ARRAY"}) then {
-					if ((_pos distance _bPos) <= _radius) then {
-						if (isNull _town || {isNull _bTown} || {_town == _bTown}) then {
-							_best = _belief;
-							_bestIndex = _idx;
+			_matchCategory = false;
+			if (_bCategory == _category) then {_matchCategory = true};
+			if (_bCategory == "unknown") then {_matchCategory = true};
+			if (_category == "unknown") then {_matchCategory = true};
+			if (_bEnemy == _enemy) then {
+				if (_matchCategory) then {
+					if (typeName _pos == "ARRAY") then {
+						if (typeName _bPos == "ARRAY") then {
+							if ((_pos distance _bPos) <= _radius) then {
+								_sameTown = false;
+								if (isNull _town) then {_sameTown = true};
+								if (isNull _bTown) then {_sameTown = true};
+								if (_town == _bTown) then {_sameTown = true};
+								if (_sameTown) then {
+									_best = _belief;
+									_bestIndex = _idx;
+								};
+							};
 						};
 					};
 				};
