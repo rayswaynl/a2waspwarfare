@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T23:35:00+02:00 - Codex - buy-unit price display correction
+
+- Continued the documentation finisher loop and source-rechecked the buy-unit pricing note after the prior correction. The first pass was too broad: it checked list and purchase/charge math, but missed the selected-detail refresh path.
+- Evidence checked: `Client_UIFillListBuyUnits.sqf:60` uses `UNIT_COST_MODIFIER` for list rows; `GUI_Menu_BuyUnits.sqf:90,155-156` uses it for purchase/check/charge; `GUI_Menu_BuyUnits.sqf:261` recomputes `_currentCost` without it; `GUI_Menu_BuyUnits.sqf:465` displays that recomputed value in control `12034`.
+- Updated [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Feature status](Feature-Status-Register), [Development lessons](Development-Lessons-Learned), `agent-development-lessons.jsonl`, [Progress dashboard](Progress-Dashboard) and `agent-status.json`.
+- Lesson captured: reused UI variables need all assignment paths and all display/guard/mutation sinks traced before claiming formula parity. No gameplay source files changed.
+
 ## 2026-06-04T22:55:00+02:00 - Codex - depth leftovers mini scout harvest
 
 - All six depth-leftovers mini scouts returned and were closed after the Spark quota fallback wave.

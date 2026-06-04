@@ -258,6 +258,12 @@ The camp-count helpers show a different trap. `Common_GetTotalCamps.sqf:9-12` an
 
 Development rule: for stateful town/world changes, smoke three things separately: replicated variables, local marker/UI feedback and world object state. For long-running loops, cite both the latch writer and the reset path before calling relaunch behavior working. For shared count helpers, decide whether the caller needs a real count or a safe denominator before reusing the helper.
 
+## Lesson 28: Reused UI Variables Need All Assignment Paths Traced
+
+The Buy Units menu shows why a partial grep can create bad documentation. The list row uses the unit-cost modifier in `Client_UIFillListBuyUnits.sqf:60`, and the purchase/funds/charge path also uses it when `MenuAction == 1` (`GUI_Menu_BuyUnits.sqf:90,155-156`). A later selected-detail refresh in the same GUI script reassigns `_currentCost` without `UNIT_COST_MODIFIER` at `GUI_Menu_BuyUnits.sqf:261` and then writes that value to control `12034` at `:465`. So the charge path and selected-detail display can still disagree even though the first `_currentCost` assignment looked correct.
+
+Development rule: when auditing UI formulas, grep every assignment to the reused variable and every display, guard and mutation sink before declaring parity. For price/cost work, smoke list rows, selected-detail display, affordability guards and the actual charged funds together. See [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) and [Feature status](Feature-Status-Register).
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |
