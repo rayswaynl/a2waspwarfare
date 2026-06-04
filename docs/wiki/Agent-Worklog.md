@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T20:50:00+02:00 - Codex - static reference triage lesson
+
+- Continued the documentation finisher loop after the scout wave closed. Picked the highest-value remaining missing-reference lead: [Source inventory](Source-Inventory) had a raw static-reference table that could be mistaken for a list of live boot blockers.
+- Source-checked the candidate paths. `description.ext:37` references `scripts\unitCaching\description.ext` only in a commented include; `Server/Init/Init_Towns.sqf:168,174` references `Server\FSM\respatrol.fsm` only in commented `ExecFSM` calls; `WASP/Init_Client.sqf:12` references missing `WASP\KeyDown.sqf` only in a commented compile; `WASP/actions/car_wheel_new.sqf:29-36` calls `WASP_procInitComm`, but its action caller is commented at `WASP/actions/AddActions.sqf:6` and the only `WASP_procInitComm` compile is in the commented bootstrap at `initJIPCompatible.sqf:243`.
+- Updated [Source inventory](Source-Inventory#static-reference-check) so static-reference rows are explicitly triage leads, then added [Development lesson 15](Development-Lessons-Learned#lesson-15-static-reference-hits-are-leads-not-runtime-proof) plus `agent-development-lessons.jsonl` to preserve the rule for future agents.
+- Documentation/status only; no gameplay source files were edited.
+
 ## 2026-06-04T19:55:10+02:00 - Codex - Spark scout wave version/lifecycle/tooling/feature/PV/caps
 
 - Steff asked for another bunch of Spark scouts. Codex launched six `gpt-5.3-codex-spark` read-only lanes: generated `version.sqf` release gating, mission lifecycle/init graph, tooling/integrations, Feature Status depth pass, PV/PVF authority risks and player-role/AI-cap formulas.

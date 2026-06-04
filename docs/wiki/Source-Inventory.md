@@ -185,6 +185,17 @@ Agent rule: do not use tracked-file counts as proof that a mission root can boot
 
 ## Static Reference Check
 
+This table is a static string-reference scan, not a boot-blocker list. It intentionally includes live includes, engine/module paths, commented legacy references and dead-feature archaeology. Before promoting any row into Feature Status or a release gate, check whether the source line is executable and whether the target is meant to exist in the current feature path.
+
+High-signal interpretation examples from the 2026-06-04 missing-reference sweep:
+
+| Reference | Current source shape | Developer meaning |
+| --- | --- | --- |
+| `description.ext` -> `scripts\unitCaching\description.ext` | Commented include at `description.ext:37`; `scripts/unitCaching` folder is absent. | Stale/abandoned optimization scaffold, not a current boot dependency. |
+| `Server/Init/Init_Towns.sqf` -> `Server\FSM\respatrol.fsm` | Both `ExecFSM` calls are commented at `Init_Towns.sqf:168,174`; target file is absent. | Dormant resistance-patrol alternative, not a live missing FSM. |
+| `WASP/Init_Client.sqf` -> `WASP\KeyDown.sqf` | Compile is commented at `WASP/Init_Client.sqf:12`; target file is absent. | Dead WASP client-init chain; see [WASP overlay](WASP-Overlay). |
+| `WASP/actions/car_wheel_new.sqf` -> `WASP_procInitComm` | `car_wheel_new.sqf:29-36` calls `WASP_procInitComm`, but the only compile is inside the commented bootstrap at `initJIPCompatible.sqf:243`; its only action caller is commented in `WASP/actions/AddActions.sqf:6`. | Broken orphan if revived as-is; currently inactive. |
+
 | File | Reference |
 | --- | --- |
 | Client/Init/Init_Client.sqf | ca\\modules\\ARTY\\data\\scripts\\init.sqf |

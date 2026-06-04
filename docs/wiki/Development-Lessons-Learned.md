@@ -158,6 +158,12 @@ The current-head recheck also found a small but important state-cleanup decision
 
 Development rule: when a branch-head note says older line refs are superseded, refresh the canonical table and all adjacent machine/status rows in the same batch. A note is not enough once owners are using the page for merge gates. See [Current supply heli PR](Current-Work-Supply-Helicopters-PR1).
 
+## Lesson 15: Static Reference Hits Are Leads, Not Runtime Proof
+
+Static scans are excellent for finding missing files, but they mix live includes with commented-out experiments and dead-feature archaeology. The 2026-06-04 missing-reference sweep showed the pattern clearly: `description.ext:37` references `scripts\unitCaching\description.ext`, but the line is commented and the folder is absent; `Server/Init/Init_Towns.sqf:168,174` references `Server\FSM\respatrol.fsm`, but both `ExecFSM` calls are commented; `WASP/Init_Client.sqf:12` references missing `WASP\KeyDown.sqf`, but that compile is also commented; and `WASP/actions/car_wheel_new.sqf:29-36` calls `WASP_procInitComm`, whose only compile is inside the commented bootstrap at `initJIPCompatible.sqf:243`.
+
+Development rule: treat static reference rows as triage leads until you inspect line executability, caller/action reachability and target-file existence. Promote live missing includes or active `execVM`/`ExecFSM` paths to release gates; route commented/dead chains to abandoned-feature or cleanup pages instead. See [Source inventory](Source-Inventory#static-reference-check) for the current interpretation table.
+
 ## Lesson 15: Map Branches Need Static And Runtime Done States
 
 `origin/feature/zargabad-map` is a useful example of a strong static map branch that is still not runtime-complete. `Tools\Validate-ZargabadMission.ps1` passed on current head `e9294ede`, proving object/sync/count/value/layout invariants: 13 towns, 19 camps, 1 airport, 9 start logics, 33 town-defense logics, no duplicate mission object ids, no missing synchronization targets and no Takistan Zargabad-module spillover. The refreshed head also shows a second lesson: map branches can carry balance policy, not only object placement. Zargabad now has tuned low-pop defaults for AI caps, player AI caps, Soldier cap, supply cap, UAV/range limits, air countermeasures, starting funds/supply, ICBM state and price multipliers.

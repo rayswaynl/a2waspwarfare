@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T20:45:00+02:00",
+  "generatedAt": "2026-06-04T20:50:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Scout harvest batch is validated and pushed. Docs mirror commits 47cf77a0 / 654c1f0b and wiki commit 27309ef carry the version/lifecycle/tooling/Feature Status harvest plus compact dashboard reconciliation. Final fresh scouts were closed after confirming canonical coverage or overflowing without evidence.",
-      "nextExpectedOutput": "Continue bounded source-backed wiki maintenance as needed; relaunch any future scout lane narrowly before promoting new findings."
+      "currentWork": "Source-checked the remaining missing-reference lead and patched Source Inventory plus Development Lessons so static reference scans are treated as triage leads until line executability and caller reachability are proven. No gameplay source changed.",
+      "nextExpectedOutput": "Validate, mirror and push the static-reference triage lesson batch, then continue bounded source-backed wiki maintenance."
     },
     "Codex-2": {
       "status": "ready",
@@ -48,6 +48,12 @@
       "owner": "Codex",
       "status": "active-ongoing",
       "output": "Keep wiki/status pages current from source evidence, compact the dashboard, and publish scoped validation batches."
+    },
+    {
+      "lane": "static-reference-triage-lesson",
+      "owner": "Codex",
+      "status": "validation-pending",
+      "output": "Clarified Source Inventory static-reference rows as triage leads rather than boot-blocker proof, with source examples for commented unitCaching, respatrol, WASP KeyDown and car_wheel_new/procInitComm paths. Added Development Lesson 15 and a matching agent-development-lessons.jsonl record. No gameplay source changed."
     },
     {
       "lane": "spark-scout-wave-version-lifecycle-tooling-feature-pv-caps",
