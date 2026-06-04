@@ -27,6 +27,7 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 |---|---|
 | `docs/quad-ai-commander.md` | Concept and architecture overview |
 | `docs/quad-ai-commander-long-term-goal-prompt.md` | Durable Codex/assistant handoff prompt with persistent objective, evidence gates, next-action order, and completion rules |
+| `docs/quad-ai-commander-evidence-audit-matrix.md` | Gate-by-gate proof matrix mapping each phase to required evidence, blockers, and current state |
 | `docs/quad-ai-commander-implementation-roadmap.md` | Full staged roadmap |
 | `docs/quad-ai-commander-phase0-smoke-brief.md` | Current AI Commander smoke-test brief |
 | `docs/quad-ai-commander-phase0-evidence-checklist.md` | Phase 0 runtime evidence checklist for full-auto, hybrid, handoff, stopped, and watchlist proof |
