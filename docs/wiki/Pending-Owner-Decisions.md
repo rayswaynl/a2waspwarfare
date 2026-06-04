@@ -88,7 +88,7 @@ Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) for the source
 | --- | --- | --- |
 | Modded missions: regenerate from source vs maintain as forks | DR-32 | Napf/eden/lingor are divergent hand-edited forks; source fixes don't reach them |
 | 4 abandoned stub missions: complete or delete | DR-32 | sahrani/dingor/tavi/isladuala are non-runnable (1–20 files) |
-| MASH map-marker feature: revive or remove | DR-34 | dead both ends; revive needs server-held list + JIP re-send |
+| MASH map-marker feature: revive or remove | DR-34 / DR-3 recheck | Source/Vanilla local MASH respawn is separate; shared markers are orphaned: active server relay has no maintained-mission sender, receiver compile is commented, and `eden`/`lingor` show sender-only modded drift. Revival needs a server-held list, JIP re-send and unique marker names; otherwise archive or remove the relay. |
 | Paratrooper drop markers: smoke propagated fix / decide modded drift | DR-2 | source Chernarus + maintained Vanilla now register the callback and ship the handler; Arma smoke and divergent modded folders remain |
 | Dead WASP actions (OnArmor, GearYouUnit) | DR-35 | commented in `WASP/actions/AddActions.sqf:4` |
 | `supplyMissionActive.sqf` dead twin | DR-39 | compiled but never called |

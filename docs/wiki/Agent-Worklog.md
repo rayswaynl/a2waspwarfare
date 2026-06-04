@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-04T09:56:00+02:00 - Codex - Spark scout wave MASH/network depth
+
+- Steff asked for more Spark scouts. Codex launched six `gpt-5.3-codex-spark` read-only scouts before the active-agent limit rejected four additional starts.
+- Active scout lanes: commander voting/reassignment/take-command; town capture/supply/patrols; construction/base/HQ/factory dependencies; factory buy/equipment validation and rollback; respawn/MASH/camps/mobile respawn/JIP; and publicVariable channel health.
+- Broad commander/factory/construction/respawn prompts overflowed and were closed or replaced with micro-scouts. Useful reports returned from commander, towns, publicVariable networking and economy/factory micro-lanes.
+- Harvested source-backed deltas: maintained source/Vanilla MASH deploy creates/stores local MASH objects and adds undeploy, but does not broadcast `WFBE_CL_MASH_MARKER_CREATED`; the receiver compile is commented; the server relay is therefore orphaned; modded `eden`/`lingor` show sender-only drift. Commander duplicate `new-commander-assigned` wording is now scoped as a post-call-shape-fix risk. Factory docs now say the fix is a real request/accept/debit/cancel protocol, not just a refund patch. Networking docs now call out `REQUEST_SUPPLY_VALUE` no-timeout waits and modded/stale `WFBE_VAR_SERVER_FPS` consumers. Feature Status now surfaces town mortars as broken dormant scaffold.
+- Updated [Deep-review findings](Deep-Review-Findings), [Feature status](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions), [Public variable channel index](Public-Variable-Channel-Index), [Networking and public variables](Networking-And-Public-Variables), [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Commander/HQ lifecycle atlas](Commander-HQ-Lifecycle-Atlas), [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-feature-status.jsonl`. Validation/push pending.
+
 ## 2026-06-04T09:55:00+02:00 - Codex - post-push status reconciliation for caps/economy/tooling/UI wave
 
 - Continued the documentation finisher loop after the scout-wave harvest was already validated and pushed.

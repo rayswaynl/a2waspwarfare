@@ -89,6 +89,8 @@ The commander vote menu sends:
 
 The helper currently has a confirmed call-shape bug: `Server_AssignNewCommander.sqf` uses `_side = _this` while also reading `_commander = _this select 1` (`Server_AssignNewCommander.sqf:3-5`), while `RequestNewCommander.sqf:13` calls it with `[_side, _assigned_commander]`. That means helper-side side-logic lookups and notification routing receive an array instead of a `SIDE`. The source-side precondition is simple: the helper must unpack the payload as side + commander before any side-logic lookup, and all callers must pass that same shape. Use [Commander reassignment call shape](Commander-Reassignment-Call-Shape) for the patch plan and generated-mission propagation notes.
 
+Micro-scout recheck 2026-06-04 clarified the notification risk: `RequestNewCommander.sqf:14` and `Server_AssignNewCommander.sqf:9` both contain `new-commander-assigned` sends, but the helper send is currently blocked by the malformed side destination. After the call-shape fix, choose exactly one notification owner before smoke testing reassignment.
+
 Client-side special handlers show commander vote/reassignment messages and, for null reassignment, locally mirror `wfbe_commander = objNull` on the player's side logic (`Client_FNC_Special.sqf:6-34`).
 
 ## Commander Economy Controls

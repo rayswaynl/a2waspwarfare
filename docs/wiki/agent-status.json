@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T09:55:00+02:00",
+    "generatedAt":  "2026-06-04T09:57:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -19,9 +19,9 @@
     "agents":  {
                    "Codex":  {
                                  "status":  "active",
-                                 "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Reconciled post-push state after the caps/economy/tooling/UI scout wave. The harvested docs were already validated and pushed as main docs commit 783f3d0a and wiki commit 75db0fa; Codex is back on the long-running documentation finisher loop.",
-                                 "nextExpectedOutput":  "Pick the next bounded source-backed docs/status item from Feature Status, owner decisions, agent-readable files or stale coordination state."
+                                 "currentLane":  "spark-scout-wave-mash-network-depth",
+                                 "currentWork":  "Harvested the usable Spark scout reports from commander, towns, publicVariable networking and economy/factory micro-lanes. Broad commander/factory/construction/respawn scouts overflowed and were closed or replaced. Docs now sharpen MASH marker relay status, commander reassignment notification risk, factory request/accept/debit protocol scope, REQUEST_SUPPLY_VALUE no-timeout risk, server-FPS channel drift and town mortar scaffold status.",
+                                 "nextExpectedOutput":  "Validate Markdown/JSON/JSONL, mirror the changed wiki pages, commit and push the scoped documentation harvest."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -37,12 +37,18 @@
                               },
                    "Sub-agents":  {
                                       "status":  "closed",
-                                      "currentLane":  "none",
-                                      "currentWork":  "All scout threads from the caps/economy/tooling/UI wave are closed and the validated harvest was pushed as main docs 783f3d0a / wiki 75db0fa.",
+                                      "currentLane":  "spark-scout-wave-mash-network-depth",
+                                      "currentWork":  "All active scout threads from this wave are closed. Useful reports were harvested from commander, towns, publicVariable networking and economy/factory micro-scouts; broad construction and respawn prompts overflowed and were not harvested.",
                                       "nextExpectedOutput":  "No pending scout output remains from this batch."
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "spark-scout-wave-mash-network-depth",
+                            "owner":  "Codex/Sub-agents",
+                            "status":  "published-validated",
+                            "output":  "Steff asked for more Spark scouts. Codex launched six gpt-5.3-codex-spark read-only scouts and hit the active-agent limit on four more starts; broad commander/factory/construction/respawn lanes overflowed and were closed or replaced with micro-scouts. Harvested source-backed deltas: MASH marker relay is orphaned in maintained source/Vanilla, commander duplicate reassignment notification is a post-call-shape-fix risk, player factory buys need a real request/accept/debit/cancel protocol, REQUEST_SUPPLY_VALUE waits need timeouts, server-FPS channel cleanup must account for modded WFBE_VAR_SERVER_FPS consumers, and town mortars are a broken dormant scaffold. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. No gameplay source changed."
+                        },
                         {
                             "lane":  "post-push-status-reconciliation-caps-economy-tooling-ui",
                             "owner":  "Codex",

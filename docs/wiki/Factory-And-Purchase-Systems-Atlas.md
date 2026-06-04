@@ -211,6 +211,8 @@ Important authority note: no server PVF request is sent for this player purchase
 
 Mini-scout follow-up 2026-06-04 rechecked the static footprint: `Init_Client.sqf:52` compiles `BuildUnit`, `GUI_Menu_BuyUnits.sqf:155` spawns it for player purchases, and `Init_Server.sqf:10` only compiles `AIBuyUnit = Server_BuyUnit.sqf`. A source grep found no active `RequestBuyUnit`/`RequestBuildUnit` PVF path and no static caller for `AIBuyUnit` beyond the compile. `Server_BuyUnit.sqf:12-17,47-55,78-83` repeatedly exits or cleans up when the team leader is a player, which matches a latent/AI helper rather than a player purchase authority surface.
 
+This means the durable fix is not a small "refund missing" patch by itself. A public-server-safe redesign needs an explicit request/accept/debit/cancel protocol: the server should validate factory state, funds, side, queue capacity and spawn legality before accepting, then debit only at acceptance or refund every rejected/aborted post-accept path through one helper.
+
 ## Queue Model
 
 There are two queue concepts:

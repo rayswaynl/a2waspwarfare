@@ -42,16 +42,18 @@ Current status: this raw finding is historical for the maintained source path. S
 
 **Historical result:** on a dedicated server the marker PV was broadcast but never handled; on a hosted/SP server `Spawn (Call Compile "CLTFNCHandleParatrooperMarkerCreation")` resolved to nil. The fix has now been applied in source Chernarus and maintained Vanilla Takistan by adding `HandleParatrooperMarkerCreation` to `_clientCommandPV`. Remaining gates are Arma smoke and modded mission maintenance policy.
 
-### DR-3 — MASH tent map markers are dead on the receive side (abandoned/half-implemented) — **Medium**
+### DR-3 — MASH tent map markers are orphaned in source/Vanilla (abandoned/half-implemented) — **Medium**
 
-MASH markers use a two-hop relay:
-1. Client deploys tent → `WFBE_CL_MASH_MARKER_CREATED` → server EH in `Server/Module/MASH/MASHMarker.sqf:1` (registered) re-broadcasts `WFBE_SE_MASH_MARKER_SENT`.
-2. The client EH that should consume `WFBE_SE_MASH_MARKER_SENT` lives in `Client/Module/MASH/receiverMASHmarker.sqf:1` — but its **only** reference is the commented compile at `Client/Init/Init_Client.sqf:132`:
+The intended MASH marker design is a two-hop relay:
+1. Client deploys tent → `WFBE_CL_MASH_MARKER_CREATED` → server EH in `Server/Module/MASH/MASHMarker.sqf:1-13` re-broadcasts `WFBE_SE_MASH_MARKER_SENT`.
+2. The client EH that should consume `WFBE_SE_MASH_MARKER_SENT` lives in `Client/Module/MASH/receiverMASHmarker.sqf:1-29` — but its **only** source/Vanilla reference is the commented compile at `Client/Init/Init_Client.sqf:132`:
    ```sqf
    //WFBE_CL_FNC_ReceiverMASHmarker = Call Compile preprocessFileLineNumbers "Client\Module\MASH\receiverMASHmarker.sqf";
    ```
 
-**Result:** no client ever registers the `WFBE_SE_MASH_MARKER_SENT` handler, so **MASH map markers never appear**. (MASH *respawn* itself is independent and may work; only the map marker is dead.) This resolves the atlas's "client receiver currently not clearly active / requires verification." **Fix:** uncomment/restore the receiver registration in client init, or drop the dead server re-broadcast.
+**2026-06-04 recheck:** current source Chernarus and maintained Vanilla Takistan are even more inert than the original receive-side framing. `Client/Module/Skill/Skill_Officer.sqf:25-27` creates and stores the MASH object and adds undeploy, but does not broadcast `WFBE_CL_MASH_MARKER_CREATED`; `Client/Module/Skill/Actions/Officer_Undeploy_MASH.sqf:19-21` deletes the object and resets cooldown without marker cleanup. The server relay is active, but has no source/Vanilla sender. Modded `eden` and `lingor` still emit `WFBE_CL_MASH_MARKER_CREATED`, which is useful archaeology, but that is sender-only drift rather than proof the maintained missions have working shared MASH markers.
+
+**Result:** deployed MASH tents can still be local respawn objects, but shared MASH map markers are orphaned in maintained source/Vanilla: no live sender, no compiled receiver, no server-held marker list, and no JIP replay. **Fix:** either restore the feature as a server-authoritative marker registry with JIP re-send and unique marker names, or remove/comment the relay and receiver as dead code.
 
 ### DR-4 — Generated-mission drift: Takistan is in sync; the skip-list is a silent-divergence trap; modded maps are abandoned (generated-mission drift) — **Medium**
 
