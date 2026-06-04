@@ -54,7 +54,7 @@ These wrappers are preferred over hand-coded public variable dispatch for new fe
 
 Some systems use explicit public-variable channels outside the generic PVF list. The canonical inventory is [Public variable channel index](Public-Variable-Channel-Index), including registered `WFBE_PVF_*` commands, direct channels, source anchors and notable findings.
 
-Why this matters: direct channels such as `ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS`, `SEND_MESSAGE`, supply mission PVs, side-supply temp variables, side-supply mirror state (`wfbe_supply_WEST` / `wfbe_supply_EAST`), MASH marker channels, HQ marker/state broadcasts, AntiStack compensation, server FPS and AFK kick are not automatically covered by a future PVF dispatcher fix. Treat them as separate review targets when hardening the network layer. DR-46 proves this is not only theoretical: `SEND_MESSAGE` compiles direct-PV payload text on receiving clients.
+Why this matters: direct channels such as `ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS`, `SEND_MESSAGE`, supply mission PVs, side-supply temp variables, side-supply mirror state (`wfbe_supply_WEST` / `wfbe_supply_EAST`), MASH marker channels, HQ marker/state broadcasts, AntiStack compensation, server FPS and AFK kick are not automatically covered by a future PVF dispatcher fix. Treat them as separate review targets when hardening the network layer. DR-46 proves this is not only theoretical: `SEND_MESSAGE` compiles direct-PV payload text on receiving clients, and its common helper has the same local compile branch before broadcast.
 
 ### Direct PV Hardening Order
 
@@ -127,7 +127,7 @@ Registration source: `Common/Init/Init_PublicVariables.sqf:25-40` registers 15 c
 | `SetVehicleLock` / `SetMHQLock` | Applies local vehicle lock or adds MHQ lock/unlock actions (`SetVehicleLock.sqf:1`; `SetMHQLock.sqf:1-3`). | Reflects server lock state; local action setup depends on deploy status. |
 | `TownCaptured` | Recolors town marker, shows capture message, awards local funds and sends `RequestChangeScore` for eligible players/commanders (`TownCaptured.sqf:23-80`). | Not just visual. Town reward authority belongs with server-side capture reward migration. |
 | `Available` | Shows a hint with available items (`Available.sqf:1`). | UI notification only. |
-| `RequestBaseArea` | Moves a base-area object, sets `avail`/`side`, and appends it to `wfbe_basearea` (`RequestBaseArea.sqf:1-4`). | Client-bound despite the name; multiplayer-sensitive base/HQ state edge. |
+| `RequestBaseArea` | Moves a base-area object, sets `avail`/`side`, and appends it to `wfbe_basearea` (`RequestBaseArea.sqf:1-4`). | Client-bound despite the name; the callback performs the state mutation locally with no validation, so HQ/base-area deploy changes need server-origin and replay assumptions checked before reuse. |
 | `HandleParatrooperMarkerCreation` | Waits for `clientInitComplete`, optionally equips east paratroopers with NVGs, and spawns a local marker update with PerformanceAudit logging (`HandleParatrooperMarkerCreation.sqf:9-45`). | Source/Vanilla registration is propagated; Arma smoke pending. Transient marker, no replay unless owner asks for historical drops. |
 | `NukeIncoming` | Plays the air-raid sound (`NukeIncoming.sqf:1-7`). | Presentation-only pair to the ICBM authority path. |
 
@@ -151,7 +151,7 @@ Registration source: `Common/Init/Init_PublicVariables.sqf:25-40` registers 15 c
 - Some bare PV channels are copied per side. The temp mutation handlers are lowercase `wfbe_supply_temp_west` / `wfbe_supply_temp_east`; the replicated balance mirrors use side text (`wfbe_supply_WEST` / `wfbe_supply_EAST`) and are JIP-relevant because clients wait for `wfbe_supply_<sideJoinedText>` during init.
 - DR-44: the side-supply temp handlers trust the payload side as well as the payload amount. A hardened handler must reject side/channel mismatches such as a west temp channel carrying an east-side payload and must derive the allowed delta server-side.
 - `PLAYER_RADIATED` is not a server-authoritative radiation channel in current source; the client-side radzone script publishes it and the client FSM receives it. Treat it as a local/effect broadcast unless a future nuke rewrite moves radiation authority server-side.
-- `SEND_MESSAGE` is not harmless chat plumbing: its multi-language branch compiles payload text on receiving clients (`Client_onEventHandler_SEND_MESSAGE.sqf:25-31`), and `Common_SendMessage.sqf:24-27` has the same local compile branch. Treat DR-46 as a direct-channel RCE until rewritten to structured localization keys/args.
+- `SEND_MESSAGE` is not harmless chat plumbing: its multi-language branch compiles payload text on receiving clients (`Client_onEventHandler_SEND_MESSAGE.sqf:25-31`), and `Common_SendMessage.sqf:24-27` has the same local compile branch before broadcasting. Treat DR-46 as a direct-channel RCE until rewritten to structured localization keys/args.
 - A real BattlEye PV filter must include direct non-PVF channels as well as `WFBE_PVF_*`; shipped filter evidence is tracked in [External integrations](External-Integrations).
 - The master/Chernarus branch documented here does not ship PR #1 supply-helicopter source; it has the older truck supply mission path plus direct support/supply/ICBM channels. Treat supply-heli mechanics as PR-only until the branch is merged.
 
@@ -159,7 +159,7 @@ Registration source: `Common/Init/Init_PublicVariables.sqf:25-40` registers 15 c
 
 `Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` run `Call Compile` on the function-name string taken from the **value a remote machine broadcast** (`select 0` / `select 1`), with no check that it names a registered command. Validate the command string against the known `SRVFNC*`/`CLTFNC*` set before compiling, and add a real BattlEye PV filter as defense in depth. Full dispatcher analysis: [Deep-review findings](Deep-Review-Findings) DR-1.
 
-DR-46 adds a second independent network-data compile surface outside the PVF dispatcher: the direct `SEND_MESSAGE` channel compiles payload text on receiving clients when the payload's multi-language flag is true. A PVF dispatcher fix does not close it. Fix DR-46 by sending structured stringtable keys plus arguments and resolving them locally without `call compile`. Shipped BattlEye evidence and production-owner caveats: [External integrations](External-Integrations).
+DR-46 adds a second independent network-data compile surface outside the PVF dispatcher: the direct `SEND_MESSAGE` channel compiles payload text on receiving clients when the payload's multi-language flag is true, and the common send helper repeats the same compile branch locally before publishing. A PVF dispatcher fix does not close it. Fix DR-46 by sending structured stringtable keys plus arguments and resolving them locally without `call compile`. Shipped BattlEye evidence and production-owner caveats: [External integrations](External-Integrations).
 
 ### Residual Authority Risks After Dispatch Hardening
 

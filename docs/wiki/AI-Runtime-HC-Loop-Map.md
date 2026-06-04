@@ -23,7 +23,7 @@ This page is a focused runtime map for server loops, town AI, headless-client de
 | Resource/income loop | `SRC/Server/FSM/updateresources.sqf:20`, `:67`, `:74-75` | Server | FPS-adjusted sleep; exits on `gameOver` | Uses inverse `GetSleepFPS`; low FPS shortens sleeps. |
 | FPS sleep helper | `SRC/Common/Functions/Common_GetSleepFPS.sqf:5-9` | Common helper | Called by loops | Scaling may be inverted depending on intended semantics. |
 | Performance audit loop | `SRC/Common/Functions/Common_PerformanceAudit.sqf:221-240`; `SRC/Server/Init/Init_Server.sqf:586-589` | Server audit runner | Default flush `sleep 60`; exits on `gameOver` if set | Good observability hook but only as complete as callers. |
-| Server FPS publishers | `SRC/Server/GUI/serverFpsGUI.sqf:3-9`; `SRC/Server/Module/serverFPS/monitorServerFPS.sqf:1-8` | Dedicated both; hosted/listen GUI publisher only in current source | `sleep 8`; no match-end exit | Dedicated duplicates FPS publishing surfaces. |
+| Server FPS publishers | `SRC/Server/GUI/serverFpsGUI.sqf:1-9`; `SRC/Server/Module/serverFPS/monitorServerFPS.sqf:1-8` | Dedicated only in current docs/source | Early `!isDedicated` exit, then `sleep 8`; no match-end exit | Dedicated duplicates FPS publishing surfaces; hosted/listen no longer enters either loop on this docs branch. |
 | Cleanup/restorer set | `SRC/Server/Init/Init_Server.sqf:535-560`; cleaners such as `droppeditems_cleaner.sqf:4`, `:19`, `:42` | Server | Timer plus per-item sleeps; mostly `WFBE_GameOver` | Always-on cleanup pressure. |
 | Global stats extension | `SRC/Server/CallExtensions/GlobalGameStats.sqf:5`, `:24` | Server | `sleep 60`; no explicit exit | Always-on extension loop; player-count heuristics exclude HC. |
 | AntiStack loops | `SRC/Server/Init/Init_Server.sqf:597-614`; `AntiStack/updateScoreInternal.sqf:13`; `mainLoop.sqf:15`; `flushLoop.sqf:17` | Server if enabled | Mixed DB polling/sleeps | Optional but some loops can outlive a match. |
@@ -62,7 +62,7 @@ This page is a focused runtime map for server loops, town AI, headless-client de
 | Target | Smoke gates |
 | --- | --- |
 | Dedicated server | Verify `commonInitComplete`, `townInit`, `serverInitFull`, town loop, town AI loop, camp loop, cleanup loops, performance audit and both FPS publishers. |
-| Hosted/listen | Verify server/client branches both run, `monitorServerFPS.sqf` exits, `serverFpsGUI.sqf` publishes and client waits/JIP queries finish. |
+| Hosted/listen | Verify server/client branches both run, both FPS publishers exit cleanly on `!isDedicated`, and client waits/JIP queries finish without relying on server-FPS publication. |
 | JIP | Join after server init and town activation; verify side logic, town/camp states, marker updates, day/night sync and no duplicated local loops. |
 | HC | Run dedicated plus HC with delegation mode 2; verify HC registration, town AI delegation, `update-town-delegation`, HC disconnect removal and fallback behavior. |
 | Negative AI supply | In a private test only, enable the old AI supply-truck path and confirm current failure; use that as a release gate before any revival. |

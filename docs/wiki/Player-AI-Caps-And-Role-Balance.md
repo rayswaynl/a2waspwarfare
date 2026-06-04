@@ -21,6 +21,8 @@ The cap is checked against live group units plus queued units. A solo player alr
 
 Important naming trap: `WFBE_C_PLAYERS_AI_MAX` is the player follower cap. `WFBE_C_AI_MAX` is a separate AI-group knob exposed in `Rsc/Parameters.hpp:56-60` with a fallback at `Init_CommonConstants.sqf:92`; the latest scout did not prove a current Chernarus runtime consumer for that value. Do not use `WFBE_C_AI_MAX` when answering how many AI a normal player can personally command.
 
+Scout recheck 2026-06-04: the current Chernarus source still matches the table below. `GetLiveUnits.sqf:1-8` counts the player as one live group unit, so the Discord table intentionally reports AI followers rather than total group cap.
+
 ## Discord Table
 
 Default lobby baseline: `GroupSizePlayer = 15`. Values below are AI followers for a solo player.

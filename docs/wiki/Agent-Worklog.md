@@ -1,5 +1,15 @@
 # Agent Worklog
 
+## 2026-06-04T06:40:00+02:00 - Codex - mini scout wave AI/commander/factory/UI/PV/runtime
+
+- Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked all six starts, so Codex closed the failed threads and relaunched six read-only gpt-5.4-mini scouts.
+- Active scout lanes: AI squad caps/role balance, commander/voting/orders, factory economy purchase/spawn chain, UI/dialog/HUD broken references, networking/PV hardening follow-up and server runtime/HC/support lifecycle.
+- Local orchestration work source-checked the salvage payout typo again: `Skill_Salvage.sqf:38` and `updatesalvage.sqf:50` call `ChangePlayerfunds`, while `Init_Client.sqf:53,91` compiles `ChangePlayerFunds`.
+- Added the salvage casing defect to [Hardening roadmap](Hardening-Implementation-Roadmap) smaller confirmed fixes and routed it from [Pending owner decisions](Pending-Owner-Decisions) scoped hardening.
+- Runtime/HC/support scout returned first. Codex source-checked and promoted its strongest docs drift: current docs/source has both server-FPS publishers exiting on `!isDedicated`, so [AI runtime loop map](AI-Runtime-HC-Loop-Map) and [Performance opportunity sweep](Performance-Opportunity-Sweep) now distinguish `origin/master`'s old busy-loop shape from the docs-branch guarded source.
+- Remaining scouts were closed and harvested. AI caps re-confirmed the current default-lobby Discord table; UI recheck added missing Economy control `23006` beside `23004`/`23005`; PV hardening sharpened `RequestBaseArea` and both `SEND_MESSAGE` compile sites; factory/commander reports mostly confirmed canonical pages already cover purchase authority, queue/refund defects, commander vote/reassignment bugs, AI commander partiality and HC static-defense accounting.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T06:55:00+02:00 - Codex - cheap mini scout wave commander-adjacent depth
 
 - Spark quota blocked new GPT-5.3-Codex-Spark starts, so Codex launched six cheap mini scouts for construction/factories/upgrades, UI/dialogs/HUD, server ops/extensions, networking/PV security, respawn/supports and AI/team-order.

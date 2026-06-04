@@ -60,13 +60,13 @@ Validation:
 
 ### Hosted Server FPS Loops
 
-`serverFpsGUI.sqf` and `monitorServerFPS.sqf` both run `while {true}`. Their only `sleep 8` sits inside `if (isDedicated)`. On non-dedicated/hosted server, the branch is skipped and the loop has no sleep.
+On `origin/master`, `serverFpsGUI.sqf` and `monitorServerFPS.sqf` both run `while {true}` with their only `sleep 8` inside `if (isDedicated)`. On non-dedicated/hosted server, that branch is skipped and the loop has no sleep.
 
-This is a small, low-risk patch if hosted/listen mode is supported. On dedicated servers, the current behavior is not a CPU spin, but there are still two publishers broadcasting closely related values every 8 seconds.
+This docs branch's source already has the low-risk DR-19 shape: both publishers exit immediately on `!isDedicated`, then keep the dedicated 8-second cadence. The remaining work is smoke and branch adoption, plus the separate decision of whether to consolidate two closely related FPS variables.
 
 Validation:
 
-- Hosted/listen source smoke: loop exits or sleeps when `!isDedicated`.
+- Hosted/listen source smoke: both publisher scripts exit when `!isDedicated`.
 - Dedicated smoke: both HUD/status consumers still receive server FPS at the expected cadence, or documented consumers are migrated to one shared variable.
 
 ### Supply Mission Scan

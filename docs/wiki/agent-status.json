@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T06:34:00+02:00",
+  "generatedAt": "2026-06-04T06:50:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated the mini-scout maps/ops/PV/factory/respawn wave: salvage payout casing, service-point respawn wording, DiscordBot config-source precedence and parser-only PerformanceAuditAnalyzer wording.",
-      "nextExpectedOutput": "Continue with the next bounded source-backed documentation gap."
+      "currentWork": "Validated mini-scout-wave-ai-commander-factory-ui-pv-runtime after Spark quota blocked: salvage patch routing, server-FPS wording, AI-cap table confirmation, Economy control 23006, RequestBaseArea and SEND_MESSAGE trust notes.",
+      "nextExpectedOutput": "Push docs mirror and wiki commits, then continue the documentation finisher loop."
     },
     "Codex-2": {
       "status": "ready",
@@ -38,11 +38,17 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "Five gpt-5.4-mini scouts completed and were harvested. Lanes covered map/generated divergence, integrations/ops, PV/security, factory/economy spend paths and respawn/service lifecycle.",
+      "currentWork": "Six gpt-5.4-mini read-only scouts completed and were harvested. Factory and commander reports mostly confirmed canonical docs; useful deltas landed in AI caps, UI controls, PV trust notes, server-FPS wording and salvage patch routing.",
       "nextExpectedOutput": "No active sub-agent output pending."
     }
   },
   "laneSummary": [
+    {
+      "lane": "mini-scout-wave-ai-commander-factory-ui-pv-runtime",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "output": "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked all six starts, so Codex closed the failed threads and relaunched six gpt-5.4-mini read-only scouts. Harvested source-backed deltas: salvage payout casing routed into the hardening roadmap, server-FPS hosted/listen wording corrected, AI-cap table re-confirmed, Economy missing controls expanded to 23004/23005/23006, RequestBaseArea and SEND_MESSAGE trust notes sharpened. Factory and commander reports mostly confirmed existing canonical pages. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed. No gameplay source changed."
+    },
     {
       "lane": "mini-scout-wave-maps-ops-pv-factory-respawn",
       "owner": "Codex/Sub-agents",

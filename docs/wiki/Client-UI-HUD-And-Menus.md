@@ -19,7 +19,7 @@ This is the quick-reference gateway for client UI work. Start with the [player U
 - UI code is usually client-local, but UI actions can still mutate server-visible state through PVF or direct publicVariable paths.
 - Treat any UI change that touches score, funds, supply, structures, upgrades, support, loadouts, HQ state or vehicle creation as a networking/economy change too.
 - Do not assume dialog IDs are unique: `RscMenu_EASA` and `RscMenu_Economy` share `idd = 23000`, and `RscOverlay` / `OptionsAvailable` both use `idd = 10200`.
-- Economy menu startup writes to `23004`/`23005`, but the audited `RscMenu_Economy` control block does not declare those IDs; smoke disabled-state behavior before reusing this menu as a commander-control template.
+- Economy menu startup writes to `23004`/`23005`/`23006`, but the audited `RscMenu_Economy` control block does not declare those IDs; smoke disabled-state behavior before reusing this menu as a commander-control template.
 - Do not reuse `currentCutDisplay` for unrelated title resources: current source lets `OptionsAvailable`/RHUD/action icons and `EndOfGameStats` share that key, so endgame display work needs the [UI IDD collision repair](UI-IDD-Collision-Repair) handle split as well as IDD cleanup.
 - Keep polling menu loops and marker/HUD loops light; reuse cached display handles and existing update flags.
 - Headless clients do not run the UI init path; "HC" calls inside `updateclient.sqf` are high-command player UI controls, not headless-client rendering.
@@ -36,7 +36,7 @@ This is the quick-reference gateway for client UI work. Start with the [player U
 | DR-25a/b | `RscOverlay` / `OptionsAvailable` share title `idd = 10200`, and `RscClickableText.soundPush[]` is malformed. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | DR-28 | Gear, EASA and service spend/effect paths are client-authoritative. | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
 | Duplicate IDDs/display handles | EASA/Economy share `23000`; overlay/title resources share `10200`; `OptionsAvailable` and `EndOfGameStats` both use `currentCutDisplay`. | [Client UI systems atlas](Client-UI-Systems-Atlas), [UI IDD collision repair](UI-IDD-Collision-Repair) |
-| Economy dialog missing controls | `GUI_Menu_Economy.sqf:7-8` targets `23004`/`23005`, absent from audited `RscMenu_Economy` controls. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
+| Economy dialog missing controls | `GUI_Menu_Economy.sqf:7-8` targets `23004`/`23005`/`23006`, absent from audited `RscMenu_Economy` controls. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
 | Command task partial | Commander task controls are visible, but the `SetTask` send path is commented out. | [Client UI systems atlas](Client-UI-Systems-Atlas) |
 
 ## UI Risk Index

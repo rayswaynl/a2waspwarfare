@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T06:34:00+02:00",
+  "generatedAt": "2026-06-04T06:50:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,32 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "mini-scout-wave-ai-commander-factory-ui-pv-runtime",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "sourceScope": [
+        "AI squad caps and role balance",
+        "commander voting, orders, teams and AI delegation",
+        "factory economy and purchase/spawn chain",
+        "UI/dialog/HUD broken-reference audit",
+        "networking/PV hardening follow-up",
+        "server runtime, HC, cleanup, FPS, AFK, MASH and support lifecycle"
+      ],
+      "outputs": [
+        "Spark quota blocked all GPT-5.3-Codex-Spark starts; failed threads were closed",
+        "Six gpt-5.4-mini read-only scouts launched with narrow ownership lanes",
+        "Local orchestration routed salvage payout function-casing into Hardening roadmap and Pending Owner Decisions",
+        "Runtime/HC/supports report was source-checked and server-FPS wording drift was patched in AI-Runtime-HC-Loop-Map and Performance-Opportunity-Sweep",
+        "AI caps re-confirmed the current default-lobby Discord table and follower/group-cap distinction",
+        "UI report added Economy missing control 23006 beside 23004/23005",
+        "PV report sharpened RequestBaseArea and SEND_MESSAGE trust notes",
+        "Factory and commander reports mostly confirmed existing canonical pages",
+        "docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed",
+        "No gameplay source changed"
+      ],
+      "handoff": "Treat raw scout reports as harvested; future agents should use the patched canonical pages and avoid duplicating factory/commander findings already covered there."
+    },
     {
       "lane": "mini-scout-wave-maps-ops-pv-factory-respawn",
       "owner": "Codex/Sub-agents",
