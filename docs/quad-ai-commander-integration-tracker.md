@@ -17,7 +17,7 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 |---|---|---|---|---|
 | 0 Execution substrate | `feat/ai-commander` | current AI commander PR | In progress; partial full-auto evidence | yes, current PR behavior |
 | 1 Structured logs | `codex/ai-commander-logs` | Phase 0 stable | Draft PR #18 open; static surface clean, runtime evidence pending | no |
-| 2 Context/beliefs | `codex/ai-commander-context` | Phase 1 logs | Draft PR #19 open; advisory-only scaffold, synthetic/runtime evidence pending | no |
+| 2 Context/beliefs | `codex/ai-commander-context` | Phase 1 logs | Draft PR #19 open; advisory-only scaffold with manual smoke helper, synthetic/runtime evidence pending | no |
 | 3 Advisory planner | `codex/ai-commander-planner` | Phase 2 beliefs | Spec ready, implementation pending | no by default |
 | 4 Worker biasing | `codex/ai-commander-worker-biasing` | Phase 3 planner | Spec ready, implementation pending | yes, gated |
 
@@ -41,7 +41,7 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 
 ## Next Best Action
 
-Finish Phase 0 smoke-testing on PR #14, then collect Phase 1 log evidence on draft PR #18. Phase 2 draft PR #19 should stay advisory-only and behind those gates.
+Finish Phase 0 smoke-testing on PR #14, then collect Phase 1 log evidence on draft PR #18. Phase 2 draft PR #19 should stay advisory-only and behind those gates, but its manual smoke helper is ready for synthetic context validation once #18 is runnable.
 
 Already noted in PR #14:
 
@@ -87,10 +87,12 @@ PR: #19
 branch: codex/ai-commander-context
 base: codex/ai-commander-logs
 runbook: docs/quad-ai-commander-phase2-implementation-brief.md
+manual smoke: west Call WFBE_SE_FNC_AI_Com_ContextSyntheticSmoke;
 ```
 
 Required Phase 2 proof before it can leave draft:
 
+- manual synthetic helper appends `CONTACT`, `INTEL`, and `LOSS` records through Phase 1 logging
 - synthetic `CONTACT` creates a tracked belief
 - nearby contact merges and raises confidence without exceeding the cap
 - synthetic `INTEL` appears as low-confidence rumor/tracked context
@@ -120,8 +122,8 @@ Required Phase 2 proof before it can leave draft:
 | Handoff smoke | Phase 0 | pending |
 | HQ-down/disabled smoke | Phase 0 | pending |
 | Phase 1 structured log RPT excerpts | Phase 1 | draft implementation open in PR #18; runtime evidence pending |
-| Phase 2 belief merge/decay excerpts | Phase 2 | draft implementation open in PR #19; synthetic/runtime evidence pending |
-| Phase 3 advisory priority excerpts | Phase 3 | pending implementation |
+| Phase 2 belief merge/decay excerpts | Phase 2 | draft implementation open in PR #19 with manual smoke helper; synthetic/runtime evidence pending |
+| Phase 3 advisory priority excerpts | Phase 3 | pending implementation; should wait for Phase 2 smoke evidence |
 | Phase 4 worker biasing advisory-on/off excerpts | Phase 4 | pending implementation |
 
 ## Stop-Go Rules
@@ -135,6 +137,7 @@ Stop and fix before proceeding when:
 - stale priorities keep driving behavior
 - RPT shows undefined variables or nil-code calls
 - repeated waypoint reset loops appear in runtime testing
+- synthetic smoke helpers run automatically in normal gameplay
 
 ## Completion Definition
 
