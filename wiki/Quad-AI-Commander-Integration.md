@@ -19,6 +19,26 @@ That means Quad AI Commander should be added as a planning and context layer abo
 structured logs -> contact beliefs -> planner priorities -> existing team orders -> executor / town worker
 ```
 
+## Current Stack Status
+
+The staged implementation is currently split across these PRs:
+
+```text
+#14 feat/ai-commander
+  -> #18 codex/ai-commander-logs
+      -> #19 codex/ai-commander-context
+```
+
+#14 now includes a Phase 0 static compatibility pass that flattened lazy SQF condition-block patterns in the current AI Commander supervisor and workers. This is compatibility hardening only; it does not replace in-engine runtime proof.
+
+Because #14 moved after #18 was opened, #18 must be refreshed or rebased onto the current #14 head before Phase 1 runtime smoke. #19 should then be refreshed onto the refreshed #18 head before Phase 2 smoke. Keep the order strict:
+
+1. Prove #14 Phase 0 runtime behavior.
+2. Refresh #18 onto current #14.
+3. Prove #18 structured logs.
+4. Refresh #19 onto current #18.
+5. Prove #19 context/beliefs.
+
 ## Suggested Layering
 
 ### 1. Execution Layer
@@ -129,11 +149,13 @@ The lobby parameter defaults the AI commander on. That makes the in-engine hybri
 
 ## Recommended Follow-Up PR
 
-After the current branch is stable, add Quad AI Commander as a separate follow-up PR:
+After the current branch is stable, add Quad AI Commander as staged follow-up PRs:
 
-1. Add structured log append helpers.
-2. Record existing commander lifecycle, order, production, upgrade, and town-assignment events.
-3. Add the per-side context store.
-4. Merge contact/intel logs into beliefs.
-5. Bias town assignment and template selection from beliefs.
-6. Add slow debug summaries so players and developers can understand the AI commander's reasoning.
+1. Refresh `codex/ai-commander-logs` onto current `feat/ai-commander`.
+2. Add and prove structured log append helpers.
+3. Refresh `codex/ai-commander-context` onto the refreshed log branch.
+4. Add and prove the per-side context store.
+5. Merge contact/intel logs into beliefs.
+6. Add advisory planner priorities.
+7. Bias town assignment and template selection from beliefs only after advisory evidence exists and behavior gates are explicit.
+8. Add slow debug summaries so players and developers can understand the AI commander's reasoning.
