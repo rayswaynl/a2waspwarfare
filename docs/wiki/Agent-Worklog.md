@@ -2223,3 +2223,8 @@ Key conclusions:
 - Promoted only source-backed non-duplicate deltas: new [Mission config/version graph](Mission-Config-Version-Include-Graph); generated `version.sqf` map/naval/header contract; stable `AIBuyUnit` as latent and not player-buy parity; branch-local `feat/ai-commander` supervisor with `wfbe_aicom_running` as full-command latch; Help unload and orphan GPS zoom UI routes; unbounded client/HC delegated-group cleanup polls; repeated broad dropped-item cleaner scans; opt-in upstream diagnostics culture.
 - Updated the owning atlas/status pages plus `agent-feature-status.jsonl`. No gameplay source files changed.
 - Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 22 files. Content was pushed as docs `51153bf2` / wiki `152c52d`. No gameplay source changed.
+
+## 2026-06-04T13:00:00+02:00 - Codex - mini scout wave quad AI/support/lifecycle/UI/tooling/upstream launch
+- Steff asked for more Spark scouts. Three GPT-5.3-Codex-Spark starts hit the quota limit until 13:06 and were closed.
+- Launched six `gpt-5.4-mini` read-only fallback scouts: `quad-ai-commander` branch intel, support/RequestSpecial authority, lifecycle/server-loop topology, UI/dialog lifecycle, tooling/release/deploy footguns and upstream/community-dev lessons.
+- Codex remains the local integrator and will promote only source-backed, non-duplicate deltas into the wiki/docs mirror. No gameplay source files changed.

@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T12:55:00+02:00",
+    "generatedAt":  "2026-06-04T13:00:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -20,8 +20,8 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "The mini-scout-wave-config-factory-ui-ai-cleanup-upstream harvest is published, validated and pushed. Content landed as docs 51153bf2 / wiki 152c52d. All scout slots are closed. Promoted non-duplicate deltas for version.sqf terrain/runtime contract, latent AIBuyUnit queue/crew semantics, feat/ai-commander branch-local supervisor semantics, Help/GPS UI cleanup, unbounded delegated-group cleanup polls, dropped-item cleaner broad scans and upstream opt-in diagnostics culture.",
-                                 "nextExpectedOutput":  "Continue the documentation finisher loop with the next bounded source-backed docs item or scout wave Steff requests."
+                                 "currentWork":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked three starts until 13:06, so Codex closed the failed slots and launched six gpt-5.4-mini read-only fallback scouts: quad-ai-commander branch intel, support/RequestSpecial authority, lifecycle/server-loop topology, UI/dialog lifecycle, tooling/release/deploy footguns and upstream/community-dev lessons.",
+                                 "nextExpectedOutput":  "Harvest returned scout reports, promote only source-backed non-duplicate deltas into the wiki/docs mirror, then validate, mirror, commit and push."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -36,13 +36,19 @@
                                   "nextExpectedOutput":  "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
                               },
                    "Sub-agents":  {
-                                      "status":  "closed",
-                                      "currentLane":  "mini-scout-wave-config-factory-ui-ai-cleanup-upstream",
-                                      "currentWork":  "Three GPT-5.3-Codex-Spark starts errored on quota and were closed. Six gpt-5.4-mini fallback scouts returned and were closed: mission config/version includes, cleanup/restorer loops, factory queue internals, commander AI/order chain, UI IDD/menu graph and upstream developer-history lessons. No pending scout output remains from this wave.",
-                                      "nextExpectedOutput":  "No pending scout output remains from this wave."
+                                      "status":  "active",
+                                      "currentLane":  "mini-scout-wave-quad-ai-support-lifecycle-ui-tooling-upstream",
+                                      "currentWork":  "Six gpt-5.4-mini fallback scouts are running after Spark quota blocked three starts: quad-ai-commander branch intel, support/RequestSpecial authority, lifecycle/server-loop topology, UI/dialog lifecycle, tooling/release/deploy footguns and upstream/community-dev lessons.",
+                                      "nextExpectedOutput":  "Return concise source-backed reports with exact source paths, doc pages to update and duplicate confirmations."
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "mini-scout-wave-quad-ai-support-lifecycle-ui-tooling-upstream",
+                            "owner":  "Codex/Sub-agents",
+                            "status":  "active-scouting",
+                            "output":  "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked three starts until 13:06, so Codex closed the failed slots and launched six gpt-5.4-mini read-only fallback scouts: quad-ai-commander branch intel, support/RequestSpecial authority, lifecycle/server-loop topology, UI/dialog lifecycle, tooling/release/deploy footguns and upstream/community-dev lessons. Codex is keeping integration local and will only promote source-backed non-duplicate deltas."
+                        },
                         {
                             "lane":  "mini-scout-wave-config-factory-ui-ai-cleanup-upstream",
                             "owner":  "Codex/Sub-agents",
