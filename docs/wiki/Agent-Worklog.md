@@ -1902,3 +1902,8 @@ Key conclusions:
 - Converted recent source-backed findings into reusable development lessons: server-side spend paths can still have currency tuple bugs, income display is not payout proof, visible UI affordances can be partial/stale, and "HC" must be split into headless-client registration, delegation/client-FPS and Arma High Command UI meanings.
 - Updated [Development lessons learned](Development-Lessons-Learned) and [`agent-development-lessons.jsonl`](agent-development-lessons.jsonl) with exact source anchors and next-action guidance.
 - No gameplay source files changed.
+
+## 2026-06-04T03:01:14+02:00 - Codex - micro-scout status reconciliation
+- Reconciled current coordination state after the previous validated/pushed micro-scout batch: [Progress Dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` no longer show the Spark micro-scout and development-lessons lanes as validation-pending.
+- Validation evidence for that batch was already recorded and pushed: docs mirror commit `9b5bba5e`, wiki commit `dfcd399`, `docs/validate-wiki.ps1` passed, JSON/JSONL parsed, `git diff --check` passed and SHA256 parity passed for 15 mirrored files.
+- No gameplay source files changed.

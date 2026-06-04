@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T02:57:31+02:00",
+  "generatedAt": "2026-06-04T03:01:14+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,9 +22,27 @@
   },
   "activeClaims": [
     {
+      "lane": "micro-scout-status-reconciliation",
+      "owner": "Codex",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Progress-Dashboard.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/agent-events.jsonl"
+      ],
+      "outputs": [
+        "Promoted Spark micro-scout and development-lessons lanes from published-pending-validation to published-validated",
+        "Recorded validation evidence from docs mirror commit 9b5bba5e and wiki commit dfcd399",
+        "No gameplay source changed"
+      ],
+      "handoff": "Future agents can treat the micro-scout and lessons harvest as validated/pushed. Continue with a new bounded source-backed docs gap."
+    },
+    {
       "lane": "spark-micro-scout-wave-authority-ui-hc-factory",
       "owner": "Codex/Sub-agents",
-      "status": "published-pending-validation",
+      "status": "published-validated",
       "sourceScope": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestBuildUnit.sqf",
@@ -43,7 +61,7 @@
         "Harvested factory queue debit/refund, upgrade tuple semantics, commander task/vote UI and HC/delegation terminology",
         "Updated canonical wiki pages plus agent-feature-status.jsonl and agent-hardening-backlog.jsonl"
       ],
-      "handoff": "Validate this harvest before marking published-validated. Future Spark scouts should use the same file-family scoped pattern with capped output."
+      "handoff": "This harvest is validated and pushed. Future Spark scouts should use the same file-family scoped pattern with capped output."
     },
     {
       "lane": "spark-scout-wave-server-economy-ui-pv-ai",
@@ -69,7 +87,7 @@
     {
       "lane": "development-lessons-authority-ui-hc-harvest",
       "owner": "Codex",
-      "status": "published-pending-validation",
+      "status": "published-validated",
       "sourceScope": [
         "docs/wiki/Development-Lessons-Learned.md",
         "docs/wiki/agent-development-lessons.jsonl",
@@ -85,7 +103,7 @@
         "Added lessons for currency tuple order, income display/runtime split, partial UI affordances and HC terminology separation",
         "Added matching machine-readable lesson records"
       ],
-      "handoff": "Validate docs/wiki links, JSON/JSONL parsing and mirror parity before marking this lane published-validated."
+      "handoff": "Lessons harvest is validated and pushed with the micro-scout batch; future agents should append new lessons only when a reusable rule is source-backed."
     },
     {
       "lane": "buymenu-easa-qol-branch-deep-audit",
