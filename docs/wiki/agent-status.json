@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T11:35:00+02:00",
+    "generatedAt":  "2026-06-04T11:46:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -20,8 +20,8 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Latest scout harvest is published/validated/pushed as docs 1b13e170 / wiki 74337ac. Current finisher pass sharpened MHQ repair authority with server-side mutex/race requirements in the authority map and backlog.",
-                                 "nextExpectedOutput":  "Continue the documentation finisher loop with the next bounded source-backed docs item."
+                                 "currentWork":  "Current finisher pass source-checked and routed the non-ICBM RequestSpecial support-effects authority lane through Pending Owner Decisions, Feature Status, Server Authority and the hardening backlog. A fresh mini-scout wave is active after Spark quota blocked the first two starts; construction/base output has returned and is queued for duplicate-aware harvest.",
+                                 "nextExpectedOutput":  "Validate, push this RequestSpecial support-routing batch, then harvest the returned scout reports into canonical pages without duplicating existing authority rows."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -36,13 +36,19 @@
                                   "nextExpectedOutput":  "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
                               },
                    "Sub-agents":  {
-                                      "status":  "closed",
-                                      "currentLane":  "closed-scout-waves",
-                                      "currentWork":  "No pending scout output remains. The latest six-scout fallback wave was harvested, validated and pushed; current work is local documentation-finisher authority/status refresh.",
-                                      "nextExpectedOutput":  "No pending scout output remains from this batch."
+                                      "status":  "active",
+                                      "currentLane":  "mini-scout-wave-requestspecial-economy-construction-ui-tooling-abandoned",
+                                      "currentWork":  "Spark quota blocked the first two requested scout starts, so Codex launched gpt-5.4-mini read-only scouts for Request/PV authority, economy/AI capacity, construction/MHQ/base, UI/HUD/dialogs, tooling/integrations and abandoned/partial features. Construction/base scout output has returned; other scouts are still running or pending harvest.",
+                                      "nextExpectedOutput":  "Codex should harvest returned scout reports into Feature Status, Server Authority, Code Atlas or backlog only when they add non-duplicate source-backed deltas."
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "requestspecial-non-icbm-support-effects-route",
+                            "owner":  "Codex",
+                            "status":  "published-validated",
+                            "output":  "Source-checked non-ICBM RequestSpecial support effects and split them from the P0 ICBM authority playbook in Pending Owner Decisions, Feature Status, Server Authority Migration Map and agent-hardening-backlog.jsonl. Evidence: Tactical UI local gates/debits for paratroops, para-ammo and para-vehicle; old UAV local spawn/debit; Server_HandleSpecial trust of payload side/destination/team/object state for support spawns, supply-truck forced respawn, UAV cleanup and camp repair. docs/validate-wiki.ps1, JSONL parsing, git diff --check and mirror parity passed. No gameplay source changed."
+                        },
                         {
                             "lane":  "mhq-repair-authority-mutex-routing",
                             "owner":  "Codex",

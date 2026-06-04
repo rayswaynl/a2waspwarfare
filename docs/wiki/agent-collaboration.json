@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T11:35:00+02:00",
+    "generatedAt":  "2026-06-04T11:46:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,26 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "requestspecial-non-icbm-support-effects-route",
+                             "owner":  "Codex",
+                             "status":  "published-validated",
+                             "sourceScope":  [
+                                                 "Client/GUI/GUI_Menu_Tactical.sqf:262-276",
+                                                 "Client/GUI/GUI_Menu_Tactical.sqf:371-373",
+                                                 "Client/GUI/GUI_Menu_Tactical.sqf:513-527",
+                                                 "Client/Module/UAV/uav.sqf:27-52",
+                                                 "Server/Functions/Server_HandleSpecial.sqf:43-64",
+                                                 "Server/Functions/Server_HandleSpecial.sqf:147-170"
+                                             ],
+                             "outputs":  [
+                                             "Pending Owner Decisions now has a non-ICBM RequestSpecial support-effects owner row.",
+                                             "Feature Status now lists non-ICBM support effects separately from the critical ICBM/nuke row.",
+                                             "Server Authority Migration Map and agent-hardening-backlog.jsonl now require server-side requester, side, role, funds, cooldown, upgrade, object and position re-derivation for these tags.",
+                                             "No gameplay source changed."
+                                         ],
+                             "handoff":  "Future support hardening should keep paratroops/para-ammo/para-vehicle/UAV/RespawnST/repair-camp separate from the P0 ICBM playbook, then smoke valid flows and forged wrong-side/insufficient-funds/invalid-object payloads."
+                         },
                          {
                              "lane":  "mhq-repair-authority-mutex-routing",
                              "owner":  "Codex",

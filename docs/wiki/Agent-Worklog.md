@@ -2103,6 +2103,12 @@ Key conclusions:
 
 ## 2026-06-04T02:47:27+02:00 - Codex - Spark micro-scout wave relaunch
 - Broad Spark scouts for economy, networking, UI and construction proved too wide for this repo and several failed during remote compacting with context-window errors.
+## 2026-06-04T11:46:00+02:00 - Codex - RequestSpecial non-ICBM support authority route
+- Source-checked the non-ICBM `RequestSpecial` support-effects lane after the Spark quota fallback scout launch.
+- Evidence checked: `Client/GUI/GUI_Menu_Tactical.sqf:262-276,371-373,513-527`, `Client/Module/UAV/uav.sqf:27-52` and `Server/Functions/Server_HandleSpecial.sqf:43-64,147-170`.
+- Updated [Pending owner decisions](Pending-Owner-Decisions), [Feature status](Feature-Status-Register), [Server authority migration map](Server-Authority-Migration-Map), `agent-hardening-backlog.jsonl`, [Progress Dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl` so non-ICBM support effects are routed separately from the P0 ICBM playbook.
+- The current mini-scout wave remains active; the construction/base scout returned and is queued for duplicate-aware harvest. No gameplay source files changed.
+
 - Closed failed lanes and relaunched a narrower GPT-5.3-Codex-Spark micro-wave: factory queue debit/refund behavior, upgrade cost tuple semantics, commander task/vote UI wiring and HC/delegation terminology.
 - Lesson for future orchestration: Spark scouts should be file-family scoped with explicit output caps, not whole-subsystem indexing prompts. No gameplay source files changed.
 
