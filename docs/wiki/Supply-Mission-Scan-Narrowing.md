@@ -4,7 +4,7 @@ This page records the branch-local source patch for the `supply-mission-scan-nar
 
 ## Status
 
-`origin/master` is still broad-scan (`supplyMissionStarted.sqf:24-28` uses `nearestObjects [..., [], 80]`). This docs branch narrows the scan at `:24-28`, and `origin/release/2026-06-feature-bundle` carries a PR #1-compatible narrowed scan at `:46-53` with heli-aware radius logic. Hosted/dedicated Arma 2 OA smoke is still pending.
+`origin/master` is still broad-scan (`supplyMissionStarted.sqf:24-28` uses `nearestObjects [..., [], 80]`). This docs branch narrows the scan at `:24-28`, and `origin/release/2026-06-feature-bundle` carries a PR #1-compatible narrowed scan at `:50-56` with heli-aware radius logic. Hosted/dedicated Arma 2 OA smoke is still pending.
 
 ## What I Read
 
@@ -61,7 +61,7 @@ Source/Vanilla checks completed:
 
 - This docs branch's source Chernarus has zero 80-meter broad command-center scans and one narrowed `["Base_WarfareBUAVterminal"]` 80-meter scan.
 - Maintained Vanilla Takistan contains the same narrowed 80-meter command-center scan after the 2026-06-02 propagation run.
-- `origin/master` still has the broad command-center scan at `supplyMissionStarted.sqf:24-28`; `origin/release/2026-06-feature-bundle` has the narrowed PR #1-compatible scan at `:46-53`.
+- `origin/master` still has the broad command-center scan at `supplyMissionStarted.sqf:24-28`; `origin/release/2026-06-feature-bundle` has the narrowed PR #1-compatible scan at `:50-56`.
 - Source Chernarus still has the 8-meter broad nearby-player scan.
 - `git diff --check` passed.
 - `Tools/LoadoutManager` generation/copy now works from this checkout by detecting repo-root markers; set `A2WASP_SKIP_ZIP=1` for propagation-only runs.

@@ -61,6 +61,12 @@ The current source still has active callers for several thin handlers:
 
 Development rule: after the PVF dispatcher patch, claim "dispatcher RCE closed" only. Handler authority needs a second pass per effect: requester, side, object, role, range, funds/supply, idempotency and payload-shape validation. Use [Server authority migration map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) as the work queue.
 
+## Lesson 3B: Branch-Scoped Fix Evidence Beats Generic "Shipped" Claims
+
+Supply mission scan narrowing is a good branch-scope trap. Current docs/source Chernarus and maintained Vanilla use the narrowed truck scan (`supplyMissionStarted.sqf:25-28`), `origin/master` still uses the older broad command-center scan, `origin/feat/supply-helicopter` head `262dc431` adds `SupplyByHeli` but does not clear it on completion, and `origin/release/2026-06-feature-bundle` head `a9219d88` has the heli-aware scan at `supplyMissionStarted.sqf:50-56` plus `SupplyByHeli` cleanup after release commit `4cf443fe`.
+
+Development rule: when a docs page says "fixed", "shipped", "current" or "propagated", record which branch proves it. Use `origin/master`, docs/source Chernarus, maintained Vanilla, feature branch and release branch as separate evidence buckets. Do not convert a release-branch fix into a stable-master claim, and do not leave older "still open" remediation steps below a newer branch-scoped update banner.
+
 ## Lesson 4: Cleanup Loops Are Server-Owned But Some Inputs Are Client-Replicated
 
 The server starts the garbage collector, empty-vehicle collector, dropped-item cleaner, crater cleaner, ruins cleaner, building restorer and mine cleaner after init (`Server/Init/Init_Server.sqf:521-560`). Several loops run frequently or over broad areas:

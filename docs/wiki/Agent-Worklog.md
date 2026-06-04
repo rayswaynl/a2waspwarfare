@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-04T08:05:00+02:00 - Codex - supply authority branch-scope correction
+
+- Continued the documentation finisher loop into a supply-mission status-drift lead from the worklog.
+- Source-checked current docs/source Chernarus: `supplyMissionStarted.sqf:25-28` already uses the narrowed `["Base_WarfareBUAVterminal"]` 80 m command-center scan, while `supplyMissionCompleted.sqf:27-28` clears only `SupplyAmount`/`SupplyFromTown` because the current source is truck-only.
+- Source-checked branch evidence: `origin/master` still has the broad `nearestObjects [..., [], 80]` command-center scan; `origin/feat/supply-helicopter` head `262dc431` adds `SupplyByHeli` but still does not clear it on completion; `origin/release/2026-06-feature-bundle` head `a9219d88` has the heli-aware `supplyMissionStarted.sqf:50-56` scan and clears `SupplyByHeli` after release commit `4cf443fe`.
+- Updated [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) so the current-status, findings and implementation steps no longer say scan narrowing is still open everywhere, and so the dead-twin/removal claim is branch-scoped. Updated [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) release line refs from `:46-53` to `:50-56`.
+- Documentation only; no gameplay source files were edited.
+
 ## 2026-06-04T07:34:37+02:00 - Codex - static-defense HC payload-shape lesson and scout wave
 
 - Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota was exhausted until 07:36, so Codex closed the errored Spark threads and launched four `gpt-5.4-mini` read-only scouts for static-defense HC, economy/supply/town capture, UI/HUD/dialogs and networking/PV/security.

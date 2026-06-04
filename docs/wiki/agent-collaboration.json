@@ -1,6 +1,6 @@
-{
+﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T07:41:54+02:00",
+    "generatedAt":  "2026-06-04T08:05:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,25 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "supply-authority-branch-scope-correction",
+                             "owner":  "Codex",
+                             "status":  "published-validating",
+                             "sourceScope":  [
+                                                 "docs/source Chernarus supplyMissionStarted.sqf:25-28",
+                                                 "docs/source Chernarus supplyMissionCompleted.sqf:27-28",
+                                                 "origin/master supplyMissionStarted.sqf broad nearestObjects scan",
+                                                 "origin/feat/supply-helicopter head 262dc431 SupplyByHeli completion cleanup gap",
+                                                 "origin/release/2026-06-feature-bundle head a9219d88 heli-aware scan and SupplyByHeli cleanup"
+                                             ],
+                             "outputs":  [
+                                             "Corrected Supply-Mission-Authority-Cleanup-Playbook branch-scope wording for scan narrowing, dead twin removal and SupplyByHeli cleanup.",
+                                             "Corrected Supply-Mission-Scan-Narrowing release line refs from :46-53 to :50-56.",
+                                             "Added Development Lessons rule for branch-scoped fix evidence.",
+                                             "Documentation only; no gameplay source changed."
+                                         ],
+                             "handoff":  "Future agents should keep supply fixes separated by origin/master, docs/source Chernarus, maintained Vanilla, origin/feat/supply-helicopter and origin/release/2026-06-feature-bundle. Do not call release-only fixes shipped on stable master."
+                         },
                          {
                              "lane":  "mini-scout-wave-static-supply-ui-pv",
                              "owner":  "Codex/Sub-agents",

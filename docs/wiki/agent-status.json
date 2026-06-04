@@ -1,6 +1,6 @@
-{
+﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T07:41:54+02:00",
+    "generatedAt":  "2026-06-04T08:05:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -20,8 +20,8 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Harvested four mini scouts after Spark quota blocked GPT-5.3-Codex-Spark starts. Published source-backed static-defense HC payload-shape warning and ATTACK_WAVE_DETAILS server self-loop wording; UI and supply scouts confirmed existing canonical pages.",
-                                 "nextExpectedOutput":  "Continue the documentation finisher loop with the next source-backed gap or launch Spark scouts after quota resets."
+                                 "currentWork":  "Published a supply authority branch-scope correction: docs/source Chernarus is truck-only with narrowed 80 m scan; origin/master remains broad; origin/feat/supply-helicopter head 262dc431 adds SupplyByHeli but does not clear it; origin/release/2026-06-feature-bundle head a9219d88 has heli-aware scan and SupplyByHeli cleanup.",
+                                 "nextExpectedOutput":  "Continue the documentation finisher loop with the next source-backed status drift or owner-decision routing gap."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -43,6 +43,12 @@
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "supply-authority-branch-scope-correction",
+                            "owner":  "Codex",
+                            "status":  "published-validating",
+                            "output":  "Source-checked supply mission branch status and corrected Supply-Mission-Authority-Cleanup-Playbook plus Supply-Mission-Scan-Narrowing. Current docs/source Chernarus has the narrowed truck scan at supplyMissionStarted.sqf:25-28; origin/master remains broad; origin/feat/supply-helicopter head 262dc431 adds SupplyByHeli but does not clear it on completion; origin/release/2026-06-feature-bundle head a9219d88 has heli-aware scan at :50-56 and clears SupplyByHeli after commit 4cf443fe. No gameplay source changed."
+                        },
                         {
                             "lane":  "mini-scout-wave-static-supply-ui-pv",
                             "owner":  "Codex/Sub-agents",

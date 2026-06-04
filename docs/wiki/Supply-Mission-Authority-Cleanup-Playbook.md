@@ -6,7 +6,7 @@ Scope: patch source Chernarus first, then propagate generated missions with `Too
 
 Upstream-history companion: [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) documents the PR #10 -> #11 -> #12 supply-run sequence: remote activation exploit fix, too-far feedback, then JIP notification regression fix. The deeper history pass also found supply-performance reverts (`7bc4b7ac` -> `3c2efb8a`, `008ac5aa` -> `33fb2676`) where server-side optimization used the wrong object context. Keep both sequences in mind when changing supply mission start/reward behavior.
 
-> **✅ UPDATE 2026-06-03 (Claude): several items below are now DONE** (release `4cf443fe`): (1) cooldown casing standardized on `LastSupplyMissionRun` — `Init_Town.sqf` now seeds the correct key (XR4 / DR-18); (2) dead twin `supplyMissionActive.sqf` **removed** (plus `checkCCProximity.sqf`); (3) the command-center scan is **already narrowed** (class-filtered + heli 400 m / truck 80 m + heli 2D gate, `supplyMissionStarted.sqf:48-56`); (4) `SupplyByHeli` is now **cleared on completion** (XR3). **Still open:** server-owned mission state, `Killed`-handler idempotency, duplicate-start guard (XR6), server-side cargo validation, friendly-side check on the delivery CC (XR15).
+> **Branch-scope update (2026-06-04): do not collapse the supply branches.** Current docs/source Chernarus is still truck-only but has the narrowed 80 m command-center scan (`supplyMissionStarted.sqf:25-28`). `origin/master` remains broad. `origin/feat/supply-helicopter` head `262dc431` adds the heli path but still clears only `SupplyAmount`/`SupplyFromTown` on completion. `origin/release/2026-06-feature-bundle` contains release commit `4cf443fe` and later head `a9219d88`: cooldown casing is standardized, `supplyMissionActive.sqf`/`checkCCProximity.sqf` are removed, the command-center scan is heli-aware (`supplyMissionStarted.sqf:50-56`, truck 80 m / heli 400 m with 2D gate), and `SupplyByHeli` is cleared on completion. **Still open across public-baseline hardening:** server-owned mission state, duplicate-start guard (XR6), server-side cargo validation, friendly-side check on the delivery CC (XR15), and runtime smoke for repeated load/deliver/destroy cycles.
 
 ## Current Status
 
@@ -15,9 +15,9 @@ Upstream-history companion: [Developer history and upstream lessons](Developer-H
 | Truck supply mission map | Working but risky | Server tracks return-to-base, but start cargo facts are client-stamped. |
 | Supply helicopter extension | Partial / owner-risk | Additive feature shape needs loaded-state and `Killed` handler cleanup before public baseline. |
 | Cooldown model | Partial | Pull-based JIP query is useful, but casing and start-time race need cleanup. |
-| Dead twin script | ✅ Removed 2026-06-03 | `supplyMissionActive.sqf` deleted + its `Init_Server.sqf` compile removed (release `4cf443fe`). |
+| Dead twin script | Branch-scoped | Still present/compiled in current docs/source; removed on `origin/release/2026-06-feature-bundle` by `4cf443fe`. Do not patch it as the live handler. |
 | Authority posture | Open hardening | A small server-owned mission record can improve integrity without redesigning all economy flows. |
-| Command-center scan narrowing | ✅ Shipped | `supplyMissionStarted.sqf:56` is class-filtered (`["Base_WarfareBUAVterminal"]`), heli 400 m / truck 80 m, + heli 2D gate at `:48-54`. |
+| Command-center scan narrowing | Branch-scoped done / smoke pending | Current docs/source has the truck-only narrowed scan at `supplyMissionStarted.sqf:25-28`; release head `a9219d88` has heli-aware radius and 2D gate at `:50-56`; `origin/master` remains broad. |
 
 ## Current Flow
 
@@ -32,14 +32,14 @@ Upstream-history companion: [Developer history and upstream lessons](Developer-H
 | Finding | Evidence | Why it matters |
 | --- | --- | --- |
 | Client-stamped cargo remains authority-bearing. | `supplyMissionStart.sqf` stamps object vars; `supplyMissionCompleted.sqf` reads them for reward. | Forged or stale values can influence reward unless the server owns accepted mission state. |
-| `Killed` handler can stack on reused vehicles. | `supplyMissionStarted.sqf` adds a handler on each start with no proven guard/removal. | Future side effects can multiply; owner should enforce one loaded/tracking handler. |
+| `Killed` handler lifecycle still needs a public-baseline decision. | Current docs/source truck flow has no interdiction `Killed` handler; PR/release heli code guards attachment with `wfbe_supply_killed_eh_set`, but no handler-ID removal/re-arm policy is documented. | The old "stacked handler" claim is stale for current PR/release code; keep repeated load/deliver/destroy smoke and decide whether persistent guard state is intended. |
 | Duplicate starts are not explicitly guarded. | Start and tracking scripts can be reached again for a reused/rapidly reloaded vehicle. | Parallel loops and repeated handlers can appear without server-owned state. |
 | Cooldown key casing is inconsistent. | ✅ FIXED 2026-06-03 (release `4cf443fe`): `Init_Town.sqf` now seeds `LastSupplyMissionRun` to match the server read/write key. | Was: town init seeded lowercase `lastSupplyMissionRun` so the first cooldown check read nil. |
 | Start flow races the cooldown response. | Client requests cooldown and immediately reads local cache. | Keep JIP pull model, but make server start the authority decision. |
 | Older performance attempts regressed authority context. | `7bc4b7ac` reverted by `3c2efb8a`; `008ac5aa` reverted by `33fb2676`; upstream history notes server supply logic checking `getPos player` rather than the truck position. | Performance changes must use authoritative mission objects and dedicated-server/JIP smoke, not implicit client globals. |
 | Client notification/action guards have JIP history. | PR #12 / `b76f9645` fixed a "too far" notification firing during JIP/non-truck contexts. | Snapshot `cursorTarget`, type-check before distance messages and gate feedback on actual player action. |
-| Command-center scan is broader than needed. | Current source still scans all classes in 80m, then filters `Base_WarfareBUAVterminal`; the 8m nearby-player/object scan remains intentionally broad. | Low-risk performance cleanup remains open. |
-| `supplyMissionActive.sqf` is a dead twin. | Compiled in server init, but no static caller found. | Future owners should not patch the wrong script as the live path. |
+| Command-center scan status is branch-scoped, not open everywhere. | Current docs/source uses `nearestObjects [..., ["Base_WarfareBUAVterminal"], 80]` at `supplyMissionStarted.sqf:28`; release head uses `["Base_WarfareBUAVterminal"]` plus heli 400/truck 80 and 2D heli gate at `:50-56`; `origin/master` remains broad. The 8 m nearby-player/object scan remains intentionally broad. | Do not re-open scan narrowing for docs/source/release; keep the smoke gate and preserve the class-filtered terminal scan during authority rewrites. |
+| `supplyMissionActive.sqf` is a dead twin in current docs/source, removed in release. | Current docs/source compiles it as `WFBE_SE_FNC_SupplyMissionActive`, but the live start path is `supplyMissionStarted.sqf`; release `4cf443fe` deletes the twin and `checkCCProximity.sqf`. | Future owners should not patch the wrong script as the live path; either retire it in the source baseline or keep it clearly marked as dead until release is merged. |
 
 ## Safe Implementation Shape
 
@@ -48,14 +48,14 @@ Upstream-history companion: [Developer history and upstream lessons](Developer-H
 3. Standardize cooldown casing, preferably around the live server read/write key `LastSupplyMissionRun`, and seed the same key in town init.
 4. Recompute or validate cargo on the server: requester side, friendly source town, range, vehicle class, upgrade gate and amount.
 5. Preserve intended PR #1 semantics unless the owner asks for a design change: truck/light heli side supply, heavy heli upgrade-3 cash run, no-commander fallback and one-time interdiction reward.
-6. Narrow the command-center scan in source Chernarus, then propagate generated Vanilla Takistan. Keep the 8m nearby-player/object scan broad unless runtime evidence says otherwise.
-7. Retire or explicitly mark `supplyMissionActive.sqf` as dead twin so future agents do not patch it.
+6. Preserve the narrowed command-center scan already present in docs/source/release; do not regress to `nearestObjects [..., [], radius]` for the terminal search. Keep the 8 m nearby-player/object scan broad unless runtime evidence says otherwise.
+7. Retire or explicitly mark `supplyMissionActive.sqf` as dead twin in the current source baseline; release `4cf443fe` already removed it.
 
 ## Validation Plan
 
 | Gate | Checks |
 | --- | --- |
-| Source-only | Start handler owns accept/reject; repeated starts cannot stack loops or handlers; cooldown key is consistent; command-center scan is narrowed only for the 80m terminal search. |
+| Source-only | Start handler owns accept/reject; repeated starts cannot stack loops or handlers; cooldown key is consistent; command-center scan stays narrowed only for the terminal search. |
 | Hosted/dedicated smoke | Truck mission loads, delivers and rewards once; cooldown rejection works; reused truck does not duplicate delivery or handlers. |
 | Helicopter smoke | Supply helicopter class/upgrade gates work; heavy-heli cash run and no-commander fallback behave as intended. |
 | JIP/disconnect/HC | Confirm in OA smoke that JIP cooldown display remains correct, starter disconnect does not orphan loaded state, and HC presence does not change server/client supply flow. |
