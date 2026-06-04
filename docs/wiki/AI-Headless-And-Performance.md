@@ -20,6 +20,8 @@ Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-2
 
 Terminology warning: current docs use "HC" for headless-client delegation, but the source also contains a separate Arma high-command UI path. `Client/FSM/updateavailableactions.fsm:47` initializes `_hc_enabled = false`, and the only `HCSetGroup` add path is gated by that flag at `:115-117`; no current source assignment was found that flips it true. Cleanup still removes high-command groups when commander state changes (`Client/FSM/updateclient.sqf:204,228`). Do not confuse this inert high-command UI ownership path with live headless-client AI creation/delegation.
 
+HC timing caveat: the headless-client entry point currently sleeps for a fixed 20 seconds and then sends `["RequestSpecial", ["connected-hc", player]]` (`Headless/Init/Init_HC.sqf:12-15`). The server only sets `serverInitFull = true` later in `Server/Init/Init_Server.sqf:507`, so HC registration is not protected by a real full-server barrier. Treat HC startup bugs as lifecycle issues too; the canonical wait-chain view is [Lifecycle wait-chain](Lifecycle-Wait-Chain).
+
 Boyle's second-pass autonomy review clarified the split between real AI plumbing and missing autonomy:
 
 | Area | Source status | Notes |

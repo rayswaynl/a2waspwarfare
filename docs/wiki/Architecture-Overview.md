@@ -12,6 +12,8 @@ The repository is an Arma 2 OA Warfare/CTI mission derived from Benny's Warfare 
 - `Headless`: detection and initialization for headless clients. The mission disables headless delegation when the OA build is too old.
 - `WASP`: older/custom gameplay layer with MHQ repair, RPG dropping, base repair and marker monitor scripts. Some of it is still present but one old init block is commented out.
 
+Partition caveat: `Common/Init/Init_Common.sqf` is mostly shared, but it also contains server-only compile/setup branches guarded by `isServer` around `:301-307`. Do not treat `Common` as purely client-safe shared code when moving compile registrations; confirm the branch owner first.
+
 ## Source Mission Versus Generated Missions
 
 `Missions/[55-2hc]warfarev2_073v48co.chernarus` is the authoritative mission folder. The Takistan vanilla folder and modded mission folders are copy/generation outputs. The repo instructions say mission edits should be made in Chernarus, then copied with `Tools/LoadoutManager` via `dotnet run`.
@@ -27,6 +29,12 @@ The repository is an Arma 2 OA Warfare/CTI mission derived from Benny's Warfare 
 - starts `Server/Init/Init_Server.sqf` on server/host;
 - starts `Client/Init/Init_Client.sqf` on clients after side logic is ready;
 - starts `Headless/Init/Init_HC.sqf` on headless clients.
+
+Boot fragility callouts:
+
+- Headless init currently uses `Headless/Init/Init_HC.sqf:12` `sleep 20` and announces `connected-hc` at `:15`; it does not wait on `serverInitFull` from `Server/Init/Init_Server.sqf:507`. Treat this as a timing proxy, not a dependency barrier.
+- Client/JIP startup waits for replicated globals such as `townInit`, `wfbe_structures`, `wfbe_commander`, `wfbe_radio_hq`, `wfbe_startpos`, `wfbe_hq_deployed` and `wfbe_votetime` without timeout/retry fallbacks. The canonical wait graph lives in [Lifecycle wait-chain](Lifecycle-Wait-Chain).
+- Server init still has duplicate/legacy compile registrations in the early compile block. Keep init hygiene notes in [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) and [SQF code atlas](SQF-Code-Atlas) close to any compile refactor.
 
 ## Data Flow At A Glance
 

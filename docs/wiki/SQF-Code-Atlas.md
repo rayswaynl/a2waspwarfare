@@ -77,6 +77,31 @@ Top source registrars:
 
 ## Init Owners
 
+### Init Graph By Owner
+
+This is the compact owner-order map. Use it for orientation, then use [Lifecycle wait-chain](Lifecycle-Wait-Chain) for the exact `waitUntil` dependencies.
+
+```mermaid
+flowchart TD
+    Boot["initJIPCompatible.sqf"] --> Params["Init_Parameters.sqf / Init_CommonConstants.sqf"]
+    Params --> Common["Common/Init/Init_Common.sqf"]
+    Params --> TownObjects["mission.sqm town init fields"]
+    Common --> Server["Server/Init/Init_Server.sqf"]
+    Common --> Client["Client/Init/Init_Client.sqf"]
+    Common --> HC["Headless/Init/Init_HC.sqf"]
+    Server --> Full["serverInitFull / long server loops"]
+    Client --> JIP["JIP replicated-state waits"]
+    HC --> Connected["RequestSpecial connected-hc"]
+```
+
+Owner caveats:
+
+- `initJIPCompatible.sqf:52-56` detects roles and `:214-238` dispatches Common, Server, Client and HC owners.
+- `Common/Init/Init_Common.sqf` is shared but not owner-pure; the `isServer` branch around `:301-307` means some server-only setup lives in the common init file.
+- `Common/Init/Init_Common.sqf:370-371` sets common completion flags that later server/client waits assume.
+- `Headless/Init/Init_HC.sqf:12-15` announces HC after a fixed sleep, not an explicit `serverInitFull` wait.
+- `Server/Init/Init_Server.sqf:64-65` and `:88-91` show duplicate/legacy compile assignments; keep compile cleanup separate from behavior patches unless smoke covers the touched function.
+
 ### `initJIPCompatible.sqf`
 
 Early bootstrap compiles the log function first, checks headless-client identity, prepares server connect/disconnect callbacks, then compiles MP parameters and common constants. This file is the role router; use [Lifecycle wait-chain reference](Lifecycle-Wait-Chain#machine-role-truth-table) for the canonical role truth table and [Lifecycle wait-chain reference](Lifecycle-Wait-Chain#branch-dispatch-in-initjipcompatiblesqf) for branch ordering.
@@ -218,10 +243,10 @@ High-signal disabled/deferred compile lines:
 | `Server/AI/AI_UpdateSupplyTruck.sqf` | `Server/FSM/supplytruck.fsm` | The target FSM is missing; only client FSM files exist. |
 | `Client/Init/Init_Client.sqf` | `Client/Functions/Client_TaskSystem.sqf` | `TaskSystem` compile line is commented. |
 | `Client/Init/Init_Client.sqf` | `Client/Module/MASH/receiverMASHmarker.sqf` | Receiver compile line is commented. |
-| `Client/Init/Init_Client.sqf` | `Client/Functions/Client_BlinkMapIcons.sqf` | Old full-map icon blinking compile line is commented; guarded per-unit blinking remains. |
-| `Client/Init/Init_Client.sqf` | `Client/Functions/Client_AddUnitToTrack.sqf` | Old unit tracking compile line is commented. |
-| `Common/Init/Init_Common.sqf` | `Common/Functions/Common_HandleATReloadVehicle.sqf` | Compile line is commented. |
-| `Common/Init/Init_Common.sqf` | `Common/Functions/Common_HandleBombs.sqf` | Compile line is commented while newer bomb/missile handlers remain. |
+| `Client/Init/Init_Client.sqf` | `Client/Functions/Client_BlinkMapIcons.sqf` | Old full-map icon blinking compile and exec lines are commented; target file is absent; guarded per-unit blinking remains. |
+| `Client/Init/Init_Client.sqf` | `Client/Functions/Client_AddUnitToTrack.sqf` | Old unit-tracking compile line is commented; target file is absent. |
+| `Common/Init/Init_Common.sqf` | `Common/Functions/Common_HandleATReloadVehicle.sqf` | Compile line is commented; target file still exists, so this is dormant revive/archive work rather than a missing-file error. |
+| `Common/Init/Init_Common.sqf` | `Common/Functions/Common_HandleBombs.sqf` | Compile line is commented; target file is absent while newer bomb/missile handlers remain. |
 | `Server/Init/Init_Server.sqf` | `Server/Module/serverFPS/monitorServerFPS.sqf` | Compile line is commented twice; server FPS is still executed directly elsewhere. |
 
 ## FSM Inventory

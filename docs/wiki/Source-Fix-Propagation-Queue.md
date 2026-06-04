@@ -11,9 +11,12 @@ All source paths are relative to the repo root.
 1. The Chernarus source patch is present.
 2. LoadoutManager propagation has run.
 3. Generated diffs are inspected.
-4. Relevant Arma 2 OA smoke is recorded.
+4. Every claimed mission root has its generated `version.sqf` present and terrain-correct.
+5. Relevant Arma 2 OA smoke is recorded.
 
 LoadoutManager root discovery now supports both the old ancestor-folder rule and normal repo checkouts: `Tools/LoadoutManager/FileManagement/FileManager.cs` accepts either an ancestor folder named `a2waspwarfare` or a root containing `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`. Packaging can be skipped for propagation-only runs with `A2WASP_SKIP_ZIP=1`; see [Tools/build workflow](Tools-And-Build-Workflow).
+
+Generated input gate: `version.sqf` is required boot input, not tracked source. It is ignored by `.gitignore`, included by `description.ext:39` and `initJIPCompatible.sqf:4`, and consumed by `Rsc/Header.hpp:5,9,21`. Before calling any propagated fix release-ready, verify source Chernarus and maintained Vanilla Takistan both have generated `version.sqf` files with the expected `WF_MAXPLAYERS`, `WF_MISSIONNAME`, `WF_RESPAWNDELAY`, map flags and release/debug defines. The compact agent-readable rule lives in [`agent-release-readiness.json`](agent-release-readiness.json) under `versionSqfGeneratedInput`.
 
 ## Latest Propagation Run
 
@@ -77,9 +80,10 @@ These have source-backed playbooks but are not current code fixes yet. Do not mi
 3. Run `dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj` from the repo root, or `dotnet run` from `Tools/LoadoutManager`.
 4. Inspect `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` diffs for the intended source fixes.
 5. Treat `The specified content was not found in the file.` from `ReplaceGUIMenuHelp` as a non-fatal warning unless a future diff shows help-menu title replacement was expected for that terrain.
-6. Do not claim `Modded_Missions/*` propagation; current tooling does not actively maintain those folders. A 2026-06-03 scout confirmed all tracked modded folders lack generated `version.sqf`, several lack core bootstrap files, and 18 Napf/Eden/Lingor files contain unresolved conflict markers.
-7. Run or record the relevant smoke from [Testing workflow](Testing-Debugging-And-Release-Workflow), especially the [propagated fix smoke pack](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack).
-8. Update this page, [Progress dashboard](Progress-Dashboard), [`agent-release-readiness.json`](agent-release-readiness.json), [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) and [`agent-knowledge.jsonl`](agent-knowledge.jsonl).
+6. Verify generated `version.sqf` exists and matches the intended target root before pack/test/release claims; use `agent-release-readiness.json` `versionSqfGeneratedInput` as the machine checklist.
+7. Do not claim `Modded_Missions/*` propagation; current tooling does not actively maintain those folders. A 2026-06-03 scout confirmed all tracked modded folders lack generated `version.sqf`, several lack core bootstrap files, and 18 Napf/Eden/Lingor files contain unresolved conflict markers.
+8. Run or record the relevant smoke from [Testing workflow](Testing-Debugging-And-Release-Workflow), especially the [propagated fix smoke pack](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack).
+9. Update this page, [Progress dashboard](Progress-Dashboard), [`agent-release-readiness.json`](agent-release-readiness.json), [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) and [`agent-knowledge.jsonl`](agent-knowledge.jsonl).
 
 ## Validation Matrix
 
@@ -97,6 +101,7 @@ These have source-backed playbooks but are not current code fixes yet. Do not mi
 [
   {"fact":"loadoutmanager_root_discovery","source":"Tools/LoadoutManager/FileManagement/FileManager.cs","summary":"LoadoutManager now accepts either an ancestor named a2waspwarfare or a normal repo root containing Missions, Missions_Vanilla and Tools/LoadoutManager/LoadoutManager.csproj."},
   {"fact":"loadoutmanager_skip_zip","source":"Tools/LoadoutManager/ZipManager.cs","summary":"Set A2WASP_SKIP_ZIP to 1, true or yes to run generation/copy without packaging _MISSIONS.7z."},
+  {"fact":"version_sqf_generated_input_gate","source":"agent-release-readiness.json#versionSqfGeneratedInput","summary":"version.sqf is ignored/generated but required by description.ext, initJIPCompatible.sqf and Rsc/Header.hpp; verify per-target generated files before pack, smoke or release claims."},
   {"fact":"current_propagated_fixes","source":"Init_PublicVariables.sqf:39; Init_Client.sqf:547,571; serverFpsGUI.sqf:1; monitorServerFPS.sqf:1; supplyMissionStarted.sqf:25-28; playerObjectsList.sqf:17-29","summary":"Paratrooper marker registration, duplicate Skill_Init removal, hosted FPS loop exits, supply command-center scan narrowing and supply player-object list indexing are present in Chernarus source and maintained Vanilla Takistan after the 2026-06-02 LoadoutManager run."},
   {"fact":"latest_propagation_run","source":"Source-Fix-Propagation-Queue.md#latest-propagation-run","summary":"2026-06-02 LoadoutManager run completed generation/copy for Chernarus and Takistan with A2WASP_SKIP_ZIP=1; all five tracked fixes propagated, Arma smoke remains pending."}
 ]

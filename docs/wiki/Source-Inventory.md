@@ -38,9 +38,19 @@ $files | ForEach-Object { $ext = [IO.Path]::GetExtension($_).ToLowerInvariant();
 | 1 | `README.md` |
 | 1 | `mkdocs.yml` |
 
-## Mission Parity Snapshot
+## Tracked Versus Generated Mission Inputs
 
 Tracked-file counts are from `git ls-files` only, not filesystem recursion. Current local Chernarus and Vanilla Takistan roots have ignored generated `version.sqf` files on disk, but they are not tracked by Git; generated/modded target roots still need explicit verification because LoadoutManager owns terrain-version output.
+
+Agent rule: do not use tracked-file counts as proof that a mission root can boot. A prepared working tree may have ignored/generated required inputs, while a clean checkout may not. For release work, check both tracked parity and generated required files.
+
+| Input kind | Example | Git status | Release meaning |
+| --- | --- | --- | --- |
+| Tracked source | `description.ext`, `initJIPCompatible.sqf`, SQF/config folders | Counted by `git ls-files`. | Source review and diff parity can reason about these files directly. |
+| Generated required input | `version.sqf` | Ignored by `.gitignore`, expected to be present after generation. | Required before boot, pack, smoke or release wording for the target root. |
+| Runtime/media required input | `stringtable.xml`, `loadScreen.jpg`, sound/music descriptions | Varies by target root. | Missing files can make a folder boot-incomplete even when SQF files exist. |
+
+## Mission Parity Snapshot
 
 | Mission tree | Tracked files | Parity posture |
 | --- | ---: | --- |

@@ -33,6 +33,8 @@ flowchart TD
 
 These generated files are ignored by git, so do not assume a clean checkout has them. LoadoutManager owns normal generation.
 
+Release gate: if any claimed mission root lacks a generated `version.sqf`, that root is blocked for pack, smoke and release wording. Verify the file exists and that its `WF_MAXPLAYERS`, `WF_MISSIONNAME`, `WF_RESPAWNDELAY`, map flags and debug/log flags match the terrain profile before treating later SQF validation as meaningful. The machine checklist is `agent-release-readiness.json` `versionSqfGeneratedInput`.
+
 ## Map Flag Semantics
 
 `IS_CHERNARUS_MAP_DEPENDENT` is currently a binary switch. If the macro is absent, runtime code falls into non-Chernarus/Takistan-style defaults. This affects faction defaults and many class choices through `IS_chernarus_map_dependent`.
@@ -62,6 +64,7 @@ Terrain authors should verify naval intent before generating or packaging a new 
 ## Developer Rules
 
 - Treat `version.sqf` as required generated terrain metadata, not optional docs.
+- Missing generated `version.sqf` is a boot/release blocker for that mission root, even when all tracked source files look clean.
 - Verify `WF_MAXPLAYERS`, `WF_MISSIONNAME`, `WF_RESPAWNDELAY`, `IS_CHERNARUS_MAP_DEPENDENT`, `IS_NAVAL_MAP`, `WF_DEBUG` and `WF_LOG_CONTENT` in the target mission root before release packaging.
 - Do not confuse `Missions_Vanilla` with the `VANILLA` preprocessor macro. The folder is a generated target label; the macro gates OA/CO config paths inside mission headers.
 - If a modded map needs different defaults than Chernarus and Takistan, document or implement a real terrain profile instead of inheriting the binary fallback by accident.

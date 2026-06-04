@@ -69,6 +69,8 @@ Verified anchors:
 
 This means town lifecycle bugs can live in mission object init, town init scripts and server FSMs together. Regex-only scans of SQF files will miss the `mission.sqm` entry layer.
 
+Count verification note: a 2026-06-04 lifecycle scout suggested the count might be 42, but a direct source recheck with `Select-String -LiteralPath "Missions\[55-2hc]warfarev2_073v48co.chernarus\mission.sqm" -Pattern "Common\\Init\\Init_Town\.sqf"` returned 40. Keep this count source-verified before using it in balance or capture-mode assumptions.
+
 ## Common Init
 
 `Common/Init/Init_Common.sqf` compiles most shared helpers and config. The central idea is that config arrays and helper functions are available to both server and clients before side-specific runtime code starts using them. For the exact consumer waits, use [Lifecycle wait-chain](Lifecycle-Wait-Chain).
@@ -81,6 +83,8 @@ Major common responsibilities include:
 - network helpers: `Common_SendToClient`, `Common_SendToClients`, `Common_SendToServer`;
 - config loading: core models, gear, root definitions, defenses, groups;
 - module initialization: ICBM, IR smoke, CIPHER, boundaries.
+
+Ownership nuance: this file is not purely shared. It also contains `isServer`-guarded compile/setup work around `Common/Init/Init_Common.sqf:301-307`, so moving functions between common/server/client owners needs a role check, not just a path check.
 
 ## Server Init
 
@@ -100,11 +104,17 @@ Notable server loops:
 
 Source anchors: `serverInitComplete = true` at `Server/Init/Init_Server.sqf:117`, `serverInitFull = true` at `:507`, town AI at `:514`, victory at `:528` and resource loop at `:531`.
 
+Init hygiene note: the early server compile block still contains duplicate/legacy assignments such as `WFBE_CO_FNC_LogGameEnd` around `Server/Init/Init_Server.sqf:64-65` and `WFBE_SE_FNC_PlayerObjectsList` around `:88-91`. Treat duplicate compile cleanup as a small but real init-maintenance lane; do not mix it with behavior changes unless smoke coverage names the affected functions.
+
 ## Client Init
 
 `Client/Init/Init_Client.sqf` initializes player-side behavior. It compiles client functions, registers damage/fired handlers, adds map/menu/action behaviors, starts day/night client sync when needed, applies skill/module actions, sends join/anti-stack handshakes, and starts client update loops.
 
 Global gameplay hotkeys are wired here through `findDisplay 46` `KeyDown` handlers. Gear filler hotkeys are separate in `Client/Init/Init_Keybind.sqf`.
+
+### JIP Stall Risks
+
+Client init has several `waitUntil` gates on replicated state with no local timeout/retry path. The highest-risk waits are `townInit`, `wfbe_structures`, `wfbe_commander`, `wfbe_radio_hq`, `wfbe_startpos`, `wfbe_hq_deployed` and `wfbe_votetime` around `Client/Init/Init_Client.sqf:359-371`, `:467-471` and `:786-789`. Keep the detailed dependency table in [Lifecycle wait-chain](Lifecycle-Wait-Chain), but mention this risk in entrypoint work because broken replication can look like a client boot freeze rather than a later gameplay bug.
 
 ## Headless Init
 

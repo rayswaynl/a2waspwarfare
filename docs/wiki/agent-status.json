@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T20:05:00+02:00",
+    "generatedAt":  "2026-06-04T20:18:46+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -20,8 +20,8 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Published and pushed the release-target Spark scout harvest: generated/modded target tiers are now in agent-release-readiness.json, and stale old-upgrade-dialog missing wf_*.paa assets are routed through UI pages.",
-                                 "nextExpectedOutput":  "Continue the documentation finisher loop from canonical pages; relaunch tooling or lifecycle scouts as fresh narrow lanes if needed."
+                                 "currentWork":  "Harvested the Spark scout wave duplicate-aware. Version.sqf and lifecycle/init reports were source-checked and patched into canonical docs; PV/PVF confirmed canonical coverage; Feature Status added missing-file/dead-twin clarity; tooling added machine-readable release gates; AI-cap/UI/construction scouts failed without evidence. A fresh scout wave is still running for respawn/MASH, server ops/integrations and missing-reference sweep.",
+                                 "nextExpectedOutput":  "Mirror, validate and push the current docs batch; harvest remaining fresh scouts only if they return concise source-backed non-duplicate reports."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -36,13 +36,19 @@
                                   "nextExpectedOutput":  "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
                               },
                    "Sub-agents":  {
-                                      "status":  "closed-harvested-or-timed-out",
-                                      "currentLane":  "spark-scout-wave-release-targets-hc-ai-caps-economy",
-                                      "currentWork":  "Spark scouts returned for player AI caps, HC/locality/FPS, generated/modded release tiers, town/economy/supply, support authority and UI/dialog hazards. Tooling was closed unharvested after timeout; lifecycle errored during compaction.",
-                                      "nextExpectedOutput":  "No active scouts remain from this wave; relaunch any remaining lanes as fresh narrow scouts if needed."
+                                      "status":  "active",
+                                      "currentLane":  "spark-scout-wave-version-lifecycle-tooling-feature-pv-caps",
+                                      "currentWork":  "Peirce/version, Averroes/lifecycle, Nash/PV-PVF, Bacon/Feature Status and Hilbert/tooling returned and were harvested. Lovelace/player-AI-caps, Mill/UI, fresh construction/factories and fresh UI overflowed or errored without evidence. Fresh commander/economy returned mostly canonical coverage; one claim was rejected by local source recheck. Fresh respawn/MASH, server ops/integrations and missing-reference sweep are still active discovery lanes.",
+                                      "nextExpectedOutput":  "Return concise source-backed reports for the remaining active lanes or be closed as unharvested; future UI/construction relaunches should be tiny file-family scouts."
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "spark-scout-wave-version-lifecycle-tooling-feature-pv-caps",
+                            "owner":  "Codex/Sub-agents",
+                            "status":  "harvest-validation-pending-active-followup-scouts",
+                            "output":  "Steff asked for another bunch of Spark scouts. Codex launched six gpt-5.3-codex-spark read-only scouts and later fresh follow-up scouts. Harvested Peirce/version into agent-release-readiness.json versionSqfGeneratedInput plus hard release-root gates in Tools/build, Source fix propagation, Mission config/version and Source inventory. Harvested Averroes/lifecycle into Architecture, Mission entrypoints, SQF atlas and AI/headless; town object count was source-rechecked and remains 40. Nash/PV-PVF confirmed the canonical direct/PVF channel index has no undisclosed major channels and already covers the operational edges. Bacon/Feature Status added missing-file clarity for legacy map blink and AT/bomb hooks plus supplyMissionActive dead-twin caution. Hilbert/tooling added machine-readable toolingAuditGates for packaging, soft-copy/delete, analyzer, DiscordBot/Extension and BattlEye risks. AI-cap/UI/construction scouts failed without evidence. Fresh commander/economy returned mostly canonical coverage and one stale-context claim was rejected by source recheck; respawn/MASH, ops/integrations and missing-reference sweep remain active. No gameplay source changed."
+                        },
                         {
                             "lane":  "spark-scout-wave-release-targets-hc-ai-caps-economy",
                             "owner":  "Codex/Sub-agents",

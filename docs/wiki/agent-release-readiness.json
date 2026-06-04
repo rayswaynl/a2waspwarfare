@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-04T19:35:05+02:00",
-  "lastVerifiedAt": "2026-06-04T19:35:05+02:00",
+  "generatedAt": "2026-06-04T20:18:46+02:00",
+  "lastVerifiedAt": "2026-06-04T20:18:46+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -166,6 +166,125 @@
     "freshCheckoutGate": "Because version.sqf is git-ignored but included by mission boot files, every target mission root needs generated version.sqf verification before pack/test claims.",
     "packagingScope": "While Tools/LoadoutManager/ZipManager.cs:16 remains unchanged, _MISSIONS.7z packaging is expected to include Missions and Missions_Vanilla, not Modded_Missions."
   },
+  "versionSqfGeneratedInput": {
+    "status": "required-generated-ignored-input",
+    "trackedByGit": false,
+    "currentCheckoutEvidence": "git status --ignored --short reports !! for source Chernarus and maintained Vanilla Takistan version.sqf files.",
+    "whyItMatters": "description.ext and initJIPCompatible.sqf include version.sqf before mission boot continues; a fresh checkout, clean pack or generated target without that file can fail before later SQF systems initialize.",
+    "releaseGate": "Before pack, smoke-test or release wording, verify every claimed mission target root has a generated version.sqf matching its terrain profile and player count.",
+    "sourceRefs": [
+      ".gitignore:1-3",
+      ".gitignore:23",
+      "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext:39",
+      "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf:4",
+      "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:102",
+      "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:168-182",
+      "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:346-364",
+      "Tools/LoadoutManager/FileManagement/FileManager.cs:89-101",
+      "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Header.hpp:5,9,21"
+    ],
+    "targetRoots": [
+      {
+        "path": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "role": "authoritative-source",
+        "expectedGeneratedFile": "version.sqf",
+        "currentLocalStatus": "ignored-present",
+        "requiredDefines": [
+          "WF_MAXPLAYERS 55",
+          "WF_MISSIONNAME \"[55] Warfare V48 Chernarus\""
+        ]
+      },
+      {
+        "path": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "role": "maintained-generated-target",
+        "expectedGeneratedFile": "version.sqf",
+        "currentLocalStatus": "ignored-present",
+        "requiredDefines": [
+          "WF_MAXPLAYERS 61",
+          "WF_MISSIONNAME \"[61] Warfare V48 Takistan\""
+        ]
+      },
+      {
+        "path": "Modded_Missions/*",
+        "role": "non-release-target-until-regenerated-or-repaired",
+        "expectedGeneratedFile": "version.sqf",
+        "currentLocalStatus": "not-claimed",
+        "requiredDefines": [
+          "terrain-specific WF_MAXPLAYERS",
+          "terrain-specific WF_MISSIONNAME"
+        ]
+      }
+    ],
+    "validatorSeed": [
+      "git status --ignored --short -- \"Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf\" \"Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf\"",
+      "Test-Path -LiteralPath \"Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf\"",
+      "Test-Path -LiteralPath \"Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf\""
+    ]
+  },
+  "toolingAuditGates": [
+    {
+      "id": "loadoutmanager-packaging-exit-code",
+      "component": "Tools/LoadoutManager",
+      "severity": "P2",
+      "status": "open-release-validator-needed",
+      "evidenceRefs": [
+        "Tools/LoadoutManager/ZipManager.cs:26-33",
+        "Tools/LoadoutManager/ZipManager.cs:77-92"
+      ],
+      "releaseGate": "For release archives, require non-zero 7za exit-code handling, rollback-safe archive replacement and proof that _MISSIONS.7z contains the expected mission roots."
+    },
+    {
+      "id": "loadoutmanager-soft-copy-and-delete-risk",
+      "component": "Tools/LoadoutManager",
+      "severity": "P2",
+      "status": "operator-footgun-documented",
+      "evidenceRefs": [
+        "Tools/LoadoutManager/FileManagement/FileManager.cs:72-83",
+        "Tools/LoadoutManager/FileManagement/FileManager.cs:116-119",
+        "Tools/LoadoutManager/FileManagement/FileManager.cs:123-136"
+      ],
+      "releaseGate": "Inspect console output and generated diffs after propagation; treat generated targets as disposable unless the source/generator owns the files."
+    },
+    {
+      "id": "performance-audit-analyzer-headless-memory-gate",
+      "component": "Tools/PerformanceAuditAnalyzer",
+      "severity": "P3",
+      "status": "documented-headless-wrapper-needed",
+      "evidenceRefs": [
+        "Tools/PerformanceAuditAnalyzer/Analyze-PerformanceAudit.ps1:1224-1248",
+        "Tools/PerformanceAuditAnalyzer/Start-PerformanceAuditAnalyzer.ps1:11-12",
+        "Tools/PerformanceAuditAnalyzer/Start-PerformanceAuditAnalyzer.ps1:119-120"
+      ],
+      "releaseGate": "Use Analyze-PerformanceAudit.ps1 directly for automation; add streaming/large-log tests and a headless wrapper before calling the analyzer production-hardened."
+    },
+    {
+      "id": "discordbot-extension-contract-drift",
+      "component": "DiscordBot/Extension",
+      "severity": "P1",
+      "status": "open-contract-tests-needed",
+      "evidenceRefs": [
+        "DiscordBot/src/ProgramRuntime.cs:14-25",
+        "DiscordBot/Preferences.cs:24-30",
+        "DiscordBot/src/ExtensionData/GameData/GameData.cs:32-56",
+        "Extension/src/GameData.cs:29",
+        "DiscordBot/src/ExtensionData/GameData/GameData.cs:30,80-83,112-114",
+        "Extension/src/SerializationManager.cs:20",
+        "Extension/src/ExtensionMethods.cs:18-21"
+      ],
+      "releaseGate": "Before production bot/extension claims, pin one GameData schema, add fixture tests, switch DiscordBot JSON intake away from TypeNameHandling.All and validate preferences/data-path loading before Discord startup."
+    },
+    {
+      "id": "battleye-filter-bundle-incomplete",
+      "component": "BattlEyeFilter",
+      "severity": "P2",
+      "status": "public-server-hardening-not-shipped",
+      "evidenceRefs": [
+        "BattlEyeFilter/publicvariable.txt:2",
+        "Client/FSM/updateclient.sqf:153-160"
+      ],
+      "releaseGate": "Do not claim comprehensive BattlEye hardening from the repo; production needs owner-supplied BEpath/config inventory and OA-era filters beyond publicvariable.txt."
+    }
+  ],
   "toolingGate": {
     "tool": "Tools/LoadoutManager",
     "requirement": "Run from a checkout with either an ancestor folder named a2waspwarfare or repo-root markers: Missions, Missions_Vanilla and Tools/LoadoutManager/LoadoutManager.csproj.",
