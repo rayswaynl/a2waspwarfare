@@ -2177,3 +2177,9 @@ Key conclusions:
 - Preserved false-positive guards: `RespawnST` has an economy-menu caller, `SetTask` is already documented as partial UI, stable-master AI commander upgrade has a worker but no proven scheduler, and support/ICBM authority risks already belong to the support/ICBM authority pages.
 - No gameplay source files changed.
 - Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 12 mirrored files.
+
+## 2026-06-04T11:35:00+02:00 - Codex - MHQ repair authority mutex routing
+- Source-checked the normal and WASP MHQ repair paths after the latest scout harvest sharpened the race risk.
+- Evidence checked: `Client/Action/Action_RepairMHQ.sqf:5-35`, `Client/Action/Action_RepairMHQ.sqf:8-9`, `WASP/actions/Action_RepairMHQDepot.sqf:7-29`, `WASP/actions/Action_RepairMHQDepot.sqf:10-11`, `Server/PVFunctions/RequestMHQRepair.sqf:1` and `Server/Functions/Server_MHQRepair.sqf:7-79,23-57`.
+- Updated [Server authority migration map](Server-Authority-Migration-Map), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), `agent-status.json` and `agent-collaboration.json` so future HQ repair hardening includes a server-side in-flight repair mutex and duplicate/concurrent repair smoke.
+- No gameplay source files changed. Validation passed: `docs/validate-wiki.ps1`, JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
