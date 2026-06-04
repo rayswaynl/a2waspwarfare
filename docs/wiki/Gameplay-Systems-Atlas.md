@@ -167,7 +167,7 @@ Risk notes:
 
 - Economy, AntiStack and side presence interact; changing AntiStack guards can change income behavior.
 - Resource sleeps use `GetSleepFPS`, so tick rate may adapt to server FPS.
-- `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` gates the whole income block when side supply exceeds the limit.
+- `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` gates the whole income block on computed town supply income, not the current side-supply balance; see [Economy, towns and supply](Economy-Towns-And-Supply) before changing this loop.
 - Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-22 covers side-supply overspend windfall; DR-41 covers attack-wave direct-PV supply forgery. Use [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) before touching that path.
 
 ## Commander Flow

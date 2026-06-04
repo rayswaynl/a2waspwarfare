@@ -2163,3 +2163,17 @@ Key conclusions:
 - Promoted new town deltas into [Towns/camps/capture](Towns-Camps-And-Capture-Atlas), [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) and [Feature status](Feature-Status-Register): independent camp capture can set the 3D flag texture to the old owner, camp repair can change `sideID` without refreshing the flag object, resistance patrols can stay `wfbe_patrol_active` latched after patrol death, and the zero-camp helper fallback affects capture mode 2, threeway defender respawn and depot infantry gating.
 - PV/networking scout confirmed existing canonical P0 authority risks. Supply completion matching was already documented in [Supply mission architecture](Supply-Mission-Architecture) and Feature Status, so no duplicate prose was added.
 - No gameplay source files changed. Validation passed for the docs mirror: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and 22-file mirror parity. Pushed as docs `b4d0ad90` / wiki `8ec41c3`.
+
+## 2026-06-04T12:20:00+02:00 - Codex - mini scout wave launch plus town lifecycle lesson
+- Steff asked for more Spark scouts. Two GPT-5.3-Codex-Spark starts hit quota limits, so Codex closed the failed slots and launched six `gpt-5.4-mini` read-only fallback scouts: commander/HQ, economy/supply, respawn/MASH, UI/HUD, supports/special weapons and AI commander/orders.
+- While the scout wave runs, Codex source-checked the latest town/camp findings and converted them into a reusable development lesson plus global smoke-pack routing.
+- Evidence checked: `server_town_camp.sqf:122-138`, `Server_HandleSpecial.sqf:147-168`, `server_town_ai.sqf:226-230`, `server_patrols.sqf:26,71-72`, `Common_GetTotalCamps.sqf:9-12` and `Common_GetTotalCampsOnSide.sqf:15-22`.
+- Updated [Development lessons learned](Development-Lessons-Learned), [`agent-development-lessons.jsonl`](agent-development-lessons.jsonl), [Testing workflow](Testing-Debugging-And-Release-Workflow) and [Progress Dashboard](Progress-Dashboard). No gameplay source files changed.
+- Validation and mirror publication are pending for this docs-only batch.
+
+## 2026-06-04T12:45:00+02:00 - Codex - mini scout wave HQ/economy/respawn/UI/support/AI harvest
+- All six fallback scouts returned. Codex source-checked their reports and promoted only deltas that were not already better covered by canonical pages.
+- Added or sharpened notes in [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas), [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas), [Gameplay systems](Gameplay-Systems-Atlas), [Towns/camps/capture](Towns-Camps-And-Capture-Atlas), [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) and [AI commander autonomy audit](AI-Commander-Autonomy-Audit).
+- Preserved false-positive guards: `RespawnST` has an economy-menu caller, `SetTask` is already documented as partial UI, stable-master AI commander upgrade has a worker but no proven scheduler, and support/ICBM authority risks already belong to the support/ICBM authority pages.
+- No gameplay source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 12 mirrored files.

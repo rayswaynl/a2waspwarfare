@@ -156,7 +156,9 @@ Client PV functions are registered in `Init_PublicVariables.sqf:25-35`:
 - `CampCaptured`
 - `AllCampsCaptured`
 
-`TownCaptured.sqf` recolors the town marker and shows a title only for clients whose side was old or new owner (`:15-27`). If the client's side captured the town, it awards client-local funds and requests score based on nearest group unit distance (`:37-72`), then pays commander capture bounty locally if the player is commander (`:74-81`).
+`TownCaptured.sqf` recolors the town marker and shows a title only for clients whose side was old or new owner (`:15-27`). If the client's side captured the town, it awards client-local funds and requests score based on nearest group unit distance (`:37-72`), then pays commander capture bounty locally if the player is commander (`:74-81`). Exact current formulas: capture/assist bounty is `150 * supplyValue` (`TownCaptured.sqf:49-60`), while the commander bonus is `startingSupplyValue * WFBE_C_PLAYERS_COMMANDER_BOUNTY_CAPTURE_COEF` (`TownCaptured.sqf:74-80`).
+
+False-positive guard: `Common/Init/Init_Town.sqf:1-8` still accepts `townValue` as an init argument, but the current audited economy/reward paths use `supplyValue` and `startingSupplyValue`. Do not describe `townValue` as a live income multiplier unless a future source scan finds an active consumer.
 
 `CampCaptured.sqf` recolors local camp markers, pays camp capture bounty locally and requests score for nearby client group participation (`CampCaptured.sqf:19-40`). `AllCampsCaptured.sqf` recolors every camp marker for clients concerned by old or new side (`AllCampsCaptured.sqf:15-21`).
 

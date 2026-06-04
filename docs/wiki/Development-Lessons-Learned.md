@@ -23,6 +23,7 @@ The same rule applies to launched scripts. AntiStack starts `monitorTeamToJoin.s
 | Direct-PV economy helpers | Economy authority pages map the DRs, but implementation agents still need a local rule of thumb before touching helpers. | Shared helpers can look local and harmless while publishing direct mutation payloads; read helpers show the safer server-derived pattern. |
 | Post-dispatch PVF handlers | The authority map has the server-bound PVF matrix and current caller examples. | Dispatcher allowlisting prevents forged handler names, but live handlers still accept payload score, vehicle, team, side, upgrade and UID/FPS data. |
 | Cleanup/garbage/empty vehicles | Marker/cleanup atlas is strong, but patch handoffs are scattered. | Cleanup code has short polling loops, global replicated queues, inconsistent flags and nested-pair array traps. |
+| Town/camp lifecycle | Town atlas and Feature Status now carry camp flag texture drift, resistance patrol active-latch and zero-camp helper findings. | These bugs show three reusable traps: world visuals can drift from replicated state, lifecycle latches need reset-path proof, and count helpers need caller-specific semantics. |
 | Non-EASA modules | Modules atlas and testing workflow now carry the runtime-edge rule. | Use the edge type before module edits: boot init, respawn reapply, unit creation attach, PV/PVF event or server loop. Runtime Arma smoke is still needed when actual behavior changes. |
 
 ## Lesson 1: Smoke Both Vanilla Branches For AI Respawn
@@ -237,6 +238,16 @@ The commander vote mismatch is a compact example of why UI prediction and server
 
 Development rule: when a dialog predicts a winner, price, reward, permission or cooldown, inspect the server resolver before claiming behavior. Treat mismatches as semantics decisions first, then source patches. For commander voting, owners must decide plurality, strict majority, tie and AI/no-commander rules before editing `Server_VoteForCommander.sqf`.
 
+## Lesson 27: Replicated State, World Visuals And Latches Need Separate Proof
+
+Town/camp code is a useful warning against treating one state update as proof that the whole visible system is correct. Independent camp capture updates the camp `sideID` to `_newSID`, but its flag texture lookup uses `str _side`, where `_side` is the previous owner (`Server/FSM/server_town_camp.sqf:122-138`). Camp repair can also change `sideID` through `Server_HandleSpecial.sqf:147-168` without refreshing the world flag object. Marker color and replicated `sideID` can therefore be correct while the 3D object still lies.
+
+The same source slice shows why lifecycle latches need reset-path proof. `server_town_ai.sqf:226-230` sets `wfbe_patrol_active = true` before starting `server_patrols.sqf`; the worker loop runs while `!WFBE_GameOver || _team_alive` at `server_patrols.sqf:26` and only clears the active latch at `:71-72`. During a normal running match, a dead patrol can leave the town active-latched and block relaunch.
+
+The camp-count helpers show a different trap. `Common_GetTotalCamps.sqf:9-12` and `Common_GetTotalCampsOnSide.sqf:15-22` return `1` for zero-camp towns. That may be useful as a safe denominator, but it is wrong for callers that need a real count, including camp-gated capture mode 2, threeway defender respawn and depot infantry purchase gating.
+
+Development rule: for stateful town/world changes, smoke three things separately: replicated variables, local marker/UI feedback and world object state. For long-running loops, cite both the latch writer and the reset path before calling relaunch behavior working. For shared count helpers, decide whether the caller needs a real count or a safe denominator before reusing the helper.
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |
@@ -247,6 +258,7 @@ Development rule: when a dialog predicts a winner, price, reward, permission or 
 | Done | Cleanup flag/nested-pair shape rules are already accepted in the marker/cleanup atlas patch-ready section. | `Marker-Cleanup-Restoration-Systems-Atlas#patch-ready-findings` | Mine expiry and unit-kill garbage smoke remain the runtime gates before source patch acceptance. |
 | Done | Cleanup/restorer cadence and cost interpretation added to the marker/cleanup atlas. | `Marker-Cleanup-Restoration-Systems-Atlas#cadence-and-cost-interpretation` | Runtime RPT samples still needed before performance tuning patches. |
 | Done | Commander `wfbe_teammode`/`wfbe_teamgoto` source proof added to AI/headless and UI/feature pages. | `AI-Headless-And-Performance#commander-team-order-variables` | Dedicated commander AI order smoke is still pending. |
+| Done | Town/camp lifecycle guardrail added for replicated state, 3D visuals, latch reset paths and zero-count helper semantics. | `Towns-Camps-And-Capture-Atlas`, `Testing-Debugging-And-Release-Workflow#minimal-smoke-packs` | Runtime smoke remains pending for camp capture/repair flag visuals, patrol death/relaunch and zero-camp respawn/buy gates. |
 
 ## Agent Handoff
 
