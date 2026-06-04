@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T09:55:00+02:00 - Codex - post-push status reconciliation for caps/economy/tooling/UI wave
+
+- Continued the documentation finisher loop after the scout-wave harvest was already validated and pushed.
+- Source-checked repository heads: main docs branch is `783f3d0a` (`docs: harvest caps economy tooling scout wave`) and wiki `master` is `75db0fa` (`wiki: harvest caps economy tooling scout wave`).
+- Reconciled [Progress dashboard](Progress-Dashboard) and `agent-status.json` so Codex no longer says the next expected output is validating/mirroring/pushing that already-pushed scout wave. Codex is back on `documentation-finisher-loop`.
+- Coordination cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T09:35:00+02:00 - Codex - Spark scout wave caps/economy/tooling/UI
 
 - Steff asked for more Spark scouts. Codex launched GPT-5.3-Codex-Spark read-only scouts for lifecycle/init, economy/factory, commander/AI caps, PV/security, towns/supply and UI, then added a tooling/runtime scout when a slot freed up.

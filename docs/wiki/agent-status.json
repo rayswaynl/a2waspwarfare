@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T09:35:00+02:00",
+    "generatedAt":  "2026-06-04T09:55:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -19,9 +19,9 @@
     "agents":  {
                    "Codex":  {
                                  "status":  "active",
-                                 "currentLane":  "spark-scout-wave-caps-economy-tooling-ui",
-                                 "currentWork":  "Spawned another Spark scout wave and harvested returned micro-scout deltas: AI cap formula/fallback table, commander reassignment broken-status wording, factory buy acceptance/rollback protocol language, LoadoutManager destination-sync blast radius, UI title lifecycle-handle wording and stale supply-heli head cleanup.",
-                                 "nextExpectedOutput":  "Validate, mirror, commit and push the scout-wave documentation harvest."
+                                 "currentLane":  "documentation-finisher-loop",
+                                 "currentWork":  "Reconciled post-push state after the caps/economy/tooling/UI scout wave. The harvested docs were already validated and pushed as main docs commit 783f3d0a and wiki commit 75db0fa; Codex is back on the long-running documentation finisher loop.",
+                                 "nextExpectedOutput":  "Pick the next bounded source-backed docs/status item from Feature Status, owner decisions, agent-readable files or stale coordination state."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -37,12 +37,18 @@
                               },
                    "Sub-agents":  {
                                       "status":  "closed",
-                                      "currentLane":  "spark-scout-wave-caps-economy-tooling-ui",
-                                      "currentWork":  "Commander, economy, tooling and UI micro-scout outputs were harvested; broad commander/economy/PV scouts overflowed and lifecycle/towns scouts timed out, then all active scout threads were closed.",
+                                      "currentLane":  "none",
+                                      "currentWork":  "All scout threads from the caps/economy/tooling/UI wave are closed and the validated harvest was pushed as main docs 783f3d0a / wiki 75db0fa.",
                                       "nextExpectedOutput":  "No pending scout output remains from this batch."
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "post-push-status-reconciliation-caps-economy-tooling-ui",
+                            "owner":  "Codex",
+                            "status":  "published-validated",
+                            "output":  "Reconciled agent-status after the prior scout-wave harvest was already validated and pushed. Source evidence: main docs HEAD 783f3d0a and wiki HEAD 75db0fa. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. No gameplay source changed."
+                        },
                         {
                             "lane":  "spark-scout-wave-caps-economy-tooling-ui",
                             "owner":  "Codex/Sub-agents",
