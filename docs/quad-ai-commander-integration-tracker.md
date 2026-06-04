@@ -19,7 +19,7 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 | 1 Structured logs | `codex/ai-commander-logs` | Phase 0 stable | Draft PR #18 open; static surface clean, runtime evidence pending | no |
 | 2 Context/beliefs | `codex/ai-commander-context` | Phase 1 logs | Draft PR #19 open; advisory-only scaffold with manual smoke helper, synthetic/runtime evidence pending | no |
 | 3 Advisory planner | `codex/ai-commander-planner` | Phase 2 beliefs | Spec and implementation brief ready; implementation pending until Phase 2 evidence | no by default |
-| 4 Worker biasing | `codex/ai-commander-worker-biasing` | Phase 3 planner | Spec ready, implementation pending | yes, gated |
+| 4 Worker biasing | `codex/ai-commander-worker-biasing` | Phase 3 planner | Spec and implementation brief ready; behavior-changing implementation pending until Phase 3 evidence | yes, gated off by default |
 
 ## Phase Documents
 
@@ -36,6 +36,7 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 | `docs/quad-ai-commander-phase3-planner.md` | Advisory planner priority spec |
 | `docs/quad-ai-commander-phase3-implementation-brief.md` | Advisory planner implementation runbook |
 | `docs/quad-ai-commander-phase4-worker-biasing.md` | Behavior-changing worker biasing spec |
+| `docs/quad-ai-commander-phase4-implementation-brief.md` | Guarded worker-biasing implementation runbook |
 | `docs/quad-ai-commander-runtime-validation.md` | Runtime evidence, stacked smoke handoff, RPT handoff, stop-go rules |
 | `wiki/Quad-AI-Commander.md` | Wiki-ready overview |
 | `wiki/Quad-AI-Commander-Integration.md` | Integration notes against `feat/ai-commander` |
@@ -48,7 +49,7 @@ Follow the stacked smoke handoff in `docs/quad-ai-commander-runtime-validation.m
 2. Collect Phase 1 log evidence on draft PR #18.
 3. Use the manual Phase 2 smoke helper on draft PR #19 after #18 is runnable.
 
-Phase 3 implementation guidance is ready in `docs/quad-ai-commander-phase3-implementation-brief.md`, but a planner branch should wait until Phase 2 has positive context evidence.
+Phase 3 implementation guidance is ready in `docs/quad-ai-commander-phase3-implementation-brief.md`, but a planner branch should wait until Phase 2 has positive context evidence. Phase 4 implementation guidance is ready in `docs/quad-ai-commander-phase4-implementation-brief.md`, but worker biasing must wait until Phase 3 priorities are proven in advisory mode.
 
 Already noted in PR #14:
 
@@ -127,6 +128,24 @@ Required Phase 3 guardrails:
 - no waypoint, production, upgrade, type-assignment, or town-assignment behavior changes
 - priority scores and counts remain bounded
 
+Phase 4 is specified but not started:
+
+```text
+future branch: codex/ai-commander-worker-biasing
+base: codex/ai-commander-planner
+runbook: docs/quad-ai-commander-phase4-implementation-brief.md
+```
+
+Required Phase 4 guardrails:
+
+- worker bias is gated off by default
+- advisory mode must be false before any priority-driven behavior changes
+- optional worker-bias flag defaults false
+- human explicit Move/Patrol/Defense orders remain sacred
+- non-delegated hybrid teams are not touched
+- AI economy remains frozen under a human commander
+- fallback behavior remains reachable for missing/expired/malformed priorities
+
 ## Invariants Across All Phases
 
 - Human explicit Move/Patrol/Defense orders are sacred.
@@ -149,7 +168,7 @@ Required Phase 3 guardrails:
 | Phase 1 structured log RPT excerpts | Phase 1 | draft implementation open in PR #18; runtime evidence pending |
 | Phase 2 belief merge/decay excerpts | Phase 2 | draft implementation open in PR #19 with manual smoke helper; synthetic/runtime evidence pending |
 | Phase 3 advisory priority excerpts | Phase 3 | implementation brief ready; code pending Phase 2 smoke evidence |
-| Phase 4 worker biasing advisory-on/off excerpts | Phase 4 | pending implementation |
+| Phase 4 worker biasing advisory-on/off excerpts | Phase 4 | implementation brief ready; code pending Phase 3 advisory evidence |
 
 ## Stop-Go Rules
 
@@ -163,6 +182,7 @@ Stop and fix before proceeding when:
 - RPT shows undefined variables or nil-code calls
 - repeated waypoint reset loops appear in runtime testing
 - synthetic smoke helpers run automatically in normal gameplay
+- worker biasing is active by default
 
 ## Completion Definition
 
