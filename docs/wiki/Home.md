@@ -183,7 +183,6 @@ Use this sequence for low-risk orientation:
 - Human-readable progress dashboard: [Progress dashboard](Progress-Dashboard)
 - Ranked bottleneck queue: [Bottleneck removal queue](Bottleneck-Removal-Queue)
 - Mirror/wiki reconciliation policy: [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan)
-- Mirror/wiki reconciliation policy: [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan)
 - Machine-readable progress file: [`agent-status.json`](agent-status.json)
 - Machine-readable collaboration file: [`agent-collaboration.json`](agent-collaboration.json)
 - Machine-readable hardening backlog: [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl)

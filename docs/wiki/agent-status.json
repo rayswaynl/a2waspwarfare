@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T00:33:55+02:00",
+  "generatedAt": "2026-06-05T00:38:19+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop / research-catchup-synthesis-default-supported / relevance-pruning-and-archive-default-supported",
-      "currentWork": "Published the first catch-up/debloat batch: current loop refresh, pruning ledger, external-report absorption matrix, scout-wave gateway, DR routing index and DR-47 gameplay-atlas caveat.",
-      "nextExpectedOutput": "Resume supported helper lanes for deeper bloat reduction and research absorption; keep future patches scoped and evidence-preserving."
+      "currentWork": "Cleaning up pruning-batch residue after the first catch-up/debloat publish: dashboard chronology, duplicate Home navigation and repeated pruning-ledger rows.",
+      "nextExpectedOutput": "Validate, mirror, commit and push the dashboard/pruning-ledger cleanup, then continue scoped relevance pruning."
     },
     "Codex-2": {
       "status": "ready",
@@ -50,6 +50,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "dashboard-pruning-ledger-cleanup",
+      "owner": "Codex",
+      "status": "local-validation-pending",
+      "output": "Progress Dashboard Latest Batch is compacted back toward current-state use, duplicate Home mirror-policy navigation is removed, and repeated Subagent Discovery Swarm pruning-ledger rows are reconciled. No gameplay source changed."
+    },
     {
       "lane": "wiki-pruning-loop-refresh-supported-agents",
       "owner": "Codex",

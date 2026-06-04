@@ -1,5 +1,18 @@
 # Agent Worklog
 
+## 2026-06-05T00:40:26+02:00 - Codex - audit findings queue catch-up status
+
+- Resumed `research-catchup-synthesis-default-supported` after the pruning/catch-up publish gate cleared at docs `32945217` / wiki `4b19f5c`.
+- Re-read the current dashboard/status files and selected [Audit findings queue](Audit-Findings-Queue-2026-06-03) as a non-overlapping catch-up target.
+- Added a compact current-status section so readers treat the page as a PR #8 / `origin/release/2026-06-feature-bundle` historical audit queue, not a current `master` bug register.
+- Source evidence checked: release-branch commits `97370acb` and `0bb16513` exist locally and touch the files for SG5/AI7/AI11/AI2 and V2/AI1/AI8 respectively. No gameplay source files changed.
+
+## 2026-06-05T00:38:19+02:00 - Codex - dashboard pruning residue cleanup
+
+- Resumed `relevance-pruning-and-archive-default-supported` after the main thread published docs `32945217` / wiki `4b19f5c`.
+- Picked a small status/navigation cleanup rather than touching source evidence pages: removed duplicate Home mirror-policy navigation, reconciled repeated [Subagent discovery swarm](Subagent-Discovery-Swarm) pruning-ledger rows, and compacted [Progress dashboard](Progress-Dashboard) Latest Batch so older published rows route to worklog/status/events instead of repeating long chronology.
+- No gameplay source files changed.
+
 ## 2026-06-05T00:30:26+02:00 - Codex - scout-wave gateway pruning
 
 - Claimed `relevance-pruning-and-archive-default-supported` in this delegated pruning lane and scored old agent/planning pages for safe bloat reduction.
