@@ -18,7 +18,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\PerformanceAuditAnalyzer\Analyz
 
 ## Outputs
 
-The analyzer emits machine-readable and human-readable reports, including raw/pivot CSVs, timelines, script summaries, spike reports, FPS context, player/map/session summaries, Markdown, HTML, interpretation HTML and a Word-friendly `.doc` report.
+The analyzer currently emits 14 named machine-readable and human-readable reports: raw/pivot/extra-fields/timeline/script/spike/FPS/player/map/session CSVs, Markdown, HTML, interpretation HTML and a Word-friendly `.doc` report (`Analyze-PerformanceAudit.ps1:1361-1393`).
 
 Use the outputs after changes to town loops, AI delegation, supply scanning, server FPS logic, UI polling loops or any other performance-sensitive system.
 

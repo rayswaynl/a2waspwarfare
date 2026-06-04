@@ -30,6 +30,9 @@ This page is a focused runtime map for server loops, town AI, headless-client de
 | AI supply truck loop | `SRC/Server/AI/AI_UpdateSupplyTruck.sqf:5-17`; `SRC/Server/Init/Init_Server.sqf:36`, `:381-383` | Intended server | `sleep 60`; exits on `gameOver` | Compile is commented, branch still calls `UpdateSupplyTruck`, FSM target is missing. |
 | Commander map-order executor | `SRC/Client/GUI/GUI_Menu_Command.sqf:252-306`; `SRC/Common/Functions/Common_SetTeamMoveMode.sqf:8`; `SRC/Common/Functions/Common_SetTeamMovePos.sqf:8`; `SRC/Server/AI/AI_SquadRespawn.sqf:105-109`; `SRC/Server/AI/AI_AdvancedRespawn.sqf:120-124` | UI writes replicated group vars; static server reads found only respawn reset | No general loop found | `wfbe_teammode` / `wfbe_teamgoto` are not proof of a server-owned waypoint executor. |
 | AI town attack-path helper | `SRC/Server/Init/Init_Server.sqf:45-47`; `SRC/Server/Functions/Server_AI_SetTownAttackPath.sqf:18,41,80-109` | Compiled server helper for arced town attack waypoints | No static caller found in stable master scan | Helper clears existing waypoints before path generation; if a future caller revives it, smoke the early-exit branches before relying on generated attack routes. |
+| Spawned-unit follow-up | `SRC/Client/Functions/Client_BuildUnit.sqf:463-465`; `SRC/Client/Functions/Client_SendSpawnedUnitsToLeaderWaypoint.sqf:13-94` | Client-side helper for newly bought AI | On spawn/build completion only | Reads stored shift-click order, current waypoint or `expectedDestination`, then `commandMove`s spawned units/drivers. This is not a general commander AI scheduler. |
+| Player AI watchdog/recovery | `SRC/Client/Init/Init_Client.sqf:515`; `SRC/Client/Functions/Client_WatchdogPlayerAI.sqf:147-333`; `SRC/Client/Functions/Client_RecoverPlayerAI.sqf:1-1000` | Client-side stuck-AI recovery | Client loop/action path | Manual and automatic recovery can reset/move/retry local player-group AI; keep locality and cooldown semantics when touching AI movement. |
+| AI leader respawn hooks | `SRC/Server/Init/Init_Server.sqf:10-12`; `SRC/Server/AI/AI_AddMultiplayerRespawnEH.sqf:1`; `SRC/Server/AI/AI_AdvancedRespawn.sqf:55-125`; `SRC/Server/AI/AI_SquadRespawn.sqf:14-111` | Server-owned AI leader respawn | Branch differs by `WF_A2_Vanilla` | Non-vanilla uses an MPRespawn hook into advanced respawn; vanilla uses a loop path. Both reset non-autonomous move state, so smoke both branches before changing order/respawn coupling. |
 
 ## HC Delegation Map
 
@@ -47,6 +50,18 @@ HC delegation creates units on another machine through request/response helpers;
 | Locality transfer helper | `Server_SetLocalityOwner.sqf:13` | Not used by town/static HC AI delegation; delegation creates on remote rather than transferring existing locality. |
 
 Cleanup-loop edge: the client/HC delegation receivers each spin a local group cleanup poll after remote creation. `Client_DelegateTownAI.sqf:42-43`, `Client_DelegateAI.sqf:29-30` and `Client_DelegateAIStaticDefence.sqf:35-36` all wait while `count (units _team) > 0`, sleep one second, then `deleteGroup _team`. There is no timeout or server reconciliation in those receivers; a leaked unit can leave a long-lived local cleanup thread.
+
+## Order And Recovery Chain
+
+There are three separate order/recovery concepts that are easy to blend together:
+
+| Concept | Source | Scope |
+| --- | --- | --- |
+| Commander order UI | `GUI_Menu_Command.sqf:252-306` | Commander-facing Move/Patrol/Defense map-click flow. It writes team variables and marker feedback; a general server-side executor is still unproven by static source. |
+| Spawned-unit inheritance | `Client_BuildUnit.sqf:463-465`; `Client_SendSpawnedUnitsToLeaderWaypoint.sqf:13-94` | Newly bought units can inherit a stored map order, group waypoint or `expectedDestination`. This only runs at build/spawn handoff time. |
+| Player-AI recovery | `Client_WatchdogPlayerAI.sqf:147-333`; `Client_RecoverPlayerAI.sqf:1-1000` | Client-side stuck-unit recovery for player-group AI, with manual action and automatic watchdog paths. |
+
+When debugging "AI ignores orders", first identify which layer is failing: command UI write, spawned-unit handoff, server/HC waypoint creation, or client-side recovery. Patching the wrong layer can make the visible symptom disappear in one scenario while leaving the real owner path untouched.
 
 ## Findings
 

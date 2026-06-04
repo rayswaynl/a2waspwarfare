@@ -38,6 +38,19 @@ This page maps the mission-facing configuration and media layer: `description.ex
 
 `Common/Config/readme.txt:7-65` is still the best map of the intended data model: gear files register weapons, magazines and backpacks; group files feed town groups; loadout files build gear-menu templates; model/root files select side assets, support vehicles, AI loadouts and faction defaults. Runtime init then chooses faction roots from mission parameters and imports root, defense and group files (`Common/Init/Init_Common.sqf:263-308`).
 
+The config layer is mostly positional data. Many families are not keyed objects; they are parallel arrays that must stay aligned with shared index constants or sibling arrays. The high-risk families are:
+
+| Family | Why it is brittle |
+| --- | --- |
+| `class Params` / `paramsArray` | Lobby parameter order is the runtime API; `Init_Parameters.sqf:5-9` exports by class name after reading `paramsArray` in config order. |
+| `WFBE_C_UPGRADES_<side>_*` | Enabled, cost, max-level, link, time and AI-order arrays must stay aligned to the `WFBE_UP_*` constants from `Init_CommonConstants.sqf`. |
+| `WFBE_%SIDE%_ARTILLERY_*` | Artillery UI, ammunition choices and behavior index across the same per-artillery slots. |
+| `WFBE_%SIDE%STRUCTURES*` | Structure names, classnames, descriptions, costs, times, distances, directions and scripts are positional siblings. `WFBE_C_STRUCTURES_ANTIAIRRADAR` also conditionally adds radar entries in `Common/Config/Core_Structures/Structures_*.sqf:86`. |
+| `WFBE_%SIDE%LIGHTUNITS` / `HEAVYUNITS` / `AIRCRAFTUNITS` / `AIRPORTUNITS` / `DEPOTUNITS` | Buy UI, factory queues and build-time/price derivations consume these lists directly. `WFBE_C_UNITS_TOWN_PURCHASE` and map/faction gates can change what is visible. |
+| `WFBE_%SIDE%AITEAM*` | Squad templates, requirements, type labels, upgrade requirements and AI-team roles must remain in lockstep. |
+
+There is also a post-load mutation layer. `Init_Common.sqf:325-367` derives longest build times, doubles selected unit prices under `WFBE_C_UNITS_PRICING`, multiplies structure costs when `WFBE_C_ECONOMY_CURRENCY_SYSTEM == 1`, and builds aggregate repair-truck lists. `Config_SetTemplates.sqf:33-123` is a schema builder, not just a helper: it consumes nested weapon/magazine/backpack rows and outputs `[picture, label, price, upgrade, weapons, magazines, backpack]`.
+
 Load-order landmarks for config work:
 
 - `initJIPCompatible.sqf:121-123` loads mission parameters and common constants, then `:214-215` starts common config and town initialization.

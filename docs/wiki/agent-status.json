@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T22:05:00+02:00",
+  "generatedAt": "2026-06-04T22:15:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Fallback mini-scout wave is harvested, validated and pushed. Content commits are docs b878f7e4 / wiki bad8646; final breadcrumb heads are docs b7f03baf / wiki 14a3a2d. No gameplay source changed.",
-      "nextExpectedOutput": "Continue bounded source-backed wiki maintenance and keep final-head breadcrumbs current."
+      "currentWork": "Mini scout wave for community/dev, config data model, AI runtime/orders, UI/player workflows and tooling has been harvested into docs. One feature-status scout overflowed without evidence. Validation and push are pending. No gameplay source changed.",
+      "nextExpectedOutput": "Validate, mirror, commit and push the scoped docs batch, then record final heads."
     },
     "Codex-2": {
       "status": "ready",
@@ -37,12 +37,18 @@
     },
     "Sub-agents": {
       "status": "closed",
-      "currentLane": "fallback-mini-scout-wave-feature-lifecycle-economy-pv-ui-tooling",
-      "currentWork": "All six fallback scouts returned and were closed. Bohr mostly confirmed existing canonical rows; Laplace produced a sidebar navigation delta; Descartes produced one accepted PV inventory correction and one rejected version-flow correction; Huygens produced economy constants; Hubble sharpened networking transport wording; Kuhn led to a PerformanceAuditAnalyzer page.",
-      "nextExpectedOutput": "No active scout wave; future scouts should stay narrow and source-cited."
+      "currentLane": "mini-scout-wave-community-config-ai-ui-tooling",
+      "currentWork": "Five mini scouts returned and were closed: community/dev provenance, config/data model, AI runtime/orders, UI/player workflows and tooling/integrations. One feature-status scout overflowed during compaction and is not evidence.",
+      "nextExpectedOutput": "No active scout wave; current harvested docs batch awaits validation/push."
     }
   },
   "laneSummary": [
+    {
+      "lane": "mini-scout-wave-community-config-ai-ui-tooling",
+      "owner": "Codex/Sub-agents",
+      "status": "harvested-validation-pending",
+      "output": "Spark starts hit quota/overflow before evidence, so Codex launched six gpt-5.4-mini read-only scouts. Five returned and were source-checked into docs: config positional arrays and post-load mutation, player UI workflow details, AI order/recovery chain and PerformanceAuditAnalyzer 14-output contract. Community/dev scout confirmed existing hub coverage. One feature-status scout overflowed and is not evidence. No gameplay source changed."
+    },
     {
       "lane": "documentation-finisher-loop",
       "owner": "Codex",

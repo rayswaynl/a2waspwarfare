@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-04T22:15:00+02:00 - Codex - mini scout wave community/config/AI/UI/tooling
+
+- Steff asked for more Spark scouts. Spark quota/overflow blocked three `gpt-5.3-codex-spark` starts before evidence, so Codex closed the failed slots and launched six read-only `gpt-5.4-mini` scouts.
+- Returned reports: community/dev provenance, config/data model, AI/runtime orders, UI/player workflows and tooling/integrations. The feature-status scout overflowed during remote compaction and is not evidence.
+- Harvested only non-duplicate, source-backed deltas: [Assets/config/localization/parameters](Assets-Config-Localization-And-Parameters-Atlas) now calls out positional config families and post-load mutation; [Player UI workflow](Player-UI-Workflow-Map) now spells out buy-gear views/tabs, command-menu map-click flow, help-menu text ownership and respawn discovery; [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) now separates commander order UI, spawned-unit inheritance and player-AI recovery; [PerformanceAuditAnalyzer](PerformanceAuditAnalyzer) now states the current 14-output contract.
+- Community/dev scout confirmed the existing [Community & Dev](Community-And-Dev) page is the right hub; contributor-density and upstream-remotes evidence were already captured there, so no duplicate prose was added.
+- Validation and mirror publication are pending for this docs-only batch. No gameplay source files were edited.
+
 ## 2026-06-04T21:05:00+02:00 - Codex - fallback mini scout wave after Spark quota
 
 - Steff asked to run more Spark scouts. Six `gpt-5.3-codex-spark` starts failed on quota before returning evidence, with the runtime reporting Spark unavailable until 23:53.
