@@ -40,54 +40,62 @@ _newestSeq = _lastSeq;
 			_status = "rumor";
 
 			if (typeName _payload == "ARRAY") then {
-				if (_kind == "CONTACT" && {count _payload >= 7}) then {
-					_enemy = _payload select 0;
-					_category = _payload select 1;
-					_pos = _payload select 2;
-					_countMin = _payload select 3;
-					_countMax = _payload select 4;
-					_conf = 0 max (1 min (_payload select 5));
-					_label = _payload select 6;
-					_status = "active";
-					_relevant = true;
+				if (_kind == "CONTACT") then {
+					if (count _payload >= 7) then {
+						_enemy = _payload select 0;
+						_category = _payload select 1;
+						_pos = _payload select 2;
+						_countMin = _payload select 3;
+						_countMax = _payload select 4;
+						_conf = 0 max (1 min (_payload select 5));
+						_label = _payload select 6;
+						_status = "active";
+						_relevant = true;
+					};
 				};
-				if (_kind == "INTEL" && {count _payload >= 8}) then {
-					_enemy = _payload select 0;
-					_category = _payload select 1;
-					_pos = _payload select 2;
-					_countMin = _payload select 3;
-					_countMax = _payload select 4;
-					_conf = 0 max (0.60 min (_payload select 5));
-					_label = _payload select 6;
-					_status = "rumor";
-					_relevant = true;
+				if (_kind == "INTEL") then {
+					if (count _payload >= 8) then {
+						_enemy = _payload select 0;
+						_category = _payload select 1;
+						_pos = _payload select 2;
+						_countMin = _payload select 3;
+						_countMax = _payload select 4;
+						_conf = 0 max (0.60 min (_payload select 5));
+						_label = _payload select 6;
+						_status = "rumor";
+						_relevant = true;
+					};
 				};
-				if (_kind == "LOSS" && {count _payload >= 5}) then {
-					_enemy = if (_side == west) then {east} else {west};
-					_category = _payload select 3;
-					_pos = _payload select 1;
-					_countMin = 0;
-					_countMax = -1;
-					_conf = 0 max (0.70 min (_payload select 4));
-					_label = _payload select 2;
-					_status = "active";
-					_relevant = true;
+				if (_kind == "LOSS") then {
+					if (count _payload >= 5) then {
+						_enemy = if (_side == west) then {east} else {west};
+						_category = _payload select 3;
+						_pos = _payload select 1;
+						_countMin = 0;
+						_countMax = -1;
+						_conf = 0 max (0.70 min (_payload select 4));
+						_label = _payload select 2;
+						_status = "active";
+						_relevant = true;
+					};
 				};
 
-				if (_relevant && {typeName _pos == "ARRAY"}) then {
-					_town = objNull;
-					_townName = "";
-					_townRadius = if (_category == "air") then {2500} else {1500};
-					if (count towns > 0) then {
-						_town = [_pos, towns] Call WFBE_CO_FNC_GetClosestEntity;
-						if (!isNil "_town") then {
-							if (!isNull _town) then {
-								if ((_pos distance _town) <= _townRadius) then {_townName = _town getVariable ["name", "town"]} else {_town = objNull};
+				if (_relevant) then {
+					if (typeName _pos == "ARRAY") then {
+						_town = objNull;
+						_townName = "";
+						_townRadius = if (_category == "air") then {2500} else {1500};
+						if (count towns > 0) then {
+							_town = [_pos, towns] Call WFBE_CO_FNC_GetClosestEntity;
+							if (!isNil "_town") then {
+								if (!isNull _town) then {
+									if ((_pos distance _town) <= _townRadius) then {_townName = _town getVariable ["name", "town"]} else {_town = objNull};
+								};
 							};
 						};
+						_sources = [_source];
+						_candidate = [Format ["contact-%1-%2", str _side, _seq], _enemy, _category, _pos, _town, _townName, _countMin, _countMax, _conf, time, time, _sources, _status];
 					};
-					_sources = [_source];
-					_candidate = [Format ["contact-%1-%2", str _side, _seq], _enemy, _category, _pos, _town, _townName, _countMin, _countMax, _conf, time, time, _sources, _status];
 				};
 			};
 
