@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T16:05:00+02:00",
+    "generatedAt":  "2026-06-04T19:25:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -20,8 +20,8 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Source-checked moved AI commander branch refs while running a new narrow Spark scout wave. origin/feat/ai-commander is now c20ce153 (9 Chernarus files, +416/-5, no Vanilla); origin/codex/quad-ai-commander is now d4e0fa38. Current patch refreshes branch-head/status pages and machine ledgers first.",
-                                 "nextExpectedOutput":  "Validate, mirror and push the AI commander branch-head refresh; then harvest completed scout reports into focused follow-up documentation batches."
+                                 "currentWork":  "Validated and mirrored the AI commander branch-head refresh: origin/feat/ai-commander is now c20ce153 (9 Chernarus files, +416/-5, no Vanilla), and origin/codex/quad-ai-commander is d4e0fa38 concept/report evidence only.",
+                                 "nextExpectedOutput":  "Harvest completed scout reports into focused follow-up documentation batches, keeping duplicate confirmations out of canonical pages."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -46,8 +46,8 @@
                         {
                             "lane":  "ai-commander-branch-head-refresh-and-spark-scout-wave",
                             "owner":  "Codex/Sub-agents",
-                            "status":  "in-progress-source-checked",
-                            "output":  "Steff asked for more Spark scouts. Codex launched narrow read-only Spark lanes and source-checked moved AI commander branch heads locally. origin/feat/ai-commander is now c20ce153, still source-Chernarus-only with 9 files +416/-5 and no Missions_Vanilla propagation. The post-4dba060e fix series b4b0333f..c20ce153 rewrites lazy condition blocks in the five AI commander scripts but does not change smoke/propagation gates. origin/codex/quad-ai-commander is now d4e0fa38 and adds planning/report artifacts only. Scout reports already returned with leads for mission init, PV/networking, UI, tooling, generated/modded drift and feature-status evidence; they will be harvested in follow-up docs batches. No gameplay source changed."
+                            "status":  "published-validated",
+                            "output":  "Codex validated and mirrored the AI commander branch-head refresh. origin/feat/ai-commander is c20ce153, still source-Chernarus-only with 9 files +416/-5 and no Missions_Vanilla propagation. The post-4dba060e fix series b4b0333f..c20ce153 rewrites lazy condition blocks in the five AI commander scripts (+141/-91) but does not change smoke/propagation gates. origin/codex/quad-ai-commander is d4e0fa38 and adds planning/report artifacts only. Returned scout leads will be harvested in follow-up docs batches. No gameplay source changed."
                         },
                         {
                             "lane":  "fresh-background-spark-scout-wave-buy-menu-harvest",

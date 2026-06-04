@@ -7,6 +7,7 @@
 - In parallel, source-checked moved branch refs. `origin/feat/ai-commander` is now `c20ce153`, still source-Chernarus-only: 9 files, +416/-5, no `Missions_Vanilla`. The post-`4dba060e` cleanup series `b4b0333f`..`c20ce153` only rewrites lazy condition blocks across the five AI commander scripts, improving branch readiness without changing branch-only/smoke status.
 - Also refreshed `origin/codex/quad-ai-commander` from stale `3179be6d` to `d4e0fa38`; it now includes documentation-side evidence audit/runtime report artifacts, still planning evidence only.
 - Updated current branch-head/status pages and machine ledgers first. Documentation/status only; no gameplay source files were edited.
+- Closure note: the branch-head/status refresh is now validated and mirrored. Evidence checked: `origin/master` is `2cdf5fb8`; `origin/feat/ai-commander` is `c20ce153`; `origin/codex/quad-ai-commander` is `d4e0fa38`; `origin/master..origin/feat/ai-commander` is 9 Chernarus files, +416/-5, with no `Missions_Vanilla` file changes; `4dba060e..c20ce153` touches only the five `Server/AI/Commander/AI_Commander*.sqf` scripts (+141/-91).
 
 ## 2026-06-04T14:05:00+02:00 - Codex - fresh background Spark scout harvest status
 
