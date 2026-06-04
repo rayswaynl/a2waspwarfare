@@ -54,6 +54,7 @@ Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_C
 Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_BeliefMerge.sqf
 Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_BeliefDecay.sqf
 Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_ContextDebug.sqf
+Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_ContextSyntheticSmoke.sqf
 ```
 
 Takistan/variant propagation should wait until the Chernarus source is stable, unless the repo workflow requires immediate generated parity.
@@ -64,7 +65,7 @@ Takistan/variant propagation should wait until the Chernarus source is stable, u
 Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf
 ```
 
-Only add guarded compile/call hooks for context update. Do not change town assignment, executor, type assignment, production, or upgrade decisions.
+Only add guarded compile/call hooks for context update and compile the manual synthetic smoke helper. Do not change town assignment, executor, type assignment, production, or upgrade decisions.
 
 ## Compile Strategy
 
@@ -77,9 +78,10 @@ if (isNil "WFBE_SE_FNC_AI_Com_ContextUpdate") then {WFBE_SE_FNC_AI_Com_ContextUp
 if (isNil "WFBE_SE_FNC_AI_Com_BeliefMerge") then {WFBE_SE_FNC_AI_Com_BeliefMerge = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_BeliefMerge.sqf"};
 if (isNil "WFBE_SE_FNC_AI_Com_BeliefDecay") then {WFBE_SE_FNC_AI_Com_BeliefDecay = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_BeliefDecay.sqf"};
 if (isNil "WFBE_SE_FNC_AI_Com_ContextDebug") then {WFBE_SE_FNC_AI_Com_ContextDebug = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_ContextDebug.sqf"};
+if (isNil "WFBE_SE_FNC_AI_Com_ContextSyntheticSmoke") then {WFBE_SE_FNC_AI_Com_ContextSyntheticSmoke = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_ContextSyntheticSmoke.sqf"};
 ```
 
-Guard every call so context failure cannot break commander execution.
+Guard every call so context failure cannot break commander execution. The synthetic smoke helper must not be called automatically.
 
 ## Storage Contract
 
@@ -169,14 +171,49 @@ Current draft output shape:
 AI_Commander_Context: [WEST] 3 tracked beliefs, top=active/armor near Gorka conf=0.78 age=42s sources="BLUEFOR-C1","INTEL-FUZZY".
 ```
 
-## Synthetic Log Inputs
+### AI_Commander_ContextSyntheticSmoke.sqf
 
-Phase 2 can be tested before real contact emitters exist by appending synthetic records through the Phase 1 helper:
+Input:
 
 ```sqf
-[_side, "CONTACT", "BLUEFOR-C1", [east, "armor", [9610,8790,0], 3, 6, 0.75, "Gorka"]] Call WFBE_SE_FNC_AI_Com_LogAppend;
-[_side, "INTEL", "RADIO", [east, "unknown", [9600,8750,0], 0, -1, 0.35, "Gorka", "radio-traffic"]] Call WFBE_SE_FNC_AI_Com_LogAppend;
-[_side, "LOSS", "BLUEFOR-C2", [_team, [9400,8600,0], "vehicle-destroyed", "armor", 0.45]] Call WFBE_SE_FNC_AI_Com_LogAppend;
+// _side
+```
+
+Required behavior:
+
+- append two nearby `CONTACT` records, one `INTEL` record, and one `LOSS` record through `WFBE_SE_FNC_AI_Com_LogAppend`
+- use a town position as the anchor when towns exist
+- emit a short RPT line confirming synthetic records were appended
+- return `true` on success and `false` on missing side logic or log append helper
+- never run automatically
+
+## Synthetic Log Smoke
+
+Preferred manual server/debug command:
+
+```sqf
+west Call WFBE_SE_FNC_AI_Com_ContextSyntheticSmoke;
+```
+
+Use `east` instead of `west` to smoke the other side.
+
+Expected RPT anchors:
+
+```text
+AI_Commander_ContextSyntheticSmoke: [WEST] appended CONTACT/INTEL/LOSS synthetic records
+AI_Commander_Log: [WEST] #... CONTACT
+AI_Commander_Log: [WEST] #... INTEL
+AI_Commander_Log: [WEST] #... LOSS
+AI_Commander_Context: [WEST] ... tracked beliefs, top=...
+```
+
+The helper appends records equivalent to:
+
+```sqf
+[_side, "CONTACT", "SYNTHETIC-C1", [_enemy, "armor", _pos, 3, 6, 0.75, _label]] Call WFBE_SE_FNC_AI_Com_LogAppend;
+[_side, "CONTACT", "SYNTHETIC-C2", [_enemy, "armor", _nearPos, 2, 5, 0.65, _label]] Call WFBE_SE_FNC_AI_Com_LogAppend;
+[_side, "INTEL", "SYNTHETIC-RADIO", [_enemy, "unknown", _nearPos, 0, -1, 0.35, _label, "radio-traffic"]] Call WFBE_SE_FNC_AI_Com_LogAppend;
+[_side, "LOSS", "SYNTHETIC-LOSS", [_team, _nearPos, "vehicle-destroyed", "armor", 0.45]] Call WFBE_SE_FNC_AI_Com_LogAppend;
 ```
 
 Synthetic logs are for validation only. Do not wire fake contacts into normal gameplay.
@@ -203,6 +240,7 @@ Before opening the PR:
 - no Arma 3-only syntax
 - all new files compile with `preprocessFileLineNumbers`
 - context calls Phase 1 drain helper only when it exists
+- synthetic smoke helper is compiled but not invoked automatically
 - no worker reads `wfbe_aicom_context` yet
 - no order, production, upgrade, or type-assignment logic changes
 - belief count is capped
@@ -215,7 +253,7 @@ Using synthetic logs:
 
 - one `CONTACT` creates one active belief
 - nearby `CONTACT` from another source merges and raises confidence
-- far `CONTACT` creates a separate belief
+- far `CONTACT` creates a separate belief, if manually appended beyond merge radius
 - `INTEL` creates low-confidence rumor/context and does not jump to high confidence alone
 - `LOSS` creates or reinforces a moderate-confidence threat belief
 - confidence decays over time
@@ -238,6 +276,7 @@ Adds the Phase 2 AI Commander context layer. It consumes Phase 1 structured logs
 - No worker biasing.
 - No economy or waypoint behavior changes.
 - Context is server-owned and side-logic scoped.
+- Synthetic smoke helper is manual only.
 
 ## Validation
 
@@ -254,6 +293,7 @@ Stop and fix before publishing if:
 - malformed logs produce undefined-variable RPT noise
 - context grows unbounded
 - confidence exceeds 1 or goes below 0
+- synthetic smoke runs automatically in normal gameplay
 - any existing commander worker changes behavior because context exists
 - human explicit orders or economy boundaries are affected
 
