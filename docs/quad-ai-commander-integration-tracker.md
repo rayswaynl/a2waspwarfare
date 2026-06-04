@@ -18,7 +18,7 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 | 0 Execution substrate | `feat/ai-commander` | current AI commander PR | In progress; partial full-auto evidence | yes, current PR behavior |
 | 1 Structured logs | `codex/ai-commander-logs` | Phase 0 stable | Draft PR #18 open; static surface clean, runtime evidence pending | no |
 | 2 Context/beliefs | `codex/ai-commander-context` | Phase 1 logs | Draft PR #19 open; advisory-only scaffold with manual smoke helper, synthetic/runtime evidence pending | no |
-| 3 Advisory planner | `codex/ai-commander-planner` | Phase 2 beliefs | Spec ready, implementation pending | no by default |
+| 3 Advisory planner | `codex/ai-commander-planner` | Phase 2 beliefs | Spec and implementation brief ready; implementation pending until Phase 2 evidence | no by default |
 | 4 Worker biasing | `codex/ai-commander-worker-biasing` | Phase 3 planner | Spec ready, implementation pending | yes, gated |
 
 ## Phase Documents
@@ -34,6 +34,7 @@ This tracker summarizes the staged Quad AI Commander integration plan, current s
 | `docs/quad-ai-commander-phase2-beliefs.md` | Context and belief merge/decay spec |
 | `docs/quad-ai-commander-phase2-implementation-brief.md` | Context/belief implementation runbook |
 | `docs/quad-ai-commander-phase3-planner.md` | Advisory planner priority spec |
+| `docs/quad-ai-commander-phase3-implementation-brief.md` | Advisory planner implementation runbook |
 | `docs/quad-ai-commander-phase4-worker-biasing.md` | Behavior-changing worker biasing spec |
 | `docs/quad-ai-commander-runtime-validation.md` | Runtime evidence, stacked smoke handoff, RPT handoff, stop-go rules |
 | `wiki/Quad-AI-Commander.md` | Wiki-ready overview |
@@ -47,7 +48,7 @@ Follow the stacked smoke handoff in `docs/quad-ai-commander-runtime-validation.m
 2. Collect Phase 1 log evidence on draft PR #18.
 3. Use the manual Phase 2 smoke helper on draft PR #19 after #18 is runnable.
 
-Phase 3 should wait until Phase 2 has positive context evidence.
+Phase 3 implementation guidance is ready in `docs/quad-ai-commander-phase3-implementation-brief.md`, but a planner branch should wait until Phase 2 has positive context evidence.
 
 Already noted in PR #14:
 
@@ -110,6 +111,22 @@ Required Phase 2 proof before it can leave draft:
 - no worker reads `wfbe_aicom_context` yet
 - no order, production, upgrade, or type-assignment behavior changes because context exists
 
+Phase 3 is specified but not started:
+
+```text
+future branch: codex/ai-commander-planner
+base: codex/ai-commander-context
+runbook: docs/quad-ai-commander-phase3-implementation-brief.md
+```
+
+Required Phase 3 guardrails:
+
+- advisory mode defaults true
+- planner writes `wfbe_aicom_priorities` only
+- no worker reads priorities yet
+- no waypoint, production, upgrade, type-assignment, or town-assignment behavior changes
+- priority scores and counts remain bounded
+
 ## Invariants Across All Phases
 
 - Human explicit Move/Patrol/Defense orders are sacred.
@@ -131,7 +148,7 @@ Required Phase 2 proof before it can leave draft:
 | HQ-down/disabled smoke | Phase 0 | pending |
 | Phase 1 structured log RPT excerpts | Phase 1 | draft implementation open in PR #18; runtime evidence pending |
 | Phase 2 belief merge/decay excerpts | Phase 2 | draft implementation open in PR #19 with manual smoke helper; synthetic/runtime evidence pending |
-| Phase 3 advisory priority excerpts | Phase 3 | pending implementation; should wait for Phase 2 smoke evidence |
+| Phase 3 advisory priority excerpts | Phase 3 | implementation brief ready; code pending Phase 2 smoke evidence |
 | Phase 4 worker biasing advisory-on/off excerpts | Phase 4 | pending implementation |
 
 ## Stop-Go Rules
