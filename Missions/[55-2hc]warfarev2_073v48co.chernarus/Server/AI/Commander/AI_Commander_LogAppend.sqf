@@ -31,7 +31,7 @@ while {count _logs > _max} do {
 
 _logik setVariable ["wfbe_aicom_logs", _logs];
 _logik setVariable ["wfbe_aicom_log_seq", _seq];
-if (isNil {_logik getVariable "wfbe_aicom_log_last_prune"}) then {_logik setVariable ["wfbe_aicom_log_last_prune", time]};
+_logik setVariable ["wfbe_aicom_log_last_prune", time];
 
 _sideText = str _side;
 ["INFORMATION", Format ["AI_Commander_Log: [%1] #%2 %3.", _sideText, _seq, _kind]] Call WFBE_CO_FNC_LogContent;
