@@ -4,7 +4,7 @@ Page ownership: this page owns the supply-mission flow, cooldown/JIP pattern and
 
 Supply missions are one of the most cross-cutting systems in the mission. They touch client actions, skill roles, town cooldown state, server tracking loops, side supply, commander/team funds in PR #1, player rewards, public variables and buy-menu affordances.
 
-Authority summary: the live path is still client-authored at start and partly client-rewarded at completion. Client-side checks are affordance gates; the server tracks return-to-base and writes side supply, but today it accepts client-stamped `SupplyFromTown` / `SupplyAmount` state and the client completion message path handles personal cash/score reward presentation.
+Authority summary: the live path is still client-authored at start and partly client-rewarded at completion. Client-side checks are affordance gates; the server tracks return-to-base and writes side supply, but today it accepts client-stamped `SupplyFromTown` / `SupplyAmount` state and the client completion message path handles personal cash/score reward presentation. The completion message channel is therefore gameplay-relevant, not cosmetic: `supplyMissionCompleted.sqf:24-34` broadcasts amount/player data, and `supplyMissionCompletedMessage.sqf:11-23` locally grants player funds and sends a score-change request when the payload player matches the local player.
 
 Current-source scope: the checked-in Chernarus source is still truck-only. A 2026-06-04 supply scout found no `SupplyByHeli` hits under `Missions/[55-2hc]warfarev2_073v48co.chernarus`; `SupplyByHeli` belongs to PR #1 / `origin/feat/supply-helicopter` branch evidence until that branch is merged.
 
@@ -42,7 +42,8 @@ Current-source scope: the checked-in Chernarus source is still truck-only. A 202
 - Cooldown variable casing is a confirmed DR-18 defect: town init seeds `lastSupplyMissionRun`, while server supply code reads/writes `LastSupplyMissionRun`.
 - `supplyMissionStarted.sqf` loops until the vehicle dies; it should avoid creating duplicate tracking loops for the same loaded vehicle.
 - Completion trusts object variables on the supply vehicle, so any feature that reuses those vars must clear them reliably.
-- Completion reward is split: the server mutates side supply, while the client completion message path grants personal funds locally and requests score reward. The personal cash award is raw `_supplyAmount` (`supplyMissionCompletedMessage.sqf:8,13-14`), not the stale `STR_Supplies_2` stringtable claim of `4 x actual value`.
+- Completion reward is split: the server mutates side supply, while the client completion message path grants personal funds locally and requests score reward. The personal cash award is raw `_supplyAmount` (`supplyMissionCompletedMessage.sqf:8,13-14`), not the stale `STR_Supplies_2` stringtable claim of `4 x actual value`. Because the cash/score side effect happens in the client handler (`supplyMissionCompletedMessage.sqf:11-23`), hardening must treat `WFBE_Server_PV_SupplyMissionCompletedMessage` as an authority surface, not just a notification.
+- Supply request/response caches are mutable local state. `Client_ReceiveSupplyValue.sqf:1-8` writes `missionNamespace["wfbe_supply_%side"]`, `townSupplyStatus.sqf:1-8` writes `supplyMissionCoolDownEnabled` on town objects, and `Common_GetSideSupply.sqf:13-18,26-31,39-44` waits on those local values with no timeout. Keep local cache poisoning and unbounded waits in mind before adding more client-side economy gates on top of supply reads.
 - Player resolution depends on `WFBE_SE_PLAYERLIST` and proximity/driver checks; stale rows can survive disconnects until the lifecycle cleanup lane is patched.
 
 Claude DR-39 split the Perf/JIP status cleanly:
@@ -84,6 +85,7 @@ Merge-scope caveat: current local `origin/feat/supply-helicopter` head is `262dc
 - Add an explicit loaded/unloaded state variable to prevent duplicate tracking loops; keep or deliberately extend the PR's `Killed` handler guard.
 - Split client affordance, server validation and reward calculation into documented helper functions.
 - Keep the pull-based cooldown request/response pattern for JIP-visible state, but target responses where possible.
+- Add terminal timeouts/fallback behavior to `Common_GetSideSupply` request waits so lost or blocked `SUPPLY_VALUE_REQUESTED` responses cannot hang every caller on that client.
 - Command-center scan narrowing is patched in source and maintained Vanilla Takistan; keep Arma smoke evidence on [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) and [Testing workflow](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack).
 - Redesign autonomous AI logistics separately from the broken `UpdateSupplyTruck` runtime path (`Init_Server.sqf:36,383`; filename/log label `AI_UpdateSupplyTruck.sqf`) and missing `supplytruck.fsm`.
 

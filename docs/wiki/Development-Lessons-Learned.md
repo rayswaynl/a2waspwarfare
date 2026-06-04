@@ -4,6 +4,12 @@ This page captures implementation lessons that future developers and agents shou
 
 Source root: `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
 
+## Lesson 0: Feature-Sounding Names Are Not Proof Of Feature Completeness
+
+The depth-2 scout wave found a good example in AI teams: `wfbe_autonomous` sounds like a working autonomous AI feature, but `Common/Functions/Common_SetTeamAutonomous.sqf:8` only writes a replicated group variable. Current source-visible consumers are commander cleanup (`Client/FSM/updateclient.sqf:191-205`), the command-menu toggle (`Client/GUI/GUI_Menu_Command.sqf:364-389`) and AI respawn order-reset logic (`Server/AI/AI_SquadRespawn.sqf:102-109`, `Server/AI/AI_AdvancedRespawn.sqf:117-125`). Before documenting or building around a feature-sounding variable, trace writers and consumers; then describe the actual behavior in player terms.
+
+The same rule applies to network messages that sound cosmetic. `WFBE_Server_PV_SupplyMissionCompletedMessage` looks like a notification channel, but the client handler grants funds and requests score (`Client/Module/supplyMission/supplyMissionCompletedMessage.sqf:11-23`). Treat names as clues, not proof of authority or side-effect scope.
+
 ## Highest-Value Coverage Gaps
 
 | Area | Current coverage state | Why it still deserves attention |

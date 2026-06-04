@@ -142,6 +142,8 @@ When a town itself is captured, `Server_SetCampsToSide.sqf` resets every camp to
 
 `Common_GetTotalCamps.sqf:10-11` and `Common_GetTotalCampsOnSide.sqf:16` both return `1` when the computed count is zero. That fallback may have been intended as a divide-by-zero guard for camp-ratio logic, but it can also inflate empty-camp totals in UI, metrics or future balance code. Before reusing these helpers, decide whether the caller needs a real count or a safe denominator.
 
+Respawn-specific caveat from the 2026-06-04 depth scout: `Common_GetRespawnThreeway.sqf:6-8` checks whether total camps equals side-owned camps, and `Client_GetRespawnAvailable.sqf:67-75` appends that list for threeway defender respawn. Because both helper functions return `1` for zero-camp towns, a side-owned zero-camp town can look fully camp-owned to the respawn system. If this fallback is meant only as a safe denominator for capture math, split a real-count helper or explicitly exclude zero-camp towns in threeway respawn.
+
 Camp capture marker events are also timing-sensitive: `CampCaptured.sqf:12-13` and `AllCampsCaptured.sqf:9-10` assume each camp already has a local `wfbe_camp_marker`. `Init_Town.sqf:149-158` creates those marker names on clients, so JIP or unusually early PVF delivery should be smoked before changing camp marker dispatch.
 
 ## Client Marker And Capture Feedback

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T06:50:00+02:00",
+  "generatedAt": "2026-06-04T07:10:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Validated mini-scout-wave-ai-commander-factory-ui-pv-runtime after Spark quota blocked: salvage patch routing, server-FPS wording, AI-cap table confirmation, Economy control 23006, RequestBaseArea and SEND_MESSAGE trust notes.",
+      "currentWork": "Validated mini-scout-wave-ai-construction-respawn-pv-ui-depth-2 after harvesting five gpt-5.4-mini reports: wfbe_autonomous wording, AI formation picker, server base-area seeding, CoIn null reads, supply completion reward authority, supply cache timeout/cache-poisoning, RequestSpecial group-query authority, threeway zero-camp respawn, duplicate HandleAT Fired handlers, WASP base-repair traps and compact UI TODOs.",
       "nextExpectedOutput": "Push docs mirror and wiki commits, then continue the documentation finisher loop."
     },
     "Codex-2": {
@@ -38,16 +38,22 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "Six gpt-5.4-mini read-only scouts completed and were harvested. Factory and commander reports mostly confirmed canonical docs; useful deltas landed in AI caps, UI controls, PV trust notes, server-FPS wording and salvage patch routing.",
+      "currentWork": "Five gpt-5.4-mini read-only scouts completed and were harvested into canonical pages.",
       "nextExpectedOutput": "No active sub-agent output pending."
     }
   },
   "laneSummary": [
     {
+      "lane": "mini-scout-wave-ai-construction-respawn-pv-ui-depth-2",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "output": "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked the first two starts, so Codex closed those failed slots and launched five gpt-5.4-mini read-only scouts. Source-backed deltas were promoted into canonical pages: wfbe_autonomous wording, AI formation picker, server base-area seeding, CoIn null reads, supply completion reward authority, supply cache timeout/cache-poisoning, RequestSpecial group-query authority, threeway zero-camp respawn, duplicate HandleAT Fired handlers, WASP base-repair traps and compact UI TODOs. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed. No gameplay source changed."
+    },
+    {
       "lane": "mini-scout-wave-ai-commander-factory-ui-pv-runtime",
       "owner": "Codex/Sub-agents",
       "status": "published-validated",
-      "output": "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked all six starts, so Codex closed the failed threads and relaunched six gpt-5.4-mini read-only scouts. Harvested source-backed deltas: salvage payout casing routed into the hardening roadmap, server-FPS hosted/listen wording corrected, AI-cap table re-confirmed, Economy missing controls expanded to 23004/23005/23006, RequestBaseArea and SEND_MESSAGE trust notes sharpened. Factory and commander reports mostly confirmed existing canonical pages. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed. No gameplay source changed."
+      "output": "Steff asked for more Spark scouts. GPT-5.3-Codex-Spark quota blocked all six starts, so Codex closed the failed threads and relaunched six gpt-5.4-mini read-only scouts. Harvested source-backed deltas: salvage payout casing routed into the hardening roadmap, server-FPS hosted/listen wording corrected, AI-cap table re-confirmed, Economy missing controls expanded to 23004/23005/23006, RequestBaseArea and SEND_MESSAGE trust notes sharpened. Factory and commander reports mostly confirmed existing canonical pages. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed. Pushed as docs 0d5b5063 / wiki 2428bfc. No gameplay source changed."
     },
     {
       "lane": "mini-scout-wave-maps-ops-pv-factory-respawn",

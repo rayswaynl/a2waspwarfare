@@ -18,6 +18,8 @@ Server dispatch starts at `Server/PVFunctions/RequestSpecial.sqf:1`, which forwa
 
 RequestSpecial scout 2026-06-04: the active tag set in source Chernarus is `update-teamleader`, `group-query`, `Paratroops`, `ParaVehi`, `ParaAmmo`, `RespawnST`, `uav`, `upgrade-sync`, `update-clientfps`, `update-town-delegation`, `ICBM`, `process-killed-hq`, `connected-hc` and `repair-camp`. `track-playerobject` has a server switch case around `Server_HandleSpecial.sqf:133-145`, but no active Chernarus `RequestSpecial` caller was found; treat it as an undriven bookkeeping branch unless a later dynamic caller proves otherwise.
 
+Depth scout follow-up 2026-06-04 added one high-value authority caution: `group-query` is not just a harmless request relay. `Server_HandleSpecial.sqf:13-31` trusts payload `_group`, `_player` and `_side`; if the target leader is AI and the group lacks `wfbe_uid`, it calls `Common_ChangeUnitGroup.sqf:3-11` to move the payload player into that group. Patch this in the server-authority lane by deriving requester/player/side server-side before any group move.
+
 Mini-scout follow-up 2026-06-04 tightened the authority map:
 
 - Tactical menu gating is client-side first: `Client/GUI/GUI_Menu_Tactical.sqf:252-283,293-347,463-527` checks funds, upgrades, commander status, UAV state and local cooldowns before requests are sent.
@@ -51,7 +53,7 @@ Adjacent server runtime surfaces: grouped base areas are enabled only when `WFBE
 | ZetaCargo/airlift | Broken/partial | Hook attaches nearby unmanned land vehicle; detach action does not pass the lifted vehicle even though unhook expects it. |
 | Service menu | Working/partial | Repair/refuel/rearm/heal effects and deductions are client-side; local support scripts recheck world state but not full money authority. |
 | Supply mission | Partial | Server validates return proximity but trusts client-set `SupplyFromTown` / `SupplyAmount`. |
-| Supply truck respawn | Working/unclear | Economy menu requests server-side supply-truck kill/respawn; no fee found. |
+| Supply truck respawn | Partial/unclear | Economy menu requests `RequestSpecial ["RespawnST", sideJoined]`; `Server_HandleSpecial.sqf:55-60` damages current `wfbe_ai_supplytrucks`, but actual recreation depends on the broken/config-gated `UpdateSupplyTruck` path. |
 
 ## Server Dispatch And PV Paths
 

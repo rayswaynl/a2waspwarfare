@@ -60,6 +60,7 @@ Mini-scout follow-up 2026-06-04 confirmed two practical spawn-table caveats:
 
 - Service Point and Command Center base respawns are explicitly commented out in `Client_GetRespawnAvailable.sqf:23-26`; the live base set is HQ plus Barracks/Light/Heavy/Air factories.
 - Mobile respawn is conditional, not just object-based: `Client_GetRespawnAvailable.sqf:33-45` requires an ambulance-class vehicle inside the upgrade-gated range and with free cargo space before it enters the candidate list. Camp availability has its own hostile-safe filtering in `Common_GetRespawnCamps.sqf:11-94`.
+- Threeway defender town respawn inherits the camp-count fallback. `Common_GetTotalCamps.sqf:9-12` and `Common_GetTotalCampsOnSide.sqf:15-22` both return `1` when a town has zero camps, and `Common_GetRespawnThreeway.sqf:6-8` treats equality as "all camps owned." Because `Client_GetRespawnAvailable.sqf:67-75` appends that result directly, a side-owned zero-camp town can become a respawn source unless an owner confirms that the `1` fallback is intended for this caller.
 
 No revive framework is wired in the audited source. The 2026-06-04 respawn scout found no mission-script `revive`/`reviving`/`revived` path under source Chernarus, and the live architecture is kill event, custom death camera, respawn menu, then `Client_OnRespawnHandler.sqf`. Do not document MASH as a revive feature; it is a respawn candidate source with a dead marker-sharing edge.
 
@@ -153,6 +154,8 @@ Known adjacent hazard: HQ death has its own redundant client EH/JIP path and ide
 | Smoke pending | Source-only skill idempotency patch depends on respawn reapply still working. | `Client_PreRespawnHandler.sqf:5`; [Client skill init idempotency](Client-Skill-Init-Idempotency) | Smoke Soldier/non-Soldier cap and post-respawn skill actions after LoadoutManager propagation. |
 | Review target | Respawn UI loop sleeps `0.01` and selector sleeps `0.03`. | `GUI_RespawnMenu.sqf:113`; `Client_UI_Respawn_Selector.sqf:19-35` | Keep as bounded death-screen-only UI work; if optimizing, preserve marker responsiveness and cleanup. |
 | Cleanup target | AI respawn loadout tier uses a literal gear-upgrade index and assumes a non-empty loadout array. | `AI_AdvancedRespawn.sqf:68`; `AI_SquadRespawn.sqf:56`; `Init_CommonConstants.sqf:50` | Replace literal `13` with `WFBE_UP_GEAR`, clamp/bounds-check tier selection and smoke Vanilla plus non-Vanilla AI leader respawn. |
+| Patch-ready | Player respawn can stack `HandleAT` Fired handlers on a persistent vehicle. | `Init_Client.sqf:18,266`; `Client_PreRespawnHandler.sqf:13` | Store/remove handler IDs or guard attachment per vehicle/player lifecycle, then smoke death while in/on the same vehicle and ordinary infantry respawn. |
+| Review target | Threeway defender respawn can include zero-camp towns because total-camp helpers return `1` for empty camp arrays. | `Common_GetTotalCamps.sqf:9-12`; `Common_GetTotalCampsOnSide.sqf:15-22`; `Common_GetRespawnThreeway.sqf:6-8`; `Client_GetRespawnAvailable.sqf:67-75` | Split safe-denominator helpers from real respawn eligibility, or explicitly exclude zero-camp towns in `GetRespawnThreeway`; smoke threeway defender towns with 0/partial/all camps. |
 
 ## Validation Checklist
 

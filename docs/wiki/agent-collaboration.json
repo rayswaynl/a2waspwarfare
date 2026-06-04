@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T06:50:00+02:00",
+  "generatedAt": "2026-06-04T07:10:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,28 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "mini-scout-wave-ai-construction-respawn-pv-ui-depth-2",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "sourceScope": [
+        "AI commander autonomy and AI team behavior",
+        "construction, CoIn, base areas, factories, repair and salvage",
+        "respawn, MHQ, service points, camps, MASH and death/revive flow",
+        "networking, public variables, authority checks and client/server trust",
+        "UI, HUD, dialogs, buy menus, gear templates and player-facing UX traps"
+      ],
+      "outputs": [
+        "Steff asked for more Spark scouts",
+        "GPT-5.3-Codex-Spark quota blocked the first two starts until reset; failed Spark slots were closed",
+        "Five gpt-5.4-mini read-only scouts launched with disjoint subsystem lanes and closed after reports",
+        "Previous mini-scout harvest was pushed as docs 0d5b5063 / wiki 2428bfc",
+        "Promoted source-backed deltas into AI commander, AI/headless, construction/CoIn, supply mission, public-variable index, server-authority map, respawn/death, towns/camps, support specials, UI systems, WASP overlay and Feature Status pages",
+        "No gameplay source changed",
+        "docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed"
+      ],
+      "handoff": "Treat the raw scout reports as harvested. Future agents should use the patched canonical pages and source paths; push is the only remaining step for this docs batch."
+    },
     {
       "lane": "mini-scout-wave-ai-commander-factory-ui-pv-runtime",
       "owner": "Codex/Sub-agents",
@@ -43,6 +65,7 @@
         "PV report sharpened RequestBaseArea and SEND_MESSAGE trust notes",
         "Factory and commander reports mostly confirmed existing canonical pages",
         "docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed",
+        "Pushed as docs 0d5b5063 / wiki 2428bfc",
         "No gameplay source changed"
       ],
       "handoff": "Treat raw scout reports as harvested; future agents should use the patched canonical pages and avoid duplicating factory/commander findings already covered there."

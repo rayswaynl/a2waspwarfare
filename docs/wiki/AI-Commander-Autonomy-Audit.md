@@ -82,6 +82,15 @@ The safe wording is therefore: stable master has usable order primitives and a h
 
 Final mini-scout follow-up 2026-06-04 found one partial automation nuance worth preserving: newly spawned units can inherit an existing client-side map/waypoint destination. `Client_SendSpawnedUnitsToLeaderWaypoint.sqf:24-35,73-92` reads the last team-leader map order or current waypoint/expected destination and issues `commandMove` to spawned units; `Client_SetAttackWaveDetails.sqf:24-35,73-92` has the same shape for attack-wave units. This is order inheritance at spawn time, not a general server-side commander scheduler, and it depends on client-side stored map-order state such as `WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_*`.
 
+Depth scout follow-up 2026-06-04 sharpened the meaning of the `wfbe_autonomous` group variable. `Common/Functions/Common_SetTeamAutonomous.sqf:8` only replicates the flag; the visible consumers found in source are commander-loss cleanup (`Client/FSM/updateclient.sqf:191-205`), the command-menu toggle (`Client/GUI/GUI_Menu_Command.sqf:364-389`) and AI respawn reset logic (`Server/AI/AI_SquadRespawn.sqf:102-109`, `Server/AI/AI_AdvancedRespawn.sqf:117-125`). In other words, "autonomous" means "do not reset this team's stored movement order on respawn" more than "run a live independent AI commander brain." Keep that distinction when designing AI commander revival or role-balance changes.
+
+The same pass found two order-helper caveats:
+
+- Behavior/formation knobs can be rewritten by movement helpers. `AI_MoveTo.sqf:6-17` and `AI_Patrol.sqf:7-18` set combat/behavior/formation/speed, then may call `UpdateTeam`; `AI_TownPatrol.sqf:26-30` randomizes the same properties directly before waypoints. Do not assume command-menu combo values are preserved after every server order helper runs.
+- `Server/Functions/Server_UpdateTeam.sqf:4-8` chooses a formation using `round(random(count _formations -1))`. If uniform selection is intended, this is a small correctness bug candidate because edge entries get different probability than a `floor(random count _formations)` picker.
+
+Resistance AI should stay split from main-side commander teams. `Server/AI/AI_Resistance.sqf:7-16` goes straight to `BIS_fnc_taskPatrol`, `AIWPAdd` or `AIPatrol`; west/east order helpers gate through `CanUpdateTeam` and `UpdateTeam` first. Document resistance behavior as town/occupation AI, not as proof that west/east commander-team autonomy is live.
+
 ## Broken AI Supply Truck Path
 
 The old AI logistics path is config-gated latent breakage:

@@ -171,9 +171,9 @@ When mobilizing:
 - Locks/unlocks commander interaction and logs the change.
 - Deletes the deployed HQ structure.
 
-Base-area support is present but partly strange: the server creates a `LocationLogicStart`, sets `DefenseTeam` and `weapons`, then sends `RequestBaseArea` to clients. The older direct server-side `avail`, `side` and `wfbe_basearea` updates are inside a commented block at `Construction_HQSite.sqf:56-58`, while `Client/PVFunctions/RequestBaseArea.sqf` sets `avail`, `side`, `wfbe_basearea` on receipt. Treat base-area accounting as multiplayer-sensitive before changing defense availability.
+Base-area support is present but partly broken. `Server/Init/Init_Server.sqf:380` initializes each side logic `wfbe_basearea` to `[]` when grouped base areas are enabled. During HQ deploy, the server creates a `LocationLogicStart`, sets `DefenseTeam` and `weapons`, then sends `RequestBaseArea` to clients (`Construction_HQSite.sqf:50-54`). The older direct server-side `avail`, `side` and `wfbe_basearea` updates are inside a commented block at `Construction_HQSite.sqf:55-58`, while `Client/PVFunctions/RequestBaseArea.sqf:1-4` performs the append on the receiving client. `Server/FSM/basearea.sqf:55-77` only prunes an existing server list; no source path in this pass was found that appends the new base-area logic back into the server-side list. Treat server-side base-area consumers as operating from an empty or stale list until the server seeding path is restored and smoked.
 
-The CoIn defense path mirrors the same fragility on the client side: `Client/Module/CoIn/coin_interface.sqf:721-730` reads base-area availability from the nearest `_area` before proving the base-area object is valid. Pair any server-side `Construction_StationaryDefense` null-guard fix with a CoIn UI smoke pass for stale/empty base-area lists.
+The CoIn defense path mirrors the same fragility on the client side. `Client/Module/CoIn/coin_interface.sqf:721-730` reads base-area availability from the nearest `_area` before proving the base-area object is valid. The commander defense-sale path has the same guard-order shape: `coin_interface.sqf:256-263` finds the closest base-area logic, reads `_area getVariable "avail"` first, and only checks `!isNull _area` afterwards. Pair any server-side `Construction_StationaryDefense` null-guard fix with a CoIn UI smoke pass for stale/empty base-area lists, grouped-base placement and commander defense selling.
 
 ### SmallSite / MediumSite
 
@@ -220,7 +220,7 @@ Notable paths:
 
 Focused construction scout 2026-06-04 found a small guard-order bug here. `Construction_StationaryDefense.sqf:12-13` finds the closest base-area logic and immediately reads `_area getVariable "weapons"` before the later `if (!isNull _area)` guard. If the base-area list is empty, stale or race-pruned, defense construction can hit a null-object variable read before the script reaches its guarded block. Patch this separately from DR-6 authority hardening: move the weapons read inside the non-null block or early-exit when no base-area logic exists, then smoke defense placement with grouped-base mode on and off.
 
-Client-side CoIn placement has the companion risk noted above (`coin_interface.sqf:721-730`). Do not call the guard fixed until both the server construction worker and the client availability/decrement path handle missing/stale base-area logics.
+Client-side CoIn placement and sale have the companion risks noted above (`coin_interface.sqf:721-730` and `:256-263`). Do not call the guard fixed until the server construction worker, server base-area seeding, client placement availability/decrement and commander sale/refund path all handle missing/stale base-area logics.
 
 ## Repair Flows
 
