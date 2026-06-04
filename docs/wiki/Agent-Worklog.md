@@ -2315,6 +2315,13 @@ Key conclusions:
 - No gameplay source files changed.
 - Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 24 mirrored files.
 
+## 2026-06-04T23:59:30+02:00 - Codex - commander artillery ownership patch published
+- Focused Codex thread `WASP commander artillery ownership` finished and landed the commander-built ARTY fix.
+- Evidence checked by the focused lane: commander defense construction through `Server/PVFunctions/RequestDefense.sqf`, `Server/Construction/Construction_StationaryDefense.sqf`, `Server/Functions/Server_HandleDefense.sqf`, `Client/GUI/GUI_Menu_Tactical.sqf`, `Client/Functions/Client_RequestFireMission.sqf` and `Common/Functions/Common_GetTeamArtillery.sqf`.
+- Source result: artillery-class stationary defenses built through the commander defense path are assigned to the side commander team before manning, so the commander's Tactical artillery workflow can discover them instead of leaving them as direct-fire-only defenses.
+- Validation before push: `docs/validate-wiki.ps1`, `git diff --check`, touched JSONL parsing, mirror/wiki SHA256 parity and Chernarus/Takistan `Construction_StationaryDefense.sqf` parity all passed.
+- Pushed as docs `b5feed5f` / wiki `819d41c`. Arma smoke remains pending.
+
 ## 2026-06-04T11:05:00+02:00 - Codex - commander/town/PV mini scout playbook harvest
 - Spark quota blocked the requested GPT-5.3-Codex-Spark wave, so Codex launched four `gpt-5.4-mini` read-only scouts for commander/HQ, economy/supply, towns/capture and PV/networking authority.
 - Commander, towns and PV/networking returned; the economy scout timed out and was closed without output.

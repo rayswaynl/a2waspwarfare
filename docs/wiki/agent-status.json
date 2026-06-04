@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T23:59:00+02:00",
+  "generatedAt": "2026-06-04T23:59:30+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Navigation parity batch is published: _Sidebar.md and mkdocs.yml now have zero page-slug drift and expose the same major reading routes. Current scout wave mostly confirmed existing canonical pages; economy scout timed out twice and was closed without output. No gameplay source changed.",
+      "currentWork": "Commander artillery ownership patch is published from the focused engineering thread: artillery-class stationary defenses built through the commander defense path are routed to the side commander team before manning, with source Chernarus and maintained Vanilla Takistan kept in parity. Docs/machine notes were pushed as docs b5feed5f / wiki 819d41c; Arma smoke remains the release gate.",
       "nextExpectedOutput": "Continue from the next source-backed docs lane: fold new focused engineering-thread findings into owner pages/Feature Status if they produce evidence, otherwise continue P0/P1 owner-page cleanup."
     },
     "Codex-2": {
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "commander-artillery-ownership-patch",
+      "owner": "Focused Codex thread",
+      "status": "published-validated-pushed",
+      "output": "Traced commander defense construction through RequestDefense.sqf, Construction_StationaryDefense.sqf, HandleDefense, GetTeamArtillery and the Tactical fire-mission request path. Patched source Chernarus and maintained Vanilla Takistan so artillery-class stationary defenses built through the commander defense path are assigned to the commander team before manning, allowing commander Tactical artillery discovery instead of direct-fire-only behavior. Validation included docs/validate-wiki.ps1, diff checks, JSONL parsing, docs/wiki mirror parity and Chernarus/Takistan construction-file parity. Pushed as docs b5feed5f / wiki 819d41c. Arma smoke remains pending."
+    },
     {
       "lane": "navigation-parity-and-scout-wave-2026-06-04",
       "owner": "Codex/Sub-agents",
