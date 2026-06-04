@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T23:59:30+02:00",
+  "generatedAt": "2026-06-04T23:28:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Commander artillery ownership patch is published from the focused engineering thread: artillery-class stationary defenses built through the commander defense path are routed to the side commander team before manning, with source Chernarus and maintained Vanilla Takistan kept in parity. Docs/machine notes were pushed as docs b5feed5f / wiki 819d41c, and Testing-Debugging-And-Release-Workflow now carries the concrete commander-built artillery smoke pack; Arma smoke remains the release gate.",
-      "nextExpectedOutput": "Continue from the next source-backed docs lane: fold new focused engineering-thread findings into owner pages/Feature Status if they produce evidence, otherwise continue P0/P1 owner-page cleanup."
+      "currentWork": "Reconciled agent-hardening-backlog.jsonl after the commander artillery patch: the stationary-defense server base-area null guard is source-patched in Chernarus and maintained Vanilla Takistan; the client-side CoIn companion remains source-unpatched. No gameplay source changed in this docs batch.",
+      "nextExpectedOutput": "Continue from the next source-backed docs lane: fold newly returned focused engineering-thread findings into owner pages/Feature Status if they produce evidence, otherwise continue P0/P1 owner-page cleanup."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,6 +43,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "stationary-defense-guard-backlog-reconciliation",
+      "owner": "Codex",
+      "status": "published-validated-pushed",
+      "output": "Machine hardening backlog now distinguishes the source-patched server stationary-defense base-area guard from the still-open client CoIn companion guard. Evidence: Construction_StationaryDefense.sqf:12-15 in source Chernarus and maintained Vanilla Takistan; CoIn companion remains around coin_interface.sqf:721-730. No gameplay source changed; Arma smoke remains pending."
+    },
     {
       "lane": "commander-artillery-ownership-patch",
       "owner": "Focused Codex thread",

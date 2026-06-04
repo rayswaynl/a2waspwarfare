@@ -2358,6 +2358,12 @@ Key conclusions:
 - Updated the owning atlas/status pages plus `agent-feature-status.jsonl`. No gameplay source files changed.
 - Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity for 22 files. Content was pushed as docs `51153bf2` / wiki `152c52d`. No gameplay source changed.
 
+## 2026-06-04T23:28:00+02:00 - Codex - stationary defense guard backlog reconciliation
+- Reconciled stale machine-readable hardening backlog status after the commander artillery patch changed `Construction_StationaryDefense.sqf`.
+- Evidence checked: source Chernarus and maintained Vanilla Takistan now default `_availweapons = 0` and read `_area getVariable "weapons"` only behind `if (!isNull _area)` in `Server/Construction/Construction_StationaryDefense.sqf:12-15`; commander artillery team routing remains at Chernarus `:91-94`.
+- Updated `agent-hardening-backlog.jsonl`: `stationary-defense-basearea-null-guard-2026-06-04` is now `source-patched-smoke-pending`, while `coin-basearea-null-guard-pair-2026-06-04` is `partial-server-patched-client-source-unpatched` because `Client/Module/CoIn/coin_interface.sqf:721-730` still needs the companion guard.
+- No gameplay source files changed in this docs batch. Arma smoke remains pending.
+
 ## 2026-06-04T13:00:00+02:00 - Codex - mini scout wave quad AI/support/lifecycle/UI/tooling/upstream launch
 - Steff asked for more Spark scouts. Three GPT-5.3-Codex-Spark starts hit the quota limit until 13:06 and were closed.
 - Launched six `gpt-5.4-mini` read-only fallback scouts: `quad-ai-commander` branch intel, support/RequestSpecial authority, lifecycle/server-loop topology, UI/dialog lifecycle, tooling/release/deploy footguns and upstream/community-dev lessons.
