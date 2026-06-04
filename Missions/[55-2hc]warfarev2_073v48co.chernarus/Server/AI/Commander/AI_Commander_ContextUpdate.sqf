@@ -4,7 +4,7 @@
 	Parameter: _side
 */
 
-Private ["_side","_logik","_lastSeq","_records","_context","_record","_seq","_kind","_source","_payload","_candidate","_enemy","_category","_pos","_countMin","_countMax","_conf","_label","_town","_townName","_townRadius","_status","_sources","_debugLast","_newestSeq"];
+Private ["_side","_logik","_lastSeq","_records","_context","_record","_seq","_kind","_source","_payload","_candidate","_enemy","_category","_pos","_countMin","_countMax","_conf","_label","_town","_townName","_townRadius","_status","_sources","_debugLast","_newestSeq","_relevant"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -29,6 +29,15 @@ _newestSeq = _lastSeq;
 			_payload = _record select 5;
 			if (_seq > _newestSeq) then {_newestSeq = _seq};
 			_candidate = [];
+			_relevant = false;
+			_enemy = sideUnknown;
+			_category = "unknown";
+			_pos = [];
+			_countMin = 0;
+			_countMax = -1;
+			_conf = 0;
+			_label = "";
+			_status = "rumor";
 
 			if (typeName _payload == "ARRAY") then {
 				if (_kind == "CONTACT" && {count _payload >= 7}) then {
@@ -40,6 +49,7 @@ _newestSeq = _lastSeq;
 					_conf = 0 max (1 min (_payload select 5));
 					_label = _payload select 6;
 					_status = "active";
+					_relevant = true;
 				};
 				if (_kind == "INTEL" && {count _payload >= 8}) then {
 					_enemy = _payload select 0;
@@ -50,6 +60,7 @@ _newestSeq = _lastSeq;
 					_conf = 0 max (0.60 min (_payload select 5));
 					_label = _payload select 6;
 					_status = "rumor";
+					_relevant = true;
 				};
 				if (_kind == "LOSS" && {count _payload >= 5}) then {
 					_enemy = if (_side == west) then {east} else {west};
@@ -60,9 +71,10 @@ _newestSeq = _lastSeq;
 					_conf = 0 max (0.70 min (_payload select 4));
 					_label = _payload select 2;
 					_status = "active";
+					_relevant = true;
 				};
 
-				if ((_kind == "CONTACT" || {_kind == "INTEL"} || {_kind == "LOSS"}) && {typeName _pos == "ARRAY"}) then {
+				if (_relevant && {typeName _pos == "ARRAY"}) then {
 					_town = objNull;
 					_townName = "";
 					_townRadius = if (_category == "air") then {2500} else {1500};
