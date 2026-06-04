@@ -12,6 +12,7 @@ Scope: Chernarus source mission first, Arma 2 Operation Arrowhead 1.64 only, the
 | New value from this pass | First safe code sequence: side-supply arithmetic/validation first, then existing PVF spend handlers, then player-buy redesign. |
 | Wave I refinement | Kepler split client-trusted score/funds/supply mutation from safer server-derived read and award helpers. |
 | Wave Q refinement | Linnaeus's side-supply follow-up is now folded in: negative amounts are legitimate spend deltas, but the same signed `_amount` is also direct-PV payload data, so the first patch must clamp the result and validate channel/side/shape without pretending sign checks are authority. |
+| 2026-06-04 scout refinement | AI commander upgrade debit order is suspect, resource income can couple money payouts to the supply-cap guard, and client income display for income system `4` can differ from server paycheck math. |
 | Immediate patch candidate | `Common_ChangeSideSupply.sqf` and `Server_ChangeSideSupply.sqf` negative clamp and side/channel validation. |
 | Smallest server-led migration candidate | Upgrade purchase, because `RequestUpgrade` already reaches a server process but currently trusts client-side debit and dependency checks. |
 | Do not treat as small | Player factory buys. They create units/vehicles from the client and have no `RequestBuyUnit` PVF. |
@@ -50,6 +51,9 @@ Scope: Chernarus source mission first, Arma 2 Operation Arrowhead 1.64 only, the
 - `Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf:1-18`
 - `Server/Functions/Server_HandleSpecial.sqf:97-111`
 - `Server/Functions/Server_AttackWave.sqf:1-38`
+- `Server/Functions/Server_AI_Com_Upgrade.sqf:27,32-50`
+- `Server/FSM/updateresources.sqf:29-70`
+- `Client/Functions/Client_GetIncome.sqf:20-29`
 - Existing wiki records: [Deep-review findings](Deep-Review-Findings), [Server authority map](Server-Authority-Migration-Map), [Pending owner decisions](Pending-Owner-Decisions), [Public variable channel index](Public-Variable-Channel-Index), [Economy, towns and supply](Economy-Towns-And-Supply), [Attack-wave authority playbook](Attack-Wave-Authority-Playbook).
 
 ## What The Code Actually Does
@@ -100,6 +104,14 @@ There are also safer patterns worth reusing. `Common_AwardScorePlayer.sqf:17-27`
 - sends `RequestUpgrade` with `[side, id, currentLevel, true]` at `:161`.
 
 `RequestUpgrade.sqf:5` just spawns `Server_ProcessUpgrade`. `Server_ProcessUpgrade.sqf:12-18` trusts side, id and level from the payload to look up time; `:40-44` increments the upgrade state and clears the running flag. It does not recompute commander, current level, dependencies, cost or funds before accepting the transition. See [Upgrades and research atlas](Upgrades-And-Research-Atlas) for the full live-menu/server-worker/AI-worker map.
+
+AI commander upgrades are server-side but not therefore automatically correct. `Server_AI_Com_Upgrade.sqf:32-36` validates `_cost select 0` as supply and `_cost select 1` as funds, matching the player upgrade menu, then deducts `_cost select 0` from AI commander funds and `_cost select 1` from side supply at `:47-50`. Before reviving autonomous AI commander upgrade loops, decide whether the tuple order is `[supply, funds]` everywhere and patch the AI debit path accordingly.
+
+### Resource income has payout/display edge cases
+
+`Server/FSM/updateresources.sqf:29-70` places the side-supply increase, team paychecks and AI-commander funds inside an `_supply < WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` guard. `_supply` is the computed town supply income for the side, so the guard is not simply "current side supply is full". Do not refactor the income loop as a pure supply-cap cleanup without checking player/commander money payouts.
+
+For income system `4`, server payout applies a `1.5` multiplier before commander/player split (`updateresources.sqf:41-44`), while `Client_GetIncome.sqf:20-29` displays the split without that multiplier. UI work around RHUD/menu income should preserve or deliberately correct this mismatch with balance owner approval.
 
 ### Construction/defense already have server entrypoints, but client owns debit and placement affordance
 

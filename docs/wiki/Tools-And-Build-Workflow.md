@@ -11,7 +11,7 @@ Page ownership: this page owns the operational LoadoutManager rules, skip-list a
 Responsibilities:
 
 - generate common balance/EASA SQF files for terrains;
-- copy source mission files from Chernarus to vanilla/modded target missions;
+- copy source mission files from Chernarus to maintained vanilla target missions;
 - adjust terrain-specific map parameters such as Takistan `SET_MAP`;
 - optionally package missions with 7-Zip.
 

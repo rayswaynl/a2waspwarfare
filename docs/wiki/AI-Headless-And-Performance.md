@@ -18,6 +18,8 @@ Page ownership: this atlas owns AI/performance runtime orientation and source ro
 
 Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-21 covers HC disconnect/no failover, DR-42 covers static-defense HC one-way delegation / missing update-back, and DR-45 covers town-AI vehicle despawn deleting vehicles with player passengers. Treat those as the canonical finding records and use the linked playbooks for patch shape. For AI commander/autonomous logistics revival decisions, use [AI commander autonomy audit](AI-Commander-Autonomy-Audit).
 
+Terminology warning: current docs use "HC" for headless-client delegation, but the source also contains a separate Arma high-command UI path. `Client/FSM/updateavailableactions.fsm:47` initializes `_hc_enabled = false`, and the only `HCSetGroup` add path is gated by that flag at `:115-117`; no current source assignment was found that flips it true. Cleanup still removes high-command groups when commander state changes (`Client/FSM/updateclient.sqf:204,228`). Do not confuse this inert high-command UI ownership path with live headless-client AI creation/delegation.
+
 Boyle's second-pass autonomy review clarified the split between real AI plumbing and missing autonomy:
 
 | Area | Source status | Notes |
@@ -114,6 +116,8 @@ There is no `setGroupOwner` in the mission. HC mode uses remote creation: the se
 | HC bootstrap and registration | `initJIPCompatible.sqf:236-238`; `Headless/Init/Init_HC.sqf:4-15`; `Server_HandleSpecial.sqf:117-131`; `Server/Init/Init_Server.sqf:109-110` | [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) |
 | Town AI HC path | `Server_DelegateAITownHeadless.sqf:23-34`; `Client_DelegateTownAI.sqf:23-35`; `Server_HandleSpecial.sqf:86-96` | [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) |
 | Static-defense HC path | `Server_OperateTownDefensesUnits.sqf:38-56`; `Server_HandleDefense.sqf:19-24`; `Server_DelegateAIStaticDefenceHeadless.sqf:23-26`; `Client_DelegateAIStaticDefence.sqf:25-28` | [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) |
+| Player-client FPS delegation trust | `updateavailableactions.fsm:121-125`; `Server_HandleSpecial.sqf:75-83`; `Server_OnPlayerConnected.sqf:68-70`; `Server_FNC_Delegation.sqf:153-158` | [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) |
+| Arma high-command UI group add path | `updateavailableactions.fsm:47,115-117`; `updateclient.sqf:204,228` | Inert unless `_hc_enabled` is deliberately revived. |
 | Disconnect and late-HC behavior | `Server_OnPlayerDisconnected.sqf:22-29`; `initJIPCompatible.sqf:155,164-170` | [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) |
 
 Runtime caveats: HC mode can be forced at `initJIPCompatible.sqf:155`, then downgraded once during init if the OA build lacks HC support (`initJIPCompatible.sqf:164-170`). The current mission has no visible failover/rebalancing pass on HC disconnect and no late-HC rebalance pass. DR-21 and DR-42 track those as implementation findings; this atlas only routes readers to the live code.

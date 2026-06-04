@@ -33,6 +33,8 @@ The server registers a connected HC in `Server_HandleSpecial.sqf:117-131` by sto
 - `WFBE_HEADLESS_<uid>` = `group _hc`
 - `WFBE_HEADLESSCLIENTS_ID` += `[group _hc]`
 
+Registration edge: the append only happens when `owner _hc` is not `0` (`Server_HandleSpecial.sqf:120-128`). If the owner id is `0`, the server logs a warning at `:129-130` and no retry, delayed registration or fallback registration is visible in current source. In HC mode, a missed registration means later town-AI HC selection sees no HC groups and falls back to server-side creation in `server_town_ai.sqf:164-180`.
+
 On HC disconnect, `Server_OnPlayerDisconnected.sqf:22-29` removes that group from `WFBE_HEADLESSCLIENTS_ID` and clears `WFBE_HEADLESS_<uid>`. It does not reclaim, re-track, or re-delegate units that were already created by the HC.
 
 ## Delegation Paths
@@ -71,9 +73,11 @@ Unlike town AI, static-defense HC creation does not tell the server what was cre
 Client delegation mode (`WFBE_C_AI_DELEGATION == 1`) is separate from HC mode. `Server_FNC_Delegation.sqf` selects player clients using `WFBE_AI_DELEGATION_<uid>` data:
 
 - `Server_OnPlayerConnected.sqf:68-71` initializes `[fps, groups, sessionId]`.
-- `Client/FSM/updateavailableactions.fsm` periodically sends client FPS.
+- `Client/FSM/updateavailableactions.fsm:121-125` periodically sends client FPS with `["update-clientfps", getPlayerUID(player), avgFps]`.
 - `Server_FNC_Delegation.sqf:139-178` selects delegators by FPS and group count.
 - `Server_FNC_Delegation.sqf:104-115` tracks delegated groups until null, then decrements the delegator count if the session ID still matches.
+
+Authority edge: `Server_HandleSpecial.sqf:75-83` trusts the UID and FPS values from the `RequestSpecial` payload when updating `WFBE_AI_DELEGATION_<uid>`. That means client-FPS delegation is a client-asserted performance signal, then the server uses the stored values to choose delegators in `Server_FNC_Delegation.sqf:153-158`. If this mode is revived for public play, derive sender UID from the request context where possible or add strict shape/rate validation plus diagnostics.
 
 Do not copy this player-client session-counting model directly into HC mode without adapting it; HC mode currently stores HC groups, not per-HC delegated work records.
 
@@ -82,6 +86,8 @@ Do not copy this player-client session-counting model directly into HC mode with
 | Risk | Evidence | Impact |
 | --- | --- | --- |
 | HC disconnect has no mission-level re-delegation. | `Server_OnPlayerDisconnected.sqf:22-29` only removes the HC from the candidate pool. | Already-created HC-local groups may fall back to engine locality behavior, but the mission does not redistribute them to another HC. |
+| HC registration can miss the candidate pool. | `Headless/Init/Init_HC.sqf:11-15` sends one `connected-hc`; `Server_HandleSpecial.sqf:125-130` rejects owner id `0` with only a warning. | Add retry/delayed registration or a server-side reconciliation pass before relying on HC availability. |
+| Client-FPS delegation trusts payload UID/FPS. | `updateavailableactions.fsm:121-125`; `Server_HandleSpecial.sqf:75-83`; `Server_FNC_Delegation.sqf:153-158`. | Treat mode `1` as authority-light; validate sender/UID/rate before using it on a hostile public server. |
 | Static-defense HC units are untracked server-side. | `Client_DelegateAIStaticDefence.sqf:28` comments out update-back; `Server_HandleSpecial.sqf` has `update-town-delegation` but no `update-delegation-static_defence` case. | Cleanup/accounting/re-delegation cannot reason about HC-created static-defense units. |
 | Late HC join does not automatically re-enable mode. | `initJIPCompatible.sqf:164-171` can downgrade unsupported HC mode once; the server initializes `WFBE_HEADLESSCLIENTS_ID` only when mode is `2`. | If HC mode was disabled or no candidate was present during spawn decisions, later HC presence does not retroactively move existing AI. |
 | Static-defense removal may miss original operators. | `Server_OperateTownDefensesUnits.sqf:62-69` stores `wfbe_defense_operator` only for server-created gunners; HC-created static gunners do not pass through that assignment. | Removal path deletes current gunner when it is not a player/funded group, but the original-operator bookkeeping differs between server and HC paths. |

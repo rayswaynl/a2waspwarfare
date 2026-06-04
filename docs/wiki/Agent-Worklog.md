@@ -1,5 +1,18 @@
 # Agent Worklog
 
+## 2026-06-04T02:27:14+02:00 - Codex - authority/UI/HC fallback scout wave
+
+- Tried Spark scouts again, but GPT-5.3-Codex-Spark remained quota-blocked until 03:58. Relaunched five fallback explorers for economy authority, commander/HQ, AI/HC, client/UI and tooling/generated mission drift.
+- Source-checked and promoted only new or corrective findings: likely AI-commander upgrade debit-order bug, resource-income payout/display drift, commander vote restart and SetTask partials, HQ deploy/pack authority caveat, HC owner-id registration miss, client-FPS delegation UID/FPS trust, inert Arma high-command UI add path, vote/help/WASP UI edge cases and LoadoutManager summary wording for modded generation.
+- Updated canonical pages plus `agent-feature-status.jsonl` and `agent-hardening-backlog.jsonl`; gameplay source files were not edited.
+
+## 2026-06-04T02:13:25+02:00 - Codex - collaboration Claude lane refresh
+
+- Reconciled `agent-collaboration.json` against [Progress dashboard](Progress-Dashboard) and `agent-status.json`.
+- Claude's current lane now matches the active coordination state: `collaboration-follow-autonomous-ready`.
+- Preserved the older DR-46 send-message review wording only as historical worklog/event context, not as a current owner claim.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T00:37:08+02:00 - Codex - Micro-scout harvest after Spark quota/context limits
 
 - Ran a second scout wave, then switched from broad Spark prompts to bounded micro-scouts after context-window errors and Spark quota limits.

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T02:09:03+02:00",
+  "generatedAt": "2026-06-04T02:27:14+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated the deep-gap fallback scout wave: cleaner startup wording, basearea/groupsMonitor routing, AI respawn loadout and legacy order notes, config load-order landmarks, LoadoutManager machine-ledger cleanup and old player-object-list backlog superseding.",
-      "nextExpectedOutput": "Pick the next bounded Feature Status, authority or stale-machine-ledger lane."
+      "currentWork": "Published and validated the authority/UI/HC fallback scout wave: economy authority, commander/HQ, AI/HC, client/UI and tooling drift findings were source-checked and added to canonical docs plus machine records.",
+      "nextExpectedOutput": "Pick the next bounded source-backed code-indexing lane or hand a patch owner a focused fix playbook."
     },
     "Codex-2": {
       "status": "ready",
@@ -38,11 +38,23 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "Latest fallback explorer wave completed after Spark quota blocked. Lanes covered AI respawn/orders, cleaners/restorers, config data, support/basearea/groups-monitor triggers and stale machine-ledger/tooling claims; useful findings are published and validated.",
+      "currentWork": "Latest fallback explorer wave completed after Spark quota blocked. Lanes covered economy authority, commander/HQ, AI/HC, client/UI and tooling/generated mission drift; useful findings are published and validated.",
       "nextExpectedOutput": "No active sub-agent output pending."
     }
   },
   "laneSummary": [
+    {
+      "lane": "authority-ui-hc-fallback-scout-wave",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "output": "Spark quota blocked cheap model scouts again, so Codex ran five fallback explorers and source-checked their findings. Published docs and machine records for AI-commander upgrade debit-order risk, resource income payout/display drift, commander vote restart and SetTask partials, HQ deploy/pack authority, HC owner-id registration and client-FPS trust, inert Arma high-command UI add path, vote/help/WASP UI edge cases and LoadoutManager modded-generation summary correction. Wiki validation, JSON/JSONL parsing, git diff --check and mirror parity passed."
+    },
+    {
+      "lane": "collaboration-claude-lane-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Reconciled agent-collaboration.json with Progress-Dashboard and agent-status.json. Claude now appears as collaboration-follow-autonomous-ready in the current machine coordination state; older DR-46 send-message review wording remains only in historical worklog/event records. Wiki validation, JSON/JSONL parsing, git diff --check and mirror parity passed."
+    },
     {
       "lane": "deep-gap-fallback-scout-wave",
       "owner": "Codex/Sub-agents",

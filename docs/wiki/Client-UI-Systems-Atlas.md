@@ -193,6 +193,10 @@ The helper functions compiled in `Init_Client.sqf:116-126` own list filling, tem
 
 `GUI_Menu_Command.sqf` owns team selection, AI team templates, behavior/combat/formation/speed combos, move/task controls and respawn factory choice. The move/order helpers are live, but task assignment is partial: the dialog exposes the Set Task button (`Rsc/Dialogs.hpp:2052-2053`) and `GUI_Menu_Command.sqf:315-344` gathers task data and plays HQ speech, while the `SetTask` send calls are commented at `:335-337` and `:343`.
 
+Vote menu cleanup edge: `WFBE_Client_Teams_Count` is initialized as `count WFBE_Client_Teams` (`Init_Client.sqf:273`), but `GUI_Commander_VoteMenu.sqf:58-66` and `GUI_VoteMenu.sqf:29,61-66` use it as an inclusive `for ... to` maximum. Existing `isNil` guards make this mostly a refresh-loop polish bug rather than a proven crash, but vote UI changes should switch to `(WFBE_Client_Teams_Count - 1)` or `forEach`.
+
+Help dialog lifecycle edge: `RscMenu_Help` stores the display as `uiNamespace["dialog_HelpPanel"]` on load, but unload clears `uiNamespace["cti_dialog_ui_onlinehelpmenu"]` and calls `GUI_Menu_Help.sqf` with `onUnload` (`Dialogs.hpp:3446-3447`). The controller only implements `onLoad` and `onHelpLBSelChanged` (`GUI_Menu_Help.sqf:5-10`). This looks like stale namespace wiring, so avoid building new help-panel state on the old unload variable without cleaning it.
+
 `GUI_Menu_Tactical.sqf` is the support hub. It builds the support list from fast travel, ICBM, paratroopers, ammo/vehicle paradrops, UAV actions and unit camera (`:56-64`). Availability is recomputed from current upgrades, funds, cooldowns and selected support (`:144-290`), then requests are sent through `RequestSpecial` where needed (`:373` and later request branches).
 
 ### Upgrade And Economy Menus
@@ -237,7 +241,7 @@ Map UI is split across one-shot initialization, long-running refresh loops and e
 | `Client/FSM/updateteamsmarkers.sqf` | Tracks team/player/AI markers, AFK suffix and alpha/color changes. | Skips most work when no map/GPS/Warfare dialog consumer is visible; records `updateteamsmarkers`. |
 | `Client/FSM/updateavailableactions.fsm` | Computes range booleans and writes action availability icons. | Tracks `nearEntities` count and records `updateavailableactions`. |
 | `Client/Functions/Client_BookkeepBlinkingIcons.sqf` | Optional combat marker blinking bookkeeping. | Fully gated by `WFBE_C_MAP_ICON_BLINKING_ENABLED`. |
-| `WASP/global_marking_monitor.sqf` | Adds a display-12 map double-click handler that prefixes marker text with the player's name. | Polls for the marker dialog/display before attaching `mouseButtonDblClick`; current source still has a short unslept wait and should get a tiny backoff before expansion. |
+| `WASP/global_marking_monitor.sqf` | Adds a display-12 map double-click handler that prefixes marker text with the player's name. | Polls for the marker dialog/display before attaching `mouseButtonDblClick`; current source disables all user input, then runs an unslept wait for up to two seconds before re-enabling input (`:57-73`). Add a tiny backoff and fail-safe unlock before expansion. |
 
 ## Action Menus And Scroll Actions
 
@@ -273,10 +277,12 @@ The intro video is `Videos/intro720p.ogv`, started from `Init_Client.sqf:785`.
 | Economy dialog missing controls | `GUI_Menu_Economy.sqf:7-8` writes to `23004`/`23005`, while the audited `RscMenu_Economy` control block does not declare those IDC values. | Add the intended controls or remove/update stale controller writes; smoke Economy disabled state, commander income buttons and supply-truck respawn after the change. |
 | Polling loops | `GUI_Menu.sqf`, buy/command/tactical/service/upgrade/respawn menus all run scheduled loops. | Keep work incremental and cache expensive state. |
 | Map marker loops | Marker loops are live-server sensitive and now include performance-audit records. | Preserve map-closed skip behavior and `WFBE_C_MAP_ICON_BLINKING_ENABLED` gates. |
-| WASP marker dialog wait | `WASP/global_marking_monitor.sqf` does up to two seconds of display polling. | Add a tiny sleep/backoff and smoke map-marker creation before adding more WASP marker features. |
+| WASP marker dialog wait/input lock | `WASP/global_marking_monitor.sqf:57-73` disables all user input and does up to two seconds of unslept display polling before re-enabling input. | Add a tiny sleep/backoff and a fail-safe unlock; smoke map-marker creation and rapid double-click/dialog-close behavior before adding more WASP marker features. |
 | Respawn selector loop | `Client_UI_Respawn_Selector.sqf` sleeps `0.03`. | Do not add expensive marker or object scans inside it. |
 | Economy supply-truck UI | `GUI_Menu_Economy.sqf` can send `RespawnST`. | This touches the config-gated broken autonomous supply-truck path. |
 | Command task assignment UI | `Rsc/Dialogs.hpp:2052-2053` exposes the button and `GUI_Menu_Command.sqf:315-344` builds task data/HQ speech, but the `SetTask` sends are commented. | Visible partial feature; revive only with JIP/task-spam review, or hide the affordance. |
+| Vote menu inclusive loops | `GUI_Commander_VoteMenu.sqf:58` and `GUI_VoteMenu.sqf:29,61` loop to `WFBE_Client_Teams_Count`, which equals `count WFBE_Client_Teams`. | Treat as UI correctness debt; use `count - 1` or `forEach` if touching vote refresh. |
+| Help menu stale unload state | `Dialogs.hpp:3446-3447` sets `dialog_HelpPanel` on load but clears `cti_dialog_ui_onlinehelpmenu` on unload; `GUI_Menu_Help.sqf` has no `onUnload` case. | Clean namespace key ownership before adding new help-menu state or controller behavior. |
 | Economy sell guard commented | DR-16: `GUI_Menu_Economy.sqf:32-35` comments an HQ-death guard while `:105-150` keeps the sell/refund path active. | Treat structure selling as part of the server-authority migration class, not as a safe UI-only feature. |
 | Economy stale cleanup notes | `GUI_Menu_Economy.sqf:93-96,136-141` contains dead relay comments and a TODO to replace lookup-by-find behavior. | Clean comments/lookup behavior before using this menu as a model for new commander controls. |
 | Service/EASA stale TODO | `GUI_Menu_Service.sqf:240-244` says EASA dialog is TBD, but the live path opens `RscMenu_EASA`. | Do not document EASA as missing; update comments if touching service UI. |

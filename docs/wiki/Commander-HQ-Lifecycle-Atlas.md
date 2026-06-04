@@ -21,6 +21,7 @@ The useful mental model:
 | --- | --- |
 | Server side init/state | `Server/Init/Init_Server.sqf:313-371,380,397-413,622` |
 | Commander vote worker | `Server/Functions/Server_VoteForCommander.sqf:9-57` |
+| Vote restart request | `Client/GUI/GUI_Menu.sqf:75,91`, `Server/PVFunctions/RequestCommanderVote.sqf:3-22`, `Common/Init/Init_PublicVariables.sqf:12` |
 | Manual reassignment path | `Client/GUI/GUI_Commander_VoteMenu.sqf:46`, `Server/PVFunctions/RequestNewCommander.sqf:3-16`, `Server/Functions/Server_AssignNewCommander.sqf:3-14` |
 | Commander getters/votes | `Common/Functions/Common_GetCommanderTeam.sqf:7-12`, `Common/Functions/Common_SetCommanderVotes.sqf:3-10` |
 | HQ getters | `Common/Functions/Common_GetSideHQ.sqf:7-12`, `Common/Functions/Common_GetSideHQDeployStatus.sqf:7-12` |
@@ -67,6 +68,10 @@ At the end of server init, every present side starts `WFBE_SE_FNC_VoteForCommand
 7. stops any running AI commander flag when a player commander is selected (`:54-57`).
 
 `Common_SetCommanderVotes.sqf` is a helper that sets every team vote to a provided value (`Common_SetCommanderVotes.sqf:3-10`). It does not decide the winner.
+
+There is also a client-triggered vote restart path. If the main menu sees `wfbe_votetime <= 0`, it sends `RequestCommanderVote` with `[sideJoined, name player]` (`GUI_Menu.sqf:75,91`). The server handler rechecks side logic vote time, resets team votes around the current commander team, spawns `VoteForCommander`, sends the side message and broadcasts `commander-vote-start` with the provided name (`RequestCommanderVote.sqf:3-22`). This is useful for recovery, but the handler does not prove requester identity beyond the payload, so keep it in commander-authority smoke when changing vote behavior.
+
+The vote UI refresh loops also have an inclusive-bound edge. `WFBE_Client_Teams_Count` is set to `count WFBE_Client_Teams` (`Init_Client.sqf:273`), but both `GUI_Commander_VoteMenu.sqf:58-66` and `GUI_VoteMenu.sqf:29,61-66` loop `from 0 to WFBE_Client_Teams_Count`, which reaches one index past the array. Existing `isNil` guards reduce the blast radius, but this is still a source-level cleanup candidate for vote-menu polish.
 
 ## Manual Reassignment Flow
 
@@ -187,6 +192,8 @@ This is not just "another repair UI." It mutates economy/town state and HQ posit
 | Side coverage gap | HQ alive/dead marker broadcasts cover west/east, not resistance. | `Server_OnHQKilled.sqf:97`; `Server_MHQRepair.sqf:60`; `updateclient.sqf:42-100` | Keep resistance HQ/economy disabled or design a full three-side marker state machine before enabling resistance HQ recovery. |
 | Multiplayer-sensitive | Base-area accounting is updated via client-bound `RequestBaseArea`. | `Construction_HQSite.sqf:54-59`; `RequestBaseArea.sqf:1-4` | Audit before changing defense availability, base area limits or server authority around CoIn. |
 | Partial/latent | AI commander variable state exists, but full autonomous commander ownership is not proven. | `wfbe_commander = objNull`; `Server_VoteForCommander.sqf:48-57`; [AI commander autonomy audit](AI-Commander-Autonomy-Audit) | Keep AI commander revival separate from commander/HQ correctness patches. |
+| Partial UI/order feature | Commander Set Task UI builds task data and plays HQ speech, but the targeted and side-wide `SetTask` sends are commented while `Client/PVFunctions/SetTask.sqf` still creates `CommanderOrder` if invoked. | `GUI_Menu_Command.sqf:315-344`; `Client/PVFunctions/SetTask.sqf:8-14`; `Common/Init/Init_PublicVariables.sqf:33` | Hide the affordance or revive it as a server-backed/JIP-safe task flow; do not document commander task assignment as working. |
+| HQ-specific construction authority | CoIn sends HQ/structure requests from the client; the server `RequestStructure` handler accepts side/class/position/direction and executes construction, while `Construction_HQSite` toggles deployed/mobile HQ state. | `coin_interface.sqf:494,718`; `RequestStructure.sqf:3-21`; `Construction_HQSite.sqf:17-23,80` | When hardening construction, include HQ-specific commander/range/role checks instead of treating HQ deploy/pack as only a generic building purchase. |
 
 ## Development Rules
 
