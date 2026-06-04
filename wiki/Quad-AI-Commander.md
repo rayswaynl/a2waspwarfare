@@ -4,6 +4,17 @@ Quad AI Commander is a proposed AI battle staff layer for Wasp Warfare. It lets 
 
 The goal is not perfect AI knowledge. The goal is an AI commander that acts from reports, uncertainty, stale sightings, and partial intelligence.
 
+## Current Implementation Status
+
+The integration is staged, not complete:
+
+1. #14 `feat/ai-commander` provides the execution substrate: supervisor states, order executor, town assignment, production, upgrades, and hybrid human/AI command.
+2. #18 `codex/ai-commander-logs` adds Phase 1 structured logs, but remains draft until #14 runtime proof and branch graph refresh are complete.
+3. #19 `codex/ai-commander-context` adds Phase 2 advisory contact beliefs, but remains draft until #18 is refreshed and proven.
+4. Phase 3 planner priorities and Phase 4 worker biasing are specified, but should not drive behavior until the earlier evidence gates pass.
+
+Use `docs/quad-ai-commander-long-term-goal-prompt.md` as the durable handoff for future implementation work. Use `docs/quad-ai-commander-integration-tracker.md` and `docs/quad-ai-commander-runtime-validation.md` for the current gate order and runtime proof requirements.
+
 ## Basic Idea
 
 Commanders log what they see:
