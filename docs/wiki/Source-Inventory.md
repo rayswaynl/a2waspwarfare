@@ -40,7 +40,7 @@ $files | ForEach-Object { $ext = [IO.Path]::GetExtension($_).ToLowerInvariant();
 
 ## Mission Parity Snapshot
 
-Tracked-file counts are from `git ls-files` only, not filesystem recursion. Generated/ignored files such as `version.sqf` are intentionally absent from this count.
+Tracked-file counts are from `git ls-files` only, not filesystem recursion. Current source Chernarus now tracks `version.sqf`, but generated/modded target roots still need explicit verification because LoadoutManager owns terrain-version output.
 
 | Mission tree | Tracked files | Parity posture |
 | --- | ---: | --- |

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-04T04:47:00+02:00",
+  "generatedAt": "2026-06-04T05:05:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -21,6 +21,30 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "mini-scout-wave-init-pv-supply-construction-ui-ops",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus init/compile/version/parameter files",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus Server/PVFunctions and networking handlers",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus towns/economy/supply files",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus construction/CoIn/salvage files",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus Client GUI/Rsc files",
+        "DiscordBot, Extension and tooling/runtime operation files"
+      ],
+      "outputs": [
+        "Closed Spark path after quota block and harvested six cheap mini scouts",
+        "Corrected current source Chernarus version.sqf state while keeping generated target-root verification open",
+        "Clarified stable truck-only supply scope and PR/branch-only SupplyByHeli evidence",
+        "Queued thin registered PVF handler authority review",
+        "Added CoIn base-area null-guard companion issue and salvage authority/cleanup lead",
+        "Added orphaned GPS MenuAction 17/18 UI note",
+        "Added DiscordBot/Extension database.json contract drift note",
+        "No gameplay source changed"
+      ],
+      "handoff": "This docs batch is validated and ready to push. Future agents should not re-open these scout reports unless they are implementing the queued hardening leads."
+    },
     {
       "lane": "mini-scout-wave-towns-construction-respawn-supports-ai-runtime",
       "owner": "Codex/Sub-agents",

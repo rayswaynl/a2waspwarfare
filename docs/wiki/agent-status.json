@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T04:47:00+02:00",
+  "generatedAt": "2026-06-04T05:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,7 +20,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published and validated the latest cheap mini scout wave after GPT-5.3-Codex-Spark quota blocked the first two starts. Promoted source-backed deltas for RequestSpecial upgrade-sync argument shape, respawn candidate caveats, player-buy/no-PVF confirmation, SmallSite logic-list add/add risk, stable-master AI order plumbing versus missing autonomy, server runtime startup hub/dormant hooks and town-capture/commander-vote separation. Pushed as docs 16338f5d and wiki 35479de.",
+      "currentWork": "Published and validated the latest cheap mini scout wave after Spark quota blocked new Spark starts. Promoted source-backed corrections/leads for current source Chernarus version.sqf presence versus generated target-root verification, stable truck-only supply versus PR/branch SupplyByHeli evidence, thin registered PVF handler authority review, CoIn base-area null guard, salvage local payout/deletion and cleanup loop risk, orphaned GPS MenuAction 17/18 handlers and DiscordBot/Extension database.json contract drift.",
       "nextExpectedOutput": "Continue with the next bounded source-backed documentation gap."
     },
     "Codex-2": {
@@ -38,11 +38,17 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "Latest mini scout wave harvested. Spark quota blocked the first two starts, so six cheap mini scouts covered towns/voting, factories/buildings/repair, respawn/MHQ/camps, supports/artillery/UAV/ICBM, AI orders/autonomy and server loops/perf cleanup.",
+      "currentWork": "Latest mini scout wave harvested. Spark quota blocked new Spark starts, so six cheap mini scouts covered init/compile, PV/security, towns/economy/supply, construction/CoIn, UI/dialogs and tools/extensions/ops.",
       "nextExpectedOutput": "No active sub-agent output pending."
     }
   },
   "laneSummary": [
+    {
+      "lane": "mini-scout-wave-init-pv-supply-construction-ui-ops",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "output": "Spark quota blocked new Spark starts, so Codex launched six cheap mini discovery scouts. Source-backed corrections/leads landed across entrypoint, parameter/build, content, Feature Status, supply, construction/CoIn, UI, PV/networking, external integrations and machine ledgers: current source Chernarus now tracks version.sqf while generated/target roots still need verification; current stable supply is truck-only while SupplyByHeli is PR/branch evidence; thin PVF handlers need authority review; CoIn has a base-area null-guard companion issue; salvage has local payout/deletion plus a suspect cleanup loop; main-menu GPS actions are orphaned; DiscordBot/Extension database.json field counts drift. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and SHA256 mirror parity passed. No gameplay source changed."
+    },
     {
       "lane": "mini-scout-wave-towns-construction-respawn-supports-ai-runtime",
       "owner": "Codex/Sub-agents",
@@ -251,7 +257,7 @@
       "lane": "owner-decision-branch-scope-refresh",
       "owner": "Codex",
       "status": "published-validated",
-      "output": "Pending-Owner-Decisions now matches corrected DR-43 and DR-19 evidence: Init_Server.sqf has three live duplicate binds plus three commented remnants, version.sqf is absent from tracked source while included by description.ext:39 and initJIPCompatible.sqf:4, and hosted-FPS is docs/source propagated while stable master is old and release a9219d88 is Chernarus-only. agent-context.json and agent-hardening-backlog.jsonl were aligned."
+      "output": "Pending-Owner-Decisions matched corrected DR-43 and DR-19 evidence at publication time. Later 2026-06-04 init scout corrected the version.sqf subclaim: source Chernarus now tracks version.sqf, so the remaining gate is generated/target-root verification. Init_Server duplicate binds and hosted-FPS branch scope remain as documented."
     },
     {
       "lane": "dashboard-active-handoff-refresh",

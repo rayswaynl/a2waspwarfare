@@ -160,10 +160,12 @@ The player opens the main menu through the scroll action wired by `Client/Functi
 | 12 | `RscDisplay_Parameters` |
 | 13 | `RscMenu_Help` |
 | 16 | Toggle full `RUBHUD` |
-| 17/18 | GPS zoom out/in |
+| 17/18 | Dormant/orphaned GPS zoom handlers; `GUI_Menu.sqf` still handles them, but the audited `WF_Menu` controls expose actions 1-13, 16 and 19 only. |
 | 19 | Toggle FPS-only HUD |
 
 Range booleans such as `barracksInRange`, `gearInRange`, `commandInRange` and `serviceInRange` are maintained by `Client/FSM/updateavailableactions.fsm`, not by the main menu itself.
+
+Mini UI scout note 2026-06-04: no live buy/gear/service/tactical/vote/unit-camera control was found with an outright missing handler. The important main-menu mismatch is narrower: `MenuAction == 17/18` remains in the router for GPS zoom, but no current `WF_Menu` resource control was found to send those values.
 
 ## Major Controller Flows
 

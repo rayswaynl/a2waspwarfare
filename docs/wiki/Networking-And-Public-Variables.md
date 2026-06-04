@@ -172,7 +172,9 @@ Replacing `Call Compile` with mission-namespace lookup closes arbitrary code exe
 | `RequestUpgrade` | Directly spawns upgrade processing; handler itself does not show commander/funds validation. | `Server/PVFunctions/RequestUpgrade.sqf:5`, `Server/Functions/Server_ProcessUpgrade.sqf:40-43` |
 | `RequestVehicleLock` | Locks the payload vehicle without visible owner/side/range check. | `Server/PVFunctions/RequestVehicleLock.sqf:3-8` |
 | `RequestTeamUpdate` | Accepts array or side and mutates group behavior/combat/formation/speed. | `Server/PVFunctions/RequestTeamUpdate.sqf:3-26` |
+| `RequestAutoWallConstructinChange` | Writes one global auto-wall setting from a client request; later SmallSite/MediumSite construction consumes it. | `Server/PVFunctions/RequestAutoWallConstructinChange.sqf:3-7`, `Server/Construction/Construction_SmallSite.sqf:110-112`, `Construction_MediumSite.sqf:125-128` |
 | `RequestSpecial` | Broad router for paratroops, support, ICBM, camp repair, teamleader update and HC registration. Claude DR-27 found the `"ICBM"` branch can be forged to server-spawn `NukeDammage` at a client-chosen position with no upgrade/commander/funds validation. | `Client/Module/Nuke/nukeincoming.sqf:23`, `Server/PVFunctions/RequestSpecial.sqf:1`, `Server/Functions/Server_HandleSpecial.sqf:97-112` |
+| `RequestSpecial` `update-clientfps` / delegation tags | Trusts client-supplied UID/FPS and town/vehicle arrays for delegation-adjacent state. | `Server/Functions/Server_HandleSpecial.sqf:75-95`, `Server/Functions/Server_FNC_Delegation.sqf:153-158` |
 
 ### Highest-Priority Registered Command: ICBM / Nuke
 

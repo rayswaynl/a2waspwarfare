@@ -4,7 +4,7 @@ This page owns mission parameter flow, localization hazards and generated includ
 
 ## Source Of Truth
 
-`description.ext:52` includes `Rsc\Parameters.hpp`; the `class Params` order is the authoritative `paramsArray` index order. `description.ext:39` and `initJIPCompatible.sqf:4` both include `version.sqf`, but the file is absent in the current source checkout and is generated/ignored by LoadoutManager.
+`description.ext:52` includes `Rsc\Parameters.hpp`; the `class Params` order is the authoritative `paramsArray` index order. `description.ext:39` and `initJIPCompatible.sqf:4` both include `version.sqf`. The current source Chernarus checkout includes that file, but LoadoutManager still generates/updates version outputs for terrain copies and several modded/stub roots remain incomplete without it.
 
 Source refs:
 
@@ -56,9 +56,9 @@ The scout pass found no live missing `$STR_...` keys for `Rsc/Parameters.hpp` re
 
 ## Version And Include Generation
 
-`version.sqf` is included by both `description.ext` and `initJIPCompatible.sqf`, but it is not present in the current source mission. LoadoutManager generates it; `Tools/LoadoutManager/FileManagement/FileManager.cs:92-100` treats it specially, and terrain generation writes version output from the C# terrain flow.
+`version.sqf` is included by both `description.ext` and `initJIPCompatible.sqf`. Current source Chernarus tracks a copy (`Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf:1`), while LoadoutManager also generates version output for terrain copies. `Tools/LoadoutManager/FileManagement/FileManager.cs:92-100` treats it specially, and terrain generation writes version output from the C# terrain flow.
 
-Practical rule: a fresh source checkout is not self-contained for mission packing/testing until generated files exist. Use LoadoutManager from a normal `a2waspwarfare` clone or any repo root that contains `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`. For propagation-only work, set `A2WASP_SKIP_ZIP=1` so missing `7za` does not block generation/copy.
+Practical rule: verify the target mission root, not just source Chernarus. A source checkout may be packable, while generated Vanilla or modded/stub folders still need LoadoutManager output or terrain-specific generated files. Use LoadoutManager from a normal `a2waspwarfare` clone or any repo root that contains `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`. For propagation-only work, set `A2WASP_SKIP_ZIP=1` so missing `7za` does not block generation/copy.
 
 ## LoadoutManager Overwrite Boundaries
 
@@ -91,7 +91,7 @@ This means current Codex checkouts such as `work\a` can run LoadoutManager after
 
 - Do not reorder `class Params` without auditing every `paramsArray` index.
 - Do not hand-edit generated Vanilla mission drift as a substitute for LoadoutManager propagation.
-- Treat `version.sqf` as generated input, not missing dead code.
+- Treat `version.sqf` as required generated/terrain metadata. Source Chernarus currently has it; generated and modded targets still need explicit verification.
 - Keep Arma 2 OA config syntax in mind; do not import Arma 3 `description.ext` assumptions.
 
 Previous: [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle) | Next: [Tools and build workflow](Tools-And-Build-Workflow)

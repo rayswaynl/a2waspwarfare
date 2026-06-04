@@ -90,7 +90,7 @@ Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) for the source
 | Dead WASP actions (OnArmor, GearYouUnit) | DR-35 | commented in `WASP/actions/AddActions.sqf:4` |
 | `supplyMissionActive.sqf` dead twin | DR-39 | compiled but never called |
 | `Init_Server.sqf` duplicate binds: 3 live + 3 commented remnants | DR-43b | Live duplicates are `LogGameEnd` (`Init_Server.sqf:64,89`), `PlayerObjectsList` (`:69,91`) and `AwardScorePlayer` (`:83,93`); commented remnants are AFK kick, server FPS and MASH marker. De-duplicate live binds; coordinate `LogGameEnd` with DR-13/DR-36. |
-| `version.sqf` referenced by `description.ext:39` and `initJIPCompatible.sqf:4` but absent from tracked source | DR-43a | `git ls-files` has no `version.sqf`; commit a safe source placeholder or keep generated-only with explicit pre-pack/pre-test checks. |
+| `version.sqf` referenced by `description.ext:39` and `initJIPCompatible.sqf:4`; generated target roots need verification | DR-43a | Current source Chernarus tracks `version.sqf`, but LoadoutManager still owns generated terrain metadata and modded/stub roots remain incomplete. Keep pre-pack/pre-test checks for every supported target mission root. |
 
 ## 4. Robustness / defense-in-depth (optional)
 

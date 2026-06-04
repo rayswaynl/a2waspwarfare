@@ -62,6 +62,10 @@ flowchart LR
 
 The extension writes `GameData.Instance` to `C:\a2waspwarfare\Data\database.json`; DiscordBot reads the configured data-source path and updates Discord every 60 seconds.
 
+### `database.json` Contract Drift
+
+The current file contract is not pinned in one code type. The mission sends six comma-separated fields from `Server/CallExtensions/GlobalGameStats.sqf:22`. The in-repo extension DTO starts with `exportedArgs = new string[2]` in `Extension/src/GameData.cs:29`, while the DiscordBot reader allocates `exportedArgs = new string[4]` and later checks index `4` in `DiscordBot/src/ExtensionData/GameData/GameData.cs:30`. Future integration work should define the expected field count once, add fixture tests for normal and short/long arrays, and keep extension writer plus DiscordBot reader in lockstep.
+
 Implementation notes from the source:
 
 - `Extension/src/ExtensionMethods.cs` exports `_RVExtension@12` through `RGiesecke.DllExport`.

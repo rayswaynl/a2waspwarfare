@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-04T05:05:00+02:00 - Codex - mini scout wave init/PV/supply/construction/UI/ops
+
+- Spark quota blocked another Spark scout wave, so Codex launched six cheap mini discovery scouts instead.
+- Scout lanes covered init/compile/parameter wiring, PV/security/authority, towns/economy/supply, construction/CoIn/base structures, UI/dialog wiring and tools/extensions/ops.
+- Promoted source-backed corrections and leads: current source Chernarus now tracks `version.sqf` while generated/target roots still need verification; stable checked-in supply mission code is truck-only and `SupplyByHeli` belongs to PR/branch evidence; thinner registered PVF handlers still need handler/effect authority review; CoIn mirrors the stationary-defense base-area null-guard issue; salvage has a local payout/deletion authority edge and suspect cleanup loop; main-menu GPS zoom actions are orphaned; DiscordBot/Extension/DiscordBot `database.json` field counts drift.
+- Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` in both worktrees and SHA256 mirror parity.
+- Documentation/machine-state cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T04:32:00+02:00 - Codex - mini scout wave towns/construction/respawn/supports/AI/runtime
 
 - Spark quota blocked the first two GPT-5.3-Codex-Spark scout starts, so Codex closed those failed slots and relaunched six cheap mini scouts.

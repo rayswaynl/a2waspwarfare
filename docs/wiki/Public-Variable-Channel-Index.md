@@ -18,7 +18,7 @@ For implementation work after PVF dispatch allowlisting, use the [registered ser
 
 | Command (`WFBE_PVF_*`) | Purpose / notable finding |
 | --- | --- |
-| `RequestVehicleLock` | lock/unlock a vehicle |
+| `RequestVehicleLock` | lock/unlock a payload-selected vehicle; owner/side/range validation is not visible in the handler |
 | `RequestOnUnitKilled` | report a kill for scoring |
 | `RequestChangeScore` | score mutation; accepts payload score and applies `addScore`, unlike safer server-derived award helpers |
 | `RequestCommanderVote` | commander vote |
@@ -28,9 +28,11 @@ For implementation work after PVF dispatch allowlisting, use the [registered ser
 | `RequestJoin` | join handshake (robust 30s-retry, DR-37) |
 | `RequestMHQRepair` | MHQ repair — DR-6-class (`_side` from payload); lifecycle/risk map in [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) |
 | `RequestSpecial` | multiplexer → `Server_HandleSpecial.sqf` (ICBM/paradrop/uav/HC/…) — **DR-27** (forged `["ICBM",…]` = map-wide kill) |
-| `RequestTeamUpdate` | team roster update |
+| `RequestTeamUpdate` | team/group property update; mutates behavior/combat/formation/speed from payload-selected team/side |
 | `RequestUpgrade` | side upgrade purchase — **DR-23** (client-authoritative) |
-| `RequestAutoWallConstructinChange` | auto-wall construction toggle |
+| `RequestAutoWallConstructinChange` | auto-wall construction toggle; writes one global setting consumed by later SmallSite/MediumSite construction |
+
+Scout refinement 2026-06-04: the thinner registered handlers above are still live hardening surfaces after a future PVF dispatcher fix. In particular, `RequestChangeScore`, `RequestVehicleLock`, `RequestTeamUpdate`, `RequestAutoWallConstructinChange`, `RequestStructure`, `RequestDefense` and `RequestUpgrade` need requester/side/object/funds validation at the handler/effect layer, not only dispatcher allowlisting.
 
 ### 1b. Client-bound (server → client) — 15
 

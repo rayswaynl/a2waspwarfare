@@ -6,6 +6,8 @@ Supply missions are one of the most cross-cutting systems in the mission. They t
 
 Authority summary: the live path is still client-authored at start and partly client-rewarded at completion. Client-side checks are affordance gates; the server tracks return-to-base and writes side supply, but today it accepts client-stamped `SupplyFromTown` / `SupplyAmount` state and the client completion message path handles personal cash/score reward presentation.
 
+Current-source scope: the checked-in Chernarus source is still truck-only. A 2026-06-04 supply scout found no `SupplyByHeli` hits under `Missions/[55-2hc]warfarev2_073v48co.chernarus`; `SupplyByHeli` belongs to PR #1 / `origin/feat/supply-helicopter` branch evidence until that branch is merged.
+
 ## Master Branch Flow
 
 1. SpecOps receives the supply action in `Client/Module/Skill/Skill_Apply.sqf` when role/module conditions are met.

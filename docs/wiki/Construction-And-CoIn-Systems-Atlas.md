@@ -173,6 +173,8 @@ When mobilizing:
 
 Base-area support is present but partly strange: the server creates a `LocationLogicStart`, sets `DefenseTeam` and `weapons`, then sends `RequestBaseArea` to clients. The older direct server-side `avail`, `side` and `wfbe_basearea` updates are inside a commented block at `Construction_HQSite.sqf:56-58`, while `Client/PVFunctions/RequestBaseArea.sqf` sets `avail`, `side`, `wfbe_basearea` on receipt. Treat base-area accounting as multiplayer-sensitive before changing defense availability.
 
+The CoIn defense path mirrors the same fragility on the client side: `Client/Module/CoIn/coin_interface.sqf:721-730` reads base-area availability from the nearest `_area` before proving the base-area object is valid. Pair any server-side `Construction_StationaryDefense` null-guard fix with a CoIn UI smoke pass for stale/empty base-area lists.
+
 ### SmallSite / MediumSite
 
 `Construction_SmallSite.sqf` and `Construction_MediumSite.sqf` are near twins. They:
@@ -218,6 +220,8 @@ Notable paths:
 
 Focused construction scout 2026-06-04 found a small guard-order bug here. `Construction_StationaryDefense.sqf:12-13` finds the closest base-area logic and immediately reads `_area getVariable "weapons"` before the later `if (!isNull _area)` guard. If the base-area list is empty, stale or race-pruned, defense construction can hit a null-object variable read before the script reaches its guarded block. Patch this separately from DR-6 authority hardening: move the weapons read inside the non-null block or early-exit when no base-area logic exists, then smoke defense placement with grouped-base mode on and off.
 
+Client-side CoIn placement has the companion risk noted above (`coin_interface.sqf:721-730`). Do not call the guard fixed until both the server construction worker and the client availability/decrement path handle missing/stale base-area logics.
+
 ## Repair Flows
 
 ### MHQ Repair
@@ -240,6 +244,10 @@ Server side:
 `Server_HandleBuildingRepair.sqf` uses a repair logic with `WFBE_B_Completion`. It creates ruins, waits for completion, recreates the site if structure live limits allow it, re-adds init/event handlers and subtracts half the building cost from side supply in currency system 0. If completion stalls, it degrades over time and eventually deletes the repair logic.
 
 Current status is latent/uncalled by static search: `Server_HandleBuildingRepair.sqf` is compiled, but no active caller was found in the source mission. Do not confuse this with the WASP base-repair flow, which is live and separate in `WASP/baserep/viem.sqf` and `WASP/baserep/repair.sqf`.
+
+### Salvage
+
+The engineer salvage flow is client-led. `Client/Module/Skill/Skill_Salvage.sqf:20-35` and `Client/FSM/updatesalvage.sqf:46-50` own wreck deletion and cash payout locally. The update loop condition in `updatesalvage.sqf:10-18` uses `while {!gameOver || !(alive _vehicle)}`, which keeps the loop alive while the game is running even if the vehicle state changes in surprising ways. Treat salvage as a small correctness + authority lane before increasing rewards or adding new salvage targets.
 
 ## Sale And Deletion Flows
 
