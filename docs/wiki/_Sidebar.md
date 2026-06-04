@@ -18,6 +18,7 @@
 - Quality and operations
   - [Feature status](Feature-Status-Register)
   - [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook)
+  - [Attack-wave authority](Attack-Wave-Authority-Playbook)
   - [Server ops runbook](Server-Ops-Runbook)
   - [PerformanceAuditAnalyzer](PerformanceAuditAnalyzer)
   - [Documentation plan](Documentation-Implementation-Plan)
@@ -32,7 +33,6 @@
   - [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas)
   - [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas)
   - [Service menu affordability guards](Service-Menu-Affordability-Guards)
-  - [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook)
   - [WASP overlay](WASP-Overlay)
 - Community & Dev
   - [Community & Dev](Community-And-Dev)
@@ -51,10 +51,7 @@
   - [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel)
   - [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match)
 - Compatibility and references
-  - [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons)
-  - [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel)
   - [HC upstream history and lessons](HC-Upstream-History-And-Lessons)
-  - [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match)
   - [Player stats branch audit](Player-Stats-Branch-Audit)
   - [BuyMenu EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit)
   - [Perf quick wins branch audit](Perf-Quick-Wins-Branch-Audit)

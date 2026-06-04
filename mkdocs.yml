@@ -84,6 +84,7 @@ nav:
       - Gear Template Profile Filter: Gear-Template-Profile-Filter.md
       - Vehicle Cargo Equip Loop Bounds: Vehicle-Cargo-Equip-Loop-Bounds.md
       - Service Menu Affordability Guards: Service-Menu-Affordability-Guards.md
+      - WASP Overlay: WASP-Overlay.md
       - Tools And Build Workflow: Tools-And-Build-Workflow.md
       - Tooling Release Readiness Audit: Tooling-Release-Readiness-Audit.md
       - Source Fix Propagation Queue: Source-Fix-Propagation-Queue.md
