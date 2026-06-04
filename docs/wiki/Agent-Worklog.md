@@ -1,5 +1,14 @@
 # Agent Worklog
 
+## 2026-06-04T10:12:00+02:00 - Codex - Zargabad branch head refresh and new Spark scouts
+
+- Steff asked for a bunch more Spark scouts. Codex launched six `gpt-5.3-codex-spark` read-only scouts: town defense/mortars/artillery, AI/HC delegation/autonomy, UI/Rsc feature status, economy/supply/factory edge cases, tools/DiscordBot/Extension release footguns and docs/machine-ledger drift.
+- In parallel, Codex source-checked `origin/feature/zargabad-map` after fetch advanced it from the previously audited `1fdcb37a` to `e9294ede` (`Fix Claude brief screenshot filename escaping`), with `1ff04228` in between tuning Zargabad low-pop balance defaults.
+- Detached-worktree static validation passed at `e9294ede` with `Tools\Validate-ZargabadMission.ps1`. Branch scale is still 832 files, now +77733/-95 versus stable `origin/master`, with 3542 generated whitespace findings remaining from `git diff --check`.
+- Updated the Zargabad branch audit, source snapshot, Feature Status, owner decisions and branch smoke workflow so they name current head `e9294ede` and the new low-pop defaults: AI max `6`, player AI max `8`, Soldier cap `3`, team supply cap `30000`, UAV `650`, town mortar/patrol `420/300`, countermeasures `12/18`, start funds/supply `8000/3600`, ordnance range `1500`, ICBM off and price multipliers `0.95/1.15/1.4/1.75/2.0/1.0`.
+- Scout harvest: docs/machine drift scout caught the stale Zargabad machine row and a broken `Feature-Status-Register#owner-decision-queue` link; AI/HC and town/mortar scouts mostly confirmed existing canonical findings; economy/supply/factory scout added stale `_playerObject` matching and sharper factory debit/abort evidence; tooling scout added LoadoutManager soft-copy failure, PerformanceAuditAnalyzer scale/GUI caveats and DiscordBot/extension runtime footguns; fallback UI scout added command-menu tab/multi-select/two-step map-order behavior.
+- Updated [Supply mission architecture](Supply-Mission-Architecture), [Economy authority first cut](Economy-Authority-First-Cut), [Tools and build workflow](Tools-And-Build-Workflow), [External integrations](External-Integrations), [Client UI systems atlas](Client-UI-Systems-Atlas), [Feature status](Feature-Status-Register), `agent-hardening-backlog.jsonl` and coordination files. Validation passed: `docs/validate-wiki.ps1`, JSON/JSONL parsing, `git diff --check` and mirror parity.
+
 ## 2026-06-04T09:56:00+02:00 - Codex - Spark scout wave MASH/network depth
 
 - Steff asked for more Spark scouts. Codex launched six `gpt-5.3-codex-spark` read-only scouts before the active-agent limit rejected four additional starts.

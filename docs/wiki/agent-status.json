@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T09:57:00+02:00",
+    "generatedAt":  "2026-06-04T10:30:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -19,9 +19,9 @@
     "agents":  {
                    "Codex":  {
                                  "status":  "active",
-                                 "currentLane":  "spark-scout-wave-mash-network-depth",
-                                 "currentWork":  "Harvested the usable Spark scout reports from commander, towns, publicVariable networking and economy/factory micro-lanes. Broad commander/factory/construction/respawn scouts overflowed and were closed or replaced. Docs now sharpen MASH marker relay status, commander reassignment notification risk, factory request/accept/debit protocol scope, REQUEST_SUPPLY_VALUE no-timeout risk, server-FPS channel drift and town mortar scaffold status.",
-                                 "nextExpectedOutput":  "Validate Markdown/JSON/JSONL, mirror the changed wiki pages, commit and push the scoped documentation harvest."
+                                 "currentLane":  "spark-scout-wave-zargabad-refresh-and-deep-scouts",
+                                 "currentWork":  "Launched a new scout wave, refreshed origin/feature/zargabad-map head e9294ede, reran branch-local static validation and harvested returned scout deltas into canonical pages: supply completion player-object rescan risk, factory debit/abort evidence, LoadoutManager soft copy failures, PerformanceAuditAnalyzer scale/GUI constraints, DiscordBot/extension runtime footguns and command-menu interaction model.",
+                                 "nextExpectedOutput":  "Continue documentation finisher loop with the next bounded source-backed docs item."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -37,12 +37,18 @@
                               },
                    "Sub-agents":  {
                                       "status":  "closed",
-                                      "currentLane":  "spark-scout-wave-mash-network-depth",
-                                      "currentWork":  "All active scout threads from this wave are closed. Useful reports were harvested from commander, towns, publicVariable networking and economy/factory micro-scouts; broad construction and respawn prompts overflowed and were not harvested.",
+                                      "currentLane":  "spark-scout-wave-zargabad-refresh-and-deep-scouts",
+                                      "currentWork":  "Scout wave returned. One broad UI Spark overflowed and was relaunched as a gpt-5.4-mini fallback after Spark quota hit. Useful non-duplicate findings were source-checked and harvested; remaining results mostly confirmed existing canonical pages.",
                                       "nextExpectedOutput":  "No pending scout output remains from this batch."
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "spark-scout-wave-zargabad-refresh-and-deep-scouts",
+                            "owner":  "Codex/Sub-agents",
+                            "status":  "published-validated",
+                            "output":  "Steff asked for more Spark scouts. Codex launched six read-only scouts, closed one overflowing UI Spark lane and relaunched it as gpt-5.4-mini after Spark quota hit. In parallel, refreshed Zargabad docs against origin/feature/zargabad-map head e9294ede. Static validation with Tools/Validate-ZargabadMission.ps1 passed at e9294ede; branch scale is 832 files +77733/-95 with 3542 generated whitespace findings. Harvested scout deltas into Supply Mission Architecture, Economy Authority, Tools/Build, External Integrations, Client UI Systems, Feature Status and hardening backlog. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed."
+                        },
                         {
                             "lane":  "spark-scout-wave-mash-network-depth",
                             "owner":  "Codex/Sub-agents",

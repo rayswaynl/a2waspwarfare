@@ -32,6 +32,12 @@ No token is committed, which is good. Still, treat the sample identifiers and ha
 - document whether `botconfig.json`, `preferences.json` or environment variables are the intended deployment source, then remove or clearly demote the unused path;
 - keep `token.txt` and any live Discord IDs out of committed files.
 
+### Discord Runtime Footguns
+
+The bot currently blocks forever through `await Task.Delay(-1)` in `ProgramRuntime.cs:59-60`, without an explicit cancellation/shutdown path in that method. That is acceptable for a simple long-running process, but process managers should stop it externally and future code should add a real cancellation token before expecting graceful shutdown.
+
+The `/cleanup` command uses a heuristic over the last 50 channel messages and deletes bot-authored embeds whose title contains `Chernarus`/`Takistan` or whose description contains `Score:` (`CommandHandler.cs:138-148`). That can over-delete older or related bot status embeds if the channel is shared. Prefer a stored status-message id or a narrower marker before relying on `/cleanup` in mixed channels.
+
 ### Discord Data Path Risk
 
 Claude DR-31 completed the consumer-side review of the extension data path. The bot polls `database.json` on a 60-second timer, at startup and from a command path. Secret hygiene is good (`token.txt` and `preferences.json` are ignored, and commands are auth-gated), but `DiscordBot/src/ExtensionData/GameData/GameData.cs` deserializes that JSON with Newtonsoft `TypeNameHandling.All`.
@@ -43,6 +49,8 @@ Do not conflate this with the in-repo extension writer: `Extension/src/Serializa
 ## Arma Extension: `a2waspwarfare_Extension`
 
 `Extension` is a legacy .NET Framework 4.8 x86 Arma 2 OA extension using `RGiesecke.DllExport`/`UnmanagedExports` and Newtonsoft.Json. It is not an SDK-style `dotnet build` target. Build it with Visual Studio/MSBuild after restoring the old `../packages` NuGet layout, and preserve x86 for Arma 2 OA extension loading. It exports `_RVExtension@12`, parses comma-separated arguments, resolves an extension class by enum name, and currently includes `GLOBALGAMESTATS`.
+
+Parser caveat: `ExtensionMethods.cs:18-21` indexes `splitArgsArray[0]` immediately after splitting the callExtension string. Empty or malformed argument strings can therefore fail before a clean error response is produced. Treat the callExtension contract as "class name first, then fields" until the parser validates length and returns a structured error.
 
 Mission bridge:
 

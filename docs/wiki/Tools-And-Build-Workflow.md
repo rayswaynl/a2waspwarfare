@@ -70,6 +70,8 @@ A recursive diff in [Deep-review findings](Deep-Review-Findings) DR-4 confirmed 
 
 Sync blast radius: LoadoutManager also deletes destination files and directories that do not exist in the source copy (`FileManager.cs:116-119,123-136`). Treat generated mission trees as disposable outputs. Manual edits or extra assets placed only in `Missions_Vanilla/*` can be removed by a later propagation run unless the generator/source tree owns them.
 
+Soft-copy failure caveat: `FileManager.cs:72-83` catches `IOException` during individual file copies, prints `Error copying file: ...`, and then continues the run. A LoadoutManager run can therefore finish with partial copy failures in console output. For release or propagation claims, inspect the console log and `git diff --stat`; do not rely only on process completion.
+
 **Modded missions are not maintained by the current `dotnet run` path.** The modded-terrain propagation call is commented out at `SqfFileGenerators/SqfFileGenerator.cs:132`, and `ZipManager.cs:10` packages only `Missions` plus `Missions_Vanilla`. Treat `Modded_Missions/*` as non-authoritative until the owner chooses regenerate-from-source or maintained-fork policy; see DR-32 for the full tier analysis.
 
 ## Generated Mission Status Table
@@ -104,6 +106,12 @@ This is the operational summary of DR-32's three maintenance tiers. Use it befor
 ## PerformanceAuditAnalyzer
 
 `Tools/PerformanceAuditAnalyzer` parses existing Arma 2 RPT/log files containing `[Performance Audit]` and exports CSV/Markdown/HTML/Word-friendly reports. It has a GUI picker plus command-line script, but the current tree does not ship a live RPT tailer or background telemetry service.
+
+Operational caveats from the 2026-06-04 tooling scout:
+
+- `Analyze-PerformanceAudit.ps1:1224-1228` creates the output directory before it confirms any input files, so failed/no-input runs can still leave output folders behind.
+- `Analyze-PerformanceAudit.ps1:1248` reads each input with `Get-Content | ForEach-Object`; useful for normal RPTs, but very large logs should be treated as memory/latency-sensitive until streaming behavior is improved and tested.
+- `Start-PerformanceAuditAnalyzer.ps1:11-12,119-120` loads `System.Windows.Forms` and opens the picker dialog, so the launcher is desktop/interactive only. Use `Analyze-PerformanceAudit.ps1` directly for automation, CI or headless server log processing.
 
 Important outputs include:
 

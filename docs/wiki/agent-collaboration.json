@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T09:57:00+02:00",
+    "generatedAt":  "2026-06-04T10:30:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,27 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "spark-scout-wave-zargabad-refresh-and-deep-scouts",
+                             "owner":  "Codex/Sub-agents",
+                             "status":  "published-validated",
+                             "sourceScope":  [
+                                                 "origin/feature/zargabad-map head refresh",
+                                                 "Zargabad low-pop constants and generated parameters",
+                                                 "Zargabad static/runtime validators and screenshot evidence workflow",
+                                                 "Feature Status / Pending Owner Decisions / Testing Workflow branch gates",
+                                                 "six active Spark scout lanes for deeper code discovery"
+                                             ],
+                             "outputs":  [
+                                             "Launched six gpt-5.3-codex-spark read-only scouts for town defense/mortars/artillery, AI/HC delegation, UI/Rsc status, economy/supply/factory edge cases, tooling/integrations/release footguns and docs/machine-ledger drift; one overflowing UI lane was closed and relaunched with gpt-5.4-mini after Spark quota hit.",
+                                             "Source-checked origin/feature/zargabad-map at e9294ede after the previously audited head 1fdcb37a advanced.",
+                                             "Reran branch-local Tools/Validate-ZargabadMission.ps1 in a detached worktree at e9294ede; validation passed.",
+                                             "Patched human and machine docs to record 832 files, +77733/-95, 3542 generated whitespace findings and tuned low-pop defaults.",
+                                             "Harvested useful scout deltas: supply completion _playerObject rescan risk, exact factory debit/abort evidence, LoadoutManager soft copy failures, PerformanceAuditAnalyzer scale/GUI constraints, DiscordBot/extension runtime footguns and command-menu interaction model.",
+                                             "docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed."
+                                         ],
+                             "handoff":  "After validation/push, treat this scout wave as closed. Do not use stale Zargabad head 1fdcb37a as current evidence."
+                         },
                          {
                              "lane":  "spark-scout-wave-mash-network-depth",
                              "owner":  "Codex/Sub-agents",

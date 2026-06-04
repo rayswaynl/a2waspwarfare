@@ -179,6 +179,16 @@ Mini UI scout note 2026-06-04: no live buy/gear/service/tactical/vote/unit-camer
 - Sends the final purchase to `BuildUnit` (`:155`), which later handles spawn details and salvage FSM entry.
 - Displays ambulance and supply-truck hints for important support vehicles (`:443-449`).
 
+### Command Menu Interaction Model
+
+The command menu is easy to misread from source because much of its workflow is icon-driven:
+
+| Interaction | Source evidence | Developer note |
+| --- | --- | --- |
+| Three icon tabs/modes | `Rsc/Dialogs.hpp:2100-2123`; `GUI_Menu_Command.sqf:111-170` | The tab buttons are icons while the title text is the main visible mode cue. Docs and future UI work should name the three modes and keep icon/title state in sync. |
+| Multi-select teams plus "All" behavior | `Dialogs.hpp:1913-1923`; `GUI_Menu_Command.sqf:115-118,277-307,397-404` | Actions can target a selected subset or all teams depending on the `All` row/selection state. Smoke both selected-subset and all-teams paths after command-menu edits. |
+| Two-step map orders | `Dialogs.hpp:1846-1888,2047-2059`; `GUI_Menu_Command.sqf:262-313,315-345` | The player arms an order mode with a button, then clicks the map to place move/patrol/defend/task targets, with marker-color feedback. Do not document task/order buttons as immediate actions. |
+
 ### Buy Gear
 
 For the full source-backed data/runtime/generator map, see [Gear, loadout and EASA atlas](Gear-Loadout-And-EASA-Atlas).

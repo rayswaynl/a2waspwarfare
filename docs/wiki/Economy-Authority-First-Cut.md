@@ -123,7 +123,7 @@ For income system `4`, server payout applies a `1.5` multiplier before commander
 
 `GUI_Menu_BuyUnits.sqf:102-108` checks funds locally, queues locally and at `:155-156` spawns `BuildUnit` and debits `ChangePlayerFunds`. `Client_BuildUnit.sqf:217` creates infantry through `WFBE_CO_FNC_CreateUnit`; `:249` creates vehicles through `WFBE_CO_FNC_CreateVehicle`; `:411-455` creates crew locally. There is no `RequestBuyUnit` PVF in `Init_PublicVariables.sqf` and no `Server/PVFunctions/RequestBuyUnit.sqf`.
 
-That means player buy authority is a protocol redesign, not a tidy handler hardening patch. It needs a server request/acceptance/rollback contract or an explicit BattlEye `scripts.txt` posture while preserving locality. The debit should either commit only after build acceptance or be refunded on every post-queue abort path by one source-of-truth helper.
+That means player buy authority is a protocol redesign, not a tidy handler hardening patch. It needs a server request/acceptance/rollback contract or an explicit BattlEye `scripts.txt` posture while preserving locality. The current honest-client path debits immediately after spawning `BuildUnit` (`GUI_Menu_BuyUnits.sqf:155-156`), while `Client_BuildUnit.sqf:365` can exit an empty/crewless vehicle path before the normal queue and local-counter tail (`:467-469`). Server-side AI buy abort paths clean queue state (`Server_BuyUnit.sqf:47-55,78-83`) but do not define a player refund/rollback contract. The debit should either commit only after build acceptance or be refunded on every post-queue abort path by one source-of-truth helper.
 
 ### Supply missions are a separate logistics authority lane
 
