@@ -13,6 +13,7 @@ Use those pages instead of adding new UI findings here. This alias exists so hum
 
 - Live upgrades use `WFBE_UpgradeMenu` and `Client/GUI/GUI_UpgradeMenu.sqf`; the older `RscMenu_Upgrade` path is stale and points at missing `Client/GUI/GUI_Menu_Upgrade.sqf`. Use [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog-review) before deleting or replacing it.
 - `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000`; `RscOverlay` and `OptionsAvailable` both use `idd = 10200`. Use [UI IDD collision repair](UI-IDD-Collision-Repair) before adding `findDisplay`-based UI automation.
+- `RscClickableText.soundPush[]` is malformed in `Rsc/Ressources.hpp:556` (`{, 0.2, 1}`); the valid empty-sound pattern is `{"", 0.2, 1}` at `Ressources.hpp:92`. Use [Client UI systems atlas](Client-UI-Systems-Atlas#known-ui-risks-and-partial-work) before deriving new clickable controls.
 - Gear template helpers live under `Client/Functions`, not `Client/GUI`.
 
 ## Continue Reading

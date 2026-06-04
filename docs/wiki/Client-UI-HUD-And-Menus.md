@@ -19,6 +19,7 @@ This is the quick-reference gateway for client UI work. Start with the [player U
 - UI code is usually client-local, but UI actions can still mutate server-visible state through PVF or direct publicVariable paths.
 - Treat any UI change that touches score, funds, supply, structures, upgrades, support, loadouts, HQ state or vehicle creation as a networking/economy change too.
 - Do not assume dialog IDs are unique: `RscMenu_EASA` and `RscMenu_Economy` share `idd = 23000`, and `RscOverlay` / `OptionsAvailable` both use `idd = 10200`.
+- Do not derive new clickable controls from `RscClickableText` before fixing its malformed base sound config: `Rsc/Ressources.hpp:556` has `soundPush[] = {, 0.2, 1};`, while the valid empty-sound pattern is `{"", 0.2, 1}` at `Ressources.hpp:92`.
 - Economy menu startup writes to `23004`/`23005`/`23006`, but the audited `RscMenu_Economy` control block does not declare those IDs; smoke disabled-state behavior before reusing this menu as a commander-control template.
 - Economy map-sell also has a stale-click risk: `GUI_Menu_Economy.sqf:10` does not reset `mouseButtonUp`, but `:101-106` consumes it for map sell. Reset the latch if touching Economy map controls.
 - EASA should close or recover on unsupported/stale vehicles: `GUI_Menu_EASA.sqf:3-4` exits early when the current vehicle type is not in `WFBE_EASA_Vehicles`, while the dialog may remain open from a stale service-menu context.
