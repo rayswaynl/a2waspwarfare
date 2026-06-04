@@ -1,5 +1,14 @@
 # Agent Worklog
 
+## 2026-06-04T08:08:06+02:00 - Codex - Spark scout wave wiki drift / community / feature depth
+
+- Steff asked for another Spark scout wave.
+- Launched six `gpt-5.3-codex-spark` read-only scouts with narrow lanes: stale reference drift; Miksuu/community developer history; Feature Status depth; agent-readable knowledge-platform improvements; UI/HUD workflow traps; runtime/server-ops/external integration risks.
+- Patched two remaining stale release supply-scan refs in [Instructions for Codex](Instructions-For-Codex) and [Performance opportunity sweep](Performance-Opportunity-Sweep): release branch scan evidence is `origin/release/2026-06-feature-bundle` `supplyMissionStarted.sqf:50-56`, not `:46-53`.
+- The broad stale-ref, Feature Status and UI scouts overflowed and were replaced with smaller row/window scouts. The replacement stale-ref scout confirmed the two patched docs no longer contain stale release scan refs.
+- Harvested source-backed deltas: `RequestSpecial upgrade-sync` is consistency debt rather than a proven functional bug; HC registration owner-id/duplicate rows now say high reliability/idempotency debt; formation picker and server base-area seeding rows are sharper; vote menu row coloring is a concrete offset bug; Knowledge Platform now records active-state/machine-index debt; Community & Dev now records the upstream decision-ledger gap and the current local `miksuu/master` three-commit lead over `origin/master`.
+- Runtime/server-ops integration scout remains pending; documentation/machine-state cleanup only; no gameplay source files were edited.
+
 ## 2026-06-04T08:18:00+02:00 - Codex - supply scan reference cleanup
 
 - Continued the documentation finisher loop after noticing that `agent-status.json` still marked `supply-authority-branch-scope-correction` as `published-validating` even though the dashboard and prior validation evidence said validated.

@@ -70,6 +70,21 @@ Do not treat `Arma2Warfare GPT`, `Mr. James`, `Contributor`, `Game Admin` or `Ve
 | Tool-assisted generated missions | Treat source mission, maintained Vanilla target and historical modded propagation as different scopes. |
 | AI assistance | AI can accelerate archaeology and docs, but source verification is a project norm, not paperwork. |
 
+## Upstream and Decision-Ledger Gap
+
+The 2026-06-04 community scout verified the local remotes as `origin` = `rayswaynl/a2waspwarfare` and `miksuu` = `Miksuu/a2waspwarfare`. At that check, `miksuu/master` was three commits ahead of `origin/master`: `913ecdf6` town defense diagnostics, `d5bfe3a2` Takistan update and merge `8bcc42b1`.
+
+This page, [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) and [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel) now overlap enough that future upstream archaeology needs a single decision ledger. The missing page should track:
+
+| Decision record | Why it matters |
+| --- | --- |
+| Upstream PR/commit/revert rationale | Reverts and closed PRs often carry negative knowledge that is easy for agents to lose. |
+| Behavior classification | Mark each imported lesson as gameplay, performance, tooling, compatibility, docs-only or historical. |
+| Branch scope | Distinguish `origin/master`, `miksuu/master`, feature branches, release branches, source Chernarus, maintained Vanilla/Takistan targets and generated-output status. |
+| Current action | Cherry-pick, source-check, document-only, owner decision, reject or archive. |
+
+Until that ledger exists, treat upstream commit/wiki findings as leads and route implementation truth through current source plus the relevant subsystem page.
+
 ## Upstream wiki archive
 
 Imported from `Miksuu/a2waspwarfare.wiki` at commit `45ef3da367d65e6487de488bbe3b16a8a8b21ba3`.

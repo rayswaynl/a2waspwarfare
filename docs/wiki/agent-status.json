@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T08:18:00+02:00",
+    "generatedAt":  "2026-06-04T08:45:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -19,9 +19,9 @@
     "agents":  {
                    "Codex":  {
                                  "status":  "active",
-                                 "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Published supply scan reference cleanup: Deep Review release refs now point at supplyMissionStarted.sqf:50-56, Feature Status names the actual Base_WarfareBUAVterminal nearestObjects source shape, and previous supply branch-scope state is marked validated.",
-                                 "nextExpectedOutput":  "Continue the documentation finisher loop with the next source-backed owner-decision or Feature Status routing gap."
+                                 "currentLane":  "spark-scout-wave-wiki-drift-community-feature-depth",
+                                 "currentWork":  "Partially harvested the Spark scout wave: patched release supply-scan refs, sharpened Feature Status rows for upgrade-sync, HC registration, AI formation picker, base-area seeding and vote UI row-offset; added Knowledge Platform agent-state debt and Community & Dev upstream decision-ledger gap. Runtime/server-ops scout remains pending.",
+                                 "nextExpectedOutput":  "Validate and publish partial harvest, then harvest the remaining runtime/server-ops scout when it returns."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -36,13 +36,19 @@
                                   "nextExpectedOutput":  "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
                               },
                    "Sub-agents":  {
-                                      "status":  "closed",
-                                      "currentLane":  "mini-scout-wave-static-supply-ui-pv",
-                                      "currentWork":  "Four gpt-5.4-mini read-only scouts were closed and harvested: static-defense HC, economy/supply/town capture, UI/HUD/dialogs and networking/PV/security.",
-                                      "nextExpectedOutput":  "No pending scout output remains from this batch."
+                                      "status":  "active",
+                                      "currentLane":  "spark-scout-wave-wiki-drift-community-feature-depth",
+                                      "currentWork":  "Most Spark scouts are harvested or closed. Broad stale-ref, Feature Status and UI lanes overflowed and were replaced with tiny scouts; runtime/server-ops integration scout remains pending.",
+                                      "nextExpectedOutput":  "Return runtime/server-ops integration report for Codex source-checking."
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "spark-scout-wave-wiki-drift-community-feature-depth",
+                            "owner":  "Codex/Sub-agents",
+                            "status":  "partial-harvest-validated-runtime-scout-pending",
+                            "output":  "Steff asked for another Spark scout wave. Codex harvested the stale-ref replacement, community/upstream, agent-readable platform, Feature Status window and UI window scouts; broad prompts that overflowed were replaced with tiny row/window scouts. Docs now record the :50-56 release supply scan refs, upgrade-sync as consistency debt, sharper HC registration/formation/base-area/vote UI statuses, Knowledge Platform active-state/machine-index debt and a Community & Dev upstream decision-ledger gap. Runtime/server-ops integration scout remains pending. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. No gameplay source changed."
+                        },
                         {
                             "lane":  "supply-scan-reference-cleanup",
                             "owner":  "Codex",

@@ -21,6 +21,17 @@ Do not move the canonical documentation to a SaaS docs platform or a separate kn
 | `agent-context.json` | Compact machine-readable repo map and high-risk rules. |
 | `agent-knowledge.jsonl` / `agent-hardening-backlog.jsonl` | Append-only evidence and backlog streams for Codex, Claude and future agents. |
 
+## Agent-Readable Debt Found During Scout Waves
+
+The 2026-06-04 agent-readable scout found that the docs already have the right long-term direction, but the active-state layer is too heavy for future agents to ingest quickly.
+
+| Finding | Evidence | Action |
+| --- | --- | --- |
+| Missing agent development pack alias | `LLM-Agent-Entry-Pack.md` exists, but `Agent-Development-Pack.md` does not. Some prompts and agents still ask for an agent development pack by that name. | Add a lightweight alias page or normalize every prompt/link to [LLM agent entry pack](LLM-Agent-Entry-Pack). |
+| Active state is carrying too much history | `agent-status.json` has hundreds of `laneSummary` entries, and `agent-collaboration.json` carries many completed claims under `activeClaims`. | Split current state from history: keep `activeLanes`, `queuedClaims` and current blockers in snapshots; keep completed lanes in `agent-events.jsonl` and the worklog. |
+| Machine records use mixed envelopes | Existing JSONL rows mix `ts` and `timestamp`, plus different actor/status/source fields. | Introduce a shared schema envelope before adding CI-grade schema validation. Do not rewrite history blindly; add normalized records going forward and teach validators to tolerate legacy rows. |
+| Page-to-source lookup is scattered | Canonical pages cite source evidence, but there is no compact machine index from page/system to source proof refs. | Add `agent-machine-index.json` or extend `agent-context.json` with page id, system, branch scope, source refs, risk tier, latest stale check and next gate. |
+
 ## Why Not Keep GitHub Wiki Canonical
 
 The wiki is useful because it is public, familiar and easy to click through from GitHub. It is weaker as the long-term source of truth because:

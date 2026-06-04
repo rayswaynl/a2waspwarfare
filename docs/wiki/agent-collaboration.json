@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T08:18:00+02:00",
+    "generatedAt":  "2026-06-04T08:45:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,30 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "spark-scout-wave-wiki-drift-community-feature-depth",
+                             "owner":  "Codex/Sub-agents",
+                             "status":  "partial-harvest-validated-runtime-scout-pending",
+                             "sourceScope":  [
+                                                 "Instructions-For-Codex and Performance-Opportunity-Sweep stale line refs",
+                                                 "Miksuu upstream/community/developer history and imported wiki archive",
+                                                 "Feature-Status-Register and adjacent canonical pages",
+                                                 "agent-readable wiki/navigation/machine-state files",
+                                                 "Client UI/HUD/dialog workflow files",
+                                                 "runtime/server-ops/external integration tooling"
+                                             ],
+                             "outputs":  [
+                                             "Launched six GPT-5.3-Codex-Spark read-only scouts after Steff asked for another Spark wave.",
+                                             "Closed overflowing stale-ref, broad Feature Status and broad UI scouts and replaced them with tiny two-file or row/window audits.",
+                                             "Patched two local stale release supply-scan refs from :46-53 to :50-56 in Instructions-For-Codex and Performance-Opportunity-Sweep.",
+                                             "Community/upstream scout returned first: Miksuu upstream is locally observed as three commits ahead, Community & Dev docs overlap with Developer History and Upstream Commit Intel, and a canonical decision/provenance ledger would reduce duplication.",
+                                             "Feature Status now treats RequestSpecial upgrade-sync as consistency debt, sharpens HC registration/formation/base-area statuses and confirms vote row coloring as a concrete offset bug.",
+                                             "Knowledge Platform Roadmap now records missing Agent-Development-Pack alias, fat active-state snapshots, mixed JSONL envelopes and missing page-to-source machine index.",
+                                             "Validation/parity passed for the partial harvest.",
+                                             "Runtime/server-ops integration scout remains pending; no gameplay source changed."
+                                         ],
+                             "handoff":  "Partial harvest is validated. Do not duplicate the harvested stale-ref/community/platform/Feature Status/UI lanes. Wait for the remaining runtime/server-ops scout, then source-check and promote only compact non-duplicate deltas."
+                         },
                          {
                              "lane":  "supply-scan-reference-cleanup",
                              "owner":  "Codex",
