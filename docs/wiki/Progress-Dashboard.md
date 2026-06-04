@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `mini-scout-wave-config-ui-cleanup-support-security` | Published / validated | Spark quota still blocked GPT-5.3-Codex-Spark, so Codex launched five cheap mini scouts for config data, UI edge cases, cleanup/perf, support flows and PV/security. Harvested non-duplicate deltas: IR-smoke parameter/runtime name split, hidden upgrade-clearance switch, volumetric weather forced off despite a parameter row, orphan-looking BIS High Command parameter, buy-unit driver-default profile key split, gear-template creation-gate semantics and 24-hour empty supply-truck cleanup behavior. Validation/parity passed. No gameplay source changed. |
 | `cheap-mini-scout-wave-commander-adjacent-depth` | Published / validated | Spark quota blocked GPT-5.3-Codex-Spark starts, so Codex launched six cheap mini scouts: construction/factories/upgrades, UI/dialogs/HUD, server ops/extensions, networking/PV security, respawn/supports and AI/team-order. Source-checked and promoted the strongest new deltas: commander vote server/UI mismatch (DR-47), commander reassignment target-by-name fragility, gear-template hidden-by-upgrade UX trap, respawn selector helper in the player UI map, DiscordBot presence timeout caveat and spawned-unit order inheritance as partial client-side automation. Validation/parity passed. No gameplay source changed. |
 | `mini-scout-wave-factory-respawn-support-runtime-tooling` | Published / validated | Harvested five mini/high scouts across factory/upgrades, respawn/service, support/ordnance, runtime/HC/AntiStack and tooling/build. Promoted only non-duplicate findings: validator path drift (`docs\validate-wiki.ps1` vs old `Tools\ValidateWiki.ps1`), branch-local Zargabad validators, buy-menu list/detail price drift, EASA exact-funds rejection, RU para-ammo config swallowed by a same-line comment, AntiStack DB error shape/stub worker, static-defence HC update-back gap and LoadoutManager packaging/replacement footguns. Validation/parity passed. No gameplay source changed. |
 | `version-sqf-ignore-target-root-correction` | Published / validated | Corrected the previous version-file wording across human and machine docs: local Chernarus and Vanilla `version.sqf` files exist in this workspace, but Git ignores them and does not track them; clean checkout and generated/target-root verification remain required before pack/test claims. Validation/parity passed. No gameplay source changed. |
@@ -129,10 +130,10 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` | Latest mini-scout wave is validated and pushed; continue with the next bounded source-backed documentation gap. |
+| Codex | Active | `documentation-finisher-loop` | Latest mini-scout config/UI/cleanup/support/security wave is validated; continue with the next bounded source-backed documentation gap. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle. |
-| Sub-agents | Closed | none | Latest mini-scout wave is harvested and closed. Useful deltas landed in support, respawn, factory, construction, AI commander, server runtime and town/capture pages; no active scout output is pending. |
+| Sub-agents | Closed | none | Five cheap mini scouts completed and were closed. Useful deltas landed in config, UI, gear-template and cleanup pages; support/security mostly confirmed canonical authority docs. |
 | Shared docs | Live | GitHub wiki + `docs/wiki` mirror | Wiki and docs mirror are kept in parity; see `agent-events.jsonl` and git history for commit IDs. |
 
 ## One-Link Check
@@ -155,6 +156,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Owner | Status | Meaning |
 | --- | --- | --- | --- |
+| `mini-scout-wave-config-ui-cleanup-support-security` | Codex/Sub-agents | Published / validated | Spark quota blocked new Spark scouts, so Codex used five cheap mini scouts. Config/UI/cleanup deltas are integrated; validation/parity passed. |
 | `mini-scout-wave-towns-construction-respawn-supports-ai-runtime` | Codex/Sub-agents | Published / validated | Harvested six cheap mini scouts after Spark quota blocked the first two starts. Deltas landed in support, respawn, factory, construction, AI commander, server runtime, town/capture, Feature Status and machine files. Pushed as docs `16338f5d` / wiki `35479de`; validation/parity passed. |
 | `spark-scout-wave-afk-config-victory-ui-runtime-integrations` | Codex/Sub-agents | Published / validated | Harvested source-backed doc deltas into lifecycle/AntiStack, UI, modded-map, external integration/runbook and tooling pages. Validation/parity passed. |
 | `spark-scout-wave-respawn-towns-ai-construction-supports-runtime` | Codex/Sub-agents | Published / validated | Harvested five useful reports into support, respawn, AI commander, construction and town/capture pages plus machine ledgers. Broad bounces and the timed-out AFK lane are recorded as a Spark prompt-scope lesson. Validation/parity passed. |

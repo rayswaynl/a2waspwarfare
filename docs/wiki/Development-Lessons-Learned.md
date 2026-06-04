@@ -205,6 +205,12 @@ Tooling pages can drift just like mission code. The current docs branch contains
 
 Development rule: when a page says "run this tool," verify the script exists on the branch or worktree being used for the claim. For current wiki edits, use `powershell -ExecutionPolicy Bypass -File docs\validate-wiki.ps1`, `git diff --check`, JSON/JSONL parsing when touched, and SHA256 parity for mirrored pages. For branch-specific features such as Zargabad, run branch-local validators from a worktree at the exact candidate head and label them branch evidence, not current-checkout tooling.
 
+## Lesson 25: Lobby Parameters Are Not Runtime Truth By Themselves
+
+`Init_Parameters.sqf` exports `class Params` entries by class name and index order, but later code can still diverge from the visible lobby surface. The 2026-06-04 config scout found several current examples: `Rsc/Parameters.hpp:393-397` exposes `WFBE_C_MODULE_WFBE_IRS`, while runtime init and upgrade gates read `WFBE_C_MODULE_WFBE_IRSMOKE` (`Init_CommonConstants.sqf:238`, `Init_Common.sqf:320`, `Upgrades_CO_US.sqf:24-25`); `WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE` is commented out in the parameter tree but still consumed by server upgrade initialization (`Parameters.hpp:351-356`, `Init_CommonConstants.sqf:225`, `Server/Init/Init_Server.sqf:333-349`); and `WFBE_C_ENVIRONMENT_WEATHER_VOLUMETRIC` is visible but forced to `0` in constants and client init (`Parameters.hpp:210-214`, `Init_CommonConstants.sqf:212`, `Init_Client.sqf:218`).
+
+Development rule: for any parameter claim, cite three layers together: the lobby class, the constants fallback and the live consumer or forced assignment. A visible host setting can be a locked switch, an orphan, a stale name or internal boot state. Do not rebalance or document operator behavior from `Parameters.hpp` alone. See [Mission parameters, localization and generated build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs) and [Assets/config/localization/parameters atlas](Assets-Config-Localization-And-Parameters-Atlas).
+
 ## Proposed Backlog Patches
 
 | Priority | Patch | Owner page target | Validation |

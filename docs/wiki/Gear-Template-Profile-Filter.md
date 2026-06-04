@@ -45,6 +45,14 @@ if ((_get select 3) > _upgrade_barracks && _u_upgrade > _upgrade_gear) then {_ca
 
 `_u_upgrade` exists in `Client_UI_Gear_AddTemplate.sqf`, where it is the computed max upgrade for a newly created template. It does not exist in `Client_UI_Gear_SaveTemplateProfile.sqf`.
 
+Separate creation-gate nuance: `Client_UI_Gear_AddTemplate.sqf:135-136` accepts a new template when the computed requirement is below either current Barracks upgrade or current Gear upgrade:
+
+```sqf
+if (_u_upgrade <= (_upgrades select WFBE_UP_BARRACKS) || _u_upgrade <= (_upgrades select WFBE_UP_GEAR)) then {
+```
+
+That may be intentional because some infantry equipment gates are Barracks-led while others are Gear-led. It still needs owner confirmation before profile/template cleanup: `Client_UI_Gear_FillTemplates.sqf:15-22` later hides visible templates above current `WFBE_UP_GEAR` only, and `Client_UI_Gear_SaveTemplateProfile.sqf` has its own undefined `_u_upgrade` filter bug. If the intended rule is "unlocked by either relevant tech lane," keep the OR and document which item classes use which lane. If the intended rule is "both infantry tech and gear tech must support it," change AddTemplate, FillTemplates and SaveTemplateProfile together.
+
 Practical impact:
 
 - The save pass can hit an undefined-variable script error when a template item's upgrade exceeds the current barracks upgrade and the expression evaluates the second operand.
@@ -103,6 +111,7 @@ Source checks:
 3. `Client_UI_Gear_AddTemplate.sqf` still computes and stores template max upgrade in field 3.
 4. `Init_ProfileGear.sqf` still recalculates stored profile price and max upgrade on load.
 5. `Init_ProfileGear.sqf` no longer accepts six-field rows and then reads index 6 without a compatibility default.
+6. AddTemplate, FillTemplates and SaveTemplateProfile all use the same intended Barracks/Gear lane rule after the owner decision.
 
 Arma smoke:
 

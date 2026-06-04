@@ -27,6 +27,10 @@ Runtime consumers include day/night duration, AFK timeout, AntiStack enable, per
 
 Current ordnance parameter caveat: `WFBE_C_GAMEPLAY_BOMBS_ALTITUDE` exists in `Rsc/Parameters.hpp:284-288`, but the current bomb handler comments out the altitude enforcement block (`Common/Functions/Common_HandleShootBombs.sqf:32-44`). By contrast, `WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION` is consumed by the live distance-delete path (`Common_HandleShootBombs.sqf:21-30`). Do not describe the altitude parameter as active gameplay enforcement until that handler is revived and smoke-tested.
 
+Parameter-name drift caveat: the generic importer does not normalize near-miss names. A 2026-06-04 config scout found `Rsc/Parameters.hpp:393-397` exposes `WFBE_C_MODULE_WFBE_IRS`, while common init and upgrade gates read `WFBE_C_MODULE_WFBE_IRSMOKE` (`Init_CommonConstants.sqf:238`, `Init_Common.sqf:320`, representative `Upgrades_CO_US.sqf:24-25`). Unless a later generation step deliberately aliases those variables, changing the lobby value does not control the runtime IR-smoke module gate.
+
+Hidden-or-forced parameter caveat: some runtime switches are not ordinary lobby controls. `WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE` is commented out in `Rsc/Parameters.hpp:351-356`, but constants/server init still use it (`Init_CommonConstants.sqf:225`, `Server/Init/Init_Server.sqf:333-349`) and boot code can force it to `7` (`initJIPCompatible.sqf:148,152`). `WFBE_C_ENVIRONMENT_WEATHER_VOLUMETRIC` exists in `Parameters.hpp:210-214`, but common constants and client init both force it to `0` (`Init_CommonConstants.sqf:212`, `Client/Init/Init_Client.sqf:218`). Treat these as internal/locked runtime state until the owner chooses to expose them deliberately.
+
 ## MP Defaults Versus Constants Fallbacks
 
 Wave O found a real default drift class: mission boot only calls `Common/Init/Init_Parameters.sqf` when `isMultiplayer` is true (`initJIPCompatible.sqf:121`). In non-MP boot paths, `Init_CommonConstants.sqf` fills any nil values instead of reading `Rsc/Parameters.hpp` defaults, even though `GUI_Display_Parameters.sqf` can display SP defaults directly from the config tree.
@@ -82,6 +86,8 @@ This means current Codex checkouts such as `work\a` can run LoadoutManager after
 | Bomb altitude parameter is visible but dormant | Either revive/smoke the commented `Common_HandleShootBombs.sqf` altitude block or hide/rename the host parameter as historical. | Host/admin UX does not imply an active restriction that the runtime does not enforce. |
 | Missing fallback for bomb distance | Add an `Init_CommonConstants.sqf` fallback or use `getVariable` default in the consumer. | Bomb-distance handling works in SP, MP and generated missions. |
 | Supply reward stringtable drift | Update `STR_Supplies_2` to match live reward math, or change the reward implementation and stringtable together during supply-authority redesign. | Player help text, runtime load message and completion reward agree for default supply upgrades and upgraded supply-rate cases. |
+| IR-smoke parameter/runtime name split | Rename the lobby class to `WFBE_C_MODULE_WFBE_IRSMOKE`, change all runtime consumers to `WFBE_C_MODULE_WFBE_IRS`, or add a small explicit alias immediately after parameter import. | Lobby disabled/enabled values actually change `IRS_Init.sqf` startup and `WFBE_UP_IRSMOKE` upgrade availability. |
+| Hidden/forced parameter exposure | Either remove hidden/dead lobby rows or wire them to real runtime behavior. Current examples: hidden `WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE`, forced-off volumetric weather and orphan-looking `WFBE_C_MODULE_BIS_HC`. | Host parameter list, in-game parameter display and runtime variables agree; no operator-facing switch implies behavior that is forced elsewhere. |
 | Root discovery drift | Keep LoadoutManager's repo-marker root discovery documented and do not reintroduce literal-folder-only assumptions. | LoadoutManager runs from `work\a` and a normal `a2waspwarfare` clone. |
 | Missing `7za` during propagation-only work | Use `A2WASP_SKIP_ZIP=1`; require `7za` only for release packaging. | Generated files land even when package creation is skipped. |
 | Generated files lack banners | Add generated-file banners to generated SQF/description/version outputs. | Future agents avoid hand-editing generated targets. |
@@ -90,6 +96,7 @@ This means current Codex checkouts such as `work\a` can run LoadoutManager after
 ## Developer Rules
 
 - Do not reorder `class Params` without auditing every `paramsArray` index.
+- Do not trust a parameter by label alone. Check the class name imported by `Init_Parameters.sqf`, any constants fallback and any later forced assignment before calling it active.
 - Do not hand-edit generated Vanilla mission drift as a substitute for LoadoutManager propagation.
 - Treat `version.sqf` as required generated/terrain metadata. Local Chernarus/Vanilla copies may exist as ignored generated files; clean checkouts, generated targets and modded targets still need explicit verification.
 - Keep Arma 2 OA config syntax in mind; do not import Arma 3 `description.ext` assumptions.

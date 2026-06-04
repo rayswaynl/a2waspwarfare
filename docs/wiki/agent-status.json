@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T06:55:00+02:00",
+  "generatedAt": "2026-06-04T07:35:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Harvested the cheap mini scout wave for commander-adjacent depth: commander vote DR-47, commander reassignment UI identity, gear-template visibility gate, respawn selector routing, DiscordBot presence timeout and spawned-unit order inheritance.",
-      "nextExpectedOutput": "Validate mirror parity and push the scoped docs/wiki batch, then continue with the next bounded source-backed documentation gap."
+      "currentWork": "Harvested the mini-scout config/UI/cleanup/support/security wave: IR-smoke parameter/runtime name split, hidden upgrade-clearance switch, forced-off volumetric weather, orphan-looking BIS High Command parameter, buy-unit driver-default profile key split, gear-template creation-gate semantics and 24-hour supply-truck empty cleanup.",
+      "nextExpectedOutput": "Push the scoped docs/wiki batch, then continue with the next bounded source-backed documentation gap."
     },
     "Codex-2": {
       "status": "ready",
@@ -38,11 +38,17 @@
     "Sub-agents": {
       "status": "closed",
       "currentLane": "none",
-      "currentWork": "Latest six cheap mini scouts completed and were harvested. Lanes covered construction/factories/upgrades, UI/dialogs/HUD, server ops/extensions, networking/PV security, respawn/supports and AI/team-order.",
+      "currentWork": "Latest five cheap mini scouts completed and were harvested. Lanes covered config data, UI edge cases, cleanup/performance, support flows and PV/security. Spark launches were quota-blocked and replaced with mini explorers.",
       "nextExpectedOutput": "No active sub-agent output pending."
     }
   },
   "laneSummary": [
+    {
+      "lane": "mini-scout-wave-config-ui-cleanup-support-security",
+      "owner": "Codex/Sub-agents",
+      "status": "published-validated",
+      "output": "Spark quota blocked GPT-5.3-Codex-Spark starts, so Codex launched five cheap mini scouts. Source-backed deltas landed for IR-smoke parameter/runtime name split, hidden upgrade-clearance switch, forced-off volumetric weather, orphan-looking BIS High Command parameter, buy-unit driver-default profile key split, gear-template AddTemplate/FillTemplates lane semantics and 24-hour empty supply-truck cleanup behavior. Support/security reports mostly confirmed canonical authority pages. docs/validate-wiki.ps1, JSON/JSONL parsing, git diff --check and mirror parity passed. No gameplay source changed."
+    },
     {
       "lane": "cheap-mini-scout-wave-commander-adjacent-depth",
       "owner": "Codex/Sub-agents",

@@ -26,10 +26,13 @@ This page maps the mission-facing configuration and media layer: `description.ex
 | `WFBE_C_AI_DELEGATION` | `Rsc/Parameters.hpp:50-54` | `0/1/2`, default `2` | Hosted server path can force HC mode off in `initJIPCompatible.sqf:168-169`. Runtime consumers include client FPS delegation, town AI, static defense and disconnect cleanup. |
 | `WFBE_C_AI_TEAMS_ENABLED` | `Rsc/Parameters.hpp:74-78` | `0/1`, default `0` | AI teams are disabled by default in current mission parameters even though constants fallback defaults to enabled in `Init_CommonConstants.sqf:94`. |
 | `WFBE_C_STRUCTURES_CONSTRUCTION_MODE` | `Rsc/Parameters.hpp:122-126` | only value `0` | UI still has sold/instant affordances for mode `1` in `GUI_Menu_Economy.sqf:149`, but the parameter only exposes timed construction. |
-| `WFBE_C_ENVIRONMENT_WEATHER_VOLUMETRIC` | `Rsc/Parameters.hpp:210-214`, `Client/Init/Init_Client.sqf:218` | only value `0` | Comment says clouds are globally disabled for FPS/stutter; client init also forces the variable to `0`. |
+| `WFBE_C_ENVIRONMENT_WEATHER_VOLUMETRIC` | `Rsc/Parameters.hpp:210-214`, `Common/Init/Init_CommonConstants.sqf:212`, `Client/Init/Init_Client.sqf:218` | only value `0`; forced `0` twice | Comment says clouds are globally disabled for FPS/stutter. Treat the lobby entry as a locked/off switch until both constants and client init stop forcing the variable to `0`. |
 | `WFBE_C_MODULE_BIS_PMC` | `Rsc/Parameters.hpp:222-227` | hidden behind `#ifndef VANILLA` | Loadout/unit roots use it for PMC content gates, for example `Common/Config/Core_Root/Root_TKGUE.sqf:99`. |
 | `WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION` | `Rsc/Parameters.hpp:290-294` | distance list | Its `title` is the same string as bomb altitude (`$STR_WF_PARAMETER_BombAltitude`), but it drives distance restriction in `Common/Functions/Common_HandleShootBombs.sqf:21`. |
 | `WFBE_C_GAMEPLAY_BOMBS_ALTITUDE` | `Rsc/Parameters.hpp:284-288` | altitude list, default 2000 | Config-present, but current `Common_HandleShootBombs.sqf:32-44` comments out the altitude enforcement block. Do not document this as active gameplay behavior until the handler is revived and smoke-tested. |
+| `WFBE_C_MODULE_WFBE_IRS` / `WFBE_C_MODULE_WFBE_IRSMOKE` | `Rsc/Parameters.hpp:393-397`; `Init_CommonConstants.sqf:238`; `Init_Common.sqf:320`; `Upgrades_CO_US.sqf:24-25` | parameter name and runtime name differ | The lobby parameter is `WFBE_C_MODULE_WFBE_IRS`, but the runtime init and upgrade gates read `WFBE_C_MODULE_WFBE_IRSMOKE`. Unless another generation step aliases these names, the lobby toggle does not control the live IR-smoke module gate. |
+| `WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE` | `Rsc/Parameters.hpp:351-356`, `Init_CommonConstants.sqf:225`, `Server/Init/Init_Server.sqf:333-349`, `initJIPCompatible.sqf:148,152` | hidden/commented parameter, live variable | The lobby class is commented out, but server upgrade initialization still consumes the variable and boot/headless fallback can set it to `7`. Treat it as an internal boot/runtime switch, not an operator-visible lobby setting. |
+| `WFBE_C_MODULE_BIS_HC` | `Rsc/Parameters.hpp:381-385`; `initJIPCompatible.sqf:151-170`; `Server/Init/Init_Server.sqf:109`; `Server/FSM/server_town_ai.sqf:17` | visible parameter, no current consumer found | Runtime headless-client delegation uses `WFBE_C_AI_DELEGATION`; no static consumer for `WFBE_C_MODULE_BIS_HC` was found in the Chernarus source pass. Do not confuse this with headless-client enablement. |
 
 ## Config Data-Model Checklist
 
@@ -70,6 +73,8 @@ Minimum smoke scenario for content changes: boot hosted or dedicated with the ed
 
 - Add new server/admin-facing settings as `class Params` entries only after choosing a stable `WFBE_*` variable name. `Init_Parameters.sqf:5-9` exports class names directly.
 - Keep `values[]`, `texts[]` and `default` aligned. A single-value parameter is a deliberate locked switch and should be documented when left that way.
+- Verify the runtime variable name matches the `class Params` name. `Init_Parameters.sqf` exports the class name directly; a near-miss such as `WFBE_C_MODULE_WFBE_IRS` versus `WFBE_C_MODULE_WFBE_IRSMOKE` is not automatically aliased.
+- Before trusting a lobby switch, grep for forced assignments after constants load. Volumetric weather is exposed in `Parameters.hpp` but forced off in both common constants and client init.
 - When adding sounds, update both the `.ogg` file and `Sounds/description.ext`, then grep for `playSound`/`say` to verify the class name matches exactly.
 - When adding UI images, verify every relative path exists in the source mission before propagation.
 - Do not convert engine-absolute paths such as `\ca\ui\data\...` into local files unless there is a clear portability reason.
@@ -83,7 +88,9 @@ Minimum smoke scenario for content changes: boot hosted or dedicated with the ed
 3. Audit missing local vehicle texture references before changing texture behavior; many entries may be old livery leftovers.
 4. Rename or retitle `WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION` UI text so it does not present as bomb altitude.
 5. Decide whether `WFBE_C_GAMEPLAY_BOMBS_ALTITUDE` should be revived, hidden or marked historical in the host parameter UX.
-6. Either remove the commented unit-caching include from docs/mental model or restore the folder as a real optimization feature.
+6. Decide whether IR smoke should use the lobby-facing `WFBE_C_MODULE_WFBE_IRS` name, the runtime `WFBE_C_MODULE_WFBE_IRSMOKE` name, or an explicit alias during parameter import.
+7. Either remove `WFBE_C_MODULE_BIS_HC` from the visible parameter set or wire/document a live consumer separate from headless-client `WFBE_C_AI_DELEGATION`.
+8. Either remove the commented unit-caching include from docs/mental model or restore the folder as a real optimization feature.
 
 ## Continue Reading
 
