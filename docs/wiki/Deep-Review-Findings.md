@@ -4,6 +4,21 @@
 
 All paths are relative to the source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Arma 2 OA 1.64 — not Arma 3.
 
+## Current Routing Index
+
+Read this page as an evidence ledger. For day-to-day work, start from the owner page below and use the DR entry only when you need the original source proof or fix shape.
+
+| Finding family | DRs | Current canonical route | Status |
+| --- | --- | --- | --- |
+| PVF, direct-PV and network-data compile trust boundaries | DR-1, DR-27, DR-30, DR-38, DR-41, DR-44, DR-46 | [Networking/PV](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index), [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook), [Server authority map](Server-Authority-Migration-Map), [Hardening roadmap](Hardening-Implementation-Roadmap) | Source-backed; implementation remains code-owner work unless an owner patches a specific channel. |
+| Economy, construction, purchases, services and upgrade authority | DR-6, DR-14, DR-16, DR-22, DR-23, DR-28, DR-33 | [Feature status](Feature-Status-Register), [Construction/CoIn](Construction-And-CoIn-Systems-Atlas), [Factory/purchase](Factory-And-Purchase-Systems-Atlas), [Economy authority first cut](Economy-Authority-First-Cut), [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas) | Source-backed; route fixes through owner playbooks and smoke packs. |
+| Commander, HQ and victory correctness | DR-11, DR-12, DR-13, DR-15, DR-20, DR-36, DR-47 | [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas), [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook), [Victory/endgame](Victory-And-Endgame-Atlas), [Pending owner decisions](Pending-Owner-Decisions) | Source-backed; DR-47 is source-unpatched and separate from DR-15. |
+| Generated mission drift, modded stubs and release propagation | DR-2, DR-4, DR-32, DR-43 | [Tools/build](Tools-And-Build-Workflow), [Content/maps](Content-Structure-And-Maps), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Tooling release readiness audit](Tooling-Release-Readiness-Audit) | Source Chernarus and maintained Vanilla Takistan are the release focus; modded missions are non-authoritative unless regenerated. |
+| Respawn, MASH, markers, WASP and partial/dead features | DR-3, DR-24, DR-25, DR-34, DR-35, DR-40 | [Feature status](Feature-Status-Register), [Respawn/death](Respawn-And-Death-Lifecycle-Atlas), [WASP overlay](WASP-Overlay), [Abandoned feature revival](Abandoned-Feature-Revival-Review), [UI IDD collision repair](UI-IDD-Collision-Repair) | Keep source evidence; do not expand duplicate archaeology pages. |
+| Headless, JIP, lifecycle and performance review cells | DR-5, DR-18, DR-19, DR-21, DR-37, DR-39, DR-42, DR-45 | [AI/headless/performance](AI-Headless-And-Performance), [Headless delegation/failover](Headless-Delegation-And-Failover-Playbook), [Lifecycle wait-chain](Lifecycle-Wait-Chain), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Town AI vehicle despawn safety](Town-AI-Vehicle-Despawn-Safety) | Mixed source-backed bugs, clean reviews and smoke-pending propagated fixes. |
+| External integrations, AntiStack, DiscordBot, Extension and governance | DR-7, DR-8, DR-9, DR-10, DR-26, DR-29, DR-31 | [External integrations](External-Integrations), [Integration trust boundary audit](Integration-Trust-Boundary-Audit), [AntiStack DB extension audit](AntiStack-Database-Extension-Audit), [Community & Dev](Community-And-Dev) | Source-backed; secrets/config/runtime deployment choices remain owner decisions. |
+| External report intake and clean-review records | DR-17, DR-26, DR-35, DR-36, DR-37, DR-38, DR-39, DR-40, DR-43 | [External research reports](External-Research-Reports), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger) | Keep as provenance and false-positive guards; avoid copying them into new pages. |
+
 ## Round 2 — 2026-06-01 (Claude)
 
 ### DR-1 — PV dispatch is a server-side `Call Compile` trust boundary (SECURITY / hardening) — **High**

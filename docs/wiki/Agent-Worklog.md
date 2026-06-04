@@ -1,5 +1,31 @@
 # Agent Worklog
 
+## 2026-06-05T00:30:26+02:00 - Codex - scout-wave gateway pruning
+
+- Claimed `relevance-pruning-and-archive-default-supported` in this delegated pruning lane and scored old agent/planning pages for safe bloat reduction.
+- Condensed [Subagent discovery swarm](Subagent-Discovery-Swarm) from a long wave-by-wave chronology into a current gateway: active state, canonical destinations, harvest snapshot, non-evidence rules and narrow relaunch notes.
+- Updated [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger), [Progress dashboard](Progress-Dashboard), `agent-collaboration.json` and `agent-events.jsonl` so future agents know this was an intentional evidence-preserving condense, not a deletion of scout provenance. No gameplay source files changed.
+
+## 2026-06-05T00:28:45+02:00 - Codex - research catch-up absorption index
+
+- Claimed `research-catchup-synthesis-default-supported` and inventoried the current intake surfaces: [External research reports](External-Research-Reports), [Deep-review findings](Deep-Review-Findings), [Audit findings queue](Audit-Findings-Queue-2026-06-03), [Subagent discovery swarm](Subagent-Discovery-Swarm), [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import), [Developer history](Developer-History-And-Upstream-Lessons) and [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel).
+- Condensed [External research reports](External-Research-Reports) from report-by-report synthesis into a current-use index plus absorption matrix. Exact report hashes and local paths remain in [`external-research-report-manifest.json`](external-research-report-manifest.json).
+- Added a current routing index to [Deep-review findings](Deep-Review-Findings) so the 47 source-backed DR entries stay as evidence while daily work routes through canonical owner pages.
+- Updated [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) with catch-up decisions for external reports, DR evidence, scout waves and Miksuu/upstream archive material. No gameplay source files changed.
+
+## 2026-06-05T00:24:28+02:00 - Codex - wiki pruning loop refresh and default-supported agents
+
+- Steff flagged that `gpt-5.5-codex` and `gpt-5-codex` are not supported with the current ChatGPT/Codex account, so the helper starts using those named models are treated as failed/non-evidence.
+- Launched two replacement high-reasoning chats with no model override, letting Codex use the account-supported default model: `research-catchup-synthesis-default-supported` (`019e94bf-34a3-7d00-b5f8-a6779a04a4ac`) and `relevance-pruning-and-archive-default-supported` (`019e94bf-7c68-7030-a8e4-2b2f67fa295f`). Their lanes are catch-up synthesis and pruning/archive decisions; Spark remains only opportunistic backup when capacity exists.
+- Improved the main Codex loop from "keep indexing/publishing findings" to "catch up, synthesize, remove duplication, preserve evidence, and only add new detail when it changes development decisions."
+- Condensed [Instructions for Codex](Instructions-For-Codex) from an old completed audit queue into the current operating contract, compressed [External research reports](External-Research-Reports) and [Subagent discovery swarm](Subagent-Discovery-Swarm) into gateways, added a routing index to [Deep-review findings](Deep-Review-Findings), and added [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) as the shared place to record keep/condense/merge/archive decisions. No gameplay source files changed.
+
+## 2026-06-05T00:03:56+02:00 - Codex - gameplay atlas commander vote caveat
+
+- Continued the documentation finisher loop and source-checked DR-47 routing after confirming [Gameplay systems atlas](Gameplay-Systems-Atlas) still summarized the vote worker as if the AI/no-commander fallback was ordinary trusted behavior.
+- Evidence checked: source Chernarus and maintained Vanilla Takistan both count `_aiVotes` at `Server/Functions/Server_VoteForCommander.sqf:24-29` and select any non-tied player candidate at `:43` because the branch checks `_highest >= _aiVotes` OR `_highest <= _aiVotes`; the client preview can show AI/no commander at `Client/GUI/GUI_VoteMenu.sqf:87-89`.
+- Updated [Gameplay systems atlas](Gameplay-Systems-Atlas) so the commander-flow summary and risk notes point to DR-47 and [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook). No gameplay source files changed.
+
 ## 2026-06-04T23:56:00+02:00 - Codex - coverage ledger mailbox closure
 
 - Continued the documentation finisher loop and source-checked the old Claude mailbox item asking Codex to wire `Codebase-Coverage-Ledger.md` into navigation/context.

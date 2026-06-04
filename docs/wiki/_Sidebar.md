@@ -65,6 +65,7 @@
   - [Documentation plan](Documentation-Implementation-Plan)
   - [Knowledge platform roadmap](Knowledge-Platform-Roadmap)
   - [Wiki quality audit](Wiki-Quality-Audit)
+  - [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger)
 - Hardening and authority
   - [Hardening roadmap](Hardening-Implementation-Roadmap)
   - [ICBM authority](ICBM-Authority-Playbook)

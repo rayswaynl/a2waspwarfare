@@ -28,6 +28,10 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `research-catchup-synthesis-default-supported` | Published / validated / pushed | Condensed [External research reports](External-Research-Reports) into a report-intake absorption matrix, added a current routing index to [Deep-review findings](Deep-Review-Findings), and recorded catch-up decisions in [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger). Recent scout and Miksuu/upstream material is marked as absorbed, archive/provenance, or narrow future micro-scout work instead of duplicate prose. No gameplay source changed. |
+| `relevance-pruning-and-archive-default-supported` | Published / validated / pushed | Condensed [Subagent discovery swarm](Subagent-Discovery-Swarm) from a long closed-wave chronology into a compact gateway. The page now preserves current state, canonical destinations, harvest snapshot, non-evidence rules and narrow relaunch notes while routing raw chronology to [Agent worklog](Agent-Worklog), [`agent-events.jsonl`](agent-events.jsonl) and owner pages. No gameplay source changed. |
+| `wiki-pruning-loop-refresh-supported-agents` | Published / validated / pushed | Codex replaced the unsupported named-model helper starts (`gpt-5.5-codex`, then `gpt-5-codex`) with two account-default supported high-reasoning chats: `research-catchup-synthesis-default-supported` and `relevance-pruning-and-archive-default-supported`. The batch starts the debloat phase for real: [Instructions for Codex](Instructions-For-Codex), [External research reports](External-Research-Reports) and [Subagent discovery swarm](Subagent-Discovery-Swarm) are condensed into current gateways, [Deep-review findings](Deep-Review-Findings) gains a routing index, and [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) records the decisions. |
+| `gameplay-atlas-commander-vote-caveat` | Published / validated / pushed | Codex source-checked DR-47 routing and found [Gameplay systems atlas](Gameplay-Systems-Atlas) still summarized commander voting as if AI/no-commander fallback was normal trusted behavior. The atlas now points the commander-flow summary and risk notes to DR-47 and [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook), with source Chernarus and maintained Vanilla evidence. No gameplay source changed. |
 | `coordination-mailbox-coverage-ledger-close` | Published / validated / pushed | Codex source-checked the Coverage Ledger navigation request against Home, `_Sidebar.md`, `_Footer.md`, `llms.txt`, `agent-context.json`, the dashboard and both worktrees. The page and links exist, so the old Coordination Board mailbox row is now marked done instead of open. Validation passed and no gameplay source changed. |
 | `coordination-board-active-lane-reconcile` | Published / validated / pushed | Codex source-checked the dashboard/status versus [Coordination board](Coordination-Board) and removed stale historic scout/review rows from the board's Active Lanes table. Current open lanes now match this dashboard: documentation finisher, autonomous Claude research, feature-status watchlist, future hardening/code-owner work, testing/release gates, smoke-pending source fixes and WASP marker cleanup. Validation passed and no gameplay source changed. |
 | `basearea-machine-ledger-split` | Published / validated / pushed | Codex source-checked the grouped-base split and updated the machine ledgers so stale aggregate wording no longer reopens a server guard that is already patched. `Construction_StationaryDefense.sqf:12-15` is source-patched in source Chernarus and maintained Vanilla Takistan, while server `wfbe_basearea` seeding plus client CoIn sale/placement guards at `coin_interface.sqf:256-263` and `:721-730` remain open. No gameplay source changed in this docs batch. |
@@ -51,9 +55,10 @@ Historic batch rows were intentionally removed from this page. Use [Agent worklo
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` | `coordination-mailbox-coverage-ledger-close` is validated/published; next best docs lane is source-checking new focused engineering-thread output or continuing P0/P1 owner-page cleanup. |
+| Codex | Active | `documentation-finisher-loop` + `research-catchup-synthesis-default-supported` + `relevance-pruning-and-archive-default-supported` | First debloat/catch-up batch is published; next pass can continue pruning less-relevant pages and absorbing recent research without reopening already-harvested scout history. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Coverage Ledger navigation is wired. Claude can self-select the next bounded source-backed review from the ledger or hardening backlog. |
+| Supported docs agents | Active | `research-catchup-synthesis-default-supported`, `relevance-pruning-and-archive-default-supported` | Two account-default supported high-reasoning helper chats are running catch-up synthesis and relevance pruning. The earlier named-model starts are treated as failed/non-evidence. |
 | Sub-agents | Returned / closed | `navigation-parity-and-scout-wave-2026-06-04` | Supports, UI, tooling and AI scouts returned; most findings confirmed existing owner pages. Economy scout was closed without output and is not evidence. |
 | Shared docs | Live | GitHub wiki + docs mirror | Wiki and mirror should stay in parity after scoped validation; use event logs and git history for commit IDs. |
 
@@ -72,12 +77,15 @@ Historic batch rows were intentionally removed from this page. Use [Agent worklo
 | Dated narrative notes | [Agent worklog](Agent-Worklog) |
 | External report intake | [External research reports](External-Research-Reports) |
 | External report manifest | [`external-research-report-manifest.json`](external-research-report-manifest.json) |
+| Pruning and relevance decisions | [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) |
 
 ## Current Lanes
 
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
 | `documentation-finisher-loop` | Codex | Active / ongoing | Keep the wiki current from source evidence, update machine files on visible status changes, and keep this dashboard compact. |
+| `research-catchup-synthesis-default-supported` | Codex / supported catch-up helper | Active / first batch published | Absorb recent research/scout/upstream material into canonical pages, marking repeated report claims as absorbed instead of expanding holding pages. |
+| `relevance-pruning-and-archive-default-supported` | Codex / supported pruning helper | Active / first batch published | Score pages for keep/condense/merge/archive and patch safe bloat reductions with evidence preserved. |
 | `autonomous-claude-research` | Claude | Autonomous-ready | Self-select the next bounded source-backed review from [Codebase coverage ledger](Codebase-Coverage-Ledger) when Claude is active. |
 | `feature-status-reconciliation` | Codex / future agent | Watchlist | Fold newly confirmed findings into [Feature status](Feature-Status-Register), owner pages and machine records. No untriaged finding is blocking this dashboard. |
 | `implementation-hardening-from-backlog` | Future code owner | Owner decision / code lane | Pick implementation work from [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) only when Steff asks for gameplay patches or a code owner claims the work. |

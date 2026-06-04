@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-04T23:05:00+02:00",
+    "generatedAt":  "2026-06-05T00:28:42+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,45 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "research-catchup-synthesis-default-supported",
+                             "owner":  "Codex",
+                             "status":  "active-validation-pending",
+                             "sourceScope":  [
+                                                 "docs/wiki/External-Research-Reports.md",
+                                                 "docs/wiki/Deep-Review-Findings.md",
+                                                 "docs/wiki/Wiki-Pruning-And-Relevance-Ledger.md",
+                                                 "docs/wiki/Subagent-Discovery-Swarm.md",
+                                                 "docs/wiki/Miksuu-Upstream-Wiki-Import.md",
+                                                 "docs/wiki/Developer-History-And-Upstream-Lessons.md",
+                                                 "docs/wiki/Upstream-Miksuu-Commit-Intel.md"
+                                             ],
+                             "outputs":  [
+                                             "Condensed External Research Reports into an absorption matrix and current-use index.",
+                                             "Added a routing index to Deep-Review Findings so the source-cited evidence ledger points readers to canonical owner pages.",
+                                             "Recorded catch-up and pruning decisions in Wiki-Pruning-And-Relevance-Ledger.",
+                                             "No gameplay source changed."
+                                         ],
+                             "handoff":  "Validate and mirror this docs-only catch-up batch, then use the owner pages listed in the routing tables instead of expanding report/scout holding pages."
+                         },
+                         {
+                             "lane":  "relevance-pruning-and-archive-default-supported",
+                             "owner":  "Codex",
+                             "status":  "active",
+                             "sourceScope":  [
+                                                 "docs/wiki/Subagent-Discovery-Swarm.md",
+                                                 "docs/wiki/Wiki-Pruning-And-Relevance-Ledger.md",
+                                                 "docs/wiki/Progress-Dashboard.md",
+                                                 "docs/wiki/Agent-Worklog.md",
+                                                 "docs/wiki/agent-status.json",
+                                                 "docs/wiki/agent-events.jsonl"
+                                             ],
+                             "outputs":  [
+                                             "Scoring old agent/planning pages for keep, condense, merge or archive.",
+                                             "First safe batch targets scout-wave narration after promoted findings already landed in canonical owner pages."
+                                         ],
+                             "handoff":  "Preserve source-backed promoted findings in owner pages; treat duplicate scout narration and closed/failed starts as provenance, not current work."
+                         },
                          {
                              "lane":  "mini-scout-wave-depth-leftovers-2026-06-04",
                              "owner":  "Codex/Sub-agents",

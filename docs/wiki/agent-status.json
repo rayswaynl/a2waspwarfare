@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T23:58:14+02:00",
+  "generatedAt": "2026-06-05T00:33:55+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -14,14 +14,15 @@
     "eventFeed": "agent-events.jsonl",
     "repoContext": "agent-context.json",
     "releaseReadiness": "agent-release-readiness.json",
-    "agentEntryPoint": "agent-entrypoint.json"
+    "agentEntryPoint": "agent-entrypoint.json",
+    "pruningLedger": "Wiki-Pruning-And-Relevance-Ledger.md"
   },
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published the Coverage Ledger navigation mailbox closure: the old Coordination Board open row is marked done after source-checking all requested links. No gameplay source changed.",
-      "nextExpectedOutput": "Continue P0/P1 owner-page cleanup from source evidence; fold focused engineering-thread findings into Feature Status only when source-checked."
+      "currentLane": "documentation-finisher-loop / research-catchup-synthesis-default-supported / relevance-pruning-and-archive-default-supported",
+      "currentWork": "Published the first catch-up/debloat batch: current loop refresh, pruning ledger, external-report absorption matrix, scout-wave gateway, DR routing index and DR-47 gameplay-atlas caveat.",
+      "nextExpectedOutput": "Resume supported helper lanes for deeper bloat reduction and research absorption; keep future patches scoped and evidence-preserving."
     },
     "Codex-2": {
       "status": "ready",
@@ -40,9 +41,39 @@
       "currentLane": "navigation-parity-and-scout-wave-2026-06-04",
       "currentWork": "Two gpt-5.3-codex-spark starts hit quota before evidence; five read-only gpt-5.4-mini scouts were launched. Supports, UI, tooling and AI returned and mostly confirmed canonical owner pages. Economy timed out twice and was closed without output.",
       "nextExpectedOutput": "No active scout output remains for this wave."
+    },
+    "Supported docs agents": {
+      "status": "active",
+      "currentLane": "research-catchup-synthesis-default-supported / relevance-pruning-and-archive-default-supported",
+      "currentWork": "Two replacement high-reasoning helper chats are running with no named model override after gpt-5.5-codex and gpt-5-codex both proved unsupported for this account.",
+      "nextExpectedOutput": "Catch-up synthesis should route recent research/scout/upstream deltas into canonical pages; pruning should propose or patch safe keep/condense/merge/archive decisions."
     }
   },
   "laneSummary": [
+    {
+      "lane": "wiki-pruning-loop-refresh-supported-agents",
+      "owner": "Codex",
+      "status": "published-validated-pushed",
+      "output": "Unsupported named-model helper starts (gpt-5.5-codex, then gpt-5-codex) are treated as failed/non-evidence. Two account-default supported high-reasoning helper chats were launched for research catch-up synthesis and relevance pruning. Instructions-For-Codex, External-Research-Reports and Subagent-Discovery-Swarm are condensed into current gateways, Deep-Review-Findings now has a routing index, and Wiki-Pruning-And-Relevance-Ledger records keep/condense/merge/archive decisions. No gameplay source changed."
+    },
+    {
+      "lane": "research-catchup-synthesis-default-supported",
+      "owner": "Codex / supported catch-up helper",
+      "status": "active-first-batch-published",
+      "output": "Condensed External Research Reports into an absorption matrix, added a routing index to Deep Review Findings, and recorded catch-up decisions for external reports, DR evidence, recent scouts and Miksuu/upstream archive material in Wiki-Pruning-And-Relevance-Ledger. No gameplay source changed."
+    },
+    {
+      "lane": "relevance-pruning-and-archive-default-supported",
+      "owner": "Codex / supported pruning helper",
+      "status": "active-first-batch-published",
+      "output": "Thread 019e94bf-7c68-7030-a8e4-2b2f67fa295f is assigned to score pages for keep/condense/merge/archive and patch safe bloat reductions while preserving source evidence. First patch condenses Subagent-Discovery-Swarm into a compact gateway and records the decision in Wiki-Pruning-And-Relevance-Ledger. No gameplay source changed."
+    },
+    {
+      "lane": "gameplay-atlas-commander-vote-caveat",
+      "owner": "Codex",
+      "status": "published-validated-pushed",
+      "output": "Gameplay Systems commander-flow summary now flags DR-47: source Chernarus and maintained Vanilla both count AI/no-commander votes but select any non-tied player candidate via the tautological _highest >= _aiVotes OR _highest <= _aiVotes branch, while GUI_VoteMenu can preview AI/no commander. No gameplay source changed."
+    },
     {
       "lane": "coordination-mailbox-coverage-ledger-close",
       "owner": "Codex",
@@ -196,6 +227,7 @@
     "coordinationBoard": "Coordination-Board.md",
     "discoverySwarm": "Subagent-Discovery-Swarm.md",
     "codebaseCoverageLedger": "Codebase-Coverage-Ledger.md",
+    "pruningLedger": "Wiki-Pruning-And-Relevance-Ledger.md",
     "featureStatus": "Feature-Status-Register.md",
     "hardeningBacklog": "agent-hardening-backlog.jsonl",
     "collaborationProtocol": "Agent-Collaboration-Protocol.md",

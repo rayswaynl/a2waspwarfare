@@ -218,13 +218,14 @@ sequenceDiagram
 
 `RequestCommanderVote.sqf` only starts a vote when side logic `wfbe_votetime <= 0`. It seeds votes with `SetCommanderVotes`, spawns `WFBE_SE_FNC_VoteForCommander`, sends `VotingForNewCommander`, and notifies clients with `HandleSpecial` (`Server/PVFunctions/RequestCommanderVote.sqf:8-22`; `Common/Functions/Common_SetCommanderVotes.sqf:9-10`).
 
-`Server_VoteForCommander.sqf` counts down `WFBE_C_GAMEPLAY_VOTE_TIME`, collects team votes, resolves a winner or AI commander fallback, sets side logic `wfbe_commander`, notifies clients and stops AI commander state when a player commander is elected (`Server/Functions/Server_VoteForCommander.sqf:10-56`; `Common/Functions/Common_GetCommanderTeam.sqf:8-10`).
+`Server_VoteForCommander.sqf` counts down `WFBE_C_GAMEPLAY_VOTE_TIME`, collects team votes, sets side logic `wfbe_commander`, notifies clients and stops AI commander state when a player commander is elected (`Server/Functions/Server_VoteForCommander.sqf:10-56`; `Common/Functions/Common_GetCommanderTeam.sqf:8-10`). Treat the current AI/no-commander fallback wording as patch-ready rather than trusted behavior: **DR-47** confirms the worker counts `_aiVotes` at `Server_VoteForCommander.sqf:24-29`, but the winner branch at `:43` checks `_highest >= _aiVotes` OR `_highest <= _aiVotes`, so any non-tied player candidate can win while the client preview at `GUI_VoteMenu.sqf:87-89` can show AI/no commander. Use [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) before changing vote semantics.
 
 `RequestNewCommander.sqf` directly assigns a commander when no vote is running, then spawns `WFBE_SE_FNC_AssignForCommander` and sends `new-commander-assigned` (`Server/PVFunctions/RequestNewCommander.sqf:8-14`; `Server/Functions/Server_AssignNewCommander.sqf:1-13`).
 
 Risk notes:
 
 - `Server_AssignNewCommander.sqf` treats `_this` both as side and array (`_side = _this; _commander = _this select 1`). This is confirmed as [Deep-review findings](Deep-Review-Findings) DR-15, not just an open question.
+- `Server_VoteForCommander.sqf` has the DR-47 server/UI no-commander mismatch above in both source Chernarus and maintained Vanilla Takistan; patch server semantics and UI preview together.
 - Commander identity lives on side logic and is public; client UI and resource distribution both depend on it.
 
 ## Upgrades
