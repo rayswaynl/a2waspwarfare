@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-04T14:05:00+02:00 - Codex - fresh background Spark scout harvest status
+
+- Continued the documentation finisher loop after the fresh background Spark scout launch. Read completed thread reports for construction/base, PV/network, tools/content, abandoned features and upstream/community.
+- Harvest result: the completed reports mostly confirmed existing canonical coverage rather than adding new source-backed deltas. Construction auto-wall/base-area/SmallSite risks, PVF/direct-PV/SEND_MESSAGE risks, LoadoutManager packaging/modded path risks, AI supply truck/supplyMissionActive/Reaktiv/MASH dead-feature risks and branch-head/upstream routing were already present in their owner pages.
+- Four threads were interrupted before final reports (`commander/economy`, `respawn/MASH`, `runtime/HC`, `performance hot paths`) and the UI/dialogs thread hit a system error. Treat those as unharvested, not evidence. Relaunch as narrow micro-scouts if the lane is still valuable.
+- Updated [Progress dashboard](Progress-Dashboard), [Discovery swarm](Subagent-Discovery-Swarm), `agent-status.json` and `agent-events.jsonl` to make the wave visible without duplicating confirmed bug prose. Documentation/status only; no gameplay source files were edited.
+
 ## 2026-06-04T13:45:00+02:00 - Codex - Spark scout startup failure and local buy-menu harvest
 
 - Steff asked for another Spark scout wave. Codex launched read-only subagents for commander/economy, construction, respawn/MASH, runtime/HC, PV networking and UI, but all failed during remote startup compaction because this long-running orchestration thread is now too large for the Spark compact path. Codex then switched to fresh background Codex Spark threads so the scouts start without inherited context.

@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-status-v1",
-    "generatedAt":  "2026-06-04T13:25:00+02:00",
+    "generatedAt":  "2026-06-04T14:05:00+02:00",
     "purpose":  "Compact progress snapshot for humans, Codex, Claude and future agents.",
     "dashboard":  "Progress-Dashboard.md",
     "sourceOfTruth":  {
@@ -20,8 +20,8 @@
                    "Codex":  {
                                  "status":  "active",
                                  "currentLane":  "documentation-finisher-loop",
-                                 "currentWork":  "Published and pushed the latest scout harvest after GPT-5.3-Codex-Spark quota blocked three starts and six gpt-5.4-mini fallback scouts returned. Content commits: docs 1d7d0567 / wiki faaee0f; current pushed heads after status reconciliation: docs 180bb301 / wiki 6a49599.",
-                                 "nextExpectedOutput":  "Continue documentation finisher/orchestrator loop; pick the next source-backed discovery or hardening lane when Steff asks."
+                                 "currentWork":  "Harvested the fresh background Spark scout wave that replaced failed in-thread Spark subagents. Five reports completed and mostly confirmed already-canonical construction, PV/network, tooling, abandoned-feature and upstream/community coverage; four threads interrupted before final and one UI thread hit a system error. The buy-menu profile key lesson was already routed and pushed as docs 894ad733 / wiki 0d41450.",
+                                 "nextExpectedOutput":  "Continue documentation finisher/orchestrator loop; relaunch interrupted lanes as narrower micro-scouts or pick the next source-backed non-duplicate docs item."
                              },
                    "Codex-2":  {
                                    "status":  "ready",
@@ -36,13 +36,19 @@
                                   "nextExpectedOutput":  "Read shared state, follow Codex handoffs first, then self-select another source-backed review if idle."
                               },
                    "Sub-agents":  {
-                                      "status":  "closed",
-                                      "currentLane":  "mini-scout-wave-quad-ai-support-lifecycle-ui-tooling-upstream",
-                                      "currentWork":  "All six gpt-5.4-mini fallback scouts returned and were closed after Codex harvested non-duplicate source-backed findings.",
-                                      "nextExpectedOutput":  "No active scout output pending from this wave."
+                                      "status":  "closed-partial-harvest",
+                                      "currentLane":  "fresh-background-spark-scout-wave-buy-menu-harvest",
+                                      "currentWork":  "Ten fresh background Spark threads were launched after normal subagent startup failed. Five completed reports were harvested as duplicate confirmations, four interrupted before final and one UI thread errored.",
+                                      "nextExpectedOutput":  "No completed report is pending harvest from this wave. Interrupted/error lanes need fresh narrow micro-scouts before their claims become evidence."
                                   }
                },
     "laneSummary":  [
+                        {
+                            "lane":  "fresh-background-spark-scout-wave-buy-menu-harvest",
+                            "owner":  "Codex/background Spark threads",
+                            "status":  "published-validated-pushed",
+                            "output":  "Normal Spark subagents failed during remote startup compaction in the long-running orchestrator thread, so Codex launched ten fresh background Spark threads. Completed reports for construction/base, PV/network, tools/content, abandoned features and upstream/community mostly confirmed existing canonical docs and were not duplicated. Commander/economy, respawn/MASH, runtime/HC and performance threads interrupted before final; UI/dialogs hit a system error. The source-backed content delta from this run was the buy-menu driver-default profileNamespace key split, pushed as docs 894ad733 / wiki 0d41450; this status batch records the fresh thread outcomes and keeps the unfinalized threads out of evidence ledgers. No gameplay source changed."
+                        },
                         {
                             "lane":  "mini-scout-wave-quad-ai-support-lifecycle-ui-tooling-upstream",
                             "owner":  "Codex/Sub-agents",

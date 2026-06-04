@@ -4,7 +4,26 @@ This page tracks the cheap read-only Codex discovery agents currently digging th
 
 The swarm is intentionally evidence-first: agents read source, report path/line-backed findings, and avoid editing docs or mission code. Codex integrates the useful findings into the wiki, `agent-context.json`, the coverage ledger and the feature-status register after review.
 
-## Current Wave: Wave S
+## Current Wave: Fresh Background Spark Threads (2026-06-04)
+
+Spawned after the long-running orchestrator thread became too large for normal Spark subagent startup compaction. Codex moved the scout work into fresh background Spark threads with absolute repo paths, then harvested only completed final reports.
+
+| Thread | Lane | Status | Harvest summary |
+| --- | --- | --- | --- |
+| `019e938e-4547-7310-8469-69bb3c1e31c5` | construction/base | Completed / duplicate-confirmation harvest | Reconfirmed DR-6 construction authority, base-area stale/null-guard risks, global auto-wall toggle, client-driven sale flow and SmallSite cleanup. These are already canonical in [Construction/CoIn](Construction-And-CoIn-Systems-Atlas), [Feature status](Feature-Status-Register) and the hardening backlog. |
+| `019e938e-ae10-7de1-9639-a432de30ad5c` | PV/network | Completed / duplicate-confirmation harvest | Reconfirmed PVF dispatch compile risk, attack-wave/direct-PV authority, `SEND_MESSAGE`, ICBM payload trust, MASH marker relay and JIP pull-pattern notes. These already route through [Networking/PV](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index), [Deep-review findings](Deep-Review-Findings), [Attack-wave authority](Attack-Wave-Authority-Playbook) and [ICBM authority](ICBM-Authority-Playbook). |
+| `019e938e-cf76-7ce0-8fb5-c73a8cf65d93` | tools/content | Completed / duplicate-confirmation harvest | Reconfirmed LoadoutManager modded-generation disablement, packaging omissions, `7za`/archive failure modes, copy sync blast radius, skip-list drift and replacement soft failures. These already live in [Tools/build](Tools-And-Build-Workflow), [Tooling readiness](Tooling-Release-Readiness-Audit) and [Feature status](Feature-Status-Register). |
+| `019e938f-3386-70c3-a592-2c215fafb08d` | abandoned features | Completed / duplicate-confirmation harvest | Reconfirmed autonomous AI supply trucks, dead `supplyMissionActive.sqf`, dead Reaktiv, orphaned MASH marker relay, LoadoutManager modded path, Discord command bootstrap and extension serialization risks. Canonical homes already exist in [Abandoned feature revival](Abandoned-Feature-Revival-Review), [Modules atlas](Modules-Atlas), [External integrations](External-Integrations) and [Feature status](Feature-Status-Register). |
+| `019e938f-4105-77f1-916f-3add88537f0f` | upstream/community | Completed / routing harvest | Reconfirmed current branch heads and lesson sinks for AI commander, EASA QoL, commander positions, player stats, drone/recon, supply heli and WF menu branches. Existing branch matrix and community/dev pages remain the canonical routing surfaces. |
+| `019e938d-feb1-7893-95d5-bdc0a3ea6fff` | commander/economy | Interrupted before final | Treat as unharvested. Relaunch as a narrower file-family micro-scout if needed. |
+| `019e938e-52b5-7000-8ffa-8107d0b9560c` | respawn/MASH | Interrupted before final | Treat as unharvested. Existing MASH/respawn canonical pages remain source of truth. |
+| `019e938e-61c3-7451-b207-31c9ff269b49` | runtime/HC | Interrupted before final | Treat as unharvested. Relaunch as separate HC, AFK, AntiStack or FPS micro-scouts if needed. |
+| `019e938f-751c-7131-b518-4418f4f2d0cb` | performance hot paths | Interrupted before final | Treat as unharvested. Existing performance pages remain source of truth until a final report exists. |
+| `019e938e-be87-7740-9ce3-6218172e288f` | UI/dialogs | System error | No harvest. Relaunch with a narrower UI file family if needed. |
+
+Harvest rule: completed reports were valuable mainly as confirmation that the current canonical pages already cover the recurring risks. The only content delta from this run before this status update was the buy-menu driver-default `profileNamespace` key split, routed into [Factory/purchase](Factory-And-Purchase-Systems-Atlas) and [Development lessons](Development-Lessons-Learned).
+
+## Previous Wave: Wave S
 
 Spawned by the main orchestrator after Wave R was harvested and the stale dashboard status was corrected. These read-only explorers returned compact source packets; Codex promoted only selected source-backed deltas into owner pages and machine records.
 
