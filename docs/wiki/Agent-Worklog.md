@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-05T08:16:00+02:00 - Codex - pruning ledger completion audit
+
+- Audited [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) against the current pushed wiki state after the UI/runtime quick-reference batch (`33b6406e` / wiki `f8c5872`).
+- Verified the remaining archive-page caveat note was already satisfied: each `Miksuu-Wiki-Archive-*` page has an import provenance header and says it is not the current canonical source of truth for implementation details.
+- Converted the ledger's old "Current Pruning Backlog" into a completion-state table showing P0/P1/P2 pruning tasks completed, with evidence routes.
+- Compacted [Progress dashboard](Progress-Dashboard) so Latest Batch only shows the local completion audit and the two most recent published pruning batches; older chronology remains in this worklog, machine files and git history.
+- No gameplay source files changed.
+
 ## 2026-06-05T08:02:31+02:00 - Codex - UI/runtime quick-reference pruning
 
 - Continued the pruning ledger's P2 overlapping-atlas lane from the pushed Feature Status cleanup batch (`de23dadf` / wiki `2d158e6`).

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T08:02:31+02:00",
+  "generatedAt": "2026-06-05T08:16:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published the UI/runtime quick-reference pruning batch: gateway pages route to canonical UI, runtime, tooling and HC owner pages instead of repeating evidence.",
-      "nextExpectedOutput": "Check for any remaining archive/navigation caveat pass or run a fresh completion audit against the pruning ledger."
+      "currentWork": "Published the pruning-ledger completion audit: P0/P1/P2 pruning tasks are recorded as completed and the dashboard is compacted to current-state use.",
+      "nextExpectedOutput": "Future work should start from fresh source evidence, code-owner requests or new user direction."
     },
     "Codex-2": {
       "status": "ready",
@@ -37,10 +37,10 @@
       "nextExpectedOutput": "Self-select the next bounded source-backed review from Coverage Ledger or the hardening backlog."
     },
     "Sub-agents": {
-      "status": "returned-promoted",
+      "status": "returned-harvested",
       "currentLane": "ui-runtime-bloat-scout / wiki-navigation-chain-scout",
-      "currentWork": "Confucius's UI/HUD/runtime quick-reference pruning leads are source-checked into the current local batch. Carson's small navigation fixes were promoted in the previous batch; archive-page caveats remain optional future work.",
-      "nextExpectedOutput": "No active scout output remains; future pruning should be narrow and page-owner based."
+      "currentWork": "Confucius's UI/HUD/runtime quick-reference pruning leads were source-checked and published. Carson's small navigation fixes were promoted, and the archive-page caveat note is already satisfied by imported archive headers.",
+      "nextExpectedOutput": "No active scout output remains; future pruning should start from fresh evidence."
     },
     "Supported docs agents": {
       "status": "active",
@@ -50,6 +50,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "pruning-ledger-completion-audit",
+      "owner": "Codex",
+      "status": "published-validated-pushed",
+      "output": "Wiki-Pruning-And-Relevance-Ledger now records P0/P1/P2 pruning tasks as completed and separates future gameplay/code-owner work from pruning-goal work. Progress-Dashboard is compacted to current-state use. No gameplay source changed."
+    },
     {
       "lane": "ui-runtime-quickref-pruning",
       "owner": "Codex",
