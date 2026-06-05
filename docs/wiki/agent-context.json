@@ -1226,6 +1226,15 @@
     "agentMachineIndex": "agent-machine-index.json"
   },
   "currentCoordination": {
-    "bottleneckQueue": "Bottleneck-Removal-Queue.md"
+    "liveOpenTaskRoute": [
+      "Progress-Dashboard.md",
+      "Coordination-Board.md",
+      "Wiki-Pruning-And-Relevance-Ledger.md",
+      "Feature-Status-Register.md",
+      "Pending-Owner-Decisions.md",
+      "agent-status.json"
+    ],
+    "bottleneckQueue": "Bottleneck-Removal-Queue.md",
+    "bottleneckQueueStatus": "supporting-checklist-not-live-claim"
   }
 }

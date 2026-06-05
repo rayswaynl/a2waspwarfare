@@ -1,8 +1,10 @@
 # Bottleneck Removal Queue
 
-Lane claimed: `bottleneck-reducer-progress-accelerator`.
+Former lane: `bottleneck-reducer-progress-accelerator` (**closed / historical**).
 
-This page is the compact queue for removing documentation/process drag. It does not replace [Feature status](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Wiki quality audit](Wiki-Quality-Audit) or [Current source status](Current-Source-Status-Snapshot); it points at the next action when those pages disagree or get too large.
+This page is now a supporting checklist for recurring documentation/process drag. It is **not** the live open-task queue and does not claim active ownership. Use [Progress dashboard](Progress-Dashboard), [Coordination board](Coordination-Board), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), [Feature status](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions) and [`agent-status.json`](agent-status.json) as the current route.
+
+Use this page when a broad docs/process problem reappears: stale patched wording, mirror drift, validation gaps, harvested-report residue, or release-readiness overclaims. If nothing here contradicts the current route, do not reopen the old bottleneck lane.
 
 ## Current Truth
 
@@ -13,6 +15,7 @@ This page is the compact queue for removing documentation/process drag. It does 
 | `agent-release-readiness.json` now exists as an evidence-only gate index. | Do not treat it as a release-ready claim; it records blockers and validation gates that must close first. |
 | `docs/wiki` and the active wiki checkout are currently managed by scoped parity checks. | Keep [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) as the no-blind-copy policy for future drift or alternate-checkout reconciliation; latest scoped batches report `full-diffCount=0`. |
 | Review coverage is mostly done; remaining risk is owner action and validation evidence. | Send code owners to [Pending owner decisions](Pending-Owner-Decisions), not more broad review prose. |
+| The old `bottleneck-reducer-progress-accelerator` lane is historical. | Future agents should open a fresh lane if a new bottleneck appears, instead of treating this page header as an active claim. |
 
 ## P0 Bottlenecks
 

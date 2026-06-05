@@ -13,6 +13,11 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T16:58:18+02:00 - Codex - bottleneck queue demotion refresh
+
+- Demoted [Bottleneck removal queue](Bottleneck-Removal-Queue) from an old claimed lane into a supporting checklist for recurring docs/process drag.
+- Added machine supersession context so future agents route active work through [Progress dashboard](Progress-Dashboard), [Coordination board](Coordination-Board), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), [Feature status](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions) and [`agent-status.json`](agent-status.json), not the old `bottleneck-reducer-progress-accelerator` lane. No gameplay source changed.
+
 ## 2026-06-05T16:53:19+02:00 - Codex - wiki source consistency footer route refresh
 
 - Relabeled the historical [Wiki/source consistency findings](Wiki-Source-Consistency-Findings) `Continue Reading` footer from `Codex queue` to a current route: [Progress dashboard](Progress-Dashboard) as the live route and [Instructions for Codex](Instructions-For-Codex) as the operating contract. No gameplay source changed.
