@@ -41,6 +41,12 @@ When an old entry disagrees with a newer source-checked page or supersession rec
 - Result: every checked maintained root/branch still loads the client-local WASP marker monitor and keeps `disableUserInput true`, the unslept display-54 polling window and final `disableUserInput false` in `global_marking_monitor.sqf:57-73`; the display-12 wait at `:80` remains the throttled idiom to copy. Release Chernarus only shifts the launch line to `Init_Client.sqf:282`.
 - Refreshed [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup) as the canonical branch route and condensed [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger) and machine records. No gameplay source changed.
 
+## 2026-06-05T21:30:00+02:00 - Codex - Dashboard latest batch re-trim
+
+- Claimed `dashboard-latest-batch-retrim` after [Progress dashboard](Progress-Dashboard) Latest Batch kept regrowing past its five-row compact-current-state convention.
+- Trimmed the table back to the newest five published rows, matching the page's compact-current-state convention.
+- Preserved older visible-parameter, auto-wall, RHUD/endgame and buy-menu price/key batches in this worklog, [`agent-events.jsonl`](agent-events.jsonl), owner pages and git history. No gameplay source changed.
+
 ## 2026-06-05T23:59:30+02:00 - Codex-helper - Camp count helper fallback branch route
 
 - Claimed `camp-count-helper-fallback-branch-route` from the towns/camps correctness backlog.
