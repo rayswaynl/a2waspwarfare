@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-05T13:25:00+02:00 - Codex - neither-nav support closeout
+
+- Claimed `neither-nav-support-closeout` after the hidden owner/reference promotion left 20 neither-nav pages.
+- Updated [Navigation inventory and page status](Navigation-Inventory-And-Page-Status) with a support-only closeout table for the remaining pages: patch-ready handoffs, evidence ledgers/queues, agent instructions and analysis support.
+- Recorded in [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) that the remaining neither-nav set is intentional support material, not untriaged navigation drift.
+- Updated [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl`. No gameplay source changed.
+
 ## 2026-06-05T13:10:00+02:00 - Codex - hidden owner/reference nav promotion
 
 - Claimed `hidden-owner-reference-nav-promotion` after inventorying the 27 neither-nav pages and separating broad current owner/reference pages from archives, prompts, analysis notes and narrow patch handoffs.

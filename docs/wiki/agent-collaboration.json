@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-05T13:20:00+02:00",
+    "generatedAt":  "2026-06-05T13:35:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,25 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "neither-nav-support-closeout",
+                             "owner":  "Codex",
+                             "status":  "published-validated",
+                             "sourceScope":  [
+                                                 "docs/wiki/Navigation-Inventory-And-Page-Status.md",
+                                                 "docs/wiki/Wiki-Pruning-And-Relevance-Ledger.md",
+                                                 "docs/wiki/Progress-Dashboard.md",
+                                                 "docs/wiki/agent-status.json",
+                                                 "docs/wiki/agent-collaboration.json",
+                                                 "docs/wiki/agent-events.jsonl"
+                                             ],
+                             "outputs":  [
+                                             "Classify remaining neither-nav support pages by intended status.",
+                                             "Make the remaining 20 hidden pages intentional instead of untriaged drift.",
+                                             "No gameplay source changed."
+                                         ],
+                             "handoff":  "This docs-only closeout is validated. Future agents should only promote a support-only page if it becomes a current primary owner or gateway."
+                         },
                          {
                              "lane":  "hidden-owner-reference-nav-promotion",
                              "owner":  "Codex",

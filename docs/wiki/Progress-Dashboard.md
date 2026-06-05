@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `neither-nav-support-closeout` | Published / validated | Classified the remaining 20 neither-nav pages as intentional support-only material: patch-ready handoffs, evidence ledgers/queues, agent instructions and analysis support. No gameplay source changed. |
 | `hidden-owner-reference-nav-promotion` | Published / validated | Promoted seven broad owner/reference pages from neither-nav support status into both sidebar and MkDocs: Core systems, Modules atlas, Server runtime, Performance opportunity sweep, Player AI caps, Variable conventions and Arma 2 OA external reference guide. Current counts: `109` sidebar pages, `118` MkDocs pages, `109` in both, `20` neither-nav support pages. No gameplay source changed. |
 | `mkdocs-primary-sidebar-parity` | Published / validated | Added the four remaining primary sidebar-only pages to `mkdocs.yml`: PR cleanup lab, Headless client scaling, Dead/stale code register and Wiki pruning ledger. Navigation inventory now reports `102` pages in both navs, `0` sidebar-only pages and `9` MkDocs-only archive pages. No gameplay source changed. |
 | `archive-queue-continue-reading-closeout` | Published / validated | Added `## Continue Reading` routing to the two remaining queue/support pages and normalized the 9 imported Miksuu archive pages to archive-chain `Continue Reading` blocks. Recomputed missing count: `0`. No gameplay source changed. |
@@ -52,7 +53,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` | Hidden owner/reference nav promotion is validated; continue from fresh source evidence or code-owner requests. |
+| Codex | Active | `documentation-finisher-loop` | Neither-nav support closeout is validated; continue from fresh source evidence or code-owner requests. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Coverage Ledger navigation is wired. Claude can self-select the next bounded source-backed review from the ledger or hardening backlog. |
 | Supported docs agents | Active | `research-catchup-synthesis-default-supported`, `relevance-pruning-and-archive-default-supported` | Two account-default supported high-reasoning helper chats are running catch-up synthesis and relevance pruning. The earlier named-model starts are treated as failed/non-evidence. |
@@ -82,6 +83,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
+| `neither-nav-support-closeout` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
 | `hidden-owner-reference-nav-promotion` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
 | `mkdocs-primary-sidebar-parity` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
 | `archive-queue-continue-reading-closeout` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |

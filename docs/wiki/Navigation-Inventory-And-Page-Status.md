@@ -55,7 +55,7 @@ These are all imported Miksuu archive pages. Keeping them MkDocs-visible is usef
 
 ### Neither-Nav Pages
 
-These pages are not directly listed in either `_Sidebar.md` or `mkdocs.yml`. That is acceptable for narrow patch pages and historical queues, but owner pages should have at least one clear inbound route from a canonical page.
+These pages are not directly listed in either `_Sidebar.md` or `mkdocs.yml`. That is now intentional for the 20-page support set below: they are still linked from owner/status pages, but they should not be first-click navigation unless their role changes.
 
 | Family | Pages | Suggested action |
 | --- | --- | --- |
@@ -64,6 +64,17 @@ These pages are not directly listed in either `_Sidebar.md` or `mkdocs.yml`. Tha
 | Broad owner/reference pages | [Core systems index](Core-Systems-Index), [Modules atlas](Modules-Atlas), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance), [Variable and naming conventions](Variable-And-Naming-Conventions), [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) | Promoted to both sidebar and MkDocs on 2026-06-05 because they are current owner/reference pages already used by Home and `agent-context.json`. |
 | Claude/instruction pages | [Claude goal](Claude-Goal), [Claude long-term goal](Claude-Long-Term-Goal), [Claude loop goal](Claude-Loop-Goal), [Instructions for Codex](Instructions-For-Codex) | Keep discoverable through coordination pages; avoid primary human nav unless actively used. |
 | Analysis/support pages | [Client UI and server loop perf findings](Client-UI-And-Server-Loop-Perf-Findings), [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index), [Performance gain simulation](Performance-Gain-Simulation), [Self-host testing field notes](Self-Host-Testing-Field-Notes) | Keep linked from the owning subsystem or archive index only. |
+
+## Remaining Support-Only Pages
+
+Use this list as the closeout state for neither-nav cleanup. A page should leave this table only when it becomes a primary owner page, a current gateway, or stale enough to merge/archive.
+
+| Status | Pages | Keep reachable through |
+| --- | --- | --- |
+| `patch-ready` | [Client skill init](Client-Skill-Init-Idempotency), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup), [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing), [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup), [Paratrooper marker revival](Paratrooper-Marker-Revival), [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) | [Feature status](Feature-Status-Register), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Testing workflow](Testing-Debugging-And-Release-Workflow), [Hardening roadmap](Hardening-Implementation-Roadmap). |
+| `archive` / `evidence-ledger` | [Deep-review findings](Deep-Review-Findings), [External research reports](External-Research-Reports), [Audit findings queue](Audit-Findings-Queue-2026-06-03), [Development lessons](Development-Lessons-Learned), [Subagent discovery swarm](Subagent-Discovery-Swarm) | [Progress dashboard](Progress-Dashboard), [Agent worklog](Agent-Worklog), [Feature status](Feature-Status-Register), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger). |
+| `agent-instruction` | [Claude goal](Claude-Goal), [Claude long-term goal](Claude-Long-Term-Goal), [Claude loop goal](Claude-Loop-Goal), [Instructions for Codex](Instructions-For-Codex) | [Coordination board](Coordination-Board), [Agent collaboration protocol](Agent-Collaboration-Protocol), [AI assistant developer guide](AI-Assistant-Developer-Guide). |
+| `analysis-support` | [Client UI/server loop perf findings](Client-UI-And-Server-Loop-Perf-Findings), [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index), [Performance gain simulation](Performance-Gain-Simulation), [Self-host testing field notes](Self-Host-Testing-Field-Notes) | [Client UI systems atlas](Client-UI-Systems-Atlas), [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Server ops runbook](Server-Ops-Runbook). |
 
 ## Continue Reading Gaps
 

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T13:20:00+02:00",
+  "generatedAt": "2026-06-05T13:35:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Validated hidden owner/reference nav promotion; seven broad pages moved into both sidebar and MkDocs, leaving 20 neither-nav support pages.",
+      "currentWork": "Validated neither-nav support closeout; remaining 20 neither-nav pages are intentionally classified support material.",
       "nextExpectedOutput": "Continue future wiki backlog work from fresh source evidence, code-owner requests or new user direction."
     },
     "Codex-2": {
@@ -50,6 +50,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "neither-nav-support-closeout",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Navigation inventory now classifies the remaining 20 neither-nav pages as patch-ready handoffs, evidence ledgers/queues, agent instructions or analysis support. No gameplay source changed."
+    },
     {
       "lane": "hidden-owner-reference-nav-promotion",
       "owner": "Codex",
