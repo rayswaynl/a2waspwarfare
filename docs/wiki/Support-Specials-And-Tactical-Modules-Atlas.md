@@ -9,7 +9,9 @@ The main support UI is `Client/GUI/GUI_Menu_Tactical.sqf`.
 Key source refs:
 
 - `GUI_Menu_Tactical.sqf:58-61` defines support list/fees/cooldowns.
+- `:146-217` owns fast-travel destination discovery, fee-mode filtering and local fee marker text.
 - `:252-282` gates support buttons by funds, upgrade level and local cooldown state.
+- `:403-406` locally debits paid fast travel after destination click.
 - `:371-373`, `:513-527` send `RequestSpecial` support requests.
 - `:463-505` performs the ICBM local launch flow.
 - `:532-605` requests artillery/fire mission behavior.
@@ -65,6 +67,7 @@ Adjacent server runtime surfaces: grouped base areas are enabled only when `WFBE
 | Feature | Status | Notes |
 | --- | --- | --- |
 | Tactical support menu | Partial | UI works, but most fee/cooldown/upgrade gates are client-side only. |
+| Fast travel | Working/partial | Local Tactical flow. Fee mode hides unaffordable towns and debits locally; branch/root matrix and UX decision live in [Client UI systems](Client-UI-Systems-Atlas#tactical-fast-travel-fee-branch-matrix). |
 | Paratroopers | Working/partial | `RequestSpecial -> HandleSpecial -> KAT_Paratroopers`; server creates transport/units and sends marker callback. Missing server-side fee/cooldown/upgrade validation. |
 | Ammo paradrop | Working/partial | Client-gated by `WFBE_UP_SUPPLYPARADROP` and shared `lastSupplyCall`; server creates aircraft/crates. |
 | Vehicle paradrop | Working/partial | Similar to ammo paradrop; server creates cargo vehicle and empty-vehicle cleanup. |
@@ -86,7 +89,7 @@ Use [Server authority migration map](Server-Authority-Migration-Map) before addi
 
 ## Economy Cooldown And Upgrade Gates
 
-The tactical UI keeps support fees and intervals locally. The scout observed fee examples `[0,75000,9500,3500,8500,0,12500,0,0]` and intervals `[0,1000,800,600,900,0,0,0,0]`. Button enabling checks funds/upgrades/cooldowns client-side; future patches should re-check the same facts on the server before spawning assets or applying map-wide effects.
+The tactical UI keeps support fees and intervals locally. The scout observed support fee examples `[0,75000,9500,3500,8500,0,12500,0,0]` and intervals `[0,1000,800,600,900,0,0,0,0]`; paid fast travel uses the separate distance-based `WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM` path. Button enabling checks funds/upgrades/cooldowns client-side; future patches should re-check the same facts on the server before spawning assets or applying map-wide effects.
 
 Do not treat those UI checks as security boundaries. For paradrops, UAV and ICBM, the server router currently assumes the client already did role, upgrade, fee and cooldown filtering. For artillery and services, much of the effect/debit path is client-local. Public-server hardening should therefore separate:
 

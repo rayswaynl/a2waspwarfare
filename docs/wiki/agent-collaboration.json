@@ -120,6 +120,28 @@
       "handoff": "When complete, leave this as docs-published owner-decision work: decide whether 24-hour supply-truck persistence is intended logistics behavior or should become shorter/parameterized, then propagate source Chernarus plus maintained Vanilla and smoke supply mission/logistics cleanup."
     },
     {
+      "lane": "fast-travel-fee-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_Menu_Tactical.sqf",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md",
+        "docs/wiki/Client-UI-Systems-Atlas.md",
+        "docs/wiki/Support-Specials-And-Tactical-Modules-Atlas.md"
+      ],
+      "outputs": [
+        "Branch-check the Tactical fast-travel fee TODO, marker filtering and action-time debit path without changing gameplay source.",
+        "Route the finding through the canonical UI/support pages, Feature Status, Source Fix Propagation Queue and machine records."
+      ],
+      "handoff": "When complete, leave this as docs-published owner-decision work: decide whether paid fast travel should hide or disable unaffordable destinations, add confirmation/action-time recheck if desired, and smoke funds/range/destination behavior."
+    },
+    {
       "lane": "auto-wall-toggle-scope-branch-route",
       "owner": "Codex-helper",
       "status": "published-validated",

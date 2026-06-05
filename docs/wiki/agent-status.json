@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Reconciled the newest camp-count helper, WASP marker wait, clickable-text soundPush, side-supply clamp, empty supply-truck cleanup, vote/help UI edge and RequestSpecial upgrade-sync branch matrices across wiki and docs/wiki. Towns-Camps-And-Capture-Atlas, WASP-Marker-Wait-Cleanup, Client-UI-Systems-Atlas, Economy-Authority-First-Cut, Marker-Cleanup-Restoration-Systems-Atlas and Support-Specials-And-Tactical-Modules-Atlas are the canonical routes.",
+      "currentWork": "Reconciled the newest camp-count helper, WASP marker wait, clickable-text soundPush, side-supply clamp, empty supply-truck cleanup, vote/help UI edge, RequestSpecial upgrade-sync and fast-travel fee branch matrices across wiki and docs/wiki. Towns-Camps-And-Capture-Atlas, WASP-Marker-Wait-Cleanup, Client-UI-Systems-Atlas, Economy-Authority-First-Cut, Marker-Cleanup-Restoration-Systems-Atlas and Support-Specials-And-Tactical-Modules-Atlas are the canonical routes.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -127,6 +127,12 @@
       "owner": "Codex-helper",
       "status": "published-validated",
       "output": "Support specials now owns the branch-checked route for RequestSpecial upgrade-sync tuple cleanup; Feature Status, Source Fix Propagation Queue and machine records mark it as consistency debt because _args = _this, not a proven runtime break. No gameplay source changed."
+    },
+    {
+      "lane": "fast-travel-fee-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "output": "Client UI systems now owns the branch-checked route for Tactical fast-travel fee UX; current source/Vanilla, stable, upstream, perf and release keep the same TODO, hidden unaffordable destinations, marker-only fee text and local debit. No gameplay source changed."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",

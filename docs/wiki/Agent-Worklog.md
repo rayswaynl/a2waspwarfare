@@ -14,6 +14,13 @@
 - Result: every checked maintained root/branch keeps the same vote inclusive-loop and row-color shape, help-panel load/unload namespace mismatch and main-menu GPS `17/18` router-only shape. Release only moves line numbers for Help and the main menu.
 - Updated [Client UI systems](Client-UI-Systems-Atlas#vote-help-and-main-menu-branch-matrix), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
 
+## 2026-06-05T21:54:43+02:00 - Codex helper - Fast travel fee branch route
+
+- Claimed `fast-travel-fee-branch-route` after the live Feature Status row still described fast travel fee work as a generic missing feature.
+- Source-checked current docs/source Chernarus and maintained Vanilla, stable `origin/master` `2cdf5fb8`, current `miksuu/master` `f532f706`, `origin/perf/quick-wins` `0076040f` and release `3282ff3f`.
+- Result: every checked maintained root/branch keeps the same Tactical menu shape: `GUI_Menu_Tactical.sqf:146-147` policy TODO, fee-mode hidden unaffordable destinations at `:185-199`, marker-only fee text at `:208-217` and local travel debit at `:403-406`.
+- Updated [Client UI systems](Client-UI-Systems-Atlas#tactical-fast-travel-fee-branch-matrix), [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Progress dashboard](Progress-Dashboard), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger) and machine records. No gameplay source changed.
+
 ## 2026-06-05T23:59:30+02:00 - Codex helper - clickable text soundPush branch route
 
 - Claimed `clickabletext-soundpush-branch-route` from the UI/resource config backlog.
