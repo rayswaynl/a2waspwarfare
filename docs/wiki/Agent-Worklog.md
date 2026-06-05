@@ -1,5 +1,11 @@
 # Agent Worklog
 
+## 2026-06-05T23:10:00+02:00 - Codex - Source-fix salvage duplicate prune
+
+- Claimed `source-fix-salvage-duplicate-prune` after [Source fix propagation queue](Source-Fix-Propagation-Queue#patch-ready-but-not-in-current-code) carried two live salvage patch-ready rows: `Salvage payout/cleanup cleanup` and `Salvage payout casing and loop/authority cleanup`.
+- Kept the more specific row with the [Construction and CoIn salvage matrix](Construction-And-CoIn-Systems-Atlas#salvage-branch-matrix) anchor and folded the first-row "both salvage paths / maintained Vanilla first" wording into it.
+- Removed the older duplicate row, updated [Progress dashboard](Progress-Dashboard) and logged this pruning decision. No gameplay source changed.
+
 ## 2026-06-06T02:05:00+02:00 - Codex helper - Factory destroyed-purchase refund branch route
 
 - Claimed `factory-destroyed-purchase-refund-branch-route` from the factory/purchase authority and refund backlog.
