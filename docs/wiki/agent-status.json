@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T17:02:41+02:00",
+  "generatedAt": "2026-06-05T17:08:15+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed the Progress Dashboard footer so click-through stays on the live Coordination Board route after Bottleneck Removal Queue was demoted to a support checklist.",
+      "currentWork": "Synced Progress Dashboard and compact machine status with Coordination Board so commander-built ARTY is visible in the source-propagated smoke-pending lane.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -96,7 +96,7 @@
       "lane": "source-propagated-smoke-pending",
       "owner": "future-tester-release-owner",
       "status": "smoke-pending",
-      "output": "Client skill init, hosted FPS, supply scan and paratrooper marker lanes are tracked on owner pages and Feature Status; not active dashboard cleanup blockers."
+      "output": "Client skill init, hosted FPS, supply scan, paratrooper marker and commander-built ARTY lanes are tracked on owner pages and Feature Status; not active dashboard cleanup blockers."
     },
     {
       "lane": "wasp-marker-wait-cleanup",

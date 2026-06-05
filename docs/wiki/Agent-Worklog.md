@@ -13,6 +13,11 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T17:08:15+02:00 - Codex - commander ARTY smoke lane dashboard sync
+
+- Synced [Progress dashboard](Progress-Dashboard) and [`agent-status.json`](agent-status.json) with [Coordination board](Coordination-Board) so [commander-built ARTY](Construction-And-CoIn-Systems-Atlas) is visible in the `source-propagated-smoke-pending` lane.
+- This is a docs/status correction only: owner-page evidence remains in [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas), [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [Testing workflow](Testing-Debugging-And-Release-Workflow) and [Feature status](Feature-Status-Register). No gameplay source changed.
+
 ## 2026-06-05T17:02:41+02:00 - Codex - dashboard footer live-route refresh
 
 - Refreshed [Progress dashboard](Progress-Dashboard) `Continue Reading` so the next page is [Coordination board](Coordination-Board), not the demoted [Bottleneck removal queue](Bottleneck-Removal-Queue). No gameplay source changed.
