@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-05T09:05:00+02:00 - Codex - dead code and stale code register
+
+- Started the dead-code finding/logging lane requested by Steff and kept it documentation/analysis only.
+- Added a repeatable missing-reference/conflict-marker scan in `docs/analysis/dead-code-reference-scan.ps1`; latest output scanned `Missions`, `Missions_Vanilla` and `Modded_Missions`, finding 2765 text files, 3546 quoted source references, 658 missing-reference leads and 18 real conflict-marker files.
+- Added `docs/analysis/dead-code-findings.jsonl` with evidence-backed structured findings for stale map blink code, stale upgrade UI, MASH marker relay, latent `AIBuyUnit`, modded mission conflict markers, generated `version.sqf`, modded packaging scope and other cleanup candidates.
+- Published [Dead/stale code register](Dead-Code-And-Stale-Code-Register) as the human-facing cleanup map. No gameplay source files changed.
+
 ## 2026-06-05T08:16:00+02:00 - Codex - pruning ledger completion audit
 
 - Audited [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) against the current pushed wiki state after the UI/runtime quick-reference batch (`33b6406e` / wiki `f8c5872`).
