@@ -10,6 +10,8 @@ Integration/tooling evidence is captured by `docs/analysis/dead-code-integration
 
 Direct public-variable channel evidence is captured by `docs/analysis/dead-code-pv-channel-scan.ps1`, with the latest output in `docs/analysis/dead-code-pv-channel-scan.json`.
 
+UI/Rsc/dialog evidence is captured by `docs/analysis/dead-code-ui-rsc-scan.ps1`, with the latest output in `docs/analysis/dead-code-ui-rsc-scan.json`.
+
 ## Scan Snapshot
 
 Latest local scan:
@@ -47,6 +49,21 @@ Latest direct public-variable channel scan:
 | Comment-only channels | 6 legacy direct `WFBE_*` names |
 | Generated artifact | `docs/analysis/dead-code-pv-channel-scan.json` |
 
+Latest UI/Rsc/dialog scan:
+
+| Item | Value |
+| --- | --- |
+| Roots scanned | `Missions`, `Missions_Vanilla`, `Modded_Missions` |
+| Text files scanned | 2761 |
+| UI/reference records | 7447 total, 7364 active, 83 comment-only |
+| Dialog classes / literal calls | 10 `RscMenu_*` classes, 17 literal `createDialog` calls |
+| Handler script references | 20 active `onLoad` / `onUnload` script references |
+| Missing handler scripts | 1: `Client\GUI\GUI_Menu_Upgrade.sqf` |
+| Dialog classes without literal calls | 1: `RscMenu_Upgrade` |
+| Active IDC uses without mission declarations | 10 scan leads; 3 are mission economy menu IDCs and 7 are engine/BIS/map display IDs |
+| Duplicate IDDs | 2 active collision groups: `23000`, `10200` |
+| Generated artifact | `docs/analysis/dead-code-ui-rsc-scan.json` |
+
 Scanner caveats:
 
 - The scanner intentionally finds leads, not final truth.
@@ -56,6 +73,7 @@ Scanner caveats:
 - Includes inside subfolders can be relative to the including file, while the first scanner pass resolves quoted paths from the mission root.
 - Modded missions are out of the current LoadoutManager release pack path, so modded breakage is real source debt but not necessarily current release breakage.
 - A direct PV channel with no `addPublicVariableEventHandler` is not automatically dead. Some channels are state variables read via `missionNamespace getVariable`, some are BattlEye/filter hooks, and some sender names are dynamic `format` expressions that need source interpretation.
+- UI IDC scans cannot distinguish engine display controls from mission resource controls by themselves. Treat `101`, `116` and `112410`-`112414` as source-check leads, not broken mission `Rsc` controls.
 
 ## Classification Rules
 
@@ -71,6 +89,8 @@ Scanner caveats:
 | `comment-only-legacy-direct-pv` | Old direct publicVariable channel names survive only in comments after migration to PVF/helper calls. | Remove or annotate comments after branch-aware search. |
 | `duplicate-compatibility-channel` | Two channels publish similar state, but one may still serve stale/modded consumers. | Consolidate only after compatibility policy is decided. |
 | `receiver-only-legacy-event-handler` | A live event handler waits on a channel with no active sender found in maintained source. | Treat as stale wiring until runtime/branch smoke proves otherwise. |
+| `duplicate-misleading-ui-resource-id` | Two distinct reachable dialogs/titles share an IDD value. | Do not delete; assign unique IDs only during a tested UI cleanup. |
+| `comment-only-stale-idc-reference` | A missing or old IDC appears only inside comments. | Clean comments or document as retired UI; do not add controls unless reviving the feature. |
 
 ## Current Findings
 
@@ -78,7 +98,7 @@ Scanner caveats:
 | --- | --- | --- | --- |
 | `old-map-blink-loop-missing-files` | Retired commented reference | `Client/Init/Init_Client.sqf:138`, `:140`, `:782` reference missing plural blink/add-track files; `:139` compiles the live singular `Client_BlinkMapIcon.sqf`. | Safe comment cleanup only. Keep the singular blink helper. |
 | `server-map-blinking-units-commented-missing` | Retired commented reference | `Server/Init/Init_Server.sqf:593` comments an exec for missing `Server_MapBlinkingUnits.sqf`. | Treat as retired unless marker authority is redesigned. |
-| `stale-rscmenu-upgrade-missing-onload` | Broken stale UI class | `Rsc/Dialogs.hpp:2425`, `:2428` keep `RscMenu_Upgrade` with missing `Client/GUI/GUI_Menu_Upgrade.sqf`. | Search all dialog callers, then remove/alias to the maintained upgrade menu. |
+| `stale-rscmenu-upgrade-missing-onload` | Broken stale UI class | `Rsc/Dialogs.hpp:2425`, `:2428` keep `RscMenu_Upgrade` with missing `Client/GUI/GUI_Menu_Upgrade.sqf`; the UI/Rsc scan confirms this is the only `RscMenu_*` class without literal `createDialog` calls and the handler target is missing across source, Vanilla and modded copies. | Search branch callers, then remove/alias to the maintained `WFBE_UpgradeMenu` / `GUI_UpgradeMenu.sqf` path. |
 | `mash-marker-relay-orphaned` | Orphaned partial feature | Server compiles `MASHMarker.sqf`; client receiver compile is commented at `Client/Init/Init_Client.sqf:132`; sender/receiver PV channels do not form a maintained Chernarus loop. | Decide retire vs revive. MASH tents are not dead. |
 | `latent-aibuyunit-server-buy-worker` | Latent revive candidate | `Server/Init/Init_Server.sqf:10` compiles `AIBuyUnit`, but stable source search finds no caller; `Server_BuyUnit.sqf` is an AI/team worker. | Do not delete casually. Needed if AI commander production is revived. |
 | `modded-mission-conflict-markers` | Broken modded mission sources | 18 files under `Modded_Missions` contain real `<<<<<<<`, `=======`, `>>>>>>>` markers. | Resolve before any modded release. Do not blindly delete sections. |
@@ -87,7 +107,7 @@ Scanner caveats:
 | `legacy-config-defenses-commented-missing` | Retired commented reference | Defense files call live `Config_Defenses_Towns.sqf` and retain commented old `Config_Defenses.sqf` calls. | Safe comment cleanup after branch search. |
 | `wasp-commented-action-scaffolds` | Retired commented reference, narrow scope | `WASP/Init_Client.sqf:7`, `:12`, `:21` point at missing old action/key scripts; adjacent WASP action helpers still have uses. | Clean only commented missing hooks unless a full WASP action inventory proves more. |
 | `bis-hc-parameter-orphan` | Orphan-looking config | `Rsc/Parameters.hpp:381` exposes `WFBE_C_MODULE_BIS_HC`; HC delegation uses `WFBE_C_AI_DELEGATION`. | Hide/remove or wire a real BIS High Command feature; do not label it as headless-client enablement. |
-| `economy-menu-missing-control-writes` | Stale UI control writes | `GUI_Menu_Economy.sqf:7-8` writes IDC `23004/23005/23006`; audited `RscMenu_Economy` starts at `23002/23003` then `23008+`. | Complete IDC inventory, then restore intended controls or remove stale writes. |
+| `economy-menu-missing-control-writes` | Stale UI control writes | `GUI_Menu_Economy.sqf:7-8` writes IDC `23004/23005/23006`; audited `RscMenu_Economy` declares `23002/23003` then `23008+`; the UI/Rsc scan reports all three as active undeclared mission IDC uses across source, Vanilla and modded copies. | Complete menu intent review, then restore intended controls or remove stale writes. |
 | `modded-missing-camp-helper-files` | Broken modded source reference | Modded `Init_Common.sqf` files compile `Common_GetTotalCamps*.sqf`; scan reports missing helpers in modded roots. | Restore from current source or regenerate modded missions before release. |
 | `generated-version-sqf-clean-checkout-risk` | Generated-file contract risk | Mission entrypoints include `version.sqf`; LoadoutManager generates/excludes it. | Keep includes; validate generation workflow on clean checkout. |
 | `rsc-clickabletext-soundpush-malformed` | Stale or malformed resource config | `Rsc/Ressources.hpp:556` has `soundPush[] = {, 0.2, 1};` in source and modded copies. | Replace with valid value only after config/dialog smoke. |
@@ -123,6 +143,22 @@ Source-checked false positives from this pass:
 - HQ alive, HQ marker info, anti-stack compensation, team-no-player tick counters and similar sender-only rows are state broadcasts unless a later source pass proves no reader.
 - `WFBE_PVF_%1` is the dynamic PVF registration pattern from `Init_PublicVariables.sqf`, not a literal runtime channel.
 
+## UI And Rsc Findings
+
+These are source-interpreted findings from the dialog/resource scan. The raw scan intentionally records broad UI leads; this section separates real mission-resource debt from engine-owned display IDs and comment-only residue.
+
+| ID | Classification | Evidence | Action |
+| --- | --- | --- | --- |
+| `ui-duplicate-idd-collisions` | Duplicate misleading UI resource ID | `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000` (`Rsc/Dialogs.hpp:3209`, `:3211`, `:3287`, `:3289`) and both have live `createDialog` callers (`GUI_Menu_Service.sqf:244`, `GUI_Menu.sqf:172`). `RscOverlay` and `OptionsAvailable` both use `idd = 10200` (`Rsc/Titles.hpp:44`, `:46`, `:164`, `:165`) and both are used through `cutRsc` paths (`Init_Client.sqf:149`, `Client_UpdateRHUD.sqf:7`). | Do not delete any of these as dead. Assign unique IDDs only in a UI cleanup branch, then smoke EASA, economy, RHUD and action icons. |
+| `parameters-display-commented-22005-idc` | Comment-only stale IDC reference | `GUI_Display_Parameters.sqf:12` actively writes parameter rows to `22003`; `:16-19` contains a block-commented uptime write to missing `22005`; `RscDisplay_Parameters` declares the dialog and live controls around `Rsc/Dialogs.hpp:3133`, `:3136`, `:3173`, `:3180`. | Safe comment cleanup or annotation. Do not add `22005` unless the old uptime row is intentionally revived. |
+
+Source-checked false positives from this pass:
+
+- IDC `101` in `WASP/global_marking_monitor.sqf` is a map/display control lead, not a missing mission `Rsc` declaration.
+- IDC `116` in `Client/FSM/updateavailableactions.fsm` is an external/current display control lead, not a mission resource declaration gap.
+- IDCs `112410`-`112414` in `Client/Module/UAV/uav_interface.sqf` belong to the UAV interface/display path and should be checked as BIS/UI integration IDs, not deleted as dead controls.
+- IDC `22005` is comment-only in the parameters display and is not an active runtime write.
+
 ## Priority Backlog
 
 | Priority | Work | Why |
@@ -132,6 +168,7 @@ Source-checked false positives from this pass:
 | P1 | Decide MASH marker relay fate. | It has real PV wiring residue and could be useful, but it is currently half registered. |
 | P1 | Keep `AIBuyUnit` latent until AI commander production is intentionally merged or retired. | It is dead-looking on stable but valuable for AI commander work. |
 | P1 | Audit economy menu IDC `23004/23005/23006`. | Stale UI writes can hide broken commander economy controls. |
+| P1 | Fix or formally waive duplicate UI IDDs `23000` and `10200`. | They are not dead, but they make future dialog/title ownership work brittle. |
 | P1 | Clean integration dead/stale helpers before expanding Discord/status tooling. | Dormant `.Auto` JSON helpers, stale `botconfig.json` ownership and arg-shape drift are easy to revive incorrectly. |
 | P1 | Decide whether warning-marked CRV7PG loadouts are forbidden or intentionally quarantined. | A warning-named crash-risk class is referenced by WILDCAT data, so generator output may carry known-dangerous loadouts. |
 | P1 | Decide whether the stale `ICBM_launched` PVEH should be retired or revived. | The current nuke path uses `NukeIncoming` and `HandleSpecial "icbm-display"`; a receiver-only event handler misleads future networking work. |
@@ -185,12 +222,19 @@ Run the direct public-variable channel scan:
 .\docs\analysis\dead-code-pv-channel-scan.ps1
 ```
 
+Run the UI/Rsc/dialog scan:
+
+```powershell
+.\docs\analysis\dead-code-ui-rsc-scan.ps1
+```
+
 Validate the machine-readable register:
 
 ```powershell
 Get-Content .\docs\analysis\dead-code-findings.jsonl | ForEach-Object { $_ | ConvertFrom-Json | Out-Null }
 Get-Content .\docs\analysis\dead-code-integration-scan.json | ConvertFrom-Json | Out-Null
 Get-Content .\docs\analysis\dead-code-pv-channel-scan.json | ConvertFrom-Json | Out-Null
+Get-Content .\docs\analysis\dead-code-ui-rsc-scan.json | ConvertFrom-Json | Out-Null
 ```
 
 Useful manual follow-up scans:
@@ -199,6 +243,7 @@ Useful manual follow-up scans:
 rg -n "RscMenu_Upgrade|GUI_Menu_Upgrade|AIBuyUnit|Server_MapBlinkingUnits|Client_BlinkMapIcons|Client_AddUnitToTrack" Missions Missions_Vanilla Modded_Missions
 rg -n "^\s*(<{7,}|={7,}|>{7,})" Modded_Missions
 rg -n "WFBE_C_MODULE_BIS_HC|WFBE_C_AI_DELEGATION|23004|23005|23006" Missions Missions_Vanilla Modded_Missions
+rg -n "RscMenu_EASA|RscMenu_Economy|RscOverlay|OptionsAvailable|idd\s*=\s*23000|idd\s*=\s*10200" Missions Missions_Vanilla Modded_Missions
 rg -n "ICBM_launched|WFBE_RequestVehicleLock|WFBE_RequestSpecial|WFBE_RequestTeamUpdate|WFBE_ChangeScore|WFBE_LocalizeMessage|WFBE_RequestStructure" Missions Missions_Vanilla Modded_Missions
 ```
 

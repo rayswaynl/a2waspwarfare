@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-05T10:35:00+02:00 - Codex - dead code UI/Rsc pass
+
+- Continued Steff's long-running dead-code detective goal with a UI/Rsc/dialog scan across `Missions`, `Missions_Vanilla` and `Modded_Missions`.
+- Added `docs/analysis/dead-code-ui-rsc-scan.ps1` and `docs/analysis/dead-code-ui-rsc-scan.json`. Latest scan covered 2761 text files and found 7447 UI/reference records: 7364 active, 83 comment-only, 20 active handler-script references, one missing handler script, one `RscMenu_*` class without literal `createDialog` calls, 10 active undeclared-IDC leads and two duplicate active IDD groups.
+- Promoted source-backed UI findings into `docs/analysis/dead-code-findings.jsonl` and [Dead/stale code register](Dead-Code-And-Stale-Code-Register): duplicate reachable IDDs `23000` (`RscMenu_EASA` / `RscMenu_Economy`) and `10200` (`RscOverlay` / `OptionsAvailable`), plus comment-only retired parameters-display IDC `22005`.
+- Strengthened existing rows for stale `RscMenu_Upgrade` and economy menu IDCs `23004/23005/23006`, and added false-positive guardrails for engine/BIS/display IDCs `101`, `116` and `112410`-`112414`.
+- No gameplay source files changed.
+
 ## 2026-06-05T10:05:00+02:00 - Codex - dead code PV channel pass
 
 - Continued Steff's long-running dead-code detective goal with a direct public-variable sender/receiver scan.
