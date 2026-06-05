@@ -48,7 +48,7 @@ Use Action 19 = Decrease view distance
 Use Action 20 = Increase view distance
 (like before, and according to #use-action-shortcuts )
 
-The parameters of the features can be adjusted easily. 
+The parameters of the features can be adjusted easily.
 Regarding the FPS range setting of the automatic view distance optimizer, be sure to leave feedback regarding how it works on your PC so we can change it or implement feature to adjust it in game.
 
 Thanks a lot to @marty0007 for programming this feature. Additionally, I contributed to it by making the feature more configurable for the user.
@@ -88,7 +88,7 @@ Thanks a lot to @marty0007 for programming this feature. Additionally, I contrib
   - Enhanced the destruction caused by the nuke impact by damaging all objects within an 800m radius around the target, including trees, buildings, factories, and animals. Logical objects, camps, depots, and flags have been preserved to avoid disrupting game mechanics. Spam bombs in the impact area have been removed to prevent performance issues. Unnecessary spawns have also been removed for the same reason.
   - Added a radiation sound effect when players enter a radiation nuke zone.
   - To test these changes on a live server, we're offering nukes for a discounted price of $75,000 each (instead of $150,000) for a limited time of ~1 week.
-  - Since we now have the optional parameters in the marker creation script, @marty0007 is already planning to add a radius of destruction to the incoming nuclear strike marker on the map. 
+  - Since we now have the optional parameters in the marker creation script, @marty0007 is already planning to add a radius of destruction to the incoming nuclear strike marker on the map.
 
 - **Sound Adjustments**
   - Corrected sound levels for certain sounds such as artillery call. If you have feedback regarding these changes, let us know how we could optimise the sound mix of the mission even further!
@@ -97,7 +97,7 @@ Big thanks to @marty0007 for programming these huge QoL changes that have been l
 
 Also we've updated the #rules of the server, removing the rule of dropping guided bombs from the high altitude since that's scripted now and quite balanced with the current limit. Minefield deployment from the repair trucks is now restricted in any situation when the vehicle is airborne.
 
-— Arma2Warfare GPT & @marty0007 & @miksuu 
+— Arma2Warfare GPT & @marty0007 & @miksuu
 ||@everyone :stalin_ping:||
 
 # v03072024 (Marty, Miksuu)
@@ -113,9 +113,9 @@ Also we've updated the #rules of the server, removing the rule of dropping guide
 
 ||@everyone @Veteran :stalin_ping:  ||
 
-## Changed the functionality of the code regarding building the construction sites and it broadcasting the message to all of the sides players. 
+## Changed the functionality of the code regarding building the construction sites and it broadcasting the message to all of the sides players.
 - This should resolve the performance issues that some of the players were having on long sessions when looking towards a base or being in one. When you'll play on server, let us know if the mission has better performance in regards this (compared to the v22032024 patch). I'll be testing this today too.
-- In a week or so, we will enable @marty0007 's command center unit number feature on the cam, and monitor client sided performance. 
+- In a week or so, we will enable @marty0007 's command center unit number feature on the cam, and monitor client sided performance.
 - Report all of the observations in #performance-discussion , thanks!
 
 ## Changed server view distance from 3000 to 3500 meters
@@ -144,7 +144,7 @@ Please note that this should not affect server FPS in any way, and you can still
 Hello ||@everyone :stalin_ping:||, we have a new patch up on the server.
 
 ## Each factory now features a unique build sound and message, enhancing the immersive experience within the game.
-- This feature is displayed in the Command Chat for better visibility. 
+- This feature is displayed in the Command Chat for better visibility.
 - Check the video below for the demonstration. Also I have posted the sounds below too (excluding service point which is a drill, basically)!
 
 ## Implemented additional levels of IR smoke, providing four more charges and a consistent warning for Level 2. Our appreciation goes to @rainbowbier for the extensive testing and valuable feedback on the features mentioned above
@@ -158,7 +158,7 @@ Hello ||@everyone :stalin_ping:||, we have a new patch up on the server.
 ## Significant updates have been rolled out for the Chernarus map, along with minor adjustments to the Takistan map.
 
 - **Deadspawn Overhaul**: Locations of deadspawn points have been reorganized, and a new deadspawn marker introduced for enhanced gameplay clarity.
-- **Starting Positions**: 
+- **Starting Positions**:
   - Dense forest starting points like **Bor** have been removed to facilitate faster gameplay.
   - New strategic starting points added in **Kozlovka**, **Pass Sosnovy**, **NW part of the North West Airfield**, **Veresnik hill**, among others.
   - Superfluous starting points, such as **Devils Castle** and **Krasnostav Airfield**, have been removed.
@@ -168,8 +168,8 @@ Hello ||@everyone :stalin_ping:||, we have a new patch up on the server.
   - **Pogorevka** replaced with **Rogovo** and **Pulkovo** * inserted to focus action in the Center.
   - Removed **Orlovets**.
   - Added **Nizhnoye** to replace it.
-  
-- **Supply Value Changes**: 
+
+- **Supply Value Changes**:
   - Supply values have been calibrated for towns across the map to encourage strategic decision-making and resource management, putting bigger emphasis on the Center control.
   - Notable supply value increases for towns such as **Kabanino**, **Stary Sobor**, and **Novy Sobor** to highlight their strategic importance.
   - Some towns like **Kamenka**, **Tulga**, **Petrovka**, and **Olsha** have seen a reduction in supply values.
@@ -190,7 +190,7 @@ Hello ||@everyone :stalin_ping:||, we have a new patch up on the server.
 
 ## Corrections have been made to the Russian translations within the engineer salvage feature.
 
-Please provide feedback on the current audio mix of the mission, since it is so easy to adjust now. Also I have noticed that if you have effects turned up really high in the game, somehow the sounds get amplified, so try lowering that inside the sound settings if you have issues with that. In the future we will optimise the sound mix to run on ~50% of the ingame volume, but your overall feedback is very crucial! 
+Please provide feedback on the current audio mix of the mission, since it is so easy to adjust now. Also I have noticed that if you have effects turned up really high in the game, somehow the sounds get amplified, so try lowering that inside the sound settings if you have issues with that. In the future we will optimise the sound mix to run on ~50% of the ingame volume, but your overall feedback is very crucial!
 
 — Arma2Warfare GPT & @miksuu
 
@@ -209,7 +209,7 @@ https://cdn.discordapp.com/attachments/1116268624458547261/1220557523837255761/n
 - Removed the task system from the mission to remove clutter from the UI.
 - Added debug lines to investigate the occasional base area limit bug. If you encounter this issue, please report it on Discord with a timestamp and, if possible, screenshots or video of the base setup.
 - Implemented debug lines to monitor the total number of groups and AI units in the game. This change aims to identify and eliminate possible "ghost" groups that may cause lag, especially after increasing the server's processing power with the latest configuration change. If you notice consistent low server FPS that does not recover to approximately 45-48, please report it for further investigation.
-- Corrected the last syntax error in the base defences and resolved the last major error on the server RPT side (except for the algorithm managing guerrilla AI groups from the resistance barracks, which only generates errors at the game's start). 
+- Corrected the last syntax error in the base defences and resolved the last major error on the server RPT side (except for the algorithm managing guerrilla AI groups from the resistance barracks, which only generates errors at the game's start).
 
 This is very experimental patch since we can't test these things on the testing server, so please report any issues with the wreck marker or unusual server lag! It will help us optimize performance for a smooth experience with up to 30 players with the power of the new server that we have, especially when it's configured correctly now!
 
@@ -253,7 +253,7 @@ This is very experimental patch since we can't test these things on the testing 
 — Arma2Warfare GPT & @miksuu
 
 # v26122023 (Miksuu)
-- The 7950X3D server has been disabled. It seems that it wasn't worth it at all. Thanks for trying it out though! We might upgrade to 14th gen Intel when it becomes available to the host we use. If you connect by IP, use 88.198.47.228 now again, as updated to #server-info 
+- The 7950X3D server has been disabled. It seems that it wasn't worth it at all. Thanks for trying it out though! We might upgrade to 14th gen Intel when it becomes available to the host we use. If you connect by IP, use 88.198.47.228 now again, as updated to #server-info
 - Experimental: Headless client custom memory allocator enabled. Please report your performance findings in #performance-discussion (Mr.James is still active, no multithreading yet). Server has been running this memory allocator before too.
 - Quick fix: Attempt removing "Dumb Bomb Rocket Simulation", that might have forced infrared lock on the bombs, possibly fixing the guidance of the bombs. Report your findings and if they still guide, we'll implement a range limit for the bombs.
 
@@ -371,7 +371,7 @@ We are excited to announce the latest updates to Arma 2 with patch v17112023! He
 ### Quality of Life Adjustments
 - **Endgame Music**: Reinstated the classic "Iron Mountain" from Arma 2: Operation Arrowhead soundtrack, removing the custom endgame music to facilitate faster mission downloads and preserve the nostalgic Arma experience.
 
-Thank you for your continued support and feedback. Your input is invaluable and helps us make Arma 2 the best experience possible. Please continue to report bugs and share your suggestions on our Discord channels. #old_report-a-bug #old_suggestions 
+Thank you for your continued support and feedback. Your input is invaluable and helps us make Arma 2 the best experience possible. Please continue to report bugs and share your suggestions on our Discord channels. #old_report-a-bug #old_suggestions
 
 Keep the feedback coming, and let's enjoy the enhanced gameplay together!
 
@@ -445,7 +445,7 @@ Server will update when the round ends or at tomorrow morning.
 - **Added a better notice to the center of the screen and a new sound when your artillery is off the cooldown**
 - **Fixed errors regarding BIS_CONTROL_CAM**
 - **For the developers:** complete refactoring of the magic function "createMarker" that can handle now object or coordinate positions as string. When the function get an object, the marker position will be automatically updated. Easy to use.
- 
+
 **Miksuu's changes: **
 **- [Bug Fix] Reverted changes of Common_SortByDistance.sqf script that most likely caused the crash on the server yesterday. It will be fixed at a later date so resistance can roam the map again.**
 
@@ -454,7 +454,7 @@ Server will update when the round ends or at tomorrow morning.
 **- [Balancing/Voted] Added new artillery upgrade levels and reworked the costs, and cooldown times for each of the upgrade levels** https://discord.com/channels/440257265941872660/1116365031228063755/1131988965419921428
 (although the last level with 200sec was added, but it can be very easily removed if it gets negative feedback)
 > New levels:
-> Level = cooldown - cost in supplies - upgrade time. 
+> Level = cooldown - cost in supplies - upgrade time.
 > - Level 0 = 500 seconds - 0 - 0
 > - Level 1 = 450 seconds - 800 - 40
 > - Level 2 = 400 seconds - 1400 - 70
@@ -462,7 +462,7 @@ Server will update when the round ends or at tomorrow morning.
 > - Level 4 = 300 seconds - 3700- 130
 > - Level 5 = 250 seconds - 6100 - 160
 > - Level 6 = 200 seconds - 10000 - 190
-> 
+>
 > These levels might require further tuning based on your feedback after you have tried it on the server, so please provide it in #balancing_discussion !
 
 **- [Balancing/Voted] Raised the price of Stryker MC from $4200 to $4800**  https://discord.com/channels/440257265941872660/1116365031228063755/1131988857823428658
@@ -504,7 +504,7 @@ Server will update when the round ends or at tomorrow morning.
 - [Debug mode only] Disabled teamswapping for easier testing and not having to navigate to the parameter menu every time
 
 Big props to @marty0007 for the fixes! These QoL changes are just way too awesome!
-Since the aircraft I intended to add tomorrows event (modded V10 air event on Taviana with new air vehicles) were bugged, not balanced at all (sidewinders didn't kill them with one shot), I postponed the event possibly to next week (will be decided later). 
+Since the aircraft I intended to add tomorrows event (modded V10 air event on Taviana with new air vehicles) were bugged, not balanced at all (sidewinders didn't kill them with one shot), I postponed the event possibly to next week (will be decided later).
 On the other hand, today I went back to developing the main mission itself, so a lot of updates are coming to the mission (already in testing, below on the image) in the next few days! However, I need your feedback on this: https://discord.com/channels/440257265941872660/445631540513210379/1155144257947041943 (upcoming arty reload changes).
 As a reminder, features that have the most effect on the gameplay while having a fast implementation time will be prioritised. Thanks!
 
@@ -579,7 +579,7 @@ Another update again! As you all wanted, we're excited to introduce others great
 
 1. **ARTY Mark on the Map:**
    - When a player calls in artillery support, a distinctive marker with the player's name is now visible on the map.
-   - An audio message, supporting multiple languages, is broadcast to all players on the same team when artillery support is requested. 
+   - An audio message, supporting multiple languages, is broadcast to all players on the same team when artillery support is requested.
    - After the cooldown period for artillery, the player who made the call will receive a notification in the form of a multilingual hint message.
    - Audio messages are available in three different languages based on the faction you are playing with: American, Russian, and Arabic for the Takistanish faction.
    - The marker is automatically removed once the artillery support mission is completed. To enhance reliability, it will be removed automatically after 80 seconds.
@@ -603,7 +603,7 @@ https://cdn.discordapp.com/attachments/1116268624458547261/1151868741903196332/A
 -- Huge refactoring of the missions Cherno and Takistan files are now very similar
 -- Added a feature to the LoadoutManager for it to copy almost all files (some blacklisted, we'll reduce this list later) from Chernarus to Takistan (and these are cloned to the event maps automatically, just like before)
 
-These changes will make development for our contributors very easy since most of the time, they need to edit Chernarus. However, it is a huge refactoring change for the whole mission (since there was many differences between Takistan and Chernarus). 
+These changes will make development for our contributors very easy since most of the time, they need to edit Chernarus. However, it is a huge refactoring change for the whole mission (since there was many differences between Takistan and Chernarus).
 
 Although it's tested quite well, **let us know if you notice any small bugs in the mission, or something's just off.** I will keep you posted when I do refactoring the missions until the point they are identical (excluding the factions and mission.sqm file), but yet still the same way they are right now for the player.
 
@@ -656,7 +656,7 @@ A countdown will appear on the screen of AFK players 30 seconds prior to the aut
 
 -- A-10A/Su-25a Loadouts: Added 2 AGM-65 Maverick / 4 Ataka as EASA loadouts.
 
--- Tank Crew: Replaced crewmen inside tanks with engineers for repair capabilities. 
+-- Tank Crew: Replaced crewmen inside tanks with engineers for repair capabilities.
 
 -- MI-24CZ: Lowered price from **$42620** to **$39620**.
 
@@ -686,7 +686,7 @@ The problem with the hind is that the vehicle itself is very tanky, and is very 
 
 So for the update **v21082023**:
 
-**-- Both of the Mi-24V variants moved to AF4** 
+**-- Both of the Mi-24V variants moved to AF4**
 
 **-- Mi-24V (CZ) price raised to $42620 from $35620**
 
@@ -788,7 +788,7 @@ Please report any players who seem unlockable frequently, preferably with multip
 **-- Many vehicle additions and such as:**
 - AH-64D (TOW) at AF3 (new vehicle)
 - Mi-24V (CZ) at AF3 (new :blufor_icon: BLUFOR vehicle!)
-- Reintroduced Wildcat with loadouts that don't crash your game :KEKW: 
+- Reintroduced Wildcat with loadouts that don't crash your game :KEKW:
 - A-10A at AF3 (new vehicle)
 - A-10C at AF4 (loadouts changed from the original A-10)
 - Su-25A at AF3 (new vehicle)
@@ -849,7 +849,7 @@ is calculated:
 - Camos are not the most optimal for every aircraft (for example, the takistani Su-25T has desert camo on both maps)
 ~~- Now that An-2 is on AF1 on both maps, to my knowledge, OPFOR does not have any AF2 aircraft. Perhaps we'll move ambu helicopters to that level for both factions, or such.~~
 
-I'd like to thank you for community contributor for this brilliant idea and your spreadsheet to rework the whole air balance. 
+I'd like to thank you for community contributor for this brilliant idea and your spreadsheet to rework the whole air balance.
 Many thanks for @cleinstein helping to put it together.
 And @DMR#1208 for helping me to implement all of this stuff in to the mission.
 
@@ -870,14 +870,14 @@ Thanks, and have fun on the server enjoying the largest update so far (with its 
 
 **-- Fixed a bug where ground vehicle AI's with IR Smoke made a warning sound when player was not inside the vehicle**
 
-@everyone 
+@everyone
 We've been working on a huge Air Balancing patch with @DMR#1208, a community contributor and @cleinstein. Loadout generator is pretty much done, with the correct prices on the weapons. They can be found here: https://pastebin.com/DTEperMn . What do you think? To ensure we will get everything right, I think that we'll release this patch next week and have an air event on Saturday and perhaps briefly testing @quadxd 's new Tasmania map on Sunday. Repacked @a2waspterrainsv7 modpack can be found here: https://drive.google.com/file/d/1RuJAPTLG8L-DOeeYbThVnbuNsFKfZrp3/view?usp=sharing. Keys have been added to the server now, although the server might require a restart so don't enable these mods yet, and I think during non-events you should keep them off anyways, since they are not needed.
 
 # v31072023 (Miksuu)
 
 **-- Added a feature to tune the view distance with hotkeys. See: https://discord.com/channels/440257265941872660/1135891800373071894/1135897984945631272 **
 
-Thanks for the idea to add a debounce feature for this @quadxd! 
+Thanks for the idea to add a debounce feature for this @quadxd!
 
 **-- Fixed OPFOR not having any AT soldiers on the depots at B0, added RPG18 soldier for that level (RPG-7 soldiers are available from B1 level)**
 Thanks for the reminder to fix this @rainbowbier !
@@ -950,12 +950,12 @@ Also we're planning to rework air balance completely, and will release the plan 
 **-- Change logic when ClientInitComplete is done to the end of Init_Client.sqf script**
 > This shouldn't have any effect joining games, but if it does cause any issues let me now. Best case scenario, it fixes the bug that ruins a round every few months or so :D
 
-Thank you for 0=1 for these contributions above! Much appreciated! :beers: 
+Thank you for 0=1 for these contributions above! Much appreciated! :beers:
 
 **-- Changed SADARM artillery (Artillery Ammunition Upgrade level 3, from the Ammunition Truck) to target helicopters more efficiently. Additionally, Artillery Ammunition Upgrade Level 2's supply price was raised from 3500 to 5250, and Level 3 was raised from 4500 to 9000**
 > This should help to deal with helicopter camping in bases where the supply points are. They are incentivised for more active gameplay, alongside with teamwork to build new supply points with your teams repair truck drivers + and commander to relocate bases to deal with the threat. Interested to see where this will go. Since this is such an experimental feature, please provide feedback on it, thanks! I have also added a vote about the artillery ammunition upgrade costs, check it out if you like to get that changed. https://discord.com/channels/440257265941872660/1116365031228063755/1131988888928407622
 
-Thank you @quadxd for your brilliant idea, and for writing this script! :beers: 
+Thank you @quadxd for your brilliant idea, and for writing this script! :beers:
 
 **-- Added Anti Air Radar-upgrade [Image 3] with three different levels that's cost 15000 and 35000 supplies, with upgrade time of 150 and 250 seconds**
 - Level 0 provides you with position, direction, and speed data of the enemy aircrafts, with 3 seconds refresh rate
@@ -972,7 +972,7 @@ Thank you @quadxd for your brilliant idea, and for writing this script! :beers:
 Thanks @cleinstein and 0=1 for the bug report.
 
 **-- Raise AI limit from 14 to 16**
-> https://discord.com/channels/440257265941872660/1116365031228063755/1131988526263713803 :AhShitHereWeGoAgain: 
+> https://discord.com/channels/440257265941872660/1116365031228063755/1131988526263713803 :AhShitHereWeGoAgain:
 
 **-- Added sound warning for incoming missiles on tanks with IR smoke upgrade researched**
 
@@ -1000,7 +1000,7 @@ Thanks @cleinstein and 0=1 for the bug report.
 # v18072023 (Miksuu)
 
 **-- Possibly fixed a rare runtime error of base defences not manning**
-> I imported a script from v50 version (Arma 3 mission by Spayker) that from my understanding of the code should fix this error. When headless client is working properly, the defences should be manned just like before (by units to running to them from the barracks). Otherwise without the HC, defences will be instantly manned. Since the bug was almost impossible to reproduce, let me know if it doesn't suddenly work and I'll check the log. Thanks. 
+> I imported a script from v50 version (Arma 3 mission by Spayker) that from my understanding of the code should fix this error. When headless client is working properly, the defences should be manned just like before (by units to running to them from the barracks). Otherwise without the HC, defences will be instantly manned. Since the bug was almost impossible to reproduce, let me know if it doesn't suddenly work and I'll check the log. Thanks.
 
 **-- Bought supply points with money will now be deleted once a base is down**
 > I added this feature, because once you sold a base that had one of these supply points it caused a bug that the base area didn't stop counting. Since you can't sell that structure, this caused these base areas to exist that you couldn't get rid off. Do you want a feature for these bought service points to be marked on the map automatically when built, and being able to sell them. https://discord.com/channels/440257265941872660/1116365031228063755/1130681186977595502
@@ -1123,7 +1123,7 @@ Thank you @Rayswaycx#3767 for the **HUGE 250€** donation yesterday. This is th
 
 The merger comparison: https://github.com/Miksuu/a2waspwarfare/compare/48bccc0e44dd...e498d7adbfc9
 
-Don't forget to vote + discuss the newly added suggestions in #vote-suggestions 
+Don't forget to vote + discuss the newly added suggestions in #vote-suggestions
 ||And enjoy the incoming double @everyone  ping :stalin_ping:||
 
 ![](https://cdn.discordapp.com/attachments/1116268624458547261/1126573390422089828/image.png)
@@ -1275,7 +1275,7 @@ Hello @everyone! Since the recent attempt to take down my server by @ezcoo yeste
 
 -- Move T-90 from HF3 to HF4
 
--- Move 2S6M Tunguska from HF3 to HF4 
+-- Move 2S6M Tunguska from HF3 to HF4
 
 *[Multiple commits by @miksuu on 03/10/2018]*
 

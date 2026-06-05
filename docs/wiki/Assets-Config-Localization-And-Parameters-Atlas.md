@@ -16,6 +16,7 @@ This page maps the mission-facing configuration and media layer: `description.ex
 | Music registry | `Music/description.ext:1-19` | Defines `wf_outro` and `cherna_intro`, backed by two tracked `.ogg` files. |
 | UI resources | `Rsc/Ressources.hpp`, `Rsc/Dialogs.hpp`, `Rsc/Titles.hpp` | Shared controls, dialog classes and title resources. Current source has 18 top-level dialog classes and 99 title classes. |
 | Local media folders | `Textures/`, `Client/Images/`, `Sounds/`, `Music/` | Current source has 20 local texture `.paa`, 45 client image `.paa`, 26 sound `.ogg` and 2 music `.ogg` files. |
+| Asset/reference scanner | `docs/analysis/dead-code-asset-reference-scan.ps1` | Repeatable scanner for mission path references, missing bootstrap files, local assets, include targets and OA addon paths. Latest scan: 5860 path records across 9 mission roots, 21 missing bootstrap files all under `Modded_Missions`. |
 
 ## Parameter Contract
 
@@ -78,7 +79,7 @@ Minimum smoke scenario for content changes: boot hosted or dedicated with the ed
 | Missing `airRaid` sound class | `Client/PVFunctions/NukeIncoming.sqf:7` plays `airRaid`, but `Sounds/description.ext` has no `class airRaid`. | Nuke incoming may fail to play its intended warning sound even though ICBM/radiation sounds are registered. Banach also found this PVF path is likely stale, so fix should follow the support/nuke owner decision. |
 | Unused registered message sounds | `Sounds/description.ext:24-39`, `:96-105`; no source play/use found for `ARTY_message_to_friendly_*` or `ICBM_message_to_*`. | Likely abandoned voice/message audio or unused support/ICBM notification variants. Keep files until support-agent findings confirm removal is safe. |
 | Missing local tactical menu icons | `Rsc/Dialogs.hpp:2634-2821` references `Client\Images\wf_*.paa`; none of those local files exist. | Tactical/support menu buttons may show blank/missing icons unless these paths were intended to be generated/restored. |
-| Missing local vehicle textures | `Common/Functions/Common_AddVehicleTexture.sqf:19-72`, `:215-217`; `Server/Init/Init_Server.sqf:323-325`. | Several relative `Textures/*.paa` overlays are absent, including AAV/LAV/BMP3/BTR/Tunguska/T-90 desert paths. Engine-absolute `\ca\...` paths are not flagged. |
+| Map-conditional vehicle texture leads | `Common/Functions/Common_AddVehicleTexture.sqf:8-223` contains both `IS_chernarus_map_dependent` and `!IS_chernarus_map_dependent` branches. Source Chernarus defines `IS_CHERNARUS_MAP_DEPENDENT` in `version.sqf:3`; Vanilla Takistan comments it out at `version.sqf:3`; `initJIPCompatible.sqf:111-113` turns that define into the runtime boolean. | Do not treat every static missing `Textures/*.paa` hit as broken. Many are opposite-terrain branches. Verify the target terrain profile and smoke the guarded branch before adding, deleting or copying texture files. |
 | `loadScreen.jpg` is live and present | `description.ext:64`, `Rsc/Titles.hpp:36`; `loadScreen.jpg` exists. | Do not remove the file as "unused"; it is used by both config and title resources. |
 | Commented unit caching include is stale | `description.ext:37`; no `scripts/unitCaching` folder. | Treat as abandoned scaffold, not an available optimization switch. |
 
@@ -98,7 +99,7 @@ Minimum smoke scenario for content changes: boot hosted or dedicated with the ed
 
 1. Add or replace the missing `airRaid` CfgSounds class used by `NukeIncoming.sqf`, or retire the stale PVF path if support/nuke owners confirm it is dead.
 2. Decide whether missing `Client\Images\wf_*.paa` tactical icons are intended absent art, stale dialog references or files lost during repo history.
-3. Audit missing local vehicle texture references before changing texture behavior; many entries may be old livery leftovers.
+3. Audit map-conditional vehicle texture references before changing texture behavior; many static missing hits are opposite-terrain branches, while real livery leftovers still need Arma smoke.
 4. Rename or retitle `WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION` UI text so it does not present as bomb altitude.
 5. Decide whether `WFBE_C_GAMEPLAY_BOMBS_ALTITUDE` should be revived, hidden or marked historical in the host parameter UX.
 6. Decide whether IR smoke should use the lobby-facing `WFBE_C_MODULE_WFBE_IRS` name, the runtime `WFBE_C_MODULE_WFBE_IRSMOKE` name, or an explicit alias during parameter import.

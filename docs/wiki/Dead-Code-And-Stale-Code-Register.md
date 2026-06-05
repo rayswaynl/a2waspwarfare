@@ -20,6 +20,8 @@ Mission-copy divergence evidence is captured by `docs/analysis/dead-code-mission
 
 Arma 2 OA compatibility / Arma 3-style API evidence is captured by `docs/analysis/dead-code-oa-compatibility-scan.ps1`, with the latest output in `docs/analysis/dead-code-oa-compatibility-scan.json`.
 
+Asset, media and mission-bootstrap evidence is captured by `docs/analysis/dead-code-asset-reference-scan.ps1`, with the latest output in `docs/analysis/dead-code-asset-reference-scan.json`.
+
 ## Scan Snapshot
 
 Latest local scan:
@@ -124,6 +126,19 @@ Latest Arma 2 OA compatibility scan:
 | OA-safe inverse-trap hits | 1132: `diag_tickTime`, `uiSleep`, `setVehicleInit`, `processInitCommands` |
 | Generated artifact | `docs/analysis/dead-code-oa-compatibility-scan.json` |
 
+Latest asset/media/bootstrap scan:
+
+| Item | Value |
+| --- | --- |
+| Mission roots scanned | 9: source Chernarus, Vanilla Takistan and 7 modded roots |
+| Text files scanned | 2774 |
+| Path/reference records | 5860 total, 5441 active |
+| Resolved references | 3896 |
+| External addon references | 583, including OA `\ca\...` assets/scripts |
+| Active missing references | 890 total: 109 maintained-root leads and 781 modded-root leads |
+| Missing bootstrap files | 21, all under `Modded_Missions` roots |
+| Generated artifact | `docs/analysis/dead-code-asset-reference-scan.json` |
+
 Scanner caveats:
 
 - The scanner intentionally finds leads, not final truth.
@@ -140,6 +155,8 @@ Scanner caveats:
 - Mission-copy divergence does not automatically mean dead code. Source Chernarus vs Vanilla Takistan differences are often map/generated differences such as help text, database map id, Takistani resistance units, start vehicles, `mission.sqm`, artillery config and `version.sqf`.
 - Modded-copy divergence is a release-readiness warning. Current tooling does not package or regenerate `Modded_Missions`, so drift there should be quarantined until the owner chooses a maintained-fork or regenerate-from-source policy.
 - Arma 3-style term hits are not automatically defects. Docs intentionally contain warnings such as `remoteExec` / `CfgFunctions` / `parseSimpleArray`, while code intentionally uses OA-safe inverse-trap commands such as `diag_tickTime`, `uiSleep`, `setVehicleInit` and `processInitCommands`.
+- Asset scans cannot infer surrounding `IS_chernarus_map_dependent` branches. Several apparent missing `Textures/*.paa` records are Chernarus/Takistan complementary assets guarded by map-profile checks, not guaranteed runtime failures.
+- Quoted filename fragments can be part of dynamically built external addon paths. Example: nuke missile particle scripts are assembled from `\ca\air2\cruisemissile\data\scripts\...` in `Client/Module/Nuke/nukeincoming.sqf`, so `cruisemissileflare.sqf` and `exhaust1.sqf` are OA addon references rather than repo-local missing files.
 
 ## Classification Rules
 
@@ -167,6 +184,8 @@ Scanner caveats:
 | `source-generated-map-specific-divergence` | Source Chernarus and Vanilla Takistan differ only in map/terrain/generated data. | Keep documented as intentional; do not flatten these differences during cleanup. |
 | `oa-compatibility-guardrail` | A pattern looks modern/A3-ish or docs contain A3 terminology, but source review proves no unsupported implementation path. | Keep warnings clear; do not convert them into implementation advice. |
 | `oa-safe-inverse-trap-not-dead` | A command looks suspicious to A3-trained agents but is valid/load-bearing in Arma 2 OA. | Preserve unless an OA-compatible replacement is designed and smoked. |
+| `asset-bootstrap-release-risk` | Mission-facing asset, media or bootstrap references are missing or generated outside Git. | Treat as release/test gate evidence; source-check map branches and addon paths before patching. |
+| `map-conditional-asset-false-positive` | A static scan reports a local asset missing in one maintained root, but the surrounding code is guarded by the opposite terrain profile. | Do not patch blindly. Verify the branch can execute in the target generated mission. |
 
 ## Current Findings
 
@@ -190,6 +209,23 @@ Scanner caveats:
 | `generated-version-sqf-clean-checkout-risk` | Generated-file contract risk | Mission entrypoints include `version.sqf`; LoadoutManager generates/excludes it. | Keep includes; validate generation workflow on clean checkout. |
 | `rsc-clickabletext-soundpush-malformed` | Stale or malformed resource config | `Rsc/Ressources.hpp:556` has `soundPush[] = {, 0.2, 1};` in source and modded copies. | Replace with valid value only after config/dialog smoke. |
 | `modded-packaging-disabled-by-tooling` | Deferred release scope | `Tools/LoadoutManager/ZipManager.cs:16` packages `Missions` and `Missions_Vanilla`; `SqfFileGenerator.cs:133` says add modded maps later. | Keep disabled until conflict/missing-reference checks pass, or archive old modded roots. |
+
+## Asset And Bootstrap Findings
+
+These findings are source-interpreted from the asset/media/bootstrap scan. They supplement [Assets/config/localization/parameters](Assets-Config-Localization-And-Parameters-Atlas) and the modded mission map table in [Content structure and maps](Content-Structure-And-Maps).
+
+| ID | Classification | Evidence | Action |
+| --- | --- | --- | --- |
+| `asset-scan-repeatable-release-gate` | Asset/bootstrap release risk | The scan found 5860 path/reference records across 2774 mission-root text files, 3896 resolved references, 583 external addon references and 21 missing bootstrap files. All missing bootstrap files are in `Modded_Missions`, matching the existing packaging quarantine: several roots lack `description.ext`, `mission.sqm`, `initJIPCompatible.sqf` and/or generated `version.sqf`. | Use the scanner as a release gate before claiming any terrain root is pack/test-ready. Keep modded roots quarantined until generated or explicitly maintained. |
+| `rscmenu-upgrade-icons-missing-assets` | Broken stale UI class | Source and maintained Vanilla `Rsc/Dialogs.hpp:2425-2428` point `RscMenu_Upgrade` at missing `Client\GUI\GUI_Menu_Upgrade.sqf`; the same stale block references missing `Client\Images\wf_*.paa` icons at `Dialogs.hpp:2634-2821`. Live upgrade flow uses `WFBE_UpgradeMenu` / `Client\GUI\GUI_UpgradeMenu.sqf`. | Treat the old dialog as stale until branch search proves a caller. Prefer removing/aliasing the old resource instead of recreating unused art blindly. |
+| `map-conditional-vehicle-texture-leads` | Map-conditional asset false positive | `Common_AddVehicleTexture.sqf` includes both Chernarus and non-Chernarus texture branches. Example: Chernarus `version.sqf:3` defines `IS_CHERNARUS_MAP_DEPENDENT`, while Vanilla Takistan comments it at `version.sqf:3`; `initJIPCompatible.sqf:111-113` converts that define into `IS_chernarus_map_dependent`. Static scan therefore reports opposite-root assets as missing even when the branch should not execute. The West LAV HQ texture calls in `Init_Server.sqf:322-327`, `Construction_HQSite.sqf:81-86` and `Server_MHQRepair.sqf:27-32` are also guarded behind `!(IS_chernarus_map_dependent)`. | Before adding or deleting texture files, smoke the target terrain profile and check whether the guarded branch can run there. Do not flatten Chernarus/Takistan asset sets solely to satisfy a static scan. |
+
+Source-checked false positives and guardrails from this pass:
+
+- `\ca\...` and dynamically concatenated OA addon paths are not repo-local missing files.
+- `loadScreen.jpg` is live and present in maintained roots; do not remove it as unused.
+- `version.sqf` is generated metadata and a release gate, not dead code, even though clean tracked checkouts may not contain it.
+- Modded roots remain the dominant missing-bootstrap/missing-reference source and should not be used as implementation truth until regenerated or explicitly maintained.
 
 ## Mission Copy Divergence Findings
 
@@ -319,6 +355,7 @@ Source-checked false positives from this pass:
 | P1 | Decide whether warning-marked CRV7PG loadouts are forbidden or intentionally quarantined. | A warning-named crash-risk class is referenced by WILDCAT data, so generator output may carry known-dangerous loadouts. |
 | P1 | Decide whether the stale `ICBM_launched` PVEH should be retired or revived. | The current nuke path uses `NukeIncoming` and `HandleSpecial "icbm-display"`; a receiver-only event handler misleads future networking work. |
 | P1 | Decide whether dormant SQF helper families are archive, revive or tooling-owned: `UpdateSupplyTruck`, `groupsMonitor`, `Common_ModifyAirVehicle`, `HandleATReloadVehicle`, IRS warning helpers, Reaktiv and TaskSystem. | They are source-backed stale code, but several have branch, tooling or modded context that makes blind deletion risky. |
+| P1 | Use the asset/media/bootstrap scan before terrain release claims. | It now distinguishes maintained roots, modded roots, missing bootstrap files, addon paths and map-conditional false positives. |
 | P2 | Remove or rationalize safe commented missing references: unitCaching, old blink loop, old bomb handler, old defense helper, WASP commented hooks. | Low-risk bloat cleanup once branch searches are complete. |
 | P2 | Remove or annotate old direct `WFBE_*` publicVariable comment blocks after branch search. | They are migration residue and make the current PVF/helper network model harder to read. |
 | P2 | Document generated `version.sqf` in every build/release handoff. | Prevent agents from misclassifying a required generated file as missing dead code. |

@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `wiki-backlog-asset-bootstrap-pass` | Published / validated | Added repeatable asset/media/bootstrap scanner evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [Assets/config/localization/parameters](Assets-Config-Localization-And-Parameters-Atlas): 9 mission roots, 2774 text files, 5860 path records, 21 missing bootstrap files all under `Modded_Missions`, and guardrails for OA addon paths plus map-conditional texture false positives. Added fresh pruning backlog leads to [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger). No gameplay source changed. |
 | `july-update-planning` | Queued / dev branch created | Steff added **Hosted Server FPS Loop Fix** to the July update to-do list. Dev branch: `dev/july-update-hosted-server-fps-loop-fix`. Scope is the DR-19 hosted/listen busy-spin fix plus dedicated FPS publish smoke; no gameplay source changed by this dashboard note. |
 | `dead-code-oa-compatibility-pass` | Published / validated | Added repo-wide OA compatibility evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit): 3199 text files scanned, 22 risky patterns checked, 0 live code-risk implementation hits for A3-style APIs, and 1132 OA-safe inverse-trap hits (`diag_tickTime`, `uiSleep`, `setVehicleInit`, `processInitCommands`) documented as not-dead guardrails. No gameplay source changed. |
 | `dead-code-mission-copy-divergence-pass` | Published / validated | Added mission-copy divergence evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register): 9 mission roots, 690 unique mission-relative paths, 548 identical copied paths, 139 diverged copied paths, 18 conflict-marker files. Source/Vanilla divergence is mostly intentional map/generated data; `Modded_Missions` is quarantined as stale fork territory until regenerated or explicitly maintained. No gameplay source changed. |
@@ -46,7 +47,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` | Pruning-ledger completion audit is validated/published; future work should start from fresh source evidence or code-owner requests. |
+| Codex | Active | `documentation-finisher-loop` | Asset/bootstrap scanner and fresh pruning backlog leads are validated; continue from fresh source evidence or code-owner requests. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Coverage Ledger navigation is wired. Claude can self-select the next bounded source-backed review from the ledger or hardening backlog. |
 | Supported docs agents | Active | `research-catchup-synthesis-default-supported`, `relevance-pruning-and-archive-default-supported` | Two account-default supported high-reasoning helper chats are running catch-up synthesis and relevance pruning. The earlier named-model starts are treated as failed/non-evidence. |
@@ -76,6 +77,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
+| `wiki-backlog-asset-bootstrap-pass` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
 | `dead-code-oa-compatibility-pass` | Codex | Published / validated | Push wiki/docs-only changes, then continue the broader dead-code goal from fresh source evidence. |
 | `dead-code-mission-copy-divergence-pass` | Codex | Published / validated | Continue the broader dead-code goal from fresh source evidence. |
 | `dead-code-sqf-reachability-pass` | Codex | Published / validated | Continue the broader dead-code goal from fresh source evidence. |

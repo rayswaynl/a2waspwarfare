@@ -43,6 +43,18 @@ The fastest way to break OA mission SQF is to "fix" it with Arma 3 reflexes: man
 | `BIS_fnc_selectRandom` | **Arma 2 · 1.00** (OA 1.50) | OA-safe **function** (`_arr call BIS_fnc_selectRandom`) returning a random array element — **distinct from the A3-only `selectRandom` command** in the avoid-list above. Repo: spawn-pad pick in `Client/Functions/Client_BuildUnit.sqf:59/85/111/135`. |
 | `allGroups`, `call`, `compile`, `preprocessFileLineNumbers`, `typeName`, `isNil`, `format`, `localize`, `hintSilent`, `diag_log`, `diag_fps`, `publicVariable`, `addPublicVariableEventHandler`, `toArray`, `toString`, `setVectorDirAndUp` (ArmA 1.09) | OFP / ArmA / A2 | All OA-safe. |
 
+## Object lifecycle commands — OA-safe, locality-sensitive
+
+The object-lifecycle addendum is closed: these commands are valid OA-era SQF, but the important question is who owns the object and whether the effect is local or global. Current source uses the spawn/delete/init family heavily; `hideObject` / `enableSimulation` are not live source commands in this fork, and the A3 `*Global` variants remain absent.
+
+| Command | First · version | Repo guardrail |
+| --- | --- | --- |
+| `createVehicle` | OFP / ArmA era | OA-safe global object creation. Used for server support drops (`Server/Support/Support_Paratroopers.sqf:50`), town depot/camp/flag objects (`Common/Init/Init_Town.sqf:82,99,110`) and client visual/effect paths such as nuke/UAV helpers. Authority still depends on caller path; do not treat command availability as server validation. |
+| `createUnit` | OFP / ArmA era | OA-safe group/unit creation. Examples include server HQ radio logic (`Server/Init/Init_Server.sqf:397-398,572`) and local CoIn logic setup (`Client/Module/CoIn/coin_interface.sqf:69`). Locality follows the target group/owner model; OA has no `setGroupOwner`. |
+| `deleteVehicle` | OFP / ArmA era | OA-safe deletion. Heavily used by support cleanup, CoIn preview cleanup, modules and server maintenance loops. Before patching deletion logic, check owner pages such as [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) and [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas) for player-cargo, marker and stale-state hazards. |
+| `hideObject` / `enableSimulation` | OFP / ArmA / A2 era local forms | OA has local forms only. Current source has no live `hideObject` or `enableSimulation` hits, so do not introduce them as a global state fix without an explicit publicVariable/JIP replay plan. |
+| `hideObjectGlobal` / `enableSimulationGlobal` | Arma 3 · 1.12 | A3-only global variants. Confirmed absent; do not import them into OA snippets. |
+
 ## Object scans & spatial queries — all OA-safe; pick the right one
 
 These are heavily used across the fork and all date to OFP/ArmA/A2, so the trap here is **semantic, not version**: choosing a scan whose filter silently excludes what you need.

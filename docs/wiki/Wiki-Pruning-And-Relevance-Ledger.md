@@ -60,6 +60,19 @@ Current evidence as of 2026-06-05:
 - The dashboard is compacted back to current-state use; old batches route to [Agent worklog](Agent-Worklog), [`agent-status.json`](agent-status.json), [`agent-events.jsonl`](agent-events.jsonl) and git history.
 - Future gameplay hardening, release smoke and code-owner implementation remain valid project work, but they are not unfinished tasks in this pruning ledger.
 
+## Fresh Backlog Leads
+
+These are new cleanup leads from the 2026-06-05 wiki-backlog scout wave. They are not evidence that the earlier pruning batches failed; they are the next refinements to pick when a docs owner wants another bloat pass.
+
+| Priority | Lead | Evidence | Suggested action |
+| --- | --- | --- | --- |
+| P0 | Reconcile mirror drift before broad edits | The scout reported non-identical wiki/mirror pages including `Arma-2-OA-Command-Version-Reference`, `Miksuu-Wiki-Archive-Changelog` and `Miksuu-Wiki-Archive-Project-Script-Architecture-Of-Chernarus-Mission`, plus line-ending-only noise in a few files. | File-by-file compare before any bulk copy; keep both sides additive on real content drift. |
+| P1 | Separate machine/state files from human navigation | `agent-events.jsonl`, `agent-collaboration.json`, `agent-knowledge.jsonl`, `agent-hardening-backlog.jsonl`, `agent-context.json` and `Agent-Worklog.md` dominate page/file size. | Keep machine files available for agents, but route humans through [Progress dashboard](Progress-Dashboard), [Coordination board](Coordination-Board) and compact indexes. |
+| P1 | Shorten Home and stop overclaiming navigation completeness | The scout found `Home.md` mixes start page, tours, repo shape, machine context and reading paths, and says every content page has `Continue Reading` while some current/archive pages do not. | Make Home a shorter launch pad, move large maps to dedicated index pages, or soften the blanket claim. |
+| P1 | Maintain one navigation inventory | The scout found pages that are neither in MkDocs nav nor sidebar, plus sidebar-only and MkDocs-only archive differences. | Add a generated/current/archive/machine/hidden navigation inventory instead of hand-auditing drift repeatedly. |
+| P2 | Keep imported/archive and raw scout pages demoted | Large historical pages such as Miksuu archives, [Deep-review findings](Deep-Review-Findings), [Agent worklog](Agent-Worklog) and scout chronology remain useful provenance but poor daily entrypoints. | Preserve archives, but expose compact owner routes and current-state indexes first. |
+| P2 | Reduce onboarding overlap | [Quickstart](Quickstart-For-Humans-And-Agents), [AI assistant guide](AI-Assistant-Guide), [LLM agent entry pack](LLM-Agent-Entry-Pack), `llms.txt` and Home repeat boot-order guidance. | Pick one canonical agent boot order and make the other pages short audience-specific gateways. |
+
 ## Agent Guidance
 
 Before adding a new page, answer:

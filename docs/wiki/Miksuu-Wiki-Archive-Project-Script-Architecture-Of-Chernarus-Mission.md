@@ -19,7 +19,7 @@ Welcome to the documentation page dedicated to the architecture of the script pr
 
 # Hierarchical Diagram
 
-The hierarchical diagram below illustrates the organization of folders and files in the project. 
+The hierarchical diagram below illustrates the organization of folders and files in the project.
 
 ![](https://cdn.discordapp.com/attachments/1117093090642100295/1117483001538945095/chernarus_map_files_project.png)
 
@@ -118,7 +118,7 @@ Overall, the "common" folder organizes configuration files and functions related
         Additionally, there is a "readme.txt" file providing information or instructions related to the configuration files.
 
 2. Folder: "**Functions**"
-        
+
    This folder contains various functions that can be used by the system. Each function is defined in a separate file. The SQF files included in the "functions" folder are organized to group together different reusable functions that are common to the mission. These functions may cover various aspects such as vehicle manipulation, unit creation and placement, objective management, client-server communication, event handling, and more.
 By using these function files, mission creators can save time and effort by reusing predefined functionalities instead of having to recreate them from scratch. This enhances the efficiency of mission development and ensures consistency in the implementation of different functionalities.
 In summary, the "functions" folder in the context of an ArmA 2: Operation Arrowhead mission creation project contains SQF files that group reusable functions, aiming to facilitate mission development and provide common and practical features for an enhanced gameplay experience.

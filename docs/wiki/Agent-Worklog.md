@@ -2530,3 +2530,9 @@ Key conclusions:
 - Steff asked for more Spark scouts. Three GPT-5.3-Codex-Spark starts hit the quota limit until 13:06 and were closed.
 - Launched six `gpt-5.4-mini` read-only fallback scouts: `quad-ai-commander` branch intel, support/RequestSpecial authority, lifecycle/server-loop topology, UI/dialog lifecycle, tooling/release/deploy footguns and upstream/community-dev lessons.
 - Codex remains the local integrator and will promote only source-backed, non-duplicate deltas into the wiki/docs mirror. No gameplay source files changed.
+
+## 2026-06-05T10:50:00+02:00 - Codex - wiki backlog asset/bootstrap scan and pruning scout harvest
+- Started the new long-running wiki backlog goal and launched three read-only scouts for wiki bloat/navigation, feature/dead-code backlog and upstream/community lessons. All three returned and were closed; Codex promoted only compact, source-backed deltas.
+- Added repeatable asset/media/bootstrap scanner `docs/analysis/dead-code-asset-reference-scan.ps1` plus JSON output. Latest scan covers 9 mission roots, 2774 text files and 5860 path records; 21 missing bootstrap files are all under `Modded_Missions`.
+- Source-checked scan false positives: dynamically built `\ca\air2\cruisemissile\data\scripts\...` nuke particle scripts are OA addon paths, and many missing `Textures/*.paa` records are map-conditional Chernarus/Takistan branch leads rather than guaranteed runtime breakage.
+- Updated [Dead/stale code register](Dead-Code-And-Stale-Code-Register), [Assets/config/localization/parameters](Assets-Config-Localization-And-Parameters-Atlas), [Wiki pruning/relevance ledger](Wiki-Pruning-And-Relevance-Ledger) and [Progress dashboard](Progress-Dashboard). No gameplay source changed.
