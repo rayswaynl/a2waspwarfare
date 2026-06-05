@@ -12,6 +12,8 @@ Direct public-variable channel evidence is captured by `docs/analysis/dead-code-
 
 UI/Rsc/dialog evidence is captured by `docs/analysis/dead-code-ui-rsc-scan.ps1`, with the latest output in `docs/analysis/dead-code-ui-rsc-scan.json`.
 
+Mission parameter/config evidence is captured by `docs/analysis/dead-code-parameter-scan.ps1`, with the latest output in `docs/analysis/dead-code-parameter-scan.json`.
+
 ## Scan Snapshot
 
 Latest local scan:
@@ -64,6 +66,19 @@ Latest UI/Rsc/dialog scan:
 | Duplicate IDDs | 2 active collision groups: `23000`, `10200` |
 | Generated artifact | `docs/analysis/dead-code-ui-rsc-scan.json` |
 
+Latest mission parameter/config scan:
+
+| Item | Value |
+| --- | --- |
+| Roots scanned | `Missions`, `Missions_Vanilla`, `Modded_Missions` |
+| Text files scanned | 2763 |
+| Active parameter classes | 89 |
+| Parameter/reference records | 3299 total, 3225 active, 74 comment-only |
+| Active parameters with no runtime references | 5 scan leads: `WFBE_C_AI_MAX`, `WFBE_C_GAMEPLAY_BOMBS_ALTITUDE`, `WFBE_C_MODULE_BIS_HC`, `WFBE_C_MODULE_WFBE_IRS`, `WFBE_C_UNITS_CLEAN_TIMEOUT` |
+| Active parameters with no runtime read-like references | 9 scan leads; dynamic `format` reads make the four economy-start rows false positives |
+| Active parameters with runtime set-like overrides | 12 |
+| Generated artifact | `docs/analysis/dead-code-parameter-scan.json` |
+
 Scanner caveats:
 
 - The scanner intentionally finds leads, not final truth.
@@ -74,6 +89,7 @@ Scanner caveats:
 - Modded missions are out of the current LoadoutManager release pack path, so modded breakage is real source debt but not necessarily current release breakage.
 - A direct PV channel with no `addPublicVariableEventHandler` is not automatically dead. Some channels are state variables read via `missionNamespace getVariable`, some are BattlEye/filter hooks, and some sender names are dynamic `format` expressions that need source interpretation.
 - UI IDC scans cannot distinguish engine display controls from mission resource controls by themselves. Treat `101`, `116` and `112410`-`112414` as source-check leads, not broken mission `Rsc` controls.
+- Parameter scans cannot prove dynamic formatted variable reads on exact names. The economy start parameters look readless in exact-name scans, but `Server/Init/Init_Server.sqf` and player-connect code read them through `Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side]` and `Format ["WFBE_C_ECONOMY_SUPPLY_START_%1", _side]`.
 
 ## Classification Rules
 
@@ -91,6 +107,8 @@ Scanner caveats:
 | `receiver-only-legacy-event-handler` | A live event handler waits on a channel with no active sender found in maintained source. | Treat as stale wiring until runtime/branch smoke proves otherwise. |
 | `duplicate-misleading-ui-resource-id` | Two distinct reachable dialogs/titles share an IDD value. | Do not delete; assign unique IDs only during a tested UI cleanup. |
 | `comment-only-stale-idc-reference` | A missing or old IDC appears only inside comments. | Clean comments or document as retired UI; do not add controls unless reviving the feature. |
+| `visible-parameter-no-runtime-consumer` | A lobby/in-game parameter is imported and defaulted, but no current runtime consumer is found. | Hide/remove, wire, or document as historical after owner review. |
+| `visible-parameter-comment-only-consumer` | A lobby/in-game parameter has only commented or bypassed runtime consumption. | Decide intended policy before wiring or removing. |
 
 ## Current Findings
 
@@ -107,6 +125,8 @@ Scanner caveats:
 | `legacy-config-defenses-commented-missing` | Retired commented reference | Defense files call live `Config_Defenses_Towns.sqf` and retain commented old `Config_Defenses.sqf` calls. | Safe comment cleanup after branch search. |
 | `wasp-commented-action-scaffolds` | Retired commented reference, narrow scope | `WASP/Init_Client.sqf:7`, `:12`, `:21` point at missing old action/key scripts; adjacent WASP action helpers still have uses. | Clean only commented missing hooks unless a full WASP action inventory proves more. |
 | `bis-hc-parameter-orphan` | Orphan-looking config | `Rsc/Parameters.hpp:381` exposes `WFBE_C_MODULE_BIS_HC`; HC delegation uses `WFBE_C_AI_DELEGATION`. | Hide/remove or wire a real BIS High Command feature; do not label it as headless-client enablement. |
+| `ai-max-visible-parameter-no-runtime-consumer` | Visible parameter with no runtime consumer | `Rsc/Parameters.hpp:56-60` exposes `WFBE_C_AI_MAX`; `Init_CommonConstants.sqf:92` defaults it; the parameter scan and fixed-string search find no active runtime consumer. Player follower caps use `WFBE_C_PLAYERS_AI_MAX` instead. | Do not use this for player cap answers. Wire it to real AI-team sizing, hide/remove it, or label it historical. |
+| `units-clean-timeout-visible-parameter-comment-only-consumer` | Visible parameter with comment-only consumer | `Rsc/Parameters.hpp:242-246` exposes `WFBE_C_UNITS_CLEAN_TIMEOUT`; constants default it at `Init_CommonConstants.sqf:348`; active trash cleanup reads `WFBE_C_UNITS_BODIES_TIMEOUT` at `Common_TrashObject.sqf:19` and only mentions `WFBE_C_UNITS_CLEAN_TIMEOUT` in a commented old split line at `:20`; empty vehicles use `WFBE_C_UNITS_EMPTY_TIMEOUT` in `Server_HandleEmptyVehicle.sqf:12`. | Decide whether the lobby row should drive body timeout, revive the old man/non-man split, or be removed/renamed. Keep empty vehicle cleanup separate. |
 | `economy-menu-missing-control-writes` | Stale UI control writes | `GUI_Menu_Economy.sqf:7-8` writes IDC `23004/23005/23006`; audited `RscMenu_Economy` declares `23002/23003` then `23008+`; the UI/Rsc scan reports all three as active undeclared mission IDC uses across source, Vanilla and modded copies. | Complete menu intent review, then restore intended controls or remove stale writes. |
 | `modded-missing-camp-helper-files` | Broken modded source reference | Modded `Init_Common.sqf` files compile `Common_GetTotalCamps*.sqf`; scan reports missing helpers in modded roots. | Restore from current source or regenerate modded missions before release. |
 | `generated-version-sqf-clean-checkout-risk` | Generated-file contract risk | Mission entrypoints include `version.sqf`; LoadoutManager generates/excludes it. | Keep includes; validate generation workflow on clean checkout. |
@@ -159,6 +179,20 @@ Source-checked false positives from this pass:
 - IDCs `112410`-`112414` in `Client/Module/UAV/uav_interface.sqf` belong to the UAV interface/display path and should be checked as BIS/UI integration IDs, not deleted as dead controls.
 - IDC `22005` is comment-only in the parameters display and is not an active runtime write.
 
+## Parameter And Config Findings
+
+These are source-interpreted findings from the parameter/config scan. `Init_Parameters.sqf` imports every lobby `class Params` name into `missionNamespace`, so initialization alone does not prove gameplay use.
+
+| ID | Classification | Evidence | Action |
+| --- | --- | --- | --- |
+| `ai-max-visible-parameter-no-runtime-consumer` | Visible parameter with no runtime consumer | `WFBE_C_AI_MAX` is visible in `Rsc/Parameters.hpp:56-60` and defaulted at `Init_CommonConstants.sqf:92`, but the parameter scan and fixed-string source search find no active runtime consumer outside parameter/default files. Current buy-menu and Soldier role cap behavior use `WFBE_C_PLAYERS_AI_MAX` instead (`GUI_Menu_BuyUnits.sqf:37`, `Skill_Init.sqf:49`). | Do not use `WFBE_C_AI_MAX` in player-cap or role-balance answers. Wire it to real AI-team sizing, hide/remove it, or mark it historical. |
+| `units-clean-timeout-visible-parameter-comment-only-consumer` | Visible parameter with comment-only consumer | `WFBE_C_UNITS_CLEAN_TIMEOUT` is visible in `Rsc/Parameters.hpp:242-246` and defaulted at `Init_CommonConstants.sqf:348`, but `Common_TrashObject.sqf:19` actively reads `WFBE_C_UNITS_BODIES_TIMEOUT`; the old `WFBE_C_UNITS_CLEAN_TIMEOUT` split remains only in a commented line at `:20`. Empty vehicles use `WFBE_C_UNITS_EMPTY_TIMEOUT` via `Server_HandleEmptyVehicle.sqf:12`. | Decide whether the lobby body-timeout row should drive body cleanup, revive the old man/non-man split, or be removed/renamed. |
+
+Source-checked false positives from this pass:
+
+- `WFBE_C_ECONOMY_FUNDS_START_EAST`, `WFBE_C_ECONOMY_FUNDS_START_WEST`, `WFBE_C_ECONOMY_SUPPLY_START_EAST` and `WFBE_C_ECONOMY_SUPPLY_START_WEST` look readless in exact-name scan output, but server init/player-connect code reads them dynamically with `Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side]` and `Format ["WFBE_C_ECONOMY_SUPPLY_START_%1", _side]`.
+- `WFBE_C_GAMEPLAY_BOMBS_ALTITUDE`, `WFBE_C_MODULE_BIS_HC`, `WFBE_C_MODULE_WFBE_IRS`, hidden upgrade clearance and forced volumetric weather were already documented in the parameter/config owner pages. The parameter scan now gives repeatable evidence for those existing rows.
+
 ## Priority Backlog
 
 | Priority | Work | Why |
@@ -169,6 +203,7 @@ Source-checked false positives from this pass:
 | P1 | Keep `AIBuyUnit` latent until AI commander production is intentionally merged or retired. | It is dead-looking on stable but valuable for AI commander work. |
 | P1 | Audit economy menu IDC `23004/23005/23006`. | Stale UI writes can hide broken commander economy controls. |
 | P1 | Fix or formally waive duplicate UI IDDs `23000` and `10200`. | They are not dead, but they make future dialog/title ownership work brittle. |
+| P1 | Decide the fate of visible dead/misleading parameters `WFBE_C_AI_MAX` and `WFBE_C_UNITS_CLEAN_TIMEOUT`. | They affect host/in-game parameter truth and can mislead balance/cleanup tuning. |
 | P1 | Clean integration dead/stale helpers before expanding Discord/status tooling. | Dormant `.Auto` JSON helpers, stale `botconfig.json` ownership and arg-shape drift are easy to revive incorrectly. |
 | P1 | Decide whether warning-marked CRV7PG loadouts are forbidden or intentionally quarantined. | A warning-named crash-risk class is referenced by WILDCAT data, so generator output may carry known-dangerous loadouts. |
 | P1 | Decide whether the stale `ICBM_launched` PVEH should be retired or revived. | The current nuke path uses `NukeIncoming` and `HandleSpecial "icbm-display"`; a receiver-only event handler misleads future networking work. |
@@ -228,6 +263,12 @@ Run the UI/Rsc/dialog scan:
 .\docs\analysis\dead-code-ui-rsc-scan.ps1
 ```
 
+Run the mission parameter/config scan:
+
+```powershell
+.\docs\analysis\dead-code-parameter-scan.ps1
+```
+
 Validate the machine-readable register:
 
 ```powershell
@@ -235,6 +276,7 @@ Get-Content .\docs\analysis\dead-code-findings.jsonl | ForEach-Object { $_ | Con
 Get-Content .\docs\analysis\dead-code-integration-scan.json | ConvertFrom-Json | Out-Null
 Get-Content .\docs\analysis\dead-code-pv-channel-scan.json | ConvertFrom-Json | Out-Null
 Get-Content .\docs\analysis\dead-code-ui-rsc-scan.json | ConvertFrom-Json | Out-Null
+Get-Content .\docs\analysis\dead-code-parameter-scan.json | ConvertFrom-Json | Out-Null
 ```
 
 Useful manual follow-up scans:
@@ -243,6 +285,7 @@ Useful manual follow-up scans:
 rg -n "RscMenu_Upgrade|GUI_Menu_Upgrade|AIBuyUnit|Server_MapBlinkingUnits|Client_BlinkMapIcons|Client_AddUnitToTrack" Missions Missions_Vanilla Modded_Missions
 rg -n "^\s*(<{7,}|={7,}|>{7,})" Modded_Missions
 rg -n "WFBE_C_MODULE_BIS_HC|WFBE_C_AI_DELEGATION|23004|23005|23006" Missions Missions_Vanilla Modded_Missions
+rg -n "WFBE_C_AI_MAX|WFBE_C_UNITS_CLEAN_TIMEOUT|WFBE_C_UNITS_BODIES_TIMEOUT|WFBE_C_PLAYERS_AI_MAX" Missions Missions_Vanilla Modded_Missions
 rg -n "RscMenu_EASA|RscMenu_Economy|RscOverlay|OptionsAvailable|idd\s*=\s*23000|idd\s*=\s*10200" Missions Missions_Vanilla Modded_Missions
 rg -n "ICBM_launched|WFBE_RequestVehicleLock|WFBE_RequestSpecial|WFBE_RequestTeamUpdate|WFBE_ChangeScore|WFBE_LocalizeMessage|WFBE_RequestStructure" Missions Missions_Vanilla Modded_Missions
 ```

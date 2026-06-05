@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-05T10:55:00+02:00 - Codex - dead code parameter/config pass
+
+- Continued Steff's long-running dead-code detective goal with a mission parameter/config scan.
+- Added `docs/analysis/dead-code-parameter-scan.ps1` and `docs/analysis/dead-code-parameter-scan.json`. Latest scan covered 2763 text files across `Missions`, `Missions_Vanilla` and `Modded_Missions`, finding 89 active parameter classes and 3299 parameter/reference records.
+- Promoted source-backed parameter findings into `docs/analysis/dead-code-findings.jsonl` and [Dead/stale code register](Dead-Code-And-Stale-Code-Register): visible `WFBE_C_AI_MAX` has no current runtime consumer, while visible `WFBE_C_UNITS_CLEAN_TIMEOUT` is bypassed by active `WFBE_C_UNITS_BODIES_TIMEOUT` / `WFBE_C_UNITS_EMPTY_TIMEOUT` cleanup paths and survives only in a commented old split line.
+- Added false-positive guardrails for dynamic economy start parameters read through `Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side]` and `Format ["WFBE_C_ECONOMY_SUPPLY_START_%1", _side]`.
+- No gameplay source files changed.
+
 ## 2026-06-05T10:35:00+02:00 - Codex - dead code UI/Rsc pass
 
 - Continued Steff's long-running dead-code detective goal with a UI/Rsc/dialog scan across `Missions`, `Missions_Vanilla` and `Modded_Missions`.
