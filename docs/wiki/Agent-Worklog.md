@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T21:35:00+02:00 - Codex - Factory queue token branch route
+
+- Claimed `factory-queue-token-branch-route` from the patch-ready factory queue cleanup backlog.
+- Source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master`, `origin/perf/quick-wins` and `origin/release/2026-06-feature-bundle` for `Client_BuildUnit.sqf`.
+- Result: current docs/source, maintained Vanilla, stable and Miksuu upstream still carry both DR-33a crewless queue-counter leak and DR-33b low-entropy `varQueu` FIFO token. `perf/quick-wins` and release Chernarus patch only the crewless counter leak; the token remains unchanged and maintained Vanilla is not propagated.
+- Refreshed [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) as the branch/root matrix and condensed [Feature status](Feature-Status-Register) plus [Source fix propagation queue](Source-Fix-Propagation-Queue). No gameplay source changed.
+
 ## 2026-06-05T21:10:00+02:00 - Codex - Service/EASA affordability authority route
 
 - Claimed `service-easa-affordability-authority-route` from the patch-ready UI/economy backlog.

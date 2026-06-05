@@ -68,7 +68,7 @@ These have source-backed playbooks but are not current code fixes yet. Do not mi
 
 | Lane | Status | Canonical page | Why separate |
 | --- | --- | --- | --- |
-| Factory queue counter/token cleanup | Patch-ready, current code still carries the defect. | [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) | A code patch is still needed in `Client_BuildUnit.sqf` before propagation. |
+| Factory queue counter/token cleanup | Patch-ready, current code still carries both the queue-counter leak and low-entropy token; branch matrix refreshed 2026-06-05. | [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) | `perf/quick-wins` and release Chernarus patch only the crewless queue-counter leak; the FIFO token and maintained Vanilla propagation remain open. |
 | Commander reassignment call shape | Patch-ready, current code still carries the defect. | [Commander reassignment call shape](Commander-Reassignment-Call-Shape) | Needs a source edit plus one notification-owner decision. |
 | Construction small-site logic cleanup | Patch-ready, current code still carries the defect. | [Construction logic list cleanup](Construction-Logic-List-Cleanup) | Needs the one-line SmallSite add-to-remove edit, then Vanilla propagation and construction smoke. |
 | RHUD/endgame title display handle split | Patch-ready, current code still carries the defect. | [UI IDD collision repair](UI-IDD-Collision-Repair) | Needs a title display-variable split or RHUD/action-icon endgame gate before propagation; keep separate from broader UI IDD cleanup and smoke RHUD/action icons/endgame stat bars together. |

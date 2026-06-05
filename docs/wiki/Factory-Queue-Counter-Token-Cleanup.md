@@ -25,6 +25,18 @@ Two parts are fragile:
 
 The source line check on 2026-06-02 still shows both issues in source Chernarus. Do not treat this lane as patched until `Client_BuildUnit.sqf` changes and LoadoutManager propagation are both verified.
 
+## Current Branch Matrix
+
+| Root / branch | Queue-counter cleanup | FIFO token cleanup | Practical meaning |
+| --- | --- | --- | --- |
+| Current docs/source Chernarus | Still leaks on crewless-vehicle exit: `Client_BuildUnit.sqf:365` exits before the normal `unitQueu` / `WFBE_C_QUEUE_<type>` decrement at `:467-469`. | Still uses `_unique = varQueu; varQueu = random(10)+random(100)+random(1000)` at `:167-168`. | Patch-ready and source-unpatched. |
+| Maintained Vanilla Takistan | Same leak and token shape as Chernarus (`Client_BuildUnit.sqf:365`, `:467-469`, `:167-168`). | Same low-entropy token. | Must be propagated deliberately; a Chernarus-only fix is not enough. |
+| Stable `origin/master` / Miksuu upstream | Same source shape as current docs/source in Chernarus and Vanilla. | Same low-entropy token in both maintained roots. | No upstream rescue for this lane. |
+| `origin/perf/quick-wins` | Chernarus patches the crewless exit with the missing local queue decrement (`Client_BuildUnit.sqf:365-368`), but Vanilla remains unpatched. | Token remains unchanged (`:167-168`). | Useful patch candidate for DR-33a only; still needs Vanilla propagation and DR-33b token work. |
+| `origin/release/2026-06-feature-bundle` | Release Chernarus has the same class of crewless-exit cleanup plus a refund comment/path (`Client_BuildUnit.sqf:366-370`); release Vanilla remains unpatched. | Token remains unchanged in Chernarus and Vanilla (`:168-169` / `:167-168`). | Treat release as partial Chernarus queue-counter cleanup, not the full factory queue/token fix. |
+
+This branch split is why the first implementation should stay small: port or reimplement the crewless counter decrement, replace the token, then propagate maintained Vanilla and smoke both together.
+
 ## Suggested Patch Shape
 
 Keep this patch local and narrow:
@@ -78,6 +90,15 @@ Arma smoke:
 ## Handoff
 
 Future owner: patch the local queue accounting/token identity first, then decide whether the public `queu` broadcast should be reduced, converted to local UI state, or moved into a broader server-owned purchase queue redesign.
+
+## Agent Index Facts
+
+```json
+[
+  {"fact":"factory_queue_current_source_unpatched","source":"Client_BuildUnit.sqf:167-168,365,467-469","summary":"Current source Chernarus and maintained Vanilla still use low-entropy varQueu tokens and leak local queue counters on crewless vehicle exit."},
+  {"fact":"factory_queue_partial_branch_fixes","source":"origin/perf/quick-wins Client_BuildUnit.sqf:365-368; origin/release/2026-06-feature-bundle Client_BuildUnit.sqf:366-370","summary":"Perf quick-wins and release Chernarus patch the crewless queue-counter leak but leave the FIFO token unchanged and do not propagate maintained Vanilla."}
+]
+```
 
 ## Continue Reading
 
