@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T21:45:00+02:00",
+  "generatedAt": "2026-06-05T22:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed stale pruning-ledger lead wording so completed mirror parity, navigation inventory, Home/onboarding pruning, archive demotion and machine-file navigation work no longer read like open backlog.",
-      "nextExpectedOutput": "Continue source-backed wiki pruning/status upkeep; reopen navigation/onboarding work only from fresh evidence or a new user request."
+      "currentWork": "Compacted Progress Dashboard Latest Batch to the five newest published batches and routed older history to Agent Worklog, Discovery Swarm, agent-status, agent-events and git history.",
+      "nextExpectedOutput": "Continue source-backed wiki pruning/status upkeep; keep the dashboard current-state focused and move chronology to append-only history files."
     },
     "Codex-2": {
       "status": "ready",

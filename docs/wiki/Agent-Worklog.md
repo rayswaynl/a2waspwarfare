@@ -13,6 +13,12 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T22:05:00+02:00 - Codex - dashboard latest-batch compaction
+
+- Claimed `dashboard-latest-batch-compaction` after [Progress dashboard](Progress-Dashboard) `Latest Batch` had re-grown into a long history table.
+- Kept only the most recent five published batches on the dashboard and routed older published batches to this worklog, [Discovery swarm](Subagent-Discovery-Swarm), [`agent-status.json`](agent-status.json), [`agent-events.jsonl`](agent-events.jsonl) and git history.
+- Added the cleanup to [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger). No gameplay source changed.
+
 ## 2026-06-05T21:45:00+02:00 - Codex - pruning ledger lead-state closeout
 
 - Claimed `pruning-ledger-lead-state-closeout` after the pruning ledger still showed old scout "Fresh Backlog Leads" as suggested work even though later passes closed most of them.
