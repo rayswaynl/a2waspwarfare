@@ -13,6 +13,11 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T17:42:00+02:00 - Codex - stale upgrade dialog branch-scope
+
+- Source-checked stale `RscMenu_Upgrade`: current docs/source, `origin/master` and `miksuu/master` keep the missing `Client/GUI/GUI_Menu_Upgrade.sqf` onLoad in source Chernarus plus maintained Vanilla. `origin/release/2026-06-feature-bundle` includes `460c0312` removing the stale Chernarus class, but release Vanilla still carries it.
+- Updated [Dead/stale code register](Dead-Code-And-Stale-Code-Register), [Client UI systems](Client-UI-Systems-Atlas), [Upgrades and research](Upgrades-And-Research-Atlas), [Feature status](Feature-Status-Register), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) and [`agent-feature-status.jsonl`](agent-feature-status.jsonl) so future code owners treat this as a parity cleanup, not another broad discovery lane. No gameplay source changed.
+
 ## 2026-06-05T17:16:56+02:00 - Codex - commander ARTY release ledger sync
 
 - Source-checked `Construction_StationaryDefense.sqf`: docs/source Chernarus and maintained Vanilla both route manned artillery-class base-area defense gunners to the current commander team at `:91-93`; stable `origin/master` and release head `3282ff3f` do not.

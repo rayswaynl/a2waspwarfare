@@ -162,6 +162,8 @@ Do not confuse the live `WFBE_UpgradeMenu` with `RscMenu_Upgrade`.
 
 `Rsc/Dialogs.hpp:2424-2428` still defines `class RscMenu_Upgrade` with `onLoad = "_this ExecVM ""Client\GUI\GUI_Menu_Upgrade.sqf"""`, but the referenced script is absent. The live menu route creates `WFBE_UpgradeMenu`, not `RscMenu_Upgrade`. This is stale dialog archaeology, not the active upgrade system.
 
+Branch status as of 2026-06-05: docs/source, `origin/master` and `miksuu/master` still carry the stale class in both Chernarus and maintained Vanilla. The current release branch removed the stale Chernarus class in `460c0312` (`chore: remove orphan WF2 RscMenu_Upgrade dialog (IDD 18000)`), but maintained Vanilla on that branch still carries `RscMenu_Upgrade` and the missing `GUI_Menu_Upgrade.sqf` onLoad. If this cleanup is promoted, treat it as a parity task: remove or intentionally alias the old class in both maintained roots, then smoke the live `WFBE_UpgradeMenu` purchase/request path.
+
 Related page: [Abandoned Feature Revival Review](Abandoned-Feature-Revival-Review).
 
 ## Risk Register
@@ -173,7 +175,7 @@ Related page: [Abandoned Feature Revival Review](Abandoned-Feature-Revival-Revie
 | Patch-ready | AI commander upgrade worker appears to swap supply/funds when deducting after a successful validation. | `GUI_UpgradeMenu.sqf:139-159`; `Server_AI_Com_Upgrade.sqf:34-50` | Align AI deduction with the `[supply, funds]` convention before wiring a live AI commander upgrade scheduler. |
 | Research-needed | Config arrays may be length-misaligned around AAR/unit-cost. | `Init_CommonConstants.sqf:36-58`; representative `Upgrades_USMC.sqf` excerpt | Build a side-config validator before changing upgrade arrays or propagating generated missions. |
 | Partial | AI commander upgrade worker exists, but full autonomous scheduling remains unproven. | `Server_AI_Com_Upgrade.sqf:7-53`; [AI Commander Autonomy Audit](AI-Commander-Autonomy-Audit) | Treat AI upgrade flow as a useful worker, not as proof of a complete AI commander. |
-| Abandoned/stale | `RscMenu_Upgrade` references missing `GUI_Menu_Upgrade.sqf`. | `Rsc/Dialogs.hpp:2424-2428` | Keep it documented as stale unless intentionally deleting or reviving it. |
+| Abandoned/stale | `RscMenu_Upgrade` references missing `GUI_Menu_Upgrade.sqf`. | `Rsc/Dialogs.hpp:2424-2428`; release cleanup commit `460c0312` is Chernarus-only while release Vanilla remains stale. | Keep it documented as stale unless intentionally deleting or aliasing it across maintained roots. |
 
 ## Server-Authority Migration Plan
 
