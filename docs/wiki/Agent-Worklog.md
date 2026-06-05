@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-05T10:05:00+02:00 - Codex - dead code PV channel pass
+
+- Continued Steff's long-running dead-code detective goal with a direct public-variable sender/receiver scan.
+- Added `docs/analysis/dead-code-pv-channel-scan.ps1` and `docs/analysis/dead-code-pv-channel-scan.json`. Latest scan covered 2761 text files across `Missions`, `Missions_Vanilla` and `Modded_Missions`, finding 229 literal direct PV sender/receiver records: 190 active, 39 comment-only, 36 active channels, 13 active sender-only channels, 3 active receiver-only channels before source interpretation and 6 comment-only legacy channels.
+- Promoted source-backed findings into `docs/analysis/dead-code-findings.jsonl`, [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [Public variable channel index](Public-Variable-Channel-Index): old direct `WFBE_*` publicVariable names are comment-only PVF migration residue; `SERVER_FPS_GUI` is the source/Vanilla RHUD contract while `WFBE_VAR_SERVER_FPS` remains modded/stale compatibility drift; `ICBM_launched` is a receiver-only legacy PVEH while the current nuke path uses `NukeIncoming`, `RequestSpecial ["ICBM", ...]` and `HandleSpecial "icbm-display"`.
+- Added false-positive guardrails: dynamic `wfbe_supply_temp_%1` channels, BattlEye-handled `kickAFK`, state broadcasts and dynamic `WFBE_PVF_%1` registrations should not be treated as dead merely because the literal scan has no matching PVEH or sender.
+- No gameplay source files changed.
+
 ## 2026-06-05T09:25:00+02:00 - Codex - dead code integrations and tooling pass
 
 - Continued Steff's long-running dead-code detective goal beyond the first SQF/reference register.

@@ -28,7 +28,8 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
-| `dead-code-integrations-and-tooling-pass` | Published / validated / push pending | Deepened [Dead/stale code register](Dead-Code-And-Stale-Code-Register) with DiscordBot, Extension, BattlEye and LoadoutManager findings: dormant config/helper paths, unsafe dormant JSON helpers, commented extension deserialization scaffold, game-status arg-shape drift, DiscordBot/LoadoutManager terrain metadata drift, AFK-only BattlEye footprint and warning-marked CRV7PG loadout data. Validation passed. No gameplay source changed. |
+| `dead-code-pv-channel-pass` | Published / validated / pushed | Added direct public-variable scan evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [Public variable channel index](Public-Variable-Channel-Index): comment-only legacy `WFBE_*` direct PV names, `SERVER_FPS_GUI` / `WFBE_VAR_SERVER_FPS` compatibility drift, receiver-only `ICBM_launched` handler, plus false-positive guardrails for dynamic supply temp channels and state broadcasts. No gameplay source changed. |
+| `dead-code-integrations-and-tooling-pass` | Published / validated / pushed | Deepened [Dead/stale code register](Dead-Code-And-Stale-Code-Register) with DiscordBot, Extension, BattlEye and LoadoutManager findings: dormant config/helper paths, unsafe dormant JSON helpers, commented extension deserialization scaffold, game-status arg-shape drift, DiscordBot/LoadoutManager terrain metadata drift, AFK-only BattlEye footprint and warning-marked CRV7PG loadout data. Validation passed. No gameplay source changed. |
 | `dead-code-register` | Published / validated / pushed | Added [Dead/stale code register](Dead-Code-And-Stale-Code-Register) plus `docs/analysis/dead-code-findings.jsonl` and the repeatable reference scan. Current pass classifies stale comments, broken UI residue, MASH marker relay, latent `AIBuyUnit`, modded conflict markers, generated `version.sqf` and modded packaging scope. Validation passed. No gameplay source changed. |
 | `pruning-ledger-completion-audit` | Published / validated / pushed | Codex audited [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) against the current wiki state. P0/P1/P2 pruning rows are now recorded as completed, archive pages carry historical/current-truth caveats, and future gameplay hardening/release smoke/code-owner tasks are separated from the pruning goal. Validation passed. No gameplay source changed. |
 | `ui-runtime-quickref-pruning` | Published / validated / pushed | Most recent published pruning batch: UI/runtime gateways route to canonical owner pages and no longer repeat detailed proof. |
@@ -69,7 +70,8 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
-| `dead-code-integrations-and-tooling-pass` | Codex | Published / validated / push pending | Push the scoped docs/analysis update, then continue remaining dead-code objective scope in later passes. |
+| `dead-code-pv-channel-pass` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
+| `dead-code-integrations-and-tooling-pass` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
 | `dead-code-register` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
 | `pruning-ledger-completion-audit` | Codex | Published / validated / pushed | Ledger records all pruning-backlog rows as completed and dashboard is compacted to current-state use. |
 | `documentation-finisher-loop` | Codex | Active / ongoing | Keep the wiki current from source evidence after this pruning goal closes. |

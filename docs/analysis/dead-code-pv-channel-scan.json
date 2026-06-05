@@ -1,0 +1,4523 @@
+{
+  "generatedAt": "2026-06-05T09:11:55.9437450+02:00",
+  "roots": [
+    "Missions",
+    "Missions_Vanilla",
+    "Modded_Missions"
+  ],
+  "scannedFiles": 2761,
+  "totalRecords": 229,
+  "activeRecords": 190,
+  "commentOnlyRecords": 39,
+  "activeChannelCount": 36,
+  "activeSenderOnlyChannels": [
+    {
+      "channel": "CBA_display_ingame_warnings",
+      "activeSenderCount": 4,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "CBA_display_ingame_warnings",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\initJIPCompatible.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 25,
+          "commentOnly": false,
+          "text": "publicVariable \"CBA_display_ingame_warnings\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "CBA_display_ingame_warnings",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\initJIPCompatible.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 25,
+          "commentOnly": false,
+          "text": "publicVariable \"CBA_display_ingame_warnings\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "CBA_display_ingame_warnings",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\initJIPCompatible.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 25,
+          "commentOnly": false,
+          "text": "publicVariable \"CBA_display_ingame_warnings\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "CBA_display_ingame_warnings",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\initJIPCompatible.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 25,
+          "commentOnly": false,
+          "text": "publicVariable \"CBA_display_ingame_warnings\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "HQ_EAST_MARKER_INFOS",
+      "activeSenderCount": 6,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "HQ_EAST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 75,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_EAST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_EAST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 114,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_EAST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_EAST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 75,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_EAST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_EAST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 114,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_EAST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_EAST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 95,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_EAST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_EAST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 95,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_EAST_MARKER_INFOS\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "HQ_WEST_MARKER_INFOS",
+      "activeSenderCount": 6,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "HQ_WEST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 66,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_WEST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_WEST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 104,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_WEST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_WEST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 66,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_WEST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_WEST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 104,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_WEST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_WEST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 85,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_WEST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_WEST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 85,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_WEST_MARKER_INFOS\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "IS_EAST_HQ_ALIVE",
+      "activeSenderCount": 9,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 72,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 110,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 72,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 110,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 69,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 91,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 69,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 69,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 91,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "IS_WEST_HQ_ALIVE",
+      "activeSenderCount": 9,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 63,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 100,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 63,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 100,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 63,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 81,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 63,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 63,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 81,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "kickAFK",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "kickAFK",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\FSM\\updateclient.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 160,
+          "commentOnly": false,
+          "text": "publicVariable \"kickAFK\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "kickAFK",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\FSM\\updateclient.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 160,
+          "commentOnly": false,
+          "text": "publicVariable \"kickAFK\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "SERVER_FPS_GUI",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "SERVER_FPS_GUI",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\GUI\\serverFpsGUI.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 7,
+          "commentOnly": false,
+          "text": "publicVariable \"SERVER_FPS_GUI\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "SERVER_FPS_GUI",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\GUI\\serverFpsGUI.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 7,
+          "commentOnly": false,
+          "text": "publicVariable \"SERVER_FPS_GUI\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "SUPPLY_COMPENSATION_AMOUNT_EAST",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "SUPPLY_COMPENSATION_AMOUNT_EAST",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\AntiStack\\skillDiffCompensation.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 75,
+          "commentOnly": false,
+          "text": "publicVariable \"SUPPLY_COMPENSATION_AMOUNT_EAST\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "SUPPLY_COMPENSATION_AMOUNT_EAST",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\AntiStack\\skillDiffCompensation.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 75,
+          "commentOnly": false,
+          "text": "publicVariable \"SUPPLY_COMPENSATION_AMOUNT_EAST\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "SUPPLY_COMPENSATION_AMOUNT_WEST",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "SUPPLY_COMPENSATION_AMOUNT_WEST",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\AntiStack\\skillDiffCompensation.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 133,
+          "commentOnly": false,
+          "text": "publicVariable \"SUPPLY_COMPENSATION_AMOUNT_WEST\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "SUPPLY_COMPENSATION_AMOUNT_WEST",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\AntiStack\\skillDiffCompensation.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 133,
+          "commentOnly": false,
+          "text": "publicVariable \"SUPPLY_COMPENSATION_AMOUNT_WEST\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "TEAM_EAST_TICKS_NO_PLAYERS",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "TEAM_EAST_TICKS_NO_PLAYERS",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_StagnateSupplyIncomeNoPlayers.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 56,
+          "commentOnly": false,
+          "text": "publicVariable \"TEAM_EAST_TICKS_NO_PLAYERS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "TEAM_EAST_TICKS_NO_PLAYERS",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_StagnateSupplyIncomeNoPlayers.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 56,
+          "commentOnly": false,
+          "text": "publicVariable \"TEAM_EAST_TICKS_NO_PLAYERS\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "TEAM_WEST_TICKS_NO_PLAYERS",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "TEAM_WEST_TICKS_NO_PLAYERS",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_StagnateSupplyIncomeNoPlayers.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 55,
+          "commentOnly": false,
+          "text": "publicVariable \"TEAM_WEST_TICKS_NO_PLAYERS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "TEAM_WEST_TICKS_NO_PLAYERS",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_StagnateSupplyIncomeNoPlayers.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 55,
+          "commentOnly": false,
+          "text": "publicVariable \"TEAM_WEST_TICKS_NO_PLAYERS\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_PVF_%1",
+      "activeSenderCount": 30,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 17,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 20,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 18,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_SendToServer.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_SendToServerOptimized.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariableServer 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 17,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 20,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 18,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_SendToServer.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_SendToServerOptimized.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariableServer 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 17,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 20,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 18,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Common\\Functions\\Common_SendToServer.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableServer",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Common\\Functions\\Common_SendToServerOptimized.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariableServer 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 17,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 20,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 18,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Common\\Functions\\Common_SendToServer.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableServer",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Common\\Functions\\Common_SendToServerOptimized.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariableServer 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 17,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 20,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 18,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Common\\Functions\\Common_SendToServer.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableServer",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Common\\Functions\\Common_SendToServerOptimized.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariableServer 'WFBE_PVF_%1';\", _func];"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_VAR_SERVER_FPS",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_VAR_SERVER_FPS",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\serverFPS\\monitorServerFPS.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 6,
+          "commentOnly": false,
+          "text": "publicVariable \"WFBE_VAR_SERVER_FPS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_VAR_SERVER_FPS",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\serverFPS\\monitorServerFPS.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 6,
+          "commentOnly": false,
+          "text": "publicVariable \"WFBE_VAR_SERVER_FPS\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    }
+  ],
+  "activeReceiverOnlyChannels": [
+    {
+      "channel": "ICBM_launched",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "ICBM_launched",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\FSM\\updateclient.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 20,
+          "commentOnly": false,
+          "text": "\"ICBM_launched\" addPublicVariableEventHandler {_this call OnEventHandler_ICBM_Launch};"
+        },
+        {
+          "kind": "receiver",
+          "channel": "ICBM_launched",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\FSM\\updateclient.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 20,
+          "commentOnly": false,
+          "text": "\"ICBM_launched\" addPublicVariableEventHandler {_this call OnEventHandler_ICBM_Launch};"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "wfbe_supply_temp_east",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "wfbe_supply_temp_east",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_ChangeSideSupply.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 25,
+          "commentOnly": false,
+          "text": "\"wfbe_supply_temp_east\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "wfbe_supply_temp_east",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_ChangeSideSupply.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 25,
+          "commentOnly": false,
+          "text": "\"wfbe_supply_temp_east\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "wfbe_supply_temp_west",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "wfbe_supply_temp_west",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_ChangeSideSupply.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"wfbe_supply_temp_west\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "wfbe_supply_temp_west",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_ChangeSideSupply.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"wfbe_supply_temp_west\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    }
+  ],
+  "commentOnlyChannels": [
+    {
+      "channel": "WFBE_ChangeScore",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 5,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [],
+      "activeSenders": [],
+      "activeReceivers": [],
+      "commentOnlyReferences": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_ChangeScore",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\PVFunctions\\RequestChangeScore.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 11,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_ChangeScore';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_ChangeScore",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\PVFunctions\\RequestChangeScore.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 11,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_ChangeScore';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_ChangeScore",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Server\\PVFunctions\\RequestChangeScore.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 11,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_ChangeScore';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_ChangeScore",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Server\\PVFunctions\\RequestChangeScore.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 11,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_ChangeScore';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_ChangeScore",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Server\\PVFunctions\\RequestChangeScore.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 11,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_ChangeScore';"
+        }
+      ]
+    },
+    {
+      "channel": "WFBE_LocalizeMessage",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 10,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [],
+      "activeSenders": [],
+      "activeReceivers": [],
+      "commentOnlyReferences": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 126,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 146,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 126,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 146,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 126,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 146,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 126,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 146,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 126,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 146,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        }
+      ]
+    },
+    {
+      "channel": "WFBE_RequestSpecial",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 5,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [],
+      "activeSenders": [],
+      "activeReceivers": [],
+      "commentOnlyReferences": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestSpecial",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 94,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestSpecial';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestSpecial",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 94,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestSpecial';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestSpecial",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 94,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestSpecial';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestSpecial",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 94,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestSpecial';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestSpecial",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 94,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestSpecial';"
+        }
+      ]
+    },
+    {
+      "channel": "WFBE_RequestStructure",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 4,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [],
+      "activeSenders": [],
+      "activeReceivers": [],
+      "commentOnlyReferences": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestStructure",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Module\\CoIn\\coin_interface.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 492,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestStructure';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestStructure",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Module\\CoIn\\coin_interface.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 492,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestStructure';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestStructure",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\Module\\CoIn\\coin_interface.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 492,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestStructure';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestStructure",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\Module\\CoIn\\coin_interface.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 492,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestStructure';"
+        }
+      ]
+    },
+    {
+      "channel": "WFBE_RequestTeamUpdate",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 5,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [],
+      "activeSenders": [],
+      "activeReceivers": [],
+      "commentOnlyReferences": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestTeamUpdate",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\GUI\\GUI_Menu_Command.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 426,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestTeamUpdate';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestTeamUpdate",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\GUI\\GUI_Menu_Command.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 426,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestTeamUpdate';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestTeamUpdate",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\GUI\\GUI_Menu_Command.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 426,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestTeamUpdate';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestTeamUpdate",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\GUI\\GUI_Menu_Command.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 426,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestTeamUpdate';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestTeamUpdate",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\GUI\\GUI_Menu_Command.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 426,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestTeamUpdate';"
+        }
+      ]
+    },
+    {
+      "channel": "WFBE_RequestVehicleLock",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 10,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [],
+      "activeSenders": [],
+      "activeReceivers": [],
+      "commentOnlyReferences": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Action\\Action_ToggleMHQLock.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 8,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Module\\Skill\\Skill_SpecOps.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 50,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Action\\Action_ToggleMHQLock.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 8,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Module\\Skill\\Skill_SpecOps.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 50,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\Action\\Action_ToggleMHQLock.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 8,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\Module\\Skill\\Skill_SpecOps.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 50,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\Action\\Action_ToggleMHQLock.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 8,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\Module\\Skill\\Skill_SpecOps.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 50,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\Action\\Action_ToggleMHQLock.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 8,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\Module\\Skill\\Skill_SpecOps.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 50,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        }
+      ]
+    }
+  ],
+  "channels": [
+    {
+      "channel": "AFKthresholdExceededName",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "AFKthresholdExceededName",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Module\\AFKkick\\monitorAFK.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 25,
+          "commentOnly": false,
+          "text": "publicVariableServer \"AFKthresholdExceededName\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "AFKthresholdExceededName",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Module\\AFKkick\\monitorAFK.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 25,
+          "commentOnly": false,
+          "text": "publicVariableServer \"AFKthresholdExceededName\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "AFKthresholdExceededName",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\afkKick\\initAFKkickHandler.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 9,
+          "commentOnly": false,
+          "text": "\"AFKthresholdExceededName\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "AFKthresholdExceededName",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\afkKick\\initAFKkickHandler.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 9,
+          "commentOnly": false,
+          "text": "\"AFKthresholdExceededName\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "ATTACK_WAVE_DETAILS",
+      "activeSenderCount": 4,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "ATTACK_WAVE_DETAILS",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_AttackWave.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 27,
+          "commentOnly": false,
+          "text": "publicVariableServer \"ATTACK_WAVE_DETAILS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "ATTACK_WAVE_DETAILS",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_AttackWave.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 38,
+          "commentOnly": false,
+          "text": "publicVariableServer \"ATTACK_WAVE_DETAILS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "ATTACK_WAVE_DETAILS",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_AttackWave.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 27,
+          "commentOnly": false,
+          "text": "publicVariableServer \"ATTACK_WAVE_DETAILS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "ATTACK_WAVE_DETAILS",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_AttackWave.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 38,
+          "commentOnly": false,
+          "text": "publicVariableServer \"ATTACK_WAVE_DETAILS\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "ATTACK_WAVE_DETAILS",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\PVFunctions\\AttackWave.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 19,
+          "commentOnly": false,
+          "text": "\"ATTACK_WAVE_DETAILS\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "ATTACK_WAVE_DETAILS",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\PVFunctions\\AttackWave.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 19,
+          "commentOnly": false,
+          "text": "\"ATTACK_WAVE_DETAILS\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "ATTACK_WAVE_INIT",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "ATTACK_WAVE_INIT",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_AttackWaveActivate.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 8,
+          "commentOnly": false,
+          "text": "publicVariableServer \"ATTACK_WAVE_INIT\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "ATTACK_WAVE_INIT",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_AttackWaveActivate.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 8,
+          "commentOnly": false,
+          "text": "publicVariableServer \"ATTACK_WAVE_INIT\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "ATTACK_WAVE_INIT",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_AttackWave.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"ATTACK_WAVE_INIT\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "ATTACK_WAVE_INIT",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_AttackWave.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"ATTACK_WAVE_INIT\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "CBA_display_ingame_warnings",
+      "activeSenderCount": 4,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "CBA_display_ingame_warnings",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\initJIPCompatible.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 25,
+          "commentOnly": false,
+          "text": "publicVariable \"CBA_display_ingame_warnings\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "CBA_display_ingame_warnings",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\initJIPCompatible.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 25,
+          "commentOnly": false,
+          "text": "publicVariable \"CBA_display_ingame_warnings\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "CBA_display_ingame_warnings",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\initJIPCompatible.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 25,
+          "commentOnly": false,
+          "text": "publicVariable \"CBA_display_ingame_warnings\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "CBA_display_ingame_warnings",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\initJIPCompatible.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 25,
+          "commentOnly": false,
+          "text": "publicVariable \"CBA_display_ingame_warnings\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "CLIENT_INIT_READY",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "CLIENT_INIT_READY",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 962,
+          "commentOnly": false,
+          "text": "publicVariableServer \"CLIENT_INIT_READY\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "CLIENT_INIT_READY",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 962,
+          "commentOnly": false,
+          "text": "publicVariableServer \"CLIENT_INIT_READY\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "CLIENT_INIT_READY",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\PVFunctions\\AttackWave.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"CLIENT_INIT_READY\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "CLIENT_INIT_READY",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\PVFunctions\\AttackWave.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"CLIENT_INIT_READY\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "HQ_EAST_MARKER_INFOS",
+      "activeSenderCount": 6,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "HQ_EAST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 75,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_EAST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_EAST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 114,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_EAST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_EAST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 75,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_EAST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_EAST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 114,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_EAST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_EAST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 95,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_EAST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_EAST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 95,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_EAST_MARKER_INFOS\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "HQ_WEST_MARKER_INFOS",
+      "activeSenderCount": 6,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "HQ_WEST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 66,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_WEST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_WEST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 104,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_WEST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_WEST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 66,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_WEST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_WEST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 104,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_WEST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_WEST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 85,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_WEST_MARKER_INFOS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "HQ_WEST_MARKER_INFOS",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 85,
+          "commentOnly": false,
+          "text": "publicVariable \"HQ_WEST_MARKER_INFOS\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "ICBM_launched",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "ICBM_launched",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\FSM\\updateclient.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 20,
+          "commentOnly": false,
+          "text": "\"ICBM_launched\" addPublicVariableEventHandler {_this call OnEventHandler_ICBM_Launch};"
+        },
+        {
+          "kind": "receiver",
+          "channel": "ICBM_launched",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\FSM\\updateclient.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 20,
+          "commentOnly": false,
+          "text": "\"ICBM_launched\" addPublicVariableEventHandler {_this call OnEventHandler_ICBM_Launch};"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "IS_EAST_HQ_ALIVE",
+      "activeSenderCount": 9,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 72,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 110,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 72,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 110,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 69,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 91,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 69,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 69,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_EAST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 91,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_EAST_HQ_ALIVE\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "IS_WEST_HQ_ALIVE",
+      "activeSenderCount": 9,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 63,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 100,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 63,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 100,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 63,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 81,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 63,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Server\\Functions\\Server_MHQRepair.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 63,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "IS_WEST_HQ_ALIVE",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Server\\Functions\\Server_OnHQKilled.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 81,
+          "commentOnly": false,
+          "text": "publicVariable \"IS_WEST_HQ_ALIVE\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "kickAFK",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "kickAFK",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\FSM\\updateclient.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 160,
+          "commentOnly": false,
+          "text": "publicVariable \"kickAFK\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "kickAFK",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\FSM\\updateclient.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 160,
+          "commentOnly": false,
+          "text": "publicVariable \"kickAFK\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "MARKER_CREATION",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 4,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "MARKER_CREATION",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_CreateMarker.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 83,
+          "commentOnly": false,
+          "text": "publicVariable \"MARKER_CREATION\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "MARKER_CREATION",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_CreateMarker.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 83,
+          "commentOnly": false,
+          "text": "publicVariable \"MARKER_CREATION\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "MARKER_CREATION",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\FSM\\updateclient.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 16,
+          "commentOnly": false,
+          "text": "\"MARKER_CREATION\" addPublicVariableEventHandler {_this call onEventHandler_MARKER_CREATION};"
+        },
+        {
+          "kind": "receiver",
+          "channel": "MARKER_CREATION",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Functions\\Client_onEventHandler_MARKER_CREATION.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 5,
+          "commentOnly": false,
+          "text": "Parameters are given by the EH \"MARKER_CREATION\" addPublicVariableEventHandler"
+        },
+        {
+          "kind": "receiver",
+          "channel": "MARKER_CREATION",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\FSM\\updateclient.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 16,
+          "commentOnly": false,
+          "text": "\"MARKER_CREATION\" addPublicVariableEventHandler {_this call onEventHandler_MARKER_CREATION};"
+        },
+        {
+          "kind": "receiver",
+          "channel": "MARKER_CREATION",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Functions\\Client_onEventHandler_MARKER_CREATION.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 5,
+          "commentOnly": false,
+          "text": "Parameters are given by the EH \"MARKER_CREATION\" addPublicVariableEventHandler"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "PLAYER_RADIATED",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "PLAYER_RADIATED",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Module\\Nuke\\radzone.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 104,
+          "commentOnly": false,
+          "text": "publicVariable \"PLAYER_RADIATED\"; // will trigger the PLAYER_RADIATED addPublicVariableEventHandler."
+        },
+        {
+          "kind": "sender",
+          "channel": "PLAYER_RADIATED",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Module\\Nuke\\radzone.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 104,
+          "commentOnly": false,
+          "text": "publicVariable \"PLAYER_RADIATED\"; // will trigger the PLAYER_RADIATED addPublicVariableEventHandler."
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "PLAYER_RADIATED",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\FSM\\updateclient.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 24,
+          "commentOnly": false,
+          "text": "\"PLAYER_RADIATED\" addPublicVariableEventHandler {_this call OnEventHandler_player_radiated};"
+        },
+        {
+          "kind": "receiver",
+          "channel": "PLAYER_RADIATED",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\FSM\\updateclient.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 24,
+          "commentOnly": false,
+          "text": "\"PLAYER_RADIATED\" addPublicVariableEventHandler {_this call OnEventHandler_player_radiated};"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "REQUEST_SUPPLY_VALUE",
+      "activeSenderCount": 6,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "REQUEST_SUPPLY_VALUE",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_GetSideSupply.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 15,
+          "commentOnly": false,
+          "text": "publicVariableServer \"REQUEST_SUPPLY_VALUE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "REQUEST_SUPPLY_VALUE",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_GetSideSupply.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 28,
+          "commentOnly": false,
+          "text": "publicVariableServer \"REQUEST_SUPPLY_VALUE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "REQUEST_SUPPLY_VALUE",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_GetSideSupply.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 41,
+          "commentOnly": false,
+          "text": "publicVariableServer \"REQUEST_SUPPLY_VALUE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "REQUEST_SUPPLY_VALUE",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_GetSideSupply.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 15,
+          "commentOnly": false,
+          "text": "publicVariableServer \"REQUEST_SUPPLY_VALUE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "REQUEST_SUPPLY_VALUE",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_GetSideSupply.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 28,
+          "commentOnly": false,
+          "text": "publicVariableServer \"REQUEST_SUPPLY_VALUE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "REQUEST_SUPPLY_VALUE",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_GetSideSupply.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 41,
+          "commentOnly": false,
+          "text": "publicVariableServer \"REQUEST_SUPPLY_VALUE\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "REQUEST_SUPPLY_VALUE",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_PV_RequestSupplyValue.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"REQUEST_SUPPLY_VALUE\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "REQUEST_SUPPLY_VALUE",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_PV_RequestSupplyValue.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"REQUEST_SUPPLY_VALUE\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "SEND_MESSAGE",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 4,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "SEND_MESSAGE",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_SendMessage.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 38,
+          "commentOnly": false,
+          "text": "publicVariable \"SEND_MESSAGE\"; // will trigger the SEND_MESSAGE addPublicVariableEventHandler"
+        },
+        {
+          "kind": "sender",
+          "channel": "SEND_MESSAGE",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_SendMessage.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 38,
+          "commentOnly": false,
+          "text": "publicVariable \"SEND_MESSAGE\"; // will trigger the SEND_MESSAGE addPublicVariableEventHandler"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "SEND_MESSAGE",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\FSM\\updateclient.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 12,
+          "commentOnly": false,
+          "text": "\"SEND_MESSAGE\" addPublicVariableEventHandler {_this call onEventHandler_SEND_MESSAGE};"
+        },
+        {
+          "kind": "receiver",
+          "channel": "SEND_MESSAGE",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Functions\\Client_onEventHandler_SEND_MESSAGE.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 5,
+          "commentOnly": false,
+          "text": "Parameters are given by the EH \"SEND_MESSAGE\" addPublicVariableEventHandler"
+        },
+        {
+          "kind": "receiver",
+          "channel": "SEND_MESSAGE",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\FSM\\updateclient.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 12,
+          "commentOnly": false,
+          "text": "\"SEND_MESSAGE\" addPublicVariableEventHandler {_this call onEventHandler_SEND_MESSAGE};"
+        },
+        {
+          "kind": "receiver",
+          "channel": "SEND_MESSAGE",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Functions\\Client_onEventHandler_SEND_MESSAGE.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 5,
+          "commentOnly": false,
+          "text": "Parameters are given by the EH \"SEND_MESSAGE\" addPublicVariableEventHandler"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "SERVER_FPS_GUI",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "SERVER_FPS_GUI",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\GUI\\serverFpsGUI.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 7,
+          "commentOnly": false,
+          "text": "publicVariable \"SERVER_FPS_GUI\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "SERVER_FPS_GUI",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\GUI\\serverFpsGUI.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 7,
+          "commentOnly": false,
+          "text": "publicVariable \"SERVER_FPS_GUI\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "SUPPLY_COMPENSATION_AMOUNT_EAST",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "SUPPLY_COMPENSATION_AMOUNT_EAST",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\AntiStack\\skillDiffCompensation.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 75,
+          "commentOnly": false,
+          "text": "publicVariable \"SUPPLY_COMPENSATION_AMOUNT_EAST\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "SUPPLY_COMPENSATION_AMOUNT_EAST",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\AntiStack\\skillDiffCompensation.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 75,
+          "commentOnly": false,
+          "text": "publicVariable \"SUPPLY_COMPENSATION_AMOUNT_EAST\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "SUPPLY_COMPENSATION_AMOUNT_WEST",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "SUPPLY_COMPENSATION_AMOUNT_WEST",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\AntiStack\\skillDiffCompensation.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 133,
+          "commentOnly": false,
+          "text": "publicVariable \"SUPPLY_COMPENSATION_AMOUNT_WEST\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "SUPPLY_COMPENSATION_AMOUNT_WEST",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\AntiStack\\skillDiffCompensation.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 133,
+          "commentOnly": false,
+          "text": "publicVariable \"SUPPLY_COMPENSATION_AMOUNT_WEST\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "SUPPLY_VALUE_REQUESTED",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "SUPPLY_VALUE_REQUESTED",
+          "function": "publicVariableClient",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_PV_RequestSupplyValue.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 8,
+          "commentOnly": false,
+          "text": "(owner _player) publicVariableClient \"SUPPLY_VALUE_REQUESTED\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "SUPPLY_VALUE_REQUESTED",
+          "function": "publicVariableClient",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_PV_RequestSupplyValue.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 8,
+          "commentOnly": false,
+          "text": "(owner _player) publicVariableClient \"SUPPLY_VALUE_REQUESTED\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "SUPPLY_VALUE_REQUESTED",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Functions\\Client_ReceiveSupplyValue.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"SUPPLY_VALUE_REQUESTED\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "SUPPLY_VALUE_REQUESTED",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Functions\\Client_ReceiveSupplyValue.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"SUPPLY_VALUE_REQUESTED\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "TEAM_EAST_TICKS_NO_PLAYERS",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "TEAM_EAST_TICKS_NO_PLAYERS",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_StagnateSupplyIncomeNoPlayers.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 56,
+          "commentOnly": false,
+          "text": "publicVariable \"TEAM_EAST_TICKS_NO_PLAYERS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "TEAM_EAST_TICKS_NO_PLAYERS",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_StagnateSupplyIncomeNoPlayers.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 56,
+          "commentOnly": false,
+          "text": "publicVariable \"TEAM_EAST_TICKS_NO_PLAYERS\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "TEAM_WEST_TICKS_NO_PLAYERS",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "TEAM_WEST_TICKS_NO_PLAYERS",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_StagnateSupplyIncomeNoPlayers.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 55,
+          "commentOnly": false,
+          "text": "publicVariable \"TEAM_WEST_TICKS_NO_PLAYERS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "TEAM_WEST_TICKS_NO_PLAYERS",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_StagnateSupplyIncomeNoPlayers.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 55,
+          "commentOnly": false,
+          "text": "publicVariable \"TEAM_WEST_TICKS_NO_PLAYERS\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_C_PLAYER_OBJECT",
+      "activeSenderCount": 5,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_C_PLAYER_OBJECT",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 760,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_C_PLAYER_OBJECT\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_C_PLAYER_OBJECT",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 760,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_C_PLAYER_OBJECT\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_C_PLAYER_OBJECT",
+          "function": "publicVariableServer",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 656,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_C_PLAYER_OBJECT\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_C_PLAYER_OBJECT",
+          "function": "publicVariableServer",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 656,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_C_PLAYER_OBJECT\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_C_PLAYER_OBJECT",
+          "function": "publicVariableServer",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 656,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_C_PLAYER_OBJECT\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "WFBE_C_PLAYER_OBJECT",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\supplyMission\\playerObjectsList.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_C_PLAYER_OBJECT\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "WFBE_C_PLAYER_OBJECT",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\supplyMission\\playerObjectsList.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_C_PLAYER_OBJECT\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_ChangeScore",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 5,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [],
+      "activeSenders": [],
+      "activeReceivers": [],
+      "commentOnlyReferences": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_ChangeScore",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\PVFunctions\\RequestChangeScore.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 11,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_ChangeScore';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_ChangeScore",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\PVFunctions\\RequestChangeScore.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 11,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_ChangeScore';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_ChangeScore",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Server\\PVFunctions\\RequestChangeScore.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 11,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_ChangeScore';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_ChangeScore",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Server\\PVFunctions\\RequestChangeScore.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 11,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_ChangeScore';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_ChangeScore",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Server\\PVFunctions\\RequestChangeScore.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 11,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_ChangeScore';"
+        }
+      ]
+    },
+    {
+      "channel": "WFBE_CL_MASH_MARKER_CREATED",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_CL_MASH_MARKER_CREATED",
+          "function": "publicVariableServer",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\Module\\Skill\\Skill_Officer.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 40,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_CL_MASH_MARKER_CREATED\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_CL_MASH_MARKER_CREATED",
+          "function": "publicVariableServer",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\Module\\Skill\\Skill_Officer.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 40,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_CL_MASH_MARKER_CREATED\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "WFBE_CL_MASH_MARKER_CREATED",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\MASH\\MASHMarker.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_CL_MASH_MARKER_CREATED\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "WFBE_CL_MASH_MARKER_CREATED",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\MASH\\MASHMarker.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_CL_MASH_MARKER_CREATED\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH",
+      "activeSenderCount": 4,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 443,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 454,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 443,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 454,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\AntiStack\\clientHasConnectedAtLaunch.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\AntiStack\\clientHasConnectedAtLaunch.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_Client_PV_IsSupplyMissionActiveInTown",
+      "activeSenderCount": 9,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_Client_PV_IsSupplyMissionActiveInTown",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 768,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Client_PV_IsSupplyMissionActiveInTown\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Client_PV_IsSupplyMissionActiveInTown",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Module\\supplyMission\\supplyMissionStart.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 7,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Client_PV_IsSupplyMissionActiveInTown\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Client_PV_IsSupplyMissionActiveInTown",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Module\\supplyMission\\supplyMissionStart.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 49,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Client_PV_IsSupplyMissionActiveInTown\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Client_PV_IsSupplyMissionActiveInTown",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 768,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Client_PV_IsSupplyMissionActiveInTown\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Client_PV_IsSupplyMissionActiveInTown",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Module\\supplyMission\\supplyMissionStart.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 7,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Client_PV_IsSupplyMissionActiveInTown\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Client_PV_IsSupplyMissionActiveInTown",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Module\\supplyMission\\supplyMissionStart.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 49,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Client_PV_IsSupplyMissionActiveInTown\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Client_PV_IsSupplyMissionActiveInTown",
+          "function": "publicVariableServer",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 664,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Client_PV_IsSupplyMissionActiveInTown\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Client_PV_IsSupplyMissionActiveInTown",
+          "function": "publicVariableServer",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 664,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Client_PV_IsSupplyMissionActiveInTown\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Client_PV_IsSupplyMissionActiveInTown",
+          "function": "publicVariableServer",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\Init\\Init_Client.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 664,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Client_PV_IsSupplyMissionActiveInTown\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "WFBE_Client_PV_IsSupplyMissionActiveInTown",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\supplyMission\\isSupplyMissionActiveInTown.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_Client_PV_IsSupplyMissionActiveInTown\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "WFBE_Client_PV_IsSupplyMissionActiveInTown",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\supplyMission\\isSupplyMissionActiveInTown.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_Client_PV_IsSupplyMissionActiveInTown\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_Client_PV_SupplyMissionStarted",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_Client_PV_SupplyMissionStarted",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Module\\supplyMission\\supplyMissionStart.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 39,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Client_PV_SupplyMissionStarted\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Client_PV_SupplyMissionStarted",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Module\\supplyMission\\supplyMissionStart.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 39,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Client_PV_SupplyMissionStarted\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "WFBE_Client_PV_SupplyMissionStarted",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\supplyMission\\supplyMissionStarted.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_Client_PV_SupplyMissionStarted\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "WFBE_Client_PV_SupplyMissionStarted",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\supplyMission\\supplyMissionStarted.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_Client_PV_SupplyMissionStarted\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_DAYNIGHT_DATE",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_DAYNIGHT_DATE",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_DayNightCycle.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 89,
+          "commentOnly": false,
+          "text": "publicVariable \"WFBE_DAYNIGHT_DATE\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_DAYNIGHT_DATE",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_DayNightCycle.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 89,
+          "commentOnly": false,
+          "text": "publicVariable \"WFBE_DAYNIGHT_DATE\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "WFBE_DAYNIGHT_DATE",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\initJIPCompatible.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 176,
+          "commentOnly": false,
+          "text": "\"WFBE_DAYNIGHT_DATE\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "WFBE_DAYNIGHT_DATE",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\initJIPCompatible.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 176,
+          "commentOnly": false,
+          "text": "\"WFBE_DAYNIGHT_DATE\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_LocalizeMessage",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 10,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [],
+      "activeSenders": [],
+      "activeReceivers": [],
+      "commentOnlyReferences": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 126,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 146,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 126,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 146,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 126,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 146,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 126,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 146,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 126,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_LocalizeMessage",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 146,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_LocalizeMessage';"
+        }
+      ]
+    },
+    {
+      "channel": "WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK",
+          "function": "publicVariableClient",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\AntiStack\\clientHasConnectedAtLaunch.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 15,
+          "commentOnly": false,
+          "text": "(owner _player) publicVariableClient \"WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK",
+          "function": "publicVariableClient",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\AntiStack\\clientHasConnectedAtLaunch.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 15,
+          "commentOnly": false,
+          "text": "(owner _player) publicVariableClient \"WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Module\\AntiStack\\hasConnectedAtLaunchACK.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Module\\AntiStack\\hasConnectedAtLaunchACK.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_PVF_%1",
+      "activeSenderCount": 30,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 17,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 20,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 18,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_SendToServer.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Common\\Functions\\Common_SendToServerOptimized.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariableServer 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 17,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 20,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 18,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_SendToServer.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Common\\Functions\\Common_SendToServerOptimized.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariableServer 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 17,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 20,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 18,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Common\\Functions\\Common_SendToServer.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableServer",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Common\\Functions\\Common_SendToServerOptimized.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariableServer 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 17,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 20,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 18,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Common\\Functions\\Common_SendToServer.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableServer",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Common\\Functions\\Common_SendToServerOptimized.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariableServer 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 17,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableClient",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Common\\Functions\\Common_SendToClient.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 20,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Common\\Functions\\Common_SendToClients.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 18,
+          "commentOnly": false,
+          "text": "if (isMultiplayer) then {Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func]};"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Common\\Functions\\Common_SendToServer.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariable 'WFBE_PVF_%1';\", _func];"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_PVF_%1",
+          "function": "publicVariableServer",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Common\\Functions\\Common_SendToServerOptimized.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 15,
+          "commentOnly": false,
+          "text": "Call Compile Format [\"WFBE_PVF_%1 = _pvf; publicVariableServer 'WFBE_PVF_%1';\", _func];"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_RequestSpecial",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 5,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [],
+      "activeSenders": [],
+      "activeReceivers": [],
+      "commentOnlyReferences": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestSpecial",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 94,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestSpecial';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestSpecial",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 94,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestSpecial';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestSpecial",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 94,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestSpecial';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestSpecial",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 94,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestSpecial';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestSpecial",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\GUI\\GUI_Menu_Economy.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 94,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestSpecial';"
+        }
+      ]
+    },
+    {
+      "channel": "WFBE_RequestStructure",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 4,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [],
+      "activeSenders": [],
+      "activeReceivers": [],
+      "commentOnlyReferences": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestStructure",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Module\\CoIn\\coin_interface.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 492,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestStructure';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestStructure",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Module\\CoIn\\coin_interface.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 492,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestStructure';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestStructure",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\Module\\CoIn\\coin_interface.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 492,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestStructure';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestStructure",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\Module\\CoIn\\coin_interface.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 492,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestStructure';"
+        }
+      ]
+    },
+    {
+      "channel": "WFBE_RequestTeamUpdate",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 5,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [],
+      "activeSenders": [],
+      "activeReceivers": [],
+      "commentOnlyReferences": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestTeamUpdate",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\GUI\\GUI_Menu_Command.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 426,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestTeamUpdate';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestTeamUpdate",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\GUI\\GUI_Menu_Command.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 426,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestTeamUpdate';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestTeamUpdate",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\GUI\\GUI_Menu_Command.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 426,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestTeamUpdate';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestTeamUpdate",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\GUI\\GUI_Menu_Command.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 426,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestTeamUpdate';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestTeamUpdate",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\GUI\\GUI_Menu_Command.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 426,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestTeamUpdate';"
+        }
+      ]
+    },
+    {
+      "channel": "WFBE_RequestVehicleLock",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 10,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [],
+      "activeSenders": [],
+      "activeReceivers": [],
+      "commentOnlyReferences": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Action\\Action_ToggleMHQLock.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 8,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Module\\Skill\\Skill_SpecOps.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 50,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Action\\Action_ToggleMHQLock.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 8,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Module\\Skill\\Skill_SpecOps.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 50,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\Action\\Action_ToggleMHQLock.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 8,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.eden\\Client\\Module\\Skill\\Skill_SpecOps.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.eden",
+          "line": 50,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\Action\\Action_ToggleMHQLock.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 8,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.lingor\\Client\\Module\\Skill\\Skill_SpecOps.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor",
+          "line": 50,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\Action\\Action_ToggleMHQLock.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 8,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_RequestVehicleLock",
+          "function": "publicVariable",
+          "source": "Modded_Missions\\[55-2hc]warfarev2_073v48co.Napf\\Client\\Module\\Skill\\Skill_SpecOps.sqf",
+          "missionRoot": "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf",
+          "line": 50,
+          "commentOnly": true,
+          "text": "// publicVariable 'WFBE_RequestVehicleLock';"
+        }
+      ]
+    },
+    {
+      "channel": "WFBE_SE_MASH_MARKER_SENT",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_SE_MASH_MARKER_SENT",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\MASH\\MASHMarker.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 11,
+          "commentOnly": false,
+          "text": "publicVariable \"WFBE_SE_MASH_MARKER_SENT\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_SE_MASH_MARKER_SENT",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\MASH\\MASHMarker.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 11,
+          "commentOnly": false,
+          "text": "publicVariable \"WFBE_SE_MASH_MARKER_SENT\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "WFBE_SE_MASH_MARKER_SENT",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Module\\MASH\\receiverMASHmarker.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_SE_MASH_MARKER_SENT\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "WFBE_SE_MASH_MARKER_SENT",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Module\\MASH\\receiverMASHmarker.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_SE_MASH_MARKER_SENT\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_Server_PV_IsSupplyMissionActiveInTown",
+      "activeSenderCount": 4,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_Server_PV_IsSupplyMissionActiveInTown",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\supplyMission\\isSupplyMissionActiveInTown.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 18,
+          "commentOnly": false,
+          "text": "publicVariable \"WFBE_Server_PV_IsSupplyMissionActiveInTown\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Server_PV_IsSupplyMissionActiveInTown",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\supplyMission\\supplyMissionTimerForTown.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 9,
+          "commentOnly": false,
+          "text": "publicVariable \"WFBE_Server_PV_IsSupplyMissionActiveInTown\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Server_PV_IsSupplyMissionActiveInTown",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\supplyMission\\isSupplyMissionActiveInTown.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 18,
+          "commentOnly": false,
+          "text": "publicVariable \"WFBE_Server_PV_IsSupplyMissionActiveInTown\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Server_PV_IsSupplyMissionActiveInTown",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\supplyMission\\supplyMissionTimerForTown.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 9,
+          "commentOnly": false,
+          "text": "publicVariable \"WFBE_Server_PV_IsSupplyMissionActiveInTown\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "WFBE_Server_PV_IsSupplyMissionActiveInTown",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Module\\supplyMission\\townSupplyStatus.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_Server_PV_IsSupplyMissionActiveInTown\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "WFBE_Server_PV_IsSupplyMissionActiveInTown",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Module\\supplyMission\\townSupplyStatus.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"WFBE_Server_PV_IsSupplyMissionActiveInTown\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_Server_PV_SupplyMissionCompleted",
+      "activeSenderCount": 4,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_Server_PV_SupplyMissionCompleted",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\supplyMission\\supplyMissionActive.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 58,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Server_PV_SupplyMissionCompleted\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Server_PV_SupplyMissionCompleted",
+          "function": "publicVariableServer",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\supplyMission\\supplyMissionStarted.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 65,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Server_PV_SupplyMissionCompleted\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Server_PV_SupplyMissionCompleted",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\supplyMission\\supplyMissionActive.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 58,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Server_PV_SupplyMissionCompleted\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Server_PV_SupplyMissionCompleted",
+          "function": "publicVariableServer",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\supplyMission\\supplyMissionStarted.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 65,
+          "commentOnly": false,
+          "text": "publicVariableServer \"WFBE_Server_PV_SupplyMissionCompleted\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "WFBE_Server_PV_SupplyMissionCompleted",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\supplyMission\\supplyMissionCompleted.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 2,
+          "commentOnly": false,
+          "text": "\"WFBE_Server_PV_SupplyMissionCompleted\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "WFBE_Server_PV_SupplyMissionCompleted",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\supplyMission\\supplyMissionCompleted.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 2,
+          "commentOnly": false,
+          "text": "\"WFBE_Server_PV_SupplyMissionCompleted\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_Server_PV_SupplyMissionCompletedMessage",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_Server_PV_SupplyMissionCompletedMessage",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\supplyMission\\supplyMissionCompleted.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 34,
+          "commentOnly": false,
+          "text": "publicVariable \"WFBE_Server_PV_SupplyMissionCompletedMessage\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_Server_PV_SupplyMissionCompletedMessage",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\supplyMission\\supplyMissionCompleted.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 34,
+          "commentOnly": false,
+          "text": "publicVariable \"WFBE_Server_PV_SupplyMissionCompletedMessage\";"
+        }
+      ],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "WFBE_Server_PV_SupplyMissionCompletedMessage",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Client\\Module\\supplyMission\\supplyMissionCompletedMessage.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 2,
+          "commentOnly": false,
+          "text": "\"WFBE_Server_PV_SupplyMissionCompletedMessage\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "WFBE_Server_PV_SupplyMissionCompletedMessage",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Client\\Module\\supplyMission\\supplyMissionCompletedMessage.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 2,
+          "commentOnly": false,
+          "text": "\"WFBE_Server_PV_SupplyMissionCompletedMessage\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "wfbe_supply_temp_east",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "wfbe_supply_temp_east",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_ChangeSideSupply.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 25,
+          "commentOnly": false,
+          "text": "\"wfbe_supply_temp_east\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "wfbe_supply_temp_east",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_ChangeSideSupply.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 25,
+          "commentOnly": false,
+          "text": "\"wfbe_supply_temp_east\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "wfbe_supply_temp_west",
+      "activeSenderCount": 0,
+      "activeReceiverCount": 2,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [],
+      "activeReceivers": [
+        {
+          "kind": "receiver",
+          "channel": "wfbe_supply_temp_west",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Functions\\Server_ChangeSideSupply.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"wfbe_supply_temp_west\" addPublicVariableEventHandler {"
+        },
+        {
+          "kind": "receiver",
+          "channel": "wfbe_supply_temp_west",
+          "function": "addPublicVariableEventHandler",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Functions\\Server_ChangeSideSupply.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 1,
+          "commentOnly": false,
+          "text": "\"wfbe_supply_temp_west\" addPublicVariableEventHandler {"
+        }
+      ],
+      "commentOnlyReferences": []
+    },
+    {
+      "channel": "WFBE_VAR_SERVER_FPS",
+      "activeSenderCount": 2,
+      "activeReceiverCount": 0,
+      "commentSenderCount": 0,
+      "commentReceiverCount": 0,
+      "activeMissionRoots": [
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+      ],
+      "activeSenders": [
+        {
+          "kind": "sender",
+          "channel": "WFBE_VAR_SERVER_FPS",
+          "function": "publicVariable",
+          "source": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\Module\\serverFPS\\monitorServerFPS.sqf",
+          "missionRoot": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+          "line": 6,
+          "commentOnly": false,
+          "text": "publicVariable \"WFBE_VAR_SERVER_FPS\";"
+        },
+        {
+          "kind": "sender",
+          "channel": "WFBE_VAR_SERVER_FPS",
+          "function": "publicVariable",
+          "source": "Missions_Vanilla\\[61-2hc]warfarev2_073v48co.takistan\\Server\\Module\\serverFPS\\monitorServerFPS.sqf",
+          "missionRoot": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+          "line": 6,
+          "commentOnly": false,
+          "text": "publicVariable \"WFBE_VAR_SERVER_FPS\";"
+        }
+      ],
+      "activeReceivers": [],
+      "commentOnlyReferences": []
+    }
+  ]
+}

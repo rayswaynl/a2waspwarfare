@@ -8,6 +8,8 @@ Machine-readable findings live in `docs/analysis/dead-code-findings.jsonl`. The 
 
 Integration/tooling evidence is captured by `docs/analysis/dead-code-integration-scan.ps1`, with the latest output in `docs/analysis/dead-code-integration-scan.json`.
 
+Direct public-variable channel evidence is captured by `docs/analysis/dead-code-pv-channel-scan.ps1`, with the latest output in `docs/analysis/dead-code-pv-channel-scan.json`.
+
 ## Scan Snapshot
 
 Latest local scan:
@@ -32,6 +34,19 @@ Latest integration/tooling scan:
 | Serializer hits | DiscordBot active `TypeNameHandling.All`, DiscordBot dormant `.Auto` helper, Extension active `.None`, Extension commented `.Auto` scaffold |
 | Tooling drift hits | Commented modded generation call, modded packaging omission, DiscordBot/LoadoutManager terrain metadata drift |
 
+Latest direct public-variable channel scan:
+
+| Item | Value |
+| --- | --- |
+| Roots scanned | `Missions`, `Missions_Vanilla`, `Modded_Missions` |
+| Text files scanned | 2761 |
+| Direct PV sender/receiver records | 229 total, 190 active, 39 comment-only |
+| Active direct channels | 36 |
+| Active sender-only channels | 13, many are state broadcasts or external-filter channels |
+| Active receiver-only channels | 3 before source interpretation: `ICBM_launched`, `wfbe_supply_temp_east`, `wfbe_supply_temp_west` |
+| Comment-only channels | 6 legacy direct `WFBE_*` names |
+| Generated artifact | `docs/analysis/dead-code-pv-channel-scan.json` |
+
 Scanner caveats:
 
 - The scanner intentionally finds leads, not final truth.
@@ -40,6 +55,7 @@ Scanner caveats:
 - Commented-out references are usually cleanup/documentation candidates, not runtime failures.
 - Includes inside subfolders can be relative to the including file, while the first scanner pass resolves quoted paths from the mission root.
 - Modded missions are out of the current LoadoutManager release pack path, so modded breakage is real source debt but not necessarily current release breakage.
+- A direct PV channel with no `addPublicVariableEventHandler` is not automatically dead. Some channels are state variables read via `missionNamespace getVariable`, some are BattlEye/filter hooks, and some sender names are dynamic `format` expressions that need source interpretation.
 
 ## Classification Rules
 
@@ -52,6 +68,9 @@ Scanner caveats:
 | `broken-modded-source-reference` | Broken in old/generated/modded mission roots. | Fix only when modded maps re-enter release scope. |
 | `generated-file-contract-risk` | Looks missing in source but is produced by tooling. | Document and validate workflow, do not delete. |
 | `stale-or-malformed-resource-config` | Resource/config code appears malformed or outdated. | Runtime/config smoke before editing. |
+| `comment-only-legacy-direct-pv` | Old direct publicVariable channel names survive only in comments after migration to PVF/helper calls. | Remove or annotate comments after branch-aware search. |
+| `duplicate-compatibility-channel` | Two channels publish similar state, but one may still serve stale/modded consumers. | Consolidate only after compatibility policy is decided. |
+| `receiver-only-legacy-event-handler` | A live event handler waits on a channel with no active sender found in maintained source. | Treat as stale wiring until runtime/branch smoke proves otherwise. |
 
 ## Current Findings
 
@@ -87,6 +106,23 @@ Scanner caveats:
 | `battleye-afk-only-filter-footprint` | Misleading deployment-hardening footprint | Tracked BattlEye files are the README docx and `publicvariable.txt`; the filter contains only `5 "kickAFK"` and matches the AFK FSM broadcast. | Keep as AFK feature plumbing; do not claim broad public-server hardening without production `BEpath` evidence. |
 | `loadoutmanager-dangerous-crv7pg-warning-used` | Misleading dangerous data, not dead | `WARNING_GAME_CRASH_DO_NOT_USE_IN_LOADOUTS_*` classes exist and `WILDCAT.cs:37` references one. | Do not delete as dead. Remove/replace the WILDCAT reference or make the generator fail on warning-marked loadouts, then smoke in Arma 2 OA. |
 
+## Direct Public-Variable Findings
+
+These are source-interpreted findings from the direct sender/receiver scan. The raw scan is intentionally conservative: it only records literal `publicVariable* "NAME"` and `"NAME" addPublicVariableEventHandler` lines. Dynamic channel names and variable-state broadcasts require human review.
+
+| ID | Classification | Evidence | Action |
+| --- | --- | --- | --- |
+| `direct-pv-comment-only-legacy-channels` | Comment-only legacy direct PV | The scan found six direct `WFBE_*` channels only in comments: `WFBE_ChangeScore`, `WFBE_LocalizeMessage`, `WFBE_RequestSpecial`, `WFBE_RequestStructure`, `WFBE_RequestTeamUpdate`, `WFBE_RequestVehicleLock`. Example source rows sit beside `HandleSPVF`, `WFBE_CO_FNC_SendToServer`, `WFBE_CO_FNC_SendToClients` or PVF registrations in `Common/Init/Init_PublicVariables.sqf`. | Safe comment cleanup or annotation after branch-aware search. Keep the PVF registrations and helper calls. |
+| `server-fps-dual-channel-drift` | Duplicate compatibility channel | `Server/GUI/serverFpsGUI.sqf:7` publishes `SERVER_FPS_GUI`; `Server/Module/serverFPS/monitorServerFPS.sqf:6` publishes `WFBE_VAR_SERVER_FPS`; source/Vanilla RHUD reads `SERVER_FPS_GUI`; Lingor modded RHUD still has a `WFBE_VAR_SERVER_FPS` wait/read path. | Treat `SERVER_FPS_GUI` as source/Vanilla UI contract. Consolidate only after modded/stale consumers are migrated or archived. |
+| `icbm-launched-pveh-receiver-only` | Receiver-only legacy event handler | Source/Vanilla `Client/FSM/updateclient.sqf:20` registers `"ICBM_launched" addPublicVariableEventHandler`, but no active sender was found. Current tactical nuke flow spawns `NukeIncoming`, sends `RequestSpecial` `"ICBM"` to the server, and broadcasts `HandleSpecial` `"icbm-display"` to clients. | Do not delete ICBM. Either retire the stale `ICBM_launched` handler/receiver docs or revive it deliberately with one sender and one documented notification path. |
+
+Source-checked false positives from this pass:
+
+- `wfbe_supply_temp_east` and `wfbe_supply_temp_west` look receiver-only to the literal scan, but `Common_ChangeSideSupply.sqf:28-30` creates/sends them through `format ["wfbe_supply_temp_%1", _side]`.
+- `kickAFK` looks sender-only because it is handled by the BattlEye `publicvariable.txt` filter rather than an SQF PVEH.
+- HQ alive, HQ marker info, anti-stack compensation, team-no-player tick counters and similar sender-only rows are state broadcasts unless a later source pass proves no reader.
+- `WFBE_PVF_%1` is the dynamic PVF registration pattern from `Init_PublicVariables.sqf`, not a literal runtime channel.
+
 ## Priority Backlog
 
 | Priority | Work | Why |
@@ -98,7 +134,9 @@ Scanner caveats:
 | P1 | Audit economy menu IDC `23004/23005/23006`. | Stale UI writes can hide broken commander economy controls. |
 | P1 | Clean integration dead/stale helpers before expanding Discord/status tooling. | Dormant `.Auto` JSON helpers, stale `botconfig.json` ownership and arg-shape drift are easy to revive incorrectly. |
 | P1 | Decide whether warning-marked CRV7PG loadouts are forbidden or intentionally quarantined. | A warning-named crash-risk class is referenced by WILDCAT data, so generator output may carry known-dangerous loadouts. |
+| P1 | Decide whether the stale `ICBM_launched` PVEH should be retired or revived. | The current nuke path uses `NukeIncoming` and `HandleSpecial "icbm-display"`; a receiver-only event handler misleads future networking work. |
 | P2 | Remove or rationalize safe commented missing references: unitCaching, old blink loop, old bomb handler, old defense helper, WASP commented hooks. | Low-risk bloat cleanup once branch searches are complete. |
+| P2 | Remove or annotate old direct `WFBE_*` publicVariable comment blocks after branch search. | They are migration residue and make the current PVF/helper network model harder to read. |
 | P2 | Document generated `version.sqf` in every build/release handoff. | Prevent agents from misclassifying a required generated file as missing dead code. |
 | P2 | Fix `RscClickableText.soundPush` after config smoke. | Likely malformed config, but resource classes have wide UI blast radius. |
 | P2 | Split DiscordBot display terrain metadata from old LoadoutManager write APIs. | The bot should not carry mission file-writing API surface unless that is intentionally shared and tested. |
@@ -113,6 +151,7 @@ These are candidates for a future source patch because they are commented and po
 - `Common_HandleBombs.sqf` commented compile.
 - `Common\Config\Config_Defenses.sqf` commented calls.
 - `WASP\actions\OnArmor\timer.sqf`, `WASP\KeyDown.sqf`, `WASP\actions\SitsOnArmor\init.sqf` commented hooks.
+- Commented legacy direct-PV names: `WFBE_RequestVehicleLock`, `WFBE_RequestSpecial`, `WFBE_RequestStructure`, `WFBE_RequestTeamUpdate`, `WFBE_ChangeScore`, `WFBE_LocalizeMessage`.
 
 Before changing source, run a branch-aware search against the target branch and verify generated mission propagation rules. Do not edit `Missions_Vanilla` directly for gameplay unless the build workflow requires it; source-of-truth rules still apply.
 
@@ -123,6 +162,7 @@ Before changing source, run a branch-aware search against the target branch and 
 | MASH marker relay | Useful player-facing map state around mobile respawn. | Sender, server relay, client receiver, marker delete/JIP behavior and PV channel docs must be made coherent. |
 | `AIBuyUnit` / `Server_BuyUnit.sqf` | Likely needed by AI commander production branches. | AI production scheduler, funds/cap policy, queue cleanup and Client_BuildUnit drift review. |
 | Old marker blinking loop | Could be useful if map marker ownership is redesigned. | Must not regress current singular `Client_BlinkMapIcon` behavior. |
+| `ICBM_launched` PVEH | Could be revived as a clear client notification channel for tactical nukes. | Must be reconciled with the current `NukeIncoming` / `RequestSpecial` / `HandleSpecial "icbm-display"` path and smoke-tested for friendly/enemy warnings, markers and damage. |
 | Modded maps | Community value, but currently conflict-marked and outside release packaging. | Conflict-free source, missing helper restoration, LoadoutManager policy and editor/dedicated smoke. |
 
 ## How To Rerun
@@ -139,11 +179,18 @@ Run the integration/tooling scan:
 .\docs\analysis\dead-code-integration-scan.ps1
 ```
 
+Run the direct public-variable channel scan:
+
+```powershell
+.\docs\analysis\dead-code-pv-channel-scan.ps1
+```
+
 Validate the machine-readable register:
 
 ```powershell
 Get-Content .\docs\analysis\dead-code-findings.jsonl | ForEach-Object { $_ | ConvertFrom-Json | Out-Null }
 Get-Content .\docs\analysis\dead-code-integration-scan.json | ConvertFrom-Json | Out-Null
+Get-Content .\docs\analysis\dead-code-pv-channel-scan.json | ConvertFrom-Json | Out-Null
 ```
 
 Useful manual follow-up scans:
@@ -152,6 +199,7 @@ Useful manual follow-up scans:
 rg -n "RscMenu_Upgrade|GUI_Menu_Upgrade|AIBuyUnit|Server_MapBlinkingUnits|Client_BlinkMapIcons|Client_AddUnitToTrack" Missions Missions_Vanilla Modded_Missions
 rg -n "^\s*(<{7,}|={7,}|>{7,})" Modded_Missions
 rg -n "WFBE_C_MODULE_BIS_HC|WFBE_C_AI_DELEGATION|23004|23005|23006" Missions Missions_Vanilla Modded_Missions
+rg -n "ICBM_launched|WFBE_RequestVehicleLock|WFBE_RequestSpecial|WFBE_RequestTeamUpdate|WFBE_ChangeScore|WFBE_LocalizeMessage|WFBE_RequestStructure" Missions Missions_Vanilla Modded_Missions
 ```
 
 ## Related Pages
