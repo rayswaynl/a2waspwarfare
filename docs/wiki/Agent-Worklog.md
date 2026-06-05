@@ -2858,6 +2858,11 @@ Key conclusions:
 - Updated [`agent-machine-index.json`](agent-machine-index.json) so future agents route FPS-cap prompts through the new test pack instead of older generic old-BE wording.
 - No gameplay source files changed.
 
+## 2026-06-05T17:57:00+02:00 - Codex - economy menu IDC branch scope
+- Claimed `economy-menu-idc-branch-scope` from the dead-code/UI backlog after the row still said to audit `23004/23005/23006`.
+- Source-checked current source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle`: current source/stable/upstream keep stale disabled-state writes to `23004/23005/23006` while `RscMenu_Economy` declares `23002`, `23003` and `23008+`.
+- Release Chernarus no longer has those stale writes and adds dashboard IDC `23020`, but release Vanilla still carries the old writes. Updated owner pages and machine records to route this as a UI parity cleanup plus Economy smoke, not another discovery pass. No gameplay source changed.
+
 ## 2026-06-05T23:59:55+02:00 - Codex - old-FPS provenance cleanup
 - Claimed `old-fps-provenance-cleanup` after a stale-status scan found [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison) still naming an older docs-only commit as the current Wasp source baseline.
 - Reworded the evidence table to cite the current source mission path and route branch/head truth through [Current source status snapshot](Current-Source-Status-Snapshot) instead of freezing the page to one docs-branch commit hash.
