@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T20:15:00+02:00 - Codex + Noether - MASH marker relay decision route
+
+- Folded Noether's read-only MASH scout into the owner pages after it rechecked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle`.
+- Result: local officer MASH respawn is source-supported (`Skill_Officer.sqf` stores local `wfbe_mash`, `Client_GetRespawnAvailable.sqf` reads it); shared/JIP-safe marker synchronization remains orphaned because the server relay listens for `WFBE_CL_MASH_MARKER_CREATED`, maintained deploy paths do not send it, and the client receiver compile is commented.
+- Added a branch/root matrix to [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas#mash-split-live-respawn-dead-marker-relay) and condensed repeated wording in [Feature status](Feature-Status-Register), [Public variable channel index](Public-Variable-Channel-Index) and [Dead/stale code register](Dead-Code-And-Stale-Code-Register).
+- Owner decision remains: revive with server-held marker registry, delete replay and JIP resend, or retire/archive the stale relay. No gameplay source changed.
+
 ## 2026-06-05T19:55:00+02:00 - Codex - UI resource parity cleanup
 
 - Claimed `ui-resource-parity-cleanup` after Pauli's UI parity recommendation.

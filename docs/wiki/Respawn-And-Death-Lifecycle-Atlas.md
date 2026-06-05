@@ -97,6 +97,8 @@ Default gear is class-specific by skill type (`Client_OnRespawnHandler.sqf:81-10
 
 ## MASH Split: Live Respawn, Dead Marker Relay
 
+Canonical statement: **local officer MASH respawn is source-supported; shared/JIP-safe MASH marker synchronization is orphaned in maintained roots.** No Arma runtime smoke was run for this docs pass, so describe the local respawn path as source-supported rather than runtime-proven.
+
 Live pieces:
 
 - Officer action is added only when `WFBE_C_RESPAWN_MASH > 0` in `Client/Module/Skill/Skill_Apply.sqf:42-55`.
@@ -110,6 +112,14 @@ Dead/broken marker edge:
 - Client receiver for `WFBE_SE_MASH_MARKER_SENT` exists in `Client/Module/MASH/receiverMASHmarker.sqf:1-29`, but its compile line is commented in `Client/Init/Init_Client.sqf:132`.
 - No live deploy path was found broadcasting `WFBE_CL_MASH_MARKER_CREATED`.
 - Branch recheck on 2026-06-05 found the same orphaned shape in current source/Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle`; modded `eden`/`lingor` sender lines are sender-only drift, not maintained-marker proof.
+
+| Scope | Local MASH respawn | Shared marker relay | Development meaning |
+| --- | --- | --- | --- |
+| Current docs/source Chernarus | Source-supported: deploy stores local `wfbe_mash`; respawn availability reads it. | Orphaned: active server receiver, commented client receiver compile, no maintained deploy sender. | Decide personal/squad/team semantics before changing code. |
+| Maintained Vanilla Takistan | Same source-supported local path. | Same orphaned relay. | Any revive/remove patch must propagate to Vanilla. |
+| `origin/master` / `miksuu/master` | Same source-supported local path. | Same orphaned relay. | Stable/upstream do not prove team-shared MASH behavior. |
+| `origin/release/2026-06-feature-bundle` | Same source-supported local path. | Same orphaned relay. | Release does not fix MASH markers. |
+| Modded `eden` / `lingor` | Not maintained proof. | Sender-only drift: modded deploy sends `WFBE_CL_MASH_MARKER_CREATED`, but maintained clients still do not compile the receiver. | Use only as archaeology if reviving; do not cite as working maintained behavior. |
 
 Do not call MASH respawn dead unless specifically talking about team-shared/JIP marker synchronization. The source-backed statement is: local officer MASH respawn exists; MASH marker sharing is dead/orphaned; team-wide MASH respawn is not proven. Deployment stores `wfbe_mash` on `WFBE_Client_Logic`, and respawn availability reads that same local variable, while the server only seeds the value to `objNull`.
 
