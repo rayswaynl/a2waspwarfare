@@ -1,0 +1,199 @@
+{
+  "generatedAt": "2026-06-05T09:05:18.3005720+02:00",
+  "trackedIntegrationBuildArtifacts": [],
+  "ignoredIntegrationBuildDirsPresent": [
+    "Tools\\LoadoutManager\\bin",
+    "Tools\\LoadoutManager\\obj",
+    "DiscordBot\\bin",
+    "DiscordBot\\obj",
+    "Extension\\obj"
+  ],
+  "battleyeFiles": [
+    "BattlEyeFilter/READ ME FIRST - Using BattlEye filter to auto kick.docx",
+    "BattlEyeFilter/publicvariable.txt"
+  ],
+  "repoServerConfigOrFilterFiles": [
+    "BattlEyeFilter/publicvariable.txt"
+  ],
+  "serializerHits": [
+    {
+      "path": "DiscordBot\\src\\ExtensionData\\GameData\\GameData.cs",
+      "line": 52,
+      "text": "TypeNameHandling = TypeNameHandling.All,"
+    },
+    {
+      "path": "DiscordBot\\src\\ExtensionData\\GameData\\GameDataDeSerialization.cs",
+      "line": 32,
+      "text": "settings.TypeNameHandling = TypeNameHandling.Auto;"
+    },
+    {
+      "path": "Extension\\src\\SerializationManager.cs",
+      "line": 33,
+      "text": "serializer.TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None;"
+    },
+    {
+      "path": "Extension\\src\\SerializationManager.cs",
+      "line": 116,
+      "text": "//    settings.TypeNameHandling = TypeNameHandling.Auto;"
+    }
+  ],
+  "discordConfigHits": [
+    {
+      "path": "DiscordBot\\FileConfiguration.cs",
+      "line": 9,
+      "text": "public static string DataSourcePath"
+    },
+    {
+      "path": "DiscordBot\\FileConfiguration.cs",
+      "line": 14,
+      "text": "if (!string.IsNullOrEmpty(Preferences.Instance.DataSourcePath))"
+    },
+    {
+      "path": "DiscordBot\\FileConfiguration.cs",
+      "line": 16,
+      "text": "return Preferences.Instance.DataSourcePath;"
+    },
+    {
+      "path": "DiscordBot\\FileConfiguration.cs",
+      "line": 25,
+      "text": "if (File.Exists(\"botconfig.json\"))"
+    },
+    {
+      "path": "DiscordBot\\FileConfiguration.cs",
+      "line": 27,
+      "text": "var config = System.Text.Json.JsonSerializer.Deserialize<BotConfig>(File.ReadAllText(\"botconfig.json\"));"
+    },
+    {
+      "path": "DiscordBot\\FileConfiguration.cs",
+      "line": 28,
+      "text": "if (config != null && !string.IsNullOrEmpty(config.DataSourcePath))"
+    },
+    {
+      "path": "DiscordBot\\FileConfiguration.cs",
+      "line": 30,
+      "text": "customDataPath = config.DataSourcePath;"
+    },
+    {
+      "path": "DiscordBot\\FileConfiguration.cs",
+      "line": 46,
+      "text": "public static void SetCustomDataSourcePath(string path)"
+    },
+    {
+      "path": "DiscordBot\\FileConfiguration.cs",
+      "line": 55,
+      "text": "public string? DataSourcePath { get; set; }"
+    },
+    {
+      "path": "DiscordBot\\src\\ExtensionData\\GameData\\GameData.cs",
+      "line": 36,
+      "text": "var dataPath = Preferences.Instance.DataSourcePath ?? @\"C:\\a2waspwarfare\\Data\";"
+    },
+    {
+      "path": "DiscordBot\\src\\ProgramRuntime.cs",
+      "line": 21,
+      "text": "if (!File.Exists(\"token.txt\"))"
+    },
+    {
+      "path": "DiscordBot\\src\\ProgramRuntime.cs",
+      "line": 23,
+      "text": "Log.WriteLine(\"Token file 'token.txt' not found in the application directory. Please create this file with your Discord bot token.\", LogLevel.ERROR);"
+    },
+    {
+      "path": "DiscordBot\\src\\ProgramRuntime.cs",
+      "line": 28,
+      "text": "var token = File.ReadAllText(\"token.txt\");"
+    },
+    {
+      "path": "DiscordBot\\src\\ProgramRuntime.cs",
+      "line": 33,
+      "text": "Log.WriteLine(\"Token file 'token.txt' is empty. Please add your Discord bot token to this file.\", LogLevel.ERROR);"
+    },
+    {
+      "path": "DiscordBot\\src\\Preferences.cs",
+      "line": 9,
+      "text": "public ulong GuildID;"
+    },
+    {
+      "path": "DiscordBot\\src\\Preferences.cs",
+      "line": 10,
+      "text": "public ulong[] AuthorizedUserIDs { get; set; } = new ulong[0];"
+    },
+    {
+      "path": "DiscordBot\\src\\Preferences.cs",
+      "line": 13,
+      "text": "public string? DataSourcePath { get; set; }"
+    },
+    {
+      "path": "DiscordBot\\src\\Preferences.cs",
+      "line": 24,
+      "text": "string json = File.ReadAllText(\"preferences.json\");"
+    },
+    {
+      "path": "DiscordBot\\src\\Preferences.cs",
+      "line": 43,
+      "text": "File.WriteAllText(\"preferences.json\", json);"
+    },
+    {
+      "path": "DiscordBot\\src\\Preferences.cs",
+      "line": 49,
+      "text": "return AuthorizedUserIDs.Contains(userId);"
+    },
+    {
+      "path": "DiscordBot\\preferences_sample.json",
+      "line": 2,
+      "text": "\"GuildID\": \"440257265941872660\","
+    },
+    {
+      "path": "DiscordBot\\preferences_sample.json",
+      "line": 3,
+      "text": "\"AuthorizedUserIDs\": ["
+    },
+    {
+      "path": "DiscordBot\\preferences_sample.json",
+      "line": 8,
+      "text": "\"DataSourcePath\": \"C:\\\\a2waspwarfare\\\\Data\","
+    }
+  ],
+  "toolingAndTerrainDriftHits": [
+    {
+      "path": "Tools\\LoadoutManager\\SqfFileGenerators\\SqfFileGenerator.cs",
+      "line": 132,
+      "text": "//WriteAndUpdateToFilesForModdedTerrains(easaFileStrings.modded, commonBalanceFileStrings.modded, aircraftDisplayNameStrings.modded, addedAircraftDamageModelChanges.modded, coreModFileStrings);"
+    },
+    {
+      "path": "Tools\\LoadoutManager\\SqfFileGenerators\\SqfFileGenerator.cs",
+      "line": 133,
+      "text": "// TODO: Add the modded maps back here later"
+    },
+    {
+      "path": "Tools\\LoadoutManager\\SqfFileGenerators\\SqfFileGenerator.cs",
+      "line": 406,
+      "text": "private static void WriteAndUpdateToFilesForModdedTerrains("
+    },
+    {
+      "path": "Tools\\LoadoutManager\\ZipManager.cs",
+      "line": 16,
+      "text": "string[] missionDirectories = { \"Missions\", \"Missions_Vanilla\" }; //, \"Modded_Missions\""
+    },
+    {
+      "path": "Tools\\LoadoutManager\\ZipManager.cs",
+      "line": 38,
+      "text": "foreach (var missionDirectory in missionDirectories)"
+    },
+    {
+      "path": "DiscordBot\\src\\ExtensionData\\GameData\\SharedWithLoadoutManager\\Terrains\\TerrainName.cs",
+      "line": 12,
+      "text": "TASMANIA2010,"
+    },
+    {
+      "path": "DiscordBot\\src\\ExtensionData\\GameData\\SharedWithLoadoutManager\\Terrains\\BaseTerrain.cs",
+      "line": 11,
+      "text": "public void WriteToFile(DirectoryInfo _dir, string _content, string _targetScriptPath)"
+    },
+    {
+      "path": "DiscordBot\\src\\ExtensionData\\GameData\\SharedWithLoadoutManager\\Terrains\\BaseTerrain.cs",
+      "line": 34,
+      "text": "return \"Modded_Missions\";"
+    }
+  ]
+}

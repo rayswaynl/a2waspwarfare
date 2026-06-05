@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-05T09:25:00+02:00 - Codex - dead code integrations and tooling pass
+
+- Continued Steff's long-running dead-code detective goal beyond the first SQF/reference register.
+- Added `docs/analysis/dead-code-integration-scan.ps1` and `docs/analysis/dead-code-integration-scan.json` to capture repeatable evidence for integration/tooling surfaces: tracked BattlEye footprint, ignored local build-output dirs, serializer settings, DiscordBot config path ownership and LoadoutManager/modded generation drift.
+- Promoted source-backed findings into `docs/analysis/dead-code-findings.jsonl` and [Dead/stale code register](Dead-Code-And-Stale-Code-Register): dormant DiscordBot `FileConfiguration.DataSourcePath`, dormant unsafe DiscordBot JSON helper, commented unsafe Extension deserialization scaffold, GLOBALGAMESTATS arg-shape drift, DiscordBot copied LoadoutManager write API, stale Tasmania metadata, AFK-only BattlEye footprint and warning-marked CRV7PG loadout data.
+- No gameplay source files changed.
+
 ## 2026-06-05T09:05:00+02:00 - Codex - dead code and stale code register
 
 - Started the dead-code finding/logging lane requested by Steff and kept it documentation/analysis only.
