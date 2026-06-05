@@ -2813,3 +2813,8 @@ Key conclusions:
 - Claimed `old-fps-provenance-cleanup` after a stale-status scan found [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison) still naming an older docs-only commit as the current Wasp source baseline.
 - Reworded the evidence table to cite the current source mission path and route branch/head truth through [Current source status snapshot](Current-Source-Status-Snapshot) instead of freezing the page to one docs-branch commit hash.
 - Refreshed [`agent-machine-index.json`](agent-machine-index.json) metadata after the FPS opportunity harvest. No gameplay source changed.
+
+## 2026-06-05T23:59:59+02:00 - Codex - FPS helper lane compaction
+- Claimed `fps-helper-lane-compaction` after [Progress dashboard](Progress-Dashboard), [`agent-status.json`](agent-status.json) and [`agent-collaboration.json`](agent-collaboration.json) still showed old BE/FPS helper windows as live or ready-for-review lanes after their outputs were harvested.
+- Removed `old-be-wasp-fps-archaeology` and `old-vs-current-fps-opportunity-scout` from live lane surfaces. Their history remains in this worklog and [`agent-events.jsonl`](agent-events.jsonl); their actionable output routes through old-BE, player-cap, performance, testing and Feature Status owner pages.
+- No gameplay source files changed.

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-05T23:59:55+02:00",
+  "generatedAt": "2026-06-05T23:59:59+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -55,43 +55,6 @@
         "Coverage Ledger is linked from Home, sidebar, footer, llms and agent context."
       ],
       "handoff": "Claude should claim a narrow lane before editing and append worklog/events."
-    },
-    {
-      "lane": "old-be-wasp-fps-archaeology",
-      "owner": "Codex-delegated",
-      "status": "ready-for-review-harvested",
-      "sourceScope": [
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
-        "docs/wiki/Old-WarfareBE-Performance-Comparison.md",
-        "docs/wiki/Performance-Opportunity-Sweep.md",
-        "docs/wiki/Player-AI-Caps-And-Role-Balance.md",
-        "external/ArmA2_WarfareBE"
-      ],
-      "outputs": [
-        "Safe report draft comparing old Benny Edition implementation choices with current Wasp FPS/simulation-load candidates.",
-        "Ranked client/server/both opportunity table, player-AI cap options, static/town cleanup options, 20-player/full-server test plan and Discord summary."
-      ],
-      "handoff": "Compact source-backed deltas are already promoted into canonical pages; review the full output report only if more detail should be promoted. No gameplay source edits were made in this lane."
-    },
-    {
-      "lane": "old-vs-current-fps-opportunity-scout",
-      "owner": "Codex-delegated",
-      "status": "ready-for-review",
-      "sourceScope": [
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
-        "docs/wiki/Old-WarfareBE-Performance-Comparison.md",
-        "docs/wiki/Performance-Opportunity-Sweep.md",
-        "docs/wiki/Player-AI-Caps-And-Role-Balance.md",
-        "docs/wiki/Testing-Debugging-And-Release-Workflow.md",
-        "docs/wiki/Feature-Status-Register.md",
-        "external/ArmA2_WarfareBE"
-      ],
-      "outputs": [
-        "Standalone wiki-ready audit titled Old BE vs Current Wasp FPS Opportunity Audit.",
-        "Prioritized client/server opportunity table, dynamic AI cap recommendation, 10/15/20/25/30-player test matrix and suggested wiki edits.",
-        "Output report: C:/Users/Steff/Documents/Codex/2026-06-05/wasp-old-vs-current-fps-investigation/outputs/Old-BE-vs-Current-Wasp-FPS-Opportunity-Audit.md"
-      ],
-      "handoff": "Review standalone report for community discussion or selectively promote its suggested edits into the named wiki pages. No gameplay source edits were made."
     },
     {
       "lane": "feature-status-reconciliation",
@@ -222,7 +185,8 @@
     "release-head-propagated-fix-spotcheck-and-fps-report-intake",
     "release-head-machine-ledger-sync",
     "old-vs-current-fps-opportunity-harvest",
-    "old-fps-provenance-cleanup"
+    "old-fps-provenance-cleanup",
+    "fps-helper-lane-compaction"
   ],
   "queuedReports": [],
   "lanes": [
