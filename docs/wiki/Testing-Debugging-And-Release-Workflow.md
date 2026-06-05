@@ -101,6 +101,7 @@ For player-count validation, run no-HC and multi-HC cases before trusting public
 | Supply mission | Start a truck mission, complete it once, repeat after cooldown, JIP during cooldown query, disconnect/reconnect same UID and verify `WFBE_SE_PLAYERLIST` replacement/no stale completion, tamper or stale `SupplyFromTown` / `SupplyAmount` and confirm server validation after hardening, destroy tracked vehicle once if PR #1 interdiction logic is in scope. |
 | Victory/endgame | Use [Victory/endgame atlas](Victory-And-Endgame-Atlas). Simulate HQ/factory elimination and all-town capture paths, confirm one winner, one endgame broadcast and one stats log. |
 | LoadoutManager | From the repo root or `Tools/LoadoutManager`, optionally set `A2WASP_SKIP_ZIP=1`, then run `dotnet run`; inspect generated EASA/balance outputs, Takistan copy, `version.sqf`, and whether packaging was skipped or failed only because `7za` is missing. |
+| Full-server FPS comparison | Use [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison). Run current Wasp default, current Wasp cap `10`, role-aware cap, HC present/absent, matched view-distance and old BE baseline if runnable. Record commit/PBO hash, server.cfg/basic.cfg/profile values, server FPS, three client FPS samples, active towns, total AI split by player followers / AI teams / town groups / static gunners / supports, vehicle counts, HC ownership evidence, RPT errors and PerformanceAudit rows. |
 
 ## Propagated Fix Smoke Pack
 

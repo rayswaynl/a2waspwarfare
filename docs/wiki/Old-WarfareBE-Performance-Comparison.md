@@ -29,6 +29,20 @@ Uncertainty notes:
 - Old BE main branch is Takistan. Chernarus town layout, town count and Wasp custom content can change runtime cost even when SQF shape looks similar.
 - Some current docs contain branch-era findings from other agents; this page cites concrete current source lines where making a direct claim.
 
+## 2026-06-05 Delegated Report Intake
+
+A delegated `old-be-wasp-fps-archaeology` pass produced a separate decision report at `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-mission-fps-archaeology\outputs\Old-BE-vs-Wasp-FPS-Archaeology.md`. The report rechecked the same source families and is treated as **ready-for-review input**, not a new canonical page, to avoid duplicating this atlas.
+
+Promoted conclusions:
+
+- The strongest old-vs-current delta remains player-owned AI cap behavior: old BE defaults lower and does not add the current Wasp commander `+10` bonus.
+- Old BE's low-supply town group tables are lighter in some early-town cases, but old BE still has town activation scans, town defenders, statics and cleanup systems.
+- Current Wasp can outperform the old baseline only if HC/delegation actually carries town/static AI; tests must record HC ownership, not just lobby settings.
+- Cleaners/restorers and current-only integrations should be measured with RPT/audit evidence before disabling them, because they may prevent long-session object buildup.
+- Full-server FPS work should record AI by source: player followers, AI teams, town groups, static gunners, supports and empty vehicles.
+
+Canonical follow-ups from the report are routed to [Player AI caps](Player-AI-Caps-And-Role-Balance), [Performance opportunity sweep](Performance-Opportunity-Sweep) and the [Testing workflow](Testing-Debugging-And-Release-Workflow#full-server-fps-comparison-pack).
+
 ## Lag Taxonomy
 
 | Category | What to separate during testing |

@@ -115,6 +115,8 @@ For a public server, the cleanest tuning lever is the lobby `WFBE_C_PLAYERS_AI_M
 
 Before cutting CTI identity too hard, test current Wasp with the old-style cap neighborhood: normal roles around `8-10` late-game followers, Soldier kept higher, and commander bonus reduced or role-gated. Compare that against old WarfareBE with the same cap and view-distance settings.
 
+Dynamic cap warning from the 2026-06-05 old-BE FPS archaeology pass: if caps later scale by live player count, do not implement it as a hidden client-only guess. Publish the active cap from trusted mission/server state, make buy menu and RHUD read the same value, and start with a non-destructive "future purchases only" cap so players do not suddenly lose already-fielded AI mid-fight.
+
 ## Development Notes
 
 - Do not use the unused `WFBE_C_PLAYERS_SKILL_SOLDIER_UNITS_MAX = 6` constant as proof of current behavior. The live Soldier cap path uses `ceil (1.5 * WFBE_C_PLAYERS_AI_MAX)`.

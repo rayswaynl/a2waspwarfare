@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T23:58:00+02:00 - Codex - release-head propagated-fix spot-check and FPS report intake
+
+- Claimed `release-head-propagated-fix-spotcheck-and-fps-report-intake` after the PR8 head refresh left older propagated-fix pages naming `a9219d88` as if it were still the current release branch.
+- Spot-checked `origin/release/2026-06-feature-bundle` head `3282ff3f`: paratrooper marker registration is still absent in Chernarus/Vanilla, client `Skill_Init` still duplicates in Chernarus/Vanilla, supply scan narrowing remains Chernarus-only, and hosted FPS loop cleanup remains Chernarus-only while release Vanilla keeps the old loops.
+- Updated current-facing owner pages and `agent-context.json` to route those lanes through `3282ff3f` and [Current source status snapshot](Current-Source-Status-Snapshot), while leaving older `a9219d88` matrix rows as historical evidence.
+- Harvested the delegated old-BE FPS archaeology report without creating a duplicate report page: [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison) now records the intake, [Player AI caps](Player-AI-Caps-And-Role-Balance) carries the dynamic-cap guardrail, [Performance sweep](Performance-Opportunity-Sweep) has the sharpened easy-win bundle, and [Testing workflow](Testing-Debugging-And-Release-Workflow#full-server-fps-comparison-pack) owns the full-server FPS test pack. No gameplay source changed.
+
 ## 2026-06-05T23:20:00+02:00 - Codex - PR8 release-head evidence refresh
 
 - Claimed `pr8-release-head-evidence-refresh` after the current-source refetch showed `origin/release/2026-06-feature-bundle` moved from the earlier matrix head `a9219d88` to `3282ff3f`.
@@ -2775,3 +2782,11 @@ Key conclusions:
 - Appended `source-status-branch-matrix-refresh-2026-06-05-1935` to [`agent-knowledge.jsonl`](agent-knowledge.jsonl) after rechecking the old June 2 disputed cleanup matrix: commander reassignment and factory queue remain source-unpatched, paratrooper markers / single Skill_Init / hosted FPS exits / command-center supply scan narrowing are docs-source propagated with branch/smoke caveats, and WASP display-54 wait remains an unpatched cleanup opportunity.
 - Updated [Wiki/source consistency findings](Wiki-Source-Consistency-Findings) so Cluster B/C are provenance and source anchors, not active docs-cleanup tasks. No gameplay source changed.
 - Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse, `git diff --check` in both worktrees and full repo-mirror/wiki checkout SHA256 parity (`full-diffCount=0`). The validator emitted only the known non-failing legacy JSONL envelope warnings.
+
+## 2026-06-05T23:45:00+02:00 - Codex delegated - old BE vs Wasp FPS archaeology report draft
+- Claimed `old-be-wasp-fps-archaeology` as a read-only delegated lane to produce a safe report draft outside the wiki tree.
+- Rechecked current Wasp and old Benny Edition source around player AI caps, Soldier/commander cap math, AI-team defaults, HC/delegation, town activation loops, low-SV group tables, static defenses, cleanup/restorer loops, PV/publicVariable surface, supply mission traffic, server-FPS publishers and view distance.
+- Main conclusion: old BE is a useful conservative baseline, especially for lower player-AI defaults and lighter low-SV town group tables, but it is not proof that old per-town FSM architecture is cheaper. Current Wasp has richer systems and higher defaults, but also better HC hooks, resistance-only static-defense gates, cooperative global-loop sleeps and PerformanceAudit evidence surfaces.
+- Created the report draft at `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-mission-fps-archaeology\outputs\Old-BE-vs-Wasp-FPS-Archaeology.md` with required comparison, hotspot, player cap, static/town cleanup and 20-player test-plan tables plus Discord summary and wiki integration plan.
+- No gameplay source files changed.
+- Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse and `git diff --check` in the docs repo. The validator emitted only known non-failing legacy JSONL envelope warnings; `git diff --check` emitted only CRLF normalization warnings for touched docs files.

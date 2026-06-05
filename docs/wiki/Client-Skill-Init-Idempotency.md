@@ -23,7 +23,7 @@ Current branch status is:
 | This docs branch, source Chernarus | `Client/Init/Init_Client.sqf:547`, `:551`, `:571` | One `Skill_Init.sqf` call remains before default gear selection, and `(player) Call WFBE_SK_FNC_Apply` still runs later. |
 | This docs branch, maintained Vanilla Takistan | `Client/Init/Init_Client.sqf:547`, `:551`, `:571` | Vanilla matches the source Chernarus single-init shape after propagation. |
 | `origin/master`, source Chernarus | `Client/Init/Init_Client.sqf:561`, `:565`, `:585-586` | Unpatched on master: it still calls `Skill_Init.sqf` twice before applying skills. |
-| `origin/release/2026-06-feature-bundle`, source Chernarus | `Client/Init/Init_Client.sqf:562`, `:566`, `:586-587` | Still duplicates the init on the release branch too. |
+| `origin/release/2026-06-feature-bundle` head `3282ff3f`, source Chernarus | `Client/Init/Init_Client.sqf:565`, `:589-590` | Still duplicates the init on the release branch too. Maintained release Vanilla also duplicates at `:561`/`:585-586`. |
 | Shared skill init module | `Client/Module/Skill/Skill_Init.sqf:10`, `:40-49` | Compiles `WFBE_SK_FNC_Apply`, sets `WFBE_SK_V_Type`, and multiplies local `WFBE_C_PLAYERS_AI_MAX` by `1.5` for Soldier class. |
 | Shared common constant | `Common/Init/Init_CommonConstants.sqf:243` | Default `WFBE_C_PLAYERS_AI_MAX` is `16`. |
 | Respawn path | `Client/Functions/Client_PreRespawnHandler.sqf:5` | Respawn reapply calls `WFBE_SK_FNC_Apply` without rerunning `Skill_Init.sqf`. |

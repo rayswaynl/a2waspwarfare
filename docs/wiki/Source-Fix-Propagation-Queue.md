@@ -37,11 +37,11 @@ Result: generation/copy completed for Chernarus and Takistan, `_MISSIONS.7z` pac
 | Supply mission scan narrowing | Source and Vanilla `supplyMissionStarted.sqf:28` scan only `["Base_WarfareBUAVterminal"]` for the 80m command-center check. | Chernarus carries it, Vanilla carries it, smoke pending. |
 | Supply player-object list indexing | Source and Vanilla `playerObjectsList.sqf:17` initialize `_i = 0` before the `WFBE_SE_PLAYERLIST` loop. | Chernarus carries it, Vanilla carries it, smoke pending. |
 
-## Release Branch Caveat (2026-06-03)
+## Release Branch Caveat (2026-06-05 Refresh)
 
-The propagation table above describes the docs/source branch state, not a stable-master or release-branch guarantee. Current source-status recheck used docs/source `HEAD` `4163faba`, `origin/master` `2cdf5fb8`, and `origin/release/2026-06-feature-bundle` `a9219d88`.
+The propagation table above describes the docs/source branch state, not a stable-master or release-branch guarantee. The original source-status recheck used docs/source `HEAD` `4163faba`, `origin/master` `2cdf5fb8`, and `origin/release/2026-06-feature-bundle` `a9219d88`. A 2026-06-05 spot-check against current release head `3282ff3f` found the same lane outcomes for the rows below.
 
-| Lane | Stable `origin/master` | Release `a9219d88` | Practical rule |
+| Lane | Stable `origin/master` | Release `3282ff3f` | Practical rule |
 | --- | --- | --- | --- |
 | Paratrooper marker revival | Handler registration absent in Chernarus/Vanilla `Common/Init/Init_PublicVariables.sqf`. | Handler registration absent in release Chernarus (`NukeIncoming` at `:41`) and release Vanilla (`NukeIncoming` at `:39`). | Do not assume this lane is in release builds until the release branch carries it in both maintained missions. |
 | Client skill init idempotency | Duplicate `Skill_Init.sqf` remains in Chernarus/Vanilla at `Client/Init/Init_Client.sqf:561` and `:585`. | Duplicate `Skill_Init.sqf` remains in release Chernarus at `:565`/`:589` and release Vanilla at `:561`/`:585`. | Treat release/master as still needing the single-init change. |

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T23:20:00+02:00",
+  "generatedAt": "2026-06-05T23:58:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Routed current PR #8 / release head 3282ff3f into PR cleanup and testing docs: WF menu player/town counts, service-point full/refuel QoL, shielded HQ walls and the Chernarus/static-only PR8 smoke script.",
+      "currentWork": "Spot-checked current release head 3282ff3f for propagated-fix lanes and harvested the old-BE FPS archaeology report into compact old-BE, player-cap, performance and testing docs.",
       "nextExpectedOutput": "Continue source-backed wiki pruning/status upkeep; keep gateway pages current and route code-owner work to owner-decision lanes."
     },
     "Codex-2": {
@@ -37,10 +37,10 @@
       "nextExpectedOutput": "Self-select the next bounded source-backed review from Coverage Ledger or the hardening backlog."
     },
     "Codex delegated FPS window": {
-      "status": "active",
+      "status": "ready-for-review / harvested",
       "currentLane": "old-be-wasp-fps-archaeology",
-      "currentWork": "Read-only comparison of old Benny Edition / WarfareBE and current Wasp for client/server FPS opportunities, player-AI cap designs and matched 20-player/full-server test planning.",
-      "nextExpectedOutput": "Report draft with ranked source-backed FPS candidates and a Discord-ready summary; no gameplay source edits."
+      "currentWork": "Report draft completed in the projectless outputs folder; compact source-backed deltas are harvested into canonical wiki pages.",
+      "nextExpectedOutput": "Review the full report if desired before promoting more detail; no gameplay source edits were made."
     },
     "Sub-agents": {
       "status": "returned-harvested",
@@ -65,8 +65,8 @@
     {
       "lane": "old-be-wasp-fps-archaeology",
       "owner": "Codex-delegated",
-      "status": "active-read-only",
-      "output": "Compare old Benny Edition / WarfareBE with current Wasp for FPS, AI-cap, town/static cleanup and test-plan lessons; promote only reviewed source-backed deltas."
+      "status": "ready-for-review-harvested",
+      "output": "Report draft completed; canonical pages now carry the compact FPS test-pack, cap-policy and performance-backlog deltas."
     },
     {
       "lane": "autonomous-claude-research",

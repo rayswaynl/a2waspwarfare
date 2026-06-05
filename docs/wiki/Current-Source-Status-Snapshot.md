@@ -39,13 +39,15 @@ If any item is missing, use `patch-ready`, `branch-local`, `propagated-smoke-pen
 | Ref | Earlier matrix head | Fetched head on 2026-06-05 | Delta / action |
 | --- | --- | --- | --- |
 | `origin/docs/developer-wiki-index` | source-check basis `154b7f38` | `a552060d` before this docs batch | Docs-only branch has advanced through wiki/backlog maintenance. Use it for documentation truth, not gameplay release proof. |
-| `origin/release/2026-06-feature-bundle` | `a9219d88` | `3282ff3f` | Four newer commits are present: PR8 static smoke checks, shielded HQ walls, service-point menu actions and WF menu counts. Each needs its owner page/source review before status wording changes. |
+| `origin/release/2026-06-feature-bundle` | `a9219d88` | `3282ff3f` | Four newer commits are present: PR8 static smoke checks, shielded HQ walls, service-point menu actions and WF menu counts. PR8-specific deltas are routed in [PR cleanup lab](PR-Cleanup-And-Integration-Lab#pr-8-head-refresh-3282ff3f). The propagated-fix lanes below were spot-checked again at `3282ff3f`; their release-branch coverage is unchanged from the earlier matrix. |
 | `miksuu/master` | `8bcc42b1` | `69e1958a` | New upstream merge `Marty_town_defense_fix` includes `e4be1958` (`Fix town occupation AI state after capture`). Treat as an upstream lesson candidate, not a rayswaynl shipped fix. |
 | Other named feature refs in the 2026-06-04 matrix | As listed below | unchanged in this refetch | Keep existing branch-review gates until a later source audit proves a new delta. |
 
 ## 2026-06-03 Branch Matrix
 
 Checked refs: docs/source `HEAD` `4163faba`, stable `origin/master` `2cdf5fb8`, and `origin/release/2026-06-feature-bundle` `a9219d88`.
+
+Follow-up release-head spot-check on 2026-06-05: `origin/release/2026-06-feature-bundle` `3282ff3f` still has the same propagated-fix lane status as the `a9219d88` matrix for hosted FPS, supply command-center scan, client `Skill_Init` idempotency and paratrooper marker registration. Newer PR8 commits did not change those four lane outcomes.
 
 | Lane | docs/source `HEAD` | `origin/master` | release `a9219d88` | Interpretation |
 | --- | --- | --- | --- | --- |

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-05T23:20:00+02:00",
+  "generatedAt": "2026-06-05T23:58:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -59,7 +59,7 @@
     {
       "lane": "old-be-wasp-fps-archaeology",
       "owner": "Codex-delegated",
-      "status": "active",
+      "status": "ready-for-review-harvested",
       "sourceScope": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus",
         "docs/wiki/Old-WarfareBE-Performance-Comparison.md",
@@ -71,7 +71,7 @@
         "Safe report draft comparing old Benny Edition implementation choices with current Wasp FPS/simulation-load candidates.",
         "Ranked client/server/both opportunity table, player-AI cap options, static/town cleanup options, 20-player/full-server test plan and Discord summary."
       ],
-      "handoff": "Promote only source-backed deltas into wiki owner pages after review; no gameplay source edits in this lane."
+      "handoff": "Compact source-backed deltas are already promoted into canonical pages; review the full output report only if more detail should be promoted. No gameplay source edits were made in this lane."
     },
     {
       "lane": "feature-status-reconciliation",
@@ -198,7 +198,8 @@
     "current-source-status-refetch",
     "miksuu-town-capture-state-fix-intake",
     "community-upstream-head-note-refresh",
-    "pr8-release-head-evidence-refresh"
+    "pr8-release-head-evidence-refresh",
+    "release-head-propagated-fix-spotcheck-and-fps-report-intake"
   ],
   "queuedReports": [],
   "lanes": [

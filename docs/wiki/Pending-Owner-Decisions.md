@@ -101,7 +101,7 @@ Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) for the source
 | Decision | Finding | Note |
 | --- | --- | --- |
 | Post-join `wfbe_*` `waitUntil` chain has no timeouts | DR-37 | a never-set synced var hangs the JIP client; add defensive timeouts |
-| Server-FPS hosted/listen busy-loop | DR-19 | docs/source Chernarus + Vanilla now early-exit on `!isDedicated` (`serverFpsGUI.sqf:1`, `monitorServerFPS.sqf:1`); stable `origin/master` still has the old inner-`isDedicated` sleep, release `a9219d88` is Chernarus-only, and Arma smoke remains. |
+| Server-FPS hosted/listen busy-loop | DR-19 | docs/source Chernarus + Vanilla now early-exit on `!isDedicated` (`serverFpsGUI.sqf:1`, `monitorServerFPS.sqf:1`); stable `origin/master` still has the old inner-`isDedicated` sleep, current release head `3282ff3f` is Chernarus-only, and Arma smoke remains. |
 | WASP `global_marking_monitor.sqf:62` sleepless display-wait | DR-40 | use the throttled `waitUntil {sleep …; cond}` idiom |
 
 ## Agent Handoff Contract
