@@ -9,7 +9,9 @@ Archive category: `integration-provenance`
 
 ---
 
-## Archive Navigation
+## Continue Reading
+
+Archive chain. This imported upstream page is historical provenance, not current implementation truth.
 
 Previous: [Miksuu Wiki Archive: Gameplay Videos](Miksuu-Wiki-Archive-Gameplay-Videos) | Next: [Miksuu Wiki Archive: Development Process](Miksuu-Wiki-Archive-Development-Process)
 

@@ -9,7 +9,9 @@ Archive category: `community-release-history`
 
 ---
 
-## Archive Navigation
+## Continue Reading
+
+Archive chain. This imported upstream page is historical provenance, not current implementation truth.
 
 Previous: [Miksuu Wiki Archive: Big Announcements](Miksuu-Wiki-Archive-Big-Announcements) | Next: [Miksuu Wiki Archive: Gameplay Videos](Miksuu-Wiki-Archive-Gameplay-Videos)
 

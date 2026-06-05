@@ -242,7 +242,7 @@
         "Wiki-Mirror-Reconciliation-Plan"
       ],
     "hasPerPageContinueReading": false,
-    "continueReadingStatus": "Primary/current owner pages now have Continue Reading blocks; remaining gaps are archive/queue pages tracked in Navigation-Inventory-And-Page-Status.",
+    "continueReadingStatus": "All content pages now have Continue Reading blocks. Current owner pages use normal previous/next routing; archive and queue pages use caveated support routing tracked in Navigation-Inventory-And-Page-Status.",
       "sidebar": "_Sidebar.md",
       "footer": "_Footer.md"
     }

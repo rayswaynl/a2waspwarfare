@@ -120,3 +120,9 @@ Typos (all-language, visible): **UX2** "TeamBance"/"Autonalance" (autobalance), 
 - Cross-check the ⬜ rows; several "high" SG/NJ items (SG1 win-inversion, SG3 supply-underflow, SG2 HQ double-score, NJ8 HQ-dup, NJ10 JIP-HQ-killed) are economy/victory-critical — confirm before any fix.
 - Recurring patterns worth a wiki note: (1) **non-atomic check-and-set on networked vars** (NJ8, NJ11, NJ2); (2) **EHs not re-added on respawn** (NJ5, NJ7); (3) **`||` vs `&&` loop-exit slips** (AI1, V1, SG7); (4) **client `sideJoined` used server-side** (AI8); (5) **old-vs-new side variable mix-ups on capture** (SG5).
 - AI17 confirmed FALSE POSITIVE — note in any AI-waypoint wiki page that `Common_WaypointsAdd.sqf` (7-element) ≠ `AI_WPAdd.sqf` (6-element).
+
+## Continue Reading
+
+Previous: [Deep-review findings](Deep-Review-Findings) | Next: [Feature status](Feature-Status-Register)
+
+Main map: [Home](Home) | Triage owner: [Dead/stale code register](Dead-Code-And-Stale-Code-Register) | Implementation queue: [Hardening roadmap](Hardening-Implementation-Roadmap)

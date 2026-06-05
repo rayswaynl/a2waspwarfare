@@ -285,3 +285,9 @@ Development rule: when a UI or command feature says "owned", prove which identit
 ## Agent Handoff
 
 This page is safe to integrate because it adds a new, source-cited lesson artifact and does not alter the DR-44-owned networking/server atlas/instructions pages. The matching machine-readable records live in `agent-development-lessons.jsonl`.
+
+## Continue Reading
+
+Previous: [Agent worklog](Agent-Worklog) | Next: [AI assistant guide](AI-Assistant-Guide)
+
+Main map: [Home](Home) | Machine records: [`agent-development-lessons.jsonl`](agent-development-lessons.jsonl) | Testing route: [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow)

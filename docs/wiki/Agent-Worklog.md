@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-05T12:35:00+02:00 - Codex - archive/queue Continue Reading closeout
+
+- Claimed `archive-queue-continue-reading-closeout` after the owner-page polish pass left only archive/queue pages without normalized `## Continue Reading` blocks.
+- Added support-page routes to [Audit findings queue](Audit-Findings-Queue-2026-06-03) and [Development lessons learned](Development-Lessons-Learned).
+- Renamed the imported Miksuu archive page chains from `Archive Navigation` to `Continue Reading` and added a short caveat that they are historical provenance, not current implementation truth.
+- Recomputed the missing `Continue Reading` count across `docs/wiki/*.md` content pages: `0`.
+- Updated [Navigation inventory and page status](Navigation-Inventory-And-Page-Status), [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger), [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-context.json`, `agent-collaboration.json` and `agent-events.jsonl`. No gameplay source changed.
+
 ## 2026-06-05T12:25:00+02:00 - Codex - dead code OA compatibility pass
 
 - Continued Steff's long-running dead-code detective goal with a repo-wide Arma 2 OA compatibility / Arma 3-style API scan.

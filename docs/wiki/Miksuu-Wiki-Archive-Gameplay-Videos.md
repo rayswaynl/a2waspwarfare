@@ -9,7 +9,9 @@ Archive category: `community-media`
 
 ---
 
-## Archive Navigation
+## Continue Reading
+
+Archive chain. This imported upstream page is historical provenance, not current implementation truth.
 
 Previous: [Miksuu Wiki Archive: Changelog](Miksuu-Wiki-Archive-Changelog) | Next: [Miksuu Wiki Archive: Discord Bot](Miksuu-Wiki-Archive-Discord-Bot)
 

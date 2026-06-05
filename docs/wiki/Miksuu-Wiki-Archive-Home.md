@@ -9,7 +9,9 @@ Archive category: `upstream-wiki-stub`
 
 ---
 
-## Archive Navigation
+## Continue Reading
+
+Archive chain. This imported upstream page is historical provenance, not current implementation truth.
 
 Previous: [Miksuu Wiki Archive: Chernarus Mission Script Architecture](Miksuu-Wiki-Archive-Project-Script-Architecture-Of-Chernarus-Mission) | Next: [Community & Dev](Community-And-Dev)
 

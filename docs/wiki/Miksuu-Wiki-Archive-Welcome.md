@@ -9,7 +9,9 @@ Archive category: `project-lineage`
 
 ---
 
-## Archive Navigation
+## Continue Reading
+
+Archive chain. This imported upstream page is historical provenance, not current implementation truth.
 
 Previous: [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) | Next: [Miksuu Wiki Archive: Big Announcements](Miksuu-Wiki-Archive-Big-Announcements)
 

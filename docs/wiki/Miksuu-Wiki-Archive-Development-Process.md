@@ -9,7 +9,9 @@ Archive category: `developer-process-history`
 
 ---
 
-## Archive Navigation
+## Continue Reading
+
+Archive chain. This imported upstream page is historical provenance, not current implementation truth.
 
 Previous: [Miksuu Wiki Archive: Discord Bot](Miksuu-Wiki-Archive-Discord-Bot) | Next: [Miksuu Wiki Archive: LoadoutManager](Miksuu-Wiki-Archive-LoadoutManager)
 

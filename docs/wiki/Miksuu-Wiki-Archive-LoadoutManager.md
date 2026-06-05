@@ -9,7 +9,9 @@ Archive category: `tool-history`
 
 ---
 
-## Archive Navigation
+## Continue Reading
+
+Archive chain. This imported upstream page is historical provenance, not current implementation truth.
 
 Previous: [Miksuu Wiki Archive: Development Process](Miksuu-Wiki-Archive-Development-Process) | Next: [Miksuu Wiki Archive: Chernarus Mission Script Architecture](Miksuu-Wiki-Archive-Project-Script-Architecture-Of-Chernarus-Mission)
 

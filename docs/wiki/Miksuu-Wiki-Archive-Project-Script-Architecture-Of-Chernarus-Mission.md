@@ -9,7 +9,9 @@ Archive category: `architecture-history`
 
 ---
 
-## Archive Navigation
+## Continue Reading
+
+Archive chain. This imported upstream page is historical provenance, not current implementation truth.
 
 Previous: [Miksuu Wiki Archive: LoadoutManager](Miksuu-Wiki-Archive-LoadoutManager) | Next: [Miksuu Wiki Archive: Wiki Home Stub](Miksuu-Wiki-Archive-Home)
 

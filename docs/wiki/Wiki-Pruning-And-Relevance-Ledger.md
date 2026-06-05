@@ -78,6 +78,7 @@ These are new cleanup leads from the 2026-06-05 wiki-backlog scout wave. They ar
 | Date | Lead | Status | Evidence / next action |
 | --- | --- | --- | --- |
 | 2026-06-05 | Maintain one navigation inventory | Started / published | [Navigation inventory and page status](Navigation-Inventory-And-Page-Status) records current sidebar, MkDocs, neither-nav and `Continue Reading` gaps. Next pass should decide whether sidebar-only primary pages join MkDocs and whether MkDocs-only Miksuu archive pages stay search-visible or move behind archive indexes. |
+| 2026-06-05 | Close remaining `Continue Reading` gaps | Completed / validated | Queue pages now route back to owning indexes, and imported Miksuu archive pages use archive-chain `## Continue Reading` blocks that preserve the historical-provenance caveat. Recomputed missing count: `0`. |
 
 ## Agent Guidance
 

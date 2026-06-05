@@ -9,7 +9,9 @@ Archive category: `community-announcement`
 
 ---
 
-## Archive Navigation
+## Continue Reading
+
+Archive chain. This imported upstream page is historical provenance, not current implementation truth.
 
 Previous: [Miksuu Wiki Archive: Project Welcome](Miksuu-Wiki-Archive-Welcome) | Next: [Miksuu Wiki Archive: Changelog](Miksuu-Wiki-Archive-Changelog)
 
