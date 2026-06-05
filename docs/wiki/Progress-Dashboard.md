@@ -29,21 +29,28 @@ Keep this page open when parallel documentation work is running. It links to the
 | Lane | Status | Output |
 | --- | --- | --- |
 | `july-update-planning` | Queued / dev branch created | Steff added **Hosted Server FPS Loop Fix** to the July update to-do list. Dev branch: `dev/july-update-hosted-server-fps-loop-fix`. Scope is the DR-19 hosted/listen busy-spin fix plus dedicated FPS publish smoke; no gameplay source changed by this dashboard note. |
-| `dashboard-open-item-cleanup` | Published / validated | Codex compacted this dashboard back into a live status surface, moved old batch detail behind worklog/swarm links, closed the Coverage Ledger sidebar request, and reclassified stale open/ready rows as published, watchlist or future code-owner work. No gameplay source changed. |
-| `spark-scout-wave-release-targets-hc-ai-caps-economy` | Published / validated / pushed | Steff asked for more Spark scouts. Codex launched six GPT-5.3-Codex-Spark read-only scouts for player AI caps, support authority, UI/dialog hazards, generated/modded release tiers, town/economy/supply edge cases and HC/locality/FPS, then refilled one freed slot with tooling/integrations and one with mission lifecycle/init. Returned reports were duplicate-aware: Player AI caps confirmed the existing Discord-ready table, HC scout confirmed existing failover/dual-FPS/static-defense gaps, town/economy scout confirmed already-canonical camp flag, patrol latch, side-supply, income-cap and supply-authority rows, and generated/modded scout sharpened release target counts. The content delta is focused in `agent-release-readiness.json` and [Tooling release readiness audit](Tooling-Release-Readiness-Audit): release targets are now split into source Chernarus, maintained Takistan, branch-only Zargabad candidate and per-folder modded blocked/stub tiers with file counts, conflict-marker counts and bootstrap blockers. UI scout also added the missing `Client\Images\wf_*.paa` old-upgrade-dialog asset references to the UI atlas/checklist. Validation passed and content pushed as docs `058427d3` / wiki `4b72809`. No gameplay source changed. |
-| `ai-commander-branch-head-refresh-and-spark-scout-wave` | Published / validated | Current branch evidence is recorded: `origin/feat/ai-commander` is `c20ce153`, source-Chernarus-only with 9 files, +416/-5 and no maintained Vanilla changes. The post-`4dba060e` cleanup series only rewrites five `Server/AI/Commander/AI_Commander*.sqf` scripts. `origin/codex/quad-ai-commander` is `d4e0fa38` concept/report evidence only. Returned scout notes remain follow-up leads until source-checked into canonical pages. |
-| `fresh-background-spark-scout-wave-buy-menu-harvest` | Published / validated / pushed | Ten fresh background Spark threads were launched after normal subagent startup failed. Five completed reports mostly confirmed existing canonical docs, four were interrupted and one UI thread errored. The only promoted delta was the buy-menu driver-default `profileNamespace` key split, routed through [Factory/purchase](Factory-And-Purchase-Systems-Atlas), [Development lessons](Development-Lessons-Learned), `agent-development-lessons.jsonl` and `agent-feature-status.jsonl`. |
+| `dead-code-mission-copy-divergence-pass` | Published / validated | Added mission-copy divergence evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register): 9 mission roots, 690 unique mission-relative paths, 548 identical copied paths, 139 diverged copied paths, 18 conflict-marker files. Source/Vanilla divergence is mostly intentional map/generated data; `Modded_Missions` is quarantined as stale fork territory until regenerated or explicitly maintained. No gameplay source changed. |
+| `dead-code-sqf-reachability-pass` | Published / validated | Added quoted-SQF-path reachability evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register): 2705 SQF files catalogued, 4358 quoted SQF path references, 453 raw unreferenced leads, and source-checked findings for AI supply truck, groupsMonitor, air-vehicle modifier hook, AT reload hook, IRS warning helpers, Reaktiv and TaskSystem. Added false-positive guardrails for dynamic Skill, construction, AI respawn and MHQ lock paths. No gameplay source changed. |
+| `dead-code-parameter-config-pass` | Published / validated / pushed | Added mission parameter/config scan evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register): visible `WFBE_C_AI_MAX` has no current runtime consumer; visible `WFBE_C_UNITS_CLEAN_TIMEOUT` is bypassed by active body/empty-vehicle cleanup paths and only survives in a commented old split line; dynamic economy start parameters are marked as exact-name scan false positives. No gameplay source changed. |
+| `dead-code-ui-rsc-pass` | Published / validated / pushed | Added UI/Rsc scan evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register): missing `RscMenu_Upgrade` handler target, active economy IDC drift `23004/23005/23006`, duplicate reachable IDDs `23000` and `10200`, comment-only retired parameters IDC `22005`, plus false-positive guardrails for engine/BIS/display IDCs. No gameplay source changed. |
+| `dead-code-pv-channel-pass` | Published / validated / pushed | Added direct public-variable scan evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [Public variable channel index](Public-Variable-Channel-Index): comment-only legacy `WFBE_*` direct PV names, `SERVER_FPS_GUI` / `WFBE_VAR_SERVER_FPS` compatibility drift, receiver-only `ICBM_launched` handler, plus false-positive guardrails for dynamic supply temp channels and state broadcasts. No gameplay source changed. |
+| `dead-code-integrations-and-tooling-pass` | Published / validated / pushed | Deepened [Dead/stale code register](Dead-Code-And-Stale-Code-Register) with DiscordBot, Extension, BattlEye and LoadoutManager findings: dormant config/helper paths, unsafe dormant JSON helpers, commented extension deserialization scaffold, game-status arg-shape drift, DiscordBot/LoadoutManager terrain metadata drift, AFK-only BattlEye footprint and warning-marked CRV7PG loadout data. Validation passed. No gameplay source changed. |
+| `dead-code-register` | Published / validated / pushed | Added [Dead/stale code register](Dead-Code-And-Stale-Code-Register) plus `docs/analysis/dead-code-findings.jsonl` and the repeatable reference scan. Current pass classifies stale comments, broken UI residue, MASH marker relay, latent `AIBuyUnit`, modded conflict markers, generated `version.sqf` and modded packaging scope. Validation passed. No gameplay source changed. |
+| `pruning-ledger-completion-audit` | Published / validated / pushed | Codex audited [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) against the current wiki state. P0/P1/P2 pruning rows are now recorded as completed, archive pages carry historical/current-truth caveats, and future gameplay hardening/release smoke/code-owner tasks are separated from the pruning goal. Validation passed. No gameplay source changed. |
+| `ui-runtime-quickref-pruning` | Published / validated / pushed | Most recent published pruning batch: UI/runtime gateways route to canonical owner pages and no longer repeat detailed proof. |
 
-Historic batch rows were intentionally removed from this page. Use [Agent worklog](Agent-Worklog), [Discovery swarm](Subagent-Discovery-Swarm) and [`agent-events.jsonl`](agent-events.jsonl) for the long audit trail.
+Older published batches are intentionally omitted from this table. Use [Agent worklog](Agent-Worklog), [Discovery swarm](Subagent-Discovery-Swarm), [`agent-status.json`](agent-status.json), [`agent-events.jsonl`](agent-events.jsonl) and git history for the long audit trail.
 
 ## At A Glance
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` | Dashboard open-item cleanup is complete; continue bounded source-backed wiki maintenance and keep stale dashboard rows out of the live surface. |
+| Codex | Active | `documentation-finisher-loop` | Pruning-ledger completion audit is validated/published; future work should start from fresh source evidence or code-owner requests. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Coverage Ledger navigation is wired. Claude can self-select the next bounded source-backed review from the ledger or hardening backlog. |
-| Sub-agents | None canonical | Follow-up leads only | Prior interrupted/error scout threads are not evidence. Relaunch narrowly before promoting anything into owner pages. |
+| Supported docs agents | Active | `research-catchup-synthesis-default-supported`, `relevance-pruning-and-archive-default-supported` | Two account-default supported high-reasoning helper chats are running catch-up synthesis and relevance pruning. The earlier named-model starts are treated as failed/non-evidence. |
+| Read-only pruning scouts | Returned / harvested | `ui-runtime-bloat-scout`, `wiki-navigation-chain-scout` | UI/runtime lead is promoted; small navigation fixes are promoted; remaining archive-page caveat note is already satisfied by archive page headers. |
+| Sub-agents | Returned / closed | `navigation-parity-and-scout-wave-2026-06-04` | Supports, UI, tooling and AI scouts returned; most findings confirmed existing owner pages. Economy scout was closed without output and is not evidence. |
 | Shared docs | Live | GitHub wiki + docs mirror | Wiki and mirror should stay in parity after scoped validation; use event logs and git history for commit IDs. |
 
 ## One-Link Check
@@ -57,16 +64,31 @@ Historic batch rows were intentionally removed from this page. Use [Agent worklo
 | Active lanes and ownership | [`agent-collaboration.json`](agent-collaboration.json) |
 | Agent-readable knowledge records | [`agent-knowledge.jsonl`](agent-knowledge.jsonl) |
 | Agent-readable hardening backlog | [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) |
+| Agent release readiness ledger | [Agent release readiness ledger](Agent-Release-Readiness-Ledger) |
 | Latest event stream | [`agent-events.jsonl`](agent-events.jsonl) |
 | Dated narrative notes | [Agent worklog](Agent-Worklog) |
 | External report intake | [External research reports](External-Research-Reports) |
 | External report manifest | [`external-research-report-manifest.json`](external-research-report-manifest.json) |
+| Pruning and relevance decisions | [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) |
 
 ## Current Lanes
 
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
-| `documentation-finisher-loop` | Codex | Active / ongoing | Keep the wiki current from source evidence, update machine files on visible status changes, and keep this dashboard compact. |
+| `dead-code-mission-copy-divergence-pass` | Codex | Published / validated | Push wiki/docs-only changes, then continue the broader dead-code goal from fresh source evidence. |
+| `dead-code-sqf-reachability-pass` | Codex | Published / validated | Continue the broader dead-code goal from fresh source evidence. |
+| `dead-code-parameter-config-pass` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
+| `dead-code-ui-rsc-pass` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
+| `dead-code-pv-channel-pass` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
+| `dead-code-integrations-and-tooling-pass` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
+| `dead-code-register` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
+| `pruning-ledger-completion-audit` | Codex | Published / validated / pushed | Ledger records all pruning-backlog rows as completed and dashboard is compacted to current-state use. |
+| `documentation-finisher-loop` | Codex | Active / ongoing | Keep the wiki current from source evidence after this pruning goal closes. |
+| `ui-runtime-quickref-pruning` | Codex | Published / validated / pushed | UI/runtime gateways route to canonical owners and no longer repeat detailed proof. |
+| `feature-status-residue-pruning` | Codex | Published / validated / pushed | Feature Status now routes harvested scout history to owner pages, fixes stale PR #1 handler wording and keeps AI supply logistics branch/config scope visible. |
+| `core-gameplay-gateway-pruning` | Codex | Published / validated / pushed | Core index is a route map and Gameplay systems routes duplicated economy/commander/upgrade/construction/factory detail to owner pages. |
+| `miksuu-archive-sidebar-pruning` | Codex | Published / validated / pushed | Preserve imported Miksuu archive pages but route sidebar users through the archive index, community context and source-check pages. |
+| `scout-pruning-leads` | Codex sub-agents | Harvested / closed | Fermat, Herschel, Confucius and Carson leads have been promoted, rejected or marked already satisfied in the ledger/worklog. |
 | `autonomous-claude-research` | Claude | Autonomous-ready | Self-select the next bounded source-backed review from [Codebase coverage ledger](Codebase-Coverage-Ledger) when Claude is active. |
 | `feature-status-reconciliation` | Codex / future agent | Watchlist | Fold newly confirmed findings into [Feature status](Feature-Status-Register), owner pages and machine records. No untriaged finding is blocking this dashboard. |
 | `implementation-hardening-from-backlog` | Future code owner | Owner decision / code lane | Pick implementation work from [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) only when Steff asks for gameplay patches or a code owner claims the work. |
@@ -131,6 +153,6 @@ Historic batch rows were intentionally removed from this page. Use [Agent worklo
 
 ## Continue Reading
 
-Previous: [Agent context](Agent-Context) | Next: [Coordination board](Coordination-Board)
+Previous: [Agent context](Agent-Context) | Next: [Bottleneck removal queue](Bottleneck-Removal-Queue)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
