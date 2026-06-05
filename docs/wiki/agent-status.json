@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Wiki Source Consistency Cluster B/C as current docs drift and corrected stale DR-2 paratrooper marker wording in agent-context.json.",
+      "currentWork": "Closed Wiki Source Consistency Cluster B/C as current docs drift and added a 2026-06-05 branch-scoped source-truth supersession to agent-knowledge.jsonl.",
       "nextExpectedOutput": "Continue the documentation finisher loop from fresh source evidence, user requests or newly returned helper reports; keep wiki and docs mirror in parity."
     },
     "Codex-2": {
