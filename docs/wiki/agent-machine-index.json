@@ -356,6 +356,7 @@
         "Player-AI-Caps-And-Role-Balance",
         "AI-Headless-And-Performance",
         "Performance-Opportunity-Sweep",
+        "Testing-Debugging-And-Release-Workflow",
         "Feature-Status-Register"
       ],
       "sourceRefs": [
@@ -369,10 +370,11 @@
       "machineRefs": [
         "agent-events.jsonl#old-warfarebe-performance-comparison-expanded-2026-06-05-2045",
         "agent-events.jsonl#old-vs-current-fps-opportunity-scout-complete-2026-06-05-2359",
+        "agent-events.jsonl#old-be-current-wasp-fps-opportunity-final-harvest-2026-06-05-1606",
         "agent-status.json",
         "agent-machine-index.json"
       ],
-      "nextGate": "Do not patch gameplay from nostalgia alone. Use Testing-Debugging-And-Release-Workflow.md#full-server-fps-opportunity-pack: run 10/15/20/25/30-player tests with player AI cap, view distance, HC presence, active towns, static gunners, AI teams and PerformanceAudit/RPT capture recorded separately."
+      "nextGate": "Do not patch gameplay from nostalgia alone. Use Testing-Debugging-And-Release-Workflow.md#full-server-fps-opportunity-pack: run 10/15/20/25/30-player tests with player AI cap, view distance, HC presence, active towns, static gunners, AI teams, PerformanceAudit/RPT capture and static-defense HC update-back evidence recorded separately."
     },
     {
       "id": "client-ui-gear-service",

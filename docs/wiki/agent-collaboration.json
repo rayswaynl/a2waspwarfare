@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-05T15:56:10+02:00",
+  "generatedAt": "2026-06-05T16:06:23+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -48,7 +48,7 @@
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
       "owner": "Codex-delegated",
-      "status": "active-read-only",
+      "status": "returned-harvested",
       "sourceScope": [
         "C:/Users/Steff/Documents/Codex/2026-06-05/wasp-old-mission-fps-opportunity-window",
         "https://github.com/BennyBoy-/ArmA2_WarfareBE",
@@ -61,11 +61,11 @@
         "docs/wiki/Server-Runtime-And-Operations.md"
       ],
       "outputs": [
-        "Report-only old BE vs current Wasp FPS opportunity scout.",
-        "Compare AI caps, town/static lifecycle, AI loops, cleanup, HUD/marker/PV work, HC delegation, network assumptions and benchmark design.",
-        "Expected output: C:/Users/Steff/Documents/Codex/2026-06-05/wasp-old-mission-fps-opportunity-window/outputs/Old-BE-vs-Current-Wasp-FPS-Opportunity-Scout.md"
+        "Report-only old BE vs current Wasp FPS opportunity scout returned.",
+        "Compact deltas were harvested into Old-WarfareBE-Performance-Comparison, Performance-Opportunity-Sweep, Testing-Debugging-And-Release-Workflow and Feature-Status-Register.",
+        "Output report: C:/Users/Steff/Documents/Codex/2026-06-05/wasp-old-mission-fps-opportunity-window/outputs/Old-BE-vs-Current-Wasp-FPS-Opportunity-Scout.md"
       ],
-      "handoff": "When complete, harvest only compact source-backed deltas into canonical owner pages. Do not edit gameplay source from this lane."
+      "handoff": "Closed as docs-harvested. Future work should run the benchmark matrix or claim a code-owner performance experiment; do not reopen this lane just to duplicate the report."
     },
     {
       "lane": "autonomous-claude-research",
@@ -213,7 +213,8 @@
     "old-vs-current-fps-opportunity-harvest",
     "old-fps-provenance-cleanup",
     "fps-helper-lane-compaction",
-    "server-runtime-operations-gateway"
+    "server-runtime-operations-gateway",
+    "old-be-current-wasp-fps-opportunity-final-harvest"
   ],
   "queuedReports": [],
   "lanes": [
@@ -226,8 +227,8 @@
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
       "suggestedOwner": "Codex-delegated",
-      "status": "active-read-only",
-      "summary": "Fresh old BE vs current Wasp FPS opportunity scout; report-only until harvested."
+      "status": "returned-harvested",
+      "summary": "Final old BE vs current Wasp FPS opportunity scout returned and was compactly harvested into canonical pages."
     },
     {
       "lane": "autonomous-claude-research",

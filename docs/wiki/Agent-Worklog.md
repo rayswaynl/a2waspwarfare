@@ -2828,3 +2828,8 @@ Key conclusions:
 - Claimed `server-runtime-operations-gateway` after the active FPS scout found a prompt target named `Server-Runtime-And-Operations.md` while the wiki only had split owner pages.
 - Added [Server runtime and operations](Server-Runtime-And-Operations) as a thin gateway that routes broad server prompts to runtime, ops, integrations, authority, HC, performance and testing owner pages instead of copying their evidence.
 - Updated sidebar, MkDocs, `llms.txt`, [Home](Home), [Navigation inventory](Navigation-Inventory-And-Page-Status), [`agent-context.json`](agent-context.json), [`agent-machine-index.json`](agent-machine-index.json) and coordination records. No gameplay source files changed.
+
+## 2026-06-05T16:06:23+02:00 - Codex - final old-BE/current-Wasp FPS scout harvest
+- Harvested `old-be-current-wasp-fps-opportunity-scout-2` from `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-mission-fps-opportunity-window\outputs\Old-BE-vs-Current-Wasp-FPS-Opportunity-Scout.md` without mirroring the full report into the wiki.
+- Promoted only compact deltas: no useful old-BE bandwidth/basic.cfg lesson found, branch-aware player-cap scope, final benchmark order, AI-source scoreboard gate, static-defense HC update-back proof gate and expanded benchmark runbook fields.
+- Canonical owners are [Old WarfareBE comparison](Old-WarfareBE-Performance-Comparison), [Performance sweep](Performance-Opportunity-Sweep), [Testing workflow](Testing-Debugging-And-Release-Workflow#full-server-fps-opportunity-pack), [Feature status](Feature-Status-Register) and [Player AI caps](Player-AI-Caps-And-Role-Balance). No gameplay source changed.

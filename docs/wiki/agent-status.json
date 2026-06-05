@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T15:56:10+02:00",
+  "generatedAt": "2026-06-05T16:06:23+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Added a server runtime/operations gateway so broad server prompts route to the correct owner page without duplicating runtime or deployment evidence.",
-      "nextExpectedOutput": "Harvest only compact source-backed deltas from old-be-current-wasp-fps-opportunity-scout-2 when the report completes; keep gateway pages short and route new facts to owner pages."
+      "currentWork": "Harvested the final old-be-current-wasp-fps-opportunity-scout-2 report into old-BE, performance, testing and Feature Status owner pages without mirroring the report wholesale.",
+      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from fresh source evidence, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -37,10 +37,10 @@
       "nextExpectedOutput": "Self-select the next bounded source-backed review from Coverage Ledger or the hardening backlog."
     },
     "Codex delegated FPS scout": {
-      "status": "active / read-only",
+      "status": "returned / harvested",
       "currentLane": "old-be-current-wasp-fps-opportunity-scout-2",
-      "currentWork": "Comparing BennyBoy old Warfare BE against current Wasp for source-backed client/server FPS opportunities, including AI caps, town/static lifecycle, HUD/marker/PV work, HC delegation and benchmark design.",
-      "nextExpectedOutput": "Markdown report at C:/Users/Steff/Documents/Codex/2026-06-05/wasp-old-mission-fps-opportunity-window/outputs/Old-BE-vs-Current-Wasp-FPS-Opportunity-Scout.md; no gameplay source edits."
+      "currentWork": "Completed report-only comparison at C:/Users/Steff/Documents/Codex/2026-06-05/wasp-old-mission-fps-opportunity-window/outputs/Old-BE-vs-Current-Wasp-FPS-Opportunity-Scout.md; compact deltas were harvested into canonical docs.",
+      "nextExpectedOutput": "No active output remains for this lane. Future work should execute the full-server FPS test matrix or open a code-owner lane for one chosen performance experiment."
     },
     "Sub-agents": {
       "status": "returned-harvested",
@@ -65,8 +65,8 @@
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
       "owner": "Codex-delegated",
-      "status": "active-read-only",
-      "output": "Fresh helper window is comparing old Warfare BE against current Wasp for client/server FPS opportunities and should return a report-only artifact."
+      "status": "returned-harvested",
+      "output": "Final report returned and was compacted into Old-WarfareBE-Performance-Comparison, Performance-Opportunity-Sweep, Testing-Debugging-And-Release-Workflow and Feature-Status-Register."
     },
     {
       "lane": "autonomous-claude-research",

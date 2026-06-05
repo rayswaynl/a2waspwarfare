@@ -105,15 +105,17 @@ For player-count validation, run no-HC and multi-HC cases before trusting public
 
 ## Full-Server FPS Opportunity Pack
 
-Use this pack when testing the old-BE/current-Wasp FPS debate or any AI-cap proposal. It is based on `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-vs-current-fps-investigation\outputs\Old-BE-vs-Current-Wasp-FPS-Opportunity-Audit.md`.
+Use this pack when testing the old-BE/current-Wasp FPS debate or any AI-cap proposal. It is based on `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-vs-current-fps-investigation\outputs\Old-BE-vs-Current-Wasp-FPS-Opportunity-Audit.md` and the final report-only scout at `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-mission-fps-opportunity-window\outputs\Old-BE-vs-Current-Wasp-FPS-Opportunity-Scout.md`.
 
 Record for every run:
 
 - mission commit or PBO hash, server hardware, Arma 2 OA version, mods, weather/time and route;
-- `server.cfg`, `basic.cfg`, profile and lobby parameters;
-- HC present/absent, HC owner/delegation evidence and fallback count;
+- `server.cfg`, `basic.cfg`, profile, launch args, lobby parameters, PBO rollback path and RPT locations;
+- HC present/absent, HC slot/command used, HC owner/delegation evidence, fallback count and whether static-defense HC units report back or remain one-way delegated;
 - view distance, active towns, static gunners, AI teams, player followers, support units, vehicles and empty/stale vehicles;
-- server FPS, at least three client FPS samples, RPT errors and PerformanceAudit rows.
+- server FPS, at least three client FPS samples, RPT errors, PerformanceAudit rows and the `Tools/PerformanceAuditAnalyzer` command/result if used.
+
+Old BE is Takistan Lite OA evidence in the cloned reference repo. Use it as a conservative baseline, but keep island, view distance, server config and player-count differences explicit before drawing conclusions.
 
 Scenario matrix:
 
@@ -129,9 +131,10 @@ Required variants:
 
 | Variant | What changes | What it proves |
 | --- | --- | --- |
+| AI-source scoreboard | Count player followers, AI teams, town occupation, town defenders, static gunners, supports, vehicles and empty/stale vehicles separately. | Whether the cap pilot actually reduces the dominant AI bucket or only moves attention away from town/static/server AI. |
 | Matched view distance | Current at `1000`, `3500` and `6000`; old near `1000`/`4000` where possible. | Client render and AI-knowledge sensitivity versus mission entity load. |
 | Low-SV town group branch | Current group tables versus old-like low-SV group counts. | Whether towns are the next biggest load bucket after player AI. |
-| Static defense stress | Activate, capture and deactivate defense-heavy towns. | Whether static gunners/statics leak, spike or fail HC/deletion handoff. |
+| Static defense stress | Activate, capture and deactivate defense-heavy towns, with and without HC. | Whether static gunners/statics leak, spike or fail deletion/accounting; specifically check the commented static update-back against town-AI update-back behavior. |
 | Long-session cleanup | 60-120 minutes with combat and vehicle churn. | Whether cleaners/restorers cost more than they save. |
 | Network/config capture | Keep network config fixed and logged. | Separates bandwidth/desync claims from simulation-FPS claims. |
 

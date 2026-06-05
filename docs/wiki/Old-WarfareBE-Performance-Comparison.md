@@ -54,6 +54,17 @@ Use it as an appendix, not a duplicate wiki page. The promoted deltas are:
 - Current Wasp also has advantages old BE lacks: HC mode, global loops with sleeps/audit, aircraft-excluding town activation scans, resistance-only static defense gates and PerformanceAudit evidence surfaces.
 - Best test order: player-owned AI cap pilot, AI-source scoreboard, HC proof pack, low-SV town group branch, static lifecycle audit and matched view-distance runs before smaller network/cleanup refinements.
 
+## 2026-06-05 Final FPS Scout Appendix
+
+The later `old-be-current-wasp-fps-opportunity-scout-2` lane returned a report-only artifact at `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-mission-fps-opportunity-window\outputs\Old-BE-vs-Current-Wasp-FPS-Opportunity-Scout.md`. Treat it as the final compact scout in this old-BE comparison chain, not a new page to mirror wholesale.
+
+Extra deltas promoted from that report:
+
+- No useful old-BE `MinBandwidth` / `MaxBandwidth` or `basic.cfg` lesson was found in the cloned BennyBoy repo; server/network config belongs in the test record as a controlled variable.
+- Static-defense HC accounting remains a proof gate, not a confirmed FPS win: `Client_DelegateAIStaticDefence.sqf:28` leaves the static update-back commented while `Client_DelegateTownAI.sqf:35` reports town vehicles back.
+- The test order is now fixed as a queue: AI-source scoreboard, role-aware cap pilot, HC proof pack, low-SV town group branch, static-defense lifecycle/HC accounting, cleaner/object-count evidence, then PV/server-FPS/network cleanups.
+- Old BE remains Takistan Lite OA evidence. Do not compare old BE at lower view distance or different server config against current Wasp and call the result an architecture proof.
+
 ## Lag Taxonomy
 
 | Category | What to separate during testing |

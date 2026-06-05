@@ -2,7 +2,7 @@
 
 This page documents the live player group-size cap used by the buy menu and RHUD, plus a Discord-ready balance table for the default server setting.
 
-Scope: current `master` source mission, `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
+Scope: source mission `Missions/[55-2hc]warfarev2_073v48co.chernarus`. The formulas below have been checked in the active docs branch; before making a release claim, recheck the exact branch or PBO being tested because `master`, docs branches and release branches can differ.
 
 For the old BennyBoy WarfareBE baseline behind the current FPS debate, see [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison). The short version: old default player AI was lower (`12` vs current Wasp lobby default `15`), but old WarfareBE still had town scans, town-AI activation and static-defense gunners.
 
