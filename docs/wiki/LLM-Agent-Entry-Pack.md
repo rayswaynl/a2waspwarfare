@@ -61,18 +61,9 @@ Use this page first, then jump into the canonical pages and machine files it nam
 
 ## Current Truth Notes
 
-- Paratrooper marker revival, client skill duplicate init removal, hosted server FPS loop exits, supply mission command-center scan narrowing and supply player-object list indexing are patched in Chernarus source and propagated to maintained Vanilla Takistan; Arma 2 OA smoke remains pending.
-- The current source/Vanilla propagation ledger lives in [Source fix propagation queue](Source-Fix-Propagation-Queue), with compact machine status in [`agent-release-readiness.json`](agent-release-readiness.json); update both before claiming release completeness.
+- Do not treat this page as the live source-fix dashboard. For current source/Vanilla propagation and smoke status, read [Current source status snapshot](Current-Source-Status-Snapshot), [Source fix propagation queue](Source-Fix-Propagation-Queue) and [`agent-release-readiness.json`](agent-release-readiness.json).
 - Machine-file contract: [`agent-entrypoint.json`](agent-entrypoint.json) is the small canonical bootstrap file. `agent-status.json`, `agent-collaboration.json`, `agent-context.json`, `agent-release-readiness.json` and `agent-compatibility-audit.json` are snapshots. `agent-events.jsonl`, `agent-knowledge.jsonl`, `agent-feature-status.jsonl` and `agent-hardening-backlog.jsonl` are append-oriented evidence streams; do not assume event rows are timestamp-sorted, and prefer the newest explicit `status`/`supersedes` record when older rows disagree.
-- WASP marker wait cleanup is an opportunity/playbook, not a completed code patch.
-- Respawn/death lifecycle has a canonical atlas. Local MASH respawn is live for the audited deployer path; MASH marker synchronization is dead/orphaned; custom-gear penalty mode `5` has a patch-ready affordability/skip edge.
-- Service menu affordability guards are a patch-ready local correctness lane for `GUI_Menu_Service.sqf`; do not confuse them with full gear/EASA/service server authority.
-- Integration trust fixes are split: DiscordBot `TypeNameHandling.All` is the active JSON intake risk; `a2waspwarfare_Extension` is the in-repo status writer; AntiStack uses a separate absent `A2WaspDatabase` extension. AntiStack has a controlled ON/OFF parameter and disabled-mode guards, but enabled-mode DB return parsing still needs hardening.
-- Commander vote/reassignment, UI IDD collisions and resistance supply now have dedicated source-backed playbooks: [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook), [Commander reassignment call shape](Commander-Reassignment-Call-Shape), [UI IDD collision repair](UI-IDD-Collision-Repair) and [Resistance supply scaffold](Resistance-Supply-Scaffold).
-- Commander/HQ lifecycle now has a canonical atlas. It maps commander vote/reassignment, client commander affordances, HQ deploy/mobilize, HQ destruction, allied wreck markers, normal MHQ repair, WASP cash HQ recovery and base-area/JIP-sensitive risk edges.
-- Victory/endgame now has a canonical atlas. It maps the default 80-second server victory loop, loser-side client payload semantics, all-towns winner inversion, same-tick double-fire, non-zero threeway no-detection, stale `PVFunctions/LogGameEnd.sqf` and smoke gates.
-- Wave G scout outputs now have owner pages: [Join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle), [Marker cleanup/restoration atlas](Marker-Cleanup-Restoration-Systems-Atlas), [Parameters/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs) and [Support/specials/modules atlas](Support-Specials-And-Tactical-Modules-Atlas).
-- Checked-in source has no tracked `version.sqf`; local ignored generated copies may exist, but clean checkout generation/pack inputs must supply it before source-mission boot or release packaging.
+- Use the task bundles above to find owner pages for MASH/respawn, service menu guards, integration trust, commander/HQ lifecycle, victory/endgame, marker/lifecycle and generated-version work. Owner pages carry the source evidence and current caveats.
 
 ## Agent Output Rules
 

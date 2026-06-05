@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-entrypoint-v1",
-  "generatedAt": "2026-06-03T22:25:00+02:00",
+  "generatedAt": "2026-06-05T14:35:00+02:00",
   "repo": {
     "owner": "rayswaynl",
     "name": "a2waspwarfare",
@@ -29,7 +29,11 @@
     "rule": "Do not collapse source patch state, generated propagation, Arma runtime smoke and wiki publication into one prose status."
   },
   "readOrder": [
+    "LLM-Agent-Entry-Pack.md",
     "llms.txt",
+    "agent-context.json",
+    "agent-status.json",
+    "agent-collaboration.json",
     "AI-Assistant-Developer-Guide.md",
     "Progress-Dashboard.md",
     "Feature-Status-Register.md",

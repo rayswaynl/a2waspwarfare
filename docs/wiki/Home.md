@@ -2,200 +2,75 @@
 
 Developer documentation for `rayswaynl/a2waspwarfare`, an Arma 2: Operation Arrowhead 1.64 Warfare / CTI mission and server ecosystem.
 
-# This page is the central orientation surface:
-# what this is, where the source files live, and how to navigate next.
+This page is the front door. It should help you choose the right owner page quickly, not repeat the whole wiki.
 
-## What this page is
+## Start Here
 
-- Human and AI starter map for all current source-backed documentation in this repository.
-- A central orientation surface for click-through tours, source-linked canonical pages, and handoff-safe routing.
-- The first stop before opening subsystem pages.
-
-## Where it lives
-
-- Wiki page: `docs/wiki/Home.md`
-- Machine companion: [`agent-context.json`](agent-context.json)
-- Source and mirror live under `docs/wiki` (active checkout) plus the synced GitHub wiki mirror.
-
-## How to use this page
-
-1. Start with the audience-specific quick path in the table below.
-2. Follow a tour to related systems and risk pages.
-3. Re-check `Progress-Dashboard` and machine logs (`agent-status.json`, `agent-events.jsonl`) before opening lane claims.
-4. Return here when a page needs rerouting after any major subsystem change.
-
-This wiki is built for two audiences at once:
-
-| Audience | Start here | Why |
+| If you are... | Open first | Then |
 | --- | --- | --- |
-| New human developer | [Quickstart](Quickstart-For-Humans-And-Agents) | Fast orientation, safe edit rules and reading paths. |
-| AI assistant | [Agent context](Agent-Context), [Current source status snapshot](Current-Source-Status-Snapshot), [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide), [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) and [`agent-context.json`](agent-context.json) | Compact context, current source truth for disputed lanes, OA engine references, compatibility guardrails, page map and high-risk rules. |
-| LLM / agent bootstrap | [AI Assistant Guide](AI-Assistant-Guide), [LLM agent entry pack](LLM-Agent-Entry-Pack), and [`llms.txt`](llms.txt) | Fast load order, task bundles and machine-readable entrypoints. |
-| Reviewer | [Feature status register](Feature-Status-Register) | Broken, partial, deferred and missing features. |
-| Hardening implementer | [Hardening roadmap](Hardening-Implementation-Roadmap), [Server authority map](Server-Authority-Migration-Map), [Commander vote/reassignment playbook](Commander-Vote-And-Reassignment-Playbook), [ICBM authority playbook](ICBM-Authority-Playbook), [Economy authority first cut](Economy-Authority-First-Cut) and [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) | Source-backed patch order, validation gates and safe implementation notes. |
-| Tester / releaser | [Testing workflow](Testing-Debugging-And-Release-Workflow) | Source checks, smoke packs, RPT logging and release gates. |
-| Mission implementer | [SQF code atlas](SQF-Code-Atlas) | Compile registry, PVF contract and entrypoint ownership. |
-| Upstream archaeologist | [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons), [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel) and [HC upstream history](HC-Upstream-History-And-Lessons) | Evidence-backed lessons from Miksuu PRs, reverts, branch history and recurring fix clusters. |
-| Community / dev historian | [Community & Dev](Community-And-Dev) and [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) | WASP -> Miksuu lineage, Discord/changelog culture, contributor mentions, historical upstream wiki archive and import caveats. |
-| Release reviewer | [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match) | Review checklist mapping upstream history lessons to PR #8 and drone branches. |
-| Stats/integration reviewer | [Player stats branch audit](Player-Stats-Branch-Audit) | Branch-only SQF-to-RPT-to-DiscordBot stats pipeline audit, with privacy/runtime/test gates. |
-| UI branch reviewer | [BuyMenu EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit) | Deep audit for the narrow Buy Units/EASA UI branch, with final-control smoke gates and Vanilla scope. |
-| Performance/fix branch reviewer | [Perf quick wins branch audit](Perf-Quick-Wins-Branch-Audit) | Deep audit for compact Chernarus-only fix branch covering side supply, factory queues, paratrooper markers, server loops and WASP actions. |
-| Construction branch reviewer | [Commander positions branch audit](Commander-Positions-Branch-Audit) | Deep branch audit for WDDM commander positions, modular walls, CoIn cleanup, merge baggage and Vanilla scope. |
-| Map branch reviewer | [Zargabad branch audit](Zargabad-Branch-Audit) | Deep branch audit for the low-pop Zargabad terrain release candidate, static validation result, runtime gates and generator scope. |
-| Claude collaborator | [Agent collaboration protocol](Agent-Collaboration-Protocol) and [Claude loop goal](Claude-Loop-Goal) | Shared claim, handoff, event protocol and Claude's current operating mode. |
-| Steff / project owner | [Progress dashboard](Progress-Dashboard), [Bottleneck removal queue](Bottleneck-Removal-Queue) and [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) | Current lanes, event feed, ranked bottlenecks, mirror/wiki parity state and next best actions. |
-| Docs/platform owner | [Navigation inventory](Navigation-Inventory-And-Page-Status), [Knowledge platform roadmap](Knowledge-Platform-Roadmap), [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) and [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) | Page-status inventory, canonical docs location, GitHub Pages/MkDocs path, LLM bundle plan, mirror/wiki parity policy and bloat-reduction decisions. |
+| New human developer | [Quickstart](Quickstart-For-Humans-And-Agents) | [Architecture overview](Architecture-Overview), [Mission entrypoints](Mission-Entrypoints-And-Lifecycle), [SQF code atlas](SQF-Code-Atlas) |
+| AI assistant / LLM | [LLM agent entry pack](LLM-Agent-Entry-Pack) | [`llms.txt`](llms.txt), [`agent-entrypoint.json`](agent-entrypoint.json), [`agent-context.json`](agent-context.json), [AI assistant guide](AI-Assistant-Guide) |
+| Current work reviewer | [Progress dashboard](Progress-Dashboard) | [`agent-status.json`](agent-status.json), [`agent-collaboration.json`](agent-collaboration.json), [Agent worklog](Agent-Worklog) |
+| Feature or bug triager | [Feature status register](Feature-Status-Register) | [Dead/stale code register](Dead-Code-And-Stale-Code-Register), [Pending owner decisions](Pending-Owner-Decisions) |
+| Gameplay implementer | [Gameplay systems atlas](Gameplay-Systems-Atlas) | [Construction/CoIn](Construction-And-CoIn-Systems-Atlas), [Factory/purchase](Factory-And-Purchase-Systems-Atlas), [Server runtime](Server-Gameplay-Runtime-Atlas) |
+| Public-server hardening owner | [Hardening roadmap](Hardening-Implementation-Roadmap) | [Server authority map](Server-Authority-Migration-Map), [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook), [Testing workflow](Testing-Debugging-And-Release-Workflow) |
+| Upstream/community archaeologist | [Community & Dev](Community-And-Dev) | [Miksuu wiki import](Miksuu-Upstream-Wiki-Import), [Developer history](Developer-History-And-Upstream-Lessons), [Upstream commit intel](Upstream-Miksuu-Commit-Intel) |
+| Docs/platform maintainer | [Navigation inventory](Navigation-Inventory-And-Page-Status) | [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), [Knowledge platform roadmap](Knowledge-Platform-Roadmap), [Wiki mirror plan](Wiki-Mirror-Reconciliation-Plan) |
 
-## Click-Through Tours
+## Non-Negotiables
 
-Use these when you want to read the wiki like a connected handbook instead of jumping through the sidebar.
-
-| Tour | Path |
+| Rule | Why it matters |
 | --- | --- |
-| First day in the repo | [Quickstart](Quickstart-For-Humans-And-Agents) -> [Architecture overview](Architecture-Overview) -> [Mission lifecycle](Mission-Entrypoints-And-Lifecycle) -> [Mission config/version graph](Mission-Config-Version-Include-Graph) -> [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
-| Implement a gameplay change | [Gameplay atlas](Gameplay-Systems-Atlas) -> [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas) -> [Factory/purchase atlas](Factory-And-Purchase-Systems-Atlas) -> [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) -> [Server runtime atlas](Server-Gameplay-Runtime-Atlas) -> [Core systems](Core-Systems-Index) -> [Feature status](Feature-Status-Register) |
-| Harden the mission | [Feature status](Feature-Status-Register) -> [Pending owner decisions](Pending-Owner-Decisions) -> [Abandoned feature revival](Abandoned-Feature-Revival-Review) -> [Paratrooper marker revival](Paratrooper-Marker-Revival) -> [Hardening roadmap](Hardening-Implementation-Roadmap) -> [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) -> [Server authority map](Server-Authority-Migration-Map) -> [Commander vote/reassignment playbook](Commander-Vote-And-Reassignment-Playbook) -> [ICBM authority playbook](ICBM-Authority-Playbook) -> [Economy authority first cut](Economy-Authority-First-Cut) -> [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) -> [Testing workflow](Testing-Debugging-And-Release-Workflow) -> [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) -> [Networking/PV](Networking-And-Public-Variables) -> [PV channel index](Public-Variable-Channel-Index) -> [Deep-review findings](Deep-Review-Findings) |
-| Trace SQF and networking | [SQF atlas](SQF-Code-Atlas) -> [Function index](Function-And-Module-Index) -> [Networking/PV](Networking-And-Public-Variables) -> [PV channel index](Public-Variable-Channel-Index) |
-| Learn from upstream history | [Community & Dev](Community-And-Dev) -> [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) -> [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) -> [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel) -> [HC upstream history](HC-Upstream-History-And-Lessons) -> [Feature status](Feature-Status-Register) -> [AI Assistant Guide](AI-Assistant-Guide) |
-| Review branch-only stats work | [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-04-feature-branch-matrix) -> [Player stats branch audit](Player-Stats-Branch-Audit) -> [Pending owner decisions](Pending-Owner-Decisions#branch-only-feature-promotion-decisions) -> [Testing workflow](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) |
-| Review branch-only BuyMenu/EASA work | [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-04-feature-branch-matrix) -> [BuyMenu EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit) -> [Client UI systems atlas](Client-UI-Systems-Atlas#branch-only-ui-theme-work) -> [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) -> [Testing workflow](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) |
-| Review branch-only perf/fix work | [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-04-feature-branch-matrix) -> [Perf quick wins branch audit](Perf-Quick-Wins-Branch-Audit) -> [Performance opportunity sweep](Performance-Opportunity-Sweep) -> [Pending owner decisions](Pending-Owner-Decisions#branch-only-feature-promotion-decisions) -> [Testing workflow](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) |
-| Review branch-only commander positions | [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-04-feature-branch-matrix) -> [Commander positions branch audit](Commander-Positions-Branch-Audit) -> [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas) -> [Pending owner decisions](Pending-Owner-Decisions#branch-only-feature-promotion-decisions) -> [Testing workflow](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) |
-| Review branch-only Zargabad map work | [Current source status snapshot](Current-Source-Status-Snapshot#2026-06-04-feature-branch-matrix) -> [Zargabad branch audit](Zargabad-Branch-Audit) -> [Content structure and maps](Content-Structure-And-Maps) -> [Pending owner decisions](Pending-Owner-Decisions#branch-only-feature-promotion-decisions) -> [Testing workflow](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) |
-| Review PR #8 or drone work | [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match) -> [Feature status](Feature-Status-Register) -> [Tools/build](Tools-And-Build-Workflow) |
-| Work on UI/HUD | [Client UI/HUD/menus](Client-UI-HUD-And-Menus) -> [UI HUD and dialogs](UI-HUD-And-Dialogs) -> [Client UI systems atlas](Client-UI-Systems-Atlas) -> [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) -> [Tools/build](Tools-And-Build-Workflow) |
-| Coordinate Codex and Claude | [Progress dashboard](Progress-Dashboard) -> [Bottleneck removal queue](Bottleneck-Removal-Queue) -> [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) -> [Coordination board](Coordination-Board) -> [Agent collaboration protocol](Agent-Collaboration-Protocol) -> [Claude loop goal](Claude-Loop-Goal) -> [Agent worklog](Agent-Worklog) |
-| Bootstrap an LLM agent | [LLM agent entry pack](LLM-Agent-Entry-Pack) -> [`llms.txt`](llms.txt) -> [`agent-context.json`](agent-context.json) -> [Feature status](Feature-Status-Register) -> [Progress dashboard](Progress-Dashboard) |
+| Source gameplay edits start in `Missions/[55-2hc]warfarev2_073v48co.chernarus`. | This is the source mission. |
+| Treat `Missions_Vanilla` as maintained generated/copy output. | Propagate with `Tools/LoadoutManager`; do not hand-edit drift unless a release owner says so. |
+| Treat `Modded_Missions` as divergent/stubbed unless tooling proves otherwise. | Current generation/package paths do not actively maintain those folders. |
+| Use Arma 2 OA 1.64 scripting references. | Arma 3 assumptions are a common source of bad fixes. |
+| Check [Progress dashboard](Progress-Dashboard) before claiming work. | It prevents duplicate Codex/Claude/agent lanes. |
+| Keep `docs/wiki` and the GitHub wiki mirror in sync. | Humans use the wiki; agents use the repo mirror. |
 
-All content pages include a **Continue Reading** block. Owner pages use previous/next reading paths; archive and queue pages use caveated support routes tracked in [Navigation inventory and page status](Navigation-Inventory-And-Page-Status).
+## Main Routes
 
-
-## Canonical Entry Path for Humans and Agents
-
-### What it is
-
-- A single orientation surface that answers where to start, what to read next, and where evidence and machine files live.
-
-### Where it lives
-
-- Wiki page: `Home.md`
-- Machine file: `agent-context.json`
-
-### How to use it
-
-Use this sequence for low-risk orientation:
-
-1. [AI-Assistant-Guide](AI-Assistant-Guide) for compact boot order.
-2. [AI-Assistant-Developer-Guide](AI-Assistant-Developer-Guide) for edit constraints and safety checks.
-3. [Progress-Dashboard](Progress-Dashboard) for lane state and ownership.
-4. [Feature-Status-Register](Feature-Status-Register) to choose safe first systems.
-5. [SQF-Code-Atlas](SQF-Code-Atlas) or the owning atlas/playbook for source entrypoints.
-
-### What depends on this page
-
-- LLM/agent bootstrap and human onboarding.
-- Dashboard handoff discoverability.
-- Cross-link drift checks when source-of-truth pages move.
-- Required companion files:
-  - [`agent-status.json`](agent-status.json)
-  - [`agent-events.jsonl`](agent-events.jsonl)
-  - [`agent-knowledge.jsonl`](agent-knowledge.jsonl)
-  - [`llms.txt`](llms.txt)
-  - [`_Sidebar.md`](./_Sidebar.md)
-  - [Progress Dashboard](Progress-Dashboard)
-  - [Wiki quality audit](Wiki-Quality-Audit)
-  - [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger)
-
-### What is risky / Next after reading
-
-- Risk: stale links between boot path, `_Sidebar`, and machine files can route agents to outdated routes.
-- Next action if uncertain: open [Feature-Status-Register](Feature-Status-Register), then [Progress-Dashboard](Progress-Dashboard), then confirm source status before opening subsystem files.
-
-## First Principles
-
-| Rule | Details |
+| Need | Canonical route |
 | --- | --- |
-| Source mission | Gameplay edits start in `Missions/[55-2hc]warfarev2_073v48co.chernarus`. |
-| Generated missions | `Missions_Vanilla` is the maintained generated/copy target. `Modded_Missions` exists in-tree, but current LoadoutManager generation/package paths do not actively maintain it. |
-| Script reference | Use Bohemia Interactive Arma 2 OA scripting docs, not Arma 3 assumptions; see [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) for the current docs scan. |
-| Current source status | Use [Current source status snapshot](Current-Source-Status-Snapshot) before trusting older claims that cleanup lanes already shipped. |
-| Windows path trap | Use PowerShell `-LiteralPath` for `[55-2hc]` paths because brackets are wildcard syntax. |
-| Current docs checkout | Active working branch is `docs/developer-wiki-index`; keep this in sync with the live wiki mirror after validation. |
+| Startup, lifecycle, includes | [Architecture overview](Architecture-Overview) -> [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) -> [Mission config/version graph](Mission-Config-Version-Include-Graph) -> [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
+| SQF ownership and compile flow | [SQF code atlas](SQF-Code-Atlas) -> [Function and module index](Function-And-Module-Index) -> [Source inventory](Source-Inventory) |
+| Networking and authority | [Networking/PV](Networking-And-Public-Variables) -> [Public variable channel index](Public-Variable-Channel-Index) -> [Server authority map](Server-Authority-Migration-Map) |
+| Economy, towns, supply | [Economy/towns/supply](Economy-Towns-And-Supply) -> [Towns/camps/capture](Towns-Camps-And-Capture-Atlas) -> [Supply mission architecture](Supply-Mission-Architecture) |
+| Commander, HQ, construction | [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) -> [Construction/CoIn](Construction-And-CoIn-Systems-Atlas) -> [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) |
+| Factories, purchases, upgrades | [Factory/purchase](Factory-And-Purchase-Systems-Atlas) -> [Upgrades/research](Upgrades-And-Research-Atlas) -> [Gear/loadout/EASA](Gear-Loadout-And-EASA-Atlas) |
+| AI, HC, performance | [AI/headless/performance](AI-Headless-And-Performance) -> [Headless client scaling](Headless-Client-Scaling-And-Topology) -> [Performance opportunity sweep](Performance-Opportunity-Sweep) |
+| UI, HUD, menus | [Client UI/HUD/menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) -> [UI IDD collision repair](UI-IDD-Collision-Repair) |
+| Tools, build, release | [Tools/build workflow](Tools-And-Build-Workflow) -> [Source fix propagation queue](Source-Fix-Propagation-Queue) -> [Testing workflow](Testing-Debugging-And-Release-Workflow) |
+| Integrations and ops | [External integrations](External-Integrations) -> [Integration trust boundary audit](Integration-Trust-Boundary-Audit) -> [Server ops runbook](Server-Ops-Runbook) |
 
-## Reading Paths
+## Current Work
 
-| Task | Pages |
+| Surface | Use it for |
 | --- | --- |
-| Understand startup flow | [Architecture overview](Architecture-Overview) -> [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) -> [Mission config/version graph](Mission-Config-Version-Include-Graph) -> [SQF code atlas](SQF-Code-Atlas) |
-| Work on networking | [Networking and public variables](Networking-And-Public-Variables) -> [Public variable channel index](Public-Variable-Channel-Index) -> [SQF code atlas](SQF-Code-Atlas) |
-| Work on economy or supply | [Economy, towns and supply](Economy-Towns-And-Supply) -> [Economy authority first cut](Economy-Authority-First-Cut) -> [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) -> [Supply mission architecture](Supply-Mission-Architecture) -> [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) -> [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) -> [Current supply heli PR](Current-Work-Supply-Helicopters-PR1) |
-| Work on AI/performance | [AI, headless and performance](AI-Headless-And-Performance) -> [Headless client scaling and topology](Headless-Client-Scaling-And-Topology) -> [Performance opportunity sweep](Performance-Opportunity-Sweep), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup), [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Client skill init idempotency](Client-Skill-Init-Idempotency), [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing), [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup) -> [HC delegation/failover playbook](Headless-Delegation-And-Failover-Playbook) -> [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) -> [Feature status register](Feature-Status-Register) |
-| Review AI commander concepts | [AI commander autonomy audit](AI-Commander-Autonomy-Audit) -> [Quad AI Commander concept](Quad-AI-Commander) -> [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) |
-| Work on UI/HUD/menus | [Client UI, HUD and menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) -> [UI IDD collision repair](UI-IDD-Collision-Repair) -> [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
-| Work on core gameplay | [Gameplay systems atlas](Gameplay-Systems-Atlas) -> [Modules atlas](Modules-Atlas) -> [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) -> [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) -> [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) -> [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) -> [Core systems index](Core-Systems-Index) |
-| Test or release changes | [Testing workflow](Testing-Debugging-And-Release-Workflow) -> [Server ops runbook](Server-Ops-Runbook) -> [Current source status snapshot](Current-Source-Status-Snapshot) -> [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) -> [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) -> [Tools/build](Tools-And-Build-Workflow) -> [Knowledge platform roadmap](Knowledge-Platform-Roadmap) -> [Hardening roadmap](Hardening-Implementation-Roadmap) -> [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook) -> [Server authority map](Server-Authority-Migration-Map) -> [Commander vote/reassignment playbook](Commander-Vote-And-Reassignment-Playbook) -> [ICBM authority playbook](ICBM-Authority-Playbook) -> [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) |
-| Understand community/dev culture | [Community & Dev](Community-And-Dev) -> [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) -> [Miksuu changelog archive](Miksuu-Wiki-Archive-Changelog) -> [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) |
-| Check agent progress | [Progress dashboard](Progress-Dashboard) -> [Bottleneck removal queue](Bottleneck-Removal-Queue) -> [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) -> [`agent-status.json`](agent-status.json) -> [`agent-events.jsonl`](agent-events.jsonl) |
-| Coordinate agents | [LLM agent entry pack](LLM-Agent-Entry-Pack) -> [Progress dashboard](Progress-Dashboard) -> [Bottleneck removal queue](Bottleneck-Removal-Queue) -> [Coordination board](Coordination-Board) -> [Agent worklog](Agent-Worklog) -> [Codebase coverage ledger](Codebase-Coverage-Ledger) -> [Claude long-term goal](Claude-Long-Term-Goal) -> [Claude loop goal](Claude-Loop-Goal) |
-| Understand WASP-specific additions | [WASP overlay](WASP-Overlay) -> [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup) -> [Feature status register](Feature-Status-Register) |
+| [Progress dashboard](Progress-Dashboard) | Human-readable current lanes, July update queue and recent published batches. |
+| [`agent-status.json`](agent-status.json) | Compact machine snapshot of active/watchlist/code-owner lanes. |
+| [`agent-collaboration.json`](agent-collaboration.json) | Current claim/ownership surface. Historical lanes live in the worklog and event stream. |
+| [`agent-events.jsonl`](agent-events.jsonl) | Append-only coordination events. |
+| [Agent worklog](Agent-Worklog) | Dated narrative notes and historical batch detail. |
 
-## Current Map
+## Validation
 
-| Area | Page |
-| --- | --- |
-| Architecture | [Architecture overview](Architecture-Overview), [Mission entrypoints](Mission-Entrypoints-And-Lifecycle), [Mission config/version graph](Mission-Config-Version-Include-Graph) |
-| Boot dependencies | [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
-| Inventory | [Source inventory](Source-Inventory), [Content structure and maps](Content-Structure-And-Maps) |
-| Code | [Function and module index](Function-And-Module-Index), [SQF code atlas](SQF-Code-Atlas), [Variable and naming conventions](Variable-And-Naming-Conventions) |
-| Runtime systems | [Gameplay systems atlas](Gameplay-Systems-Atlas), [Modules atlas](Modules-Atlas), [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas), [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), [Core systems index](Core-Systems-Index), [Economy, towns and supply](Economy-Towns-And-Supply), [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook), [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing), [AI, headless and performance](AI-Headless-And-Performance), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup), [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Client skill init idempotency](Client-Skill-Init-Idempotency), [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing), [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup), [HC delegation/failover playbook](Headless-Delegation-And-Failover-Playbook), [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) |
-| Networking | [Networking and public variables](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index) |
-| UI | [Client UI, HUD and menus](Client-UI-HUD-And-Menus), [Client UI systems atlas](Client-UI-Systems-Atlas), [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
-| WASP additions | [WASP overlay](WASP-Overlay), [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup) |
-| Operations | [Server ops runbook](Server-Ops-Runbook), [Tools and build workflow](Tools-And-Build-Workflow), [PerformanceAuditAnalyzer](PerformanceAuditAnalyzer), [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow), [Current source status snapshot](Current-Source-Status-Snapshot), [Knowledge platform roadmap](Knowledge-Platform-Roadmap), [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan), [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide), [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit), [External integrations](External-Integrations), [Self-host testing field notes](Self-Host-Testing-Field-Notes) |
-| Risk and future work | [Feature status register](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions), [Player stats branch audit](Player-Stats-Branch-Audit), [BuyMenu EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit), [Perf quick wins branch audit](Perf-Quick-Wins-Branch-Audit), [Commander positions branch audit](Commander-Positions-Branch-Audit), [Zargabad branch audit](Zargabad-Branch-Audit), [Abandoned feature revival](Abandoned-Feature-Revival-Review), [Paratrooper marker revival](Paratrooper-Marker-Revival), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup), [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Client skill init idempotency](Client-Skill-Init-Idempotency), [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing), [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup), [Commander vote/reassignment playbook](Commander-Vote-And-Reassignment-Playbook), [Commander reassignment call shape](Commander-Reassignment-Call-Shape), [Resistance supply scaffold](Resistance-Supply-Scaffold), [UI IDD collision repair](UI-IDD-Collision-Repair), [Hardening implementation roadmap](Hardening-Implementation-Roadmap), [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook), [Server authority migration map](Server-Authority-Migration-Map), [ICBM authority playbook](ICBM-Authority-Playbook), [Economy authority first cut](Economy-Authority-First-Cut), [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook), [Attack-wave authority playbook](Attack-Wave-Authority-Playbook), [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow), [HC delegation/failover playbook](Headless-Delegation-And-Failover-Playbook), [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety), [Deep-review findings](Deep-Review-Findings), [External research reports](External-Research-Reports), [Codebase coverage ledger](Codebase-Coverage-Ledger), [Wiki quality audit](Wiki-Quality-Audit), [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger), [Wiki source consistency findings](Wiki-Source-Consistency-Findings), [Documentation implementation plan](Documentation-Implementation-Plan) |
-| Community and developer history | [Community & Dev](Community-And-Dev), [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import), [Miksuu changelog archive](Miksuu-Wiki-Archive-Changelog), [Miksuu big announcements archive](Miksuu-Wiki-Archive-Big-Announcements), [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons), [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel), [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match) |
-| LLM and agent entrypoints | [LLM agent entry pack](LLM-Agent-Entry-Pack), [`llms.txt`](llms.txt), [`agent-context.json`](agent-context.json), [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl), [`agent-knowledge.jsonl`](agent-knowledge.jsonl) |
-| Agent collaboration | [AI assistant developer guide](AI-Assistant-Developer-Guide), [Current source status snapshot](Current-Source-Status-Snapshot), [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide), [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit), [Agent context](Agent-Context), [Progress dashboard](Progress-Dashboard), [Bottleneck removal queue](Bottleneck-Removal-Queue), [Coordination board](Coordination-Board), [Agent collaboration protocol](Agent-Collaboration-Protocol), [Claude loop goal](Claude-Loop-Goal) |
+```powershell
+powershell -ExecutionPolicy Bypass -File docs\validate-wiki.ps1
+```
 
-## Repo Shape
+After meaningful docs or machine-file edits, also parse touched JSON/JSONL files, mirror touched wiki files, inspect diffs and keep gameplay source unchanged unless Steff explicitly asks for a code patch.
 
-| Count | Top-level path |
-| ---: | --- |
-| 1475 | `Modded_Missions` |
-| 787 | `Missions` |
-| 786 | `Missions_Vanilla` |
-| 199 | `Tools` |
-| 42 | `DiscordBot` |
-| 16 | `Extension` |
-| 3 | `Guides` |
-| 3 | `Mods` |
-| 2 | `BattlEyeFilter` |
+## Navigation Notes
 
-## Machine Context
-
-- Human-readable agent brief: [Agent context](Agent-Context)
-- Machine-readable agent file: [`agent-context.json`](agent-context.json)
-- Machine-readable feature status: [`agent-feature-status.jsonl`](agent-feature-status.jsonl)
-- Machine-readable OA compatibility audit: [`agent-compatibility-audit.json`](agent-compatibility-audit.json)
-- Machine-readable upstream wiki import ledger: [`agent-upstream-wiki-imports.jsonl`](agent-upstream-wiki-imports.jsonl)
-- Current source status snapshot: [Current source status](Current-Source-Status-Snapshot)
-- Human-readable progress dashboard: [Progress dashboard](Progress-Dashboard)
-- Ranked bottleneck queue: [Bottleneck removal queue](Bottleneck-Removal-Queue)
-- Mirror/wiki reconciliation policy: [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan)
-- Navigation and page-status inventory: [Navigation inventory](Navigation-Inventory-And-Page-Status)
-- Machine-readable progress file: [`agent-status.json`](agent-status.json)
-- Machine-readable collaboration file: [`agent-collaboration.json`](agent-collaboration.json)
-- Machine-readable hardening backlog: [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl)
-- Machine-readable test evidence schema: [`agent-test-plan.schema.json`](agent-test-plan.schema.json)
-- External PDF report metadata: [`external-research-report-manifest.json`](external-research-report-manifest.json)
-- Append-only coordination feed: [`agent-events.jsonl`](agent-events.jsonl)
-- Agent coordination log: [Agent worklog](Agent-Worklog)
-
-Persistent navigation is provided by `_Sidebar.md`; shared bottom navigation is provided by `_Footer.md`.
+- Persistent navigation is in [`_Sidebar.md`](_Sidebar).
+- Shared footer navigation is in [`_Footer.md`](_Footer).
+- Page-status and hidden/support-page classification lives in [Navigation inventory](Navigation-Inventory-And-Page-Status).
+- Bloat, merge, archive and relevance decisions live in [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger).
+- The long-term docs platform recommendation lives in [Knowledge platform roadmap](Knowledge-Platform-Roadmap).
 
 ## Continue Reading
 
 Previous: [Claude long-term goal](Claude-Long-Term-Goal) | Next: [Quickstart](Quickstart-For-Humans-And-Agents)
 
-Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent file: [`agent-context.json`](agent-context.json)
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent pack: [LLM agent entry pack](LLM-Agent-Entry-Pack)

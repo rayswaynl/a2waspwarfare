@@ -10,7 +10,7 @@ This page is the low-friction route into the repo. Use it before editing mission
 | Runtime | Arma 2: Operation Arrowhead 1.64 |
 | Mission type | Warfare / CTI TvT PvE |
 | Source mission | `Missions/[55-2hc]warfarev2_073v48co.chernarus` |
-| Generated targets | `Missions_Vanilla/*`, `Modded_Missions/*` |
+| Generated targets | `Missions_Vanilla/*`; `Modded_Missions/*` is in-tree but not actively maintained by current generation/package paths |
 | Generator | `Tools/LoadoutManager` |
 | AI context | [`agent-entrypoint.json`](agent-entrypoint.json), [`agent-context.json`](agent-context.json) |
 | Progress view | [Progress dashboard](Progress-Dashboard), [`agent-status.json`](agent-status.json) |
@@ -36,29 +36,7 @@ This page is the low-friction route into the repo. Use it before editing mission
 
 ## If You Are An LLM
 
-Load these first, in order:
-
-1. [`agent-entrypoint.json`](agent-entrypoint.json)
-2. [`agent-context.json`](agent-context.json)
-3. [`agent-status.json`](agent-status.json)
-4. [`agent-collaboration.json`](agent-collaboration.json)
-5. [`agent-release-readiness.json`](agent-release-readiness.json)
-6. [Agent context](Agent-Context)
-7. [Progress dashboard](Progress-Dashboard)
-8. [Agent collaboration protocol](Agent-Collaboration-Protocol)
-9. [SQF code atlas](SQF-Code-Atlas)
-10. [Gameplay systems atlas](Gameplay-Systems-Atlas)
-11. [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas)
-12. [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas)
-13. [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas)
-14. [Lifecycle wait-chain](Lifecycle-Wait-Chain)
-15. [WASP overlay](WASP-Overlay)
-16. [Documentation implementation plan](Documentation-Implementation-Plan)
-17. [Feature status register](Feature-Status-Register)
-18. [Hardening implementation roadmap](Hardening-Implementation-Roadmap)
-19. [Agent worklog](Agent-Worklog)
-
-Then inspect source before making claims. Do not infer Arma 3 behavior. Update `agent-entrypoint.json` only for bootstrap/status-convention changes; update `agent-context.json` for the larger context snapshot.
+Use [LLM agent entry pack](LLM-Agent-Entry-Pack) as the only canonical boot-order owner, then inspect source before making claims. Do not infer Arma 3 behavior. Update `agent-entrypoint.json` only for bootstrap/status-convention changes; update `agent-context.json` for the larger context snapshot.
 
 ## Safe Edit Checklist
 

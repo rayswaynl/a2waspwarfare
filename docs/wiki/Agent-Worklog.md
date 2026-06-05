@@ -1,5 +1,14 @@
 # Agent Worklog
 
+## 2026-06-05T14:30:00+02:00 - Codex - onboarding gateway pruning
+
+- Claimed `onboarding-gateway-pruning` from [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) after Home, Quickstart, AI Assistant Guide and LLM Agent Entry Pack were repeating boot-order, safety and status material.
+- Condensed [Home](Home) from 201 lines to a short launchpad that routes readers to [Quickstart](Quickstart-For-Humans-And-Agents), [LLM agent entry pack](LLM-Agent-Entry-Pack), [Progress dashboard](Progress-Dashboard), [Feature status](Feature-Status-Register), subsystem owner pages and docs-platform pages.
+- Made [Quickstart](Quickstart-For-Humans-And-Agents) primarily the human first-day page, routed LLMs to [LLM agent entry pack](LLM-Agent-Entry-Pack), and corrected the `Modded_Missions` generated-target wording.
+- Converted [AI assistant guide](AI-Assistant-Guide) into a compact safety gateway and replaced its duplicated networking/upstream-history memo with owner-page routes.
+- Trimmed volatile status from [LLM agent entry pack](LLM-Agent-Entry-Pack) and updated `agent-entrypoint.json` so the LLM pack is the human-readable boot-order owner.
+- No gameplay source changed.
+
 ## 2026-06-05T14:00:00+02:00 - Codex - dashboard current-lane freshness
 
 - Claimed `dashboard-current-lanes-freshness` after the dashboard's `Current Lanes` table still listed already-published documentation batches with stale next actions like "commit/push docs-only changes".
