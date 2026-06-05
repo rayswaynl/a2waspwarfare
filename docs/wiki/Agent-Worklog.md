@@ -10,7 +10,7 @@
 ## 2026-06-06T01:15:00+02:00 - Codex helper - Resource income payout/display branch route
 
 - Claimed `resource-income-payout-branch-route` from the economy correctness backlog.
-- Source-checked current source Chernarus, maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and current release `fb3084c2`.
+- Source-checked current source Chernarus, maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and current release `7195b331`.
 - Result: every checked maintained root/branch keeps `Server/FSM/updateresources.sqf:29-70` wrapping side-supply growth, player paychecks and AI-commander funds in the same town-supply cap guard, and keeps income system `4` applying a server-side `1.5` multiplier that `Client/Functions/Client_GetIncome.sqf:20-29` does not mirror for display math.
 - Updated [Economy, towns and supply](Economy-Towns-And-Supply#resource-income-branch-matrix), [Economy authority first cut](Economy-Authority-First-Cut), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
 
@@ -3167,3 +3167,9 @@ Key conclusions:
 - Source-checked current docs/source Chernarus and maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and `origin/release/2026-06-feature-bundle` `3282ff3f`: all checked roots keep `emptyvehiclescollector.sqf` draining `WF_Logic emptyVehicles` into `WFBE_SE_FNC_HandleEmptyVehicle`, and all checked handlers hard-code `_delay = 86400` for supply-truck classes.
 - Added the canonical branch matrix to [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas#empty-supply-truck-branch-matrix), then condensed [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), dashboard/status files and machine ledgers to route future work there.
 - No gameplay source files changed.
+
+## 2026-06-05T22:19:34+02:00 - Codex helper - release 7195b331 status refresh
+- Claimed `release-7195b331-status-refresh` after `git fetch --all --prune` advanced `origin/release/2026-06-feature-bundle` from the older `3282ff3f`/`d482c742` evidence rows through `fb3084c2` to `7195b331`.
+- Spot-checked the release head against high-traffic status rows: release Chernarus and maintained Vanilla now both register `HandleParatrooperMarkerCreation` at `Common/Init/Init_PublicVariables.sqf:34`, run one `Skill_Init.sqf` call at `Client/Init/Init_Client.sqf:566`, guard `serverFpsGUI.sqf:4` while deleting `Server/Module/serverFPS/monitorServerFPS.sqf`, and use the narrowed `Base_WarfareBUAVterminal` supply scan at `supplyMissionStarted.sqf:52,58`.
+- Confirmed release `7195b331` also has the camp-capture `str _newSide` flag texture and resistance-patrol `&&` loop in both maintained roots, while commander-built ARTY ownership still remains absent from release and stable master: both release roots keep the base-area `DefenseTeam` path in `Construction_StationaryDefense.sqf:88-97`. The `7195b331` delta replaces the old FPS-only menu slot with a GPS toggle.
+- Updated [Current source snapshot](Current-Source-Status-Snapshot), [PR cleanup lab](PR-Cleanup-And-Integration-Lab), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Progress dashboard](Progress-Dashboard), pruning/status pages and machine records. No gameplay source changed.

@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Reconciled the newest camp-count helper, WASP marker wait, clickable-text soundPush, side-supply clamp, side-supply reason-string, empty supply-truck cleanup, vote/help UI edge, RequestSpecial upgrade-sync, fast-travel fee and resource-income payout/display branch matrices across wiki and docs/wiki. Towns-Camps-And-Capture-Atlas, WASP-Marker-Wait-Cleanup, Client-UI-Systems-Atlas, Economy-Authority-First-Cut, Economy-Towns-And-Supply, Marker-Cleanup-Restoration-Systems-Atlas and Support-Specials-And-Tactical-Modules-Atlas are the canonical routes.",
+      "currentWork": "Reconciled the newest release 7195b331 status refresh plus camp-count helper, WASP marker wait, clickable-text soundPush, side-supply clamp, side-supply reason-string, empty supply-truck cleanup, vote/help UI edge, RequestSpecial upgrade-sync, fast-travel fee and resource-income payout/display branch matrices across wiki and docs/wiki. Current-Source-Status-Snapshot, PR-Cleanup-And-Integration-Lab, Feature-Status-Register, Source-Fix-Propagation-Queue, Towns-Camps-And-Capture-Atlas, WASP-Marker-Wait-Cleanup, Client-UI-Systems-Atlas, Economy-Authority-First-Cut, Economy-Towns-And-Supply, Marker-Cleanup-Restoration-Systems-Atlas and Support-Specials-And-Tactical-Modules-Atlas are the canonical routes.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -61,6 +61,12 @@
       "owner": "Codex",
       "status": "active-ongoing",
       "output": "Keep wiki/status pages current from source evidence; route open docs work through the dashboard, pruning ledger, Feature Status, Pending Owner Decisions and machine status files; compact the dashboard, maintain machine-readable entrypoints, refresh scan artifacts when docs/source changes affect them and publish scoped validation batches."
+    },
+    {
+      "lane": "release-7195b331-status-refresh",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "output": "Current source snapshot, PR cleanup lab, Feature Status, Source Fix Propagation Queue and machine records now reflect release 7195b331: paratrooper registration, single Skill_Init, hosted FPS guard/removal, narrowed supply scan, camp-capture flag fix and resistance patrol && are present in both release maintained roots; 7195b331 also replaces the old FPS-only menu slot with a GPS toggle, while commander-built ARTY ownership remains absent from release/stable. No gameplay source changed."
     },
     {
       "lane": "resistance-patrol-latch-branch-route",

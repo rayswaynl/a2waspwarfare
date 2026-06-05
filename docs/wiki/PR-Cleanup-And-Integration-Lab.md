@@ -19,7 +19,7 @@ Current board state was refreshed from GitHub on 2026-06-05. A later `git fetch 
 
 | Branch | Contents | Use |
 | --- | --- | --- |
-| [`dev/pr8-only-testbed`](https://github.com/rayswaynl/a2waspwarfare/tree/dev/pr8-only-testbed) | Snapshot of PR #8 / `release/2026-06-feature-bundle` for clean bundle testing. Current fetched head observed as `68b34e6e`; current PR #8 branch head observed as `3282ff3f`, so the testbed branch is now an older clean snapshot unless it is rebuilt. | Clean PR8-only multiplayer test baseline. Rebuild/rebase if exact branch-head parity matters. |
+| [`dev/pr8-only-testbed`](https://github.com/rayswaynl/a2waspwarfare/tree/dev/pr8-only-testbed) | Snapshot of PR #8 / `release/2026-06-feature-bundle` for clean bundle testing. Current fetched head observed as `68b34e6e`; current release/PR #8 branch head observed as `7195b331`, so the testbed branch is now an older clean snapshot unless it is rebuilt. | Clean PR8-only multiplayer test baseline. Rebuild/rebase if exact branch-head parity matters. |
 | [`dev/pr8-plus-testbed`](https://github.com/rayswaynl/a2waspwarfare/tree/dev/pr8-plus-testbed) | PR #8 lab plus manually resolved PR #12 quick fixes and PR #16 original-style WF menu UX. Current fetched head observed as `5fb51c37`. | Combined test branch for bundle plus quick fixes plus original-style WF menu UX. |
 
 ## Main Recommendation
@@ -34,16 +34,19 @@ dev/pr8-plus-testbed = PR #8 + PR #12 + PR #16
 
 Keep PR #4, PR #9, PR #13 and the PR #14/#18 AI-commander chain separate until they have their own focused test windows. PR #19 is now closed; preserve it as branch/context evidence for the AI commander chain rather than as an open board item.
 
-### PR #8 Head Refresh: `3282ff3f`
+### PR #8 Head Refresh: `7195b331`
 
-A 2026-06-05 refetch found `origin/release/2026-06-feature-bundle` at `3282ff3f`, four commits newer than the earlier release matrix head `a9219d88`. The branch still differs from `origin/master` by `78` files total and `72` mission files, so the headline PR #8 mission-file scale remains accurate. Newer head evidence:
+A 2026-06-05 refetch found `origin/release/2026-06-feature-bundle` at `7195b331`, eight commits newer than the earlier release matrix head `a9219d88`. The latest delta after `3282ff3f` removes the Chernarus-only static smoke helper from the release payload (`d482c742`), applies broad live-playtest hardening (`fb3084c2`) and replaces the old FPS-only menu slot with a GPS toggle (`7195b331`). This makes `7195b331` the release-bundle head to review, while older `dev/pr8-only-testbed` remains a stale clean snapshot unless rebuilt.
 
 | Commit | Scope | Source evidence | Test implication |
 | --- | --- | --- | --- |
 | `68b34e6e` | WF menu player/playable-slot/town counts. | Chernarus and Vanilla `Client/GUI/GUI_Menu.sqf` add a compact top strip for uptime, clock, players, playable slots and towns held/total. Vanilla replaces the localized uptime line with the same hard-coded compact strip. | Client visual smoke for text fit, long names/localization assumptions and town-count correctness. |
 | `cd63fb95` | Service-point menu QoL. | Chernarus and Vanilla `Client/GUI/GUI_Menu_Service.sqf` and `Rsc/Dialogs.hpp` add full-service helpers, refuel pricing, disabled-state reasons and batch/full start helpers. | Smoke destroyed/airborne/moving disabled reasons, full-service, repair/refuel/rearm/heal-all paths and visible funds debit. Treat as UX/QoL evidence, not server-authority hardening. |
 | `379da6c0` | Shielded concrete HQ walls. | Chernarus and Vanilla `Server/Init/Init_Defenses.sqf` add `WFBE_NEURODEF_HEADQUARTERS_WALLS`; `Server/Construction/Construction_HQSite.sqf` stores deployed walls in `wfbe_hq_walls` and deletes them on mobilize. | Smoke HQ deploy/mobilize wall creation and cleanup, pathing/blockage, base-area interactions and no stale walls after redeploy. |
-| `3282ff3f` | Static PR8 preflight. | `Tools/SmokeTests/Test-PR8StaticSmoke.ps1` scans Chernarus changed `.sqf`/`.fsm` files against `origin/master`, A3-only command names, HQ shield wiring, key PR8 PVF registrations and Buy Units image-tab text writes. | Use as a source/static preflight only. It is Chernarus-only and does not prove Vanilla parity, service-menu behavior or Arma runtime safety. |
+| `3282ff3f` | Static PR8 preflight, now historical. | `Tools/SmokeTests/Test-PR8StaticSmoke.ps1` scanned Chernarus changed `.sqf`/`.fsm` files against `origin/master`, A3-only command names, HQ shield wiring, key PR8 PVF registrations and Buy Units image-tab text writes. | Historical source/static preflight only. The next release commit removes this helper from the release payload, so rerun or recover it from git history if the static check is wanted. |
+| `d482c742` | Keep smoke harness out of release payload. | Deletes `Tools/SmokeTests/Test-PR8StaticSmoke.ps1`. | Do not expect the PR8 smoke helper in the release branch checkout after this commit; validation must use an external/local copy or future tooling commit. |
+| `fb3084c2` | Live-playtest hardening. | Broad Chernarus + maintained Vanilla changes across UI/RHUD, supply mission, stat hooks, construction/defense, public-variable registrations, generated mission files and LoadoutManager root discovery. Spot-checks show both release roots now carry paratrooper marker registration, single `Skill_Init`, hosted-FPS guard/removal, narrowed supply command-center scan, camp flag capture fix and resistance patrol `&&`; both still lack commander-built ARTY ownership handoff. | Broad static propagation evidence, but not the final observed release head. Keep the full Chernarus + Vanilla smoke list for supply, service, buy menu, RHUD/endgame, construction/defense, paratroopers, FPS publishers, town/camp capture and patrol lifecycle. |
+| `7195b331` | GPS toggle QoL on top of PR8 hardening. | Chernarus and Vanilla `Client/GUI/GUI_Menu.sqf` make menu action `19` toggle `shownGPS`/`showGPS`; `Client/Client_UpdateRHUD.sqf` removes the FPS-only `RUBFPSHUD` mode; `Client/Init/Init_Client.sqf` removes `RUBFPSHUD` init while keeping the single `Skill_Init` shape. | Treat as the current PR8 release candidate, not proof of runtime safety. Add main-menu GPS toggle and RHUD FPS display checks to the full smoke list. |
 
 ## PR Triage Matrix
 

@@ -901,7 +901,7 @@
     }
   ],
   "branchScope": {
-    "checkedAt": "2026-06-05T23:59:00+02:00",
+    "checkedAt": "2026-06-06T01:30:00+02:00",
     "docsSource": {
       "commit": "4163faba",
       "branch": "docs/developer-wiki-index",
@@ -913,9 +913,9 @@
       "meaning": "Stable baseline; does not carry hosted FPS loop exit, supply scan narrowing, client Skill_Init idempotency, paratrooper marker registration or commander-built ARTY ownership."
     },
     "releaseBranch": {
-      "commit": "3282ff3f",
+      "commit": "7195b331",
       "branch": "origin/release/2026-06-feature-bundle",
-      "meaning": "Chernarus-only for hosted FPS and supply scan narrowing; lacks client Skill_Init idempotency, paratrooper marker registration and commander-built ARTY ownership in both maintained missions."
+      "meaning": "Current release head now carries paratrooper marker registration, single Skill_Init, hosted FPS guard/removal and narrowed supply scan in both maintained missions; the latest delta replaces the old FPS-only menu slot with a GPS toggle; commander-built ARTY ownership still remains absent in both release maintained missions. Arma smoke remains pending."
     },
     "canonicalDoc": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
   }

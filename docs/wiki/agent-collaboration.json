@@ -51,6 +51,27 @@
       "handoff": "Continue from fresh source evidence, owner requests or newly returned helper reports."
     },
     {
+      "lane": "release-7195b331-status-refresh",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "origin/release/2026-06-feature-bundle@7195b331",
+        "docs/wiki/Current-Source-Status-Snapshot.md",
+        "docs/wiki/PR-Cleanup-And-Integration-Lab.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md",
+        "docs/wiki/agent-release-readiness.json",
+        "docs/wiki/agent-feature-status.jsonl",
+        "docs/wiki/agent-knowledge.jsonl"
+      ],
+      "outputs": [
+        "Refreshed release-head evidence after the fetched feature-bundle branch moved from 3282ff3f/d482c742 through fb3084c2 to 7195b331.",
+        "Confirmed fb3084c2's broad propagated-fix statuses still hold at 7195b331; noted the newer GPS-toggle replacement for the old FPS-only menu slot.",
+        "Updated stale release-branch rows only; no gameplay source edits."
+      ],
+      "handoff": "Closed as docs-published. Future release work should smoke 7195b331 in Arma 2 OA before release-complete claims, and still treat commander-built ARTY ownership as absent from release/stable."
+    },
+    {
       "lane": "camp-flag-texture-branch-scope",
       "owner": "Codex-additional",
       "status": "integrated",
@@ -597,7 +618,8 @@
     "empty-supply-truck-cleanup-branch-route",
     "vote-help-ui-edge-branch-route",
     "requestspecial-upgrade-sync-branch-route",
-    "resource-income-payout-branch-route"
+    "resource-income-payout-branch-route",
+    "release-7195b331-status-refresh"
   ],
   "queuedReports": [],
   "lanes": [
@@ -684,6 +706,12 @@
       "suggestedOwner": "Codex-helper",
       "status": "published-validated",
       "summary": "Branch-checked resource income cap-guard and income-system 4 display drift across current source, maintained Vanilla, stable, upstream, perf and release, then updated economy/status docs without gameplay source changes."
+    },
+    {
+      "lane": "release-7195b331-status-refresh",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "Refreshed current release-head evidence through 7195b331 and updated release/status docs without gameplay source changes."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
