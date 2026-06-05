@@ -13,6 +13,7 @@
   - [Agent collaboration protocol](Agent-Collaboration-Protocol)
   - [Agent worklog](Agent-Worklog)
   - [Progress dashboard](Progress-Dashboard)
+  - [PR cleanup and integration lab](PR-Cleanup-And-Integration-Lab)
   - [Coordination board](Coordination-Board)
   - [Codebase coverage ledger](Codebase-Coverage-Ledger)
   - [Bottleneck removal queue](Bottleneck-Removal-Queue)
