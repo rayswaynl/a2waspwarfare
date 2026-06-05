@@ -169,6 +169,33 @@
       "handoff": "Closed as docs-published. Future auto-wall work should use the remaining branch-checked Feature Status row plus Construction-And-CoIn-Systems-Atlas."
     },
     {
+      "lane": "camp-count-helper-fallback-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Towns-Camps-And-Capture-Atlas.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md",
+        "docs/wiki/Wiki-Pruning-And-Relevance-Ledger.md",
+        "docs/wiki/agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTotalCamps.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTotalCampsOnSide.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetRespawnThreeway.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Branch-checked camp count helper zero fallback semantics without changing gameplay source.",
+        "Condensed the finding into Towns/camps/capture, Feature Status, Source Fix Propagation Queue, pruning ledger and machine records."
+      ],
+      "handoff": "Closed as docs-published. Future code owner should decide real-count versus safe-denominator semantics, then split helpers or add caller-specific zero-camp guards and smoke capture mode 2, threeway respawn and depot infantry buys."
+    },
+    {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
       "owner": "Codex-delegated",
       "status": "returned-harvested",
@@ -349,7 +376,8 @@
     "resistance-patrol-latch-branch-route",
     "auto-wall-toggle-scope-branch-route",
     "salvage-payout-cleanup-branch-route",
-    "feature-status-auto-wall-duplicate-prune"
+    "feature-status-auto-wall-duplicate-prune",
+    "camp-count-helper-fallback-branch-route"
   ],
   "queuedReports": [],
   "lanes": [
@@ -382,6 +410,12 @@
       "suggestedOwner": "Codex-helper",
       "status": "published-validated",
       "summary": "Pruned the stale duplicate auto-wall row from Feature Status and kept the branch-checked row as canonical without gameplay source changes."
+    },
+    {
+      "lane": "camp-count-helper-fallback-branch-route",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "Branch-checked camp count helper zero fallback semantics and updated towns/status docs without gameplay source changes."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",

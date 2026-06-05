@@ -20,6 +20,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T23:59:30+02:00 - Codex-helper - Camp count helper fallback branch route
+
+- Claimed `camp-count-helper-fallback-branch-route` from the towns/camps correctness backlog.
+- Source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master`, `origin/perf/quick-wins` and `origin/release/2026-06-feature-bundle` for `Common_GetTotalCamps.sqf`, `Common_GetTotalCampsOnSide.sqf`, `server_town.sqf`, `Common_GetRespawnThreeway.sqf` and `GUI_Menu_BuyUnits.sqf`.
+- Result: every checked root/branch keeps the zero-camp `exitWith {1}` fallback and the same capture-mode, threeway-respawn and depot-buy consumers. Release Chernarus only shifts the Buy Units caller line to `:119`; it does not rescue the helper semantics.
+- Refreshed [Towns, camps and capture](Towns-Camps-And-Capture-Atlas) as the canonical branch route and condensed [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger) and machine records. No gameplay source changed.
+
 ## 2026-06-05T23:59:00+02:00 - Codex-helper - Feature status auto-wall duplicate prune
 
 - Claimed `feature-status-auto-wall-duplicate-prune` after the RHUD/salvage rebase left two adjacent `Auto-wall construction toggle is global` rows in [Feature status](Feature-Status-Register).

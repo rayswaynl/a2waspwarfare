@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T23:59:00+02:00",
+  "generatedAt": "2026-06-05T23:59:30+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Pruned the stale duplicate auto-wall row from Feature Status after confirming the branch-checked row remains source-backed by current Chernarus and maintained Vanilla. Construction-And-CoIn-Systems-Atlas remains the canonical route.",
+      "currentWork": "Refreshed the camp count helper fallback branch matrix: current source/Vanilla, stable, Miksuu upstream, perf/quick-wins and release all keep zero-camp helper fallbacks returning 1 and feeding capture mode 2, threeway respawn and depot-buy gates. Towns-Camps-And-Capture-Atlas is the canonical route.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -91,6 +91,12 @@
       "owner": "Codex-helper",
       "status": "published-validated",
       "output": "Feature Status now carries one branch-checked auto-wall row instead of a branch-checked row plus stale duplicate; Construction and CoIn remains the canonical auto-wall route. No gameplay source changed."
+    },
+    {
+      "lane": "camp-count-helper-fallback-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "output": "Towns/camps/capture now owns the branch-checked route for zero-camp helper fallback semantics; Feature Status, Source Fix Propagation Queue and machine records point future code owners to real-count versus safe-denominator cleanup plus smoke. No gameplay source changed."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
