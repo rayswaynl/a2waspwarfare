@@ -7,6 +7,12 @@
 - Result: every checked maintained root/branch keeps AddTemplate accepting a template when the max item upgrade is within either `WFBE_UP_BARRACKS` or `WFBE_UP_GEAR`, FillTemplates displaying stored templates only against `WFBE_UP_GEAR`, and SaveTemplateProfile still filtering with undefined `_u_upgrade`.
 - Updated [Gear template profile filter](Gear-Template-Profile-Filter#creation-gate-branch-matrix), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
 
+## 2026-06-05T23:25:00+02:00 - Codex - Dead-code parameter duplicate prune
+
+- Claimed `dead-code-parameter-duplicate-prune` after a duplicate-key scan found `ai-max-visible-parameter-no-runtime-consumer` and `units-clean-timeout-visible-parameter-comment-only-consumer` listed twice in [Dead/stale code register](Dead-Code-And-Stale-Code-Register).
+- Kept the actionable rows in [Current Findings](Dead-Code-And-Stale-Code-Register#current-findings) and the [Priority Backlog](Dead-Code-And-Stale-Code-Register#priority-backlog), then replaced the later duplicate table under [Parameter and config findings](Dead-Code-And-Stale-Code-Register#parameter-and-config-findings) with a single-source pointer.
+- Updated [Progress dashboard](Progress-Dashboard) and the pruning ledger. No gameplay source changed.
+
 ## 2026-06-05T23:10:00+02:00 - Codex - Source-fix salvage duplicate prune
 
 - Claimed `source-fix-salvage-duplicate-prune` after [Source fix propagation queue](Source-Fix-Propagation-Queue#patch-ready-but-not-in-current-code) carried two live salvage patch-ready rows: `Salvage payout/cleanup cleanup` and `Salvage payout casing and loop/authority cleanup`.

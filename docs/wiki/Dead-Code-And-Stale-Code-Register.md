@@ -332,10 +332,7 @@ Source-checked false positives from this pass:
 
 These are source-interpreted findings from the parameter/config scan. `Init_Parameters.sqf` imports every lobby `class Params` name into `missionNamespace`, so initialization alone does not prove gameplay use.
 
-| ID | Classification | Evidence | Action |
-| --- | --- | --- | --- |
-| `ai-max-visible-parameter-no-runtime-consumer` | Visible parameter with no runtime consumer | `WFBE_C_AI_MAX` is visible/defaulted, but branch check 2026-06-05 found no active maintained-root runtime consumer outside parameter/default files across current source/Vanilla, stable, Miksuu upstream and release. Current buy-menu/RHUD/Soldier behavior uses `WFBE_C_PLAYERS_AI_MAX` instead (`GUI_Menu_BuyUnits.sqf:37`, `Client_UpdateRHUD.sqf:312`, `Skill_Init.sqf:49`). | Do not use `WFBE_C_AI_MAX` in player-cap answers. Wire it to real AI-team sizing, hide/remove it, or mark it historical. Canonical route: [Mission parameters](Mission-Parameters-Localization-And-Generated-Build-Inputs). |
-| `units-clean-timeout-visible-parameter-comment-only-consumer` | Visible parameter with comment-only consumer | `WFBE_C_UNITS_CLEAN_TIMEOUT` is visible/defaulted, but branch check 2026-06-05 found live cleanup uses `WFBE_C_UNITS_BODIES_TIMEOUT` at `Common_TrashObject.sqf:19`; the `WFBE_C_UNITS_CLEAN_TIMEOUT` split remains only in the commented line at `:20`. Empty vehicles use `WFBE_C_UNITS_EMPTY_TIMEOUT` via `Server_HandleEmptyVehicle.sqf:12,18`. | Decide whether the lobby body-timeout row should drive body cleanup, revive the old man/non-man split, or be removed/renamed. Canonical route: [Mission parameters](Mission-Parameters-Localization-And-Generated-Build-Inputs). |
+The actionable visible-parameter rows are already in [Current Findings](#current-findings) and the [Priority Backlog](#priority-backlog): `ai-max-visible-parameter-no-runtime-consumer` and `units-clean-timeout-visible-parameter-comment-only-consumer`. Keep those IDs single-sourced there and route policy decisions through [Mission parameters](Mission-Parameters-Localization-And-Generated-Build-Inputs#parameter-cache-flow).
 
 Source-checked false positives from this pass:
 
