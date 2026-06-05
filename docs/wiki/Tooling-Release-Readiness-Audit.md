@@ -25,7 +25,7 @@ Canonical companion pages are [Tools/build workflow](Tools-And-Build-Workflow), 
 | Priority | Finding | Evidence | Action |
 | --- | --- | --- | --- |
 | P1 | Canonical release ledger says the five tracked source fixes are Chernarus source-patched, maintained Vanilla propagated and Arma smoke pending. | `agent-release-readiness.json:33-44`, `:54-130`; `Source-Fix-Propagation-Queue.md:25-45`; `Feature-Status-Register.md:40`, `:111`, `:118`, `:126` | Treat runtime smoke, not propagation, as the remaining release gate. |
-| P1 | `agent-status.json` still has stale prose for some propagated lanes. | Status rows around the propagated fix lanes say Vanilla propagation pending while release readiness says propagated. | Update wording to "Vanilla propagated; Arma smoke pending" in the next status cleanup. |
+| Done 2026-06-05 | `agent-status.json` stale propagated-lane prose closed. | Recheck found `agent-status.json` now routes source-propagated lanes as smoke pending and no longer carries the old "Vanilla propagation pending" wording for the propagated fix lanes. | Keep `agent-status.json`, [Source fix propagation queue](Source-Fix-Propagation-Queue) and `agent-release-readiness.json` aligned whenever source/Vanilla/release-branch scope changes. |
 | P1 | Fresh-checkout boot/package hazard is real. | `version.sqf` is git-ignored/generated but included by mission boot files. | Machine-readable gate now lives in `agent-release-readiness.json` `versionSqfGeneratedInput`; next step is turning that gate into a CI/release validator. |
 | P1 | Docs CI validates wiki structure, not build/drift/security. | `.github/workflows/docs.yml:25-46`; `docs/validate-wiki.ps1:63-111` | Add separate build/drift/security checks rather than overloading docs validation. |
 | P2 | Modded release posture is cautious and source-consistent. | `Tools-And-Build-Workflow.md:63`, `:72-74`; `agent-release-readiness.json:13-118`; `SqfFileGenerator.cs:132-133`; `ZipManager.cs:16`; `rg -l "<<<<<<<|=======|>>>>>>>" Modded_Missions` finds 18 files. | Keep Modded_Missions out of generated-propagation claims unless generation is intentionally restored and conflict/bootstrap cleanup is validated. The agent ledger now splits source, maintained generated, branch-only candidate, divergent fork and skeletal/stub tiers. |
@@ -103,7 +103,7 @@ rg --files | rg "(^|/)(publicvariable\.txt|scripts\.txt|server\.cfg|basic\.cfg)$
 
 | Priority | Correction |
 | --- | --- |
-| P1 | Update stale `agent-status.json` lane prose to "Vanilla propagated; Arma smoke pending." |
+| Done 2026-06-05 | Closed stale `agent-status.json` lane prose warning; current status routes propagated lanes as smoke pending. |
 | Done 2026-06-04 | Added `versionSqfGeneratedInput` to `agent-release-readiness.json`, including ignored/tracked status, Chernarus/Takistan target roots, expected defines, source refs and validator seed commands. |
 | P1 | Add generated drift checker to CI or a separate release validator. |
 | P1 | Add a tooling release validator from `agent-release-readiness.json` `toolingAuditGates`: 7za exit-code/archive membership, generated-target delete/soft-copy warnings, DiscordBot/Extension schema fixture, and BattlEye bundle inventory. |

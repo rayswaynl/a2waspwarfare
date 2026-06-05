@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T16:15:00+02:00",
+  "generatedAt": "2026-06-05T16:45:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Validated the PR cleanup board refresh from live GitHub metadata after PR-ref pruning; current docs now distinguish open feature candidates, closed docs PRs and closed/superseded feature branches.",
+      "currentWork": "Closed a stale Tooling Release Readiness Audit warning after rechecking that agent-status.json already routes propagated source-fix lanes as smoke pending.",
       "nextExpectedOutput": "Continue future wiki backlog work from fresh evidence, code-owner requests or newly returned helper reports."
     },
     "Codex-2": {

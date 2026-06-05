@@ -2630,3 +2630,9 @@ Key conclusions:
 - Documented the fetch/prune lesson: synthetic `origin/pr/*` and `miksuu/pr/*` refs disappeared after `git fetch --all --prune`, so future agents should use PR URLs, `headRefName`/`baseRefName` and remote branch heads rather than assuming local PR refs exist.
 - Added a compact `pr-cleanup-current-state` entry to [`agent-machine-index.json`](agent-machine-index.json), updated [Progress dashboard](Progress-Dashboard), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl`. No gameplay source changed.
 - Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse and `git diff --check` in the docs mirror. The validator emitted only the known non-failing legacy JSONL envelope warnings.
+
+## 2026-06-05T16:45:00+02:00 - Codex - tooling release audit status closeout
+- Claimed `tooling-release-audit-status-closeout` during the stale-state sweep.
+- Rechecked `agent-status.json`: current status routes the propagated source-fix lanes as `source-propagated-smoke-pending` / smoke pending and no longer carries the old "Vanilla propagation pending" wording called out by [Tooling release readiness audit](Tooling-Release-Readiness-Audit).
+- Updated [Tooling release readiness audit](Tooling-Release-Readiness-Audit) and [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger) so future agents focus on runtime smoke, release-branch scope and validator work instead of a stale status-text task. No gameplay source changed.
+- Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse and `git diff --check`. The validator emitted only the known non-failing legacy JSONL envelope warnings.

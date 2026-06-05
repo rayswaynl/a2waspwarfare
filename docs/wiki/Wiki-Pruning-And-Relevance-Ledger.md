@@ -91,6 +91,7 @@ These are new cleanup leads from the 2026-06-05 wiki-backlog scout wave. They ar
 | 2026-06-05 | Add Agent Development Pack alias | Completed / validated | [Agent development pack](Agent-Development-Pack) now exists as a compatibility alias to [LLM agent entry pack](LLM-Agent-Entry-Pack). |
 | 2026-06-05 | Add compact page-to-source machine index | Completed / validated | [`agent-machine-index.json`](agent-machine-index.json) maps high-risk/high-traffic systems to canonical docs, source refs, machine refs, branch scope and next gate. It also records the JSONL vNext envelope convention so new machine rows are more consistent without rewriting legacy records, and [Navigation inventory](Navigation-Inventory-And-Page-Status) marks it as the one intentional sidebar-only machine-file link. |
 | 2026-06-05 | Refresh stale PR board state | Completed / validated | [PR cleanup lab](PR-Cleanup-And-Integration-Lab) now reflects current GitHub metadata after the board cleanup: closed docs/feature PRs are no longer shown as open, PR #8 remains the bundle baseline, `dev/pr8-plus-testbed` remains the combined lab branch and synthetic `origin/pr/*` refs are documented as pruned. |
+| 2026-06-05 | Close stale tooling release status warning | Completed / validated | [Tooling release readiness audit](Tooling-Release-Readiness-Audit) no longer tells agents to update old `agent-status.json` propagation wording; the current status file already routes propagated lanes as smoke pending. |
 
 ## Agent Guidance
 
