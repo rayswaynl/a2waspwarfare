@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T10:50:00+02:00",
+  "generatedAt": "2026-06-05T11:15:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Validated the asset/media/bootstrap scanner batch and recorded fresh pruning backlog leads.",
+      "currentWork": "Validated Navigation-Inventory-And-Page-Status and wired it into Home, sidebar, MkDocs, footer, llms and agent context.",
       "nextExpectedOutput": "Continue future wiki backlog work from fresh source evidence, code-owner requests or new user direction."
     },
     "Codex-2": {
@@ -50,6 +50,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "navigation-inventory-page-status",
+      "owner": "Codex/Sub-agent",
+      "status": "published-validated",
+      "output": "Read-only navigation scout plus local inventory found 140 Markdown pages, 102 sidebar pages, 107 MkDocs pages, 27 content pages in neither nav and 21 pages missing Continue Reading. Added Navigation-Inventory-And-Page-Status and corrected Home/agent-context overclaim. No gameplay source changed."
+    },
     {
       "lane": "wiki-backlog-asset-bootstrap-pass",
       "owner": "Codex/Sub-agents",

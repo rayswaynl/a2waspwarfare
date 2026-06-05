@@ -2536,3 +2536,9 @@ Key conclusions:
 - Added repeatable asset/media/bootstrap scanner `docs/analysis/dead-code-asset-reference-scan.ps1` plus JSON output. Latest scan covers 9 mission roots, 2774 text files and 5860 path records; 21 missing bootstrap files are all under `Modded_Missions`.
 - Source-checked scan false positives: dynamically built `\ca\air2\cruisemissile\data\scripts\...` nuke particle scripts are OA addon paths, and many missing `Textures/*.paa` records are map-conditional Chernarus/Takistan branch leads rather than guaranteed runtime breakage.
 - Updated [Dead/stale code register](Dead-Code-And-Stale-Code-Register), [Assets/config/localization/parameters](Assets-Config-Localization-And-Parameters-Atlas), [Wiki pruning/relevance ledger](Wiki-Pruning-And-Relevance-Ledger) and [Progress dashboard](Progress-Dashboard). No gameplay source changed.
+
+## 2026-06-05T11:15:00+02:00 - Codex - navigation inventory and page-status cleanup
+- Continued the wiki backlog goal with one read-only navigation scout and a local inventory of `docs/wiki/*.md`, `_Sidebar.md` and `mkdocs.yml`.
+- Added [Navigation inventory and page status](Navigation-Inventory-And-Page-Status): 140 Markdown pages, 102 sidebar pages, 107 MkDocs pages, 27 content pages in neither navigation surface and 21 pages missing `Continue Reading`.
+- Updated Home, sidebar, MkDocs, footer, `llms.txt`, `agent-context.json`, [Wiki pruning/relevance ledger](Wiki-Pruning-And-Relevance-Ledger) and [Progress dashboard](Progress-Dashboard) so future docs owners have one explicit place to track nav/page-status drift.
+- No gameplay source changed.

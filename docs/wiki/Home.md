@@ -45,7 +45,7 @@ This wiki is built for two audiences at once:
 | Map branch reviewer | [Zargabad branch audit](Zargabad-Branch-Audit) | Deep branch audit for the low-pop Zargabad terrain release candidate, static validation result, runtime gates and generator scope. |
 | Claude collaborator | [Agent collaboration protocol](Agent-Collaboration-Protocol) and [Claude loop goal](Claude-Loop-Goal) | Shared claim, handoff, event protocol and Claude's current operating mode. |
 | Steff / project owner | [Progress dashboard](Progress-Dashboard), [Bottleneck removal queue](Bottleneck-Removal-Queue) and [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) | Current lanes, event feed, ranked bottlenecks, mirror/wiki parity state and next best actions. |
-| Docs/platform owner | [Knowledge platform roadmap](Knowledge-Platform-Roadmap), [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) and [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) | Canonical docs location, GitHub Pages/MkDocs path, LLM bundle plan, mirror/wiki parity policy and bloat-reduction decisions. |
+| Docs/platform owner | [Navigation inventory](Navigation-Inventory-And-Page-Status), [Knowledge platform roadmap](Knowledge-Platform-Roadmap), [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) and [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) | Page-status inventory, canonical docs location, GitHub Pages/MkDocs path, LLM bundle plan, mirror/wiki parity policy and bloat-reduction decisions. |
 
 ## Click-Through Tours
 
@@ -68,7 +68,7 @@ Use these when you want to read the wiki like a connected handbook instead of ju
 | Coordinate Codex and Claude | [Progress dashboard](Progress-Dashboard) -> [Bottleneck removal queue](Bottleneck-Removal-Queue) -> [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) -> [Coordination board](Coordination-Board) -> [Agent collaboration protocol](Agent-Collaboration-Protocol) -> [Claude loop goal](Claude-Loop-Goal) -> [Agent worklog](Agent-Worklog) |
 | Bootstrap an LLM agent | [LLM agent entry pack](LLM-Agent-Entry-Pack) -> [`llms.txt`](llms.txt) -> [`agent-context.json`](agent-context.json) -> [Feature status](Feature-Status-Register) -> [Progress dashboard](Progress-Dashboard) |
 
-Every content page now includes a **Continue Reading** block with previous and next links for the main handbook path.
+Most primary handbook pages include a **Continue Reading** block with previous and next links. Known gaps and archive-page exceptions are tracked in [Navigation inventory and page status](Navigation-Inventory-And-Page-Status).
 
 
 ## Canonical Entry Path for Humans and Agents
@@ -183,6 +183,7 @@ Use this sequence for low-risk orientation:
 - Human-readable progress dashboard: [Progress dashboard](Progress-Dashboard)
 - Ranked bottleneck queue: [Bottleneck removal queue](Bottleneck-Removal-Queue)
 - Mirror/wiki reconciliation policy: [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan)
+- Navigation and page-status inventory: [Navigation inventory](Navigation-Inventory-And-Page-Status)
 - Machine-readable progress file: [`agent-status.json`](agent-status.json)
 - Machine-readable collaboration file: [`agent-collaboration.json`](agent-collaboration.json)
 - Machine-readable hardening backlog: [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl)

@@ -19,6 +19,7 @@
   - [Bottleneck removal queue](Bottleneck-Removal-Queue)
   - [Current source status](Current-Source-Status-Snapshot)
   - [Wiki mirror reconciliation](Wiki-Mirror-Reconciliation-Plan)
+  - [Navigation inventory](Navigation-Inventory-And-Page-Status)
 - Architecture
   - [Architecture overview](Architecture-Overview)
   - [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle)

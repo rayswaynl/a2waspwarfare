@@ -96,6 +96,7 @@
       "Mission-Entrypoints-And-Lifecycle",
       "Mission-Parameters-Localization-And-Generated-Build-Inputs",
       "Modules-Atlas",
+      "Navigation-Inventory-And-Page-Status",
       "Networking-And-Public-Variables",
       "PR-Cleanup-And-Integration-Lab",
       "PR8-And-Drone-Upstream-Lesson-Match",
@@ -227,9 +228,10 @@
         "Deep-Review-Findings",
         "External-Research-Reports",
         "Codebase-Coverage-Ledger",
-        "Wiki-Source-Consistency-Findings",
-        "Documentation-Implementation-Plan",
-        "Claude-Goal",
+      "Wiki-Source-Consistency-Findings",
+      "Documentation-Implementation-Plan",
+      "Navigation-Inventory-And-Page-Status",
+      "Claude-Goal",
         "Claude-Long-Term-Goal",
         "Claude-Loop-Goal",
         "Client-Skill-Init-Idempotency",
@@ -239,7 +241,8 @@
         "Bottleneck-Removal-Queue",
         "Wiki-Mirror-Reconciliation-Plan"
       ],
-      "hasPerPageContinueReading": true,
+    "hasPerPageContinueReading": false,
+    "continueReadingStatus": "Most primary handbook pages have Continue Reading blocks; known gaps and archive exceptions are tracked in Navigation-Inventory-And-Page-Status.",
       "sidebar": "_Sidebar.md",
       "footer": "_Footer.md"
     }

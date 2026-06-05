@@ -73,6 +73,12 @@ These are new cleanup leads from the 2026-06-05 wiki-backlog scout wave. They ar
 | P2 | Keep imported/archive and raw scout pages demoted | Large historical pages such as Miksuu archives, [Deep-review findings](Deep-Review-Findings), [Agent worklog](Agent-Worklog) and scout chronology remain useful provenance but poor daily entrypoints. | Preserve archives, but expose compact owner routes and current-state indexes first. |
 | P2 | Reduce onboarding overlap | [Quickstart](Quickstart-For-Humans-And-Agents), [AI assistant guide](AI-Assistant-Guide), [LLM agent entry pack](LLM-Agent-Entry-Pack), `llms.txt` and Home repeat boot-order guidance. | Pick one canonical agent boot order and make the other pages short audience-specific gateways. |
 
+## Fresh Backlog Progress
+
+| Date | Lead | Status | Evidence / next action |
+| --- | --- | --- | --- |
+| 2026-06-05 | Maintain one navigation inventory | Started / published | [Navigation inventory and page status](Navigation-Inventory-And-Page-Status) records current sidebar, MkDocs, neither-nav and `Continue Reading` gaps. Next pass should decide whether sidebar-only primary pages join MkDocs and whether MkDocs-only Miksuu archive pages stay search-visible or move behind archive indexes. |
+
 ## Agent Guidance
 
 Before adding a new page, answer:

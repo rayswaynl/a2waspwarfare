@@ -26,6 +26,7 @@ Important notes:
 - [Progress dashboard](https://github.com/rayswaynl/a2waspwarfare/wiki/Progress-Dashboard): Current Codex/Claude lanes and shared status.
 - [Release-readiness ledger](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-release-readiness.json): Machine-readable source-only fix, generated propagation and smoke gate status.
 - [Knowledge platform roadmap](https://github.com/rayswaynl/a2waspwarfare/wiki/Knowledge-Platform-Roadmap): Why repo docs + GitHub Pages/MkDocs should become canonical.
+- [Navigation inventory and page status](https://github.com/rayswaynl/a2waspwarfare/wiki/Navigation-Inventory-And-Page-Status): Current sidebar/MkDocs/page-status inventory and navigation cleanup backlog.
 
 ## Community & Dev
 
