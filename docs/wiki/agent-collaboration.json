@@ -72,6 +72,31 @@
       "handoff": "When complete, leave this as patch-ready code-owner work: change independent capture flag texture to the new side and refresh camp repair flag texture, then smoke independent capture and repair."
     },
     {
+      "lane": "visible-parameter-runtime-consumer-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_TrashObject.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Init.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/release/2026-06-feature-bundle",
+        "docs/wiki/Dead-Code-And-Stale-Code-Register.md",
+        "docs/wiki/Mission-Parameters-Localization-And-Generated-Build-Inputs.md",
+        "docs/wiki/Player-AI-Caps-And-Role-Balance.md",
+        "docs/wiki/Feature-Status-Register.md"
+      ],
+      "outputs": [
+        "Branch-checked visible-but-unused or comment-only mission parameters without changing gameplay source.",
+        "Condensed repeated stale-parameter notes into Mission parameters, Dead/stale code, Feature Status, Source Fix Propagation Queue, Player AI caps and machine records."
+      ],
+      "handoff": "Closed as docs-published. Future code owner should decide whether to wire, hide, rename or historical-label WFBE_C_AI_MAX and WFBE_C_UNITS_CLEAN_TIMEOUT, then smoke host parameter display, player AI cap UI/RHUD, corpse cleanup and empty-vehicle cleanup."
+    },
+    {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
       "owner": "Codex-delegated",
       "status": "returned-harvested",
@@ -258,6 +283,12 @@
       "suggestedOwner": "Codex",
       "status": "active-ongoing",
       "summary": "Continuing scoped source-backed wiki upkeep."
+    },
+    {
+      "lane": "visible-parameter-runtime-consumer-branch-route",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "Branch-checked visible mission parameters with missing/comment-only runtime consumers and updated canonical docs without gameplay source changes."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",

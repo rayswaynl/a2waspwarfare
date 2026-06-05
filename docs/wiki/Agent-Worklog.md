@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T23:35:00+02:00 - Codex-helper - Visible parameter runtime-consumer branch route
+
+- Claimed `visible-parameter-runtime-consumer-branch-route` as a documentation-only cleanup lane.
+- Source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle` for `WFBE_C_AI_MAX`, `WFBE_C_PLAYERS_AI_MAX`, `WFBE_C_UNITS_CLEAN_TIMEOUT`, `WFBE_C_UNITS_BODIES_TIMEOUT` and `WFBE_C_UNITS_EMPTY_TIMEOUT`.
+- Result: every checked root/branch keeps `WFBE_C_AI_MAX` visible/defaulted without an active maintained-root runtime reader found, while live player follower cap behavior uses `WFBE_C_PLAYERS_AI_MAX`. Every checked root/branch keeps `WFBE_C_UNITS_CLEAN_TIMEOUT` visible/defaulted but comment-only in cleanup; live cleanup uses bodies and empty-vehicle timeout variables.
+- Refreshed [Mission parameters](Mission-Parameters-Localization-And-Generated-Build-Inputs) as the canonical route and condensed [Dead/stale code](Dead-Code-And-Stale-Code-Register), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue) and [Player AI caps](Player-AI-Caps-And-Role-Balance). No gameplay source changed.
+
 ## 2026-06-05T23:20:00+02:00 - Codex - Buy-menu price/key branch route
 
 - Claimed `buy-menu-price-key-branch-route` from the UI/economy buy-menu backlog.

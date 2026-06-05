@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T23:20:00+02:00",
+  "generatedAt": "2026-06-05T23:35:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed the newest buy-menu price/key and resistance patrol latch branch matrices. Buy-menu status is centralized in Factory-And-Purchase-Systems-Atlas; patrol latch status is centralized in Towns-Camps-And-Capture-Atlas with current source/Vanilla still needing the && loop-exit fix plus Vanilla propagation.",
+      "currentWork": "Refreshed Mission-Parameters-Localization-And-Generated-Build-Inputs as the visible-parameter runtime-consumer branch route: current source/Vanilla, stable/upstream and release all keep WFBE_C_AI_MAX visible/defaulted without an active maintained-root runtime reader, while WFBE_C_UNITS_CLEAN_TIMEOUT remains comment-only cleanup residue.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -61,6 +61,12 @@
       "owner": "Codex",
       "status": "active-ongoing",
       "output": "Keep wiki/status pages current from source evidence; route open docs work through the dashboard, pruning ledger, Feature Status, Pending Owner Decisions and machine status files; compact the dashboard, maintain machine-readable entrypoints, refresh scan artifacts when docs/source changes affect them and publish scoped validation batches."
+    },
+    {
+      "lane": "visible-parameter-runtime-consumer-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "output": "Mission parameters now owns the branch-checked route for WFBE_C_AI_MAX and WFBE_C_UNITS_CLEAN_TIMEOUT; Dead/stale code, Feature Status, Source Fix Propagation Queue and Player AI caps point there. No gameplay source changed."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
