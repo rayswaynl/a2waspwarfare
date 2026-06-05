@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-05T23:59:30+02:00 - Codex helper - clickable text soundPush branch route
+
+- Claimed `clickabletext-soundpush-branch-route` from the UI/resource config backlog.
+- Source-checked current docs/source Chernarus, maintained Vanilla, stable `origin/master` `2cdf5fb8`, current `miksuu/master` `f532f706`, `origin/perf/quick-wins` `0076040f`, release `3282ff3f`, `origin/feat/wf-menu-ops-console` `0767c0b5` and `origin/feat/wf-menu-ux-phase1` `87d86257`.
+- Result: every checked maintained root/branch keeps malformed `RscClickableText.soundPush[] = {, 0.2, 1};` at `Rsc/Ressources.hpp:556`, while the same file shows valid empty-sound precedent `{"", 0.2, 1}` at `:92`. Current maintained roots derive 17 controls from `RscClickableText`.
+- Updated [Client UI systems](Client-UI-Systems-Atlas#clickable-text-soundpush-branch-matrix), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Dead/stale code](Dead-Code-And-Stale-Code-Register), [Progress dashboard](Progress-Dashboard), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger) and machine records. No gameplay source changed.
+
 ## 2026-06-05T20:55:00+02:00 - Codex helper - salvage payout/loop branch route
 
 - Claimed `salvage-payout-loop-branch-route` after the existing salvage row still had only mini-scout scope and no branch/root matrix.

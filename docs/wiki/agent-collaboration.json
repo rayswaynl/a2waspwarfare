@@ -220,6 +220,30 @@
       "handoff": "Closed as docs-published. Future code owner should replace only the display-54 wait with a throttled waitUntil/sleep shape, preserve marker-dialog handlers and final input unlock, propagate Vanilla and smoke map-marker behavior."
     },
     {
+      "lane": "clickabletext-soundpush-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Ressources.hpp",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc/Ressources.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc/Dialogs.hpp",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "origin/feat/wf-menu-ops-console",
+        "docs/wiki/Client-UI-Systems-Atlas.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Branch-checked the malformed RscClickableText soundPush base control config without changing gameplay source.",
+        "Condensed repeated DR-25b wording into the UI atlas, Feature Status, Source Fix Propagation Queue and machine records."
+      ],
+      "handoff": "Closed as docs-published. Future code owner should fix the base-class config in source Chernarus and maintained Vanilla, then smoke representative clickable controls in Arma 2 OA."
+    },
+    {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
       "owner": "Codex-delegated",
       "status": "returned-harvested",
@@ -402,7 +426,8 @@
     "salvage-payout-cleanup-branch-route",
     "feature-status-auto-wall-duplicate-prune",
     "camp-count-helper-fallback-branch-route",
-    "wasp-marker-wait-branch-route"
+    "wasp-marker-wait-branch-route",
+    "clickabletext-soundpush-branch-route"
   ],
   "queuedReports": [],
   "lanes": [
@@ -447,6 +472,12 @@
       "suggestedOwner": "Codex-helper",
       "status": "published-validated",
       "summary": "Branch-checked WASP marker display-54 wait cleanup and updated WASP/status docs without gameplay source changes."
+    },
+    {
+      "lane": "clickabletext-soundpush-branch-route",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "Branch-checked malformed RscClickableText soundPush config and updated UI/status docs without gameplay source changes."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
