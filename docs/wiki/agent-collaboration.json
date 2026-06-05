@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-05T21:25:00+02:00",
+  "generatedAt": "2026-06-05T21:45:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -172,7 +172,8 @@
     "old-warfarebe-performance-comparison",
     "navigation-inventory-refresh-old-fps",
     "old-fps-feature-routing",
-    "old-fps-scout-addendum-harvest"
+    "old-fps-scout-addendum-harvest",
+    "pruning-ledger-lead-state-closeout"
   ],
   "queuedReports": [],
   "lanes": [

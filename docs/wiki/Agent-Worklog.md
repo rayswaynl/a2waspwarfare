@@ -13,6 +13,12 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T21:45:00+02:00 - Codex - pruning ledger lead-state closeout
+
+- Claimed `pruning-ledger-lead-state-closeout` after the pruning ledger still showed old scout "Fresh Backlog Leads" as suggested work even though later passes closed most of them.
+- Converted the leads into an open/closed state table: mirror drift, machine navigation, Home/onboarding overlap, navigation inventory, archive demotion and onboarding overlap are closed for this pruning pass unless fresh evidence reopens them.
+- Simplified [Navigation inventory](Navigation-Inventory-And-Page-Status) `Continue Reading` gap families to `None` instead of listing pages that were already fixed. No gameplay source changed.
+
 ## 2026-06-05T21:25:00+02:00 - Codex - old FPS scout addendum harvest
 
 - Read the returned `old-warfarebe-fps-scout` thread. It left no files in its projectless workspace, but the thread report had compact, source-backed deltas.

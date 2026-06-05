@@ -78,8 +78,8 @@ Every content page has a `## Continue Reading` block as of the 2026-06-05 archiv
 
 | Family | Pages missing block | Decision |
 | --- | --- | --- |
-| High-traffic owner pages | [AI assistant guide](AI-Assistant-Guide), [Architecture overview](Architecture-Overview), [Mission parameters/localization/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs), [Player join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle), [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [Towns/camps/capture](Towns-Camps-And-Capture-Atlas), [Upgrades/research](Upgrades-And-Research-Atlas), [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel), [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas), [PR cleanup lab](PR-Cleanup-And-Integration-Lab) | Completed on 2026-06-05. These now have normalized `## Continue Reading` blocks. |
-| Archive/queue pages | [Audit findings queue](Audit-Findings-Queue-2026-06-03), [Development lessons](Development-Lessons-Learned), all `Miksuu-Wiki-Archive-*` pages | Completed on 2026-06-05. Queue pages route back to owning indexes; imported archive pages keep an archive-chain caveat. |
+| High-traffic owner pages | None | Previously missing owner-page blocks were normalized on 2026-06-05. |
+| Archive/queue pages | None | Queue pages route back to owning indexes; imported archive pages keep an archive-chain caveat. |
 
 ## Maintenance Checklist
 
