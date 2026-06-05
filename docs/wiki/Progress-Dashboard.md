@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `july-update-planning` | Queued / dev branch created | Steff added **Hosted Server FPS Loop Fix** to the July update to-do list. Dev branch: `dev/july-update-hosted-server-fps-loop-fix`. Scope is the DR-19 hosted/listen busy-spin fix plus dedicated FPS publish smoke; no gameplay source changed by this dashboard note. |
 | `dead-code-oa-compatibility-pass` | Published / validated | Added repo-wide OA compatibility evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit): 3199 text files scanned, 22 risky patterns checked, 0 live code-risk implementation hits for A3-style APIs, and 1132 OA-safe inverse-trap hits (`diag_tickTime`, `uiSleep`, `setVehicleInit`, `processInitCommands`) documented as not-dead guardrails. No gameplay source changed. |
 | `dead-code-mission-copy-divergence-pass` | Published / validated | Added mission-copy divergence evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register): 9 mission roots, 690 unique mission-relative paths, 548 identical copied paths, 139 diverged copied paths, 18 conflict-marker files. Source/Vanilla divergence is mostly intentional map/generated data; `Modded_Missions` is quarantined as stale fork territory until regenerated or explicitly maintained. No gameplay source changed. |
 | `dead-code-sqf-reachability-pass` | Published / validated | Added quoted-SQF-path reachability evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register): 2705 SQF files catalogued, 4358 quoted SQF path references, 453 raw unreferenced leads, and source-checked findings for AI supply truck, groupsMonitor, air-vehicle modifier hook, AT reload hook, IRS warning helpers, Reaktiv and TaskSystem. Added false-positive guardrails for dynamic Skill, construction, AI respawn and MHQ lock paths. No gameplay source changed. |
@@ -96,6 +97,12 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 | `testing-debugging-release-workflow` | Codex / future tester | Published release gate | Use [Testing workflow](Testing-Debugging-And-Release-Workflow) to distinguish source review, propagated source fixes and actual Arma smoke evidence. |
 | `source-propagated-smoke-pending` | Future tester / release owner | Smoke pending | [Client skill init](Client-Skill-Init-Idempotency), [hosted FPS](Hosted-Server-FPS-Loop-Sleep), [supply scan](Supply-Mission-Scan-Narrowing) and [paratrooper markers](Paratrooper-Marker-Revival) are tracked in owner pages and Feature Status; they are not dashboard cleanup blockers. |
 | `wasp-marker-wait-cleanup` | Future code owner | Source needs code | [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup) remains a tiny patch-ready opportunity, not an active docs lane. |
+
+## July Update To-Do
+
+| # | Item | Dev branch | Scope | LOC estimate | Status | Validation gate |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | Hosted Server FPS Loop Fix | `dev/july-update-hosted-server-fps-loop-fix` | Adopt/verify the DR-19 hosted/listen busy-spin fix for the July update target. Keep the low-risk early `!isDedicated` exit shape for FPS publisher loops; decide separately whether to consolidate the two FPS variables. | ~5-20 LOC for the loop guard; ~20-50 LOC if cleanup/consolidation is included. | Queued for July update. Remote dev branch created from `origin/master`. | Dedicated server still publishes `SERVER_FPS_GUI` / `WFBE_VAR_SERVER_FPS`; hosted/listen runs do not spin the FPS publisher loops; Chernarus and maintained Vanilla parity are named before release wording. |
 
 ## Recently Closed / Reclassified Open Items
 
