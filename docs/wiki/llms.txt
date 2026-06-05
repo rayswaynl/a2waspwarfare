@@ -16,7 +16,7 @@ Important notes:
 
 - [LLM agent entry pack](https://github.com/rayswaynl/a2waspwarfare/wiki/LLM-Agent-Entry-Pack): Compact read order, safety rules and task-specific page bundles for AI assistants.
 - [Agent development pack alias](https://github.com/rayswaynl/a2waspwarfare/wiki/Agent-Development-Pack): Compatibility alias for prompts that ask for an agent development pack; routes back to the LLM agent entry pack.
-- [Home](https://github.com/rayswaynl/a2waspwarfare/wiki/Home): Main navigation, click-through tours and current page map.
+- [Home](https://github.com/rayswaynl/a2waspwarfare/wiki/Home): Compact front door that routes humans, LLMs, reviewers and docs owners to canonical pages.
 - [Quickstart](https://github.com/rayswaynl/a2waspwarfare/wiki/Quickstart-For-Humans-And-Agents): First-day orientation for humans and agents.
 - [Feature status register](https://github.com/rayswaynl/a2waspwarfare/wiki/Feature-Status-Register): Triage dashboard for working, broken, partial, dormant and high-risk systems.
 - [Player stats branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Player-Stats-Branch-Audit): Branch-only SQF-to-RPT-to-DiscordBot stats pipeline audit and enablement gates.

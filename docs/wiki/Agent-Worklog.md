@@ -4,7 +4,7 @@
 
 - Claimed `agent-development-pack-alias` from [Knowledge platform roadmap](Knowledge-Platform-Roadmap) after the roadmap noted that older prompts still ask for an "Agent Development Pack" while the canonical page is [LLM agent entry pack](LLM-Agent-Entry-Pack).
 - Added [Agent development pack](Agent-Development-Pack) as a lightweight alias page that routes to [LLM agent entry pack](LLM-Agent-Entry-Pack), `agent-entrypoint.json`, `llms.txt`, `agent-context.json`, [Progress dashboard](Progress-Dashboard) and [Feature status](Feature-Status-Register).
-- Wired the alias into `_Sidebar.md`, `mkdocs.yml` and `llms.txt`, then refreshed [Navigation inventory](Navigation-Inventory-And-Page-Status): `142` Markdown pages, `140` content pages, `111` sidebar pages, `120` MkDocs pages, `111` pages in both navs, `9` MkDocs-only archive pages, `20` neither-nav support pages and `0` pages missing `Continue Reading`.
+- Wired the alias into `_Sidebar.md`, `mkdocs.yml`, `llms.txt` and `agent-context.json`, corrected the stale Home description in `llms.txt`, and refreshed [Navigation inventory](Navigation-Inventory-And-Page-Status): `142` Markdown pages, `140` content pages, `111` sidebar pages, `120` MkDocs pages, `111` pages in both navs, `9` MkDocs-only archive pages, `20` neither-nav support pages and `0` pages missing `Continue Reading`.
 - No gameplay source changed.
 
 ## 2026-06-05T14:30:00+02:00 - Codex - onboarding gateway pruning

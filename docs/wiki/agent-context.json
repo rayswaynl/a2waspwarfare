@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-context-v1",
-  "generatedAt": "2026-06-05T14:15:00+02:00",
+  "generatedAt": "2026-06-05T15:10:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "game": "Arma 2 Operation Arrowhead 1.64",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -18,6 +18,7 @@
       "AI-Headless-And-Performance",
       "AI-Runtime-HC-Loop-Map",
       "Abandoned-Feature-Revival-Review",
+      "Agent-Development-Pack",
       "Agent-Collaboration-Protocol",
       "Agent-Context",
       "Agent-Release-Readiness-Ledger",
@@ -172,6 +173,7 @@
       "primaryTour": [
         "Home",
         "LLM-Agent-Entry-Pack",
+        "Agent-Development-Pack",
         "Quickstart-For-Humans-And-Agents",
         "Architecture-Overview",
         "Mission-Entrypoints-And-Lifecycle",
@@ -1214,7 +1216,8 @@
     "hcUpstreamHistory": "HC-Upstream-History-And-Lessons.md",
     "currentSourceStatusSnapshot": "Current-Source-Status-Snapshot.md",
     "currentSourceStatusKnowledge": "agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851",
-    "currentSourceStatusEvent": "agent-events.jsonl#current-source-status-pointer-refresh-2026-06-02-1851"
+    "currentSourceStatusEvent": "agent-events.jsonl#current-source-status-pointer-refresh-2026-06-02-1851",
+    "agentDevelopmentPackAlias": "Agent-Development-Pack.md"
   },
   "currentCoordination": {
     "bottleneckQueue": "Bottleneck-Removal-Queue.md"

@@ -18,7 +18,7 @@ This is the compact human-readable context file for AI coding agents. Start mach
 
 - Source mission: `Missions/[55-2hc]warfarev2_073v48co.chernarus`
 - Generated vanilla mission: `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan`
-- Modded generated missions: `Modded_Missions/*`
+- Modded mission folders: `Modded_Missions/*` is in-tree, but current generation/package paths do not actively maintain it unless a tooling owner proves otherwise.
 - Generator/tool: `Tools/LoadoutManager`
 - Source-fix propagation gate: `Source-Fix-Propagation-Queue.md` plus `agent-release-readiness.json`
 
