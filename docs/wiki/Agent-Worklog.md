@@ -26,6 +26,12 @@ When an old entry disagrees with a newer source-checked page or supersession rec
 - Source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle` for `WFBE_C_AI_MAX`, `WFBE_C_PLAYERS_AI_MAX`, `WFBE_C_UNITS_CLEAN_TIMEOUT`, `WFBE_C_UNITS_BODIES_TIMEOUT` and `WFBE_C_UNITS_EMPTY_TIMEOUT`.
 - Result: every checked root/branch keeps `WFBE_C_AI_MAX` visible/defaulted without an active maintained-root runtime reader found, while live player follower cap behavior uses `WFBE_C_PLAYERS_AI_MAX`. Every checked root/branch keeps `WFBE_C_UNITS_CLEAN_TIMEOUT` visible/defaulted but comment-only in cleanup; live cleanup uses bodies and empty-vehicle timeout variables.
 - Refreshed [Mission parameters](Mission-Parameters-Localization-And-Generated-Build-Inputs) as the canonical route and condensed [Dead/stale code](Dead-Code-And-Stale-Code-Register), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue) and [Player AI caps](Player-AI-Caps-And-Role-Balance). No gameplay source changed.
+## 2026-06-05T23:40:00+02:00 - Codex - RHUD/endgame title handle branch route
+
+- Claimed `rhud-endgame-title-handle-branch-route` from the patch-ready UI/title backlog.
+- Fresh-fetched `origin` and `miksuu`, then source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, latest `miksuu/master` and `origin/release/2026-06-feature-bundle` for `Rsc/Titles.hpp`, `Client_UpdateRHUD.sqf`, `updateavailableactions.fsm`, `GUI_EndOfGameStats.sqf` and the current cut-display helper scripts.
+- Result: every checked root/branch still shares `uiNamespace["currentCutDisplay"]` between `OptionsAvailable`/RHUD/action icons and `EndOfGameStats`; release Chernarus' EASA `idd = 24000` change does not fix this title lifecycle handle collision.
+- Refreshed [UI IDD collision repair](UI-IDD-Collision-Repair) as the branch/root matrix and condensed [Client UI systems atlas](Client-UI-Systems-Atlas), [Feature status](Feature-Status-Register) and [Source fix propagation queue](Source-Fix-Propagation-Queue). No gameplay source changed.
 
 ## 2026-06-05T23:20:00+02:00 - Codex - Buy-menu price/key branch route
 
