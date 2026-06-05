@@ -74,7 +74,15 @@ The extension writes `GameData.Instance` to `C:\a2waspwarfare\Data\database.json
 
 ### `database.json` Contract Drift
 
-The current file contract is not pinned in one code type. The mission sends six comma-separated fields from `Server/CallExtensions/GlobalGameStats.sqf:22`. The in-repo extension DTO starts with `exportedArgs = new string[2]` in `Extension/src/GameData.cs:29`, while the DiscordBot reader allocates `exportedArgs = new string[4]` and later checks index `4` in `DiscordBot/src/ExtensionData/GameData/GameData.cs:30`. Future integration work should define the expected field count once, add fixture tests for normal and short/long arrays, and keep extension writer plus DiscordBot reader in lockstep.
+The current file contract is not pinned in one code type. The mission sends class selector plus west score, east score, map, uptime and player count from `Server/CallExtensions/GlobalGameStats.sqf:22`. `GLOBALGAMESTATS.cs:5-11` still labels uptime and player count as future fields, the in-repo extension DTO starts with `exportedArgs = new string[2]` in `Extension/src/GameData.cs:29`, and the DiscordBot reader allocates `exportedArgs = new string[4]` at `DiscordBot/src/ExtensionData/GameData/GameData.cs:30`.
+
+The live DiscordBot display paths guard before reading player count at index `4` (`GameData.cs:80-82`, `:111-114`) and uptime at index `3` (`:181-189`), so short/default arrays mostly produce fallback/degraded status text rather than a separate mission failure. Future integration work should define the expected field count once, add normal/short/long/corrupt `database.json` fixtures, and keep extension writer plus DiscordBot reader in lockstep. Keep this contract work separate from the higher-priority `TypeNameHandling` hardening path above.
+
+### Shared Terrain Copy Caveat
+
+DiscordBot carries terrain classes under `ExtensionData/GameData/SharedWithLoadoutManager`. Those classes include a copied `WriteToFile()` generator API (`BaseTerrain.cs:9-32`, `InterfaceTerrain.cs:5-6`), but static search found no bot caller; live bot code uses terrain metadata for display/player-cap formatting in `GameData.cs:76-92`, `:108-124` and `:147-156`.
+
+Actual mission write/propagation remains in `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs` and `Tools/LoadoutManager/FileManagement/FileManager.cs`. Treat the bot copy as stale shared/historical surface until a refactor splits display metadata from generator APIs or marks the write API unavailable to DiscordBot.
 
 ### Discord Update Timeout Caveat
 

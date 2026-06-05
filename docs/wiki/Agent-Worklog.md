@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T18:50:00+02:00 - Codex - Extension/DiscordBot contract stale scope
+
+- Claimed `extension-discordbot-contract-stale-scope` after a read-only helper returned two integration drift leads.
+- Source-checked `GlobalGameStats.sqf:22`, `GLOBALGAMESTATS.cs:5-11`, `Extension/src/GameData.cs:29` and `DiscordBot/src/ExtensionData/GameData/GameData.cs:30,80-82,111-114,181-189`.
+- Kept the failure class narrow: stale comments/default array sizes can mislead contract work and short/incompatible payloads degrade bot display/fallback, but this arg-shape drift is not the same as the separate `TypeNameHandling` security hardening path.
+- Source-checked DiscordBot `SharedWithLoadoutManager` terrain copies: the copied `WriteToFile` API has no bot caller, while live DiscordBot code only resolves terrain metadata for display. Actual mission write/propagation remains in `Tools/LoadoutManager`. No gameplay source changed.
+
 ## 2026-06-05T18:35:00+02:00 - Codex - ICBM_launched receiver branch scope
 
 - Claimed `icbm-launched-receiver-branch-scope` after a read-only explorer returned the stale direct-PV receiver lead.
