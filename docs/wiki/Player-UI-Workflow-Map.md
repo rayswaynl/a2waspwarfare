@@ -2,7 +2,7 @@
 
 This page maps what a player or commander can actually do from the client UI, and where each workflow lives in source. Use it before editing `Rsc/Dialogs.hpp`, `Client/GUI/*`, player actions, map-click behavior, HUD/title resources or WASP action surfaces.
 
-Canonical implementation pages remain [Client UI systems atlas](Client-UI-Systems-Atlas), [Client UI/HUD/menus](Client-UI-HUD-And-Menus), [UI HUD and dialogs](UI-HUD-And-Dialogs), [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook), [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Service menu affordability guards](Service-Menu-Affordability-Guards), [UI IDD collision repair](UI-IDD-Collision-Repair), [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas) and [WASP overlay](WASP-Overlay).
+Canonical implementation pages remain [Client UI systems atlas](Client-UI-Systems-Atlas), [Client UI/HUD/menus](Client-UI-HUD-And-Menus), [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook), [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Service menu affordability guards](Service-Menu-Affordability-Guards), [UI IDD collision repair](UI-IDD-Collision-Repair), [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas) and [WASP overlay](WASP-Overlay). This page is the player-clickable workflow tour, not the detailed dialog atlas.
 
 ## Workflow Map
 
@@ -23,40 +23,26 @@ Canonical implementation pages remain [Client UI systems atlas](Client-UI-System
 
 ## Dialog And Action Surfaces
 
-| Surface | Class/action | Source refs | Status |
-| --- | --- | --- | --- |
-| Upgrade | `WFBE_UpgradeMenu`, IDD `504000` | `Rsc/Dialogs.hpp:4-7`; `GUI_UpgradeMenu.sqf:135-161` | Live. |
-| Vote | `WFBE_VoteMenu`, `WFBE_Commander_VoteMenu` | `Rsc/Dialogs.hpp:145-148`, `:237-240`; `GUI_Menu.sqf:56-96` | Live UI surface; use [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) before changing outcome preview, target selection or reassignment smoke. |
-| Respawn | `WFBE_RespawnMenu`, IDD `511000`; selector marker loop | `Rsc/Dialogs.hpp:314-317`; `GUI_RespawnMenu.sqf:103-157`; `Client_UI_Respawn_Selector.sqf:19-35` | Live. |
-| Transfer | `WFBE_TransferMenu`, IDD `505000` | `Rsc/Dialogs.hpp:409-412`; `GUI_TransferMenu.sqf:57-75` | Live. |
-| Gear | `WFBE_BuyGearMenu`, IDD `503000` | `Rsc/Dialogs.hpp:530-533`; `GUI_BuyGearMenu.sqf:418-509` | Live, risky. |
-| Main | `WF_Menu`, IDD `11000` | `Rsc/Dialogs.hpp:1019-1022`; `GUI_Menu.sqf:32-208` | Live. |
-| Team | `RscMenu_Team`, IDD `13000` | `Rsc/Dialogs.hpp:1233-1236`; `GUI_Menu_Team.sqf:86-160` | Live. |
-| Buy units | `RscMenu_BuyUnits`, IDD `12000` | `Rsc/Dialogs.hpp:1445-1448`; `GUI_Menu_BuyUnits.sqf:90-156` | Live, risky. |
-| Command | `RscMenu_Command`, IDD `14000` | `Rsc/Dialogs.hpp:1789-1792`; `GUI_Menu_Command.sqf:315-344` | Live/partial. |
-| Tactical | `RscMenu_Tactical`, IDD `17000` | `Rsc/Dialogs.hpp:2161-2164`; `GUI_Menu_Tactical.sqf:363-527` | Live, risky. |
-| Old upgrade | `RscMenu_Upgrade`, IDD `18000` | `Rsc/Dialogs.hpp:2425-2428`; missing `Client/GUI/GUI_Menu_Upgrade.sqf` | Stale. |
-| Service | `RscMenu_Service`, IDD `20000` | `Rsc/Dialogs.hpp:2870-2873`; `GUI_Menu_Service.sqf:195-244` | Live, guard debt. |
-| EASA | `RscMenu_EASA`, IDD `23000` | `Rsc/Dialogs.hpp:3209-3212`; `GUI_Menu_EASA.sqf:47-50` | Live; duplicate IDD. |
-| Economy | `RscMenu_Economy`, IDD `23000` | `Rsc/Dialogs.hpp:3287-3290`; `GUI_Menu_Economy.sqf:74-150` | Live; duplicate IDD/risky. |
-| RHUD/action title | `RscOverlay`, `OptionsAvailable`, both IDD `10200` | `Rsc/Titles.hpp:44-46`, `:164-171`; `Client_UpdateRHUD.sqf:7`, `:91` | Live; duplicate title IDD. |
-| Capture/end/build titles | `CaptureBar`, `EndOfGameStats`, `WFBE_ConstructionInterface` | `Rsc/Titles.hpp:126`, `:532`, `:723`; `coin_interface.sqf:29` | Live. |
-| Help | `RscMenu_Help`, IDD `508000` | `Rsc/Dialogs.hpp:3446-3447`; `GUI_Menu_Help.sqf:5-10` | Live display, but unload namespace cleanup is mismatched and the controller has no unload case. |
-| WASP scroll actions | Recover HQ, base repair and skill actions | `WASP/actions/AddActions.sqf:15`; `WASP/baserep/viem.sqf:52`; `Client/Module/Skill/Skill_Apply.sqf:14-160` | Mixed live/stale. |
+Use [Client UI systems atlas](Client-UI-Systems-Atlas) for the full dialog/title table. As a workflow shortcut:
+
+| Surface group | Main examples | Owner route |
+| --- | --- | --- |
+| Live player menus | Upgrade, vote, respawn, transfer, main, team, buy units, command, tactical, service, EASA, economy and help. | [Client UI systems atlas](Client-UI-Systems-Atlas), [Client UI/HUD/menus](Client-UI-HUD-And-Menus) |
+| Authority-sensitive menus | Buy units, gear, tactical supports, upgrades, economy sale, CoIn, service/EASA and WASP repair actions. | [Server authority map](Server-Authority-Migration-Map), [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Service menu affordability guards](Service-Menu-Affordability-Guards) |
+| Stale or partial surfaces | Old upgrade dialog, visible command task controls, help unload mismatch, duplicate EASA/Economy IDD and duplicate title-resource IDs. | [UI IDD collision repair](UI-IDD-Collision-Repair), [Abandoned feature revival](Abandoned-Feature-Revival-Review#old-upgrade-dialog-review), [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) |
+| Map/HUD/WASP overlays | RHUD/action titles, capture/build/end titles, respawn marker selector, command map clicks and WASP scroll/map actions. | [Client UI systems atlas](Client-UI-Systems-Atlas), [WASP overlay](WASP-Overlay) |
 
 ## High-Risk Action Surfaces
 
-| Risk | Evidence | Action |
+| Risk | Action |
 | --- | --- | --- |
-| Client-authoritative player actions | Buy units (`GUI_Menu_BuyUnits.sqf:143-156`), buy gear (`GUI_BuyGearMenu.sqf:418-449`), tactical supports (`GUI_Menu_Tactical.sqf:363-527`), upgrades (`GUI_UpgradeMenu.sqf:135-161`), economy sale (`GUI_Menu_Economy.sqf:104-150`), CoIn (`coin_interface.sqf:672-718`) and WASP HQ repair (`WASP/actions/Action_RepairMHQDepot.sqf:19-28`). | Keep UI as affordance only in future hardening; server should validate funds, cooldowns, ownership, side, distance and effect target. |
-| Commander map-order executor unproven | `GUI_Menu_Command.sqf:252-306` writes `wfbe_teammode` / `wfbe_teamgoto` through shared setters, but source search found no general server loop consuming those vars into `AIMoveTo` / `AIPatrol` / `AITownPatrol`. | Smoke Move/Patrol/Defense/Take Towns orders in Arma before treating the UI as a working AI-order executor. |
-| Duplicate display/title IDs | EASA/Economy both use `idd=23000`; `RscOverlay`/`OptionsAvailable` both use `10200`. | Use [UI IDD collision repair](UI-IDD-Collision-Repair) before adding `findDisplay`-based automation or new resources. |
-| Visible command task partial | `GUI_Menu_Command.sqf:315-344` exposes task controls while `SetTask` sends are commented. | Hide or restore with server-backed task flow; do not document as working task assignment. |
-| Help dialog lifecycle mismatch | `Dialogs.hpp:3446-3447` sets `dialog_HelpPanel` on load but clears `cti_dialog_ui_onlinehelpmenu` on unload; `GUI_Menu_Help.sqf:5-10` has no unload case. | Clean namespace state before extending the help menu. |
-| Help content is controller-owned | `GUI_Menu_Help.sqf:7-14`, `:63-105`, `:206` hardcodes the topic list and a long English help body in SQF rather than a separate data/stringtable source. | Treat help edits as UI plus localization work; do not assume `Dialogs.hpp` alone owns visible help text. |
-| Orphan main-menu GPS route | `GUI_Menu.sqf:202-208` handles `MenuAction == 17/18`, while the audited `WF_Menu` control set exposes actions `1-13`, `16` and `19`. | Remove the dead router cases or restore visible controls deliberately; smoke main-menu HUD/GPS actions either way. |
-| Stale upgrade dialog | `RscMenu_Upgrade` points at missing `Client/GUI/GUI_Menu_Upgrade.sqf`; live path is `WFBE_UpgradeMenu`. | Remove or repoint only with UI smoke. |
-| Hardcoded UI text | New-player hint (`Init_Client.sqf:958`), HUD tooltips (`Rsc/Dialogs.hpp:1208-1227`), buy-unit/gear hints, artillery ammo hints and WASP `RECOVER HQ`. | Move only in a dedicated localization pass; keep source copy stable during behavior patches. |
+| Client-authoritative player actions | Keep UI as affordance only in future hardening; server should validate funds, cooldowns, ownership, side, distance and effect target. |
+| Commander map-order executor unproven | Smoke Move/Patrol/Defense/Take Towns orders in Arma before treating the UI as a working AI-order executor. |
+| Duplicate display/title IDs | Use [UI IDD collision repair](UI-IDD-Collision-Repair) before adding `findDisplay`-based automation or new resources. |
+| Visible command task partial | Hide or restore with server-backed task flow; do not document as working task assignment. |
+| Help dialog/content lifecycle | Clean namespace state before extending help, and treat help text edits as UI plus localization work. |
+| Orphan main-menu GPS route and stale upgrade dialog | Remove dead router/resource cases or restore visible controls deliberately; smoke main-menu HUD/GPS and upgrade dialog flows either way. |
+| Hardcoded UI text | Move only in a dedicated localization pass; keep source copy stable during behavior patches. |
 
 ## Map-Click Modifier Model
 

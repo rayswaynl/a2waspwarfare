@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T07:47:01+02:00",
+  "generatedAt": "2026-06-05T08:02:31+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published the Feature Status residue-pruning batch: dated scout waves are routed to owner pages, stale PR #1 handler wording is corrected and small click-through navigation fixes are in place.",
-      "nextExpectedOutput": "Continue with UI/runtime quick-reference pruning and remaining navigation-chain cleanup."
+      "currentWork": "Published the UI/runtime quick-reference pruning batch: gateway pages route to canonical UI, runtime, tooling and HC owner pages instead of repeating evidence.",
+      "nextExpectedOutput": "Check for any remaining archive/navigation caveat pass or run a fresh completion audit against the pruning ledger."
     },
     "Codex-2": {
       "status": "ready",
@@ -37,10 +37,10 @@
       "nextExpectedOutput": "Self-select the next bounded source-backed review from Coverage Ledger or the hardening backlog."
     },
     "Sub-agents": {
-      "status": "returned-leads-captured",
+      "status": "returned-promoted",
       "currentLane": "ui-runtime-bloat-scout / wiki-navigation-chain-scout",
-      "currentWork": "Confucius returned UI/HUD/runtime quick-reference pruning leads. Carson returned navigation-chain and orphan-ish page visibility fixes; the small navigation fixes were promoted into the current batch.",
-      "nextExpectedOutput": "Use the UI/runtime bloat scout as the next pruning lane after this Feature Status/navigation batch is published."
+      "currentWork": "Confucius's UI/HUD/runtime quick-reference pruning leads are source-checked into the current local batch. Carson's small navigation fixes were promoted in the previous batch; archive-page caveats remain optional future work.",
+      "nextExpectedOutput": "No active scout output remains; future pruning should be narrow and page-owner based."
     },
     "Supported docs agents": {
       "status": "active",
@@ -50,6 +50,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "ui-runtime-quickref-pruning",
+      "owner": "Codex",
+      "status": "published-validated-pushed",
+      "output": "UI-HUD-And-Dialogs is now a pure alias; Client-UI-HUD-And-Menus routes risk families; Player-UI-Workflow-Map keeps the player workflow tour; Server-Ops-Runbook keeps operator contracts; Server-Gameplay-Runtime-Atlas owns server-loop evidence; AI-Runtime-HC-Loop-Map stays focused on AI/HC lifecycle; Headless-Client-Scaling-And-Topology no longer carries a long pseudo-implementation sketch. No gameplay source changed."
+    },
     {
       "lane": "feature-status-residue-pruning",
       "owner": "Codex",

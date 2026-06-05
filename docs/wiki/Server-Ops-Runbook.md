@@ -9,10 +9,8 @@ This page is the operator entrypoint for running, packaging and observing Wasp W
 | Mission source | `Missions/[55-2hc]warfarev2_073v48co.chernarus` | Source mission for gameplay edits and source-backed docs. |
 | Generated maintained mission | `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` | LoadoutManager copy/generation target. Use the skip-list rules before hand-editing it. |
 | Build/generation tool | `Tools/LoadoutManager` | Generates EASA/balance/version outputs, copies Chernarus to maintained Vanilla and optionally packages `_MISSIONS.7z`. |
-| Performance parser | `Tools/PerformanceAuditAnalyzer` | Parses existing `[Performance Audit]` RPT/log files into CSV, Markdown, HTML and Word-friendly reports; it is not a shipped live tailer service. |
-| Discord status bot | `DiscordBot` | Reads `database.json` through `Preferences.Instance.DataSourcePath` or `C:\a2waspwarfare\Data` and updates Discord status every 60 seconds when `token.txt` and `preferences.json` are supplied outside git. `botconfig.json` helper support exists but is not the live status-reader source of truth and is not currently ignored. |
-| Global stats extension | `Extension` | Legacy .NET Framework 4.8 x86 Arma extension that writes `C:\a2waspwarfare\Data\database.json`. |
-| BattlEye stub | `BattlEyeFilter/publicvariable.txt` | Contains only the `kickAFK` publicVariable rule. It is AFK plumbing, not a complete public-server filter set. |
+| Offline performance parser | `Tools/PerformanceAuditAnalyzer` | Parses existing `[Performance Audit]` RPT/log files; see [Tools/build](Tools-And-Build-Workflow). |
+| Discord/status integration | `DiscordBot`, `Extension`, `BattlEyeFilter/publicvariable.txt` | Runtime status, global stats and AFK filter stub; see [External integrations](External-Integrations). |
 
 ## What Is Not In The Repo
 
@@ -50,18 +48,16 @@ Before calling a host reproducible, record these owner-provided paths/versions i
 
 ## Runtime Telemetry Contracts
 
-| Signal | Source | Consumer / proof |
+| Signal family | Operational contract | Canonical detail |
 | --- | --- | --- |
-| `SERVER_FPS_GUI` | `Server/GUI/serverFpsGUI.sqf:1-7` | RHUD reads it in `Client/Client_UpdateRHUD.sqf:113`. |
-| `WFBE_VAR_SERVER_FPS` | `Server/Module/serverFPS/monitorServerFPS.sqf:1-6` | Compatibility channel; no current source Chernarus player-UI reader was found. |
-| Client delegation FPS | `Client/FSM/updateavailableactions.fsm:121`; `Server/Functions/Server_HandleSpecial.sqf:75` | Stored as `WFBE_AI_DELEGATION_<uid>` and used by `Server_FNC_Delegation.sqf`. |
-| Performance audit RPT rows | `Common/Functions/Common_PerformanceAudit.sqf:118-119` | Literal `[Performance Audit]` rows parsed by `Tools/PerformanceAuditAnalyzer/Analyze-PerformanceAudit.ps1`. |
-| Global game stats | `Server/CallExtensions/GlobalGameStats.sqf:5` -> `Extension/src/BaseExtensionClass/Implementations/GLOBALGAMESTATS.cs:13` | Writes `C:\a2waspwarfare\Data\database.json`; DiscordBot polls and updates every 60 seconds. |
+| Server FPS | Dedicated publishers feed RHUD/server-FPS compatibility state; hosted/listen loop behavior is a release-scope smoke item. | [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) |
+| Client delegation FPS | Player clients report FPS for delegation mode 1; do not trust it as a security signal. | [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map), [Headless delegation/failover](Headless-Delegation-And-Failover-Playbook) |
+| Performance audit rows | Collect server and client RPTs; the parser consumes literal `[Performance Audit]` rows, not a live daemon stream. | [Tools/build](Tools-And-Build-Workflow), [PerformanceAuditAnalyzer](PerformanceAuditAnalyzer) |
+| Global stats / Discord status | In-repo extension writes `database.json`; DiscordBot polls the selected data path; AntiStack uses a separate missing DB extension. | [External integrations](External-Integrations), [AntiStack database extension audit](AntiStack-Database-Extension-Audit) |
 
 Operational caveats:
 
 - Collect the server RPT for server-scope performance and each client RPT for client/RHUD/UI performance. Client and server performance audit writers are local to their own RPTs.
-- The performance-audit contract is `[Performance Audit]`, not `PERF_RECORD`, and current tooling is parser/launcher only rather than a daemon that tails live RPTs.
 - `GlobalGameStats.sqf` subtracts one assumed headless client from player count; smoke no-HC and multi-HC deployments before relying on Discord player counts.
 - `origin/feat/player-stats` has a branch-only `StatsService`/`stats.json` flow. Current source uses the global `database.json` status path.
 

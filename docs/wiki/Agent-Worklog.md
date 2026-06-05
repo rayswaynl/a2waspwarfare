@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-05T08:02:31+02:00 - Codex - UI/runtime quick-reference pruning
+
+- Continued the pruning ledger's P2 overlapping-atlas lane from the pushed Feature Status cleanup batch (`de23dadf` / wiki `2d158e6`).
+- Source-checked Confucius's `ui-runtime-bloat-scout` lead and kept the lane to documentation pruning only.
+- Condensed [UI HUD and dialogs](UI-HUD-And-Dialogs) into a pure alias; [Client UI/HUD/menus](Client-UI-HUD-And-Menus) now routes UI risk families instead of repeating individual source proofs; [Player UI workflow map](Player-UI-Workflow-Map) remains a player-clickable tour and routes detailed dialog/title evidence to the UI atlas and IDD repair pages.
+- Trimmed runtime overlap: [Server ops runbook](Server-Ops-Runbook) keeps operator contracts, [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) owns server-loop evidence, [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) stays focused on AI/HC lifecycle, and [Headless client scaling](Headless-Client-Scaling-And-Topology) no longer carries a long pseudo-implementation sketch.
+- No gameplay source files changed.
+
 ## 2026-06-05T07:47:01+02:00 - Codex - Feature Status residue pruning and navigation scouts
 
 - Continued the pruning ledger goal after Core/Gameplay gateway pruning was pushed as docs `65e59eb9` / wiki `8dccaa0`.

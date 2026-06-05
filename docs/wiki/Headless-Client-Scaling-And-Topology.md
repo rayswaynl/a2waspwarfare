@@ -124,78 +124,18 @@ Concrete fixes to make the **existing single HC** more reliable and offload more
 
 **Biggest single win:** #5 (load-balanced selection) + #1 (server fallback) — both **feasible without any engine workaround** — together turn Mode 2 from *random, untracked, drop-on-race* into *balanced, accounted, safe*, and they are the prerequisite that makes adding a 2nd HC pay off rather than just scatter AI. **Lowest feasibility:** delegating purchases/patrols/support (item 6, second half) — blocked by the missing `setGroupOwner`, a per-category rewrite.
 
-## Implementation note — items #1 + #5 (concrete sketch)
-Both touch the same function (`Server_DelegateAITownHeadless.sqf`), so they're best done together. **Sketch only — Arma 2 OA 1.63 SQF, not a patch.** It reuses Mode 1's tracking idea (`Server_FNC_Delegation.sqf`), adapted: HCs don't report FPS, so HC selection is **least-loaded by group count**, not FPS-gated.
+## Implementation Guidance
 
-**Current loop** (`Server_DelegateAITownHeadless.sqf:23-30`) — random pick, silently skips when no HC:
-```sqf
-for '_i' from 0 to count(_groups) -1 do {
-    _clients = missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID";
-    if (count _clients > 0) then {
-        [leader(_clients select floor(random count _clients)), "HandleSpecial",
-            ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i]]
-        ] Call WFBE_CO_FNC_SendToClient;
-        _delegated = _delegated + 1;
-    };
-    // no else -> if no HC at this instant, the group is created nowhere
-};
-```
+Items #1 and #5 both touch `Server_DelegateAITownHeadless.sqf`, so they should be designed and tested together: replace random HC selection with tracked least-loaded selection, and add a server fallback when no HC is available at the moment of delegation. Keep the implementation in the HC failover owner pages rather than this topology overview.
 
-**(#5) Per-HC load counter + least-loaded picker + death tracker.** Init the counter where the HC registers, clear it on disconnect:
-```sqf
-// Server_HandleSpecial.sqf 'connected-hc' (after appending to WFBE_HEADLESSCLIENTS_ID):
-missionNamespace setVariable [format ["WFBE_HC_LOAD_%1", _uid], 0];
-// Server_OnPlayerDisconnected.sqf HC block (after removing from the list):
-missionNamespace setVariable [format ["WFBE_HC_LOAD_%1", _uid], nil];
+Patch owner rules:
 
-// Least-loaded HC (grpNull if none) -- A2 OA safe: no select [start,count], no params:
-WFBE_SE_FNC_PickLeastLoadedHC = {
-    private ["_best", "_bestLoad", "_uid", "_load"];
-    _best = grpNull; _bestLoad = 999999;
-    {
-        _uid  = getPlayerUID (leader _x);
-        _load = missionNamespace getVariable [format ["WFBE_HC_LOAD_%1", _uid], 0];
-        if (_load < _bestLoad) then { _bestLoad = _load; _best = _x };
-    } forEach (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
-    _best
-};
+- Preserve OA constraints: no `setGroupOwner`, no `remoteExec`, no `params`, no Arma 3 locality helpers and no live transfer of already-created groups.
+- Keep vehicle bookkeeping intact. If fallback creation happens on the server, preserve the existing `CreateTownUnits` return handling, `wfbe_active_vehicles` registration and `HandleEmptyVehicle` path.
+- Do not merely uncomment static-defence report-back. DR-42 needs a deliberate static-defence payload and server receiver because the current helper returns only `[_teams]`.
+- Prefer source Chernarus first, then propagate maintained Vanilla through LoadoutManager and run private dedicated/HC smoke.
 
-// Decrement when the delegated group dies (mirrors Mode 1's DelegationTracker):
-WFBE_SE_FNC_HCDelegationTracker = {
-    private ["_uid", "_group", "_cur"];
-    _uid = _this select 0; _group = _this select 1;
-    while {!isNull _group} do { sleep 5 };
-    _cur = missionNamespace getVariable [format ["WFBE_HC_LOAD_%1", _uid], 0];
-    missionNamespace setVariable [format ["WFBE_HC_LOAD_%1", _uid], (_cur - 1) max 0];
-};
-```
-
-**(#1 + #5) New loop** — least-loaded pick, increment + track, and a **server fallback** instead of skipping:
-```sqf
-for "_i" from 0 to (count _groups) - 1 do {
-    private ["_hc", "_uid", "_cur"];
-    _hc = call WFBE_SE_FNC_PickLeastLoadedHC;
-    if (!isNull _hc) then {
-        _uid = getPlayerUID (leader _hc);
-        [leader _hc, "HandleSpecial",
-            ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i]]
-        ] call WFBE_CO_FNC_SendToClient;
-        _cur = missionNamespace getVariable [format ["WFBE_HC_LOAD_%1", _uid], 0];
-        missionNamespace setVariable [format ["WFBE_HC_LOAD_%1", _uid], _cur + 1];
-        [_uid, _teams select _i] spawn WFBE_SE_FNC_HCDelegationTracker;
-        _delegated = _delegated + 1;
-    } else {
-        // #1: no HC available -> create on the server (global=false), as server_town_ai.sqf:178 does
-        [_town, _side, [_groups select _i], [_positions select _i], [_teams select _i], false] call WFBE_CO_FNC_CreateTownUnits;
-    };
-};
-```
-
-**Caveats for the real change:**
-- **Vehicle tracking for the fallback.** `CreateTownUnits` returns `[_teams, _vehicles]`; the server-AI path pushes `_vehicles` into the town's `wfbe_active_vehicles` (`server_town_ai.sqf:179`). The fallback above doesn't — capture the return and push it, or (cleaner) collect undelegated groups and let the **call site** server-create them so the existing vehicle/`HandleEmptyVehicle` bookkeeping runs.
-- **Tracker depends on the group handle.** It watches the server-side group object; if PVF group-handle transfer is unreliable (see *Harden group-handle*, #7), prefer an HC `group-empty` report-back over server-side `isNull` polling.
-- **Apply the same pattern to** `Server_DelegateAIStaticDefenceHeadless.sqf` (and fix DR-42's report-back, #2) so static defences are balanced + accounted too.
-- A2 OA safety: uses `grpNull`, `forEach`, `getPlayerUID`, `format`, `getVariable [name, default]`, `setVariable [name, nil]`, `max`, `spawn` — all OA-valid. No `params`, `setGroupOwner`, `select [start,count]`, `isEqualType`, or `private _x = …`.
+Detailed source anchors and patch-readiness evidence live in [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map), [Headless delegation/failover](Headless-Delegation-And-Failover-Playbook), [Feature status](Feature-Status-Register) and [Deep-review findings](Deep-Review-Findings) DR-21 / DR-42.
 
 ## Observability & validation
 The delegation path emits `PerformanceAudit_Record` rows (e.g. `delegate_townai_headless`, logging `town`/`side`/`groups`/`delegated`/`headless` count). To validate any HC change: baseline at a known load → add one **co-located** HC → re-measure at the **same** load → diff with [PerformanceAuditAnalyzer](Tools-And-Build-Workflow). Change one thing at a time; never bundle.
