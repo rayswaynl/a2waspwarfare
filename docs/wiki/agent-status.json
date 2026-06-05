@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T23:59:30+02:00",
+  "generatedAt": "2026-06-06T00:00:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed the camp count helper fallback branch matrix: current source/Vanilla, stable, Miksuu upstream, perf/quick-wins and release all keep zero-camp helper fallbacks returning 1 and feeding capture mode 2, threeway respawn and depot-buy gates. Towns-Camps-And-Capture-Atlas is the canonical route.",
+      "currentWork": "Refreshed the WASP marker wait cleanup branch matrix: current source/Vanilla, stable, Miksuu upstream, perf/quick-wins and release all keep the display-54 input-lock busy wait while the display-12 sibling already uses throttled waitUntil. WASP-Marker-Wait-Cleanup is the canonical route.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -97,6 +97,12 @@
       "owner": "Codex-helper",
       "status": "published-validated",
       "output": "Towns/camps/capture now owns the branch-checked route for zero-camp helper fallback semantics; Feature Status, Source Fix Propagation Queue and machine records point future code owners to real-count versus safe-denominator cleanup plus smoke. No gameplay source changed."
+    },
+    {
+      "lane": "wasp-marker-wait-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "output": "WASP marker wait cleanup now owns the branch-checked route for the display-54 input-lock busy wait; Feature Status, Source Fix Propagation Queue and machine records point future code owners to the tiny throttled wait patch plus marker-dialog smoke. No gameplay source changed."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",

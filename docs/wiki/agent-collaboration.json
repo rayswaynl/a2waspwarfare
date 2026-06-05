@@ -196,6 +196,30 @@
       "handoff": "Closed as docs-published. Future code owner should decide real-count versus safe-denominator semantics, then split helpers or add caller-specific zero-camp guards and smoke capture mode 2, threeway respawn and depot infantry buys."
     },
     {
+      "lane": "wasp-marker-wait-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/WASP-Marker-Wait-Cleanup.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md",
+        "docs/wiki/Wiki-Pruning-And-Relevance-Ledger.md",
+        "docs/wiki/agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/WASP/global_marking_monitor.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Branch-checked the WASP marker display-54 wait cleanup without changing gameplay source.",
+        "Condensed the finding into WASP marker wait cleanup, Feature Status, Source Fix Propagation Queue, pruning ledger and machine records."
+      ],
+      "handoff": "Closed as docs-published. Future code owner should replace only the display-54 wait with a throttled waitUntil/sleep shape, preserve marker-dialog handlers and final input unlock, propagate Vanilla and smoke map-marker behavior."
+    },
+    {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
       "owner": "Codex-delegated",
       "status": "returned-harvested",
@@ -377,7 +401,8 @@
     "auto-wall-toggle-scope-branch-route",
     "salvage-payout-cleanup-branch-route",
     "feature-status-auto-wall-duplicate-prune",
-    "camp-count-helper-fallback-branch-route"
+    "camp-count-helper-fallback-branch-route",
+    "wasp-marker-wait-branch-route"
   ],
   "queuedReports": [],
   "lanes": [
@@ -416,6 +441,12 @@
       "suggestedOwner": "Codex-helper",
       "status": "published-validated",
       "summary": "Branch-checked camp count helper zero fallback semantics and updated towns/status docs without gameplay source changes."
+    },
+    {
+      "lane": "wasp-marker-wait-branch-route",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "Branch-checked WASP marker display-54 wait cleanup and updated WASP/status docs without gameplay source changes."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",

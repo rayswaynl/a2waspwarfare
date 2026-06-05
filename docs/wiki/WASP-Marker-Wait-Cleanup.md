@@ -6,6 +6,8 @@ This page tracks the `wasp-marker-wait-cleanup` opportunity. It is a small clien
 
 Not patched in the current source. Source Chernarus and Vanilla Takistan both still need a tiny sleep/backoff in `WASP/global_marking_monitor.sqf`, followed by in-game map-marker smoke.
 
+Branch check 2026-06-05 found no rescue in current docs/source Chernarus or maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` or release `3282ff3f`: every checked root/branch still loads `WASP\global_marking_monitor.sqf` from client init and keeps `disableUserInput true`, the unslept display-54 polling window and final `disableUserInput false` in `global_marking_monitor.sqf:57-73`. The sibling display-12 map wait remains the good local idiom at `global_marking_monitor.sqf:80` (`waitUntil {sleep 0.1; !isNull (findDisplay 12)}`). Release Chernarus only shifts the client-init launch line to `Init_Client.sqf:282`; it does not change the marker wait.
+
 ## What To Read
 
 Source:
