@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T23:40:00+02:00 - Codex - RHUD/endgame title handle branch route
+
+- Claimed `rhud-endgame-title-handle-branch-route` from the patch-ready UI/title backlog.
+- Fresh-fetched `origin` and `miksuu`, then source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, latest `miksuu/master` and `origin/release/2026-06-feature-bundle` for `Rsc/Titles.hpp`, `Client_UpdateRHUD.sqf`, `updateavailableactions.fsm`, `GUI_EndOfGameStats.sqf` and the current cut-display helper scripts.
+- Result: every checked root/branch still shares `uiNamespace["currentCutDisplay"]` between `OptionsAvailable`/RHUD/action icons and `EndOfGameStats`; release Chernarus' EASA `idd = 24000` change does not fix this title lifecycle handle collision.
+- Refreshed [UI IDD collision repair](UI-IDD-Collision-Repair) as the branch/root matrix and condensed [Client UI systems atlas](Client-UI-Systems-Atlas), [Feature status](Feature-Status-Register) and [Source fix propagation queue](Source-Fix-Propagation-Queue). No gameplay source changed.
+
 ## 2026-06-05T23:15:00+02:00 - Codex - Construction SmallSite logic branch route
 
 - Claimed `construction-smallsite-logic-branch-route` from the patch-ready construction backlog.
