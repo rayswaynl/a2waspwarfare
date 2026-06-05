@@ -556,7 +556,7 @@
       ],
       "findings": [
         "DR-1 PV dispatch Call Compile trust boundary unmitigated by validation or BattlEye filter.",
-        "DR-2 paratrooper drop markers remain patch-ready/current-source-unpatched: current source/Vanilla have the sender and handler file, but lack HandleParatrooperMarkerCreation in the client PVF list; source patch, Vanilla propagation and Arma smoke remain.",
+        "DR-2 paratrooper drop markers are source/Vanilla propagated but not stable/release complete: current docs/source Chernarus and maintained Vanilla register HandleParatrooperMarkerCreation in the client PVF list, but origin/master and release a9219d88 omit the registration; Arma smoke and modded drift cleanup remain.",
         "DR-3 MASH tent markers dead because receiverMASHmarker.sqf is only referenced by a commented client init compile.",
         "DR-4 Chernarus and Takistan are in sync except skip-list/blacklist differences; Modded_Missions are stale or stubbed.",
         "DR-5 atlas preprocessFile counts should be treated as point-in-time; FSM count of 3 verified accurate."

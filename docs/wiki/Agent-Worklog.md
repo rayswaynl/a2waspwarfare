@@ -2643,7 +2643,7 @@ Key conclusions:
 - Rechecked DR cross-link requests: DR-44 is routed through economy/networking/server runtime; DR-20 through construction/gameplay/server runtime; DR-40 through WASP overlay; DR-19 through server runtime/AI-headless; DR-45 through the town-AI playbook and AI/headless page.
 - Rechecked current-state requests: [Coordination board](Coordination-Board) no longer lists stale Wave F sub-agent lanes as active, [Progress dashboard](Progress-Dashboard) shows Claude as `collaboration-follow-autonomous-ready`, and sidebar has one `Headless delegation and failover` entry.
 - Updated [Wiki quality audit](Wiki-Quality-Audit), [Progress dashboard](Progress-Dashboard), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl`. No gameplay source changed.
-- Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse and `git diff --check`. The validator emitted only the known non-failing legacy JSONL envelope warnings.
+- Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse, `git diff --check` in both worktrees and full repo-mirror/wiki checkout SHA256 parity (`full-diffCount=0`). The validator emitted only the known non-failing legacy JSONL envelope warnings.
 
 ## 2026-06-05T17:35:00+02:00 - Codex - mirror and source consistency closeout
 - Claimed `mirror-and-source-consistency-closeout` after the stale-state sweep found old mirror-drift and SQF compile-count audit residue.
@@ -2668,3 +2668,11 @@ Key conclusions:
 - Rechecked paratrooper marker registration: source Chernarus and maintained Vanilla register `HandleParatrooperMarkerCreation` at `Common/Init/Init_PublicVariables.sqf:39`; current docs keep the stable-master/release-branch and Arma-smoke caveats visible.
 - Updated [Wiki/source consistency findings](Wiki-Source-Consistency-Findings) so Cluster A is closed as a docs-contradiction risk while preserving the live code-owner tasks. No gameplay source changed.
 - Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse and `git diff --check`. The validator emitted only the known non-failing legacy JSONL envelope warnings.
+
+## 2026-06-05T19:05:00+02:00 - Codex - source consistency Cluster B/C current-state closeout
+- Claimed `source-consistency-cluster-bc-current-state` to recheck old [Wiki/source consistency findings](Wiki-Source-Consistency-Findings) Cluster B/C path, direction and line-drift rows against current source and owner pages.
+- Rechecked Cluster B source anchors: `SERVER_FPS_GUI` is published from `Server/GUI/serverFpsGUI.sqf:6-7`; `WFBE_VAR_SERVER_FPS` is the separate `Server/Module/serverFPS/monitorServerFPS.sqf:5-6`; `ATTACK_WAVE_DETAILS` is still sent by `publicVariableServer` at `Server_AttackWave.sqf:27`; AFK module path is `Client/Module/AFKkick/monitorAFK.sqf:24-30`; current PV owner pages carry these corrections.
+- Rechecked Cluster C anchors: HC downgrade is `initJIPCompatible.sqf:165-171`, no-HC fallback is per-town activation at `server_town_ai.sqf:165-170`, live `WFBE_CO_FNC_LogGameEnd` compile target is `Server/Functions/Server_LogGameEnd.sqf` at `Init_Server.sqf:64`, and `wfbe_votetime` wait is `Init_Client.sqf:787`.
+- Corrected stale [`agent-context.json`](agent-context.json) DR-2 wording so it no longer says current source/Vanilla lack `HandleParatrooperMarkerCreation`; current state is source/Vanilla propagated, stable/release absent, smoke/modded drift pending.
+- Updated [Wiki/source consistency findings](Wiki-Source-Consistency-Findings) so Cluster B/C are provenance and source anchors, not active docs-cleanup tasks. No gameplay source changed.
+- Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse, `git diff --check` in both worktrees and full repo-mirror/wiki checkout SHA256 parity (`full-diffCount=0`). The validator emitted only the known non-failing legacy JSONL envelope warnings.

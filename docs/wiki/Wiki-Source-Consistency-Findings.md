@@ -6,6 +6,8 @@ Codex follow-up 2026-06-02T14:56: Cluster B and Cluster C line/path issues were 
 
 Codex follow-up 2026-06-05T18:35: Cluster A is now closed as a documentation-contradiction risk. Current owner pages no longer claim these fixes are shipped: commander reassignment and factory queue cleanup are explicitly source-unpatched code-owner work, while paratrooper marker registration is branch-scoped/source-propagated with Arma smoke and release-branch gaps still visible. Keep the table as provenance and as a compact route map for future code owners.
 
+Codex follow-up 2026-06-05T19:05: Cluster B/C is now closed as current docs drift. Current owner pages carry the corrected server FPS paths, `ATTACK_WAVE_DETAILS` direction, AFKkick path, client-PVF count, HC downgrade lines, LogGameEnd compile target and DR-37 `wfbe_votetime` caveat. Keep these tables as provenance and quick source anchors, not as active cleanup tasks.
+
 ## A. HIGH — former claimed-fixed-vs-source-bug contradictions (closed as docs drift)
 
 Original risk: a reader/agent could wrongly skip a still-live bug because a page said a fix had shipped. Current status: owner pages now preserve the live bug/branch scope correctly. No gameplay source was changed by this closeout.
@@ -18,7 +20,10 @@ Original risk: a reader/agent could wrongly skip a still-live bug because a page
 | `HandleParatrooperMarkerCreation` is now a registered client PVF. | Source Chernarus and maintained Vanilla do register the client PVF at `Common/Init/Init_PublicVariables.sqf:39`, and the handler file exists. Stable master / current release branch caveats remain separate. | [Feature status](Feature-Status-Register), [Public variable channel index](Public-Variable-Channel-Index) and [Paratrooper marker revival](Paratrooper-Marker-Revival) now mark it branch-scoped/source-propagated with Arma smoke and release-branch gaps still open. | `Common/Init/Init_PublicVariables.sqf:39`; Vanilla same path `:39` | DR-2 |
 | Duplicate `new-commander-assigned` send was removed. | Still source-unpatched in source Chernarus and maintained Vanilla: both the PVF caller and helper send the notification, but the helper path is partly masked by the malformed side argument until DR-15 is fixed. | [Feature status](Feature-Status-Register), [Commander reassignment call shape](Commander-Reassignment-Call-Shape) and [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) now warn future code owners to choose exactly one notification owner after fixing call shape. | `Server/PVFunctions/RequestNewCommander.sqf:14`; `Server/Functions/Server_AssignNewCommander.sqf:9`; Vanilla same paths | - |
 
-## B. MEDIUM — Public-Variable Channel Index: wrong path or direction
+## B. MEDIUM — Public-Variable Channel Index: wrong path or direction (closed as current docs drift)
+
+Status 2026-06-05: closed by current [Public variable channel index](Public-Variable-Channel-Index), [Feature status](Feature-Status-Register), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), [Player join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle) and smoke/backlog pages. The source realities below remain valid anchors.
+
 | Claim | Source reality | Ref |
 | --- | --- | --- |
 | `SERVER_FPS_GUI` lives in `Server/Module/serverFPS/serverFpsGUI.sqf` | It is `Server/GUI/serverFpsGUI.sqf:7`; `Server/Module/serverFPS/` holds only `monitorServerFPS.sqf` (the separate `WFBE_VAR_SERVER_FPS` channel). | `Server/GUI/serverFpsGUI.sqf:7` |
@@ -26,7 +31,10 @@ Original risk: a reader/agent could wrongly skip a still-live bug because a page
 | AFK channel handler at `Client/Module/AFK/monitorAFK.sqf` | Directory is `AFKkick`, not `AFK`. | `Client/Module/AFKkick/monitorAFK.sqf` |
 | Client-bound count "15"; list range `:25-40` | **Resolved by current source.** `_clientCommandPV` has 15 active entries at `Common/Init/Init_PublicVariables.sqf:25-40`; `HandleParatrooperMarkerCreation` is present at `:39` and `NukeIncoming` is present at `:40`. | `Common/Init/Init_PublicVariables.sqf:25-40` |
 
-## C. MEDIUM — file:line drift / wrong compile target
+## C. MEDIUM — file:line drift / wrong compile target (closed as current docs drift)
+
+Status 2026-06-05: closed by current [AI/headless and performance](AI-Headless-And-Performance), [SQF code atlas](SQF-Code-Atlas), [Victory/endgame atlas](Victory-And-Endgame-Atlas), [Deep-review findings](Deep-Review-Findings) and [Lifecycle wait-chain](Lifecycle-Wait-Chain). The source realities below remain valid anchors.
+
 | Page | Claim | Source reality | Ref |
 | --- | --- | --- | --- |
 | AI/headless | HC delegation downgrade at `initJIPCompatible.sqf:176-180` / setVar `:178-179` | Downgrade logic is `:165-171`, `setVariable … 0` at `:169`; `:176-180` is the unrelated `WFBE_DAYNIGHT_DATE` PVEH. | `initJIPCompatible.sqf:165-171` |
@@ -43,7 +51,7 @@ Separate note still worth source-checking in a future DR text cleanup lane: DR-4
 
 ## Handoff for Codex
 - **Cluster A docs contradiction is closed:** current owner pages now mark the live commander/factory rows as source-unpatched and the paratrooper marker row as branch-scoped/source-propagated rather than broadly shipped. Future work belongs to code-owner implementation/smoke lanes, not another docs-contradiction pass.
-- Cluster B/C are doc-accuracy fixes you own (paths, channel direction, drifted `file:line`).
+- **Cluster B/C docs drift is closed:** current owner pages now carry the corrected paths, direction and line refs. Future edits should only reopen a row after a fresh source/page contradiction is found.
 - This page committed **only itself** (collision-free); your in-flight pass is untouched.
 
 ## Batch 3 — canonical homes + lifecycle/integration/tools (mostly routed)

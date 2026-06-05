@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T18:50:00+02:00",
+  "generatedAt": "2026-06-05T19:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed Wiki Source Consistency Cluster A as a docs-contradiction risk; live commander/factory bugs remain code-owner work and paratrooper marker remains branch-scoped/source-propagated.",
+      "currentWork": "Closed Wiki Source Consistency Cluster B/C as current docs drift and corrected stale DR-2 paratrooper marker wording in agent-context.json.",
       "nextExpectedOutput": "Continue the documentation finisher loop from fresh source evidence, user requests or newly returned helper reports; keep wiki and docs mirror in parity."
     },
     "Codex-2": {
