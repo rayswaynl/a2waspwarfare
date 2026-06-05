@@ -35,6 +35,16 @@ flowchart TD
 | `Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf:94-95` | Writes the filtered array to `profileNamespace` and calls `saveProfileNamespace`. |
 | `Client/Functions/Client_UI_Gear_FillTemplates.sqf:15-22` | The visible template list only adds templates whose stored upgrade level is at or below current `WFBE_UP_GEAR`. |
 
+## Current Branch Matrix
+
+| Root / branch | Save filter | Profile import guard | Practical meaning |
+| --- | --- | --- | --- |
+| Current docs/source Chernarus | `Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` still reference undefined `_u_upgrade`. | `Init_ProfileGear.sqf:17` accepts `count _x >= 6`, then `:25` reads `_x select 6`. | Patch-ready; source is still unpatched. |
+| Maintained Vanilla Takistan | Same save-filter `_u_upgrade` references. | Same six-field guard before index-6 read. | Propagate deliberately after Chernarus source fix. |
+| Stable `origin/master` | Same in both maintained roots. | Same in both maintained roots. | No stable-branch rescue exists. |
+| Miksuu upstream `miksuu/master` | Same in both maintained roots. | Same in both maintained roots. | No upstream rescue exists. |
+| `origin/release/2026-06-feature-bundle` | Same in both maintained roots. | Same in both maintained roots. | Release bundle still carries the paired profile-template debt. |
+
 ## Bug Shape
 
 `Client_UI_Gear_SaveTemplateProfile.sqf` intends to filter templates so only side-valid and currently unlocked items are saved to the player's profile. The function has a correctly named `_template_upgrade` value, but the three per-item upgrade checks reference `_u_upgrade` instead:
@@ -133,6 +143,7 @@ Generated mission:
 - The import-bound issue is a paired profile persistence bug, not proof that live gear purchase authority is hardened or broken in a new way.
 - It is not the same as full gear purchase authority. Do not claim public-server gear hardening after this patch.
 - Keep this page paired with [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Client UI systems atlas](Client-UI-Systems-Atlas) and [Feature status](Feature-Status-Register).
+- Branch check 2026-06-05 found no rescue branch: current source/Vanilla, stable `origin/master`, Miksuu upstream and `origin/release/2026-06-feature-bundle` all still carry both the save-filter and profile-import defects.
 
 ## Continue Reading
 

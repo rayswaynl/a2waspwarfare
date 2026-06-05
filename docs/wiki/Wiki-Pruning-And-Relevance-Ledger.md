@@ -4,6 +4,12 @@ This ledger records decisions to condense, archive, merge or keep wiki material.
 
 Rule of thumb: preserve evidence, reduce repeated narration.
 
+## Recent Pruning Decisions
+
+| Date | Page / area | Action | Why | Preserved / route |
+| --- | --- | --- | --- | --- |
+| 2026-06-05 | [Gear template profile filter](Gear-Template-Profile-Filter), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) | Gear template profile branch route | Existing wording named the current defect but did not prove upstream/release status or pair the save/import bugs consistently. | [Gear template profile filter](Gear-Template-Profile-Filter) now owns the branch matrix; no branch rescue exists, and save-filter replacement plus import guard/default remain paired patch work. |
+
 ## Decision Rules
 
 | Action | Use when | Requirement |

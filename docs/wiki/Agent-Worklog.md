@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T22:25:00+02:00 - Codex - Gear template profile branch route
+
+- Claimed `gear-template-profile-branch-route` from the patch-ready gear/profile backlog.
+- Source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle` for `Client_UI_Gear_SaveTemplateProfile.sqf` and `Init_ProfileGear.sqf`.
+- Result: every checked root/branch still carries the undefined `_u_upgrade` save-filter references and the six-field profile import guard before `_x select 6`.
+- Refreshed [Gear template profile filter](Gear-Template-Profile-Filter) as the branch/root matrix and condensed [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue) and [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas). No gameplay source changed.
+
 ## 2026-06-05T22:00:00+02:00 - Codex - Commander reassignment branch route
 
 - Claimed `commander-reassignment-branch-route` from the patch-ready commander/PVF backlog.
