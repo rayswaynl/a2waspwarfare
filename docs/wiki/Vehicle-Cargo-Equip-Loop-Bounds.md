@@ -28,6 +28,16 @@ flowchart TD
 | `Client/Functions/Client_BuildUnit.sqf:229` | Calls `WFBE_CO_FNC_EquipBackpack` for soldier purchases when a backpack is present. |
 | `Common/Functions/Common_EquipUnit.sqf:38` | Calls `WFBE_CO_FNC_EquipBackpack` for unit loadout application. |
 
+## Current Branch Matrix
+
+| Root / branch | `Common_EquipVehicle.sqf` | `Common_EquipBackpack.sqf` | Practical meaning |
+| --- | --- | --- | --- |
+| Current docs/source Chernarus | Inclusive weapon, magazine and backpack loops at `:27`, `:33`, `:39`. | Inclusive weapon and magazine loops at `:35`, `:41`. | Patch-ready; source is still unpatched. |
+| Maintained Vanilla Takistan | Same three inclusive vehicle loops. | Same two inclusive backpack loops. | Propagate deliberately after Chernarus source fix. |
+| Stable `origin/master` | Same in both maintained roots. | Same in both maintained roots. | No stable-branch rescue exists. |
+| Miksuu upstream `miksuu/master` | Same in both maintained roots. | Same in both maintained roots. | No upstream rescue exists. |
+| `origin/release/2026-06-feature-bundle` | Same in both maintained roots. | Same in both maintained roots. | Release bundle still carries the five loop-bound edits. |
+
 ## Bug Shape
 
 SQF arrays are zero-indexed. These equip helpers iterate one slot past the last valid item:
@@ -112,6 +122,7 @@ Per project rules:
 - This is a small, patch-ready reliability bug.
 - It should be safe to patch independently from the server-authority/economy redesign because it only fixes loop bounds in cargo-application helpers.
 - Keep this page paired with [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Client UI systems atlas](Client-UI-Systems-Atlas) and [Feature status](Feature-Status-Register).
+- Branch check 2026-06-05 found no rescue branch: current source/Vanilla, stable `origin/master`, Miksuu upstream and `origin/release/2026-06-feature-bundle` all still carry the same five inclusive loops.
 
 ## Continue Reading
 

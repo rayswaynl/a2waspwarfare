@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T22:25:00+02:00",
+  "generatedAt": "2026-06-05T22:50:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed Gear-Template-Profile-Filter as the gear profile branch matrix: current source/Vanilla, stable/upstream and release all keep undefined _u_upgrade save filtering plus the six-field profile import guard; patch still needs save-filter replacement and import guard/default.",
+      "currentWork": "Refreshed Vehicle-Cargo-Equip-Loop-Bounds as the cargo loop branch matrix: current source/Vanilla, stable/upstream and release all keep the same five inclusive cargo loops; patch still needs five count(_items)-1 edits plus Vanilla propagation and cargo smoke.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {

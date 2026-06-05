@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T22:50:00+02:00 - Codex - Vehicle cargo loop bounds branch route
+
+- Claimed `vehicle-cargo-loop-bounds-branch-route` from the patch-ready gear/cargo backlog.
+- Source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle` for `Common_EquipVehicle.sqf` and `Common_EquipBackpack.sqf`.
+- Result: every checked root/branch still carries the same five inclusive cargo loops: vehicle weapon/magazine/backpack cargo and backpack weapon/magazine cargo.
+- Refreshed [Vehicle cargo equip loop bounds](Vehicle-Cargo-Equip-Loop-Bounds) as the branch/root matrix and condensed [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue) and [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas). No gameplay source changed.
+
 ## 2026-06-05T22:25:00+02:00 - Codex - Gear template profile branch route
 
 - Claimed `gear-template-profile-branch-route` from the patch-ready gear/profile backlog.
