@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-05T14:15:00+02:00",
+  "generatedAt": "2026-06-05T16:15:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -162,7 +162,8 @@
     "factory-queue-counter-token-cleanup",
     "scout-wave-j-harvest"
     ,
-    "agent-machine-index-bootstrap"
+    "agent-machine-index-bootstrap",
+    "pr-board-state-refresh"
   ],
   "queuedReports": [],
   "lanes": [

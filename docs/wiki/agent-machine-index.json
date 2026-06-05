@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-machine-index-v1",
-  "generatedAt": "2026-06-05T15:35:00+02:00",
+  "generatedAt": "2026-06-05T16:15:00+02:00",
   "purpose": "Compact page-to-source and page-to-risk lookup for AI agents. Use this before opening broad wiki pages when you need the canonical owner page, source proof refs, machine records and next gate for a system.",
   "repo": {
     "owner": "rayswaynl",
@@ -76,6 +76,30 @@
         "agent-events.jsonl"
       ],
       "nextGate": "Before claiming work, read active lanes and append a claim event; do not treat historical events as live ownership."
+    },
+    {
+      "id": "pr-cleanup-current-state",
+      "system": "PR cleanup, integration lab and release-branch triage",
+      "riskTier": "route",
+      "branchScope": "github_pr_board_2026-06-05",
+      "canonicalDocs": [
+        "PR-Cleanup-And-Integration-Lab",
+        "Feature-Status-Register",
+        "PR8-And-Drone-Upstream-Lesson-Match",
+        "Testing-Debugging-And-Release-Workflow"
+      ],
+      "sourceRefs": [
+        "GitHub PR metadata for rayswaynl/a2waspwarfare #1-#19 on 2026-06-05",
+        "origin/release/2026-06-feature-bundle@3282ff3f",
+        "origin/dev/pr8-only-testbed@68b34e6e",
+        "origin/dev/pr8-plus-testbed@5fb51c37"
+      ],
+      "machineRefs": [
+        "agent-events.jsonl#pr-board-state-refresh",
+        "agent-status.json",
+        "agent-feature-status.jsonl#upstream-lessons-pr8-match-2026-06-03"
+      ],
+      "nextGate": "Use current PR URLs/head branches instead of pruned origin/pr/* refs; test PR #8, then dev/pr8-plus-testbed, while keeping #4/#9/#13/#14/#18 separate."
     },
     {
       "id": "mission-entrypoints-lifecycle",

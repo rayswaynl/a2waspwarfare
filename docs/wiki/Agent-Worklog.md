@@ -2622,3 +2622,11 @@ Key conclusions:
 - Linked the machine index from [LLM agent entry pack](LLM-Agent-Entry-Pack), [Agent context](Agent-Context), [`agent-entrypoint.json`](agent-entrypoint.json), [`agent-context.json`](agent-context.json), [`llms.txt`](llms.txt), sidebar, dashboard and pruning ledger. No gameplay source changed.
 - Validation passed: `docs/validate-wiki.ps1` now parses JSON/JSONL and emits compact non-failing legacy-envelope warnings, touched JSON/JSONL parse succeeded, and `git diff --check` returned no whitespace errors.
 - Follow-up: [Navigation inventory](Navigation-Inventory-And-Page-Status) now treats [`agent-machine-index.json`](agent-machine-index.json) as the one intentional sidebar-only machine-file link; primary Markdown sidebar-only drift remains closed.
+
+## 2026-06-05T16:10:00+02:00 - Codex - PR board state refresh
+- Claimed `pr-board-state-refresh` after live GitHub PR metadata contradicted stale [PR cleanup lab](PR-Cleanup-And-Integration-Lab) rows.
+- Current board state from `gh pr list`: open feature/test candidates are PR #4, #8, #9, #13, #14 and #18; open docs/concept reference is PR #17; PR #2, #3, #11, #12, #15, #16 and #19 are now closed.
+- Refreshed [PR cleanup lab](PR-Cleanup-And-Integration-Lab) so closed PRs no longer appear as open, `dev/pr8-plus-testbed` remains the PR8 + PR12 + PR16 lab branch, PR #19 is preserved as AI-commander branch evidence rather than open work, and closed docs PR #2/#3 are treated as historical/harvested.
+- Documented the fetch/prune lesson: synthetic `origin/pr/*` and `miksuu/pr/*` refs disappeared after `git fetch --all --prune`, so future agents should use PR URLs, `headRefName`/`baseRefName` and remote branch heads rather than assuming local PR refs exist.
+- Added a compact `pr-cleanup-current-state` entry to [`agent-machine-index.json`](agent-machine-index.json), updated [Progress dashboard](Progress-Dashboard), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl`. No gameplay source changed.
+- Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse and `git diff --check` in the docs mirror. The validator emitted only the known non-failing legacy JSONL envelope warnings.
