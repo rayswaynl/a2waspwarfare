@@ -2833,3 +2833,9 @@ Key conclusions:
 - Harvested `old-be-current-wasp-fps-opportunity-scout-2` from `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-mission-fps-opportunity-window\outputs\Old-BE-vs-Current-Wasp-FPS-Opportunity-Scout.md` without mirroring the full report into the wiki.
 - Promoted only compact deltas: no useful old-BE bandwidth/basic.cfg lesson found, branch-aware player-cap scope, final benchmark order, AI-source scoreboard gate, static-defense HC update-back proof gate and expanded benchmark runbook fields.
 - Canonical owners are [Old WarfareBE comparison](Old-WarfareBE-Performance-Comparison), [Performance sweep](Performance-Opportunity-Sweep), [Testing workflow](Testing-Debugging-And-Release-Workflow#full-server-fps-opportunity-pack), [Feature status](Feature-Status-Register) and [Player AI caps](Player-AI-Caps-And-Role-Balance). No gameplay source changed.
+
+## 2026-06-05T16:24:00+02:00 - Codex - dead-code OA compatibility scan refresh
+- Claimed `dead-code-oa-compatibility-scan-refresh` after the dead-code register's OA compatibility snapshot included `docs/wiki` and recent docs edits could stale the counts.
+- Reran `docs/analysis/dead-code-oa-compatibility-scan.ps1` with PowerShell 7 (`pwsh`); Windows PowerShell 5.1 failed on `System.IO.Path.GetRelativePath`.
+- Regenerated `docs/analysis/dead-code-oa-compatibility-scan.json` and updated [Dead/stale code register](Dead-Code-And-Stale-Code-Register): `3205` text files scanned, `0` code-risk implementation hits, `416` docs/reference hits and `1132` OA-safe inverse-trap hits. No gameplay source changed.
+- Folded in Feynman's read-only audit deltas: added the missing asset scan rerun/validation commands, narrowed `dead-code-findings.jsonl` wording to core promoted findings, added a one-off classification-label caveat and clarified that parameter set-like overrides are broad scan leads.

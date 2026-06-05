@@ -4,7 +4,7 @@ This page is the cleanup map for code that appears dead, stale, unreachable, orp
 
 It is not a delete list. It separates safe comment cleanup from risky broken features and revive candidates so future agents do not accidentally remove useful archaeology or branch-ready systems.
 
-Machine-readable findings live in `docs/analysis/dead-code-findings.jsonl`. The repeatable source scan lives in `docs/analysis/dead-code-reference-scan.ps1`, with the latest raw scan output in `docs/analysis/dead-code-reference-scan.json`.
+Core promoted machine-readable findings live in `docs/analysis/dead-code-findings.jsonl`. Scan-specific JSON files below are authoritative for newer raw scan sections, including asset/bootstrap and mission-copy evidence that may not be duplicated into the JSONL ledger.
 
 Integration/tooling evidence is captured by `docs/analysis/dead-code-integration-scan.ps1`, with the latest output in `docs/analysis/dead-code-integration-scan.json`.
 
@@ -119,10 +119,10 @@ Latest Arma 2 OA compatibility scan:
 | Item | Value |
 | --- | --- |
 | Roots scanned | `Missions`, `Missions_Vanilla`, `Modded_Missions`, `Tools`, `DiscordBot`, `Extension`, `BattlEyeFilter`, `docs/wiki` |
-| Text files scanned | 3199 |
+| Text files scanned | 3205 |
 | Risk patterns checked | 22 |
 | Code-risk implementation hits | 0 |
-| Documentation/reference hits | 355, all routed through compatibility warning pages or machine mirrors |
+| Documentation/reference hits | 416, all routed through compatibility warning pages or machine mirrors |
 | OA-safe inverse-trap hits | 1132: `diag_tickTime`, `uiSleep`, `setVehicleInit`, `processInitCommands` |
 | Generated artifact | `docs/analysis/dead-code-oa-compatibility-scan.json` |
 
@@ -150,6 +150,7 @@ Scanner caveats:
 - A direct PV channel with no `addPublicVariableEventHandler` is not automatically dead. Some channels are state variables read via `missionNamespace getVariable`, some are BattlEye/filter hooks, and some sender names are dynamic `format` expressions that need source interpretation.
 - UI IDC scans cannot distinguish engine display controls from mission resource controls by themselves. Treat `101`, `116` and `112410`-`112414` as source-check leads, not broken mission `Rsc` controls.
 - Parameter scans cannot prove dynamic formatted variable reads on exact names. The economy start parameters look readless in exact-name scans, but `Server/Init/Init_Server.sqf` and player-connect code read them through `Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side]` and `Format ["WFBE_C_ECONOMY_SUPPLY_START_%1", _side]`.
+- Parameter `set-like override` counts are broad scan leads, not automatic bugs. Source-read each row's `runtimeReferences`: some hits are intentional forced-mode or solo-test assignments rather than stale lobby parameters.
 - SQF reachability scans cannot prove dynamic `addAction`, `missionNamespace getVariable`, `Format` or generated path usage. Treat `Client/Module/Skill/Skill_*.sqf`, `Server/Construction/Construction_*Site.sqf`, config arrays and mission entrypoints as source-check leads, not dead files.
 - Baseline and modded source can legitimately differ. Example: source Chernarus/Vanilla IRS warning helpers are unreferenced after inline warning logic was added, while the conflict-marked Napf IRS file still contains old helper calls.
 - Mission-copy divergence does not automatically mean dead code. Source Chernarus vs Vanilla Takistan differences are often map/generated differences such as help text, database map id, Takistani resistance units, start vehicles, `mission.sqm`, artillery config and `version.sqf`.
@@ -159,6 +160,8 @@ Scanner caveats:
 - Quoted filename fragments can be part of dynamically built external addon paths. Example: nuke missile particle scripts are assembled from `\ca\air2\cruisemissile\data\scripts\...` in `Client/Module/Nuke/nukeincoming.sqf`, so `cruisemissileflare.sqf` and `exhaust1.sqf` are OA addon references rather than repo-local missing files.
 
 ## Classification Rules
+
+This table defines common labels used by the register. The append-only `dead-code-findings.jsonl` ledger may contain narrower one-off labels; source-read those records before renaming, deleting or merging them.
 
 | Classification | Meaning | Default action |
 | --- | --- | --- |
@@ -434,10 +437,16 @@ Run the mission-copy divergence scan:
 .\docs\analysis\dead-code-mission-copy-divergence-scan.ps1
 ```
 
-Run the Arma 2 OA compatibility / Arma 3-style API scan:
+Run the Arma 2 OA compatibility / Arma 3-style API scan. Use PowerShell 7 (`pwsh`); Windows PowerShell 5.1 lacks the `System.IO.Path.GetRelativePath` API used by this scanner.
 
 ```powershell
-.\docs\analysis\dead-code-oa-compatibility-scan.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\docs\analysis\dead-code-oa-compatibility-scan.ps1
+```
+
+Run the asset/media/bootstrap scan:
+
+```powershell
+.\docs\analysis\dead-code-asset-reference-scan.ps1
 ```
 
 Validate the machine-readable register:
@@ -451,6 +460,7 @@ Get-Content .\docs\analysis\dead-code-parameter-scan.json | ConvertFrom-Json | O
 Get-Content .\docs\analysis\dead-code-sqf-reachability-scan.json | ConvertFrom-Json | Out-Null
 Get-Content .\docs\analysis\dead-code-mission-copy-divergence-scan.json | ConvertFrom-Json | Out-Null
 Get-Content .\docs\analysis\dead-code-oa-compatibility-scan.json | ConvertFrom-Json | Out-Null
+Get-Content .\docs\analysis\dead-code-asset-reference-scan.json | ConvertFrom-Json | Out-Null
 ```
 
 Useful manual follow-up scans:
@@ -482,4 +492,4 @@ rg -n "remoteExec|remoteExecCall|BIS_fnc_MP|addMissionEventHandler|isRemoteExecu
 
 Previous: [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) | Next: [Source fix propagation queue](Source-Fix-Propagation-Queue)
 
-Main map: [Home](Home) | Status: [Progress dashboard](Progress-Dashboard) | Agent file: `docs/analysis/dead-code-findings.jsonl`
+Main map: [Home](Home) | Status: [Progress dashboard](Progress-Dashboard) | Core findings: `docs/analysis/dead-code-findings.jsonl` | Scan artifacts: `docs/analysis/dead-code-*.json`

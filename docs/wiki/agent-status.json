@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T16:06:23+02:00",
+  "generatedAt": "2026-06-05T16:24:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Harvested the final old-be-current-wasp-fps-opportunity-scout-2 report into old-BE, performance, testing and Feature Status owner pages without mirroring the report wholesale.",
+      "currentWork": "Refreshed the dead-code OA compatibility scan artifact and Dead Code register after docs/wiki growth; code-risk implementation hits remain zero and the register now documents pwsh plus scan-artifact caveats.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from fresh source evidence, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -60,7 +60,7 @@
       "lane": "documentation-finisher-loop",
       "owner": "Codex",
       "status": "active-ongoing",
-      "output": "Keep wiki/status pages current from source evidence, compact the dashboard, maintain machine-readable entrypoints and publish scoped validation batches."
+      "output": "Keep wiki/status pages current from source evidence, compact the dashboard, maintain machine-readable entrypoints, refresh scan artifacts when docs/source changes affect them and publish scoped validation batches."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
