@@ -4,13 +4,14 @@ This lane turns the abandoned-feature note for paratrooper drop markers into a m
 
 ## Status
 
-Branch-local source and maintained Vanilla are propagated; `origin/master` is **not** patched. On stable master, `Common/Init/Init_PublicVariables.sqf:39` is still `NukeIncoming` and `HandleParatrooperMarkerCreation` is absent from `_clientCommandPV`.
+Branch-local source and maintained Vanilla are propagated; current release head `7195b331` also carries the registration in both maintained release roots. `origin/master` is **not** patched. On stable master, `Common/Init/Init_PublicVariables.sqf:39` is still `NukeIncoming` and `HandleParatrooperMarkerCreation` is absent from `_clientCommandPV`.
 
 | Surface | Status | Evidence |
 | --- | --- | --- |
 | `origin/master` | Not patched | `Common/Init/Init_PublicVariables.sqf:39` is `NukeIncoming`; no `HandleParatrooperMarkerCreation` registration exists. |
 | Source Chernarus mission on this docs branch | Branch-local patched | `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:39` now registers `HandleParatrooperMarkerCreation`. |
 | Vanilla Takistan mission | Propagated | `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_PublicVariables.sqf:39` now has the same registration after the LoadoutManager propagation run. |
+| `origin/release/2026-06-feature-bundle` head `7195b331` | Release branch patched / smoke pending | Release Chernarus and maintained Vanilla both register `HandleParatrooperMarkerCreation` at `Common/Init/Init_PublicVariables.sqf:34`. Static registration is present, but Arma marker smoke is still required before release-complete wording. |
 | Modded mission folders | Still drifted / not patched | Napf, eden and lingor register `HandleParatrooperMarkerCreation`, but no `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` file exists in those folders. Per `AGENTS.md`, direct mission edits should only touch Chernarus; modded propagation needs an owner decision. |
 | Runtime validation | Pending hosted/dedicated smoke | Source checks prove the handler now compiles/registers in Chernarus source and maintained Vanilla; Arma 2 OA gameplay smoke is still needed to prove marker visibility and side filtering in-engine. |
 
@@ -75,6 +76,7 @@ Branch-local source/Vanilla checks completed:
 - Chernarus source mission now has sender + registered client PVF + handler file.
 - Vanilla Takistan now has sender + handler file + registration after the propagation run.
 - `origin/master` still lacks the registration at `Init_PublicVariables.sqf:39`; do not call the revive shipped on master until that branch adopts it.
+- Current release head `7195b331` has the registration in both maintained release roots at `Init_PublicVariables.sqf:34`, but runtime smoke remains pending.
 - Diff is scoped to one source `Init_PublicVariables.sqf` insertion plus docs/machine-readable handoff updates.
 - Earlier propagation was blocked by the checkout path, but `Tools/LoadoutManager` root discovery and `A2WASP_SKIP_ZIP=1` support were later patched; generation/copy completed for maintained Vanilla Takistan.
 

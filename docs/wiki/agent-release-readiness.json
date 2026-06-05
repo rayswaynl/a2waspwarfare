@@ -736,9 +736,9 @@
       "releaseGate": "Trigger paratrooper support and confirm the client marker appears without an unregistered-client-PVF error.",
       "branchStatus": {
         "stableMaster": "absent",
-        "releaseBranch": "absent-in-chernarus-and-vanilla",
+        "releaseBranch": "current-release-7195b331-registers-in-chernarus-and-vanilla",
         "docsSource": "chernarus-and-vanilla-carry-registration",
-        "evidence": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+        "evidence": "Current-Source-Status-Snapshot.md#2026-06-05-refetch-delta"
       }
     },
     {

@@ -1,5 +1,11 @@
 # Agent Worklog
 
+## 2026-06-06T03:10:00+02:00 - Codex - Paratrooper release status refresh
+
+- Claimed `paratrooper-release-status-refresh` after [Current source snapshot](Current-Source-Status-Snapshot) and one Feature Status row still said the current release branch lacked `HandleParatrooperMarkerCreation`, despite the newer `7195b331` spot-check and source evidence.
+- Rechecked docs/source, stable `origin/master` and release `7195b331`: docs/source Chernarus and maintained Vanilla register `HandleParatrooperMarkerCreation` at `Common/Init/Init_PublicVariables.sqf:39`; stable still omits it; release `7195b331` registers it at `:34` in both maintained release roots.
+- Updated [Paratrooper marker revival](Paratrooper-Marker-Revival), [Current source snapshot](Current-Source-Status-Snapshot), [Feature status](Feature-Status-Register), release/feature machine rows and the dashboard. No gameplay source changed.
+
 ## 2026-06-06T02:55:00+02:00 - Codex helper - SEND_MESSAGE direct compile branch route
 
 - Claimed `send-message-direct-compile-branch-route` from the direct-PV/P0 hardening backlog.
