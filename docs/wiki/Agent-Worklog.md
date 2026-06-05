@@ -2,7 +2,7 @@
 
 ## Read This First
 
-This page is append-only history. Older entries can be superseded by later source checks, branch matrices, validation passes or release decisions.
+This page is append-only history. Older entries can be superseded by later source checks, branch matrices, validation passes or release decisions. Do not assume the visible order is strictly timestamp-sorted; use explicit timestamps plus the current-state files below.
 
 For current state, start with:
 
