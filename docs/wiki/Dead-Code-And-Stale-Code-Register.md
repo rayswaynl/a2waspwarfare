@@ -18,6 +18,8 @@ SQF reachability evidence is captured by `docs/analysis/dead-code-sqf-reachabili
 
 Mission-copy divergence evidence is captured by `docs/analysis/dead-code-mission-copy-divergence-scan.ps1`, with the latest output in `docs/analysis/dead-code-mission-copy-divergence-scan.json`.
 
+Arma 2 OA compatibility / Arma 3-style API evidence is captured by `docs/analysis/dead-code-oa-compatibility-scan.ps1`, with the latest output in `docs/analysis/dead-code-oa-compatibility-scan.json`.
+
 ## Scan Snapshot
 
 Latest local scan:
@@ -110,6 +112,18 @@ Latest mission-copy divergence scan:
 | Source Chernarus vs Vanilla Takistan | 687 paths compared: 670 identical, 17 diverged |
 | Generated artifact | `docs/analysis/dead-code-mission-copy-divergence-scan.json` |
 
+Latest Arma 2 OA compatibility scan:
+
+| Item | Value |
+| --- | --- |
+| Roots scanned | `Missions`, `Missions_Vanilla`, `Modded_Missions`, `Tools`, `DiscordBot`, `Extension`, `BattlEyeFilter`, `docs/wiki` |
+| Text files scanned | 3199 |
+| Risk patterns checked | 22 |
+| Code-risk implementation hits | 0 |
+| Documentation/reference hits | 355, all routed through compatibility warning pages or machine mirrors |
+| OA-safe inverse-trap hits | 1132: `diag_tickTime`, `uiSleep`, `setVehicleInit`, `processInitCommands` |
+| Generated artifact | `docs/analysis/dead-code-oa-compatibility-scan.json` |
+
 Scanner caveats:
 
 - The scanner intentionally finds leads, not final truth.
@@ -125,6 +139,7 @@ Scanner caveats:
 - Baseline and modded source can legitimately differ. Example: source Chernarus/Vanilla IRS warning helpers are unreferenced after inline warning logic was added, while the conflict-marked Napf IRS file still contains old helper calls.
 - Mission-copy divergence does not automatically mean dead code. Source Chernarus vs Vanilla Takistan differences are often map/generated differences such as help text, database map id, Takistani resistance units, start vehicles, `mission.sqm`, artillery config and `version.sqf`.
 - Modded-copy divergence is a release-readiness warning. Current tooling does not package or regenerate `Modded_Missions`, so drift there should be quarantined until the owner chooses a maintained-fork or regenerate-from-source policy.
+- Arma 3-style term hits are not automatically defects. Docs intentionally contain warnings such as `remoteExec` / `CfgFunctions` / `parseSimpleArray`, while code intentionally uses OA-safe inverse-trap commands such as `diag_tickTime`, `uiSleep`, `setVehicleInit` and `processInitCommands`.
 
 ## Classification Rules
 
@@ -150,6 +165,8 @@ Scanner caveats:
 | `tooling-owned-dormant-hook` | Runtime hook is disabled, but an external tool still owns or rewrites the file. | Do not delete until tooling contract is redesigned. |
 | `modded-copy-quarantine` | Old modded mission copies differ from source/Vanilla and are outside the current packaging/regeneration path. | Do not ship or use as code truth until regenerated or explicitly maintained. |
 | `source-generated-map-specific-divergence` | Source Chernarus and Vanilla Takistan differ only in map/terrain/generated data. | Keep documented as intentional; do not flatten these differences during cleanup. |
+| `oa-compatibility-guardrail` | A pattern looks modern/A3-ish or docs contain A3 terminology, but source review proves no unsupported implementation path. | Keep warnings clear; do not convert them into implementation advice. |
+| `oa-safe-inverse-trap-not-dead` | A command looks suspicious to A3-trained agents but is valid/load-bearing in Arma 2 OA. | Preserve unless an OA-compatible replacement is designed and smoked. |
 
 ## Current Findings
 
@@ -188,6 +205,21 @@ Source-checked false positives and guardrails from this pass:
 - Vanilla-only `Common/Config/Core_Artillery/Artillery_TKA.sqf`, `Artillery_TKGUE.sqf` and `Artillery_US.sqf` are not automatically dead: Takistan root configs actively compile the OA/CO artillery config family.
 - Source Chernarus vs Vanilla Takistan `mission.sqm` divergence is expected because editor objects, markers and playable slots are map-specific.
 - `version.sqf` divergence is expected when generated correctly. Chernarus currently carries `WF_MAXPLAYERS 55` and `WF_MISSIONNAME "[55] Warfare V48 Chernarus"`; Vanilla Takistan carries `WF_MAXPLAYERS 61` and `WF_MISSIONNAME "[61] Warfare V48 Takistan"`.
+
+## Arma 2 OA Compatibility Findings
+
+These findings are source-interpreted from the OA compatibility scan. They help future cleanup agents avoid two opposite mistakes: importing Arma 3 APIs into OA code, or deleting OA-safe commands because Arma 3 removed or replaced them.
+
+| ID | Classification | Evidence | Action |
+| --- | --- | --- | --- |
+| `oa-compatibility-no-a3-api-code-risk` | OA compatibility guardrail | The scan checked 22 risky patterns across 3199 text files in mission roots, tools, integrations, BattlEye and docs. It found **0** code-risk implementation hits for `remoteExec`, `BIS_fnc_MP`, `addMissionEventHandler`, `isRemoteExecuted`, `remoteExecutedOwner`, `parseSimpleArray`, `RVExtensionArgs`, `CfgFunctions`, `isEqualTo`, SQF `params`, `apply`, `pushBack`, `allPlayers`, A3 loadout APIs, `createSimpleObject` and `setGroupOwner` outside docs. | Keep the current OA-era publicVariable/PVEH/manual-init model unless a code owner proves OA support and smokes a migration. |
+| `oa-safe-inverse-trap-commands-not-dead` | OA-safe inverse-trap, not dead | The scan found 1132 live inverse-trap hits: `diag_tickTime` in mission roots and LoadoutManager-generated SQF text, `uiSleep` in source/Vanilla server timing loops, and `setVehicleInit` / `processInitCommands` across source, Vanilla and modded mission roots. [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference) classifies these as OA-safe/load-bearing. Representative source paths include `Client/Client_UpdateRHUD.sqf:187`, `Server/Module/supplyMission/supplyMissionTimerForTown.sqf:5`, `Client/Module/UAV/uav.sqf:30-31` and `Common/Functions/Common_CreateVehicle.sqf`/construction support paths. | Do not remove these as "A3-only" or "A3-banned" cleanup. Preserve until an OA-compatible replacement exists and runtime smoke proves parity. |
+
+Source-checked false positives and guardrails from this pass:
+
+- `paramsArray` / mission `class Params` are valid mission-parameter constructs here and are not the newer SQF `params` command.
+- `Modded_Missions/[55-2hc]warfarev2_073v48co.eden` remains a terrain/folder name, not proof of Eden Editor workflow.
+- Documentation hits for `remoteExec`, `parseSimpleArray`, `RVExtensionArgs`, `CfgFunctions`, `CBA`, `ACE` and related terms are warning/contrast text unless an agent turns them into implementation advice.
 
 ## SQF Reachability Findings
 
@@ -276,6 +308,7 @@ Source-checked false positives from this pass:
 | --- | --- | --- |
 | P0 | Resolve or archive modded mission conflict markers before re-enabling modded packaging. | Raw merge markers are hard breakage if those missions are shipped. |
 | P0 | Pick a policy for modded mission drift before using modded roots as implementation evidence. | The divergence scan shows runtime/PVF/UI/server files have forked across old modded roots while tooling no longer regenerates or packages them. |
+| P0 | Keep OA compatibility scans clean before accepting hardening patches. | A patch that introduces A3-only APIs into SQF or integration glue can silently produce non-runnable mission code. |
 | P0 | Verify and fix/remove stale `RscMenu_Upgrade`. | A dialog `onLoad` points at a missing file, so any live caller can break player UI. |
 | P1 | Decide MASH marker relay fate. | It has real PV wiring residue and could be useful, but it is currently half registered. |
 | P1 | Keep `AIBuyUnit` latent until AI commander production is intentionally merged or retired. | It is dead-looking on stable but valuable for AI commander work. |
@@ -364,6 +397,12 @@ Run the mission-copy divergence scan:
 .\docs\analysis\dead-code-mission-copy-divergence-scan.ps1
 ```
 
+Run the Arma 2 OA compatibility / Arma 3-style API scan:
+
+```powershell
+.\docs\analysis\dead-code-oa-compatibility-scan.ps1
+```
+
 Validate the machine-readable register:
 
 ```powershell
@@ -374,6 +413,7 @@ Get-Content .\docs\analysis\dead-code-ui-rsc-scan.json | ConvertFrom-Json | Out-
 Get-Content .\docs\analysis\dead-code-parameter-scan.json | ConvertFrom-Json | Out-Null
 Get-Content .\docs\analysis\dead-code-sqf-reachability-scan.json | ConvertFrom-Json | Out-Null
 Get-Content .\docs\analysis\dead-code-mission-copy-divergence-scan.json | ConvertFrom-Json | Out-Null
+Get-Content .\docs\analysis\dead-code-oa-compatibility-scan.json | ConvertFrom-Json | Out-Null
 ```
 
 Useful manual follow-up scans:
@@ -387,6 +427,7 @@ rg -n "RscMenu_EASA|RscMenu_Economy|RscOverlay|OptionsAvailable|idd\s*=\s*23000|
 rg -n "ICBM_launched|WFBE_RequestVehicleLock|WFBE_RequestSpecial|WFBE_RequestTeamUpdate|WFBE_ChangeScore|WFBE_LocalizeMessage|WFBE_RequestStructure" Missions Missions_Vanilla Modded_Missions
 rg -n "AI_UpdateSupplyTruck|UpdateSupplyTruck|groupsMonitor|Common_ModifyAirVehicle|Common_HandleATReloadVehicle|IRS_ShowWarning|IRS_PlayWarningSound|Reaktiv_Init|Client_TaskSystem" Missions Missions_Vanilla Modded_Missions
 rg -n "Warfare WASP-AWESOME EDITION|SET_MAP|WF_MAXPLAYERS|WF_MISSIONNAME|EAST_StartVeh|WEST_StartVeh" Missions Missions_Vanilla
+rg -n "remoteExec|remoteExecCall|BIS_fnc_MP|addMissionEventHandler|isRemoteExecuted|remoteExecutedOwner|parseSimpleArray|RVExtensionArgs|CfgFunctions|isEqualTo|\bparams\s*\[|\bapply\s*\{|\bpushBack\b|\ballPlayers\b|getUnitLoadout|setUnitLoadout|createSimpleObject|setGroupOwner|groupOwner" Missions Missions_Vanilla Modded_Missions Tools DiscordBot Extension BattlEyeFilter
 ```
 
 ## Related Pages
@@ -398,6 +439,7 @@ rg -n "Warfare WASP-AWESOME EDITION|SET_MAP|WF_MAXPLAYERS|WF_MISSIONNAME|EAST_St
 - [Client UI systems atlas](Client-UI-Systems-Atlas)
 - [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas)
 - [AI commander autonomy audit](AI-Commander-Autonomy-Audit)
+- [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit)
 
 ## Continue Reading
 

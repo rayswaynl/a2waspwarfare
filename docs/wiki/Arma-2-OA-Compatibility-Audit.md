@@ -4,7 +4,7 @@ This page records a documentation audit for accidental Arma 3 assumptions. It ex
 
 Audit date: 2026-06-02
 
-Latest refresh: 2026-06-02T20:00:00+02:00
+Latest refresh: 2026-06-05T12:25:00+02:00
 
 Scope:
 
@@ -12,6 +12,7 @@ Scope:
 - `docs/wiki/*.json`
 - `docs/wiki/*.jsonl`
 - `docs/wiki/*.txt`
+- Mission, tooling, integration and BattlEye text files through `docs/analysis/dead-code-oa-compatibility-scan.ps1`
 
 ## Search Patterns
 
@@ -42,6 +43,8 @@ Broad searches for `params` and `A3` are intentionally avoided as primary tests 
 ## Current Result
 
 No incorrect Arma 3 implementation advice was found in the current docs mirror. The explicit Arma 3 references are guardrails, contrast notes or compatibility warnings.
+
+The 2026-06-05 repo-wide scan also found **0 live code-risk implementation hits** for the risky A3-style API set across mission roots, tools, DiscordBot, Extension and BattlEye. In other words: current source code is not using `remoteExec`, `BIS_fnc_MP`, `CfgFunctions`, A3 loadout APIs or similar unsupported modernization patterns. The scan did find many OA-safe inverse-trap commands, which must be preserved unless an OA-compatible replacement is designed and smoked.
 
 Claude's command-version cross-check added the opposite hazard too: some commands are valid and load-bearing in OA even though Arma 3-trained agents may mistrust them. These are now part of this audit so future agents do not "modernize" working OA code into a regression.
 
@@ -89,21 +92,38 @@ rg -n -i "\bapply\b|setGroupOwner|groupOwner|diag_tickTime|uiSleep|setVehicleIni
 
 ## Current Scan Snapshot
 
-This refresh includes the newer AntiStack, integration-trust, release-readiness, source-propagation and command-version-reference pages.
+This refresh includes the newer AntiStack, integration-trust, release-readiness, source-propagation, command-version-reference and dead-code register pages, plus a repo-wide implementation scan.
+
+Repo-wide scan artifact:
+
+| Item | Value |
+| --- | --- |
+| Script | `docs/analysis/dead-code-oa-compatibility-scan.ps1` |
+| Output | `docs/analysis/dead-code-oa-compatibility-scan.json` |
+| Roots | `Missions`, `Missions_Vanilla`, `Modded_Missions`, `Tools`, `DiscordBot`, `Extension`, `BattlEyeFilter`, `docs/wiki` |
+| Text files scanned | 3199 |
+| Risk patterns checked | 22 |
+| Code-risk implementation hits | 0 |
+| Docs/reference hits | 355 |
+| OA-safe inverse-trap hits | 1132 |
+
+Pattern snapshot from the repo-wide scan:
 
 | Pattern | Hit count | Current classification |
 | --- | ---: | --- |
-| `Arma 3` / `Arma3` | 64 | Guardrails, contrast notes and agent instructions. |
-| `remoteExec` / `remoteExecCall` | 27 | Invalid-drop-in warnings for the OA-era PV/PVEH model. |
-| `BIS_fnc_MP` | 11 | Modernization hazard warning; not implementation advice. |
-| `remoteExecutedOwner` / `isRemoteExecuted` | 14 | Evidence contrast for missing OA sender identity. |
-| `parseSimpleArray` | 19 | Explicit non-option for AntiStack/extension hardening in OA. |
-| `RVExtensionArgs` | 10 | Explicit non-option for the in-repo extension ABI. |
-| `CfgFunctions` | 14 | Warning against assuming automatic preInit/postInit lifecycle. |
-| `CBA` / `ACE` | 10 | Dependency guardrail. |
-| `Eden Editor` | 11 | Folder-name caveat and audit text; not editor workflow advice. |
-| `diag_tickTime` / `uiSleep` | see command reference | OA-safe inverse traps; do not remove as assumed A3-only commands. |
-| `setVehicleInit` / `processInitCommands` | see command reference | OA-safe inverse traps removed in A3; keep hardcoded-literal usage unless an OA replacement is designed. |
+| `remoteExec` / `remoteExecCall` | 49 | Docs/reference warnings only; 0 source implementation hits outside docs. |
+| `BIS_fnc_MP` | 19 | Docs/reference modernization hazard only; 0 source implementation hits. |
+| `addMissionEventHandler` | 8 | Docs/reference warning only; 0 source implementation hits. |
+| `remoteExecutedOwner` / `isRemoteExecuted` | 35 | Docs/reference evidence contrast only; 0 source implementation hits. |
+| `parseSimpleArray` | 29 | Explicit non-option for AntiStack/extension hardening in OA; 0 source implementation hits. |
+| `RVExtensionArgs` | 13 | Explicit non-option for the in-repo extension ABI; 0 source implementation hits. |
+| `CfgFunctions` | 16 | Warning against assuming automatic preInit/postInit lifecycle; 0 source implementation hits. |
+| `CBA` / `ACE` | 25 | Dependency guardrail in docs; 0 source implementation hits. |
+| `Eden Editor` | 14 | Folder-name caveat and audit text; not editor workflow advice. |
+| `isEqualTo`, SQF `params`, `apply`, `pushBack`, `allPlayers`, A3 loadout/object/locality APIs | 49 combined | Docs/reference warnings only; 0 source implementation hits in mission/tool/integration roots. |
+| `diag_tickTime` | 610 total / 589 source-tool inverse-trap hits | OA-safe inverse trap; used by PerformanceAudit instrumentation and generated SQF text. |
+| `uiSleep` | 43 total / 20 source inverse-trap hits | OA-safe inverse trap; used in server timing loops. |
+| `setVehicleInit` / `processInitCommands` | 557 total / 523 source inverse-trap hits | OA-safe inverse trap removed in A3; keep hardcoded-literal usage unless an OA replacement is designed. |
 
 Representative pages intentionally containing risky terms:
 
@@ -134,7 +154,7 @@ When a future prompt, report or patch proposes a risky term:
 
 ## Corrections Needed Now
 
-No incorrect Arma 3 implementation advice was found in the current docs mirror during the 2026-06-02T20:00:00+02:00 refresh.
+No incorrect Arma 3 implementation advice was found in the docs mirror during the 2026-06-05 refresh, and no live source implementation hits were found for the risky A3-style API set.
 
 The main maintenance need is not deletion; it is keeping warnings clearly marked as warnings and inverse traps clearly marked as OA-safe. The highest-risk places are future AntiStack hardening, PVF/server-authority work and lifecycle refactors, because those are where modern Arma APIs look tempting but would be wrong for OA unless independently proven.
 

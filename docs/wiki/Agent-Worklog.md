@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-05T12:25:00+02:00 - Codex - dead code OA compatibility pass
+
+- Continued Steff's long-running dead-code detective goal with a repo-wide Arma 2 OA compatibility / Arma 3-style API scan.
+- Added `docs/analysis/dead-code-oa-compatibility-scan.ps1` and `docs/analysis/dead-code-oa-compatibility-scan.json`. Latest scan covered 3199 text files across mission roots, Tools, DiscordBot, Extension, BattlEyeFilter and `docs/wiki`, checking 22 risky patterns.
+- Result: **0 code-risk implementation hits** for the A3-style hazard set (`remoteExec`, `BIS_fnc_MP`, `CfgFunctions`, A3 loadout APIs, SQF `params`/`apply`/`pushBack`, `allPlayers`, `setGroupOwner`, etc.) outside docs/reference text.
+- Promoted the inverse-trap finding into `docs/analysis/dead-code-findings.jsonl`, [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit): `diag_tickTime`, `uiSleep`, `setVehicleInit` and `processInitCommands` are OA-safe/load-bearing and must not be removed as assumed A3-only or A3-banned code.
+- No gameplay source files changed.
+
 ## 2026-06-05T12:10:00+02:00 - Codex - dead code mission-copy divergence pass
 
 - Continued Steff's long-running dead-code detective goal with a mission-copy divergence scan across source Chernarus, Vanilla Takistan and seven modded mission roots.
