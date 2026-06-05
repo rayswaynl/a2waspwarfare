@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T23:58:00+02:00 - Codex-helper - Salvage payout/cleanup branch route
+
+- Claimed `salvage-payout-cleanup-branch-route` from the construction/economy hardening backlog.
+- Source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master`, `origin/perf/quick-wins`, `origin/release/2026-06-feature-bundle`, `miksuu/EngineerSalvageAbility` and `miksuu/SalvageRuTranslationFix` for `Skill_Salvage.sqf`, `updatesalvage.sqf`, `Init_Client.sqf` and salvage-truck `Client_BuildUnit.sqf` entry.
+- Result: every checked root/branch keeps lowercase `ChangePlayerfunds` payout calls in both salvage paths, local wreck deletion and the `updatesalvage.sqf` `while {!gameOver || !(alive _vehicle)}` loop. The salvage-named Miksuu branches are historical feature/translation context, not fixes for this defect.
+- Refreshed [Construction and CoIn](Construction-And-CoIn-Systems-Atlas) as the canonical branch route and condensed [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger) and machine records. No gameplay source changed.
+
 ## 2026-06-05T23:50:00+02:00 - Codex-helper - Auto-wall toggle scope branch route
 
 - Claimed `auto-wall-toggle-scope-branch-route` from the construction/workflow hardening backlog.

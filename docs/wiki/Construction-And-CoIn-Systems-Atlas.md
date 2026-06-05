@@ -263,6 +263,8 @@ Current status is latent/uncalled by static search: `Server_HandleBuildingRepair
 
 The engineer salvage flow is client-led. `Client/Module/Skill/Skill_Salvage.sqf:20-38` and `Client/FSM/updatesalvage.sqf:46-50` own wreck deletion and cash payout locally. Both payout paths call `ChangePlayerfunds` with a lowercase `f` (`Skill_Salvage.sqf:38`, `updatesalvage.sqf:50`), while the compiled client function is `ChangePlayerFunds` in `Client/Init/Init_Client.sqf:53,91`. The update loop condition in `updatesalvage.sqf:10-18` uses `while {!gameOver || !(alive _vehicle)}`, which keeps the loop alive while the game is running even if the vehicle state changes in surprising ways. Treat salvage as a small correctness + authority lane before increasing rewards or adding new salvage targets.
 
+Branch check 2026-06-05 found no rescue in current docs/source Chernarus or maintained Vanilla, stable `origin/master`, Miksuu upstream, `origin/perf/quick-wins`, `origin/release/2026-06-feature-bundle`, `miksuu/EngineerSalvageAbility` or `miksuu/SalvageRuTranslationFix`: all checked roots/branches keep the lowercase payout calls, local `deleteVehicle` path and `while {!gameOver || !(alive _vehicle)}` salvage-truck loop. The two salvage-named Miksuu branches are useful historical context for feature introduction/translation, not fixes for the current payout/authority defect. Patch order should stay small: fix casing in source Chernarus and maintained Vanilla first, smoke manual engineer salvage plus salvage-truck payout, then decide whether final delete/reward authority moves server-side.
+
 ## Sale And Deletion Flows
 
 There are two sale paths:
