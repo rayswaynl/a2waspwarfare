@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `old-warfarebe-performance-comparison` | Published / validated | Added [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison): old BennyBoy WarfareBE vs current Wasp FPS architecture, AI-cap delta, town-AI/static-defense/cleanup/PVF comparison, Discord summary and controlled A/B weekend test matrix. A separate Codex scout window is continuing deeper client/server FPS archaeology. No gameplay source changed. |
 | `agent-worklog-append-only-guardrail` | Published / validated | Added a top guardrail to [Agent worklog](Agent-Worklog) so old append-only rows are not mistaken for current truth. Current-state readers are routed to [Progress dashboard](Progress-Dashboard), [Current source status snapshot](Current-Source-Status-Snapshot), [`agent-status.json`](agent-status.json) and [`agent-knowledge.jsonl`](agent-knowledge.jsonl). No gameplay source changed. |
 | `source-consistency-cluster-bc-current-state` | Published / validated | Closed old [Wiki/source consistency findings](Wiki-Source-Consistency-Findings) Cluster B/C as current docs drift: PV/channel owner pages now carry corrected `SERVER_FPS_GUI`, `ATTACK_WAVE_DETAILS` and AFKkick paths/direction; lifecycle/SQF/victory owner pages now carry corrected HC downgrade, `LogGameEnd` compile target and DR-37 `wfbe_votetime` context. Also corrected stale paratrooper marker wording in [`agent-context.json`](agent-context.json) and added a superseding current branch/source matrix to [`agent-knowledge.jsonl`](agent-knowledge.jsonl). Validation passed; no gameplay source changed. |
 | `source-consistency-cluster-a-current-state` | Published / validated | Rechecked old [Wiki/source consistency findings](Wiki-Source-Consistency-Findings) Cluster A against current Chernarus/Vanilla source and owner pages. Commander reassignment and factory queue rows remain source-unpatched code-owner work, paratrooper marker registration is branch-scoped/source-propagated, and current owner pages now route those states correctly instead of claiming shipped fixes. Validation passed; no gameplay source changed. |
@@ -66,7 +67,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` | Keep status/navigation pages current from source evidence; preserve the active old WarfareBE FPS research lane without making it block wiki cleanup. |
+| Codex | Active | `documentation-finisher-loop` | Published the first old WarfareBE FPS comparison page and opened a separate scout window for deeper client/server FPS archaeology; continue source-backed wiki pruning/status upkeep. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Coverage Ledger navigation is wired. Claude can self-select the next bounded source-backed review from the ledger or hardening backlog. |
 | Supported docs agents | First batch published / historical | `research-catchup-synthesis-default-supported`, `relevance-pruning-and-archive-default-supported` | Earlier account-default helper chats produced catch-up and pruning/archive work. Relaunch or resume only for a fresh narrow lane; they are not live dashboard blockers. |
@@ -99,7 +100,6 @@ This table is only for active, autonomous-ready, watchlist or future owner lanes
 
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
-| `old-warfarebe-performance-comparison` | Codex | Active / docs-only research | Compare old WarfareBE/Benny Edition SQF/FSM architecture with current Wasp and publish a wiki report, Discord table, FPS backlog and test plan. |
 | `documentation-finisher-loop` | Codex | Active / ongoing | Keep the wiki current from source evidence after this pruning goal closes. |
 | `autonomous-claude-research` | Claude | Autonomous-ready | Self-select the next bounded source-backed review from [Codebase coverage ledger](Codebase-Coverage-Ledger) when Claude is active. |
 | `feature-status-reconciliation` | Codex / future agent | Watchlist | Fold newly confirmed findings into [Feature status](Feature-Status-Register), owner pages and machine records. No untriaged finding is blocking this dashboard. |

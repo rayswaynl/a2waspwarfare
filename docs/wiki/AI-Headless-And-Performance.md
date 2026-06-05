@@ -2,6 +2,8 @@
 
 For the loop-level runtime and HC delegation table, see [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map). This page remains the broader atlas for AI, headless-client behavior and performance ownership.
 
+For the old BennyBoy WarfareBE vs current Wasp FPS archaeology pass, see [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison). It is useful when discussing whether older mission code was lighter, because it compares old per-town FSM activation and FPS-gated client delegation against current global town loops and HC mode.
+
 ## AI Delegation
 
 `WFBE_C_AI_DELEGATION` controls delegation:

@@ -84,6 +84,7 @@ nav:
       - AI Runtime HC Loop Map: AI-Runtime-HC-Loop-Map.md
       - Headless Client Scaling And Topology: Headless-Client-Scaling-And-Topology.md
       - Player AI Caps And Role Balance: Player-AI-Caps-And-Role-Balance.md
+      - Old WarfareBE FPS Comparison: Old-WarfareBE-Performance-Comparison.md
       - AI Commander Autonomy Audit: AI-Commander-Autonomy-Audit.md
       - Headless Delegation And Failover: Headless-Delegation-And-Failover-Playbook.md
       - Quad AI Commander: Quad-AI-Commander.md

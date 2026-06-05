@@ -22,6 +22,7 @@ Important notes:
 - [Player stats branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Player-Stats-Branch-Audit): Branch-only SQF-to-RPT-to-DiscordBot stats pipeline audit and enablement gates.
 - [BuyMenu EASA QoL branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/BuyMenu-EASA-QoL-Branch-Audit): Branch-only Buy Units/EASA UI audit covering affordability tint, queue tabs, EASA current-loadout selection and final-control smoke gates.
 - [Perf quick wins branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Perf-Quick-Wins-Branch-Audit): Branch-only Chernarus fix audit covering side supply, factory queues, paratrooper PV registration, server loops and propagation gates.
+- [Old WarfareBE performance comparison](https://github.com/rayswaynl/a2waspwarfare/wiki/Old-WarfareBE-Performance-Comparison): Source-backed old BennyBoy WarfareBE vs current Wasp FPS architecture comparison and A/B test plan.
 - [Commander positions branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Commander-Positions-Branch-Audit): Branch-only WDDM commander positions audit, with Chernarus-only runtime scope, merge baggage and smoke gates.
 - [Zargabad branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Zargabad-Branch-Audit): Branch-only low-pop Zargabad terrain release audit, static validation result and runtime evidence gates.
 - [Progress dashboard](https://github.com/rayswaynl/a2waspwarfare/wiki/Progress-Dashboard): Current Codex/Claude lanes and shared status.
@@ -86,6 +87,7 @@ Important notes:
 - [Supply mission authority cleanup](https://github.com/rayswaynl/a2waspwarfare/wiki/Supply-Mission-Authority-Cleanup-Playbook): Cooldown/reward/trust cleanup plan.
 - [Current supply helicopter PR](https://github.com/rayswaynl/a2waspwarfare/wiki/Current-Work-Supply-Helicopters-PR1): PR #1 / `feat/supply-helicopter` notes.
 - [AI, headless and performance](https://github.com/rayswaynl/a2waspwarfare/wiki/AI-Headless-And-Performance): AI, HC and performance architecture.
+- [Old WarfareBE performance comparison](https://github.com/rayswaynl/a2waspwarfare/wiki/Old-WarfareBE-Performance-Comparison): Old mission performance lessons, AI-cap deltas, town-AI comparison and controlled test matrix.
 - [AI commander autonomy audit](https://github.com/rayswaynl/a2waspwarfare/wiki/AI-Commander-Autonomy-Audit): Source-backed partial/autonomous AI commander and broken AI logistics revival audit.
 - [Headless delegation/failover](https://github.com/rayswaynl/a2waspwarfare/wiki/Headless-Delegation-And-Failover-Playbook): HC delegation patch guidance.
 

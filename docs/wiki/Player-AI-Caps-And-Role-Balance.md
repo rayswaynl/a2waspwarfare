@@ -4,6 +4,8 @@ This page documents the live player group-size cap used by the buy menu and RHUD
 
 Scope: current `master` source mission, `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
 
+For the old BennyBoy WarfareBE baseline behind the current FPS debate, see [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison). The short version: old default player AI was lower (`12` vs current Wasp lobby default `15`), but old WarfareBE still had town scans, town-AI activation and static-defense gunners.
+
 ## Source Formula
 
 The default multiplayer lobby value is `WFBE_C_PLAYERS_AI_MAX = 15` (`Rsc/Parameters.hpp:62-68`). If no lobby parameter supplies it, `Init_CommonConstants.sqf` falls back to `16`, so always state which baseline you are using.
@@ -110,6 +112,8 @@ Suggested direction:
 | Specialist commander | Consider normal-role cap plus `+5`, not full Soldier-scale cap. | Keeps commander survivable without making every commander a frontline platoon. |
 
 For a public server, the cleanest tuning lever is the lobby `WFBE_C_PLAYERS_AI_MAX` parameter. Code changes should come later if the project wants role-specific caps rather than the current Soldier multiplier plus commander bonus.
+
+Before cutting CTI identity too hard, test current Wasp with the old-style cap neighborhood: normal roles around `8-10` late-game followers, Soldier kept higher, and commander bonus reduced or role-gated. Compare that against old WarfareBE with the same cap and view-distance settings.
 
 ## Development Notes
 

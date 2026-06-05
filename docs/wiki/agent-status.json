@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T19:50:00+02:00",
+  "generatedAt": "2026-06-05T20:15:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Added an append-only history guardrail to Agent-Worklog.md so older rows route through current source/status pages before being treated as live truth. The old WarfareBE performance comparison remains an active docs-only research claim.",
-      "nextExpectedOutput": "Continue source-backed wiki pruning/status upkeep, and fold old WarfareBE performance findings into the wiki when that research lane returns."
+      "currentWork": "Published the first old BennyBoy WarfareBE vs current Wasp FPS comparison page with AI-cap, town-AI, static-defense, cleanup, PVF and A/B test evidence. A separate Codex scout window is continuing deeper FPS archaeology.",
+      "nextExpectedOutput": "Continue source-backed wiki pruning/status upkeep and harvest the old-FPS scout report when it returns."
     },
     "Codex-2": {
       "status": "ready",
@@ -50,12 +50,6 @@
     }
   },
   "laneSummary": [
-    {
-      "lane": "old-warfarebe-performance-comparison",
-      "owner": "Codex",
-      "status": "active",
-      "output": "Compare old WarfareBE/Benny Edition performance architecture with current Wasp from concrete SQF/FSM evidence; publish docs-only recommendations and keep mirror parity."
-    },
     {
       "lane": "documentation-finisher-loop",
       "owner": "Codex",

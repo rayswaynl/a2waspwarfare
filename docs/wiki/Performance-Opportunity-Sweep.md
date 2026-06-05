@@ -2,6 +2,8 @@
 
 This page ranks source-backed performance opportunities found in the Chernarus source mission. It separates quick low-risk wins from higher-value fixes that are already bundled with security, correctness or gameplay behavior.
 
+For the old BennyBoy WarfareBE comparison that sparked the current FPS discussion, see [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison). That page separates old-code lessons from A/B test variables so current Wasp changes can be measured rather than guessed.
+
 ## Ranked Opportunities
 
 | Priority | Opportunity | Source evidence | Why it matters | Implementation shape |

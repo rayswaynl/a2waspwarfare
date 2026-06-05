@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-05T19:50:00+02:00",
+  "generatedAt": "2026-06-05T20:15:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -67,26 +67,6 @@
         "Fold newly confirmed findings into Feature Status, owner pages and machine files."
       ],
       "handoff": "Only update from fresh source evidence or returned helper reports."
-    },
-    {
-      "lane": "old-warfarebe-performance-comparison",
-      "owner": "Codex",
-      "status": "active",
-      "sourceScope": [
-        "docs/wiki/Old-WarfareBE-Performance-Comparison.md",
-        "docs/wiki/Performance-Opportunity-Sweep.md",
-        "docs/wiki/Player-AI-Caps-And-Role-Balance.md",
-        "docs/wiki/AI-Headless-And-Performance.md",
-        "docs/wiki/Networking-And-Public-Variables.md",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
-        "external: BennyBoy-/ArmA2_WarfareBE"
-      ],
-      "outputs": [
-        "Compare old WarfareBE/Benny Edition SQF/FSM architecture with current Wasp performance surfaces.",
-        "Publish a source-backed wiki page, Discord-ready table, FPS backlog and comparison test plan.",
-        "Keep docs/wiki and wiki checkout in parity if the report is published."
-      ],
-      "handoff": "No gameplay code changes; recommendations only unless Steff separately asks for implementation."
     },
     {
       "lane": "implementation-hardening-from-backlog",
@@ -188,7 +168,8 @@
     "wiki-quality-round2-closeout",
     "mirror-and-source-consistency-closeout",
     "wiki-source-batch3-routing-closeout",
-    "agent-worklog-append-only-guardrail"
+    "agent-worklog-append-only-guardrail",
+    "old-warfarebe-performance-comparison"
   ],
   "queuedReports": [],
   "lanes": [
@@ -209,12 +190,6 @@
       "suggestedOwner": "Codex/future-agent",
       "status": "watchlist",
       "summary": "Fold fresh findings into canonical pages and machine files."
-    },
-    {
-      "lane": "old-warfarebe-performance-comparison",
-      "suggestedOwner": "Codex",
-      "status": "active",
-      "summary": "Compare old WarfareBE/Benny Edition performance architecture with current Wasp and publish docs-only recommendations."
     },
     {
       "lane": "implementation-hardening-from-backlog",

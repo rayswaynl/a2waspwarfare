@@ -13,6 +13,14 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T20:15:00+02:00 - Codex - old WarfareBE performance comparison
+
+- Claimed `old-warfarebe-performance-comparison` after the community asked whether a 14-year-old WarfareBE/Benny Edition mission might perform better than current Wasp and whether player AI should be capped around 10.
+- Cloned/read `BennyBoy-/ArmA2_WarfareBE` at `aeb71bbbf674c7f8c051417c28677234dd6446b3` and compared it against current Chernarus source for AI caps, town activation, static defenses, cleanup, PVF/network surface, client/server loops, HC/client delegation and test variables.
+- Added [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison), including a Discord-ready summary, source-count table, old/current AI cap comparison, old per-town FSM evidence, current global town-loop/HC evidence and an A/B weekend test plan.
+- Wired the page into `_Sidebar.md`, `mkdocs.yml`, `llms.txt`, [AI, headless and performance](AI-Headless-And-Performance), [Performance opportunity sweep](Performance-Opportunity-Sweep) and [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance).
+- Opened a separate Codex window named `Old WarfareBE FPS Gains Scout` for deeper client-side and server-side FPS archaeology; no gameplay source changed.
+
 ## 2026-06-05T19:50:00+02:00 - Codex - agent worklog append-only guardrail
 
 - Claimed `agent-worklog-append-only-guardrail` after stale status scans showed old [Agent worklog](Agent-Worklog) entries can be mistaken for current truth even though [Current source status snapshot](Current-Source-Status-Snapshot) already carries the stronger branch-aware guardrail.
