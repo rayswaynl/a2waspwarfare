@@ -12,10 +12,10 @@ Snapshot generated from `docs/wiki/*.md`, `_Sidebar.md` and `mkdocs.yml` on 2026
 | --- | ---: | --- |
 | Markdown pages | 140 | All `.md` pages in `docs/wiki`, including `_Sidebar.md` and `_Footer.md`. |
 | Content pages | 138 | Markdown pages excluding `_Sidebar.md` and `_Footer.md`. |
-| Sidebar pages | 102 | Pages linked from the GitHub wiki sidebar. |
-| MkDocs pages | 111 | Pages listed in `mkdocs.yml` navigation. |
-| Pages in both navs | 102 | Primary pages visible in both GitHub wiki and MkDocs. |
-| Pages in neither nav | 27 | Usually owner pages, archives, old queues or narrow patch pages reached through canonical pages. |
+| Sidebar pages | 109 | Pages linked from the GitHub wiki sidebar. |
+| MkDocs pages | 118 | Pages listed in `mkdocs.yml` navigation. |
+| Pages in both navs | 109 | Primary pages visible in both GitHub wiki and MkDocs. |
+| Pages in neither nav | 20 | Usually archives, instruction pages, old queues, analysis notes or narrow patch pages reached through canonical pages. |
 | Sidebar-only pages | 0 | The 2026-06-05 MkDocs parity pass added the remaining primary sidebar pages to repo mirror navigation. |
 | MkDocs-only pages | 9 | All imported Miksuu archive pages. |
 | Pages missing `Continue Reading` | 0 | All content pages now expose either owner-page or archive/queue-safe routing. |
@@ -61,7 +61,7 @@ These pages are not directly listed in either `_Sidebar.md` or `mkdocs.yml`. Tha
 | --- | --- | --- |
 | Patch-ready performance/source-fix pages | [Client skill init](Client-Skill-Init-Idempotency), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup), [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing), [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup), [Paratrooper marker revival](Paratrooper-Marker-Revival), [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) | Keep out of primary nav if Feature Status, Performance sweep and Testing workflow route to them. |
 | Evidence archives and queues | [Deep-review findings](Deep-Review-Findings), [External research reports](External-Research-Reports), [Audit findings queue](Audit-Findings-Queue-2026-06-03), [Development lessons](Development-Lessons-Learned), [Subagent discovery swarm](Subagent-Discovery-Swarm) | Keep as archive/support pages; expose compact owner routes first. |
-| Broad owner pages currently hidden | [Core systems index](Core-Systems-Index), [Modules atlas](Modules-Atlas), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance), [Variable and naming conventions](Variable-And-Naming-Conventions), [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) | Consider adding these to MkDocs/sidebar if they remain current owner pages. |
+| Broad owner/reference pages | [Core systems index](Core-Systems-Index), [Modules atlas](Modules-Atlas), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance), [Variable and naming conventions](Variable-And-Naming-Conventions), [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) | Promoted to both sidebar and MkDocs on 2026-06-05 because they are current owner/reference pages already used by Home and `agent-context.json`. |
 | Claude/instruction pages | [Claude goal](Claude-Goal), [Claude long-term goal](Claude-Long-Term-Goal), [Claude loop goal](Claude-Loop-Goal), [Instructions for Codex](Instructions-For-Codex) | Keep discoverable through coordination pages; avoid primary human nav unless actively used. |
 | Analysis/support pages | [Client UI and server loop perf findings](Client-UI-And-Server-Loop-Perf-Findings), [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index), [Performance gain simulation](Performance-Gain-Simulation), [Self-host testing field notes](Self-Host-Testing-Field-Notes) | Keep linked from the owning subsystem or archive index only. |
 

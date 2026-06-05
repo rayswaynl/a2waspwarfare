@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T13:05:00+02:00",
+  "generatedAt": "2026-06-05T13:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Validated MkDocs primary-sidebar parity; sidebar-only page count is now 0 and MkDocs-only pages are the 9 imported Miksuu archives.",
+      "currentWork": "Validated hidden owner/reference nav promotion; seven broad pages moved into both sidebar and MkDocs, leaving 20 neither-nav support pages.",
       "nextExpectedOutput": "Continue future wiki backlog work from fresh source evidence, code-owner requests or new user direction."
     },
     "Codex-2": {
@@ -50,6 +50,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "hidden-owner-reference-nav-promotion",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Added Core systems, Modules atlas, Server gameplay runtime atlas, Performance opportunity sweep, Player AI caps and role balance, Variable and naming conventions and Arma 2 OA external reference guide to both sidebar and MkDocs. Current counts: 109 sidebar pages, 118 MkDocs pages, 109 pages in both and 20 neither-nav support pages. No gameplay source changed."
+    },
     {
       "lane": "mkdocs-primary-sidebar-parity",
       "owner": "Codex",

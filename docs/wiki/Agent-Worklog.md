@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-05T13:10:00+02:00 - Codex - hidden owner/reference nav promotion
+
+- Claimed `hidden-owner-reference-nav-promotion` after inventorying the 27 neither-nav pages and separating broad current owner/reference pages from archives, prompts, analysis notes and narrow patch handoffs.
+- Added seven broad pages to both `_Sidebar.md` and `mkdocs.yml`: [Core systems index](Core-Systems-Index), [Modules atlas](Modules-Atlas), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance), [Variable and naming conventions](Variable-And-Naming-Conventions) and [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide).
+- Recomputed navigation counts: `109` sidebar pages, `118` MkDocs pages, `109` pages in both navs, `0` sidebar-only, `9` MkDocs-only imported archive pages and `20` neither-nav support pages.
+- Updated [Navigation inventory and page status](Navigation-Inventory-And-Page-Status), [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger), [Progress dashboard](Progress-Dashboard), `agent-context.json`, `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl`. No gameplay source changed.
+
 ## 2026-06-05T12:55:00+02:00 - Codex - MkDocs primary sidebar parity
 
 - Claimed `mkdocs-primary-sidebar-parity` from [Navigation inventory and page status](Navigation-Inventory-And-Page-Status) after the archive/queue closeout left sidebar/MkDocs drift as the next navigation cleanup.

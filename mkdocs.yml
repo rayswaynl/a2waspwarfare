@@ -52,11 +52,14 @@ nav:
   - Code And Networking:
       - SQF Code Atlas: SQF-Code-Atlas.md
       - Function And Module Index: Function-And-Module-Index.md
+      - Modules Atlas: Modules-Atlas.md
+      - Variable And Naming Conventions: Variable-And-Naming-Conventions.md
       - Networking And Public Variables: Networking-And-Public-Variables.md
       - Public Variable Channel Index: Public-Variable-Channel-Index.md
       - PVF Dispatch Implementation: PVF-Dispatch-Implementation-Playbook.md
       - Server Authority Migration Map: Server-Authority-Migration-Map.md
   - Gameplay:
+      - Core Systems Index: Core-Systems-Index.md
       - Gameplay Systems Atlas: Gameplay-Systems-Atlas.md
       - Commander HQ Lifecycle Atlas: Commander-HQ-Lifecycle-Atlas.md
       - Economy Towns And Supply: Economy-Towns-And-Supply.md
@@ -78,6 +81,7 @@ nav:
       - Perf Quick Wins Branch Audit: Perf-Quick-Wins-Branch-Audit.md
       - AI Runtime HC Loop Map: AI-Runtime-HC-Loop-Map.md
       - Headless Client Scaling And Topology: Headless-Client-Scaling-And-Topology.md
+      - Player AI Caps And Role Balance: Player-AI-Caps-And-Role-Balance.md
       - AI Commander Autonomy Audit: AI-Commander-Autonomy-Audit.md
       - Headless Delegation And Failover: Headless-Delegation-And-Failover-Playbook.md
       - Quad AI Commander: Quad-AI-Commander.md
@@ -102,8 +106,11 @@ nav:
       - Agent Release Readiness Ledger: Agent-Release-Readiness-Ledger.md
       - Testing Debugging And Release Workflow: Testing-Debugging-And-Release-Workflow.md
       - Server Ops Runbook: Server-Ops-Runbook.md
+      - Server Gameplay Runtime Atlas: Server-Gameplay-Runtime-Atlas.md
+      - Performance Opportunity Sweep: Performance-Opportunity-Sweep.md
       - Player Stats Branch Audit: Player-Stats-Branch-Audit.md
       - Dead/Stale Code Register: Dead-Code-And-Stale-Code-Register.md
+      - Arma 2 OA External Reference Guide: Arma-2-OA-External-Reference-Guide.md
       - Arma 2 OA Compatibility Audit: Arma-2-OA-Compatibility-Audit.md
       - Arma 2 OA Command Version Reference: Arma-2-OA-Command-Version-Reference.md
       - External Integrations: External-Integrations.md
