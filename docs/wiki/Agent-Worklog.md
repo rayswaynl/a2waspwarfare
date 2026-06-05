@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-05T07:39:42+02:00 - Codex - Core/Gameplay gateway pruning
+
+- Continued the pruning ledger's P2 overlapping-atlas lane after the Miksuu archive/sidebar batch was pushed as docs `4fdc90b2` / wiki `d042adc`.
+- Source-checked Fermat's read-only overlap lead and found [Core systems index](Core-Systems-Index) was acting like a shallow second atlas, including overconfident split-authority wording for construction and `AIBuyUnit`.
+- Converted [Core systems index](Core-Systems-Index) into a route map with first-stop owner pages, representative anchors and gateway rules. Trimmed [Gameplay systems atlas](Gameplay-Systems-Atlas) sections for economy, commander, upgrades, construction and factories so they point at canonical owner pages rather than repeating their walkthroughs.
+- Preserved town/capture evidence, economy balance constants and risk cross-links. No gameplay source files changed.
+
 ## 2026-06-05T07:28:19+02:00 - Codex - Miksuu archive sidebar pruning
 
 - Continued the pruning ledger goal and picked the P1 imported-Miksuu archive prominence item.

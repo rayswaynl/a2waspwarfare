@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-05T07:28:19+02:00",
+    "generatedAt":  "2026-06-05T07:39:42+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,27 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "core-gameplay-gateway-pruning",
+                             "owner":  "Codex",
+                             "status":  "published-validated-pushed",
+                             "sourceScope":  [
+                                                 "docs/wiki/Core-Systems-Index.md",
+                                                 "docs/wiki/Gameplay-Systems-Atlas.md",
+                                                 "docs/wiki/Wiki-Pruning-And-Relevance-Ledger.md",
+                                                 "docs/wiki/Progress-Dashboard.md",
+                                                 "docs/wiki/Agent-Worklog.md",
+                                                 "docs/wiki/agent-status.json",
+                                                 "docs/wiki/agent-collaboration.json",
+                                                 "docs/wiki/agent-events.jsonl"
+                                             ],
+                             "outputs":  [
+                                             "Convert Core-Systems-Index into a route map instead of a shallow second atlas.",
+                                             "Trim duplicated Gameplay-Systems-Atlas mini-atlases for economy, commander, upgrades, construction and factories.",
+                                             "Preserve detailed source evidence in dedicated owner pages and keep economy constants visible."
+                                         ],
+                             "handoff":  "This docs-only gateway-pruning batch is published. Next likely pruning lanes are Feature Status residue or UI/runtime quick-ref cleanup."
+                         },
                          {
                              "lane":  "miksuu-archive-sidebar-pruning",
                              "owner":  "Codex",

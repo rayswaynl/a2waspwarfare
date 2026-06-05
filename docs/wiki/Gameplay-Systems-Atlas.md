@@ -142,24 +142,13 @@ Risk notes:
 
 ## Economy And Resource Loop
 
-Gateway page: use [Economy, towns and supply](Economy-Towns-And-Supply) for the economy authority matrix, supply missions and PR #1 supply-helicopter context.
+Owner pages:
 
-`Server/Init/Init_Server.sqf` starts resources only when there are at least two present sides:
+- [Economy, towns and supply](Economy-Towns-And-Supply) owns the economy authority matrix, supply missions, supply-helicopter PR #1 context and current source caveats.
+- [Economy authority first cut](Economy-Authority-First-Cut) owns the smallest patch order for side-supply clamps and server-led migration candidates.
+- [Towns, camps and capture atlas](Towns-Camps-And-Capture-Atlas) owns town lifecycle details that feed the economy.
 
-```sqf
-[] ExecVM "Server\FSM\updateresources.sqf";
-```
-
-`Server/FSM/updateresources.sqf` loops over `WFBE_PRESENTSIDES` and computes the resource tick. Source anchors: `Server/Init/Init_Server.sqf:531` starts the resource loop; `Server/FSM/updateresources.sqf:3-17` reads economy parameters; `:29` reads town supply; `:49` calls `ChangeSideSupply`; `:63` pays teams; `:67` pays AI commander funds; and `:74` applies `GetSleepFPS`.
-
-- town supply with `WFBE_CO_FNC_GetTownsSupply`;
-- income from supply value, depending on `WFBE_C_ECONOMY_INCOME_SYSTEM`;
-- player and commander share when using commander-percent systems;
-- side supply increase through `ChangeSideSupply` when currency system is supply-based;
-- team funds through `WFBE_CO_FNC_ChangeTeamFunds`;
-- AI commander funds through `ChangeAICommanderFunds` when no player commander exists.
-
-Important parameters live in the resource loop: `WFBE_C_ECONOMY_INCOME_SYSTEM`, `WFBE_C_ECONOMY_INCOME_INTERVAL`, `WFBE_C_ECONOMY_INCOME_COEF`, `WFBE_C_ECONOMY_INCOME_DIVIDED`, `WFBE_C_ECONOMY_CURRENCY_SYSTEM`, `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` and side-logic `wfbe_commander_percent`.
+Runtime shape: `Server/Init/Init_Server.sqf:531` starts `Server/FSM/updateresources.sqf` only when there are at least two present sides. The loop reads economy parameters, gets town supply, can route side-supply changes through `ChangeSideSupply`, pays teams, optionally pays AI commander funds and sleeps through `GetSleepFPS`.
 
 Current stable tuning constants worth checking before balance work:
 
@@ -185,42 +174,18 @@ Risk notes:
 
 - Economy, AntiStack and side presence interact; changing AntiStack guards can change income behavior.
 - Resource sleeps use `GetSleepFPS`, so tick rate may adapt to server FPS.
-- `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` gates the whole income block on computed town supply income, not the current side-supply balance; see [Economy, towns and supply](Economy-Towns-And-Supply) before changing this loop.
+- `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` currently gates the income block on computed town supply income, not current side-supply balance; see [Economy, towns and supply](Economy-Towns-And-Supply) before changing this loop.
 - Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-22 covers side-supply overspend windfall; DR-41 covers attack-wave direct-PV supply forgery. Use [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) before touching that path.
 
 ## Commander Flow
 
-### Source files
+Owner pages:
 
-- `Server/PVFunctions/RequestCommanderVote.sqf`
-- `Server/PVFunctions/RequestNewCommander.sqf`
-- `Server/Functions/Server_VoteForCommander.sqf`
-- `Server/Functions/Server_AssignNewCommander.sqf`
-- `Common/Functions/Common_SetCommanderVotes.sqf`
-- `Common/Functions/Common_GetCommanderTeam.sqf`
+- [Commander/HQ lifecycle atlas](Commander-HQ-Lifecycle-Atlas) owns commander state, HQ state and command-menu lifecycle context.
+- [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) owns the patch-ready vote/reassign evidence and smoke gates.
+- [AI commander autonomy audit](AI-Commander-Autonomy-Audit) owns AI commander branch/context boundaries.
 
-Commander vote flow:
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant PVF as WFBE_CO_FNC_SendToServer
-    participant ServerPV as RequestCommanderVote.sqf
-    participant Vote as Server_VoteForCommander.sqf
-    participant Clients as HandleSpecial clients
-
-    Client->>PVF: RequestCommanderVote
-    PVF->>ServerPV: SRVFNCRequestCommanderVote
-    ServerPV->>Vote: spawn vote countdown
-    Vote->>Vote: collect wfbe_vote from teams
-    Vote->>Clients: commander-vote result
-```
-
-`RequestCommanderVote.sqf` only starts a vote when side logic `wfbe_votetime <= 0`. It seeds votes with `SetCommanderVotes`, spawns `WFBE_SE_FNC_VoteForCommander`, sends `VotingForNewCommander`, and notifies clients with `HandleSpecial` (`Server/PVFunctions/RequestCommanderVote.sqf:8-22`; `Common/Functions/Common_SetCommanderVotes.sqf:9-10`).
-
-`Server_VoteForCommander.sqf` counts down `WFBE_C_GAMEPLAY_VOTE_TIME`, collects team votes, sets side logic `wfbe_commander`, notifies clients and stops AI commander state when a player commander is elected (`Server/Functions/Server_VoteForCommander.sqf:10-56`; `Common/Functions/Common_GetCommanderTeam.sqf:8-10`). Treat the current AI/no-commander fallback wording as patch-ready rather than trusted behavior: **DR-47** confirms the worker counts `_aiVotes` at `Server_VoteForCommander.sqf:24-29`, but the winner branch at `:43` checks `_highest >= _aiVotes` OR `_highest <= _aiVotes`, so any non-tied player candidate can win while the client preview at `GUI_VoteMenu.sqf:87-89` can show AI/no commander. Use [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) before changing vote semantics.
-
-`RequestNewCommander.sqf` directly assigns a commander when no vote is running, then spawns `WFBE_SE_FNC_AssignForCommander` and sends `new-commander-assigned` (`Server/PVFunctions/RequestNewCommander.sqf:8-14`; `Server/Functions/Server_AssignNewCommander.sqf:1-13`).
+Runtime shape: clients request votes or reassignment through PVF wrappers, server workers update side-logic commander state and clients receive `HandleSpecial` notifications. Do not infer trusted AI/no-commander fallback behavior from the high-level flow: **DR-47** confirms `Server_VoteForCommander.sqf` and `GUI_VoteMenu.sqf` disagree about AI/no-commander fallback semantics. Use the vote/reassignment playbook before changing this path.
 
 Risk notes:
 
@@ -230,30 +195,9 @@ Risk notes:
 
 ## Upgrades
 
-### Source files
+Owner page: [Upgrades and research atlas](Upgrades-And-Research-Atlas).
 
-- `Server/PVFunctions/RequestUpgrade.sqf`
-- `Server/Functions/Server_ProcessUpgrade.sqf`
-- `Common/Config/Core_Upgrades/Upgrades_*.sqf`
-- `Common/Config/Core_Upgrades/Check_Upgrades.sqf`
-- `Client/GUI/GUI_UpgradeMenu.sqf`
-
-`RequestUpgrade.sqf` is a thin PVF wrapper that spawns `WFBE_SE_FNC_ProcessUpgrade` (`Server/PVFunctions/RequestUpgrade.sqf:5`).
-
-`Server_ProcessUpgrade.sqf`:
-
-- reads upgrade time from `WFBE_C_UPGRADES_<side>_TIMES`;
-- sets side logic `wfbe_upgrading = true` and `wfbe_upgrading_id`;
-- notifies clients with `HandleSpecial ['upgrade-started', id, level]`;
-- waits for either a sync variable or elapsed upgrade time for player-started upgrades;
-- increments side logic `wfbe_upgrades`;
-- clears `wfbe_upgrading` and `wfbe_upgrading_id`;
-- refreshes existing artillery pieces when the artillery ammo upgrade completes;
-- notifies clients with `HandleSpecial ['upgrade-complete', id, level]`.
-
-Source anchors: `Server/Functions/Server_ProcessUpgrade.sqf:17-24` for upgrade time/state/start notification, `:26-46` for player-start sync and completion state, and `:48-87` for artillery refresh and complete notification.
-
-`Check_Upgrades.sqf` fills missing AI commander upgrade order entries from enabled upgrade levels. It is a repair/normalization helper, not the live upgrade processor (`Common/Config/Core_Upgrades/Check_Upgrades.sqf:7-9` and `:39-40`). Client upgrade initiation currently performs affordability/debit/send locally through `Client/GUI/GUI_UpgradeMenu.sqf:137-171`, then renders running status around `:186-202`.
+Runtime shape: `RequestUpgrade.sqf` is a thin PVF wrapper into `Server_ProcessUpgrade.sqf`. The server worker sets side upgrade state, waits for sync/time completion, increments `wfbe_upgrades`, refreshes artillery ammo on the relevant upgrade and notifies clients. Client upgrade initiation still performs affordability/debit/send locally, so upgrade authority work belongs in the owner atlas plus [Economy authority first cut](Economy-Authority-First-Cut).
 
 Risk notes:
 
@@ -265,20 +209,7 @@ Risk notes:
 
 Gateway page: use [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) for structure arrays, placement rules, CoIn runtime behavior, server request handlers, HQ lifecycle, repair flows, base-area notes, DR-6 authority details and DR-20 HQ-killed idempotency routing.
 
-### Source files
-
-- `Client/Init/Init_Coin.sqf`
-- `Client/Module/CoIn/coin_interface.sqf`
-- `Server/PVFunctions/RequestStructure.sqf`
-- `Server/Construction/Construction_HQSite.sqf`
-- `Server/Construction/Construction_SmallSite.sqf`
-- `Server/Construction/Construction_MediumSite.sqf`
-- `Server/Construction/Construction_StationaryDefense.sqf`
-- `Client/Init/Init_BaseStructure.sqf`
-
-Construction is a client-preview/server-create path. `Init_Coin.sqf` adapts side structure/defense arrays into BIS CoIn data (`Client/Init/Init_Coin.sqf:8-12`, `:20-42`, `:80-91`). `coin_interface.sqf` owns display/camera/preview state and dispatches PVF requests (`Client/Module/CoIn/coin_interface.sqf:28-34`, `:50-62`, `:491-494`, `:560-581`, `:891-920`). `RequestStructure.sqf` maps display classname to structure/script arrays and starts the selected construction worker (`Server/PVFunctions/RequestStructure.sqf:8-21`).
-
-The server workers then create the final objects and handlers: HQ deploy/mobilize (`Server/Construction/Construction_HQSite.sqf:14-38`, `:68-95`, `:104`), small/medium sites (`Server/Construction/Construction_SmallSite.sqf:37-70`, `:104-131`; `Server/Construction/Construction_MediumSite.sqf:37-70`, `:83-114`, `:119-146`) and stationary defenses (`Server/Construction/Construction_StationaryDefense.sqf:15-19`, `:61-75`, `:105-112`).
+Runtime shape: construction is a split client-preview/server-create path. `Init_Coin.sqf` adapts side structure/defense arrays into BIS CoIn data, `coin_interface.sqf` owns display/camera/preview state and dispatches PVF requests, and server construction workers create final objects/handlers. Treat this page as a route into the construction atlas rather than the canonical construction walkthrough.
 
 Risk notes:
 
@@ -292,24 +223,7 @@ Risk notes:
 
 Gateway page: use [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) for config chains, range globals, buy-menu filtering, queue model, common creation helpers, DR-14 authority notes and DR-33 queue hazards.
 
-### Source files
-
-- `Client/GUI/GUI_Menu_BuyUnits.sqf`
-- `Client/Functions/Client_BuildUnit.sqf`
-- `Server/Functions/Server_BuyUnit.sqf`
-- side unit/config arrays under `Common/Config/Core_Units/*`
-- side structure arrays under `Common/Config/Core_Structures/*`
-
-There are two main production paths:
-
-| Path | Owner | Source | Use |
-| --- | --- | --- | --- |
-| Player local build | Client | `GUI_Menu_BuyUnits.sqf` -> `Client_BuildUnit.sqf` | Player buys units/vehicles near a factory. |
-| Latent AI/server build worker | Server | `AIBuyUnit` -> `Server_BuyUnit.sqf` | Compiled helper for AI teams/server-side production, but current stable source search finds no active caller outside the compile and the worker itself. |
-
-The buy menu detects factory range globals, filters by tab/faction/upgrade, performs local funds/group/queue checks, spawns `BuildUnit` and deducts player funds (`Client/GUI/GUI_Menu_BuyUnits.sqf:89-156`, `:195-248`, `:257-369`). `Client_BuildUnit.sqf` owns local queue wait, build time, spawn placement and vehicle/crew initialization (`Client/Functions/Client_BuildUnit.sqf:149-217`, `:246-356`, `:368-469`). `Init_Server.sqf:10` compiles `AIBuyUnit = Server_BuyUnit.sqf`, and that worker mirrors much of the vehicle initialization (`Server/Functions/Server_BuyUnit.sqf:21-97`, `:98-214`), but treat it as dormant unless a dynamic caller is proven or a future AI commander production loop intentionally revives it.
-
-Attack-wave production is a direct-PV side path rather than normal factory production; `Server/Functions/Server_AttackWave.sqf:1-38` publishes the request details before `Server/PVFunctions/AttackWave.sqf:19-55` consumes and resets active wave state.
+Runtime shape: player purchases run through `GUI_Menu_BuyUnits.sqf` and `Client_BuildUnit.sqf`; they are local buy/build threads with factory range globals, UI filters, local funds/group/queue checks, build waits, spawn placement and vehicle/crew initialization. `Init_Server.sqf:10` compiles `AIBuyUnit = Server_BuyUnit.sqf`, but stable master source search finds no active caller outside the compile and worker itself. Treat `AIBuyUnit` as latent unless a branch proves or intentionally revives it. Attack-wave production is a separate direct-PV side path, not normal factory production.
 
 Risk notes:
 

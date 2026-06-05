@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `core-gameplay-gateway-pruning` | Published / validated / pushed | Codex source-checked the overlapping-atlas scout lead by converting [Core systems index](Core-Systems-Index) into a route map and trimming duplicated mini-atlases from [Gameplay systems atlas](Gameplay-Systems-Atlas). Owner pages keep the detailed source evidence. Validation passed. No gameplay source changed. |
 | `miksuu-archive-sidebar-pruning` | Published / validated / pushed | Codex demoted individual Miksuu archive pages from sidebar prominence while preserving every imported page through [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) and [Community & Dev](Community-And-Dev). This keeps historical/community provenance reachable without making archive pages look like current implementation docs. Two read-only sidecar explorers returned next-batch leads for overlapping atlases and Feature Status residue. Validation passed. No gameplay source changed. |
 | `dashboard-pruning-ledger-cleanup` | Published / validated | Follow-up pruning pass compacted this dashboard's Latest Batch back toward current-state use, removed duplicate Home navigation, and reconciled repeated pruning-ledger rows for [Subagent discovery swarm](Subagent-Discovery-Swarm). Validation passed. No gameplay source changed. |
 | `research-catchup-synthesis-default-supported` | Published / validated / pushed | Condensed [External research reports](External-Research-Reports) into a report-intake absorption matrix, added a current routing index to [Deep-review findings](Deep-Review-Findings), and recorded catch-up decisions in [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger). Recent scout and Miksuu/upstream material is marked as absorbed, archive/provenance, or narrow future micro-scout work instead of duplicate prose. No gameplay source changed. |
@@ -41,7 +42,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` + `miksuu-archive-sidebar-pruning` | Miksuu archive/sidebar pruning is published; next source-check target is Core/Gameplay gateway pruning or Feature Status residue. |
+| Codex | Active | `documentation-finisher-loop` + `core-gameplay-gateway-pruning` | Core/Gameplay gateway pruning is published; next source-check target is Feature Status residue or UI/runtime quick-ref pruning. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Coverage Ledger navigation is wired. Claude can self-select the next bounded source-backed review from the ledger or hardening backlog. |
 | Supported docs agents | Active | `research-catchup-synthesis-default-supported`, `relevance-pruning-and-archive-default-supported` | Two account-default supported high-reasoning helper chats are running catch-up synthesis and relevance pruning. The earlier named-model starts are treated as failed/non-evidence. |
@@ -71,6 +72,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
 | `documentation-finisher-loop` | Codex | Active / ongoing | Keep the wiki current from source evidence, update machine files on visible status changes, and keep this dashboard compact. |
+| `core-gameplay-gateway-pruning` | Codex | Published / validated / pushed | Core index is a route map and Gameplay systems routes duplicated economy/commander/upgrade/construction/factory detail to owner pages. |
 | `miksuu-archive-sidebar-pruning` | Codex | Published / validated / pushed | Preserve imported Miksuu archive pages but route sidebar users through the archive index, community context and source-check pages. |
 | `overlapping-atlas-bloat-scout` | Codex sub-agent Fermat | Returned / lead captured | Recommends `Core-Systems-Index.md` plus `Gameplay-Systems-Atlas.md` gateway pruning as the safest high-payoff P2 batch, with UI/runtime quick-ref pruning second. |
 | `feature-status-residue-scout` | Codex sub-agent Herschel | Returned / lead captured | Recommends source-checking stale/duplicate Feature Status sections: branch rows, scout harvest history, supply handler status, side-supply reason-drop duplication, latent `AIBuyUnit` wording and the trailing deep-audit addendum. |
