@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-machine-index-v1",
-  "generatedAt": "2026-06-05T23:59:55+02:00",
+  "generatedAt": "2026-06-05T15:56:10+02:00",
   "purpose": "Compact page-to-source and page-to-risk lookup for AI agents. Use this before opening broad wiki pages when you need the canonical owner page, source proof refs, machine records and next gate for a system.",
   "repo": {
     "owner": "rayswaynl",
@@ -325,6 +325,7 @@
       "riskTier": "P1",
       "branchScope": "master_current plus branch-only AI commander notes",
       "canonicalDocs": [
+        "Server-Runtime-And-Operations",
         "AI-Headless-And-Performance",
         "Headless-Delegation-And-Failover-Playbook",
         "AI-Commander-Autonomy-Audit",

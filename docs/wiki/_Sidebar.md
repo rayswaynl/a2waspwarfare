@@ -72,6 +72,7 @@
   - [Dead/stale code register](Dead-Code-And-Stale-Code-Register)
   - [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook)
   - [Attack-wave authority](Attack-Wave-Authority-Playbook)
+  - [Server runtime and operations](Server-Runtime-And-Operations)
   - [Server ops runbook](Server-Ops-Runbook)
   - [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas)
   - [PerformanceAuditAnalyzer](PerformanceAuditAnalyzer)

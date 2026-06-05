@@ -103,6 +103,7 @@ Important notes:
 - [Tools and build workflow](https://github.com/rayswaynl/a2waspwarfare/wiki/Tools-And-Build-Workflow): LoadoutManager, generation, packaging and Windows path traps.
 - [Source fix propagation queue](https://github.com/rayswaynl/a2waspwarfare/wiki/Source-Fix-Propagation-Queue): Current source/Vanilla propagation status and smoke gates.
 - [Testing/debugging/release workflow](https://github.com/rayswaynl/a2waspwarfare/wiki/Testing-Debugging-And-Release-Workflow): Source checks, smoke gates and release notes.
+- [Server runtime and operations](https://github.com/rayswaynl/a2waspwarfare/wiki/Server-Runtime-And-Operations): Gateway that routes ambiguous server-runtime/server-ops prompts to gameplay runtime, deployment, authority, integration, performance or testing owner pages.
 - [External integrations](https://github.com/rayswaynl/a2waspwarfare/wiki/External-Integrations): DiscordBot, extension, BattlEye and server config footprint.
 - [Integration trust boundary audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Integration-Trust-Boundary-Audit): Security-first split between DiscordBot JSON intake, in-repo extension writes, AntiStack DB calls and BattlEye posture.
 - [AntiStack database extension audit](https://github.com/rayswaynl/a2waspwarfare/wiki/AntiStack-Database-Extension-Audit): Runtime/procedure map for AntiStack ON/OFF guards, A2WaspDatabase wrappers and enabled-mode return hardening.

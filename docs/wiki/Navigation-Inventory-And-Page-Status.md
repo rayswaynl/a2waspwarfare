@@ -6,15 +6,15 @@ Use it before adding pages to Home, `_Sidebar.md`, `mkdocs.yml`, `llms.txt` or `
 
 ## Current Snapshot
 
-Snapshot generated from `docs/wiki/*.md`, `_Sidebar.md`, selected non-Markdown sidebar links and `mkdocs.yml` on 2026-06-05 after adding [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison).
+Snapshot generated from `docs/wiki/*.md`, `_Sidebar.md`, selected non-Markdown sidebar links and `mkdocs.yml` on 2026-06-05 after adding [Server runtime and operations](Server-Runtime-And-Operations).
 
 | Item | Count | Meaning |
 | --- | ---: | --- |
-| Markdown pages | 143 | All `.md` pages in `docs/wiki`, including `_Sidebar.md` and `_Footer.md`. |
-| Content pages | 141 | Markdown pages excluding `_Sidebar.md` and `_Footer.md`. |
-| Sidebar links | 114 | Markdown pages plus selected agent files linked from the GitHub wiki sidebar. This includes [`llms.txt`](llms.txt) and one intentional machine-file link: [`agent-machine-index.json`](agent-machine-index.json). |
-| MkDocs entries | 122 | Markdown pages plus [`llms.txt`](llms.txt) listed in `mkdocs.yml` navigation. |
-| Pages in both navs | 112 | Primary Markdown pages visible in both GitHub wiki and MkDocs. |
+| Markdown pages | 144 | All `.md` pages in `docs/wiki`, including `_Sidebar.md` and `_Footer.md`. |
+| Content pages | 142 | Markdown pages excluding `_Sidebar.md` and `_Footer.md`. |
+| Sidebar links | 115 | Markdown pages plus selected agent files linked from the GitHub wiki sidebar. This includes [`llms.txt`](llms.txt) and one intentional machine-file link: [`agent-machine-index.json`](agent-machine-index.json). |
+| MkDocs entries | 123 | Markdown pages plus [`llms.txt`](llms.txt) listed in `mkdocs.yml` navigation. |
+| Pages in both navs | 113 | Primary Markdown pages visible in both GitHub wiki and MkDocs. |
 | Pages in neither nav | 20 | Usually archives, instruction pages, old queues, analysis notes or narrow patch pages reached through canonical pages. |
 | Sidebar-only links | 1 | [`agent-machine-index.json`](agent-machine-index.json) is intentionally sidebar-only because it is an agent-readable JSON file, not a MkDocs Markdown page. Primary Markdown sidebar-only drift remains `0`. |
 | MkDocs-only pages | 9 | All imported Miksuu archive pages. |

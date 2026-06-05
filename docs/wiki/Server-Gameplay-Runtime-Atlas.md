@@ -4,6 +4,8 @@ Upstream-history note: Miksuu commit clusters show that server runtime changes a
 
 This atlas maps long-running server gameplay loops and runtime surfaces that future owners should treat carefully. Paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
+For deployment, packaging, BattlEye, extension and RPT collection questions, use [Server runtime and operations](Server-Runtime-And-Operations) to route to the correct operations page instead of expanding this runtime atlas.
+
 ## Runtime Loops
 
 | Runtime surface | Source anchors | Notes |

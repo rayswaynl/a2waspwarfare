@@ -12,7 +12,7 @@ This page is the front door. It should help you choose the right owner page quic
 | AI assistant / LLM | [LLM agent entry pack](LLM-Agent-Entry-Pack) | [`llms.txt`](llms.txt), [`agent-entrypoint.json`](agent-entrypoint.json), [`agent-context.json`](agent-context.json), [AI assistant guide](AI-Assistant-Guide) |
 | Current work reviewer | [Progress dashboard](Progress-Dashboard) | [`agent-status.json`](agent-status.json), [`agent-collaboration.json`](agent-collaboration.json), [Agent worklog](Agent-Worklog) |
 | Feature or bug triager | [Feature status register](Feature-Status-Register) | [Dead/stale code register](Dead-Code-And-Stale-Code-Register), [Pending owner decisions](Pending-Owner-Decisions) |
-| Gameplay implementer | [Gameplay systems atlas](Gameplay-Systems-Atlas) | [Construction/CoIn](Construction-And-CoIn-Systems-Atlas), [Factory/purchase](Factory-And-Purchase-Systems-Atlas), [Server runtime](Server-Gameplay-Runtime-Atlas) |
+| Gameplay implementer | [Gameplay systems atlas](Gameplay-Systems-Atlas) | [Construction/CoIn](Construction-And-CoIn-Systems-Atlas), [Factory/purchase](Factory-And-Purchase-Systems-Atlas), [Server runtime](Server-Runtime-And-Operations) |
 | Public-server hardening owner | [Hardening roadmap](Hardening-Implementation-Roadmap) | [Server authority map](Server-Authority-Migration-Map), [PVF dispatch playbook](PVF-Dispatch-Implementation-Playbook), [Testing workflow](Testing-Debugging-And-Release-Workflow) |
 | Upstream/community archaeologist | [Community & Dev](Community-And-Dev) | [Miksuu wiki import](Miksuu-Upstream-Wiki-Import), [Developer history](Developer-History-And-Upstream-Lessons), [Upstream commit intel](Upstream-Miksuu-Commit-Intel) |
 | Docs/platform maintainer | [Navigation inventory](Navigation-Inventory-And-Page-Status) | [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), [Knowledge platform roadmap](Knowledge-Platform-Roadmap), [Wiki mirror plan](Wiki-Mirror-Reconciliation-Plan) |
@@ -41,7 +41,7 @@ This page is the front door. It should help you choose the right owner page quic
 | AI, HC, performance | [AI/headless/performance](AI-Headless-And-Performance) -> [Headless client scaling](Headless-Client-Scaling-And-Topology) -> [Performance opportunity sweep](Performance-Opportunity-Sweep) |
 | UI, HUD, menus | [Client UI/HUD/menus](Client-UI-HUD-And-Menus) -> [Client UI systems atlas](Client-UI-Systems-Atlas) -> [UI IDD collision repair](UI-IDD-Collision-Repair) |
 | Tools, build, release | [Tools/build workflow](Tools-And-Build-Workflow) -> [Source fix propagation queue](Source-Fix-Propagation-Queue) -> [Testing workflow](Testing-Debugging-And-Release-Workflow) |
-| Integrations and ops | [External integrations](External-Integrations) -> [Integration trust boundary audit](Integration-Trust-Boundary-Audit) -> [Server ops runbook](Server-Ops-Runbook) |
+| Integrations and ops | [External integrations](External-Integrations) -> [Integration trust boundary audit](Integration-Trust-Boundary-Audit) -> [Server runtime and operations](Server-Runtime-And-Operations) |
 
 ## Current Work
 

@@ -2823,3 +2823,8 @@ Key conclusions:
 - Opened and pinned Codex thread `019e9808-757a-7a52-81a6-8bd1050ebe6c` as `old-be-current-wasp-fps-opportunity-scout-2`.
 - Scope is read-only archaeology: compare BennyBoy old Warfare BE against current Wasp for client/server FPS opportunities across AI caps, town/static lifecycle, cleanup, HUD/marker/PV work, HC delegation and benchmark design.
 - Expected report path: `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-mission-fps-opportunity-window\outputs\Old-BE-vs-Current-Wasp-FPS-Opportunity-Scout.md`. No gameplay source files changed.
+
+## 2026-06-05T15:56:10+02:00 - Codex - server runtime/operations gateway
+- Claimed `server-runtime-operations-gateway` after the active FPS scout found a prompt target named `Server-Runtime-And-Operations.md` while the wiki only had split owner pages.
+- Added [Server runtime and operations](Server-Runtime-And-Operations) as a thin gateway that routes broad server prompts to runtime, ops, integrations, authority, HC, performance and testing owner pages instead of copying their evidence.
+- Updated sidebar, MkDocs, `llms.txt`, [Home](Home), [Navigation inventory](Navigation-Inventory-And-Page-Status), [`agent-context.json`](agent-context.json), [`agent-machine-index.json`](agent-machine-index.json) and coordination records. No gameplay source files changed.

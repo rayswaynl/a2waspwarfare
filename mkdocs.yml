@@ -108,6 +108,7 @@ nav:
       - Source Fix Propagation Queue: Source-Fix-Propagation-Queue.md
       - Agent Release Readiness Ledger: Agent-Release-Readiness-Ledger.md
       - Testing Debugging And Release Workflow: Testing-Debugging-And-Release-Workflow.md
+      - Server Runtime And Operations: Server-Runtime-And-Operations.md
       - Server Ops Runbook: Server-Ops-Runbook.md
       - Server Gameplay Runtime Atlas: Server-Gameplay-Runtime-Atlas.md
       - Performance Opportunity Sweep: Performance-Opportunity-Sweep.md

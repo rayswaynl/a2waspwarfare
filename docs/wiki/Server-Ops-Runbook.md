@@ -2,6 +2,8 @@
 
 This page is the operator entrypoint for running, packaging and observing Wasp Warfare. It links the operational pieces from [Tools and build workflow](Tools-And-Build-Workflow), [External integrations](External-Integrations), [Testing/debugging/release workflow](Testing-Debugging-And-Release-Workflow) and [Self-host testing field notes](Self-Host-Testing-Field-Notes).
 
+If you arrived from a broad "server runtime and operations" prompt, start with [Server runtime and operations](Server-Runtime-And-Operations) to choose between this runbook, gameplay runtime loops, integration trust boundaries and release/testing gates.
+
 ## What Ships In The Repo
 
 | Area | Repo artifact | Operator meaning |
