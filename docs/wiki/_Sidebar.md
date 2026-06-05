@@ -42,6 +42,7 @@
   - [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons)
   - [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel)
   - [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match)
+  - [Takistan airfield FPV drone design](Takistan-Airfield-FPV-Drone-Design)
 - Compatibility and references
   - [HC upstream history and lessons](HC-Upstream-History-And-Lessons)
   - [Player stats branch audit](Player-Stats-Branch-Audit)

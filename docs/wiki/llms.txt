@@ -8,6 +8,7 @@ Human agent brief: Agent-Context.md
 Machine agent brief: agent-context.json
 Progress snapshot: agent-status.json
 Current source status snapshot: Current-Source-Status-Snapshot.md
+Takistan FPV design: Takistan-Airfield-FPV-Drone-Design.md
 Coordination state: agent-collaboration.json
 Event feed: agent-events.jsonl
 Worklog: Agent-Worklog.md

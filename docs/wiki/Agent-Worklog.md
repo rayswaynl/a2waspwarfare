@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-05T13:20:00+02:00 - Codex - Takistan airfield FPV July design
+
+- Converted Steff's Takistan FPV questionnaire answers into [Takistan airfield FPV drone design](Takistan-Airfield-FPV-Drone-Design).
+- Created remote DEV branch `dev/july-takistan-airfield-fpv-drone` from `origin/master` for the July update candidate.
+- Updated [Progress dashboard](Progress-Dashboard), `_Sidebar.md`, `llms.txt`, `agent-context.json` and `agent-events.jsonl` so the design is discoverable.
+- Captured key owner decisions: neutral Takistan airfields, runway-edge capture placement rather than runway blockage, bunker-gated Drone Bay, `$50` per-player-cycle team income, UAV/EASA tier gates, one active drone per player, side-wide cap, center-boundary range kill, no base sniping, AA/radar counterplay and server-authoritative validation.
+- No gameplay source files changed.
+
 ## 2026-06-04T19:45:00+02:00 - Codex - Spark scout wave release targets / HC / AI caps / economy
 
 - Steff asked for another bunch of Spark scouts. Codex launched six `gpt-5.3-codex-spark` read-only lanes for player AI caps, support authority, UI/dialog hazards, generated/modded release tiers, town/economy/supply edge cases and HC/locality/FPS. The active thread ceiling blocked the seventh lane, so Codex closed completed scouts and refilled a slot with tooling/integrations plus mission lifecycle/init.
