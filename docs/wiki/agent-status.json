@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-06T00:16:00+02:00",
+  "generatedAt": "2026-06-06T00:30:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Reconciled the newest side-supply clamp and empty supply-truck cleanup branch matrices across wiki and docs/wiki. Economy-Authority-First-Cut and Marker-Cleanup-Restoration-Systems-Atlas are the canonical routes.",
+      "currentWork": "Reconciled the newest camp-count helper, WASP marker wait, clickable-text soundPush, side-supply clamp, empty supply-truck cleanup and vote/help UI edge branch matrices across wiki and docs/wiki. Towns-Camps-And-Capture-Atlas, WASP-Marker-Wait-Cleanup, Client-UI-Systems-Atlas, Economy-Authority-First-Cut and Marker-Cleanup-Restoration-Systems-Atlas are the canonical routes.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -115,6 +115,12 @@
       "owner": "Codex-helper",
       "status": "published-validated",
       "output": "Marker cleanup/restoration now owns the branch-checked route for the hard-coded 24-hour empty supply-truck timeout; Feature Status, Source Fix Propagation Queue and machine records point future code owners to keep-and-label versus shorter/parameterized cleanup plus supply/logistics smoke. No gameplay source changed."
+    },
+    {
+      "lane": "vote-help-ui-edge-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "output": "Client UI systems now owns the branch-checked route for vote refresh/row-color, help namespace and GPS router-only cleanup; Feature Status, Source Fix Propagation Queue and machine records point future code owners to the small UI patch plus vote/help/main-menu smoke. No gameplay source changed."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",

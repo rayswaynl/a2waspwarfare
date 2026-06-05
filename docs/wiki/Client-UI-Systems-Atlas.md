@@ -218,6 +218,26 @@ Help dialog lifecycle edge: `RscMenu_Help` stores the display as `uiNamespace["d
 
 Main-menu orphan route: `GUI_Menu.sqf:202-208` still handles `MenuAction == 17/18` for GPS zoom, but the audited `WF_Menu` resource block exposes actions `1-13`, `16` and `19` only. The same handler-only shape exists in maintained Vanilla, stable master, Miksuu upstream and the current release branch; modded Napf/Eden/Lingor also keep copied handlers. Treat those router cases as dead UX baggage unless a hidden/branch control is deliberately reintroduced and smoke-tested.
 
+### Vote, Help And Main-Menu Branch Matrix
+
+This route owns the small UI correctness cluster around vote refresh/list coloring, help-panel lifecycle state and the main-menu GPS zoom router. The WASP marker input-lock wait is adjacent UX debt, but its branch matrix stays on [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup).
+
+| Root / branch | Vote refresh and row color | Help menu lifecycle | Main-menu GPS route | Status |
+| --- | --- | --- | --- | --- |
+| Current source Chernarus | `Init_Client.sqf:285` sets `WFBE_Client_Teams_Count = count WFBE_Client_Teams`; `GUI_VoteMenu.sqf:29,49,61` and `GUI_Commander_VoteMenu.sqf:58` loop through that inclusive value; `GUI_VoteMenu.sqf:80,82` colors `[_i+1,0]`. | `Rsc/Dialogs.hpp:3502` stores `dialog_HelpPanel`; `:3503` clears `cti_dialog_ui_onlinehelpmenu`; `GUI_Menu_Help.sqf:5-10` handles load and selection, not unload. | `GUI_Menu.sqf:202,206` handles `MenuAction == 17/18`; fixed-string searches found no maintained-root `MenuAction = 17` or `MenuAction = 18` emitter. | Patch-ready UI cleanup; current source is unpatched. |
+| Maintained Vanilla Takistan | Same vote loops, row-color offset, help key mismatch and GPS router-only shape. | Same. | Same. | Needs propagation with Chernarus if code work is claimed. |
+| Stable `origin/master` `2cdf5fb8` | Same shapes in both maintained roots. | Same `dialog_HelpPanel` / `cti_dialog_ui_onlinehelpmenu` mismatch. | Same handler-only `17/18` route. | No stable rescue. |
+| Miksuu upstream `miksuu/master` `f532f706` | Same shapes in both maintained roots. | Same. | Same. | No upstream rescue. |
+| `origin/perf/quick-wins` `0076040f` | Same shapes in both maintained roots. | Same. | Same. | Perf branch does not touch this UI cluster. |
+| Release `origin/release/2026-06-feature-bundle` `3282ff3f` | Same vote shapes in both maintained roots. | Same mismatch, with line drift: release Chernarus `Dialogs.hpp:3106-3107`, release Vanilla `:3531-3532`. | Same route, with line drift to `GUI_Menu.sqf:213,217`. | Release does not rescue the cluster. |
+
+Patch order:
+
+1. Fix vote loops with `count - 1` or `forEach`, and correct the row-color target so highlighted rows match the candidate rows.
+2. Use one help-display namespace key and either implement a real `onUnload` branch or remove the stale controller call.
+3. Decide whether GPS zoom should be visible again. If not, remove or comment the dead `17/18` router cases; if yes, add controls deliberately and smoke HUD/GPS state.
+4. Propagate maintained Vanilla and smoke vote refresh/list coloring, help open/close and main-menu HUD/FPS/GPS behavior together.
+
 `GUI_Menu_Tactical.sqf` is the support hub. It builds the support list from fast travel, ICBM, paratroopers, ammo/vehicle paradrops, UAV actions and unit camera (`:56-64`). Availability is recomputed from current upgrades, funds, cooldowns and selected support (`:144-290`), then requests are sent through `RequestSpecial` where needed (`:373` and later request branches).
 
 ### Upgrade And Economy Menus

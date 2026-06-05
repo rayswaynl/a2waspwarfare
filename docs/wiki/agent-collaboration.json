@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-06T00:15:00+02:00",
+  "generatedAt": "2026-06-06T00:30:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -290,6 +290,31 @@
       "handoff": "Closed as docs-published. Future code owner should port or recreate floor-to-zero in source Chernarus plus maintained Vanilla, validate west/east temp-channel side/amount shape, and keep server-owned spend acceptance as a separate authority lane."
     },
     {
+      "lane": "vote-help-ui-edge-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_VoteMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Commander_VoteMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Help.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "docs/wiki/Client-UI-Systems-Atlas.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Branch-checked vote/help/main-menu UI edge cleanup without changing gameplay source.",
+        "Condensed branch scope into Client UI systems, Feature Status, Source Fix Propagation Queue, pruning ledger and machine records."
+      ],
+      "handoff": "Closed as docs-published. Future code owner should fix vote loops and row-color target, clean help onLoad/onUnload namespace state, decide remove-vs-revive for GPS 17/18, propagate maintained Vanilla and smoke vote refresh, help open/close and main-menu HUD/GPS behavior."
+    },
+    {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
       "owner": "Codex-delegated",
       "status": "returned-harvested",
@@ -475,7 +500,8 @@
     "wasp-marker-wait-branch-route",
     "clickabletext-soundpush-branch-route",
     "side-supply-clamp-branch-route",
-    "empty-supply-truck-cleanup-branch-route"
+    "empty-supply-truck-cleanup-branch-route",
+    "vote-help-ui-edge-branch-route"
   ],
   "queuedReports": [],
   "lanes": [
@@ -538,6 +564,12 @@
       "suggestedOwner": "Codex-helper",
       "status": "published-validated",
       "summary": "Branch-checked side-supply clamp-first across current source, maintained Vanilla, stable, upstream, perf and release, then updated economy/status docs without gameplay source changes."
+    },
+    {
+      "lane": "vote-help-ui-edge-branch-route",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "Branch-checked vote/help/main-menu UI edge cases across current source, maintained Vanilla, stable, upstream, perf and release, then updated UI/status docs without gameplay source changes."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",

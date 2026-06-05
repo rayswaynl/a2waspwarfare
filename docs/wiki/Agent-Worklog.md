@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-06T00:30:00+02:00 - Codex helper - vote/help UI edge branch route
+
+- Claimed `vote-help-ui-edge-branch-route` from the UI correctness backlog.
+- Source-checked current source Chernarus, maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and release `3282ff3f`.
+- Result: every checked maintained root/branch keeps the same vote inclusive-loop and row-color shape, help-panel load/unload namespace mismatch and main-menu GPS `17/18` router-only shape. Release only moves line numbers for Help and the main menu.
+- Updated [Client UI systems](Client-UI-Systems-Atlas#vote-help-and-main-menu-branch-matrix), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
+
 ## 2026-06-05T23:59:30+02:00 - Codex helper - clickable text soundPush branch route
 
 - Claimed `clickabletext-soundpush-branch-route` from the UI/resource config backlog.
