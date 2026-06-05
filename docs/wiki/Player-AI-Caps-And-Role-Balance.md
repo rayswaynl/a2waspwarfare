@@ -117,6 +117,38 @@ Before cutting CTI identity too hard, test current Wasp with the old-style cap n
 
 Dynamic cap warning from the 2026-06-05 old-BE FPS archaeology pass: if caps later scale by live player count, do not implement it as a hidden client-only guess. Publish the active cap from trusted mission/server state, make buy menu and RHUD read the same value, and start with a non-destructive "future purchases only" cap so players do not suddenly lose already-fielded AI mid-fight.
 
+## Dynamic Cap Proposal
+
+The follow-up FPS opportunity scout produced a concrete test policy at `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-vs-current-fps-investigation\outputs\Old-BE-vs-Current-Wasp-FPS-Opportunity-Audit.md`.
+
+Recommended rollout:
+
+1. Public pilot: cap normal players around `10` AI and record FPS/entity evidence. Keep this framed as a test, not a permanent identity change.
+2. Final policy: server-published, role-aware dynamic cap based on total player count or per-side human count.
+3. Enforcement: non-destructive for future purchases first. Do not delete already-fielded player AI when more players join.
+4. UI parity: buy menu and RHUD must read the same active cap source.
+
+Starting values for a full-server test:
+
+| Total players | Approx. per side | Normal slots | Soldier slots | Commander bonus | Soldier commander ceiling | Intent |
+| ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 10 | 5 | 12 | 18 | +5 | 20 | Low-pop games keep classic CTI squad scale. |
+| 15 | 7-8 | 10 | 16 | +5 | 20 | First public pilot target; close to the proposed "10 max" while preserving Soldier. |
+| 20 | 10 | 9 | 15 | +5 | 18 | Starts separating full-server protection from low-pop feel. |
+| 25 | 12-13 | 8 | 14 | +4 | 17 | Protects full-server FPS while retaining a Soldier squad role. |
+| 30 | 15 | 7 | 12 | +3 | 15 | Full-server protection mode; avoids 30 players each bringing large personal squads. |
+
+Formula sketch:
+
+```text
+normalCap = clamp(floor(sidePlayerAIBudget / max(1, sideHumanPlayers)), 7, 12)
+soldierCap = clamp(normalCap + 5 or +6, 12, 18)
+commanderBonus = if totalPlayers < 20 then 5 else if totalPlayers < 30 then 4 else 3
+commanderCap = min(roleCap + commanderBonus, soldierCommanderCeiling)
+```
+
+Initial budgets to test: `110` player-owned AI per side for normal public play, `90` for stress testing. Keep town AI, static gunners, AI teams and support units outside this budget, but record them next to it so the project does not simply move load from player followers to town/server AI.
+
 ## Development Notes
 
 - Do not use the unused `WFBE_C_PLAYERS_SKILL_SOLDIER_UNITS_MAX = 6` constant as proof of current behavior. The live Soldier cap path uses `ceil (1.5 * WFBE_C_PLAYERS_AI_MAX)`.

@@ -18,7 +18,7 @@ When an old entry disagrees with a newer source-checked page or supersession rec
 - Claimed `release-head-propagated-fix-spotcheck-and-fps-report-intake` after the PR8 head refresh left older propagated-fix pages naming `a9219d88` as if it were still the current release branch.
 - Spot-checked `origin/release/2026-06-feature-bundle` head `3282ff3f`: paratrooper marker registration is still absent in Chernarus/Vanilla, client `Skill_Init` still duplicates in Chernarus/Vanilla, supply scan narrowing remains Chernarus-only, and hosted FPS loop cleanup remains Chernarus-only while release Vanilla keeps the old loops.
 - Updated current-facing owner pages and `agent-context.json` to route those lanes through `3282ff3f` and [Current source status snapshot](Current-Source-Status-Snapshot), while leaving older `a9219d88` matrix rows as historical evidence.
-- Harvested the delegated old-BE FPS archaeology report without creating a duplicate report page: [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison) now records the intake, [Player AI caps](Player-AI-Caps-And-Role-Balance) carries the dynamic-cap guardrail, [Performance sweep](Performance-Opportunity-Sweep) has the sharpened easy-win bundle, and [Testing workflow](Testing-Debugging-And-Release-Workflow#full-server-fps-comparison-pack) owns the full-server FPS test pack. No gameplay source changed.
+- Harvested the delegated old-BE FPS archaeology report without creating a duplicate report page: [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison) now records the intake, [Player AI caps](Player-AI-Caps-And-Role-Balance) carries the dynamic-cap guardrail, [Performance sweep](Performance-Opportunity-Sweep) has the sharpened easy-win bundle, and [Testing workflow](Testing-Debugging-And-Release-Workflow#full-server-fps-opportunity-pack) owns the full-server FPS test pack. No gameplay source changed.
 
 ## 2026-06-05T23:20:00+02:00 - Codex - PR8 release-head evidence refresh
 
@@ -2801,4 +2801,10 @@ Key conclusions:
 - Claimed `release-head-machine-ledger-sync` to remove stale current-looking `a9219d88` wording after the `3282ff3f` release-head propagated-fix spot-check.
 - Updated live machine rows in [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) and [`agent-release-readiness.json`](agent-release-readiness.json) so future agents read `3282ff3f` as the current release-head evidence for hosted FPS, supply scan, client `Skill_Init` and paratrooper marker coverage.
 - Left older `a9219d88` records in [`agent-knowledge.jsonl`](agent-knowledge.jsonl) as append-only historical provenance, superseded by the newer `release-3282ff3f-propagated-fix-lane-spotcheck-2026-06-05` and this sync note.
+- No gameplay source files changed.
+
+## 2026-06-05T23:59:45+02:00 - Codex - old-vs-current FPS opportunity harvest
+- Claimed `old-vs-current-fps-opportunity-harvest` after the delegated scout completed `Old-BE-vs-Current-Wasp-FPS-Opportunity-Audit.md`.
+- Promoted only compact, actionable deltas: [Performance sweep](Performance-Opportunity-Sweep) owns the opportunity order, [Player AI caps](Player-AI-Caps-And-Role-Balance#dynamic-cap-proposal) owns the dynamic cap table, [Old WarfareBE comparison](Old-WarfareBE-Performance-Comparison#2026-06-05-opportunity-audit-appendix) owns the appendix, [Testing workflow](Testing-Debugging-And-Release-Workflow#full-server-fps-opportunity-pack) owns the 10/15/20/25/30 matrix, and [Feature status](Feature-Status-Register) marks the cap/scoreboard as owner-decision gameplay/performance work.
+- Updated [`agent-machine-index.json`](agent-machine-index.json) so future agents route FPS-cap prompts through the new test pack instead of older generic old-BE wording.
 - No gameplay source files changed.

@@ -103,6 +103,38 @@ For player-count validation, run no-HC and multi-HC cases before trusting public
 | LoadoutManager | From the repo root or `Tools/LoadoutManager`, optionally set `A2WASP_SKIP_ZIP=1`, then run `dotnet run`; inspect generated EASA/balance outputs, Takistan copy, `version.sqf`, and whether packaging was skipped or failed only because `7za` is missing. |
 | Full-server FPS comparison | Use [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison). Run current Wasp default, current Wasp cap `10`, role-aware cap, HC present/absent, matched view-distance and old BE baseline if runnable. Record commit/PBO hash, server.cfg/basic.cfg/profile values, server FPS, three client FPS samples, active towns, total AI split by player followers / AI teams / town groups / static gunners / supports, vehicle counts, HC ownership evidence, RPT errors and PerformanceAudit rows. |
 
+## Full-Server FPS Opportunity Pack
+
+Use this pack when testing the old-BE/current-Wasp FPS debate or any AI-cap proposal. It is based on `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-vs-current-fps-investigation\outputs\Old-BE-vs-Current-Wasp-FPS-Opportunity-Audit.md`.
+
+Record for every run:
+
+- mission commit or PBO hash, server hardware, Arma 2 OA version, mods, weather/time and route;
+- `server.cfg`, `basic.cfg`, profile and lobby parameters;
+- HC present/absent, HC owner/delegation evidence and fallback count;
+- view distance, active towns, static gunners, AI teams, player followers, support units, vehicles and empty/stale vehicles;
+- server FPS, at least three client FPS samples, RPT errors and PerformanceAudit rows.
+
+Scenario matrix:
+
+| Player count | Current default, no HC | Current default, HC | Cap pilot, no HC | Cap pilot, HC | Old BE baseline | Purpose |
+| ---: | --- | --- | --- | --- | --- | --- |
+| 10 | Cap 15 | Cap 15 + HC proof | Normal 12 or 10, Soldier 18/16 | Same + HC | Old BE default cap 12; optional cap 10 | Low-pop feel and classic CTI identity. |
+| 15 | Cap 15 | Cap 15 + HC | Normal 10, Soldier 16, commander +5 | Same + HC | Old BE default/cap 10 | First public pilot size. |
+| 20 | Cap 15 | Cap 15 + HC | Normal 9/10, Soldier 15/16, commander +5 | Same + HC | Old BE cap matched where possible | Separate player followers from town AI. |
+| 25 | Cap 15 | Cap 15 + HC | Normal 8, Soldier 14, commander +4 | Same + HC | Optional staged old baseline | Full-server pressure and town fight load. |
+| 30 | Cap 15 | Cap 15 + HC | Normal 7, Soldier 12, commander +3 | Same + HC | Optional synthetic/staged load | Full-server protection proof. |
+
+Required variants:
+
+| Variant | What changes | What it proves |
+| --- | --- | --- |
+| Matched view distance | Current at `1000`, `3500` and `6000`; old near `1000`/`4000` where possible. | Client render and AI-knowledge sensitivity versus mission entity load. |
+| Low-SV town group branch | Current group tables versus old-like low-SV group counts. | Whether towns are the next biggest load bucket after player AI. |
+| Static defense stress | Activate, capture and deactivate defense-heavy towns. | Whether static gunners/statics leak, spike or fail HC/deletion handoff. |
+| Long-session cleanup | 60-120 minutes with combat and vehicle churn. | Whether cleaners/restorers cost more than they save. |
+| Network/config capture | Keep network config fixed and logged. | Separates bandwidth/desync claims from simulation-FPS claims. |
+
 ## Propagated Fix Smoke Pack
 
 These checks cover the 2026-06-02 source fixes that have been propagated from Chernarus source to maintained Vanilla Takistan. They are planned gates, not completed runtime evidence, until an Arma 2 OA hosted/dedicated run records RPT snippets and observations.

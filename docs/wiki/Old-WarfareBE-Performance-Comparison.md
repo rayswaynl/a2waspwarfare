@@ -41,7 +41,18 @@ Promoted conclusions:
 - Cleaners/restorers and current-only integrations should be measured with RPT/audit evidence before disabling them, because they may prevent long-session object buildup.
 - Full-server FPS work should record AI by source: player followers, AI teams, town groups, static gunners, supports and empty vehicles.
 
-Canonical follow-ups from the report are routed to [Player AI caps](Player-AI-Caps-And-Role-Balance), [Performance opportunity sweep](Performance-Opportunity-Sweep) and the [Testing workflow](Testing-Debugging-And-Release-Workflow#full-server-fps-comparison-pack).
+Canonical follow-ups from the report are routed to [Player AI caps](Player-AI-Caps-And-Role-Balance), [Performance opportunity sweep](Performance-Opportunity-Sweep) and the [Testing workflow](Testing-Debugging-And-Release-Workflow#full-server-fps-opportunity-pack).
+
+## 2026-06-05 Opportunity Audit Appendix
+
+A follow-up `old-vs-current-fps-opportunity-scout` produced a sharper community-discussion report at `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-vs-current-fps-investigation\outputs\Old-BE-vs-Current-Wasp-FPS-Opportunity-Audit.md`.
+
+Use it as an appendix, not a duplicate wiki page. The promoted deltas are:
+
+- Old BE's strongest conservative lesson is still lower player-owned AI: default `12`, fallback `14`, fixed Soldier `+6` and no commander `+10`, compared with current Wasp default `15`, fallback `16`, Soldier `ceil(1.5 * cap)` and commander `+10`.
+- Current Wasp may be heavier in early town fights because old occupation groups start at `1` group below SV `10`, while current starts at `2`; old SV `10-20` starts at `2`, while current starts at `4`.
+- Current Wasp also has advantages old BE lacks: HC mode, global loops with sleeps/audit, aircraft-excluding town activation scans, resistance-only static defense gates and PerformanceAudit evidence surfaces.
+- Best test order: player-owned AI cap pilot, AI-source scoreboard, HC proof pack, low-SV town group branch, static lifecycle audit and matched view-distance runs before smaller network/cleanup refinements.
 
 ## Lag Taxonomy
 

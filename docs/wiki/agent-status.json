@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T23:59:00+02:00",
+  "generatedAt": "2026-06-05T23:59:45+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Synced live machine ledgers to current release head 3282ff3f after the propagated-fix spot-check; older a9219d88 records remain append-only history only.",
-      "nextExpectedOutput": "Continue source-backed wiki pruning/status upkeep; next stale-state pass should start from fresh rg/git evidence, not older a9219d88 machine rows."
+      "currentWork": "Harvested the old-vs-current FPS opportunity audit into compact performance, player-cap, old-BE, testing, feature-status and machine-index docs; no gameplay source changed.",
+      "nextExpectedOutput": "Continue source-backed wiki pruning/status upkeep; next FPS/code work should run the full-server FPS opportunity pack before changing AI caps or town/static budgets."
     },
     "Codex-2": {
       "status": "ready",
