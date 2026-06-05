@@ -4,6 +4,8 @@ Status: confirmed UI/resource risk, patch-ready. This page owns the exact source
 
 All source paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
+Branch check 2026-06-05: current source, `origin/master` and `miksuu/master` keep both collision groups in Chernarus and maintained Vanilla. `origin/release/2026-06-feature-bundle` changes Chernarus `RscMenu_EASA` to `idd = 24000`, leaving Chernarus Economy at `23000`, but release Vanilla still keeps both EASA and Economy on `23000`. The `RscOverlay` / `OptionsAvailable` title collision on `10200` is still present in both release roots. Current mission source has no hard-coded `findDisplay 23000` or `findDisplay 10200` caller in `Missions` / `Missions_Vanilla`, so this remains a maintenance/debug/future-control risk rather than a proven live lookup bug.
+
 ## What To Read
 
 - `description.ext`
@@ -32,6 +34,8 @@ Two dialog classes share `idd = 23000`:
 | --- | --- | --- |
 | `RscMenu_EASA` | `Rsc/Dialogs.hpp:3209-3211` | `Client/GUI/GUI_Menu_EASA.sqf` |
 | `RscMenu_Economy` | `Rsc/Dialogs.hpp:3287-3289` | `Client/GUI/GUI_Menu_Economy.sqf` |
+
+Release-branch caveat: `origin/release/2026-06-feature-bundle` already moves Chernarus EASA to `idd = 24000` (`Dialogs.hpp:2860-2863`), but maintained Vanilla on that branch still has EASA/Economy both on `23000` (`Dialogs.hpp:3294-3296`, `:3372-3374`). Treat the Chernarus release shape as a useful comparison point, not as proof the cleanup is complete.
 
 Two title resources share `idd = 10200`:
 
@@ -65,9 +69,9 @@ The title IDD collision is less likely to break creation because `cutRsc` addres
 Keep the first patch small:
 
 1. Assign a new unique `idd` to one of `RscMenu_EASA` or `RscMenu_Economy`.
-2. Audit all `findDisplay 23000` and hard-coded display assumptions before changing scripts.
+2. Re-run the current no-`findDisplay 23000/10200` grep before patching and keep it clean after the change.
 3. Keep existing `idc` values unless a specific control collision is proven after the dialog ID change.
-4. Assign a distinct `idd` to either `RscOverlay` or `OptionsAvailable`.
+4. Assign a distinct `idd` to either `RscOverlay` or `OptionsAvailable`; release Chernarus did not already solve this title-resource collision.
 5. Keep title IDD cleanup separate from title display-variable cleanup.
 6. Split title display handles so `OptionsAvailable`/RHUD/action icons and `EndOfGameStats` do not share `currentCutDisplay`. Either add separate helper scripts/keys or make the helper accept the key name explicitly.
 7. Before reviving or deleting stale resource classes, check script targets and assets as well as IDs. Current source example: `RscMenu_Upgrade` points at missing `Client/GUI/GUI_Menu_Upgrade.sqf` and missing `Client\Images\wf_*.paa` upgrade icons (`Dialogs.hpp:2425-2428`, `:2634-2821`).
@@ -77,7 +81,7 @@ Do not combine this with EASA balance generation or Economy authority changes. T
 
 ## Generated And Modded Copies
 
-The same collisions are expected in generated Vanilla Takistan and full modded mission copies. Patch source Chernarus first, propagate generated Vanilla with `Tools/LoadoutManager`, and treat modded copies as a separate maintenance decision.
+The same collisions are present in generated Vanilla Takistan and old modded mission copies. Patch source Chernarus first, propagate or manually sync maintained Vanilla with `Tools/LoadoutManager` as appropriate for the branch, and treat modded copies as a separate maintenance decision.
 
 ## Validation
 
@@ -86,7 +90,7 @@ Source-only:
 - `RscMenu_EASA` and `RscMenu_Economy` have distinct `idd` values.
 - `RscOverlay` and `OptionsAvailable` have distinct `idd` values.
 - `OptionsAvailable`/RHUD/action icons and `EndOfGameStats` no longer set/clear the same `uiNamespace` display key.
-- Any `findDisplay 23000` / `findDisplay 10200` references are updated or proven safe.
+- No `findDisplay 23000` / `findDisplay 10200` source references are introduced, or any deliberate hard-coded display lookup is updated to the new unique IDs and documented.
 
 Arma smoke:
 

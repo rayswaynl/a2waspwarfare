@@ -13,6 +13,12 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T18:09:00+02:00 - Codex - UI IDD collision branch scope
+
+- Claimed `ui-idd-collision-branch-scope` from the P1 dead-code/UI backlog after the row still invited another broad audit.
+- Source-checked current source, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle`: source/stable/upstream keep EASA/Economy on `idd=23000` and `RscOverlay`/`OptionsAvailable` on `idd=10200`; release Chernarus moves EASA to `24000`, but release Vanilla still duplicates `23000` and release titles still duplicate `10200`.
+- Mission source grep found no hard-coded `findDisplay 23000` or `findDisplay 10200` caller, so the owner pages now frame this as a UI parity cleanup or formal waiver plus smoke, not a proven live lookup bug. No gameplay source changed.
+
 ## 2026-06-05T17:42:00+02:00 - Codex - stale upgrade dialog branch-scope
 
 - Source-checked stale `RscMenu_Upgrade`: current docs/source, `origin/master` and `miksuu/master` keep the missing `Client/GUI/GUI_Menu_Upgrade.sqf` onLoad in source Chernarus plus maintained Vanilla. `origin/release/2026-06-feature-bundle` includes `460c0312` removing the stale Chernarus class, but release Vanilla still carries it.
