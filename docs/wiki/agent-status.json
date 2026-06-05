@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T12:45:00+02:00",
+  "generatedAt": "2026-06-05T13:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Validated archive/queue Continue Reading closeout; all content pages now expose a Continue Reading block.",
+      "currentWork": "Validated MkDocs primary-sidebar parity; sidebar-only page count is now 0 and MkDocs-only pages are the 9 imported Miksuu archives.",
       "nextExpectedOutput": "Continue future wiki backlog work from fresh source evidence, code-owner requests or new user direction."
     },
     "Codex-2": {
@@ -50,6 +50,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "mkdocs-primary-sidebar-parity",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Added PR cleanup lab, Headless client scaling, Dead/stale code register and Wiki pruning ledger to mkdocs.yml. Navigation inventory now reports 102 pages in both navs, 0 sidebar-only pages and 9 MkDocs-only imported archives. No gameplay source changed."
+    },
     {
       "lane": "archive-queue-continue-reading-closeout",
       "owner": "Codex",

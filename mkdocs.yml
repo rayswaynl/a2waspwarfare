@@ -37,6 +37,7 @@ nav:
       - Developer History And Upstream Lessons: Developer-History-And-Upstream-Lessons.md
       - Upstream Miksuu Commit Intel: Upstream-Miksuu-Commit-Intel.md
       - PR8 And Drone Upstream Lesson Match: PR8-And-Drone-Upstream-Lesson-Match.md
+      - PR Cleanup And Integration Lab: PR-Cleanup-And-Integration-Lab.md
   - Architecture:
       - Overview: Architecture-Overview.md
       - Mission Config Version Graph: Mission-Config-Version-Include-Graph.md
@@ -76,6 +77,7 @@ nav:
       - HC Upstream History And Lessons: HC-Upstream-History-And-Lessons.md
       - Perf Quick Wins Branch Audit: Perf-Quick-Wins-Branch-Audit.md
       - AI Runtime HC Loop Map: AI-Runtime-HC-Loop-Map.md
+      - Headless Client Scaling And Topology: Headless-Client-Scaling-And-Topology.md
       - AI Commander Autonomy Audit: AI-Commander-Autonomy-Audit.md
       - Headless Delegation And Failover: Headless-Delegation-And-Failover-Playbook.md
       - Quad AI Commander: Quad-AI-Commander.md
@@ -101,6 +103,7 @@ nav:
       - Testing Debugging And Release Workflow: Testing-Debugging-And-Release-Workflow.md
       - Server Ops Runbook: Server-Ops-Runbook.md
       - Player Stats Branch Audit: Player-Stats-Branch-Audit.md
+      - Dead/Stale Code Register: Dead-Code-And-Stale-Code-Register.md
       - Arma 2 OA Compatibility Audit: Arma-2-OA-Compatibility-Audit.md
       - Arma 2 OA Command Version Reference: Arma-2-OA-Command-Version-Reference.md
       - External Integrations: External-Integrations.md
@@ -127,4 +130,5 @@ nav:
       - Wiki Mirror Reconciliation Plan: Wiki-Mirror-Reconciliation-Plan.md
       - Navigation Inventory And Page Status: Navigation-Inventory-And-Page-Status.md
       - Wiki Quality Audit: Wiki-Quality-Audit.md
+      - Wiki Pruning And Relevance Ledger: Wiki-Pruning-And-Relevance-Ledger.md
       - Wiki Source Consistency Findings: Wiki-Source-Consistency-Findings.md

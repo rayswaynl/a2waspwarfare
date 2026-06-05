@@ -13,10 +13,10 @@ Snapshot generated from `docs/wiki/*.md`, `_Sidebar.md` and `mkdocs.yml` on 2026
 | Markdown pages | 140 | All `.md` pages in `docs/wiki`, including `_Sidebar.md` and `_Footer.md`. |
 | Content pages | 138 | Markdown pages excluding `_Sidebar.md` and `_Footer.md`. |
 | Sidebar pages | 102 | Pages linked from the GitHub wiki sidebar. |
-| MkDocs pages | 107 | Pages listed in `mkdocs.yml` navigation. |
-| Pages in both navs | 98 | Primary pages visible in both GitHub wiki and MkDocs. |
+| MkDocs pages | 111 | Pages listed in `mkdocs.yml` navigation. |
+| Pages in both navs | 102 | Primary pages visible in both GitHub wiki and MkDocs. |
 | Pages in neither nav | 27 | Usually owner pages, archives, old queues or narrow patch pages reached through canonical pages. |
-| Sidebar-only pages | 4 | Visible in GitHub wiki but not MkDocs. |
+| Sidebar-only pages | 0 | The 2026-06-05 MkDocs parity pass added the remaining primary sidebar pages to repo mirror navigation. |
 | MkDocs-only pages | 9 | All imported Miksuu archive pages. |
 | Pages missing `Continue Reading` | 0 | All content pages now expose either owner-page or archive/queue-safe routing. |
 | Imported Miksuu archive pages | 9 | Historical provenance; route through [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import). |
@@ -36,14 +36,14 @@ Snapshot generated from `docs/wiki/*.md`, `_Sidebar.md` and `mkdocs.yml` on 2026
 
 ### Sidebar-Only Pages
 
-These pages are visible in the GitHub wiki sidebar but not in MkDocs navigation.
+The sidebar-only primary-page drift is closed as of the 2026-06-05 MkDocs parity pass.
 
 | Page | Suggested status | Next action |
 | --- | --- | --- |
-| [Dead/stale code register](Dead-Code-And-Stale-Code-Register) | `primary` | Add to MkDocs quality/operations nav or intentionally mark MkDocs as slimmer than the wiki. |
-| [Headless client scaling and topology](Headless-Client-Scaling-And-Topology) | `primary` | Add under gameplay/AI in MkDocs or route only through AI/HC pages. |
-| [PR cleanup and integration lab](PR-Cleanup-And-Integration-Lab) | `primary` while PR triage is active | Add to MkDocs status/coordination nav while PR cleanup is live. |
-| [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) | `primary` for docs owners | Add to MkDocs quality/coordination nav or keep GitHub-wiki-only for maintenance. |
+| [Dead/stale code register](Dead-Code-And-Stale-Code-Register) | `primary` | Added to MkDocs UI/tooling quality nav on 2026-06-05. |
+| [Headless client scaling and topology](Headless-Client-Scaling-And-Topology) | `primary` | Added to MkDocs Gameplay AI/HC nav on 2026-06-05. |
+| [PR cleanup and integration lab](PR-Cleanup-And-Integration-Lab) | `primary` while PR triage is active | Added to MkDocs Community & Dev nav on 2026-06-05. |
+| [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) | `primary` for docs owners | Added to MkDocs Agent Coordination nav on 2026-06-05. |
 
 ### MkDocs-Only Pages
 

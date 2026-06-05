@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-05T12:55:00+02:00 - Codex - MkDocs primary sidebar parity
+
+- Claimed `mkdocs-primary-sidebar-parity` from [Navigation inventory and page status](Navigation-Inventory-And-Page-Status) after the archive/queue closeout left sidebar/MkDocs drift as the next navigation cleanup.
+- Added the four remaining primary sidebar-only pages to `mkdocs.yml`: [PR cleanup lab](PR-Cleanup-And-Integration-Lab), [Headless client scaling and topology](Headless-Client-Scaling-And-Topology), [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger).
+- Updated [Home](Home) to say all content pages now have `Continue Reading`, and updated [Navigation inventory and page status](Navigation-Inventory-And-Page-Status) to show `111` MkDocs pages, `102` pages in both navs and `0` sidebar-only pages.
+- No gameplay source changed.
+
 ## 2026-06-05T12:35:00+02:00 - Codex - archive/queue Continue Reading closeout
 
 - Claimed `archive-queue-continue-reading-closeout` after the owner-page polish pass left only archive/queue pages without normalized `## Continue Reading` blocks.

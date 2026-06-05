@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-05T12:45:00+02:00",
+    "generatedAt":  "2026-06-05T13:05:00+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,28 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "mkdocs-primary-sidebar-parity",
+                             "owner":  "Codex",
+                             "status":  "published-validated",
+                             "sourceScope":  [
+                                                 "mkdocs.yml",
+                                                 "docs/wiki/Home.md",
+                                                 "docs/wiki/Navigation-Inventory-And-Page-Status.md",
+                                                 "docs/wiki/Wiki-Pruning-And-Relevance-Ledger.md",
+                                                 "docs/wiki/Progress-Dashboard.md",
+                                                 "docs/wiki/agent-status.json",
+                                                 "docs/wiki/agent-collaboration.json",
+                                                 "docs/wiki/agent-events.jsonl"
+                                             ],
+                             "outputs":  [
+                                             "Add primary sidebar-only pages to MkDocs navigation.",
+                                             "Update navigation inventory counts and Home wording.",
+                                             "Reduce primary sidebar-only drift to 0.",
+                                             "No gameplay source changed."
+                                         ],
+                             "handoff":  "This docs-only nav parity batch is validated. Keep Miksuu archive pages grouped in MkDocs Community & Dev rather than re-adding each to the sidebar."
+                         },
                          {
                              "lane":  "archive-queue-continue-reading-closeout",
                              "owner":  "Codex",

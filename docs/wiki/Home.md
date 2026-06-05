@@ -68,7 +68,7 @@ Use these when you want to read the wiki like a connected handbook instead of ju
 | Coordinate Codex and Claude | [Progress dashboard](Progress-Dashboard) -> [Bottleneck removal queue](Bottleneck-Removal-Queue) -> [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) -> [Coordination board](Coordination-Board) -> [Agent collaboration protocol](Agent-Collaboration-Protocol) -> [Claude loop goal](Claude-Loop-Goal) -> [Agent worklog](Agent-Worklog) |
 | Bootstrap an LLM agent | [LLM agent entry pack](LLM-Agent-Entry-Pack) -> [`llms.txt`](llms.txt) -> [`agent-context.json`](agent-context.json) -> [Feature status](Feature-Status-Register) -> [Progress dashboard](Progress-Dashboard) |
 
-Most primary handbook pages include a **Continue Reading** block with previous and next links. Known gaps and archive-page exceptions are tracked in [Navigation inventory and page status](Navigation-Inventory-And-Page-Status).
+All content pages include a **Continue Reading** block. Owner pages use previous/next reading paths; archive and queue pages use caveated support routes tracked in [Navigation inventory and page status](Navigation-Inventory-And-Page-Status).
 
 
 ## Canonical Entry Path for Humans and Agents
