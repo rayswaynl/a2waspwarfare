@@ -45,7 +45,7 @@ When an old entry disagrees with a newer source-checked page or supersession rec
 
 - Claimed `dashboard-latest-batch-retrim` after [Progress dashboard](Progress-Dashboard) Latest Batch kept regrowing past its five-row compact-current-state convention.
 - Trimmed the table back to the newest five published rows, matching the page's compact-current-state convention.
-- Preserved older visible-parameter, auto-wall, RHUD/endgame and buy-menu price/key batches in this worklog, [`agent-events.jsonl`](agent-events.jsonl), owner pages and git history. No gameplay source changed.
+- Preserved older visible-parameter, salvage, auto-wall, RHUD/endgame and buy-menu price/key batches in this worklog, [`agent-events.jsonl`](agent-events.jsonl), owner pages and git history. No gameplay source changed.
 
 ## 2026-06-05T23:59:30+02:00 - Codex-helper - Camp count helper fallback branch route
 
