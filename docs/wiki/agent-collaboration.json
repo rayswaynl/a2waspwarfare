@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-06T01:15:00+02:00",
+  "generatedAt": "2026-06-06T01:35:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -312,6 +312,30 @@
       "handoff": "Closed as docs-published. Future code owner should port or recreate floor-to-zero in source Chernarus plus maintained Vanilla, validate west/east temp-channel side/amount shape, and keep server-owned spend acceptance as a separate authority lane."
     },
     {
+      "lane": "side-supply-reason-string-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/AttackWave.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "docs/wiki/Economy-Authority-First-Cut.md",
+        "docs/wiki/Economy-Towns-And-Supply.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Branch-checked the side-supply reason-string off-by-one without changing gameplay source.",
+        "Routed the diagnostics cleanup through Economy authority, Economy/towns/supply, Feature Status, Source Fix Propagation Queue, pruning ledger and machine records."
+      ],
+      "handoff": "Closed as docs-published. Future code owner should parse _reason at count _this > 2 and _includeStagnation at count _this > 3 in source Chernarus plus maintained Vanilla, then smoke AttackWave and supply-completion reason logging while keeping authority validation separate."
+    },
+    {
       "lane": "vote-help-ui-edge-branch-route",
       "owner": "Codex-helper",
       "status": "published-validated",
@@ -569,6 +593,7 @@
     "wasp-marker-wait-branch-route",
     "clickabletext-soundpush-branch-route",
     "side-supply-clamp-branch-route",
+    "side-supply-reason-string-branch-route",
     "empty-supply-truck-cleanup-branch-route",
     "vote-help-ui-edge-branch-route",
     "requestspecial-upgrade-sync-branch-route",
@@ -635,6 +660,12 @@
       "suggestedOwner": "Codex-helper",
       "status": "published-validated",
       "summary": "Branch-checked side-supply clamp-first across current source, maintained Vanilla, stable, upstream, perf and release, then updated economy/status docs without gameplay source changes."
+    },
+    {
+      "lane": "side-supply-reason-string-branch-route",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "Branch-checked the side-supply reason-string off-by-one across current source, maintained Vanilla, stable, upstream, perf and release, then updated economy/status docs without gameplay source changes."
     },
     {
       "lane": "vote-help-ui-edge-branch-route",

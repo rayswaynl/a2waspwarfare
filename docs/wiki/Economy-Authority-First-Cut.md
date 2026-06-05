@@ -90,6 +90,19 @@ Small auditability bug: `Common_ChangeSideSupply.sqf:8-14` reads `_includeStagna
 
 The live source of truth for side supply is the side-keyed mission variable `wfbe_supply_%1` read by `Common_GetSideSupply.sqf`. The generic `wfbe_supply` value initialized in `Client/Init/Init_Client.sqf:371` is a legacy alias/cache and should not be used as the target for new authority work.
 
+## Side-Supply Reason String Branch Matrix
+
+This matrix is about logging/audit provenance only. It should travel with the clamp/validation patch because the same helper is being edited, but it does not close direct-channel authority or spend acceptance.
+
+| Scope | Reason parsing shape | Preserved reason callers | Development meaning |
+| --- | --- | --- | --- |
+| Current source Chernarus | `Common_ChangeSideSupply.sqf:8-14` reads both `_includeStagnation` and `_reason` only when `count _this > 3`; `:28` publishes the selected reason through `wfbe_supply_temp_<side>`. | `Server/PVFunctions/AttackWave.sqf:40` passes three arguments and loses `"Heavy attack mode activated."`; `Server/Module/supplyMission/supplyMissionCompleted.sqf:26` passes four arguments and keeps its formatted reason. | Patch-ready low-risk diagnostics cleanup. Parse `_reason` at `count _this > 2` and `_includeStagnation` at `count _this > 3`, while retaining the default error text for malformed/no-reason payloads. |
+| Maintained Vanilla Takistan | Same helper guard and same AttackWave/supply-completion caller shape in the maintained root. | Same three-argument AttackWave reason drop; same four-argument supply mission reason preservation. | Propagate with the Chernarus helper edit; do not call the reason fix source-complete if Vanilla is still old. |
+| Stable `origin/master` `2cdf5fb8` | Same `count _this > 3` reason guard in both maintained roots. | Same AttackWave three-argument drop and supply-completion four-argument preservation. | Stable remains source-unpatched for audit provenance. |
+| Miksuu upstream `f532f706` | Same `count _this > 3` reason guard in both maintained roots. | Same AttackWave/supply-completion contrast. | No upstream rescue candidate in the checked upstream head. |
+| `origin/perf/quick-wins` `0076040f` | Same reason guard in both maintained roots; the branch's side-supply arithmetic work does not alter reason parsing. | Same AttackWave/supply-completion contrast. | The perf branch can inform arithmetic floor work, but it does not fix this logging defect. |
+| Release `fb3084c2` | Same helper guard and `AttackWave.sqf:40` shape in both maintained roots; supply-completion line drifts to `supplyMissionCompleted.sqf:40` in the release branch. | Same three-argument AttackWave reason drop; four-argument supply completion still preserves its reason. | Release does not rescue the reason-string lane. Keep line-drift notes when cherry-picking docs or patches. |
+
 ## Side-Supply Branch Matrix
 
 This matrix separates the small DR-22 arithmetic clamp from the larger DR-44 direct-channel authority problem. It is docs-only evidence; no current source patch is implied.

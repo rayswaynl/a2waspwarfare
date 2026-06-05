@@ -82,7 +82,7 @@ The economy authority class is now fully characterized by source review. Every c
 
 This should be treated as one owner decision, not separate patch tracks. Either introduce a server-side funds/effects ledger and validate each spend handler before applying effects, or explicitly accept the legacy client-trusted model and lean on BattlEye script filters for public-server hardening. DR-41 adds an important architecture rule: the forgery class has two surfaces, registered PVF handlers and direct `publicVariableServer` channels, so a PVF dispatcher fix alone does not harden direct economy/support channels. Small parity fixes, such as adding affordability guards to service rearm/refuel, are useful correctness work but do not close the architectural authority gap.
 
-Side-supply logging caveat: `Common_ChangeSideSupply.sqf:8-13` only copies the human-readable `_reason` when `count _this > 3`. Four-argument callers such as `supplyMissionCompleted.sqf:26` preserve their reason, but 3-argument callers such as `AttackWave.sqf:40` fall back to the default error string in the published `wfbe_supply_temp_<side>` payload. Patch this as a logging/diagnostics cleanup alongside side-supply authority work.
+Side-supply logging caveat: `Common_ChangeSideSupply.sqf:8-13` only copies the human-readable `_reason` when `count _this > 3`. Use the branch-checked [Economy authority matrix](Economy-Authority-First-Cut#side-supply-reason-string-branch-matrix): current source/Vanilla, stable, upstream, perf and release all drop the 3-argument `AttackWave.sqf:40` reason while preserving 4-argument supply-completion reasons. Patch this as diagnostics cleanup alongside side-supply clamp/validation work, not as authority closure.
 
 ## Supply-Related Partial Work
 

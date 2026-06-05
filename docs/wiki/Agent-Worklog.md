@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-06T01:35:00+02:00 - Codex helper - Side-supply reason-string branch route
+
+- Claimed `side-supply-reason-string-branch-route` from the side-supply diagnostics backlog.
+- Source-checked current source Chernarus, maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706` (local ref after a fetch reset), `origin/perf/quick-wins` `0076040f` and current release `fb3084c2`.
+- Result: every checked maintained root/branch keeps `Common_ChangeSideSupply.sqf:8-14` reading `_reason` only when `count _this > 3`, so three-argument `Server/PVFunctions/AttackWave.sqf:40` drops its audit reason while four-argument `supplyMissionCompleted.sqf` preserves the formatted reason.
+- Updated [Economy authority first cut](Economy-Authority-First-Cut#side-supply-reason-string-branch-matrix), [Economy, towns and supply](Economy-Towns-And-Supply), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
+
 ## 2026-06-06T01:15:00+02:00 - Codex helper - Resource income payout/display branch route
 
 - Claimed `resource-income-payout-branch-route` from the economy correctness backlog.
