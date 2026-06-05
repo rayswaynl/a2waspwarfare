@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T22:00:00+02:00 - Codex - Commander reassignment branch route
+
+- Claimed `commander-reassignment-branch-route` from the patch-ready commander/PVF backlog.
+- Source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle` for `GUI_Commander_VoteMenu.sqf`, `RequestNewCommander.sqf` and `Server_AssignNewCommander.sqf`.
+- Result: current docs/source and maintained Vanilla still carry the DR-15 helper unpacking bug (`_side = _this`). Stable, Miksuu upstream and release already fix helper unpacking in both maintained roots, but visible-name UI selection and duplicate `new-commander-assigned` senders remain everywhere checked.
+- Refreshed [Commander reassignment call shape](Commander-Reassignment-Call-Shape) as the branch/root matrix and condensed [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook), [Feature status](Feature-Status-Register) and [Source fix propagation queue](Source-Fix-Propagation-Queue). No gameplay source changed.
+
 ## 2026-06-05T21:35:00+02:00 - Codex - Factory queue token branch route
 
 - Claimed `factory-queue-token-branch-route` from the patch-ready factory queue cleanup backlog.

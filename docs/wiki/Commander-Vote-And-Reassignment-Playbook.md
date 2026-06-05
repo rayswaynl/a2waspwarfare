@@ -35,8 +35,8 @@ All source refs below are from the Chernarus source mission unless the path star
 | Commander assign UI | `Client/GUI/GUI_Commander_VoteMenu.sqf:8-14,33-46` stores row team indexes but resolves the target by visible leader-name text before sending `RequestNewCommander`. | Duplicate or changed names can point the reassignment at the wrong team. |
 | Vote restart PVF | `Server/PVFunctions/RequestCommanderVote.sqf:3-22` trusts payload side/name, resets votes, seeds the current commander vote and spawns `VoteForCommander`. | Useful recovery path, but requester identity hardening is separate from vote resolution. |
 | Manual reassign PVF | `Server/PVFunctions/RequestNewCommander.sqf:3-14` reads side/candidate, writes `wfbe_commander`, spawns `[_side, _assigned_commander]` into the helper and sends `new-commander-assigned`. | The caller already mutates commander state before the helper runs. |
-| Assign helper | `Server/Functions/Server_AssignNewCommander.sqf:3-9` sets `_side = _this`, `_commander = _this select 1`, then sends another `new-commander-assigned`. | DR-15: helper side lookup receives an array; after fixing it, duplicate notification ownership must be decided. |
-| Vanilla parity | `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_VoteForCommander.sqf:24-29,43` and `Server/Functions/Server_AssignNewCommander.sqf:3-5,9`. | Maintained Vanilla carries the same vote and reassignment defects. |
+| Assign helper | Current docs/source `Server/Functions/Server_AssignNewCommander.sqf:3-9` sets `_side = _this`, `_commander = _this select 1`, then sends another `new-commander-assigned`. Stable/upstream/release already use `_this select 0` / `_this select 1` but keep the second sender. | DR-15 is source-unpatched on this docs branch, partially fixed upstream/release. After fixing/porting it, duplicate notification ownership must still be decided. |
+| Vanilla parity | Current maintained Vanilla carries the same vote and reassignment defects as current source; stable/upstream/release Vanilla have the helper unpacking fix but still keep name-text selection and duplicate notification sender shape. | Use [Commander reassignment call shape](Commander-Reassignment-Call-Shape) for branch status before claiming this lane fixed. |
 
 ## Current Vote Behavior
 
@@ -64,7 +64,7 @@ Manual reassignment is a separate flow from the vote result, but the fixes are a
 3. The helper reads `_side = _this`, so side-logic routing receives an array instead of a side.
 4. Both caller and helper contain `new-commander-assigned` sends, but the helper send is partly blocked today by the bad side argument.
 
-Patch the DR-15 helper call shape with [Commander reassignment call shape](Commander-Reassignment-Call-Shape). When that helper starts working, choose exactly one notification owner or clients can receive duplicate commander messages.
+Patch or port the DR-15 helper call shape with [Commander reassignment call shape](Commander-Reassignment-Call-Shape). Stable/upstream/release already fixed the helper unpacking, but still need one notification owner or clients can receive duplicate commander messages.
 
 Patch the UI identity edge in the same implementation branch if possible. `GUI_Commander_VoteMenu.sqf` should use the row value/team index already stored in the listbox instead of comparing visible leader names.
 

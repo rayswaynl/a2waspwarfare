@@ -42,6 +42,17 @@ _commander = _this select 1;
 
 `Common_GetSideLogic.sqf` expects a real `SIDE` value and otherwise falls back to `objNull`. Passing the whole array as `_side` means helper-side side-logic work and notification routing use an invalid side value.
 
+## Current Branch Matrix
+
+| Root / branch | Helper call shape | Remaining commander reassignment risks | Practical meaning |
+| --- | --- | --- | --- |
+| Current docs/source Chernarus | Still broken: `Server_AssignNewCommander.sqf:3-5` uses `_side = _this` and `_commander = _this select 1`. | Vote menu resolves by visible leader name (`GUI_Commander_VoteMenu.sqf:33-46`); `RequestNewCommander.sqf:14` and helper `:9` both send `new-commander-assigned`. | Patch-ready and source-unpatched. |
+| Maintained Vanilla Takistan | Same broken helper shape and UI/name selector as Chernarus. | Same duplicate notification-owner risk. | Must be propagated deliberately; a Chernarus-only fix is not enough. |
+| Stable `origin/master` / Miksuu upstream | Helper unpacking is fixed in both maintained roots: `_side = _this select 0`, `_commander = _this select 1` (`Server_AssignNewCommander.sqf:4-5`). | UI still selects by leader-name text, and both `RequestNewCommander.sqf:14` plus helper `:10` still send `new-commander-assigned`. | Upstream fixes the DR-15 call-shape bug, but not the duplicate-message or UI identity cleanup. |
+| `origin/release/2026-06-feature-bundle` | Same fixed helper unpacking as stable/upstream in Chernarus and Vanilla. | UI name selector and duplicate notification owner remain. | Treat release as partial commander reassignment cleanup, not a complete reassignment/authority fix. |
+
+This means future code work can either port the fixed helper shape from stable/release or implement it directly, but it still needs one notification owner and a row-value/team-identity selector before the reassignment path is clean.
+
 ## Evidence
 
 | File | Evidence |
@@ -99,6 +110,15 @@ Arma smoke:
 - The previous AI commander, if any, is stopped/reset for the intended side.
 - Clients receive one reassignment message, not zero and not two.
 - Commander vote fallback still works after reassignment.
+
+## Agent Index Facts
+
+```json
+[
+  {"fact":"commander_reassignment_current_source_unpatched","source":"Server_AssignNewCommander.sqf:3-5; RequestNewCommander.sqf:13-14; GUI_Commander_VoteMenu.sqf:33-46","summary":"Current source Chernarus and maintained Vanilla still have the bad helper side argument, duplicate notification senders and visible-name commander selection."},
+  {"fact":"commander_reassignment_partial_branch_fix","source":"origin/master and origin/release/2026-06-feature-bundle Server_AssignNewCommander.sqf:4-5,10","summary":"Stable/upstream/release fix the helper payload unpacking, but the UI still resolves by visible leader-name text and both caller/helper notification senders remain."}
+]
+```
 
 ## Continue Reading
 
