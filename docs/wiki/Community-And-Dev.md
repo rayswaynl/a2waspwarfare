@@ -109,6 +109,8 @@ Archive caveat: imported upstream wiki history includes at least one very short-
 
 Imported from `Miksuu/a2waspwarfare.wiki` at commit `45ef3da367d65e6487de488bbe3b16a8a8b21ba3`.
 
+The imported pages are intentionally treated as an archive set. They remain reachable through [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import), but the sidebar exposes the archive index and source-check queues rather than every historical page. That keeps current development routes lighter while preserving the full upstream record.
+
 | Archive page | Best use |
 | --- | --- |
 | [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) | Import manifest, provenance, caveats and historical-only pages. |

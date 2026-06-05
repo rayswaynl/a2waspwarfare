@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `miksuu-archive-sidebar-pruning` | Published / validated / pushed | Codex demoted individual Miksuu archive pages from sidebar prominence while preserving every imported page through [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) and [Community & Dev](Community-And-Dev). This keeps historical/community provenance reachable without making archive pages look like current implementation docs. Two read-only sidecar explorers returned next-batch leads for overlapping atlases and Feature Status residue. Validation passed. No gameplay source changed. |
 | `dashboard-pruning-ledger-cleanup` | Published / validated | Follow-up pruning pass compacted this dashboard's Latest Batch back toward current-state use, removed duplicate Home navigation, and reconciled repeated pruning-ledger rows for [Subagent discovery swarm](Subagent-Discovery-Swarm). Validation passed. No gameplay source changed. |
 | `research-catchup-synthesis-default-supported` | Published / validated / pushed | Condensed [External research reports](External-Research-Reports) into a report-intake absorption matrix, added a current routing index to [Deep-review findings](Deep-Review-Findings), and recorded catch-up decisions in [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger). Recent scout and Miksuu/upstream material is marked as absorbed, archive/provenance, or narrow future micro-scout work instead of duplicate prose. No gameplay source changed. |
 | `relevance-pruning-and-archive-default-supported` | Published / validated / pushed | Condensed [Subagent discovery swarm](Subagent-Discovery-Swarm) from a long closed-wave chronology into a compact gateway. The page now preserves current state, canonical destinations, harvest snapshot, non-evidence rules and narrow relaunch notes while routing raw chronology to [Agent worklog](Agent-Worklog), [`agent-events.jsonl`](agent-events.jsonl) and owner pages. No gameplay source changed. |
@@ -40,10 +41,11 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` + `research-catchup-synthesis-default-supported` + `relevance-pruning-and-archive-default-supported` | First debloat/catch-up batch is published; current pass is compacting status/navigation residue without reopening already-harvested scout history. |
+| Codex | Active | `documentation-finisher-loop` + `miksuu-archive-sidebar-pruning` | Miksuu archive/sidebar pruning is published; next source-check target is Core/Gameplay gateway pruning or Feature Status residue. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Coverage Ledger navigation is wired. Claude can self-select the next bounded source-backed review from the ledger or hardening backlog. |
 | Supported docs agents | Active | `research-catchup-synthesis-default-supported`, `relevance-pruning-and-archive-default-supported` | Two account-default supported high-reasoning helper chats are running catch-up synthesis and relevance pruning. The earlier named-model starts are treated as failed/non-evidence. |
+| Read-only pruning scouts | Returned / leads captured | `overlapping-atlas-bloat-scout`, `feature-status-residue-scout` | Fermat recommends Core + Gameplay gateway pruning first; Herschel recommends Feature Status residue cleanup around branch rows, scout harvest history, supply handler status and duplicate AIBuyUnit/side-supply entries. Reports are leads until Codex source-checks and promotes them. |
 | Sub-agents | Returned / closed | `navigation-parity-and-scout-wave-2026-06-04` | Supports, UI, tooling and AI scouts returned; most findings confirmed existing owner pages. Economy scout was closed without output and is not evidence. |
 | Shared docs | Live | GitHub wiki + docs mirror | Wiki and mirror should stay in parity after scoped validation; use event logs and git history for commit IDs. |
 
@@ -69,6 +71,9 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
 | `documentation-finisher-loop` | Codex | Active / ongoing | Keep the wiki current from source evidence, update machine files on visible status changes, and keep this dashboard compact. |
+| `miksuu-archive-sidebar-pruning` | Codex | Published / validated / pushed | Preserve imported Miksuu archive pages but route sidebar users through the archive index, community context and source-check pages. |
+| `overlapping-atlas-bloat-scout` | Codex sub-agent Fermat | Returned / lead captured | Recommends `Core-Systems-Index.md` plus `Gameplay-Systems-Atlas.md` gateway pruning as the safest high-payoff P2 batch, with UI/runtime quick-ref pruning second. |
+| `feature-status-residue-scout` | Codex sub-agent Herschel | Returned / lead captured | Recommends source-checking stale/duplicate Feature Status sections: branch rows, scout harvest history, supply handler status, side-supply reason-drop duplication, latent `AIBuyUnit` wording and the trailing deep-audit addendum. |
 | `research-catchup-synthesis-default-supported` | Codex / supported catch-up helper | Active / first batch published | Absorb recent research/scout/upstream material into canonical pages, marking repeated report claims as absorbed instead of expanding holding pages. |
 | `relevance-pruning-and-archive-default-supported` | Codex / supported pruning helper | Active / first batch published | Score pages for keep/condense/merge/archive and patch safe bloat reductions with evidence preserved. |
 | `autonomous-claude-research` | Claude | Autonomous-ready | Self-select the next bounded source-backed review from [Codebase coverage ledger](Codebase-Coverage-Ledger) when Claude is active. |

@@ -4,6 +4,8 @@ This page records the import of the upstream `Miksuu/a2waspwarfare` GitHub wiki 
 
 The import is intentionally namespaced under `Miksuu-Wiki-Archive-*` pages so current docs can remain canonical while still preserving every upstream page at HEAD.
 
+Navigation policy: archive pages are preserved and linked from the tables below, but they are not all first-level sidebar entries. Use [Community & Dev](Community-And-Dev) for cultural context, this page as the archive index, and [Upstream changelog feature leads](Upstream-Changelog-Feature-Leads) for source-checkable follow-up work.
+
 ## Snapshot
 
 | Field | Value |
@@ -69,6 +71,7 @@ Do not rewrite or mirror external media without a separate asset-preservation pa
 2. Promote a claim only after checking current source, branch history or the existing source-backed docs.
 3. Preserve contributor names and cultural context, but avoid converting Discord-era wording into current-role claims.
 4. When an upstream page conflicts with current source-backed docs, keep both: archive the upstream claim and route implementation work to the current canonical page.
+5. Do not re-add every archive page to the sidebar; this page is the click-through index for preserved upstream material.
 
 ## Continue Reading
 

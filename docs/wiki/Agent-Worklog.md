@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-05T07:28:19+02:00 - Codex - Miksuu archive sidebar pruning
+
+- Continued the pruning ledger goal and picked the P1 imported-Miksuu archive prominence item.
+- Finding: [Community & Dev](Community-And-Dev) and [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import) already preserve the full upstream archive and caveats, but [`_Sidebar.md`](_Sidebar) still listed every individual `Miksuu-Wiki-Archive-*` page as if each were a current navigation destination.
+- Patched sidebar prominence only: kept the archive pages intact, kept the archive index/current source-check pages in the sidebar, and documented that individual archive pages should be reached through the import/community index. No gameplay source files changed.
+- Spawned two read-only sidecar explorers for the next pruning targets. Fermat returned a P2 overlap map recommending Core + Gameplay gateway pruning first and UI/runtime quick-ref pruning second. Herschel returned Feature Status residue leads around branch rows, scout harvest history, supply handler status, side-supply reason-drop duplication, latent `AIBuyUnit` wording and the trailing deep-audit addendum. Their output is a lead until Codex source-checks and promotes it.
+
 ## 2026-06-05T00:40:26+02:00 - Codex - audit findings queue catch-up status
 
 - Resumed `research-catchup-synthesis-default-supported` after the pruning/catch-up publish gate cleared at docs `32945217` / wiki `4b19f5c`.

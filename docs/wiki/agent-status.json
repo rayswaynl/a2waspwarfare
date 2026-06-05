@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T00:38:19+02:00",
+  "generatedAt": "2026-06-05T07:28:19+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,9 +20,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "documentation-finisher-loop / research-catchup-synthesis-default-supported / relevance-pruning-and-archive-default-supported",
-      "currentWork": "Published the dashboard/pruning-ledger cleanup after the first catch-up/debloat batch: compact dashboard chronology, duplicate Home navigation removed and repeated pruning-ledger rows reconciled.",
-      "nextExpectedOutput": "Continue scoped relevance pruning from the pruning ledger without reopening already-harvested scout history."
+      "currentLane": "documentation-finisher-loop / miksuu-archive-sidebar-pruning",
+      "currentWork": "Validated the Miksuu archive/sidebar pruning batch: individual archive pages stay intact through the archive/community indexes but are no longer all first-level sidebar entries. Two read-only pruning scouts returned next-batch leads.",
+      "nextExpectedOutput": "Source-check sidecar scout output for Core/Gameplay gateway pruning and Feature Status residue."
     },
     "Codex-2": {
       "status": "ready",
@@ -50,6 +50,24 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "miksuu-archive-sidebar-pruning",
+      "owner": "Codex",
+      "status": "published-validated-pushed",
+      "output": "Individual Miksuu-Wiki-Archive pages are removed from sidebar prominence while staying intact through the Miksuu archive index and Community & Dev archive table. Two read-only sidecar scouts returned leads for overlapping atlas bloat and Feature Status residue. Validation passed: docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check with line-ending warnings only and SHA256 mirror parity. No gameplay source changed."
+    },
+    {
+      "lane": "overlapping-atlas-bloat-scout",
+      "owner": "Codex sub-agent Fermat",
+      "status": "returned-lead-needs-source-check",
+      "output": "Read-only scout recommends Core-Systems-Index plus Gameplay-Systems-Atlas gateway pruning as the highest-payoff P2 batch; UI/runtime quick-ref pruning is a second batch. Treat as a lead until Codex source-checks and patches."
+    },
+    {
+      "lane": "feature-status-residue-scout",
+      "owner": "Codex sub-agent Herschel",
+      "status": "returned-lead-needs-source-check",
+      "output": "Read-only scout recommends source-checking stale/duplicate Feature Status rows around branch reviews, scout harvest history, supply handler status, side-supply reason-drop duplication, latent AIBuyUnit wording and the trailing deep-audit addendum."
+    },
     {
       "lane": "dashboard-pruning-ledger-cleanup",
       "owner": "Codex",

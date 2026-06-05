@@ -1,6 +1,6 @@
 ﻿{
     "schema":  "a2waspwarfare-agent-collaboration-v1",
-    "generatedAt":  "2026-06-05T00:28:42+02:00",
+    "generatedAt":  "2026-06-05T07:28:19+02:00",
     "purpose":  "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
     "sourceOfTruth":  {
                           "progressDashboard":  "Progress-Dashboard.md",
@@ -21,6 +21,30 @@
                    "operatingMode":  "Claude-Loop-Goal.md"
                },
     "activeClaims":  [
+                         {
+                             "lane":  "miksuu-archive-sidebar-pruning",
+                             "owner":  "Codex",
+                             "status":  "published-validated-pushed",
+                             "sourceScope":  [
+                                                 "docs/wiki/_Sidebar.md",
+                                                 "docs/wiki/Miksuu-Upstream-Wiki-Import.md",
+                                                 "docs/wiki/Community-And-Dev.md",
+                                                 "docs/wiki/Wiki-Pruning-And-Relevance-Ledger.md",
+                                                 "docs/wiki/Progress-Dashboard.md",
+                                                 "docs/wiki/Agent-Worklog.md",
+                                                 "docs/wiki/agent-status.json",
+                                                 "docs/wiki/agent-collaboration.json",
+                                                 "docs/wiki/agent-events.jsonl"
+                                             ],
+                             "outputs":  [
+                                             "Demote individual Miksuu-Wiki-Archive pages from sidebar prominence.",
+                                             "Preserve every imported archive page through Miksuu-Upstream-Wiki-Import and Community-And-Dev.",
+                                             "Record the decision in pruning/status/worklog/machine files.",
+                                             "Two read-only sub-agents returned next-batch pruning leads for Core/Gameplay gateway pruning and Feature Status residue cleanup.",
+                                             "Validation passed; docs/wiki and wiki checkout are pushed."
+                                         ],
+                             "handoff":  "Do not re-add every archive page to the sidebar. Use Miksuu-Upstream-Wiki-Import as the archive index and Community-And-Dev for cultural context."
+                         },
                          {
                              "lane":  "research-catchup-synthesis-default-supported",
                              "owner":  "Codex",
