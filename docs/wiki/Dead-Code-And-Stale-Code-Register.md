@@ -318,14 +318,14 @@ These are source-interpreted findings from the dialog/resource scan. The raw sca
 | ID | Classification | Evidence | Action |
 | --- | --- | --- | --- |
 | `ui-duplicate-idd-collisions` | Duplicate misleading UI resource ID | `RscMenu_EASA` and `RscMenu_Economy` both use `idd = 23000` (`Rsc/Dialogs.hpp:3209`, `:3211`, `:3287`, `:3289`) and both have live `createDialog` callers (`GUI_Menu_Service.sqf:244`, `GUI_Menu.sqf:172`). `RscOverlay` and `OptionsAvailable` both use `idd = 10200` (`Rsc/Titles.hpp:44`, `:46`, `:164`, `:165`) and both are used through `cutRsc` paths (`Init_Client.sqf:149`, `Client_UpdateRHUD.sqf:7`). Branch check 2026-06-05: source/stable/upstream keep both collisions in Chernarus and Vanilla; release Chernarus changes EASA to `24000` but release Vanilla still duplicates `23000`, and release titles still duplicate `10200`. No current source `findDisplay 23000/10200` caller was found. | Do not delete any of these as dead. Treat as docs-ready UI parity cleanup or formal waiver: assign unique IDDs only in a UI cleanup branch, avoid introducing hard-coded IDD lookup assumptions, then smoke EASA, Economy, RHUD/FPS HUD, action icons and endgame stats. |
-| `parameters-display-commented-22005-idc` | Comment-only stale IDC reference | `GUI_Display_Parameters.sqf:12` actively writes parameter rows to `22003`; `:16-19` contains a block-commented uptime write to missing `22005`; `RscDisplay_Parameters` declares the dialog and live controls around `Rsc/Dialogs.hpp:3133`, `:3136`, `:3173`, `:3180`. | Safe comment cleanup or annotation. Do not add `22005` unless the old uptime row is intentionally revived. |
+| `parameters-display-commented-22005-idc` | Comment-only stale IDC reference | `GUI_Display_Parameters.sqf:12` actively writes parameter rows to `22003`; `:16-19` contains a block-commented uptime write to missing `22005`; `RscDisplay_Parameters` declares the dialog and live controls around `Rsc/Dialogs.hpp:3133`, `:3136`, `:3173`, `:3180`. Branch check 2026-06-05: current source, maintained Vanilla, modded copies, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle` keep the same comment-only uptime block and no `RscDisplay_Parameters` control `22005`; release Chernarus moved line numbers only (`Dialogs.hpp:2784`, `:2787`, `:2831`, `:2920`). | Docs-ready safe comment cleanup. Do not add `22005` unless the old uptime row is intentionally revived; the live Parameters dialog should keep rendering rows through `22003` and button controls through the existing resource. |
 
 Source-checked false positives from this pass:
 
 - IDC `101` in `WASP/global_marking_monitor.sqf` is a map/display control lead, not a missing mission `Rsc` declaration.
 - IDC `116` in `Client/FSM/updateavailableactions.fsm` is an external/current display control lead, not a mission resource declaration gap.
 - IDCs `112410`-`112414` in `Client/Module/UAV/uav_interface.sqf` belong to the UAV interface/display path and should be checked as BIS/UI integration IDs, not deleted as dead controls.
-- IDC `22005` is comment-only in the parameters display and is not an active runtime write.
+- IDC `22005` is comment-only in the parameters display across current source, stable/upstream, release and maintained/generated copies; it is not an active runtime write.
 
 ## Parameter And Config Findings
 

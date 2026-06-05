@@ -13,6 +13,12 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T18:20:00+02:00 - Codex - Parameters display 22005 comment scope
+
+- Claimed `parameters-display-22005-comment-scope` from the UI/dead-code backlog after the stale `22005` line still risked being rediscovered as a live missing-control bug.
+- Source-checked current source Chernarus, maintained Vanilla, modded copies, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle`: all keep the uptime `ctrlSetText [22005,...]` inside a block comment that says uptime moved to the main menu.
+- Confirmed the live Parameters display still writes rows to IDC `22003`, has no `22005` control in `RscDisplay_Parameters`, and remains reachable through the main menu. Owner pages now route this as safe comment cleanup or deliberate uptime-row revival, not a runtime UI defect. No gameplay source changed.
+
 ## 2026-06-05T18:09:00+02:00 - Codex - UI IDD collision branch scope
 
 - Claimed `ui-idd-collision-branch-scope` from the P1 dead-code/UI backlog after the row still invited another broad audit.
