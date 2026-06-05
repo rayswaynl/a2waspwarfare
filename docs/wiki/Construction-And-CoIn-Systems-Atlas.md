@@ -101,7 +101,7 @@ CoIn is reinitialized from several lifecycle points:
 | Enforces base-area limit client-side before opening the UI. | Lines 13-26. |
 | Opens custom construction title resources and camera controls. | Lines 29-56. |
 | Maintains command-menu reopen loop. | Lines 98-112 and 920-937. |
-| Has a TODO on CoIn border relocation after logic movement. | Lines 114-120. |
+| Border is temporary and only auto-refreshes on area-size changes. | `coin_interface.sqf:114-158` creates a local transparent-wall border from the initial logic/start position; `:419-425` recreates it when `BIS_COIN_areasize` changes and refreshes camera limits. The TODO is specifically about logic-position movement, not a proven generic border break. Branch check 2026-06-06 found the same shape in source Chernarus, maintained Vanilla, stable `origin/master`, Miksuu upstream, `perf/quick-wins` and release. |
 | Allows quick-repeat of last built defense with User15. | Lines 220-228. |
 | Allows toggling defense manning with User16. | Lines 231-236. |
 | Lets commander sell/delete a pointed defense and refund player cash. | Lines 238-265. |

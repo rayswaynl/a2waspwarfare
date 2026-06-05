@@ -52,6 +52,7 @@ Boot fragility callouts:
 | Mission front door and include graph | `description.ext:37-69` defines version/debug switches and includes sounds, music, resource/dialog/title/parameter headers. |
 | Runtime role detection and shared constants | `initJIPCompatible.sqf:132-134` loads MP parameters and common constants; `:185-193` gates headless-client support by OA build. |
 | Common compile/config layer | `Common/Init/Init_Common.sqf:19-63` compiles economy/town/helper functions; `:147-149` selects the OA/vanilla server-send wrapper. |
+| Common side-presence/defender setup | `Common/Init/Init_Common.sqf:273-285` detects which side logics exist and fills `WFBE_PRESENTSIDES`, then still fixes `WFBE_DEFENDER = resistance`; the inline TODO is about making defender/logic presence dynamic, not proof that current two-side play is broken. |
 | Server-owned loops | `Server/Init/Init_Server.sqf:509-531` launches town, town-AI, victory and resource loops; `:577-595` starts FPS publishers and performance helpers. |
 | Client-owned UI/action layer | `Client/Init/Init_Client.sqf:49-65` compiles local UI/player helpers; `:492-503` initializes CoIn and JIP HQ killed handling. |
 | Headless entry point | `Headless/Init/Init_HC.sqf:4-15` compiles delegation handlers and announces the HC to the server through `RequestSpecial`. |
