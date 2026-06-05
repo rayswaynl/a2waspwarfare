@@ -13,6 +13,7 @@ Scope: Chernarus source mission first, Arma 2 Operation Arrowhead 1.64 only, the
 | Wave I refinement | Kepler split client-trusted score/funds/supply mutation from safer server-derived read and award helpers. |
 | Wave Q refinement | Linnaeus's side-supply follow-up is now folded in: negative amounts are legitimate spend deltas, but the same signed `_amount` is also direct-PV payload data, so the first patch must clamp the result and validate channel/side/shape without pretending sign checks are authority. |
 | 2026-06-04 scout refinement | AI commander upgrade debit order is suspect, resource income can couple money payouts to the supply-cap guard, client income display for income system `4` can differ from server paycheck math, and factory player buys need a protocol redesign rather than a narrow hardening patch. |
+| 2026-06-06 branch check | Current source Chernarus, maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706` and release `3282ff3f` all still use `_currentSupply - _amount` for negative side-supply results and trust the direct temp-channel payload side. `origin/perf/quick-wins` `0076040f` fixes only the Chernarus arithmetic floor to `0`; maintained Vanilla and DR-44 authority validation remain open. |
 | Immediate patch candidate | `Common_ChangeSideSupply.sqf` and `Server_ChangeSideSupply.sqf` negative clamp and side/channel validation. |
 | Smallest server-led migration candidate | Upgrade purchase, because `RequestUpgrade` already reaches a server process but currently trusts client-side debit and dependency checks. |
 | Do not treat as small | Player factory buys. They create units/vehicles from the client and have no `RequestBuyUnit` PVF. |
@@ -88,6 +89,19 @@ Important subtlety: negative `_amount` values are not inherently malicious. Norm
 Small auditability bug: `Common_ChangeSideSupply.sqf:8-14` reads `_includeStagnation` and `_reason` only when `count _this > 3`. Three-argument calls such as `Server/PVFunctions/AttackWave.sqf:40` pass a reason string but still publish the default `"ERROR! No reason specified..."` reason. Fix this alongside the clamp/validation pass so economy logs keep useful provenance while malformed payloads still produce clear warnings: parse `_reason` at `count _this > 2`, then `_includeStagnation` at `count _this > 3`.
 
 The live source of truth for side supply is the side-keyed mission variable `wfbe_supply_%1` read by `Common_GetSideSupply.sqf`. The generic `wfbe_supply` value initialized in `Client/Init/Init_Client.sqf:371` is a legacy alias/cache and should not be used as the target for new authority work.
+
+## Side-Supply Branch Matrix
+
+This matrix separates the small DR-22 arithmetic clamp from the larger DR-44 direct-channel authority problem. It is docs-only evidence; no current source patch is implied.
+
+| Scope | Arithmetic floor | Direct temp-channel validation | Development meaning |
+| --- | --- | --- | --- |
+| Current source Chernarus | Old bug remains: `Common_ChangeSideSupply.sqf:24-30` computes `_change`, then floors negatives with `_currentSupply - _amount`; `Server_ChangeSideSupply.sqf:11-13,35-37` does the same for west/east handlers. | Open: handlers at `Server_ChangeSideSupply.sqf:1-21,25-45` read `_side` from the payload and write `wfbe_supply_%1`; channel suffix does not constrain the mutated side. | Patch-ready and current-source-unpatched. Clamp to `0`, keep max cap, validate side/channel/amount shape, and still treat spend authorization as future server-ledger work. |
+| Maintained Vanilla Takistan | Same old floor in `Common_ChangeSideSupply.sqf:24-30` and `Server_ChangeSideSupply.sqf:11-13,35-37`. | Same payload-trusting west/east handlers. | Any fix must be propagated; do not cite a Chernarus-only branch as Vanilla-ready. |
+| Stable `origin/master` `2cdf5fb8` | Same old floor in Chernarus and Vanilla (`Common_ChangeSideSupply.sqf:25`; `Server_ChangeSideSupply.sqf:12,36`). | Same direct `wfbe_supply_temp_west/east` handlers and payload side trust. | Stable remains vulnerable to overspend-as-credit plus direct-channel authority. |
+| Miksuu upstream `f532f706` | Same old floor in Chernarus and Vanilla. | Same payload-trusting direct temp channels. | No upstream rescue candidate in current upstream head. |
+| `origin/perf/quick-wins` `0076040f` | Chernarus only: `Common_ChangeSideSupply.sqf:25` and `Server_ChangeSideSupply.sqf:12,36` floor negatives to `0`. Vanilla on the same branch still has `_currentSupply - _amount`. | Still open even in Chernarus: the branch keeps `wfbe_supply_temp_%1` and does not add side/channel/requester validation. | Useful cherry-pick candidate for the DR-22 arithmetic floor only; not a DR-44 authority fix and not propagated. |
+| Release `3282ff3f` | Same old floor in release Chernarus and release Vanilla. | Same payload-trusting direct temp channels. | Release branch does not rescue the side-supply lane. |
 
 ### Score and supply reads show mixed authority patterns
 

@@ -27,6 +27,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-06T00:15:00+02:00 - Codex-helper - Side-supply clamp branch route
+
+- Claimed `side-supply-clamp-branch-route` from the economy authority backlog.
+- Source-checked current source Chernarus, maintained Vanilla, stable `origin/master`, `miksuu/master`, `origin/perf/quick-wins` and `origin/release/2026-06-feature-bundle` for `Common_ChangeSideSupply.sqf` and `Server_ChangeSideSupply.sqf`.
+- Result: current source/Vanilla, stable, upstream and release all still floor negative results with `_currentSupply - _amount` and trust payload `_side` in direct `wfbe_supply_temp_west/east` handlers. `perf/quick-wins` fixes only Chernarus arithmetic to `0`; Vanilla and DR-44 side/channel/requester validation remain open.
+- Refreshed [Economy authority first cut](Economy-Authority-First-Cut) as the canonical branch route and condensed [Economy/towns/supply](Economy-Towns-And-Supply), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger) and machine records. No gameplay source changed.
+
 ## 2026-06-06T00:00:00+02:00 - Codex-helper - WASP marker wait branch route
 
 - Claimed `wasp-marker-wait-branch-route` from the UI/performance backlog.

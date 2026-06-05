@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-06T00:00:30+02:00",
+  "generatedAt": "2026-06-06T00:15:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Reconciled the newest camp-count helper, WASP marker wait and clickable-text soundPush branch matrices across wiki and docs/wiki. Towns-Camps-And-Capture-Atlas, WASP-Marker-Wait-Cleanup and Client-UI-Systems-Atlas are the canonical routes.",
+      "currentWork": "Reconciled the newest camp-count helper, WASP marker wait, clickable-text soundPush and side-supply clamp branch matrices across wiki and docs/wiki. Towns-Camps-And-Capture-Atlas, WASP-Marker-Wait-Cleanup, Client-UI-Systems-Atlas and Economy-Authority-First-Cut are the canonical routes.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -103,6 +103,12 @@
       "owner": "Codex-helper",
       "status": "published-validated",
       "output": "WASP marker wait cleanup now owns the branch-checked route for the display-54 input-lock busy wait; Feature Status, Source Fix Propagation Queue and machine records point future code owners to the tiny throttled wait patch plus marker-dialog smoke. No gameplay source changed."
+    },
+    {
+      "lane": "side-supply-clamp-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "output": "Economy authority now owns the branch-checked route for side-supply clamp-first; Feature Status, Source Fix Propagation Queue and machine records point future code owners to Chernarus plus Vanilla floor-to-zero propagation and separate temp-channel validation. No gameplay source changed."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
