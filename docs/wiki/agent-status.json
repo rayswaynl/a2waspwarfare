@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T16:43:29+02:00",
+  "generatedAt": "2026-06-05T16:49:25+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Promoted the Agent Worklog timestamp-order guardrail into the top Read This First block so future agents use explicit timestamps and current-state files instead of visible order.",
-      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from fresh source evidence, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
+      "currentWork": "Refreshed the Coordination Board and Progress Dashboard open-task route so future agents use current-state surfaces instead of treating Instructions for Codex as a live queue.",
+      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -60,7 +60,7 @@
       "lane": "documentation-finisher-loop",
       "owner": "Codex",
       "status": "active-ongoing",
-      "output": "Keep wiki/status pages current from source evidence, compact the dashboard, maintain machine-readable entrypoints, refresh scan artifacts when docs/source changes affect them and publish scoped validation batches."
+      "output": "Keep wiki/status pages current from source evidence; route open docs work through the dashboard, pruning ledger, Feature Status, Pending Owner Decisions and machine status files; compact the dashboard, maintain machine-readable entrypoints, refresh scan artifacts when docs/source changes affect them and publish scoped validation batches."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",

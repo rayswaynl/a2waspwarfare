@@ -13,6 +13,11 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T16:49:25+02:00 - Codex - coordination board open-task route refresh
+
+- Refreshed [Coordination board](Coordination-Board) and [Progress dashboard](Progress-Dashboard) so `documentation-finisher-loop` no longer tells future agents to treat [Instructions for Codex](Instructions-For-Codex) as a live queue after that page was condensed.
+- The active docs loop now routes through current-state surfaces: [Progress dashboard](Progress-Dashboard), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), [Feature status](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions), [`agent-status.json`](agent-status.json) and fresh source evidence. No gameplay source changed.
+
 ## 2026-06-05T16:40:00+02:00 - Codex - Dashboard latest batch trim
 
 - Trimmed [Progress dashboard](Progress-Dashboard) `Latest Batch` back to the documented newest-five shape after the July route-sync row made it six rows.

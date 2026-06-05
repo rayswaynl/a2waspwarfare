@@ -107,7 +107,7 @@ This table shows only current/open coordination state. Historic scout lanes and 
 
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
-| `documentation-finisher-loop` | Codex | Active / ongoing | Continue [Instructions for Codex](Instructions-For-Codex), source-check each item, mirror, validate and publish scoped docs batches. |
+| `documentation-finisher-loop` | Codex | Active / ongoing | Resolve current docs/open-task drift from [Progress dashboard](Progress-Dashboard), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), [Feature status](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions), [`agent-status.json`](agent-status.json) and fresh source evidence; treat [Instructions for Codex](Instructions-For-Codex) as the operating contract, not a live queue. |
 | `autonomous-claude-research` | Claude | Open / autonomous-ready | Self-select a bounded source-backed review from [Codebase coverage ledger](Codebase-Coverage-Ledger), the dashboard or the hardening backlog after checking current claims. |
 | `feature-status-reconciliation` | Codex / future agent | Watchlist | Fold newly confirmed findings into [Feature status](Feature-Status-Register), owner pages and machine-readable records. No stale historical lane is a dashboard blocker. |
 | `implementation-hardening-from-backlog` | Future code owner | Owner decision / code lane | Pick implementation work from [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) or [Hardening roadmap](Hardening-Implementation-Roadmap) only when gameplay patches are requested or claimed. |
