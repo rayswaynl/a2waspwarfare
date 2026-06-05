@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T19:05:00+02:00 - Codex - Main-menu GPS orphan actions branch scope
+
+- Claimed `main-menu-gps-orphan-actions-branch-scope` from the UI/backlog rows after the hardening record still had only mini-scout status.
+- Source-checked current source Chernarus plus maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle`: all keep `GUI_Menu.sqf` router cases for `MenuAction == 17/18`.
+- Fixed-string action searches found no `MenuAction = 17` or `MenuAction = 18` emitter in maintained roots; current `WF_Menu` controls expose actions `1-13`, `16` and `19`.
+- Routed this as docs-ready low-risk UI cleanup or deliberate GPS-control revival. No gameplay source changed.
+
 ## 2026-06-05T18:50:00+02:00 - Codex - Extension/DiscordBot contract stale scope
 
 - Claimed `extension-discordbot-contract-stale-scope` after a read-only helper returned two integration drift leads.

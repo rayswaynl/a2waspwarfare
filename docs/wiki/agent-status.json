@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T18:50:00+02:00",
+  "generatedAt": "2026-06-05T19:05:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refined Extension/DiscordBot contract drift: live bot readers guard uptime/player-count slots and mainly degrade display/fallback on short or incompatible database.json shape; stale future-field comments/default arrays and copied terrain WriteToFile APIs remain cleanup/contract-test debt, with LoadoutManager as the actual mission writer.",
+      "currentWork": "Source-checked main-menu GPS MenuAction 17/18 branch scope: current source/Vanilla, stable, Miksuu upstream and release keep handler-only router cases while fixed-string action searches found no MenuAction = 17/18 emitter in maintained roots. Routed as low-risk UI cleanup or deliberate revival.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {

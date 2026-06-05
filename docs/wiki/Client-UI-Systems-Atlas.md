@@ -163,12 +163,12 @@ The player opens the main menu through the scroll action wired by `Client/Functi
 | 12 | `RscDisplay_Parameters` |
 | 13 | `RscMenu_Help` |
 | 16 | Toggle full `RUBHUD` |
-| 17/18 | Dormant/orphaned GPS zoom handlers; `GUI_Menu.sqf` still handles them, but the audited `WF_Menu` controls expose actions 1-13, 16 and 19 only. |
+| 17/18 | Dormant/orphaned GPS zoom handlers; `GUI_Menu.sqf` still handles them in Chernarus and maintained Vanilla, but audited `WF_Menu` controls expose actions 1-13, 16 and 19 only. |
 | 19 | Toggle FPS-only HUD |
 
 Range booleans such as `barracksInRange`, `gearInRange`, `commandInRange` and `serviceInRange` are maintained by `Client/FSM/updateavailableactions.fsm`, not by the main menu itself.
 
-Mini UI scout note 2026-06-04: no live buy/gear/service/tactical/vote/unit-camera control was found with an outright missing handler. The important main-menu mismatch is narrower: `MenuAction == 17/18` remains in the router for GPS zoom, but no current `WF_Menu` resource control was found to send those values.
+Mini UI scout note 2026-06-04 plus branch recheck 2026-06-05: no live buy/gear/service/tactical/vote/unit-camera control was found with an outright missing handler. The important main-menu mismatch is narrower: `MenuAction == 17/18` remains in the router for GPS zoom in current source/Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle`, but fixed-string action searches found no `MenuAction = 17` or `MenuAction = 18` emitter in maintained roots.
 
 ## Major Controller Flows
 
@@ -218,7 +218,7 @@ Commander reassignment has a separate selector fragility. `GUI_Commander_VoteMen
 
 Help dialog lifecycle edge: `RscMenu_Help` stores the display as `uiNamespace["dialog_HelpPanel"]` on load, but unload clears `uiNamespace["cti_dialog_ui_onlinehelpmenu"]` and calls `GUI_Menu_Help.sqf` with `onUnload` (`Dialogs.hpp:3446-3447`). The controller only implements `onLoad` and `onHelpLBSelChanged` (`GUI_Menu_Help.sqf:5-10`). This looks like stale namespace wiring, so avoid building new help-panel state on the old unload variable without cleaning it.
 
-Main-menu orphan route: `GUI_Menu.sqf:202-208` still handles `MenuAction == 17/18` for GPS zoom, but the audited `WF_Menu` resource block exposes actions `1-13`, `16` and `19` only. Treat those router cases as dead UX baggage unless a hidden/branch control is deliberately reintroduced and smoke-tested.
+Main-menu orphan route: `GUI_Menu.sqf:202-208` still handles `MenuAction == 17/18` for GPS zoom, but the audited `WF_Menu` resource block exposes actions `1-13`, `16` and `19` only. The same handler-only shape exists in maintained Vanilla, stable master, Miksuu upstream and the current release branch; modded Napf/Eden/Lingor also keep copied handlers. Treat those router cases as dead UX baggage unless a hidden/branch control is deliberately reintroduced and smoke-tested.
 
 `GUI_Menu_Tactical.sqf` is the support hub. It builds the support list from fast travel, ICBM, paratroopers, ammo/vehicle paradrops, UAV actions and unit camera (`:56-64`). Availability is recomputed from current upgrades, funds, cooldowns and selected support (`:144-290`), then requests are sent through `RequestSpecial` where needed (`:373` and later request branches).
 
