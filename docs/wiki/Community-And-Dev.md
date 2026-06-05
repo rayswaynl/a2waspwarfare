@@ -76,6 +76,8 @@ Do not treat `Arma2Warfare GPT`, `Mr. James`, `Contributor`, `Game Admin` or `Ve
 
 Upstream diagnostic style note: the freshest local `miksuu/master` delta on 2026-06-04 was the town-defense diagnostics branch (`913ecdf6` -> `d5bfe3a2` -> merge `8bcc42b1`). It added an opt-in `WFBE_C_TOWN_DEFENSE_DIAGNOSTICS` / `TownDefenseDiagnosticsEnabled` path around town-defense code rather than broad permanent logging. That is a useful pattern for hot-loop work: add narrow feature diagnostics, keep defaults quiet and propagate source-Chernarus changes deliberately to maintained Vanilla/Takistan.
 
+2026-06-05 refetch addendum: `miksuu/master` later moved to `69e1958a` by merging `Marty_town_defense_fix`. The new source commit `e4be1958` clears previous-side active town-AI state on town capture in both Chernarus and maintained Vanilla Takistan. This reinforces the same culture pattern: upstream town-performance work is being paired with targeted diagnostics and correctness repairs, but it is still upstream evidence until imported and smoked in rayswaynl source.
+
 ### Upstream Process Capsule
 
 The imported [Development process](Miksuu-Wiki-Archive-Development-Process) page gives a compact picture of how the mission was actually developed upstream:
@@ -91,6 +93,8 @@ The imported [Development process](Miksuu-Wiki-Archive-Development-Process) page
 ## Upstream and Decision-Ledger Gap
 
 The 2026-06-04 community scout verified the local remotes as `origin` = `rayswaynl/a2waspwarfare` and `miksuu` = `Miksuu/a2waspwarfare`. At that check, `miksuu/master` was three commits ahead of `origin/master`: `913ecdf6` town defense diagnostics, `d5bfe3a2` Takistan update and merge `8bcc42b1`. The local `master` branch was also 29 commits behind `origin/master`, so use remote branch refs for provenance checks instead of trusting the local branch pointer.
+
+The 2026-06-05 refetch updates the current upstream head to `69e1958a`, with `e4be1958` as the new source-bearing town-capture state reset. Treat the older `8bcc42b1` notes as point-in-time provenance, and use [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel#2026-06-05-miksuumaster-capture-state-addendum) for the current upstream-candidate routing.
 
 This page, [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) and [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel) now overlap enough that future upstream archaeology needs a single decision ledger. The missing page should track:
 

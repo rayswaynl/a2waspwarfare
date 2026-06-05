@@ -13,6 +13,12 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T22:55:00+02:00 - Codex - community upstream head note refresh
+
+- Claimed `community-upstream-head-note-refresh` after a stale-provenance scan found [Community & Dev](Community-And-Dev) and [Developer history](Developer-History-And-Upstream-Lessons) still framed `miksuu/master` `8bcc42b1` as the latest upstream evidence.
+- Updated those pages so `8bcc42b1` remains point-in-time provenance and the current 2026-06-05 upstream head `69e1958a` / `e4be1958` routes through [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel#2026-06-05-miksuumaster-capture-state-addendum).
+- Added a machine supersession record in [`agent-knowledge.jsonl`](agent-knowledge.jsonl). No gameplay source changed.
+
 ## 2026-06-05T22:45:00+02:00 - Codex - Miksuu town-capture state fix intake
 
 - Claimed `miksuu-town-capture-state-fix-intake` after the previous refetch delta showed `miksuu/master` moved to `69e1958a`.
