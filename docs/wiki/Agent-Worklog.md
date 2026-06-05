@@ -13,6 +13,12 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T22:25:00+02:00 - Codex - bottleneck queue validation refresh
+
+- Claimed `bottleneck-queue-validation-refresh` after [Bottleneck removal queue](Bottleneck-Removal-Queue) still described mirror/wiki parity as required from an old 2026-06-03 state.
+- Refreshed the page so it records current docs validation practice: `docs/validate-wiki.ps1`, touched JSON/JSONL parse, `git diff --check`, wiki-checkout checks and full SHA parity with `full-diffCount=0`.
+- Updated [Progress dashboard](Progress-Dashboard) and [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger). No gameplay source changed.
+
 ## 2026-06-05T22:05:00+02:00 - Codex - dashboard latest-batch compaction
 
 - Claimed `dashboard-latest-batch-compaction` after [Progress dashboard](Progress-Dashboard) `Latest Batch` had re-grown into a long history table.

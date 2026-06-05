@@ -11,7 +11,7 @@ This page is the compact queue for removing documentation/process drag. It does 
 | The disputed cleanup lanes are not source-patched as of the current source snapshot. | Before any "patched", "propagated" or "smoke pending" claim, re-open [Current source status](Current-Source-Status-Snapshot). |
 | Append-only event/worklog history contains superseded false patched pulses. | Treat older shipped-status lines as historical unless a newer direct source check with file/line evidence supersedes the snapshot. |
 | `agent-release-readiness.json` now exists as an evidence-only gate index. | Do not treat it as a release-ready claim; it records blockers and validation gates that must close first. |
-| `docs/wiki` and the active wiki checkout should stay in parity. | Keep [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) as the no-blind-copy policy for future drift or alternate-checkout reconciliation. |
+| `docs/wiki` and the active wiki checkout are currently managed by scoped parity checks. | Keep [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) as the no-blind-copy policy for future drift or alternate-checkout reconciliation; latest scoped batches report `full-diffCount=0`. |
 | Review coverage is mostly done; remaining risk is owner action and validation evidence. | Send code owners to [Pending owner decisions](Pending-Owner-Decisions), not more broad review prose. |
 
 ## P0 Bottlenecks
@@ -20,8 +20,8 @@ This page is the compact queue for removing documentation/process drag. It does 
 | --- | --- | --- | --- |
 | Stale patched/propagated claims can still mislead agents. | `agent-events.jsonl`, `agent-knowledge.jsonl` and [Agent worklog](Agent-Worklog) retain superseded false patched history by design. | Any agent starting source/code work. | Read [Current source status](Current-Source-Status-Snapshot) first; only write new patched wording after source Chernarus, generated Vanilla and Arma 2 OA smoke evidence exist. |
 | Release-readiness state was missing from the mirror. | `agent-release-readiness.json` did not exist before the original queue pass, despite being named in the mission brief. | Bottleneck reducer / release owner. | Keep [`agent-release-readiness.json`](agent-release-readiness.json) evidence-only until source patches, validation and OA smoke gates are recorded. |
-| Wiki checkout and repo mirror parity can drift when agents publish directly to the wiki. | This page was referenced by Home/sidebar/agent records but missing from the current wiki checkout until the 2026-06-03 mirror reconciliation pass. | Documentation finisher / docs owner. | Follow [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan); choose source-of-truth file by file and re-run validation before publishing. |
-| Validation gates are present but not yet a shared release habit. | `Tools/ValidateWiki.ps1`, `docs/validate-wiki.ps1` and parity checks exist, but parity can fail while mirror/wiki diverge. | Future docs agent. | Run docs validation before handoff; after any intended mirror sync, run parity and wiki-checkout validation. |
+| Wiki checkout and repo mirror parity can drift when agents publish directly to the wiki. | This page was referenced by Home/sidebar/agent records but missing from the current wiki checkout until the 2026-06-03 mirror reconciliation pass; later batches now record `full-diffCount=0` parity evidence in `agent-events.jsonl`. | Documentation finisher / docs owner. | Continue scoped syncs only. If drift appears, follow [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan); choose source-of-truth file by file and re-run validation before publishing. |
+| Validation gates are present and now documented as a shared docs habit. | `docs/validate-wiki.ps1`, touched JSON/JSONL parse, `git diff --check`, wiki-checkout checks and full SHA parity are now repeated in recent docs batches. | Future docs agent. | Keep running the same gates before handoff; do not treat them as release/gameplay smoke. |
 
 ## P1 Bottlenecks
 
@@ -71,9 +71,10 @@ This page is the compact queue for removing documentation/process drag. It does 
 
 | Check | Result | Notes |
 | --- | --- | --- |
-| Repo mirror validation | Pass | 2026-06-03 mirror reconciliation pass restored this page because Home/sidebar/agent records referenced it. |
-| Repo whitespace check | Pass | `git diff --check` should pass before each handoff; Windows LF-to-CRLF warnings are normal. |
-| Mirror/wiki parity | Required | Re-run after every scoped sync and before calling a mirror reconciliation batch complete. |
+| Repo mirror validation | Pass | Recent 2026-06-05 docs batches run `docs/validate-wiki.ps1`; known legacy JSONL envelope warnings are non-failing. |
+| Repo whitespace check | Pass | `git diff --check` is part of the docs handoff ritual; Windows LF-to-CRLF warnings are normal. |
+| Wiki checkout JSON/diff check | Pass | Recent scoped publishes parse touched JSON/JSONL in the wiki checkout and run `git diff --check`. |
+| Mirror/wiki parity | Pass | Full repo-mirror/wiki checkout SHA checks report `full-diffCount=0` after scoped syncs. Keep re-running after every publish. |
 
 ## Continue Reading
 
