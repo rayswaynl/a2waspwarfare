@@ -1,5 +1,14 @@
 # Agent Worklog
 
+## 2026-06-05T11:35:00+02:00 - Codex - dead code SQF reachability pass
+
+- Continued Steff's long-running dead-code detective goal with a quoted-SQF-path reachability scan.
+- Added `docs/analysis/dead-code-sqf-reachability-scan.ps1` and `docs/analysis/dead-code-sqf-reachability-scan.json`. Latest scan covered 2767 text files, catalogued 2705 SQF files, found 4358 quoted SQF path references, resolved 3476 active references and produced 453 raw unreferenced SQF leads.
+- Promoted source-checked findings into `docs/analysis/dead-code-findings.jsonl` and [Dead/stale code register](Dead-Code-And-Stale-Code-Register): comment-only `AI_UpdateSupplyTruck`, dormant `groupsMonitor`, tooling-owned dormant `Common_ModifyAirVehicle`, comment-only `HandleATReloadVehicle`, baseline-unreferenced IRS warning helpers with modded split, unreachable Reaktiv and disabled TaskSystem.
+- Added guardrails for dynamic SQF false positives: Skill role scripts are reached through dynamic `WFBE_SK_V_Root` `addAction` paths, construction site scripts are selected through `WFBE_%1STRUCTURESCRIPTS`, AI respawn has a Vanilla/non-Vanilla branch split, and MHQ lock action reachability is tied to action/PVF wiring rather than simple quoted-path references.
+- Confirmed the conflict-marker debt is still modded-only in this marker scan: 18 unique files under `Modded_Missions` contain real merge markers, while source Chernarus and Vanilla roots stayed clean for the marker pattern.
+- No gameplay source files changed.
+
 ## 2026-06-05T10:55:00+02:00 - Codex - dead code parameter/config pass
 
 - Continued Steff's long-running dead-code detective goal with a mission parameter/config scan.

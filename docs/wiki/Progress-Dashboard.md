@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `dead-code-sqf-reachability-pass` | Published / validated | Added quoted-SQF-path reachability evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register): 2705 SQF files catalogued, 4358 quoted SQF path references, 453 raw unreferenced leads, and source-checked findings for AI supply truck, groupsMonitor, air-vehicle modifier hook, AT reload hook, IRS warning helpers, Reaktiv and TaskSystem. Added false-positive guardrails for dynamic Skill, construction, AI respawn and MHQ lock paths. No gameplay source changed. |
 | `dead-code-parameter-config-pass` | Published / validated / pushed | Added mission parameter/config scan evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register): visible `WFBE_C_AI_MAX` has no current runtime consumer; visible `WFBE_C_UNITS_CLEAN_TIMEOUT` is bypassed by active body/empty-vehicle cleanup paths and only survives in a commented old split line; dynamic economy start parameters are marked as exact-name scan false positives. No gameplay source changed. |
 | `dead-code-ui-rsc-pass` | Published / validated / pushed | Added UI/Rsc scan evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register): missing `RscMenu_Upgrade` handler target, active economy IDC drift `23004/23005/23006`, duplicate reachable IDDs `23000` and `10200`, comment-only retired parameters IDC `22005`, plus false-positive guardrails for engine/BIS/display IDCs. No gameplay source changed. |
 | `dead-code-pv-channel-pass` | Published / validated / pushed | Added direct public-variable scan evidence to [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [Public variable channel index](Public-Variable-Channel-Index): comment-only legacy `WFBE_*` direct PV names, `SERVER_FPS_GUI` / `WFBE_VAR_SERVER_FPS` compatibility drift, receiver-only `ICBM_launched` handler, plus false-positive guardrails for dynamic supply temp channels and state broadcasts. No gameplay source changed. |
@@ -72,6 +73,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
+| `dead-code-sqf-reachability-pass` | Codex | Published / validated | Push wiki/docs-only changes, then continue the broader dead-code goal from fresh source evidence. |
 | `dead-code-parameter-config-pass` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
 | `dead-code-ui-rsc-pass` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
 | `dead-code-pv-channel-pass` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |

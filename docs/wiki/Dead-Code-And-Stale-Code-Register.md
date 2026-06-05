@@ -14,6 +14,8 @@ UI/Rsc/dialog evidence is captured by `docs/analysis/dead-code-ui-rsc-scan.ps1`,
 
 Mission parameter/config evidence is captured by `docs/analysis/dead-code-parameter-scan.ps1`, with the latest output in `docs/analysis/dead-code-parameter-scan.json`.
 
+SQF reachability evidence is captured by `docs/analysis/dead-code-sqf-reachability-scan.ps1`, with the latest output in `docs/analysis/dead-code-sqf-reachability-scan.json`.
+
 ## Scan Snapshot
 
 Latest local scan:
@@ -79,6 +81,19 @@ Latest mission parameter/config scan:
 | Active parameters with runtime set-like overrides | 12 |
 | Generated artifact | `docs/analysis/dead-code-parameter-scan.json` |
 
+Latest SQF reachability scan:
+
+| Item | Value |
+| --- | --- |
+| Roots scanned | `Missions`, `Missions_Vanilla`, `Modded_Missions` |
+| Text files scanned | 2767 |
+| SQF files catalogued | 2705 |
+| Quoted SQF path references | 4358 total, 4121 active, 237 comment-only |
+| Active quoted SQF references resolved | 3476 |
+| Raw unreferenced SQF leads | 453 |
+| Biggest raw lead buckets | 170 function-library files, 164 config-data files, 46 module scripts, 23 server scripts |
+| Generated artifact | `docs/analysis/dead-code-sqf-reachability-scan.json` |
+
 Scanner caveats:
 
 - The scanner intentionally finds leads, not final truth.
@@ -90,6 +105,8 @@ Scanner caveats:
 - A direct PV channel with no `addPublicVariableEventHandler` is not automatically dead. Some channels are state variables read via `missionNamespace getVariable`, some are BattlEye/filter hooks, and some sender names are dynamic `format` expressions that need source interpretation.
 - UI IDC scans cannot distinguish engine display controls from mission resource controls by themselves. Treat `101`, `116` and `112410`-`112414` as source-check leads, not broken mission `Rsc` controls.
 - Parameter scans cannot prove dynamic formatted variable reads on exact names. The economy start parameters look readless in exact-name scans, but `Server/Init/Init_Server.sqf` and player-connect code read them through `Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side]` and `Format ["WFBE_C_ECONOMY_SUPPLY_START_%1", _side]`.
+- SQF reachability scans cannot prove dynamic `addAction`, `missionNamespace getVariable`, `Format` or generated path usage. Treat `Client/Module/Skill/Skill_*.sqf`, `Server/Construction/Construction_*Site.sqf`, config arrays and mission entrypoints as source-check leads, not dead files.
+- Baseline and modded source can legitimately differ. Example: source Chernarus/Vanilla IRS warning helpers are unreferenced after inline warning logic was added, while the conflict-marked Napf IRS file still contains old helper calls.
 
 ## Classification Rules
 
@@ -109,6 +126,10 @@ Scanner caveats:
 | `comment-only-stale-idc-reference` | A missing or old IDC appears only inside comments. | Clean comments or document as retired UI; do not add controls unless reviving the feature. |
 | `visible-parameter-no-runtime-consumer` | A lobby/in-game parameter is imported and defaulted, but no current runtime consumer is found. | Hide/remove, wire, or document as historical after owner review. |
 | `visible-parameter-comment-only-consumer` | A lobby/in-game parameter has only commented or bypassed runtime consumption. | Decide intended policy before wiring or removing. |
+| `comment-only-sqf-entrypoint` | A script exists and is only reached from commented compile/exec/addAction references. | Usually owner decision: remove stale wiring, revive deliberately, or leave as documented archaeology. |
+| `baseline-unreferenced-modded-live-split` | A helper is unreachable in maintained source/Vanilla but still appears in stale or modded sources. | Do not delete globally until modded branch policy is chosen. |
+| `dynamic-path-false-positive` | A static path scan cannot see runtime path construction or arrays of script paths. | Add guardrails and source-check the dynamic owner before classifying. |
+| `tooling-owned-dormant-hook` | Runtime hook is disabled, but an external tool still owns or rewrites the file. | Do not delete until tooling contract is redesigned. |
 
 ## Current Findings
 
@@ -132,6 +153,27 @@ Scanner caveats:
 | `generated-version-sqf-clean-checkout-risk` | Generated-file contract risk | Mission entrypoints include `version.sqf`; LoadoutManager generates/excludes it. | Keep includes; validate generation workflow on clean checkout. |
 | `rsc-clickabletext-soundpush-malformed` | Stale or malformed resource config | `Rsc/Ressources.hpp:556` has `soundPush[] = {, 0.2, 1};` in source and modded copies. | Replace with valid value only after config/dialog smoke. |
 | `modded-packaging-disabled-by-tooling` | Deferred release scope | `Tools/LoadoutManager/ZipManager.cs:16` packages `Missions` and `Missions_Vanilla`; `SqfFileGenerator.cs:133` says add modded maps later. | Keep disabled until conflict/missing-reference checks pass, or archive old modded roots. |
+
+## SQF Reachability Findings
+
+These are source-interpreted findings from the SQF reachability scan. The scan only proves that no literal active quoted path reached a file; every row below was checked against the relevant init, module or dynamic-dispatch owner before being promoted.
+
+| ID | Classification | Evidence | Action |
+| --- | --- | --- | --- |
+| `sqf-ai-supply-truck-worker-comment-only` | Comment-only SQF entrypoint with latent breakage | `Server/Init/Init_Server.sqf:36` comments the `UpdateSupplyTruck` compile, while the gated call at `:383` can still spawn it when supply system `0` and AI commanders are enabled; `AI_UpdateSupplyTruck.sqf:17` then tries missing `Server\FSM\supplytruck.fsm`. | Keep documented as config-gated latent breakage. Do not simply uncomment; either guard/remove the gated spawn or redesign AI logistics. |
+| `groupsmonitor-commented-debug-loop` | Comment-only SQF entrypoint | `Server/FSM/groupsMonitor.sqf:1-14` logs `allGroups` counts every 30 seconds, but the only source start point found is commented at `Server/Init/Init_Server.sqf:567`. | Safe to leave dormant. If revived, make it an explicit debug parameter/tooling feature to avoid production log spam. |
+| `common-modify-airvehicle-tooling-owned-dormant-hook` | Tooling-owned dormant hook | `Common/Functions/Common_CreateVehicle.sqf:22` comments the aircraft post-create call; `Common_ModifyAirVehicle.sqf` still contains `//LoadoutManagerInsertChanges` and generated aircraft rearmor cases. | Do not delete as dead runtime code until LoadoutManager's generated-aircraft contract is redesigned or retired. |
+| `common-handle-at-reload-comment-only` | Comment-only SQF entrypoint | `Common/Init/Init_Common.sqf:10` comments `HandleATReloadVehicle`; the existing helper manipulates TOW magazine/reload timing but no active compile/caller is found. | Treat with the existing AT/bomb hook family as archive/revive work. Do not call current ordnance guardrails dependent on it. |
+| `irs-warning-helpers-baseline-unreferenced` | Baseline unreferenced / modded-live split | Source Chernarus and Vanilla `IRS_Init.sqf` compile `CreateSmoke`, `DeploySmoke`, `HandleMissile` and `OnIncomingMissile` only; `IRS_ShowWarning.sqf` and `IRS_PlayWarningSound.sqf` have no maintained-source caller. Napf's conflict-marked IRS file still contains old calls to both helpers. | Do not delete globally until modded mission policy is settled. For source/Vanilla, treat the inline `inboundMissileGround` logic in `IRS_OnIncomingMissile.sqf` as the current path. |
+| `reaktiv-init-unreachable` | Orphaned module script | `Common/Module/Reaktiv/Reaktiv_Init.sqf:5` compiles the HandleDamage helper, but `Init_Common.sqf:319-323` initializes ICBM, IRS and CIPHER without any Reaktiv init call. | Already routed to module docs as dead/unreachable. Preserve only if an owner wants ERA armor revived and smoke-tested. |
+| `client-task-system-comment-only` | Disabled partial UX path | `Client/Init/Init_Client.sqf:75` comments the `TaskSystem` compile and `:744` comments old town-complete task spawning, while `Client_TaskSystem.sqf` and `SetTask` receiver/UI residue still exist. | Owner decision: hide/remove task UI residue or revive with server-backed/JIP-safe task flow. |
+
+Source-checked false positives from this pass:
+
+- `Client/Module/Skill/Skill_Engineer.sqf`, `Skill_Salvage.sqf`, `Skill_Officer.sqf`, `Skill_LR.sqf`, `Skill_Sniper.sqf` and `Skill_SpecOps.sqf` are reached through dynamic `WFBE_SK_V_Root + '<Role>.sqf'` `addAction` paths in `Skill_Apply.sqf`. Do not classify them as dead from static path scans.
+- `Server/Construction/Construction_HQSite.sqf`, `Construction_SmallSite.sqf` and `Construction_MediumSite.sqf` are selected through `WFBE_%1STRUCTURESCRIPTS` arrays and `RequestStructure.sqf`; they are live dynamic construction workers, not unreferenced files.
+- `AI_AddMultiplayerRespawnEH.sqf` looks unreferenced to the raw scan, but `Init_Server.sqf` uses different AI respawn implementations by `WF_A2_Vanilla`; the non-vanilla advanced respawn path is already documented as a live branch.
+- `Action_ToggleMHQLock.sqf` looks unreferenced as a quoted path in some roots, but it is part of the live MHQ lock action/PVF authority surface and is already cited by the server authority map. Treat scanner output here as an addAction/dynamic-UI limitation.
 
 ## Integration And Tooling Findings
 
@@ -207,6 +249,7 @@ Source-checked false positives from this pass:
 | P1 | Clean integration dead/stale helpers before expanding Discord/status tooling. | Dormant `.Auto` JSON helpers, stale `botconfig.json` ownership and arg-shape drift are easy to revive incorrectly. |
 | P1 | Decide whether warning-marked CRV7PG loadouts are forbidden or intentionally quarantined. | A warning-named crash-risk class is referenced by WILDCAT data, so generator output may carry known-dangerous loadouts. |
 | P1 | Decide whether the stale `ICBM_launched` PVEH should be retired or revived. | The current nuke path uses `NukeIncoming` and `HandleSpecial "icbm-display"`; a receiver-only event handler misleads future networking work. |
+| P1 | Decide whether dormant SQF helper families are archive, revive or tooling-owned: `UpdateSupplyTruck`, `groupsMonitor`, `Common_ModifyAirVehicle`, `HandleATReloadVehicle`, IRS warning helpers, Reaktiv and TaskSystem. | They are source-backed stale code, but several have branch, tooling or modded context that makes blind deletion risky. |
 | P2 | Remove or rationalize safe commented missing references: unitCaching, old blink loop, old bomb handler, old defense helper, WASP commented hooks. | Low-risk bloat cleanup once branch searches are complete. |
 | P2 | Remove or annotate old direct `WFBE_*` publicVariable comment blocks after branch search. | They are migration residue and make the current PVF/helper network model harder to read. |
 | P2 | Document generated `version.sqf` in every build/release handoff. | Prevent agents from misclassifying a required generated file as missing dead code. |
@@ -224,6 +267,7 @@ These are candidates for a future source patch because they are commented and po
 - `Common\Config\Config_Defenses.sqf` commented calls.
 - `WASP\actions\OnArmor\timer.sqf`, `WASP\KeyDown.sqf`, `WASP\actions\SitsOnArmor\init.sqf` commented hooks.
 - Commented legacy direct-PV names: `WFBE_RequestVehicleLock`, `WFBE_RequestSpecial`, `WFBE_RequestStructure`, `WFBE_RequestTeamUpdate`, `WFBE_ChangeScore`, `WFBE_LocalizeMessage`.
+- Comment-only SQF hooks after owner review: `groupsMonitor.sqf`, `HandleATReloadVehicle`, and stale TaskSystem start comments.
 
 Before changing source, run a branch-aware search against the target branch and verify generated mission propagation rules. Do not edit `Missions_Vanilla` directly for gameplay unless the build workflow requires it; source-of-truth rules still apply.
 
@@ -235,6 +279,9 @@ Before changing source, run a branch-aware search against the target branch and 
 | `AIBuyUnit` / `Server_BuyUnit.sqf` | Likely needed by AI commander production branches. | AI production scheduler, funds/cap policy, queue cleanup and Client_BuildUnit drift review. |
 | Old marker blinking loop | Could be useful if map marker ownership is redesigned. | Must not regress current singular `Client_BlinkMapIcon` behavior. |
 | `ICBM_launched` PVEH | Could be revived as a clear client notification channel for tactical nukes. | Must be reconciled with the current `NukeIncoming` / `RequestSpecial` / `HandleSpecial "icbm-display"` path and smoke-tested for friendly/enemy warnings, markers and damage. |
+| AI supply-truck logistics | The script and config-gated spawn show an abandoned autonomous economy idea. | Needs a new server-owned logistics design; the old missing FSM cannot be restored by uncommenting one compile. |
+| Reaktiv ERA armor | The module is self-contained enough to inspect and could add vehicle survivability tuning. | Must be wired in deliberately, checked against existing IRS/CM/inline rearmor handlers and smoke-tested for HandleDamage locality. |
+| TaskSystem / commander task assignment | UI, receiver and old task helper residue show a recoverable commander UX idea. | Needs server authority, JIP behavior, spam controls and UI clarity before revival. |
 | Modded maps | Community value, but currently conflict-marked and outside release packaging. | Conflict-free source, missing helper restoration, LoadoutManager policy and editor/dedicated smoke. |
 
 ## How To Rerun
@@ -269,6 +316,12 @@ Run the mission parameter/config scan:
 .\docs\analysis\dead-code-parameter-scan.ps1
 ```
 
+Run the SQF reachability scan:
+
+```powershell
+.\docs\analysis\dead-code-sqf-reachability-scan.ps1
+```
+
 Validate the machine-readable register:
 
 ```powershell
@@ -277,6 +330,7 @@ Get-Content .\docs\analysis\dead-code-integration-scan.json | ConvertFrom-Json |
 Get-Content .\docs\analysis\dead-code-pv-channel-scan.json | ConvertFrom-Json | Out-Null
 Get-Content .\docs\analysis\dead-code-ui-rsc-scan.json | ConvertFrom-Json | Out-Null
 Get-Content .\docs\analysis\dead-code-parameter-scan.json | ConvertFrom-Json | Out-Null
+Get-Content .\docs\analysis\dead-code-sqf-reachability-scan.json | ConvertFrom-Json | Out-Null
 ```
 
 Useful manual follow-up scans:
@@ -288,6 +342,7 @@ rg -n "WFBE_C_MODULE_BIS_HC|WFBE_C_AI_DELEGATION|23004|23005|23006" Missions Mis
 rg -n "WFBE_C_AI_MAX|WFBE_C_UNITS_CLEAN_TIMEOUT|WFBE_C_UNITS_BODIES_TIMEOUT|WFBE_C_PLAYERS_AI_MAX" Missions Missions_Vanilla Modded_Missions
 rg -n "RscMenu_EASA|RscMenu_Economy|RscOverlay|OptionsAvailable|idd\s*=\s*23000|idd\s*=\s*10200" Missions Missions_Vanilla Modded_Missions
 rg -n "ICBM_launched|WFBE_RequestVehicleLock|WFBE_RequestSpecial|WFBE_RequestTeamUpdate|WFBE_ChangeScore|WFBE_LocalizeMessage|WFBE_RequestStructure" Missions Missions_Vanilla Modded_Missions
+rg -n "AI_UpdateSupplyTruck|UpdateSupplyTruck|groupsMonitor|Common_ModifyAirVehicle|Common_HandleATReloadVehicle|IRS_ShowWarning|IRS_PlayWarningSound|Reaktiv_Init|Client_TaskSystem" Missions Missions_Vanilla Modded_Missions
 ```
 
 ## Related Pages
