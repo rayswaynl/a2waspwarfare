@@ -37,6 +37,15 @@ For the full per-handler checklist, use [Server authority migration map](Server-
 | P2 | Commander vote semantics and reassignment correctness | DR-47 and DR-15 are small but match-visible commander/HQ correctness fixes. Use [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook): decide no-commander/tie rules before code, then keep vote resolution separate from manual reassignment call-shape and requester-authority hardening. |
 | P2 | Factory queue, HC/static-defense and support-loop cleanups | Player-facing soft-lock/perf/partial-feature fixes once core authority is moving. |
 
+## July Update Candidate Route
+
+The [Progress dashboard](Progress-Dashboard#july-update-to-do) currently names two July update candidates. Treat them as explicit dev-branch lanes, not as merged gameplay state.
+
+| Candidate | Branch | Route | First code-owner gate |
+| --- | --- | --- | --- |
+| Hosted Server FPS Loop Fix | `dev/july-update-hosted-server-fps-loop-fix` | [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Testing workflow](Testing-Debugging-And-Release-Workflow#july-update-candidate-smoke-route) | Adopt or verify the low-risk `!isDedicated` early-exit shape, keep dedicated FPS publishing intact, and name Chernarus plus maintained Vanilla parity before release wording. |
+| Takistan Airfield FPV Drone Bay | `dev/july-takistan-airfield-fpv-drone` | [Takistan airfield FPV drone design](Takistan-Airfield-FPV-Drone-Design), [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match), [Testing workflow](Testing-Debugging-And-Release-Workflow#july-update-candidate-smoke-route) | Build Takistan-only and server-authoritative first: server rechecks ownership, funds, UAV/EASA gates, one-drone-per-player, side cap, range/boundary, bunker state and base-protection before spawning or debiting. |
+
 ## P0: PVF Dispatcher Lookup
 
 Dedicated playbook: [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook).

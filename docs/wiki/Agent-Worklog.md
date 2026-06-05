@@ -13,6 +13,12 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T16:35:00+02:00 - Codex - July update route sync
+
+- Claimed a docs-only route sync for the two July update dev branches already listed on [Progress dashboard](Progress-Dashboard#july-update-to-do): `dev/july-update-hosted-server-fps-loop-fix` and `dev/july-takistan-airfield-fpv-drone`.
+- Added a compact [Hardening roadmap](Hardening-Implementation-Roadmap#july-update-candidate-route) route and [Testing workflow](Testing-Debugging-And-Release-Workflow#july-update-candidate-smoke-route) gates so future code owners can start from normal owner pages instead of relying only on dashboard memory.
+- Updated machine-facing routing in [`agent-machine-index.json`](agent-machine-index.json) and [`agent-release-readiness.json`](agent-release-readiness.json). No gameplay source changed.
+
 ## 2026-06-05T23:58:00+02:00 - Codex - release-head propagated-fix spot-check and FPS report intake
 
 - Claimed `release-head-propagated-fix-spotcheck-and-fps-report-intake` after the PR8 head refresh left older propagated-fix pages naming `a9219d88` as if it were still the current release branch.

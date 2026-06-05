@@ -102,6 +102,31 @@
       "nextGate": "Use current PR URLs/head branches instead of pruned origin/pr/* refs; test PR #8, then dev/pr8-plus-testbed, while keeping #4/#9/#13/#14/#18 separate."
     },
     {
+      "id": "july-update-candidate-route",
+      "system": "July update dev-branch planning and smoke routing",
+      "riskTier": "route",
+      "branchScope": "origin/dev/july-update-hosted-server-fps-loop-fix plus origin/dev/july-takistan-airfield-fpv-drone",
+      "canonicalDocs": [
+        "Progress-Dashboard",
+        "Hardening-Implementation-Roadmap",
+        "Testing-Debugging-And-Release-Workflow",
+        "Hosted-Server-FPS-Loop-Sleep",
+        "Takistan-Airfield-FPV-Drone-Design"
+      ],
+      "sourceRefs": [
+        "origin/dev/july-update-hosted-server-fps-loop-fix",
+        "origin/dev/july-takistan-airfield-fpv-drone",
+        "docs/wiki/Progress-Dashboard.md#july-update-to-do",
+        "docs/wiki/Testing-Debugging-And-Release-Workflow.md#july-update-candidate-smoke-route"
+      ],
+      "machineRefs": [
+        "agent-events.jsonl#july-update-route-sync-2026-06-05-1635",
+        "agent-release-readiness.json#julyUpdateCandidates",
+        "agent-hardening-backlog.jsonl#server-fps-hosted-loop-sleep"
+      ],
+      "nextGate": "Use the July smoke route before implementation or release wording: hosted FPS must prove dedicated publishing plus hosted no-spin behavior; Takistan FPV must stay server-authoritative and Takistan-scoped until runtime evidence says otherwise."
+    },
+    {
       "id": "mission-entrypoints-lifecycle",
       "system": "mission boot and role split",
       "riskTier": "P1",
