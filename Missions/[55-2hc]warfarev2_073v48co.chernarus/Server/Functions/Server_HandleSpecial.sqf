@@ -232,7 +232,7 @@ switch (_args select 0) do {
 		_townModel = (missionNamespace getVariable "WFBE_C_CAMP") createVehicle (getPos _logic);
 		_townModel setDir ((getDir _logic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
 		_townModel setPos (getPos _logic);
-		_townModel addEventHandler ["killed", {(_this select 0) Spawn WFBE_SE_FNC_OnBuildingKilled}];
+		//--- bug: removed killed-EH that called nonexistent WFBE_SE_FNC_OnBuildingKilled (nil-code -> RPT error on every camp-bunker death). Camp death is already detected via alive(wfbe_camp_bunker) polling; BuildingKilled is unsuitable here (the bunker has no wfbe_side).
 		_townModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
 		_logic setVariable ["wfbe_camp_bunker", _townModel, true];
 

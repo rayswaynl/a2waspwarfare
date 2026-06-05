@@ -22,7 +22,7 @@ _maxSupplyLimit = missionNameSpace getvariable "WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT"
 _currentSupply = (_side) Call GetSideSupply;
 if (isNil '_currentSupply') then {_currentSupply = 0};
 _change = _currentSupply + _amount;
-if (_change < 0) then {_change = _currentSupply - _amount};
+if (_change < 0) then {_change = 0}; //--- bug/economy (DR-22): floor at 0 (was an overspend->credit inversion). NB: _change here is currently unused (line below sends _amount); corrected to avoid a future trap.
 if (_change >= _maxSupplyLimit) then {_change = _maxSupplyLimit};
 
 missionNamespace setVariable [format ["wfbe_supply_temp_%1", _side], [_side, _amount, _reason]];

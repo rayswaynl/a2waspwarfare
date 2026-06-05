@@ -32,11 +32,11 @@ if (_backpack != "") then {
 	_items = (_backpack_content select 0) select 0;
 	_counts = (_backpack_content select 0) select 1;
 	
-	for '_i' from 0 to count(_items) do {_unit_bp addWeaponCargoGlobal [_items select _i, _counts select _i]};
+	for '_i' from 0 to count(_items)-1 do {_unit_bp addWeaponCargoGlobal [_items select _i, _counts select _i]};
 	
 	//--- Ammo
 	_items = (_backpack_content select 1) select 0;
 	_counts = (_backpack_content select 1) select 1;
 	
-	for '_i' from 0 to count(_items) do {_unit_bp addMagazineCargoGlobal [_items select _i, _counts select _i]};
+	for '_i' from 0 to count(_items)-1 do {_unit_bp addMagazineCargoGlobal [_items select _i, _counts select _i]};
 };

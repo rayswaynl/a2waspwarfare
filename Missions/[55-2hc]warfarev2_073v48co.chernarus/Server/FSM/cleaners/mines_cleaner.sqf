@@ -14,7 +14,7 @@ while {!WFBE_GameOver} do {
 		_mine_timer = _x select 1;
 		if((time - _mine_timer) >= _timer) then{
 			deleteVehicle (_x select 0);
-			mines = mines - _x;
+			mines = mines - [_x]; //--- perf/bug: _x is a [mine,time] pair; "- _x" removed nothing, leaking pairs forever and slowing this cleaner each cycle.
 			_perfDeleted = _perfDeleted + 1;
 		};
 		_perfActive = _perfActive + (diag_tickTime - _perfItemStart);

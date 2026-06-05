@@ -93,7 +93,7 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 			[_killer_uid, "AwardBounty", [_killed_type, false, _killer_award]] Call WFBE_CO_FNC_SendToClients;
 
 			if (vehicle _killed != _killed && alive _killed) then { //--- Kill assist (players in the same vehicle).
-				{if (alive _x && isPlayer _x) then {[getPlayerUID(_x), "AwardBounty", [_objectType, true]] Call WFBE_CO_FNC_SendToClients}} forEach ((crew (vehicle _killed)) - [_killer, player]);
+				{if (alive _x && isPlayer _x) then {[getPlayerUID(_x), "AwardBounty", [_killed_type, true]] Call WFBE_CO_FNC_SendToClients}} forEach ((crew (vehicle _killed)) - [_killer, player]); //--- bug: was undefined _objectType -> kill-assist bounty silently failed; use _killed_type.
 			};
 
 			};

@@ -71,6 +71,6 @@ while {!gameOver} do {
 
 	} forEach WFBE_PRESENTSIDES;
 
-	_awaits = (_ii) Call GetSleepFPS;
+	_awaits = _ii; //--- perf/bug: keep the full income interval; GetSleepFPS SHORTENED it under low FPS, doubling per-cycle wfbe_funds broadcasts exactly when the server was already stressed (positive-feedback death-spiral).
 	sleep _awaits;
 };

@@ -24,17 +24,17 @@ if (alive _vehicle) then {
 	_items = (_vehicle_content select 0) select 0;
 	_counts = (_vehicle_content select 0) select 1;
 	
-	for '_i' from 0 to count(_items) do {_vehicle addWeaponCargoGlobal [_items select _i, _counts select _i]};
+	for '_i' from 0 to count(_items)-1 do {_vehicle addWeaponCargoGlobal [_items select _i, _counts select _i]};
 	
 	//--- Ammo
 	_items = (_vehicle_content select 1) select 0;
 	_counts = (_vehicle_content select 1) select 1;
 	
-	for '_i' from 0 to count(_items) do {_vehicle addMagazineCargoGlobal [_items select _i, _counts select _i]};
+	for '_i' from 0 to count(_items)-1 do {_vehicle addMagazineCargoGlobal [_items select _i, _counts select _i]};
 	
 	//--- Backpack
 	_items = (_vehicle_content select 2) select 0;
 	_counts = (_vehicle_content select 2) select 1;
 	
-	for '_i' from 0 to count(_items) do {_vehicle addBackpackCargoGlobal [_items select _i, _counts select _i]};
+	for '_i' from 0 to count(_items)-1 do {_vehicle addBackpackCargoGlobal [_items select _i, _counts select _i]};
 };

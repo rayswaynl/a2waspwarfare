@@ -86,6 +86,7 @@ WFBE_SE_PV_RequestSupplyValue = Call Compile preprocessFileLineNumbers "Server\F
 WFBE_SE_FNC_CallDatabaseRequestSideTotalSkill = Compile preprocessFileLineNumbers "Server\Module\AntiStack\callDatabaseRequestSideTotalSkill.sqf";
 WFBE_SE_FNC_CallDatabaseFlushPlayerList = Compile preprocessFileLineNumbers "Server\Module\AntiStack\callDatabaseFlushPlayerList.sqf";
 WFBE_SE_FNC_CallDatabaseSetMap = Compile preprocessFileLineNumbers "Server\Module\AntiStack\callDatabaseSetMap.sqf";
+//--- PR12 removed a duplicate compile block here; keep only the dormant module stubs below.
 //WFBE_CO_FNC_InitAFKkickHandler = Compile preprocessFileLineNumbers "Server\Module\afkKick\initAFKkickHandler.sqf";
 // WFBE_CO_FNC_monitorServerFPS = Compile preprocessFileLineNumbers "Server\Module\serverFPS\monitorServerFPS.sqf";
 //WFBE_SE_FNC_MASH_MARKER = Call Compile preprocessFileLineNumbers "Server\Module\MASH\MASHMarker.sqf";
