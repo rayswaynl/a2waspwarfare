@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T22:45:00+02:00 - Codex - Miksuu town-capture state fix intake
+
+- Claimed `miksuu-town-capture-state-fix-intake` after the previous refetch delta showed `miksuu/master` moved to `69e1958a`.
+- Source-checked commit `e4be1958` (`Fix town occupation AI state after capture`): both Chernarus and maintained Vanilla Takistan `Server/FSM/server_town.sqf:229-257` add `capture_before` / `capture_cleanup` diagnostics, delete old tracked town teams/vehicles, and reset `wfbe_active`, `wfbe_active_air`, `wfbe_active_sideIDs`, `wfbe_active_override`, `wfbe_inactivity`, `wfbe_town_teams` and `wfbe_active_vehicles` during capture.
+- Rechecked rayswaynl `origin/master` `2cdf5fb8`: Chernarus `server_town.sqf:226-245` still goes from capture log to side messages, `sideID`, `TownCaptured`, camp reassignment and defense replacement without clearing active-town AI state.
+- Routed the upstream candidate through [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel), [Towns/camps/capture](Towns-Camps-And-Capture-Atlas), [Feature status](Feature-Status-Register), [Developer history](Developer-History-And-Upstream-Lessons) and [Testing workflow](Testing-Debugging-And-Release-Workflow). No gameplay source changed.
+
 ## 2026-06-05T22:35:00+02:00 - Codex - current source-status refetch
 
 - Claimed `current-source-status-refetch` after stale-status scanning showed [Current source status snapshot](Current-Source-Status-Snapshot) still carried older docs/release/upstream branch heads from the 2026-06-03/04 matrices.

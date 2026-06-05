@@ -2,7 +2,7 @@
 
 This page indexes source-backed upstream history from `Miksuu/a2waspwarfare` for documentation and future implementation planning. It is intentionally evidence-first: use it to find proven developer intent, then re-check current source before patching.
 
-Research snapshot: upstream `master` at `8bcc42b1` (2026-06-02), GitHub PRs #1-#12, branch list from GitHub, and local fetched upstream refs.
+Research snapshot: upstream `master` at `69e1958a` after the 2026-06-05 refetch, GitHub PRs #1-#12, branch list from GitHub, and local fetched upstream refs. Earlier sections still preserve their original point-in-time evidence.
 
 ## PR Ledger
 
@@ -49,7 +49,20 @@ Research snapshot: upstream `master` at `8bcc42b1` (2026-06-02), GitHub PRs #1-#
 | `88e0749a`, `ff1ea838`, `62becdda`, `49aa1e53` | performance audit/analyzer | Diagnostics preceded major performance work. |
 | `4aaa814a` | `server_town_camp.sqf`, `server_town_ai.sqf`, town-unit creation/delegation | Server loop and town-AI optimizations intentionally reduced scans and marker work. |
 | `6189f3c5` | `server_town_ai.sqf` | Scan budgeting added per-cycle and per-town cadence. |
-| `a20a5a0f`, `84b1b684`, `ea0bff2e`, `913ecdf6` | `server_town.sqf`, `server_town_ai.sqf`, delegation/static-defense helpers | Town defense activation needed restoration, defender filtering and diagnostics after performance changes. |
+| `a20a5a0f`, `84b1b684`, `ea0bff2e`, `913ecdf6`, `e4be1958` | `server_town.sqf`, `server_town_ai.sqf`, delegation/static-defense helpers | Town defense activation needed restoration, defender filtering and diagnostics after performance changes. The newest upstream patch also clears previous-side active town-AI state on capture so the new owner can spawn occupation teams. |
+
+#### 2026-06-05 `miksuu/master` Capture-State Addendum
+
+Refetch result: `miksuu/master` moved from `8bcc42b1` to `69e1958a` by merging `Marty_town_defense_fix`. The new source commit is [`e4be1958`](https://github.com/Miksuu/a2waspwarfare/commit/e4be1958668ade647dfec8a098a4743b4131f511) (`Fix town occupation AI state after capture`).
+
+Evidence checked:
+
+| Branch / commit | Mission coverage | Source shape | Interpretation |
+| --- | --- | --- | --- |
+| `miksuu/master` `e4be1958` | Source Chernarus and maintained Vanilla Takistan | `Server/FSM/server_town.sqf:229-257` logs `capture_before`, copies `wfbe_town_teams` / `wfbe_active_vehicles`, deletes prior tracked groups/vehicles when they are not player-led, resets `wfbe_active`, `wfbe_active_air`, `wfbe_active_sideIDs`, `wfbe_active_override`, `wfbe_inactivity`, `wfbe_town_teams` and `wfbe_active_vehicles`, then logs `capture_cleanup`. | Upstream fix candidate for captured towns where old active AI state blocks new occupation AI. |
+| `rayswaynl/origin/master` `2cdf5fb8` | Source Chernarus baseline checked | `Server/FSM/server_town.sqf:226-245` goes from capture log to side messages, `sideID` write, `TownCaptured`, camp reassignment and defense replacement; it does not reset `wfbe_*` active-town AI variables during capture. | Source-unpatched in stable baseline. Do not claim this behavior is fixed until imported and smoked. |
+
+Import caution: the upstream cleanup uses the same player-leader-only vehicle deletion shape as the known [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) issue. If this patch is ported, add a crew/cargo/turret player-occupancy guard before deleting `_captureVehicles` or explicitly smoke occupied captured-town AI vehicles.
 
 ### UI, Markers And Locality
 
@@ -226,7 +239,7 @@ Research snapshot: upstream `master` at `8bcc42b1` (2026-06-02), GitHub PRs #1-#
 
 | Evidence | Files / area | Finding |
 | --- | --- | --- |
-| `4aaa814a`, `6189f3c5`, `1d5092ef`, `a20a5a0f`, `84b1b684`, `ea0bff2e`, `913ecdf6` | town AI, town capture, defender tags | Town scan optimization needed restoration of remote/pre-capture activation and defender-origin filtering. |
+| `4aaa814a`, `6189f3c5`, `1d5092ef`, `a20a5a0f`, `84b1b684`, `ea0bff2e`, `913ecdf6`, `e4be1958` | town AI, town capture, defender tags | Town scan optimization needed restoration of remote/pre-capture activation, defender-origin filtering and capture-side active-state cleanup. |
 | `a20a5a0f`, `84b1b684` | capture detection vs pre-capture activation | Capture-scan wakeup was too late; pre-capture scans were restored. |
 | `ea0bff2e` | `WFBE_IsTownDefenderAI` | Defender units, crews, vehicles and groups must be tagged so they do not wake enemy towns. |
 | `823ad0da`, `a6f5020e`, `99bd4be8`, `8372f5ce` | RHUD/server FPS publishing | Diagnostics can become performance bugs; FPS HUD fixes and server loops both had reverts/guards. |
