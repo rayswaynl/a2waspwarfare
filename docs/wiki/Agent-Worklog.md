@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-05T20:55:00+02:00 - Codex helper - salvage payout/loop branch route
+
+- Claimed `salvage-payout-loop-branch-route` after the existing salvage row still had only mini-scout scope and no branch/root matrix.
+- Source-checked current source Chernarus and maintained Vanilla, stable `origin/master` `2cdf5fb8`, current `miksuu/master` `f532f706`, `origin/perf/quick-wins` `0076040f`, release `3282ff3f` and historical Miksuu salvage branches `EngineerSalvageAbility` `99bfaeb8` / `SalvageRuTranslationFix` `291c6cb4`.
+- All checked roots keep lowercase `ChangePlayerfunds` in `Skill_Salvage.sqf` and `updatesalvage.sqf`, while `Init_Client.sqf` compiles `ChangePlayerFunds`; all checked roots also keep the salvage-truck `while {!gameOver || !(alive _vehicle)}` loop and client-local wreck deletion/reward shape.
+- Updated [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas#salvage-branch-matrix), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Progress dashboard](Progress-Dashboard), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), `agent-status.json`, `agent-collaboration.json`, `agent-feature-status.jsonl`, `agent-hardening-backlog.jsonl`, `agent-knowledge.jsonl` and `agent-events.jsonl`. No gameplay source changed.
+
 ## Read This First
 
 This page is append-only history. Older entries can be superseded by later source checks, branch matrices, validation passes or release decisions. Do not assume the visible order is strictly timestamp-sorted; use explicit timestamps plus the current-state files below.
