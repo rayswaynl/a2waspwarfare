@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T20:35:00+02:00 - Codex - Server init bind cleanup route
+
+- Claimed `server-init-bind-cleanup-route` from DR-43b / duplicate-bind backlog.
+- Source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle`.
+- Added [Server init bind cleanup](Server-Init-Bind-Cleanup) as the owner page: current source/Vanilla and stable/upstream keep live duplicate binds for `WFBE_CO_FNC_LogGameEnd`, `WFBE_SE_FNC_PlayerObjectsList` and `WFBE_SE_FNC_AwardScorePlayer`; release Chernarus removes those live duplicates; release Vanilla keeps the old shape; commented AFK/server-FPS/MASH remnants remain separate from behavior revivals.
+- Condensed [Feature status](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions), [SQF code atlas](SQF-Code-Atlas) and [Server gameplay runtime](Server-Gameplay-Runtime-Atlas). No gameplay source changed.
+
 ## 2026-06-05T20:15:00+02:00 - Codex + Noether - MASH marker relay decision route
 
 - Folded Noether's read-only MASH scout into the owner pages after it rechecked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle`.

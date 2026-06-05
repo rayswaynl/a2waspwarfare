@@ -49,7 +49,7 @@ Do not collapse this into `LocalizeMessage`. `LocalizeMessage` is registered as 
 | Direct PV authority | Open hardening | [Public variable channel index](Public-Variable-Channel-Index) |
 | Side-message payload shape | Source-cited runtime surface | Use [SideMessage pipeline shape](#sidemessage-pipeline-shape). `SideMessage` takes different parameter shapes for town, strongpoint, base/construction and no-parameter radio topics; keep it separate from `LocalizeMessage` before adding radio/dubbing or changing message text. |
 | AntiStack/database loops | High-sensitivity lifecycle surface | [External integrations](External-Integrations), [AntiStack database extension audit](AntiStack-Database-Extension-Audit) and [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) |
-| Dormant maintenance hooks | `Init_Server.sqf:36` comments `UpdateSupplyTruck`; `:567` comments `groupsMonitor`; `:65,88-92` retain older commented AFK/server-FPS/MASH compile remnants. | Keep disabled hooks documented as historical or deliberately revive them with owner-scoped smoke. |
+| Dormant maintenance hooks | `Init_Server.sqf:36` comments `UpdateSupplyTruck`; `:567` comments `groupsMonitor`; `:65,88-92` retain older commented AFK/server-FPS/MASH compile remnants. | Keep disabled hooks documented as historical or deliberately revive them with owner-scoped smoke. Duplicate live bind cleanup is tracked in [Server init bind cleanup](Server-Init-Bind-Cleanup). |
 
 ## Safe Runtime Rules
 

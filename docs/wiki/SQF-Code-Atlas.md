@@ -100,7 +100,7 @@ Owner caveats:
 - `Common/Init/Init_Common.sqf` is shared but not owner-pure; the `isServer` branch around `:301-307` means some server-only setup lives in the common init file.
 - `Common/Init/Init_Common.sqf:370-371` sets common completion flags that later server/client waits assume.
 - `Headless/Init/Init_HC.sqf:12-15` announces HC after a fixed sleep, not an explicit `serverInitFull` wait.
-- `Server/Init/Init_Server.sqf:64-65` and `:88-91` show duplicate/legacy compile assignments; keep compile cleanup separate from behavior patches unless smoke covers the touched function.
+- `Server/Init/Init_Server.sqf:64-65` and `:88-91` show duplicate/legacy compile assignments; use [Server init bind cleanup](Server-Init-Bind-Cleanup) and keep compile cleanup separate from behavior patches unless smoke covers the touched function.
 
 ### `initJIPCompatible.sqf`
 
@@ -225,7 +225,7 @@ PVF dispatch mechanics:
 PV function files outside the standard PVF command lists:
 
 - `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` exists in current source/Vanilla and `HandleParatrooperMarkerCreation` is now registered in `_clientCommandPV` before `NukeIncoming`. The remaining work is Arma smoke and modded-mission drift; see [Paratrooper marker revival](Paratrooper-Marker-Revival).
-- `Server/PVFunctions/AttackWave.sqf` and `Server/Functions/Server_AttackWave.sqf` are compiled directly in server init rather than through the standard PVF command list (`Init_Server.sqf:94-95`). `WFBE_CO_FNC_LogGameEnd` is wired to `Server/Functions/Server_LogGameEnd.sqf` at `Init_Server.sqf:64` and `:89`; the `Server/PVFunctions/LogGameEnd.sqf` twin exists as the DR-13 cleanup target but is not the live compile target.
+- `Server/PVFunctions/AttackWave.sqf` and `Server/Functions/Server_AttackWave.sqf` are compiled directly in server init rather than through the standard PVF command list (`Init_Server.sqf:94-95`). `WFBE_CO_FNC_LogGameEnd` is wired to `Server/Functions/Server_LogGameEnd.sqf`; current source/stable duplicate that bind, while release Chernarus de-duplicates it. Use [Server init bind cleanup](Server-Init-Bind-Cleanup) for branch status. The `Server/PVFunctions/LogGameEnd.sqf` twin exists as the DR-13 cleanup target but is not the live compile target.
 
 ## Direct Public Variable Channels
 
