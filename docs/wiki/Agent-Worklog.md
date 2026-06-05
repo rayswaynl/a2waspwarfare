@@ -7,6 +7,12 @@
 - Result: every checked maintained root/branch keeps `Server/FSM/updateresources.sqf:29-70` wrapping side-supply growth, player paychecks and AI-commander funds in the same town-supply cap guard, and keeps income system `4` applying a server-side `1.5` multiplier that `Client/Functions/Client_GetIncome.sqf:20-29` does not mirror for display math.
 - Updated [Economy, towns and supply](Economy-Towns-And-Supply#resource-income-branch-matrix), [Economy authority first cut](Economy-Authority-First-Cut), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
 
+## 2026-06-06T01:20:00+02:00 - Codex - Dashboard Latest Batch trim after resource income
+
+- Claimed `dashboard-latest-batch-retrim-after-resource-income` during rebase after the resource-income payout branch route made [Progress dashboard](Progress-Dashboard) grow past five current rows.
+- Kept the newest five live dashboard rows and aged `fast-travel-fee-branch-route` out of Latest Batch. The fast-travel finding remains preserved in this worklog, [`agent-events.jsonl`](agent-events.jsonl), [Client UI systems](Client-UI-Systems-Atlas#tactical-fast-travel-fee-branch-matrix), [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue) and git history.
+- No gameplay source changed.
+
 ## 2026-06-06T00:50:00+02:00 - Codex helper - RequestSpecial upgrade-sync branch route
 
 - Claimed `requestspecial-upgrade-sync-branch-route` from the RequestSpecial/upgrades cleanup backlog.
@@ -54,6 +60,18 @@ For current state, start with:
 - [`agent-knowledge.jsonl`](agent-knowledge.jsonl)
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
+
+## 2026-06-06T00:55:00+02:00 - Codex - Dashboard Latest Batch trim after fast-travel
+
+- Claimed `dashboard-latest-batch-retrim-after-fast-travel` during rebase after the fast-travel fee branch route made [Progress dashboard](Progress-Dashboard) grow to six published rows.
+- Kept the newest five live dashboard rows and aged `empty-supply-truck-cleanup-branch-route` out of Latest Batch. The empty supply-truck finding remains preserved in this worklog, [`agent-events.jsonl`](agent-events.jsonl), [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas#empty-supply-truck-branch-matrix), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue) and git history.
+- No gameplay source changed.
+
+## 2026-06-06T00:35:00+02:00 - Codex - Dashboard Latest Batch trim after vote/help
+
+- Claimed `dashboard-latest-batch-retrim-after-vote-help` after [Progress dashboard](Progress-Dashboard) Latest Batch grew to six rows when the vote/help UI edge batch landed.
+- Trimmed the table back to the newest five published rows by aging `clickabletext-soundpush-branch-route` out of Latest Batch. The clickable-text finding remains preserved in this worklog, [`agent-events.jsonl`](agent-events.jsonl), [Client UI systems](Client-UI-Systems-Atlas#clickable-text-soundpush-branch-matrix), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue) and git history.
+- No gameplay source changed.
 
 ## 2026-06-06T00:20:00+02:00 - Codex - Salvage pruning ledger duplicate trim
 
