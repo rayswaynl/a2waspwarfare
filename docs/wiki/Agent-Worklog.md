@@ -1,5 +1,25 @@
 # Agent Worklog
 
+## Read This First
+
+This page is append-only history. Older entries can be superseded by later source checks, branch matrices, validation passes or release decisions.
+
+For current state, start with:
+
+- [Progress dashboard](Progress-Dashboard)
+- [Current source status snapshot](Current-Source-Status-Snapshot)
+- [`agent-status.json`](agent-status.json)
+- [`agent-knowledge.jsonl`](agent-knowledge.jsonl)
+
+When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
+
+## 2026-06-05T19:50:00+02:00 - Codex - agent worklog append-only guardrail
+
+- Claimed `agent-worklog-append-only-guardrail` after stale status scans showed old [Agent worklog](Agent-Worklog) entries can be mistaken for current truth even though [Current source status snapshot](Current-Source-Status-Snapshot) already carries the stronger branch-aware guardrail.
+- Added this top-of-page guardrail so humans and LLMs start from [Progress dashboard](Progress-Dashboard), [Current source status snapshot](Current-Source-Status-Snapshot), [`agent-status.json`](agent-status.json) and [`agent-knowledge.jsonl`](agent-knowledge.jsonl) before treating historical rows as live state.
+- Preserved all historical entries unchanged.
+- No gameplay source changed.
+
 ## 2026-06-05T14:50:00+02:00 - Codex - agent development pack alias
 
 - Claimed `agent-development-pack-alias` from [Knowledge platform roadmap](Knowledge-Platform-Roadmap) after the roadmap noted that older prompts still ask for an "Agent Development Pack" while the canonical page is [LLM agent entry pack](LLM-Agent-Entry-Pack).
