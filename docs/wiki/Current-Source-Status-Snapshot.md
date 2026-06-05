@@ -32,6 +32,17 @@ If any item is missing, use `patch-ready`, `branch-local`, `propagated-smoke-pen
 | DroneStrike branch | Whether the latest drone tuning branch is the target, whether paid-support authority moved server-side, and whether generated scope/smoke exists. | [PR8 and drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match) |
 | ReconUAV branch | Whether ReconUAV replaces the old UAV module, whether it is rebased onto latest DroneStrike tuning, and whether recall/reveal/JIP cleanup is smoked. | [PR8 and drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match) |
 
+## 2026-06-05 Refetch Delta
+
+`git fetch --all --prune` was rerun on 2026-06-05. This did **not** re-prove every matrix row below; it only refreshes the branch-head routing state so agents do not treat old commit IDs as current.
+
+| Ref | Earlier matrix head | Fetched head on 2026-06-05 | Delta / action |
+| --- | --- | --- | --- |
+| `origin/docs/developer-wiki-index` | source-check basis `154b7f38` | `a552060d` before this docs batch | Docs-only branch has advanced through wiki/backlog maintenance. Use it for documentation truth, not gameplay release proof. |
+| `origin/release/2026-06-feature-bundle` | `a9219d88` | `3282ff3f` | Four newer commits are present: PR8 static smoke checks, shielded HQ walls, service-point menu actions and WF menu counts. Each needs its owner page/source review before status wording changes. |
+| `miksuu/master` | `8bcc42b1` | `69e1958a` | New upstream merge `Marty_town_defense_fix` includes `e4be1958` (`Fix town occupation AI state after capture`). Treat as an upstream lesson candidate, not a rayswaynl shipped fix. |
+| Other named feature refs in the 2026-06-04 matrix | As listed below | unchanged in this refetch | Keep existing branch-review gates until a later source audit proves a new delta. |
+
 ## 2026-06-03 Branch Matrix
 
 Checked refs: docs/source `HEAD` `4163faba`, stable `origin/master` `2cdf5fb8`, and `origin/release/2026-06-feature-bundle` `a9219d88`.

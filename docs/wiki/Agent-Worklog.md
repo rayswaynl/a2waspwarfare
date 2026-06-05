@@ -13,6 +13,12 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T22:35:00+02:00 - Codex - current source-status refetch
+
+- Claimed `current-source-status-refetch` after stale-status scanning showed [Current source status snapshot](Current-Source-Status-Snapshot) still carried older docs/release/upstream branch heads from the 2026-06-03/04 matrices.
+- Ran `git fetch --all --prune` and checked the named refs. Docs mirror was at `a552060d`, `origin/release/2026-06-feature-bundle` moved from `a9219d88` to `3282ff3f`, and `miksuu/master` moved from `8bcc42b1` to `69e1958a`.
+- Added a dated refetch delta instead of rewriting matrix conclusions, because newer release/upstream commits still need source-owner review before they become current gameplay status claims. No gameplay source changed.
+
 ## 2026-06-05T22:25:00+02:00 - Codex - bottleneck queue validation refresh
 
 - Claimed `bottleneck-queue-validation-refresh` after [Bottleneck removal queue](Bottleneck-Removal-Queue) still described mirror/wiki parity as required from an old 2026-06-03 state.
