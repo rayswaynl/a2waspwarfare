@@ -57,6 +57,71 @@ Recommended PR board cleanup:
 4. Test separately later: PR #4 player stats, PR #9 Zargabad, PR #13 drone/recon UAV, PR #14/#18/#19 AI commander chain.
 5. Pick one WF menu direction: PR #16 for original-style UX, or PR #15 for ops-console reskin. They overlap enough that both should not be merged blindly.
 
+## Scout Findings Addendum
+
+Additional read-only scout passes refined the branch guidance:
+
+### PR #4 Player Stats
+
+PR #4 is real, coherent, and off by default, but it should remain a separate feature lane. It adds a server-authoritative telemetry pipe:
+
+```text
+server SQF stat buffer -> WASPSTAT RPT lines -> DiscordBot RPT tailer/parser -> stats.json
+```
+
+Both gates default off:
+
+- Mission: `WFBE_C_STATS_ENABLED = false`.
+- Bot: `Preferences.StatsEnabled = false`.
+
+The branch includes deterministic `DiscordBot.Tests` coverage for parser, accumulator, document persistence, RPT tailing, and pipeline integration. The main risk is operational/privacy rather than mergeability: `stats.json` is keyed by raw SteamID64 and should be treated as sensitive local telemetry.
+
+### PR #9 Zargabad
+
+PR #9 is a mission-pack import, not a small feature. It is mechanically clean but operationally large:
+
+- 80 commits ahead of `origin/master`.
+- 832 files changed.
+- 77k+ insertions.
+- Hundreds of new files under `Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad`.
+
+Use its validation tooling as gates before promotion:
+
+```text
+Tools/Validate-ZargabadMission.ps1
+Tools/New-ZargabadRuntimeReport.ps1
+Tools/Validate-ZargabadRuntimeEvidence.ps1
+Tools/Validate-ZargabadRuntimeReport.ps1
+```
+
+Also evaluate `miksuu/Marty_town_defense_fix` before serious release testing. It is a focused upstream runtime correctness fix and may reduce false confidence during PR8 town-defense sessions.
+
+### PR #14 / #18 / #19 AI Commander Chain
+
+These PRs are one experimental family, not standalone branches:
+
+- PR #14 adds the commander supervisor/worker runtime.
+- PR #18 adds structured AI commander logs.
+- PR #19 adds context/belief tracking.
+
+PR #18 and PR #19 assume the PR #14 runtime. The chain is not perfectly linear by ancestry, so build a dedicated `ai-commander-lab` branch instead of merging directly into PR8. The repeated hard conflict is:
+
+```text
+Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AI_Com_Upgrade.sqf
+```
+
+The conflict is around AI commander upgrade debit/cost handling. There are no automated tests for no-human commander mode, human-assist mode, upgrade-spend correctness, smoke/JIP handoff, or context-belief output, so this needs a manual lab and telemetry-first review.
+
+### PR #15 vs PR #16 UI
+
+PR #16 remains the safer default because it is smaller, keeps the existing visual contract, and focuses on SafeZone/layout/grouping improvements. PR #15 is a broader visual reskin:
+
+- PR #15 changes shared style/resource/title files, GUI structured-text colors, and adds `brand_chevron.jpg`.
+- PR #16 rewrites the main WF menu layout and shared resources in a lower-risk way.
+- Both overlap in `Rsc/Dialogs.hpp` and `Rsc/Ressources.hpp` for Chernarus and Takistan.
+
+Do not merge both blindly. Cherry-pick PR #15 ideas later only after PR #16 is tested: style tokens, title typography, structured-text color polish, and optional branding/footer assets.
+
 ## Test Notes For Discord
 
 Short version to share:
