@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-06T02:05:00+02:00 - Codex helper - Factory destroyed-purchase refund branch route
+
+- Claimed `factory-destroyed-purchase-refund-branch-route` from the factory/purchase authority and refund backlog.
+- Source-checked current source Chernarus, maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and release `origin/release/2026-06-feature-bundle` `7195b331` for `GUI_Menu_BuyUnits.sqf` debit timing and `Client_BuildUnit.sqf` abort cleanup.
+- Result: current source/Vanilla, stable, upstream and perf all debit after `BuildUnit` spawn and leave the dead/null factory exit as queue cleanup with no refund. Release carries `_currentCost` into `BuildUnit` and refunds in the empty/crewless branch, but its dead/null factory exit still does not refund.
+- Updated [Factory and purchase systems](Factory-And-Purchase-Systems-Atlas#destroyed-factory-refund-branch-matrix), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
+
 ## 2026-06-06T01:35:00+02:00 - Codex helper - Side-supply reason-string branch route
 
 - Claimed `side-supply-reason-string-branch-route` from the side-supply diagnostics backlog.

@@ -230,6 +230,17 @@ This means the durable fix is not a small "refund missing" patch by itself. A pu
 
 Terminology note from the 2026-06-04 factory queue scout: once the buy menu spawns `BuildUnit`, "cancel" is not a current UI operation. The Back button only returns to the main WF menu (`GUI_Menu_BuyUnits.sqf:495-499`), while the worker continues unless it reaches an abort path such as a dead/null factory. Use "abort/refund" for implementation work until an actual cancel command exists.
 
+### Destroyed-Factory Refund Branch Matrix
+
+Refreshed 2026-06-06 for current source `HEAD`/stable `origin/master` `2cdf5fb8`, upstream `miksuu/master` `f532f706`, `origin/perf/quick-wins` `0076040f` and release `origin/release/2026-06-feature-bundle` `7195b331`.
+
+| Scope | Menu/debit shape | Dead/null factory abort | Development meaning |
+| --- | --- | --- | --- |
+| Current source Chernarus + maintained Vanilla | `GUI_Menu_BuyUnits.sqf:145-156` checks the local queue cap, increments `WFBE_C_QUEUE_%1`, spawns `BuildUnit`, then debits with `-(_currentCost) Call ChangePlayerFunds`. `_currentCost` is not passed to `BuildUnit`. | `Client_BuildUnit.sqf:211-214` exits when the building is dead/null and decrements `unitQueu` plus `WFBE_C_QUEUE_%1`, but does not refund funds. | The player pays even when the build worker aborts after a destroyed/null factory. Treat as owner-decision patch-ready work, not a documented cancellation feature. |
+| Stable `origin/master` `2cdf5fb8` and upstream `miksuu/master` `f532f706` | Same line shape in both maintained roots: buy menu debit after `BuildUnit` spawn at `GUI_Menu_BuyUnits.sqf:145-156`. | Same dead/null exit at `Client_BuildUnit.sqf:211-214` with queue cleanup only. | No stable/upstream rescue found. |
+| `origin/perf/quick-wins` `0076040f` | Same buy menu debit and no `_currentCost` parameter in both roots. | Dead/null factory exit still has queue cleanup only at `Client_BuildUnit.sqf:211-214`. Chernarus additionally cleans the empty/crewless branch counter at `:367-368`; Vanilla does not. | Perf branch is useful DR-33a evidence, but it does not solve destroyed-factory refunds or maintained Vanilla propagation. |
+| Release `origin/release/2026-06-feature-bundle` `7195b331` | Chernarus and Vanilla pass `_currentCost` into `BuildUnit` at `GUI_Menu_BuyUnits.sqf:160`, spawn at `:161`, then debit at `:162`. | Dead/null factory exit still only decrements queue/counter at `Client_BuildUnit.sqf:212-215`. The later empty/crewless branch releases the queue and refunds `_currentCost` at `:367-372`, with a comment saying factory destroyed before build. | Release has adjacent cost/refund plumbing, but not closure for the dead/null factory abort. Review the comment/branch placement before porting; a durable fix should define one acceptance/debit/refund contract across all post-queue abort paths. |
+
 ## Queue Model
 
 There are two queue concepts:
