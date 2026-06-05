@@ -13,6 +13,10 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T16:53:19+02:00 - Codex - wiki source consistency footer route refresh
+
+- Relabeled the historical [Wiki/source consistency findings](Wiki-Source-Consistency-Findings) `Continue Reading` footer from `Codex queue` to a current route: [Progress dashboard](Progress-Dashboard) as the live route and [Instructions for Codex](Instructions-For-Codex) as the operating contract. No gameplay source changed.
+
 ## 2026-06-05T16:49:25+02:00 - Codex - coordination board open-task route refresh
 
 - Refreshed [Coordination board](Coordination-Board) and [Progress dashboard](Progress-Dashboard) so `documentation-finisher-loop` no longer tells future agents to treat [Instructions for Codex](Instructions-For-Codex) as a live queue after that page was condensed.

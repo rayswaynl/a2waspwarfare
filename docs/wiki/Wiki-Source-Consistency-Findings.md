@@ -80,6 +80,6 @@ Status 2026-06-05: this batch is now mostly a historical routing audit rather th
 > **Totals across batches 1–3:** 21 pages, ~1,100 concrete claims checked, ~78 inconsistencies. Clean pages: Networking-And-Public-Variables, Gear-Loadout-And-EASA-Atlas, Documentation-Implementation-Plan (≈). Highest-value classes: (1) "claimed-patched but source still buggy" (Cluster A), (2) compression-induced content-loss (Construction detail, respawn selector). Codex acknowledged + began reconciling B/C at 14:56.
 
 ## Continue Reading
-Findings: [Deep-review findings](Deep-Review-Findings) · Status: [Feature status register](Feature-Status-Register) · Channels: [Public variable channel index](Public-Variable-Channel-Index) · Reference: [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference) · Codex queue: [Instructions for Codex](Instructions-For-Codex)
+Findings: [Deep-review findings](Deep-Review-Findings) · Status: [Feature status register](Feature-Status-Register) · Channels: [Public variable channel index](Public-Variable-Channel-Index) · Reference: [Arma 2 OA command version reference](Arma-2-OA-Command-Version-Reference) · Live route: [Progress dashboard](Progress-Dashboard) · Operating contract: [Instructions for Codex](Instructions-For-Codex)
 
 > Method: each claim verified by opening the cited source file in `Missions/[55-2hc]warfarev2_073v48co.chernarus`. Read-only; no source or other wiki page was modified. Re-run cadence: this lane re-audits as pages change.
