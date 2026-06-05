@@ -208,9 +208,13 @@
         "ICBM-Authority-Playbook",
         "Server-Authority-Migration-Map",
         "Networking-And-Public-Variables",
+        "Public-Variable-Channel-Index",
+        "Dead-Code-And-Stale-Code-Register",
         "Feature-Status-Register"
       ],
       "sourceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateclient.sqf:20",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Nuke/OnEventHandler_ICBM_Launch.sqf:5-9",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Nuke/nukeincoming.sqf:23",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestSpecial.sqf:1",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf:97-111",
@@ -220,7 +224,7 @@
         "agent-feature-status.jsonl#icbm-requestspecial-authority",
         "agent-hardening-backlog.jsonl#icbm-requestspecial-authority"
       ],
-      "nextGate": "Server must re-derive commander/team/side/module/upgrade/funds/object state before launching or rejecting the nuke; client Tactical menu gates are only affordance."
+      "nextGate": "Server must re-derive commander/team/side/module/upgrade/funds/object state before launching or rejecting the nuke; client Tactical menu gates are only affordance. Separately, branch-checked ICBM_launched is a receiver-only legacy notification channel and should be retired or deliberately revived with one sender."
     },
     {
       "id": "direct-publicvariable-channels",

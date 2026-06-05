@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T18:35:00+02:00 - Codex - ICBM_launched receiver branch scope
+
+- Claimed `icbm-launched-receiver-branch-scope` after a read-only explorer returned the stale direct-PV receiver lead.
+- Corrected the explorer's path wording from `Migrations` to the actual `Missions` roots, then source-checked current Chernarus, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle`.
+- Confirmed `Client/FSM/updateclient.sqf:20` still registers `"ICBM_launched"` and `Client/Module/Nuke/OnEventHandler_ICBM_Launch.sqf:5-9` still documents the old payload, but fixed-string sender searches found no active assignment or `publicVariable "ICBM_launched"` sender.
+- Kept the live path separate: Tactical menu spawns `NukeIncoming`, which sends `RequestSpecial ["ICBM", ...]` and broadcasts `HandleSpecial "icbm-display"`. Docs now route this as retire-vs-revive plus ICBM smoke, not another broad PV scan. No gameplay source changed.
+
 ## 2026-06-05T18:20:00+02:00 - Codex - Parameters display 22005 comment scope
 
 - Claimed `parameters-display-22005-comment-scope` from the UI/dead-code backlog after the stale `22005` line still risked being rediscovered as a live missing-control bug.
