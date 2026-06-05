@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-context-v1",
-  "generatedAt": "2026-06-05T16:06:23+02:00",
+  "generatedAt": "2026-06-05T17:21:10+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "game": "Arma 2 Operation Arrowhead 1.64",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -329,7 +329,7 @@
       "lane": "source-propagated-smoke-pending",
       "owner": "future-tester-release-owner",
       "status": "smoke-pending",
-      "nextAction": "Smoke client skill init, hosted FPS, supply scan and paratrooper marker lanes before release-complete claims."
+      "nextAction": "Smoke client skill init, hosted FPS, supply scan, paratrooper marker and commander-built ARTY lanes before release-complete claims."
     },
     {
       "lane": "wasp-marker-wait-cleanup",
@@ -375,7 +375,7 @@
     "HC delegation docs have split ownership: AI-Headless-And-Performance.md routes runtime/source anchors, Lifecycle-Wait-Chain.md owns HC boot timing, and Headless-Delegation-And-Failover-Playbook.md owns DR-21/DR-42 patch policy.",
     "Lifecycle docs have split ownership: Lifecycle-Wait-Chain.md owns flags, boot ordering, JIP waits and HC wait hazards; Mission-Entrypoints-And-Lifecycle.md owns include graph and role-dispatch orientation; SQF-Code-Atlas.md owns compile/source ownership; Server-Gameplay-Runtime-Atlas.md owns long-running server loops.",
     "Hardening authority docs have split ownership: Hardening-Implementation-Roadmap.md owns patch order/branch discipline/validation gates, while Server-Authority-Migration-Map.md owns authority design principles, flow table and handler checklist.",
-    "Use Current-Source-Status-Snapshot.md and agent-knowledge.jsonl#release-3282ff3f-propagated-fix-lane-spotcheck-2026-06-05 before trusting older worklog/event/knowledge entries that claim cleanup lanes already shipped. As of the 2026-06-05 release-head spot-check, docs/source carries paratrooper marker registration, duplicate Skill_Init removal, hosted FPS loop exits and supply scan narrowing in Chernarus plus maintained Vanilla; stable master does not, and release 3282ff3f is partial for FPS/supply and absent for paratrooper/Skill_Init. Commander DR-15 and factory DR-33 remain current-code-change-needed, and the WASP display-54 wait remains an open cleanup opportunity.",
+    "Use Current-Source-Status-Snapshot.md and agent-knowledge.jsonl#release-3282ff3f-propagated-fix-lane-spotcheck-2026-06-05 before trusting older worklog/event/knowledge entries that claim cleanup lanes already shipped. As of the 2026-06-05 release-head spot-check, docs/source carries paratrooper marker registration, duplicate Skill_Init removal, hosted FPS loop exits, supply scan narrowing and commander-built ARTY ownership in Chernarus plus maintained Vanilla; stable master does not, release 3282ff3f is partial for FPS/supply and absent for paratrooper/Skill_Init/commander ARTY. Commander DR-15 and factory DR-33 remain current-code-change-needed, and the WASP display-54 wait remains an open cleanup opportunity.",
     "Worklog/event timestamps can be non-monotonic; append-order supersession notes plus Current-Source-Status-Snapshot.md beat older or later-looking stale timestamps."
   ],
   "entrypoints": [
@@ -416,7 +416,7 @@
     "economyAuthorityFirstCut": "Economy-Authority-First-Cut.md is the source-backed minimum patch order for DR-22 side-supply clamp, DR-23 upgrades, DR-6 construction/defense and DR-14 player-buy ceiling.",
     "supplyMissionAuthorityCleanup": "Supply-Mission-Authority-Cleanup-Playbook.md is the source-backed patch guide for player supply missions and PR #1 supply helicopters: server-owned loaded/tracking state, DR-18 cooldown casing patch shape, cargo validation, Killed-handler idempotency, command-center scan narrowing and dedicated/JIP/heli validation. Supply-Mission-Architecture.md owns the flow/JIP map; Deep-Review-Findings.md DR-18 owns exact casing evidence.",
     "abandonedFeatureRevival": "Abandoned-Feature-Revival-Review.md classifies dormant/broken feature paths: MASH markers need server-held/JIP-safe revival or removal; paratrooper markers are a small PVF registration revive; AI supply trucks are broken because compile is commented and supplytruck.fsm is missing; UAV 007/WASP actions/old upgrade dialog are stale cleanup; modded mission propagation needs an owner maintenance-model decision.",
-    "performanceOpportunitySweep": "Performance-Opportunity-Sweep.md ranks low-risk and high-value performance work: AI-source scoreboard, role-aware player-AI cap pilot, HC proof pack, low-SV town groups, static-defense HC accounting, cleanup/object-count evidence, PVF dispatcher lookup, hosted FPS loop sleep, supply scan narrowing, public queue broadcast review, WASP marker polling and audit-first cleaner/marker-loop tuning. Old-WarfareBE-Performance-Comparison.md owns the old BennyBoy WarfareBE baseline and final FPS scout appendix; Testing-Debugging-And-Release-Workflow.md owns the full-server FPS benchmark pack. Current-state correction 2026-06-03: duplicate Skill_Init removal, hosted FPS loop sleep and narrowed supply command-center scan are docs/source propagated to maintained Vanilla but still need smoke and branch-specific release/master handling; factory queue counter/token cleanup remains current-code-change-needed; the WASP display-54 wait remains an open cleanup opportunity.",
+    "performanceOpportunitySweep": "Performance-Opportunity-Sweep.md ranks low-risk and high-value performance work: AI-source scoreboard, role-aware player-AI cap pilot, HC proof pack, low-SV town groups, static-defense HC accounting, cleanup/object-count evidence, PVF dispatcher lookup, hosted FPS loop sleep, supply scan narrowing, public queue broadcast review, WASP marker polling and audit-first cleaner/marker-loop tuning. Old-WarfareBE-Performance-Comparison.md owns the old BennyBoy WarfareBE baseline and final FPS scout appendix; Testing-Debugging-And-Release-Workflow.md owns the full-server FPS benchmark pack. Current-state correction 2026-06-05: duplicate Skill_Init removal, hosted FPS loop sleep, narrowed supply command-center scan and commander-built ARTY ownership are docs/source propagated to maintained Vanilla but still need smoke and branch-specific release/master handling; factory queue counter/token cleanup remains current-code-change-needed; the WASP display-54 wait remains an open cleanup opportunity.",
     "paratrooperMarkerRevival": {
       "page": "Paratrooper-Marker-Revival.md",
       "status": "docs-source-propagated-absent-on-master-and-release-smoke-pending",
@@ -428,6 +428,19 @@
         "origin/release/2026-06-feature-bundle 3282ff3f Chernarus Init_PublicVariables.sqf:41 NukeIncoming only; Vanilla :39 NukeIncoming only",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_Paratroopers.sqf:117",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/PVFunctions/HandleParatrooperMarkerCreation.sqf:1-47"
+      ]
+    },
+    "commanderBuiltArtilleryOwnership": {
+      "page": "Construction-And-CoIn-Systems-Atlas.md",
+      "status": "docs-source-propagated-absent-on-master-and-release-smoke-pending",
+      "summary": "docs/source Chernarus and maintained Vanilla Takistan route manned artillery-class base-area defense gunners to the current commander team when one exists, matching Tactical fire-mission group discovery. Stable master and release 3282ff3f keep the old DefenseTeam-only path; Arma smoke remains pending.",
+      "sourceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_StationaryDefense.sqf:91-93",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Construction/Construction_StationaryDefense.sqf:91-93",
+        "origin/master Construction_StationaryDefense.sqf has no GetCommanderTeam handoff",
+        "origin/release/2026-06-feature-bundle 3282ff3f Construction_StationaryDefense.sqf has no GetCommanderTeam handoff",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTeamArtillery.sqf:10-30",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf:544,565,594"
       ]
     },
     "wikiMirrorReconciliation": "Wiki-Mirror-Reconciliation-Plan.md remains the no-blind-copy policy. The active _wasp_wiki_tmp checkout is restored by scoped sync for current docs surfaces; alternate _wasp_wiki_claude still has broad divergence and must be reconciled file by file."

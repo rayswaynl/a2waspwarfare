@@ -13,6 +13,11 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T17:16:56+02:00 - Codex - commander ARTY release ledger sync
+
+- Source-checked `Construction_StationaryDefense.sqf`: docs/source Chernarus and maintained Vanilla both route manned artillery-class base-area defense gunners to the current commander team at `:91-93`; stable `origin/master` and release head `3282ff3f` do not.
+- Added commander-built ARTY ownership to [Source fix propagation queue](Source-Fix-Propagation-Queue), [Current source status](Current-Source-Status-Snapshot), [`agent-release-readiness.json`](agent-release-readiness.json), [`agent-context.json`](agent-context.json) and this dashboard trail as present in docs/source Chernarus plus maintained Vanilla source, with Arma smoke still pending. No gameplay source changed.
+
 ## 2026-06-05T17:12:13+02:00 - Codex - commander ARTY smoke lane collaboration sync
 
 - Synced [`agent-collaboration.json`](agent-collaboration.json) with the dashboard/status smoke lane so future agents see [commander-built ARTY](Construction-And-CoIn-Systems-Atlas) in `source-propagated-smoke-pending` before making release-complete claims.

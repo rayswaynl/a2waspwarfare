@@ -1,7 +1,7 @@
 {
   "schema": "a2waspwarfare-agent-release-readiness-v1",
-  "generatedAt": "2026-06-04T20:18:46+02:00",
-  "lastVerifiedAt": "2026-06-04T20:18:46+02:00",
+  "generatedAt": "2026-06-05T17:21:10+02:00",
+  "lastVerifiedAt": "2026-06-05T17:21:10+02:00",
   "purpose": "Machine-readable release-readiness ledger for docs/source branch fixes, generated mission propagation, branch-specific caveats and Arma 2 OA smoke gates.",
   "humanCanonicalPage": "Source-Fix-Propagation-Queue.md",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -839,6 +839,33 @@
         "docsSource": "chernarus-and-vanilla-carry-index-initialization",
         "evidence": "Source-Fix-Propagation-Queue.md#latest-propagation-run"
       }
+    },
+    {
+      "id": "commander-built-artillery-ownership",
+      "priority": "P2",
+      "sourceStatus": "docs-source-carries-change",
+      "vanillaStatus": "docs-source-vanilla-carries-change",
+      "smokeStatus": "pending",
+      "canonicalDocs": [
+        "Construction-And-CoIn-Systems-Atlas.md",
+        "Support-Specials-And-Tactical-Modules-Atlas.md",
+        "Testing-Debugging-And-Release-Workflow.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md"
+      ],
+      "evidenceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_StationaryDefense.sqf:91-93",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Construction/Construction_StationaryDefense.sqf:91-93",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTeamArtillery.sqf:10-30",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf:544,565,594"
+      ],
+      "releaseGate": "Smoke commander-built manned artillery inside the HQ/base circle, Tactical fire-mission listing, ammo loading, direct fire, non-artillery DefenseTeam behavior and HC static-defense fallback.",
+      "branchStatus": {
+        "stableMaster": "old-defense-team-only-path-remains",
+        "releaseBranch": "old-defense-team-only-path-remains-in-chernarus-and-vanilla",
+        "docsSource": "chernarus-and-vanilla-carry-commander-team-artillery-handoff",
+        "evidence": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+      }
     }
   ],
   "patchReadyNotSourcePatched": [
@@ -883,12 +910,12 @@
     "stableMaster": {
       "commit": "2cdf5fb8",
       "branch": "origin/master",
-      "meaning": "Stable baseline; does not carry hosted FPS loop exit, supply scan narrowing, client Skill_Init idempotency or paratrooper marker registration."
+      "meaning": "Stable baseline; does not carry hosted FPS loop exit, supply scan narrowing, client Skill_Init idempotency, paratrooper marker registration or commander-built ARTY ownership."
     },
     "releaseBranch": {
       "commit": "3282ff3f",
       "branch": "origin/release/2026-06-feature-bundle",
-      "meaning": "Chernarus-only for hosted FPS and supply scan narrowing; lacks client Skill_Init idempotency and paratrooper marker registration in both maintained missions."
+      "meaning": "Chernarus-only for hosted FPS and supply scan narrowing; lacks client Skill_Init idempotency, paratrooper marker registration and commander-built ARTY ownership in both maintained missions."
     },
     "canonicalDoc": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
   }
