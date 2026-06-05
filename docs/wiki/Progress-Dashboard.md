@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `agent-machine-index-bootstrap` | Published / validated | Added [`agent-machine-index.json`](agent-machine-index.json) as a compact page-to-source/risk lookup for agents, linked it from the LLM entry pack, `llms.txt`, Agent Context, sidebar and machine entrypoint, and documented JSONL vNext envelope conventions while tolerating legacy rows. Validator now emits compact non-failing legacy-envelope warnings. No gameplay source changed. |
 | `agent-development-pack-alias` | Published / validated | Added [Agent development pack](Agent-Development-Pack) as a lightweight compatibility alias to [LLM agent entry pack](LLM-Agent-Entry-Pack), wired it into sidebar, MkDocs, `llms.txt` and `agent-context.json`, corrected stale entrypoint wording and refreshed navigation counts. No gameplay source changed. |
 | `onboarding-gateway-pruning` | Published / validated | Condensed [Home](Home), [Quickstart](Quickstart-For-Humans-And-Agents), [AI assistant guide](AI-Assistant-Guide) and [LLM agent entry pack](LLM-Agent-Entry-Pack) so only the LLM pack owns canonical AI boot order, Home stays a front door and volatile status routes to live owner pages. No gameplay source changed. |
 | `takistan-fpv-mirror-sync` | Published / validated | Synced the wiki-only [Takistan airfield FPV drone design](Takistan-Airfield-FPV-Drone-Design) into `docs/wiki/`, added it to MkDocs Community & Dev navigation and refreshed navigation counts. No gameplay source changed. |
@@ -76,6 +77,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 | Active lanes and ownership | [`agent-collaboration.json`](agent-collaboration.json) |
 | Agent-readable knowledge records | [`agent-knowledge.jsonl`](agent-knowledge.jsonl) |
 | Agent-readable hardening backlog | [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) |
+| Compact machine index | [`agent-machine-index.json`](agent-machine-index.json) |
 | Agent release readiness ledger | [Agent release readiness ledger](Agent-Release-Readiness-Ledger) |
 | Latest event stream | [`agent-events.jsonl`](agent-events.jsonl) |
 | Dated narrative notes | [Agent worklog](Agent-Worklog) |

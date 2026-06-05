@@ -10,7 +10,7 @@ Important notes:
 - Use Bohemia Interactive Arma 2 OA scripting references, not Arma 3 assumptions.
 - Treat publicVariable/PVF, economy authority, ICBM, side supply, attack waves and integration trust boundaries as high-risk public-server surfaces.
 - Current docs are mirrored between the GitHub Wiki and `docs/wiki`; the long-term recommendation is repo-canonical docs plus GitHub Pages/MkDocs.
-- Machine files split into snapshots and append-oriented logs. Treat `agent-status.json`, `agent-collaboration.json`, `agent-context.json`, `agent-release-readiness.json` and `agent-compatibility-audit.json` as snapshots; treat `agent-events.jsonl`, `agent-knowledge.jsonl`, `agent-feature-status.jsonl` and `agent-hardening-backlog.jsonl` as evidence streams where later/superseding rows may refine older records.
+- Machine files split into snapshots and append-oriented logs. Treat `agent-status.json`, `agent-collaboration.json`, `agent-context.json`, `agent-release-readiness.json`, `agent-compatibility-audit.json` and `agent-machine-index.json` as snapshots; treat `agent-events.jsonl`, `agent-knowledge.jsonl`, `agent-feature-status.jsonl` and `agent-hardening-backlog.jsonl` as evidence streams where later/superseding rows may refine older records.
 
 ## Start Here
 
@@ -26,6 +26,7 @@ Important notes:
 - [Zargabad branch audit](https://github.com/rayswaynl/a2waspwarfare/wiki/Zargabad-Branch-Audit): Branch-only low-pop Zargabad terrain release audit, static validation result and runtime evidence gates.
 - [Progress dashboard](https://github.com/rayswaynl/a2waspwarfare/wiki/Progress-Dashboard): Current Codex/Claude lanes and shared status.
 - [Release-readiness ledger](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-release-readiness.json): Machine-readable source-only fix, generated propagation and smoke gate status.
+- [Machine index](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-machine-index.json): Compact page-to-source/risk lookup for agents.
 - [Knowledge platform roadmap](https://github.com/rayswaynl/a2waspwarfare/wiki/Knowledge-Platform-Roadmap): Why repo docs + GitHub Pages/MkDocs should become canonical.
 - [Navigation inventory and page status](https://github.com/rayswaynl/a2waspwarfare/wiki/Navigation-Inventory-And-Page-Status): Current sidebar/MkDocs/page-status inventory and navigation cleanup backlog.
 
@@ -109,6 +110,7 @@ Important notes:
 ## Machine-Readable Context
 
 - [agent-context.json](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-context.json): Compact repo map, rules and page inventory.
+- [agent-machine-index.json](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-machine-index.json): Compact page-to-source/risk lookup with canonical pages, source refs, machine refs and next gates.
 - [agent-compatibility-audit.json](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-compatibility-audit.json): Machine-readable Arma 2 OA compatibility classifications and risky-term rules.
 - [agent-release-readiness.json](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-release-readiness.json): Machine-readable release-readiness ledger for tracked fixes, Vanilla propagation and smoke gates.
 - [agent-feature-status.jsonl](https://github.com/rayswaynl/a2waspwarfare/wiki/agent-feature-status.jsonl): Compact machine-readable feature/risk status index.

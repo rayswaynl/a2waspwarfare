@@ -1,6 +1,6 @@
 # Agent Context
 
-This is the compact human-readable context file for AI coding agents. Start machine readers with [`agent-entrypoint.json`](agent-entrypoint.json), then use `agent-context.json` for the larger snapshot, `agent-knowledge.jsonl` for durable source knowledge records and `agent-development-lessons.jsonl` for implementation lessons.
+This is the compact human-readable context file for AI coding agents. Start machine readers with [`agent-entrypoint.json`](agent-entrypoint.json), then use `agent-context.json` for the larger snapshot, [`agent-machine-index.json`](agent-machine-index.json) for page-to-source/risk lookup, `agent-knowledge.jsonl` for durable source knowledge records and `agent-development-lessons.jsonl` for implementation lessons.
 
 ## Identity
 
@@ -9,6 +9,7 @@ This is the compact human-readable context file for AI coding agents. Start mach
 - Mission type: Warfare / CTI TvT PvE, forked from Benny's Warfare and modernized for WASP/Miksuu.
 - Documentation target: GitHub wiki plus `docs/wiki` mirror.
 - Progress surface: `Progress-Dashboard.md` plus `agent-status.json`, `agent-knowledge.jsonl` and `agent-development-lessons.jsonl`.
+- Machine lookup: `agent-machine-index.json` maps high-traffic systems to canonical pages, source proof refs, machine records, risk tier and next gate.
 - Agent-actionable backlog: `agent-hardening-backlog.jsonl`.
 - Lesson capture: `Development-Lessons-Learned.md` plus `agent-development-lessons.jsonl`.
 - Release-readiness ledger: `agent-release-readiness.json` for tracked source fixes, generated propagation and smoke gates.
@@ -80,4 +81,4 @@ This is the compact human-readable context file for AI coding agents. Start mach
 
 Previous: [AI assistant developer guide](AI-Assistant-Developer-Guide) | Next: [Coordination board](Coordination-Board)
 
-Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent entry: [`agent-entrypoint.json`](agent-entrypoint.json) | Agent file: [`agent-context.json`](agent-context.json)
+Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent entry: [`agent-entrypoint.json`](agent-entrypoint.json) | Machine index: [`agent-machine-index.json`](agent-machine-index.json)

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-context-v1",
-  "generatedAt": "2026-06-05T15:10:00+02:00",
+  "generatedAt": "2026-06-05T15:35:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "game": "Arma 2 Operation Arrowhead 1.64",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -164,6 +164,7 @@
       "agent-status.json",
       "agent-release-readiness.json",
       "agent-collaboration.json",
+      "agent-machine-index.json",
       "agent-events.jsonl",
       "agent-compatibility-audit.json",
       "external-research-report-manifest.json",
@@ -1217,7 +1218,8 @@
     "currentSourceStatusSnapshot": "Current-Source-Status-Snapshot.md",
     "currentSourceStatusKnowledge": "agent-knowledge.jsonl#current-source-status-pointer-refresh-2026-06-02-1851",
     "currentSourceStatusEvent": "agent-events.jsonl#current-source-status-pointer-refresh-2026-06-02-1851",
-    "agentDevelopmentPackAlias": "Agent-Development-Pack.md"
+    "agentDevelopmentPackAlias": "Agent-Development-Pack.md",
+    "agentMachineIndex": "agent-machine-index.json"
   },
   "currentCoordination": {
     "bottleneckQueue": "Bottleneck-Removal-Queue.md"

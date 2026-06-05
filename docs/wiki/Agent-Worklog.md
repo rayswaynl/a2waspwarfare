@@ -2614,3 +2614,10 @@ Key conclusions:
 - Normalized or added `## Continue Reading` blocks on 10 high-traffic/current owner pages: AI guide, architecture, mission parameters, join/disconnect, support specials, towns/camps, upgrades/research, marker cleanup, upstream commit intel and PR cleanup lab.
 - Recomputed the gap list: remaining pages without `Continue Reading` are now 11 archive/queue pages only (`Audit-Findings-Queue`, `Development-Lessons-Learned` and imported `Miksuu-Wiki-Archive-*` pages).
 - Updated [Navigation inventory and page status](Navigation-Inventory-And-Page-Status) and [Progress dashboard](Progress-Dashboard). No gameplay source changed.
+
+## 2026-06-05T15:35:00+02:00 - Codex - agent machine index bootstrap
+- Claimed `agent-machine-index-bootstrap` to close the Knowledge Platform Roadmap's page-to-source lookup and mixed machine-envelope debt.
+- Added [`agent-machine-index.json`](agent-machine-index.json), a compact lookup for high-traffic systems: agent bootstrap, mission lifecycle, PVF dispatch, `SEND_MESSAGE`, ICBM/RequestSpecial, direct PV channels, economy authority, supply missions, construction/CoIn, factories, AI/HC, UI/gear/service, tooling/release and external integrations.
+- Documented the JSONL vNext convention inside the index: new records should carry `schema`, `id`, `status`, `summary`, and normalized source/wiki refs while validators tolerate old `ts`/`timestamp` and `state`/`status` records.
+- Linked the machine index from [LLM agent entry pack](LLM-Agent-Entry-Pack), [Agent context](Agent-Context), [`agent-entrypoint.json`](agent-entrypoint.json), [`agent-context.json`](agent-context.json), [`llms.txt`](llms.txt), sidebar, dashboard and pruning ledger. No gameplay source changed.
+- Validation passed: `docs/validate-wiki.ps1` now parses JSON/JSONL and emits compact non-failing legacy-envelope warnings, touched JSON/JSONL parse succeeded, and `git diff --check` returned no whitespace errors.

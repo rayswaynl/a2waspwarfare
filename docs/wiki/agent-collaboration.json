@@ -10,6 +10,7 @@
     "worklog": "Agent-Worklog.md",
     "eventFeed": "agent-events.jsonl",
     "repoContext": "agent-context.json",
+    "machineIndex": "agent-machine-index.json",
     "knowledgeRecords": "agent-knowledge.jsonl",
     "hardeningBacklog": "agent-hardening-backlog.jsonl",
     "externalResearchManifest": "external-research-report-manifest.json"
@@ -160,6 +161,8 @@
     "wasp-marker-wait-cleanup",
     "factory-queue-counter-token-cleanup",
     "scout-wave-j-harvest"
+    ,
+    "agent-machine-index-bootstrap"
   ],
   "queuedReports": [],
   "lanes": [

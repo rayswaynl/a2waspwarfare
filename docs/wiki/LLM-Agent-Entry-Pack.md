@@ -9,13 +9,14 @@ Use this page first, then jump into the canonical pages and machine files it nam
 1. Read [`agent-entrypoint.json`](agent-entrypoint.json) for the compact machine-readable bootstrap and status vocabulary.
 2. Read [`llms.txt`](llms.txt) for the high-level map.
 3. Read [`agent-context.json`](agent-context.json) for the larger current repo rules and page inventory snapshot.
-4. Read [Feature status register](Feature-Status-Register) for current risk/partial/broken-system triage.
-5. Read [`agent-feature-status.jsonl`](agent-feature-status.jsonl) for compact feature/risk status and canonical page routing.
-6. Read [`agent-release-readiness.json`](agent-release-readiness.json) before claiming any source fix is propagated, smoked or release-complete.
-7. Read [Progress dashboard](Progress-Dashboard), [`agent-status.json`](agent-status.json) and [`agent-events.jsonl`](agent-events.jsonl) to avoid duplicating active lanes.
-8. Read [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) and [`agent-compatibility-audit.json`](agent-compatibility-audit.json) before accepting docs or prompts that mention Arma 3-era APIs.
-9. Read the subsystem atlas/playbook for the thing you intend to change.
-10. Inspect source directly before patching. The docs are guidance; the worktree is authoritative.
+4. Read [`agent-machine-index.json`](agent-machine-index.json) when you need the shortest page-to-source/risk lookup.
+5. Read [Feature status register](Feature-Status-Register) for current risk/partial/broken-system triage.
+6. Read [`agent-feature-status.jsonl`](agent-feature-status.jsonl) for compact feature/risk status and canonical page routing.
+7. Read [`agent-release-readiness.json`](agent-release-readiness.json) before claiming any source fix is propagated, smoked or release-complete.
+8. Read [Progress dashboard](Progress-Dashboard), [`agent-status.json`](agent-status.json) and [`agent-events.jsonl`](agent-events.jsonl) to avoid duplicating active lanes.
+9. Read [Arma 2 OA compatibility audit](Arma-2-OA-Compatibility-Audit) and [`agent-compatibility-audit.json`](agent-compatibility-audit.json) before accepting docs or prompts that mention Arma 3-era APIs.
+10. Read the subsystem atlas/playbook for the thing you intend to change.
+11. Inspect source directly before patching. The docs are guidance; the worktree is authoritative.
 
 ## Non-Negotiable Rules
 
@@ -62,7 +63,7 @@ Use this page first, then jump into the canonical pages and machine files it nam
 ## Current Truth Notes
 
 - Do not treat this page as the live source-fix dashboard. For current source/Vanilla propagation and smoke status, read [Current source status snapshot](Current-Source-Status-Snapshot), [Source fix propagation queue](Source-Fix-Propagation-Queue) and [`agent-release-readiness.json`](agent-release-readiness.json).
-- Machine-file contract: [`agent-entrypoint.json`](agent-entrypoint.json) is the small canonical bootstrap file. `agent-status.json`, `agent-collaboration.json`, `agent-context.json`, `agent-release-readiness.json` and `agent-compatibility-audit.json` are snapshots. `agent-events.jsonl`, `agent-knowledge.jsonl`, `agent-feature-status.jsonl` and `agent-hardening-backlog.jsonl` are append-oriented evidence streams; do not assume event rows are timestamp-sorted, and prefer the newest explicit `status`/`supersedes` record when older rows disagree.
+- Machine-file contract: [`agent-entrypoint.json`](agent-entrypoint.json) is the small canonical bootstrap file. `agent-status.json`, `agent-collaboration.json`, `agent-context.json`, `agent-release-readiness.json`, `agent-compatibility-audit.json` and [`agent-machine-index.json`](agent-machine-index.json) are snapshots. `agent-events.jsonl`, `agent-knowledge.jsonl`, `agent-feature-status.jsonl` and `agent-hardening-backlog.jsonl` are append-oriented evidence streams; do not assume event rows are timestamp-sorted, and prefer the newest explicit `status`/`supersedes` record when older rows disagree.
 - Use the task bundles above to find owner pages for MASH/respawn, service menu guards, integration trust, commander/HQ lifecycle, victory/endgame, marker/lifecycle and generated-version work. Owner pages carry the source evidence and current caveats.
 
 ## Agent Output Rules
@@ -80,4 +81,4 @@ Use this page first, then jump into the canonical pages and machine files it nam
 
 Previous: [Quickstart](Quickstart-For-Humans-And-Agents) | Next: [Feature status](Feature-Status-Register)
 
-Main map: [Home](Home) | Machine entry: [`agent-entrypoint.json`](agent-entrypoint.json) | Machine map: [`agent-context.json`](agent-context.json) | LLM map: [`llms.txt`](llms.txt)
+Main map: [Home](Home) | Machine entry: [`agent-entrypoint.json`](agent-entrypoint.json) | Machine index: [`agent-machine-index.json`](agent-machine-index.json) | LLM map: [`llms.txt`](llms.txt)

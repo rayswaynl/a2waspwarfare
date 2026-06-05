@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Validated dashboard current-lane freshness cleanup; published batches now live in Latest Batch, Agent Worklog, agent-status history, agent-events and git history instead of Current Lanes.",
-      "nextExpectedOutput": "Continue future wiki backlog work from fresh source evidence, code-owner requests or newly returned helper reports."
+      "currentWork": "Validated agent-machine-index.json as a compact page-to-source/risk lookup and tightened machine-record conventions without changing gameplay source.",
+      "nextExpectedOutput": "Continue future wiki backlog work from fresh evidence, code-owner requests or newly returned helper reports."
     },
     "Codex-2": {
       "status": "ready",
@@ -54,7 +54,7 @@
       "lane": "documentation-finisher-loop",
       "owner": "Codex",
       "status": "active-ongoing",
-      "output": "Keep wiki/status pages current from source evidence, compact the dashboard, and publish scoped validation batches."
+      "output": "Keep wiki/status pages current from source evidence, compact the dashboard, maintain machine-readable entrypoints and publish scoped validation batches."
     },
     {
       "lane": "autonomous-claude-research",
@@ -112,6 +112,7 @@
     "hardeningBacklog": "agent-hardening-backlog.jsonl",
     "collaborationProtocol": "Agent-Collaboration-Protocol.md",
     "releaseReadiness": "agent-release-readiness.json",
+    "machineIndex": "agent-machine-index.json",
     "llms": "llms.txt"
   }
 }

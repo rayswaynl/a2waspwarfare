@@ -1,0 +1,404 @@
+{
+  "schema": "a2waspwarfare-agent-machine-index-v1",
+  "generatedAt": "2026-06-05T15:35:00+02:00",
+  "purpose": "Compact page-to-source and page-to-risk lookup for AI agents. Use this before opening broad wiki pages when you need the canonical owner page, source proof refs, machine records and next gate for a system.",
+  "repo": {
+    "owner": "rayswaynl",
+    "name": "a2waspwarfare",
+    "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+    "maintainedGeneratedMission": "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+    "wikiMirror": "docs/wiki"
+  },
+  "recordConvention": {
+    "snapshots": [
+      "agent-entrypoint.json",
+      "agent-context.json",
+      "agent-status.json",
+      "agent-collaboration.json",
+      "agent-release-readiness.json",
+      "agent-compatibility-audit.json",
+      "agent-machine-index.json"
+    ],
+    "appendOnlyStreams": [
+      "agent-events.jsonl",
+      "agent-knowledge.jsonl",
+      "agent-feature-status.jsonl",
+      "agent-hardening-backlog.jsonl",
+      "agent-development-lessons.jsonl",
+      "agent-upstream-wiki-imports.jsonl"
+    ],
+    "jsonlEnvelopeGoingForward": {
+      "required": [
+        "schema",
+        "id",
+        "status",
+        "summary"
+      ],
+      "recommended": [
+        "ts",
+        "actor",
+        "lane",
+        "type",
+        "sourceRefs",
+        "wikiRefs",
+        "nextAction",
+        "supersedes"
+      ],
+      "legacyTolerance": "Existing JSONL files mix ts/timestamp and sourceRefs/wikiRefs/canonicalDocs shapes. Do not rewrite history blindly; add normalized records going forward and let validators parse legacy rows."
+    },
+    "sourceRefStyle": "Prefer repo-relative paths with line refs when line-stable evidence matters. Use wiki page ids without .md in canonicalDocs. Mark branchScope when a finding is branch-only, generated-target-only or smoke-pending."
+  },
+  "entries": [
+    {
+      "id": "agent-bootstrap",
+      "system": "AI agent bootstrap and coordination",
+      "riskTier": "route",
+      "branchScope": "docs_current",
+      "canonicalDocs": [
+        "LLM-Agent-Entry-Pack",
+        "Agent-Development-Pack",
+        "Agent-Collaboration-Protocol",
+        "Progress-Dashboard"
+      ],
+      "sourceRefs": [
+        "docs/wiki/agent-entrypoint.json",
+        "docs/wiki/llms.txt",
+        "docs/wiki/agent-context.json",
+        "docs/wiki/agent-status.json",
+        "docs/wiki/agent-collaboration.json",
+        "docs/wiki/agent-events.jsonl"
+      ],
+      "machineRefs": [
+        "agent-entrypoint.json",
+        "agent-context.json",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl"
+      ],
+      "nextGate": "Before claiming work, read active lanes and append a claim event; do not treat historical events as live ownership."
+    },
+    {
+      "id": "mission-entrypoints-lifecycle",
+      "system": "mission boot and role split",
+      "riskTier": "P1",
+      "branchScope": "master_current",
+      "canonicalDocs": [
+        "Mission-Entrypoints-And-Lifecycle",
+        "Lifecycle-Wait-Chain",
+        "Architecture-Overview",
+        "SQF-Code-Atlas"
+      ],
+      "sourceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf"
+      ],
+      "machineRefs": [
+        "agent-context.json",
+        "agent-knowledge.jsonl#cluster-lifecycle-bootstrap"
+      ],
+      "nextGate": "Before changing boot/JIP waits, prove producer and consumer flags, add timeouts only where they preserve JIP/HC flow, then run hosted/dedicated smoke."
+    },
+    {
+      "id": "pvf-dispatch-trust-boundary",
+      "system": "registered PVF dispatcher",
+      "riskTier": "P0",
+      "branchScope": "master_current",
+      "canonicalDocs": [
+        "PVF-Dispatch-Implementation-Playbook",
+        "Networking-And-Public-Variables",
+        "Public-Variable-Channel-Index",
+        "Feature-Status-Register"
+      ],
+      "sourceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf:43-51",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf:14",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf:22",
+        "BattlEyeFilter/publicvariable.txt"
+      ],
+      "machineRefs": [
+        "agent-feature-status.jsonl#pvf-dispatch-trust-boundary",
+        "agent-hardening-backlog.jsonl#pvf-dispatch-lookup",
+        "agent-knowledge.jsonl#cluster-pv-network-trust"
+      ],
+      "nextGate": "Patch dispatcher lookup in source Chernarus only when code work is in scope; smoke valid server/client commands and forged invalid names separately."
+    },
+    {
+      "id": "send-message-direct-rce",
+      "system": "direct SEND_MESSAGE publicVariable compile surface",
+      "riskTier": "P0",
+      "branchScope": "master_current",
+      "canonicalDocs": [
+        "Networking-And-Public-Variables",
+        "Public-Variable-Channel-Index",
+        "Hardening-Implementation-Roadmap",
+        "Feature-Status-Register"
+      ],
+      "sourceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf:25-31",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendMessage.sqf:24-27",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateclient.sqf:10-12",
+        "Deep-Review-Findings.md DR-46"
+      ],
+      "machineRefs": [
+        "agent-hardening-backlog.jsonl#send-message-call-compile-rce",
+        "agent-feature-status.jsonl",
+        "agent-knowledge.jsonl#cluster-pv-network-trust"
+      ],
+      "nextGate": "Rewrite message localization as structured keys/args with no call compile; smoke normal side messages and forged SQF payloads."
+    },
+    {
+      "id": "icbm-requestspecial-authority",
+      "system": "ICBM/Nuke RequestSpecial authority",
+      "riskTier": "P0",
+      "branchScope": "master_current",
+      "canonicalDocs": [
+        "ICBM-Authority-Playbook",
+        "Server-Authority-Migration-Map",
+        "Networking-And-Public-Variables",
+        "Feature-Status-Register"
+      ],
+      "sourceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Nuke/nukeincoming.sqf:23",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestSpecial.sqf:1",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf:97-111",
+        "Deep-Review-Findings.md DR-27"
+      ],
+      "machineRefs": [
+        "agent-feature-status.jsonl#icbm-requestspecial-authority",
+        "agent-hardening-backlog.jsonl#icbm-requestspecial-authority"
+      ],
+      "nextGate": "Server must re-derive commander/team/side/module/upgrade/funds/object state before launching or rejecting the nuke; client Tactical menu gates are only affordance."
+    },
+    {
+      "id": "direct-publicvariable-channels",
+      "system": "direct publicVariableServer/publicVariableClient/state channels",
+      "riskTier": "P0",
+      "branchScope": "master_current",
+      "canonicalDocs": [
+        "Public-Variable-Channel-Index",
+        "Networking-And-Public-Variables",
+        "Attack-Wave-Authority-Playbook",
+        "Economy-Authority-First-Cut"
+      ],
+      "sourceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AttackWaveActivate.sqf:3-8",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AttackWave.sqf:1-38",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf"
+      ],
+      "machineRefs": [
+        "agent-feature-status.jsonl#attack-wave-authority",
+        "agent-feature-status.jsonl#side-supply-clamp-first",
+        "agent-hardening-backlog.jsonl#attack-wave-authority"
+      ],
+      "nextGate": "Do not describe PVF dispatcher hardening as full PV security; direct channels need per-channel server recomputation or request redesign."
+    },
+    {
+      "id": "economy-authority-class",
+      "system": "economy, side supply, spend and reward authority",
+      "riskTier": "P0",
+      "branchScope": "master_current",
+      "canonicalDocs": [
+        "Economy-Authority-First-Cut",
+        "Server-Authority-Migration-Map",
+        "Economy-Towns-And-Supply",
+        "Hardening-Implementation-Roadmap"
+      ],
+      "sourceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_EASA.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Service.sqf"
+      ],
+      "machineRefs": [
+        "agent-feature-status.jsonl#economy-authority-class",
+        "agent-hardening-backlog.jsonl#economy-authority-design",
+        "agent-feature-status.jsonl#side-supply-clamp-first"
+      ],
+      "nextGate": "Clamp side-supply first, then migrate spend/effect handlers under one server-ledger design instead of isolated UI checks."
+    },
+    {
+      "id": "supply-mission-authority",
+      "system": "player supply truck, PR1 supply heli and cooldown/reward flow",
+      "riskTier": "P1",
+      "branchScope": "master_current plus PR #1 docs context",
+      "canonicalDocs": [
+        "Supply-Mission-Architecture",
+        "Supply-Mission-Authority-Cleanup-Playbook",
+        "Current-Work-Supply-Helicopters-PR1",
+        "Supply-Mission-Scan-Narrowing"
+      ],
+      "sourceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionActive.sqf"
+      ],
+      "machineRefs": [
+        "agent-hardening-backlog.jsonl#supply-mission-authority-cleanup",
+        "agent-release-readiness.json",
+        "agent-feature-status.jsonl"
+      ],
+      "nextGate": "Keep cooldown request/response JIP model, standardize cooldown casing, prevent stacked vehicle Killed handlers and smoke source plus maintained Vanilla before release wording."
+    },
+    {
+      "id": "construction-coin-authority",
+      "system": "commander construction, defenses, CoIn and MHQ repair",
+      "riskTier": "P1",
+      "branchScope": "master_current with some source-patched smoke-pending fixes",
+      "canonicalDocs": [
+        "Construction-And-CoIn-Systems-Atlas",
+        "Commander-HQ-Lifecycle-Atlas",
+        "Commander-Vote-And-Reassignment-Playbook",
+        "Server-Authority-Migration-Map"
+      ],
+      "sourceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestStructure.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestDefense.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_StationaryDefense.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/CoIn/coin_interface.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestMHQRepair.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_MHQRepair.sqf"
+      ],
+      "machineRefs": [
+        "agent-hardening-backlog.jsonl",
+        "agent-events.jsonl",
+        "agent-release-readiness.json"
+      ],
+      "nextGate": "Separate docs/source-patched/smoke-pending state from release-complete claims; commander-built ARTY has source fix evidence but still needs Arma smoke."
+    },
+    {
+      "id": "factory-and-purchase-flow",
+      "system": "factory queues, player buy-unit flow and latent AI buy path",
+      "riskTier": "P2",
+      "branchScope": "master_current",
+      "canonicalDocs": [
+        "Factory-And-Purchase-Systems-Atlas",
+        "Factory-Queue-Counter-Token-Cleanup",
+        "Feature-Status-Register",
+        "Performance-Opportunity-Sweep"
+      ],
+      "sourceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf:145-155",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf:167-168",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf:365",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_BuyUnit.sqf"
+      ],
+      "machineRefs": [
+        "agent-hardening-backlog.jsonl#factory-queue-cleanups",
+        "agent-feature-status.jsonl"
+      ],
+      "nextGate": "Fix queue cleanup/token identity before broadcast reduction; do not equate latent Server_BuyUnit/AIBuyUnit with the live player-buy path."
+    },
+    {
+      "id": "ai-headless-runtime",
+      "system": "AI commander, HC delegation, static defenses and runtime loops",
+      "riskTier": "P1",
+      "branchScope": "master_current plus branch-only AI commander notes",
+      "canonicalDocs": [
+        "AI-Headless-And-Performance",
+        "Headless-Delegation-And-Failover-Playbook",
+        "AI-Commander-Autonomy-Audit",
+        "AI-Runtime-HC-Loop-Map",
+        "Headless-Client-Scaling-And-Topology"
+      ],
+      "sourceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_DelegateTownAI.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_DelegateAIStaticDefence.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_ai.sqf"
+      ],
+      "machineRefs": [
+        "agent-development-lessons.jsonl",
+        "agent-hardening-backlog.jsonl",
+        "agent-feature-status.jsonl"
+      ],
+      "nextGate": "Smoke vanilla/non-vanilla AI branches, HC reconnect/failover and static-defense update-back before treating autonomous AI logistics as revived."
+    },
+    {
+      "id": "client-ui-gear-service",
+      "system": "dialogs, HUD, gear templates, EASA and service menu",
+      "riskTier": "P2",
+      "branchScope": "master_current plus branch-only UI audit pages",
+      "canonicalDocs": [
+        "Client-UI-Systems-Atlas",
+        "UI-IDD-Collision-Repair",
+        "Gear-Loadout-And-EASA-Atlas",
+        "Gear-Template-Profile-Filter",
+        "Service-Menu-Affordability-Guards",
+        "Vehicle-Cargo-Equip-Loop-Bounds"
+      ],
+      "sourceRefs": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Gear.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_EASA.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Service.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc"
+      ],
+      "machineRefs": [
+        "agent-feature-status.jsonl",
+        "agent-hardening-backlog.jsonl",
+        "agent-development-lessons.jsonl"
+      ],
+      "nextGate": "Treat UI affordability as local affordance only; server authority and unique IDD repair remain separate gates."
+    },
+    {
+      "id": "tooling-generated-release",
+      "system": "LoadoutManager, generated missions, release packaging and smoke gates",
+      "riskTier": "P1",
+      "branchScope": "master_current docs/tooling",
+      "canonicalDocs": [
+        "Tools-And-Build-Workflow",
+        "Source-Fix-Propagation-Queue",
+        "Testing-Debugging-And-Release-Workflow",
+        "Agent-Release-Readiness-Ledger",
+        "Content-Structure-And-Maps"
+      ],
+      "sourceRefs": [
+        "Tools/LoadoutManager/Program.cs",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs",
+        "Tools/LoadoutManager/FileManager.cs",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf"
+      ],
+      "machineRefs": [
+        "agent-release-readiness.json",
+        "agent-context.json",
+        "agent-events.jsonl"
+      ],
+      "nextGate": "After source mission edits, run LoadoutManager or explicitly record propagation pending; missing 7za is packaging-only when A2WASP_SKIP_ZIP=1 is used."
+    },
+    {
+      "id": "external-integrations-trust",
+      "system": "DiscordBot, Extension, AntiStack and BattlEye posture",
+      "riskTier": "P0",
+      "branchScope": "master_current plus owner production BEpath question",
+      "canonicalDocs": [
+        "Integration-Trust-Boundary-Audit",
+        "External-Integrations",
+        "AntiStack-Database-Extension-Audit",
+        "Player-Stats-Branch-Audit",
+        "Feature-Status-Register"
+      ],
+      "sourceRefs": [
+        "DiscordBot/src/ProgramRuntime.cs",
+        "DiscordBot/src/GameData.cs",
+        "Extension/src/EntryPoint.cs",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/CallExtensions/GlobalGameStats.sqf",
+        "BattlEyeFilter/publicvariable.txt"
+      ],
+      "machineRefs": [
+        "agent-hardening-backlog.jsonl",
+        "agent-feature-status.jsonl",
+        "agent-knowledge.jsonl"
+      ],
+      "nextGate": "Separate local-write-gated DiscordBot JSON risks from in-repo extension writes and absent production BattlEye policy; do not claim public-server BE hardening from repo filters alone."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-entrypoint-v1",
-  "generatedAt": "2026-06-05T14:35:00+02:00",
+  "generatedAt": "2026-06-05T15:35:00+02:00",
   "repo": {
     "owner": "rayswaynl",
     "name": "a2waspwarfare",
@@ -32,6 +32,7 @@
     "LLM-Agent-Entry-Pack.md",
     "llms.txt",
     "agent-context.json",
+    "agent-machine-index.json",
     "agent-status.json",
     "agent-collaboration.json",
     "AI-Assistant-Developer-Guide.md",
@@ -68,6 +69,7 @@
   "machineFiles": {
     "status": "agent-status.json",
     "collaboration": "agent-collaboration.json",
+    "machineIndex": "agent-machine-index.json",
     "events": "agent-events.jsonl",
     "knowledge": "agent-knowledge.jsonl",
     "featureStatus": "agent-feature-status.jsonl",
