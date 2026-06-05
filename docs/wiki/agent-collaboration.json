@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-06T02:05:00+02:00",
+  "generatedAt": "2026-06-06T02:25:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -72,6 +72,31 @@
         "Routed the finding through the canonical factory atlas, Feature Status, Source Fix Propagation Queue and machine records."
       ],
       "handoff": "Leave as patch-ready owner-decision work: define acceptance/debit/refund semantics, propagate maintained roots and smoke factory death, buyer disconnect, empty/crewless abort and normal completion."
+    },
+    {
+      "lane": "gear-template-creation-gate-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UI_Gear_AddTemplate.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UI_Gear_FillTemplates.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Functions/Client_UI_Gear_AddTemplate.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Functions/Client_UI_Gear_FillTemplates.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "docs/wiki/Gear-Template-Profile-Filter.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Branch-checked gear-template creation/display/save gate alignment without changing gameplay source.",
+        "Routed the owner-decision through Gear Template Profile Filter, Feature Status, Source Fix Propagation Queue and machine records."
+      ],
+      "handoff": "Leave as owner-decision consistency work: decide Barracks-or-Gear versus Gear-only template semantics, then patch AddTemplate, FillTemplates and SaveTemplateProfile together in source Chernarus plus maintained Vanilla."
     },
     {
       "lane": "release-7195b331-status-refresh",

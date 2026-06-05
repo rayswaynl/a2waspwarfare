@@ -45,6 +45,17 @@ flowchart TD
 | Miksuu upstream `miksuu/master` | Same in both maintained roots. | Same in both maintained roots. | No upstream rescue exists. |
 | `origin/release/2026-06-feature-bundle` | Same in both maintained roots. | Same in both maintained roots. | Release bundle still carries the paired profile-template debt. |
 
+### Creation Gate Branch Matrix
+
+Refreshed 2026-06-06 for current source `HEAD`/stable `origin/master` `2cdf5fb8`, upstream `miksuu/master` `f532f706`, `origin/perf/quick-wins` `0076040f` and release `origin/release/2026-06-feature-bundle` `7195b331`.
+
+| Scope | Add-template gate | Fill/save contrast | Practical meaning |
+| --- | --- | --- | --- |
+| Current source Chernarus + maintained Vanilla | `Client_UI_Gear_AddTemplate.sqf:15,37,83,110` computes `_u_upgrade`, then `:136` accepts a new template when `_u_upgrade <= WFBE_UP_BARRACKS` **or** `_u_upgrade <= WFBE_UP_GEAR`. | `Client_UI_Gear_FillTemplates.sqf:17` displays templates only when stored upgrade `<= WFBE_UP_GEAR`; `Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` still tries to filter with undefined `_u_upgrade`. | Owner-decision consistency debt: choose whether templates are unlocked by either Barracks/Gear lane or Gear-only display should be changed. |
+| Stable `origin/master` and upstream `miksuu/master` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | No stable/upstream rescue found. |
+| `origin/perf/quick-wins` `0076040f` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | Perf branch does not touch gear-template semantics. |
+| Release `origin/release/2026-06-feature-bundle` `7195b331` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | Release branch does not resolve the creation/display/save contract. |
+
 ## Bug Shape
 
 `Client_UI_Gear_SaveTemplateProfile.sqf` intends to filter templates so only side-valid and currently unlocked items are saved to the player's profile. The function has a correctly named `_template_upgrade` value, but the three per-item upgrade checks reference `_u_upgrade` instead:
@@ -143,7 +154,7 @@ Generated mission:
 - The import-bound issue is a paired profile persistence bug, not proof that live gear purchase authority is hardened or broken in a new way.
 - It is not the same as full gear purchase authority. Do not claim public-server gear hardening after this patch.
 - Keep this page paired with [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Client UI systems atlas](Client-UI-Systems-Atlas) and [Feature status](Feature-Status-Register).
-- Branch check 2026-06-05 found no rescue branch: current source/Vanilla, stable `origin/master`, Miksuu upstream and `origin/release/2026-06-feature-bundle` all still carry both the save-filter and profile-import defects.
+- Branch checks 2026-06-05 and 2026-06-06 found no rescue branch: current source/Vanilla, stable `origin/master`, Miksuu upstream, `perf/quick-wins` and `origin/release/2026-06-feature-bundle` all keep the undefined `_u_upgrade` save filter plus six-field import guard, and they also keep the Barracks-or-Gear AddTemplate creation gate while FillTemplates displays against Gear only. Treat save/import repair as paired patch work, and treat creation/display semantics as a separate owner decision before changing code.
 
 ## Continue Reading
 
