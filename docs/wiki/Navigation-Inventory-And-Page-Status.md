@@ -6,17 +6,17 @@ Use it before adding pages to Home, `_Sidebar.md`, `mkdocs.yml`, `llms.txt` or `
 
 ## Current Snapshot
 
-Snapshot generated from `docs/wiki/*.md`, `_Sidebar.md` and `mkdocs.yml` on 2026-06-05.
+Snapshot generated from `docs/wiki/*.md`, `_Sidebar.md`, selected machine-file sidebar links and `mkdocs.yml` on 2026-06-05.
 
 | Item | Count | Meaning |
 | --- | ---: | --- |
 | Markdown pages | 142 | All `.md` pages in `docs/wiki`, including `_Sidebar.md` and `_Footer.md`. |
 | Content pages | 140 | Markdown pages excluding `_Sidebar.md` and `_Footer.md`. |
-| Sidebar pages | 111 | Pages linked from the GitHub wiki sidebar. |
+| Sidebar links | 112 | Pages or agent files linked from the GitHub wiki sidebar. This includes one intentional machine-file link: [`agent-machine-index.json`](agent-machine-index.json). |
 | MkDocs pages | 120 | Pages listed in `mkdocs.yml` navigation. |
 | Pages in both navs | 111 | Primary pages visible in both GitHub wiki and MkDocs. |
 | Pages in neither nav | 20 | Usually archives, instruction pages, old queues, analysis notes or narrow patch pages reached through canonical pages. |
-| Sidebar-only pages | 0 | The 2026-06-05 MkDocs parity pass added the remaining primary sidebar pages to repo mirror navigation. |
+| Sidebar-only links | 1 | [`agent-machine-index.json`](agent-machine-index.json) is intentionally sidebar-only because it is an agent-readable JSON file, not a MkDocs Markdown page. Primary Markdown sidebar-only drift remains `0`. |
 | MkDocs-only pages | 9 | All imported Miksuu archive pages. |
 | Pages missing `Continue Reading` | 0 | All content pages now expose either owner-page or archive/queue-safe routing. |
 | Imported Miksuu archive pages | 9 | Historical provenance; route through [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import). |
@@ -36,7 +36,7 @@ Snapshot generated from `docs/wiki/*.md`, `_Sidebar.md` and `mkdocs.yml` on 2026
 
 ### Sidebar-Only Pages
 
-The sidebar-only primary-page drift is closed as of the 2026-06-05 MkDocs parity pass.
+The sidebar-only primary Markdown page drift is closed as of the 2026-06-05 MkDocs parity pass. The only current sidebar-only item is the machine-readable [`agent-machine-index.json`](agent-machine-index.json), which is intentionally exposed for agents without adding it to MkDocs Markdown navigation.
 
 | Page | Suggested status | Next action |
 | --- | --- | --- |
@@ -44,6 +44,7 @@ The sidebar-only primary-page drift is closed as of the 2026-06-05 MkDocs parity
 | [Headless client scaling and topology](Headless-Client-Scaling-And-Topology) | `primary` | Added to MkDocs Gameplay AI/HC nav on 2026-06-05. |
 | [PR cleanup and integration lab](PR-Cleanup-And-Integration-Lab) | `primary` while PR triage is active | Added to MkDocs Community & Dev nav on 2026-06-05. |
 | [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) | `primary` for docs owners | Added to MkDocs Agent Coordination nav on 2026-06-05. |
+| [`agent-machine-index.json`](agent-machine-index.json) | `machine-file` | Intentionally sidebar-only as of 2026-06-05; linked from LLM entrypoints and sidebar, but not a Markdown content page. |
 
 ### MkDocs-Only Pages
 
