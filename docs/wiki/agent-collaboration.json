@@ -146,6 +146,29 @@
       "handoff": "Closed as docs-published. Future code owner should fix ChangePlayerFunds casing in source Chernarus and maintained Vanilla first, smoke manual engineer and salvage-truck payouts, then separately review loop exit and server-owned delete/reward authority."
     },
     {
+      "lane": "feature-status-auto-wall-duplicate-prune",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Construction-And-CoIn-Systems-Atlas.md",
+        "docs/wiki/Wiki-Pruning-And-Relevance-Ledger.md",
+        "docs/wiki/Agent-Worklog.md",
+        "docs/wiki/agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/CoIn/coin_interface.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestAutoWallConstructinChange.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_SmallSite.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_MediumSite.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan"
+      ],
+      "outputs": [
+        "Removed the stale duplicate auto-wall Feature Status row left after the RHUD/salvage rebase.",
+        "Kept the source-backed branch-checked auto-wall row and Construction-And-CoIn-Systems-Atlas as canonical."
+      ],
+      "handoff": "Closed as docs-published. Future auto-wall work should use the remaining branch-checked Feature Status row plus Construction-And-CoIn-Systems-Atlas."
+    },
+    {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
       "owner": "Codex-delegated",
       "status": "returned-harvested",
@@ -325,7 +348,8 @@
     "camp-flag-texture-branch-scope",
     "resistance-patrol-latch-branch-route",
     "auto-wall-toggle-scope-branch-route",
-    "salvage-payout-cleanup-branch-route"
+    "salvage-payout-cleanup-branch-route",
+    "feature-status-auto-wall-duplicate-prune"
   ],
   "queuedReports": [],
   "lanes": [
@@ -352,6 +376,12 @@
       "suggestedOwner": "Codex-helper",
       "status": "published-validated",
       "summary": "Branch-checked salvage payout casing, local delete/reward authority and loop shape, then updated construction/status docs without gameplay source changes."
+    },
+    {
+      "lane": "feature-status-auto-wall-duplicate-prune",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "Pruned the stale duplicate auto-wall row from Feature Status and kept the branch-checked row as canonical without gameplay source changes."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",

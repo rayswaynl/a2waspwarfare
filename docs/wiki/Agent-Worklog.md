@@ -13,6 +13,12 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T23:59:00+02:00 - Codex-helper - Feature status auto-wall duplicate prune
+
+- Claimed `feature-status-auto-wall-duplicate-prune` after the RHUD/salvage rebase left two adjacent `Auto-wall construction toggle is global` rows in [Feature status](Feature-Status-Register).
+- Rechecked current source Chernarus and maintained Vanilla for the branch-checked row's evidence: `Init_Common.sqf:201`, `coin_interface.sqf:180,207-217`, `RequestAutoWallConstructinChange.sqf:3-7`, `Construction_SmallSite.sqf:110` and `Construction_MediumSite.sqf:125` still describe one global `isAutoWallConstructingEnabled` toggle.
+- Removed only the stale pre-branch duplicate row and left the branch-checked row plus [Construction and CoIn](Construction-And-CoIn-Systems-Atlas) as the canonical route. No gameplay source changed.
+
 ## 2026-06-05T23:58:00+02:00 - Codex-helper - Salvage payout/cleanup branch route
 
 - Claimed `salvage-payout-cleanup-branch-route` from the construction/economy hardening backlog.
