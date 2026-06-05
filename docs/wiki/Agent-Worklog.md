@@ -7,6 +7,13 @@
 - Result: current source/Vanilla, stable, upstream and perf all debit after `BuildUnit` spawn and leave the dead/null factory exit as queue cleanup with no refund. Release carries `_currentCost` into `BuildUnit` and refunds in the empty/crewless branch, but its dead/null factory exit still does not refund.
 - Updated [Factory and purchase systems](Factory-And-Purchase-Systems-Atlas#destroyed-factory-refund-branch-matrix), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
 
+## 2026-06-05T22:55:00+02:00 - Codex - Claude branch divergence harvest check
+
+- Fetched `origin` and `miksuu`; current refs checked: `origin/docs/developer-wiki-index` `1e3dfd97`, `origin/docs/developer-wiki-claude` `5d0db9d2`, `origin/release/2026-06-feature-bundle` `7195b331`, `origin/master` `2cdf5fb8` and `miksuu/master` `f532f706`.
+- Checked Claude's latest docs commits `3cd1798c` (`docs: sync buy menu price key wiki matrix`) and `5d0db9d2` (`docs: sync construction and buy menu wiki state`) against the current curated docs branch instead of merging the highly divergent branch wholesale.
+- Result: the useful buy-menu price/key, destroyed-factory refund, extra-turret queue, SmallSite/MediumSite logic, auto-wall, salvage and dormant progressive-repair facts are already present in the canonical owner pages: [Factory and purchase systems](Factory-And-Purchase-Systems-Atlas), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup), [Construction and CoIn](Construction-And-CoIn-Systems-Atlas), [Construction logic list cleanup](Construction-Logic-List-Cleanup), [Feature status](Feature-Status-Register) and [Source fix propagation queue](Source-Fix-Propagation-Queue).
+- Decision: do not merge `origin/docs/developer-wiki-claude` wholesale into the curated docs branch. Treat it as a scout branch; harvest only source-backed deltas that are missing from owner pages. No gameplay source changed.
+
 ## 2026-06-06T01:35:00+02:00 - Codex helper - Side-supply reason-string branch route
 
 - Claimed `side-supply-reason-string-branch-route` from the side-supply diagnostics backlog.
