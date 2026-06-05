@@ -55,6 +55,7 @@ Run these before any major gameplay patch and after large generated changes:
 | JIP replay scan | New transient PV events that should have replicated object variables or pull-based state requests. |
 | IDD/resource scan | Duplicate display/title IDDs and missing Rsc class references. |
 | Generated drift scan | Chernarus versus Takistan outside the LoadoutManager skip-list; modded missions are separate forks/stubs. |
+| PR8 static smoke script | On PR #8 / `origin/release/2026-06-feature-bundle`, run `powershell -ExecutionPolicy Bypass -File Tools\SmokeTests\Test-PR8StaticSmoke.ps1 -BaseRef origin/master -HeadRef HEAD`. It catches A3-only command names, HQ shield template/deploy/cleanup shape, core PR8 PVF registration and Buy Units image-tab text writes. This is Chernarus/static-only preflight, not Arma runtime proof or Vanilla parity proof. |
 | Conflict-marker scan | `rg -l "<<<<<<<|=======|>>>>>>>" Modded_Missions`; current docs/source scan finds 18 unresolved modded files, so modded forks are not release candidates until cleaned, regenerated or retired. |
 | Extension trust scan | `callExtension` return handling, `call compile`, serialization settings and missing DLL/config assumptions; route through [Integration trust boundary audit](Integration-Trust-Boundary-Audit) and [AntiStack database extension audit](AntiStack-Database-Extension-Audit) for AntiStack-specific DB wrappers. |
 

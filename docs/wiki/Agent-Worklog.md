@@ -13,6 +13,12 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T23:20:00+02:00 - Codex - PR8 release-head evidence refresh
+
+- Claimed `pr8-release-head-evidence-refresh` after the current-source refetch showed `origin/release/2026-06-feature-bundle` moved from the earlier matrix head `a9219d88` to `3282ff3f`.
+- Source-checked the four newer commits: `68b34e6e` adds WF menu player/playable-slot/town counts, `cd63fb95` adds service-point full/refuel QoL and disabled-state reasons, `379da6c0` adds shielded concrete HQ walls with `wfbe_hq_walls` cleanup, and `3282ff3f` adds `Tools/SmokeTests/Test-PR8StaticSmoke.ps1`.
+- Updated [PR cleanup lab](PR-Cleanup-And-Integration-Lab) and [Testing workflow](Testing-Debugging-And-Release-Workflow) so future PR8 testers see the current branch-head evidence and understand that the static smoke script is Chernarus/source-only preflight, not Arma runtime proof. No gameplay source changed.
+
 ## 2026-06-05T22:55:00+02:00 - Codex - community upstream head note refresh
 
 - Claimed `community-upstream-head-note-refresh` after a stale-provenance scan found [Community & Dev](Community-And-Dev) and [Developer history](Developer-History-And-Upstream-Lessons) still framed `miksuu/master` `8bcc42b1` as the latest upstream evidence.

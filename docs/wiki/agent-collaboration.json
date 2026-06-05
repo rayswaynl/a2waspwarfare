@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-05T22:55:00+02:00",
+  "generatedAt": "2026-06-05T23:20:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -28,14 +28,14 @@
       "status": "active-ongoing",
       "sourceScope": [
         "docs/wiki/Progress-Dashboard.md",
-        "docs/wiki/Community-And-Dev.md",
-        "docs/wiki/Developer-History-And-Upstream-Lessons.md",
+        "docs/wiki/PR-Cleanup-And-Integration-Lab.md",
+        "docs/wiki/Testing-Debugging-And-Release-Workflow.md",
         "docs/wiki/Agent-Worklog.md",
         "docs/wiki/agent-status.json",
         "docs/wiki/agent-events.jsonl"
       ],
       "outputs": [
-        "Keep wiki/status pages current from source evidence, branch-head refetches, upstream candidate intake and stale-provenance cleanup.",
+        "Keep wiki/status pages current from source evidence, branch-head refetches, upstream candidate intake, PR/release-head changes and stale-provenance cleanup.",
         "Compact dashboard/status surfaces when history leaks into live state.",
         "Publish scoped validation batches."
       ],
@@ -55,6 +55,23 @@
         "Coverage Ledger is linked from Home, sidebar, footer, llms and agent context."
       ],
       "handoff": "Claude should claim a narrow lane before editing and append worklog/events."
+    },
+    {
+      "lane": "old-be-wasp-fps-archaeology",
+      "owner": "Codex-delegated",
+      "status": "active",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "docs/wiki/Old-WarfareBE-Performance-Comparison.md",
+        "docs/wiki/Performance-Opportunity-Sweep.md",
+        "docs/wiki/Player-AI-Caps-And-Role-Balance.md",
+        "external/ArmA2_WarfareBE"
+      ],
+      "outputs": [
+        "Safe report draft comparing old Benny Edition implementation choices with current Wasp FPS/simulation-load candidates.",
+        "Ranked client/server/both opportunity table, player-AI cap options, static/town cleanup options, 20-player/full-server test plan and Discord summary."
+      ],
+      "handoff": "Promote only source-backed deltas into wiki owner pages after review; no gameplay source edits in this lane."
     },
     {
       "lane": "feature-status-reconciliation",
@@ -180,7 +197,8 @@
     "bottleneck-queue-validation-refresh",
     "current-source-status-refetch",
     "miksuu-town-capture-state-fix-intake",
-    "community-upstream-head-note-refresh"
+    "community-upstream-head-note-refresh",
+    "pr8-release-head-evidence-refresh"
   ],
   "queuedReports": [],
   "lanes": [
