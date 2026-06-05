@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-05T16:35:00+02:00",
+  "generatedAt": "2026-06-05T17:12:13+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -137,10 +137,14 @@
         "docs/wiki/Client-Skill-Init-Idempotency.md",
         "docs/wiki/Hosted-Server-FPS-Loop-Sleep.md",
         "docs/wiki/Supply-Mission-Scan-Narrowing.md",
-        "docs/wiki/Paratrooper-Marker-Revival.md"
+        "docs/wiki/Paratrooper-Marker-Revival.md",
+        "docs/wiki/Construction-And-CoIn-Systems-Atlas.md",
+        "docs/wiki/Support-Specials-And-Tactical-Modules-Atlas.md",
+        "docs/wiki/Testing-Debugging-And-Release-Workflow.md",
+        "docs/wiki/Feature-Status-Register.md"
       ],
       "outputs": [
-        "Patch-ready/source-propagated lanes still need Arma smoke before release-complete claims."
+        "Client skill init, hosted FPS, supply scan, paratrooper markers and commander-built ARTY still need Arma smoke before release-complete claims."
       ],
       "handoff": "Track smoke results on owner pages and Feature Status."
     },
@@ -220,7 +224,9 @@
     "fps-helper-lane-compaction",
     "server-runtime-operations-gateway",
     "old-be-current-wasp-fps-opportunity-final-harvest",
-    "july-update-route-sync"
+    "july-update-route-sync",
+    "commander-arty-smoke-lane-dashboard-sync",
+    "commander-arty-smoke-lane-collaboration-sync"
   ],
   "queuedReports": [],
   "lanes": [
@@ -264,7 +270,7 @@
       "lane": "source-propagated-smoke-pending",
       "suggestedOwner": "future-tester-release-owner",
       "status": "smoke-pending",
-      "summary": "Source-propagated candidates still need Arma smoke."
+      "summary": "Client skill init, hosted FPS, supply scan, paratrooper markers and commander-built ARTY still need Arma smoke."
     },
     {
       "lane": "wasp-marker-wait-cleanup",
