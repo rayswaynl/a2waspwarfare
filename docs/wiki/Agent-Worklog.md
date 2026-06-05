@@ -2808,3 +2808,8 @@ Key conclusions:
 - Promoted only compact, actionable deltas: [Performance sweep](Performance-Opportunity-Sweep) owns the opportunity order, [Player AI caps](Player-AI-Caps-And-Role-Balance#dynamic-cap-proposal) owns the dynamic cap table, [Old WarfareBE comparison](Old-WarfareBE-Performance-Comparison#2026-06-05-opportunity-audit-appendix) owns the appendix, [Testing workflow](Testing-Debugging-And-Release-Workflow#full-server-fps-opportunity-pack) owns the 10/15/20/25/30 matrix, and [Feature status](Feature-Status-Register) marks the cap/scoreboard as owner-decision gameplay/performance work.
 - Updated [`agent-machine-index.json`](agent-machine-index.json) so future agents route FPS-cap prompts through the new test pack instead of older generic old-BE wording.
 - No gameplay source files changed.
+
+## 2026-06-05T23:59:55+02:00 - Codex - old-FPS provenance cleanup
+- Claimed `old-fps-provenance-cleanup` after a stale-status scan found [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison) still naming an older docs-only commit as the current Wasp source baseline.
+- Reworded the evidence table to cite the current source mission path and route branch/head truth through [Current source status snapshot](Current-Source-Status-Snapshot) instead of freezing the page to one docs-branch commit hash.
+- Refreshed [`agent-machine-index.json`](agent-machine-index.json) metadata after the FPS opportunity harvest. No gameplay source changed.

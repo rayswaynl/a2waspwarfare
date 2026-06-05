@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-05T23:59:45+02:00",
+  "generatedAt": "2026-06-05T23:59:55+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -221,7 +221,8 @@
     "pr8-release-head-evidence-refresh",
     "release-head-propagated-fix-spotcheck-and-fps-report-intake",
     "release-head-machine-ledger-sync",
-    "old-vs-current-fps-opportunity-harvest"
+    "old-vs-current-fps-opportunity-harvest",
+    "old-fps-provenance-cleanup"
   ],
   "queuedReports": [],
   "lanes": [

@@ -19,7 +19,7 @@ The practical differences are more specific:
 | --- | --- |
 | Old BennyBoy repository | [`BennyBoy-/ArmA2_WarfareBE`](https://github.com/BennyBoy-/ArmA2_WarfareBE), local clone at commit `aeb71bb` (`Updated nfo`) with initial upload `2fcd64d`. |
 | Old mission scope | `readme.nfo` and `version.sqf:18-19` identify the main branch as `Warfare Benny Edition V2.073 Lite OA - Takistan`, `WF_MAXPLAYERS 32`. Treat findings as Takistan Lite OA scope unless another release package is checked. |
-| Current Wasp source | `rayswaynl/a2waspwarfare` local branch `docs/developer-wiki-index` at commit `a2affb7d`; source mission path `Missions/[55-2hc]warfarev2_073v48co.chernarus`. |
+| Current Wasp source | `rayswaynl/a2waspwarfare` local branch `docs/developer-wiki-index`; source mission path `Missions/[55-2hc]warfarev2_073v48co.chernarus`. The original static archaeology was expanded around earlier docs-branch commits, then refreshed by the 2026-06-05 opportunity harvest; use source paths and [Current source status snapshot](Current-Source-Status-Snapshot) for current branch/head truth instead of treating one docs-only commit hash as permanent. |
 | Current upstream context | [`Miksuu/a2waspwarfare`](https://github.com/Miksuu/a2waspwarfare) documents the modern mission as a Warfare derivative with added modules such as Discord integration. |
 | Engine claim used here | BI wiki [`setViewDistance`](https://community.bohemia.net/wiki/setViewDistance), which describes scripted view distance and includes Arma 2 OA notes. Arma 3-only command assumptions are not used as OA authority. |
 
