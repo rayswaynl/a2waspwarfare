@@ -268,7 +268,7 @@ The supply mission code later reads/writes `LastSupplyMissionRun` with a differe
 | Economy | Income tick still reflects town SV and ownership; side supply clamp/authority changes still use current town supply. |
 | Victory | All-town and HQ/factory elimination paths still produce one winner and one endgame/log path. |
 
-## Next Pages
+## Continue Reading
 
 Previous: [Gameplay systems atlas](Gameplay-Systems-Atlas) | Next: [Economy, towns and supply](Economy-Towns-And-Supply)
 

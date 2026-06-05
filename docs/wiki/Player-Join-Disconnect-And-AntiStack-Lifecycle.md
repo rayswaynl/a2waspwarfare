@@ -140,6 +140,8 @@ For public hosting, treat AFK as client UX plus BattlEye/logging signals, not a 
 - Launch-connect spoof attempt with mismatched object/side is ignored and logged.
 - AFK timeout logs the correct player and cannot be spoofed by another client.
 
+## Continue Reading
+
 Previous: [Lifecycle wait-chain](Lifecycle-Wait-Chain) | Next: [AntiStack database extension audit](AntiStack-Database-Extension-Audit)
 
 Main map: [Home](Home) | Feature triage: [Feature status](Feature-Status-Register) | PV inventory: [Public variable channel index](Public-Variable-Channel-Index)

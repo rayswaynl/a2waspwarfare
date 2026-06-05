@@ -242,7 +242,7 @@
         "Wiki-Mirror-Reconciliation-Plan"
       ],
     "hasPerPageContinueReading": false,
-    "continueReadingStatus": "Most primary handbook pages have Continue Reading blocks; known gaps and archive exceptions are tracked in Navigation-Inventory-And-Page-Status.",
+    "continueReadingStatus": "Primary/current owner pages now have Continue Reading blocks; remaining gaps are archive/queue pages tracked in Navigation-Inventory-And-Page-Status.",
       "sidebar": "_Sidebar.md",
       "footer": "_Footer.md"
     }

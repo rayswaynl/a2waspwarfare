@@ -232,3 +232,9 @@ Research snapshot: upstream `master` at `8bcc42b1` (2026-06-02), GitHub PRs #1-#
 | `823ad0da`, `a6f5020e`, `99bd4be8`, `8372f5ce` | RHUD/server FPS publishing | Diagnostics can become performance bugs; FPS HUD fixes and server loops both had reverts/guards. |
 | `95481b37`, DR-45 | mines cleanup, `wfbe_trashed`, town-AI despawn | Cleanup bugs are array-shape, idempotency and full-occupancy checks, not only missing deletes. |
 | local `feat/ai-commander` head `4dba060e` (`585c3519`, `1a3e3def`, `4c2abced`, `4dba060e`) | `Server/AI/Commander/*`, `Server_AI_Com_Upgrade.sqf`, `Init_Server.sqf`, `Parameters.hpp` | AI commander revival is branch-only/local evidence until merged, propagated and smoked: default-on AI commander, per-side supervisor, assign/produce workers, explicit order executor and upgrade cost fixes are source-Chernarus-only. |
+
+## Continue Reading
+
+Previous: [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) | Next: [PR8 and Drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match)
+
+Main map: [Home](Home) | Community: [Community & Dev](Community-And-Dev) | Archive index: [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import)

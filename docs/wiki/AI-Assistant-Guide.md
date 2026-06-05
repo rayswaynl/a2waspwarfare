@@ -117,7 +117,7 @@ Use this checklist before adding a new networking channel:
 - [Feature status register](Feature-Status-Register) for risk ranking
 - [Current source status snapshot](Current-Source-Status-Snapshot)
 
-## Continue reading
+## Continue Reading
 
 Previous: [Home](Home) | Next: [AI Assistant Developer Guide](AI-Assistant-Developer-Guide)
 

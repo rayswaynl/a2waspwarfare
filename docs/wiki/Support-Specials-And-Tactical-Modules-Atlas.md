@@ -160,6 +160,8 @@ Wave N rechecked the support router and found two source-level traps worth keepi
 - Service actions with changing funds/world state between button enable and click.
 - Supply mission cargo reward and cooldown after truck reuse.
 
+## Continue Reading
+
 Previous: [Modules atlas](Modules-Atlas) | Next: [ICBM authority](ICBM-Authority-Playbook)
 
 Main map: [Home](Home) | Feature triage: [Feature status](Feature-Status-Register) | Authority map: [Server authority migration map](Server-Authority-Migration-Map)

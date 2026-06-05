@@ -193,7 +193,9 @@ A safe future patch should add a server-side request wrapper before `WFBE_SE_FNC
 
 Until this exists, the client UI should be treated as an affordance layer, not as the authority boundary.
 
-## Next Pages
+## Continue Reading
+
+Previous: [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) | Next: [Economy authority first cut](Economy-Authority-First-Cut)
 
 - [Economy Authority First Cut](Economy-Authority-First-Cut)
 - [Server Authority Migration Map](Server-Authority-Migration-Map)

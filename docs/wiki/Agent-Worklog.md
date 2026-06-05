@@ -2542,3 +2542,8 @@ Key conclusions:
 - Added [Navigation inventory and page status](Navigation-Inventory-And-Page-Status): 140 Markdown pages, 102 sidebar pages, 107 MkDocs pages, 27 content pages in neither navigation surface and 21 pages missing `Continue Reading`.
 - Updated Home, sidebar, MkDocs, footer, `llms.txt`, `agent-context.json`, [Wiki pruning/relevance ledger](Wiki-Pruning-And-Relevance-Ledger) and [Progress dashboard](Progress-Dashboard) so future docs owners have one explicit place to track nav/page-status drift.
 - No gameplay source changed.
+
+## 2026-06-05T11:35:00+02:00 - Codex - Continue Reading owner-page polish
+- Normalized or added `## Continue Reading` blocks on 10 high-traffic/current owner pages: AI guide, architecture, mission parameters, join/disconnect, support specials, towns/camps, upgrades/research, marker cleanup, upstream commit intel and PR cleanup lab.
+- Recomputed the gap list: remaining pages without `Continue Reading` are now 11 archive/queue pages only (`Audit-Findings-Queue`, `Development-Lessons-Learned` and imported `Miksuu-Wiki-Archive-*` pages).
+- Updated [Navigation inventory and page status](Navigation-Inventory-And-Page-Status) and [Progress dashboard](Progress-Dashboard). No gameplay source changed.

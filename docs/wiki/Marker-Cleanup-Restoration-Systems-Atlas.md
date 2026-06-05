@@ -126,6 +126,8 @@ PerformanceAudit labels to search in the server RPT:
 - Building restorer repairs only the intended structure set.
 - For cleaner/restorer tuning, capture at least one server RPT sample for the relevant PerformanceAudit label before and after the change. Compare active time and `cycleMs`; do not optimize from scan width alone.
 
+## Continue Reading
+
 Previous: [Client UI systems atlas](Client-UI-Systems-Atlas) | Next: [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas)
 
 Main map: [Home](Home) | Feature triage: [Feature status](Feature-Status-Register) | Performance: [Performance opportunity sweep](Performance-Opportunity-Sweep)

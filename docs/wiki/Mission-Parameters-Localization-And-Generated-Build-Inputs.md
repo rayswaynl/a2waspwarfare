@@ -105,6 +105,8 @@ This means current Codex checkouts such as `work\a` can run LoadoutManager after
 - Treat `version.sqf` as required generated/terrain metadata. Local Chernarus/Vanilla copies may exist as ignored generated files; clean checkouts, generated targets and modded targets still need explicit verification.
 - Keep Arma 2 OA config syntax in mind; do not import Arma 3 `description.ext` assumptions.
 
+## Continue Reading
+
 Previous: [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle) | Next: [Tools and build workflow](Tools-And-Build-Workflow)
 
 Main map: [Home](Home) | Release gate: [Source fix propagation queue](Source-Fix-Propagation-Queue) | Machine ledger: [`agent-release-readiness.json`](agent-release-readiness.json)

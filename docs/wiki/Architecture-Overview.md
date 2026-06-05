@@ -59,3 +59,9 @@ Boot fragility callouts:
 ## Development Philosophy
 
 This mission values runtime performance and live-server stability. Many systems have explicit audit logging, cached UI writes, deferred loops, and optional switches. Documentation and feature work should preserve those patterns instead of reintroducing large per-frame scans or unconditional global broadcasts.
+
+## Continue Reading
+
+Previous: [Quickstart](Quickstart-For-Humans-And-Agents) | Next: [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle)
+
+Main map: [Home](Home) | Source map: [Source inventory](Source-Inventory) | Runtime: [Lifecycle wait-chain](Lifecycle-Wait-Chain)

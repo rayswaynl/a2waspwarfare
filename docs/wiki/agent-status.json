@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T11:15:00+02:00",
+  "generatedAt": "2026-06-05T11:35:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Validated Navigation-Inventory-And-Page-Status and wired it into Home, sidebar, MkDocs, footer, llms and agent context.",
+      "currentWork": "Validated Continue Reading blocks on 10 high-traffic/current owner pages; remaining gaps are archive/queue pages only.",
       "nextExpectedOutput": "Continue future wiki backlog work from fresh source evidence, code-owner requests or new user direction."
     },
     "Codex-2": {
@@ -50,6 +50,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "continue-reading-owner-page-polish",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Normalized Continue Reading blocks on AI guide, architecture, mission parameters, join/disconnect, support specials, towns/camps, upgrades/research, marker cleanup, upstream commit intel and PR cleanup lab. Missing Continue Reading count is now 11 archive/queue pages only. No gameplay source changed."
+    },
     {
       "lane": "navigation-inventory-page-status",
       "owner": "Codex/Sub-agent",

@@ -18,7 +18,7 @@ Snapshot generated from `docs/wiki/*.md`, `_Sidebar.md` and `mkdocs.yml` on 2026
 | Pages in neither nav | 27 | Usually owner pages, archives, old queues or narrow patch pages reached through canonical pages. |
 | Sidebar-only pages | 4 | Visible in GitHub wiki but not MkDocs. |
 | MkDocs-only pages | 9 | All imported Miksuu archive pages. |
-| Pages missing `Continue Reading` | 21 | Mix of high-traffic owner pages and historical/archive pages. |
+| Pages missing `Continue Reading` | 11 | Archive/queue pages only after the 2026-06-05 owner-page polish pass. |
 | Imported Miksuu archive pages | 9 | Historical provenance; route through [Miksuu upstream wiki import](Miksuu-Upstream-Wiki-Import). |
 
 ## Page Status Rules
@@ -71,8 +71,8 @@ Home should not claim every content page has previous/next links until these are
 
 | Family | Pages missing block | Decision |
 | --- | --- | --- |
-| High-traffic owner pages | [AI assistant guide](AI-Assistant-Guide), [Architecture overview](Architecture-Overview), [Mission parameters/localization/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs), [Player join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle), [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [Towns/camps/capture](Towns-Camps-And-Capture-Atlas), [Upgrades/research](Upgrades-And-Research-Atlas), [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel), [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas), [PR cleanup lab](PR-Cleanup-And-Integration-Lab) | Add `Continue Reading` blocks during the next owner-page polish pass. |
-| Archive/queue pages | [Audit findings queue](Audit-Findings-Queue-2026-06-03), [Development lessons](Development-Lessons-Learned), all `Miksuu-Wiki-Archive-*` pages | Either add archive-specific footer links or explicitly waive the chain for archive pages. |
+| High-traffic owner pages | [AI assistant guide](AI-Assistant-Guide), [Architecture overview](Architecture-Overview), [Mission parameters/localization/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs), [Player join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle), [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [Towns/camps/capture](Towns-Camps-And-Capture-Atlas), [Upgrades/research](Upgrades-And-Research-Atlas), [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel), [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas), [PR cleanup lab](PR-Cleanup-And-Integration-Lab) | Completed on 2026-06-05. These now have normalized `## Continue Reading` blocks. |
+| Archive/queue pages | [Audit findings queue](Audit-Findings-Queue-2026-06-03), [Development lessons](Development-Lessons-Learned), all `Miksuu-Wiki-Archive-*` pages | Remaining gap. Either add archive-specific footer links or explicitly waive the chain for archive pages. |
 
 ## Maintenance Checklist
 
