@@ -2635,7 +2635,7 @@ Key conclusions:
 - Claimed `tooling-release-audit-status-closeout` during the stale-state sweep.
 - Rechecked `agent-status.json`: current status routes the propagated source-fix lanes as `source-propagated-smoke-pending` / smoke pending and no longer carries the old "Vanilla propagation pending" wording called out by [Tooling release readiness audit](Tooling-Release-Readiness-Audit).
 - Updated [Tooling release readiness audit](Tooling-Release-Readiness-Audit) and [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger) so future agents focus on runtime smoke, release-branch scope and validator work instead of a stale status-text task. No gameplay source changed.
-- Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse and `git diff --check`. The validator emitted only the known non-failing legacy JSONL envelope warnings.
+- Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse, `git diff --check` in both worktrees and full repo-mirror/wiki checkout SHA256 parity (`full-diffCount=0`). The validator emitted only the known non-failing legacy JSONL envelope warnings.
 
 ## 2026-06-05T17:10:00+02:00 - Codex - wiki quality Round 2 closeout
 - Claimed `wiki-quality-round2-closeout` after the stale-state sweep found old Round 2 Codex-lane items still written as open in [Wiki quality audit](Wiki-Quality-Audit).
@@ -2651,4 +2651,12 @@ Key conclusions:
 - Updated [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) to record full parity evidence while preserving the no-blind-copy policy.
 - Updated [Wiki/source consistency findings](Wiki-Source-Consistency-Findings) so the old SQF compile-count warning is historical; current [SQF code atlas](SQF-Code-Atlas) owns dated counts, DR-5 caveat and regeneration command.
 - Updated [Progress dashboard](Progress-Dashboard), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl`. No gameplay source changed.
+- Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse and `git diff --check`. The validator emitted only the known non-failing legacy JSONL envelope warnings.
+
+## 2026-06-05T18:05:00+02:00 - Codex - wiki source Batch 3 routing closeout
+- Claimed `wiki-source-batch3-routing-closeout` to recheck old [Wiki/source consistency findings](Wiki-Source-Consistency-Findings) Batch 3 content-loss and path-drift warnings against current owner pages and source anchors.
+- Rechecked [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) and [Gameplay systems atlas](Gameplay-Systems-Atlas): construction detail is no longer homeless; Gameplay now routes to the construction owner page.
+- Rechecked respawn selector source (`Init_Client.sqf:127`, `GUI_RespawnMenu.sqf:32`, `Client_OnKilled.sqf:156`) and current UI/respawn owner pages: selector detail is documented in [Client UI systems atlas](Client-UI-Systems-Atlas), [Client UI/HUD and menus](Client-UI-HUD-And-Menus) and [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas).
+- Preserved the real SmallSite add/add vs MediumSite add/remove construction defect as source-unpatched code-owner work, routed through [Construction logic list cleanup](Construction-Logic-List-Cleanup), not as a docs content-loss blocker.
+- Corrected [Lifecycle wait-chain](Lifecycle-Wait-Chain) time-sync line drift and fixed the [`agent-machine-index.json`](agent-machine-index.json) LoadoutManager `FileManager.cs` source path. No gameplay source changed.
 - Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse and `git diff --check`. The validator emitted only the known non-failing legacy JSONL envelope warnings.

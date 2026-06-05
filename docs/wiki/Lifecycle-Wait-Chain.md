@@ -79,7 +79,7 @@ Page ownership note: this lifecycle page owns HC boot timing and wait-chain risk
 
 There is no `didJIP` variable; JIP is handled implicitly because `initJIPCompatible.sqf` runs identically on joining clients, hitting the same barriers.
 
-- **Time catch-up:** `initJIPCompatible.sqf:212` — `if (local player) then {skipTime (time/3600)}`; initial date applied from `WFBE_DAYNIGHT_DATE` if present (`:203`).
+- **Time catch-up:** `initJIPCompatible.sqf:202` — `if (local player) then {skipTime (time/3600)}` when the accelerated day/night cycle is disabled; `WFBE_DAYNIGHT_DATE` is applied at `:193-194` when the accelerated cycle is enabled.
 - **Spawn position:** `Init_Client.sqf:462` — `if (time < 30)` use start position, else (JIP) spawn at newest factory building.
 - **Markers:** `Init_Client.sqf:732-736` — deferred re-init of town/camp markers from already-synced object variables after a short sleep.
 - **State sync:** town `sideID`/`supplyValue`, side-logic commander/HQ/upgrades/teams, and team `wfbe_funds` are all written with `setVariable [..., true]` so the engine replicates them to JIP clients automatically (see the JIP section of [Networking and public variables](Networking-And-Public-Variables)).

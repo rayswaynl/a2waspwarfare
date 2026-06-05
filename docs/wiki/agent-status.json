@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T17:45:00+02:00",
+  "generatedAt": "2026-06-05T18:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Closed and validated mirror/SQF consistency residue: full repo-mirror/wiki checkout parity is zero-drift and the old SQF compile-count warning is now historical because SQF Code Atlas carries a dated recount and regeneration command.",
-      "nextExpectedOutput": "Continue future wiki backlog work from fresh evidence, code-owner requests or newly returned helper reports."
+      "currentWork": "Closed/routed old Wiki Source Consistency Batch 3 residue; continue the documentation finisher loop from fresh source evidence, user requests or new helper reports.",
+      "nextExpectedOutput": "Pick the next bounded docs/backlog cleanup lane; keep wiki and docs mirror in parity and avoid gameplay source changes unless explicitly requested."
     },
     "Codex-2": {
       "status": "ready",

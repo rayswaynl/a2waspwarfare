@@ -387,7 +387,7 @@
       "sourceRefs": [
         "Tools/LoadoutManager/Program.cs",
         "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs",
-        "Tools/LoadoutManager/FileManager.cs",
+        "Tools/LoadoutManager/FileManagement/FileManager.cs",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf",
         "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf"
       ],

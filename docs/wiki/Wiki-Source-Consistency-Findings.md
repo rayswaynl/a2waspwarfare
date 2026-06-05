@@ -43,24 +43,28 @@ Separate note still worth source-checking in a future DR text cleanup lane: DR-4
 - Cluster B/C are doc-accuracy fixes you own (paths, channel direction, drifted `file:line`).
 - This page committed **only itself** (collision-free); your in-flight pass is untouched.
 
-## Batch 3 — canonical homes + lifecycle/integration/tools (27 inconsistencies / 314 claims)
+## Batch 3 — canonical homes + lifecycle/integration/tools (mostly routed)
 
-### Compression content-loss — CONFIRMED from both sides (HIGH)
-- **Construction *system* detail is homeless.** `Gameplay-Systems-Atlas:247` (+ `:270` "this page stays a gateway") sends readers to the Construction atlas for structure arrays / placement / CoIn runtime / request handlers / HQ lifecycle / repair flows / DR-6 — but that atlas is a 3-line stub redirecting back here. Detail on **neither** page; the `wfbe_structures_logic` "owning map" (`Gameplay:327`) is homeless for the same reason. → Restore the detail to **one** canonical page.
-- **Respawn-selector UI detail lost.** `Client-UI-Systems-Atlas` (stub) promises "respawn selector" coverage, redirecting to `Client-UI-HUD-And-Menus`, but that page has only a one-line `GUI_RespawnMenu.sqf` bullet; `WFBE_CL_FNC_UI_Respawn_Selector` (`Client/Init/Init_Client.sqf:127`) is unmentioned.
-- **Relocation that DID work:** `Documentation-Implementation-Plan` (38 claims, content present) — the Hardening-Roadmap + Server-Authority-Map stubbing was a **valid** relocation. ✓
+Status 2026-06-05: this batch is now mostly a historical routing audit rather than an active content-loss blocker. Current-page rechecks found the old construction and respawn-selector compression losses resolved by canonical owner pages, while the real SmallSite source defect remains a code-owner patch candidate.
+
+### Compression content-loss — closed by current owner pages
+
+- **Construction system detail:** closed. [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) now owns the structure arrays, CoIn runtime, placement checks, request handlers, server construction workers, HQ/base-area risks, repair flows and `wfbe_structures_logic` synthesis. [Gameplay systems atlas](Gameplay-Systems-Atlas) now stays a gateway and links there.
+- **Respawn selector UI detail:** closed. [Client UI systems atlas](Client-UI-Systems-Atlas) now maps `WFBE_RespawnMenu`, `GUI_RespawnMenu.sqf` and `Client_UI_Respawn_Selector.sqf`, while [Respawn and death lifecycle atlas](Respawn-And-Death-Lifecycle-Atlas) owns the canonical player death/menu/spawn-source flow.
+- **Relocation that worked:** still valid. `Documentation-Implementation-Plan` remains an evidence-rich planning page, while [Hardening roadmap](Hardening-Implementation-Roadmap) and [Server authority map](Server-Authority-Migration-Map) own implementation sequencing.
 
 ### Source / code findings
-- **CODE (potential bug — review lane, not just docs):** `Construction_SmallSite.sqf:99` does `… + [_nearLogic]` (**add**) while its own comment `:98` says "Remove the logic from the list since it's built" and `Construction_MediumSite.sqf:114` does `- [_nearLogic]` (**remove**). SmallSite and MediumSite **diverge** — SmallSite likely never clears its built-site logic from `wfbe_structures_logic`. | `Server/Construction/Construction_SmallSite.sqf:98-99` vs `Construction_MediumSite.sqf:114` |
-- Mission-Entrypoints: day/night client sync is started in `initJIPCompatible.sqf:209`, **not** `Init_Client.sqf`. | behavior-mismatch |
-- Tools: LoadoutManager skips `loadScreen.jpg` **only for vanilla** terrains (`FileManager.cs:98` `!_isModdedTerrain`); PerformanceAudit produces **14** outputs (wiki lists 12 — omits `performance_interpretation.html`, `performance_report_word.doc`); `Core_Artillery` blacklist is a suffix `EndsWith` match, not the path `Common/Config/Core_Artillery`. |
 
-### Doc-accuracy (LOW — mostly line-drift; several overlap Codex's 14:56 sweep)
-- **Lifecycle-Wait-Chain**: `initJIPCompatible` refs are systematically **~+10 too high** (server guard `:218` not ~228; client `:224/:233`; headless `:237-239`; WASP block `:241-245`; `skipTime :202`; `setDate :193-194`); `Init_TownMode` waitUntil `:3` not :18, `townModeSet :21` not :20; `Init_Unit` waitUntil `:32` not :33.
-- **Gameplay**: `PerformanceAudit_Record :263-265` not :259-265; range globals `:310-320` (incl. `hqInRange`) not :311-320.
-- **Client-UI-HUD**: `WF_Menu`/onLoad at `Dialogs.hpp:1019/1022` not :1025.
-- **Broken anchors**: Documentation-Implementation-Plan → `Feature-Status-Register#triage-view` (no such heading); External-Integrations → `Public-Variable-Channel-Index#2a-direct-handler-drilldown` (no 2a subsection).
-- **External-Integrations**: AntiStack default-enable guard is `Init_CommonConstants.sqf:171` not :175-177. **No BattlEye/`remoteexec.txt` framing error found — the DR-30 correction is consistent.** ✓
+- **Still live code-owner candidate:** `Construction_SmallSite.sqf:98-99` still says "Remove the logic from the list since it's built" but appends `_nearLogic`, while `Construction_MediumSite.sqf:113-114` removes `_nearLogic`. Current owner pages route this through [Construction logic list cleanup](Construction-Logic-List-Cleanup), [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) and `agent-hardening-backlog.jsonl`. Do not mark source fixed until a gameplay-code lane patches and propagates it.
+- **Day/night client sync:** source check remains `initJIPCompatible.sqf:207-209`, not `Init_Client.sqf`. Current lifecycle docs should cite `initJIPCompatible.sqf` for that behavior.
+- **Tools:** current source path is `Tools/LoadoutManager/FileManagement/FileManager.cs`; `ShouldSkipFile()` skips `loadScreen.jpg` only when `!_isModdedTerrain` (`:89-101`), and the Takistan directory blacklist is an `EndsWith` suffix match for `Core_Artillery` / `Server\Config` / `Textures` (`:22-39`). [Tools and build workflow](Tools-And-Build-Workflow), [Tooling release readiness audit](Tooling-Release-Readiness-Audit) and [PerformanceAuditAnalyzer](PerformanceAuditAnalyzer) now document the 14 analyzer outputs, including `performance_interpretation.html` and `performance_report_word.doc`.
+
+### Doc-accuracy drift
+
+- **Lifecycle wait-chain:** mostly resolved. Current source anchors are server branch `initJIPCompatible.sqf:218-220`, client `:224-233`, headless `:237-238`, old WASP block `:241-245`, `skipTime :202`, `WFBE_DAYNIGHT_DATE` date apply `:193-194`, `Init_TownMode.sqf:3` and `townModeSet :21`, and `Common/Init/Init_Unit.sqf:32`. The 2026-06-05 Codex closeout corrected the remaining time-sync drift on [Lifecycle wait-chain](Lifecycle-Wait-Chain).
+- **Gameplay / Client UI HUD:** resolved in current owner pages. `server_town.sqf:263-265` owns the `PerformanceAudit_Record` call, range globals are routed through [Gameplay systems atlas](Gameplay-Systems-Atlas) resolved follow-ups, and `WF_Menu` / `onLoad` are now cited as `Dialogs.hpp:1019/1022` on [Client UI/HUD and menus](Client-UI-HUD-And-Menus).
+- **Broken anchors:** no active edit was made in this closeout because the current pages searched no longer expose the cited broken anchors as daily routes. Reopen only with a fresh link-check failure.
+- **External integrations:** AntiStack default-enable line drift is routed through current integration pages; the DR-30 BattlEye correction remains valid.
 
 > **Totals across batches 1–3:** 21 pages, ~1,100 concrete claims checked, ~78 inconsistencies. Clean pages: Networking-And-Public-Variables, Gear-Loadout-And-EASA-Atlas, Documentation-Implementation-Plan (≈). Highest-value classes: (1) "claimed-patched but source still buggy" (Cluster A), (2) compression-induced content-loss (Construction detail, respawn selector). Codex acknowledged + began reconciling B/C at 14:56.
 
