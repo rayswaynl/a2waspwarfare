@@ -1,5 +1,15 @@
 # Agent Worklog
 
+## 2026-06-05T07:47:01+02:00 - Codex - Feature Status residue pruning and navigation scouts
+
+- Continued the pruning ledger goal after Core/Gameplay gateway pruning was pushed as docs `65e59eb9` / wiki `8dccaa0`.
+- Spawned two read-only sidecar scouts: Confucius (`ui-runtime-bloat-scout`) for UI/runtime quick-reference pruning leads, and Carson (`wiki-navigation-chain-scout`) for click-through/navigation issues. Their reports are leads, not source truth, until promoted by Codex.
+- Source-checked Herschel's Feature Status residue lead and condensed dated mini-scout sections into one harvested-routing matrix. Removed the duplicate short `AIBuyUnit` row while keeping the fuller latent server-buy-worker row.
+- Corrected stale PR #1 supply killed-handler wording: current PR/release branch evidence uses `wfbe_supply_killed_eh_set`, so the old unguarded stacked-handler claim is stale; runtime load/deliver/destroy smoke and handler lifecycle policy remain open gates.
+- Removed the trailing deep-audit addendum after Continue Reading and routed economy/supply/commander evidence to canonical owner pages.
+- Applied small navigation-chain fixes from Carson's scout: Progress -> Bottleneck -> Wiki mirror -> Coordination flow, Miksuu archive import no longer has an archive page as its next current hop, `Agent-Context` link text now matches its target, AI Assistant Guide routes back to Home, Home's docs branch is corrected to `docs/developer-wiki-index`, and Headless client scaling is visible from Home/sidebar.
+- No gameplay source files changed.
+
 ## 2026-06-05T07:39:42+02:00 - Codex - Core/Gameplay gateway pruning
 
 - Continued the pruning ledger's P2 overlapping-atlas lane after the Miksuu archive/sidebar batch was pushed as docs `4fdc90b2` / wiki `d042adc`.

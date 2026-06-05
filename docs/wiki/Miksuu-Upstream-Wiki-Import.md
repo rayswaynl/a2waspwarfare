@@ -75,7 +75,7 @@ Do not rewrite or mirror external media without a separate asset-preservation pa
 
 ## Continue Reading
 
-Previous: [Community & Dev](Community-And-Dev) | Next: [Miksuu Wiki Archive: Project Welcome](Miksuu-Wiki-Archive-Welcome)
+Previous: [Community & Dev](Community-And-Dev) | Next: [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons)
 
 Related: [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) | [Upstream Miksuu commit intel](Upstream-Miksuu-Commit-Intel) | [`agent-upstream-wiki-imports.jsonl`](agent-upstream-wiki-imports.jsonl)
 

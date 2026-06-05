@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T07:39:42+02:00",
+  "generatedAt": "2026-06-05T07:47:01+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,9 +20,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "documentation-finisher-loop / core-gameplay-gateway-pruning",
-      "currentWork": "Published the Core/Gameplay gateway-pruning batch: Core-Systems-Index is now a route map and Gameplay-Systems-Atlas routes duplicated mini-atlases to owner pages.",
-      "nextExpectedOutput": "Continue with Feature Status residue or UI/runtime quick-ref pruning."
+      "currentLane": "documentation-finisher-loop",
+      "currentWork": "Published the Feature Status residue-pruning batch: dated scout waves are routed to owner pages, stale PR #1 handler wording is corrected and small click-through navigation fixes are in place.",
+      "nextExpectedOutput": "Continue with UI/runtime quick-reference pruning and remaining navigation-chain cleanup."
     },
     "Codex-2": {
       "status": "ready",
@@ -37,10 +37,10 @@
       "nextExpectedOutput": "Self-select the next bounded source-backed review from Coverage Ledger or the hardening backlog."
     },
     "Sub-agents": {
-      "status": "returned-closed",
-      "currentLane": "navigation-parity-and-scout-wave-2026-06-04",
-      "currentWork": "Two gpt-5.3-codex-spark starts hit quota before evidence; five read-only gpt-5.4-mini scouts were launched. Supports, UI, tooling and AI returned and mostly confirmed canonical owner pages. Economy timed out twice and was closed without output.",
-      "nextExpectedOutput": "No active scout output remains for this wave."
+      "status": "returned-leads-captured",
+      "currentLane": "ui-runtime-bloat-scout / wiki-navigation-chain-scout",
+      "currentWork": "Confucius returned UI/HUD/runtime quick-reference pruning leads. Carson returned navigation-chain and orphan-ish page visibility fixes; the small navigation fixes were promoted into the current batch.",
+      "nextExpectedOutput": "Use the UI/runtime bloat scout as the next pruning lane after this Feature Status/navigation batch is published."
     },
     "Supported docs agents": {
       "status": "active",
@@ -50,6 +50,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "feature-status-residue-pruning",
+      "owner": "Codex",
+      "status": "published-validated-pushed",
+      "output": "Feature-Status-Register now treats dated mini-scout waves as harvested history, routes finding families to owner pages, keeps AI supply logistics as config-gated broken/deferred work, corrects stale PR #1 supply killed-handler wording and removes duplicate AIBuyUnit residue. Small navigation fixes from the wiki-navigation-chain scout are included. Validation passed. No gameplay source changed."
+    },
     {
       "lane": "core-gameplay-gateway-pruning",
       "owner": "Codex",

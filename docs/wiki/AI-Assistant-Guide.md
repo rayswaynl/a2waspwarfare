@@ -121,4 +121,4 @@ Use this checklist before adding a new networking channel:
 
 Previous: [Home](Home) | Next: [AI Assistant Developer Guide](AI-Assistant-Developer-Guide)
 
-Main map: [Feature status](Feature-Status-Register) | Agent file: [`agent-context.json`](agent-context.json)
+Main map: [Home](Home) | Risk triage: [Feature status](Feature-Status-Register) | Agent file: [`agent-context.json`](agent-context.json)

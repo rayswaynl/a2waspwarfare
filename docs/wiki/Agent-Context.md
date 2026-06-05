@@ -78,6 +78,6 @@ This is the compact human-readable context file for AI coding agents. Start mach
 
 ## Continue Reading
 
-Previous: [AI assistant guide](AI-Assistant-Developer-Guide) | Next: [Coordination board](Coordination-Board)
+Previous: [AI assistant developer guide](AI-Assistant-Developer-Guide) | Next: [Coordination board](Coordination-Board)
 
 Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agents) | Agent entry: [`agent-entrypoint.json`](agent-entrypoint.json) | Agent file: [`agent-context.json`](agent-context.json)

@@ -52,6 +52,7 @@
   - [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas)
 - AI / HC
   - [AI headless and performance](AI-Headless-And-Performance)
+  - [Headless client scaling and topology](Headless-Client-Scaling-And-Topology)
   - [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map)
   - [AI commander autonomy audit](AI-Commander-Autonomy-Audit)
   - [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook)

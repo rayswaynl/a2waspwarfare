@@ -77,6 +77,6 @@ This page is the compact queue for removing documentation/process drag. It does 
 
 ## Continue Reading
 
-Previous: [Progress dashboard](Progress-Dashboard) | Next: [Coordination board](Coordination-Board)
+Previous: [Progress dashboard](Progress-Dashboard) | Next: [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan)
 
 Main map: [Home](Home) | Fast path: [Current source status](Current-Source-Status-Snapshot) | Agent file: [`agent-status.json`](agent-status.json)
