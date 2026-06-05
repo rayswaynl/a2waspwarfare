@@ -83,14 +83,14 @@
     {
       "lane": "overlapping-atlas-bloat-scout",
       "owner": "Codex sub-agent Fermat",
-      "status": "returned-lead-needs-source-check",
-      "output": "Read-only scout recommends Core-Systems-Index plus Gameplay-Systems-Atlas gateway pruning as the highest-payoff P2 batch; UI/runtime quick-ref pruning is a second batch. Treat as a lead until Codex source-checks and patches."
+      "status": "harvested-promoted",
+      "output": "Read-only scout recommended Core-Systems-Index plus Gameplay-Systems-Atlas gateway pruning first and UI/runtime quick-ref pruning second. Both lanes were source-checked, patched, validated and pushed."
     },
     {
       "lane": "feature-status-residue-scout",
       "owner": "Codex sub-agent Herschel",
-      "status": "returned-lead-needs-source-check",
-      "output": "Read-only scout recommends source-checking stale/duplicate Feature Status rows around branch reviews, scout harvest history, supply handler status, side-supply reason-drop duplication, latent AIBuyUnit wording and the trailing deep-audit addendum."
+      "status": "harvested-promoted",
+      "output": "Read-only scout recommended source-checking stale/duplicate Feature Status residue. The promoted findings were condensed, corrected, validated and pushed in the Feature Status pruning batch."
     },
     {
       "lane": "dashboard-pruning-ledger-cleanup",
