@@ -6,15 +6,15 @@ Use it before adding pages to Home, `_Sidebar.md`, `mkdocs.yml`, `llms.txt` or `
 
 ## Current Snapshot
 
-Snapshot generated from `docs/wiki/*.md`, `_Sidebar.md`, selected machine-file sidebar links and `mkdocs.yml` on 2026-06-05.
+Snapshot generated from `docs/wiki/*.md`, `_Sidebar.md`, selected non-Markdown sidebar links and `mkdocs.yml` on 2026-06-05 after adding [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison).
 
 | Item | Count | Meaning |
 | --- | ---: | --- |
-| Markdown pages | 142 | All `.md` pages in `docs/wiki`, including `_Sidebar.md` and `_Footer.md`. |
-| Content pages | 140 | Markdown pages excluding `_Sidebar.md` and `_Footer.md`. |
-| Sidebar links | 112 | Pages or agent files linked from the GitHub wiki sidebar. This includes one intentional machine-file link: [`agent-machine-index.json`](agent-machine-index.json). |
-| MkDocs pages | 120 | Pages listed in `mkdocs.yml` navigation. |
-| Pages in both navs | 111 | Primary pages visible in both GitHub wiki and MkDocs. |
+| Markdown pages | 143 | All `.md` pages in `docs/wiki`, including `_Sidebar.md` and `_Footer.md`. |
+| Content pages | 141 | Markdown pages excluding `_Sidebar.md` and `_Footer.md`. |
+| Sidebar links | 114 | Markdown pages plus selected agent files linked from the GitHub wiki sidebar. This includes [`llms.txt`](llms.txt) and one intentional machine-file link: [`agent-machine-index.json`](agent-machine-index.json). |
+| MkDocs entries | 122 | Markdown pages plus [`llms.txt`](llms.txt) listed in `mkdocs.yml` navigation. |
+| Pages in both navs | 112 | Primary Markdown pages visible in both GitHub wiki and MkDocs. |
 | Pages in neither nav | 20 | Usually archives, instruction pages, old queues, analysis notes or narrow patch pages reached through canonical pages. |
 | Sidebar-only links | 1 | [`agent-machine-index.json`](agent-machine-index.json) is intentionally sidebar-only because it is an agent-readable JSON file, not a MkDocs Markdown page. Primary Markdown sidebar-only drift remains `0`. |
 | MkDocs-only pages | 9 | All imported Miksuu archive pages. |
@@ -40,10 +40,6 @@ The sidebar-only primary Markdown page drift is closed as of the 2026-06-05 MkDo
 
 | Page | Suggested status | Next action |
 | --- | --- | --- |
-| [Dead/stale code register](Dead-Code-And-Stale-Code-Register) | `primary` | Added to MkDocs UI/tooling quality nav on 2026-06-05. |
-| [Headless client scaling and topology](Headless-Client-Scaling-And-Topology) | `primary` | Added to MkDocs Gameplay AI/HC nav on 2026-06-05. |
-| [PR cleanup and integration lab](PR-Cleanup-And-Integration-Lab) | `primary` while PR triage is active | Added to MkDocs Community & Dev nav on 2026-06-05. |
-| [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) | `primary` for docs owners | Added to MkDocs Agent Coordination nav on 2026-06-05. |
 | [`agent-machine-index.json`](agent-machine-index.json) | `machine-file` | Intentionally sidebar-only as of 2026-06-05; linked from LLM entrypoints and sidebar, but not a Markdown content page. |
 
 ### MkDocs-Only Pages
@@ -62,7 +58,6 @@ These pages are not directly listed in either `_Sidebar.md` or `mkdocs.yml`. Tha
 | --- | --- | --- |
 | Patch-ready performance/source-fix pages | [Client skill init](Client-Skill-Init-Idempotency), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup), [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing), [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup), [Paratrooper marker revival](Paratrooper-Marker-Revival), [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) | Keep out of primary nav if Feature Status, Performance sweep and Testing workflow route to them. |
 | Evidence archives and queues | [Deep-review findings](Deep-Review-Findings), [External research reports](External-Research-Reports), [Audit findings queue](Audit-Findings-Queue-2026-06-03), [Development lessons](Development-Lessons-Learned), [Subagent discovery swarm](Subagent-Discovery-Swarm) | Keep as archive/support pages; expose compact owner routes first. |
-| Broad owner/reference pages | [Core systems index](Core-Systems-Index), [Modules atlas](Modules-Atlas), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance), [Variable and naming conventions](Variable-And-Naming-Conventions), [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide) | Promoted to both sidebar and MkDocs on 2026-06-05 because they are current owner/reference pages already used by Home and `agent-context.json`. |
 | Claude/instruction pages | [Claude goal](Claude-Goal), [Claude long-term goal](Claude-Long-Term-Goal), [Claude loop goal](Claude-Loop-Goal), [Instructions for Codex](Instructions-For-Codex) | Keep discoverable through coordination pages; avoid primary human nav unless actively used. |
 | Analysis/support pages | [Client UI and server loop perf findings](Client-UI-And-Server-Loop-Perf-Findings), [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index), [Performance gain simulation](Performance-Gain-Simulation), [Self-host testing field notes](Self-Host-Testing-Field-Notes) | Keep linked from the owning subsystem or archive index only. |
 

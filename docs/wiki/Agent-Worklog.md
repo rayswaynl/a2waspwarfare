@@ -13,6 +13,20 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T20:50:00+02:00 - Codex - navigation inventory refresh after old-FPS page
+
+- Claimed `navigation-inventory-refresh-old-fps` as a small follow-up after [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison) became a new current owner page and was expanded.
+- Recomputed navigation counts from `docs/wiki/*.md`, `_Sidebar.md` and `mkdocs.yml`: `143` Markdown pages, `141` content pages, `114` sidebar links including `llms.txt` and [`agent-machine-index.json`](agent-machine-index.json), `122` MkDocs entries including `llms.txt`, `112` primary Markdown pages in both navs, `20` intentional neither-nav support pages, `9` MkDocs-only Miksuu archive pages and `0` pages missing `Continue Reading`.
+- Updated [Navigation inventory and page status](Navigation-Inventory-And-Page-Status) and removed a stale neither-nav row for broad owner/reference pages that had already been promoted.
+- No gameplay source changed.
+
+## 2026-06-05T20:45:00+02:00 - Codex - old WarfareBE comparison expansion
+
+- Replaced the first draft of [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison) with a deeper source-backed report after finishing the BennyBoy/current Wasp code-path comparison.
+- Added explicit old Takistan Lite scope, client/server/network/perceived-lag taxonomy, Discord-ready summary table, role-aware player AI cap answer, current-Wasp server/client cost surfaces, safe/low-risk/risky/test-only FPS backlog and a detailed A/B test plan.
+- Source-backed the page with old/current paths and line refs for player caps, HC delegation, town activation, group tables, static-defense gates, cleanup loops, PV/direct broadcast paths, RHUD/marker loops, extension/server-FPS systems and BI `setViewDistance` engine caveat.
+- Synced the report and sidebar into the GitHub wiki checkout. No gameplay source changed.
+
 ## 2026-06-05T20:15:00+02:00 - Codex - old WarfareBE performance comparison
 
 - Claimed `old-warfarebe-performance-comparison` after the community asked whether a 14-year-old WarfareBE/Benny Edition mission might perform better than current Wasp and whether player AI should be capped around 10.
