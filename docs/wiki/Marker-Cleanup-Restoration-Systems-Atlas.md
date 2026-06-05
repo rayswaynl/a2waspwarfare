@@ -101,10 +101,26 @@ PerformanceAudit labels to search in the server RPT:
 - Filename note: the live empty-vehicle collector is `Server/FSM/emptyvehiclescollector.sqf`; there is no `server_empty_vehicles_collector.sqf` in the audited source tree.
 - Modded mission drift note: old Lingor/Eden/Napf forks start the building restorer and mine cleaner, but their parameter files may lack the newer building/mine interval parameters. Treat Chernarus plus maintained Vanilla as authoritative until those forks are regenerated or explicitly maintained.
 
+### Empty Supply Truck Branch Matrix
+
+Use this matrix before diagnosing abandoned supply trucks as a broken cleanup loop. The collector drains the replicated queue quickly, but the spawned handler deliberately gives supply-truck classes a 24-hour empty-vehicle lifetime.
+
+| Root / branch | Evidence | Outcome |
+| --- | --- | --- |
+| Current docs/source Chernarus `HEAD@71c4bc1b` | `Server/FSM/emptyvehiclescollector.sqf:9-19,30`; `Server/Functions/Server_HandleEmptyVehicle.sqf:21-23,27,33` | Queue drains through `emptyQueu`, spawns `WFBE_SE_FNC_HandleEmptyVehicle`, then supply trucks set `_delay = 86400` and are only deleted after the handler sees enough empty time. |
+| Current maintained Vanilla Takistan `HEAD@71c4bc1b` | Same `emptyvehiclescollector.sqf:9-19,30`; same `Server_HandleEmptyVehicle.sqf:21-23,27,33` | Same 24-hour supply-truck behavior in the maintained generated/copy target. |
+| Stable `origin/master@2cdf5fb8` | Same Chernarus and Vanilla handler/collector shape. | No stable-branch rescue; the hard-coded 24-hour delay remains. |
+| Miksuu upstream `miksuu/master@f532f706` | Same Chernarus and Vanilla handler/collector shape. | No upstream rescue; this behavior is inherited, not a docs-branch-only change. |
+| `origin/perf/quick-wins@0076040f` | Same Chernarus and Vanilla handler/collector shape. | The perf branch does not change supply-truck empty cleanup. |
+| `origin/release/2026-06-feature-bundle@3282ff3f` | Same Chernarus and Vanilla handler/collector shape. | Release branch still ships the 24-hour supply-truck delay in both maintained roots. |
+
+Future code-owner decision: either keep this as intentional logistics persistence and label it in operator docs, or replace `_delay = 86400` with a shorter/parameterized supply-truck timeout in source Chernarus and maintained Vanilla. Smoke must cover ordinary empty vehicles, ambulance/repair double-timeout vehicles, supply trucks during supply-mission/logistics use, and long-match object-count behavior.
+
 ## Patch-Ready Findings
 
 | Finding | Evidence | Patch shape |
 | --- | --- | --- |
+| Empty supply trucks bypass normal timeout | `Server_HandleEmptyVehicle.sqf:21-23` hard-codes `_delay = 86400` for supply truck classes across current source/Vanilla, stable, upstream, perf and release. | Decide intentional logistics persistence versus shorter/parameterized cleanup; if changing, patch source Chernarus plus maintained Vanilla and smoke ordinary empty vehicles, double-timeout medical/repair vehicles and supply mission/logistics flows. |
 | Mine cleaner pair removal likely wrong | Minefields push `[mine, time]` pairs; `mines_cleaner.sqf:17` uses `mines = mines - _x`. | Remove the tracked pair with `mines = mines - [_x]` or rewrite to filter live pairs. Smoke mine cleanup and verify no stale pairs persist. |
 | Garbage flags are inconsistent | `server_collector_garbage.sqf:17` skips `wfbe_trashable`; `RequestOnUnitKilled.sqf:51-54` sets `wfbe_trashed`. | Align the flag contract: collector should also skip `wfbe_trashed`, or kill paths should set the collector's skip flag before spawning trash. |
 | Local marker delete helper deletes globally | `Client_Delete_Marker.sqf:5` documents local marker creation; `:24` comments `deleteMarkerLocal`; `:25` uses `deleteMarker`. | Restore local deletion for side-local markers or rename/split helper behavior. Smoke side-specific marker removal. |

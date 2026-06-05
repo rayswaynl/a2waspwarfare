@@ -97,6 +97,29 @@
       "handoff": "Closed as docs-published. Future code owner should decide whether to wire, hide, rename or historical-label WFBE_C_AI_MAX and WFBE_C_UNITS_CLEAN_TIMEOUT, then smoke host parameter display, player AI cap UI/RHUD, corpse cleanup and empty-vehicle cleanup."
     },
     {
+      "lane": "empty-supply-truck-cleanup-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleEmptyVehicle.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/emptyvehiclescollector.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_HandleEmptyVehicle.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/FSM/emptyvehiclescollector.sqf",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "docs/wiki/Marker-Cleanup-Restoration-Systems-Atlas.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Branch-checked the hard-coded 24-hour empty supply-truck cleanup delay without changing gameplay source.",
+        "Routed the behavior through the cleanup atlas, Feature Status, Source Fix Propagation Queue and machine records."
+      ],
+      "handoff": "When complete, leave this as docs-published owner-decision work: decide whether 24-hour supply-truck persistence is intended logistics behavior or should become shorter/parameterized, then propagate source Chernarus plus maintained Vanilla and smoke supply mission/logistics cleanup."
+    },
+    {
       "lane": "auto-wall-toggle-scope-branch-route",
       "owner": "Codex-helper",
       "status": "published-validated",
@@ -451,7 +474,8 @@
     "camp-count-helper-fallback-branch-route",
     "wasp-marker-wait-branch-route",
     "clickabletext-soundpush-branch-route",
-    "side-supply-clamp-branch-route"
+    "side-supply-clamp-branch-route",
+    "empty-supply-truck-cleanup-branch-route"
   ],
   "queuedReports": [],
   "lanes": [
@@ -466,6 +490,12 @@
       "suggestedOwner": "Codex-helper",
       "status": "published-validated",
       "summary": "Branch-checked visible mission parameters with missing/comment-only runtime consumers and updated canonical docs without gameplay source changes."
+    },
+    {
+      "lane": "empty-supply-truck-cleanup-branch-route",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "Branch-checked the hard-coded 24-hour empty supply-truck cleanup delay and routed the owner-decision cleanup docs without gameplay source changes."
     },
     {
       "lane": "auto-wall-toggle-scope-branch-route",

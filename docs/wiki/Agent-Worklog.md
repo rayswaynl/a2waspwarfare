@@ -3102,3 +3102,9 @@ Key conclusions:
 - Reran `docs/analysis/dead-code-oa-compatibility-scan.ps1` with PowerShell 7 (`pwsh`); Windows PowerShell 5.1 failed on `System.IO.Path.GetRelativePath`.
 - Regenerated `docs/analysis/dead-code-oa-compatibility-scan.json` and updated [Dead/stale code register](Dead-Code-And-Stale-Code-Register): `3205` text files scanned, `0` code-risk implementation hits, `416` docs/reference hits and `1132` OA-safe inverse-trap hits. No gameplay source changed.
 - Folded in Feynman's read-only audit deltas: added the missing asset scan rerun/validation commands, narrowed `dead-code-findings.jsonl` wording to core promoted findings, added a one-off classification-label caveat and clarified that parameter set-like overrides are broad scan leads.
+
+## 2026-06-05T21:39:00+02:00 - Codex helper - empty supply truck cleanup branch route
+- Claimed `empty-supply-truck-cleanup-branch-route` from the cleanup/logistics status backlog after the existing row said supply trucks linger for 24 hours but did not show branch scope.
+- Source-checked current docs/source Chernarus and maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and `origin/release/2026-06-feature-bundle` `3282ff3f`: all checked roots keep `emptyvehiclescollector.sqf` draining `WF_Logic emptyVehicles` into `WFBE_SE_FNC_HandleEmptyVehicle`, and all checked handlers hard-code `_delay = 86400` for supply-truck classes.
+- Added the canonical branch matrix to [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas#empty-supply-truck-branch-matrix), then condensed [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), dashboard/status files and machine ledgers to route future work there.
+- No gameplay source files changed.
