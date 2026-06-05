@@ -349,7 +349,7 @@ Source-checked false positives from this pass:
 | P0 | Pick a policy for modded mission drift before using modded roots as implementation evidence. | The divergence scan shows runtime/PVF/UI/server files have forked across old modded roots while tooling no longer regenerates or packages them. |
 | P0 | Keep OA compatibility scans clean before accepting hardening patches. | A patch that introduces A3-only APIs into SQF or integration glue can silently produce non-runnable mission code. |
 | P0 | Fix/remove stale `RscMenu_Upgrade` consistently across maintained roots. | Branch verification is done: current source/stable/upstream keep the missing-handler class in Chernarus and Vanilla, while release Chernarus removed it and release Vanilla did not. The remaining work is a code-owner cleanup plus upgrade-menu smoke, not another broad discovery pass. |
-| P1 | Decide MASH marker relay fate. | It has real PV wiring residue and could be useful, but it is currently half registered. |
+| P1 | Decide MASH marker relay fate. | Branch verification is done: current source/Vanilla, stable, Miksuu upstream and release all keep the server relay plus commented receiver while maintained deploy paths do not send the trigger PV. Modded `eden`/`lingor` sender lines are drift, not proof the maintained relay works. |
 | P1 | Keep `AIBuyUnit` latent until AI commander production is intentionally merged or retired. | It is dead-looking on stable but valuable for AI commander work. |
 | P1 | Audit economy menu IDC `23004/23005/23006`. | Stale UI writes can hide broken commander economy controls. |
 | P1 | Fix or formally waive duplicate UI IDDs `23000` and `10200`. | They are not dead, but they make future dialog/title ownership work brittle. |
@@ -384,7 +384,7 @@ Before changing source, run a branch-aware search against the target branch and 
 
 | Candidate | Why preserve it | Revival gate |
 | --- | --- | --- |
-| MASH marker relay | Useful player-facing map state around mobile respawn. | Sender, server relay, client receiver, marker delete/JIP behavior and PV channel docs must be made coherent. |
+| MASH marker relay | Useful player-facing map state around mobile respawn, but currently orphaned in maintained source, stable, upstream and release. | Sender, server relay, client receiver, marker delete/JIP behavior and PV channel docs must be made coherent, or the stale relay should be retired/archived. |
 | `AIBuyUnit` / `Server_BuyUnit.sqf` | Likely needed by AI commander production branches. | AI production scheduler, funds/cap policy, queue cleanup and Client_BuildUnit drift review. |
 | Old marker blinking loop | Could be useful if map marker ownership is redesigned. | Must not regress current singular `Client_BlinkMapIcon` behavior. |
 | `ICBM_launched` PVEH | Could be revived as a clear client notification channel for tactical nukes. | Must be reconciled with the current `NukeIncoming` / `RequestSpecial` / `HandleSpecial "icbm-display"` path and smoke-tested for friendly/enemy warnings, markers and damage. |

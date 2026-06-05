@@ -109,6 +109,7 @@ Dead/broken marker edge:
 - Server PVEH listens for `WFBE_CL_MASH_MARKER_CREATED` in `Server/Module/MASH/MASHMarker.sqf:1-13`.
 - Client receiver for `WFBE_SE_MASH_MARKER_SENT` exists in `Client/Module/MASH/receiverMASHmarker.sqf:1-29`, but its compile line is commented in `Client/Init/Init_Client.sqf:132`.
 - No live deploy path was found broadcasting `WFBE_CL_MASH_MARKER_CREATED`.
+- Branch recheck on 2026-06-05 found the same orphaned shape in current source/Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle`; modded `eden`/`lingor` sender lines are sender-only drift, not maintained-marker proof.
 
 Do not call MASH respawn dead unless specifically talking about team-shared/JIP marker synchronization. The source-backed statement is: local officer MASH respawn exists; MASH marker sharing is dead/orphaned; team-wide MASH respawn is not proven. Deployment stores `wfbe_mash` on `WFBE_Client_Logic`, and respawn availability reads that same local variable, while the server only seeds the value to `objNull`.
 
@@ -150,7 +151,7 @@ Known adjacent hazard: HQ death has its own redundant client EH/JIP path and ide
 | --- | --- | --- | --- |
 | Patch-ready | Respawn penalty mode `5` can skip custom gear on base/HQ respawn when player lacks funds, even though `_charge` is false. | `Client_OnRespawnHandler.sqf:54-70` | Patch `_skip` to respect `_charge`, or document owner-confirmed intended semantics. Smoke custom gear at base and mobile under sufficient/insufficient funds. |
 | Owner decision | MASH is local to the deployer in audited source; team-wide MASH respawn is not proven. | `Skill_Officer.sqf:26`; `Client_GetRespawnAvailable.sqf:47-58` | Decide whether MASH should be personal, squad/team-shared, or marker-only. If shared, design server-owned registry/JIP replay. |
-| Broken/dead edge | MASH marker synchronization is orphaned. | `Init_Client.sqf:132`; `MASHMarker.sqf:1-13`; `receiverMASHmarker.sqf:1-29` | Revive with server-held marker records and deletion replay, or delete/comment the dead relay more clearly. |
+| Broken/dead edge | MASH marker synchronization is orphaned across current source/Vanilla, stable, upstream and release. | `Init_Client.sqf:132`; `MASHMarker.sqf:1-13`; `receiverMASHmarker.sqf:1-29` | Revive with server-held marker records, delete replay and JIP resend, or delete/comment the dead relay more clearly. |
 | Smoke pending | Source-only skill idempotency patch depends on respawn reapply still working. | `Client_PreRespawnHandler.sqf:5`; [Client skill init idempotency](Client-Skill-Init-Idempotency) | Smoke Soldier/non-Soldier cap and post-respawn skill actions after LoadoutManager propagation. |
 | Review target | Respawn UI loop sleeps `0.01` and selector sleeps `0.03`. | `GUI_RespawnMenu.sqf:113`; `Client_UI_Respawn_Selector.sqf:19-35` | Keep as bounded death-screen-only UI work; if optimizing, preserve marker responsiveness and cleanup. |
 | Cleanup target | AI respawn loadout tier uses a literal gear-upgrade index and assumes a non-empty loadout array. | `AI_AdvancedRespawn.sqf:68`; `AI_SquadRespawn.sqf:56`; `Init_CommonConstants.sqf:50` | Replace literal `13` with `WFBE_UP_GEAR`, clamp/bounds-check tier selection and smoke Vanilla plus non-Vanilla AI leader respawn. |

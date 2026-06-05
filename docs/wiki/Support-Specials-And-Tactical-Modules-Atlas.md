@@ -95,7 +95,7 @@ AAR is a live base-support system, not only a historical changelog item. The bui
 
 ### MASH
 
-`Client/Module/Skill/*` owns officer MASH/supply actions. MASH deploy creates local tent state used by respawn lookup. Marker sync is stale: the server relay exists, the client receiver compile is commented, and no live sender was found in the audited Chernarus path. Use [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas) for the live respawn split.
+`Client/Module/Skill/*` owns officer MASH/supply actions. MASH deploy creates local tent state used by respawn lookup. Marker sync is stale: the server relay exists, the client receiver compile is commented, and no maintained Chernarus/Vanilla sender was found. The 2026-06-05 branch recheck found the same orphaned relay shape on stable, Miksuu upstream and the current release branch; modded `eden`/`lingor` sender lines are drift, not maintained-marker proof. Use [Respawn/death lifecycle](Respawn-And-Death-Lifecycle-Atlas) for the live respawn split.
 
 ### ZetaCargo Airlift
 
@@ -145,7 +145,7 @@ Wave N rechecked the support router and found two source-level traps worth keepi
 | `upgrade-sync` mixed argument source | Normalize `Server_HandleSpecial.sqf:67-74` to read side/id/level from one payload shape, then smoke upgrade completion synchronization. |
 | Zeta detach missing vehicle arg | Pass `[_vehicle]` when adding the detach action in `Zeta_Hook.sqf`, or revise `Zeta_Unhook.sqf` to find the lifted object safely. |
 | Stale ICBM adjuncts | Either wire the `ICBM_launched` / `NukeIncoming` paths intentionally or remove/document them as dead. If revived, fix the missing `airRaid` sound reference first. |
-| MASH marker flow is split | Reconcile sender, server relay and client receiver, or remove the stale marker relay. |
+| MASH marker flow is split | Reconcile sender, server relay, client receiver, delete replay and JIP resend, or remove/archive the stale marker relay. |
 | Supply mission cargo/source trust | Recompute cargo/source/reward server-side from trusted truck/town state. |
 | UAV creation/cost client-owned | Move UAV spawn/cost validation server-side or validate requested type, side, funds and existing UAV before accepting tracking. |
 
