@@ -13,6 +13,11 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T16:40:00+02:00 - Codex - Dashboard latest batch trim
+
+- Trimmed [Progress dashboard](Progress-Dashboard) `Latest Batch` back to the documented newest-five shape after the July route-sync row made it six rows.
+- Moved the `old-fps-provenance-cleanup` reminder into `Recently Closed / Reclassified Open Items` instead of keeping it in the current batch table. No gameplay source changed.
+
 ## 2026-06-05T16:35:00+02:00 - Codex - July update route sync
 
 - Claimed a docs-only route sync for the two July update dev branches already listed on [Progress dashboard](Progress-Dashboard#july-update-to-do): `dev/july-update-hosted-server-fps-loop-fix` and `dev/july-takistan-airfield-fpv-drone`.

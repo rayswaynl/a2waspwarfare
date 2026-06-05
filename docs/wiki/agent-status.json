@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Routed the two July update dev branches into canonical roadmap, testing and machine-index surfaces so future code owners can find the correct smoke gates without relying only on the dashboard.",
+      "currentWork": "Trimmed Progress Dashboard Latest Batch back to the documented newest-five shape after the July route-sync row made the table too long.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from fresh source evidence, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
