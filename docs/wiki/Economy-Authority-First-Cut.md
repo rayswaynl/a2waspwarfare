@@ -123,7 +123,7 @@ AI commander upgrades are server-side but not therefore automatically correct. T
 
 ### Resource income has payout/display edge cases
 
-`Server/FSM/updateresources.sqf:29-70` places the side-supply increase, team paychecks and AI-commander funds inside an `_supply < WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` guard. `_supply` is the computed town supply income for the side, so the guard is not simply "current side supply is full". Do not refactor the income loop as a pure supply-cap cleanup without checking player/commander money payouts.
+`Server/FSM/updateresources.sqf:29-70` places the side-supply increase, team paychecks and AI-commander funds inside an `_supply < WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` guard. `_supply` is the computed town supply income for the side, so the guard is not simply "current side supply is full". Do not refactor the income loop as a pure supply-cap cleanup without checking player/commander money payouts. The current branch/root route lives in [Economy, towns and supply](Economy-Towns-And-Supply#resource-income-branch-matrix): current source/Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and release `fb3084c2` all still keep the same shape.
 
 For income system `4`, server payout applies a `1.5` multiplier before commander/player split (`updateresources.sqf:41-44`), while `Client_GetIncome.sqf:20-29` displays the split without that multiplier. UI work around RHUD/menu income should preserve or deliberately correct this mismatch with balance owner approval.
 

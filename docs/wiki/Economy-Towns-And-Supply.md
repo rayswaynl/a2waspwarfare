@@ -37,6 +37,21 @@ Funds and supply are separate systems unless the mission parameter switches curr
 
 The same scout found a client/server display mismatch for income system `4`: server payout multiplies income by `1.5` before splitting commander/player shares (`updateresources.sqf:41-44`), while `Client/Functions/Client_GetIncome.sqf:20-29` displays the same split without the `1.5` multiplier. Verify the intended balance before changing either path; the important docs point is that RHUD/menu income can differ from the actual paycheck.
 
+### Resource Income Branch Matrix
+
+Checked 2026-06-06 against current docs/source Chernarus, maintained Vanilla Takistan, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and release `origin/release/2026-06-feature-bundle` `fb3084c2`.
+
+| Scope | Updater guard | Income-system `4` display parity | Development meaning |
+| --- | --- | --- | --- |
+| Current source Chernarus | `Server/FSM/updateresources.sqf:29-70` computes `_supply`, then `:31` guards side-supply growth, player paychecks and AI-commander funds with `_supply < _supply_max_limit`. | Server applies the `1.5` multiplier at `updateresources.sqf:42-43`; client display omits it in `Client/Functions/Client_GetIncome.sqf:21-28`. | Patch-ready economy correctness debt. Treat as balance-sensitive, not a harmless UI refactor. |
+| Maintained Vanilla Takistan | Same `updateresources.sqf:29-70` guard shape and same income-system `4` multiplier lines. | Same `Client_GetIncome.sqf:21-28` display math without `1.5`. | Any fix must be propagated; do not cite a Chernarus-only edit as maintained Vanilla-ready. |
+| Stable `origin/master` `2cdf5fb8` | Same maintained-root guard shape in both mission roots. | Same server/client split in both roots. | Stable remains source-unpatched. |
+| Miksuu upstream `f532f706` | Same maintained-root guard shape in both mission roots. | Same server/client split in both roots. | No upstream rescue candidate in current upstream head. |
+| `origin/perf/quick-wins` `0076040f` | Same maintained-root guard shape in both mission roots. | Same server/client split in both roots. | Perf branch does not address this income route. |
+| Release `fb3084c2` | Same maintained-root guard shape in both mission roots. | Same server/client split in both roots. | Current release branch still needs owner review before income/paycheck/display wording changes. |
+
+Smallest code-owner review: decide whether the cap guard should constrain only side-supply growth or also money payouts, then align actual paychecks, AI commander funds and `Client_GetIncome`/RHUD/menu display for income system `4`. Smoke a capped-supply side, a normal uncapped side, commander and non-commander teams, and AI commander funds before calling the behavior fixed.
+
 AI commander upgrades have a separate suspected debit bug. `Server_AI_Com_Upgrade.sqf:32-36` validates `_cost select 0` as side supply and `_cost select 1` as funds, matching the player upgrade menu (`GUI_UpgradeMenu.sqf:96-99,139-159`), but the deduction path subtracts `_cost select 0` from AI commander funds and `_cost select 1` from side supply (`Server_AI_Com_Upgrade.sqf:47-50`). Treat this as a likely split-currency bug before enabling or expanding autonomous AI commander upgrades.
 
 Kill-bounty detail: player-facing bounty awards are client PVF/local-money paths, but AI-led kill bounty has a separate server branch. `RequestOnUnitKilled.sqf:83-100` sends `AwardBountyPlayer`/`AwardBounty` to players for player kills and, when `WFBE_C_AI_TEAMS_ENABLED > 0`, credits the AI killer group directly with `ChangeTeamFunds` (`RequestOnUnitKilled.sqf:97-100`). Treat score/bounty changes as both player-economy and AI-team-economy work.

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-06T00:50:00+02:00",
+  "generatedAt": "2026-06-06T01:15:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Reconciled the newest camp-count helper, WASP marker wait, clickable-text soundPush, side-supply clamp, empty supply-truck cleanup, vote/help UI edge, RequestSpecial upgrade-sync and fast-travel fee branch matrices across wiki and docs/wiki. Towns-Camps-And-Capture-Atlas, WASP-Marker-Wait-Cleanup, Client-UI-Systems-Atlas, Economy-Authority-First-Cut, Marker-Cleanup-Restoration-Systems-Atlas and Support-Specials-And-Tactical-Modules-Atlas are the canonical routes.",
+      "currentWork": "Reconciled the newest camp-count helper, WASP marker wait, clickable-text soundPush, side-supply clamp, empty supply-truck cleanup, vote/help UI edge, RequestSpecial upgrade-sync, fast-travel fee and resource-income payout/display branch matrices across wiki and docs/wiki. Towns-Camps-And-Capture-Atlas, WASP-Marker-Wait-Cleanup, Client-UI-Systems-Atlas, Economy-Authority-First-Cut, Economy-Towns-And-Supply, Marker-Cleanup-Restoration-Systems-Atlas and Support-Specials-And-Tactical-Modules-Atlas are the canonical routes.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -133,6 +133,12 @@
       "owner": "Codex-helper",
       "status": "published-validated",
       "output": "Client UI systems now owns the branch-checked route for Tactical fast-travel fee UX; current source/Vanilla, stable, upstream, perf and release keep the same TODO, hidden unaffordable destinations, marker-only fee text and local debit. No gameplay source changed."
+    },
+    {
+      "lane": "resource-income-payout-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "output": "Economy, towns and supply now owns the branch-checked route for resource income cap-guard and income-system 4 display drift; current source/Vanilla, stable, upstream, perf and release all keep the same source-unpatched shape. No gameplay source changed."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",

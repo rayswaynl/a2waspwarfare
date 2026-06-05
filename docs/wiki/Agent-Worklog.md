@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-06T01:15:00+02:00 - Codex helper - Resource income payout/display branch route
+
+- Claimed `resource-income-payout-branch-route` from the economy correctness backlog.
+- Source-checked current source Chernarus, maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and current release `fb3084c2`.
+- Result: every checked maintained root/branch keeps `Server/FSM/updateresources.sqf:29-70` wrapping side-supply growth, player paychecks and AI-commander funds in the same town-supply cap guard, and keeps income system `4` applying a server-side `1.5` multiplier that `Client/Functions/Client_GetIncome.sqf:20-29` does not mirror for display math.
+- Updated [Economy, towns and supply](Economy-Towns-And-Supply#resource-income-branch-matrix), [Economy authority first cut](Economy-Authority-First-Cut), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
+
 ## 2026-06-06T00:50:00+02:00 - Codex helper - RequestSpecial upgrade-sync branch route
 
 - Claimed `requestspecial-upgrade-sync-branch-route` from the RequestSpecial/upgrades cleanup backlog.
