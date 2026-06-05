@@ -10,7 +10,7 @@
 
 ## 1. Registered PVF commands
 
-Registration: `Common/Init/Init_PublicVariables.sqf` — server-bound list `:9-21`, client-bound list `:25-40`, dispatch wiring `:44-51`. Each name `X` -> channel `WFBE_PVF_X` -> pre-compiled `SRVFNC X` / `CLTFNC X` (built `:45,:50`) but dispatched via `Call Compile` (`Server_HandlePVF.sqf:14` / `Client_HandlePVF.sqf:22`).
+Registration: `Common/Init/Init_PublicVariables.sqf` — server-bound list `:9-21`, client-bound list `:25-40`, dispatch wiring `:44-51`. Each name `X` -> channel `WFBE_PVF_X` -> pre-compiled `SRVFNC X` / `CLTFNC X` (built `:45,:50`) but dispatched via `Call Compile` (`Server_HandlePVF.sqf:14` / `Client_HandlePVF.sqf:22`). Branch matrix: [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix).
 
 ### 1a. Server-bound (client → server) — 13
 

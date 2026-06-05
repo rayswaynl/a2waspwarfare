@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-06T02:55:00+02:00",
+  "generatedAt": "2026-06-05T23:30:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -49,6 +49,33 @@
         "Publish scoped validation batches."
       ],
       "handoff": "Continue from fresh source evidence, owner requests or newly returned helper reports."
+    },
+    {
+      "lane": "pvf-dispatcher-lookup-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master@2cdf5fb8",
+        "miksuu/master@f532f706",
+        "origin/perf/quick-wins@0076040f",
+        "origin/release/2026-06-feature-bundle@7195b331",
+        "docs/wiki/PVF-Dispatch-Implementation-Playbook.md",
+        "docs/wiki/Networking-And-Public-Variables.md",
+        "docs/wiki/Public-Variable-Channel-Index.md",
+        "docs/wiki/Hardening-Implementation-Roadmap.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Branch-checked the generic PVF dispatcher Call Compile route without changing gameplay source.",
+        "Documented release 7195b331's HC client filter as adjacent behavior, not a dispatcher hardening substitute.",
+        "Routed the P0 patch-ready owner work through the PVF dispatch implementation playbook, Networking, Public variable channel index, Hardening roadmap, Feature Status and Source Fix Propagation Queue."
+      ],
+      "handoff": "Closed as docs-published. Future code owner should patch Init_PublicVariables plus both dispatchers with allowlisted missionNamespace getVariable lookup, propagate maintained Vanilla and smoke RequestJoin/RequestVehicleLock/client PVF messages plus forged unregistered handler rejection. Keep legitimate-handler payload validation and direct PV channels separate."
     },
     {
       "lane": "send-message-direct-compile-branch-route",
@@ -724,7 +751,8 @@
     "dead-code-parameter-duplicate-prune",
     "gear-template-creation-gate-branch-route",
     "ai-supply-truck-branch-route",
-    "send-message-direct-compile-branch-route"
+    "send-message-direct-compile-branch-route",
+    "pvf-dispatcher-lookup-branch-route"
   ],
   "queuedReports": [],
   "lanes": [
@@ -733,6 +761,12 @@
       "suggestedOwner": "Codex",
       "status": "active-ongoing",
       "summary": "Continuing scoped source-backed wiki upkeep."
+    },
+    {
+      "lane": "pvf-dispatcher-lookup-branch-route",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "Branch-checked DR-1/DR-38 generic PVF dispatcher Call Compile lookup hardening across current source, maintained Vanilla, stable, upstream, perf and release without gameplay source changes."
     },
     {
       "lane": "send-message-direct-compile-branch-route",

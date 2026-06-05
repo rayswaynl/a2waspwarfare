@@ -17,6 +17,19 @@ Use this with [Networking and public variables](Networking-And-Public-Variables)
 | What this fixes | Arbitrary handler-string compilation and avoidable per-message recompile in generic PVF dispatch. |
 | What it does not fix | Payload forgery inside legitimate handlers, direct publicVariable channels outside `WFBE_PVF_*`, or missing BattlEye defense-in-depth. |
 
+## Current Branch Matrix
+
+Branch route `pvf-dispatcher-lookup-branch-route` rechecked the generic PVF dispatcher across maintained roots and active candidate branches on 2026-06-05:
+
+| Scope checked | Server dispatcher | Client dispatcher | PVF init / registry | Practical meaning |
+| --- | --- | --- | --- | --- |
+| Current docs/source Chernarus and maintained Vanilla Takistan | Both roots still read `_script` from payload index `0` and run `_parameters Spawn (Call Compile _script)` at `Server/Functions/Server_HandlePVF.sqf:14`. | Both roots still destination-filter, then run `_parameters Spawn (Call Compile _script)` at `Client/Functions/Client_HandlePVF.sqf:22`. | Both roots precompile `CLTFNC*` / `SRVFNC*` handlers in `Common/Init/Init_PublicVariables.sqf:45,50`, but do not export or enforce an allowlist. | P0 dispatcher lookup hardening remains source-unpatched in both maintained roots. |
+| Stable `origin/master` `2cdf5fb8` and Miksuu upstream `f532f706` | Same `Spawn (Call Compile _script)` line at `Server_HandlePVF.sqf:14` in both maintained roots. | Same client dispatcher compile at `Client_HandlePVF.sqf:22` in both maintained roots. | Same precompile-and-PVEH registry shape; no `PVF_ALLOWED` / namespace lookup guard found. | No stable or upstream rescue exists. |
+| `origin/perf/quick-wins` `0076040f` | Same server dispatcher compile at `:14` in Chernarus and maintained Vanilla. | Same client dispatcher compile at `:22` in Chernarus and maintained Vanilla. | Same registry shape; perf fixes do not touch PVF dispatch lookup. | Performance branch does not cover DR-1/DR-38 despite this being a small perf/security patch. |
+| `origin/release/2026-06-feature-bundle` `7195b331` | Same server dispatcher compile at `:14` in release Chernarus and release maintained Vanilla. | Release adds headless-client destination filtering, shifting the final compile to `Client_HandlePVF.sqf:32`, but still runs `Spawn (Call Compile _script)` in both release roots. | Same precompiled `CLTFNC*` / `SRVFNC*` registry; no allowlist or `missionNamespace getVariable` dispatch guard. | Release head is not fixed; its HC client filter is adjacent behavior, not a dispatcher hardening substitute. |
+
+Bohemia's Community Wiki lists `missionNamespace` as introduced with Arma 2 1.00 and shows `missionNamespace getVariable` as the supported namespace lookup shape, so the recommended lookup is Arma 2 OA-compatible rather than an Arma 3 import.
+
 ## What I Read
 
 - `Common/Init/Init_PublicVariables.sqf:9-23`, `:25-42`, `:44-52`

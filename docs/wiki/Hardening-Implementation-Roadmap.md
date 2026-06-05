@@ -27,7 +27,7 @@ For the full per-handler checklist, use [Server authority migration map](Server-
 
 | Priority | Work package | Why first |
 | --- | --- | --- |
-| P0 | PVF dispatcher lookup hardening | Smallest behavior-preserving change that closes DR-1 arbitrary code execution and DR-38 per-message recompilation. |
+| P0 | PVF dispatcher lookup hardening | Smallest behavior-preserving change that closes DR-1 arbitrary code execution and DR-38 per-message recompilation; branch matrix: [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix). |
 | P0 | `SEND_MESSAGE` direct-PV compile removal | DR-46 is a second network-data RCE outside the PVF dispatcher; dispatcher lookup does not close it. |
 | P0 | ICBM `RequestSpecial` server validation | Highest blast radius: forged PV can trigger server-applied map-wide damage. Use [ICBM authority](ICBM-Authority-Playbook). |
 | P1 | Victory/endgame correctness (DR-11 / DR-36) | Small source change with large match-outcome/stat impact. |
@@ -50,7 +50,7 @@ The [Progress dashboard](Progress-Dashboard#july-update-to-do) currently names t
 
 Dedicated playbook: [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook).
 
-Roadmap summary: replace dispatch-time `Call Compile _script` in `Server_HandlePVF.sqf` and `Client_HandlePVF.sqf` with a validated allowlist / namespace lookup while preserving `Spawn`. This closes DR-1 arbitrary handler-string compilation and DR-38 avoidable per-message recompilation. It does **not** validate forged payloads sent to legitimate handlers and does **not** touch direct publicVariable channels like `ATTACK_WAVE_INIT`.
+Roadmap summary: replace dispatch-time `Call Compile _script` in `Server_HandlePVF.sqf` and `Client_HandlePVF.sqf` with a validated allowlist / namespace lookup while preserving `Spawn`. Branch recheck 2026-06-05 found current source Chernarus, maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and release `7195b331` still compile the sender-provided handler string; release only adds adjacent HC client filtering. This closes DR-1 arbitrary handler-string compilation and DR-38 avoidable per-message recompilation. It does **not** validate forged payloads sent to legitimate handlers and does **not** touch direct publicVariable channels like `ATTACK_WAVE_INIT`.
 
 Validation:
 

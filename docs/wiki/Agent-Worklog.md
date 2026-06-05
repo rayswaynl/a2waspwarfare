@@ -12,6 +12,13 @@
 - Rechecked docs/source, stable `origin/master` and release `7195b331`: docs/source Chernarus and maintained Vanilla register `HandleParatrooperMarkerCreation` at `Common/Init/Init_PublicVariables.sqf:39`; stable still omits it; release `7195b331` registers it at `:34` in both maintained release roots.
 - Updated [Paratrooper marker revival](Paratrooper-Marker-Revival), [Current source snapshot](Current-Source-Status-Snapshot), [Feature status](Feature-Status-Register), release/feature machine rows and the dashboard. No gameplay source changed.
 
+## 2026-06-05T23:30:00+02:00 - Codex helper - PVF dispatcher lookup branch route
+
+- Claimed `pvf-dispatcher-lookup-branch-route` from the P0 PVF dispatcher lookup hardening backlog.
+- Source-checked current source Chernarus, maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and release `origin/release/2026-06-feature-bundle` `7195b331` for `Server_HandlePVF.sqf`, `Client_HandlePVF.sqf` and `Init_PublicVariables.sqf`.
+- Result: every checked maintained root/branch still dispatches generic PVF messages with `Spawn (Call Compile _script)`; release only moves the client compile to `:32` after an HC filter. All checked roots precompile `SRVFNC*` / `CLTFNC*` but do not export/enforce an allowlist or `missionNamespace getVariable` lookup.
+- Updated [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix), [Networking](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index), [Hardening roadmap](Hardening-Implementation-Roadmap), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
+
 ## 2026-06-06T02:55:00+02:00 - Codex helper - SEND_MESSAGE direct compile branch route
 
 - Claimed `send-message-direct-compile-branch-route` from the direct-PV/P0 hardening backlog.
