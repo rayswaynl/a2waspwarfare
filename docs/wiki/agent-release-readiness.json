@@ -846,7 +846,7 @@
     }
   ],
   "branchScope": {
-    "checkedAt": "2026-06-03T22:05:00+02:00",
+    "checkedAt": "2026-06-05T23:59:00+02:00",
     "docsSource": {
       "commit": "4163faba",
       "branch": "docs/developer-wiki-index",
@@ -858,7 +858,7 @@
       "meaning": "Stable baseline; does not carry hosted FPS loop exit, supply scan narrowing, client Skill_Init idempotency or paratrooper marker registration."
     },
     "releaseBranch": {
-      "commit": "a9219d88",
+      "commit": "3282ff3f",
       "branch": "origin/release/2026-06-feature-bundle",
       "meaning": "Chernarus-only for hosted FPS and supply scan narrowing; lacks client Skill_Init idempotency and paratrooper marker registration in both maintained missions."
     },

@@ -2790,3 +2790,15 @@ Key conclusions:
 - Created the report draft at `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-mission-fps-archaeology\outputs\Old-BE-vs-Wasp-FPS-Archaeology.md` with required comparison, hotspot, player cap, static/town cleanup and 20-player test-plan tables plus Discord summary and wiki integration plan.
 - No gameplay source files changed.
 - Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse and `git diff --check` in the docs repo. The validator emitted only known non-failing legacy JSONL envelope warnings; `git diff --check` emitted only CRLF normalization warnings for touched docs files.
+
+## 2026-06-05T23:59:30+02:00 - Codex delegated - old vs current FPS opportunity scout audit
+- Claimed `old-vs-current-fps-opportunity-scout` as a read-only follow-up to sharpen the previous old-BE archaeology into a standalone community-discussion audit.
+- Rechecked source anchors for player AI defaults and role math, AI-team defaults, HC delegation, current/old town group tables, static-defense gates, cleanup/restorer loops, duplicate server-FPS publishers, PerformanceAudit counters and view-distance defaults.
+- Created `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-vs-current-fps-investigation\outputs\Old-BE-vs-Current-Wasp-FPS-Opportunity-Audit.md` with a prioritized opportunity table, role-aware dynamic AI cap recommendation, 10/15/20/25/30-player test matrix, "do not chase yet" list and suggested wiki edits for performance/player-cap/old-BE/testing/feature-status pages.
+- No gameplay source files changed.
+
+## 2026-06-05T23:59:00+02:00 - Codex - release-head machine ledger sync
+- Claimed `release-head-machine-ledger-sync` to remove stale current-looking `a9219d88` wording after the `3282ff3f` release-head propagated-fix spot-check.
+- Updated live machine rows in [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) and [`agent-release-readiness.json`](agent-release-readiness.json) so future agents read `3282ff3f` as the current release-head evidence for hosted FPS, supply scan, client `Skill_Init` and paratrooper marker coverage.
+- Left older `a9219d88` records in [`agent-knowledge.jsonl`](agent-knowledge.jsonl) as append-only historical provenance, superseded by the newer `release-3282ff3f-propagated-fix-lane-spotcheck-2026-06-05` and this sync note.
+- No gameplay source files changed.
