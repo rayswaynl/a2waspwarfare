@@ -807,14 +807,16 @@
       ],
       "evidenceRefs": [
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf:25-28",
-        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/supplyMission/supplyMissionStarted.sqf:25-28"
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/supplyMission/supplyMissionStarted.sqf:25-28",
+        "origin/release/2026-06-feature-bundle@7195b331 Chernarus/Vanilla Server/Module/supplyMission/supplyMissionStarted.sqf:52,58 narrowed to Base_WarfareBUAVterminal with truck 80m / heli 400m distance",
+        "origin/release/2026-06-feature-bundle@7195b331 Chernarus/Vanilla Server/Init/Init_Server.sqf:82 comments the dead SupplyMissionActive compile; supplyMissionActive.sqf and checkCCProximity.sqf absent"
       ],
       "releaseGate": "Smoke delivery at a real command center and no completion near unrelated objects.",
       "branchStatus": {
         "stableMaster": "broad-command-center-scan-remains",
-        "releaseBranch": "chernarus-only-vanilla-broad-scan",
+        "releaseBranch": "current-release-7195b331-narrowed-heli-aware-scan-in-chernarus-and-vanilla",
         "docsSource": "chernarus-and-vanilla-narrowed-scan",
-        "evidence": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+        "evidence": "Current-Source-Status-Snapshot.md#2026-06-05-refetch-delta"
       }
     },
     {

@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-05T23:48:34+02:00 - Codex helper - Supply scan release status refresh
+
+- Claimed `supply-scan-release-status-refresh` after [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) still described current release scope as Chernarus-only / release Vanilla broad, despite [Current source snapshot](Current-Source-Status-Snapshot) saying release `7195b331` has the narrowed command-center scan in both maintained release roots.
+- Scope: verify release Chernarus and maintained Vanilla `supplyMissionStarted.sqf`, then update only docs/status/machine records if the stale wording is confirmed. No gameplay source changes planned.
+- Rechecked current source, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and release `7195b331`: current docs/source Chernarus and maintained Vanilla remain truck-scan narrowed at `supplyMissionStarted.sqf:25-28`; stable/upstream/perf still use broad `nearestObjects [..., [], 80]`; release Chernarus and Vanilla both use the heli-aware class-filtered scan at `supplyMissionStarted.sqf:52,58`.
+- Also confirmed release `7195b331` comments the dead `WFBE_SE_FNC_SupplyMissionActive` compile at `Init_Server.sqf:82` and removes `supplyMissionActive.sqf` / `checkCCProximity.sqf` in both maintained release roots.
+- Updated [Supply mission architecture](Supply-Mission-Architecture#current-branch-matrix), [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing), [Current source snapshot](Current-Source-Status-Snapshot), [Feature status](Feature-Status-Register), release/hardening/feature machine rows and the dashboard. No gameplay source changed.
+
 ## 2026-06-06T03:35:00+02:00 - Codex - Hosted FPS release status refresh
 
 - Claimed `hosted-fps-release-status-refresh` after [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) and [Pending owner decisions](Pending-Owner-Decisions) still described release `3282ff3f` as Chernarus-only.

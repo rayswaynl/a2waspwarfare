@@ -6,7 +6,7 @@ This page records the branch-local source patch for the `supply-mission-scan-nar
 
 Canonical branch/root matrix: [Supply mission architecture](Supply-Mission-Architecture#current-branch-matrix).
 
-Short status: docs/source Chernarus and maintained Vanilla narrow the truck command-center scan at `supplyMissionStarted.sqf:25-28`; stable `origin/master` and `miksuu/master` still use `nearestObjects [..., [], 80]`; release Chernarus carries a PR #1-compatible heli-aware narrowed scan at `:50-56`; release Vanilla remains broad. Hosted/dedicated Arma 2 OA smoke is still pending.
+Short status: docs/source Chernarus and maintained Vanilla narrow the truck command-center scan at `supplyMissionStarted.sqf:25-28`; stable `origin/master`, `miksuu/master` and `origin/perf/quick-wins` still use `nearestObjects [..., [], 80]`; current release head `7195b331` carries a PR #1-compatible heli-aware narrowed scan in both maintained release roots at `:52,58`. Hosted/dedicated Arma 2 OA smoke is still pending.
 
 ## What I Read
 
@@ -55,7 +55,7 @@ Maintained Vanilla Takistan was propagated by `Tools/LoadoutManager` on 2026-06-
 
 This removes an avoidable broad object scan from the live active supply mission handler without changing the completion trigger, cadence or reward path. It is small, source-backed and low-risk compared with the remaining supply-mission authority work.
 
-Status: **docs/source and maintained Vanilla propagated for the truck scan; stable/upstream still broad; release Chernarus only; hosted/dedicated smoke pending**.
+Status: **docs/source and maintained Vanilla propagated for the truck scan; stable/upstream/perf still broad; current release `7195b331` narrowed in both maintained roots; hosted/dedicated smoke pending**.
 
 ## Validation
 
@@ -63,7 +63,7 @@ Source/Vanilla checks completed:
 
 - This docs branch's source Chernarus has zero 80-meter broad command-center scans and one narrowed `["Base_WarfareBUAVterminal"]` 80-meter scan.
 - Maintained Vanilla Takistan contains the same narrowed 80-meter command-center scan after the 2026-06-02 propagation run.
-- `origin/master` and `miksuu/master` still have the broad command-center scan at `supplyMissionStarted.sqf:24-28`; `origin/release/2026-06-feature-bundle` has the narrowed PR #1-compatible scan in Chernarus at `:50-56`, while release Vanilla remains broad at `:28`.
+- `origin/master`, `miksuu/master` and `origin/perf/quick-wins` still have the broad command-center scan at `supplyMissionStarted.sqf:24-28`; current release `origin/release/2026-06-feature-bundle` head `7195b331` has the narrowed PR #1-compatible scan in both maintained roots at `:52,58`.
 - Source Chernarus still has the 8-meter broad nearby-player scan.
 - `git diff --check` passed.
 - `Tools/LoadoutManager` generation/copy now works from this checkout by detecting repo-root markers; set `A2WASP_SKIP_ZIP=1` for propagation-only runs.

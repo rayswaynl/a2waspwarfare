@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-05T23:30:00+02:00",
+  "generatedAt": "2026-06-05T23:48:34+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -49,6 +49,25 @@
         "Publish scoped validation batches."
       ],
       "handoff": "Continue from fresh source evidence, owner requests or newly returned helper reports."
+    },
+    {
+      "lane": "supply-scan-release-status-refresh",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "docs/wiki/Supply-Mission-Scan-Narrowing.md",
+        "docs/wiki/Supply-Mission-Architecture.md",
+        "docs/wiki/Current-Source-Status-Snapshot.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md",
+        "docs/wiki/agent-release-readiness.json",
+        "origin/release/2026-06-feature-bundle@7195b331"
+      ],
+      "outputs": [
+        "Rechecked stale supply command-center scan release wording after current release head 7195b331.",
+        "Updated the canonical supply architecture matrix, scan leaf page, Current Source snapshot, Feature Status, dashboard and machine rows without gameplay source changes."
+      ],
+      "handoff": "Closed as docs-published. Future tester should run Arma truck/heli command-center delivery smoke before release-complete wording; future code owner should keep broader supply authority cleanup separate."
     },
     {
       "lane": "pvf-dispatcher-lookup-branch-route",
