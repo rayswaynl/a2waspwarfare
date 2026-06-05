@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T19:25:00+02:00 - Codex - Supply branch-scope status collapse
+
+- Claimed `supply-branch-scope-status-collapse` after Pauli recommended collapsing mixed supply status wording.
+- Source-checked current docs/source Chernarus plus maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle` for command-center scan shape, cooldown casing, dead-twin compile and `SupplyByHeli` cleanup.
+- Made [Supply mission architecture](Supply-Mission-Architecture#current-branch-matrix) the canonical branch/root matrix: docs/source and maintained Vanilla are truck-scan narrowed; stable/upstream remain broad; release Chernarus has the heli-aware cleanup; release Vanilla remains broad and still compiles the dead twin.
+- Updated the scan narrowing page, authority playbook, Feature Status and machine records to link to that matrix instead of restating partial truth. No gameplay source changed.
+
 ## 2026-06-05T19:05:00+02:00 - Codex - Main-menu GPS orphan actions branch scope
 
 - Claimed `main-menu-gps-orphan-actions-branch-scope` from the UI/backlog rows after the hardening record still had only mini-scout status.
