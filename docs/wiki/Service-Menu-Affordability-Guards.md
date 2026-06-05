@@ -10,6 +10,17 @@ The service menu controls rearm, repair, refuel, crew heal and EASA entry. The m
 
 That creates a normal-client correctness bug: a stale `MenuAction`, stale price, or quickly changed funds/context can debit an unaffordable action. It also explains why this is not real anti-cheat: the whole flow remains client-side, so public-server hardening still needs a server ledger or BattlEye posture decision.
 
+## Current Branch Matrix
+
+| Root / branch | Service menu status | EASA status | Practical meaning |
+| --- | --- | --- | --- |
+| Current docs/source Chernarus | Buttons still use cached prices before recalculation (`GUI_Menu_Service.sqf:130-190`); rearm/refuel debit without action-time funds/context guards, while repair/heal only check positive price (`:196-233`). | Purchase still uses strict `_funds > price` and client-side `ChangePlayerFunds` (`GUI_Menu_EASA.sqf:40-53`). | Patch-ready and source-unpatched. Fix Chernarus first if this lane becomes code work. |
+| Maintained Vanilla Takistan | Same source shape as Chernarus for service and EASA. | Same strict exact-funds rejection and client-side debit as Chernarus. | Must be propagated deliberately; do not call a Chernarus-only fix complete. |
+| Stable `origin/master` / Miksuu upstream | Newer service controller recomputes prices before enabling buttons, but action branches still debit from client state: rearm/refuel debit directly and repair/heal only check positive price (`GUI_Menu_Service.sqf:311-360` on both remotes). | Exact-funds rejection remains (`GUI_Menu_EASA.sqf:47-50`). | Upstream narrows stale-button behavior but does not close the local action-time guard or authority issue. |
+| `origin/release/2026-06-feature-bundle` | Release Chernarus partially guards rearm/refuel with `_funds >= _price` (`GUI_Menu_Service.sqf:444-468`), but repair/heal still lack fresh affordability/context guards; release Vanilla keeps the old unguarded rearm/refuel shape. | Release Chernarus and Vanilla still use strict `_funds > price` for EASA (`GUI_Menu_EASA.sqf:76` / `:47`). | Treat release as partial Chernarus QoL, not a complete service/EASA affordability fix. |
+
+The small local fix is still useful, but it is only a correctness patch. Full public-server hardening belongs to [Server authority migration map](Server-Authority-Migration-Map) and [Economy authority first cut](Economy-Authority-First-Cut).
+
 ## Source Flow
 
 | Step | Source | Behavior |
@@ -98,7 +109,8 @@ This page is the small local guard for DR-28's service-menu inconsistency. The l
 [
   {"fact":"service_menu_stale_enable_prices","source":"GUI_Menu_Service.sqf:140-190","summary":"Service action buttons are enabled from funds and cached price variables before the loop recalculates repair/rearm/refuel prices."},
   {"fact":"service_rearm_refuel_unconditional_debit","source":"GUI_Menu_Service.sqf:196-222","summary":"Rearm and refuel action branches debit money and spawn support threads without price, affordability or action-time usable-state guards."},
-  {"fact":"service_support_scripts_no_funds_check","source":"Client_SupportRearm.sqf:56-72; Client_SupportRefuel.sqf:61-77; Client_SupportRepair.sqf:56-72; Client_SupportHeal.sqf:56-76","summary":"Support scripts re-check distance/alive/airborne state during timed work, but funds were already debited by the menu."}
+  {"fact":"service_support_scripts_no_funds_check","source":"Client_SupportRearm.sqf:56-72; Client_SupportRefuel.sqf:61-77; Client_SupportRepair.sqf:56-72; Client_SupportHeal.sqf:56-76","summary":"Support scripts re-check distance/alive/airborne state during timed work, but funds were already debited by the menu."},
+  {"fact":"service_easa_branch_matrix_2026_06_05","source":"origin/master and miksuu/master GUI_Menu_Service.sqf:311-360; origin/release/2026-06-feature-bundle GUI_Menu_Service.sqf:444-468; GUI_Menu_EASA.sqf:47/76","summary":"Stable/upstream improve button-enable order but keep client-side action debit risks; release Chernarus partially guards rearm/refuel, release Vanilla lags, and exact-funds EASA rejection remains everywhere checked."}
 ]
 ```
 

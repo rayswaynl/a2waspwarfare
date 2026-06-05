@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T21:10:00+02:00 - Codex - Service/EASA affordability authority route
+
+- Claimed `service-easa-affordability-authority-route` from the patch-ready UI/economy backlog.
+- Source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle` for `GUI_Menu_Service.sqf` and `GUI_Menu_EASA.sqf`.
+- Result: current docs/source and maintained Vanilla still enable service actions from stale/cached prices and debit client-side without full action-time price/funds/context guards; stable and Miksuu upstream improve price-before-button ordering but still use client-side action debits; release Chernarus partially guards rearm/refuel, but repair/heal, release Vanilla and EASA exact-funds remain open.
+- Refreshed [Service menu affordability guards](Service-Menu-Affordability-Guards) as the branch/root matrix and condensed [Feature status](Feature-Status-Register) plus [Source fix propagation queue](Source-Fix-Propagation-Queue). No gameplay source changed.
+
 ## 2026-06-05T20:35:00+02:00 - Codex - Server init bind cleanup route
 
 - Claimed `server-init-bind-cleanup-route` from DR-43b / duplicate-bind backlog.
