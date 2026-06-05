@@ -59,21 +59,23 @@ A second full audit (all 60 pages, accuracy/consistency/coverage). Wiki is healt
 
 **Accuracy (correctness) — do first:**
 - **R2-1 (Medium):** [Client UI systems atlas](Client-UI-Systems-Atlas) + [Client UI HUD and menus](Client-UI-HUD-And-Menus) **mislabel findings** — **Status:** resolved by Codex before the 2026-06-04 UI alias/path cleanup. The target pages now correctly route DR-16 as structure-sale client authority, DR-17 as duplicate dialog IDD, DR-24 as dead `RscMenu_Upgrade`, DR-25a/b as duplicate title IDD / malformed `soundPush[]`, and DR-28 as gear/EASA/service authority.
-- **R2-2 (Medium):** [SQF atlas](SQF-Code-Atlas) compile counts ("659/452/207") are presented as bare facts — DR-5 flagged these as stale point-in-time; add a timestamp + regeneration command + DR-5 cite.
-- **R2-3 (Medium):** [SQF atlas](SQF-Code-Atlas) still hedges the MASH marker as "requires careful source verification" — DR-34 settled it (dead both ends); cite DR-34 as resolved.
+- **R2-2 (Medium):** [SQF atlas](SQF-Code-Atlas) compile counts were presented as stale bare facts — **Status:** resolved before the 2026-06-05 audit closeout. SQF atlas now has a 2026-06-02 point-in-time recount, regeneration command and DR-5 warning that counts must be regenerated before relying on them.
+- **R2-3 (Medium):** [SQF atlas](SQF-Code-Atlas) hedged the MASH marker status — **Status:** resolved before the 2026-06-05 audit closeout. SQF atlas now cites DR-34 and states the shared MASH map-marker relay is dead/orphaned while MASH tents remain a separate deployable officer feature.
 
 **Orphaned cross-links (add the DR where a developer would look):**
-- **R2-4:** **DR-44** (`wfbe_supply_temp_<side>` forgery) missing from [Economy](Economy-Towns-And-Supply) synthesis table, [Networking](Networking-And-Public-Variables) direct-channel section, and [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
-- **R2-5:** **DR-20** (HQ-killed N-fold score exploit) missing from [Construction atlas](Construction-And-CoIn-Systems-Atlas), [Gameplay atlas](Gameplay-Systems-Atlas), [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
-- **R2-6:** cite **DR-40** by number in [WASP overlay](WASP-Overlay) and **DR-19** in [Server runtime atlas](Server-Gameplay-Runtime-Atlas).
-- **R2-7:** **DR-45** cross-link from the `Town-AI-Vehicle-Despawn-Safety` playbook + [AI/headless](AI-Headless-And-Performance).
+- **R2-4:** **DR-44** (`wfbe_supply_temp_<side>` forgery) missing from [Economy](Economy-Towns-And-Supply), [Networking](Networking-And-Public-Variables) and [Server runtime atlas](Server-Gameplay-Runtime-Atlas) — **Status:** resolved. Those pages now cite or route DR-44 / side-supply temp channel risk.
+- **R2-5:** **DR-20** (HQ-killed N-fold score exploit) missing from [Construction atlas](Construction-And-CoIn-Systems-Atlas), [Gameplay atlas](Gameplay-Systems-Atlas), [Server runtime atlas](Server-Gameplay-Runtime-Atlas) — **Status:** resolved. Those pages now route HQ-killed idempotency and score-duplication proof to DR-20.
+- **R2-6:** cite **DR-40** by number in [WASP overlay](WASP-Overlay) and **DR-19** in [Server runtime atlas](Server-Gameplay-Runtime-Atlas) — **Status:** resolved. WASP overlay cites DR-40 and server runtime / AI-headless pages cite DR-19 for the hosted/listen FPS loop.
+- **R2-7:** **DR-45** cross-link from the `Town-AI-Vehicle-Despawn-Safety` playbook + [AI/headless](AI-Headless-And-Performance) — **Status:** resolved. Both pages now cite DR-45 and route to the town-AI vehicle safety playbook.
 
 **Thin citations (lower priority):** [Core systems index](Core-Systems-Index), [Architecture overview](Architecture-Overview), [Content structure and maps](Content-Structure-And-Maps) have no `path:line` anchors.
 
 **Current-work reconcile (Codex status pages):**
-- **R2-8 (Medium):** [Coordination board](Coordination-Board) "Active Lanes" + "Roles" tables are stale — sub-agent lanes (Faraday/Mencius/Hilbert/Cicero/Curie/Meitner) shown "Active" were harvested/closed in Wave F; `victory-endgame-runtime-atlas` shown "Active" is integrated; the Roles line says "Claude's latest reviews are DR-11..DR-15" but Claude is at **DR-45**. Reconcile to current state.
-- **R2-9 (Low):** [Progress dashboard](Progress-Dashboard) "At A Glance" Claude row predates the Phase-1-complete + collaboration-follow mode; update.
-- **R2-10 (Low):** `_Sidebar.md` still lists `Headless-Delegation-And-Failover-Playbook` twice (Gameplay + Ops); de-dup.
+- **R2-8 (Medium):** [Coordination board](Coordination-Board) "Active Lanes" + "Roles" tables were stale — **Status:** resolved. Current board no longer lists the named Wave F sub-agents or `victory-endgame-runtime-atlas` as active, and the Claude role now references `collaboration-follow-autonomous-ready` / DR-45+ / DR-46 handoffs.
+- **R2-9 (Low):** [Progress dashboard](Progress-Dashboard) "At A Glance" Claude row predates the collaboration-follow mode — **Status:** resolved. Current dashboard shows Claude as autonomous-ready in `collaboration-follow-autonomous-ready`.
+- **R2-10 (Low):** `_Sidebar.md` listed `Headless-Delegation-And-Failover-Playbook` twice — **Status:** resolved. Current sidebar has one `Headless delegation and failover` entry.
+
+**Round 2 closeout 2026-06-05:** Codex rechecked the pages named above against the current docs mirror. The Round 2 Codex-lane items are now historical routing notes, not open backlog. Future agents should use [Progress dashboard](Progress-Dashboard), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), [Feature status](Feature-Status-Register) and the owner pages for current work.
 
 **Do NOT "fix" (audit false positives, verified at source):** the `Public-Variable-Channel-Index` PVF line ranges `:8-20`/`:23-37` are **correct** — an audit pass miscounted blank lines. Leave those ranges.
 

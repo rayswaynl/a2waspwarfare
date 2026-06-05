@@ -2636,3 +2636,11 @@ Key conclusions:
 - Rechecked `agent-status.json`: current status routes the propagated source-fix lanes as `source-propagated-smoke-pending` / smoke pending and no longer carries the old "Vanilla propagation pending" wording called out by [Tooling release readiness audit](Tooling-Release-Readiness-Audit).
 - Updated [Tooling release readiness audit](Tooling-Release-Readiness-Audit) and [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger) so future agents focus on runtime smoke, release-branch scope and validator work instead of a stale status-text task. No gameplay source changed.
 - Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse and `git diff --check`. The validator emitted only the known non-failing legacy JSONL envelope warnings.
+
+## 2026-06-05T17:10:00+02:00 - Codex - wiki quality Round 2 closeout
+- Claimed `wiki-quality-round2-closeout` after the stale-state sweep found old Round 2 Codex-lane items still written as open in [Wiki quality audit](Wiki-Quality-Audit).
+- Rechecked current owner pages: [SQF code atlas](SQF-Code-Atlas) now has dated compile counts, a regeneration command and DR-5 caveat; it also cites DR-34 for dead/orphaned MASH marker relay status.
+- Rechecked DR cross-link requests: DR-44 is routed through economy/networking/server runtime; DR-20 through construction/gameplay/server runtime; DR-40 through WASP overlay; DR-19 through server runtime/AI-headless; DR-45 through the town-AI playbook and AI/headless page.
+- Rechecked current-state requests: [Coordination board](Coordination-Board) no longer lists stale Wave F sub-agent lanes as active, [Progress dashboard](Progress-Dashboard) shows Claude as `collaboration-follow-autonomous-ready`, and sidebar has one `Headless delegation and failover` entry.
+- Updated [Wiki quality audit](Wiki-Quality-Audit), [Progress dashboard](Progress-Dashboard), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl`. No gameplay source changed.
+- Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse and `git diff --check`. The validator emitted only the known non-failing legacy JSONL envelope warnings.
