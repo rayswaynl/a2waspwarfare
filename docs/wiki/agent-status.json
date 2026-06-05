@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-04T20:05:00+02:00",
+  "generatedAt": "2026-06-05T23:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -14,14 +14,15 @@
     "eventFeed": "agent-events.jsonl",
     "repoContext": "agent-context.json",
     "releaseReadiness": "agent-release-readiness.json",
-    "agentEntryPoint": "agent-entrypoint.json"
+    "agentEntryPoint": "agent-entrypoint.json",
+    "pruningLedger": "Wiki-Pruning-And-Relevance-Ledger.md"
   },
   "agents": {
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Dashboard open-item cleanup is validated and the remote release-target scout push is preserved: Progress-Dashboard is compact, Coverage Ledger sidebar/mailbox routing is closed, stale review rows are reclassified, machine state is compact, and docs/wiki validation passed.",
-      "nextExpectedOutput": "Commit and push the validated wiki/mirror cleanup, then continue bounded source-backed wiki maintenance as needed."
+      "currentWork": "Refreshed Factory-And-Purchase-Systems-Atlas with the buy-menu price/key branch matrix: current source/Vanilla, stable and upstream keep selected-detail price drift, no level-0 UNIT_COST_MODIFIER reset and the driver-default profile key split; release/QoL branch fix only Chernarus selected-detail price.",
+      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -35,11 +36,23 @@
       "currentWork": "Coverage Ledger navigation request is closed; Claude can continue from the wired Codebase-Coverage-Ledger page when active.",
       "nextExpectedOutput": "Self-select the next bounded source-backed review from Coverage Ledger or the hardening backlog."
     },
+    "Codex delegated FPS scout": {
+      "status": "returned / harvested",
+      "currentLane": "old-be-current-wasp-fps-opportunity-scout-2",
+      "currentWork": "Completed report-only comparison at C:/Users/Steff/Documents/Codex/2026-06-05/wasp-old-mission-fps-opportunity-window/outputs/Old-BE-vs-Current-Wasp-FPS-Opportunity-Scout.md; compact deltas were harvested into canonical docs.",
+      "nextExpectedOutput": "No active output remains for this lane. Future work should execute the full-server FPS test matrix or open a code-owner lane for one chosen performance experiment."
+    },
     "Sub-agents": {
-      "status": "none-canonical",
-      "currentLane": "follow-up-leads-only",
-      "currentWork": "No active canonical sub-agent wave is being treated as evidence. The release-target scout wave is published/validated/pushed into agent-release-readiness, UI and tooling docs; prior interrupted/error scout threads are non-evidence until relaunched or finalized.",
-      "nextExpectedOutput": "Relaunch narrowly before promotion; keep raw scout detail in Subagent-Discovery-Swarm and agent-events.jsonl."
+      "status": "returned-harvested",
+      "currentLane": "ui-runtime-bloat-scout / wiki-navigation-chain-scout",
+      "currentWork": "Confucius's UI/HUD/runtime quick-reference pruning leads were source-checked and published. Carson's small navigation fixes were promoted, and the archive-page caveat note is already satisfied by imported archive headers.",
+      "nextExpectedOutput": "No active scout output remains; future pruning should start from fresh evidence."
+    },
+    "Supported docs agents": {
+      "status": "first-batch-published / historical",
+      "currentLane": "research-catchup-synthesis-default-supported / relevance-pruning-and-archive-default-supported",
+      "currentWork": "Earlier helper chats produced first-batch catch-up and pruning/archive docs; no fresh output is currently blocking the live dashboard.",
+      "nextExpectedOutput": "Relaunch or resume only for a fresh narrow catch-up/pruning lane; keep historic helper detail in Agent-Worklog and agent-events.jsonl."
     }
   },
   "laneSummary": [
@@ -47,31 +60,13 @@
       "lane": "documentation-finisher-loop",
       "owner": "Codex",
       "status": "active-ongoing",
-      "output": "Keep wiki/status pages current from source evidence, compact the dashboard, and publish scoped validation batches."
+      "output": "Keep wiki/status pages current from source evidence; route open docs work through the dashboard, pruning ledger, Feature Status, Pending Owner Decisions and machine status files; compact the dashboard, maintain machine-readable entrypoints, refresh scan artifacts when docs/source changes affect them and publish scoped validation batches."
     },
     {
-      "lane": "dashboard-open-item-cleanup",
-      "owner": "Codex",
-      "status": "published-validated",
-      "output": "Progress Dashboard debloated, Coverage Ledger nav request closed, stale review rows reclassified and compact machine state refreshed. No gameplay source changed."
-    },
-    {
-      "lane": "spark-scout-wave-release-targets-hc-ai-caps-economy",
-      "owner": "Codex/Sub-agents",
-      "status": "published-validated-pushed",
-      "output": "Steff asked for more Spark scouts. Codex launched six GPT-5.3-Codex-Spark read-only scouts and recycled completed slots into tooling/integrations plus mission lifecycle/init. Returned reports confirmed existing Player AI caps, HC failover/static-defense/FPS and economy/town/supply findings without duplicating prose. The new durable deltas are generated mission release tiering in agent-release-readiness.json and missing old-upgrade-dialog wf_*.paa asset routing in UI pages. Validation/parity passed and content pushed as docs 058427d3 / wiki 4b72809. No gameplay source changed."
-    },
-    {
-      "lane": "ai-commander-branch-head-refresh-and-spark-scout-wave",
-      "owner": "Codex/Sub-agents",
-      "status": "published-validated",
-      "output": "origin/feat/ai-commander is c20ce153, source-Chernarus-only with no maintained Vanilla changes; origin/codex/quad-ai-commander is d4e0fa38 concept/report evidence only. Scout notes remain leads until source-checked."
-    },
-    {
-      "lane": "fresh-background-spark-scout-wave-buy-menu-harvest",
-      "owner": "Codex/background Spark threads",
-      "status": "published-validated-pushed",
-      "output": "Five completed reports mostly confirmed canonical docs; interrupted/error threads are not evidence. Buy-menu driver-default profile key split was promoted and routed."
+      "lane": "old-be-current-wasp-fps-opportunity-scout-2",
+      "owner": "Codex-delegated",
+      "status": "returned-harvested",
+      "output": "Final report returned and was compacted into Old-WarfareBE-Performance-Comparison, Performance-Opportunity-Sweep, Testing-Debugging-And-Release-Workflow and Feature-Status-Register."
     },
     {
       "lane": "autonomous-claude-research",
@@ -101,7 +96,7 @@
       "lane": "source-propagated-smoke-pending",
       "owner": "future-tester-release-owner",
       "status": "smoke-pending",
-      "output": "Client skill init, hosted FPS, supply scan and paratrooper marker lanes are tracked on owner pages and Feature Status; not active dashboard cleanup blockers."
+      "output": "Client skill init, hosted FPS, supply scan, paratrooper marker and commander-built ARTY lanes are tracked on owner pages and Feature Status; not active dashboard cleanup blockers."
     },
     {
       "lane": "wasp-marker-wait-cleanup",
@@ -124,22 +119,13 @@
     "coordinationBoard": "Coordination-Board.md",
     "discoverySwarm": "Subagent-Discovery-Swarm.md",
     "codebaseCoverageLedger": "Codebase-Coverage-Ledger.md",
+    "pruningLedger": "Wiki-Pruning-And-Relevance-Ledger.md",
     "featureStatus": "Feature-Status-Register.md",
     "hardeningBacklog": "agent-hardening-backlog.jsonl",
     "collaborationProtocol": "Agent-Collaboration-Protocol.md",
-    "collaborationState": "agent-collaboration.json",
-    "agentContext": "agent-context.json",
-    "knowledgeRecords": "agent-knowledge.jsonl",
-    "events": "agent-events.jsonl",
-    "worklog": "Agent-Worklog.md",
-    "testingWorkflow": "Testing-Debugging-And-Release-Workflow.md",
-    "serverAuthorityMap": "Server-Authority-Migration-Map.md",
-    "pvfDispatchPlaybook": "PVF-Dispatch-Implementation-Playbook.md",
-    "attackWaveAuthority": "Attack-Wave-Authority-Playbook.md",
-    "icbmAuthority": "ICBM-Authority-Playbook.md",
-    "aiCommanderAutonomyAudit": "AI-Commander-Autonomy-Audit.md",
-    "currentSourceStatus": "Current-Source-Status-Snapshot.md",
-    "bottleneckQueue": "Bottleneck-Removal-Queue.md",
-    "wikiMirrorReconciliation": "Wiki-Mirror-Reconciliation-Plan.md"
+    "releaseReadiness": "agent-release-readiness.json",
+    "machineIndex": "agent-machine-index.json",
+    "prCleanupLab": "PR-Cleanup-And-Integration-Lab.md",
+    "llms": "llms.txt"
   }
 }

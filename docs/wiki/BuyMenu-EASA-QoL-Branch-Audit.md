@@ -6,6 +6,8 @@ This page deep-audits `origin/feat/buymenu-easa-qol` as branch evidence, not sta
 
 `origin/feat/buymenu-easa-qol` head `a66d4691` is a narrow client-UI quality-of-life branch. It changes Buy Units affordability display, factory-tab queue labels and EASA current-loadout selection.
 
+2026-06-05 refresh: the branch fixes the selected-unit detail price formula only in Chernarus. It does not reset `UNIT_COST_MODIFIER` to `1` for unit-cost upgrade level `0`, does not normalize the uppercase/lowercase driver-default profile key split, and does not touch maintained Vanilla. Treat those as separate buy-menu price/key cleanup work; canonical matrix: [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas#buy-menu-price-and-driver-key-branch-matrix).
+
 - Head: `a66d4691` (`feat(easa): highlight and pre-select the loadout currently equipped on the vehicle`)
 - Merge base versus stable `origin/master`: `2cdf5fb8`
 - Diff versus `origin/master`: 3 files, +42/-6

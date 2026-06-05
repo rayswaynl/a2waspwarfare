@@ -11,9 +11,12 @@ All source paths are relative to the repo root.
 1. The Chernarus source patch is present.
 2. LoadoutManager propagation has run.
 3. Generated diffs are inspected.
-4. Relevant Arma 2 OA smoke is recorded.
+4. Every claimed mission root has its generated `version.sqf` present and terrain-correct.
+5. Relevant Arma 2 OA smoke is recorded.
 
 LoadoutManager root discovery now supports both the old ancestor-folder rule and normal repo checkouts: `Tools/LoadoutManager/FileManagement/FileManager.cs` accepts either an ancestor folder named `a2waspwarfare` or a root containing `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`. Packaging can be skipped for propagation-only runs with `A2WASP_SKIP_ZIP=1`; see [Tools/build workflow](Tools-And-Build-Workflow).
+
+Generated input gate: `version.sqf` is required boot input, not tracked source. It is ignored by `.gitignore`, included by `description.ext:39` and `initJIPCompatible.sqf:4`, and consumed by `Rsc/Header.hpp:5,9,21`. Before calling any propagated fix release-ready, verify source Chernarus and maintained Vanilla Takistan both have generated `version.sqf` files with the expected `WF_MAXPLAYERS`, `WF_MISSIONNAME`, `WF_RESPAWNDELAY`, map flags and release/debug defines. The compact agent-readable rule lives in [`agent-release-readiness.json`](agent-release-readiness.json) under `versionSqfGeneratedInput`.
 
 ## Latest Propagation Run
 
@@ -34,16 +37,19 @@ Result: generation/copy completed for Chernarus and Takistan, `_MISSIONS.7z` pac
 | Supply mission scan narrowing | Source and Vanilla `supplyMissionStarted.sqf:28` scan only `["Base_WarfareBUAVterminal"]` for the 80m command-center check. | Chernarus carries it, Vanilla carries it, smoke pending. |
 | Supply player-object list indexing | Source and Vanilla `playerObjectsList.sqf:17` initialize `_i = 0` before the `WFBE_SE_PLAYERLIST` loop. | Chernarus carries it, Vanilla carries it, smoke pending. |
 
-## Release Branch Caveat (2026-06-03)
+Follow-up source check on 2026-06-05 added one later source-only fix to the queue: commander-built artillery ownership. It was not part of the 2026-06-02 LoadoutManager run above, but current docs/source Chernarus and maintained Vanilla both carry the same `Construction_StationaryDefense.sqf:91-93` commander-team handoff. Stable `origin/master` and release head `3282ff3f` still lack that handoff.
 
-The propagation table above describes the docs/source branch state, not a stable-master or release-branch guarantee. Current source-status recheck used docs/source `HEAD` `4163faba`, `origin/master` `2cdf5fb8`, and `origin/release/2026-06-feature-bundle` `a9219d88`.
+## Release Branch Caveat (2026-06-05 Refresh)
 
-| Lane | Stable `origin/master` | Release `a9219d88` | Practical rule |
+The propagation table above describes the docs/source branch state, not a stable-master or release-branch guarantee. The original source-status recheck used docs/source `HEAD` `4163faba`, `origin/master` `2cdf5fb8`, and `origin/release/2026-06-feature-bundle` `a9219d88`. A 2026-06-05 spot-check against current release head `3282ff3f` found the same lane outcomes for the rows below.
+
+| Lane | Stable `origin/master` | Release `3282ff3f` | Practical rule |
 | --- | --- | --- | --- |
 | Paratrooper marker revival | Handler registration absent in Chernarus/Vanilla `Common/Init/Init_PublicVariables.sqf`. | Handler registration absent in release Chernarus (`NukeIncoming` at `:41`) and release Vanilla (`NukeIncoming` at `:39`). | Do not assume this lane is in release builds until the release branch carries it in both maintained missions. |
 | Client skill init idempotency | Duplicate `Skill_Init.sqf` remains in Chernarus/Vanilla at `Client/Init/Init_Client.sqf:561` and `:585`. | Duplicate `Skill_Init.sqf` remains in release Chernarus at `:565`/`:589` and release Vanilla at `:561`/`:585`. | Treat release/master as still needing the single-init change. |
 | Hosted server FPS loop sleep | Chernarus/Vanilla still use branch-only sleeps inside the loop. | Release Chernarus has the guarded publisher and removed/commented monitor path; release Vanilla still has the old loop shape. | Release branch is Chernarus-only for this lane. |
 | Supply mission scan narrowing | Chernarus/Vanilla still use the broad 80m command-center scan. | Release Chernarus has the heli-aware narrowed command-center scan; release Vanilla still uses the broad 80m scan. | Release branch is Chernarus-only for this lane. |
+| Commander-built artillery ownership | Chernarus/Vanilla keep manned base-area artillery gunners on the base-area `DefenseTeam`; no commander-team handoff is present. | Release Chernarus/Vanilla also keep manned base-area artillery gunners on `DefenseTeam`; no commander-team handoff is present. | Treat release/master as still needing the commander-built ARTY ownership patch. |
 
 ## Current Propagated Fix Queue
 
@@ -54,6 +60,7 @@ The propagation table above describes the docs/source branch state, not a stable
 | [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) | Chernarus FPS publishers exit immediately on `!isDedicated`. | Vanilla FPS publishers have the same early exit. | Pending dedicated/hosted smoke. | Source/Vanilla `Server/GUI/serverFpsGUI.sqf:1`; source/Vanilla `Server/Module/serverFPS/monitorServerFPS.sqf:1`. | Smoke dedicated FPS publish and hosted/listen no-spin behavior. |
 | [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) | Chernarus 80m command-center scan uses `nearestObjects [..., ["Base_WarfareBUAVterminal"], 80]`. | Vanilla uses the same narrowed 80m scan. | Pending truck/heli smoke. | Source/Vanilla `Server/Module/supplyMission/supplyMissionStarted.sqf:25-28`; broad nearby-player 8m scan remains intentional. | Smoke delivery near command centers and no completion near unrelated objects. |
 | [Supply player-object list indexing](Player-Join-Disconnect-And-AntiStack-Lifecycle) | Chernarus initializes `_i = 0` before the `WFBE_SE_PLAYERLIST` loop so reconnecting UIDs replace their real row. | Vanilla has the same counter placement. | Pending reconnect/supply smoke. | Source/Vanilla `Server/Module/supplyMission/playerObjectsList.sqf:17-29`; consumers `supplyMissionStarted.sqf:57+` and `supplyMissionActive.sqf:51+`. | Smoke reconnect/JIP player-object replacement and supply mission completion lookup. |
+| [Commander-built artillery ownership](Construction-And-CoIn-Systems-Atlas) | Chernarus routes manned artillery-class base-area defense gunners to the current commander team when one exists. | Vanilla has the same commander-team handoff. | Pending commander ARTY smoke. | Source/Vanilla `Server/Construction/Construction_StationaryDefense.sqf:91-93`; tactical discovery `Common/Functions/Common_GetTeamArtillery.sqf:10-30`; tactical UI `Client/GUI/GUI_Menu_Tactical.sqf:544,565,594`. | Smoke commander-built manned ARTY inside the HQ/base circle, Tactical fire-mission listing, ammo loading, direct fire, non-artillery `DefenseTeam` behavior and HC static-defense fallback. |
 
 ## Patch-Ready But Not In Current Code
 
@@ -61,13 +68,14 @@ These have source-backed playbooks but are not current code fixes yet. Do not mi
 
 | Lane | Status | Canonical page | Why separate |
 | --- | --- | --- | --- |
-| Factory queue counter/token cleanup | Patch-ready, current code still carries the defect. | [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) | A code patch is still needed in `Client_BuildUnit.sqf` before propagation. |
-| Commander reassignment call shape | Patch-ready, current code still carries the defect. | [Commander reassignment call shape](Commander-Reassignment-Call-Shape) | Needs a source edit plus one notification-owner decision. |
+| Factory queue counter/token cleanup | Patch-ready, current code still carries both the queue-counter leak and low-entropy token; branch matrix refreshed 2026-06-05. | [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup) | `perf/quick-wins` and release Chernarus patch only the crewless queue-counter leak; the FIFO token and maintained Vanilla propagation remain open. |
+| Commander reassignment call shape | Patch-ready, current docs/source still carries the helper defect; branch matrix refreshed 2026-06-05. | [Commander reassignment call shape](Commander-Reassignment-Call-Shape) | Stable/upstream/release already fix helper unpacking, but current source/Vanilla need the patch or port; duplicate notification owner and UI row-identity cleanup remain open everywhere checked. |
 | Construction small-site logic cleanup | Patch-ready, current code still carries the defect. | [Construction logic list cleanup](Construction-Logic-List-Cleanup) | Needs the one-line SmallSite add-to-remove edit, then Vanilla propagation and construction smoke. |
 | RHUD/endgame title display handle split | Patch-ready, current code still carries the defect. | [UI IDD collision repair](UI-IDD-Collision-Repair) | Needs a title display-variable split or RHUD/action-icon endgame gate before propagation; keep separate from broader UI IDD cleanup and smoke RHUD/action icons/endgame stat bars together. |
-| Gear template profile filter | Patch-ready, current code still carries the defect. | [Gear template profile filter](Gear-Template-Profile-Filter) | Needs `_u_upgrade` replacement in `Client_UI_Gear_SaveTemplateProfile.sqf`. |
-| Vehicle cargo equip loop bounds | Patch-ready, current code still carries the defect. | [Vehicle cargo equip loop bounds](Vehicle-Cargo-Equip-Loop-Bounds) | Needs five loop-bound edits before propagation. |
-| Service menu affordability guards | Patch-ready, current code still carries the defect. | [Service menu affordability guards](Service-Menu-Affordability-Guards) | Needs action-time price/funds/context guards before propagation. |
+| Gear template profile filter | Patch-ready; current source/Vanilla, stable/upstream and release all still carry undefined `_u_upgrade` save filtering plus the six-field profile import guard. | [Gear template profile filter](Gear-Template-Profile-Filter) | Needs save-filter replacement in `Client_UI_Gear_SaveTemplateProfile.sqf` plus an `Init_ProfileGear.sqf` import guard/default before propagation. |
+| Vehicle cargo equip loop bounds | Patch-ready; current source/Vanilla, stable/upstream and release all still carry the same five inclusive cargo loops. | [Vehicle cargo equip loop bounds](Vehicle-Cargo-Equip-Loop-Bounds) | Needs five loop-bound edits in `Common_EquipVehicle.sqf` and `Common_EquipBackpack.sqf`, then Vanilla propagation and cargo smoke. |
+| Buy-menu price/key alignment | Patch-ready; current source/Vanilla, stable and upstream still carry selected-detail price drift, stale `UNIT_COST_MODIFIER` reset behavior and the driver-default profile key split. Release/QoL branch fix only Chernarus selected-detail display. | [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas#buy-menu-price-and-driver-key-branch-matrix) | Needs one shared price/reset path plus one normalized driver-default key, then Vanilla propagation and Buy Units UI/economy smoke. |
+| Service menu affordability guards | Patch-ready, current code still carries the defect; branch matrix refreshed 2026-06-05. | [Service menu affordability guards](Service-Menu-Affordability-Guards) | Current docs/source and maintained Vanilla need action-time price/funds/context guards; stable/upstream improve button-enable order but still debit client-side; release Chernarus is only a partial rearm/refuel QoL guard and release Vanilla/EASA exact-funds remain open. |
 | WASP marker wait cleanup | Opportunity, source implementation still needed. | [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup) | Small performance cleanup, but still requires map-marker smoke. |
 
 ## Propagation Procedure
@@ -77,9 +85,10 @@ These have source-backed playbooks but are not current code fixes yet. Do not mi
 3. Run `dotnet run --project Tools\LoadoutManager\LoadoutManager.csproj` from the repo root, or `dotnet run` from `Tools/LoadoutManager`.
 4. Inspect `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` diffs for the intended source fixes.
 5. Treat `The specified content was not found in the file.` from `ReplaceGUIMenuHelp` as a non-fatal warning unless a future diff shows help-menu title replacement was expected for that terrain.
-6. Do not claim `Modded_Missions/*` propagation; current tooling does not actively maintain those folders. A 2026-06-03 scout confirmed all tracked modded folders lack generated `version.sqf`, several lack core bootstrap files, and 18 Napf/Eden/Lingor files contain unresolved conflict markers.
-7. Run or record the relevant smoke from [Testing workflow](Testing-Debugging-And-Release-Workflow), especially the [propagated fix smoke pack](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack).
-8. Update this page, [Progress dashboard](Progress-Dashboard), [`agent-release-readiness.json`](agent-release-readiness.json), [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) and [`agent-knowledge.jsonl`](agent-knowledge.jsonl).
+6. Verify generated `version.sqf` exists and matches the intended target root before pack/test/release claims; use `agent-release-readiness.json` `versionSqfGeneratedInput` as the machine checklist.
+7. Do not claim `Modded_Missions/*` propagation; current tooling does not actively maintain those folders. A 2026-06-03 scout confirmed all tracked modded folders lack generated `version.sqf`, several lack core bootstrap files, and 18 Napf/Eden/Lingor files contain unresolved conflict markers.
+8. Run or record the relevant smoke from [Testing workflow](Testing-Debugging-And-Release-Workflow), especially the [propagated fix smoke pack](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack).
+9. Update this page, [Progress dashboard](Progress-Dashboard), [`agent-release-readiness.json`](agent-release-readiness.json), [`agent-feature-status.jsonl`](agent-feature-status.jsonl), [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) and [`agent-knowledge.jsonl`](agent-knowledge.jsonl).
 
 ## Validation Matrix
 
@@ -90,6 +99,7 @@ These have source-backed playbooks but are not current code fixes yet. Do not mi
 | Hosted server FPS loop sleep | Dedicated server still publishes `SERVER_FPS_GUI` / `WFBE_VAR_SERVER_FPS`; hosted/listen run does not spin the FPS publisher loops. See the dedicated/hosted row in [Testing workflow](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack). |
 | Supply mission scan narrowing | Supply truck/heli completes at a real command center; unrelated nearby objects do not complete the mission; JIP cooldown behavior remains unchanged. See the supply scan row in [Testing workflow](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack). |
 | Supply player-object list indexing | A reconnecting/JIP player with an existing UID updates the matching `WFBE_SE_PLAYERLIST` row, not row 0, and supply completion still finds the correct nearby player object. See the reconnect row in [Testing workflow](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack). |
+| Commander-built artillery ownership | Commander-built manned artillery inside the HQ/base circle appears in the commander's Tactical fire-mission path, ammo loading still targets the gun, direct fire still works, non-artillery statics remain on the base-area `DefenseTeam`, and HC static-defense delegation does not break commander-team discoverability. See the commander artillery row in [Testing workflow](Testing-Debugging-And-Release-Workflow#source-propagated-fix-smoke-pack). |
 
 ## Agent Index Facts
 
@@ -97,7 +107,8 @@ These have source-backed playbooks but are not current code fixes yet. Do not mi
 [
   {"fact":"loadoutmanager_root_discovery","source":"Tools/LoadoutManager/FileManagement/FileManager.cs","summary":"LoadoutManager now accepts either an ancestor named a2waspwarfare or a normal repo root containing Missions, Missions_Vanilla and Tools/LoadoutManager/LoadoutManager.csproj."},
   {"fact":"loadoutmanager_skip_zip","source":"Tools/LoadoutManager/ZipManager.cs","summary":"Set A2WASP_SKIP_ZIP to 1, true or yes to run generation/copy without packaging _MISSIONS.7z."},
-  {"fact":"current_propagated_fixes","source":"Init_PublicVariables.sqf:39; Init_Client.sqf:547,571; serverFpsGUI.sqf:1; monitorServerFPS.sqf:1; supplyMissionStarted.sqf:25-28; playerObjectsList.sqf:17-29","summary":"Paratrooper marker registration, duplicate Skill_Init removal, hosted FPS loop exits, supply command-center scan narrowing and supply player-object list indexing are present in Chernarus source and maintained Vanilla Takistan after the 2026-06-02 LoadoutManager run."},
+  {"fact":"version_sqf_generated_input_gate","source":"agent-release-readiness.json#versionSqfGeneratedInput","summary":"version.sqf is ignored/generated but required by description.ext, initJIPCompatible.sqf and Rsc/Header.hpp; verify per-target generated files before pack, smoke or release claims."},
+  {"fact":"current_propagated_fixes","source":"Init_PublicVariables.sqf:39; Init_Client.sqf:547,571; serverFpsGUI.sqf:1; monitorServerFPS.sqf:1; supplyMissionStarted.sqf:25-28; playerObjectsList.sqf:17-29; Construction_StationaryDefense.sqf:91-93","summary":"Paratrooper marker registration, duplicate Skill_Init removal, hosted FPS loop exits, supply command-center scan narrowing, supply player-object list indexing and commander-built artillery ownership are present in Chernarus source and maintained Vanilla Takistan; Arma smoke remains pending."},
   {"fact":"latest_propagation_run","source":"Source-Fix-Propagation-Queue.md#latest-propagation-run","summary":"2026-06-02 LoadoutManager run completed generation/copy for Chernarus and Takistan with A2WASP_SKIP_ZIP=1; all five tracked fixes propagated, Arma smoke remains pending."}
 ]
 ```
