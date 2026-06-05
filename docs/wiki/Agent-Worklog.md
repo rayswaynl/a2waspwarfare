@@ -13,12 +13,12 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
-## 2026-06-05T23:40:00+02:00 - Codex - RHUD/endgame title handle branch route
+## 2026-06-05T23:20:00+02:00 - Codex - Buy-menu price/key branch route
 
-- Claimed `rhud-endgame-title-handle-branch-route` from the patch-ready UI/title backlog.
-- Fresh-fetched `origin` and `miksuu`, then source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, latest `miksuu/master` and `origin/release/2026-06-feature-bundle` for `Rsc/Titles.hpp`, `Client_UpdateRHUD.sqf`, `updateavailableactions.fsm`, `GUI_EndOfGameStats.sqf` and the current cut-display helper scripts.
-- Result: every checked root/branch still shares `uiNamespace["currentCutDisplay"]` between `OptionsAvailable`/RHUD/action icons and `EndOfGameStats`; release Chernarus' EASA `idd = 24000` change does not fix this title lifecycle handle collision.
-- Refreshed [UI IDD collision repair](UI-IDD-Collision-Repair) as the branch/root matrix and condensed [Client UI systems atlas](Client-UI-Systems-Atlas), [Feature status](Feature-Status-Register) and [Source fix propagation queue](Source-Fix-Propagation-Queue). No gameplay source changed.
+- Claimed `buy-menu-price-key-branch-route` from the UI/economy buy-menu backlog.
+- Source-checked current docs/source Chernarus, maintained Vanilla, stable `origin/master`, upstream `miksuu/master`, release `origin/release/2026-06-feature-bundle` and `origin/feat/buymenu-easa-qol` for `Client_UIFillListBuyUnits.sqf` and `GUI_Menu_BuyUnits.sqf`.
+- Result: current source/Vanilla, stable and upstream still carry selected-detail price drift, no level-0 `UNIT_COST_MODIFIER` reset and the uppercase/lowercase driver-default profile key split. Release/QoL branch fix only Chernarus selected-detail price; maintained Vanilla, modifier reset and driver key remain open.
+- Refreshed [Factory and purchase systems](Factory-And-Purchase-Systems-Atlas#buy-menu-price-and-driver-key-branch-matrix) as the matrix and condensed [Feature status](Feature-Status-Register), [Client UI systems](Client-UI-Systems-Atlas), [BuyMenu EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit) and [Source fix propagation queue](Source-Fix-Propagation-Queue). No gameplay source changed.
 
 ## 2026-06-05T23:15:00+02:00 - Codex - Construction SmallSite logic branch route
 
@@ -2972,6 +2972,12 @@ Key conclusions:
 - Claimed `economy-menu-idc-branch-scope` from the dead-code/UI backlog after the row still said to audit `23004/23005/23006`.
 - Source-checked current source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle`: current source/stable/upstream keep stale disabled-state writes to `23004/23005/23006` while `RscMenu_Economy` declares `23002`, `23003` and `23008+`.
 - Release Chernarus no longer has those stale writes and adds dashboard IDC `23020`, but release Vanilla still carries the old writes. Updated owner pages and machine records to route this as a UI parity cleanup plus Economy smoke, not another discovery pass. No gameplay source changed.
+
+## 2026-06-05T20:35:00+02:00 - Codex additional - camp flag texture branch scope
+- Claimed `camp-flag-texture-branch-scope` from the towns/camps correctness backlog after the old row named current source debt but did not explain release/upstream scope.
+- Source-checked current source Chernarus and maintained Vanilla, stable `origin/master` `2cdf5fb8`, current `miksuu/master` `f532f706` and `origin/release/2026-06-feature-bundle` `3282ff3f`: current source/Vanilla, stable and Miksuu still set independent capture flag texture from `str _side` at `server_town_camp.sqf:135`; release Chernarus has the `0a1e6165` one-line `str _newSide` fix, but release Vanilla still uses `str _side`.
+- Rechecked repair-side state: `Server_HandleSpecial.sqf:243,246` changes camp `sideID` and broadcasts `CampCaptured` without a world-flag `setFlagTexture` refresh in all checked maintained roots.
+- Updated [Towns/camps/capture](Towns-Camps-And-Capture-Atlas), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Progress dashboard](Progress-Dashboard), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), `agent-status.json`, `agent-feature-status.jsonl`, `agent-knowledge.jsonl`, `agent-collaboration.json` and `agent-events.jsonl`. No gameplay source changed.
 
 ## 2026-06-05T23:59:55+02:00 - Codex - old-FPS provenance cleanup
 - Claimed `old-fps-provenance-cleanup` after a stale-status scan found [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison) still naming an older docs-only commit as the current Wasp source baseline.

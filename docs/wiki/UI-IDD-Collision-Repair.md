@@ -6,7 +6,7 @@ Combined UI cleanup route: [UI resource parity cleanup](UI-Resource-Parity-Clean
 
 All source paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
-Branch check 2026-06-05 after fresh fetch: current source, `origin/master` and latest `miksuu/master` keep both collision groups in Chernarus and maintained Vanilla. `origin/release/2026-06-feature-bundle` changes Chernarus `RscMenu_EASA` to `idd = 24000`, leaving Chernarus Economy at `23000`, but release Vanilla still keeps both EASA and Economy on `23000`. The `RscOverlay` / `OptionsAvailable` title collision on `10200` is still present in both release roots. Current mission source has no hard-coded `findDisplay 23000` or `findDisplay 10200` caller in `Missions` / `Missions_Vanilla`, so this remains a maintenance/debug/future-control risk rather than a proven live lookup bug.
+Branch check 2026-06-05: current source, `origin/master` and `miksuu/master` keep both collision groups in Chernarus and maintained Vanilla. `origin/release/2026-06-feature-bundle` changes Chernarus `RscMenu_EASA` to `idd = 24000`, leaving Chernarus Economy at `23000`, but release Vanilla still keeps both EASA and Economy on `23000`. The `RscOverlay` / `OptionsAvailable` title collision on `10200` is still present in both release roots. Current mission source has no hard-coded `findDisplay 23000` or `findDisplay 10200` caller in `Missions` / `Missions_Vanilla`, so this remains a maintenance/debug/future-control risk rather than a proven live lookup bug.
 
 ## What To Read
 
@@ -51,20 +51,6 @@ There is no standalone `Client/RHUD` subtree in the current source. RHUD is fold
 
 Wave Q added a separate title lifecycle-handle ownership finding. `EndOfGameStats` uses `idd = 90000` (`Rsc/Titles.hpp:532-533`), but it shares the same `onLoad`/`onUnload` helper scripts and therefore the same `uiNamespace["currentCutDisplay"]` key as `OptionsAvailable` (`Titles.hpp:539-540`). `Client/GUI/GUI_EndOfGameStats.sqf:13` cuts `EndOfGameStats`, then waits for and writes controls through `currentCutDisplay` at `:34-44` and `:86-93`. Meanwhile `Client/Client_UpdateRHUD.sqf:183-190` keeps its one-second loop alive and `_RHUDGetDisplay` can re-cut `OptionsAvailable` when the shared key is null (`:89-92`). This is a lifecycle handle collision even if all `idd` values are made unique.
 
-## Title Display Handle Branch Matrix
-
-This matrix is separate from the duplicate-IDD matrix above. It tracks the stored display-handle ownership problem: `OptionsAvailable`/RHUD/action icons and `EndOfGameStats` both use the same `currentCutDisplay` helpers.
-
-| Root / branch | OptionsAvailable / RHUD / action icons | EndOfGameStats | Practical meaning |
-| --- | --- | --- | --- |
-| Current docs/source Chernarus | `Rsc/Titles.hpp:170-171` calls `GUI_SetCurrentCutDisplay.sqf` / `GUI_ClearCurrentCutDisplay.sqf`; `Client_UpdateRHUD.sqf:89-92` and `updateavailableactions.fsm:225-230` read/write `currentCutDisplay`. | `Rsc/Titles.hpp:539-540` calls the same helpers; `GUI_EndOfGameStats.sqf:34-44,86-93` writes stat controls through `currentCutDisplay`. | Patch-ready. The lifecycle-handle collision remains in current source. |
-| Maintained Vanilla Takistan | Same helper/key shape in `Rsc/Titles.hpp:170-171,539-540`, `Client_UpdateRHUD.sqf:89-92`, `updateavailableactions.fsm:225-230` and `GUI_EndOfGameStats.sqf:34-44,86-93`. | Same. | Propagate deliberately after the source fix. |
-| Stable `origin/master` | Same in both maintained roots. | Same in both maintained roots. | No stable rescue. |
-| Latest `miksuu/master` after 2026-06-05 fetch | Same in both maintained roots. | Same in both maintained roots. | No upstream rescue. |
-| `origin/release/2026-06-feature-bundle` | Same in both maintained roots; release Chernarus line numbers shift slightly (`Client_UpdateRHUD.sqf:90-93`, `Titles.hpp:583-584` for endgame). | Same in both maintained roots. | Release still carries the handle collision even where Chernarus EASA's dialog ID was changed. |
-
-Repair this with a display-variable split before or alongside any title-display work: for example `currentActionHudDisplay` for `OptionsAvailable` and `currentEndgameStatsDisplay` for `EndOfGameStats`, or a helper that takes the key name explicitly. Keep this separate from the `idd` uniqueness pass so smoke failures can be traced cleanly.
-
 ## Why It Is A Risk
 
 In Arma 2 OA UI terms, duplicated `idd` makes `findDisplay 23000` or `findDisplay 10200` ambiguous when more than one matching display can exist or when future code assumes uniqueness.
@@ -92,7 +78,7 @@ Keep the first patch small:
 5. Keep title IDD cleanup separate from title display-variable cleanup.
 6. Split title display handles so `OptionsAvailable`/RHUD/action icons and `EndOfGameStats` do not share `currentCutDisplay`. Either add separate helper scripts/keys or make the helper accept the key name explicitly.
 7. Before reviving or deleting stale resource classes, check script targets and assets as well as IDs. Current source example: `RscMenu_Upgrade` points at missing `Client/GUI/GUI_Menu_Upgrade.sqf` and missing `Client\Images\wf_*.paa` upgrade icons (`Dialogs.hpp:2425-2428`, `:2634-2821`).
-8. If the minimal patch instead gates RHUD/action-icon recreation during endgame, still avoid making endgame stat rendering depend on an action-HUD-owned key.
+7. If the minimal patch instead gates RHUD/action-icon recreation during endgame, still avoid making endgame stat rendering depend on an action-HUD-owned key.
 
 Do not combine this with EASA balance generation or Economy authority changes. This is resource hygiene and future-proofing.
 

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T23:40:00+02:00",
+  "generatedAt": "2026-06-05T23:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed UI-IDD-Collision-Repair as the RHUD/endgame title-handle branch matrix: current source/Vanilla, stable/upstream and release all share currentCutDisplay between OptionsAvailable/RHUD/action icons and EndOfGameStats; patch still needs a title display-variable split or endgame gate plus UI smoke.",
+      "currentWork": "Refreshed Factory-And-Purchase-Systems-Atlas with the buy-menu price/key branch matrix: current source/Vanilla, stable and upstream keep selected-detail price drift, no level-0 UNIT_COST_MODIFIER reset and the driver-default profile key split; release/QoL branch fix only Chernarus selected-detail price.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {

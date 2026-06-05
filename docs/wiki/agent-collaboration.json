@@ -51,6 +51,27 @@
       "handoff": "Continue from fresh source evidence, owner requests or newly returned helper reports."
     },
     {
+      "lane": "camp-flag-texture-branch-scope",
+      "owner": "Codex-additional",
+      "status": "integrated",
+      "sourceScope": [
+        "docs/wiki/Towns-Camps-And-Capture-Atlas.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Wiki-Pruning-And-Relevance-Ledger.md",
+        "docs/wiki/agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_camp.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/FSM/server_town_camp.sqf",
+        "origin/master",
+        "miksuu/master",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Source-checked the camp flag texture drift across current source, maintained Vanilla, stable, Miksuu upstream and release.",
+        "Condensed the finding into the canonical towns/camps owner page plus compact status surfaces."
+      ],
+      "handoff": "When complete, leave this as patch-ready code-owner work: change independent capture flag texture to the new side and refresh camp repair flag texture, then smoke independent capture and repair."
+    },
+    {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
       "owner": "Codex-delegated",
       "status": "returned-harvested",
@@ -226,7 +247,8 @@
     "old-be-current-wasp-fps-opportunity-final-harvest",
     "july-update-route-sync",
     "commander-arty-smoke-lane-dashboard-sync",
-    "commander-arty-smoke-lane-collaboration-sync"
+    "commander-arty-smoke-lane-collaboration-sync",
+    "camp-flag-texture-branch-scope"
   ],
   "queuedReports": [],
   "lanes": [
