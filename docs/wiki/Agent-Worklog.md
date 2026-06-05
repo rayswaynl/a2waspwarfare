@@ -1,11 +1,26 @@
 # Agent Worklog
 
+## 2026-06-05T13:45:00+02:00 - Codex - Takistan FPV mirror sync
+
+- Integrated the wiki-side `july-takistan-airfield-fpv-drone` design note into the `docs/wiki/` mirror after the wiki rebase pulled remote commit `106f0f3`.
+- Copied [Takistan airfield FPV drone design](Takistan-Airfield-FPV-Drone-Design), `_Sidebar.md`, `llms.txt`, `agent-context.json`, [Progress dashboard](Progress-Dashboard), [Agent worklog](Agent-Worklog), `agent-events.jsonl` and current status files from the wiki checkout into the repo mirror.
+- Added the new page to `mkdocs.yml` under Community & Dev and refreshed [Navigation inventory and page status](Navigation-Inventory-And-Page-Status): `141` Markdown pages, `139` content pages, `110` sidebar pages, `119` MkDocs pages, `110` pages in both navs, `9` MkDocs-only archive pages and `20` neither-nav support pages.
+- No gameplay source changed; implementation remains future work on `dev/july-takistan-airfield-fpv-drone`.
+
 ## 2026-06-05T13:25:00+02:00 - Codex - neither-nav support closeout
 
 - Claimed `neither-nav-support-closeout` after the hidden owner/reference promotion left 20 neither-nav pages.
 - Updated [Navigation inventory and page status](Navigation-Inventory-And-Page-Status) with a support-only closeout table for the remaining pages: patch-ready handoffs, evidence ledgers/queues, agent instructions and analysis support.
 - Recorded in [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) that the remaining neither-nav set is intentional support material, not untriaged navigation drift.
 - Updated [Progress dashboard](Progress-Dashboard), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl`. No gameplay source changed.
+
+## 2026-06-05T13:20:00+02:00 - Codex - Takistan airfield FPV July design
+
+- Converted Steff's Takistan FPV questionnaire answers into [Takistan airfield FPV drone design](Takistan-Airfield-FPV-Drone-Design).
+- Created remote DEV branch `dev/july-takistan-airfield-fpv-drone` from `origin/master` for the July update candidate.
+- Updated [Progress dashboard](Progress-Dashboard), `_Sidebar.md`, `llms.txt`, `agent-context.json` and `agent-events.jsonl` so the design is discoverable.
+- Captured key owner decisions: neutral Takistan airfields, runway-edge capture placement rather than runway blockage, bunker-gated Drone Bay, `$50` per-player-cycle team income, UAV/EASA tier gates, one active drone per player, side-wide cap, center-boundary range kill, no base sniping, AA/radar counterplay and server-authoritative validation.
+- No gameplay source files changed.
 
 ## 2026-06-05T13:10:00+02:00 - Codex - hidden owner/reference nav promotion
 

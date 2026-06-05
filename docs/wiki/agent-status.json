@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T13:35:00+02:00",
+  "generatedAt": "2026-06-05T13:55:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Validated neither-nav support closeout; remaining 20 neither-nav pages are intentionally classified support material.",
+      "currentWork": "Validated Takistan FPV mirror sync; the wiki-only design page is now mirrored in docs/wiki and listed in MkDocs.",
       "nextExpectedOutput": "Continue future wiki backlog work from fresh source evidence, code-owner requests or new user direction."
     },
     "Codex-2": {
@@ -51,6 +51,12 @@
   },
   "laneSummary": [
     {
+      "lane": "takistan-fpv-mirror-sync",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Copied Takistan-Airfield-FPV-Drone-Design from the wiki into docs/wiki, added it to mkdocs.yml and refreshed navigation counts to 141 Markdown pages, 139 content pages, 110 sidebar pages, 119 MkDocs pages, 110 pages in both and 20 neither-nav support pages. No gameplay source changed."
+    },
+    {
       "lane": "neither-nav-support-closeout",
       "owner": "Codex",
       "status": "published-validated",
@@ -60,7 +66,7 @@
       "lane": "hidden-owner-reference-nav-promotion",
       "owner": "Codex",
       "status": "published-validated",
-      "output": "Added Core systems, Modules atlas, Server gameplay runtime atlas, Performance opportunity sweep, Player AI caps and role balance, Variable and naming conventions and Arma 2 OA external reference guide to both sidebar and MkDocs. Current counts: 109 sidebar pages, 118 MkDocs pages, 109 pages in both and 20 neither-nav support pages. No gameplay source changed."
+      "output": "Added Core systems, Modules atlas, Server gameplay runtime atlas, Performance opportunity sweep, Player AI caps and role balance, Variable and naming conventions and Arma 2 OA external reference guide to both sidebar and MkDocs. Current counts after Takistan sync: 110 sidebar pages, 119 MkDocs pages, 110 pages in both and 20 neither-nav support pages. No gameplay source changed."
     },
     {
       "lane": "mkdocs-primary-sidebar-parity",

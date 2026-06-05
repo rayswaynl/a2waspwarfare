@@ -47,6 +47,7 @@
   - [Victory and endgame atlas](Victory-And-Endgame-Atlas)
   - [Marker cleanup and restoration](Marker-Cleanup-Restoration-Systems-Atlas)
   - [Support specials and tactical modules](Support-Specials-And-Tactical-Modules-Atlas)
+  - [Takistan airfield FPV drone design](Takistan-Airfield-FPV-Drone-Design)
   - [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas)
   - [Construction logic list cleanup](Construction-Logic-List-Cleanup)
   - [Resistance supply scaffold](Resistance-Supply-Scaffold)

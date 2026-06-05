@@ -28,8 +28,10 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `takistan-fpv-mirror-sync` | Published / validated | Synced the wiki-only [Takistan airfield FPV drone design](Takistan-Airfield-FPV-Drone-Design) into `docs/wiki/`, added it to MkDocs Community & Dev navigation and refreshed navigation counts. No gameplay source changed. |
 | `neither-nav-support-closeout` | Published / validated | Classified the remaining 20 neither-nav pages as intentional support-only material: patch-ready handoffs, evidence ledgers/queues, agent instructions and analysis support. No gameplay source changed. |
-| `hidden-owner-reference-nav-promotion` | Published / validated | Promoted seven broad owner/reference pages from neither-nav support status into both sidebar and MkDocs: Core systems, Modules atlas, Server runtime, Performance opportunity sweep, Player AI caps, Variable conventions and Arma 2 OA external reference guide. Current counts: `109` sidebar pages, `118` MkDocs pages, `109` in both, `20` neither-nav support pages. No gameplay source changed. |
+| `july-takistan-airfield-fpv-drone` | Queued / design captured / dev branch created | Added [Takistan airfield FPV drone design](Takistan-Airfield-FPV-Drone-Design) from Steff's questionnaire answers. Scope: neutral Takistan airfields, runway-edge capture placement, bunker-gated Drone Bay, `$50` per-player-cycle team income, UAV/EASA tier gates, side/player caps, center-boundary range kill and server-authoritative purchase/spawn/range validation. Dev branch: `dev/july-takistan-airfield-fpv-drone`. No gameplay source changed by this dashboard note. |
+| `hidden-owner-reference-nav-promotion` | Published / validated | Promoted seven broad owner/reference pages from neither-nav support status into both sidebar and MkDocs: Core systems, Modules atlas, Server runtime, Performance opportunity sweep, Player AI caps, Variable conventions and Arma 2 OA external reference guide. Current counts after Takistan sync: `110` sidebar pages, `119` MkDocs pages, `110` in both, `20` neither-nav support pages. No gameplay source changed. |
 | `mkdocs-primary-sidebar-parity` | Published / validated | Added the four remaining primary sidebar-only pages to `mkdocs.yml`: PR cleanup lab, Headless client scaling, Dead/stale code register and Wiki pruning ledger. Navigation inventory now reports `102` pages in both navs, `0` sidebar-only pages and `9` MkDocs-only archive pages. No gameplay source changed. |
 | `archive-queue-continue-reading-closeout` | Published / validated | Added `## Continue Reading` routing to the two remaining queue/support pages and normalized the 9 imported Miksuu archive pages to archive-chain `Continue Reading` blocks. Recomputed missing count: `0`. No gameplay source changed. |
 | `continue-reading-owner-page-polish` | Published / validated | Added or normalized `## Continue Reading` blocks on 10 high-traffic/current owner pages: AI guide, architecture, mission parameters, join/disconnect, support specials, towns/camps, upgrades/research, marker cleanup, upstream commit intel and PR cleanup lab. Remaining gaps are archive/queue pages only. No gameplay source changed. |
@@ -53,7 +55,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` | Neither-nav support closeout is validated; continue from fresh source evidence or code-owner requests. |
+| Codex | Active | `documentation-finisher-loop` | Takistan FPV mirror sync is validated; continue from fresh source evidence or code-owner requests. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Coverage Ledger navigation is wired. Claude can self-select the next bounded source-backed review from the ledger or hardening backlog. |
 | Supported docs agents | Active | `research-catchup-synthesis-default-supported`, `relevance-pruning-and-archive-default-supported` | Two account-default supported high-reasoning helper chats are running catch-up synthesis and relevance pruning. The earlier named-model starts are treated as failed/non-evidence. |
@@ -83,6 +85,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
+| `takistan-fpv-mirror-sync` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
 | `neither-nav-support-closeout` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
 | `hidden-owner-reference-nav-promotion` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
 | `mkdocs-primary-sidebar-parity` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
@@ -117,6 +120,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 | # | Item | Dev branch | Scope | LOC estimate | Status | Validation gate |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Hosted Server FPS Loop Fix | `dev/july-update-hosted-server-fps-loop-fix` | Adopt/verify the DR-19 hosted/listen busy-spin fix for the July update target. Keep the low-risk early `!isDedicated` exit shape for FPS publisher loops; decide separately whether to consolidate the two FPS variables. | ~5-20 LOC for the loop guard; ~20-50 LOC if cleanup/consolidation is included. | Queued for July update. Remote dev branch created from `origin/master`. | Dedicated server still publishes `SERVER_FPS_GUI` / `WFBE_VAR_SERVER_FPS`; hosted/listen runs do not spin the FPS publisher loops; Chernarus and maintained Vanilla parity are named before release wording. |
+| 2 | Takistan Airfield FPV Drone Bay | `dev/july-takistan-airfield-fpv-drone` | Add neutral captured-airfield objectives on Takistan. Use runway-edge capture placement plus a bunker/camp-gated Drone Bay near each hangar; unlock player-funded FPV drones with UAV/EASA progression, one active drone per player, side-wide cap, center-map boundary kill, no base sniping and AA/radar counterplay. Normal aircraft hangar use stays ungated. | ~350-700 LOC prototype; ~1000-1800 LOC for a July-quality server-authoritative Takistan-only version, plus `mission.sqm` object edits. | Queued for July update. Remote dev branch created from `origin/master`; design captured from Steff questionnaire. | Takistan boot/capture/JIP smoke; economy smoke for `$50` per player per cycle; UAV/EASA gate smoke; server-side ownership/funds/cap/tier/range rejection tests; base-protection and AA/radar counterplay smoke. |
 
 ## Recently Closed / Reclassified Open Items
 
