@@ -112,6 +112,8 @@ This is the clearest "do not casually revive" feature. It is config-gated latent
 
 Detailed AI commander state, upgrade-worker and production/logistics readiness are now canonical in [AI commander autonomy audit](AI-Commander-Autonomy-Audit).
 
+Branch refresh 2026-06-06: release `7195b331` changes both maintained roots from a raw `Spawn UpdateSupplyTruck` into a warning/disabled branch, while `origin/feat/ai-commander` `c20ce153` only guards Chernarus and leaves Vanilla raw. Neither branch restores `Server\FSM\supplytruck.fsm`; use [AI commander autonomy audit](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix) as the branch matrix.
+
 Safe implementation shape:
 
 - Short cleanup: guard the gated branch with `!isNil "UpdateSupplyTruck"` and log a warning, or remove/disable the branch until an owner revives AI logistics.

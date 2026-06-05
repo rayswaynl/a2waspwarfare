@@ -114,6 +114,19 @@ Default posture nuance:
 - `Rsc/Parameters.hpp:92-97` gives the AI commander mission parameter default as `0`.
 - Therefore the branch is normally avoided by mission parameters/fallbacks, but it is still a live config trap if an admin enables truck supply and AI commander behavior.
 
+### AI Supply-Truck Branch Matrix
+
+Branch route `ai-supply-truck-branch-route` rechecked the maintained roots after release `7195b331` and `origin/feat/ai-commander` moved:
+
+| Branch / root | Evidence | Status |
+| --- | --- | --- |
+| Current docs/source Chernarus and maintained Vanilla | Both roots still comment out `UpdateSupplyTruck` at `Server/Init/Init_Server.sqf:36`, then spawn it at `:383` when truck supply and AI commanders are enabled. `Server/AI/AI_UpdateSupplyTruck.sqf:17` still executes missing `Server\FSM\supplytruck.fsm`. | Config-gated nil-code/FSM trap remains open in current source. |
+| Stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706` and `origin/perf/quick-wins` `0076040f` | Same compile-comment plus gated spawn shape; perf line numbers drift to `Init_Server.sqf:376-378`. No checked branch restores `supplytruck.fsm`. | No stable/upstream/perf rescue. |
+| Release `origin/release/2026-06-feature-bundle` `7195b331` | Chernarus and maintained Vanilla still keep the compile commented and the old worker script with missing FSM dependency, but the gated branch now initializes `wfbe_ai_supplytrucks` and logs a warning at `Init_Server.sqf:384-386` instead of spawning nil code. | Release carries a minimal safe-disable candidate in both maintained roots; it does not revive autonomous logistics. |
+| `origin/feat/ai-commander` `c20ce153` | Chernarus guards the spawn with `if (!isNil "UpdateSupplyTruck") then {[_side] Spawn UpdateSupplyTruck}` at `Init_Server.sqf:387-389`, but the compile remains commented and `supplytruck.fsm` remains absent. Maintained Vanilla on the same branch still has the raw `[_side] Spawn UpdateSupplyTruck` at `Init_Server.sqf:381-383`. | Branch-only partial guard. Do not treat the AI commander feature branch as a supply-truck revival or Vanilla propagation. |
+
+Patch direction: for a safety-only fix, prefer the release warning/disable shape in both current maintained roots so truck-supply plus AI commanders cannot call nil code. For a real logistics revival, design or restore a verified server-owned supply-truck loop/FSM and keep it separate from player-run supply helicopter work.
+
 ## Authority-Adjacent Commander Controls
 
 Some commander-facing systems are live but still client-led. Keep them out of the autonomy revival lane unless the owner intentionally bundles server-authority work.

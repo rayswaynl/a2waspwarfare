@@ -124,6 +124,33 @@
       "handoff": "Leave as owner-decision consistency work: decide Barracks-or-Gear versus Gear-only template semantics, then patch AddTemplate, FillTemplates and SaveTemplateProfile together in source Chernarus plus maintained Vanilla."
     },
     {
+      "lane": "ai-supply-truck-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/AI_UpdateSupplyTruck.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle@7195b331",
+        "origin/feat/ai-commander@c20ce153",
+        "docs/wiki/AI-Commander-Autonomy-Audit.md",
+        "docs/wiki/Abandoned-Feature-Revival-Review.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Branch-checked the config-gated AI supply-truck trap without changing gameplay source.",
+        "Documented release 7195b331 as a safe-disable/logging candidate in both maintained roots, not an autonomous logistics revival.",
+        "Documented feat/ai-commander as Chernarus-only guard coverage with Vanilla still raw and missing FSM still absent."
+      ],
+      "handoff": "Closed as docs-published. Future code owner should port the release warning/disable shape for safety, or design a real server-owned supply-truck loop/FSM and smoke truck supply plus AI commanders deliberately."
+    },
+    {
       "lane": "release-7195b331-status-refresh",
       "owner": "Codex-helper",
       "status": "published-validated",
@@ -693,6 +720,10 @@
     "resource-income-payout-branch-route",
     "release-7195b331-status-refresh",
     "factory-destroyed-purchase-refund-branch-route",
+    "source-fix-salvage-duplicate-prune",
+    "dead-code-parameter-duplicate-prune",
+    "gear-template-creation-gate-branch-route",
+    "ai-supply-truck-branch-route",
     "send-message-direct-compile-branch-route"
   ],
   "queuedReports": [],
@@ -708,6 +739,30 @@
       "suggestedOwner": "Codex-helper",
       "status": "published-validated",
       "summary": "Branch-checked DR-46 SEND_MESSAGE direct compile across current source, maintained Vanilla, stable, upstream, perf and release, then updated networking/status docs without gameplay source changes."
+    },
+    {
+      "lane": "gear-template-creation-gate-branch-route",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "Branch-checked gear-template creation/display/save gate alignment across current source, maintained Vanilla, stable, upstream, perf and release, then updated gear/status docs without gameplay source changes."
+    },
+    {
+      "lane": "ai-supply-truck-branch-route",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "AI commander autonomy owns the branch-checked route for config-gated AI supply-truck safe-disable versus real logistics revival."
+    },
+    {
+      "lane": "dead-code-parameter-duplicate-prune",
+      "suggestedOwner": "Codex",
+      "status": "published-validated",
+      "summary": "Pruned duplicate dead-code parameter rows and kept the actionable WFBE_C_AI_MAX and WFBE_C_UNITS_CLEAN_TIMEOUT findings single-sourced without gameplay source changes."
+    },
+    {
+      "lane": "source-fix-salvage-duplicate-prune",
+      "suggestedOwner": "Codex",
+      "status": "published-validated",
+      "summary": "Pruned the duplicate salvage cleanup queue row and kept the branch-checked construction route canonical without gameplay source changes."
     },
     {
       "lane": "factory-destroyed-purchase-refund-branch-route",

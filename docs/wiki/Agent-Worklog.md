@@ -14,6 +14,13 @@
 - Result: every checked maintained root/branch keeps AddTemplate accepting a template when the max item upgrade is within either `WFBE_UP_BARRACKS` or `WFBE_UP_GEAR`, FillTemplates displaying stored templates only against `WFBE_UP_GEAR`, and SaveTemplateProfile still filtering with undefined `_u_upgrade`.
 - Updated [Gear template profile filter](Gear-Template-Profile-Filter#creation-gate-branch-matrix), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
 
+## 2026-06-06T02:20:00+02:00 - Codex helper - AI supply-truck branch route
+
+- Claimed `ai-supply-truck-branch-route` from the abandoned AI logistics backlog.
+- Source-checked current source Chernarus, maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f`, release `origin/release/2026-06-feature-bundle` `7195b331` and `origin/feat/ai-commander` `c20ce153` for `Server/Init/Init_Server.sqf`, `Server/AI/AI_UpdateSupplyTruck.sqf`, config defaults and mission params.
+- Result: current source/Vanilla, stable, upstream and perf still comment out the `UpdateSupplyTruck` compile while the AI-commander/supply-system branch raw-spawns it and the helper still points at missing `Server\FSM\supplytruck.fsm`; release logs/disables the branch in both maintained roots; `feat/ai-commander` guards only Chernarus, leaving Vanilla raw and not reviving logistics.
+- Updated [AI commander autonomy](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix), [Abandoned feature revival](Abandoned-Feature-Revival-Review), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
+
 ## 2026-06-05T23:25:00+02:00 - Codex - Dead-code parameter duplicate prune
 
 - Claimed `dead-code-parameter-duplicate-prune` after a duplicate-key scan found `ai-max-visible-parameter-no-runtime-consumer` and `units-clean-timeout-visible-parameter-comment-only-consumer` listed twice in [Dead/stale code register](Dead-Code-And-Stale-Code-Register).
