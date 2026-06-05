@@ -2,7 +2,7 @@
 
 ## Status
 
-`hosted-server-fps-loop-sleep` is **branch-local patched / not on `origin/master`** as of 2026-06-03. `origin/master` still has the DR-19 loop shape (`serverFpsGUI.sqf:1-12`, `monitorServerFPS.sqf:1-8`) with `sleep 8` inside `if (isDedicated)`. This docs branch has early `if (!isDedicated) exitWith {};` guards in both publishers. Current release head `3282ff3f` keeps a single guarded Chernarus `serverFpsGUI.sqf` publisher while removing the redundant Chernarus `monitorServerFPS.sqf` path, but release Vanilla still has the old two-loop shape. Arma 2 OA smoke is still pending.
+`hosted-server-fps-loop-sleep` is **branch-local patched / not on `origin/master`** as of 2026-06-03. `origin/master` still has the DR-19 loop shape (`serverFpsGUI.sqf:1-12`, `monitorServerFPS.sqf:1-8`) with `sleep 8` inside `if (isDedicated)`. This docs branch has early `if (!isDedicated) exitWith {};` guards in both publishers. Current release head `7195b331` keeps a single guarded `serverFpsGUI.sqf` publisher in both maintained release roots and removes the redundant `Server/Module/serverFPS/monitorServerFPS.sqf` file; the compile remains commented in `Init_Server.sqf`. Arma 2 OA smoke is still pending.
 
 ## What I Read
 
@@ -51,7 +51,7 @@ Branch-local source/Vanilla validation done:
 
 - This docs branch's Chernarus `serverFpsGUI.sqf` has one early `!isDedicated` exit, one loop, one `sleep 8` and no inner `if (isDedicated)` branch.
 - This docs branch's Chernarus `monitorServerFPS.sqf` has one early `!isDedicated` exit, one loop, one `sleep 8` and no inner `if (isDedicated)` branch.
-- `origin/release/2026-06-feature-bundle` head `3282ff3f` has the guarded Chernarus `serverFpsGUI.sqf` shape at `:4-12` and comments `monitorServerFPS.sqf` out as redundant from Chernarus `Init_Server.sqf:594-596`; release Vanilla still keeps the old inner-`isDedicated` loops in `serverFpsGUI.sqf:1-10` and `monitorServerFPS.sqf:1-7`.
+- `origin/release/2026-06-feature-bundle` head `7195b331` has the guarded `serverFpsGUI.sqf` shape at `:4-12` in both maintained release roots. The redundant `Server/Module/serverFPS/monitorServerFPS.sqf` file is absent from the release tree and its compile remains commented in both release `Init_Server.sqf` files.
 - Vanilla Takistan has the same early-exit shape after the propagation run.
 - `dotnet run` in `Tools/LoadoutManager` now works from `work\a`; use `A2WASP_SKIP_ZIP=1` for propagation-only runs so missing `7za` remains non-blocking.
 - `git diff --check` passes.

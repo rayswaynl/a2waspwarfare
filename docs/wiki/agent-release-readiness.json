@@ -782,14 +782,16 @@
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf:1",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf:1",
         "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/GUI/serverFpsGUI.sqf:1",
-        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/serverFPS/monitorServerFPS.sqf:1"
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/serverFPS/monitorServerFPS.sqf:1",
+        "origin/release/2026-06-feature-bundle@7195b331 Chernarus/Vanilla Server/GUI/serverFpsGUI.sqf:4 guarded",
+        "origin/release/2026-06-feature-bundle@7195b331 Server/Module/serverFPS/monitorServerFPS.sqf absent in both maintained roots"
       ],
       "releaseGate": "Smoke dedicated FPS publishing and confirm hosted/listen servers do not spin the FPS publisher loops.",
       "branchStatus": {
         "stableMaster": "old-loop-shape-remains",
-        "releaseBranch": "chernarus-only-vanilla-old-loop-shape",
+        "releaseBranch": "current-release-7195b331-guarded-single-publisher-in-chernarus-and-vanilla",
         "docsSource": "chernarus-and-vanilla-early-exit",
-        "evidence": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+        "evidence": "Current-Source-Status-Snapshot.md#2026-06-05-refetch-delta"
       }
     },
     {

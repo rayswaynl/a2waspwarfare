@@ -1,5 +1,11 @@
 # Agent Worklog
 
+## 2026-06-06T03:35:00+02:00 - Codex - Hosted FPS release status refresh
+
+- Claimed `hosted-fps-release-status-refresh` after [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) and [Pending owner decisions](Pending-Owner-Decisions) still described release `3282ff3f` as Chernarus-only.
+- Rechecked current release head `7195b331`: both maintained release roots guard `Server/GUI/serverFpsGUI.sqf` with `if (!isDedicated) exitWith {};`, the redundant `Server/Module/serverFPS/monitorServerFPS.sqf` file is absent, and both release `Init_Server.sqf` files keep the monitor compile commented.
+- Updated owner/decision pages, release-readiness and feature/hardening machine rows plus the dashboard. No gameplay source changed.
+
 ## 2026-06-06T03:10:00+02:00 - Codex - Paratrooper release status refresh
 
 - Claimed `paratrooper-release-status-refresh` after [Current source snapshot](Current-Source-Status-Snapshot) and one Feature Status row still said the current release branch lacked `HandleParatrooperMarkerCreation`, despite the newer `7195b331` spot-check and source evidence.
