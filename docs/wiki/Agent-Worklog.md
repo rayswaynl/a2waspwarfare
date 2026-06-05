@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T19:55:00+02:00 - Codex - UI resource parity cleanup
+
+- Claimed `ui-resource-parity-cleanup` after Pauli's UI parity recommendation.
+- Source-checked stale `RscMenu_Upgrade`, Economy `23004/23005/23006` writes, EASA/Economy `23000` reuse and `RscOverlay`/`OptionsAvailable` `10200` reuse across current docs/source, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle`.
+- Added [UI resource parity cleanup](UI-Resource-Parity-Cleanup) as the canonical matrix: current docs/source and stable/upstream keep the old UI resource shape; release Chernarus removed the old upgrade class, moved EASA to `idd = 24000` and rewrote Economy around `23020`; release Vanilla still carries the old shape; title `10200` remains duplicated everywhere checked.
+- Condensed repeated branch-status wording in [Client UI systems atlas](Client-UI-Systems-Atlas), [Feature status register](Feature-Status-Register), [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [UI IDD collision repair](UI-IDD-Collision-Repair). No gameplay source changed.
+
 ## 2026-06-05T19:25:00+02:00 - Codex - Supply branch-scope status collapse
 
 - Claimed `supply-branch-scope-status-collapse` after Pauli recommended collapsing mixed supply status wording.

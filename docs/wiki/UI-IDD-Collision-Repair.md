@@ -2,6 +2,8 @@
 
 Status: confirmed UI/resource risk, patch-ready. This page owns the exact source evidence and safe repair plan for duplicated `idd` values in dialogs and title resources.
 
+Combined UI cleanup route: [UI resource parity cleanup](UI-Resource-Parity-Cleanup) is the canonical matrix for stale `RscMenu_Upgrade`, Economy missing-control writes and duplicate IDDs. Use this page for the duplicate-IDD patch details after that matrix tells you which branch/root still needs work.
+
 All source paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
 Branch check 2026-06-05: current source, `origin/master` and `miksuu/master` keep both collision groups in Chernarus and maintained Vanilla. `origin/release/2026-06-feature-bundle` changes Chernarus `RscMenu_EASA` to `idd = 24000`, leaving Chernarus Economy at `23000`, but release Vanilla still keeps both EASA and Economy on `23000`. The `RscOverlay` / `OptionsAvailable` title collision on `10200` is still present in both release roots. Current mission source has no hard-coded `findDisplay 23000` or `findDisplay 10200` caller in `Missions` / `Missions_Vanilla`, so this remains a maintenance/debug/future-control risk rather than a proven live lookup bug.
@@ -17,6 +19,7 @@ Branch check 2026-06-05: current source, `origin/master` and `miksuu/master` kee
 - `Client/GUI/GUI_Menu_Service.sqf`
 - `Client/Client_UpdateRHUD.sqf`
 - `Client/FSM/updateavailableactions.fsm`
+- [UI resource parity cleanup](UI-Resource-Parity-Cleanup)
 - [Client UI systems atlas](Client-UI-Systems-Atlas)
 - [Feature status register](Feature-Status-Register)
 
