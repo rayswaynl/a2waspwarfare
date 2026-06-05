@@ -2,7 +2,7 @@
 
 ## Status
 
-`client-skill-init-idempotency` is branch-local source + maintained Vanilla propagated and smoke pending as of 2026-06-03. This docs branch removes the second `Skill_Init.sqf` call in client init while preserving the immediate `WFBE_SK_FNC_Apply` call; `origin/master` and `origin/release/2026-06-feature-bundle` still have the duplicate init and should not be described as shipped. The earlier checkout-root blocker was removed by the LoadoutManager root-discovery patch, and propagation now works from this Codex checkout with `A2WASP_SKIP_ZIP=1`.
+`client-skill-init-idempotency` is branch-local source + maintained Vanilla propagated and smoke pending as of 2026-06-03. This docs branch removes the second `Skill_Init.sqf` call in client init while preserving the immediate `WFBE_SK_FNC_Apply` call; stable `origin/master` still has the duplicate init and should not be described as shipped there. Current release head `7195b331` now carries the same single-init shape in both maintained release roots, but Arma Soldier/non-Soldier/respawn smoke is still pending. The earlier checkout-root blocker was removed by the LoadoutManager root-discovery patch, and propagation now works from this Codex checkout with `A2WASP_SKIP_ZIP=1`.
 
 ## What I Read
 
@@ -12,7 +12,7 @@
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_PreRespawnHandler.sqf`
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf`
 - Vanilla Takistan `Client/Init/Init_Client.sqf` after LoadoutManager propagation.
-- `origin/master` and `origin/release/2026-06-feature-bundle` versions of the Chernarus client init file for branch status.
+- `origin/master` and `origin/release/2026-06-feature-bundle` versions of the Chernarus and maintained Vanilla client init files for branch status.
 
 ## Branch Status
 
@@ -23,7 +23,8 @@ Current branch status is:
 | This docs branch, source Chernarus | `Client/Init/Init_Client.sqf:547`, `:551`, `:571` | One `Skill_Init.sqf` call remains before default gear selection, and `(player) Call WFBE_SK_FNC_Apply` still runs later. |
 | This docs branch, maintained Vanilla Takistan | `Client/Init/Init_Client.sqf:547`, `:551`, `:571` | Vanilla matches the source Chernarus single-init shape after propagation. |
 | `origin/master`, source Chernarus | `Client/Init/Init_Client.sqf:561`, `:565`, `:585-586` | Unpatched on master: it still calls `Skill_Init.sqf` twice before applying skills. |
-| `origin/release/2026-06-feature-bundle` head `3282ff3f`, source Chernarus | `Client/Init/Init_Client.sqf:565`, `:589-590` | Still duplicates the init on the release branch too. Maintained release Vanilla also duplicates at `:561`/`:585-586`. |
+| `origin/release/2026-06-feature-bundle` head `3282ff3f`, source Chernarus | `Client/Init/Init_Client.sqf:565`, `:589-590` | Historical release spot-check: still duplicated the init. Superseded by current release head `7195b331`. |
+| `origin/release/2026-06-feature-bundle` head `7195b331`, Chernarus and maintained Vanilla | `Client/Init/Init_Client.sqf:564`, `:587` | Current release head now has one `Skill_Init.sqf` call followed by `WFBE_SK_FNC_Apply` in both maintained roots. Arma smoke remains pending. |
 | Shared skill init module | `Client/Module/Skill/Skill_Init.sqf:10`, `:40-49` | Compiles `WFBE_SK_FNC_Apply`, sets `WFBE_SK_V_Type`, and multiplies local `WFBE_C_PLAYERS_AI_MAX` by `1.5` for Soldier class. |
 | Shared common constant | `Common/Init/Init_CommonConstants.sqf:243` | Default `WFBE_C_PLAYERS_AI_MAX` is `16`. |
 | Respawn path | `Client/Functions/Client_PreRespawnHandler.sqf:5` | Respawn reapply calls `WFBE_SK_FNC_Apply` without rerunning `Skill_Init.sqf`. |

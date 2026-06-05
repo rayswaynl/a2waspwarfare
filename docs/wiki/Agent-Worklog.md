@@ -7,6 +7,12 @@
 - Result: every checked maintained root/branch keeps direct `SEND_MESSAGE` PVEH registration, receiver-side payload-text `call compile` when the multi-language flag is true, and the same helper compile before `missionNamespace setVariable` / `publicVariable`.
 - Updated [Public variable channel index](Public-Variable-Channel-Index#send_message-direct-compile-branch-matrix), [Networking](Networking-And-Public-Variables), [Hardening roadmap](Hardening-Implementation-Roadmap), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
 
+## 2026-06-06T02:45:00+02:00 - Codex - Client skill release status refresh
+
+- Claimed `client-skill-release-status-refresh` after [Client skill init idempotency](Client-Skill-Init-Idempotency) and machine rows still described `origin/release/2026-06-feature-bundle` as duplicate-init despite the newer `7195b331` release head.
+- Rechecked current source, stable `origin/master` and release `7195b331`: docs/source Chernarus and maintained Vanilla still have one `Skill_Init.sqf` call at `Client/Init/Init_Client.sqf:547` plus `WFBE_SK_FNC_Apply` at `:571`; stable still duplicates at `:561` and `:585`; release `7195b331` has one `Skill_Init.sqf` call at `:564` and apply at `:587` in both maintained roots.
+- Updated [Client skill init idempotency](Client-Skill-Init-Idempotency), [Current source snapshot](Current-Source-Status-Snapshot), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), release/feature machine rows and the dashboard. No gameplay source changed.
+
 ## 2026-06-06T02:25:00+02:00 - Codex helper - Gear template creation gate branch route
 
 - Claimed `gear-template-creation-gate-branch-route` from the gear-template owner-decision backlog.

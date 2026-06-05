@@ -762,9 +762,9 @@
       "releaseGate": "Smoke Soldier/non-Soldier AI caps and respawn skill reapply.",
       "branchStatus": {
         "stableMaster": "duplicate-skill-init-remains",
-        "releaseBranch": "duplicate-skill-init-remains-in-chernarus-and-vanilla",
+        "releaseBranch": "current-release-7195b331-single-init-in-chernarus-and-vanilla",
         "docsSource": "single-init-in-chernarus-and-vanilla",
-        "evidence": "Current-Source-Status-Snapshot.md#2026-06-03-branch-matrix"
+        "evidence": "Current-Source-Status-Snapshot.md#2026-06-05-refetch-delta"
       }
     },
     {
