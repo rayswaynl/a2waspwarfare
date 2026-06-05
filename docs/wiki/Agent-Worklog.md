@@ -20,6 +20,13 @@ When an old entry disagrees with a newer source-checked page or supersession rec
 - Result: current source/Vanilla, stable and upstream still carry selected-detail price drift, no level-0 `UNIT_COST_MODIFIER` reset and the uppercase/lowercase driver-default profile key split. Release/QoL branch fix only Chernarus selected-detail price; maintained Vanilla, modifier reset and driver key remain open.
 - Refreshed [Factory and purchase systems](Factory-And-Purchase-Systems-Atlas#buy-menu-price-and-driver-key-branch-matrix) as the matrix and condensed [Feature status](Feature-Status-Register), [Client UI systems](Client-UI-Systems-Atlas), [BuyMenu EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit) and [Source fix propagation queue](Source-Fix-Propagation-Queue). No gameplay source changed.
 
+## 2026-06-05T23:20:00+02:00 - Codex-helper - Resistance patrol latch branch route
+
+- Claimed `resistance-patrol-latch-branch-route` from the AI/town lifecycle backlog.
+- Source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master`, `origin/perf/quick-wins` and `origin/release/2026-06-feature-bundle` for `server_town_ai.sqf` and `server_patrols.sqf`.
+- Result: current source/Vanilla, stable `origin/master` and Miksuu upstream still carry the `server_patrols.sqf` `while {!WFBE_GameOver || _team_alive}` latch hazard; `perf/quick-wins` and release Chernarus use `&&`, but maintained Vanilla still carries the old loop.
+- Refreshed [Towns/camps/capture](Towns-Camps-And-Capture-Atlas#resistance-patrol-branch-matrix) as the branch/root matrix and condensed [AI runtime](AI-Runtime-HC-Loop-Map), [Feature status](Feature-Status-Register) and [Source fix propagation queue](Source-Fix-Propagation-Queue). No gameplay source changed.
+
 ## 2026-06-05T23:15:00+02:00 - Codex - Construction SmallSite logic branch route
 
 - Claimed `construction-smallsite-logic-branch-route` from the patch-ready construction backlog.

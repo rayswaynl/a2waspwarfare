@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-05T17:12:13+02:00",
+  "generatedAt": "2026-06-05T23:20:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -248,7 +248,8 @@
     "july-update-route-sync",
     "commander-arty-smoke-lane-dashboard-sync",
     "commander-arty-smoke-lane-collaboration-sync",
-    "camp-flag-texture-branch-scope"
+    "camp-flag-texture-branch-scope",
+    "resistance-patrol-latch-branch-route"
   ],
   "queuedReports": [],
   "lanes": [

@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Refreshed Factory-And-Purchase-Systems-Atlas with the buy-menu price/key branch matrix: current source/Vanilla, stable and upstream keep selected-detail price drift, no level-0 UNIT_COST_MODIFIER reset and the driver-default profile key split; release/QoL branch fix only Chernarus selected-detail price.",
+      "currentWork": "Refreshed the newest buy-menu price/key and resistance patrol latch branch matrices. Buy-menu status is centralized in Factory-And-Purchase-Systems-Atlas; patrol latch status is centralized in Towns-Camps-And-Capture-Atlas with current source/Vanilla still needing the && loop-exit fix plus Vanilla propagation.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {

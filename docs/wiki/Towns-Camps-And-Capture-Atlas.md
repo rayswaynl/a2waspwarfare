@@ -191,6 +191,21 @@ When inactive long enough, it clears active state and deletes town teams/vehicle
 
 Resistance patrols have a separate lifecycle trap. `server_town_ai.sqf:226-230` starts `server_patrols.sqf` only when `wfbe_patrol_enabled` is true and `wfbe_patrol_active` is false, then immediately latches `wfbe_patrol_active = true`. The patrol worker uses `while {!WFBE_GameOver || _team_alive}` at `server_patrols.sqf:26`, so during a normal running match the loop condition stays true even after the patrol dies. The reset at `server_patrols.sqf:71-72` is therefore not reached until game-over conditions permit exit. Treat patrol respawn as effectively blocked after first launch until this lifecycle condition is patched.
 
+### Resistance Patrol Branch Matrix
+
+Checked 2026-06-05 after fetching `origin` and Miksuu upstream.
+
+| Root / branch | `server_town_ai.sqf` launch shape | `server_patrols.sqf` loop | Status |
+| --- | --- | --- | --- |
+| Current docs/source Chernarus `HEAD` `732d408c` | Latches `wfbe_patrol_active` before `execVM` at `:227-230`. | Still `while {!WFBE_GameOver || _team_alive}` at `:26`; reset remains after loop at `:71-72`. | Source-unpatched. |
+| Current maintained Vanilla Takistan `HEAD` `732d408c` | Same launch/latch at `:227-230`. | Same `||` loop and post-loop reset at `:26`, `:71-72`. | Vanilla source-unpatched. |
+| Stable `origin/master` `2cdf5fb8` | Same launch/latch in both maintained roots at `:232-235`. | Same `||` loop and post-loop reset in both maintained roots at `:26`, `:71-72`. | Stable-unpatched. |
+| Miksuu upstream `miksuu/master` `f532f706` | Same launch/latch in both maintained roots at `:276-279`. | Same `||` loop and post-loop reset in both maintained roots at `:26`, `:71-72`. | Upstream still carries the latch hazard; the newer town-capture reset does not fix patrol relaunch. |
+| `origin/perf/quick-wins` `0076040f` | Chernarus keeps the same latch before launch at `:232-235`; Vanilla keeps the old shape. | Chernarus changes the loop to `while {!WFBE_GameOver && _team_alive}` at `:26`; Vanilla still uses `||`. | Chernarus-only fix candidate; not propagated to maintained Vanilla. |
+| `origin/release/2026-06-feature-bundle` `3282ff3f` | Chernarus and Vanilla keep the same latch before launch at `:232-235`. | Chernarus uses `&&` at `:26`; Vanilla still uses `||` at `:26`. | Release branch is Chernarus-only for this fix. |
+
+Practical patch rule: port or recreate the `&&` loop exit in source Chernarus, propagate maintained Vanilla, and smoke patrol launch, patrol death, `wfbe_patrol_active` reset / relaunch, and game-over cleanup. Keep this separate from the adjacent `server_town_patrol.sqf` worker until both loops are reviewed together.
+
 ## Upstream Miksuu Town-Defense Diagnostics
 
 Current [Miksuu upstream commit intel](Upstream-Miksuu-Commit-Intel) found `miksuu/master` ahead of `rayswaynl/master` by a focused town-defense diagnostics batch as of 2026-06-03. The key Chernarus commit is [`913ecdf6`](https://github.com/Miksuu/a2waspwarfare/commit/913ecdf6b55698ad8ea5de70dc1ecb33193b17ce), followed by Takistan propagation in [`d5bfe3a2`](https://github.com/Miksuu/a2waspwarfare/commit/d5bfe3a26d677d84c49188abe8d92c03b72f049f).
@@ -239,7 +254,7 @@ The supply mission code later reads/writes `LastSupplyMissionRun` with a differe
 | --- | --- | --- | --- |
 | Patch-ready | Town AI inactivity cleanup can delete a town-AI vehicle with a player passenger/crew member aboard if the player is not group leader. | `server_town_ai.sqf:211-216` | [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) |
 | Patch-ready / partial release Chernarus fix | Current source/Vanilla, stable and current Miksuu upstream set independent camp-capture world flags to the old owner; release Chernarus fixes that one line, but release Vanilla and repair-side flag refresh remain open. | Current source/Vanilla `server_town_camp.sqf:132,135`; `Server_HandleSpecial.sqf:243,246`; release Chernarus commit `0a1e6165`; release Vanilla `server_town_camp.sqf:135` | This page, [Feature status](Feature-Status-Register) |
-| Patch-ready | Resistance patrols can stay latched active after the patrol dies because the worker loop runs while the game is not over, and `wfbe_patrol_active` is reset only after the loop exits. | `server_town_ai.sqf:226-230`; `server_patrols.sqf:26,71-72` | This page, [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) |
+| Patch-ready | Resistance patrols can stay latched active after the patrol dies because the worker loop runs while the game is not over, and `wfbe_patrol_active` is reset only after the loop exits. Branch check 2026-06-05: current source/Vanilla, stable and Miksuu upstream still carry the `||` loop; `perf/quick-wins` and release Chernarus use `&&`, but maintained Vanilla still needs propagation. | `server_town_ai.sqf:226-230`; `server_patrols.sqf:26,71-72`; branch matrix above | This page, [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) |
 | Upstream candidate | Miksuu's latest `master` adds focused town-defense diagnostics plus `grpNull`/`objNull` creation guards and Vanilla propagation; `e4be1958` additionally clears previous-side active town-AI state when a town is captured so the new owner can spawn occupation teams. | [`913ecdf6`](https://github.com/Miksuu/a2waspwarfare/commit/913ecdf6b55698ad8ea5de70dc1ecb33193b17ce), [`d5bfe3a2`](https://github.com/Miksuu/a2waspwarfare/commit/d5bfe3a26d677d84c49188abe8d92c03b72f049f), [`e4be1958`](https://github.com/Miksuu/a2waspwarfare/commit/e4be1958668ade647dfec8a098a4743b4131f511) | [Miksuu upstream commit intel](Upstream-Miksuu-Commit-Intel) |
 | Patch-ready | Supply mission cooldown key casing differs between town init and supply mission code. | `Init_Town.sqf:35`; supply pages trace `LastSupplyMissionRun` | [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) |
 | Authority gap | Town and camp capture bounties are awarded client-side after server capture broadcasts. | `TownCaptured.sqf:37-81`; `CampCaptured.sqf:19-40` | [Server authority map](Server-Authority-Migration-Map), [Feature status](Feature-Status-Register) |
