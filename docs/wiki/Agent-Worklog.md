@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T23:50:00+02:00 - Codex-helper - Auto-wall toggle scope branch route
+
+- Claimed `auto-wall-toggle-scope-branch-route` from the construction/workflow hardening backlog.
+- Source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master`, `origin/perf/quick-wins` and `origin/release/2026-06-feature-bundle` for `isAutoWallConstructingEnabled`, `RequestAutoWallConstructinChange`, CoIn `User14` toggle handling, and SmallSite/MediumSite consumers.
+- Result: every checked maintained root/branch keeps the same single global auto-wall state. `perf/quick-wins` and release do not rescue this lane; release Chernarus only shifts the common-init line by one.
+- Refreshed [Construction and CoIn](Construction-And-CoIn-Systems-Atlas) as the canonical branch route and condensed [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger) and machine records. No gameplay source changed.
+
 ## 2026-06-05T23:35:00+02:00 - Codex-helper - Visible parameter runtime-consumer branch route
 
 - Claimed `visible-parameter-runtime-consumer-branch-route` as a documentation-only cleanup lane.

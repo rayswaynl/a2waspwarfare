@@ -97,6 +97,30 @@
       "handoff": "Closed as docs-published. Future code owner should decide whether to wire, hide, rename or historical-label WFBE_C_AI_MAX and WFBE_C_UNITS_CLEAN_TIMEOUT, then smoke host parameter display, player AI cap UI/RHUD, corpse cleanup and empty-vehicle cleanup."
     },
     {
+      "lane": "auto-wall-toggle-scope-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/CoIn/coin_interface.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestAutoWallConstructinChange.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_SmallSite.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_MediumSite.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "docs/wiki/Construction-And-CoIn-Systems-Atlas.md",
+        "docs/wiki/Feature-Status-Register.md"
+      ],
+      "outputs": [
+        "Branch-checked global auto-wall toggle scope without changing gameplay source.",
+        "Condensed repeated auto-wall wording into Construction and CoIn, Feature Status, Source Fix Propagation Queue, pruning ledger and machine records."
+      ],
+      "handoff": "Closed as docs-published. Future code owner should decide whether auto-wall is a global match switch or side/requester preference, then label or key/validate the state and smoke two players/sides toggling before SmallSite and MediumSite construction."
+    },
+    {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
       "owner": "Codex-delegated",
       "status": "returned-harvested",
@@ -274,7 +298,8 @@
     "commander-arty-smoke-lane-dashboard-sync",
     "commander-arty-smoke-lane-collaboration-sync",
     "camp-flag-texture-branch-scope",
-    "resistance-patrol-latch-branch-route"
+    "resistance-patrol-latch-branch-route",
+    "auto-wall-toggle-scope-branch-route"
   ],
   "queuedReports": [],
   "lanes": [
@@ -289,6 +314,12 @@
       "suggestedOwner": "Codex-helper",
       "status": "published-validated",
       "summary": "Branch-checked visible mission parameters with missing/comment-only runtime consumers and updated canonical docs without gameplay source changes."
+    },
+    {
+      "lane": "auto-wall-toggle-scope-branch-route",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "Branch-checked the global auto-wall toggle scope and updated construction/status docs without gameplay source changes."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
