@@ -16,6 +16,8 @@ Mission parameter/config evidence is captured by `docs/analysis/dead-code-parame
 
 SQF reachability evidence is captured by `docs/analysis/dead-code-sqf-reachability-scan.ps1`, with the latest output in `docs/analysis/dead-code-sqf-reachability-scan.json`.
 
+Mission-copy divergence evidence is captured by `docs/analysis/dead-code-mission-copy-divergence-scan.ps1`, with the latest output in `docs/analysis/dead-code-mission-copy-divergence-scan.json`.
+
 ## Scan Snapshot
 
 Latest local scan:
@@ -94,6 +96,20 @@ Latest SQF reachability scan:
 | Biggest raw lead buckets | 170 function-library files, 164 config-data files, 46 module scripts, 23 server scripts |
 | Generated artifact | `docs/analysis/dead-code-sqf-reachability-scan.json` |
 
+Latest mission-copy divergence scan:
+
+| Item | Value |
+| --- | --- |
+| Mission roots scanned | 9: source Chernarus, Vanilla Takistan and 7 modded roots |
+| Text files scanned | 2767 |
+| Unique mission-relative paths | 690 |
+| Identical copied paths | 548 |
+| Diverged copied paths | 139 |
+| Single-root-only paths | 3, all Vanilla-only artillery config files |
+| Conflict-marker files / path groups | 18 files / 17 mission-relative path groups |
+| Source Chernarus vs Vanilla Takistan | 687 paths compared: 670 identical, 17 diverged |
+| Generated artifact | `docs/analysis/dead-code-mission-copy-divergence-scan.json` |
+
 Scanner caveats:
 
 - The scanner intentionally finds leads, not final truth.
@@ -107,6 +123,8 @@ Scanner caveats:
 - Parameter scans cannot prove dynamic formatted variable reads on exact names. The economy start parameters look readless in exact-name scans, but `Server/Init/Init_Server.sqf` and player-connect code read them through `Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side]` and `Format ["WFBE_C_ECONOMY_SUPPLY_START_%1", _side]`.
 - SQF reachability scans cannot prove dynamic `addAction`, `missionNamespace getVariable`, `Format` or generated path usage. Treat `Client/Module/Skill/Skill_*.sqf`, `Server/Construction/Construction_*Site.sqf`, config arrays and mission entrypoints as source-check leads, not dead files.
 - Baseline and modded source can legitimately differ. Example: source Chernarus/Vanilla IRS warning helpers are unreferenced after inline warning logic was added, while the conflict-marked Napf IRS file still contains old helper calls.
+- Mission-copy divergence does not automatically mean dead code. Source Chernarus vs Vanilla Takistan differences are often map/generated differences such as help text, database map id, Takistani resistance units, start vehicles, `mission.sqm`, artillery config and `version.sqf`.
+- Modded-copy divergence is a release-readiness warning. Current tooling does not package or regenerate `Modded_Missions`, so drift there should be quarantined until the owner chooses a maintained-fork or regenerate-from-source policy.
 
 ## Classification Rules
 
@@ -130,6 +148,8 @@ Scanner caveats:
 | `baseline-unreferenced-modded-live-split` | A helper is unreachable in maintained source/Vanilla but still appears in stale or modded sources. | Do not delete globally until modded branch policy is chosen. |
 | `dynamic-path-false-positive` | A static path scan cannot see runtime path construction or arrays of script paths. | Add guardrails and source-check the dynamic owner before classifying. |
 | `tooling-owned-dormant-hook` | Runtime hook is disabled, but an external tool still owns or rewrites the file. | Do not delete until tooling contract is redesigned. |
+| `modded-copy-quarantine` | Old modded mission copies differ from source/Vanilla and are outside the current packaging/regeneration path. | Do not ship or use as code truth until regenerated or explicitly maintained. |
+| `source-generated-map-specific-divergence` | Source Chernarus and Vanilla Takistan differ only in map/terrain/generated data. | Keep documented as intentional; do not flatten these differences during cleanup. |
 
 ## Current Findings
 
@@ -140,7 +160,7 @@ Scanner caveats:
 | `stale-rscmenu-upgrade-missing-onload` | Broken stale UI class | `Rsc/Dialogs.hpp:2425`, `:2428` keep `RscMenu_Upgrade` with missing `Client/GUI/GUI_Menu_Upgrade.sqf`; the UI/Rsc scan confirms this is the only `RscMenu_*` class without literal `createDialog` calls and the handler target is missing across source, Vanilla and modded copies. | Search branch callers, then remove/alias to the maintained `WFBE_UpgradeMenu` / `GUI_UpgradeMenu.sqf` path. |
 | `mash-marker-relay-orphaned` | Orphaned partial feature | Server compiles `MASHMarker.sqf`; client receiver compile is commented at `Client/Init/Init_Client.sqf:132`; sender/receiver PV channels do not form a maintained Chernarus loop. | Decide retire vs revive. MASH tents are not dead. |
 | `latent-aibuyunit-server-buy-worker` | Latent revive candidate | `Server/Init/Init_Server.sqf:10` compiles `AIBuyUnit`, but stable source search finds no caller; `Server_BuyUnit.sqf` is an AI/team worker. | Do not delete casually. Needed if AI commander production is revived. |
-| `modded-mission-conflict-markers` | Broken modded mission sources | 18 files under `Modded_Missions` contain real `<<<<<<<`, `=======`, `>>>>>>>` markers. | Resolve before any modded release. Do not blindly delete sections. |
+| `modded-mission-conflict-markers` | Broken modded mission sources | 18 files under `Modded_Missions` contain real `<<<<<<<`, `=======`, `>>>>>>>` markers; the mission-copy divergence scan groups them into 17 mission-relative paths, including Eden `Skill_Apply.sqf`, Lingor `Client_UpdateRHUD.sqf`, Napf `description.ext` and multiple root/config files. | Resolve before any modded release. Do not blindly delete sections. |
 | `unitcaching-commented-absent-scaffold` | Retired commented reference | `description.ext:37` comments `scripts\unitCaching\description.ext`; the folder is absent. | Safe comment cleanup or keep as abandoned optimization note. |
 | `common-handlebombs-commented-missing` | Retired commented reference | `Common/Init/Init_Common.sqf:11` comments missing `Common_HandleBombs.sqf`. | Safe comment cleanup; live IRS/missile systems are separate. |
 | `legacy-config-defenses-commented-missing` | Retired commented reference | Defense files call live `Config_Defenses_Towns.sqf` and retain commented old `Config_Defenses.sqf` calls. | Safe comment cleanup after branch search. |
@@ -153,6 +173,21 @@ Scanner caveats:
 | `generated-version-sqf-clean-checkout-risk` | Generated-file contract risk | Mission entrypoints include `version.sqf`; LoadoutManager generates/excludes it. | Keep includes; validate generation workflow on clean checkout. |
 | `rsc-clickabletext-soundpush-malformed` | Stale or malformed resource config | `Rsc/Ressources.hpp:556` has `soundPush[] = {, 0.2, 1};` in source and modded copies. | Replace with valid value only after config/dialog smoke. |
 | `modded-packaging-disabled-by-tooling` | Deferred release scope | `Tools/LoadoutManager/ZipManager.cs:16` packages `Missions` and `Missions_Vanilla`; `SqfFileGenerator.cs:133` says add modded maps later. | Keep disabled until conflict/missing-reference checks pass, or archive old modded roots. |
+
+## Mission Copy Divergence Findings
+
+These are source-interpreted findings from the mission-copy divergence scan. The purpose is not to make every mission copy byte-identical; it is to show where a future cleanup or hardening patch must propagate and where old copies should be quarantined.
+
+| ID | Classification | Evidence | Action |
+| --- | --- | --- | --- |
+| `source-vanilla-map-specific-divergence-guardrail` | Source/generated map-specific divergence | Source Chernarus and Vanilla Takistan compare 687 mission-relative paths: 670 are byte-identical and 17 diverge. Source checks show representative divergences are intentional map/generated data: help title says Chernarus vs Takistan (`GUI_Menu_Help.sqf:149`), database map id is `SET_MAP 1` vs `2` (`Init_Server.sqf:613`), `version.sqf` has player count/name flags (`:7-8`), `WASP/unsort/StartVeh.sqf:1,15-16` uses terrain-specific start vehicles, and the remaining single-root-only paths are Vanilla-only artillery configs referenced by Takistan root configs. | Do not flatten these differences during dead-code cleanup. Treat non-map logic files that diverge outside this small set as propagation-review candidates. |
+| `modded-mission-copy-drift-quarantine` | Modded copy quarantine | The scan found 139 diverged mission-relative paths across 9 roots; high-fanout drift includes runtime/UI/PVF/FSM paths such as `Client\Client_EndGame.sqf`, `Client\Client_UpdateRHUD.sqf`, `Client/GUI/GUI_Menu_Command.sqf`, `Client/PVFunctions/HandleSpecial.sqf`, `Server/Init/Init_Server.sqf`, `Server/Functions/Server_HandleSpecial.sqf` and `Common/Functions/Common_OnUnitKilled.sqf`. `ZipManager.cs:16` packages only `Missions` and `Missions_Vanilla`, while `SqfFileGenerator.cs:131-133` comments modded writes with a TODO to add them back later. | Keep `Modded_Missions` out of code truth and release claims until an owner either regenerates them from hardened source or maintains them as explicit forks with separate audits. |
+
+Source-checked false positives and guardrails from this pass:
+
+- Vanilla-only `Common/Config/Core_Artillery/Artillery_TKA.sqf`, `Artillery_TKGUE.sqf` and `Artillery_US.sqf` are not automatically dead: Takistan root configs actively compile the OA/CO artillery config family.
+- Source Chernarus vs Vanilla Takistan `mission.sqm` divergence is expected because editor objects, markers and playable slots are map-specific.
+- `version.sqf` divergence is expected when generated correctly. Chernarus currently carries `WF_MAXPLAYERS 55` and `WF_MISSIONNAME "[55] Warfare V48 Chernarus"`; Vanilla Takistan carries `WF_MAXPLAYERS 61` and `WF_MISSIONNAME "[61] Warfare V48 Takistan"`.
 
 ## SQF Reachability Findings
 
@@ -240,6 +275,7 @@ Source-checked false positives from this pass:
 | Priority | Work | Why |
 | --- | --- | --- |
 | P0 | Resolve or archive modded mission conflict markers before re-enabling modded packaging. | Raw merge markers are hard breakage if those missions are shipped. |
+| P0 | Pick a policy for modded mission drift before using modded roots as implementation evidence. | The divergence scan shows runtime/PVF/UI/server files have forked across old modded roots while tooling no longer regenerates or packages them. |
 | P0 | Verify and fix/remove stale `RscMenu_Upgrade`. | A dialog `onLoad` points at a missing file, so any live caller can break player UI. |
 | P1 | Decide MASH marker relay fate. | It has real PV wiring residue and could be useful, but it is currently half registered. |
 | P1 | Keep `AIBuyUnit` latent until AI commander production is intentionally merged or retired. | It is dead-looking on stable but valuable for AI commander work. |
@@ -322,6 +358,12 @@ Run the SQF reachability scan:
 .\docs\analysis\dead-code-sqf-reachability-scan.ps1
 ```
 
+Run the mission-copy divergence scan:
+
+```powershell
+.\docs\analysis\dead-code-mission-copy-divergence-scan.ps1
+```
+
 Validate the machine-readable register:
 
 ```powershell
@@ -331,6 +373,7 @@ Get-Content .\docs\analysis\dead-code-pv-channel-scan.json | ConvertFrom-Json | 
 Get-Content .\docs\analysis\dead-code-ui-rsc-scan.json | ConvertFrom-Json | Out-Null
 Get-Content .\docs\analysis\dead-code-parameter-scan.json | ConvertFrom-Json | Out-Null
 Get-Content .\docs\analysis\dead-code-sqf-reachability-scan.json | ConvertFrom-Json | Out-Null
+Get-Content .\docs\analysis\dead-code-mission-copy-divergence-scan.json | ConvertFrom-Json | Out-Null
 ```
 
 Useful manual follow-up scans:
@@ -343,6 +386,7 @@ rg -n "WFBE_C_AI_MAX|WFBE_C_UNITS_CLEAN_TIMEOUT|WFBE_C_UNITS_BODIES_TIMEOUT|WFBE
 rg -n "RscMenu_EASA|RscMenu_Economy|RscOverlay|OptionsAvailable|idd\s*=\s*23000|idd\s*=\s*10200" Missions Missions_Vanilla Modded_Missions
 rg -n "ICBM_launched|WFBE_RequestVehicleLock|WFBE_RequestSpecial|WFBE_RequestTeamUpdate|WFBE_ChangeScore|WFBE_LocalizeMessage|WFBE_RequestStructure" Missions Missions_Vanilla Modded_Missions
 rg -n "AI_UpdateSupplyTruck|UpdateSupplyTruck|groupsMonitor|Common_ModifyAirVehicle|Common_HandleATReloadVehicle|IRS_ShowWarning|IRS_PlayWarningSound|Reaktiv_Init|Client_TaskSystem" Missions Missions_Vanilla Modded_Missions
+rg -n "Warfare WASP-AWESOME EDITION|SET_MAP|WF_MAXPLAYERS|WF_MISSIONNAME|EAST_StartVeh|WEST_StartVeh" Missions Missions_Vanilla
 ```
 
 ## Related Pages

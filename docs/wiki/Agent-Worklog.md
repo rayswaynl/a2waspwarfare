@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-05T12:10:00+02:00 - Codex - dead code mission-copy divergence pass
+
+- Continued Steff's long-running dead-code detective goal with a mission-copy divergence scan across source Chernarus, Vanilla Takistan and seven modded mission roots.
+- Added `docs/analysis/dead-code-mission-copy-divergence-scan.ps1` and `docs/analysis/dead-code-mission-copy-divergence-scan.json`. Latest scan covered 2767 text files, 690 unique mission-relative paths, 548 identical copied paths, 139 diverged copied paths and 18 conflict-marker files.
+- Promoted two source-backed findings into `docs/analysis/dead-code-findings.jsonl` and [Dead/stale code register](Dead-Code-And-Stale-Code-Register): source Chernarus vs Vanilla Takistan divergence is mostly intentional map/generated data, while `Modded_Missions` remains a quarantine zone with broad runtime/config/UI/PVF drift outside the current generation/packaging path.
+- Source-checked representative Chernarus/Takistan divergences: help title text, `SET_MAP` database id, generated `version.sqf` player count/name flags, terrain-specific WASP start vehicles, and Vanilla-only artillery config files.
+- No gameplay source files changed.
+
 ## 2026-06-05T11:35:00+02:00 - Codex - dead code SQF reachability pass
 
 - Continued Steff's long-running dead-code detective goal with a quoted-SQF-path reachability scan.
