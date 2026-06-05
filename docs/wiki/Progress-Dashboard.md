@@ -28,7 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
-| `dead-code-register` | Published / validated / push pending | Added [Dead/stale code register](Dead-Code-And-Stale-Code-Register) plus `docs/analysis/dead-code-findings.jsonl` and the repeatable reference scan. Current pass classifies stale comments, broken UI residue, MASH marker relay, latent `AIBuyUnit`, modded conflict markers, generated `version.sqf` and modded packaging scope. Validation passed. No gameplay source changed. |
+| `dead-code-register` | Published / validated / pushed | Added [Dead/stale code register](Dead-Code-And-Stale-Code-Register) plus `docs/analysis/dead-code-findings.jsonl` and the repeatable reference scan. Current pass classifies stale comments, broken UI residue, MASH marker relay, latent `AIBuyUnit`, modded conflict markers, generated `version.sqf` and modded packaging scope. Validation passed. No gameplay source changed. |
 | `pruning-ledger-completion-audit` | Published / validated / pushed | Codex audited [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) against the current wiki state. P0/P1/P2 pruning rows are now recorded as completed, archive pages carry historical/current-truth caveats, and future gameplay hardening/release smoke/code-owner tasks are separated from the pruning goal. Validation passed. No gameplay source changed. |
 | `ui-runtime-quickref-pruning` | Published / validated / pushed | Most recent published pruning batch: UI/runtime gateways route to canonical owner pages and no longer repeat detailed proof. |
 
@@ -68,7 +68,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
-| `dead-code-register` | Codex | Published / validated / push pending | Commit and push the register, then continue deeper source passes for additional dead-code families if the goal remains active. |
+| `dead-code-register` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
 | `pruning-ledger-completion-audit` | Codex | Published / validated / pushed | Ledger records all pruning-backlog rows as completed and dashboard is compacted to current-state use. |
 | `documentation-finisher-loop` | Codex | Active / ongoing | Keep the wiki current from source evidence after this pruning goal closes. |
 | `ui-runtime-quickref-pruning` | Codex | Published / validated / pushed | UI/runtime gateways route to canonical owners and no longer repeat detailed proof. |
