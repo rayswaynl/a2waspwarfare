@@ -55,10 +55,10 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` | Takistan FPV mirror sync is validated; continue from fresh source evidence or code-owner requests. |
+| Codex | Active | `documentation-finisher-loop` | Current lanes are fresh again; continue from source evidence, owner requests or newly returned helper reports. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Coverage Ledger navigation is wired. Claude can self-select the next bounded source-backed review from the ledger or hardening backlog. |
-| Supported docs agents | Active | `research-catchup-synthesis-default-supported`, `relevance-pruning-and-archive-default-supported` | Two account-default supported high-reasoning helper chats are running catch-up synthesis and relevance pruning. The earlier named-model starts are treated as failed/non-evidence. |
+| Supported docs agents | First batch published / historical | `research-catchup-synthesis-default-supported`, `relevance-pruning-and-archive-default-supported` | Earlier account-default helper chats produced catch-up and pruning/archive work. Relaunch or resume only for a fresh narrow lane; they are not live dashboard blockers. |
 | Read-only pruning scouts | Returned / harvested | `ui-runtime-bloat-scout`, `wiki-navigation-chain-scout` | UI/runtime lead is promoted; small navigation fixes are promoted; remaining archive-page caveat note is already satisfied by archive page headers. |
 | Sub-agents | Returned / closed | `navigation-parity-and-scout-wave-2026-06-04` | Supports, UI, tooling and AI scouts returned; most findings confirmed existing owner pages. Economy scout was closed without output and is not evidence. |
 | Shared docs | Live | GitHub wiki + docs mirror | Wiki and mirror should stay in parity after scoped validation; use event logs and git history for commit IDs. |
@@ -83,31 +83,11 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 ## Current Lanes
 
+This table is only for active, autonomous-ready, watchlist or future owner lanes. Published documentation batches are recorded in **Latest Batch**, [Agent worklog](Agent-Worklog), [`agent-status.json`](agent-status.json), [`agent-events.jsonl`](agent-events.jsonl) and git history.
+
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
-| `takistan-fpv-mirror-sync` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
-| `neither-nav-support-closeout` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
-| `hidden-owner-reference-nav-promotion` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
-| `mkdocs-primary-sidebar-parity` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
-| `archive-queue-continue-reading-closeout` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
-| `continue-reading-owner-page-polish` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
-| `navigation-inventory-page-status` | Codex/Sub-agent | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
-| `wiki-backlog-asset-bootstrap-pass` | Codex | Published / validated | Commit/push docs-only changes, then continue future backlog work from fresh source evidence. |
-| `dead-code-oa-compatibility-pass` | Codex | Published / validated | Push wiki/docs-only changes, then continue the broader dead-code goal from fresh source evidence. |
-| `dead-code-mission-copy-divergence-pass` | Codex | Published / validated | Continue the broader dead-code goal from fresh source evidence. |
-| `dead-code-sqf-reachability-pass` | Codex | Published / validated | Continue the broader dead-code goal from fresh source evidence. |
-| `dead-code-parameter-config-pass` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
-| `dead-code-ui-rsc-pass` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
-| `dead-code-pv-channel-pass` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
-| `dead-code-integrations-and-tooling-pass` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
-| `dead-code-register` | Codex | Published / validated / pushed | Continue deeper source passes for additional dead-code families if the goal remains active. |
-| `pruning-ledger-completion-audit` | Codex | Published / validated / pushed | Ledger records all pruning-backlog rows as completed and dashboard is compacted to current-state use. |
 | `documentation-finisher-loop` | Codex | Active / ongoing | Keep the wiki current from source evidence after this pruning goal closes. |
-| `ui-runtime-quickref-pruning` | Codex | Published / validated / pushed | UI/runtime gateways route to canonical owners and no longer repeat detailed proof. |
-| `feature-status-residue-pruning` | Codex | Published / validated / pushed | Feature Status now routes harvested scout history to owner pages, fixes stale PR #1 handler wording and keeps AI supply logistics branch/config scope visible. |
-| `core-gameplay-gateway-pruning` | Codex | Published / validated / pushed | Core index is a route map and Gameplay systems routes duplicated economy/commander/upgrade/construction/factory detail to owner pages. |
-| `miksuu-archive-sidebar-pruning` | Codex | Published / validated / pushed | Preserve imported Miksuu archive pages but route sidebar users through the archive index, community context and source-check pages. |
-| `scout-pruning-leads` | Codex sub-agents | Harvested / closed | Fermat, Herschel, Confucius and Carson leads have been promoted, rejected or marked already satisfied in the ledger/worklog. |
 | `autonomous-claude-research` | Claude | Autonomous-ready | Self-select the next bounded source-backed review from [Codebase coverage ledger](Codebase-Coverage-Ledger) when Claude is active. |
 | `feature-status-reconciliation` | Codex / future agent | Watchlist | Fold newly confirmed findings into [Feature status](Feature-Status-Register), owner pages and machine records. No untriaged finding is blocking this dashboard. |
 | `implementation-hardening-from-backlog` | Future code owner | Owner decision / code lane | Pick implementation work from [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) only when Steff asks for gameplay patches or a code owner claims the work. |

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-context-v1",
-  "generatedAt": "2026-06-04T19:44:55+02:00",
+  "generatedAt": "2026-06-05T14:15:00+02:00",
   "repository": "rayswaynl/a2waspwarfare",
   "game": "Arma 2 Operation Arrowhead 1.64",
   "sourceMission": "Missions/[55-2hc]warfarev2_073v48co.chernarus",
@@ -229,10 +229,10 @@
         "Deep-Review-Findings",
         "External-Research-Reports",
         "Codebase-Coverage-Ledger",
-      "Wiki-Source-Consistency-Findings",
-      "Documentation-Implementation-Plan",
-      "Navigation-Inventory-And-Page-Status",
-      "Claude-Goal",
+        "Wiki-Source-Consistency-Findings",
+        "Documentation-Implementation-Plan",
+        "Navigation-Inventory-And-Page-Status",
+        "Claude-Goal",
         "Claude-Long-Term-Goal",
         "Claude-Loop-Goal",
         "Client-Skill-Init-Idempotency",
@@ -242,8 +242,8 @@
         "Bottleneck-Removal-Queue",
         "Wiki-Mirror-Reconciliation-Plan"
       ],
-    "hasPerPageContinueReading": true,
-    "continueReadingStatus": "All content pages now have Continue Reading blocks. Current owner pages use normal previous/next routing; archive and queue pages use caveated support routing tracked in Navigation-Inventory-And-Page-Status.",
+      "hasPerPageContinueReading": true,
+      "continueReadingStatus": "All content pages now have Continue Reading blocks. Current owner pages use normal previous/next routing; archive and queue pages use caveated support routing tracked in Navigation-Inventory-And-Page-Status.",
       "sidebar": "_Sidebar.md",
       "footer": "_Footer.md"
     }
@@ -295,18 +295,6 @@
       "nextAction": "Continue bounded source-backed wiki upkeep, compact dashboard/status surfaces, validate and publish scoped batches."
     },
     {
-      "lane": "dashboard-open-item-cleanup",
-      "owner": "Codex",
-      "status": "published-validated",
-      "nextAction": "No further dashboard spam cleanup blocker remains; keep future historic batch detail in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl."
-    },
-    {
-      "lane": "oa-object-lifecycle-command-addendum",
-      "owner": "Codex",
-      "status": "published-validated",
-      "nextAction": "Object lifecycle command guardrails are now folded into Arma-2-OA-Command-Version-Reference.md; no active Codex-2 claim remains."
-    },
-    {
       "lane": "autonomous-claude-research",
       "owner": "Claude",
       "status": "autonomous-ready",
@@ -338,7 +326,7 @@
     },
     {
       "lane": "wasp-marker-wait-cleanup",
-      "owner": "future-ui-owner",
+      "owner": "future-code-owner",
       "status": "source-needs-code",
       "nextAction": "Patch and smoke the bounded WASP display wait cleanup when code work is claimed."
     }

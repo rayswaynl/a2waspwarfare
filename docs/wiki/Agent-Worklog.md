@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-05T14:00:00+02:00 - Codex - dashboard current-lane freshness
+
+- Claimed `dashboard-current-lanes-freshness` after the dashboard's `Current Lanes` table still listed already-published documentation batches with stale next actions like "commit/push docs-only changes".
+- Pruned `Current Lanes` back to live control-panel use: the active documentation finisher loop, Claude autonomous-ready lane, feature-status watchlist, code-owner hardening lanes and release/smoke gates. The dashboard cleanup lane is completed and recorded here instead of staying live.
+- Left published batch detail in [Latest Batch](Progress-Dashboard#latest-batch), this worklog, [`agent-status.json`](agent-status.json), [`agent-events.jsonl`](agent-events.jsonl) and git history.
+- No gameplay source changed.
+
 ## 2026-06-05T13:45:00+02:00 - Codex - Takistan FPV mirror sync
 
 - Integrated the wiki-side `july-takistan-airfield-fpv-drone` design note into the `docs/wiki/` mirror after the wiki rebase pulled remote commit `106f0f3`.

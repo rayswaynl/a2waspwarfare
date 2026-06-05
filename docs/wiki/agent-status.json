@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T13:55:00+02:00",
+  "generatedAt": "2026-06-05T14:15:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Validated Takistan FPV mirror sync; the wiki-only design page is now mirrored in docs/wiki and listed in MkDocs.",
-      "nextExpectedOutput": "Continue future wiki backlog work from fresh source evidence, code-owner requests or new user direction."
+      "currentWork": "Validated dashboard current-lane freshness cleanup; published batches now live in Latest Batch, Agent Worklog, agent-status history, agent-events and git history instead of Current Lanes.",
+      "nextExpectedOutput": "Continue future wiki backlog work from fresh source evidence, code-owner requests or newly returned helper reports."
     },
     "Codex-2": {
       "status": "ready",
@@ -43,234 +43,18 @@
       "nextExpectedOutput": "No active scout output remains; future pruning should start from fresh evidence."
     },
     "Supported docs agents": {
-      "status": "active",
+      "status": "first-batch-published / historical",
       "currentLane": "research-catchup-synthesis-default-supported / relevance-pruning-and-archive-default-supported",
-      "currentWork": "Two replacement high-reasoning helper chats are running with no named model override after gpt-5.5-codex and gpt-5-codex both proved unsupported for this account.",
-      "nextExpectedOutput": "Catch-up synthesis should route recent research/scout/upstream deltas into canonical pages; pruning should propose or patch safe keep/condense/merge/archive decisions."
+      "currentWork": "Earlier helper chats produced first-batch catch-up and pruning/archive docs; no fresh output is currently blocking the live dashboard.",
+      "nextExpectedOutput": "Relaunch or resume only for a fresh narrow catch-up/pruning lane; keep historic helper detail in Agent-Worklog and agent-events.jsonl."
     }
   },
   "laneSummary": [
-    {
-      "lane": "takistan-fpv-mirror-sync",
-      "owner": "Codex",
-      "status": "published-validated",
-      "output": "Copied Takistan-Airfield-FPV-Drone-Design from the wiki into docs/wiki, added it to mkdocs.yml and refreshed navigation counts to 141 Markdown pages, 139 content pages, 110 sidebar pages, 119 MkDocs pages, 110 pages in both and 20 neither-nav support pages. No gameplay source changed."
-    },
-    {
-      "lane": "neither-nav-support-closeout",
-      "owner": "Codex",
-      "status": "published-validated",
-      "output": "Navigation inventory now classifies the remaining 20 neither-nav pages as patch-ready handoffs, evidence ledgers/queues, agent instructions or analysis support. No gameplay source changed."
-    },
-    {
-      "lane": "hidden-owner-reference-nav-promotion",
-      "owner": "Codex",
-      "status": "published-validated",
-      "output": "Added Core systems, Modules atlas, Server gameplay runtime atlas, Performance opportunity sweep, Player AI caps and role balance, Variable and naming conventions and Arma 2 OA external reference guide to both sidebar and MkDocs. Current counts after Takistan sync: 110 sidebar pages, 119 MkDocs pages, 110 pages in both and 20 neither-nav support pages. No gameplay source changed."
-    },
-    {
-      "lane": "mkdocs-primary-sidebar-parity",
-      "owner": "Codex",
-      "status": "published-validated",
-      "output": "Added PR cleanup lab, Headless client scaling, Dead/stale code register and Wiki pruning ledger to mkdocs.yml. Navigation inventory now reports 102 pages in both navs, 0 sidebar-only pages and 9 MkDocs-only imported archives. No gameplay source changed."
-    },
-    {
-      "lane": "archive-queue-continue-reading-closeout",
-      "owner": "Codex",
-      "status": "published-validated",
-      "output": "Added queue/support page Continue Reading routes and normalized imported Miksuu archive pages to caveated archive-chain Continue Reading blocks. Recomputed missing Continue Reading count is 0. No gameplay source changed."
-    },
-    {
-      "lane": "continue-reading-owner-page-polish",
-      "owner": "Codex",
-      "status": "published-validated",
-      "output": "Normalized Continue Reading blocks on AI guide, architecture, mission parameters, join/disconnect, support specials, towns/camps, upgrades/research, marker cleanup, upstream commit intel and PR cleanup lab. Missing Continue Reading count is now 11 archive/queue pages only. No gameplay source changed."
-    },
-    {
-      "lane": "navigation-inventory-page-status",
-      "owner": "Codex/Sub-agent",
-      "status": "published-validated",
-      "output": "Read-only navigation scout plus local inventory found 140 Markdown pages, 102 sidebar pages, 107 MkDocs pages, 27 content pages in neither nav and 21 pages missing Continue Reading. Added Navigation-Inventory-And-Page-Status and corrected Home/agent-context overclaim. No gameplay source changed."
-    },
-    {
-      "lane": "wiki-backlog-asset-bootstrap-pass",
-      "owner": "Codex/Sub-agents",
-      "status": "published-validated",
-      "output": "Three read-only scouts returned wiki bloat, feature/dead-code and upstream/community lessons. Codex added docs/analysis/dead-code-asset-reference-scan.ps1 plus JSON output, promoted compact asset/bootstrap evidence into Dead-Code-And-Stale-Code-Register and Assets-Config-Localization-And-Parameters-Atlas, and recorded fresh pruning backlog leads in Wiki-Pruning-And-Relevance-Ledger. No gameplay source changed."
-    },
-    {
-      "lane": "pruning-ledger-completion-audit",
-      "owner": "Codex",
-      "status": "published-validated-pushed",
-      "output": "Wiki-Pruning-And-Relevance-Ledger now records P0/P1/P2 pruning tasks as completed and separates future gameplay/code-owner work from pruning-goal work. Progress-Dashboard is compacted to current-state use. No gameplay source changed."
-    },
-    {
-      "lane": "ui-runtime-quickref-pruning",
-      "owner": "Codex",
-      "status": "published-validated-pushed",
-      "output": "UI-HUD-And-Dialogs is now a pure alias; Client-UI-HUD-And-Menus routes risk families; Player-UI-Workflow-Map keeps the player workflow tour; Server-Ops-Runbook keeps operator contracts; Server-Gameplay-Runtime-Atlas owns server-loop evidence; AI-Runtime-HC-Loop-Map stays focused on AI/HC lifecycle; Headless-Client-Scaling-And-Topology no longer carries a long pseudo-implementation sketch. No gameplay source changed."
-    },
-    {
-      "lane": "feature-status-residue-pruning",
-      "owner": "Codex",
-      "status": "published-validated-pushed",
-      "output": "Feature-Status-Register now treats dated mini-scout waves as harvested history, routes finding families to owner pages, keeps AI supply logistics as config-gated broken/deferred work, corrects stale PR #1 supply killed-handler wording and removes duplicate AIBuyUnit residue. Small navigation fixes from the wiki-navigation-chain scout are included. Validation passed. No gameplay source changed."
-    },
-    {
-      "lane": "core-gameplay-gateway-pruning",
-      "owner": "Codex",
-      "status": "published-validated-pushed",
-      "output": "Core-Systems-Index is converted into a route map, and Gameplay-Systems-Atlas no longer repeats full economy/commander/upgrade/construction/factory mini-atlases. Detailed evidence remains in owner pages. Validation passed: docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check with line-ending warnings only and SHA256 mirror parity. No gameplay source changed."
-    },
-    {
-      "lane": "miksuu-archive-sidebar-pruning",
-      "owner": "Codex",
-      "status": "published-validated-pushed",
-      "output": "Individual Miksuu-Wiki-Archive pages are removed from sidebar prominence while staying intact through the Miksuu archive index and Community & Dev archive table. Two read-only sidecar scouts returned leads for overlapping atlas bloat and Feature Status residue. Validation passed: docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check with line-ending warnings only and SHA256 mirror parity. No gameplay source changed."
-    },
-    {
-      "lane": "overlapping-atlas-bloat-scout",
-      "owner": "Codex sub-agent Fermat",
-      "status": "harvested-promoted",
-      "output": "Read-only scout recommended Core-Systems-Index plus Gameplay-Systems-Atlas gateway pruning first and UI/runtime quick-ref pruning second. Both lanes were source-checked, patched, validated and pushed."
-    },
-    {
-      "lane": "feature-status-residue-scout",
-      "owner": "Codex sub-agent Herschel",
-      "status": "harvested-promoted",
-      "output": "Read-only scout recommended source-checking stale/duplicate Feature Status residue. The promoted findings were condensed, corrected, validated and pushed in the Feature Status pruning batch."
-    },
-    {
-      "lane": "dashboard-pruning-ledger-cleanup",
-      "owner": "Codex",
-      "status": "published-validated",
-      "output": "Progress Dashboard Latest Batch is compacted back toward current-state use, duplicate Home mirror-policy navigation is removed, and repeated Subagent Discovery Swarm pruning-ledger rows are reconciled. Validation passed: docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check with line-ending warnings only and SHA256 mirror parity. No gameplay source changed."
-    },
-    {
-      "lane": "wiki-pruning-loop-refresh-supported-agents",
-      "owner": "Codex",
-      "status": "published-validated-pushed",
-      "output": "Unsupported named-model helper starts (gpt-5.5-codex, then gpt-5-codex) are treated as failed/non-evidence. Two account-default supported high-reasoning helper chats were launched for research catch-up synthesis and relevance pruning. Instructions-For-Codex, External-Research-Reports and Subagent-Discovery-Swarm are condensed into current gateways, Deep-Review-Findings now has a routing index, and Wiki-Pruning-And-Relevance-Ledger records keep/condense/merge/archive decisions. No gameplay source changed."
-    },
-    {
-      "lane": "research-catchup-synthesis-default-supported",
-      "owner": "Codex / supported catch-up helper",
-      "status": "active-first-batch-published",
-      "output": "Condensed External Research Reports into an absorption matrix, added a routing index to Deep Review Findings, and recorded catch-up decisions for external reports, DR evidence, recent scouts and Miksuu/upstream archive material in Wiki-Pruning-And-Relevance-Ledger. No gameplay source changed."
-    },
-    {
-      "lane": "relevance-pruning-and-archive-default-supported",
-      "owner": "Codex / supported pruning helper",
-      "status": "active-first-batch-published",
-      "output": "Thread 019e94bf-7c68-7030-a8e4-2b2f67fa295f is assigned to score pages for keep/condense/merge/archive and patch safe bloat reductions while preserving source evidence. First patch condenses Subagent-Discovery-Swarm into a compact gateway and records the decision in Wiki-Pruning-And-Relevance-Ledger. No gameplay source changed."
-    },
-    {
-      "lane": "gameplay-atlas-commander-vote-caveat",
-      "owner": "Codex",
-      "status": "published-validated-pushed",
-      "output": "Gameplay Systems commander-flow summary now flags DR-47: source Chernarus and maintained Vanilla both count AI/no-commander votes but select any non-tied player candidate via the tautological _highest >= _aiVotes OR _highest <= _aiVotes branch, while GUI_VoteMenu can preview AI/no commander. No gameplay source changed."
-    },
-    {
-      "lane": "coordination-mailbox-coverage-ledger-close",
-      "owner": "Codex",
-      "status": "published-validated-pushed",
-      "output": "Coordination Board mailbox now marks Claude's Coverage Ledger navigation request done after checking Codebase-Coverage-Ledger exists and is linked from Home, _Sidebar, _Footer, llms.txt, agent-context.json and the active Claude lane. Validation passed: docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check with line-ending warnings only and SHA256 mirror parity. No gameplay source changed."
-    },
-    {
-      "lane": "coordination-board-active-lane-reconcile",
-      "owner": "Codex",
-      "status": "published-validated-pushed",
-      "output": "Coordination Board Active Lanes now mirrors current dashboard/status lanes and moves historic scout/review lanes into a Resolved Historical Lanes routing table. Validation passed: docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check with line-ending warnings only and SHA256 mirror parity. No gameplay source changed."
-    },
-    {
-      "lane": "basearea-machine-ledger-split",
-      "owner": "Codex",
-      "status": "published-validated-pushed",
-      "output": "Machine ledgers now split the source-patched server stationary-defense base-area guard from still-open server base-area seeding and client CoIn sale/placement null guards. Validation passed: docs/validate-wiki.ps1, JSON/JSONL parse, git diff --check and SHA256 mirror parity. No gameplay source changed."
-    },
-    {
-      "lane": "stationary-defense-guard-backlog-reconciliation",
-      "owner": "Codex",
-      "status": "published-validated-pushed",
-      "output": "Machine hardening backlog now distinguishes the source-patched server stationary-defense base-area guard from the still-open client CoIn companion guard. Evidence: Construction_StationaryDefense.sqf:12-15 in source Chernarus and maintained Vanilla Takistan; CoIn companion remains around coin_interface.sqf:721-730. No gameplay source changed; Arma smoke remains pending."
-    },
-    {
-      "lane": "commander-artillery-ownership-patch",
-      "owner": "Focused Codex thread",
-      "status": "published-validated-pushed",
-      "output": "Traced commander defense construction through RequestDefense.sqf, Construction_StationaryDefense.sqf, HandleDefense, GetTeamArtillery and the Tactical fire-mission request path. Patched source Chernarus and maintained Vanilla Takistan so artillery-class stationary defenses built through the commander defense path are assigned to the commander team before manning, allowing commander Tactical artillery discovery instead of direct-fire-only behavior. Testing-Debugging-And-Release-Workflow now carries the concrete smoke pack for commander-built artillery discovery/fire/ammo/direct-fire/non-artillery/HC/Vanilla parity. Validation included docs/validate-wiki.ps1, diff checks, JSONL parsing, docs/wiki mirror parity and Chernarus/Takistan construction-file parity. Pushed as docs b5feed5f / wiki 819d41c. Arma smoke remains pending."
-    },
-    {
-      "lane": "navigation-parity-and-scout-wave-2026-06-04",
-      "owner": "Codex/Sub-agents",
-      "status": "published-validated-pushed",
-      "output": "Reconciled GitHub wiki _Sidebar.md and mkdocs.yml to zero page-slug drift; added sidebar groups for Architecture, Code and networking, Gameplay systems, AI/HC, Hardening/authority and Tooling/release/integrations. Spawned five gpt-5.4-mini read-only scouts after Spark quota blocked two starts; supports, UI, tooling and AI reports mostly confirmed existing canonical pages. Economy scout timed out twice and was closed without output. Validation passed and content pushed as docs bc710bcc / wiki 7148406. No gameplay source changed."
-    },
-    {
-      "lane": "buy-unit-price-display-correction",
-      "owner": "Codex",
-      "status": "published-validated-pushed",
-      "output": "Corrected the buy-unit pricing docs after source recheck showed two live risks: selected-detail display can drift from list/charge pricing because GUI_Menu_BuyUnits.sqf:261 omits UNIT_COST_MODIFIER before control 12034 is updated at :465, and Client_UIFillListBuyUnits.sqf:7-16 can leave a stale global modifier. Updated Factory/Purchase, Feature Status, Development Lessons and agent-development-lessons.jsonl. No gameplay source changed."
-    },
-    {
-      "lane": "mini-scout-wave-depth-leftovers-2026-06-04",
-      "owner": "Codex/Sub-agents",
-      "status": "published-validated-pushed",
-      "output": "Three gpt-5.3-codex-spark starts hit quota before evidence, so Codex closed the dead slots and launched six gpt-5.4-mini read-only scouts. All six returned and were closed. Promoted source-checked deltas into AI/order, HC failover, gear templates, PerformanceAuditAnalyzer, server ops, tooling readiness and authority-migration owner pages. Rejected the smd_sahrani_a2 mission.sqm correction because the tracked stub still lacks mission.sqm, description.ext and initJIPCompatible.sqf. Validation passed and content pushed as docs d02f3709 / wiki 7be237f. No gameplay source changed."
-    },
-    {
-      "lane": "mini-scout-wave-community-config-ai-ui-tooling",
-      "owner": "Codex/Sub-agents",
-      "status": "published-validated-pushed",
-      "output": "Spark starts hit quota/overflow before evidence, so Codex launched six gpt-5.4-mini read-only scouts. Five returned and were source-checked into docs: config positional arrays and post-load mutation, player UI workflow details, AI order/recovery chain and PerformanceAuditAnalyzer 14-output contract. Community/dev scout confirmed existing hub coverage. One feature-status scout overflowed and is not evidence. Validation passed; content commits are docs b5a40dd4 / wiki 5699c82, final reconciled heads are docs b2a33c70 / wiki 741e21a. No gameplay source changed."
-    },
     {
       "lane": "documentation-finisher-loop",
       "owner": "Codex",
       "status": "active-ongoing",
       "output": "Keep wiki/status pages current from source evidence, compact the dashboard, and publish scoped validation batches."
-    },
-    {
-      "lane": "fallback-mini-scout-wave-feature-lifecycle-economy-pv-ui-tooling",
-      "owner": "Codex/Sub-agents",
-      "status": "harvested-validated-pushed",
-      "output": "Spark quota blocked six requested scout starts until 23:53, so Codex closed the failed starts and launched six gpt-5.4-mini read-only fallback scouts. Promoted source-checked deltas into sidebar UI navigation, SQF/PV inventory wording, PerformanceAuditAnalyzer, Gameplay constants and Networking transport-vs-authority wording. Validation passed; content commits are docs b878f7e4 / wiki bad8646, final breadcrumb heads are docs b7f03baf / wiki 14a3a2d. No gameplay source changed."
-    },
-    {
-      "lane": "static-reference-triage-lesson",
-      "owner": "Codex",
-      "status": "published-validated-pushed",
-      "output": "Clarified Source Inventory static-reference rows as triage leads rather than boot-blocker proof, with source examples for commented unitCaching, respatrol, WASP KeyDown and car_wheel_new/procInitComm paths. Added Development Lesson 15 and a matching agent-development-lessons.jsonl record. Validation passed and content pushed as docs a391a0f1 / wiki 9e08393. No gameplay source changed."
-    },
-    {
-      "lane": "spark-scout-wave-version-lifecycle-tooling-feature-pv-caps",
-      "owner": "Codex/Sub-agents",
-      "status": "published-validated-pushed-scouts-closed",
-      "output": "Harvested version.sqf release gating, lifecycle/init caveats, PV/PVF canonical coverage confirmation, Feature Status missing-file/dead-twin deltas and machine-readable toolingAuditGates. AI-cap/UI/construction/respawn scouts failed without evidence. Fresh commander/economy mostly confirmed canonical coverage and one stale-context claim was rejected by source recheck. Fresh server ops/integrations and missing-reference sweep confirmed already-canonical ops/dead-feature coverage. No gameplay source changed."
-    },
-    {
-      "lane": "dashboard-open-item-cleanup",
-      "owner": "Codex",
-      "status": "published-validated",
-      "output": "Progress Dashboard debloated, Coverage Ledger nav request closed, stale review rows reclassified and compact machine state refreshed. No gameplay source changed."
-    },
-    {
-      "lane": "spark-scout-wave-release-targets-hc-ai-caps-economy",
-      "owner": "Codex/Sub-agents",
-      "status": "published-validated-pushed",
-      "output": "Release-target scout wave is published as docs 058427d3 / wiki 4b72809; release targets are tiered in agent-release-readiness and UI missing asset routing is documented."
-    },
-    {
-      "lane": "ai-commander-branch-head-refresh-and-spark-scout-wave",
-      "owner": "Codex/Sub-agents",
-      "status": "published-validated",
-      "output": "origin/feat/ai-commander is c20ce153, source-Chernarus-only with no maintained Vanilla changes; origin/codex/quad-ai-commander is d4e0fa38 concept/report evidence only. Scout notes remain leads until source-checked."
-    },
-    {
-      "lane": "fresh-background-spark-scout-wave-buy-menu-harvest",
-      "owner": "Codex/background Spark threads",
-      "status": "published-validated-pushed",
-      "output": "Five completed reports mostly confirmed canonical docs; interrupted/error threads are not evidence. Buy-menu driver-default profile key split was promoted and routed."
     },
     {
       "lane": "autonomous-claude-research",
