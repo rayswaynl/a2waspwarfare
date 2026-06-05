@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-machine-index-v1",
-  "generatedAt": "2026-06-05T16:15:00+02:00",
+  "generatedAt": "2026-06-05T21:05:00+02:00",
   "purpose": "Compact page-to-source and page-to-risk lookup for AI agents. Use this before opening broad wiki pages when you need the canonical owner page, source proof refs, machine records and next gate for a system.",
   "repo": {
     "owner": "rayswaynl",
@@ -344,6 +344,33 @@
         "agent-feature-status.jsonl"
       ],
       "nextGate": "Smoke vanilla/non-vanilla AI branches, HC reconnect/failover and static-defense update-back before treating autonomous AI logistics as revived."
+    },
+    {
+      "id": "old-warfarebe-fps-baseline",
+      "system": "old WarfareBE comparison, public FPS debate and AI-cap test planning",
+      "riskTier": "test-plan",
+      "branchScope": "docs_current; old external source BennyBoy-/ArmA2_WarfareBE@aeb71bb",
+      "canonicalDocs": [
+        "Old-WarfareBE-Performance-Comparison",
+        "Player-AI-Caps-And-Role-Balance",
+        "AI-Headless-And-Performance",
+        "Performance-Opportunity-Sweep",
+        "Feature-Status-Register"
+      ],
+      "sourceRefs": [
+        "external:BennyBoy-/ArmA2_WarfareBE@aeb71bb readme.nfo and version.sqf",
+        "external:BennyBoy-/ArmA2_WarfareBE@aeb71bb Rsc/Parameters.hpp:16-20",
+        "external:BennyBoy-/ArmA2_WarfareBE@aeb71bb Server/FSM/server_town_ai.fsm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp:50-67",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf:118-132",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_ai.sqf"
+      ],
+      "machineRefs": [
+        "agent-events.jsonl#old-warfarebe-performance-comparison-expanded-2026-06-05-2045",
+        "agent-status.json",
+        "agent-machine-index.json"
+      ],
+      "nextGate": "Do not patch gameplay from nostalgia alone. Run matched old/current tests with player AI cap, view distance, HC presence, active towns, static gunners, AI teams and PerformanceAudit/RPT capture recorded separately."
     },
     {
       "id": "client-ui-gear-service",

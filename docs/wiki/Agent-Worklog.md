@@ -13,6 +13,13 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T21:05:00+02:00 - Codex - old-FPS feature routing
+
+- Claimed `old-fps-feature-routing` after the expanded [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison) landed but [Feature status](Feature-Status-Register) and machine lookup files did not yet expose it as a current test/decision lane.
+- Added a compact Feature Status row that treats the old mission as a matched A/B baseline and explicitly says not to patch gameplay from nostalgia alone.
+- Added a task-bundle route to [LLM agent entry pack](LLM-Agent-Entry-Pack), a compact `old-warfarebe-fps-baseline` entry to [`agent-machine-index.json`](agent-machine-index.json), a normalized [`agent-feature-status.jsonl`](agent-feature-status.jsonl) row, and refreshed [`agent-context.json`](agent-context.json) page/rule routing.
+- No gameplay source changed.
+
 ## 2026-06-05T20:50:00+02:00 - Codex - navigation inventory refresh after old-FPS page
 
 - Claimed `navigation-inventory-refresh-old-fps` as a small follow-up after [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison) became a new current owner page and was expanded.

@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `old-fps-feature-routing` | Published / validated | Routed the expanded old-WarfareBE FPS findings into [Feature status](Feature-Status-Register), [LLM agent entry pack](LLM-Agent-Entry-Pack), [`agent-machine-index.json`](agent-machine-index.json), [`agent-context.json`](agent-context.json) and [`agent-feature-status.jsonl`](agent-feature-status.jsonl), so agents find the old-vs-current test lane from risk triage instead of treating it as a loose performance note. No gameplay source changed. |
 | `navigation-inventory-refresh-old-fps` | Published / validated | Refreshed [Navigation inventory and page status](Navigation-Inventory-And-Page-Status) after adding/expanding the old WarfareBE page: current generated counts are `143` Markdown pages, `141` content pages, `112` primary Markdown pages in both navs, `20` intentional neither-nav support pages and `0` missing `Continue Reading` blocks. |
 | `old-warfarebe-performance-comparison` | Expanded / validated | Replaced the draft with a deeper source-backed [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison): old Takistan Lite scope, player/AI cap math, HC fallback, town activation and low-SV groups, static-defense gates, cleanup, PV traffic, client HUD/markers, view-distance caveats, Discord table, prioritized backlog and comparison test plan. No gameplay source changed. |
 | `agent-worklog-append-only-guardrail` | Published / validated | Added a top guardrail to [Agent worklog](Agent-Worklog) so old append-only rows are not mistaken for current truth. Current-state readers are routed to [Progress dashboard](Progress-Dashboard), [Current source status snapshot](Current-Source-Status-Snapshot), [`agent-status.json`](agent-status.json) and [`agent-knowledge.jsonl`](agent-knowledge.jsonl). No gameplay source changed. |
@@ -68,7 +69,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
-| Codex | Active | `documentation-finisher-loop` | Refreshed navigation inventory after the old-FPS page expansion; continue source-backed wiki pruning/status upkeep. |
+| Codex | Active | `documentation-finisher-loop` | Routed old-FPS findings into Feature Status and agent boot/index files; continue source-backed wiki pruning/status upkeep. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Coverage Ledger navigation is wired. Claude can self-select the next bounded source-backed review from the ledger or hardening backlog. |
 | Supported docs agents | First batch published / historical | `research-catchup-synthesis-default-supported`, `relevance-pruning-and-archive-default-supported` | Earlier account-default helper chats produced catch-up and pruning/archive work. Relaunch or resume only for a fresh narrow lane; they are not live dashboard blockers. |
