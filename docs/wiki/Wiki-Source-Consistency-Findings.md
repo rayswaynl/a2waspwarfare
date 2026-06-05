@@ -31,8 +31,12 @@ A reader/agent would wrongly skip a still-live bug. Source verified still unpatc
 | SQF atlas | `LogGameEnd` compiled from `Server/PVFunctions/LogGameEnd.sqf` | `Init_Server.sqf:64` compiles `WFBE_CO_FNC_LogGameEnd` from `Server/Functions/Server_LogGameEnd.sqf`; the PVFunctions twin exists but is **not** the compile target (cf. DR-13 duplicate). | `Server/Init/Init_Server.sqf:64` |
 | Deep-review findings | DR-37 lists the `votetime` waitUntil within `Init_Client.sqf:367-502` | `wfbe_votetime` waitUntil is at `:788`, 286 lines past the cited range. | `Client/Init/Init_Client.sqf:788` |
 
-## D. LOW (already on the backlog) — SQF-Code-Atlas stale counts
-[Instructions for Codex](Instructions-For-Codex) item 3 + DR-5 already call for marking these point-in-time. Verified current numbers (2026-06-02): `preprocessFile` total **674** (wiki 659); `preprocessFileLineNumbers` **461** (wiki 452); plain `preprocessFile` **213** (wiki 207); `Init_Common.sqf` **196** (wiki 187); `Common` tree **430** (wiki 424). (Also: DR-44's "literal" `_reason` quote drops the 56-char "No reason provided for supply value update!" prefix — `Server_ChangeSideSupply.sqf:6`.)
+## D. LOW (closed) — SQF-Code-Atlas stale counts
+Original finding: [Instructions for Codex](Instructions-For-Codex) item 3 + DR-5 called for marking the compile counts as point-in-time. The audit's checked numbers on 2026-06-02 differed from the then-current wiki.
+
+Status 2026-06-05: closed by the current [SQF code atlas](SQF-Code-Atlas). It now labels the compile registry as a dated point-in-time recount, cites DR-5, includes a regeneration command, and warns future agents to regenerate before relying on the numbers. Keep this section as provenance only; do not reopen it unless a new source recount contradicts the current atlas wording.
+
+Separate note still worth source-checking in a future DR text cleanup lane: DR-44's "literal" `_reason` quote drops the 56-char "No reason provided for supply value update!" prefix from `Server_ChangeSideSupply.sqf:6`.
 
 ## Handoff for Codex
 - **Cluster A is the priority:** these are exactly the "source-patched vs patch-ready" reconciliations your current-state-recheck pass is doing. DR-2 is now resolved for source/maintained Vanilla and should be read as historical; the other listed code bugs remain separate current-source checks.

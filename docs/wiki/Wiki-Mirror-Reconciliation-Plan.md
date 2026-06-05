@@ -1,6 +1,6 @@
 # Wiki Mirror Reconciliation Plan
 
-This page records the no-blind-copy policy for mirror/wiki drift. The active `_wasp_wiki_tmp` checkout is currently in parity after the latest scoped sync; the `_wasp_wiki_claude` inventory below is retained as historical/alternate-checkout evidence and as the process to use if drift returns.
+This page records the no-blind-copy policy for mirror/wiki drift. The active wiki checkout is currently in full file parity with the `docs/wiki/` repo mirror as of 2026-06-05; the `_wasp_wiki_claude` inventory below is retained as historical/alternate-checkout evidence and as the process to use if drift returns.
 
 ## Current Evidence
 
@@ -8,7 +8,7 @@ This page records the no-blind-copy policy for mirror/wiki drift. The active `_w
 | --- | --- | --- |
 | Repo mirror validation | Pass | `powershell -ExecutionPolicy Bypass -File .\docs\validate-wiki.ps1` passes in `C:\Users\Steff\a2waspwarfare-docs`. |
 | Active wiki checkout validation | Pass | Current checkout uses `powershell -ExecutionPolicy Bypass -File .\docs\validate-wiki.ps1` from the repo mirror; the old `Tools\ValidateWiki.ps1` helper is not present in this tree. |
-| Active repo mirror/wiki checkout parity | Pass | Current scoped-sync batches use SHA256 parity over changed files after copying `docs/wiki/<page>` to the wiki checkout. The old `Tools\TestWikiParity.ps1` helper is not present in this tree. |
+| Active repo mirror/wiki checkout parity | Pass | 2026-06-05 full-file SHA256 parity check over every top-level file in `docs/wiki/` and the active `a2waspwarfare.wiki` checkout reports `full-diffCount=0`. Scoped sync still compares touched files first during each batch. The old `Tools\TestWikiParity.ps1` helper is not present in this tree. |
 | Older alternate checkout inventory | Historical drift | `C:\Users\Steff\_wasp_wiki_claude` previously reported broad divergence. Use the inventory below only if reconciling that alternate checkout. |
 
 ## Historical Alternate-Checkout Inventory

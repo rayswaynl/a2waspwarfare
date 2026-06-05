@@ -2644,3 +2644,11 @@ Key conclusions:
 - Rechecked current-state requests: [Coordination board](Coordination-Board) no longer lists stale Wave F sub-agent lanes as active, [Progress dashboard](Progress-Dashboard) shows Claude as `collaboration-follow-autonomous-ready`, and sidebar has one `Headless delegation and failover` entry.
 - Updated [Wiki quality audit](Wiki-Quality-Audit), [Progress dashboard](Progress-Dashboard), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl`. No gameplay source changed.
 - Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse and `git diff --check`. The validator emitted only the known non-failing legacy JSONL envelope warnings.
+
+## 2026-06-05T17:35:00+02:00 - Codex - mirror and source consistency closeout
+- Claimed `mirror-and-source-consistency-closeout` after the stale-state sweep found old mirror-drift and SQF compile-count audit residue.
+- Rechecked full repo-mirror/wiki checkout parity: SHA256 comparison over top-level `docs/wiki/` files and the active `a2waspwarfare.wiki` checkout reported `full-diffCount=0`.
+- Updated [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) to record full parity evidence while preserving the no-blind-copy policy.
+- Updated [Wiki/source consistency findings](Wiki-Source-Consistency-Findings) so the old SQF compile-count warning is historical; current [SQF code atlas](SQF-Code-Atlas) owns dated counts, DR-5 caveat and regeneration command.
+- Updated [Progress dashboard](Progress-Dashboard), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger), `agent-status.json`, `agent-collaboration.json` and `agent-events.jsonl`. No gameplay source changed.
+- Validation passed: `docs/validate-wiki.ps1`, touched JSON/JSONL parse and `git diff --check`. The validator emitted only the known non-failing legacy JSONL envelope warnings.

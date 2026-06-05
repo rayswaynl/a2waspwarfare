@@ -93,6 +93,7 @@ These are new cleanup leads from the 2026-06-05 wiki-backlog scout wave. They ar
 | 2026-06-05 | Refresh stale PR board state | Completed / validated | [PR cleanup lab](PR-Cleanup-And-Integration-Lab) now reflects current GitHub metadata after the board cleanup: closed docs/feature PRs are no longer shown as open, PR #8 remains the bundle baseline, `dev/pr8-plus-testbed` remains the combined lab branch and synthetic `origin/pr/*` refs are documented as pruned. |
 | 2026-06-05 | Close stale tooling release status warning | Completed / validated | [Tooling release readiness audit](Tooling-Release-Readiness-Audit) no longer tells agents to update old `agent-status.json` propagation wording; the current status file already routes propagated lanes as smoke pending. |
 | 2026-06-05 | Close stale Wiki Quality Audit Round 2 items | Completed / validated | [Wiki quality audit](Wiki-Quality-Audit) now marks its old Round 2 Codex-lane items resolved where current owner pages already carry the requested DR links, dated SQF recount, current coordination state and sidebar de-dupe. |
+| 2026-06-05 | Close mirror drift and stale SQF count audit residue | Completed / validated | Full repo-mirror/wiki checkout SHA256 parity now reports `full-diffCount=0`; [Wiki mirror reconciliation plan](Wiki-Mirror-Reconciliation-Plan) records that evidence, and [Wiki/source consistency findings](Wiki-Source-Consistency-Findings) marks the old SQF compile-count warning closed by the current dated SQF atlas recount. Validation passed. |
 
 ## Agent Guidance
 
