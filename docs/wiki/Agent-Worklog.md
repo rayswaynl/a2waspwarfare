@@ -13,6 +13,10 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T17:02:41+02:00 - Codex - dashboard footer live-route refresh
+
+- Refreshed [Progress dashboard](Progress-Dashboard) `Continue Reading` so the next page is [Coordination board](Coordination-Board), not the demoted [Bottleneck removal queue](Bottleneck-Removal-Queue). No gameplay source changed.
+
 ## 2026-06-05T16:58:18+02:00 - Codex - bottleneck queue demotion refresh
 
 - Demoted [Bottleneck removal queue](Bottleneck-Removal-Queue) from an old claimed lane into a supporting checklist for recurring docs/process drag.
