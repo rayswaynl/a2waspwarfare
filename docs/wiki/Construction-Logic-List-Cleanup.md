@@ -31,6 +31,16 @@ All source paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.cher
 
 Wave P also checked generated/parallel mission copies: source Chernarus, maintained Vanilla Takistan, Eden and Napf carry the same SmallSite add/add and MediumSite add/remove shape. Treat Vanilla as the required propagation target after a source patch; treat modded copies as explicit owner decisions.
 
+## Current Branch Matrix
+
+| Root / branch | SmallSite cleanup | MediumSite cleanup | Practical meaning |
+| --- | --- | --- | --- |
+| Current docs/source Chernarus | `Construction_SmallSite.sqf:98-99` says remove, then appends `_nearLogic` again. | `Construction_MediumSite.sqf:113-114` removes `_nearLogic`. | Patch-ready; source is still unpatched. |
+| Maintained Vanilla Takistan | Same SmallSite add/add shape. | Same MediumSite add/remove shape. | Propagate deliberately after Chernarus source fix. |
+| Stable `origin/master` | Same in both maintained roots. | Same in both maintained roots. | No stable-branch rescue exists. |
+| Miksuu upstream `miksuu/master` | Same in both maintained roots. | Same in both maintained roots. | No upstream rescue exists. |
+| `origin/release/2026-06-feature-bundle` | Same in both maintained roots. | Same in both maintained roots. | Release bundle still carries the one-line SmallSite cleanup debt. |
+
 ## Why It Matters
 
 Small and medium construction sites are near twins. MediumSite adds the build logic while construction is in progress and removes it after completion. SmallSite adds the same logic before construction and again at the cleanup point where its own comment says removal should happen.
@@ -102,6 +112,7 @@ Keep probes out of the final source patch unless the owner wants permanent debug
 - MediumSite behavior is unchanged.
 - No source claims are made about visible player impact until Arma 2 OA smoke records it.
 - Docs stay routed through this page, [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas), [Feature status](Feature-Status-Register) and [Source fix propagation queue](Source-Fix-Propagation-Queue).
+- Branch check 2026-06-05 found no rescue branch: current source/Vanilla, stable `origin/master`, Miksuu upstream and `origin/release/2026-06-feature-bundle` all keep SmallSite add/add while MediumSite removes.
 
 ## Continue Reading
 

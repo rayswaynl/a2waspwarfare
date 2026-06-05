@@ -20,6 +20,13 @@ When an old entry disagrees with a newer source-checked page or supersession rec
 - Result: current source/Vanilla, stable and upstream still carry selected-detail price drift, no level-0 `UNIT_COST_MODIFIER` reset and the uppercase/lowercase driver-default profile key split. Release/QoL branch fix only Chernarus selected-detail price; maintained Vanilla, modifier reset and driver key remain open.
 - Refreshed [Factory and purchase systems](Factory-And-Purchase-Systems-Atlas#buy-menu-price-and-driver-key-branch-matrix) as the matrix and condensed [Feature status](Feature-Status-Register), [Client UI systems](Client-UI-Systems-Atlas), [BuyMenu EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit) and [Source fix propagation queue](Source-Fix-Propagation-Queue). No gameplay source changed.
 
+## 2026-06-05T23:15:00+02:00 - Codex - Construction SmallSite logic branch route
+
+- Claimed `construction-smallsite-logic-branch-route` from the patch-ready construction backlog.
+- Source-checked current docs/source Chernarus, maintained Vanilla, `origin/master`, `miksuu/master` and `origin/release/2026-06-feature-bundle` for `Construction_SmallSite.sqf` and `Construction_MediumSite.sqf`.
+- Result: every checked root/branch still carries SmallSite add/add at the line where the comment says removal should happen, while MediumSite keeps the expected add/remove shape.
+- Refreshed [Construction logic list cleanup](Construction-Logic-List-Cleanup) as the branch/root matrix and condensed [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas), [Feature status](Feature-Status-Register) and [Source fix propagation queue](Source-Fix-Propagation-Queue). No gameplay source changed.
+
 ## 2026-06-05T22:50:00+02:00 - Codex - Vehicle cargo loop bounds branch route
 
 - Claimed `vehicle-cargo-loop-bounds-branch-route` from the patch-ready gear/cargo backlog.
