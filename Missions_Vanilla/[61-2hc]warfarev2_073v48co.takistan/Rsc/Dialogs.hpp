@@ -1016,216 +1016,248 @@ class WFBE_BuyGearMenu {
 	};
 };
 
-//--- Main Menu. | ALL DONE!
+//--- Main Menu. | UX redesign (Phase 1) — original style, SafeZone, grouped.
 class WF_Menu {
 	movingEnable = 1;
 	idd = 11000;
 	onLoad = "ExecVM ""Client\GUI\GUI_Menu.sqf""";
-	
+
 	class controlsBackground {
 		class Background_M : RscText {
-			x = 0.17467;
-			y = 0.186955;
-			w = 0.65066;
-			h = 0.63192;
+			x = "SafeZoneX + (SafeZoneW * 0.205)";
+			y = "SafeZoneY + (SafeZoneH * 0.12)";
+			w = "SafeZoneW * 0.59";
+			h = "SafeZoneH * 0.76";
 			moving = 1;
 			colorBackground[] = WFBE_Background_Color;
 		};
 		class Background_H : RscText {
-			x = 0.17467;
-			y = 0.186955;
-			w = 0.65066;
-			h = 0.0525;
+			x = "SafeZoneX + (SafeZoneW * 0.205)";
+			y = "SafeZoneY + (SafeZoneH * 0.12)";
+			w = "SafeZoneW * 0.59";
+			h = "SafeZoneH * 0.05";
 			moving = 1;
 			colorBackground[] = WFBE_Background_Color_Header;
 		};
 		class Background_F : RscText {
-			x = 0.17467;
-			y = 0.766375;
-			w = 0.65066;
-			h = 0.0525;
+			x = "SafeZoneX + (SafeZoneW * 0.205)";
+			y = "SafeZoneY + (SafeZoneH * 0.82)";
+			w = "SafeZoneW * 0.59";
+			h = "SafeZoneH * 0.05";
 			moving = 1;
 			colorBackground[] = WFBE_Background_Color_Footer;
 		};
 		class Background_L : RscText {
-			x = 0.17467;
-			y = 0.238455;
-			w = 0.65066;
-			h = WFBE_Background_Border_Thick;
+			x = "SafeZoneX + (SafeZoneW * 0.205)";
+			y = "SafeZoneY + (SafeZoneH * 0.17)";
+			w = "SafeZoneW * 0.59";
+			h = "SafeZoneH * 0.0025";
 			colorBackground[] = WFBE_Background_Border;
 		};
 	};
 	class controls {
+		/* Dynamic title — GUI_Menu.sqf writes uptime to idc 11015 */
+		class TitleMenu : RscText_Title {
+			idc = 11015;
+			x = "SafeZoneX + (SafeZoneW * 0.220)";
+			y = "SafeZoneY + (SafeZoneH * 0.128)";
+			w = "SafeZoneW * 0.40";
+			h = "SafeZoneH * 0.040";
+			sizeEx = 0.040;
+		};
+
+		/* Section headers (decorative, idc -1) */
+		class Sect_Purchase : RscText_SubTitle {
+			idc = -1;
+			x = "SafeZoneX + (SafeZoneW * 0.220)";
+			y = "SafeZoneY + (SafeZoneH * 0.190)";
+			w = "SafeZoneW * 0.27";
+			h = "SafeZoneH * 0.028";
+			sizeEx = 0.028;
+			text = "PURCHASE";
+		};
+		class Sect_General : Sect_Purchase {
+			y = "SafeZoneY + (SafeZoneH * 0.438)";
+			text = "GENERAL";
+		};
+		class Sect_Command : Sect_Purchase {
+			x = "SafeZoneX + (SafeZoneW * 0.520)";
+			text = "COMMAND";
+		};
+
+		/* PURCHASE column (left) */
 		class Button_A : RscShortcutButtonMain {
 			idc = 11001;
-			x = 0.17598;
-			y = 0.250358;
-			w = 0.313727;
-			h = 0.104575;
+			x = "SafeZoneX + (SafeZoneW * 0.215)";
+			y = "SafeZoneY + (SafeZoneH * 0.222)";
+			w = "SafeZoneW * 0.27";
+			h = "SafeZoneH * 0.098";
 			text = $STR_WF_MAIN_Purchase_Units;
 			tooltip = $STR_WF_TOOLTIP_MainMenu_Purchase_Units;
 			action = "MenuAction = 1";
 		};
 		class Button_B : RscShortcutButtonMain {
 			idc = 11002;
-			x = 0.17598;
-			y = 0.35116;
-			w = 0.313727;
-			h = 0.104575;
+			x = "SafeZoneX + (SafeZoneW * 0.215)";
+			y = "SafeZoneY + (SafeZoneH * 0.328)";
+			w = "SafeZoneW * 0.27";
+			h = "SafeZoneH * 0.098";
 			text = $STR_WF_MAIN_Purchase_Gear;
 			tooltip = $STR_WF_TOOLTIP_MainMenu_Purchase_Gear;
 			action = "MenuAction = 2";
 		};
+
+		/* GENERAL column (left) */
 		class Button_C : RscShortcutButtonMain {
 			idc = 11003;
-			x = 0.17598;
-			y = 0.451959;
-			w = 0.313727;
-			h = 0.104575;
+			x = "SafeZoneX + (SafeZoneW * 0.215)";
+			y = "SafeZoneY + (SafeZoneH * 0.470)";
+			w = "SafeZoneW * 0.27";
+			h = "SafeZoneH * 0.098";
 			text = $STR_WF_MAIN_TeamMenu;
 			tooltip = $STR_WF_TOOLTIP_MainMenu_TeamMenu;
 			action = "MenuAction = 3";
 		};
-		class Button_D : RscShortcutButtonMain {
-			idc = 11004;
-			x = 0.510943;
-			y = 0.65356;
-			w = 0.313727;
-			h = 0.104575;
-			text = $STR_WF_MAIN_VotingMenu;
-			tooltip = $STR_WF_TOOLTIP_MainMenu_VoteForCommander;
-			action = "MenuAction = 4";
+		class Button_I : RscShortcutButtonMain {
+			idc = 11009;
+			x = "SafeZoneX + (SafeZoneW * 0.215)";
+			y = "SafeZoneY + (SafeZoneH * 0.576)";
+			w = "SafeZoneW * 0.27";
+			h = "SafeZoneH * 0.098";
+			text = $STR_WF_SupportMenu;
+			tooltip = $STR_WF_TOOLTIP_CommandMenu_SupportMenu;
+			action = "MenuAction = 9";
 		};
+		class Button_J : RscShortcutButtonMain {
+			idc = 11010;
+			x = "SafeZoneX + (SafeZoneW * 0.215)";
+			y = "SafeZoneY + (SafeZoneH * 0.682)";
+			w = "SafeZoneW * 0.27";
+			h = "SafeZoneH * 0.098";
+			text = $STR_WF_HelpMenu;
+			tooltip = $STR_WF_TOOLTIP_CommandMenu_Help;
+			action = "MenuAction = 13";
+		};
+
+		/* COMMAND column (right) */
 		class Button_E : RscShortcutButtonMain {
 			idc = 11005;
-			x = 0.510943;
-			y = 0.250358;
-			w = 0.313727;
-			h = 0.104575;
+			x = "SafeZoneX + (SafeZoneW * 0.515)";
+			y = "SafeZoneY + (SafeZoneH * 0.222)";
+			w = "SafeZoneW * 0.27";
+			h = "SafeZoneH * 0.098";
 			text = $STR_WF_MAIN_CommandMenu;
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_Commandteam;
 			action = "MenuAction = 5";
 		};
 		class Button_F : RscShortcutButtonMain {
 			idc = 11006;
-			x = 0.17598;
-			y = 0.55276;
-			w = 0.313727;
-			h = 0.104575;
+			x = "SafeZoneX + (SafeZoneW * 0.515)";
+			y = "SafeZoneY + (SafeZoneH * 0.334)";
+			w = "SafeZoneW * 0.27";
+			h = "SafeZoneH * 0.098";
 			text = $STR_WF_MAIN_TacticalMenu;
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_SpecialMenu;
 			action = "MenuAction = 6";
-		};		
-
-		
+		};
 		class Button_G : RscShortcutButtonMain {
 			idc = 11007;
-			x = 0.510943;
-			y = 0.451959;
-			w = 0.313727;
-			h = 0.104575;
+			x = "SafeZoneX + (SafeZoneW * 0.515)";
+			y = "SafeZoneY + (SafeZoneH * 0.446)";
+			w = "SafeZoneW * 0.27";
+			h = "SafeZoneH * 0.098";
 			text = $STR_WF_MAIN_UpgradeMenu;
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_Upgrade_Menu;
 			action = "MenuAction = 7";
 		};
-		
 		class Button_H : RscShortcutButtonMain {
 			idc = 11008;
-			x = 0.510943;
-			y = 0.35116;
-			w = 0.313727;
-			h = 0.104575;
+			x = "SafeZoneX + (SafeZoneW * 0.515)";
+			y = "SafeZoneY + (SafeZoneH * 0.558)";
+			w = "SafeZoneW * 0.27";
+			h = "SafeZoneH * 0.098";
 			text = $STR_WF_MAIN_EconomyMenu;
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_Commander_Menu;
 			action = "MenuAction = 8";
 		};
-		class Button_I : RscShortcutButtonMain {
-			idc = 11009;
-			x = 0.17598;
-			y = 0.65356;
-			w = 0.313727;
-			h = 0.104575;
-			text = $STR_WF_SupportMenu;
-			tooltip = $STR_WF_TOOLTIP_CommandMenu_SupportMenu;
-			action = "MenuAction = 9";
+		class Button_D : RscShortcutButtonMain {
+			idc = 11004;
+			x = "SafeZoneX + (SafeZoneW * 0.515)";
+			y = "SafeZoneY + (SafeZoneH * 0.670)";
+			w = "SafeZoneW * 0.27";
+			h = "SafeZoneH * 0.098";
+			text = $STR_WF_MAIN_VotingMenu;
+			tooltip = $STR_WF_TOOLTIP_MainMenu_VoteForCommander;
+			action = "MenuAction = 4";
 		};
-		
-		class Button_J : RscShortcutButtonMain {
-			idc = 11010;
-			x = 0.510943;
-			y = 0.55276;
-			w = 0.313727;
-			h = 0.104575;
-			text = $STR_WF_HelpMenu;
-			tooltip = $STR_WF_TOOLTIP_CommandMenu_Help;
-			action = "MenuAction = 13";
-		};
-		
-		class TitleMenu: RscText_Title {
-			idc = 11015;
-			x = 0.178164;
-			y = 0.19379;
-			w = 0.800001;
-			sizeEx = 0.035;
+
+		/* Tools footer cluster */
+		class Tools_Label : RscText_SubTitle {
+			idc = -1;
+			x = "SafeZoneX + (SafeZoneW * 0.220)";
+			y = "SafeZoneY + (SafeZoneH * 0.832)";
+			w = "SafeZoneW * 0.05";
+			h = "SafeZoneH * 0.026";
+			sizeEx = 0.022;
+			text = "TOOLS";
 		};
 		class CA_PA_Button : RscClickableText {
 			idc = 11012;
-			x = 0.776399;
-			y = 0.191982;
-			w = 0.04;
-			h = 0.04;
+			x = "SafeZoneX + (SafeZoneW * 0.262)";
+			y = "SafeZoneY + (SafeZoneH * 0.827)";
+			w = "SafeZoneW * 0.024";
+			h = "SafeZoneH * 0.038";
 			text = "\ca\ui\data\iconvehicle_ca.paa";
 			action = "MenuAction = 12";
 			tooltip = $STR_WF_TOOLTIP_Parameter;
 		};
 		class CA_UN_Button : RscClickableText {
 			idc = 11013;
-			x = 0.194088;
-			y = 0.767144;
-			w = 0.045;
-			h = 0.045;
+			x = "SafeZoneX + (SafeZoneW * 0.290)";
+			y = "SafeZoneY + (SafeZoneH * 0.827)";
+			w = "SafeZoneW * 0.024";
+			h = "SafeZoneH * 0.038";
 			text = "\ca\ui\data\stats_soft_ca.paa";
 			action = "MenuAction = 10";
 			tooltip = $STR_WF_TOOLTIP_Unflip;
 		};
 		class CA_HB_Button : RscClickableText {
 			idc = 11014;
-			x = 0.265514;
-			y = 0.766938;
-			w = 0.045;
-			h = 0.045;
+			x = "SafeZoneX + (SafeZoneW * 0.318)";
+			y = "SafeZoneY + (SafeZoneH * 0.827)";
+			w = "SafeZoneW * 0.024";
+			h = "SafeZoneH * 0.038";
 			text = "\ca\ui\data\editor_2d_camera_ca.paa";
 			action = "MenuAction = 11";
 			tooltip = $STR_WF_TOOLTIP_HeadBugFix;
 		};
-		/* Exit */
-		class Exit_Button : RscButton_Exit {
-			x = 0.778103;
-			y = 0.769671;
-			onButtonClick = "closeDialog 0;";
-			tooltip = $STR_WF_TOOLTIP_CloseButton;
-		};
-		
 		class CA_HUD_Button : RscClickableText {
 			idc = 11018;
-			x = 0.410;
-			y = 0.78000;
-			w = 0.040;
-			h = 0.040;
+			x = "SafeZoneX + (SafeZoneW * 0.346)";
+			y = "SafeZoneY + (SafeZoneH * 0.827)";
+			w = "SafeZoneW * 0.024";
+			h = "SafeZoneH * 0.038";
 			text = "Client\images\hud_bis.paa";
 			action = "MenuAction = 16";
 			tooltip = "ALL SCREEN HUD On/Off";
-		};		
-		// Marty: Button next to RHUD for the lightweight client/server FPS overlay.
+		};
 		class CA_FPSHUD_Button : RscClickableText {
 			idc = 11019;
-			x = 0.455;
-			y = 0.78000;
-			w = 0.040;
-			h = 0.040;
+			x = "SafeZoneX + (SafeZoneW * 0.374)";
+			y = "SafeZoneY + (SafeZoneH * 0.827)";
+			w = "SafeZoneW * 0.024";
+			h = "SafeZoneH * 0.038";
 			text = "Client\images\fps_hud.jpg";
 			action = "MenuAction = 19";
 			tooltip = "FPS HUD On/Off";
+		};
+		class Exit_Button : RscButton_Exit {
+			x = "SafeZoneX + (SafeZoneW * 0.762)";
+			y = "SafeZoneY + (SafeZoneH * 0.827)";
+			w = "SafeZoneW * 0.030";
+			h = "SafeZoneH * 0.040";
+			onButtonClick = "closeDialog 0;";
+			tooltip = $STR_WF_TOOLTIP_CloseButton;
 		};
 	};
 };
