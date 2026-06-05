@@ -34,6 +34,12 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-06T00:20:00+02:00 - Codex - Salvage pruning ledger duplicate trim
+
+- Claimed `pruning-ledger-salvage-duplicate-row-trim` after [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger) carried both the newer `salvage-payout-cleanup-branch-route` row and the older mini-scout `salvage-payout-loop-branch-route` row in Recent Pruning Decisions.
+- Removed the older duplicate row from the active ledger only. The broader branch-checked salvage cleanup row remains live, and provenance stays in this worklog, [`agent-events.jsonl`](agent-events.jsonl), git history and [Construction and CoIn](Construction-And-CoIn-Systems-Atlas#salvage-branch-matrix).
+- No gameplay source changed.
+
 ## 2026-06-06T00:15:00+02:00 - Codex-helper - Side-supply clamp branch route
 
 - Claimed `side-supply-clamp-branch-route` from the economy authority backlog.
