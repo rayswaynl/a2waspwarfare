@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-05T23:59:59+02:00",
+  "generatedAt": "2026-06-05T15:50:20+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -40,6 +40,28 @@
         "Publish scoped validation batches."
       ],
       "handoff": "Continue from fresh source evidence, owner requests or newly returned helper reports."
+    },
+    {
+      "lane": "old-be-current-wasp-fps-opportunity-scout-2",
+      "owner": "Codex-delegated",
+      "status": "active-read-only",
+      "sourceScope": [
+        "C:/Users/Steff/Documents/Codex/2026-06-05/wasp-old-mission-fps-opportunity-window",
+        "https://github.com/BennyBoy-/ArmA2_WarfareBE",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "docs/wiki/Old-WarfareBE-Performance-Comparison.md",
+        "docs/wiki/Player-AI-Caps-And-Role-Balance.md",
+        "docs/wiki/Performance-Opportunity-Sweep.md",
+        "docs/wiki/Testing-Debugging-And-Release-Workflow.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Server-Runtime-And-Operations.md"
+      ],
+      "outputs": [
+        "Report-only old BE vs current Wasp FPS opportunity scout.",
+        "Compare AI caps, town/static lifecycle, AI loops, cleanup, HUD/marker/PV work, HC delegation, network assumptions and benchmark design.",
+        "Expected output: C:/Users/Steff/Documents/Codex/2026-06-05/wasp-old-mission-fps-opportunity-window/outputs/Old-BE-vs-Current-Wasp-FPS-Opportunity-Scout.md"
+      ],
+      "handoff": "When complete, harvest only compact source-backed deltas into canonical owner pages. Do not edit gameplay source from this lane."
     },
     {
       "lane": "autonomous-claude-research",
@@ -195,6 +217,12 @@
       "suggestedOwner": "Codex",
       "status": "active-ongoing",
       "summary": "Continuing scoped source-backed wiki upkeep."
+    },
+    {
+      "lane": "old-be-current-wasp-fps-opportunity-scout-2",
+      "suggestedOwner": "Codex-delegated",
+      "status": "active-read-only",
+      "summary": "Fresh old BE vs current Wasp FPS opportunity scout; report-only until harvested."
     },
     {
       "lane": "autonomous-claude-research",

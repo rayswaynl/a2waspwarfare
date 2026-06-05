@@ -2818,3 +2818,8 @@ Key conclusions:
 - Claimed `fps-helper-lane-compaction` after [Progress dashboard](Progress-Dashboard), [`agent-status.json`](agent-status.json) and [`agent-collaboration.json`](agent-collaboration.json) still showed old BE/FPS helper windows as live or ready-for-review lanes after their outputs were harvested.
 - Removed `old-be-wasp-fps-archaeology` and `old-vs-current-fps-opportunity-scout` from live lane surfaces. Their history remains in this worklog and [`agent-events.jsonl`](agent-events.jsonl); their actionable output routes through old-BE, player-cap, performance, testing and Feature Status owner pages.
 - No gameplay source files changed.
+
+## 2026-06-05T15:50:20+02:00 - Codex delegated - old BE/current Wasp FPS scout 2 claim
+- Opened and pinned Codex thread `019e9808-757a-7a52-81a6-8bd1050ebe6c` as `old-be-current-wasp-fps-opportunity-scout-2`.
+- Scope is read-only archaeology: compare BennyBoy old Warfare BE against current Wasp for client/server FPS opportunities across AI caps, town/static lifecycle, cleanup, HUD/marker/PV work, HC delegation and benchmark design.
+- Expected report path: `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-mission-fps-opportunity-window\outputs\Old-BE-vs-Current-Wasp-FPS-Opportunity-Scout.md`. No gameplay source files changed.

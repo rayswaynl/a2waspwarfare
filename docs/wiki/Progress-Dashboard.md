@@ -41,6 +41,7 @@ Older published batches are intentionally omitted from this table. Use [Agent wo
 | Actor | Status | Current lane | What to expect next |
 | --- | --- | --- | --- |
 | Codex | Active | `documentation-finisher-loop` | Keeping PR/release, upstream and backlog status pages current as branch heads and helper reports move. |
+| FPS scout window | Active / read-only | `old-be-current-wasp-fps-opportunity-scout-2` | Comparing BennyBoy old Warfare BE against current Wasp for client/server FPS opportunities. Report target: `C:\Users\Steff\Documents\Codex\2026-06-05\wasp-old-mission-fps-opportunity-window\outputs\Old-BE-vs-Current-Wasp-FPS-Opportunity-Scout.md`; harvest only compact source-backed deltas when complete. |
 | Codex-2 | Ready | None | Pick a bounded source-backed lane from PVF dispatcher lookup, side-supply clamp first, commander reassignment call-shape repair or remaining supply authority hardening. |
 | Claude | Autonomous-ready | `collaboration-follow-autonomous-ready` | Coverage Ledger navigation is wired. Claude can self-select the next bounded source-backed review from the ledger or hardening backlog. |
 | Supported docs agents | First batch published / historical | `research-catchup-synthesis-default-supported`, `relevance-pruning-and-archive-default-supported` | Earlier account-default helper chats produced catch-up and pruning/archive work. Relaunch or resume only for a fresh narrow lane; they are not live dashboard blockers. |
@@ -74,6 +75,7 @@ This table is only for active, autonomous-ready, watchlist or future owner lanes
 | Lane | Owner | Status | Next action |
 | --- | --- | --- | --- |
 | `documentation-finisher-loop` | Codex | Active / ongoing | Keep the wiki current from source evidence after this pruning goal closes. |
+| `old-be-current-wasp-fps-opportunity-scout-2` | Codex delegated window | Active / read-only | Finish old BE vs current Wasp source comparison for AI caps, town/static lifecycle, client HUD/marker work, PV traffic, HC delegation and benchmark design. Do not edit gameplay source. |
 | `autonomous-claude-research` | Claude | Autonomous-ready | Self-select the next bounded source-backed review from [Codebase coverage ledger](Codebase-Coverage-Ledger) when Claude is active. |
 | `feature-status-reconciliation` | Codex / future agent | Watchlist | Fold newly confirmed findings into [Feature status](Feature-Status-Register), owner pages and machine records. No untriaged finding is blocking this dashboard. |
 | `implementation-hardening-from-backlog` | Future code owner | Owner decision / code lane | Pick implementation work from [`agent-hardening-backlog.jsonl`](agent-hardening-backlog.jsonl) only when Steff asks for gameplay patches or a code owner claims the work. |
