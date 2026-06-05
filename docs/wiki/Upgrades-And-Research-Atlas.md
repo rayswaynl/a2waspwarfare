@@ -109,6 +109,8 @@ Inside `GUI_UpgradeMenu.sqf`:
 6. The client sends `["RequestUpgrade", [WFBE_Client_SideJoined, _id, _upgrade_current, true]]` to the server (`line 161`).
 7. Non-server clients spawn a local timer and later send `RequestSpecial ["upgrade-sync", ...]` (`lines 167-172`) so `Server_ProcessUpgrade.sqf` can release before the full server sleep if the sync flag arrives.
 
+The `upgrade-sync` companion is branch-scoped in [Support specials](Support-Specials-And-Tactical-Modules-Atlas#upgrade-sync-branch-matrix). Current source, maintained Vanilla, stable, Miksuu upstream, `perf/quick-wins` and release all keep the same mixed `_args` / `_this` parser in `Server_HandleSpecial.sqf:67-73`. Because `_args = _this` at function entry, this is cleanup/fragility debt rather than a confirmed current break; future router work should still normalize the tuple before broader RequestSpecial hardening.
+
 This is functional for normal honest commanders, but it is not server-authoritative.
 
 ## Server Flow

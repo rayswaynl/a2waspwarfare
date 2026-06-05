@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-06T00:50:00+02:00 - Codex helper - RequestSpecial upgrade-sync branch route
+
+- Claimed `requestspecial-upgrade-sync-branch-route` from the RequestSpecial/upgrades cleanup backlog.
+- Source-checked current source Chernarus, maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and current release `d482c742`.
+- Result: every checked maintained root/branch keeps the same `Server_HandleSpecial.sqf` mixed `_args` / `_this` parser for `upgrade-sync`, while `Server_HandleSpecial.sqf:3` assigns `_args = _this`; this is cleanup/fragility debt, not a confirmed current runtime break. Release only shifts the Chernarus upgrade-menu caller to `GUI_UpgradeMenu.sqf:254`.
+- Updated [Support specials](Support-Specials-And-Tactical-Modules-Atlas#upgrade-sync-branch-matrix), [Upgrades and research](Upgrades-And-Research-Atlas), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
+
 ## 2026-06-06T00:30:00+02:00 - Codex helper - vote/help UI edge branch route
 
 - Claimed `vote-help-ui-edge-branch-route` from the UI correctness backlog.

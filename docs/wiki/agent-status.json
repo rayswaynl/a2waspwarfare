@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-06T00:30:00+02:00",
+  "generatedAt": "2026-06-06T00:50:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Reconciled the newest camp-count helper, WASP marker wait, clickable-text soundPush, side-supply clamp, empty supply-truck cleanup and vote/help UI edge branch matrices across wiki and docs/wiki. Towns-Camps-And-Capture-Atlas, WASP-Marker-Wait-Cleanup, Client-UI-Systems-Atlas, Economy-Authority-First-Cut and Marker-Cleanup-Restoration-Systems-Atlas are the canonical routes.",
+      "currentWork": "Reconciled the newest camp-count helper, WASP marker wait, clickable-text soundPush, side-supply clamp, empty supply-truck cleanup, vote/help UI edge and RequestSpecial upgrade-sync branch matrices across wiki and docs/wiki. Towns-Camps-And-Capture-Atlas, WASP-Marker-Wait-Cleanup, Client-UI-Systems-Atlas, Economy-Authority-First-Cut, Marker-Cleanup-Restoration-Systems-Atlas and Support-Specials-And-Tactical-Modules-Atlas are the canonical routes.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -121,6 +121,12 @@
       "owner": "Codex-helper",
       "status": "published-validated",
       "output": "Client UI systems now owns the branch-checked route for vote refresh/row-color, help namespace and GPS router-only cleanup; Feature Status, Source Fix Propagation Queue and machine records point future code owners to the small UI patch plus vote/help/main-menu smoke. No gameplay source changed."
+    },
+    {
+      "lane": "requestspecial-upgrade-sync-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "output": "Support specials now owns the branch-checked route for RequestSpecial upgrade-sync tuple cleanup; Feature Status, Source Fix Propagation Queue and machine records mark it as consistency debt because _args = _this, not a proven runtime break. No gameplay source changed."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",

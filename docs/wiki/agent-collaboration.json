@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-06T00:30:00+02:00",
+  "generatedAt": "2026-06-06T00:50:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -315,6 +315,30 @@
       "handoff": "Closed as docs-published. Future code owner should fix vote loops and row-color target, clean help onLoad/onUnload namespace state, decide remove-vs-revive for GPS 17/18, propagate maintained Vanilla and smoke vote refresh, help open/close and main-menu HUD/GPS behavior."
     },
     {
+      "lane": "requestspecial-upgrade-sync-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_UpgradeMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ProcessUpgrade.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "docs/wiki/Support-Specials-And-Tactical-Modules-Atlas.md",
+        "docs/wiki/Upgrades-And-Research-Atlas.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Branch-checked RequestSpecial upgrade-sync tuple parsing without changing gameplay source.",
+        "Routed the cleanup through Support specials, Upgrades, Feature Status, Source Fix Propagation Queue and machine records with the caveat that _args = _this makes it consistency debt rather than a confirmed runtime break."
+      ],
+      "handoff": "Closed as docs-published. Future code owner should normalize Server_HandleSpecial.sqf upgrade-sync to one tuple source, keep RequestUpgrade authority migration separate, propagate maintained Vanilla and smoke normal upgrade completion plus non-server timer sync."
+    },
+    {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
       "owner": "Codex-delegated",
       "status": "returned-harvested",
@@ -501,7 +525,8 @@
     "clickabletext-soundpush-branch-route",
     "side-supply-clamp-branch-route",
     "empty-supply-truck-cleanup-branch-route",
-    "vote-help-ui-edge-branch-route"
+    "vote-help-ui-edge-branch-route",
+    "requestspecial-upgrade-sync-branch-route"
   ],
   "queuedReports": [],
   "lanes": [
@@ -570,6 +595,12 @@
       "suggestedOwner": "Codex-helper",
       "status": "published-validated",
       "summary": "Branch-checked vote/help/main-menu UI edge cases across current source, maintained Vanilla, stable, upstream, perf and release, then updated UI/status docs without gameplay source changes."
+    },
+    {
+      "lane": "requestspecial-upgrade-sync-branch-route",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "Branch-checked RequestSpecial upgrade-sync tuple parsing across current source, maintained Vanilla, stable, upstream, perf and release, then updated support/upgrades/status docs without gameplay source changes."
     },
     {
       "lane": "old-be-current-wasp-fps-opportunity-scout-2",
