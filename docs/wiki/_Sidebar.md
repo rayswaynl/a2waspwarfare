@@ -7,6 +7,7 @@
   - [AI assistant guide](AI-Assistant-Guide)
   - [AI assistant developer guide](AI-Assistant-Developer-Guide)
   - [LLM agent entry pack](LLM-Agent-Entry-Pack)
+  - [Agent development pack alias](Agent-Development-Pack)
   - [llms.txt](llms.txt)
 - Status and coordination
   - [Agent context](Agent-Context)

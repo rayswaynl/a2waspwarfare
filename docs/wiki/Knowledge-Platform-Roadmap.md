@@ -27,7 +27,7 @@ The 2026-06-04 agent-readable scout found that the docs already have the right l
 
 | Finding | Evidence | Action |
 | --- | --- | --- |
-| Missing agent development pack alias | `LLM-Agent-Entry-Pack.md` exists, but `Agent-Development-Pack.md` does not. Some prompts and agents still ask for an agent development pack by that name. | Add a lightweight alias page or normalize every prompt/link to [LLM agent entry pack](LLM-Agent-Entry-Pack). |
+| Agent development pack alias is fixed | [Agent development pack](Agent-Development-Pack) now exists as a lightweight compatibility alias for prompts that ask for that name. | Keep it as a gateway only; update [LLM agent entry pack](LLM-Agent-Entry-Pack) for real boot-order changes. |
 | Active state history leak is mostly fixed | `agent-status.json`, `agent-collaboration.json` and `agent-context.json` now carry compact live lane snapshots after the 2026-06-05 dashboard current-lane cleanup. | Keep completed lanes in `agent-events.jsonl`, [Agent worklog](Agent-Worklog) and git history. Future work is schema naming/validation, not another large live-state archive. |
 | Machine records use mixed envelopes | Existing JSONL rows mix `ts` and `timestamp`, plus different actor/status/source fields. | Introduce a shared schema envelope before adding CI-grade schema validation. Do not rewrite history blindly; add normalized records going forward and teach validators to tolerate legacy rows. |
 | Page-to-source lookup is scattered | Canonical pages cite source evidence, but there is no compact machine index from page/system to source proof refs. | Add `agent-machine-index.json` or extend `agent-context.json` with page id, system, branch scope, source refs, risk tier, latest stale check and next gate. |

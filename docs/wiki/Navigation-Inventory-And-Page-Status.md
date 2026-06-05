@@ -10,11 +10,11 @@ Snapshot generated from `docs/wiki/*.md`, `_Sidebar.md` and `mkdocs.yml` on 2026
 
 | Item | Count | Meaning |
 | --- | ---: | --- |
-| Markdown pages | 141 | All `.md` pages in `docs/wiki`, including `_Sidebar.md` and `_Footer.md`. |
-| Content pages | 139 | Markdown pages excluding `_Sidebar.md` and `_Footer.md`. |
-| Sidebar pages | 110 | Pages linked from the GitHub wiki sidebar. |
-| MkDocs pages | 119 | Pages listed in `mkdocs.yml` navigation. |
-| Pages in both navs | 110 | Primary pages visible in both GitHub wiki and MkDocs. |
+| Markdown pages | 142 | All `.md` pages in `docs/wiki`, including `_Sidebar.md` and `_Footer.md`. |
+| Content pages | 140 | Markdown pages excluding `_Sidebar.md` and `_Footer.md`. |
+| Sidebar pages | 111 | Pages linked from the GitHub wiki sidebar. |
+| MkDocs pages | 120 | Pages listed in `mkdocs.yml` navigation. |
+| Pages in both navs | 111 | Primary pages visible in both GitHub wiki and MkDocs. |
 | Pages in neither nav | 20 | Usually archives, instruction pages, old queues, analysis notes or narrow patch pages reached through canonical pages. |
 | Sidebar-only pages | 0 | The 2026-06-05 MkDocs parity pass added the remaining primary sidebar pages to repo mirror navigation. |
 | MkDocs-only pages | 9 | All imported Miksuu archive pages. |

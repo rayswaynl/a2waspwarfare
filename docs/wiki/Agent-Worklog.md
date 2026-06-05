@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-05T14:50:00+02:00 - Codex - agent development pack alias
+
+- Claimed `agent-development-pack-alias` from [Knowledge platform roadmap](Knowledge-Platform-Roadmap) after the roadmap noted that older prompts still ask for an "Agent Development Pack" while the canonical page is [LLM agent entry pack](LLM-Agent-Entry-Pack).
+- Added [Agent development pack](Agent-Development-Pack) as a lightweight alias page that routes to [LLM agent entry pack](LLM-Agent-Entry-Pack), `agent-entrypoint.json`, `llms.txt`, `agent-context.json`, [Progress dashboard](Progress-Dashboard) and [Feature status](Feature-Status-Register).
+- Wired the alias into `_Sidebar.md`, `mkdocs.yml` and `llms.txt`, then refreshed [Navigation inventory](Navigation-Inventory-And-Page-Status): `142` Markdown pages, `140` content pages, `111` sidebar pages, `120` MkDocs pages, `111` pages in both navs, `9` MkDocs-only archive pages, `20` neither-nav support pages and `0` pages missing `Continue Reading`.
+- No gameplay source changed.
+
 ## 2026-06-05T14:30:00+02:00 - Codex - onboarding gateway pruning
 
 - Claimed `onboarding-gateway-pruning` from [Wiki pruning and relevance ledger](Wiki-Pruning-And-Relevance-Ledger) after Home, Quickstart, AI Assistant Guide and LLM Agent Entry Pack were repeating boot-order, safety and status material.

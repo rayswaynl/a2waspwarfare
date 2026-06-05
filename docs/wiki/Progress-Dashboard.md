@@ -28,6 +28,7 @@ Keep this page open when parallel documentation work is running. It links to the
 
 | Lane | Status | Output |
 | --- | --- | --- |
+| `agent-development-pack-alias` | Published / validated | Added [Agent development pack](Agent-Development-Pack) as a lightweight compatibility alias to [LLM agent entry pack](LLM-Agent-Entry-Pack), wired it into sidebar, MkDocs and `llms.txt`, and refreshed navigation counts. No gameplay source changed. |
 | `onboarding-gateway-pruning` | Published / validated | Condensed [Home](Home), [Quickstart](Quickstart-For-Humans-And-Agents), [AI assistant guide](AI-Assistant-Guide) and [LLM agent entry pack](LLM-Agent-Entry-Pack) so only the LLM pack owns canonical AI boot order, Home stays a front door and volatile status routes to live owner pages. No gameplay source changed. |
 | `takistan-fpv-mirror-sync` | Published / validated | Synced the wiki-only [Takistan airfield FPV drone design](Takistan-Airfield-FPV-Drone-Design) into `docs/wiki/`, added it to MkDocs Community & Dev navigation and refreshed navigation counts. No gameplay source changed. |
 | `neither-nav-support-closeout` | Published / validated | Classified the remaining 20 neither-nav pages as intentional support-only material: patch-ready handoffs, evidence ledgers/queues, agent instructions and analysis support. No gameplay source changed. |

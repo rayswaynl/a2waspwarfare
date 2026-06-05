@@ -14,6 +14,7 @@ plugins:
 nav:
   - Home: Home.md
   - LLM Agent Entry Pack: LLM-Agent-Entry-Pack.md
+  - Agent Development Pack Alias: Agent-Development-Pack.md
   - llms.txt: llms.txt
   - Quickstart: Quickstart-For-Humans-And-Agents.md
   - AI Assistant Guide: AI-Assistant-Guide.md
