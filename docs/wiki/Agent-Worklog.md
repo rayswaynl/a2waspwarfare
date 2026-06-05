@@ -13,6 +13,12 @@ For current state, start with:
 
 When an old entry disagrees with a newer source-checked page or supersession record, trust the newer source-checked record and preserve the old line as provenance.
 
+## 2026-06-05T21:25:00+02:00 - Codex - old FPS scout addendum harvest
+
+- Read the returned `old-warfarebe-fps-scout` thread. It left no files in its projectless workspace, but the thread report had compact, source-backed deltas.
+- Harvested only non-duplicate deltas into canonical owner pages: current delegated town AI's non-global init optimization, `publicVariableServer` routing nuance versus old broadcast requests, `SERVER_FPS_GUI` / `WFBE_VAR_SERVER_FPS` consumer caveat, AntiStack/PerformanceAudit as explicit A/B test variables and static-defense HC readback as unproven.
+- Updated [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison), [Performance opportunity sweep](Performance-Opportunity-Sweep), [AI, headless and performance](AI-Headless-And-Performance), [Feature status](Feature-Status-Register), [Progress dashboard](Progress-Dashboard) and [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger). No gameplay source changed.
+
 ## 2026-06-05T21:05:00+02:00 - Codex - old-FPS feature routing
 
 - Claimed `old-fps-feature-routing` after the expanded [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison) landed but [Feature status](Feature-Status-Register) and machine lookup files did not yet expose it as a current test/decision lane.

@@ -88,6 +88,7 @@ Instrumented areas include:
 - RHUD caches controls, text and colors to avoid rewriting unchanged UI every second.
 - Team and town marker loops include local caches and audit counters.
 - Common marker helper loops (`Common_MarkerUpdate.sqf` and `Common_AARadarMarkerUpdate.sqf`) also use cached marker state and should remain measurement-led.
+- Delegated town AI avoids some global per-unit init work by passing the non-global creation path through `Client_DelegateTownAI.sqf` and `Common_CreateTownUnits.sqf`; this is a current-Wasp optimization over the old embedded delegation path, not a regression.
 - Volumetric clouds are force-disabled because of FPS/stutter cost with skipTime.
 - Day/night sync uses small client-side skipTime steps, server date broadcasts and hard sync only for excessive drift.
 - Anti-stack loops can be disabled by mission parameter for controlled audits.
@@ -97,7 +98,7 @@ Instrumented areas include:
 
 `Server/GUI/serverFpsGUI.sqf` and `Server/Module/serverFPS/monitorServerFPS.sqf` publish server FPS data used by HUD/status surfaces. Earlier compile lines for `WFBE_CO_FNC_monitorServerFPS` are commented at `Server/Init/Init_Server.sqf:65,90`, but `Init_Server.sqf` later executes the GUI and module directly at `Server/Init/Init_Server.sqf:578,595`.
 
-Source anchors: `Server/GUI/serverFpsGUI.sqf:1-10` exits immediately when `!isDedicated`, then publishes `SERVER_FPS_GUI` every 8 seconds on dedicated servers; `Server/Module/serverFPS/monitorServerFPS.sqf:1-6` now uses the same early-exit shape for `WFBE_VAR_SERVER_FPS`. The hosted/listen-server busy-loop caveat is DR-19 and is patched in source Chernarus plus maintained Vanilla; Arma smoke remains pending.
+Source anchors: `Server/GUI/serverFpsGUI.sqf:1-10` exits immediately when `!isDedicated`, then publishes `SERVER_FPS_GUI` every 8 seconds on dedicated servers; `Server/Module/serverFPS/monitorServerFPS.sqf:1-6` now uses the same early-exit shape for `WFBE_VAR_SERVER_FPS`. RHUD reads `SERVER_FPS_GUI`; a current-source search did not find an obvious `WFBE_VAR_SERVER_FPS` consumer, so consolidation is plausible but still needs generated-mission/branch smoke. The hosted/listen-server busy-loop caveat is DR-19 and is patched in source Chernarus plus maintained Vanilla; Arma smoke remains pending.
 
 ## Performance Caveats
 

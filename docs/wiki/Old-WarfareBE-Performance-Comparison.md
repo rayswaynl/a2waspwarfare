@@ -10,7 +10,7 @@ The practical differences are more specific:
 
 - Old BE's default player AI cap is lower, and it has no commander `+10` purchase bonus.
 - Current Wasp has a broader runtime surface: HC routing, AntiStack, supply-mission traffic, Discord/extension stats, PerformanceAudit, server-FPS publishers, map cleaners/restorers, RHUD and richer marker logic.
-- Current Wasp also has optimizations old BE did not have: global town loops with cooperative sleeps, town creation sleeps, resistance-only static-defense spawning, HC delegation paths and client marker caches.
+- Current Wasp also has optimizations old BE did not have: global town loops with cooperative sleeps, town creation sleeps, delegated town AI avoiding global per-unit init, resistance-only static-defense spawning, HC delegation paths and client marker caches.
 - The first FPS step should not be "set every player to 10 AI and call it done." Test a lower normal-role cap, keep Soldier/commander role identity deliberately, and pair that with active-town/static-defense cleanup and HC verification.
 
 ## Evidence Base
@@ -83,7 +83,7 @@ That is both a benefit and a risk. If HC is healthy, Wasp can outperform old BE 
 
 Old BE starts a separate `server_town.fsm` and `server_town_ai.fsm` per town. Current Wasp comments those per-town starts out and launches one global `server_town.sqf` and one global `server_town_ai.sqf` from server init.
 
-Current Wasp's global loop is not obviously worse. It sleeps per town, sleeps between full cycles, ignores aircraft in the AI activation scan, records PerformanceAudit counters, and spreads town unit creation with `sleep 0.5`. Old BE's architecture is simpler, but it can still spawn bursts and has no audit.
+Current Wasp's global loop is not obviously worse. It sleeps per town, sleeps between full cycles, ignores aircraft in the AI activation scan, records PerformanceAudit counters, and spreads town unit creation with `sleep 0.5`. Delegated town creation also calls `CreateTownUnits` without global per-unit init (`Client/Functions/Client_DelegateTownAI.sqf:25-27`; `Common/Functions/Common_CreateTownUnits.sqf:11-20,40-43`), while the old delegated path always passed global init through its embedded client special handler. Old BE's architecture is simpler, but it can still spawn bursts and has no audit.
 
 The stronger current risk is content budget:
 
@@ -118,7 +118,7 @@ Old BE and current Wasp share the same basic dynamic PVF shape:
 - add public variable event handlers;
 - send by rewriting the function name and using `Call Compile Format`.
 
-Current Wasp has more PV commands and extra direct public variables: marker creation, side messages, supply mission active queries for each town on client init, client init readiness, server FPS and extension/stat systems. That makes "old PV code was cleaner" false, but "current network surface is broader" true.
+Current Wasp has more PV commands and extra direct public variables: marker creation, side messages, supply mission active queries for each town on client init, client init readiness, server FPS and extension/stat systems. That makes "old PV code was cleaner" false, but "current network surface is broader" true. The routing comparison is nuanced: current has more registered and direct channels, but its OA server-request wrapper uses `publicVariableServer` (`Common/Functions/Common_SendToServerOptimized.sqf:1-17`), while old `Common_SendToServer.sqf:14-18` broadcast with `publicVariable`.
 
 PVF dispatcher hardening remains a good performance and trust-boundary candidate because both old and current share the dynamic dispatch pattern, and current has more channels to exercise it.
 
