@@ -62,7 +62,7 @@ Why this matters: direct channels such as `ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAI
 
 1. Fix PVF dispatcher command resolution first (DR-1), because that closes arbitrary command-string execution.
 2. Harden registered high-impact handlers next: construction, upgrades, score, vehicle lock, commander/team changes.
-3. Review the direct channels above separately, because they will not be protected by a `WFBE_PVF_*` allow-list. Start with DR-46 `SEND_MESSAGE`, DR-41/`ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS` and DR-44 side-supply temp channels.
+3. Review the direct channels above separately, because they will not be protected by a `WFBE_PVF_*` allow-list. Start with DR-46 `SEND_MESSAGE` (branch/root matrix: [Public variable channel index](Public-Variable-Channel-Index#send_message-direct-compile-branch-matrix)), DR-41/`ATTACK_WAVE_INIT`, `ATTACK_WAVE_DETAILS` and DR-44 side-supply temp channels.
 4. Design BattlEye `publicvariable.txt` from both lists: registered `WFBE_PVF_*` channels plus explicit direct channels such as `kickAFK`, supply mission PVs, day/night, HQ markers, attack waves and AntiStack compensation. Use [External integrations](External-Integrations) for the canonical shipped BattlEye posture.
 
 Replay/JIP rule of thumb: late players receive retained object/global state and the next heartbeat, not a replay of old publicVariable events. For revived event-only channels such as MASH marker relays, add a server-held list and explicit JIP re-send plan rather than assuming event replay.
@@ -162,7 +162,7 @@ Registration source: `Common/Init/Init_PublicVariables.sqf:25-40` registers 15 c
 
 `Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` run `Call Compile` on the function-name string taken from the **value a remote machine broadcast** (`select 0` / `select 1`), with no check that it names a registered command. Validate the command string against the known `SRVFNC*`/`CLTFNC*` set before compiling, and add a real BattlEye PV filter as defense in depth. Full dispatcher analysis: [Deep-review findings](Deep-Review-Findings) DR-1.
 
-DR-46 adds a second independent network-data compile surface outside the PVF dispatcher: the direct `SEND_MESSAGE` channel compiles payload text on receiving clients when the payload's multi-language flag is true, and the common send helper repeats the same compile branch locally before publishing. A PVF dispatcher fix does not close it. Fix DR-46 by sending structured stringtable keys plus arguments and resolving them locally without `call compile`. Shipped BattlEye evidence and production-owner caveats: [External integrations](External-Integrations).
+DR-46 adds a second independent network-data compile surface outside the PVF dispatcher: the direct `SEND_MESSAGE` channel compiles payload text on receiving clients when the payload's multi-language flag is true, and the common send helper repeats the same compile branch locally before publishing. A PVF dispatcher fix does not close it. The 2026-06-06 branch/root matrix in [Public variable channel index](Public-Variable-Channel-Index#send_message-direct-compile-branch-matrix) confirms current source/Vanilla, stable, Miksuu upstream, perf and release all remain source-unpatched. Fix DR-46 by sending structured stringtable keys plus arguments and resolving them locally without `call compile`. Shipped BattlEye evidence and production-owner caveats: [External integrations](External-Integrations).
 
 ### Residual Authority Risks After Dispatch Hardening
 

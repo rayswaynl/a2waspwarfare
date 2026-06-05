@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-06T02:25:00+02:00",
+  "generatedAt": "2026-06-06T02:55:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -49,6 +49,31 @@
         "Publish scoped validation batches."
       ],
       "handoff": "Continue from fresh source evidence, owner requests or newly returned helper reports."
+    },
+    {
+      "lane": "send-message-direct-compile-branch-route",
+      "owner": "Codex-helper",
+      "status": "published-validated",
+      "sourceScope": [
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateclient.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendMessage.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "docs/wiki/Public-Variable-Channel-Index.md",
+        "docs/wiki/Networking-And-Public-Variables.md",
+        "docs/wiki/Hardening-Implementation-Roadmap.md",
+        "docs/wiki/Feature-Status-Register.md",
+        "docs/wiki/Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Branch-checked DR-46 SEND_MESSAGE direct compile without changing gameplay source.",
+        "Routed the finding through Public variable channel index, Networking, Hardening roadmap, Feature Status, Source Fix Propagation Queue and machine records."
+      ],
+      "handoff": "Closed as docs-published. Future code owner should replace receiver/helper call compile with structured localization keys/args, update callers, propagate maintained Vanilla and smoke localized messages plus forged payload-as-data."
     },
     {
       "lane": "factory-destroyed-purchase-refund-branch-route",
@@ -623,8 +648,7 @@
     "supply-mission-scan-narrowing",
     "wasp-marker-wait-cleanup",
     "factory-queue-counter-token-cleanup",
-    "scout-wave-j-harvest"
-    ,
+    "scout-wave-j-harvest",
     "agent-machine-index-bootstrap",
     "pr-board-state-refresh",
     "tooling-release-audit-status-closeout",
@@ -668,7 +692,8 @@
     "requestspecial-upgrade-sync-branch-route",
     "resource-income-payout-branch-route",
     "release-7195b331-status-refresh",
-    "factory-destroyed-purchase-refund-branch-route"
+    "factory-destroyed-purchase-refund-branch-route",
+    "send-message-direct-compile-branch-route"
   ],
   "queuedReports": [],
   "lanes": [
@@ -677,6 +702,12 @@
       "suggestedOwner": "Codex",
       "status": "active-ongoing",
       "summary": "Continuing scoped source-backed wiki upkeep."
+    },
+    {
+      "lane": "send-message-direct-compile-branch-route",
+      "suggestedOwner": "Codex-helper",
+      "status": "published-validated",
+      "summary": "Branch-checked DR-46 SEND_MESSAGE direct compile across current source, maintained Vanilla, stable, upstream, perf and release, then updated networking/status docs without gameplay source changes."
     },
     {
       "lane": "factory-destroyed-purchase-refund-branch-route",

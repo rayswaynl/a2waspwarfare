@@ -1,5 +1,12 @@
 # Agent Worklog
 
+## 2026-06-06T02:55:00+02:00 - Codex helper - SEND_MESSAGE direct compile branch route
+
+- Claimed `send-message-direct-compile-branch-route` from the direct-PV/P0 hardening backlog.
+- Source-checked current source Chernarus, maintained Vanilla, stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706`, `origin/perf/quick-wins` `0076040f` and release `origin/release/2026-06-feature-bundle` `7195b331` for `Client/FSM/updateclient.sqf`, `Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf` and `Common/Functions/Common_SendMessage.sqf`.
+- Result: every checked maintained root/branch keeps direct `SEND_MESSAGE` PVEH registration, receiver-side payload-text `call compile` when the multi-language flag is true, and the same helper compile before `missionNamespace setVariable` / `publicVariable`.
+- Updated [Public variable channel index](Public-Variable-Channel-Index#send_message-direct-compile-branch-matrix), [Networking](Networking-And-Public-Variables), [Hardening roadmap](Hardening-Implementation-Roadmap), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), the dashboard and machine records. No gameplay source changed.
+
 ## 2026-06-06T02:25:00+02:00 - Codex helper - Gear template creation gate branch route
 
 - Claimed `gear-template-creation-gate-branch-route` from the gear-template owner-decision backlog.
@@ -18,6 +25,7 @@
 - Claimed `source-fix-salvage-duplicate-prune` after [Source fix propagation queue](Source-Fix-Propagation-Queue#patch-ready-but-not-in-current-code) carried two live salvage patch-ready rows: `Salvage payout/cleanup cleanup` and `Salvage payout casing and loop/authority cleanup`.
 - Kept the more specific row with the [Construction and CoIn salvage matrix](Construction-And-CoIn-Systems-Atlas#salvage-branch-matrix) anchor and folded the first-row "both salvage paths / maintained Vanilla first" wording into it.
 - Removed the older duplicate row, updated [Progress dashboard](Progress-Dashboard) and logged this pruning decision. No gameplay source changed.
+
 ## 2026-06-06T02:05:00+02:00 - Codex helper - Factory destroyed-purchase refund branch route
 
 - Claimed `factory-destroyed-purchase-refund-branch-route` from the factory/purchase authority and refund backlog.

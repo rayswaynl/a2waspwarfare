@@ -66,6 +66,8 @@ Raw evidence: [Deep-review findings](Deep-Review-Findings) DR-46. Channel invent
 
 Roadmap summary: remove `call compile` from both `Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf` and `Common/Functions/Common_SendMessage.sqf`. The current multi-language branch treats message text as executable code. Because `SEND_MESSAGE` is a direct `publicVariable` channel, this is independent of the PVF dispatcher fix.
 
+Branch/root status: the 2026-06-06 matrix in [Public variable channel index](Public-Variable-Channel-Index#send_message-direct-compile-branch-matrix) confirms current source/Vanilla, stable `origin/master`, Miksuu upstream, `perf/quick-wins` and release `7195b331` all still keep the direct receiver/helper compile route.
+
 Implementation shape:
 
 1. Treat multi-language payloads as structured arrays: `[stringtableKey, arg1, arg2, ...]`.

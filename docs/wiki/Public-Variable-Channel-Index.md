@@ -92,6 +92,17 @@ Each has its own `addPublicVariableEventHandler`; not behind the dispatcher.
 | `WFBE_C_PLAYER_OBJECT` | client → server | player-object publication for `WFBE_SE_PLAYERLIST`; source indexing is patched, but sender/UID validation and disconnect pruning/stale row cleanup remain open. The handler accepts `[playerObject, uid]` and supply mission player lookup later depends on this list. | `Client/Init/Init_Client.sqf:759-760`, `Server/Module/supplyMission/playerObjectsList.sqf:1-40`, `Server/Module/supplyMission/supplyMissionStarted.sqf:31-65` |
 | `CBA_display_ingame_warnings` | global bootstrap broadcast | disables CBA in-game warnings during mission bootstrap. Low gameplay risk, but it is still a public variable and belongs in the BattlEye/publicVariable inventory. | `initJIPCompatible.sqf:24-25` |
 
+### SEND_MESSAGE Direct Compile Branch Matrix
+
+This is the branch/root route for DR-46. It is intentionally separate from the PVF dispatcher matrix because `SEND_MESSAGE` is a bare direct publicVariable channel with its own event handler.
+
+| Scope checked 2026-06-06 | Receiver route | Helper / broadcast route | Practical meaning |
+| --- | --- | --- | --- |
+| Current source Chernarus `HEAD` `2cdf5fb8` and maintained Vanilla Takistan | Both roots register `"SEND_MESSAGE" addPublicVariableEventHandler` in `Client/FSM/updateclient.sqf:10-12`; both unpack payload indexes `0-3` in `Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf:15,18-21` and run `_messageText = call compile _messageText` at `:27` when the multi-language flag is true. | Both roots run `_messageText = call compile _messageText` in `Common/Functions/Common_SendMessage.sqf:26`, then publish `SEND_MESSAGE` via `missionNamespace setVariable` / `publicVariable` at `:37-38`. | P0 direct-PV RCE remains present in both maintained roots; a PVF dispatcher allowlist does not touch this channel. |
+| Stable `origin/master` `2cdf5fb8` and Miksuu upstream `f532f706` | Same receiver registration and compile lines in both maintained roots. | Same helper compile and broadcast lines in both maintained roots. | No stable/upstream rescue exists for the current source shape. |
+| `origin/perf/quick-wins` `0076040f` | Same receiver registration and compile lines in Chernarus and maintained Vanilla. | Same helper compile and broadcast lines in Chernarus and maintained Vanilla. | Perf branch fixes do not cover this security lane. |
+| `origin/release/2026-06-feature-bundle` `7195b331` | Same receiver registration and compile lines in release Chernarus and release maintained Vanilla. | Same helper compile and broadcast lines in release Chernarus and release maintained Vanilla. | Current release head is still source-unpatched for DR-46; keep it in the P0 patch-ready queue. |
+
 ## Hardening note
 
 For a real BattlEye `publicvariable.txt`, the default-deny whitelist must cover **both** tables — registered `WFBE_PVF_*` names and these direct channels — keeping `kickAFK`. But BattlEye is defense-in-depth only; the durable fix is server-side authority in the PVF handlers (DR-1), direct handler validation for authority channels (DR-41/DR-44) and removal of direct network-data compilation (`SEND_MESSAGE`, DR-46). See [Pending owner decisions](Pending-Owner-Decisions).
