@@ -1,0 +1,10 @@
+# Regex patterns for PR8 mission-side issues.
+# These are release signals, not addon/mod noise. Do not move them into
+# KnownNoise.txt unless the mission code has been proven unrelated.
+
+_requestID|_responseCode|_response|_teamSkillWest|_teamSkillEast
+sideJoined|sideID|WFBE_Client_SideID|AwardBounty
+AntiStack
+HC client PVF
+SupplyMission.*(ignored|cancelled|error|undefined)
+Server_PV|Client_PV
