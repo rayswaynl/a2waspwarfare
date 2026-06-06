@@ -1,5 +1,11 @@
 # Agent Worklog
 
+## 2026-06-06T10:34:00+02:00 - Codex - Air Event parameter documentation
+
+- Claimed `air-event-parameter-doc-gap` after Steff asked whether the old Air Event setting still exists.
+- Source-checked current Chernarus and maintained Vanilla: `WFBE_AIR_EVENT_ENABLED` is exposed in `Rsc/Parameters.hpp`, converted into `IS_air_war_event` during `initJIPCompatible.sqf`, and still gates event economy/upgrade clearance, ICBM availability and Avenger/Tunguska-style heavy-AA entries.
+- Added a compact canonical caveat to [Mission parameters](Mission-Parameters-Localization-And-Generated-Build-Inputs#air-event-override-caveat) and a short route from [Feature status](Feature-Status-Register). No gameplay source changed.
+
 ## 2026-06-05T23:48:34+02:00 - Codex helper - Supply scan release status refresh
 
 - Claimed `supply-scan-release-status-refresh` after [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) still described current release scope as Chernarus-only / release Vanilla broad, despite [Current source snapshot](Current-Source-Status-Snapshot) saying release `7195b331` has the narrowed command-center scan in both maintained release roots.

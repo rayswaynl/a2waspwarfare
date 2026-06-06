@@ -56,6 +56,7 @@ This register separates working systems from partial, deferred or risky systems 
 - ICBM/radiation module.
 - EASA aircraft loadout module.
 - Client marker blinking guarded by parameter.
+- Air Event override parameter remains live: it forces event economy/upgrade-clearance defaults and hides ICBM plus Avenger/Tunguska-style heavy AA. Canonical route: [Mission parameters](Mission-Parameters-Localization-And-Generated-Build-Inputs#air-event-override-caveat).
 - LoadoutManager mission copy/generation workflow.
 - Discord bot status updates from exported game data.
 
