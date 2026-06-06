@@ -62,6 +62,10 @@ This register separates working systems from partial, deferred or risky systems 
 
 ## Partial / Deferred / Needs Review
 
+| Area | Evidence | Status |
+| --- | --- | --- |
+| Client-visible indicators and state surfaces | Initial 2026-06-06 scan found indicator families across `Rsc/Titles.hpp`, `Client_UpdateRHUD.sqf`, `updateavailableactions.fsm`, `client_title_capture.sqf`, marker loops, Tactical/Respawn markers, support marker PVFs, Buy Units/EASA/Gear/Upgrade icons, server-FPS publishers and `Client/Images` references. | **Exploration backlog.** Use [Client UI systems atlas](Client-UI-Systems-Atlas#indicator-exploration-backlog) to build the owner/audience/update/cleanup/smoke matrix before redesigning or pruning indicators. |
+
 ## Networking / Public-variable hardening lane (source-backed)
 
 This lane tracks direct channels, PVF authority boundaries, and JIP semantics that are still open after the PVF dispatch trust patch lane.

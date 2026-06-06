@@ -1,5 +1,11 @@
 # Agent Worklog
 
+## 2026-06-06T10:45:23+02:00 - Codex - Indicator exploration backlog
+
+- Claimed `indicator-exploration-backlog` after Steff asked to check all indicators and add exploring them to the wiki to-do list.
+- Source-scanned indicator families across `Rsc/Titles.hpp`, `Client/Client_UpdateRHUD.sqf`, `Client/FSM/updateavailableactions.fsm`, `Client/FSM/client_title_capture.sqf`, marker update loops, Tactical/Respawn markers, support marker PVFs, Buy Units/EASA/Gear/Upgrade icons, server-FPS/status publishers and `Client/Images`.
+- Added a canonical exploration checklist to [Client UI systems](Client-UI-Systems-Atlas#indicator-exploration-backlog), then routed it from [Feature status](Feature-Status-Register), [Pending owner decisions](Pending-Owner-Decisions) and [Progress dashboard](Progress-Dashboard). No gameplay source changed.
+
 ## 2026-06-06T10:34:00+02:00 - Codex - Air Event parameter documentation
 
 - Claimed `air-event-parameter-doc-gap` after Steff asked whether the old Air Event setting still exists.

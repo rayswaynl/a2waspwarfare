@@ -87,6 +87,7 @@ Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) for the source
 
 | Decision | Finding | Note |
 | --- | --- | --- |
+| Client-visible indicator audit scope | HUD/title resources, map markers, menu/list icons, support markers, server-FPS/status channels and local image references are spread across UI, marker, support and performance code. | Explore before redesigning or pruning. Start with [Client UI systems atlas](Client-UI-Systems-Atlas#indicator-exploration-backlog), then decide which indicators are public player UX, commander-only, admin/debug, stale/dead or branch-only. |
 | Modded missions: regenerate from source vs maintain as forks | DR-32 | Napf/eden/lingor are divergent hand-edited forks; source fixes don't reach them |
 | 4 abandoned stub missions: complete or delete | DR-32 | sahrani/dingor/tavi/isladuala are non-runnable (1–20 files) |
 | MASH map-marker feature: revive or remove | DR-34 / DR-3 recheck | Source/Vanilla local MASH respawn is separate; shared markers are orphaned: active server relay has no maintained-mission sender, receiver compile is commented, and `eden`/`lingor` show sender-only modded drift. Revival needs a server-held list, JIP re-send and unique marker names; otherwise archive or remove the relay. |
