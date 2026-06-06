@@ -1,5 +1,11 @@
 # Agent Worklog
 
+## 2026-06-06T13:15:54+02:00 - Codex - Mission start parameter index
+
+- Claimed `mission-start-parameter-index` after Steff asked to add all start parameters to the wiki.
+- Source-checked maintained Chernarus and Vanilla Takistan `Rsc/Parameters.hpp`; they are identical in current source and expose 89 active lobby-visible classes under `class Params`.
+- Added [Mission start parameters index](Mission-Start-Parameters-Index) with source-order, source lines, class names, lobby titles, defaults, choices, category ranges and caveats for hidden/commented, forced, visible-no-op and mislabeled parameters. No gameplay source changed.
+
 ## 2026-06-06T10:45:23+02:00 - Codex - Indicator exploration backlog
 
 - Claimed `indicator-exploration-backlog` after Steff asked to check all indicators and add exploring them to the wiki to-do list.

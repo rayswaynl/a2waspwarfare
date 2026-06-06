@@ -14,6 +14,8 @@ Source refs:
 - `Common/Init/Init_CommonConstants.sqf:65-67` documents the nil-default pattern that avoids overriding MP parameters.
 - `Client/GUI/GUI_Display_Parameters.sqf:3-12` displays parameter names/statuses from the same `Params` tree.
 
+Full lobby/start parameter index: [Mission start parameters index](Mission-Start-Parameters-Index). Current maintained Chernarus and Vanilla Takistan have identical `Rsc/Parameters.hpp` files, with 89 active lobby-visible parameters plus one commented-out upgrade-clearance class that is not host-selectable.
+
 ## Parameter Cache Flow
 
 1. `description.ext` includes `Rsc\Parameters.hpp`.
