@@ -108,6 +108,37 @@ Goals / open design (needs owner input):
 Validation gate: deploy/undeploy, one-per-side cap, JIP marker visibility, respawn at MASH,
 default-gear enforcement, and no RPT spam (the old marker EH chain).
 
+## Town/static defender classification (July)
+
+Claude's PR8-side exploration found a useful AI correctness lane that is too risky to slip into
+the June release after final testing: town-spawned defender AI and static-defense crews should be
+explicitly classified so nearby town activation scans do not treat them like roaming enemy
+attackers.
+
+Problem shape:
+- Static defenders and resistance town defenders can bleed into nearby detection radii.
+- Without a clear marker, town activation can count those defenders as live attackers and wake or
+  sustain the wrong town lifecycle.
+- Delegated town AI can also start unnecessary client marker/action setup, adding noise during
+  heavy AI runs.
+
+Planned shape:
+1. Tag defender town groups, units, crews, vehicles, and static gunners with a locality-safe
+   `WFBE_IsTownDefenderAI` variable.
+2. Teach `server_town_ai.sqf` activation scans to ignore those tagged defenders while still
+   detecting real players, player-led AI, and attacking combat groups.
+3. Keep town AI creation on the safer post-June code path: preserve null-group / failed-unit /
+   empty-vehicle guards from PR8 final hardening.
+4. Let delegated town AI opt out of extra global client marker/action init where that is not
+   needed.
+5. Add performance/audit logging around town activation, despawn, and delegated town AI creation
+   so the harness can prove the change did not create new server-FPS or HC locality problems.
+
+Validation gate: two nearby hostile/neutral towns, defender static crews active, HC delegation on,
+player enters/leaves detection radius, town wakes only for real enemies, tagged defenders do not
+wake adjacent towns, town despawns cleanly, no stuck empty groups, no marker/action spam, and
+server FPS remains unchanged under the stress harness.
+
 ## Smaller July candidates (could fold into a future release)
 - Recon UAV / drone-saturation-strike (separate feature branches `feat/recon-uav`, `feat/drone-saturation-strike`).
 - Player stats Phase 1 (`feat/player-stats`) — a guarded stats hook already exists in `RequestOnUnitKilled.sqf`.
