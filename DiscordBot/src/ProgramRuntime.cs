@@ -69,6 +69,9 @@ public class ProgramRuntime
         var gameStatusUpdater = new GameStatusUpdater();
         gameStatusUpdater.StartGameStatusUpdates(client);
 
+        // Start in-game player-stats ingest (RPT tail -> stats.json). No-op unless Preferences.StatsEnabled.
+        new StatsService().Start();
+
         Log.WriteLine("Program listeners and schedulers setup completed", LogLevel.DEBUG);
     }
 

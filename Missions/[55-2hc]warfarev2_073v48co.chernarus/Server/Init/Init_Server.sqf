@@ -297,6 +297,10 @@ if (_use_random) then {
 
 [] execVM "Server\CallExtensions\GlobalGameStats.sqf";
 
+// Player-stats: define the buffer helper, then launch the RPT flush loop (both no-op unless WFBE_C_STATS_ENABLED).
+call compile preprocessFileLineNumbers "Server\Stats\RecordStat.sqf";
+[] execVM "Server\Stats\StatsFlush.sqf";
+
 emptyQueu = [];
 
 //--- Global sides initialization.
