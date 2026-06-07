@@ -13,7 +13,23 @@ then removed before shipping a release mission.
 - A static smoke script for checking the active test mission boundary.
 - A random **bug-hunt** mode (`BugHunt/Find-WaspBugHunt.ps1`) — a heuristic static hunter.
 - A one-command **pre-test check** (`Run-WaspFinalCheck.ps1`) — runs the smoke gate + bug-hunt.
+- A one-command **play-test setup** (`Setup-WaspTestMission.ps1`) — LoadoutManager regen + copy to MPMissions.
 - A PR8-era stress profile that can be reused as the starting point for later PR tests.
+
+## Play-Test Setup (get a release build runnable on this PC)
+
+Requires .NET SDK (`dotnet`) and Arma 2: Operation Arrowhead installed.
+
+```powershell
+pwsh Tools\PrTestHarness\Setup-WaspTestMission.ps1
+# or point at your Arma path:
+pwsh Tools\PrTestHarness\Setup-WaspTestMission.ps1 -MpMissions "D:\Games\ArmA 2 OA\MPMissions"
+```
+
+It runs `Tools\LoadoutManager` (regenerates Chernarus -> Takistan and writes the required
+generated `version.sqf`), verifies the boot input, and copies the Chernarus mission into your
+Arma 2 OA `MPMissions` folder. Then host it from **Multiplayer -> New** in-game. (`7za`/7-Zip is
+optional — without it only the `_MISSIONS.7z` server package is skipped; the mission still runs.)
 
 ## Ready-To-Test Check
 
