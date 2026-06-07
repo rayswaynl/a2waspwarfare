@@ -11,7 +11,26 @@ then removed before shipping a release mission.
 - A stress/smoke mission overlay with scroll actions and server-side command queues.
 - RPT live reporting and post-run analysis tools.
 - A static smoke script for checking the active test mission boundary.
+- A random **bug-hunt** mode (`BugHunt/Find-WaspBugHunt.ps1`) — a heuristic static hunter.
 - A PR8-era stress profile that can be reused as the starting point for later PR tests.
+
+## Bug-Hunt Mode
+
+`BugHunt/Find-WaspBugHunt.ps1` is an open-ended HUNTER (vs the pass/fail smoke gate). It
+scans mission `.sqf` for high-signal bug patterns — A3-only commands, off-by-one loops
+(`to (count ..)` without `-1`, `<= count`), descending loops missing `step -1`, `local`
+on a Group, nil-hazard `getVariable`, and missing compiled/exec paths. Findings are leads
+to eyeball, not guaranteed bugs.
+
+```powershell
+pwsh BugHunt\Find-WaspBugHunt.ps1                  # hunt the PR diff (changed vs origin/master)
+pwsh BugHunt\Find-WaspBugHunt.ps1 -All             # hunt the whole Chernarus mission
+pwsh BugHunt\Find-WaspBugHunt.ps1 -Random 40       # random 40-file sample (new seed each run)
+pwsh BugHunt\Find-WaspBugHunt.ps1 -Random 40 -Seed 7   # reproducible random sample
+pwsh BugHunt\Find-WaspBugHunt.ps1 -All -MinSeverity high -FailOnHigh   # CI-style gate on HIGH
+```
+
+`-Random N` hunts a different slice each run, so repeated passes cover the mission over time.
 
 ## Install A Local Test Mission
 
