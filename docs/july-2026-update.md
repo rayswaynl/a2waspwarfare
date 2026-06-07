@@ -55,6 +55,27 @@ server-side) · range kill · base-protection · AA/radar counter (no global lau
 - Propagation-queue items (paratrooper markers, skill-init idempotency, supply-scan narrowing,
   commander-artillery ownership) — present in the June release, pending in-engine smoke.
 
+## MASH revamp (July)
+
+The June bundle **removed** the old MASH respawn/officer-skill system (officer "Deploy MASH"
+ability, MASH mobile-respawn, lobby parameter, dead marker modules, unused composition
+template). July re-introduces MASH as a **better** system rather than the old half-baked one.
+
+Goals / open design (needs owner input):
+- **What MASH should be:** a commander- or officer-deployed forward aid/respawn point, or a
+  buildable medical structure — pick one coherent model (the old one mixed an officer-tent
+  respawn with a never-rendered map marker).
+- **Server-authoritative:** deploy/limit/respawn validated server-side (the old path was
+  client-driven and the marker PV chain was broken — no publisher).
+- **One per side / cooldown / lifetime** caps; clear HUD + map marker that actually renders.
+- **Respawn rules:** default-gear vs custom-gear, range, and interaction with the existing
+  mobile/leader/camp respawn options.
+- Decide whether to reuse the leftover dead `'MASH'`/`WFBE_<side>DEFENSES_MASH` registry
+  entries (still in `Core_CIV`/`Structures_*.sqf`) or scrub and rebuild clean.
+
+Validation gate: deploy/undeploy, one-per-side cap, JIP marker visibility, respawn at MASH,
+default-gear enforcement, and no RPT spam (the old marker EH chain).
+
 ## Smaller July candidates (could fold into a future release)
 - Recon UAV / drone-saturation-strike (separate feature branches `feat/recon-uav`, `feat/drone-saturation-strike`).
 - Player stats Phase 1 (`feat/player-stats`) — a guarded stats hook already exists in `RequestOnUnitKilled.sqf`.
