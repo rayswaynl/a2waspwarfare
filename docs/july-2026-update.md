@@ -50,6 +50,38 @@ economy ($50 grant, stops on loss) · upgrade gating (UAV gates all; EASA gates 
 purchase (debit once, 1/player + side cap) · authority (bad side/field/funds/tier/range fail
 server-side) · range kill · base-protection · AA/radar counter (no global launch warning).
 
+## Committed: PVF / public-variable sender authentication (DR-55) — LOW perf impact
+
+**Locked in for July.** The whole PVF / PVEH / direct-publicVariable surface currently lacks
+server-side sender authentication (`Server/Functions/Server_HandlePVF.sqf:14`,
+`Common/Init/Init_PublicVariables.sqf:50` never forward the sender), so ~18 handlers are
+client-forgeable by any connected client — set anyone's score, lock the enemy MHQ, drain a
+side's supply, unlimited instant supply, force-assign commander, etc. (full list in the wiki
+`Deep-Review-Findings` DR-55).
+
+### Low-perf-impact design (hard requirement)
+The fix must add **no per-frame and no measurable hot-path cost** — PVF requests are
+discrete player actions (a few per second across the whole server at most), so authentication
+is O(1) per request:
+
+1. **Embed the caller once at send time.** `WFBE_CO_FNC_SendToServer` adds `getPlayerUID player`
+   (and/or `owner player`) to the payload — a single cheap read, only when the player triggers
+   the action.
+2. **Authenticate once at dispatch.** `Server_HandlePVF` / the PVEH reads the sender from the
+   event (`_this select 0/2`) and/or the embedded UID, resolves the player object **once**, and
+   passes an authenticated `_sender` to the handler. One hashmap-free lookup per request.
+3. **Re-derive, don't trust.** Each handler derives side / commander / funds **server-side from
+   `_sender`**, ignoring payload-supplied side/score/amount fields. No new loops, timers, or
+   broadcasts — pure validation, so the steady-state perf cost is zero.
+4. **Stage it.** Land the CRITICAL economy/authority channels first (RequestChangeScore,
+   RequestVehicleLock, SupplyMissionCompleted, ATTACK_WAVE_DETAILS, RequestMHQRepair,
+   RequestNewCommander), then the rest. Read/cosmetic server-originated channels are already
+   clean and need no change.
+
+Validation gate: each hardened channel — legitimate use still works; a forged request from the
+wrong side/role is rejected server-side; no RPT spam; **server FPS unchanged** before/after
+(the explicit perf check).
+
 ## Already handled in June (not July)
 - Hosted/listen server-FPS busy-loop fix (DR-19) — shipped in PR #8.
 - Propagation-queue items (paratrooper markers, skill-init idempotency, supply-scan narrowing,
