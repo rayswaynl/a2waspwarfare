@@ -29,7 +29,7 @@ param(
 	[switch]$All,                       # scan the whole mission tree (default: changed-vs-base)
 	[int]$Random = 0,                   # scan a random sample of N files
 	[Nullable[int]]$Seed = $null,       # seed the random sample for reproducibility
-	[ValidateSet("low","medium","high")][string]$MinSeverity = "low",
+	[ValidateSet("low","medium","high")][string]$MinSeverity = "medium",
 	[int]$Top = 80,                     # max findings to print
 	[switch]$FailOnHigh                 # exit 1 if any HIGH finding (for CI)
 )
@@ -51,8 +51,10 @@ function Add-Finding {
 	}) | Out-Null
 }
 
-# Return code-only lines (same line count) with '...'/"..." string bodies, // line comments
-# and /* */ block comments blanked to spaces, so detectors never trip on text or commented code.
+# Return code-only lines (same line count) with // line comments and /* */ block comments removed,
+# but STRINGS KEPT. Strings are kept on purpose: SQF writes the for-loop iterator and getVariable
+# names as string literals (for "_i" ..., getVariable "x"), so blanking strings would hide the very
+# structures we hunt. The original false positives were all in COMMENTS, which we still strip.
 function Get-CodeLines {
 	param([string]$Text)
 	$out = New-Object System.Collections.Generic.List[string]
@@ -62,16 +64,17 @@ function Get-CodeLines {
 	while ($i -lt $len) {
 		$c = $Text[$i]
 		$nx = if ($i + 1 -lt $len) { $Text[$i + 1] } else { [char]0 }
-		if ($c -eq "`n") { $out.Add($sb.ToString()) | Out-Null; [void]$sb.Clear(); $inLine = $false; $i++; continue }   # keep string state across lines (SQF strings span lines); only // comments end at newline
+		# Reset string state per line (most SQF strings are single-line); block comments span lines.
+		if ($c -eq "`n") { $out.Add($sb.ToString()) | Out-Null; [void]$sb.Clear(); $inLine = $false; $inS = $false; $inD = $false; $i++; continue }
 		if ($c -eq "`r") { $i++; continue }
-		if ($inLine) { [void]$sb.Append(' '); $i++; continue }
-		if ($inBlock) { if ($c -eq '*' -and $nx -eq '/') { $inBlock = $false; [void]$sb.Append('  '); $i += 2; continue }; [void]$sb.Append(' '); $i++; continue }
-		if ($inS) { if ($c -eq "'") { if ($nx -eq "'") { [void]$sb.Append('  '); $i += 2; continue } else { $inS = $false } }; [void]$sb.Append(' '); $i++; continue }
-		if ($inD) { if ($c -eq '"') { if ($nx -eq '"') { [void]$sb.Append('  '); $i += 2; continue } else { $inD = $false } }; [void]$sb.Append(' '); $i++; continue }
-		if ($c -eq '/' -and $nx -eq '/') { $inLine = $true; [void]$sb.Append(' '); $i++; continue }
-		if ($c -eq '/' -and $nx -eq '*') { $inBlock = $true; [void]$sb.Append(' '); $i++; continue }
-		if ($c -eq "'") { $inS = $true; [void]$sb.Append(' '); $i++; continue }
-		if ($c -eq '"') { $inD = $true; [void]$sb.Append(' '); $i++; continue }
+		if ($inLine) { $i++; continue }
+		if ($inBlock) { if ($c -eq '*' -and $nx -eq '/') { $inBlock = $false; $i += 2; continue }; $i++; continue }
+		if ($inS) { [void]$sb.Append($c); if ($c -eq "'") { if ($nx -eq "'") { [void]$sb.Append($nx); $i += 2; continue } else { $inS = $false } }; $i++; continue }
+		if ($inD) { [void]$sb.Append($c); if ($c -eq '"') { if ($nx -eq '"') { [void]$sb.Append($nx); $i += 2; continue } else { $inD = $false } }; $i++; continue }
+		if ($c -eq '/' -and $nx -eq '/') { $inLine = $true; $i++; continue }
+		if ($c -eq '/' -and $nx -eq '*') { $inBlock = $true; $i++; continue }
+		if ($c -eq "'") { $inS = $true; [void]$sb.Append($c); $i++; continue }
+		if ($c -eq '"') { $inD = $true; [void]$sb.Append($c); $i++; continue }
 		[void]$sb.Append($c); $i++
 	}
 	$out.Add($sb.ToString()) | Out-Null
@@ -119,15 +122,15 @@ function Test-File {
 		# 1. A3-only command (string-stripped so 'params' inside text is ignored)
 		if ($code -match $a3Pattern) { Add-Finding "high" "A3-only command '$($matches[1])'" $Path $n $raw }
 
-		# 2. Ascending off-by-one: for "_i" from .. to <expr with count> do  (no -1)
-		if ($code -match 'for\s+"[^"]+"\s+from\s+.+?\s+to\s+([^;]*?\bcount\b[^;]*?)\s+do') {
-			if ($matches[1] -notmatch '-\s*1') { Add-Finding "high" "Off-by-one: 'to (count ...)' without -1" $Path $n $raw }
+		# 2. Ascending off-by-one: for "_i"/'_i' from .. to <expr with count> do  (no -1)
+		if ($code -match 'for\s+["''][^"'']+["'']\s+from\b.+?\bto\s+([^;{]*?\bcount\b[^;{]*?)\s+do\b') {
+			if ($matches[1] -notmatch '-\s*1') { Add-Finding "high" "Off-by-one: loop 'to (count ...)' without -1 (index runs 1 past end)" $Path $n $raw }
 		}
 		# 2b. C-style off-by-one: _i <= count ...
 		if ($code -match '\b_\w+\s*<=\s*[^;{]*\bcount\b') { Add-Finding "medium" "Off-by-one: '<= count ...' (use <)" $Path $n $raw }
 
-		# 3. Descending loop with no negative step: from (..count..) to 0 do  (never runs)
-		if ($code -match 'for\s+"[^"]+"\s+from\s+[^;]*\bcount\b[^;]*\bto\s+0\s+do') {
+		# 3. Descending loop with no negative step: from (..count..) to 0 do  (body never runs)
+		if ($code -match 'for\s+["''][^"'']+["'']\s+from\b[^;{]*\bcount\b[^;{]*\bto\s+0\s+do\b') {
 			if ($code -notmatch '\bstep\b') { Add-Finding "high" "Descending loop missing 'step -1' (body never runs)" $Path $n $raw }
 		}
 
@@ -136,9 +139,11 @@ function Test-File {
 			Add-Finding "medium" "'local' on a likely Group value (throws; use locality of leader/object)" $Path $n $raw
 		}
 
-		# 5. string-form getVariable with no default (nil hazard if the var was never set)
-		if ($code -match 'getVariable\s+"[^"]+"' -and $code -notmatch 'getVariable\s*\[') {
-			Add-Finding "low" "getVariable with no default (nil hazard; prefer getVariable [name, default])" $Path $n $raw
+		# 5. string-form getVariable (no default) used in a NIL-HAZARD context: !(x getVariable "y")
+		#    or arithmetic ( + (x getVariable "y") ). Plain getVariable-without-default is valid SQF and
+		#    far too common to flag, so we only flag the negation/arithmetic shapes that actually throw on nil.
+		if ($code -notmatch 'getVariable\s*\[' -and ($code -match '!\s*\(\s*\w[\w ]*\s+getVariable\s+"' -or $code -match '[-+*/]\s*\(\s*\w[\w ]*\s+getVariable\s+"')) {
+			Add-Finding "medium" "getVariable (no default) negated/in arithmetic — nil throws if unset" $Path $n $raw
 		}
 	}
 
@@ -157,14 +162,9 @@ function Test-File {
 		}
 	}
 
-	# 7. Per-file bracket imbalance in CODE (ignoring strings/comments) -> typo / missing brace
-	foreach ($pair in @(@('[',']'), @('(',')'), @('{','}'))) {
-		$o = ($codeText.ToCharArray() | Where-Object { $_ -eq $pair[0] }).Count
-		$c = ($codeText.ToCharArray() | Where-Object { $_ -eq $pair[1] }).Count
-		if ($o -ne $c) {
-			Add-Finding "medium" "Bracket imbalance '$($pair[0])$($pair[1])' ($o vs $c) — possible missing brace/typo" $Path 1 "file-level"
-		}
-	}
+# (Bracket-imbalance detector intentionally omitted: without a full SQF parser it false-positives
+#  on multi-line strings and macros. Per-file brace balance is covered by the smoke harness / manual
+#  diff checks on changed files, where it is reliable.)
 }
 
 $targets = @(Get-TargetFiles)
