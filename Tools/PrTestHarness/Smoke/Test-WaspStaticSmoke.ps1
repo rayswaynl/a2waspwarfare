@@ -427,8 +427,10 @@ function Test-MashRemoved {
 
 function Test-GpsSlotFreed {
 	$titles = Get-Text (Join-Path $missionRoot "Rsc\Titles.hpp")
-	$freed = -not $titles.Contains('name="gps"')
-	Add-Result "GPS slot freed (RscOverlay no longer name=gps)" $freed "noGpsName=$freed"
+	# Match the actual binding line `name="gps";` (semicolon) so an explanatory comment that mentions
+	# name="gps", (comma) does not trip a false negative; also confirm the rename positively.
+	$freed = (-not $titles.Contains('name="gps";')) -and $titles.Contains('name="wf_hud_overlay"')
+	Add-Result "GPS slot freed (RscOverlay no longer name=gps)" $freed "noGpsBinding=$(-not $titles.Contains('name=""gps"";')) renamed=$($titles.Contains('name=""wf_hud_overlay""'))"
 }
 
 function Test-EmptyVehicleRefundFix {
