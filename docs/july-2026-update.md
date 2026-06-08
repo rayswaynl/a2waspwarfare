@@ -139,6 +139,38 @@ player enters/leaves detection radius, town wakes only for real enemies, tagged 
 wake adjacent towns, town despawns cleanly, no stuck empty groups, no marker/action spam, and
 server FPS remains unchanged under the stress harness.
 
+## GPS mini-map button fix (July)
+
+The June bundle replaced the WF-menu FPS button with a GPS toggle and renamed the `RscOverlay`
+resource from `name="gps"` to `wf_hud_overlay` (`Titles.hpp`) to free the engine GPS slot.
+In-engine testing confirmed that was **necessary but not sufficient**: the button calls `showGPS
+true`, `shownGPS` returns `true`, yet the mini-map never renders in play. A `CTRL + M` keybind
+hint was added to the GPS-enabled popup (`Client/GUI/GUI_Menu.sqf`) as a June stopgap so players
+have a working fallback; the real fix is deferred here.
+
+Root cause (from the PR8 in-engine GPS investigation):
+- `RscOverlay` and `OptionsAvailable` (`Titles.hpp`) **share `idd=10200`**, so the engine treats
+  them as the same display and one stomps the other.
+- `Init_Client.sqf` runs a keep-alive loop (~every 0.8s) that re-fires `cutRsc ['RscOverlay',...]`
+  on layer 1365, while `Client_UpdateRHUD.sqf` spawns `OptionsAvailable` with no explicit layer and
+  `updateavailableactions.fsm` uses layer 12450 — inconsistent layers for the same resource.
+- Net effect: `showGPS` reports success but the mini-map control is drawn into a display that is
+  immediately replaced by the RscOverlay/OptionsAvailable respawn, so nothing renders.
+
+Planned shape:
+1. Give `RscOverlay` and `OptionsAvailable` **distinct `idd` values** (the shared `10200` is a
+   latent display-stomping bug, not only a GPS symptom).
+2. Suppress the `Init_Client.sqf` RscOverlay keep-alive respawn while GPS is active (gate on
+   `shownGPS` / a GPS-active flag) so it cannot stomp the engine GPS render.
+3. Make `Client_UpdateRHUD.sqf`'s `OptionsAvailable` `cutRsc` use a **consistent explicit layer**
+   (matching the FSM's `12450`) so it never collides with the engine GPS layer.
+4. Confirm `description.ext showGPS = 1` is not overridden and the GPS capability is mission-enabled.
+5. Keep the `CTRL + M` popup hint as the player-facing fallback even after the fix.
+
+Validation gate: open the WF menu and toggle GPS → the mini-map actually renders and persists
+across RHUD / available-action refreshes; `CTRL + M` toggles it; it survives a JIP / slot switch;
+no RscOverlay/OptionsAvailable flicker; no RPT spam; verified on Chernarus and the modded maps.
+
 ## Smaller July candidates (could fold into a future release)
 - Recon UAV / drone-saturation-strike (separate feature branches `feat/recon-uav`, `feat/drone-saturation-strike`).
 - Player stats Phase 1 (`feat/player-stats`) — a guarded stats hook already exists in `RequestOnUnitKilled.sqf`.
