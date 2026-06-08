@@ -92,7 +92,7 @@ function Remove-StringLiterals {
 
 function Test-ForbiddenA3Commands {
 	$forbidden = @(
-		"pushBack","pushBackUnique","selectRandom","isEqualTo","params",
+		"allMapMarkers","allMissionObjects","pushBack","pushBackUnique","selectRandom","isEqualTo","params",
 		"parseSimpleArray","remoteExec","setGroupOwner","append","apply",
 		"findIf","deleteAt","createHashMap","hashMap"
 	)
@@ -111,6 +111,37 @@ function Test-ForbiddenA3Commands {
 		}
 	}
 	Add-Result "A2 OA command dialect" ($hits.Count -eq 0) ($(if ($hits.Count) { $hits -join "; " } else { "No forbidden A3-only commands in changed Chernarus mission files." }))
+}
+
+function Test-HarnessOverlayA3Dialect {
+	# Dialect-scan the harness overlay's OWN sqf (init.sqf + test/*.sqf). The main
+	# dialect check only covers changed mission files, so harness A3-isms (e.g. the
+	# allMapMarkers regression) previously slipped to runtime.
+	$forbidden = @(
+		"allMapMarkers","allMissionObjects","pushBack","pushBackUnique","selectRandom","isEqualTo","params",
+		"parseSimpleArray","remoteExec","setGroupOwner","append","apply",
+		"findIf","deleteAt","createHashMap","hashMap"
+	)
+	$pattern = "\b(" + (($forbidden | ForEach-Object {[regex]::Escape($_)}) -join "|") + ")\b"
+	$overlayRoot = Join-Path $harnessRoot "Overlays\pr8-stress"
+	$files = @()
+	$initFile = Join-Path $overlayRoot "init.sqf"
+	if (Test-Path -LiteralPath $initFile) { $files += $initFile }
+	$testDir = Join-Path $overlayRoot "test"
+	if (Test-Path -LiteralPath $testDir) { $files += (Get-ChildItem -LiteralPath $testDir -Filter "*.sqf" -File -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }) }
+	$hits = @()
+	foreach ($file in $files) {
+		$lineNumber = 0
+		$inBlockComment = $false
+		foreach ($line in [System.IO.File]::ReadLines($file)) {
+			$lineNumber++
+			$code = Remove-StringLiterals (Remove-CodeComments $line ([ref]$inBlockComment))
+			if ($code -match $pattern) {
+				$hits += "$(Split-Path -Leaf $file):$lineNumber $($matches[1])"
+			}
+		}
+	}
+	Add-Result "Harness overlay A2 dialect" ($hits.Count -eq 0) ($(if ($hits.Count) { $hits -join "; " } else { "No A3-only commands in the pr8-stress harness overlay scripts." }))
 }
 
 function Test-HqShield {
@@ -590,6 +621,7 @@ function Test-ActiveStressMissionCopy {
 }
 
 Test-ForbiddenA3Commands
+Test-HarnessOverlayA3Dialect
 Test-HqShield
 Test-AARadarHasNoWalls
 Test-WddmInstantStaticCrew
