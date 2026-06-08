@@ -1,6 +1,7 @@
 param(
 	[string]$BaseRef = "origin/master",
 	[string]$HeadRef = "HEAD",
+	[string]$SourceMissionRoot = "",
 	[string]$ActiveMissionRoot = ""
 )
 
@@ -8,7 +9,12 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..\..")
 $harnessRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+$sourceRepoRoot = $repoRoot
 $missionRoot = Join-Path $repoRoot "Missions\[55-2hc]warfarev2_073v48co.chernarus"
+if (![string]::IsNullOrWhiteSpace($SourceMissionRoot)) {
+	$missionRoot = (Resolve-Path -LiteralPath $SourceMissionRoot).Path
+	$sourceRepoRoot = Split-Path -Parent (Split-Path -Parent $missionRoot)
+}
 if ([string]::IsNullOrWhiteSpace($ActiveMissionRoot)) {
 	$ActiveMissionRoot = Join-Path $env:USERPROFILE "Documents\ArmA 2 Other Profiles\Zwanon\MPMissions\WASP_PR8_StressTest.Chernarus"
 }
@@ -25,11 +31,13 @@ function Get-Text {
 }
 
 function Get-ChangedMissionFiles {
-	$relative = & git -C $repoRoot diff --name-only "$BaseRef..$HeadRef" -- "Missions/[55-2hc]warfarev2_073v48co.chernarus"
+	$sourceRepoRootPath = if ($sourceRepoRoot -is [System.Management.Automation.PathInfo]) { $sourceRepoRoot.Path } else { [string]$sourceRepoRoot }
+	$missionPath = $missionRoot.Substring($sourceRepoRootPath.Length).TrimStart('\') -replace '\\','/'
+	$relative = & git -C $sourceRepoRootPath diff --name-only "$BaseRef..$HeadRef" -- $missionPath
 	$files = @()
 	foreach ($path in $relative) {
 		if ($path -match '\.(sqf|fsm)$') {
-			$full = Join-Path $repoRoot ($path -replace '/', '\')
+			$full = Join-Path $sourceRepoRootPath ($path -replace '/', '\')
 			if (Test-Path -LiteralPath $full) { $files += $full }
 		}
 	}
@@ -43,6 +51,45 @@ function Remove-LineComment {
 	return $Line
 }
 
+function Remove-CodeComments {
+	param(
+		[string]$Line,
+		[ref]$InBlockComment
+	)
+	$remaining = $Line
+	$out = ""
+	while ($remaining.Length -gt 0) {
+		if ($InBlockComment.Value) {
+			$end = $remaining.IndexOf("*/")
+			if ($end -lt 0) { return $out }
+			$remaining = $remaining.Substring($end + 2)
+			$InBlockComment.Value = $false
+			continue
+		}
+		$lineComment = $remaining.IndexOf("//")
+		$blockComment = $remaining.IndexOf("/*")
+		if ($lineComment -ge 0 -and ($blockComment -lt 0 -or $lineComment -lt $blockComment)) {
+			$out += $remaining.Substring(0, $lineComment)
+			return $out
+		}
+		if ($blockComment -ge 0) {
+			$out += $remaining.Substring(0, $blockComment)
+			$remaining = $remaining.Substring($blockComment + 2)
+			$InBlockComment.Value = $true
+			continue
+		}
+		$out += $remaining
+		return $out
+	}
+	return $out
+}
+
+function Remove-StringLiterals {
+	param([string]$Line)
+	$withoutDouble = [regex]::Replace($Line, '"[^"]*"', '""')
+	return [regex]::Replace($withoutDouble, "'[^']*'", "''")
+}
+
 function Test-ForbiddenA3Commands {
 	$forbidden = @(
 		"pushBack","pushBackUnique","selectRandom","isEqualTo","params",
@@ -53,9 +100,10 @@ function Test-ForbiddenA3Commands {
 	$hits = @()
 	foreach ($file in Get-ChangedMissionFiles) {
 		$lineNumber = 0
+		$inBlockComment = $false
 		foreach ($line in [System.IO.File]::ReadLines($file)) {
 			$lineNumber++
-			$code = Remove-LineComment $line
+			$code = Remove-StringLiterals (Remove-CodeComments $line ([ref]$inBlockComment))
 			if ($code -match $pattern) {
 				$rel = Resolve-Path -LiteralPath $file -Relative
 				$hits += "$rel`:$lineNumber $($matches[1])"
@@ -77,7 +125,7 @@ function Test-HqShield {
 	$hasConcrete = $body.Contains("Concrete_Wall_EP1")
 	$hasBlocks = $body.Contains("Land_CncBlock")
 	$hasFunnel = $body.Contains("335") -and $body.Contains("325") -and $body.Contains("25") -and $body.Contains("35")
-	$tightTemplate = $body.Contains("7.2") -and (-not $body.Contains("10.5")) -and (-not $body.Contains("13,0")) -and (-not $body.Contains("-13")) -and (-not $body.Contains("10.8"))
+	$tightTemplate = $body.Contains("6.1") -and $body.Contains("-6.1") -and (-not $body.Contains("7.2")) -and (-not $body.Contains("10.5")) -and (-not $body.Contains("13,0")) -and (-not $body.Contains("-13")) -and (-not $body.Contains("10.8"))
 	$spawns = $hqText.Contains('missionNamespace getVariable "WFBE_NEURODEF_HEADQUARTERS_WALLS"') -and $hqText.Contains("call CreateDefenseTemplate")
 	$stores = $hqText.Contains('setVariable ["wfbe_hq_walls"') -and $hqText.Contains('setVariable ["WFBE_Walls"')
 	$cleans = $hqText.Contains('getVariable ["wfbe_hq_walls", _HQ getVariable ["WFBE_Walls", []]]') -and $hqText.Contains("deleteVehicle _x")
@@ -108,6 +156,80 @@ function Test-WddmInstantStaticCrew {
 	$retry = $create.Contains('retried instant static manning') -and $create.Contains('setPosATL (getPosATL _defence)') -and $create.Contains('_unit moveInGunner _defence')
 	$settles = $create.Contains('disableAI "MOVE"') -and $create.Contains('WFBE_StaticDefenseSettled')
 	Add-Result "WDDM instant static crew settling" ($spawnAtGun -and $logsStaticType -and $passesWddmFlag -and $retry -and $settles) "spawnAtGun=$spawnAtGun logsStaticType=$logsStaticType wddmFlag=$passesWddmFlag retry=$retry settles=$settles"
+}
+
+function Test-WddmAnchorClassValidity {
+	# Guards the exact regression behind the "WDDM build preview missing" live finding:
+	# an invalid CfgVehicles anchor class (RoadBarrier / RoadBarrier_light / RoadBarrier_long)
+	# made Core_CIV log "Element '...' is not a valid class.", skip registration, and feed CoIn
+	# a malformed [cash,<null>] cost -> _canAffordCount undefined cascade -> no placement ghost.
+	#
+	# isClass cannot run outside the engine, so validity is enforced two ways:
+	#   1. denylist  - no known-invalid (Arma-3-only) anchor class may appear in any WDDM file, on any map.
+	#   2. allowlist - every WFBE_POSITION_ANCHOR_NAMES entry must be a class already CONFIRMED valid
+	#                  in Arma 2 OA. Adding a new anchor forces an in-engine isClass check + this list.
+
+	# Curated set confirmed to resolve in Arma 2 OA CfgVehicles (the commander build anchors).
+	$validAnchors = @(
+		"Land_Ind_BoardsPack1","Land_CncBlock_Stripes","Land_Barrel_sand",
+		"Land_Ind_BoardsPack2","Land_WoodenRamp","RoadCone",
+		"Paleta1","Paleta2","Land_Ind_Timbers"
+	)
+	# Classes that previously broke the commander build menu (Arma-3-only / invalid in A2 OA).
+	$invalidAnchors = @("RoadBarrier","RoadBarrier_light","RoadBarrier_long")
+
+	$wddmFiles = @(
+		"Common\Config\Core\Core_CIV.sqf",
+		"Common\Config\Core_Structures\Structures_CO_RU.sqf",
+		"Common\Config\Core_Structures\Structures_CO_US.sqf",
+		"Server\Construction\Construction_MediumSite.sqf",
+		"Server\Construction\Construction_SmallSite.sqf",
+		"Server\Init\Init_Defenses.sqf"
+	)
+
+	# 1. Denylist scan across EVERY maintained mission (Chernarus/Takistan/Napf/eden/lingor/...).
+	$invalidHits = @()
+	foreach ($root in @("Missions", "Missions_Vanilla", "Modded_Missions")) {
+		$fullRoot = Join-Path $sourceRepoRoot $root
+		if (!(Test-Path -LiteralPath $fullRoot)) { continue }
+		foreach ($missionDir in Get-ChildItem -LiteralPath $fullRoot -Directory) {
+			foreach ($rel in $wddmFiles) {
+				$f = Join-Path $missionDir.FullName $rel
+				if (!(Test-Path -LiteralPath $f)) { continue }
+				$t = Get-Text $f
+				foreach ($bad in $invalidAnchors) {
+					if ([regex]::IsMatch($t, "'$([regex]::Escape($bad))'")) {
+						$invalidHits += "$($missionDir.Name)\$rel : $bad"
+					}
+				}
+			}
+		}
+	}
+
+	# 2/3. Parse the Chernarus source of truth for the anchor list + template-map keys.
+	$defText = Get-Text (Join-Path $missionRoot "Server\Init\Init_Defenses.sqf")
+	$anchorMatch = [regex]::Match($defText, "WFBE_POSITION_ANCHOR_NAMES\s*=\s*\[(?<body>[^\]]*)\]")
+	$anchorBody = if ($anchorMatch.Success) { $anchorMatch.Groups["body"].Value } else { "" }
+	$anchorNames = @([regex]::Matches($anchorBody, "'(?<c>[^']+)'") | ForEach-Object { $_.Groups["c"].Value })
+
+	$mapMatch = [regex]::Match($defText, "WFBE_POSITION_TEMPLATE_MAP\s*=\s*\[(?<body>[\s\S]*?)\];")
+	$mapBody = if ($mapMatch.Success) { $mapMatch.Groups["body"].Value } else { "" }
+	$mapKeys = @([regex]::Matches($mapBody, "\[\s*'(?<c>[^']+)'") | ForEach-Object { $_.Groups["c"].Value })
+
+	# 4. Every shipped anchor must be on the confirmed-valid allowlist.
+	$unknown = @($anchorNames | Where-Object { $validAnchors -notcontains $_ })
+
+	# 5. Anchor names and template-map keys must be the SAME set (no orphan anchor / template).
+	$anchorsSorted = (($anchorNames | Sort-Object) -join ",")
+	$keysSorted = (($mapKeys | Sort-Object) -join ",")
+	$consistent = ($anchorMatch.Success -and $mapMatch.Success -and $anchorNames.Count -gt 0 -and $anchorsSorted -eq $keysSorted)
+
+	# 6. Each anchor must be wired into the CoIn commander build menu (Core_CIV) so it can be placed.
+	$coiv = Get-Text (Join-Path $missionRoot "Common\Config\Core\Core_CIV.sqf")
+	$unwired = @($anchorNames | Where-Object { -not $coiv.Contains("'$_'") })
+
+	$ok = ($invalidHits.Count -eq 0) -and ($unknown.Count -eq 0) -and $consistent -and ($unwired.Count -eq 0)
+	Add-Result "WDDM anchor-class validity" $ok "anchors=$($anchorNames.Count) consistentMap=$consistent invalidHits=[$($invalidHits -join '; ')] unknown=[$($unknown -join ',')] unwired=[$($unwired -join ',')]"
 }
 
 function Test-PvfIntegrity {
@@ -149,7 +271,7 @@ function Test-HcDelegatedAiLocalGroups {
 	$townLocalizes = $delegateTown.Contains("count units _team") -and $delegateTown.Contains("_team = createGroup _side") -and $delegateTown.Contains("_teams set [_i, _team]")
 	$staticLocalizes = $delegateStatic.Contains("count units _team") -and $delegateStatic.Contains("_team = createGroup _side")
 	$unitFallback = $createUnit.Contains("_teamLeader = leader _team") -and $createUnit.Contains("!local _teamLeader") -and $createUnit.Contains("is not local here; creating local fallback group") -and $createUnit.Contains("if (isNull _unit) exitWith") -and (-not $createUnit.Contains("local _team)"))
-	$teamFiltersNull = $createTeam.Contains("if (!isNull _unit) then") -and $createTeam.Contains("if (isNull _crewUnit) exitWith {}")
+	$teamFiltersNull = ($createTeam.Contains("if (!isNull _unit) then") -or ($createTeam.Contains("if (isNull _unit) then") -and $createTeam.Contains("_perfSkipped = _perfSkipped + 1"))) -and $createTeam.Contains("if (isNull _crewUnit) exitWith {}")
 	Add-Result "HC delegated AI local groups" ($townLocalizes -and $staticLocalizes -and $unitFallback -and $teamFiltersNull) "town=$townLocalizes static=$staticLocalizes unitFallback=$unitFallback nullFilter=$teamFiltersNull"
 }
 
@@ -164,7 +286,7 @@ function Test-StaleUpgradeDialog {
 	$roots = @("Missions", "Missions_Vanilla", "Modded_Missions")
 	$hits = @()
 	foreach ($root in $roots) {
-		$fullRoot = Join-Path $repoRoot $root
+		$fullRoot = Join-Path $sourceRepoRoot $root
 		if (!(Test-Path -LiteralPath $fullRoot)) { continue }
 		foreach ($dialog in Get-ChildItem -LiteralPath $fullRoot -Recurse -Filter "Dialogs.hpp") {
 			$text = Get-Text $dialog.FullName
@@ -198,18 +320,46 @@ function Test-ServiceMenuDisplayGuard {
 	Add-Result "Service menu display guard" ($sourceOk -and $activeOk) "sourceOk=$sourceOk activeOk=$activeOk"
 }
 
+function Test-WfMenuGpsButton {
+	$dialogs = Get-Text (Join-Path $missionRoot "Rsc\Dialogs.hpp")
+	$menu = Get-Text (Join-Path $missionRoot "Client\GUI\GUI_Menu.sqf")
+	$description = Get-Text (Join-Path $missionRoot "description.ext")
+	$activeDialogsPath = Join-Path $ActiveMissionRoot "Rsc\Dialogs.hpp"
+	$activeMenuPath = Join-Path $ActiveMissionRoot "Client\GUI\GUI_Menu.sqf"
+	$activeDescriptionPath = Join-Path $ActiveMissionRoot "description.ext"
+	$activeDialogs = if (Test-Path -LiteralPath $activeDialogsPath) { Get-Text $activeDialogsPath } else { "" }
+	$activeMenu = if (Test-Path -LiteralPath $activeMenuPath) { Get-Text $activeMenuPath } else { "" }
+	$activeDescription = if (Test-Path -LiteralPath $activeDescriptionPath) { Get-Text $activeDescriptionPath } else { "" }
+	$sourceHudButton = $dialogs.Contains("class CA_HUD_Button : RscButton_Main") -and $dialogs.Contains('text = "HUD";') -and $dialogs.Contains("tooltip = ""HUD On/Off""")
+	$sourceButton = $dialogs.Contains("class CA_GPS_Button : RscButton_Main") -and $dialogs.Contains('text = "GPS";') -and $dialogs.Contains("tooltip = ""Enable GPS / Mini Map""")
+	$sourceGpsAllowed = $description.Contains("showGPS = 1;")
+	$sourceToggle = $menu.Contains('WFBE_Client_MenuGPSState') -and $menu.Contains('!("ItemGPS" in weapons player)') -and $menu.Contains('player addWeapon "ItemGPS"') -and $menu.Contains("showGPS true") -and $menu.Contains("shownGPS") -and $menu.Contains("GPS enabled.") -and $menu.Contains("closeDialog 0")
+	$activeHudButton = ($activeDialogs -eq "") -or ($activeDialogs.Contains("class CA_HUD_Button : RscButton_Main") -and $activeDialogs.Contains('text = "HUD";'))
+	$activeButton = ($activeDialogs -eq "") -or ($activeDialogs.Contains("class CA_GPS_Button : RscButton_Main") -and $activeDialogs.Contains('text = "GPS";') -and $activeDialogs.Contains("tooltip = ""Enable GPS / Mini Map"""))
+	$activeGpsAllowed = ($activeDescription -eq "") -or $activeDescription.Contains("showGPS = 1;")
+	$activeToggle = ($activeMenu -eq "") -or ($activeMenu.Contains('WFBE_Client_MenuGPSState') -and $activeMenu.Contains('!("ItemGPS" in weapons player)') -and $activeMenu.Contains('player addWeapon "ItemGPS"') -and $activeMenu.Contains("showGPS true") -and $activeMenu.Contains("shownGPS") -and $activeMenu.Contains("GPS enabled.") -and $activeMenu.Contains("closeDialog 0"))
+	Add-Result "WF menu GPS/HUD buttons" ($sourceHudButton -and $sourceButton -and $sourceGpsAllowed -and $sourceToggle -and $activeHudButton -and $activeButton -and $activeGpsAllowed -and $activeToggle) "sourceHud=$sourceHudButton sourceGps=$sourceButton sourceGpsAllowed=$sourceGpsAllowed sourceEnable=$sourceToggle activeHud=$activeHudButton activeGps=$activeButton activeGpsAllowed=$activeGpsAllowed activeEnable=$activeToggle"
+}
+
 function Test-RhudEconomyFpsLayout {
 	$rhud = Get-Text (Join-Path $missionRoot "Client\Client_UpdateRHUD.sqf")
+	$initClient = Get-Text (Join-Path $missionRoot "Client\Init\Init_Client.sqf")
 	$menu = Get-Text (Join-Path $missionRoot "Client\GUI\GUI_Menu.sqf")
 	$stressPath = Join-Path $ActiveMissionRoot "test\wasp_pr8_stress_mission.sqf"
+	$activeInitPath = Join-Path $ActiveMissionRoot "Client\Init\Init_Client.sqf"
+	$activeRhudPath = Join-Path $ActiveMissionRoot "Client\Client_UpdateRHUD.sqf"
 	$stress = if (Test-Path -LiteralPath $stressPath) { Get-Text $stressPath } else { "" }
+	$activeInit = if (Test-Path -LiteralPath $activeInitPath) { Get-Text $activeInitPath } else { "" }
+	$activeRhud = if (Test-Path -LiteralPath $activeRhudPath) { Get-Text $activeRhudPath } else { "" }
 	$moneyIncome = $rhud.Contains('%1 $ | %2') -and $rhud.Contains('[7, "Money:"]')
-	$svPlus = $rhud.Contains('[11, "SV+:"]') -and (-not $rhud.Contains('[13, "SV Min:"]'))
+	$baseStatus = $rhud.Contains('[11, "Base:"]') -and $rhud.Contains('WFBE_CO_FNC_GetSideStructures') -and $rhud.Contains('Format ["%1 ok | D%2"') -and (-not $rhud.Contains('[11, "SV+:"]')) -and (-not $rhud.Contains('[13, "SV Min:"]'))
 	$fpsCombined = $rhud.Contains('[13, "FPS C/S:"]') -and $rhud.Contains('format ["%1 / %2", _clientFPS, _serverFPS]') -and (-not $rhud.Contains('[15, "FPS Server:"]'))
 	$hiddenOldRows = $rhud.Contains('{[_x, false] call _RHUDSetShow} forEach [15,16,17,18,19,20,21,22]')
-	$topStrip = $menu.Contains('| SV+ %9') -and (-not $menu.Contains('| FPS %9'))
-	$stressProof = $stress.Contains('topStrip=uptime|time|players|towns|svPlus') -and $stress.Contains('rhud=moneyIncome|svPlus|fpsClientServer')
-	Add-Result "RHUD economy/FPS layout" ($moneyIncome -and $svPlus -and $fpsCombined -and $hiddenOldRows -and $topStrip -and $stressProof) "moneyIncome=$moneyIncome svPlus=$svPlus fpsCombined=$fpsCombined hiddenOldRows=$hiddenOldRows topStrip=$topStrip stressProof=$stressProof"
+	$topStrip = $menu.Contains('| SV %9') -and (-not $menu.Contains('| SV+ %9')) -and (-not $menu.Contains('| FPS %9'))
+	$stressProof = $stress.Contains('topStrip=uptime|time|players|towns|svSigned') -and $stress.Contains('rhud=moneyIncome|baseStatus|fpsClientServer')
+	$hudDefaultOn = $initClient.Contains('if (isNil "RUBHUD") then {RUBHUD = true}') -and $rhud.Contains('if (isNil "RUBHUD") then {RUBHUD = true}') -and (-not $initClient.Contains("Start RHUD hidden"))
+	$activeHudDefaultOn = ($activeInit -eq "") -or ($activeInit.Contains('if (isNil "RUBHUD") then {RUBHUD = true}') -and $activeRhud.Contains('if (isNil "RUBHUD") then {RUBHUD = true}'))
+	Add-Result "RHUD economy/FPS layout" ($moneyIncome -and $baseStatus -and $fpsCombined -and $hiddenOldRows -and $topStrip -and $stressProof -and $hudDefaultOn -and $activeHudDefaultOn) "moneyIncome=$moneyIncome baseStatus=$baseStatus fpsCombined=$fpsCombined hiddenOldRows=$hiddenOldRows topStrip=$topStrip stressProof=$stressProof hudDefaultOn=$hudDefaultOn activeHudDefaultOn=$activeHudDefaultOn"
 }
 
 function Test-AfkBoolComparisons {
@@ -218,6 +368,28 @@ function Test-AfkBoolComparisons {
 	$afkXor = $monitor.Contains("(_afk && !_afkShouldBe) || (!_afk && _afkShouldBe)")
 	$commandXor = $monitor.Contains("(_commandAndConquer && !_commandAndConquerShouldBe) || (!_commandAndConquer && _commandAndConquerShouldBe)")
 	Add-Result "AFK boolean comparison guard" ($noBoolNotEquals -and $afkXor -and $commandXor) "noBoolNotEquals=$noBoolNotEquals afkXor=$afkXor commandXor=$commandXor"
+}
+
+function Test-HarnessBoolComparisons {
+	$roots = @()
+	$overlayTest = Join-Path $harnessRoot "Overlays\pr8-stress\test"
+	$activeTest = Join-Path $ActiveMissionRoot "test"
+	if (Test-Path -LiteralPath $overlayTest) { $roots += $overlayTest }
+	if (Test-Path -LiteralPath $activeTest) { $roots += $activeTest }
+	$hits = @()
+	foreach ($root in $roots) {
+		foreach ($file in Get-ChildItem -LiteralPath $root -Recurse -Filter "*.sqf") {
+			$lineNumber = 0
+			foreach ($line in [System.IO.File]::ReadLines($file.FullName)) {
+				$lineNumber++
+				$code = Remove-LineComment $line
+				if ($code -match "(?i)(!=\s*(true|false)|(true|false)\s*!=)") {
+					$hits += "$($file.Name):$lineNumber"
+				}
+			}
+		}
+	}
+	Add-Result "Harness boolean comparison guard" ($hits.Count -eq 0) ($(if ($hits.Count) { $hits -join "; " } else { "No true/false != comparisons in stress harness SQF." }))
 }
 
 function Test-DefenseAutoManningDefault {
@@ -276,7 +448,7 @@ function Test-AiSupplyTruckDisabled {
 function Test-StaleLogGameEndRemoved {
 	$hits = @()
 	foreach ($root in @("Missions", "Missions_Vanilla")) {
-		$fullRoot = Join-Path $repoRoot $root
+		$fullRoot = Join-Path $sourceRepoRoot $root
 		if (!(Test-Path -LiteralPath $fullRoot)) { continue }
 		foreach ($file in Get-ChildItem -LiteralPath $fullRoot -Recurse -Filter "LogGameEnd.sqf") {
 			if ($file.FullName -match [regex]::Escape("Server\PVFunctions\LogGameEnd.sqf")) {
@@ -319,7 +491,7 @@ function Test-Pr8StressHarness {
 	$text = if (Test-Path -LiteralPath $harness) { Get-Text $harness } else { "" }
 	$gated = $text.Contains("WASP_PR8_STRESS_ENABLED") -and $text.Contains("disabled - flag is false")
 	$anchors = $text.Contains("[WASP-PR8-STRESS]") -and $text.Contains("PHASE_BEGIN") -and $text.Contains("SNAPSHOT") -and $text.Contains("AI_BEHAVIOR") -and $text.Contains("ACTION_MATRIX") -and $text.Contains("TRIGGER") -and $text.Contains("EVIDENCE")
-	$coverage = @("hcDelegation","timedSyntheticWaves","townLifecycle","prePressureCapPostRestore","TOWN_SNAPSHOT","TOWN_GROUPS","TOWN_PRESSURE","TOWN_CAPTURE_FORCE","TOWN_CAMP_CAPTURE_FORCE","TOWN_RESTORE","TOWN_PRESSURE_CLEANUP","wddm","hqWalls","commanderArtillery","supplyHeli","supplyInterdiction","easa","service","directDelayedAttribution","buyAutoCrew","autoManning","NOISECHECK","supplyCompletion","teamFunds","reinforcement","WASP_PR8_STRESS_PROFILE","PROFILE selected","CLIENT_COMMAND","clientWave","clientHeavyWave","CLEANUP","WASP_PR8_STRESS_AI_BEHAVIOR","AI_BEHAVIOR","AI_DELEGATION_AUDIT","BUGHUNT_AUDIT","GPS_UI_AUDIT","CLIENT_GPS_STATE","CLIENT_UI_TEXT_STATE","CLIENT_SERVICE_CLIP_AUDIT","farStopped","leaderFarStopped","underStrengthGroups","noDestination","noWaypoint","PLAYER_EXPERIENCE_AUDIT","FACTORY_AUDIT","SERVICE_SUPPLY_AUDIT","WDDM_ARTILLERY_AUDIT","UI_AUDIT","PERF_BURST","SPAWN vehicleLoad","WASP_PR8_STRESS_FACTORY_AUDIT","WASP_PR8_STRESS_SERVICE_SUPPLY_AUDIT","WASP_PR8_STRESS_WDDM_ARTILLERY_AUDIT","WASP_PR8_STRESS_UI_AUDIT","WASP_PR8_STRESS_AI_DELEGATION_AUDIT","WASP_PR8_STRESS_BUGHUNT_AUDIT","WASP_PR8_STRESS_PERF_BURST","WASP_PR8_STRESS_SPAWN_VEHICLE_LOAD","wasp-pr8-stress-v5","perfAuditSid","maxAiUnitsVehiclesGroupsDead","CLIENT_COMMAND_SCHEDULED ai-deep-sample","WASP_PR8_STRESS_QUEUE","WASP_PR8_STRESS_QUEUE_ADD","WASP_PR8_STRESS_QUEUE_RUNNER","WASP_PR8_STRESS_QUEUE_SEQUENCE","WASP_PR8_STRESS_WAIT_FOR_HC","QUEUE_ENQUEUE","QUEUE_BEGIN","QUEUE_STEP","QUEUE_END","QUEUE_STATUS","QUEUE_STOP","QUEUE_PROOF","HC_WAIT_BEGIN","HC_READY","HC_WAIT_TIMEOUT","CLEANUP_LOOP")
+	$coverage = @("hcDelegation","timedSyntheticWaves","townLifecycle","prePressureCapPostRestore","TOWN_SNAPSHOT","TOWN_GROUPS","TOWN_PRESSURE","TOWN_CAPTURE_FORCE","TOWN_CAMP_CAPTURE_FORCE","TOWN_RESTORE","TOWN_PRESSURE_CLEANUP","wddm","hqWalls","commanderArtillery","supplyHeli","supplyInterdiction","easa","service","directDelayedAttribution","buyAutoCrew","autoManning","NOISECHECK","supplyCompletion","teamFunds","reinforcement","WASP_PR8_STRESS_PROFILE","PROFILE selected","CLIENT_COMMAND","clientWave","clientHeavyWave","CLEANUP","WASP_PR8_STRESS_AI_BEHAVIOR","AI_BEHAVIOR","AI_DELEGATION_AUDIT","BUGHUNT_AUDIT","RANDOM_BUGHUNT_AUDIT","GPS_UI_AUDIT","CLIENT_GPS_STATE","CLIENT_UI_TEXT_STATE","CLIENT_SERVICE_CLIP_AUDIT","farStopped","leaderFarStopped","underStrengthGroups","noDestination","noWaypoint","PLAYER_EXPERIENCE_AUDIT","FACTORY_AUDIT","SERVICE_SUPPLY_AUDIT","WDDM_ARTILLERY_AUDIT","UI_AUDIT","PERF_BURST","SPAWN vehicleLoad","WASP_PR8_STRESS_FACTORY_AUDIT","WASP_PR8_STRESS_SERVICE_SUPPLY_AUDIT","WASP_PR8_STRESS_WDDM_ARTILLERY_AUDIT","WASP_PR8_STRESS_UI_AUDIT","WASP_PR8_STRESS_AI_DELEGATION_AUDIT","WASP_PR8_STRESS_BUGHUNT_AUDIT","WASP_PR8_STRESS_RANDOM_BUGHUNT_AUDIT","WASP_PR8_STRESS_PERF_BURST","WASP_PR8_STRESS_SPAWN_VEHICLE_LOAD","wasp-pr8-stress-v5","perfAuditSid","maxAiUnitsVehiclesGroupsDead","CLIENT_COMMAND_SCHEDULED ai-deep-sample","WASP_PR8_STRESS_QUEUE","WASP_PR8_STRESS_QUEUE_ADD","WASP_PR8_STRESS_QUEUE_ENQUEUES","WASP_PR8_STRESS_QUEUE_RUNNER","WASP_PR8_STRESS_QUEUE_SEQUENCE","WASP_PR8_STRESS_WAIT_FOR_HC","WASP_PR8_STRESS_AUTORUN_START","AUTORUN_WAIT","AUTORUN_TRIGGER","operator","ai-long","systems","ui-long","QUEUE_ENQUEUE","QUEUE_BEGIN","QUEUE_STEP","QUEUE_END","QUEUE_STATUS","QUEUE_STOP","QUEUE_PROOF","QUEUE_NOT_TRIGGERED","HC_WAIT_BEGIN","HC_READY","HC_WAIT_TIMEOUT","CLEANUP_LOOP","final_ai_delegation","final_bughunt","final_random_bughunt","final_perf_burst","reason=noDisplay")
 	$missing = @()
 	foreach ($token in $coverage) {
 		if (-not $text.Contains($token)) { $missing += $token }
@@ -341,13 +513,18 @@ function Test-Pr8StressClientHelper {
 	$clientText = if (Test-Path -LiteralPath $client) { Get-Text $client } else { "" }
 	$actionText = if (Test-Path -LiteralPath $action) { Get-Text $action } else { "" }
 	$gated = $clientText.Contains("WASP_PR8_STRESS_ENABLED") -and $actionText.Contains("WASP_PR8_STRESS_ENABLED") -and $clientText.Contains("isDedicated")
-	$actions = @("queue-full","queue-ai","queue-factory","queue-service","queue-wddm","queue-ui","queue-load","queue-gps-ui","queue-bughunt","queue-status","queue-stop","cleanup-loop-start","cleanup-loop-stop","snapshot","ai-audit","ai-deep-sample","spawn-wave","spawn-heavy-wave","perf-burst","vehicle-load","factory-audit","ui-audit","gps-ui-audit","gps-gain-toggle-audit","player-experience-audit","ai-delegation-audit","bughunt-audit","service-supply-audit","wddm-artillery-audit","trigger-direct","town-lifecycle","profile","cleanup")
+	$actions = @("queue-operator","queue-ai-long","queue-systems","queue-ui-long","queue-status","queue-stop","cleanup-loop-start","cleanup-loop-stop")
 	$missing = @()
 	foreach ($token in $actions) {
 		if (-not ($clientText.Contains($token) -and $actionText.Contains("WASP_PR8_STRESS_CLIENT_COMMAND"))) { $missing += $token }
 	}
 	$sends = $actionText.Contains('publicVariableServer "WASP_PR8_STRESS_CLIENT_COMMAND"')
-	Add-Result "Local active stress client helper actions" ($exists -and $gated -and $missing.Count -eq 0 -and $sends) "exists=$exists gated=$gated missingActions=$($missing -join ',') sends=$sends"
+	$hcSkip = $clientText.Contains("helper skipped headless/non-interface") -and $actionText.Contains("skipped headless/non-interface") -and $clientText.Contains("hasInterface") -and $clientText.Contains("isHeadLessClient")
+	$autoProbes = $clientText.Contains("WASP_PR8_STRESS_CLIENT_AUTOFIRED") -and $clientText.Contains("auto probe command") -and $clientText.Contains("auto probes complete") -and $clientText.Contains("gps-gain-toggle-audit") -and $clientText.Contains("bughunt-audit") -and $clientText.Contains("random-bughunt-audit") -and $clientText.Contains("DIALOG_AUTO_PROBE")
+	$closedUiEvidence = $actionText.Contains("reason=noDisplay")
+	$uiSerializationGuard = $actionText.Contains("disableSerialization;") -and $actionText.Contains("findDisplay 11000") -and $actionText.Contains("findDisplay 20000")
+	$gpsProbeRestores = $actionText.Contains("_restoreGpsAfterAudit") -and $actionText.Contains("showGPS _gpsBefore") -and $actionText.Contains("CLIENT_GPS_RESTORE")
+	Add-Result "Local active stress client helper actions" ($exists -and $gated -and $missing.Count -eq 0 -and $sends -and $hcSkip -and $autoProbes -and $closedUiEvidence -and $uiSerializationGuard -and $gpsProbeRestores) "exists=$exists gated=$gated missingActions=$($missing -join ',') sends=$sends hcSkip=$hcSkip autoProbes=$autoProbes closedUi=$closedUiEvidence uiSerializationGuard=$uiSerializationGuard gpsProbeRestores=$gpsProbeRestores"
 }
 
 function Test-Pr8StressRptAnalyzer {
@@ -358,7 +535,7 @@ function Test-Pr8StressRptAnalyzer {
 	$text = if (Test-Path -LiteralPath $analyzer) { Get-Text $analyzer } else { "" }
 	$allowText = if (Test-Path -LiteralPath $allow) { Get-Text $allow } else { "" }
 	$issueText = if (Test-Path -LiteralPath $missionIssues) { Get-Text $missionIssues } else { "" }
-	$anchors = @("PROFILE selected=","PHASE_BEGIN","AI_BEHAVIOR","SNAPSHOT_SIDE","TOWN_SNAPSHOT","TOWN_GROUPS","TOWN_PRESSURE","TOWN_CAPTURE_FORCE","TOWN_CAMP_CAPTURE_FORCE","TOWN_RESTORE","TOWN_PRESSURE_CLEANUP","ACTION_MATRIX","TRIGGER supplyCompletion","TRIGGER supplyInterdiction","TRIGGER teamFunds","PROBE delayedKill","SPAWN reinforcement","PERF #","NOISECHECK","EVIDENCE","maxFarStopped","maxLeaderFarStopped","maxUnderStrengthGroups","maxNoDestination","AI/pathing symptom counts","Out of path-planning region","Wrong unit index","FACTORY_AUDIT","SERVICE_SUPPLY_AUDIT","WDDM_ARTILLERY_AUDIT","UI_AUDIT","GPS_UI_AUDIT","CLIENT_GPS_STATE","CLIENT_UI_TEXT_STATE","CLIENT_SERVICE_CLIP_AUDIT","AI_DELEGATION_AUDIT","BUGHUNT_AUDIT","PLAYER_EXPERIENCE_AUDIT","PERF_BURST","SPAWN vehicleLoad","QUEUE_ENQUEUE","QUEUE_STEP","QUEUE_PROOF","QUEUE_END","HC_READY","HC_WAIT_TIMEOUT","CLEANUP_LOOP","queue:","client-heavy-wave","audits:")
+	$anchors = @("PROFILE selected=","PHASE_BEGIN","AI_BEHAVIOR","SNAPSHOT_SIDE","TOWN_SNAPSHOT","TOWN_GROUPS","TOWN_PRESSURE","TOWN_CAPTURE_FORCE","TOWN_CAMP_CAPTURE_FORCE","TOWN_RESTORE","TOWN_PRESSURE_CLEANUP","ACTION_MATRIX","TRIGGER supplyCompletion","TRIGGER supplyInterdiction","TRIGGER teamFunds","PROBE delayedKill","SPAWN reinforcement","PERF #","NOISECHECK","EVIDENCE","maxFarStopped","maxLeaderFarStopped","maxUnderStrengthGroups","maxNoDestination","AI/pathing symptom counts","Out of path-planning region","Wrong unit index","FACTORY_AUDIT","SERVICE_SUPPLY_AUDIT","WDDM_ARTILLERY_AUDIT","UI_AUDIT","GPS_UI_AUDIT","CLIENT_GPS_STATE","CLIENT_UI_TEXT_STATE","CLIENT_SERVICE_CLIP_AUDIT","AI_DELEGATION_AUDIT","BUGHUNT_AUDIT","RANDOM_BUGHUNT_AUDIT","PLAYER_EXPERIENCE_AUDIT","PERF_BURST","SPAWN vehicleLoad","QUEUE_ENQUEUE","QUEUE_STEP","QUEUE_PROOF","QUEUE_END","QUEUE_NOT_TRIGGERED","HC_READY","HC_WAIT_TIMEOUT","CLEANUP_LOOP","DIALOG_AUTO_PROBE","dialogAutoProbe","queue:","client-heavy-wave","audits:","randomBughunt")
 	$missing = @()
 	foreach ($token in $anchors) {
 		if (-not $text.Contains($token)) { $missing += $token }
@@ -372,7 +549,7 @@ function Test-Pr8LiveWatcher {
 	$watcher = Join-Path $harnessRoot "Rpt\Watch-WaspLiveRpt.ps1"
 	$exists = Test-Path -LiteralPath $watcher
 	$text = if ($exists) { Get-Text $watcher } else { "" }
-	$anchors = @("HostRpt","HcRpt","AI_BEHAVIOR","farStopped","leaderFarStopped","underStrengthGroups","noDestination","noWaypoint","emptyGroups","knownNoise","missionIssue","Get-CimInstance","Win32_Process","SupplyMissionUnload","SupplyMissionCompleted","commanderArtillery","FACTORY_AUDIT","SERVICE_SUPPLY_AUDIT","WDDM_ARTILLERY_AUDIT","UI_AUDIT","GPS_UI_AUDIT","CLIENT_GPS_STATE","CLIENT_UI_TEXT_STATE","CLIENT_SERVICE_CLIP_AUDIT","AI_DELEGATION_AUDIT","BUGHUNT_AUDIT","PLAYER_EXPERIENCE_AUDIT","PERF_BURST","SPAWN vehicleLoad","QUEUE_ENQUEUE","QUEUE_STEP","QUEUE_PROOF","QUEUE_END","HC_READY","HC_WAIT_TIMEOUT","CLEANUP_LOOP","queue:","gps/ui:","bughunt:","audits:")
+	$anchors = @("HostRpt","HcRpt","AI_BEHAVIOR","farStopped","leaderFarStopped","underStrengthGroups","noDestination","noWaypoint","emptyGroups","knownNoise","missionIssue","Get-CimInstance","Win32_Process","SupplyMissionUnload","SupplyMissionCompleted","commanderArtillery","FACTORY_AUDIT","SERVICE_SUPPLY_AUDIT","WDDM_ARTILLERY_AUDIT","UI_AUDIT","GPS_UI_AUDIT","CLIENT_GPS_STATE","CLIENT_UI_TEXT_STATE","CLIENT_SERVICE_CLIP_AUDIT","AI_DELEGATION_AUDIT","BUGHUNT_AUDIT","RANDOM_BUGHUNT_AUDIT","PLAYER_EXPERIENCE_AUDIT","PERF_BURST","SPAWN vehicleLoad","QUEUE_ENQUEUE","QUEUE_STEP","QUEUE_PROOF","QUEUE_END","QUEUE_NOT_TRIGGERED","HC_READY","HC_WAIT_TIMEOUT","CLEANUP_LOOP","queue:","gps/ui:","bughunt:","audits:","randomBughunt")
 	$missing = @()
 	foreach ($token in $anchors) {
 		if (-not $text.Contains($token)) { $missing += $token }
@@ -382,7 +559,7 @@ function Test-Pr8LiveWatcher {
 
 function Test-ShippingMissionsExcludeHarness {
 	$chernarusTest = Join-Path $missionRoot "test"
-	$takistanRoot = Join-Path $repoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
+	$takistanRoot = Join-Path $sourceRepoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan"
 	$takistanTest = Join-Path $takistanRoot "test"
 	$chernarusAbsent = -not (Test-Path -LiteralPath $chernarusTest)
 	$takistanAbsent = -not (Test-Path -LiteralPath $takistanTest)
@@ -407,8 +584,8 @@ function Test-ActiveStressMissionCopy {
 	$hasSelftest = (-not $init.Contains('[] execVM "test\wasp_selftest.sqf"')) -or (Test-Path -LiteralPath $selftest)
 	$launches = $init.Contains("WASP_PR8_STRESS_ENABLED = true") -and $init.Contains('[] execVM "test\wasp_pr8_stress_mission.sqf"') -and $init.Contains('[] execVM "test\wasp_pr8_stress_client.sqf"') -and $hasSelftest
 	$timed = $init.Contains("WASP_PR8_STRESS_PROFILE") -and $init.Contains("WASP_PR8_STRESS_PHASE_DELAY") -and $init.Contains("WASP_PR8_STRESS_REINFORCEMENT_INTERVAL") -and $init.Contains("WASP_PR8_STRESS_TRIGGER_DIRECT_ACTIONS = true") -and $init.Contains("WASP_PR8_STRESS_TOWN_LIFECYCLE_ENABLED = true") -and $init.Contains("WASP_PR8_STRESS_TOWN_RESTORE = true") -and $init.Contains("WASP_PR8_STRESS_REQUIRE_HC = true")
-	$picker = $mission.Contains('briefingName="TEST PR8 Stress - June Feature Bundle"') -and $mission.Contains("Auto-starts WASP-PR8-STRESS")
-	$name = $version.Contains('#define WF_MISSIONNAME "TEST PR8 Stress - Chernarus"')
+	$picker = $mission.Contains('briefingName="TEST PR8 Stress') -and $mission.Contains("Auto-starts WASP-PR8-STRESS")
+	$name = $version.Contains('#define WF_MISSIONNAME "TEST PR8 Stress')
 	Add-Result "Active stress mission copy" ($hasHarness -and $hasClient -and $launches -and $timed -and $picker -and $name) "harness=$hasHarness client=$hasClient selftest=$hasSelftest launches=$launches timed=$timed picker=$picker name=$name root=$ActiveMissionRoot"
 }
 
@@ -416,6 +593,7 @@ Test-ForbiddenA3Commands
 Test-HqShield
 Test-AARadarHasNoWalls
 Test-WddmInstantStaticCrew
+Test-WddmAnchorClassValidity
 Test-PvfIntegrity
 Test-HcPvfGuard
 Test-HcDelegatedAiLocalGroups
@@ -423,8 +601,10 @@ Test-GuiImageTabGuard
 Test-StaleUpgradeDialog
 Test-SupplyHeliTimers
 Test-ServiceMenuDisplayGuard
+Test-WfMenuGpsButton
 Test-RhudEconomyFpsLayout
 Test-AfkBoolComparisons
+Test-HarnessBoolComparisons
 Test-DefenseAutoManningDefault
 Test-BuyMenuAutoCrewDefault
 Test-VehicleBountyAssistType

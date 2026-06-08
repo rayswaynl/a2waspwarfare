@@ -175,6 +175,7 @@ $featureTriggerPatterns = [ordered]@{
 	"client-service-clip-audit" = "CLIENT_SERVICE_CLIP_AUDIT"
 	"ai-delegation-audit" = "AI_DELEGATION_AUDIT"
 	"bughunt-audit" = "BUGHUNT_AUDIT"
+	"random-bughunt-audit" = "RANDOM_BUGHUNT_AUDIT"
 	"ai-deep-sample" = "CLIENT_COMMAND_DONE ai-deep-sample"
 	"player-experience-audit" = "PLAYER_EXPERIENCE_AUDIT"
 	"town-pressure-cleanup" = "TOWN_PRESSURE_CLEANUP"
@@ -182,9 +183,20 @@ $featureTriggerPatterns = [ordered]@{
 	"queue-step" = "QUEUE_STEP"
 	"queue-proof" = "QUEUE_PROOF"
 	"queue-end" = "QUEUE_END"
+	"queue-not-triggered" = "QUEUE_NOT_TRIGGERED"
 	"hc-ready" = "HC_READY"
 	"hc-wait-timeout" = "HC_WAIT_TIMEOUT"
 	"cleanup-loop" = "CLEANUP_LOOP"
+	"dialog-auto-probe" = "DIALOG_AUTO_PROBE"
+	"town-cap-regression-begin" = "TOWN_CAP_REGRESSION_BEGIN"
+	"town-cap-force" = "TOWN_CAP_FORCE"
+	"town-reman-ok" = "TOWN_REMAN_OK"
+	"town-reman-fail" = "TOWN_REMAN_FAIL"
+	"town-cap-leak" = "TOWN_CAP_LEAK"
+	"town-cap-organic-result" = "TOWN_CAP_ORGANIC_RESULT"
+	"town-cap-regression-end" = "TOWN_CAP_REGRESSION_END"
+	"town-rapid-recap-ok" = "TOWN_RAPID_RECAP_OK"
+	"town-rapid-recap-fail" = "TOWN_RAPID_RECAP_FAIL"
 }
 $featureTriggers = [ordered]@{}
 foreach ($key in $featureTriggerPatterns.Keys) {
@@ -298,8 +310,8 @@ if ($Json) {
 if ($LiveSummary) {
 	Write-Host ("stress: lines={0} perf={1} fps={2}/{3}/{4} | ai samples={5} farStopped={6} leaderFarStopped={7} noDest={8} noWp={9} empty={10} underStrength={11}" -f $stressLines.Count, $fpsValues.Count, $fpsMin, $fpsAvg, $fpsMax, $aiBehavior.samples, $aiBehavior.maxFarStopped, $aiBehavior.maxLeaderFarStopped, $aiBehavior.maxNoDestination, $aiBehavior.maxNoWaypoint, $aiBehavior.maxEmptyGroups, $aiBehavior.maxUnderStrengthGroups)
 	Write-Host ("triggers: supplyCompletion={0} supplyInterdiction={1} teamFunds={2} townCapture={3} clientWave={4} heavyWave={5} vehicleLoad={6}" -f $featureTriggers["supply-completion"], $featureTriggers["supply-interdiction"], $featureTriggers["team-funds"], $featureTriggers["town-capture"], $featureTriggers["client-wave"], $featureTriggers["client-heavy-wave"], $featureTriggers["vehicle-load"])
-	Write-Host ("queue: enqueue={0} step={1} proof={2} end={3} hcReady={4} hcTimeout={5} cleanupLoop={6}" -f $featureTriggers["queue-enqueue"], $featureTriggers["queue-step"], $featureTriggers["queue-proof"], $featureTriggers["queue-end"], $featureTriggers["hc-ready"], $featureTriggers["hc-wait-timeout"], $featureTriggers["cleanup-loop"])
-	Write-Host ("audits: ai={0} aiDelegation={1} aiDeep={2} playerUX={3} factory={4} serviceSupply={5} wddmArtillery={6} ui={7} gpsUI={8} bughunt={9} perfBurst={10}" -f $featureTriggers["ai-audit"], $featureTriggers["ai-delegation-audit"], $featureTriggers["ai-deep-sample"], $featureTriggers["player-experience-audit"], $featureTriggers["factory-audit"], $featureTriggers["service-supply-audit"], $featureTriggers["wddm-artillery-audit"], $featureTriggers["ui-audit"], $featureTriggers["gps-ui-audit"], $featureTriggers["bughunt-audit"], $featureTriggers["perf-burst"])
+	Write-Host ("queue: enqueue={0} step={1} proof={2} end={3} notTriggered={4} hcReady={5} hcTimeout={6} cleanupLoop={7}" -f $featureTriggers["queue-enqueue"], $featureTriggers["queue-step"], $featureTriggers["queue-proof"], $featureTriggers["queue-end"], $featureTriggers["queue-not-triggered"], $featureTriggers["hc-ready"], $featureTriggers["hc-wait-timeout"], $featureTriggers["cleanup-loop"])
+	Write-Host ("audits: ai={0} aiDelegation={1} aiDeep={2} playerUX={3} factory={4} serviceSupply={5} wddmArtillery={6} ui={7} gpsUI={8} dialogAutoProbe={9} bughunt={10} randomBughunt={11} perfBurst={12}" -f $featureTriggers["ai-audit"], $featureTriggers["ai-delegation-audit"], $featureTriggers["ai-deep-sample"], $featureTriggers["player-experience-audit"], $featureTriggers["factory-audit"], $featureTriggers["service-supply-audit"], $featureTriggers["wddm-artillery-audit"], $featureTriggers["ui-audit"], $featureTriggers["gps-ui-audit"], $featureTriggers["dialog-auto-probe"], $featureTriggers["bughunt-audit"], $featureTriggers["random-bughunt-audit"], $featureTriggers["perf-burst"])
 	Write-Host ("errors: real={0} missionIssue={1} knownNoise={2}" -f $unexpected.Count, $missionIssues.Count, $knownNoise.Count)
 	if ($missionIssues.Count -gt 0) { Write-Host ("missionIssue: {0}" -f (($missionIssues | Select-Object -Last 1) -replace "\s+", " ")) }
 	if ($unexpected.Count -gt 0) { Write-Host ("realIssue: {0}" -f (($unexpected | Select-Object -Last 1) -replace "\s+", " ")) }
@@ -329,6 +341,15 @@ Write-Host "Feature trigger counts:"
 foreach ($key in $featureTriggers.Keys) {
 	Write-Host ("{0,-24} {1,7}" -f $key, $featureTriggers[$key])
 }
+
+$townCapLeakLines = @($stressLines | Where-Object { $_ -like "*TOWN_CAP_LEAK*" })
+$maxTownTeamsAlive = 0
+foreach ($line in $townCapLeakLines) {
+	$val = Get-LineMetric $line "townTeamsAlive"
+	if ($null -ne $val -and $val -gt $maxTownTeamsAlive) { $maxTownTeamsAlive = $val }
+}
+Write-Host ""
+Write-Host ("Town cap regression: remanOk={0} remanFail={1} maxTownTeamsAlive={2}" -f $featureTriggers["town-reman-ok"], $featureTriggers["town-reman-fail"], $maxTownTeamsAlive)
 
 if ($missionIssues.Count -gt 0) {
 	Write-Host ""

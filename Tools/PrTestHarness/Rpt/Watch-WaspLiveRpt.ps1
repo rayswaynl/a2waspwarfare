@@ -92,14 +92,22 @@ function Get-TriggerCounts {
 		"clientServiceClipAudit" = "CLIENT_SERVICE_CLIP_AUDIT"
 		"aiDelegationAudit" = "AI_DELEGATION_AUDIT"
 		"bughuntAudit" = "BUGHUNT_AUDIT"
+		"randomBughuntAudit" = "RANDOM_BUGHUNT_AUDIT"
 		"heavyWave" = "SPAWN clientHeavyWave"
 		"queueEnqueue" = "QUEUE_ENQUEUE"
 		"queueStep" = "QUEUE_STEP"
 		"queueEnd" = "QUEUE_END"
 		"queueProof" = "QUEUE_PROOF"
+		"queueNotTriggered" = "QUEUE_NOT_TRIGGERED"
 		"hcReady" = "HC_READY"
 		"hcWaitTimeout" = "HC_WAIT_TIMEOUT"
 		"cleanupLoop" = "CLEANUP_LOOP"
+		"townCapRegression" = "TOWN_CAP_REGRESSION"
+		"townRemanOk" = "TOWN_REMAN_OK"
+		"townRemanFail" = "TOWN_REMAN_FAIL"
+		"townCapLeak" = "TOWN_CAP_LEAK"
+		"townRapidRecapOk" = "TOWN_RAPID_RECAP_OK"
+		"townRapidRecapFail" = "TOWN_RAPID_RECAP_FAIL"
 	}
 	$result = [ordered]@{}
 	foreach ($key in $patterns.Keys) {
@@ -148,8 +156,8 @@ do {
 	$perf = Get-LatestLine $allLines "\[WASP-PR8-STRESS\].*PERF #"
 	$ai = Get-LatestLine $allLines "\[WASP-PR8-STRESS\].*AI_BEHAVIOR"
 	$gps = Get-LatestLine $allLines "\[WASP-PR8-STRESS\].*(GPS_UI_AUDIT|CLIENT_GPS_STATE|CLIENT_UI_TEXT_STATE|CLIENT_SERVICE_CLIP_AUDIT)"
-	$bughunt = Get-LatestLine $allLines "\[WASP-PR8-STRESS\].*(BUGHUNT_AUDIT|AI_DELEGATION_AUDIT)"
-	$queue = Get-LatestLine $allLines "\[WASP-PR8-STRESS\].*(QUEUE_ENQUEUE|QUEUE_BEGIN|QUEUE_STEP|QUEUE_END|QUEUE_STATUS|QUEUE_STOP|QUEUE_PROOF|HC_WAIT_BEGIN|HC_READY|HC_WAIT_TIMEOUT|CLEANUP_LOOP)"
+	$bughunt = Get-LatestLine $allLines "\[WASP-PR8-STRESS\].*(BUGHUNT_AUDIT|RANDOM_BUGHUNT_AUDIT|AI_DELEGATION_AUDIT)"
+	$queue = Get-LatestLine $allLines "\[WASP-PR8-STRESS\].*(QUEUE_ENQUEUE|QUEUE_BEGIN|QUEUE_STEP|QUEUE_END|QUEUE_STATUS|QUEUE_STOP|QUEUE_PROOF|QUEUE_NOT_TRIGGERED|HC_WAIT_BEGIN|HC_READY|HC_WAIT_TIMEOUT|CLEANUP_LOOP)"
 	$triggers = Get-TriggerCounts $allLines
 	$noise = Get-NoiseSummary $allLines $knownNoise $missionIssues
 
@@ -170,8 +178,8 @@ do {
 	if ($bughunt -ne "") { Write-Host ("bughunt: {0}" -f $bughunt) } else { Write-Host "bughunt: quiet" }
 	Write-Host $aiSummary
 	Write-Host ("triggers: supplyStart={0} unloadStart={1} complete={2} interdict={3} wddm={4} commanderArtillery={5} easa={6} reward={7}" -f $triggers["supplyStart"], $triggers["supplyUnloadStart"], $triggers["supplyComplete"], $triggers["supplyInterdict"], $triggers["wddm"], $triggers["commanderArtillery"], $triggers["easa"], $triggers["vehicleReward"])
-	Write-Host ("queueCounts: enqueue={0} step={1} proof={2} end={3} hcReady={4} hcTimeout={5} cleanupLoop={6}" -f $triggers["queueEnqueue"], $triggers["queueStep"], $triggers["queueProof"], $triggers["queueEnd"], $triggers["hcReady"], $triggers["hcWaitTimeout"], $triggers["cleanupLoop"])
-	Write-Host ("audits: ai={0} aiDelegation={1} aiDeep={2} playerUX={3} factory={4} serviceSupply={5} wddmArtillery={6} ui={7} gpsUI={8} clientGps={9} clip={10} bughunt={11} perfBurst={12} vehicleLoad={13} heavyWave={14}" -f $triggers["aiAudit"], $triggers["aiDelegationAudit"], $triggers["aiDeep"], $triggers["playerExperience"], $triggers["factoryAudit"], $triggers["serviceSupplyAudit"], $triggers["wddmArtilleryAudit"], $triggers["uiAudit"], $triggers["gpsUiAudit"], $triggers["clientGpsState"], $triggers["clientServiceClipAudit"], $triggers["bughuntAudit"], $triggers["perfBurst"], $triggers["vehicleLoad"], $triggers["heavyWave"])
+	Write-Host ("queueCounts: enqueue={0} step={1} proof={2} end={3} notTriggered={4} hcReady={5} hcTimeout={6} cleanupLoop={7}" -f $triggers["queueEnqueue"], $triggers["queueStep"], $triggers["queueProof"], $triggers["queueEnd"], $triggers["queueNotTriggered"], $triggers["hcReady"], $triggers["hcWaitTimeout"], $triggers["cleanupLoop"])
+	Write-Host ("audits: ai={0} aiDelegation={1} aiDeep={2} playerUX={3} factory={4} serviceSupply={5} wddmArtillery={6} ui={7} gpsUI={8} clientGps={9} clip={10} bughunt={11} randomBughunt={12} perfBurst={13} vehicleLoad={14} heavyWave={15}" -f $triggers["aiAudit"], $triggers["aiDelegationAudit"], $triggers["aiDeep"], $triggers["playerExperience"], $triggers["factoryAudit"], $triggers["serviceSupplyAudit"], $triggers["wddmArtilleryAudit"], $triggers["uiAudit"], $triggers["gpsUiAudit"], $triggers["clientGpsState"], $triggers["clientServiceClipAudit"], $triggers["bughuntAudit"], $triggers["randomBughuntAudit"], $triggers["perfBurst"], $triggers["vehicleLoad"], $triggers["heavyWave"])
 	Write-Host ("errors: real={0} missionIssue={1} knownNoise={2}" -f $noise.RealIssue.Count, $noise.MissionIssue.Count, $noise.KnownNoise.Count)
 	if ($noise.RealIssue.Count -gt 0) { Write-Host ("realIssue: {0}" -f (($noise.RealIssue | Select-Object -Last 1) -replace "\s+", " ")) }
 	if ($noise.MissionIssue.Count -gt 0) { Write-Host ("missionIssue: {0}" -f (($noise.MissionIssue | Select-Object -Last 1) -replace "\s+", " ")) }

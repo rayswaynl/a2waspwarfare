@@ -23,8 +23,16 @@ the harness to the shipping mission payload.
 ## Coverage Added For Future Runs
 
 - Client GPS/minimap state, `ItemGPS` gain, WF menu GPS button, and service text clipping.
+- Automatic once-per-player client probes for AFK runs; HC/non-interface clients
+  are skipped before scroll actions are added.
+- `QUEUE_NOT_TRIGGERED` final evidence when no server queue action fired, so
+  missing queue coverage is explicit.
 - AI delegation, HC IDs, leader locality, empty/no-waypoint groups, and stuck leaders.
 - General bughunt snapshot covering FPS, AI, vehicles, supply state, static crews, queues, towns, and missing functions.
+- Randomized live-state sampler for catching "random broken stuff": orphan/no-owner
+  units, stopped AI without destination data, crewed vehicles without drivers,
+  empty or over-crewed statics, bad town side/supply values, and missing core
+  vars/functions.
 - Existing PR8 stress coverage for factories, service/supply, WDDM/artillery, perf bursts, town lifecycle, and direct probes.
 
 ## Live Reporting Style
@@ -36,6 +44,7 @@ Steff prefers inline Claude-style live ticks during active Arma playtests:
 - latest `AI_BEHAVIOR` and `AI_DELEGATION_AUDIT`,
 - latest `GPS_UI_AUDIT`/client UI proof,
 - latest `BUGHUNT_AUDIT`,
+- latest `RANDOM_BUGHUNT_AUDIT`,
 - feature triggers and new real errors,
 - known mod/addon noise kept separate.
 

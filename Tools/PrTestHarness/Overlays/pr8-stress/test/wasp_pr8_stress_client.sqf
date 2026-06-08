@@ -9,7 +9,65 @@ if (!WASP_PR8_STRESS_ENABLED) exitWith {};
 
 diag_log "[WASP-PR8-STRESS-CLIENT] helper waiting for player";
 
+waitUntil {!isNull player};
+_isHeadless = false;
+if (!isNil "isHeadLessClient") then {_isHeadless = isHeadLessClient};
+if ((!hasInterface) || {_isHeadless}) exitWith {
+	diag_log Format ["[WASP-PR8-STRESS-CLIENT] helper skipped headless/non-interface player=%1 hasInterface=%2 isHeadless=%3", player, hasInterface, _isHeadless];
+};
+
 WASP_PR8_STRESS_CLIENT_LAST_PLAYER = objNull;
+WASP_PR8_STRESS_CLIENT_AUTOFIRED = false;
+WASP_PR8_STRESS_CLIENT_DIALOG_WATCH_RUNNING = false;
+
+if (!WASP_PR8_STRESS_CLIENT_DIALOG_WATCH_RUNNING) then {
+	WASP_PR8_STRESS_CLIENT_DIALOG_WATCH_RUNNING = true;
+	[] Spawn {
+		Private ["_watch","_displayOpen","_command","_lastKey","_lastTime","_now","_key","_label"];
+		disableSerialization;
+		_lastKey = "";
+		_lastTime = -999;
+		diag_log "[WASP-PR8-STRESS-CLIENT] dialog watcher started";
+		while {true} do {
+			waitUntil {!isNull player};
+			_watch = [
+				["wf-menu", 11000, "ui-audit"],
+				["buy-menu", 12000, "ui-audit"],
+				["team-menu", 13000, "ui-audit"],
+				["command-menu", 14000, "ui-audit"],
+				["tactical-menu", 17000, "ui-audit"],
+				["service-menu", 20000, "ui-audit"],
+				["unit-camera-menu", 21000, "ui-audit"],
+				["parameters-menu", 22000, "ui-audit"],
+				["economy-menu", 23000, "ui-audit"],
+				["easa-menu", 24000, "ui-audit"],
+				["gear-menu", 503000, "ui-audit"],
+				["upgrade-menu", 504000, "ui-audit"],
+				["transfer-menu", 505000, "ui-audit"],
+				["help-menu", 508000, "ui-audit"],
+				["respawn-menu", 511000, "ui-audit"],
+				["vote-menu", 500000, "ui-audit"],
+				["commander-vote-menu", 500999, "ui-audit"]
+			];
+			{
+				_label = _x select 0;
+				_displayOpen = !(isNull (findDisplay (_x select 1)));
+				_command = _x select 2;
+				if (_displayOpen) exitWith {
+					_now = time;
+					_key = Format ["%1:%2", _label, _command];
+					if ((_key != _lastKey) || {(_now - _lastTime) > 45}) then {
+						_lastKey = _key;
+						_lastTime = _now;
+						diag_log Format ["[WASP-PR8-STRESS-CLIENT] DIALOG_AUTO_PROBE dialog auto probe label=%1 command=%2", _label, _command];
+						[player, player, -2, [_command]] execVM "test\wasp_pr8_stress_client_action.sqf";
+					};
+				};
+			} forEach _watch;
+			sleep 3;
+		};
+	};
+};
 
 while {true} do {
 	waitUntil {!isNull player};
@@ -21,23 +79,15 @@ while {true} do {
 		};
 
 		_actions = [];
-		_id = player addAction ["<t color='#7cff9b'>PR8 Queue: full sequence</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-full"], 1, false, true];
+		_id = player addAction ["<t color='#7cff9b'>PR8 AUTO: full bughunt run</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-operator"], 1, false, true];
 		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#7cff9b'>PR8 Queue: AI behavior</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-ai"], 1, false, true];
+		_id = player addAction ["<t color='#7cff9b'>PR8 AUTO: AI/FPS soak</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-ai-long"], 1, false, true];
 		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#7cff9b'>PR8 Queue: factories</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-factory"], 1, false, true];
+		_id = player addAction ["<t color='#7cff9b'>PR8 AUTO: systems sweep</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-systems"], 1, false, true];
 		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#7cff9b'>PR8 Queue: service/supply</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-service"], 1, false, true];
+		_id = player addAction ["<t color='#7cff9b'>PR8 AUTO: UI/GPS sweep</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-ui-long"], 1, false, true];
 		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#7cff9b'>PR8 Queue: WDDM/artillery</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-wddm"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#7cff9b'>PR8 Queue: UI/UX</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-ui"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#7cff9b'>PR8 Queue: load/perf</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-load"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#7cff9b'>PR8 Queue: GPS/UI</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-gps-ui"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#7cff9b'>PR8 Queue: bughunt sweep</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-bughunt"], 1, false, true];
+		_id = player addAction ["<t color='#7cff9b'>PR8 AUTO: town cap regression</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-town-regression"], 1, false, true];
 		_actions set [count _actions, _id];
 		_id = player addAction ["<t color='#ffb86c'>PR8 Queue: status</t>", "test\wasp_pr8_stress_client_action.sqf", ["queue-status"], 1, false, true];
 		_actions set [count _actions, _id];
@@ -47,50 +97,26 @@ while {true} do {
 		_actions set [count _actions, _id];
 		_id = player addAction ["<t color='#ffb86c'>PR8 Cleanup loop: stop</t>", "test\wasp_pr8_stress_client_action.sqf", ["cleanup-loop-stop"], 1, false, true];
 		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: snapshot all</t>", "test\wasp_pr8_stress_client_action.sqf", ["snapshot"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: AI behavior audit</t>", "test\wasp_pr8_stress_client_action.sqf", ["ai-audit"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: AI deep sample</t>", "test\wasp_pr8_stress_client_action.sqf", ["ai-deep-sample"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: spawn AI wave</t>", "test\wasp_pr8_stress_client_action.sqf", ["spawn-wave"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: spawn HEAVY AI wave</t>", "test\wasp_pr8_stress_client_action.sqf", ["spawn-heavy-wave"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: FPS burst sample</t>", "test\wasp_pr8_stress_client_action.sqf", ["perf-burst"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: spawn vehicle load</t>", "test\wasp_pr8_stress_client_action.sqf", ["vehicle-load"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: factories/queues audit</t>", "test\wasp_pr8_stress_client_action.sqf", ["factory-audit"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: UI/UX audit</t>", "test\wasp_pr8_stress_client_action.sqf", ["ui-audit"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: GPS/UI audit</t>", "test\wasp_pr8_stress_client_action.sqf", ["gps-ui-audit"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: GPS gain/toggle audit</t>", "test\wasp_pr8_stress_client_action.sqf", ["gps-gain-toggle-audit"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: player FPS/UX audit</t>", "test\wasp_pr8_stress_client_action.sqf", ["player-experience-audit"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: AI delegation audit</t>", "test\wasp_pr8_stress_client_action.sqf", ["ai-delegation-audit"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: bughunt audit</t>", "test\wasp_pr8_stress_client_action.sqf", ["bughunt-audit"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: service/supply audit</t>", "test\wasp_pr8_stress_client_action.sqf", ["service-supply-audit"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: WDDM/artillery audit</t>", "test\wasp_pr8_stress_client_action.sqf", ["wddm-artillery-audit"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: town lifecycle</t>", "test\wasp_pr8_stress_client_action.sqf", ["town-lifecycle"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: direct probes</t>", "test\wasp_pr8_stress_client_action.sqf", ["trigger-direct"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: dump profile</t>", "test\wasp_pr8_stress_client_action.sqf", ["profile"], 1, false, true];
-		_actions set [count _actions, _id];
-		_id = player addAction ["<t color='#f6d365'>PR8 Test: cleanup/reset</t>", "test\wasp_pr8_stress_client_action.sqf", ["cleanup"], 1, false, true];
-		_actions set [count _actions, _id];
 
 		player setVariable ["WASP_PR8_STRESS_CLIENT_ACTIONS", _actions];
 		WASP_PR8_STRESS_CLIENT_LAST_PLAYER = player;
 		diag_log Format ["[WASP-PR8-STRESS-CLIENT] actions added count=%1 player=%2", count _actions, player];
+
+		if (!WASP_PR8_STRESS_CLIENT_AUTOFIRED) then {
+			WASP_PR8_STRESS_CLIENT_AUTOFIRED = true;
+			[] Spawn {
+				Private ["_commands","_command"];
+				sleep 18;
+				_commands = ["ui-audit","gps-ui-audit","gps-gain-toggle-audit","player-experience-audit","ai-delegation-audit","bughunt-audit","random-bughunt-audit"];
+				{
+					_command = _x;
+					diag_log Format ["[WASP-PR8-STRESS-CLIENT] auto probe command=%1", _command];
+					[player, player, -1, [_command]] execVM "test\wasp_pr8_stress_client_action.sqf";
+					sleep 6;
+				} forEach _commands;
+				diag_log "[WASP-PR8-STRESS-CLIENT] auto probes complete";
+			};
+		};
 	};
 	sleep 10;
 };

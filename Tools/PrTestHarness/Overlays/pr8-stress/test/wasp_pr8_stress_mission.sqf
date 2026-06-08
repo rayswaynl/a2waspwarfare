@@ -450,6 +450,506 @@ WASP_PR8_STRESS_TOWN_LIFECYCLE = {
 	};
 };
 
+WASP_PR8_STRESS_TOWN_CAP_REGRESSION = {
+	Private ["_cycles","_cycleDelay","_verifyDelay","_remanTimeout","_doOrganic","_organicTimeout","_organicGroups","_organicUnits","_doRapid","_town","_candidate","_rotation","_rotationSideIDs","_rotationClasses","_totalCaptures","_remanOk","_remanFail","_organicCaptured","_cycle","_ri","_capSide","_capSideID","_capClass","_oldSideID","_oldSide","_oldSupply","_oldActive","_oldActiveAir","_oldActiveSides","_oldAttackers","_oldTeams","_oldVehicles","_camps","_campStates","_camp","_preObjectCount","_preGroupCount","_townPos","_pressure","_defs","_aliveDefs","_townTeams","_nonNullTeams","_waited","_reManned","_townTeamsLen","_townTeamsAlive","_westGroups","_eastGroups","_guerGroups","_cleanupObjects","_cleanupGroups","_idx","_organicSideID","_organicSide","_organicClass","_organicStart","_organicElapsed","_organicPreObj","_organicPreGrp","_captureRange","_orgTownPos","_rapidSideA","_rapidSideAID","_rapidSideB","_rapidSideBID","_rapidWaited","_rapidReManned","_rapidDefs","_rapidAliveDefs","_rapidTeams","_rapidNonNull","_rapidPreObj","_rapidPreGrp","_rapidCleanObj","_rapidCleanGrp","_origSideID","_origSide","_origSupply","_origActive","_origActiveAir","_origActiveSides","_origAttackers","_origTeams","_origVehicles","_origCampStates","_currentSideID","_garrisonGrp","_garrisonUnits","_garrisonVeh"];
+	_cycles = if (isNil "WASP_PR8_STRESS_TOWN_CAP_CYCLES") then {3} else {WASP_PR8_STRESS_TOWN_CAP_CYCLES};
+	_cycleDelay = if (isNil "WASP_PR8_STRESS_TOWN_CAP_CYCLE_DELAY") then {5} else {WASP_PR8_STRESS_TOWN_CAP_CYCLE_DELAY};
+	_verifyDelay = if (isNil "WASP_PR8_STRESS_TOWN_CAP_VERIFY_DELAY") then {4} else {WASP_PR8_STRESS_TOWN_CAP_VERIFY_DELAY};
+	_remanTimeout = if (isNil "WASP_PR8_STRESS_TOWN_CAP_REMAN_TIMEOUT") then {15} else {WASP_PR8_STRESS_TOWN_CAP_REMAN_TIMEOUT};
+	_doOrganic = if (isNil "WASP_PR8_STRESS_TOWN_CAP_ORGANIC") then {true} else {WASP_PR8_STRESS_TOWN_CAP_ORGANIC};
+	_organicTimeout = if (isNil "WASP_PR8_STRESS_TOWN_CAP_ORGANIC_TIMEOUT") then {120} else {WASP_PR8_STRESS_TOWN_CAP_ORGANIC_TIMEOUT};
+	_organicGroups = if (isNil "WASP_PR8_STRESS_TOWN_CAP_ORGANIC_GROUPS") then {3} else {WASP_PR8_STRESS_TOWN_CAP_ORGANIC_GROUPS};
+	_organicUnits = if (isNil "WASP_PR8_STRESS_TOWN_CAP_ORGANIC_UNITS") then {5} else {WASP_PR8_STRESS_TOWN_CAP_ORGANIC_UNITS};
+	_doRapid = if (isNil "WASP_PR8_STRESS_TOWN_CAP_RAPID") then {true} else {WASP_PR8_STRESS_TOWN_CAP_RAPID};
+
+	if (isNil "towns") exitWith {["WARNING", "TOWN_CAP_REGRESSION skipped missing towns"] Call WASP_PR8_STRESS_LOG};
+	if ((typeName towns != "ARRAY") || {(count towns) == 0}) exitWith {["WARNING", "TOWN_CAP_REGRESSION skipped noTowns"] Call WASP_PR8_STRESS_LOG};
+
+	_town = objNull;
+	{
+		_candidate = _x;
+		if (isNull _town) then {
+			if (!(_candidate getVariable ["wfbe_inactive", false]) && {(count (_candidate getVariable ["camps", []])) > 0}) then {_town = _candidate};
+		};
+	} forEach towns;
+	if (isNull _town) then {
+		{
+			_candidate = _x;
+			if (isNull _town) then {
+				if (!(_candidate getVariable ["wfbe_inactive", false])) then {_town = _candidate};
+			};
+		} forEach towns;
+	};
+	if (isNull _town) exitWith {["WARNING", "TOWN_CAP_REGRESSION skipped noUsableTown"] Call WASP_PR8_STRESS_LOG};
+
+	_rotation = [west, east, resistance];
+	_rotationSideIDs = [WFBE_C_WEST_ID, WFBE_C_EAST_ID, WFBE_C_GUER_ID];
+	_rotationClasses = [
+		["WFBE_WESTSOLDIER", "USMC_Soldier"] Call WASP_PR8_STRESS_GETVAR,
+		["WFBE_EASTSOLDIER", "RU_Soldier"] Call WASP_PR8_STRESS_GETVAR,
+		["WFBE_GUERSOLDIER", "GUE_Soldier_1"] Call WASP_PR8_STRESS_GETVAR
+	];
+
+	if (count _rotation == 0) exitWith {["WARNING", "TOWN_CAP_REGRESSION skipped noSidesInRotation"] Call WASP_PR8_STRESS_LOG};
+
+	_totalCaptures = 0;
+	_remanOk = 0;
+	_remanFail = 0;
+	_organicCaptured = false;
+	_townPos = getPos _town;
+
+	["INFORMATION", Format ["TOWN_CAP_REGRESSION_BEGIN town=%1 cycles=%2 sides=%3 sideIDs=%4", _town getVariable ["name", str _town], _cycles, _rotation, _rotationSideIDs]] Call WASP_PR8_STRESS_LOG;
+	["pre_cap_regression", _town] Call WASP_PR8_STRESS_TOWN_SNAPSHOT;
+
+	// --- Save ORIGINAL town state ONCE before all forced cycles ---
+	_origSideID = _town getVariable ["sideID", WFBE_C_GUER_ID];
+	_origSide = _origSideID Call WFBE_CO_FNC_GetSideFromID;
+	_origSupply = _town getVariable ["supplyValue", _town getVariable ["startingSupplyValue", 10]];
+	_origActive = _town getVariable ["wfbe_active", false];
+	_origActiveAir = _town getVariable ["wfbe_active_air", false];
+	_origActiveSides = _town getVariable ["wfbe_active_sideIDs", []];
+	_origAttackers = _town getVariable ["wfbe_attacker_sideIDs", []];
+	_origTeams = _town getVariable ["wfbe_town_teams", []];
+	_origVehicles = _town getVariable ["wfbe_active_vehicles", []];
+	_camps = _town getVariable ["camps", []];
+	_origCampStates = [];
+	{
+		_origCampStates set [count _origCampStates, [_x, _x getVariable ["sideID", -1], _x getVariable ["supplyValue", -1]]];
+	} forEach _camps;
+	_preObjectCount = count WASP_PR8_STRESS_OBJECTS;
+	_preGroupCount = count WASP_PR8_STRESS_GROUPS;
+	["INFORMATION", Format ["TOWN_CAP_ORIG_SAVE town=%1 sideID=%2 supply=%3 camps=%4", _town getVariable ["name", str _town], _origSideID, _origSupply, count _origCampStates]] Call WASP_PR8_STRESS_LOG;
+
+	// --- Chained forced-capture loop: captures chain through rotation ---
+	// Each side captures FROM the current owner (left by previous step).
+	// GUER-home example chain: west<-GUER, east<-west, GUER<-east, west<-GUER ...
+	for "_cycle" from 1 to _cycles do {
+		for "_ri" from 0 to ((count _rotation) - 1) do {
+			_capSide = _rotation select _ri;
+			_capSideID = _rotationSideIDs select _ri;
+			_capClass = _rotationClasses select _ri;
+			_currentSideID = _town getVariable ["sideID", -1];
+
+			if (_currentSideID == _capSideID) then {
+				["INFORMATION", Format ["TOWN_CAP_SKIP cycle=%1 side=%2 reason=alreadyOwned currentSideID=%3", _cycle, _capSide Call WASP_PR8_STRESS_SIDETEXT, _currentSideID]] Call WASP_PR8_STRESS_LOG;
+			} else {
+				_oldSideID = _currentSideID;
+				_oldSide = _oldSideID Call WFBE_CO_FNC_GetSideFromID;
+
+				_pressure = [_capSide, [(_townPos select 0) + 35, (_townPos select 1) + 35, 0], 2, 4, _capClass, _townPos] Call WASP_PR8_STRESS_SPAWN_AI;
+				["INFORMATION", Format ["TOWN_CAP_PRESSURE cycle=%1 side=%2 spawned=%3 fromSideID=%4", _cycle, _capSide Call WASP_PR8_STRESS_SIDETEXT, _pressure, _oldSideID]] Call WASP_PR8_STRESS_LOG;
+
+				if (!isNil "WFBE_SE_FNC_OperateTownDefensesUnits") then {[_town, _oldSide, "remove"] Call WFBE_SE_FNC_OperateTownDefensesUnits};
+				_town setVariable ["supplyValue", _town getVariable ["startingSupplyValue", _origSupply], true];
+				_town setVariable ["sideID", _capSideID, true];
+				if (!isNil "WFBE_CO_FNC_SendToClients") then {[nil, "TownCaptured", [_town, _oldSideID, _capSideID]] Call WFBE_CO_FNC_SendToClients};
+				if (!isNil "WFBE_SE_FNC_SetCampsToSide") then {[_town, _oldSideID, _capSideID] Spawn WFBE_SE_FNC_SetCampsToSide};
+				if (!isNil "WFBE_SE_FNC_ManageTownDefenses") then {[_town, _capSide, _oldSideID] Call WFBE_SE_FNC_ManageTownDefenses};
+				_totalCaptures = _totalCaptures + 1;
+
+				["INFORMATION", Format ["TOWN_CAP_FORCE cycle=%1 oldSideID=%2 newSideID=%3 town=%4", _cycle, _oldSideID, _capSideID, _town getVariable ["name", str _town]]] Call WASP_PR8_STRESS_LOG;
+				[Format ["cap_c%1_s%2", _cycle, _ri], _town] Call WASP_PR8_STRESS_TOWN_SNAPSHOT;
+				sleep 2;
+
+				_waited = 0;
+				_reManned = false;
+				while {(!_reManned) && {_waited < _remanTimeout}} do {
+					sleep 2;
+					_waited = _waited + 2;
+					_defs = _town getVariable ["wfbe_town_defenses", []];
+					_aliveDefs = {alive (_x getVariable ["wfbe_defense", objNull])} count _defs;
+					_townTeams = _town getVariable ["wfbe_town_teams", []];
+					_nonNullTeams = 0;
+					{if (!isNil "_x") then {if (!isNull _x) then {_nonNullTeams = _nonNullTeams + 1}}} forEach _townTeams;
+					if (_capSideID == WFBE_C_GUER_ID) then {
+						if ((_aliveDefs > 0) || {_nonNullTeams > 0}) then {_reManned = true};
+					} else {
+						if (_nonNullTeams > 0) then {_reManned = true};
+					};
+				};
+
+				_defs = _town getVariable ["wfbe_town_defenses", []];
+				_aliveDefs = {alive (_x getVariable ["wfbe_defense", objNull])} count _defs;
+				_townTeams = _town getVariable ["wfbe_town_teams", []];
+				_nonNullTeams = 0;
+				{if (!isNil "_x") then {if (!isNull _x) then {_nonNullTeams = _nonNullTeams + 1}}} forEach _townTeams;
+				if (_reManned) then {
+					_remanOk = _remanOk + 1;
+					["INFORMATION", Format ["TOWN_REMAN_OK cycle=%1 side=%2 forced=true defenses=%3 teams=%4 waited=%5", _cycle, _capSide Call WASP_PR8_STRESS_SIDETEXT, _aliveDefs, _nonNullTeams, _waited]] Call WASP_PR8_STRESS_LOG;
+				} else {
+					_remanFail = _remanFail + 1;
+					["INFORMATION", Format ["TOWN_REMAN_FAIL cycle=%1 side=%2 forced=true defenses=0 teams=0 waited=%3 timeout=true", _cycle, _capSide Call WASP_PR8_STRESS_SIDETEXT, _waited]] Call WASP_PR8_STRESS_LOG;
+				};
+
+				_townTeamsLen = count (_town getVariable ["wfbe_town_teams", []]);
+				_townTeamsAlive = 0;
+				{if (!isNil "_x") then {if (!isNull _x) then {_townTeamsAlive = _townTeamsAlive + 1}}} forEach (_town getVariable ["wfbe_town_teams", []]);
+				_westGroups = {side _x == west} count allGroups;
+				_eastGroups = {side _x == east} count allGroups;
+				_guerGroups = {side _x == resistance} count allGroups;
+				["INFORMATION", Format ["TOWN_CAP_LEAK cycle=%1 side=%2 townTeamsLen=%3 townTeamsAlive=%4 allGroupsWest=%5 allGroupsEast=%6 allGroupsGuer=%7", _cycle, _capSide Call WASP_PR8_STRESS_SIDETEXT, _townTeamsLen, _townTeamsAlive, _westGroups, _eastGroups, _guerGroups]] Call WASP_PR8_STRESS_LOG;
+
+				// --- Per-step garrison cleanup: delete server-spawned garrison groups ---
+				// This prevents group accumulation across chained captures.
+				_townTeams = _town getVariable ["wfbe_town_teams", []];
+				{
+					_garrisonGrp = _x;
+					if (!isNil "_garrisonGrp") then {
+						if (!isNull _garrisonGrp) then {
+							_garrisonUnits = units _garrisonGrp;
+							{deleteVehicle _x} forEach _garrisonUnits;
+							deleteGroup _garrisonGrp;
+						};
+					};
+				} forEach _townTeams;
+				_town setVariable ["wfbe_town_teams", []];
+				// Delete tracked garrison vehicles
+				_garrisonVeh = _town getVariable ["wfbe_active_vehicles", []];
+				{
+					if (!isNil "_x") then {
+						if (!isNull _x) then {deleteVehicle _x};
+					};
+				} forEach _garrisonVeh;
+				_town setVariable ["wfbe_active_vehicles", []];
+				["INFORMATION", Format ["TOWN_GARRISON_CLEANUP cycle=%1 side=%2 teamsDeleted=%3 vehiclesDeleted=%4", _cycle, _capSide Call WASP_PR8_STRESS_SIDETEXT, count _townTeams, count _garrisonVeh]] Call WASP_PR8_STRESS_LOG;
+
+				// --- Clean harness-spawned pressure AI (offset slicing) ---
+				_cleanupObjects = (count WASP_PR8_STRESS_OBJECTS) - _preObjectCount;
+				_cleanupGroups = (count WASP_PR8_STRESS_GROUPS) - _preGroupCount;
+				for "_idx" from _preObjectCount to ((count WASP_PR8_STRESS_OBJECTS) - 1) do {
+					if (!isNull (WASP_PR8_STRESS_OBJECTS select _idx)) then {deleteVehicle (WASP_PR8_STRESS_OBJECTS select _idx)};
+				};
+				for "_idx" from _preGroupCount to ((count WASP_PR8_STRESS_GROUPS) - 1) do {
+					if (!isNull (WASP_PR8_STRESS_GROUPS select _idx)) then {deleteGroup (WASP_PR8_STRESS_GROUPS select _idx)};
+				};
+				WASP_PR8_STRESS_OBJECTS resize _preObjectCount;
+				WASP_PR8_STRESS_GROUPS resize _preGroupCount;
+			};
+			if (_ri < ((count _rotation) - 1)) then {sleep _verifyDelay};
+		};
+		if (_cycle < _cycles) then {sleep _cycleDelay};
+	};
+
+	// --- Restore town to ORIGINAL state after all forced cycles ---
+	_capSideID = _town getVariable ["sideID", _origSideID];
+	_capSide = _capSideID Call WFBE_CO_FNC_GetSideFromID;
+	if (!isNil "WFBE_SE_FNC_OperateTownDefensesUnits") then {[_town, _capSide, "remove"] Call WFBE_SE_FNC_OperateTownDefensesUnits};
+	// Garrison cleanup before restoring original state
+	_townTeams = _town getVariable ["wfbe_town_teams", []];
+	{
+		_garrisonGrp = _x;
+		if (!isNil "_garrisonGrp") then {
+			if (!isNull _garrisonGrp) then {
+				_garrisonUnits = units _garrisonGrp;
+				{deleteVehicle _x} forEach _garrisonUnits;
+				deleteGroup _garrisonGrp;
+			};
+		};
+	} forEach _townTeams;
+	_garrisonVeh = _town getVariable ["wfbe_active_vehicles", []];
+	{
+		if (!isNil "_x") then {
+			if (!isNull _x) then {deleteVehicle _x};
+		};
+	} forEach _garrisonVeh;
+	["INFORMATION", Format ["TOWN_GARRISON_CLEANUP_FINAL teamsDeleted=%1 vehiclesDeleted=%2", count _townTeams, count _garrisonVeh]] Call WASP_PR8_STRESS_LOG;
+	_town setVariable ["sideID", _origSideID, true];
+	_town setVariable ["supplyValue", _origSupply, true];
+	if (!isNil "WFBE_SE_FNC_SetCampsToSide") then {[_town, _capSideID, _origSideID] Spawn WFBE_SE_FNC_SetCampsToSide};
+	sleep 1;
+	{
+		_camp = _x select 0;
+		if (!isNull _camp) then {
+			_camp setVariable ["sideID", _x select 1, true];
+			_camp setVariable ["supplyValue", _x select 2, true];
+		};
+	} forEach _origCampStates;
+	if (!isNil "WFBE_SE_FNC_ManageTownDefenses") then {[_town, _origSide, _capSideID] Call WFBE_SE_FNC_ManageTownDefenses};
+	_town setVariable ["wfbe_active", false, true];
+	_town setVariable ["wfbe_active_air", false, true];
+	_town setVariable ["wfbe_active_sideIDs", [], true];
+	_town setVariable ["wfbe_attacker_sideIDs", [], true];
+	_town setVariable ["wfbe_town_teams", []];
+	_town setVariable ["wfbe_active_vehicles", []];
+	["INFORMATION", Format ["TOWN_ORIG_RESTORE town=%1 sideID=%2 supply=%3", _town getVariable ["name", str _town], _origSideID, _origSupply]] Call WASP_PR8_STRESS_LOG;
+
+	if (_doRapid) then {
+		_rapidSideA = _rotation select 0;
+		_rapidSideAID = _rotationSideIDs select 0;
+		_rapidSideB = _rotation select 1;
+		_rapidSideBID = _rotationSideIDs select 1;
+		if ((_town getVariable ["sideID", -1]) == _rapidSideAID) then {
+			_rapidSideA = _rotation select 1;
+			_rapidSideAID = _rotationSideIDs select 1;
+			_rapidSideB = _rotation select 2;
+			_rapidSideBID = _rotationSideIDs select 2;
+		};
+
+		_oldSideID = _town getVariable ["sideID", WFBE_C_GUER_ID];
+		_oldSide = _oldSideID Call WFBE_CO_FNC_GetSideFromID;
+		_oldSupply = _town getVariable ["supplyValue", _town getVariable ["startingSupplyValue", 10]];
+		_camps = _town getVariable ["camps", []];
+		_campStates = [];
+		{
+			_campStates set [count _campStates, [_x, _x getVariable ["sideID", -1], _x getVariable ["supplyValue", -1]]];
+		} forEach _camps;
+		_rapidPreObj = count WASP_PR8_STRESS_OBJECTS;
+		_rapidPreGrp = count WASP_PR8_STRESS_GROUPS;
+
+		["INFORMATION", Format ["TOWN_RAPID_RECAP_BEGIN town=%1 sideA=%2 sideB=%3 sideAID=%4 sideBID=%5", _town getVariable ["name", str _town], _rapidSideA Call WASP_PR8_STRESS_SIDETEXT, _rapidSideB Call WASP_PR8_STRESS_SIDETEXT, _rapidSideAID, _rapidSideBID]] Call WASP_PR8_STRESS_LOG;
+
+		if (!isNil "WFBE_SE_FNC_OperateTownDefensesUnits") then {[_town, _oldSide, "remove"] Call WFBE_SE_FNC_OperateTownDefensesUnits};
+		_town setVariable ["sideID", _rapidSideAID, true];
+		_town setVariable ["supplyValue", _town getVariable ["startingSupplyValue", _oldSupply], true];
+		if (!isNil "WFBE_CO_FNC_SendToClients") then {[nil, "TownCaptured", [_town, _oldSideID, _rapidSideAID]] Call WFBE_CO_FNC_SendToClients};
+		if (!isNil "WFBE_SE_FNC_SetCampsToSide") then {[_town, _oldSideID, _rapidSideAID] Spawn WFBE_SE_FNC_SetCampsToSide};
+		if (!isNil "WFBE_SE_FNC_ManageTownDefenses") then {[_town, _rapidSideA, _oldSideID] Call WFBE_SE_FNC_ManageTownDefenses};
+
+		_rapidWaited = 0;
+		_rapidReManned = false;
+		while {(!_rapidReManned) && {_rapidWaited < _remanTimeout}} do {
+			sleep 2;
+			_rapidWaited = _rapidWaited + 2;
+			_rapidDefs = _town getVariable ["wfbe_town_defenses", []];
+			_rapidAliveDefs = {alive (_x getVariable ["wfbe_defense", objNull])} count _rapidDefs;
+			_rapidTeams = _town getVariable ["wfbe_town_teams", []];
+			_rapidNonNull = 0;
+			{if (!isNil "_x") then {if (!isNull _x) then {_rapidNonNull = _rapidNonNull + 1}}} forEach _rapidTeams;
+			if ((_town getVariable ["wfbe_active", false]) || {_rapidNonNull > 0}) then {_rapidReManned = true};
+		};
+
+		if (!_rapidReManned) then {
+			["INFORMATION", Format ["TOWN_RAPID_RECAP_FAIL town=%1 sideA=%2 sideB=%3 reason=sideA_never_manned waited=%4", _town getVariable ["name", str _town], _rapidSideA Call WASP_PR8_STRESS_SIDETEXT, _rapidSideB Call WASP_PR8_STRESS_SIDETEXT, _rapidWaited]] Call WASP_PR8_STRESS_LOG;
+		} else {
+			_town setVariable ["sideID", _rapidSideBID, true];
+			if (!isNil "WFBE_CO_FNC_SendToClients") then {[nil, "TownCaptured", [_town, _rapidSideAID, _rapidSideBID]] Call WFBE_CO_FNC_SendToClients};
+			if (!isNil "WFBE_SE_FNC_SetCampsToSide") then {[_town, _rapidSideAID, _rapidSideBID] Spawn WFBE_SE_FNC_SetCampsToSide};
+			if (!isNil "WFBE_SE_FNC_ManageTownDefenses") then {[_town, _rapidSideB, _rapidSideAID] Call WFBE_SE_FNC_ManageTownDefenses};
+
+			_rapidWaited = 0;
+			_rapidReManned = false;
+			while {(!_rapidReManned) && {_rapidWaited < _remanTimeout}} do {
+				sleep 2;
+				_rapidWaited = _rapidWaited + 2;
+				_rapidDefs = _town getVariable ["wfbe_town_defenses", []];
+				_rapidAliveDefs = {alive (_x getVariable ["wfbe_defense", objNull])} count _rapidDefs;
+				_rapidTeams = _town getVariable ["wfbe_town_teams", []];
+				_rapidNonNull = 0;
+				{if (!isNil "_x") then {if (!isNull _x) then {_rapidNonNull = _rapidNonNull + 1}}} forEach _rapidTeams;
+				if (_rapidSideBID == WFBE_C_GUER_ID) then {
+					if ((_rapidAliveDefs > 0) || {_rapidNonNull > 0}) then {_rapidReManned = true};
+				} else {
+					if (_rapidNonNull > 0) then {_rapidReManned = true};
+				};
+			};
+
+			_rapidTeams = _town getVariable ["wfbe_town_teams", []];
+			_rapidNonNull = 0;
+			{if (!isNil "_x") then {if (!isNull _x) then {_rapidNonNull = _rapidNonNull + 1}}} forEach _rapidTeams;
+			if (_rapidReManned) then {
+				["INFORMATION", Format ["TOWN_RAPID_RECAP_OK town=%1 sideA=%2 sideB=%3 teams=%4 waited=%5", _town getVariable ["name", str _town], _rapidSideA Call WASP_PR8_STRESS_SIDETEXT, _rapidSideB Call WASP_PR8_STRESS_SIDETEXT, _rapidNonNull, _rapidWaited]] Call WASP_PR8_STRESS_LOG;
+			} else {
+				["INFORMATION", Format ["TOWN_RAPID_RECAP_FAIL town=%1 sideA=%2 sideB=%3 teams=%4 waited=%5", _town getVariable ["name", str _town], _rapidSideA Call WASP_PR8_STRESS_SIDETEXT, _rapidSideB Call WASP_PR8_STRESS_SIDETEXT, _rapidNonNull, _rapidWaited]] Call WASP_PR8_STRESS_LOG;
+			};
+		};
+
+		_capSideID = _town getVariable ["sideID", _rapidSideBID];
+		_capSide = _capSideID Call WFBE_CO_FNC_GetSideFromID;
+		if (!isNil "WFBE_SE_FNC_OperateTownDefensesUnits") then {[_town, _capSide, "remove"] Call WFBE_SE_FNC_OperateTownDefensesUnits};
+		// Garrison cleanup before rapid-recap restore
+		_townTeams = _town getVariable ["wfbe_town_teams", []];
+		{
+			_garrisonGrp = _x;
+			if (!isNil "_garrisonGrp") then {
+				if (!isNull _garrisonGrp) then {
+					_garrisonUnits = units _garrisonGrp;
+					{deleteVehicle _x} forEach _garrisonUnits;
+					deleteGroup _garrisonGrp;
+				};
+			};
+		} forEach _townTeams;
+		_garrisonVeh = _town getVariable ["wfbe_active_vehicles", []];
+		{
+			if (!isNil "_x") then {
+				if (!isNull _x) then {deleteVehicle _x};
+			};
+		} forEach _garrisonVeh;
+		["INFORMATION", Format ["TOWN_GARRISON_CLEANUP_RAPID teamsDeleted=%1 vehiclesDeleted=%2", count _townTeams, count _garrisonVeh]] Call WASP_PR8_STRESS_LOG;
+		_town setVariable ["sideID", _oldSideID, true];
+		_town setVariable ["supplyValue", _oldSupply, true];
+		if (!isNil "WFBE_SE_FNC_SetCampsToSide") then {[_town, _capSideID, _oldSideID] Spawn WFBE_SE_FNC_SetCampsToSide};
+		sleep 1;
+		{
+			_camp = _x select 0;
+			if (!isNull _camp) then {
+				_camp setVariable ["sideID", _x select 1, true];
+				_camp setVariable ["supplyValue", _x select 2, true];
+			};
+		} forEach _campStates;
+		if (!isNil "WFBE_SE_FNC_ManageTownDefenses") then {[_town, _oldSide, _capSideID] Call WFBE_SE_FNC_ManageTownDefenses};
+		_town setVariable ["wfbe_active", false, true];
+		_town setVariable ["wfbe_active_air", false, true];
+		_town setVariable ["wfbe_town_teams", []];
+		_town setVariable ["wfbe_active_vehicles", []];
+		_rapidCleanObj = (count WASP_PR8_STRESS_OBJECTS) - _rapidPreObj;
+		_rapidCleanGrp = (count WASP_PR8_STRESS_GROUPS) - _rapidPreGrp;
+		for "_idx" from _rapidPreObj to ((count WASP_PR8_STRESS_OBJECTS) - 1) do {
+			if (!isNull (WASP_PR8_STRESS_OBJECTS select _idx)) then {deleteVehicle (WASP_PR8_STRESS_OBJECTS select _idx)};
+		};
+		for "_idx" from _rapidPreGrp to ((count WASP_PR8_STRESS_GROUPS) - 1) do {
+			if (!isNull (WASP_PR8_STRESS_GROUPS select _idx)) then {deleteGroup (WASP_PR8_STRESS_GROUPS select _idx)};
+		};
+		WASP_PR8_STRESS_OBJECTS resize _rapidPreObj;
+		WASP_PR8_STRESS_GROUPS resize _rapidPreGrp;
+	};
+
+	if (_doOrganic) then {
+		_oldSideID = _town getVariable ["sideID", WFBE_C_GUER_ID];
+		_oldSide = _oldSideID Call WFBE_CO_FNC_GetSideFromID;
+		_oldSupply = _town getVariable ["supplyValue", _town getVariable ["startingSupplyValue", 10]];
+		_oldActive = _town getVariable ["wfbe_active", false];
+		_oldActiveAir = _town getVariable ["wfbe_active_air", false];
+		_oldActiveSides = _town getVariable ["wfbe_active_sideIDs", []];
+		_oldAttackers = _town getVariable ["wfbe_attacker_sideIDs", []];
+		_oldTeams = _town getVariable ["wfbe_town_teams", []];
+		_oldVehicles = _town getVariable ["wfbe_active_vehicles", []];
+		_camps = _town getVariable ["camps", []];
+		_campStates = [];
+		{
+			_campStates set [count _campStates, [_x, _x getVariable ["sideID", -1], _x getVariable ["supplyValue", -1]]];
+		} forEach _camps;
+
+		_organicSideID = -1;
+		_organicSide = west;
+		_organicClass = "";
+		{
+			Private ["_rs","_rsid"];
+			_rs = _rotation select _forEachIndex;
+			_rsid = _rotationSideIDs select _forEachIndex;
+			if (_rsid != _oldSideID) exitWith {
+				_organicSideID = _rsid;
+				_organicSide = _rs;
+				_organicClass = _rotationClasses select _forEachIndex;
+			};
+		} forEach _rotation;
+
+		if (_organicSideID == -1) exitWith {
+			["WARNING", "TOWN_CAP_ORGANIC skipped noEnemySideAvailable"] Call WASP_PR8_STRESS_LOG;
+			["INFORMATION", Format ["TOWN_CAP_REGRESSION_END town=%1 cycles=%2 totalCaptures=%3 remanOk=%4 remanFail=%5 organicCaptured=false", _town getVariable ["name", str _town], _cycles, _totalCaptures, _remanOk, _remanFail]] Call WASP_PR8_STRESS_LOG;
+			["post_cap_regression", _town] Call WASP_PR8_STRESS_TOWN_SNAPSHOT;
+		};
+
+		_captureRange = if (isNil "WFBE_C_TOWNS_CAPTURE_RANGE") then {250} else {WFBE_C_TOWNS_CAPTURE_RANGE};
+		_orgTownPos = getPos _town;
+		_organicPreObj = count WASP_PR8_STRESS_OBJECTS;
+		_organicPreGrp = count WASP_PR8_STRESS_GROUPS;
+
+		_pressure = [_organicSide, [(_orgTownPos select 0) + 20, (_orgTownPos select 1) + 20, 0], _organicGroups, _organicUnits, _organicClass, _orgTownPos] Call WASP_PR8_STRESS_SPAWN_AI;
+		["INFORMATION", Format ["TOWN_CAP_ORGANIC_BEGIN town=%1 attackerSide=%2 attackerSideID=%3 ownerSideID=%4 spawned=%5 captureRange=%6 groups=%7 units=%8", _town getVariable ["name", str _town], _organicSide Call WASP_PR8_STRESS_SIDETEXT, _organicSideID, _oldSideID, _pressure, _captureRange, _organicGroups, _organicUnits]] Call WASP_PR8_STRESS_LOG;
+
+		_organicStart = time;
+		_organicElapsed = 0;
+		_organicCaptured = false;
+		while {(!_organicCaptured) && {_organicElapsed < _organicTimeout}} do {
+			sleep 5;
+			_organicElapsed = time - _organicStart;
+			if ((_town getVariable ["sideID", _oldSideID]) != _oldSideID) then {
+				_organicCaptured = true;
+			};
+			["INFORMATION", Format ["TOWN_CAP_ORGANIC_POLL elapsed=%1 currentSideID=%2 ownerSideID=%3 captured=%4", round _organicElapsed, _town getVariable ["sideID", -1], _oldSideID, _organicCaptured]] Call WASP_PR8_STRESS_LOG;
+		};
+
+		["INFORMATION", Format ["TOWN_CAP_ORGANIC_RESULT captured=%1 elapsed=%2 finalSideID=%3 town=%4", _organicCaptured, round _organicElapsed, _town getVariable ["sideID", -1], _town getVariable ["name", str _town]]] Call WASP_PR8_STRESS_LOG;
+
+		if (_organicCaptured) then {
+			_waited = 0;
+			_reManned = false;
+			_capSideID = _town getVariable ["sideID", _organicSideID];
+			_capSide = _capSideID Call WFBE_CO_FNC_GetSideFromID;
+			while {(!_reManned) && {_waited < _remanTimeout}} do {
+				sleep 2;
+				_waited = _waited + 2;
+				_defs = _town getVariable ["wfbe_town_defenses", []];
+				_aliveDefs = {alive (_x getVariable ["wfbe_defense", objNull])} count _defs;
+				_townTeams = _town getVariable ["wfbe_town_teams", []];
+				_nonNullTeams = 0;
+				{if (!isNil "_x") then {if (!isNull _x) then {_nonNullTeams = _nonNullTeams + 1}}} forEach _townTeams;
+				if (_capSideID == WFBE_C_GUER_ID) then {
+					if ((_aliveDefs > 0) || {_nonNullTeams > 0}) then {_reManned = true};
+				} else {
+					if (_nonNullTeams > 0) then {_reManned = true};
+				};
+			};
+			_defs = _town getVariable ["wfbe_town_defenses", []];
+			_aliveDefs = {alive (_x getVariable ["wfbe_defense", objNull])} count _defs;
+			_townTeams = _town getVariable ["wfbe_town_teams", []];
+			_nonNullTeams = 0;
+			{if (!isNil "_x") then {if (!isNull _x) then {_nonNullTeams = _nonNullTeams + 1}}} forEach _townTeams;
+			if (_reManned) then {
+				_remanOk = _remanOk + 1;
+				["INFORMATION", Format ["TOWN_REMAN_OK cycle=organic side=%1 forced=false organic=true defenses=%2 teams=%3 waited=%4", _capSide Call WASP_PR8_STRESS_SIDETEXT, _aliveDefs, _nonNullTeams, _waited]] Call WASP_PR8_STRESS_LOG;
+			} else {
+				_remanFail = _remanFail + 1;
+				["INFORMATION", Format ["TOWN_REMAN_FAIL cycle=organic side=%1 forced=false organic=true defenses=0 teams=0 waited=%2 timeout=true", _capSide Call WASP_PR8_STRESS_SIDETEXT, _waited]] Call WASP_PR8_STRESS_LOG;
+			};
+		};
+
+		_capSideID = _town getVariable ["sideID", _oldSideID];
+		_capSide = _capSideID Call WFBE_CO_FNC_GetSideFromID;
+		if (!isNil "WFBE_SE_FNC_OperateTownDefensesUnits") then {[_town, _capSide, "remove"] Call WFBE_SE_FNC_OperateTownDefensesUnits};
+		// Garrison cleanup before organic restore
+		_townTeams = _town getVariable ["wfbe_town_teams", []];
+		{
+			_garrisonGrp = _x;
+			if (!isNil "_garrisonGrp") then {
+				if (!isNull _garrisonGrp) then {
+					_garrisonUnits = units _garrisonGrp;
+					{deleteVehicle _x} forEach _garrisonUnits;
+					deleteGroup _garrisonGrp;
+				};
+			};
+		} forEach _townTeams;
+		_garrisonVeh = _town getVariable ["wfbe_active_vehicles", []];
+		{
+			if (!isNil "_x") then {
+				if (!isNull _x) then {deleteVehicle _x};
+			};
+		} forEach _garrisonVeh;
+		["INFORMATION", Format ["TOWN_GARRISON_CLEANUP_ORGANIC teamsDeleted=%1 vehiclesDeleted=%2", count _townTeams, count _garrisonVeh]] Call WASP_PR8_STRESS_LOG;
+		_town setVariable ["sideID", _oldSideID, true];
+		_town setVariable ["supplyValue", _oldSupply, true];
+		if (!isNil "WFBE_SE_FNC_SetCampsToSide") then {[_town, _capSideID, _oldSideID] Spawn WFBE_SE_FNC_SetCampsToSide};
+		sleep 1;
+		{
+			_camp = _x select 0;
+			if (!isNull _camp) then {
+				_camp setVariable ["sideID", _x select 1, true];
+				_camp setVariable ["supplyValue", _x select 2, true];
+			};
+		} forEach _campStates;
+		if (!isNil "WFBE_SE_FNC_ManageTownDefenses") then {[_town, _oldSide, _capSideID] Call WFBE_SE_FNC_ManageTownDefenses};
+		_town setVariable ["wfbe_active", _oldActive, true];
+		_town setVariable ["wfbe_active_air", _oldActiveAir, true];
+		_town setVariable ["wfbe_active_sideIDs", _oldActiveSides, true];
+		_town setVariable ["wfbe_attacker_sideIDs", _oldAttackers, true];
+		_town setVariable ["wfbe_town_teams", _oldTeams];
+		_town setVariable ["wfbe_active_vehicles", _oldVehicles];
+		_cleanupObjects = (count WASP_PR8_STRESS_OBJECTS) - _organicPreObj;
+		_cleanupGroups = (count WASP_PR8_STRESS_GROUPS) - _organicPreGrp;
+		for "_idx" from _organicPreObj to ((count WASP_PR8_STRESS_OBJECTS) - 1) do {
+			if (!isNull (WASP_PR8_STRESS_OBJECTS select _idx)) then {deleteVehicle (WASP_PR8_STRESS_OBJECTS select _idx)};
+		};
+		for "_idx" from _organicPreGrp to ((count WASP_PR8_STRESS_GROUPS) - 1) do {
+			if (!isNull (WASP_PR8_STRESS_GROUPS select _idx)) then {deleteGroup (WASP_PR8_STRESS_GROUPS select _idx)};
+		};
+		WASP_PR8_STRESS_OBJECTS resize _organicPreObj;
+		WASP_PR8_STRESS_GROUPS resize _organicPreGrp;
+	};
+
+	["INFORMATION", Format ["TOWN_CAP_REGRESSION_END town=%1 cycles=%2 totalCaptures=%3 remanOk=%4 remanFail=%5 organicCaptured=%6", _town getVariable ["name", str _town], _cycles, _totalCaptures, _remanOk, _remanFail, _organicCaptured]] Call WASP_PR8_STRESS_LOG;
+	["post_cap_regression", _town] Call WASP_PR8_STRESS_TOWN_SNAPSHOT;
+};
+
 WASP_PR8_STRESS_PHASE = {
 	Private ["_label","_delay"];
 	_label = _this select 0;
@@ -673,7 +1173,7 @@ WASP_PR8_STRESS_SPAWN_VEHICLE_LOAD = {
 };
 
 WASP_PR8_STRESS_UI_AUDIT = {
-	Private ["_args","_label","_clientFps","_hasDialog","_vehicleType","_cursorType","_visibleMap","_groupUnits","_vehicleSpeed","_cameraView","_shownGps","_hasItemGps","_rubGps","_zoomGps","_wfMenuOpen","_wfTopText","_serviceMenuOpen","_serviceStatusText","_tacticalMenuOpen","_buyMenuOpen","_gpsBefore","_gpsToggled","_rubHud","_wfGpsButtonFound","_serviceClipRisk"];
+	Private ["_args","_label","_clientFps","_hasDialog","_vehicleType","_cursorType","_visibleMap","_groupUnits","_vehicleSpeed","_cameraView","_shownGps","_hasItemGps","_rubGps","_zoomGps","_wfMenuOpen","_wfTopText","_serviceMenuOpen","_serviceStatusText","_serviceTextLen","_tacticalMenuOpen","_buyMenuOpen","_gpsBefore","_gpsToggled","_rubHud","_wfGpsButtonFound","_serviceClipRisk"];
 	_args = _this;
 	_label = if ((typeName _args == "ARRAY") && {(count _args) > 0}) then {_args select 0} else {"manual"};
 	_clientFps = if ((typeName _args == "ARRAY") && {(count _args) > 1}) then {_args select 1} else {-1};
@@ -692,20 +1192,26 @@ WASP_PR8_STRESS_UI_AUDIT = {
 	_wfTopText = if ((typeName _args == "ARRAY") && {(count _args) > 14}) then {_args select 14} else {""};
 	_serviceMenuOpen = if ((typeName _args == "ARRAY") && {(count _args) > 15}) then {_args select 15} else {false};
 	_serviceStatusText = if ((typeName _args == "ARRAY") && {(count _args) > 16}) then {_args select 16} else {""};
+	_serviceTextLen = count toArray _serviceStatusText;
 	_tacticalMenuOpen = if ((typeName _args == "ARRAY") && {(count _args) > 17}) then {_args select 17} else {false};
 	_buyMenuOpen = if ((typeName _args == "ARRAY") && {(count _args) > 18}) then {_args select 18} else {false};
 	_gpsBefore = if ((typeName _args == "ARRAY") && {(count _args) > 19}) then {_args select 19} else {_shownGps};
 	_rubHud = if ((typeName _args == "ARRAY") && {(count _args) > 20}) then {_args select 20} else {-1};
 	_wfGpsButtonFound = if ((typeName _args == "ARRAY") && {(count _args) > 21}) then {_args select 21} else {false};
 	_serviceClipRisk = if ((typeName _args == "ARRAY") && {(count _args) > 22}) then {_args select 22} else {false};
-	_gpsToggled = _gpsBefore != _shownGps;
-	["INFORMATION", Format ["UI_AUDIT label=%1 clientFps=%2 serverFps=%3 clientDialog=%4 visibleMap=%5 shownGPS=%6 hasItemGPS=%7 RUBGPS=%8 zoomgps=%9 wfMenuOpen=%10 tacticalMenuOpen=%11 buyMenuOpen=%12 serviceMenuOpen=%13 vehicleType=%14 cursorType=%15 groupUnits=%16 vehicleSpeed=%17 cameraView=%18 confirmFunction=%19 serviceMenuProof=see-GUI_Menu_Service queueTabs=see-GUI_Menu_BuyUnits topStrip=uptime|time|players|towns|svPlus|clientFps rhud=moneyIncome|svPlus|fpsClientServer",
+	_gpsToggled = false;
+	if (_gpsBefore) then {_gpsToggled = !_shownGps} else {_gpsToggled = _shownGps};
+	["INFORMATION", Format ["UI_AUDIT label=%1 clientFps=%2 serverFps=%3 clientDialog=%4 visibleMap=%5 shownGPS=%6 hasItemGPS=%7 RUBGPS=%8 zoomgps=%9 wfMenuOpen=%10 tacticalMenuOpen=%11 buyMenuOpen=%12 serviceMenuOpen=%13 vehicleType=%14 cursorType=%15 groupUnits=%16 vehicleSpeed=%17 cameraView=%18 confirmFunction=%19 serviceMenuProof=see-GUI_Menu_Service queueTabs=see-GUI_Menu_BuyUnits topStrip=uptime|time|players|towns|svSigned|clientFps rhud=moneyIncome|baseStatus|fpsClientServer",
 		_label, _clientFps, (round (diag_fps * 10)) / 10, _hasDialog, _visibleMap, _shownGps, _hasItemGps, _rubGps, _zoomGps, _wfMenuOpen, _tacticalMenuOpen, _buyMenuOpen, _serviceMenuOpen, _vehicleType, _cursorType, _groupUnits, _vehicleSpeed, _cameraView, !(isNil "WFBE_CL_FNC_ConfirmAction")]] Call WASP_PR8_STRESS_LOG;
 	["INFORMATION", Format ["GPS_UI_AUDIT label=%1 gpsBefore=%2 shownGPS=%3 toggled=%4 hasItemGPS=%5 RUBGPS=%6 zoomgps=%7 visibleMap=%8 wfMenuOpen=%9 wfTopText='%10' serviceMenuOpen=%11 serviceStatusText='%12' tacticalMenuOpen=%13 buyMenuOpen=%14",
 		_label, _gpsBefore, _shownGps, _gpsToggled, _hasItemGps, _rubGps, _zoomGps, _visibleMap, _wfMenuOpen, _wfTopText, _serviceMenuOpen, _serviceStatusText, _tacticalMenuOpen, _buyMenuOpen]] Call WASP_PR8_STRESS_LOG;
 	["INFORMATION", Format ["CLIENT_GPS_STATE label=%1 hasItemGPS=%2 shownGPS=%3 gpsBefore=%4 changed=%5 RUBHUD=%6 RUBGPS=%7 zoomgps=%8 visibleMap=%9 dialog=%10", _label, _hasItemGps, _shownGps, _gpsBefore, _gpsToggled, _rubHud, _rubGps, _zoomGps, _visibleMap, _hasDialog]] Call WASP_PR8_STRESS_LOG;
-	["INFORMATION", Format ["CLIENT_UI_TEXT_STATE label=%1 wfMenu=%2 topStrip='%3' gpsButtonFound=%4 serviceMenu=%5 serviceLen=%6 serviceClipRisk=%7 tacticalMenu=%8 buyMenu=%9", _label, _wfMenuOpen, _wfTopText, _wfGpsButtonFound, _serviceMenuOpen, count _serviceStatusText, _serviceClipRisk, _tacticalMenuOpen, _buyMenuOpen]] Call WASP_PR8_STRESS_LOG;
-	if (_serviceMenuOpen) then {["INFORMATION", Format ["CLIENT_SERVICE_CLIP_AUDIT label=%1 display=20000 infoIdc=20021 textLen=%2 clipRisk=%3 text='%4'", _label, count _serviceStatusText, _serviceClipRisk, _serviceStatusText]] Call WASP_PR8_STRESS_LOG};
+	["INFORMATION", Format ["CLIENT_UI_TEXT_STATE label=%1 wfMenu=%2 topStrip='%3' gpsButtonFound=%4 serviceMenu=%5 serviceLen=%6 serviceClipRisk=%7 tacticalMenu=%8 buyMenu=%9", _label, _wfMenuOpen, _wfTopText, _wfGpsButtonFound, _serviceMenuOpen, _serviceTextLen, _serviceClipRisk, _tacticalMenuOpen, _buyMenuOpen]] Call WASP_PR8_STRESS_LOG;
+	if (_serviceMenuOpen) then {
+		["INFORMATION", Format ["CLIENT_SERVICE_CLIP_AUDIT label=%1 display=20000 infoIdc=20021 textLen=%2 clipRisk=%3 text='%4'", _label, _serviceTextLen, _serviceClipRisk, _serviceStatusText]] Call WASP_PR8_STRESS_LOG;
+	} else {
+		["INFORMATION", Format ["CLIENT_SERVICE_CLIP_AUDIT label=%1 display=missing infoIdc=20021 textLen=0 clipRisk=false reason=noDisplay", _label]] Call WASP_PR8_STRESS_LOG;
+	};
 };
 
 WASP_PR8_STRESS_PLAYER_EXPERIENCE_AUDIT = {
@@ -811,6 +1317,102 @@ WASP_PR8_STRESS_BUGHUNT_AUDIT = {
 		_label, _serverFps, _hcs, _playerCount, _aiCount, count allUnits, count vehicles, count allGroups, _emptyGroups, _deadVehicles, _damagedVehicles, _loadedSupply, _loadingSupply, _staticCrew, _emptyStatics, _openQueueItems, _townsActive, _townsCooldown, _sidesReady, _missingClientFuncs, _missingServerFuncs]] Call WASP_PR8_STRESS_LOG;
 };
 
+WASP_PR8_STRESS_RANDOM_BUGHUNT_AUDIT = {
+	Private ["_label","_units","_vehicles","_groups","_townList","_sampleUnits","_sampleVehicles","_sampleGroups","_sampleTowns","_i","_idx","_unit","_vehicle","_group","_leader","_destinationData","_destination","_veh","_town","_supply","_sideID","_orphanUnits","_noOwnerUnits","_stoppedNoDest","_deadSampleUnits","_crewNoDriver","_emptyStaticSample","_overCrewedStatics","_criticalVehicles","_loadedSupplySample","_loadingSupplySample","_emptyGroupSample","_noWaypointGroupSample","_nullLeaderGroupSample","_remoteLeaderGroupSample","_townBadSide","_townBadSupply","_townActive","_missingCoreVars","_missingClientFuncs","_missingServerFuncs","_name"];
+	_label = _this;
+	_units = allUnits;
+	_vehicles = vehicles;
+	_groups = allGroups;
+	_townList = if (isNil "towns") then {[]} else {towns};
+	_sampleUnits = 0;
+	_sampleVehicles = 0;
+	_sampleGroups = 0;
+	_sampleTowns = 0;
+	_orphanUnits = 0;
+	_noOwnerUnits = 0;
+	_stoppedNoDest = 0;
+	_deadSampleUnits = 0;
+	_crewNoDriver = 0;
+	_emptyStaticSample = 0;
+	_overCrewedStatics = 0;
+	_criticalVehicles = 0;
+	_loadedSupplySample = 0;
+	_loadingSupplySample = 0;
+	_emptyGroupSample = 0;
+	_noWaypointGroupSample = 0;
+	_nullLeaderGroupSample = 0;
+	_remoteLeaderGroupSample = 0;
+	_townBadSide = 0;
+	_townBadSupply = 0;
+	_townActive = 0;
+	_missingCoreVars = [];
+
+	for "_i" from 1 to 24 do {
+		if (count _units > 0) then {
+			_idx = floor (random (count _units));
+			_unit = _units select _idx;
+			_sampleUnits = _sampleUnits + 1;
+			if (isNull (group _unit)) then {_orphanUnits = _orphanUnits + 1};
+			if ((owner _unit) <= 0) then {_noOwnerUnits = _noOwnerUnits + 1};
+			if !(alive _unit) then {_deadSampleUnits = _deadSampleUnits + 1};
+			if (alive _unit && {!isPlayer _unit}) then {
+				_destinationData = expectedDestination _unit;
+				_destination = [];
+				if (count _destinationData > 0) then {_destination = _destinationData select 0};
+				if ((stopped _unit || unitReady _unit) && {((typeName _destination != "ARRAY") || {(count _destination) < 2})}) then {_stoppedNoDest = _stoppedNoDest + 1};
+			};
+		};
+		if (count _vehicles > 0) then {
+			_idx = floor (random (count _vehicles));
+			_veh = _vehicles select _idx;
+			_sampleVehicles = _sampleVehicles + 1;
+			if (alive _veh && {(getDammage _veh) > 0.85}) then {_criticalVehicles = _criticalVehicles + 1};
+			if (alive _veh && {(_veh getVariable ["SupplyAmount", 0]) > 0}) then {_loadedSupplySample = _loadedSupplySample + 1};
+			if (alive _veh && {_veh getVariable ["SupplyLoading", false]}) then {_loadingSupplySample = _loadingSupplySample + 1};
+			if (alive _veh && {_veh isKindOf "StaticWeapon"}) then {
+				if ((count crew _veh) == 0) then {_emptyStaticSample = _emptyStaticSample + 1};
+				if ((count crew _veh) > 1) then {_overCrewedStatics = _overCrewedStatics + 1};
+			};
+			if (alive _veh && {!(_veh isKindOf "StaticWeapon")} && {(count crew _veh) > 0} && {isNull (driver _veh)}) then {_crewNoDriver = _crewNoDriver + 1};
+		};
+		if (count _groups > 0) then {
+			_idx = floor (random (count _groups));
+			_group = _groups select _idx;
+			if (!isNull _group) then {
+				_sampleGroups = _sampleGroups + 1;
+				if ((count units _group) == 0) then {_emptyGroupSample = _emptyGroupSample + 1};
+				if ((count waypoints _group) == 0) then {_noWaypointGroupSample = _noWaypointGroupSample + 1};
+				_leader = leader _group;
+				if (isNull _leader) then {
+					_nullLeaderGroupSample = _nullLeaderGroupSample + 1;
+				} else {
+					if !(local _leader) then {_remoteLeaderGroupSample = _remoteLeaderGroupSample + 1};
+				};
+			};
+		};
+		if (count _townList > 0) then {
+			_idx = floor (random (count _townList));
+			_town = _townList select _idx;
+			_sampleTowns = _sampleTowns + 1;
+			_sideID = _town getVariable ["sideID", -99];
+			if ((_sideID < -1) || {_sideID > 3}) then {_townBadSide = _townBadSide + 1};
+			_supply = _town getVariable ["supplyValue", _town getVariable ["supply", -1]];
+			if ((typeName _supply == "SCALAR") && {_supply < 0}) then {_townBadSupply = _townBadSupply + 1};
+			if (_town getVariable ["wfbe_active", false]) then {_townActive = _townActive + 1};
+		};
+	};
+
+	{
+		_name = _x;
+		if (isNil _name) then {_missingCoreVars set [count _missingCoreVars, _name]};
+	} forEach ["towns","WFBE_HEADLESSCLIENTS_ID","WFBE_C_AI_DELEGATION","WFBE_C_AI_DELEGATION_FPS_MIN","WFBE_C_SUPPLY_HELI_LOAD_TIME","WFBE_C_SUPPLY_HELI_UNLOAD_TIME"];
+	_missingClientFuncs = ["WFBE_CL_FNC_SupplyMissionStart","WFBE_CL_FNC_SupplyMissionUnload","WFBE_CL_FNC_ConfirmAction","WFBE_CL_FNC_CanUseRepairPointEASA","WFBE_CL_FNC_GetRepairTruckServicePoints"] Call WASP_PR8_STRESS_MISSING;
+	_missingServerFuncs = ["WFBE_SE_FNC_HandleEmptyVehicle","WFBE_SE_FNC_ProcessUpgrade","WFBE_SE_FNC_SupplyMissionTimerForTown","Server_ConstructPosition","ConstructDefense","HandleDefense"] Call WASP_PR8_STRESS_MISSING;
+
+	["INFORMATION", Format ["RANDOM_BUGHUNT_AUDIT label=%1 samples=[units:%2,vehicles:%3,groups:%4,towns:%5] orphanUnits=%6 noOwnerUnits=%7 deadSampleUnits=%8 stoppedNoDest=%9 crewNoDriver=%10 emptyStaticSample=%11 overCrewedStatics=%12 criticalVehicles=%13 loadedSupplySample=%14 loadingSupplySample=%15 emptyGroupSample=%16 noWaypointGroupSample=%17 nullLeaderGroupSample=%18 remoteLeaderGroupSample=%19 townBadSide=%20 townBadSupply=%21 townActiveSample=%22 missingCoreVars=%23 missingClientFuncs=%24 missingServerFuncs=%25",
+		_label, _sampleUnits, _sampleVehicles, _sampleGroups, _sampleTowns, _orphanUnits, _noOwnerUnits, _deadSampleUnits, _stoppedNoDest, _crewNoDriver, _emptyStaticSample, _overCrewedStatics, _criticalVehicles, _loadedSupplySample, _loadingSupplySample, _emptyGroupSample, _noWaypointGroupSample, _nullLeaderGroupSample, _remoteLeaderGroupSample, _townBadSide, _townBadSupply, _townActive, _missingCoreVars, _missingClientFuncs, _missingServerFuncs]] Call WASP_PR8_STRESS_LOG;
+};
+
 WASP_PR8_STRESS_HANDLE_COMMAND = {
 	Private ["_payload","_command","_source","_sourceName","_clientFps","_clientDialog","_vehicleType","_cursorType","_visibleMap","_groupUnitsClient","_vehicleSpeed","_cameraView","_shownGps","_hasItemGps","_rubGps","_zoomGps","_wfMenuOpen","_wfTopText","_serviceMenuOpen","_serviceStatusText","_tacticalMenuOpen","_buyMenuOpen","_gpsBefore","_rubHud","_wfGpsButtonFound","_serviceClipRisk","_westPos","_eastPos","_westClass","_eastClass","_units","_groups","_rw","_re","_heavyGroups","_heavyUnits","_sample"];
 	_payload = _this;
@@ -869,7 +1471,11 @@ WASP_PR8_STRESS_HANDLE_COMMAND = {
 	["INFORMATION", Format ["CLIENT_COMMAND command=%1 source=%2 sourceName=%3 clientFps=%4 clientDialog=%5 visibleMap=%6 shownGPS=%7 hasItemGPS=%8 wfMenuOpen=%9 serviceMenuOpen=%10 tacticalMenuOpen=%11 buyMenuOpen=%12 vehicleType=%13 cursorType=%14 groupUnits=%15 vehicleSpeed=%16 cameraView=%17 serverFps=%18",
 		_command, _source, _sourceName, _clientFps, _clientDialog, _visibleMap, _shownGps, _hasItemGps, _wfMenuOpen, _serviceMenuOpen, _tacticalMenuOpen, _buyMenuOpen, _vehicleType, _cursorType, _groupUnitsClient, _vehicleSpeed, _cameraView, (round (diag_fps * 10)) / 10]] Call WASP_PR8_STRESS_LOG;
 
-	if (_command == "queue-full") exitWith {"full" Call WASP_PR8_STRESS_QUEUE_ADD};
+	if (_command == "queue-operator") exitWith {"operator" Call WASP_PR8_STRESS_QUEUE_ADD};
+	if (_command == "queue-ai-long") exitWith {"ai-long" Call WASP_PR8_STRESS_QUEUE_ADD};
+	if (_command == "queue-systems") exitWith {"systems" Call WASP_PR8_STRESS_QUEUE_ADD};
+	if (_command == "queue-ui-long") exitWith {"ui-long" Call WASP_PR8_STRESS_QUEUE_ADD};
+	if (_command == "queue-full") exitWith {"operator" Call WASP_PR8_STRESS_QUEUE_ADD};
 	if (_command == "queue-ai") exitWith {"ai" Call WASP_PR8_STRESS_QUEUE_ADD};
 	if (_command == "queue-factory") exitWith {"factory" Call WASP_PR8_STRESS_QUEUE_ADD};
 	if (_command == "queue-service") exitWith {"service" Call WASP_PR8_STRESS_QUEUE_ADD};
@@ -878,6 +1484,7 @@ WASP_PR8_STRESS_HANDLE_COMMAND = {
 	if (_command == "queue-load") exitWith {"load" Call WASP_PR8_STRESS_QUEUE_ADD};
 	if (_command == "queue-gps-ui") exitWith {"gps-ui" Call WASP_PR8_STRESS_QUEUE_ADD};
 	if (_command == "queue-bughunt") exitWith {"bughunt" Call WASP_PR8_STRESS_QUEUE_ADD};
+	if (_command == "queue-town-regression") exitWith {"town-regression" Call WASP_PR8_STRESS_QUEUE_ADD};
 	if (_command == "queue-status") exitWith {
 		["INFORMATION", Format ["QUEUE_STATUS running=%1 pending=%2 cleanupLoop=%3 stopFlag=%4", WASP_PR8_STRESS_QUEUE_RUNNING, count WASP_PR8_STRESS_QUEUE, WASP_PR8_STRESS_CLEANUP_LOOP_RUNNING, WASP_PR8_STRESS_QUEUE_STOP]] Call WASP_PR8_STRESS_LOG;
 	};
@@ -976,8 +1583,13 @@ WASP_PR8_STRESS_HANDLE_COMMAND = {
 	};
 	if (_command == "bughunt-audit") exitWith {
 		"client_bughunt_audit" Call WASP_PR8_STRESS_BUGHUNT_AUDIT;
+		"client_bughunt_audit" Call WASP_PR8_STRESS_RANDOM_BUGHUNT_AUDIT;
 		"client_bughunt_audit" Call WASP_PR8_STRESS_SNAPSHOT;
 		["INFORMATION", "CLIENT_COMMAND_DONE bughunt-audit"] Call WASP_PR8_STRESS_LOG;
+	};
+	if (_command == "random-bughunt-audit") exitWith {
+		"client_random_bughunt_audit" Call WASP_PR8_STRESS_RANDOM_BUGHUNT_AUDIT;
+		["INFORMATION", "CLIENT_COMMAND_DONE random-bughunt-audit"] Call WASP_PR8_STRESS_LOG;
 	};
 	if (_command == "service-supply-audit") exitWith {
 		"client_service_supply_audit" Call WASP_PR8_STRESS_SERVICE_SUPPLY_AUDIT;
@@ -995,6 +1607,10 @@ WASP_PR8_STRESS_HANDLE_COMMAND = {
 		[] Spawn WASP_PR8_STRESS_TOWN_LIFECYCLE;
 		["INFORMATION", "CLIENT_COMMAND_DONE town-lifecycle spawned"] Call WASP_PR8_STRESS_LOG;
 	};
+	if (_command == "town-cap-regression") exitWith {
+		[] Spawn WASP_PR8_STRESS_TOWN_CAP_REGRESSION;
+		["INFORMATION", "CLIENT_COMMAND_DONE town-cap-regression spawned"] Call WASP_PR8_STRESS_LOG;
+	};
 	if (_command == "cleanup") exitWith {
 		"client_command" Call WASP_PR8_STRESS_CLEANUP_NOW;
 	};
@@ -1008,8 +1624,10 @@ WASP_PR8_STRESS_HANDLE_COMMAND = {
 WASP_PR8_STRESS_QUEUE = [];
 WASP_PR8_STRESS_QUEUE_RUNNING = false;
 WASP_PR8_STRESS_QUEUE_STOP = false;
+WASP_PR8_STRESS_QUEUE_ENQUEUES = 0;
 WASP_PR8_STRESS_CLEANUP_LOOP_RUNNING = false;
 WASP_PR8_STRESS_CLEANUP_LOOP_DELAY = 300;
+WASP_PR8_STRESS_AUTORUN_STARTED = false;
 
 WASP_PR8_STRESS_QUEUE_SEQUENCE = {
 	Private ["_name","_steps"];
@@ -1017,14 +1635,38 @@ WASP_PR8_STRESS_QUEUE_SEQUENCE = {
 	if (typeName _name == "ARRAY") then {
 		_name = if (count _name > 0) then {_name select 0} else {"full"};
 	};
+	if (_name == "full") then {_name = "operator"};
 	_steps = [];
-	if (_name == "full") then {
+	if (_name == "operator") then {
 		_steps = [
 			["cleanup", 5], ["profile", 2], ["queue-proof", 5], ["snapshot", 5], ["ai-audit", 6], ["ai-deep-sample", 20],
 			["ai-delegation-audit", 6], ["factory-audit", 8], ["service-supply-audit", 8], ["wddm-artillery-audit", 10],
 			["ui-audit", 6], ["gps-ui-audit", 6], ["player-experience-audit", 6], ["bughunt-audit", 6], ["perf-burst", 28],
 			["vehicle-load", 10], ["spawn-wave", 10], ["spawn-heavy-wave", 12],
-			["town-lifecycle", 18], ["trigger-direct", 8], ["bughunt-audit", 6], ["snapshot", 0]
+			["town-lifecycle", 18], ["trigger-direct", 8], ["random-bughunt-audit", 6], ["bughunt-audit", 6], ["snapshot", 0]
+		];
+	};
+	if (_name == "ai-long") then {
+		_steps = [
+			["cleanup", 5], ["queue-proof", 5], ["snapshot", 5], ["ai-audit", 6], ["ai-delegation-audit", 6],
+			["ai-deep-sample", 20], ["spawn-wave", 10], ["ai-audit", 6], ["spawn-heavy-wave", 12],
+			["ai-delegation-audit", 6], ["ai-deep-sample", 20], ["bughunt-audit", 6], ["perf-burst", 28],
+			["random-bughunt-audit", 6], ["snapshot", 0]
+		];
+	};
+	if (_name == "systems") then {
+		_steps = [
+			["cleanup", 5], ["queue-proof", 5], ["factory-audit", 8], ["service-supply-audit", 8],
+			["wddm-artillery-audit", 10], ["town-lifecycle", 18], ["town-cap-regression", 75], ["trigger-direct", 8],
+			["bughunt-audit", 6], ["perf-burst", 28], ["factory-audit", 6],
+			["service-supply-audit", 6], ["wddm-artillery-audit", 0]
+		];
+	};
+	if (_name == "ui-long") then {
+		_steps = [
+			["queue-proof", 4], ["ui-audit", 4], ["gps-ui-audit", 4], ["gps-gain-toggle-audit", 4],
+			["player-experience-audit", 4], ["service-supply-audit", 6], ["bughunt-audit", 6],
+			["perf-burst", 28], ["ui-audit", 4], ["gps-ui-audit", 0]
 		];
 	};
 	if (_name == "ai") then {
@@ -1052,7 +1694,10 @@ WASP_PR8_STRESS_QUEUE_SEQUENCE = {
 		_steps = [["ui-audit", 4], ["gps-ui-audit", 4], ["gps-gain-toggle-audit", 4], ["player-experience-audit", 4], ["gps-ui-audit", 0]];
 	};
 	if (_name == "bughunt") then {
-		_steps = [["snapshot", 4], ["bughunt-audit", 4], ["ai-delegation-audit", 4], ["factory-audit", 4], ["service-supply-audit", 4], ["wddm-artillery-audit", 4], ["bughunt-audit", 0]];
+		_steps = [["snapshot", 4], ["bughunt-audit", 4], ["random-bughunt-audit", 4], ["ai-delegation-audit", 4], ["factory-audit", 4], ["service-supply-audit", 4], ["wddm-artillery-audit", 4], ["random-bughunt-audit", 4], ["bughunt-audit", 0]];
+	};
+	if (_name == "town-regression") then {
+		_steps = [["cleanup", 5], ["queue-proof", 5], ["snapshot", 5], ["town-cap-regression", 75], ["bughunt-audit", 6], ["snapshot", 0]];
 	};
 	_steps
 };
@@ -1091,13 +1736,40 @@ WASP_PR8_STRESS_QUEUE_ADD = {
 	if (count _steps == 0) exitWith {
 		["WARNING", Format ["QUEUE_ENQUEUE skipped unknownSequence=%1", _name]] Call WASP_PR8_STRESS_LOG;
 	};
+	if ((WASP_PR8_STRESS_QUEUE_RUNNING || {(count WASP_PR8_STRESS_QUEUE) > 0}) && {!WASP_PR8_STRESS_QUEUE_STOP}) exitWith {
+		["WARNING", Format ["QUEUE_ENQUEUE skipped busy sequence=%1 pending=%2 running=%3", _name, count WASP_PR8_STRESS_QUEUE, WASP_PR8_STRESS_QUEUE_RUNNING]] Call WASP_PR8_STRESS_LOG;
+	};
 	_before = count WASP_PR8_STRESS_QUEUE;
+	WASP_PR8_STRESS_QUEUE_ENQUEUES = WASP_PR8_STRESS_QUEUE_ENQUEUES + 1;
 	{
 		_step = _x;
 		WASP_PR8_STRESS_QUEUE set [count WASP_PR8_STRESS_QUEUE, _step];
 	} forEach _steps;
-	["INFORMATION", Format ["QUEUE_ENQUEUE sequence=%1 added=%2 before=%3 pending=%4 running=%5", _name, count _steps, _before, count WASP_PR8_STRESS_QUEUE, WASP_PR8_STRESS_QUEUE_RUNNING]] Call WASP_PR8_STRESS_LOG;
+	["INFORMATION", Format ["QUEUE_ENQUEUE sequence=%1 added=%2 before=%3 pending=%4 running=%5 totalEnqueues=%6", _name, count _steps, _before, count WASP_PR8_STRESS_QUEUE, WASP_PR8_STRESS_QUEUE_RUNNING, WASP_PR8_STRESS_QUEUE_ENQUEUES]] Call WASP_PR8_STRESS_LOG;
 	if (!WASP_PR8_STRESS_QUEUE_RUNNING) then {[] Spawn WASP_PR8_STRESS_QUEUE_RUNNER};
+};
+
+WASP_PR8_STRESS_AUTORUN_START = {
+	Private ["_enabled","_sequence","_delay"];
+	_enabled = if (isNil "WASP_PR8_STRESS_AUTORUN_ENABLED") then {false} else {WASP_PR8_STRESS_AUTORUN_ENABLED};
+	if (!_enabled) exitWith {
+		["INFORMATION", "AUTORUN skipped enabled=false"] Call WASP_PR8_STRESS_LOG;
+	};
+	if (WASP_PR8_STRESS_AUTORUN_STARTED) exitWith {
+		["INFORMATION", "AUTORUN skipped alreadyStarted=true"] Call WASP_PR8_STRESS_LOG;
+	};
+	WASP_PR8_STRESS_AUTORUN_STARTED = true;
+	_sequence = if (isNil "WASP_PR8_STRESS_AUTORUN_SEQUENCE") then {"operator"} else {WASP_PR8_STRESS_AUTORUN_SEQUENCE};
+	_delay = if (isNil "WASP_PR8_STRESS_AUTORUN_DELAY") then {45} else {WASP_PR8_STRESS_AUTORUN_DELAY};
+	[_sequence, _delay] Spawn {
+		Private ["_sequence","_delay"];
+		_sequence = _this select 0;
+		_delay = _this select 1;
+		["INFORMATION", Format ["AUTORUN_WAIT sequence=%1 delay=%2", _sequence, _delay]] Call WASP_PR8_STRESS_LOG;
+		if (_delay > 0) then {sleep _delay};
+		["INFORMATION", Format ["AUTORUN_TRIGGER sequence=%1", _sequence]] Call WASP_PR8_STRESS_LOG;
+		_sequence Call WASP_PR8_STRESS_QUEUE_ADD;
+	};
 };
 
 WASP_PR8_STRESS_CLEANUP_LOOP_SET = {
@@ -1231,6 +1903,7 @@ _missingVars = _requiredVars Call WASP_PR8_STRESS_MISSING;
 _missingFuncs = _requiredFuncs Call WASP_PR8_STRESS_MISSING;
 ["INFORMATION", Format ["LOGICCHECK missingVars=%1 missingFuncs=%2", _missingVars, _missingFuncs]] Call WASP_PR8_STRESS_LOG;
 [] Call WASP_PR8_STRESS_WAIT_FOR_HC;
+[] Call WASP_PR8_STRESS_AUTORUN_START;
 
 _sides = if (isNil "WFBE_PRESENTSIDES") then {[west,east]} else {WFBE_PRESENTSIDES};
 WASP_PR8_STRESS_SIDES = _sides;
@@ -1382,6 +2055,13 @@ while {_i < _sampleCount} do {
 
 _avg = if (_sampleCount > 0) then {(round ((_sum / _sampleCount) * 10)) / 10} else {-1};
 "final_perf_window" Call WASP_PR8_STRESS_AI_BEHAVIOR;
+"final_ai_delegation" Call WASP_PR8_STRESS_AI_DELEGATION_AUDIT;
+"final_bughunt" Call WASP_PR8_STRESS_BUGHUNT_AUDIT;
+"final_random_bughunt" Call WASP_PR8_STRESS_RANDOM_BUGHUNT_AUDIT;
+["final_perf_burst", 6, 2] Call WASP_PR8_STRESS_PERF_BURST;
+if (WASP_PR8_STRESS_QUEUE_ENQUEUES == 0) then {
+	["WARNING", "QUEUE_NOT_TRIGGERED totalEnqueues=0 reason=no-client-or-scroll-action; use client auto probes or queue actions for full UI/UX coverage"] Call WASP_PR8_STRESS_LOG;
+};
 ["INITIALIZATION", Format ["EVIDENCE {""schema"":""wasp-pr8-stress-v5"",""run"":""%15"",""perfAuditSid"":""%16"",""gatesReached"":%1,""phases"":6,""directTriggers"":%12,""townLifecycle"":%14,""reinforcementInterval"":%13,""aiBehavior"":true,""aiSpawned"":[%2,%3,%4],""vehiclePairs"":%5,""samples"":%6,""fpsMinAvgMax"":[%7,%8,%9],""objectsTracked"":%10,""groupsTracked"":%11,""maxAiUnitsVehiclesGroupsDead"":[%17,%18,%19,%20,%21]}",
 	_reached, _westAI, _eastAI, _resAI, _vehiclePairs, _sampleCount, (round (_min * 10)) / 10, _avg, (round (_max * 10)) / 10, count WASP_PR8_STRESS_OBJECTS, count WASP_PR8_STRESS_GROUPS, (if (isNil "WASP_PR8_STRESS_TRIGGER_DIRECT_ACTIONS") then {true} else {WASP_PR8_STRESS_TRIGGER_DIRECT_ACTIONS}), _reinforcementInterval, (if (isNil "WASP_PR8_STRESS_TOWN_LIFECYCLE_ENABLED") then {true} else {WASP_PR8_STRESS_TOWN_LIFECYCLE_ENABLED}), WASP_PR8_STRESS_RUN_ID, (if (isNil "PerformanceAuditSessionId") then {"none"} else {PerformanceAuditSessionId}), WASP_PR8_STRESS_MAX_AI, WASP_PR8_STRESS_MAX_UNITS, WASP_PR8_STRESS_MAX_VEHICLES, WASP_PR8_STRESS_MAX_GROUPS, WASP_PR8_STRESS_MAX_DEAD]] Call WASP_PR8_STRESS_LOG;
 

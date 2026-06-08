@@ -33,15 +33,18 @@ The installer copies the source mission to the local destination, overlays
 ## Next-Run Test Order
 
 1. Start the stress mission and connect the HC.
-2. Trigger `PR8 Queue: status` and confirm `QUEUE_PROOF` or `HC_READY`.
-3. Trigger `PR8 Queue: GPS/UI` while opening the WF menu, service menu, and GPS/minimap.
-4. Trigger `PR8 Queue: AI behavior`.
-5. Trigger `PR8 Queue: factories`.
-6. Trigger `PR8 Queue: service/supply`.
-7. Trigger `PR8 Queue: WDDM/artillery`.
-8. Trigger `PR8 Queue: load/perf`.
-9. Trigger `PR8 Queue: bughunt sweep`.
-10. End with `PR8 Test: cleanup/reset`.
+2. Wait for the automatic client probe set to emit `CLIENT_COMMAND`,
+   `GPS_UI_AUDIT`, `CLIENT_GPS_STATE`, `PLAYER_EXPERIENCE_AUDIT`,
+   `AI_DELEGATION_AUDIT`, `BUGHUNT_AUDIT`, and `RANDOM_BUGHUNT_AUDIT`.
+3. Trigger `PR8 Queue: status` and confirm `QUEUE_PROOF` or `HC_READY`.
+4. Trigger `PR8 Queue: GPS/UI` while opening the WF menu, service menu, and GPS/minimap. The WF footer should show compact `HUD` and `GPS` buttons; `GPS` should grant `ItemGPS`, close the WF menu, and show the standard bottom-right GPS/minimap.
+5. Trigger `PR8 Queue: AI behavior`.
+6. Trigger `PR8 Queue: factories`.
+7. Trigger `PR8 Queue: service/supply`.
+8. Trigger `PR8 Queue: WDDM/artillery`.
+9. Trigger `PR8 Queue: load/perf`.
+10. Trigger `PR8 Queue: bughunt sweep`.
+11. End with `PR8 Test: cleanup/reset`.
 
 ## Live Watch
 
@@ -61,9 +64,11 @@ powershell -ExecutionPolicy Bypass -File Tools\PrTestHarness\Rpt\Analyze-WaspStr
 Important tokens:
 
 - `QUEUE_PROOF`, `QUEUE_STEP`, `QUEUE_END`
+- `QUEUE_NOT_TRIGGERED` when no queue path fired in an AFK run
 - `AI_BEHAVIOR`, `AI_DELEGATION_AUDIT`
 - `GPS_UI_AUDIT`, `CLIENT_GPS_STATE`, `CLIENT_UI_TEXT_STATE`, `CLIENT_SERVICE_CLIP_AUDIT`
 - `BUGHUNT_AUDIT`
+- `RANDOM_BUGHUNT_AUDIT`
 - `FACTORY_AUDIT`, `SERVICE_SUPPLY_AUDIT`, `WDDM_ARTILLERY_AUDIT`
 - `PERF_BURST`, `PERF #`
 

@@ -19,16 +19,21 @@
 ^\s*Error position: <_source\];.*$
 ^\s*Error Undefined variable in expression: _source$
 ^File JSRS_Distance\\scripts\\.*\.sqf, line 19$
+^\s*Cannot load sound 'jsrs_.*'$
 ^.*_freeslots.*$
 ^.*_slotVar.*$
 ^.*_ptype.*$
 ^.*weaponSlots.*$
+^.*_lastupos.*$
+^.*tpwcas_supstate.*$
 ^.*fnc_invSlotsEmpty\.sqf.*$
 ^.*fnc_inventoryCheck\.sqf.*$
 ^.*fnc_getNearWeapons\.sqf.*$
+^.*fnc_AINet\.sqf.*$
 ^File x\\asr_ai\\addons\\sys_airearming\\fnc_invSlotsEmpty\.sqf, line 25$
 ^File x\\asr_ai\\addons\\sys_airearming\\fnc_inventoryCheck\.sqf, line 161$
 ^File x\\asr_ai\\addons\\sys_airearming\\fnc_getNearWeapons\.sqf, line 83$
+^File x\\asr_ai\\addons\\sys_aiskill\\fnc_AINet\.sqf, line 103$
 ^.*WarFXPE\\ParticleEffects\\Universa.*$
 ^File warfxpe\\ParticleEffects\\SCRIPTS\\ammo\\M256\.sqf, line 30$
 ^\s*Cannot evaluate 'ReadAndWrite' - no file$

@@ -70,6 +70,21 @@ if (Test-Path -LiteralPath $destTest) {
 Copy-Item -LiteralPath (Join-Path $overlayRoot "test") -Destination $destTest -Recurse -Force
 
 if ($MissionTitle -ne "") {
+	$missionSqm = Join-Path $destination "mission.sqm"
+	if (Test-Path -LiteralPath $missionSqm) {
+		$text = Get-Content -Raw -LiteralPath $missionSqm
+		$text = $text -replace 'briefingName="[^"]*";', "briefingName=`"$MissionTitle`";"
+		$text = $text -replace 'briefingDescription="[^"]*";', 'briefingDescription="Auto-starts WASP-PR8-STRESS: FPS, HC, AI behavior, supply, WDDM, service/EASA checks.";'
+		Set-Content -LiteralPath $missionSqm -Value $text -Encoding ASCII
+	}
+
+	$version = Join-Path $destination "version.sqf"
+	if (Test-Path -LiteralPath $version) {
+		$text = Get-Content -Raw -LiteralPath $version
+		$text = $text -replace '#define WF_MISSIONNAME "[^"]*"', "#define WF_MISSIONNAME `"$MissionTitle`""
+		Set-Content -LiteralPath $version -Value $text -Encoding ASCII
+	}
+
 	$briefing = Join-Path $destination "briefing.html"
 	if (Test-Path -LiteralPath $briefing) {
 		$text = Get-Content -Raw -LiteralPath $briefing
