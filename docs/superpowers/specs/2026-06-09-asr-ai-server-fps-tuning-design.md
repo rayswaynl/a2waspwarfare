@@ -164,3 +164,22 @@ committed. Validator: no new entries in mission.sqm addOns[].
   `buildingSearching` 0–1).
 - No in-engine benchmark (per scope). Owner validates via normal playtests.
 - Revert path: `asr_ai_settings.hpp.bak`.
+
+## Post-deploy correction (2026-06-09)
+
+Reality differed from two assumptions in this design; corrected after deploy:
+
+1. **Install location.** The running game/server is **`F:\SteamLibrary\steamapps\common\Arma 2 Operation
+   Arrowhead\`** (the machine has 3 Steam libraries: C:, D:, F:). The `C:\Program Files (x86)\Steam\…\Arma 2
+   OA` folder used during authoring is a **stray** (mods + userconfig, no `.exe`) and is NOT what the game
+   reads. The tune was deployed to **F:** (with `asr_ai_settings.hpp.bak` as the stock revert) and the stray
+   C: edit was reverted. Server, HC, and client all launch from F: (`start_wasp_server.cmd`,
+   `Launch_Miksuu_Warfare_BE.cmd`), so one deploy covers all roles — no SSH/remote step.
+2. **Rearming.** The real F: install is true stock with `sys_airearming.feature = 1` (rearming ON). The `= 0`
+   referenced earlier in this doc existed only on the stray C: folder. Per Steff's decision, rearming is
+   **left ON**; the canonical `asr_ai_settings.hpp` and README were updated to `feature = 1` to match. Only the
+   two reviewed knobs (`radiorange 300`, `buildingSearching 0.5`) constitute the tune.
+
+Separately (not caused by this change — no PBOs were touched): `CA_CruiseMissile.pbo` is missing from the F:
+install, producing a non-fatal `JSRS_2A14` "requires addon CA_CruiseMissile" startup popup. Fix via Steam →
+Verify Integrity on Arma 2 and Arma 2 OA.

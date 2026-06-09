@@ -11,7 +11,7 @@
 
 /*
  WASP Warfare perf tuning — Profile A (Conservative), 2026-06-09:
-   sys_airearming.feature = 0           (AI rearming scan loop off; pre-existing)
+   sys_airearming.feature = 1           (left at stock; rearming ON — not part of the tune)
    sys_aiskill.radiorange = 300         (was 500; shrink radio-net fan-out)
    sys_aiskill.buildingSearching = 0.5  (was 0.7; reduce CQB pathfinding)
  KEEP-LIST (do not change for FPS): serverdvd=1, join_loners=1, setskills=1, debug flags=0, sets/factions.
@@ -23,7 +23,7 @@ class asr_ai {
 	version = 6; // will increment this when structure changes
 
 	class sys_airearming {
-		feature = 0;        // All the other settings of this class matter only if we have 1 here
+		feature = 1;        // All the other settings of this class matter only if we have 1 here
 		run = 1;            // Enable rearming at mission start
 		radius = 50;        // Rearming search radius - how far will AI go to grab stuff
 		civ = 0;            // Civilians will try to arm themselves

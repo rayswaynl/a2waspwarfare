@@ -15,7 +15,7 @@ group).
 
 ## Current tune — Profile A (Conservative, 2026-06-09)
 
-- `sys_airearming.feature = 0` — rearming scan loop off (pre-existing).
+- `sys_airearming.feature = 1` — left at this install's stock value; rearming stays ON (not part of the tune).
 - `sys_aiskill.radiorange = 300` (was 500) — smaller radio-net that shares enemy positions
   between AI groups (the cost that scales worst with group count).
 - `sys_aiskill.buildingSearching = 0.5` (was 0.7) — AI clears buildings less often
