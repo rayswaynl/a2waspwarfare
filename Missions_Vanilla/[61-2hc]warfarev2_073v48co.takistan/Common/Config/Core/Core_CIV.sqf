@@ -171,6 +171,36 @@ _i = _i + [['','',25,0,0,0,'Fortification',0,'Civilians',[]]];
 _c = _c + ['Land_Ind_IlluminantTower'];
 _i = _i + [['','',200,0,0,0,'Fortification',0,'Civilians',[]]];
 
+//--- WDDM commander positions (Stage 1): anchor placeholders for composition buildables.
+//--- Label/price/category only; the anchor model is just the placement ghost (the composition
+//--- itself is spawned by Server\Functions\Server_ConstructPosition.sqf). Price is a flat MVP value.
+_c = _c + ['Land_Ind_BoardsPack1'];
+_i = _i + [['AA Position (Light, 2 AI)','',2500,0,0,0,'Defense',0,'Civilians',[]]];
+
+_c = _c + ['Land_CncBlock_Stripes'];
+_i = _i + [['AA Position (Heavy, 4 AI)','',4500,0,0,0,'Defense',0,'Civilians',[]]];
+
+_c = _c + ['Land_Barrel_sand'];
+_i = _i + [['Artillery (Light, 1 AI)','',2500,0,0,0,'Defense',0,'Civilians',[]]];
+
+_c = _c + ['Land_Ind_BoardsPack2'];
+_i = _i + [['Artillery (Heavy, 4 AI)','',5000,0,0,0,'Defense',0,'Civilians',[]]];
+
+_c = _c + ['Land_WoodenRamp'];
+_i = _i + [['Mixed Position (Light, 2 AI)','',2500,0,0,0,'Defense',0,'Civilians',[]]];
+
+_c = _c + ['RoadCone'];
+_i = _i + [['Mixed Position (Heavy, 4 AI)','',5000,0,0,0,'Defense',0,'Civilians',[]]];
+
+_c = _c + ['Paleta1'];
+_i = _i + [['Base Wall - Straight','',250,0,0,0,'Fortification',0,'Civilians',[]]];
+
+_c = _c + ['Paleta2'];
+_i = _i + [['Base Wall - Corner','',300,0,0,0,'Fortification',0,'Civilians',[]]];
+
+_c = _c + ['Land_Ind_Timbers'];
+_i = _i + [['Base Wall - Gate','',300,0,0,0,'Fortification',0,'Civilians',[]]];
+
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {
 		_get = missionNamespace getVariable (_c select _z);

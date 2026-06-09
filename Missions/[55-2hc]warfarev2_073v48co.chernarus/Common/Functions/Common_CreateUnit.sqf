@@ -9,7 +9,7 @@
 		- {PLacement}
 */
 
-Private ["_get", "_global", "_globalInitMode", "_leaderIsPlayer", "_perfScope", "_perfStart", "_position", "_side", "_skill", "_special", "_team", "_trackInfantry", "_type", "_unit"];
+Private ["_get", "_global", "_globalInitMode", "_leaderIsPlayer", "_perfScope", "_perfStart", "_position", "_side", "_sideValue", "_skill", "_special", "_team", "_teamLeader", "_trackInfantry", "_type", "_unit"];
 
 _type = _this select 0;
 _team = _this select 1;
@@ -23,7 +23,20 @@ _globalInitMode = "globalFalse";
 _trackInfantry = missionNamespace getVariable ["WFBE_C_UNITS_TRACK_INFANTRY", -1];
 _leaderIsPlayer = false;
 
-if (typeName _side == "SIDE") then {_side = (_side) Call WFBE_CO_FNC_GetSideID};
+_sideValue = _side;
+if (typeName _side == "SIDE") then {
+	_side = (_side) Call WFBE_CO_FNC_GetSideID;
+} else {
+	_sideValue = _side Call WFBE_CO_FNC_GetSideFromID;
+};
+if (isNull _team) then {_team = createGroup _sideValue};
+if ((count units _team) > 0) then {
+	_teamLeader = leader _team;
+	if (!(isNull _teamLeader) && {!local _teamLeader}) then {
+		["WARNING", Format ["Common_CreateUnit.sqf: Team [%1] leader [%2] for unit [%3] is not local here; creating local fallback group.", _team, _teamLeader, _type]] Call WFBE_CO_FNC_LogContent;
+		_team = createGroup _sideValue;
+	};
+};
 
 // Marty: Do not attempt createUnit on grpNull; callers can degrade without spawning empty vehicles.
 if (isNull _team) exitWith {

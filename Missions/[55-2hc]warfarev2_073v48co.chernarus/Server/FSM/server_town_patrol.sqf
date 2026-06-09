@@ -17,7 +17,6 @@ _patrol_range = missionNamespace getVariable 'WFBE_C_TOWNS_PATROL_RANGE';
 _defense_range = missionNamespace getVariable 'WFBE_C_TOWNS_DEFENSE_RANGE';
 _aliveTeam = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
-
 // Marty: Stop the patrol monitor as soon as the team is gone; dead empty loops accumulate over long games.
 while {!WFBE_GameOver && _aliveTeam} do {
 	// Marty: Performance Audit for per-town-team patrol scripts spawned by town AI.

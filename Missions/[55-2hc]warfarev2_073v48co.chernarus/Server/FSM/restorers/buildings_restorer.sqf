@@ -1,6 +1,9 @@
 private["_clear", "_perfActive", "_perfItemStart", "_perfRestored", "_perfScanned", "_perfStart", "_timer"];
 
 _timer = missionNamespace getVariable ["WFBE_C_BUILDING_RESTORER_TIME_PERIOD", 600];
+if (_timer < 1800) then {_timer = 1800};
+
+uisleep _timer;
 
 while {!WFBE_GameOver} do {
 	// Marty: Performance Audit timing excludes the cooperative restore sleeps below.
@@ -12,11 +15,13 @@ while {!WFBE_GameOver} do {
 	_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
 	_perfScanned = count _clear;
 	{
-		_perfItemStart = diag_tickTime;
-		_x setdamage 0;
-		_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
-		_perfRestored = _perfRestored + 1;
-		sleep 0.5;
+		if ((damage _x) > 0) then {
+			_perfItemStart = diag_tickTime;
+			_x setDamage 0;
+			_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
+			_perfRestored = _perfRestored + 1;
+			sleep 0.5;
+		};
 	} forEach _clear;
 	if !(isNil "PerformanceAudit_Record") then {
 		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {

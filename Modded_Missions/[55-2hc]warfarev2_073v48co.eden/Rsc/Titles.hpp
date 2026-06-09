@@ -46,7 +46,7 @@ class RscTitles {
 		idd=10200;
 		movingEnable = 0;
 		duration=15000;
-		name="gps";
+		name="wf_hud_overlay"; //--- GPS FIX (mirror of Chernarus a43ab0f8): rename frees the engine GPS slot so the WF-menu GPS button's showGPS renders the mini-map.
 		controls[]={"txt_dwn","txt_crw","OptionsIcon0","OptionsIcon1","OptionsIcon2","OptionsIcon3","OptionsIcon4","OptionsIcon5","OptionsIcon6"};
 		onload="uiNamespace setVariable['GUI',_this select 0];";
 

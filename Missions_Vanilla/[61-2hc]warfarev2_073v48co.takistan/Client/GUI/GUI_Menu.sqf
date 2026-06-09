@@ -27,7 +27,24 @@ while {alive player && dialog} do {
 
 	//--- Uptime.
 	_uptime = Call GetTime; //added-MrNiceGuy
-	ctrlSetText [11015,Format[localize 'STR_WF_MAIN_Uptime',_uptime select 0,_uptime select 1,_uptime select 2, _uptime select 3]];
+	//--- QoL: compact strategic snapshot for the WF-menu top strip.
+	private ["_clkH","_clkM","_playerCount","_playerSlots","_townsHeld","_townsTotal","_totalSupplyValue","_compensation","_svPlusText"];
+	_clkH = date select 3; _clkM = date select 4;
+	_clkH = if (_clkH < 10) then {"0" + str _clkH} else {str _clkH};
+	_clkM = if (_clkM < 10) then {"0" + str _clkM} else {str _clkM};
+	_playerCount = {isPlayer _x} count playableUnits;
+	if (_playerCount == 0 && (isPlayer player)) then {_playerCount = 1};
+	_playerSlots = count playableUnits;
+	if (_playerSlots < _playerCount) then {_playerSlots = _playerCount};
+	_townsTotal = if (isNil "towns") then {0} else {count towns};
+	_townsHeld = if (_townsTotal > 0) then {sideJoined Call GetTownsHeld} else {0};
+	_totalSupplyValue = sideJoined Call GetTotalSupplyValue;
+	_compensation = 0;
+	if (sideJoined == WEST) then {_compensation = SUPPLY_COMPENSATION_AMOUNT_WEST};
+	if (sideJoined == EAST) then {_compensation = SUPPLY_COMPENSATION_AMOUNT_EAST};
+	_svPlusText = Format ["+%1", _totalSupplyValue];
+	if (_compensation > 0) then {_svPlusText = Format ["+%1 (+%2)", _totalSupplyValue, _compensation]};
+	ctrlSetText [11015, format ["Uptime: %1h %2m | Time %3:%4 | Players %5/%6 | Towns %7/%8 | SV %9", (_uptime select 0) * 24 + (_uptime select 1), _uptime select 2, _clkH, _clkM, _playerCount, _playerSlots, _townsHeld, _townsTotal, _svPlusText]];	//--- QoL: compact top-strip status
 
 	//--- Buy Units.
 	if (MenuAction == 1) exitWith {
@@ -193,10 +210,26 @@ while {alive player && dialog} do {
 		if(RUBHUD)then{RUBHUD = false}else{RUBHUD = true};
 	};
 
-	// Marty: Lightweight FPS-only HUD toggle.
-	if (MenuAction == 19) then {
+	// Marty: Reuse the old FPS-only slot as a GPS enabler; client/server FPS now lives in RHUD.
+	if (MenuAction == 19) exitWith {
 		MenuAction = -1;
-		if(RUBFPSHUD)then{RUBFPSHUD = false}else{RUBFPSHUD = true};
+		missionNamespace setVariable ["WFBE_Client_MenuGPSState", true];
+		if (!isNull player && {!("ItemGPS" in weapons player)}) then {player addWeapon "ItemGPS"};
+		closeDialog 0;
+		[] Spawn {
+			sleep 0.15;
+			missionNamespace setVariable ["WFBE_Client_MenuGPSState", true];
+			if (!isNull player && {!("ItemGPS" in weapons player)}) then {player addWeapon "ItemGPS"};
+			RUBGPS = 1;
+			showGPS true;
+			sleep 0.10;
+			showGPS true;
+			if (shownGPS) then {
+				hint "GPS enabled.\nIf the mini-map stays hidden, press CTRL + M to toggle it.";
+			} else {
+				hint "GPS could not be enabled yet.\nCheck that your unit has GPS gear.";
+			};
+		};
 	};
 
 	if (MenuAction == 17) then {

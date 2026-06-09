@@ -34,7 +34,6 @@
     MrNiceGuy - UI Design - Beer provider
 */
 
-//#include "scripts\unitCaching\description.ext"
 //--- Define which 'part' of the game to run.
 #include "version.sqf"
 
@@ -63,5 +62,6 @@
 #endif
 loadScreen = "loadScreen.jpg";
 enableSentences = false;
+showGPS = 1;
 disableChannels[]={3,6};
 disabledAI=0;

@@ -23,7 +23,7 @@ if (count _group > 0) then {
 	_retVal = [_group, _position, _side, _lock, _team] Call WFBE_CO_FNC_CreateTeam;
 };
 
-while {!WFBE_GameOver || _team_alive} do {
+while {!WFBE_GameOver && _team_alive} do {
 
 	_team_alive = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 	

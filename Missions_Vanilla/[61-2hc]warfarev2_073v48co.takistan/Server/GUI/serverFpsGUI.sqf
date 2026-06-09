@@ -1,12 +1,13 @@
+// Release fix (#7): only publish server FPS on a true dedicated server.
+// Previously the `sleep 8` lived INSIDE the `if (isDedicated)` branch, so on a listen/SP host
+// (isServer true, isDedicated false) this `while {true}` spun every frame with no yield = a CPU busy-loop.
+if (!isDedicated) exitWith {};
+
 while {true} do
 {
-    // Check that it's being run on the server
-    if (isDedicated) then
-    {
-        // Get the fps variable from the server, insert to get from the missionNamespace as public variable
-        SERVER_FPS_GUI = round(diag_fps);
-        publicVariable "SERVER_FPS_GUI";
+    // Publish the current server FPS; the client HUD (Client_UpdateRHUD.sqf) reads SERVER_FPS_GUI.
+    SERVER_FPS_GUI = round(diag_fps);
+    publicVariable "SERVER_FPS_GUI";
 
-        sleep 8; // Update frequency
-    }
-}
+    sleep 8; // Update frequency
+};

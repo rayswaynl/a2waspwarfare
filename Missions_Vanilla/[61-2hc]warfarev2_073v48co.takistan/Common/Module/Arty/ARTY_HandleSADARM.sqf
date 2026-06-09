@@ -37,6 +37,7 @@ _barrel attachTo [_parachute,[0,0,0]];
 //--- Free Fall Simulation with stabilization.
 waitUntil
 {
+	sleep 0.1;   //--- DR-56: throttle; this waitUntil setVelocity'd every frame for the whole descent.
 	_altitude = getPos _parachute select 2;
 	_v1 = velocity _parachute;
 	_parachute setVelocity [_v1 select 0, _v1 select 1, -_velocity];
@@ -135,8 +136,7 @@ deleteVehicle _barrel;
 if !(isNull _parachute) then {deleteVehicle _parachute};
 
 if !(isNull _impactAreaSimulation) then {
-	while {true} do {
-		sleep 1;
-		deleteVehicle _impactAreaSimulation;
-	}
+	//--- DR-56: was `while {true} do {sleep 1; deleteVehicle}` — leaked a permanently-sleeping thread per air-kill.
+	sleep 1;
+	deleteVehicle _impactAreaSimulation;
 };

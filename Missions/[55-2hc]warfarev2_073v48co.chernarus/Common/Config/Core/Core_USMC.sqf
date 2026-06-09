@@ -236,7 +236,7 @@ _i = _i + [['','',7200,0,0,0,'Ammo',0,'USMC',[]]];
 
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {
-		missionNamespace getVariable (_c select _z);
+		_get = missionNamespace getVariable (_c select _z);
 		if (isNil '_get') then {
 			if ((_i select _z) select 0 == '') then {(_i select _z) set [0, [_c select _z,'displayName'] Call GetConfigInfo]};
 			if (typeName ((_i select _z) select 4) == 'SCALAR') then {

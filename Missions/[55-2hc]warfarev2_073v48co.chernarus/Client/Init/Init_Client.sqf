@@ -89,14 +89,19 @@ BIS_FNC_GUIget = {UInamespace getVariable (_this select 0)};
 WFBE_CL_FNC_AddWFMenuAction = Compile preprocessFileLineNumbers "Client\Functions\Client_AddWFMenuAction.sqf";
 WFBE_CL_FNC_AddPlayerAIActions = Compile preprocessFileLineNumbers "Client\Functions\Client_AddPlayerAIActions.sqf";
 WFBE_CL_FNC_ChangeClientFunds = Compile preprocessFileLineNumbers "Client\Functions\Client_ChangePlayerFunds.sqf";
+// Marty: Local cleanup for town AI delegated to this client or headless client.
+WFBE_CL_FNC_CleanupDelegatedTownAI = Compile preprocessFileLineNumbers "Client\Functions\Client_CleanupDelegatedTownAI.sqf";
 WFBE_CL_FNC_DelegateTownAI = Compile preprocessFileLineNumbers "Client\Functions\Client_DelegateTownAI.sqf";
 WFBE_CL_FNC_DelegateAI = Compile preprocessFileLineNumbers "Client\Functions\Client_DelegateAI.sqf";
 WFBE_CL_FNC_DelegateAIStaticDefence = Compile preprocessFileLineNumbers "Client\Functions\Client_DelegateAIStaticDefence.sqf";
 WFBE_CL_FNC_GetAIID = Compile preprocessFileLineNumbers "Client\Functions\Client_GetAIID.sqf";
 WFBE_CL_FNC_GetBackpackContent = if !(WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Client\Functions\Client_GetBackpackContent.sqf"} else {{[[],[]]}};
 WFBE_CL_FNC_GetClientFunds = Compile preprocessFileLineNumbers "Client\Functions\Client_GetPlayerFunds.sqf";
+WFBE_CL_FNC_ConfirmAction = Compile preprocessFileLineNumbers "Client\Functions\Client_ConfirmAction.sqf";
 // Marty: Condition helper used by Repair Camp addActions so the mouse wheel menu only shows it near destroyed camps.
 WFBE_CL_FNC_CanRepairCampNearby = Compile preprocessFileLineNumbers "Client\Functions\Client_CanRepairCampNearby.sqf";
+WFBE_CL_FNC_GetRepairTruckServicePoints = Compile preprocessFileLineNumbers "Client\Functions\Client_GetRepairTruckServicePoints.sqf";
+WFBE_CL_FNC_CanUseRepairPointEASA = Compile preprocessFileLineNumbers "Client\Functions\Client_CanUseRepairPointEASA.sqf";
 WFBE_CL_FNC_GetClosestAirport = Compile preprocessFileLineNumbers "Client\Functions\Client_GetClosestAirport.sqf";
 WFBE_CL_FNC_GetClosestCamp = Compile preprocessFileLineNumbers "Client\Functions\Client_GetClosestCamp.sqf";
 WFBE_CL_FNC_GetClosestDepot = Compile preprocessFileLineNumbers "Client\Functions\Client_GetClosestDepot.sqf";
@@ -126,18 +131,16 @@ WFBE_CL_FNC_UI_Gear_UpdateTarget = Compile preprocessFileLineNumbers "Client\Fun
 WFBE_CL_FNC_UI_Gear_UpdateView = Compile preprocessFileLineNumbers "Client\Functions\Client_UI_Gear_UpdateView.sqf";
 WFBE_CL_FNC_UI_Respawn_Selector = Compile preprocessFileLineNumbers "Client\Functions\Client_UI_Respawn_Selector.sqf";
 WFBE_CL_FNC_SupplyMissionCompletedMessage = Call Compile preprocessFileLineNumbers "Client\Module\supplyMission\supplyMissionCompletedMessage.sqf";
-WFBE_CL_FNC_SupplyMissionStart = Call Compile preprocessFileLineNumbers "Client\Module\supplyMission\supplyMissionStart.sqf";
+WFBE_CL_FNC_SupplyMissionStart = Compile preprocessFileLineNumbers "Client\Module\supplyMission\supplyMissionStart.sqf";
+WFBE_CL_FNC_SupplyMissionUnload = Compile preprocessFileLineNumbers "Client\Module\supplyMission\supplyMissionUnload.sqf";
 WFBE_CL_FNC_TownSupplyStatus = Call Compile preprocessFileLineNumbers "Client\Module\supplyMission\townSupplyStatus.sqf";
-WFBE_CL_FNC_CheckCCProximity = Compile preprocessFileLineNumbers "Client\Module\supplyMission\checkCCProximity.sqf";
-//WFBE_CL_FNC_ReceiverMASHmarker = Call Compile preprocessFileLineNumbers "Client\Module\MASH\receiverMASHmarker.sqf";
+//--- SM9/XR2: removed dead WFBE_CL_FNC_CheckCCProximity (checkCCProximity.sqf) -- compiled, zero callers.
 WFBE_CL_PVEH_HasConnectedAtLaunch = Call Compile preprocessFileLineNumbers "Client\Module\AntiStack\hasConnectedAtLaunchACK.sqf";
 WFBE_CL_FNC_FindVariableInNestedArray = Compile preprocessFileLineNumbers "Client\Functions\Client_FindVariableInNestedArray.sqf";
 WFBE_CL_PV_ReceiveSupplyValue = Call Compile preprocessFileLineNumbers "Client\Functions\Client_ReceiveSupplyValue.sqf";
 WFBE_CL_FNC_ReturnAircraftNameFromItsType = Compile preprocessFileLineNumbers "Common\Common_ReturnAircraftNameFromItsType.sqf";
 WFBE_CL_FNC_SetMapIconStatusInCombat = Compile preprocessFileLineNumbers "Client\Functions\Client_SetMapIconStatusInCombat.sqf";
-// WFBE_CL_FNC_BlinkMapIcons = Compile preprocessFileLineNumbers "Client\Functions\Client_BlinkMapIcons.sqf";
 WFBE_CL_FNC_BlinkMapIcon = Compile preprocessFileLineNumbers "Client\Functions\Client_BlinkMapIcon.sqf";
-// WFBE_CL_FNC_AddUnitToTrack = Compile preprocessFileLineNumbers "Client\Functions\Client_AddUnitToTrack.sqf";
 
 //Affichage Rubber maps:
 	Local_GUIWorking = false;
@@ -168,8 +171,9 @@ waitUntil {commonInitComplete};
 
 // Marty: Show the test build marker once in debug mode so testers can confirm the running PBO version.
 if (WF_Debug) then {
-	systemChat "TD Debug build: 2026-06-07 01:46";
+	systemChat "TD Debug build: 2026-06-08 00:07";
 };
+
 
 if (ARMA_VERSION >= 162 && ARMA_RELEASENUMBER > 97105 || ARMA_VERSION > 162) then {
 	//--- Profile namespace related.
@@ -183,10 +187,6 @@ missionNamespace setVariable ["AUTO_SEND_SPAWNED_UNITS_TO_WAYPOINT", false];
 missionNamespace setVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_POSITION", []];
 missionNamespace setVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_GROUP", grpNull];
 missionNamespace setVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_TIME", -5000];
-// Marty: Timestamp used to distinguish active map commanders from players who only left the map open.
-missionNamespace setVariable ["WFBE_CLIENT_LAST_MAP_COMMAND_CLICK_TIME", -5000];
-missionNamespace setVariable ["WFBE_CLIENT_LAST_MAP_COMMAND_CLICK_POS", []];
-missionNamespace setVariable ["WFBE_CLIENT_COMMAND_AND_CONQUER_WINDOW", 180];
 // Marty: State used by Ctrl-click map disband because onMapSingleClick does not expose Ctrl.
 missionNamespace setVariable ["WFBE_CLIENT_MAP_DISBAND_CTRL_DOWN", false];
 
@@ -247,6 +247,8 @@ _display = findDisplay 46;
 _display displayAddEventHandler ["KeyDown","_this call keyPressed"];
 _display displayAddEventHandler ["KeyDown","_this call keyPressedForAutoSendSpawnedUnitsToWaypoint"];
 _display displayAddEventHandler ["KeyDown","_this call keyPressedForAdjustingViewDistance"];
+	//--- Debug teleport rebind: press "[" (DIK 0x1A=26) to ARM, then the next plain map-click teleports you (was: every click teleported under WF_Debug, which ate the sell/ICBM confirm clicks).
+	_display displayAddEventHandler ["KeyDown","if ((_this select 1) == 26 && WF_Debug) then {missionNamespace setVariable ['WFBE_DEBUG_TELEPORT_ARMED', true]; hintSilent 'Debug teleport ARMED - next map click teleports you.'; true} else {false}"];
 // Marty: onMapSingleClick exposes Shift and Alt but not Ctrl, so track Ctrl state separately for map disband.
 _display displayAddEventHandler ["KeyDown","if ((_this select 1) in [29,157]) then {missionNamespace setVariable ['WFBE_CLIENT_MAP_DISBAND_CTRL_DOWN', true]}; false"];
 _display displayAddEventHandler ["KeyUp","if ((_this select 1) in [29,157]) then {missionNamespace setVariable ['WFBE_CLIENT_MAP_DISBAND_CTRL_DOWN', false]}; false"];
@@ -267,14 +269,10 @@ WFBE_CO_FNC_HandleAFKkeys = compile preprocessFileLineNumbers "Client\Module\AFK
 AFKthresholdExceededName = name player;
 WFBE_CO_VAR_AFKkickThreshold = 30;
 WFBE_CO_VAR_NotAFK_update = false;
-// Marty: Separate physical movement from map-command activity for AFK marker text only.
-WFBE_CO_VAR_NotAFK_MovementUpdate = false;
-// Marty: Keep anti-kick activity and physical movement separate for Command & Conquer marker state.
+// Marty: Start the AFK timer immediately, even if the player never moves after joining.
 player setVariable ["lastActionTime", time];
-player setVariable ["lastMovementTime", time];
-// Marty: Networked marker state for immobile players who are still actively commanding from map clicks.
-player setVariable ["WASP_AFK", false, true];
-player setVariable ["WASP_CommandAndConquer", false, true];
+player setVariable ["lastPosition", position player];
+["INFORMATION", Format ["AFK Diagnostic: initialized for player [%1]. time [%2] position [%3].", name player, time, position player]] Call WFBE_CO_FNC_LogContent;
 
 _display displayAddEventHandler ["KeyDown", "_this call WFBE_CO_FNC_HandleAFKkeys"];
 
@@ -292,7 +290,7 @@ WFBE_Client_IsRespawning = false;
 WFBE_Client_LastGroupJoinRequest = -5000;
 WFBE_Client_PendingRequests = [];
 WFBE_Client_PendingRequests_Accepted = [];
-WFBE_Client_SupplyMissionActive = false;
+//--- SM9: removed dead WFBE_Client_SupplyMissionActive (set, never read).
 WFBE_C_VAR_FRIENDLYCOMMANDCENTERINPROXIMITY = false;
 
 commanderTeam = objNull;
@@ -345,10 +343,8 @@ ExecVM "Common\Config\Core_Upgrades\Labels_Upgrades.sqf";
 if (isMultiplayer) then {["RequestSpecial", ["update-teamleader", WFBE_Client_Team, player]] Call WFBE_CO_FNC_SendToServer};
 
 /* HUD ON/OFF VALUE */
-// Marty: Start RHUD hidden; players can still toggle it from the menu.
-if (isNil "RUBHUD") then {RUBHUD = false};
-// Marty: Separate lightweight FPS-only HUD toggle, hidden by default.
-if (isNil "RUBFPSHUD") then {RUBFPSHUD = false};
+// Marty: Start RHUD visible; the WF menu HUD button is now opt-out.
+if (isNil "RUBHUD") then {RUBHUD = true};
 if (isNil "RUBGPS") then {RUBGPS = 1};
 if (isNil "RUBOSD") then {RUBOSD = 1};
 
@@ -489,13 +485,14 @@ if (time < 30) then {
     if (count _buildings > 0) then {
 	    for "_i" from ((count _buildings) - 1) to 0 do {
 	        _structureType = (_buildings select _i) getVariable "wfbe_structure_type";
-	        if (_structureType == "Barracks" || _structureType == "Light" || _structureType == "Heavy" || _structureType == "Aircraft") exitWith {
+	        if ((_structureType == "Barracks" || _structureType == "Light" || _structureType == "Heavy" || _structureType == "Aircraft") && alive (_buildings select _i)) exitWith {	//--- FIX(deadspawn): only pick a LIVE factory, never a destroyed wreck
 	            _base = _buildings select _i;
 			};
 		};
 	};
 
-    // if (count _buildings > 0) then {_base = _buildings select ((count _buildings) - 1)};
+	    //--- FIX(deadspawn): if no live factory was found and the HQ is dead, fall back to the side start position instead of spawning on a wreck.
+	    if (isNull _base || {!alive _base}) then { _base = WFBE_Client_Logic getVariable "wfbe_startpos" };
 };
 
 ["INITIALIZATION", Format["Init_Client.sqf: Client spawn location has been determined at [%1].", _base]] Call WFBE_CO_FNC_LogContent;
@@ -586,8 +583,6 @@ if (count _default <= 3) then {
 /* Default gear menu filler. */
 WF_Logic setVariable ['filler','primary'];
 
-/* Skill Module. */
-[] Call Compile preprocessFile "Client\Module\Skill\Skill_Init.sqf";
 (player) Call WFBE_SK_FNC_Apply;
 
 [] execVM "WASP\baserep\init.sqf";
@@ -600,7 +595,6 @@ WF_Logic setVariable ['filler','primary'];
 if (WF_Debug) then {
 	//player addEventHandler ["HandleDamage", {false}];
 	// player setCaptive true;
-	// player addEventHandler ["HandleDamage", {false;if (player != (_this select 3)) then {(_this select 3) setDammage 1}}]; //--- God-Slayer mode.
 };
 execVM "limitThirdPersonView.sqf";
 
@@ -799,7 +793,6 @@ player setVariable ["score", 0];
 if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1) then {
 	[] execVM "Client\Functions\Client_BookkeepBlinkingIcons.sqf";
 };
-// [] execVM "Client\Functions\Client_BlinkMapIcons.sqf";
 
 _video = ["Videos\intro720p.ogv"] call BIS_fnc_playVideo;
 

@@ -31,6 +31,9 @@ lnbSetCurSelRow[504001, _upgrade_lastsel];
 _upgrades_old = _upgrades;
 
 _purchase = false;
+_queue_toggle = false;
+_queue_old = [];
+_queue_footer_old = [];
 _update_upgrade = true;
 _update_upgrade_details = true;
 _update_list = false;
@@ -39,6 +42,7 @@ _update_upgrade_lastcheck = -1;
 _player_commander = false; //added-MrNiceGuy
 if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_player_commander = true}};
 if !(_player_commander) then {ctrlEnable [504007, false]};
+if !(_player_commander) then {ctrlEnable [504008, false]};
 
 WFBE_MenuAction = -1;
 
@@ -112,6 +116,7 @@ WFBE_MenuAction = -1;
 while {alive player && dialog} do {
 	if (WFBE_MenuAction == 1) then {WFBE_MenuAction = -1; if (_player_commander) then {_purchase = true}};
 	if (WFBE_MenuAction == 2) then {WFBE_MenuAction = -1;_update_upgrade = true};
+	if (WFBE_MenuAction == 3) then {WFBE_MenuAction = -1; if (_player_commander) then {_queue_toggle = true}};
 
 	_upgrades = (WFBE_Client_SideJoined) call WFBE_CO_FNC_GetSideUpgrades;
 	
@@ -119,14 +124,19 @@ while {alive player && dialog} do {
 		_update_list = false;
 		_update_upgrade_lastcheck = time;
 		for '_i' from 0 to count(_upgrades_old)-1 do {if ((_upgrades_old select _i) != (_upgrades select _i)) exitWith {_update_list = true}};
+		_queue_now = WFBE_Client_Logic getVariable "wfbe_upgrade_queue";
+		if (isNil "_queue_now") then {_queue_now = []};
+		if ((str _queue_now) != (str _queue_old)) then {_update_list = true; _update_upgrade = true; _queue_old = + _queue_now};
 		if (_update_list) then {
 			_update_list = false;
-			for '_i' from 0 to count(_upgrades_old)-1 do {lnbSetText[504001, [_i, 0], Format ["%1/%2",_upgrades select _i,_upgrade_levels select _i]]};
+			//--- QoL fix: removed dead raw-index refresh loop (it wrote rows in unsorted order, then was instantly overwritten by the sorted loop below).
 			
 			_i = 0;
 			{
 				if (_upgrade_enabled select _x) then {
-					lnbSetText[504001, [_i, 0], Format ["%1/%2",_upgrades select _x,_upgrade_levels select _x]];
+					_qpos = _queue_old find _x;
+					_qtag = if (_qpos >= 0) then {Format [" [Q%1]", _qpos + 1]} else {""};
+					lnbSetText[504001, [_i, 0], Format ["%1/%2%3",_upgrades select _x,_upgrade_levels select _x,_qtag]];
 					_i = _i + 1;
 				};
 			} forEach _upgrade_sorted;
@@ -145,6 +155,9 @@ while {alive player && dialog} do {
 			uiNamespace setVariable ["wfbe_display_upgrades_sel", _ui_lnb_sel];
 			ctrlSetText[504002, if ((_upgrade_images select _id) != "") then {_upgrade_images select _id} else {""}];
 			((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504005) ctrlSetStructuredText (parseText (_upgrade_descriptions select _id));
+			_qsel = WFBE_Client_Logic getVariable "wfbe_upgrade_queue";
+			if (isNil "_qsel") then {_qsel = []};
+			ctrlSetText[504008, if (_id in _qsel) then {"Dequeue"} else {"Queue"}];
 		};
 		_update_upgrade_details = true;
 	};
@@ -260,16 +273,44 @@ while {alive player && dialog} do {
 			};
 		};
 	};
-	
+
+	if (_queue_toggle) then {
+		_queue_toggle = false;
+		_ui_lnb_sel = lnbCurSelRow(504001);
+		if (_ui_lnb_sel != -1) then {
+			_id = lnbValue[504001, [_ui_lnb_sel, 0]];
+			_queue = WFBE_Client_Logic getVariable "wfbe_upgrade_queue";
+			if (isNil "_queue") then {_queue = []};
+			if (_id in _queue) then {
+				["RequestDequeue", [WFBE_Client_SideJoined, _id]] call WFBE_CO_FNC_SendToServer;
+				hint parseText(Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Removed <t color='#F5D363'>%1</t> from the queue</t>", _upgrade_labels select _id]);
+			} else {
+				_upgrade_current = _upgrades select _id;
+				if (_upgrade_current < (_upgrade_levels select _id) && {(WFBE_Client_Logic getVariable "wfbe_upgrading_id") != _id}) then {
+					["RequestEnqueue", [WFBE_Client_SideJoined, _id]] call WFBE_CO_FNC_SendToServer;
+					hint parseText(Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Queued <t color='#B6F563'>%1</t></t>", _upgrade_labels select _id]);
+				};
+			};
+		};
+	};
+
 	// Marty: Refresh the running-upgrade status when either the state or the active upgrade ID changes.
 	_running_id = WFBE_Client_Logic getVariable "wfbe_upgrading_id";
 	if (isNil "_running_id") then {_running_id = -1};
-	if ((_upgrade_isupgrading && !(WFBE_Client_Logic getVariable "wfbe_upgrading")) || (!_upgrade_isupgrading && (WFBE_Client_Logic getVariable "wfbe_upgrading")) || (_upgrade_running_id != _running_id)) then {
+	_qlist = WFBE_Client_Logic getVariable "wfbe_upgrade_queue";
+	if (isNil "_qlist") then {_qlist = []};
+	if ((_upgrade_isupgrading && !(WFBE_Client_Logic getVariable "wfbe_upgrading")) || (!_upgrade_isupgrading && (WFBE_Client_Logic getVariable "wfbe_upgrading")) || (_upgrade_running_id != _running_id) || ((str _qlist) != (str _queue_footer_old))) then {
 		_upgrade_isupgrading = (WFBE_Client_Logic getVariable "wfbe_upgrading");
 		_upgrade_running_id = _running_id;
 		_running_label = if (_upgrade_running_id >= 0 && _upgrade_running_id < count _upgrade_labels) then {_upgrade_labels select _upgrade_running_id} else {"An upgrade"};
+		_qnames = "";
+		{
+			_qnames = _qnames + (if (_qnames == "") then {""} else {", "}) + (_upgrade_labels select _x);
+		} forEach _qlist;
 		_html = if (_upgrade_isupgrading) then {Format["<t><t color='#B6F563'>%1</t> is currently running</t>", _running_label]} else {""};
+		if (count _qlist > 0) then {_html = _html + Format["<br /><t>Queued: <t color='#F5D363'>%1</t></t>", _qnames]};
 		((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504006) ctrlSetStructuredText (parseText _html);
+		_queue_footer_old = + _qlist;
 	};
 	
 	//--- Go back to the main menu.

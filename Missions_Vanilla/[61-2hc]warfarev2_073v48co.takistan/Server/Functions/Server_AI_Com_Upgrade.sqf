@@ -44,10 +44,10 @@ if (count _to_upgrade > 0) then {
 		_logik setVariable ["wfbe_upgrading_id", _upgrade, true];
 		
 		//--- Deduct.
-		[_side,-(_cost select 0)] Call ChangeAICommanderFunds;
+		[_side,-(_cost select 1)] Call ChangeAICommanderFunds; //--- TR12: funds price is _cost select 1 (was select 0, the supply price).
 		
 		if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
-			[_side,-(_cost select 1),"AI commander tech upgrade.", false] Call ChangeSideSupply;
+			[_side,-(_cost select 0),"AI commander tech upgrade.", false] Call ChangeSideSupply; //--- TR12: supply price is _cost select 0 (was select 1, the funds price).
 		};
 	};
 };

@@ -43,10 +43,15 @@ while {!WFBE_GameOver} do {
 		_town_teams = _town getVariable "wfbe_town_teams";
 		_patrol_enabled = if (!isNil {_town getVariable "wfbe_patrol_enabled"}) then {true} else {false};
 
-		//--- Towns patrol, if enabled.
+		//--- Towns patrol, if enabled. DR-57 fix: initialise the gate ONCE per town, not every
+		//--- ~5s cycle. The old unconditional reset refreshed wfbe_patrol_active_last every pass so
+		//--- the spawn gate (time - last > delay) never elapsed and town patrols never spawned.
+		//--- server_patrols.sqf:71-72 re-stamps active/last on patrol completion; we only seed them.
 		if (_patrol_enabled) then {
-			_town setVariable ["wfbe_patrol_active", false];
-			_town setVariable ["wfbe_patrol_active_last", time];
+			if (isNil {_town getVariable "wfbe_patrol_active"}) then {
+				_town setVariable ["wfbe_patrol_active", false];
+				_town setVariable ["wfbe_patrol_active_last", time];
+			};
 		};
 
 		_sideID = _town getVariable "sideID";
@@ -135,14 +140,16 @@ while {!WFBE_GameOver} do {
 						switch (_ai_delegation_enabled) do {
 							case 1: { //--- Client side delegation.
 								_retVal = [_town, _side, _groups, _positions, _teams] Call WFBE_SE_FNC_DelegateAITown;
-								_town_teams = _town_teams + _teams;
+								// Marty: Only store server-created fallback groups; delegated clients report their own local groups back.
+								_town_teams = _town_teams + (_retVal select 0);
 								_town setVariable ['wfbe_active_vehicles', (_town getVariable 'wfbe_active_vehicles') + (_retVal select 1)];
+								_town setVariable ['wfbe_town_teams', _town_teams];
 								_use_server = false;
 							};
 							case 2: { //--- Headless Client delegation.
 								if (count(missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID") > 0) then {
 									[_town, _side, _groups, _positions, _teams] Call WFBE_CO_FNC_DelegateAITownHeadless;
-									_town_teams = _town_teams + _teams;
+									// Marty: HC-local groups are reported back by update-town-delegation after creation.
 									_town setVariable ['wfbe_town_teams', _town_teams];
 									_use_server = false;
 								};
@@ -152,7 +159,8 @@ while {!WFBE_GameOver} do {
 						//--- Use Server AI.
 						if (_use_server) then {
 							_retVal = [_town, _side, _groups, _positions, _teams] Call WFBE_CO_FNC_CreateTownUnits;
-							_town_teams = _town_teams + _teams;
+							// Marty: Store the real groups returned by CreateTownUnits, not the preallocated input groups.
+							_town_teams = _town_teams + (_retVal select 0);
 							_town setVariable ['wfbe_active_vehicles', (_town getVariable 'wfbe_active_vehicles') + (_retVal select 1)];
 							_town setVariable ['wfbe_town_teams', _town_teams];
 						};
@@ -173,6 +181,9 @@ while {!WFBE_GameOver} do {
 					_town setVariable ["wfbe_active", false];
 					_town setVariable ["wfbe_active_air", false];
 
+					// Marty: Ask delegated clients/HCs to delete their local town AI groups where deleteGroup can actually work.
+					if (isMultiplayer) then {[nil, "HandleSpecial", ["cleanup-townai", _town, _side]] Call WFBE_CO_FNC_SendToClients};
+
 					//--- Teams Units.
 					{
 						if !(isNil '_x') then {
@@ -191,6 +202,7 @@ while {!WFBE_GameOver} do {
 					} forEach (_town getVariable 'wfbe_active_vehicles');
 
 					_town_teams = [];
+					_town setVariable ['wfbe_town_teams', []];
 					_town setVariable ['wfbe_active_vehicles', []];
 
 					//--- Despawn the town defenses unit.

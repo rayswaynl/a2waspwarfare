@@ -7,9 +7,10 @@ _arty_countdown = _this select 2;
 _arty_radius    = _this select 3;
 
 _units = [group player, false, _index, WFBE_Client_SideJoinedText] Call GetTeamArtillery;
-_type = ((missionNamespace getVariable Format ['WFBE_%1_ARTILLERY_CLASSNAMES', WFBE_Client_SideJoinedText]) select _index) find (typeOf (_units select 0));
+if (count _units < 1) exitWith {};
 
-if (count _units < 1 || _type < 0) exitWith {};
+_type = ((missionNamespace getVariable Format ['WFBE_%1_ARTILLERY_CLASSNAMES', WFBE_Client_SideJoinedText]) select _index) find (typeOf (_units select 0));
+if (_type < 0) exitWith {};
 
 {[_x, _destination, WFBE_Client_SideJoined, artyRange] Spawn WFBE_CO_FNC_FireArtillery} forEach _units;
 

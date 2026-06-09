@@ -1,9 +1,8 @@
 disableSerialization;
 
-// Marty: Keep the shared OptionsAvailable resource alive for action icons, but do not show RHUD by default.
-if (isNil "RUBHUD") then {RUBHUD = false};
-if (isNil "RUBFPSHUD") then {RUBFPSHUD = false};
-if !(isNil "BIS_CONTROL_CAM") then {RUBHUD = false; RUBFPSHUD = false};
+// Marty: Keep the shared OptionsAvailable resource alive for action icons, and show RHUD by default.
+if (isNil "RUBHUD") then {RUBHUD = true};
+if !(isNil "BIS_CONTROL_CAM") then {RUBHUD = false};
 CutRsc["OptionsAvailable","PLAIN",0];
 
 waituntil{!isnil"totalTowns"};
@@ -11,19 +10,20 @@ waituntil{!isnil"totalTowns"};
 // Marty: Cache RHUD controls and values so hidden/unchanged HUD state does not rewrite UI every second.
 private[
 	"_total", "_perfStart", "_display", "_lastDisplay", "_controls", "_rhudIDC", "_lastTexts", "_lastColors", "_lastShown", "_lastBackgroundColor",
-	"_labelsApplied", "_hiddenApplied", "_hudWasShown", "_lastTownRefresh", "_incomeText", "_supplyText", "_supplyMinText", "_cityText",
+	"_labelsApplied", "_hiddenApplied", "_hudWasShown", "_lastTownRefresh", "_incomeText", "_supplyText", "_baseText", "_baseColor",
 	"_RHUDResetControlCache", "_RHUDSetShow", "_RHUDSetText", "_RHUDSetColor", "_RHUDGetDisplay", "_idx", "_player", "_side", "_bgColor",
 	"_status", "_health", "_healthAct", "_healthColor", "_uptime", "_commanderText", "_mbu", "_currentUnitsCount", "_maxUnitsCount",
-	"_isCommanderTeam", "_aiText", "_aiColor", "_moneyText", "_totalSupplyValue", "_compensation", "_clientFPS", "_clientFPSColor",
-	"_serverFPS", "_serverFPSColor", "_hudMode", "_lastHudMode", "_RHUDUpdateFPS", "_RHUDSetFPSPosition", "_RHUDSetFullPosition", "_clientLabel", "_serverLabel", "_showMissingServer",
-	"_labelX", "_valueX", "_startY", "_rowH", "_labelW", "_valueW", "_lineH", "_rowY", "_layoutPairs"
+	"_isCommanderTeam", "_aiText", "_aiColor", "_moneyText", "_baseStructures", "_baseHq", "_baseTotal", "_baseDamaged", "_clientFPS", "_clientFPSColor",
+	"_serverFPS", "_serverFPSColor", "_hudFPSColor", "_hudMode", "_lastHudMode", "_RHUDUpdateFPS", "_RHUDUpdateServerFPSRow", "_RHUDSetFPSPosition", "_RHUDSetFullPosition", "_clientLabel", "_serverLabel", "_showMissingServer",
+	"_labelX", "_valueX", "_startY", "_rowH", "_labelW", "_valueW", "_lineH", "_rowY", "_layoutPairs",
+	"_RHUDUpdateUpgrade", "_RHUD_upgId", "_RHUD_upgEnd"
 ];
 
 _total = count towns;
 _display = displayNull;
 _lastDisplay = displayNull;
 _controls = [];
-_rhudIDC = [1345,1346,1347,1348,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1361,1362,1363,1364,1365,1366,1367];
+_rhudIDC = [1345,1346,1347,1348,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1361,1362,1363,1364,1365,1366,1367,1368,1369,1370,1371];
 _lastTexts = [];
 _lastColors = [];
 _lastShown = [];
@@ -35,8 +35,8 @@ _lastHudMode = "";
 _lastTownRefresh = -999;
 _incomeText = "";
 _supplyText = "";
-_supplyMinText = "";
-_cityText = "";
+_baseText = "";
+_baseColor = [0, 1, 0, 1];
 
 _RHUDResetControlCache = {
 	_controls = [];
@@ -125,6 +125,71 @@ _RHUDUpdateFPS = {
 	[22, _serverFPSColor] call _RHUDSetColor;
 };
 
+_RHUDUpdateServerFPSRow = {
+	_clientFPS = round(diag_fps);
+	_serverFPS = missionNamespace getVariable "SERVER_FPS_GUI";
+	if (isNil {_serverFPS}) exitWith {
+		_hudFPSColor = [0, 1, 0, 1];
+		if (_clientFPS < 40) then {_hudFPSColor = [1, 0.8431, 0, 1]};
+		if (_clientFPS < 20) then {_hudFPSColor = [1, 0, 0, 1]};
+		[14, format ["%1 / ...", _clientFPS]] call _RHUDSetText;
+		[14, _hudFPSColor] call _RHUDSetColor;
+	};
+
+	_hudFPSColor = [0, 1, 0, 1];
+	if (_clientFPS < 40 || _serverFPS < 40) then {_hudFPSColor = [1, 0.8431, 0, 1]};
+	if (_clientFPS < 20 || _serverFPS < 20) then {_hudFPSColor = [1, 0, 0, 1]};
+	[14, format ["%1 / %2", _clientFPS, _serverFPS]] call _RHUDSetText;
+	[14, _hudFPSColor] call _RHUDSetColor;
+};
+
+_RHUDUpdateUpgrade = {
+	private ["_up","_id","_labels","_times","_lbl","_lvl","_dur","_remain","_mm","_ss","_txt","_queue","_upgrades"];
+	_labels = missionNamespace getVariable "WFBE_C_UPGRADES_LABELS";
+	if (isNil "_labels") exitWith {};
+
+	_up = WFBE_Client_Logic getVariable "wfbe_upgrading";
+	if (isNil "_up") then {_up = false};
+	_id = WFBE_Client_Logic getVariable "wfbe_upgrading_id";
+	if (isNil "_id") then {_id = -1};
+
+	//--- Current (indices 23/24).
+	if (_up && _id >= 0 && _id < count _labels) then {
+		_lbl = _labels select _id;
+		if (_RHUD_upgId != _id) then {
+			_times = missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_TIMES", WFBE_Client_SideJoinedText];
+			_upgrades = (WFBE_Client_SideJoined) call WFBE_CO_FNC_GetSideUpgrades;
+			_lvl = _upgrades select _id;
+			_dur = 0;
+			if (_lvl < count (_times select _id)) then {_dur = (_times select _id) select _lvl};
+			_RHUD_upgId = _id;
+			_RHUD_upgEnd = time + _dur;
+		};
+		_remain = ceil (_RHUD_upgEnd - time);
+		if (_remain < 0) then {_remain = 0};
+		_mm = floor (_remain / 60);
+		_ss = _remain - (_mm * 60);
+		_txt = if (_ss < 10) then {Format["%1 %2:0%3", _lbl, _mm, _ss]} else {Format["%1 %2:%3", _lbl, _mm, _ss]};
+		[23, "Upgrade:"] call _RHUDSetText;
+		[24, _txt] call _RHUDSetText;
+	} else {
+		_RHUD_upgId = -1;
+		[23, ""] call _RHUDSetText;
+		[24, ""] call _RHUDSetText;
+	};
+
+	//--- Next (indices 25/26).
+	_queue = WFBE_Client_Logic getVariable "wfbe_upgrade_queue";
+	if (isNil "_queue") then {_queue = []};
+	if (count _queue > 0 && {(_queue select 0) < count _labels}) then {
+		[25, "Next:"] call _RHUDSetText;
+		[26, _labels select (_queue select 0)] call _RHUDSetText;
+	} else {
+		[25, ""] call _RHUDSetText;
+		[26, ""] call _RHUDSetText;
+	};
+};
+
 _RHUDSetFPSPosition = {
 	private["_mini", "_labelX", "_valueX", "_row1Y", "_row2Y", "_labelW", "_valueW", "_lineH"];
 	_mini = _this;
@@ -166,7 +231,7 @@ _RHUDSetFullPosition = {
 
 	(_controls select 0) ctrlSetPosition [_labelX, _startY + (0.021 * safezoneH), 0.145 * safezoneW, 0.001 * safezoneH];
 
-	_layoutPairs = [[1,2],[3,4],[5,6],[7,8],[9,10],[11,12],[13,14],[15,16],[17,18],[19,20],[21,22]];
+	_layoutPairs = [[1,2],[3,4],[5,6],[7,8],[9,10],[11,12],[13,14],[23,24],[25,26]];
 	for "_idx" from 0 to ((count _layoutPairs) - 1) do {
 		_rowY = _startY + (_idx * _rowH);
 		(_controls select ((_layoutPairs select _idx) select 0)) ctrlSetPosition [_labelX, _rowY, _labelW, _lineH];
@@ -179,6 +244,9 @@ _RHUDSetFullPosition = {
 };
 
 sleep 10;
+
+_RHUD_upgId = -1;
+_RHUD_upgEnd = 0;
 
 while {true} do {
 	sleep 1;
@@ -198,13 +266,11 @@ while {true} do {
 	if (isNull _display) then {
 		if !(isNil "PerformanceAudit_Record") then {
 			if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
-				["client_rhud", diag_tickTime - _perfStart, Format["enabled:%1;fpsOnly:%2;visibleMap:%3;display:null", RUBHUD, RUBFPSHUD, visibleMap], "CLIENT"] Call PerformanceAudit_Record;
+				["client_rhud", diag_tickTime - _perfStart, Format["enabled:%1;visibleMap:%2;display:null", RUBHUD, visibleMap], "CLIENT"] Call PerformanceAudit_Record;
 			};
 		};
 	} else {
-		// Marty: RHUD full mode wins over the FPS-only overlay; both toggles can stay independent.
 		_hudMode = "hidden";
-		if (RUBFPSHUD) then {_hudMode = "fps"};
 		if (RUBHUD) then {_hudMode = "full"};
 
 		switch (_hudMode) do {
@@ -217,24 +283,6 @@ while {true} do {
 					_hudWasShown = false;
 					_lastHudMode = _hudMode;
 				};
-			};
-			case "fps": {
-				if (_lastHudMode != _hudMode) then {
-					for "_idx" from 0 to ((count _rhudIDC) - 1) do {
-						[_idx, false] call _RHUDSetShow;
-					};
-					[19, true] call _RHUDSetShow;
-					[20, true] call _RHUDSetShow;
-					[21, true] call _RHUDSetShow;
-					[22, true] call _RHUDSetShow;
-					// Marty: FPS-only overlay belongs in the upper-right corner and needs wider label/value spacing.
-					true call _RHUDSetFPSPosition;
-					_labelsApplied = false;
-					_hudWasShown = false;
-					_lastHudMode = _hudMode;
-				};
-
-				["Client:", "Server:", true] call _RHUDUpdateFPS;
 			};
 			case "full": {
 				if (_lastHudMode != _hudMode) then {
@@ -249,19 +297,14 @@ while {true} do {
 				for "_idx" from 0 to ((count _rhudIDC) - 1) do {
 					[_idx, true] call _RHUDSetShow;
 				};
+				{[_x, false] call _RHUDSetShow} forEach [15,16,17,18,19,20,21,22];
 				[1, "Health:"] call _RHUDSetText;
-				[3, "UpTime:"] call _RHUDSetText;
-				[5, "Commander:"] call _RHUDSetText;
-				[7, "AI:"] call _RHUDSetText;
-				[9, "Money:"] call _RHUDSetText;
-				[11, "Income:"] call _RHUDSetText;
-				[13, "Supply:"] call _RHUDSetText;
-				[15, "SV Min:"] call _RHUDSetText;
-				[17, "City:"] call _RHUDSetText;
-				// Marty: Spell out the two FPS rows in the full RHUD.
-				[19, "FPS Client:"] call _RHUDSetText;
-				[21, "FPS Server:"] call _RHUDSetText;
-				[22, ""] call _RHUDSetText;
+				[3, "Commander:"] call _RHUDSetText;
+				[5, "AI:"] call _RHUDSetText;
+				[7, "Money:"] call _RHUDSetText;
+				[9, "Supply:"] call _RHUDSetText;
+				[11, "Base:"] call _RHUDSetText;
+				[13, "FPS C/S:"] call _RHUDSetText;
 				_labelsApplied = true;
 				_hiddenApplied = false;
 			};
@@ -293,20 +336,11 @@ while {true} do {
 			[2, Format ["%1/100",str(round _healthAct)]] call _RHUDSetText;
 			[2, _healthColor] call _RHUDSetColor;
 
-			//UPTIME
-			_uptime = Call GetTime; //added-MrNiceGuy
-			[4, [0.7, 0.7, 0.7, 1]] call _RHUDSetColor;
-			if (_uptime select 2 >= 10) then {
-				[4, Format ["%1:%2:%3",_uptime select 1,_uptime select 2, _uptime select 3]] call _RHUDSetText;
-			} else {
-				[4, Format ["%1:0%2:%3",_uptime select 1,_uptime select 2, _uptime select 3]] call _RHUDSetText;
-			};
-
 			//COMMANDER
 			_commanderText = " No Commander";
 			if (!isNull commanderTeam) then {_commanderText = Format [" %1", name (leader commanderTeam)]};
-			[6, [0.85, 0, 0, 1]] call _RHUDSetColor;
-			[6, _commanderText] call _RHUDSetText;
+			[4, [0.85, 0, 0, 1]] call _RHUDSetColor;
+			[4, _commanderText] call _RHUDSetText;
 
 			//AI COUNT
 			_mbu = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX';
@@ -327,46 +361,52 @@ while {true} do {
 			_aiColor = [0, 1, 0, 1];
 			if (_currentUnitsCount >= _maxUnitsCount/2) then {_aiColor = [1, 0.8431, 0, 1]};
 			if (_currentUnitsCount >= _maxUnitsCount) then {_aiColor = [1, 0, 0, 1]};
-			[8, _aiText] call _RHUDSetText;
-			[8, _aiColor] call _RHUDSetColor;
-
-			//MONEY
-			_moneyText = Format ["%1 $",Call GetPlayerFunds];
-			[10, _moneyText] call _RHUDSetText;
-			[10, [0, 0.825294, 0.449803, 1]] call _RHUDSetColor;
+			[6, _aiText] call _RHUDSetText;
+			[6, _aiColor] call _RHUDSetColor;
 
 			// Marty: Town/economy aggregates walk the towns array, so refresh them less often than volatile HUD values.
 			if (time - _lastTownRefresh > 3) then {
 				_incomeText = Format ["+ %1 $",sideJoined Call GetIncome];
 				_supplyText = Format ["%1",(sideJoined) Call GetSideSupply];
-				_totalSupplyValue = sideJoined Call GetTotalSupplyValue;
-				_compensation = 0;
-				if (_side == WEST) then {_compensation = SUPPLY_COMPENSATION_AMOUNT_WEST};
-				if (_side == EAST) then {_compensation = SUPPLY_COMPENSATION_AMOUNT_EAST};
-				_supplyMinText = Format ["+ %1", _totalSupplyValue];
-				if (_compensation > 0) then {_supplyMinText = Format ["+ %1 (+ %2)", _totalSupplyValue, _compensation]};
-				_cityText = Format ["%1 on %2", sideJoined Call GetTownsHeld,_total];
+				_baseStructures = sideJoined Call WFBE_CO_FNC_GetSideStructures;
+				_baseHq = sideJoined Call WFBE_CO_FNC_GetSideHQ;
+				if (!isNull _baseHq) then {_baseStructures = _baseStructures + [_baseHq]};
+				_baseTotal = 0;
+				_baseDamaged = 0;
+				{
+					if (!isNull _x && {alive _x}) then {
+						_baseTotal = _baseTotal + 1;
+						if (damage _x > 0.10) then {_baseDamaged = _baseDamaged + 1};
+					};
+				} forEach _baseStructures;
+				_baseText = Format ["%1 ok", _baseTotal];
+				_baseColor = [0, 1, 0, 1];
+				if (_baseDamaged > 0) then {
+					_baseText = Format ["%1 ok | D%2", _baseTotal, _baseDamaged];
+					_baseColor = [1, 0.8431, 0, 1];
+				};
+				if (_baseTotal == 0) then {_baseColor = [1, 0, 0, 1]};
 				_lastTownRefresh = time;
 			};
 
-			[12, _incomeText] call _RHUDSetText;
-			[12, [0, 0.825294, 0.449803, 1]] call _RHUDSetColor;
-			[14, _supplyText] call _RHUDSetText;
-			[14, [1, 0.8831, 0, 1]] call _RHUDSetColor;
-			[16, _supplyMinText] call _RHUDSetText;
-			[16, [1, 0.6831, 0, 1]] call _RHUDSetColor;
-			[18, _cityText] call _RHUDSetText;
-			[18, [0.85, 0, 0, 1]] call _RHUDSetColor;
+			//MONEY / INCOME
+			_moneyText = Format ["%1 $ | %2", Call GetPlayerFunds, _incomeText];
+			[8, _moneyText] call _RHUDSetText;
+			[8, [0, 0.825294, 0.449803, 1]] call _RHUDSetColor;
+			[10, _supplyText] call _RHUDSetText;
+			[10, [1, 0.8831, 0, 1]] call _RHUDSetColor;
+			[12, _baseText] call _RHUDSetText;
+			[12, _baseColor] call _RHUDSetColor;
 
-			// Marty: Keep full RHUD FPS labels expanded while updating their values.
-			["FPS Client:", "FPS Server:", false] call _RHUDUpdateFPS;
+			call _RHUDUpdateServerFPSRow;
+			call _RHUDUpdateUpgrade;
 			};
 		};
 
 		// Marty: Performance Audit record for the local HUD refresh.
 		if !(isNil "PerformanceAudit_Record") then {
 			if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
-				["client_rhud", diag_tickTime - _perfStart, Format["enabled:%1;fpsOnly:%2;visibleMap:%3", RUBHUD, RUBFPSHUD, visibleMap], "CLIENT"] Call PerformanceAudit_Record;
+				["client_rhud", diag_tickTime - _perfStart, Format["enabled:%1;visibleMap:%2", RUBHUD, visibleMap], "CLIENT"] Call PerformanceAudit_Record;
 			};
 		};
 	};

@@ -1,5 +1,5 @@
 /* Use this file if you wish to set quickly a faction's groups */
-Private ['_aiTeamTemplates','_aiTeamTemplateName','_aiTeamTemplateRequires','_aiTeamTypes','_aiTeamUpgrades','_blacklist','_cfgFaction','_faction','_side'];
+Private ['_aiTeamTemplates','_aiTeamTemplateName','_aiTeamTemplateRequires','_aiTeamTypes','_aiTeamUpgrades','_blacklist','_cfgFaction','_faction','_return','_side'];
 
 _side = _this select 0;
 _faction = _this select 1;
@@ -7,13 +7,17 @@ _blacklist = if (count _this > 2) then {_this select 2} else {[]};
 
 _cfgFaction = configFile >> "CfgGroups" >> _side >> _faction;
 
-if !(isClass _cfgFaction) exitWith {["ERROR", Format ["Squads_SetFactionGroups.sqf: Entry (configFile >> '%3' >> '%4') is not a valid group config.", _side,_faction]] Call WFBE_CO_FNC_LogContent};
-
 _aiTeamTemplates = [];
 _aiTeamTemplateName = [];
 _aiTeamTemplateRequires = [];
 _aiTeamTypes =  [];
 _aiTeamUpgrades = [];
+_return = [_aiTeamTemplates, _aiTeamTemplateName, _aiTeamTemplateRequires, _aiTeamTypes, _aiTeamUpgrades];
+
+if !(isClass _cfgFaction) exitWith {
+	["ERROR", Format ["Squads_GetFactionGroups.sqf: Entry (configFile >> 'CfgGroups' >> '%1' >> '%2') is not a valid group config.", _side, _faction]] Call WFBE_CO_FNC_LogContent;
+	_return
+};
 
 //--- Iterate through the faction's config and grab the group along with it's properties.
 for "_i" from 0 to ((count _cfgFaction) - 1) do {

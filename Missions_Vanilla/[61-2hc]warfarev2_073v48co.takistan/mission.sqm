@@ -29,8 +29,8 @@ class Mission
 	randomSeed=6848509;
 	class Intel
 	{
-		briefingName="[61] Warfare V48 Takistan";
-		briefingDescription="by Benny and Awesome&WASP";
+		briefingName="PR 8 - June Feature Bundle (Takistan)";
+		briefingDescription="June release test build: UI/UX, GPS, factories, supply, WDDM/arty, AI/perf.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;

@@ -8,26 +8,13 @@
 */
 
 // Marty: Ctrl-click map disband falls back to the legacy setDamage disband method.
-Private ["_aiId","_alt","_candidate","_candidateDistance","_candidatePosition","_candidatePosition2D","_candidateVehicle","_clickPosition2D","_ctrlPressed","_distance","_group","_hasCommandableUnits","_message","_position","_range","_selectedUnits","_shift","_storedPosition","_target","_units","_plainClick","_selectedGroupUnits","_targetVehicle","_driver","_gunner","_commander","_crewPriority","_crewUnit","_selectionHandled","_isSelectableMapUnit","_isVehicleIcon"];
+Private ["_aiId","_alt","_candidate","_candidateDistance","_candidatePosition","_candidatePosition2D","_candidateVehicle","_clickPosition2D","_ctrlPressed","_distance","_group","_message","_position","_range","_selectedUnits","_shift","_storedPosition","_target","_units","_plainClick","_selectedGroupUnits","_targetVehicle","_driver","_gunner","_commander","_crewPriority","_crewUnit","_selectionHandled","_isSelectableMapUnit","_isVehicleIcon"];
 
 _position = _this select 0;
 _shift = _this select 1;
 _alt = _this select 2;
 _selectedUnits = _this select 3;
 _ctrlPressed = missionNamespace getVariable "WFBE_CLIENT_MAP_DISBAND_CTRL_DOWN";
-
-// Marty: Only real map clicks refresh command-map activity; merely opening the map never touches this state.
-_hasCommandableUnits = ((count (((units group player) Call WFBE_CO_FNC_GetLiveUnits) - [player])) > 0) || ((count (hcAllGroups player)) > 0);
-if (_hasCommandableUnits) then {
-	missionNamespace setVariable ["WFBE_CLIENT_LAST_MAP_COMMAND_CLICK_TIME", time];
-	missionNamespace setVariable ["WFBE_CLIENT_LAST_MAP_COMMAND_CLICK_POS", _position];
-	player setVariable ["lastActionTime", time];
-	if !(isNil "WFBE_CO_VAR_NotAFK_update") then {WFBE_CO_VAR_NotAFK_update = true};
-	// Marty: This is marker text only; it never changes the Warfare commander role.
-	if (player getVariable ["WASP_AFK", false]) then {
-		player setVariable ["WASP_CommandAndConquer", true, true];
-	};
-};
 
 // Marty: Ctrl-click selects the nearest AI in the player's group and disbands it immediately.
 if (_ctrlPressed) exitWith {
@@ -185,10 +172,12 @@ if (_shift && (leader (group player)) == player) then {
 };
 
 // Preserve the legacy debug teleport on plain map clicks without blocking shift-click move capture.
-if (WF_Debug && !_shift) then {
+if ((missionNamespace getVariable ["WFBE_DEBUG_TELEPORT_ARMED", false]) && !_shift) then {	//--- FIX: was "WF_Debug" => every map click teleported (ate the sell/ICBM confirm second-click). Now arm with the "[" key first.
 	vehicle player setPos _position;
 	(vehicle player) setVelocity [0,0,-0.1];
 	diag_log getPos player;
+		missionNamespace setVariable ["WFBE_DEBUG_TELEPORT_ARMED", false];	//--- one-shot: disarm after teleporting
+		hintSilent "Teleported.";
 };
 
 false

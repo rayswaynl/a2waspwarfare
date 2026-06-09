@@ -4,6 +4,7 @@ _unit = _this select 1;
 _vehi = _this select 2;
 _factory = _this select 3;
 _cpt = _this select 4;
+_currentCost = if (count _this > 5) then {_this select 5} else {0}; //--- FC2: purchase price, for refund if the factory is destroyed mid-build.
 
 _isMan = if (_unit isKindOf "Man") then {true} else {false};
 
@@ -211,6 +212,8 @@ _spawnedUnits = [];
 if (!alive _building || isNull _building) exitWith {
 	unitQueu = unitQueu - _cpt;
 	missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+	//--- FC2: factory was destroyed mid-build (nothing spawned) -> refund the purchase price. This is the real destroyed-factory path.
+	if (_currentCost > 0) then {(_currentCost) Call ChangePlayerFunds};
 };
 
 if (_isMan) then {
@@ -317,6 +320,11 @@ if(typeOf _vehicle in ['F35B','AV8B','AV8B2','A10','A10_US_EP1','Su25_TK_EP1','S
 	_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles}];
 };
 
+//--- Jets survive the first SPAAG (Tunguska/Linebacker) hit — fuel drained + slight damage to attempt a landing; a second hit explodes. Set WFBE_C_JET_AA_SURVIVE 0 to disable.
+if (_vehicle isKindOf "Plane" && (missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) > 0) then {
+	_vehicle addEventHandler ["HandleDamage", {_this Call HandleJetAADamage}];
+};
+
 if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {
 	_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];
 };
@@ -331,7 +339,7 @@ if(typeOf _vehicle in ['Pandur2_ACR']) then {
 
 if ({(typeOf _vehicle) isKindOf _x} count ["LAV25_Base","M2A2_Base","BMP2_Base","BTR90_Base" ] != 0) then {_vehicle addeventhandler ["fired",{_this spawn HandleReload;}];};
 
-if ({(typeOf _vehicle) isKindOf _x} count ["LAV25_Base","M2A2_Base","BMP2_Base","BTR90_Base"] != 0) then {_vehicle addeventhandler ["fired",{_this spawn HandleReload;}];};
+//--- V2: removed duplicate "fired"->HandleReload event handler (was identical to the IFV line above; double-registering spawned HandleReload twice per shot).
 
 if({(_vehicle isKindOf _x)} count ["Tank","Wheeled_APC"] !=0) then {_vehicle addeventhandler ['Engine',{_this execVM "Client\Module\Engines\Engine.sqf"}];
      _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target &&(isEngineOn _target)"];};
@@ -362,7 +370,14 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 
 
 	//--- Empty Vehicle.
-	if (!_driver && !_gunner && !_commander) exitWith {};
+	if (!_driver && !_gunner && !_commander) exitWith {
+		//--- Release fix (#3): empty-vehicle exit must still release the per-factory queue slot,
+		//--- otherwise WFBE_C_QUEUE_<type> leaks one each empty purchase and the factory soft-locks at its cap.
+		//--- NO refund here: this is the normal crewless/Depot purchase path and the vehicle WAS already
+		//--- spawned above. (The genuine destroyed-factory refund lives in the !alive _building exit earlier.)
+		unitQueu = unitQueu - _cpt;
+		missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1];
+	};
 
 	//--- Crew Management.
 	_crew = missionNamespace getVariable Format ["WFBE_%1SOLDIER",sideJoinedText];

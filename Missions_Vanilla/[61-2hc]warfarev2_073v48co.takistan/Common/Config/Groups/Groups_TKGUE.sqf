@@ -28,7 +28,7 @@ _u = _u + ["TK_GUE_Soldier_AR_EP1"];
 _l = _l + [_u];
 
 _k = _k + ["Team"];
-_u		= ["TK_GUE_Soldier_Warlord_EP1"];
+_u		= ["TK_GUE_Warlord_EP1"];
 _u = _u + ["TK_GUE_Soldier_AR_EP1"];
 _u = _u + ["TK_GUE_Bonesetter_EP1"];
 _u = _u + ["TK_GUE_Soldier_5_EP1"];

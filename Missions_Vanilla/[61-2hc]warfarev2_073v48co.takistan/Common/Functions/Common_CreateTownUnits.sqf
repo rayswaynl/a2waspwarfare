@@ -8,7 +8,7 @@
 		- Teams
 */
 
-Private ["_groups", "_lock", "_position", "_positions", "_side", "_sideID", "_team", "_teams", "_town", "_town_teams", "_town_vehicles"];
+Private ["_built", "_builtveh", "_groupCountCiv", "_groupCountEast", "_groupCountGuer", "_groupCountLogic", "_groupCountSide", "_groupCountWest", "_groupCountUnknown", "_groupMachine", "_groupSide", "_groups", "_i", "_lock", "_position", "_positions", "_retVal", "_side", "_sideID", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehicles"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -31,13 +31,26 @@ for '_i' from 0 to count(_groups)-1 do {
 	["INFORMATION", Format["Common_CreateTownUnits.sqf: Town [%1] [%2] will create a team template %3 at %4", _town, _side, _groups select _i,_position]] Call WFBE_CO_FNC_LogContent;
 	
 	_retVal = [_groups select _i, _position, _side, _lock, _team, true, 90] call WFBE_CO_FNC_CreateTeam;
+	_units = _retVal select 0;
 	_vehicles = _retVal select 1;
-	_built = _built + count(_retVal select 0);
+	// Marty: Track the actual group returned by CreateTeam, because delegated HC creation may replace grpNull locally.
+	_team = _retVal select 2;
+	_built = _built + count _units;
 	_builtveh = _builtveh + (count _vehicles);
 
-	[_town, _team, _sideID] execVM "Server\FSM\server_town_patrol.sqf";
-	[_team, 400, _position] spawn WFBE_CO_FNC_RevealArea;
-	[_town_teams, _team] call WFBE_CO_FNC_ArrayPush;
+	// Marty: Skip tracking/patrol work when no valid group could be created on this machine.
+	if (isNull _team || {((count _units) + (count _vehicles)) == 0}) then {
+		["WARNING", Format["Common_CreateTownUnits.sqf: Town [%1] [%2] skipped patrol setup for template %3 because no valid team assets were created.", _town, _side, _groups select _i]] Call WFBE_CO_FNC_LogContent;
+	} else {
+		_team setVariable ["WFBE_TownAI_Town", _town, false];
+		_team setVariable ["WFBE_TownAI_Side", _side, false];
+		_team setVariable ["WFBE_TownAI_Group", true, false];
+		[_town, _team, _sideID] execVM "Server\FSM\server_town_patrol.sqf";
+		[_team, 400, _position] spawn WFBE_CO_FNC_RevealArea;
+		[_town_teams, _team] call WFBE_CO_FNC_ArrayPush;
+		_team allowFleeing 0; //--- Make the units brave.
+	};
+
 	{
 		[_town_vehicles, _x] call WFBE_CO_FNC_ArrayPush;
 		if (isServer) then {
@@ -45,12 +58,41 @@ for '_i' from 0 to count(_groups)-1 do {
 			_x setVariable ["WFBE_Taxi_Prohib", true];
 		};
 	} forEach _vehicles;
-
-	_team allowFleeing 0; //--- Make the units brave.
 };
 
 if (_built > 0) then {[str _side,'UnitsCreated',_built] call UpdateStatistics};
 if (_builtveh > 0) then {[str _side,'VehiclesCreated',_builtveh] call UpdateStatistics};
+
+// Marty: When a town activates empty, print the machine-side group counts near the failure.
+if ((_built + _builtveh) == 0) then {
+	_groupCountWest = 0;
+	_groupCountEast = 0;
+	_groupCountGuer = 0;
+	_groupCountCiv = 0;
+	_groupCountLogic = 0;
+	_groupCountUnknown = 0;
+	{
+		_groupSide = side _x;
+		switch (_groupSide) do {
+			case west: {_groupCountWest = _groupCountWest + 1};
+			case east: {_groupCountEast = _groupCountEast + 1};
+			case resistance: {_groupCountGuer = _groupCountGuer + 1};
+			case civilian: {_groupCountCiv = _groupCountCiv + 1};
+			case sideLogic: {_groupCountLogic = _groupCountLogic + 1};
+			default {_groupCountUnknown = _groupCountUnknown + 1};
+		};
+	} forEach allGroups;
+	_groupCountSide = switch (_side) do {
+		case west: {_groupCountWest};
+		case east: {_groupCountEast};
+		case resistance: {_groupCountGuer};
+		case civilian: {_groupCountCiv};
+		case sideLogic: {_groupCountLogic};
+		default {_groupCountUnknown};
+	};
+	_groupMachine = if (isServer) then {"SERVER"} else {if (hasInterface) then {"CLIENT"} else {"HC"}};
+	["WARNING", Format ["TOWN_GROUP_COUNT town_empty machine:%1 town:%2 side:%3 sideGroups:%4 total:%5 west:%6 east:%7 guer:%8 civ:%9 logic:%10 unknown:%11", _groupMachine, _town getVariable "name", _side, _groupCountSide, count allGroups, _groupCountWest, _groupCountEast, _groupCountGuer, _groupCountCiv, _groupCountLogic, _groupCountUnknown]] Call WFBE_CO_FNC_LogContent;
+};
 
 ["INFORMATION", Format["Common_CreateTownUnits.sqf: Town [%1] held by [%2] was activated witha total of [%3] units.", _town, _side, _built + _builtveh]] Call WFBE_CO_FNC_LogContent;
 

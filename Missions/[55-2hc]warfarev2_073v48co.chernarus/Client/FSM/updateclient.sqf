@@ -1,5 +1,5 @@
 // Marty: Performance Audit locals.
-private["_toggle_auto_distance_view","_lastCommanderTeam","_changeCommander","_timer", "_sideHQ", "_perfLoopStart", "_perfAFKStart", "_perfAFKBroadcasts","_countDownKick"];
+private["_toggle_auto_distance_view","_lastCommanderTeam","_changeCommander","_timer", "_sideHQ", "_perfLoopStart", "_perfAFKStart", "_perfAFKBroadcasts","_countDownKick","_afk","_afkShouldBe","_afkDiagnosticNextLog","_afkDiagnosticLastFailureLog","_afkDiagnosticMovementResets","_afkDiagnosticStartTime","_afkKickRequested","_currentPosition","_elapsedTime","_inactivityTimeout","_lastActionTime","_lastPosition","_movementDistance","_namePlayer","_rawInactivityTimeout"];
 
 commanderTeam = (sideJoined) Call WFBE_CO_FNC_GetCommanderTeam;
 
@@ -25,14 +25,22 @@ OnEventHandler_player_radiated = Compile preprocessFileLineNumbers "Client\Modul
 
 //marty : initialize AFK kick time by default
 if !(isMultiplayer) then {missionNamespace setVariable ["WFBE_C_AFK_TIME", 10]}; // useful when testing solo.
-_inactivityTimeout = missionNamespace getVariable "WFBE_C_AFK_TIME";
-_inactivityTimeout = _inactivityTimeout * 60; // Convert the given time from minutes to seconds.
+_rawInactivityTimeout = missionNamespace getVariable "WFBE_C_AFK_TIME";
+_inactivityTimeout = _rawInactivityTimeout * 60; // Convert the given time from minutes to seconds.
 
 if (WF_Debug) then {_inactivityTimeout = _inactivityTimeout * 99999};
 
 AutomaticViewDistance = compile preprocessFile "Common\Functions\Common_AutomaticViewDistance.sqf";
+_afkDiagnosticNextLog = 0;
+_afkDiagnosticLastFailureLog = 0;
+_afkDiagnosticMovementResets = 0;
+_afkDiagnosticStartTime = time;
+_afkKickRequested = false;
 
-while {!gameOver} do {
+// Marty: Always-on startup line confirms the AFK client loop and the effective timeout used by this client.
+["INFORMATION", Format ["AFK Diagnostic: updateclient started for [%1]. rawMinutes [%2] effectiveSeconds [%3] WF_Debug [%4] startTime [%5].", name player, _rawInactivityTimeout, _inactivityTimeout, WF_Debug, _afkDiagnosticStartTime]] Call WFBE_CO_FNC_LogContent;
+
+while {!gameOver && !_afkKickRequested} do {
 
 	// Marty: Performance Audit timing for the full client update tick.
 	_perfLoopStart = diag_tickTime;
@@ -117,45 +125,74 @@ while {!gameOver} do {
 	_countDownKick =round(_inactivityTimeout - _elapsedTime);
 	//player sideChat format ["Elapsed Time: %1 seconds", _elapsedTime]; // Display the inacticity time of the player for testing purpose	
 
-	// Marty: Kick warning follows actual activity, so recent command-map clicks do not show a false kick countdown.
-	if (_countDownKick < 600) then {
-		call {
-			if (_countDownKick <= 120) exitWith {
-				hint format ["You are AFK. If you don't move or command on the map you will be kicked in %1 seconds.", _countDownKick];
+	// Marty: Publish AFK only when the state actually changes; repeated false/true writes can hide the marker remotely.
+	_afk = player getVariable ["WASP_AFK", false];
+	_afkShouldBe = _countDownKick < 600;
+
+	if ((_afk && !_afkShouldBe) || (!_afk && _afkShouldBe)) then {
+		_perfAFKBroadcasts = _perfAFKBroadcasts + 1;
+		player setVariable ["WASP_AFK", _afkShouldBe, true];
+		["INFORMATION", Format ["AFK Diagnostic: WASP_AFK changed to [%1] for [%2]. elapsed [%3] countdown [%4] timeout [%5].", _afkShouldBe, name player, round _elapsedTime, _countDownKick, _inactivityTimeout]] Call WFBE_CO_FNC_LogContent;
+	};
+
+	// Marty: Once the AFK timeout is exceeded, request the real BattleEye kick through the public variable filter.
+	if (_elapsedTime > _inactivityTimeout) then {
+		_afkKickRequested = true;
+		_namePlayer = name player;
+		["WARNING", Format ["AFK Diagnostic: kick requested for [%1]. elapsed [%2] countdown [%3] timeout [%4] rawMinutes [%5] movementResets [%6].", _namePlayer, round _elapsedTime, _countDownKick, _inactivityTimeout, _rawInactivityTimeout, _afkDiagnosticMovementResets]] Call WFBE_CO_FNC_LogContent;
+		["KICK", format["%1 Kicked for AFKing", _namePlayer]] Call WFBE_CO_FNC_LogContent;
+
+		AFKthresholdExceededName = _namePlayer;
+		publicVariableServer "AFKthresholdExceededName";
+
+		kickAFK = format["%1 Kicked for AFKing", _namePlayer];
+		publicVariable "kickAFK";
+	};
+
+	if (_afkShouldBe && !_afkKickRequested) then {
+		if (_countDownKick > 120) then {
+			if ((_countDownKick % 30) == 0) then {
+				hint format ["You are AFK. If you don't move you will be kicked in %1 minutes.", round (_countDownKick / 60)];
 			};
-			if ((_countDownKick % 30) != 0) exitWith {};
-			hint format ["You are AFK. If you don't move or command on the map you will be kicked in %1 minutes.", round (_countDownKick / 60)];
+		} else {
+			hint format ["You are AFK. If you don't move you will be kicked in %1 seconds.", _countDownKick];
 		};
 	};
 
 
-	// Check if the player has been inactive for more than the specified duration, if so he's ejected from the mission.
-    if (_elapsedTime > _inactivityTimeout) then {
-        
-		// Creation of a publicVariable named "kickAFK" that will be detected by BattleEye (customized filter) and will kick the client (=the player) that is using the kickAFK variable.
-		// BattleEye is used with publicVariable in order to kick player because the serverCommand has been deactivated by Bohemia since the arma2OA updated for security reason. But Weirdly they didnt mention it clearly.
-		// DON'T FORGET TO CREATE THE TEXT FILE FOR BATTLEYE. This text file must be located in the BattlEye folder where the server.cfg of the mission is. This file is called publicVariable.txt and contain the instruction : 5 "kickAFK" 
-		_namePlayer = name player ;
-		["KICK", format["%1 Kicked for AFKing", _namePlayer]] Call WFBE_CO_FNC_LogContent;
-
-		kickAFK = format["%1 Kicked for AFKing", _namePlayer];
-		publicVariable "kickAFK";
-	
-		//endMission "END1"; //not good. The player stays in the slot. Must be kicked using BattlEye Filter.
-
-    };
-	
 	// Verify if the player moved since the last check position
 	_currentPosition 	= getPos player;
 	_lastPosition 		= player getVariable ["lastPosition", getPos player] ;
+	_movementDistance = _currentPosition distance _lastPosition;
       
-	// Marty: Preserve the original command-client AFK activity behavior; Command & Conquer marker state is handled in monitorAFK.sqf.
 	if (str(_currentPosition) != str(_lastPosition)) then {            	 
-		player setVariable ["lastActionTime", time];
+		_afkDiagnosticMovementResets = _afkDiagnosticMovementResets + 1;
+		if (WF_Debug) then {
+			["INFORMATION", Format ["AFK Diagnostic: movement reset for [%1]. distance [%2] current [%3] last [%4] resets [%5].", name player, _movementDistance, _currentPosition, _lastPosition, _afkDiagnosticMovementResets]] Call WFBE_CO_FNC_LogContent;
+		};
+		player setVariable ["lastActionTime", time]; // If the player moved, it saves the current time into lastActionTime variable.
     };
 
 	player setVariable ["lastPosition", position player]; // Saving the last position of the player with the current one.
 	// Marty. 
+
+	// Marty: WF_Debug periodic snapshot of the AFK decision path without spamming normal server logs.
+	if (WF_Debug) then {
+		call {
+			if (time < _afkDiagnosticNextLog) exitWith {};
+			_afkDiagnosticNextLog = time + 15;
+			["INFORMATION", Format ["AFK Diagnostic: tick player [%1] rawMinutes [%2] timeout [%3] elapsed [%4] countdown [%5] afk [%6] shouldBe [%7] movementDistance [%8] movementResets [%9] lastAction [%10] time [%11].", name player, _rawInactivityTimeout, _inactivityTimeout, round _elapsedTime, _countDownKick, player getVariable ["WASP_AFK", false], _afkShouldBe, _movementDistance, _afkDiagnosticMovementResets, _lastActionTime, time]] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+
+	// Marty: Always-on warning for short AFK test sessions where the expected kick did not happen.
+	call {
+		if (_rawInactivityTimeout > 2) exitWith {};
+		if ((time - _afkDiagnosticStartTime) <= (_inactivityTimeout + 15)) exitWith {};
+		if ((time - _afkDiagnosticLastFailureLog) <= 30) exitWith {};
+		_afkDiagnosticLastFailureLog = time;
+		["WARNING", Format ["AFK Diagnostic: short-timeout test exceeded expected kick window for [%1]. elapsed [%2] countdown [%3] timeout [%4] movementResets [%5] currentPos [%6] lastPos [%7].", name player, round _elapsedTime, _countDownKick, _inactivityTimeout, _afkDiagnosticMovementResets, _currentPosition, _lastPosition]] Call WFBE_CO_FNC_LogContent;
+	};
 
 	// Marty: Performance Audit record for the legacy AFK block.
 	if !(isNil "PerformanceAudit_Record") then {

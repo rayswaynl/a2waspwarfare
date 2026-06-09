@@ -6,7 +6,7 @@
 		- Action ("spawn"/"remove").
 */
 
-Private ["_action","_defense","_side","_spawn","_town","_units","_sideID"];
+Private ["_action","_ai_delegation_enabled","_defense","_groups","_positions","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -51,11 +51,15 @@ switch (_action) do {
 
 					if (_use_server) then {
 						_unit = [missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side],missionNamespace getVariable Format ["WFBE_%1_DefenseTeam", _side], getPos _x, _side] Call WFBE_CO_FNC_CreateUnit;
-						_unit assignAsGunner _defense;
-						[_unit] orderGetIn true;
-						_unit moveInGunner _defense;
-						[group _unit, 175, getPos _defense] spawn WFBE_CO_FNC_RevealArea;
-						_x setVariable ["wfbe_defense_operator", _unit]; //--- Track the original gunner.
+						if (isNull _unit) then {
+							["WARNING", Format ["Server_OperateTownDefensesUnits.sqf: Town [%1] failed to create a defense gunner for [%2].", _town getVariable "name", typeOf _defense]] Call WFBE_CO_FNC_LogContent;
+						} else {
+							_unit assignAsGunner _defense;
+							[_unit] orderGetIn true;
+							_unit moveInGunner _defense;
+							[group _unit, 175, getPos _defense] spawn WFBE_CO_FNC_RevealArea;
+							_x setVariable ["wfbe_defense_operator", _unit]; //--- Track the original gunner.
+						};
 					};
 				};
 

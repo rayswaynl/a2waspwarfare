@@ -1,4 +1,4 @@
-Private ["_areas","_commanderTeam","_deployed","_direction","_grp","_HQ","_HQName","_logic","_logik","_MHQ","_near","_position","_side","_sideText","_site","_type","_update"];
+Private ["_areas","_commanderTeam","_defenses","_deployed","_direction","_grp","_HQ","_HQName","_logic","_logik","_MHQ","_near","_position","_side","_sideText","_site","_type","_update"];
 
 _type = _this select 0;
 _side = _this select 1;
@@ -36,6 +36,9 @@ if (!_deployed) then {
 	_site addEventHandler ['killed', {_this Spawn WFBE_SE_FNC_OnHQKilled}];
 	_site addEventHandler ["hit",{_this Spawn BuildingDamaged}];
 	_site addEventHandler ['handleDamage',{[_this select 0,_this select 2,_this select 3, _this select 4] Call BuildingHandleDamages}];
+	_defenses = [_site, missionNamespace getVariable "WFBE_NEURODEF_HEADQUARTERS_WALLS"] call CreateDefenseTemplate;
+	_site setVariable ["wfbe_hq_walls", _defenses];
+	_site setVariable ["WFBE_Walls", _defenses];
 
 	//--- base area limits.
 	if ((missionNamespace getVariable "WFBE_C_BASE_AREA") > 0) then {
@@ -66,6 +69,9 @@ if (!_deployed) then {
 	_position = getPos _HQ;
 	_direction = getDir _HQ;
 	_HQName = missionNamespace getVariable Format["WFBE_%1MHQNAME",_sideText];
+
+	_defenses = _HQ getVariable ["wfbe_hq_walls", _HQ getVariable ["WFBE_Walls", []]];
+	{if (!isNull _x) then {deleteVehicle _x}} forEach _defenses;
 
 	_HQ setPos [1,1,1];
 

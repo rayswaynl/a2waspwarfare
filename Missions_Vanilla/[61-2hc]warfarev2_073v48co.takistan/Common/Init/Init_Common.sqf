@@ -8,9 +8,9 @@ HandleCommanderReload = Compile preprocessFileLineNumbers "Common\Functions\Comm
 HandleReload = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleReload.sqf";
 HandleATReload = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleATReload.sqf";
 //HandleATReloadVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleATReloadVehicle.sqf";
-//HandleBombs = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleBombs.sqf";
 HandleATMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleATMissiles.sqf";
 HandleAAMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleAAMissiles.sqf";
+HandleJetAADamage = Compile preprocessFileLineNumbers "Common\Functions\Common_JetAADamage.sqf";
 HandleAlarm = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleAlarm.sqf";
 HandleArty = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleArty.sqf";
 HandleAT = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleAT.sqf";
@@ -198,7 +198,7 @@ WFBE_Logic_Airfield = "LocationLogicAirport";
 WFBE_Logic_Camp = "LocationLogicCamp";
 WFBE_Logic_Depot = "LocationLogicDepot";
 
-isAutoWallConstructingEnabled = false;
+isAutoWallConstructingEnabled = true;
 WFBE_CO_VAR_SupplyMissionRegenInterval = 1800;
 
 /* Wait for BIS Module Init */

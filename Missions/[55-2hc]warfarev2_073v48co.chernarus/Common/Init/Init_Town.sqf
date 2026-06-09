@@ -32,7 +32,7 @@ _town setVariable ["name",_townName];
 _town setVariable ["range",_townRange];
 _town setVariable ["startingSupplyValue",_townStartSV];
 _town setVariable ["maxSupplyValue",_townMaxSV];
-_town setVariable ["lastSupplyMissionRun", 0];
+_town setVariable ["LastSupplyMissionRun", 0]; //--- XR4: match the read/write casing in isSupplyMissionActiveInTown / supplyMissionStarted (was lowercase "lastSupplyMissionRun" -> first cooldown check read nil).
 _town setVariable ["supplyMissionCoolDownEnabled", false];
 
 //--- If the town type is an array rather than a single value, pick a random template (see Server_GetTownGroupsDefender.sqf).

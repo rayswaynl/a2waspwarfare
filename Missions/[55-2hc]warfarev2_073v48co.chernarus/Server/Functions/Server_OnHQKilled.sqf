@@ -39,6 +39,11 @@ if ((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus) then {
 	_logik setVariable ["wfbe_hq_deployed", false, true];
 	_logik setVariable ["wfbe_hq",_hq,true];
 
+	//--- Release fix: delete the deployed-HQ shield walls too. They are created on deploy
+	//--- (Construction_HQSite.sqf) and were previously cleaned ONLY on mobilize, so a DESTROYED
+	//--- deployed HQ left ~23 concrete objects orphaned on the map every destroy/redeploy cycle.
+	{if (!isNull _x) then {deleteVehicle _x}} forEach (_structure getVariable ["wfbe_hq_walls", _structure getVariable ["WFBE_Walls", []]]);
+
 	//--- Remove the structure after the burial.
 	(_structure) Spawn {sleep 10; deleteVehicle _this};
 };

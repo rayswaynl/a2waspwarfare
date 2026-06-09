@@ -123,11 +123,21 @@ class WFBE_UpgradeMenu {
 			idc = 504007;
 			x = 0.595;
 			y = 0.762;
-			w = 0.2;
+			w = 0.095;
 			h = 0.035;
-			sizeEx = 0.035;
+			sizeEx = 0.03;
 			text = "Upgrade";
 			action = "WFBE_MenuAction = 1";
+		};
+		class CA_QueueUpgrade : RscButton_Main {
+			idc = 504008;
+			x = 0.700;
+			y = 0.762;
+			w = 0.095;
+			h = 0.035;
+			sizeEx = 0.03;
+			text = "Queue";
+			action = "WFBE_MenuAction = 3";
 		};
 		class CA_Details : CA_UpgradeDetails {
 			idc = 504006;
@@ -1165,8 +1175,8 @@ class WF_Menu {
 			idc = 11015;
 			x = 0.178164;
 			y = 0.19379;
-			w = 0.800001;
-			sizeEx = 0.035;
+			w = 0.600000;
+			sizeEx = 0.031;
 		};
 		class CA_PA_Button : RscClickableText {
 			idc = 11012;
@@ -1206,26 +1216,28 @@ class WF_Menu {
 			tooltip = $STR_WF_TOOLTIP_CloseButton;
 		};
 		
-		class CA_HUD_Button : RscClickableText {
+		class CA_HUD_Button : RscButton_Main {
 			idc = 11018;
-			x = 0.410;
-			y = 0.78000;
-			w = 0.040;
-			h = 0.040;
-			text = "Client\images\hud_bis.paa";
+			x = 0.408;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = "HUD";
+			sizeEx = 0.026;
 			action = "MenuAction = 16";
-			tooltip = "ALL SCREEN HUD On/Off";
+			tooltip = "HUD On/Off";
 		};		
-		// Marty: Button next to RHUD for the lightweight client/server FPS overlay.
-		class CA_FPSHUD_Button : RscClickableText {
+		// Marty: Reuse the old FPS-only HUD slot for GPS; FPS now lives in the RHUD/sidebar.
+		class CA_GPS_Button : RscButton_Main {
 			idc = 11019;
 			x = 0.455;
-			y = 0.78000;
-			w = 0.040;
-			h = 0.040;
-			text = "Client\images\fps_hud.jpg";
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = "GPS";
+			sizeEx = 0.026;
 			action = "MenuAction = 19";
-			tooltip = "FPS HUD On/Off";
+			tooltip = "Enable GPS / Mini Map";
 		};
 	};
 };
@@ -2431,450 +2443,6 @@ class RscMenu_Tactical {
 	};
 };
 
-//--- Upgrade Menu. | ALL DONE!
-class RscMenu_Upgrade {
-	movingEnable = 1;
-	idd = 18000;
-	onLoad = "_this ExecVM ""Client\GUI\GUI_Menu_Upgrade.sqf""";
-	
-	class controlsBackground {
-		class Background_M : RscText {
-			x = 0.0933989;
-			y = 0.151421;
-			w = 0.813204;
-			h = 0.699949;
-			moving = 1;
-			colorBackground[] = WFBE_Background_Color;
-		};
-		class Background_H : RscText {
-			x = 0.0933989;
-			y = 0.151421;
-			w = 0.813204;
-			h = 0.0525;
-			moving = 1;
-			colorBackground[] = WFBE_Background_Color_Header;
-		};
-		class Background_F : RscText {
-			x = 0.0933989;
-			y = 0.798870;
-			w = 0.813204;
-			h = 0.0525;
-			moving = 1;
-			colorBackground[] = WFBE_Background_Color_Footer;
-		};
-		class Background_L : RscText {
-			x = 0.0933989;
-			y = 0.202921;
-			w = 0.813204;
-			h = WFBE_Background_Border_Thick;
-			colorBackground[] = WFBE_Background_Border;
-		};
-	};
-	class controls {
-		class Title_Upgrade : RscText_Title {
-			idc = 18801;
-			x = 0.1;
-			y = 0.157621;
-			w = 0.399999;
-			text = $STR_WF_MAIN_UpgradeMenu;
-		};
-		class CA_Label_TimeLeft : RscText {
-			idc = 18802;
-			x = 0.443216;
-			y = 0.158741;
-			w = 0.45;
-			style = ST_RIGHT;
-		};
-		/* Aircraft */
-		class LineTRH1 : RscText {
-			x = 0.812039;
-			y = 0.3;
-			w = 0.0025;
-			h = 0.4;
-			colorBackground[] = {0.6941,0.6902,0.4431,1};
-		};
-		class LineTRH2 : LineTRH1 {
-			x = 0.812674;
-			y = 0.336547;
-			w = 0.05;
-			h = 0.00300001;
-		};
-		class LineTRH3 : LineTRH1 {
-			x = 0.763215;
-			y = 0.439469;
-			w = 0.05;
-			h = 0.00300001;
-		};
-		class LineTRH4 : LineTRH1 {
-			x = 0.763394;
-			y = 0.540148;
-			w = 0.05;
-			h = 0.00300001;
-		};
-		class LineTRH5 : LineTRH1 {
-			x = 0.812737;
-			y = 0.5648;
-			w = 0.05;
-			h = 0.00300001;
-		};
-		class LineTRH6 : LineTRH1 {
-			x = 0.700909;
-			y = 0.640347;
-			w = 0.113265;
-			h = 0.00300001;
-		};
-		class LineTRH7 : LineTRH1 {
-			x = 0.76336;
-			y = 0.439833;
-			w = 0.0025;
-			h = 0.0300001;
-		};
-		class LineTRH8 : LineTRH1 {
-			x = 0.76336;
-			y = 0.540672;
-			w = 0.0025;
-			h = 0.0300001;
-		};
-		class LineTRH9 : LineTRH1 {
-			x = 0.76336;
-			y = 0.640393;
-			w = 0.0025;
-			h = 0.0300001;
-		};
-		class LineTRH10 : LineTRH1 {
-			x = 0.700997;
-			y = 0.640154;
-			w = 0.0025;
-			h = 0.0300001;
-		};
-		class LineTRH11 : LineTRH1 {
-			x = 0.862185;
-			y = 0.352101;
-			w = 0.0025;
-			h = 0.14;
-		};
-		/* Heavy-Vehicle */
-		class LineTRH20 : LineTRH1 {
-			x = 0.593264;
-			y = 0.3;
-			w = 0.0025;
-			h = 0.4;
-		};
-		class LineTRH21 : LineTRH1 {
-			x = 0.545447;
-			y = 0.439629;
-			w = 0.0489796;
-			h = 0.00300001;
-		};
-		class LineTRH22 : LineTRH1 {
-			x = 0.545713;
-			y = 0.439833;
-			w = 0.0025;
-			h = 0.0300001;
-		};
-		class LineTRH23 : LineTRH1 {
-			x = 0.545713;
-			y = 0.496975;
-			w = 0.0025;
-			h = 0.185;
-		};
-		/* Light-Vehicle */
-		class LineTRH30 : LineTRH1 {
-			x = 0.374489;
-			y = 0.3;
-			w = 0.0025;
-			h = 0.4;
-		};
-		class LineTRH31 : LineTRH1 {
-			x = 0.375701;
-			y = 0.339909;
-			w = 0.05;
-			h = 0.00300001;
-		};
-		class LineTRH32 : LineTRH1 {
-			x = 0.327268;
-			y = 0.540469;
-			w = 0.0489797;
-			h = 0.00300001;
-		};
-		class LineTRH33 : LineTRH1 {
-			x = 0.327226;
-			y = 0.540672;
-			w = 0.0025;
-			h = 0.0300001;
-		};
-		/* Barracks */
-		class LineTRH40 : LineTRH1 {
-			x = 0.186325;
-			y = 0.3;
-			w = 0.0025;
-			h = 0.4;
-		};
-		class LineTRH41 : LineTRH1 {
-			x = 0.187465;
-			y = 0.339909;
-			w = 0.05;
-			h = 0.00300001;
-		};
-		class LineTRH42 : LineTRH1 {
-			x = 0.137885;
-			y = 0.439629;
-			w = 0.05;
-			h = 0.00300001;
-		};
-		class LineTRH43 : LineTRH1 {
-			x = 0.138151;
-			y = 0.439831;
-			w = 0.0025;
-			h = 0.0300001;
-		};
-		class LineTRH44 : LineTRH1 {
-			x = 0.138149;
-			y = 0.492493;
-			w = 0.0025;
-			h = 0.185;
-		};
-		/* Normal GUI Ctrls */
-		class WF_Con1 : RscClickableText {
-			idc = 18001;
-			x = 0.156325;
-			y = 0.238231;
-			w = 0.064;
-			h = 0.064;
-			text = "Client\Images\wf_b.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'infantry'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con2 : WF_Con1 {
-			idc = 18002;
-			x = 0.34449;
-			y = 0.238231;
-			text = "Client\Images\wf_lvf.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'light'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con3 : WF_Con1 {
-			idc = 18003;
-			x = 0.561224;
-			y = 0.238231;
-			text = "Client\Images\wf_hvf.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'heavy'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con4 : WF_Con1 {
-			idc = 18004;
-			x = 0.779999;
-			y = 0.238231;
-			text = "Client\Images\wf_air.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'air'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con5 : WF_Con1 {
-			idc = 18005;
-			x = 0.724129;
-			y = 0.457148;
-			text = "Client\Images\wf_par.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'parachutist'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con6 : WF_Con1 {
-			idc = 18006;
-			x = 0.723951;
-			y = 0.557871;
-			text = "Client\Images\wf_uav.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'uav'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con7 : WF_Con1 {
-			idc = 18007;
-			x = 0.400177;
-			y = 0.329419;
-			text = "Client\Images\wf_sup.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'supply'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con8 : WF_Con1 {
-			idc = 18008;
-			x = 0.287599;
-			y = 0.55879;
-			text = "Client\Images\wf_fia.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'ambuSpawn'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con9 : WF_Con1 {
-			idc = 18009;
-			x = 0.836891;
-			y = 0.32942;
-			text = "Client\Images\wf_lif.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'airlift'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con10 : WF_Con1 {
-			idc = 18010;
-			x = 0.836891;
-			y = 0.558514;
-			text = "Client\Images\wf_fla.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'flares'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con11 : WF_Con1 {
-			idc = 18011;
-			x = 0.50587;
-			y = 0.457871;
-			text = "Client\Images\wf_art.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'artillery'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con12 : WF_Con1 {
-			idc = 18012;
-			x = 0.660492;
-			y = 0.657666;
-			text = "Client\Images\wf_mib.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'icbm'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con13 : WF_Con1 {
-			idc = 18013;
-			x = 0.212198;
-			y = 0.329419;
-			text = "Client\Images\wf_fas.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'fasttravel'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con14 : WF_Con1 {
-			idc = 18014;
-			x = 0.100274;
-			y = 0.456988;
-			text = "Client\Images\wf_gea.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'gear'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con15 : WF_Con1 {
-			idc = 18015;
-			x = 0.100274;
-			y = 0.658312;
-			text = "Client\Images\wf_amm.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'ammo'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con16 : WF_Con1 {
-			idc = 18016;
-			x = 0.72413;
-			y = 0.658312;
-			text = "Client\Images\wf_eas.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'easa'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con17 : WF_Con1 {
-			idc = 18017;
-			x = 0.837035;
-			y = 0.457147;
-			text = "Client\Images\wf_pas.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'paradrop'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		class WF_Con18 : WF_Con1 {
-			idc = 18018;
-			x = 0.505869;
-			y = 0.657837;
-			text = "Client\Images\wf_shl.paa";
-			action = "MenuAction = 1";
-			
-			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)"; 
-			onMouseEnter = "displayUpgrade = 'shells'";
-			onMouseExit = "displayUpgrade = ''";
-		};
-		/* Tooltip */
-		class TooltipHelper : RscText {
-			idc = 18998;
-			x = 0.0;
-			y = 0.0;
-			w = 0.0;
-			h = 0.0;
-			style = 128;
-			colorBackground[] = {0, 0, 0, 0.6};
-		};
-		class TooltipHelperText : RscStructuredText {
-			idc = 18999;
-			x = 0.0;
-			y = 0.0;
-			w = 0.0;
-			h = 0.0;
-			size = 0.035;
-			class Attributes {
-				font = "Zeppelin32";
-				color = "#B6F862";
-				align = "left";
-				shadow = true;
-			};
-		};
-		/* Back */
-		class Back_Button : RscButton_Back {
-			x = 0.799231;
-			y = 0.804806;
-			action = "MenuAction = 2";
-			tooltip = $STR_WF_TOOLTIP_BackButton;
-		};
-		/* Exit */
-		class Exit_Button : RscButton_Exit {
-			x = 0.862497;
-			y = 0.804806;
-			onButtonClick = "closeDialog 0;";
-			tooltip = $STR_WF_TOOLTIP_CloseButton;
-		};
-	};
-};
 
 //--- Service Menu. | ALL DONE!
 class RscMenu_Service {
@@ -2930,114 +2498,143 @@ class RscMenu_Service {
 			x = 0.162101;
 			y = 0.209804;
 			w = 0.677143;
-			h = 0.429553;
+			h = 0.385000;
 			rowHeight = 0.025;
 			sizeEx = 0.035;
+		};
+		class CA_ServiceInfo : RscStructuredText {
+			idc = 20021;
+			x = 0.162101;
+			y = 0.604500;
+			w = 0.677143;
+			h = 0.082000;
+			size = 0.021;
+			colorBackground[] = WFBE_Background_Color_Footer;
 		};
 		class CA_Rearm_Button : RscButton {
 			idc = 20003;
 			x = 0.161261;
-			y = 0.650391;
-			w = 0.22;
+			y = 0.686391;
+			w = 0.165;
 			text = $STR_WF_SERVICE_Rearm;
 			action = "MenuAction = 1";
 		};
 		class CA_Repair_Button : RscButton {
 			idc = 20004;
 			x = 0.50748;
-			y = 0.650391;
-			w = 0.22;
+			y = 0.686391;
+			w = 0.165;
 			text = $STR_WF_SERVICE_Repair;
 			action = "MenuAction = 2";
 		};
 		class CA_Refuel_Button : RscButton {
 			idc = 20005;
 			x = 0.161261;
-			y = 0.697899;
-			w = 0.22;
+			y = 0.733899;
+			w = 0.165;
 			text = $STR_WF_SERVICE_Refuel;
 			action = "MenuAction = 3";
 		};
 		class CA_Heal_Button : RscButton {
 			idc = 20008;
 			x = 0.50748;
-			y = 0.697899;
-			w = 0.22;
+			y = 0.733899;
+			w = 0.165;
 			text = $STR_WF_SERVICE_Heal;
 			action = "MenuAction = 5";
 		};
-		// Marty: Batch service buttons use one total price each and queue only eligible units from the list.
+		// Marty: Compact all-unit buttons sit inside the old single-action button width.
 		class CA_RearmAll_Button : RscButton {
 			idc = 20015;
-			x = 0.161261;
-			y = 0.747311;
-			w = 0.22;
-			text = "Rearm All";
+			x = 0.329261;
+			y = 0.686391;
+			w = 0.052;
+			text = "All";
 			action = "MenuAction = 11";
 		};
 		class CA_RepairAll_Button : RscButton {
 			idc = 20017;
-			x = 0.50748;
-			y = 0.747311;
-			w = 0.22;
-			text = "Repair All";
+			x = 0.675480;
+			y = 0.686391;
+			w = 0.052;
+			text = "All";
 			action = "MenuAction = 12";
+		};
+		class CA_RefuelAll_Button : RscButton {
+			idc = 20022;
+			x = 0.329261;
+			y = 0.733899;
+			w = 0.052;
+			text = "All";
+			action = "MenuAction = 13";
 		};
 		class CA_HealAll_Button : RscButton {
 			idc = 20019;
-			x = 0.161261;
-			y = 0.794819;
-			w = 0.22;
-			text = "Heal All";
+			x = 0.675480;
+			y = 0.733899;
+			w = 0.052;
+			text = "All";
 			action = "MenuAction = 15";
 		};
 		class CA_LabelRearm: RscText {
 			idc = 20011;
 			x = 0.388739;
-			y = 0.653752;
+			y = 0.689752;
 			w = 0.12;
 		};
 		class CA_LabelRepair : CA_LabelRearm {
 			idc = 20012;
-			x = 0.734957;
-			y = 0.653752;
-			w = 0.12;
+			x = 0.724957;
+			y = 0.689752;
+			w = 0.095;
 		};
 		class CA_LabelRefuel : CA_LabelRearm {
 			idc = 20013;
 			x = 0.388739;
-			y = 0.699691;
+			y = 0.735691;
 			w = 0.12;
 		};
 		class CA_LabelHeal : CA_LabelRearm {
 			idc = 20014;
-			x = 0.734957;
-			y = 0.699691;
-			w = 0.12;
+			x = 0.724957;
+			y = 0.735691;
+			w = 0.095;
 		};
-		// Marty: Total prices for the all-unit service buttons.
+		// Marty: Hidden total-price labels kept so older scripts/control maps stay harmless.
 		class CA_LabelRearmAll: CA_LabelRearm {
 			idc = 20016;
-			x = 0.388739;
-			y = 0.750672;
-			w = 0.12;
+			x = 0;
+			y = 0;
+			w = 0;
+			h = 0;
 		};
 		class CA_LabelRepairAll : CA_LabelRearmAll {
 			idc = 20018;
-			x = 0.734957;
 		};
 		class CA_LabelHealAll : CA_LabelRearmAll {
 			idc = 20020;
-			x = 0.388739;
-			y = 0.798180;
 		};
-		// Marty: Put EASA below the three batch service buttons as its own secondary action row.
+		class CA_FullService_Button : RscButton {
+			idc = 20023;
+			x = 0.161261;
+			y = 0.767311;
+			w = 0.22;
+			text = "Full Service";
+			action = "MenuAction = 16";
+		};
+		class CA_LabelFullService : CA_LabelRearm {
+			idc = 20024;
+			x = 0.388739;
+			y = 0.770672;
+			w = 0.12;
+		};
+		// Marty: Keep EASA visible as a loadout/configuration action, not a generic service action.
 		class CA_EASA_Button : RscButton {
 			idc = 20010;
-			x = 0.162101;
-			y = 0.842327;
-			w = 0.677143;
-			text = $STR_WF_SERVICE_EASA;
+			x = 0.50748;
+			y = 0.767311;
+			w = 0.331764;
+			text = "Loadout (EASA)";
 			action = "MenuAction = 7";
 		};
 		/* Back */
@@ -3264,7 +2861,7 @@ class RscDisplay_Parameters {
 //--- EASA Menu. | ALL DONE!
 class RscMenu_EASA {
 	movingEnable = 1;
-	idd = 23000;
+	idd = 24000;
 	onLoad = "_this ExecVM ""Client\GUI\GUI_Menu_EASA.sqf""";
 	
 	class controlsBackground {
@@ -3403,7 +3000,16 @@ class RscMenu_Economy {
 			x = 0.0322372;
 			y = 0.264119;
 			w = 0.25;
-			text = "Economy Workers";
+			text = "Economy Overview";
+		};
+		class CA_EconomyDashboard : RscStructuredText {
+			idc = 23020;
+			x = 0.0372786;
+			y = 0.305000;
+			w = 0.360000;
+			h = 0.140000;
+			size = 0.030;
+			shadow = 1;
 		};
 		/* Income */
 		class CA_LabelPartIncome : CA_LabelPartWorkers {

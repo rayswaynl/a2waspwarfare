@@ -22,8 +22,8 @@ class Mission
 	randomSeed=10034581;
 	class Intel
 	{
-		briefingName="[55] Warfare V48 Chernarus";
-		briefingDescription="by Benny and Awesome&WASP";
+		briefingName="PR 8 - June Feature Bundle";
+		briefingDescription="June release test build: UI/UX, GPS, factories, supply, WDDM/arty, AI/perf.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;

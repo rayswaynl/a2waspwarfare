@@ -84,11 +84,31 @@ switch (_args select 0) do {
 		};
 	};
 	case "update-town-delegation": {
-		Private ["_town","_vehicles"];
+		Private ["_teams","_town","_vehicles"];
 		_town = _args select 1;
-		_vehicles = _args select 2;
+		_teams = [];
+		_vehicles = [];
+
+		// Marty: New delegated town AI reports include local HC/client groups before vehicles; keep old vehicle-only format compatible.
+		if (count _args > 3) then {
+			_teams = _args select 2;
+			_vehicles = _args select 3;
+		} else {
+			_vehicles = _args select 2;
+		};
+
+		// Marty: Track the real delegated groups so server-side state and cleanup requests reference the same town assets.
+		{
+			if !(isNull _x) then {
+				if !(_x in (_town getVariable "wfbe_town_teams")) then {
+					_town setVariable ['wfbe_town_teams', (_town getVariable "wfbe_town_teams") + [_x]];
+				};
+			};
+		} forEach _teams;
 
 		_town setVariable ['wfbe_active_vehicles', (_town getVariable 'wfbe_active_vehicles') + _vehicles];
+		// Marty: Log the server acknowledgement of delegated town assets for production RPT diagnosis.
+		["INFORMATION", Format ["TOWN_AI_HC_CLEANUP server_update town:%1 teams:%2 vehicles:%3 totalTeams:%4 totalVehicles:%5", _town getVariable "name", count _teams, count _vehicles, count (_town getVariable "wfbe_town_teams"), count (_town getVariable 'wfbe_active_vehicles')]] Call WFBE_CO_FNC_LogContent;
 		{
 			[_x] spawn WFBE_SE_FNC_HandleEmptyVehicle;
 			_x setVariable ["WFBE_Taxi_Prohib", true];
