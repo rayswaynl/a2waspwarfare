@@ -218,7 +218,7 @@ waitUntil {commonInitComplete};
 
 // Marty: Show the test build marker once in debug mode so testers can confirm the running PBO version.
 if (WF_Debug) then {
-	systemChat "TD Debug build: 2026-06-08 00:07";
+	systemChat "TD Debug build: 2026-06-09 01:56";
 };
 
 
