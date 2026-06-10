@@ -8,7 +8,7 @@
 		- Teams
 */
 
-Private ["_built", "_builtveh", "_groupCountCiv", "_groupCountEast", "_groupCountGuer", "_groupCountLogic", "_groupCountSide", "_groupCountWest", "_groupCountUnknown", "_groupMachine", "_groupSide", "_groups", "_i", "_lock", "_position", "_positions", "_retVal", "_side", "_sideID", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehicles"];
+Private ["_built", "_builtveh", "_crews", "_groupCountCiv", "_groupCountEast", "_groupCountGuer", "_groupCountLogic", "_groupCountSide", "_groupCountWest", "_groupCountUnknown", "_groupMachine", "_groupSide", "_groups", "_i", "_lock", "_position", "_positions", "_retVal", "_side", "_sideID", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehicles"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -35,6 +35,12 @@ for '_i' from 0 to count(_groups)-1 do {
 	_vehicles = _retVal select 1;
 	// Marty: Track the actual group returned by CreateTeam, because delegated HC creation may replace grpNull locally.
 	_team = _retVal select 2;
+	_crews = if (count _retVal > 3) then {_retVal select 3} else {[]};
+
+	//--- Defender classification: tag everything this town spawned. PUBLIC tag (3rd arg true) -
+	//--- town AI may be created on an HC while the activation scan that must ignore these runs
+	//--- on the server, so a local-only tag would be invisible where it matters.
+	{if (!isNull _x) then {_x setVariable ["WFBE_IsTownDefenderAI", true, true]}} forEach (_units + _crews + _vehicles);
 	_built = _built + count _units;
 	_builtveh = _builtveh + (count _vehicles);
 
