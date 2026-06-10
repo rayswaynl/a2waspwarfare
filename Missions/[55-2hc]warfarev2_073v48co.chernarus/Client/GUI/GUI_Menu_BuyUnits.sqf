@@ -203,17 +203,18 @@ _IDCS = _IDCS - [_currentIDC];
 	ctrlSetText [12019,Format [localize 'STR_WF_UNITS_Cash',Call GetPlayerFunds]];
 
 	//--- WFBE_C_FACTORY_QUEUE_LIMITS=1: recompute per-factory caps from current upgrade levels each tick.
-	//--- Formula: Barracks = WFBE_UP_BARRACKS+2; Light/Heavy/Aircraft/Airport = respective level+1.
+	//--- Formula: max(FLOOR, level+offset) — floors prevent early-game starvation.
+	//--- Floors: Barracks=10, Light=5, Heavy=3, Aircraft/Airport=3 (aircraft floor tentative, pending owner sign-off).
 	//--- Cross-ref: same formula used in the queue-display below (search "Queue: N/CAP").
 	//--- When WFBE_C_FACTORY_QUEUE_LIMITS=0 the _MAX variables retain Init_Client.sqf static defaults.
 	if ((missionNamespace getVariable ["WFBE_C_FACTORY_QUEUE_LIMITS",0]) > 0) then {
 		private ["_upg"];
 		_upg = sideJoined Call WFBE_CO_FNC_GetSideUpgrades;
-		missionNamespace setVariable ["WFBE_C_QUEUE_BARRACKS_MAX", (_upg select WFBE_UP_BARRACKS) + 2];
-		missionNamespace setVariable ["WFBE_C_QUEUE_LIGHT_MAX",    (_upg select WFBE_UP_LIGHT)    + 1];
-		missionNamespace setVariable ["WFBE_C_QUEUE_HEAVY_MAX",    (_upg select WFBE_UP_HEAVY)    + 1];
-		missionNamespace setVariable ["WFBE_C_QUEUE_AIRCRAFT_MAX", (_upg select WFBE_UP_AIR)      + 1];
-		missionNamespace setVariable ["WFBE_C_QUEUE_AIRPORT_MAX",  (_upg select WFBE_UP_AIR)      + 1];
+		missionNamespace setVariable ["WFBE_C_QUEUE_BARRACKS_MAX", 10 max ((_upg select WFBE_UP_BARRACKS) + 2)];
+		missionNamespace setVariable ["WFBE_C_QUEUE_LIGHT_MAX",     5 max ((_upg select WFBE_UP_LIGHT)    + 1)];
+		missionNamespace setVariable ["WFBE_C_QUEUE_HEAVY_MAX",     3 max ((_upg select WFBE_UP_HEAVY)    + 1)];
+		missionNamespace setVariable ["WFBE_C_QUEUE_AIRCRAFT_MAX",  3 max ((_upg select WFBE_UP_AIR)      + 1)];
+		missionNamespace setVariable ["WFBE_C_QUEUE_AIRPORT_MAX",   3 max ((_upg select WFBE_UP_AIR)      + 1)];
 	};
 
 		//--- QoL: live queue count on factory tabs (change-detected to avoid per-tick UI churn).
