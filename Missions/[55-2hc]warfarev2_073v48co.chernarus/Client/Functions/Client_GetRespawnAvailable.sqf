@@ -66,7 +66,7 @@ if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0) then {
 				&& abs(speed _veh) < 1
 				&& !(isEngineOn _veh)
 				&& !(isNull _medic) && {alive _medic} && {_medic in (crew _veh)}) then {
-				//--- Not within 300 m of an enemy-held or contested town.
+				//--- Not within 500 m of an enemy-held or contested town.
 				_tooClose = false;
 				{
 					private "_townSide";
