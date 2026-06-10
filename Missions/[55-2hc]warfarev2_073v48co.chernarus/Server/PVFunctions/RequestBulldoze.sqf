@@ -19,7 +19,8 @@
 */
 
 private ["_tree","_veh","_reqPlayer","_side","_logik","_startPos","_baseAreas","_centers",
-         "_baseRange","_inBase","_currentSupply","_lastFell","_playerCount","_felled"];
+         "_baseRange","_inBase","_currentSupply","_lastFell","_playerCount","_felled",
+         "_upgrades","_barrackLvl"];
 
 _tree      = _this select 0;
 _veh       = _this select 1;
@@ -39,10 +40,22 @@ if (isNull _veh || {isNull _reqPlayer} || {!(alive _reqPlayer)}) exitWith {};
 // Determine requesting side from the player.
 _side = side group _reqPlayer;
 
-// Gate 4: server-side base-area check — tree must be inside a friendly base area.
+// Gate 4: Barracks level >= 1 (balance gate — prevents early-game supply drain).
+// Pattern mirrors Server_CounterBattery.sqf's WFBE_UP_CBRADAR check:
+//   side logic → wfbe_upgrades array → select WFBE_UP_BARRACKS (= index 0).
+_logik = _side Call WFBE_CO_FNC_GetSideLogic;
+_upgrades = _logik getVariable ["wfbe_upgrades", []];
+_barrackLvl = 0;
+if (count _upgrades > WFBE_UP_BARRACKS) then { _barrackLvl = _upgrades select WFBE_UP_BARRACKS };
+if (_barrackLvl < 1) exitWith {
+	[_reqPlayer, "LocalizeMessage", ["BulldozerNeedsBarracks1"]] Call WFBE_CO_FNC_SendToClient;
+	["DEBUG", Format ["RequestBulldoze.sqf: [%1] bulldoze rejected — Barracks level %2 < 1.", str _side, _barrackLvl]] Call WFBE_CO_FNC_LogContent;
+};
+
+// Gate 5: server-side base-area check — tree must be inside a friendly base area.
 // Mirrors the bank-placement check in RequestStructure.sqf:
 //   logik → wfbe_startpos + wfbe_basearea[] + WFBE_C_BASE_AREA_RANGE 250 m
-_logik = _side Call WFBE_CO_FNC_GetSideLogic;
+// (_logik already fetched above for the barracks check)
 _startPos  = _logik getVariable ["wfbe_startpos", objNull];
 _baseAreas = _logik getVariable ["wfbe_basearea", []];
 _baseRange = missionNamespace getVariable ["WFBE_C_BASE_AREA_RANGE", 250];
@@ -60,7 +73,7 @@ if !(_inBase) exitWith {
 	["DEBUG", Format ["RequestBulldoze.sqf: [%1] tree at %2 rejected — outside base area.", str _side, getPos _tree]] Call WFBE_CO_FNC_LogContent;
 };
 
-// Gate 5: sufficient supply (>= 10).
+// Gate 6: sufficient supply (>= 10).
 // GetSideSupply / ChangeSideSupply are compiled in Common\Init\Init_Common.sqf and available
 // server-side.  Pattern mirrors upgradeQueue.sqf and Server_AI_Com_Upgrade.sqf.
 _currentSupply = _side Call GetSideSupply;
@@ -79,7 +92,8 @@ if (_playerCount >= 100) exitWith {
 	// Only message once at exactly 100 so it doesn't spam after.
 	if (_playerCount == 100) then {
 		_reqPlayer setVariable ["wfbe_dozer_count", 101];
-		[_side, "LocalizeMessage", ["BulldozerSessionCapReached"]] Call WFBE_CO_FNC_SendToClients;
+		// Use SendToClient (UID-targeted) not SendToClients: only the capped player sees this notice.
+		[_reqPlayer, "LocalizeMessage", ["BulldozerSessionCapReached"]] Call WFBE_CO_FNC_SendToClient;
 		["WARNING", Format ["RequestBulldoze.sqf: [%1] session cap reached (100 trees) — bulldozer halted for this player.", name _reqPlayer]] Call WFBE_CO_FNC_LogContent;
 	};
 };

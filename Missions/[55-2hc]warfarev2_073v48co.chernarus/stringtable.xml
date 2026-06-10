@@ -9488,6 +9488,12 @@
     <Key ID="BankDividend">
       <English>Bank dividend: $%1</English>
     </Key>
+    <Key ID="BulldozerSessionCapReached">
+      <English>Bulldozer session limit reached (100 trees). Ask another engineer to continue.</English>
+    </Key>
+    <Key ID="BulldozerNeedsBarracks1">
+      <English>Bulldozer requires Barracks level 1 before use.</English>
+    </Key>
     <Key ID="STR_WF_CBR_Contact">
       <English>CB CONTACT</English>
     </Key>

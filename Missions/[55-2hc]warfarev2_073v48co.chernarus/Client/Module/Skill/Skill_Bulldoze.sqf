@@ -15,7 +15,7 @@
 */
 
 private ["_veh","_baseRange","_inBase","_trees","_s","_side","_startPos","_baseAreas","_centers",
-         "_nearBase","_candidates","_tree","_isTree"];
+         "_nearBase","_candidates","_tree","_isTree","_upgrades","_barrackLvl"];
 
 _veh = _this select 0;
 
@@ -55,6 +55,17 @@ while {alive _veh} do {
 
 			if (_inBase) then {
 
+				// Barracks gate (client-side pre-check — prevents request spam before Barracks 1).
+				// Mirrors Server_CounterBattery.sqf pattern: side logic → wfbe_upgrades → WFBE_UP_BARRACKS.
+				// WFBE_CO_FNC_GetSideUpgrades reads wfbe_upgrades from the side logic; WFBE_UP_BARRACKS = 0.
+				_upgrades = sideJoined Call WFBE_CO_FNC_GetSideUpgrades;
+				_barrackLvl = 0;
+				if (!(isNil "_upgrades") && {count _upgrades > WFBE_UP_BARRACKS}) then {
+					_barrackLvl = _upgrades select WFBE_UP_BARRACKS;
+				};
+
+				if (_barrackLvl >= 1) then {
+
 				// Detect nearby terrain trees.
 				// nearestObjects in A2 returns terrain objects within range.
 				// str of a terrain object yields e.g. "123456: t_picea2s.p3d" — we match
@@ -82,6 +93,7 @@ while {alive _veh} do {
 					};
 				} forEach _candidates;
 
+				}; // _barrackLvl >= 1
 			}; // _inBase
 		}; // speed gate
 	}; // driver check
