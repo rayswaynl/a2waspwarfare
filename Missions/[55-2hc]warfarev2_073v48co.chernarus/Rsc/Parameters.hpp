@@ -102,6 +102,12 @@
 		texts[] = {"$STR_WF_PARAMETER_No","$STR_WF_PARAMETER_Yes"};//{"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1; //--- feat/ai-commander: default-ON (admins can still disable in the lobby).
 	};
+	class WFBE_C_AI_COMMANDER_LEVEL {
+		title = "AI Commander difficulty";
+		values[] = {0,1,2};
+		texts[] = {"Easy","Normal","Hard"};
+		default = 1; //--- V0.5: tunes the AI's synthetic MONEY only - supply stays real on every level.
+	};
 	class WFBE_C_STRUCTURES_ANTIAIRRADAR {
 		title = "$STR_WF_PARAMETER_AntiAirRadar";
 		values[] = {0,1};

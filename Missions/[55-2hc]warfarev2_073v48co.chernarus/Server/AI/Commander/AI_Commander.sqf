@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -53,7 +53,7 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 	};
 };
 
-_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0;
+_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0;
 _prevHuman = false; _prevState = "";
 
 ["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1.", str _side]] Call WFBE_CO_FNC_AICOMLog;
@@ -98,6 +98,10 @@ while {!gameOver} do {
 
 		//--- Economy: full command only (rule A - AI never spends under a human commander).
 		if (!_humanCmd) then {
+			//--- V0.5: war strategy (spearheads, town relief, HQ strike, artillery).
+			if (time - _ltStrat > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60])) then {
+				(_side) Call WFBE_SE_FNC_AI_Com_Strategy; _ltStrat = time;
+			};
 			//--- V0.2: build the base (HQ deploy -> doctrine build order -> defenses).
 			if (time - _ltBase > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_BASE_INTERVAL", 60])) then {
 				(_side) Call WFBE_SE_FNC_AI_Com_Base; _ltBase = time;
@@ -127,3 +131,11 @@ while {!gameOver} do {
 
 	sleep (missionNamespace getVariable "WFBE_C_AI_COMMANDER_TICK");
 };
+
+//--- V0.5: round verdict - one line per side for the stats pipeline / meta-learning.
+_myID = (_side) Call WFBE_CO_FNC_GetSideID;
+_held = 0;
+{ if ((_x getVariable "sideID") == _myID) then {_held = _held + 1} } forEach towns;
+_winner = sideUnknown;
+if (!isNil "WF_Logic") then {_winner = WF_Logic getVariable ["WF_Winner", sideUnknown]};
+["INFORMATION", Format ["AI_Commander.sqf: [%1] ROUND OVER after %2 min: winner [%3], my doctrine %4, towns held %5, funds left %6.", str _side, round (time / 60), _winner, _logik getVariable ["wfbe_aicom_doctrine", "?"], _held, (_side) Call GetAICommanderFunds]] Call WFBE_CO_FNC_AICOMLog;

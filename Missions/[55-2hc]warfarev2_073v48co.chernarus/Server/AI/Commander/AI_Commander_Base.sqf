@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses"];
 
 _side = _this;
 _sideText = str _side;
@@ -137,6 +137,33 @@ if (_defCount < _defMax) then {
 				[_defClass, _side, _pos, random 360, true, true] Call ConstructDefense;
 				_logik setVariable ["wfbe_aicom_defenses", _defCount + 1];
 				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base defense %2/%3 [%4].", _sideText, _defCount + 1, _defMax, _defClass]] Call WFBE_CO_FNC_AICOMLog;
+			};
+		};
+	};
+};
+
+//--- 4) V0.5: two base artillery pieces once the defenses stand. Construction tags
+//--- them WFBE_CommanderArtillery; the strategy worker fires them at spearhead
+//--- towns / the enemy HQ (fire is free in WFBE - the real cooldown gates it).
+if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0) then {
+	_artyBuilt = _logik getVariable ["wfbe_aicom_arty_built", 0];
+	if (_artyBuilt < 2 && {(_logik getVariable ["wfbe_aicom_defenses", 0]) >= _defMax}) then {
+		_have = false;
+		{ if ((_x getVariable ["wfbe_structure_type", ""]) == "Barracks" && {alive _x}) exitWith {_have = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+		if (_have) then {
+			_artyClasses = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_CLASSNAMES", _sideText];
+			if (!isNil "_artyClasses" && {count _artyClasses > 0}) then {
+				_defClass = _artyClasses select 0;
+				_defData = missionNamespace getVariable _defClass;
+				_defPrice = if (!isNil "_defData") then {_defData select QUERYUNITPRICE} else {0};
+				_funds = (_side) Call GetAICommanderFunds;
+				if (_funds >= _defPrice) then {
+					[_side, -_defPrice] Call ChangeAICommanderFunds;
+					_pos = [25, 38] Call _findBuildPos;
+					[_defClass, _side, _pos, random 360, true, true] Call ConstructDefense;
+					_logik setVariable ["wfbe_aicom_arty_built", _artyBuilt + 1];
+					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base artillery %2/2 [%3] (cost %4 funds).", _sideText, _artyBuilt + 1, _defClass, _defPrice]] Call WFBE_CO_FNC_AICOMLog;
+				};
 			};
 		};
 	};

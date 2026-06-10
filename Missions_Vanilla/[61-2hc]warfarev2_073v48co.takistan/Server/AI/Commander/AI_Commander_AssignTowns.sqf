@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG","_ord"];
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG","_ord","_spear","_spearT","_perTown"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -118,9 +118,25 @@ _assigned = [];
 			};
 
 			if (_needs) then {
-				_avail = _uncaptured - _assigned;
-				if (count _avail == 0) then {_avail = _uncaptured};
-				_target = [leader _team, _avail] Call WFBE_CO_FNC_GetClosestEntity;
+				//--- V0.5: concentrate on the strategy worker's spearhead targets first
+				//--- (SPEARHEAD_PER_TOWN teams per town this pass), then spill over to
+				//--- the classic nearest-uncaptured pick.
+				_target = objNull;
+				_spear = _logik getVariable ["wfbe_aicom_targets", []];
+				_perTown = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_SPEARHEAD_PER_TOWN", 3];
+				{
+					_spearT = _x;
+					if (isNull _target && {!isNull _spearT}) then {
+						if ((_spearT getVariable "sideID") != _sideID) then {
+							if (({_x == _spearT} count _assigned) < _perTown) then {_target = _spearT};
+						};
+					};
+				} forEach _spear;
+				if (isNull _target) then {
+					_avail = _uncaptured - _assigned;
+					if (count _avail == 0) then {_avail = _uncaptured};
+					_target = [leader _team, _avail] Call WFBE_CO_FNC_GetClosestEntity;
+				};
 				if (!isNil "_target") then {
 					if (!isNull _target) then {
 						[_team, "towns"] Call SetTeamMoveMode;

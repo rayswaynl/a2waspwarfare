@@ -8,7 +8,7 @@
 	affordable. One order per team per call. No-ops when the factory does not exist.
 */
 
-private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds"];
+private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP"];
 
 _side = _this;
 _sideText = str _side;
@@ -43,6 +43,14 @@ _facDefs = [["Barracks","BARRACKSUNITS",WFBE_UP_BARRACKS], ["Light","LIGHTUNITS"
 			if (_type < count _templates) then {
 				if (count (_team getVariable ["wfbe_queue", []]) == 0) then {_canProduce = true};
 			};
+		};
+	};
+	//--- V0.5: reinforcement sanity - AIBuyUnit spawns refills at the factory, so only
+	//--- refill teams near the base; fully wiped teams reform at base anyway.
+	if (_canProduce && {({alive _x} count (units _team)) > 0}) then {
+		_hqP = (_side) Call WFBE_CO_FNC_GetSideHQ;
+		if (!isNull _hqP) then {
+			if ((leader _team) distance _hqP > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_REINFORCE_RANGE", 1200])) then {_canProduce = false};
 		};
 	};
 	if (_canProduce) then {
