@@ -32,13 +32,7 @@ while {!gameOver} do {
 				gameOver = true;
 				WFBE_GameOver = true;
 
-				_side = west;
-
-				if (_x == west) then {
-				    _side = east;
-				};
-
-				[_side] call WFBE_CO_FNC_LogGameEnd;
+				[_x] call WFBE_CO_FNC_LogGameEnd;
 			};
 		} forEach WFBE_PRESENTSIDES - [WFBE_DEFENDER];
 	};
