@@ -12,13 +12,15 @@ private ["_active","_newTitle","_footID","_vehRef","_vehID"];
 _active = missionNamespace getVariable ["WFBE_WASP_EarplugActive", false];
 
 if (!_active) then {
-	//--- Put earplugs IN: lower volume.
+	//--- Put earplugs IN: lower ambient and radio volume.
 	0.25 fadeSound 0.3;
+	0.25 fadeRadio 0.12;
 	playSound "autoViewDistanceToggledOn";
 	missionNamespace setVariable ["WFBE_WASP_EarplugActive", true];
 } else {
-	//--- Take earplugs OUT: restore volume.
+	//--- Take earplugs OUT: restore ambient and radio volume.
 	1 fadeSound 0.3;
+	1 fadeRadio 1;
 	playSound "autoViewDistanceToggledOff";
 	missionNamespace setVariable ["WFBE_WASP_EarplugActive", false];
 };
