@@ -591,15 +591,19 @@ WF_Logic setVariable ['filler','primary'];
 //--- Design: setVariable ["wfbe_medic_unit", player, true] (public broadcast) while
 //--- aboard a redeploy truck; reader validates alive + still in crew — stale on
 //--- dismount/disconnect with no cleanup needed.
-if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && WFBE_SK_V_Type == "Medic") then {
+//--- Loop is permanent (not while-alive): players respawn and can re-pick class mid-session,
+//--- so the alive + class checks live INSIDE the loop body, not in the start gate.
+if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0) then {
 	[] spawn {
 		private ["_redeployList","_veh"];
 		_redeployList = missionNamespace getVariable [Format["WFBE_%1REDEPLOYTRUCKS",sideJoinedText],[]];
-		while {alive player} do {
+		while {true} do {
 			sleep 5;
-			_veh = vehicle player;
-			if (_veh != player && typeOf _veh in _redeployList) then {
-				_veh setVariable ["wfbe_medic_unit", player, true];
+			if (alive player && WFBE_SK_V_Type == "Medic") then {
+				_veh = vehicle player;
+				if (_veh != player && typeOf _veh in _redeployList) then {
+					_veh setVariable ["wfbe_medic_unit", player, true];
+				};
 			};
 		};
 	};
