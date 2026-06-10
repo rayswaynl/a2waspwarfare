@@ -165,8 +165,8 @@ _longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",_facto
 	_longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",_factoryType];
 };
 
+varQueu = Format["%1_%2", getPlayerUID player, diag_tickTime];
 _unique = varQueu;
-varQueu = random(10)+random(100)+random(1000);
 _queu = _building getVariable "queu";
 if (isNil "_queu") then {_queu = []};
 _queu = _queu + [_unique];
