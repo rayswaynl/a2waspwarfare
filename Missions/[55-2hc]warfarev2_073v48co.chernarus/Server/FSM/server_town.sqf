@@ -235,7 +235,15 @@ while {!WFBE_GameOver} do {
 			};
 
 			//--- If the side is defined, we create the new side's defenses.
-			if (_side_enabled) then {[_location, _newSide, _sideID] Call WFBE_SE_FNC_ManageTownDefenses};
+			if (_side_enabled) then {
+				[_location, _newSide, _sideID] Call WFBE_SE_FNC_ManageTownDefenses;
+				//--- Immediately man the statics that ManageTownDefenses just spawned (Task 19).
+				//--- OperateTownDefensesUnits reads wfbe_defense set by SpawnTownDefense, which
+				//--- ManageTownDefenses calls synchronously above, so ordering is guaranteed.
+				if (missionNamespace getVariable ["WFBE_C_TOWNS_GUNNERS_ON_CAPTURE", true]) then {
+					[_location, _newSide, "spawn"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
+				};
+			};
 		};
 		};
 		sleep 0.05;

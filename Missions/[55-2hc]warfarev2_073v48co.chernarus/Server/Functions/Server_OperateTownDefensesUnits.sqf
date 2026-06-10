@@ -14,7 +14,6 @@ _action = _this select 2;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 
 
-if (_sideID != WFBE_C_GUER_ID) exitWith {};
 switch (_action) do {
 	case "spawn": {
 		//_side_group = createGroup _side;
