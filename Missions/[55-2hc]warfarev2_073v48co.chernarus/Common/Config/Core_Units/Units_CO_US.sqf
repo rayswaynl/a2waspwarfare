@@ -143,6 +143,7 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['ATV_US_EP1'];
     _u = _u		+ ['Zodiac'];
 
+
     _u = _u		+ ['HMMWV_M998A2_SOV_DES_EP1'];
     _u = _u		+ ['HMMWV_M1151_M2_DES_EP1'];
     _u = _u		+ ['HMMWV'];
@@ -180,6 +181,7 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['BAF_Offroad_W'];
     _u = _u		+ ['BAF_Jackal2_GMG_W'];
     _u = _u		+ ['BAF_Jackal2_L2A1_W'];
+    _u = _u		+ ['RM70_ACR'];
 } else {
     _u 			= ['MMT_USMC'];
     _u = _u		+ ['M1030'];
@@ -234,6 +236,7 @@ if (IS_chernarus_map_dependent) then {
         _u = _u		+ ['M6_EP1'];
     };
     _u = _u		+ ['BAF_FV510_W'];
+    _u = _u		+ ['T72M4CZ_ACR'];
 } else {
     _u 			= ['AAV'];
     _u = _u		+ ['M2A2_EP1'];

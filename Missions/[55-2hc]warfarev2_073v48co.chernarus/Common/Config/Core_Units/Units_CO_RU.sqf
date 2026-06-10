@@ -112,6 +112,7 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['Ural_ZU23_INS'];
     _u = _u		+ ['BTR90'];
     _u = _u		+ ['GRAD_RU'];
+    _u = _u		+ ['RM70_ACR'];
 } else {
     _u 			= ['MMT_Civ'];
     _u = _u		+ ['TT650_Ins'];
@@ -161,6 +162,7 @@ if (IS_chernarus_map_dependent) then {
     if (!(IS_air_war_event)) then {
         _u = _u		+ ['2S6M_Tunguska'];
     };
+    _u = _u		+ ['T72M4CZ_ACR'];
 } else {
     _u 			= ['M113_TK_EP1'];
     _u = _u		+ ['BMP2_TK_EP1'];
