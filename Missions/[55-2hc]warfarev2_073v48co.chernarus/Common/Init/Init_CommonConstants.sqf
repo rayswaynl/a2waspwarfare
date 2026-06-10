@@ -397,8 +397,8 @@ if (WF_A2_Vanilla) then {
 	WFBE_C_STRUCTURES_COUNTERBATTERY = 1; // Counter Battery Radar structure (mid-game, requires own AAR)
 	WFBE_C_ECONOMY_BANK = 1;              // Federal Reserve / Bank Rossii endgame objective building
 	WFBE_C_UNITS_REDEPLOYTRUCK = 1;       // Medic redeployment truck (forward spawn)
-	WFBE_C_SUPPORT_REARM_PROPORTIONAL = 1;// Rearm price scales with ammo actually missing (arty exempt)
-	WFBE_C_ENGINEER_BULLDOZER = 1;        // Engineer base-area tree clearing
+	WFBE_C_SUPPORT_REARM_PROPORTIONAL = 1; //--- Rearm price scales with ammo actually missing (arty exempt)
+	WFBE_C_UNITS_BULLDOZER = 1;           //--- Engineer base-area tree clearing
 	WFBE_C_DEFENSE_BUDGET = 1;            // Per-base-area defense caps scaling with barracks level
 	WFBE_C_FACTORY_QUEUE_LIMITS = 1;      // Per-factory production queue caps scaling with factory level
 	WFBE_C_STATLOG = 1;                   // [WASPSTAT] structured telemetry RPT lines
