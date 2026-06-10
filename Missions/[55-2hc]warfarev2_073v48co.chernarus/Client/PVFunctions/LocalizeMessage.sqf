@@ -136,6 +136,12 @@ switch (_localize) do {
         _txt = Format [Localize "DefenseBudgetFull", _this select 1, _this select 2, _this select 3];
     };
 
+    case "WddmCompositionCapReached": {
+        // _this: [1]=current composition count, [2]=cap
+        // No client-side refund — WDDM compositions are charged server-side, not optimistically on the client.
+        _txt = Format [Localize "WddmCompositionCapReached", _this select 1, _this select 2];
+    };
+
     case "DefenseThreatGate": {
         // _this: [1]=refund price
         // Refund then show threat warning.

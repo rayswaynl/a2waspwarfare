@@ -9539,6 +9539,11 @@
       <English>Cannot place statics or mines — enemies are within base range. Funds refunded.</English>
     </Key>
 
+    <!-- Marty: WDDM composition cap — max 3 compositions per base area (Task 18). %1 = current count, %2 = cap -->
+    <Key ID="WddmCompositionCapReached">
+      <English>Base composition limit reached (%1/%2). Commander composition not built.</English>
+    </Key>
+
     </Container>
   </Package>
 </Project>

@@ -33,7 +33,8 @@ if (_index != -1) then {
 		         "_cat","_classesByCategory","_existingCount","_cap",
 		         "_budgetRejected","_threatRejected","_enemySide","_enemyCount",
 		         "_refundPrice","_templateVar","_tplEntry","_tplName","_factionSpecific",
-		         "_tplChildren","_childCls","_childCat","_budgetChildCount"];
+		         "_tplChildren","_childCls","_childCat","_budgetChildCount",
+		         "_compCap","_allDefNamesComp","_compObjs","_seenIDs","_cid"];
 
 		//----------------------------------------------------------------------
 		// A. Locate the nearest base-area center to the placement position.
@@ -135,65 +136,102 @@ if (_index != -1) then {
 			};
 
 			//------------------------------------------------------------------
+			// B3b. COMPOSITION CAP — anchors only; max WFBE_C_WDDM_COMP_CAP
+			//      distinct compositions per base area (size-independent).
+			//      Counted by distinct WFBE_WDDMPositionAnchor placement-ID
+			//      values found on defense objects near the base center.
+			//------------------------------------------------------------------
+			_budgetRejected = false;
+			_rejCat = ""; _rejUsed = 0; _rejCap = 0;
+
+			if (_isAnchor) then {
+				_compCap      = missionNamespace getVariable ["WFBE_C_WDDM_COMP_CAP", 3];
+				_allDefNamesComp = missionNamespace getVariable [format ["WFBE_%1DEFENSENAMES", str _side], []];
+				_compObjs     = nearestObjects [_nearestCenter, _allDefNamesComp, _baseRange];
+				_seenIDs      = [];
+				{
+					_cid = _x getVariable ["WFBE_WDDMPositionAnchor", ""];
+					if (_cid != "" && {!(_cid in _seenIDs)}) then { _seenIDs = _seenIDs + [_cid] };
+				} forEach _compObjs;
+				if (count _seenIDs >= _compCap) then {
+					_budgetRejected = true;
+					_rejCat  = "WddmCompositionCapReached";
+					_rejUsed = count _seenIDs;
+					_rejCap  = _compCap;
+					["INFORMATION", Format ["RequestDefense.sqf: [%1] WDDM composition cap rejected [%2] — %3/%4 compositions in base.", str _side, _defenseType, _rejUsed, _rejCap]] Call WFBE_CO_FNC_LogContent;
+				};
+			};
+
+			//------------------------------------------------------------------
 			// B4. BUDGET CHECK — per category against live-object count.
 			//     Build a classname list for each category, then do ONE
 			//     nearestObjects call per category that has items to count.
-			//     Composition children that would exceed cap also rejected.
+			//     Compositions are exempt (cap is B3b above); only single
+			//     defenses hit per-category budget.
 			//------------------------------------------------------------------
-			_budgetRejected = false;
-			private ["_catStatics","_catForts","_catMines","_pendingS","_pendingF","_pendingM","_capS","_capF","_capM","_countS","_countF","_countM","_allDefNames","_rejCat","_rejUsed","_rejCap"];
+			private ["_catStatics","_catForts","_catMines","_pendingS","_pendingF","_pendingM","_capS","_capF","_capM","_countS","_countF","_countM","_allDefNames"];
 
-			_pendingS = 0; _pendingF = 0; _pendingM = 0;
-			{
-				_cat = [_x, _side] Call WFBE_CO_FNC_GetDefenseCategory;
-				switch (_cat) do {
-					case "STATICS":       { _pendingS = _pendingS + 1 };
-					case "FORTIFICATIONS":{ _pendingF = _pendingF + 1 };
-					case "MINES":         { _pendingM = _pendingM + 1 };
+			if (!_isAnchor) then {
+				//--- Single defenses only: count pending objects against per-category caps.
+				//--- Compositions are exempt here; their cap is enforced in B3b above.
+				_pendingS = 0; _pendingF = 0; _pendingM = 0;
+				{
+					_cat = [_x, _side] Call WFBE_CO_FNC_GetDefenseCategory;
+					switch (_cat) do {
+						case "STATICS":       { _pendingS = _pendingS + 1 };
+						case "FORTIFICATIONS":{ _pendingF = _pendingF + 1 };
+						case "MINES":         { _pendingM = _pendingM + 1 };
+					};
+				} forEach _clsToCheck;
+
+				// Caps: 6+2x / 20+10x / 10+5x  (x = barracks level)
+				_capS = 6  + 2  * _barrackLvl;
+				_capF = 20 + 10 * _barrackLvl;
+				_capM = 10 + 5  * _barrackLvl;
+
+				// Count existing: build lists per category for nearestObjects calls.
+				// Skip WDDM composition children so they don't consume single-defense budget slots.
+				_allDefNames = missionNamespace getVariable Format["WFBE_%1DEFENSENAMES", str _side];
+				_catStatics = []; _catForts = []; _catMines = [];
+				{
+					_cat = [_x, _side] Call WFBE_CO_FNC_GetDefenseCategory;
+					switch (_cat) do {
+						case "STATICS":        { _catStatics = _catStatics + [_x] };
+						case "FORTIFICATIONS": { _catForts   = _catForts   + [_x] };
+						case "MINES":          { _catMines   = _catMines   + [_x] };
+					};
+				} forEach _allDefNames;
+
+				_countS = 0; _countF = 0; _countM = 0;
+				if (count _catStatics > 0 && _pendingS > 0) then {
+					{
+						if (alive _x && !(_x getVariable ["WFBE_WDDMPositionChild", false])) then {_countS = _countS + 1}
+					} forEach (nearestObjects [_nearestCenter, _catStatics, _baseRange]);
 				};
-			} forEach _clsToCheck;
-
-			// Caps: 6+2x / 20+10x / 10+5x  (x = barracks level)
-			_capS = 6  + 2  * _barrackLvl;
-			_capF = 20 + 10 * _barrackLvl;
-			_capM = 10 + 5  * _barrackLvl;
-
-			// Count existing: build lists per category for nearestObjects calls.
-			_allDefNames = missionNamespace getVariable Format["WFBE_%1DEFENSENAMES", str _side];
-			_catStatics = []; _catForts = []; _catMines = [];
-			{
-				_cat = [_x, _side] Call WFBE_CO_FNC_GetDefenseCategory;
-				switch (_cat) do {
-					case "STATICS":        { _catStatics = _catStatics + [_x] };
-					case "FORTIFICATIONS": { _catForts   = _catForts   + [_x] };
-					case "MINES":          { _catMines   = _catMines   + [_x] };
+				if (count _catForts > 0 && _pendingF > 0) then {
+					{
+						if (alive _x && !(_x getVariable ["WFBE_WDDMPositionChild", false])) then {_countF = _countF + 1}
+					} forEach (nearestObjects [_nearestCenter, _catForts, _baseRange]);
 				};
-			} forEach _allDefNames;
+				if (count _catMines > 0 && _pendingM > 0) then {
+					{
+						if (alive _x && !(_x getVariable ["WFBE_WDDMPositionChild", false])) then {_countM = _countM + 1}
+					} forEach (nearestObjects [_nearestCenter, _catMines, _baseRange]);
+				};
 
-			_countS = 0; _countF = 0; _countM = 0;
-			if (count _catStatics > 0 && _pendingS > 0) then {
-				{if (alive _x) then {_countS = _countS + 1}} forEach (nearestObjects [_nearestCenter, _catStatics, _baseRange]);
-			};
-			if (count _catForts > 0 && _pendingF > 0) then {
-				{if (alive _x) then {_countF = _countF + 1}} forEach (nearestObjects [_nearestCenter, _catForts, _baseRange]);
-			};
-			if (count _catMines > 0 && _pendingM > 0) then {
-				{if (alive _x) then {_countM = _countM + 1}} forEach (nearestObjects [_nearestCenter, _catMines, _baseRange]);
-			};
+				if (_pendingS > 0 && (_countS + _pendingS) > _capS) then {
+					_budgetRejected = true; _rejCat = "Statics"; _rejUsed = _countS; _rejCap = _capS;
+				};
+				if (!_budgetRejected && _pendingF > 0 && (_countF + _pendingF) > _capF) then {
+					_budgetRejected = true; _rejCat = "Fortifications"; _rejUsed = _countF; _rejCap = _capF;
+				};
+				if (!_budgetRejected && _pendingM > 0 && (_countM + _pendingM) > _capM) then {
+					_budgetRejected = true; _rejCat = "Mines"; _rejUsed = _countM; _rejCap = _capM;
+				};
 
-			_rejCat = ""; _rejUsed = 0; _rejCap = 0;
-			if (_pendingS > 0 && (_countS + _pendingS) > _capS) then {
-				_budgetRejected = true; _rejCat = "Statics"; _rejUsed = _countS; _rejCap = _capS;
-			};
-			if (!_budgetRejected && _pendingF > 0 && (_countF + _pendingF) > _capF) then {
-				_budgetRejected = true; _rejCat = "Fortifications"; _rejUsed = _countF; _rejCap = _capF;
-			};
-			if (!_budgetRejected && _pendingM > 0 && (_countM + _pendingM) > _capM) then {
-				_budgetRejected = true; _rejCat = "Mines"; _rejUsed = _countM; _rejCap = _capM;
-			};
-
-			if (_budgetRejected) then {
-				["INFORMATION", Format ["RequestDefense.sqf: [%1] budget rejected [%2] — %3 used %4/%5.", str _side, _defenseType, _rejCat, _rejUsed, _rejCap]] Call WFBE_CO_FNC_LogContent;
+				if (_budgetRejected) then {
+					["INFORMATION", Format ["RequestDefense.sqf: [%1] budget rejected [%2] — %3 used %4/%5.", str _side, _defenseType, _rejCat, _rejUsed, _rejCap]] Call WFBE_CO_FNC_LogContent;
+				};
 			};
 
 			//------------------------------------------------------------------
@@ -212,14 +250,22 @@ if (_index != -1) then {
 						if (_threatRejected) then {
 							[_reqPlayer, "LocalizeMessage", ["DefenseThreatGate", _defPrice]] Call WFBE_CO_FNC_SendToClient;
 						} else {
-							[_reqPlayer, "LocalizeMessage", ["DefenseBudgetFull", _rejCat, _rejUsed, _rejCap, _defPrice]] Call WFBE_CO_FNC_SendToClient;
+							if (_rejCat == "WddmCompositionCapReached") then {
+								[_reqPlayer, "LocalizeMessage", ["WddmCompositionCapReached", _rejUsed, _rejCap]] Call WFBE_CO_FNC_SendToClient;
+							} else {
+								[_reqPlayer, "LocalizeMessage", ["DefenseBudgetFull", _rejCat, _rejUsed, _rejCap, _defPrice]] Call WFBE_CO_FNC_SendToClient;
+							};
 						};
 					} else {
 						//--- Anchor: no single price to refund (cost structure differs); notify only.
 						if (_threatRejected) then {
 							[_reqPlayer, "LocalizeMessage", ["DefenseThreatGate", 0]] Call WFBE_CO_FNC_SendToClient;
 						} else {
-							[_reqPlayer, "LocalizeMessage", ["DefenseBudgetFull", _rejCat, _rejUsed, _rejCap, 0]] Call WFBE_CO_FNC_SendToClient;
+							if (_rejCat == "WddmCompositionCapReached") then {
+								[_reqPlayer, "LocalizeMessage", ["WddmCompositionCapReached", _rejUsed, _rejCap]] Call WFBE_CO_FNC_SendToClient;
+							} else {
+								[_reqPlayer, "LocalizeMessage", ["DefenseBudgetFull", _rejCat, _rejUsed, _rejCap, 0]] Call WFBE_CO_FNC_SendToClient;
+							};
 						};
 					};
 				};
