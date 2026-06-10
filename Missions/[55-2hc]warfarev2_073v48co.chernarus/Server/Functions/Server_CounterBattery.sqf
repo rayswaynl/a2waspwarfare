@@ -18,7 +18,7 @@
 */
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) == 0) exitWith {};
 
-Private ["_unit","_fpos","_firingSide","_opposingSideKey","_cbrs","_i","_cbr","_r","_upgKey","_upgs","_lvl","_lastPing","_d","_t","_h","_tStr","_markerPos","_pkt"];
+Private ["_unit","_fpos","_firingSide","_opposingSideKey","_cbrs","_i","_cbr","_r","_upgs","_lvl","_lastPing","_d","_t","_h","_tStr","_markerPos","_pkt"];
 
 _unit  = _this select 0;
 _fpos  = _this select 1;
@@ -43,7 +43,6 @@ if (count _cbrs == 0) exitWith {};
         _r = _cbr getVariable ["wfbe_cbr_radius", -1];
         if (_r < 0) then {
             //--- Use upgrade level to pick radius.
-            _upgKey = if (side _cbr == west) then {"wfbe_upgrades"} else {"wfbe_upgrades"};
             _upgs = ((side _cbr) Call WFBE_CO_FNC_GetSideLogic) getVariable ["wfbe_upgrades", []];
             _lvl = 0;
             if (count _upgs > WFBE_UP_CBRADAR) then {_lvl = _upgs select WFBE_UP_CBRADAR};
