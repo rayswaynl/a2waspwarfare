@@ -63,7 +63,7 @@ _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 					_pick = _eligible select (floor (random (count _eligible)));
 				};
 				_team setVariable ["wfbe_teamtype", _pick, true];
-				["INFORMATION", Format ["AI_Commander_AssignTypes.sqf: [%1] assigned template %2 to AI team [%3] (doctrine %4).", _sideText, _pick, _team, _doc]] Call WFBE_CO_FNC_LogContent;
+				["INFORMATION", Format ["AI_Commander_AssignTypes.sqf: [%1] assigned template %2 to AI team [%3] (doctrine %4).", _sideText, _pick, _team, _doc]] Call WFBE_CO_FNC_AICOMLog;
 			};
 		};
 	};

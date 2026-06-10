@@ -88,7 +88,7 @@ _facDefs = [["Barracks","BARRACKSUNITS",WFBE_UP_BARRACKS], ["Light","LIGHTUNITS"
 										_q = (_team getVariable ["wfbe_queue", []]) + [_id];
 										_team setVariable ["wfbe_queue", _q];
 										[_id, (_factories select 0), _toBuild, _side, _team, _isVeh] Spawn AIBuyUnit;
-										["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] ordering [%3] at %4 factory (cost %5).", _sideText, _team, _toBuild, _typeName, _price]] Call WFBE_CO_FNC_LogContent;
+										["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] ordering [%3] at %4 factory (cost %5).", _sideText, _team, _toBuild, _typeName, _price]] Call WFBE_CO_FNC_AICOMLog;
 									};
 								};
 							};

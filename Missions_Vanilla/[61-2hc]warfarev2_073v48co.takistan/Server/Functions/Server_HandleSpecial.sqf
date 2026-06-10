@@ -221,6 +221,7 @@ switch (_args select 0) do {
 			_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
 			if (!isNull _cteam) then {
 				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) + [_cteam], true];
+				["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 registered (%3 units).", _csideID, _cteam, count units _cteam]] Call WFBE_CO_FNC_AICOMLog;
 			};
 		};
 	};
@@ -238,6 +239,7 @@ switch (_args select 0) do {
 				if ((_clogik getVariable ["wfbe_aicom_garrison", grpNull]) == _cteam) then {
 					_clogik setVariable ["wfbe_aicom_garrison", grpNull];
 				};
+				["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 wiped and deregistered.", _csideID, _cteam]] Call WFBE_CO_FNC_AICOMLog;
 			};
 		};
 	};

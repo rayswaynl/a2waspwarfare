@@ -16,7 +16,7 @@
 	members at the factories per-unit (the V0.2 path).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj"];
+private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -27,11 +27,21 @@ if (isNil "_logik") exitWith {};
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") then {_teams = []};
 
-//--- Count AI-led teams (server-local AND HC-resident) + in-flight foundings.
+//--- Count REAL AI combat teams + in-flight foundings. V0.4 fix: the empty editor
+//--- slot groups (no units, null leader) also pass a plain "!isPlayer leader" test,
+//--- so the target looked met and no army was ever founded. A team counts only if
+//--- the commander founded it (HC or server-local tag) or it actually has an alive
+//--- AI leader with units in the field.
 _aiTeams = 0;
 {
 	if (!isNull _x) then {
-		if (!isPlayer (leader _x)) then {_aiTeams = _aiTeams + 1};
+		_real = false;
+		if (_x getVariable ["wfbe_aicom_hc", false]) then {_real = true};
+		if (!_real && {_x getVariable ["wfbe_aicom_founded", false]}) then {_real = true};
+		if (!_real) then {
+			if ((count units _x) > 0 && {!isPlayer (leader _x)} && {alive (leader _x)}) then {_real = true};
+		};
+		if (_real) then {_aiTeams = _aiTeams + 1};
 	};
 } forEach _teams;
 _pending = _logik getVariable ["wfbe_aicom_pending", 0];
@@ -106,13 +116,14 @@ if (count _live > 0) then {
 	[_side, -_price] Call ChangeAICommanderFunds;
 	_logik setVariable ["wfbe_aicom_pending", _pending + 1];
 	[leader (_live select (floor (random (count _live)))), "HandleSpecial", ['delegate-aicom-team', _sideID, _template, getPos _facObj]] Call WFBE_CO_FNC_SendToClient;
-	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched (template %2, cost %3, doctrine %4).", _sideText, _pick, _price, _doc]] Call WFBE_CO_FNC_LogContent;
+	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched (template %2, cost %3, doctrine %4).", _sideText, _pick, _price, _doc]] Call WFBE_CO_FNC_AICOMLog;
 } else {
 	//--- Fallback (no HC): found a server-local empty team; AssignTypes + Produce feed it.
 	_g = createGroup _side;
 	if (isNull _g) exitWith {
-		["WARNING", Format ["AI_Commander_Teams.sqf: [%1] createGroup returned grpNull (group limit?).", _sideText]] Call WFBE_CO_FNC_LogContent;
+		["WARNING", Format ["AI_Commander_Teams.sqf: [%1] createGroup returned grpNull (group limit?).", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 	};
+	_g setVariable ["wfbe_aicom_founded", true];
 	_g setVariable ["wfbe_funds", 0, true];
 	_g setVariable ["wfbe_side", _side];
 	_g setVariable ["wfbe_persistent", true];
@@ -124,5 +135,5 @@ if (count _live > 0) then {
 	[_g, "towns"] Call SetTeamMoveMode;
 	[_g, [0,0,0]] Call SetTeamMovePos;
 	_logik setVariable ["wfbe_teams", _teams + [_g], true];
-	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] founded server-local AI team %2/%3 [%4].", _sideText, _aiTeams + 1, _target, _g]] Call WFBE_CO_FNC_LogContent;
+	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] founded server-local AI team %2/%3 [%4].", _sideText, _aiTeams + 1, _target, _g]] Call WFBE_CO_FNC_AICOMLog;
 };

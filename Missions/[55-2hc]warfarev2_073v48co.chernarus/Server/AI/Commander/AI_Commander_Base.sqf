@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand"];
 
 _side = _this;
 _sideText = str _side;
@@ -36,21 +36,44 @@ if (!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {
 	if (_supply >= _deployCost) then {
 		if (_dual) then {[_side, -_deployCost, "AI commander HQ deployment.", false] Call ChangeSideSupply};
 		[_classes select 0, _side, getPos _hq, getDir _hq, 0] ExecVM "Server\Construction\Construction_HQSite.sqf";
-		["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] deploying HQ (cost %2 supply).", _sideText, _deployCost]] Call WFBE_CO_FNC_LogContent;
+		["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] deploying HQ (cost %2 supply).", _sideText, _deployCost]] Call WFBE_CO_FNC_AICOMLog;
 	};
 };
 
 //--- 2) HQ deployed: walk the doctrine build order; build the first missing structure.
 _doctrine = _logik getVariable ["wfbe_aicom_doctrine", "LF"];
-//--- Logical-name build order (resolved to indices below). Primary factory first.
-_order = if (_doctrine == "HF") then {
-	["Barracks","Heavy","Light","ServicePoint","Aircraft","CommandCenter"]
-} else {
-	["Barracks","Light","Heavy","ServicePoint","Aircraft","CommandCenter"]
+_hqPos = getPos ((_side) Call WFBE_CO_FNC_GetSideHQ);
+
+//--- V0.4: valid-position helper. Ring placement around the HQ, clearance-checked,
+//--- never in water and never on a road. _this = [rmin, rmax]; returns a position.
+_findBuildPos = {
+	private ["_rmin","_rmax","_p","_ok","_try","_ang"];
+	_rmin = _this select 0; _rmax = _this select 1;
+	_ok = false; _try = 0; _p = [_hqPos, 35] Call WFBE_CO_FNC_GetEmptyPosition;
+	while {!_ok && _try < 24} do {
+		_ang = random 360;
+		_p = [(_hqPos select 0) + (_rmin + random (_rmax - _rmin)) * sin _ang, (_hqPos select 1) + (_rmin + random (_rmax - _rmin)) * cos _ang, 0];
+		_p = [_p, 30] Call WFBE_CO_FNC_GetEmptyPosition;
+		if (!(surfaceIsWater _p) && {count (_p nearRoads 12) == 0}) then {_ok = true};
+		_try = _try + 1;
+	};
+	_p
+};
+
+//--- V0.4: strategy-shaped construction. At start ONLY the core: CC -> Barracks ->
+//--- doctrine factory (keeps supply free for the research program). The rest of the
+//--- base is built once the research core (Gear 3 + Barracks 2) is reached = branch out.
+_upgrades = _logik getVariable "wfbe_upgrades";
+_coreDone = false;
+if (!isNil "_upgrades") then {
+	_coreDone = ((_upgrades select WFBE_UP_GEAR) >= 3) && {(_upgrades select WFBE_UP_BARRACKS) >= 2};
+};
+_order = if (_doctrine == "HF") then {["CommandCenter","Barracks","Heavy"]} else {["CommandCenter","Barracks","Light"]};
+if (_coreDone) then {
+	_order = _order + (if (_doctrine == "HF") then {["Light","ServicePoint","Aircraft"]} else {["Heavy","ServicePoint","Aircraft"]});
 };
 
 _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
-_hqPos = getPos ((_side) Call WFBE_CO_FNC_GetSideHQ);
 
 {
 	_idx = _names find _x;
@@ -62,14 +85,23 @@ _hqPos = getPos ((_side) Call WFBE_CO_FNC_GetSideHQ);
 		if (!_have) exitWith {
 			_cost = _costs select _idx;
 			if (_supply >= _cost) then {
-				//--- Ring placement around the HQ, clearance-checked.
-				_ang = 30 + (_idx * 55) + (random 20);
-				_pos = [(_hqPos select 0) + (45 + random 20) * sin _ang, (_hqPos select 1) + (45 + random 20) * cos _ang, 0];
-				_pos = [_pos, 35] Call WFBE_CO_FNC_GetEmptyPosition;
+				//--- ServicePoint wants to sit ON a road (repair/refuel access); fall back to ring.
+				_pos = [0,0,0];
+				_placed = false;
+				if (_x == "ServicePoint") then {
+					_roads = _hqPos nearRoads 200;
+					_cand = [];
+					{ if (((getPos _x) distance _hqPos) > 25) then {_cand = _cand + [_x]} } forEach _roads;
+					if (count _cand > 0) then {
+						_pos = getPos (_cand select (floor (random (count _cand))));
+						if (!(surfaceIsWater _pos)) then {_placed = true};
+					};
+				};
+				if (!_placed) then {_pos = [45, 75] Call _findBuildPos};
 				if (_dual) then {[_side, -_cost, Format ["AI commander base construction (%1).", _x], false] Call ChangeSideSupply};
 				_script = _scripts select _idx;
 				[_class, _side, _pos, random 360, _idx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
-				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] building %2 (cost %3 supply, doctrine %4).", _sideText, _x, _cost, _doctrine]] Call WFBE_CO_FNC_LogContent;
+				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] building %2 at %3 (cost %4 supply, doctrine %5, branch-out %6).", _sideText, _x, _pos, _cost, _doctrine, _coreDone]] Call WFBE_CO_FNC_AICOMLog;
 			};
 		};
 	};
@@ -95,12 +127,10 @@ if (_defCount < _defMax) then {
 			_funds = (_side) Call GetAICommanderFunds;
 			if (_funds >= _defPrice) then {
 				[_side, -_defPrice] Call ChangeAICommanderFunds;
-				_ang = _defCount * 90 + 45;
-				_pos = [(_hqPos select 0) + 35 * sin _ang, (_hqPos select 1) + 35 * cos _ang, 0];
-				_pos = [_pos, 15] Call WFBE_CO_FNC_GetEmptyPosition;
+				_pos = [28, 42] Call _findBuildPos;
 				[_defClass, _side, _pos, random 360, true, true] Call ConstructDefense;
 				_logik setVariable ["wfbe_aicom_defenses", _defCount + 1];
-				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base defense %2/%3 [%4].", _sideText, _defCount + 1, _defMax, _defClass]] Call WFBE_CO_FNC_LogContent;
+				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base defense %2/%3 [%4].", _sideText, _defCount + 1, _defMax, _defClass]] Call WFBE_CO_FNC_AICOMLog;
 			};
 		};
 	};

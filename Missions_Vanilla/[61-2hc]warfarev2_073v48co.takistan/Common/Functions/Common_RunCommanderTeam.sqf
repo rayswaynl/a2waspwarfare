@@ -30,7 +30,7 @@ _vehicles = _retVal select 1;
 _team = _retVal select 2;
 
 if (isNull _team || {((count _units) + (count _vehicles)) == 0}) exitWith {
-	["WARNING", Format ["Common_RunCommanderTeam.sqf: [%1] team creation failed - releasing the slot.", _side]] Call WFBE_CO_FNC_LogContent;
+	["WARNING", Format ["Common_RunCommanderTeam.sqf: [%1] team creation failed - releasing the slot.", _side]] Call WFBE_CO_FNC_AICOMLog;
 	if (isServer) then {
 		["aicom-team-ended", _sideID, grpNull] Call HandleSpecial;
 	} else {
@@ -48,7 +48,7 @@ if (isServer) then {
 	["RequestSpecial", ["aicom-team-created", _sideID, _team]] Call WFBE_CO_FNC_SendToServer;
 };
 
-["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] commander team spawned (%2 units, %3 vehicles).", _side, count _units, count _vehicles]] Call WFBE_CO_FNC_LogContent;
+["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] commander team spawned (%2 units, %3 vehicles).", _side, count _units, count _vehicles]] Call WFBE_CO_FNC_AICOMLog;
 
 //--- Order-execution loop: apply each new order seq from the server brain.
 _lastSeq = -1;
@@ -69,7 +69,7 @@ while {!WFBE_GameOver && _alive} do {
 				_lastSeq = _seq;
 				_arrived = false;
 				[_team, _dest, 'MOVE', 50] Spawn WFBE_CO_FNC_WaypointSimple;
-				["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4.", _side, _team, _seq, _mode]] Call WFBE_CO_FNC_LogContent;
+				["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4.", _side, _team, _seq, _mode]] Call WFBE_CO_FNC_AICOMLog;
 			} else {
 				//--- On arrival, switch to the mode's local behaviour once.
 				if (!_arrived) then {

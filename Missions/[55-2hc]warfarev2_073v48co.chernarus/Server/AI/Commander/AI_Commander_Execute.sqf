@@ -39,7 +39,7 @@ if (isNil "_teams") exitWith {};
 						if (_modeL == "defense") then {_wpType = "HOLD"; _radius = 30};
 						[_team, _goto, _wpType, _radius] Call AIMoveTo;
 						_team setVariable ["wfbe_exec_sig", _sig];
-						["INFORMATION", Format ["AI_Commander_Execute.sqf: [%1] team [%2] executing %3 order at %4.", _side, _team, _modeL, _goto]] Call WFBE_CO_FNC_LogContent;
+						["INFORMATION", Format ["AI_Commander_Execute.sqf: [%1] team [%2] executing %3 order at %4.", _side, _team, _modeL, _goto]] Call WFBE_CO_FNC_AICOMLog;
 					};
 				};
 			} else {

@@ -74,7 +74,7 @@ _assigned = [];
 					};
 					_logik setVariable ["wfbe_aicom_garrison", _team];
 					_explicitMode = true; //--- now an explicit order; the executor drives it home
-					["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] assigned as base garrison.", _sideText, _team]] Call WFBE_CO_FNC_LogContent;
+					["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] assigned as base garrison.", _sideText, _team]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			};
 		};
@@ -120,7 +120,7 @@ _assigned = [];
 							};
 						};
 						_assigned set [count _assigned, _target];
-						["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] heading to attack town [%3].", _sideText, _team, _target getVariable ["name", "town"]]] Call WFBE_CO_FNC_LogContent;
+						["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] heading to attack town [%3].", _sideText, _team, _target getVariable ["name", "town"]]] Call WFBE_CO_FNC_AICOMLog;
 					};
 				};
 			};

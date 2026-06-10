@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_inject","_new","_entry","_anchor"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -25,42 +25,38 @@ waitUntil {sleep 1; !(isNil "serverInitFull")};
 if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 	_doctrine = if (random 1 > 0.5) then {"HF"} else {"LF"};
 	_logik setVariable ["wfbe_aicom_doctrine", _doctrine];
-	["INFORMATION", Format ["AI_Commander.sqf: [%1] doctrine picked: %2 (primary factory path).", str _side, _doctrine]] Call WFBE_CO_FNC_LogContent;
+	["INFORMATION", Format ["AI_Commander.sqf: [%1] doctrine picked: %2 (primary factory path).", str _side, _doctrine]] Call WFBE_CO_FNC_AICOMLog;
 
-	//--- Prioritize Patrols research (and the heavy line under HF doctrine) by injecting
-	//--- entries after their prerequisite anchors in this side's AI upgrade order.
-	//--- Check_Upgrades already appended them at the END; an early duplicate is harmless
-	//--- (the upgrade worker skips entries whose target level is already reached).
+	//--- V0.4: doctrine research PROGRAM. The upgrade worker always takes the FIRST entry
+	//--- whose level is not yet reached, so a prepended program IS the strategy: rush the
+	//--- doctrine factory to 3 with Barracks/Gear mixed in until Gear 3 + Barracks 2, then
+	//--- fall through to the faction's curated default order (= branch out).
+	//--- Duplicates in the tail are harmless (the worker skips reached levels).
 	_order = missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side];
 	if (!isNil "_order" && {!isNil "WFBE_UP_PATROLS"}) then {
-		_inject = [
-			[[WFBE_UP_LIGHT,1],  [WFBE_UP_PATROLS,1]],
-			[[WFBE_UP_HEAVY,2],  [WFBE_UP_PATROLS,2]],
-			[[WFBE_UP_HEAVY,3],  [WFBE_UP_PATROLS,3]]
+		_factory = if (_doctrine == "HF") then {WFBE_UP_HEAVY} else {WFBE_UP_LIGHT};
+		_program = [
+			[WFBE_UP_BARRACKS,1],
+			[_factory,1],
+			[WFBE_UP_GEAR,1],
+			[WFBE_UP_PATROLS,1],
+			[_factory,2],
+			[WFBE_UP_GEAR,2],
+			[WFBE_UP_BARRACKS,2],
+			[_factory,3],
+			[WFBE_UP_GEAR,3],
+			[WFBE_UP_PATROLS,2],
+			[WFBE_UP_PATROLS,3]
 		];
-		if (_doctrine == "HF") then {
-			_inject = [[[WFBE_UP_GEAR,1], [WFBE_UP_HEAVY,1]]] + _inject;
-		};
-		_new = [];
-		{
-			_entry = _x;
-			_new = _new + [_entry];
-			{
-				_anchor = _x select 0;
-				if ((_entry select 0) == (_anchor select 0) && {(_entry select 1) == (_anchor select 1)}) then {
-					_new = _new + [_x select 1];
-				};
-			} forEach _inject;
-		} forEach _order;
-		missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _new];
-		["INFORMATION", Format ["AI_Commander.sqf: [%1] upgrade order tuned (%2 -> %3 entries, Patrols prioritized).", str _side, count _order, count _new]] Call WFBE_CO_FNC_LogContent;
+		missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _program + _order];
+		["INFORMATION", Format ["AI_Commander.sqf: [%1] doctrine research program set (%2: factory id %3 to lvl 3, Gear 3, Barracks 2, then branch out).", str _side, _doctrine, _factory]] Call WFBE_CO_FNC_AICOMLog;
 	};
 };
 
 _ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0;
 _prevHuman = false; _prevState = "";
 
-["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1.", str _side]] Call WFBE_CO_FNC_LogContent;
+["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1.", str _side]] Call WFBE_CO_FNC_AICOMLog;
 
 while {!gameOver} do {
 	_active = false;
@@ -87,8 +83,8 @@ while {!gameOver} do {
 		_state = if (_humanCmd) then {"assist"} else {"full"};
 		if (_state != _prevState) then {
 			_logik setVariable ["wfbe_aicom_running", !_humanCmd];
-			if (_state == "full")   then {["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ACTIVE (full command).", str _side]] Call WFBE_CO_FNC_LogContent};
-			if (_state == "assist") then {["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ASSIST (hybrid - human commander, executor only).", str _side]] Call WFBE_CO_FNC_LogContent};
+			if (_state == "full")   then {["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ACTIVE (full command).", str _side]] Call WFBE_CO_FNC_AICOMLog};
+			if (_state == "assist") then {["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander ASSIST (hybrid - human commander, executor only).", str _side]] Call WFBE_CO_FNC_AICOMLog};
 			_prevState = _state;
 		};
 
@@ -124,7 +120,7 @@ while {!gameOver} do {
 	} else {
 		if (_prevState != "stopped") then {
 			_logik setVariable ["wfbe_aicom_running", false];
-			["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander STOPPED (disabled / HQ down).", str _side]] Call WFBE_CO_FNC_LogContent;
+			["INFORMATION", Format ["AI_Commander.sqf: [%1] AI commander STOPPED (disabled / HQ down).", str _side]] Call WFBE_CO_FNC_AICOMLog;
 			_prevState = "stopped"; _prevHuman = false;
 		};
 	};

@@ -370,7 +370,9 @@ emptyQueu = [];
 		_logik setVariable ["wfbe_structure_lasthit", 0];
 		_logik setVariable ["wfbe_structures", [], true];
 		_logik setVariable ["wfbe_aicom_running", false];
-		_logik setVariable ["wfbe_aicom_funds", round((missionNamespace getVariable Format ['WFBE_C_ECONOMY_FUNDS_START_%1', _side])*1.5)];
+		//--- V0.4: honest economy - the AI commander starts with exactly the commander's normal
+		//--- starting funds (was *1.5) and lives off the same per-tick income a human would get.
+		_logik setVariable ["wfbe_aicom_funds", round(missionNamespace getVariable Format ['WFBE_C_ECONOMY_FUNDS_START_%1', _side])];
 		_logik setVariable ["wfbe_upgrades", _upgrades, true];
 		_logik setVariable ["wfbe_upgrading", false, true];
 		// Marty: Track the running upgrade ID so clients can display the upgrade name in the menu.
