@@ -49,6 +49,8 @@ GetTeamArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_Ge
 // Marty: Artillery ammo selector helpers used by the Tactical Center.
 WFBE_CO_FNC_GetArtilleryAmmoOptions = Compile preprocessFileLineNumbers "Common\Functions\Common_GetArtilleryAmmoOptions.sqf";
 WFBE_CO_FNC_LoadArtilleryAmmo = Compile preprocessFileLineNumbers "Common\Functions\Common_LoadArtilleryAmmo.sqf";
+// Marty: Ammo-fraction helper (vehicle current / full complement). Used by proportional rearm pricing.
+WFBE_CO_FNC_GetAmmoFraction = Compile preprocessFileLineNumbers "Common\Functions\Common_GetAmmoFraction.sqf";
 GetTeamAutonomous = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamAutonomous.sqf";
 GetTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamFunds.sqf";
 GetTeamMoveMode = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamMoveMode.sqf";

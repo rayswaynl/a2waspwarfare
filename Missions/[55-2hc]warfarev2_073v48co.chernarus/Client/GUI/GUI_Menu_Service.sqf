@@ -61,7 +61,17 @@ _martyServiceGetPrice = {
 
 	if (_action == "REARM") exitWith {
 		if (isNil "_get") exitWith {500};
-		round((_get select QUERYUNITPRICE) / (missionNamespace getVariable "WFBE_C_UNITS_SUPPORT_REARM_PRICE"))
+		Private ["_basePrice","_frac","_isArty"];
+		_basePrice = round((_get select QUERYUNITPRICE) / (missionNamespace getVariable "WFBE_C_UNITS_SUPPORT_REARM_PRICE"));
+		//--- Proportional pricing: charge only for ammo actually missing (arty always pays full).
+		if ((missionNamespace getVariable "WFBE_C_SUPPORT_REARM_PROPORTIONAL") > 0) then {
+			_isArty = ([typeOf _veh, str sideJoined] Call IsArtillery) != -1;
+			if !(_isArty) then {
+				_frac = _veh Call WFBE_CO_FNC_GetAmmoFraction;
+				_basePrice = round(_basePrice * ((1 - _frac) max 0.1));
+			};
+		};
+		_basePrice
 	};
 
 	0
