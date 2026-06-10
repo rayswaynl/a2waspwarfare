@@ -65,5 +65,8 @@ if (!_ok) exitWith {
 };
 
 ["INFORMATION", Format ["SupplyMissionUnload.sqf: Player %1 requested helicopter unload for %2.", name player, _associatedSupplyTruck]] Call WFBE_CO_FNC_LogContent;
+//--- QoL S3: delivery confirmation sound for the unloading player (distinct from the server-confirmed
+//--- commanderNotification in supplyMissionCompletedMessage.sqf which fires after server acks).
+playSound "commanderNotification";
 WFBE_Server_PV_SupplyMissionCompleted = [player, _associatedSupplyTruck, sideJoined];
 publicVariableServer "WFBE_Server_PV_SupplyMissionCompleted";
