@@ -665,4 +665,103 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 for '_i' from 0 to count(_easaVehi)-1 do {	_loadout = _easaLoadout select _i;		for '_j' from 0 to count(_loadout)-1 do {		_loadout_line = _loadout select _j;		_is_AAMissile = false;				{			_ammo = getText(configFile >> "CfgMagazines" >> _x >> "ammo");						if (_ammo != "") then {				if (getNumber(configFile >> "CfgAmmo" >> _ammo >> "airLock") == 1 && configName(inheritsFrom(configFile >> "CfgAmmo" >> _ammo)) == "MissileBase") exitWith {_is_AAMissile = true};			};		} forEach ((_loadout_line select 2) select 1);				_loadout_line set [3, if (_is_AAMissile) then {true} else {false}];	};};
+
+//--- EASA weapon category tags (experital) ---
+//
+// WFBE_EASA_CategoryOverride: manual overrides for weapon classnames whose
+// auto-derived category is wrong.  Format: [[classname, "TAG"], ...]
+// TAG must be one of: "AA", "AG", "MR"
+// Add entries here if the heuristic misfires on a particular launcher.
+// Currently seeded empty — the string-match heuristic covers all known loadouts.
+WFBE_EASA_CategoryOverride = [
+	// ["SomeLauncherClass", "AA"]   // example entry
+];
+
+// WFBE_EASA_CatCache: per-classname category cache so config/string walks
+// happen at most once per weapon class per session.
+WFBE_EASA_CatCache = [];
+
+// WFBE_EASA_FNC_WeaponCat: return "AA", "AG", or "MR" for a single weapon classname.
+// Uses string-pattern matching on the classname (fast, no config walk needed beyond
+// what the existing post-pass already does) plus the manual override table.
+WFBE_EASA_FNC_WeaponCat = {
+	private ["_cls","_idx","_cachedTag","_tag","_clsLower","_override"];
+	_cls = _this;
+	// --- manual override check first ---
+	_tag = "";
+	{
+		if ((_x select 0) == _cls) exitWith { _tag = _x select 1 };
+	} forEach WFBE_EASA_CategoryOverride;
+	if (_tag != "") exitWith { _tag };
+
+	// --- cache lookup ---
+	_idx = -1;
+	for "_ci" from 0 to (count WFBE_EASA_CatCache - 1) do {
+		if ((WFBE_EASA_CatCache select _ci) select 0 == _cls) exitWith { _idx = _ci };
+	};
+	if (_idx != -1) exitWith { (WFBE_EASA_CatCache select _idx) select 1 };
+
+	// --- classify by classname substring ---
+	// AA launchers: R-73 (R73), AIM-9 Sidewinder (Sidewinder), Igla/Stinger family
+	_clsLower = toLower _cls;
+	_tag = "AG"; // default — most launchers are ground-attack
+	if (
+		_clsLower find "r73" >= 0        ||
+		_clsLower find "sidewinder" >= 0 ||
+		_clsLower find "igla" >= 0       ||
+		_clsLower find "stinger" >= 0    ||
+		_clsLower find "aim" >= 0
+	) then {
+		_tag = "AA";
+	};
+
+	// AG launchers: bombs, rockets, Kh-29, Vikhr, Maverick, Hellfire, Ataka, Hydra, Spike
+	// (explicit check so AG wins over the default even if something hits both branches)
+	if (
+		_clsLower find "bomb" >= 0       ||
+		_clsLower find "fab" >= 0        ||
+		_clsLower find "gbu" >= 0        ||
+		_clsLower find "mk82" >= 0       ||
+		_clsLower find "s8launcher" >= 0 ||
+		_clsLower find "57mm" >= 0       ||
+		_clsLower find "ffar" >= 0       ||
+		_clsLower find "crv7" >= 0       ||
+		_clsLower find "ch29" >= 0       ||
+		_clsLower find "vikhr" >= 0      ||
+		_clsLower find "maverick" >= 0   ||
+		_clsLower find "hellfire" >= 0   ||
+		_clsLower find "at9" >= 0        ||
+		_clsLower find "tow" >= 0        ||
+		_clsLower find "spike" >= 0
+	) then {
+		_tag = "AG";
+	};
+
+	// Cache the result
+	WFBE_EASA_CatCache = WFBE_EASA_CatCache + [[_cls, _tag]];
+	_tag
+};
+
+// WFBE_EASA_FNC_LoadoutCat: return "[AA]", "[AG]", or "[MR]" tag for a loadout row.
+// A loadout is AA-only if every weapon in it is AA.
+// A loadout is AG-only if every weapon in it is AG.
+// Mixed (has both AA and AG, or has only unclassified weapons) → MR.
+// Gun/cannon-only (no launchers → empty weapons list) → MR.
+WFBE_EASA_FNC_LoadoutCat = {
+	private ["_loadoutSpec","_weapons","_hasAA","_hasAG","_cat","_wCat"];
+	_loadoutSpec = _this;
+	_weapons = _loadoutSpec select 0;
+	_hasAA = false;
+	_hasAG = false;
+	{
+		_wCat = _x call WFBE_EASA_FNC_WeaponCat;
+		if (_wCat == "AA") then { _hasAA = true };
+		if (_wCat == "AG") then { _hasAG = true };
+	} forEach _weapons;
+
+	if (_hasAA && !_hasAG) exitWith { "[AA]" };
+	if (_hasAG && !_hasAA) exitWith { "[AG]" };
+	"[MR]" // mixed, or gun-only, or neither
+};
+
 missionNamespace setVariable ['WFBE_EASA_Vehicles',_easaVehi];missionNamespace setVariable ['WFBE_EASA_Loadouts',_easaLoadout];missionNamespace setVariable ['WFBE_EASA_Default',_easaDefault];

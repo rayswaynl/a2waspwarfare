@@ -27,7 +27,15 @@ for '_i' from 0 to count(_data)-1 do {
 	};
 
 	if (_add) then {
-		lnbAddRow [_listBox, [Format["$%1.", _row select 0], _row select 1]];
+		//--- EASA category tags: prefix each loadout label with [AA], [AG], or [MR].
+		//--- Categorise once at fill time; WFBE_EASA_CatCache prevents repeated walks.
+		private ["_rowLabel","_catTag"];
+		_rowLabel = _row select 1;
+		if (WFBE_C_EASA_CATEGORIES == 1 && !(isNil "WFBE_EASA_FNC_LoadoutCat")) then {
+			_catTag = ((_row select 2) select 0) call WFBE_EASA_FNC_LoadoutCat;
+			_rowLabel = _catTag + " " + _rowLabel;
+		};
+		lnbAddRow [_listBox, [Format["$%1.", _row select 0], _rowLabel]];
 		lnbSetValue[_listBox, [_u, 0], _i];
 		_u = _u + 1;
 	};
