@@ -249,5 +249,20 @@ while {alive player && dialog} do {
 	if ( zoomgps >= 0.025) then { zoomgps = (zoomgps - 0.025); hint "zoom IN";} else { zoomgps = 0.025; hint "GPS Zoom: \n MIN Value";};
 	};
 
+	// Earplugs: fade game volume to 20% and back; state persists after the menu closes.
+	if (MenuAction == 20) then {
+		MenuAction = -1;
+		if (isNil "WFBE_Earplugs") then {WFBE_Earplugs = false};
+		if (WFBE_Earplugs) then {
+			WFBE_Earplugs = false;
+			1 fadeSound 1;
+			hint "Earplugs: OUT";
+		} else {
+			WFBE_Earplugs = true;
+			1 fadeSound 0.2;
+			hint "Earplugs: IN";
+		};
+	};
+
 	sleep 0.1;
 };

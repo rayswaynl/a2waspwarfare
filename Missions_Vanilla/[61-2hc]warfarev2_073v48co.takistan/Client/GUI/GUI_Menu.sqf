@@ -217,7 +217,15 @@ while {alive player && dialog} do {
 		if (!isNull player && {!("ItemGPS" in weapons player)}) then {player addWeapon "ItemGPS"};
 		closeDialog 0;
 		[] Spawn {
-			sleep 0.15;
+			// PR8 (claude): the engine accepts showGPS while the WF dialog (idd 11000) is still
+			// closing yet draws no mini-map - the manual GPS keybind works only because it fires
+			// with no dialog open. Wait for the WF menu display to actually close before enabling
+			// GPS so the in-game HUD renders. Capped at 1.5s so a stuck display cannot hang this
+			// thread; on timeout it falls back to the previous fixed-delay behaviour.
+			private ["_deadline"];
+			_deadline = time + 1.5;
+			waitUntil {(isNull (findDisplay 11000)) || (time > _deadline)};
+			sleep 0.10;
 			missionNamespace setVariable ["WFBE_Client_MenuGPSState", true];
 			if (!isNull player && {!("ItemGPS" in weapons player)}) then {player addWeapon "ItemGPS"};
 			RUBGPS = 1;
@@ -239,6 +247,21 @@ while {alive player && dialog} do {
 	if (MenuAction == 18) then {
 		MenuAction = -1;
 	if ( zoomgps >= 0.025) then { zoomgps = (zoomgps - 0.025); hint "zoom IN";} else { zoomgps = 0.025; hint "GPS Zoom: \n MIN Value";};
+	};
+
+	// Earplugs: fade game volume to 20% and back; state persists after the menu closes.
+	if (MenuAction == 20) then {
+		MenuAction = -1;
+		if (isNil "WFBE_Earplugs") then {WFBE_Earplugs = false};
+		if (WFBE_Earplugs) then {
+			WFBE_Earplugs = false;
+			1 fadeSound 1;
+			hint "Earplugs: OUT";
+		} else {
+			WFBE_Earplugs = true;
+			1 fadeSound 0.2;
+			hint "Earplugs: IN";
+		};
 	};
 
 	sleep 0.1;

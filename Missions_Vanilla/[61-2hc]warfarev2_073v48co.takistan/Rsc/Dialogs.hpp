@@ -1239,6 +1239,18 @@ class WF_Menu {
 			action = "MenuAction = 19";
 			tooltip = "Enable GPS / Mini Map";
 		};
+		// Earplugs: lower the game volume without touching system audio (Arma 3-style QoL).
+		class CA_EAR_Button : RscButton_Main {
+			idc = 11020;
+			x = 0.502;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = "EAR";
+			sizeEx = 0.026;
+			action = "MenuAction = 20";
+			tooltip = "Earplugs In/Out (lowers game volume)";
+		};
 	};
 };
 
