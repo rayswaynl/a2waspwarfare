@@ -38,6 +38,13 @@ if (-not (Test-Path -LiteralPath $sourceMission)) {
 # ---------------------------------------------------------------------------
 # version.sqf is intentionally excluded from git (.gitignore) because the
 # mission title and player-count differ per deployment context.
+#
+# !! WF_DEBUG MUST STAY COMMENTED FOR ANY SERVER DEPLOY (live-verified 2026-06-10):
+# !! WF_DEBUG 1 = 900,000 starting funds/supply, EVERY unit's upgrade requirement
+# !! stomped to level 1 (all heavy/air unlocked from the start), debug cheat menu +
+# !! teleport, 5s respawns, 3s votes, AFK kick disabled. The main-repo local copy
+# !! is a DEV copy - do not mirror it blindly. Production reference = the deployed
+# !! PR8 mission's version.sqf on the box (both debug defines commented out).
 # description.ext and initJIPCompatible.sqf both do #include "version.sqf"
 # at preprocessor level — the PBO build ABORTS with "Include file not found"
 # if this file is missing.
@@ -60,8 +67,8 @@ $versionSqfPath = Join-Path $sourceMission "version.sqf"
 Write-Host "Writing version.sqf: $versionSqfPath"
 
 $versionContent = @"
-#define WF_DEBUG 1
-#define WF_LOG_CONTENT
+// #define WF_DEBUG 1
+// #define WF_LOG_CONTENT
 #define IS_CHERNARUS_MAP_DEPENDENT
 //#define IS_MOD_MAP_DEPENDENT
 #define IS_NAVAL_MAP
