@@ -46,6 +46,12 @@
 
 ---
 
+## Live play-test fix batch (2026-06-10, session 1)
+- **Defense threat gate live-tune** — the any-1-enemy/any-class gate blocked statics/mines near-permanently mid-round (ambient resistance AI from neighbouring towns and aircraft overflights counted as a "raid"). Now: west/east ground units only, fires at ≥ `WFBE_C_DEFENSE_THREAT_MIN` (3, tunable). Threat/budget rejects whose price the server can't resolve now pass the **classname** so the client refunds exactly what it charged (WDDM anchors silently lost 2,500–5,000 cash on threat reject).
+- **PR #23 upgrade-queue stacking ported** — same-upgrade level stacking + `[Q1,3]` queue marks in the upgrade menu (base PR #5 queue was already in; the stacking landed on master after this branch's base was cut).
+- **Factory queue minimum floors** — Barracks 10, Light 5, Heavy 3, Aircraft 3 (was `lvl+2`/`lvl+1` flat — too small at low levels).
+- **Earplugs in vehicles** — the toggle now mirrors onto the player's current vehicle (A2 hides unit actions while mounted); hardened against death-loop exit, stale action ids, and a cross-object id-collision removal.
+
 ## Cleanup, QoL & fixes
 - **Wiki-verified fixes** — victory log was crediting the **loser** (poisoned win stats); PVF dispatcher `Call Compile`→`getVariable` (RCE-vector + perf); queue-token collision stall; JIP camp-marker colour; map-click busy-poll; service menu listing enemy vehicles.
 - **Small-wins batch** — dead-code removal (Client_TaskSystem, UAV dev branch), malformed config-array fix, ungated log gated.
