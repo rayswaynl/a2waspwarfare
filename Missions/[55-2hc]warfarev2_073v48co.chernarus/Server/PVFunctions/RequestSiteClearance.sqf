@@ -26,4 +26,4 @@ _side      = _this select 0;
 _pos       = _this select 1;
 _reqPlayer = _this select 2;
 
-[_side, _pos, _reqPlayer] Call Server_SiteClearance;
+[_side, _pos, _reqPlayer] Call WFBE_SE_FNC_SiteClearance;

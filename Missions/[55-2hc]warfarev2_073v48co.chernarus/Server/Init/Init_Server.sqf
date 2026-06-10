@@ -92,6 +92,7 @@ WFBE_SE_FNC_AttackWavePVEH = Call Compile preprocessFileLineNumbers "Server\Func
 WFBE_SE_FNC_CounterBatteryCheck = Compile preprocessFileLineNumbers "Server\Functions\Server_CounterBattery.sqf";
 WFBE_SE_FNC_SpawnStructureDressing = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnStructureDressing.sqf";
 WFBE_SE_FNC_BankIncome = Compile preprocessFileLineNumbers "Server\Functions\Server_BankIncome.sqf";
+WFBE_SE_FNC_SiteClearance = Compile preprocessFileLineNumbers "Server\Functions\Server_SiteClearance.sqf";
 //--- CBR: per-side registries (populated as CBRs are built; pruned lazily during checks).
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
 	missionNamespace setVariable ["WFBE_CBR_WEST", []];
