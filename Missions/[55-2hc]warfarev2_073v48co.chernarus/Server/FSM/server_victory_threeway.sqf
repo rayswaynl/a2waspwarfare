@@ -32,6 +32,14 @@ while {!gameOver} do {
 				gameOver = true;
 				WFBE_GameOver = true;
 
+				// WASPSTAT ROUNDEND telemetry (Task 10). Winner = _x (the loop variable for the winning side).
+				// durationSec = round(time) which mirrors GlobalGameStats.sqf's _uptime source.
+				if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
+					if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
+					WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
+					diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|ROUNDEND|" + str _x + "|" + str round(time) + "|" + worldName);
+				};
+
 				[_x] call WFBE_CO_FNC_LogGameEnd;
 			};
 		} forEach WFBE_PRESENTSIDES - [WFBE_DEFENDER];

@@ -207,6 +207,15 @@ while {!WFBE_GameOver} do {
 
 			_location setVariable ["sideID",_newSID,true];
 
+			// WASPSTAT CAPTURE telemetry (Task 10). Gate: WFBE_C_STATLOG must be 1.
+			// NOTE: Task 19 (captured-town gunner change) will also edit this block — keep changes below this comment.
+			if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
+				if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
+				WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
+				diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|CAPTURE|" + (_location getVariable ["name","unknown"]) + "|" + str _sideID + "|" + str _newSID);
+			};
+			// END WASPSTAT CAPTURE (Task 10)
+
 			//--- FM-5: clear the old garrison's active flags on capture so the new owner re-garrisons immediately (prevents an up-to-WFBE_C_TOWNS_UNITS_INACTIVE undefended window on rapid recapture).
 			_location setVariable ["wfbe_active", false];
 			_location setVariable ["wfbe_active_air", false];
