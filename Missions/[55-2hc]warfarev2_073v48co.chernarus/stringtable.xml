@@ -9528,6 +9528,17 @@
       <Italian>Auto-flip: %1 e stato raddrizzato automaticamente.</Italian>
     </Key>
 
+    <!-- Marty: Defense budget — budget cap exceeded rejection (server -> client via LocalizeMessage). -->
+    <!-- %1 = category (STATICS/FORTIFICATIONS/MINES), %2 = current count, %3 = cap -->
+    <Key ID="DefenseBudgetFull">
+      <English>Defense limit reached — %1: %2 of %3 built. Funds refunded.</English>
+    </Key>
+
+    <!-- Marty: Defense budget — threat gate rejection (enemies near base, statics/mines blocked). -->
+    <Key ID="DefenseThreatGate">
+      <English>Cannot place statics or mines — enemies are within base range. Funds refunded.</English>
+    </Key>
+
     </Container>
   </Package>
 </Project>

@@ -128,6 +128,20 @@ switch (_localize) do {
         };
         _commandChat = true;
     };
+
+    case "DefenseBudgetFull": {
+        // _this: [1]=category string, [2]=used count, [3]=cap, [4]=refund price
+        // Refund the charged price (positive amount = credit back to player).
+        if ((_this select 4) > 0) then { (_this select 4) Call ChangePlayerFunds };
+        _txt = Format [Localize "DefenseBudgetFull", _this select 1, _this select 2, _this select 3];
+    };
+
+    case "DefenseThreatGate": {
+        // _this: [1]=refund price
+        // Refund then show threat warning.
+        if ((_this select 1) > 0) then { (_this select 1) Call ChangePlayerFunds };
+        _txt = Localize "DefenseThreatGate";
+    };
 };
 
 if (_commandChat) then {
