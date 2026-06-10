@@ -244,6 +244,72 @@ while {!WFBE_GameOver} do {
 					[_location, _newSide, "spawn"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
 				};
 			};
+
+			//--- Task 12: Airfield capture — spawn repair point + exclusive hangar for the new owner.
+			if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && (_location getVariable ["wfbe_is_airfield", false])) then {
+				Private ["_airfieldLogic","_newHangar","_oldHangar","_oldSP","_logik","_sp","_spClass","_spPos"];
+
+				//--- Determine side-specific ServicePoint classname (Chernarus variants).
+				_spClass = switch (_newSide) do {
+					case west:       { if (IS_chernarus_map_dependent) then {"USMC_WarfareBVehicleServicePoint"} else {"US_WarfareBVehicleServicePoint_EP1"} };
+					case east:       { if (IS_chernarus_map_dependent) then {"INS_WarfareBVehicleServicePoint"} else {"TK_WarfareBVehicleServicePoint_EP1"} };
+					default          { if (IS_chernarus_map_dependent) then {"Gue_WarfareBVehicleServicePoint"} else {"TK_GUE_WarfareBVehicleServicePoint_EP1"} };
+				};
+
+				//--- Find the nearest LocationLogicAirport (should be within 1500m of the depot logic).
+				_airfieldLogic = ((getPos _location) nearEntities [["LocationLogicAirport"], 1500]) select 0;
+
+				//--- Delete old repair point if present (side changed or recapture).
+				//--- Also remove from old side's structures list to avoid dead-object references.
+				_oldSP = _location getVariable ["wfbe_airfield_sp", objNull];
+				if !(isNull _oldSP) then {
+					{
+						_oldStructures = _x getVariable ["wfbe_structures", []];
+						if (_oldSP in _oldStructures) then {
+							_x setVariable ["wfbe_structures", _oldStructures - [_oldSP], true];
+						};
+					} forEach [WFBE_L_BLU, WFBE_L_OPF, WFBE_L_GUE];
+					deleteVehicle _oldSP;
+				};
+
+				//--- Create new repair point 80m north of the airfield logic position.
+				_spPos = if !(isNull _airfieldLogic) then {
+					[(getPos _airfieldLogic select 0), ((getPos _airfieldLogic select 1) + 80), 0]
+				} else {
+					[(getPos _location select 0), ((getPos _location select 1) + 80), 0]
+				};
+				_sp = _spClass createVehicle _spPos;
+				_sp setPos _spPos;
+				_sp setVariable ["WFBE_RepairTruckServicePoint", true, true];
+
+				//--- Register in side logic structures list so clients can see it.
+				_logik = (_newSide) Call WFBE_CO_FNC_GetSideLogic;
+				_logik setVariable ["wfbe_structures", (_logik getVariable "wfbe_structures") + [_sp], true];
+
+				//--- Trigger Init_BaseStructure on clients so a map marker is created.
+				_sp setVehicleInit Format ["[this,false,%1] ExecVM 'Client\Init\Init_BaseStructure.sqf'", _newSID];
+				processInitCommands;
+
+				//--- Store on location for cleanup on next capture.
+				_location setVariable ["wfbe_airfield_sp", _sp, true];
+
+				//--- Delete old hangar (previous owner's) and its link on the airport logic.
+				_oldHangar = _location getVariable ["wfbe_airfield_hangar_obj", objNull];
+				if !(isNull _oldHangar) then {
+					deleteVehicle _oldHangar;
+					if !(isNull _airfieldLogic) then { _airfieldLogic setVariable ["wfbe_hangar", nil, true] };
+				};
+
+				//--- Spawn new hangar on the airport logic so GetClosestAirport can find it.
+				if !(isNull _airfieldLogic) then {
+					_newHangar = (missionNamespace getVariable "WFBE_C_HANGAR") createVehicle (getPos _airfieldLogic);
+					_newHangar setDir ((getDir _airfieldLogic) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
+					_newHangar setPos (getPos _airfieldLogic);
+					_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
+					_airfieldLogic setVariable ["wfbe_hangar", _newHangar, true];
+					_location setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
+				};
+			};
 		};
 		};
 		sleep 0.05;

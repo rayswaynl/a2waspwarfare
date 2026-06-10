@@ -252,9 +252,16 @@ _IDCS = _IDCS - [_currentIDC];
 			//--- Specials.
 			case 'Depot': {
 				_sorted = [[vehicle player, missionNamespace getVariable "WFBE_C_TOWNS_PURCHASE_RANGE"] Call WFBE_CL_FNC_GetClosestDepot];
+				_closest = _sorted select 0;
 			};
 			case 'Airport': {
 				_sorted = [[vehicle player, missionNamespace getVariable "WFBE_C_UNITS_PURCHASE_HANGAR_RANGE"] Call WFBE_CL_FNC_GetClosestAirport];
+				_closest = _sorted select 0;
+				//--- Task 12: If the nearest hangar is a captured airfield, show the exclusive roster instead of the faction airport list.
+				if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && !(isNull _closest) && {((_closest getVariable ["wfbe_hangar", objNull]) getVariable ["wfbe_is_airfield_hangar", false])}) then {
+					_listUnits = missionNamespace getVariable ["WFBE_AIRFIELD_UNITS", []];
+					[_listUnits,_type,_listBox,_val] Call UIFillListBuyUnits;
+				};
 			};
 			//--- Factories
 			default {

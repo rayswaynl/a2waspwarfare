@@ -370,6 +370,16 @@ _repairs = [];
 missionNamespace setVariable ["WFBE_REPAIRTRUCKS", _repairs];
 
 
+//--- Task 12: Airfield-exclusive aircraft roster.  Populated on all machines so
+//--- the hangar buy menu can use it without a server round-trip.
+if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0) then {
+	WFBE_AIRFIELD_UNITS = if (IS_chernarus_map_dependent) then {
+		["L39_TK_EP1","An2_TK_EP1","Mi17_Ins"]
+	} else {
+		["L39_TK_EP1","An2_TK_EP1","Mi17_TK_EP1"]
+	};
+};
+
 //--- Common initilization is complete at this point.
 ["INITIALIZATION", Format ["Init_Common.sqf: Common initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 commonInitComplete = true;
