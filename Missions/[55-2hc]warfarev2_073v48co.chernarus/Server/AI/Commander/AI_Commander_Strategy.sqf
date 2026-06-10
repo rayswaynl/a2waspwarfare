@@ -176,7 +176,7 @@ _logik setVariable ["wfbe_aicom_strike_on", _strikeOn];
 
 //--- 4) ARTILLERY: soften the spearhead town or the enemy HQ - never near friendlies.
 if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0) then {
-	_upASel = (_logik getVariable "wfbe_upgrades") select WFBE_UP_ARTYTIMEOUT;
+	_upASel = (_logik getVariable ["wfbe_upgrades", [0,0,0,0,0,0,0,0,0,0,0]]) select WFBE_UP_ARTYTIMEOUT;
 	_cd = (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS") select (_upASel min ((count (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS")) - 1));
 	if (time - (_logik getVariable ["wfbe_aicom_arty_last", -1e6]) > _cd) then {
 		//--- Target: enemy HQ during a strike, else the top spearhead town.
@@ -186,7 +186,7 @@ if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0) then {
 		if (count _artyTgt > 0) then {
 			//--- Friendly-fire guard: no own troops near the impact zone.
 			_ownNear = 0;
-			{ if (side _x == _side && {alive _x}) then {_ownNear = _ownNear + 1} } forEach (_artyTgt nearEntities [["Man","Car","Tank"], 400]);
+			{ if (side _x == _side && {alive _x}) then {_ownNear = _ownNear + 1} } forEach (_artyTgt nearEntities [["Man","Car","Tank","Air"], 400]);
 			if (_ownNear == 0) then {
 				//--- Our base guns (built by the Base worker, tagged by Construction_StationaryDefense).
 				_pieces = (getPos ((_side) Call WFBE_CO_FNC_GetSideHQ)) nearEntities [["StaticWeapon","Tank","Car"], 250];

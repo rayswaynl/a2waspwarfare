@@ -24,7 +24,10 @@ _to_upgrade = [];
 //--- Found something to upgrade!
 if (count _to_upgrade > 0) then {
 	_upgrade = _to_upgrade select 0;
-	_cost = ((missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_COSTS", _side]) select _upgrade) select (_to_upgrade select 1);
+	//--- V0.5.1: price by CURRENT level (researching level N+1 costs COSTS select N).
+	//--- The old "select target level" was off by one: every research charged the
+	//--- NEXT level's price (Heavy 1 demanded 4400 instead of 1200 - the round-3 stall).
+	_cost = ((missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_COSTS", _side]) select _upgrade) select (_upgrades select _upgrade);
 	
 	//--- Validation.
 	_can_upgrade = false;
