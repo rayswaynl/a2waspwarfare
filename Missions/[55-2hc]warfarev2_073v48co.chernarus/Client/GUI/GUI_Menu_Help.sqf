@@ -82,7 +82,7 @@ A fully 'pushed' town creates a higher income of supplies and money for the <br 
 commander and if town is attacked, there will spawn more and better units to defend it. <br />
 <br />
 <br />
-Most of explanations refer to default parameters. If params are changed, some explanations are no longer valid. <br />
+Most of explanations refer to default parameters. If lobby settings are changed, some explanations are no longer valid. <br />
 <br />
 ",
 //------------------------------Base Structures
