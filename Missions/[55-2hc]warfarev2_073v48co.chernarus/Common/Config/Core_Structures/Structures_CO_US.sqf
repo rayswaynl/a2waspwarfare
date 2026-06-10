@@ -97,7 +97,7 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR") > 0) then {
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
 	_v = _v		+ ["CBRadar"];
 	_n = _n		+ ["Land_Antenna"];
-	_d = _d		+ ["Counter Battery Radar"];
+	_d = _d		+ [localize "STR_WF_UPGRADE_CBRadar"];
 	_c = _c		+ [2400];
 	_t = _t		+ [if (WF_Debug) then {1} else {60}];
 	_s = _s		+ ["SmallSite"];

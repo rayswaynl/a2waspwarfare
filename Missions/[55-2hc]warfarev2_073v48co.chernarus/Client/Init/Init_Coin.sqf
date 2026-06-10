@@ -38,6 +38,11 @@ if (_updateStructures) then {
 
 if (_updateDefenses) then {
 	private ["_allDefenses","_filteredDefenses","_d"];
+	//--- Ordering guarantee: Init_Coin is only ever called after waitUntil {commonInitComplete} in Init_Client.sqf
+	//--- (line ~168). commonInitComplete is set at the end of Init_Common.sqf, which runs Core_CIV well before
+	//--- that point. Therefore WFBE_%1DEFENSENAMES and its Land_Pneu entry are always registered by the time
+	//--- we reach here. The isNil guard in the forEach below further protects against any individual entry
+	//--- that might be missing its config var (e.g. if a defence class is unrecognised by the engine).
 	_allDefenses = missionNamespace getVariable Format["WFBE_%1DEFENSENAMES",sideJoinedText];
 	//--- RCoin (repair-truck context): exclude Site Clearance — commander-only, not a repair-truck action.
 	if (_extra == "REPAIR") then {_allDefenses = _allDefenses - ["Land_Pneu"]};
