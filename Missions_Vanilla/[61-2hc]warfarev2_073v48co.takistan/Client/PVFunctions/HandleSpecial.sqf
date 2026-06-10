@@ -14,6 +14,7 @@ switch (_request) do {
 	case "cleanup-townai": {_args spawn WFBE_CL_FNC_CleanupDelegatedTownAI};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
+	case "delegate-aicom-team": {_args spawn WFBE_CO_FNC_RunCommanderTeam};
 	case "delegate-ai": {_args spawn WFBE_CL_FNC_DelegateAI};
 	case "delegate-ai-static-defence": {_args spawn WFBE_CL_FNC_DelegateAIStaticDefence};
 	case "endgame": {_args spawn WFBE_CL_FNC_EndGame};
