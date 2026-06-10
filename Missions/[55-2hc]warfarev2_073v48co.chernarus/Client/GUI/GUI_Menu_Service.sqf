@@ -336,12 +336,12 @@ if (count _checks > 0) then {
 	_repair = _checks select 0;
 	_vehi = ((getPos _repair) nearEntities[["Car","Motorcycle","Tank","Air","Ship","StaticWeapon"],100]) - [_repair];
 	{
-		if !(_x in _effective) then {
+		if (!(_x in _effective) && {side _x in [sideJoined, civilian]}) then {
 			_effective = _effective + [_x];
 			_nearSupport set [_i,[_repair]];
 			_descVehi = [typeOf (vehicle _x), 'displayName'] Call GetConfigInfo;
 			lbAdd[20002,_descVehi];
-			
+
 			_i = _i + 1;
 		};
 	} forEach _vehi;
