@@ -550,6 +550,8 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 ["INITIALIZATION", "Init_Server.sqf: Garbage Collector is defined."] Call WFBE_CO_FNC_LogContent;
 [] ExecVM "Server\FSM\emptyvehiclescollector.sqf";
 ["INITIALIZATION", "Init_Server.sqf: Empty Vehicle Collector is defined."] Call WFBE_CO_FNC_LogContent;
+[] ExecVM "Server\FSM\server_groupsGC.sqf";
+["INITIALIZATION", "Init_Server.sqf: Group GC is defined."] Call WFBE_CO_FNC_LogContent;
 
 /////////////////////////////////////////////////////////////////////////////////// map cleaners
 
