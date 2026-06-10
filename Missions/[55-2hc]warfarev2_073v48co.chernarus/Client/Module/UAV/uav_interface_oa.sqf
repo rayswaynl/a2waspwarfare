@@ -95,7 +95,7 @@ _displayEH_keydown = (finddisplay 46) displayaddeventhandler ["keydown","Private
 //--- Detect pressed mouse buttons
 _displayEH_mousebuttondown = (finddisplay 46) displayaddeventhandler ["mousebuttondown","
 	disableserialization;
-	Private ['_button','_control','_controls','_display'];
+	Private ['_button'];
 	_button = _this select 1;
 "];
 
