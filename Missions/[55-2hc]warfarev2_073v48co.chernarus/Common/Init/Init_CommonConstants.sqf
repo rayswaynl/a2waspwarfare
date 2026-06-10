@@ -412,6 +412,13 @@ if (WF_A2_Vanilla) then {
 	WFBE_C_FACTORY_QUEUE_LIMITS = 1;      // Per-factory production queue caps scaling with factory level
 	WFBE_C_STATLOG = 1;                   // [WASPSTAT] structured telemetry RPT lines
 	if (isNil "WFBE_C_TOWNS_GUNNERS_ON_CAPTURE") then {WFBE_C_TOWNS_GUNNERS_ON_CAPTURE = true}; // Immediately man static defenses at capture (all sides); false = reactive only
+	//--- Task 32: capture grace periods.
+	//--- Delay (seconds) before the new owner's static defenses and defense teams spawn after capture.
+	//--- A fire-time ownership guard aborts the spawn if the town changed hands again in the interim.
+	WFBE_C_TOWNS_DEFENSE_SPAWN_DELAY = 300;
+	//--- Linger time (seconds): the old owner's gunners keep fighting after capture before being cleaned up.
+	//--- A fire-time guard aborts cleanup if the town has flipped back to the old owner's side.
+	WFBE_C_TOWNS_DEFENDER_LINGER = 180;
 	if (isNil "WFBE_C_EASA_CATEGORIES") then {WFBE_C_EASA_CATEGORIES = 1}; // EASA loadout category tags [AA]/[AG]/[MR] prefixed on each row (display-only)
 	if (isNil "WFBE_C_AIRFIELDS") then {WFBE_C_AIRFIELDS = 1}; // Airfield capture points (NWAF/NEAF/Balota): repair-point + exclusive hangar on capture
 	if (isNil "WFBE_C_CAPTURE_UNLOCKS") then {WFBE_C_CAPTURE_UNLOCKS = 1}; // Holding trigger towns unlocks premium ACR units at own factories (Krasnostav->T72M4CZ_ACR lvl4 Heavy; NWAF->RM70_ACR lvl4 Light)

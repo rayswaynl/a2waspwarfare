@@ -223,8 +223,20 @@ while {!WFBE_GameOver} do {
 			[nil, "TownCaptured", [_location, _sideID, _newSID]] Call WFBE_CO_FNC_SendToClients;
 			if ((missionNamespace getVariable "WFBE_C_CAMPS_CREATE") > 0) then {[_location, _sideID, _newSID] Spawn WFBE_SE_FNC_SetCampsToSide};
 
-			//--- Clear the town defenses, units first then replace the defenses if needed.
-			[_location, _side, "remove"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
+			//--- Task 32: old defenders linger for WFBE_C_TOWNS_DEFENDER_LINGER seconds before cleanup.
+			//--- Fire-time guard: only clean up if the town has NOT flipped back to the old side.
+			[_location, _side, _newSID] spawn {
+				Private ["_loc","_oldSide","_newSIDAtCapture"];
+				_loc              = _this select 0;
+				_oldSide          = _this select 1;
+				_newSIDAtCapture  = _this select 2;
+				sleep (missionNamespace getVariable ["WFBE_C_TOWNS_DEFENDER_LINGER", 180]);
+				//--- Abort cleanup if the town has flipped back to the old owner's side.
+				if ((_loc getVariable ["sideID", -1]) == _newSIDAtCapture) then {
+					{if (alive _x) then {deleteVehicle _x}} forEach (units (missionNamespace getVariable [format ["WFBE_%1_DefenseTeam", _oldSide], grpNull]));
+					[_loc, _oldSide, "remove"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
+				};
+			};
 
 			//--- Check if the side is enabled in town and add defenses if needed.
 			_side_enabled = false;
@@ -234,14 +246,23 @@ while {!WFBE_GameOver} do {
 				if (_town_occupation_enabled) then {_side_enabled = true};
 			};
 
-			//--- If the side is defined, we create the new side's defenses.
+			//--- Task 32: spawn new owner's defenses after WFBE_C_TOWNS_DEFENSE_SPAWN_DELAY.
+			//--- Fire-time guard: only spawn if the town is still owned by the new side.
 			if (_side_enabled) then {
-				[_location, _newSide, _sideID] Call WFBE_SE_FNC_ManageTownDefenses;
-				//--- Immediately man the statics that ManageTownDefenses just spawned (Task 19).
-				//--- OperateTownDefensesUnits reads wfbe_defense set by SpawnTownDefense, which
-				//--- ManageTownDefenses calls synchronously above, so ordering is guaranteed.
-				if (missionNamespace getVariable ["WFBE_C_TOWNS_GUNNERS_ON_CAPTURE", true]) then {
-					[_location, _newSide, "spawn"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
+				[_location, _newSide, _sideID, _newSID] spawn {
+					Private ["_loc","_side","_oldSID","_newSIDAtCapture","_side_enabled2"];
+					_loc             = _this select 0;
+					_side            = _this select 1;
+					_oldSID          = _this select 2;
+					_newSIDAtCapture = _this select 3;
+					sleep (missionNamespace getVariable ["WFBE_C_TOWNS_DEFENSE_SPAWN_DELAY", 300]);
+					//--- Abort if the town no longer belongs to the new owner.
+					if ((_loc getVariable ["sideID", -1]) != _newSIDAtCapture) exitWith {};
+					[_loc, _side, _oldSID] Call WFBE_SE_FNC_ManageTownDefenses;
+					//--- Man the statics immediately after the delayed spawn (mirrors Task 19 logic).
+					if (missionNamespace getVariable ["WFBE_C_TOWNS_GUNNERS_ON_CAPTURE", true]) then {
+						[_loc, _side, "spawn"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
+					};
 				};
 			};
 
