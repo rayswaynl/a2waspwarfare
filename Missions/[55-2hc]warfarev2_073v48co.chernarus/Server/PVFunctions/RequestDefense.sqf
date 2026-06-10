@@ -251,7 +251,7 @@ if (_index != -1) then {
 							[_reqPlayer, "LocalizeMessage", ["DefenseThreatGate", _defPrice]] Call WFBE_CO_FNC_SendToClient;
 						} else {
 							if (_rejCat == "WddmCompositionCapReached") then {
-								[_reqPlayer, "LocalizeMessage", ["WddmCompositionCapReached", _rejUsed, _rejCap]] Call WFBE_CO_FNC_SendToClient;
+								[_reqPlayer, "LocalizeMessage", ["WddmCompositionCapReached", _rejUsed, _rejCap, _defenseType]] Call WFBE_CO_FNC_SendToClient;
 							} else {
 								[_reqPlayer, "LocalizeMessage", ["DefenseBudgetFull", _rejCat, _rejUsed, _rejCap, _defPrice]] Call WFBE_CO_FNC_SendToClient;
 							};
@@ -262,7 +262,7 @@ if (_index != -1) then {
 							[_reqPlayer, "LocalizeMessage", ["DefenseThreatGate", 0]] Call WFBE_CO_FNC_SendToClient;
 						} else {
 							if (_rejCat == "WddmCompositionCapReached") then {
-								[_reqPlayer, "LocalizeMessage", ["WddmCompositionCapReached", _rejUsed, _rejCap]] Call WFBE_CO_FNC_SendToClient;
+								[_reqPlayer, "LocalizeMessage", ["WddmCompositionCapReached", _rejUsed, _rejCap, _defenseType]] Call WFBE_CO_FNC_SendToClient;
 							} else {
 								[_reqPlayer, "LocalizeMessage", ["DefenseBudgetFull", _rejCat, _rejUsed, _rejCap, 0]] Call WFBE_CO_FNC_SendToClient;
 							};

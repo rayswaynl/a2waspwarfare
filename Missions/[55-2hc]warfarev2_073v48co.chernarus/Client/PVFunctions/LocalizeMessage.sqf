@@ -137,8 +137,14 @@ switch (_localize) do {
     };
 
     case "WddmCompositionCapReached": {
-        // _this: [1]=current composition count, [2]=cap
-        // No client-side refund — WDDM compositions are charged server-side, not optimistically on the client.
+        // _this: [1]=current composition count, [2]=cap, [3]=anchor classname
+        // The anchor cost IS charged optimistically on the client at placement
+        // (coin_interface.sqf: -(price) Call ChangePlayerFunds). The cap rejected the
+        // placement, so refund the exact price this client charged for the anchor.
+        private ["_anchorClass","_get"];
+        _anchorClass = _this select 3;
+        _get = missionNamespace getVariable _anchorClass;
+        if (!isNil "_get") then { (_get select QUERYUNITPRICE) Call ChangePlayerFunds };
         _txt = Format [Localize "WddmCompositionCapReached", _this select 1, _this select 2];
     };
 
