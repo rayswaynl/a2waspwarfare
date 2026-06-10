@@ -8,6 +8,8 @@
     _this when called via addAction:                [target, caller, id, args]
 */
 
+private ["_auto","_classType","_lastShown","_txt"];
+
 //--- Determine call mode: ["auto"] from Skill_Init means apply the changed-class guard.
 _auto = false;
 if (typeName _this == "ARRAY" && {count _this == 1} && {typeName (_this select 0) == "STRING"}) then {
@@ -18,10 +20,10 @@ if (typeName _this == "ARRAY" && {count _this == 1} && {typeName (_this select 0
 _classType = if (isNil "WFBE_SK_V_Type") then {""} else {WFBE_SK_V_Type};
 
 //--- Guard: in auto mode, skip display if the class hasn't changed since last hint.
-if (_auto) then {
-    _lastShown = missionNamespace getVariable ["WFBE_WASP_ClassInfo_LastShown", "UNINIT"];
-    if (_lastShown == _classType) exitWith {};
-};
+//--- MUST live at script scope: an exitWith nested inside `if (_auto) then {...}`
+//--- only exits that then-block, not the script, and the guard becomes a no-op.
+_lastShown = missionNamespace getVariable ["WFBE_WASP_ClassInfo_LastShown", "UNINIT"];
+if (_auto && {_lastShown == _classType}) exitWith {};
 
 //--- Record last-shown class so repeated Skill_Init runs don't re-spam.
 missionNamespace setVariable ["WFBE_WASP_ClassInfo_LastShown", _classType];

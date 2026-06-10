@@ -131,7 +131,9 @@ WFBE_CL_FNC_Upgrade_Started = {
 	};
 	(Format [Localize "STR_WF_CHAT_Upgrade_Started_Message",(missionNamespace getVariable "WFBE_C_UPGRADES_LABELS") select _upgrade, _level]) Call CommandChatMessage;
 	// Marty: Notify side players that their upgrade has started.
-	playSound "commanderNotification";
+	//--- Task 29: dedicated quiet alias (same ogg, volume 2.5) — commanderNotification (10)
+	//--- is shared by other notifications and stays loud for those.
+	playSound "upgradeStartedSound";
 };
 
 WFBE_CL_FNC_Building_Started = {

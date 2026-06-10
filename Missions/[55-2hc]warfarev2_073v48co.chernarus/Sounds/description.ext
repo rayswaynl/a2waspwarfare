@@ -87,6 +87,14 @@ class CfgSounds
         titles[] = {};
     };
 
+    //--- Task 29: quiet alias of commanderNotification for the upgrade-START cue only
+    //--- (the shared entry stays at 10 for the other notification call sites).
+    class upgradeStartedSound {
+        name = "upgradeStartedSound";
+        sound[] = {"\Sounds\commanderNotification-10.ogg", 2.5, 1};
+        titles[] = {};
+    };
+
     class heavyFactoryBuildSound {
         name = "heavyFactoryBuildSound";
         sound[] = {"\Sounds\heavyFactoryBuildSound-7.ogg", 2.5, 1};
