@@ -50,13 +50,15 @@ if (isServer) then {
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
 		['US_Soldier_TL_EP1','US_Soldier_MG_EP1','US_Soldier_Sniper_EP1','US_Soldier_Medic_EP1'],
 		['US_Soldier_TL_EP1','US_Soldier_AR_EP1','US_Soldier_GL_EP1','US_Soldier_AT_EP1','US_Soldier_EP1'],
-		['HMMWV_M1151_M2_DES_EP1','HMMWV_MK19_DES_EP1']
+		['HMMWV_M1151_M2_DES_EP1','HMMWV_MK19_DES_EP1'],
+		['US_Soldier_TL_EP1','US_Soldier_MG_EP1','US_Soldier_AT_EP1','US_Soldier_GL_EP1','US_Soldier_Medic_EP1']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
 		['M1126_ICV_M2_EP1','M1135_ATGMV_EP1'],
 		['MTVR_DES_EP1','US_Soldier_TL_EP1','US_Soldier_AT_EP1','US_Soldier_MG_EP1','US_Soldier_AT_EP1'],
-		['M2A3_EP1','US_Soldier_AA_EP1','US_Soldier_AA_EP1','US_Soldier_Medic_EP1']
+		['M2A3_EP1','US_Soldier_AA_EP1','US_Soldier_AA_EP1','US_Soldier_Medic_EP1'],
+		['M2A3_EP1','US_Soldier_TL_EP1','US_Soldier_AT_EP1','US_Soldier_Medic_EP1']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [

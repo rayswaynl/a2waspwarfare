@@ -50,13 +50,15 @@ if (isServer) then {
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
 		['RU_Soldier_TL','RU_Soldier_MG','RU_Soldier_Sniper','RU_Soldier_Medic'],
 		['RU_Soldier_TL','RU_Soldier_AR','RU_Soldier_GL','RU_Soldier_LAT','RU_Soldier'],
-		['GAZ_Vodnik_HMG','GAZ_Vodnik']
+		['GAZ_Vodnik_HMG','GAZ_Vodnik'],
+		['RU_Soldier_TL','RU_Soldier_MG','RU_Soldier_AT','RU_Soldier_GL','RU_Soldier_Medic']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
 		['BTR90','BTR90'],
 		['Kamaz','RU_Soldier_TL','RU_Soldier_AT','RU_Soldier_MG','RU_Soldier_LAT'],
-		['BMP3','RU_Soldier_AA','RU_Soldier_AA','RU_Soldier_Medic']
+		['BMP3','RU_Soldier_AA','RU_Soldier_AA','RU_Soldier_Medic'],
+		['BMP3','RU_Soldier_TL','RU_Soldier_AT','RU_Soldier_Medic']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [

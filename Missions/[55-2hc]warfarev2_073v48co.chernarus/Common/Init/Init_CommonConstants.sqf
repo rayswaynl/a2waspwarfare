@@ -60,7 +60,7 @@ WFBE_UP_CBRADAR = 22;
 WFBE_UP_PATROLS = 23;
 
 //--- Side patrols (Patrols upgrade): max concurrent patrol teams per side.
-if (isNil "WFBE_C_SIDE_PATROLS_MAX") then {WFBE_C_SIDE_PATROLS_MAX = 2};
+if (isNil "WFBE_C_SIDE_PATROLS_MAX") then {WFBE_C_SIDE_PATROLS_MAX = 3};
 
 /*
 	### Working with the missionNamespace ###
