@@ -90,14 +90,16 @@ if ((_structure getVariable ["wfbe_structure_type", ""]) == "Bank" && (missionNa
 		//--- gains supply (commander resource — mirrors the guerrilla-barracks side-supply
 		//--- award above), the killer gets a personal cash bonus. ChangeSideSupply clamps
 		//--- at the supply ceiling, so the +40000 is safe near the cap.
-		_bankBounty = 7500;
-		[(side group _killer), 40000, "Bank destruction", false] Call ChangeSideSupply;
+		//--- Rebalance (Steff 2026-06-11): supply 40000 -> 10000, killer cash 7500 -> 25000
+		//--- (shift the reward from the commander pool to the player who pulls it off).
+		_bankBounty = 25000;
+		[(side group _killer), 10000, "Bank destruction", false] Call ChangeSideSupply;
 		[_killer_uid, "BankPayout", [_bankBounty]] Call WFBE_CO_FNC_SendToClients;
 		//--- Global broadcast: everyone hears the bank fell.
 		private ["_sideName"];
 		_sideName = if (_side == west) then {"Federal Reserve"} else {"Bank Rossii"};
 		[nil, "LocalizeMessage", ["BankDestroyed", name _killer, _sideName]] Call WFBE_CO_FNC_SendToClients;
-		["INFORMATION", Format ["Server_BuildingKilled.sqf: [%1] Bank destroyed by [%2]. +40000 side supply, $%3 killer bonus.", str _side, name _killer, _bankBounty]] Call WFBE_CO_FNC_LogContent;
+		["INFORMATION", Format ["Server_BuildingKilled.sqf: [%1] Bank destroyed by [%2]. +10000 side supply, $%3 killer bonus.", str _side, name _killer, _bankBounty]] Call WFBE_CO_FNC_LogContent;
 	};
 };
 

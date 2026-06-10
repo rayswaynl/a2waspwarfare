@@ -32,7 +32,7 @@
 - **Doubled + compensated starting economy.** Both sides start with $11,600 cash and 7,400 supply (baseline was $800/$1,200; doubled then +$10k cash/$5k supply as session-restart compensation).
 
 ### New Structures
-- **Federal Reserve / Bank Rossii.** 9,500 supply. Must be placed >800 m from HQ; one per side; marked on map for both sides. Pays $5,000 per 5 min split among living players while HQ stands. Destruction reward: +$40,000 side supply + $7,500 to the killer.
+- **Federal Reserve / Bank Rossii.** 9,500 supply. Must be placed >800 m from HQ; one per side; marked on map for both sides. pays $6,000 per 5 min split among living players while HQ stands. Destruction reward: +$40,000 side supply + $25,000 to the killer.
 - **Counter Battery Radar (CBR).** 2,400 supply. Marks enemy artillery firing positions for 75 s. Requires own AAR to be alive. CBR Radar upgrade extends radius: 750 m → 1,500 m → 2,000 m.
 
 ### Airfields

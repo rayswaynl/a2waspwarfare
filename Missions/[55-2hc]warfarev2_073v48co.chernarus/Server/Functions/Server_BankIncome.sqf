@@ -18,7 +18,7 @@ _bank   = _this select 0;
 _side   = _this select 1;
 
 _interval = 300;   //--- 5 minutes between payouts.
-_pool     = 5000;  //--- FIXED dividend pool per tick, split among living side players.
+_pool     = 6000;  //--- FIXED dividend pool per tick, split among living side players. (Steff 2026-06-11: 5000 -> 6000)
                    //--- Balance review 2026-06-10: a flat per-player 2500 scaled to $50k/tick on a
                    //--- 20-player side (3-5x town income); a fixed pool caps total injection.
 

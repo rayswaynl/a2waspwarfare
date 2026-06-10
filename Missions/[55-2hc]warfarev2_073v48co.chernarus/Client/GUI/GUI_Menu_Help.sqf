@@ -133,7 +133,7 @@ Tracks enemy aircraft above ~30 m altitude (red diamond on map). Required before
 <br />
 <t size='1.2' color='#ffec1c' align='left'>Federal Reserve / Bank Rossii [Bank]</t><br />
 <br />
-9,500 supply. Must be placed more than 800 m from your HQ. One per side. While your HQ stands it pays $5,000 total every 5 minutes split among living players. Destroying the enemy bank awards +$40,000 side supply and $7,500 to the killer. Both banks are marked on the map for both sides.<br />
+9,500 supply. Must be placed more than 800 m from your HQ. One per side. While your HQ stands it pays $6,000 total every 5 minutes split among living players. Destroying the enemy bank awards +$40,000 side supply and $25,000 to the killer. Both banks are marked on the map for both sides.<br />
 <br />
 <t size='1.2' color='#ffec1c' align='left'>Servicepoint [SP]</t><br />
 <br />
@@ -158,7 +158,7 @@ This is the <t color='#F5D363'>WASP Experital</t> build — an experimental test
 Both sides start with <t color='#F5D363'>$11,600 cash</t> and <t color='#F5D363'>7,400 supply</t>.<br />
 <br />
 <t size='1.2' color='#ffec1c'>Bank (endgame objective)</t><br />
-Commander can build a Federal Reserve / Bank Rossii (9,500 supply, &gt;800 m from HQ, one per side). Pays $5,000/5 min split among living players while HQ stands. Destroying enemy bank: +$40,000 side supply + $7,500 to the killer. Both banks are marked on the map.<br />
+Commander can build a Federal Reserve / Bank Rossii (9,500 supply, &gt;800 m from HQ, one per side). pays $6,000/5 min split among living players while HQ stands. Destroying enemy bank: +$40,000 side supply + $25,000 to the killer. Both banks are marked on the map.<br />
 <br />
 <t size='1.2' color='#ffec1c'>Counter Battery Radar</t><br />
 2,400 supply; marks enemy artillery positions for 75 s. Requires AAR. CBR Radar upgrade: 750 m → 1,500 m → 2,000 m. Airfields give a free permanent 2,000 m CBR.<br />
