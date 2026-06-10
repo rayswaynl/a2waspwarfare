@@ -15,7 +15,7 @@ _nearIsSP = false;
 _nearIsDP = false;
 _nearIsRT = false;
 {
-	if ((typeOf _x) == _spType) then {_nearIsSP = true};
+	if ((typeOf _x) == _spType || {_x isKindOf "Base_WarfareBVehicleServicePoint"}) then {_nearIsSP = true};
 	if ((typeOf _x) == WFBE_Logic_Depot) then {_nearIsDP = true};
 	if ((typeOf _x) in _typeRepair) then {_nearIsRT = true};
 } forEach _supports;
@@ -75,4 +75,10 @@ while {true} do {
 //--- Fix the damages?
 if (_cts != 0) then {
 	_veh setDammage 0;
+	//--- Jets: a full repair restores fuel to 100% and re-arms the SPAAG survival mechanic.
+	if (_veh isKindOf "Plane") then {
+		_veh setFuel 1;
+		_veh setVariable ["wfbe_jet_aa_hits", 0, true];
+		_veh setVariable ["wfbe_jet_aa_lasthit", -100, true];
+	};
 };

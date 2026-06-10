@@ -73,7 +73,8 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_LABELS"], [
 	localize 'STR_WF_UPGRADE_IRS',
 	localize 'STR_WF_UPGRADE_AirAA',
 	localize 'STR_WF_UPGRADE_AntiAirRadar',
-	localize 'STR_WF_UPGRADE_UnitCost'
+	localize 'STR_WF_UPGRADE_UnitCost',
+	'Patrols'
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_DESCRIPTIONS"], [
@@ -98,7 +99,8 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_DESCRIPTIONS"], [
 	localize 'STR_WF_UPGRADE_IRS_Desc',
 	localize 'STR_WF_UPGRADE_AirAA_Desc',
 	localize 'STR_WF_UPGRADE_AntiAirRadar_Desc',
-	localize 'STR_WF_UPGRADE_UnitCost_Desc'
+	localize 'STR_WF_UPGRADE_UnitCost_Desc',
+	"Fields autonomous side patrols (max 2 active) that spawn near your HQ and push toward the frontline, capturing as they go.<br /><br />Level 1: light infantry patrol.<br />Level 2: motorized patrol (requires Light Factory).<br />Level 3: armored patrol (requires Heavy Factory 2).<br /><br />Patrol equipment follows your side's tech, and running patrols reduces every player's max AI by 1."
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_IMAGES"], [
@@ -123,5 +125,6 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_IMAGES"], [
 	"", 
 	"",
 	"Client\Images\icon_wf_building_aa_radar.paa",
+	"",
 	""
 ]];ExecVM "Common\Module\CIPHER\CIPHER_Sort.sqf";

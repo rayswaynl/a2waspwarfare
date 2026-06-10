@@ -16,6 +16,13 @@ if (typeName _position == "OBJECT") then {_position = getPos _position};
 if (typeName _side == "SIDE") then {_side = (_side) Call WFBE_CO_FNC_GetSideID};
 
 _vehicle = createVehicle [_type, _position, [], 7, _special];
+
+// Marty: Let callers detect engine-side vehicle creation failures instead of configuring objNull.
+if (isNull _vehicle) exitWith {
+	["WARNING", Format ["Common_CreateVehicle.sqf: Vehicle [%1] for side [%2] failed to create at [%3].", _type, _side, _position]] Call WFBE_CO_FNC_LogContent;
+	objNull
+};
+
 if(_vehicle isKindOf "Tank" || _vehicle isKindOf "APC")then{ [_vehicle] Call Compile preprocessFile "Common\Functions\Common_ModifyVehicle.sqf";};
 
 //["DEBUG (Common_CreateVehicle)", Format ["Before calling"]] Call WFBE_CO_FNC_LogContent;
@@ -38,12 +45,17 @@ if (_bounty) then {
 };
 
 if (_global) then {
-	if (_side != WFBE_DEFENDER_ID || WFBE_ISTHREEWAY) then {
-		_globalInitMode = "vehicleInit";
-		_vehicle setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf'", _side];
-		processInitCommands;
+	if (!isNil "isHeadLessClient" && {isHeadLessClient}) then {
+		//--- HC-created (delegated) vehicles skip the global Init_Unit broadcast (see Common_CreateUnit).
+		_globalInitMode = "hcSkipped";
 	} else {
-		_globalInitMode = "defenderSkipped";
+		if (_side != WFBE_DEFENDER_ID || WFBE_ISTHREEWAY) then {
+			_globalInitMode = "vehicleInit";
+			_vehicle setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf'", _side];
+			processInitCommands;
+		} else {
+			_globalInitMode = "defenderSkipped";
+		};
 	};
 };
  

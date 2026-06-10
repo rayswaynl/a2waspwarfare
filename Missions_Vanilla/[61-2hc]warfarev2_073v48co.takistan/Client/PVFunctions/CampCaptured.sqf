@@ -15,6 +15,7 @@ _sideID_old = _this select 2;
 _is_repair = if (count _this > 3) then {_this select 3} else {false};
 
 _town = _camp getVariable "town";
+if (isNil "WFBE_Client_SideID") exitWith {};
 
 //--- Does the new side match the client side?
 if (WFBE_Client_SideID == _sideID_new) then {

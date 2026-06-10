@@ -16,7 +16,7 @@ _nearIsSP = false;
 _nearIsDP = false;
 _nearIsRT = false;
 {
-	if ((typeOf _x) == _spType) then {_nearIsSP = true};
+	if ((typeOf _x) == _spType || {_x isKindOf "Base_WarfareBVehicleServicePoint"}) then {_nearIsSP = true};
 	if ((typeOf _x) == WFBE_Logic_Depot) then {_nearIsDP = true};
 	if ((typeOf _x) in _typeRepair) then {_nearIsRT = true};
 } forEach _supports;

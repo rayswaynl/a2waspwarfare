@@ -5,6 +5,9 @@ _team = _this select 1;
 _sideID = _this select 2;
 _focus = if (count _this > 3) then {_this select 3} else {objNull};
 
+// Marty: Town unit creation can fail under engine limits; do not keep a patrol script alive for a null group.
+if (isNull _team) exitWith {};
+
 _lastSV = _location getVariable 'supplyValue';
 _startSV = _location getVariable 'startingSupplyValue';
 _mode = "patrol";
@@ -14,8 +17,8 @@ _patrol_range = missionNamespace getVariable 'WFBE_C_TOWNS_PATROL_RANGE';
 _defense_range = missionNamespace getVariable 'WFBE_C_TOWNS_DEFENSE_RANGE';
 _aliveTeam = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
-
-while {!WFBE_GameOver || _aliveTeam} do {
+// Marty: Stop the patrol monitor as soon as the team is gone; dead empty loops accumulate over long games.
+while {!WFBE_GameOver && _aliveTeam} do {
 	// Marty: Performance Audit for per-town-team patrol scripts spawned by town AI.
 	_perfStart = diag_tickTime;
 	_perfModeChange = 0;

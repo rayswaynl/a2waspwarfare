@@ -1,6 +1,13 @@
 /* Parameters */
 
 	class Params {
+	//--- Supply-helicopter feature toggle: shelve the heli feature from the lobby (default Enabled).
+	class WFBE_C_SUPPLY_HELI_ENABLED {
+		title = "Supply Helicopters";
+		values[] = {0,1};
+		texts[] = {"Disabled","Enabled"};
+		default = 1;
+	};
 	// Marty: Allow admins to run the mission with or without the accelerated day/night cycle.
 	class WFBE_DAYNIGHT_ENABLED {
 		title = "$STR_WF_PARAMETER_DAYNIGHT_ENABLED";
@@ -421,12 +428,6 @@
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled","$STR_WF_Enabled_DefaultGear"};
 		default = 0;
 	};
-	class WFBE_C_RESPAWN_MASH {
-		title = "$STR_WF_PARAMETER_Respawn_MASH";
-		values[] = {0,1,2};
-		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled","$STR_WF_Enabled_DefaultGear"};
-		default = 1;
-	};
 	class WFBE_C_RESPAWN_MOBILE {
 		title = "$STR_WF_PARAMETER_MobileRespawn";
 		values[] = {0,1,2};
@@ -485,7 +486,7 @@
 		title = "$STR_WF_PARAMETER_MaxResPatrols";
 		values[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30,32,34,36,38,40,50,60,70,80,90,100};
 		texts[] = {"$STR_WF_Disabled","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","22","24","26","28","30","32","34","36","38","40","50","60","70","80","90","100"};
-		default = 0;
+		default = 6;   //--- Town patrols ON by default (up to 6 towns); DR-57 fix makes them work. Set 0 in the lobby to disable, or raise the count. Each patrol is a roaming AI group — main perf lever.
 	};
 	class WFBE_C_TOWNS_BUILD_PROTECTION_RANGE {
 		title = "$STR_WF_PARAMETER_TownProtectionRange";

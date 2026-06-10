@@ -54,6 +54,9 @@ isHeadLessClient = false;
 
 //--- Headless Client?
 isHeadLessClient = Call Compile preprocessFileLineNumbers "Headless\Functions\HC_IsHeadlessClient.sqf";
+//--- Debug/logging support: HCs always log verbosely - an HC's RPT is its only observable
+//--- channel, and the cost lands on the HC machine, never on players or the server.
+if (isHeadLessClient) then {LOG_CONTENT_STATE = "ACTIVATED"};
 if (isHeadLessClient) then {["INITIALIZATION", "initJIPCompatible.sqf: Detected an headless client."] Call WFBE_CO_FNC_LogContent};
 
 

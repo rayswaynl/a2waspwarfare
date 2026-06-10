@@ -1,5 +1,5 @@
 // Marty: Crew placement uses explicit private locals because town AI may be created on server, client, or headless client.
-Private ['_canCreate','_commander','_crewRole','_crewUnit','_crews','_driver','_firstDone','_global','_gunner','_list','_lockVehicles','_perfCrew','_perfInfantry','_perfScope','_perfSkipped','_perfStart','_perfVehicles','_position','_probability','_side','_sideID','_team','_type','_unit','_units','_vehicle','_vehicles','_rearmor'];
+Private ['_canCreate','_commander','_crewRole','_crewUnit','_crews','_driver','_firstDone','_global','_groupCountCiv','_groupCountEast','_groupCountGuer','_groupCountLogic','_groupCountSide','_groupCountWest','_groupCountUnknown','_groupMachine','_groupSide','_gunner','_list','_lockVehicles','_perfCrew','_perfInfantry','_perfScope','_perfSkipped','_perfStart','_perfVehicles','_position','_probability','_side','_sideID','_team','_type','_unit','_units','_vehicle','_vehicleCrews','_vehicles','_rearmor'];
 
 _list = _this select 0;
 _position = _this select 1;
@@ -20,9 +20,50 @@ _perfVehicles = 0;
 _perfCrew = 0;
 _perfSkipped = 0;
 
+if (typeName _list != "ARRAY") then { _list = [_list] };
+
 if (isNull _team) then {_team = createGroup _side}; //--- Create a group if none are given as a parameter.
 
-if (typeName _list != "ARRAY") then { _list = [_list] };
+// Marty: createGroup can return grpNull when the per-side group limit is reached; fail the whole template before creating empty vehicles.
+if (isNull _team) exitWith {
+	_perfSkipped = count _list;
+	// Marty: Count groups on this machine when Arma refuses to create a group, to diagnose side group saturation.
+	_groupCountWest = 0;
+	_groupCountEast = 0;
+	_groupCountGuer = 0;
+	_groupCountCiv = 0;
+	_groupCountLogic = 0;
+	_groupCountUnknown = 0;
+	{
+		_groupSide = side _x;
+		switch (_groupSide) do {
+			case west: {_groupCountWest = _groupCountWest + 1};
+			case east: {_groupCountEast = _groupCountEast + 1};
+			case resistance: {_groupCountGuer = _groupCountGuer + 1};
+			case civilian: {_groupCountCiv = _groupCountCiv + 1};
+			case sideLogic: {_groupCountLogic = _groupCountLogic + 1};
+			default {_groupCountUnknown = _groupCountUnknown + 1};
+		};
+	} forEach allGroups;
+	_groupCountSide = switch (_side) do {
+		case west: {_groupCountWest};
+		case east: {_groupCountEast};
+		case resistance: {_groupCountGuer};
+		case civilian: {_groupCountCiv};
+		case sideLogic: {_groupCountLogic};
+		default {_groupCountUnknown};
+	};
+	_groupMachine = if (isServer) then {"SERVER"} else {if (hasInterface) then {"CLIENT"} else {"HC"}};
+	["WARNING", Format ["TOWN_GROUP_COUNT create_failed machine:%1 side:%2 sideGroups:%3 total:%4 west:%5 east:%6 guer:%7 civ:%8 logic:%9 unknown:%10", _groupMachine, _side, _groupCountSide, count allGroups, _groupCountWest, _groupCountEast, _groupCountGuer, _groupCountCiv, _groupCountLogic, _groupCountUnknown]] Call WFBE_CO_FNC_LogContent;
+	["WARNING", Format ["Common_CreateTeam.sqf: Team template for side [%1] at [%2] was skipped because no valid group could be created. Templates:%3", _side, _position, count _list]] Call WFBE_CO_FNC_LogContent;
+	if !(isNil "PerformanceAudit_Record") then {
+		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
+			_perfScope = if (isServer && !hasInterface) then {"SERVER"} else {"CLIENT"};
+			["createteam", diag_tickTime - _perfStart, Format["side:%1;global:%2;templates:%3;infantry:0;vehicles:0;crews:0;skipped:%4;groupNull:true", _sideID, _global, count _list, _perfSkipped], _perfScope] Call PerformanceAudit_Record;
+		};
+	};
+	[[], [], _team, []]
+};
 
 _rearmor = {
    				_ammo = _this select 4;
@@ -52,46 +93,69 @@ _rearmor = {
 		if (_x isKindOf 'Man') then {
 			// Marty: Forward the team global-init flag so town AI infantry can skip client marker/action setup.
 			_unit = [_x,_team,_position,_sideID,_global] Call WFBE_CO_FNC_CreateUnit;
-			_units = _units + [_unit];
-			_perfInfantry = _perfInfantry + 1;
+			// Marty: Count and track only units the engine actually created.
+			if (isNull _unit) then {
+				_perfSkipped = _perfSkipped + 1;
+			} else {
+				_units = _units + [_unit];
+				_perfInfantry = _perfInfantry + 1;
+			};
 		} else {
 			_vehicle = [_x, _position, _sideID, 0, _lockVehicles, true, _global, "FORM"] Call WFBE_CO_FNC_CreateVehicle;
-			_perfVehicles = _perfVehicles + 1;
-			_type = if (_vehicle isKindOf 'Man') then {missionNamespace getVariable Format ['WFBE_%1SOLDIER',_side]} else {if (_vehicle isKindOf 'Air') then {missionNamespace getVariable Format ['WFBE_%1PILOT',_side]} else {missionNamespace getVariable Format ['WFBE_%1CREW',_side]}};
-			// Marty: Assign crew roles before moveIn so locked or delegated town vehicles keep their crews mounted.
-			_vehicle allowCrewInImmobile true;
-			_team addVehicle _vehicle;
-			{
-				_crewRole = _x;
-				call {
-					if ((_vehicle emptyPositions _crewRole) <= 0) exitWith {};
-					_crewUnit = [_type,_team,_position,_sideID,_global] Call WFBE_CO_FNC_CreateUnit;
-					[_crewUnit] allowGetIn true;
-
-					switch (_crewRole) do {
-						case "driver": {
-							_crewUnit assignAsDriver _vehicle;
-							[_crewUnit] orderGetIn true;
-							_crewUnit moveInDriver _vehicle;
-						};
-						case "gunner": {
-							_crewUnit assignAsGunner _vehicle;
-							[_crewUnit] orderGetIn true;
-							_crewUnit moveInGunner _vehicle;
-						};
-						case "commander": {
-							_crewUnit assignAsCommander _vehicle;
-							[_crewUnit] orderGetIn true;
-							_crewUnit moveInCommander _vehicle;
-						};
-					};
-
-					_crewUnit addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
-					_crews = _crews + [_crewUnit];
-					_perfCrew = _perfCrew + 1;
+			call {
+				// Marty: If the vehicle itself failed, skip this template entry without attempting crew work.
+				if (isNull _vehicle) exitWith {
+					_perfSkipped = _perfSkipped + 1;
 				};
-			} forEach ["driver","gunner","commander"];
-			_vehicles = _vehicles + [_vehicle];
+
+				_type = if (_vehicle isKindOf 'Man') then {missionNamespace getVariable Format ['WFBE_%1SOLDIER',_side]} else {if (_vehicle isKindOf 'Air') then {missionNamespace getVariable Format ['WFBE_%1PILOT',_side]} else {missionNamespace getVariable Format ['WFBE_%1CREW',_side]}};
+				_vehicleCrews = [];
+				// Marty: Assign crew roles before moveIn so locked or delegated town vehicles keep their crews mounted.
+				_vehicle allowCrewInImmobile true;
+				_team addVehicle _vehicle;
+				{
+					_crewRole = _x;
+					call {
+						if ((_vehicle emptyPositions _crewRole) <= 0) exitWith {};
+						_crewUnit = [_type,_team,_position,_sideID,_global] Call WFBE_CO_FNC_CreateUnit;
+						if (isNull _crewUnit) exitWith {};
+						[_crewUnit] allowGetIn true;
+
+						switch (_crewRole) do {
+							case "driver": {
+								_crewUnit assignAsDriver _vehicle;
+								[_crewUnit] orderGetIn true;
+								_crewUnit moveInDriver _vehicle;
+							};
+							case "gunner": {
+								_crewUnit assignAsGunner _vehicle;
+								[_crewUnit] orderGetIn true;
+								_crewUnit moveInGunner _vehicle;
+							};
+							case "commander": {
+								_crewUnit assignAsCommander _vehicle;
+								[_crewUnit] orderGetIn true;
+								_crewUnit moveInCommander _vehicle;
+							};
+						};
+
+						_crewUnit addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+						_vehicleCrews = _vehicleCrews + [_crewUnit];
+					};
+				} forEach ["driver","gunner","commander"];
+
+				// Marty: A town combat vehicle without any crew is worse than no vehicle; remove it immediately.
+				if (count _vehicleCrews == 0) exitWith {
+					["WARNING", Format ["Common_CreateTeam.sqf: Vehicle [%1] for side [%2] at [%3] had no crew and was removed to prevent empty town defenses.", typeOf _vehicle, _side, _position]] Call WFBE_CO_FNC_LogContent;
+					deleteVehicle _vehicle;
+					_perfSkipped = _perfSkipped + 1;
+				};
+
+				_crews = _crews + _vehicleCrews;
+				_perfCrew = _perfCrew + count _vehicleCrews;
+				_vehicles = _vehicles + [_vehicle];
+				_perfVehicles = _perfVehicles + 1;
+			};
 		};
 	} else {
 		_perfSkipped = _perfSkipped + 1;

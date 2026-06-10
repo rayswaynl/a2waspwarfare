@@ -27,7 +27,7 @@ for '_i' from 0 to 2 do {
 		_count = ((_existing_content) select _i) select 1;
 		for '_j' from 0 to count(_items)-1 do {
 			_get = missionNamespace getVariable Format["%1%2",_prefix,_items select _j];
-			if !(isNil '_get') then {
+			if (!(isNil '_get') && {typeName _get == "ARRAY"} && {count _get > 5}) then { //--- PR8 (claude): require a well-formed descriptor array before "_get select 4/5" (HC gear-cargo RPT cascade source).
 				_size = _size + ((_get select 5) * (_count select _j));
 				if (_i == 1) then {
 					_m = _m + (_count select _j);

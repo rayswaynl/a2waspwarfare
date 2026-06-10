@@ -28,7 +28,7 @@ while {!WFBE_GameOver} do {
 
     if (_teamWestSkillTicksTriggerThresholdExceeded) then {
 
-            while {!_teamWestSkillTicksEndTriggerThresholdExceeded} do {
+            while {!_teamWestSkillTicksEndTriggerThresholdExceeded && !WFBE_GameOver} do {
 
                 _teamSkillWest = ["REQUEST_SIDE_SKILL", west] call WFBE_SE_FNC_CallDatabaseRequestSideTotalSkill;
                 _teamSkillEast = ["REQUEST_SIDE_SKILL", east] call WFBE_SE_FNC_CallDatabaseRequestSideTotalSkill;
@@ -86,7 +86,7 @@ while {!WFBE_GameOver} do {
 
             if (_teamEastSkillTicksTriggerThresholdExceeded) then {
 
-                while {!_teamEastSkillTicksEndTriggerThresholdExceeded} do {
+                while {!_teamEastSkillTicksEndTriggerThresholdExceeded && !WFBE_GameOver} do {
 
                     _teamSkillWest = ["REQUEST_SIDE_SKILL", west] call WFBE_SE_FNC_CallDatabaseRequestSideTotalSkill;
                     _teamSkillEast = ["REQUEST_SIDE_SKILL", east] call WFBE_SE_FNC_CallDatabaseRequestSideTotalSkill;

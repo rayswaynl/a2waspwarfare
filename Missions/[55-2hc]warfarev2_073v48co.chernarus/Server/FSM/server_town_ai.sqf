@@ -1,5 +1,4 @@
-// Marty: Reliable town AI monitor based on the old pre-capture activation scan; aircraft are ignored.
-Private["_activeSideIDs","_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_teams","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_detected","_detectedRaw","_enemies","_perfTowns","_perfNearEntities","_perfDetected","_perfActivations","_perfDespawns","_perfSpawnGroups","_perfActive","_perfItemStart","_perfStart","_skippedTowns","_townScanned","_sideID","_side","_side_enabled","_isActiveTown","_dynRange","_scanUnit","_scanVehicle","_camps","_camp","_positions","_teams","_use_server","_retVal","_groupIndex"];
+Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored"];
 
 for "_j" from 0 to ((count towns) - 1) step 1 do
 {
@@ -12,6 +11,7 @@ _range = 600;
 _range_detect = _range * (missionNamespace getVariable "WFBE_C_TOWNS_DETECTION_RANGE_COEF");
 _range_detect_active = _range * (missionNamespace getVariable "WFBE_C_TOWNS_DETECTION_RANGE_ACTIVE_COEF");
 
+_airHeight = missionNamespace getVariable "WFBE_C_TOWNS_DETECTION_RANGE_AIR";
 _unitsInactiveMax = missionNamespace getVariable "WFBE_C_TOWNS_UNITS_INACTIVE";
 _patrol_delay = missionNamespace getVariable "WFBE_C_PATROLS_DELAY_SPAWN";
 _ai_delegation_enabled = missionNamespace getVariable "WFBE_C_AI_DELEGATION";
@@ -21,10 +21,8 @@ _town_occupation_enabled = if ((missionNamespace getVariable "WFBE_C_TOWNS_OCCUP
 for "_k" from 0 to ((count towns) - 1) step 1 do
 {
 	_town = towns select _k;
-	_town setVariable ["wfbe_active", false, true];
-	_town setVariable ["wfbe_active_air", false, true];
-	// Marty: Clients use this side list to reveal active-town SV without leaking it to every team.
-	_town setVariable ["wfbe_active_sideIDs", [], true];
+	_town setVariable ["wfbe_active", false];
+	_town setVariable ["wfbe_active_air", false];
 	_town setVariable ["wfbe_inactivity", 0];
 	_town setVariable ["wfbe_active_override", false];
 	_town setVariable ['wfbe_active_vehicles', []];
@@ -34,38 +32,20 @@ for "_k" from 0 to ((count towns) - 1) step 1 do
 
 while {!WFBE_GameOver} do {
 
-	// Marty: Performance Audit timing for one town AI server cycle.
-	_perfStart = diag_tickTime;
-	_perfTowns = 0;
-	_perfNearEntities = 0;
-	_perfDetected = 0;
-	_perfActivations = 0;
-	_perfDespawns = 0;
-	_perfSpawnGroups = 0;
-	_skippedTowns = 0;
-	_perfActive = 0;
 
 	for "_i" from 0 to ((count towns) - 1) step 1 do
 	{
-		// Marty: Performance Audit active time excludes the cooperative sleep below.
-		_perfItemStart = diag_tickTime;
 		_position = [];
 		_groups = [];
-		_townScanned = false;
+
 
 		_town = towns select _i;
-		_perfTowns = _perfTowns + 1;
 		_town_teams = _town getVariable "wfbe_town_teams";
-		_patrol_enabled = if (!isNil {_town getVariable "wfbe_patrol_enabled"}) then {true} else {false};
-
-		//--- Towns patrol, if enabled.
-		if (_patrol_enabled) then {
-			_town setVariable ["wfbe_patrol_active", false];
-			_town setVariable ["wfbe_patrol_active_last", time];
-		};
+		//--- Patrols v2: town-based patrol gating retired (see Server\FSM\server_side_patrols.sqf).
 
 		_sideID = _town getVariable "sideID";
 		_side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
+
 
 		if(_sideID != WFBE_C_UNKNOWN_ID ) then {
 			_side_enabled = false;
@@ -78,117 +58,126 @@ while {!WFBE_GameOver} do {
 
 			if(_side_enabled) then
 			{
-				_isActiveTown = (_town getVariable "wfbe_active") || (_town getVariable "wfbe_active_air");
-				_dynRange = if (_isActiveTown) then {_range_detect_active} else {_range_detect};
+				_dynRange = if (_town getVariable "wfbe_active" || _town getVariable "wfbe_active_air") then {_range_detect_active} else {_range_detect};
+				_detected = (_town nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"],_dynRange]) unitsBelowHeight 20;
 
-				// Marty: Restore the old reliable per-town activation scan, but leave Air out to prevent fly-by spawns.
-				_detectedRaw = _town nearEntities [["Man","Car","Motorcycle","Tank","Ship"],_dynRange];
-				_detected = [];
+				//--- Defender classification: town/static defender AI must not wake towns (its own
+				//--- OR a neighbouring enemy town it wandered near) - only players and bought AI count.
+				_scanStart = diag_tickTime;
+				_detectedFiltered = [];
+				_defendersIgnored = 0;
 				{
-					_scanUnit = _x;
-					_scanVehicle = vehicle _scanUnit;
-					call {
-						if (_scanVehicle isKindOf "Air") exitWith {};
-						// Marty: Town defenders may patrol into nearby enemy detection radii; do not let them wake those towns.
-						if (_scanUnit getVariable ["WFBE_IsTownDefenderAI", false]) exitWith {};
-						if (_scanVehicle getVariable ["WFBE_IsTownDefenderAI", false]) exitWith {};
-						if ((_scanUnit isKindOf "Man") && ((group _scanUnit) getVariable ["WFBE_IsTownDefenderAI", false])) exitWith {};
-						[_detected, _scanUnit] call WFBE_CO_FNC_ArrayPush;
+					if (_x getVariable ["WFBE_IsTownDefenderAI", false]) then {
+						_defendersIgnored = _defendersIgnored + 1;
+					} else {
+						_detectedFiltered = _detectedFiltered + [_x];
 					};
-				} forEach _detectedRaw;
+				} forEach _detected;
 
-				_townScanned = true;
-				_perfNearEntities = _perfNearEntities + 1;
-				_perfDetected = _perfDetected + count _detected;
-
-				_enemies = [_detected, _side] Call WFBE_CO_FNC_GetAreaEnemiesCount;
-
+				_enemies = [_detectedFiltered, _side] Call WFBE_CO_FNC_GetAreaEnemiesCount;
+				if (!isNil "PerformanceAudit_Record") then {
+					if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
+						["town_activation_scan", diag_tickTime - _scanStart, Format["town:%1;detected:%2;defendersIgnored:%3;enemies:%4", _town getVariable "name", count _detected, _defendersIgnored, _enemies], "SERVER"] Call PerformanceAudit_Record;
+					};
+				};
 				if(_enemies > 0)then{
-					// Marty: Publish only the side IDs that actually woke this town AI, not the global active flag alone.
-					_activeSideIDs = [];
-					if (_side != west && (west countSide _detected) > 0) then {_activeSideIDs set [count _activeSideIDs, WFBE_C_WEST_ID]};
-					if (_side != east && (east countSide _detected) > 0) then {_activeSideIDs set [count _activeSideIDs, WFBE_C_EAST_ID]};
-					if (_side != resistance && (resistance countSide _detected) > 0) then {_activeSideIDs set [count _activeSideIDs, WFBE_C_GUER_ID]};
-					_town setVariable ["wfbe_active_sideIDs", _activeSideIDs, true];
-					_town setVariable ["wfbe_inactivity", time];
+					///
+					if (_enemies > 0) then {_town setVariable ["wfbe_inactivity", time]};
 
 					if (_town getVariable "wfbe_active_override") then {
 						_town setVariable ["wfbe_active_override", false];
-						_town setVariable ["wfbe_active", false, true];
+						_town setVariable ["wfbe_active", false];
 					};
 
 					if(!(_town getVariable "wfbe_active")) then {
-						_town setVariable ["wfbe_active", true, true];
+						_below = 1;
+						_enemies_ground = 1;
 
-						if (_side == WFBE_DEFENDER) then {
-							_groups = [_town, _side] Call WFBE_SE_FNC_GetTownGroupsDefender
-						} else {
-							_groups = [_town, _side] Call WFBE_SE_FNC_GetTownGroups;
+						if(_enemies_ground > 0) then {
+							////
+							_town setVariable ["wfbe_active", true];
+
+							if (_side == WFBE_DEFENDER) then {
+								_groups = [_town, _side] Call WFBE_SE_FNC_GetTownGroupsDefender
+							} else {
+								_groups = [_town, _side] Call WFBE_SE_FNC_GetTownGroups;
+							};
+
+							////
 						};
 
-						// Marty: Count the activation even if a bad config leaves only static defenses to man.
-						_perfActivations = _perfActivations + 1;
+						if(_enemies_ground == 0 && _enemies > 0) then {
+							if(!(_town getVariable "wfbe_active_air")) then {
+								_town setVariable ["wfbe_active_air", true];
 
-						if (count _groups == 0) then {
-							["WARNING", Format ["server_town_ai.sqf: Town [%1] activation for [%2] had no group templates; static defenses will still be manned.", _town getVariable "name", _side]] Call WFBE_CO_FNC_LogContent;
-						} else {
-							// Marty: Performance Audit counters for town AI activation.
-							_perfSpawnGroups = _perfSpawnGroups + count _groups;
-							["INFORMATION", Format ["server_town_ai.fsm: Town [%1] has been activated, creating defensive units for [%2].", _town, _side]] Call WFBE_CO_FNC_LogContent;
-
-							if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_side]) then {[_side,"HostilesDetectedNear",_town] Spawn SideMessage};
-
-							//--- Get the positions and create the groups
-							_camps = +(_town getVariable "camps");
-							_positions = [];
-							_teams = [];
-							// Marty: Use a separate group index so town iteration is never affected by activation work.
-							for '_groupIndex' from 0 to count(_groups)-1 do {
-								_position = [];
-								if (count _camps > 0 && random 100 > 50) then {
-									_camp = _camps select floor (random count _camps);
-									_camps = _camps - [_camp];
-									_position = ([getPos _camp, 10, 50] call WFBE_CO_FNC_GetRandomPosition);
+								if (_side == WFBE_DEFENDER) then {
+									_groups = [_town, _side, true] Call WFBE_SE_FNC_GetTownGroupsDefender
 								} else {
-									_position = ([getPos _town, 50, 300] call WFBE_CO_FNC_GetRandomPosition);
-								};
-								_position = [_position, 50] call WFBE_CO_FNC_GetEmptyPosition;
-								[_positions, _position] call WFBE_CO_FNC_ArrayPush;
-								[_teams, createGroup _side] call WFBE_CO_FNC_ArrayPush;
-							};
-
-							_use_server = true;
-
-							switch (_ai_delegation_enabled) do {
-								case 1: { //--- Client side delegation.
-									_retVal = [_town, _side, _groups, _positions, _teams] Call WFBE_SE_FNC_DelegateAITown;
-									_town_teams = _town_teams + _teams;
-									_town setVariable ['wfbe_active_vehicles', (_town getVariable 'wfbe_active_vehicles') + (_retVal select 1)];
-									_use_server = false;
-								};
-								case 2: { //--- Headless Client delegation.
-									if (count(missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID") > 0) then {
-										[_town, _side, _groups, _positions, _teams] Call WFBE_CO_FNC_DelegateAITownHeadless;
-										_town_teams = _town_teams + _teams;
-										_town setVariable ['wfbe_town_teams', _town_teams];
-										_use_server = false;
-									};
+									_groups = [_town, _side, true] Call WFBE_SE_FNC_GetTownGroups;
 								};
 							};
+						};
+						//// start of creation
+						["INFORMATION", Format ["server_town_ai.fsm: Town [%1] has been activated, creating defensive units for [%2].", _town, _side]] Call WFBE_CO_FNC_LogContent;
 
-							//--- Use Server AI.
-							if (_use_server) then {
-								// Marty: Town AI does not need client-side unit marker/action initialization.
-								_retVal = [_town, _side, _groups, _positions, _teams, false] Call WFBE_CO_FNC_CreateTownUnits;
-								_town_teams = _town_teams + _teams;
+						if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_side]) then {[_side,"HostilesDetectedNear",_town] Spawn SideMessage};
+
+
+
+						//--- Get the positions and create the groups
+						_camps = +(_town getVariable "camps");
+						_positions = [];
+						_teams = [];
+						for '_i' from 0 to count(_groups)-1 do {
+							_position = [];
+							if (count _camps > 0 && random 100 > 50) then {
+								_camp = _camps select floor (random count _camps);
+								_camps = _camps - [_camp];
+								_position = ([getPos _camp, 10, 50] call WFBE_CO_FNC_GetRandomPosition);
+							} else {
+								_position = ([getPos _town, 50, 300] call WFBE_CO_FNC_GetRandomPosition);
+							};
+							_position = [_position, 50] call WFBE_CO_FNC_GetEmptyPosition;
+							[_positions, _position] call WFBE_CO_FNC_ArrayPush;
+							[_teams, createGroup _side] call WFBE_CO_FNC_ArrayPush;
+						};
+
+						_use_server = true;
+
+						switch (_ai_delegation_enabled) do {
+							case 1: { //--- Client side delegation.
+								_retVal = [_town, _side, _groups, _positions, _teams] Call WFBE_SE_FNC_DelegateAITown;
+								// Marty: Only store server-created fallback groups; delegated clients report their own local groups back.
+								_town_teams = _town_teams + (_retVal select 0);
 								_town setVariable ['wfbe_active_vehicles', (_town getVariable 'wfbe_active_vehicles') + (_retVal select 1)];
 								_town setVariable ['wfbe_town_teams', _town_teams];
+								_use_server = false;
 							};
+							case 2: { //--- Headless Client delegation.
+								if (count(missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID") > 0) then {
+									[_town, _side, _groups, _positions, _teams] Call WFBE_CO_FNC_DelegateAITownHeadless;
+									// Marty: HC-local groups are reported back by update-town-delegation after creation.
+									_town setVariable ['wfbe_town_teams', _town_teams];
+									_use_server = false;
+								};
+							};
+						};
+
+						//--- Use Server AI.
+						if (_use_server) then {
+							_retVal = [_town, _side, _groups, _positions, _teams] Call WFBE_CO_FNC_CreateTownUnits;
+							// Marty: Store the real groups returned by CreateTownUnits, not the preallocated input groups.
+							_town_teams = _town_teams + (_retVal select 0);
+							_town setVariable ['wfbe_active_vehicles', (_town getVariable 'wfbe_active_vehicles') + (_retVal select 1)];
+							_town setVariable ['wfbe_town_teams', _town_teams];
 						};
 
 						//--- Man the defenses.
 						[_town, _side, "spawn"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
+
+						//// end of creating
 					};
+					///
 				};
 
 			};//// end of side_enabled
@@ -196,12 +185,11 @@ while {!WFBE_GameOver} do {
 			if((_town getVariable "wfbe_active") || (_town getVariable "wfbe_active_air")) then {
 				if(time - (_town getVariable "wfbe_inactivity") > _unitsInactiveMax) then {
 					//// inner block
-					// Marty: Performance Audit counter for town AI despawn.
-					_perfDespawns = _perfDespawns + 1;
-					_town setVariable ["wfbe_active", false, true];
-					_town setVariable ["wfbe_active_air", false, true];
-					// Marty: Clear side-scoped active visibility when the town deactivates.
-					_town setVariable ["wfbe_active_sideIDs", [], true];
+					_town setVariable ["wfbe_active", false];
+					_town setVariable ["wfbe_active_air", false];
+
+					// Marty: Ask delegated clients/HCs to delete their local town AI groups where deleteGroup can actually work.
+					if (isMultiplayer) then {[nil, "HandleSpecial", ["cleanup-townai", _town, _side]] Call WFBE_CO_FNC_SendToClients};
 
 					//--- Teams Units.
 					{
@@ -221,6 +209,7 @@ while {!WFBE_GameOver} do {
 					} forEach (_town getVariable 'wfbe_active_vehicles');
 
 					_town_teams = [];
+					_town setVariable ['wfbe_town_teams', []];
 					_town setVariable ['wfbe_active_vehicles', []];
 
 					//--- Despawn the town defenses unit.
@@ -228,30 +217,13 @@ while {!WFBE_GameOver} do {
 					//// end of inner block
 				};
 			};
-			if(_patrol_enabled)then {
-				if !(_town getVariable "wfbe_patrol_active") then {
-					if (time - (_town getVariable "wfbe_patrol_active_last") > _patrol_delay && !(_town getVariable "wfbe_active")) then {
-						_town setVariable ["wfbe_patrol_active", true];
-						[_town, _sideID] execVM "Server\FSM\server_patrols.sqf";
-					};
-				};
-			};
+			//--- Patrols v2: the per-town spawn gate is retired (server_side_patrols.sqf drives patrols now).
 
 		};
 
-		// Marty: Count towns that did not run an activation scan due to side/config eligibility.
-		if (!_townScanned) then {_skippedTowns = _skippedTowns + 1};
-
-		_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
 		sleep 0.05;
 	};
 
-	// Marty: Performance Audit record for one town AI server cycle.
-	if !(isNil "PerformanceAudit_Record") then {
-		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
-			["server_town_ai", _perfActive, Format["towns:%1;scannedTowns:%2;skippedTowns:%3;nearEntities:%4;detected:%5;activations:%6;despawns:%7;spawnGroups:%8;cycleMs:%9", _perfTowns, _perfTowns - _skippedTowns, _skippedTowns, _perfNearEntities, _perfDetected, _perfActivations, _perfDespawns, _perfSpawnGroups, round ((diag_tickTime - _perfStart) * 1000)], "SERVER"] Call PerformanceAudit_Record;
-		};
-	};
 
 	sleep 5;
 

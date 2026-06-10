@@ -29,4 +29,4 @@ _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 		[_x, _side] Call WFBE_SE_FNC_SpawnTownDefense;
 	};
 } forEach (_town getVariable "wfbe_town_defenses");
-if !(isNil {_town getVariable "wfbe_town_mortars"}) then {[_town, _side] Call WFBE_SE_FNC_ManageTownMortars}; //--- Mortars checkup.
+//--- AI2: town-mortar checkup removed. The feature was never wired -- no town ever set "wfbe_town_mortars", and Server_SpawnTownMortars.sqf had no compile registration (orphan, deleted).

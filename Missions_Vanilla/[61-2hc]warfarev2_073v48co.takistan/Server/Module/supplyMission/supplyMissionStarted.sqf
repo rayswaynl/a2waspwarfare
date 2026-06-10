@@ -1,11 +1,34 @@
 "WFBE_Client_PV_SupplyMissionStarted" addPublicVariableEventHandler {
     (_this select 1) spawn {
-        private ['_associatedSupplyTruck', '_associatedSourceTown', '_sidePlayer','_iteratedObject','_friendlyCommandCenterInProximity','_playerObject','_match','_currentSupplyTruckDriverLeader','_playerIsDrivingSupplyTruck','_playerisInProximityOfSupplyTruck'];
+        private ['_associatedSupplyTruck', '_associatedSourceTown', '_sidePlayer','_iteratedObject','_friendlyCommandCenterInProximity','_playerObject','_match','_currentSupplyTruckDriverLeader','_playerIsDrivingSupplyTruck','_playerisInProximityOfSupplyTruck','_byHeli','_vp','_cp','_dx','_dy','_ccDwell','_heliCCSeen','_unloadNeed'];
         _playerObject = _this select 0;
         _associatedSupplyTruck = _this select 1;
         _associatedSourceTown = _this select 2;
+        _byHeli = _associatedSupplyTruck getVariable "SupplyByHeli";
+        if (isNil "_byHeli") then { _byHeli = false; };
 
         _associatedSourceTown setVariable ['LastSupplyMissionRun', time];
+
+        //--- Interdiction: if the loaded supply vehicle is destroyed, reward the killer's side a share of the cargo.
+        if (isNil {_associatedSupplyTruck getVariable "wfbe_supply_killed_eh_set"}) then {
+            _associatedSupplyTruck setVariable ["wfbe_supply_killed_eh_set", true, true];
+            _associatedSupplyTruck addEventHandler ["Killed", {
+            private ["_veh","_killer","_amt","_killerSide","_reward"];
+            _veh = _this select 0;
+            _killer = _this select 1;
+            _amt = _veh getVariable "SupplyAmount";
+            if (isNil "_amt") then { _amt = 0; };
+            if ((_amt > 0) && {!isNull _killer}) then {
+                _killerSide = side group _killer;
+                //--- Only a genuine ENEMY kill pays interdiction. Guards friendly-fire / self-destruct from minting own-side supply.
+                if ((_killerSide in WFBE_PRESENTSIDES) && {_killerSide != (side _veh)}) then {
+                    _reward = round (_amt * WFBE_C_SUPPLY_INTERDICTION_CUT);
+                    [_killerSide, _reward, format ["Logistics interdiction: enemy supply vehicle destroyed (+S %1).", _reward], false] call ChangeSideSupply;
+                };
+                _veh setVariable ["SupplyAmount", 0, true];
+            };
+        }];
+        };
 
         _friendlyCommandCenterInProximity = false;
         _playerisInProximityOfSupplyTruck = false;
@@ -17,17 +40,31 @@
 
         [_associatedSourceTown] spawn WFBE_SE_FNC_SupplyMissionTimerForTown;
 
-        while { alive _associatedSupplyTruck } do {
-            
-            sleep 3;
-			
-            {
-       			if (_x isKindOf "Base_WarfareBUAVterminal") then {
-            	    _friendlyCommandCenterInProximity = true;
-        		};
-    		} forEach (nearestObjects [(getPos _associatedSupplyTruck), [], 80]);
+        _ccDwell = 0;
+        _heliCCSeen = false;
+        _unloadNeed = if (_byHeli) then { WFBE_C_SUPPLY_HELI_UNLOAD_TIME } else { 0 };
 
-            if (_friendlyCommandCenterInProximity) exitWith {
+        while { alive _associatedSupplyTruck } do {
+            sleep 1;
+            if ((_associatedSupplyTruck getVariable ["SupplyAmount", 0]) <= 0) exitWith {};
+
+            _friendlyCommandCenterInProximity = false;
+            {
+                if (_x isKindOf "Base_WarfareBUAVterminal") then {
+                    //--- Helicopters fly high: qualify on HORIZONTAL (2D) distance to the CC, ignore altitude. Trucks unchanged.
+                    _vp = getPos _associatedSupplyTruck; _cp = getPos _x;
+                    _dx = (_vp select 0) - (_cp select 0); _dy = (_vp select 1) - (_cp select 1);
+                    if ((!_byHeli) || (((_dx*_dx)+(_dy*_dy)) < 6400)) then { _friendlyCommandCenterInProximity = true; };
+                };
+            } forEach (nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], (if (_byHeli) then {400} else {80})]);
+
+            if (_friendlyCommandCenterInProximity) then { _ccDwell = _ccDwell + 1; } else { _ccDwell = 0; };
+            if (_byHeli && _friendlyCommandCenterInProximity && !_heliCCSeen) then {
+                _heliCCSeen = true;
+                ["INFORMATION", Format ["SupplyMissionStarted.sqf: Helicopter supply vehicle %1 reached Command Center area; waiting for manual UNLOAD SUPPLIES.", _associatedSupplyTruck]] Call WFBE_CO_FNC_LogContent;
+            };
+
+            if ((!_byHeli) && _friendlyCommandCenterInProximity && (_ccDwell >= _unloadNeed)) exitWith {
                 {
                     _iteratedPlayerUID = _x select 1;
                     // diag_log format ["_associatedSupplyTruck: %1, leader group: %2, getPlayerUID leader group _associatedSupplyTruck: %3, _iteratedPlayerUID: %4, _playerObject: %5", _associatedSupplyTruck, leader group _associatedSupplyTruck, getPlayerUID leader group _associatedSupplyTruck, _iteratedPlayerUID, _playerObject];

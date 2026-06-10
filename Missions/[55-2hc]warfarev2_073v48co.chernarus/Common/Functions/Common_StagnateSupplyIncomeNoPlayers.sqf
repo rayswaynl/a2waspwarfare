@@ -1,4 +1,4 @@
-private ["_amount", "_side", "_sidePlayers", "_supplyDecreasePercentage", "_teamSkillWest", "_teamSkillEast"];
+private ["_amount", "_side", "_sidePlayers", "_supplyDecreasePercentage", "_teamSkillWest", "_teamSkillEast", "_teamSkillWestResult", "_teamSkillEastResult", "_teamWestPlayers", "_teamEastPlayers"];
 
 _amount = _this select 0; 
 _side = _this select 1;
@@ -6,8 +6,22 @@ _side = _this select 1;
 _sidePlayers = [];
 _supplyDecreasePercentage = 0;
 
-_teamSkillWest = ["REQUEST_SIDE_SKILL", west] call WFBE_SE_FNC_CallDatabaseRequestSideTotalSkill;
-_teamSkillEast = ["REQUEST_SIDE_SKILL", east] call WFBE_SE_FNC_CallDatabaseRequestSideTotalSkill;
+_teamSkillWest = 0;
+_teamSkillEast = 0;
+_teamSkillWestResult = 0;
+_teamSkillEastResult = 0;
+
+if !(isNil "WFBE_SE_FNC_CallDatabaseRequestSideTotalSkill") then {
+    _teamSkillWestResult = ["REQUEST_SIDE_SKILL", west] call WFBE_SE_FNC_CallDatabaseRequestSideTotalSkill;
+    if !(isNil "_teamSkillWestResult") then {
+        if (typeName _teamSkillWestResult == "SCALAR") then {_teamSkillWest = _teamSkillWestResult};
+    };
+
+    _teamSkillEastResult = ["REQUEST_SIDE_SKILL", east] call WFBE_SE_FNC_CallDatabaseRequestSideTotalSkill;
+    if !(isNil "_teamSkillEastResult") then {
+        if (typeName _teamSkillEastResult == "SCALAR") then {_teamSkillEast = _teamSkillEastResult};
+    };
+};
 
 if (_side == west) then {
     if (_teamSkillWest > 0) exitWith {

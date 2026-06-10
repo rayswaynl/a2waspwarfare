@@ -38,7 +38,7 @@ if (_wp_origin distance _wp_dest > _distance_node) then {
 	//--- First WP
 	_wp_sel = [[([_nodes_a select 0, 20, 100] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 40, 20, [], [], ["AWARE","","COLUMN","NORMAL"]]];
 	
-	if (random 100 < 30) exitWith {};
+	if (random 100 < 30) exitWith {[_team, false, _wp_sel] Call WFBE_CO_FNC_WaypointsAdd;};
 	
 	//--- Determine the path to follow.
 	_a_safe = [_nodes_a select 1, _side, _town_assigned] Call WFBE_SE_FNC_AI_SetTownAttackPath_PosIsSafe;

@@ -13,16 +13,13 @@
 		- Groups
 */
 WFBE_SE_FNC_DelegateAITown = {
-	Private ["_delegated", "_delegators", "_fallbackGroups", "_groups", "_perfStart", "_positions", "_retVal", "_side", "_teams", "_town", "_town_teams", "_town_vehicles"];
+	Private ["_groups", "_positions", "_side", "_teams", "_town", "_town_teams", "_town_vehicles"];
 
 	_town = _this select 0;
 	_side = _this select 1;
 	_groups = +(_this select 2);
 	_positions = +(_this select 3);
 	_teams = +(_this select 4);
-	// Marty: Performance Audit counts client delegation versus server fallback.
-	_perfStart = diag_tickTime;
-	_delegated = 0;
 
 	_town_teams = [];
 	_town_vehicles = [];
@@ -44,7 +41,6 @@ WFBE_SE_FNC_DelegateAITown = {
 			[_uid, "increment"] Call WFBE_SE_FNC_DelegationOperate; //--- Increment the group count for that client.
 			[_uid, _teams select _i] Spawn WFBE_SE_FNC_DelegationTracker; //--- Track a group until it's nullification.
 			["INFORMATION", Format["Server_DelegateAITown.sqf: [%1] Town [%2] Units [%3] in group [%4] were delegated to client [%5].", _side, _town, _groups select _i, _teams select _i, name (_delegators select _i)]] Call WFBE_CO_FNC_LogContent;
-			_delegated = _delegated + 1;
 			
 			_groups set [_i, "**NIL**"];
 			_positions set [_i, "**NIL**"];
@@ -55,19 +51,11 @@ WFBE_SE_FNC_DelegateAITown = {
 	_groups = _groups - ["**NIL**"];
 	_positions = _positions - ["**NIL**"];
 	_teams = _teams - ["**NIL**"];
-	_fallbackGroups = count _groups;
 
 	if (count _groups > 0) then { //--- Some units left for the server to create?
-		// Marty: Server fallback town AI should not globally initialize client marker/action scripts.
-		_retVal = [_town, _side, _groups, _positions, _teams, false] call WFBE_CO_FNC_CreateTownUnits;
+		_retVal = [_town, _side, _groups, _positions, _teams] call WFBE_CO_FNC_CreateTownUnits;
 		_town_teams = _town_teams + (_retVal select 0);
 		_town_vehicles = _town_vehicles + (_retVal select 1);
-	};
-
-	if !(isNil "PerformanceAudit_Record") then {
-		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
-			["delegate_townai_server", diag_tickTime - _perfStart, Format["town:%1;side:%2;delegators:%3;delegated:%4;fallbackGroups:%5;fallbackVehicles:%6", _town getVariable "name", _side, count _delegators, _delegated, _fallbackGroups, count _town_vehicles], "SERVER"] Call PerformanceAudit_Record;
-		};
 	};
 
 	[_town_teams, _town_vehicles]
@@ -80,7 +68,7 @@ WFBE_SE_FNC_DelegateAITown = {
 		- Operate (increment/decrement).
 */
 WFBE_SE_FNC_DelegationOperate = {
-	Private ["_delegator", "_get", "_operation", "_uid"];
+	Private ["_delegator", "_get", "_uid"];
 	
 	_uid = _this select 0;
 	_operation = _this select 1;
@@ -102,7 +90,7 @@ WFBE_SE_FNC_DelegationOperate = {
 		- Group.
 */
 WFBE_SE_FNC_DelegationTracker = {
-	Private ["_delegator", "_group", "_id", "_uid"];
+	Private ["_delegator", "_group", "_uid"];
 	
 	_uid = _this select 0;
 	_group = _this select 1;

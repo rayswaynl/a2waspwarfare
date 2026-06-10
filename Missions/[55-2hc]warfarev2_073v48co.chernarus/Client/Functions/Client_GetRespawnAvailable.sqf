@@ -44,19 +44,6 @@ if ((missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") > 0) then {
 	};
 };
 
-//--- MASH.
-if ((missionNamespace getVariable "WFBE_C_RESPAWN_MASH") > 0) then {
-	_mash = WFBE_Client_Logic getVariable "wfbe_mash";
-
-	if (!(isNil "_mash")) then {
-		if (alive _mash) then {
-			_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
-			_range = (missionNamespace getVariable "WFBE_C_RESPAWN_RANGES") select (_upgrades select WFBE_UP_RESPAWNRANGE);
-			if (_deathLoc distance _mash <= _range) then {_availableSpawn = _availableSpawn + [_mash]};
-		};
-	};
-};
-
 //--- Leader.
 if ((missionNamespace getVariable "WFBE_C_RESPAWN_LEADER") > 0) then {
 	if (group player != WFBE_Client_Team && (leader group player) != player) then {

@@ -1,4 +1,4 @@
-Private ['_description','_addin','_c','_currentUpgrades','_filler','_filter','_i','_listBox','_listNames','_u','_value','_unitCostUpgradeLevel'];
+Private ['_description','_addin','_c','_currentUpgrades','_filler','_filter','_i','_listBox','_listNames','_u','_value','_unitCostUpgradeLevel','_funds','_price'];
 _listNames = _this select 0;
 _filler = _this select 1;
 _listBox = _this select 2;
@@ -31,6 +31,7 @@ if (isNil '_filter') then {_filter = "nil"} else {
 	};
 };
 
+_funds = Call GetPlayerFunds; //--- QoL: affordability reference (base price vs current funds)
 lnbClear _listBox;
 {
 	_addin = true;
@@ -57,7 +58,8 @@ lnbClear _listBox;
         };
 
 	if (((_c select QUERYUNITUPGRADE) <= (_currentUpgrades select _value) && _addin) || (_addit&&_addin)) then {
-		lnbAddRow [_listBox,['$'+str (round (((_c select QUERYUNITPRICE) * ATTACK_WAVE_PRICE_MODIFIER) * UNIT_COST_MODIFIER)),_description]];
+		_price = round (((_c select QUERYUNITPRICE) * ATTACK_WAVE_PRICE_MODIFIER) * UNIT_COST_MODIFIER);
+		lnbAddRow [_listBox,['$'+str _price,_description]];
 		lnbSetData [_listBox,[_i,0],_filler];
 		lnbSetValue [_listBox,[_i,0],_u];
 
@@ -99,6 +101,11 @@ lnbClear _listBox;
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.5, 0.25, 1.0]]
 	};
 
+	if (_x in WFBE_C_SUPPLY_HELI_TYPES) then {
+		lnbSetColor [_listBox,[_i,1],[1.0, 0.5, 0.25, 1.0]]
+	};
+
+		if (_price > _funds) then {lnbSetColor [_listBox,[_i,0],[1,0.4,0.4,1]]}; //--- QoL: red price = can't afford base cost
 		_i = _i + 1;
 	};
 	_u = _u + 1;

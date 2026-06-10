@@ -22,8 +22,8 @@ class Mission
 	randomSeed=10034581;
 	class Intel
 	{
-		briefingName="[55] Warfare V48 Chernarus";
-		briefingDescription="by Benny and Awesome&WASP";
+		briefingName="PR 8 - June Feature Bundle";
+		briefingDescription="June release test build: UI/UX, GPS, factories, supply, WDDM/arty, AI/perf.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;
@@ -35,7 +35,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=125;
+		items=126;
 		class Item0
 		{
 			side="LOGIC";
@@ -4814,6 +4814,27 @@ class Mission
 					vehicle="LocationLogicStart";
 					leader=1;
 					skill=0.60000002;
+				};
+			};
+		};
+		class Item125
+		{
+			side="CIV";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={1937.2078,544.75983,15282.436};
+					id=304;
+					side="CIV";
+					vehicle="Functionary1";
+					player="PLAY CDG";
+					forceHeadlessClient=1;
+					leader=1;
+					skill=0.60000002;
+					init="this allowdamage false;";
+					description="Headless Client 2";
 				};
 			};
 		};

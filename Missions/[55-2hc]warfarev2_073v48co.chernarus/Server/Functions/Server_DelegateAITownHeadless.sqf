@@ -8,7 +8,7 @@
 		- Teams
 */
 
-Private ["_clients", "_delegated", "_groups", "_perfStart", "_positions", "_side", "_teams", "_town"];
+Private ["_clients", "_clientsLive", "_delegated", "_groups", "_perfStart", "_positions", "_side", "_teams", "_town"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -23,9 +23,18 @@ _delegated = 0;
 for '_i' from 0 to count(_groups) -1 do {
 	_clients = missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID";
 
-	if (count _clients > 0) then {
-		[leader(_clients select floor(random count _clients)), "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i]]] Call WFBE_CO_FNC_SendToClient;
+	//--- Only LIVE HC groups: a stale registry entry (HC dropped between prunes) would send
+	//--- the delegation to a null leader and the town AI would silently never spawn.
+	_clientsLive = [];
+	{
+		if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_clientsLive = _clientsLive + [_x]};
+	} forEach _clients;
+
+	if (count _clientsLive > 0) then {
+		[leader(_clientsLive select floor(random count _clientsLive)), "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i]]] Call WFBE_CO_FNC_SendToClient;
 		_delegated = _delegated + 1;
+	} else {
+		["WARNING", Format["Server_DelegateAITownHeadless.sqf: No live headless client for town [%1] group %2 - delegation dropped.", _town getVariable "name", _i]] Call WFBE_CO_FNC_LogContent;
 	};
 };
 

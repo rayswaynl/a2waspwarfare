@@ -1,6 +1,11 @@
 private["_clear","_perfActive","_perfDeleted","_perfItemStart","_perfScanned","_perfStart","_timer"];
 
 _timer = missionNamespace getVariable "WFBE_C_RUINS_CLEANER_TIME_PERIOD";
+if (isNil "_timer") then {_timer = 1800};
+if (_timer < 1800) then {_timer = 1800};
+
+sleep _timer;
+
 while {!WFBE_GameOver} do {
 	// Marty: Performance Audit timing excludes the cooperative delete sleeps below.
 	_perfStart = diag_tickTime;
@@ -22,9 +27,5 @@ while {!WFBE_GameOver} do {
 			["cleaner_ruins", _perfActive, Format["scanned:%1;deleted:%2;cycleMs:%3", _perfScanned, _perfDeleted, round ((diag_tickTime - _perfStart) * 1000)], "SERVER"] Call PerformanceAudit_Record;
 		};
 	};
-	if(!(isNil "_timer"))then{
-		sleep _timer;
-	}else{
-		sleep 600;
-	}
+	sleep _timer;
 };

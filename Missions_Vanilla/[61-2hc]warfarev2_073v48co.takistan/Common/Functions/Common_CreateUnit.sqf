@@ -9,7 +9,7 @@
 		- {PLacement}
 */
 
-Private ["_get", "_global", "_globalInitMode", "_leaderIsPlayer", "_perfScope", "_perfStart", "_position", "_side", "_skill", "_special", "_team", "_trackInfantry", "_type", "_unit"];
+Private ["_get", "_global", "_globalInitMode", "_leaderIsPlayer", "_perfScope", "_perfStart", "_position", "_side", "_sideValue", "_skill", "_special", "_team", "_teamLeader", "_trackInfantry", "_type", "_unit"];
 
 _type = _this select 0;
 _team = _this select 1;
@@ -23,11 +23,37 @@ _globalInitMode = "globalFalse";
 _trackInfantry = missionNamespace getVariable ["WFBE_C_UNITS_TRACK_INFANTRY", -1];
 _leaderIsPlayer = false;
 
-if (typeName _side == "SIDE") then {_side = (_side) Call WFBE_CO_FNC_GetSideID};
+_sideValue = _side;
+if (typeName _side == "SIDE") then {
+	_side = (_side) Call WFBE_CO_FNC_GetSideID;
+} else {
+	_sideValue = _side Call WFBE_CO_FNC_GetSideFromID;
+};
+if (isNull _team) then {_team = createGroup _sideValue};
+if ((count units _team) > 0) then {
+	_teamLeader = leader _team;
+	if (!(isNull _teamLeader) && {!local _teamLeader}) then {
+		["WARNING", Format ["Common_CreateUnit.sqf: Team [%1] leader [%2] for unit [%3] is not local here; creating local fallback group.", _team, _teamLeader, _type]] Call WFBE_CO_FNC_LogContent;
+		_team = createGroup _sideValue;
+	};
+};
+
+// Marty: Do not attempt createUnit on grpNull; callers can degrade without spawning empty vehicles.
+if (isNull _team) exitWith {
+	["WARNING", Format ["Common_CreateUnit.sqf: Unit [%1] for side [%2] was not created because target group is null.", _type, _side]] Call WFBE_CO_FNC_LogContent;
+	objNull
+};
 
 _get = missionNamespace getVariable _type;
 _skill = if !(isNil '_get') then {_get select QUERYUNITSKILL} else {missionNamespace getVariable "WFBE_C_UNITS_SKILL_DEFAULT"};
 _unit = _team createUnit [_type, _position, [], 5, _special];
+
+// Marty: Stop cleanly if the engine refused the unit, usually because a group/unit limit was reached.
+if (isNull _unit) exitWith {
+	["WARNING", Format ["Common_CreateUnit.sqf: Unit [%1] for side [%2] failed to create in group [%3] at [%4].", _type, _side, _team, _position]] Call WFBE_CO_FNC_LogContent;
+	objNull
+};
+
 _unit setSkill _skill;
 
 if(side _unit == east && !(_unit hasWeapon "NVGoggles")) then {
@@ -55,22 +81,29 @@ if (_type == "MVD_Soldier_AT") then {
 };
 
 if (_global) then {
-	if (_side != WFBE_DEFENDER_ID || WFBE_ISTHREEWAY) then {
-		if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_INFANTRY") > 0) then {
-			_globalInitMode = "vehicleInit";
-			_unit setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';", _side];
-			processInitCommands;
-		} else {
-			_leaderIsPlayer = isPlayer leader _team;
-			if (_leaderIsPlayer) then {
-				_globalInitMode = "localPlayerInit";
-				[_unit, _side] ExecVM 'Common\Init\Init_Unit.sqf'
-			} else {
-				_globalInitMode = "trackOffNoPlayer";
-			};
-		};
+	if (!isNil "isHeadLessClient" && {isHeadLessClient}) then {
+		//--- HC-created (delegated) AI skips the global Init_Unit broadcast entirely: the
+		//--- setVehicleInit path would spawn marker/action loops on every client (and every
+		//--- JIP) for units that are pure AI offload. Mirrors the defenderSkipped rationale.
+		_globalInitMode = "hcSkipped";
 	} else {
-		_globalInitMode = "defenderSkipped";
+		if (_side != WFBE_DEFENDER_ID || WFBE_ISTHREEWAY) then {
+			if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_INFANTRY") > 0) then {
+				_globalInitMode = "vehicleInit";
+				_unit setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';", _side];
+				processInitCommands;
+			} else {
+				_leaderIsPlayer = isPlayer leader _team;
+				if (_leaderIsPlayer) then {
+					_globalInitMode = "localPlayerInit";
+					[_unit, _side] ExecVM 'Common\Init\Init_Unit.sqf'
+				} else {
+					_globalInitMode = "trackOffNoPlayer";
+				};
+			};
+		} else {
+			_globalInitMode = "defenderSkipped";
+		};
 	};
 };
 

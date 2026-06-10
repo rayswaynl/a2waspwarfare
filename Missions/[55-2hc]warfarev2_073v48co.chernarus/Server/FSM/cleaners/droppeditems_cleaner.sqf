@@ -1,6 +1,11 @@
 private["_clear", "_perfActive", "_perfDeleted", "_perfItemStart", "_perfMines", "_perfMineE", "_perfScanned", "_perfStart", "_perfWeaponholders", "_timer"];
 
 _timer = missionNamespace getVariable "WFBE_C_DROPPEDITEMS_CLEANER_TIME_PERIOD";
+if (isNil "_timer") then {_timer = 300};
+if (_timer < 300) then {_timer = 300};
+
+sleep _timer;
+
 while {!WFBE_GameOver} do {
 	// Marty: Performance Audit timing excludes the cooperative delete sleeps below.
 	_perfStart = diag_tickTime;
@@ -38,9 +43,5 @@ while {!WFBE_GameOver} do {
 		};
 	};
 
-	if(!(isNil "_timer"))then{
-		sleep _timer;
-	}else{
-		sleep 600;
-	}
+	sleep _timer;
 };

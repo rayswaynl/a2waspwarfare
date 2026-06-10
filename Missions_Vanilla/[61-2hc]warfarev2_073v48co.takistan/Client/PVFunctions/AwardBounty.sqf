@@ -1,5 +1,8 @@
 Private["_assist","_bounty","_get","_name","_type","_faction"];
 
+if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}};
+if (isNull player) exitWith {};
+
 _type = _this select 0;
 _assist = _this select 1;
 _ai = if (count _this > 2) then {_this select 2} else {objNull};

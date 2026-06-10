@@ -142,17 +142,38 @@ public class FileManager
         string currentDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
         DirectoryInfo dir = new DirectoryInfo(currentDirectory);
 
-        while (dir.Name != "a2waspwarfare" && dir.Parent != null)
+        while (!IsA2WaspWarfareRoot(dir) && dir.Parent != null)
         {
             dir = dir.Parent;
         }
 
-        if (dir.Name != "a2waspwarfare")
+        if (!IsA2WaspWarfareRoot(dir))
         {
-            throw new Exception("Could not find the 'a2waspwarfare' directory.");
+            throw new Exception("Could not find the a2waspwarfare repository root.");
         }
 
         return dir;
+    }
+
+    private static bool IsA2WaspWarfareRoot(DirectoryInfo _directory)
+    {
+        if (_directory == null)
+        {
+            return false;
+        }
+
+        if (_directory.Name == "a2waspwarfare")
+        {
+            return true;
+        }
+
+        string missionsPath = Path.Combine(_directory.FullName, "Missions", "[55-2hc]warfarev2_073v48co.chernarus");
+        string loadoutManagerPath = Path.Combine(_directory.FullName, "Tools", "LoadoutManager");
+        string agentsPath = Path.Combine(_directory.FullName, "AGENTS.md");
+
+        return Directory.Exists(missionsPath) &&
+               Directory.Exists(loadoutManagerPath) &&
+               File.Exists(agentsPath);
     }
 
     // This method traverses a directory and lists all the file paths.

@@ -19,6 +19,8 @@ _l = _l + ["RequestSpecial"];
 _l = _l + ["RequestTeamUpdate"];
 _l = _l + ["RequestUpgrade"];
 _l = _l + ["RequestAutoWallConstructinChange"];
+_l = _l + ["RequestEnqueue"];
+_l = _l + ["RequestDequeue"];
 
 _serverCommandPV = _l;
 
@@ -29,6 +31,7 @@ _l = _l + ["CampCaptured"];
 _l = _l + ["ChangeScore"];
 //_l = _l + ["DatabaseDebug"];
 _l = _l + ["HandleSpecial"];
+_l = _l + ["HandleParatrooperMarkerCreation"];
 _l = _l + ["LocalizeMessage"];
 _l = _l + ["SetTask"];
 _l = _l + ["SetVehicleLock"];

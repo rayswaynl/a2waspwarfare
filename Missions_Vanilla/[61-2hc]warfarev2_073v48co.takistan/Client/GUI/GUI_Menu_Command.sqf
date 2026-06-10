@@ -16,6 +16,7 @@ _IDCTasks = [14017,14018,14021,14022,14030,14032];
 _IDCDetails = [14030,14041,14042,14043];
 {ctrlShow[_x,false]} forEach (_IDCTasks + _IDCDetails);
 {ctrlShow[_x,true]} forEach _IDCTeam;
+//--- Tasks tab REVIVED as the Commander Objective Ping (MenuAction 306 sends re-enabled below); tab left visible (dialog default).
 _TaskTypes = ["Assist","Attack","Defend","Destroy","Guard","Hold","Patrol","Move","Search and Destroy","Seize","Support"];
 _TaskDuration = [1,2,3,4,5,6,7,8,9,10,15,20,25,30,35,40,45,50,55,60];
 _TaskDurationLabel = ["1 Min","2 Min","3 Min","4 Min","5 Min","6 Min","7 Min","8 Min","9 Min","10 Min","15 Min","20 Min","25 Min","30 Min","35 Min","40 Min","45 Min","50 Min","55 Min","60 Min"];
@@ -331,16 +332,18 @@ while {alive player && dialog} do {
 				{
 					_selected = clientTeams select (_x - 1);
 					if (alive (leader _selected) && isPlayer(leader _selected)) then {
-						// if (WF_A2_Vanilla) then {
-							// [getPlayerUID(leader _selected), "SetTask", [_taskType,_taskTime,_taskTimeLabel,_position]] Call WFBE_CO_FNC_SendToClients;
-						// } else {
-							// [leader _selected, "SetTask", [_taskType,_taskTime,_taskTimeLabel,_position]] Call WFBE_CO_FNC_SendToClient;
-						// };
+						//--- Revived (Objective Ping): targeted send to this squad leader's client. CLTFNCSetTask builds the SimpleTask + map destination + 250m/duration completion loop.
+						[leader _selected, "SetTask", [_taskType,_taskTime,_taskTimeLabel,_position]] Call WFBE_CO_FNC_SendToClient;
 					};
 				} forEach _teams;
 			} else {
 				player kbTell [sideHQ, WFBE_V_HQTopicSide, "OrderSentAll",["1","","All",["all"]],["2","","moving to position",["HC_MovingToPosition"]],["3","","over.",["Over1"]],true];
-				// [sideJoined, "SetTask", [_taskType,_taskTime,_taskTimeLabel,_position]] Call WFBE_CO_FNC_SendToClients;
+				//--- Revived (Objective Ping): send to every friendly PLAYER-led squad individually. The old broadcast also tasked the enemy (receiver doesn't side-filter).
+				{
+					if (alive (leader _x) && isPlayer (leader _x)) then {
+						[leader _x, "SetTask", [_taskType,_taskTime,_taskTimeLabel,_position]] Call WFBE_CO_FNC_SendToClient;
+					};
+				} forEach clientTeams;
 			};
 		};
 	};

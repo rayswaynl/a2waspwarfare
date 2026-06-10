@@ -6,8 +6,8 @@ MenuAction = -1;
 _listUnits = [];
 
 _closest = objNull;
-_commander = false;
-_extracrew = false;
+_commander = true;
+_extracrew = true;
 _countAlive = 0;
 _currentCost = 0;
 _currentIDC = 0;
@@ -15,7 +15,7 @@ _disabledColor = [0.7961, 0.8000, 0.7961, 1];
 _display = _this select 0;
 _enabledColor = [0, 1, 0, 1];
 _enabledColor2 = [1, 0, 0, 1]; //---NEW (LOCK)
-_gunner = false;
+_gunner = true;
 _IDCLock = 12023;
 _IDCS = [12005,12006,12007,12008,12020,12021];
 _IDCSVehi = [12012,12013,12014,12041];
@@ -35,12 +35,12 @@ _updateList = true;
 _updateMap = true;
 _val = 0;
 _mbu = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX';
+//--- Patrols upgrade trades 1 max AI per player for the side's autonomous patrols.
+if (count ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) > WFBE_UP_PATROLS && {(((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_PATROLS) > 0}) then {_mbu = (_mbu - 1) max 1};
 
-_driverEnabledByDefault = profileNamespace getVariable "WFBE_C_DRIVER_ENABLED_BY_DEFAULT";
-
-if (isNil "_driverEnabledByDefault") then {
-	profileNamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", false];
-};
+_driverEnabledByDefault = true;
+profileNamespace setVariable ["wfbe_c_driver_enabled_by_default", true];
+profileNamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", true];
 
 
 ctrlSetText[12025,localize 'STR_WF_UNITS_FactionChoiceLabel' + ":"]; // changed-MrNiceGuy
@@ -75,7 +75,15 @@ _IDCS = _IDCS - [_currentIDC];
 } forEach _IDCS;
 
 //--- Loop.
-while {alive player && dialog} do {
+//--- QoL: cache the factory-tab base labels so we can append live queue counts without losing them.
+	private ["_tabIDC","_tabKey","_tabBase","_tabLast","_tabI"];
+	_tabIDC = [12005,12006,12007,12008,12020,12021];
+	_tabKey = ["Barracks","Light","Heavy","Aircraft","Depot","Airport"];
+	_tabBase = [];
+	{_tabBase set [count _tabBase, ctrlText (_display displayCtrl _x)]} forEach _tabIDC;
+	_tabLast = ["","","","","",""];
+
+	while {alive player && dialog} do {
 	//--- Nothing in range? exit!.
 	if (!barracksInRange && !lightInRange && !heavyInRange && !aircraftInRange && !hangarInRange && !depotInRange) exitWith {closeDialog 0};
 	if (side group player != sideJoined || !dialog) exitWith {closeDialog 0};
@@ -151,7 +159,7 @@ while {alive player && dialog} do {
 					_txt = parseText(Format [localize 'STR_WF_INFO_BuyEffective',_currentUnitLabel]);
 					if (!isNil '_queu') then {if (count _queu > 0) then {_txt = parseText(Format [localize 'STR_WF_INFO_Queu',_currentUnitLabel])}};
 					hint _txt;
-					_params = if (_isInfantry) then {[_closest,_unit,[],_type,_cpt]} else {[_closest,_unit,[profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ,_gunner,_commander,_extracrew,_isLocked],_type,_cpt]};
+					_params = if (_isInfantry) then {[_closest,_unit,[],_type,_cpt,_currentCost]} else {[_closest,_unit,[profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ,_gunner,_commander,_extracrew,_isLocked],_type,_cpt,_currentCost]};
 					_params Spawn BuildUnit;
 					-(_currentCost) Call ChangePlayerFunds;
 				} else {
@@ -170,7 +178,13 @@ while {alive player && dialog} do {
 	if (MenuAction == 106) then {MenuAction = -1;if (hangarInRange) then {_currentIDC = 12021;_type = 'Airport';_val = 3;_update = true}};
 	
 	//--- driver-gunner-commander icons.
-	if (MenuAction == 201) then {MenuAction = -1;if (profileNamespace getVariable "WFBE_C_DRIVER_ENABLED_BY_DEFAULT") then {profileNamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", false]} else {profileNamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", true]};_updateDetails = true};
+	if (MenuAction == 201) then {
+		MenuAction = -1;
+		_driverEnabledByDefault = !(profileNamespace getVariable "wfbe_c_driver_enabled_by_default");
+		profileNamespace setVariable ["wfbe_c_driver_enabled_by_default", _driverEnabledByDefault];
+		profileNamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", _driverEnabledByDefault];
+		_updateDetails = true;
+	};
 	if (MenuAction == 202) then {MenuAction = -1;_gunner = if (_gunner) then {false} else {true};_updateDetails = true};
 	if (MenuAction == 203) then {MenuAction = -1;_commander = if (_commander) then {false} else {true};_updateDetails = true};
 	if (MenuAction == 204) then {MenuAction = -1;_extracrew = if (_extracrew) then {false} else {true};_updateDetails = true};
@@ -189,6 +203,17 @@ while {alive player && dialog} do {
 	
 	//--- Player funds.
 	ctrlSetText [12019,Format [localize 'STR_WF_UNITS_Cash',Call GetPlayerFunds]];
+
+		//--- QoL: live queue count on factory tabs (change-detected to avoid per-tick UI churn).
+		_tabI = 0;
+		{
+			private ["_q","_m","_txt"];
+			_q = missionNamespace getVariable [format ["WFBE_C_QUEUE_%1", _tabKey select _tabI], -1];
+			_m = missionNamespace getVariable [format ["WFBE_C_QUEUE_%1_MAX", _tabKey select _tabI], -1];
+			_txt = _tabBase select _tabI;	//--- FIX: never append text to the tab control — it is an RscClickableText whose text is a .paa ICON path; appending "(q/max)" corrupted it to "con_barracks.paa (0/10)" (engine "picture not found", tab icons vanished, only Barracks visible). Queue total still shows in the header.
+			if (_txt != (_tabLast select _tabI)) then {(_display displayCtrl _x) ctrlSetText _txt; _tabLast set [_tabI, _txt]};
+			_tabI = _tabI + 1;
+		} forEach _tabIDC;
 	
 	//--- Update tabs.
 	if (_update) then {
@@ -258,7 +283,7 @@ while {alive player && dialog} do {
 			ctrlSetText [12009,_currentUnit select QUERYUNITPICTURE];
 			ctrlSetText [12033,_currentUnit select QUERYUNITFACTION];
 			ctrlSetText [12035,str (_currentUnit select QUERYUNITTIME)];
-			_currentCost = floor ((_currentUnit select QUERYUNITPRICE) * ATTACK_WAVE_PRICE_MODIFIER);
+			_currentCost = round (((_currentUnit select QUERYUNITPRICE) * ATTACK_WAVE_PRICE_MODIFIER) * UNIT_COST_MODIFIER); //--- QoL: match the list/purchase formula (incl. unit-cost upgrade discount)
 			
 			_isInfantry = if (_unit isKindOf 'Man') then {true} else {false};
 			
@@ -281,10 +306,11 @@ while {alive player && dialog} do {
 						if (_lastType != _type || _lastSel != _currentRow) then {_maxOut = true};
 
 						if (_maxOut) then {
-							profilenamespace getvariable "wfbe_c_driver_enabled_by_default";
+							profilenamespace setVariable ["wfbe_c_driver_enabled_by_default", true];
+							profilenamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", true];
 							_gunner = true;
 							_commander = true;
-							_extracrew = false;
+							_extracrew = true;
 						};
 						
 						if !(_hasGunner) then {_gunner = false};
@@ -325,19 +351,19 @@ while {alive player && dialog} do {
 						
 						switch (_slots) do {
 							case 1: {
-								if (_maxOut) then {profilenamespace setVariable ["wfbe_c_driver_enabled_by_default", true]};
+								if (_maxOut) then {profilenamespace setVariable ["wfbe_c_driver_enabled_by_default", true];profilenamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", true]};
 								if (profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ) then {_extra = _extra + 1};
 								_gunner = false;
 								_commander = false;
 							};
 							case 2: {
-								if (_maxOut) then {profilenamespace setVariable ["wfbe_c_driver_enabled_by_default", true];_gunner = true};
+								if (_maxOut) then {profilenamespace setVariable ["wfbe_c_driver_enabled_by_default", true];profilenamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", true];_gunner = true};
 								if (profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ) then {_extra = _extra + 1};
 								if (_gunner) then {_extra = _extra + 1};
 								_commander = false;
 							};
 							case 3: {
-								if (_maxOut) then {profilenamespace setVariable ["wfbe_c_driver_enabled_by_default", true];_gunner = true;_commander = true};
+								if (_maxOut) then {profilenamespace setVariable ["wfbe_c_driver_enabled_by_default", true];profilenamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", true];_gunner = true;_commander = true};
 								if (profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ) then {_extra = _extra + 1};
 								if (_gunner) then {_extra = _extra + 1};
 								if (_commander) then {_extra = _extra + 1};					
@@ -371,6 +397,7 @@ while {alive player && dialog} do {
 				} else {
 					{ctrlShow [_x,false]} forEach (_IDCSVehi);
 					profilenamespace setVariable ["wfbe_c_driver_enabled_by_default", false];
+					profilenamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", false];
 					_gunner = false;
 					_commander = false;
 					_extracrew = false;
@@ -383,6 +410,7 @@ while {alive player && dialog} do {
 			
 				{ctrlShow [_x,false]} forEach (_IDCSVehi);
 				profilenamespace setVariable ["wfbe_c_driver_enabled_by_default", false];
+				profilenamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", false];
 				_gunner = false;
 				_commander = false;
 				_extracrew = false;
@@ -421,6 +449,9 @@ while {alive player && dialog} do {
 				(_display displayCtrl 12022) ctrlSetStructuredText (parseText _txt);
 			};
 			
+			//--- QoL: show the full purchase cost (base + crew) in the dialog's price field (idc 12034).
+			ctrlSetText [12034, format ["$%1", _currentCost]];
+
 			//--- Lock Icon.
 			if !(_isInfantry) then {
 				ctrlShow[_IDCLock,true];
@@ -448,7 +479,14 @@ while {alive player && dialog} do {
 					if (_unit in (missionNamespace getVariable Format ["WFBE_%1SUPPLYTRUCKS", sideJoinedText])) then {
 						hintSilent parseText "Supply trucks can be used to boost the supply income of your team. <br/> <br/>You can collect extra supply by driving to friendly town center (next to main depot of town), getting out of your supply truck, aiming at it and using action menu (mouse scroll) -> LOAD SUPPLIES... Then just drive next to friendly Command Center (marked with C) on map. <br/> <br/> Note that you need to have selected Support slot/class in server lobby. There also needs to be [+SUPPLY] mark after town name for you to be able to collect the extra supply.";
 					};
+					if (_unit in WFBE_C_SUPPLY_HELI_TYPES) then {
+						hintSilent parseText "Supply helicopters work like supply trucks but deliver supply by air. <br/> <br/>Requires the Aircraft Factory at level 3. At Air level 4, deliveries become CASH RUNS straight to the commander's funds. Air delivery pays the pilot a larger reward. <br/> <br/>Aim at a friendly [+SUPPLY] town's helicopter, use LOAD SUPPLIES, then fly to your Command Center (marked C). A loaded helicopter shot down hands the enemy a share of the cargo.";
+					};
 					
+					if (!(_unit in WFBE_C_SUPPLY_HELI_TYPES) && {_unit in (missionNamespace getVariable [format ["WFBE_%1LIFTVEHICLE", sideJoinedText], []])}) then {
+						hintSilent parseText "Lift-capable helicopter. <br/> <br/>Can sling-load vehicles and objects once the Airlift upgrade is unlocked. (Not a supply helicopter.)";
+					};
+
 					_artyClassnames = missionNamespace getVariable Format ['WFBE_%1_ARTILLERY_CLASSNAMES', sideJoinedText];
 					_varPosInNestedArray = [_artyClassnames, _unit] call WFBE_CL_FNC_FindVariableInNestedArray;
 					_isNotArtillery = [_varPosInNestedArray, -1] call BIS_fnc_areEqual;
@@ -465,7 +503,7 @@ while {alive player && dialog} do {
 			ctrlSetText [12034,Format ["$ %1",_currentCost]];
 			_updateDetails = false;
 		} else {
-			{ctrlSetText [_x , ""]} forEach [12009,12010,12027,12028,12029,12030,12031,12032,12033,12034,12035,12036,12037,12038,12039];
+			{ctrlSetText [_x , ""]} forEach [12009,12033,12034,12035,12036,12037,12038,12039];
 			(_display displayCtrl 12022) ctrlSetStructuredText (parseText '');
 		};
 	};

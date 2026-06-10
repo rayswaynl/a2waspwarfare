@@ -1,5 +1,7 @@
 Private["_assist","_bounty","_get","_name","_type", "_killed","_coef"];
 
+if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}};
+if (isNull player) exitWith {};
 
 _killed = _this;
 _name = name _killed;

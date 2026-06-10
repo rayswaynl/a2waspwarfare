@@ -24,7 +24,7 @@ _to_upgrade = [];
 //--- Found something to upgrade!
 if (count _to_upgrade > 0) then {
 	_upgrade = _to_upgrade select 0;
-	_cost = ((missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_COSTS", _side]) select _upgrade) select ((_to_upgrade select 1) - 1); //--- fix: COSTS[upgrade] is 0-indexed by level; the AI_ORDER level is 1-based (matches Client_FNC_Special.sqf:116/122 _level-1). Raw level over-indexed by one -> nil -> "_cost undefined" crash at line 34 on top-level upgrades.
+	_cost = ((missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_COSTS", _side]) select _upgrade) select (_to_upgrade select 1);
 	
 	//--- Validation.
 	_can_upgrade = false;
@@ -44,10 +44,10 @@ if (count _to_upgrade > 0) then {
 		_logik setVariable ["wfbe_upgrading_id", _upgrade, true];
 		
 		//--- Deduct.
-		[_side,-(_cost select 1)] Call ChangeAICommanderFunds; //--- fix: debit the FUNDS cost (was _cost select 0, the supply cost; cost array is [supply,funds]).
+		[_side,-(_cost select 1)] Call ChangeAICommanderFunds; //--- TR12: funds price is _cost select 1 (was select 0, the supply price).
 		
 		if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
-			[_side,-(_cost select 0),"AI commander tech upgrade.", false] Call ChangeSideSupply; //--- fix: debit the SUPPLY cost (was _cost select 1, the funds cost).
+			[_side,-(_cost select 0),"AI commander tech upgrade.", false] Call ChangeSideSupply; //--- TR12: supply price is _cost select 0 (was select 1, the funds price).
 		};
 	};
 };

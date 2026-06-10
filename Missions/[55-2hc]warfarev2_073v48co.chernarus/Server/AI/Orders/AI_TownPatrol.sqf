@@ -47,11 +47,14 @@ for [{_z=0},{_z<=_maxWaypoints},{_z=_z+1}] do {
 		_rand1 = random _radius - random _radius;
 		_rand2 = random _radius - random _radius;
 		_pos = [(_townPos select 0)+_rand1,(_townPos select 1)+_rand2,0];
-		while {surfaceIsWater _pos} do {
+		_wtr = 0;
+		while {surfaceIsWater _pos && _wtr < 20} do {
 			_rand1 = random _radius - random _radius;
 			_rand2 = random _radius - random _radius;
 			_pos = [(_townPos select 0)+_rand1,(_townPos select 1)+_rand2,0];
+			_wtr = _wtr + 1;
 		};
+		if (surfaceIsWater _pos) then {_pos = [_townPos select 0, _townPos select 1, 0]};
 		_wpradius = 32;
 		_wpcompletionRadius = 44;
 	} else {

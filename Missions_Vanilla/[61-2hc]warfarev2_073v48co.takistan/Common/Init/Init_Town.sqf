@@ -32,7 +32,7 @@ _town setVariable ["name",_townName];
 _town setVariable ["range",_townRange];
 _town setVariable ["startingSupplyValue",_townStartSV];
 _town setVariable ["maxSupplyValue",_townMaxSV];
-_town setVariable ["lastSupplyMissionRun", 0];
+_town setVariable ["LastSupplyMissionRun", 0]; //--- XR4: match the read/write casing in isSupplyMissionActiveInTown / supplyMissionStarted (was lowercase "lastSupplyMissionRun" -> first cooldown check read nil).
 _town setVariable ["supplyMissionCoolDownEnabled", false];
 
 //--- If the town type is an array rather than a single value, pick a random template (see Server_GetTownGroupsDefender.sqf).
@@ -133,8 +133,8 @@ if (isServer) then {
 
 		waitUntil {townInitServer};
 
-		//--- Prepare the default defenses (if needed and if occupation or defender is present).
-		if ((_town getVariable "sideID") != WFBE_C_UNKNOWN_ID && ((missionNamespace getVariable "WFBE_C_TOWNS_DEFENDER") > 0 || (missionNamespace getVariable "WFBE_C_TOWNS_OCCUPATION") > 0)) then {
+		// Marty: Prepare default static defenses only for resistance towns; BLUFOR/OPFOR occupation towns use mobile defenders only.
+		if ((_town getVariable "sideID") == WFBE_DEFENDER_ID && (missionNamespace getVariable "WFBE_C_TOWNS_DEFENDER") > 0) then {
 			[_town, (_town getVariable "sideID") Call WFBE_CO_FNC_GetSideFromID, -1] Call WFBE_SE_FNC_ManageTownDefenses;
 		};
 
