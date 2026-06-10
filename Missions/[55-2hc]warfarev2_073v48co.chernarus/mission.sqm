@@ -35,7 +35,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=125;
+		items=128;
 		class Item0
 		{
 			side="LOGIC";
@@ -193,7 +193,7 @@ class Mission
 					vehicle="LocationLogicAirport";
 					leader=1;
 					skill=0.60000002;
-					init="this enableSimulation false;";
+					init="this setVariable [""wfbe_skip_auto_hangar"",true,true];this enableSimulation false;";
 				};
 			};
 		};
@@ -212,7 +212,7 @@ class Mission
 					vehicle="LocationLogicAirport";
 					leader=1;
 					skill=0.60000002;
-					init="this enableSimulation false;";
+					init="this setVariable [""wfbe_skip_auto_hangar"",true,true];this enableSimulation false;";
 				};
 			};
 		};
@@ -231,7 +231,7 @@ class Mission
 					vehicle="LocationLogicAirport";
 					leader=1;
 					skill=0.60000002;
-					init="this enableSimulation false;";
+					init="this setVariable [""wfbe_skip_auto_hangar"",true,true];this enableSimulation false;";
 				};
 			};
 		};
@@ -4814,6 +4814,69 @@ class Mission
 					vehicle="LocationLogicStart";
 					leader=1;
 					skill=0.60000002;
+				};
+			};
+		};
+		class Item125
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={4500,339,10250};
+					azimut=0;
+					special="NONE";
+					id=304;
+					side="LOGIC";
+					vehicle="LocationLogicDepot";
+					leader=1;
+					skill=0.60000002;
+					text="NWAF";
+					init="nullReturn = [this,""NWAF"",""++"",50,80,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
+				};
+			};
+		};
+		class Item126
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={12150,159,12900};
+					azimut=0;
+					special="NONE";
+					id=305;
+					side="LOGIC";
+					vehicle="LocationLogicDepot";
+					leader=1;
+					skill=0.60000002;
+					text="NEAF";
+					init="nullReturn = [this,""NEAF"",""++"",50,80,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
+				};
+			};
+		};
+		class Item127
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={4800,9,2150};
+					azimut=0;
+					special="NONE";
+					id=306;
+					side="LOGIC";
+					vehicle="LocationLogicDepot";
+					leader=1;
+					skill=0.60000002;
+					text="Balota";
+					init="nullReturn = [this,""Balota"",""++"",50,80,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
 				};
 			};
 		};
