@@ -1,4 +1,4 @@
-Private ['_description','_addin','_c','_currentUpgrades','_filler','_filter','_i','_listBox','_listNames','_u','_value','_unitCostUpgradeLevel','_funds','_price'];
+Private ['_description','_addin','_c','_currentUpgrades','_filler','_filter','_i','_listBox','_listNames','_u','_value','_unitCostUpgradeLevel','_funds','_price','_unlockList','_lockIdx','_lockEntry','_outerX','_reqTown','_townObj'];
 _listNames = _this select 0;
 _filler = _this select 1;
 _listBox = _this select 2;
@@ -56,6 +56,31 @@ lnbClear _listBox;
         } else {
             _description = "undefined";
         };
+
+	// Capture-to-unlock gate: suppress any unit in the side's CAPTURE_UNLOCKS list
+	// unless the required trigger town is currently held by this side.
+	// A2OA lacks findIf; forEach/exitWith is used to locate entries by classname.
+	if ((missionNamespace getVariable ["WFBE_C_CAPTURE_UNLOCKS", 0]) > 0) then {
+		_unlockList = missionNamespace getVariable [Format["WFBE_%1_CAPTURE_UNLOCKS", sideJoinedText], []];
+		_outerX = _x; // save outer-forEach _x before it is shadowed by the inner scan
+		_lockIdx = -1;
+		{
+			if ((_x select 0) == _outerX) exitWith { _lockIdx = _forEachIndex };
+		} forEach _unlockList;
+		if (_lockIdx >= 0) then {
+			_lockEntry = _unlockList select _lockIdx;
+			_reqTown   = _lockEntry select 1;
+			_townObj   = objNull;
+			{ if ((_x getVariable ["name",""]) == _reqTown) exitWith { _townObj = _x } } forEach towns;
+			if (isNull _townObj) then {
+				_addin = false; // town not yet initialised — hide until ready
+			} else {
+				if ((_townObj getVariable ["sideID",-1]) != WFBE_Client_SideID) then {
+					_addin = false;
+				};
+			};
+		};
+	};
 
 	if (((_c select QUERYUNITUPGRADE) <= (_currentUpgrades select _value) && _addin) || (_addit&&_addin)) then {
 		_price = round (((_c select QUERYUNITPRICE) * ATTACK_WAVE_PRICE_MODIFIER) * UNIT_COST_MODIFIER);
