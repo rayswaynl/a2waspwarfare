@@ -64,7 +64,16 @@ while {!gameOver} do {
 					};
 				} forEach (_logik getVariable "wfbe_teams");
 
-				if (isNull(_x Call WFBE_CO_FNC_GetCommanderTeam) && _commander_enabled) then {[_x, _income] Call ChangeAICommanderFunds};
+				if (isNull(_x Call WFBE_CO_FNC_GetCommanderTeam) && _commander_enabled) then {
+					[_x, round(_income * (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_MULT", 1.5]))] Call ChangeAICommanderFunds;
+				};
+			};
+
+			//--- V0.4.1: synthetic MONEY drip for the AI commander - never synthetic supply.
+			//--- Flows even with zero town income so PvE on a near-empty server stays fun
+			//--- (the AI keeps fielding armies); supply remains the real shared war resource.
+			if (isNull(_x Call WFBE_CO_FNC_GetCommanderTeam) && _commander_enabled) then {
+				[_x, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25]] Call ChangeAICommanderFunds;
 			};
 
 		};
