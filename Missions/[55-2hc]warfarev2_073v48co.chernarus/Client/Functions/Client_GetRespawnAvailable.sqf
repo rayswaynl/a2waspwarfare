@@ -44,13 +44,14 @@ if ((missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") > 0) then {
 	};
 };
 
-//--- Medic redeployment truck (forward spawn).
-//--- Stationary: speed < 1 AND engine off at evaluation time (menu re-evaluates every ~1s,
+//--- Medic redeployment truck (forward spawn) — v2 contract.
+//--- Medics purchase and park this truck; ONLY medics spawn at it (WFBE_SK_V_Type is the
+//--- local player's own class — local read is correct here, this is the local respawn menu).
+//--- Stationary: abs(speed) < 1 AND engine off at evaluation time (menu re-evaluates every ~1s,
 //--- so a moving truck drops off the list naturally; no 30s timer needed in v1).
-//--- Medic-aboard: a medic client broadcasts itself via wfbe_medic_unit on the vehicle object
-//--- (public setVariable — precedent: WFBE_StaticDefenseAssignedUnit in Common_CreateUnitForStaticDefence.sqf).
-//--- Reader validates: object non-null, alive, AND still in crew — stale on dismount/disconnect, no clearing needed.
-if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0) then {
+//--- Purchase restriction: MTVR/Kamaz are also ordinary transports; restricting buy by class
+//--- would break transport access for non-medics. The spawn-side gate below IS the binding rule.
+if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && WFBE_SK_V_Type == "Medic") then {
 	_redeployTrucks = missionNamespace getVariable [Format["WFBE_%1REDEPLOYTRUCKS",_sideText],[]];
 	_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 	_range = (missionNamespace getVariable "WFBE_C_RESPAWN_RANGES") select (_upgrades select WFBE_UP_RESPAWNRANGE);
@@ -58,14 +59,12 @@ if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0) then {
 	if (count _checks > 0) then {
 		_sideID = (_side) Call GetSideID;
 		{
-			private ["_veh","_medic","_tooClose"];
+			private ["_veh","_tooClose"];
 			_veh = _x;
-			_medic = _veh getVariable ["wfbe_medic_unit", objNull];
-			//--- Cargo available, stationary, engine off, medic aboard and alive.
+			//--- Cargo available, stationary, engine off.
 			if (_veh emptyPositions "cargo" > 0
 				&& abs(speed _veh) < 1
-				&& !(isEngineOn _veh)
-				&& !(isNull _medic) && {alive _medic} && {_medic in (crew _veh)}) then {
+				&& !(isEngineOn _veh)) then {
 				//--- Not within 500 m of an enemy-held or contested town.
 				_tooClose = false;
 				{

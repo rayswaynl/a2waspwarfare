@@ -585,33 +585,6 @@ WF_Logic setVariable ['filler','primary'];
 
 (player) Call WFBE_SK_FNC_Apply;
 
-//--- Medic redeployment-truck broadcaster.
-//--- Only runs on medic clients; broadcasts the unit object onto the vehicle so
-//--- Client_GetRespawnAvailable can validate medic presence without shared state.
-//--- Design: setVariable ["wfbe_medic_unit", player, true] (public broadcast) while
-//--- aboard a redeploy truck; reader validates alive + still in crew — stale on
-//--- dismount/disconnect with no cleanup needed.
-//--- Loop is permanent (not while-alive): players respawn and can re-pick class mid-session,
-//--- so the alive + class checks live INSIDE the loop body, not in the start gate.
-if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0) then {
-	[] spawn {
-		private ["_redeployList","_veh"];
-		while {true} do {
-			sleep 5;
-			if (alive player && WFBE_SK_V_Type == "Medic") then {
-				//--- Re-read each tick: avoids a silent empty capture if this spawn races Root config init.
-				_redeployList = missionNamespace getVariable [Format["WFBE_%1REDEPLOYTRUCKS",sideJoinedText],[]];
-				_veh = vehicle player;
-				if (_veh != player && typeOf _veh in _redeployList) then {
-					//--- NOTE: wfbe_medic_unit is never cleared. Readers MUST re-validate
-					//--- (alive _medic && _medic in crew _veh) — see Client_GetRespawnAvailable.sqf.
-					_veh setVariable ["wfbe_medic_unit", player, true];
-				};
-			};
-		};
-	};
-};
-
 [] execVM "WASP\baserep\init.sqf";
 [] execVM "WASP\actions\AddActions.sqf";
 
