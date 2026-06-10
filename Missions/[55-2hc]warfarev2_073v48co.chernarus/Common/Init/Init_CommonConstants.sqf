@@ -56,6 +56,7 @@ WFBE_UP_IRSMOKE = 18;
 WFBE_UP_AIRAAM = 19;
 WFBE_UP_AAR = 20;
 WFBE_UP_UNITCOST = 21;
+WFBE_UP_CBRADAR = 22;
 
 /*
 	### Working with the missionNamespace ###

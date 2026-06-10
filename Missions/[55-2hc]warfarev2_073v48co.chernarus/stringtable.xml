@@ -9466,6 +9466,20 @@
       <Italian>Questo aggiornamento riduce il prezzo delle unità in modo permanente. Livello 1 = sconto permanente del 25 % su tutte le unità, costo: S 25.000. Livello 2 = sconto permanente del 50 % su tutte le unità, costo: S 50.000.</Italian>
     </Key>
 
+    <!-- CBR: Counter Battery Radar strings. -->
+    <Key ID="STR_WF_UPGRADE_CBRadar">
+      <English>Counter Battery Radar</English>
+    </Key>
+    <Key ID="STR_WF_UPGRADE_CBRadar_Desc">
+      <English>Upgrades your Counter Battery Radar detection range.&lt;br/&gt; - Level 0 = 750 m detection radius&lt;br/&gt;   Level 1 = 1500 m detection radius&lt;br/&gt;   Level 2 = 2000 m detection radius</English>
+    </Key>
+    <Key ID="CBRadarNeedsAAR">
+      <English>Counter Battery Radar requires an Anti-Air Radar to be built first.</English>
+    </Key>
+    <Key ID="STR_WF_CBR_Contact">
+      <English>CB CONTACT</English>
+    </Key>
+
     <!-- Marty: Client notification when the AI movement recovery actually made a unit move again. -->
     <Key ID="STR_WF_INFO_AI_Recovered">
       <English>AI movement recovered: %1.</English>
