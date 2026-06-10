@@ -37,7 +37,8 @@ _facDefs = [["Barracks","BARRACKSUNITS",WFBE_UP_BARRACKS], ["Light","LIGHTUNITS"
 	_team = _x;
 	_type = _team getVariable ["wfbe_teamtype", -1];
 	_canProduce = false;
-	if (!isPlayer (leader _team)) then {
+	//--- V0.3: HC-resident commander teams are produced whole on the HC - never here.
+	if (!isPlayer (leader _team) && {!(_team getVariable ["wfbe_aicom_hc", false])}) then {
 		if (_type >= 0) then {
 			if (_type < count _templates) then {
 				if (count (_team getVariable ["wfbe_queue", []]) == 0) then {_canProduce = true};

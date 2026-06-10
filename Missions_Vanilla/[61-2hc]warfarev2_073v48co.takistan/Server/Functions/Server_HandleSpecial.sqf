@@ -212,6 +212,35 @@ switch (_args select 0) do {
 			if (!isNull _unit) then {_unit setVariable ["CommandBar_DeadUnits_ServerCleanupRunning", false, false]};
 		};
 	};
+	case "aicom-team-created": {
+		Private ["_csideID","_cteam","_clogik"];
+		_csideID = _args select 1;
+		_cteam = _args select 2;
+		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
+		if (!isNull _clogik) then {
+			_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
+			if (!isNull _cteam) then {
+				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) + [_cteam], true];
+			};
+		};
+	};
+	case "aicom-team-ended": {
+		Private ["_csideID","_cteam","_clogik"];
+		_csideID = _args select 1;
+		_cteam = _args select 2;
+		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
+		if (!isNull _clogik) then {
+			if (isNull _cteam) then {
+				//--- Creation failed before registration: just release the pending slot.
+				_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
+			} else {
+				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) - [_cteam], true];
+				if ((_clogik getVariable ["wfbe_aicom_garrison", grpNull]) == _cteam) then {
+					_clogik setVariable ["wfbe_aicom_garrison", grpNull];
+				};
+			};
+		};
+	};
 	case "sidepatrol-started": {
 		Private ["_psideID","_punit","_plist"];
 		_psideID = _args select 1;

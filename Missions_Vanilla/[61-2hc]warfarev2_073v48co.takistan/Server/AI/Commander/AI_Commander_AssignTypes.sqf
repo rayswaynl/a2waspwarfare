@@ -31,7 +31,8 @@ _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 	_team = _x;
 	_unassigned = false;
 	if ((_team getVariable ["wfbe_teamtype", -1]) < 0) then {_unassigned = true};
-	if (!isPlayer (leader _team)) then {
+	//--- V0.3: HC-resident teams carry a fixed template from founding - skip.
+	if (!isPlayer (leader _team) && {!(_team getVariable ["wfbe_aicom_hc", false])}) then {
 		if (_unassigned) then {
 			//--- Build the list of UNLOCKED template indices.
 			_eligible = [];

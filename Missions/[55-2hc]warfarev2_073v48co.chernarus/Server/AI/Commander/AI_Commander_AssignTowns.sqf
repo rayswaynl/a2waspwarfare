@@ -68,6 +68,10 @@ _assigned = [];
 				if (!isNull _hqG) then {
 					[_team, "defense"] Call SetTeamMoveMode;
 					[_team, getPos _hqG] Call SetTeamMovePos;
+					//--- V0.3: HC-resident teams get their orders via the public order variable.
+					if (_team getVariable ["wfbe_aicom_hc", false]) then {
+						_team setVariable ["wfbe_aicom_order", [((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1, "defense", getPos _hqG], true];
+					};
 					_logik setVariable ["wfbe_aicom_garrison", _team];
 					_explicitMode = true; //--- now an explicit order; the executor drives it home
 					["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] assigned as base garrison.", _sideText, _team]] Call WFBE_CO_FNC_LogContent;
@@ -104,10 +108,16 @@ _assigned = [];
 					if (!isNull _target) then {
 						[_team, "towns"] Call SetTeamMoveMode;
 						[_team, _target] Call SetTeamMovePos;
-						if (_useArc) then {
-							[_team, _target] Call WFBE_SE_FNC_AI_SetTownAttackPath;
+						if (_team getVariable ["wfbe_aicom_hc", false]) then {
+							//--- V0.3: HC-resident team - the HC driver issues the local waypoints;
+							//--- server-side waypoint commands on remote groups are unreliable.
+							_team setVariable ["wfbe_aicom_order", [((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1, "towns-target", getPos _target], true];
 						} else {
-							[_team, getPos _target, "SAD", 200] Call AIMoveTo;
+							if (_useArc) then {
+								[_team, _target] Call WFBE_SE_FNC_AI_SetTownAttackPath;
+							} else {
+								[_team, getPos _target, "SAD", 200] Call AIMoveTo;
+							};
 						};
 						_assigned set [count _assigned, _target];
 						["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] heading to attack town [%3].", _sideText, _team, _target getVariable ["name", "town"]]] Call WFBE_CO_FNC_LogContent;
