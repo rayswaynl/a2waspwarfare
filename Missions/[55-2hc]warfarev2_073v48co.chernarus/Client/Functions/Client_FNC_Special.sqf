@@ -130,6 +130,8 @@ WFBE_CL_FNC_Upgrade_Started = {
 		WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_end_time", time + _upgradeTime, false];
 	};
 	(Format [Localize "STR_WF_CHAT_Upgrade_Started_Message",(missionNamespace getVariable "WFBE_C_UPGRADES_LABELS") select _upgrade, _level]) Call CommandChatMessage;
+	// Marty: Notify side players that their upgrade has started.
+	playSound "commanderNotification";
 };
 
 WFBE_CL_FNC_Building_Started = {
@@ -185,6 +187,8 @@ WFBE_CL_FNC_Upgrade_Complete = {
 	_level = _this select 1;
 
 	(Format [Localize "STR_WF_CHAT_Upgrade_Complete_Message",(missionNamespace getVariable "WFBE_C_UPGRADES_LABELS") select _upgrade, _level]) Call CommandChatMessage;
+	// Marty: Notify side players that their upgrade has completed.
+	playSound "ARTY_cooldown_over";
 	// Marty: Clear the local cached upgrade ID and countdown when completion is announced.
 	WFBE_Client_Logic setVariable ["wfbe_upgrading_id", -1];
 	WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_id", -1, false];
