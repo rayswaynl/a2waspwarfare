@@ -130,9 +130,17 @@ switch (_localize) do {
     };
 
     case "DefenseBudgetFull": {
-        // _this: [1]=category string, [2]=used count, [3]=cap, [4]=refund price
-        // Refund the charged price (positive amount = credit back to player).
-        if ((_this select 4) > 0) then { (_this select 4) Call ChangePlayerFunds };
+        // _this: [1]=category string, [2]=used count, [3]=cap,
+        //        [4]=refund — NUMBER (refund directly) or classname STRING (look up the
+        //        price this client charged; covers entries the server cannot price).
+        private ["_refArg","_refGet"];
+        _refArg = _this select 4;
+        if (typeName _refArg == "STRING") then {
+            _refGet = missionNamespace getVariable _refArg;
+            if (!isNil "_refGet") then { (_refGet select QUERYUNITPRICE) Call ChangePlayerFunds };
+        } else {
+            if (_refArg > 0) then { _refArg Call ChangePlayerFunds };
+        };
         _txt = Format [Localize "DefenseBudgetFull", _this select 1, _this select 2, _this select 3];
     };
 
@@ -149,9 +157,17 @@ switch (_localize) do {
     };
 
     case "DefenseThreatGate": {
-        // _this: [1]=refund price
-        // Refund then show threat warning.
-        if ((_this select 1) > 0) then { (_this select 1) Call ChangePlayerFunds };
+        // _this: [1]=refund — NUMBER (refund directly) or classname STRING (look up the
+        //        price this client charged for it; covers WDDM anchors whose price the
+        //        server cannot resolve from a single global). Refund, then warn.
+        private ["_refArg","_refGet"];
+        _refArg = _this select 1;
+        if (typeName _refArg == "STRING") then {
+            _refGet = missionNamespace getVariable _refArg;
+            if (!isNil "_refGet") then { (_refGet select QUERYUNITPRICE) Call ChangePlayerFunds };
+        } else {
+            if (_refArg > 0) then { _refArg Call ChangePlayerFunds };
+        };
         _txt = Localize "DefenseThreatGate";
     };
 };

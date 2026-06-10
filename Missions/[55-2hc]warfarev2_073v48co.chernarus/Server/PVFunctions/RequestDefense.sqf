@@ -122,14 +122,19 @@ if (_index != -1) then {
 			} forEach _clsToCheck;
 
 			if (_anyThreatGated) then {
-				//--- Count alive enemy units within base-area range of the nearest base center.
-				_enemySide  = [west, east, resistance] - [_side];
+				//--- Count enemy GROUND units within base-area range of the nearest base center.
+				//--- Live-tune (2026-06-10 play test): the original any-1-enemy/any-class gate blocked
+				//--- placement near-permanently in a real round — ambient resistance AI from a
+				//--- neighbouring town or a single aircraft overflight counted as a "raid".
+				//--- Now: major-team opponents only (no ambient GUER), ground classes only (no Air),
+				//--- and a minimum presence of WFBE_C_DEFENSE_THREAT_MIN (default 3) to fire the gate.
+				_enemySide  = [west, east] - [_side];
 				_enemyCount = 0;
 				{
-					_enemyCount = _enemyCount + (_x countSide (nearestObjects [_nearestCenter, ["Man","Car","Motorcycle","Tank","Air"], _baseRange]));
+					_enemyCount = _enemyCount + (_x countSide (nearestObjects [_nearestCenter, ["Man","Car","Motorcycle","Tank"], _baseRange]));
 				} forEach _enemySide;
 
-				if (_enemyCount > 0) then {
+				if (_enemyCount >= (missionNamespace getVariable ["WFBE_C_DEFENSE_THREAT_MIN", 3])) then {
 					_threatRejected = true;
 					["INFORMATION", Format ["RequestDefense.sqf: [%1] threat gate rejected [%2] (%3 enemies within %4 m of base).", str _side, _defenseType, _enemyCount, _baseRange]] Call WFBE_CO_FNC_LogContent;
 				};
@@ -257,14 +262,16 @@ if (_index != -1) then {
 							};
 						};
 					} else {
-						//--- Anchor: no single price to refund (cost structure differs); notify only.
+						//--- Price not resolvable server-side (e.g. WDDM anchors): pass the CLASSNAME
+						//--- so the client refunds via its own price lookup — exactly what it charged.
+						//--- (Was: notify-only with 0 -> anchors LOST their 2,500-5,000 cash on threat reject.)
 						if (_threatRejected) then {
-							[_reqPlayer, "LocalizeMessage", ["DefenseThreatGate", 0]] Call WFBE_CO_FNC_SendToClient;
+							[_reqPlayer, "LocalizeMessage", ["DefenseThreatGate", _defenseType]] Call WFBE_CO_FNC_SendToClient;
 						} else {
 							if (_rejCat == "WddmCompositionCapReached") then {
 								[_reqPlayer, "LocalizeMessage", ["WddmCompositionCapReached", _rejUsed, _rejCap, _defenseType]] Call WFBE_CO_FNC_SendToClient;
 							} else {
-								[_reqPlayer, "LocalizeMessage", ["DefenseBudgetFull", _rejCat, _rejUsed, _rejCap, 0]] Call WFBE_CO_FNC_SendToClient;
+								[_reqPlayer, "LocalizeMessage", ["DefenseBudgetFull", _rejCat, _rejUsed, _rejCap, _defenseType]] Call WFBE_CO_FNC_SendToClient;
 							};
 						};
 					};
