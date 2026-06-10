@@ -45,6 +45,11 @@ missionNamespace setVariable ['WFBE_NEURODEF_CBRADAR_WALLS',[
 
 ]];
 
+//--- Bank intentionally has no auto walls — dressing is handled by Server_SpawnStructureDressing.sqf.
+missionNamespace setVariable ['WFBE_NEURODEF_BANK_WALLS',[
+
+]];
+
 //=============================================================================
 // CBR (Counter Battery Radar) composition dressing.
 // Footprint ≤ 14 m radius. Core = Land_Antenna (WEST) / Land_telek1 (EAST) at origin.
@@ -285,6 +290,96 @@ missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_LIGHT_EAST',[
 	['TKBasicAmmunitionBox_EP1',[-3,-2,0],0],['TKBasicAmmunitionBox_EP1',[3,-2,0],0],
 	['Land_HBarrier_large',[-5,2,0],90],['Land_HBarrier_large',[5,2,0],90],
 	['Fort_RazorWire',[0,5,0],0]
+]];
+
+//=============================================================================
+// Bank (Federal Reserve / Bank Rossii) composition dressing.
+// Footprint ≤ 22 m radius. Core = WarfareBBarracks building at origin.
+// Perimeter: HBarrier ring with an entrance gap on the south side (raidable).
+// WEST: US/NATO aesthetic. EAST: RU/TK aesthetic.
+// Classname confidence notes:
+//   Land_HBarrier_large      — HIGH (used extensively in defense templates above).
+//   Land_HBarrier5           — HIGH (used in COMMANDCENTER_WALLS template above).
+//   FlagCarrierUSA           — HIGH (~90%): standard US flag prop in A2OA USMC content.
+//   FlagCarrierRUS           — MEDIUM (~75%): RU flag variant; substitute FlagCarrierCDF if absent.
+//   USBasicAmmunitionBox_EP1 — HIGH (confirmed in CBR template above).
+//   TKBasicAmmunitionBox_EP1 — HIGH (confirmed in CBR template above).
+//   Land_CamoNetB_NATO       — HIGH (confirmed in CBR template above).
+//   Land_CamoNetB_EAST       — HIGH (confirmed in CBR template above).
+//   Land_fort_bagfence_long  — HIGH (confirmed in CBR template above).
+//   Fort_RazorWire           — HIGH (confirmed in CBR template above).
+//   Land_Campfire            — HIGH (confirmed in CBR template above).
+//   Land_HBarrier5           — HIGH (from COMMANDCENTER_WALLS above).
+//=============================================================================
+
+//--- WEST: US Federal Reserve — HBarrier ring with gap, US flag, NATO camo net, ammo crates, sandags, lights.
+missionNamespace setVariable ['WFBE_NEURODEF_BANK_WEST',[
+	//--- North perimeter HBarrier wall (solid).
+	['Land_HBarrier_large',		[-14, 18, 0],	0],		//--- North wall left
+	['Land_HBarrier_large',		[-6, 18, 0],	0],		//--- North wall centre-left
+	['Land_HBarrier_large',		[2, 18, 0],		0],		//--- North wall centre-right
+	['Land_HBarrier_large',		[10, 18, 0],	0],		//--- North wall right
+	//--- West perimeter HBarrier wall (solid).
+	['Land_HBarrier_large',		[-18, 10, 0],	90],	//--- West wall north
+	['Land_HBarrier_large',		[-18, 2, 0],	90],	//--- West wall mid
+	['Land_HBarrier_large',		[-18, -6, 0],	90],	//--- West wall south
+	//--- East perimeter HBarrier wall (solid).
+	['Land_HBarrier_large',		[18, 10, 0],	90],	//--- East wall north
+	['Land_HBarrier_large',		[18, 2, 0],		90],	//--- East wall mid
+	['Land_HBarrier_large',		[18, -6, 0],	90],	//--- East wall south
+	//--- South wall with entrance gap in centre (infantry + satchel raidable).
+	['Land_HBarrier_large',		[-14, -18, 0],	0],		//--- South wall left
+	['Land_HBarrier_large',		[10, -18, 0],	0],		//--- South wall right (gap at centre ≈ 8 m wide)
+	//--- US flag pole — front-right.
+	['FlagCarrierUSA',			[12, -15, 0],	180],	//--- US flag near entrance
+	//--- NATO camo net over NW corner.
+	['Land_CamoNetB_NATO',		[-12, 14, 0],	270],	//--- Camo net NW
+	//--- Ammo/supply crates inside compound (east side).
+	['USBasicAmmunitionBox_EP1',	[10, 6, 0],		0],		//--- Supply crate
+	['USBasicAmmunitionBox_EP1',	[12, 6, 0],		0],		//--- Second supply crate
+	//--- Sandbag guard posts at entrance corners.
+	['Land_fort_bagfence_long',	[-4, -14, 0],	90],	//--- Entrance left sandbag
+	['Land_fort_bagfence_long',	[4, -14, 0],	90],	//--- Entrance right sandbag
+	//--- Razorwire perimeter outside wall south flanks.
+	['Fort_RazorWire',			[-16, -19, 0],	0],		//--- SW approach wire
+	['Fort_RazorWire',			[14, -19, 0],	0],		//--- SE approach wire
+	//--- Campfire/light for operator ambience.
+	['Land_Campfire',			[-15, 15, 0],	0]		//--- NW corner light
+]];
+
+//--- EAST: Bank Rossii — HBarrier ring with entrance gap, RU flag, EAST camo net, TK crates.
+missionNamespace setVariable ['WFBE_NEURODEF_BANK_EAST',[
+	//--- North perimeter HBarrier wall (solid).
+	['Land_HBarrier_large',		[-14, 18, 0],	0],		//--- North wall left
+	['Land_HBarrier_large',		[-6, 18, 0],	0],		//--- North wall centre-left
+	['Land_HBarrier_large',		[2, 18, 0],		0],		//--- North wall centre-right
+	['Land_HBarrier_large',		[10, 18, 0],	0],		//--- North wall right
+	//--- West perimeter HBarrier wall (solid).
+	['Land_HBarrier_large',		[-18, 10, 0],	90],	//--- West wall north
+	['Land_HBarrier_large',		[-18, 2, 0],	90],	//--- West wall mid
+	['Land_HBarrier_large',		[-18, -6, 0],	90],	//--- West wall south
+	//--- East perimeter HBarrier wall (solid).
+	['Land_HBarrier_large',		[18, 10, 0],	90],	//--- East wall north
+	['Land_HBarrier_large',		[18, 2, 0],		90],	//--- East wall mid
+	['Land_HBarrier_large',		[18, -6, 0],	90],	//--- East wall south
+	//--- South wall with entrance gap in centre (infantry + satchel raidable).
+	['Land_HBarrier_large',		[-14, -18, 0],	0],		//--- South wall left
+	['Land_HBarrier_large',		[10, -18, 0],	0],		//--- South wall right (gap at centre ≈ 8 m wide)
+	//--- RU flag pole — front-right. FlagCarrierRUS ~75% confidence; sub FlagCarrierCDF if absent.
+	['FlagCarrierRUS',			[12, -15, 0],	180],	//--- RU flag near entrance
+	//--- EAST camo net over NW corner.
+	['Land_CamoNetB_EAST',		[-12, 14, 0],	270],	//--- Camo net NW
+	//--- TK ammo/supply crates inside compound (east side).
+	['TKBasicAmmunitionBox_EP1',	[10, 6, 0],		0],		//--- Supply crate
+	['TKBasicAmmunitionBox_EP1',	[12, 6, 0],		0],		//--- Second supply crate
+	//--- Sandbag guard posts at entrance corners.
+	['Land_fort_bagfence_long',	[-4, -14, 0],	90],	//--- Entrance left sandbag
+	['Land_fort_bagfence_long',	[4, -14, 0],	90],	//--- Entrance right sandbag
+	//--- Razorwire perimeter outside wall south flanks.
+	['Fort_RazorWire',			[-16, -19, 0],	0],		//--- SW approach wire
+	['Fort_RazorWire',			[14, -19, 0],	0],		//--- SE approach wire
+	//--- Campfire/light for operator ambience.
+	['Land_Campfire',			[-15, 15, 0],	0]		//--- NW corner light
 ]];
 
 //--- Anchor (build-menu placeholder classname) -> composition template map.

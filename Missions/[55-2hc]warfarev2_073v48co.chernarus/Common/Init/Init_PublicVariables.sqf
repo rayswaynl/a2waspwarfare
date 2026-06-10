@@ -42,6 +42,7 @@ _l = _l + ["Available"];
 _l = _l + ["RequestBaseArea"];
 _l = _l + ["NukeIncoming"];
 _l = _l + ["CounterBatteryContact"];
+_l = _l + ["BankPayout"];
 
 _clientCommandPV = _l;
 

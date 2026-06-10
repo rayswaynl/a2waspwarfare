@@ -47,6 +47,17 @@ switch (_localize) do {
 	case "CommanderDisconnected": {_txt = Localize "strwfcommanderdisconnected"};
 	case "TacticalLaunch": {_txt = Localize "STR_WF_CHAT_ICBM_Launch"};
 	case "CBRadarNeedsAAR": {_txt = Localize "CBRadarNeedsAAR"};
+	case "BankAlreadyBuilt": {_txt = Localize "BankAlreadyBuilt"};
+	case "BankTooCloseToBase": {_txt = Localize "BankTooCloseToBase"};
+	case "BankDestroyed": {
+		//--- _this: [1]=killerName, [2]=sideName — broadcast to all (both sides hear it).
+		_txt = Format [Localize "BankDestroyed", _this select 1, _this select 2];
+	};
+	case "BankDividend": {
+		//--- _this: [1]=amount — quiet group-chat notification (side-targeted).
+		_txt = Format [Localize "BankDividend", _this select 1];
+		_commandChat = false;
+	};
 	case "Teamkill": {_txt = Format [Localize "STR_WF_CHAT_Teamkill",(missionNamespace getVariable "WFBE_C_PLAYERS_PENALTY_TEAMKILL")]; -(missionNamespace getVariable "WFBE_C_PLAYERS_PENALTY_TEAMKILL") Call ChangePlayerFunds};
 	case "FundsTransfer": {_txt = Format [Localize "STR_WF_CHAT_FundsTransfer",_this select 1,_this select 2];_commandChat = false;playSound ["cashierSound", true];};
 	case "StructureSold": {_txt = Format [Localize "STR_WF_CHAT_Structure_Sold",([_this select 1,'displayName'] Call GetConfigInfo), ([_object, towns] Call GetClosestLocation)]};

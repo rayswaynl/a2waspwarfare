@@ -91,10 +91,16 @@ WFBE_SE_FNC_AttackWave = Call Compile preprocessFileLineNumbers "Server\PVFuncti
 WFBE_SE_FNC_AttackWavePVEH = Call Compile preprocessFileLineNumbers "Server\Functions\Server_AttackWave.sqf";
 WFBE_SE_FNC_CounterBatteryCheck = Compile preprocessFileLineNumbers "Server\Functions\Server_CounterBattery.sqf";
 WFBE_SE_FNC_SpawnStructureDressing = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnStructureDressing.sqf";
+WFBE_SE_FNC_BankIncome = Compile preprocessFileLineNumbers "Server\Functions\Server_BankIncome.sqf";
 //--- CBR: per-side registries (populated as CBRs are built; pruned lazily during checks).
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
 	missionNamespace setVariable ["WFBE_CBR_WEST", []];
 	missionNamespace setVariable ["WFBE_CBR_EAST", []];
+};
+//--- Bank: per-side single-object registries (set when bank is built, cleared on death).
+if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
+	missionNamespace setVariable ["WFBE_BANK_WEST", objNull];
+	missionNamespace setVariable ["WFBE_BANK_EAST", objNull];
 };
 
 //--- Define Headless Client functions (server ones).
