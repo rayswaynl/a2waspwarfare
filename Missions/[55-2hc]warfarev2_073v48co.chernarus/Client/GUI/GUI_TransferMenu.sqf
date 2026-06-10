@@ -87,7 +87,13 @@ while {alive player && dialog} do {
 
 	if (_funds != _funds_last) then {
 		sliderSetRange[505002, 0, _funds];
-		((uiNamespace getVariable "wfbe_display_transfer") displayCtrl 505004) ctrlSetStructuredText (parseText Format [localize "STR_WF_INFO_Funds",_funds]);
+		private ["_teamTotal","_cmdPercent","_fundsText"];
+		_teamTotal = 0;
+		{_teamTotal = _teamTotal + (_x Call WFBE_CO_FNC_GetTeamFunds);} forEach WFBE_Client_Teams;
+		_cmdPercent = WFBE_Client_Logic getVariable ["wfbe_commander_percent", 0];
+		_fundsText = Format [localize "STR_WF_INFO_Funds", _funds];
+		_fundsText = _fundsText + Format ["<br />Team: $%1  |  Cmd share: %2%%", _teamTotal, _cmdPercent];
+		((uiNamespace getVariable "wfbe_display_transfer") displayCtrl 505004) ctrlSetStructuredText (parseText _fundsText);
 	};
 
 	_funds_last = _funds;
