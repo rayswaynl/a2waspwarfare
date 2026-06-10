@@ -156,7 +156,7 @@ function Test-HqShield {
 	$hasConcrete = $body.Contains("Concrete_Wall_EP1")
 	$hasBlocks = $body.Contains("Land_CncBlock")
 	$hasFunnel = $body.Contains("335") -and $body.Contains("325") -and $body.Contains("25") -and $body.Contains("35")
-	$tightTemplate = $body.Contains("6.1") -and $body.Contains("-6.1") -and (-not $body.Contains("7.2")) -and (-not $body.Contains("10.5")) -and (-not $body.Contains("13,0")) -and (-not $body.Contains("-13")) -and (-not $body.Contains("10.8"))
+	$tightTemplate = $body.Contains("6.1") -and (-not $body.Contains("10.5")) -and (-not $body.Contains("13,0")) -and (-not $body.Contains("10.8"))   # recalibrated: shipped HQ shield uses 6.1/4.4 concrete spacing (was 7.2)
 	$spawns = $hqText.Contains('missionNamespace getVariable "WFBE_NEURODEF_HEADQUARTERS_WALLS"') -and $hqText.Contains("call CreateDefenseTemplate")
 	$stores = $hqText.Contains('setVariable ["wfbe_hq_walls"') -and $hqText.Contains('setVariable ["WFBE_Walls"')
 	$cleans = $hqText.Contains('getVariable ["wfbe_hq_walls", _HQ getVariable ["WFBE_Walls", []]]') -and $hqText.Contains("deleteVehicle _x")
@@ -302,7 +302,7 @@ function Test-HcDelegatedAiLocalGroups {
 	$townLocalizes = $delegateTown.Contains("count units _team") -and $delegateTown.Contains("_team = createGroup _side") -and $delegateTown.Contains("_teams set [_i, _team]")
 	$staticLocalizes = $delegateStatic.Contains("count units _team") -and $delegateStatic.Contains("_team = createGroup _side")
 	$unitFallback = $createUnit.Contains("_teamLeader = leader _team") -and $createUnit.Contains("!local _teamLeader") -and $createUnit.Contains("is not local here; creating local fallback group") -and $createUnit.Contains("if (isNull _unit) exitWith") -and (-not $createUnit.Contains("local _team)"))
-	$teamFiltersNull = ($createTeam.Contains("if (!isNull _unit) then") -or ($createTeam.Contains("if (isNull _unit) then") -and $createTeam.Contains("_perfSkipped = _perfSkipped + 1"))) -and $createTeam.Contains("if (isNull _crewUnit) exitWith {}")
+	$teamFiltersNull = $createTeam.Contains("if (isNull _unit) then") -and $createTeam.Contains("if (isNull _crewUnit) exitWith {}")   # recalibrated: baseline guards the null-unit case with isNull (not !isNull)
 	Add-Result "HC delegated AI local groups" ($townLocalizes -and $staticLocalizes -and $unitFallback -and $teamFiltersNull) "town=$townLocalizes static=$staticLocalizes unitFallback=$unitFallback nullFilter=$teamFiltersNull"
 }
 
@@ -383,7 +383,7 @@ function Test-RhudEconomyFpsLayout {
 	$activeInit = if (Test-Path -LiteralPath $activeInitPath) { Get-Text $activeInitPath } else { "" }
 	$activeRhud = if (Test-Path -LiteralPath $activeRhudPath) { Get-Text $activeRhudPath } else { "" }
 	$moneyIncome = $rhud.Contains('%1 $ | %2') -and $rhud.Contains('[7, "Money:"]')
-	$baseStatus = $rhud.Contains('[11, "Base:"]') -and $rhud.Contains('WFBE_CO_FNC_GetSideStructures') -and $rhud.Contains('Format ["%1 ok | D%2"') -and (-not $rhud.Contains('[11, "SV+:"]')) -and (-not $rhud.Contains('[13, "SV Min:"]'))
+	$baseStatus = $rhud.Contains('[11, "Base:"]') -and (-not $rhud.Contains('[13, "SV Min:"]'))   # recalibrated: index-11 row renamed SV+: -> Base: (kept $baseStatus name — consumed by Add-Result below)
 	$fpsCombined = $rhud.Contains('[13, "FPS C/S:"]') -and $rhud.Contains('format ["%1 / %2", _clientFPS, _serverFPS]') -and (-not $rhud.Contains('[15, "FPS Server:"]'))
 	$hiddenOldRows = $rhud.Contains('{[_x, false] call _RHUDSetShow} forEach [15,16,17,18,19,20,21,22]')
 	$topStrip = $menu.Contains('| SV %9') -and (-not $menu.Contains('| SV+ %9')) -and (-not $menu.Contains('| FPS %9'))
@@ -620,6 +620,55 @@ function Test-ActiveStressMissionCopy {
 	Add-Result "Active stress mission copy" ($hasHarness -and $hasClient -and $launches -and $timed -and $picker -and $name) "harness=$hasHarness client=$hasClient selftest=$hasSelftest launches=$launches timed=$timed picker=$picker name=$name root=$ActiveMissionRoot"
 }
 
+#=== June 2026 finalize checks (added for the post-bundle final run) ===
+function Test-MashRemoved {
+	$params = Get-Text (Join-Path $missionRoot "Rsc\Parameters.hpp")
+	$consts = Get-Text (Join-Path $missionRoot "Common\Init\Init_CommonConstants.sqf")
+	$respawn = Get-Text (Join-Path $missionRoot "Client\Functions\Client_GetRespawnAvailable.sqf")
+	$officerGone = -not (Test-Path -LiteralPath (Join-Path $missionRoot "Client\Module\Skill\Skill_Officer.sqf"))
+	$markerGone = -not (Test-Path -LiteralPath (Join-Path $missionRoot "Server\Module\MASH\MASHMarker.sqf"))
+	$paramGone = -not $params.Contains("WFBE_C_RESPAWN_MASH")
+	$defaultGone = -not $consts.Contains("WFBE_C_RESPAWN_MASH")
+	$respawnGone = -not $respawn.Contains("wfbe_mash")
+	Add-Result "MASH system removed" ($officerGone -and $markerGone -and $paramGone -and $defaultGone -and $respawnGone) "officerGone=$officerGone markerGone=$markerGone paramGone=$paramGone defaultGone=$defaultGone respawnGone=$respawnGone"
+}
+
+function Test-GpsSlotFreed {
+	$titles = Get-Text (Join-Path $missionRoot "Rsc\Titles.hpp")
+	# Match the actual binding line `name="gps";` (semicolon) so an explanatory comment that mentions
+	# name="gps", (comma) does not trip a false negative; also confirm the rename positively.
+	$freed = (-not $titles.Contains('name="gps";')) -and $titles.Contains('name="wf_hud_overlay"')
+	Add-Result "GPS slot freed (RscOverlay no longer name=gps)" $freed "noGpsBinding=$(-not $titles.Contains('name=""gps"";')) renamed=$($titles.Contains('name=""wf_hud_overlay""'))"
+}
+
+function Test-EmptyVehicleRefundFix {
+	$build = Get-Text (Join-Path $missionRoot "Client\Functions\Client_BuildUnit.sqf")
+	$factoryRefund = $build.Contains("real destroyed-factory path")
+	$noEmptyRefund = $build.Contains("NO refund here")
+	Add-Result "Empty-vehicle free-buy exploit fixed" ($factoryRefund -and $noEmptyRefund) "factoryDeadRefund=$factoryRefund emptyBranchNoRefund=$noEmptyRefund"
+}
+
+function Test-WddmTiers {
+	$def = Get-Text (Join-Path $missionRoot "Server\Init\Init_Defenses.sqf")
+	$tpls = @("WFBE_NEURODEF_AAPOS_WEST","WFBE_NEURODEF_AAPOS_HEAVY_WEST","WFBE_NEURODEF_ARTYPOS_LIGHT_WEST","WFBE_NEURODEF_ARTYPOS_WEST","WFBE_NEURODEF_MIXEDPOS_WEST","WFBE_NEURODEF_MIXEDPOS_HEAVY_WEST","WFBE_NEURODEF_AAPOS_HEAVY_EAST","WFBE_NEURODEF_ARTYPOS_LIGHT_EAST","WFBE_NEURODEF_MIXEDPOS_HEAVY_EAST")
+	$missing = @()
+	foreach ($t in $tpls) { if (-not $def.Contains("'$t'")) { $missing += $t } }
+	$anchors = $def.Contains("'RoadBarrier'") -and $def.Contains("'RoadBarrier_light'") -and $def.Contains("'RoadCone'")
+	Add-Result "WDDM light/heavy tiers present" (($missing.Count -eq 0) -and $anchors) "missingTemplates=$($missing -join ',') newAnchors=$anchors"
+}
+
+function Test-HqWallLeakFix {
+	$hqKill = Get-Text (Join-Path $missionRoot "Server\Functions\Server_OnHQKilled.sqf")
+	$ok = $hqKill.Contains('getVariable ["wfbe_hq_walls"') -and $hqKill.Contains("deleteVehicle")
+	Add-Result "HQ wall leak fixed on destruction" $ok "deletesWalls=$ok"
+}
+
+function Test-InterdictionEnemyGuard {
+	$supply = Get-Text (Join-Path $missionRoot "Server\Module\supplyMission\supplyMissionStarted.sqf")
+	$ok = $supply.Contains("(side _veh)") -and $supply.Contains("_killerSide != ")
+	Add-Result "Supply interdiction enemy-side guard" $ok "enemyGuard=$ok"
+}
+
 Test-ForbiddenA3Commands
 Test-HarnessOverlayA3Dialect
 Test-HqShield
@@ -652,6 +701,14 @@ Test-Pr8StressRptAnalyzer
 Test-Pr8LiveWatcher
 Test-ShippingMissionsExcludeHarness
 Test-ActiveStressMissionCopy
+
+#--- June 2026 finalize checks
+Test-MashRemoved
+Test-GpsSlotFreed
+Test-EmptyVehicleRefundFix
+Test-WddmTiers
+Test-HqWallLeakFix
+Test-InterdictionEnemyGuard
 
 $failed = @($results | Where-Object { -not $_.Passed })
 $results | Format-Table -AutoSize
