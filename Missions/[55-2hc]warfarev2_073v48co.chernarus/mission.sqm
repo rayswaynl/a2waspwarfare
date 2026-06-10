@@ -22,8 +22,8 @@ class Mission
 	randomSeed=10034581;
 	class Intel
 	{
-		briefingName="PR 8 - June Feature Bundle";
-		briefingDescription="June release test build: UI/UX, GPS, factories, supply, WDDM/arty, AI/perf.";
+		briefingName="WASP Experital TEST";
+		briefingDescription="Experital branch: experimental feature sandbox (counter-battery, bank, redeploy truck, proportional rearm, bulldozer, defense budget, factory caps, statlog).";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;
