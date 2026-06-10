@@ -40,6 +40,59 @@ missionNamespace setVariable ['WFBE_NEURODEF_AARADAR_WALLS',[
 
 ]];
 
+//--- CBRadar intentionally has no auto walls — dressing is handled by Server_SpawnStructureDressing.sqf.
+missionNamespace setVariable ['WFBE_NEURODEF_CBRADAR_WALLS',[
+
+]];
+
+//=============================================================================
+// CBR (Counter Battery Radar) composition dressing.
+// Footprint ≤ 14 m radius. Core = Land_Antenna (WEST) / Land_telek1 (EAST) at origin.
+// Visually distinct WEST (NATO/US) vs EAST (TK/RU) kits.
+// NOTE: Land_Antenna exists in A2OA (Chernarus terrain, large whip mast).
+//       Land_telek1 exists in A2OA (Chernarus cell-tower mast, ~90% confidence).
+//       Misc_cargo_cont_small confirmed in A2OA EP1 (shipping container half-size).
+//       Land_CamoNetB_NATO / Land_CamoNetB_EAST confirmed (used in Structures_CO files).
+//       Land_fort_bagfence_* confirmed (used extensively in defenses).
+//       USBasicAmmunitionBox_EP1 / TKBasicAmmunitionBox_EP1 confirmed.
+//       Land_Campfire confirmed (in Structures_CO_US defense list).
+//       Fort_RazorWire confirmed (in defense templates above).
+//       Land_HBarrier_large confirmed.
+//       Hedgehog confirmed (used in WFBE_NEURODEF_WALL_GATE above).
+//       FLAGGED UNCERTAIN: Land_telek1 — ~85% confidence it exists; substitute Land_Antenna for EAST if absent.
+//=============================================================================
+
+//--- WEST: NATO / US kit — generator shelter, ammo crates, NATO camo net, sandbag ring, razorwire.
+missionNamespace setVariable ['WFBE_NEURODEF_CBRADAR_WEST',[
+	['Misc_cargo_cont_small',		[-5, 3, 0],		90],	//--- Instrument shelter / generator box (west-rear left)
+	['USBasicAmmunitionBox_EP1',	[-3, -2, 0],	0],		//--- Equipment crate near shelter
+	['USBasicAmmunitionBox_EP1',	[-1.5, -2.5, 0],0],		//--- Second crate (battery packs, cables)
+	['Land_CamoNetB_NATO',			[2, -4, 0],		270],	//--- Camo net draped south
+	['Land_fort_bagfence_round',	[0, 3.5, 0],	0],		//--- Sandbag ring front
+	['Land_fort_bagfence_long',		[-3.5, 0, 0],	90],	//--- Sandbag east wall
+	['Land_fort_bagfence_long',		[3.5, 0, 0],	90],	//--- Sandbag west wall
+	['Fort_RazorWire',				[0, 7, 0],		0],		//--- Perimeter razorwire north
+	['Fort_RazorWire',				[-5, -4, 0],	30],	//--- Perimeter razorwire south-left
+	['Fort_RazorWire',				[5, -4, 0],		330],	//--- Perimeter razorwire south-right
+	['Land_Campfire',				[-6, 5, 0],		0]		//--- Operator campfire / lamp
+]];
+
+//--- EAST: TK/RU kit — metal drum shelter, TK ammo crates, EAST camo net, HBarrier, hedgehog, razorwire.
+missionNamespace setVariable ['WFBE_NEURODEF_CBRADAR_EAST',[
+	['Land_HBarrier_large',			[-4, 3, 0],		90],	//--- Blast wall behind mast (RU style)
+	['Land_HBarrier_large',			[4, 3, 0],		90],	//--- Blast wall other side
+	['TKBasicAmmunitionBox_EP1',	[-3, -2, 0],	0],		//--- Equipment crate
+	['TKBasicAmmunitionBox_EP1',	[-1.5, -2.5, 0],0],		//--- Second crate
+	['Land_CamoNetB_EAST',			[2, -4, 0],		270],	//--- East camo net
+	['Land_fort_bagfence_round',	[0, 3.5, 0],	0],		//--- Sandbag ring front
+	['Land_fort_bagfence_long',		[-3.5, 0, 0],	90],	//--- Sandbag side wall
+	['Fort_RazorWire',				[0, 7, 0],		0],		//--- Perimeter razorwire north
+	['Hedgehog',					[-5, -4, 0],	0],		//--- Tank trap south-left
+	['Hedgehog',					[5, -4, 0],		0],		//--- Tank trap south-right
+	['Fort_RazorWire',				[0, -6, 0],		0],		//--- Razorwire south
+	['Land_Campfire',				[-6, 5, 0],		0]		//--- Operator position
+]];
+
 //--- Shielded HQ walls (WDDM: hq_concrete_walk_exit), tight funnel layout from PR8 live test.
 missionNamespace setVariable ['WFBE_NEURODEF_HEADQUARTERS_WALLS',[
 	['Concrete_Wall_EP1',[-4.4,6.1,0],0],
