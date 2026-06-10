@@ -101,6 +101,15 @@ function Get-TriggerCounts {
 		"queueNotTriggered" = "QUEUE_NOT_TRIGGERED"
 		"hcReady" = "HC_READY"
 		"hcWaitTimeout" = "HC_WAIT_TIMEOUT"
+		# Experital-branch positive-activity triggers (2026-06-10): silent failure in these
+		# subsystems shows as a zero count during a live watch, not just absence of errors.
+		"counterBattery" = "Server_CounterBattery\.sqf:|CB CONTACT"
+		"bankIncome" = "Server_BankIncome\.sqf: .*Dividend"
+		"bankDestroyed" = "Bank destroyed by"
+		"siteClearance" = "Server_SiteClearance\.sqf:"
+		"waspstatKill" = "WASPSTAT.*KILL"
+		"waspstatCapture" = "WASPSTAT.*CAPTURE"
+		"waspstatRoundEnd" = "WASPSTAT.*ROUNDEND"
 		"cleanupLoop" = "CLEANUP_LOOP"
 		"townCapRegression" = "TOWN_CAP_REGRESSION"
 		"townRemanOk" = "TOWN_REMAN_OK"
@@ -179,6 +188,7 @@ do {
 	Write-Host $aiSummary
 	Write-Host ("triggers: supplyStart={0} unloadStart={1} complete={2} interdict={3} wddm={4} commanderArtillery={5} easa={6} reward={7}" -f $triggers["supplyStart"], $triggers["supplyUnloadStart"], $triggers["supplyComplete"], $triggers["supplyInterdict"], $triggers["wddm"], $triggers["commanderArtillery"], $triggers["easa"], $triggers["vehicleReward"])
 	Write-Host ("queueCounts: enqueue={0} step={1} proof={2} end={3} notTriggered={4} hcReady={5} hcTimeout={6} cleanupLoop={7}" -f $triggers["queueEnqueue"], $triggers["queueStep"], $triggers["queueProof"], $triggers["queueEnd"], $triggers["queueNotTriggered"], $triggers["hcReady"], $triggers["hcWaitTimeout"], $triggers["cleanupLoop"])
+	Write-Host ("experital: cbr={0} bankIncome={1} bankKill={2} siteClear={3} | waspstat kill={4} cap={5} end={6}" -f $triggers["counterBattery"], $triggers["bankIncome"], $triggers["bankDestroyed"], $triggers["siteClearance"], $triggers["waspstatKill"], $triggers["waspstatCapture"], $triggers["waspstatRoundEnd"])
 	Write-Host ("audits: ai={0} aiDelegation={1} aiDeep={2} playerUX={3} factory={4} serviceSupply={5} wddmArtillery={6} ui={7} gpsUI={8} clientGps={9} clip={10} bughunt={11} randomBughunt={12} perfBurst={13} vehicleLoad={14} heavyWave={15}" -f $triggers["aiAudit"], $triggers["aiDelegationAudit"], $triggers["aiDeep"], $triggers["playerExperience"], $triggers["factoryAudit"], $triggers["serviceSupplyAudit"], $triggers["wddmArtilleryAudit"], $triggers["uiAudit"], $triggers["gpsUiAudit"], $triggers["clientGpsState"], $triggers["clientServiceClipAudit"], $triggers["bughuntAudit"], $triggers["randomBughuntAudit"], $triggers["perfBurst"], $triggers["vehicleLoad"], $triggers["heavyWave"])
 	Write-Host ("errors: real={0} missionIssue={1} knownNoise={2}" -f $noise.RealIssue.Count, $noise.MissionIssue.Count, $noise.KnownNoise.Count)
 	if ($noise.RealIssue.Count -gt 0) { Write-Host ("realIssue: {0}" -f (($noise.RealIssue | Select-Object -Last 1) -replace "\s+", " ")) }

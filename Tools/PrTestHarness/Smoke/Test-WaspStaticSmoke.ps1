@@ -266,7 +266,7 @@ function Test-WddmAnchorClassValidity {
 function Test-PvfIntegrity {
 	$initPv = Get-Text (Join-Path $missionRoot "Common\Init\Init_PublicVariables.sqf")
 	$serverPvDir = Join-Path $missionRoot "Server\PVFunctions"
-	$required = @("RequestEnqueue","RequestDequeue","RequestDefense","RequestSpecial","RequestUpgrade","RequestOnUnitKilled")
+	$required = @("RequestEnqueue","RequestDequeue","RequestDefense","RequestSpecial","RequestUpgrade","RequestOnUnitKilled","RequestSiteClearance","CounterBatteryFired")
 	$missing = @()
 	foreach ($name in $required) {
 		$registered = $initPv.Contains($name)
