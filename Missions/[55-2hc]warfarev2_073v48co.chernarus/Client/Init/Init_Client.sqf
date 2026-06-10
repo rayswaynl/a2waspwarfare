@@ -596,12 +596,15 @@ WF_Logic setVariable ['filler','primary'];
 if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0) then {
 	[] spawn {
 		private ["_redeployList","_veh"];
-		_redeployList = missionNamespace getVariable [Format["WFBE_%1REDEPLOYTRUCKS",sideJoinedText],[]];
 		while {true} do {
 			sleep 5;
 			if (alive player && WFBE_SK_V_Type == "Medic") then {
+				//--- Re-read each tick: avoids a silent empty capture if this spawn races Root config init.
+				_redeployList = missionNamespace getVariable [Format["WFBE_%1REDEPLOYTRUCKS",sideJoinedText],[]];
 				_veh = vehicle player;
 				if (_veh != player && typeOf _veh in _redeployList) then {
+					//--- NOTE: wfbe_medic_unit is never cleared. Readers MUST re-validate
+					//--- (alive _medic && _medic in crew _veh) — see Client_GetRespawnAvailable.sqf.
 					_veh setVariable ["wfbe_medic_unit", player, true];
 				};
 			};

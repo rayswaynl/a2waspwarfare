@@ -63,7 +63,7 @@ if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0) then {
 			_medic = _veh getVariable ["wfbe_medic_unit", objNull];
 			//--- Cargo available, stationary, engine off, medic aboard and alive.
 			if (_veh emptyPositions "cargo" > 0
-				&& speed _veh < 1
+				&& abs(speed _veh) < 1
 				&& !(isEngineOn _veh)
 				&& !(isNull _medic) && {alive _medic} && {_medic in (crew _veh)}) then {
 				//--- Not within 300 m of an enemy-held or contested town.
