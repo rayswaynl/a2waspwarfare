@@ -40,7 +40,7 @@
 	is consistent with codebase precedent.
 */
 
-Private ["_cacheKey","_class","_currentHull","_currentTotal","_fullTotal","_turrets","_veh"];
+private ["_cacheKey","_class","_currentHull","_currentTotal","_fullTotal","_turrets","_veh"];
 
 _veh = _this;
 
@@ -53,7 +53,7 @@ _cacheKey = Format ["WFBE_AMMOFULL_%1", _class];
 _fullTotal = missionNamespace getVariable _cacheKey;
 
 if (isNil "_fullTotal") then {
-	Private ["_hullMags","_total"];
+	private ["_hullMags","_total"];
 	_hullMags  = getArray (configFile >> "CfgVehicles" >> _class >> "magazines");
 	_total     = count _hullMags;
 
