@@ -38,6 +38,21 @@ if (_distance < 0 || _distance + _minRange > _maxRange) exitWith {};
 
 _FEH = Call Compile Format ["_artillery addEventHandler ['Fired',{[_this select 4,_this select 6,%1,%2,%3,%4,%5,%6,%7,%8,%9] Spawn WFBE_CO_FNC_HandleArtillery}];",_ammo,_destination,_velocity,_dispersion,getPos _artillery,_distance,_radius,_maxRange,_side];
 
+//--- CBR detection hook: runs where the arty is local (server for AI; client for player-crewed).
+//--- Route to server in both cases via SendToServer when not already on server.
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
+	_artillery addEventHandler ['Fired', {
+		private ["_firer","_fpos","_pkt"];
+		_firer = _this select 0;
+		_fpos  = getPos _firer;
+		if (isServer) then {
+			[_firer, _fpos] Call WFBE_SE_FNC_CounterBatteryCheck;
+		} else {
+			["CounterBatteryFired", [_firer, _fpos]] Call WFBE_CO_FNC_SendToServer;
+		};
+	}];
+};
+
 {_gunner disableAI _x} forEach ['MOVE','TARGET','AUTOTARGET'];
 _watchPosition = [_destination select 0, _destination select 1, (_artillery distance _destination)/(tan(90-_angle))];
 
