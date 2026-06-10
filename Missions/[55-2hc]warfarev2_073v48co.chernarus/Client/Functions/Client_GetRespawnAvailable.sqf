@@ -71,7 +71,7 @@ if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0) then {
 				{
 					private "_townSide";
 					_townSide = _x getVariable ["sideID",-1];
-					if (_townSide != _sideID && _veh distance _x < 300) then {_tooClose = true};
+					if (_townSide != _sideID && _veh distance _x < 500) then {_tooClose = true};
 				} forEach towns;
 				if !(_tooClose) then {
 					_availableSpawn = _availableSpawn + [_veh];

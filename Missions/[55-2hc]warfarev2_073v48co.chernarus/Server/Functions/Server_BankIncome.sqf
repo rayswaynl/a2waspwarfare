@@ -12,13 +12,15 @@
    WFBE_CL_FNC_ChangeClientFunds on each receiving client.
    This mirrors TownCaptured.sqf's pattern for side-targeted client payouts.
 */
-Private ["_bank","_side","_interval","_payout","_logik","_hqAlive"];
+Private ["_bank","_side","_interval","_pool","_share","_playerCount","_logik","_hqAlive"];
 
 _bank   = _this select 0;
 _side   = _this select 1;
 
 _interval = 300;   //--- 5 minutes between payouts.
-_payout   = 2500;  //--- Per-player dividend.
+_pool     = 5000;  //--- FIXED dividend pool per tick, split among living side players.
+                   //--- Balance review 2026-06-10: a flat per-player 2500 scaled to $50k/tick on a
+                   //--- 20-player side (3-5x town income); a fixed pool caps total injection.
 
 ["INFORMATION", Format ["Server_BankIncome.sqf: [%1] Income drip started for bank [%2].", str _side, _bank]] Call WFBE_CO_FNC_LogContent;
 
@@ -32,9 +34,12 @@ while {alive _bank} do {
 	if (!_hqAlive) then {
 		["INFORMATION", Format ["Server_BankIncome.sqf: [%1] Payout skipped — no deployed HQ.", str _side]] Call WFBE_CO_FNC_LogContent;
 	} else {
-		//--- Pay every player on the owning side via the BankPayout client PVF.
-		[_side, "BankPayout", [_payout]] Call WFBE_CO_FNC_SendToClients;
-		["INFORMATION", Format ["Server_BankIncome.sqf: [%1] Dividend $%2 sent to all side players.", str _side, _payout]] Call WFBE_CO_FNC_LogContent;
+		//--- Split the pool among living players on the owning side.
+		_playerCount = 0;
+		{if ((isPlayer _x) && (alive _x) && (side _x == _side)) then {_playerCount = _playerCount + 1}} forEach playableUnits;
+		_share = round (_pool / (_playerCount max 1));
+		[_side, "BankPayout", [_share]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Server_BankIncome.sqf: [%1] Dividend $%2 x %3 players sent (pool %4).", str _side, _share, _playerCount, _pool]] Call WFBE_CO_FNC_LogContent;
 	};
 };
 
