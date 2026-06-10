@@ -22,7 +22,6 @@ _l = _l + ["RequestAutoWallConstructinChange"];
 _l = _l + ["RequestEnqueue"];
 _l = _l + ["RequestDequeue"];
 _l = _l + ["CounterBatteryFired"];
-_l = _l + ["RequestBulldoze"];
 
 _serverCommandPV = _l;
 
@@ -44,7 +43,6 @@ _l = _l + ["RequestBaseArea"];
 _l = _l + ["NukeIncoming"];
 _l = _l + ["CounterBatteryContact"];
 _l = _l + ["BankPayout"];
-_l = _l + ["BulldozeFelled"];
 
 _clientCommandPV = _l;
 

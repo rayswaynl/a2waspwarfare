@@ -9488,11 +9488,23 @@
     <Key ID="BankDividend">
       <English>Bank dividend: $%1</English>
     </Key>
-    <Key ID="BulldozerSessionCapReached">
-      <English>Bulldozer session limit reached (100 trees). Ask another engineer to continue.</English>
+    <Key ID="SiteClearanceCommanderOnly">
+      <English>Site Clearance can only be used by the commander.</English>
     </Key>
-    <Key ID="BulldozerNeedsBarracks1">
-      <English>Bulldozer requires Barracks level 1 before use.</English>
+    <Key ID="SiteClearanceNeedsBarracks1">
+      <English>Site Clearance requires Barracks level 1 before use.</English>
+    </Key>
+    <Key ID="SiteClearanceNoTrees">
+      <English>Site Clearance: no trees found within 25 m of that position.</English>
+    </Key>
+    <Key ID="SiteClearanceNoSupply">
+      <English>Site Clearance: insufficient supply (need %1).</English>
+    </Key>
+    <Key ID="SiteClearanceDone">
+      <English>Site clearance: %1 trees felled, -%2 supply.</English>
+    </Key>
+    <Key ID="SiteClearanceOutsideBase">
+      <English>Site Clearance position must be inside your base area.</English>
     </Key>
     <Key ID="STR_WF_CBR_Contact">
       <English>CB CONTACT</English>

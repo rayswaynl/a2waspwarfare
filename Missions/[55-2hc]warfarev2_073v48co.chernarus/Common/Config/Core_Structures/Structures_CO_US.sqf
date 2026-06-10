@@ -197,6 +197,9 @@ _n = _n		+ ["RoadCone"];				//--- Mixed Position (Heavy)
 _n = _n		+ ["Paleta1"];				//--- Base Wall - Straight
 _n = _n		+ ["Paleta2"];				//--- Base Wall - Corner
 _n = _n		+ ["Land_Ind_Timbers"];		//--- Base Wall - Gate
+if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {
+	_n = _n + ["Land_Pneu"];			//--- Site Clearance (commander only)
+};
 
 /* Class used for AI, AI will attempt to build those */
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_MG", _side], ['M2StaticMG_US_EP1']];

@@ -58,8 +58,12 @@ switch (_localize) do {
 		_txt = Format [Localize "BankDividend", _this select 1];
 		_commandChat = false;
 	};
-	case "BulldozerSessionCapReached": {_txt = Localize "BulldozerSessionCapReached"};
-	case "BulldozerNeedsBarracks1": {_txt = Localize "BulldozerNeedsBarracks1"};
+	case "SiteClearanceCommanderOnly": {_txt = Localize "SiteClearanceCommanderOnly"};
+	case "SiteClearanceNeedsBarracks1": {_txt = Localize "SiteClearanceNeedsBarracks1"};
+	case "SiteClearanceNoTrees": {_txt = Localize "SiteClearanceNoTrees"};
+	case "SiteClearanceNoSupply": {_txt = Format [Localize "SiteClearanceNoSupply", _this select 1]};
+	case "SiteClearanceDone": {_txt = Format [Localize "SiteClearanceDone", _this select 1, _this select 2]};
+	case "SiteClearanceOutsideBase": {_txt = Localize "SiteClearanceOutsideBase"};
 	case "Teamkill": {_txt = Format [Localize "STR_WF_CHAT_Teamkill",(missionNamespace getVariable "WFBE_C_PLAYERS_PENALTY_TEAMKILL")]; -(missionNamespace getVariable "WFBE_C_PLAYERS_PENALTY_TEAMKILL") Call ChangePlayerFunds};
 	case "FundsTransfer": {_txt = Format [Localize "STR_WF_CHAT_FundsTransfer",_this select 1,_this select 2];_commandChat = false;playSound ["cashierSound", true];};
 	case "StructureSold": {_txt = Format [Localize "STR_WF_CHAT_Structure_Sold",([_this select 1,'displayName'] Call GetConfigInfo), ([_object, towns] Call GetClosestLocation)]};
