@@ -2,7 +2,7 @@
 
 **Experimental feature branch** built on `release/2026-06-feature-bundle` (`a96fdda2`). Ships as a separate optional mission **"WASP Experital TEST"** for the Hetzner test server, alongside (not replacing) the PR8 default. Every feature is individually toggleable via a `WFBE_C_*` gate; all default ON in this mission, all byte-identical to baseline when gated off.
 
-> Status: **18 / 21 work items complete (~68 commits)**. Living doc — updated as work lands. Player-facing Discord changelog is produced separately at deploy.
+> Status: **19 / 21 work items complete (~72 commits)**. Living doc — updated as work lands. Player-facing Discord changelog is produced separately at deploy.
 
 ---
 
@@ -34,6 +34,9 @@
 ### Aircraft
 - **EASA weapon category tags** (`WFBE_C_EASA_CATEGORIES`) — the aircraft-loadout editor now prefixes each loadout with `[AA]` / `[AG]` / `[MR]` (multirole), auto-derived from weapon config with a per-class cache + manual-override table. Display-only.
 
+### Airfield capture points
+- **Airfield capture objectives** (`WFBE_C_AIRFIELDS`) — NWAF, NEAF and Balota Airfield are now live capture towns (50-supply, `PMCAirfield` garrison type). Defended by up to ~18 PMC infantry (Squad/Team/AT/Sniper) + Motorized and AA_Light vehicle groups across 6 spawn slots (70% infantry budget). Capturing an airfield spawns a **side-correct repair point** (`WFBE_RepairTruckServicePoint=true`, registered in side-logic structures, map marker via `Init_BaseStructure`) and an **exclusive hangar** on the matching `LocationLogicAirport` entity. The hangar's buy menu overrides to `WFBE_AIRFIELD_UNITS` — a curated cross-faction roster (`L39_TK_EP1`, `An2_TK_EP1`, `Mi17_Ins` on Chernarus) available **nowhere else**. Recapture deletes the previous owner's SP and hangar, cleans up the side-logic structures list, and re-spawns for the new side. The `Init_Airports.sqf` auto-hangar path is skipped for flagged airports so lifecycle is fully capture-event-driven.
+
 ### Telemetry
 - **WASPSTAT** (`WFBE_C_STATLOG`) — extends the existing `WASPSTAT|v1` RPT line family with `KILL` / `CAPTURE` / `ROUNDEND` records (killer+victim, town ownership change, round winner+duration) for the future miksuu.com rankings pipeline. Format documented in `docs/WASPSTAT-FORMAT.md`.
 
@@ -56,8 +59,9 @@ Subagent-driven: each feature implemented by a fresh agent, then **spec-reviewed
 _Pre-existing, logged (not introduced here): `airRaid` nuke-warning sound in `NukeIncoming.sqf` has no CfgSound entry._
 
 ## Remaining
-- ⏳ **Airfield capture points** — NWAF/NEAF/Balota as ~50-SV capture towns, **PMC garrison** (`Core_PMC.sqf` present), **repair point spawned on capture**, **`L39_TK_EP1`** buyable while you hold the airfield. *Minimal scope (owner): no hand-placed static-defense logics.*
+- ✅ **Airfield capture points** — implemented (Task 12), see Features section above.
 - ⏳ **Airfield built-in CBR** — permanent 2,000 m radar following the airfield owner
+- ⏳ **Capture-to-unlock premium units** — holding **Krasnostav** (Cherno) / **Loy Manara AF** (Taki) unlocks the **Czech T-72** (`T72M4CZ_ACR`, Heavy factory lvl 4); holding **NW Airfield** (Cherno) / **Rasman AF** (Taki) unlocks the **RM-70** rocket-MLRS (`RM70_ACR`, Light factory lvl 4, registered as artillery). Both units are **added to the mission** (neither was present) and **built at your own factories**, gated by (ownership of the trigger location + factory level). **Whichever team captures the location can build them** — added to both sides' arrays. Distinct from the airfield-exclusive aircraft (which are bought *at* the airfield). Mapping is data-driven by town name so both maps share one table. *(Takistan names are carried as data for the regenerated build only.)*
 - ⏳ **Pack / smoke / deploy** to Hetzner as the optional mission + RPT classname checks
 - ⏳ Player-facing Discord changelog (at deploy)
 
