@@ -45,11 +45,11 @@ if ((missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") > 0) then {
 };
 
 //--- Medic redeployment truck (forward spawn).
-//--- V1 simplification: stationary = speed < 1 AND engine off at evaluation time.
-//--- The respawn menu re-evaluates every second, so a moving truck drops off the list naturally.
-//--- No 30s-stationary timer implemented; add in a later version if needed.
-//--- Medic-aboard check: WFBE_SK_V_Type is player-profile-based and not readable on crew units.
-//--- Fallback: driver must be alive (any class). Documented as DONE_WITH_CONCERNS.
+//--- Stationary: speed < 1 AND engine off at evaluation time (menu re-evaluates every ~1s,
+//--- so a moving truck drops off the list naturally; no 30s timer needed in v1).
+//--- Medic-aboard: a medic client broadcasts itself via wfbe_medic_unit on the vehicle object
+//--- (public setVariable — precedent: WFBE_StaticDefenseAssignedUnit in Common_CreateUnitForStaticDefence.sqf).
+//--- Reader validates: object non-null, alive, AND still in crew — stale on dismount/disconnect, no clearing needed.
 if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0) then {
 	_redeployTrucks = missionNamespace getVariable [Format["WFBE_%1REDEPLOYTRUCKS",_sideText],[]];
 	_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
@@ -58,13 +58,14 @@ if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0) then {
 	if (count _checks > 0) then {
 		_sideID = (_side) Call GetSideID;
 		{
-			private ["_veh","_tooClose"];
+			private ["_veh","_medic","_tooClose"];
 			_veh = _x;
-			//--- Cargo seats available, stationary, engine off, driver alive.
+			_medic = _veh getVariable ["wfbe_medic_unit", objNull];
+			//--- Cargo available, stationary, engine off, medic aboard and alive.
 			if (_veh emptyPositions "cargo" > 0
 				&& speed _veh < 1
 				&& !(isEngineOn _veh)
-				&& alive (driver _veh)) then {
+				&& !(isNull _medic) && {alive _medic} && {_medic in (crew _veh)}) then {
 				//--- Not within 300 m of an enemy-held or contested town.
 				_tooClose = false;
 				{
