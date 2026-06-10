@@ -27,6 +27,12 @@ if (isNull _team || {(count units _team) == 0}) then {_team = createGroup _side}
 _retVal = [_side, _groups, _positions, _team, _defence, _moveInGunner] call WFBE_CO_FNC_CreateUnitForStaticDefence;
 _teams = _retVal select 0;
 
+//--- Defender classification: HC-created static-defence gunners. PUBLIC tag - the
+//--- activation scan that must ignore these runs on the server, not on this machine.
+{
+	{if (!isNull _x) then {_x setVariable ["WFBE_IsTownDefenderAI", true, true]}} forEach (units _x);
+} forEach _teams;
+
 //["RequestSpecial", ["update-delegation-static_defence", _teams]] Call WFBE_CO_FNC_SendToServer;
 
 {

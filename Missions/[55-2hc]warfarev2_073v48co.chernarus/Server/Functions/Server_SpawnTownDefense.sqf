@@ -42,5 +42,7 @@ if (_defense != "") then {
 	_entitie setDir (direction _defense_logic);
 	_entitie setPos (getPos _defense_logic);
 	_entitie addEventHandler ['killed', Format ["[_this select 0, _this select 1, %1] Spawn WFBE_CO_FNC_OnUnitKilled;", _sideID]];
+	//--- Defender classification (public: the activation scan runs server-side).
+	_entitie setVariable ["WFBE_IsTownDefenderAI", true, true];
 	_defense_logic setVariable ["wfbe_defense", _entitie];
 };

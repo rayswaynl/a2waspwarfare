@@ -81,22 +81,29 @@ if (_type == "MVD_Soldier_AT") then {
 };
 
 if (_global) then {
-	if (_side != WFBE_DEFENDER_ID || WFBE_ISTHREEWAY) then {
-		if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_INFANTRY") > 0) then {
-			_globalInitMode = "vehicleInit";
-			_unit setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';", _side];
-			processInitCommands;
-		} else {
-			_leaderIsPlayer = isPlayer leader _team;
-			if (_leaderIsPlayer) then {
-				_globalInitMode = "localPlayerInit";
-				[_unit, _side] ExecVM 'Common\Init\Init_Unit.sqf'
-			} else {
-				_globalInitMode = "trackOffNoPlayer";
-			};
-		};
+	if (!isNil "isHeadLessClient" && {isHeadLessClient}) then {
+		//--- HC-created (delegated) AI skips the global Init_Unit broadcast entirely: the
+		//--- setVehicleInit path would spawn marker/action loops on every client (and every
+		//--- JIP) for units that are pure AI offload. Mirrors the defenderSkipped rationale.
+		_globalInitMode = "hcSkipped";
 	} else {
-		_globalInitMode = "defenderSkipped";
+		if (_side != WFBE_DEFENDER_ID || WFBE_ISTHREEWAY) then {
+			if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_INFANTRY") > 0) then {
+				_globalInitMode = "vehicleInit";
+				_unit setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';", _side];
+				processInitCommands;
+			} else {
+				_leaderIsPlayer = isPlayer leader _team;
+				if (_leaderIsPlayer) then {
+					_globalInitMode = "localPlayerInit";
+					[_unit, _side] ExecVM 'Common\Init\Init_Unit.sqf'
+				} else {
+					_globalInitMode = "trackOffNoPlayer";
+				};
+			};
+		} else {
+			_globalInitMode = "defenderSkipped";
+		};
 	};
 };
 

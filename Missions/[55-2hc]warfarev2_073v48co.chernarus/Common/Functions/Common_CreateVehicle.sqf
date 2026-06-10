@@ -45,12 +45,17 @@ if (_bounty) then {
 };
 
 if (_global) then {
-	if (_side != WFBE_DEFENDER_ID || WFBE_ISTHREEWAY) then {
-		_globalInitMode = "vehicleInit";
-		_vehicle setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf'", _side];
-		processInitCommands;
+	if (!isNil "isHeadLessClient" && {isHeadLessClient}) then {
+		//--- HC-created (delegated) vehicles skip the global Init_Unit broadcast (see Common_CreateUnit).
+		_globalInitMode = "hcSkipped";
 	} else {
-		_globalInitMode = "defenderSkipped";
+		if (_side != WFBE_DEFENDER_ID || WFBE_ISTHREEWAY) then {
+			_globalInitMode = "vehicleInit";
+			_vehicle setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf'", _side];
+			processInitCommands;
+		} else {
+			_globalInitMode = "defenderSkipped";
+		};
 	};
 };
  

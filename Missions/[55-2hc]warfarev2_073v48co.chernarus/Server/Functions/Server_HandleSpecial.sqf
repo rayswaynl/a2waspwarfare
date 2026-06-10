@@ -213,7 +213,7 @@ switch (_args select 0) do {
 		};
 	};
 	case "connected-hc": {
-		Private ["_hc","_id","_uid"];
+		Private ["_hc","_id","_uid","_hcOld","_hcList","_hcValid"];
 		_hc = _args select 1;
 		_id = owner _hc;
 		_uid = getPlayerUID _hc;
@@ -221,9 +221,22 @@ switch (_args select 0) do {
 		["INFORMATION", Format["Server_HandleSpecial.sqf: Headless client is now connected [%1] [%2] with Owner ID [%3].", _hc, _uid, _id]] Call WFBE_CO_FNC_LogContent;
 
 		if (_id != 0) then {
+			//--- Registry hygiene: an HC re-registers after every reconnect, and the old append-only
+			//--- list kept dead groups forever - delegation could then pick a corpse and the town AI
+			//--- silently vanished. Drop this UID's previous group and prune any dead entries.
+			_hcList = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
+			_hcOld = missionNamespace getVariable Format["WFBE_HEADLESS_%1", _uid];
+			if (!isNil "_hcOld") then {_hcList = _hcList - [_hcOld]};
+			_hcValid = [];
+			{
+				if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_hcValid = _hcValid + [_x]};
+			} forEach _hcList;
+			if (count _hcValid != count _hcList) then {
+				["INFORMATION", Format["Server_HandleSpecial.sqf: Pruned [%1] dead headless client entries from the registry.", (count _hcList) - (count _hcValid)]] Call WFBE_CO_FNC_LogContent;
+			};
 			//--- Add the Headless client to our candidates.
 			missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], group _hc];
-			missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", (missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID") + [group _hc]];
+			missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", _hcValid + [group _hc]];
 		} else {
 			["WARNING", Format["Server_HandleSpecial.sqf: Headless client [%1] Owner ID is [0], it is server controlled.",_hc]] Call WFBE_CO_FNC_LogContent;
 		};

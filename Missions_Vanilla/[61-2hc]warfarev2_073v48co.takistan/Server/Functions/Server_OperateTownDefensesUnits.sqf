@@ -54,6 +54,8 @@ switch (_action) do {
 						if (isNull _unit) then {
 							["WARNING", Format ["Server_OperateTownDefensesUnits.sqf: Town [%1] failed to create a defense gunner for [%2].", _town getVariable "name", typeOf _defense]] Call WFBE_CO_FNC_LogContent;
 						} else {
+							//--- Defender classification (public: the activation scan runs server-side).
+							_unit setVariable ["WFBE_IsTownDefenderAI", true, true];
 							_unit assignAsGunner _defense;
 							[_unit] orderGetIn true;
 							_unit moveInGunner _defense;

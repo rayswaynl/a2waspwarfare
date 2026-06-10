@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled"];
+Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored"];
 
 for "_j" from 0 to ((count towns) - 1) step 1 do
 {
@@ -72,7 +72,25 @@ while {!WFBE_GameOver} do {
 				_dynRange = if (_town getVariable "wfbe_active" || _town getVariable "wfbe_active_air") then {_range_detect_active} else {_range_detect};
 				_detected = (_town nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"],_dynRange]) unitsBelowHeight 20;
 
-				_enemies = [_detected, _side] Call WFBE_CO_FNC_GetAreaEnemiesCount;
+				//--- Defender classification: town/static defender AI must not wake towns (its own
+				//--- OR a neighbouring enemy town it wandered near) - only players and bought AI count.
+				_scanStart = diag_tickTime;
+				_detectedFiltered = [];
+				_defendersIgnored = 0;
+				{
+					if (_x getVariable ["WFBE_IsTownDefenderAI", false]) then {
+						_defendersIgnored = _defendersIgnored + 1;
+					} else {
+						_detectedFiltered = _detectedFiltered + [_x];
+					};
+				} forEach _detected;
+
+				_enemies = [_detectedFiltered, _side] Call WFBE_CO_FNC_GetAreaEnemiesCount;
+				if (!isNil "PerformanceAudit_Record") then {
+					if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
+						["town_activation_scan", diag_tickTime - _scanStart, Format["town:%1;detected:%2;defendersIgnored:%3;enemies:%4", _town getVariable "name", count _detected, _defendersIgnored, _enemies], "SERVER"] Call PerformanceAudit_Record;
+					};
+				};
 				if(_enemies > 0)then{
 					///
 					if (_enemies > 0) then {_town setVariable ["wfbe_inactivity", time]};
