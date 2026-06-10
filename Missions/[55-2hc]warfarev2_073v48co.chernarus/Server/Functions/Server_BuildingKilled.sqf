@@ -86,8 +86,8 @@ if ((_structure getVariable ["wfbe_structure_type", ""]) == "Bank" && (missionNa
 	if (_bankMarker != "") then {deleteMarker _bankMarker};
 	if ((!isNull _killer) && (isPlayer _killer) && !_teamkill) then {
 		_bankBounty = 150000;
-		//--- Award bounty to killer via side-targeted BankPayout PVF (they are on the killing side).
-		[_side_killer, "BankPayout", [_bankBounty]] Call WFBE_CO_FNC_SendToClients;
+		//--- Award bounty to the individual killer only (UID-targeted, not side-wide).
+		[_killer_uid, "BankPayout", [_bankBounty]] Call WFBE_CO_FNC_SendToClients;
 		//--- Global broadcast: everyone hears the bank fell.
 		private ["_sideName"];
 		_sideName = if (_side == west) then {"Federal Reserve"} else {"Bank Rossii"};

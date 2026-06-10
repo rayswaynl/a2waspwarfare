@@ -107,7 +107,7 @@ if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) 
 
 if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	_v = _v		+ ["Bank"];
-	_n = _n		+ ["USMC_WarfareBBarracks"];
+	_n = _n		+ ["Land_Mil_hangar_EP1"];
 	_d = _d		+ ["Federal Reserve"];
 	_c = _c		+ [9500];
 	_t = _t		+ [if (WF_Debug) then {1} else {300}];
@@ -122,7 +122,7 @@ for [{_count = count _v - 1},{_count >= 0},{_count = _count - 1}] do {
 
 {
 	missionNamespace setVariable [Format ["%1%2",_side, _x select 0], _x select 1];
-} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR","Land_Antenna"],["BANK","USMC_WarfareBBarracks"]];
+} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR","Land_Antenna"],["BANK","Land_Mil_hangar_EP1"]];
 
 missionNamespace setVariable [Format["WFBE_%1MHQNAME", _side], _MHQ];
 missionNamespace setVariable [Format["WFBE_%1STRUCTURES", _side], _v];
