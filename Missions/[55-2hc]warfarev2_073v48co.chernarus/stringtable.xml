@@ -4036,9 +4036,9 @@
       </Key>
 	  <!--Air-Factory-->
 	  <Key ID="STR_WF_UPGRADE_aircraftfactory_Desc">
-        <English>This upgrade unlocks aircrafts.&lt;br/&gt;&lt;br/&gt;This allows the team to buy better aircraft at the Aircraft Factory and Airport Hangars.</English>
-        <French>This upgrade unlocks aircrafts.&lt;br/&gt;&lt;br/&gt;This allows the team to buy better aircraft at the Aircraft Factory and Airport Hangars.</French>
-        <German>Dieses Upgrade vebessert die Luftstreitkräfte.&lt;br/&gt;&lt;br/&gt;Dadurch kann das Team bessere Luftstreitkräfte bei der Fabrik und auch bei Flugplätzen/Hangars kaufen.</German>
+        <English>This upgrade unlocks aircraft.&lt;br/&gt;&lt;br/&gt;Allows the team to buy better aircraft at the Air Factory. Capturing an airfield (NWAF, NEAF, Balota) also unlocks an exclusive hangar with aircraft unavailable elsewhere.</English>
+        <French>This upgrade unlocks aircraft.&lt;br/&gt;&lt;br/&gt;Allows the team to buy better aircraft at the Air Factory. Capturing an airfield (NWAF, NEAF, Balota) also unlocks an exclusive hangar with aircraft unavailable elsewhere.</French>
+        <German>Dieses Upgrade verbessert die Luftstreitkräfte.&lt;br/&gt;&lt;br/&gt;Ermöglicht dem Team, bessere Luftstreitkräfte bei der Fabrik zu kaufen. Das Einnehmen eines Flugplatzes (NWAF, NEAF, Balota) schaltet zudem einen exklusiven Hangar mit einzigartigen Flugzeugen frei.</German>
         <Russian>Данная модернизация разблокирует Авиацию.&lt;br/&gt;&lt;br/&gt;Это позволяет команде покупать лучшие вертолеты и самолеты на авиазаводе и в ангаре аэродрома (только самолеты).</Russian>
         <Italian>This upgrade unlocks aircrafts.&lt;br/&gt;&lt;br/&gt;This allows the team to buy better aircraft at the Aircraft Factory and Airport Hangars.</Italian>
       </Key>
@@ -9471,7 +9471,7 @@
       <English>Counter Battery Radar</English>
     </Key>
     <Key ID="STR_WF_UPGRADE_CBRadar_Desc">
-      <English>Upgrades your Counter Battery Radar detection range.&lt;br/&gt; - Level 0 = 750 m detection radius&lt;br/&gt;   Level 1 = 1500 m detection radius&lt;br/&gt;   Level 2 = 2000 m detection radius</English>
+      <English>Increases your Counter Battery Radar detection radius.&lt;br/&gt; - Level 0 = 750 m&lt;br/&gt;   Level 1 = 1,500 m&lt;br/&gt;   Level 2 = 2,000 m&lt;br/&gt;&lt;br/&gt;Note: each captured airfield provides a permanent 2,000 m CBR that is not affected by this upgrade.</English>
     </Key>
     <Key ID="CBRadarNeedsAAR">
       <English>Counter Battery Radar requires an Anti-Air Radar to be built first.</English>
@@ -9534,9 +9534,9 @@
       <English>Defense limit reached — %1: %2 of %3 built. Funds refunded.</English>
     </Key>
 
-    <!-- Marty: Defense budget — threat gate rejection (enemies near base, statics/mines blocked). -->
+    <!-- Marty: Defense budget — threat gate rejection (3+ enemy ground units near base, statics/mines blocked). -->
     <Key ID="DefenseThreatGate">
-      <English>Cannot place statics or mines — enemies are within base range. Funds refunded.</English>
+      <English>Cannot place statics or mines — 3 or more enemy ground units are within base range. Funds refunded.</English>
     </Key>
 
     <!-- Marty: WDDM composition cap — max 3 compositions per base area (Task 18). %1 = current count, %2 = cap -->
