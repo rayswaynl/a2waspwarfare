@@ -24,6 +24,11 @@ private ["_cls","_side","_sideText","_cat",
 _cls  = _this select 0;
 _side = _this select 1;
 
+//--- Defensive entry guard (live RPT 2026-06-10: one "Undefined variable _cls" at the
+//--- toLower below — a caller passed a nil/non-string classname; an abort here can
+//--- swallow a placement mid-gate). Unknown input classifies as OTHER (uncapped).
+if (isNil "_cls" || {typeName _cls != "STRING"}) exitWith {"OTHER"};
+
 _cat = "OTHER"; // default
 
 //=============================================================================
