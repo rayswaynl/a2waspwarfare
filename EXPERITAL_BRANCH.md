@@ -46,6 +46,12 @@
 
 ---
 
+## Live play-test fix batch 2 (2026-06-10, session 1 cont.)
+- **Patrols v2 ported at upgrade index 23** — full master feature (3-level upgrade 300/1600/2400 supply, L2 needs LF1 / L3 needs HF2, 2/side cap, HQ-near spawn + frontline gravitation, HC-delegated, yellow leader markers, player max-AI −1 while active, old random-town patrol system retired). Index 23 because experital's CBR upgrade already owns master's index 22; all 11 faction upgrade files re-padded to 24 entries across all 5 parallel arrays (audited twice, independently). Bonus: the port audit caught 6 faction files missing **AAR** entries in LEVELS/LINKS/TIMES — a latent pre-existing off-by-one, fixed.
+- **Upgrade/build sounds −64%** — the 7 structure build/complete sounds dropped volume 7 → 2.5; the upgrade-start cue now uses a dedicated 2.5-volume alias (`upgradeStartedSound`) so the shared `commanderNotification` (10) keeps its volume elsewhere.
+- **Class info on join** — non-invasive `hintSilent` showing your class + abilities on join/class change (guarded against repeats), plus a "Class Info" action-menu entry to re-read it any time.
+- **Engineer crews** — bought tanks AND wheeled APCs (LAV-25/BTR-90/Pandur) now come crewed by engineers (WEST: US engineer; EAST: TK engineer — RU has no engineer class).
+
 ## Live play-test fix batch (2026-06-10, session 1)
 - **Defense threat gate live-tune** — the any-1-enemy/any-class gate blocked statics/mines near-permanently mid-round (ambient resistance AI from neighbouring towns and aircraft overflights counted as a "raid"). Now: west/east ground units only, fires at ≥ `WFBE_C_DEFENSE_THREAT_MIN` (3, tunable). Threat/budget rejects whose price the server can't resolve now pass the **classname** so the client refunds exactly what it charged (WDDM anchors silently lost 2,500–5,000 cash on threat reject).
 - **PR #23 upgrade-queue stacking ported** — same-upgrade level stacking + `[Q1,3]` queue marks in the upgrade menu (base PR #5 queue was already in; the stacking landed on master after this branch's base was cut).
