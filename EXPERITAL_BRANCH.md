@@ -51,10 +51,12 @@
 ---
 
 ## Process
-Subagent-driven: each feature implemented by a fresh agent, then **spec-reviewed and (for high-stakes changes) adversarially reviewed** before acceptance. A full 7-dimension cross-feature review of the whole branch is in progress.
+Subagent-driven: each feature implemented by a fresh agent, then **spec-reviewed and (for high-stakes changes) adversarially reviewed** before acceptance. **Full 7-dimension cross-feature review complete** — found & fixed 2 integration blockers that per-task review couldn't see: Site Clearance was a silent no-op (`Server_SiteClearance` never compiled into `Init_Server`), and EASA category tags always returned `[AG]` (a double-`select 0` iterated a string's characters). All 10 gates declared, all 4 new PVFs wired, gate-off paths inert, feature stacks compose cleanly. **Branch is deploy-ready pending the airfield feature.**
+
+_Pre-existing, logged (not introduced here): `airRaid` nuke-warning sound in `NukeIncoming.sqf` has no CfgSound entry._
 
 ## Remaining
-- ⏳ **Airfield capture points** — NWAF/NEAF/Balota as ~50-SV towns, PMC garrison (`Core_PMC.sqf` confirmed present), repair point on capture, `L39_TK_EP1` trainer-jet production *(design Qs pending: L-39-only vs full hangar unlock; statics need mission.sqm logic placement)*
+- ⏳ **Airfield capture points** — NWAF/NEAF/Balota as ~50-SV capture towns, **PMC garrison** (`Core_PMC.sqf` present), **repair point spawned on capture**, **`L39_TK_EP1`** buyable while you hold the airfield. *Minimal scope (owner): no hand-placed static-defense logics.*
 - ⏳ **Airfield built-in CBR** — permanent 2,000 m radar following the airfield owner
 - ⏳ **Pack / smoke / deploy** to Hetzner as the optional mission + RPT classname checks
 - ⏳ Player-facing Discord changelog (at deploy)
