@@ -133,11 +133,24 @@ class WFBE_UpgradeMenu {
 			idc = 504008;
 			x = 0.700;
 			y = 0.762;
-			w = 0.095;
+			w = 0.0625;
 			h = 0.035;
-			sizeEx = 0.03;
+			sizeEx = 0.028;
 			text = "Queue";
 			action = "WFBE_MenuAction = 3";
+			tooltip = "Queue the next level of the selected upgrade (click again to stack more levels)";
+		};
+		// Stacking: queueing is no longer a toggle, so cancelling needs its own button.
+		class CA_DequeueUpgrade : RscButton_Main {
+			idc = 504009;
+			x = 0.7675;
+			y = 0.762;
+			w = 0.0275;
+			h = 0.035;
+			sizeEx = 0.03;
+			text = "-";
+			action = "WFBE_MenuAction = 4";
+			tooltip = "Remove the last queued level of the selected upgrade";
 		};
 		class CA_Details : CA_UpgradeDetails {
 			idc = 504006;
