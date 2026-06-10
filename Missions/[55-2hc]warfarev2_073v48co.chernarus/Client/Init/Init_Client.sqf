@@ -367,6 +367,7 @@ if ((missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM") in [3,4]) then
 
 /* Exec SQF|FSM Misc stuff. */
 if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] execVM "Client\FSM\updateteamsmarkers.sqf"};
+[] execVM "Client\FSM\updatepatrolmarkers.sqf"; //--- Friendly side-patrol markers (Patrols upgrade).
 [] execFSM "Client\FSM\updateactions.fsm";
 /* Don't pause the client initialization process. */
 [] Spawn {

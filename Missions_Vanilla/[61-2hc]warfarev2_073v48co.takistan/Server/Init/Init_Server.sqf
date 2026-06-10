@@ -530,6 +530,7 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 
 	[] ExecVM "Server\FSM\updateresources.sqf";
 	[] ExecVM "Server\FSM\upgradeQueue.sqf";
+	[] ExecVM "Server\FSM\server_side_patrols.sqf";
 	["INITIALIZATION", "Init_Server.sqf: Resources FSM is initialized."] Call WFBE_CO_FNC_LogContent;
 };
 

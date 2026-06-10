@@ -24,7 +24,8 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_ENABLED", _side], [
 	if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_IRSMOKE") > 0) then {true} else {false}, //--- IR Smoke
 	if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") == 1) then {true} else {false}, //--- Aircraft AA Missiles
 	true, //--- Anti Air radar
-	true //--- Unit cost modifier
+	true,
+	true //--- Patrols //--- Unit cost modifier
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
@@ -50,7 +51,8 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
 	[[3000,0],[9000,0]], //--- IR Smoke
 	[[7500,0]], //--- Aircraft AA Missiles
 	[[5000,0],[12500,0]], //--- Anti Air Radar
-	[[25000,0],[50000,0]] //--- Unit cost modifier
+	[[25000,0],[50000,0]],
+	[[600,0],[1000,0],[2000,0]] //--- Patrols //--- Unit cost modifier
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
@@ -76,7 +78,8 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
 	2, //--- IR Smoke
 	1, //--- Aircraft AA Missiles
 	2, //--- Anti Air Radar
-	2  //--- Unit cost modifier
+	2,
+	3 //--- Patrols  //--- Unit cost modifier
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LINKS", _side], [
@@ -110,7 +113,8 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LINKS", _side], [
 	[[WFBE_UP_HEAVY, 3],[]], //--- IR Smoke
 	[[WFBE_UP_AIR, 3]], //--- Aircraft AA Missiles
 	[[],[]], //--- Anti Air Radar
-	[[],[]] //--- Unit cost modifier
+	[[],[]],
+	[[],[WFBE_UP_LIGHT,1],[WFBE_UP_HEAVY,2]] //--- Patrols //--- Unit cost modifier
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [
@@ -136,7 +140,8 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [
 	[120,180], //--- IR Smoke
 	[120], //--- Aircraft AA Missiles
 	[50,125], //--- Anti Air Radar
-	[120, 200] //--- Unit cost modifier
+	[120, 200],
+	[90,150,240] //--- Patrols //--- Unit cost modifier
 ]];
 
 //todo, on commander missing link checkup, skip disabled upgrades.
