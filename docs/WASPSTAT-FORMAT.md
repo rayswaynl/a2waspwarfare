@@ -23,7 +23,7 @@ WASPSTAT|v1|<seq>|<record-type>|...
 | `WASPSTAT` | Fixed literal marker — grep anchor for the RPT parser. |
 | `v1` | Format version. Increment if the field layout changes incompatibly. |
 | `seq` | Monotonically increasing integer, server-global, shared across **all** record types. Counter name: `WFBE_WASPSTAT_SEQ`. |
-| `record-type` | One of: `PLAYERSTATS`, `KILL`, `CAPTURE`, `ROUNDEND`. |
+| `record-type` | One of: `KILL`, `CAPTURE`, `ROUNDEND`. Per-player stat records have **no** keyword here — the parser identifies them by the absence of a keyword after `seq` (see PLAYERSTATS below). |
 
 The sequence is initialised lazily to `0` by the first emitter that runs and is incremented once
 per emitted line. Lines from different record types are totally ordered by `seq`.

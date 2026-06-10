@@ -43,7 +43,7 @@ while {!gameOver} do {
 				};
 			} else {
 				//--- QoL S3: SpecOps sees MM:SS countdown until supply is ready again.
-				if (!isNil "WFBE_SK_V_Type" && {WFBE_SK_V_Type == 'SpecOps'}) then {
+				if (!isNil "WFBE_SK_V_Type" && {WFBE_SK_V_Type == 'SpecOps'} && {!isNil "WFBE_CO_VAR_SupplyMissionRegenInterval"}) then {
 					private ["_lastRun","_elapsed","_remaining","_mm","_ss"];
 					_lastRun  = _town getVariable ["LastSupplyMissionRun", 0];
 					_elapsed  = time - _lastRun;

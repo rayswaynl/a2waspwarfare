@@ -3,11 +3,13 @@
 	Called via addAction on a factory building.
 	Cancels the calling player's last not-yet-spawned queued unit and issues a refund.
 
-	Refund rule (attack-wave arbitrage cap):
+	Refund rule:
 	  - Normal: refund the price paid at order time (stored in queu_costs).
 	  - Attack-wave active (ATTACK_WAVE_PRICE_MODIFIER < 1.0): cap refund at 50% of BASE price.
 	    Base price = paid_price / (ATTACK_WAVE_PRICE_MODIFIER * UNIT_COST_MODIFIER).
-	    This prevents discount-then-cancel free supply.
+	    The cap is a DEFENSIVE CEILING and does not trigger in standard config (the refund
+	    never exceeds the amount paid, so no arbitrage exists at normal ATTACK_WAVE_PRICE_MODIFIER
+	    values). It is kept as a safeguard against future config edge cases.
 */
 
 private ["_building","_factory","_queu","_queuCosts","_queuCpts","_uid","_idx","_paidCost","_cpt","_basePrice","_refund","_maxRefund","_newArr","_i"];

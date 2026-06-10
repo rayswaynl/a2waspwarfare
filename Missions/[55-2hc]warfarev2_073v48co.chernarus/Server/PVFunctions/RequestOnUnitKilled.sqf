@@ -92,7 +92,7 @@ if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 			if (_killed isKindOf "StaticWeapon") then {
 				_wsk_cat = "STATIC";
 			} else {
-				if (_killed_type isKindOf "Building") then {
+				if (_killed isKindOf "Building") then {
 					// HQ vs generic structure distinguished by wfbe_structure_type
 					if ((_killed getVariable ["wfbe_structure_type","NONE"]) == "Headquarters") then {
 						_wsk_cat = "HQ";
