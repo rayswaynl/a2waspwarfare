@@ -46,5 +46,7 @@ if (WFBE_Client_SideID == _sideID_new) then {
 	//--- Did the client side lost a known camp?
 	if (WFBE_Client_SideID in [(_town getVariable "sideID"), _sideID_old]) then {
 		(_camp getVariable "wfbe_camp_marker") setMarkerColorLocal (missionNamespace getVariable Format ["WFBE_C_%1_COLOR",(_sideID_new) Call WFBE_CO_FNC_GetSideFromID]);
+		//--- Enemy repaired a destroyed camp: warn the player with an inbound sound.
+		if (_is_repair) then {playSound "inbound"};
 	};
 };
