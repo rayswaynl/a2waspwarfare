@@ -1,4 +1,4 @@
-Private ['_current','_find','_killer','_logik','_structure','_structures','_side','_tked','_type','_killer_uid','_side_killer','_score','_bounty','_supplies','_teamkill'];
+Private ['_bankBounty','_bankKey','_bankMarker','_current','_find','_killer','_logik','_structure','_structures','_side','_tked','_type','_killer_uid','_side_killer','_score','_bounty','_supplies','_teamkill'];
 _structure = _this select 0;
 _killer = _this select 1;
 _type = _this select 2;
@@ -76,6 +76,24 @@ if (_teamkill) then
 else
 {
     ["INFORMATION", Format ["Server_BuildingKilled.sqf: [%1] Structure [%2] has been destroyed by [%3].", str _side, _type, _killer]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Bank special case: flat 150 000 bounty, global broadcast, registry cleanup + marker delete.
+if ((_structure getVariable ["wfbe_structure_type", ""]) == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
+	_bankKey = if (_side == west) then {"WFBE_BANK_WEST"} else {"WFBE_BANK_EAST"};
+	missionNamespace setVariable [_bankKey, objNull];
+	_bankMarker = _structure getVariable ["wfbe_bank_marker", ""];
+	if (_bankMarker != "") then {deleteMarker _bankMarker};
+	if ((!isNull _killer) && (isPlayer _killer) && !_teamkill) then {
+		_bankBounty = 150000;
+		//--- Award bounty to killer via side-targeted BankPayout PVF (they are on the killing side).
+		[_side_killer, "BankPayout", [_bankBounty]] Call WFBE_CO_FNC_SendToClients;
+		//--- Global broadcast: everyone hears the bank fell.
+		private ["_sideName"];
+		_sideName = if (_side == west) then {"Federal Reserve"} else {"Bank Rossii"};
+		[nil, "LocalizeMessage", ["BankDestroyed", name _killer, _sideName]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Server_BuildingKilled.sqf: [%1] Bank destroyed by [%2]. Bounty $150000 sent.", str _side, name _killer]] Call WFBE_CO_FNC_LogContent;
+	};
 };
 
 //--- Decrement building limit.
