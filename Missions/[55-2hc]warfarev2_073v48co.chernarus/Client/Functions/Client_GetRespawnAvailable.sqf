@@ -51,7 +51,7 @@ if ((missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") > 0) then {
 //--- Medic-aboard check: WFBE_SK_V_Type is player-profile-based and not readable on crew units.
 //--- Fallback: driver must be alive (any class). Documented as DONE_WITH_CONCERNS.
 if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0) then {
-	_redeployTrucks = missionNamespace getVariable Format["WFBE_%1REDEPLOYTRUCKS",_sideText];
+	_redeployTrucks = missionNamespace getVariable [Format["WFBE_%1REDEPLOYTRUCKS",_sideText],[]];
 	_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 	_range = (missionNamespace getVariable "WFBE_C_RESPAWN_RANGES") select (_upgrades select WFBE_UP_RESPAWNRANGE);
 	_checks = _deathLoc nearEntities[_redeployTrucks,_range];
