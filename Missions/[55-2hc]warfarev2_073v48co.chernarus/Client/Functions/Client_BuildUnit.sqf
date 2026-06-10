@@ -1,4 +1,4 @@
-Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction"];
+Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
@@ -179,6 +179,11 @@ _building setVariable ["queu_costs", _queuCosts, true];
 _queuCpts = _building getVariable ["queu_cpts", []];
 _queuCpts = _queuCpts + [_cpt];
 _building setVariable ["queu_cpts", _queuCpts, true];
+//--- Task 33: store the human-readable unit label so the buy-menu queue readout can display it.
+_unitLabel33 = _currentUnit select QUERYUNITLABEL;
+_queuLabels = _building getVariable ["queu_labels", []];
+_queuLabels = _queuLabels + [_unitLabel33];
+_building setVariable ["queu_labels", _queuLabels, true];
 //--- QoL cancel: add a cancel action on this building for the buyer (removed after their slot resolves).
 private ["_cancelActionID"];
 _cancelActionID = _building addAction [
@@ -231,9 +236,10 @@ _queu = _queu - [_unique];
 _building setVariable ["queu",_queu,true];
 //--- QoL cancel: keep parallel arrays in sync when the unit actually spawns.
 if (_qIdx >= 0) then {
-	private ["_qCosts","_qCpts","_newArr","_i"];
+	private ["_qCosts","_qCpts","_qLabels","_newArr","_i"];
 	_qCosts = _building getVariable ["queu_costs", []];
 	_qCpts  = _building getVariable ["queu_cpts",  []];
+	_qLabels = _building getVariable ["queu_labels", []];
 	if (_qIdx < count _qCosts) then {
 		_newArr = []; _i = 0;
 		{if (_i != _qIdx) then {_newArr = _newArr + [_x]}; _i = _i + 1} forEach _qCosts;
@@ -243,6 +249,12 @@ if (_qIdx >= 0) then {
 		_newArr = []; _i = 0;
 		{if (_i != _qIdx) then {_newArr = _newArr + [_x]}; _i = _i + 1} forEach _qCpts;
 		_building setVariable ["queu_cpts", _newArr, true];
+	};
+	//--- Task 33: keep queu_labels in sync.
+	if (_qIdx < count _qLabels) then {
+		_newArr = []; _i = 0;
+		{if (_i != _qIdx) then {_newArr = _newArr + [_x]}; _i = _i + 1} forEach _qLabels;
+		_building setVariable ["queu_labels", _newArr, true];
 	};
 };
 //--- QoL cancel: remove the per-player cancel action once their slot is resolved.

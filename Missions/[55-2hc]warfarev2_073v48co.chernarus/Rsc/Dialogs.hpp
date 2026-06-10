@@ -1684,8 +1684,22 @@ class RscMenu_BuyUnits {
 			idc = 12024;
 			x = 0.350419;
 			y = 0.00775906;
-			w = 0.3;
+			w = 0.22;
 			style = ST_CENTER;
+		};
+		//--- Task 33: cancel-last-queue button, placed in header next to queue count.
+		class CA_Cancel_Queue : RscButton {
+			idc = 12043;
+			x = 0.578;
+			y = 0.00775906;
+			w = 0.07;
+			h = 0.035;
+			sizeEx = 0.022;
+			text = "Cancel Last";
+			colorBackground[] = {0.6, 0.1, 0.0, 0.8};
+			colorBackgroundActive[] = {0.8, 0.2, 0.0, 0.9};
+			colorText[] = {1, 1, 1, 1};
+			action = "MenuAction = 501";
 		};
 		class CA_Faction_Label : RscText {
 			idc = 12025;

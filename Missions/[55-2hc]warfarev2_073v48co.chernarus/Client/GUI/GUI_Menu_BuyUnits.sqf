@@ -162,6 +162,7 @@ _IDCS = _IDCS - [_currentIDC];
 					_params = if (_isInfantry) then {[_closest,_unit,[],_type,_cpt,_currentCost]} else {[_closest,_unit,[profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ,_gunner,_commander,_extracrew,_isLocked],_type,_cpt,_currentCost]};
 					_params Spawn BuildUnit;
 					-(_currentCost) Call ChangePlayerFunds;
+					_updateDetails = true; //--- Task 33: refresh queue list panel after purchase.
 				} else {
 					hint parseText(Format [localize 'STR_WF_INFO_Queu_Max',missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type]]);
 				};
@@ -200,6 +201,52 @@ _IDCS = _IDCS - [_currentIDC];
 	
 	//--- Lock icon.
 	if (MenuAction == 401) then {MenuAction = -1;_isLocked = if (_isLocked) then {false} else {true};_updateDetails = true};
+
+	//--- Task 33: cancel last queued order for this player in the current factory.
+	if (MenuAction == 501) then {
+		MenuAction = -1;
+		private ["_uid33","_q33","_qc33","_qp33","_ql33","_idx33","_paidCost33","_cpt33","_basePrice33","_refund33","_maxRefund33","_newArr33","_i33"];
+		_uid33 = getPlayerUID player;
+		_q33   = _closest getVariable ["queu",        []];
+		_qc33  = _closest getVariable ["queu_costs",  []];
+		_qp33  = _closest getVariable ["queu_cpts",   []];
+		_ql33  = _closest getVariable ["queu_labels",  []];
+		//--- Find the LAST entry belonging to this player.
+		_idx33 = -1;
+		{if (_x find _uid33 == 0) then {_idx33 = _forEachIndex}} forEach _q33;
+		if (_idx33 == -1) exitWith {hint parseText "<t color='#ff9900'>You have no unit queued in this factory.</t>"};
+		_paidCost33 = if (_idx33 < count _qc33) then {_qc33 select _idx33} else {0};
+		_cpt33      = if (_idx33 < count _qp33) then {_qp33 select _idx33} else {1};
+		_refund33   = _paidCost33;
+		if (ATTACK_WAVE_PRICE_MODIFIER < 1.0 && UNIT_COST_MODIFIER > 0) then {
+			_basePrice33 = _paidCost33 / (ATTACK_WAVE_PRICE_MODIFIER * UNIT_COST_MODIFIER);
+			_maxRefund33 = round (_basePrice33 * 0.5);
+			if (_refund33 > _maxRefund33) then {_refund33 = _maxRefund33};
+		};
+		//--- Remove from all parallel arrays by index.
+		_q33 = _q33 - [_q33 select _idx33];
+		_newArr33 = []; _i33 = 0; {if (_i33 != _idx33) then {_newArr33 = _newArr33 + [_x]}; _i33 = _i33 + 1} forEach _qc33; _qc33 = _newArr33;
+		_newArr33 = []; _i33 = 0; {if (_i33 != _idx33) then {_newArr33 = _newArr33 + [_x]}; _i33 = _i33 + 1} forEach _qp33; _qp33 = _newArr33;
+		_newArr33 = []; _i33 = 0; {if (_i33 != _idx33) then {_newArr33 = _newArr33 + [_x]}; _i33 = _i33 + 1} forEach _ql33; _ql33 = _newArr33;
+		_closest setVariable ["queu",        _q33,  true];
+		_closest setVariable ["queu_costs",  _qc33, true];
+		_closest setVariable ["queu_cpts",   _qp33, true];
+		_closest setVariable ["queu_labels", _ql33, true];
+		//--- Decrement queue counters.
+		unitQueu = (unitQueu - _cpt33) max 0;
+		missionNamespace setVariable [
+			Format ["WFBE_C_QUEUE_%1", _type],
+			((missionNamespace getVariable [Format ["WFBE_C_QUEUE_%1", _type], 0]) - 1) max 0
+		];
+		//--- Refund.
+		if (_refund33 > 0) then {(_refund33) Call ChangePlayerFunds};
+		hint parseText Format [
+			"<t color='#00e83e'>Queue cancelled.</t><br/>Refunded: <t color='#ffe066'>$%1</t>%2",
+			_refund33,
+			if (_paidCost33 != _refund33) then {Format [" (capped from $%1 — attack-wave)", _paidCost33]} else {""}
+		];
+		_updateDetails = true;
+	};
 	
 	//--- Player funds.
 	ctrlSetText [12019,Format [localize 'STR_WF_UNITS_Cash',Call GetPlayerFunds]];
@@ -546,7 +593,24 @@ _IDCS = _IDCS - [_currentIDC];
 			_updateDetails = false;
 		} else {
 			{ctrlSetText [_x , ""]} forEach [12009,12033,12034,12035,12036,12037,12038,12039];
-			(_display displayCtrl 12022) ctrlSetStructuredText (parseText '');
+			//--- Task 33: show queue list in the description panel when no unit is selected.
+			private ["_qLabels33","_qTokens33","_uid33","_qTxt33","_qEntry33"];
+			_qTokens33 = _closest getVariable ["queu", []];
+			_qLabels33 = _closest getVariable ["queu_labels", []];
+			_uid33 = getPlayerUID player;
+			if (count _qTokens33 > 0) then {
+				_qTxt33 = "<t color='#42b6ff' shadow='1'>Queue (oldest first):</t><br/>";
+				{
+					_qEntry33 = if (_forEachIndex < count _qLabels33) then {_qLabels33 select _forEachIndex} else {"?"};
+					private "_mark33";
+					_mark33 = if (_x find _uid33 == 0) then {"<t color='#ffe066'>YOU</t>  "} else {"          "};
+					_qTxt33 = _qTxt33 + Format ["%1<t color='#eee58b'>%2. %3</t><br/>", _mark33, (_forEachIndex + 1), _qEntry33];
+				} forEach _qTokens33;
+				_qTxt33 = _qTxt33 + "<br/><t color='#aaaaaa' size='0.85'>Press 'Cancel Last' to remove your last order and get a refund.</t>";
+				(_display displayCtrl 12022) ctrlSetStructuredText (parseText _qTxt33);
+			} else {
+				(_display displayCtrl 12022) ctrlSetStructuredText (parseText "<t color='#aaaaaa'>Queue is empty. Select a unit to buy it.</t>");
+			};
 		};
 	};
 	

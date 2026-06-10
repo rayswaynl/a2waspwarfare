@@ -12,15 +12,16 @@
 	    values). It is kept as a safeguard against future config edge cases.
 */
 
-private ["_building","_factory","_queu","_queuCosts","_queuCpts","_uid","_idx","_paidCost","_cpt","_basePrice","_refund","_maxRefund","_newArr","_i"];
+private ["_building","_factory","_queu","_queuCosts","_queuCpts","_queuLabels","_uid","_idx","_paidCost","_cpt","_basePrice","_refund","_maxRefund","_newArr","_i"];
 
 _building = _this select 1;               // object the action is attached to (the factory building)
 _factory  = (_this select 3) select 0;   // params[0] = factory type string (e.g. "Barracks")
 
 _uid = getPlayerUID player;
-_queu      = _building getVariable ["queu",      []];
-_queuCosts = _building getVariable ["queu_costs", []];
-_queuCpts  = _building getVariable ["queu_cpts",  []];
+_queu      = _building getVariable ["queu",        []];
+_queuCosts = _building getVariable ["queu_costs",  []];
+_queuCpts  = _building getVariable ["queu_cpts",   []];
+_queuLabels = _building getVariable ["queu_labels", []];
 
 //--- Find the LAST entry belonging to this player (most recently queued = safest to cancel).
 _idx = -1;
@@ -52,9 +53,14 @@ _queuCosts = _newArr;
 _newArr = []; _i = 0;
 {if (_i != _idx) then {_newArr = _newArr + [_x]}; _i = _i + 1} forEach _queuCpts;
 _queuCpts = _newArr;
-_building setVariable ["queu",       _queu,      true];
-_building setVariable ["queu_costs", _queuCosts, true];
-_building setVariable ["queu_cpts",  _queuCpts,  true];
+//--- Task 33: keep queu_labels in sync.
+_newArr = []; _i = 0;
+{if (_i != _idx) then {_newArr = _newArr + [_x]}; _i = _i + 1} forEach _queuLabels;
+_queuLabels = _newArr;
+_building setVariable ["queu",        _queu,       true];
+_building setVariable ["queu_costs",  _queuCosts,  true];
+_building setVariable ["queu_cpts",   _queuCpts,   true];
+_building setVariable ["queu_labels", _queuLabels, true];
 
 //--- Decrement queue counters (mirror normal-completion path).
 unitQueu = unitQueu - _cpt;
