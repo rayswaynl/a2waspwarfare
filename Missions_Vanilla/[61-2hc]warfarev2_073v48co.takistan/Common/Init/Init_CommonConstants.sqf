@@ -56,6 +56,10 @@ WFBE_UP_IRSMOKE = 18;
 WFBE_UP_AIRAAM = 19;
 WFBE_UP_AAR = 20;
 WFBE_UP_UNITCOST = 21;
+WFBE_UP_PATROLS = 22;
+
+//--- Side patrols (Patrols upgrade): max concurrent patrol teams per side.
+if (isNil "WFBE_C_SIDE_PATROLS_MAX") then {WFBE_C_SIDE_PATROLS_MAX = 2};
 
 /*
 	### Working with the missionNamespace ###
