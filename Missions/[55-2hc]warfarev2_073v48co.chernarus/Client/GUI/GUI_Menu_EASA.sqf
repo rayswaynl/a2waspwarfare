@@ -67,11 +67,15 @@ while {alive player && dialog} do {
 				_vType = (missionNamespace getVariable 'WFBE_EASA_Vehicles') find (typeOf (vehicle player));
 				if (_vType != -1) then {
 					_currentSetup = (vehicle player) getVariable ['WFBE_EASA_Setup', -2];
+					_defaultLoadout = (missionNamespace getVariable 'WFBE_EASA_Default') select _vType;
 					if (_currentSetup != -2) then {
 						_currentLoadout = (((missionNamespace getVariable 'WFBE_EASA_Loadouts') select _vType) select _currentSetup) select 2;
 						[vehicle player, _currentLoadout] Call EASA_RemoveLoadout;
+					} else {
+						//--- No EASA setup means the FACTORY weapons are still mounted: strip them
+						//--- before re-adding, or the default loadout double-stacks (mirrors EASA_Equip.sqf).
+						[vehicle player, _defaultLoadout] Call EASA_RemoveLoadout;
 					};
-					_defaultLoadout = (missionNamespace getVariable 'WFBE_EASA_Default') select _vType;
 					if ((typeOf (vehicle player)) == "AW159_Lynx_BAF") then {
 						{(vehicle player) addMagazineTurret [_x, [-1]]} forEach (_defaultLoadout select 1);
 						{(vehicle player) addWeaponTurret [_x, [-1]]} forEach (_defaultLoadout select 0);
