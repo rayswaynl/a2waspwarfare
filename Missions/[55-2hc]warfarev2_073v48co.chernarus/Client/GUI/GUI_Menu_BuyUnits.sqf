@@ -202,10 +202,10 @@ _IDCS = _IDCS - [_currentIDC];
 	//--- Player funds.
 	ctrlSetText [12019,Format [localize 'STR_WF_UNITS_Cash',Call GetPlayerFunds]];
 
-	//--- WFBE_C_FACTORY_QUEUE_LIMITS: recompute per-factory caps from current upgrade levels each tick.
+	//--- WFBE_C_FACTORY_QUEUE_LIMITS=1: recompute per-factory caps from current upgrade levels each tick.
 	//--- Formula: Barracks = WFBE_UP_BARRACKS+2; Light/Heavy/Aircraft/Airport = respective level+1.
 	//--- Cross-ref: same formula used in the queue-display below (search "Queue: N/CAP").
-	//--- When gate=0 the _MAX variables retain their Init_Client.sqf static defaults unchanged.
+	//--- When WFBE_C_FACTORY_QUEUE_LIMITS=0 the _MAX variables retain Init_Client.sqf static defaults.
 	if ((missionNamespace getVariable ["WFBE_C_FACTORY_QUEUE_LIMITS",0]) > 0) then {
 		private ["_upg"];
 		_upg = sideJoined Call WFBE_CO_FNC_GetSideUpgrades;
@@ -282,12 +282,17 @@ _IDCS = _IDCS - [_currentIDC];
 	//--- Display Factory Queu.
 	_queu = _closest getVariable "queu";
 	_value = if (isNil '_queu') then {0} else {count (_closest getVariable "queu")};
-	//--- WFBE_C_FACTORY_QUEUE_LIMITS: append /CAP to the queue count so players can see the limit.
+	//--- WFBE_C_FACTORY_QUEUE_LIMITS=1: append /CAP to the queue count so players can see the limit.
+	//--- Falls back to plain count if WFBE_C_FACTORY_QUEUE_LIMITS=0 or the cap var is missing/zero.
 	//--- Cross-ref: cap formula lives in the WFBE_C_FACTORY_QUEUE_LIMITS block above this loop.
 	if ((missionNamespace getVariable ["WFBE_C_FACTORY_QUEUE_LIMITS",0]) > 0) then {
 		private ["_qCap"];
 		_qCap = missionNamespace getVariable [Format ["WFBE_C_QUEUE_%1_MAX",_type], -1];
-		ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel', str _value + "/" + str _qCap]];
+		if (_qCap > 0) then {
+			ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel', str _value + "/" + str _qCap]];
+		} else {
+			ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel',str _value]];
+		};
 	} else {
 		ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel',str _value]];
 	};
