@@ -46,6 +46,15 @@
 
 ---
 
+## Live play-test fix batch 3 (2026-06-10/11, session 2 backlog — tasks 32-46)
+- **THE defense no-build root cause** (client RPT evidence): `coin_interface.sqf:851` threw "Undefined variable _restart" each tick (BIS_COIN_restart deliberately nil-cleared elsewhere + eager `||`) — the interface died while previews kept rendering. Nil-guarded. Earlier threat-gate retune was secondary.
+- **Town capture pacing** — new owner's defenses spawn 5 min after capture (`WFBE_C_TOWNS_DEFENSE_SPAWN_DELAY`), old defenders linger 3 min (`WFBE_C_TOWNS_DEFENDER_LINGER`); both fire-time-guarded against re-flips.
+- **Airshop fixed** — the hangar roster was emptied by the saved faction filter + the AIR-upgrade gate; filter resets to All at the override and the roster bypasses the upgrade gate (capture IS the unlock).
+- **Convoys = Patrols level 4** (3200 supply) — patrols field a side supply truck; each town stop pays the team a `WFBE_C_PATROL_CONVOY_PAY` (750) cash pool split via the bank-payout channel. Patrols also now sweep camps then the town center, quality bumped, cap 3/side, numbered arrow markers.
+- **Queue management** — buy menu shows the pending queue (own orders highlighted) + a "Cancel Last" header button with exact refund/slot accounting; camp per airfield; CBR composition visual rework (antenna kept).
+- **Fixes** — town map supply timer 0:00 (missing broadcast), OPFOR gear save (undefined `_u_upgrade` no-op gate + hostile-gear flag ignored on save), deadspawn on mid-game re-slot (post-gate reposition + the stats-DB guards that removed a 54s join stall), resistance town vehicles unlocked when resistance inactive (`WFBE_C_TOWNS_DEFENDER`=0), earplugs fade radio, stats-DB module exits cleanly without its extension (−14k RPT noise lines).
+- **Docs refresh** — briefing (sqf+html), upgrade descriptions, stringtable corrections, in-game Help "Experital Changes" tab, `docs/PATCHLOG-EXPERITAL.md`. Start economy 11600 cash / 7400 supply; class guide moved to map Notes; Veteran default difficulty (cfg).
+
 ## Live play-test fix batch 2 (2026-06-10, session 1 cont.)
 - **Patrols v2 ported at upgrade index 23** — full master feature (3-level upgrade 300/1600/2400 supply, L2 needs LF1 / L3 needs HF2, 2/side cap, HQ-near spawn + frontline gravitation, HC-delegated, yellow leader markers, player max-AI −1 while active, old random-town patrol system retired). Index 23 because experital's CBR upgrade already owns master's index 22; all 11 faction upgrade files re-padded to 24 entries across all 5 parallel arrays (audited twice, independently). Bonus: the port audit caught 6 faction files missing **AAR** entries in LEVELS/LINKS/TIMES — a latent pre-existing off-by-one, fixed.
 - **Upgrade/build sounds −64%** — the 7 structure build/complete sounds dropped volume 7 → 2.5; the upgrade-start cue now uses a dedicated 2.5-volume alias (`upgradeStartedSound`) so the shared `commanderNotification` (10) keeps its volume elsewhere.
