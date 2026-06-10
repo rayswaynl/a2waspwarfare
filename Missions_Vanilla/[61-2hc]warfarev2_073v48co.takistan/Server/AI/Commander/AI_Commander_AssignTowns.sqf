@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode"];
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -55,6 +55,25 @@ _assigned = [];
 	};
 
 	if (_canDrive) then {
+		//--- V0.2: hold one team back as the base garrison (full-auto only) - a captured
+		//--- base must not be left open while every team marches at towns.
+		if (!_humanCmd && {!_explicitMode} && {_aliveCount > 0}) then {
+			_gar = _logik getVariable ["wfbe_aicom_garrison", grpNull];
+			_garDead = true;
+			if (!isNull _gar) then {
+				if (({alive _x} count (units _gar)) > 0) then {_garDead = false};
+			};
+			if (_garDead) then {
+				_hqG = (_side) Call WFBE_CO_FNC_GetSideHQ;
+				if (!isNull _hqG) then {
+					[_team, "defense"] Call SetTeamMoveMode;
+					[_team, getPos _hqG] Call SetTeamMovePos;
+					_logik setVariable ["wfbe_aicom_garrison", _team];
+					_explicitMode = true; //--- now an explicit order; the executor drives it home
+					["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] assigned as base garrison.", _sideText, _team]] Call WFBE_CO_FNC_LogContent;
+				};
+			};
+		};
 		if (!_explicitMode) then {
 			_mode = _team getVariable ["wfbe_teammode", ""];
 			_goto = _team getVariable ["wfbe_teamgoto", objNull];

@@ -9,7 +9,7 @@
 	Produce worker no-ops gracefully when the needed factory does not exist yet.
 */
 
-private ["_side","_logik","_sideText","_teams","_templates","_tmplUpgrades","_upgrades","_team","_eligible","_i","_u","_ok","_k","_pick","_unassigned"];
+private ["_side","_logik","_sideText","_teams","_templates","_tmplUpgrades","_upgrades","_team","_eligible","_i","_u","_ok","_k","_pick","_unassigned","_doc","_track","_pref"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -45,9 +45,24 @@ _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 			};
 
 			if (count _eligible > 0) then {
-				_pick = _eligible select (floor (random (count _eligible)));
+				//--- V0.2 doctrine: 70% of picks favor templates of the primary factory path
+				//--- (LF doctrine -> light-requiring templates, HF -> heavy-requiring).
+				_doc = _logik getVariable ["wfbe_aicom_doctrine", ""];
+				_pref = [];
+				if (_doc != "") then {
+					_track = if (_doc == "HF") then {2} else {1};
+					{
+						_u = _tmplUpgrades select _x;
+						if ((_u select _track) >= 1) then {_pref = _pref + [_x]};
+					} forEach _eligible;
+				};
+				if (count _pref > 0 && {(random 1) < 0.7}) then {
+					_pick = _pref select (floor (random (count _pref)));
+				} else {
+					_pick = _eligible select (floor (random (count _eligible)));
+				};
 				_team setVariable ["wfbe_teamtype", _pick, true];
-				["INFORMATION", Format ["AI_Commander_AssignTypes.sqf: [%1] assigned template %2 to AI team [%3].", _sideText, _pick, _team]] Call WFBE_CO_FNC_LogContent;
+				["INFORMATION", Format ["AI_Commander_AssignTypes.sqf: [%1] assigned template %2 to AI team [%3] (doctrine %4).", _sideText, _pick, _team, _doc]] Call WFBE_CO_FNC_LogContent;
 			};
 		};
 	};

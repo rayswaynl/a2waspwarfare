@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_inject","_new","_entry","_anchor"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -21,7 +21,43 @@ if (isNil "_logik") exitWith {};
 //--- Wait for full server init before commanding.
 waitUntil {sleep 1; !(isNil "serverInitFull")};
 
-_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0;
+//--- V0.2: pick a doctrine once - the primary factory path this AI builds around.
+if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
+	_doctrine = if (random 1 > 0.5) then {"HF"} else {"LF"};
+	_logik setVariable ["wfbe_aicom_doctrine", _doctrine];
+	["INFORMATION", Format ["AI_Commander.sqf: [%1] doctrine picked: %2 (primary factory path).", str _side, _doctrine]] Call WFBE_CO_FNC_LogContent;
+
+	//--- Prioritize Patrols research (and the heavy line under HF doctrine) by injecting
+	//--- entries after their prerequisite anchors in this side's AI upgrade order.
+	//--- Check_Upgrades already appended them at the END; an early duplicate is harmless
+	//--- (the upgrade worker skips entries whose target level is already reached).
+	_order = missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side];
+	if (!isNil "_order" && {!isNil "WFBE_UP_PATROLS"}) then {
+		_inject = [
+			[[WFBE_UP_LIGHT,1],  [WFBE_UP_PATROLS,1]],
+			[[WFBE_UP_HEAVY,2],  [WFBE_UP_PATROLS,2]],
+			[[WFBE_UP_HEAVY,3],  [WFBE_UP_PATROLS,3]]
+		];
+		if (_doctrine == "HF") then {
+			_inject = [[[WFBE_UP_GEAR,1], [WFBE_UP_HEAVY,1]]] + _inject;
+		};
+		_new = [];
+		{
+			_entry = _x;
+			_new = _new + [_entry];
+			{
+				_anchor = _x select 0;
+				if ((_entry select 0) == (_anchor select 0) && {(_entry select 1) == (_anchor select 1)}) then {
+					_new = _new + [_x select 1];
+				};
+			} forEach _inject;
+		} forEach _order;
+		missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _new];
+		["INFORMATION", Format ["AI_Commander.sqf: [%1] upgrade order tuned (%2 -> %3 entries, Patrols prioritized).", str _side, count _order, count _new]] Call WFBE_CO_FNC_LogContent;
+	};
+};
+
+_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0;
 _prevHuman = false; _prevState = "";
 
 ["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1.", str _side]] Call WFBE_CO_FNC_LogContent;
@@ -66,6 +102,14 @@ while {!gameOver} do {
 
 		//--- Economy: full command only (rule A - AI never spends under a human commander).
 		if (!_humanCmd) then {
+			//--- V0.2: build the base (HQ deploy -> doctrine build order -> defenses).
+			if (time - _ltBase > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_BASE_INTERVAL", 60])) then {
+				(_side) Call WFBE_SE_FNC_AI_Com_Base; _ltBase = time;
+			};
+			//--- V0.2: found AI combat teams up to the target (editor slots are not enough on AI-only sides).
+			if (time - _ltTeams > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TEAMS_INTERVAL", 90])) then {
+				(_side) Call WFBE_SE_FNC_AI_Com_Teams; _ltTeams = time;
+			};
 			if (time - _ltTypes > (missionNamespace getVariable "WFBE_C_AI_COMMANDER_TYPES_INTERVAL")) then {
 				(_side) Call WFBE_SE_FNC_AI_Com_AssignTypes; _ltTypes = time;
 			};
