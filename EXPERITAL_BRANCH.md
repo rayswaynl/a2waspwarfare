@@ -54,6 +54,7 @@
 
 ## Infrastructure
 - **Harness error-tracker wiring** (tools branch) — RPT scan patterns attribute errors from every new subsystem; live-watch counts CBR/bank/site-clearance/WASPSTAT activity; static smoke requires the new PVFs registered.
+- **Second HC slot (PR #24 parity)** — ported master's second `forceHeadlessClient=1` CIV slot ("Headless Client 2", `id=307`, group `Item128`) + HC verbose logging into this branch; the base release branch predates PR #24, so with two HCs connected one auto-slotted into BLUFOR. Live-verified on the test box: both HCs in CIV, mission auto-starts (experital is now head of the cfg rotation), in-engine classcheck **8/9 OK** — only `T72M4CZ_ACR` fails there (full-ACR DLC, headless decrypt limitation); `RM70_ACR` and all airfield aircraft resolve.
 
 ---
 
