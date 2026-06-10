@@ -14,6 +14,9 @@ While {!(Alive Player)} do {sleep 2;};
 //player addEventHandler ["HandleDamage", {false;if (player != (_this select 3)) then {(_this select 3) setDammage 0}}]; //--- God-Slayer mode.
 208 = player addAction ["<t color='#FF0000'>"+ "RECOVER HQ" + "  " + str (missionNameSpace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_CASH') +"$" +"</t>", "WASP\actions\Action_RepairMHQDepot.sqf", [], 1, false, true, "", "!(alive ((SideJoined) Call WFBE_CO_FNC_GetSideHQ))&&(leader  (SideJoined call GetCommanderTeam) == leader (vehicle player))&&(typeOf cursorTarget in ['Land_fortified_nest_big_EP1','WFBE_C_DEPOT'])&&(cursorTarget distance player < 100)"];
 
+//--- Task 30: Class Info lookup action. Re-registered each respawn; always shows on explicit request.
+player addAction ["Class Info", "WASP\actions\ClassInfo.sqf", [], 0, false, false, "", ""];
+
 //--- Earplugs: persistent toggle. AddActions.sqf is re-execVM'd on each respawn (via OnKilled.sqf),
 //--- so the action is re-registered. The title reflects current state via the missionNamespace flag.
 //--- fadeSound persists across respawn independently.
