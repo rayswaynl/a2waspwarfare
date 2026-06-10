@@ -241,6 +241,21 @@ switch (_args select 0) do {
 		missionNamespace setVariable ["WFBE_ACTIVE_PATROLS", _pnew];
 		publicVariable "WFBE_ACTIVE_PATROLS";
 	};
+	//--- Task 41: convoy reached a town — pay the owning side.
+	case "sidepatrol-convoy-stop": {
+		Private ["_cSideID","_cTown","_cSide","_cPool","_cShare","_cCount"];
+		_cSideID = _args select 1;
+		_cTown   = _args select 2;
+		_cSide   = (_cSideID) Call WFBE_CO_FNC_GetSideFromID;
+		_cPool   = if (isNil "WFBE_C_PATROL_CONVOY_PAY") then {750} else {WFBE_C_PATROL_CONVOY_PAY};
+
+		_cCount = 0;
+		{if ((isPlayer _x) && (alive _x) && (side _x == _cSide)) then {_cCount = _cCount + 1}} forEach playableUnits;
+		_cShare = round (_cPool / (_cCount max 1));
+
+		[_cSide, "BankPayout", [_cShare]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] convoy payout $%2 x %3 players at [%4].", str _cSide, _cShare, _cCount, if (!isNull _cTown) then {_cTown getVariable ["name","?"]} else {"?"}]] Call WFBE_CO_FNC_LogContent;
+	};
 	case "connected-hc": {
 		Private ["_hc","_id","_uid"];
 		_hc = _args select 1;

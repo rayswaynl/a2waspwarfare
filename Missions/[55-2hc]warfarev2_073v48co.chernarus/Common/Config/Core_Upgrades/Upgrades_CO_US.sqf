@@ -54,7 +54,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
 	[[5000,0],[12500,0]], //--- Anti Air Radar
 	[[25000,0],[50000,0]], //--- Unit cost modifier
 	[[3500,0],[6500,0]], //--- Counter Battery Radar
-	[[300,0],[1600,0],[2400,0]] //--- Patrols
+	[[300,0],[1600,0],[2400,0],[3200,0]] //--- Patrols
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
@@ -82,7 +82,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
 	2, //--- Anti Air Radar
 	2, //--- Unit cost modifier
 	2, //--- Counter Battery Radar
-	3 //--- Patrols
+	4 //--- Patrols
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LINKS", _side], [
@@ -118,7 +118,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LINKS", _side], [
 	[[],[]], //--- Anti Air Radar
 	[[],[]], //--- Unit cost modifier
 	[[WFBE_UP_AAR,1],[WFBE_UP_AAR,2]], //--- Counter Battery Radar (requires AAR level 1 / AAR level 2)
-	[[],[WFBE_UP_LIGHT,1],[WFBE_UP_HEAVY,2]] //--- Patrols
+	[[],[WFBE_UP_LIGHT,1],[WFBE_UP_HEAVY,2],[WFBE_UP_HEAVY,2]] //--- Patrols
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [
@@ -146,7 +146,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [
 	[50,125], //--- Anti Air Radar
 	[120, 200], //--- Unit cost modifier
 	[60, 90], //--- Counter Battery Radar
-	[90,150,240] //--- Patrols
+	[90,150,240,240] //--- Patrols
 ]];
 
 //todo, on commander missing link checkup, skip disabled upgrades.
@@ -191,7 +191,8 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], [
 	[WFBE_UP_CBRADAR,2],
 	[WFBE_UP_PATROLS,1],
 	[WFBE_UP_PATROLS,2],
-	[WFBE_UP_PATROLS,3]
+	[WFBE_UP_PATROLS,3],
+	[WFBE_UP_PATROLS,4]
 ]];
 
 //--- Check potential missing definition.
