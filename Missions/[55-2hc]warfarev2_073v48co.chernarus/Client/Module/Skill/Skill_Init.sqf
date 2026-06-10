@@ -47,3 +47,7 @@ if (playerType in WFBE_SK_V_Medics) then {WFBE_SK_V_Type = "Medic"};
 /* Special one time init */
 /* The soldier can hire more units than the others leader */
 if (WFBE_SK_V_Type == 'Soldier') then {missionNamespace setVariable ['WFBE_C_PLAYERS_AI_MAX',ceil (1.5*(missionNamespace getVariable "WFBE_C_PLAYERS_AI_MAX"))]};
+
+//--- QoL S4: broadcast this player's class so updateteamsmarkers can show a class tag on the map marker.
+//--- WFBE_SK_V_Type is LOCAL-only; setVariable with broadcast=true propagates to all clients.
+player setVariable ["wfbe_player_class", WFBE_SK_V_Type, true];
