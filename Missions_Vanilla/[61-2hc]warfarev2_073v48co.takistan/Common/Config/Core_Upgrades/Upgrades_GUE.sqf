@@ -52,7 +52,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
 	[[7500,0]], //--- Aircraft AA Missiles
 	[[5000,0],[12500,0]],
 	[[999999,0]], //--- (index padding)
-	[[1000,0],[1600,0],[2400,0]] //--- Patrols //--- Anti Air Radar
+	[[600,0],[1000,0],[2000,0]] //--- Patrols //--- Anti Air Radar
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
