@@ -13,6 +13,7 @@ switch (_request) do {
 	// Marty: Run delegated town AI cleanup on the machine that owns the local groups.
 	case "cleanup-townai": {_args spawn WFBE_CL_FNC_CleanupDelegatedTownAI};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
+	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
 	case "delegate-ai": {_args spawn WFBE_CL_FNC_DelegateAI};
 	case "delegate-ai-static-defence": {_args spawn WFBE_CL_FNC_DelegateAIStaticDefence};
 	case "endgame": {_args spawn WFBE_CL_FNC_EndGame};

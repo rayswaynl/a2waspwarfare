@@ -344,6 +344,8 @@ while {true} do {
 
 			//AI COUNT
 			_mbu = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX';
+			//--- Patrols upgrade trades 1 max AI per player for the side's autonomous patrols.
+			if (count ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) > WFBE_UP_PATROLS && {(((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_PATROLS) > 0}) then {_mbu = (_mbu - 1) max 1};
 			_currentUnitsCount = Count ((Units (group player)) Call GetLiveUnits);
 			_maxUnitsCount = ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_BARRACKS;
 			switch (_maxUnitsCount) do {
