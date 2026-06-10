@@ -16,6 +16,10 @@ _unit setVariable ["lastPosition", position _unit];
 if ((missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") == 2) then {
 	if (_typeof in (missionNamespace getVariable Format ["WFBE_%1AMBULANCES",sideJoinedText])) then {_allowCustom = false};
 };
+//--- Default gear enforcement on redeploy truck respawn (same mode gate as mobile).
+if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && (missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") == 2) then {
+	if (_typeof in (missionNamespace getVariable [Format ["WFBE_%1REDEPLOYTRUCKS",sideJoinedText],[]])) then {_allowCustom = false};
+};
 
 //--- Default gear enforcement on leader respawn.
 if ((missionNamespace getVariable "WFBE_C_RESPAWN_LEADER") == 2) then {
@@ -26,6 +30,9 @@ if ((missionNamespace getVariable "WFBE_C_RESPAWN_LEADER") == 2) then {
 if (_spawn isKindOf "Man") then {_spawn = vehicle _spawn};
 _spawnInside = false;
 if (_typeof in (missionNamespace getVariable Format ["WFBE_%1AMBULANCES",sideJoinedText]) && alive _spawn) then {
+	if (_spawn emptyPositions "cargo" > 0 && !(locked _spawn)) then {_unit moveInCargo _spawn;_spawnInside = true};
+};
+if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && _typeof in (missionNamespace getVariable [Format ["WFBE_%1REDEPLOYTRUCKS",sideJoinedText],[]]) && alive _spawn) then {
 	if (_spawn emptyPositions "cargo" > 0 && !(locked _spawn)) then {_unit moveInCargo _spawn;_spawnInside = true};
 };
 

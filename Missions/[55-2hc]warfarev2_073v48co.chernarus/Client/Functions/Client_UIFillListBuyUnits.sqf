@@ -87,6 +87,13 @@ lnbClear _listBox;
 
 	};
 
+	//--- Medic redeployment truck [Redeploy,Spawn]: teal tint to distinguish from plain cargo trucks.
+	if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0) then {
+		if(_x in (missionNamespace getVariable [format["WFBE_%1REDEPLOYTRUCKS", sideJoinedText], []])) then {
+			lnbSetColor [_listBox,[_i,1],[0.0, 0.8, 0.8, 0.6]]
+		};
+	};
+
 
 	if(_x in (missionNamespace getVariable [format["WFBE_%1SALVAGETRUCK", sideJoinedText], []])) then {
 		lnbSetColor [_listBox,[_i,1],[0.0, 1.0, 0.0, 0.6]]
