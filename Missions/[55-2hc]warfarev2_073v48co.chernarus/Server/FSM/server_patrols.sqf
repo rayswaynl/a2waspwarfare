@@ -19,7 +19,12 @@ if (count _group > 0) then {
 
 	_position = ([getPos _location, 50, 500] Call WFBE_CO_FNC_GetRandomPosition);
 	_position = [_position, 50] Call WFBE_CO_FNC_GetEmptyPosition;
-	_lock = if (_side == WFBE_DEFENDER) then {_town_vehicle_lock_defender} else {true};
+	//--- Task 34: resistance-patrol vehicles follow the same rule — unlocked when resistance AI is disabled.
+	_lock = if (_side == WFBE_DEFENDER && (missionNamespace getVariable ["WFBE_C_TOWNS_DEFENDER", 1]) == 0) then {
+		false
+	} else {
+		if (_side == WFBE_DEFENDER) then {_town_vehicle_lock_defender} else {true}
+	};
 	_retVal = [_group, _position, _side, _lock, _team] Call WFBE_CO_FNC_CreateTeam;
 };
 
