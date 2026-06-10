@@ -92,6 +92,11 @@ if (!isNull _area) then {
 			_area setVariable ["DefenseTeam", _team];
 		}else{
 			if(side _team != _side) then{
+				// Group-cap fix: delete the orphaned group before creating the new one.
+				if !(isNull _team) then {
+					{deleteVehicle _x} forEach (units _team);
+					deleteGroup _team;
+				};
 				_team = createGroup _side;
 			};
 			_area setVariable ["DefenseTeam", _team];
