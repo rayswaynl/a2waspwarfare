@@ -246,8 +246,10 @@ while {!WFBE_GameOver} do {
 			};
 
 			//--- Task 12: Airfield capture — spawn repair point + exclusive hangar for the new owner.
+			//--- Task 13: Airfield built-in Counter Battery Radar (2000 m, follows owner).
 			if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && (_location getVariable ["wfbe_is_airfield", false])) then {
-				Private ["_airfieldLogic","_newHangar","_oldHangar","_oldSP","_logik","_sp","_spClass","_spPos"];
+				Private ["_airfieldLogic","_newHangar","_oldHangar","_oldSP","_logik","_sp","_spClass","_spPos",
+				         "_oldRadar","_oldDressing","_radarClass","_radarPos","_radar","_cbrKey","_cbrReg","_dressTpl"];
 
 				//--- Determine side-specific ServicePoint classname (Chernarus variants).
 				_spClass = switch (_newSide) do {
@@ -309,6 +311,68 @@ while {!WFBE_GameOver} do {
 					_airfieldLogic setVariable ["wfbe_hangar", _newHangar, true];
 					_location setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
 				};
+
+				//--- Task 13: Counter Battery Radar lifecycle.
+				//--- Gate: CBR feature must be enabled. Resistance has no CBR registry — radar skipped.
+				//--- Indestructible: HandleDamage-returns-0 (only established invincibility idiom in this codebase;
+				//---   allowDamage has no usage precedent here). Placed 60 m east of airfield logic to avoid runway.
+				if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
+
+					//--- 1. CLEANUP: delete previous airfield radar if one exists.
+					_oldRadar = _location getVariable ["wfbe_airfield_cbr", objNull];
+					if !(isNull _oldRadar) then {
+						//--- Remove from both side registries (indestructible means lazy prune never fires).
+						missionNamespace setVariable ["WFBE_CBR_WEST", (missionNamespace getVariable ["WFBE_CBR_WEST", []]) - [_oldRadar]];
+						missionNamespace setVariable ["WFBE_CBR_EAST", (missionNamespace getVariable ["WFBE_CBR_EAST", []]) - [_oldRadar]];
+						//--- Delete dressing props explicitly (Killed EH won't fire on deleteVehicle).
+						_oldDressing = _oldRadar getVariable ["wfbe_dressing", []];
+						{if !(isNull _x) then {deleteVehicle _x}} forEach _oldDressing;
+						deleteVehicle _oldRadar;
+						["INFORMATION", Format ["server_town.sqf: [%1] airfield CBR removed on recapture.", str _side]] Call WFBE_CO_FNC_LogContent;
+					};
+
+					//--- 2. SPAWN new radar (only for WEST/EAST — resistance has no CBR registry).
+					if (_newSide == west || _newSide == east) then {
+						//--- Side-specific mast: WEST = Land_Antenna (NATO whip mast),
+						//---   EAST = Land_telek1 (taller cell-tower mast). Matches Init_Defenses.sqf CBRADAR core comments.
+						_radarClass = if (_newSide == west) then {"Land_Antenna"} else {"Land_telek1"};
+
+						//--- Position: 60 m east of airfield logic (off the runway centerline).
+						_radarPos = if !(isNull _airfieldLogic) then {
+							[((getPos _airfieldLogic) select 0) + 60, (getPos _airfieldLogic) select 1, 0]
+						} else {
+							[((getPos _location) select 0) + 60, (getPos _location) select 1, 0]
+						};
+
+						_radar = _radarClass createVehicle _radarPos;
+						_radar setPos _radarPos;
+						//--- Radius override: 2000 m. Server_CounterBattery.sqf reads "wfbe_cbr_radius" getVariable.
+						_radar setVariable ["wfbe_cbr_radius", 2000];
+						//--- Indestructible: HandleDamage returning 0 prevents any damage being applied.
+						_radar addEventHandler ["HandleDamage", {0}];
+
+						//--- Spawn side-matched dressing for visual identity (reuses buildable CBRADAR templates).
+						_dressTpl = Format ["WFBE_NEURODEF_CBRADAR_%1", if (_newSide == west) then {"WEST"} else {"EAST"}];
+						[_radar, _dressTpl, 0] Call WFBE_SE_FNC_SpawnStructureDressing;
+
+						//--- 3. REGISTER in the new owner's CBR registry.
+						_cbrKey = if (_newSide == west) then {"WFBE_CBR_WEST"} else {"WFBE_CBR_EAST"};
+						_cbrReg = missionNamespace getVariable [_cbrKey, []];
+						missionNamespace setVariable [_cbrKey, _cbrReg + [_radar]];
+
+						//--- Store on location for cleanup on next capture.
+						_location setVariable ["wfbe_airfield_cbr", _radar, true];
+
+						["INFORMATION", Format ["server_town.sqf: [%1] airfield CBR spawned (%2) at %3. Radius 2000 m. Registry [%4] size: %5.",
+							str _newSide, _radarClass, _radarPos, _cbrKey,
+							count (missionNamespace getVariable [_cbrKey, []])]] Call WFBE_CO_FNC_LogContent;
+					} else {
+						//--- Resistance capture: no CBR registry for GUER — radar skipped, mast not spawned.
+						_location setVariable ["wfbe_airfield_cbr", objNull, true];
+						["INFORMATION", Format ["server_town.sqf: airfield [%1] captured by resistance — CBR skipped (no GUER registry).", _location getVariable ["name","unknown"]]] Call WFBE_CO_FNC_LogContent;
+					};
+				};
+				//--- End Task 13 CBR lifecycle.
 			};
 		};
 		};
