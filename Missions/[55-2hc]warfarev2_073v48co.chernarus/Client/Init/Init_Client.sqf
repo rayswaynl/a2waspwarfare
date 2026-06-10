@@ -471,6 +471,14 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 };
 
 /* Get the client starting location */
+//--- Task 35: escape the deadspawn holding area IMMEDIATELY after the join gate. The final
+//--- position is refined below (newest live factory / HQ); this interim move covers any
+//--- stall in that determination so mid-game (re)joiners never sit visibly at the
+//--- TempRespawnMarker parking area. (The other half of this fix: the stats-DB guards —
+//--- the join gate used to block up to 54s in DB retry loops on a DB-less server.)
+if (!isNil {WFBE_Client_Logic getVariable "wfbe_startpos"}) then {
+	player setPos ([WFBE_Client_Logic getVariable "wfbe_startpos", 10, 25] Call GetRandomPosition);
+};
 ["INITIALIZATION", "Init_Client.sqf: Retrieving the client spawn location."] Call WFBE_CO_FNC_LogContent;
 _base = objNull;
 if (time < 30) then {

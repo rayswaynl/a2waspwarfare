@@ -263,7 +263,14 @@ _IDCS = _IDCS - [_currentIDC];
 				//--- Task 12: If the nearest hangar is a captured airfield, show the exclusive roster instead of the faction airport list.
 				if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && !(isNull _closest) && {((_closest getVariable ["wfbe_hangar", objNull]) getVariable ["wfbe_is_airfield_hangar", false])}) then {
 					_listUnits = missionNamespace getVariable ["WFBE_AIRFIELD_UNITS", []];
-					[_listUnits,_type,_listBox,_val] Call UIFillListBuyUnits;
+					//--- Task 36 (live "empty airshop" fix): the roster is CROSS-FACTION
+					//--- (Takistani/Insurgent classes) and deliberately airfield-gated, so two
+					//--- standard filters must not apply here:
+					//---  1. reset the saved faction filter to "All" or every row is dropped;
+					//---  2. pass sentinel 999 as the upgrade index — the airfield capture IS
+					//---     the unlock; UIFillListBuyUnits treats out-of-range as "no gate".
+					missionNamespace setVariable [Format["WFBE_%1%2CURRENTFACTIONSELECTED",sideJoinedText,_type], 0];
+					[_listUnits,_type,_listBox,999] Call UIFillListBuyUnits;
 				};
 			};
 			//--- Factories

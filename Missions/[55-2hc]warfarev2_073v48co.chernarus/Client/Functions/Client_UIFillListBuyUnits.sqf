@@ -82,7 +82,11 @@ lnbClear _listBox;
 		};
 	};
 
-	if (((_c select QUERYUNITUPGRADE) <= (_currentUpgrades select _value) && _addin) || (_addit&&_addin)) then {
+	//--- Task 36: _value >= array length is the "no upgrade gate" sentinel (airfield hangar
+	//--- roster — the capture itself is the unlock; indexing past the array would error).
+	private "_upgradePass";
+	_upgradePass = if (_value >= count _currentUpgrades) then {true} else {(_c select QUERYUNITUPGRADE) <= (_currentUpgrades select _value)};
+	if ((_upgradePass && _addin) || (_addit&&_addin)) then {
 		_price = round (((_c select QUERYUNITPRICE) * ATTACK_WAVE_PRICE_MODIFIER) * UNIT_COST_MODIFIER);
 		lnbAddRow [_listBox,['$'+str _price,_description]];
 		lnbSetData [_listBox,[_i,0],_filler];
