@@ -68,5 +68,12 @@ while {!WFBE_GameOver && _team_alive} do {
 	sleep 30;
 };
 
+// Group-cap fix: delete the patrol group once all units are dead and the loop exits.
+// Patrols are not persistent (wfbe_persistent is never set on _team), so this is safe.
+if !(isNull _team) then {
+	{deleteVehicle _x} forEach (units _team);
+	deleteGroup _team;
+};
+
 _location setVariable ["wfbe_patrol_active", false];
 _location setVariable ["wfbe_patrol_active_last", time];
