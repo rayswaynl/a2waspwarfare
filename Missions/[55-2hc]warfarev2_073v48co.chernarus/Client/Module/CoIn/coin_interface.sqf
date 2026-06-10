@@ -848,6 +848,11 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 		_cashValuesOld = _logic getVariable "BIS_COIN_fundsOld";
 		if (isNil "_cashValuesOld") then {_cashValuesOld = []; _cashValuesOld set [count _cashValues - 1,-1]};
 		_restart = _logic getVariable "BIS_COIN_restart";
+		//--- LIVE FIX (client RPT 2026-06-10, line 851): BIS_COIN_restart is deliberately
+		//--- CLEARED to nil elsewhere (setVariable nil); `|| _restart` with nil then throws
+		//--- "Undefined variable" and kills the rest of this interface tick — placements
+		//--- stop building while the preview still shows. Treat nil as false.
+		if (isNil "_restart") then {_restart = false};
 		if (!([_cashValues,_cashValuesOld] call bis_fnc_arraycompare) || _restart) then {
 			_cashValuesCount = count _cashValues;
 			_cashSize = if (_cashValuesCount <= 1) then {2} else {2.8 / _cashValuesCount};
