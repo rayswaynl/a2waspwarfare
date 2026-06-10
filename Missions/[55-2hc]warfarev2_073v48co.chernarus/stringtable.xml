@@ -8294,35 +8294,35 @@
         <Russian>[$] Медик</Russian>
         <Italian>[$] Medico</Italian>
 	</Key>	
-	 </Key><Key ID="STR_WF_ALL_TAI3">
+	 <Key ID="STR_WF_ALL_TAI3">
         <English>[$] AT Rifleman</English>
         <French>[$] anti réservoir Fusilier</French>
         <German>[$] AT Schütze</German>
         <Russian>[$] анти бак стрелок</Russian>
         <Italian>[$] anti cisterna Fuciliere</Italian>
 	 </Key>
-	 </Key><Key ID="STR_WF_ALL_TAI4">
+	 <Key ID="STR_WF_ALL_TAI4">
         <English>[$] Machine Gunner</English>
         <French>[$] Machine Canonnier</French>
         <German>[$] Maschinengewehrschütze</German>
         <Russian>[$] Машина наводчик</Russian>
         <Italian>[$] Macchina Artigliere</Italian>
 	 </Key>
-	 </Key><Key ID="STR_WF_ALL_TAI5">
+	 <Key ID="STR_WF_ALL_TAI5">
         <English>[$] Automatic Rifleman</English>
         <French>[$] Automatique Fusilier</French>
         <German>[$] Automatik Schütze</German>
         <Russian>[$] Автоматический стрелок</Russian>
         <Italian>[$] Automatico Fuciliere</Italian>
 	 </Key>
-	 </Key><Key ID="STR_WF_ALL_TAI6">
+	 <Key ID="STR_WF_ALL_TAI6">
         <English>[$] AT Specialist</English>
         <French>[$] anti réservoir Spécialiste</French>
         <German>[$] AT Spezialist</German>
         <Russian>[$] анти бак Специалист</Russian>
         <Italian>[$] anti cisterna Specialista</Italian>
 	 </Key>
-	 </Key><Key ID="STR_WF_ALL_TAI7">
+	 <Key ID="STR_WF_ALL_TAI7">
         <English>[$] AA Specialist</English>
        <French>[$] anti Air Spécialiste</French>
         <German>[$] AA Spezialist</German>
