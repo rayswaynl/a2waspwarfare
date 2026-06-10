@@ -429,10 +429,10 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 	//--- Crew Management.
 	_crew = missionNamespace getVariable Format ["WFBE_%1SOLDIER",sideJoinedText];
 	
-	// Marty : All crew members in tanks are replaced by engineers of their side. 
+	// Marty : All crew members in tanks and wheeled APCs (LAV-25, BTR-90, Pandur / HF vehicles) are replaced by engineers of their side.
 	// Russian side do not have engineer class so we use takistan class engineer for russian.
 	//if (_unit isKindOf "Tank") then {_crew = missionNamespace getVariable Format ["WFBE_%1CREW",sideJoinedText]};
-	if (_unit isKindOf "Tank") then {
+	if (_unit isKindOf "Tank" || _unit isKindOf "Wheeled_APC") then {
 		if (sideJoinedText == "WEST")then 
 		{
 			// WEST side (american)
