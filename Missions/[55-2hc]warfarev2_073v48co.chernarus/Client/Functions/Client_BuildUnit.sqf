@@ -269,6 +269,15 @@ if (_isMan) then {
 	//--- Salvage Truck.
 	if (_unit in (missionNamespace getVariable Format['WFBE_%1SALVAGETRUCK',sideJoinedText])) then {[_vehicle] execVM 'Client\FSM\updatesalvage.sqf'};
 
+	//--- Bulldozer (engineer tree clearing): runs on same repair/salvage truck classes.
+	//--- Mirrors updatesalvage launch: execVM keeps the loop independent, same start/stop conditions.
+	if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {
+		if (_unit in (missionNamespace getVariable Format['WFBE_%1REPAIRTRUCKS',sideJoinedText]) ||
+		    {_unit in (missionNamespace getVariable Format['WFBE_%1SALVAGETRUCK',sideJoinedText])}) then {
+			[_vehicle] execVM 'Client\Module\Skill\Skill_Bulldoze.sqf';
+		};
+	};
+
 	//--- Units Balancing.
 	if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {(_vehicle) Call BalanceInit};
 
