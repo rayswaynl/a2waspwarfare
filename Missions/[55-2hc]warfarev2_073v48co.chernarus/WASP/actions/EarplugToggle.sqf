@@ -26,3 +26,18 @@ if (!_active) then {
 	(_this select 1) removeAction (_this select 2);
 	player addAction ["Earplugs IN", "WASP\actions\EarplugToggle.sqf", [], 1, false, false, "", ""];
 };
+
+//--- Vehicle mirror: refresh the vehicle action title to match the new state.
+//--- The monitor loop in AddActions.sqf owns lifecycle (add/remove on mount/dismount);
+//--- we only need to flip the title here by removing and re-adding with the new label.
+if (vehicle player != player) then {
+	private ["_vehRef","_vehID","_newTitle"];
+	_vehRef = player getVariable ["WFBE_WASP_EarplugVehRef", objNull];
+	_vehID  = player getVariable ["WFBE_WASP_EarplugVehID",  -1];
+	if (!isNull _vehRef && _vehID != -1) then {
+		_vehRef removeAction _vehID;
+		_newTitle = if (missionNamespace getVariable ["WFBE_WASP_EarplugActive", false]) then {"Earplugs OUT"} else {"Earplugs IN"};
+		_vehID = _vehRef addAction [_newTitle, "WASP\actions\EarplugToggle.sqf", [], 1, false, false, "", ""];
+		player setVariable ["WFBE_WASP_EarplugVehID", _vehID];
+	};
+};
