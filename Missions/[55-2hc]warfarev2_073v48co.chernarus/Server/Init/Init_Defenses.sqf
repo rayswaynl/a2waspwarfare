@@ -365,8 +365,8 @@ missionNamespace setVariable ['WFBE_NEURODEF_BANK_EAST',[
 	//--- South wall with entrance gap in centre (infantry + satchel raidable).
 	['Land_HBarrier_large',		[-14, -18, 0],	0],		//--- South wall left
 	['Land_HBarrier_large',		[10, -18, 0],	0],		//--- South wall right (gap at centre ≈ 8 m wide)
-	//--- RU flag pole — front-right. FlagCarrierRUS ~75% confidence; sub FlagCarrierCDF if absent.
-	['FlagCarrierRUS',			[12, -15, 0],	180],	//--- RU flag near entrance
+	//--- RU flag pole — front-right.
+	['FlagCarrierRU',			[12, -15, 0],	180],	//--- RU flag near entrance
 	//--- EAST camo net over NW corner.
 	['Land_CamoNetB_EAST',		[-12, 14, 0],	270],	//--- Camo net NW
 	//--- TK ammo/supply crates inside compound (east side).
