@@ -1,9 +1,11 @@
 /*
-	Remove an upgrade from the side's auto-start queue.
+	Remove the LAST queued copy of an upgrade from the side's auto-start queue.
 	 Parameters: [ side, upgradeId ]
+	With stacking the same id may be queued several times; removing the last
+	copy cancels only the highest pending level.
 */
 
-Private ["_side","_id","_logik","_queue"];
+Private ["_side","_id","_logik","_queue","_k","_idx"];
 
 _side = _this select 0;
 _id   = _this select 1;
@@ -15,8 +17,13 @@ if (isNull _logik) exitWith {};
 if (isNull (_side Call WFBE_CO_FNC_GetCommanderTeam)) exitWith {};
 
 _queue = + (_logik getVariable "wfbe_upgrade_queue");
-if !(_id in _queue) exitWith {};
+_idx = -1;
+for "_k" from 0 to (count _queue - 1) do {
+	if ((_queue select _k) == _id) then {_idx = _k};
+};
+if (_idx < 0) exitWith {};
 
-//--- Duplicates are forbidden at enqueue, so set-subtraction removes exactly one.
-_queue = _queue - [_id];
+//--- Drop exactly that copy (plain array subtraction would strip ALL copies of a stacked id).
+_queue set [_idx, objNull];
+_queue = _queue - [objNull];
 _logik setVariable ["wfbe_upgrade_queue", _queue, true];
