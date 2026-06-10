@@ -39,6 +39,13 @@ if (local player) then {
 	if (_text != "") then {_marker setMarkerTextLocal _text};
 	_marker setMarkerColorLocal _color;
 
+	//--- ServicePoint: use a distinct mil_objective marker with side color and "SP" label.
+	if (!_hq && _text == "S") then {
+		_marker setMarkerTypeLocal "mil_objective";
+		_marker setMarkerTextLocal "SP";
+		_marker setMarkerColorLocal (missionNamespace getVariable (Format ["WFBE_C_%1_COLOR", _side]));
+	};
+
 	while {!isNull _structure && alive _structure} do {sleep 2};
 
 	deleteMarkerLocal _marker;
