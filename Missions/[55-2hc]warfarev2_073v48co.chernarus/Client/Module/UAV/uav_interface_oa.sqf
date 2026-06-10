@@ -97,15 +97,6 @@ _displayEH_mousebuttondown = (finddisplay 46) displayaddeventhandler ["mousebutt
 	disableserialization;
 	Private ['_button','_control','_controls','_display'];
 	_button = _this select 1;
-	if (_button == 007 && !visiblemap) then {comment 'DISABLED';
-		_display = uinamespace getvariable 'BIS_UAV_DISPLAY';
-		_controls = [112401,112402,112403,112404];
-		{
-			_control = _display displayctrl _x;
-			_control ctrlshow !(ctrlshown _control);
-			_control ctrlcommit 0;
-		} foreach _controls;
-	};
 "];
 
 
