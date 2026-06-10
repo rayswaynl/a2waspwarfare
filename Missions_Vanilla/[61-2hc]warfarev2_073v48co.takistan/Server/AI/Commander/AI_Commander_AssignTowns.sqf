@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG"];
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG","_ord"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -82,7 +82,10 @@ _assigned = [];
 			_mode = _team getVariable ["wfbe_teammode", ""];
 			_goto = _team getVariable ["wfbe_teamgoto", objNull];
 
-			//--- Needs a (re)target unless it is actively heading at a still-enemy town and not idling far from it.
+			//--- V0.4.2 churn fix: orders are STICKY. Retarget only when the team has no
+			//--- valid enemy-town target, the target resolved (we captured it), or the team
+			//--- has been visibly stuck on the same order for 10+ min without progress.
+			//--- Distance alone is NOT a reason - en-route teams keep their order.
 			_needs = false;
 			if (_mode == "towns" || _mode == "") then {
 				if (typeName _goto != "OBJECT") then {
@@ -94,7 +97,21 @@ _assigned = [];
 						if ((_goto getVariable "sideID") == _sideID) then {
 							_needs = true;
 						} else {
-							if ((leader _team) distance _goto > 1500) then {_needs = true};
+							_ord = _team getVariable ["wfbe_aicom_townorder", []];
+							if (count _ord < 3 || {(_ord select 0) != _goto}) then {
+								//--- No bookkeeping yet (legacy order) or goto changed under us: book it
+								//--- once without re-issuing waypoints; the stuck check takes over from here.
+								_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos (leader _team)]];
+							} else {
+								if (time - (_ord select 1) > 600) then {
+									if ((leader _team) distance (_ord select 2) < 200 && {(leader _team) distance _goto > 300}) then {
+										_needs = true; //--- parked 10+ min far from the target: re-issue
+									} else {
+										//--- progressing (or arrived): refresh the breadcrumb
+										_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos (leader _team)]];
+									};
+								};
+							};
 						};
 					};
 				};
@@ -120,6 +137,7 @@ _assigned = [];
 							};
 						};
 						_assigned set [count _assigned, _target];
+						_team setVariable ["wfbe_aicom_townorder", [_target, time, getPos (leader _team)]];
 						["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] heading to attack town [%3].", _sideText, _team, _target getVariable ["name", "town"]]] Call WFBE_CO_FNC_AICOMLog;
 					};
 				};

@@ -79,9 +79,14 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 	_idx = _names find _x;
 	if (_idx >= 0) then {
 		_class = _classes select _idx;
-		//--- Already have an ALIVE one of this type?
+		//--- Already have an ALIVE one of this type? V0.4.2: construction is ASYNC, so a
+		//--- site paid for last tick is not alive yet - the pending timestamp guards the
+		//--- 5-min build window so we never pay for the same structure twice.
 		_have = false;
 		{ if (typeOf _x == _class && {alive _x}) exitWith {_have = true} } forEach _structures;
+		if (!_have) then {
+			if (time - (_logik getVariable [Format ["wfbe_aicom_built_%1", _x], -1e6]) < 300) then {_have = true};
+		};
 		if (!_have) exitWith {
 			_cost = _costs select _idx;
 			if (_supply >= _cost) then {
@@ -99,6 +104,7 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				};
 				if (!_placed) then {_pos = [45, 75] Call _findBuildPos};
 				if (_dual) then {[_side, -_cost, Format ["AI commander base construction (%1).", _x], false] Call ChangeSideSupply};
+				_logik setVariable [Format ["wfbe_aicom_built_%1", _x], time];
 				_script = _scripts select _idx;
 				[_class, _side, _pos, random 360, _idx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
 				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] building %2 at %3 (cost %4 supply, doctrine %5, branch-out %6).", _sideText, _x, _pos, _cost, _doctrine, _coreDone]] Call WFBE_CO_FNC_AICOMLog;
