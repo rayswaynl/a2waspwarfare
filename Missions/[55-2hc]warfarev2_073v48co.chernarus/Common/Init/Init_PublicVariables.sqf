@@ -22,6 +22,7 @@ _l = _l + ["RequestAutoWallConstructinChange"];
 _l = _l + ["RequestEnqueue"];
 _l = _l + ["RequestDequeue"];
 _l = _l + ["CounterBatteryFired"];
+_l = _l + ["RequestSiteClearance"];
 
 _serverCommandPV = _l;
 

@@ -201,6 +201,12 @@ _i = _i + [['Base Wall - Corner','',300,0,0,0,'Fortification',0,'Civilians',[]]]
 _c = _c + ['Land_Ind_Timbers'];
 _i = _i + [['Base Wall - Gate','',300,0,0,0,'Fortification',0,'Civilians',[]]];
 
+//--- Site Clearance (commander build-menu only; cost is dynamic server-side; label carries the per-tree price).
+if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {
+	_c = _c + ['Land_Pneu'];
+	_i = _i + [['Site Clearance (10/tree)','',0,0,0,0,'Strategic',0,'Civilians',[]]];
+};
+
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {
 		_get = missionNamespace getVariable (_c select _z);

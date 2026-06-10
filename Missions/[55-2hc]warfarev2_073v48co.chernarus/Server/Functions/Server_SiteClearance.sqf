@@ -1,8 +1,9 @@
 /*
 	Server_SiteClearance.sqf — Commander build-menu Site Clearance: fell trees near a
-	base-area placement position.  Called from RequestDefense.sqf when the placed anchor
-	is 'Land_Pneu' (the site-clearance placeholder class).  NO object is ever built;
-	RequestDefense exits immediately after calling this function.
+	base-area placement position.  Called from RequestSiteClearance.sqf (the dedicated
+	server PVF) which receives the real player identity from the client payload.
+	NO object is ever built; coin_interface sends RequestSiteClearance instead of
+	RequestDefense for Land_Pneu so this function is the only server-side entry point.
 
 	ENGINE NOTE (deferred): whether setDamage 1 fells A2 terrain trees and whether fallen
 	trunks sync to JIP is DEFERRED to the integration smoke test.  Charge ordering is safe

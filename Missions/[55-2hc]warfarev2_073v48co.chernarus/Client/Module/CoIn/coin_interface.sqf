@@ -720,7 +720,13 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						};
 
 						if (_class in _defenses) then {
-							["RequestDefense", [sideJoined,_class,_pos,_dir,manningDefense,(_logic == RCoin)]] Call WFBE_CO_FNC_SendToServer;
+							//--- Site Clearance: dedicated PVF so the server receives the real player identity.
+							//--- All other defenses use the standard RequestDefense path.
+							if (_class == "Land_Pneu") then {
+								["RequestSiteClearance", [sideJoined,_pos,player]] Call WFBE_CO_FNC_SendToServer;
+							} else {
+								["RequestDefense", [sideJoined,_class,_pos,_dir,manningDefense,(_logic == RCoin)]] Call WFBE_CO_FNC_SendToServer;
+							};
 							lastBuilt = _par;
 							_area = [_pos,((sidejoined) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity2;
 							_get = _area getVariable 'avail';
