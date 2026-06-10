@@ -333,9 +333,10 @@ while {!WFBE_GameOver} do {
 
 					//--- 2. SPAWN new radar (only for WEST/EAST — resistance has no CBR registry).
 					if (_newSide == west || _newSide == east) then {
-						//--- Side-specific mast: WEST = Land_Antenna (NATO whip mast),
-						//---   EAST = Land_telek1 (taller cell-tower mast). Matches Init_Defenses.sqf CBRADAR core comments.
-						_radarClass = if (_newSide == west) then {"Land_Antenna"} else {"Land_telek1"};
+						//--- Both sides use Land_Antenna (confirmed-present whip mast). Land_telek1 assessed
+						//---   as likely absent at runtime for this content set — using Land_Antenna for both.
+						//---   Visual distinctness is provided by the side-specific dressing template.
+						_radarClass = "Land_Antenna";
 
 						//--- Position: 60 m east of airfield logic (off the runway centerline).
 						_radarPos = if !(isNull _airfieldLogic) then {
