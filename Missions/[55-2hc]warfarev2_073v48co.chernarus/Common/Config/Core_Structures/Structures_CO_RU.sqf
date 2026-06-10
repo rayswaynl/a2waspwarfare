@@ -96,7 +96,7 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR") > 0) then {
 
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
 	_v = _v		+ ["CBRadar"];
-	_n = _n		+ ["Land_telek1"];
+	_n = _n		+ ["Land_Antenna"]; //--- Land_telek1 rejected: likely absent at runtime for this content set
 	_d = _d		+ [localize "STR_WF_UPGRADE_CBRadar"];
 	_c = _c		+ [2400];
 	_t = _t		+ [if (WF_Debug) then {1} else {60}];
@@ -122,7 +122,7 @@ for [{_count = count _v - 1},{_count >= 0},{_count = _count - 1}] do {
 
 {
 	missionNamespace setVariable [Format ["%1%2",_side, _x select 0], _x select 1];
-} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR","Land_telek1"],["BANK","Land_Mil_hangar_EP1"]];
+} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR","Land_Antenna"],["BANK","Land_Mil_hangar_EP1"]]; //--- Land_telek1 rejected: likely absent
 
 missionNamespace setVariable [Format["WFBE_%1MHQNAME", _side], _MHQ];
 missionNamespace setVariable [Format["WFBE_%1STRUCTURES", _side], _v];
