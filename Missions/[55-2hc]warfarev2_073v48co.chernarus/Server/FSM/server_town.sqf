@@ -292,6 +292,11 @@ while {!WFBE_GameOver} do {
 				_sp setVehicleInit Format ["[this,false,%1] ExecVM 'Client\Init\Init_BaseStructure.sqf'", _newSID];
 				processInitCommands;
 
+				//--- Wire Hit/Killed EHs so destruction grants bounty and removes SP from wfbe_structures.
+				//--- Mirrors the pattern in Construction_SmallSite.sqf (~line 141/147).
+				_sp addEventHandler ["hit", {_this Spawn BuildingDamaged}];
+				Call Compile Format ["_sp AddEventHandler ['killed',{[_this select 0,_this select 1,'%1'] Spawn BuildingKilled}];", "ServicePoint"];
+
 				//--- Store on location for cleanup on next capture.
 				_location setVariable ["wfbe_airfield_sp", _sp, true];
 
