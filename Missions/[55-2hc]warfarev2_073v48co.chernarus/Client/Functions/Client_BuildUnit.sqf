@@ -171,6 +171,27 @@ _queu = _building getVariable "queu";
 if (isNil "_queu") then {_queu = []};
 _queu = _queu + [_unique];
 _building setVariable ["queu",_queu,true];
+//--- QoL cancel: store price-paid and cpt in parallel arrays so Action_CancelQueue.sqf can refund correctly.
+private ["_queuCosts","_queuCpts"];
+_queuCosts = _building getVariable ["queu_costs", []];
+_queuCosts = _queuCosts + [_currentCost];
+_building setVariable ["queu_costs", _queuCosts, true];
+_queuCpts = _building getVariable ["queu_cpts", []];
+_queuCpts = _queuCpts + [_cpt];
+_building setVariable ["queu_cpts", _queuCpts, true];
+//--- QoL cancel: add a cancel action on this building for the buyer (removed after their slot resolves).
+private ["_cancelActionID"];
+_cancelActionID = _building addAction [
+	"<t color='#ff9900'>Cancel last queued unit</t>",
+	"Client\Action\Action_CancelQueue.sqf",
+	[_factory],
+	50,
+	false,
+	true,
+	"",
+	"cursorObject == _target && player distance _target < 25"
+];
+_building setVariable [Format ["wfbe_cancel_action_%1", getPlayerUID player], _cancelActionID];
 
 _ret = 0;
 _queu2 = [0];
@@ -204,8 +225,34 @@ if (_show) then {hint(parseText(Format [localize "STR_WF_INFO_BuyEffective",_des
 sleep _waitTime;
 
 _queu = _building getVariable "queu";
+private ["_qIdx"];
+_qIdx = _queu find _unique;
 _queu = _queu - [_unique];
 _building setVariable ["queu",_queu,true];
+//--- QoL cancel: keep parallel arrays in sync when the unit actually spawns.
+if (_qIdx >= 0) then {
+	private ["_qCosts","_qCpts","_newArr","_i"];
+	_qCosts = _building getVariable ["queu_costs", []];
+	_qCpts  = _building getVariable ["queu_cpts",  []];
+	if (_qIdx < count _qCosts) then {
+		_newArr = []; _i = 0;
+		{if (_i != _qIdx) then {_newArr = _newArr + [_x]}; _i = _i + 1} forEach _qCosts;
+		_building setVariable ["queu_costs", _newArr, true];
+	};
+	if (_qIdx < count _qCpts) then {
+		_newArr = []; _i = 0;
+		{if (_i != _qIdx) then {_newArr = _newArr + [_x]}; _i = _i + 1} forEach _qCpts;
+		_building setVariable ["queu_cpts", _newArr, true];
+	};
+};
+//--- QoL cancel: remove the per-player cancel action once their slot is resolved.
+private ["_myActionKey","_myActionID"];
+_myActionKey = Format ["wfbe_cancel_action_%1", getPlayerUID player];
+_myActionID = _building getVariable [_myActionKey, -1];
+if (_myActionID >= 0) then {
+	_building removeAction _myActionID;
+	_building setVariable [_myActionKey, -1];
+};
 
 _group = group player;
 _spawnedUnits = [];
