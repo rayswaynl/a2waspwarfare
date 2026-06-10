@@ -2,7 +2,7 @@
 
 **Experimental feature branch** built on `release/2026-06-feature-bundle` (`a96fdda2`). Ships as a separate optional mission **"WASP Experital TEST"** for the Hetzner test server, alongside (not replacing) the PR8 default. Every feature is individually toggleable via a `WFBE_C_*` gate; all default ON in this mission, all byte-identical to baseline when gated off.
 
-> Status: **All 21 work items complete (~83 commits) — feature-complete.** Remaining: pack/smoke/deploy to the test server + player-facing Discord changelog. Living doc — updated as work lands.
+> Status: **All 21 work items complete (~84 commits) — feature-complete and DEPLOYED.** Live on the Hetzner test server (78.46.107.142) as the optional mission `WASP_Experital_TEST.Chernarus` since 2026-06-10, alongside the untouched PR8 default. Player-facing Discord changelog delivered.
 
 ---
 
@@ -66,7 +66,7 @@ _Pre-existing, logged (not introduced here): `airRaid` nuke-warning sound in `Nu
 - ✅ **Airfield capture points** — implemented (Task 12), see Features section above.
 - ✅ **Airfield built-in CBR** — implemented, see Features section above.
 - ✅ **Capture-to-unlock premium units** — implemented (Tasks 21–22), see Features section above. *(Takistan trigger names — Loy Manara AF → T-72, Rasman AF → RM-70 — carried as data for the regenerated build.)*
-- ⏳ **Pack / smoke / deploy** to Hetzner as the optional mission + RPT classname checks
-- ⏳ Player-facing Discord changelog (at deploy)
+- ✅ **Pack / smoke / deploy** — deployed 2026-06-10 as `MPMissions\WASP_Experital_TEST.Chernarus` (folder deploy, matching the box's existing convention; 800 files, generated `version.sqf` included). Static smoke 31/33 — the 2 fails are baseline drift (AARadar-wall removal + AFKkick module split exist only on `master`, post-date this branch's base; the AFK xor fix itself IS present in this branch's `updateclient.sqf`). One-shot `WFBE_CLASSCHECK` RPT probes wired into the deployed copy's `initJIPCompatible.sqf` (deploy-only, not in git). PR8 default mission and the running server untouched. **Known box limitation:** ACR DLC cannot decrypt on this headless server, so `T72M4CZ_ACR`/`RM70_ACR` are expected to fail the classcheck there — the unlock *gate logic* is what's testable on this box; the units themselves need a DLC-capable host.
+- ✅ Player-facing Discord changelog — delivered 2026-06-10 (3 blocks, capture-unlocks included as shipped).
 
 **Deferred (not blocking):** group-cap pre-warning log & zombie-disconnect cleanup; buy-tab array hoist (owner declined); hitpoint-aware paid repair (no A2 command precedent).
