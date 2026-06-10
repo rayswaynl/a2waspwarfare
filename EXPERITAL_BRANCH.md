@@ -2,7 +2,7 @@
 
 **Experimental feature branch** built on `release/2026-06-feature-bundle` (`a96fdda2`). Ships as a separate optional mission **"WASP Experital TEST"** for the Hetzner test server, alongside (not replacing) the PR8 default. Every feature is individually toggleable via a `WFBE_C_*` gate; all default ON in this mission, all byte-identical to baseline when gated off.
 
-> Status: **19 / 21 work items complete (~72 commits)**. Living doc — updated as work lands. Player-facing Discord changelog is produced separately at deploy.
+> Status: **All 21 work items complete (~83 commits) — feature-complete.** Remaining: pack/smoke/deploy to the test server + player-facing Discord changelog. Living doc — updated as work lands.
 
 ---
 
@@ -36,6 +36,10 @@
 
 ### Airfield capture points
 - **Airfield capture objectives** (`WFBE_C_AIRFIELDS`) — NWAF, NEAF and Balota Airfield are now live capture towns (50-supply, `PMCAirfield` garrison type). Defended by up to ~18 PMC infantry (Squad/Team/AT/Sniper) + Motorized and AA_Light vehicle groups across 6 spawn slots (70% infantry budget). Capturing an airfield spawns a **side-correct repair point** (`WFBE_RepairTruckServicePoint=true`, registered in side-logic structures, map marker via `Init_BaseStructure`) and an **exclusive hangar** on the matching `LocationLogicAirport` entity. The hangar's buy menu overrides to `WFBE_AIRFIELD_UNITS` — a curated cross-faction roster (`L39_TK_EP1`, `An2_TK_EP1`, `Mi17_Ins` on Chernarus) available **nowhere else**. Recapture deletes the previous owner's SP and hangar, cleans up the side-logic structures list, and re-spawns for the new side. The `Init_Airports.sqf` auto-hangar path is skipped for flagged airports so lifecycle is fully capture-event-driven.
+- **Airfield built-in Counter Battery Radar** — every captured airfield also gives its owner a permanent, indestructible 2,000 m CBR (`Land_Antenna` core + dressing, `wfbe_cbr_radius=2000`, `HandleDamage`-immune). Ownership follows the airfield: explicit registry hand-off on recapture (the indestructible radar can't be pruned lazily, so removal is event-driven). Resistance captures get no radar (no GUER CBR registry). Gated on both `WFBE_C_AIRFIELDS` and `WFBE_C_STRUCTURES_COUNTERBATTERY`.
+
+### Capture-to-unlock premium units
+- **Capture-to-unlock** (`WFBE_C_CAPTURE_UNLOCKS`) — holding **Krasnostav** unlocks the **Czech T-72** (`T72M4CZ_ACR`, Heavy factory lvl 4, $7,000); holding **NW Airfield** unlocks the **RM-70** rocket-MLRS (`RM70_ACR`, Light factory lvl 4, $6,800, full artillery integration: map markers + fire-mission menu). Both newly registered ACR units, added to **both sides'** arrays — whichever team holds the trigger town can build them **at its own factories** (ownership + factory level gated, via a forEach/exitWith scan — A2OA has no findIf). Distinct from the airfield-exclusive aircraft. Takistan trigger names (Loy Manara AF → T-72, Rasman AF → RM-70) carried as data for the regenerated build. AI commanders may buy these unconditionally (accepted as AI privilege, documented).
 
 ### Telemetry
 - **WASPSTAT** (`WFBE_C_STATLOG`) — extends the existing `WASPSTAT|v1` RPT line family with `KILL` / `CAPTURE` / `ROUNDEND` records (killer+victim, town ownership change, round winner+duration) for the future miksuu.com rankings pipeline. Format documented in `docs/WASPSTAT-FORMAT.md`.
@@ -54,14 +58,14 @@
 ---
 
 ## Process
-Subagent-driven: each feature implemented by a fresh agent, then **spec-reviewed and (for high-stakes changes) adversarially reviewed** before acceptance. **Full 7-dimension cross-feature review complete** — found & fixed 2 integration blockers that per-task review couldn't see: Site Clearance was a silent no-op (`Server_SiteClearance` never compiled into `Init_Server`), and EASA category tags always returned `[AG]` (a double-`select 0` iterated a string's characters). All 10 gates declared, all 4 new PVFs wired, gate-off paths inert, feature stacks compose cleanly. **Branch is deploy-ready pending the airfield feature.**
+Subagent-driven: each feature implemented by a fresh agent, then **spec-reviewed and (for high-stakes changes) adversarially reviewed** before acceptance. **Full 7-dimension cross-feature review complete** — found & fixed 2 integration blockers that per-task review couldn't see: Site Clearance was a silent no-op (`Server_SiteClearance` never compiled into `Init_Server`), and EASA category tags always returned `[AG]` (a double-`select 0` iterated a string's characters). All feature gates declared, all new PVFs wired, gate-off paths inert, feature stacks compose cleanly. A second **6-dimension mission-compatibility audit** (each finding adversarially verified) cleared the airfield/CBR/unlock additions against the base mission. **Branch is feature-complete and deploy-ready.**
 
 _Pre-existing, logged (not introduced here): `airRaid` nuke-warning sound in `NukeIncoming.sqf` has no CfgSound entry._
 
 ## Remaining
 - ✅ **Airfield capture points** — implemented (Task 12), see Features section above.
-- ⏳ **Airfield built-in CBR** — permanent 2,000 m radar following the airfield owner
-- ⏳ **Capture-to-unlock premium units** — holding **Krasnostav** (Cherno) / **Loy Manara AF** (Taki) unlocks the **Czech T-72** (`T72M4CZ_ACR`, Heavy factory lvl 4); holding **NW Airfield** (Cherno) / **Rasman AF** (Taki) unlocks the **RM-70** rocket-MLRS (`RM70_ACR`, Light factory lvl 4, registered as artillery). Both units are **added to the mission** (neither was present) and **built at your own factories**, gated by (ownership of the trigger location + factory level). **Whichever team captures the location can build them** — added to both sides' arrays. Distinct from the airfield-exclusive aircraft (which are bought *at* the airfield). Mapping is data-driven by town name so both maps share one table. *(Takistan names are carried as data for the regenerated build only.)*
+- ✅ **Airfield built-in CBR** — implemented, see Features section above.
+- ✅ **Capture-to-unlock premium units** — implemented (Tasks 21–22), see Features section above. *(Takistan trigger names — Loy Manara AF → T-72, Rasman AF → RM-70 — carried as data for the regenerated build.)*
 - ⏳ **Pack / smoke / deploy** to Hetzner as the optional mission + RPT classname checks
 - ⏳ Player-facing Discord changelog (at deploy)
 
