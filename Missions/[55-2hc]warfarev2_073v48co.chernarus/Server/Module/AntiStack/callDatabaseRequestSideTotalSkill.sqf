@@ -32,6 +32,11 @@ if (_procedureName == "REQUEST_SIDE_SKILL") then {
 
 _requestID = call compile _requestID;
 
+//--- task46 (claude): DB extension absent/unreachable -> callExtension returns "" and "call compile" yields nil; exit before "select 1" to avoid the undefined-variable RPT cascade.
+if (isNil "_requestID" || {(typeName _requestID) != "ARRAY"}) exitWith {
+	0
+};
+
 // Strip request ID from the response body
 _requestID = _requestID select 1;
 
