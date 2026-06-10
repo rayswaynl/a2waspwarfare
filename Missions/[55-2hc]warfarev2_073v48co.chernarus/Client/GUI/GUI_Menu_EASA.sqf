@@ -32,7 +32,7 @@ for '_i' from 0 to count(_data)-1 do {
 		private ["_rowLabel","_catTag"];
 		_rowLabel = _row select 1;
 		if (WFBE_C_EASA_CATEGORIES == 1 && !(isNil "WFBE_EASA_FNC_LoadoutCat")) then {
-			_catTag = ((_row select 2) select 0) call WFBE_EASA_FNC_LoadoutCat;
+			_catTag = (_row select 2) call WFBE_EASA_FNC_LoadoutCat;
 			_rowLabel = _catTag + " " + _rowLabel;
 		};
 		lnbAddRow [_listBox, [Format["$%1.", _row select 0], _rowLabel]];
