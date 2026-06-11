@@ -51,6 +51,24 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 		];
 		missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _program + _order];
 		["INFORMATION", Format ["AI_Commander.sqf: [%1] doctrine research program set (%2: factory id %3 to lvl 3, Gear 3, Barracks 2, then branch out).", str _side, _doctrine, _factory]] Call WFBE_CO_FNC_AICOMLog;
+
+		//--- V0.6 task 49c: experital-awareness research extension (nil-guarded).
+		//--- Convoys (PATROLS lvl 4): activate when the side's LEVELS array shows PATROLS max >= 4.
+		//--- CBRADAR (upgrades 1..2): activate when WFBE_UP_CBRADAR constant exists and the
+		//--- LEVELS array is long enough to include it. Both are no-ops on this mission.
+		_upgLvls = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_LEVELS", str _side], []];
+		if (!isNil "WFBE_UP_PATROLS" && {count _upgLvls > WFBE_UP_PATROLS} && {(_upgLvls select WFBE_UP_PATROLS) >= 4}) then {
+			_order = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], []];
+			missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _order + [[WFBE_UP_PATROLS,4]]];
+			["INFORMATION", Format ["AI_Commander.sqf: [%1] experital scaffold: Convoys (PATROLS lvl 4) appended to research program.", str _side]] Call WFBE_CO_FNC_AICOMLog;
+			diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|0|SCAFFOLD_RESEARCH|Convoys-PATROLS4");
+		};
+		if (!isNil "WFBE_UP_CBRADAR" && {count _upgLvls > WFBE_UP_CBRADAR}) then {
+			_order = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], []];
+			missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _order + [[WFBE_UP_CBRADAR,1],[WFBE_UP_CBRADAR,2]]];
+			["INFORMATION", Format ["AI_Commander.sqf: [%1] experital scaffold: CBRadar lvl 1-2 appended to research program (after factory-3 stage).", str _side]] Call WFBE_CO_FNC_AICOMLog;
+			diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|0|SCAFFOLD_RESEARCH|CBRadar-1-2");
+		};
 	};
 };
 

@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated"];
 
 _side = _this;
 _sideText = str _side;
@@ -71,6 +71,31 @@ if (!isNil "_upgrades") then {
 _order = if (_doctrine == "HF") then {["CommandCenter","Barracks","Heavy"]} else {["CommandCenter","Barracks","Light"]};
 if (_coreDone) then {
 	_order = _order + (if (_doctrine == "HF") then {["Light","ServicePoint","Aircraft"]} else {["Heavy","ServicePoint","Aircraft"]});
+};
+
+//--- V0.6 task 49b: experital-awareness build extension (nil-guarded, no-op on this mission).
+//--- CBRadar and Bank only enter _order when the side's STRUCTURES array lists them.
+//--- The EXACT type-name strings come from Structures_CO_RU/W.sqf in the experital branch:
+//---   CBR  -> "CBRadar"   (WFBE_C_STRUCTURES_COUNTERBATTERY guard in experital)
+//---   Bank -> "Bank"      (WFBE_C_ECONOMY_BANK guard in experital)
+_scaffoldActivated = false;
+_cbrIdx = _names find "CBRadar";
+if (_cbrIdx >= 0) then {
+	_order = _order + ["CBRadar"];
+	_scaffoldActivated = true;
+};
+_bankIdx = _names find "Bank";
+if (_bankIdx >= 0) then {
+	//--- Supply gate: only attempt Bank when supply > 1.5x its construction cost.
+	_bankCost = _costs select _bankIdx;
+	if (_supply > _bankCost * 1.5) then {
+		_order = _order + ["Bank"];
+		_scaffoldActivated = true;
+	};
+};
+if (_scaffoldActivated) then {
+	["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] experital build scaffold ACTIVE (CBR=%2 Bank=%3 in order).", _sideText, (_cbrIdx >= 0), (_bankIdx >= 0)]] Call WFBE_CO_FNC_AICOMLog;
+	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SCAFFOLD_BUILD|CBR=" + str (_cbrIdx >= 0) + " Bank=" + str (_bankIdx >= 0));
 };
 
 _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;

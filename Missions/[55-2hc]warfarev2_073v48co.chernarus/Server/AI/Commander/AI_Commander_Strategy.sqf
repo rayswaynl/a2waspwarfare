@@ -58,7 +58,9 @@ for "_i" from 1 to _want do {
 			_dNear = 1e9;
 			{ if ((_x getVariable "sideID") == _sideID) then {_d = _t distance _x; if (_d < _dNear) then {_dNear = _d}} } forEach towns;
 			if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
-			_score = (_t getVariable ["supplyValue", 0]) - (_dNear / 150);
+			//--- V0.6 task 49a: town weight hook (nil-safe, zero on this mission;
+			//--- experital's airfield init can set wfbe_aicom_town_weight on a town object).
+			_score = (_t getVariable ["supplyValue", 0]) - (_dNear / 150) + (_t getVariable ["wfbe_aicom_town_weight", 0]);
 			if (_score > _bestScore) then {_bestScore = _score; _bestTown = _t};
 		};
 	} forEach _cands;
