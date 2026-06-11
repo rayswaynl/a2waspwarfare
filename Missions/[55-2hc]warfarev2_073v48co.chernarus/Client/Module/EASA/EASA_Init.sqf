@@ -576,16 +576,18 @@ _easaLoadout = _easaLoadout + [
 //     57mmLauncher (S-5 rocket pod) is used for all three pod hardpoints (3 magazines
 //     = 192 rounds); this is the only pod-type weapon available in A2 EASA.
 //     Documented substitution: 3x S-5 pod mags represent 2x23mm pods + 1x57mm pod.
-//   Falanga/AT-2 ATGM: ACR Mi-24D uses AT9Launcher + 8Rnd_AT9_Mi24V (Ataka-V);
-//     no separate Falanga (AT-2) classname exists in A2 ACR — 2x8 Ataka-V used.
+//   Falanga/AT-2 ATGM: no Falanga (AT-2) classname exists in A2 ACR; the owner intent
+//     is a TOKEN anti-armor sting (early-game "meh"), so ONE 4Rnd Ataka mag x2 launchers
+//     = 8 total was still too strong -> 2x 4Rnd_AT9_Mi24P kept the mission-standard mag
+//     but the DEFAULT loadout carries NO ATGM at all (rockets only, stock-like).
 //   Category: AG (all weapons are ground-attack — AT9Launcher and 57mmLauncher both
 //     match the AG substring pattern in WFBE_EASA_FNC_WeaponCat).
 if (isClass (configFile >> "CfgVehicles" >> "Mi171Sh_rockets_CZ_EP1")) then {
 	_easaVehi = _easaVehi + ['Mi171Sh_rockets_CZ_EP1'];
-	_easaDefault = _easaDefault + [[['57mmLauncher','AT9Launcher'],['64Rnd_57mm','64Rnd_57mm','8Rnd_AT9_Mi24V']]];
+	_easaDefault = _easaDefault + [[['57mmLauncher'],['64Rnd_57mm','64Rnd_57mm']]];
 	_easaLoadout = _easaLoadout + [
 	[
-	[5600,'Gun Run: S-5 pods (192rnd) [23mm+57mm sub] | Ataka-V (16) [Falanga sub]',[['57mmLauncher','AT9Launcher'],['64Rnd_57mm','64Rnd_57mm','64Rnd_57mm','8Rnd_AT9_Mi24V','8Rnd_AT9_Mi24V']]]
+	[4400,'Gun Run: S-5 (192) | Ataka-V (8)',[['57mmLauncher','AT9Launcher'],['64Rnd_57mm','64Rnd_57mm','64Rnd_57mm','4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P']]]
 	]
 	];
 };
