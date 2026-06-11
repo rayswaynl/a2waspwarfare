@@ -29,6 +29,9 @@ _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 
 {
 	_team = _x;
+	//--- V0.6.5: skip NULL entries (wiped HC teams; getVariable on a null group
+	//--- returns nil even with a default -> nil < 0 threw and killed this worker).
+	if (!isNull _team) then {
 	_unassigned = false;
 	if ((_team getVariable ["wfbe_teamtype", -1]) < 0) then {_unassigned = true};
 	//--- V0.3: HC-resident teams carry a fixed template from founding - skip.
@@ -67,4 +70,5 @@ _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 			};
 		};
 	};
+	}; //--- V0.6.5 null-team guard
 } forEach _teams;

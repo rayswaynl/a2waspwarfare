@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng"];
 
 _side = _this;
 _sideText = str _side;
@@ -34,8 +34,22 @@ if (!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {
 	if (_logik getVariable ["wfbe_hqinuse", false]) exitWith {};
 	_deployCost = _costs select 0;
 	if (_supply >= _deployCost) then {
+		//--- V0.6.5 owner report: HQ deployed ON a road (MHQ start spot). Nudge the
+		//--- deploy position off-road/out-of-water; fall back to the raw spot if no
+		//--- candidate is found within 20 tries.
+		_dPos = getPos _hq;
+		if ((count (_dPos nearRoads 14) > 0) || {surfaceIsWater _dPos}) then {
+			_dTry = 0;
+			while {_dTry < 20 && {(count (_dPos nearRoads 14) > 0) || {surfaceIsWater _dPos}}} do {
+				_dAng = random 360;
+				_dPos = [((getPos _hq) select 0) + (22 + random 28) * sin _dAng, ((getPos _hq) select 1) + (22 + random 28) * cos _dAng, 0];
+				_dTry = _dTry + 1;
+			};
+			if ((count (_dPos nearRoads 14) > 0) || {surfaceIsWater _dPos}) then {_dPos = getPos _hq};
+			["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] HQ deploy spot nudged off-road to %2 (%3 tries).", _sideText, _dPos, _dTry]] Call WFBE_CO_FNC_AICOMLog;
+		};
 		if (_dual) then {[_side, -_deployCost, "AI commander HQ deployment.", false] Call ChangeSideSupply};
-		[_classes select 0, _side, getPos _hq, getDir _hq, 0] ExecVM "Server\Construction\Construction_HQSite.sqf";
+		[_classes select 0, _side, _dPos, getDir _hq, 0] ExecVM "Server\Construction\Construction_HQSite.sqf";
 		["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] deploying HQ (cost %2 supply).", _sideText, _deployCost]] Call WFBE_CO_FNC_AICOMLog;
 	};
 };

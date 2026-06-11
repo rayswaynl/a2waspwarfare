@@ -37,7 +37,13 @@ _assigned = [];
 
 {
 	_team = _x;
-	_aliveCount = {alive _x} count (units _team);
+	//--- V0.6.5: wiped HC teams leave NULL groups in wfbe_teams (index-aligned registry,
+	//--- entries must NOT be removed). getVariable on a null group returns nil even with
+	//--- a default -> toLower nil threw here every tick and killed town assignment for
+	//--- every team after the first null (live-round towns stuck at 0/0). Skip nulls.
+	_aliveCount = 0;
+	if (!isNull _team) then {_aliveCount = {alive _x} count (units _team)};
+	if (_aliveCount > 0) then {
 	_autonomous = _team getVariable ["wfbe_autonomous", false];
 	_modeNow = toLower (_team getVariable ["wfbe_teammode", "towns"]);
 	_canDrive = false;
@@ -162,4 +168,5 @@ _assigned = [];
 			};
 		};
 	};
+	}; //--- V0.6.5 null-team guard
 } forEach _teams;
