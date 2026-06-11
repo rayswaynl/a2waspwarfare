@@ -351,6 +351,7 @@ if (isNil "WFBE_CL_FNC_CoinValidity") then {
 	WFBE_CL_FNC_CoinValidity = compile preprocessFile "Client\Module\CoIn\coin_validity.sqf";
 };
 //--- Throttled validity state (reset each session open).
+private ["_lastValidityCheck","_validityResult","_validityReason"];
 _lastValidityCheck = -999;
 _validityResult    = [true,""];
 _validityReason    = "";
