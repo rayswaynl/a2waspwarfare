@@ -604,12 +604,6 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 				_logic setVariable ["BIS_COIN_preview",_preview];
 				_new = true;
 
-				//--- Facing arrow: attached at +2.5m ahead, +1.0m up so it rotates with the ghost.
-				private "_facingArrow";
-				_facingArrow = "Sign_arrow_down_EP1" createVehicleLocal (getPos _preview);
-				_facingArrow attachTo [_preview, [0, 2.5, 1.0]];
-				_logic setVariable ["BIS_COIN_arrow", _facingArrow];
-
 				//--- Preview Helper.
 				if (_itemclass in _greenList && _index != -1) then {
 					_distance = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDISTANCES",sideJoinedText]) select _index;
@@ -626,9 +620,6 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 					_logic setVariable ['WFBE_Helper',_helper];
 				};
 
-				_preview setObjectTexture [0,_colorGray];
-				_preview setVariable ["BIS_COIN_color",_colorGray];
-
 				//--- Exception - preview not created
 				if (isnull _preview) then {
 					deleteVehicle _preview;
@@ -644,6 +635,16 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						deleteVehicle _get;
 						_logic setVariable ['BIS_COIN_arrow',nil];
 					};
+				} else {
+					_preview setObjectTexture [0,_colorGray];
+					_preview setVariable ["BIS_COIN_color",_colorGray];
+
+					//--- Facing arrow: attached at +2.5m ahead, +1.0m up so it rotates with the ghost.
+					//--- Guard: only create when preview is valid (non-null).
+					private "_facingArrow";
+					_facingArrow = "Sign_arrow_down_EP1" createVehicleLocal (getPos _preview);
+					_facingArrow attachTo [_preview, [0, 2.5, 1.0]];
+					_logic setVariable ["BIS_COIN_arrow", _facingArrow];
 				};
 
 			} else {
@@ -796,17 +797,6 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 					_stripText = "";
 				};
 
-				//--- Refresh 112224 when strip text changes (throttle fires or item deselected).
-				if (_stripText != _stripTextOld) then {
-					_stripTextOld = _stripText;
-					private "_cashBase";
-					_cashBase = _logic getVariable ["BIS_COIN_cashTextBase", ""];
-					if (_cashBase != "") then {
-						((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112224) ctrlSetStructuredText (parseText (_cashBase + _stripText));
-						((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112224) ctrlCommit 0;
-					};
-				};
-
 				_tooltip = _itemclass;
 				_tooltipType = "preview";
 
@@ -948,6 +938,18 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 			((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112201) ctrlCommit 0;
 			//--- No item selected: clear strip.
 			_stripText = "";
+		};
+
+		//--- Refresh 112224 when strip text changes (throttle fires or item deselected).
+		//--- Runs in both branches so deselect clears the strip immediately.
+		if (_stripText != _stripTextOld) then {
+			_stripTextOld = _stripText;
+			private "_cashBase";
+			_cashBase = _logic getVariable ["BIS_COIN_cashTextBase", ""];
+			if (_cashBase != "") then {
+				((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112224) ctrlSetStructuredText (parseText (_cashBase + _stripText));
+				((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112224) ctrlCommit 0;
+			};
 		};
 
 		_oldTooltip = _logic getVariable "BIS_COIN_tooltip";
