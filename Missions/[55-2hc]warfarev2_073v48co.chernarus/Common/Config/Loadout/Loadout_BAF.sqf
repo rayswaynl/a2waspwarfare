@@ -36,10 +36,6 @@ _m = _m + ['1Rnd_SmokeGreen_M203'];
 _m = _m + ['1Rnd_SmokeYellow_M203'];
 _m = _m + ['Mine'];
 _m = _m + ['PipeBomb'];
-_m = _m + ['BAF_ied_v1'];
-_m = _m + ['BAF_ied_v2'];
-_m = _m + ['BAF_ied_v3'];
-_m = _m + ['BAF_ied_v4'];
 
 _m = [_m, _side] Call Compile preprocessFile "Common\Config\Config_SortMagazines.sqf";
 
