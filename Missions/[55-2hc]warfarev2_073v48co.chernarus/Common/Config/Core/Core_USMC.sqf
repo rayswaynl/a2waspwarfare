@@ -140,6 +140,9 @@ _i = _i + [['','',6500,40,-2,if (WF_A2_Vanilla) then {3} else {4},2,0,'USMC',[]]
 _c = _c + ['MH60S'];
 _i = _i + [['','',6528,30,-2,1,3,0,'USMC',[]]];
 
+_c = _c + ['UH1H_EP1'];
+_i = _i + [['','',9800,30,-2,2,3,0,'USMC',[]]]; //--- WEST salvage helicopter (salvage-only by classname, mirrors EAST Mi17_medevac_CDF)
+
 _c = _c + ['UH1Y'];
 _i = _i + [['','',10522,35,-2,2,3,0,'USMC',[]]];
 

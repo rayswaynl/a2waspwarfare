@@ -15,7 +15,7 @@ missionNamespace setVariable [Format["WFBE_%1AMBULANCES", _side], ['HMMWV_Ambula
 missionNamespace setVariable [Format["WFBE_%1REDEPLOYTRUCKS", _side], ['MTVR']]; //--- MTVR (vanilla A2) for Chernarus; MtvrRepair_DES_EP1 path used elsewhere — divergence is INTENTIONAL (map-variant split).
 //missionNamespace setVariable [Format ["WFBE_%1MASHES", _side], ['MASH']];
 missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCKS", _side], ['MtvrRepair','MtvrRepair_DES_EP1']];
-missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_USMC','MtvrSalvage_DES_EP1']];
+missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_USMC','MtvrSalvage_DES_EP1','UH1H_EP1']];
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCKS", _side], ['WarfareSupplyTruck_USMC','MtvrSupply_DES_EP1']];
 missionNamespace setVariable [Format["WFBE_%1UAV", _side], 'MQ9PredatorB_US_EP1'];
 

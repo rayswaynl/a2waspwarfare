@@ -287,6 +287,7 @@ _u = _u		+ ['C130J_US_EP1'];
 _u = _u		+ ['BAF_Merlin_HC3_D'];
 _u = _u		+ ['AH6J_EP1'];
 _u = _u		+ ['UH1Y'];
+_u = _u		+ ['UH1H_EP1']; //--- salvage helicopter (salvage-only by classname)
 _u = _u		+ ['AW159_Lynx_BAF'];
 _u = _u		+ ['Mi24_D_CZ_ACR'];
 _u = _u		+ ['Mi171Sh_CZ_EP1'];
