@@ -24,8 +24,14 @@ _units = _retVal select 0;
 _vehicles = _retVal select 1;
 _team = _retVal select 2;
 
-if (isNull _team || {((count _units) + (count _vehicles)) == 0}) exitWith {
-	["WARNING", Format["Common_RunSidePatrol.sqf: [%1] patrol creation failed at [%2] - releasing the slot.", _side, _homeTown getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
+if (isNull _team || {count _units == 0}) exitWith {
+	//--- Fix 2026-06-11: a CREWLESS spawn (0 units, N vehicles) passed the old total-only
+	//--- guard, instantly failed the alive-check and LEAKED its empty vehicles at the
+	//--- spawn town, then re-dispatched in a loop. Delete the litter, release the slot.
+	{if (!isNull _x) then {deleteVehicle _x}} forEach _vehicles;
+	{if (!isNull _x) then {deleteVehicle _x}} forEach _units;
+	if (!isNull _team) then {deleteGroup _team};
+	["WARNING", Format["Common_RunSidePatrol.sqf: [%1] patrol creation failed/crewless at [%2] (units %3, vehicles %4, template %5) - cleaned up, releasing the slot.", _side, _homeTown getVariable "name", count _units, count _vehicles, _template]] Call WFBE_CO_FNC_AICOMLog;
 	if (isServer) then {
 		["sidepatrol-ended", _sideID, objNull] Call HandleSpecial;
 	} else {
