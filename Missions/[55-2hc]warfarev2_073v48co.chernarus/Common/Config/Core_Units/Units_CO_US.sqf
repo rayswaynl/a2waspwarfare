@@ -65,11 +65,6 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['BAF_Soldier_spotter_W'];
     _u = _u		+ ['BAF_Soldier_spotterN_W'];
     _u = _u		+ ['BAF_Soldier_TL_W'];
-    //--- Delta Force (premium).
-    _u = _u		+ ['US_Delta_Force_TL_EP1'];
-    _u = _u		+ ['US_Delta_Force_EP1'];
-    _u = _u		+ ['US_Delta_Force_Medic_EP1'];
-    _u = _u		+ ['US_Delta_Force_MG_EP1'];
 } else {
     _u 			= ['US_Soldier_Light_EP1'];
     _u = _u		+ ['US_Soldier_EP1'];

@@ -23,8 +23,6 @@ if (_side == WEST) then {
 		["USMC_Soldier_Medic",    "", false],
 		["USMC_SoldierS_Engineer","", false],
 		["US_Soldier_EP1",        "", false],
-		["US_Delta_Force_EP1",    "", false],
-		["US_Delta_Force_Night_EP1","",false],
 		["BAF_Soldier_MTP",       "", false],
 		["BAF_Soldier_SL_MTP",    "", false],
 		["CZ_Soldier_DES_EP1",    "", false],
