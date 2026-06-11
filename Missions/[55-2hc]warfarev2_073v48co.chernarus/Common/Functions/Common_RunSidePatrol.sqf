@@ -23,7 +23,9 @@ Private ["_sideID","_template","_homeTown","_side","_position","_retVal","_units
          "_team","_ldr","_target","_alive","_candidates",
          "_upgLvl","_truckCls","_truckVeh","_truckDriver","_truckList",
          "_paidThisVisit","_convoyPay","_sweepDone",
-         "_townCamps","_campObj","_sweepStart","_allOurs","_ups"];
+         "_townCamps","_campObj","_sweepStart","_allOurs","_ups",
+         "_campRange","_liveUnits","_inVehicle","_dismounted","_veh",
+         "_driver","_cargo","_u","_settleTimer","_settleTimeout"];
 
 _sideID   = _this select 0;
 _template = _this select 1;
@@ -121,29 +123,99 @@ while {!WFBE_GameOver && _alive} do {
 
 					_townCamps  = _target getVariable ["camps", []];
 					_sweepStart = time;
+					_campRange  = missionNamespace getVariable ["WFBE_C_CAMPS_RANGE", 30];
 
 					if (count _townCamps > 0) then {
 						["INFORMATION", Format["Common_RunSidePatrol.sqf: [%1] sweeping %2 camps at [%3].", _side, count _townCamps, _target getVariable "name"]] Call WFBE_CO_FNC_LogContent;
 
-						//--- Move the leader through each camp sequentially; dwell ~75 s.
+						//--- Per-camp: move leader → settle → DISMOUNT non-drivers → dwell → REMOUNT.
 						for "_ci" from 0 to ((count _townCamps) - 1) do {
 							_campObj = _townCamps select _ci;
+
+							//--- Skip dead camps to avoid nil-access on getPos of a null object.
+							if (isNull _campObj) exitWith {};
+
+							//--- Order move to camp.
 							if (!isNull leader _team && alive leader _team) then {
 								(leader _team) doMove (getPos _campObj);
 							};
+
+							//--- Settle wait: up to 20 s or leader within _campRange m.
+							_settleTimer   = time;
+							_settleTimeout = time + 20;
+							while {time < _settleTimeout} do {
+								if (!isNull leader _team && alive leader _team) then {
+									if ((leader _team) distance _campObj < _campRange) exitWith {};
+								};
+								sleep 2;
+							};
+
+							//--- DISMOUNT: unassign everyone alive who is currently inside a vehicle,
+							//---   EXCEPT one driver per vehicle (keep each vehicle driveable for remount).
+							_liveUnits  = (units _team) Call WFBE_CO_FNC_GetLiveUnits;
+							_dismounted = [];
+							{
+								_u = _x;
+								if (alive _u && vehicle _u != _u) then {
+									_veh = vehicle _u;
+									//--- Preserve exactly one driver per vehicle (already seated as driver).
+									if (_u == driver _veh) then {
+										//--- This unit IS the driver — leave them in.
+									} else {
+										unassignVehicle _u;
+										[_u] orderGetIn false;
+										_dismounted = _dismounted + [_u];
+									};
+								};
+							} forEach _liveUnits;
+
+							//--- Send dismounted infantry to the camp object.
+							if (count _dismounted > 0) then {
+								{
+									if (alive _x) then {_x doMove (getPos _campObj)};
+								} forEach _dismounted;
+							};
+
+							//--- Dwell at camp (~75 s total including settle phase).
 							sleep 75;
+
+							//--- REMOUNT: re-assign cargo and order back in (25 s grace, then proceed regardless).
+							if (count _vehicles > 0 && count _dismounted > 0) then {
+								_veh = _vehicles select 0;
+								{
+									if (alive _x && alive _veh) then {
+										_x assignAsCargo _veh;
+										[_x] orderGetIn true;
+									};
+								} forEach _dismounted;
+								sleep 25;
+							};
 						};
 
 						//--- After the camp sweep, if all camps belong to us OR the 8-min
 						//--- total timeout fired, push to the town center.
 						_allOurs = true;
 						for "_ci" from 0 to ((count _townCamps) - 1) do {
-							if (((_townCamps select _ci) getVariable "sideID") != _sideID) then {_allOurs = false};
+							if (isNull (_townCamps select _ci)) then {_allOurs = false};
+							if (!isNull (_townCamps select _ci) && ((_townCamps select _ci) getVariable ["sideID", -1]) != _sideID) then {_allOurs = false};
 						};
 
 						if (_allOurs || {time - _sweepStart > 480}) then {
+							//--- Town-center push: dismount ALL non-drivers, send to center, NO remount — hold/fight.
+							_liveUnits = (units _team) Call WFBE_CO_FNC_GetLiveUnits;
+							{
+								_u = _x;
+								if (alive _u && vehicle _u != _u) then {
+									_veh = vehicle _u;
+									if (_u != driver _veh) then {
+										unassignVehicle _u;
+										[_u] orderGetIn false;
+									};
+								};
+							} forEach _liveUnits;
+
 							if (!isNull leader _team && alive leader _team) then {
-								(leader _team) doMove (getPos _target);
+								{if (alive _x) then {_x doMove (getPos _target)}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 								sleep 30;
 							};
 						};
