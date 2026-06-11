@@ -11,8 +11,9 @@ if (_manningLoopActive) exitWith {
 };
 _defense setVariable ["WFBE_DefenseManningLoopActive", true, true];
 
-_moveInGunner = _defense getVariable "WFBE_WDDMPositionChild";
-if (isNil "_moveInGunner") then {_moveInGunner = false};
+//--- Owner call 2026-06-11: ALL base-defense crews mount instantly (spawn at the gun,
+//--- teleport in). No barracks walk = no pathfinding cost, no stalled walk-in boarding.
+_moveInGunner = true;
 
 while {alive _defense} do {
 	if (isNull(gunner _defense) || !alive gunner _defense) then {
