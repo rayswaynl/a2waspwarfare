@@ -39,8 +39,15 @@ _units    = _retVal select 0;
 _vehicles = _retVal select 1;
 _team     = _retVal select 2;
 
-if (isNull _team || {((count _units) + (count _vehicles)) == 0}) exitWith {
-	["WARNING", Format["Common_RunSidePatrol.sqf: [%1] patrol creation failed at [%2] - releasing the slot.", _side, _homeTown getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+if (isNull _team || {count _units == 0}) exitWith {
+	//--- Fix 2026-06-11: a CREWLESS spawn (0 units, N vehicles) passed the old total-only
+	//--- guard, instantly failed the alive-check and LEAKED its empty vehicles at the
+	//--- spawn town forever (observed piling up at Mogilevka), then re-dispatched in a
+	//--- loop. No infantry = no patrol: delete whatever spawned and release the slot.
+	{if (!isNull _x) then {deleteVehicle _x}} forEach _vehicles;
+	{if (!isNull _x) then {deleteVehicle _x}} forEach _units;
+	if (!isNull _team) then {deleteGroup _team};
+	["WARNING", Format["Common_RunSidePatrol.sqf: [%1] patrol creation failed/crewless at [%2] (units %3, vehicles %4, template %5) - cleaned up, releasing the slot.", _side, _homeTown getVariable "name", count _units, count _vehicles, _template]] Call WFBE_CO_FNC_LogContent;
 	if (isServer) then {
 		["sidepatrol-ended", _sideID, objNull] Call HandleSpecial;
 	} else {
@@ -72,7 +79,10 @@ if (_upgLvl >= 4) then {
 		_truckCls    = _truckList select 0;
 		_truckVeh    = _truckCls createVehicle _position;
 		_truckVeh    setPos _position;
-		_truckDriver = _truckCls createUnit [_position, _team, [], 0, "NONE"];
+		//--- Fix 2026-06-11: the driver was created with the TRUCK classname (a vehicle
+		//--- class as a soldier = no driver, truck never moves, convoy pay never fires).
+		//--- Use the side's crew soldier class instead (same source HandleDefense uses).
+		_truckDriver = (missionNamespace getVariable Format["WFBE_%1SOLDIER", _side]) createUnit [_position, _team, "", 0.6, "CORPORAL"];
 		_truckDriver moveInDriver _truckVeh;
 		["INFORMATION", Format["Common_RunSidePatrol.sqf: [%1] convoy truck [%2] spawned for L4 patrol.", _side, _truckCls]] Call WFBE_CO_FNC_LogContent;
 	};
