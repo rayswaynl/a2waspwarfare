@@ -236,6 +236,14 @@ BIS_CONTROL_CAM_Handler = {
 			_logic setVariable ["WF_RequestUpdate",true];
 		};
 
+		//--- C1: Item card toggle (Custom Action User20 — fires only on COIN display).
+		//--- Sets a global flag; the main loop processes it next tick (can't touch loop-locals here).
+		if ((missionNamespace getVariable ["WFBE_C_COIN_CARDS", 1]) > 0) then {
+			if (_key in (actionKeys "User20")) then {
+				WFBE_COIN_CARD_TOGGLE = true;
+			};
+		};
+
 		//--- Sell Defense. (Commander only) (Custom Action #3).
 		if ((_key in (actionKeys "User17")) && !isNull(commanderTeam)) then {
 			if(commanderTeam == clientTeam) then {
@@ -344,6 +352,7 @@ BIS_CONTROL_CAM_Handler = {
 
 		//--- Behold the placeholders
 		BIS_COIN_QUIT = nil;
+		WFBE_COIN_CARD_TOGGLE = nil;
 		_border = missionNamespace getVariable "BIS_COIN_border";
 		{deleteVehicle _x} forEach _border;
 		missionNamespace setVariable ["BIS_COIN_border",nil];
@@ -360,13 +369,23 @@ endLoadingScreen;
 if (isNil "WFBE_CL_FNC_CoinValidity") then {
 	WFBE_CL_FNC_CoinValidity = compile preprocessFile "Client\Module\CoIn\coin_validity.sqf";
 };
+//--- C1: item card — compile card builder once per session.
+if ((missionNamespace getVariable ["WFBE_C_COIN_CARDS", 1]) > 0) then {
+	if (isNil "WFBE_CL_FNC_CoinCard") then {
+		WFBE_CL_FNC_CoinCard = compile preprocessFile "Client\Module\CoIn\coin_cards.sqf";
+	};
+};
 //--- Throttled validity state (reset each session open).
-private ["_lastValidityCheck","_validityResult","_validityReason","_stripText","_stripTextOld"];
+private ["_lastValidityCheck","_validityResult","_validityReason","_stripText","_stripTextOld","_cardOn","_cardParamsLast"];
 _lastValidityCheck = -999;
 _validityResult    = [true,""];
 _validityReason    = "";
 _stripText         = "";
 _stripTextOld      = "~init~";
+//--- C1: item card toggle state (persisted in profileNamespace, default on).
+_cardOn              = profileNamespace getVariable ["wfbe_coin_cards_on", true];
+_cardParamsLast      = [];
+WFBE_COIN_CARD_TOGGLE = false;
 
 _canAffordCount = 0;
 _canAffordCountOld = 0;
@@ -1026,7 +1045,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 					_text1 +
 					_text2 +
 					_text3 +
-					"<br /><t size='0.75' color='#99aabb'>Custom controls: UA14 auto-walls  ·  UA15 reselect last  ·  UA16 auto-manning  ·  UA17 delete aimed  ·  rebind in Options &gt; Controls &gt; Custom</t>" +
+					"<br /><t size='0.75' color='#99aabb'>Custom controls: UA14 auto-walls  ·  UA15 reselect last  ·  UA16 auto-manning  ·  UA17 delete aimed  ·  UA20 item card on/off  ·  rebind in Options &gt; Controls &gt; Custom</t>" +
 					""
 				);
 
@@ -1166,6 +1185,42 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 		};
 		_logic setVariable ["BIS_COIN_fundsOld",_cashValues];
 		_logic setVariable ["BIS_COIN_tooltip",_tooltipType + _tooltip];
+
+		//--- C1: item card panel refresh.
+		if ((missionNamespace getVariable ["WFBE_C_COIN_CARDS", 1]) > 0) then {
+			private ["_cardParams","_cardChanged","_cardText","_cardDisplayName"];
+			//--- Process toggle request from the display key handler.
+			if (!isNil "WFBE_COIN_CARD_TOGGLE" && {WFBE_COIN_CARD_TOGGLE}) then {
+				WFBE_COIN_CARD_TOGGLE = false;
+				_cardOn = !_cardOn;
+				profileNamespace setVariable ["wfbe_coin_cards_on", _cardOn];
+				_cardParamsLast = ["~force~"];
+			};
+			_cardParams = _logic getVariable ["BIS_COIN_params", []];
+			if (isNil "_cardParams") then {_cardParams = []};
+			_cardChanged = !([_cardParams, _cardParamsLast] call bis_fnc_arraycompare);
+			if (_cardChanged) then {
+				_cardParamsLast = _cardParams;
+				if (_cardOn && {count _cardParams >= 3}) then {
+					//--- Build and display the card.
+					//--- Synthesise displayName when params have only 3 elements (no custom name).
+					_cardDisplayName = if (count _cardParams > 3) then {_cardParams select 3} else {getText (configFile >> "CfgVehicles" >> (_cardParams select 0) >> "displayName")};
+					_cardText = [_cardParams select 0, _cardParams select 1, _cardParams select 2, _cardDisplayName] call WFBE_CL_FNC_CoinCard;
+					if (isNil "_cardText") then {_cardText = ""};
+					((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112216) ctrlShow true;
+					((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112216) ctrlCommit 0;
+					((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112217) ctrlSetStructuredText (parseText _cardText);
+					((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112217) ctrlShow true;
+					((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112217) ctrlCommit 0;
+				} else {
+					//--- No item selected, or card toggled off — clear both controls.
+					((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112217) ctrlSetStructuredText (parseText "");
+					((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112217) ctrlCommit 0;
+					((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112216) ctrlShow false;
+					((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112216) ctrlCommit 0;
+				};
+			};
+		};
 
 		if (_restart) then {
 			_logic setVariable ["BIS_COIN_restart",false];
