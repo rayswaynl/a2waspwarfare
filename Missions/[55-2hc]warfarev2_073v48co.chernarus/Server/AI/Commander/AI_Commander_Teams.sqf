@@ -16,7 +16,7 @@
 	members at the factories per-unit (the V0.2 path).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups"];
+private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_facMap","_unitList"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -72,12 +72,32 @@ if (count _live > 0) then {
 	if (isNil "_templates" || isNil "_tmplUpgrades") exitWith {};
 	_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 
+	//--- V0.6.2: gate templates on REAL unit data too (same rule Produce uses) - the
+	//--- hand-authored squad metadata is stale (RU tank platoon claims heavy 1; the
+	//--- T72_RU unit data says heavy 3 for humans). Track = factory unit-list membership.
+	_facMap = [["BARRACKSUNITS", WFBE_UP_BARRACKS], ["LIGHTUNITS", WFBE_UP_LIGHT], ["HEAVYUNITS", WFBE_UP_HEAVY], ["AIRCRAFTUNITS", WFBE_UP_AIR]];
+
 	_eligible = [];
 	for "_i" from 0 to (count _templates - 1) do {
 		_u = _tmplUpgrades select _i;
 		_ok = true;
 		for "_k" from 0 to 3 do {
 			if ((_u select _k) > (_upgrades select _k)) exitWith {_ok = false};
+		};
+		if (_ok) then {
+			{
+				_cn = _x;
+				_ud = missionNamespace getVariable _cn;
+				if (!isNil "_ud") then {
+					{
+						_unitList = missionNamespace getVariable [Format ["WFBE_%1%2", _sideText, _x select 0], []];
+						if (_cn in _unitList) exitWith {
+							if ((_ud select QUERYUNITUPGRADE) > (_upgrades select (_x select 1))) then {_ok = false};
+						};
+					} forEach _facMap;
+				};
+				if (!_ok) exitWith {};
+			} forEach (_templates select _i);
 		};
 		if (_ok) then {_eligible set [count _eligible, _i]};
 	};
