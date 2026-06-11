@@ -15,6 +15,12 @@ while {!gameOver} do {
 			_structures = (_x) Call WFBE_CO_FNC_GetSideStructures;
 			_towns = (_x) Call GetTownsHeld;
 
+			//--- HQ not registered yet (early boot) -> skip this side this tick. NOTE: do NOT
+			//--- treat nil as "HQ dead": at boot factories are 0 too, and that would end the
+			//--- round instantly. The old code threw on the nil instead (16x/boot in RPT).
+			if (isNil "_hq") exitWith {};
+			if (isNull _hq) exitWith {};
+
 			_factories = 0;
 			{
 				_factories = _factories + count([_side,missionNamespace getVariable Format ["WFBE_%1%2TYPE",_side,_x], _structures] Call GetFactories);
