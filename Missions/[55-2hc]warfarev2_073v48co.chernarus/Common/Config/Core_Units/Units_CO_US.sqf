@@ -236,7 +236,7 @@ if (IS_chernarus_map_dependent) then {
         _u = _u		+ ['M6_EP1'];
     };
     _u = _u		+ ['BAF_FV510_W'];
-    _u = _u		+ ['T72M4CZ_ACR'];
+    _u = _u		+ ['T72M4CZ'];
 } else {
     _u 			= ['AAV'];
     _u = _u		+ ['M2A2_EP1'];

@@ -40,7 +40,7 @@
 - **Airfield built-in CBR.** Each captured airfield gives its owner a permanent indestructible 2,000 m CBR. Ownership transfers on recapture. Resistance captures get no CBR.
 
 ### Capture-to-Unlock Premium Units
-- Holding **Krasnostav** → Czech T-72 (`T72M4CZ_ACR`) at Heavy Factory level 4, $7,000.
+- Holding **Krasnostav** → Czech T-72 (`T72M4CZ`) at Heavy Factory level 4, $7,000.
 - Holding **NW Airfield** → RM-70 rocket artillery (`RM70_ACR`) at Light Factory level 4, $6,800 (full fire-mission menu integration).
 - Both available to whichever side holds the trigger town; AI commanders may buy unconditionally.
 

@@ -79,7 +79,7 @@ _c = _c + ['Pandur2_ACR'];
 _i = _i + [['','',2650,25,[true,false,2,0],3,1,0,'Czech',[]]];
 
 /* Heavy Vehicles — ACR premium (capture-unlock) */
-_c = _c + ['T72M4CZ_ACR'];
+_c = _c + ['T72M4CZ'];
 _i = _i + [['','',7000,45,-2,4,2,0,'Czech',[]]];
 
 /* Light Vehicles — ACR premium (capture-unlock) */

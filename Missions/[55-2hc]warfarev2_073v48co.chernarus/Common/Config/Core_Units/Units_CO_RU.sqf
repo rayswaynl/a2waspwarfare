@@ -162,7 +162,7 @@ if (IS_chernarus_map_dependent) then {
     if (!(IS_air_war_event)) then {
         _u = _u		+ ['2S6M_Tunguska'];
     };
-    _u = _u		+ ['T72M4CZ_ACR'];
+    _u = _u		+ ['T72M4CZ'];
 } else {
     _u 			= ['M113_TK_EP1'];
     _u = _u		+ ['BMP2_TK_EP1'];
