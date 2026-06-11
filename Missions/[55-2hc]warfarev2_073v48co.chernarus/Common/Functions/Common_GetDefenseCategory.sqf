@@ -19,10 +19,40 @@
 
 private ["_cls","_side","_sideText","_cat",
          "_mgs","_gls","_aapods","_atpods","_cannons","_mortars",
-         "_staticsList","_isStatic"];
+         "_staticsList","_isStatic","_matchAny"];
 
 _cls  = _this select 0;
 _side = _this select 1;
+
+//--- A2-safe substring matcher: `find` on STRINGS is an ARMA 3 command - on A2 OA it
+//--- throws "Type String, expected Array" (live-burned 2026-06-11: every classname
+//--- that reached the substring sections below killed the calling script, including
+//--- RequestDefense mid-purchase). _this = [haystackLower, [needle1, needle2, ...]].
+_matchAny = {
+	private ["_hayA","_needles","_found","_nA","_hl","_nl","_i","_j","_ok"];
+	_hayA = toArray (_this select 0);
+	_needles = _this select 1;
+	_hl = count _hayA;
+	_found = false;
+	{
+		if (!_found) then {
+			_nA = toArray _x;
+			_nl = count _nA;
+			if (_nl > 0 && _nl <= _hl) then {
+				for "_i" from 0 to (_hl - _nl) do {
+					if (!_found) then {
+						_ok = true;
+						for "_j" from 0 to (_nl - 1) do {
+							if ((_hayA select (_i + _j)) != (_nA select _j)) exitWith {_ok = false};
+						};
+						if (_ok) then {_found = true};
+					};
+				};
+			};
+		};
+	} forEach _needles;
+	_found
+};
 
 //--- Defensive entry guard (live RPT 2026-06-10: one "Undefined variable _cls" at the
 //--- toLower below — a caller passed a nil/non-string classname; an abort here can
@@ -59,37 +89,8 @@ _isStatic = (_cls in _staticsList);
 //--- WarfareBMGNest_* classes are the sandbag-ring MG nests.
 //--- The searchlight is non-crewable for combat — keep as OTHER.
 if (!_isStatic) then {
-	//--- Check via config: if the classname has a non-empty gunner turret it is a static.
-	//--- We do this via getNumber on artilleryScanner + emptyPositions proxy would need an object.
-	//--- Cheaper: match known prefixes for crewable statics across all factions.
-	private "_clsLower";
-	_clsLower = toLower _cls;
-	if (
-		(_clsLower find "mgnestt")     >= 0 ||
-		(_clsLower find "mgbag")       >= 0 ||
-		(_clsLower find "mgnest")      >= 0 ||
-		(_clsLower find "m2staticmg")  >= 0 ||
-		(_clsLower find "kord")        >= 0 ||
-		(_clsLower find "dshkm")       >= 0 ||
-		(_clsLower find "zu23")        >= 0 ||
-		(_clsLower find "ags")         >= 0 ||
-		(_clsLower find "mk19")        >= 0 ||
-		(_clsLower find "tow")         >= 0 ||
-		(_clsLower find "stinger")     >= 0 ||
-		(_clsLower find "igla")        >= 0 ||
-		(_clsLower find "metis")       >= 0 ||
-		(_clsLower find "spg9")        >= 0 ||
-		(_clsLower find "m252")        >= 0 ||
-		(_clsLower find "2b14")        >= 0 ||
-		(_clsLower find "m119")        >= 0 ||
-		(_clsLower find "d30")         >= 0 ||
-		(_clsLower find "mlrs")        >= 0 ||
-		(_clsLower find "baf_gpmg")    >= 0 ||
-		(_clsLower find "baf_gmg")     >= 0 ||
-		(_clsLower find "baf_l2a1")    >= 0 ||
-		(_clsLower find "m2hd")        >= 0 ||
-		(_clsLower find "m1129")       >= 0
-	) then {
+	//--- Match known prefixes for crewable statics across all factions (A2-safe matcher).
+	if ([toLower _cls, ["mgnestt","mgbag","mgnest","m2staticmg","kord","dshkm","zu23","ags","mk19","tow","stinger","igla","metis","spg9","m252","2b14","m119","d30","mlrs","baf_gpmg","baf_gmg","baf_l2a1","m2hd","m1129"]] call _matchAny) then {
 		_isStatic = true;
 	};
 };
@@ -99,24 +100,7 @@ if (_isStatic) exitWith {"STATICS"};
 //=============================================================================
 // 3. FORTIFICATIONS — walls, barriers, sandbags, wire, hedgehogs, nets, ramparts, nests
 //=============================================================================
-private "_clsLower2";
-_clsLower2 = toLower _cls;
-if (
-	(_clsLower2 find "hbarrier")          >= 0 ||
-	(_clsLower2 find "barrier5x")         >= 0 ||
-	(_clsLower2 find "barrier10x")        >= 0 ||
-	(_clsLower2 find "bagfence")          >= 0 ||
-	(_clsLower2 find "razorwire")         >= 0 ||
-	(_clsLower2 find "hedgehog")          >= 0 ||
-	(_clsLower2 find "hhedgehog")         >= 0 ||
-	(_clsLower2 find "camonet")           >= 0 ||
-	(_clsLower2 find "camo_net")          >= 0 ||
-	(_clsLower2 find "fort_rampart")      >= 0 ||
-	(_clsLower2 find "fort_artillery")    >= 0 ||
-	(_clsLower2 find "fortified_nest")    >= 0 ||
-	(_clsLower2 find "concrete_wall")     >= 0 ||
-	(_clsLower2 find "cncblock")          >= 0
-) exitWith {"FORTIFICATIONS"};
+if ([toLower _cls, ["hbarrier","barrier5x","barrier10x","bagfence","razorwire","hedgehog","hhedgehog","camonet","camo_net","fort_rampart","fort_artillery","fortified_nest","concrete_wall","cncblock"]] call _matchAny) exitWith {"FORTIFICATIONS"};
 
 //=============================================================================
 // 4. Everything else: OTHER (uncapped in v1)
