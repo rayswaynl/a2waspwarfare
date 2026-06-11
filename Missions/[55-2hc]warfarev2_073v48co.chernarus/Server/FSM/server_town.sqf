@@ -382,6 +382,13 @@ while {!WFBE_GameOver} do {
 						_dressTpl = Format ["WFBE_NEURODEF_CBRADAR_%1", if (_newSide == west) then {"WEST"} else {"EAST"}];
 						[_radar, _dressTpl, 0] Call WFBE_SE_FNC_SpawnStructureDressing;
 
+						//--- Task D: trigger Init_BaseStructure on clients so the CBR range circle is drawn.
+						//--- Mirrors the SP pattern (server_town.sqf ~line 313) and Construction_SmallSite.sqf ~line 138.
+						//--- _newSID is already set above (0 = west, 1 = east); recompute from _newSide.
+						_newSID = if (_newSide == west) then {0} else {1};
+						_radar setVehicleInit Format ["[this,false,%1] ExecVM 'Client\Init\Init_BaseStructure.sqf'", _newSID];
+						processInitCommands;
+
 						//--- 3. REGISTER in the new owner's CBR registry.
 						_cbrKey = if (_newSide == west) then {"WFBE_CBR_WEST"} else {"WFBE_CBR_EAST"};
 						_cbrReg = missionNamespace getVariable [_cbrKey, []];

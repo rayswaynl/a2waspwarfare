@@ -296,6 +296,7 @@ WFBE_C_VAR_FRIENDLYCOMMANDCENTERINPROXIMITY = false;
 commanderTeam = objNull;
 buildingMarker = 0;
 CCMarker = 0;
+CBRCircleMarker = 0;
 gearCost = 0;
 currentTG = 50;
 if (currentTG == 50) then {setTerrainGrid currentTG};
