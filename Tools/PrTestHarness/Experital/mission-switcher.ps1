@@ -100,18 +100,35 @@ try {
         Log "experital restored - it wins the alphabetical auto-start"
     }
 
-    # --- 5. Relaunch the chain (proven sequence incl. HC1 reslot bounce) -----------
+    # --- 5. Relaunch the chain (proven sequence; BOTH HCs get a reslot bounce) ------
+    # An HC sitting in the LOBBY when the mission starts keeps its default (BLUFOR)
+    # slot; only an HC that JIPs into the RUNNING mission is auto-seated into the CIV
+    # forceHeadlessClient slot. So after the mission is up, kill and rejoin both HCs.
     Run-Task "MiksuuPR8";  Start-Sleep 40
     Run-Task "MiksuuHC";   Start-Sleep 55
     Run-Task "DismissACR"
     Run-Task "MiksuuHC2";  Start-Sleep 50
     Run-Task "DismissACR"
+    # bounce HC1 (earliest-started client; its rejoin is a JIP -> CIV slot)
     $hc1 = Get-Process ArmA2OA -ErrorAction SilentlyContinue | Sort-Object StartTime | Select-Object -First 1
     if ($hc1) { Stop-Process -Id $hc1.Id -Force }
     End-Task "MiksuuHC"; Run-Task "MiksuuHC"; Start-Sleep 55
     Run-Task "DismissACR"
+    # bounce HC2: kill every ArmA2OA except the newest (= HC1's fresh instance), rejoin.
+    # (hc_launch.cmd's taskkill usually kills HC2 as collateral anyway - this makes it
+    # deterministic so HC2 never lingers in the BLUFOR slot it took during the lobby.)
+    $clients = @(Get-Process ArmA2OA -ErrorAction SilentlyContinue | Sort-Object StartTime)
+    if ($clients.Count -gt 1) { $clients | Select-Object -SkipLast 1 | Stop-Process -Force }
+    End-Task "MiksuuHC2"; Run-Task "MiksuuHC2"; Start-Sleep 50
+    Run-Task "DismissACR"
     Start-Sleep 10
     $procs = @(Get-Process arma2oaserver, ArmA2OA -ErrorAction SilentlyContinue).Count
+    if ($procs -lt 3) {
+        Log "procs $procs/3 - one HC2 retry (known sandbox crash)"
+        Run-Task "MiksuuHC2"; Start-Sleep 50
+        Run-Task "DismissACR"
+        $procs = @(Get-Process arma2oaserver, ArmA2OA -ErrorAction SilentlyContinue).Count
+    }
     Log "switch complete - $procs/3 processes up"
     if ($procs -lt 2) { Log "WARNING: fewer than server+1HC running - manual check advised" }
 } catch {
