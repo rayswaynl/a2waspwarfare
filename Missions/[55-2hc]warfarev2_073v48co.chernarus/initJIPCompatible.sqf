@@ -125,6 +125,22 @@ if (isMultiplayer) then {Call Compile preprocessFileLineNumbers "Common\Init\Ini
 
 Call Compile preprocessFileLineNumbers "Common\Init\Init_CommonConstants.sqf"; //--- Set the constants and the parameters, skip the params if they're already defined.
 
+//--- AICOM: +50% starting economy. MUST live here: in MP Init_Parameters always sets these from paramsArray,
+//--- so the isNil fallbacks in Init_CommonConstants never fire on a dedicated server (why earlier raises had no effect).
+//--- Air-event/WF_Debug overrides below still take precedence. AI commander seed funds scale with this (FUNDS_START * 1.5 in Init_Server).
+if (isMultiplayer) then {
+	{
+		Private "_v";
+		_v = missionNamespace getVariable _x;
+		if (!isNil "_v") then {missionNamespace setVariable [_x, round(_v * 1.5)]};
+	} forEach ["WFBE_C_ECONOMY_FUNDS_START_WEST","WFBE_C_ECONOMY_FUNDS_START_EAST","WFBE_C_ECONOMY_SUPPLY_START_WEST","WFBE_C_ECONOMY_SUPPLY_START_EAST"];
+	diag_log Format ["[WFBE (INIT)] EconomyBoost +50pct ACTIVE: fundsW=%1 fundsE=%2 supplyW=%3 supplyE=%4",
+		missionNamespace getVariable "WFBE_C_ECONOMY_FUNDS_START_WEST",
+		missionNamespace getVariable "WFBE_C_ECONOMY_FUNDS_START_EAST",
+		missionNamespace getVariable "WFBE_C_ECONOMY_SUPPLY_START_WEST",
+		missionNamespace getVariable "WFBE_C_ECONOMY_SUPPLY_START_EAST"];
+};
+
 IS_air_war_event = false;
 _airEventEnabledFromParameters = missionNamespace getVariable "WFBE_AIR_EVENT_ENABLED";
 
