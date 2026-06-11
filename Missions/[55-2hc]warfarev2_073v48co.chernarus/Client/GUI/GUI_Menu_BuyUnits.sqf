@@ -576,6 +576,19 @@ _IDCS = _IDCS - [_currentIDC];
 						hintSilent parseText "Lift-capable helicopter. <br/> <br/>Can sling-load vehicles and objects once the Airlift upgrade is unlocked. (Not a supply helicopter.)";
 					};
 
+					//--- Data-driven special-unit info popup (WFBE_SPECIAL_UNIT_HINTS).
+					//--- Format: [[classname, stringtable-key], ...].  Append pairs to add new specials.
+					private ["_wfbeSpecialHints","_wfbeHintIdx","_wfbeHintKey"];
+					_wfbeSpecialHints = missionNamespace getVariable ["WFBE_SPECIAL_UNIT_HINTS", []];
+					_wfbeHintIdx = -1;
+					{
+						if ((_x select 0) == _unit) exitWith { _wfbeHintIdx = _forEachIndex };
+					} forEach _wfbeSpecialHints;
+					if (_wfbeHintIdx >= 0) then {
+						_wfbeHintKey = (_wfbeSpecialHints select _wfbeHintIdx) select 1;
+						hintSilent parseText (localize _wfbeHintKey);
+					};
+
 					_artyClassnames = missionNamespace getVariable Format ['WFBE_%1_ARTILLERY_CLASSNAMES', sideJoinedText];
 					_varPosInNestedArray = [_artyClassnames, _unit] call WFBE_CL_FNC_FindVariableInNestedArray;
 					_isNotArtillery = [_varPosInNestedArray, -1] call BIS_fnc_areEqual;

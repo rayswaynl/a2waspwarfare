@@ -224,6 +224,18 @@ switch (_type) do {
 	    };
 	};
 
+	//--- Salvage helicopters: amber tint to distinguish them from standard transport.
+	//--- Note: A2 OA helicopters often ignore setObjectTexture on body selections;
+	//--- apply best-effort and verify in-engine — selection 0 is the fuselage on most variants.
+	//--- NEEDS-IN-ENGINE-VERIFY: confirm the tint is visible on UH1H_EP1 and Mi17_medevac_CDF.
+	case "UH1H_EP1": {
+		_vehicle setVehicleInit "this setObjectTexture [0,""#(argb,8,8,3)color(0.8,0.5,0.0,0.5,ca)""]";
+	};
+
+	case "Mi17_medevac_CDF": {
+		_vehicle setVehicleInit "this setObjectTexture [0,""#(argb,8,8,3)color(0.8,0.5,0.0,0.5,ca)""]";
+	};
+
 
 	};
 

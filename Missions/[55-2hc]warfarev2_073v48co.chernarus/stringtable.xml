@@ -9616,6 +9616,11 @@
       <English>Skip Night vote is only available at night.</English>
     </Key>
 
+    <!-- Special-unit info popups (data-driven WFBE_SPECIAL_UNIT_HINTS map) -->
+    <Key ID="STR_WF_HINT_SalvageHeli">
+      <English>Salvage Helicopter - recovers wrecks for cash, salvage-only role. Unlocks at Air level 1.</English>
+    </Key>
+
     </Container>
   </Package>
 </Project>

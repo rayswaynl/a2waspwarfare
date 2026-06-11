@@ -380,6 +380,15 @@ if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0) then {
 	};
 };
 
+//--- Data-driven special-unit info popups.
+//--- Each entry: [classname, stringtable-key].  The buy menu reads this on selection
+//--- and shows hintSilent parseText (localize key) when a match is found.
+//--- To add a new special: append ["ClassName","STR_WF_HINT_..."] to the array.
+WFBE_SPECIAL_UNIT_HINTS = [
+	["UH1H_EP1","STR_WF_HINT_SalvageHeli"],
+	["Mi17_medevac_CDF","STR_WF_HINT_SalvageHeli"]
+];
+
 //--- Common initilization is complete at this point.
 ["INITIALIZATION", Format ["Init_Common.sqf: Common initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 commonInitComplete = true;
