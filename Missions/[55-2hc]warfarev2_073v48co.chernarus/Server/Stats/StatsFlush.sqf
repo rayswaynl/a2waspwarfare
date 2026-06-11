@@ -2,12 +2,15 @@
 // playtime + current side to each connected player, then emit ONE batched WASPSTAT line to the
 // RPT and zero the buffers. The DiscordBot tails the RPT, accumulates lifetime totals, writes
 // stats.json. Wire format: WASPSTAT|v1|<seq>|<uid>:<d0..d14>,<side>|<uid2>:...
+//
+// SEQ: WFBE_WASPSTAT_SEQ is a shared server global so that KILL/CAPTURE/ROUNDEND emitters
+// (Task 10) share one ordered sequence across all WASPSTAT v1 record types.
 
 if (isNil "WFBE_C_STATS_ENABLED") exitWith {};
 if (!WFBE_C_STATS_ENABLED) exitWith {};
 
-private "_seq";
-_seq = 0;
+// Initialise the shared sequence counter once (other emitters may start it first).
+if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
 
 while {true} do {
 	sleep WFBE_C_STATS_FLUSH_INTERVAL;
@@ -28,8 +31,8 @@ while {true} do {
 	// 2) Build and emit one line for all dirty UIDs, then reset.
 	if (count WFBE_STATS_DIRTY_UIDS > 0) then {
 		private "_line";
-		_seq = _seq + 1;
-		_line = "WASPSTAT|v1|" + str _seq;
+		WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
+		_line = "WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ;
 		{
 			private ["_uid","_buf","_sideNum","_csv"];
 			_uid = _x;

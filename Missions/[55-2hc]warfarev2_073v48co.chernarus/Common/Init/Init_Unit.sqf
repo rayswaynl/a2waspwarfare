@@ -72,12 +72,16 @@ if (_unit isKindOf "Tank") then { //--- Tanks.
 	//--- Valhalla Low gear.
 	_unit addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOn")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(vehicle player == _target) && !(_target getVariable ['WFBE_HighClimbingEnabled', missionNamespace getVariable ['WFBE_HighClimbingDefaultEnabled', false]]) && canMove _target"];
 	_unit addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOff")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(vehicle player == _target) && (_target getVariable ['WFBE_HighClimbingEnabled', missionNamespace getVariable ['WFBE_HighClimbingDefaultEnabled', false]]) && canMove _target"];
+	//--- Manual flip: on-demand righting, bypasses AutoFlip stuck-timer/cooldown.
+	_unit addAction ["Flip Vehicle", "WASP\actions\FlipVehicle.sqf", [], 5, false, true, "", "(vectorUp _target select 2) < 0.35 && _target distance player < 10"];
 };
 
 if (_unit isKindOf "Car") then { //--- Lights vehicles.
 	//--- Valhalla Low gear.
 	_unit addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOn")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(player==driver _target) && !(_target getVariable ['WFBE_HighClimbingEnabled', missionNamespace getVariable ['WFBE_HighClimbingDefaultEnabled', false]]) && canMove _target"];
 	_unit addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOff")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(player==driver _target) && (_target getVariable ['WFBE_HighClimbingEnabled', missionNamespace getVariable ['WFBE_HighClimbingDefaultEnabled', false]]) && canMove _target"];
+	//--- Manual flip: on-demand righting, bypasses AutoFlip stuck-timer/cooldown.
+	_unit addAction ["Flip Vehicle", "WASP\actions\FlipVehicle.sqf", [], 5, false, true, "", "(vectorUp _target select 2) < 0.35 && _target distance player < 10"];
 };
 
 if (_unit isKindOf "Ship") then { //--- Boats.

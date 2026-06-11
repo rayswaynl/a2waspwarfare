@@ -70,6 +70,8 @@ WFBE_SE_FNC_SetLocalityOwner = if !(WF_A2_Vanilla) then {Compile preprocessFileL
 WFBE_SE_FNC_SpawnTownDefense = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnTownDefense.sqf";
 WFBE_SE_FNC_VoteForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_VoteForCommander.sqf";
 WFBE_SE_FNC_AssignForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_AssignNewCommander.sqf";
+WFBE_SE_FNC_VoteWatcher = Compile preprocessFileLineNumbers "Server\Functions\Server_VoteWatcher.sqf";
+WFBE_SE_FNC_VotePassed  = Compile preprocessFileLineNumbers "Server\Functions\Server_VotePassed.sqf";
 WFBE_CO_FNC_InitAFKkickHandler = Compile preprocessFileLineNumbers "Server\Module\afkKick\initAFKkickHandler.sqf";
 WFBE_CO_FNC_LogGameEnd = Compile preprocessFileLineNumbers "Server\Functions\Server_LogGameEnd.sqf";
 // WFBE_CO_FNC_monitorServerFPS = Compile preprocessFileLineNumbers "Server\Module\serverFPS\monitorServerFPS.sqf";
@@ -98,6 +100,20 @@ WFBE_SE_FNC_CallDatabaseSetMap = Compile preprocessFileLineNumbers "Server\Modul
 // WFBE_CO_FNC_monitorServerFPS = Compile preprocessFileLineNumbers "Server\Module\serverFPS\monitorServerFPS.sqf";
 WFBE_SE_FNC_AttackWave = Call Compile preprocessFileLineNumbers "Server\PVFunctions\AttackWave.sqf";
 WFBE_SE_FNC_AttackWavePVEH = Call Compile preprocessFileLineNumbers "Server\Functions\Server_AttackWave.sqf";
+WFBE_SE_FNC_CounterBatteryCheck = Compile preprocessFileLineNumbers "Server\Functions\Server_CounterBattery.sqf";
+WFBE_SE_FNC_SpawnStructureDressing = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnStructureDressing.sqf";
+WFBE_SE_FNC_BankIncome = Compile preprocessFileLineNumbers "Server\Functions\Server_BankIncome.sqf";
+WFBE_SE_FNC_SiteClearance = Compile preprocessFileLineNumbers "Server\Functions\Server_SiteClearance.sqf";
+//--- CBR: per-side registries (populated as CBRs are built; pruned lazily during checks).
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
+	missionNamespace setVariable ["WFBE_CBR_WEST", []];
+	missionNamespace setVariable ["WFBE_CBR_EAST", []];
+};
+//--- Bank: per-side single-object registries (set when bank is built, cleared on death).
+if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
+	missionNamespace setVariable ["WFBE_BANK_WEST", objNull];
+	missionNamespace setVariable ["WFBE_BANK_EAST", objNull];
+};
 
 //--- Define Headless Client functions (server ones).
 if (ARMA_VERSION >= 162 && ARMA_RELEASENUMBER >= 101334 || ARMA_VERSION > 162) then {
@@ -549,6 +565,8 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 ["INITIALIZATION", "Init_Server.sqf: Garbage Collector is defined."] Call WFBE_CO_FNC_LogContent;
 [] ExecVM "Server\FSM\emptyvehiclescollector.sqf";
 ["INITIALIZATION", "Init_Server.sqf: Empty Vehicle Collector is defined."] Call WFBE_CO_FNC_LogContent;
+[] ExecVM "Server\FSM\server_groupsGC.sqf";
+["INITIALIZATION", "Init_Server.sqf: Group GC is defined."] Call WFBE_CO_FNC_LogContent;
 
 /////////////////////////////////////////////////////////////////////////////////// map cleaners
 
@@ -643,5 +661,21 @@ if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
 	[] execVM "Server\Functions\Server_DayNightCycle.sqf";
 };
 
+//--- Marty: Vote system — JIP init and persistent server-time broadcast.
+//--- WFBE_VOTE_COOLDOWNS init ensures JIP clients receive the var even if no vote has run.
+if (isNil "WFBE_VOTE_COOLDOWNS") then {
+	WFBE_VOTE_COOLDOWNS = [];
+	publicVariable "WFBE_VOTE_COOLDOWNS";
+};
+//--- Persistent 10 s loop broadcasts WFBE_SERVER_TIME so client dialogs always have
+//--- a recent reference for cooldown and countdown display.  The per-vote watcher
+//--- supplements this with 2 s ticks while a vote window is open.
+[] Spawn {
+	while {true} do {
+		WFBE_SERVER_TIME = time;
+		publicVariable "WFBE_SERVER_TIME";
+		sleep 10;
+	};
+};
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

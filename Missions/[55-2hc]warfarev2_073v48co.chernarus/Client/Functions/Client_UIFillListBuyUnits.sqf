@@ -1,4 +1,4 @@
-Private ['_description','_addin','_c','_currentUpgrades','_filler','_filter','_i','_listBox','_listNames','_u','_value','_unitCostUpgradeLevel','_funds','_price'];
+Private ['_description','_addin','_c','_currentUpgrades','_filler','_filter','_i','_listBox','_listNames','_u','_value','_unitCostUpgradeLevel','_funds','_price','_unlockList','_lockIdx','_lockEntry','_outerX','_reqTown','_townObj'];
 _listNames = _this select 0;
 _filler = _this select 1;
 _listBox = _this select 2;
@@ -57,7 +57,36 @@ lnbClear _listBox;
             _description = "undefined";
         };
 
-	if (((_c select QUERYUNITUPGRADE) <= (_currentUpgrades select _value) && _addin) || (_addit&&_addin)) then {
+	// Capture-to-unlock gate: suppress any unit in the side's CAPTURE_UNLOCKS list
+	// unless the required trigger town is currently held by this side.
+	// A2OA lacks findIf; forEach/exitWith is used to locate entries by classname.
+	if ((missionNamespace getVariable ["WFBE_C_CAPTURE_UNLOCKS", 0]) > 0) then {
+		_unlockList = missionNamespace getVariable [Format["WFBE_%1_CAPTURE_UNLOCKS", sideJoinedText], []];
+		_outerX = _x; // save outer-forEach _x before it is shadowed by the inner scan
+		_lockIdx = -1;
+		{
+			if ((_x select 0) == _outerX) exitWith { _lockIdx = _forEachIndex };
+		} forEach _unlockList;
+		if (_lockIdx >= 0) then {
+			_lockEntry = _unlockList select _lockIdx;
+			_reqTown   = _lockEntry select 1;
+			_townObj   = objNull;
+			{ if ((_x getVariable ["name",""]) == _reqTown) exitWith { _townObj = _x } } forEach towns;
+			if (isNull _townObj) then {
+				_addin = false; // town not yet initialised — hide until ready
+			} else {
+				if ((_townObj getVariable ["sideID",-1]) != WFBE_Client_SideID) then {
+					_addin = false;
+				};
+			};
+		};
+	};
+
+	//--- Task 36: _value >= array length is the "no upgrade gate" sentinel (airfield hangar
+	//--- roster — the capture itself is the unlock; indexing past the array would error).
+	private "_upgradePass";
+	_upgradePass = if (_value >= count _currentUpgrades) then {true} else {(_c select QUERYUNITUPGRADE) <= (_currentUpgrades select _value)};
+	if ((_upgradePass && _addin) || (_addit&&_addin)) then {
 		_price = round (((_c select QUERYUNITPRICE) * ATTACK_WAVE_PRICE_MODIFIER) * UNIT_COST_MODIFIER);
 		lnbAddRow [_listBox,['$'+str _price,_description]];
 		lnbSetData [_listBox,[_i,0],_filler];
@@ -85,6 +114,14 @@ lnbClear _listBox;
 	if(_x in (missionNamespace getVariable [format["WFBE_%1AMBULANCES", sideJoinedText], []])) then {
 		lnbSetColor [_listBox,[_i,1],[1.0, 1.0, 0.0, 0.6]]
 
+	};
+
+	//--- Medic redeployment truck: violet tint (unique — ambulance=yellow, salvage=green) + medic-flavored label.
+	if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0) then {
+		if(_x in (missionNamespace getVariable [format["WFBE_%1REDEPLOYTRUCKS", sideJoinedText], []])) then {
+			lnbSetColor [_listBox,[_i,1],[0.7, 0.4, 1.0, 0.6]];
+			lnbSetText [_listBox,[_i,1],_description + " [Medic Redeploy,Spawn]"];
+		};
 	};
 
 

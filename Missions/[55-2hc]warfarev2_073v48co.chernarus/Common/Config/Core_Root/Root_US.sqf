@@ -11,9 +11,10 @@ missionNamespace setVariable [Format["WFBE_%1SOLDIER", _side], 'US_Soldier_EP1']
 missionNamespace setVariable [Format["WFBE_%1FLAG", _side], '\Ca\ca_e\Data\flag_us_co.paa'];
 
 missionNamespace setVariable [Format["WFBE_%1AMBULANCES", _side], ['HMMWV_Ambulance','HMMWV_Ambulance_DES_EP1','UH60M_MEV_EP1','M1133_MEV_EP1']];
+missionNamespace setVariable [Format["WFBE_%1REDEPLOYTRUCKS", _side], ['MTVR_DES_EP1']];
 //missionNamespace setVariable [Format ["WFBE_%1MASHES", _side], ['MASH']];
 missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCKS", _side], ['MtvrRepair','MtvrRepair_DES_EP1']];
-missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_USMC','MtvrSalvage_DES_EP1']];
+missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_USMC','MtvrSalvage_DES_EP1','UH1H_EP1']];
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCKS", _side], ['WarfareSupplyTruck_USMC','MtvrSupply_DES_EP1']];
 missionNamespace setVariable [Format["WFBE_%1UAV", _side], 'MQ9PredatorB_US_EP1'];
 
@@ -49,13 +50,15 @@ if (isServer) then {
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
 		['US_Soldier_TL_EP1','US_Soldier_MG_EP1','US_Soldier_Sniper_EP1','US_Soldier_Medic_EP1'],
 		['US_Soldier_TL_EP1','US_Soldier_AR_EP1','US_Soldier_GL_EP1','US_Soldier_AT_EP1','US_Soldier_EP1'],
-		['HMMWV_M1151_M2_DES_EP1','HMMWV_MK19_DES_EP1']
+		['HMMWV_M1151_M2_DES_EP1','HMMWV_MK19_DES_EP1'],
+		['US_Soldier_TL_EP1','US_Soldier_MG_EP1','US_Soldier_AT_EP1','US_Soldier_GL_EP1','US_Soldier_Medic_EP1']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
 		['M1126_ICV_M2_EP1','M1135_ATGMV_EP1'],
 		['MTVR_DES_EP1','US_Soldier_TL_EP1','US_Soldier_AT_EP1','US_Soldier_MG_EP1','US_Soldier_AT_EP1'],
-		['M2A3_EP1','US_Soldier_AA_EP1','US_Soldier_AA_EP1','US_Soldier_Medic_EP1']
+		['M2A3_EP1','US_Soldier_AA_EP1','US_Soldier_AA_EP1','US_Soldier_Medic_EP1'],
+		['M2A3_EP1','US_Soldier_TL_EP1','US_Soldier_AT_EP1','US_Soldier_Medic_EP1']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [

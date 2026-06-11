@@ -1,4 +1,4 @@
-Private ['_current','_find','_killer','_logik','_structure','_structures','_side','_tked','_type','_killer_uid','_side_killer','_score','_bounty','_supplies','_teamkill'];
+Private ['_bankBounty','_bankKey','_bankMarker','_current','_find','_killer','_logik','_structure','_structures','_side','_tked','_type','_killer_uid','_side_killer','_score','_bounty','_supplies','_teamkill'];
 _structure = _this select 0;
 _killer = _this select 1;
 _type = _this select 2;
@@ -76,6 +76,31 @@ if (_teamkill) then
 else
 {
     ["INFORMATION", Format ["Server_BuildingKilled.sqf: [%1] Structure [%2] has been destroyed by [%3].", str _side, _type, _killer]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Bank special case: raid reward split, global broadcast, registry cleanup + marker delete.
+if ((_structure getVariable ["wfbe_structure_type", ""]) == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
+	_bankKey = if (_side == west) then {"WFBE_BANK_WEST"} else {"WFBE_BANK_EAST"};
+	missionNamespace setVariable [_bankKey, objNull];
+	_bankMarker = _structure getVariable ["wfbe_bank_marker", ""];
+	if (_bankMarker != "") then {deleteMarker _bankMarker};
+	if ((!isNull _killer) && (isPlayer _killer) && !_teamkill) then {
+		//--- Balance review 2026-06-10: a flat 150k to one player was a whale mechanic
+		//--- (~4-5 attack helicopters to a single wallet). Split instead: the raiding SIDE
+		//--- gains supply (commander resource — mirrors the guerrilla-barracks side-supply
+		//--- award above), the killer gets a personal cash bonus. ChangeSideSupply clamps
+		//--- at the supply ceiling, so the +40000 is safe near the cap.
+		//--- Rebalance (Steff 2026-06-11): supply 40000 -> 10000, killer cash 7500 -> 25000
+		//--- (shift the reward from the commander pool to the player who pulls it off).
+		_bankBounty = 25000;
+		[(side group _killer), 10000, "Bank destruction", false] Call ChangeSideSupply;
+		[_killer_uid, "BankPayout", [_bankBounty]] Call WFBE_CO_FNC_SendToClients;
+		//--- Global broadcast: everyone hears the bank fell.
+		private ["_sideName"];
+		_sideName = if (_side == west) then {"Federal Reserve"} else {"Bank Rossii"};
+		[nil, "LocalizeMessage", ["BankDestroyed", name _killer, _sideName]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Server_BuildingKilled.sqf: [%1] Bank destroyed by [%2]. +10000 side supply, $%3 killer bonus.", str _side, name _killer, _bankBounty]] Call WFBE_CO_FNC_LogContent;
+	};
 };
 
 //--- Decrement building limit.

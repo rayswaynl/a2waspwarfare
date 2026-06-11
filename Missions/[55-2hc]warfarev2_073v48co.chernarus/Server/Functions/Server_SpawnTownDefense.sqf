@@ -15,7 +15,7 @@ _defense = "";
 _kinds = _defense_logic getVariable "wfbe_defense_kind";
 
 //--- At least one type is needed.
-if (count _kinds == 0 || _sideID != WFBE_C_GUER_ID) exitWith {};
+if (count _kinds == 0) exitWith {};
 
 _nils = [];
 if (count _kinds > 1) then {

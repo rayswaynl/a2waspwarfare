@@ -337,6 +337,12 @@ _n = _n + [''];
 _o = _o + [50];
 _z = _z + [1];
 
+_u = _u + ["IR_Strobe_Target"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [25];
+_z = _z + [1];
+
 [_faction, _u, _p, _n, _o, _z] Call Compile preprocessFile "Common\Config\Config_Magazines.sqf";
 
 _u = [];//--- Weapon
