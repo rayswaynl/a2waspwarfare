@@ -574,8 +574,9 @@ _easaLoadout = _easaLoadout + [
 // Substitution notes:
 //   23mm gun pods + 57mm rocket pod: A2/ACR has no UPK-23 pod launcher classname.
 //     57mmLauncher (S-5 rocket pod) is the only pod-type weapon available in A2 EASA.
-//     Owner trim 2026-06-12: ONE 64Rnd S-5 mag (64 rockets) — "should not have the
-//     massive 192x S5 rockets"; the gun-pod hardpoints stay unrepresented.
+//     Owner trim 2026-06-12 ("2 falanga, 32 s5"): exact counts impossible — A2 mags are
+//     fixed-size (smallest S-5 pod = 64Rnd, smallest Ataka rack = 4Rnd). Closest legal:
+//     1x 64Rnd S-5 + 1x 4Rnd Ataka. Gun-pod hardpoints stay unrepresented.
 //   Falanga/AT-2 ATGM: no Falanga (AT-2) classname exists in A2 ACR; the owner intent
 //     is a TOKEN anti-armor sting (early-game "meh"), so ONE 4Rnd Ataka mag x2 launchers
 //     = 8 total was still too strong -> 2x 4Rnd_AT9_Mi24P kept the mission-standard mag
@@ -589,7 +590,7 @@ if (isClass (configFile >> "CfgVehicles" >> "Mi171Sh_rockets_CZ_EP1")) then {
 	_easaDefault = _easaDefault + [[['57mmLauncher','AT9Launcher'],['64Rnd_57mm','64Rnd_57mm']]];
 	_easaLoadout = _easaLoadout + [
 	[
-	[3400,'Gun Run: S-5 (64) | Ataka-V (8)',[['57mmLauncher','AT9Launcher'],['64Rnd_57mm','4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P']]]
+	[2800,'Gun Run: S-5 (64) | Ataka-V (4)',[['57mmLauncher','AT9Launcher'],['64Rnd_57mm','4Rnd_AT9_Mi24P']]]
 	]
 	];
 };
