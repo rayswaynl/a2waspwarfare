@@ -36,10 +36,10 @@
 //     FlagCarrierRU      — Russian flag object used at captured bases
 //
 //   PREMIUM UNLOCK VEHICLES (capture-to-unlock, WFBE_C_AIRFIELDS unlock tier)
-//     T72M4CZ_ACR        — Czech T-72 (Krasnostav / Loy Manara AF unlock, requires ACR)
+//     T72M4CZ        — Czech T-72 (Krasnostav / Loy Manara AF unlock, requires ACR)
 //     RM70_ACR           — RM-70 MLRS (NW AF / Rasman AF unlock, requires ACR)
 //
-// NOTE ON DLC CLASSES (T72M4CZ_ACR, RM70_ACR, L39_TK_EP1, An2_TK_EP1)
+// NOTE ON DLC CLASSES (T72M4CZ, RM70_ACR, L39_TK_EP1, An2_TK_EP1)
 //   These require the ACR / OA DLC content.  The Hetzner dedicated server
 //   cannot decrypt DLC PBOs without a GPU/Steam-client context (see memory:
 //   miksuu-hetzner-test-server — "DLC cannot load on the headless server").
@@ -80,7 +80,7 @@ _classes = [
 	"An2_TK_EP1",
 	"Mi17_Ins",
 	// Premium unlocks (requires ACR DLC — FAIL expected on dedicated without DLC)
-	"T72M4CZ_ACR",
+	"T72M4CZ",
 	"RM70_ACR"
 ];
 
@@ -99,7 +99,7 @@ _fail = 0;
 } forEach _classes;
 
 diag_log format [
-	"WFBE_CLASSCHECK SUMMARY: ok=%1 fail=%2 total=%3 (DLC FAIL on dedicated = expected for T72M4CZ_ACR RM70_ACR L39_TK_EP1 An2_TK_EP1 Mi17_Ins)",
+	"WFBE_CLASSCHECK SUMMARY: ok=%1 fail=%2 total=%3 (DLC FAIL on dedicated = expected for T72M4CZ RM70_ACR L39_TK_EP1 An2_TK_EP1 Mi17_Ins)",
 	_ok,
 	_fail,
 	count _classes
