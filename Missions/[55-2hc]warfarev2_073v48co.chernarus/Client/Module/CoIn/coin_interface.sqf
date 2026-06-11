@@ -345,6 +345,16 @@ endLoadingScreen;
 
 
 ///*** LOOOP ****
+
+//--- Client-side prediction: compile validity function once per COIN session.
+if (isNil "WFBE_CL_FNC_CoinValidity") then {
+	WFBE_CL_FNC_CoinValidity = compile preprocessFile "Client\Module\CoIn\coin_validity.sqf";
+};
+//--- Throttled validity state (reset each session open).
+_lastValidityCheck = -999;
+_validityResult    = [true,""];
+_validityReason    = "";
+
 _canAffordCount = 0;
 _canAffordCountOld = 0;
 _oldMenu = commandingMenu;
@@ -615,6 +625,29 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 				_preview setObjectTexture [0,_color];
 				_preview setVariable ["BIS_COIN_color",_color];
 
+				//--- Client-side prediction: throttled at most every 0.7 s.
+				//--- Only run when base color is green (skip water/out-of-zone checks).
+				if (_color == _colorGreen) then {
+					if ((time - _lastValidityCheck) >= 0.7) then {
+						_lastValidityCheck = time;
+						_validityResult    = [_itemclass, position _preview, _logic] call WFBE_CL_FNC_CoinValidity;
+					};
+					if (isNil "_validityResult") then { _validityResult = [true,""] };
+					if (!(_validityResult select 0)) then {
+						_color = _colorRed;
+						_validityReason = _validityResult select 1;
+						_preview setObjectTexture [0,_color];
+						_preview setVariable ["BIS_COIN_color",_color];
+					} else {
+						_validityReason = "";
+					};
+				} else {
+					//--- Color is already gray/red from earlier checks; clear reason.
+					_validityReason = "";
+					_validityResult = [true,""];
+					_lastValidityCheck = -999;
+				};
+
 				_tooltip = _itemclass;
 				_tooltipType = "preview";
 
@@ -808,9 +841,16 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 				};
 
 				//--- Compose text
+				//--- Append prediction-rejection reason line if present (red, below header).
+				private "_validityLine";
+				_validityLine = "";
+				if (!isNil "_validityReason" && {_validityReason != ""}) then {
+					_validityLine = format ["<t color='#ff7766' size='0.9'>%1</t><br />", _validityReason];
+				};
 				_textHint = (
 					_textPicture +
 					_textHeader +
+					_validityLine +
 					""
 				);
 
