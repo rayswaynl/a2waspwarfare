@@ -281,7 +281,7 @@ _u = _u		+ ['UH1H_EP1']; //--- salvage helicopter (salvage-only by classname)
 _u = _u		+ ['AW159_Lynx_BAF'];
 _u = _u		+ ['Mi24_D_CZ_ACR'];
 _u = _u		+ ['Mi171Sh_CZ_EP1'];
-_u = _u		+ ['Mi171Sh_rockets_CZ_EP1'];
+//--- Mi171Sh_rockets_CZ_EP1 moved to WFBE_AIRFIELD_UNITS (generic airfield hangar); buy it at any captured airfield.
 _u = _u		+ ['AH64D'];
 _u = _u		+ ['AH64D_EP1'];
 _u = _u		+ ['BAF_Apache_AH1_D'];

@@ -310,6 +310,22 @@ _IDCS = _IDCS - [_currentIDC];
 				//--- Task 12: If the nearest hangar is a captured airfield, show the exclusive roster instead of the faction airport list.
 				if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && !(isNull _closest) && {((_closest getVariable ["wfbe_hangar", objNull]) getVariable ["wfbe_is_airfield_hangar", false])}) then {
 					_listUnits = missionNamespace getVariable ["WFBE_AIRFIELD_UNITS", []];
+
+					//--- Per-airfield specials: augment generic list with any classes mapped to this airfield's town.
+					//--- Resolve the airfield town name by finding the closest town to the airport logic object.
+					private ["_airfTownObj","_airfTownName","_airfSpecials","_airfIdx","_airfEntry"];
+					_airfTownObj  = [_closest, towns] Call WFBE_CO_FNC_GetClosestEntity;
+					_airfTownName = if (isNull _airfTownObj) then {""} else {_airfTownObj getVariable ["name",""]};
+					_airfSpecials = missionNamespace getVariable ["WFBE_AIRFIELD_UNITS_SPECIAL", []];
+					_airfIdx = -1;
+					{
+						if ((_x select 0) == _airfTownName) exitWith { _airfIdx = _forEachIndex };
+					} forEach _airfSpecials;
+					if (_airfIdx >= 0) then {
+						_airfEntry = _airfSpecials select _airfIdx;
+						_listUnits = _listUnits + (_airfEntry select 1);
+					};
+
 					//--- Task 36 (live "empty airshop" fix): the roster is CROSS-FACTION
 					//--- (Takistani/Insurgent classes) and deliberately airfield-gated, so two
 					//--- standard filters must not apply here:

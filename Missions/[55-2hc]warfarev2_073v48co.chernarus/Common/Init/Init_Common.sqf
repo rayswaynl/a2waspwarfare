@@ -372,12 +372,26 @@ missionNamespace setVariable ["WFBE_REPAIRTRUCKS", _repairs];
 
 //--- Task 12: Airfield-exclusive aircraft roster.  Populated on all machines so
 //--- the hangar buy menu can use it without a server round-trip.
+//--- WFBE_AIRFIELD_UNITS      = generic list shared by ALL captured airfields (both sides).
+//--- WFBE_AIRFIELD_UNITS_SPECIAL = per-airfield extras: [[townName, [classnames]], ...].
+//---   At menu-fill time the nearest town name is resolved from the airport logic object
+//---   and any matching entry's classes are appended to the generic list.
+//---   Add new per-airfield specials by appending a pair — no other file changes needed.
 if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0) then {
 	WFBE_AIRFIELD_UNITS = if (IS_chernarus_map_dependent) then {
-		["L39_TK_EP1","An2_TK_EP1","Mi17_Ins"]
+		//--- L-39C removed (Balota-only via special); Mi-171Sh rocket gunship added for early-game support.
+		["An2_TK_EP1","Mi17_Ins","Mi171Sh_rockets_CZ_EP1"]
 	} else {
-		["L39_TK_EP1","An2_TK_EP1","Mi17_TK_EP1"]
+		//--- Takistan generic list: L-39C not present here; leave as-is.
+		["An2_TK_EP1","Mi17_TK_EP1"]
 	};
+
+	//--- Per-airfield specials: units added ONLY at the named airfield.
+	//--- Chernarus: L-39C is exclusive to Balota (closest prestige-aviation context).
+	//--- Takistan: no per-airfield specials defined (no clean equivalent for L-39C there).
+	WFBE_AIRFIELD_UNITS_SPECIAL = [
+		["Balota", ["L39_TK_EP1"]]
+	];
 };
 
 //--- Data-driven special-unit info popups.
