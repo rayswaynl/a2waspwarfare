@@ -424,6 +424,16 @@ while {true} do {
 			_gear_sel_backpack = +_gear_backpack_content;
 			_gear_sel_vehicle = +_gear_vehicle_content;
 			_msg = "";
+			//--- Cap magazine count to inventory capacity.
+			Private ["_cap","_capped","_mag_overflow","_mi"];
+			_cap = missionNamespace getVariable ["WFBE_C_GEAR_MAG_SLOTS", 12];
+			_mag_overflow = false;
+			if (count _target_magazines > _cap) then {
+				_capped = [];
+				for "_mi" from 0 to _cap - 1 do {_capped set [count _capped, _target_magazines select _mi]};
+				_target_magazines = _capped;
+				_mag_overflow = true;
+			};
 			if (_target isKindOf "Man" && _has_inv_changed) then {
 				_msg = _msg + Format["<t color='#B6F563'>%1</t>",[configFile >> 'CfgVehicles' >> typeOf _target, "displayName"] Call WFBE_CO_FNC_GetConfigEntry];
 				[_target, _target_weapons - [_gear_backpack], _target_magazines, [_gear_primary,_gear_pistol,_gear_secondary], _gear_backpack, _gear_sel_backpack] Call WFBE_CO_FNC_EquipUnit;
@@ -439,7 +449,12 @@ while {true} do {
 				[vehicle _target, _gear_sel_vehicle] Call WFBE_CO_FNC_EquipVehicle;
 			};
 			-(_price) Call WFBE_CL_FNC_ChangeClientFunds;
-			if (_has_inv_changed || _has_veh_changed) then {hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Purchased Equipement to %1 for $<t color='#F5D363'>%2</t>.</t>",_msg,_price];_price = 0;} else {hint parseText("<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>The gear was not purchased since nothing has changed.</t>");};
+			if (_has_inv_changed || _has_veh_changed) then {
+				Private ["_hint_overflow"];
+				_hint_overflow = if (_mag_overflow) then {"<br /><br /><t color='#F56363'>Loadout exceeds inventory capacity (12 magazine slots) - extra magazines were discarded.</t>"} else {""};
+				hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Purchased Equipement to %1 for $<t color='#F5D363'>%2</t>.</t>%3",_msg,_price,_hint_overflow];
+				_price = 0;
+			} else {hint parseText("<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>The gear was not purchased since nothing has changed.</t>");};
 			_has_inv_changed = false;
 			_has_veh_changed = false;
 			_update_inventory = true;
