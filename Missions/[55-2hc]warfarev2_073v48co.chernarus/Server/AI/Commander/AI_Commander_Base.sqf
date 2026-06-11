@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated"];
 
 _side = _this;
 _sideText = str _side;
@@ -177,9 +177,24 @@ if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0) then {
 		_have = false;
 		{ if ((_x getVariable ["wfbe_structure_type", ""]) == "Barracks" && {alive _x}) exitWith {_have = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
 		if (_have) then {
+			_defClass = "";
 			_artyClasses = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_CLASSNAMES", _sideText];
 			if (!isNil "_artyClasses" && {count _artyClasses > 0}) then {
-				_defClass = _artyClasses select 0;
+				//--- Entries are FAMILY arrays ([['M119_US_EP1'],['M252_US_EP1'],...]): pass a
+				//--- CLASSNAME on, or ConstructDefense's createVehicle throws a type error that
+				//--- kills the whole supervisor script. Family _artyBuilt, scanning past empties.
+				_i = _artyBuilt;
+				while {_i < count _artyClasses && {_defClass == ""}} do {
+					_fam = _artyClasses select _i;
+					if (typeName _fam == "ARRAY") then {
+						if (count _fam > 0) then {_defClass = _fam select 0};
+					} else {
+						_defClass = _fam;
+					};
+					_i = _i + 1;
+				};
+			};
+			if (_defClass != "") then {
 				_defData = missionNamespace getVariable _defClass;
 				_defPrice = if (!isNil "_defData") then {_defData select QUERYUNITPRICE} else {0};
 				_funds = (_side) Call GetAICommanderFunds;
