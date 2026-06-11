@@ -245,7 +245,6 @@ switch (true) do {
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_FR.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_GUE.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_INS.sqf';
-		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_KSK.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_MVD.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_PMC.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_RU.sqf';
