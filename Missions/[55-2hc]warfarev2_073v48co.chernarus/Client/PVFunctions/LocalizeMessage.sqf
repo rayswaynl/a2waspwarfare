@@ -156,6 +156,12 @@ switch (_localize) do {
         _txt = Format [Localize "WddmCompositionCapReached", _this select 1, _this select 2];
     };
 
+    //--- Marty: Voting page notifications.
+    case "VoteStarted":   {_txt = Format [Localize "STR_WF_VOTE_Started",  _this select 1, _this select 2]};
+    case "VotePassed":    {_txt = Format [Localize "STR_WF_VOTE_Passed",   _this select 1]};
+    case "VoteFailed":    {_txt = Format [Localize "STR_WF_VOTE_Failed",   _this select 1]};
+    case "VoteNotNight":  {_txt = Localize "STR_WF_VOTE_NotNight"};
+
     case "DefenseThreatGate": {
         // _this: [1]=refund — NUMBER (refund directly) or classname STRING (look up the
         //        price this client charged for it; covers WDDM anchors whose price the

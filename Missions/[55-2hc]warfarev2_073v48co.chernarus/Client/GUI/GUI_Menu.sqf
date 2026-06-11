@@ -196,6 +196,13 @@ while {alive player && dialog} do {
 		createDialog "RscMenu_Service";
 	};
 
+	//--- Voting Page (multi-type vote menu).
+	if (MenuAction == 20) exitWith {
+		MenuAction = -1;
+		closeDialog 0;
+		createDialog "WFBE_VotingMenu";
+	};
+
 	//--- Help Menu
 	if (MenuAction == 13) exitWith { //added-spayker
 		MenuAction = -1;

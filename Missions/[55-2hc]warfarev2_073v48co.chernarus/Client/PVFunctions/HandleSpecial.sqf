@@ -37,6 +37,23 @@ switch (_request) do {
 	case "set-hq-killed-eh": {if !(isServer) then {(_args select 0) addEventHandler ["killed", {["RequestSpecial", ["process-killed-hq", _this]] Call WFBE_CO_FNC_SendToServer}]};};
 	case "auto-wall-constructing-changed":{ isAutoWallConstructingEnabled = (_args select 0)};
 	case "attack-wave": {ATTACK_WAVE_PRICE_MODIFIER = (_args select 0);};
+	//--- Marty: Vote-skip-night: server has already advanced its clock and publicVariable'd WFBE_DAYNIGHT_DATE.
+	//--- The DAYNIGHT_DATE PVEH only flags PENDING_SYNC (not a direct setDate); do it explicitly here.
+	case "vote-skip-night": {
+		Private ["_newDate"];
+		_newDate = _args select 0;
+		if ((typeName _newDate) == "ARRAY" && {count _newDate >= 5}) then {
+			setDate _newDate;
+		};
+	};
+	//--- Marty: Vote-weather-apply: engine does NOT auto-sync weather to clients.
+	case "vote-weather-apply": {
+		Private ["_ov","_ra"];
+		_ov = _args select 0;
+		_ra = _args select 1;
+		60 setOvercast _ov;
+		60 setRain     _ra;
+	};
 	// Marty: Server-side command bar cleanup can transfer dead AI locality back to the player for final detachment.
 	case "commandbar-force-dead-cleanup": {
 		_args Spawn {
