@@ -21,7 +21,7 @@
 
 private ["_side","_pos","_reqPlayer","_logik","_upgrades","_barrackLvl","_commanderTeam",
          "_startPos","_baseAreas","_centers","_baseRange","_inBase","_lastClear","_candidates",
-         "_trees","_tree","_s","_isTree","_N","_cost","_currentSupply","_felled","_i"];
+         "_trees","_tree","_s","_isTree","_N","_cost","_currentSupply","_felled","_i","_matchAny"];
 
 _side      = _this select 0;
 _pos       = _this select 1;
@@ -86,16 +86,44 @@ if ((time - _lastClear) < 15) exitWith {
 	["DEBUG", Format ["Server_SiteClearance.sqf: [%1] rate-limited (last clear %2 s ago).", str _side, round (time - _lastClear)]] Call WFBE_CO_FNC_LogContent;
 };
 
+// A2-safe substring matcher (string find is A3-only and throws on A2 OA).
+// _this = [haystackLower (String), [needle1, needle2, ...]] -> Bool
+_matchAny = {
+	private ["_hayA","_needles","_found","_nA","_hl","_nl","_i","_j","_ok"];
+	_hayA = toArray (_this select 0);
+	_needles = _this select 1;
+	_hl = count _hayA;
+	_found = false;
+	{
+		if (!_found) then {
+			_nA = toArray _x;
+			_nl = count _nA;
+			if (_nl > 0 && _nl <= _hl) then {
+				for "_i" from 0 to (_hl - _nl) do {
+					if (!_found) then {
+						_ok = true;
+						for "_j" from 0 to (_nl - 1) do {
+							if ((_hayA select (_i + _j)) != (_nA select _j)) exitWith {_ok = false};
+						};
+						if (_ok) then {_found = true};
+					};
+				};
+			};
+		};
+	} forEach _needles;
+	_found
+};
+
 // Tree scan: nearestObjects within 25 m of placement position.
 // Filter: getDammage < 1 AND str contains ": t_" (Chernarus tree prefix) or ": str_" (legacy).
-// A2OA string find works on substrings.  Bushes (b_ prefix) excluded in v1.
+// NOTE: string find is A3-only; use _matchAny (toArray sliding-window). Bushes (b_ prefix) excluded in v1.
 _candidates = nearestObjects [_pos, [], 25];
 _trees = [];
 {
 	_tree = _x;
 	if (getDammage _tree < 1) then {
-		_s = str _tree;
-		if ((_s find ": t_") >= 0 || {(_s find ": str_") >= 0}) then {
+		_s = toLower (str _tree);
+		if ([_s, [": t_", ": str_"]] call _matchAny) then {
 			_trees = _trees + [_tree];
 		};
 	};

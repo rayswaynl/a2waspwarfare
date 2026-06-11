@@ -685,7 +685,7 @@ WFBE_EASA_CatCache = [];
 // Uses string-pattern matching on the classname (fast, no config walk needed beyond
 // what the existing post-pass already does) plus the manual override table.
 WFBE_EASA_FNC_WeaponCat = {
-	private ["_cls","_idx","_cachedTag","_tag","_clsLower","_override"];
+	private ["_cls","_idx","_cachedTag","_tag","_clsLower","_override","_matchAny"];
 	_cls = _this;
 	// --- manual override check first ---
 	_tag = "";
@@ -701,39 +701,45 @@ WFBE_EASA_FNC_WeaponCat = {
 	};
 	if (_idx != -1) exitWith { (WFBE_EASA_CatCache select _idx) select 1 };
 
+	// --- A2-safe substring matcher (string find is A3-only and throws on A2) ---
+	// _this = [haystackLower (String), [needle1, needle2, ...] (Array)] -> Bool
+	_matchAny = {
+		private ["_hayA","_needles","_found","_nA","_hl","_nl","_i","_j","_ok"];
+		_hayA = toArray (_this select 0);
+		_needles = _this select 1;
+		_hl = count _hayA;
+		_found = false;
+		{
+			if (!_found) then {
+				_nA = toArray _x;
+				_nl = count _nA;
+				if (_nl > 0 && _nl <= _hl) then {
+					for "_i" from 0 to (_hl - _nl) do {
+						if (!_found) then {
+							_ok = true;
+							for "_j" from 0 to (_nl - 1) do {
+								if ((_hayA select (_i + _j)) != (_nA select _j)) exitWith {_ok = false};
+							};
+							if (_ok) then {_found = true};
+						};
+					};
+				};
+			};
+		} forEach _needles;
+		_found
+	};
+
 	// --- classify by classname substring ---
 	// AA launchers: R-73 (R73), AIM-9 Sidewinder (Sidewinder), Igla/Stinger family
 	_clsLower = toLower _cls;
 	_tag = "AG"; // default — most launchers are ground-attack
-	if (
-		_clsLower find "r73" >= 0        ||
-		_clsLower find "sidewinder" >= 0 ||
-		_clsLower find "igla" >= 0       ||
-		_clsLower find "stinger" >= 0    ||
-		_clsLower find "aim" >= 0
-	) then {
+	if ([_clsLower, ["r73","sidewinder","igla","stinger","aim"]] call _matchAny) then {
 		_tag = "AA";
 	};
 
 	// AG launchers: bombs, rockets, Kh-29, Vikhr, Maverick, Hellfire, Ataka, Hydra, Spike
 	// (explicit check so AG wins over the default even if something hits both branches)
-	if (
-		_clsLower find "bomb" >= 0       ||
-		_clsLower find "fab" >= 0        ||
-		_clsLower find "gbu" >= 0        ||
-		_clsLower find "mk82" >= 0       ||
-		_clsLower find "s8launcher" >= 0 ||
-		_clsLower find "57mm" >= 0       ||
-		_clsLower find "ffar" >= 0       ||
-		_clsLower find "crv7" >= 0       ||
-		_clsLower find "ch29" >= 0       ||
-		_clsLower find "vikhr" >= 0      ||
-		_clsLower find "maverick" >= 0   ||
-		_clsLower find "hellfire" >= 0   ||
-		_clsLower find "at9" >= 0        ||
-		_clsLower find "tow" >= 0        ||
-		_clsLower find "spike" >= 0
-	) then {
+	if ([_clsLower, ["bomb","fab","gbu","mk82","s8launcher","57mm","ffar","crv7","ch29","vikhr","maverick","hellfire","at9","tow","spike"]] call _matchAny) then {
 		_tag = "AG";
 	};
 

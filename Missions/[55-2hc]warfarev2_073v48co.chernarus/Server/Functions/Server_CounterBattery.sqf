@@ -18,7 +18,7 @@
 */
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) == 0) exitWith {};
 
-Private ["_unit","_fpos","_firingSide","_opposingSideKey","_cbrs","_i","_cbr","_r","_upgs","_lvl","_lastPing","_d","_t","_h","_tStr","_markerPos","_pkt"];
+Private ["_unit","_fpos","_firingSide","_opposingSideKey","_cbrs","_i","_cbr","_r","_upgs","_lvl","_lastPing","_d","_t","_h","_tStr","_markerPos","_pkt","_aliveCbrs"];
 
 _unit  = _this select 0;
 _fpos  = _this select 1;
@@ -72,4 +72,7 @@ if (count _cbrs == 0) exitWith {};
 } forEach _cbrs;
 
 //--- Prune dead entries from registry (done outside the forEach loop).
-missionNamespace setVariable [_opposingSideKey, _cbrs select {alive _x}];
+//--- A2: select {code} is A3-only; use an explicit filter loop.
+_aliveCbrs = [];
+{if (!isNull _x && {alive _x}) then {_aliveCbrs set [count _aliveCbrs, _x]}} forEach _cbrs;
+missionNamespace setVariable [_opposingSideKey, _aliveCbrs];
