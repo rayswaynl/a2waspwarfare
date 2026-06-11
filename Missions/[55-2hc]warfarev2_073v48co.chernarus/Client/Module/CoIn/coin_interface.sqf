@@ -236,10 +236,11 @@ BIS_CONTROL_CAM_Handler = {
 			_logic setVariable ["WF_RequestUpdate",true];
 		};
 
-		//--- C1: Item card toggle (Custom Action User20 — fires only on COIN display).
+		//--- C1: Item card toggle (Custom Action User12 — User13-20 are taken by waypoint/
+		//--- walls/reselect/manning/delete/view-distance-tuner; 1-12 are free mission-wide).
 		//--- Sets a global flag; the main loop processes it next tick (can't touch loop-locals here).
 		if ((missionNamespace getVariable ["WFBE_C_COIN_CARDS", 1]) > 0) then {
-			if (_key in (actionKeys "User20")) then {
+			if (_key in (actionKeys "User12")) then {
 				WFBE_COIN_CARD_TOGGLE = true;
 			};
 		};
@@ -1045,7 +1046,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 					_text1 +
 					_text2 +
 					_text3 +
-					"<br /><t size='0.75' color='#99aabb'>Custom controls: UA14 auto-walls  ·  UA15 reselect last  ·  UA16 auto-manning  ·  UA17 delete aimed  ·  UA20 item card on/off  ·  rebind in Options &gt; Controls &gt; Custom</t>" +
+					"<br /><t size='0.75' color='#99aabb'>Custom controls: UA14 auto-walls  ·  UA15 reselect last  ·  UA16 auto-manning  ·  UA17 delete aimed  ·  UA12 item card on/off  ·  rebind in Options &gt; Controls &gt; Custom</t>" +
 					""
 				);
 
