@@ -4,6 +4,10 @@ Deploy the Experital branch as an **optional additional mission** on the Hetzner
 test server (78.46.107.142), without removing or replacing the current PR8
 default (`[55-2hc]warfarev2_073v48co.chernarus.pbo`).
 
+> **CONSENT POLICY:** Do NOT deploy to the Hetzner server without Steff's
+> explicit go-ahead in this session.  Claude may prepare and verify locally,
+> but no PBO copy, no cfg edit, and no server restart may happen autonomously.
+
 ---
 
 ## Prerequisites
@@ -14,6 +18,44 @@ default (`[55-2hc]warfarev2_073v48co.chernarus.pbo`).
   on PATH, or pass `-PboToolPath` to the pack script.
 - SSH access to Hetzner box (RDP: `mstsc /v:78.46.107.142`, credentials in
   Windows Credential Manager: `cmdkey /list | findstr 78.46.107.142`).
+
+---
+
+## Mission identity
+
+| Field | Value |
+|-------|-------|
+| Mission title (in-game) | `[PLAY] WASP Experimental Test` |
+| `WF_MAXPLAYERS` | `56` (1 server + 2 HC + 53 human slots) |
+| PBO base name | `WASP_Experital_TEST.Chernarus` |
+| PR8 default (untouched) | `[55-2hc]warfarev2_073v48co.chernarus.pbo` |
+
+---
+
+## Box time note
+
+The Hetzner box clock runs **9 hours behind owner local time**.
+Scheduled maintenance windows in **box time**:
+
+| Window | Box time |
+|--------|----------|
+| AICOM telemetry window | 18:00 box time |
+| Experital deploy window | 06:00 box time |
+
+Convert from owner local: subtract 9 hours.
+
+---
+
+## Hotfix staging directories
+
+Pre-staged hotfix builds on the Hetzner box live at:
+
+| Dir | Contents |
+|-----|----------|
+| `C:\WASP\hotfix-v061` | V0.6.1 candidate PBOs |
+| `C:\WASP\hotfix-coin` | CoIn-specific hotfix staging |
+
+Do not overwrite these dirs during an Experital deploy; they are for PR8 hotfixes.
 
 ---
 
@@ -33,10 +75,28 @@ C:\Users\Steff\a2waspwarfare-experital\Missions\[55-2hc]warfarev2_073v48co.chern
 
 ---
 
-## Step 2 — Generate version.sqf and pack the PBO
+## Step 2 — A2-compatibility lint
+
+Run the A2 linter before packing.  Any FAIL exit means the mission contains
+an A3-only command that will crash on the A2 OA dedicated:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File `
+  "C:\Users\Steff\a2waspwarfare-pr-builds\ReusableHarness\Tools\PrTestHarness\Smoke\Lint-A2Compat.ps1" `
+  -MissionLiteralPath "C:\Users\Steff\a2waspwarfare-experital\Missions\[55-2hc]warfarev2_073v48co.chernarus"
+```
+
+FAIL items (e.g. `select {`, `findIf`, `pushBack`) are hard blockers — do not
+proceed until resolved.  REVIEW items (find-quote usages) require manual
+inspection to confirm whether the left operand is a string or an array.
+
+---
+
+## Step 3 — Generate version.sqf and pack the PBO
 
 `version.sqf` is **gitignored** and required.  The pack script generates it
-automatically (11 `#define` lines, including `WF_MISSIONNAME "WASP Experital TEST"`).
+automatically including `WF_MISSIONNAME "[PLAY] WASP Experimental Test"` and
+`WF_MAXPLAYERS 56`.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File `
@@ -54,12 +114,12 @@ the server rotation — this name is intentionally distinct from the PR8 default
 
 ---
 
-## Step 3 — Local dedicated boot smoke
+## Step 4 — Local dedicated boot smoke
 
 Before uploading to Hetzner, boot the packed PBO on the local Miksuu
 dedicated rig (see `miksuu-local-test-rig` memory) or any local A2OA dedicated.
 
-### 3a. Static smoke
+### 4a. Static smoke
 
 Run the engine-free structural checks against the source (catches class errors,
 A3-dialect, missing PVF registrations):
@@ -72,7 +132,7 @@ powershell -ExecutionPolicy Bypass -File `
 
 All 30+ checks must pass (`PASS: PR8 static smoke checks clean.`).
 
-### 3b. Boot the local dedicated with the PBO
+### 4b. Boot the local dedicated with the PBO
 
 Copy the PBO to your local dedicated's MPMissions folder, start the server,
 and let it boot to the mission lobby.  The standard local rig install does NOT
@@ -84,16 +144,16 @@ powershell -ExecutionPolicy Bypass -File `
   -SourceMissionRoot "C:\Users\Steff\a2waspwarfare-experital\Missions\[55-2hc]warfarev2_073v48co.chernarus" `
   -DestinationMissionRoot "C:\Users\Steff\Documents\ArmA 2 Other Profiles\Zwanon\MPMissions\WASP_Experital_TEST.Chernarus" `
   -Overlay "pr8-stress" `
-  -MissionTitle "WASP Experital TEST" `
+  -MissionTitle "[PLAY] WASP Experimental Test" `
   -Force
 ```
 
 Note: the stress overlay's `Test-ActiveStressMissionCopy` smoke check expects
 the title to start with `"TEST PR8 Stress"` — skip that single check for the
-Experital mission (its mission briefingName is `"WASP Experital TEST"`, not
-the PR8 stress contract).  All other checks apply.
+Experital mission (its mission briefingName is `"[PLAY] WASP Experimental Test"`,
+not the PR8 stress contract).  All other checks apply.
 
-### 3c. Classcheck smoke
+### 4c. Classcheck smoke
 
 Copy `Smoke-ExperitalClasscheck.sqf` into the installed mission's `test\` folder
 and `execVM` it from init.sqf, then watch the RPT for:
@@ -117,7 +177,7 @@ that should always resolve.  Do not deploy if they fail.
 
 ---
 
-## Step 4 — RPT scan after first boot
+## Step 5 — RPT scan after first boot
 
 Run Analyze-WaspStressRpt against the local boot RPT:
 
@@ -153,7 +213,9 @@ powershell -ExecutionPolicy Bypass -File `
 
 ---
 
-## Step 5 — Copy PBO to Hetzner MPMissions
+## Step 6 — Copy PBO to Hetzner MPMissions
+
+**CONSENT REQUIRED.** Confirm with Steff before executing this step.
 
 **This is a manual operator step.** The Hetzner server runs Windows, so the
 transfer is SCP or RDP file copy.  Credentials are stored on Main PC.
@@ -193,7 +255,7 @@ ssh Administrator@78.46.107.142 `
 
 ---
 
-## Step 6 — Add to server mission rotation (optional)
+## Step 7 — Add to server mission rotation (optional)
 
 The PR8 default mission (`[55-2hc]warfarev2_073v48co.chernarus.pbo`) remains
 the primary rotation entry.  To add Experital as an optional second mission
@@ -221,23 +283,49 @@ to pick Experital from the mission list once a HC connects.
 
 ---
 
-## Step 7 — First-boot RPT pulls from Hetzner
+## Step 8 — Restart the chain
 
-After the server restarts with the new PBO:
+**CONSENT REQUIRED.** Confirm with Steff before executing this step.
 
-1. SSH to the box to pull the fresh RPT:
-   ```powershell
-   ssh Administrator@78.46.107.142 `
-       "type C:\Users\Administrator\AppData\Local\ArmA 2 OA\Arma2OA.RPT" > C:\WASP\hetzner-experital-boot.rpt
-   ```
-2. Run the analyzer against the pulled RPT:
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File `
-     "C:\Users\Steff\a2waspwarfare-pr-builds\ReusableHarness\Tools\PrTestHarness\Rpt\Analyze-WaspStressRpt.ps1" `
-     -RptPath "C:\WASP\hetzner-experital-boot.rpt" -LiveSummary
-   ```
-3. Confirm `WFBE_CLASSCHECK OK:` for the four non-DLC base classes and that
-   no `class not found` or `Missing addons:` errors appear.
+Use the shared restart library to restart the full chain in the correct order:
+
+```powershell
+# On the Hetzner box (via SSH or RDP):
+powershell -ExecutionPolicy Bypass -File "C:\WASP\Restart-MiksuuChain.ps1"
+```
+
+See `Tools\PrTestHarness\Ops\Restart-MiksuuChain.ps1` for parameter details
+(`-SkipStop`, `-LogPath`).
+
+---
+
+## Step 9 — Post-deploy verification
+
+After the restart:
+
+```powershell
+# On the Hetzner box (via SSH or RDP):
+powershell -ExecutionPolicy Bypass -File "C:\WASP\post-deploy-verify.ps1"
+```
+
+This will:
+- Wait for all 3 processes (server + 2 HC) to appear
+- Wait up to 8 minutes for the first AICOMSTAT TICK from both sides
+- Scan the new RPT region for error blocks
+
+Then pull the RPT and run the analyzer from Main PC:
+
+```powershell
+ssh Administrator@78.46.107.142 `
+    "type C:\Users\Administrator\AppData\Local\ArmA 2 OA\arma2oaserver.RPT" > C:\WASP\hetzner-experital-boot.rpt
+
+powershell -ExecutionPolicy Bypass -File `
+  "C:\Users\Steff\a2waspwarfare-pr-builds\ReusableHarness\Tools\PrTestHarness\Rpt\Analyze-WaspStressRpt.ps1" `
+  -RptPath "C:\WASP\hetzner-experital-boot.rpt" -LiveSummary
+```
+
+Confirm `WFBE_CLASSCHECK OK:` for the four non-DLC base classes and that
+no `class not found` or `Missing addons:` errors appear.
 
 ---
 
@@ -247,7 +335,9 @@ To remove the Experital mission from the server without touching the PR8 default
 
 1. Delete `WASP_Experital_TEST.Chernarus.pbo` from the remote MPMissions folder.
 2. Remove the `class WASP_Experital` block from `server-pr8.cfg` if you added it.
-3. Restart the Arma2OAServer process (via the `MiksuuPR8` scheduled task
-   or `Restart-ScheduledTask -TaskName MiksuuPR8` via SSH).
+3. Restart the chain:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File "C:\WASP\Restart-MiksuuChain.ps1"
+   ```
 
 The PR8 default mission is unaffected — it was never modified.
