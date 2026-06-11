@@ -1,6 +1,6 @@
 # WASP Warfare — `experital` branch
 
-**Experimental feature branch** built on `release/2026-06-feature-bundle` (`a96fdda2`). Ships as a separate optional mission **"WASP Experital TEST"** for the Hetzner test server, alongside (not replacing) the PR8 default. Every feature is individually toggleable via a `WFBE_C_*` gate; all default ON in this mission, all byte-identical to baseline when gated off.
+**Experimental feature branch** ("experital" = experimental) built on `release/2026-06-feature-bundle` (`a96fdda2`). Ships as a separate optional mission **"WASP Experital TEST"** for the Hetzner test server, alongside (not replacing) the PR8 default. Every feature is individually toggleable via a `WFBE_C_*` gate; all default ON in this mission, all byte-identical to baseline when gated off.
 
 > Status: **All 21 work items complete (~84 commits) — feature-complete and DEPLOYED.** Live on the Hetzner test server (78.46.107.142) as the optional mission `WASP_Experital_TEST.Chernarus` since 2026-06-10, alongside the untouched PR8 default. Player-facing Discord changelog delivered.
 
