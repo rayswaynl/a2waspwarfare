@@ -16,7 +16,7 @@
 	members at the factories per-unit (the V0.2 path).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_facMap","_unitList"];
+private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_facMap","_unitList","_hcUnit"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -146,8 +146,11 @@ if (count _live > 0) then {
 
 	[_side, -_price] Call ChangeAICommanderFunds;
 	_logik setVariable ["wfbe_aicom_pending", _pending + 1];
-	[leader (_live select (floor (random (count _live)))), "HandleSpecial", ['delegate-aicom-team', _sideID, _template, getPos _facObj]] Call WFBE_CO_FNC_SendToClient;
-	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched (template %2, cost %3, doctrine %4, founded %5 editor %6 pending->%7 target %8).", _sideText, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target]] Call WFBE_CO_FNC_AICOMLog;
+	//--- V0.6.4: name the receiving HC in the log - the random pick spreads load across
+	//--- all live HCs, and the server RPT should show the split without reading HC RPTs.
+	_hcUnit = leader (_live select (floor (random (count _live))));
+	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, getPos _facObj]] Call WFBE_CO_FNC_SendToClient;
+	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target]] Call WFBE_CO_FNC_AICOMLog;
 	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|HC-template" + str _pick);
 } else {
 	//--- Fallback (no HC): found a server-local empty team; AssignTypes + Produce feed it.
