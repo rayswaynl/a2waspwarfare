@@ -451,7 +451,7 @@ while {true} do {
 			-(_price) Call WFBE_CL_FNC_ChangeClientFunds;
 			if (_has_inv_changed || _has_veh_changed) then {
 				Private ["_hint_overflow"];
-				_hint_overflow = if (_mag_overflow) then {"<br /><br /><t color='#F56363'>Loadout exceeds inventory capacity (12 magazine slots) - extra magazines were discarded.</t>"} else {""};
+				_hint_overflow = if (_mag_overflow) then {Format ["<br /><br /><t color='#F56363'>Loadout exceeds inventory capacity (%1 magazine slots) - extra magazines were discarded.</t>", _cap]} else {""};
 				hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Purchased Equipement to %1 for $<t color='#F5D363'>%2</t>.</t>%3",_msg,_price,_hint_overflow];
 				_price = 0;
 			} else {hint parseText("<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>The gear was not purchased since nothing has changed.</t>");};
