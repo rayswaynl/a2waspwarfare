@@ -573,9 +573,9 @@ _easaLoadout = _easaLoadout + [
 // Mi-171Sh (CZ) [AF3] - gunship transport (experital: owner-pick "Gun Run" loadout)
 // Substitution notes:
 //   23mm gun pods + 57mm rocket pod: A2/ACR has no UPK-23 pod launcher classname.
-//     57mmLauncher (S-5 rocket pod) is used for all three pod hardpoints (3 magazines
-//     = 192 rounds); this is the only pod-type weapon available in A2 EASA.
-//     Documented substitution: 3x S-5 pod mags represent 2x23mm pods + 1x57mm pod.
+//     57mmLauncher (S-5 rocket pod) is the only pod-type weapon available in A2 EASA.
+//     Owner trim 2026-06-12: ONE 64Rnd S-5 mag (64 rockets) — "should not have the
+//     massive 192x S5 rockets"; the gun-pod hardpoints stay unrepresented.
 //   Falanga/AT-2 ATGM: no Falanga (AT-2) classname exists in A2 ACR; the owner intent
 //     is a TOKEN anti-armor sting (early-game "meh"), so ONE 4Rnd Ataka mag x2 launchers
 //     = 8 total was still too strong -> 2x 4Rnd_AT9_Mi24P kept the mission-standard mag
@@ -589,7 +589,7 @@ if (isClass (configFile >> "CfgVehicles" >> "Mi171Sh_rockets_CZ_EP1")) then {
 	_easaDefault = _easaDefault + [[['57mmLauncher','AT9Launcher'],['64Rnd_57mm','64Rnd_57mm']]];
 	_easaLoadout = _easaLoadout + [
 	[
-	[4400,'Gun Run: S-5 (192) | Ataka-V (8)',[['57mmLauncher','AT9Launcher'],['64Rnd_57mm','64Rnd_57mm','64Rnd_57mm','4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P']]]
+	[3400,'Gun Run: S-5 (64) | Ataka-V (8)',[['57mmLauncher','AT9Launcher'],['64Rnd_57mm','4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P']]]
 	]
 	];
 };
