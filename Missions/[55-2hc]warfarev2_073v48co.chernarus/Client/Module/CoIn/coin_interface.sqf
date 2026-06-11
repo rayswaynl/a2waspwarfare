@@ -295,6 +295,11 @@ BIS_CONTROL_CAM_Handler = {
 					deleteVehicle _get;
 					_logic setVariable ['WFBE_Helper',nil];
 				};
+				_get = _logic getVariable 'BIS_COIN_arrow';
+				if !(isNil '_get') then {
+					deleteVehicle _get;
+					_logic setVariable ['BIS_COIN_arrow',nil];
+				};
 			};
 		};
 	};
@@ -315,6 +320,11 @@ BIS_CONTROL_CAM_Handler = {
 		if !(isNil '_get') then {
 			deleteVehicle _get;
 			_logic setVariable ['WFBE_Helper',nil];
+		};
+		_get = _logic getVariable 'BIS_COIN_arrow';
+		if !(isNil '_get') then {
+			deleteVehicle _get;
+			_logic setVariable ['BIS_COIN_arrow',nil];
 		};
 		_logic setVariable ["BIS_COIN_selected",nil];
 		_logic setVariable ["BIS_COIN_params",nil];
@@ -351,10 +361,12 @@ if (isNil "WFBE_CL_FNC_CoinValidity") then {
 	WFBE_CL_FNC_CoinValidity = compile preprocessFile "Client\Module\CoIn\coin_validity.sqf";
 };
 //--- Throttled validity state (reset each session open).
-private ["_lastValidityCheck","_validityResult","_validityReason"];
+private ["_lastValidityCheck","_validityResult","_validityReason","_stripText","_stripTextOld"];
 _lastValidityCheck = -999;
 _validityResult    = [true,""];
 _validityReason    = "";
+_stripText         = "";
+_stripTextOld      = "~init~";
 
 _canAffordCount = 0;
 _canAffordCountOld = 0;
@@ -399,6 +411,11 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 		if !(isNil '_get') then {
 			deleteVehicle _get;
 			_logic setVariable ['WFBE_Helper',nil];
+		};
+		_get = _logic getVariable 'BIS_COIN_arrow';
+		if !(isNil '_get') then {
+			deleteVehicle _get;
+			_logic setVariable ['BIS_COIN_arrow',nil];
 		};
 		_logic setVariable ["BIS_COIN_selected",nil];
 		_logic setVariable ["BIS_COIN_params",nil];
@@ -494,6 +511,11 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 					deleteVehicle _get;
 					_logic setVariable ['WFBE_Helper',nil];
 				};
+				_get = _logic getVariable 'BIS_COIN_arrow';
+				if !(isNil '_get') then {
+					deleteVehicle _get;
+					_logic setVariable ['BIS_COIN_arrow',nil];
+				};
 				_hqDeployed = (sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus;
 				_index = _bns find _itemclass;
 				if (_index == 0 && _hqDeployed) exitWith {
@@ -528,6 +550,11 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 					_preview = _logic getVariable "BIS_COIN_preview";
 					if !(isNil "_preview") then {deleteVehicle _preview};
 					_logic setVariable ["BIS_COIN_preview",nil];
+					_get = _logic getVariable 'BIS_COIN_arrow';
+					if !(isNil '_get') then {
+						deleteVehicle _get;
+						_logic setVariable ['BIS_COIN_arrow',nil];
+					};
 					_logic setVariable ["BIS_COIN_selected",nil];
 					_logic setVariable ["BIS_COIN_params",nil];
 					_logic setVariable ["BIS_COIN_lastdir",nil];
@@ -577,6 +604,12 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 				_logic setVariable ["BIS_COIN_preview",_preview];
 				_new = true;
 
+				//--- Facing arrow: attached at +2.5m ahead, +1.0m up so it rotates with the ghost.
+				private "_facingArrow";
+				_facingArrow = "Sign_arrow_down_EP1" createVehicleLocal (getPos _preview);
+				_facingArrow attachTo [_preview, [0, 2.5, 1.0]];
+				_logic setVariable ["BIS_COIN_arrow", _facingArrow];
+
 				//--- Preview Helper.
 				if (_itemclass in _greenList && _index != -1) then {
 					_distance = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDISTANCES",sideJoinedText]) select _index;
@@ -606,6 +639,11 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						deleteVehicle _get;
 						_logic setVariable ['WFBE_Helper',nil];
 					};
+					_get = _logic getVariable 'BIS_COIN_arrow';
+					if !(isNil '_get') then {
+						deleteVehicle _get;
+						_logic setVariable ['BIS_COIN_arrow',nil];
+					};
 				};
 
 			} else {
@@ -632,6 +670,114 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 					if ((time - _lastValidityCheck) >= 0.7) then {
 						_lastValidityCheck = time;
 						_validityResult    = [_itemclass, position _preview, _logic] call WFBE_CL_FNC_CoinValidity;
+
+						//--- Status strip: compute budget/WDDM/threat readout for cashText (Task A).
+						_stripText = "";
+						private [
+							"_stBudgetOn","_stAllDef","_stSideStr","_stIsAnchor",
+							"_stCat","_stIsS","_stIsF","_stIsM",
+							"_stUpgrades","_stBarrackLvl","_stCapS","_stCapF","_stCapM",
+							"_stCountS","_stCountF","_stCountM",
+							"_stCatStaticsCls","_stCatFortsCls","_stCatMinesCls",
+							"_stAllDefCls","_stLogicSide","_stBaseAreas","_stBaseRange","_stNearestCenter","_stNearestDist","_stD",
+							"_stCompCap","_stCompObjs","_stSeenIDs","_stCid",
+							"_stEnemySide","_stEnemyCount","_stThreatMin",
+							"_stParts"
+						];
+						_stBudgetOn = missionNamespace getVariable ["WFBE_C_DEFENSE_BUDGET", 0];
+						if (_stBudgetOn > 0) then {
+							_stSideStr  = str sideJoined;
+							_stAllDef   = missionNamespace getVariable [format ["WFBE_%1DEFENSENAMES", _stSideStr], []];
+							if (_itemclass in _stAllDef) then {
+								//--- Locate nearest base center (mirrors validity.sqf).
+								_stLogicSide    = sideJoined Call WFBE_CO_FNC_GetSideLogic;
+								_stBaseAreas    = WFBE_Client_Logic getVariable ["wfbe_basearea", []];
+								_stBaseRange    = missionNamespace getVariable ["WFBE_C_BASE_AREA_RANGE", 250];
+								_stNearestCenter = [];
+								_stNearestDist   = 99999;
+								private ["_stStartPosObj","_stCenters"];
+								_stStartPosObj = _stLogicSide getVariable ["wfbe_startpos", objNull];
+								_stCenters = [];
+								if !(isNull _stStartPosObj) then {_stCenters = _stCenters + [getPos _stStartPosObj]};
+								{_stCenters = _stCenters + [getPos _x]} forEach _stBaseAreas;
+								{
+									_stD = (position _preview) distance _x;
+									if (_stD < _stNearestDist) then {_stNearestDist = _stD; _stNearestCenter = _x};
+								} forEach _stCenters;
+								if (_stNearestDist < _stBaseRange) then {
+									//--- Is this an anchor (WDDM composition)?
+									_stIsAnchor = (!isNil "WFBE_POSITION_ANCHOR_NAMES" && {(WFBE_POSITION_ANCHOR_NAMES find _itemclass) != -1});
+
+									//--- Barracks caps.
+									_stUpgrades   = _stLogicSide getVariable ["wfbe_upgrades", []];
+									_stBarrackLvl = 0;
+									if (count _stUpgrades > WFBE_UP_BARRACKS) then {_stBarrackLvl = _stUpgrades select WFBE_UP_BARRACKS};
+									_stCapS = 6  + 2  * _stBarrackLvl;
+									_stCapF = 20 + 10 * _stBarrackLvl;
+									_stCapM = 10 + 5  * _stBarrackLvl;
+
+									//--- Build category classname lists for count queries.
+									_stCatStaticsCls = []; _stCatFortsCls = []; _stCatMinesCls = [];
+									{
+										_stCat = [_x, sideJoined] Call WFBE_CO_FNC_GetDefenseCategory;
+										if (_stCat == "STATICS")        then {_stCatStaticsCls = _stCatStaticsCls + [_x]};
+										if (_stCat == "FORTIFICATIONS") then {_stCatFortsCls   = _stCatFortsCls   + [_x]};
+										if (_stCat == "MINES")          then {_stCatMinesCls   = _stCatMinesCls   + [_x]};
+									} forEach _stAllDef;
+
+									_stCountS = 0; _stCountF = 0; _stCountM = 0;
+									{
+										if (alive _x && {!(_x getVariable ["WFBE_WDDMPositionChild", false])}) then {_stCountS = _stCountS + 1};
+									} forEach (nearestObjects [_stNearestCenter, _stCatStaticsCls, _stBaseRange]);
+									{
+										if (alive _x && {!(_x getVariable ["WFBE_WDDMPositionChild", false])}) then {_stCountF = _stCountF + 1};
+									} forEach (nearestObjects [_stNearestCenter, _stCatFortsCls, _stBaseRange]);
+									{
+										if (alive _x && {!(_x getVariable ["WFBE_WDDMPositionChild", false])}) then {_stCountM = _stCountM + 1};
+									} forEach (nearestObjects [_stNearestCenter, _stCatMinesCls, _stBaseRange]);
+
+									//--- Which category is the currently selected item?
+									_stCat = [_itemclass, sideJoined] Call WFBE_CO_FNC_GetDefenseCategory;
+									_stIsS = (_stCat == "STATICS");
+									_stIsF = (_stCat == "FORTIFICATIONS");
+									_stIsM = (_stCat == "MINES");
+
+									//--- WDDM composition count.
+									_stCompCap  = missionNamespace getVariable ["WFBE_C_WDDM_COMP_CAP", 3];
+									_stCompObjs = nearestObjects [_stNearestCenter, _stAllDef, _stBaseRange];
+									_stSeenIDs  = [];
+									{
+										_stCid = _x getVariable ["WFBE_WDDMPositionAnchor", ""];
+										if (_stCid != "" && {!(_stCid in _stSeenIDs)}) then {_stSeenIDs = _stSeenIDs + [_stCid]};
+									} forEach _stCompObjs;
+
+									//--- Threat count.
+									_stEnemySide  = [west, east] - [sideJoined];
+									_stEnemyCount = 0;
+									{
+										_stEnemyCount = _stEnemyCount + (_x countSide (nearestObjects [_stNearestCenter, ["Man","Car","Motorcycle","Tank"], _stBaseRange]));
+									} forEach _stEnemySide;
+									_stThreatMin = missionNamespace getVariable ["WFBE_C_DEFENSE_THREAT_MIN", 3];
+
+									//--- Compose strip parts (only parts relevant to selected item).
+									_stParts = [];
+									if (_stIsS) then {_stParts = _stParts + [format ["Statics %1/%2", _stCountS, _stCapS]]};
+									if (_stIsF) then {_stParts = _stParts + [format ["Forts %1/%2", _stCountF, _stCapF]]};
+									if (_stIsM) then {_stParts = _stParts + [format ["Mines %1/%2", _stCountM, _stCapM]]};
+									if (_stIsAnchor) then {_stParts = _stParts + [format ["Comps %1/%2", count _stSeenIDs, _stCompCap]]};
+									if (_stIsS || {_stIsM}) then {_stParts = _stParts + [format ["Threat %1/%2", _stEnemyCount, _stThreatMin]]};
+
+									if (count _stParts > 0) then {
+										_stripText = "<br /><t size='0.85' color='#aaccff'>";
+										{
+											if (_forEachIndex > 0) then {_stripText = _stripText + "  ·  "};
+											_stripText = _stripText + _x;
+										} forEach _stParts;
+										_stripText = _stripText + "</t>";
+									};
+								};
+							};
+						};
 					};
 					if (isNil "_validityResult") then { _validityResult = [true,""] };
 					if (!(_validityResult select 0)) then {
@@ -643,10 +789,22 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						_validityReason = "";
 					};
 				} else {
-					//--- Color is already gray/red from earlier checks; clear reason.
+					//--- Color is already gray/red from earlier checks; clear reason and strip.
 					_validityReason = "";
 					_validityResult = [true,""];
 					_lastValidityCheck = -999;
+					_stripText = "";
+				};
+
+				//--- Refresh 112224 when strip text changes (throttle fires or item deselected).
+				if (_stripText != _stripTextOld) then {
+					_stripTextOld = _stripText;
+					private "_cashBase";
+					_cashBase = _logic getVariable ["BIS_COIN_cashTextBase", ""];
+					if (_cashBase != "") then {
+						((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112224) ctrlSetStructuredText (parseText (_cashBase + _stripText));
+						((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112224) ctrlCommit 0;
+					};
 				};
 
 				_tooltip = _itemclass;
@@ -674,6 +832,11 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 				if !(isNil '_get') then {
 					deleteVehicle _get;
 					_logic setVariable ['WFBE_Helper',nil];
+				};
+				_get = _logic getVariable 'BIS_COIN_arrow';
+				if !(isNil '_get') then {
+					deleteVehicle _get;
+					_logic setVariable ['BIS_COIN_arrow',nil];
 				};
 
 				//--- Remove funds
@@ -783,6 +946,8 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 			_colorGUI = [1,1,1,0.1];
 			((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112201) ctrlSetTextColor _colorGUI;
 			((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112201) ctrlCommit 0;
+			//--- No item selected: clear strip.
+			_stripText = "";
 		};
 
 		_oldTooltip = _logic getVariable "BIS_COIN_tooltip";
@@ -859,6 +1024,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 					_text1 +
 					_text2 +
 					_text3 +
+					"<br /><t size='0.75' color='#99aabb'>Custom controls: UA14 auto-walls  ·  UA15 reselect last  ·  UA16 auto-manning  ·  UA17 delete aimed  ·  rebind in Options &gt; Controls &gt; Custom</t>" +
 					""
 				);
 
@@ -906,8 +1072,12 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 				_cashLines = _cashLines + 0.05;
 			};
 			_cashText = _cashText + "</t>";
+			//--- Store base cash text; status strip is appended each frame separately.
+			_logic setVariable ["BIS_COIN_cashTextBase", _cashText];
 			_cashPos = ctrlPosition ((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112224);
-			((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112224) ctrlSetStructuredText (parseText _cashText);
+			private "_cashTextFull";
+			_cashTextFull = _cashText + (if (isNil "_stripText") then {""} else {_stripText});
+			((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112224) ctrlSetStructuredText (parseText _cashTextFull);
 			((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112224) ctrlSetPosition [_cashPos select 0,_cashPos select 1,_cashPos select 2,(_cashPos select 3)/*0.1*/ + _cashLines];
 			((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112224) ctrlShow true;
 			((uiNamespace getVariable "wfbe_title_coin") displayCtrl 112224) ctrlCommit 0;
