@@ -171,7 +171,8 @@ if (_defCount < _defMax) then {
 //--- 4) V0.5: two base artillery pieces once the defenses stand. Construction tags
 //--- them WFBE_CommanderArtillery; the strategy worker fires them at spearhead
 //--- towns / the enemy HQ (fire is free in WFBE - the real cooldown gates it).
-if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0) then {
+//--- V0.6.3: OFF by default (owner call) - opt back in via WFBE_C_AI_COMMANDER_ARTILLERY = 1.
+if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) && {(missionNamespace getVariable "WFBE_C_ARTILLERY") > 0}) then {
 	_artyBuilt = _logik getVariable ["wfbe_aicom_arty_built", 0];
 	if (_artyBuilt < 2 && {(_logik getVariable ["wfbe_aicom_defenses", 0]) >= _defMax}) then {
 		_have = false;

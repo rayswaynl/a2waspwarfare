@@ -179,7 +179,8 @@ if (_strikeOn) then {
 _logik setVariable ["wfbe_aicom_strike_on", _strikeOn];
 
 //--- 4) ARTILLERY: soften the spearhead town or the enemy HQ - never near friendlies.
-if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0) then {
+//--- V0.6.3: OFF by default (owner call) - opt back in via WFBE_C_AI_COMMANDER_ARTILLERY = 1.
+if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) && {(missionNamespace getVariable "WFBE_C_ARTILLERY") > 0}) then {
 	_upASel = (_logik getVariable ["wfbe_upgrades", [0,0,0,0,0,0,0,0,0,0,0]]) select WFBE_UP_ARTYTIMEOUT;
 	_cd = (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS") select (_upASel min ((count (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS")) - 1));
 	if (time - (_logik getVariable ["wfbe_aicom_arty_last", -1e6]) > _cd) then {
