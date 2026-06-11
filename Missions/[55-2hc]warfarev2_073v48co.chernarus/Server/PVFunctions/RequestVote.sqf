@@ -14,15 +14,19 @@ scriptName "Server\PVFunctions\RequestVote.sqf";
 	  WFBE_VOTE_STATE     = [] or [type, yes, needed, serverEndTime, side]
 	  WFBE_VOTE_VOTERS    = [playerName, ...]   — who already voted YES
 	  WFBE_VOTE_COOLDOWNS = [[type, unlockServerTime], ...]
-	  WFBE_SERVER_TIME    = time  (broadcast every loop tick so clients can compute countdowns)
+	  WFBE_SERVER_TIME    = time  (broadcast by persistent server loop + watcher)
 
-	Vote window: missionNamespace getVariable ["WFBE_C_VOTE_WINDOW", 60]  (seconds)
-	Cooldown:    missionNamespace getVariable ["WFBE_C_VOTE_COOLDOWN_FAILED", 300] (seconds)
+	Threshold is locked at vote-open time (stored in state[2]) so
+	join/leave mid-vote cannot shift the pass bar.
+
+	Vote window:  missionNamespace getVariable ["WFBE_C_VOTE_WINDOW", 60]  (seconds)
+	Cooldown:     missionNamespace getVariable ["WFBE_C_VOTE_COOLDOWN_FAILED", 300] (seconds)
 */
 
-Private ["_side","_playerName","_voteType","_logik","_eligible","_needed",
-         "_voters","_yesCount","_state","_cooldowns","_cooldownSec","_i",
-         "_unlock","_onCooldown","_window","_endTime","_vSide"];
+Private ["_side","_playerName","_voteType","_eligible","_needed",
+         "_voters","_yesCount","_state","_cooldowns","_cooldownSec",
+         "_onCooldown","_window","_endTime","_vSide","_alreadyVoted",
+         "_rejected","_h","_activeType","_voteSide"];
 
 _side       = _this select 0;
 _playerName = _this select 1;
@@ -33,56 +37,41 @@ if (!(_voteType in ["skip-night","surrender","weather","mission-restart"])) exit
 	["WARNING", Format ["RequestVote: unknown type '%1' from %2", _voteType, _playerName]] Call WFBE_CO_FNC_LogContent;
 };
 
-//--- Resolve which side's eligibility counts.
-//--- surrender = own team; skip-night/weather/mission-restart = all humans.
-_vSide = if (_voteType == "surrender") then {_side} else {objNull};
-
-//--- Count eligible voters (exclude headless clients: isPlayer is false for HCs).
-_eligible = 0;
-{
-	if (isPlayer _x && {alive _x}) then {
-		if (_voteType == "surrender") then {
-			if (side _x == _vSide) then {_eligible = _eligible + 1};
-		} else {
-			_eligible = _eligible + 1;
-		};
-	};
-} forEach playableUnits;
-
-if (_eligible < 1) then {_eligible = 1}; //--- Solo-server guard: votes still work.
-
-//--- Quorum threshold.
-_needed = if (_voteType in ["weather","mission-restart","surrender"]) then {
-	_eligible
-} else {
-	//--- skip-night: simple majority.
-	floor(_eligible / 2) + 1
-};
-
 //--- Fetch shared state arrays (init on first use).
 if (isNil "WFBE_VOTE_STATE")     then {WFBE_VOTE_STATE     = []};
 if (isNil "WFBE_VOTE_VOTERS")    then {WFBE_VOTE_VOTERS    = []};
-if (isNil "WFBE_VOTE_COOLDOWNS") then {WFBE_VOTE_COOLDOWNS = []};
+if (isNil "WFBE_VOTE_COOLDOWNS") then {
+	WFBE_VOTE_COOLDOWNS = [];
+	publicVariable "WFBE_VOTE_COOLDOWNS"; //--- JIP: ensure clients see an empty list.
+};
 
 _state     = WFBE_VOTE_STATE;
 _voters    = WFBE_VOTE_VOTERS;
 _cooldowns = WFBE_VOTE_COOLDOWNS;
-_window    = missionNamespace getVariable ["WFBE_C_VOTE_WINDOW", 60];
+_window      = missionNamespace getVariable ["WFBE_C_VOTE_WINDOW", 60];
 _cooldownSec = missionNamespace getVariable ["WFBE_C_VOTE_COOLDOWN_FAILED", 300];
 
 //--- -----------------------------------------------------------------------
 //--- BRANCH A: a vote is already active.
 //--- -----------------------------------------------------------------------
 if (count _state >= 5) then {
-	Private ["_activeType"];
 	_activeType = _state select 0;
 
-	if (_activeType != _voteType) exitWith {
-		//--- Different vote type is running — silently ignore (client dialog disables button).
+	//--- Different vote type running — silently ignore.
+	if (_activeType != _voteType) exitWith {};
+
+	//--- For surrender: verify sender's side matches the stored vote side.
+	//--- _state select 4 is a side value for surrender votes; objNull for global ones.
+	//--- Use typeName to distinguish: "SIDE" = restricted; "OBJECT" = no restriction.
+	if (_voteType == "surrender") then {
+		_voteSide = _state select 4;
+		if ((typeName _voteSide) == "SIDE" && {_side != _voteSide}) exitWith {};
 	};
 
+	//--- Read threshold locked at vote-open time (fix #1: never recompute mid-vote).
+	_needed = _state select 2;
+
 	//--- Record YES (no double-counting).
-	Private ["_alreadyVoted"];
 	_alreadyVoted = false;
 	{if (_x == _playerName) then {_alreadyVoted = true}} forEach _voters;
 
@@ -93,7 +82,7 @@ if (count _state >= 5) then {
 
 		_yesCount = count _voters;
 
-		//--- Update state broadcast.
+		//--- Update state broadcast (yes count only; threshold unchanged).
 		_state set [1, _yesCount];
 		WFBE_VOTE_STATE = _state;
 		publicVariable "WFBE_VOTE_STATE";
@@ -107,9 +96,20 @@ if (count _state >= 5) then {
 } else {
 	//--- -----------------------------------------------------------------------
 	//--- BRANCH B: no active vote — try to start one.
+	//--- Spin-lock mutex to prevent two concurrent Spawns both seeing empty state.
 	//--- -----------------------------------------------------------------------
+	while {!(isNil "WFBE_VOTE_LOCK") && {WFBE_VOTE_LOCK}} do {sleep 0.01};
+	WFBE_VOTE_LOCK = true;
 
-	//--- Check cooldown.
+	//--- Re-check state and cooldowns inside lock (freshest read after acquiring mutex).
+	_state     = WFBE_VOTE_STATE;
+	_cooldowns = WFBE_VOTE_COOLDOWNS;
+	if (count _state >= 5) exitWith {
+		WFBE_VOTE_LOCK = false;
+		//--- A race winner already opened a vote; silently drop this request.
+	};
+
+	//--- Check cooldown (inside lock).
 	_onCooldown = false;
 	{
 		if ((_x select 0) == _voteType) then {
@@ -118,16 +118,46 @@ if (count _state >= 5) then {
 	} forEach _cooldowns;
 
 	if (_onCooldown) exitWith {
+		WFBE_VOTE_LOCK = false;
 		//--- Silently ignore; client already shows cooldown timer.
 	};
 
-	//--- skip-night only valid when it IS night.
+	//--- skip-night only valid at night — flag and gate below to keep exitWith at script scope.
+	_rejected = false;
 	if (_voteType == "skip-night") then {
-		Private ["_h"];
 		_h = date select 3;
-		if (!(_h >= 19 || _h < 5)) exitWith {
+		if (!(_h >= 19 || _h < 5)) then {
+			_rejected = true;
 			[nil, "LocalizeMessage", ["VoteNotNight"]] Call WFBE_CO_FNC_SendToClients;
 		};
+	};
+
+	if (_rejected) exitWith {
+		WFBE_VOTE_LOCK = false;
+	};
+
+	//--- Resolve which side's eligibility counts.
+	//--- surrender = own team; skip-night/weather/mission-restart = all humans.
+	_vSide = if (_voteType == "surrender") then {_side} else {objNull};
+
+	//--- Count eligible voters at vote-start time (threshold locked here).
+	_eligible = 0;
+	{
+		if (isPlayer _x && {alive _x}) then {
+			if (_voteType == "surrender") then {
+				if (side _x == _vSide) then {_eligible = _eligible + 1};
+			} else {
+				_eligible = _eligible + 1;
+			};
+		};
+	} forEach playableUnits;
+	if (_eligible < 1) then {_eligible = 1}; //--- Solo-server guard.
+
+	//--- Quorum threshold (locked for the life of this vote).
+	_needed = if (_voteType in ["weather","mission-restart","surrender"]) then {
+		_eligible
+	} else {
+		floor(_eligible / 2) + 1
 	};
 
 	//--- Open a new vote.
@@ -139,9 +169,11 @@ if (count _state >= 5) then {
 	publicVariable "WFBE_VOTE_VOTERS";
 	publicVariable "WFBE_SERVER_TIME";
 
+	WFBE_VOTE_LOCK = false; //--- Release lock before spawning watcher.
+
 	//--- Announce start.
 	[nil, "LocalizeMessage", ["VoteStarted", _playerName, Localize (Format ["STR_WF_VOTE_OPT_%1", _voteType])]] Call WFBE_CO_FNC_SendToClients;
 
-	//--- Spawn watcher to close the window.
+	//--- Spawn watcher to close the window (passes needed so watcher never recomputes).
 	[_voteType, _side, _endTime, _needed] Spawn WFBE_SE_FNC_VoteWatcher;
 };

@@ -647,5 +647,21 @@ if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
 	[] execVM "Server\Functions\Server_DayNightCycle.sqf";
 };
 
+//--- Marty: Vote system — JIP init and persistent server-time broadcast.
+//--- WFBE_VOTE_COOLDOWNS init ensures JIP clients receive the var even if no vote has run.
+if (isNil "WFBE_VOTE_COOLDOWNS") then {
+	WFBE_VOTE_COOLDOWNS = [];
+	publicVariable "WFBE_VOTE_COOLDOWNS";
+};
+//--- Persistent 10 s loop broadcasts WFBE_SERVER_TIME so client dialogs always have
+//--- a recent reference for cooldown and countdown display.  The per-vote watcher
+//--- supplements this with 2 s ticks while a vote window is open.
+[] Spawn {
+	while {true} do {
+		WFBE_SERVER_TIME = time;
+		publicVariable "WFBE_SERVER_TIME";
+		sleep 10;
+	};
+};
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

@@ -3,9 +3,11 @@ scriptName "Server\Functions\Server_VoteWatcher.sqf";
 /*
 	Spawned when a new vote is opened.
 	Polls until the window closes, then tallies the result.
-	Server broadcasts WFBE_SERVER_TIME each tick so clients can compute countdowns.
+	Broadcasts WFBE_SERVER_TIME every 2 s while the vote is active (supplements
+	the persistent 10-s loop from Init_Server so countdown is smooth).
 
 	Parameters: [voteType, side, endTime, needed]
+	_needed is the threshold locked at vote-open; never recomputed here.
 */
 
 Private ["_voteType","_side","_endTime","_needed","_yesCount","_voters",
@@ -14,17 +16,17 @@ Private ["_voteType","_side","_endTime","_needed","_yesCount","_voters",
 _voteType    = _this select 0;
 _side        = _this select 1;
 _endTime     = _this select 2;
-_needed      = _this select 3;
+_needed      = _this select 3; //--- Locked threshold from vote-open.
 _cooldownSec = missionNamespace getVariable ["WFBE_C_VOTE_COOLDOWN_FAILED", 300];
 
-//--- Broadcast server time every 2 s so clients can compute countdown.
+//--- Fine-grained time broadcast while vote window is open.
 while {time < _endTime} do {
 	_state = missionNamespace getVariable ["WFBE_VOTE_STATE", []];
 
 	//--- State was already cleared by an early pass — exit.
 	if (count _state == 0) exitWith {};
 
-	//--- State type changed (shouldn't happen, but guard).
+	//--- State type changed (guard against stale watcher).
 	if ((count _state >= 1) && {(_state select 0) != _voteType}) exitWith {};
 
 	WFBE_SERVER_TIME = time;
@@ -38,7 +40,7 @@ _state = missionNamespace getVariable ["WFBE_VOTE_STATE", []];
 if (count _state == 0) exitWith {};
 if ((count _state >= 1) && {(_state select 0) != _voteType}) exitWith {};
 
-//--- Window expired — tally.
+//--- Window expired — tally using the locked threshold.
 _voters   = missionNamespace getVariable ["WFBE_VOTE_VOTERS", []];
 _yesCount = count _voters;
 

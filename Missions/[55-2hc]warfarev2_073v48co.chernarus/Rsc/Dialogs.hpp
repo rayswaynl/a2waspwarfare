@@ -352,14 +352,16 @@ class WFBE_VotingMenu {
 			shadow = 2;
 		};
 		//--- Start Vote / Vote YES button.
-		class CA_ActionButton : RscShortcutButton {
+		//--- RscButton_Main (plain RscButton type 1) so ctrlSetText works at runtime in A2 OA.
+		//--- RscShortcutButton (type 16) ignores ctrlSetText after dialog open.
+		class CA_ActionButton : RscButton_Main {
 			idc = 25104;
 			x = 0.28;
 			y = 0.104 + 0.62;
 			w = 0.489;
 			h = 0.06;
 			text = $STR_WF_VOTE_StartVote;
-			action = "WFBE_MenuAction = 1";
+			onButtonClick = "WFBE_MenuAction = 1";
 		};
 		//--- Footer status (cooldown or "voting in progress").
 		class CA_Footer : RscText {
