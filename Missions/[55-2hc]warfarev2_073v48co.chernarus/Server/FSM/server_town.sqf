@@ -386,7 +386,8 @@ while {!WFBE_GameOver} do {
 						//--- Mirrors the SP pattern (server_town.sqf ~line 313) and Construction_SmallSite.sqf ~line 138.
 						//--- Use a local _cbrSID (0=west,1=east) for the Init_BaseStructure call
 						//--- rather than reusing the outer-scope _newSID, which tracks town ownership.
-						private _cbrSID = if (_newSide == west) then {0} else {1};
+						Private "_cbrSID";
+						_cbrSID = if (_newSide == west) then {0} else {1};
 						_radar setVehicleInit Format ["[this,false,%1] ExecVM 'Client\Init\Init_BaseStructure.sqf'", _cbrSID];
 						processInitCommands;
 
