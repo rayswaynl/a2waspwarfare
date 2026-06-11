@@ -97,7 +97,7 @@ WFBE_MenuAction = -1;
 					// Using (level - 1) max 0 avoids the 0:00 flash caused by reading the already-
 					// incremented post-completion level during the publicVariable/HandleSpecial race.
 					_runningTime = 0;
-					if (_runningId >= 0 && _runningId < count _times) then {
+					if (_runningId >= 0 && {_runningId < count _times} && {_runningId < count _upgrades}) then {
 						_upgrades = (WFBE_Client_SideJoined) call WFBE_CO_FNC_GetSideUpgrades;
 						_runningLevel = ((_upgrades select _runningId) - 1) max 0;
 						if (_runningLevel < count (_times select _runningId)) then {
@@ -367,7 +367,7 @@ while {alive player && dialog} do {
 					if ((_qlist select _qj) == _qId) then {_qPrevCount = _qPrevCount + 1};
 				};
 				// Effective level = current level + prior-in-queue count.
-				_qEffLvl = (_upgrades select _qId) + _qPrevCount;
+				_qEffLvl = if (_qId >= 0 && {_qId < count _upgrades}) then {(_upgrades select _qId) + _qPrevCount} else {_qPrevCount};
 				// Duration at effective level (clamped to times array; out-of-bounds = maxed = skip).
 				_qDurSec = -1;
 				if (_qId >= 0 && _qId < count _upgrade_times) then {

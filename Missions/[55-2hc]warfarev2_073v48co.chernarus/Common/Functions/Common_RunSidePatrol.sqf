@@ -25,7 +25,7 @@ Private ["_sideID","_template","_homeTown","_side","_position","_retVal","_units
          "_paidThisVisit","_convoyPay","_sweepDone",
          "_townCamps","_campObj","_sweepStart","_allOurs","_ups",
          "_campRange","_liveUnits","_inVehicle","_dismounted","_veh",
-         "_driver","_cargo","_u","_settleTimer","_settleTimeout"];
+         "_driver","_cargo","_u","_settleTimeout"];
 
 _sideID   = _this select 0;
 _template = _this select 1;
@@ -141,14 +141,10 @@ while {!WFBE_GameOver && _alive} do {
 							};
 
 							//--- Settle wait: up to 20 s or leader within _campRange m.
-							_settleTimer   = time;
+							//--- Fix: exitWith inside a then-block exits only that then-block, not the
+							//--- while; proximity condition moved into the while test with lazy && {}.
 							_settleTimeout = time + 20;
-							while {time < _settleTimeout} do {
-								if (!isNull leader _team && alive leader _team) then {
-									if ((leader _team) distance _campObj < _campRange) exitWith {};
-								};
-								sleep 2;
-							};
+							while {time < _settleTimeout && {!(!isNull leader _team && {alive leader _team} && {(leader _team) distance _campObj < _campRange})}} do { sleep 2; };
 
 							//--- DISMOUNT: unassign everyone alive who is currently inside a vehicle,
 							//---   EXCEPT one driver per vehicle (keep each vehicle driveable for remount).

@@ -584,7 +584,9 @@ _easaLoadout = _easaLoadout + [
 //     match the AG substring pattern in WFBE_EASA_FNC_WeaponCat).
 if (isClass (configFile >> "CfgVehicles" >> "Mi171Sh_rockets_CZ_EP1")) then {
 	_easaVehi = _easaVehi + ['Mi171Sh_rockets_CZ_EP1'];
-	_easaDefault = _easaDefault + [[['57mmLauncher'],['64Rnd_57mm','64Rnd_57mm']]];
+	//--- Default lists ALL stock weapons for strip purposes so EASA_RemoveLoadout clears them fully.
+	//--- Mi171Sh_rockets_CZ_EP1 ships with both 57mmLauncher (S-5 rocket pods) and AT9Launcher (Ataka-V ATGMs).
+	_easaDefault = _easaDefault + [[['57mmLauncher','AT9Launcher'],['64Rnd_57mm','64Rnd_57mm']]];
 	_easaLoadout = _easaLoadout + [
 	[
 	[4400,'Gun Run: S-5 (192) | Ataka-V (8)',[['57mmLauncher','AT9Launcher'],['64Rnd_57mm','64Rnd_57mm','64Rnd_57mm','4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P']]]

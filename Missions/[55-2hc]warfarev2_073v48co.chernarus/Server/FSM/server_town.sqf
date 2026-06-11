@@ -384,9 +384,10 @@ while {!WFBE_GameOver} do {
 
 						//--- Task D: trigger Init_BaseStructure on clients so the CBR range circle is drawn.
 						//--- Mirrors the SP pattern (server_town.sqf ~line 313) and Construction_SmallSite.sqf ~line 138.
-						//--- _newSID is already set above (0 = west, 1 = east); recompute from _newSide.
-						_newSID = if (_newSide == west) then {0} else {1};
-						_radar setVehicleInit Format ["[this,false,%1] ExecVM 'Client\Init\Init_BaseStructure.sqf'", _newSID];
+						//--- Use a local _cbrSID (0=west,1=east) for the Init_BaseStructure call
+						//--- rather than reusing the outer-scope _newSID, which tracks town ownership.
+						private _cbrSID = if (_newSide == west) then {0} else {1};
+						_radar setVehicleInit Format ["[this,false,%1] ExecVM 'Client\Init\Init_BaseStructure.sqf'", _cbrSID];
 						processInitCommands;
 
 						//--- 3. REGISTER in the new owner's CBR registry.
