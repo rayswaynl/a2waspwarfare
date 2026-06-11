@@ -57,7 +57,9 @@ _assigned = [];
 	if (_canDrive) then {
 		//--- V0.2: hold one team back as the base garrison (full-auto only) - a captured
 		//--- base must not be left open while every team marches at towns.
-		if (!_humanCmd && {!_explicitMode} && {_aliveCount > 0}) then {
+		//--- Owner call 2026-06-11: OFF by default - everything goes to the front.
+		//--- Opt back in via WFBE_C_AI_COMMANDER_GARRISON = 1.
+		if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_GARRISON", 0]) > 0) && {!_humanCmd} && {!_explicitMode} && {_aliveCount > 0}) then {
 			_gar = _logik getVariable ["wfbe_aicom_garrison", grpNull];
 			_garDead = true;
 			if (!isNull _gar) then {
