@@ -170,6 +170,9 @@ $failPatterns = [ordered]@{
     "findAny"        = [regex]::new('\bfindAny\b',          [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
     # BIS_fnc_inString
     "BIS_fnc_inString" = [regex]::new('\bBIS_fnc_inString\b', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    # private _x = ...  - A3 inline declaration; A2 needs Private "_x"; / Private ["_x",...]
+    # (live-burned 2026-06-12: killed Common_CreateVehicle -> no MHQ -> AI commanders stopped)
+    "private _x ="   = [regex]::new('\bprivate\s+_\w+\s*=',  [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
 }
 
 # REVIEW pattern — blunt: any  find "  (could be string or array find)
