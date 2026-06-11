@@ -22,7 +22,7 @@ class Mission
 	randomSeed=10034581;
 	class Intel
 	{
-		briefingName="WASP AI Commander TEST";
+		briefingName="[AI-ONLY] WASP AI Commander Test";
 		briefingDescription="AI-vs-AI commander eval build (V0.6.x): both sides run the scripted commander brain. Spectate or observe - rounds are scored from telemetry.";
 		resistanceWest=0;
 		startWeather=0;
