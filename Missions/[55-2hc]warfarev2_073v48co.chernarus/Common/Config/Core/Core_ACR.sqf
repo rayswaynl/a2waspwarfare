@@ -78,6 +78,19 @@ _i = _i + [['','',1050,21,-2,2,1,0,'Czech',[]]];
 _c = _c + ['Pandur2_ACR'];
 _i = _i + [['','',2650,25,[true,false,2,0],3,1,0,'Czech',[]]];
 
+/* Support Trucks (T810 family) */
+_c = _c + ['T810_CZ_EP1'];
+_i = _i + [['','',500,20,-2,1,1,0,'Czech',[]]];
+
+_c = _c + ['T810_Repair_CZ_EP1'];
+_i = _i + [['','',2500,22,-2,2,1,0,'Czech',[]]];
+
+_c = _c + ['T810_Refuel_CZ_EP1'];
+_i = _i + [['','',500,22,-2,1,1,0,'Czech',[]]];
+
+_c = _c + ['T810_Ammo_CZ_EP1'];
+_i = _i + [['','',1750,22,-2,1,1,0,'Czech',[]]];
+
 /* Heavy Vehicles — ACR premium (capture-unlock) */
 _c = _c + ['T72M4CZ'];
 _i = _i + [['','',7000,45,-2,4,2,0,'Czech',[]]];

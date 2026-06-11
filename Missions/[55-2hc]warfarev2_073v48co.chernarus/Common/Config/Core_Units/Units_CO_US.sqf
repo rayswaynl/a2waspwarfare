@@ -174,6 +174,10 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['MtvrRefuel'];
     _u = _u		+ ['WarfareSalvageTruck_USMC'];
     _u = _u		+ ['WarfareSupplyTruck_USMC'];
+    _u = _u		+ ['T810_CZ_EP1'];
+    _u = _u		+ ['T810_Repair_CZ_EP1'];
+    _u = _u		+ ['T810_Refuel_CZ_EP1'];
+    _u = _u		+ ['T810_Ammo_CZ_EP1'];
     _u = _u		+ ['RHIB'];
     _u = _u		+ ['RHIB2Turret'];
     _u = _u		+ ['LAV25'];
@@ -212,6 +216,10 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['MtvrRefuel_DES_EP1'];
     _u = _u		+ ['MtvrSalvage_DES_EP1'];
     _u = _u		+ ['MtvrSupply_DES_EP1'];
+    _u = _u		+ ['T810_CZ_EP1'];
+    _u = _u		+ ['T810_Repair_CZ_EP1'];
+    _u = _u		+ ['T810_Refuel_CZ_EP1'];
+    _u = _u		+ ['T810_Ammo_CZ_EP1'];
     _u = _u		+ ['Dingo_DST_ACR'];
     _u = _u		+ ['Dingo_GL_DST_ACR'];
     _u = _u		+ ['LandRover_Special_CZ_EP1'];
