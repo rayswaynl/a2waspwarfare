@@ -22,8 +22,8 @@ class Mission
 	randomSeed=10034581;
 	class Intel
 	{
-		briefingName="WASP Experital TEST";
-		briefingDescription="Experital branch: experimental feature sandbox (counter-battery, bank, redeploy truck, proportional rearm, bulldozer, defense budget, factory caps, statlog).";
+		briefingName="[PLAY] WASP Experimental Test";
+		briefingDescription="Experimental feature sandbox - JOIN THIS ONE to play. Counter-battery, bank, redeploy truck, proportional rearm, site clearance, defense budgets, patrols/convoys, airfield captures, COIN UI upgrades.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;
