@@ -1,0 +1,39 @@
+# Regex allowlist for Analyze-WaspStressRpt.ps1.
+# Keep this narrow. Add only RPT lines that are known engine/mod noise and not
+# useful PR8 regression signals.
+# Never add mission-side AntiStack, no-DB fallback, HC PVF routing,
+# AwardBounty, sideJoined/sideID/WFBE_Client_SideID, or team-skill undefined
+# lines here. Those belong in MissionIssuePatterns.txt and remain release
+# signals.
+
+^\s*Warning Message: No entry '.*'\.?$
+^\s*Cannot load texture .+$
+^\s*Cannot open object .+$
+^\s*Unsupported language .+$
+^.*\[WASP-PR8-STRESS\].*expectedErrorLines=0.*$
+^.*\[WASP-PR8-STRESS\].*rpt-error-grep.*$
+
+# Active test mod stack known noise, recorded from 2026-06-05 PR8 StressTest.
+# Keep mission-side AntiStack/HC PVF errors out of this file.
+^.*jsrs_scrap_array, _source.*$
+^\s*Error position: <_source\];.*$
+^\s*Error Undefined variable in expression: _source$
+^File JSRS_Distance\\scripts\\.*\.sqf, line 19$
+^\s*Cannot load sound 'jsrs_.*'$
+^.*_freeslots.*$
+^.*_slotVar.*$
+^.*_ptype.*$
+^.*weaponSlots.*$
+^.*_lastupos.*$
+^.*tpwcas_supstate.*$
+^.*fnc_invSlotsEmpty\.sqf.*$
+^.*fnc_inventoryCheck\.sqf.*$
+^.*fnc_getNearWeapons\.sqf.*$
+^.*fnc_AINet\.sqf.*$
+^File x\\asr_ai\\addons\\sys_airearming\\fnc_invSlotsEmpty\.sqf, line 25$
+^File x\\asr_ai\\addons\\sys_airearming\\fnc_inventoryCheck\.sqf, line 161$
+^File x\\asr_ai\\addons\\sys_airearming\\fnc_getNearWeapons\.sqf, line 83$
+^File x\\asr_ai\\addons\\sys_aiskill\\fnc_AINet\.sqf, line 103$
+^.*WarFXPE\\ParticleEffects\\Universa.*$
+^File warfxpe\\ParticleEffects\\SCRIPTS\\ammo\\M256\.sqf, line 30$
+^\s*Cannot evaluate 'ReadAndWrite' - no file$
