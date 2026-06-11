@@ -56,6 +56,7 @@ WFBE_SE_FNC_AI_Com_Base = Compile preprocessFileLineNumbers "Server\AI\Commander
 WFBE_SE_FNC_AI_Com_Teams = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Teams.sqf";
 WFBE_SE_FNC_AI_Com_Strategy = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Strategy.sqf";
 WFBE_SE_FNC_AI_Commander = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander.sqf";
+WFBE_SE_FNC_AI_Commander_Wildcard = Compile preprocessFileLineNumbers "Server\Functions\AI_Commander_Wildcard.sqf";
 WFBE_SE_FNC_GetTownGroups = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroups.sqf";
 WFBE_SE_FNC_GetTownGroupsDefender = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroupsDefender.sqf";
 WFBE_SE_FNC_GetTownPatrol = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownPatrol.sqf";
@@ -655,6 +656,12 @@ WFBE_SE_PLAYERLIST = [[objNull, "0"]];
 
 //--- feat/ai-commander: one always-running supervisor per side (self-gates on enabled + no player commander).
 {_x Spawn WFBE_SE_FNC_AI_Commander} forEach WFBE_PRESENTSIDES;
+
+//--- V0.6: AI Commander Wildcard events (one free random event per AI side per interval).
+if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD", 1]) == 1 && {(missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0}) then {
+	{_x Spawn WFBE_SE_FNC_AI_Commander_Wildcard} forEach WFBE_PRESENTSIDES;
+	["INITIALIZATION", Format ["Init_Server.sqf: AI Commander Wildcard workers started for %1 sides (interval=%2s).", count WFBE_PRESENTSIDES, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL", 1800]]] Call WFBE_CO_FNC_AICOMLog;
+};
 
 // Marty: Start the accelerated day/night cycle only when the mission parameter enables it.
 if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
