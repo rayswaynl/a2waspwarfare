@@ -128,6 +128,7 @@ if (count _live > 0) then {
 	_logik setVariable ["wfbe_aicom_pending", _pending + 1];
 	[leader (_live select (floor (random (count _live)))), "HandleSpecial", ['delegate-aicom-team', _sideID, _template, getPos _facObj]] Call WFBE_CO_FNC_SendToClient;
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched (template %2, cost %3, doctrine %4, founded %5 editor %6 pending->%7 target %8).", _sideText, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target]] Call WFBE_CO_FNC_AICOMLog;
+	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|HC-template" + str _pick);
 } else {
 	//--- Fallback (no HC): found a server-local empty team; AssignTypes + Produce feed it.
 	_g = createGroup _side;
@@ -147,4 +148,5 @@ if (count _live > 0) then {
 	[_g, [0,0,0]] Call SetTeamMovePos;
 	_logik setVariable ["wfbe_teams", _teams + [_g], true];
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] founded server-local AI team (founded %2->%3 editor %4 target %5) [%6].", _sideText, _foundedTeams, _foundedTeams + 1, _editorTeams, _target, _g]] Call WFBE_CO_FNC_AICOMLog;
+	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|server-local");
 };

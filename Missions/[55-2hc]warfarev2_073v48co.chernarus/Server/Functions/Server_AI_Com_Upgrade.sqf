@@ -45,6 +45,7 @@ if (count _to_upgrade > 0) then {
 	//--- Roll on!
 	if (_can_upgrade) then {
 		["INFORMATION", Format ["Server_AI_Com_Upgrade.sqf: [%1] researching upgrade id %2 -> level %3 (supply %4, funds %5).", _side, _upgrade, (_upgrades select _upgrade) + 1, _cost select 0, _cost select 1]] Call WFBE_CO_FNC_AICOMLog;
+		diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|UPGRADE_RESEARCHED|id" + str _upgrade + "-lvl" + str ((_upgrades select _upgrade) + 1));
 		[_side, _upgrade, _upgrades select _upgrade, false] Spawn WFBE_SE_FNC_ProcessUpgrade;
 		// Marty: Mirror the AI commander's active upgrade ID for client upgrade-menu status text.
 		_logik setVariable ["wfbe_upgrading", true, true];

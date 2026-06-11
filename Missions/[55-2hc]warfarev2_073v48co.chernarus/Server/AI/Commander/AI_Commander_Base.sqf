@@ -108,6 +108,7 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				_script = _scripts select _idx;
 				[_class, _side, _pos, random 360, _idx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
 				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] building %2 at %3 (cost %4 supply, doctrine %5, branch-out %6).", _sideText, _x, _pos, _cost, _doctrine, _coreDone]] Call WFBE_CO_FNC_AICOMLog;
+				diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRUCTURE_BUILT|" + _x);
 			};
 		};
 	};

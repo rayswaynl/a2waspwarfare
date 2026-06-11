@@ -113,6 +113,7 @@ _relieved = 0;
 				_free setVariable ["wfbe_aicom_relief", _town];
 				_relieved = _relieved + 1;
 				["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] diverted to RELIEVE [%3] (under attack).", _sideText, _free, _town getVariable ["name", "town"]]] Call WFBE_CO_FNC_AICOMLog;
+				diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RELIEF|" + (_town getVariable ["name", "town"]));
 			};
 		} else {
 			_relieved = _relieved + 1;
@@ -134,6 +135,7 @@ if (!isNull _enemyHQ && {alive _enemyHQ}) then {
 if (_strikeOn) then {
 	if (!_wasStrike) then {
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] WAR STATE: winning (towns %2v%3, strength %4v%5) - HQ STRIKE launched.", _sideText, _myTowns, _enemyTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
+		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE|launched");
 	};
 	//--- Keep up to 3 strongest field teams on the strike (refill as strikers die).
 	_strikeCount = 0;
@@ -202,6 +204,7 @@ if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0) then {
 								_logik setVariable ["wfbe_aicom_arty_last", time];
 								_fired = true;
 								["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] FIRE MISSION [%2] at %3 (cooldown %4s).", _sideText, typeOf _p, _artyTgt, _cd]] Call WFBE_CO_FNC_AICOMLog;
+						diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FIRE_MISSION|" + (typeOf _p));
 							};
 						};
 					};
