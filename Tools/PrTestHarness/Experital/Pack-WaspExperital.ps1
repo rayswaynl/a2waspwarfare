@@ -6,7 +6,7 @@ param(
 
 	[string]$PboToolPath = "",
 
-	[string]$MissionTitle = "WASP Experital TEST"
+	[string]$MissionTitle = "[PLAY] WASP Experimental Test"
 )
 
 $ErrorActionPreference = "Stop"
