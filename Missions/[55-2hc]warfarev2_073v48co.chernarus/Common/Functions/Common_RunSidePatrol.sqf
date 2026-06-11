@@ -76,7 +76,9 @@ _upgLvl    = if (count _ups > WFBE_UP_PATROLS) then {_ups select WFBE_UP_PATROLS
 if (_upgLvl >= 4) then {
 	_truckList = missionNamespace getVariable Format["WFBE_%1SUPPLYTRUCKS", str _side];
 	if (!isNil "_truckList" && {count _truckList > 0}) then {
-		_truckCls    = _truckList select 0;
+		//--- Prefer the T810 as the convoy truck when ACR is present; fall back to the
+		//--- side's first supply truck so it still works without the ACR DLC.
+		_truckCls = if (isClass (configFile >> "CfgVehicles" >> "T810_CZ_EP1")) then {"T810_CZ_EP1"} else {_truckList select 0};
 		_truckVeh    = _truckCls createVehicle _position;
 		_truckVeh    setPos _position;
 		//--- Fix 2026-06-11: the driver was created with the TRUCK classname (a vehicle
