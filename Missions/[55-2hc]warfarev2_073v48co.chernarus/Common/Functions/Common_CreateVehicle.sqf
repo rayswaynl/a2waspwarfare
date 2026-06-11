@@ -55,8 +55,9 @@ if (_global) then {
 			//--- append it to the Init_Unit init string so both run in a single
 			//--- processInitCommands call.  This is the only way to ensure JIP clients
 			//--- also receive the texture — setVehicleInit stores only the LAST string set.
-			private _pendingTex = _vehicle getVariable ["wfbe_pending_texture", ""];
-			private _initStr = Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf'", _side];
+			Private ["_pendingTex","_initStr"];
+			_pendingTex = _vehicle getVariable ["wfbe_pending_texture", ""];
+			_initStr = Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf'", _side];
 			if (_pendingTex != "") then { _initStr = _initStr + "; " + _pendingTex };
 			_vehicle setVehicleInit _initStr;
 			processInitCommands;
