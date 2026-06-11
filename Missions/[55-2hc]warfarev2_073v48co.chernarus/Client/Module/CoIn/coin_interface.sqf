@@ -385,7 +385,7 @@ _stripText         = "";
 _stripTextOld      = "~init~";
 //--- C1: item card toggle state (persisted in profileNamespace, default on).
 _cardOn              = profileNamespace getVariable ["wfbe_coin_cards_on", true];
-_cardParamsLast      = [];
+_cardParamsLast      = ["~init~"]; //--- sentinel: BIS_COIN_params starts [] too - force first-tick refresh so the card panel hides on open
 WFBE_COIN_CARD_TOGGLE = false;
 
 _canAffordCount = 0;
