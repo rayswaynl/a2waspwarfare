@@ -836,34 +836,6 @@ class RscTitles {
 				w = 0.2;
 				h = 0.1;
 			};
-
-			//--- C1: item card panel — background (idc 112216) + text (idc 112217).
-			//--- Positioned above the center description panel.
-			//--- Empty text = invisible (safe pattern for RscTitles; avoid ctrlShow on displays).
-			class cardBack : IGUIBack {
-				idc = 112216;
-				x = "SafezoneX + 0.01 + 0.3 + (SafeZoneW - 0.02 - 0.3*2) * 0.35";
-				y = "SafezoneY + SafezoneH - 0.13 - 0.20";
-				w = "( SafeZoneW - 0.02 - 0.3*2 ) * 0.30";
-				h = 0.19;
-			};
-
-			class cardText : RscStructuredText {
-				idc = 112217;
-				x = "SafezoneX + 0.01 + 0.3 + (SafeZoneW - 0.02 - 0.3*2) * 0.35";
-				y = "SafezoneY + SafezoneH - 0.13 - 0.20 + 0.005";
-				w = "( SafeZoneW - 0.02 - 0.3*2 ) * 0.30";
-				h = 0.18;
-				size = 0.032;
-				text = "";
-
-				class Attributes {
-					font = "Zeppelin32";
-					color = "#eef8ff";
-					align = "center";
-					shadow = true;
-				};
-			};
 		};
 	};
 };
