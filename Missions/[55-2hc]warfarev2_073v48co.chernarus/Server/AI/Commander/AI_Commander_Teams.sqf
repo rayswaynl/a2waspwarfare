@@ -16,7 +16,7 @@
 	members at the factories per-unit (the V0.2 path).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_facMap","_unitList","_hcUnit"];
+private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_facMap","_unitList","_hcUnit","_base","_extra","_maxExtra","_fundsPerExtraTeam","_lastDynTarget"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -50,7 +50,26 @@ _editorTeams  = 0;
 _aiTeams = _foundedTeams + _editorTeams; //--- legacy alias; used in server-local log below.
 _pending = _logik getVariable ["wfbe_aicom_pending", 0];
 
-_target = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TEAMS_TARGET", 4];
+//--- V0.6.6: dynamic target - banked funds scale the founding threshold so losing
+//--- AIs convert wealth into pressure instead of hoarding.
+_base             = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TEAMS_TARGET",        4];
+_fundsPerExtraTeam = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_FUNDS_PER_EXTRA_TEAM", 75000];
+_maxExtra         = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TEAMS_MAX_EXTRA",      4];
+_funds            = (_side) Call GetAICommanderFunds;
+_extra            = floor (_funds / _fundsPerExtraTeam);
+if (_extra > _maxExtra) then {_extra = _maxExtra};
+_target           = _base + _extra;
+
+//--- Log only when the effective target changes (avoid RPT spam).
+_lastDynTarget = _logik getVariable ["wfbe_aicom_dyntarget", _base];
+if (_target > _base && {_target != _lastDynTarget}) then {
+	_logik setVariable ["wfbe_aicom_dyntarget", _target];
+	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] dynamic target raised to %2 (base %3 + extra %4, funds %5).", _sideText, _target, _base, _extra, _funds]] Call WFBE_CO_FNC_AICOMLog;
+};
+if (_target == _base && {_lastDynTarget > _base}) then {
+	_logik setVariable ["wfbe_aicom_dyntarget", _base];
+};
+
 if ((_foundedTeams + _pending) >= _target) exitWith {};
 
 //--- V0.6 task 47: group-cap safety ceiling - skip founding if the side already has
