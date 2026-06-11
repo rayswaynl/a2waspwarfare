@@ -1385,6 +1385,18 @@ class WF_Menu {
 			action = "MenuAction = 20";
 			tooltip = $STR_WF_TOOLTIP_MainMenu_VotingPage;
 		};
+		//--- Command Deck: Skin Selector shortcut in footer strip.
+		class CA_Skin_Button : RscButton_Main {
+			idc = 11021;
+			x = 0.564;
+			y = 0.767144;
+			w = 0.057;
+			h = 0.045;
+			text = $STR_WF_SkinSelector_MenuButton;
+			sizeEx = 0.022;
+			action = "MenuAction = 21";
+			tooltip = $STR_WF_SkinSelector_Title;
+		};
 	};
 };
 
@@ -3363,5 +3375,153 @@ class RscMenu_Help {
 			onButtonClick = "closeDialog 0;";
 			tooltip = $STR_WF_TOOLTIP_CloseButton;
 		};		
-	};	
+	};
+};
+
+//--- Command Deck: Skin Selector (idd 27000).
+class WFBE_SkinSelectorMenu {
+	movingEnable = 1;
+	idd = 27000;
+	onLoad = "(_this) ExecVM 'Client\GUI\GUI_SkinSelectorMenu.sqf'";
+
+	class controlsBackground {
+		class CA_Background : RscText {
+			x = 0.25;
+			y = 0.08;
+			w = 0.50;
+			h = 0.84;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class CA_Background_Header : CA_Background {
+			x = 0.25;
+			y = 0.08;
+			w = 0.50;
+			h = 0.06;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class CA_Background_Footer : CA_Background {
+			x = 0.25;
+			y = 0.08 + 0.80;
+			w = 0.50;
+			h = 0.04;
+			colorBackground[] = WFBE_Background_Color_Sub;
+		};
+		//--- Accent border line below header.
+		class CA_Border : RscText {
+			x = 0.25;
+			y = 0.08 + 0.06;
+			w = 0.50;
+			h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+	};
+
+	class controls {
+		//--- Header title (idc 27008) — RscButton_Main so ctrlSetText works at runtime.
+		class CA_Title : RscButton_Main {
+			idc = 27008;
+			x = 0.255;
+			y = 0.08 + 0.012;
+			w = 0.35;
+			h = 0.038;
+			text = $STR_WF_SkinSelector_Title;
+			sizeEx = 0.028;
+			colorBackground[] = {0, 0, 0, 0};
+			colorBackgroundFocus[] = {0, 0, 0, 0};
+			colorBackgroundActive[] = {0, 0, 0, 0};
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+			default = false;
+		};
+		//--- Close button.
+		class CA_Quit_Button : RscButton_Main {
+			x = 0.25 + 0.45;
+			y = 0.08 + 0.0075;
+			w = 0.045;
+			h = 0.045;
+			text = "X";
+			shadow = 2;
+			sizeEx = 0.03;
+			onButtonClick = "WFBE_MenuAction = 2;";
+		};
+		//--- Skin list (idc 27001).
+		class CA_SkinList : RscListBox {
+			idc = 27001;
+			x = 0.255;
+			y = 0.08 + 0.07;
+			w = 0.22;
+			h = 0.65;
+			colorSelectBackground[] = WFBE_Menu_ListBox_Select_Color;
+			onLBSelChanged = "";
+		};
+		//--- Portrait picture (idc 27002).
+		class CA_Portrait : RscPicture {
+			idc = 27002;
+			x = 0.485;
+			y = 0.08 + 0.07;
+			w = 0.12;
+			h = 0.24;
+			style = 0x30 + 0x800;
+			text = "";
+		};
+		//--- Skin name label (idc 27003).
+		class CA_SkinName : RscText {
+			idc = 27003;
+			x = 0.485;
+			y = 0.08 + 0.32;
+			w = 0.255;
+			h = 0.04;
+			sizeEx = 0.026;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Faction label (idc 27004).
+		class CA_FactionName : RscText {
+			idc = 27004;
+			x = 0.485;
+			y = 0.08 + 0.365;
+			w = 0.255;
+			h = 0.035;
+			sizeEx = 0.022;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Ghillie note (idc 27005).
+		class CA_GhillieNote : RscText {
+			idc = 27005;
+			x = 0.255;
+			y = 0.08 + 0.73;
+			w = 0.485;
+			h = 0.03;
+			sizeEx = 0.020;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- APPLY button (idc 27006) — RscButton_Main for ctrlSetText compat.
+		class CA_Apply : RscButton_Main {
+			idc = 27006;
+			x = 0.330;
+			y = 0.08 + 0.762;
+			w = 0.15;
+			h = 0.035;
+			sizeEx = 0.028;
+			text = $STR_WF_SkinSelector_Apply;
+			action = "WFBE_MenuAction = 1";
+		};
+		//--- SKIP button (idc 27007).
+		class CA_Skip : RscButton_Main {
+			idc = 27007;
+			x = 0.490;
+			y = 0.08 + 0.762;
+			w = 0.10;
+			h = 0.035;
+			sizeEx = 0.026;
+			text = $STR_WF_SkinSelector_Skip;
+			action = "WFBE_MenuAction = 2";
+		};
+	};
 };

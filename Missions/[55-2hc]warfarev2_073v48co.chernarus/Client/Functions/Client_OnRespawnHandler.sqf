@@ -110,3 +110,24 @@ case "Medic": {_default = missionNamespace getVariable Format["WFBE_%1_DefaultGe
 		[_unit, _default select 0, _default select 1, _default select 2, _default select 3, _default select 4] Call WFBE_CO_FNC_EquipUnit;
 	};
 };
+
+//--- Command Deck: re-apply persisted skin class after respawn.
+//--- sleep 0.5 first so the engine completes unit creation before we swap models.
+if (WFBE_C_SKIN_SELECTOR == 1 && {WFBE_SkinSelector_Applied}) then {
+	Private ["_uid","_skinKey","_savedSkin"];
+	_uid     = getPlayerUID _unit;
+	_skinKey = "WFBE_SkinSelector_Skin_" + _uid;
+	_savedSkin = missionNamespace getVariable [_skinKey, ""];
+	if (_savedSkin != "") then {
+		_unit setVariable ["WFBE_SkinSelector_PendingRespawnSkin", _savedSkin];
+		[_unit] spawn {
+			Private ["_u","_cls"];
+			_u = _this select 0;
+			sleep 0.5;
+			_cls = _u getVariable ["WFBE_SkinSelector_PendingRespawnSkin", ""];
+			if (_cls != "" && {alive _u} && {vehicle _u == _u}) then {
+				[_cls] execVM "WASP\actions\SkinSelector\SkinSelector_Apply.sqf";
+			};
+		};
+	};
+};

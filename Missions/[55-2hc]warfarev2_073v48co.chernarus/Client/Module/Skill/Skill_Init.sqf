@@ -54,3 +54,10 @@ player setVariable ["wfbe_player_class", WFBE_SK_V_Type, true];
 
 //--- Task 30: show class info hint on join / class change (guarded — only when class actually changed).
 ["auto"] execVM "WASP\actions\ClassInfo.sqf";
+
+//--- Command Deck: show the skin selector once on first join (or on slot-switch rejoin).
+//--- Show-once flag is stored on the player object so a mid-game slot-switch rejoin re-offers it.
+if (WFBE_C_SKIN_SELECTOR == 1 && {!(player getVariable ["WFBE_SkinSelector_ShownOnJoin", false])}) then {
+	player setVariable ["WFBE_SkinSelector_ShownOnJoin", true];
+	[] execVM "WASP\actions\SkinSelector\SkinSelector_Open.sqf";
+};

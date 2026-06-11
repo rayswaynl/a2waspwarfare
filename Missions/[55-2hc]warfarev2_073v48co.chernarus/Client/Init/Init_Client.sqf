@@ -43,6 +43,9 @@ _rearmor = {
    				_result
   			};
 
+//--- Command Deck: store _rearmor code in a global so SkinSelector_Apply.sqf can re-attach it post-swap.
+WFBE_CL_VAR_ReArmorCode = _rearmor;
+
 player addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
 [] execVM "Common\Functions\Common_Bipod.sqf";
 
