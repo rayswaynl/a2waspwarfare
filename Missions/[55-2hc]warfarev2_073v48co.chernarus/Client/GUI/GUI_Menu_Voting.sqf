@@ -20,7 +20,7 @@ Private ["_display","_selected","_state","_yes","_needed","_endTime",
          "_cooldowns","_cooldownSec","_remaining","_statusTxt","_countTxt",
          "_cooldownTxt","_footerTxt","_btnTxt","_i","_opts",
          "_vSide","_onCooldown","_activeType","_canAct","_isActive","_isVoter",
-         "_now"];
+         "_now","_cmdTeam"];
 
 //--- Register display reference.
 uiNamespace setVariable ["WFBE_Display_VotingMenu", _this select 0];
@@ -126,6 +126,15 @@ while {alive player && dialog} do {
 		if (_onCooldown) then {
 			_cooldownTxt = Format [Localize "STR_WF_VOTE_Cooldown", ceil _remaining];
 			_canAct      = false;
+		};
+		//--- Surrender vote may only be STARTED by the commander (voting YES on an
+		//--- already-active one stays open to the whole side via the branch above).
+		if (_selected == "surrender") then {
+			_cmdTeam = (sideJoined) Call WFBE_CO_FNC_GetCommanderTeam;
+			if (isNull _cmdTeam || {_cmdTeam != group player}) then {
+				_footerTxt = Localize "STR_WF_VOTE_SurrenderCommanderOnly";
+				_canAct    = false;
+			};
 		};
 	};
 

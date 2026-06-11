@@ -9594,6 +9594,9 @@
     <Key ID="STR_WF_VOTE_Cooldown">
       <English>On cooldown: %1 s remaining</English>
     </Key>
+    <Key ID="STR_WF_VOTE_SurrenderCommanderOnly">
+      <English>Only the commander can start a surrender vote</English>
+    </Key>
     <!-- %1 = localized name of the other active vote type -->
     <Key ID="STR_WF_VOTE_OtherActive">
       <English>Another vote is in progress: %1</English>

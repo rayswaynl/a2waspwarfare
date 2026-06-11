@@ -26,7 +26,7 @@ scriptName "Server\PVFunctions\RequestVote.sqf";
 Private ["_side","_playerName","_voteType","_eligible","_needed",
          "_voters","_yesCount","_state","_cooldowns","_cooldownSec",
          "_onCooldown","_window","_endTime","_vSide","_alreadyVoted",
-         "_rejected","_h","_activeType","_voteSide"];
+         "_rejected","_h","_activeType","_voteSide","_cmdTeam"];
 
 _side       = _this select 0;
 _playerName = _this select 1;
@@ -129,6 +129,17 @@ if (count _state >= 5) then {
 		if (!(_h >= 19 || _h < 5)) then {
 			_rejected = true;
 			[nil, "LocalizeMessage", ["VoteNotNight"]] Call WFBE_CO_FNC_SendToClients;
+		};
+	};
+
+	//--- Surrender vote may only be STARTED by the side's commander (client UI mirrors
+	//--- this; server check is authoritative). Name match against the commander team
+	//--- leader — no commander = no surrender vote.
+	if (_voteType == "surrender") then {
+		_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
+		if (isNull _cmdTeam || {_playerName != name (leader _cmdTeam)}) then {
+			_rejected = true;
+			["INFORMATION", Format ["RequestVote: surrender start by non-commander '%1' rejected", _playerName]] Call WFBE_CO_FNC_LogContent;
 		};
 	};
 

@@ -30,6 +30,12 @@ if (!(isClass (configFile >> "CfgVehicles" >> _chosenClass))) exitWith {
 	hint format ["Skin class %1 not found in config.", _chosenClass];
 };
 
+//--- Guard: must be alive AT EXECUTION time — the dialog loop's alive check can race
+//--- a lethal hit; a swap on a corpse collides with the OnKilled respawn flow.
+if (!(alive player)) exitWith {
+	hint "Cannot swap skin while dead.";
+};
+
 _oldUnit = player;
 _grp     = group _oldUnit;
 
@@ -51,6 +57,14 @@ _wasLeader = (leader _grp == _oldUnit);
 
 //--- Create new unit in the same group at the same position.
 _newUnit = _grp createUnit [_chosenClass, _pos, [], 0, "NONE"];
+
+//--- Guard: createUnit can fail (group/unit caps) and return objNull.
+//--- selectPlayer objNull would permanently softlock this client — abort cleanly instead.
+if (isNull _newUnit) exitWith {
+	diag_log format ["[WFBE (SKIN)] createUnit FAILED for '%1' (unit/group cap?) - swap aborted", _chosenClass];
+	hint "Skin swap failed (server unit limit). Please try again later.";
+};
+
 _newUnit setPosATL _pos;
 _newUnit setDir    _dir;
 
@@ -101,6 +115,9 @@ player Call WFBE_SK_FNC_Apply;
 player Call WFBE_CL_FNC_AddPlayerAIActions;
 [] execVM "WASP\actions\AddActions.sqf";
 player setVariable ["wfbe_player_class", WFBE_SK_V_Type, true];
+
+//--- Re-add the User11 KeyDown EH — it lived on the old (deleted) unit.
+player addEventHandler ["KeyDown", WF_SkinSelector_Hotkey];
 
 //--- Restore commander HQ build action if applicable.
 if (!(isNull commanderTeam)) then {
