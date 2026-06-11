@@ -42,18 +42,19 @@ _requestID = _requestID select 1;
 _procedureCodeTryRetrieve = 505;
 _response = "A2WaspDatabase" callExtension format ["%1,%2",_procedureCodeTryRetrieve,_requestID];
 _response = call compile _response;
-_responseCode = _response select 0;
+//--- guard: extension absent -> compile "" = nil; treat as pending (responseCode -1 keeps the poll loop running toward timeout).
+if (isNil "_response" || {(typeName _response) != "ARRAY"}) then { _responseCode = -1; } else { _responseCode = _response select 0; };
 _attemptsMax = 120;
 _attempts = 0;
 
-while { (_responseCode < 0) && (_attempts < _attemptsMax) } do 
+while { (_responseCode < 0) && (_attempts < _attemptsMax) } do
 {
 	sleep _sleep;
 	_response = "A2WaspDatabase" callExtension format ["%1,%2",_procedureCodeTryRetrieve,_requestID];
-	
+
 	_response = call compile _response;
-	
-	_responseCode = _response select 0;
+	//--- guard: extension absent mid-poll -> sentinel keeps loop alive toward _attemptsMax.
+	if (isNil "_response" || {(typeName _response) != "ARRAY"}) then { _responseCode = -1; } else { _responseCode = _response select 0; };
 
 	_attempts = _attempts + 1;
 };
