@@ -54,7 +54,7 @@ if (-not (Test-Path -LiteralPath $sourceMission)) {
 #   #define WF_LOG_CONTENT
 #   #define IS_CHERNARUS_MAP_DEPENDENT
 #   #define IS_NAVAL_MAP
-#   #define WF_MAXPLAYERS 55
+#   #define WF_MAXPLAYERS 56
 #   #define WF_MISSIONNAME "..."
 #   #define STARTING_DISTANCE 7500
 #   #define COMBINEDOPS 1
@@ -73,7 +73,7 @@ $versionContent = @"
 //#define IS_MOD_MAP_DEPENDENT
 #define IS_NAVAL_MAP
 //#define IS_AIR_WAR_EVENT
-#define WF_MAXPLAYERS 55
+#define WF_MAXPLAYERS 56
 #define WF_MISSIONNAME "$MissionTitle"
 #define STARTING_DISTANCE 7500
 #define COMBINEDOPS 1
