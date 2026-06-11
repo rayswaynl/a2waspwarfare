@@ -185,6 +185,7 @@ if (IS_chernarus_map_dependent) then {
     _u 			= ['UH1H_TK_EP1'];
     _u = _u		+ ['Mi17_Ins'];
     _u = _u		+ ['Mi17_medevac_RU'];
+    _u = _u		+ ['Mi17_medevac_CDF'];
     _u = _u		+ ['Mi17_rockets_RU'];
     _u = _u		+ ['Mi24_D_TK_EP1'];
     _u = _u		+ ['Mi24_P'];
@@ -201,6 +202,7 @@ if (IS_chernarus_map_dependent) then {
     _u =  ['UH1H_TK_EP1'];
     _u = _u		+ ['Mi17_TK_EP1'];
     _u = _u		+ ['Mi17_medevac_RU'];
+    _u = _u		+ ['Mi17_medevac_CDF'];
     _u = _u		+ ['Mi17_rockets_RU'];
     _u = _u		+ ['Mi24_D_TK_EP1'];
     _u = _u		+ ['Mi24_P'];

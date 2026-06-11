@@ -13,7 +13,7 @@ missionNamespace setVariable [Format["WFBE_%1FLAG", _side], '\Ca\Data\flag_rus_c
 missionNamespace setVariable [Format["WFBE_%1AMBULANCES", _side], ['GAZ_Vodnik_MedEvac','M113Ambul_TK_EP1','Mi17_medevac_RU','M113Ambul_TK_EP1']];
 missionNamespace setVariable [Format["WFBE_%1REDEPLOYTRUCKS", _side], ['Kamaz']];
 missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCKS", _side], ['KamazRepair','UralRepair_TK_EP1']];
-missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_RU','UralSalvage_TK_EP1']];
+missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_RU','UralSalvage_TK_EP1','Mi17_medevac_CDF']];
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCKS", _side], ['WarfareSupplyTruck_RU','UralSupply_TK_EP1']];
 missionNamespace setVariable [Format["WFBE_%1UAV", _side], 'Pchela1T'];
 
