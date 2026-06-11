@@ -570,6 +570,26 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
+// Mi-171Sh (CZ) [AF3] - gunship transport (experital: owner-pick "Gun Run" loadout)
+// Substitution notes:
+//   23mm gun pods + 57mm rocket pod: A2/ACR has no UPK-23 pod launcher classname.
+//     57mmLauncher (S-5 rocket pod) is used for all three pod hardpoints (3 magazines
+//     = 192 rounds); this is the only pod-type weapon available in A2 EASA.
+//     Documented substitution: 3x S-5 pod mags represent 2x23mm pods + 1x57mm pod.
+//   Falanga/AT-2 ATGM: ACR Mi-24D uses AT9Launcher + 8Rnd_AT9_Mi24V (Ataka-V);
+//     no separate Falanga (AT-2) classname exists in A2 ACR — 2x8 Ataka-V used.
+//   Category: AG (all weapons are ground-attack — AT9Launcher and 57mmLauncher both
+//     match the AG substring pattern in WFBE_EASA_FNC_WeaponCat).
+if (isClass (configFile >> "CfgVehicles" >> "Mi171Sh_rockets_CZ_EP1")) then {
+	_easaVehi = _easaVehi + ['Mi171Sh_rockets_CZ_EP1'];
+	_easaDefault = _easaDefault + [[['57mmLauncher','AT9Launcher'],['64Rnd_57mm','64Rnd_57mm','8Rnd_AT9_Mi24V']]];
+	_easaLoadout = _easaLoadout + [
+	[
+	[5600,'Gun Run: S-5 pods (192rnd) [23mm+57mm sub] | Ataka-V (16) [Falanga sub]',[['57mmLauncher','AT9Launcher'],['64Rnd_57mm','64Rnd_57mm','64Rnd_57mm','8Rnd_AT9_Mi24V','8Rnd_AT9_Mi24V']]]
+	]
+	];
+};
+
 // Mi-24V (CZ) [AF3] - 4 pylons
 _easaVehi = _easaVehi + ['Mi24_D_CZ_ACR'];
 _easaDefault = _easaDefault + [[['AT9Launcher'],['8Rnd_AT9_Mi24V']]];
