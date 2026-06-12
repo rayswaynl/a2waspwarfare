@@ -16,15 +16,10 @@ case "Su34": {
 
 // Su-25A [AF3] - 6 pylons
 case "Su25_Ins": {
-    _this removeMagazine "4Rnd_FAB_250";
     _this removeMagazine "2Rnd_R73";
     _this removeMagazine "80Rnd_S8T";
     _this removeWeapon "R73Launcher_2";
     _this removeWeapon "S8Launcher";
-    _this addMagazine "4Rnd_FAB_250";
-    _this addMagazine "4Rnd_FAB_250";
-    _this addMagazine "2Rnd_FAB_250";
-    _this addMagazine "2Rnd_FAB_250";
     _this addMagazine "64Rnd_57mm";
     _this addWeapon "57mmLauncher";
 };

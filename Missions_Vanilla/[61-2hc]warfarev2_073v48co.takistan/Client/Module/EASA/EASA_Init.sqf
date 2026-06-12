@@ -103,7 +103,7 @@ _easaLoadout = _easaLoadout + [
 
 // Su-25A [AF3] - 6 pylons
 _easaVehi = _easaVehi + ['Su25_Ins'];
-_easaDefault = _easaDefault + [[['AirBombLauncher','57mmLauncher'],['4Rnd_FAB_250','2Rnd_FAB_250','4Rnd_FAB_250','2Rnd_FAB_250','64Rnd_57mm']]];
+_easaDefault = _easaDefault + [[[],[]]];
 _easaLoadout = _easaLoadout + [
 [
 [6000,'Ataka-V (4) | FAB-250 (6) | Gun rounds (360rnd) (2)',[['AT9Launcher','AirBombLauncher'],['4Rnd_AT9_Mi24P','4Rnd_FAB_250','2Rnd_FAB_250','180Rnd_30mm_GSh301','180Rnd_30mm_GSh301']]],

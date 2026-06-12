@@ -20,15 +20,15 @@
         //    "120Rnd_CMFlare_Chaff_Magazine"
         //};
 
+        // Owner downtune 2026-06-12 (airfield light-jet spec: no heavy payload defaults):
+        // FAB-250 bombs removed from DEFAULT loadouts; still EASA-purchasable.
         base.vanillaGameDefaultLoadout.AmmunitionTypesWithCount = new Dictionary<AmmunitionType, int>
             {
-                { AmmunitionType.FOURROUNDFAB250, 2},
                 { AmmunitionType.TWOROUNDR73, 2},
                 { AmmunitionType.VANILLA_EIGHTYROUNDS8_WITHS8LAUNCHER, 2},
             };
         base.defaultLoadout.AmmunitionTypesWithCount = new Dictionary<AmmunitionType, int>
             {
-                { AmmunitionType.SIXROUNDFAB250, 4},
                 { AmmunitionType.SIXTYFOURROUNDS5, 2},
             };
 
