@@ -348,12 +348,14 @@ _IDCS = _IDCS - [_currentIDC];
 
 		//--- Refresh the Factory DropDown list.
 		lbClear 12018;
-		{
-			_nearTown = ([_x, towns] Call WFBE_CO_FNC_GetClosestEntity) getVariable 'name';
-			_txt = _type + ' ' + _nearTown + ' ' + str (round((vehicle player) distance _x)) + 'M';
-			lbAdd[12018,_txt];
-		} forEach _sorted;
-		lbSetCurSel [12018,0];
+		if !(isNull (_sorted select 0)) then {
+			{
+				_nearTown = ([_x, towns] Call WFBE_CO_FNC_GetClosestEntity) getVariable 'name';
+				_txt = _type + ' ' + _nearTown + ' ' + str (round((vehicle player) distance _x)) + 'M';
+				lbAdd[12018,_txt];
+			} forEach _sorted;
+			lbSetCurSel [12018,0];
+		};
 		
 		_updateList = false;
 		_updateMap = true;
@@ -645,9 +647,11 @@ _IDCS = _IDCS - [_currentIDC];
 	
 	//--- Update the Factory Minimap position.
 	if (_updateMap) then {
-		ctrlMapAnimClear _map;
-		_map ctrlMapAnimAdd [2,.075,getPos _closest];
-		ctrlMapAnimCommit _map;
+		if !(isNull _closest) then {
+			ctrlMapAnimClear _map;
+			_map ctrlMapAnimAdd [2,.075,getPos _closest];
+			ctrlMapAnimCommit _map;
+		};
 		_updateMap = false;
 	};
 	
