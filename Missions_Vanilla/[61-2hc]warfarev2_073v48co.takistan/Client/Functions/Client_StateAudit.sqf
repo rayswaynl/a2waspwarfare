@@ -3,21 +3,17 @@
 // the number of scheduled scripts or the amount of retained state (markers, groups, corpses).
 // Arma save/load RESUMES suspended scheduled scripts, so save/load FPS-recovery tests do NOT
 // isolate VM count; this log plus the PerformanceAuditMarkerScripts counters are the A/B proof.
-Private ["_activeScripts","_hasDiagProbe","_hasDiagScripts","_line","_markerScripts","_aarScripts"];
+Private ["_activeScripts","_line","_markerScripts","_aarScripts"];
 
 waitUntil {commonInitComplete};
 
-// Marty: diag_activeSQFScripts only exists on diag-capable builds; probe once instead of erroring every minute.
-_hasDiagScripts = false;
-_hasDiagProbe = call compile "diag_activeSQFScripts";
-if !(isNil "_hasDiagProbe") then {_hasDiagScripts = true};
-
 while {!WFBE_GameOver} do {
 
+	// Marty: PR31 review P1 - diag_activeSQFScripts is Arma 3 (1.44+) only; even a
+	// call-compile probe evaluates the symbol and errors on OA 1.64 clients. Logged as a
+	// constant -1 so the analyzer schema keeps the column; PerformanceAuditMarkerScripts
+	// is the script-count proxy on OA.
 	_activeScripts = -1;
-	if (_hasDiagScripts) then {
-		_activeScripts = count (call compile "diag_activeSQFScripts");
-	};
 
 	_markerScripts = missionNamespace getVariable ["PerformanceAuditMarkerScripts", -1];
 	_aarScripts = missionNamespace getVariable ["PerformanceAuditAARMarkerScripts", -1];

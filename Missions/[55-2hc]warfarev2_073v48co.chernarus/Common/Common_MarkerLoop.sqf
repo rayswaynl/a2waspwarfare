@@ -16,7 +16,7 @@ if (isNil "WFBE_CL_AARMarkerRegistry") then {WFBE_CL_AARMarkerRegistry = []};
 if (isNil "WFBE_CL_UnitMarkerLedger") then {WFBE_CL_UnitMarkerLedger = []};
 
 _sweepNext = time + 60;
-_aarUpgradeCache = [-1, -1, -999]; // [sideID, level, lastCheck diag_tickTime]
+_aarUpgradeCache = [sideUnknown, -1, -999]; // [side, level, lastCheck diag_tickTime]
 _height = missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR_DETECTION";
 
 // Marty: PERF1 slice C - local refresh lever. Manual map-marker rebuild action plus an
@@ -368,8 +368,10 @@ while {true} do {
 
 				// Marty: One shared 5s upgrade-level cache per tick replaces the per-script caches.
 				_oppositeSide = _aarEntry select 3;
-				if ((diag_tickTime - (_aarUpgradeCache select 2)) > 5) then {
+				// Marty: PR31 review caveat - key the cache by side so three-way AAR entries never read another side's level.
+				if ((_aarUpgradeCache select 0) != _oppositeSide || {(diag_tickTime - (_aarUpgradeCache select 2)) > 5}) then {
 					_upgrades = (_oppositeSide) Call WFBE_CO_FNC_GetSideUpgrades;
+					_aarUpgradeCache set [0, _oppositeSide];
 					_aarUpgradeCache set [1, _upgrades select WFBE_UP_AAR];
 					_aarUpgradeCache set [2, diag_tickTime];
 				};
