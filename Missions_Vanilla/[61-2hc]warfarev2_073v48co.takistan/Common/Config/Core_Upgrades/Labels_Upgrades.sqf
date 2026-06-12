@@ -73,7 +73,9 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_LABELS"], [
 	localize 'STR_WF_UPGRADE_IRS',
 	localize 'STR_WF_UPGRADE_AirAA',
 	localize 'STR_WF_UPGRADE_AntiAirRadar',
-	localize 'STR_WF_UPGRADE_UnitCost'
+	localize 'STR_WF_UPGRADE_UnitCost',
+	localize 'STR_WF_UPGRADE_CBRadar',
+	'Patrols'
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_DESCRIPTIONS"], [
@@ -98,7 +100,9 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_DESCRIPTIONS"], [
 	localize 'STR_WF_UPGRADE_IRS_Desc',
 	localize 'STR_WF_UPGRADE_AirAA_Desc',
 	localize 'STR_WF_UPGRADE_AntiAirRadar_Desc',
-	localize 'STR_WF_UPGRADE_UnitCost_Desc'
+	localize 'STR_WF_UPGRADE_UnitCost_Desc',
+	localize 'STR_WF_UPGRADE_CBRadar_Desc',
+	"Fields autonomous side patrols (max 3 active per side) that spawn near your HQ and push toward the frontline, capturing towns as they go.<br /><br />Level 1: light infantry patrol.<br />Level 2: motorised patrol (requires Light Factory level 1).<br />Level 3: armoured patrol (requires Heavy Factory level 2).<br />Level 4: Convoys — each patrol fields a supply truck that pays your team <t color='#F5D363'>$750 split equally</t> at every town stop (requires Heavy Factory level 2).<br /><br />Patrol equipment scales with your side's tech level. Each active patrol reduces every player's max AI by 1."
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_IMAGES"], [
@@ -123,5 +127,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_IMAGES"], [
 	"", 
 	"",
 	"Client\Images\icon_wf_building_aa_radar.paa",
+	"",
+	"",
 	""
 ]];ExecVM "Common\Module\CIPHER\CIPHER_Sort.sqf";

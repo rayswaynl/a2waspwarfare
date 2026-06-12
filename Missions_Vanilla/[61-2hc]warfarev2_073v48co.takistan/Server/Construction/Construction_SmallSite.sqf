@@ -107,13 +107,26 @@ _site setPos _position;
 _site setVariable ["wfbe_side", _side];
 _site setVariable ["wfbe_structure_type", _rlType];
 
-if(isAutoWallConstructingEnabled && _rlType != "AARadar")then{
+//--- CBR: spawn composition dressing and register in per-side registry.
+if (_rlType == "CBRadar" && (missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
+	private ["_dressTpl","_cbrRegistry","_cbrKey"];
+	_dressTpl = Format ["WFBE_NEURODEF_CBRADAR_%1", if (_side == west) then {"WEST"} else {"EAST"}];
+	[_site, _dressTpl, _direction] Call WFBE_SE_FNC_SpawnStructureDressing;
+	//--- Register in the per-side CBR array.
+	_cbrKey = if (_side == west) then {"WFBE_CBR_WEST"} else {"WFBE_CBR_EAST"};
+	_cbrRegistry = missionNamespace getVariable [_cbrKey, []];
+	_cbrRegistry = _cbrRegistry + [_site];
+	missionNamespace setVariable [_cbrKey, _cbrRegistry];
+	["INFORMATION", Format ["Construction_SmallSite.sqf: [%1] CBRadar registered. Registry size: %2.", str _side, count _cbrRegistry]] Call WFBE_CO_FNC_LogContent;
+};
+
+if(isAutoWallConstructingEnabled && !(_rlType in ["AARadar","CBRadar"]))then{
 	_defenses = [_site, missionNamespace getVariable format ["WFBE_NEURODEF_%1_WALLS", _rlType]] call CreateDefenseTemplate;
 	_site setVariable ["WFBE_Walls", _defenses];
 } else {
 	_site setVariable ["WFBE_Walls", []];
-	if (_rlType == "AARadar") then {
-		["INFORMATION", Format ["Construction_SmallSite.sqf: [%1] AARadar auto walls skipped by PR8 no-wall guard.", str _side]] Call WFBE_CO_FNC_LogContent;
+	if (_rlType in ["AARadar","CBRadar"]) then {
+		["INFORMATION", Format ["Construction_SmallSite.sqf: [%1] %2 auto walls skipped.", str _side, _rlType]] Call WFBE_CO_FNC_LogContent;
 	};
 };
 

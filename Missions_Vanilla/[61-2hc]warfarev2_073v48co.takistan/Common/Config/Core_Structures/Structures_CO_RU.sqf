@@ -12,6 +12,8 @@ _HEAVY = if (IS_chernarus_map_dependent) then {"RU_WarfareBHeavyFactory"} else {
 _AIR = if (IS_chernarus_map_dependent) then {"RU_WarfareBAircraftFactory"} else {"TK_WarfareBAircraftFactory_EP1"};
 _SP = if (IS_chernarus_map_dependent) then {"RU_WarfareBVehicleServicePoint"} else {"TK_WarfareBVehicleServicePoint_EP1"};
 _AAR = if (IS_chernarus_map_dependent) then {"RU_WarfareBAntiAirRadar"} else {"TK_WarfareBAntiAirRadar_EP1"};
+_ARTRAD = if (IS_chernarus_map_dependent) then {"RU_WarfareBArtilleryRadar"} else {"TK_WarfareBArtilleryRadar_EP1"};
+_RES = if (IS_chernarus_map_dependent) then {"Land_Mil_Barracks_i"} else {"Land_Mil_Barracks_i_EP1"}; //--- EP1 intact model inferred safe: mission already uses Land_Mil_Barracks_i_ruins_EP1 (WFBE_C_STRUCTURES_RUINS)
 
 /* Mash used after being deployed */
 missionNamespace setVariable [Format["WFBE_%1FARP", _side], 'CampEast_EP1'];
@@ -94,13 +96,57 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR") > 0) then {
 	_dir = _dir	+ [90];
 };
 
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
+	_v = _v		+ ["CBRadar"];
+	_n = _n		+ ["Land_Antenna"]; //--- Land_telek1 rejected: likely absent at runtime for this content set
+	_d = _d		+ [localize "STR_WF_UPGRADE_CBRadar"];
+	_c = _c		+ [2400];
+	_t = _t		+ [if (WF_Debug) then {1} else {60}];
+	_s = _s		+ ["SmallSite"];
+	_dis = _dis	+ [16];
+	_dir = _dir	+ [90];
+};
+
+if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
+	_v = _v		+ ["Bank"];
+	_n = _n		+ ["Land_Mil_hangar_EP1"];
+	_d = _d		+ ["Bank Rossii"];
+	_c = _c		+ [9500];
+	_t = _t		+ [if (WF_Debug) then {1} else {300}];
+	_s = _s		+ ["MediumSite"];
+	_dis = _dis	+ [30];
+	_dir = _dir	+ [0];
+};
+
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_ARTILLERYRADAR", 0]) > 0) then {
+	_v = _v		+ ["ArtilleryRadar"];
+	_n = _n		+ [_ARTRAD];
+	_d = _d		+ [getText (configFile >> "CfgVehicles" >> (_n select (count _n - 1)) >> "displayName")];
+	_c = _c		+ [2400];
+	_t = _t		+ [if (WF_Debug) then {1} else {60}];
+	_s = _s		+ ["MediumSite"];
+	_dis = _dis	+ [21];
+	_dir = _dir	+ [90];
+};
+
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_RESERVE", 0]) > 0) then {
+	_v = _v		+ ["Reserve"];
+	_n = _n		+ [_RES];
+	_d = _d		+ ["Reserve"];
+	_c = _c		+ [2000];
+	_t = _t		+ [if (WF_Debug) then {1} else {60}];
+	_s = _s		+ ["MediumSite"];
+	_dis = _dis	+ [30];	//--- walled-yard walls reach ±24 m
+	_dir = _dir	+ [90];
+};
+
 for [{_count = count _v - 1},{_count >= 0},{_count = _count - 1}] do {
 	missionNamespace setVariable [Format["WFBE_%1%2TYPE",_side,_v select _count],_count];
 };
 
 {
 	missionNamespace setVariable [Format ["%1%2",_side, _x select 0], _x select 1];
-} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR]];
+} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR","Land_Antenna"],["BANK","Land_Mil_hangar_EP1"],["ARTRAD",_ARTRAD],["RES",_RES]]; //--- Land_telek1 rejected: likely absent
 
 missionNamespace setVariable [Format["WFBE_%1MHQNAME", _side], _MHQ];
 missionNamespace setVariable [Format["WFBE_%1STRUCTURES", _side], _v];
@@ -173,6 +219,9 @@ _n = _n		+ ["RoadCone"];				//--- Mixed Position (Heavy)
 _n = _n		+ ["Paleta1"];				//--- Base Wall - Straight
 _n = _n		+ ["Paleta2"];				//--- Base Wall - Corner
 _n = _n		+ ["Land_Ind_Timbers"];		//--- Base Wall - Gate
+if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {
+	_n = _n + ["Land_Pneu"];			//--- Site Clearance (commander only)
+};
 
 /* Class used for AI, AI will attempt to build those */
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_MG", _side], ['KORD_high_TK_EP1']];

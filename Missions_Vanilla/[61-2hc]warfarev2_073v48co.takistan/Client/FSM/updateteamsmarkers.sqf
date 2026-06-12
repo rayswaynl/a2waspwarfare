@@ -160,6 +160,21 @@ while {!gameOver} do {
 							if (_crewText == "") exitWith {_label = Format["%1 %2", _label, _cargoText]};
 							_label = Format["%1 | %2", _label, _cargoText];
 						};
+
+						//--- QoL S4: append class tag from broadcast wfbe_player_class (set in Skill_Init.sqf).
+						//--- getVariable is cheap; runs inside the existing 0.2s loop only when map/GPS visible.
+						private ["_leaderClass","_classTag"];
+						_leaderClass = _leader getVariable ["wfbe_player_class", ""];
+						_classTag = switch (_leaderClass) do {
+							case "Engineer": {"ENG"};
+							case "Soldier":  {"SOL"};
+							case "SpecOps":  {"SUP"};
+							case "Spotter":  {"SNI"};
+							case "Medic":    {"MED"};
+							case "Officer":  {"OFF"};
+							default          {""};
+						};
+						if (_classTag != "") then {_label = Format["%1 [%2]", _label, _classTag]};
 					} else {
 						_perfAILeaders = _perfAILeaders + 1;
 						if (_updateAILeaders) then {_updateThisLeader = true};
