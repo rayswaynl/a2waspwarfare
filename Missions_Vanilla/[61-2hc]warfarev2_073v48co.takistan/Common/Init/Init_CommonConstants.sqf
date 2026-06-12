@@ -96,7 +96,7 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AI_COMMANDER_ENABLED") then {WFBE_C_AI_COMMANDER_ENABLED = 1}; //--- Enable or disable the AI Commanders.
 	//--- AI COMMANDER LOCK: when 1, AI retains full command regardless of who occupies the slot.
 	//--- Protects eval/night sessions from accidental human takeover. Default 0 = normal play.
-	if (isNil "WFBE_C_AI_COMMANDER_LOCK") then {WFBE_C_AI_COMMANDER_LOCK = 0};
+	if (isNil "WFBE_C_AI_COMMANDER_LOCK") then {WFBE_C_AI_COMMANDER_LOCK = 1};
 	//--- ACTIVE-TOWN BUDGET: max concurrently active towns. FPS lever; default 6.
 	if (isNil "WFBE_C_TOWNS_ACTIVE_MAX") then {WFBE_C_TOWNS_ACTIVE_MAX = 6};
 	if (isNil "WFBE_C_AI_MAX") then {WFBE_C_AI_MAX = 10}; //--- Max AI allowed on each AI groups.
@@ -437,7 +437,7 @@ if (WF_A2_Vanilla) then {
 	if (isNil "WFBE_C_QOL_TRIO") then {WFBE_C_QOL_TRIO = 1};                //--- 0 disables all three QoL features.
 	if (isNil "WFBE_C_QOL_ADVISOR_INTERVAL") then {WFBE_C_QOL_ADVISOR_INTERVAL = 300}; //--- Seconds between advisor nudge checks (0 = off).
 
-	// === EXPERITAL FEATURES (experimental branch — each feature individually toggleable) ===
+	// === EXPERITAL FEATURES (experimental branch ??? each feature individually toggleable) ===
 	WFBE_C_STRUCTURES_COUNTERBATTERY = 1; // Counter Battery Radar structure (mid-game, requires own AAR)
 	WFBE_C_ECONOMY_BANK = 1;              // Federal Reserve / Bank Rossii endgame objective building
 	WFBE_C_STRUCTURES_ARTILLERYRADAR = 1; // Artillery Radar buildable structure (WDDM walled-gate walls, fort-only by design)
@@ -550,3 +550,4 @@ WFBE_STAT_FIELD_COUNT      = 15;
 WFBE_STATS_DIRTY_UIDS = [];
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
+

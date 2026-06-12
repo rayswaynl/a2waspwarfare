@@ -190,7 +190,8 @@ while {!WFBE_GameOver} do {
 			//--- Append activeTowns counter published by server_town_ai each sweep.
 			_activeTowns = missionNamespace getVariable "wfbe_active_town_count";
 			if (isNil "_activeTowns") then { _activeTowns = 0 };
-			["INFORMATION", Format ["server_groupsGC.sqf: group audit [%1] %2/144: %3 activeTowns=%4", str _auditSide, _auditCnt, _auditStr, _activeTowns]] Call WFBE_CO_FNC_AICOMLog;
+			["INFORMATION", Format ["server_groupsGC.sqf: group audit [%1] %2/144: %3 srvFps=" + (str round diag_fps) + " activeTowns=%4", str _auditSide, _auditCnt, _auditStr, _activeTowns]] Call WFBE_CO_FNC_AICOMLog;
 		} forEach [west, east, resistance];
 	};
 };
+
