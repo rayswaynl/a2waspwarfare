@@ -109,7 +109,7 @@ while {!gameOver} do {
 					         "_enemySide","_enemyID","_myTowns","_enemyTowns","_losing",
 					         "_wW1","_wW2","_wW3","_wW4","_wW5","_wW6","_eMult",
 					         "_weights","_cumSum","_roll","_i","_chosen",
-					         "_artyTgt","_targets","_cands","_bestScore","_bestTown","_score","_dNear","_d",
+					         "_cTown","_artyTgt","_targets","_cands","_bestScore","_bestTown","_score","_dNear","_d",
 					         "_pieces","_p","_idx","_maxR","_fired","_sideText",
 					         "_w5Pool","_w5Tier","_contestedTowns","_nearTown","_nearD","_dd",
 					         "_weakTown","_weakSV","_sv","_defSlots","_defLogic","_defSlot",
@@ -305,13 +305,16 @@ while {!gameOver} do {
 							//--- Pick target: highest-weight enemy town (mirrors Strategy spearhead scoring).
 							_cands = [];
 							{if ((_x getVariable ["sideID","?"]) != _sideID) then {_cands = _cands + [_x]}} forEach towns;
+							//--- Review fix: capture the outer candidate town like AI_Commander_Strategy does
+							//--- (_this in this spawned body is [_side]; the old line threw a distance type error).
 							_bestScore = -1e9; _bestTown = objNull;
 							{
+								_cTown = _x;
 								_dNear = 1e9;
-								{if ((_x getVariable ["sideID","?"]) == _sideID) then {_d = (_this) distance _x; if (_d < _dNear) then {_dNear = _d}}} forEach towns;
-								if (_dNear > 1e8) then {_dNear = _this distance _hq};
-								_score = (_x getVariable ["supplyValue", 0]) - (_dNear / 150) + (_x getVariable ["wfbe_aicom_town_weight", 0]);
-								if (_score > _bestScore) then {_bestScore = _score; _bestTown = _x};
+								{if ((_x getVariable ["sideID","?"]) == _sideID) then {_d = _cTown distance _x; if (_d < _dNear) then {_dNear = _d}}} forEach towns;
+								if (_dNear > 1e8) then {_dNear = _cTown distance _hq};
+								_score = (_cTown getVariable ["supplyValue", 0]) - (_dNear / 150) + (_cTown getVariable ["wfbe_aicom_town_weight", 0]);
+								if (_score > _bestScore) then {_bestScore = _score; _bestTown = _cTown};
 							} forEach _cands;
 
 							if (!isNull _bestTown) then {
@@ -372,11 +375,14 @@ while {!gameOver} do {
 						//--- Uses LIGHT pool unconditionally (cheapest patrol; recon does not need heavy kit).
 						case 5: {
 							//--- Find nearest contested town to our front.
+							//--- Review fix: capture the outer town before the inner forEach rebinds _x
+							//--- (_this in this spawned body is [_side], not the outer town).
 							_nearTown = objNull; _nearD = 1e9;
 							{
-								_dd = (_owned select 0) distance _x;
-								{ _dd = _dd min (_x distance _this) } forEach _owned;
-								if (_dd < _nearD) then {_nearD = _dd; _nearTown = _x};
+								_cTown = _x;
+								_dd = (_owned select 0) distance _cTown;
+								{ _dd = _dd min (_x distance _cTown) } forEach _owned;
+								if (_dd < _nearD) then {_nearD = _dd; _nearTown = _cTown};
 							} forEach _contestedTowns;
 
 							_template = _w5Pool select floor(random count _w5Pool);
