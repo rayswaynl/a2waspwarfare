@@ -98,7 +98,7 @@ _u 			= ['UH1H_TK_EP1'];
 _u = _u		+ ['Mi17_TK_EP1'];
 _u = _u		+ ['Mi24_D_TK_EP1'];
 _u = _u		+ ['An2_TK_EP1'];
-_u = _u		+ ['L39_TK_EP1'];
+// _u = _u	+ ['L39_TK_EP1']; // airfield-exclusive per owner 2026-06-12
 _u = _u		+ ['Su25_TK_EP1'];
 
 missionNamespace setVariable [Format ["WFBE_%1AIRCRAFTUNITS", _side], _u];
@@ -106,7 +106,7 @@ if (local player) then {['AIRCRAFT', _side, _u] Call Compile preProcessFile 'Cli
 
 _u = [];
 _u = _u		+ ['An2_TK_EP1'];
-_u = _u		+ ['L39_TK_EP1'];
+// _u = _u	+ ['L39_TK_EP1']; // airfield-exclusive per owner 2026-06-12
 _u = _u		+ ['Su25_TK_EP1'];
 
 missionNamespace setVariable [Format ["WFBE_%1AIRPORTUNITS", _side], _u];

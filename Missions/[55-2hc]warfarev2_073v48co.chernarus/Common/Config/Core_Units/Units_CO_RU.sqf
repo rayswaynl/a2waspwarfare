@@ -193,7 +193,7 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['Ka52'];
     _u = _u		+ ['Ka52Black'];
     _u = _u		+ ['An2_TK_EP1'];
-    _u = _u		+ ['L39_TK_EP1'];
+    // _u = _u	+ ['L39_TK_EP1']; // airfield-exclusive per owner 2026-06-12
     _u = _u		+ ['Su25_Ins'];
     _u = _u		+ ['Su25_TK_EP1'];
     _u = _u		+ ['Su39'];
@@ -210,7 +210,7 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['Ka52'];
     _u = _u		+ ['Ka52Black'];
     _u = _u		+ ['An2_TK_EP1'];
-    _u = _u		+ ['L39_TK_EP1'];
+    // _u = _u	+ ['L39_TK_EP1']; // airfield-exclusive per owner 2026-06-12
     _u = _u		+ ['Su25_Ins'];
     _u = _u		+ ['Su25_TK_EP1'];
     _u = _u		+ ['Su39'];
@@ -234,7 +234,7 @@ if (IS_chernarus_map_dependent) then {
 };
 
 _u = _u		+ ['An2_TK_EP1'];
-_u = _u		+ ['L39_TK_EP1'];
+// _u = _u		+ ['L39_TK_EP1']; // airfield-exclusive per owner 2026-06-12
 _u = _u		+ ['Su25_Ins'];
 _u = _u		+ ['Su25_TK_EP1'];
 _u = _u		+ ['Su39'];

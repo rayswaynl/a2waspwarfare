@@ -164,8 +164,8 @@ _i = _i + [['','',4992,25,-2,0,3,0,'Takistani Army',[]]];
 _c = _c + ['Mi24_D_TK_EP1'];
 _i = _i + [['','',22580,40,-2,3,3,0,'Takistani Army',[]]];
 
-_c = _c + ['L39_TK_EP1'];
-_i = _i + [['','',21904,40,-2,3,3,0,'Takistani Army',[]]];
+// _c = _c + ['L39_TK_EP1']; // airfield-exclusive per owner 2026-06-12
+// _i = _i + [['','',21904,40,-2,3,3,0,'Takistani Army',[]]];
 
 _c = _c + ['Su25_TK_EP1'];
 _i = _i + [['Su-25T','',31980,45,-2,4,3,0,'Takistani Army',[]]];

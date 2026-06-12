@@ -42,7 +42,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=116;
+		items=118;
 		class Item0
 		{
 			side="WEST";
@@ -4106,6 +4106,81 @@ class Mission
 					text="HC";
 					init="this allowdamage false;this setPosATL (getPos this);";
 					description="Headless Client 2";
+				};
+			};
+		};
+		// --- Task-12 Takistan airfield capture logics (parity with Chernarus NWAF/NEAF/Balota) ---
+		// Loy Manara AF: depot capture point + single camp on apron east of runway.
+		// Nearest LocationLogicAirport (id=66) at {8191.4199,296.04001,1803.4586} is found by
+		//   server_town.sqf 1500m nearEntities search on depot pos — no changes needed to id=66.
+		class Item116
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=2;
+				class Item0
+				{
+					position[]={8191,296,1880};
+					azimut=60;
+					special="NONE";
+					id=250;
+					side="LOGIC";
+					vehicle="LocationLogicDepot";
+					leader=1;
+					skill=0.60000002;
+					text="Loy Manara AF";
+					init="nullReturn = [this,""Loy Manara AF"",""++"",10,40,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
+					synchronizations[]={251};
+				};
+				class Item1
+				{
+					position[]={8191,296,1960};
+					azimut=60;
+					special="NONE";
+					id=251;
+					side="LOGIC";
+					vehicle="LocationLogicCamp";
+					skill=0.60000002;
+					init="this enableSimulation false;";
+					synchronizations[]={250};
+				};
+			};
+		};
+		// Rasman AF: depot capture point + single camp on apron west of runway.
+		// Nearest LocationLogicAirport (id=78) at {5689.9028,83.046074,11181.199} is found
+		//   automatically by server_town.sqf nearEntities 1500m search.
+		class Item117
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=2;
+				class Item0
+				{
+					position[]={5690,83,11260};
+					azimut=220;
+					special="NONE";
+					id=252;
+					side="LOGIC";
+					vehicle="LocationLogicDepot";
+					leader=1;
+					skill=0.60000002;
+					text="Rasman AF";
+					init="nullReturn = [this,""Rasman AF"",""++"",10,40,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
+					synchronizations[]={253};
+				};
+				class Item1
+				{
+					position[]={5690,83,11340};
+					azimut=220;
+					special="NONE";
+					id=253;
+					side="LOGIC";
+					vehicle="LocationLogicCamp";
+					skill=0.60000002;
+					init="this enableSimulation false;";
+					synchronizations[]={252};
 				};
 			};
 		};

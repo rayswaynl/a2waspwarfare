@@ -22,7 +22,10 @@ _moveInGunner = _this select 5;
 
 sleep (random 1); //--- Delay a bit to prevent a bandwidth congestion.
 
-if (isNull _team || {(count units _team) == 0}) then {_team = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup};
+//--- GROUP BLOAT REDUCTION: do NOT pre-create a group here.  _team is the server-side
+//--- per-town group (non-local on this HC).  Common_CreateUnitForStaticDefence will
+//--- bridge to (or create) a per-town HC-local group keyed on _team.  Pre-creating a
+//--- group here caused a leaked empty group per delegation call (old behaviour).
 
 _retVal = [_side, _groups, _positions, _team, _defence, _moveInGunner] call WFBE_CO_FNC_CreateUnitForStaticDefence;
 _teams = _retVal select 0;
@@ -35,12 +38,23 @@ _teams = _retVal select 0;
 
 //["RequestSpecial", ["update-delegation-static_defence", _teams]] Call WFBE_CO_FNC_SendToServer;
 
+//--- HC-local per-town groups: only delete when the shared group drains to zero.
+//--- Duplicate entries in _teams are expected (same group repeated per gunner in the
+//--- batch); collect unique groups before starting the watcher to avoid multiple
+//--- concurrent watchers racing to deleteGroup on the same object.
+Private ["_watchedGrps", "_grp"];
+_watchedGrps = [];
+{
+	_grp = _x;
+	if (!(isNull _grp) && {!(_grp in _watchedGrps)}) then {
+		[_watchedGrps, _grp] call WFBE_CO_FNC_ArrayPush;
+	};
+} forEach _teams;
 {
 	_x Spawn {
 		Private ["_team"];
 		_team = _this;
-
 		while {count (units _team) > 0} do {sleep 1};
 		deleteGroup _team;
 	};
-} forEach _teams; //--- Delete the group client-sided.
+} forEach _watchedGrps;

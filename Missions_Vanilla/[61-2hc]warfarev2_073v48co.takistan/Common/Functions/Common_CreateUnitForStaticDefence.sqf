@@ -9,7 +9,7 @@
 		- Move In Gunner immidietly or not
 */
 
-Private ["_assignedUnit", "_built", "_defence", "_diagEnabled", "_groups", "_manningInProgress", "_moveInGunner", "_perfActive", "_perfItemStart", "_perfScope", "_perfStart", "_position", "_positions", "_side", "_sideID", "_team", "_teamLeader", "_teams", "_unit"];
+Private ["_assignedUnit", "_built", "_defence", "_diagEnabled", "_groups", "_hcGrpIdx", "_hcGrpKey", "_hcLocalGrp", "_manningInProgress", "_moveInGunner", "_perfActive", "_perfItemStart", "_perfScope", "_perfStart", "_position", "_positions", "_serverTeam", "_side", "_sideID", "_team", "_teamLeader", "_teams", "_unit"];
 
 _side = _this select 0;
 _groups = _this select 1;
@@ -64,10 +64,51 @@ for '_i' from 0 to count(_groups)-1 do {
 
 	_sideID = (_side) Call GetSideID;
 	_perfItemStart = diag_tickTime;
-	if (isNull _team || {(count units _team) == 0}) then {_team = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup};
-	if ((count units _team) > 0) then {
-		_teamLeader = leader _team;
-		if (!(isNull _teamLeader) && {!local _teamLeader}) then {_team = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup};
+
+	//--- GROUP BLOAT REDUCTION (HC path): reuse a per-town HC-local group bridged from the
+	//--- server-side per-town group (_team).  The server group is non-local on this machine so
+	//--- we cannot add units to it directly, but we can use it as a stable key to store our
+	//--- local counterpart.  A machine-local variable (no broadcast) keeps it HC-private.
+	//--- Cap at 12 units per HC group; overflow creates a new group with an incremented suffix
+	//--- variable (wfbe_hc_local_grp, wfbe_hc_local_grp1, wfbe_hc_local_grp2, ...).
+	_serverTeam = _team;
+	if (!(isNull _serverTeam) && {count units _serverTeam == 0} && {!local _serverTeam}) then {
+		//--- _team is a server group (non-local, empty from this machine's view).
+		//--- Look for an HC-local group already bridged to it.
+		_hcLocalGrp = _serverTeam getVariable "wfbe_hc_local_grp";
+		if (isNil "_hcLocalGrp") then {_hcLocalGrp = grpNull};
+		//--- If the bridged group is full (12-unit cap), walk the overflow slots.
+		_hcGrpIdx = 0;
+		while {!(isNull _hcLocalGrp) && {count units _hcLocalGrp >= 12}} do {
+			_hcGrpIdx = _hcGrpIdx + 1;
+			_hcGrpKey = Format ["wfbe_hc_local_grp%1", _hcGrpIdx];
+			_hcLocalGrp = _serverTeam getVariable _hcGrpKey;
+			if (isNil "_hcLocalGrp") then {_hcLocalGrp = grpNull};
+		};
+		if (isNull _hcLocalGrp) then {
+			//--- No suitable HC-local group yet; create one and bridge it.
+			_hcLocalGrp = [_side, "defense-gunners"] Call WFBE_CO_FNC_CreateGroup;
+			if !(isNull _hcLocalGrp) then {
+				_hcLocalGrp setVariable ["wfbe_persistent", true];
+				if (_hcGrpIdx == 0) then {
+					_serverTeam setVariable ["wfbe_hc_local_grp", _hcLocalGrp]; //--- machine-local, no broadcast
+				} else {
+					_serverTeam setVariable [Format ["wfbe_hc_local_grp%1", _hcGrpIdx], _hcLocalGrp];
+				};
+			};
+		};
+		if !(isNull _hcLocalGrp) then {_team = _hcLocalGrp};
+		//--- _team is now a local group; skip the standard group-creation block below.
+	} else {
+		//--- Standard path (server-local or passed-in local group).
+		if (isNull _team || {(count units _team) == 0}) then {_team = [_side, "defense-gunners"] Call WFBE_CO_FNC_CreateGroup};
+		if ((count units _team) > 0) then {
+			_teamLeader = leader _team;
+			if (!(isNull _teamLeader) && {!local _teamLeader}) then {
+				//--- Team leader is on a different machine; fall back to a new local group.
+				_team = [_side, "defense-gunners"] Call WFBE_CO_FNC_CreateGroup;
+			};
+		};
 	};
 
 	if (isNull _team) then {

@@ -388,7 +388,7 @@ if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0) then {
 		//---   Hydra/Maverick default) — priced between Mi-171Sh (24000) and cheapest factory jet.
 		//---   Cross-faction listing is intentional (soft-faction-walls precedent).
 		//---   NOTE: Su25_Ins also appears in Core_INS factory; L159_ACR also in Core_USMC AF3.
-		//---   Owner: confirm whether to remove from those configs to enforce airfield-exclusivity.
+		//---   Owner ruling 2026-06-12: dual availability confirmed — Su25_Ins and L159_ACR stay in both airfield pool AND factory lists.
 		["An2_TK_EP1","Mi17_Ins","Mi171Sh_rockets_CZ_EP1","Su25_Ins","L159_ACR"]
 	} else {
 		//--- Takistan generic list: L-39C not present here; leave as-is.

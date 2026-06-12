@@ -186,7 +186,7 @@ class Mission
 				items=1;
 				class Item0
 				{
-					position[]={4824.0562,8.8999996,2500.5276};
+					position[]={4550,8.8999996,2280};
 					azimut=300;
 					id=7;
 					side="LOGIC";
@@ -4859,7 +4859,7 @@ class Mission
 				items=2;
 				class Item0
 				{
-					position[]={12150,159,12900};
+					position[]={11850,159,12690};
 					azimut=0;
 					special="NONE";
 					id=305;
@@ -4873,7 +4873,7 @@ class Mission
 				};
 				class Item1
 				{
-					position[]={12150,159,12980};
+					position[]={11850,159,12770};
 					azimut=0;
 					special="NONE";
 					id=309;
@@ -4893,7 +4893,7 @@ class Mission
 				items=2;
 				class Item0
 				{
-					position[]={4800,9,2150};
+					position[]={4650,9,1980};
 					azimut=0;
 					special="NONE";
 					id=306;
@@ -4907,7 +4907,7 @@ class Mission
 				};
 				class Item1
 				{
-					position[]={4800,9,2230};
+					position[]={4650,9,2060};
 					azimut=0;
 					special="NONE";
 					id=310;
