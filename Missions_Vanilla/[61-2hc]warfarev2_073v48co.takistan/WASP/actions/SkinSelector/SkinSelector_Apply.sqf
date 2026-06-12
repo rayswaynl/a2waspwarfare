@@ -12,13 +12,30 @@
 	  before the first skin swap the old vehicle would retain stale EH entries, but the
 	  new unit's vehicle will get fresh EHs on entry from Init_PreRespawn / normal flow.
 	  This is acceptable for a first-join swap since the player is at the temp spawn.
+
+	A2 OA 1.64 createUnit note:
+	  Array-form createUnit does NOT return the new unit in A2 (it was always nil).
+	  We therefore use WFBE_CO_FNC_CreateUnit with _global=false so:
+	    - The wrapper uses the same array-form internally but returns the unit reliably
+	      via its own post-creation reference (Common_CreateUnit.sqf line 122: _unit).
+	    - _global=false skips setVehicleInit/processInitCommands broadcast — the new
+	      unit is a player body, not an AI; it needs no global Init_Unit run.
+	  Group locality: if the player is subordinate to another group leader the existing
+	  group is non-local (leader not local). WFBE_CO_FNC_CreateUnit detects this and
+	  auto-falls back to a fresh local group (Common_CreateUnit.sqf lines 33-38).
+	  We always pass a fresh createGroup so the player skin unit is never put into
+	  a shared AI group regardless of squad state. After selectPlayer the original
+	  group membership is restored via joinGroup.
 */
 
-Private ["_chosenClass","_oldUnit","_grp","_pos","_dir",
+Private ["_chosenClass","_oldUnit","_oldGrp","_swapGrp","_pos","_dir",
          "_unitName","_unitRank","_unitFace","_unitSpeaker",
          "_gear","_newUnit","_wasLeader","_uid"];
 
 _chosenClass = _this select 0;
+
+diag_log format ["[WFBE (SKIN)] B1 Apply entry: class='%1' player='%2' alive=%3 onFoot=%4",
+	_chosenClass, name player, alive player, (vehicle player == player)];
 
 //--- Guard: infantry only.
 if (!(vehicle player == player)) exitWith {
@@ -27,6 +44,7 @@ if (!(vehicle player == player)) exitWith {
 
 //--- Guard: class exists in config.
 if (!(isClass (configFile >> "CfgVehicles" >> _chosenClass))) exitWith {
+	diag_log format ["[WFBE (SKIN)] B1 ABORT: class '%1' not in CfgVehicles", _chosenClass];
 	hint format ["Skin class %1 not found in config.", _chosenClass];
 };
 
@@ -37,7 +55,7 @@ if (!(alive player)) exitWith {
 };
 
 _oldUnit = player;
-_grp     = group _oldUnit;
+_oldGrp  = group _oldUnit;
 
 //--- Capture position / orientation.
 _pos = getPosATL _oldUnit;
@@ -49,29 +67,41 @@ _unitRank    = rank    _oldUnit;
 _unitFace    = face    _oldUnit;
 _unitSpeaker = speaker _oldUnit;
 
-//--- Capture gear.
+//--- Capture gear before the old unit is altered.
 _gear = _oldUnit call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_CopyGear.sqf");
 
-//--- Was this unit the group leader?
-_wasLeader = (leader _grp == _oldUnit);
+//--- Was this unit the group leader of the original group?
+_wasLeader = (leader _oldGrp == _oldUnit);
 
-//--- Create new unit in the same group at the same position.
-diag_log format ["[WFBE (SKIN)] SkinSelector_Apply: attempting createUnit '%1' in grp %2 at %3", _chosenClass, _grp, _pos];
-_newUnit = _grp createUnit [_chosenClass, _pos, [], 0, "NONE"];
+//--- Create a fresh LOCAL group for the swap unit.
+//--- Reason: if the player is subordinate, _oldGrp's leader is not local here;
+//--- createUnit into a non-local group fails silently (A2 OA group-locality trap).
+//--- A dedicated swap group is deleted after joinGroup restores squad membership.
+_swapGrp = createGroup (side _oldUnit);
 
-//--- A2 OA: array-form createUnit may return nil (not objNull) unlike A3.
-//--- isNull on a nil variable THROWS in A2 (nil-comparison trap), killing the script
-//--- before selectPlayer — unit may be orphaned at player's feet. Guard nil first.
+diag_log format ["[WFBE (SKIN)] B2 createUnit: class='%1' swapGrp=%2 pos=%3 swapGrpLocal=%4",
+	_chosenClass, _swapGrp, _pos, local _swapGrp];
+
+//--- WFBE_CO_FNC_CreateUnit: [class, group, pos, sideID, global, placement]
+//--- Pass _global=false: skips setVehicleInit/Init_Unit broadcast — this is a
+//--- player body, not an AI. The wrapper returns objNull (never nil) on failure.
+_newUnit = [_chosenClass, _swapGrp, _pos, WFBE_Client_SideID, false, "NONE"] call WFBE_CO_FNC_CreateUnit;
+
+//--- WFBE_CO_FNC_CreateUnit always returns objNull on failure (never nil in A2),
+//--- so a plain isNull check is sufficient here. Keep the isNil belt for safety.
 if (isNil "_newUnit") exitWith {
-	diag_log format ["[WFBE (SKIN)] createUnit returned NIL for '%1' (A2 nil return) - swap aborted", _chosenClass];
+	diag_log format ["[WFBE (SKIN)] B2 ABORT: WFBE_CO_FNC_CreateUnit returned NIL for '%1' (unexpected)", _chosenClass];
+	deleteGroup _swapGrp;
 	hint "Skin swap failed (unit creation returned nil). Please try again.";
 };
-//--- Guard: createUnit can fail (group/unit caps) and return objNull.
-//--- selectPlayer objNull would permanently softlock this client — abort cleanly instead.
 if (isNull _newUnit) exitWith {
-	diag_log format ["[WFBE (SKIN)] createUnit FAILED for '%1' (unit/group cap?) - swap aborted", _chosenClass];
+	diag_log format ["[WFBE (SKIN)] B2 ABORT: WFBE_CO_FNC_CreateUnit returned objNull for '%1' (unit/group cap?)", _chosenClass];
+	deleteGroup _swapGrp;
 	hint "Skin swap failed (server unit limit). Please try again later.";
 };
+
+diag_log format ["[WFBE (SKIN)] B3 newUnit created: %1 class=%2 local=%3",
+	_newUnit, typeOf _newUnit, local _newUnit];
 
 _newUnit setPosATL _pos;
 _newUnit setDir    _dir;
@@ -83,20 +113,36 @@ _newUnit setFace    _unitFace;
 _newUnit setSpeaker _unitSpeaker;
 
 //--- Apply gear to new unit.
+//--- ApplyGear calls removeAllWeapons first so NVGoggles / custom loadout from
+//--- WFBE_CO_FNC_CreateUnit (EAST/dragon/MVD special cases) are wiped cleanly.
 [_newUnit, _gear] call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_ApplyGear.sqf");
 
 //--- Transfer AFK tracking vars before selectPlayer (they are per-unit locals).
 _newUnit setVariable ["lastActionTime", time];
 _newUnit setVariable ["lastPosition",   getPosATL _newUnit];
 
+//--- Rejoin the original group BEFORE selectPlayer so the player transitions
+//--- with the correct group context. If the original group is empty or gone
+//--- (edge case: everyone left while selector was open) remain in _swapGrp.
+if (!(isNull _oldGrp) && {!(isNull (leader _oldGrp)) || {count units _oldGrp > 0}}) then {
+	_newUnit joinGroup _oldGrp;
+} else {
+	diag_log "[WFBE (SKIN)] B3 original group gone/empty — new unit stays in swapGrp";
+};
+
 //--- Switch player.
-diag_log format ["[WFBE (SKIN)] SkinSelector_Apply: selectPlayer -> '%1' at %2", _chosenClass, _pos];
+diag_log format ["[WFBE (SKIN)] B4 selectPlayer -> '%1' grp=%2 wasLeader=%3",
+	_chosenClass, group _newUnit, _wasLeader];
 selectPlayer _newUnit;
 
-//--- Restore group leadership.
-if (_wasLeader) then {_grp selectLeader _newUnit};
+//--- Restore group leadership if the player led the original group.
+if (_wasLeader) then {(group _newUnit) selectLeader _newUnit};
+
+//--- swapGrp is now empty (new unit moved to _oldGrp above); clean it up.
+if (count units _swapGrp == 0) then {deleteGroup _swapGrp};
 
 //--- Delete old unit.
+diag_log format ["[WFBE (SKIN)] B5 deleteVehicle old unit %1", _oldUnit];
 deleteVehicle _oldUnit;
 
 //--- Brief pause to let the engine settle before re-adding EHs.
@@ -142,4 +188,6 @@ _uid = getPlayerUID player;
 missionNamespace setVariable [("WFBE_SkinSelector_Skin_" + _uid), _chosenClass];
 WFBE_SkinSelector_Applied = true;
 
+diag_log format ["[WFBE (SKIN)] B6 COMPLETE: player='%1' class='%2' uid='%3'",
+	name player, typeOf player, _uid];
 hint format ["%1\nSkin applied.", _chosenClass];

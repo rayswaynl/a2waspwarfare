@@ -9,7 +9,7 @@
 // tombstone the slot (set to 0) and compaction only rebuilds the array once enough
 // tombstones accumulate, keeping the lost-append race window negligible. The marker
 // name ledger sweep below heals any marker that would slip through regardless.
-Private ["_aarEntry","_aarUpgradeCache","_actionPlayer","_dist","_ehHandle","_lowFpsSince","_mapWasClosed","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades"];
+Private ["_aarEntry","_aarUpgradeCache","_actionPlayer","_dist","_ehHandle","_lowFpsSince","_mapWasClosed","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_budgetMax","_budgetServiced","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades"];
 
 if (isNil "WFBE_CL_UnitMarkerRegistry") then {WFBE_CL_UnitMarkerRegistry = []};
 if (isNil "WFBE_CL_AARMarkerRegistry") then {WFBE_CL_AARMarkerRegistry = []};
@@ -37,6 +37,10 @@ while {true} do {
 	_perfTick = diag_tickTime;
 	_now = time;
 	_mapVisible = visibleMap;
+	// Marty: PERF3 token-bucket - cap visual-refresh work per tick to avoid map-FPS halving
+	// under large AI wars. Default 30 = 150 markers/sec at 5 Hz; override via missionNamespace.
+	_budgetMax = missionNamespace getVariable ["WFBE_C_MARKER_BUDGET_PER_TICK", 30];
+	_budgetServiced = 0;
 
 	// Marty: PERF2 map-open dirty pass - when map transitions from closed to open, reset
 	// every unit-marker nextDue to 0 so they all re-service immediately on this tick,
@@ -189,6 +193,13 @@ while {true} do {
 				// above still run while the map is closed; only visual refresh work is skipped.
 				// nextDue is NOT advanced here so the entry re-services immediately on map open.
 				if (!_mapVisible) exitWith {};
+
+				// Marty: PERF3 token-bucket - budget gate. nextDue is NOT advanced so the entry
+				// is re-tried next tick (rolling stagger, no starvation). Only fires when map is
+				// open (map-closed entries already exited above), so the budget is shared across
+				// the visible-refresh path only.
+				if (_budgetServiced >= _budgetMax) exitWith {};
+				_budgetServiced = _budgetServiced + 1;
 
 				_perfStart = diag_tickTime;
 				_markerName = _entry select 1;
@@ -364,6 +375,11 @@ while {true} do {
 
 				if (_now < (_aarEntry select 11)) exitWith {};
 
+				// Marty: PERF3 token-bucket - shared budget counter with unit markers.
+				// nextDue NOT advanced; entry re-tried next tick.
+				if (_budgetServiced >= _budgetMax) exitWith {};
+				_budgetServiced = _budgetServiced + 1;
+
 				_perfStart = diag_tickTime;
 
 				// Marty: AAR markers are only useful while the Arma 2 map screen is open.
@@ -486,9 +502,12 @@ while {true} do {
 		WFBE_CL_UnitMarkerLedger = _ledger;
 	};
 
+	// Marty: PERF3 publish serviced count so Client_StateAudit can read it cheaply.
+	WFBE_CL_MarkerBudgetLastServiced = _budgetServiced;
+
 	if !(isNil "PerformanceAudit_Record") then {
 		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
-			["markerloop_tick", diag_tickTime - _perfTick, Format["entries:%1;aarEntries:%2;tombstones:%3;activeMarkers:%4", _activeEntries, count WFBE_CL_AARMarkerRegistry, _tombstones, missionNamespace getVariable ["PerformanceAuditMarkerScripts", 0]], "CLIENT"] Call PerformanceAudit_Record;
+			["markerloop_tick", diag_tickTime - _perfTick, Format["entries:%1;aarEntries:%2;tombstones:%3;activeMarkers:%4;budgetServiced:%5;budgetMax:%6", _activeEntries, count WFBE_CL_AARMarkerRegistry, _tombstones, missionNamespace getVariable ["PerformanceAuditMarkerScripts", 0], _budgetServiced, _budgetMax], "CLIENT"] Call PerformanceAudit_Record;
 		};
 	};
 };

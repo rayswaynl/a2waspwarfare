@@ -15,7 +15,10 @@ _type = typeOf _killed;
 
 if (!(_killed isKindOf "Man") && (_killer == _killed || isNull _killer || !alive _killer)) then { //--- Vehicles may crash or burn out after a valid hit.
 	_last_hit = _killed getVariable ["wfbe_lasthitby", objNull];
+	// A2 OA: deleted objects can return nil even with a default; guard before isNull.
+	if (isNil "_last_hit") then { _last_hit = objNull };
 	_last_hit_time = _killed getVariable ["wfbe_lasthittime", -1];
+	if (isNil "_last_hit_time") then { _last_hit_time = -1 };
 	_last_hit_window = missionNamespace getVariable ["WFBE_C_UNITS_LAST_HIT_REWARD_WINDOW", 60];
 
 	if !(isNull _last_hit) then {

@@ -207,6 +207,25 @@ while {!WFBE_GameOver} do {
 
 			_location setVariable ["sideID",_newSID,true];
 
+			// AICOMSTAT FIRST_TOWN metric: emit once per side per round on its first capture.
+			// Plain logic getVariable with isNil guard (A2 OA safe; no == on Bool).
+			Private ["_ftLogik","_ftFlag","_ftKey","_ftMin","_ftSec","_ftTownName"];
+			_ftLogik = _newSide Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNil "_ftLogik" && {!isNull _ftLogik}) then {
+				_ftKey  = "wfbe_first_town_captured";
+				_ftFlag = _ftLogik getVariable _ftKey;
+				if (isNil "_ftFlag") then { _ftFlag = false };
+				if (!_ftFlag) then {
+					_ftLogik setVariable [_ftKey, true];
+					_ftMin     = round (time / 60);
+					_ftSec     = round time;
+					_ftTownName = _location getVariable ["name", "unknown"];
+					diag_log ("AICOMSTAT|v1|EVENT|" + (str _newSide) + "|" + str _ftMin + "|FIRST_TOWN|" + _ftTownName + "-t" + str _ftSec);
+					["INFORMATION", Format ["server_town.sqf: [%1] FIRST_TOWN captured: %2 at %3 min (%4 s).", str _newSide, _ftTownName, _ftMin, _ftSec]] Call WFBE_CO_FNC_LogContent;
+				};
+			};
+			// END AICOMSTAT FIRST_TOWN
+
 			// WASPSTAT CAPTURE telemetry (Task 10). Gate: WFBE_C_STATLOG must be 1.
 			// NOTE: Task 19 (captured-town gunner change) will also edit this block — keep changes below this comment.
 			if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {

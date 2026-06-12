@@ -8,7 +8,7 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt"];
 
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 
@@ -134,6 +134,19 @@ while {!WFBE_GameOver} do {
 	if (isNil "_lastAudit") then { _lastAudit = -9999 };
 	if ((_now - _lastAudit) >= _auditInterval) then {
 		missionNamespace setVariable ["wfbe_groupaudit_last", _now];
+		_auditT0 = diag_tickTime;
+
+		// Single allUnits pass: count units per side for audit line + TICK sharing.
+		// Stored in missionNamespace so AI_Commander TICK can read them cheaply.
+		_uniWest = 0; _uniEast = 0; _uniGuer = 0;
+		{
+			if (side _x == west)       then { _uniWest = _uniWest + 1 };
+			if (side _x == east)       then { _uniEast = _uniEast + 1 };
+			if (side _x == resistance) then { _uniGuer = _uniGuer + 1 };
+		} forEach allUnits;
+		missionNamespace setVariable ["wfbe_units_west", _uniWest];
+		missionNamespace setVariable ["wfbe_units_east", _uniEast];
+		missionNamespace setVariable ["wfbe_units_guer", _uniGuer];
 
 		// Build per-(side, src) counts in a flat key=value array: [side, src, count, ...]
 		// Using a simple parallel-arrays approach to avoid any A3-only constructs.
@@ -165,7 +178,12 @@ while {!WFBE_GameOver} do {
 			};
 		} forEach allGroups;
 
-		// Log one line per side present
+		// Collect per-side log strings into an array; emit after auditMs is known.
+		// _auditLines is a flat array of strings (one per side).
+		_auditLines = [];
+		_activeTowns = missionNamespace getVariable "wfbe_active_town_count";
+		if (isNil "_activeTowns") then { _activeTowns = 0 };
+
 		{
 			_auditSide = _x;
 			_auditCnt  = switch (_auditSide) do {
@@ -187,11 +205,25 @@ while {!WFBE_GameOver} do {
 			};
 			if (_auditStr == "") then { _auditStr = "(none)" };
 
-			//--- Append activeTowns counter published by server_town_ai each sweep.
-			_activeTowns = missionNamespace getVariable "wfbe_active_town_count";
-			if (isNil "_activeTowns") then { _activeTowns = 0 };
-			["INFORMATION", Format ["server_groupsGC.sqf: group audit [%1] %2/144: %3 srvFps=" + (str round diag_fps) + " activeTowns=%4", str _auditSide, _auditCnt, _auditStr, _activeTowns]] Call WFBE_CO_FNC_AICOMLog;
+			//--- Resolve unit count for this side from the single allUnits pass above.
+			_auditUniCnt = switch (_auditSide) do {
+				case west:       { _uniWest };
+				case east:       { _uniEast };
+				case resistance: { _uniGuer };
+				default          { 0 };
+			};
+
+			// Build the log string (auditMs appended below when known).
+			_auditLine = Format ["server_groupsGC.sqf: group audit [%1] %2/144: %3 srvFps=%4 activeTowns=%5 units=%6",
+				str _auditSide, _auditCnt, _auditStr, round diag_fps, _activeTowns, _auditUniCnt];
+			[_auditLines, _auditLine] call WFBE_CO_FNC_ArrayPush;
 		} forEach [west, east, resistance];
+
+		// Compute sweep cost; emit all three per-side lines with auditMs appended.
+		_auditMs = round ((diag_tickTime - _auditT0) * 1000);
+		{
+			["INFORMATION", _x + " auditMs=" + str _auditMs] Call WFBE_CO_FNC_AICOMLog;
+		} forEach _auditLines;
 	};
 };
 

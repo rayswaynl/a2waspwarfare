@@ -91,6 +91,7 @@ while {alive player && dialog} do {
 	if (WFBE_MenuAction == 1) exitWith {
 		WFBE_MenuAction = -1;
 		closeDialog 0;
+		diag_log format ["[WFBE (SKIN)] B0 Apply pressed: class='%1' player='%2'", _selectedCls, name player];
 		[_selectedCls] execVM "WASP\actions\SkinSelector\SkinSelector_Apply.sqf";
 	};
 

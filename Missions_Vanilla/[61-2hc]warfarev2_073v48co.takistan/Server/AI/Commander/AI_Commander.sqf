@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -265,7 +265,20 @@ while {!gameOver} do {
 			_upgCsv = _upgCsv + str (_upgArr select _i);
 			if (_i < (count _upgArr - 1)) then {_upgCsv = _upgCsv + ":"};
 		};
-		diag_log ("AICOMSTAT|v1|TICK|" + (str _side) + "|" + str _elMin + "|" + str _towns + "|" + str _supply + "|" + str _funds + "|" + str _fTeams + "|" + str _eTeams + "|" + _upgCsv);
+		// Append live unit count: read from missionNamespace cache written by server_groupsGC
+		// each audit cycle (wfbe_units_west / _east / _guer). Falls back to 0 if not yet written.
+		_tickUniKey = switch (_side) do {
+			case west:       { "wfbe_units_west" };
+			case east:       { "wfbe_units_east" };
+			case resistance: { "wfbe_units_guer" };
+			default          { "" };
+		};
+		_tickUni = 0;
+		if (_tickUniKey != "") then {
+			_tickUni = missionNamespace getVariable _tickUniKey;
+			if (isNil "_tickUni") then { _tickUni = 0 };
+		};
+		diag_log ("AICOMSTAT|v1|TICK|" + (str _side) + "|" + str _elMin + "|" + str _towns + "|" + str _supply + "|" + str _funds + "|" + str _fTeams + "|" + str _eTeams + "|" + _upgCsv + "|units=" + str _tickUni);
 		_ltStat = time;
 	};
 
