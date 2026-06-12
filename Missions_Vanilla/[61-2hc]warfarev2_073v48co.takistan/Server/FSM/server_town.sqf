@@ -217,8 +217,10 @@ while {!WFBE_GameOver} do {
 			// END WASPSTAT CAPTURE (Task 10)
 
 			//--- FM-5: clear the old garrison's active flags on capture so the new owner re-garrisons immediately (prevents an up-to-WFBE_C_TOWNS_UNITS_INACTIVE undefended window on rapid recapture).
+			//--- Also clear episode latch so the new owner's activation episode is not blocked.
 			_location setVariable ["wfbe_active", false];
 			_location setVariable ["wfbe_active_air", false];
+			_location setVariable ["wfbe_episode_spawned", false];
 
 			[nil, "TownCaptured", [_location, _sideID, _newSID]] Call WFBE_CO_FNC_SendToClients;
 			if ((missionNamespace getVariable "WFBE_C_CAMPS_CREATE") > 0) then {[_location, _sideID, _newSID] Spawn WFBE_SE_FNC_SetCampsToSide};

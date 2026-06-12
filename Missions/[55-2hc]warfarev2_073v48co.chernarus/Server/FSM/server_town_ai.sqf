@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly"];
+Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies"];
 
 for "_j" from 0 to ((count towns) - 1) step 1 do
 {
@@ -27,6 +27,9 @@ for "_k" from 0 to ((count towns) - 1) step 1 do
 	_town setVariable ["wfbe_active_override", false];
 	_town setVariable ['wfbe_active_vehicles', []];
 	_town setVariable ['wfbe_town_teams', []];
+	//--- Episode latch: true while this episode's units are live; cleared only after cleanup completes.
+	//--- Prevents re-activation before the old complement is fully deleted.
+	_town setVariable ["wfbe_episode_spawned", false];
 	sleep 0.01;
 };
 
@@ -37,7 +40,7 @@ while {!WFBE_GameOver} do {
 	{
 		_position = [];
 		_groups = [];
-
+		_currentEnemies = 0; //--- Initialised here so deactivation check is safe when side is disabled.
 
 		_town = towns select _i;
 		_town_teams = _town getVariable "wfbe_town_teams";
@@ -89,7 +92,8 @@ while {!WFBE_GameOver} do {
 					} forEach _detectedFiltered;
 					_detectedFiltered = _detectedEnemyOnly;
 				};
-				_enemies = [_detectedFiltered, _side] Call WFBE_CO_FNC_GetAreaEnemiesCount;
+				_currentEnemies = [_detectedFiltered, _side] Call WFBE_CO_FNC_GetAreaEnemiesCount;
+				_enemies = _currentEnemies;
 				if (!isNil "PerformanceAudit_Record") then {
 					if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
 						["town_activation_scan", diag_tickTime - _scanStart, Format["town:%1;detected:%2;defendersIgnored:%3;enemies:%4", _town getVariable "name", count _detected, _defendersIgnored, _enemies], "SERVER"] Call PerformanceAudit_Record;
@@ -97,20 +101,27 @@ while {!WFBE_GameOver} do {
 				};
 				if(_enemies > 0)then{
 					///
-					if (_enemies > 0) then {_town setVariable ["wfbe_inactivity", time]};
+					//--- Keep the inactivity timer alive while enemies are present.
+					_town setVariable ["wfbe_inactivity", time];
 
 					if (_town getVariable "wfbe_active_override") then {
 						_town setVariable ["wfbe_active_override", false];
 						_town setVariable ["wfbe_active", false];
+						//--- Also clear episode latch so the town re-garrisons on next tick.
+						_town setVariable ["wfbe_episode_spawned", false];
 					};
 
-					if(!(_town getVariable "wfbe_active")) then {
+					//--- Episode latch: only spawn if this activation episode hasn't already
+					//--- spawned units. wfbe_episode_spawned is cleared only when deactivation
+					//--- cleanup fully completes, preventing double-spawn on the same episode.
+					if(!(_town getVariable "wfbe_active") && !(_town getVariable ["wfbe_episode_spawned", false])) then {
 						_below = 1;
 						_enemies_ground = 1;
 
 						if(_enemies_ground > 0) then {
 							////
 							_town setVariable ["wfbe_active", true];
+							_town setVariable ["wfbe_episode_spawned", true];
 
 							if (_side == WFBE_DEFENDER) then {
 								_groups = [_town, _side] Call WFBE_SE_FNC_GetTownGroupsDefender
@@ -124,6 +135,7 @@ while {!WFBE_GameOver} do {
 						if(_enemies_ground == 0 && _enemies > 0) then {
 							if(!(_town getVariable "wfbe_active_air")) then {
 								_town setVariable ["wfbe_active_air", true];
+								_town setVariable ["wfbe_episode_spawned", true];
 
 								if (_side == WFBE_DEFENDER) then {
 									_groups = [_town, _side, true] Call WFBE_SE_FNC_GetTownGroupsDefender
@@ -133,7 +145,7 @@ while {!WFBE_GameOver} do {
 							};
 						};
 						//// start of creation
-						["INFORMATION", Format ["server_town_ai.fsm: Town [%1] has been activated, creating defensive units for [%2].", _town, _side]] Call WFBE_CO_FNC_LogContent;
+						["INFORMATION", Format ["server_town_ai.sqf: Town [%1] ACTIVATED for [%2] (episode_spawned latch set, groups=%3).", _town getVariable "name", _side, count _groups]] Call WFBE_CO_FNC_LogContent;
 
 						if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_side]) then {[_side,"HostilesDetectedNear",_town] Spawn SideMessage};
 
@@ -198,10 +210,18 @@ while {!WFBE_GameOver} do {
 			};//// end of side_enabled
 
 			if((_town getVariable "wfbe_active") || (_town getVariable "wfbe_active_air")) then {
-				if(time - (_town getVariable "wfbe_inactivity") > _unitsInactiveMax) then {
+				//--- Deactivation guard: only consider deactivating when enemies are genuinely absent
+				//--- (_currentEnemies == 0). If enemies are present the inactivity timer was just
+				//--- refreshed above, so the time-check would not fire anyway — but guarding here
+				//--- explicitly prevents the rare race where detection misses enemies for one tick
+				//--- while they are still physically in radius, which would stall the timer and let
+				//--- the 90-s window expire mid-fight.
+				if(_currentEnemies == 0 && time - (_town getVariable "wfbe_inactivity") > _unitsInactiveMax) then {
 					//// inner block
 					_town setVariable ["wfbe_active", false];
 					_town setVariable ["wfbe_active_air", false];
+
+					["INFORMATION", Format ["server_town_ai.sqf: Town [%1] DEACTIVATED for [%2] (inactivity, teams=%3).", _town getVariable "name", _side, count _town_teams]] Call WFBE_CO_FNC_LogContent;
 
 					// Marty: Ask delegated clients/HCs to delete their local town AI groups where deleteGroup can actually work.
 					if (isMultiplayer) then {[nil, "HandleSpecial", ["cleanup-townai", _town, _side]] Call WFBE_CO_FNC_SendToClients};
@@ -234,6 +254,11 @@ while {!WFBE_GameOver} do {
 
 					//--- Despawn the town defenses unit.
 					[_town, _side, "remove"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
+
+					//--- Episode latch cleared AFTER cleanup completes: the next activation episode
+					//--- is now permitted. Clearing before this point would allow a re-spawn during
+					//--- the cleanup window (groups being deleted on HC while new ones are created).
+					_town setVariable ["wfbe_episode_spawned", false];
 					//// end of inner block
 				};
 			};

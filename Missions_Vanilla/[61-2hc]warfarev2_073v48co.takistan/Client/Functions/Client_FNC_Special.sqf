@@ -203,43 +203,43 @@ WFBE_CL_FNC_Upgrade_Complete = {
 
 	(Format [Localize "STR_WF_CHAT_Upgrade_Complete_Message",(missionNamespace getVariable "WFBE_C_UPGRADES_LABELS") select _upgrade, _level]) Call CommandChatMessage;
 
-	//--- Sound and QoL banner: only when the upgrade was triggered by a human commander.
-	//--- AI-commander upgrades (prime suspect for "sounds out of nowhere") are silent here;
-	//--- the chat message above still informs all side players.
-	if (_upgrade_isplayer) then {
-
-		//--- QoL trio feat.2: upgrade-complete banner with top-3 unit unlocks.
-		//--- Only attempt for the four factory upgrade types (BARRACKS/LIGHT/HEAVY/AIR = IDs 0-3).
-		if ((missionNamespace getVariable ["WFBE_C_QOL_TRIO", 1]) > 0 && _upgrade <= 3) then {
-			_qolFactoryKey = (["BARRACKSUNITS","LIGHTUNITS","HEAVYUNITS","AIRCRAFTUNITS"] select _upgrade);
-			_qolUnitList = missionNamespace getVariable [Format ["WFBE_%1%2", WFBE_Client_SideJoinedText, _qolFactoryKey], []];
-			_qolUnlocks = [];
-			{
-				if (count _qolUnlocks < 3) then {
-					_qolC = missionNamespace getVariable _x;
-					if !(isNil "_qolC") then {
-						if ((_qolC select QUERYUNITUPGRADE) == _level) then {
-							_qolLabel = _qolC select QUERYUNITLABEL;
-							if (_qolLabel == "") then {_qolLabel = [_x, "displayName"] Call GetConfigInfo};
-							if (_qolLabel != "") then {
-								_qolUnlocks = _qolUnlocks + [_qolLabel];
-							};
+	//--- QoL trio feat.2: upgrade-complete banner with top-3 unit unlocks.
+	//--- BUG-FIX (build5 regression): banner is side-wide — shows for ALL of the player's own
+	//--- side's completed upgrades regardless of who triggered it.
+	//--- Only the SOUND stays gated to player-initiated upgrades (avoids "sounds out of nowhere").
+	//--- Only attempt for the four factory upgrade types (BARRACKS/LIGHT/HEAVY/AIR = IDs 0-3).
+	if ((missionNamespace getVariable ["WFBE_C_QOL_TRIO", 1]) > 0 && _upgrade <= 3) then {
+		_qolFactoryKey = (["BARRACKSUNITS","LIGHTUNITS","HEAVYUNITS","AIRCRAFTUNITS"] select _upgrade);
+		_qolUnitList = missionNamespace getVariable [Format ["WFBE_%1%2", WFBE_Client_SideJoinedText, _qolFactoryKey], []];
+		_qolUnlocks = [];
+		{
+			if (count _qolUnlocks < 3) then {
+				_qolC = missionNamespace getVariable _x;
+				if !(isNil "_qolC") then {
+					if ((_qolC select QUERYUNITUPGRADE) == _level) then {
+						_qolLabel = _qolC select QUERYUNITLABEL;
+						if (_qolLabel == "") then {_qolLabel = [_x, "displayName"] Call GetConfigInfo};
+						if (_qolLabel != "") then {
+							_qolUnlocks = _qolUnlocks + [_qolLabel];
 						};
 					};
 				};
-			} forEach _qolUnitList;
-			_qolBanner = Format ["%1 upgraded to level %2!", (missionNamespace getVariable "WFBE_C_UPGRADES_LABELS") select _upgrade, _level];
-			if (count _qolUnlocks > 0) then {
-				_qolBanner = _qolBanner + (Format [" New: %1", _qolUnlocks select 0]);
-				if (count _qolUnlocks > 1) then {_qolBanner = _qolBanner + (Format [", %1", _qolUnlocks select 1])};
-				if (count _qolUnlocks > 2) then {_qolBanner = _qolBanner + (Format [", %1", _qolUnlocks select 2])};
 			};
-			hintSilent _qolBanner;
+		} forEach _qolUnitList;
+		_qolBanner = Format ["%1 upgraded to level %2!", (missionNamespace getVariable "WFBE_C_UPGRADES_LABELS") select _upgrade, _level];
+		if (count _qolUnlocks > 0) then {
+			_qolBanner = _qolBanner + (Format [" New: %1", _qolUnlocks select 0]);
+			if (count _qolUnlocks > 1) then {_qolBanner = _qolBanner + (Format [", %1", _qolUnlocks select 1])};
+			if (count _qolUnlocks > 2) then {_qolBanner = _qolBanner + (Format [", %1", _qolUnlocks select 2])};
 		};
+		hintSilent _qolBanner;
+	};
 
+	//--- Sound only: still gated to player-initiated upgrades.
+	//--- AI-commander upgrades (prime suspect for "sounds out of nowhere") remain silent.
+	if (_upgrade_isplayer) then {
 		// Marty: Notify side players that their upgrade has completed.
 		playSound "ARTY_cooldown_over";
-
 	}; //--- end _upgrade_isplayer guard
 	// Marty: Clear the local cached upgrade ID and countdown when completion is announced.
 	WFBE_Client_Logic setVariable ["wfbe_upgrading_id", -1];

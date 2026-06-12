@@ -128,7 +128,7 @@ while {!gameOver} do {
 				         "_w4Eligible","_w4Units","_w4Model","_w4Cargo",
 				         "_w6Eligible","_defMax","_defCount","_defClass","_defData","_defPrice","_defFunds",
 				         "_w7Eligible",
-				         "_w8Eligible","_w8BestClass","_w8BestPrice","_w8UD",
+				         "_w8Eligible","_w8BestClass","_w8BestPrice","_w8UD","_soldierClass",
 				         "_w9Eligible","_guerTemplates","_guerUnits",
 				         "_w10Eligible","_w12Eligible","_w12Key","_w12Exp",
 				         "_wW1","_wW2","_wW3","_wW4","_wW6","_wW7","_wW8","_wW9","_wW10","_wW11","_wW12",
@@ -152,7 +152,8 @@ while {!gameOver} do {
 				         "_cumSum2","_reDraw","_drawn","_needRedraw","_tmpActiveUpr","_targets",
 				         "_existingTeams","_sideIDLocal","_crew1","_crew2",
 				         "_healed","_humanCmd","_skipAI","_w11Eligible",
-				         "_dAng","_spawnPos","_dp","_placed","_dPos"];
+				         "_dAng","_spawnPos","_dp","_placed","_dPos",
+				         "_wNameMap","_wName"];
 
 				_side     = _this select 0;
 				_humanCmd = _this select 1;
@@ -217,8 +218,10 @@ while {!gameOver} do {
 				} else {
 					missionNamespace getVariable [Format ["WFBE_%1DEFENSES_AAPOD", _sideText], ""]
 				};
-				if (!isNil "_defClass" && {_defClass != ""}) then {
-					if (typeName _defClass == "ARRAY") then {if (count _defClass > 0) then {_defClass = _defClass select 0}};
+				//--- BUG-FIX: typeName check BEFORE string comparison; _defClass may be an ARRAY
+				//--- (defense list entry [classname, cost, ...]) in this mission's config.
+				if (!isNil "_defClass") then {
+					if (typeName _defClass == "ARRAY") then {if (count _defClass > 0) then {_defClass = _defClass select 0} else {_defClass = ""}};
 					if (typeName _defClass == "STRING" && {_defClass != ""}) then {
 						_defData  = missionNamespace getVariable _defClass;
 						_defPrice = if (!isNil "_defData") then {_defData select QUERYUNITPRICE} else {0};
@@ -476,8 +479,9 @@ while {!gameOver} do {
 							} else {
 								missionNamespace getVariable [Format ["WFBE_%1DEFENSES_AAPOD", _sideText], ""]
 							};
-							if (!isNil "_defClass" && {_defClass != ""}) then {
-								if (typeName _defClass == "ARRAY") then {if (count _defClass > 0) then {_defClass = _defClass select 0}};
+							//--- BUG-FIX mirror: same typeName-first guard as eligibility block.
+							if (!isNil "_defClass") then {
+								if (typeName _defClass == "ARRAY") then {if (count _defClass > 0) then {_defClass = _defClass select 0} else {_defClass = ""}};
 								if (typeName _defClass == "STRING" && {_defClass != ""}) then {
 									_defData  = missionNamespace getVariable _defClass;
 									_defPrice = if (!isNil "_defData") then {_defData select QUERYUNITPRICE} else {0};
@@ -671,10 +675,26 @@ while {!gameOver} do {
 				["INFORMATION", Format ["AI_Commander_Wildcard.sqf: [WILDCARD] side=%1 draw=W%2 result=%3 detail=(%4)", _sideText, _draw, _result, _detail]] Call WFBE_CO_FNC_AICOMLog;
 				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|WILDCARD_W" + str _draw + "|" + _result + "|" + _detail);
 
-				//--- Human-side announcement.
+				//--- Announcement: human-side draws go to that side only; AI-side draws
+				//--- broadcast to ALL clients (nil) so everyone sees what the AI drew.
+				//--- BUG-FIX: previously only human-side draws were announced; AI draws were silent.
+				_locMsg = if (_humanCmd) then {
+					Format ["[Wildcard] Your forces receive: W%1 (%2)", _draw, _result]
+				} else {
+					_wNameMap = [
+						[1,"War Chest"],[2,"Supply Drop"],[3,"Bonus Patrol"],
+						[4,"Airborne Assault"],[6,"Fortification Grant"],[7,"Veteran Company"],
+						[8,"Motor Pool Delivery"],[9,"Uprising"],[10,"Lucky Salvage"],
+						[11,"Field Hospital"],[12,"Spoils of War"]
+					];
+					_wName = Format ["W%1", _draw];
+					{if ((_x select 0) == _draw) exitWith {_wName = _x select 1}} forEach _wNameMap;
+					Format ["[Wildcard] AI Commander (%1) drew: %2", _sideText, _wName]
+				};
 				if (_humanCmd) then {
-					_locMsg = Format ["[Wildcard] Your forces receive: W%1 (%2)", _draw, _result];
 					[_sideText, "LocalizeMessage", ["Wildcard", _locMsg]] Call WFBE_CO_FNC_SendToClients;
+				} else {
+					[nil, "LocalizeMessage", ["Wildcard", _locMsg]] Call WFBE_CO_FNC_SendToClients;
 				};
 
 			}; //--- end isolation spawn
