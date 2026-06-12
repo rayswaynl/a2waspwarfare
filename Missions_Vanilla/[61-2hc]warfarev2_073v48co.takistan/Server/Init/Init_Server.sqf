@@ -47,6 +47,15 @@ WFBE_SE_FNC_AI_SetTownAttackPath = Compile preprocessFileLineNumbers "Server\Fun
 WFBE_SE_FNC_AI_SetTownAttackPath_PathIsSafe = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath_PathIsSafe.sqf";
 WFBE_SE_FNC_AI_SetTownAttackPath_PosIsSafe = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath_PosIsSafe.sqf";
 WFBE_SE_FNC_AI_Com_Upgrade = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_Com_Upgrade.sqf";
+//--- feat/ai-commander: revival workers + supervisor.
+WFBE_SE_FNC_AI_Com_AssignTypes = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_AssignTypes.sqf";
+WFBE_SE_FNC_AI_Com_AssignTowns = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_AssignTowns.sqf";
+WFBE_SE_FNC_AI_Com_Produce = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Produce.sqf";
+WFBE_SE_FNC_AI_Com_Execute = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Execute.sqf";
+WFBE_SE_FNC_AI_Com_Base = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Base.sqf";
+WFBE_SE_FNC_AI_Com_Teams = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Teams.sqf";
+WFBE_SE_FNC_AI_Com_Strategy = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Strategy.sqf";
+WFBE_SE_FNC_AI_Commander = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander.sqf";
 WFBE_SE_FNC_GetTownGroups = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroups.sqf";
 WFBE_SE_FNC_GetTownGroupsDefender = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroupsDefender.sqf";
 WFBE_SE_FNC_GetTownPatrol = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownPatrol.sqf";
@@ -362,7 +371,9 @@ emptyQueu = [];
 		_logik setVariable ["wfbe_structure_lasthit", 0];
 		_logik setVariable ["wfbe_structures", [], true];
 		_logik setVariable ["wfbe_aicom_running", false];
-		_logik setVariable ["wfbe_aicom_funds", round((missionNamespace getVariable Format ['WFBE_C_ECONOMY_FUNDS_START_%1', _side])*1.5)];
+		//--- V0.4.1: synthetic MONEY is fine (PvE pacing) - synthetic SUPPLY is not.
+		//--- Funds seed = commander start funds x FUNDS_MULT; supply spending stays 100% real.
+		_logik setVariable ["wfbe_aicom_funds", round((missionNamespace getVariable Format ['WFBE_C_ECONOMY_FUNDS_START_%1', _side]) * (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_FUNDS_MULT", 1.5]))];
 		_logik setVariable ["wfbe_upgrades", _upgrades, true];
 		_logik setVariable ["wfbe_upgrading", false, true];
 		// Marty: Track the running upgrade ID so clients can display the upgrade name in the menu.
@@ -623,6 +634,9 @@ _logMatchWinPlayerCountThreshold = 10;
 WFBE_SE_PLAYERLIST = [[objNull, "0"]];
 
 {_x Spawn WFBE_SE_FNC_VoteForCommander} forEach WFBE_PRESENTSIDES;
+
+//--- feat/ai-commander: one always-running supervisor per side (self-gates on enabled + no player commander).
+{_x Spawn WFBE_SE_FNC_AI_Commander} forEach WFBE_PRESENTSIDES;
 
 // Marty: Start the accelerated day/night cycle only when the mission parameter enables it.
 if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {

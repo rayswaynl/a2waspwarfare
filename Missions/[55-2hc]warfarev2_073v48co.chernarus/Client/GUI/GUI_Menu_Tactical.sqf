@@ -144,7 +144,6 @@ while {alive player && dialog} do {
 	_currentUpgrades = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
 	
 	if (_ft > 0) then {
-		//--- TODO: Travel fee, mod parameter > FT free or pay, do a clt fct.
 		_currentLevel = _currentUpgrades select WFBE_UP_FASTTRAVEL;
 		if (time - _lastUpdate > 15 && _currentLevel > 0) then {
 			{deleteMarkerLocal _x} forEach _markers;

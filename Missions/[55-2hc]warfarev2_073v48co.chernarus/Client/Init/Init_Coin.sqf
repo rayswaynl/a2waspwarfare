@@ -37,15 +37,28 @@ if (_updateStructures) then {
 };
 
 if (_updateDefenses) then {
-	_defenses = missionNamespace getVariable Format["WFBE_%1DEFENSENAMES",sideJoinedText];
+	private ["_allDefenses","_filteredDefenses","_d"];
+	//--- Ordering guarantee: Init_Coin is only ever called after waitUntil {commonInitComplete} in Init_Client.sqf
+	//--- (line ~168). commonInitComplete is set at the end of Init_Common.sqf, which runs Core_CIV well before
+	//--- that point. Therefore WFBE_%1DEFENSENAMES and its Land_Pneu entry are always registered by the time
+	//--- we reach here. The isNil guard in the forEach below further protects against any individual entry
+	//--- that might be missing its config var (e.g. if a defence class is unrecognised by the engine).
+	_allDefenses = missionNamespace getVariable Format["WFBE_%1DEFENSENAMES",sideJoinedText];
+	//--- RCoin (repair-truck context): exclude Site Clearance — commander-only, not a repair-truck action.
+	if (_extra == "REPAIR") then {_allDefenses = _allDefenses - ["Land_Pneu"]};
+	//--- Rebuild _defenses alongside cost/description/category arrays in lock-step so the parallel
+	//--- arrays always have the same count (items with no config entry are omitted from all four).
+	_filteredDefenses = [];
 	{
 		_d = missionNamespace getVariable _x;
 		if !(isNil '_d') then {
-			_defenseCosts = _defenseCosts + [(_d select QUERYUNITPRICE)];
-			_defenseDescriptions = _defenseDescriptions + [(_d select QUERYUNITLABEL)];
-			_defenseCategories = _defenseCategories + [(_d select QUERYUNITFACTORY)];
+			_filteredDefenses       = _filteredDefenses       + [_x];
+			_defenseCosts           = _defenseCosts           + [(_d select QUERYUNITPRICE)];
+			_defenseDescriptions    = _defenseDescriptions    + [(_d select QUERYUNITLABEL)];
+			_defenseCategories      = _defenseCategories      + [(_d select QUERYUNITFACTORY)];
 		};
-	} forEach _defenses;
+	} forEach _allDefenses;
+	_defenses = _filteredDefenses;
 };
 
 if (_emptyStructures) then {

@@ -47,6 +47,16 @@ WFBE_SE_FNC_AI_SetTownAttackPath = Compile preprocessFileLineNumbers "Server\Fun
 WFBE_SE_FNC_AI_SetTownAttackPath_PathIsSafe = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath_PathIsSafe.sqf";
 WFBE_SE_FNC_AI_SetTownAttackPath_PosIsSafe = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath_PosIsSafe.sqf";
 WFBE_SE_FNC_AI_Com_Upgrade = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_Com_Upgrade.sqf";
+//--- feat/ai-commander: revival workers + supervisor.
+WFBE_SE_FNC_AI_Com_AssignTypes = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_AssignTypes.sqf";
+WFBE_SE_FNC_AI_Com_AssignTowns = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_AssignTowns.sqf";
+WFBE_SE_FNC_AI_Com_Produce = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Produce.sqf";
+WFBE_SE_FNC_AI_Com_Execute = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Execute.sqf";
+WFBE_SE_FNC_AI_Com_Base = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Base.sqf";
+WFBE_SE_FNC_AI_Com_Teams = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Teams.sqf";
+WFBE_SE_FNC_AI_Com_Strategy = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Strategy.sqf";
+WFBE_SE_FNC_AI_Commander = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander.sqf";
+WFBE_SE_FNC_AI_Commander_Wildcard = Compile preprocessFileLineNumbers "Server\Functions\AI_Commander_Wildcard.sqf";
 WFBE_SE_FNC_GetTownGroups = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroups.sqf";
 WFBE_SE_FNC_GetTownGroupsDefender = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroupsDefender.sqf";
 WFBE_SE_FNC_GetTownPatrol = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownPatrol.sqf";
@@ -61,6 +71,8 @@ WFBE_SE_FNC_SetLocalityOwner = if !(WF_A2_Vanilla) then {Compile preprocessFileL
 WFBE_SE_FNC_SpawnTownDefense = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnTownDefense.sqf";
 WFBE_SE_FNC_VoteForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_VoteForCommander.sqf";
 WFBE_SE_FNC_AssignForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_AssignNewCommander.sqf";
+WFBE_SE_FNC_VoteWatcher = Compile preprocessFileLineNumbers "Server\Functions\Server_VoteWatcher.sqf";
+WFBE_SE_FNC_VotePassed  = Compile preprocessFileLineNumbers "Server\Functions\Server_VotePassed.sqf";
 WFBE_CO_FNC_InitAFKkickHandler = Compile preprocessFileLineNumbers "Server\Module\afkKick\initAFKkickHandler.sqf";
 WFBE_CO_FNC_LogGameEnd = Compile preprocessFileLineNumbers "Server\Functions\Server_LogGameEnd.sqf";
 // WFBE_CO_FNC_monitorServerFPS = Compile preprocessFileLineNumbers "Server\Module\serverFPS\monitorServerFPS.sqf";
@@ -89,6 +101,20 @@ WFBE_SE_FNC_CallDatabaseSetMap = Compile preprocessFileLineNumbers "Server\Modul
 // WFBE_CO_FNC_monitorServerFPS = Compile preprocessFileLineNumbers "Server\Module\serverFPS\monitorServerFPS.sqf";
 WFBE_SE_FNC_AttackWave = Call Compile preprocessFileLineNumbers "Server\PVFunctions\AttackWave.sqf";
 WFBE_SE_FNC_AttackWavePVEH = Call Compile preprocessFileLineNumbers "Server\Functions\Server_AttackWave.sqf";
+WFBE_SE_FNC_CounterBatteryCheck = Compile preprocessFileLineNumbers "Server\Functions\Server_CounterBattery.sqf";
+WFBE_SE_FNC_SpawnStructureDressing = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnStructureDressing.sqf";
+WFBE_SE_FNC_BankIncome = Compile preprocessFileLineNumbers "Server\Functions\Server_BankIncome.sqf";
+WFBE_SE_FNC_SiteClearance = Compile preprocessFileLineNumbers "Server\Functions\Server_SiteClearance.sqf";
+//--- CBR: per-side registries (populated as CBRs are built; pruned lazily during checks).
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
+	missionNamespace setVariable ["WFBE_CBR_WEST", []];
+	missionNamespace setVariable ["WFBE_CBR_EAST", []];
+};
+//--- Bank: per-side single-object registries (set when bank is built, cleared on death).
+if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
+	missionNamespace setVariable ["WFBE_BANK_WEST", objNull];
+	missionNamespace setVariable ["WFBE_BANK_EAST", objNull];
+};
 
 //--- Define Headless Client functions (server ones).
 if (ARMA_VERSION >= 162 && ARMA_RELEASENUMBER >= 101334 || ARMA_VERSION > 162) then {
@@ -362,7 +388,9 @@ emptyQueu = [];
 		_logik setVariable ["wfbe_structure_lasthit", 0];
 		_logik setVariable ["wfbe_structures", [], true];
 		_logik setVariable ["wfbe_aicom_running", false];
-		_logik setVariable ["wfbe_aicom_funds", round((missionNamespace getVariable Format ['WFBE_C_ECONOMY_FUNDS_START_%1', _side])*1.5)];
+		//--- V0.4.1: synthetic MONEY is fine (PvE pacing) - synthetic SUPPLY is not.
+		//--- Funds seed = commander start funds x FUNDS_MULT; supply spending stays 100% real.
+		_logik setVariable ["wfbe_aicom_funds", round((missionNamespace getVariable Format ['WFBE_C_ECONOMY_FUNDS_START_%1', _side]) * (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_FUNDS_MULT", 1.5]))];
 		_logik setVariable ["wfbe_upgrades", _upgrades, true];
 		_logik setVariable ["wfbe_upgrading", false, true];
 		// Marty: Track the running upgrade ID so clients can display the upgrade name in the menu.
@@ -538,6 +566,8 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 ["INITIALIZATION", "Init_Server.sqf: Garbage Collector is defined."] Call WFBE_CO_FNC_LogContent;
 [] ExecVM "Server\FSM\emptyvehiclescollector.sqf";
 ["INITIALIZATION", "Init_Server.sqf: Empty Vehicle Collector is defined."] Call WFBE_CO_FNC_LogContent;
+[] ExecVM "Server\FSM\server_groupsGC.sqf";
+["INITIALIZATION", "Init_Server.sqf: Group GC is defined."] Call WFBE_CO_FNC_LogContent;
 
 /////////////////////////////////////////////////////////////////////////////////// map cleaners
 
@@ -624,10 +654,35 @@ WFBE_SE_PLAYERLIST = [[objNull, "0"]];
 
 {_x Spawn WFBE_SE_FNC_VoteForCommander} forEach WFBE_PRESENTSIDES;
 
+//--- feat/ai-commander: one always-running supervisor per side (self-gates on enabled + no player commander).
+{_x Spawn WFBE_SE_FNC_AI_Commander} forEach WFBE_PRESENTSIDES;
+
+//--- V0.6: AI Commander Wildcard events (one free random event per AI side per interval).
+if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD", 1]) == 1 && {(missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0}) then {
+	{_x Spawn WFBE_SE_FNC_AI_Commander_Wildcard} forEach WFBE_PRESENTSIDES;
+	["INITIALIZATION", Format ["Init_Server.sqf: AI Commander Wildcard workers started for %1 sides (interval=%2s).", count WFBE_PRESENTSIDES, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL", 1800]]] Call WFBE_CO_FNC_AICOMLog;
+};
+
 // Marty: Start the accelerated day/night cycle only when the mission parameter enables it.
 if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
 	[] execVM "Server\Functions\Server_DayNightCycle.sqf";
 };
 
+//--- Marty: Vote system — JIP init and persistent server-time broadcast.
+//--- WFBE_VOTE_COOLDOWNS init ensures JIP clients receive the var even if no vote has run.
+if (isNil "WFBE_VOTE_COOLDOWNS") then {
+	WFBE_VOTE_COOLDOWNS = [];
+	publicVariable "WFBE_VOTE_COOLDOWNS";
+};
+//--- Persistent 10 s loop broadcasts WFBE_SERVER_TIME so client dialogs always have
+//--- a recent reference for cooldown and countdown display.  The per-vote watcher
+//--- supplements this with 2 s ticks while a vote window is open.
+[] Spawn {
+	while {true} do {
+		WFBE_SERVER_TIME = time;
+		publicVariable "WFBE_SERVER_TIME";
+		sleep 10;
+	};
+};
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

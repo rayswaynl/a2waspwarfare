@@ -14,7 +14,6 @@ _action = _this select 2;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 
 
-if (_sideID != WFBE_C_GUER_ID) exitWith {};
 switch (_action) do {
 	case "spawn": {
 		//_side_group = createGroup _side;
@@ -38,6 +37,9 @@ switch (_action) do {
 
 								if (isNull _team) then {
 									_team = createGroup _side;
+									//--- Re-flag persistent: the empty-group GC (server_groupsGC.sqf) must NOT delete this
+									//--- re-created side DefenseTeam in the window before units are added (HC-delegated manning).
+									_team setVariable ["wfbe_persistent", true];
 									missionNamespace setVariable [format["WFBE_%1_DefenseTeam", _side], _team];
 								};
 

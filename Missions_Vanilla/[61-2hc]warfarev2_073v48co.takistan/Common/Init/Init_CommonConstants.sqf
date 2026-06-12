@@ -99,6 +99,31 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AI_TEAMS_JIP_PRESERVE") then {WFBE_C_AI_TEAMS_JIP_PRESERVE = 1}; //--- Keep the AI Teams units on JIP.
 	WFBE_C_AI_COMMANDER_MOVE_INTERVALS = 3600;
 	WFBE_C_AI_COMMANDER_SUPPLY_TRUCKS_MAX = 5;
+	//--- AI Commander revival (feat/ai-commander).
+	WFBE_C_AI_COMMANDER_TOTAL_AI_MAX = 60;     //--- Per-side AI ceiling for AI-commander unit production (FPS safety cap).
+	WFBE_C_AI_COMMANDER_USE_ARC_APPROACH = 1;  //--- 1: SetTownAttackPath arc approach; 0: simple AIMoveTo fallback.
+	WFBE_C_AI_COMMANDER_UPGRADE_INTERVAL = 120;
+	WFBE_C_AI_COMMANDER_TOWN_INTERVAL = 120;
+	WFBE_C_AI_COMMANDER_PRODUCE_INTERVAL = 45;
+	WFBE_C_AI_COMMANDER_TYPES_INTERVAL = 30;
+	WFBE_C_AI_COMMANDER_TICK = 15;             //--- Supervisor base tick (s); how often the order-executor runs (hybrid responsiveness).
+	WFBE_C_AI_COMMANDER_BASE_INTERVAL = 60;    //--- V0.2: base worker cadence (HQ deploy -> doctrine build order -> defenses).
+	WFBE_C_AI_COMMANDER_TEAMS_INTERVAL = 90;   //--- V0.2: team-founding cadence.
+	WFBE_C_AI_COMMANDER_TEAMS_TARGET = 4;      //--- V0.2: AI-led combat teams the commander maintains per side.
+	WFBE_C_AI_COMMANDER_DEFENSES_MAX = 4;      //--- V0.2: manned base statics the AI places around its HQ.
+	WFBE_C_AI_COMMANDER_LOG = 1;               //--- V0.4: always-on [AICOM] diag_log (independent of WF_LOG_CONTENT; 0 to silence).
+	//--- V0.5: PvE difficulty (lobby param WFBE_C_AI_COMMANDER_LEVEL: 0 Easy / 1 Normal / 2 Hard).
+	//--- Tunes the SYNTHETIC MONEY only - supply stays real on every level.
+	if (isNil "WFBE_C_AI_COMMANDER_LEVEL") then {WFBE_C_AI_COMMANDER_LEVEL = 1};
+	switch (WFBE_C_AI_COMMANDER_LEVEL) do {
+		case 0:  {WFBE_C_AI_COMMANDER_FUNDS_MULT = 1.0; WFBE_C_AI_COMMANDER_INCOME_MULT = 1.0; WFBE_C_AI_COMMANDER_INCOME_STIPEND = 0};
+		case 2:  {WFBE_C_AI_COMMANDER_FUNDS_MULT = 2.0; WFBE_C_AI_COMMANDER_INCOME_MULT = 2.0; WFBE_C_AI_COMMANDER_INCOME_STIPEND = 60};
+		default  {WFBE_C_AI_COMMANDER_FUNDS_MULT = 1.5; WFBE_C_AI_COMMANDER_INCOME_MULT = 1.5; WFBE_C_AI_COMMANDER_INCOME_STIPEND = 25};
+	};
+	WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL = 60;   //--- V0.5: war-strategy worker cadence (spearheads/relief/strike/arty).
+	WFBE_C_AI_COMMANDER_SPEARHEAD_PER_TOWN = 3;   //--- V0.5: teams concentrated per spearhead town.
+	WFBE_C_AI_COMMANDER_RELIEF_MAX = 2;           //--- V0.5: max simultaneous town-relief diversions.
+	WFBE_C_AI_COMMANDER_REINFORCE_RANGE = 1200;   //--- V0.5: Produce only refills teams this close to base (wiped teams reform at base).
 	WFBE_C_AI_DELEGATION_FPS_INTERVAL = 60 * 3; //--- A client send it's FPS average each x seconds to the server.
 	WFBE_C_AI_DELEGATION_FPS_MIN = 25; //--- A client can handle groups if it's FPS average is above x.
 	WFBE_C_AI_DELEGATION_GROUPS_MAX = 1; //--- A client max have up to x groups managed on his computer (high values may makes lag, be careful).

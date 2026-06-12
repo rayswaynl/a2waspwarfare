@@ -212,6 +212,37 @@ switch (_args select 0) do {
 			if (!isNull _unit) then {_unit setVariable ["CommandBar_DeadUnits_ServerCleanupRunning", false, false]};
 		};
 	};
+	case "aicom-team-created": {
+		Private ["_csideID","_cteam","_clogik"];
+		_csideID = _args select 1;
+		_cteam = _args select 2;
+		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
+		if (!isNull _clogik) then {
+			_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
+			if (!isNull _cteam) then {
+				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) + [_cteam], true];
+				["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 registered (%3 units).", _csideID, _cteam, count units _cteam]] Call WFBE_CO_FNC_AICOMLog;
+			};
+		};
+	};
+	case "aicom-team-ended": {
+		Private ["_csideID","_cteam","_clogik"];
+		_csideID = _args select 1;
+		_cteam = _args select 2;
+		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
+		if (!isNull _clogik) then {
+			if (isNull _cteam) then {
+				//--- Creation failed before registration: just release the pending slot.
+				_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
+			} else {
+				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) - [_cteam], true];
+				if ((_clogik getVariable ["wfbe_aicom_garrison", grpNull]) == _cteam) then {
+					_clogik setVariable ["wfbe_aicom_garrison", grpNull];
+				};
+				["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 wiped and deregistered.", _csideID, _cteam]] Call WFBE_CO_FNC_AICOMLog;
+			};
+		};
+	};
 	case "sidepatrol-started": {
 		Private ["_psideID","_punit","_plist"];
 		_psideID = _args select 1;
@@ -240,6 +271,21 @@ switch (_args select 0) do {
 		} forEach _plist;
 		missionNamespace setVariable ["WFBE_ACTIVE_PATROLS", _pnew];
 		publicVariable "WFBE_ACTIVE_PATROLS";
+	};
+	//--- Task 41: convoy reached a town — pay the owning side.
+	case "sidepatrol-convoy-stop": {
+		Private ["_cSideID","_cTown","_cSide","_cPool","_cShare","_cCount"];
+		_cSideID = _args select 1;
+		_cTown   = _args select 2;
+		_cSide   = (_cSideID) Call WFBE_CO_FNC_GetSideFromID;
+		_cPool   = if (isNil "WFBE_C_PATROL_CONVOY_PAY") then {750} else {WFBE_C_PATROL_CONVOY_PAY};
+
+		_cCount = 0;
+		{if ((isPlayer _x) && (alive _x) && (side _x == _cSide)) then {_cCount = _cCount + 1}} forEach playableUnits;
+		_cShare = round (_cPool / (_cCount max 1));
+
+		[_cSide, "BankPayout", [_cShare]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] convoy payout $%2 x %3 players at [%4].", str _cSide, _cShare, _cCount, if (!isNull _cTown) then {_cTown getVariable ["name","?"]} else {"?"}]] Call WFBE_CO_FNC_LogContent;
 	};
 	case "connected-hc": {
 		Private ["_hc","_id","_uid","_hcOld","_hcList","_hcValid"];

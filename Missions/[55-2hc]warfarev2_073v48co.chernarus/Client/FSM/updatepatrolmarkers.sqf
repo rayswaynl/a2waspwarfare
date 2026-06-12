@@ -31,10 +31,12 @@ while {true} do {
 				_i = _i + 1;
 				_mk = Format["wfbe_patrolmarker_%1", _i];
 				createMarkerLocal [_mk, getPos _unit];
-				_mk setMarkerTypeLocal "mil_circle";
+				//--- Direction-showing arrow, numbered per patrol (Steff: "marker can be nicer").
+				_mk setMarkerTypeLocal "mil_arrow2";
 				_mk setMarkerColorLocal "ColorYellow";
-				_mk setMarkerSizeLocal [0.7,0.7];
-				_mk setMarkerTextLocal "Patrol";
+				_mk setMarkerSizeLocal [0.6,0.6];
+				_mk setMarkerTextLocal Format["Patrol %1", _i];
+				_mk setMarkerDirLocal (getDir _unit);
 				_tracked = _tracked + [[_unit, _mk]];
 			};
 		};
@@ -47,6 +49,7 @@ while {true} do {
 		_mk = _x select 1;
 		if (!isNull _unit && {alive _unit}) then {
 			_mk setMarkerPosLocal (getPos _unit);
+			_mk setMarkerDirLocal (getDir _unit); //--- arrow tracks the patrol's heading
 			_keep = _keep + [_x];
 		} else {
 			deleteMarkerLocal _mk;

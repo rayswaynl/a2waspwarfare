@@ -36,6 +36,11 @@ while {!WFBE_GameOver} do {
 					_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
 					_owned = [];
 					{if ((_x getVariable "sideID") == _sideID) then {_owned = _owned + [_x]}} forEach towns;
+					//--- V0.5.1: observability - say WHY a researched patrol is not spawning (once).
+					if (count _owned == 0 && {!(_logik getVariable ["wfbe_patrol_waitlog", false])}) then {
+						_logik setVariable ["wfbe_patrol_waitlog", true];
+						["INFORMATION", Format ["server_side_patrols.sqf: [%1] Patrols %2 researched but NO owned towns yet - waiting for the first capture.", _side, _lvl]] Call WFBE_CO_FNC_AICOMLog;
+					};
 					if (!isNull _hq && count _owned > 0) then {
 						_home = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity;
 						_tier = switch (_lvl) do {case 1: {"LIGHT"}; case 2: {"MEDIUM"}; default {"HEAVY"}};
@@ -55,7 +60,8 @@ while {!WFBE_GameOver} do {
 							} else {
 								[_sideID, _template, _home] Spawn WFBE_CO_FNC_RunSidePatrol;
 							};
-							["INFORMATION", Format["server_side_patrols.sqf: [%1] %2 patrol dispatched from [%3] (active %4/%5, HC:%6).", _side, _tier, _home getVariable "name", _active + 1, _max, count _live > 0]] Call WFBE_CO_FNC_LogContent;
+							_logik setVariable ["wfbe_patrol_waitlog", false];
+							["INFORMATION", Format["server_side_patrols.sqf: [%1] %2 patrol dispatched from [%3] (active %4/%5, HC:%6).", _side, _tier, _home getVariable "name", _active + 1, _max, count _live > 0]] Call WFBE_CO_FNC_AICOMLog;
 							if (!isNil "PerformanceAudit_Record") then {
 								if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
 									["side_patrol_spawn", 0, Format["side:%1;tier:%2;active:%3;hc:%4", _side, _tier, _active + 1, count _live > 0], "SERVER"] Call PerformanceAudit_Record;

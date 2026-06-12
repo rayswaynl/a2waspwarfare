@@ -4,7 +4,7 @@
 		- Client PVF
 */
 
-Private ["_destination","_exit","_hcAllowed","_isHeadless","_parameters","_publicVar","_script"];
+Private ["_code","_destination","_exit","_hcAllowed","_isHeadless","_parameters","_publicVar","_script"];
 
 _publicVar = _this;
 _exit = true;
@@ -29,4 +29,5 @@ if (typeName(_destination) == 'STRING') then {if (isMultiplayer) then {if (getPl
 
 if (_exit) exitWith {};
 
-_parameters Spawn (Call Compile _script);
+_code = missionNamespace getVariable _script;
+if (!(isNil "_code") && {typeName _code == "CODE"}) then {_parameters Spawn _code};

@@ -25,7 +25,7 @@ _vehicles = _retVal select 1;
 _team = _retVal select 2;
 
 if (isNull _team || {((count _units) + (count _vehicles)) == 0}) exitWith {
-	["WARNING", Format["Common_RunSidePatrol.sqf: [%1] patrol creation failed at [%2] - releasing the slot.", _side, _homeTown getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+	["WARNING", Format["Common_RunSidePatrol.sqf: [%1] patrol creation failed at [%2] - releasing the slot.", _side, _homeTown getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
 	if (isServer) then {
 		["sidepatrol-ended", _sideID, objNull] Call HandleSpecial;
 	} else {
@@ -43,7 +43,7 @@ if (isServer) then {
 	["RequestSpecial", ["sidepatrol-started", _sideID, _ldr]] Call WFBE_CO_FNC_SendToServer;
 };
 
-["INFORMATION", Format["Common_RunSidePatrol.sqf: [%1] patrol spawned at [%2] (%3 units, %4 vehicles).", _side, _homeTown getVariable "name", count _units, count _vehicles]] Call WFBE_CO_FNC_LogContent;
+["INFORMATION", Format["Common_RunSidePatrol.sqf: [%1] patrol spawned at [%2] (%3 units, %4 vehicles).", _side, _homeTown getVariable "name", count _units, count _vehicles]] Call WFBE_CO_FNC_AICOMLog;
 
 //--- Frontline gravitation: always head for the nearest town we do NOT own; when it
 //--- flips to us (we helped cap it or a teammate did), pick the next one. If we own

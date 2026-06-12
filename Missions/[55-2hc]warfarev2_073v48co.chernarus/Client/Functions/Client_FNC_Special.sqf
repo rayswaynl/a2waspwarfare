@@ -130,6 +130,10 @@ WFBE_CL_FNC_Upgrade_Started = {
 		WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_end_time", time + _upgradeTime, false];
 	};
 	(Format [Localize "STR_WF_CHAT_Upgrade_Started_Message",(missionNamespace getVariable "WFBE_C_UPGRADES_LABELS") select _upgrade, _level]) Call CommandChatMessage;
+	// Marty: Notify side players that their upgrade has started.
+	//--- Task 29: dedicated quiet alias (same ogg, volume 2.5) — commanderNotification (10)
+	//--- is shared by other notifications and stays loud for those.
+	playSound "upgradeStartedSound";
 };
 
 WFBE_CL_FNC_Building_Started = {
@@ -142,31 +146,31 @@ WFBE_CL_FNC_Building_Started = {
 	switch (_building) do {
 		case "Barracks": {
 			_localisedBuilding = localize "RB_Barracks";
-			playSound ["barracksBuildSound",true];
+			//playSound ["barracksBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
 		};
 		case "Light": {
 			_localisedBuilding = localize "RB_Light_Factory";
-			playSound ["lightFactoryBuildSound",true];
+			//playSound ["lightFactoryBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
 		};
 		case "CommandCenter": {
 			_localisedBuilding = localize "RB_Command_Center";
-			playSound ["commandCenterBuildSound",true];
+			//playSound ["commandCenterBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
 		};
 		case "Heavy": {
 			_localisedBuilding = localize "RB_Heavy_Factory";
-			playSound ["heavyFactoryBuildSound",true];
+			//playSound ["heavyFactoryBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
 		};
 		case "Aircraft": {
 			_localisedBuilding = localize "RB_Aircraft_factory";
-			playSound ["aircraftFactoryBuildSound",true];
+			//playSound ["aircraftFactoryBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
 		};
 		case "ServicePoint": {
 			_localisedBuilding = localize "RB_Service_Point";
-			playSound ["servicePointBuildSound",true];
+			//playSound ["servicePointBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
 		};
 		case "AARadar": {
 			_localisedBuilding = localize "STR_WF_UPGRADE_AntiAirRadar";
-			playSound ["aaRadarBuildSound",true];
+			//playSound ["aaRadarBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
 		};
 		default {
 			_localisedBuilding = "Unknown";
@@ -185,6 +189,8 @@ WFBE_CL_FNC_Upgrade_Complete = {
 	_level = _this select 1;
 
 	(Format [Localize "STR_WF_CHAT_Upgrade_Complete_Message",(missionNamespace getVariable "WFBE_C_UPGRADES_LABELS") select _upgrade, _level]) Call CommandChatMessage;
+	// Marty: Notify side players that their upgrade has completed.
+	playSound "ARTY_cooldown_over";
 	// Marty: Clear the local cached upgrade ID and countdown when completion is announced.
 	WFBE_Client_Logic setVariable ["wfbe_upgrading_id", -1];
 	WFBE_Client_Logic setVariable ["wfbe_upgrading_countdown_id", -1, false];
