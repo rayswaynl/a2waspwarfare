@@ -51,6 +51,47 @@ missionNamespace setVariable ['WFBE_NEURODEF_BANK_WALLS',[
 ]];
 
 //=============================================================================
+// Artillery Radar — CHOSEN WDDM design: "walled boom-gate checkpoint" (0 AI, fortifications only).
+// Enclosed HESCO 5x ring with a 3 m front gap, cones + danger sign at the entrance.
+// Boom gate (Land_BarGate2) is A2 content → used on CO/Vanilla; OA standalone gets a
+// jersey-block chicane in the gap instead. All other classes mission-proven
+// (Base_WarfareBBarrier5x: barracks walls; RoadCone/Sign_Danger/Land_CncBlock_Stripes: defense lists).
+private ['_w'];
+_w = [
+	['Base_WarfareBBarrier5x',[-6,13,0],0],['Base_WarfareBBarrier5x',[6,13,0],0],
+	['Base_WarfareBBarrier5x',[-13,6,0],90],['Base_WarfareBBarrier5x',[-13,-6,0],90],
+	['Base_WarfareBBarrier5x',[13,6,0],90],['Base_WarfareBBarrier5x',[13,-6,0],90],
+	['Base_WarfareBBarrier5x',[-7.5,-13,0],0],['Base_WarfareBBarrier5x',[7.5,-13,0],0],
+	['RoadCone',[-1.2,-16,0],0],['RoadCone',[1.2,-16,0],0],
+	['Sign_Danger',[4,-14.5,0],0]
+];
+if (WF_A2_Arrowhead) then {
+	_w = _w + [['Land_CncBlock_Stripes',[-1.4,-13.6,0],0],['Land_CncBlock_Stripes',[1.4,-12.4,0],0]];	//--- OA: chicane gate
+} else {
+	_w = _w + [['Land_BarGate2',[0,-13,0],0]];	//--- A2/CO: boom gate across the gap
+};
+missionNamespace setVariable ['WFBE_NEURODEF_ARTILLERYRADAR_WALLS', _w];
+
+// Reserve — CHOSEN WDDM design: "floodlit walled yard" (0 AI).
+// Full HESCO 10x yard with a 3 m front gap, corner watchtowers and an illuminant
+// tower over the vehicle bays. Watchtower variant is content-dependent
+// (Land_Fort_Watchtower_EP1 = WFBE_C_CAMP precedent in Core_Models\Arrowhead.sqf;
+//  Land_Ind_IlluminantTower confirmed in Core_CIV + Core_TKCIV → both content sets).
+_w = [
+	['Base_WarfareBBarrier10x',[-12,18,0],0],['Base_WarfareBBarrier10x',[12,18,0],0],
+	['Base_WarfareBBarrier10x',[-13.5,-18,0],0],['Base_WarfareBBarrier10x',[13.5,-18,0],0],
+	['Base_WarfareBBarrier10x',[-24,-7.5,0],90],['Base_WarfareBBarrier10x',[-24,7.5,0],90],
+	['Base_WarfareBBarrier10x',[24,-7.5,0],90],['Base_WarfareBBarrier10x',[24,7.5,0],90],
+	['Land_Ind_IlluminantTower',[0,-9,0],0]
+];
+if (WF_A2_Arrowhead) then {
+	_w = _w + [['Land_Fort_Watchtower_EP1',[-21,15,0],45],['Land_Fort_Watchtower_EP1',[21,15,0],315]];
+} else {
+	_w = _w + [['Land_Fort_Watchtower',[-21,15,0],45],['Land_Fort_Watchtower',[21,15,0],315]];
+};
+missionNamespace setVariable ['WFBE_NEURODEF_RESERVE_WALLS', _w];
+
+//=============================================================================
 // CBR (Counter Battery Radar) composition dressing — task 37 visual rework.
 // Footprint ≤ 14 m radius. Core = Land_Antenna at origin for both sides (Land_telek1 rejected as likely absent).
 // WEST: NATO/US radar outpost — cornered sandbag ring, camo-netted shelter, razorwire perimeter.

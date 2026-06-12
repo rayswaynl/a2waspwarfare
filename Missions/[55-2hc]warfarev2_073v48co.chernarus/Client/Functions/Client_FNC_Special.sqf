@@ -172,6 +172,12 @@ WFBE_CL_FNC_Building_Started = {
 			_localisedBuilding = localize "STR_WF_UPGRADE_AntiAirRadar";
 			//playSound ["aaRadarBuildSound",true]; //--- removed (owner, 2026-06-11): factory build jingles too intrusive
 		};
+		case "ArtilleryRadar": {
+			_localisedBuilding = localize "RB_Artillery_Radar";
+		};
+		case "Reserve": {
+			_localisedBuilding = localize "RB_Reserve";
+		};
 		default {
 			_localisedBuilding = "Unknown";
 		};

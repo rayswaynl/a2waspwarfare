@@ -1,5 +1,40 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-06-12 — Artillery Radar + Reserve buildable structures (WDDM integration)
+
+Two new commander-buildable structures, mirroring the CBR/Bank pattern (cfc1fb93):
+
+- **ArtilleryRadar** — `USMC_/RU_WarfareBArtilleryRadar` (CO) / `US_/TK_..._EP1` (OA).
+  Cost 2400, MediumSite, dis 21, dir 90. Gate `WFBE_C_STRUCTURES_ARTILLERYRADAR = 1`.
+- **Reserve** — `Land_Mil_Barracks_i` (CO) / `Land_Mil_Barracks_i_EP1` (OA — intact model
+  inferred safe from the `Land_Mil_Barracks_i_ruins_EP1` WFBE_C_STRUCTURES_RUINS precedent).
+  Cost 2000, MediumSite, dis 30 (walls reach ±24 m). Gate `WFBE_C_STRUCTURES_RESERVE = 1`.
+
+Both use **MediumSite** → the standard phased construction animation path
+(LocationLogicStart / WFBE_B_Completion), same as the factories — NOT preplaced.
+Auto-walls fire from Construction_MediumSite (exclusion list untouched), pulling the
+CHOSEN WDDM designs added to Init_Defenses.sqf:
+
+- `WFBE_NEURODEF_ARTILLERYRADAR_WALLS` — "walled boom-gate checkpoint": HESCO 5x ring,
+  3 m front gap, cones + danger sign; boom gate `Land_BarGate2` on A2/CO, jersey-block
+  chicane fallback on OA standalone (BarGate is A2 content).
+- `WFBE_NEURODEF_RESERVE_WALLS` — "floodlit walled yard": HESCO 10x yard, corner
+  watchtowers (`Land_Fort_Watchtower[_EP1]` per content set), `Land_Ind_IlluminantTower`
+  over the bays (confirmed both content sets via Core_CIV/Core_TKCIV).
+
+Plumbing: RequestStructure allowed-list +2, marker labels ("AR"/"RES"),
+Client_FNC_Special build-started cases, stringtable `RB_Artillery_Radar`/`RB_Reserve`,
+shorthand vars `<side>ARTRAD`/`<side>RES`. Per-design intent: the Artillery Radar takes
+fortifications only (walls, no gun defenses) — its template contains zero crewed weapons.
+
+LoadoutManager run synced Takistan (7za pack step fails — documented-ignorable). NOTE:
+the generator clobbers owner hand-edits in `EASA_Init.sqf` (re-adds stripped defaults,
+54ad0732) and `Sounds\description.ext` (volumes 1→7) on the CHERNARUS side — those four
+generated-file changes were reverted before commit; Takistan committed state already
+matches generator output. Needs an in-engine build test of both structures.
+
+---
+
 ## Task 28 — Port Patrols v2 at upgrade index 23 (2026-06-10)
 
 WFBE_UP_PATROLS = 23 (CBR = 22 stays). All faction arrays grow to 24 entries.
