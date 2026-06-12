@@ -8,7 +8,7 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns"];
 
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 
@@ -187,7 +187,10 @@ while {!WFBE_GameOver} do {
 			};
 			if (_auditStr == "") then { _auditStr = "(none)" };
 
-			["INFORMATION", Format ["server_groupsGC.sqf: group audit [%1] %2/144: %3", str _auditSide, _auditCnt, _auditStr]] Call WFBE_CO_FNC_AICOMLog;
+			//--- Append activeTowns counter published by server_town_ai each sweep.
+			_activeTowns = missionNamespace getVariable "wfbe_active_town_count";
+			if (isNil "_activeTowns") then { _activeTowns = 0 };
+			["INFORMATION", Format ["server_groupsGC.sqf: group audit [%1] %2/144: %3 activeTowns=%4", str _auditSide, _auditCnt, _auditStr, _activeTowns]] Call WFBE_CO_FNC_AICOMLog;
 		} forEach [west, east, resistance];
 	};
 };

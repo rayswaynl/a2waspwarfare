@@ -75,6 +75,11 @@ _cbrResearchAppended = false; //--- Tracks whether CBR research was reactively a
 
 ["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1.", str _side]] Call WFBE_CO_FNC_AICOMLog;
 
+//--- AI COMMANDER LOCK startup notice.
+if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {
+	["INFORMATION", Format ["AI_Commander.sqf: [%1] WFBE_C_AI_COMMANDER_LOCK=1 - AI retains full command regardless of human slot occupancy.", str _side]] Call WFBE_CO_FNC_AICOMLog;
+};
+
 while {!gameOver} do {
 	_active = false;
 	if ((missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0) then {
@@ -86,6 +91,12 @@ while {!gameOver} do {
 		_humanCmd = false;
 		if (!isNull _cmdTeam) then {
 			if (isPlayer (leader _cmdTeam)) then {_humanCmd = true};
+		};
+
+		//--- AI COMMANDER LOCK: when lock=1, treat _humanCmd as false so AI keeps full command
+		//--- even if a human occupies the commander slot (eval/night protection).
+		if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {
+			_humanCmd = false;
 		};
 
 		//--- Human just left -> clear leftover explicit orders so full-auto retakes cleanly.

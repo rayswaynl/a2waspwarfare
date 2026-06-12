@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies"];
+Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now"];
 
 for "_j" from 0 to ((count towns) - 1) step 1 do
 {
@@ -18,6 +18,12 @@ _ai_delegation_enabled = missionNamespace getVariable "WFBE_C_AI_DELEGATION";
 _town_defender_enabled = if ((missionNamespace getVariable "WFBE_C_TOWNS_DEFENDER") > 0) then {true} else {false};
 _town_occupation_enabled = if ((missionNamespace getVariable "WFBE_C_TOWNS_OCCUPATION") > 0) then {true} else {false};
 
+//--- ACTIVE-TOWN BUDGET: cap on concurrently active towns (FPS lever).
+//--- Tunable WFBE_C_TOWNS_ACTIVE_MAX; default 6. Set lower in params to cut spawn load.
+_activeTownsBudgetMax = missionNamespace getVariable "WFBE_C_TOWNS_ACTIVE_MAX";
+if (isNil "_activeTownsBudgetMax") then { _activeTownsBudgetMax = 6 };
+_budgetDeferLast = -9999; //--- Debounce timestamp for the "deferred" log line (1 per 5 min).
+
 for "_k" from 0 to ((count towns) - 1) step 1 do
 {
 	_town = towns select _k;
@@ -35,6 +41,12 @@ for "_k" from 0 to ((count towns) - 1) step 1 do
 
 while {!WFBE_GameOver} do {
 
+	//--- Count currently active towns once per sweep; publish for groupsGC audit line.
+	_activeTownCount = 0;
+	{
+		if (_x getVariable ["wfbe_active", false]) then { _activeTownCount = _activeTownCount + 1 };
+	} forEach towns;
+	missionNamespace setVariable ["wfbe_active_town_count", _activeTownCount];
 
 	for "_i" from 0 to ((count towns) - 1) step 1 do
 	{
@@ -118,6 +130,24 @@ while {!WFBE_GameOver} do {
 						_below = 1;
 						_enemies_ground = 1;
 
+						//--- ACTIVE-TOWN BUDGET: skip activation if cap is reached.
+						//--- Recount live active towns at the moment of activation decision.
+						_activeTownCount = 0;
+						{
+							if (_x getVariable ["wfbe_active", false]) then { _activeTownCount = _activeTownCount + 1 };
+						} forEach towns;
+						if (_activeTownCount >= _activeTownsBudgetMax) then {
+							//--- Debounced log: at most once per 5 minutes to avoid RPT spam.
+							_now = time;
+							if ((_now - _budgetDeferLast) >= 300) then {
+								_budgetDeferLast = _now;
+								["INFORMATION", Format ["server_town_ai.sqf: activation deferred for %1 - active-town budget %2/%3", _town getVariable "name", _activeTownCount, _activeTownsBudgetMax]] Call WFBE_CO_FNC_AICOMLog;
+							};
+							//--- Zero both flags to skip ground AND air activation branches below.
+							_enemies_ground = 0;
+							_enemies = 0;
+						};
+
 						if(_enemies_ground > 0) then {
 							////
 							_town setVariable ["wfbe_active", true];
@@ -145,7 +175,7 @@ while {!WFBE_GameOver} do {
 							};
 						};
 						//// start of creation
-						["INFORMATION", Format ["server_town_ai.sqf: Town [%1] ACTIVATED for [%2] (episode_spawned latch set, groups=%3).", _town getVariable "name", _side, count _groups]] Call WFBE_CO_FNC_LogContent;
+						["INFORMATION", Format ["server_town_ai.sqf: Town [%1] ACTIVATED for [%2] (episode_spawned latch set, groups=%3).", _town getVariable "name", _side, count _groups]] Call WFBE_CO_FNC_AICOMLog;
 
 						if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_side]) then {[_side,"HostilesDetectedNear",_town] Spawn SideMessage};
 
@@ -221,7 +251,7 @@ while {!WFBE_GameOver} do {
 					_town setVariable ["wfbe_active", false];
 					_town setVariable ["wfbe_active_air", false];
 
-					["INFORMATION", Format ["server_town_ai.sqf: Town [%1] DEACTIVATED for [%2] (inactivity, teams=%3).", _town getVariable "name", _side, count _town_teams]] Call WFBE_CO_FNC_LogContent;
+					["INFORMATION", Format ["server_town_ai.sqf: Town [%1] DEACTIVATED for [%2] (inactivity, teams=%3).", _town getVariable "name", _side, count _town_teams]] Call WFBE_CO_FNC_AICOMLog;
 
 					// Marty: Ask delegated clients/HCs to delete their local town AI groups where deleteGroup can actually work.
 					if (isMultiplayer) then {[nil, "HandleSpecial", ["cleanup-townai", _town, _side]] Call WFBE_CO_FNC_SendToClients};

@@ -92,6 +92,11 @@ while {!gameOver} do {
 	};
 	_bothHuman = (_humanCmdWEST && _humanCmdEAST);
 
+	//--- AI COMMANDER LOCK: when lock=1, treat as not-both-human so wildcard draws continue.
+	if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {
+		_bothHuman = false;
+	};
+
 	if (_bothHuman) then {
 		["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - both sides human-commanded", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 	} else {
