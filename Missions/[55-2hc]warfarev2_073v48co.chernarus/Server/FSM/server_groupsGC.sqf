@@ -8,7 +8,7 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped"];
 
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 
@@ -22,6 +22,39 @@ while {!WFBE_GameOver} do {
 			deleteGroup _grp;
 		};
 	} forEach allGroups;
+
+	// --- Orphaned-team zombie reaper ---
+	// Reclaims AI teams whose player disconnected with WFBE_C_AI_TEAMS_JIP_PRESERVE==1
+	// and never reconnected within WFBE_C_DISCONNECT_ZOMBIE_TIMEOUT seconds (default 600).
+	// Set the param to 0 to disable entirely.
+	_zombieTimeout = missionNamespace getVariable ["WFBE_C_DISCONNECT_ZOMBIE_TIMEOUT", 600];
+	if (_zombieTimeout > 0) then {
+		{
+			_grp = _x;
+			_orphanedAt = _grp getVariable ["wfbe_orphaned_at", -1];
+			if (_orphanedAt >= 0 && {(time - _orphanedAt) >= _zombieTimeout}) then {
+				// Confirm the team is still unclaimed (wfbe_uid cleared to nil on disconnect).
+				_uidVal = _grp getVariable "wfbe_uid";
+				if (isNil "_uidVal") then {
+					// Mirror the preserve==0 deletion pattern from Server_OnPlayerDisconnected.sqf,
+					// including the explicit side-HQ exclusion (a team member could be crewing the MHQ).
+					_zombieHQ       = (side _grp) Call WFBE_CO_FNC_GetSideHQ;
+					_zombieUnits    = units _grp;
+					_zombieVehicles = [_grp, false] Call GetTeamVehicles;
+					_zombieUnits    = (_zombieUnits + _zombieVehicles) - [_zombieHQ];
+					_reaped = 0;
+					{
+						if (!isPlayer _x && !(_x in playableUnits)) then {
+							deleteVehicle _x;
+							_reaped = _reaped + 1;
+						};
+					} forEach _zombieUnits;
+					_grp setVariable ["wfbe_orphaned_at", nil];
+					["INFORMATION", Format ["server_groupsGC.sqf: reaped %1 zombie unit(s) from orphaned team %2 (disconnected %3s ago)", _reaped, _grp, (time - _orphanedAt)]] Call WFBE_CO_FNC_AICOMLog;
+				};
+			};
+		} forEach allGroups;
+	};
 
 	// --- Group-cap pre-warning ---
 	// Count groups per side (single pass; cheap at 60s cadence).

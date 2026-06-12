@@ -107,6 +107,10 @@ if ((missionNamespace getVariable "WFBE_C_AI_TEAMS_JIP_PRESERVE") == 0) then {
 	_units = units _team;
 	_units = _units + ([_team,false] Call GetTeamVehicles) - [_hq];
 	{if (!isPlayer _x && !(_x in playableUnits)) then {deleteVehicle _x}} forEach _units;
+} else {
+	//--- Preserve==1: AI subordinates remain. Stamp the team so the GC reaper can
+	//--- reclaim it if the player never reconnects within the zombie timeout.
+	_team setVariable ["wfbe_orphaned_at", time];
 };
 
 //--- We save the disconnect client funds.
