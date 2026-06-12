@@ -143,6 +143,7 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['ATV_US_EP1'];
     _u = _u		+ ['Zodiac'];
 
+
     _u = _u		+ ['HMMWV_M998A2_SOV_DES_EP1'];
     _u = _u		+ ['HMMWV_M1151_M2_DES_EP1'];
     _u = _u		+ ['HMMWV'];
@@ -173,6 +174,10 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['MtvrRefuel'];
     _u = _u		+ ['WarfareSalvageTruck_USMC'];
     _u = _u		+ ['WarfareSupplyTruck_USMC'];
+    _u = _u		+ ['T810_CZ_EP1'];
+    _u = _u		+ ['T810_Repair_CZ_EP1'];
+    _u = _u		+ ['T810_Refuel_CZ_EP1'];
+    _u = _u		+ ['T810_Ammo_CZ_EP1'];
     _u = _u		+ ['RHIB'];
     _u = _u		+ ['RHIB2Turret'];
     _u = _u		+ ['LAV25'];
@@ -180,6 +185,7 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['BAF_Offroad_W'];
     _u = _u		+ ['BAF_Jackal2_GMG_W'];
     _u = _u		+ ['BAF_Jackal2_L2A1_W'];
+    _u = _u		+ ['RM70_ACR'];
 } else {
     _u 			= ['MMT_USMC'];
     _u = _u		+ ['M1030'];
@@ -210,6 +216,10 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['MtvrRefuel_DES_EP1'];
     _u = _u		+ ['MtvrSalvage_DES_EP1'];
     _u = _u		+ ['MtvrSupply_DES_EP1'];
+    _u = _u		+ ['T810_CZ_EP1'];
+    _u = _u		+ ['T810_Repair_CZ_EP1'];
+    _u = _u		+ ['T810_Refuel_CZ_EP1'];
+    _u = _u		+ ['T810_Ammo_CZ_EP1'];
     _u = _u		+ ['Dingo_DST_ACR'];
     _u = _u		+ ['Dingo_GL_DST_ACR'];
     _u = _u		+ ['LandRover_Special_CZ_EP1'];
@@ -234,6 +244,7 @@ if (IS_chernarus_map_dependent) then {
         _u = _u		+ ['M6_EP1'];
     };
     _u = _u		+ ['BAF_FV510_W'];
+    _u = _u		+ ['T72M4CZ'];
 } else {
     _u 			= ['AAV'];
     _u = _u		+ ['M2A2_EP1'];
@@ -261,8 +272,11 @@ _u = _u		+ ['C130J_US_EP1'];
 _u = _u		+ ['BAF_Merlin_HC3_D'];
 _u = _u		+ ['AH6J_EP1'];
 _u = _u		+ ['UH1Y'];
+_u = _u		+ ['UH1H_EP1']; //--- salvage helicopter (salvage-only by classname)
 _u = _u		+ ['AW159_Lynx_BAF'];
 _u = _u		+ ['Mi24_D_CZ_ACR'];
+_u = _u		+ ['Mi171Sh_CZ_EP1'];
+//--- Mi171Sh_rockets_CZ_EP1 moved to WFBE_AIRFIELD_UNITS (generic airfield hangar); buy it at any captured airfield.
 _u = _u		+ ['AH64D'];
 _u = _u		+ ['AH64D_EP1'];
 _u = _u		+ ['BAF_Apache_AH1_D'];

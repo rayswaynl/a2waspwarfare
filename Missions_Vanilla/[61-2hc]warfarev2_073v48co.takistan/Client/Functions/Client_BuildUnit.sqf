@@ -1,4 +1,4 @@
-Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction"];
+Private ["_building","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
@@ -165,12 +165,38 @@ _longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",_facto
 	_longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",_factoryType];
 };
 
+varQueu = Format["%1_%2", getPlayerUID player, diag_tickTime];
 _unique = varQueu;
-varQueu = random(10)+random(100)+random(1000);
 _queu = _building getVariable "queu";
 if (isNil "_queu") then {_queu = []};
 _queu = _queu + [_unique];
 _building setVariable ["queu",_queu,true];
+//--- QoL cancel: store price-paid and cpt in parallel arrays so Action_CancelQueue.sqf can refund correctly.
+private ["_queuCosts","_queuCpts"];
+_queuCosts = _building getVariable ["queu_costs", []];
+_queuCosts = _queuCosts + [_currentCost];
+_building setVariable ["queu_costs", _queuCosts, true];
+_queuCpts = _building getVariable ["queu_cpts", []];
+_queuCpts = _queuCpts + [_cpt];
+_building setVariable ["queu_cpts", _queuCpts, true];
+//--- Task 33: store the human-readable unit label so the buy-menu queue readout can display it.
+_unitLabel33 = _currentUnit select QUERYUNITLABEL;
+_queuLabels = _building getVariable ["queu_labels", []];
+_queuLabels = _queuLabels + [_unitLabel33];
+_building setVariable ["queu_labels", _queuLabels, true];
+//--- QoL cancel: add a cancel action on this building for the buyer (removed after their slot resolves).
+private ["_cancelActionID"];
+_cancelActionID = _building addAction [
+	"<t color='#ff9900'>Cancel last queued unit</t>",
+	"Client\Action\Action_CancelQueue.sqf",
+	[_factory],
+	50,
+	false,
+	true,
+	"",
+	"cursorObject == _target && player distance _target < 25"
+];
+_building setVariable [Format ["wfbe_cancel_action_%1", getPlayerUID player], _cancelActionID];
 
 _ret = 0;
 _queu2 = [0];
@@ -204,8 +230,41 @@ if (_show) then {hint(parseText(Format [localize "STR_WF_INFO_BuyEffective",_des
 sleep _waitTime;
 
 _queu = _building getVariable "queu";
+private ["_qIdx"];
+_qIdx = _queu find _unique;
 _queu = _queu - [_unique];
 _building setVariable ["queu",_queu,true];
+//--- QoL cancel: keep parallel arrays in sync when the unit actually spawns.
+if (_qIdx >= 0) then {
+	private ["_qCosts","_qCpts","_qLabels","_newArr","_i"];
+	_qCosts = _building getVariable ["queu_costs", []];
+	_qCpts  = _building getVariable ["queu_cpts",  []];
+	_qLabels = _building getVariable ["queu_labels", []];
+	if (_qIdx < count _qCosts) then {
+		_newArr = []; _i = 0;
+		{if (_i != _qIdx) then {_newArr = _newArr + [_x]}; _i = _i + 1} forEach _qCosts;
+		_building setVariable ["queu_costs", _newArr, true];
+	};
+	if (_qIdx < count _qCpts) then {
+		_newArr = []; _i = 0;
+		{if (_i != _qIdx) then {_newArr = _newArr + [_x]}; _i = _i + 1} forEach _qCpts;
+		_building setVariable ["queu_cpts", _newArr, true];
+	};
+	//--- Task 33: keep queu_labels in sync.
+	if (_qIdx < count _qLabels) then {
+		_newArr = []; _i = 0;
+		{if (_i != _qIdx) then {_newArr = _newArr + [_x]}; _i = _i + 1} forEach _qLabels;
+		_building setVariable ["queu_labels", _newArr, true];
+	};
+};
+//--- QoL cancel: remove the per-player cancel action once their slot is resolved.
+private ["_myActionKey","_myActionID"];
+_myActionKey = Format ["wfbe_cancel_action_%1", getPlayerUID player];
+_myActionID = _building getVariable [_myActionKey, -1];
+if (_myActionID >= 0) then {
+	_building removeAction _myActionID;
+	_building setVariable [_myActionKey, -1];
+};
 
 _group = group player;
 _spawnedUnits = [];
@@ -382,10 +441,10 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 	//--- Crew Management.
 	_crew = missionNamespace getVariable Format ["WFBE_%1SOLDIER",sideJoinedText];
 	
-	// Marty : All crew members in tanks are replaced by engineers of their side. 
+	// Marty : All crew members in tanks and wheeled APCs (LAV-25, BTR-90, Pandur / HF vehicles) are replaced by engineers of their side.
 	// Russian side do not have engineer class so we use takistan class engineer for russian.
 	//if (_unit isKindOf "Tank") then {_crew = missionNamespace getVariable Format ["WFBE_%1CREW",sideJoinedText]};
-	if (_unit isKindOf "Tank") then {
+	if (_unit isKindOf "Tank" || _unit isKindOf "Wheeled_APC") then {
 		if (sideJoinedText == "WEST")then 
 		{
 			// WEST side (american)

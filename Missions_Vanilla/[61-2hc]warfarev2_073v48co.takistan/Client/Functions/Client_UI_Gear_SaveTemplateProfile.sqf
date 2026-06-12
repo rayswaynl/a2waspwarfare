@@ -27,17 +27,22 @@ _upgrade_gear = _upgrades select WFBE_UP_GEAR;
 	{
 		_item = _x;
 		
-		//--- Upgrade level first.
+		//--- Upgrade level first. (task 44: was `_u_upgrade > _upgrade_gear` with _u_upgrade
+		//--- UNDEFINED -> gate never fired; use the item's own required level on both sides.)
 		_get = missionNamespace getVariable _item;
 		if !(isNil '_get') then {
-			if ((_get select 3) > _upgrade_barracks && _u_upgrade > _upgrade_gear) then {_can_save = false};
+			if ((_get select 3) > _upgrade_barracks && (_get select 3) > _upgrade_gear) then {_can_save = false};
 		} else {
 			_can_save = false;
 		};
-		
-		//--- Belong to side next.
-		if ({_x == _item} count _side_equipment == 0) then {_can_save = false};
-		
+
+		//--- Belong to side next — UNLESS hostile gear saving is allowed (task 44: AddTemplate
+		//--- honors WFBE_Allow_HostileGearSaving but save did not, silently dropping any OPFOR
+		//--- template containing cross-faction gear).
+		if !(WFBE_Allow_HostileGearSaving) then {
+			if ({_x == _item} count _side_equipment == 0) then {_can_save = false};
+		};
+
 		if !(_can_save) exitWith {};
 	} forEach _template_weapons;
 	
@@ -46,17 +51,19 @@ _upgrade_gear = _upgrades select WFBE_UP_GEAR;
 		{
 			_item = _x;
 			
-			//--- Upgrade level first.
+			//--- Upgrade level first. (task 44: same undefined _u_upgrade fix as the weapon loop.)
 			_get = missionNamespace getVariable Format["Mag_%1", _item];
 			if !(isNil '_get') then {
-				if ((_get select 3) > _upgrade_barracks && _u_upgrade > _upgrade_gear) then {_can_save = false};
+				if ((_get select 3) > _upgrade_barracks && (_get select 3) > _upgrade_gear) then {_can_save = false};
 			} else {
 				_can_save = false;
 			};
-			
-			//--- Belong to side next.
-			if ({_x == _item} count _side_equipment == 0) then {_can_save = false};
-			
+
+			//--- Belong to side next — unless hostile gear saving is allowed (task 44).
+			if !(WFBE_Allow_HostileGearSaving) then {
+				if ({_x == _item} count _side_equipment == 0) then {_can_save = false};
+			};
+
 			if !(_can_save) exitWith {};
 		} forEach _template_magazines;
 		
@@ -69,16 +76,18 @@ _upgrade_gear = _upgrades select WFBE_UP_GEAR;
 				{
 					_item = _x;
 					
-					//--- Upgrade level first.
+					//--- Upgrade level first. (task 44: same undefined _u_upgrade fix.)
 					_get = missionNamespace getVariable Format["%1%2", _prefix, _item];
 					if !(isNil '_get') then {
-						if ((_get select 3) > _upgrade_barracks && _u_upgrade > _upgrade_gear) then {_can_save = false};
+						if ((_get select 3) > _upgrade_barracks && (_get select 3) > _upgrade_gear) then {_can_save = false};
 					} else {
 						_can_save = false;
 					};
-					
-					//--- Belong to side next.
-					if ({_x == _item} count _side_equipment == 0) then {_can_save = false};
+
+					//--- Belong to side next — unless hostile gear saving is allowed (task 44).
+					if !(WFBE_Allow_HostileGearSaving) then {
+						if ({_x == _item} count _side_equipment == 0) then {_can_save = false};
+					};
 				} forEach ((_template_backpack select _j) select 0);
 				
 				_prefix = "Mag_";

@@ -46,6 +46,24 @@ switch (_localize) do {
     };
 	case "CommanderDisconnected": {_txt = Localize "strwfcommanderdisconnected"};
 	case "TacticalLaunch": {_txt = Localize "STR_WF_CHAT_ICBM_Launch"};
+	case "CBRadarNeedsAAR": {_txt = Localize "CBRadarNeedsAAR"};
+	case "BankAlreadyBuilt": {_txt = Localize "BankAlreadyBuilt"};
+	case "BankTooCloseToBase": {_txt = Localize "BankTooCloseToBase"};
+	case "BankDestroyed": {
+		//--- _this: [1]=killerName, [2]=sideName — broadcast to all (both sides hear it).
+		_txt = Format [Localize "BankDestroyed", _this select 1, _this select 2];
+	};
+	case "BankDividend": {
+		//--- _this: [1]=amount — quiet group-chat notification (side-targeted).
+		_txt = Format [Localize "BankDividend", _this select 1];
+		_commandChat = false;
+	};
+	case "SiteClearanceCommanderOnly": {_txt = Localize "SiteClearanceCommanderOnly"};
+	case "SiteClearanceNeedsBarracks1": {_txt = Localize "SiteClearanceNeedsBarracks1"};
+	case "SiteClearanceNoTrees": {_txt = Localize "SiteClearanceNoTrees"};
+	case "SiteClearanceNoSupply": {_txt = Format [Localize "SiteClearanceNoSupply", _this select 1]};
+	case "SiteClearanceDone": {_txt = Format [Localize "SiteClearanceDone", _this select 1, _this select 2]};
+	case "SiteClearanceOutsideBase": {_txt = Localize "SiteClearanceOutsideBase"};
 	case "Teamkill": {_txt = Format [Localize "STR_WF_CHAT_Teamkill",(missionNamespace getVariable "WFBE_C_PLAYERS_PENALTY_TEAMKILL")]; -(missionNamespace getVariable "WFBE_C_PLAYERS_PENALTY_TEAMKILL") Call ChangePlayerFunds};
 	case "FundsTransfer": {_txt = Format [Localize "STR_WF_CHAT_FundsTransfer",_this select 1,_this select 2];_commandChat = false;playSound ["cashierSound", true];};
 	case "StructureSold": {_txt = Format [Localize "STR_WF_CHAT_Structure_Sold",([_this select 1,'displayName'] Call GetConfigInfo), ([_object, towns] Call GetClosestLocation)]};
@@ -109,6 +127,54 @@ switch (_localize) do {
             _txt = format [localize "STR_WF_BuildingKilledByErrorEnemy", ([_structure_kind, "displayName"] call GetConfigInfo)];
         };
         _commandChat = true;
+    };
+
+    case "DefenseBudgetFull": {
+        // _this: [1]=category string, [2]=used count, [3]=cap,
+        //        [4]=refund — NUMBER (refund directly) or classname STRING (look up the
+        //        price this client charged; covers entries the server cannot price).
+        private ["_refArg","_refGet"];
+        _refArg = _this select 4;
+        if (typeName _refArg == "STRING") then {
+            _refGet = missionNamespace getVariable _refArg;
+            if (!isNil "_refGet") then { (_refGet select QUERYUNITPRICE) Call ChangePlayerFunds };
+        } else {
+            if (_refArg > 0) then { _refArg Call ChangePlayerFunds };
+        };
+        _txt = Format [Localize "DefenseBudgetFull", _this select 1, _this select 2, _this select 3];
+    };
+
+    case "WddmCompositionCapReached": {
+        // _this: [1]=current composition count, [2]=cap, [3]=anchor classname
+        // The anchor cost IS charged optimistically on the client at placement
+        // (coin_interface.sqf: -(price) Call ChangePlayerFunds). The cap rejected the
+        // placement, so refund the exact price this client charged for the anchor.
+        private ["_anchorClass","_get"];
+        _anchorClass = _this select 3;
+        _get = missionNamespace getVariable _anchorClass;
+        if (!isNil "_get") then { (_get select QUERYUNITPRICE) Call ChangePlayerFunds };
+        _txt = Format [Localize "WddmCompositionCapReached", _this select 1, _this select 2];
+    };
+
+    //--- Marty: Voting page notifications.
+    case "VoteStarted":   {_txt = Format [Localize "STR_WF_VOTE_Started",  _this select 1, _this select 2]};
+    case "VotePassed":    {_txt = Format [Localize "STR_WF_VOTE_Passed",   _this select 1]};
+    case "VoteFailed":    {_txt = Format [Localize "STR_WF_VOTE_Failed",   _this select 1]};
+    case "VoteNotNight":  {_txt = Localize "STR_WF_VOTE_NotNight"};
+
+    case "DefenseThreatGate": {
+        // _this: [1]=refund — NUMBER (refund directly) or classname STRING (look up the
+        //        price this client charged for it; covers WDDM anchors whose price the
+        //        server cannot resolve from a single global). Refund, then warn.
+        private ["_refArg","_refGet"];
+        _refArg = _this select 1;
+        if (typeName _refArg == "STRING") then {
+            _refGet = missionNamespace getVariable _refArg;
+            if (!isNil "_refGet") then { (_refGet select QUERYUNITPRICE) Call ChangePlayerFunds };
+        } else {
+            if (_refArg > 0) then { _refArg Call ChangePlayerFunds };
+        };
+        _txt = Localize "DefenseThreatGate";
     };
 };
 

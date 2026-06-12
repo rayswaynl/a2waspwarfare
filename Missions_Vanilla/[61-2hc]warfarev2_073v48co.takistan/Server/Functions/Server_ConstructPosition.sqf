@@ -8,7 +8,7 @@
 
    Called from Server\PVFunctions\RequestDefense.sqf:  [_side,_anchorType,_pos,_dir,_manned] Spawn Server_ConstructPosition;
 */
-Private ["_side","_anchorType","_pos","_dir","_manned","_map","_base","_factionSpecific","_tplName","_template","_origin","_created","_i","_entry","_cls","_relPos","_relDir","_worldPos","_worldDir","_one"];
+Private ["_side","_anchorType","_pos","_dir","_manned","_map","_base","_factionSpecific","_tplName","_template","_origin","_created","_i","_entry","_cls","_relPos","_relDir","_worldPos","_worldDir","_one","_placementID"];
 _side       = _this select 0;
 _anchorType = _this select 1;
 _pos        = _this select 2;
@@ -40,6 +40,10 @@ if (count _template == 0) exitWith {[]};
 //--- (A Land_HelipadEmpty "origin" + modelToWorld was unreliable: the helper spawned at [0,0,0], so the whole
 //---  composition built ~12km away at the map corner. Direct trig is deterministic and needs no spawned helper.)
 
+if (isNil "WFBE_WDDMPlacementCounter") then { WFBE_WDDMPlacementCounter = 0 };
+WFBE_WDDMPlacementCounter = WFBE_WDDMPlacementCounter + 1;
+_placementID = format ["%1_%2", _anchorType, str WFBE_WDDMPlacementCounter];
+
 _created = [];
 for "_i" from 0 to (count _template - 1) do {
 	_entry  = _template select _i;
@@ -60,7 +64,7 @@ for "_i" from 0 to (count _template - 1) do {
 	_one = [_cls, _side, _worldPos, _worldDir, _manned, false, missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MANNING_RANGE", false, true] Call ConstructDefense;
 	if (!isNil "_one") then {
 		if (typeName _one == "OBJECT") then {
-			_one setVariable ["WFBE_WDDMPositionAnchor", _anchorType, true];
+			_one setVariable ["WFBE_WDDMPositionAnchor", _placementID, true];
 		};
 		_created = _created + [_one];
 	};

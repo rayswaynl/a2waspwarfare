@@ -22,7 +22,14 @@ _builtveh = 0;
 _town_teams = [];
 _town_vehicles = [];
 
-_lock = if ((missionNamespace getVariable "WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER") == 0 && _side == WFBE_DEFENDER) then {false} else {true};
+//--- Task 34: resistance vehicles are always unlocked when the resistance side is inactive (WFBE_C_TOWNS_DEFENDER == 0).
+//--- When resistance IS active the existing WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER parameter governs the lock state
+//--- (default=0 in Parameters.hpp, meaning unlocked; set to 1 in the lobby to require lockpick).
+_lock = if (_side == WFBE_DEFENDER && (missionNamespace getVariable ["WFBE_C_TOWNS_DEFENDER", 1]) == 0) then {
+	false  //--- Resistance AI disabled: nothing to fight — unlock vehicles for everyone.
+} else {
+	if ((missionNamespace getVariable "WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER") == 0 && _side == WFBE_DEFENDER) then {false} else {true}
+};
 
 for '_i' from 0 to count(_groups)-1 do {
 	_position = _positions select _i;

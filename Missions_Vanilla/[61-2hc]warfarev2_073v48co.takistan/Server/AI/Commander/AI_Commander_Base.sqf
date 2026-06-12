@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng"];
 
 _side = _this;
 _sideText = str _side;
@@ -34,8 +34,22 @@ if (!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {
 	if (_logik getVariable ["wfbe_hqinuse", false]) exitWith {};
 	_deployCost = _costs select 0;
 	if (_supply >= _deployCost) then {
+		//--- V0.6.5 owner report: HQ deployed ON a road (MHQ start spot). Nudge the
+		//--- deploy position off-road/out-of-water; fall back to the raw spot if no
+		//--- candidate is found within 20 tries.
+		_dPos = getPos _hq;
+		if ((count (_dPos nearRoads 14) > 0) || {surfaceIsWater _dPos}) then {
+			_dTry = 0;
+			while {_dTry < 20 && {(count (_dPos nearRoads 14) > 0) || {surfaceIsWater _dPos}}} do {
+				_dAng = random 360;
+				_dPos = [((getPos _hq) select 0) + (22 + random 28) * sin _dAng, ((getPos _hq) select 1) + (22 + random 28) * cos _dAng, 0];
+				_dTry = _dTry + 1;
+			};
+			if ((count (_dPos nearRoads 14) > 0) || {surfaceIsWater _dPos}) then {_dPos = getPos _hq};
+			["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] HQ deploy spot nudged off-road to %2 (%3 tries).", _sideText, _dPos, _dTry]] Call WFBE_CO_FNC_AICOMLog;
+		};
 		if (_dual) then {[_side, -_deployCost, "AI commander HQ deployment.", false] Call ChangeSideSupply};
-		[_classes select 0, _side, getPos _hq, getDir _hq, 0] ExecVM "Server\Construction\Construction_HQSite.sqf";
+		[_classes select 0, _side, _dPos, getDir _hq, 0] ExecVM "Server\Construction\Construction_HQSite.sqf";
 		["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] deploying HQ (cost %2 supply).", _sideText, _deployCost]] Call WFBE_CO_FNC_AICOMLog;
 	};
 };
@@ -73,6 +87,31 @@ if (_coreDone) then {
 	_order = _order + (if (_doctrine == "HF") then {["Light","ServicePoint","Aircraft"]} else {["Heavy","ServicePoint","Aircraft"]});
 };
 
+//--- V0.6 task 49b: experital-awareness build extension (nil-guarded, no-op on this mission).
+//--- CBRadar and Bank only enter _order when the side's STRUCTURES array lists them.
+//--- The EXACT type-name strings come from Structures_CO_RU/W.sqf in the experital branch:
+//---   CBR  -> "CBRadar"   (WFBE_C_STRUCTURES_COUNTERBATTERY guard in experital)
+//---   Bank -> "Bank"      (WFBE_C_ECONOMY_BANK guard in experital)
+_scaffoldActivated = false;
+_cbrIdx = _names find "CBRadar";
+if (_cbrIdx >= 0) then {
+	_order = _order + ["CBRadar"];
+	_scaffoldActivated = true;
+};
+_bankIdx = _names find "Bank";
+if (_bankIdx >= 0) then {
+	//--- Supply gate: only attempt Bank when supply > 1.5x its construction cost.
+	_bankCost = _costs select _bankIdx;
+	if (_supply > _bankCost * 1.5) then {
+		_order = _order + ["Bank"];
+		_scaffoldActivated = true;
+	};
+};
+if (_scaffoldActivated) then {
+	["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] experital build scaffold ACTIVE (CBR=%2 Bank=%3 in order).", _sideText, (_cbrIdx >= 0), (_bankIdx >= 0)]] Call WFBE_CO_FNC_AICOMLog;
+	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SCAFFOLD_BUILD|CBR=" + str (_cbrIdx >= 0) + " Bank=" + str (_bankIdx >= 0));
+};
+
 _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 
 {
@@ -108,6 +147,7 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				_script = _scripts select _idx;
 				[_class, _side, _pos, random 360, _idx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
 				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] building %2 at %3 (cost %4 supply, doctrine %5, branch-out %6).", _sideText, _x, _pos, _cost, _doctrine, _coreDone]] Call WFBE_CO_FNC_AICOMLog;
+				diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRUCTURE_BUILT|" + _x);
 			};
 		};
 	};
@@ -145,15 +185,31 @@ if (_defCount < _defMax) then {
 //--- 4) V0.5: two base artillery pieces once the defenses stand. Construction tags
 //--- them WFBE_CommanderArtillery; the strategy worker fires them at spearhead
 //--- towns / the enemy HQ (fire is free in WFBE - the real cooldown gates it).
-if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0) then {
+//--- V0.6.3: OFF by default (owner call) - opt back in via WFBE_C_AI_COMMANDER_ARTILLERY = 1.
+if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) && {(missionNamespace getVariable "WFBE_C_ARTILLERY") > 0}) then {
 	_artyBuilt = _logik getVariable ["wfbe_aicom_arty_built", 0];
 	if (_artyBuilt < 2 && {(_logik getVariable ["wfbe_aicom_defenses", 0]) >= _defMax}) then {
 		_have = false;
 		{ if ((_x getVariable ["wfbe_structure_type", ""]) == "Barracks" && {alive _x}) exitWith {_have = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
 		if (_have) then {
+			_defClass = "";
 			_artyClasses = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_CLASSNAMES", _sideText];
 			if (!isNil "_artyClasses" && {count _artyClasses > 0}) then {
-				_defClass = _artyClasses select 0;
+				//--- Entries are FAMILY arrays ([['M119_US_EP1'],['M252_US_EP1'],...]): pass a
+				//--- CLASSNAME on, or ConstructDefense's createVehicle throws a type error that
+				//--- kills the whole supervisor script. Family _artyBuilt, scanning past empties.
+				_i = _artyBuilt;
+				while {_i < count _artyClasses && {_defClass == ""}} do {
+					_fam = _artyClasses select _i;
+					if (typeName _fam == "ARRAY") then {
+						if (count _fam > 0) then {_defClass = _fam select 0};
+					} else {
+						_defClass = _fam;
+					};
+					_i = _i + 1;
+				};
+			};
+			if (_defClass != "") then {
 				_defData = missionNamespace getVariable _defClass;
 				_defPrice = if (!isNil "_defData") then {_defData select QUERYUNITPRICE} else {0};
 				_funds = (_side) Call GetAICommanderFunds;

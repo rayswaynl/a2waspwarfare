@@ -27,6 +27,10 @@ while { !WFBE_GameOver } do {
 			_playerScore = score _x;
 			_playerPrevStats = ["RETRIEVE", getPlayerUID _x] call WFBE_SE_FNC_CallDatabaseRetrieve;
 			_perfDbCalls = _perfDbCalls + 1;
+			//--- guard: DB extension absent -> Retrieve returns [1,1] sentinel; also guard against unexpected nil/non-ARRAY.
+			if (isNil "_playerPrevStats" || {(typeName _playerPrevStats) != "ARRAY"} || {count _playerPrevStats < 2}) then {
+				_playerPrevStats = [1, 1];
+			};
 			_playerPrevScoreTotal = _playerPrevStats select 0;
 			_playerPrevTimePlayedTotal = _playerPrevStats select 1;
 			_oldScore = missionNamespace getVariable format ["WFBE_CO_OLD_SCORE_PLAYER_%1", getPlayerUID _x];

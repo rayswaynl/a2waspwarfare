@@ -35,6 +35,10 @@ _facDefs = [["Barracks","BARRACKSUNITS",WFBE_UP_BARRACKS], ["Light","LIGHTUNITS"
 
 {
 	_team = _x;
+	//--- V0.6.5: skip NULL entries (wiped HC teams; getVariable on a null group returns
+	//--- nil even with a default -> the lazy-brace check below threw and killed Produce,
+	//--- stopping ALL factory purchases for editor teams).
+	if (!isNull _team) then {
 	_type = _team getVariable ["wfbe_teamtype", -1];
 	_canProduce = false;
 	//--- V0.3: HC-resident commander teams are produced whole on the HC - never here.
@@ -106,4 +110,5 @@ _facDefs = [["Barracks","BARRACKSUNITS",WFBE_UP_BARRACKS], ["Light","LIGHTUNITS"
 			};
 		};
 	};
+	}; //--- V0.6.5 null-team guard
 } forEach _teams;

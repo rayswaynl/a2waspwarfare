@@ -12,11 +12,12 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNil "_logik") exitWith {};
+_myID = (_side) Call WFBE_CO_FNC_GetSideID;
 
 //--- Wait for full server init before commanding.
 waitUntil {sleep 1; !(isNil "serverInitFull")};
@@ -50,10 +51,28 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 		];
 		missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _program + _order];
 		["INFORMATION", Format ["AI_Commander.sqf: [%1] doctrine research program set (%2: factory id %3 to lvl 3, Gear 3, Barracks 2, then branch out).", str _side, _doctrine, _factory]] Call WFBE_CO_FNC_AICOMLog;
+
+		//--- V0.6 task 49c: experital-awareness research extension (nil-guarded).
+		//--- Convoys (PATROLS lvl 4): activate when the side's LEVELS array shows PATROLS max >= 4.
+		//--- CBRADAR (upgrades 1..2): activate when WFBE_UP_CBRADAR constant exists and the
+		//--- LEVELS array is long enough to include it. Both are no-ops on this mission.
+		_upgLvls = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_LEVELS", str _side], []];
+		if (!isNil "WFBE_UP_PATROLS" && {count _upgLvls > WFBE_UP_PATROLS} && {(_upgLvls select WFBE_UP_PATROLS) >= 4}) then {
+			_order = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], []];
+			missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _order + [[WFBE_UP_PATROLS,4]]];
+			["INFORMATION", Format ["AI_Commander.sqf: [%1] experital scaffold: Convoys (PATROLS lvl 4) appended to research program.", str _side]] Call WFBE_CO_FNC_AICOMLog;
+			diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|0|SCAFFOLD_RESEARCH|Convoys-PATROLS4");
+		};
+		if (!isNil "WFBE_UP_CBRADAR" && {count _upgLvls > WFBE_UP_CBRADAR}) then {
+			_order = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], []];
+			missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _order + [[WFBE_UP_CBRADAR,1],[WFBE_UP_CBRADAR,2]]];
+			["INFORMATION", Format ["AI_Commander.sqf: [%1] experital scaffold: CBRadar lvl 1-2 appended to research program (after factory-3 stage).", str _side]] Call WFBE_CO_FNC_AICOMLog;
+			diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|0|SCAFFOLD_RESEARCH|CBRadar-1-2");
+		};
 	};
 };
 
-_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0;
+_ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301;
 _prevHuman = false; _prevState = "";
 
 ["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1.", str _side]] Call WFBE_CO_FNC_AICOMLog;
@@ -129,13 +148,40 @@ while {!gameOver} do {
 		};
 	};
 
+	//--- V0.6 task 48: AICOMSTAT TICK every 5 minutes (ungated - always flows).
+	if (time - _ltStat >= 300) then {
+		_elMin = round (time / 60);
+		_towns = 0; { if ((_x getVariable "sideID") == _myID) then {_towns = _towns + 1} } forEach towns;
+		_supply = if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {(_side) Call WFBE_CO_FNC_GetSideSupply} else {0};
+		_funds = (_side) Call GetAICommanderFunds;
+		_fTeams = 0; _eTeams = 0;
+		{
+			if (!isNull _x) then {
+				if ((_x getVariable ["wfbe_aicom_hc", false]) || {_x getVariable ["wfbe_aicom_founded", false]}) then {
+					_fTeams = _fTeams + 1;
+				} else {
+					if ((count units _x) > 0 && {!isPlayer (leader _x)} && {alive (leader _x)}) then {_eTeams = _eTeams + 1};
+				};
+			};
+		} forEach (_logik getVariable ["wfbe_teams", []]);
+		_upgArr = _logik getVariable ["wfbe_upgrades", []];
+		_upgCsv = "";
+		for "_i" from 0 to (count _upgArr - 1) do {
+			_upgCsv = _upgCsv + str (_upgArr select _i);
+			if (_i < (count _upgArr - 1)) then {_upgCsv = _upgCsv + ":"};
+		};
+		diag_log ("AICOMSTAT|v1|TICK|" + (str _side) + "|" + str _elMin + "|" + str _towns + "|" + str _supply + "|" + str _funds + "|" + str _fTeams + "|" + str _eTeams + "|" + _upgCsv);
+		_ltStat = time;
+	};
+
 	sleep (missionNamespace getVariable "WFBE_C_AI_COMMANDER_TICK");
 };
 
 //--- V0.5: round verdict - one line per side for the stats pipeline / meta-learning.
-_myID = (_side) Call WFBE_CO_FNC_GetSideID;
 _held = 0;
 { if ((_x getVariable "sideID") == _myID) then {_held = _held + 1} } forEach towns;
 _winner = sideUnknown;
 if (!isNil "WF_Logic") then {_winner = WF_Logic getVariable ["WF_Winner", sideUnknown]};
 ["INFORMATION", Format ["AI_Commander.sqf: [%1] ROUND OVER after %2 min: winner [%3], my doctrine %4, towns held %5, funds left %6.", str _side, round (time / 60), _winner, _logik getVariable ["wfbe_aicom_doctrine", "?"], _held, (_side) Call GetAICommanderFunds]] Call WFBE_CO_FNC_AICOMLog;
+//--- V0.6 task 48: AICOMSTAT END - always emitted ungated regardless of LOG setting.
+diag_log ("AICOMSTAT|v1|END|" + (str _side) + "|" + str (round (time / 60)) + "|" + (str _winner) + "|" + (_logik getVariable ["wfbe_aicom_doctrine", "?"]) + "|" + str _held + "|" + str ((_side) Call GetAICommanderFunds));

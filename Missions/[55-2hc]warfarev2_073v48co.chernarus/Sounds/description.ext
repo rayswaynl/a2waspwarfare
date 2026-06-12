@@ -5,13 +5,13 @@ class CfgSounds
     
     class aaRadarBuildSound {
         name = "aaRadarBuildSound";
-        sound[] = {"\Sounds\aaRadarBuildSound-7.ogg", 1, 1};
+        sound[] = {"\Sounds\aaRadarBuildSound-7.ogg", 7, 1};
         titles[] = {};
     };
 
     class aircraftFactoryBuildSound {
         name = "aircraftFactoryBuildSound";
-        sound[] = {"\Sounds\aircraftFactoryBuildSound-7.ogg", 1, 1};
+        sound[] = {"\Sounds\aircraftFactoryBuildSound-7.ogg", 7, 1};
         titles[] = {};
     };
 
@@ -59,7 +59,7 @@ class CfgSounds
 
     class barracksBuildSound {
         name = "barracksBuildSound";
-        sound[] = {"\Sounds\barracksBuildSound-7.ogg", 1, 1};
+        sound[] = {"\Sounds\barracksBuildSound-7.ogg", 7, 1};
         titles[] = {};
     };
 
@@ -77,7 +77,7 @@ class CfgSounds
 
     class commandCenterBuildSound {
         name = "commandCenterBuildSound";
-        sound[] = {"\Sounds\commandCenterBuildSound-7.ogg", 1, 1};
+        sound[] = {"\Sounds\commandCenterBuildSound-7.ogg", 7, 1};
         titles[] = {};
     };
 
@@ -87,17 +87,9 @@ class CfgSounds
         titles[] = {};
     };
 
-    //--- Task 29: quiet alias of commanderNotification for the upgrade-START cue only
-    //--- (the shared entry stays at 10 for the other notification call sites).
-    class upgradeStartedSound {
-        name = "upgradeStartedSound";
-        sound[] = {"\Sounds\commanderNotification-10.ogg", 1, 1};
-        titles[] = {};
-    };
-
     class heavyFactoryBuildSound {
         name = "heavyFactoryBuildSound";
-        sound[] = {"\Sounds\heavyFactoryBuildSound-7.ogg", 1, 1};
+        sound[] = {"\Sounds\heavyFactoryBuildSound-7.ogg", 7, 1};
         titles[] = {};
     };
 
@@ -133,7 +125,7 @@ class CfgSounds
 
     class lightFactoryBuildSound {
         name = "lightFactoryBuildSound";
-        sound[] = {"\Sounds\lightFactoryBuildSound-7.ogg", 1, 1};
+        sound[] = {"\Sounds\lightFactoryBuildSound-7.ogg", 7, 1};
         titles[] = {};
     };
 
@@ -157,7 +149,7 @@ class CfgSounds
 
     class servicePointBuildSound {
         name = "servicePointBuildSound";
-        sound[] = {"\Sounds\servicePointBuildSound-7.ogg", 1, 1};
+        sound[] = {"\Sounds\servicePointBuildSound-7.ogg", 7, 1};
         titles[] = {};
     };
 

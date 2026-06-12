@@ -224,6 +224,23 @@ switch (_type) do {
 	    };
 	};
 
+	//--- Salvage helicopters: amber tint to distinguish them from standard transport.
+	//--- Note: A2 OA helicopters often ignore setObjectTexture on body selections;
+	//--- apply best-effort and verify in-engine — selection 0 is the fuselage on most variants.
+	//--- NEEDS-IN-ENGINE-VERIFY: confirm the tint is visible on UH1H_EP1 and Mi17_medevac_CDF.
+	//--- Implementation note: we do NOT use setVehicleInit here because Common_CreateVehicle.sqf
+	//--- calls setVehicleInit again (for Init_Unit.sqf) AFTER this function returns, which would
+	//--- overwrite the texture command before processInitCommands sees it — killing JIP visibility.
+	//--- Instead we store the texture command string on the vehicle; Common_CreateVehicle reads it
+	//--- and appends it to the Init_Unit setVehicleInit so both run in one processInitCommands call.
+	case "UH1H_EP1": {
+		_vehicle setVariable ["wfbe_pending_texture", "this setObjectTexture [0,'#(argb,8,8,3)color(0.8,0.5,0.0,0.5,ca)']"];
+	};
+
+	case "Mi17_medevac_CDF": {
+		_vehicle setVariable ["wfbe_pending_texture", "this setObjectTexture [0,'#(argb,8,8,3)color(0.8,0.5,0.0,0.5,ca)']"];
+	};
+
 
 	};
 

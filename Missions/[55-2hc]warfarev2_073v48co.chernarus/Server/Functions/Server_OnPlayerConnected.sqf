@@ -64,6 +64,8 @@ _team Call WFBE_CO_FNC_WaypointsRemove;
 //--- We store the player UID over the group, this allows us to easily fetch the disconnecting client original group.
 _team setVariable ["wfbe_uid", _uid];
 _team setVariable ["wfbe_teamleader", leader _team];
+//--- Clear any orphan stamp so the GC reaper does not reclaim a reclaimed team.
+_team setVariable ["wfbe_orphaned_at", nil];
 
 //--- If AI delegation is enabled, we create a special variable for player based on his UID and ID.  FPS | Groups handled | Session ID.
 if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 1) then {
