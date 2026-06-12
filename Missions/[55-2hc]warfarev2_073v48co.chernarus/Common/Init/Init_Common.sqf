@@ -70,6 +70,7 @@ HandleShootBombs = Compile preprocessFileLineNumbers "Common\Functions\Common_Ha
 HandleShootMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleShootMissiles.sqf";
 IsArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_IsArtillery.sqf";
 MarkerUpdate = Compile preprocessFileLineNumbers "Common\Common_MarkerUpdate.sqf";
+WFBE_CL_MarkerLoop = Compile preprocessFileLineNumbers "Common\Common_MarkerLoop.sqf"; // Marty: PERF1 consolidated client marker loop (started by the first MarkerUpdate registration).
 PlaceNear = Compile preprocessFileLineNumbers "Common\Functions\Common_PlaceNear.sqf";
 PlaceSafe = Compile preprocessFileLineNumbers "Common\Functions\Common_PlaceSafe.sqf";
 RearmVehicle = if !(WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Common\Functions\Common_RearmVehicleOA.sqf"} else {Compile preprocessFileLineNumbers "Common\Functions\Common_RearmVehicle.sqf"};

@@ -189,10 +189,11 @@ if (_isMan) then { //--- Man.
 // Marty: Only attach the combat marker blinking Fired EH when the mission parameter enables the feature.
 if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1) then {
 	_perfBlinkingEH = 1;
-	_unit addEventHandler ["Fired", {
+	// Marty: Store the EH handle so the consolidated marker loop can remove it on death (EH hygiene).
+	_unit setVariable ["WFBE_BlinkFiredEH", _unit addEventHandler ["Fired", {
 		_u = _this select 0;                 // unit that fired
 		_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
-	}];
+	}], false];
 };
 
 _unit setVariable ["OriginalMarkerColor", _color, false];
@@ -212,6 +213,7 @@ if !(isNil "PerformanceAudit_Record") then {
 if (_unit isKindOf "Tank" || _unit isKindOf "Car" || _unit isKindOf "Air") then {
 	if (isNil {_unit getVariable "WFBE_MissileTerrainMaskingEH_Added"}) then { // the WFBE_MissileTerrainMaskingEH_Added is just to make sure the eventhandler has not been added already to this unit, in order to prevent creating multiple useless eventhandler (but its more a security than a necessity actually...
 		_unit setVariable ["WFBE_MissileTerrainMaskingEH_Added", true, false];
-		_unit addEventHandler ['Fired', {_this Spawn HandleShootMissiles;}];
+		// Marty: Store the EH handle so the consolidated marker loop can remove it on death (EH hygiene).
+		_unit setVariable ["WFBE_MissileTerrainMaskingEH", _unit addEventHandler ['Fired', {_this Spawn HandleShootMissiles;}], false];
 	};
 };
