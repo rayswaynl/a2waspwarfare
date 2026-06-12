@@ -9573,6 +9573,10 @@
     <Key ID="STR_WF_TOOLTIP_MainMenu_VotingPage">
       <English>Open the voting menu (skip night, surrender, weather, restart, commander).</English>
     </Key>
+    <!-- Marty 2026-06-12: "More votes..." button inside WFBE_VoteMenu (idd 500000) -->
+    <Key ID="STR_WF_VOTING_MoreVotes">
+      <English>More votes...</English>
+    </Key>
     <Key ID="STR_WF_VOTE_Title">
       <English>Community Vote</English>
     </Key>

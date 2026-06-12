@@ -56,8 +56,16 @@ _gear = _oldUnit call (compile preprocessFile "WASP\actions\SkinSelector\SkinSel
 _wasLeader = (leader _grp == _oldUnit);
 
 //--- Create new unit in the same group at the same position.
+diag_log format ["[WFBE (SKIN)] SkinSelector_Apply: attempting createUnit '%1' in grp %2 at %3", _chosenClass, _grp, _pos];
 _newUnit = _grp createUnit [_chosenClass, _pos, [], 0, "NONE"];
 
+//--- A2 OA: array-form createUnit may return nil (not objNull) unlike A3.
+//--- isNull on a nil variable THROWS in A2 (nil-comparison trap), killing the script
+//--- before selectPlayer — unit may be orphaned at player's feet. Guard nil first.
+if (isNil "_newUnit") exitWith {
+	diag_log format ["[WFBE (SKIN)] createUnit returned NIL for '%1' (A2 nil return) - swap aborted", _chosenClass];
+	hint "Skin swap failed (unit creation returned nil). Please try again.";
+};
 //--- Guard: createUnit can fail (group/unit caps) and return objNull.
 //--- selectPlayer objNull would permanently softlock this client — abort cleanly instead.
 if (isNull _newUnit) exitWith {
@@ -82,6 +90,7 @@ _newUnit setVariable ["lastActionTime", time];
 _newUnit setVariable ["lastPosition",   getPosATL _newUnit];
 
 //--- Switch player.
+diag_log format ["[WFBE (SKIN)] SkinSelector_Apply: selectPlayer -> '%1' at %2", _chosenClass, _pos];
 selectPlayer _newUnit;
 
 //--- Restore group leadership.

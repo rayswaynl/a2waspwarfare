@@ -48,6 +48,26 @@ for '_i' from 0 to count(_groups)-1 do {
 	//--- town AI may be created on an HC while the activation scan that must ignore these runs
 	//--- on the server, so a local-only tag would be invisible where it matters.
 	{if (!isNull _x) then {_x setVariable ["WFBE_IsTownDefenderAI", true, true]}} forEach (_units + _crews + _vehicles);
+
+	//--- Item 1: Airfield garrison tracking. Tag units spawned for PMCAirfield-type towns so they
+	//--- can be bulk-deleted on capture (server_town.sqf cleanup-airfield-garrison path).
+	//--- The per-location array is maintained server-local; non-server machines tag individually.
+	if ((_town getVariable ["wfbe_town_type", ""]) == "PMCAirfield") then {
+		Private "_garUnit";
+		{
+			_garUnit = _x;
+			if (!isNull _garUnit) then {
+				_garUnit setVariable ["wfbe_airfield_garrison", true, false];
+			};
+		} forEach (_units + _crews + _vehicles);
+		if (isServer) then {
+			Private "_garArr";
+			_garArr = _town getVariable "wfbe_airfield_garrison_units";
+			if (isNil "_garArr") then {_garArr = []};
+			_town setVariable ["wfbe_airfield_garrison_units", _garArr + _units + _crews + _vehicles, false];
+		};
+	};
+
 	_built = _built + count _units;
 	_builtveh = _builtveh + (count _vehicles);
 

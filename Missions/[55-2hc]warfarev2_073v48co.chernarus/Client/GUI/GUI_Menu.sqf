@@ -196,12 +196,8 @@ while {alive player && dialog} do {
 		createDialog "RscMenu_Service";
 	};
 
-	//--- Voting Page (multi-type vote menu).
-	if (MenuAction == 20) exitWith {
-		MenuAction = -1;
-		closeDialog 0;
-		createDialog "WFBE_VotingMenu";
-	};
+	//--- MenuAction 20 (Voting Page footer shortcut) removed 2026-06-12 — entry point moved to
+	//---   "More votes..." button (WFBE_MenuAction 2) inside WFBE_VoteMenu (idd 500000).
 
 	//--- Command Deck: Skin Selector (re-open from WF menu footer).
 	if (MenuAction == 21) exitWith {

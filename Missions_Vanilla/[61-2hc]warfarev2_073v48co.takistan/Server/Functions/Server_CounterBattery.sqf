@@ -1,5 +1,8 @@
 /* Server_CounterBattery.sqf — WFBE_SE_FNC_CounterBatteryCheck
    Checks whether any CBR on the opposing side detects a given artillery firing.
+   Also increments the enemy-fire-mission counter on the FIRING side's opposing logic
+   (wfbe_aicom_enemy_arty_fire_count) so the AI commander's threat gate can arm itself
+   when >= 3 enemy fire missions are observed (condition b of the CBR reactive spec).
 
    Locality note (documented from code-reading):
      Common_FireArtillery.sqf is called via Spawn, and the Fired EH it installs fires
@@ -18,7 +21,7 @@
 */
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) == 0) exitWith {};
 
-Private ["_unit","_fpos","_firingSide","_opposingSideKey","_cbrs","_i","_cbr","_r","_upgs","_lvl","_lastPing","_d","_t","_h","_tStr","_markerPos","_pkt","_aliveCbrs"];
+Private ["_unit","_fpos","_firingSide","_opposingSideKey","_cbrs","_i","_cbr","_r","_upgs","_lvl","_lastPing","_d","_t","_h","_tStr","_markerPos","_pkt","_aliveCbrs","_opposingLogik","_fireMissCount"];
 
 _unit  = _this select 0;
 _fpos  = _this select 1;
@@ -27,6 +30,20 @@ _firingSide = side _unit;
 //--- Rate-limit: skip if this unit fired a CBR ping within the last 10 s (server-side variable).
 _lastPing = _unit getVariable ["wfbe_cbr_lastping", -99];
 if ((time - _lastPing) < 10) exitWith {};
+
+//--- Condition (b): count enemy fire missions observed by the opposing side's AI logic.
+//--- The OPPOSING side is the one whose AI threat flag we want to arm (they are under fire).
+_opposingLogik = (if (_firingSide == west) then {east} else {west}) Call WFBE_CO_FNC_GetSideLogic;
+if (!isNil "_opposingLogik") then {
+	_fireMissCount = _opposingLogik getVariable ["wfbe_aicom_enemy_arty_fire_count", 0] + 1;
+	_opposingLogik setVariable ["wfbe_aicom_enemy_arty_fire_count", _fireMissCount];
+	//--- Arm threat flag when >= 3 fire missions observed (condition b).
+	if (_fireMissCount >= 3 && {!(_opposingLogik getVariable ["wfbe_aicom_arty_threat", false])}) then {
+		_opposingLogik setVariable ["wfbe_aicom_arty_threat", true];
+		["INFORMATION", Format ["Server_CounterBattery.sqf: [%1] wfbe_aicom_arty_threat ARMED (cond-b: %2 enemy fire missions observed).", str (if (_firingSide == west) then {east} else {west}), _fireMissCount]] Call WFBE_CO_FNC_LogContent;
+		diag_log ("AICOMSTAT|v1|EVENT|" + (str (if (_firingSide == west) then {east} else {west})) + "|" + str (round (time / 60)) + "|ARTY_THREAT_ARMED|cond-b|count=" + str _fireMissCount);
+	};
+};
 
 //--- Determine the detecting side's CBR registry.
 _opposingSideKey = if (_firingSide == west) then {"WFBE_CBR_EAST"} else {"WFBE_CBR_WEST"};

@@ -254,6 +254,17 @@ class WFBE_VoteMenu {
 			style = ST_RIGHT;
 			text = $STR_WF_VOTING_TimeLeft;
 		};
+		//--- Marty 2026-06-12: "More votes..." entry — opens the extended voting page (idd 25000).
+		class CA_MoreVotes_Button : RscButton_Main {
+			idc = 500104;
+			x = 0.273 + 0.35;
+			y = 0.134 + 0.762;
+			w = 0.13;
+			h = 0.037;
+			text = $STR_WF_VOTING_MoreVotes;
+			sizeEx = 0.022;
+			action = "WFBE_MenuAction = 2";
+		};
 	};
 };
 
@@ -1373,18 +1384,8 @@ class WF_Menu {
 			action = "MenuAction = 19";
 			tooltip = "Enable GPS / Mini Map";
 		};
-		//--- Marty: Voting page shortcut in footer strip.
-		class CA_Vote_Button : RscButton_Main {
-			idc = 11020;
-			x = 0.502;
-			y = 0.767144;
-			w = 0.057;
-			h = 0.045;
-			text = $STR_WF_MAIN_VotingPageMenu;
-			sizeEx = 0.022;
-			action = "MenuAction = 20";
-			tooltip = $STR_WF_TOOLTIP_MainMenu_VotingPage;
-		};
+		//--- Marty 2026-06-12: CA_Vote_Button (idc 11020 / MenuAction 20) removed — entry point
+		//---   moved inside WFBE_VoteMenu (idd 500000) as "More votes..." (idc 500104).
 		//--- Command Deck: Skin Selector shortcut in footer strip.
 		class CA_Skin_Button : RscButton_Main {
 			idc = 11021;

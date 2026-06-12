@@ -84,6 +84,7 @@ if (_upgrade_id == WFBE_UP_ARTYAMMO) then {
 
 [_side, "NewIntelAvailable"] Spawn SideMessage;
 // [_side, "LocalizeMessage", ['UpgradeComplete', _upgrade_id, _upgrade_level + 1]] Call WFBE_CO_FNC_SendToClients;
-[_side, "HandleSpecial", ['upgrade-complete', _upgrade_id, _upgrade_level + 1]] Call WFBE_CO_FNC_SendToClients;
+//--- Pass _upgrade_isplayer so clients can suppress sound/banner on AI-commander upgrades.
+[_side, "HandleSpecial", ['upgrade-complete', _upgrade_id, _upgrade_level + 1, _upgrade_isplayer]] Call WFBE_CO_FNC_SendToClients;
 
 //todo log.

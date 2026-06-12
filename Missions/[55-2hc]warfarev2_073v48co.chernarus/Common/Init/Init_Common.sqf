@@ -384,7 +384,12 @@ missionNamespace setVariable ["WFBE_REPAIRTRUCKS", _repairs];
 if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0) then {
 	WFBE_AIRFIELD_UNITS = if (IS_chernarus_map_dependent) then {
 		//--- L-39C removed (Balota-only via special); Mi-171Sh rocket gunship added for early-game support.
-		["An2_TK_EP1","Mi17_Ins","Mi171Sh_rockets_CZ_EP1"]
+		//--- Amendment 2026-06-12: light jets added — Su25_Ins (EAST, gun+S-5 default) and L159_ACR (WEST,
+		//---   Hydra/Maverick default) — priced between Mi-171Sh (24000) and cheapest factory jet.
+		//---   Cross-faction listing is intentional (soft-faction-walls precedent).
+		//---   NOTE: Su25_Ins also appears in Core_INS factory; L159_ACR also in Core_USMC AF3.
+		//---   Owner: confirm whether to remove from those configs to enforce airfield-exclusivity.
+		["An2_TK_EP1","Mi17_Ins","Mi171Sh_rockets_CZ_EP1","Su25_Ins","L159_ACR"]
 	} else {
 		//--- Takistan generic list: L-39C not present here; leave as-is.
 		["An2_TK_EP1","Mi17_TK_EP1"]

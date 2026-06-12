@@ -12,6 +12,40 @@ switch (_request) do {
 	case "new-commander-assigned": {_args spawn WFBE_CL_FNC_Commander_Assigned};
 	// Marty: Run delegated town AI cleanup on the machine that owns the local groups.
 	case "cleanup-townai": {_args spawn WFBE_CL_FNC_CleanupDelegatedTownAI};
+	// Item 1: Delete airfield garrison units that are local to this machine.
+	// Each machine (server, client, HC) deletes its own locally-owned garrison units.
+	case "cleanup-airfield-garrison": {
+		Private ["_garLoc","_garUnits","_garUnit"];
+		_garLoc = _args select 0;
+		if (isNull _garLoc) exitWith {};
+		//--- Primary: use the server-maintained array if available.
+		_garUnits = _garLoc getVariable "wfbe_airfield_garrison_units";
+		if (isNil "_garUnits") then {_garUnits = []};
+		{
+			_garUnit = _x;
+			if !(isNull _garUnit) then {
+				if (alive _garUnit && local _garUnit) then {deleteVehicle _garUnit};
+			};
+		} forEach _garUnits;
+		//--- Fallback: scan local AI units for the wfbe_airfield_garrison tag (covers HC-delegated units
+		//--- created locally but not in the server array). allUnits = men only; vehicles is separate.
+		{
+			_garUnit = _x;
+			if (local _garUnit && alive _garUnit && !isPlayer _garUnit) then {
+				if (_garUnit getVariable ["wfbe_airfield_garrison", false]) then {
+					deleteVehicle _garUnit;
+				};
+			};
+		} forEach allUnits;
+		{
+			_garUnit = _x;
+			if (local _garUnit && alive _garUnit) then {
+				if (_garUnit getVariable ["wfbe_airfield_garrison", false]) then {
+					deleteVehicle _garUnit;
+				};
+			};
+		} forEach vehicles;
+	};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
 	case "delegate-aicom-team": {_args spawn WFBE_CO_FNC_RunCommanderTeam};

@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored"];
+Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly"];
 
 for "_j" from 0 to ((count towns) - 1) step 1 do
 {
@@ -74,6 +74,21 @@ while {!WFBE_GameOver} do {
 					};
 				} forEach _detected;
 
+				//--- FINAL spec: for owned (non-resistance) towns, friendly passers-by must NOT trigger
+				//--- activation — only units whose side is genuinely hostile to the owner count.
+				//--- Resistance/neutral towns keep current behaviour (any non-friendly wakes them).
+				if (_sideID != WFBE_C_GUER_ID && _sideID != WFBE_C_UNKNOWN_ID) then {
+					//--- Build the set of sides that are enemies of the owning side.
+					//--- Mirrors Common_GetAreaEnemiesCount.sqf: enemies = all sides minus owner minus ignored.
+					_hostileSides = [west, east, resistance] - [_side];
+					_detectedEnemyOnly = [];
+					{
+						if ((side _x) in _hostileSides) then {
+							_detectedEnemyOnly = _detectedEnemyOnly + [_x];
+						};
+					} forEach _detectedFiltered;
+					_detectedFiltered = _detectedEnemyOnly;
+				};
 				_enemies = [_detectedFiltered, _side] Call WFBE_CO_FNC_GetAreaEnemiesCount;
 				if (!isNil "PerformanceAudit_Record") then {
 					if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {

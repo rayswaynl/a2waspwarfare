@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -63,17 +63,15 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 			["INFORMATION", Format ["AI_Commander.sqf: [%1] experital scaffold: Convoys (PATROLS lvl 4) appended to research program.", str _side]] Call WFBE_CO_FNC_AICOMLog;
 			diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|0|SCAFFOLD_RESEARCH|Convoys-PATROLS4");
 		};
-		if (!isNil "WFBE_UP_CBRADAR" && {count _upgLvls > WFBE_UP_CBRADAR}) then {
-			_order = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], []];
-			missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _order + [[WFBE_UP_CBRADAR,1],[WFBE_UP_CBRADAR,2]]];
-			["INFORMATION", Format ["AI_Commander.sqf: [%1] experital scaffold: CBRadar lvl 1-2 appended to research program (after factory-3 stage).", str _side]] Call WFBE_CO_FNC_AICOMLog;
-			diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|0|SCAFFOLD_RESEARCH|CBRadar-1-2");
-		};
+		//--- CBR research is NOT appended here unconditionally.
+		//--- It is appended reactively in the main loop when wfbe_aicom_arty_threat is set.
+		//--- (WFBE_UP_CBRADAR guard kept so the flag is checked only when CBR exists in upgrades.)
 	};
 };
 
 _ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301;
 _prevHuman = false; _prevState = "";
+_cbrResearchAppended = false; //--- Tracks whether CBR research was reactively appended this round.
 
 ["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1.", str _side]] Call WFBE_CO_FNC_AICOMLog;
 
@@ -138,6 +136,20 @@ while {!gameOver} do {
 			};
 			if (time - _ltProd > (missionNamespace getVariable "WFBE_C_AI_COMMANDER_PRODUCE_INTERVAL")) then {
 				(_side) Call WFBE_SE_FNC_AI_Com_Produce; _ltProd = time;
+			};
+
+			//--- Reactive CBR research: append [WFBE_UP_CBRADAR,1/2] to the AI upgrade program
+			//--- once, the first tick after wfbe_aicom_arty_threat is set.  No-op if the constant
+			//--- or the upgrades-levels array doesn't include CBR (vanilla / non-experital builds).
+			if (!_cbrResearchAppended && {!isNil "WFBE_UP_CBRADAR"} && {_logik getVariable ["wfbe_aicom_arty_threat", false]}) then {
+				_upgLvls = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_LEVELS", str _side], []];
+				if (count _upgLvls > WFBE_UP_CBRADAR) then {
+					_order = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], []];
+					missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _order + [[WFBE_UP_CBRADAR,1],[WFBE_UP_CBRADAR,2]]];
+					_cbrResearchAppended = true;
+					["INFORMATION", Format ["AI_Commander.sqf: [%1] CBRadar research (lvl 1-2) appended to program - arty threat confirmed at %2 min.", str _side, round (time / 60)]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|SCAFFOLD_RESEARCH_REACTIVE|CBRadar-1-2");
+				};
 			};
 		};
 	} else {

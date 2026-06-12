@@ -238,30 +238,112 @@ while {!WFBE_GameOver} do {
 				};
 			};
 
-			//--- Check if the side is enabled in town and add defenses if needed.
-			_side_enabled = false;
+			//--- FINAL spec (2026-06-12): lazy garrison on capture.
+			//--- Resistance / neutral towns keep the existing defender path; owned (west/east) towns use the new lazy path.
 			if (_newSide == WFBE_DEFENDER) then {
-				if (_town_defender_enabled) then {_side_enabled = true};
+				//--- Resistance recapture: keep existing defender setup unchanged.
+				if (_town_defender_enabled) then {
+					[_location, _newSide, _sideID, _newSID] spawn {
+						Private ["_loc","_side","_oldSID","_newSIDAtCapture"];
+						_loc             = _this select 0;
+						_side            = _this select 1;
+						_oldSID          = _this select 2;
+						_newSIDAtCapture = _this select 3;
+						sleep (missionNamespace getVariable ["WFBE_C_TOWNS_DEFENSE_SPAWN_DELAY", 300]);
+						if ((_loc getVariable ["sideID", -1]) != _newSIDAtCapture) exitWith {};
+						[_loc, _side, _oldSID] Call WFBE_SE_FNC_ManageTownDefenses;
+						if (missionNamespace getVariable ["WFBE_C_TOWNS_GUNNERS_ON_CAPTURE", true]) then {
+							[_loc, _side, "spawn"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
+						};
+					};
+				};
 			} else {
-				if (_town_occupation_enabled) then {_side_enabled = true};
-			};
+				//--- Owned (west/east) town: lazy garrison per FINAL spec.
+				//--- Step 2: T+60s spawn exactly 1 owner-side infantry squad as mop-up detail.
+				//--- Step 3: Squad auto-despawns when no GUER/resistance detected for 2 consecutive 30s scans.
+				//--- Step 4: Full defenses spawn only when ENEMY enters radius (handled in server_town_ai.sqf).
+				if (_town_occupation_enabled) then {
+					[_location, _newSide, _newSID] spawn {
+						Private ["_loc","_side","_newSIDAtCapture","_squadGrp","_squadUnits","_squadVehicles",
+						         "_clearCount","_detected","_squadTeam","_upgLvl","_tplName","_spawnPos",
+						         "_retVal","_scanActive","_townRange","_guerCount"];
+						_loc             = _this select 0;
+						_side            = _this select 1;
+						_newSIDAtCapture = _this select 2;
 
-			//--- Task 32: spawn new owner's defenses after WFBE_C_TOWNS_DEFENSE_SPAWN_DELAY.
-			//--- Fire-time guard: only spawn if the town is still owned by the new side.
-			if (_side_enabled) then {
-				[_location, _newSide, _sideID, _newSID] spawn {
-					Private ["_loc","_side","_oldSID","_newSIDAtCapture","_side_enabled2"];
-					_loc             = _this select 0;
-					_side            = _this select 1;
-					_oldSID          = _this select 2;
-					_newSIDAtCapture = _this select 3;
-					sleep (missionNamespace getVariable ["WFBE_C_TOWNS_DEFENSE_SPAWN_DELAY", 300]);
-					//--- Abort if the town no longer belongs to the new owner.
-					if ((_loc getVariable ["sideID", -1]) != _newSIDAtCapture) exitWith {};
-					[_loc, _side, _oldSID] Call WFBE_SE_FNC_ManageTownDefenses;
-					//--- Man the statics immediately after the delayed spawn (mirrors Task 19 logic).
-					if (missionNamespace getVariable ["WFBE_C_TOWNS_GUNNERS_ON_CAPTURE", true]) then {
-						[_loc, _side, "spawn"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
+						//--- Wait 60 s; abort if the town flipped again before the timer fires.
+						sleep 60;
+						if ((_loc getVariable ["sideID", -1]) != _newSIDAtCapture) exitWith {
+							["INFORMATION", Format ["server_town.sqf: mop-up squad cancelled (town %1 flipped before T+60).", _loc getVariable ["name","unknown"]]] Call WFBE_CO_FNC_LogContent;
+						};
+
+						//--- Pick the smallest infantry template for the owning side (Squad at current barracks level).
+						_upgLvl  = ((_side) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_BARRACKS;
+						_tplName = Format ["Squad_%1", _upgLvl];
+
+						//--- Spawn position near town centre.
+						_spawnPos = [getPos _loc, 50, 200] call WFBE_CO_FNC_GetRandomPosition;
+						_spawnPos = [_spawnPos, 50] call WFBE_CO_FNC_GetEmptyPosition;
+
+						_squadTeam = [_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup;
+						_retVal    = [_tplName, _spawnPos, _side, true, _squadTeam, true, 90] call WFBE_CO_FNC_CreateTeam;
+						_squadUnits    = _retVal select 0;
+						_squadVehicles = _retVal select 1;
+						_squadGrp      = _retVal select 2;
+
+						if (isNull _squadGrp || {(count _squadUnits + count _squadVehicles) == 0}) exitWith {
+							["INFORMATION", Format ["server_town.sqf: mop-up squad for %1 (%2) failed to create — template %3 unavailable.", _loc getVariable ["name","unknown"], _side, _tplName]] Call WFBE_CO_FNC_LogContent;
+						};
+
+						//--- Tag squad units as town defender AI so they don't re-trigger activation scans.
+						{if (!isNull _x) then {_x setVariable ["WFBE_IsTownDefenderAI", true, true]}} forEach (_squadUnits + _squadVehicles);
+						_squadGrp allowFleeing 0;
+
+						//--- Store reference on location so deactivation cleanup can hard-despawn it.
+						_loc setVariable ["wfbe_mopup_group", _squadGrp, false];
+						_loc setVariable ["wfbe_mopup_units", _squadUnits + _squadVehicles, false];
+
+						["INFORMATION", Format ["server_town.sqf: mop-up squad spawned for %1 (side %2, template %3, %4 units).", _loc getVariable ["name","unknown"], _side, _tplName, count _squadUnits]] Call WFBE_CO_FNC_LogContent;
+
+						//--- Scan loop: despawn when no GUER/resistance detected for 2 consecutive 30s checks.
+						_clearCount  = 0;
+						_scanActive  = true;
+						//--- Use the town activation detection range (600m base) for the straggler scan.
+						_townRange   = 600 * (missionNamespace getVariable ["WFBE_C_TOWNS_DETECTION_RANGE_COEF", 1]);
+
+						while {_scanActive && !isNull _squadGrp && {count (units _squadGrp) > 0}} do {
+							sleep 30;
+
+							//--- Hard-despawn if town deactivated or flipped.
+							if (!(_loc getVariable ["wfbe_active", false]) && !(_loc getVariable ["wfbe_active_air", false]) && _clearCount > 0) then {
+								_scanActive = false;
+							};
+							if ((_loc getVariable ["sideID", -1]) != _newSIDAtCapture) then {_scanActive = false};
+
+							if (_scanActive) then {
+								_detected = (_loc nearEntities [["Man"], _townRange]) unitsBelowHeight 20;
+								_guerCount = 0;
+								{if (side _x == resistance) then {_guerCount = _guerCount + 1}} forEach _detected;
+
+								if (_guerCount == 0) then {
+									_clearCount = _clearCount + 1;
+								} else {
+									_clearCount = 0;
+								};
+
+								if (_clearCount >= 2) then {_scanActive = false};
+							};
+						};
+
+						//--- Despawn the mop-up squad.
+						if !(isNull _squadGrp) then {
+							{if (!isNull _x && alive _x) then {deleteVehicle _x}} forEach (units _squadGrp);
+							{if (!isNull _x && alive _x) then {deleteVehicle _x}} forEach _squadVehicles;
+							if !(isNull _squadGrp) then {deleteGroup _squadGrp};
+						};
+						_loc setVariable ["wfbe_mopup_group", grpNull, false];
+						_loc setVariable ["wfbe_mopup_units", [], false];
+						["INFORMATION", Format ["server_town.sqf: mop-up squad stood down for %1 (no GUER detected).", _loc getVariable ["name","unknown"]]] Call WFBE_CO_FNC_LogContent;
 					};
 				};
 			};
@@ -270,7 +352,33 @@ while {!WFBE_GameOver} do {
 			//--- Task 13: Airfield built-in Counter Battery Radar (2000 m, follows owner).
 			if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && (_location getVariable ["wfbe_is_airfield", false])) then {
 				Private ["_airfieldLogic","_newHangar","_oldHangar","_oldSP","_logik","_sp","_spClass","_spPos",
-				         "_oldRadar","_oldDressing","_radarClass","_radarPos","_radar","_cbrKey","_cbrReg","_dressTpl"];
+				         "_oldRadar","_oldDressing","_radarClass","_radarPos","_radar","_cbrKey","_cbrReg","_dressTpl",
+				         "_oldGarrison","_garUnit"];
+
+				//--- ITEM 1: Airfield garrison despawn on capture.
+				//--- Delete all surviving units/vehicles tagged wfbe_airfield_garrison = true by server_town_ai.sqf.
+				//--- Units spawned on HCs are not local here; broadcast cleanup-townai to all machines so each
+				//--- deletes its own local garrison units (mirrors existing deactivation cleanup pattern).
+				_oldGarrison = _location getVariable "wfbe_airfield_garrison_units";
+				if !(isNil "_oldGarrison") then {
+					{
+						_garUnit = _x;
+						if !(isNull _garUnit) then {
+							if (alive _garUnit) then {
+								if (local _garUnit) then {
+									deleteVehicle _garUnit;
+								};
+								//--- Non-local units are cleaned up by the broadcast below.
+							};
+						};
+					} forEach _oldGarrison;
+					_location setVariable ["wfbe_airfield_garrison_units", [], false];
+				};
+				//--- Broadcast to clients/HCs so they delete any garrison units local to them.
+				if (isMultiplayer) then {
+					[nil, "HandleSpecial", ["cleanup-airfield-garrison", _location]] Call WFBE_CO_FNC_SendToClients;
+				};
+				["INFORMATION", Format ["server_town.sqf: airfield garrison despawned on capture of %1 by %2.", _location getVariable ["name","unknown"], _newSide]] Call WFBE_CO_FNC_LogContent;
 
 				//--- Determine side-specific ServicePoint classname (Chernarus variants).
 				_spClass = switch (_newSide) do {

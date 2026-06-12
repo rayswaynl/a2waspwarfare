@@ -9,9 +9,16 @@
 	Last-purchase tracking: GUI_Menu_BuyUnits.sqf stamps WFBE_QOL_LAST_PURCHASE_TIME = time
 	on each purchase.  This script reads that variable.
 
+	Also shows a once-per-session nudge to the side commander when:
+	  - player IS the side commander (commanderTeam == group player)
+	  - side owns >= 3 towns
+	  - Patrols upgrade is unresearched (wfbe_upgrades index WFBE_UP_PATROLS == 0)
+	  - round time > 15 min
+	(WILDCARD V2 RECONCILIATION: owner-approved commander Patrols nudge)
+
 	Spawned from Init_Client.sqf after commonInitComplete.
 */
-Private ["_interval","_threshold","_lastBuy","_funds","_unitData","_price","_nudgeText","_elapsed"];
+Private ["_interval","_threshold","_lastBuy","_funds","_unitData","_price","_nudgeText","_elapsed","_patrolNudgeDone","_upgrades","_townsHeld","_patrolLvl"];
 
 //--- Master toggle.
 if ((missionNamespace getVariable ["WFBE_C_QOL_TRIO", 1]) < 1) exitWith {};
@@ -42,6 +49,9 @@ if (isNil "WFBE_QOL_LAST_PURCHASE_TIME") then {
 	WFBE_QOL_LAST_PURCHASE_TIME = time;
 };
 
+//--- Commander Patrols nudge: once per session.
+_patrolNudgeDone = false;
+
 while {!gameOver} do {
 	sleep _interval;
 
@@ -61,6 +71,23 @@ while {!gameOver} do {
 			if (_funds >= _threshold) then {
 				_nudgeText = Format ["You have $%1 unspent - visit a factory or the gear menu.", _funds];
 				hintSilent _nudgeText;
+			};
+		};
+
+		//--- Commander Patrols nudge (once per session, separate flag).
+		//--- Gates: player IS commander + side owns 3+ towns + Patrols unresearched + round > 15 min.
+		if (!_patrolNudgeDone && {!isNull commanderTeam} && {commanderTeam == group player} && {time > 900}) then {
+			_townsHeld = sideJoined Call GetTownsHeld;
+			if (_townsHeld >= 3) then {
+				_upgrades = sideJoined Call WFBE_CO_FNC_GetSideUpgrades;
+				_patrolLvl = 0;
+				if (!isNil "_upgrades" && {count _upgrades > WFBE_UP_PATROLS}) then {
+					_patrolLvl = _upgrades select WFBE_UP_PATROLS;
+				};
+				if (_patrolLvl == 0) then {
+					hintSilent "Commander tip: you hold 3+ towns - research Patrols (upgrade menu) to push the frontline automatically.";
+					_patrolNudgeDone = true;
+				};
 			};
 		};
 	};

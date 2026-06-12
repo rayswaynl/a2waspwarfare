@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve"];
 
 _side = _this;
 _sideText = str _side;
@@ -92,11 +92,48 @@ if (_coreDone) then {
 //--- The EXACT type-name strings come from Structures_CO_RU/W.sqf in the experital branch:
 //---   CBR  -> "CBRadar"   (WFBE_C_STRUCTURES_COUNTERBATTERY guard in experital)
 //---   Bank -> "Bank"      (WFBE_C_ECONOMY_BANK guard in experital)
+//---
+//--- CBR REACTIVE gate (AI scaffold only — human commanders are unaffected):
+//--- CBRadar only enters the build order when an artillery THREAT is confirmed.
+//--- Threat state is armed by Server_CounterBattery.sqf (fired-EH blip path, condition b),
+//--- RequestOnUnitKilled.sqf (killed-by-arty check, condition a), and the enemy-arty-exists
+//--- scan below (condition c).  All three write wfbe_aicom_arty_threat = true on the
+//--- side logic.  Additional gates: round time > 45 min AND supply >= CBR cost + reserve.
 _scaffoldActivated = false;
 _cbrIdx = _names find "CBRadar";
 if (_cbrIdx >= 0) then {
-	_order = _order + ["CBRadar"];
-	_scaffoldActivated = true;
+	//--- Read or compute the threat flag.
+	_artyThreat = _logik getVariable ["wfbe_aicom_arty_threat", false];
+
+	//--- Condition (c): enemy has built an artillery piece AND round > 60 min.
+	//--- Cheap scan: WFBE_CommanderArtillery is set globally (true,true) on construction.
+	//--- Only evaluate if threat not yet confirmed (skip scan when already armed).
+	if (!_artyThreat && {time > 3600}) then {
+		_enemySide = if (_side == west) then {east} else {west};
+		_enemySideText = str _enemySide;
+		{
+			if (!_artyThreat) then {
+				if ((_x getVariable ["WFBE_CommanderArtillery", false]) &&
+				    {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _enemySideText} &&
+				    {alive _x}) then {
+					_artyThreat = true;
+					_logik setVariable ["wfbe_aicom_arty_threat", true];
+					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] wfbe_aicom_arty_threat ARMED (cond-c: enemy arty piece exists at %2 min).", _sideText, round (time / 60)]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ARTY_THREAT_ARMED|cond-c");
+				};
+			};
+		} forEach (nearestObjects [getPos (_side Call WFBE_CO_FNC_GetSideHQ), ["StaticWeapon","Tank","Car"], 10000]);
+	};
+
+	//--- CBR enters the build order only when: threat confirmed + round > 45 min + supply OK.
+	if (_artyThreat && {time > 2700}) then {
+		_cbrCost    = _costs select _cbrIdx;
+		_cbrReserve = 3000; //--- Minimum reserve: keeps team-founding supply free.
+		if (_supply >= _cbrCost + _cbrReserve) then {
+			_order = _order + ["CBRadar"];
+			_scaffoldActivated = true;
+		};
+	};
 };
 _bankIdx = _names find "Bank";
 if (_bankIdx >= 0) then {
@@ -108,8 +145,9 @@ if (_bankIdx >= 0) then {
 	};
 };
 if (_scaffoldActivated) then {
-	["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] experital build scaffold ACTIVE (CBR=%2 Bank=%3 in order).", _sideText, (_cbrIdx >= 0), (_bankIdx >= 0)]] Call WFBE_CO_FNC_AICOMLog;
-	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SCAFFOLD_BUILD|CBR=" + str (_cbrIdx >= 0) + " Bank=" + str (_bankIdx >= 0));
+	_artyThreat = _logik getVariable ["wfbe_aicom_arty_threat", false];
+	["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] experital build scaffold ACTIVE (CBR-in-order=%2 threat=%3 Bank=%4).", _sideText, ("CBRadar" in _order), _artyThreat, ("Bank" in _order)]] Call WFBE_CO_FNC_AICOMLog;
+	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SCAFFOLD_BUILD|CBR=" + str ("CBRadar" in _order) + " threat=" + str _artyThreat + " Bank=" + str ("Bank" in _order));
 };
 
 _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;

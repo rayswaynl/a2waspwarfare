@@ -6,7 +6,7 @@
 		- Killed side ID.
 */
 
-Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type"];
+Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount"];
 
 _killed = _this select 0;
 _killer = _this select 1;
@@ -50,6 +50,29 @@ if (_killer_side == sideEnemy) then { //--- Make sure the killer is not renegade
 };
 
 if (_killer_side == civilian) exitWith {}; //--- Side couldn't be determined? exit.
+
+//--- Condition (a): own-side unit killed by enemy artillery.
+//--- Arm wfbe_aicom_arty_threat on the VICTIM side's logic after >= 2 arty kills.
+//--- Nil-guard the killer vehicle: disconnected/deleted killers are nil-prone.
+if (_killer_side != _killed_side) then {
+	_killerVehObj = if (!isNil "_killer") then {vehicle _killer} else {objNull};
+	_isArtyKill = false;
+	if (!isNull _killerVehObj) then {
+		_isArtyKill = ([typeOf _killerVehObj, _killer_side] Call IsArtillery) >= 0;
+	};
+	if (_isArtyKill) then {
+		_victimLogik = _killed_side Call WFBE_CO_FNC_GetSideLogic;
+		if (!isNil "_victimLogik") then {
+			_artyKillCount = _victimLogik getVariable ["wfbe_aicom_arty_kill_count", 0] + 1;
+			_victimLogik setVariable ["wfbe_aicom_arty_kill_count", _artyKillCount];
+			if (_artyKillCount >= 2 && {!(_victimLogik getVariable ["wfbe_aicom_arty_threat", false])}) then {
+				_victimLogik setVariable ["wfbe_aicom_arty_threat", true];
+				["INFORMATION", Format ["RequestOnUnitKilled.sqf: [%1] wfbe_aicom_arty_threat ARMED (cond-a: %2 units killed by enemy arty [%3]).", str _killed_side, _artyKillCount, typeOf _killerVehObj]] Call WFBE_CO_FNC_LogContent;
+				diag_log ("AICOMSTAT|v1|EVENT|" + (str _killed_side) + "|" + str (round (time / 60)) + "|ARTY_THREAT_ARMED|cond-a|count=" + str _artyKillCount);
+			};
+		};
+	};
+};
 
 // Player-stats: record resolved enemy kills after delayed vehicle attribution. No-op unless stats are enabled.
 if (!(isNil "WFBE_C_STATS_ENABLED")) then {
