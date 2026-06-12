@@ -97,6 +97,13 @@ while {!gameOver} do {
 		_bothHuman = false;
 	};
 
+	//--- Owner 2026-06-12: wildcards STICK AROUND even with human commanders on both sides
+	//--- (human sides draw with payout remapping). WFBE_C_WILDCARD_ALWAYS=0 restores the
+	//--- old both-human shutoff if ever needed.
+	if ((missionNamespace getVariable ["WFBE_C_WILDCARD_ALWAYS", 1]) > 0) then {
+		_bothHuman = false;
+	};
+
 	if (_bothHuman) then {
 		["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - both sides human-commanded", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 	} else {
