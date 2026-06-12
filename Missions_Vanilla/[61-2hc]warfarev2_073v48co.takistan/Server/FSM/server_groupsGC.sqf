@@ -31,7 +31,10 @@ while {!WFBE_GameOver} do {
 	if (_zombieTimeout > 0) then {
 		{
 			_grp = _x;
-			_orphanedAt = _grp getVariable ["wfbe_orphaned_at", -1];
+			// A2 OA: the [name, default] form of getVariable is not supported on groups
+			// (objects/namespaces only) - it yields nil and the comparison below throws.
+			_orphanedAt = _grp getVariable "wfbe_orphaned_at";
+			if (isNil "_orphanedAt") then {_orphanedAt = -1};
 			if (_orphanedAt >= 0 && {(time - _orphanedAt) >= _zombieTimeout}) then {
 				// Confirm the team is still unclaimed (wfbe_uid cleared to nil on disconnect).
 				_uidVal = _grp getVariable "wfbe_uid";
