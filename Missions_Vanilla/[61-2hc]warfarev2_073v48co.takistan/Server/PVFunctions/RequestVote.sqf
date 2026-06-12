@@ -152,9 +152,11 @@ if (count _state >= 5) then {
 	_vSide = if (_voteType == "surrender") then {_side} else {objNull};
 
 	//--- Count eligible voters at vote-start time (threshold locked here).
+	//--- Headless clients sit in playable CIV slots and are isPlayer-true; exclude them
+	//--- by requiring side west or east so 2 connected HCs cannot inflate every threshold.
 	_eligible = 0;
 	{
-		if (isPlayer _x && {alive _x}) then {
+		if (isPlayer _x && {alive _x} && {(side _x) in [west, east]}) then {
 			if (_voteType == "surrender") then {
 				if (side _x == _vSide) then {_eligible = _eligible + 1};
 			} else {

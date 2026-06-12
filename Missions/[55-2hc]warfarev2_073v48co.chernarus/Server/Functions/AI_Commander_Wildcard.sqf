@@ -1,79 +1,73 @@
 /*
-	AI Commander Wildcard Events - one free random event per AI-commanded side per interval.
-	feat/ai-commander v0.6.  Server-side; one instance spawned per side from Init_Server.
+	AI Commander Wildcard Events - one free random event per side per interval.
+	feat/ai-commander v2.0 (2026-06-12 final deck rebuild).
+	Server-side; one instance spawned per side from Init_Server.
 	Parameter: _this = side.
 
-	Runs UNATTENDED in AI-vs-AI eval rounds.  Design constraints:
-	  - First event fires after one full interval (not at minute 0).
-	  - One failed event must never kill this loop.  Isolation = the apply body
-	    runs inside [_side] spawn {...} so a runtime error kills only that spawn.
-	  - Re-checks liveness (wfbe_aicom_running) each cycle; a human taking command
-	    suppresses wildcards until the AI is back in full command.
-	  - All external reads use getVariable with defaults so nil never throws.
+	GATE (v2): draws fire as long as AT LEAST ONE side is AI-commanded.
+	  Disabled only when BOTH sides have a human commander.
+	  AI-commanded side: normal draw, AI wallet.
+	  Human-commanded side: draw fires too (PvE spice); human-side payout mapping applies.
 
-	Event pool v2 (six events; W4/W5 omitted from v1 remain omitted - see below):
-	  W1  WAR CHEST        — AI funds += 25% of FUNDS_START (always eligible; fallback).
-	  W2  SUPPLY DROP      — side supply += 1500, capped at WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT.
-	  W3  BONUS PATROL     — one extra patrol at the side's current tier, cap bypass.
-	                         Ineligible when: Patrols upgrade = 0, no owned towns, pool empty.
-	  W4  ARTILLERY VOUCHER— one-shot fire mission at the highest-weight enemy town via the
-	                         base gun machinery (AI_Commander_Strategy section 4).
-	                         Requires WFBE_C_AI_COMMANDER_ARTILLERY > 0 AND a ready base gun;
-	                         falls back to W1 when gated/no gun available.
-	  W5  RECON SWEEP      — bonus scout patrol toward the nearest contested town using the
-	                         existing tier-0 / LIGHT patrol pool; same HC-dispatch path as W3.
-	                         Ineligible when no owned towns, no enemy/neutral towns, pool empty.
-	  W6  DEFENSE DROP     — spawn / refresh one defense slot at the side's weakest owned town
-	                         (lowest supplyValue).  Uses Server_ManageTownDefenses path: calls
-	                         WFBE_SE_FNC_SpawnTownDefense on a defense_logic with an empty slot.
-	                         Ineligible when no owned towns with any wfbe_town_defenses slots.
+	DECK (weights, total=103):
+	  W1  War Chest         (20) Common    — AI funds +25% FUNDS_START.
+	  W2  Supply Drop       (20) Common    — side supply +1500, capped.
+	  W3  Bonus Patrol      (15) Common    — free patrol at current tier, cap bypass.
+	  W6  Fortification Grant(8) Uncommon  — +2 base defenses beyond the 4-cap via AI_Commander_Base placer.
+	  W7  Veteran Company   ( 8) Uncommon  — next founded team uses premium template + skill boost.
+	  W10 Lucky Salvage     ( 8) Uncommon  — one sweep converting wrecks to AI funds (cap ~15000).
+	  W11 Field Hospital    ( 8) Uncommon  — heal all wounded AI infantry + one-shot free re-founding flag.
+	  W12 Spoils of War     ( 6) Uncommon  — 10-min double kill-bounty flag; not stackable.
+	  W4  Airborne Assault  ( 4) Rare      — free max-level paradrop (PARACHUTELEVEL3) on spearhead town.
+	  W8  Motor Pool Delivery(3) Rare      — free crewed top-tier vehicle, registers as AI team.
+	  W9  Uprising          ( 3) Rare      — GUER attack force at enemy-held town nearest the front; cap 1 active.
 
-	W4 RESEARCH SURGE omitted: ProcessUpgrade sleeps the full research timer and sets
-	wfbe_upgrading exclusively - there is no safe instant-complete path without
-	hand-rolling upgrade state mutation.  Flagged as v3.
+	Human-side payout mapping:
+	  W1 -> wfbe_funds on the commander's team (instead of AI wallet).
+	  W7 -> re-draw (N/A for humans).
+	  W3/W4/W8 -> assets join human side under server/HC AI control.
+	  W12 -> doubles normal bounty path (flag consumed by RequestOnUnitKilled).
+	  W9 -> CAN fire against human-commanded sides (pressure, not stat theft).
+	  Draw announced via LocalizeMessage so players see the card.
 
-	W5 GUNSHIP GIFT omitted (v1 tag): no existing produce/team path that avoids new machinery.
+	DE-CORRELATION: per-side jitter sleep (random 30) before each draw AND a
+	second independent random call (random 1) mixed into the roll after the jitter,
+	ensuring side workers diverge even on the same frame.
 
-	WEIGHTED DRAW (v2):
-	  Base weight table: private array of [type, weight] pairs.
-	  Weights are scaled by an ESCALATION BIAS when losing (myTowns < enemyTowns * threshold):
-	  aggressive events (W1 WAR CHEST, W4 ARTILLERY VOUCHER) get their weight multiplied by
-	  WFBE_C_AI_COMMANDER_WILDCARD_ESCALATION_MULT (default 2.0).
-	  Weighted selection = single random roll over cumulative sum (no reject loop needed).
-	  Ineligible events fall back to W1 after the roll.
+	ESCALATION: losing side (>=5 fewer towns than enemy) doubles W4/W7/W8/W9 weights.
+
+	ELIGIBILITY re-draw: up to 3 attempts; fallback W1.
+
+	W12 expiry: flag lives on missionNamespace so it survives isolation-spawn death.
+
+	A2 OA 1.64 compat: private string-array only; no getVariable [name,default] on groups
+	(use plain getVariable then isNil check); no inline private _x=.
 
 	Tunables (missionNamespace getVariable with defaults):
-	  WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL          default 1800  (seconds)
-	  WFBE_C_AI_COMMANDER_WILDCARD                   default 1     (0=disable)
-	  WFBE_C_AI_COMMANDER_WILDCARD_W1_WEIGHT         default 10
-	  WFBE_C_AI_COMMANDER_WILDCARD_W2_WEIGHT         default 10
-	  WFBE_C_AI_COMMANDER_WILDCARD_W3_WEIGHT         default 10
-	  WFBE_C_AI_COMMANDER_WILDCARD_W4_WEIGHT         default 8
-	  WFBE_C_AI_COMMANDER_WILDCARD_W5_WEIGHT         default 7
-	  WFBE_C_AI_COMMANDER_WILDCARD_W6_WEIGHT         default 7
+	  WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL      default 1800
+	  WFBE_C_AI_COMMANDER_WILDCARD               default 1 (0=disable)
 	  WFBE_C_AI_COMMANDER_WILDCARD_ESCALATION_MULT   default 2.0
-	  WFBE_C_AI_COMMANDER_WILDCARD_ESCALATION_RATIO  default 0.75  (myTowns/enemyTowns threshold)
+	  WFBE_C_AI_COMMANDER_WILDCARD_ESCALATION_TOWNS  default 5 (gap threshold)
 */
 
-private ["_side","_logik","_sideID","_interval","_enabled","_humanCmd","_cmdTeam",
-         "_fundsStart","_bonus","_curFunds","_pool","_draw","_eligible",
-         "_upgrades","_lvl","_owned","_hq","_hcs","_live","_tier","_template","_home",
-         "_active","_supply","_maxSupply","_supplyGrant","_detail","_result"];
+private ["_side","_logik","_sideID","_interval","_enabled","_humanCmdWEST","_humanCmdEAST",
+         "_bothHuman","_cmdTeam","_hq","_sideText","_jitter"];
 
 _side    = _this;
 _logik   = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNil "_logik") exitWith {
-	["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - %2", str _side, "side logic is nil at startup"]] Call WFBE_CO_FNC_AICOMLog;
+	["INFORMATION", Format ["AI_Commander_Wildcard.sqf: worker exit for %1 - side logic nil at startup", str _side]] Call WFBE_CO_FNC_AICOMLog;
 };
-_sideID  = (_side) Call WFBE_CO_FNC_GetSideID;
+_sideID   = (_side) Call WFBE_CO_FNC_GetSideID;
+_sideText = str _side;
 
 _interval = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL", 1800];
 _enabled  = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD", 1];
 
-["INITIALIZATION", Format ["AI_Commander_Wildcard.sqf: worker started for %1 (interval=%2s, enabled=%3).", str _side, _interval, _enabled]] Call WFBE_CO_FNC_AICOMLog;
+["INITIALIZATION", Format ["AI_Commander_Wildcard.sqf: worker started for %1 (interval=%2s, enabled=%3).", _sideText, _interval, _enabled]] Call WFBE_CO_FNC_AICOMLog;
 
 if (_enabled == 0) exitWith {
-	["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - %2", str _side, "WFBE_C_AI_COMMANDER_WILDCARD disabled at startup"]] Call WFBE_CO_FNC_AICOMLog;
+	["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - WFBE_C_AI_COMMANDER_WILDCARD disabled", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 };
 
 //--- First event fires after one full interval.
@@ -81,356 +75,614 @@ sleep _interval;
 
 while {!gameOver} do {
 
-	//--- Liveness gate: only fire during full AI command (same gate as economy workers in AI_Commander.sqf).
-	_cmdTeam  = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-	_humanCmd = false;
+	//--- DE-CORRELATION: per-side jitter before computing commander state or rolling.
+	_jitter = random 30;
+	sleep _jitter;
+
+	//--- GATE: disabled only when BOTH sides are human-commanded.
+	_cmdTeam      = (west) Call WFBE_CO_FNC_GetCommanderTeam;
+	_humanCmdWEST = false;
 	if (!isNull _cmdTeam) then {
-		if (isPlayer (leader _cmdTeam)) then {_humanCmd = true};
+		if (isPlayer (leader _cmdTeam)) then {_humanCmdWEST = true};
 	};
+	_cmdTeam      = (east) Call WFBE_CO_FNC_GetCommanderTeam;
+	_humanCmdEAST = false;
+	if (!isNull _cmdTeam) then {
+		if (isPlayer (leader _cmdTeam)) then {_humanCmdEAST = true};
+	};
+	_bothHuman = (_humanCmdWEST && _humanCmdEAST);
 
-	if (_humanCmd) then {
-		["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - %2", str _side, "human commander active on this side"]] Call WFBE_CO_FNC_AICOMLog;
+	if (_bothHuman) then {
+		["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - both sides human-commanded", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 	} else {
+		//--- AI-liveness gate ONLY when this side is AI-commanded.
+		_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
+		_humanCmd = false;
+		if (!isNull _cmdTeam) then {
+			if (isPlayer (leader _cmdTeam)) then {_humanCmd = true};
+		};
+
+		//--- For AI-commanded sides: also require wfbe_aicom_running; HQ alive.
 		_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
-		if (isNull _hq || {!alive _hq}) then {
-			["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - %2", str _side, "HQ null or dead"]] Call WFBE_CO_FNC_AICOMLog;
-		} else {
-			if (!(_logik getVariable ["wfbe_aicom_running", false])) then {
-				["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - %2", str _side, "wfbe_aicom_running is false"]] Call WFBE_CO_FNC_AICOMLog;
-			} else {
+		_skipAI = false;
+		if (!_humanCmd) then {
+			if (isNull _hq || {!alive _hq}) then {
+				["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - HQ null or dead", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+				_skipAI = true;
+			};
+			if (!_skipAI && {!(_logik getVariable ["wfbe_aicom_running", false])}) then {
+				["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - wfbe_aicom_running false", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+				_skipAI = true;
+			};
+		};
 
-				//--- Isolate the draw+apply body: a throw kills only this spawn, not the loop.
-				[_side] spawn {
-					private ["_side","_logik","_sideID","_sideText","_fundsStart","_bonus","_curFunds",
-					         "_upgrades","_lvl","_owned","_hq","_tier","_pool","_template",
-					         "_home","_active","_hcs","_live","_supply","_maxSupply",
-					         "_supplyGrant","_draw","_eligible","_w3Eligible","_w4Eligible",
-					         "_w5Eligible","_w6Eligible","_detail","_result",
-					         "_enemySide","_enemyID","_myTowns","_enemyTowns","_losing",
-					         "_wW1","_wW2","_wW3","_wW4","_wW5","_wW6","_eMult",
-					         "_weights","_cumSum","_roll","_i","_chosen",
-					         "_artyTgt","_targets","_cands","_bestScore","_bestTown","_score","_dNear","_d",
-					         "_pieces","_p","_idx","_maxR","_fired","_sideText",
-					         "_w5Pool","_w5Tier","_contestedTowns","_nearTown","_nearD","_dd",
-					         "_weakTown","_weakSV","_sv","_defSlots","_defLogic","_defSlot",
-					         "_ownNear","_upASel","_cd","_artyEnabled","_freeSlot","_defSpawned"];
+		if (!_skipAI) then {
+			//--- Isolate the draw+apply body so a runtime error kills only this spawn.
+			[_side, _humanCmd] spawn {
+				private ["_side","_logik","_sideID","_sideText","_humanCmd",
+				         "_enemySide","_enemyID","_myTowns","_enemyTowns","_losing",
+				         "_gapThresh","_eMult",
+				         "_humanCmdWEST","_humanCmdEAST",
+				         "_upgrades","_lvl","_owned","_hq","_hqPos",
+				         "_tier","_pool","_w3Eligible",
+				         "_w4Eligible","_w4Units","_w4Model","_w4Cargo",
+				         "_w6Eligible","_defMax","_defCount","_defClass","_defData","_defPrice","_defFunds",
+				         "_w7Eligible",
+				         "_w8Eligible","_w8BestClass","_w8BestPrice","_w8UD",
+				         "_w9Eligible","_guerTemplates","_guerUnits",
+				         "_w10Eligible","_w12Eligible","_w12Key","_w12Exp",
+				         "_wW1","_wW2","_wW3","_wW4","_wW6","_wW7","_wW8","_wW9","_wW10","_wW11","_wW12",
+				         "_weights","_cumSum","_roll","_entropy","_i","_chosen","_draw",
+				         "_eligible","_result","_detail",
+				         "_fundsStart","_bonus","_curFunds",
+				         "_supply","_maxSupply","_supplyGrant",
+				         "_template","_home","_active","_hcs","_live",
+				         "_cands","_bestScore","_bestTown","_score","_dNear","_d","_t4Town",
+				         "_w4LvlText","_destination",
+				         "_facDefs","_facEntry","_facListName","_facList",
+				         "_unitClass","_unitUD","_unitPrice","_unitUpReq",
+				         "_structures","_facObj","_facClass","_facIdx","_facNames","_v","_crew","_grp",
+				         "_wrecks","_wk","_wkUD","_wkCost","_wkTotal","_wkCap",
+				         "_guerTmpl","_guerGrp","_guerUnit","_guerPos","_targetTown",
+				         "_nearTown","_nearD","_dd",
+				         "_skillBoost","_u",
+				         "_hcUnit","_sideIDEnemy",
+				         "_locMsg","_tmpHumanCmdEnemy",
+				         "_cmdTeam","_liveHC",
+				         "_cumSum2","_reDraw","_drawn","_needRedraw","_tmpActiveUpr","_targets",
+				         "_existingTeams","_sideIDLocal","_crew1","_crew2",
+				         "_healed","_humanCmd","_skipAI","_w11Eligible",
+				         "_dAng","_spawnPos","_dp","_placed","_dPos"];
 
-					_side   = _this select 0;
-					_logik  = (_side) Call WFBE_CO_FNC_GetSideLogic;
-					_sideID = (_side) Call WFBE_CO_FNC_GetSideID;
-					_sideText = str _side;
+				_side     = _this select 0;
+				_humanCmd = _this select 1;
+				_logik    = (_side) Call WFBE_CO_FNC_GetSideLogic;
+				_sideID   = (_side) Call WFBE_CO_FNC_GetSideID;
+				_sideText = str _side;
 
-					if (isNil "_logik") exitWith {};
+				if (isNil "_logik") exitWith {};
 
-					//--- ---------------------------------------------------------------
-					//--- WAR STATE: compute town counts for escalation bias.
-					//--- ---------------------------------------------------------------
-					_enemySide = if (_side == west) then {east} else {west};
-					_enemyID   = (_enemySide) Call WFBE_CO_FNC_GetSideID;
-					_myTowns   = 0; _enemyTowns = 0;
-					{
-						if ((_x getVariable ["sideID","?"]) == _sideID)   then {_myTowns   = _myTowns   + 1};
-						if ((_x getVariable ["sideID","?"]) == _enemyID)  then {_enemyTowns = _enemyTowns + 1};
-					} forEach towns;
+				//--- -----------------------------------------------------------------------
+				//--- WAR STATE
+				//--- -----------------------------------------------------------------------
+				_enemySide  = if (_side == west) then {east} else {west};
+				_enemyID    = (_enemySide) Call WFBE_CO_FNC_GetSideID;
+				_myTowns    = 0; _enemyTowns = 0;
+				{
+					if ((_x getVariable ["sideID","?"]) == _sideID)   then {_myTowns   = _myTowns   + 1};
+					if ((_x getVariable ["sideID","?"]) == _enemyID)  then {_enemyTowns = _enemyTowns + 1};
+				} forEach towns;
 
-					//--- Losing = our fraction below threshold (default 0.75).
-					_losing = false;
-					if (_enemyTowns > 0) then {
-						_losing = (_myTowns / (_myTowns + _enemyTowns)) < (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_ESCALATION_RATIO", 0.75]);
+				_gapThresh = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_ESCALATION_TOWNS", 5];
+				_losing    = ((_enemyTowns - _myTowns) >= _gapThresh);
+				_eMult     = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_ESCALATION_MULT", 2.0];
+
+				//--- -----------------------------------------------------------------------
+				//--- COMMON ELIGIBILITY FLAGS
+				//--- -----------------------------------------------------------------------
+				_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
+				_lvl      = 0;
+				if (!isNil "_upgrades" && {count _upgrades > WFBE_UP_PATROLS}) then {_lvl = _upgrades select WFBE_UP_PATROLS};
+
+				_owned = [];
+				{ if ((_x getVariable ["sideID","?"]) == _sideID) then {_owned = _owned + [_x]} } forEach towns;
+				//--- Enemy towns list (used by W4/W9 eligibility and W4/W9 apply).
+				_cands = [];
+				{ if ((_x getVariable ["sideID","?"]) == _enemyID) then {_cands = _cands + [_x]} } forEach towns;
+				_hq    = (_side) Call WFBE_CO_FNC_GetSideHQ;
+
+				_tier = switch (_lvl) do {case 1: {"LIGHT"}; case 2: {"MEDIUM"}; default {"HEAVY"}};
+				_pool = missionNamespace getVariable [Format ["WFBE_%1_PATROL_%2", _side, _tier], []];
+
+				//--- W3: bonus patrol — patrol upgrade >= 1, owned towns, pool, HQ alive.
+				_w3Eligible = (_lvl >= 1 && {count _owned > 0} && {count _pool > 0} && {!isNull _hq} && {alive _hq});
+
+				//--- W4: airborne assault — HQ alive, PARACARGO class valid, PARACHUTELEVEL3 defined.
+				_w4Eligible = false;
+				if (!isNull _hq && {alive _hq}) then {
+					_w4Model = missionNamespace getVariable [Format ["WFBE_%1PARACARGO", _sideText], ""];
+					_w4Units = missionNamespace getVariable [Format ["WFBE_%1PARACHUTELEVEL3", _sideText], []];
+					if (_w4Model != "" && {isClass (configFile >> "CfgVehicles" >> _w4Model)} && {count _w4Units > 0}) then {
+						_w4Eligible = (count _owned > 0 || {count _cands > 0});
 					};
+				};
 
-					//--- ---------------------------------------------------------------
-					//--- ELIGIBILITY FLAGS
-					//--- ---------------------------------------------------------------
-					_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
-					_lvl      = if (!isNil "_upgrades" && {count _upgrades > WFBE_UP_PATROLS}) then {_upgrades select WFBE_UP_PATROLS} else {0};
+				//--- W6: fortification grant — Barracks alive, can afford one defense.
+				_w6Eligible   = false;
+				_defMax       = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_DEFENSES_MAX", 4];
+				_defCount     = _logik getVariable ["wfbe_aicom_defenses", 0];
+				_structures   = (_side) Call WFBE_CO_FNC_GetSideStructures;
+				_defClass = if (_defCount % 2 == 0) then {
+					missionNamespace getVariable [Format ["WFBE_%1DEFENSES_MG", _sideText], ""]
+				} else {
+					missionNamespace getVariable [Format ["WFBE_%1DEFENSES_AAPOD", _sideText], ""]
+				};
+				if (!isNil "_defClass" && {_defClass != ""}) then {
+					if (typeName _defClass == "ARRAY") then {if (count _defClass > 0) then {_defClass = _defClass select 0}};
+					if (typeName _defClass == "STRING" && {_defClass != ""}) then {
+						_defData  = missionNamespace getVariable _defClass;
+						_defPrice = if (!isNil "_defData") then {_defData select QUERYUNITPRICE} else {0};
+						_defFunds = (_side) Call GetAICommanderFunds;
+						_w6Eligible = false;
+						{ if ((_x getVariable ["wfbe_structure_type", ""]) == "Barracks" && {alive _x}) exitWith {_w6Eligible = (_defFunds >= _defPrice)} } forEach _structures;
+					};
+				};
 
-					_owned = [];
-					{if ((_x getVariable ["sideID","?"]) == _sideID) then {_owned = _owned + [_x]}} forEach towns;
-					_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
+				//--- W7: veteran company — flag check (one per draw; humans re-draw).
+				_w7Eligible = (!_humanCmd);
 
-					_tier    = switch (_lvl) do {case 1: {"LIGHT"}; case 2: {"MEDIUM"}; default {"HEAVY"}};
-					_pool    = missionNamespace getVariable [Format ["WFBE_%1_PATROL_%2", _side, _tier], []];
-
-					//--- W3: bonus patrol — patrol upgrade >= 1, owned towns, non-empty pool, HQ alive.
-					_w3Eligible = (_lvl >= 1 && {count _owned > 0} && {count _pool > 0} && {!isNull _hq} && {alive _hq});
-
-					//--- W4: artillery voucher — requires WFBE_C_AI_COMMANDER_ARTILLERY > 0,
-					//--- global artillery enabled, and at least one ready base gun in range of an enemy town.
-					_artyEnabled = ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) && {(missionNamespace getVariable ["WFBE_C_ARTILLERY", 0]) > 0};
-					_w4Eligible  = false;
-					if (_artyEnabled && {!isNull _hq} && {alive _hq}) then {
-						//--- Quick check: does any live base gun with ammo exist?
-						_pieces = (getPos _hq) nearEntities [["StaticWeapon","Tank","Car"], 250];
+				//--- W8: motor pool — HQ alive, at least one factory built, best-price vehicle findable.
+				_w8Eligible   = false;
+				_w8BestClass  = "";
+				_w8BestPrice  = -1;
+				if (!isNull _hq && {alive _hq}) then {
+					_facDefs = [["LIGHTUNITS",WFBE_UP_LIGHT],["HEAVYUNITS",WFBE_UP_HEAVY],["AIRCRAFTUNITS",WFBE_UP_AIR]];
+					{
+						_facEntry    = _x;
+						_facListName = Format ["WFBE_%1%2", _sideText, _facEntry select 0];
+						_facList     = missionNamespace getVariable [_facListName, []];
 						{
-							if (!_w4Eligible && {alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {someAmmo _x}) then {
-								if (!isNull (gunner _x) && {alive (gunner _x)}) then {_w4Eligible = true};
+							_unitClass = _x;
+							_unitUD    = missionNamespace getVariable _unitClass;
+							if (!isNil "_unitUD") then {
+								_unitPrice = _unitUD select QUERYUNITPRICE;
+								_unitUpReq = _unitUD select QUERYUNITUPGRADE;
+								if (!isNil "_upgrades" && {count _upgrades > (_facEntry select 1)}) then {
+									if (_unitUpReq <= (_upgrades select (_facEntry select 1)) && {_unitPrice > _w8BestPrice}) then {
+										//--- Confirm factory exists alive.
+										_facIdx   = (missionNamespace getVariable [Format ["WFBE_%1STRUCTURES",  _sideText], []]) find (_facEntry select 0);
+										_facClass = "";
+										if (_facIdx >= 0) then {
+											_facNames = missionNamespace getVariable [Format ["WFBE_%1STRUCTURENAMES", _sideText], []];
+											if (_facIdx < count _facNames) then {_facClass = _facNames select _facIdx};
+										};
+										if (_facClass != "") then {
+											_facObj = objNull;
+											{ if (typeOf _x == _facClass && {alive _x}) exitWith {_facObj = _x} } forEach _structures;
+											if (!isNull _facObj) then {
+												_w8BestClass = _unitClass;
+												_w8BestPrice = _unitPrice;
+												_w8Eligible  = true;
+											};
+										};
+									};
+								};
 							};
-						} forEach _pieces;
+						} forEach _facList;
+					} forEach _facDefs;
+				};
+
+				//--- W9: uprising — enemy-held town nearest front, GUER templates available, cap 1 active uprising per side.
+				//--- Reuses _cands (enemy towns) already built above.
+				_w9Eligible   = false;
+				_guerTemplates = missionNamespace getVariable ["WFBE_GUERRESTEAMTEMPLATES", []];
+				_guerUnits     = missionNamespace getVariable ["WFBE_GUERRESSOLDIER", ""];
+				if (count _guerTemplates > 0 && {_guerUnits != ""} && {count _cands > 0}) then {
+					//--- Check no active uprising for this side already.
+					_tmpActiveUpr = _logik getVariable "wfbe_aicom_uprising_active";
+					_tmpActiveUpr = if (isNil "_tmpActiveUpr") then {false} else {_tmpActiveUpr};
+					if (!_tmpActiveUpr) then {_w9Eligible = true};
+				};
+
+				//--- W10: lucky salvage — any wrecked vehicle on the battlefield.
+				_w10Eligible = false;
+				_wrecks = [];
+				{
+					_wk = _x;
+					if (!(alive _wk) && {!(_wk isKindOf "WarfareBBaseStructure")} && {!(_wk getVariable ["keepAlive", false])}) then {
+						_wrecks = _wrecks + [_wk];
 					};
+				} forEach (allMissionObjects "AllVehicles");
+				if (count _wrecks > 0) then {_w10Eligible = true};
 
-					//--- W5: recon sweep — LIGHT pool (tier 0 always used regardless of upgrade),
-					//--- need at least one owned town and one contested/enemy town as destination.
-					_w5Pool = missionNamespace getVariable [Format ["WFBE_%1_PATROL_LIGHT", _side], []];
-					_contestedTowns = [];
-					{if ((_x getVariable ["sideID","?"]) != _sideID) then {_contestedTowns = _contestedTowns + [_x]}} forEach towns;
-					_w5Eligible = (count _owned > 0 && {count _w5Pool > 0} && {count _contestedTowns > 0} && {!isNull _hq} && {alive _hq});
+				//--- W11: field hospital — wounded AI infantry present.
+				_w11Eligible = ({alive _x && {!isPlayer _x} && {_x isKindOf "Man"} && {damage _x > 0.05} && {side _x == _side}} count allUnits) > 0;
 
-					//--- W6: defense drop — need at least one owned town that has defense slots
-					//--- and at least one slot whose current defense is null/dead.
-					_w6Eligible = false;
-					_weakTown   = objNull;
-					_weakSV     = 1e9;
-					{
-						_sv = _x getVariable ["supplyValue", 0];
-						_defSlots = _x getVariable ["wfbe_town_defenses", []];
-						if (count _defSlots > 0 && {_sv < _weakSV}) then {
-							//--- Check for a free (null or dead) slot.
-							_freeSlot = false;
-							{
-								_defLogic = _x;
-								_defSlot  = _defLogic getVariable ["wfbe_defense", objNull];
-								if (isNil "_defSlot" || {isNull _defSlot} || {!alive _defSlot}) then {_freeSlot = true};
-							} forEach _defSlots;
-							if (_freeSlot) then {
-								_w6Eligible = true;
-								_weakSV     = _sv;
-								_weakTown   = _x;
-							};
-						};
-					} forEach _owned;
+				//--- W12: spoils of war — not already active.
+				_w12Key  = Format ["wfbe_aicom_spoils_%1", _sideText];
+				_w12Exp  = missionNamespace getVariable _w12Key;
+				_w12Eligible = (isNil "_w12Exp") || {_w12Exp <= time};
 
-					//--- ---------------------------------------------------------------
-					//--- BASE WEIGHTS (tunables) + ESCALATION BIAS
-					//--- ---------------------------------------------------------------
-					_eMult = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_ESCALATION_MULT", 2.0];
+				//--- -----------------------------------------------------------------------
+				//--- BASE WEIGHTS + ESCALATION
+				//--- -----------------------------------------------------------------------
+				_wW1  = 20; _wW2  = 20; _wW3  = 15;
+				_wW6  =  8; _wW7  =  8; _wW10 =  8; _wW11 =  8; _wW12 =  6;
+				_wW4  =  4; _wW8  =  3; _wW9  =  3;
 
-					_wW1 = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_W1_WEIGHT", 10];
-					_wW2 = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_W2_WEIGHT", 10];
-					_wW3 = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_W3_WEIGHT", 10];
-					_wW4 = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_W4_WEIGHT", 8];
-					_wW5 = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_W5_WEIGHT", 7];
-					_wW6 = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_W6_WEIGHT", 7];
+				if (_losing) then {
+					_wW4  = round(_wW4  * _eMult);
+					_wW7  = round(_wW7  * _eMult);
+					_wW8  = round(_wW8  * _eMult);
+					_wW9  = round(_wW9  * _eMult);
+				};
 
-					//--- Escalation: boost aggressive events when losing.
-					if (_losing) then {
-						_wW1 = _wW1 * _eMult;
-						_wW4 = _wW4 * _eMult;
-					};
+				//--- Zero ineligible cards.
+				if (!_w3Eligible)  then {_wW3  = 0};
+				if (!_w4Eligible)  then {_wW4  = 0};
+				if (!_w6Eligible)  then {_wW6  = 0};
+				if (!_w7Eligible)  then {_wW7  = 0};
+				if (!_w8Eligible)  then {_wW8  = 0};
+				if (!_w9Eligible)  then {_wW9  = 0};
+				if (!_w10Eligible) then {_wW10 = 0};
+				if (!_w11Eligible) then {_wW11 = 0};
+				if (!_w12Eligible) then {_wW12 = 0};
 
-					//--- Zero out ineligible events (they fall back to W1 via the chosen==0 guard).
-					if (!_w3Eligible) then {_wW3 = 0};
-					if (!_w4Eligible) then {_wW4 = 0};
-					if (!_w5Eligible) then {_wW5 = 0};
-					if (!_w6Eligible) then {_wW6 = 0};
+				//--- Weight table: [cardID, weight]. Card IDs match W-numbers.
+				_weights = [[1,_wW1],[2,_wW2],[3,_wW3],[4,_wW4],[6,_wW6],[7,_wW7],
+				            [8,_wW8],[9,_wW9],[10,_wW10],[11,_wW11],[12,_wW12]];
 
-					//--- Build weight array [type, cumulative_sum] and do a single random roll.
-					//--- Types: 1=W1 2=W2 3=W3 4=W4 5=W5 6=W6.
-					_weights = [[1,_wW1],[2,_wW2],[3,_wW3],[4,_wW4],[5,_wW5],[6,_wW6]];
+				_cumSum = 0;
+				{ _cumSum = _cumSum + (_x select 1) } forEach _weights;
 
-					//--- Compute cumulative sums (inline; no helper needed).
-					_cumSum = 0;
-					{_cumSum = _cumSum + (_x select 1)} forEach _weights;
+				_draw   = 1;
+				_result = "applied";
+				_detail = Format ["losing=%1 myTowns=%2 enemyTowns=%3 humanCmd=%4", _losing, _myTowns, _enemyTowns, _humanCmd];
 
-					_draw = 1; //--- default fallback = W1
+				//--- Weighted roll + eligibility re-draw (up to 3 attempts; W1 fallback).
+				//--- Uses a while loop so the "accept" path can break cleanly.
+				_reDraw = 0;
+				_drawn  = false;
+				while {_reDraw < 3 && {!_drawn}} do {
+					_reDraw = _reDraw + 1;
 					if (_cumSum > 0) then {
-						_roll = random _cumSum;
-						_i = 0;
-						_chosen = 0;
-						_cumSum = 0;
+						//--- DE-CORRELATION: second independent random call mixed in.
+						_entropy = random 1;
+						_roll    = (random _cumSum) + _entropy * 0.0001;
+						_i = 0; _chosen = 0; _cumSum2 = 0;
 						while {_i < count _weights && {_chosen == 0}} do {
-							_cumSum = _cumSum + ((_weights select _i) select 1);
-							if (_roll < _cumSum) then {_chosen = (_weights select _i) select 0};
+							_cumSum2 = _cumSum2 + ((_weights select _i) select 1);
+							if (_roll < _cumSum2) then {_chosen = (_weights select _i) select 0};
 							_i = _i + 1;
 						};
-						if (_chosen > 0) then {_draw = _chosen};
+						if (_chosen == 0) then {_chosen = 1};
+						_draw = _chosen;
 					};
+					//--- Re-draw condition: W7 for human side.
+					_needRedraw = (_draw == 7 && {_humanCmd});
+					if (!_needRedraw) then {_drawn = true};
+				};
+				//--- Final fallback: W1 (draw is already at least 1 from init).
+				if (!_drawn) then {_draw = 1};
 
-					_eligible = true;
-					_result   = "applied";
-					_detail   = Format ["losing=%1 myTowns=%2 enemyTowns=%3", _losing, _myTowns, _enemyTowns];
+				//--- -----------------------------------------------------------------------
+				//--- APPLY
+				//--- -----------------------------------------------------------------------
+				switch (_draw) do {
 
-					//--- ---------------------------------------------------------------
-					//--- APPLY
-					//--- ---------------------------------------------------------------
-					switch (_draw) do {
-
-						//--- W1: WAR CHEST — funds += 25% of this side's configured FUNDS_START.
-						case 1: {
-							_fundsStart = missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side], 0];
-							_bonus      = round(_fundsStart * 0.25);
-							_curFunds   = (_side) Call GetAICommanderFunds;
+					//--- W1: WAR CHEST — AI funds +25% FUNDS_START.
+					//--- Human side: credit to commander team wfbe_funds instead.
+					case 1: {
+						_fundsStart = missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side], 0];
+						_bonus      = round(_fundsStart * 0.25);
+						if (_humanCmd) then {
+							_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
+							if (!isNull _cmdTeam) then {
+								_curFunds = _cmdTeam getVariable "wfbe_funds";
+								if (isNil "_curFunds") then {_curFunds = 0};
+								_cmdTeam setVariable ["wfbe_funds", _curFunds + _bonus, true];
+								_detail = Format ["human_cmd_team_funds_bonus=%1 funds_before=%2", _bonus, _curFunds];
+							} else {
+								_detail = "human_cmd_no_team fallback skipped";
+								_result = "ineligible";
+							};
+						} else {
+							_curFunds = (_side) Call GetAICommanderFunds;
 							[_side, _bonus] Call ChangeAICommanderFunds;
 							_detail = Format ["funds_before=%1 bonus=%2 funds_after=%3 losing=%4", _curFunds, _bonus, (_side) Call GetAICommanderFunds, _losing];
 						};
+					};
 
-						//--- W2: SUPPLY DROP — side supply += 1500 (ChangeSideSupply caps at WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT).
-						case 2: {
-							_supply    = (_side) Call WFBE_CO_FNC_GetSideSupply;
-							_maxSupply = missionNamespace getVariable ["WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT", 99999];
-							_supplyGrant = 1500 min (_maxSupply - (if (isNil "_supply") then {0} else {_supply}));
-							if (_supplyGrant > 0) then {
-								[_side, _supplyGrant, "AI Commander Wildcard: supply drop.", false] Call ChangeSideSupply;
-								_detail = Format ["supply_before=%1 grant=%2 max=%3", _supply, _supplyGrant, _maxSupply];
-							} else {
-								_result = "ineligible";
-								_detail = Format ["supply already at cap %1", _maxSupply];
-							};
-						};
-
-						//--- W3: BONUS PATROL — one extra patrol ignoring the cap for this spawn.
-						case 3: {
-							_template = _pool select floor(random count _pool);
-							_home     = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity;
-							_active   = _logik getVariable ["wfbe_side_patrols", 0];
-							//--- Book the slot (same pattern as server_side_patrols.sqf).
-							_logik setVariable ["wfbe_side_patrols", _active + 1];
-							_logik setVariable ["wfbe_side_patrol_last", time];
-							//--- Dispatch to a live HC if available, else server.
-							_hcs  = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
-							_live = [];
-							{if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_live = _live + [_x]}} forEach _hcs;
-							if (count _live > 0) then {
-								[leader(_live select floor(random count _live)), "HandleSpecial", ["delegate-sidepatrol", _sideID, _template, _home]] Call WFBE_CO_FNC_SendToClient;
-							} else {
-								[_sideID, _template, _home] Spawn WFBE_CO_FNC_RunSidePatrol;
-							};
-							_detail = Format ["tier=%1 template=%2 from_town=%3 active_after=%4 hc=%5", _tier, _template, _home getVariable ["name","?"], _active + 1, count _live > 0];
-						};
-
-						//--- W4: ARTILLERY VOUCHER — one-shot fire mission via base gun machinery.
-						//--- Reuses exact same gun-scan + FireArtillery path as AI_Commander_Strategy section 4.
-						//--- Friendly-fire guard applied; falls back to W1 if no shot is available.
-						case 4: {
-							//--- Pick target: highest-weight enemy town (mirrors Strategy spearhead scoring).
-							_cands = [];
-							{if ((_x getVariable ["sideID","?"]) != _sideID) then {_cands = _cands + [_x]}} forEach towns;
-							_bestScore = -1e9; _bestTown = objNull;
-							{
-								_dNear = 1e9;
-								{if ((_x getVariable ["sideID","?"]) == _sideID) then {_d = (_this) distance _x; if (_d < _dNear) then {_dNear = _d}}} forEach towns;
-								if (_dNear > 1e8) then {_dNear = _this distance _hq};
-								_score = (_x getVariable ["supplyValue", 0]) - (_dNear / 150) + (_x getVariable ["wfbe_aicom_town_weight", 0]);
-								if (_score > _bestScore) then {_bestScore = _score; _bestTown = _x};
-							} forEach _cands;
-
-							if (!isNull _bestTown) then {
-								_artyTgt = getPos _bestTown;
-								_ownNear = 0;
-								{if (side _x == _side && {alive _x}) then {_ownNear = _ownNear + 1}} forEach (_artyTgt nearEntities [["Man","Car","Tank","Air"], 400]);
-								if (_ownNear == 0) then {
-									_pieces = (getPos _hq) nearEntities [["StaticWeapon","Tank","Car"], 250];
-									_fired  = false;
-									{
-										_p = _x;
-										if (!_fired && {alive _p} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p}) then {
-											_idx = [typeOf _p, _side] Call IsArtillery;
-											if (_idx >= 0) then {
-												_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / (missionNamespace getVariable "WFBE_C_ARTILLERY");
-												if (_p distance _artyTgt <= _maxR) then {
-													[_p, _artyTgt, _side, 60] Spawn WFBE_CO_FNC_FireArtillery;
-													_logik setVariable ["wfbe_aicom_arty_last", time];
-													_fired = true;
-													_detail = Format ["target=%1 gun=%2 ownNear=0", _bestTown getVariable ["name","?"], typeOf _p];
-												};
-											};
-										};
-									} forEach _pieces;
-									if (!_fired) then {
-										//--- No gun in range — fall back to W1 war chest.
-										_fundsStart = missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side], 0];
-										_bonus      = round(_fundsStart * 0.25);
-										_curFunds   = (_side) Call GetAICommanderFunds;
-										[_side, _bonus] Call ChangeAICommanderFunds;
-										_draw   = 1;
-										_result = "fallback-W1";
-										_detail = Format ["arty_no_gun_in_range target=%1 funds_bonus=%2", _bestTown getVariable ["name","?"], _bonus];
-									};
-								} else {
-									//--- Friendlies near target — fall back to W1.
-									_fundsStart = missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side], 0];
-									_bonus      = round(_fundsStart * 0.25);
-									_curFunds   = (_side) Call GetAICommanderFunds;
-									[_side, _bonus] Call ChangeAICommanderFunds;
-									_draw   = 1;
-									_result = "fallback-W1";
-									_detail = Format ["arty_friendlies_near target=%1 ownNear=%2 funds_bonus=%3", _bestTown getVariable ["name","?"], _ownNear, _bonus];
-								};
-							} else {
-								//--- No enemy towns — fall back to W1.
-								_fundsStart = missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side], 0];
-								_bonus      = round(_fundsStart * 0.25);
-								[_side, _bonus] Call ChangeAICommanderFunds;
-								_draw   = 1;
-								_result = "fallback-W1";
-								_detail = Format ["arty_no_enemy_towns funds_bonus=%1", _bonus];
-							};
-						};
-
-						//--- W5: RECON SWEEP — bonus LIGHT-tier patrol dispatched toward the nearest
-						//--- contested/enemy town from our closest owned town.  Same HC path as W3.
-						//--- Uses LIGHT pool unconditionally (cheapest patrol; recon does not need heavy kit).
-						case 5: {
-							//--- Find nearest contested town to our front.
-							_nearTown = objNull; _nearD = 1e9;
-							{
-								_dd = (_owned select 0) distance _x;
-								{ _dd = _dd min (_x distance _this) } forEach _owned;
-								if (_dd < _nearD) then {_nearD = _dd; _nearTown = _x};
-							} forEach _contestedTowns;
-
-							_template = _w5Pool select floor(random count _w5Pool);
-							//--- Dispatch from closest owned town to the contested town.
-							_home = _owned select 0;
-							{if ((_x distance _nearTown) < (_home distance _nearTown)) then {_home = _x}} forEach _owned;
-
-							_active = _logik getVariable ["wfbe_side_patrols", 0];
-							_logik setVariable ["wfbe_side_patrols", _active + 1];
-							_logik setVariable ["wfbe_side_patrol_last", time];
-
-							_hcs  = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
-							_live = [];
-							{if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_live = _live + [_x]}} forEach _hcs;
-							if (count _live > 0) then {
-								[leader(_live select floor(random count _live)), "HandleSpecial", ["delegate-sidepatrol", _sideID, _template, _home]] Call WFBE_CO_FNC_SendToClient;
-							} else {
-								[_sideID, _template, _home] Spawn WFBE_CO_FNC_RunSidePatrol;
-							};
-							_detail = Format ["toward=%1 from=%2 template=%3 hc=%4", _nearTown getVariable ["name","?"], _home getVariable ["name","?"], _template, count _live > 0];
-						};
-
-						//--- W6: DEFENSE DROP — refresh one dead/missing defense slot at the
-						//--- weakest owned town (lowest supplyValue).
-						//--- Iterates wfbe_town_defenses; picks the first null/dead logic slot and
-						//--- calls WFBE_SE_FNC_SpawnTownDefense exactly as Server_ManageTownDefenses does.
-						case 6: {
-							_defSlots   = _weakTown getVariable ["wfbe_town_defenses", []];
-							_defSpawned = false;
-							{
-								_defLogic = _x;
-								_defSlot  = _defLogic getVariable ["wfbe_defense", objNull];
-								if (!_defSpawned && {isNil "_defSlot" || {isNull _defSlot} || {!alive _defSlot}}) then {
-									if !(isNull _defSlot) then {deleteVehicle _defSlot};
-									[_defLogic, _side] Call WFBE_SE_FNC_SpawnTownDefense;
-									_defSpawned = true;
-								};
-							} forEach _defSlots;
-							if (_defSpawned) then {
-								_detail = Format ["town=%1 sv=%2", _weakTown getVariable ["name","?"], _weakSV];
-							} else {
-								_result = "ineligible";
-								_detail = Format ["defense_drop_no_free_slot town=%1", _weakTown getVariable ["name","?"]];
-							};
+					//--- W2: SUPPLY DROP — +1500 supply, capped.
+					case 2: {
+						_supply    = (_side) Call WFBE_CO_FNC_GetSideSupply;
+						_maxSupply = missionNamespace getVariable ["WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT", 99999];
+						if (isNil "_supply") then {_supply = 0};
+						_supplyGrant = 1500 min (_maxSupply - _supply);
+						if (_supplyGrant > 0) then {
+							[_side, _supplyGrant, "AI Commander Wildcard: supply drop.", false] Call ChangeSideSupply;
+							_detail = Format ["supply_before=%1 grant=%2 max=%3", _supply, _supplyGrant, _maxSupply];
+						} else {
+							_result = "ineligible";
+							_detail = Format ["supply already at cap %1", _maxSupply];
 						};
 					};
 
-					["INFORMATION", Format ["AI_Commander_Wildcard.sqf: [WILDCARD] side=%1 draw=W%2 result=%3 detail=(%4)", str _side, _draw, _result, _detail]] Call WFBE_CO_FNC_AICOMLog;
-					diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|WILDCARD_W" + str _draw + "|" + _result + "|" + _detail);
+					//--- W3: BONUS PATROL — free patrol at current tier, cap bypass.
+					case 3: {
+						_template = _pool select floor(random count _pool);
+						_home     = _hq;
+						if (count _owned > 0) then {_home = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity};
+						_active   = _logik getVariable ["wfbe_side_patrols", 0];
+						_logik setVariable ["wfbe_side_patrols", _active + 1];
+						_logik setVariable ["wfbe_side_patrol_last", time];
+						_hcs  = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
+						_live = [];
+						{ if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_live = _live + [_x]} } forEach _hcs;
+						if (count _live > 0) then {
+							[leader(_live select floor(random count _live)), "HandleSpecial", ["delegate-sidepatrol", _sideID, _template, _home]] Call WFBE_CO_FNC_SendToClient;
+						} else {
+							[_sideID, _template, _home] Spawn WFBE_CO_FNC_RunSidePatrol;
+						};
+						_detail = Format ["tier=%1 template=%2 from=%3 active_after=%4 hc=%5 humanCmd=%6", _tier, _template, _home getVariable ["name","?"], _active + 1, count _live > 0, _humanCmd];
+					};
+
+					//--- W4: AIRBORNE ASSAULT — free max-level (LEVEL3) paradrop on spearhead town.
+					//--- Reuses Support_Paratroopers path with a forced level-3 override.
+					//--- For human sides: assets join under server/HC AI control.
+					case 4: {
+						//--- Target: top spearhead town (first in wfbe_aicom_targets) or nearest enemy town to front.
+						//--- _cands (enemy towns) already populated in eligibility section.
+						_bestTown  = objNull;
+						_bestScore = -1e9;
+						_targets   = _logik getVariable "wfbe_aicom_targets";
+						if (!isNil "_targets" && {count _targets > 0}) then {
+							_bestTown = _targets select 0;
+						} else {
+							{
+								_t4Town = _x;
+								_dNear = 1e9;
+								{ if ((_x getVariable ["sideID","?"]) == _sideID) then {_d = _t4Town distance _x; if (_d < _dNear) then {_dNear = _d}} } forEach towns;
+								if (_dNear > 1e8) then {_dNear = _t4Town distance _hq};
+								_score = (_t4Town getVariable ["supplyValue", 0]) - (_dNear / 150);
+								if (_score > _bestScore) then {_bestScore = _score; _bestTown = _t4Town};
+							} forEach _cands;
+						};
+						if (!isNull _bestTown) then {
+							_destination = getPos _bestTown;
+							//--- Forced LEVEL3 override: read level-3 classnames.
+							_w4Units = missionNamespace getVariable [Format ["WFBE_%1PARACHUTELEVEL3", _sideText], []];
+							_w4Model = missionNamespace getVariable [Format ["WFBE_%1PARACARGO", _sideText], ""];
+							if (count _w4Units > 0 && {_w4Model != ""}) then {
+								//--- Invoke Support_Paratroopers with playerTeam = commander group (AI gets the squad).
+								_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
+								if (isNull _cmdTeam) then {_cmdTeam = createGroup _side};
+								[nil, _side, _destination, _cmdTeam] Spawn (Compile preprocessFile "Server\Support\Support_Paratroopers.sqf");
+								//--- Override the level variable so Paratroopers reads level 3.
+								missionNamespace setVariable [Format ["WFBE_%1PARACHUTELEVEL", _sideText], 3];
+								_detail = Format ["target=%1 level=3 model=%2 humanCmd=%3", _bestTown getVariable ["name","?"], _w4Model, _humanCmd];
+							} else {
+								_result = "ineligible";
+								_detail = "W4 no PARACHUTELEVEL3 units defined";
+							};
+						} else {
+							_result = "ineligible";
+							_detail = "W4 no enemy/neutral town found";
+						};
+					};
+
+					//--- W6: FORTIFICATION GRANT — +2 base defenses beyond the normal 4-cap.
+					//--- Directly calls ConstructDefense twice via the Base placer pattern.
+					case 6: {
+						_hqPos  = getPos _hq;
+						_placed = 0;
+						_defFunds = (_side) Call GetAICommanderFunds;
+						for "_dp" from 1 to 2 do {
+							_defClass = if ((_defCount + _placed) % 2 == 0) then {
+								missionNamespace getVariable [Format ["WFBE_%1DEFENSES_MG", _sideText], ""]
+							} else {
+								missionNamespace getVariable [Format ["WFBE_%1DEFENSES_AAPOD", _sideText], ""]
+							};
+							if (!isNil "_defClass" && {_defClass != ""}) then {
+								if (typeName _defClass == "ARRAY") then {if (count _defClass > 0) then {_defClass = _defClass select 0}};
+								if (typeName _defClass == "STRING" && {_defClass != ""}) then {
+									_defData  = missionNamespace getVariable _defClass;
+									_defPrice = if (!isNil "_defData") then {_defData select QUERYUNITPRICE} else {0};
+									if (_defFunds >= _defPrice) then {
+										//--- Ring placement around HQ (same helper pattern as AI_Commander_Base).
+										_dAng  = random 360;
+										_dPos  = [(_hqPos select 0) + (28 + random 14) * sin _dAng, (_hqPos select 1) + (28 + random 14) * cos _dAng, 0];
+										[_defClass, _side, _dPos, random 360, true, true] Call ConstructDefense;
+										[_side, -_defPrice] Call ChangeAICommanderFunds;
+										_defFunds = _defFunds - _defPrice;
+										_logik setVariable ["wfbe_aicom_defenses", _defCount + _placed + 1];
+										_placed = _placed + 1;
+									};
+								};
+							};
+						};
+						if (_placed > 0) then {
+							_detail = Format ["placed=%1 defenses_now=%2", _placed, _defCount + _placed];
+						} else {
+							_result = "ineligible";
+							_detail = "W6 no funds for defense";
+						};
+					};
+
+					//--- W7: VETERAN COMPANY — set a one-shot flag on the side logic so that
+					//--- the next team founded by AI_Commander_Teams uses a premium template.
+					//--- Human side already blocked (re-draw above).
+					case 7: {
+						_logik setVariable ["wfbe_aicom_veteran_next", true];
+						//--- Also store a skill-boost target so Teams can apply it.
+						_logik setVariable ["wfbe_aicom_veteran_skill", 0.85];
+						_detail = Format ["flag set; next team will be premium template with skill=0.85 losing=%1", _losing];
+					};
+
+					//--- W8: MOTOR POOL DELIVERY — spawn best-price crewed vehicle from buy lists,
+					//--- register as an AI commander team.
+					case 8: {
+						if (_w8BestClass != "") then {
+							_w8UD   = missionNamespace getVariable _w8BestClass;
+							_hqPos  = getPos _hq;
+							_dAng   = random 360;
+							_spawnPos = [(_hqPos select 0) + (50 + random 30) * sin _dAng, (_hqPos select 1) + (50 + random 30) * cos _dAng, 0];
+							_v = [_w8BestClass, _spawnPos, _side, random 360, true, true] Call Common_CreateVehicle;
+							if (!isNull _v) then {
+								//--- Crew the vehicle: commander/gunner from SOLDIER classname.
+								_soldierClass = missionNamespace getVariable [Format ["WFBE_%1SOLDIER", _sideText], ""];
+								_grp = [_side, "aicom"] Call WFBE_CO_FNC_CreateGroup;
+								if (!isNull _grp && {_soldierClass != ""}) then {
+									_sideIDLocal = (_side) Call WFBE_CO_FNC_GetSideID;
+									_crew1 = [_soldierClass, _grp, _spawnPos, _sideIDLocal] Call WFBE_CO_FNC_CreateUnit;
+									_crew2 = [_soldierClass, _grp, _spawnPos, _sideIDLocal] Call WFBE_CO_FNC_CreateUnit;
+									if (!isNull _crew1) then {_crew1 moveInDriver _v};
+									if (!isNull _crew2) then {_crew2 moveInGunner _v};
+									//--- Register as AI team so AssignTowns picks it up.
+									_grp setVariable ["wfbe_aicom_founded", true, true];
+									_grp setVariable ["wfbe_funds", 0, true];
+									_grp setVariable ["wfbe_side", _side];
+									_grp setVariable ["wfbe_persistent", true];
+									_grp setVariable ["wfbe_queue", []];
+									_grp setVariable ["wfbe_vote", -1, true];
+									[_grp, false] Call SetTeamAutonomous;
+									[_grp, ""] Call SetTeamRespawn;
+									[_grp, -1] Call SetTeamType;
+									[_grp, "towns"] Call SetTeamMoveMode;
+									[_grp, [0,0,0]] Call SetTeamMovePos;
+									_existingTeams = _logik getVariable "wfbe_teams";
+									if (isNil "_existingTeams") then {_existingTeams = []};
+									_logik setVariable ["wfbe_teams", _existingTeams + [_grp], true];
+									_detail = Format ["class=%1 price=%2 humanCmd=%3 grp=%4", _w8BestClass, _w8BestPrice, _humanCmd, _grp];
+								} else {
+									_detail = Format ["class=%1 but no group or soldier class", _w8BestClass];
+									_result = "partial";
+								};
+							} else {
+								_result = "ineligible";
+								_detail = Format ["W8 createVehicle returned null for %1", _w8BestClass];
+							};
+						} else {
+							_result = "ineligible";
+							_detail = "W8 no eligible vehicle found";
+						};
+					};
+
+					//--- W9: UPRISING — spawn a GUER attack force at enemy-held town nearest the front.
+					//--- Cap: 1 active uprising per side (wfbe_aicom_uprising_active flag on logik).
+					case 9: {
+						//--- Find enemy town nearest our front.
+						_targetTown = objNull;
+						_nearD      = 1e9;
+						{
+							_dd = 1e9;
+							{ _dd = _dd min (_x distance _this) } forEach _owned;
+							if (count _owned == 0) then {_dd = _this distance _hq};
+							if (_dd < _nearD) then {_nearD = _dd; _targetTown = _x};
+						} forEach _cands;
+
+						if (!isNull _targetTown) then {
+							_guerTmpl = _guerTemplates select floor(random count _guerTemplates);
+							_guerGrp  = createGroup resistance;
+							_guerPos  = getPos _targetTown;
+							_logik setVariable ["wfbe_aicom_uprising_active", true];
+
+							{
+								_guerUnit = _guerGrp createUnit [_x, [(_guerPos select 0) + (random 20) - 10, (_guerPos select 1) + (random 20) - 10, 0], [], 0, "FORM"];
+							} forEach _guerTmpl;
+
+							[_guerGrp, _guerPos, 200] Call AIPatrol;
+							_guerGrp setBehaviour "AWARE";
+							_guerGrp setCombatMode "RED";
+
+							//--- Clear active flag when the group is wiped.
+							[_guerGrp, _logik, _sideText] spawn {
+								private ["_grp","_lk","_st"];
+								_grp = _this select 0;
+								_lk  = _this select 1;
+								_st  = _this select 2;
+								waitUntil {sleep 30; ({alive _x} count (units _grp)) == 0 || gameOver};
+								_lk setVariable ["wfbe_aicom_uprising_active", false];
+								diag_log ("AICOMSTAT|v2|EVENT|" + _st + "|" + str (round (time / 60)) + "|UPRISING_DONE|cleared");
+							};
+
+							_detail = Format ["target=%1 template_size=%2 nearD=%3", _targetTown getVariable ["name","?"], count _guerTmpl, round _nearD];
+						} else {
+							_result = "ineligible";
+							_detail = "W9 no enemy town found";
+							_logik setVariable ["wfbe_aicom_uprising_active", false];
+						};
+					};
+
+					//--- W10: LUCKY SALVAGE — sweep battlefield wrecks, convert to AI funds.
+					//--- Cap: ~15000 per sweep. Despawn swept wrecks.
+					case 10: {
+						_wkTotal = 0;
+						_wkCap   = 15000;
+						{
+							_wk   = _x;
+							if (!(alive _wk) && {!(_wk isKindOf "WarfareBBaseStructure")} && {!(_wk getVariable ["keepAlive", false])}) then {
+								_wkUD   = missionNamespace getVariable (typeOf _wk);
+								_wkCost = 250;
+								if (!isNil "_wkUD") then {
+									_wkCost = round(((_wkUD select QUERYUNITPRICE) * 0.30));
+									if (_wkCost < 50) then {_wkCost = 50};
+								};
+								if (_wkTotal + _wkCost <= _wkCap) then {
+									_wkTotal = _wkTotal + _wkCost;
+									deleteVehicle _wk;
+								};
+							};
+						} forEach (allMissionObjects "AllVehicles");
+						if (_wkTotal > 0) then {
+							[_side, _wkTotal] Call ChangeAICommanderFunds;
+							_detail = Format ["salvage_funds=%1 cap=%2", _wkTotal, _wkCap];
+						} else {
+							_result = "ineligible";
+							_detail = "W10 no salvageable wrecks found";
+						};
+					};
+
+					//--- W11: FIELD HOSPITAL — heal all wounded AI infantry side-wide (setDamage 0).
+					//--- Also sets a one-shot free re-founding flag on the side logic.
+					case 11: {
+						_healed = 0;
+						{
+							if (alive _x && {!isPlayer _x} && {_x isKindOf "Man"} && {damage _x > 0.05} && {side _x == _side}) then {
+								_x setDamage 0;
+								_healed = _healed + 1;
+							};
+						} forEach allUnits;
+						//--- One-shot free re-founding flag: consumed by AI_Commander_Teams.
+						_logik setVariable ["wfbe_aicom_free_refound", true];
+						_detail = Format ["healed=%1 free_refound_flag=set", _healed];
+					};
+
+					//--- W12: SPOILS OF WAR — 10-min double kill-bounty flag.
+					//--- Flag lives on missionNamespace (survives spawn death).
+					//--- Not stackable: checked above; re-draw if already active.
+					//--- Human side: same flag, affects the normal bounty path.
+					case 12: {
+						_w12Exp = time + 600;
+						missionNamespace setVariable [_w12Key, _w12Exp];
+						_detail = Format ["expiry=t+%1 (%2 min) humanCmd=%3", 600, 10, _humanCmd];
+					};
 				};
 
-			}; //--- end wfbe_aicom_running branch
-		}; //--- end HQ alive branch
-	}; //--- end humanCmd branch
+				//--- Dual logging.
+				["INFORMATION", Format ["AI_Commander_Wildcard.sqf: [WILDCARD] side=%1 draw=W%2 result=%3 detail=(%4)", _sideText, _draw, _result, _detail]] Call WFBE_CO_FNC_AICOMLog;
+				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|WILDCARD_W" + str _draw + "|" + _result + "|" + _detail);
+
+				//--- Human-side announcement.
+				if (_humanCmd) then {
+					_locMsg = Format ["[Wildcard] Your forces receive: W%1 (%2)", _draw, _result];
+					[_sideText, "LocalizeMessage", ["Wildcard", _locMsg]] Call WFBE_CO_FNC_SendToClients;
+				};
+
+			}; //--- end isolation spawn
+
+		}; //--- end !_skipAI
+	}; //--- end !_bothHuman
 
 	sleep _interval;
 };

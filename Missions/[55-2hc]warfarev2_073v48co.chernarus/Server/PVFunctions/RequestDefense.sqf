@@ -189,8 +189,8 @@ if (_index != -1) then {
 					};
 				} forEach _clsToCheck;
 
-				// Caps: 6+2x / 20+10x / 10+5x  (x = barracks level)
-				_capS = 6  + 2  * _barrackLvl;
+				// Caps: STATICS = WFBE_C_BASE_DEFENSE_STATICS_CAP (flat); FORTS = 20+10x; MINES = 10+5x  (x = barracks level)
+				_capS = missionNamespace getVariable ["WFBE_C_BASE_DEFENSE_STATICS_CAP", 25];
 				_capF = 20 + 10 * _barrackLvl;
 				_capM = 10 + 5  * _barrackLvl;
 

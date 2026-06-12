@@ -1066,6 +1066,20 @@
         <Russian>&lt;t color='#42b6ff' size='1.2' underline='1' shadow='1'&gt;Information:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; &lt;t color='#76F563'&gt;$%1.&lt;/t&gt; were sent to &lt;t color='#BD63F5'&gt;%2&lt;/t&gt;.</Russian>
         <Italian>&lt;t color='#42b6ff' size='1.2' underline='1' shadow='1'&gt;Information:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; &lt;t color='#76F563'&gt;$%1.&lt;/t&gt; were sent to &lt;t color='#BD63F5'&gt;%2&lt;/t&gt;.</Italian>
       </Key>
+      <Key ID="STR_WF_INFO_Funds_Sent_AICom">
+        <English>&lt;t color='#42b6ff' size='1.2' underline='1' shadow='1'&gt;Donation sent:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; &lt;t color='#76F563'&gt;$%1&lt;/t&gt; donated to the &lt;t color='#FFD700'&gt;AI Commander&lt;/t&gt;.</English>
+        <French>&lt;t color='#42b6ff' size='1.2' underline='1' shadow='1'&gt;Don envoyé:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; &lt;t color='#76F563'&gt;$%1&lt;/t&gt; donnés au &lt;t color='#FFD700'&gt;Commandant IA&lt;/t&gt;.</French>
+        <German>&lt;t color='#42b6ff' size='1.2' underline='1' shadow='1'&gt;Spende gesendet:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; &lt;t color='#76F563'&gt;$%1&lt;/t&gt; an den &lt;t color='#FFD700'&gt;KI-Kommandanten&lt;/t&gt; gespendet.</German>
+        <Russian>&lt;t color='#42b6ff' size='1.2' underline='1' shadow='1'&gt;Donation sent:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; &lt;t color='#76F563'&gt;$%1&lt;/t&gt; donated to the &lt;t color='#FFD700'&gt;AI Commander&lt;/t&gt;.</Russian>
+        <Italian>&lt;t color='#42b6ff' size='1.2' underline='1' shadow='1'&gt;Donation sent:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; &lt;t color='#76F563'&gt;$%1&lt;/t&gt; donated to the &lt;t color='#FFD700'&gt;AI Commander&lt;/t&gt;.</Italian>
+      </Key>
+      <Key ID="STR_WF_CHAT_AIComDonation">
+        <English>%1 donated $%2 to the AI Commander.</English>
+        <French>%1 a donné $%2 au Commandant IA.</French>
+        <German>%1 hat $%2 an den KI-Kommandanten gespendet.</German>
+        <Russian>%1 donated $%2 to the AI Commander.</Russian>
+        <Italian>%1 donated $%2 to the AI Commander.</Italian>
+      </Key>
       <Key ID="STR_WF_INFO_Gear_AllowTwo"><!--shared U-->
         <English>&lt;t color='#F8D664'&gt;Information:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; This weapon/loadout cannot be purchased due to your current loadout settings. &lt;br/&gt;&lt;br/&gt; (The &lt;t color='#85B5FA'&gt;Realistic Gear&lt;/t&gt; parameter prevent the use of heavy primary weapons with launchers or backpacks).</English>
         <French>&lt;t color='#F8D664'&gt;Information:&lt;/t&gt;&lt;br/&gt;&lt;br/&gt; Cette arme ou ensemble d'équipement ne peut être acheter en raison de votre équipement courant (Le paramètre &lt;t color='#85B5FA'&gt; Equipement réalistique &lt;/t&gt; empêche l'utilisation d'armement lourd avec des lance-missiles ou des sac à dos).</French>

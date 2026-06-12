@@ -55,6 +55,12 @@ switch (_request) do {
 		60 setOvercast _ov;
 		60 setRain     _ra;
 	};
+	//--- AI Commander donation confirmation: show hint to the donor.
+	case "aicom-donate-confirm": {
+		Private ["_dAmount"];
+		_dAmount = _args select 0;
+		hint parseText Format [localize "STR_WF_INFO_Funds_Sent_AICom", _dAmount];
+	};
 	// Marty: Server-side command bar cleanup can transfer dead AI locality back to the player for final detachment.
 	case "commandbar-force-dead-cleanup": {
 		_args Spawn {

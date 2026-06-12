@@ -16,7 +16,9 @@
 	members at the factories per-unit (the V0.2 path).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_facMap","_unitList","_hcUnit","_base","_extra","_maxExtra","_fundsPerExtraTeam","_lastDynTarget"];
+private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_facMap","_unitList","_hcUnit","_base","_extra","_maxExtra","_fundsPerExtraTeam","_lastDynTarget",
+              "_w7Flag","_w7Skill","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best","_w7SkillSend",
+              "_w11FreeFlag"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -136,6 +138,23 @@ if (count _live > 0) then {
 	} else {
 		_eligible select (floor (random (count _eligible)))
 	};
+
+	//--- W7 Veteran Company: one-shot flag on logik -> use highest-upgrade eligible template.
+	private ["_w7Flag","_w7Skill","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best"];
+	_w7Flag = _logik getVariable "wfbe_aicom_veteran_next";
+	if (isNil "_w7Flag") then {_w7Flag = false};
+	if (_w7Flag) then {
+		_logik setVariable ["wfbe_aicom_veteran_next", false];
+		_w7BestIdx = _pick; _w7Best = -1;
+		{
+			_w7Idx = _x;
+			_w7U   = _tmplUpgrades select _w7Idx;
+			_w7Score = (_w7U select 0) + (_w7U select 1) + (_w7U select 2) + (_w7U select 3);
+			if (_w7Score > _w7Best) then {_w7Best = _w7Score; _w7BestIdx = _w7Idx};
+		} forEach _eligible;
+		_pick = _w7BestIdx;
+		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] W7 VeteranCompany applied - premium template %2.", _sideText, _pick]] Call WFBE_CO_FNC_AICOMLog;
+	};
 	_template = _templates select _pick;
 
 	//--- Full template price from AI commander funds (whole-team purchase economics).
@@ -146,6 +165,17 @@ if (count _live > 0) then {
 		if (!isNil "_ud") then {_price = _price + (_ud select QUERYUNITPRICE)};
 	} forEach _template;
 	_funds = (_side) Call GetAICommanderFunds;
+
+	//--- W11 Field Hospital: one-shot free re-founding flag - waive the price check once.
+	private ["_w11FreeFlag"];
+	_w11FreeFlag = _logik getVariable "wfbe_aicom_free_refound";
+	if (isNil "_w11FreeFlag") then {_w11FreeFlag = false};
+	if (_w11FreeFlag) then {
+		_logik setVariable ["wfbe_aicom_free_refound", false];
+		_funds = _price; //--- Satisfy the funds gate without deducting.
+		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] W11 FieldHospital free-refound flag consumed.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+	};
+
 	if (_funds < _price) exitWith {};
 
 	//--- Spawn at the doctrine factory (fallback: Barracks, then the HQ).
@@ -163,13 +193,20 @@ if (count _live > 0) then {
 	if (isNull _facObj) then {_facObj = (_side) Call WFBE_CO_FNC_GetSideHQ};
 	if (isNull _facObj) exitWith {};
 
-	[_side, -_price] Call ChangeAICommanderFunds;
+	//--- W11 free-refound: do not deduct funds (founding is free this one time).
+	if (!_w11FreeFlag) then {
+		[_side, -_price] Call ChangeAICommanderFunds;
+	};
 	_logik setVariable ["wfbe_aicom_pending", _pending + 1];
 	//--- V0.6.4: name the receiving HC in the log - the random pick spreads load across
 	//--- all live HCs, and the server RPT should show the split without reading HC RPTs.
 	_hcUnit = leader (_live select (floor (random (count _live))));
-	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, getPos _facObj]] Call WFBE_CO_FNC_SendToClient;
-	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target]] Call WFBE_CO_FNC_AICOMLog;
+	//--- W7 skill boost: pass expected skill level in the delegate message if flag was active.
+	_w7SkillSend = _logik getVariable "wfbe_aicom_veteran_skill";
+	if (isNil "_w7SkillSend") then {_w7SkillSend = 0};
+	_logik setVariable ["wfbe_aicom_veteran_skill", 0]; // consume
+	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, getPos _facObj, _w7SkillSend]] Call WFBE_CO_FNC_SendToClient;
+	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
 	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|HC-template" + str _pick);
 } else {
 	//--- Fallback (no HC): found a server-local empty team; AssignTypes + Produce feed it.

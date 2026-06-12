@@ -162,6 +162,14 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 				_bounty = (_get select QUERYUNITPRICE) * (missionNamespace getVariable "WFBE_C_UNITS_BOUNTY_COEF");
 				_bounty = _bounty - (_bounty % 1);
 				[_killer_group, _bounty] Call ChangeTeamFunds;
+				//--- W12 Spoils of War: double-bounty into AI war chest while flag is active.
+				private ["_w12Key","_w12Exp","_w12KillerSideText"];
+				_w12KillerSideText = str _killer_side;
+				_w12Key  = Format ["wfbe_aicom_spoils_%1", _w12KillerSideText];
+				_w12Exp  = missionNamespace getVariable _w12Key;
+				if (!isNil "_w12Exp" && {_w12Exp > time}) then {
+					[_killer_side, _bounty] Call ChangeAICommanderFunds;
+				};
 			};
 		};
 	} else { //--- Teamkill.
