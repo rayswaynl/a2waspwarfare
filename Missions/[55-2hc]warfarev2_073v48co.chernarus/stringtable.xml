@@ -4930,6 +4930,14 @@
 	       <English>Service Point</English>
 	       <Russian>Service Point</Russian>
 	  </Key>
+	  <Key ID="RB_Artillery_Radar">
+	       <English>Artillery Radar</English>
+	       <Russian>Artillery Radar</Russian>
+	  </Key>
+	  <Key ID="RB_Reserve">
+	       <English>Reserve</English>
+	       <Russian>Reserve</Russian>
+	  </Key>
 
     <Key ID="STR_WF_PARAMETER_BuildingRestorerInterval">
         <English>GLOBAL: Building Restorer Interval</English>
