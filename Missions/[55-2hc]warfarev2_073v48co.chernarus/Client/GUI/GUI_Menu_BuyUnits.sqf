@@ -191,7 +191,10 @@ _IDCS = _IDCS - [_currentIDC];
 	if (MenuAction == 204) then {MenuAction = -1;_extracrew = if (_extracrew) then {false} else {true};_updateDetails = true};
 
 	//--- Factory DropDown list value has changed.
-	if (MenuAction == 301) then {MenuAction = -1;_factSel = lbCurSel 12018;_closest = _sorted select _factSel;_updateMap = true};
+	// Marty: Guard against the no-range state - the cleared combo can still fire onLBSelChanged
+	// (MenuAction 301) with lbCurSel -1 or a stale index; indexing _sorted then recreates the
+	// RPT error the empty-range dropdown guard removed. Only select with a valid live entry.
+	if (MenuAction == 301) then {MenuAction = -1;_factSel = lbCurSel 12018;if (_factSel >= 0 && {_factSel < count _sorted} && {!(isNull (_sorted select _factSel))}) then {_closest = _sorted select _factSel;_updateMap = true} else {_closest = objNull}};
 	
 	//--- Selection change, we update the details.
 	if (MenuAction == 302) then {MenuAction = -1;_updateDetails = true};
