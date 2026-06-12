@@ -51,7 +51,7 @@ if (!_deployed) then {
 		if (_update) then {
 			_grp = createGroup sideLogic;
 			_logic = _grp createUnit ["Logic",[0,0,0],[],0,"NONE"];
-			_logic setVariable ["DefenseTeam", createGroup _side];
+			_logic setVariable ["DefenseTeam", ([_side, "defense"] Call WFBE_CO_FNC_CreateGroup)];
             (_logic getVariable "DefenseTeam") setVariable ["wfbe_persistent", true];
 	        _logic setVariable ["weapons",missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MAX_AI"];
         [nil, "RequestBaseArea", [_logic, _position,_side,_logik,_areas]] Call WFBE_CO_FNC_SendToClients;

@@ -173,9 +173,9 @@ if (count _live > 0) then {
 	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|HC-template" + str _pick);
 } else {
 	//--- Fallback (no HC): found a server-local empty team; AssignTypes + Produce feed it.
-	_g = createGroup _side;
+	_g = [_side, "aicom"] Call WFBE_CO_FNC_CreateGroup;
 	if (isNull _g) exitWith {
-		["WARNING", Format ["AI_Commander_Teams.sqf: [%1] createGroup returned grpNull (group limit?).", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+		// Note: WFBE_CO_FNC_CreateGroup already logs the grpNull warning; this exitWith handles the no-op gracefully.
 	};
 	_g setVariable ["wfbe_aicom_founded", true];
 	_g setVariable ["wfbe_funds", 0, true];

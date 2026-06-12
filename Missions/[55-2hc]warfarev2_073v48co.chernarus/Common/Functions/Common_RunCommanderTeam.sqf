@@ -23,7 +23,7 @@ _side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
 _pos = [_pos, 30, 120] Call WFBE_CO_FNC_GetRandomPosition;
 _pos = [_pos, 40] Call WFBE_CO_FNC_GetEmptyPosition;
 
-_team = createGroup _side;
+_team = [_side, "aicom"] Call WFBE_CO_FNC_CreateGroup;
 _retVal = [_template, _pos, _side, true, _team, true, 90] call WFBE_CO_FNC_CreateTeam;
 _units = _retVal select 0;
 _vehicles = _retVal select 1;

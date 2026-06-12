@@ -8,7 +8,7 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent"];
 
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 
@@ -125,5 +125,69 @@ while {!WFBE_GameOver} do {
 			missionNamespace setVariable ["wfbe_groupcap_warn_guer144", _now];
 			["WARNING", Format ["server_groupsGC.sqf: [%1] side at %2/144 groups - AT CAP; createGroup will return grpNull and AI spawns will silently fail.", str resistance, _cntGuer]] Call WFBE_CO_FNC_AICOMLog;
 		};
+	};
+
+	// --- Per-side source attribution telemetry (LEVER 1) ---
+	// Debounced to once every 5 minutes; always logs (not only near cap).
+	_auditInterval = 300;
+	_lastAudit = missionNamespace getVariable "wfbe_groupaudit_last";
+	if (isNil "_lastAudit") then { _lastAudit = -9999 };
+	if ((_now - _lastAudit) >= _auditInterval) then {
+		missionNamespace setVariable ["wfbe_groupaudit_last", _now];
+
+		// Build per-(side, src) counts in a flat key=value array: [side, src, count, ...]
+		// Using a simple parallel-arrays approach to avoid any A3-only constructs.
+		_srcCounts = []; // flat: [side0, src0, cnt0, side1, src1, cnt1, ...]
+
+		{
+			_auditSide = side _x;
+			_src = _x getVariable "wfbe_group_src";
+			if (isNil "_src") then { _src = "untagged" };
+
+			// Find existing entry
+			_srcIdx = -1;
+			_srcKey = 0;
+			while { _srcKey < count _srcCounts } do {
+				if ((_srcCounts select _srcKey) == _auditSide && { (_srcCounts select (_srcKey + 1)) == _src }) then {
+					_srcIdx = _srcKey;
+					_srcKey = count _srcCounts; // break
+				} else {
+					_srcKey = _srcKey + 3;
+				};
+			};
+
+			if (_srcIdx < 0) then {
+				[_srcCounts, _auditSide] call WFBE_CO_FNC_ArrayPush;
+				[_srcCounts, _src]       call WFBE_CO_FNC_ArrayPush;
+				[_srcCounts, 1]          call WFBE_CO_FNC_ArrayPush;
+			} else {
+				_srcCounts set [_srcIdx + 2, (_srcCounts select (_srcIdx + 2)) + 1];
+			};
+		} forEach allGroups;
+
+		// Log one line per side present
+		{
+			_auditSide = _x;
+			_auditCnt  = switch (_auditSide) do {
+				case west:       { _cntWest };
+				case east:       { _cntEast };
+				case resistance: { _cntGuer };
+				default          { 0 };
+			};
+
+			// Build breakdown string for this side
+			_auditStr = "";
+			_srcKey = 0;
+			while { _srcKey < count _srcCounts } do {
+				if ((_srcCounts select _srcKey) == _auditSide) then {
+					if (_auditStr != "") then { _auditStr = _auditStr + " " };
+					_auditStr = _auditStr + Format ["%1=%2", _srcCounts select (_srcKey + 1), _srcCounts select (_srcKey + 2)];
+				};
+				_srcKey = _srcKey + 3;
+			};
+			if (_auditStr == "") then { _auditStr = "(none)" };
+
+			["INFORMATION", Format ["server_groupsGC.sqf: group audit [%1] %2/144: %3", str _auditSide, _auditCnt, _auditStr]] Call WFBE_CO_FNC_AICOMLog;
+		} forEach [west, east, resistance];
 	};
 };

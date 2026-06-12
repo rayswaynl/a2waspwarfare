@@ -15,7 +15,7 @@ _group = [_location, _side] Call WFBE_SE_FNC_GetTownPatrol;
 _team = objNull;
 if (count _group > 0) then {
 	_team_alive = true;
-	_team = createGroup _side;
+	_team = [_side, "patrol"] Call WFBE_CO_FNC_CreateGroup;
 
 	_position = ([getPos _location, 50, 500] Call WFBE_CO_FNC_GetRandomPosition);
 	_position = [_position, 50] Call WFBE_CO_FNC_GetEmptyPosition;

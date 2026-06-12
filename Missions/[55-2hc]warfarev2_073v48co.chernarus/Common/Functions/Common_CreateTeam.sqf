@@ -22,7 +22,7 @@ _perfSkipped = 0;
 
 if (typeName _list != "ARRAY") then { _list = [_list] };
 
-if (isNull _team) then {_team = createGroup _side}; //--- Create a group if none are given as a parameter.
+if (isNull _team) then {_team = [_side, "misc"] Call WFBE_CO_FNC_CreateGroup}; //--- Create a group if none are given as a parameter.
 
 // Marty: createGroup can return grpNull when the per-side group limit is reached; fail the whole template before creating empty vehicles.
 if (isNull _team) exitWith {

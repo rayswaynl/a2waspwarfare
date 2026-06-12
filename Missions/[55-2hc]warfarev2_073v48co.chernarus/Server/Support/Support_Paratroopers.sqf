@@ -42,7 +42,7 @@ _vehicle_count = ceil((count _units) / _vehicle_cargo);
 _vehicles = [];
 _vehicle_pilot = missionNamespace getVariable Format ["WFBE_%1PILOT",str _side];
 _ran = floor(random count _ranPos);
-_grp = createGroup _side;
+_grp = [_side, "paradrop"] Call WFBE_CO_FNC_CreateGroup;
 _built = 0;
 
 for '_i' from 1 to _vehicle_count do {

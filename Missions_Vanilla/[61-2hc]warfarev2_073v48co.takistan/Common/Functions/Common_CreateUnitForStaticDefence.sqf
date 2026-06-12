@@ -64,10 +64,10 @@ for '_i' from 0 to count(_groups)-1 do {
 
 	_sideID = (_side) Call GetSideID;
 	_perfItemStart = diag_tickTime;
-	if (isNull _team || {(count units _team) == 0}) then {_team = createGroup _side};
+	if (isNull _team || {(count units _team) == 0}) then {_team = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup};
 	if ((count units _team) > 0) then {
 		_teamLeader = leader _team;
-		if (!(isNull _teamLeader) && {!local _teamLeader}) then {_team = createGroup _side};
+		if (!(isNull _teamLeader) && {!local _teamLeader}) then {_team = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup};
 	};
 
 	if (isNull _team) then {

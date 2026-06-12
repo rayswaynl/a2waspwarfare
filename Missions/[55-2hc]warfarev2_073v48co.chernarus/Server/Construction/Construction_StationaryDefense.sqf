@@ -88,7 +88,7 @@ if (!isNull _area) then {
 		_team = _area getVariable "DefenseTeam";
 
 		if (isNil '_team') then {
-			_team = createGroup _side;
+			_team = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup;
 			//--- Per-area DefenseTeam is re-manned over time; flag persistent so the empty-group
 			//--- GC (server_groupsGC.sqf) never deletes it in a window between mannings.
 			_team setVariable ["wfbe_persistent", true];
@@ -100,7 +100,7 @@ if (!isNull _area) then {
 					{deleteVehicle _x} forEach (units _team);
 					deleteGroup _team;
 				};
-				_team = createGroup _side;
+				_team = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup;
 				//--- Re-flag persistent on the replacement group (see above).
 				_team setVariable ["wfbe_persistent", true];
 			};

@@ -139,7 +139,7 @@ while {!WFBE_GameOver} do {
 							};
 							_position = [_position, 50] call WFBE_CO_FNC_GetEmptyPosition;
 							[_positions, _position] call WFBE_CO_FNC_ArrayPush;
-							[_teams, createGroup _side] call WFBE_CO_FNC_ArrayPush;
+							[_teams, ([_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup)] call WFBE_CO_FNC_ArrayPush;
 						};
 
 						_use_server = true;

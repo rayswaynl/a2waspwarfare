@@ -30,7 +30,7 @@ Call Compile Format ["_uav addEventHandler ['Killed',{[_this select 0,_this sele
 _uav setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';",sideID];
 processInitCommands;
 
-_group = createGroup sideJoined;
+_group = [sideJoined, "misc"] Call WFBE_CO_FNC_CreateGroup;
 _driver = [missionNamespace getVariable Format ["WFBE_%1SOLDIER",sideJoinedText],_group,getPos _uav,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
 _driver moveInDriver _uav;
 

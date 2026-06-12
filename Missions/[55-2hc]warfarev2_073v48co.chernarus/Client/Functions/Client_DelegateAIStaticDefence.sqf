@@ -22,7 +22,7 @@ _moveInGunner = _this select 5;
 
 sleep (random 1); //--- Delay a bit to prevent a bandwidth congestion.
 
-if (isNull _team || {(count units _team) == 0}) then {_team = createGroup _side};
+if (isNull _team || {(count units _team) == 0}) then {_team = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup};
 
 _retVal = [_side, _groups, _positions, _team, _defence, _moveInGunner] call WFBE_CO_FNC_CreateUnitForStaticDefence;
 _teams = _retVal select 0;

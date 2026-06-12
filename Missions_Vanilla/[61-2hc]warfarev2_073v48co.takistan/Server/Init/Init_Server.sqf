@@ -187,7 +187,7 @@ Call {
 
 //--- Static defenses groups in main towns.
 {
-	missionNamespace setVariable [Format ["WFBE_%1_DefenseTeam", _x], createGroup _x];
+	missionNamespace setVariable [Format ["WFBE_%1_DefenseTeam", _x], ([_x, "defense"] Call WFBE_CO_FNC_CreateGroup)];
 	(missionNamespace getVariable Format ["WFBE_%1_DefenseTeam", _x]) setVariable ["wfbe_persistent", true];
 } forEach [west,east,resistance];
 
@@ -424,8 +424,8 @@ emptyQueu = [];
 		//--- Radio: Initialize the announcers entities.
 		_radio_hq1 = (createGroup sideLogic) createUnit ["Logic",[0,0,0],[],0,"NONE"];
 		_radio_hq2 = (createGroup sideLogic) createUnit ["Logic",[0,0,0],[],0,"NONE"];
-		[_radio_hq1] joinSilent (createGroup _side);
-		[_radio_hq2] joinSilent (createGroup _side);
+		[_radio_hq1] joinSilent ([_side, "misc"] Call WFBE_CO_FNC_CreateGroup);
+		[_radio_hq2] joinSilent ([_side, "misc"] Call WFBE_CO_FNC_CreateGroup);
 		_logik setVariable ["wfbe_radio_hq", _radio_hq1, true];
 		_logik setVariable ["wfbe_radio_hq_rec", _radio_hq2];
 

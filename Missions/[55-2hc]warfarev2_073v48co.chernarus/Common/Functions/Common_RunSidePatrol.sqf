@@ -35,7 +35,7 @@ _side     = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
 _position = ([getPos _homeTown, 100, 400] Call WFBE_CO_FNC_GetRandomPosition);
 _position = [_position, 50] Call WFBE_CO_FNC_GetEmptyPosition;
 
-_team   = createGroup _side;
+_team   = [_side, "patrol"] Call WFBE_CO_FNC_CreateGroup;
 _retVal = [_template, _position, _side, true, _team, true, 90] call WFBE_CO_FNC_CreateTeam;
 _units    = _retVal select 0;
 _vehicles = _retVal select 1;

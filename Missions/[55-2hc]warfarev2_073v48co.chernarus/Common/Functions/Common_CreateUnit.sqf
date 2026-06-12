@@ -29,12 +29,12 @@ if (typeName _side == "SIDE") then {
 } else {
 	_sideValue = _side Call WFBE_CO_FNC_GetSideFromID;
 };
-if (isNull _team) then {_team = createGroup _sideValue};
+if (isNull _team) then {_team = [_sideValue, "misc"] Call WFBE_CO_FNC_CreateGroup};
 if ((count units _team) > 0) then {
 	_teamLeader = leader _team;
 	if (!(isNull _teamLeader) && {!local _teamLeader}) then {
 		["WARNING", Format ["Common_CreateUnit.sqf: Team [%1] leader [%2] for unit [%3] is not local here; creating local fallback group.", _team, _teamLeader, _type]] Call WFBE_CO_FNC_LogContent;
-		_team = createGroup _sideValue;
+		_team = [_sideValue, "misc"] Call WFBE_CO_FNC_CreateGroup;
 	};
 };
 

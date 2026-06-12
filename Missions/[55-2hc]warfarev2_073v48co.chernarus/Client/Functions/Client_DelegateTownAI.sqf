@@ -22,7 +22,7 @@ sleep (random 1); //--- Delay a bit to prevent a bandwidth congestion.
 
 for "_i" from 0 to ((count _teams) - 1) do {
 	_team = _teams select _i;
-	if (isNull _team || {(count units _team) == 0}) then {_team = createGroup _side};
+	if (isNull _team || {(count units _team) == 0}) then {_team = [_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup};
 	_teams set [_i, _team];
 };
 

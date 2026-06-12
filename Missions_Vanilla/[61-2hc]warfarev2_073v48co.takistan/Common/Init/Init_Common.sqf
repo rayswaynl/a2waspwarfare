@@ -107,6 +107,8 @@ WFBE_CO_FNC_CreateTownUnits = Compile preprocessFileLineNumbers "Common\Function
 WFBE_CO_FNC_RunSidePatrol = Compile preprocessFileLineNumbers "Common\Functions\Common_RunSidePatrol.sqf";
 WFBE_CO_FNC_RunCommanderTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_RunCommanderTeam.sqf";
 WFBE_CO_FNC_AICOMLog = Compile preprocessFileLineNumbers "Common\Functions\Common_AICommanderLog.sqf";
+// Marty: Central createGroup wrapper (LEVER 2) - registered immediately after AICOMLog so the wrapper can call it.
+WFBE_CO_FNC_CreateGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateGroup.sqf";
 WFBE_CO_FNC_CreateUnitForStaticDefence = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateUnitForStaticDefence.sqf";
 WFBE_CO_FNC_CreateUnitsForResBases = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateUnitsForResBases.sqf";
 WFBE_CO_FNC_CreateVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateVehicle.sqf";

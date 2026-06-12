@@ -36,7 +36,7 @@ switch (_action) do {
 								_team = missionNamespace getVariable Format ["WFBE_%1_DefenseTeam", _side];
 
 								if (isNull _team) then {
-									_team = createGroup _side;
+									_team = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup;
 									//--- Re-flag persistent: the empty-group GC (server_groupsGC.sqf) must NOT delete this
 									//--- re-created side DefenseTeam in the window before units are added (HC-delegated manning).
 									_team setVariable ["wfbe_persistent", true];
