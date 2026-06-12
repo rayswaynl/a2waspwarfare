@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG","_ord","_spear","_spearT","_perTown"];
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG","_ord","_spear","_spearT","_perTown","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -34,6 +34,11 @@ if (count _uncaptured == 0) exitWith {};
 
 _useArc = (missionNamespace getVariable "WFBE_C_AI_COMMANDER_USE_ARC_APPROACH") > 0;
 _assigned = [];
+
+//--- V0.7: bootstrap-bias pre-computation (once per tick, used inside the team loop).
+_ownedCount = 0;
+{ if ((_x getVariable "sideID") == _sideID) then {_ownedCount = _ownedCount + 1} } forEach towns;
+_bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) > 0) && (_ownedCount == 0);
 
 {
 	_team = _x;
@@ -126,24 +131,45 @@ _assigned = [];
 			};
 
 			if (_needs) then {
-				//--- V0.5: concentrate on the strategy worker's spearhead targets first
-				//--- (SPEARHEAD_PER_TOWN teams per town this pass), then spill over to
-				//--- the classic nearest-uncaptured pick.
 				_target = objNull;
-				_spear = _logik getVariable ["wfbe_aicom_targets", []];
-				_perTown = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_SPEARHEAD_PER_TOWN", 3];
-				{
-					_spearT = _x;
-					if (isNull _target && {!isNull _spearT}) then {
-						if ((_spearT getVariable "sideID") != _sideID) then {
-							if (({_x == _spearT} count _assigned) < _perTown) then {_target = _spearT};
-						};
+				if (_bootstrap) then {
+					//--- V0.7 BOOTSTRAP BIAS: side owns 0 towns - pick the nearest-to-HQ,
+					//--- lowest-supplyValue uncaptured town so we grab income as fast as possible.
+					//--- Score = -(distance to HQ) - (supplyValue * 10): small near towns win.
+					_hqObj = (_side) Call WFBE_CO_FNC_GetSideHQ;
+					_bestBoot = objNull;
+					_bestBootScore = -1e9;
+					{
+						_bootDist = if (!isNull _hqObj) then {_x distance _hqObj} else {0};
+						_bootScore = (0 - _bootDist) - ((_x getVariable ["supplyValue", 0]) * 10);
+						if (_bootScore > _bestBootScore) then {_bestBootScore = _bootScore; _bestBoot = _x};
+					} forEach _uncaptured;
+					if (!isNull _bestBoot) then {_target = _bestBoot};
+					//--- Debounced log: at most once per 300 s per side.
+					_ltBootLog = _logik getVariable ["wfbe_aicom_bootstrap_lt", -1e9];
+					if (time - _ltBootLog > 300) then {
+						["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] BOOTSTRAP targeting active (0 towns owned) - biasing to nearest low-value town.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+						_logik setVariable ["wfbe_aicom_bootstrap_lt", time];
 					};
-				} forEach _spear;
-				if (isNull _target) then {
-					_avail = _uncaptured - _assigned;
-					if (count _avail == 0) then {_avail = _uncaptured};
-					_target = [leader _team, _avail] Call WFBE_CO_FNC_GetClosestEntity;
+				} else {
+					//--- V0.5: concentrate on the strategy worker's spearhead targets first
+					//--- (SPEARHEAD_PER_TOWN teams per town this pass), then spill over to
+					//--- the classic nearest-uncaptured pick.
+					_spear = _logik getVariable ["wfbe_aicom_targets", []];
+					_perTown = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_SPEARHEAD_PER_TOWN", 3];
+					{
+						_spearT = _x;
+						if (isNull _target && {!isNull _spearT}) then {
+							if ((_spearT getVariable "sideID") != _sideID) then {
+								if (({_x == _spearT} count _assigned) < _perTown) then {_target = _spearT};
+							};
+						};
+					} forEach _spear;
+					if (isNull _target) then {
+						_avail = _uncaptured - _assigned;
+						if (count _avail == 0) then {_avail = _uncaptured};
+						_target = [leader _team, _avail] Call WFBE_CO_FNC_GetClosestEntity;
+					};
 				};
 				if (!isNil "_target") then {
 					if (!isNull _target) then {

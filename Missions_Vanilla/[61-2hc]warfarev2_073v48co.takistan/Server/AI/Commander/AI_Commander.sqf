@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -72,6 +72,9 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 _ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301;
 _prevHuman = false; _prevState = "";
 _cbrResearchAppended = false; //--- Tracks whether CBR research was reactively appended this round.
+//--- V0.7 bootstrap stipend state.
+_prevStipendActive = false;
+_ltStipend = -1e9;
 
 ["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1.", str _side]] Call WFBE_CO_FNC_AICOMLog;
 
@@ -174,6 +177,48 @@ while {!gameOver} do {
 			};
 			if (!_richFlag && _prevRich) then {
 				_logik setVariable ["wfbe_aicom_reinforce_rich", false];
+			};
+
+			//--- V0.7 BOOTSTRAP STIPEND: trickle funds+supply while the side owns 0 towns AND
+			//--- time < WFBE_C_AICOM_BOOTSTRAP_MAXTIME.  Scales the per-minute amounts to the
+			//--- actual tick spacing so the grant is tick-rate-independent.
+			//--- supply is only granted when the dual-currency economy is active (system == 0).
+			_stipendMaxTime = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_MAXTIME", 3600];
+			_stipendTowns = 0;
+			{ if ((_x getVariable "sideID") == _myID) then {_stipendTowns = _stipendTowns + 1} } forEach towns;
+			_stipendActive = (_stipendTowns == 0) && (time < _stipendMaxTime);
+			if (_stipendActive && !_prevStipendActive) then {
+				["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND started (0 towns, time %2 s < max %3 s).", str _side, round time, _stipendMaxTime]] Call WFBE_CO_FNC_AICOMLog;
+				diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|start");
+			};
+			if (!_stipendActive && _prevStipendActive) then {
+				if (_stipendTowns > 0) then {
+					["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND ended - first town captured.", str _side]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|end-first-town");
+				} else {
+					["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND ended - max time %2 s reached.", str _side, _stipendMaxTime]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|end-timeout");
+				};
+			};
+			_prevStipendActive = _stipendActive;
+			if (_stipendActive) then {
+				//--- Grant once per 60 s (last-stipend timestamp guards the rate).
+				if (time - _ltStipend >= 60) then {
+					//--- Scale configured per-minute amounts by actual elapsed time since last grant
+					//--- so a missed tick doesn't silently drop income (capped at 3x to avoid windfalls).
+					_tickS = (time - _ltStipend) min 180;
+					if (_ltStipend < -1e8) then {_tickS = 60}; //--- first grant: treat as one minute.
+					_stipendFunds  = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_FUNDS",  100];
+					_stipendSupply = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_SUPPLY",  50];
+					_stipendFundsGrant  = round (_stipendFunds  * (_tickS / 60));
+					_stipendSupplyGrant = round (_stipendSupply * (_tickS / 60));
+					[_side, _stipendFundsGrant] Call ChangeAICommanderFunds;
+					_dual = (missionNamespace getVariable ["WFBE_C_ECONOMY_CURRENCY_SYSTEM", 0]) == 0;
+					if (_dual) then {
+						[_side, _stipendSupplyGrant, "AI commander bootstrap stipend.", false] Call ChangeSideSupply;
+					};
+					_ltStipend = time;
+				};
 			};
 
 			//--- Reactive CBR research: append [WFBE_UP_CBRADAR,1/2] to the AI upgrade program
