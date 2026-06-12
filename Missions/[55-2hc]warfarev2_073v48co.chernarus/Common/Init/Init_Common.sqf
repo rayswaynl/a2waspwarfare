@@ -400,7 +400,7 @@ if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0) then {
 //--- and shows hintSilent parseText (localize key) when a match is found.
 //--- To add a new special: append ["ClassName","STR_WF_HINT_..."] to the array.
 WFBE_SPECIAL_UNIT_HINTS = [
-	["UH1H_EP1","STR_WF_HINT_SalvageHeli"],
+	// Marty: WEST salvage heli (UH1H_EP1) removed - invalid class on live box; re-add with validated airframe (claude-inbox#2 item 1).
 	["Mi17_medevac_CDF","STR_WF_HINT_SalvageHeli"]
 ];
 
