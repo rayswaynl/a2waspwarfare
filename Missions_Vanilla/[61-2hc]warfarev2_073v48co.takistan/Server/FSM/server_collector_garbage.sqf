@@ -29,5 +29,7 @@ while {!WFBE_GameOver} do {
 		};
 	};
 
-	sleep 0.5;
+	// Marty: PERF1 bonus - corpses/wrecks do not need a 2Hz sweep; 5s keeps cleanup
+	// timely while cutting the allDead scan and array-diff cost by 10x on busy servers.
+	sleep 5;
 };
