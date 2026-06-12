@@ -207,18 +207,23 @@ while {!WFBE_GameOver} do {
 					if (isMultiplayer) then {[nil, "HandleSpecial", ["cleanup-townai", _town, _side]] Call WFBE_CO_FNC_SendToClients};
 
 					//--- Teams Units.
+					//--- Marty: delete only SERVER-LOCAL units here; HC-delegated units are deleted by the
+					//--- cleanup-townai broadcast above on the machine where they are local. A server-side
+					//--- deleteVehicle on HC-local units leaves ghost references in the HC group sync
+					//--- (the Takistan 'Object not found' flood: ~17k/min per HC, 910k lines in one round).
 					{
 						if !(isNil '_x') then {
 							if !(isNull _x) then {
-								{deleteVehicle _x} forEach units _x;
-								deleteGroup _x;
+								{if (local _x) then {deleteVehicle _x}} forEach units _x;
+								if (({!(local _x)} count units _x) == 0) then {deleteGroup _x};
 							};
 						};
 					} forEach _town_teams;
 
 					//--- Teams vehicles.
+					//--- Marty: same locality rule as above - HC-local vehicles die via cleanup-townai.
 					{
-						if (alive _x) then {
+						if (alive _x && {local _x}) then {
 							if (!(isPlayer leader group _x)) then {deleteVehicle _x};
 						};
 					} forEach (_town getVariable 'wfbe_active_vehicles');

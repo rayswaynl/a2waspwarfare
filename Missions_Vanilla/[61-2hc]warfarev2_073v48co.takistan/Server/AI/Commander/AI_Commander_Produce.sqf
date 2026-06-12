@@ -5,15 +5,24 @@
 
 	For each AI team with no build in flight and below its template size, build the first
 	template unit it is short on, at an alive factory of the right kind, if unlocked and
-	affordable. One order per team per call. No-ops when the factory does not exist.
+	affordable.
+	V0.6.7 ADAPTIVE BATCH: per cycle, per eligible team, order up to (deficit) units capped
+	by WFBE_C_AICOM_PRODUCE_BATCH (default 3) and available funds; each unit still charged
+	individually.  When the wfbe_aicom_reinforce_rich flag is set by the supervisor (P4
+	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP"];
+private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag"];
 
 _side = _this;
 _sideText = str _side;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNil "_logik") exitWith {};
+
+//--- V0.6.7: batch cap - tunable, doubled when supervisor sets the wealth-rich flag.
+_batchCap = missionNamespace getVariable ["WFBE_C_AICOM_PRODUCE_BATCH", 3];
+_richFlag = _logik getVariable ["wfbe_aicom_reinforce_rich", false];
+if (_richFlag) then {_batchCap = _batchCap * 2};
 
 //--- Safety cap: do not produce above the per-side AI ceiling.
 _cap = missionNamespace getVariable "WFBE_C_AI_COMMANDER_TOTAL_AI_MAX";
@@ -63,15 +72,19 @@ _facDefs = [["Barracks","BARRACKSUNITS",WFBE_UP_BARRACKS], ["Light","LIGHTUNITS"
 		_cur  = {alive _x} count (units _team);
 
 		if (_cur < _want) then {
-			//--- First template classname the team is short on.
-			_toBuild = "";
-			{
-				_d = _x;
-				_have = {typeOf _x == _d} count (units _team);
-				if (_have < ({_x == _d} count _template)) exitWith {_toBuild = _d};
-			} forEach _template;
+			//--- V0.6.7: order up to batch cap units per team this cycle (deficit-capped).
+			_batchOrdered = 0;
+			while {_cur < _want && _batchOrdered < _batchCap} do {
+				//--- First template classname the team is still short on.
+				_toBuild = "";
+				{
+					_d = _x;
+					_have = {typeOf _x == _d} count (units _team);
+					if (_have < ({_x == _d} count _template)) exitWith {_toBuild = _d};
+				} forEach _template;
 
-			if (_toBuild != "") then {
+				if (_toBuild == "") exitWith {}; //--- Nothing more to order for this team.
+
 				//--- Which production factory builds it?
 				_fac = [];
 				{
@@ -79,34 +92,37 @@ _facDefs = [["Barracks","BARRACKSUNITS",WFBE_UP_BARRACKS], ["Light","LIGHTUNITS"
 					if (_toBuild in _unitList) exitWith {_fac = _x};
 				} forEach _facDefs;
 
-				if (count _fac > 0) then {
-					_ud = missionNamespace getVariable _toBuild;
-					if (!isNil "_ud") then {
-						_typeName = _fac select 0;
-						_track    = _fac select 2;
-						_reqUp    = _ud select QUERYUNITUPGRADE;
-						_price    = _ud select QUERYUNITPRICE;
+				if (count _fac == 0) exitWith {}; //--- No factory handles this class.
 
-						if (_reqUp <= (_upgrades select _track)) then {
-							_kind = _structTypes find _typeName;
-							if (_kind >= 0) then {
-								_factories = [_side, _kind, _buildings] Call GetFactories;
-								_funds = (_side) Call GetAICommanderFunds;
-								if (count _factories > 0) then {
-									if (_funds >= _price) then {
-										[_side, -_price] Call ChangeAICommanderFunds;
-										_isVeh = if (_toBuild isKindOf "Man") then {[]} else {[true,true,true,true]};
-										_id = [floor (random 1000000)];
-										_q = (_team getVariable ["wfbe_queue", []]) + [_id];
-										_team setVariable ["wfbe_queue", _q];
-										[_id, (_factories select 0), _toBuild, _side, _team, _isVeh] Spawn AIBuyUnit;
-										["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] ordering [%3] at %4 factory (cost %5).", _sideText, _team, _toBuild, _typeName, _price]] Call WFBE_CO_FNC_AICOMLog;
-									};
-								};
-							};
-						};
-					};
-				};
+				_ud = missionNamespace getVariable _toBuild;
+				if (isNil "_ud") exitWith {};
+
+				_typeName = _fac select 0;
+				_track    = _fac select 2;
+				_reqUp    = _ud select QUERYUNITUPGRADE;
+				_price    = _ud select QUERYUNITPRICE;
+
+				if (_reqUp > (_upgrades select _track)) exitWith {}; //--- Not unlocked yet.
+
+				_kind = _structTypes find _typeName;
+				if (_kind < 0) exitWith {};
+
+				_factories = [_side, _kind, _buildings] Call GetFactories;
+				if (count _factories == 0) exitWith {};
+
+				_funds = (_side) Call GetAICommanderFunds;
+				if (_funds < _price) exitWith {}; //--- Cannot afford next unit; stop batch.
+
+				[_side, -_price] Call ChangeAICommanderFunds;
+				_isVeh = if (_toBuild isKindOf "Man") then {[]} else {[true,true,true,true]};
+				_id = [floor (random 1000000)];
+				_q = (_team getVariable ["wfbe_queue", []]) + [_id];
+				_team setVariable ["wfbe_queue", _q];
+				[_id, (_factories select 0), _toBuild, _side, _team, _isVeh] Spawn AIBuyUnit;
+				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] ordering [%3] at %4 factory (cost %5, batch %6/%7 rich=%8).", _sideText, _team, _toBuild, _typeName, _price, _batchOrdered + 1, _batchCap, _richFlag]] Call WFBE_CO_FNC_AICOMLog;
+
+				_batchOrdered = _batchOrdered + 1;
+				_cur = _cur + 1; //--- Optimistic count so deficit loop terminates correctly.
 			};
 		};
 	};

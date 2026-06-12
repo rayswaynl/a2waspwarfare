@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime"];
 
 _side = _this;
 _sideText = str _side;
@@ -125,10 +125,13 @@ if (_cbrIdx >= 0) then {
 		} forEach (nearestObjects [getPos (_side Call WFBE_CO_FNC_GetSideHQ), ["StaticWeapon","Tank","Car"], 10000]);
 	};
 
-	//--- CBR enters the build order only when: threat confirmed + round > 45 min + supply OK.
-	if (_artyThreat && {time > 2700}) then {
-		_cbrCost    = _costs select _cbrIdx;
-		_cbrReserve = 3000; //--- Minimum reserve: keeps team-founding supply free.
+	//--- CBR enters the build order only when: threat confirmed + round > min time + supply OK.
+	//--- V0.6.7 P5: both threat AND time gate are required; use tunable min-time and supply reserve.
+	//--- Default min time: 2700 s (45 min). Override via WFBE_C_AICOM_CBR_MIN_TIME in missionNamespace.
+	_cbrMinTime = missionNamespace getVariable ["WFBE_C_AICOM_CBR_MIN_TIME", 2700];
+	_cbrReserve = missionNamespace getVariable ["WFBE_C_AICOM_SUPPLY_RESERVE", 500];
+	if (_artyThreat && {time >= _cbrMinTime}) then {
+		_cbrCost = _costs select _cbrIdx;
 		if (_supply >= _cbrCost + _cbrReserve) then {
 			_order = _order + ["CBRadar"];
 			_scaffoldActivated = true;

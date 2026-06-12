@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -136,6 +136,30 @@ while {!gameOver} do {
 			};
 			if (time - _ltProd > (missionNamespace getVariable "WFBE_C_AI_COMMANDER_PRODUCE_INTERVAL")) then {
 				(_side) Call WFBE_SE_FNC_AI_Com_Produce; _ltProd = time;
+			};
+
+			//--- V0.6.7 P4: ADAPTIVE SPEND CONTROLLER - wealth conversion into reinforcement priority.
+			//--- When the AI is funds-rich (> 2x extra-team threshold) and all team targets are
+			//--- already met, signal Produce to use doubled batch cap so surplus converts to armies.
+			_richThreshold = (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_FUNDS_PER_EXTRA_TEAM", 15000]) * 2;
+			_funds = (_side) Call GetAICommanderFunds;
+			_fundsRich = _funds > _richThreshold;
+			_dynTarget = _logik getVariable ["wfbe_aicom_dyntarget", missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TEAMS_TARGET", 4]];
+			_fTeams = 0;
+			{
+				if (!isNull _x) then {
+					if ((_x getVariable ["wfbe_aicom_hc", false]) || {_x getVariable ["wfbe_aicom_founded", false]}) then {
+						_fTeams = _fTeams + 1;
+					};
+				};
+			} forEach (_logik getVariable ["wfbe_teams", []]);
+			_richFlag = _fundsRich && (_fTeams >= _dynTarget);
+			if (_richFlag != (_logik getVariable ["wfbe_aicom_reinforce_rich", false])) then {
+				_logik setVariable ["wfbe_aicom_reinforce_rich", _richFlag];
+				if (_richFlag) then {
+					["INFORMATION", Format ["AI_Commander.sqf: [%1] wealth conversion active (funds %2 > threshold %3, teams %4/%5) - Produce batch doubled.", str _side, _funds, _richThreshold, _fTeams, _dynTarget]] Call WFBE_CO_FNC_AICOMLog;
+					diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|WEALTH_CONVERSION|funds" + str _funds);
+				};
 			};
 
 			//--- Reactive CBR research: append [WFBE_UP_CBRADAR,1/2] to the AI upgrade program
