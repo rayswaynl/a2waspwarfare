@@ -18,6 +18,8 @@ _label = switch (_rlType) do {
 	case "Aircraft": {"A"};
 	case "ServicePoint": {"S"};
 	case "AARadar": {"AAR"};
+	case "ArtilleryRadar": {"AR"};
+	case "Reserve": {"RES"};
 	default {""};
 };
 

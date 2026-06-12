@@ -259,6 +259,24 @@ _n = _n + [''];
 _o = _o + [50];
 _z = _z + [1];
 
+_u = _u + ["20Rnd_B_AA12_Pellets"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [10];
+_z = _z + [2];
+
+_u = _u + ["20Rnd_B_AA12_74Slug"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [10];
+_z = _z + [2];
+
+_u = _u + ["20Rnd_B_AA12_HE"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [40];
+_z = _z + [4];
+
 [_faction, _u, _p, _n, _o, _z] Call Compile preprocessFile "Common\Config\Config_Magazines.sqf";
 
 _u = [];//--- Weapon

@@ -16,7 +16,7 @@ private[
 	"_isCommanderTeam", "_aiText", "_aiColor", "_moneyText", "_baseStructures", "_baseHq", "_baseTotal", "_baseDamaged", "_clientFPS", "_clientFPSColor",
 	"_serverFPS", "_serverFPSColor", "_hudFPSColor", "_hudMode", "_lastHudMode", "_RHUDUpdateFPS", "_RHUDUpdateServerFPSRow", "_RHUDSetFPSPosition", "_RHUDSetFullPosition", "_clientLabel", "_serverLabel", "_showMissingServer",
 	"_labelX", "_valueX", "_startY", "_rowH", "_labelW", "_valueW", "_lineH", "_rowY", "_layoutPairs",
-	"_RHUDUpdateUpgrade", "_RHUD_upgId", "_RHUD_upgEnd"
+	"_RHUDUpdateUpgrade", "_RHUD_upgId", "_RHUD_upgEnd", "_cachedEnd"
 ];
 
 _total = count towns;
@@ -144,7 +144,7 @@ _RHUDUpdateServerFPSRow = {
 };
 
 _RHUDUpdateUpgrade = {
-	private ["_up","_id","_labels","_times","_lbl","_lvl","_dur","_remain","_mm","_ss","_txt","_queue","_upgrades"];
+	private ["_up","_id","_labels","_cachedEnd","_lbl","_remain","_mm","_ss","_txt","_queue","_upgrades"];
 	_labels = missionNamespace getVariable "WFBE_C_UPGRADES_LABELS";
 	if (isNil "_labels") exitWith {};
 
@@ -157,13 +157,13 @@ _RHUDUpdateUpgrade = {
 	if (_up && _id >= 0 && _id < count _labels) then {
 		_lbl = _labels select _id;
 		if (_RHUD_upgId != _id) then {
-			_times = missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_TIMES", WFBE_Client_SideJoinedText];
-			_upgrades = (WFBE_Client_SideJoined) call WFBE_CO_FNC_GetSideUpgrades;
-			_lvl = _upgrades select _id;
-			_dur = 0;
-			if (_lvl < count (_times select _id)) then {_dur = (_times select _id) select _lvl};
+			// Marty: Use the end time cached by WFBE_CL_FNC_Upgrade_Started (anchored to the moment the client
+			// received the start message) rather than recomputing time+dur here.  This keeps the countdown stable
+			// across HUD redraws and avoids a fresh drift each time the upgrade ID first appears in the loop.
+			_cachedEnd = WFBE_Client_Logic getVariable "wfbe_upgrading_countdown_end_time";
+			if (isNil "_cachedEnd" || {_cachedEnd < 0}) then {_cachedEnd = time};
 			_RHUD_upgId = _id;
-			_RHUD_upgEnd = time + _dur;
+			_RHUD_upgEnd = _cachedEnd;
 		};
 		_remain = ceil (_RHUD_upgEnd - time);
 		if (_remain < 0) then {_remain = 0};
@@ -344,6 +344,8 @@ while {true} do {
 
 			//AI COUNT
 			_mbu = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX';
+			//--- Patrols upgrade trades 1 max AI per player for the side's autonomous patrols.
+			if (count ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) > WFBE_UP_PATROLS && {(((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_PATROLS) > 0}) then {_mbu = (_mbu - 1) max 1};
 			_currentUnitsCount = Count ((Units (group player)) Call GetLiveUnits);
 			_maxUnitsCount = ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_BARRACKS;
 			switch (_maxUnitsCount) do {

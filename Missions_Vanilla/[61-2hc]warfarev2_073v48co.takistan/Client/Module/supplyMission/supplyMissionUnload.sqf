@@ -65,5 +65,7 @@ if (!_ok) exitWith {
 };
 
 ["INFORMATION", Format ["SupplyMissionUnload.sqf: Player %1 requested helicopter unload for %2.", name player, _associatedSupplyTruck]] Call WFBE_CO_FNC_LogContent;
+//--- Sound is NOT played here; supplyMissionCompletedMessage.sqf plays commanderNotification for the
+//--- pilot once the server acks the delivery. Playing it here too caused a double-sound for the heli pilot.
 WFBE_Server_PV_SupplyMissionCompleted = [player, _associatedSupplyTruck, sideJoined];
 publicVariableServer "WFBE_Server_PV_SupplyMissionCompleted";

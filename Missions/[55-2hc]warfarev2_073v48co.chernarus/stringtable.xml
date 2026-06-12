@@ -4036,9 +4036,9 @@
       </Key>
 	  <!--Air-Factory-->
 	  <Key ID="STR_WF_UPGRADE_aircraftfactory_Desc">
-        <English>This upgrade unlocks aircrafts.&lt;br/&gt;&lt;br/&gt;This allows the team to buy better aircraft at the Aircraft Factory and Airport Hangars.</English>
-        <French>This upgrade unlocks aircrafts.&lt;br/&gt;&lt;br/&gt;This allows the team to buy better aircraft at the Aircraft Factory and Airport Hangars.</French>
-        <German>Dieses Upgrade vebessert die Luftstreitkräfte.&lt;br/&gt;&lt;br/&gt;Dadurch kann das Team bessere Luftstreitkräfte bei der Fabrik und auch bei Flugplätzen/Hangars kaufen.</German>
+        <English>This upgrade unlocks aircraft.&lt;br/&gt;&lt;br/&gt;Allows the team to buy better aircraft at the Air Factory. Capturing an airfield (NWAF, NEAF, Balota) also unlocks an exclusive hangar with aircraft unavailable elsewhere.</English>
+        <French>This upgrade unlocks aircraft.&lt;br/&gt;&lt;br/&gt;Allows the team to buy better aircraft at the Air Factory. Capturing an airfield (NWAF, NEAF, Balota) also unlocks an exclusive hangar with aircraft unavailable elsewhere.</French>
+        <German>Dieses Upgrade verbessert die Luftstreitkräfte.&lt;br/&gt;&lt;br/&gt;Ermöglicht dem Team, bessere Luftstreitkräfte bei der Fabrik zu kaufen. Das Einnehmen eines Flugplatzes (NWAF, NEAF, Balota) schaltet zudem einen exklusiven Hangar mit einzigartigen Flugzeugen frei.</German>
         <Russian>Данная модернизация разблокирует Авиацию.&lt;br/&gt;&lt;br/&gt;Это позволяет команде покупать лучшие вертолеты и самолеты на авиазаводе и в ангаре аэродрома (только самолеты).</Russian>
         <Italian>This upgrade unlocks aircrafts.&lt;br/&gt;&lt;br/&gt;This allows the team to buy better aircraft at the Aircraft Factory and Airport Hangars.</Italian>
       </Key>
@@ -4929,6 +4929,14 @@
 	  <Key ID="RB_Service_Point">
 	       <English>Service Point</English>
 	       <Russian>Service Point</Russian>
+	  </Key>
+	  <Key ID="RB_Artillery_Radar">
+	       <English>Artillery Radar</English>
+	       <Russian>Artillery Radar</Russian>
+	  </Key>
+	  <Key ID="RB_Reserve">
+	       <English>Reserve</English>
+	       <Russian>Reserve</Russian>
 	  </Key>
 
     <Key ID="STR_WF_PARAMETER_BuildingRestorerInterval">
@@ -8294,35 +8302,35 @@
         <Russian>[$] Медик</Russian>
         <Italian>[$] Medico</Italian>
 	</Key>	
-	 </Key><Key ID="STR_WF_ALL_TAI3">
+	 <Key ID="STR_WF_ALL_TAI3">
         <English>[$] AT Rifleman</English>
         <French>[$] anti réservoir Fusilier</French>
         <German>[$] AT Schütze</German>
         <Russian>[$] анти бак стрелок</Russian>
         <Italian>[$] anti cisterna Fuciliere</Italian>
 	 </Key>
-	 </Key><Key ID="STR_WF_ALL_TAI4">
+	 <Key ID="STR_WF_ALL_TAI4">
         <English>[$] Machine Gunner</English>
         <French>[$] Machine Canonnier</French>
         <German>[$] Maschinengewehrschütze</German>
         <Russian>[$] Машина наводчик</Russian>
         <Italian>[$] Macchina Artigliere</Italian>
 	 </Key>
-	 </Key><Key ID="STR_WF_ALL_TAI5">
+	 <Key ID="STR_WF_ALL_TAI5">
         <English>[$] Automatic Rifleman</English>
         <French>[$] Automatique Fusilier</French>
         <German>[$] Automatik Schütze</German>
         <Russian>[$] Автоматический стрелок</Russian>
         <Italian>[$] Automatico Fuciliere</Italian>
 	 </Key>
-	 </Key><Key ID="STR_WF_ALL_TAI6">
+	 <Key ID="STR_WF_ALL_TAI6">
         <English>[$] AT Specialist</English>
         <French>[$] anti réservoir Spécialiste</French>
         <German>[$] AT Spezialist</German>
         <Russian>[$] анти бак Специалист</Russian>
         <Italian>[$] anti cisterna Specialista</Italian>
 	 </Key>
-	 </Key><Key ID="STR_WF_ALL_TAI7">
+	 <Key ID="STR_WF_ALL_TAI7">
         <English>[$] AA Specialist</English>
        <French>[$] anti Air Spécialiste</French>
         <German>[$] AA Spezialist</German>
@@ -9466,6 +9474,50 @@
       <Italian>Questo aggiornamento riduce il prezzo delle unità in modo permanente. Livello 1 = sconto permanente del 25 % su tutte le unità, costo: S 25.000. Livello 2 = sconto permanente del 50 % su tutte le unità, costo: S 50.000.</Italian>
     </Key>
 
+    <!-- CBR: Counter Battery Radar strings. -->
+    <Key ID="STR_WF_UPGRADE_CBRadar">
+      <English>Counter Battery Radar</English>
+    </Key>
+    <Key ID="STR_WF_UPGRADE_CBRadar_Desc">
+      <English>Increases your Counter Battery Radar detection radius.&lt;br/&gt; - Level 0 = 750 m&lt;br/&gt;   Level 1 = 1,500 m&lt;br/&gt;   Level 2 = 2,000 m&lt;br/&gt;&lt;br/&gt;Note: each captured airfield provides a permanent 2,000 m CBR that is not affected by this upgrade.</English>
+    </Key>
+    <Key ID="CBRadarNeedsAAR">
+      <English>Counter Battery Radar requires an Anti-Air Radar to be built first.</English>
+    </Key>
+    <Key ID="BankAlreadyBuilt">
+      <English>Your side already has a bank. Only one bank may be active per side.</English>
+    </Key>
+    <Key ID="BankTooCloseToBase">
+      <English>The bank must be built outside your base protection area.</English>
+    </Key>
+    <Key ID="BankDestroyed">
+      <English>%1 has destroyed the %2 bank! The economic stronghold has fallen.</English>
+    </Key>
+    <Key ID="BankDividend">
+      <English>Bank dividend: $%1</English>
+    </Key>
+    <Key ID="SiteClearanceCommanderOnly">
+      <English>Site Clearance can only be used by the commander.</English>
+    </Key>
+    <Key ID="SiteClearanceNeedsBarracks1">
+      <English>Site Clearance requires Barracks level 1 before use.</English>
+    </Key>
+    <Key ID="SiteClearanceNoTrees">
+      <English>Site Clearance: no trees found within 25 m of that position.</English>
+    </Key>
+    <Key ID="SiteClearanceNoSupply">
+      <English>Site Clearance: insufficient supply (need %1).</English>
+    </Key>
+    <Key ID="SiteClearanceDone">
+      <English>Site clearance: %1 trees felled, -%2 supply.</English>
+    </Key>
+    <Key ID="SiteClearanceOutsideBase">
+      <English>Site Clearance position must be inside your base area.</English>
+    </Key>
+    <Key ID="STR_WF_CBR_Contact">
+      <English>CB CONTACT</English>
+    </Key>
+
     <!-- Marty: Client notification when the AI movement recovery actually made a unit move again. -->
     <Key ID="STR_WF_INFO_AI_Recovered">
       <English>AI movement recovered: %1.</English>
@@ -9482,6 +9534,119 @@
       <German>Auto-Flip: %1 wurde automatisch wieder aufgerichtet.</German>
       <Russian>Auto-flip: %1 was righted.</Russian>
       <Italian>Auto-flip: %1 e stato raddrizzato automaticamente.</Italian>
+    </Key>
+
+    <!-- Marty: Defense budget — budget cap exceeded rejection (server -> client via LocalizeMessage). -->
+    <!-- %1 = category (STATICS/FORTIFICATIONS/MINES), %2 = current count, %3 = cap -->
+    <Key ID="DefenseBudgetFull">
+      <English>Defense limit reached — %1: %2 of %3 built. Funds refunded.</English>
+    </Key>
+
+    <!-- Marty: Defense budget — threat gate rejection (3+ enemy ground units near base, statics/mines blocked). -->
+    <Key ID="DefenseThreatGate">
+      <English>Cannot place statics or mines — 3 or more enemy ground units are within base range. Funds refunded.</English>
+    </Key>
+
+    <!-- Marty: WDDM composition cap — max 3 compositions per base area (Task 18). %1 = current count, %2 = cap -->
+    <Key ID="WddmCompositionCapReached">
+      <English>Base composition limit reached (%1/%2). Commander composition not built.</English>
+    </Key>
+
+    <!-- Marty: Voting page — main menu button and dialog title -->
+    <Key ID="STR_WF_MAIN_VotingPageMenu">
+      <English>Vote</English>
+    </Key>
+    <Key ID="STR_WF_TOOLTIP_MainMenu_VotingPage">
+      <English>Open the voting menu (skip night, surrender, weather, restart, commander).</English>
+    </Key>
+    <Key ID="STR_WF_VOTE_Title">
+      <English>Community Vote</English>
+    </Key>
+
+    <!-- Marty: Vote option labels (must match Format ["STR_WF_VOTE_OPT_%1", type] lookups in server scripts) -->
+    <Key ID="STR_WF_VOTE_OPT_skip-night">
+      <English>Skip Night (majority)</English>
+    </Key>
+    <Key ID="STR_WF_VOTE_OPT_commander">
+      <English>Re-vote Commander (existing)</English>
+    </Key>
+    <Key ID="STR_WF_VOTE_OPT_surrender">
+      <English>Surrender (100% your team)</English>
+    </Key>
+    <Key ID="STR_WF_VOTE_OPT_weather">
+      <English>Change Weather (100% all)</English>
+    </Key>
+    <Key ID="STR_WF_VOTE_OPT_mission-restart">
+      <English>Mission Restart (100% all)</English>
+    </Key>
+
+    <!-- Marty: Dialog UI labels -->
+    <Key ID="STR_WF_VOTE_StartVote">
+      <English>Start Vote</English>
+    </Key>
+    <Key ID="STR_WF_VOTE_VoteYes">
+      <English>Vote YES</English>
+    </Key>
+    <Key ID="STR_WF_VOTE_AlreadyVoted">
+      <English>Already Voted YES</English>
+    </Key>
+    <!-- %1 = yes count, %2 = needed -->
+    <Key ID="STR_WF_VOTE_Status">
+      <English>YES: %1 / %2 needed</English>
+    </Key>
+    <!-- %1 = seconds remaining -->
+    <Key ID="STR_WF_VOTE_Countdown">
+      <English>Time remaining: %1 s</English>
+    </Key>
+    <!-- %1 = seconds until unlocked -->
+    <Key ID="STR_WF_VOTE_Cooldown">
+      <English>On cooldown: %1 s remaining</English>
+    </Key>
+    <Key ID="STR_WF_VOTE_SurrenderCommanderOnly">
+      <English>Only the commander can start a surrender vote</English>
+    </Key>
+    <!-- %1 = localized name of the other active vote type -->
+    <Key ID="STR_WF_VOTE_OtherActive">
+      <English>Another vote is in progress: %1</English>
+    </Key>
+
+    <!-- Marty: Chat broadcast messages (via LocalizeMessage) -->
+    <!-- %1 = player name, %2 = localized vote type -->
+    <Key ID="STR_WF_VOTE_Started">
+      <English>%1 has started a vote: %2</English>
+    </Key>
+    <!-- %1 = localized vote type -->
+    <Key ID="STR_WF_VOTE_Passed">
+      <English>Vote PASSED: %1</English>
+    </Key>
+    <!-- %1 = localized vote type -->
+    <Key ID="STR_WF_VOTE_Failed">
+      <English>Vote FAILED: %1 (not enough yes votes)</English>
+    </Key>
+    <Key ID="STR_WF_VOTE_NotNight">
+      <English>Skip Night vote is only available at night.</English>
+    </Key>
+
+    <!-- Special-unit info popups (data-driven WFBE_SPECIAL_UNIT_HINTS map) -->
+    <Key ID="STR_WF_HINT_SalvageHeli">
+      <English>Salvage Helicopter - recovers wrecks for cash, salvage-only role. Unlocks at Air level 1.</English>
+    </Key>
+
+    <!-- Command Deck: Skin Selector strings -->
+    <Key ID="STR_WF_SkinSelector_Title">
+      <English>SELECT YOUR SKIN</English>
+    </Key>
+    <Key ID="STR_WF_SkinSelector_Apply">
+      <English>Apply</English>
+    </Key>
+    <Key ID="STR_WF_SkinSelector_Skip">
+      <English>Skip</English>
+    </Key>
+    <Key ID="STR_WF_SkinSelector_GhillieNote">
+      <English>Ghillie suits: Sniper class only</English>
+    </Key>
+    <Key ID="STR_WF_SkinSelector_MenuButton">
+      <English>SKIN</English>
     </Key>
 
     </Container>

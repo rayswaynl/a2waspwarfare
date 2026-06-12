@@ -113,6 +113,26 @@ for '_i' from 0 to count(_groups)-1 do {
 				};
 			}else{
 				[_unit] allowGetIn true;
+				//--- Walk-in boarding watchdog: an HC-local AI boarding a server-local
+				//--- static silently stalls at the gun (walks there, never mounts). The
+				//--- instant path retries; this path had nothing. 90s grace, then force.
+				[_unit,_defence] Spawn {
+					Private ["_defence","_unit","_deadline"];
+					_unit = _this select 0;
+					_defence = _this select 1;
+					_deadline = time + 90;
+					waitUntil {sleep 5; (time > _deadline) || {!alive _unit} || {isNull _defence} || {!alive _defence} || {gunner _defence == _unit}};
+					if (alive _unit && {!isNull _defence} && {alive _defence} && {isNull (gunner _defence)}) then {
+						[_unit] allowGetIn true;
+						_unit assignAsGunner _defence;
+						[_unit] orderGetIn true;
+						sleep 10;
+						if (alive _unit && {alive _defence} && {isNull (gunner _defence)}) then {
+							_unit moveInGunner _defence;
+							["WARNING", Format["Common_CreateUnitForstaticDefence.sqf: walk-in boarding stalled - forced gunner into [%1].", typeOf _defence]] Call WFBE_CO_FNC_LogContent;
+						};
+					};
+				};
 			};
 
 			if (_diagEnabled) then {

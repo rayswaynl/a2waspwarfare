@@ -196,6 +196,22 @@ while {alive player && dialog} do {
 		createDialog "RscMenu_Service";
 	};
 
+	//--- Voting Page (multi-type vote menu).
+	if (MenuAction == 20) exitWith {
+		MenuAction = -1;
+		closeDialog 0;
+		createDialog "WFBE_VotingMenu";
+	};
+
+	//--- Command Deck: Skin Selector (re-open from WF menu footer).
+	if (MenuAction == 21) exitWith {
+		MenuAction = -1;
+		if (WFBE_C_SKIN_SELECTOR == 1 && {alive player} && {vehicle player == player}) then {
+			closeDialog 0;
+			[] execVM "WASP\actions\SkinSelector\SkinSelector_Open.sqf";
+		};
+	};
+
 	//--- Help Menu
 	if (MenuAction == 13) exitWith { //added-spayker
 		MenuAction = -1;

@@ -62,6 +62,11 @@ if (_procedureName == "SEND_PLAYERLIST") then {
 
 _response = call compile _response;
 
+//--- task46 (claude): extension absent -> compile "" = nil; exit to avoid _response/_responseCode undefined-variable RPT cascade.
+if (isNil "_response" || {(typeName _response) != "ARRAY"}) exitWith {
+	1
+};
+
 _responseCode = _response select 0;
 
 if (_responseCode < 0) then {

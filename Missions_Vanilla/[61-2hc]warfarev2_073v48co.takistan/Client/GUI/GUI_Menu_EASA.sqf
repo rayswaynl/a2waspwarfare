@@ -9,6 +9,12 @@ _listBox = 23003;
 
 _u = 0;
 _upgrades = sideJoined Call WFBE_CO_FNC_GetSideUpgrades;
+
+//--- QoL: [DEFAULT] sentinel row always at top (index 0, sentinel value -1).
+lnbAddRow [_listBox, ["$0.", "[DEFAULT] Factory loadout"]];
+lnbSetValue [_listBox, [_u, 0], -1];
+_u = _u + 1;
+
 for '_i' from 0 to count(_data)-1 do {
 	_row = _data select _i;
 	// _add = if ((missionNamespace getVariable "WFBE_C_GAMEPLAY_AIR_AA_MISSILES") < 1 && (_row select 3)) then {false} else {true};
@@ -19,9 +25,17 @@ for '_i' from 0 to count(_data)-1 do {
 			if ((_upgrades select WFBE_UP_AIRAAM) == 0 && (_row select 3)) then {_add = false};
 		};
 	};
-	
+
 	if (_add) then {
-		lnbAddRow [_listBox, [Format["$%1.", _row select 0], _row select 1]];
+		//--- EASA category tags: prefix each loadout label with [AA], [AG], or [MR].
+		//--- Categorise once at fill time; WFBE_EASA_CatCache prevents repeated walks.
+		private ["_rowLabel","_catTag"];
+		_rowLabel = _row select 1;
+		if (WFBE_C_EASA_CATEGORIES == 1 && !(isNil "WFBE_EASA_FNC_LoadoutCat")) then {
+			_catTag = (_row select 2) call WFBE_EASA_FNC_LoadoutCat;
+			_rowLabel = _catTag + " " + _rowLabel;
+		};
+		lnbAddRow [_listBox, [Format["$%1.", _row select 0], _rowLabel]];
 		lnbSetValue[_listBox, [_u, 0], _i];
 		_u = _u + 1;
 	};
@@ -54,7 +68,35 @@ while {alive player && dialog} do {
 		_index = lnbCurSelRow _listBox;
 		if (_index != -1 && ((lnbSize _listBox) select 0) > 0) then {
 			_index = lnbValue[_listBox, [_index, 0]]; //--- Retrieve the real index.
-			
+
+			//--- [DEFAULT] sentinel: restore factory loadout at no cost.
+			if (_index == -1) then {
+				private ["_vType","_currentSetup","_currentLoadout","_defaultLoadout"];
+				_vType = (missionNamespace getVariable 'WFBE_EASA_Vehicles') find (typeOf (vehicle player));
+				if (_vType != -1) then {
+					_currentSetup = (vehicle player) getVariable ['WFBE_EASA_Setup', -2];
+					_defaultLoadout = (missionNamespace getVariable 'WFBE_EASA_Default') select _vType;
+					if (_currentSetup != -2) then {
+						_currentLoadout = (((missionNamespace getVariable 'WFBE_EASA_Loadouts') select _vType) select _currentSetup) select 2;
+						[vehicle player, _currentLoadout] Call EASA_RemoveLoadout;
+					} else {
+						//--- No EASA setup means the FACTORY weapons are still mounted: strip them
+						//--- before re-adding, or the default loadout double-stacks (mirrors EASA_Equip.sqf).
+						[vehicle player, _defaultLoadout] Call EASA_RemoveLoadout;
+					};
+					if ((typeOf (vehicle player)) == "AW159_Lynx_BAF") then {
+						{(vehicle player) addMagazineTurret [_x, [-1]]} forEach (_defaultLoadout select 1);
+						{(vehicle player) addWeaponTurret [_x, [-1]]} forEach (_defaultLoadout select 0);
+					} else {
+						{(vehicle player) addMagazine _x} forEach (_defaultLoadout select 1);
+						{(vehicle player) addWeapon _x} forEach (_defaultLoadout select 0);
+					};
+					(vehicle player) setVariable ["WFBE_EASA_Setup", nil, true];
+					hint "Factory loadout restored.";
+				};
+				closeDialog 0;
+			} else {
+
 			_row = _data select _index; //--- Get the row from the data array.
 			_canUseEASA = true;
 			if (_repairPointEASA) then {
@@ -86,6 +128,7 @@ while {alive player && dialog} do {
 					hint parseText(Format[localize 'STR_WF_INFO_Funds_Missing',(_row select 0) - _funds, _row select 1]);
 				};
 			};
+			}; //--- end else (normal purchase path)
 		};
 	};
 };

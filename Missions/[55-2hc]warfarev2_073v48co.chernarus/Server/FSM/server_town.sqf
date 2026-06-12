@@ -207,6 +207,15 @@ while {!WFBE_GameOver} do {
 
 			_location setVariable ["sideID",_newSID,true];
 
+			// WASPSTAT CAPTURE telemetry (Task 10). Gate: WFBE_C_STATLOG must be 1.
+			// NOTE: Task 19 (captured-town gunner change) will also edit this block — keep changes below this comment.
+			if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
+				if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
+				WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
+				diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|CAPTURE|" + (_location getVariable ["name","unknown"]) + "|" + str _sideID + "|" + str _newSID);
+			};
+			// END WASPSTAT CAPTURE (Task 10)
+
 			//--- FM-5: clear the old garrison's active flags on capture so the new owner re-garrisons immediately (prevents an up-to-WFBE_C_TOWNS_UNITS_INACTIVE undefended window on rapid recapture).
 			_location setVariable ["wfbe_active", false];
 			_location setVariable ["wfbe_active_air", false];
@@ -214,8 +223,20 @@ while {!WFBE_GameOver} do {
 			[nil, "TownCaptured", [_location, _sideID, _newSID]] Call WFBE_CO_FNC_SendToClients;
 			if ((missionNamespace getVariable "WFBE_C_CAMPS_CREATE") > 0) then {[_location, _sideID, _newSID] Spawn WFBE_SE_FNC_SetCampsToSide};
 
-			//--- Clear the town defenses, units first then replace the defenses if needed.
-			[_location, _side, "remove"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
+			//--- Task 32: old defenders linger for WFBE_C_TOWNS_DEFENDER_LINGER seconds before cleanup.
+			//--- Fire-time guard: only clean up if the town has NOT flipped back to the old side.
+			[_location, _side, _newSID] spawn {
+				Private ["_loc","_oldSide","_newSIDAtCapture"];
+				_loc              = _this select 0;
+				_oldSide          = _this select 1;
+				_newSIDAtCapture  = _this select 2;
+				sleep (missionNamespace getVariable ["WFBE_C_TOWNS_DEFENDER_LINGER", 180]);
+				//--- Abort cleanup if the town has flipped back to the old owner's side.
+				if ((_loc getVariable ["sideID", -1]) == _newSIDAtCapture) then {
+					{if (alive _x) then {deleteVehicle _x}} forEach (units (missionNamespace getVariable [format ["WFBE_%1_DefenseTeam", _oldSide], grpNull]));
+					[_loc, _oldSide, "remove"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
+				};
+			};
 
 			//--- Check if the side is enabled in town and add defenses if needed.
 			_side_enabled = false;
@@ -225,8 +246,170 @@ while {!WFBE_GameOver} do {
 				if (_town_occupation_enabled) then {_side_enabled = true};
 			};
 
-			//--- If the side is defined, we create the new side's defenses.
-			if (_side_enabled) then {[_location, _newSide, _sideID] Call WFBE_SE_FNC_ManageTownDefenses};
+			//--- Task 32: spawn new owner's defenses after WFBE_C_TOWNS_DEFENSE_SPAWN_DELAY.
+			//--- Fire-time guard: only spawn if the town is still owned by the new side.
+			if (_side_enabled) then {
+				[_location, _newSide, _sideID, _newSID] spawn {
+					Private ["_loc","_side","_oldSID","_newSIDAtCapture","_side_enabled2"];
+					_loc             = _this select 0;
+					_side            = _this select 1;
+					_oldSID          = _this select 2;
+					_newSIDAtCapture = _this select 3;
+					sleep (missionNamespace getVariable ["WFBE_C_TOWNS_DEFENSE_SPAWN_DELAY", 300]);
+					//--- Abort if the town no longer belongs to the new owner.
+					if ((_loc getVariable ["sideID", -1]) != _newSIDAtCapture) exitWith {};
+					[_loc, _side, _oldSID] Call WFBE_SE_FNC_ManageTownDefenses;
+					//--- Man the statics immediately after the delayed spawn (mirrors Task 19 logic).
+					if (missionNamespace getVariable ["WFBE_C_TOWNS_GUNNERS_ON_CAPTURE", true]) then {
+						[_loc, _side, "spawn"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
+					};
+				};
+			};
+
+			//--- Task 12: Airfield capture — spawn repair point + exclusive hangar for the new owner.
+			//--- Task 13: Airfield built-in Counter Battery Radar (2000 m, follows owner).
+			if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && (_location getVariable ["wfbe_is_airfield", false])) then {
+				Private ["_airfieldLogic","_newHangar","_oldHangar","_oldSP","_logik","_sp","_spClass","_spPos",
+				         "_oldRadar","_oldDressing","_radarClass","_radarPos","_radar","_cbrKey","_cbrReg","_dressTpl"];
+
+				//--- Determine side-specific ServicePoint classname (Chernarus variants).
+				_spClass = switch (_newSide) do {
+					case west:       { if (IS_chernarus_map_dependent) then {"USMC_WarfareBVehicleServicePoint"} else {"US_WarfareBVehicleServicePoint_EP1"} };
+					case east:       { if (IS_chernarus_map_dependent) then {"INS_WarfareBVehicleServicePoint"} else {"TK_WarfareBVehicleServicePoint_EP1"} };
+					default          { if (IS_chernarus_map_dependent) then {"Gue_WarfareBVehicleServicePoint"} else {"TK_GUE_WarfareBVehicleServicePoint_EP1"} };
+				};
+
+				//--- Find the nearest LocationLogicAirport (should be within 1500m of the depot logic).
+				_airfieldLogic = ((getPos _location) nearEntities [["LocationLogicAirport"], 1500]) select 0;
+
+				//--- Delete old repair point if present (side changed or recapture).
+				//--- Also remove from old side's structures list to avoid dead-object references.
+				_oldSP = _location getVariable ["wfbe_airfield_sp", objNull];
+				if !(isNull _oldSP) then {
+					{
+						_oldStructures = _x getVariable ["wfbe_structures", []];
+						if (_oldSP in _oldStructures) then {
+							_x setVariable ["wfbe_structures", _oldStructures - [_oldSP], true];
+						};
+					} forEach [WFBE_L_BLU, WFBE_L_OPF, WFBE_L_GUE];
+					deleteVehicle _oldSP;
+				};
+
+				//--- Create new repair point 80m north of the airfield logic position.
+				_spPos = if !(isNull _airfieldLogic) then {
+					[(getPos _airfieldLogic select 0), ((getPos _airfieldLogic select 1) + 80), 0]
+				} else {
+					[(getPos _location select 0), ((getPos _location select 1) + 80), 0]
+				};
+				_sp = _spClass createVehicle _spPos;
+				_sp setPos _spPos;
+				_sp setVariable ["WFBE_RepairTruckServicePoint", true, true];
+
+				//--- Register in side logic structures list so clients can see it.
+				_logik = (_newSide) Call WFBE_CO_FNC_GetSideLogic;
+				_logik setVariable ["wfbe_structures", (_logik getVariable "wfbe_structures") + [_sp], true];
+
+				//--- Trigger Init_BaseStructure on clients so a map marker is created.
+				_sp setVehicleInit Format ["[this,false,%1] ExecVM 'Client\Init\Init_BaseStructure.sqf'", _newSID];
+				processInitCommands;
+
+				//--- Wire Hit/Killed EHs so destruction grants bounty and removes SP from wfbe_structures.
+				//--- Mirrors the pattern in Construction_SmallSite.sqf (~line 141/147).
+				_sp addEventHandler ["hit", {_this Spawn BuildingDamaged}];
+				Call Compile Format ["_sp AddEventHandler ['killed',{[_this select 0,_this select 1,'%1'] Spawn BuildingKilled}];", "ServicePoint"];
+
+				//--- Store on location for cleanup on next capture.
+				_location setVariable ["wfbe_airfield_sp", _sp, true];
+
+				//--- Delete old hangar (previous owner's) and its link on the airport logic.
+				_oldHangar = _location getVariable ["wfbe_airfield_hangar_obj", objNull];
+				if !(isNull _oldHangar) then {
+					deleteVehicle _oldHangar;
+					if !(isNull _airfieldLogic) then { _airfieldLogic setVariable ["wfbe_hangar", nil, true] };
+				};
+
+				//--- Spawn new hangar on the airport logic so GetClosestAirport can find it.
+				if !(isNull _airfieldLogic) then {
+					_newHangar = (missionNamespace getVariable "WFBE_C_HANGAR") createVehicle (getPos _airfieldLogic);
+					_newHangar setDir ((getDir _airfieldLogic) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
+					_newHangar setPos (getPos _airfieldLogic);
+					_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
+					_airfieldLogic setVariable ["wfbe_hangar", _newHangar, true];
+					_location setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
+				};
+
+				//--- Task 13: Counter Battery Radar lifecycle.
+				//--- Gate: CBR feature must be enabled. Resistance has no CBR registry — radar skipped.
+				//--- Indestructible: HandleDamage-returns-0 (only established invincibility idiom in this codebase;
+				//---   allowDamage has no usage precedent here). Placed 60 m east of airfield logic to avoid runway.
+				if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
+
+					//--- 1. CLEANUP: delete previous airfield radar if one exists.
+					_oldRadar = _location getVariable ["wfbe_airfield_cbr", objNull];
+					if !(isNull _oldRadar) then {
+						//--- Remove from both side registries (indestructible means lazy prune never fires).
+						missionNamespace setVariable ["WFBE_CBR_WEST", (missionNamespace getVariable ["WFBE_CBR_WEST", []]) - [_oldRadar]];
+						missionNamespace setVariable ["WFBE_CBR_EAST", (missionNamespace getVariable ["WFBE_CBR_EAST", []]) - [_oldRadar]];
+						//--- Delete dressing props explicitly (Killed EH won't fire on deleteVehicle).
+						_oldDressing = _oldRadar getVariable ["wfbe_dressing", []];
+						{if !(isNull _x) then {deleteVehicle _x}} forEach _oldDressing;
+						deleteVehicle _oldRadar;
+						["INFORMATION", Format ["server_town.sqf: [%1] airfield CBR removed on recapture.", str _side]] Call WFBE_CO_FNC_LogContent;
+					};
+
+					//--- 2. SPAWN new radar (only for WEST/EAST — resistance has no CBR registry).
+					if (_newSide == west || _newSide == east) then {
+						//--- Both sides use Land_Antenna (confirmed-present whip mast). Land_telek1 assessed
+						//---   as likely absent at runtime for this content set — using Land_Antenna for both.
+						//---   Visual distinctness is provided by the side-specific dressing template.
+						_radarClass = "Land_Antenna";
+
+						//--- Position: 60 m east of airfield logic (off the runway centerline).
+						_radarPos = if !(isNull _airfieldLogic) then {
+							[((getPos _airfieldLogic) select 0) + 60, (getPos _airfieldLogic) select 1, 0]
+						} else {
+							[((getPos _location) select 0) + 60, (getPos _location) select 1, 0]
+						};
+
+						_radar = _radarClass createVehicle _radarPos;
+						_radar setPos _radarPos;
+						//--- Radius override: 2000 m. Server_CounterBattery.sqf reads "wfbe_cbr_radius" getVariable.
+						_radar setVariable ["wfbe_cbr_radius", 2000];
+						//--- Indestructible: HandleDamage returning 0 prevents any damage being applied.
+						_radar addEventHandler ["HandleDamage", {0}];
+
+						//--- Spawn side-matched dressing for visual identity (reuses buildable CBRADAR templates).
+						_dressTpl = Format ["WFBE_NEURODEF_CBRADAR_%1", if (_newSide == west) then {"WEST"} else {"EAST"}];
+						[_radar, _dressTpl, 0] Call WFBE_SE_FNC_SpawnStructureDressing;
+
+						//--- Task D: trigger Init_BaseStructure on clients so the CBR range circle is drawn.
+						//--- Mirrors the SP pattern (server_town.sqf ~line 313) and Construction_SmallSite.sqf ~line 138.
+						//--- Use a local _cbrSID (0=west,1=east) for the Init_BaseStructure call
+						//--- rather than reusing the outer-scope _newSID, which tracks town ownership.
+						Private "_cbrSID";
+						_cbrSID = if (_newSide == west) then {0} else {1};
+						_radar setVehicleInit Format ["[this,false,%1] ExecVM 'Client\Init\Init_BaseStructure.sqf'", _cbrSID];
+						processInitCommands;
+
+						//--- 3. REGISTER in the new owner's CBR registry.
+						_cbrKey = if (_newSide == west) then {"WFBE_CBR_WEST"} else {"WFBE_CBR_EAST"};
+						_cbrReg = missionNamespace getVariable [_cbrKey, []];
+						missionNamespace setVariable [_cbrKey, _cbrReg + [_radar]];
+
+						//--- Store on location for cleanup on next capture.
+						_location setVariable ["wfbe_airfield_cbr", _radar, true];
+
+						["INFORMATION", Format ["server_town.sqf: [%1] airfield CBR spawned (%2) at %3. Radius 2000 m. Registry [%4] size: %5.",
+							str _newSide, _radarClass, _radarPos, _cbrKey,
+							count (missionNamespace getVariable [_cbrKey, []])]] Call WFBE_CO_FNC_LogContent;
+					} else {
+						//--- Resistance capture: no CBR registry for GUER — radar skipped, mast not spawned.
+						_location setVariable ["wfbe_airfield_cbr", objNull, true];
+						["INFORMATION", Format ["server_town.sqf: airfield [%1] captured by resistance — CBR skipped (no GUER registry).", _location getVariable ["name","unknown"]]] Call WFBE_CO_FNC_LogContent;
+					};
+				};
+				//--- End Task 13 CBR lifecycle.
+			};
 		};
 		};
 		sleep 0.05;

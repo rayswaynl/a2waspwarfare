@@ -47,7 +47,15 @@ if (_bounty) then {
 if (_global) then {
 	if (_side != WFBE_DEFENDER_ID || WFBE_ISTHREEWAY) then {
 		_globalInitMode = "vehicleInit";
-		_vehicle setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf'", _side];
+		//--- If AddVehicleTexture stored a pending texture command (salvage tint etc.),
+		//--- append it to the Init_Unit init string so both run in a single
+		//--- processInitCommands call.  This is the only way to ensure JIP clients
+		//--- also receive the texture — setVehicleInit stores only the LAST string set.
+		Private ["_pendingTex","_initStr"];
+		_pendingTex = _vehicle getVariable ["wfbe_pending_texture", ""];
+		_initStr = Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf'", _side];
+		if (_pendingTex != "") then { _initStr = _initStr + "; " + _pendingTex };
+		_vehicle setVehicleInit _initStr;
 		processInitCommands;
 	} else {
 		_globalInitMode = "defenderSkipped";

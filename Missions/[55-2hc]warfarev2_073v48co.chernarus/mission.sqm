@@ -22,8 +22,8 @@ class Mission
 	randomSeed=10034581;
 	class Intel
 	{
-		briefingName="PR 8 - June Feature Bundle";
-		briefingDescription="June release test build: UI/UX, GPS, factories, supply, WDDM/arty, AI/perf.";
+		briefingName="[PLAY] WASP Experimental Test";
+		briefingDescription="Experimental feature sandbox - JOIN THIS ONE to play. Counter-battery, bank, redeploy truck, proportional rearm, site clearance, defense budgets, patrols/convoys, airfield captures, COIN UI upgrades.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;
@@ -35,7 +35,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=125;
+		items=129;
 		class Item0
 		{
 			side="LOGIC";
@@ -193,7 +193,7 @@ class Mission
 					vehicle="LocationLogicAirport";
 					leader=1;
 					skill=0.60000002;
-					init="this enableSimulation false;";
+					init="this setVariable [""wfbe_skip_auto_hangar"",true,true];this enableSimulation false;";
 				};
 			};
 		};
@@ -212,7 +212,7 @@ class Mission
 					vehicle="LocationLogicAirport";
 					leader=1;
 					skill=0.60000002;
-					init="this enableSimulation false;";
+					init="this setVariable [""wfbe_skip_auto_hangar"",true,true];this enableSimulation false;";
 				};
 			};
 		};
@@ -231,7 +231,7 @@ class Mission
 					vehicle="LocationLogicAirport";
 					leader=1;
 					skill=0.60000002;
-					init="this enableSimulation false;";
+					init="this setVariable [""wfbe_skip_auto_hangar"",true,true];this enableSimulation false;";
 				};
 			};
 		};
@@ -4814,6 +4814,129 @@ class Mission
 					vehicle="LocationLogicStart";
 					leader=1;
 					skill=0.60000002;
+				};
+			};
+		};
+		class Item125
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=2;
+				class Item0
+				{
+					position[]={4500,339,10250};
+					azimut=0;
+					special="NONE";
+					id=304;
+					side="LOGIC";
+					vehicle="LocationLogicDepot";
+					leader=1;
+					skill=0.60000002;
+					text="NWAF";
+					init="nullReturn = [this,""NWAF"",""++"",50,80,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
+					synchronizations[]={308};
+				};
+				class Item1
+				{
+					position[]={4500,339,10330};
+					azimut=0;
+					special="NONE";
+					id=308;
+					side="LOGIC";
+					vehicle="LocationLogicCamp";
+					skill=0.60000002;
+					init="this enableSimulation false;";
+					synchronizations[]={304};
+				};
+			};
+		};
+		class Item126
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=2;
+				class Item0
+				{
+					position[]={12150,159,12900};
+					azimut=0;
+					special="NONE";
+					id=305;
+					side="LOGIC";
+					vehicle="LocationLogicDepot";
+					leader=1;
+					skill=0.60000002;
+					text="NEAF";
+					init="nullReturn = [this,""NEAF"",""++"",50,80,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
+					synchronizations[]={309};
+				};
+				class Item1
+				{
+					position[]={12150,159,12980};
+					azimut=0;
+					special="NONE";
+					id=309;
+					side="LOGIC";
+					vehicle="LocationLogicCamp";
+					skill=0.60000002;
+					init="this enableSimulation false;";
+					synchronizations[]={305};
+				};
+			};
+		};
+		class Item127
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=2;
+				class Item0
+				{
+					position[]={4800,9,2150};
+					azimut=0;
+					special="NONE";
+					id=306;
+					side="LOGIC";
+					vehicle="LocationLogicDepot";
+					leader=1;
+					skill=0.60000002;
+					text="Balota";
+					init="nullReturn = [this,""Balota"",""++"",50,80,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
+					synchronizations[]={310};
+				};
+				class Item1
+				{
+					position[]={4800,9,2230};
+					azimut=0;
+					special="NONE";
+					id=310;
+					side="LOGIC";
+					vehicle="LocationLogicCamp";
+					skill=0.60000002;
+					init="this enableSimulation false;";
+					synchronizations[]={306};
+				};
+			};
+		};
+		class Item128
+		{
+			side="CIV";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={1937.2078,544.75983,15282.436};
+					id=307;
+					side="CIV";
+					vehicle="Functionary1";
+					player="PLAY CDG";
+					forceHeadlessClient=1;
+					leader=1;
+					skill=0.60000002;
+					init="this allowdamage false;";
+					description="Headless Client 2";
 				};
 			};
 		};

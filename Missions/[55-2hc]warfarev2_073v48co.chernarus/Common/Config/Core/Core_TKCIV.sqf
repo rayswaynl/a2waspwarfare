@@ -116,6 +116,12 @@ _i = _i + [['','',200,0,0,0,'Fortification',0,'Takistani Civilians',[]]];
 /* _c = _c + ['Land_Misc_Cargo2B'];
 _i = _i + [['Cargo Wall','',800,0,0,0,'Fortification',0,'Takistani Civilians',[]]]; */
 
+//--- Site Clearance (commander build-menu only; cost is dynamic server-side; label carries the per-tree price).
+if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {
+	_c = _c + ['Land_Pneu'];
+	_i = _i + [['Site Clearance (10/tree)','',0,0,0,0,'Strategic',0,'Takistani Civilians',[]]];
+};
+
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {
 		_get = missionNamespace getVariable (_c select _z);

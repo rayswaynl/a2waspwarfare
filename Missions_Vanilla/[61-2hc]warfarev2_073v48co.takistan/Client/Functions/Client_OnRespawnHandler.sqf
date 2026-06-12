@@ -16,6 +16,10 @@ _unit setVariable ["lastPosition", position _unit];
 if ((missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") == 2) then {
 	if (_typeof in (missionNamespace getVariable Format ["WFBE_%1AMBULANCES",sideJoinedText])) then {_allowCustom = false};
 };
+//--- Default gear enforcement on redeploy truck respawn (same mode gate as mobile).
+if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && (missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") == 2) then {
+	if (_typeof in (missionNamespace getVariable [Format ["WFBE_%1REDEPLOYTRUCKS",sideJoinedText],[]])) then {_allowCustom = false};
+};
 
 //--- Default gear enforcement on leader respawn.
 if ((missionNamespace getVariable "WFBE_C_RESPAWN_LEADER") == 2) then {
@@ -26,6 +30,9 @@ if ((missionNamespace getVariable "WFBE_C_RESPAWN_LEADER") == 2) then {
 if (_spawn isKindOf "Man") then {_spawn = vehicle _spawn};
 _spawnInside = false;
 if (_typeof in (missionNamespace getVariable Format ["WFBE_%1AMBULANCES",sideJoinedText]) && alive _spawn) then {
+	if (_spawn emptyPositions "cargo" > 0 && !(locked _spawn)) then {_unit moveInCargo _spawn;_spawnInside = true};
+};
+if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && _typeof in (missionNamespace getVariable [Format ["WFBE_%1REDEPLOYTRUCKS",sideJoinedText],[]]) && alive _spawn) then {
 	if (_spawn emptyPositions "cargo" > 0 && !(locked _spawn)) then {_unit moveInCargo _spawn;_spawnInside = true};
 };
 
@@ -101,5 +108,26 @@ case "Medic": {_default = missionNamespace getVariable Format["WFBE_%1_DefaultGe
 		[_unit, _default select 0, _default select 1, _default select 2] Call WFBE_CO_FNC_EquipUnit;
 	} else {
 		[_unit, _default select 0, _default select 1, _default select 2, _default select 3, _default select 4] Call WFBE_CO_FNC_EquipUnit;
+	};
+};
+
+//--- Command Deck: re-apply persisted skin class after respawn.
+//--- sleep 0.5 first so the engine completes unit creation before we swap models.
+if (WFBE_C_SKIN_SELECTOR == 1 && {WFBE_SkinSelector_Applied}) then {
+	Private ["_uid","_skinKey","_savedSkin"];
+	_uid     = getPlayerUID _unit;
+	_skinKey = "WFBE_SkinSelector_Skin_" + _uid;
+	_savedSkin = missionNamespace getVariable [_skinKey, ""];
+	if (_savedSkin != "") then {
+		_unit setVariable ["WFBE_SkinSelector_PendingRespawnSkin", _savedSkin];
+		[_unit] spawn {
+			Private ["_u","_cls"];
+			_u = _this select 0;
+			sleep 0.5;
+			_cls = _u getVariable ["WFBE_SkinSelector_PendingRespawnSkin", ""];
+			if (_cls != "" && {alive _u} && {vehicle _u == _u}) then {
+				[_cls] execVM "WASP\actions\SkinSelector\SkinSelector_Apply.sqf";
+			};
+		};
 	};
 };

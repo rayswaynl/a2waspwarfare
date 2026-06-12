@@ -66,6 +66,11 @@ switch (_town getVariable "wfbe_town_type") do { // _units = [[group type, force
 		_percentage_inf = 75;
 		_groups_max = 8;
 	};
+	case "PMCAirfield": { //--- Airfield capture point: mid-game defended objective with PMC garrison
+		_units = [["Squad", 1, 0],["Team", 1, 0],["Team_AT", 1, 0],["Team_Sniper", 1, 0],["Motorized", 2, 1],["AA_Light", 1, 1]];
+		_percentage_inf = 70;
+		_groups_max = 6;
+	};
 	default { //--- If nothing is set...
 		_units = [["Squad", 1, 0], ["Team", 1, 0],["Team_AT", 1, 0],["Motorized", 1, 1]];
 		_percentage_inf = 80;

@@ -122,13 +122,35 @@ _site setPos _position;
 _site setVariable ["wfbe_side", _side];
 _site setVariable ["wfbe_structure_type", _rlType];
 
-if(isAutoWallConstructingEnabled && _rlType != "AARadar")then{
+//--- Bank: spawn composition dressing, register in per-side registry, create global marker, start income drip.
+if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
+	private ["_dressTpl","_bankKey","_markerName","_markerColor","_markerText"];
+	_dressTpl = Format ["WFBE_NEURODEF_BANK_%1", if (_side == west) then {"WEST"} else {"EAST"}];
+	[_site, _dressTpl, _direction] Call WFBE_SE_FNC_SpawnStructureDressing;
+	//--- Register single-instance reference.
+	_bankKey = if (_side == west) then {"WFBE_BANK_WEST"} else {"WFBE_BANK_EAST"};
+	missionNamespace setVariable [_bankKey, _site];
+	//--- Global map marker visible to all players (createMarker is global on server).
+	_markerName = Format ["wfbe_bank_%1", if (_side == west) then {"west"} else {"east"}];
+	_markerColor = if (_side == west) then {"ColorBlue"} else {"ColorRed"};
+	_markerText = if (_side == west) then {"FEDERAL RESERVE"} else {"BANK ROSSII"};
+	createMarker [_markerName, _position];
+	_markerName setMarkerType "mil_warning";
+	_markerName setMarkerColor _markerColor;
+	_markerName setMarkerText _markerText;
+	_site setVariable ["wfbe_bank_marker", _markerName];
+	//--- Spawn income drip script via registered function.
+	[_site, _side] Spawn WFBE_SE_FNC_BankIncome;
+	["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] Bank registered. Marker [%2] created.", str _side, _markerName]] Call WFBE_CO_FNC_LogContent;
+};
+
+if(isAutoWallConstructingEnabled && !(_rlType in ["AARadar","Bank"]))then{
 	_defenses = [_site, missionNamespace getVariable format ["WFBE_NEURODEF_%1_WALLS", _rlType]] call CreateDefenseTemplate;
 	_site setVariable ["WFBE_Walls", _defenses];
 } else {
 	_site setVariable ["WFBE_Walls", []];
-	if (_rlType == "AARadar") then {
-		["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] AARadar auto walls skipped by PR8 no-wall guard.", str _side]] Call WFBE_CO_FNC_LogContent;
+	if (_rlType in ["AARadar","Bank"]) then {
+		["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] %2 auto walls skipped.", str _side, _rlType]] Call WFBE_CO_FNC_LogContent;
 	};
 };
 

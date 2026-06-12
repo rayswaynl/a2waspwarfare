@@ -1,4 +1,4 @@
-Private["_ammo","_angle","_artillery","_artillery_classes","_artillery_type","_burst","_destination","_dispersion","_direction","_distance","_FEH","_gunner","_i","_index","_minRange","_maxRange","_position","_radius","_reloadTime","_side","_type","_velocity","_watchPosition","_weapon","_xcoord","_ycoord"];
+Private["_ammo","_angle","_artillery","_artillery_classes","_artillery_type","_burst","_CBREH","_destination","_dispersion","_direction","_distance","_FEH","_gunner","_i","_index","_minRange","_maxRange","_position","_radius","_reloadTime","_side","_type","_velocity","_watchPosition","_weapon","_xcoord","_ycoord"];
 
 _artillery = _this select 0;
 _destination = _this select 1;
@@ -38,6 +38,23 @@ if (_distance < 0 || _distance + _minRange > _maxRange) exitWith {};
 
 _FEH = Call Compile Format ["_artillery addEventHandler ['Fired',{[_this select 4,_this select 6,%1,%2,%3,%4,%5,%6,%7,%8,%9] Spawn WFBE_CO_FNC_HandleArtillery}];",_ammo,_destination,_velocity,_dispersion,getPos _artillery,_distance,_radius,_maxRange,_side];
 
+//--- CBR detection hook: runs where the arty is local (server for AI; client for player-crewed).
+//--- Route to server in both cases via SendToServer when not already on server.
+//--- Capture return index so we can remove this EH after the fire mission (prevents accumulation).
+_CBREH = -1;
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
+	_CBREH = _artillery addEventHandler ['Fired', {
+		private ["_firer","_fpos","_pkt"];
+		_firer = _this select 0;
+		_fpos  = getPos _firer;
+		if (isServer) then {
+			[_firer, _fpos] Call WFBE_SE_FNC_CounterBatteryCheck;
+		} else {
+			["CounterBatteryFired", [_firer, _fpos]] Call WFBE_CO_FNC_SendToServer;
+		};
+	}];
+};
+
 {_gunner disableAI _x} forEach ['MOVE','TARGET','AUTOTARGET'];
 _watchPosition = [_destination select 0, _destination select 1, (_artillery distance _destination)/(tan(90-_angle))];
 
@@ -45,7 +62,12 @@ _watchPosition = [_destination select 0, _destination select 1, (_artillery dist
 
 sleep (10 + random 4);
 
-if !(alive _gunner) exitWith {if !(isNull _artillery) then {_artillery removeEventHandler ['Fired',_FEH]}};
+if !(alive _gunner) exitWith {
+	if !(isNull _artillery) then {
+		_artillery removeEventHandler ['Fired',_FEH];
+		if (_CBREH >= 0) then {_artillery removeEventHandler ['Fired',_CBREH]};
+	};
+};
 if !(alive _artillery) exitWith {
 	if (alive _gunner) then {{_gunner enableAI _x} forEach ['MOVE','TARGET','AUTOTARGET']};
 };
@@ -59,7 +81,10 @@ for '_i' from 1 to _burst do {
 
 sleep 1;
 
-if !(isNull _artillery) then {_artillery removeEventHandler ['Fired',_FEH]};
+if !(isNull _artillery) then {
+	_artillery removeEventHandler ['Fired',_FEH];
+	if (_CBREH >= 0) then {_artillery removeEventHandler ['Fired',_CBREH]};
+};
 
 sleep (_reloadTime + 20);
 

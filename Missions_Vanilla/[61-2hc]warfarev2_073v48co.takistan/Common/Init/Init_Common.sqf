@@ -49,6 +49,8 @@ GetTeamArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_Ge
 // Marty: Artillery ammo selector helpers used by the Tactical Center.
 WFBE_CO_FNC_GetArtilleryAmmoOptions = Compile preprocessFileLineNumbers "Common\Functions\Common_GetArtilleryAmmoOptions.sqf";
 WFBE_CO_FNC_LoadArtilleryAmmo = Compile preprocessFileLineNumbers "Common\Functions\Common_LoadArtilleryAmmo.sqf";
+// Marty: Ammo-fraction helper (vehicle current / full complement). Used by proportional rearm pricing.
+WFBE_CO_FNC_GetAmmoFraction = Compile preprocessFileLineNumbers "Common\Functions\Common_GetAmmoFraction.sqf";
 GetTeamAutonomous = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamAutonomous.sqf";
 GetTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamFunds.sqf";
 GetTeamMoveMode = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamMoveMode.sqf";
@@ -101,6 +103,7 @@ WFBE_CO_FNC_ChangeUnitGroup = Compile preprocessFileLineNumbers "Common\Function
 WFBE_CO_FNC_ClearVehicleCargo = if (WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Common\Functions\Common_ClearVehicleCargo.sqf"} else {Compile preprocessFileLineNumbers "Common\Functions\Common_ClearVehicleCargoOA.sqf"};
 WFBE_CO_FNC_CreateTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateTeam.sqf";
 WFBE_CO_FNC_CreateTownUnits = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateTownUnits.sqf";
+WFBE_CO_FNC_RunSidePatrol = Compile preprocessFileLineNumbers "Common\Functions\Common_RunSidePatrol.sqf";
 WFBE_CO_FNC_CreateUnitForStaticDefence = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateUnitForStaticDefence.sqf";
 WFBE_CO_FNC_CreateUnitsForResBases = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateUnitsForResBases.sqf";
 WFBE_CO_FNC_CreateVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateVehicle.sqf";
@@ -158,6 +161,8 @@ WF_createMarker = compile preprocessFileLineNumbers "Common\Functions\Common_Cre
 WFBE_CL_FNC_Delete_Marker = compile preprocessFileLineNumbers "Client\Functions\Client_Delete_Marker.sqf";
 WF_sendMessage = compile preprocessFileLineNumbers "Common\Functions\Common_SendMessage.sqf";
 WFBE_CO_FNC_StagnateSupplyIncomeNoPlayers = Compile preprocessFileLineNumbers "Common\Functions\Common_StagnateSupplyIncomeNoPlayers.sqf";
+// Marty: Defense budget — category helper (used by RequestDefense budget gate and available to client UI).
+WFBE_CO_FNC_GetDefenseCategory = Compile preprocessFileLineNumbers "Common\Functions\Common_GetDefenseCategory.sqf";
 
 ["INITIALIZATION", "Init_Common.sqf: Functions are initialized."] Call WFBE_CO_FNC_LogContent;
 
@@ -236,11 +241,9 @@ switch (true) do {
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_BAFW.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_CDF.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_CIV.sqf';
-		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_DeltaForce.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_FR.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_GUE.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_INS.sqf';
-		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_KSK.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_MVD.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_PMC.sqf';
 		Call Compile preprocessFileLineNumbers 'Common\Config\Core\Core_RU.sqf';
@@ -365,6 +368,39 @@ _repairs = [];
 
 missionNamespace setVariable ["WFBE_REPAIRTRUCKS", _repairs];
 
+
+//--- Task 12: Airfield-exclusive aircraft roster.  Populated on all machines so
+//--- the hangar buy menu can use it without a server round-trip.
+//--- WFBE_AIRFIELD_UNITS      = generic list shared by ALL captured airfields (both sides).
+//--- WFBE_AIRFIELD_UNITS_SPECIAL = per-airfield extras: [[townName, [classnames]], ...].
+//---   At menu-fill time the nearest town name is resolved from the airport logic object
+//---   and any matching entry's classes are appended to the generic list.
+//---   Add new per-airfield specials by appending a pair — no other file changes needed.
+if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0) then {
+	WFBE_AIRFIELD_UNITS = if (IS_chernarus_map_dependent) then {
+		//--- L-39C removed (Balota-only via special); Mi-171Sh rocket gunship added for early-game support.
+		["An2_TK_EP1","Mi17_Ins","Mi171Sh_rockets_CZ_EP1"]
+	} else {
+		//--- Takistan generic list: L-39C not present here; leave as-is.
+		["An2_TK_EP1","Mi17_TK_EP1"]
+	};
+
+	//--- Per-airfield specials: units added ONLY at the named airfield.
+	//--- Chernarus: L-39C is exclusive to Balota (closest prestige-aviation context).
+	//--- Takistan: no per-airfield specials defined (no clean equivalent for L-39C there).
+	WFBE_AIRFIELD_UNITS_SPECIAL = [
+		["Balota", ["L39_TK_EP1"]]
+	];
+};
+
+//--- Data-driven special-unit info popups.
+//--- Each entry: [classname, stringtable-key].  The buy menu reads this on selection
+//--- and shows hintSilent parseText (localize key) when a match is found.
+//--- To add a new special: append ["ClassName","STR_WF_HINT_..."] to the array.
+WFBE_SPECIAL_UNIT_HINTS = [
+	["UH1H_EP1","STR_WF_HINT_SalvageHeli"],
+	["Mi17_medevac_CDF","STR_WF_HINT_SalvageHeli"]
+];
 
 //--- Common initilization is complete at this point.
 ["INITIALIZATION", Format ["Init_Common.sqf: Common initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

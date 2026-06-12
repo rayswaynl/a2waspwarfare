@@ -43,6 +43,9 @@ _rearmor = {
    				_result
   			};
 
+//--- Command Deck: store _rearmor code in a global so SkinSelector_Apply.sqf can re-attach it post-swap.
+WFBE_CL_VAR_ReArmorCode = _rearmor;
+
 player addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
 [] execVM "Common\Functions\Common_Bipod.sqf";
 
@@ -296,6 +299,7 @@ WFBE_C_VAR_FRIENDLYCOMMANDCENTERINPROXIMITY = false;
 commanderTeam = objNull;
 buildingMarker = 0;
 CCMarker = 0;
+CBRCircleMarker = 0;
 gearCost = 0;
 currentTG = 50;
 if (currentTG == 50) then {setTerrainGrid currentTG};
@@ -367,6 +371,7 @@ if ((missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM") in [3,4]) then
 
 /* Exec SQF|FSM Misc stuff. */
 if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] execVM "Client\FSM\updateteamsmarkers.sqf"};
+[] execVM "Client\FSM\updatepatrolmarkers.sqf"; //--- Friendly side-patrol markers (Patrols upgrade).
 [] execFSM "Client\FSM\updateactions.fsm";
 /* Don't pause the client initialization process. */
 [] Spawn {
@@ -470,6 +475,14 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 };
 
 /* Get the client starting location */
+//--- Task 35: escape the deadspawn holding area IMMEDIATELY after the join gate. The final
+//--- position is refined below (newest live factory / HQ); this interim move covers any
+//--- stall in that determination so mid-game (re)joiners never sit visibly at the
+//--- TempRespawnMarker parking area. (The other half of this fix: the stats-DB guards —
+//--- the join gate used to block up to 54s in DB retry loops on a DB-less server.)
+if (!isNil {WFBE_Client_Logic getVariable "wfbe_startpos"}) then {
+	player setPos ([WFBE_Client_Logic getVariable "wfbe_startpos", 10, 25] Call GetRandomPosition);
+};
 ["INITIALIZATION", "Init_Client.sqf: Retrieving the client spawn location."] Call WFBE_CO_FNC_LogContent;
 _base = objNull;
 if (time < 30) then {

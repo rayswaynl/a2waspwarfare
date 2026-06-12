@@ -4,7 +4,7 @@
 	_player = _this select 1;
 	_uid = getPlayerUID _player;
 
-	diag_log format ["(Supposed) UID: %1", _uid];
+	if (WF_Debug) then { diag_log format ["(Supposed) UID: %1", _uid]; };
 
 	if (!(isNil "_uid")) then {
 		// Marty: This side tracking is teamswap protection and must remain active even when AntiStack skill balancing is disabled.

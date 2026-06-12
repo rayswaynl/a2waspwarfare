@@ -41,18 +41,7 @@ while {!WFBE_GameOver} do {
 
 		_town = towns select _i;
 		_town_teams = _town getVariable "wfbe_town_teams";
-		_patrol_enabled = if (!isNil {_town getVariable "wfbe_patrol_enabled"}) then {true} else {false};
-
-		//--- Towns patrol, if enabled. DR-57 fix: initialise the gate ONCE per town, not every
-		//--- ~5s cycle. The old unconditional reset refreshed wfbe_patrol_active_last every pass so
-		//--- the spawn gate (time - last > delay) never elapsed and town patrols never spawned.
-		//--- server_patrols.sqf:71-72 re-stamps active/last on patrol completion; we only seed them.
-		if (_patrol_enabled) then {
-			if (isNil {_town getVariable "wfbe_patrol_active"}) then {
-				_town setVariable ["wfbe_patrol_active", false];
-				_town setVariable ["wfbe_patrol_active_last", time];
-			};
-		};
+		//--- Patrols v2: town-based patrol gating retired (see Server\FSM\server_side_patrols.sqf).
 
 		_sideID = _town getVariable "sideID";
 		_side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
@@ -210,14 +199,7 @@ while {!WFBE_GameOver} do {
 					//// end of inner block
 				};
 			};
-			if(_patrol_enabled)then {
-				if !(_town getVariable "wfbe_patrol_active") then {
-					if (time - (_town getVariable "wfbe_patrol_active_last") > _patrol_delay && !(_town getVariable "wfbe_active")) then {
-						_town setVariable ["wfbe_patrol_active", true];
-						[_town, _sideID] execVM "Server\FSM\server_patrols.sqf";
-					};
-				};
-			};
+			//--- Patrols v2: the per-town spawn gate is retired (server_side_patrols.sqf drives patrols now).
 
 		};
 

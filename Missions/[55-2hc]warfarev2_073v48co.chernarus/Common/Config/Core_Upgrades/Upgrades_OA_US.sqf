@@ -23,7 +23,10 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_ENABLED", _side], [
 	if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0) then {true} else {false}, //--- Artillery Ammo
 	if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_IRSMOKE") > 0) then {true} else {false}, //--- IR Smoke
 	if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") == 1) then {true} else {false}, //--- Aircraft AA Missiles
-	true //--- Anti Air radar
+	true, //--- Anti Air radar
+	false, //--- Unit cost modifier (faction has no unit cost upgrade — slot required for safe indexing)
+	false, //--- Counter Battery Radar (faction has no CBR — slot required for safe indexing)
+	true //--- Patrols
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
@@ -48,7 +51,10 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
 	[[2500,0]], //--- Artillery Ammo
 	[[3000,0],[9000,0]], //--- IR Smoke
 	[[7500,0]], //--- Aircraft AA Missiles
-	[[5000,0],[12500,0]] //--- Anti Air Radar
+	[[5000,0],[12500,0]], //--- Anti Air Radar
+	[[999999,0]], //--- (index padding: UNITCOST — not used by this faction)
+	[[999999,0]], //--- (index padding: CBR — not used by this faction)
+	[[300,0],[1600,0],[2400,0],[3200,0]] //--- Patrols
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
@@ -72,7 +78,11 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
 	// Marty: Artillery Ammunition has one maximum level.
 	1, //--- Artillery Ammo
 	2, //--- IR Smoke
-	1 //--- Aircraft AA Missiles
+	1, //--- Aircraft AA Missiles
+	2, //--- Anti Air Radar
+	0, //--- (index padding: UNITCOST)
+	0, //--- (index padding: CBR)
+	4 //--- Patrols
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LINKS", _side], [
@@ -104,7 +114,11 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LINKS", _side], [
 		[[WFBE_UP_GEAR,1],[WFBE_UP_HEAVY,1]]
 	], //--- Artillery Ammo
 	[[WFBE_UP_HEAVY, 3],[]], //--- IR Smoke
-	[[WFBE_UP_AIR, 3]] //--- Aircraft AA Missiles
+	[[WFBE_UP_AIR, 3]], //--- Aircraft AA Missiles
+	[[],[]], //--- Anti Air Radar
+	[], //--- (index padding: UNITCOST)
+	[], //--- (index padding: CBR)
+	[[],[WFBE_UP_LIGHT,1],[WFBE_UP_HEAVY,2],[WFBE_UP_HEAVY,2]] //--- Patrols
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [
@@ -128,7 +142,11 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [
 	// Marty: Artillery Ammunition keeps the original first-level upgrade time.
 	[60], //--- Artillery Ammo
 	[120,180], //--- IR Smoke
-	[120] //--- Aircraft AA Missiles
+	[120], //--- Aircraft AA Missiles
+	[50,125], //--- Anti Air Radar
+	[0], //--- (index padding: UNITCOST)
+	[0], //--- (index padding: CBR)
+	[90,150,240,240] //--- Patrols
 ]];
 
 //todo, on commander missing link checkup, skip disabled upgrades.
@@ -165,7 +183,11 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], [
 	[WFBE_UP_PARATROOPERS,3],
 	[WFBE_UP_EASA,1],
 	[WFBE_UP_SUPPLYPARADROP,1],
-	[WFBE_UP_AIRAAM,1]
+	[WFBE_UP_AIRAAM,1],
+	[WFBE_UP_PATROLS,1],
+	[WFBE_UP_PATROLS,2],
+	[WFBE_UP_PATROLS,3],
+	[WFBE_UP_PATROLS,4]
 ]];
 
 //--- Check potential missing definition.

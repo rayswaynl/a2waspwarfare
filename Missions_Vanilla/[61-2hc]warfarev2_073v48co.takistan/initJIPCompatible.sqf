@@ -27,6 +27,7 @@ publicVariable "CBA_display_ingame_warnings";
 for '_i' from 0 to 3 do {diag_log "################################"};
 diag_log format ["## Island Name: [%1]", worldName];
 diag_log format ["## Mission Name: [%1]", WF_MISSIONNAME];
+diag_log "## Build: WASP Experital TEST (experimental feature branch)";
 diag_log format ["## Starting Distance: [%1]", startingDistance];
 diag_log format ["## Max players Defined: [%1]", WF_MAXPLAYERS];
 diag_log format ["## LOG CONTENT : [%1]", LOG_CONTENT_STATE];
@@ -54,6 +55,9 @@ isHeadLessClient = false;
 
 //--- Headless Client?
 isHeadLessClient = Call Compile preprocessFileLineNumbers "Headless\Functions\HC_IsHeadlessClient.sqf";
+//--- Debug/logging support: HCs always log verbosely - an HC's RPT is its only observable
+//--- channel, and the cost lands on the HC machine, never on players or the server.
+if (isHeadLessClient) then {LOG_CONTENT_STATE = "ACTIVATED"};
 if (isHeadLessClient) then {["INITIALIZATION", "initJIPCompatible.sqf: Detected an headless client."] Call WFBE_CO_FNC_LogContent};
 
 
@@ -121,6 +125,22 @@ IS_mod_map_dependent = false;
 if (isMultiplayer) then {Call Compile preprocessFileLineNumbers "Common\Init\Init_Parameters.sqf"}; //--- In MP, we get the parameters.
 
 Call Compile preprocessFileLineNumbers "Common\Init\Init_CommonConstants.sqf"; //--- Set the constants and the parameters, skip the params if they're already defined.
+
+//--- EXPERITAL: +50% starting economy. MUST live here: in MP Init_Parameters always sets these from paramsArray,
+//--- so the isNil fallbacks in Init_CommonConstants never fire on a dedicated server (why earlier raises had no effect).
+//--- Air-event/WF_Debug overrides below still take precedence.
+if (isMultiplayer) then {
+	{
+		Private "_v";
+		_v = missionNamespace getVariable _x;
+		if (!isNil "_v") then {missionNamespace setVariable [_x, round(_v * 1.5)]};
+	} forEach ["WFBE_C_ECONOMY_FUNDS_START_WEST","WFBE_C_ECONOMY_FUNDS_START_EAST","WFBE_C_ECONOMY_SUPPLY_START_WEST","WFBE_C_ECONOMY_SUPPLY_START_EAST"];
+	diag_log Format ["[WFBE (INIT)] EconomyBoost +50pct ACTIVE: fundsW=%1 fundsE=%2 supplyW=%3 supplyE=%4",
+		missionNamespace getVariable "WFBE_C_ECONOMY_FUNDS_START_WEST",
+		missionNamespace getVariable "WFBE_C_ECONOMY_FUNDS_START_EAST",
+		missionNamespace getVariable "WFBE_C_ECONOMY_SUPPLY_START_WEST",
+		missionNamespace getVariable "WFBE_C_ECONOMY_SUPPLY_START_EAST"];
+};
 
 IS_air_war_event = false;
 _airEventEnabledFromParameters = missionNamespace getVariable "WFBE_AIR_EVENT_ENABLED";

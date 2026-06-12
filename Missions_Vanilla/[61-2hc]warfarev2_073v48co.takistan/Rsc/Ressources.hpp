@@ -553,7 +553,7 @@ class RscClickableText {
 	soundDoubleClick[] = {"", 0.1, 1};
 	soundEnter[] = {WFBE_SoundEnter,0.2,1};
 	soundEscape[] = {WFBE_SoundEscape,0.2,1};
-	soundPush[] = {, 0.2, 1};
+	soundPush[] = {"", 0.2, 1};
 	w = 0.275;
 	h = 0.04;
 	text = "";

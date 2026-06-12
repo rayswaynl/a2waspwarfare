@@ -196,6 +196,22 @@ while {alive player && dialog} do {
 		createDialog "RscMenu_Service";
 	};
 
+	//--- Voting Page (multi-type vote menu).
+	if (MenuAction == 20) exitWith {
+		MenuAction = -1;
+		closeDialog 0;
+		createDialog "WFBE_VotingMenu";
+	};
+
+	//--- Command Deck: Skin Selector (re-open from WF menu footer).
+	if (MenuAction == 21) exitWith {
+		MenuAction = -1;
+		if (WFBE_C_SKIN_SELECTOR == 1 && {alive player} && {vehicle player == player}) then {
+			closeDialog 0;
+			[] execVM "WASP\actions\SkinSelector\SkinSelector_Open.sqf";
+		};
+	};
+
 	//--- Help Menu
 	if (MenuAction == 13) exitWith { //added-spayker
 		MenuAction = -1;
@@ -217,7 +233,15 @@ while {alive player && dialog} do {
 		if (!isNull player && {!("ItemGPS" in weapons player)}) then {player addWeapon "ItemGPS"};
 		closeDialog 0;
 		[] Spawn {
-			sleep 0.15;
+			// PR8 (claude): the engine accepts showGPS while the WF dialog (idd 11000) is still
+			// closing yet draws no mini-map - the manual GPS keybind works only because it fires
+			// with no dialog open. Wait for the WF menu display to actually close before enabling
+			// GPS so the in-game HUD renders. Capped at 1.5s so a stuck display cannot hang this
+			// thread; on timeout it falls back to the previous fixed-delay behaviour.
+			private ["_deadline"];
+			_deadline = time + 1.5;
+			waitUntil {(isNull (findDisplay 11000)) || (time > _deadline)};
+			sleep 0.10;
 			missionNamespace setVariable ["WFBE_Client_MenuGPSState", true];
 			if (!isNull player && {!("ItemGPS" in weapons player)}) then {player addWeapon "ItemGPS"};
 			RUBGPS = 1;

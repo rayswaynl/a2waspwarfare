@@ -36,7 +36,7 @@ scriptName "Client\Init\Init_Markers.sqf";
 		
 		// --- Determine the coloration method.
 		_campColor = missionNamespace getVariable "WFBE_C_UNKNOWN_COLOR";
-		if (_townSide == WFBE_Client_SideID) then {
+		if (_campSide == WFBE_Client_SideID) then {
 			_campColor = missionNamespace getVariable (Format ["WFBE_C_%1_COLOR",(_campSide) Call WFBE_CO_FNC_GetSideFromID]);
 		};
 
