@@ -1,0 +1,232 @@
+{
+  "schema": "a2waspwarfare-agent-test-plan-v1",
+  "id": "zargabad-low-pop-release-smoke-2026-06-03",
+  "title": "Zargabad low-pop mission release smoke plan",
+  "status": "in-progress",
+  "coverageLevel": [
+    "source-only",
+    "local-tool",
+    "hosted-smoke",
+    "dedicated-smoke",
+    "jip-smoke",
+    "hc-smoke"
+  ],
+  "subsystems": [
+    "zargabad-map",
+    "towns-camps-capture",
+    "economy",
+    "base-defense",
+    "central-wall",
+    "edge-guard",
+    "factory-purchase",
+    "town-ai",
+    "generated-missions"
+  ],
+  "sourceRefs": [
+    "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/mission.sqm",
+    "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Common/Init/Init_CommonConstants.sqf",
+    "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Common/Init/Init_Common.sqf",
+    "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Init/Init_Zargabad.sqf",
+    "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Module/Zargabad/Zargabad_EdgeGuard.sqf",
+    "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Module/Zargabad/Zargabad_BlackMarket.sqf",
+    "Missions_Vanilla/[31-2hc]warfarev2_073v48co.zargabad/Server/Module/Zargabad/Zargabad_RuntimeAudit.sqf",
+    "Tools/Validate-ZargabadMission.ps1",
+    "Tools/Validate-ZargabadRuntimeEvidence.ps1",
+    "Tools/New-ZargabadRuntimeReport.ps1",
+    "Tools/Validate-ZargabadRuntimeReport.ps1",
+    "Tools/New-ZargabadEvidenceFolder.ps1",
+    "Tools/New-ZargabadMapAuditPacket.ps1",
+    "Tools/New-ZargabadClaudeBrief.ps1",
+    "Guides/Zargabad-Completion-Gates.md",
+    "Guides/Zargabad-Claude-Runtime-Handoff.md",
+    "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs"
+  ],
+  "relatedWikiPages": [
+    "Towns-Camps-And-Capture-Atlas",
+    "Economy-Towns-And-Supply",
+    "Mission-Parameters-Localization-And-Generated-Build-Inputs",
+    "Testing-Debugging-And-Release-Workflow"
+  ],
+  "environment": {
+    "mission": "[31-2hc]warfarev2_073v48co.zargabad",
+    "branch": "feature/zargabad-map",
+    "commit": "feature/zargabad-map@PR-head",
+    "serverMode": "source-only",
+    "missionParams": {
+      "WFBE_C_TOWNS_AMOUNT": "Full",
+      "WFBE_C_TOWNS_DEFENDER": "Hard",
+      "WFBE_C_TOWNS_OCCUPATION": "Medium",
+      "WFBE_C_AI_MAX": 6,
+      "WFBE_C_PLAYERS_AI_MAX": 8,
+      "WFBE_C_ECONOMY_FUNDS_START_EAST": 8000,
+      "WFBE_C_ECONOMY_FUNDS_START_WEST": 8000,
+      "WFBE_C_ECONOMY_SUPPLY_START_EAST": 3600,
+      "WFBE_C_ECONOMY_SUPPLY_START_WEST": 3600,
+      "WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT": 30000,
+      "WFBE_C_GAMEPLAY_AIR_AA_MISSILES": 1,
+      "WFBE_C_GAMEPLAY_BOMBS_ALTITUDE": 1500,
+      "WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION": 1500,
+      "WFBE_C_GAMEPLAY_MISSILES_RANGE": 1500,
+      "WFBE_C_GAMEPLAY_THERMAL_IMAGING": 1,
+      "WFBE_C_ENVIRONMENT_MAX_VIEW": 3500,
+      "WFBE_C_MODULE_WFBE_FLARES": 1,
+      "WFBE_C_MODULE_WFBE_ICBM": 0
+    }
+  },
+  "steps": [
+    "Start hosted or dedicated Zargabad and verify no init hang through WFBE_Parameters_Ready, commonInitComplete, townInit, serverInitFull and clientInitComplete.",
+    "Confirm 13 town markers, 19 camp markers and one airfield objective are present and positioned according to Guides/Zargabad-Low-Pop-Release-Audit.md.",
+    "Join a second client after time > 30 and confirm current town/camp colors and SV visibility rules are preserved.",
+    "Inspect WEST southwest and EAST northeast starts for direct spawn-to-spawn fire, spawn-to-city fire and hill-edge overwatch abuse.",
+    "Inspect the WDDM-compatible central H-barrier wall around 3425,3375 and confirm the pass-through gaps preserve normal infantry, light armor and AI movement.",
+    "Drive a ground vehicle to the map-audit illegal rim test points 80,3000; 3000,80; 5900,3000; and 3000,5900 and confirm Zargabad_EdgeGuard removes each after the configured timeout with -RequireNamedRimPoints.",
+    "Probe the legal rim test points 3600,5900; 4330,5900; and 5900,4340 plus aircraft near the rim, and confirm legitimate objective-side fights emit allowed-at-safe-edge-rim RPT evidence with -RequireNamedRimPoints without becoming broad safe hill-camping corridors.",
+    "Verify WEST/EAST Zargabad fortifications and statics spawn, are side-owned, manned, match runtime baseFootprint [35,45,74,78], and do not block commander construction in normal base flow.",
+    "Compare the RPT baseStaticTemplates line and Init_Zargabad base static runtime positions line with screenshots/coordinates for spawned WEST/EAST base statics and flag mismatched classes, bad arcs, bad facing, unmanned statics, or blocked commander movement.",
+    "Wake city, airfield and one outer farm with ground units; confirm town AI and static defenses activate, face useful approaches after the Zargabad orientation pass, fight, and clean up after inactivity.",
+    "Capture camps and then a town from both WEST and EAST; confirm camp/town SV drains, resets on capture, and income ticks reflect ownership.",
+    "Buy representative infantry, light, heavy, aircraft and airport units; confirm runtime buy menus match the statically validated compact Zargabad normal heavy/aircraft lists, exclude MBTs/MLRS/SPAAGs/attack helicopters/attack jets from normal factories, and make price multipliers feel sane.",
+    "Confirm the black-market armed RPT line appears after town init, then own Zargabad Airfield as WEST or EAST and wait for the black-market cache event; confirm crate/smoke spawn, ownership gating, RPT spawn evidence and RPT cleanup-release evidence.",
+    "Run one HC-enabled smoke if headless client is used by the server and confirm town AI/static defense behavior does not regress."
+  ],
+  "expected": [
+    "Mission boots without undefined variable, missing file, sync id or townInit errors in server/client RPT.",
+    "All town/camp/airport/start logics remain inside the 6000m Zargabad boundary.",
+    "Central city, market, districts and airfield are the high-value flow; farms/outskirts remain lower-value flank objectives.",
+    "Spawn areas require movement/scouting to attack and are not trivially suppressed from the opposing spawn or side hills.",
+    "The uncrewed central wall interrupts flat middle sightlines without sealing the map, trapping AI pathing or creating an armed middle-map kill strip.",
+    "Extreme-rim ground camping is server-enforced without punishing legitimate objective fights near the northern/eastern settlements.",
+    "Smaller-map economy reduces vehicle/air spam while preserving infantry and IFV fights.",
+    "The black-market cache is fun but not match-breaking."
+  ],
+  "evidence": [
+    {
+      "type": "command-output",
+      "summary": "LoadoutManager generation completed with A2WASP_SKIP_ZIP=1; packaging skipped because 7za is not required for local propagation."
+    },
+    {
+      "type": "command-output",
+      "summary": "dotnet build Tools/LoadoutManager/LoadoutManager.csproj --no-restore completed with existing warnings and 0 errors."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Zargabad_BlackMarket waits for server-side town init, logs its armed cache positions and delay/hold timing immediately, then later requires WEST/EAST ownership of Zargabad Airfield before surfacing a para-ammo cache."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Zargabad_EdgeGuard is server-only, Zargabad-gated, skips Air vehicles, exempts nearby starts/towns/camps/airport and uses the 6000m boundary plus a 120m rim band."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Static edge-footprint validation found zero objective safe-zone logics inside the 120m kill rim, exactly seven north/east edge-safe start/objective bubbles inside the 325m safe range, and named rim test points whose remove/allow expectations match the edge-guard geometry."
+    },
+    {
+      "type": "command-output",
+      "summary": "Tools/Validate-ZargabadMission.ps1 passed: no duplicate ids, all sync ids resolvable, expected town/camp/airport/start/defense counts, exact named town population/value anchors with intended coordinates/start SV/max SV/ranges, population tiers strictly descend from primary to district/market to flank routes, the city population belt carries most start/max SV, farm/outskirt objectives remain low-density SP/SV route anchors, exact camp approach anchors with intended coordinates, linked towns and distance bands, exact defense firing anchors with intended coordinates, linked towns, kind mixes and distance bands, all nine start anchors with intended coordinates, headings and edge-distance bands, intended WEST/EAST separation, no out-of-6000 logic positions, no objective safe-zone logics inside the 120m edge kill rim, exactly seven north/east edge-safe objective/start bubbles, start SV 185, max SV 648, all towns have camps and defenses, each camp links to exactly one town, all camps sit in the 90m-225m town-flow band, high-value objectives have two camp approaches and layered defense coverage, priority objective defense-kind mixes cover infantry, armor and air approaches where appropriate, generated low-pop parameter defaults, exact smaller-map economy/range/cap constants and exact compact normal heavy/aircraft lists are locked in source and generated Zargabad mission copies, the runtime town-defense orientation hook is present, WDDM-compatible central wall template/gaps are present, and no Takistan Zargabad module spillover."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Static validation requires the base anti-armor statics to sit on the forward base-axis side and face the map center: WEST TOW at forward offset [0,58] direction 0 relative to the southwest base heading, and EAST Metis at forward offset [0,58] direction 0 relative to the northeast base heading."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Init_Zargabad normalizes base static setDir/logged facing below 360 degrees before spawning and recording runtime positions, so Claude can compare RPT facing evidence directly against screenshots."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Static validation now locks the 13-piece base H-barrier ring, exact WEST/EAST base static templates, and computed default-start runtime anchors for Claude screenshot/RPT comparison: WEST TOW 1541,1591 facing 45, WEST Stinger 1459,1509 facing 225, EAST Metis 5309,5159 facing 225, and EAST Igla 5391,5241 facing 45."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Static validation now locks all nine start logics by id, role, coordinate, heading where present, and edge-distance band, including WEST/EAST defaults, Resistance central init, WEST/EAST alternates, and the two northern flank starts used near the airfield/city edge."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Camp placement audit measured 19 linked camps at 111.8m-192.4m from their town centers, with two camp approaches for the city center, airfield, north/south districts, Northwest Base and Rahim Villa."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Static validation calculates the central wall geometry from Init_Zargabad: six spans, five gap checkpoints, exactly 60 H-barrier pieces, zero crewed central-wall weapons, and pass-through gaps bounded between 180m and 320m with each checkpoint inside its gap."
+    },
+    {
+      "type": "source-audit",
+      "summary": "The static validator now checks Zargabad AI caps, player squad caps, team supply cap, fast travel, UAV spotting, respawn, command-center, town build/defense/mortar/patrol, support/service, aircraft countermeasure, and base-defense manning/protection constants before runtime testers spend effort on gameplay feel."
+    },
+    {
+      "type": "source-audit",
+      "summary": "The static validator now parses town-defense wfbe_defense_kind mixes and requires the priority Zargabad objectives to have sensible mixed coverage: city MG/nest plus GL plus AT, airfield MG/nest plus AT plus at least two AA defenses, district/base/villa objectives MG-or-nest plus AT, and Northwest Base AA for the northern air approach."
+    },
+    {
+      "type": "source-audit",
+      "summary": "The static validator now locks all 33 town-defense ids to exact firing anchors: intended coordinate, linked town, wfbe_defense_kind mix, and per-row approach-distance band, including the City Center MG+GL row and the Airfield AA/AT rows."
+    },
+    {
+      "type": "source-audit",
+      "summary": "The static validator now parses generated Zargabad Rsc/Parameters.hpp defaults for lower start funds/supply, team supply cap, missile range, hard town defenders, medium occupation, town build protection, locked defender vehicles, and base-defense manning range, and checks that LoadoutManager still carries those Zargabad defaults."
+    },
+    {
+      "type": "source-audit",
+      "summary": "The static validator parses source and generated Zargabad WEST/EAST normal heavy/aircraft override arrays, requires exact compact factory lists, and fails if MBTs, MLRS, SPAAGs, attack helicopters or attack jets return to normal factory flow."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Tools/Validate-ZargabadRuntimeEvidence.ps1 is ready for Claude/runtime RPT validation and checks server/town/Zargabad/edge-guard/runtime-audit init, expected runtime count/SV/base/fortification/factory restriction/compact factory list/price multiplier/economy/range/weapon-pressure evidence, optional JIP/HC/edge-removal/edge-safe-allow/named-rim-point/black-market spawn and cleanup evidence, and common missing-script/dependency/expression failures, WFBE class/loadout errors, and vehicle/object creation failures."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Tools/New-ZargabadRuntimeReport.ps1 generates a Codex-ready markdown report with gate state, town-defense orientation state, base/fortification audit state, base static runtime position state, failure scan, key RPT excerpts, validator output, a structured Claude Notes verdict table, an Evidence Bundle Checklist mapping exact screenshot filenames to runtime/objective rows, and an Objective Coverage table tied to Guides/Zargabad-Completion-Gates.md. Claude Notes require PASS/FAIL/UNCERTAIN plus concrete evidence for ambiguous or failing runtime checks, including separate hosted boot and dedicated boot context rows, population/SP-SV placement feel, base static runtime position/arcs, and priority defense mix arcs rows for city, airfield, district, Northwest Base and Rahim Villa screenshots/coordinate notes. Claude Notes and Objective Coverage PASS rows require keep/tune/revert/investigate/patch/retest recommendations before Codex can stop Claude. It tells Claude to place referenced screenshots and zargabad-map-audit.md in zargabad-evidence or pass their folder with -EvidenceRoot."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Tools/Validate-ZargabadRuntimeReport.ps1 validates Claude's edited runtime report before Codex stop/go: validator PASS, every expected gate and failure-scan row present, no MISSING required gates, no FOUND failure-scan rows, no _missing_ key evidence placeholders, requested JIP/HC/edge/black-market gates PASS, every expected Claude Notes row present including population/SP-SV placement feel, hosted and dedicated boot rows proven separately, every Claude Notes row PASS, every PASS row includes concrete row-specific evidence plus a keep/tune/revert/investigate/patch/retest recommendation, every Objective Coverage row from the original mission goal is present/PASS/evidence-backed/recommended, key visual rows include screenshot filenames, and screenshot filenames resolve to PNG/JPEG files when -EvidenceRoot is supplied."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Tools/Validate-ZargabadRuntimeReport.ps1 now also requires a real zargabad-map-audit.md attachment under the evidence root or beside the report when -EvidenceRoot is supplied, and checks that it contains the Population Flow, Rim Test Points, WDDM Fortification Review and Claude Screenshot Targets sections."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Tools/New-ZargabadClaudeBrief.ps1 now infers population/SP-SV placement and town-defense retest focuses when the latest commit touches mission placement, the static validator, the runtime report, the map audit packet or Zargabad audit/test-plan docs, so Claude is nudged to retest population flow/value tiers and priority defense mix arcs after every relevant Codex checkpoint."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Tools/New-ZargabadMapAuditPacket.ps1 generates a Claude-facing coordinate packet from mission.sqm with population-flow objective values, population tier totals, SP/SV intent notes, camp links/distances, town-defense kind/position/distance rows, labeled start roles, base-axis midpoint, expected base static runtime anchors, edge-safe bubbles, named rim test points, central-wall gap checkpoints, and screenshot targets for map-placement, pathing, sightline, base-static and defense-facing notes."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Tools/New-ZargabadEvidenceFolder.ps1 creates the runtime evidence folder, writes zargabad-map-audit.md into it, and adds README-zargabad-evidence.md with suggested screenshot filenames, screenshot-to-report-row mapping, and the exact Validate-ZargabadRuntimeReport.ps1 -EvidenceRoot command so Claude can build a Codex-ready evidence bundle before playtesting."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Guides/Zargabad-Completion-Gates.md maps the original mission objective to static and runtime proof, including base safety, population/SP-SV placement, defense placement, smaller-map economy/ranges/caps/costs, side-hill and rim abuse, WDDM fortification review, the under-100-LOC mystery feature, and the Claude/Codex stop rule."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Guides/Zargabad-Claude-Runtime-Handoff.md now names the Objective Coverage table as the final mission-goal checklist: every row from Guides/Zargabad-Completion-Gates.md must be present, PASS, backed by current static/runtime evidence, and include a keep/tune/revert/investigate/patch/retest Codex action recommendation before Claude can recommend stop or Codex can say stop."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Tools/New-ZargabadClaudeBrief.ps1 generates a fresh Codex-to-Claude packet after each commit or material change, including latest commit/PR head, coordination cadence, changed files, inferred retest focus, required runtime commands, dirty local state warning, and the Codex stop/go rule. It also tells Claude which runtime gates should trigger status updates, including population/SP-SV placement, points Claude to Guides/Zargabad-Completion-Gates.md as the objective coverage checklist before any final PASS recommendation, points Claude to the runtime report Evidence Bundle Checklist and README-zargabad-evidence.md screenshot row mapping with exact preferred filenames, asks for screenshot filenames plus coordinates on key visual rows, requires PASS rows to include keep/tune/revert/investigate/patch/retest Codex action recommendations, and tells Codex to treat RPT/screenshot/coordinate/repro-backed findings as actionable."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Zargabad_RuntimeAudit logs runtime towns/camps/airports/defenses, start/max SV totals, WEST/EAST base positions and separation, base static/wall counts, factory restriction counts, exact compact normal factory lists, price multiplier/sample values, and smaller-map economy/range/base-defense/edge-guard/weapon-pressure constants into RPT."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Init_Zargabad stores exact WEST/EAST base static templates in missionNamespace and now logs actual spawned static positions/facing. Zargabad_RuntimeAudit logs the templates plus baseFootprint [35,45,74,78] so Claude can compare RPT evidence against screenshots, firing arcs, manning, and commander construction space."
+    },
+    {
+      "type": "source-audit",
+      "summary": "Init_Zargabad builds WFBE_ZARGABAD_CENTRAL_WALL through CreateDefenseTemplate with six separated H-barrier spans centered at 3425,3375 and angled 316 degrees across the flat middle. Runtime audit records central-wall gap checkpoints near [4053,2725], [3789,2998], [3504,3293], [3195,3613], and [2903,3915] for Claude's infantry, light armor and AI pathing checks."
+    },
+    {
+      "type": "command-output",
+      "summary": "Static mission validation found unique ids, all sync ids resolvable, zero out-of-6000 logic positions, all nine intended start anchors and headings, WEST/EAST start separation at least 5000m, 13 towns, 19 camps, 1 airport, 33 defense logics, exact town, camp, defense and base static anchors, runtime defense-orientation hook present, start SV 185 and max SV 648, plus population tier ordering and city-belt SP/SV share."
+    }
+  ],
+  "result": "partial",
+  "notes": "Source-only and local-tool evidence passed. Hosted/dedicated/JIP/HC Arma 2 OA runtime smoke remains required before this goal can be marked complete. Codex should send Tools/New-ZargabadClaudeBrief.ps1 output after each commit, and Claude/runtime testers should use Guides/Zargabad-Claude-Runtime-Handoff.md, Tools/Validate-ZargabadRuntimeEvidence.ps1, and Tools/New-ZargabadRuntimeReport.ps1 for RPT evidence and Codex-ready status reports after each Codex commit or runtime gate.",
+  "updatedAt": "2026-06-03T10:03:00+02:00",
+  "updatedBy": "Codex"
+}

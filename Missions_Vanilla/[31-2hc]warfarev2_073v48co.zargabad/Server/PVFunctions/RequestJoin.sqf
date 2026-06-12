@@ -1,0 +1,91 @@
+private ["_canJoin","_name","_player","_side","_uid","_skillBLUFOR","_skillOPFOR","_hasConnectedAtLaunchToSide","_teamJoinedConfirmed"];
+
+_player = _this select 0;
+_side = _this select 1;
+_name = name _player;
+
+_uid = getPlayerUID(_player);
+_canJoin = true;
+
+_teamJoinedConfirmed = missionNamespace getVariable Format["WFBE_JIP_USER%1_TEAM_JOINED", _uid];
+_hasConnectedAtLaunchToSide = missionNamespace getVariable format ["WFBE_PLAYER_%1_CONNECTED_AT_LAUNCH", _uid];
+
+_skillBLUFOR = 0;
+_skillOPFOR = 0;
+_reason = "";
+
+if ( !(isNil "_teamJoinedConfirmed")) then { //--- Retrieve JIP Information if there's any.
+
+	if (_teamJoinedConfirmed != _side) then {
+
+		_canJoin = false;
+		[leader group _player, "LocalizeMessage", ['Teamswap',_name,_uid,_teamJoinedConfirmed,_side]] Call WFBE_CO_FNC_SendToClient; //--- Inform the client about the teamswap.
+		["INFORMATION", Format["RequestJoin.sqf: Player [%1] [%2] has been sent back to the lobby for teamswapping, original side [%3], joined side [%4].", _name,_uid,_teamJoinedConfirmed,_side]] Call WFBE_CO_FNC_LogContent;
+
+	} else {
+
+		_canJoin = true;
+
+	};
+
+} else {
+
+	if (!(isNil "_hasConnectedAtLaunchToSide")) then {
+
+		if (_hasConnectedAtLaunchToSide != _side) then {
+
+			_canJoin = false;
+			[leader group _player, "LocalizeMessage", ['Teamswap',_name,_uid,_hasConnectedAtLaunchToSide,_side]] Call WFBE_CO_FNC_SendToClient; //--- Inform the client about the teamswap.
+			["INFORMATION", Format["RequestJoin.sqf: Player [%1] [%2] has been sent back to the lobby for teamswapping, original side [%3], attempted side [%4].", _name,_uid,_hasConnectedAtLaunchToSide,_side]] Call WFBE_CO_FNC_LogContent;
+		} else {
+
+			_canJoin = true;
+
+		};
+
+	} else {
+
+		call {
+			// Marty: Keep teamswap protection active, but skip only the AntiStack skill DB check when the module is disabled.
+			if ((missionNamespace getVariable ["WFBE_C_ANTISTACK_ENABLED", 1]) == 0) exitWith {
+				_canJoin = true;
+				_reason = " (AntiStack skill balancing disabled. Joining allowed without skill check.)";
+				["INFORMATION", Format["RequestJoin.sqf: AntiStack skill balancing is disabled; player [%1] (UID: [%2]) can join side [%3] without team skill check.", _name, _uid, _side]] Call WFBE_CO_FNC_LogContent;
+			};
+
+			["INFORMATION", Format["RequestJoin.sqf: Player [%1] (UID: [%2]) hasn't joined either side in this match. Checking team skills...", _name, _uid]] Call WFBE_CO_FNC_LogContent;
+
+			_skillBLUFOR = [west, _uid] Call WFBE_SE_FNC_GetTeamScore;
+			_skillOPFOR = [east, _uid] Call WFBE_SE_FNC_GetTeamScore;
+
+			_canJoin = [_side, _name, _uid, _player, _skillBLUFOR, _skillOPFOR] call WFBE_SE_FNC_CompareTeamScores;
+
+			if (_canJoin) then {
+				_reason = " (Player joined the weaker team. Joining allowed.)";
+			} else {
+				_reason = " (Player attempted to join the stronger team. Joining denied.)";
+			}
+		};
+
+	};
+};
+
+if (WF_A2_Vanilla) then {
+
+	[_uid, "HandleSpecial", ["join-answer", _canJoin, _skillBLUFOR, _skillOPFOR]] Call WFBE_CO_FNC_SendToClients;
+
+} else {
+
+	[_player, "HandleSpecial", ["join-answer", _canJoin, _skillBLUFOR, _skillOPFOR]] Call WFBE_CO_FNC_SendToClient;
+
+};
+
+["INFORMATION", Format["RequestJoin.sqf: Player [%1] [%2] can join? [%3].%4", _name, _uid, _canJoin, _reason]] Call WFBE_CO_FNC_LogContent;
+
+
+if (_canJoin) then {
+
+	missionNamespace setVariable [Format["WFBE_JIP_USER%1_TEAM_JOINED", _uid], _side];
+	_result = ["STORE_SIDE", [_uid, _side]] call WFBE_SE_FNC_CallDatabaseStoreSide;
+
+};

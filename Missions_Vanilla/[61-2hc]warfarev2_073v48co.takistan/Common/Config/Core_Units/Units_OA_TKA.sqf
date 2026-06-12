@@ -84,22 +84,35 @@ if (IS_chernarus_map_dependent) then {
 missionNamespace setVariable [Format ["WFBE_%1LIGHTUNITS", _side], _u];
 if (local player) then {['LIGHT', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};
 
-_u 			= ['M113_TK_EP1'];
-_u = _u		+ ['BMP2_TK_EP1'];
-_u = _u		+ ['ZSU_TK_EP1'];
-_u = _u		+ ['T34_TK_EP1'];
-_u = _u		+ ['T55_TK_EP1'];
-_u = _u		+ ['T72_TK_EP1'];
+if (IS_zargabad_lowpop_map) then {
+	_u 			= ['M113_TK_EP1'];
+	_u = _u		+ ['BMP2_TK_EP1'];
+	_u = _u		+ ['T34_TK_EP1'];
+	_u = _u		+ ['BMP3'];
+} else {
+	_u 			= ['M113_TK_EP1'];
+	_u = _u		+ ['BMP2_TK_EP1'];
+	_u = _u		+ ['ZSU_TK_EP1'];
+	_u = _u		+ ['T34_TK_EP1'];
+	_u = _u		+ ['T55_TK_EP1'];
+	_u = _u		+ ['T72_TK_EP1'];
+};
 
 missionNamespace setVariable [Format ["WFBE_%1HEAVYUNITS", _side], _u];
 if (local player) then {['HEAVY', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};
 
-_u 			= ['UH1H_TK_EP1'];
-_u = _u		+ ['Mi17_TK_EP1'];
-_u = _u		+ ['Mi24_D_TK_EP1'];
-_u = _u		+ ['An2_TK_EP1'];
-_u = _u		+ ['L39_TK_EP1'];
-_u = _u		+ ['Su25_TK_EP1'];
+if (IS_zargabad_lowpop_map) then {
+	_u 			= ['UH1H_TK_EP1'];
+	_u = _u		+ ['Mi17_TK_EP1'];
+	_u = _u		+ ['An2_TK_EP1'];
+} else {
+	_u 			= ['UH1H_TK_EP1'];
+	_u = _u		+ ['Mi17_TK_EP1'];
+	_u = _u		+ ['Mi24_D_TK_EP1'];
+	_u = _u		+ ['An2_TK_EP1'];
+	_u = _u		+ ['L39_TK_EP1'];
+	_u = _u		+ ['Su25_TK_EP1'];
+};
 
 missionNamespace setVariable [Format ["WFBE_%1AIRCRAFTUNITS", _side], _u];
 if (local player) then {['AIRCRAFT', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};

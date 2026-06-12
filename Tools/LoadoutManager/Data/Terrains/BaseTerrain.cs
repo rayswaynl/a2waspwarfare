@@ -12,6 +12,7 @@ public abstract class BaseTerrain : InterfaceTerrain
     // Properties that specifies the name/type of the terrain.
     public TerrainName TerrainName { get => terrainName; set => terrainName = value; }
     public TerrainType TerrainType { get => terrainType; set => terrainType = value; }
+    public string missionPlayerCount { get; set; } = "";
     private TerrainName terrainName { get; set; }
     private TerrainType terrainType { get; set; }
 
@@ -69,7 +70,9 @@ class CfgSounds
         if (terrainModStatus == TerrainModStatus.VANILLA)
         {
             UpdateFilesForTakistan();
-            EnsureTakistanInitServerUsesCorrectMapId(destinationDirectory);
+            EnsureVanillaInitServerUsesCorrectMapId(destinationDirectory);
+            ApplyZargabadLowPopParameterDefaults(destinationDirectory);
+            RemoveZargabadLowPopGeneratedContent(destinationDirectory);
         }
 
         // Perhaps do a inherited class from this to reduce spaghetti
@@ -159,6 +162,11 @@ class CfgSounds
     // Method to determine the mission type based on the terrain type (Forest or Desert)
     private string DetermineMissionTypeIfItsForestOrDesert()
     {
+        if (!string.IsNullOrWhiteSpace(missionPlayerCount))
+        {
+            return missionPlayerCount;
+        }
+
         // Return "55" if the terrain type is FOREST, otherwise return "61"
         return TerrainType == TerrainType.FOREST ? "55" : "61";
     }
@@ -301,12 +309,20 @@ class CfgSounds
         File.WriteAllText(finalPathToEdit, content);
     }
 
-    // Ensures the Takistan init_server uses the correct map id after copying from Chernarus
-    private void EnsureTakistanInitServerUsesCorrectMapId(string _destinationDirectory)
+    // Ensures vanilla generated missions use their own map id after copying from Chernarus.
+    private void EnsureVanillaInitServerUsesCorrectMapId(string _destinationDirectory)
     {
-        if (terrainName != TerrainName.TAKISTAN)
+        int mapId;
+        switch (terrainName)
         {
-            return;
+            case TerrainName.TAKISTAN:
+                mapId = 2;
+                break;
+            case TerrainName.ZARGABAD:
+                mapId = 3;
+                break;
+            default:
+                return;
         }
 
         string initServerPath = Path.Combine(_destinationDirectory, @"Server\Init\Init_Server.sqf");
@@ -317,23 +333,238 @@ class CfgSounds
             return;
         }
 
-        const string chernarusMapLine = "[\"SET_MAP\", 1] call WFBE_SE_FNC_CallDatabaseSetMap;";
-        const string takistanMapLine = "[\"SET_MAP\", 2] call WFBE_SE_FNC_CallDatabaseSetMap;";
+        const string setMapPattern = "[\"SET_MAP\", ";
+        string terrainMapLine = $"[\"SET_MAP\", {mapId}] call WFBE_SE_FNC_CallDatabaseSetMap;";
 
         string fileContent = File.ReadAllText(initServerPath);
 
-        if (fileContent.Contains(takistanMapLine))
+        if (fileContent.Contains(terrainMapLine))
         {
             return;
         }
 
-        if (fileContent.Contains(chernarusMapLine))
+        int setMapStart = fileContent.IndexOf(setMapPattern, StringComparison.Ordinal);
+        if (setMapStart >= 0)
         {
-            File.WriteAllText(initServerPath, fileContent.Replace(chernarusMapLine, takistanMapLine));
+            int lineEnd = fileContent.IndexOf(";", setMapStart, StringComparison.Ordinal);
+            if (lineEnd >= 0)
+            {
+                string currentMapLine = fileContent.Substring(setMapStart, lineEnd - setMapStart + 1);
+                File.WriteAllText(initServerPath, fileContent.Replace(currentMapLine, terrainMapLine));
+                return;
+            }
+        }
+
+        Console.WriteLine($"SET_MAP definition not updated for {terrainName} in {initServerPath}.");
+    }
+
+    private void ApplyZargabadLowPopParameterDefaults(string _destinationDirectory)
+    {
+        if (terrainName != TerrainName.ZARGABAD)
+        {
             return;
         }
 
-        Console.WriteLine($"SET_MAP definition not updated for Takistan in {initServerPath}.");
+        string parametersPath = Path.Combine(_destinationDirectory, @"Rsc\Parameters.hpp");
+
+        if (!File.Exists(parametersPath))
+        {
+            Console.WriteLine($"Parameters.hpp not found at {parametersPath}");
+            return;
+        }
+
+        Dictionary<string, string> defaults = new Dictionary<string, string>
+        {
+            ["WFBE_C_AI_MAX"] = "6",
+            ["WFBE_C_PLAYERS_AI_MAX"] = "8",
+            ["WFBE_C_BASE_DEFENSE_MANNING_RANGE"] = "500",
+            ["WFBE_C_ECONOMY_FUNDS_START_EAST"] = "8000",
+            ["WFBE_C_ECONOMY_FUNDS_START_WEST"] = "8000",
+            ["WFBE_C_ECONOMY_SUPPLY_START_EAST"] = "3600",
+            ["WFBE_C_ECONOMY_SUPPLY_START_WEST"] = "3600",
+            ["WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT"] = "30000",
+            ["WFBE_C_GAMEPLAY_AIR_AA_MISSILES"] = "1",
+            ["WFBE_C_GAMEPLAY_BOMBS_ALTITUDE"] = "1500",
+            ["WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION"] = "1500",
+            ["WFBE_C_GAMEPLAY_MISSILES_RANGE"] = "1500",
+            ["WFBE_C_GAMEPLAY_THERMAL_IMAGING"] = "1",
+            ["WFBE_C_ENVIRONMENT_MAX_VIEW"] = "3500",
+            ["WFBE_C_MODULE_WFBE_FLARES"] = "1",
+            ["WFBE_C_MODULE_WFBE_ICBM"] = "0",
+            ["WFBE_C_TOWNS_DEFENDER"] = "3",
+            ["WFBE_C_TOWNS_OCCUPATION"] = "2",
+            ["WFBE_C_TOWNS_BUILD_PROTECTION_RANGE"] = "300",
+            ["WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER"] = "1",
+        };
+
+        string fileContent = File.ReadAllText(parametersPath);
+
+        foreach (KeyValuePair<string, string> parameterDefault in defaults)
+        {
+            fileContent = ReplaceParameterDefault(fileContent, parameterDefault.Key, parameterDefault.Value, parametersPath);
+        }
+
+        File.WriteAllText(parametersPath, fileContent);
+    }
+
+    private static string ReplaceParameterDefault(string _content, string _parameterName, string _defaultValue, string _filePath)
+    {
+        string classNeedle = $"class {_parameterName}";
+        int classStart = _content.IndexOf(classNeedle, StringComparison.Ordinal);
+
+        if (classStart < 0)
+        {
+            Console.WriteLine($"{_parameterName} not found in {_filePath}");
+            return _content;
+        }
+
+        int nextClassStart = _content.IndexOf("\n\tclass ", classStart + classNeedle.Length, StringComparison.Ordinal);
+        int searchEnd = nextClassStart < 0 ? _content.Length : nextClassStart;
+        int defaultStart = _content.IndexOf("default = ", classStart, searchEnd - classStart, StringComparison.Ordinal);
+
+        if (defaultStart < 0)
+        {
+            Console.WriteLine($"{_parameterName} default not found in {_filePath}");
+            return _content;
+        }
+
+        int defaultEnd = _content.IndexOf(";", defaultStart, StringComparison.Ordinal);
+
+        if (defaultEnd < 0 || defaultEnd >= searchEnd)
+        {
+            Console.WriteLine($"{_parameterName} default terminator not found in {_filePath}");
+            return _content;
+        }
+
+        return _content.Substring(0, defaultStart) + $"default = {_defaultValue}" + _content.Substring(defaultEnd);
+    }
+
+    private void RemoveZargabadLowPopGeneratedContent(string _destinationDirectory)
+    {
+        if (terrainName == TerrainName.ZARGABAD)
+        {
+            return;
+        }
+
+        string zargabadModulePath = Path.Combine(_destinationDirectory, @"Server\Module\Zargabad");
+        if (Directory.Exists(zargabadModulePath))
+        {
+            Directory.Delete(zargabadModulePath, true);
+        }
+
+        string zargabadInitPath = Path.Combine(_destinationDirectory, @"Server\Init\Init_Zargabad.sqf");
+        if (File.Exists(zargabadInitPath))
+        {
+            File.Delete(zargabadInitPath);
+        }
+
+        RemoveExactLine(Path.Combine(_destinationDirectory, @"Server\Init\Init_Server.sqf"),
+            "if (IS_zargabad_lowpop_map) then {[] execVM \"Server\\Init\\Init_Zargabad.sqf\"};");
+        RemoveExactLine(Path.Combine(_destinationDirectory, @"Common\Init\Init_Boundaries.sqf"),
+            "case 'zargabad': {_boundariesXY = 6000};");
+
+        foreach (string relativePath in new[]
+        {
+            @"Common\Init\Init_Common.sqf",
+            @"Common\Init\Init_CommonConstants.sqf",
+            @"Common\Config\Core_Units\Units_CO_RU.sqf",
+            @"Common\Config\Core_Units\Units_CO_US.sqf",
+        })
+        {
+            RemoveAllZargabadGuardBlocks(Path.Combine(_destinationDirectory, relativePath));
+        }
+    }
+
+    private static void RemoveExactLine(string _path, string _line)
+    {
+        if (!File.Exists(_path))
+        {
+            return;
+        }
+
+        string content = File.ReadAllText(_path).Replace("\r\n", "\n");
+        string[] lines = content.Split('\n');
+        string updated = string.Join("\n", lines.Where(line => line.Trim() != _line));
+
+        if (updated != content)
+        {
+            File.WriteAllText(_path, updated);
+        }
+    }
+
+    private static void RemoveAllZargabadGuardBlocks(string _path)
+    {
+        if (!File.Exists(_path))
+        {
+            return;
+        }
+
+        const string blockStartNeedle = "if (IS_zargabad_lowpop_map) then {";
+        string content = File.ReadAllText(_path).Replace("\r\n", "\n");
+        string[] lines = content.Split('\n');
+        List<string> updatedLines = new List<string>();
+        bool isSkippingZargabadBlock = false;
+        bool skipFollowingBlankLine = false;
+        bool previousLineWasBlankBeforeSkippedBlock = false;
+        int braceDepth = 0;
+        bool changed = false;
+
+        foreach (string line in lines)
+        {
+            if (skipFollowingBlankLine)
+            {
+                skipFollowingBlankLine = false;
+                if (line.Trim().Length == 0)
+                {
+                    continue;
+                }
+            }
+
+            if (!isSkippingZargabadBlock && line.Contains(blockStartNeedle, StringComparison.Ordinal))
+            {
+                previousLineWasBlankBeforeSkippedBlock = updatedLines.Count > 0 && updatedLines[updatedLines.Count - 1].Trim().Length == 0;
+                isSkippingZargabadBlock = true;
+                braceDepth = CountChar(line, '{') - CountChar(line, '}');
+                changed = true;
+                if (braceDepth <= 0)
+                {
+                    isSkippingZargabadBlock = false;
+                    skipFollowingBlankLine = previousLineWasBlankBeforeSkippedBlock;
+                }
+                continue;
+            }
+
+            if (isSkippingZargabadBlock)
+            {
+                braceDepth += CountChar(line, '{') - CountChar(line, '}');
+                if (braceDepth <= 0)
+                {
+                    isSkippingZargabadBlock = false;
+                    skipFollowingBlankLine = previousLineWasBlankBeforeSkippedBlock;
+                }
+                continue;
+            }
+
+            updatedLines.Add(line);
+        }
+
+        if (changed)
+        {
+            File.WriteAllText(_path, string.Join("\n", updatedLines));
+        }
+    }
+
+    private static int CountChar(string _value, char _character)
+    {
+        int count = 0;
+        foreach (char valueCharacter in _value)
+        {
+            if (valueCharacter == _character)
+            {
+                count++;
+            }
+        }
+        return count;
     }
 
     // Generates and returns the SQF code for a specific terrain. This method is built upon 
@@ -353,6 +584,7 @@ class CfgSounds
         string maxPlayers = DetermineMissionTypeIfItsForestOrDesert();
         string missionName = $@"[{maxPlayers}] Warfare V48 {EnumExtensions.GetEnumMemberAttrValue(terrainName)}";
         string isAirWarEvent = GenerateIsAirWarEvent();
+        string isZargabadLowPop = terrainName == TerrainName.ZARGABAD ? "#define IS_ZARGABAD_LOWPOP_MAP" : "//#define IS_ZARGABAD_LOWPOP_MAP";
         
         return $@"{wfDebug}
 {wfLogContent}
@@ -360,6 +592,7 @@ class CfgSounds
 {isModMapDependant}#define IS_MOD_MAP_DEPENDENT
 {isNavalTerrain}#define IS_NAVAL_MAP
 {isAirWarEvent}
+{isZargabadLowPop}
 #define WF_MAXPLAYERS {maxPlayers}
 #define WF_MISSIONNAME ""{missionName}""
 #define STARTING_DISTANCE {startingDistanceInMeters}

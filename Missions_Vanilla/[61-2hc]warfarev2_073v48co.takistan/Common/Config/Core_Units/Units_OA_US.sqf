@@ -169,30 +169,46 @@ _u = _u		+ ['BAF_Jackal2_L2A1_D'];
 missionNamespace setVariable [Format ["WFBE_%1LIGHTUNITS", _side], _u];
 if (local player) then {['LIGHT', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};
 
-_u =		  ['M2A2_EP1'];
-_u = _u		+ ['M2A3_EP1'];
-_u = _u		+ ['M1A1_US_DES_EP1'];
-_u = _u		+ ['MLRS_DES_EP1'];
-_u = _u		+ ['M1A2_US_TUSK_MG_EP1'];
-_u = _u		+ ['M6_EP1'];
-_u = _u		+ ['BAF_FV510_W'];
-_u = _u		+ ['BAF_FV510_D'];
+if (IS_zargabad_lowpop_map) then {
+	_u =		  ['M2A2_EP1'];
+	_u = _u		+ ['M2A3_EP1'];
+	_u = _u		+ ['BAF_FV510_D'];
+} else {
+	_u =		  ['M2A2_EP1'];
+	_u = _u		+ ['M2A3_EP1'];
+	_u = _u		+ ['M1A1_US_DES_EP1'];
+	_u = _u		+ ['MLRS_DES_EP1'];
+	_u = _u		+ ['M1A2_US_TUSK_MG_EP1'];
+	_u = _u		+ ['M6_EP1'];
+	_u = _u		+ ['BAF_FV510_W'];
+	_u = _u		+ ['BAF_FV510_D'];
+};
 
 missionNamespace setVariable [Format ["WFBE_%1HEAVYUNITS", _side], _u];
 if (local player) then {['HEAVY', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};
 
-_u 			= ['MH6J_EP1'];
-_u = _u		+ ['UH60M_EP1'];
-_u = _u		+ ['UH60M_MEV_EP1'];
-_u = _u		+ ['CH_47F_EP1'];
-_u = _u		+ ['CH_47F_BAF'];
-_u = _u		+ ['BAF_Merlin_HC3_D'];
-_u = _u		+ ['AH6J_EP1'];
-_u = _u		+ ['AW159_Lynx_BAF'];
-_u = _u		+ ['AH64D_EP1'];
-_u = _u		+ ['BAF_Apache_AH1_D'];
-_u = _u		+ ['C130J_US_EP1'];
-_u = _u		+ ['A10_US_EP1'];
+if (IS_zargabad_lowpop_map) then {
+	_u 			= ['MH6J_EP1'];
+	_u = _u		+ ['UH60M_EP1'];
+	_u = _u		+ ['UH60M_MEV_EP1'];
+	_u = _u		+ ['CH_47F_EP1'];
+	_u = _u		+ ['CH_47F_BAF'];
+	_u = _u		+ ['BAF_Merlin_HC3_D'];
+	_u = _u		+ ['AH6J_EP1'];
+} else {
+	_u 			= ['MH6J_EP1'];
+	_u = _u		+ ['UH60M_EP1'];
+	_u = _u		+ ['UH60M_MEV_EP1'];
+	_u = _u		+ ['CH_47F_EP1'];
+	_u = _u		+ ['CH_47F_BAF'];
+	_u = _u		+ ['BAF_Merlin_HC3_D'];
+	_u = _u		+ ['AH6J_EP1'];
+	_u = _u		+ ['AW159_Lynx_BAF'];
+	_u = _u		+ ['AH64D_EP1'];
+	_u = _u		+ ['BAF_Apache_AH1_D'];
+	_u = _u		+ ['C130J_US_EP1'];
+	_u = _u		+ ['A10_US_EP1'];
+};
 
 missionNamespace setVariable [Format ["WFBE_%1AIRCRAFTUNITS", _side], _u];
 if (local player) then {['AIRCRAFT', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};

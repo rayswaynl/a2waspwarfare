@@ -506,6 +506,8 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 
 serverInitFull = true;
 
+if (IS_zargabad_lowpop_map) then {[] Call Compile preprocessFile "Server\Init\Init_Zargabad.sqf"};
+
 // run one global server town script to process supply updates in each town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
 

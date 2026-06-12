@@ -6,6 +6,12 @@ public class ZipManager
 {
     public static void DoZipOperations()
     {
+        if (Environment.GetEnvironmentVariable("A2WASP_SKIP_ZIP") == "1")
+        {
+            Console.WriteLine("A2WASP_SKIP_ZIP=1, skipping mission package creation.");
+            return;
+        }
+
         string a2waspDirectory = FileManager.FindA2WaspWarfareDirectory().FullName;
         string[] missionDirectories = { "Missions", "Missions_Vanilla" }; //, "Modded_Missions" 
         // Create this directory if it doesn't exist

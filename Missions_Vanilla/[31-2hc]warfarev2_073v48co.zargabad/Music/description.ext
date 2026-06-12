@@ -1,0 +1,22 @@
+class CfgMusic
+{
+	tracks[] = {};
+	class wf_outro
+	{
+		// display name
+		name	= "Warfare Victory OST";
+
+		// filename, volume, pitch
+		sound[]	= { "\Music\wf_intro_2_7.ogg", db + 10, 1.0 };
+	};
+
+		class cherna_intro
+	{
+		// display name
+		name	= "Cherna Intro OST";
+
+		// filename, volume, pitch
+		sound[]	= { "\Music\cherna_intro_1.ogg", db + 1, 1.0 };
+	};
+
+};

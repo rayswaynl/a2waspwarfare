@@ -2,6 +2,7 @@
 {
     public TerrainName TerrainName { get => terrainName; set => terrainName = value; }
     public TerrainType TerrainType { get => terrainType; set => terrainType = value; }
+    public string missionPlayerCount { get; set; } = "";
 
     private TerrainName terrainName { get; set; }
     private TerrainType terrainType { get; set; }
@@ -39,6 +40,11 @@
 
     public string DetermineMissionTypeIfItsForestOrDesertAndGetThePlayerCount()
     {
+        if (!string.IsNullOrWhiteSpace(missionPlayerCount))
+        {
+            return missionPlayerCount;
+        }
+
         if (TerrainType == TerrainType.FOREST)
         {
             return "55";

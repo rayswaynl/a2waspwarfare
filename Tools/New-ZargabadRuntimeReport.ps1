@@ -1,0 +1,232 @@
+param(
+	[Parameter(Mandatory = $true)]
+	[string[]]$RptPath,
+	[string]$OutputPath = "",
+	[switch]$RequireJip,
+	[switch]$RequireHeadlessClient,
+	[switch]$RequireEdgeGuardRemoval,
+	[switch]$RequireEdgeGuardSafeAllow,
+	[switch]$RequireNamedRimPoints,
+	[switch]$RequireBlackMarket,
+	[switch]$AllowKnownDisconnectScoreErrors
+)
+
+$ErrorActionPreference = "Stop"
+
+function Get-RptFiles {
+	param([string[]]$Paths)
+	$files = @()
+	foreach ($path in $Paths) {
+		if (Test-Path -LiteralPath $path -PathType Container) {
+			$files += Get-ChildItem -LiteralPath $path -Recurse -File -Filter "*.rpt"
+			continue
+		}
+		if (Test-Path -LiteralPath $path -PathType Leaf) {
+			$files += Get-Item -LiteralPath $path
+			continue
+		}
+		throw "RPT path not found: $path"
+	}
+	return @($files | Sort-Object FullName -Unique)
+}
+
+function Get-EvidenceLines {
+	param([string[]]$Lines, [string]$Pattern, [int]$Max = 5)
+	$matches = @($Lines | Where-Object { $_ -match $Pattern } | Select-Object -First $Max)
+	if ($matches.Count -eq 0) { return @("_missing_") }
+	return $matches
+}
+
+function Get-GateState {
+	param([string[]]$Lines, [string]$Pattern, [bool]$Required)
+	$hasEvidence = @($Lines | Where-Object { $_ -match $Pattern } | Select-Object -First 1).Count -gt 0
+	if ($hasEvidence) { return "PASS" }
+	if ($Required) { return "MISSING" }
+	return "OPTIONAL"
+}
+
+$files = Get-RptFiles $RptPath
+if ($files.Count -eq 0) { throw "No RPT files found" }
+
+$content = ($files | ForEach-Object { Get-Content -Raw -LiteralPath $_.FullName }) -join "`n"
+if ($AllowKnownDisconnectScoreErrors) {
+	$content = [regex]::Replace($content, 'Server_PlayerDisconnected\.sqf: Player \[[^\r\n]+has no score to be saved upon disconnection[^\r\n]*', '')
+	$content = [regex]::Replace($content, 'Server_PlayerDisconnected\.sqf: Player \[[^\r\n]+has disconnected[^\r\n]*', '')
+}
+$lines = @($content -split "`r?`n")
+
+$validator = Join-Path $PSScriptRoot "Validate-ZargabadRuntimeEvidence.ps1"
+$validatorParams = @{
+	RptPath = $RptPath
+}
+if ($RequireJip) { $validatorParams.RequireJip = $true }
+if ($RequireHeadlessClient) { $validatorParams.RequireHeadlessClient = $true }
+if ($RequireEdgeGuardRemoval) { $validatorParams.RequireEdgeGuardRemoval = $true }
+if ($RequireEdgeGuardSafeAllow) { $validatorParams.RequireEdgeGuardSafeAllow = $true }
+if ($RequireNamedRimPoints) { $validatorParams.RequireNamedRimPoints = $true }
+if ($RequireBlackMarket) { $validatorParams.RequireBlackMarket = $true }
+if ($AllowKnownDisconnectScoreErrors) { $validatorParams.AllowKnownDisconnectScoreErrors = $true }
+
+$validatorPassed = $true
+$validatorOutput = @()
+try {
+	$validatorOutput = @(& $validator @validatorParams *>&1 | ForEach-Object { $_.ToString() })
+} catch {
+	$validatorPassed = $false
+	$validatorOutput += $_.Exception.Message
+}
+
+$gates = @(
+	[ordered]@{ Name = "Zargabad world"; Pattern = '(?i)zargabad'; Required = $true },
+	[ordered]@{ Name = "Server init begins"; Pattern = 'Init_Server\.sqf: Server initialization begins'; Required = $true },
+	[ordered]@{ Name = "Town init done"; Pattern = 'Init_Server\.sqf: Town starting mode is done'; Required = $true },
+	[ordered]@{ Name = "Zargabad init done"; Pattern = 'Init_Zargabad\.sqf: Spawn fortifications, central wall gaps, and side defenses are placed'; Required = $true },
+	[ordered]@{ Name = "Town defense orientation"; Pattern = 'Init_Zargabad\.sqf: Oriented \[33\] town defense logics toward linked town centers'; Required = $true },
+	[ordered]@{ Name = "Edge guard init"; Pattern = 'Zargabad_EdgeGuard\.sqf: outer \[[0-9]+\]m rim timeout \[[0-9]+\]s safe range \[[0-9]+\]m'; Required = $true },
+	[ordered]@{ Name = "Runtime count/SV audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: towns \[13\] camps \[19\] airports \[1\] defenses \[33\] startSV \[185\] maxSV \[648\]'; Required = $true },
+	[ordered]@{ Name = "Runtime base/fortification audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: bases WEST .* EAST .* distance \[[0-9]+\] westStatic \[4\] eastStatic \[4\] baseWalls \[13\] baseFootprint \[35,45,74,78\] centralWallPieces \[60\] centralWallCrewed \[0\].*centralWallGaps .*4053.*2725.*3789.*2998.*3504.*3293.*3195.*3613.*2903.*3915'; Required = $true },
+	[ordered]@{ Name = "Runtime base static template audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: baseStaticTemplates WEST .*M2StaticMG_US_EP1.*TOW_TriPod_US_EP1.*Stinger_Pod_US_EP1.* EAST .*KORD_high_TK_EP1.*Metis_TK_EP1.*Igla_AA_pod_TK_EP1'; Required = $true },
+	[ordered]@{ Name = "Base static runtime positions"; Pattern = 'Init_Zargabad\.sqf: Base static runtime positions WEST .*M2StaticMG_US_EP1.*TOW_TriPod_US_EP1.*Stinger_Pod_US_EP1.* EAST .*KORD_high_TK_EP1.*Metis_TK_EP1.*Igla_AA_pod_TK_EP1'; Required = $true },
+	[ordered]@{ Name = "Runtime factory audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: factoryCounts WEST L/H/A/AP \[[0-9]+,3,7,2\] EAST L/H/A/AP \[[0-9]+,4,3,3\] forbiddenNormal \[\]'; Required = $true },
+	[ordered]@{ Name = "Runtime compact factory lists"; Pattern = 'Zargabad_RuntimeAudit\.sqf: factoryLists WEST H .*M2A2_EP1.*M2A3_EP1.*BAF_FV510_D.* A .*MH6J_EP1.*UH60M_EP1.*UH60M_MEV_EP1.*CH_47F_EP1.*CH_47F_BAF.*BAF_Merlin_HC3_D.*AH6J_EP1.* EAST H .*M113_TK_EP1.*BMP2_TK_EP1.*T34_TK_EP1.*BMP3.* A .*UH1H_TK_EP1.*Mi17_TK_EP1.*Mi17_medevac_RU.*An2_TK_EP1'; Required = $true },
+	[ordered]@{ Name = "Runtime price audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: priceMultipliers .*priceSamples'; Required = $true },
+	[ordered]@{ Name = "Runtime economy/range/weapons audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf: economy supplyCap .*teamSupplyCap \[30000\].*edgeGuard \[120,325,45\] weapons missileRange \[1500\] uavRange \[650\] townRanges \[45,420,300\] purchaseHangar \[35\] countermeasures \[12,18\]'; Required = $true },
+	[ordered]@{ Name = "Black-market armed"; Pattern = 'Zargabad_BlackMarket\.sqf: armed near Zargabad Airfield positions .* delay \[600,960\] hold \[300\]'; Required = $true },
+	[ordered]@{ Name = "JIP"; Pattern = 'Server_PlayerConnected\.sqf: Player \[[^\r\n]+\] \[[^\r\n]+\] has joined the game|JIP Information have been stored'; Required = [bool]$RequireJip },
+	[ordered]@{ Name = "Headless client"; Pattern = 'Server_HandleSpecial\.sqf: Headless client is now connected'; Required = [bool]$RequireHeadlessClient },
+	[ordered]@{ Name = "Edge guard removal"; Pattern = 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] removed from edge rim'; Required = [bool]$RequireEdgeGuardRemoval },
+	[ordered]@{ Name = "Edge guard safe allow"; Pattern = 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] allowed at safe edge rim'; Required = [bool]$RequireEdgeGuardSafeAllow },
+	[ordered]@{ Name = "Named rim points"; Pattern = 'Zargabad_EdgeGuard\.sqf: \[[^\r\n]+\] (removed from edge rim|allowed at safe edge rim)'; Required = [bool]$RequireNamedRimPoints },
+	[ordered]@{ Name = "Black-market cache"; Pattern = 'Zargabad_BlackMarket\.sqf: \[[^\r\n]+\] cache \[[^\r\n]+\] surfaced near'; Required = [bool]$RequireBlackMarket },
+	[ordered]@{ Name = "Black-market cleanup"; Pattern = 'Zargabad_BlackMarket\.sqf: cache \[[^\r\n]+\] cleanup released near'; Required = [bool]$RequireBlackMarket },
+	[ordered]@{ Name = "Server init ends"; Pattern = 'Init_Server\.sqf: Server initialization ended'; Required = $true }
+)
+
+$failurePatterns = @(
+	[ordered]@{ Name = "Missing script/include"; Pattern = 'Script [^\r\n]+ not found|Include file [^\r\n]+ not found' },
+	[ordered]@{ Name = "Expression errors"; Pattern = 'Error in expression|Error position:|Undefined variable in expression' },
+	[ordered]@{ Name = "Missing dependency"; Pattern = 'You cannot play/edit this mission|Cannot load mission|No entry [^\r\n]+zargabad|No entry [^\r\n]+WFBE_[^\r\n]+ZARGABAD' },
+	[ordered]@{ Name = "Zargabad file load failures"; Pattern = 'Cannot open [^\r\n]+Zargabad|Cannot open [^\r\n]+zargabad' },
+	[ordered]@{ Name = "WFBE class/loadout validation errors"; Pattern = '\[WFBE \(ERROR\)\][^\r\n]+' },
+	[ordered]@{ Name = "Vehicle/object creation failures"; Pattern = 'Bad vehicle type|Cannot create non-ai vehicle|Cannot create entity with abstract type|Cannot create object|Cannot create vehicle' }
+)
+
+$report = New-Object System.Collections.Generic.List[string]
+$report.Add("# Zargabad Runtime Report")
+$report.Add("")
+$report.Add("- Generated: $(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssK')")
+$report.Add("- Validator: $(if ($validatorPassed) { 'PASS' } else { 'FAIL' })")
+$report.Add("- RPT files:")
+foreach ($file in $files) { $report.Add(('  - `{0}`' -f $file.FullName)) }
+$report.Add("")
+$report.Add("## Gate Snapshot")
+$report.Add("")
+$report.Add("| Gate | State |")
+$report.Add("| --- | --- |")
+foreach ($gate in $gates) {
+	$report.Add("| $($gate.Name) | $(Get-GateState -Lines $lines -Pattern $gate.Pattern -Required $gate.Required) |")
+}
+$report.Add("")
+$report.Add("## Failure Scan")
+$report.Add("")
+$report.Add("| Pattern | State |")
+$report.Add("| --- | --- |")
+foreach ($failure in $failurePatterns) {
+	$state = if (@($lines | Where-Object { $_ -match $failure.Pattern } | Select-Object -First 1).Count -gt 0) { "FOUND" } else { "clear" }
+	$report.Add("| $($failure.Name) | $state |")
+}
+$report.Add("")
+$report.Add("## Key Evidence")
+foreach ($item in @(
+	[ordered]@{ Name = "Init"; Pattern = 'Init_Server\.sqf: Server initialization|Init_Server\.sqf: Town starting mode|Init_Zargabad\.sqf' },
+	[ordered]@{ Name = "Edge guard"; Pattern = 'Zargabad_EdgeGuard\.sqf' },
+	[ordered]@{ Name = "Runtime audit"; Pattern = 'Zargabad_RuntimeAudit\.sqf' },
+	[ordered]@{ Name = "JIP/HC"; Pattern = 'Server_PlayerConnected\.sqf|JIP Information|Server_HandleSpecial\.sqf' },
+	[ordered]@{ Name = "Mystery feature"; Pattern = 'Zargabad_BlackMarket\.sqf' }
+)) {
+	$report.Add("")
+	$report.Add("### $($item.Name)")
+	foreach ($line in Get-EvidenceLines -Lines $lines -Pattern $item.Pattern) {
+		$report.Add("- $line")
+	}
+}
+$report.Add("")
+$report.Add("## Claude Notes")
+$report.Add("")
+$report.Add("Use `PASS`, `FAIL`, or `UNCERTAIN`. Every `PASS` row must include concrete row-specific evidence: coordinates or screenshot filenames for spatial checks, RPT excerpts or runtime values for init/balance/feature checks, and an explicit keep/tune/revert/investigate/patch/retest recommendation. Key visual rows need screenshot filenames when validating with `-EvidenceRoot`: population placement, base sightlines/statics, wall origin/gaps, town-defense blocking, and priority defense arcs. Every `FAIL` or `UNCERTAIN` row must include coordinates, screenshot filenames, RPT line excerpts, or exact repro steps. Put referenced PNG/JPEG screenshots plus `zargabad-map-audit.md` in `.\zargabad-evidence` or pass their folder with `Validate-ZargabadRuntimeReport.ps1 -EvidenceRoot`; the validator checks that the map-audit packet exists and contains the Population Flow, Rim Test Points, WDDM Fortification Review, and Claude Screenshot Targets sections.")
+$report.Add("")
+$report.Add("### Evidence Bundle Checklist")
+$report.Add("")
+$report.Add("Use these exact filenames when possible so Codex can map screenshots to the rows below without another clarification round. Put them in `.\zargabad-evidence` beside `zargabad-map-audit.md`.")
+$report.Add("")
+$report.Add("| Filename | Rows it can support | Capture target |")
+$report.Add("| --- | --- | --- |")
+$report.Add("| `population-city-airfield.png` | Population and SP/SV placement feel; SP/SV, town centers, and camps match likely population | City/district/market/airfield population belt and nearby camps. |")
+$report.Add("| `population-farms-outskirts.png` | Population and SP/SV placement feel; SP/SV, town centers, and camps match likely population | Farm/outskirt low-value routes and camp spacing. |")
+$report.Add("| `base-west-sightline.png` | Base safety and spawn sightlines; Bases are safe and meaningful | WEST default base toward center and likely spawn-suppression angles. |")
+$report.Add("| `base-east-sightline.png` | Base safety and spawn sightlines; Bases are safe and meaningful | EAST default base toward center and likely spawn-suppression angles. |")
+$report.Add("| `base-static-arcs.png` | Base static runtime positions and arcs; Beefier defenses and fortifications prevent easy base hits | Spawned static positions, manning, firing arcs, and commander space. |")
+$report.Add("| `wall-origin-axis.png` | Base-axis midpoint and wall origin; Flat middle and steep side hills cannot be abused | Central wall origin `3425,3375` looking toward both default bases. |")
+$report.Add("| `wall-gaps-pathing.png` | Central wall gaps and pathing; Beefier defenses and fortifications prevent easy base hits | Gap checkpoints `4053,2725`, `3789,2998`, `3504,3293`, `3195,3613`, `2903,3915`. |")
+$report.Add("| `town-defense-blocking.png` | Town defense facing and movement blocking; Defense units spawn where they make sense | Any defense that blocks movement, sits on bad terrain, or faces the wrong route. |")
+$report.Add("| `priority-defense-arcs.png` | Priority defense mix arcs; Defense units spawn where they make sense | City, Airfield, North/South District, Northwest Base, and Rahim Villa arcs. |")
+$report.Add("| `rim-illegal-removal.png` | Side hills and rim behavior; Flat middle and steep side hills cannot be abused | Illegal rim points after removal: `80,3000`, `3000,80`, `5900,3000`, `3000,5900`. |")
+$report.Add("| `rim-legal-allow.png` | Side hills and rim behavior; Flat middle and steep side hills cannot be abused | Legal safe-rim points: `3600,5900`, `4330,5900`, `5900,4340`. |")
+$report.Add("")
+$report.Add("| Runtime check | Verdict | Evidence / notes |")
+$report.Add("| --- | --- | --- |")
+$report.Add("| Hosted boot context | UNCERTAIN | Include hosted/listen-server RPT path or excerpt proving Zargabad reached server init end without Arma script errors. |")
+$report.Add("| Dedicated boot context | UNCERTAIN | Include dedicated-server RPT path or excerpt proving Zargabad reached server init end without missing script/include/dependency errors. |")
+$report.Add("| Map audit packet attached | UNCERTAIN | Include `zargabad-map-audit.md` beside the report or under `-EvidenceRoot` when reporting coordinates, screenshots, pathing, or sightline findings. |")
+$report.Add("| Population and SP/SV placement feel | UNCERTAIN | Compare map audit Population Flow and Population value tiers against runtime screenshots/coordinates: city/district/market/airfield should feel like the main population/economy belt, farms/outskirts lower-value routes; call out any town center, camp, or SP/SV value that feels misplaced. |")
+$report.Add("| Base safety and spawn sightlines | UNCERTAIN |  |")
+$report.Add("| Base static runtime positions and arcs | UNCERTAIN | Compare the Init_Zargabad base static runtime positions line plus runtime baseFootprint [35,45,74,78] against screenshots/coordinates, manning, usable arcs, and commander construction space. |")
+$report.Add("| Base-axis midpoint and wall origin | UNCERTAIN | Check `3425,3375` from both default starts and back toward both starts. |")
+$report.Add("| Central wall gaps and pathing | UNCERTAIN | Test `4053,2725`, `3789,2998`, `3504,3293`, `3195,3613`, and `2903,3915`. |")
+$report.Add("| Side hills and rim behavior | UNCERTAIN | Use `-RequireNamedRimPoints`: removal near 80,3000; 3000,80; 5900,3000; 3000,5900, and `allowed at safe edge rim` near 3600,5900; 4330,5900; 5900,4340. |")
+$report.Add("| Town defense facing and movement blocking | UNCERTAIN |  |")
+$report.Add("| Priority defense mix arcs | UNCERTAIN | Use map audit Town Defenses rows: city MG/nest+GL+AT; airfield MG/nest+AT+2xAA; North/South District, Northwest Base and Rahim Villa MG-or-nest+AT; Northwest Base AA. Flag bad arcs, blocked routes or unusable terrain. |")
+$report.Add("| Economy and factory pricing feel | UNCERTAIN |  |")
+$report.Add("| Weapon/range pressure | UNCERTAIN | Confirm missile range 1500, UAV 650, town defense/mortar/patrol ranges 45/420/300, hangar 35, countermeasures 12/18 feel right on Zargabad. |")
+$report.Add("| Mystery feature behavior | UNCERTAIN |  |")
+$report.Add("| Recommended Codex action | UNCERTAIN | Keep / tune / revert / investigate:  |")
+$report.Add("")
+$report.Add("## Objective Coverage")
+$report.Add("")
+$report.Add("Use `Guides/Zargabad-Completion-Gates.md` as the source of truth for these rows. Each objective row must be `PASS` before Codex can tell Claude to stop; include concrete static/runtime evidence and an explicit keep/tune/revert/investigate/patch/retest recommendation.")
+$report.Add("")
+$report.Add("| Objective row | Verdict | Evidence / recommendation |")
+$report.Add("| --- | --- | --- |")
+$report.Add("| Fully build out the Zargabad mission | UNCERTAIN | Include hosted and dedicated RPT proof, validator PASS, and any remaining mission-load caveats. |")
+$report.Add("| Bases are safe and meaningful | UNCERTAIN | Include base screenshots/coordinates, static arcs, manning, spawn sightlines, and baseFootprint evidence. |")
+$report.Add("| SP/SV, town centers, and camps match likely population | UNCERTAIN | Include map-audit Population Flow/value tiers plus screenshots/coordinates for city, airfield, districts/market, farms/outskirts, camps, and any questionable town center. |")
+$report.Add("| Defense units spawn where they make sense | UNCERTAIN | Include orientation RPT, defense wake/fight notes, blocked-route checks, and key visual screenshot filenames. |")
+$report.Add("| Economy is balanced for the smaller map | UNCERTAIN | Include runtime audit, buy-menu/factory notes, price feel, and 5v5-style snowball observations. |")
+$report.Add("| Weapons, vehicles, units, ranges, costs, and maximums fit map size | UNCERTAIN | Include runtime values for ranges/caps/costs/factory lists and whether combat pressure feels sane. |")
+$report.Add("| Flat middle and steep side hills cannot be abused | UNCERTAIN | Include edge/rim RPT, named rim point results, wall/pathing screenshots, and hill-abuse notes. |")
+$report.Add("| Beefier defenses and fortifications prevent easy base hits | UNCERTAIN | Include base fortifications, central wall, centralWallCrewed [0], pathing gaps, and spawn-suppression evidence. |")
+$report.Add("| Fortification review uses WDDM when changes are proposed | UNCERTAIN | If changing walls, include WDDM SQF or coordinate deltas; otherwise include keep/no-change rationale tied to WDDM/map-audit review. |")
+$report.Add("| Mystery feature uses existing mission code cheaply and stays under 100 LOC | UNCERTAIN | Include black-market armed/cache/cleanup RPT and confirm no balance-breaking behavior. |")
+$report.Add("| Codex and Claude work together until Codex says stop | UNCERTAIN | Include this runtime report, completion-gates audit, and final keep/tune/revert/investigate/patch/retest recommendation. |")
+$report.Add("")
+$report.Add("Codex should accept Claude's finding when this report includes concrete RPT evidence, coordinates, screenshots, or repeatable repro steps. If the report proves a mission issue, update mission code or validators before asking Claude to repeat the same pass.")
+$report.Add("")
+$report.Add("## Validator Output")
+$report.Add("")
+$report.Add('```text')
+foreach ($line in $validatorOutput) { $report.Add($line) }
+$report.Add('```')
+
+$reportText = $report -join "`r`n"
+if ($OutputPath.Trim().Length -gt 0) {
+	$parent = Split-Path -Parent $OutputPath
+	if ($parent -and -not (Test-Path -LiteralPath $parent)) {
+		New-Item -ItemType Directory -Path $parent | Out-Null
+	}
+	Set-Content -LiteralPath $OutputPath -Value $reportText -Encoding UTF8
+	Write-Host "Wrote Zargabad runtime report: $OutputPath"
+} else {
+	$reportText
+}
+
+if (-not $validatorPassed) { exit 1 }
