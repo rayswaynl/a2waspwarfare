@@ -357,6 +357,9 @@ ExecVM "Client\Client_UpdateRHUD.sqf";
 	["CLIENT"] Spawn PerformanceAudit_Run;
 };
 
+// Marty: State-audit loop (PERF1 slice A) - 60s RPT line of script count vs accumulated state vs FPS.
+[] execVM "Client\Functions\Client_StateAudit.sqf";
+
 //--- Disable Artillery Computer.
 Call Compile "enableEngineArtillery false;";
 
