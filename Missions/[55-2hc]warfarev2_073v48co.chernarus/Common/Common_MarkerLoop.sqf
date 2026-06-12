@@ -9,7 +9,7 @@
 // tombstone the slot (set to 0) and compaction only rebuilds the array once enough
 // tombstones accumulate, keeping the lost-append race window negligible. The marker
 // name ledger sweep below heals any marker that would slip through regardless.
-Private ["_aarEntry","_aarUpgradeCache","_activeEntries","_aircraftName","_altitude","_aarLevel","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades"];
+Private ["_aarEntry","_aarUpgradeCache","_ehHandle","_activeEntries","_aircraftName","_altitude","_aarLevel","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades"];
 
 if (isNil "WFBE_CL_UnitMarkerRegistry") then {WFBE_CL_UnitMarkerRegistry = []};
 if (isNil "WFBE_CL_AARMarkerRegistry") then {WFBE_CL_AARMarkerRegistry = []};
@@ -53,6 +53,19 @@ while {true} do {
 				// Marty: Unit gone - either show the death marker for the configured delay or drop now.
 				if (isNull _tracked || !(alive _tracked)) exitWith {
 					_markerName = _entry select 1;
+					// Marty: EH hygiene - dead bodies keep their Fired EHs until GC deletion; drop ours now.
+					if !(isNull _tracked) then {
+						_ehHandle = _tracked getVariable "WFBE_BlinkFiredEH";
+						if !(isNil "_ehHandle") then {
+							_tracked removeEventHandler ["Fired", _ehHandle];
+							_tracked setVariable ["WFBE_BlinkFiredEH", nil, false];
+						};
+						_ehHandle = _tracked getVariable "WFBE_MissileTerrainMaskingEH";
+						if !(isNil "_ehHandle") then {
+							_tracked removeEventHandler ["Fired", _ehHandle];
+							_tracked setVariable ["WFBE_MissileTerrainMaskingEH", nil, false];
+						};
+					};
 					if ((_entry select 6) && !(isNull _tracked)) then {
 						_markerName setMarkerTypeLocal (_entry select 7);
 						_markerName setMarkerColorLocal (_entry select 8);
