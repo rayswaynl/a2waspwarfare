@@ -57,14 +57,14 @@ for '_i' from 0 to count(_groups)-1 do {
 		{
 			_garUnit = _x;
 			if (!isNull _garUnit) then {
-				_garUnit setVariable ["wfbe_airfield_garrison", true, false];
+				_garUnit setVariable ["wfbe_airfield_garrison", true, true];
 			};
 		} forEach (_units + _crews + _vehicles);
 		if (isServer) then {
 			Private "_garArr";
 			_garArr = _town getVariable "wfbe_airfield_garrison_units";
 			if (isNil "_garArr") then {_garArr = []};
-			_town setVariable ["wfbe_airfield_garrison_units", _garArr + _units + _crews + _vehicles, false];
+			_town setVariable ["wfbe_airfield_garrison_units", _garArr + _units + _crews + _vehicles, true];
 		};
 	};
 

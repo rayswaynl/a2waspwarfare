@@ -355,7 +355,7 @@ _IDCS = _IDCS - [_currentIDC];
 
 		//--- Refresh the Factory DropDown list.
 		lbClear 12018;
-		if !(isNull (_sorted select 0)) then {
+		if (count _sorted > 0 && {!(isNull (_sorted select 0))}) then {
 			{
 				_nearTown = ([_x, towns] Call WFBE_CO_FNC_GetClosestEntity) getVariable 'name';
 				_txt = _type + ' ' + _nearTown + ' ' + str (round((vehicle player) distance _x)) + 'M';

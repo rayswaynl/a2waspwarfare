@@ -51,7 +51,7 @@
 */
 
 private ["_side","_logik","_sideID","_interval","_enabled","_humanCmdWEST","_humanCmdEAST",
-         "_bothHuman","_cmdTeam","_hq","_sideText","_jitter"];
+         "_bothHuman","_cmdTeam","_hq","_sideText","_jitter","_humanCmd","_skipAI"];
 
 _side    = _this;
 _logik   = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -284,16 +284,9 @@ while {!gameOver} do {
 					if (!_tmpActiveUpr) then {_w9Eligible = true};
 				};
 
-				//--- W10: lucky salvage — any wrecked vehicle on the battlefield.
-				_w10Eligible = false;
-				_wrecks = [];
-				{
-					_wk = _x;
-					if (!(alive _wk) && {!(_wk isKindOf "WarfareBBaseStructure")} && {!(_wk getVariable ["keepAlive", false])}) then {
-						_wrecks = _wrecks + [_wk];
-					};
-				} forEach (allMissionObjects "AllVehicles");
-				if (count _wrecks > 0) then {_w10Eligible = true};
+				//--- W10: lucky salvage — cheap proxy: allDead covers wrecks (avoids allMissionObjects every draw).
+				//--- The full sweep (with keepAlive / WarfareBBaseStructure filters) runs only in the W10 apply block.
+				_w10Eligible = (count allDead) > 0;
 
 				//--- W11: field hospital — wounded AI infantry present.
 				_w11Eligible = ({alive _x && {!isPlayer _x} && {_x isKindOf "Man"} && {damage _x > 0.05} && {side _x == _side}} count allUnits) > 0;
@@ -456,7 +449,7 @@ while {!gameOver} do {
 							if (count _w4Units > 0 && {_w4Model != ""}) then {
 								//--- Invoke Support_Paratroopers with playerTeam = commander group (AI gets the squad).
 								_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-								if (isNull _cmdTeam) then {_cmdTeam = createGroup _side};
+								if (isNull _cmdTeam) then {_cmdTeam = [_side, "aicom-wildcard"] Call WFBE_CO_FNC_CreateGroup};
 								[nil, _side, _destination, _cmdTeam] Spawn (Compile preprocessFile "Server\Support\Support_Paratroopers.sqf");
 								//--- Override the level variable so Paratroopers reads level 3.
 								missionNamespace setVariable [Format ["WFBE_%1PARACHUTELEVEL", _sideText], 3];
@@ -583,7 +576,12 @@ while {!gameOver} do {
 
 						if (!isNull _targetTown) then {
 							_guerTmpl = _guerTemplates select floor(random count _guerTemplates);
-							_guerGrp  = createGroup resistance;
+							_guerGrp  = [resistance, "aicom-uprising"] Call WFBE_CO_FNC_CreateGroup;
+							if (isNull _guerGrp) exitWith {
+								_logik setVariable ["wfbe_aicom_uprising_active", false];
+								_result = "failed";
+								_detail = "W9 grpNull at group cap";
+							};
 							_guerPos  = getPos _targetTown;
 							_logik setVariable ["wfbe_aicom_uprising_active", true];
 

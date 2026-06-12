@@ -165,6 +165,9 @@ switch (_localize) do {
     //--- AI Commander donation broadcast: teammates see generosity; donor's own confirm is a hint (HandleSpecial "aicom-donate-confirm").
     case "AIComDonation": {_txt = Format [Localize "STR_WF_CHAT_AIComDonation", _this select 1, _this select 2]; _commandChat = true;};
 
+    //--- AI Commander Wildcard event announcement: _this select 1 is the already display-ready message text.
+    case "Wildcard": {_txt = _this select 1; _commandChat = true;};
+
     case "DefenseThreatGate": {
         // _this: [1]=refund — NUMBER (refund directly) or classname STRING (look up the
         //        price this client charged for it; covers WDDM anchors whose price the

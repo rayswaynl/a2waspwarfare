@@ -535,7 +535,7 @@ _z = [];//--- Upgrade level
 
 //--- Backpacks (EAST) — built via runtime isClass filter, capped at 6 entries
 //--- Candidates: 6 primary TK/CZ + 2 US fallbacks (8 total), prices mirror US-side equivalents
-Private ["_bp_candidates","_bp_prices","_bp_valid","_bp_skipped","_bp_class","_bp_i","_bp_count"];
+Private ["_bp_candidates","_bp_prices","_bp_valid","_bp_skipped","_bp_class","_bp_i"];
 
 _bp_candidates = [
 	"TK_Assault_Pack_EP1",

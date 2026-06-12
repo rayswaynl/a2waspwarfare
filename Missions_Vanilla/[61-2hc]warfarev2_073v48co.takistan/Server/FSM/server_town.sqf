@@ -292,7 +292,7 @@ while {!WFBE_GameOver} do {
 						_squadGrp      = _retVal select 2;
 
 						if (isNull _squadGrp || {(count _squadUnits + count _squadVehicles) == 0}) exitWith {
-							["INFORMATION", Format ["server_town.sqf: mop-up squad for %1 (%2) failed to create — template %3 unavailable.", _loc getVariable ["name","unknown"], _side, _tplName]] Call WFBE_CO_FNC_LogContent;
+							["INFORMATION", Format ["server_town.sqf: mop-up squad for %1 (%2) failed to create - template %3 unavailable.", _loc getVariable ["name","unknown"], _side, _tplName]] Call WFBE_CO_FNC_LogContent;
 						};
 
 						//--- Tag squad units as town defender AI so they don't re-trigger activation scans.
@@ -321,9 +321,15 @@ while {!WFBE_GameOver} do {
 							if ((_loc getVariable ["sideID", -1]) != _newSIDAtCapture) then {_scanActive = false};
 
 							if (_scanActive) then {
-								_detected = (_loc nearEntities [["Man"], _townRange]) unitsBelowHeight 20;
+								_detected = (_loc nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"], _townRange]) unitsBelowHeight 20;
 								_guerCount = 0;
-								{if (side _x == resistance) then {_guerCount = _guerCount + 1}} forEach _detected;
+								{
+									if (side _x == resistance) then {_guerCount = _guerCount + 1};
+									//--- Count crew members of mounted vehicles too.
+									if (!(_x isKindOf "Man")) then {
+										{if (side _x == resistance) then {_guerCount = _guerCount + 1}} forEach (crew _x);
+									};
+								} forEach _detected;
 
 								if (_guerCount == 0) then {
 									_clearCount = _clearCount + 1;

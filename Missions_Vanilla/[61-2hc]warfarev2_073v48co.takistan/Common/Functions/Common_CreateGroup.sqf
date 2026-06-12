@@ -26,17 +26,24 @@ _cnt = 0;
 // --- Emergency GC if approaching cap ---
 if (_cnt >= 140) then {
 	_gcDone = 0;
+	//--- Collect deletion candidates into an array first; delete in a second pass to avoid
+	//--- modifying allGroups while iterating it (A2 OA 1.64 behaviour is undefined in that case).
+	Private ["_gcCands"];
+	_gcCands = [];
 	{
 		if (side _x == _side) then {
 			_isPersistent = _x getVariable "wfbe_persistent";
 			if (isNil "_isPersistent") then { _isPersistent = false };
 			_liveCount = { alive _x } count (units _x);
 			if (!_isPersistent && { _liveCount == 0 }) then {
-				deleteGroup _x;
-				_gcDone = _gcDone + 1;
+				_gcCands = _gcCands + [_x];
 			};
 		};
 	} forEach allGroups;
+	{
+		deleteGroup _x;
+		_gcDone = _gcDone + 1;
+	} forEach _gcCands;
 
 	// Recount after sweep
 	_cnt = 0;
@@ -51,7 +58,7 @@ _grp = createGroup _side;
 if (isNull _grp) then {
 	["WARNING", Format ["Common_CreateGroup.sqf: createGroup returned grpNull for %1 (source: %2) - %3 groups on side.", str _side, _sourceTag, _cnt]] Call WFBE_CO_FNC_AICOMLog;
 } else {
-	_grp setVariable ["wfbe_group_src", _sourceTag];
+	_grp setVariable ["wfbe_group_src", _sourceTag, true];
 };
 
 _grp

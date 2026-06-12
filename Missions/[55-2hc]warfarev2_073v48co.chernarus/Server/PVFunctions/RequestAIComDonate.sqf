@@ -62,7 +62,9 @@ if (_humanCmd) exitWith {
 };
 
 //--- Validate donor team has sufficient funds (server-authoritative check).
-_teamFunds = _donorTeam getVariable ["wfbe_funds", 0];
+//--- A2 OA 1.64: getVariable with default is unreliable on groups; use plain get + isNil guard.
+_teamFunds = _donorTeam getVariable "wfbe_funds";
+if (isNil "_teamFunds") then {_teamFunds = 0};
 if (_teamFunds < _amount) exitWith {
 	["INFORMATION", Format ["RequestAIComDonate.sqf: [DONATION] rejected for %1 - insufficient funds (has %2, wants %3).", _donorName, _teamFunds, _amount]] Call WFBE_CO_FNC_AICOMLog;
 };
