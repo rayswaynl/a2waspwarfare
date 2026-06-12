@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -154,12 +154,15 @@ while {!gameOver} do {
 				};
 			} forEach (_logik getVariable ["wfbe_teams", []]);
 			_richFlag = _fundsRich && (_fTeams >= _dynTarget);
-			if (_richFlag != (_logik getVariable ["wfbe_aicom_reinforce_rich", false])) then {
-				_logik setVariable ["wfbe_aicom_reinforce_rich", _richFlag];
-				if (_richFlag) then {
-					["INFORMATION", Format ["AI_Commander.sqf: [%1] wealth conversion active (funds %2 > threshold %3, teams %4/%5) - Produce batch doubled.", str _side, _funds, _richThreshold, _fTeams, _dynTarget]] Call WFBE_CO_FNC_AICOMLog;
-					diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|WEALTH_CONVERSION|funds" + str _funds);
-				};
+			//--- A2: == / != do not support Bool operands - use transition if/else instead.
+			_prevRich = _logik getVariable ["wfbe_aicom_reinforce_rich", false];
+			if (_richFlag && !_prevRich) then {
+				_logik setVariable ["wfbe_aicom_reinforce_rich", true];
+				["INFORMATION", Format ["AI_Commander.sqf: [%1] wealth conversion active (funds %2 > threshold %3, teams %4/%5) - Produce batch doubled.", str _side, _funds, _richThreshold, _fTeams, _dynTarget]] Call WFBE_CO_FNC_AICOMLog;
+				diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|WEALTH_CONVERSION|funds" + str _funds);
+			};
+			if (!_richFlag && _prevRich) then {
+				_logik setVariable ["wfbe_aicom_reinforce_rich", false];
 			};
 
 			//--- Reactive CBR research: append [WFBE_UP_CBRADAR,1/2] to the AI upgrade program
@@ -221,3 +224,4 @@ if (!isNil "WF_Logic") then {_winner = WF_Logic getVariable ["WF_Winner", sideUn
 ["INFORMATION", Format ["AI_Commander.sqf: [%1] ROUND OVER after %2 min: winner [%3], my doctrine %4, towns held %5, funds left %6.", str _side, round (time / 60), _winner, _logik getVariable ["wfbe_aicom_doctrine", "?"], _held, (_side) Call GetAICommanderFunds]] Call WFBE_CO_FNC_AICOMLog;
 //--- V0.6 task 48: AICOMSTAT END - always emitted ungated regardless of LOG setting.
 diag_log ("AICOMSTAT|v1|END|" + (str _side) + "|" + str (round (time / 60)) + "|" + (str _winner) + "|" + (_logik getVariable ["wfbe_aicom_doctrine", "?"]) + "|" + str _held + "|" + str ((_side) Call GetAICommanderFunds));
+
