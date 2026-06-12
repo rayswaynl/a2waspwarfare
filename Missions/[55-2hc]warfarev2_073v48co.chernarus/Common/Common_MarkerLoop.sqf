@@ -9,7 +9,7 @@
 // tombstone the slot (set to 0) and compaction only rebuilds the array once enough
 // tombstones accumulate, keeping the lost-append race window negligible. The marker
 // name ledger sweep below heals any marker that would slip through regardless.
-Private ["_aarEntry","_aarUpgradeCache","_ehHandle","_lowFpsSince","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades"];
+Private ["_aarEntry","_aarUpgradeCache","_actionPlayer","_ehHandle","_lowFpsSince","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades"];
 
 if (isNil "WFBE_CL_UnitMarkerRegistry") then {WFBE_CL_UnitMarkerRegistry = []};
 if (isNil "WFBE_CL_AARMarkerRegistry") then {WFBE_CL_AARMarkerRegistry = []};
@@ -23,7 +23,8 @@ _height = missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR_DETECTION
 // automatic rebuild when client FPS stays under the threshold for 60s (mitigation AND
 // the branch-B accumulated-state experiment in one). Threshold 0 disables the auto path.
 WFBE_CL_MarkerRebuildRequested = false;
-player addAction ["Rebuild Map Markers", "Common\Common_MarkerRebuildRequest.sqf", [], 0, false, true, "", "true"];
+_actionPlayer = player;
+_actionPlayer addAction ["Rebuild Map Markers", "Common\Common_MarkerRebuildRequest.sqf", [], 0, false, true, "", "true"];
 _lowFpsSince = -1;
 _rebuildCooldownUntil = 0;
 _rebuildFps = missionNamespace getVariable ["WFBE_C_MARKER_REBUILD_FPS", 15];
@@ -33,6 +34,14 @@ while {true} do {
 	sleep 0.2;
 	_perfTick = diag_tickTime;
 	_now = time;
+
+	// Marty: PERF1 follow-up - the player object changes on respawn, which silently
+	// drops the manual rebuild action. Re-attach when the object changes (alive check
+	// skips the brief objNull/corpse window so we attach once per life, not per tick).
+	if ((player != _actionPlayer) && {alive player}) then {
+		_actionPlayer = player;
+		_actionPlayer addAction ["Rebuild Map Markers", "Common\Common_MarkerRebuildRequest.sqf", [], 0, false, true, "", "true"];
+	};
 
 	// ---------------------------------------------------------------- refresh lever
 	if (_rebuildFps > 0) then {
