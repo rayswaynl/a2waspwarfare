@@ -9,7 +9,7 @@
 // tombstone the slot (set to 0) and compaction only rebuilds the array once enough
 // tombstones accumulate, keeping the lost-append race window negligible. The marker
 // name ledger sweep below heals any marker that would slip through regardless.
-Private ["_aarEntry","_aarUpgradeCache","_ehHandle","_activeEntries","_aircraftName","_altitude","_aarLevel","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades"];
+Private ["_aarEntry","_aarUpgradeCache","_ehHandle","_lowFpsSince","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades"];
 
 if (isNil "WFBE_CL_UnitMarkerRegistry") then {WFBE_CL_UnitMarkerRegistry = []};
 if (isNil "WFBE_CL_AARMarkerRegistry") then {WFBE_CL_AARMarkerRegistry = []};
@@ -19,11 +19,82 @@ _sweepNext = time + 60;
 _aarUpgradeCache = [-1, -1, -999]; // [sideID, level, lastCheck diag_tickTime]
 _height = missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR_DETECTION";
 
+// Marty: PERF1 slice C - local refresh lever. Manual map-marker rebuild action plus an
+// automatic rebuild when client FPS stays under the threshold for 60s (mitigation AND
+// the branch-B accumulated-state experiment in one). Threshold 0 disables the auto path.
+WFBE_CL_MarkerRebuildRequested = false;
+player addAction ["Rebuild Map Markers", "Common\Common_MarkerRebuildRequest.sqf", [], 0, false, true, "", "true"];
+_lowFpsSince = -1;
+_rebuildCooldownUntil = 0;
+_rebuildFps = missionNamespace getVariable ["WFBE_C_MARKER_REBUILD_FPS", 15];
+
 while {true} do {
 
 	sleep 0.2;
 	_perfTick = diag_tickTime;
 	_now = time;
+
+	// ---------------------------------------------------------------- refresh lever
+	if (_rebuildFps > 0) then {
+		if (diag_fps < _rebuildFps) then {
+			if (_lowFpsSince < 0) then {_lowFpsSince = _now};
+		} else {
+			_lowFpsSince = -1;
+		};
+		if (_lowFpsSince >= 0 && {(_now - _lowFpsSince) > 60} && {_now >= _rebuildCooldownUntil}) then {
+			WFBE_CL_MarkerRebuildRequested = true;
+			diag_log Format ["STATE-AUDIT: auto marker rebuild triggered at fps:%1 time:%2", diag_fps, round _now];
+		};
+	};
+
+	if (WFBE_CL_MarkerRebuildRequested) then {
+		WFBE_CL_MarkerRebuildRequested = false;
+		_rebuildCooldownUntil = _now + 300;
+		_lowFpsSince = -1;
+		_perfStart = diag_tickTime;
+		{
+			if (typeName _x == "ARRAY") then {
+				_entry = _x;
+				_markerName = _entry select 1;
+				_tracked = _entry select 0;
+				deleteMarkerLocal _markerName;
+				if (isNull _tracked) then {
+					WFBE_CL_UnitMarkerRegistry set [_forEachIndex, 0];
+				} else {
+					createMarkerLocal [_markerName, getPos _tracked];
+					if ((_entry select 16) == 1) then {
+						_markerName setMarkerTypeLocal (_entry select 7);
+						_markerName setMarkerColorLocal (_entry select 8);
+						_markerName setMarkerSizeLocal (_entry select 9);
+					} else {
+						if ((_entry select 12) != "") then {_markerName setMarkerTextLocal (_entry select 12)};
+						_markerName setMarkerTypeLocal (_entry select 13);
+						_markerName setMarkerColorLocal (_tracked getVariable ["OriginalMarkerColor", "ColorWhite"]);
+						_markerName setMarkerSizeLocal (_entry select 14);
+					};
+				};
+			};
+		} forEach WFBE_CL_UnitMarkerRegistry;
+		{
+			if (typeName _x == "ARRAY") then {
+				_aarEntry = _x;
+				_markerName = _aarEntry select 1;
+				deleteMarkerLocal _markerName;
+				if (isNull (_aarEntry select 0)) then {
+					WFBE_CL_AARMarkerRegistry set [_forEachIndex, 0];
+				} else {
+					createMarkerLocal [_markerName, [0,0,0]];
+					_markerName setMarkerTypeLocal "mil_arrow2";
+					_markerName setMarkerColorLocal "ColorRed";
+					_markerName setMarkerSizeLocal [0.5, 0.5];
+					_markerName setMarkerAlphaLocal 0;
+					_aarEntry set [4, false];
+					_aarEntry set [8, true];
+				};
+			};
+		} forEach WFBE_CL_AARMarkerRegistry;
+		diag_log Format ["STATE-AUDIT: marker rebuild done in %1s; entries:%2;aarEntries:%3;allMapMarkers:%4", diag_tickTime - _perfStart, count WFBE_CL_UnitMarkerRegistry, count WFBE_CL_AARMarkerRegistry, count allMapMarkers];
+	};
 	_tombstones = 0;
 	_activeEntries = 0;
 
