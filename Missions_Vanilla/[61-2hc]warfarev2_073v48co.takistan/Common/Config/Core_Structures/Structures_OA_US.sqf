@@ -172,4 +172,8 @@ missionNamespace setVariable [Format["WFBE_%1DEFENSES_CANNON", _side], ['M119_US
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_MASH", _side], ['MASH_EP1']];
 missionNamespace setVariable [Format["WFBE_%1DEFENSES_MORTAR", _side], ['M252_US_EP1']];
 
+if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {
+	_n = _n + ["Land_Pneu"];			//--- Site Clearance (commander only)
+};
+
 missionNamespace setVariable [Format["WFBE_%1DEFENSENAMES", _side], _n];

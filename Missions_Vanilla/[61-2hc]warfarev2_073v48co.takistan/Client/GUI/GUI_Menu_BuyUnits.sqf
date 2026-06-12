@@ -162,6 +162,7 @@ _IDCS = _IDCS - [_currentIDC];
 					_params = if (_isInfantry) then {[_closest,_unit,[],_type,_cpt,_currentCost]} else {[_closest,_unit,[profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ,_gunner,_commander,_extracrew,_isLocked],_type,_cpt,_currentCost]};
 					_params Spawn BuildUnit;
 					-(_currentCost) Call ChangePlayerFunds;
+					_updateDetails = true; //--- Task 33: refresh queue list panel after purchase.
 				} else {
 					hint parseText(Format [localize 'STR_WF_INFO_Queu_Max',missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type]]);
 				};
@@ -200,9 +201,70 @@ _IDCS = _IDCS - [_currentIDC];
 	
 	//--- Lock icon.
 	if (MenuAction == 401) then {MenuAction = -1;_isLocked = if (_isLocked) then {false} else {true};_updateDetails = true};
+
+	//--- Task 33: cancel last queued order for this player in the current factory.
+	if (MenuAction == 501) then {
+		MenuAction = -1;
+		private ["_uid33","_q33","_qc33","_qp33","_ql33","_idx33","_paidCost33","_cpt33","_basePrice33","_refund33","_maxRefund33","_newArr33","_i33"];
+		_uid33 = getPlayerUID player;
+		_q33   = _closest getVariable ["queu",        []];
+		_qc33  = _closest getVariable ["queu_costs",  []];
+		_qp33  = _closest getVariable ["queu_cpts",   []];
+		_ql33  = _closest getVariable ["queu_labels",  []];
+		//--- Find the LAST entry belonging to this player.
+		_idx33 = -1;
+		{if (_x find _uid33 == 0) then {_idx33 = _forEachIndex}} forEach _q33;
+		if (_idx33 == -1) exitWith {hint parseText "<t color='#ff9900'>You have no unit queued in this factory.</t>"};
+		_paidCost33 = if (_idx33 < count _qc33) then {_qc33 select _idx33} else {0};
+		_cpt33      = if (_idx33 < count _qp33) then {_qp33 select _idx33} else {1};
+		_refund33   = _paidCost33;
+		if (ATTACK_WAVE_PRICE_MODIFIER < 1.0 && UNIT_COST_MODIFIER > 0) then {
+			_basePrice33 = _paidCost33 / (ATTACK_WAVE_PRICE_MODIFIER * UNIT_COST_MODIFIER);
+			_maxRefund33 = round (_basePrice33 * 0.5);
+			if (_refund33 > _maxRefund33) then {_refund33 = _maxRefund33};
+		};
+		//--- Remove from all parallel arrays by index.
+		_q33 = _q33 - [_q33 select _idx33];
+		_newArr33 = []; _i33 = 0; {if (_i33 != _idx33) then {_newArr33 = _newArr33 + [_x]}; _i33 = _i33 + 1} forEach _qc33; _qc33 = _newArr33;
+		_newArr33 = []; _i33 = 0; {if (_i33 != _idx33) then {_newArr33 = _newArr33 + [_x]}; _i33 = _i33 + 1} forEach _qp33; _qp33 = _newArr33;
+		_newArr33 = []; _i33 = 0; {if (_i33 != _idx33) then {_newArr33 = _newArr33 + [_x]}; _i33 = _i33 + 1} forEach _ql33; _ql33 = _newArr33;
+		_closest setVariable ["queu",        _q33,  true];
+		_closest setVariable ["queu_costs",  _qc33, true];
+		_closest setVariable ["queu_cpts",   _qp33, true];
+		_closest setVariable ["queu_labels", _ql33, true];
+		//--- Decrement queue counters.
+		unitQueu = (unitQueu - _cpt33) max 0;
+		missionNamespace setVariable [
+			Format ["WFBE_C_QUEUE_%1", _type],
+			((missionNamespace getVariable [Format ["WFBE_C_QUEUE_%1", _type], 0]) - 1) max 0
+		];
+		//--- Refund.
+		if (_refund33 > 0) then {(_refund33) Call ChangePlayerFunds};
+		hint parseText Format [
+			"<t color='#00e83e'>Queue cancelled.</t><br/>Refunded: <t color='#ffe066'>$%1</t>%2",
+			_refund33,
+			if (_paidCost33 != _refund33) then {Format [" (capped from $%1 — attack-wave)", _paidCost33]} else {""}
+		];
+		_updateDetails = true;
+	};
 	
 	//--- Player funds.
 	ctrlSetText [12019,Format [localize 'STR_WF_UNITS_Cash',Call GetPlayerFunds]];
+
+	//--- WFBE_C_FACTORY_QUEUE_LIMITS=1: recompute per-factory caps from current upgrade levels each tick.
+	//--- Formula: max(FLOOR, level+offset) — floors prevent early-game starvation.
+	//--- Floors: Barracks=10, Light=5, Heavy=3, Aircraft/Airport=3 (aircraft floor tentative, pending owner sign-off).
+	//--- Cross-ref: same formula used in the queue-display below (search "Queue: N/CAP").
+	//--- When WFBE_C_FACTORY_QUEUE_LIMITS=0 the _MAX variables retain Init_Client.sqf static defaults.
+	if ((missionNamespace getVariable ["WFBE_C_FACTORY_QUEUE_LIMITS",0]) > 0) then {
+		private ["_upg"];
+		_upg = sideJoined Call WFBE_CO_FNC_GetSideUpgrades;
+		missionNamespace setVariable ["WFBE_C_QUEUE_BARRACKS_MAX", 10 max ((_upg select WFBE_UP_BARRACKS) + 2)];
+		missionNamespace setVariable ["WFBE_C_QUEUE_LIGHT_MAX",     5 max ((_upg select WFBE_UP_LIGHT)    + 1)];
+		missionNamespace setVariable ["WFBE_C_QUEUE_HEAVY_MAX",     3 max ((_upg select WFBE_UP_HEAVY)    + 1)];
+		missionNamespace setVariable ["WFBE_C_QUEUE_AIRCRAFT_MAX",  3 max ((_upg select WFBE_UP_AIR)      + 1)];
+		missionNamespace setVariable ["WFBE_C_QUEUE_AIRPORT_MAX",   3 max ((_upg select WFBE_UP_AIR)      + 1)];
+	};
 
 		//--- QoL: live queue count on factory tabs (change-detected to avoid per-tick UI churn).
 		_tabI = 0;
@@ -240,9 +302,39 @@ _IDCS = _IDCS - [_currentIDC];
 			//--- Specials.
 			case 'Depot': {
 				_sorted = [[vehicle player, missionNamespace getVariable "WFBE_C_TOWNS_PURCHASE_RANGE"] Call WFBE_CL_FNC_GetClosestDepot];
+				_closest = _sorted select 0;
 			};
 			case 'Airport': {
 				_sorted = [[vehicle player, missionNamespace getVariable "WFBE_C_UNITS_PURCHASE_HANGAR_RANGE"] Call WFBE_CL_FNC_GetClosestAirport];
+				_closest = _sorted select 0;
+				//--- Task 12: If the nearest hangar is a captured airfield, show the exclusive roster instead of the faction airport list.
+				if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && !(isNull _closest) && {((_closest getVariable ["wfbe_hangar", objNull]) getVariable ["wfbe_is_airfield_hangar", false])}) then {
+					_listUnits = missionNamespace getVariable ["WFBE_AIRFIELD_UNITS", []];
+
+					//--- Per-airfield specials: augment generic list with any classes mapped to this airfield's town.
+					//--- Resolve the airfield town name by finding the closest town to the airport logic object.
+					private ["_airfTownObj","_airfTownName","_airfSpecials","_airfIdx","_airfEntry"];
+					_airfTownObj  = [_closest, towns] Call WFBE_CO_FNC_GetClosestEntity;
+					_airfTownName = if (isNull _airfTownObj) then {""} else {_airfTownObj getVariable ["name",""]};
+					_airfSpecials = missionNamespace getVariable ["WFBE_AIRFIELD_UNITS_SPECIAL", []];
+					_airfIdx = -1;
+					{
+						if ((_x select 0) == _airfTownName) exitWith { _airfIdx = _forEachIndex };
+					} forEach _airfSpecials;
+					if (_airfIdx >= 0) then {
+						_airfEntry = _airfSpecials select _airfIdx;
+						_listUnits = _listUnits + (_airfEntry select 1);
+					};
+
+					//--- Task 36 (live "empty airshop" fix): the roster is CROSS-FACTION
+					//--- (Takistani/Insurgent classes) and deliberately airfield-gated, so two
+					//--- standard filters must not apply here:
+					//---  1. reset the saved faction filter to "All" or every row is dropped;
+					//---  2. pass sentinel 999 as the upgrade index — the airfield capture IS
+					//---     the unlock; UIFillListBuyUnits treats out-of-range as "no gate".
+					missionNamespace setVariable [Format["WFBE_%1%2CURRENTFACTIONSELECTED",sideJoinedText,_type], 0];
+					[_listUnits,_type,_listBox,999] Call UIFillListBuyUnits;
+				};
 			};
 			//--- Factories
 			default {
@@ -256,12 +348,14 @@ _IDCS = _IDCS - [_currentIDC];
 
 		//--- Refresh the Factory DropDown list.
 		lbClear 12018;
-		{
-			_nearTown = ([_x, towns] Call WFBE_CO_FNC_GetClosestEntity) getVariable 'name';
-			_txt = _type + ' ' + _nearTown + ' ' + str (round((vehicle player) distance _x)) + 'M';
-			lbAdd[12018,_txt];
-		} forEach _sorted;
-		lbSetCurSel [12018,0];
+		if !(isNull (_sorted select 0)) then {
+			{
+				_nearTown = ([_x, towns] Call WFBE_CO_FNC_GetClosestEntity) getVariable 'name';
+				_txt = _type + ' ' + _nearTown + ' ' + str (round((vehicle player) distance _x)) + 'M';
+				lbAdd[12018,_txt];
+			} forEach _sorted;
+			lbSetCurSel [12018,0];
+		};
 		
 		_updateList = false;
 		_updateMap = true;
@@ -270,7 +364,20 @@ _IDCS = _IDCS - [_currentIDC];
 	//--- Display Factory Queu.
 	_queu = _closest getVariable "queu";
 	_value = if (isNil '_queu') then {0} else {count (_closest getVariable "queu")};
-	ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel',str _value]];
+	//--- WFBE_C_FACTORY_QUEUE_LIMITS=1: append /CAP to the queue count so players can see the limit.
+	//--- Falls back to plain count if WFBE_C_FACTORY_QUEUE_LIMITS=0 or the cap var is missing/zero.
+	//--- Cross-ref: cap formula lives in the WFBE_C_FACTORY_QUEUE_LIMITS block above this loop.
+	if ((missionNamespace getVariable ["WFBE_C_FACTORY_QUEUE_LIMITS",0]) > 0) then {
+		private ["_qCap"];
+		_qCap = missionNamespace getVariable [Format ["WFBE_C_QUEUE_%1_MAX",_type], -1];
+		if (_qCap > 0) then {
+			ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel', str _value + "/" + str _qCap]];
+		} else {
+			ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel',str _value]];
+		};
+	} else {
+		ctrlSetText[12024,Format[localize 'STR_WF_UNITS_QueuedLabel',str _value]];
+	};
 	
 	//--- List selection changed.
 	if (_updateDetails) then {
@@ -487,6 +594,19 @@ _IDCS = _IDCS - [_currentIDC];
 						hintSilent parseText "Lift-capable helicopter. <br/> <br/>Can sling-load vehicles and objects once the Airlift upgrade is unlocked. (Not a supply helicopter.)";
 					};
 
+					//--- Data-driven special-unit info popup (WFBE_SPECIAL_UNIT_HINTS).
+					//--- Format: [[classname, stringtable-key], ...].  Append pairs to add new specials.
+					private ["_wfbeSpecialHints","_wfbeHintIdx","_wfbeHintKey"];
+					_wfbeSpecialHints = missionNamespace getVariable ["WFBE_SPECIAL_UNIT_HINTS", []];
+					_wfbeHintIdx = -1;
+					{
+						if ((_x select 0) == _unit) exitWith { _wfbeHintIdx = _forEachIndex };
+					} forEach _wfbeSpecialHints;
+					if (_wfbeHintIdx >= 0) then {
+						_wfbeHintKey = (_wfbeSpecialHints select _wfbeHintIdx) select 1;
+						hintSilent parseText (localize _wfbeHintKey);
+					};
+
 					_artyClassnames = missionNamespace getVariable Format ['WFBE_%1_ARTILLERY_CLASSNAMES', sideJoinedText];
 					_varPosInNestedArray = [_artyClassnames, _unit] call WFBE_CL_FNC_FindVariableInNestedArray;
 					_isNotArtillery = [_varPosInNestedArray, -1] call BIS_fnc_areEqual;
@@ -504,15 +624,34 @@ _IDCS = _IDCS - [_currentIDC];
 			_updateDetails = false;
 		} else {
 			{ctrlSetText [_x , ""]} forEach [12009,12033,12034,12035,12036,12037,12038,12039];
-			(_display displayCtrl 12022) ctrlSetStructuredText (parseText '');
+			//--- Task 33: show queue list in the description panel when no unit is selected.
+			private ["_qLabels33","_qTokens33","_uid33","_qTxt33","_qEntry33"];
+			_qTokens33 = _closest getVariable ["queu", []];
+			_qLabels33 = _closest getVariable ["queu_labels", []];
+			_uid33 = getPlayerUID player;
+			if (count _qTokens33 > 0) then {
+				_qTxt33 = "<t color='#42b6ff' shadow='1'>Queue (oldest first):</t><br/>";
+				{
+					_qEntry33 = if (_forEachIndex < count _qLabels33) then {_qLabels33 select _forEachIndex} else {"?"};
+					private "_mark33";
+					_mark33 = if (_x find _uid33 == 0) then {"<t color='#ffe066'>YOU</t>  "} else {"          "};
+					_qTxt33 = _qTxt33 + Format ["%1<t color='#eee58b'>%2. %3</t><br/>", _mark33, (_forEachIndex + 1), _qEntry33];
+				} forEach _qTokens33;
+				_qTxt33 = _qTxt33 + "<br/><t color='#aaaaaa' size='0.85'>Press 'Cancel Last' to remove your last order and get a refund.</t>";
+				(_display displayCtrl 12022) ctrlSetStructuredText (parseText _qTxt33);
+			} else {
+				(_display displayCtrl 12022) ctrlSetStructuredText (parseText "<t color='#aaaaaa'>Queue is empty. Select a unit to buy it.</t>");
+			};
 		};
 	};
 	
 	//--- Update the Factory Minimap position.
 	if (_updateMap) then {
-		ctrlMapAnimClear _map;
-		_map ctrlMapAnimAdd [2,.075,getPos _closest];
-		ctrlMapAnimCommit _map;
+		if !(isNull _closest) then {
+			ctrlMapAnimClear _map;
+			_map ctrlMapAnimAdd [2,.075,getPos _closest];
+			ctrlMapAnimCommit _map;
+		};
 		_updateMap = false;
 	};
 	

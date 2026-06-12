@@ -720,7 +720,14 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						};
 
 						if (_class in _defenses) then {
-							["RequestDefense", [sideJoined,_class,_pos,_dir,manningDefense,(_logic == RCoin)]] Call WFBE_CO_FNC_SendToServer;
+							//--- Site Clearance: dedicated PVF so the server receives the real player identity.
+							//--- All other defenses use the standard RequestDefense path.
+							if (_class == "Land_Pneu") then {
+								["RequestSiteClearance", [sideJoined,_pos,player]] Call WFBE_CO_FNC_SendToServer;
+							} else {
+								// Marty: pass player as arg 6 so server can refund on budget/threat rejection.
+						["RequestDefense", [sideJoined,_class,_pos,_dir,manningDefense,(_logic == RCoin),player]] Call WFBE_CO_FNC_SendToServer;
+							};
 							lastBuilt = _par;
 							_area = [_pos,((sidejoined) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity2;
 							_get = _area getVariable 'avail';
@@ -841,6 +848,11 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 		_cashValuesOld = _logic getVariable "BIS_COIN_fundsOld";
 		if (isNil "_cashValuesOld") then {_cashValuesOld = []; _cashValuesOld set [count _cashValues - 1,-1]};
 		_restart = _logic getVariable "BIS_COIN_restart";
+		//--- LIVE FIX (client RPT 2026-06-10, line 851): BIS_COIN_restart is deliberately
+		//--- CLEARED to nil elsewhere (setVariable nil); `|| _restart` with nil then throws
+		//--- "Undefined variable" and kills the rest of this interface tick — placements
+		//--- stop building while the preview still shows. Treat nil as false.
+		if (isNil "_restart") then {_restart = false};
 		if (!([_cashValues,_cashValuesOld] call bis_fnc_arraycompare) || _restart) then {
 			_cashValuesCount = count _cashValues;
 			_cashSize = if (_cashValuesCount <= 1) then {2} else {2.8 / _cashValuesCount};

@@ -37,7 +37,13 @@ _assigned = [];
 
 {
 	_team = _x;
-	_aliveCount = {alive _x} count (units _team);
+	//--- V0.6.5: wiped HC teams leave NULL groups in wfbe_teams (index-aligned registry,
+	//--- entries must NOT be removed). getVariable on a null group returns nil even with
+	//--- a default -> toLower nil threw here every tick and killed town assignment for
+	//--- every team after the first null (live-round towns stuck at 0/0). Skip nulls.
+	_aliveCount = 0;
+	if (!isNull _team) then {_aliveCount = {alive _x} count (units _team)};
+	if (_aliveCount > 0) then {
 	_autonomous = _team getVariable ["wfbe_autonomous", false];
 	_modeNow = toLower (_team getVariable ["wfbe_teammode", "towns"]);
 	_canDrive = false;
@@ -57,7 +63,9 @@ _assigned = [];
 	if (_canDrive) then {
 		//--- V0.2: hold one team back as the base garrison (full-auto only) - a captured
 		//--- base must not be left open while every team marches at towns.
-		if (!_humanCmd && {!_explicitMode} && {_aliveCount > 0}) then {
+		//--- Owner call 2026-06-11: OFF by default - everything goes to the front.
+		//--- Opt back in via WFBE_C_AI_COMMANDER_GARRISON = 1.
+		if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_GARRISON", 0]) > 0) && {!_humanCmd} && {!_explicitMode} && {_aliveCount > 0}) then {
 			_gar = _logik getVariable ["wfbe_aicom_garrison", grpNull];
 			_garDead = true;
 			if (!isNull _gar) then {
@@ -160,4 +168,5 @@ _assigned = [];
 			};
 		};
 	};
+	}; //--- V0.6.5 null-team guard
 } forEach _teams;

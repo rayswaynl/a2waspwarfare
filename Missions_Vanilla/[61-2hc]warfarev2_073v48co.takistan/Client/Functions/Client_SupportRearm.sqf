@@ -1,3 +1,12 @@
+/*
+	PRICING / SNAPSHOT NOTE (experital task 3):
+	The rearm price is computed and charged by GUI_Menu_Service.sqf BEFORE this script is
+	spawned (pre-pay pattern — see MenuAction == 1 / _martyServiceStartBatch).
+	This script never touches funds; it only waits, then calls RearmVehicle.
+	Therefore snapshot semantics are inherently satisfied: the price was fixed at the
+	moment the player pressed Rearm, using the ammo fraction at that instant.
+	Firing during the rearm timer cannot alter the bill.
+*/
 Private ['_airCoef','_artCoef','_cts','_distanceMin','_heaCoef','_i','_ligCoef','_name','_nearIsDP','_nearIsRT','_nearIsSP','_repairRange','_rearmTime','_spType','_supportRange','_supports','_typeRepair','_veh'];
 _veh = _this select 0;
 _supports = _this select 1;

@@ -1,3 +1,18 @@
+/* Command Deck: Skin Selector keybind (User11). */
+WF_SkinSelector_Hotkey = {
+	Private ["_key"];
+	_key = _this select 1;
+
+	if (_key in (actionKeys "User11")) then {
+		if (WFBE_C_SKIN_SELECTOR == 1 && {alive player} && {vehicle player == player}) then {
+			if (!dialog) then {
+				[] execVM "WASP\actions\SkinSelector\SkinSelector_Open.sqf";
+			};
+		};
+	};
+};
+player addEventHandler ["KeyDown", WF_SkinSelector_Hotkey];
+
 /* Gear keybinding */
 WF_Gear_Hotkeys = {
 	Private ['_ctrl','_key'];

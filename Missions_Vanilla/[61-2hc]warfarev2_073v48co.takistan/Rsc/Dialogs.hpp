@@ -257,6 +257,127 @@ class WFBE_VoteMenu {
 	};
 };
 
+//--- Marty: Voting page — 5 vote types (idd 25000).
+class WFBE_VotingMenu {
+	movingEnable = 1;
+	idd = 25000;
+	onLoad = "(_this) ExecVM 'Client\GUI\GUI_Menu_Voting.sqf'";
+
+	class controlsBackground {
+		class CA_Background : RscText {
+			x = 0.273;
+			y = 0.104;
+			w = 0.5;
+			h = 0.83;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class CA_Background_Header : CA_Background {
+			x = 0.273;
+			y = 0.104;
+			w = 0.5;
+			h = 0.06;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class CA_Background_Footer : CA_Background {
+			x = 0.273;
+			y = 0.104 + 0.79;
+			w = 0.5;
+			h = 0.04;
+			colorBackground[] = WFBE_Background_Color_Sub;
+		};
+		class CA_Menu_Title : RscText_Title {
+			x = 0.28;
+			y = 0.104 + 0.01;
+			w = 0.48;
+			text = $STR_WF_VOTE_Title;
+			colorText[] = WFBE_Menu_Title_Color;
+		};
+		class CA_Quit_Button : RscButton_Main {
+			x = 0.273 + 0.45;
+			y = 0.104 + 0.0075;
+			w = 0.045;
+			h = 0.045;
+			text = "X";
+			shadow = 2;
+			sizeEx = 0.03;
+			onButtonClick = "closeDialog 0;";
+		};
+	};
+
+	class controls {
+		//--- Listbox: one row per vote type.
+		class CA_VotingList : RscListBox {
+			idc = 25100;
+			x = 0.28;
+			y = 0.104 + 0.07;
+			w = 0.489;
+			h = 0.38;
+			colorSelectBackground[] = WFBE_Menu_ListBox_Select_Color;
+		};
+		//--- Live tally / status line.
+		class CA_Status : RscText {
+			idc = 25101;
+			x = 0.28;
+			y = 0.104 + 0.465;
+			w = 0.489;
+			h = 0.04;
+			sizeEx = 0.026;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Progress / countdown line.
+		class CA_Countdown : RscText {
+			idc = 25102;
+			x = 0.28;
+			y = 0.104 + 0.512;
+			w = 0.489;
+			h = 0.04;
+			sizeEx = 0.024;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Cooldown notice line (shown when a type is on cooldown).
+		class CA_Cooldown : RscText {
+			idc = 25103;
+			x = 0.28;
+			y = 0.104 + 0.559;
+			w = 0.489;
+			h = 0.04;
+			sizeEx = 0.022;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Start Vote / Vote YES button.
+		//--- RscButton_Main (plain RscButton type 1) so ctrlSetText works at runtime in A2 OA.
+		//--- RscShortcutButton (type 16) ignores ctrlSetText after dialog open.
+		class CA_ActionButton : RscButton_Main {
+			idc = 25104;
+			x = 0.28;
+			y = 0.104 + 0.62;
+			w = 0.489;
+			h = 0.06;
+			text = $STR_WF_VOTE_StartVote;
+			onButtonClick = "WFBE_MenuAction = 1";
+		};
+		//--- Footer status (cooldown or "voting in progress").
+		class CA_Footer : RscText {
+			idc = 25105;
+			x = 0.28;
+			y = 0.104 + 0.793;
+			w = 0.489;
+			h = 0.032;
+			sizeEx = 0.020;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+	};
+};
+
 //--- WF3 Commander Vote Menu.
 class WFBE_Commander_VoteMenu {
 	movingEnable = 1;
@@ -541,10 +662,10 @@ class WFBE_TransferMenu {
 			idc = 505004;
 			x = 0.415;
 			y = 0.21;
-			w = 0.3;
-			h = 0.035;
+			w = 0.38;
+			h = 0.075;
 			size = 0.03;
-			
+
 			colorText[] = {0.543, 0.5742, 0.4102, 1.0};
 		};
 	};
@@ -1252,16 +1373,40 @@ class WF_Menu {
 			action = "MenuAction = 19";
 			tooltip = "Enable GPS / Mini Map";
 		};
-		// Earplugs: lower the game volume without touching system audio (Arma 3-style QoL).
-		class CA_EAR_Button : RscButton_Main {
+		//--- Marty: Voting page shortcut in footer strip.
+		class CA_Vote_Button : RscButton_Main {
 			idc = 11020;
 			x = 0.502;
+			y = 0.767144;
+			w = 0.057;
+			h = 0.045;
+			text = $STR_WF_MAIN_VotingPageMenu;
+			sizeEx = 0.022;
+			action = "MenuAction = 20";
+			tooltip = $STR_WF_TOOLTIP_MainMenu_VotingPage;
+		};
+		//--- Command Deck: Skin Selector shortcut in footer strip.
+		class CA_Skin_Button : RscButton_Main {
+			idc = 11021;
+			x = 0.564;
+			y = 0.767144;
+			w = 0.057;
+			h = 0.045;
+			text = $STR_WF_SkinSelector_MenuButton;
+			sizeEx = 0.022;
+			action = "MenuAction = 21";
+			tooltip = $STR_WF_SkinSelector_Title;
+		};
+		// Earplugs: lower the game volume without touching system audio (Arma 3-style QoL).
+		class CA_EAR_Button : RscButton_Main {
+			idc = 11022;
+			x = 0.626;
 			y = 0.767144;
 			w = 0.042;
 			h = 0.045;
 			text = "EAR";
 			sizeEx = 0.026;
-			action = "MenuAction = 20";
+			action = "MenuAction = 22";
 			tooltip = "Earplugs In/Out (lowers game volume)";
 		};
 	};
@@ -1696,8 +1841,22 @@ class RscMenu_BuyUnits {
 			idc = 12024;
 			x = 0.350419;
 			y = 0.00775906;
-			w = 0.3;
+			w = 0.22;
 			style = ST_CENTER;
+		};
+		//--- Task 33: cancel-last-queue button, placed in header next to queue count.
+		class CA_Cancel_Queue : RscButton {
+			idc = 12043;
+			x = 0.578;
+			y = 0.00775906;
+			w = 0.07;
+			h = 0.035;
+			sizeEx = 0.022;
+			text = "Cancel Last";
+			colorBackground[] = {0.6, 0.1, 0.0, 0.8};
+			colorBackgroundActive[] = {0.8, 0.2, 0.0, 0.9};
+			colorText[] = {1, 1, 1, 1};
+			action = "MenuAction = 501";
 		};
 		class CA_Faction_Label : RscText {
 			idc = 12025;
@@ -3228,5 +3387,153 @@ class RscMenu_Help {
 			onButtonClick = "closeDialog 0;";
 			tooltip = $STR_WF_TOOLTIP_CloseButton;
 		};		
-	};	
+	};
+};
+
+//--- Command Deck: Skin Selector (idd 27000).
+class WFBE_SkinSelectorMenu {
+	movingEnable = 1;
+	idd = 27000;
+	onLoad = "(_this) ExecVM 'Client\GUI\GUI_SkinSelectorMenu.sqf'";
+
+	class controlsBackground {
+		class CA_Background : RscText {
+			x = 0.25;
+			y = 0.08;
+			w = 0.50;
+			h = 0.84;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class CA_Background_Header : CA_Background {
+			x = 0.25;
+			y = 0.08;
+			w = 0.50;
+			h = 0.06;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class CA_Background_Footer : CA_Background {
+			x = 0.25;
+			y = 0.08 + 0.80;
+			w = 0.50;
+			h = 0.04;
+			colorBackground[] = WFBE_Background_Color_Sub;
+		};
+		//--- Accent border line below header.
+		class CA_Border : RscText {
+			x = 0.25;
+			y = 0.08 + 0.06;
+			w = 0.50;
+			h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+	};
+
+	class controls {
+		//--- Header title (idc 27008) — RscButton_Main so ctrlSetText works at runtime.
+		class CA_Title : RscButton_Main {
+			idc = 27008;
+			x = 0.255;
+			y = 0.08 + 0.012;
+			w = 0.35;
+			h = 0.038;
+			text = $STR_WF_SkinSelector_Title;
+			sizeEx = 0.028;
+			colorBackground[] = {0, 0, 0, 0};
+			colorBackgroundFocus[] = {0, 0, 0, 0};
+			colorBackgroundActive[] = {0, 0, 0, 0};
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+			default = false;
+		};
+		//--- Close button.
+		class CA_Quit_Button : RscButton_Main {
+			x = 0.25 + 0.45;
+			y = 0.08 + 0.0075;
+			w = 0.045;
+			h = 0.045;
+			text = "X";
+			shadow = 2;
+			sizeEx = 0.03;
+			onButtonClick = "WFBE_MenuAction = 2;";
+		};
+		//--- Skin list (idc 27001).
+		class CA_SkinList : RscListBox {
+			idc = 27001;
+			x = 0.255;
+			y = 0.08 + 0.07;
+			w = 0.22;
+			h = 0.65;
+			colorSelectBackground[] = WFBE_Menu_ListBox_Select_Color;
+			onLBSelChanged = "";
+		};
+		//--- Portrait picture (idc 27002).
+		class CA_Portrait : RscPicture {
+			idc = 27002;
+			x = 0.485;
+			y = 0.08 + 0.07;
+			w = 0.12;
+			h = 0.24;
+			style = 0x30 + 0x800;
+			text = "";
+		};
+		//--- Skin name label (idc 27003).
+		class CA_SkinName : RscText {
+			idc = 27003;
+			x = 0.485;
+			y = 0.08 + 0.32;
+			w = 0.255;
+			h = 0.04;
+			sizeEx = 0.026;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Faction label (idc 27004).
+		class CA_FactionName : RscText {
+			idc = 27004;
+			x = 0.485;
+			y = 0.08 + 0.365;
+			w = 0.255;
+			h = 0.035;
+			sizeEx = 0.022;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Ghillie note (idc 27005).
+		class CA_GhillieNote : RscText {
+			idc = 27005;
+			x = 0.255;
+			y = 0.08 + 0.73;
+			w = 0.485;
+			h = 0.03;
+			sizeEx = 0.020;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- APPLY button (idc 27006) — RscButton_Main for ctrlSetText compat.
+		class CA_Apply : RscButton_Main {
+			idc = 27006;
+			x = 0.330;
+			y = 0.08 + 0.762;
+			w = 0.15;
+			h = 0.035;
+			sizeEx = 0.028;
+			text = $STR_WF_SkinSelector_Apply;
+			action = "WFBE_MenuAction = 1";
+		};
+		//--- SKIP button (idc 27007).
+		class CA_Skip : RscButton_Main {
+			idc = 27007;
+			x = 0.490;
+			y = 0.08 + 0.762;
+			w = 0.10;
+			h = 0.035;
+			sizeEx = 0.026;
+			text = $STR_WF_SkinSelector_Skip;
+			action = "WFBE_MenuAction = 2";
+		};
+	};
 };

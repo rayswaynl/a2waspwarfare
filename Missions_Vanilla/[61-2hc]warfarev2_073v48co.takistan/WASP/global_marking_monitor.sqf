@@ -61,6 +61,7 @@ fnc_map_mouseButtonDblClick_EH =
 
         while {time < _this} do
         {
+            sleep 0.1;
             _display = findDisplay 54;
             if (!isNull _display) exitWith
             {

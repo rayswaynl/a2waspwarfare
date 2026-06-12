@@ -71,6 +71,46 @@ if (!(isNil "WFBE_C_STATS_ENABLED")) then {
 	};
 };
 
+// WASPSTAT KILL telemetry (Task 10). Gate: WFBE_C_STATLOG must be 1.
+if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
+	private ["_wsk_killerUID","_wsk_victimUID","_wsk_killerSide","_wsk_victimSide","_wsk_weapon","_wsk_dist","_wsk_cat","_wsk_line"];
+	_wsk_killerUID = if (_killer_isplayer) then {getPlayerUID _killer} else {""};
+	_wsk_victimUID = if (_killed_isplayer) then {getPlayerUID _killed} else {""};
+	_wsk_killerSide = str _killer_side;
+	_wsk_victimSide = str _killed_side;
+	// Weapon/vehicle class: what killed. Use typeOf the killing vehicle (may differ from killer's unit class).
+	_wsk_weapon = typeOf (vehicle _killer);
+	if (_wsk_weapon == "") then { _wsk_weapon = _killer_type };
+	// Distance: guard against null killer (delayed attribution already resolved above).
+	_wsk_dist = if !(isNull _killer) then { round(_killer distance _killed) } else { -1 };
+	// Category based on killed unit type.
+	_wsk_cat = "INF";
+	if (!_killed_isman) then {
+		if (_killed isKindOf "Air") then {
+			_wsk_cat = "AIR";
+		} else {
+			if (_killed isKindOf "StaticWeapon") then {
+				_wsk_cat = "STATIC";
+			} else {
+				if (_killed isKindOf "Building") then {
+					// HQ vs generic structure distinguished by wfbe_structure_type
+					if ((_killed getVariable ["wfbe_structure_type","NONE"]) == "Headquarters") then {
+						_wsk_cat = "HQ";
+					} else {
+						_wsk_cat = "STRUCT";
+					};
+				} else {
+					_wsk_cat = "VEH";
+				};
+			};
+		};
+	};
+	if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
+	WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
+	_wsk_line = "WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|KILL|" + _wsk_killerUID + "|" + _wsk_victimUID + "|" + _wsk_killerSide + "|" + _wsk_victimSide + "|" + _wsk_weapon + "|" + str _wsk_dist + "|" + _wsk_cat;
+	diag_log _wsk_line;
+};
+
 if (WF_A2_Vanilla) then { //--- Garbage Collector.
 	if (!isServer || local player) then {_objects = (WF_Logic getVariable "trash") + [_killed];	WF_Logic setVariable ["trash",_objects,true];} else {_killed setVariable ["wfbe_trashed", true];_killed Spawn TrashObject};
 } else {

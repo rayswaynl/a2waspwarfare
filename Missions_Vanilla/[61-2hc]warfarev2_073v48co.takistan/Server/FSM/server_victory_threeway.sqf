@@ -15,6 +15,12 @@ while {!gameOver} do {
 			_structures = (_x) Call WFBE_CO_FNC_GetSideStructures;
 			_towns = (_x) Call GetTownsHeld;
 
+			//--- HQ not registered yet (early boot) -> skip this side this tick. NOTE: do NOT
+			//--- treat nil as "HQ dead": at boot factories are 0 too, and that would end the
+			//--- round instantly. The old code threw on the nil instead (16x/boot in RPT).
+			if (isNil "_hq") exitWith {};
+			if (isNull _hq) exitWith {};
+
 			_factories = 0;
 			{
 				_factories = _factories + count([_side,missionNamespace getVariable Format ["WFBE_%1%2TYPE",_side,_x], _structures] Call GetFactories);
@@ -32,13 +38,15 @@ while {!gameOver} do {
 				gameOver = true;
 				WFBE_GameOver = true;
 
-				_side = west;
-
-				if (_x == west) then {
-				    _side = east;
+				// WASPSTAT ROUNDEND telemetry (Task 10). Winner = _x (the loop variable for the winning side).
+				// durationSec = round(time) which mirrors GlobalGameStats.sqf's _uptime source.
+				if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
+					if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
+					WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
+					diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|ROUNDEND|" + str _x + "|" + str round(time) + "|" + worldName);
 				};
 
-				[_side] call WFBE_CO_FNC_LogGameEnd;
+				[_x] call WFBE_CO_FNC_LogGameEnd;
 			};
 		} forEach WFBE_PRESENTSIDES - [WFBE_DEFENDER];
 	};

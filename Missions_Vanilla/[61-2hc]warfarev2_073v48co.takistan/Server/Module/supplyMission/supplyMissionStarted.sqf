@@ -7,7 +7,9 @@
         _byHeli = _associatedSupplyTruck getVariable "SupplyByHeli";
         if (isNil "_byHeli") then { _byHeli = false; };
 
-        _associatedSourceTown setVariable ['LastSupplyMissionRun', time];
+        //--- Broadcast (3rd arg): the town-marker supply countdown reads this on CLIENTS —
+        //--- without the broadcast every client saw the init value 0 and rendered 0:00 (task 43).
+        _associatedSourceTown setVariable ['LastSupplyMissionRun', time, true];
 
         //--- Interdiction: if the loaded supply vehicle is destroyed, reward the killer's side a share of the cargo.
         if (isNil {_associatedSupplyTruck getVariable "wfbe_supply_killed_eh_set"}) then {
