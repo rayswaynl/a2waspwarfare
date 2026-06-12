@@ -428,9 +428,15 @@ if (WF_A2_Vanilla) then {
 	WFBE_C_UNITS_SUPPORT_REPAIR_PRICE = 2;
 	WFBE_C_UNITS_SUPPORT_REPAIR_TIME = 20;
 
+	// === QoL Trio (work-order item 16) ===
+	if (isNil "WFBE_C_QOL_TRIO") then {WFBE_C_QOL_TRIO = 1};                //--- 0 disables all three QoL features.
+	if (isNil "WFBE_C_QOL_ADVISOR_INTERVAL") then {WFBE_C_QOL_ADVISOR_INTERVAL = 300}; //--- Seconds between advisor nudge checks (0 = off).
+
 	// === EXPERITAL FEATURES (experimental branch — each feature individually toggleable) ===
 	WFBE_C_STRUCTURES_COUNTERBATTERY = 1; // Counter Battery Radar structure (mid-game, requires own AAR)
 	WFBE_C_ECONOMY_BANK = 1;              // Federal Reserve / Bank Rossii endgame objective building
+	WFBE_C_STRUCTURES_ARTILLERYRADAR = 1; // Artillery Radar buildable structure (WDDM walled-gate walls, fort-only by design)
+	WFBE_C_STRUCTURES_RESERVE = 1;        // Reserve buildable structure (WDDM floodlit walled-yard walls)
 	WFBE_C_UNITS_REDEPLOYTRUCK = 1;       // Medic redeployment truck (forward spawn)
 	WFBE_C_SUPPORT_REARM_PROPORTIONAL = 1; //--- Rearm price scales with ammo actually missing (arty exempt)
 	WFBE_C_UNITS_BULLDOZER = 1;           //--- Engineer base-area tree clearing

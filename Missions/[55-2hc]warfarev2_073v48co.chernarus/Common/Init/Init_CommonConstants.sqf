@@ -428,6 +428,10 @@ if (WF_A2_Vanilla) then {
 	WFBE_C_UNITS_SUPPORT_REPAIR_PRICE = 2;
 	WFBE_C_UNITS_SUPPORT_REPAIR_TIME = 20;
 
+	// === QoL Trio (work-order item 16) ===
+	if (isNil "WFBE_C_QOL_TRIO") then {WFBE_C_QOL_TRIO = 1};                //--- 0 disables all three QoL features.
+	if (isNil "WFBE_C_QOL_ADVISOR_INTERVAL") then {WFBE_C_QOL_ADVISOR_INTERVAL = 300}; //--- Seconds between advisor nudge checks (0 = off).
+
 	// === EXPERITAL FEATURES (experimental branch — each feature individually toggleable) ===
 	WFBE_C_STRUCTURES_COUNTERBATTERY = 1; // Counter Battery Radar structure (mid-game, requires own AAR)
 	WFBE_C_ECONOMY_BANK = 1;              // Federal Reserve / Bank Rossii endgame objective building

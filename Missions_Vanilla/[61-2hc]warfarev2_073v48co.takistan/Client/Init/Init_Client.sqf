@@ -161,6 +161,8 @@ WFBE_CL_FNC_BlinkMapIcon = Compile preprocessFileLineNumbers "Client\Functions\C
 Call Compile preprocessFileLineNumbers 'Client\Functions\Client_FNC_Groups.sqf'; //--- FUNCTIONS: Groups.
 Call Compile preprocessFileLineNumbers 'Client\Functions\Client_FNC_OnFired.sqf'; //--- FUNCTIONS: onFired EH.
 Call Compile preprocessFileLineNumbers 'Client\Functions\Client_FNC_Special.sqf'; //--- FUNCTIONS: Specials.
+//--- QoL trio feat.3: advisor nudge function.
+WFBE_CL_FNC_QOL_Advisor = Compile preprocessFileLineNumbers 'Client\Functions\Client_QOL_Advisor.sqf';
 
 
 
@@ -373,6 +375,8 @@ if ((missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM") in [3,4]) then
 if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] execVM "Client\FSM\updateteamsmarkers.sqf"};
 [] execVM "Client\FSM\updatepatrolmarkers.sqf"; //--- Friendly side-patrol markers (Patrols upgrade).
 [] execFSM "Client\FSM\updateactions.fsm";
+//--- QoL trio feat.3: spawn advisor nudge loop after common init is done.
+[] spawn WFBE_CL_FNC_QOL_Advisor;
 /* Don't pause the client initialization process. */
 [] Spawn {
 	waitUntil {townInit};

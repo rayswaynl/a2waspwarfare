@@ -162,6 +162,10 @@ _IDCS = _IDCS - [_currentIDC];
 					_params = if (_isInfantry) then {[_closest,_unit,[],_type,_cpt,_currentCost]} else {[_closest,_unit,[profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ,_gunner,_commander,_extracrew,_isLocked],_type,_cpt,_currentCost]};
 					_params Spawn BuildUnit;
 					-(_currentCost) Call ChangePlayerFunds;
+					//--- QoL trio feat.3: stamp last-purchase time for advisor nudge.
+					if ((missionNamespace getVariable ["WFBE_C_QOL_TRIO", 1]) > 0) then {
+						WFBE_QOL_LAST_PURCHASE_TIME = time;
+					};
 					_updateDetails = true; //--- Task 33: refresh queue list panel after purchase.
 				} else {
 					hint parseText(Format [localize 'STR_WF_INFO_Queu_Max',missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type]]);

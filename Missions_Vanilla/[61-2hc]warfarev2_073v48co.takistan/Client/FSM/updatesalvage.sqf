@@ -47,7 +47,13 @@ while {!gameOver || !(alive _vehicle)} do {
 			};
 		} foreach _wrecks;
 
-		if (_overAllCost > 0) then {(_overAllCost) Call ChangePlayerfunds};
+		if (_overAllCost > 0) then {
+			(_overAllCost) Call ChangePlayerfunds;
+			//--- QoL trio feat.1: salvage payout toast (WFBE_C_QOL_TRIO, default 1).
+			if ((missionNamespace getVariable ["WFBE_C_QOL_TRIO", 1]) > 0) then {
+				hintSilent Format ["Salvage: +$%1", _overAllCost];
+			};
+		};
 	};
 
 	// Marty: Performance Audit record for salvage vehicle scanning.
