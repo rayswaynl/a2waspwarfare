@@ -6,6 +6,30 @@ This atlas maps long-running server gameplay loops and runtime surfaces that fut
 
 For deployment, packaging, BattlEye, extension and RPT collection questions, use [Server runtime and operations](Server-Runtime-And-Operations) to route to the correct operations page instead of expanding this runtime atlas.
 
+## How To Use This Atlas
+
+This page is the server-loop orientation map. Use it to find the runtime owner, then follow the branch/status page before making a current-master, release or patch-ready claim.
+
+| Need | Start here | Then route to |
+| --- | --- | --- |
+| Server startup gates and long workers | [Runtime Loops](#runtime-loops), [Branch Scope For Source Anchors](#branch-scope-for-source-anchors) | [SQF code atlas](SQF-Code-Atlas), [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
+| Town capture, town AI and camps | Town capture / town AI rows | [Towns/camps/capture](Towns-Camps-And-Capture-Atlas), [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) |
+| Economy, resources and supply missions | Resource loop / supply mission rows | [Economy, towns and supply](Economy-Towns-And-Supply), [Supply mission architecture](Supply-Mission-Architecture), [Feature status register](Feature-Status-Register) |
+| Patrols v2 and HC delegation | Side patrol branch row | [Towns/camps/capture](Towns-Camps-And-Capture-Atlas#patrols-v2-side-upgrade-path), [Headless delegation/failover](Headless-Delegation-And-Failover-Playbook) |
+| FPS publishers, collectors and performance proof | FPS / collector rows | [Performance opportunity sweep](Performance-Opportunity-Sweep), [Testing workflow](Testing-Debugging-And-Release-Workflow), [Source fix propagation queue](Source-Fix-Propagation-Queue) |
+| Direct PV/PVF authority risks | [Current Runtime Risks](#current-runtime-risks) | [Public variable channel index](Public-Variable-Channel-Index), [Server authority migration map](Server-Authority-Migration-Map) |
+| Deployment, logs and release operations | Do not expand this page | [Server runtime and operations](Server-Runtime-And-Operations), [Server ops runbook](Server-Ops-Runbook) |
+
+## Branch Scope For Source Anchors
+
+Unless a row names another ref, source anchors below are from this docs checkout, `docs/developer-wiki-index` at `6afcc58e`. `origin/master` is currently `cf2a6d6a` and has server-source drift, so use the owner pages before turning this atlas into branch evidence.
+
+| Runtime surface | Docs checkout `6afcc58e` | `origin/master` `cf2a6d6a` | Owner route |
+| --- | --- | --- | --- |
+| AI supply-truck startup | `Init_Server.sqf:36` comments the compile, but the AI-commander/supply-system gate still raw-spawns `UpdateSupplyTruck` at `:383`. | `Init_Server.sqf:37` still comments the compile, but `:383-384` initializes `wfbe_ai_supplytrucks` and logs that legacy supply-truck logistics are disabled instead of spawning the missing worker. | [AI commander autonomy](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix) |
+| Patrols side-upgrade driver | No `Server/FSM/server_side_patrols.sqf` exists in this docs checkout source; old `server_patrols.sqf` remains present. | `Init_Server.sqf:533` starts `server_side_patrols.sqf`; that driver waits for `townInitServer` at `:16`, dispatches a live HC at `:54` or local runner at `:56`, and publishes patrol marker state through the owner route. | [Towns/camps/capture](Towns-Camps-And-Capture-Atlas#patrols-v2-side-upgrade-path), [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) |
+| Server FPS publishers | `Init_Server.sqf:578,595` starts `serverFpsGUI.sqf` and `monitorServerFPS.sqf`; both files exit on `!isDedicated` at line `1`. | `Init_Server.sqf:580` starts `serverFpsGUI.sqf`; `:596-598` records that `monitorServerFPS.sqf` was removed as a redundant publisher, and `serverFpsGUI.sqf:4` exits on `!isDedicated`. | [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Performance opportunity sweep](Performance-Opportunity-Sweep) |
+
 ## Runtime Loops
 
 | Runtime surface | Source anchors | Notes |
@@ -15,11 +39,13 @@ For deployment, packaging, BattlEye, extension and RPT collection questions, use
 | Resource loop | `Server/Init/Init_Server.sqf:531`; `Server/FSM/updateresources.sqf:20-75` | Side supply/player funds/commander funds. The `_supply < WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT` gate wraps all three payout paths, so economy-cap changes can suppress paychecks and AI commander funds as well as side-supply growth. |
 | Victory loop | `Server/Init/Init_Server.sqf:528`; `Server/FSM/server_victory_threeway.sqf` | Winner inversion/double-fire hazards live here; route through DR-11/DR-36 before patching. |
 | Supply mission tracking | `Server/Module/supplyMission/supplyMissionStarted.sqf`; `Server/Module/supplyMission/supplyMissionCompleted.sqf` | Client-stamped cargo/reward state remains an authority cleanup lane; completion calls `ChangeSideSupply`, so rewards hit the DR-44 `wfbe_supply_temp_<side>` final mutation channel. Scan narrowing is docs/source propagated; use [Current source status snapshot](Current-Source-Status-Snapshot) before making stable-master or release claims. |
+| Patrols side-upgrade driver | Branch-sensitive: `origin/master` `Init_Server.sqf:533`; `Server/FSM/server_side_patrols.sqf:16,24,54,56`; `Common/Functions/Common_RunSidePatrol.sqf` | Current `origin/master` has Patrols v2 source in Chernarus and maintained Vanilla, but this docs checkout source does not. Treat old DR-57 town-patrol wording as historical for earlier branches; current Patrols v2 is source-present and smoke-pending. |
+| Garbage and empty-vehicle collectors | `Server/Init/Init_Server.sqf:535,537`; `Server/FSM/server_collector_garbage.sqf`; `Server/FSM/emptyvehiclescollector.sqf` | Dead-object and empty-vehicle cleanup surfaces; route supply-truck timeout and cleanup policy through [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas) and [Performance opportunity sweep](Performance-Opportunity-Sweep). |
 | HQ killed processing | `Server/Construction/Construction_HQSite.sqf:89,91`; `Client/Init/Init_Client.sqf:500-503`; `Server/Functions/Server_OnHQKilled.sqf:46-81,96-114` | Mobile-HQ killed EHs can fire from multiple owning-side clients; `Server_OnHQKilled.sqf` currently has no processed-once guard before score awards, messages and HQ marker/state broadcasts. Canonical finding: [Deep-review findings](Deep-Review-Findings) DR-20. |
 | Server FPS publishing | `Server/GUI/serverFpsGUI.sqf`; `Server/Module/serverFPS/monitorServerFPS.sqf`; `Server/Init/Init_Server.sqf:578,595` | Current docs/source exits both publishers on `!isDedicated`; Arma smoke and branch-scope proof still decide release status. Canonical finding: [Deep-review findings](Deep-Review-Findings) DR-19. |
 | Side radio/message pipeline | `Server/Init/Init_Server.sqf:32`; `Server/Functions/Server_SideMessage.sqf`; callers in `server_town.sqf:199,230,233`, `Server_BuildingKilled.sqf:92` and `Server_ProcessUpgrade.sqf:85` | Server-owned HQ-radio/kbTell messages for towns, bases, strongpoints, construction, commander votes and upgrades. Keep this separate from `LocalizeMessage` chat/PVF effects. See [SideMessage pipeline shape](#sidemessage-pipeline-shape). |
 
-Server init is one dense startup cluster around `Server/Init/Init_Server.sqf:507-626`. Runtime edits should be reviewed as a worker set rather than isolated scripts; use [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) for AI/HC loop tables, [External integrations](External-Integrations) for AntiStack/DB deployment and [Testing workflow](Testing-Debugging-And-Release-Workflow) for smoke scope.
+Server init is one dense startup cluster around `Server/Init/Init_Server.sqf:507-626` in this docs checkout and around the same worker band in `origin/master`. Runtime edits should be reviewed as a worker set rather than isolated scripts; use [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) for AI/HC loop tables, [External integrations](External-Integrations) for AntiStack/DB deployment and [Testing workflow](Testing-Debugging-And-Release-Workflow) for smoke scope.
 
 ## SideMessage Pipeline Shape
 
@@ -41,15 +67,17 @@ Do not collapse this into `LocalizeMessage`. `LocalizeMessage` is registered as 
 
 | Risk | Status | Owner route |
 | --- | --- | --- |
-| Hosted/listen FPS busy loop | Docs/source propagated; stable/release branch status and Arma smoke decide shipped state; DR-19 | [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Current source status snapshot](Current-Source-Status-Snapshot) and [Deep-review findings](Deep-Review-Findings) DR-19 |
+| Hosted/listen FPS busy loop | Branch-sensitive. Docs checkout `6afcc58e` keeps two guarded publishers (`Init_Server.sqf:578,595`, both files exit on `!isDedicated` at line `1`); `origin/master` `cf2a6d6a` keeps `serverFpsGUI` only and records the redundant publisher removal at `Init_Server.sqf:596-598`. Arma smoke still decides release-ready wording; DR-19. | [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Current source status snapshot](Current-Source-Status-Snapshot) and [Deep-review findings](Deep-Review-Findings) DR-19 |
 | Supply command-center broad scan | Docs/source propagated; stable/release branch status and Arma smoke decide shipped state | [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) |
 | Supply reward/cooldown authority | Open hardening; includes DR-44 final side-supply mutation channel | [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) |
+| AI supply-truck startup branch split | Docs checkout `6afcc58e` still raw-spawns the uncompiled `UpdateSupplyTruck` worker at `Init_Server.sqf:383`; `origin/master` `cf2a6d6a` and release `a96fdda2` log-disable the legacy logistics path instead. | [AI commander autonomy](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix), [Source fix propagation queue](Source-Fix-Propagation-Queue) |
+| Patrols v2 source/smoke split | `origin/master` `cf2a6d6a` starts `server_side_patrols.sqf`; this docs checkout source does not. Current master is source-present and smoke-pending, not the old DR-57 broken-town-patrol shape. | [Towns/camps/capture](Towns-Camps-And-Capture-Atlas#patrols-v2-side-upgrade-path), [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map), [Testing workflow](Testing-Debugging-And-Release-Workflow) |
 | Victory double-fire/winner inversion | Open correctness | [Deep-review findings](Deep-Review-Findings) DR-11/DR-36 |
 | HQ-killed duplicate processing / score exploit | Open correctness; DR-20 | [Deep-review findings](Deep-Review-Findings) DR-20 |
 | Direct PV authority | Open hardening | [Public variable channel index](Public-Variable-Channel-Index) |
 | Side-message payload shape | Source-cited runtime surface | Use [SideMessage pipeline shape](#sidemessage-pipeline-shape). `SideMessage` takes different parameter shapes for town, strongpoint, base/construction and no-parameter radio topics; keep it separate from `LocalizeMessage` before adding radio/dubbing or changing message text. |
 | AntiStack/database loops | High-sensitivity lifecycle surface | [External integrations](External-Integrations), [AntiStack database extension audit](AntiStack-Database-Extension-Audit) and [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) |
-| Dormant maintenance hooks | `Init_Server.sqf:36` comments `UpdateSupplyTruck`; `:567` comments `groupsMonitor`; `:65,88-92` retain older commented AFK/server-FPS/MASH compile remnants. | Keep disabled hooks documented as historical or deliberately revive them with owner-scoped smoke. Duplicate live bind cleanup is tracked in [Server init bind cleanup](Server-Init-Bind-Cleanup). |
+| Dormant maintenance hooks | `Init_Server.sqf:36` comments `UpdateSupplyTruck`; `:567` comments `groupsMonitor`; `:65,88-92` retain older commented AFK/server-FPS/MASH compile remnants. The supply-truck runtime gate is branch-sensitive, so use the AI supply-truck row above before claiming it is dormant on a target branch. | Keep disabled hooks documented as historical or deliberately revive them with owner-scoped smoke. Duplicate live bind cleanup is tracked in [Server init bind cleanup](Server-Init-Bind-Cleanup). |
 
 ## Safe Runtime Rules
 
@@ -60,4 +88,4 @@ Do not collapse this into `LocalizeMessage`. `LocalizeMessage` is registered as 
 
 ## Continue Reading
 
-Systems: [Gameplay systems atlas](Gameplay-Systems-Atlas) | Performance: [Performance opportunity sweep](Performance-Opportunity-Sweep) | Current truth: [Current source status snapshot](Current-Source-Status-Snapshot)
+Systems: [Gameplay systems atlas](Gameplay-Systems-Atlas) | Performance: [Performance opportunity sweep](Performance-Opportunity-Sweep) | Current truth: [Current source status snapshot](Current-Source-Status-Snapshot) | Propagation: [Source fix propagation queue](Source-Fix-Propagation-Queue)

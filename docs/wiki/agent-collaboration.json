@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T21:48:39+02:00",
+  "generatedAt": "2026-06-13T21:58:58+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,31 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "server-runtime-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Server-Gameplay-Runtime-Atlas.md",
+        "Server-Runtime-And-Operations.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "origin/master",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Refreshed Server-Gameplay-Runtime-Atlas.md as a branch-aware runtime orientation page with a top routing table and branch-scope map.",
+        "Separated docs checkout 6afcc58e startup anchors from origin/master cf2a6d6a truth for AI supply-truck startup, Patrols v2 and FPS publisher cleanup.",
+        "Updated Server-Runtime-And-Operations.md so broad server runtime/operations prompts route to branch-scope evidence before citing source line anchors."
+      ],
+      "handoff": "Closed as docs-published. Future server runtime work should name the exact target ref before claiming current-master or release truth, and keep detailed AI supply-truck, Patrols v2 and FPS smoke gates on their owner pages.",
+      "updated": "2026-06-13T21:58:58+02:00"
+    },
     {
       "lane": "sqf-atlas-compile-registry-refresh",
       "owner": "Codex",
