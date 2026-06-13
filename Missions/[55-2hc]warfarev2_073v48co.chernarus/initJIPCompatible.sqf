@@ -142,6 +142,17 @@ if (isMultiplayer) then {
 		missionNamespace getVariable "WFBE_C_ECONOMY_SUPPLY_START_EAST"];
 };
 
+//--- A/B EXPERIMENT (Steff 2026-06-13): ample starting economy so legacy-vs-next matches
+//--- develop fast (AI never economy-stalls -> quick captures -> rapid metric feedback).
+//--- Shared by BOTH arms (matched condition). Set WFBE_C_AB_AMPLE_ECON=0 to disable.
+if ((missionNamespace getVariable ["WFBE_C_AB_AMPLE_ECON", 1]) > 0) then {
+	missionNamespace setVariable ["WFBE_C_ECONOMY_FUNDS_START_WEST", 150000];
+	missionNamespace setVariable ["WFBE_C_ECONOMY_FUNDS_START_EAST", 150000];
+	missionNamespace setVariable ["WFBE_C_ECONOMY_SUPPLY_START_WEST", 80000];
+	missionNamespace setVariable ["WFBE_C_ECONOMY_SUPPLY_START_EAST", 80000];
+	diag_log "[WFBE (INIT)] AB-AMPLE-ECON ACTIVE: funds=150000 supply=80000 per side (fast-feedback test)";
+};
+
 IS_air_war_event = false;
 _airEventEnabledFromParameters = missionNamespace getVariable "WFBE_AIR_EVENT_ENABLED";
 
