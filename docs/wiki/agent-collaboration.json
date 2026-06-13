@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T23:13:32+02:00",
+  "generatedAt": "2026-06-13T23:29:18+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,46 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "upgrades-research-atlas-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Upgrades-And-Research-Atlas.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "AI-Commander-Autonomy-Audit.md",
+        "Support-Specials-And-Tactical-Modules-Atlas.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_UpgradeMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestUpgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ProcessUpgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AI_Com_Upgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "origin/feat/ai-commander",
+        "origin/feat/upgrade-queue-stacking"
+      ],
+      "outputs": [
+        "Refreshed Upgrades-And-Research-Atlas.md as a branch-scoped upgrades gateway with a top route table.",
+        "Updated current branch scope to docs checkout e785f1e9, stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f, release a96fdda2, feat/ai-commander c20ce153 and feat/upgrade-queue-stacking b061c905.",
+        "Routed AI commander upgrade debit detail to AI-Commander-Autonomy-Audit.md and upgrade-sync tuple detail to Support-Specials-And-Tactical-Modules-Atlas.md.",
+        "Refreshed stale old upgrade dialog branch split: docs/Miksuu/perf still carry RscMenu_Upgrade, while stable/release/upgrade-queue have no checked stale hits.",
+        "Aligned upgrade rows in Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with refreshed owner evidence."
+      ],
+      "handoff": "Closed as docs-published. Future upgrade work should use Upgrades-And-Research-Atlas.md as the gateway, keep RequestUpgrade server-authority migration separate from upgrade-sync tuple cleanup, port/recreate the AI debit-order fix where still open, decide the AI-order cost-index correction, propagate maintained Vanilla deliberately and smoke player/AI upgrade completion on the exact target branch.",
+      "updated": "2026-06-13T23:29:18+02:00"
+    },
     {
       "lane": "factory-purchase-atlas-branch-scope-route",
       "owner": "Codex",

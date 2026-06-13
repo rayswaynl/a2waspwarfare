@@ -13,6 +13,29 @@ The critical implementation truth is split:
 - the public variable entrypoint does not currently revalidate a player upgrade request before starting the server worker;
 - AI commander upgrades have a separate server-side affordability path, but the broader AI commander scheduler/owner path is still incomplete.
 
+## How To Use This Page
+
+| Need | Start here | Then read |
+| --- | --- | --- |
+| Player upgrade purchase path | [Live Player Flow](#live-player-flow) and [Server Flow](#server-flow) | [Server Authority Migration Map](Server-Authority-Migration-Map), [Economy Authority First Cut](Economy-Authority-First-Cut) |
+| Branch status and line drift | [Current Branch Scope](#current-branch-scope) | [Feature Status Register](Feature-Status-Register), [Source Fix Propagation Queue](Source-Fix-Propagation-Queue) |
+| AI commander upgrade worker | [AI Commander Flow](#ai-commander-flow) | [AI Commander Autonomy Audit](AI-Commander-Autonomy-Audit#ai-upgrade-debit-branch-matrix) |
+| `upgrade-sync` timer cleanup | [Live Player Flow](#live-player-flow) | [Support Specials And Tactical Modules Atlas](Support-Specials-And-Tactical-Modules-Atlas#upgrade-sync-branch-matrix) |
+| Stale old upgrade UI | [Stale / Abandoned Upgrade UI](#stale--abandoned-upgrade-ui) | [UI Resource Parity Cleanup](UI-Resource-Parity-Cleanup) |
+| Upgrade consumers | [Consumers](#consumers) | [Factory And Purchase Systems Atlas](Factory-And-Purchase-Systems-Atlas), [Gear Loadout And EASA Atlas](Gear-Loadout-And-EASA-Atlas), [Support Specials And Tactical Modules Atlas](Support-Specials-And-Tactical-Modules-Atlas) |
+
+## Current Branch Scope
+
+Checked 2026-06-13 against docs checkout `e785f1e9`, stable `origin/master` `cf2a6d6a`, Miksuu upstream `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `origin/release/2026-06-feature-bundle` `a96fdda2`, `origin/feat/ai-commander` `c20ce153` and `origin/feat/upgrade-queue-stacking` `b061c905`.
+
+| Branch / root | Evidence | Status |
+| --- | --- | --- |
+| Docs checkout `e785f1e9` Chernarus and maintained Vanilla | Player UI treats costs as `[supply, funds]` (`GUI_UpgradeMenu.sqf:96-97,139-140`) and debits funds/supply at `:158-159`, then sends `RequestUpgrade` at `:161`. `RequestUpgrade.sqf:5` spawns `WFBE_SE_FNC_ProcessUpgrade`, while `Server_ProcessUpgrade.sqf:12-18` trusts side/id/level/player flag. AI worker reads raw AI-order level at `Server_AI_Com_Upgrade.sqf:27` and debits funds/supply swapped at `:47,50`. Both maintained roots still define stale `RscMenu_Upgrade` at `Rsc/Dialogs.hpp:2425,2428`. | Current docs/source checkout remains the high-risk authority/debit target. Treat player upgrades as client-authoritative and AI upgrade debit as patch-ready here. |
+| Stable `origin/master` `cf2a6d6a` and release `a96fdda2` | Both maintained roots still keep `RequestUpgrade.sqf:5` as a spawn wrapper and `Server_HandleSpecial.sqf:67-73` as the mixed `_args` / `_this` `upgrade-sync` parser. Stable callers are at `GUI_UpgradeMenu.sqf:268`; release callers are at `:254`. AI worker debit order is fixed at `Server_AI_Com_Upgrade.sqf:47,50`, but `_cost` still uses raw `(_to_upgrade select 1)` at `:27`. `git grep` found no `RscMenu_Upgrade` / `GUI_Menu_Upgrade.sqf` hits in checked stable or release maintained roots. | Stable/release rescue the stale dialog and AI debit-order issue, but not player upgrade authority, `upgrade-sync` tuple cleanup or the AI cost-index question. Smoke remains required before release-ready wording. |
+| Miksuu `b8389e74` and `perf/quick-wins` `0076040f` | Both branches keep the mixed `upgrade-sync` parser with callers at `GUI_UpgradeMenu.sqf:241`, the raw AI cost lookup at `Server_AI_Com_Upgrade.sqf:27`, swapped AI debit at `:47,50` and stale `RscMenu_Upgrade` / missing-controller onLoad at `Rsc/Dialogs.hpp:2435,2438` in both maintained roots. | No upstream/perf rescue for upgrade authority, AI debit, tuple cleanup or stale old dialog. |
+| `origin/feat/ai-commander` `c20ce153` | Chernarus subtracts one from AI-order level before reading `_cost` at `Server_AI_Com_Upgrade.sqf:27` and debits funds/supply in the player-UI order at `:47,50`; maintained Vanilla on the same branch keeps the old raw lookup and swapped debit. | Useful branch-only Chernarus lesson, not a propagated AI upgrade fix. |
+| `origin/feat/upgrade-queue-stacking` `b061c905` | Adds upgrade-queue UI state around `GUI_UpgradeMenu.sqf:66,170,255,268,283,301`, keeps `RequestUpgrade.sqf:5` as the server entry, keeps the mixed `upgrade-sync` parser at `Server_HandleSpecial.sqf:67-73`, keeps raw AI cost lookup at `Server_AI_Com_Upgrade.sqf:27`, and has no checked stale `RscMenu_Upgrade` hits. | Review as a UI/queue branch. It does not close server authority or `upgrade-sync` hardening by itself. |
+
 ## Source Files
 
 | Area | Files |
@@ -21,13 +44,13 @@ The critical implementation truth is split:
 | Side state init | `Server/Init/Init_Server.sqf:344-369` |
 | Side state getter | `Common/Functions/Common_GetSideUpgrades.sqf:7-11` |
 | Player menu class | `Rsc/Dialogs.hpp:3-142` |
-| Stale legacy menu class | `Rsc/Dialogs.hpp:2424-2428` |
+| Stale legacy menu class | Docs checkout `Rsc/Dialogs.hpp:2424-2428`; branch status is below |
 | Main menu route | `Client/GUI/GUI_Menu.sqf:21-26`, `Client/GUI/GUI_Menu.sqf:161-166` |
-| Live player UI | `Client/GUI/GUI_UpgradeMenu.sqf:1-215` |
+| Live player UI | Docs checkout `Client/GUI/GUI_UpgradeMenu.sqf:1-215`; line drift is in [Current Branch Scope](#current-branch-scope) |
 | Server request PVF | `Server/PVFunctions/RequestUpgrade.sqf:1-5` |
 | Server worker | `Server/Functions/Server_ProcessUpgrade.sqf:10-89` |
 | Client upgrade notifications | `Client/PVFunctions/HandleSpecial.sqf`, `Client/Functions/Client_FNC_Special.sqf:111-124`, `Client/Functions/Client_FNC_Special.sqf:173-185` |
-| Client timer sync | `Client/GUI/GUI_UpgradeMenu.sqf:167-172`, `Server/Functions/Server_HandleSpecial.sqf:67-74` |
+| Client timer sync | Docs checkout `Client/GUI/GUI_UpgradeMenu.sqf:167-172`, `Server/Functions/Server_HandleSpecial.sqf:67-74`; canonical matrix: [Support specials](Support-Specials-And-Tactical-Modules-Atlas#upgrade-sync-branch-matrix) |
 | AI commander worker | `Server/Functions/Server_AI_Com_Upgrade.sqf:7-53` |
 | Config arrays | `Common/Config/Core_Upgrades/Upgrades_*.sqf`, `Common/Config/Core_Upgrades/Labels_Upgrades.sqf`, `Common/Config/Core_Upgrades/Check_Upgrades.sqf` |
 
@@ -97,6 +120,8 @@ The constants define 22 upgrade indexes through `WFBE_UP_UNITCOST = 21`, while t
 
 ## Live Player Flow
 
+Line refs in this section are docs checkout `e785f1e9` Chernarus. Stable, release and feature branches have line drift in [Current Branch Scope](#current-branch-scope).
+
 The main menu enables the upgrade button whenever the player is in command center range (`Client/GUI/GUI_Menu.sqf:21-26`) and opens `WFBE_UpgradeMenu` on menu action 7 (`Client/GUI/GUI_Menu.sqf:161-166`). The `WFBE_UpgradeMenu` class is the live dialog and executes `Client\GUI\GUI_UpgradeMenu.sqf` on load (`Rsc/Dialogs.hpp:3-7`).
 
 Inside `GUI_UpgradeMenu.sqf`:
@@ -109,7 +134,7 @@ Inside `GUI_UpgradeMenu.sqf`:
 6. The client sends `["RequestUpgrade", [WFBE_Client_SideJoined, _id, _upgrade_current, true]]` to the server (`line 161`).
 7. Non-server clients spawn a local timer and later send `RequestSpecial ["upgrade-sync", ...]` (`lines 167-172`) so `Server_ProcessUpgrade.sqf` can release before the full server sleep if the sync flag arrives.
 
-The `upgrade-sync` companion is branch-scoped in [Support specials](Support-Specials-And-Tactical-Modules-Atlas#upgrade-sync-branch-matrix). Current source, maintained Vanilla, stable, Miksuu upstream, `perf/quick-wins` and release all keep the same mixed `_args` / `_this` parser in `Server_HandleSpecial.sqf:67-73`. Because `_args = _this` at function entry, this is cleanup/fragility debt rather than a confirmed current break; future router work should still normalize the tuple before broader RequestSpecial hardening.
+The `upgrade-sync` companion is branch-scoped in [Support specials](Support-Specials-And-Tactical-Modules-Atlas#upgrade-sync-branch-matrix). Docs checkout `e785f1e9`, stable `cf2a6d6a`, Miksuu `b8389e74`, `perf/quick-wins` `0076040f`, release `a96fdda2` and `feat/upgrade-queue-stacking` `b061c905` all keep the same mixed `_args` / `_this` parser in `Server_HandleSpecial.sqf:67-73`. Because `_args = _this` at function entry, this is cleanup/fragility debt rather than a confirmed current break; future router work should still normalize the tuple before broader RequestSpecial hardening.
 
 This is functional for normal honest commanders, but it is not server-authoritative.
 
@@ -138,7 +163,9 @@ What it does not do for player requests:
 
 `Server_AI_Com_Upgrade.sqf` is more authoritative than the player PV path. It reads `WFBE_C_UPGRADES_<side>_AI_ORDER`, finds the first desired upgrade level not yet met, checks AI commander funds and side supply, calls `WFBE_SE_FNC_ProcessUpgrade` with `_upgrade_isplayer = false`, sets running state, and deducts resources (`Server_AI_Com_Upgrade.sqf:7-53`).
 
-Wave R found a likely debit-index swap in that AI worker. The player UI names cost element `0` as supply and element `1` as funds (`GUI_UpgradeMenu.sqf:139-140`) and validates/deducts that way (`:158-159`). The AI worker validates with the same convention (`Server_AI_Com_Upgrade.sqf:34-36`), but then deducts `_cost select 0` from AI commander funds and `_cost select 1` from side supply (`:47-50`). Before enabling or scheduling AI commander upgrades, fix or deliberately confirm this convention.
+Branch scope matters here. Docs checkout `e785f1e9`, Miksuu `b8389e74` and `perf/quick-wins` `0076040f` validate AI costs with the same `[supply, funds]` convention as the player UI (`GUI_UpgradeMenu.sqf:96-97,139-140`; `Server_AI_Com_Upgrade.sqf:34-36`) but debit AI funds with `_cost select 0` and side supply with `_cost select 1` at `Server_AI_Com_Upgrade.sqf:47,50`. Stable `cf2a6d6a`, release `a96fdda2` and `feat/upgrade-queue-stacking` `b061c905` fix debit order in both maintained roots but still use raw `(_to_upgrade select 1)` as the cost level at `:27`. `feat/ai-commander` `c20ce153` fixes both debit order and cost-index lookup only in Chernarus.
+
+Use [AI Commander Autonomy Audit](AI-Commander-Autonomy-Audit#ai-upgrade-debit-branch-matrix) for the canonical branch matrix. Before enabling or scheduling AI commander upgrades, port or recreate the debit-order fix where needed, decide the cost-index correction, propagate maintained Vanilla and smoke AI upgrade affordability/debit.
 
 This means the upgrade worker is real, but the broader AI commander autonomy still needs care. See [AI Commander Autonomy Audit](AI-Commander-Autonomy-Audit): the repo has AI commander upgrade code and state, but the current docs should not imply a complete autonomous commander loop until the scheduler/owner path is proven.
 
@@ -164,7 +191,7 @@ Do not confuse the live `WFBE_UpgradeMenu` with `RscMenu_Upgrade`.
 
 `Rsc/Dialogs.hpp:2424-2428` still defines `class RscMenu_Upgrade` with `onLoad = "_this ExecVM ""Client\GUI\GUI_Menu_Upgrade.sqf"""`, but the referenced script is absent. The live menu route creates `WFBE_UpgradeMenu`, not `RscMenu_Upgrade`. This is stale dialog archaeology, not the active upgrade system.
 
-Branch status as of 2026-06-05: docs/source, `origin/master` and `miksuu/master` still carry the stale class in both Chernarus and maintained Vanilla. The current release branch removed the stale Chernarus class in `460c0312` (`chore: remove orphan WF2 RscMenu_Upgrade dialog (IDD 18000)`), but maintained Vanilla on that branch still carries `RscMenu_Upgrade` and the missing `GUI_Menu_Upgrade.sqf` onLoad. If this cleanup is promoted, treat it as a parity task: remove or intentionally alias the old class in both maintained roots, then smoke the live `WFBE_UpgradeMenu` purchase/request path.
+Branch check 2026-06-13: docs checkout `e785f1e9` still carries the stale class in both maintained roots at `Rsc/Dialogs.hpp:2425` with the missing controller onLoad at `:2428`. Miksuu `b8389e74` and `perf/quick-wins` `0076040f` keep the same stale class in both roots at `:2435` / `:2438`. Stable `origin/master` `cf2a6d6a`, release `a96fdda2` and `feat/upgrade-queue-stacking` `b061c905` have no checked `RscMenu_Upgrade` / `GUI_Menu_Upgrade.sqf` hits in maintained Chernarus or Vanilla roots. If cleanup is promoted into the docs/source checkout, treat it as a parity task: remove or intentionally alias the old class in both maintained roots, then smoke the live `WFBE_UpgradeMenu` purchase/request path.
 
 Related page: [Abandoned Feature Revival Review](Abandoned-Feature-Revival-Review).
 
@@ -174,10 +201,10 @@ Related page: [Abandoned Feature Revival Review](Abandoned-Feature-Revival-Revie
 | --- | --- | --- | --- |
 | Patch-ready | Player upgrade request is client-authoritative for affordability, dependencies and commander permission. | `GUI_UpgradeMenu.sqf:129-161`; `RequestUpgrade.sqf:1-5`; `Server_ProcessUpgrade.sqf:12-18` | Move validation/debit into a server authority wrapper before adding new upgrade mechanics or balancing expensive upgrades. |
 | Patch-ready | Invalid side/upgrade/level payloads can index config arrays directly. | `Server_ProcessUpgrade.sqf:12-18`; `Common_GetSideUpgrades.sqf:7-11` | Add side, ID, current-level and max-level guards before reading `TIMES`/`COSTS`/`LINKS`. |
-| Patch-ready | AI commander upgrade worker appears to swap supply/funds when deducting after a successful validation. | `GUI_UpgradeMenu.sqf:139-159`; `Server_AI_Com_Upgrade.sqf:34-50` | Align AI deduction with the `[supply, funds]` convention before wiring a live AI commander upgrade scheduler. |
+| Branch-split patch-ready | AI commander upgrade worker is fixed for debit order on stable/release/upgrade-queue, but docs checkout, Miksuu and perf still swap supply/funds; the cost-index correction is only Chernarus on `feat/ai-commander`. | [AI upgrade debit matrix](AI-Commander-Autonomy-Audit#ai-upgrade-debit-branch-matrix); docs checkout `Server_AI_Com_Upgrade.sqf:27,34-50`; stable/release `:27,47,50` | Port/recreate debit-order fix where still open, decide the cost-index correction, propagate maintained Vanilla and smoke before scheduling AI upgrades. |
 | Research-needed | Config arrays may be length-misaligned around AAR/unit-cost. | `Init_CommonConstants.sqf:36-58`; representative `Upgrades_USMC.sqf` excerpt | Build a side-config validator before changing upgrade arrays or propagating generated missions. |
 | Partial | AI commander upgrade worker exists, but full autonomous scheduling remains unproven. | `Server_AI_Com_Upgrade.sqf:7-53`; [AI Commander Autonomy Audit](AI-Commander-Autonomy-Audit) | Treat AI upgrade flow as a useful worker, not as proof of a complete AI commander. |
-| Abandoned/stale | `RscMenu_Upgrade` references missing `GUI_Menu_Upgrade.sqf`. | `Rsc/Dialogs.hpp:2424-2428`; release cleanup commit `460c0312` is Chernarus-only while release Vanilla remains stale. | Keep it documented as stale unless intentionally deleting or aliasing it across maintained roots. |
+| Branch-split stale | `RscMenu_Upgrade` references missing `GUI_Menu_Upgrade.sqf` in docs checkout, Miksuu and perf; stable, release and upgrade-queue no longer show the stale class in checked maintained roots. | Docs checkout `Rsc/Dialogs.hpp:2425,2428`; Miksuu/perf `:2435,:2438`; no checked stable/release/upgrade-queue hits | Keep it documented as stale for older/docs roots; if patched in docs/source, remove or alias consistently across maintained Chernarus and Vanilla, then smoke the live upgrade menu. |
 
 ## Server-Authority Migration Plan
 
@@ -206,6 +233,7 @@ Previous: [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atla
 - [Networking And Public Variables](Networking-And-Public-Variables)
 - [Public Variable Channel Index](Public-Variable-Channel-Index)
 - [AI Commander Autonomy Audit](AI-Commander-Autonomy-Audit)
+- [Support Specials And Tactical Modules Atlas](Support-Specials-And-Tactical-Modules-Atlas#upgrade-sync-branch-matrix)
 - [Factory And Purchase Systems Atlas](Factory-And-Purchase-Systems-Atlas)
 - [Respawn And Death Lifecycle Atlas](Respawn-And-Death-Lifecycle-Atlas)
 - [Gear Loadout And EASA Atlas](Gear-Loadout-And-EASA-Atlas)

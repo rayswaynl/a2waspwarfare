@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-13T23:13:32+02:00",
+  "generatedAt": "2026-06-13T23:29:18+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only Factory purchase atlas branch-scope route: Factory-And-Purchase-Systems-Atlas.md now has a top route table, current branch scope for docs checkout 8d611092, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f, release a96fdda2 and feat/buymenu-easa-qol a66d4691, split stable/release selected-detail/key/refund fixes from docs/Miksuu/perf old-shape debt, and refreshed factory rows in Feature-Status-Register.md plus Source-Fix-Propagation-Queue.md. No gameplay source changed.",
+      "currentWork": "Published docs-only Upgrades research atlas branch-scope route: Upgrades-And-Research-Atlas.md now has a top route table and current branch scope for docs checkout e785f1e9, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f, release a96fdda2, feat/ai-commander c20ce153 and feat/upgrade-queue-stacking b061c905; AI debit and upgrade-sync detail route to canonical matrices; stale old upgrade dialog branch split is refreshed; and Feature-Status-Register.md plus Source-Fix-Propagation-Queue.md are aligned. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "upgrades-research-atlas-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Upgrades-And-Research-Atlas.md now behaves as a branch-scoped upgrades gateway: it adds a top route table, names current branch scope for docs checkout e785f1e9, stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f, release a96fdda2, feat/ai-commander c20ce153 and feat/upgrade-queue-stacking b061c905, routes AI upgrade debit to AI-Commander-Autonomy-Audit.md, routes upgrade-sync to Support-Specials-And-Tactical-Modules-Atlas.md, and refreshes stale old upgrade dialog scope. Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, AI-Commander-Autonomy-Audit.md and Support-Specials-And-Tactical-Modules-Atlas.md now align to the refreshed evidence. No gameplay source changed."
+    },
     {
       "lane": "factory-purchase-atlas-branch-scope-route",
       "owner": "Codex",
