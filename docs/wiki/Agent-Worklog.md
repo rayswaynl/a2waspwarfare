@@ -606,6 +606,12 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Source-checked docs/source `HEAD` `f7bc72a8`, current `origin/master` `cf2a6d6a`, Miksuu `upstream/master` `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and UI theme branches `0767c0b5` / `87d86257`.
 - Result: every checked Chernarus and maintained Vanilla root still keeps `class RscClickableText` at `Rsc/Ressources.hpp:541`, malformed `soundPush[] = {, 0.2, 1};` at `:556`, and valid empty-sound precedent `{"", 0.2, 1}` at `:92`. Current `origin/master` and release now have 14 derived `RscClickableText` controls per maintained root; docs/source, upstream, perf and UI theme branches have 17.
 - Updated [Client UI systems](Client-UI-Systems-Atlas#clickable-text-soundpush-branch-matrix), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Dead/stale code register](Dead-Code-And-Stale-Code-Register), dashboard/status files and machine rows. No gameplay source changed.
+## 2026-06-13T21:01:43+02:00 - Codex - AI supply-truck current-master safe-disable route
+
+- Claimed `ai-supply-truck-current-master-safe-disable-route` after `origin/master` `cf2a6d6a` showed the old AI supply-truck nil-code/FSM trap had changed from current-source raw spawn to current-source warning/disable.
+- Source-checked current Chernarus and maintained Vanilla: `Server/Init/Init_Server.sqf:37` still comments out `UpdateSupplyTruck`, `:383-384` initializes `wfbe_ai_supplytrucks` and logs that legacy AI supply-truck logistics are disabled, and `Server/AI/AI_UpdateSupplyTruck.sqf:17` still references missing `Server\FSM\supplytruck.fsm`.
+- Branch result: release `a96fdda2` matches current master in both maintained roots; Miksuu upstream `b8389e74` and `origin/perf/quick-wins` `0076040f` still raw-spawn the missing worker; `origin/feat/ai-commander` `c20ce153` guards only Chernarus while Vanilla remains raw.
+- Updated [AI commander autonomy](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix), [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Abandoned feature revival](Abandoned-Feature-Revival-Review), [Dead/stale code](Dead-Code-And-Stale-Code-Register), dashboard/status files and machine rows. No gameplay source changed.
 
 ## 2026-06-13T21:04:23+02:00 - Codex - HQ kill score double-award branch route
 

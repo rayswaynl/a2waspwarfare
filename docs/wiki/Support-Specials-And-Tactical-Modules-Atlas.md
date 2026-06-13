@@ -27,7 +27,7 @@ Mini-scout follow-up 2026-06-04 tightened the authority map:
 - Tactical menu gating is client-side first: `Client/GUI/GUI_Menu_Tactical.sqf:252-283,293-347,463-527` checks funds, upgrades, commander status, UAV state and local cooldowns before requests are sent.
 - Artillery is not a `RequestSpecial` asset-spawn path. `Client_RequestFireMission.sqf:50-72`, `Common_HandleArtillery.sqf:7-85` and `Common_FireArtillery.sqf:7-72` own local cooldown/fire-control/range behavior, with ammo options loaded through `Common_GetArtilleryAmmoOptions.sqf:41-72` and `Common_LoadArtilleryAmmo.sqf:18-53`.
 - UAV is client-spawned and client-paid in `Client/Module/UAV/uav.sqf:15-52`; `Server/Support/Support_UAV.sqf:6-20` mainly monitors and cleans it up.
-- `Server_HandleSpecial.sqf:67-74` has a fragile `upgrade-sync` branch: it reads `_side` from `_args select 1`, then `_upgrade_id` / `_upgrade_level` from `_this select 2/3`. Any caller-shape change can break that branch differently from the other `RequestSpecial` tags.
+- `Server_HandleSpecial.sqf:67-73` has a fragile `upgrade-sync` branch: it reads `_side` from `_args select 1`, then `_upgrade_id` / `_upgrade_level` from `_this select 2/3`. Any caller-shape change can break that branch differently from the other `RequestSpecial` tags.
 
 ### Upgrade-Sync Branch Matrix
 
@@ -37,10 +37,10 @@ Mini-scout follow-up 2026-06-04 tightened the authority map:
 | --- | --- | --- |
 | Current source Chernarus | `Server_HandleSpecial.sqf:3,67-73` assigns `_args = _this`, reads `_side` from `_args select 1`, then `_upgrade_id` / `_upgrade_level` from `_this select 2/3`; `GUI_UpgradeMenu.sqf:241` sends `["upgrade-sync", WFBE_Client_SideJoined, _this select 0, _this select 1]`; `Server_ProcessUpgrade.sqf:26,29,35` owns the sync variable. | Mixed-source reads remain; current behavior is equivalent but fragile. |
 | Maintained Vanilla Takistan | Same maintained-root shape in `Server_HandleSpecial.sqf:3,67-73`, `GUI_UpgradeMenu.sqf:241` and `Server_ProcessUpgrade.sqf:26,29,35`. | Needs the same cleanup if source is patched. |
-| Stable `origin/master` `2cdf5fb8` | Same mixed `_args` / `_this` branch in both maintained roots; caller line `GUI_UpgradeMenu.sqf:241`. | No stable-master rescue. |
-| Miksuu upstream `f532f706` | Same mixed branch and caller tuple in both maintained roots. | No upstream rescue. |
+| Current `origin/master` / local `master` `89ae9dad` | Same mixed `_args` / `_this` branch in both maintained roots; caller line `GUI_UpgradeMenu.sqf:241`. The `2cdf5fb8..89ae9dad` diff does not touch the checked handler/caller/process-upgrade files. | No stable-master rescue. |
+| Miksuu upstream `89ae9dad` | Same mixed branch and caller tuple in both maintained roots. | No upstream rescue. |
 | `origin/perf/quick-wins` `0076040f` | Same mixed branch and caller tuple in both maintained roots. | Perf branch does not touch this router path. |
-| Release `origin/release/2026-06-feature-bundle` `d482c742` | Same mixed branch in both maintained roots; release Chernarus caller shifted to `GUI_UpgradeMenu.sqf:254`, Vanilla remains `:241`. The new release head has no relevant diff from the earlier `3282ff3f` smoke harness head. | No release rescue; only Chernarus line drift. |
+| Release `origin/release/2026-06-feature-bundle` `7ff18c49` | Same mixed branch in both maintained roots; release Chernarus and maintained Vanilla callers both shifted to `GUI_UpgradeMenu.sqf:254`. The `fb3084c2..7ff18c49` release delta has no relevant diff in `Server_HandleSpecial.sqf` or `GUI_UpgradeMenu.sqf`. | No release rescue; only release-root line drift. |
 
 Patch order: normalize the branch to read side/id/level from `_args` only, add a short tuple comment or helper-local guard if editing the router, keep RequestUpgrade authority migration separate, propagate maintained Vanilla, then smoke normal commander upgrade completion, non-server client timer sync, malformed/short payload rejection and AI commander upgrade progress.
 
@@ -79,7 +79,7 @@ Adjacent server runtime surfaces: grouped base areas are enabled only when `WFBE
 | ZetaCargo/airlift | Broken/partial | Hook attaches nearby unmanned land vehicle; detach action does not pass the lifted vehicle even though unhook expects it. |
 | Service menu | Working/partial | Repair/refuel/rearm/heal effects and deductions are client-side; local support scripts recheck world state but not full money authority. |
 | Supply mission | Partial | Server validates return proximity but trusts client-set `SupplyFromTown` / `SupplyAmount`. |
-| Supply truck respawn | Partial/unclear | Economy menu requests `RequestSpecial ["RespawnST", sideJoined]`; `Server_HandleSpecial.sqf:55-60` trusts the payload side and damages current `wfbe_ai_supplytrucks` for that side, but actual recreation depends on the broken/config-gated `UpdateSupplyTruck` path. |
+| Supply truck respawn | Safe-disabled / authority gap if revived | Economy menu requests `RequestSpecial ["RespawnST", sideJoined]`; `Server_HandleSpecial.sqf:55-60` still trusts the payload side and damages the side logic's `wfbe_ai_supplytrucks` list. Current `origin/master` `cf2a6d6a` and release `a96fdda2` initialize that list and log-disable old AI supply-truck logistics at `Init_Server.sqf:382-384` in both maintained roots instead of raw-spawning `UpdateSupplyTruck`; the old worker still points at missing `Server\FSM\supplytruck.fsm` at `AI_UpdateSupplyTruck.sqf:17`. Canonical branch matrix: [AI commander autonomy audit](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix). |
 
 ## Server Dispatch And PV Paths
 
@@ -160,7 +160,7 @@ Wave N rechecked the support router and found two source-level traps worth keepi
 | Ordnance guardrails depend on local target state | Test lock/no-lock, pilot/gunner, AI crew, JIP and remote locality cases before tightening bomb or missile restrictions. |
 | AA missile gating is path-dependent | Verify start vehicles, purchased aircraft, client-built aircraft, rearmed aircraft, SAMs and EASA loadouts all pass the same `WFBE_C_GAMEPLAY_AIR_AA_MISSILES` / `WFBE_UP_AIRAAM` policy before calling AA restrictions complete. |
 | RU ammo paradrop config is commented out | Split `Root_RU.sqf:36` so the starting-vehicle comment does not swallow `WFBE_%1PARAAMMO`; smoke RU para-ammo request after the fix. |
-| `upgrade-sync` mixed argument source | Use the [upgrade-sync branch matrix](#upgrade-sync-branch-matrix). Normalize `Server_HandleSpecial.sqf:67-74` to read side/id/level from one payload shape, then smoke upgrade completion synchronization. |
+| `upgrade-sync` mixed argument source | Use the [upgrade-sync branch matrix](#upgrade-sync-branch-matrix). Normalize `Server_HandleSpecial.sqf:67-73` to read side/id/level from one payload shape, then smoke upgrade completion synchronization. |
 | Zeta detach missing vehicle arg | Pass `[_vehicle]` when adding the detach action in `Zeta_Hook.sqf`, or revise `Zeta_Unhook.sqf` to find the lifted object safely. |
 | Stale ICBM adjuncts | Either wire the `ICBM_launched` / `NukeIncoming` paths intentionally or remove/document them as dead. If revived, fix the missing `airRaid` sound reference first. |
 | MASH marker flow is split | Reconcile sender, server relay, client receiver, delete replay and JIP resend, or remove/archive the stale marker relay. |

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T21:04:23+02:00",
+  "generatedAt": "2026-06-13T21:20:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,37 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "ai-supply-truck-current-master-safe-disable-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Support-Specials-And-Tactical-Modules-Atlas.md",
+        "AI-Commander-Autonomy-Audit.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Abandoned-Feature-Revival-Review.md",
+        "Dead-Code-And-Stale-Code-Register.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-feature-status.jsonl",
+        "agent-hardening-backlog.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/AI_UpdateSupplyTruck.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan"
+      ],
+      "outputs": [
+        "Published docs-only current-master refresh for AI supply-truck safe-disable status; no gameplay source changed.",
+        "Current origin/master cf2a6d6a Chernarus and maintained Vanilla initialize wfbe_ai_supplytrucks and log a warning instead of raw-spawning the missing UpdateSupplyTruck worker; release a96fdda2 matches this safety shape.",
+        "Miksuu b8389e74 and perf 0076040f still raw-spawn the uncompiled worker; feat/ai-commander c20ce153 guards Chernarus only and does not restore supplytruck.fsm."
+      ],
+      "handoff": "Future code owner should preserve the current safe-disable when merging older branches, and keep it separate from any real autonomous logistics revival; AI_UpdateSupplyTruck.sqf still references missing Server/FSM/supplytruck.fsm.",
+      "updated": "2026-06-13T21:20:00+02:00"
+    },
     {
       "lane": "hq-kill-score-double-award-branch-route",
       "owner": "Codex",
@@ -503,14 +534,14 @@
     {
       "lane": "ai-supply-truck-current-head-refresh",
       "owner": "Codex",
-      "status": "published-validated",
-      "updated": "2026-06-06T23:59:30+02:00",
+      "status": "superseded-historical-branch-evidence",
+      "updated": "2026-06-13T21:20:00+02:00",
       "sourceScope": [
         "origin/master@89ae9dad and local source HEAD@89ae9dad current stable source refs",
-        "current source/Vanilla Init_Server.sqf:36 comments out UpdateSupplyTruck compile",
-        "current source/Vanilla Init_Server.sqf:386 initializes wfbe_ai_supplytrucks and :387 raw-spawns UpdateSupplyTruck when truck supply plus AI commanders are enabled",
-        "current source/Vanilla Server/AI/AI_UpdateSupplyTruck.sqf:17 executes missing Server/FSM/supplytruck.fsm",
-        "current source/Vanilla and release ls-tree checks find no Server/FSM/supplytruck.fsm",
+        "historical 89ae9dad source/Vanilla Init_Server.sqf:36 comments out UpdateSupplyTruck compile",
+        "historical 89ae9dad source/Vanilla Init_Server.sqf:386 initializes wfbe_ai_supplytrucks and :387 raw-spawns UpdateSupplyTruck when truck supply plus AI commanders are enabled",
+        "historical 89ae9dad source/Vanilla Server/AI/AI_UpdateSupplyTruck.sqf:17 executes missing Server/FSM/supplytruck.fsm",
+        "historical 89ae9dad source/Vanilla and release ls-tree checks found no Server/FSM/supplytruck.fsm",
         "historical origin/master@2cdf5fb8 same maintained-root raw spawn at Init_Server.sqf:36,382-383 and missing FSM dependency at AI_UpdateSupplyTruck.sqf:17",
         "2cdf5fb8..89ae9dad changes checked Init_Server.sqf line positions but does not restore UpdateSupplyTruck compile or supplytruck.fsm",
         "origin/perf/quick-wins@0076040f raw-spawns in Chernarus at Init_Server.sqf:377-378 and Vanilla at :382-383; supplytruck.fsm absent",
@@ -518,11 +549,11 @@
         "origin/feat/ai-commander@c20ce153 guards Chernarus at Init_Server.sqf:388-389 but leaves maintained Vanilla raw at :382-383; supplytruck.fsm absent"
       ],
       "outputs": [
-        "Refreshed AI supply-truck safe-disable docs and machine rows from mixed historical 2cdf5fb8 line refs to current stable 89ae9dad line refs while preserving the release safe-disable and feat/ai-commander partial-guard branch split. No gameplay source changed.",
+        "Superseded by ai-supply-truck-current-master-safe-disable-route: current origin/master cf2a6d6a now carries the release-style safe-disable in both maintained roots; this 89ae9dad record is historical branch evidence only. No gameplay source changed.",
         "Updated AI-Commander-Autonomy-Audit.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, dashboard/worklog/pruning ledger and matching machine rows.",
         "No gameplay source changed."
       ],
-      "handoff": "Keep this as documentation/status routing only; code-owner work is still to port the release warning/disable shape for safety or intentionally design a real server-owned autonomous logistics replacement."
+      "handoff": "Use the newer current-master route for live status. Preserve or port the safe-disable shape when merging older raw-spawn branches; only reopen AI logistics with a verified server-owned loop/FSM."
     },
     {
       "lane": "resistance-patrol-current-head-refresh",
@@ -2812,7 +2843,7 @@
       "lane": "ai-supply-truck-current-head-refresh",
       "owner": "Codex",
       "completedAt": "2026-06-06T23:59:30+02:00",
-      "output": "Refreshed AI supply-truck safe-disable docs and machine rows from mixed historical 2cdf5fb8 line refs to current stable 89ae9dad line refs while preserving the release safe-disable and feat/ai-commander partial-guard branch split. No gameplay source changed."
+      "output": "Superseded by ai-supply-truck-current-master-safe-disable-route: current origin/master cf2a6d6a now carries the release-style safe-disable in both maintained roots; this 89ae9dad record is historical branch evidence only. No gameplay source changed."
     },
     {
       "lane": "resistance-patrol-current-head-refresh",

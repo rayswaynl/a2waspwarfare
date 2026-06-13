@@ -17,7 +17,7 @@ But the source audit did **not** find a live owner loop/FSM that starts full aut
 
 Human commander state is live: vote/reassignment, commander-side economy controls, HQ/MHQ affordances and income split all run through the normal Warfare flow. Full autonomous commander behavior is the partial/latent part.
 
-Autonomous supply trucks are worse than partial: the old `UpdateSupplyTruck` compile is commented, the gated spawn remains, and the referenced `Server\FSM\supplytruck.fsm` file is absent.
+Autonomous supply trucks are still not revived, but current `origin/master` is now safe-disabled: the old `UpdateSupplyTruck` compile remains commented and the worker still references missing `Server\FSM\supplytruck.fsm`, but current `cf2a6d6a` initializes `wfbe_ai_supplytrucks` and logs a warning instead of spawning the missing worker in both maintained roots. Miksuu/perf still keep the older raw-spawn trap; see the matrix below.
 
 `origin/feat/ai-commander` is the current branch-only revival attempt. It changes the status of the branch, not stable `master`: the branch adds a server-side commander supervisor, assignment workers, production worker and explicit order executor, but it is source-Chernarus-only and needs dedicated/JIP/Vanilla smoke before the wiki can call AI commander revived.
 
@@ -47,11 +47,24 @@ Branch-only review risks:
 - The production worker uses `AIBuyUnit`; smoke must include AI team queue cleanup, insufficient funds, destroyed factory, full AI cap, vehicle/man production and human takeover of a team.
 - Team-order setters remain state replication, not the scheduler by themselves. On the branch, `AI_Commander_Execute.sqf:19-32` is the explicit-order waypoint owner and uses `wfbe_exec_sig` idempotency; `AI_Commander_AssignTowns.sqf:38-48,65-78` separately retargets no-human or delegated/autonomous AI teams toward uncaptured towns.
 
+### AI Upgrade Debit Branch Matrix
+
+Checked 2026-06-06 after fetching `origin`; refreshed 2026-06-06 against current stable `origin/master` / local `master` / Miksuu `89ae9dad`. The player upgrade menu treats upgrade cost tuples as `[supply, funds]`: it reads supply from element `0` and funds from element `1` (`Client/GUI/GUI_UpgradeMenu.sqf:163-164,206-207`), then debits client funds at `:225` and side supply at `:226`. The AI worker validates with the same convention (`Server_AI_Com_Upgrade.sqf:34-36`) but current source still debits those two stores in the opposite order. The checked `2cdf5fb8..89ae9dad` diff does not touch the maintained-root AI upgrade worker or player upgrade menu files.
+
+| Branch / root | Evidence | Status |
+| --- | --- | --- |
+| Current source Chernarus and maintained Vanilla | Both roots read `_cost` with raw `(_to_upgrade select 1)` at `Server_AI_Com_Upgrade.sqf:27`, validate side supply against `_cost select 0` and AI funds against `_cost select 1` at `:34-36`, then debit AI funds with `_cost select 0` and side supply with `_cost select 1` at `:47-50`. | Patch-ready in current source. AI upgrade revival should align debit order and review whether the AI_ORDER level should be converted to a zero-based cost index before enabling a scheduler. |
+| Stable `origin/master` / local `master` / Miksuu `89ae9dad`; historical stable `2cdf5fb8`; `origin/perf/quick-wins` `0076040f` | Same maintained-root shape in both Chernarus and Vanilla: raw `_to_upgrade select 1` cost lookup plus swapped funds/supply debit at `Server_AI_Com_Upgrade.sqf:27,47,50`. | No current stable/upstream/perf rescue; `2cdf5fb8` is historical baseline evidence only. |
+| Release `origin/release/2026-06-feature-bundle` `7ff18c49` | Both maintained release roots still use raw `(_to_upgrade select 1)` for `_cost` at `:27`, but debit AI funds with `_cost select 1` and side supply with `_cost select 0` at `:47,50`. | Release carries the debit-order fix in both maintained roots, but does not include the branch-only cost-index fix. AI upgrade smoke remains required. |
+| `origin/feat/ai-commander` `c20ce153` | Chernarus subtracts one from the AI_ORDER level when reading `_cost` at `:27`, then debits funds with `_cost select 1` and supply with `_cost select 0` at `:47,50`. Maintained Vanilla on the same branch keeps the old raw lookup and swapped debit at `:27,47,50`. | Branch-only Chernarus fix. Do not call the feature branch Vanilla-propagated or release-ready until the maintained target is generated/reviewed and AI upgrade smoke proves cost lookup/debit behavior. |
+
+Patch direction: for current source, port or recreate the release debit-order fix first, then decide whether to take the `feat/ai-commander` cost-index correction after checking `WFBE_C_UPGRADES_*_AI_ORDER` levels against every side's cost arrays. Keep this separate from the larger autonomous-commander supervisor/production revival.
+
 ## What Exists
 
 | Area | Source evidence | Meaning |
 | --- | --- | --- |
-| Mission parameter | `Rsc/Parameters.hpp:92-97` exposes `WFBE_C_AI_COMMANDER_ENABLED` with default `0`. | In the mission parameter UI, AI commander appears disabled by default. |
+| Mission parameter | `Rsc/Parameters.hpp:99-104` exposes `WFBE_C_AI_COMMANDER_ENABLED` with default `0`. | In the mission parameter UI, AI commander appears disabled by default. |
 | Fallback constant | `Common/Init/Init_CommonConstants.sqf:91` sets `WFBE_C_AI_COMMANDER_ENABLED = 1` only if the variable is nil. | If the MP parameter path does not provide the variable, the fallback enables it. Do not confuse this with the parameter default. |
 | Move interval constant | `Common/Init/Init_CommonConstants.sqf:96` defines `WFBE_C_AI_COMMANDER_MOVE_INTERVALS = 3600`. | A legacy cadence constant exists, but no source-read scheduler was found using it. |
 | Supply truck max constant | `Common/Init/Init_CommonConstants.sqf:97` defines `WFBE_C_AI_COMMANDER_SUPPLY_TRUCKS_MAX = 5`. | Old logistics sizing remains. |
@@ -103,29 +116,30 @@ Resistance AI should stay split from main-side commander teams. `Server/AI/AI_Re
 
 The old AI logistics path is config-gated latent breakage:
 
-1. `Server/Init/Init_Server.sqf:36` comments out `UpdateSupplyTruck = Compile preprocessFile "Server\AI\AI_UpdateSupplyTruck.sqf";`.
-2. `Server/Init/Init_Server.sqf:381-383` still spawns `UpdateSupplyTruck` when `WFBE_C_ECONOMY_SUPPLY_SYSTEM == 0` and `WFBE_C_AI_COMMANDER_ENABLED > 0`.
-3. `Server/AI/AI_UpdateSupplyTruck.sqf:17` calls `ExecFSM "Server\FSM\supplytruck.fsm"`.
+1. `Server/Init/Init_Server.sqf:37` comments out `UpdateSupplyTruck = Compile preprocessFile "Server\AI\AI_UpdateSupplyTruck.sqf";`.
+2. The truck-supply + AI-commander branch still exists, but current `origin/master` `cf2a6d6a` does not spawn `UpdateSupplyTruck` there; both maintained roots initialize `wfbe_ai_supplytrucks` and log that legacy AI supply-truck logistics are disabled at `Init_Server.sqf:382-384`.
+3. `Server/AI/AI_UpdateSupplyTruck.sqf:17` still calls `ExecFSM "Server\FSM\supplytruck.fsm"`.
 4. `Server/FSM/` contains no `supplytruck.fsm`; the server FSM folder has `.sqf` loop scripts such as `server_town.sqf`, `updateresources.sqf` and `server_victory_threeway.sqf`.
 
 Default posture nuance:
 
-- `Common/Init/Init_CommonConstants.sqf:161` falls back to `WFBE_C_ECONOMY_SUPPLY_SYSTEM = 1`, automatic timed supply.
-- `Rsc/Parameters.hpp:92-97` gives the AI commander mission parameter default as `0`.
+- `Common/Init/Init_CommonConstants.sqf:165` falls back to `WFBE_C_ECONOMY_SUPPLY_SYSTEM = 1`, automatic timed supply.
+- `Rsc/Parameters.hpp:99+` gives the AI commander mission parameter default as `0`.
 - Therefore the branch is normally avoided by mission parameters/fallbacks, but it is still a live config trap if an admin enables truck supply and AI commander behavior.
 
 ### AI Supply-Truck Branch Matrix
 
-Branch route `ai-supply-truck-branch-route` rechecked the maintained roots after release `7195b331` and `origin/feat/ai-commander` moved:
+Branch route `ai-supply-truck-current-master-safe-disable-route` rechecked the maintained roots on 2026-06-13 after `origin/master` advanced to `cf2a6d6a`, Miksuu upstream to `b8389e74` and release to `a96fdda2`:
 
 | Branch / root | Evidence | Status |
 | --- | --- | --- |
-| Current docs/source Chernarus and maintained Vanilla | Both roots still comment out `UpdateSupplyTruck` at `Server/Init/Init_Server.sqf:36`, then spawn it at `:383` when truck supply and AI commanders are enabled. `Server/AI/AI_UpdateSupplyTruck.sqf:17` still executes missing `Server\FSM\supplytruck.fsm`. | Config-gated nil-code/FSM trap remains open in current source. |
-| Stable `origin/master` `2cdf5fb8`, Miksuu upstream `f532f706` and `origin/perf/quick-wins` `0076040f` | Same compile-comment plus gated spawn shape; perf line numbers drift to `Init_Server.sqf:376-378`. No checked branch restores `supplytruck.fsm`. | No stable/upstream/perf rescue. |
-| Release `origin/release/2026-06-feature-bundle` `7195b331` | Chernarus and maintained Vanilla still keep the compile commented and the old worker script with missing FSM dependency, but the gated branch now initializes `wfbe_ai_supplytrucks` and logs a warning at `Init_Server.sqf:384-386` instead of spawning nil code. | Release carries a minimal safe-disable candidate in both maintained roots; it does not revive autonomous logistics. |
-| `origin/feat/ai-commander` `c20ce153` | Chernarus guards the spawn with `if (!isNil "UpdateSupplyTruck") then {[_side] Spawn UpdateSupplyTruck}` at `Init_Server.sqf:387-389`, but the compile remains commented and `supplytruck.fsm` remains absent. Maintained Vanilla on the same branch still has the raw `[_side] Spawn UpdateSupplyTruck` at `Init_Server.sqf:381-383`. | Branch-only partial guard. Do not treat the AI commander feature branch as a supply-truck revival or Vanilla propagation. |
+| Current source Chernarus and maintained Vanilla, `origin/master` / local `master` `cf2a6d6a` | Both maintained roots still comment out `UpdateSupplyTruck` at `Server/Init/Init_Server.sqf:37`, then initialize `wfbe_ai_supplytrucks` and log-disable legacy AI supply-truck logistics at `:383-384` when truck supply and AI commanders are enabled. `Server/AI/AI_UpdateSupplyTruck.sqf:17` still references missing `Server\FSM\supplytruck.fsm`, but current master does not call it from this branch. | Safety shape is present in current master; autonomous logistics remain disabled/not revived. |
+| Miksuu upstream `b8389e74` and `origin/perf/quick-wins` `0076040f` | Miksuu keeps the older raw spawn in both maintained roots at `Init_Server.sqf:382-383`. Perf also raw-spawns, with Chernarus at `:377-378` and Vanilla at `:382-383`. Both refs still have `AI_UpdateSupplyTruck.sqf:17` pointing at missing `Server\FSM\supplytruck.fsm`; no checked branch restores the FSM. | Branch-specific raw-spawn trap remains open outside current/release. |
+| Historical stable `origin/master` `2cdf5fb8` / `89ae9dad` | Historical stable had the compile-comment plus gated raw-spawn shape before current master picked up the safe-disable. | Historical baseline only; do not use it as current-master evidence. |
+| Release `origin/release/2026-06-feature-bundle` `a96fdda2` | Chernarus and maintained Vanilla match current master: compile commented at `Init_Server.sqf:37`, `wfbe_ai_supplytrucks` initialized and warning logged at `:383-384`, old worker still references missing `supplytruck.fsm` at `AI_UpdateSupplyTruck.sqf:17`. | Release and current master share the minimal safe-disable; neither revives autonomous logistics. |
+| `origin/feat/ai-commander` `c20ce153` | Chernarus guards the spawn with `if (!isNil "UpdateSupplyTruck") then {[_side] Spawn UpdateSupplyTruck}` at `Init_Server.sqf:388-389`, but the compile remains commented and `supplytruck.fsm` remains absent. Maintained Vanilla on the same branch still has the raw `[_side] Spawn UpdateSupplyTruck` at `Init_Server.sqf:382-383`. | Branch-only partial guard. Do not treat the AI commander feature branch as a supply-truck revival or Vanilla propagation. |
 
-Patch direction: for a safety-only fix, prefer the release warning/disable shape in both current maintained roots so truck-supply plus AI commanders cannot call nil code. For a real logistics revival, design or restore a verified server-owned supply-truck loop/FSM and keep it separate from player-run supply helicopter work.
+Patch direction: current master already has the safety-only warning/disable shape in both maintained roots. Keep that shape when merging or rebasing branches, and only reopen the worker if a code owner designs or restores a verified server-owned supply-truck loop/FSM. Keep this separate from player-run supply helicopter work.
 
 ## Authority-Adjacent Commander Controls
 
@@ -136,7 +150,7 @@ Some commander-facing systems are live but still client-led. Keep them out of th
 | Commander income percent | `Client/GUI/GUI_Menu_Economy.sqf:24-27,74-79`; `Server/FSM/updateresources.sqf:36-43` | Client UI writes the commander percent that the server resource loop consumes. It needs sender/commander validation in the economy authority lane. |
 | Upgrade requests | `Client/GUI/GUI_UpgradeMenu.sqf:137-171`; `Server/PVFunctions/RequestUpgrade.sqf:1-5`; `Server/Functions/Server_ProcessUpgrade.sqf:12-21` | The server owns the timer/state transition, but the live request still trusts client-side funds/dependency/level checks. |
 | Commander team orders | `GUI_Menu_Command.sqf:252-306,425-428`; `Common_SetTeamMoveMode.sqf:8`; `Common_SetTeamMovePos.sqf:8`; `RequestTeamUpdate.sqf:3-25` | Team property updates have a real server PVF. Map-order variables are replicated group state, but no general executor was proven that turns `wfbe_teammode` / `wfbe_teamgoto` into waypoints. Do not treat this as an AI commander movement scheduler. |
-| AI commander upgrade worker | `GUI_UpgradeMenu.sqf:139-159`; `Server_AI_Com_Upgrade.sqf:34-50` | The AI worker validates `[supply, funds]` costs like the player UI but appears to deduct them swapped, taking supply cost from AI funds and funds cost from side supply. Fix this before enabling a scheduler. |
+| AI commander upgrade worker | `GUI_UpgradeMenu.sqf:163-164,206-226`; `Server_AI_Com_Upgrade.sqf:27,34-50`; [AI upgrade debit branch matrix](#ai-upgrade-debit-branch-matrix) | Current source validates `[supply, funds]` costs like the player UI but deducts them swapped, taking supply cost from AI funds and funds cost from side supply. Release fixes debit order in both maintained roots; `feat/ai-commander` also fixes the cost-level lookup only in Chernarus. Fix/verify this before enabling a scheduler. |
 | MHQ repair | `Client/Action/Action_RepairMHQ.sqf:5-35`; `Server/PVFunctions/RequestMHQRepair.sqf:1`; `Server/Functions/Server_MHQRepair.sqf:1-35` | Repair is client-debited and side-only when it reaches the server. |
 | Commander specials and selling | `Client/GUI/GUI_Menu_Tactical.sqf:363-373,463-527`; `Client/GUI/GUI_Menu_Economy.sqf:104-150`; `Server/Functions/Server_HandleSpecial.sqf:55-64` | Paratroops, paradrops, UAV/ICBM paths, RespawnST and structure sale/refund all need role/side/funds/effect validation before public-server confidence. |
 
@@ -144,11 +158,11 @@ Some commander-facing systems are live but still client-led. Keep them out of th
 
 ### Minimal Safety Patch
 
-Use this if the owner does not want to revive autonomy yet:
+Current master already follows this shape; use it as the baseline if a branch still has the raw spawn or if the owner does not want to revive autonomy yet:
 
 1. Keep `UpdateSupplyTruck` disabled.
-2. Guard the gated server init branch with `!isNil "UpdateSupplyTruck"` before spawning it.
-3. Log one `WFBE_CO_FNC_LogContent` warning if truck supply + AI commanders is requested but the worker is unavailable.
+2. Initialize `wfbe_ai_supplytrucks` for compatibility, but do not spawn the missing worker.
+3. Log one `WFBE_CO_FNC_LogContent` warning if truck supply + AI commanders is requested while legacy logistics are unavailable.
 4. Update `agent-release-readiness.json` only if this becomes a source patch and generated propagation/smoke are pending.
 
 Minimum smoke:

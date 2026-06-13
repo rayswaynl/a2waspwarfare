@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-13T21:04:23+02:00",
+  "generatedAt": "2026-06-13T21:20:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only HQ-kill score double-award branch route: current source Chernarus and maintained Vanilla, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2 all keep generic HQ building score plus a second HQ bounty score in Server_OnHQKilled.sqf; DR-50 is now split into a dedicated Feature Status and Source Fix Queue route.",
+      "currentWork": "Published docs-only AI supply-truck current-master safe-disable route: current origin/master cf2a6d6a and release a96fdda2 initialize wfbe_ai_supplytrucks and log-disable legacy AI supply-truck logistics in both maintained roots; Miksuu b8389e74 and perf 0076040f still raw-spawn the missing-FSM worker. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "ai-supply-truck-current-master-safe-disable-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Corrected AI supply-truck status after origin/master advanced to cf2a6d6a. Current Chernarus and maintained Vanilla now match release a96fdda2: UpdateSupplyTruck remains commented at Init_Server.sqf:37, the AI-truck branch initializes wfbe_ai_supplytrucks and warning/log-disables legacy logistics at Init_Server.sqf:383-384, and AI_UpdateSupplyTruck.sqf:17 still points at missing Server/FSM/supplytruck.fsm. Miksuu b8389e74 and perf 0076040f still raw-spawn; feat/ai-commander c20ce153 guards Chernarus only. No gameplay source changed."
+    },
     {
       "lane": "hq-kill-score-double-award-branch-route",
       "owner": "Codex",
@@ -168,7 +174,7 @@
       "lane": "ai-supply-truck-current-head-refresh",
       "owner": "Codex",
       "status": "published-validated",
-      "output": "Refreshed AI supply-truck safe-disable docs and machine rows from mixed historical 2cdf5fb8 line refs to current stable 89ae9dad line refs while preserving the release safe-disable and feat/ai-commander partial-guard branch split. No gameplay source changed."
+      "output": "Superseded by ai-supply-truck-current-master-safe-disable-route: current origin/master cf2a6d6a now carries the release-style safe-disable in both maintained roots, while Miksuu b8389e74 and perf 0076040f preserve the older raw-spawn trap. The 89ae9dad refresh remains historical branch evidence only. No gameplay source changed."
     },
     {
       "lane": "resistance-patrol-current-head-refresh",
