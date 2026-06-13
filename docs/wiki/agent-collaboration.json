@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T22:24:55+02:00",
+  "generatedAt": "2026-06-13T22:41:09+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,44 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "economy-atlas-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Economy-Towns-And-Supply.md",
+        "AI-Commander-Autonomy-Audit.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/updateresources.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_GetIncome.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionCompletedMessage.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AI_Com_Upgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Refreshed Economy-Towns-And-Supply.md as a branch-scoped economy gateway with a top route table.",
+        "Updated current branch scope to docs checkout 6d05cb5a, stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f and release a96fdda2.",
+        "Preserved resource-income guard/display evidence and split supply reward flow into truck-only docs/Miksuu/perf versus stable/release heli/cash-run.",
+        "Aligned AI-Commander-Autonomy-Audit.md with current stable/release fixed debit order versus docs/Miksuu/perf swapped debit.",
+        "Routed side-supply clamp/reason and supply authority details to canonical owner pages."
+      ],
+      "handoff": "Closed as docs-published. Future economy work should refresh owner pages before changing this gateway: Economy-Authority-First-Cut for side-supply, Supply-Mission-Architecture for supply flow and AI-Commander-Autonomy-Audit / Upgrades-And-Research for AI commander debit.",
+      "updated": "2026-06-13T22:41:09+02:00"
+    },
     {
       "lane": "source-fix-queue-branch-scope-refresh",
       "owner": "Codex",
