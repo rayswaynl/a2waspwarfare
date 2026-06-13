@@ -230,6 +230,42 @@ while {!WFBE_GameOver} do {
 			["WARNING", "server_groupsGC.sqf: DELEGATION-DEAD - delegation=2 but 0 HC-owned units at minute " + str (round (time / 60))] Call WFBE_CO_FNC_AICOMLog;
 		};
 
+		//--- TOWN CONTROL snapshot (front line). Bounded by town count (~16), once / 5 min.
+		//--- sideID: WEST=0 EAST=1 GUER=2 (Init_CommonConstants). No-default getVariable + isNil
+		//--- guard (towns are Locations; default-form getVariable is fine but stay explicit).
+		_tW = 0; _tE = 0; _tG = 0;
+		{
+			_tsid = _x getVariable "sideID";
+			if (isNil "_tsid") then { _tsid = 2 };
+			if (_tsid == 0) then { _tW = _tW + 1 };
+			if (_tsid == 1) then { _tE = _tE + 1 };
+			if (_tsid == 2) then { _tG = _tG + 1 };
+		} forEach towns;
+		diag_log ("TOWNSTAT|v1|west=" + str _tW + "|east=" + str _tE + "|guer=" + str _tG + "|total=" + str (count towns) + "|t=" + str (round (time / 60)));
+
+		//--- ORDER OF BATTLE: crewed vehicles by class per side. Bounded by vehicle count,
+		//--- once / 5 min. Slots: 0 armor, 1 car, 2 heli, 3 jet. Personnel = unit count above.
+		_obW = [0, 0, 0, 0]; _obE = [0, 0, 0, 0];
+		{
+			if (alive _x && { (count crew _x) > 0 }) then {
+				_vside = side ((crew _x) select 0);
+				_slot = -1;
+				if (_x isKindOf "Helicopter") then { _slot = 2 } else {
+					if (_x isKindOf "Plane") then { _slot = 3 } else {
+						if (_x isKindOf "Tank") then { _slot = 0 } else {
+							if (_x isKindOf "Car") then { _slot = 1 }
+						}
+					}
+				};
+				if (_slot >= 0) then {
+					if (_vside == west) then { _obW set [_slot, (_obW select _slot) + 1] };
+					if (_vside == east) then { _obE set [_slot, (_obE select _slot) + 1] };
+				};
+			};
+		} forEach vehicles;
+		diag_log ("ORBATSTAT|v1|WEST|armor=" + str (_obW select 0) + "|car=" + str (_obW select 1) + "|heli=" + str (_obW select 2) + "|jet=" + str (_obW select 3) + "|personnel=" + str _uniWest + "|t=" + str (round (time / 60)));
+		diag_log ("ORBATSTAT|v1|EAST|armor=" + str (_obE select 0) + "|car=" + str (_obE select 1) + "|heli=" + str (_obE select 2) + "|jet=" + str (_obE select 3) + "|personnel=" + str _uniEast + "|t=" + str (round (time / 60)));
+
 		// Compute sweep cost; emit all three per-side lines with auditMs appended.
 		_auditMs = round ((diag_tickTime - _auditT0) * 1000);
 		{

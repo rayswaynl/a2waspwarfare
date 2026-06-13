@@ -99,7 +99,7 @@ if (!(isNil "WFBE_C_STATS_ENABLED")) then {
 
 // WASPSTAT KILL telemetry (Task 10). Gate: WFBE_C_STATLOG must be 1.
 if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
-	private ["_wsk_killerUID","_wsk_victimUID","_wsk_killerSide","_wsk_victimSide","_wsk_weapon","_wsk_dist","_wsk_cat","_wsk_line"];
+	private ["_wsk_killerUID","_wsk_victimUID","_wsk_killerSide","_wsk_victimSide","_wsk_weapon","_wsk_dist","_wsk_cat","_wsk_line","_wsk_hw"];
 	_wsk_killerUID = if (_killer_isplayer) then {getPlayerUID _killer} else {""};
 	_wsk_victimUID = if (_killed_isplayer) then {getPlayerUID _killed} else {""};
 	_wsk_killerSide = str _killer_side;
@@ -131,9 +131,23 @@ if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 			};
 		};
 	};
+	// Hardware bucket of the DESTROYED object (free: _killed already in hand). Empty for infantry.
+	// Lets the stats page show tanks/helis/jets/cars/ships destroyed without any new scan.
+	_wsk_hw = "";
+	if (!_killed_isman) then {
+		_wsk_hw = if (_killed isKindOf "Helicopter") then {"HELI"} else {
+			if (_killed isKindOf "Plane") then {"JET"} else {
+				if (_killed isKindOf "Tank") then {"ARMOR"} else {
+					if (_killed isKindOf "Ship") then {"SHIP"} else {
+						if (_killed isKindOf "Car") then {"CAR"} else {"OTHER"}
+					}
+				}
+			}
+		};
+	};
 	if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
 	WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
-	_wsk_line = "WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|KILL|" + _wsk_killerUID + "|" + _wsk_victimUID + "|" + _wsk_killerSide + "|" + _wsk_victimSide + "|" + _wsk_weapon + "|" + str _wsk_dist + "|" + _wsk_cat;
+	_wsk_line = "WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|KILL|" + _wsk_killerUID + "|" + _wsk_victimUID + "|" + _wsk_killerSide + "|" + _wsk_victimSide + "|" + _wsk_weapon + "|" + str _wsk_dist + "|" + _wsk_cat + "|hw=" + _wsk_hw;
 	diag_log _wsk_line;
 };
 
