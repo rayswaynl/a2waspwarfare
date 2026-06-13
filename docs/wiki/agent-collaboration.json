@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T18:38:05+02:00",
+  "generatedAt": "2026-06-13T21:01:34+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,27 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "coordination-dashboard-hygiene-audit",
+      "owner": "Codex",
+      "status": "published-validated-coordination-only",
+      "sourceScope": [
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "GitHub wiki checkout mirror"
+      ],
+      "outputs": [
+        "Validated agent-status.json, agent-collaboration.json and agent-events.jsonl; all parsed cleanly.",
+        "Confirmed Progress-Dashboard.md Latest Batch was already at five rows, then kept it at five after adding this audit.",
+        "Checked live active-claim statuses and found no conflicting active owner claim; documentation-finisher-loop remains the only true active owner lane, with Claude autonomous-ready and watchlist/future-owner lanes unchanged.",
+        "Verified docs/wiki and wiki-checkout parity for the coordination files before editing."
+      ],
+      "handoff": "Closed as coordination-published. Future coordination passes should repeat JSON/JSONL parse, live-claim sanity, Latest Batch row count, mirror parity for touched pages and git diff --check before commit/push.",
+      "updated": "2026-06-13T21:01:34+02:00"
+    },
     {
       "lane": "p0-network-current-master-route",
       "owner": "Codex",

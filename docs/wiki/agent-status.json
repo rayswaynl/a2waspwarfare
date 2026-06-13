@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-13T18:38:05+02:00",
+  "generatedAt": "2026-06-13T21:01:34+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only P0 network current-master route: current origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2 still keep PVF dispatcher Call Compile and direct SEND_MESSAGE call compile in both maintained roots; DR-1/DR-38, DR-55 and DR-46 remain separate lanes.",
+      "currentWork": "Published coordination-dashboard-hygiene-audit: JSON/JSONL coordination files parse cleanly, Latest Batch was kept compact at five rows, checked live active claims have no conflicting owner, and wiki/docs mirror parity was verified for the touched coordination files. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "coordination-dashboard-hygiene-audit",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Audited coordination surfaces after the P0 network batch. agent-status.json and agent-collaboration.json parse cleanly, agent-events.jsonl parsed cleanly at 1004 pre-audit lines, the live active-claim set has no conflicting owner beyond the ongoing documentation-finisher-loop, Claude autonomous-ready and future-owner/watchlist lanes, and Progress-Dashboard.md Latest Batch stayed at five rows after adding this audit. docs/wiki and wiki checkout parity was verified for the coordination files before editing. No gameplay source changed."
+    },
     {
       "lane": "p0-network-current-master-route",
       "owner": "Codex",
