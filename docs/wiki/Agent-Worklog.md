@@ -1,5 +1,13 @@
 # Agent Worklog
 
+## 2026-06-13T16:46:44+02:00 - Codex - Attack wave authority branch route
+
+- Claimed `attack-wave-authority-branch-route` from the DR-41 hardening backlog as a docs-only lane.
+- Scope: verify `ATTACK_WAVE_INIT` / `ATTACK_WAVE_DETAILS` authority status across current source Chernarus, maintained Vanilla, stable `origin/master`, Miksuu upstream, release/perf branches and relevant attack-wave/AI feature refs, then update Source Fix Propagation Queue and directly necessary status pages. No gameplay source changes planned.
+- Source-checked current docs/source `HEAD` `f3e157f2`, stable `origin/master` `cf2a6d6a`, Miksuu upstream `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2`, `origin/feat/ai-commander` `c20ce153` and historical `upstream/AttackWave` `994150da`.
+- Result: every checked Chernarus and maintained Vanilla root keeps the direct `ATTACK_WAVE_INIT` `_supply` / `_side` trust in `Server_AttackWave.sqf` plus trusted `ATTACK_WAVE_DETAILS` handling/debit in `AttackWave.sqf`; no branch rescue was found.
+- Added the canonical branch/root matrix to [Attack-wave authority playbook](Attack-Wave-Authority-Playbook#branch--root-matrix) and condensed [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), dashboard and machine records. No gameplay source changed.
+
 ## 2026-06-06T13:15:54+02:00 - Codex - Mission start parameter index
 
 - Claimed `mission-start-parameter-index` after Steff asked to add all start parameters to the wiki.

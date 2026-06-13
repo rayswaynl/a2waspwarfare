@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-05T23:48:34+02:00",
+  "generatedAt": "2026-06-13T17:06:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Reconciled the newest supply scan release status refresh plus release 7195b331 status refresh, camp-count helper, WASP marker wait, clickable-text soundPush, side-supply clamp, side-supply reason-string, empty supply-truck cleanup, vote/help UI edge, RequestSpecial upgrade-sync, fast-travel fee, resource-income payout/display, factory destroyed-purchase refund, gear-template creation gate, AI supply-truck, SEND_MESSAGE direct compile and PVF dispatcher lookup branch matrices across wiki and docs/wiki. Supply-Mission-Architecture, PVF-Dispatch-Implementation-Playbook, Public-Variable-Channel-Index, Networking-And-Public-Variables, Hardening-Implementation-Roadmap, AI-Commander-Autonomy-Audit, Feature-Status-Register, Source-Fix-Propagation-Queue and the subsystem owner pages are the canonical routes.",
+      "currentWork": "Published docs-only attack-wave authority branch matrix: current source Chernarus, maintained Vanilla, stable origin/master, Miksuu upstream, perf/quick-wins, release, AI commander branch and historical Miksuu AttackWave all keep direct ATTACK_WAVE_INIT supply/side trust plus trusted ATTACK_WAVE_DETAILS.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -61,6 +61,12 @@
       "owner": "Codex",
       "status": "active-ongoing",
       "output": "Keep wiki/status pages current from source evidence; route open docs work through the dashboard, pruning ledger, Feature Status, Pending Owner Decisions and machine status files; compact the dashboard, maintain machine-readable entrypoints, refresh scan artifacts when docs/source changes affect them and publish scoped validation batches."
+    },
+    {
+      "lane": "attack-wave-authority-branch-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Attack Wave Authority Playbook now owns the DR-41 branch/root matrix: current source/Vanilla, stable origin/master cf2a6d6a, upstream/master b8389e74, perf/quick-wins 0076040f, release a96fdda2, feat/ai-commander c20ce153 and upstream/AttackWave 994150da all keep direct ATTACK_WAVE_INIT supply/side trust plus trusted ATTACK_WAVE_DETAILS. No gameplay source changed."
     },
     {
       "lane": "supply-scan-release-status-refresh",

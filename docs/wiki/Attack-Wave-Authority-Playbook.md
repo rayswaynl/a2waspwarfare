@@ -2,7 +2,7 @@
 
 Implementation playbook for Claude DR-41: `ATTACK_WAVE_INIT` is a forgeable direct publicVariable channel that can make side-wide unit prices free or negative.
 
-Scope: `Missions/[55-2hc]warfarev2_073v48co.chernarus`. Apply gameplay patches there first, then propagate generated missions with `Tools/LoadoutManager`.
+Scope: current source `Missions/[55-2hc]warfarev2_073v48co.chernarus` plus maintained Vanilla `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan`. Apply gameplay patches in Chernarus first, then propagate maintained Vanilla and generated missions with `Tools/LoadoutManager`.
 
 ## Status
 
@@ -28,6 +28,22 @@ Scope: `Missions/[55-2hc]warfarev2_073v48co.chernarus`. Apply gameplay patches t
 | `Client/Functions/Client_UIFillListBuyUnits.sqf:60` | Displays buy-list price using `ATTACK_WAVE_PRICE_MODIFIER`. |
 | `Common/Init/Init_CommonConstants.sqf:166,197-199` | Sets `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT = 50000`, default `ATTACK_WAVE_PRICE_MODIFIER = 1`, and active flags false. |
 | `BattlEyeFilter/publicvariable.txt` | Does not include `ATTACK_WAVE_INIT`; the repo filter only carries the AFK feature rule. |
+
+## Branch / Root Matrix
+
+Checked on 2026-06-13 after `git fetch --all --prune`. No checked branch or maintained root fixes the direct-PV authority issue.
+
+| Ref | Chernarus source | Maintained Vanilla | Result |
+| --- | --- | --- | --- |
+| Current docs/source `HEAD` `f3e157f2` | `updateclient.sqf:240` gates the action client-side; `Common_AttackWaveActivate.sqf:6,8` sends `ATTACK_WAVE_INIT`; `Server_AttackWave.sqf:1,5,15,27` trusts `_supply` and publishes details; `AttackWave.sqf:19,23-25,40` trusts details and debits side supply. | Same maintained-root line shape. | Patch-ready, current-source-unpatched. |
+| Stable `origin/master` `cf2a6d6a` | Same trust shape; action line drifts to `updateclient.sqf:260`, supply cap to `Init_CommonConstants.sqf:170`. | Same maintained-root shape. | Stable remains unpatched. |
+| Miksuu upstream `upstream/master` `b8389e74` | Same trust shape; action line `updateclient.sqf:260`, supply cap `Init_CommonConstants.sqf:166`. | Same maintained-root shape. | No upstream rescue in current Miksuu head. |
+| `origin/perf/quick-wins` `0076040f` | Same trust shape; action line `updateclient.sqf:223`. | Same maintained-root shape. | Perf branch side-supply/factory fixes do not touch attack-wave authority. |
+| Release `origin/release/2026-06-feature-bundle` `a96fdda2` | Same trust shape; action line `updateclient.sqf:260`, supply cap `Init_CommonConstants.sqf:166`. | Same maintained-root shape. | Current release head does not rescue this lane. |
+| AI commander branch `origin/feat/ai-commander` `c20ce153` | Same trust shape; action line `updateclient.sqf:223`, Chernarus supply cap line drifts to `Init_CommonConstants.sqf:174`. | Same maintained-root attack-wave shape; Vanilla supply cap remains `:166`. | AI commander work is unrelated to attack-wave authority. |
+| Historical Miksuu `upstream/AttackWave` `994150da` | Same trust shape; action line `updateclient.sqf:203`, supply cap `Init_CommonConstants.sqf:145`. | Same maintained-root shape. | Treat as inherited feature debt, not a fix branch. |
+
+Fixed-string grep also found no `ATTACK_WAVE` entry in `BattlEyeFilter/publicvariable.txt` for the checked refs. Treat this as still patch-ready current-source debt, not a propagated fix.
 
 ## Failure Condition
 
