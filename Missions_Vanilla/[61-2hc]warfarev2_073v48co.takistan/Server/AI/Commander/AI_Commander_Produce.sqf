@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag"];
+private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns"];
 
 _side = _this;
 _sideText = str _side;
@@ -40,7 +40,16 @@ _structTypes = missionNamespace getVariable Format ["WFBE_%1STRUCTURES", _sideTe
 if (isNil "_structTypes") exitWith {};
 
 //--- [STRUCTURES type-name, per-factory UNITS-list suffix, upgrade-track index].
-_facDefs = [["Barracks","BARRACKSUNITS",WFBE_UP_BARRACKS], ["Light","LIGHTUNITS",WFBE_UP_LIGHT], ["Heavy","HEAVYUNITS",WFBE_UP_HEAVY], ["Aircraft","AIRCRAFTUNITS",WFBE_UP_AIR]];
+_facDefs = [["Barracks","BARRACKSUNITS",WFBE_UP_BARRACKS], ["Light","LIGHTUNITS",WFBE_UP_LIGHT], ["Heavy","HEAVYUNITS",WFBE_UP_HEAVY]];
+//--- AIRCRAFT GATE (defence-in-depth, mirrors AI_Commander_Base): only let the producer
+//--- make aircraft once the side is established (>= WFBE_C_AICOM_AIR_MIN_TOWNS towns), so a
+//--- captured/pre-placed air factory can't pump aircraft the AI flies poorly with early on.
+_myID = (_side) Call WFBE_CO_FNC_GetSideID;
+_ownTowns = 0;
+{ if ((_x getVariable "sideID") == _myID) then {_ownTowns = _ownTowns + 1} } forEach towns;
+if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) then {
+	_facDefs = _facDefs + [["Aircraft","AIRCRAFTUNITS",WFBE_UP_AIR]];
+};
 
 {
 	_team = _x;

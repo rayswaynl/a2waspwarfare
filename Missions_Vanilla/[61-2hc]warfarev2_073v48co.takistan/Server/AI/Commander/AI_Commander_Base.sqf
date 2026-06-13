@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns"];
 
 _side = _this;
 _sideText = str _side;
@@ -84,7 +84,16 @@ if (!isNil "_upgrades") then {
 };
 _order = if (_doctrine == "HF") then {["CommandCenter","Barracks","Heavy"]} else {["CommandCenter","Barracks","Light"]};
 if (_coreDone) then {
-	_order = _order + (if (_doctrine == "HF") then {["Light","ServicePoint","Aircraft"]} else {["Heavy","ServicePoint","Aircraft"]});
+	_order = _order + (if (_doctrine == "HF") then {["Light","ServicePoint"]} else {["Heavy","ServicePoint"]});
+	//--- AIRCRAFT GATE: the AI flies poorly, so the air factory is deferred until the side
+	//--- is well established (holds >= WFBE_C_AICOM_AIR_MIN_TOWNS towns). Until then it never
+	//--- enters the build order, so no air upgrades/units/teams can follow from it.
+	_myID = (_side) Call WFBE_CO_FNC_GetSideID;
+	_ownTowns = 0;
+	{ if ((_x getVariable "sideID") == _myID) then {_ownTowns = _ownTowns + 1} } forEach towns;
+	if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) then {
+		_order = _order + ["Aircraft"];
+	};
 };
 
 //--- V0.6 task 49b: experital-awareness build extension (nil-guarded, no-op on this mission).
