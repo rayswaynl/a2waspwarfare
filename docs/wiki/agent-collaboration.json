@@ -44,6 +44,36 @@
       "updated": "2026-06-13T21:01:34+02:00"
     },
     {
+      "lane": "clickabletext-soundpush-current-master-refresh",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Client-UI-Systems-Atlas.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Dead-Code-And-Stale-Code-Register.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Ressources.hpp",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc/Ressources.hpp",
+        "origin/master",
+        "upstream/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Published docs-only current-master refresh for the patch-ready RscClickableText.soundPush[] config defect; no gameplay source changed.",
+        "Docs/source f7bc72a8, current origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f, release a96fdda2 and UI theme refs 0767c0b5 / 87d86257 all keep malformed soundPush[] = {, 0.2, 1}; at Rsc/Ressources.hpp:556 in both maintained roots.",
+        "Current origin/master and release have 14 derived RscClickableText controls per maintained root; docs/source, upstream, perf and UI theme branches have 17."
+      ],
+      "handoff": "Closed as docs-published. Future UI owner should patch the base-class soundPush array in source Chernarus, propagate maintained Vanilla, and smoke gear/WF menu/HUD toggles/construction/CoIn/artillery/economy dialogs for config load plus click feedback.",
+      "updated": "2026-06-13T21:00:25+02:00"
+    },
+    {
       "lane": "p0-network-current-master-route",
       "owner": "Codex",
       "status": "published-validated-docs-only",

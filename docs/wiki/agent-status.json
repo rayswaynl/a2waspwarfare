@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published coordination-dashboard-hygiene-audit: JSON/JSONL coordination files parse cleanly, Latest Batch was kept compact at five rows, checked live active claims have no conflicting owner, and wiki/docs mirror parity was verified for the touched coordination files. No gameplay source changed.",
+      "currentWork": "Published docs-only clickable text soundPush current-master refresh and preserved the coordination-dashboard-hygiene-audit update during rebase. Docs/source f7bc72a8, current origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f, release a96fdda2 and UI theme refs still keep malformed RscClickableText.soundPush[] at Rsc/Ressources.hpp:556 in both maintained roots; current master/release have 14 derived controls, while docs/source/upstream/perf/theme branches have 17. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -61,6 +61,12 @@
       "owner": "Codex",
       "status": "published-validated",
       "output": "Audited coordination surfaces after the P0 network batch. agent-status.json and agent-collaboration.json parse cleanly, agent-events.jsonl parsed cleanly at 1004 pre-audit lines, the live active-claim set has no conflicting owner beyond the ongoing documentation-finisher-loop, Claude autonomous-ready and future-owner/watchlist lanes, and Progress-Dashboard.md Latest Batch stayed at five rows after adding this audit. docs/wiki and wiki checkout parity was verified for the coordination files before editing. No gameplay source changed."
+    },
+    {
+      "lane": "clickabletext-soundpush-current-master-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed the patch-ready RscClickableText.soundPush[] branch matrix after current refs moved beyond 89ae9dad / 7ff18c49. Docs/source HEAD f7bc72a8, current origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f, release a96fdda2 and UI theme branches 0767c0b5 / 87d86257 all keep class RscClickableText at Rsc/Ressources.hpp:541 and malformed soundPush[] = {, 0.2, 1}; at :556 in both maintained roots, with valid empty-sound precedent at :92. Current master/release have 14 derived RscClickableText controls per maintained root; docs/source, upstream, perf and UI theme branches have 17. No gameplay source changed."
     },
     {
       "lane": "p0-network-current-master-route",
