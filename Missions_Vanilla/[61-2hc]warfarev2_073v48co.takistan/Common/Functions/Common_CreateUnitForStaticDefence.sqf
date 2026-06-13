@@ -72,7 +72,10 @@ for '_i' from 0 to count(_groups)-1 do {
 	//--- Cap at 12 units per HC group; overflow creates a new group with an incremented suffix
 	//--- variable (wfbe_hc_local_grp, wfbe_hc_local_grp1, wfbe_hc_local_grp2, ...).
 	_serverTeam = _team;
-	if (!(isNull _serverTeam) && {count units _serverTeam == 0} && {!local _serverTeam}) then {
+	//--- A2: 'local' on a GROUP throws (Type Group, expected Object). On any non-server
+	//--- machine the delegated _team is by construction server-owned, so !isServer is the
+	//--- correct and trap-free "non-local group" test here.
+	if (!(isNull _serverTeam) && {count units _serverTeam == 0} && {!isServer}) then {
 		//--- _team is a server group (non-local, empty from this machine's view).
 		//--- Look for an HC-local group already bridged to it.
 		_hcLocalGrp = _serverTeam getVariable "wfbe_hc_local_grp";

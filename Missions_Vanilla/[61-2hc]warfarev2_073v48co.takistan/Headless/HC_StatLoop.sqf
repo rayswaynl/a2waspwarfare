@@ -9,7 +9,8 @@ private ["_units", "_groups"];
 
 while {true} do {
 	_units = {local _x} count allUnits;
-	_groups = {local _x} count allGroups;
+	//--- A2: 'local' accepts OBJECT only - a GROUP argument throws. Use the leader as proxy.
+	_groups = {local (leader _x)} count allGroups;
 	["HCStat", [profileName, round diag_fps, _units, _groups]] Call WFBE_CO_FNC_SendToServer;
 	sleep 60;
 };
