@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T23:29:18+02:00",
+  "generatedAt": "2026-06-13T23:39:21+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,44 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "towns-camps-capture-atlas-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Towns-Camps-And-Capture-Atlas.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_camp.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTotalCamps.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTotalCampsOnSide.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetRespawnThreeway.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_GetRespawnAvailable.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Refreshed Towns-Camps-And-Capture-Atlas.md as a branch-scoped towns/camps gateway with a top route table.",
+        "Updated current branch scope to docs checkout 3eefcb00, stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f and release a96fdda2.",
+        "Separated stable/release independent camp-capture flag fixes from docs/Miksuu/perf old-owner shapes and from the still-open repair-camp flag refresh.",
+        "Confirmed zero-camp helper fallback remains present in all checked maintained roots and documented consumer line drift for capture mode 2, threeway respawn and depot Buy Units gates.",
+        "Aligned camp rows in Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with refreshed owner evidence."
+      ],
+      "handoff": "Closed as docs-published. Future towns/camps work should use Towns-Camps-And-Capture-Atlas.md as the gateway, preserve stable/release independent-capture flag fixes when merging, add repair-side flag refresh deliberately, decide real-count versus safe-denominator semantics for zero-camp helpers, propagate maintained Vanilla deliberately and smoke independent capture, repair-camp, capture mode 2, threeway respawn and depot infantry buys on the exact target branch.",
+      "updated": "2026-06-13T23:39:21+02:00"
+    },
     {
       "lane": "upgrades-research-atlas-branch-scope-route",
       "owner": "Codex",
