@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T21:58:58+02:00",
+  "generatedAt": "2026-06-13T22:07:39+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,37 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "networking-public-variable-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Networking-And-Public-Variables.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateclient.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendMessage.sqf",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Refreshed Networking-And-Public-Variables.md as the network architecture gateway with a top routing table.",
+        "Added current branch-scope source anchors for generic PVF dispatch and direct SEND_MESSAGE on origin/master cf2a6d6a.",
+        "Marked the PVF command list as orientation only and routed complete inventory, dispatcher branch status and per-handler authority to owner pages."
+      ],
+      "handoff": "Closed as docs-published. Future network work should update Public-Variable-Channel-Index.md for inventory/filter changes, PVF-Dispatch-Implementation-Playbook.md for dispatcher lookup branch status, and Server-Authority-Migration-Map.md for per-handler authority rather than expanding the gateway page.",
+      "updated": "2026-06-13T22:07:39+02:00"
+    },
     {
       "lane": "server-runtime-branch-scope-route",
       "owner": "Codex",

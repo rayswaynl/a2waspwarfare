@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-13T21:58:58+02:00",
+  "generatedAt": "2026-06-13T22:07:39+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only Server runtime branch-scope route: Server-Gameplay-Runtime-Atlas.md now has a top route table and branch-scope map for docs checkout 6afcc58e versus origin/master cf2a6d6a on AI supply-truck startup, Patrols v2 and FPS publisher cleanup; Server-Runtime-And-Operations.md routes broad prompts there first. No gameplay source changed.",
+      "currentWork": "Published docs-only Networking public-variable route prune: Networking-And-Public-Variables.md now has a top route table, current branch-scope source anchors for generic PVF dispatch and direct SEND_MESSAGE, and routes full inventory, dispatcher matrices and per-handler authority to their owner pages. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "networking-public-variable-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Networking-And-Public-Variables.md now behaves as the network architecture gateway: it adds a top How To Use This Page routing table, records current branch-scope anchors for origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f and release a96fdda2, and marks the PVF registration list as orientation only. Full channel inventory stays on Public-Variable-Channel-Index.md, dispatcher branch status on PVF-Dispatch-Implementation-Playbook.md, and per-handler authority on Server-Authority-Migration-Map.md. No gameplay source changed."
+    },
     {
       "lane": "server-runtime-branch-scope-route",
       "owner": "Codex",

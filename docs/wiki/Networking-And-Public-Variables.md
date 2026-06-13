@@ -2,7 +2,26 @@
 
 Arma 2 OA networking here is built around public variables, public-variable event handlers and wrapper functions that dispatch named PVF commands.
 
+## How To Use This Page
+
+This page is the architecture gateway for network transport and trust boundaries. Use it to understand how public-variable traffic moves, then follow the owner page before editing a specific channel.
+
+| Need | Start here |
+| --- | --- |
+| Complete registered/direct channel inventory or BattlEye filter inputs | [Public variable channel index](Public-Variable-Channel-Index) |
+| PVF dispatcher allow-list patch shape and branch matrix for DR-1/DR-38 | [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix) |
+| Registered server PVF authority, sender authentication and DR-55 follow-up | [Server authority migration map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) |
+| Direct channel fixes for `SEND_MESSAGE`, attack waves or side supply | [Public variable channel index](Public-Variable-Channel-Index#send_message-direct-compile-branch-matrix), [Attack-wave authority playbook](Attack-Wave-Authority-Playbook), [Economy authority first cut](Economy-Authority-First-Cut) |
+| Client-side PVF effects, JIP behavior and user-visible network results | [Registered Client PVF Runtime Matrix](#registered-client-pvf-runtime-matrix) below and [Client UI systems](Client-UI-Systems-Atlas) |
+| Release/smoke readiness and open patch queues | [Feature status register](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Testing workflow](Testing-Debugging-And-Release-Workflow) |
+
+## Current Branch Scope
+
+The network branch matrices cited below use stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and release `a96fdda2`. Current stable source anchors for the generic path are `Common/Init/Init_PublicVariables.sqf:48,53`, `Server/Functions/Server_HandlePVF.sqf:14` and `Client/Functions/Client_HandlePVF.sqf:32`; direct `SEND_MESSAGE` anchors are `Client/FSM/updateclient.sqf:12`, `Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf:27` and `Common/Functions/Common_SendMessage.sqf:26,38`. This page summarizes architecture and trust boundaries; the channel index owns full inventory, the PVF playbook owns dispatcher branch status, and the server-authority map owns per-handler hardening status.
+
 ## Central PVF Registration
+
+This is a compact orientation copy of the PVF lists. Use [Public variable channel index](Public-Variable-Channel-Index#1-registered-pvf-commands) for the source-anchored, branch-maintained inventory.
 
 `Common/Init/Init_PublicVariables.sqf` creates two command lists:
 
