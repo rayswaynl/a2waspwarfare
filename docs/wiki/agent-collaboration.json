@@ -23,6 +23,32 @@
   },
   "activeClaims": [
     {
+      "lane": "client-ui-atlas-owner-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Client-UI-Systems-Atlas.md",
+        "SQF-Code-Atlas.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Command.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Ressources.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan"
+      ],
+      "outputs": [
+        "Refreshed Client-UI-Systems-Atlas.md as an orientation page: synced live wiki-only atlas deltas into docs/wiki, added a top owner-route table, condensed duplicated UI risk rows into canonical owner links, and refreshed fast-travel / RscClickableText branch matrices to origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2. SQF-Code-Atlas.md also now carries the live wiki AI-order-helper route."
+      ],
+      "handoff": "No gameplay source changed. Future code/UI owners should use the refreshed Client UI atlas as an orientation page and follow leaf owner pages for implementation matrices; Objective Ping, fast-travel fee UX and RscClickableText config fixes still need runtime smoke before release-complete wording.",
+      "updated": "2026-06-13T21:12:00+02:00"
+    },
+    {
       "lane": "ai-supply-truck-current-master-safe-disable-route",
       "owner": "Codex",
       "status": "published-validated-docs-only",

@@ -141,6 +141,7 @@ Server init owns AI, town, building, construction, special support, supply missi
 Important categories:
 
 - Legacy server functions: AI buy, AI respawn, AI orders, building damage/killed, defense construction, special supports and team updates.
+- AI order helpers are compiled as plain `preprocessFile` binds at `Server/Init/Init_Server.sqf:13-18`; their source-backed caller/status table lives in [Function and module index](Function-And-Module-Index#server-ai-order-helpers).
 - New `WFBE_SE_FNC_*` functions: town attack pathing, town groups, empty vehicle handling, PVF dispatch, town defenses, commander voting, upgrades and HQ death/repair flows.
 - Supply mission handlers: `supplyMissionStarted`, `supplyMissionCompleted`, `supplyMissionActive`, `isSupplyMissionActiveInTown`, `playerObjectsList`, `supplyMissionTimerForTown`.
 - AntiStack handlers: database retrieve/store/flush/set-map, player score sampling, team score compare, launch-side ACK.

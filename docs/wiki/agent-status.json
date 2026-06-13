@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only AI supply-truck current-master safe-disable route: current origin/master cf2a6d6a and release a96fdda2 initialize wfbe_ai_supplytrucks and log-disable legacy AI supply-truck logistics in both maintained roots; Miksuu b8389e74 and perf 0076040f still raw-spawn the missing-FSM worker. No gameplay source changed.",
+      "currentWork": "Published docs-only Client UI atlas owner-route prune: Client-UI-Systems-Atlas.md is now an orientation page with a top owner-route table, condensed UI-risk links and refreshed current-head fast-travel / RscClickableText branch matrices for origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2. SQF-Code-Atlas.md was synced with the live wiki AI-order-helper route. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "client-ui-atlas-owner-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Client-UI-Systems-Atlas.md now behaves as a UI orientation page: it has a top owner-route table, keeps indicator/cadence matrices as navigation surfaces, and routes broad risk rows to UI resource parity, UI IDD collision repair, commander vote/reassignment, factory/purchase, gear/EASA/service, support specials, performance and WASP owner pages. Current branch checks used origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f and release a96fdda2. Current/release send Objective Ping SetTask at GUI_Menu_Command.sqf:336,344; Miksuu still comments those sends; fast-travel fee UX and RscClickableText.soundPush remain patch-ready. SQF-Code-Atlas.md was synced with the live wiki AI-order-helper route. No gameplay source changed."
+    },
     {
       "lane": "ai-supply-truck-current-master-safe-disable-route",
       "owner": "Codex",
