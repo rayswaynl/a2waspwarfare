@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-13T21:20:00+02:00",
+  "generatedAt": "2026-06-13T21:42:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only Client UI atlas owner-route prune: Client-UI-Systems-Atlas.md is now an orientation page with a top owner-route table, condensed UI-risk links and refreshed current-head fast-travel / RscClickableText branch matrices for origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2. SQF-Code-Atlas.md was synced with the live wiki AI-order-helper route. No gameplay source changed.",
+      "currentWork": "Published docs-only Architecture overview owner-route prune: Architecture-Overview.md is now a gateway with a top routing table, compact runtime owner and bootstrap maps, source anchors for bootstrap/common/server/client/HC/tooling propagation, and branch-sensitive detail routed to canonical owner pages. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "architecture-overview-owner-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Architecture-Overview.md now behaves as the high-level architecture gateway: it adds a top routing table, condenses repeated init/data-flow prose into runtime owner and bootstrap maps, and preserves source anchors for description.ext, initJIPCompatible.sqf, Init_Common.sqf, Init_Server.sqf, Init_Client.sqf, Init_HC.sqf and LoadoutManager propagation/packaging. Detailed branch matrices and smoke gates remain routed to SQF atlas, lifecycle, networking, server/client, tooling and Feature Status owner pages. No gameplay source changed."
+    },
     {
       "lane": "client-ui-atlas-owner-route-prune",
       "owner": "Codex",

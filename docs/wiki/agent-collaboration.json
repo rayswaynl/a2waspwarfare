@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T21:20:00+02:00",
+  "generatedAt": "2026-06-13T21:42:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,35 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "architecture-overview-owner-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Architecture-Overview.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
+        "Tools/LoadoutManager/FileManagement/FileManager.cs",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs",
+        "Tools/LoadoutManager/ZipManager.cs"
+      ],
+      "outputs": [
+        "Refreshed Architecture-Overview.md as a high-level gateway: added a top owner-route table, compact runtime owner map, source/generated target table and bootstrap shape while routing detailed branch matrices and smoke gates to canonical owner pages.",
+        "Source anchors checked in source mission and tooling paths; no gameplay source changed."
+      ],
+      "handoff": "Closed as docs-published. Future architecture/SQF atlas passes should keep Architecture-Overview.md as a gateway and put deep branch matrices in SQF-Code-Atlas.md, lifecycle, tooling, networking or subsystem owner pages.",
+      "updated": "2026-06-13T21:42:00+02:00"
+    },
     {
       "lane": "client-ui-atlas-owner-route-prune",
       "owner": "Codex",

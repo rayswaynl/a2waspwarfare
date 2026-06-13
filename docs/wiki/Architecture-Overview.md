@@ -4,58 +4,60 @@ For upstream development patterns and negative knowledge from Miksuu PRs, revert
 
 The repository is an Arma 2 OA Warfare/CTI mission derived from Benny's Warfare and actively modernized for the Miksuu/WASP server. The core runtime is SQF in a mission folder, surrounded by C# helper tools, a Discord status bot, and a Windows extension bridge.
 
-## Runtime Partitions
+## How To Use This Page
 
-- `Common`: shared constants, config, utility functions, public-variable registration, faction/core data, artillery and shared modules.
-- `Server`: authoritative game state, economy, towns, AI spawning, victory checks, PVF request handling, cleanup, callExtension integration, anti-stack/database hooks.
-- `Client`: UI, menus, player actions, local HUD/marker loops, skill modules, supply mission start flow, map interactions, PVF client handlers.
-- `Headless`: detection and initialization for headless clients. The mission disables headless delegation when the OA build is too old.
-- `WASP`: older/custom gameplay layer with MHQ repair, RPG dropping, base repair and marker monitor scripts. Some of it is still present but one old init block is commented out.
+Use this page to choose the right owner document. Keep detailed branch matrices, patch shapes and smoke checklists in the narrower pages.
 
-Partition caveat: `Common/Init/Init_Common.sqf` is mostly shared, but it also contains server-only compile/setup branches guarded by `isServer` around `:301-307`. Do not treat `Common` as purely client-safe shared code when moving compile registrations; confirm the branch owner first.
+| Need | Open this |
+| --- | --- |
+| Boot order, role detection and JIP waits | [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle), [Lifecycle wait-chain](Lifecycle-Wait-Chain), [SQF code atlas](SQF-Code-Atlas) |
+| Function compile ownership and runtime wiring | [SQF code atlas](SQF-Code-Atlas), [Function and module index](Function-And-Module-Index), [Variable and naming conventions](Variable-And-Naming-Conventions) |
+| Server loops, operations and integrations | [Server runtime and operations](Server-Runtime-And-Operations), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), [External integrations](External-Integrations) |
+| Networking, PV/PVF and authority hardening | [Networking and public variables](Networking-And-Public-Variables), [Public variable channel index](Public-Variable-Channel-Index), [Server authority migration map](Server-Authority-Migration-Map), [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook) |
+| Client UI, menus, HUD and markers | [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map) |
+| Economy, construction, upgrades, AI, supports and artillery | [Economy, towns and supply](Economy-Towns-And-Supply), [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas), [Upgrades and research](Upgrades-And-Research-Atlas), [AI/headless/performance](AI-Headless-And-Performance), [Support specials and tactical modules atlas](Support-Specials-And-Tactical-Modules-Atlas) |
+| Generated targets, release propagation and branch status | [Tools and build workflow](Tools-And-Build-Workflow), [Agent release readiness ledger](Agent-Release-Readiness-Ledger), [Current source status snapshot](Current-Source-Status-Snapshot), [Feature status register](Feature-Status-Register) |
 
-## Source Mission Versus Generated Missions
+## Runtime Owner Map
 
-`Missions/[55-2hc]warfarev2_073v48co.chernarus` is the authoritative mission folder. The Takistan vanilla folder and modded mission folders are copy/generation outputs. The repo instructions say mission edits should be made in Chernarus, then copied with `Tools/LoadoutManager` via `dotnet run`.
+| Partition | Primary responsibility | Source anchors | Deeper owner |
+| --- | --- | --- | --- |
+| `Common` | Shared constants, config imports, utility functions, public-variable registration, faction/core data, artillery and shared modules. | `Common/Init/Init_Common.sqf:6-85`, `:94-160`, `:289-323`, `:369-371` | [SQF code atlas](SQF-Code-Atlas), [Assets/config/localization atlas](Assets-Config-Localization-And-Parameters-Atlas) |
+| `Server` | Authoritative side logic, economy state, towns, AI spawning, victory checks, PVF request handling, cleanup, extension hooks, AntiStack and server metrics. | `Server/Init/Init_Server.sqf:10-95`, `:355-386`, `:507-538`, `:577-620` | [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), [Server runtime and operations](Server-Runtime-And-Operations) |
+| `Client` | UI, menus, player actions, local HUD/marker loops, skill modules, supply mission start flow, map interactions and client PVF handlers. | `Client/Init/Init_Client.sqf:49-140`, `:324-339`, `:360-388`, `:490-509`, `:547-595`, `:773-789` | [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map) |
+| `Headless` | Headless-client function subset and registration into server delegation. | `initJIPCompatible.sqf:164-170`, `:236-238`; `Headless/Init/Init_HC.sqf:4-15` | [AI/headless/performance](AI-Headless-And-Performance), [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook) |
+| `WASP` | Custom gameplay overlay such as RPG drop, base repair, marker monitor and start-vehicle additions. | `initJIPCompatible.sqf:241-245` keeps the old WASP bootstrap commented; live client wiring starts from `Client/Init/Init_Client.sqf:15`, `:573-574`, and WASP start vehicles are server-created in `Server/Init/Init_Server.sqf:425-463`. | [WASP overlay](WASP-Overlay), [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup) |
 
-## Initialization Model
+Partition caveat: `Common/Init/Init_Common.sqf` is not purely client-safe shared code. It imports public variables at `:294-295`, but also has server-only group config under `if (isServer)` at `:302-308`. Confirm the owner before moving compile or config registration.
 
-`initJIPCompatible.sqf` is the main bootstrap. It:
+## Source And Generated Targets
 
-- logs map, mission name, start distance, player count and log-content state;
-- detects hosted server, dedicated server, normal client and headless client;
-- reads mission parameters and common constants;
-- starts `Common/Init/Init_Common.sqf` and `Common/Init/Init_Towns.sqf`;
-- starts `Server/Init/Init_Server.sqf` on server/host;
-- starts `Client/Init/Init_Client.sqf` on clients after side logic is ready;
-- starts `Headless/Init/Init_HC.sqf` on headless clients.
+`Missions/[55-2hc]warfarev2_073v48co.chernarus` is the source mission for gameplay edits. Maintained Vanilla/Takistan is generated or copied from that source family; modded folders are not a safe propagation target unless a tooling owner explicitly claims them.
 
-Boot fragility callouts:
+| Target / tool | Current source-backed rule |
+| --- | --- |
+| Source mission | Edit Chernarus first for gameplay/source changes. `description.ext:39-58` includes generated `version.sqf`, sounds/music and the resource/dialog/title/parameter headers. |
+| LoadoutManager root | Root discovery is branch-sensitive; keep the branch matrix in [Tools and build workflow](Tools-And-Build-Workflow). In this checkout, `FileManager.cs:176-188` accepts either a correctly named ancestor or a repo-like root with `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj`. |
+| Maintained generated targets | `SqfFileGenerator.cs:128-129` writes Chernarus and Takistan terrain outputs; `:131-132` keeps modded terrain writing commented. |
+| Packaging | `ZipManager.cs:16` packages `Missions` and `Missions_Vanilla`; `Modded_Missions` is commented out. `ZipManager.cs:96` supports `A2WASP_SKIP_ZIP` for propagation-only runs. |
 
-- Headless init currently uses `Headless/Init/Init_HC.sqf:12` `sleep 20` and announces `connected-hc` at `:15`; it does not wait on `serverInitFull` from `Server/Init/Init_Server.sqf:507`. Treat this as a timing proxy, not a dependency barrier.
-- Client/JIP startup waits for replicated globals such as `townInit`, `wfbe_structures`, `wfbe_commander`, `wfbe_radio_hq`, `wfbe_startpos`, `wfbe_hq_deployed` and `wfbe_votetime` without timeout/retry fallbacks. The canonical wait graph lives in [Lifecycle wait-chain](Lifecycle-Wait-Chain).
-- Server init still has duplicate/legacy compile registrations in the early compile block. Keep init hygiene notes in [Mission entrypoints](Mission-Entrypoints-And-Lifecycle) and [SQF code atlas](SQF-Code-Atlas) close to any compile refactor.
+## Bootstrap Shape
 
-## Data Flow At A Glance
+`initJIPCompatible.sqf` is the front-door role router. It imports MP parameters and constants at `:121-123`, applies Air Event/debug overrides at `:125-162`, gates headless support at `:164-170`, starts Common/Towns at `:214-215`, starts Server at `:217-220`, waits for side team state before Client at `:223-233`, and starts Headless at `:236-238`.
 
-1. `description.ext` includes version, sounds, music, resource/dialog/title definitions and mission parameters.
-2. `initJIPCompatible.sqf` initializes globals, common constants and runtime partition entrypoints.
-3. `Init_Common.sqf` compiles shared functions, loads faction/core/gear/defense/group config, and registers PVF handlers.
-4. `Init_Server.sqf` creates side logic state, server functions, AI/town loops, cleanup loops, anti-stack, server FPS publishing and day/night authority.
-5. `Init_Client.sqf` compiles local functions, wires player event handlers, UI actions, hotkeys, skill/action modules, client marker loops and HUD behavior.
+The exact wait graph belongs in [Lifecycle wait-chain](Lifecycle-Wait-Chain). The exact compile registry belongs in [SQF code atlas](SQF-Code-Atlas). The high-risk architecture fact is the separation of ownership: server creates replicated side/team/HQ state (`Init_Server.sqf:355-386`, `:465-502`), clients wait for that state and wire local UI/action/runtime surfaces (`Init_Client.sqf:360-388`, `:459-509`, `:787-789`), and headless clients still register after a fixed sleep rather than an explicit `serverInitFull` barrier (`Headless/Init/Init_HC.sqf:11-15` versus `Init_Server.sqf:507`).
 
 
 ## Representative Source Anchors
 
 | Claim | Source anchors |
 | --- | --- |
-| Mission front door and include graph | `description.ext:37-69` defines version/debug switches and includes sounds, music, resource/dialog/title/parameter headers. |
-| Runtime role detection and shared constants | `initJIPCompatible.sqf:132-134` loads MP parameters and common constants; `:185-193` gates headless-client support by OA build. |
-| Common compile/config layer | `Common/Init/Init_Common.sqf:19-63` compiles economy/town/helper functions; `:147-149` selects the OA/vanilla server-send wrapper. |
-| Common side-presence/defender setup | `Common/Init/Init_Common.sqf:273-285` detects which side logics exist and fills `WFBE_PRESENTSIDES`, then still fixes `WFBE_DEFENDER = resistance`; the inline TODO is about making defender/logic presence dynamic, not proof that current two-side play is broken. |
-| Server-owned loops | `Server/Init/Init_Server.sqf:509-531` launches town, town-AI, victory and resource loops; `:577-595` starts FPS publishers and performance helpers. |
-| Client-owned UI/action layer | `Client/Init/Init_Client.sqf:49-65` compiles local UI/player helpers; `:492-503` initializes CoIn and JIP HQ killed handling. |
-| Headless entry point | `Headless/Init/Init_HC.sqf:4-15` compiles delegation handlers and announces the HC to the server through `RequestSpecial`. |
+| Mission front door and include graph | `description.ext:39-58` includes `version.sqf`, sound/music headers and the `Rsc` header/style/parameter/resource/dialog/title files. |
+| Runtime role dispatch | `initJIPCompatible.sqf:214-238` starts Common, Towns, Server, Client and Headless branches after parameter setup. |
+| Common side-presence/defender setup | `Common/Init/Init_Common.sqf:273-287` detects which side logics exist and fills `WFBE_PRESENTSIDES`, then still fixes `WFBE_DEFENDER = resistance`; keep dynamic-defender work routed through the lifecycle/feature owner pages. |
+| Server replicated state and loops | `Server/Init/Init_Server.sqf:355-386` seeds side logic state; `:507-538` starts town/victory/resource/collector loops; `:577-620` starts server FPS, PerformanceAudit, AntiStack and player-list follow-up work. |
+| Client waits and local runtime surfaces | `Client/Init/Init_Client.sqf:360-388` waits for town/structure/commander state before client FSMs; `:459-509` handles spawn/HQ/CoIn setup; `:773-789` finishes load-in and vote-menu state. |
+| Headless timing edge | `Headless/Init/Init_HC.sqf:11-15` uses `sleep 20` before `connected-hc`; it is not an explicit wait on `serverInitFull` from `Server/Init/Init_Server.sqf:507`. |
 
 ## Development Philosophy
 
