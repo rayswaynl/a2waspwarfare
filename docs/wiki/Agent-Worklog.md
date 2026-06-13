@@ -633,3 +633,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Source-checked the bootstrap and owner anchors in the source mission: `description.ext:39-58`, `initJIPCompatible.sqf:121-123,214-238`, `Common/Init/Init_Common.sqf:273-308,369-371`, `Server/Init/Init_Server.sqf:355-386,507-538,577-620`, `Client/Init/Init_Client.sqf:360-388,459-509,773-789`, and `Headless/Init/Init_HC.sqf:11-15`.
 - Source-checked propagation/tooling anchors: `Tools/LoadoutManager/FileManagement/FileManager.cs:176-188`, `SqfFileGenerator.cs:128-132`, and `ZipManager.cs:16,96`. Because root discovery is branch-sensitive, [Architecture overview](Architecture-Overview) now routes the branch matrix back to [Tools and build workflow](Tools-And-Build-Workflow).
 - Refreshed [Architecture overview](Architecture-Overview) as a lean gateway: added a top routing table, replaced repeated init/data-flow prose with compact runtime owner and bootstrap maps, and kept detailed branch matrices/smoke gates on owner pages. No gameplay source changed.
+
+## 2026-06-13T21:48:39+02:00 - Codex - SQF atlas compile registry refresh
+
+- Claimed `sqf-atlas-compile-registry-refresh` as a docs-only architecture/atlas pass, with no gameplay source edits.
+- Recounted the current docs/source checkout `docs/developer-wiki-index` at `04a60e43` against `Missions/[55-2hc]warfarev2_073v48co.chernarus` with `Select-String -SimpleMatch 'preprocessFile'` over all `.sqf` files.
+- Result: 738 total compile references, 460 `preprocessFileLineNumbers`, 278 plain `preprocessFile`, 22 commented references; target areas are root/bootstrap 7, `Common` 492, `Client` 142, `Server` 92, `Headless` 4 and `WASP` 1. Top registrars remain `Init_Common.sqf` 196, `Init_Client.sqf` 111 and `Init_Server.sqf` 90.
+- Refreshed [SQF code atlas](SQF-Code-Atlas) with a top "How To Use This Atlas" routing table, updated the compile-registry snapshot, and added a branch-local caveat because `origin/master` `cf2a6d6a` has mission-source drift from this docs checkout. No gameplay source changed.

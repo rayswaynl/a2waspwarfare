@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-13T21:42:00+02:00",
+  "generatedAt": "2026-06-13T21:48:39+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,8 +21,8 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only Architecture overview owner-route prune: Architecture-Overview.md is now a gateway with a top routing table, compact runtime owner and bootstrap maps, source anchors for bootstrap/common/server/client/HC/tooling propagation, and branch-sensitive detail routed to canonical owner pages. No gameplay source changed.",
-      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
+      "currentWork": "Published docs-only SQF atlas compile-registry refresh: SQF-Code-Atlas.md now has a top routing table, a refreshed docs-branch 04a60e43 compile snapshot with 738 preprocessFile references, corrected Client/Init_Client counts and a branch-local caveat for origin/master cf2a6d6a drift. No gameplay source changed.",
+      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "sqf-atlas-compile-registry-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "SQF-Code-Atlas.md now behaves as a clearer compile/navigation map: it replaces broad related-routing bullets with a top How To Use This Atlas table, refreshes the docs/developer-wiki-index 04a60e43 source mission snapshot to 738 preprocessFile references (460 line-numbered, 278 plain, 22 commented), corrects Client area and Init_Client.sqf counts, and warns that origin/master cf2a6d6a has mission-source drift and must be recounted separately. No gameplay source changed."
+    },
     {
       "lane": "architecture-overview-owner-route-prune",
       "owner": "Codex",

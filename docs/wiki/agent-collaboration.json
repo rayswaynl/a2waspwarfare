@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T21:42:00+02:00",
+  "generatedAt": "2026-06-13T21:48:39+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,29 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "sqf-atlas-compile-registry-refresh",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "SQF-Code-Atlas.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "origin/master"
+      ],
+      "outputs": [
+        "Refreshed SQF-Code-Atlas.md as a compile/navigation map with a top routing table and updated compile-registry snapshot.",
+        "Recounted docs/developer-wiki-index 04a60e43 source mission at 738 preprocessFile references: 460 preprocessFileLineNumbers, 278 plain preprocessFile and 22 commented references.",
+        "Corrected Client area / Init_Client.sqf counts and added a branch-local caveat because origin/master cf2a6d6a has mission-source drift from this docs checkout."
+      ],
+      "handoff": "Closed as docs-published. Future branch-status work should rerun the compile count on the exact target ref before using counts as branch evidence, and keep deep implementation matrices on owner pages rather than expanding SQF-Code-Atlas.md.",
+      "updated": "2026-06-13T21:48:39+02:00"
+    },
     {
       "lane": "architecture-overview-owner-route-prune",
       "owner": "Codex",

@@ -19,34 +19,49 @@ Source mission: `Missions/[55-2hc]warfarev2_073v48co.chernarus`
 - Runtime anchors: `initJIPCompatible.sqf`, `Common/Init/Init_Common.sqf`, `Init_Server.sqf`, `Init_Client.sqf`, `Init_HC.sqf`.
 - Scope boundary: this atlas maps compile ownership and risk hotspots; implementation order and authority behavior live in subsystem atlases and feature lanes.
 
-## Related routing
+## How To Use This Atlas
 
-- Launch path: [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle) and [Lifecycle wait-chain](Lifecycle-Wait-Chain).
-- Networking and authority: [Public variable channel index](Public-Variable-Channel-Index), [Networking and public variables](Networking-And-Public-Variables), [Feature status register](Feature-Status-Register).
-- Subsystem follow-up:
-  - [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas)
-  - [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas)
-  - [Economy, towns and supply](Economy-Towns-And-Supply)
+This page is the source map for compiled SQF entrypoints and runtime handoffs. Use it to find the owning script family, then follow the owner page for branch matrices, patch gates or Arma smoke requirements.
+
+| Need | Start here | Then route to |
+| --- | --- | --- |
+| Boot order and wait gates | [Init Owners](#init-owners) | [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle), [Lifecycle wait-chain](Lifecycle-Wait-Chain) |
+| Compile ownership and function maps | [Compile Registry Summary](#compile-registry-summary) | [Function and module index](Function-And-Module-Index), [Architecture overview](Architecture-Overview) |
+| PVF and direct public-variable channels | [PVF Contract](#pvf-contract), [Direct Public Variable Channels](#direct-public-variable-channels) | [Public variable channel index](Public-Variable-Channel-Index), [Networking and public variables](Networking-And-Public-Variables), [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook) |
+| Server runtime loops and authority | [Init Owners](#init-owners) | [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), [Server runtime and operations](Server-Runtime-And-Operations), [Server authority migration map](Server-Authority-Migration-Map) |
+| Client UI, HUD and menu entrypoints | [Init Owners](#init-owners) | [Client UI systems atlas](Client-UI-Systems-Atlas), [Player UI workflow map](Player-UI-Workflow-Map) |
+| Branch health and patch routing | This page for source ownership only | [Feature status register](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Hardening roadmap](Hardening-Implementation-Roadmap) |
+| Generated/source propagation | [Compile Registry Summary](#compile-registry-summary) | [Tools and build workflow](Tools-And-Build-Workflow), [Agent release readiness ledger](Agent-Release-Readiness-Ledger), [Current source status snapshot](Current-Source-Status-Snapshot) |
 
 ## Compile Registry Summary
 
-Point-in-time recount: 2026-06-02, source mission `Missions/[55-2hc]warfarev2_073v48co.chernarus`, all `.sqf` files, `Select-String -SimpleMatch 'preprocessFile'`. This deliberately counts `preprocessFile` as a substring of `preprocessFileLineNumbers`, so plain `preprocessFile` is `total - preprocessFileLineNumbers`. See [Deep-review findings](Deep-Review-Findings) DR-5 for why these counts must be regenerated before relying on them.
+Snapshot refreshed 2026-06-13 from the source mission in this docs checkout, `docs/developer-wiki-index` at `04a60e43`: `Missions/[55-2hc]warfarev2_073v48co.chernarus`, all `.sqf` files, `Select-String -SimpleMatch 'preprocessFile'`. This deliberately counts `preprocessFile` as a substring of `preprocessFileLineNumbers`, so plain `preprocessFile` is `total - preprocessFileLineNumbers`. See [Deep-review findings](Deep-Review-Findings) DR-5 for why these counts must be regenerated before relying on them.
 
-The source mission currently contains 739 `preprocessFile` references:
+This snapshot is branch-local. `origin/master` is currently `cf2a6d6a` and has mission-source drift from this docs checkout, so rerun the command on each target branch before using these counts as branch evidence.
+
+The source mission in this checkout contains 738 `preprocessFile` references:
 
 | Kind | Count | Notes |
 | --- | ---: | --- |
 | `preprocessFileLineNumbers` | 460 | Preferred for source-backed runtime errors and debugging. |
-| plain `preprocessFile` | 279 | Older or performance/legacy style compiles; still common in init files. |
-| commented compile references | 21 | Includes disabled systems, duplicate old lines and experiments. |
+| plain `preprocessFile` | 278 | Older or performance/legacy style compiles; still common in init files. |
+| commented compile references | 22 | Includes disabled systems, duplicate old lines and experiments. |
 
-Regenerate from the mission root with:
+Regenerate from the repo root with:
 
 ```powershell
-$files = Get-ChildItem -Recurse -Filter *.sqf
-$total = ($files | Select-String -SimpleMatch 'preprocessFile').Count
-$lineNumbers = ($files | Select-String -SimpleMatch 'preprocessFileLineNumbers').Count
-[pscustomobject]@{ Total = $total; PreprocessFileLineNumbers = $lineNumbers; PlainPreprocessFile = $total - $lineNumbers }
+$root = 'Missions/[55-2hc]warfarev2_073v48co.chernarus'
+$rootFull = (Resolve-Path -LiteralPath $root).Path
+$records = Get-ChildItem -LiteralPath $root -Recurse -Filter *.sqf | ForEach-Object {
+  Select-String -LiteralPath $_.FullName -SimpleMatch 'preprocessFile' | ForEach-Object {
+    $rel = $_.Path.Substring($rootFull.Length).TrimStart([char]'\',[char]'/')
+    [pscustomobject]@{ Path = $rel; Text = $_.Line.Trim() }
+  }
+}
+$total = @($records).Count
+$lineNumbers = @($records | Where-Object Text -Match '(?i)preprocessFileLineNumbers').Count
+$commented = @($records | Where-Object Text -Match '^\s*(//|/\*|\*)').Count
+[pscustomobject]@{ Total = $total; PreprocessFileLineNumbers = $lineNumbers; PlainPreprocessFile = $total - $lineNumbers; Commented = $commented }
 ```
 
 Target area counts:
@@ -55,25 +70,25 @@ Target area counts:
 | --- | ---: |
 | root/bootstrap `.sqf` files | 7 |
 | `Common` | 492 |
-| `Client` | 143 |
+| `Client` | 142 |
 | `Server` | 92 |
 | `Headless` | 4 |
 | `WASP` | 1 |
 
-Top source registrars:
+Top source registrars, with ties not meaningful:
 
 | Registrar | Count |
 | --- | ---: |
 | `Common/Init/Init_Common.sqf` | 196 |
-| `Client/Init/Init_Client.sqf` | 112 |
+| `Client/Init/Init_Client.sqf` | 111 |
 | `Server/Init/Init_Server.sqf` | 90 |
-| `Common/Config/Core_Root/Root_GUE.sqf` | 12 |
 | `Common/Config/Core_Root/Root_TKA.sqf` | 12 |
+| `Common/Config/Core_Root/Root_GUE.sqf` | 12 |
 | `Common/Config/Core_Root/Root_USMC.sqf` | 12 |
-| `Common/Config/Core_Root/Root_PMC.sqf` | 11 |
-| `Common/Config/Core_Root/Root_RU.sqf` | 11 |
-| `Common/Config/Core_Root/Root_TKGUE.sqf` | 11 |
 | `Common/Config/Core_Root/Root_US_Camo.sqf` | 11 |
+| `Common/Config/Core_Root/Root_TKGUE.sqf` | 11 |
+| `Common/Config/Core_Root/Root_RU.sqf` | 11 |
+| `Common/Config/Core_Root/Root_PMC.sqf` | 11 |
 
 ## Init Owners
 
