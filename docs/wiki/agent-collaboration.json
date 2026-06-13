@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T22:07:39+02:00",
+  "generatedAt": "2026-06-13T22:17:09+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,37 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "support-specials-route-upgrade-sync-refresh",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Support-Specials-And-Tactical-Modules-Atlas.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_UpgradeMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ProcessUpgrade.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_UpgradeMenu.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_ProcessUpgrade.sqf",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Refreshed Support-Specials-And-Tactical-Modules-Atlas.md as the support/tactical gateway with a top routing table.",
+        "Added branch-scope framing so authority, economy, ICBM, service and supply implementation work routes to owner pages.",
+        "Updated the upgrade-sync matrix from stale 89ae9dad / 7ff18c49 refs to docs checkout 295cc9d5, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2."
+      ],
+      "handoff": "Closed as docs-published. Future support work should update this page for orientation/source anchors, but keep RequestSpecial authority on Server-Authority-Migration-Map.md, ICBM on ICBM-Authority-Playbook.md, service actions on Service-Menu-Affordability-Guards.md and supply on Supply-Mission-Authority-Cleanup-Playbook.md.",
+      "updated": "2026-06-13T22:17:09+02:00"
+    },
     {
       "lane": "networking-public-variable-route-prune",
       "owner": "Codex",

@@ -2,6 +2,24 @@
 
 This atlas maps support calls, specials and tactical modules: paratroopers, paradrops, UAV, artillery, ICBM/Nuke, MASH, airlift/ZetaCargo, service actions and supply mission hooks.
 
+## How To Use This Page
+
+This page is the support/tactical gateway. Use it to identify which runtime family owns an effect, then follow the owner page before editing authority, economy, networking or smoke status.
+
+| Need | Start here |
+| --- | --- |
+| Tactical menu entry points, button gates and local support flow | [Tactical Menu Entry Points](#tactical-menu-entry-points) below and [Client UI systems](Client-UI-Systems-Atlas) |
+| `RequestSpecial` server authority and forged-payload risk | [Server Dispatch And PV Paths](#server-dispatch-and-pv-paths), [Server authority migration map](Server-Authority-Migration-Map) |
+| ICBM/nuke hardening | [ICBM authority](ICBM-Authority-Playbook) |
+| Artillery visibility, commander-built ARTY and fire-mission smoke | [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas), [Testing workflow](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack) |
+| Supply missions, service actions or client-side funds/debits | [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook), [Service menu affordability guards](Service-Menu-Affordability-Guards), [Economy authority first cut](Economy-Authority-First-Cut) |
+| MASH, UAV, ZetaCargo, AAR or aircraft ordnance leaf behavior | [Module Deep Dives](#module-deep-dives) and [Aircraft Ordnance Guardrails](#aircraft-ordnance-guardrails) below |
+| Branch/release readiness for support fixes | [Feature status register](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), [Testing workflow](Testing-Debugging-And-Release-Workflow) |
+
+## Current Branch Scope
+
+This atlas carries support orientation and selected source anchors. Deep hardening status belongs on owner pages: [Server authority migration map](Server-Authority-Migration-Map) for `RequestSpecial`, [ICBM authority](ICBM-Authority-Playbook) for nuke, [Service menu affordability guards](Service-Menu-Affordability-Guards) for service actions, and [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) for supply. The `upgrade-sync` matrix below was refreshed against docs checkout `295cc9d5`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and release `a96fdda2`; all checked roots still keep the mixed `_args` / `_this` parser in `Server_HandleSpecial.sqf:67-73`.
+
 ## Tactical Menu Entry Points
 
 The main support UI is `Client/GUI/GUI_Menu_Tactical.sqf`.
@@ -35,12 +53,12 @@ Mini-scout follow-up 2026-06-04 tightened the authority map:
 
 | Root / branch | Evidence | Status |
 | --- | --- | --- |
-| Current source Chernarus | `Server_HandleSpecial.sqf:3,67-73` assigns `_args = _this`, reads `_side` from `_args select 1`, then `_upgrade_id` / `_upgrade_level` from `_this select 2/3`; `GUI_UpgradeMenu.sqf:241` sends `["upgrade-sync", WFBE_Client_SideJoined, _this select 0, _this select 1]`; `Server_ProcessUpgrade.sqf:26,29,35` owns the sync variable. | Mixed-source reads remain; current behavior is equivalent but fragile. |
-| Maintained Vanilla Takistan | Same maintained-root shape in `Server_HandleSpecial.sqf:3,67-73`, `GUI_UpgradeMenu.sqf:241` and `Server_ProcessUpgrade.sqf:26,29,35`. | Needs the same cleanup if source is patched. |
-| Current `origin/master` / local `master` `89ae9dad` | Same mixed `_args` / `_this` branch in both maintained roots; caller line `GUI_UpgradeMenu.sqf:241`. The `2cdf5fb8..89ae9dad` diff does not touch the checked handler/caller/process-upgrade files. | No stable-master rescue. |
-| Miksuu upstream `89ae9dad` | Same mixed branch and caller tuple in both maintained roots. | No upstream rescue. |
-| `origin/perf/quick-wins` `0076040f` | Same mixed branch and caller tuple in both maintained roots. | Perf branch does not touch this router path. |
-| Release `origin/release/2026-06-feature-bundle` `7ff18c49` | Same mixed branch in both maintained roots; release Chernarus and maintained Vanilla callers both shifted to `GUI_UpgradeMenu.sqf:254`. The `fb3084c2..7ff18c49` release delta has no relevant diff in `Server_HandleSpecial.sqf` or `GUI_UpgradeMenu.sqf`. | No release rescue; only release-root line drift. |
+| Docs checkout Chernarus `295cc9d5` | `Server_HandleSpecial.sqf:3,67-73` assigns `_args = _this`, reads `_side` from `_args select 1`, then `_upgrade_id` / `_upgrade_level` from `_this select 2/3`; `GUI_UpgradeMenu.sqf:171` sends `["upgrade-sync", WFBE_Client_SideJoined, _this select 0, _this select 1]`; `Server_ProcessUpgrade.sqf:26,29,35` owns the sync variable. | Mixed-source reads remain; current behavior is equivalent but fragile. |
+| Docs checkout maintained Vanilla `295cc9d5` | Same maintained-root shape in `Server_HandleSpecial.sqf:3,67-73`, `GUI_UpgradeMenu.sqf:171` and `Server_ProcessUpgrade.sqf:26,29,35`. | Needs the same cleanup if source is patched. |
+| Stable `origin/master` `cf2a6d6a` | Same mixed `_args` / `_this` branch in both maintained roots; Chernarus and maintained Vanilla callers shifted to `GUI_UpgradeMenu.sqf:268` after the upgrade-menu countdown/status work. `Server_ProcessUpgrade.sqf:26,29,35` still owns the sync variable. | No stable-master rescue; only caller line drift from the docs checkout. |
+| Miksuu upstream `b8389e74` | Same mixed branch in both maintained roots; caller line `GUI_UpgradeMenu.sqf:241`; `Server_ProcessUpgrade.sqf:26,29,35` still owns the sync variable. | No upstream rescue. |
+| `origin/perf/quick-wins` `0076040f` | Same mixed branch in both maintained roots; caller line `GUI_UpgradeMenu.sqf:241`; `Server_ProcessUpgrade.sqf:26,29,35` still owns the sync variable. | Perf branch does not touch this router path. |
+| Release `origin/release/2026-06-feature-bundle` `a96fdda2` | Same mixed branch in both maintained roots; release Chernarus and maintained Vanilla callers both sit at `GUI_UpgradeMenu.sqf:254`; `Server_ProcessUpgrade.sqf:26,29,35` still owns the sync variable. | No release rescue; only release-root line drift. |
 
 Patch order: normalize the branch to read side/id/level from `_args` only, add a short tuple comment or helper-local guard if editing the router, keep RequestUpgrade authority migration separate, propagate maintained Vanilla, then smoke normal commander upgrade completion, non-server client timer sync, malformed/short payload rejection and AI commander upgrade progress.
 
