@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T00:07:14+02:00",
+  "generatedAt": "2026-06-14T00:26:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only commander vote/reassignment branch-scope route: Commander-Vote-And-Reassignment-Playbook.md now has a top route table and current branch scope for docs checkout e2c9f6ed, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f, release a96fdda2 and feat/ai-commander c20ce153; vote AI/no-commander semantics remain unpatched everywhere checked; Commander-Reassignment-Call-Shape.md owns the DR-15 helper branch matrix; and Feature-Status-Register.md plus Source-Fix-Propagation-Queue.md now align commander reassignment and Objective Ping current-head wording. No gameplay source changed.",
+      "currentWork": "Published docs-only marker cleanup/restoration branch-scope route: Marker-Cleanup-Restoration-Systems-Atlas.md now has a top route table, current branch scope for docs checkout 634a907b, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2, and refreshed cleanup startup anchors at Init_Server.sqf:528-560. The empty supply-truck matrix confirms all checked Chernarus and maintained Vanilla roots still drain emptyVehicles via emptyvehiclescollector.sqf:9,15-19,30 and set supply-truck _delay = 86400 at Server_HandleEmptyVehicle.sqf:23; Feature-Status-Register.md and Source-Fix-Propagation-Queue.md now align. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "marker-cleanup-restoration-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Marker-Cleanup-Restoration-Systems-Atlas.md now behaves as the marker/object-lifecycle cleanup gateway: it adds a top route table, names current branch scope for docs checkout 634a907b, stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f and release a96fdda2, updates cleanup startup anchors to Init_Server.sqf:528-560, and refreshes the empty supply-truck branch matrix. All checked Chernarus and maintained Vanilla roots still drain WF_Logic emptyVehicles via emptyvehiclescollector.sqf:9,15-19,30 and hard-code supply-truck _delay = 86400 at Server_HandleEmptyVehicle.sqf:23. Feature-Status-Register.md and Source-Fix-Propagation-Queue.md now align to the refreshed owner evidence. No gameplay source changed."
+    },
     {
       "lane": "commander-vote-reassign-branch-scope-route",
       "owner": "Codex",

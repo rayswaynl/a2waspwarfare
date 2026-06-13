@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T00:07:14+02:00",
+  "generatedAt": "2026-06-14T00:26:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,41 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "marker-cleanup-restoration-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Marker-Cleanup-Restoration-Systems-Atlas.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "agent-feature-status.jsonl",
+        "agent-hardening-backlog.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/emptyvehiclescollector.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleEmptyVehicle.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/FSM/emptyvehiclescollector.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_HandleEmptyVehicle.sqf",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Refreshed Marker-Cleanup-Restoration-Systems-Atlas.md as the marker/object-lifecycle cleanup gateway with a top route table.",
+        "Added current branch scope for docs checkout 634a907b, stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f and release a96fdda2.",
+        "Confirmed all checked Chernarus and maintained Vanilla roots still drain WF_Logic emptyVehicles through emptyvehiclescollector.sqf:9,15-19,30 and then hard-code supply-truck _delay = 86400 at Server_HandleEmptyVehicle.sqf:23.",
+        "Updated cleanup startup anchors to Init_Server.sqf:528-560 and aligned Feature-Status-Register.md plus Source-Fix-Propagation-Queue.md."
+      ],
+      "handoff": "Closed as docs-published. Future runtime/logistics work should use Marker-Cleanup-Restoration-Systems-Atlas.md for marker/object cleanup routing and the empty supply-truck branch matrix; decide keep-and-label versus shorter/parameterized timeout before any gameplay source patch, then propagate maintained Vanilla and smoke ordinary empty vehicles, medical/repair double-timeout vehicles, supply trucks in logistics/supply use and long-match object counts.",
+      "updated": "2026-06-14T00:26:00+02:00"
+    },
     {
       "lane": "commander-vote-reassign-branch-scope-route",
       "owner": "Codex",
