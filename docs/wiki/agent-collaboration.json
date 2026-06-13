@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T21:01:34+02:00",
+  "generatedAt": "2026-06-13T21:04:23+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,36 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "hq-kill-score-double-award-branch-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Agent-Worklog.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Commander-HQ-Lifecycle-Atlas.md",
+        "agent-feature-status.jsonl",
+        "agent-hardening-backlog.jsonl",
+        "agent-knowledge.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnHQKilled.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_OnHQKilled.sqf",
+        "origin/master",
+        "upstream/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Published docs-only branch/root matrix for DR-50 HQ-kill score double-award evidence; no gameplay source changed.",
+        "Current source Chernarus and maintained Vanilla, stable origin/master cf2a6d6a, Miksuu upstream b8389e74, origin/perf/quick-wins 0076040f and release a96fdda2 all keep generic HQ building score plus a second HQ bounty score in Server_OnHQKilled.sqf.",
+        "Historical upstream ScoreForKillingFactories f17445c1 and Fix0ScoreBountyBug 415615c9 carry the older single-HQ-bounty path only; they are provenance, not a current maintained-root rescue."
+      ],
+      "handoff": "Closed as docs-published. Future code owner should keep one non-teamkill HQ score award, make friendly/teamkill HQ kills score zero, propagate maintained Vanilla and smoke enemy HQ kill, friendly HQ teamkill and DR-20 idempotency/replayed-HQ-kill interactions.",
+      "updated": "2026-06-13T21:04:23+02:00"
+    },
     {
       "lane": "coordination-dashboard-hygiene-audit",
       "owner": "Codex",
