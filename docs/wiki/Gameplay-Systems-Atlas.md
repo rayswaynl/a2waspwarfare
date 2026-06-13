@@ -68,7 +68,7 @@ Supported starting modes:
 | `2` | Nearby towns: each side gets a limited number of nearby towns. |
 | `3` | Random 25/25/50 style setup: west/east/resistance distribution, using boundaries when available. |
 
-Resistance patrols are enabled by setting `wfbe_patrol_enabled` on selected towns; old `respatrol.fsm` references are commented, while `server_town_ai.sqf` later starts `Server/FSM/server_patrols.sqf`. Source anchors: `Server/Init/Init_Towns.sqf:169-175` for patrol flags and `:183` for `townInitServer = true`.
+Current `origin/master` `cf2a6d6a` uses Patrols v2 instead of the old selected-town `wfbe_patrol_enabled` flow. `Server/Init/Init_Towns.sqf:159-160` explicitly retires fixed random-town patrol flagging, `Server/Init/Init_Server.sqf:533` starts `Server/FSM/server_side_patrols.sqf`, and `Common/Functions/Common_RunSidePatrol.sqf` owns the patrol group lifecycle. The older `server_town_ai.sqf` launch evidence is historical for `89ae9dad`-era branches.
 
 ## Town Capture And Supply Value
 
@@ -123,7 +123,7 @@ Performance note: this loop deliberately sleeps `0.05` between towns and records
 - spawns/manages town AI via server, client delegation or headless delegation;
 - mans static defenses through `WFBE_SE_FNC_OperateTownDefensesUnits`;
 - despawns town AI and active vehicles after inactivity;
-- starts patrols with `Server/FSM/server_patrols.sqf` when enabled.
+- leaves Patrols v2 to `Server/FSM/server_side_patrols.sqf`; `server_town_ai.sqf` now marks the old per-town patrol gate retired.
 
 AI delegation mode comes from `WFBE_C_AI_DELEGATION`:
 

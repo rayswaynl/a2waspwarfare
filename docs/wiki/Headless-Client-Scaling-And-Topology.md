@@ -36,7 +36,7 @@ How `a2waspwarfare` delegates AI, **what can and cannot be offloaded**, whether 
 | **Town defence infantry** | ✅ Yes (mode 2) | The single largest AI population; spawns per contested town. `server_town_ai.sqf:157-181` |
 | **Town static-defence gunners** | ✅ Yes — **guerilla towns only** | gated `if (_sideID != WFBE_C_GUER_ID) exitWith {}` (`Server_OperateTownDefensesUnits.sqf:24,38-57`) |
 | **Base static-defence gunners** | ✅ Yes — **always tries HC** | direct `count WFBE_HEADLESSCLIENTS_ID > 0` check, *bypasses* the mode param (`Server_HandleDefense.sqf:19-33`) |
-| **Town patrols** | ❌ Server-pinned | `server_patrols.sqf` — no delegation path |
+| **Patrols v2 side patrols** | ✅ Partial | Current `cf2a6d6a` side patrols can run on a live HC through `server_side_patrols.sqf:49-56` and `Client/PVFunctions/HandleSpecial.sqf:16`; fallback is server-local `Common_RunSidePatrol.sqf`. Smoke HC dispatch and slot release before treating this as a proven FPS win. |
 | **Support airdrops** (paratroopers, para-vehicles, para-ammo) | ❌ Server-pinned | `Server/Support/Support_*` |
 | **All factory-purchased units** | ❌ Server-pinned | `Server_BuyUnit.sqf` — *2nd-largest AI source*, no delegation |
 | **AI squad/advanced respawn** | ❌ Server-pinned | `Server/AI/AI_*Respawn.sqf` |
