@@ -6,16 +6,16 @@ Use it before adding pages to Home, `_Sidebar.md`, `mkdocs.yml`, `llms.txt` or `
 
 ## Current Snapshot
 
-Snapshot generated from `docs/wiki/*.md`, `_Sidebar.md`, selected non-Markdown sidebar links and `mkdocs.yml` on 2026-06-05 after adding [Server runtime and operations](Server-Runtime-And-Operations).
+Snapshot generated from `docs/wiki/*.md`, `_Sidebar.md`, selected non-Markdown sidebar links and `mkdocs.yml` on 2026-06-13 after routing [Agent worklog archive](Agent-Worklog-Archive) into the sidebar and MkDocs mirror.
 
 | Item | Count | Meaning |
 | --- | ---: | --- |
-| Markdown pages | 144 | All `.md` pages in `docs/wiki`, including `_Sidebar.md` and `_Footer.md`. |
-| Content pages | 142 | Markdown pages excluding `_Sidebar.md` and `_Footer.md`. |
-| Sidebar links | 115 | Markdown pages plus selected agent files linked from the GitHub wiki sidebar. This includes [`llms.txt`](llms.txt) and one intentional machine-file link: [`agent-machine-index.json`](agent-machine-index.json). |
-| MkDocs entries | 123 | Markdown pages plus [`llms.txt`](llms.txt) listed in `mkdocs.yml` navigation. |
-| Pages in both navs | 113 | Primary Markdown pages visible in both GitHub wiki and MkDocs. |
-| Pages in neither nav | 20 | Usually archives, instruction pages, old queues, analysis notes or narrow patch pages reached through canonical pages. |
+| Markdown pages | 148 | All `.md` pages in `docs/wiki`, including `_Sidebar.md` and `_Footer.md`. |
+| Content pages | 146 | Markdown pages excluding `_Sidebar.md` and `_Footer.md`. |
+| Sidebar links | 116 | Markdown pages plus selected agent files linked from the GitHub wiki sidebar. This includes [`llms.txt`](llms.txt) and one intentional machine-file link: [`agent-machine-index.json`](agent-machine-index.json). |
+| MkDocs entries | 124 | Markdown pages plus [`llms.txt`](llms.txt) listed in `mkdocs.yml` navigation. |
+| Pages in both navs | 114 | Primary Markdown pages visible in both GitHub wiki and MkDocs. |
+| Pages in neither nav | 23 | Usually archives, instruction pages, old queues, analysis notes or narrow patch pages reached through canonical pages. |
 | Sidebar-only links | 1 | [`agent-machine-index.json`](agent-machine-index.json) is intentionally sidebar-only because it is an agent-readable JSON file, not a MkDocs Markdown page. Primary Markdown sidebar-only drift remains `0`. |
 | MkDocs-only pages | 9 | All imported Miksuu archive pages. |
 | Pages missing `Continue Reading` | 0 | All content pages now expose either owner-page or archive/queue-safe routing. |
@@ -57,7 +57,7 @@ These pages are not directly listed in either `_Sidebar.md` or `mkdocs.yml`. Tha
 | Family | Pages | Suggested action |
 | --- | --- | --- |
 | Patch-ready performance/source-fix pages | [Client skill init](Client-Skill-Init-Idempotency), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup), [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing), [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup), [Paratrooper marker revival](Paratrooper-Marker-Revival), [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) | Keep out of primary nav if Feature Status, Performance sweep and Testing workflow route to them. |
-| Evidence archives and queues | [Deep-review findings](Deep-Review-Findings), [External research reports](External-Research-Reports), [Audit findings queue](Audit-Findings-Queue-2026-06-03), [Development lessons](Development-Lessons-Learned), [Subagent discovery swarm](Subagent-Discovery-Swarm) | Keep as archive/support pages; expose compact owner routes first. |
+| Evidence archives and queues | [Agent worklog archive](Agent-Worklog-Archive), [Deep-review findings](Deep-Review-Findings), [External research reports](External-Research-Reports), [Audit findings queue](Audit-Findings-Queue-2026-06-03), [Development lessons](Development-Lessons-Learned), [Subagent discovery swarm](Subagent-Discovery-Swarm) | Keep as archive/support pages; expose compact owner routes first. |
 | Claude/instruction pages | [Claude goal](Claude-Goal), [Claude long-term goal](Claude-Long-Term-Goal), [Claude loop goal](Claude-Loop-Goal), [Instructions for Codex](Instructions-For-Codex) | Keep discoverable through coordination pages; avoid primary human nav unless actively used. |
 | Analysis/support pages | [Client UI and server loop perf findings](Client-UI-And-Server-Loop-Perf-Findings), [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index), [Performance gain simulation](Performance-Gain-Simulation), [Self-host testing field notes](Self-Host-Testing-Field-Notes) | Keep linked from the owning subsystem or archive index only. |
 
@@ -68,7 +68,7 @@ Use this list as the closeout state for neither-nav cleanup. A page should leave
 | Status | Pages | Keep reachable through |
 | --- | --- | --- |
 | `patch-ready` | [Client skill init](Client-Skill-Init-Idempotency), [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup), [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing), [WASP marker wait cleanup](WASP-Marker-Wait-Cleanup), [Paratrooper marker revival](Paratrooper-Marker-Revival), [Town AI vehicle safety](Town-AI-Vehicle-Despawn-Safety) | [Feature status](Feature-Status-Register), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Testing workflow](Testing-Debugging-And-Release-Workflow), [Hardening roadmap](Hardening-Implementation-Roadmap). |
-| `archive` / `evidence-ledger` | [Deep-review findings](Deep-Review-Findings), [External research reports](External-Research-Reports), [Audit findings queue](Audit-Findings-Queue-2026-06-03), [Development lessons](Development-Lessons-Learned), [Subagent discovery swarm](Subagent-Discovery-Swarm) | [Progress dashboard](Progress-Dashboard), [Agent worklog](Agent-Worklog), [Feature status](Feature-Status-Register), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger). |
+| `archive` / `evidence-ledger` | [Agent worklog archive](Agent-Worklog-Archive), [Deep-review findings](Deep-Review-Findings), [External research reports](External-Research-Reports), [Audit findings queue](Audit-Findings-Queue-2026-06-03), [Development lessons](Development-Lessons-Learned), [Subagent discovery swarm](Subagent-Discovery-Swarm) | [Agent worklog](Agent-Worklog), [Progress dashboard](Progress-Dashboard), [Feature status](Feature-Status-Register), [Wiki pruning ledger](Wiki-Pruning-And-Relevance-Ledger). |
 | `agent-instruction` | [Claude goal](Claude-Goal), [Claude long-term goal](Claude-Long-Term-Goal), [Claude loop goal](Claude-Loop-Goal), [Instructions for Codex](Instructions-For-Codex) | [Coordination board](Coordination-Board), [Agent collaboration protocol](Agent-Collaboration-Protocol), [AI assistant developer guide](AI-Assistant-Developer-Guide). |
 | `analysis-support` | [Client UI/server loop perf findings](Client-UI-And-Server-Loop-Perf-Findings), [External Arma 2 OA reference index](External-Arma-2-OA-Reference-Index), [Performance gain simulation](Performance-Gain-Simulation), [Self-host testing field notes](Self-Host-Testing-Field-Notes) | [Client UI systems atlas](Client-UI-Systems-Atlas), [Arma 2 OA external reference guide](Arma-2-OA-External-Reference-Guide), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Server ops runbook](Server-Ops-Runbook). |
 

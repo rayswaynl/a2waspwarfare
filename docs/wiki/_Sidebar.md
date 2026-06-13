@@ -14,6 +14,7 @@
   - [Agent context](Agent-Context)
   - [Agent collaboration protocol](Agent-Collaboration-Protocol)
   - [Agent worklog](Agent-Worklog)
+  - [Agent worklog archive](Agent-Worklog-Archive)
   - [Progress dashboard](Progress-Dashboard)
   - [PR cleanup and integration lab](PR-Cleanup-And-Integration-Lab)
   - [Coordination board](Coordination-Board)

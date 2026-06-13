@@ -133,6 +133,7 @@ nav:
       - Agent Context: Agent-Context.md
       - Agent Collaboration Protocol: Agent-Collaboration-Protocol.md
       - Agent Worklog: Agent-Worklog.md
+      - Agent Worklog Archive: Agent-Worklog-Archive.md
       - Coordination Board: Coordination-Board.md
       - Bottleneck Removal Queue: Bottleneck-Removal-Queue.md
       - Codebase Coverage Ledger: Codebase-Coverage-Ledger.md
