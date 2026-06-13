@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T01:21:28+02:00",
+  "generatedAt": "2026-06-14T01:29:26+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only SQF atlas source snapshot route: SQF-Code-Atlas.md now names the current docs checkout b13308ff recheck against the unchanged 04a60e43 Chernarus mission source tree, preserves the validated 738-reference preprocess snapshot, fixes the regenerate command path trim, and routes duplicate init binds, AI supply-truck startup and server FPS monitor branch claims to their canonical owner pages. No gameplay source changed.",
+      "currentWork": "Published docs-only server runtime atlas source-scope route: Server-Gameplay-Runtime-Atlas.md and Server-Runtime-And-Operations.md now name current docs checkout 92c5cf05, preserve the earlier 6afcc58e source-anchor snapshot as unchanged for checked server-runtime paths, and distinguish stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf/quick-wins 0076040f for AI supply-truck startup, Patrols v2 and server FPS publisher scope. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "server-runtime-atlas-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Server-Gameplay-Runtime-Atlas.md and Server-Runtime-And-Operations.md now refresh server startup branch scope: current docs checkout 92c5cf05 is named, relevant server-runtime paths are documented as unchanged from the earlier 6afcc58e anchor snapshot, stable origin/master cf2a6d6a is separated from release a96fdda2, Miksuu b8389e74 and perf/quick-wins 0076040f for AI supply-truck startup, Patrols v2 file presence and server FPS publishers, and broad server-runtime prompts route to the atlas before citing line refs. No gameplay source changed."
+    },
     {
       "lane": "sqf-atlas-source-snapshot-route",
       "owner": "Codex",

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T01:21:28+02:00",
+  "generatedAt": "2026-06-14T01:29:26+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,40 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "server-runtime-atlas-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Server-Gameplay-Runtime-Atlas.md",
+        "Server-Runtime-And-Operations.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunSidePatrol.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updatepatrolmarkers.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Functions/Common_RunSidePatrol.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/FSM/updatepatrolmarkers.sqf",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Updated Server-Gameplay-Runtime-Atlas.md and Server-Runtime-And-Operations.md to name docs checkout 92c5cf05 instead of treating earlier 6afcc58e as current.",
+        "Rechecked relevant server-runtime paths as unchanged from 6afcc58e to 92c5cf05, preserving existing docs-checkout line anchors.",
+        "Separated stable origin/master cf2a6d6a from release a96fdda2, Miksuu b8389e74 and perf/quick-wins 0076040f for AI supply-truck startup, Patrols v2 file presence and server FPS publisher shape.",
+        "Confirmed release matches stable supply-truck and FPS cleanup but lacks Patrols v2 files; Miksuu/perf retain raw supply-truck spawn and two unguarded FPS publishers in checked roots."
+      ],
+      "handoff": "Closed as docs-published. Future server runtime work should start from Server-Gameplay-Runtime-Atlas.md branch scope, then route AI supply-truck details to AI-Commander-Autonomy-Audit.md, Patrols v2 to Towns-Camps-And-Capture-Atlas.md / AI-Runtime-HC-Loop-Map.md, and FPS proof to Hosted-Server-FPS-Loop-Sleep.md plus Performance-Opportunity-Sweep.md.",
+      "updated": "2026-06-14T01:29:26+02:00"
+    },
     {
       "lane": "sqf-atlas-source-snapshot-route",
       "owner": "Codex",
