@@ -49,8 +49,11 @@ while {!WFBE_GameOver} do {
 				_nearCacheT = _location getVariable ["wfbe_town_near_units_t", -1];
 				if (time - _nearCacheT < 10) then {
 					//--- A2 OA: 'select {code}' filter form is A3-only; filter the cached set with a forEach.
+					//--- CRITICAL: the cache is up to 10s old, so entries may have died or been deleted.
+					//--- Drop null/dead before countSide (the fresh nearEntities only returns alive units,
+					//--- so this is behaviour-identical) - else countSide on a null entry throws every tick.
 					_nearFiltered = [];
-					{ if ((_x distance _location) < _town_capture_range) then {_nearFiltered = _nearFiltered + [_x]} } forEach (_location getVariable ["wfbe_town_near_units", []]);
+					{ if (!isNull _x && {alive _x} && {(_x distance _location) < _town_capture_range}) then {_nearFiltered = _nearFiltered + [_x]} } forEach (_location getVariable ["wfbe_town_near_units", []]);
 					_objects = _nearFiltered unitsBelowHeight 10;
 				} else {
 					_objects = (_location nearEntities[["Man","Car","Motorcycle","Tank","Air","Ship"], _town_capture_range]) unitsBelowHeight 10;

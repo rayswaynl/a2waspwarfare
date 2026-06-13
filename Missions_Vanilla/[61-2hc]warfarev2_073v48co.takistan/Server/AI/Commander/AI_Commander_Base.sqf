@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns"];
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir"];
 
 _side = _this;
 _sideText = str _side;
@@ -224,7 +224,11 @@ if (_defCount < _defMax) then {
 			if (_funds >= _defPrice) then {
 				[_side, -_defPrice] Call ChangeAICommanderFunds;
 				_pos = [28, 42] Call _findBuildPos;
-				[_defClass, _side, _pos, random 360, true, true] Call ConstructDefense;
+				//--- Steff 2026-06-13: face the defense OUTWARD (bearing HQ->pos) not a random heading,
+				//--- so manned statics engage outward threats and never fire across the base into friendly
+				//--- defenses/structures.
+				_defDir = (_pos select 0 - (_hqPos select 0)) atan2 (_pos select 1 - (_hqPos select 1));
+				[_defClass, _side, _pos, _defDir, true, true] Call ConstructDefense;
 				_logik setVariable ["wfbe_aicom_defenses", _defCount + 1];
 				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base defense %2/%3 [%4].", _sideText, _defCount + 1, _defMax, _defClass]] Call WFBE_CO_FNC_AICOMLog;
 			};
