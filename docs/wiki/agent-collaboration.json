@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T01:40:37+02:00",
+  "generatedAt": "2026-06-14T01:52:54+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,41 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "architecture-overview-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Architecture-Overview.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
+        "Tools/LoadoutManager/FileManagement/FileManager.cs",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs",
+        "Tools/LoadoutManager/ZipManager.cs",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Updated Architecture-Overview.md to name docs checkout 1bef8801 and preserve 1aa178f8 as the earlier unchanged source-anchor snapshot for checked runtime/tooling paths.",
+        "Added a compact architecture branch-scope table so broad architecture prompts route stable/release/Miksuu/perf claims to Current-Source-Status-Snapshot.md, Source-Fix-Propagation-Queue.md and owner pages before citing branch line refs.",
+        "Clarified LoadoutManager root discovery: docs checkout accepts ancestor-name or Missions/Missions_Vanilla/project-file repo shape; stable/release accept mission-path plus Tools/LoadoutManager plus AGENTS.md; Miksuu/perf still require an ancestor named a2waspwarfare."
+      ],
+      "handoff": "Closed as docs-published. Future Architecture Overview work should keep it as a gateway, avoid duplicating subsystem branch matrices, and route behavior-specific truth through SQF-Code-Atlas.md, Mission-Entrypoints-And-Lifecycle.md, Server-Gameplay-Runtime-Atlas.md, Client-UI-Systems-Atlas.md, Source-Fix-Propagation-Queue.md and Tools-And-Build-Workflow.md.",
+      "updated": "2026-06-14T01:52:54+02:00"
+    },
     {
       "lane": "client-ui-atlas-source-scope-route",
       "owner": "Codex",

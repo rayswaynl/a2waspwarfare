@@ -792,3 +792,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Branch-checked `RscClickableText.soundPush[]`, `MenuAction` `17/18/19`, help lifecycle variables and vote-loop line refs across docs `a71b42fe`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and release `a96fdda2` in maintained Chernarus and Vanilla roots.
 - Confirmed `MenuAction = 19` is branch-sensitive: docs/Miksuu/perf expose `CA_FPSHUD_Button` and toggle the FPS HUD, while stable/release expose `CA_GPS_Button` and enable GPS; every checked root still keeps handler-only `MenuAction == 17/18` GPS zoom routes.
 - Refreshed [Client UI systems atlas](Client-UI-Systems-Atlas) source-scope note, main-menu router row, vote/help/main-menu matrix and clickable-text matrix. No gameplay source changed.
+
+## 2026-06-14T01:52:54+02:00 - Codex - Architecture overview source-scope route
+
+- Claimed `architecture-overview-source-scope-route` as a docs-only architecture gateway source-scope pass, with no gameplay/source edits.
+- Rechecked docs checkout `1bef8801`: `description.ext`, `initJIPCompatible.sqf`, `Init_Common.sqf`, `Init_Server.sqf`, `Init_Client.sqf`, `Init_HC.sqf`, `FileManager.cs`, `SqfFileGenerator.cs` and `ZipManager.cs` are unchanged from the earlier `1aa178f8` architecture overview anchor snapshot, so existing docs-checkout line refs remain valid.
+- Branch-checked LoadoutManager root discovery across docs `1bef8801`, stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f`: docs accepts ancestor-name or `Missions`/`Missions_Vanilla`/project-file repo shape, stable/release use mission-path plus `Tools/LoadoutManager` plus `AGENTS.md`, and Miksuu/perf still require an ancestor named `a2waspwarfare`.
+- Refreshed [Architecture overview](Architecture-Overview) with a current source-scope note, compact branch-scope table and sharper LoadoutManager root wording. No gameplay source changed.

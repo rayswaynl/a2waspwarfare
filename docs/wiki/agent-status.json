@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T01:40:37+02:00",
+  "generatedAt": "2026-06-14T01:52:54+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only Client UI atlas source-scope route: Client-UI-Systems-Atlas.md now names current docs checkout a71b42fe, preserves earlier f7bc72a8 line refs as unchanged for checked UI paths, fixes MenuAction 19 branch wording so docs/Miksuu/perf are FPS HUD while stable cf2a6d6a and release a96fdda2 are GPS enablement, and refreshes the clickable-text matrix. No gameplay source changed.",
+      "currentWork": "Published docs-only Architecture Overview source-scope route: Architecture-Overview.md now names current docs checkout 1bef8801, preserves earlier 1aa178f8 line refs as unchanged for checked runtime/tooling paths, adds a compact branch-scope table, and splits LoadoutManager root discovery between docs checkout, stable/release and Miksuu/perf. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "architecture-overview-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Architecture-Overview.md now refreshes current architecture source scope: docs checkout 1bef8801 is named, cited runtime/tooling paths are documented as unchanged from the earlier 1aa178f8 anchor snapshot, a compact branch-scope table routes stable/release/Miksuu/perf claims to owner pages, and LoadoutManager root discovery is split between docs checkout, stable/release and Miksuu/perf shapes. No gameplay source changed."
+    },
     {
       "lane": "client-ui-atlas-source-scope-route",
       "owner": "Codex",
