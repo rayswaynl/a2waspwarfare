@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T23:39:21+02:00",
+  "generatedAt": "2026-06-13T23:54:31+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,41 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "ai-runtime-hc-loop-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "AI-Runtime-HC-Loop-Map.md",
+        "Town-AI-Vehicle-Despawn-Safety.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/AI_UpdateSupplyTruck.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_ai.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "origin/feat/ai-commander"
+      ],
+      "outputs": [
+        "Refreshed AI-Runtime-HC-Loop-Map.md as an AI/HC runtime gateway with a top route table.",
+        "Added current branch scope for docs checkout b9e80da0, stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f, release a96fdda2 and feat/ai-commander c20ce153.",
+        "Routed AI supply-truck branch detail to AI-Commander-Autonomy-Audit.md and kept stable/release safe-disable distinct from raw-spawn branches.",
+        "Refreshed Town-AI-Vehicle-Despawn-Safety.md with a current branch matrix for the tracked-vehicle DR-45 guard.",
+        "Aligned Feature-Status-Register.md and Source-Fix-Propagation-Queue.md so older 89ae9dad persistent-defense helper evidence is historical, not current branch truth."
+      ],
+      "handoff": "Closed as docs-published. Future AI runtime work should use AI-Runtime-HC-Loop-Map.md as the gateway, keep AI supply-truck branch truth on AI-Commander-Autonomy-Audit.md, add the DR-45 player-occupancy guard before deleting wfbe_active_vehicles, propagate maintained Vanilla deliberately and smoke driver/gunner/cargo/turret occupancy plus empty AI-only cleanup on the exact target branch.",
+      "updated": "2026-06-13T23:54:31+02:00"
+    },
     {
       "lane": "towns-camps-capture-atlas-branch-scope-route",
       "owner": "Codex",

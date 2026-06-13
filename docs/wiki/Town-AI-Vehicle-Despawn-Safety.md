@@ -1,8 +1,8 @@
 # Town AI Vehicle Despawn Safety
 
-Implementation playbook for [Deep-review findings](Deep-Review-Findings) DR-45, the confirmed town-AI vehicle cleanup bug in the Chernarus source mission.
+Implementation playbook for [Deep-review findings](Deep-Review-Findings) DR-45, the confirmed town-AI vehicle cleanup bug in the maintained source missions.
 
-Scope: `Missions/[55-2hc]warfarev2_073v48co.chernarus`. Apply gameplay patches there first, then propagate generated missions with `Tools/LoadoutManager`.
+Scope: source Chernarus `Missions/[55-2hc]warfarev2_073v48co.chernarus` plus maintained Vanilla `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan`. Apply gameplay patches to source Chernarus first, then propagate generated missions with `Tools/LoadoutManager` or a deliberate maintained-Vanilla port.
 
 ## Status
 
@@ -14,14 +14,27 @@ Scope: `Missions/[55-2hc]warfarev2_073v48co.chernarus`. Apply gameplay patches t
 | Risk | A town-AI vehicle can be deleted while a player is aboard if that player is not the group leader. |
 | Patch type | Small server-side cleanup guard |
 
+## Current Branch Matrix
+
+Branch route `ai-runtime-hc-loop-branch-scope-route` rechecked the maintained roots on 2026-06-13 after stable `origin/master` advanced to `cf2a6d6a`, Miksuu to `b8389e74` and release to `a96fdda2`.
+
+| Branch / root | Evidence | Status |
+| --- | --- | --- |
+| Docs checkout `b9e80da0` Chernarus and maintained Vanilla | `server_town_ai.sqf` initializes `wfbe_active_vehicles` at `:30`, appends server-created/delegated vehicles at `:161,:179`, deletes tracked inactive vehicles with only `!(isPlayer leader group _x)` at `:214`, clears at `:219`, and does not check player `crew`. | Patch-ready DR-45 still present in both maintained roots. |
+| Stable `origin/master` `cf2a6d6a` Chernarus and maintained Vanilla | Same tracked-vehicle cleanup shape with line drift: initialize `:28`, append `:152,:171`, delete at `:207`, clear at `:213`. Stable no longer contains the older `Server_CleanupExpiredTownDefenseAssets.sqf` helper named in `89ae9dad`-era docs. | Current stable remains source-unpatched for DR-45; persistent-defense helper evidence is historical. |
+| Miksuu upstream `b8389e74` Chernarus and maintained Vanilla | Same tracked-vehicle cleanup shape with line drift: initialize `:28`, append `:140,:159`, delete at `:195`, clear at `:201`; no checked `Server_CleanupExpiredTownDefenseAssets.sqf` path. | Upstream still needs the tracked-vehicle occupancy guard. |
+| `origin/perf/quick-wins` `0076040f` Chernarus and maintained Vanilla | Same tracked-vehicle cleanup shape with line drift: initialize `:30`, append `:166,:184`, delete at `:219`, clear at `:224`; no checked persistent-defense helper. | Perf branch does not rescue this safety bug. |
+| Release `origin/release/2026-06-feature-bundle` `a96fdda2` Chernarus and maintained Vanilla | Same tracked-vehicle cleanup shape with line drift: initialize `:28`, append `:145,:164`, delete at `:200`, clear at `:206`; no checked persistent-defense helper. | Release still needs the player-occupancy guard before release-ready safety wording. |
+| `origin/feat/ai-commander` `c20ce153` | Not a town-AI vehicle safety fix in this pass; only checked here for AI supply-truck branch split. | Do not route DR-45 closure through the AI commander branch without a fresh source audit. |
+
 ## Source Chain
 
 | File | Evidence |
 | --- | --- |
 | `Common/Functions/Common_CreateTownUnits.sqf` | Town teams are created from templates, vehicles returned by `WFBE_CO_FNC_CreateTeam` are appended to `_town_vehicles`, each server-local vehicle starts `WFBE_SE_FNC_HandleEmptyVehicle`, and the function returns `[_town_teams, _town_vehicles]`. |
 | `Server/FSM/server_town_ai.sqf` | On activation, server-created town vehicles are appended to the town variable `wfbe_active_vehicles`; on inactivity, the same variable is iterated for cleanup. |
-| `Server/FSM/server_town_ai.sqf:191-223` | Inactivity cleanup deletes town team units/groups, then town vehicles, then clears `wfbe_active_vehicles`. |
-| `Server/FSM/server_town_ai.sqf:211-216` | Vehicle deletion checks `alive _x` and `!(isPlayer leader group _x)`, but does not inspect vehicle crew/cargo/turret occupants. |
+| `Server/FSM/server_town_ai.sqf:205-219` on docs checkout `b9e80da0`; stable line drift `:198-213` | Inactivity cleanup deletes town team units/groups, then town vehicles, then clears `wfbe_active_vehicles`. |
+| `Server/FSM/server_town_ai.sqf:214` on docs checkout `b9e80da0`; stable line drift `:207` | Vehicle deletion checks `alive _x` and `!(isPlayer leader group _x)`, but does not inspect vehicle crew/cargo/turret occupants. |
 | `Server/Functions/Server_HandleEmptyVehicle.sqf` | Separate empty-vehicle cleanup loop resets its timer while `{alive _x} count crew _vehicle > 0`; this is not the source of the town inactivity bug. |
 | `Server/Functions/Server_OperateTownDefensesUnits.sqf` | Static defense removal has its own gunner/operator handling and should be validated separately from town vehicle despawn. |
 
@@ -39,15 +52,24 @@ The unsafe delete path exists when all of these are true:
 
 This is a player-experience correctness bug, not a generic empty-vehicle timeout bug. `Server_HandleEmptyVehicle.sqf:26-30` is already crew-aware; the unsafe delete lives in the town inactivity branch and is tracked as DR-45.
 
-## Upstream Adjacent Work
+## Branch-Historical Adjacent Work
 
-[Miksuu upstream commit intel](Upstream-Miksuu-Commit-Intel) found a newer `miksuu/master` town-defense diagnostics batch (`913ecdf6` plus Takistan propagation `d5bfe3a2`) that guards failed town group/unit/vehicle creation and removes just-created vehicles when no crew can be made.
+Earlier `89ae9dad`-era docs recorded a town-defense diagnostics / captured-defender persistence batch with `Server_CleanupExpiredTownDefenseAssets.sqf`. A fresh 2026-06-13 ref scan found no `Server_CleanupExpiredTownDefenseAssets.sqf` path in docs checkout `b9e80da0`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` or `origin/feat/ai-commander` `c20ce153`.
 
-That upstream patch is useful, but it is not a substitute for this DR-45 fix:
+Keep that helper evidence as historical/branch-specific until a target branch actually contains the file again. It is not a substitute for this DR-45 fix:
 
-- upstream guards creation-time `grpNull` / `objNull` / crewless-vehicle failures;
+- captured-defender persistence, when present on a branch, is a separate cleanup surface that also needs player-occupancy review;
 - DR-45 guards inactivity-time deletion of an already tracked `wfbe_active_vehicles` entry with a player aboard;
-- both should be smoke-tested together if imported.
+- both cleanup surfaces should be smoke-tested together if a future branch reintroduces the persistence helper.
+
+### Historical DR-48 Capture-Persistence Cleanup
+
+DR-48 remains useful historical evidence for `89ae9dad`-era branches, even though the helper is absent from the 2026-06-13 checked heads above:
+
+| Branch / file | Evidence | Why it matters |
+| --- | --- | --- |
+| `89ae9dad` Chernarus and maintained Vanilla | `Server/Init/Init_Server.sqf:55` compiles `WFBE_SE_FNC_CleanupExpiredTownDefenseAssets`; `server_town_ai.sqf:61` calls it per town; `server_town.sqf:238,241,260,324` tracks captured defender persistence through `wfbe_persistent_town_defense_assets`. | Any branch carrying this helper has a second cleanup surface beyond the tracked inactive vehicle loop. |
+| `89ae9dad` `Server_CleanupExpiredTownDefenseAssets.sqf:58,62-63` in both maintained roots | The GROUP path deletes every unit in the group at `:58`; the OBJECT path checks only `isPlayer _asset` and `isPlayer leader group _asset` before `deleteVehicle _asset` at `:62-63`. | If this helper is reintroduced, audit player `crew` / cargo / turret occupancy for object assets and player units in group assets before release wording. |
 
 ## Safe Patch Shape
 
@@ -106,6 +128,7 @@ That simpler version is easier to reason about, but it is a behavioral change be
 ## Related Pages
 
 - [AI, headless and performance](AI-Headless-And-Performance)
+- [AI runtime and HC loop map](AI-Runtime-HC-Loop-Map)
 - [Headless delegation and failover](Headless-Delegation-And-Failover-Playbook)
 - [Miksuu upstream commit intel](Upstream-Miksuu-Commit-Intel)
 - [Feature status register](Feature-Status-Register)

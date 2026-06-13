@@ -4,6 +4,26 @@ This page is a focused runtime map for server loops, town AI, headless-client de
 
 `SRC` below means `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
 
+## How To Use This Page
+
+| Need | Go here |
+| --- | --- |
+| Server/HC loop orientation | Use the [runtime loop table](#runtime-loop-table), then follow owner pages for branch-sensitive details. |
+| AI commander and autonomous logistics | Use [AI commander autonomy audit](AI-Commander-Autonomy-Audit); it owns the AI supply-truck and AI commander branch matrices. |
+| Town AI vehicle cleanup safety | Use [Town AI vehicle despawn safety](Town-AI-Vehicle-Despawn-Safety#current-branch-matrix) for the DR-45 player-occupancy guard route. |
+| Patrols v2 | Use [Towns/camps/capture](Towns-Camps-And-Capture-Atlas#patrols-v2-side-upgrade-path) for the current side-upgrade patrol path and historical DR-57 branch matrix. |
+| HC lifecycle/failback | Use [Headless delegation/failover](Headless-Delegation-And-Failover-Playbook) for payloads, callbacks, disconnect behavior and smoke gates. |
+
+## Current Branch Scope
+
+Checked 2026-06-13 on docs checkout `b9e80da0`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and `origin/feat/ai-commander` `c20ce153`.
+
+| Surface | Current branch truth | Route |
+| --- | --- | --- |
+| AI supply-truck logistics | Docs checkout `b9e80da0`, Miksuu `b8389e74` and perf `0076040f` still raw-spawn the commented/missing `UpdateSupplyTruck` worker from both maintained roots (`Init_Server.sqf:382-383`, perf Chernarus `:377-378`). Stable `origin/master` `cf2a6d6a` and release `a96fdda2` initialize `wfbe_ai_supplytrucks` and warning-disable legacy logistics at `Init_Server.sqf:383-384` in Chernarus and maintained Vanilla; `AI_UpdateSupplyTruck.sqf:17` still points at missing `Server\FSM\supplytruck.fsm`. `feat/ai-commander` `c20ce153` guards Chernarus at `Init_Server.sqf:389` but leaves Vanilla raw. | [AI commander autonomy audit](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix) |
+| Town AI tracked-vehicle cleanup | Docs checkout `b9e80da0` deletes tracked inactive vehicles with only `!(isPlayer leader group _x)` at `server_town_ai.sqf:214`; stable `cf2a6d6a` at `:207`; Miksuu `b8389e74` at `:195`; perf `0076040f` at `:219`; release `a96fdda2` at `:200`. No checked ref in this pass contains `Server_CleanupExpiredTownDefenseAssets.sqf`; older `89ae9dad` helper evidence is historical, not current branch truth. | [Town AI vehicle despawn safety](Town-AI-Vehicle-Despawn-Safety#current-branch-matrix) |
+| Patrols v2 | Stable `cf2a6d6a` and release `a96fdda2` carry the side-upgrade patrol driver and `&&` patrol worker exit in both maintained roots. Docs checkout/Miksuu/perf keep older town-AI patrol evidence or partial fixes; runtime smoke remains pending. | [Towns/camps/capture](Towns-Camps-And-Capture-Atlas#patrols-v2-side-upgrade-path) |
+
 ## Runtime Loop Table
 
 | Loop / handler | Source refs | Role | Cadence / exit | Risk |
@@ -25,7 +45,7 @@ This page is a focused runtime map for server loops, town AI, headless-client de
 | Performance audit loop | `SRC/Common/Functions/Common_PerformanceAudit.sqf:221-240`; `SRC/Server/Init/Init_Server.sqf:586-589` | Server audit runner | Default flush `sleep 60`; exits on `gameOver` if set | Good observability hook but only as complete as callers. |
 | Cleanup/restorer set | `SRC/Server/Init/Init_Server.sqf:535-560`; cleaners such as `droppeditems_cleaner.sqf:4`, `:19`, `:42` | Server | Timer plus per-item sleeps; mostly `WFBE_GameOver` | Always-on cleanup pressure. |
 | Global stats extension | `SRC/Server/CallExtensions/GlobalGameStats.sqf:5`, `:24` | Server | `sleep 60`; no explicit exit | Always-on extension loop; player-count heuristics exclude HC. |
-| AI supply truck loop | `SRC/Server/AI/AI_UpdateSupplyTruck.sqf:5-17`; `SRC/Server/Init/Init_Server.sqf:36`, `:381-383` | Intended server | `sleep 60`; exits on `gameOver` | Compile is commented, branch still calls `UpdateSupplyTruck`, FSM target is missing. |
+| AI supply truck loop | `SRC/Server/AI/AI_UpdateSupplyTruck.sqf:5-17`; docs checkout `SRC/Server/Init/Init_Server.sqf:36`, `:382-383`; stable `origin/master` `cf2a6d6a` line drift `:37`, `:383-384` | Intended server | `sleep 60`; exits on `gameOver` if spawned | Branch-sensitive legacy path: docs checkout/Miksuu/perf raw-spawn a commented/missing worker; stable/release warning-disable it instead. Keep details on [AI commander autonomy audit](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix). |
 | Commander map-order executor | `SRC/Client/GUI/GUI_Menu_Command.sqf:252-306`; `SRC/Common/Functions/Common_SetTeamMoveMode.sqf:8`; `SRC/Common/Functions/Common_SetTeamMovePos.sqf:8`; `SRC/Server/AI/AI_SquadRespawn.sqf:105-109`; `SRC/Server/AI/AI_AdvancedRespawn.sqf:120-124` | UI writes replicated group vars; static server reads found only respawn reset | No general loop found | `wfbe_teammode` / `wfbe_teamgoto` are not proof of a server-owned waypoint executor. |
 | AI town attack-path helper | `SRC/Server/Init/Init_Server.sqf:45-47`; `SRC/Server/Functions/Server_AI_SetTownAttackPath.sqf:18,41,80-109` | Compiled server helper for arced town attack waypoints | No static caller found in stable master scan | Helper clears existing waypoints before path generation; if a future caller revives it, smoke the early-exit branches before relying on generated attack routes. |
 | Spawned-unit follow-up | `SRC/Client/Functions/Client_BuildUnit.sqf:463-465`; `SRC/Client/Functions/Client_SendSpawnedUnitsToLeaderWaypoint.sqf:13-94` | Client-side helper for newly bought AI | On spawn/build completion only | Runs only when `AUTO_SEND_SPAWNED_UNITS_TO_WAYPOINT` is enabled (`:13`). It purges stale stored map orders within 25m (`:24-34`), falls back through current waypoint / `expectedDestination` (`:37-65`), then `commandMove`s units or vehicle drivers (`:80-92`). This is not a general commander AI scheduler. |
@@ -67,7 +87,7 @@ When debugging "AI ignores orders", first identify which layer is failing: comma
 
 | Severity | Finding | Evidence | Safe next action |
 | --- | --- | --- | --- |
-| High | AI supply trucks are broken if enabled. | `Init_Server.sqf:36`, `:381-383`; `AI_UpdateSupplyTruck.sqf:5-17`; missing `Server/FSM/supplytruck.fsm`. | Guard/remove the branch or restore compile + FSM + smoke before enabling. |
+| High | AI supply trucks are broken if enabled on raw-spawn branches. | Docs checkout `Init_Server.sqf:36,382-383`; stable `cf2a6d6a` / release `a96fdda2` safe-disable at `Init_Server.sqf:37,383-384`; `AI_UpdateSupplyTruck.sqf:5-17`; missing `Server/FSM/supplytruck.fsm`. | Preserve the stable/release warning-disable shape during merges, or revive logistics only with a real server-owned loop/FSM and smoke. |
 | High | Static-defense HC delegation has no completion/failback path. | `Server_DelegateAIStaticDefenceHeadless.sqf:22-27`; `Client_DelegateAIStaticDefence.sqf:28`. | Add callback/timeout or keep static-defense manning server-local. |
 | Medium | Town HC delegation lacks heartbeat/failback. | `Server_DelegateAITownHeadless.sqf:23-30`; `Client_DelegateTownAI.sqf:35`. | Smoke HC disconnect during active town and document orphan behavior. |
 | Medium | Client/HC delegated-group cleanup polls are unbounded. | `Client_DelegateTownAI.sqf:42-43`; `Client_DelegateAI.sqf:29-30`; `Client_DelegateAIStaticDefence.sqf:35-36`. | Add timeout/diagnostic/reconciliation when adding HC work records; smoke leaked/dead group cleanup on HC disconnect. |
@@ -87,10 +107,10 @@ When debugging "AI ignores orders", first identify which layer is failing: comma
 | Hosted/listen | Verify server/client branches both run, both FPS publishers exit cleanly on `!isDedicated`, and client waits/JIP queries finish without relying on server-FPS publication. |
 | JIP | Join after server init and town activation; verify side logic, town/camp states, marker updates, day/night sync and no duplicated local loops. |
 | HC | Run dedicated plus HC with delegation mode 2; verify HC registration, town AI delegation, `update-town-delegation`, HC disconnect removal and fallback behavior. |
-| Negative AI supply | In a private test only, enable the old AI supply-truck path and confirm current failure; use that as a release gate before any revival. |
+| Negative AI supply | In a private raw-spawn branch only, enable the old AI supply-truck path and confirm the missing-FSM failure; use that as a release gate before any revival. Stable/release should instead show the warning-disable path. |
 
 ## Continue Reading
 
 Previous: [AI/headless/performance](AI-Headless-And-Performance) | Next: [HC delegation/failover](Headless-Delegation-And-Failover-Playbook)
 
-Related: [Server runtime atlas](Server-Gameplay-Runtime-Atlas) | [AI commander autonomy audit](AI-Commander-Autonomy-Audit) | [Feature status](Feature-Status-Register)
+Related: [Server runtime atlas](Server-Gameplay-Runtime-Atlas) | [AI commander autonomy audit](AI-Commander-Autonomy-Audit) | [Town AI vehicle despawn safety](Town-AI-Vehicle-Despawn-Safety) | [Feature status](Feature-Status-Register)
