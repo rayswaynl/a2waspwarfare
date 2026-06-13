@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T22:54:23+02:00",
+  "generatedAt": "2026-06-13T23:13:32+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,41 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "factory-purchase-atlas-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Factory-And-Purchase-Systems-Atlas.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UIFillListBuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "origin/feat/buymenu-easa-qol"
+      ],
+      "outputs": [
+        "Refreshed Factory-And-Purchase-Systems-Atlas.md as a branch-scoped factory/purchase gateway with a top route table.",
+        "Updated current branch scope to docs checkout 8d611092, stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f, release a96fdda2 and feat/buymenu-easa-qol a66d4691.",
+        "Separated stable/release selected-detail price, driver-key mirroring and destroyed-factory refund fixes from docs checkout/Miksuu/perf old-shape debt.",
+        "Confirmed level-0 UNIT_COST_MODIFIER reset remains open everywhere checked.",
+        "Aligned factory rows in Feature-Status-Register.md and Source-Fix-Propagation-Queue.md with refreshed owner evidence."
+      ],
+      "handoff": "Closed as docs-published. Future factory/purchase work should use Factory-And-Purchase-Systems-Atlas.md as the gateway, preserve stable/release refund payloads when merging, reset/localize UNIT_COST_MODIFIER for level 0, and smoke Buy Units UI/economy plus factory-death paths on the exact target branch.",
+      "updated": "2026-06-13T23:13:32+02:00"
+    },
     {
       "lane": "construction-atlas-branch-scope-route",
       "owner": "Codex",
