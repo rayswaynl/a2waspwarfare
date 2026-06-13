@@ -241,7 +241,7 @@ PVF dispatch mechanics:
 PV function files outside the standard PVF command lists:
 
 - `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` exists in current source/Vanilla and `HandleParatrooperMarkerCreation` is now registered in `_clientCommandPV` before `NukeIncoming`. The remaining work is Arma smoke and modded-mission drift; see [Paratrooper marker revival](Paratrooper-Marker-Revival).
-- `Server/PVFunctions/AttackWave.sqf` and `Server/Functions/Server_AttackWave.sqf` are compiled directly in server init rather than through the standard PVF command list (`Init_Server.sqf:94-95`). `WFBE_CO_FNC_LogGameEnd` is wired to `Server/Functions/Server_LogGameEnd.sqf`; current source/stable duplicate that bind, while release Chernarus de-duplicates it. Use [Server init bind cleanup](Server-Init-Bind-Cleanup) for branch status. The `Server/PVFunctions/LogGameEnd.sqf` twin exists as the DR-13 cleanup target but is not the live compile target.
+- `Server/PVFunctions/AttackWave.sqf` and `Server/Functions/Server_AttackWave.sqf` are compiled directly in server init rather than through the standard PVF command list (`Init_Server.sqf:94-95`). `WFBE_CO_FNC_LogGameEnd` is wired live to `Server/Functions/Server_LogGameEnd.sqf`; docs checkout/Miksuu duplicate that bind in both maintained roots, stable/release de-duplicate it in both maintained roots, and perf de-duplicates Chernarus while leaving maintained Vanilla old-shape. Use [Server init bind cleanup](Server-Init-Bind-Cleanup) for branch status. The `Server/PVFunctions/LogGameEnd.sqf` twin exists as the DR-13 cleanup target only on docs/Miksuu/perf roots and is absent from stable/release maintained roots; it is not the live compile target.
 
 ## Direct Public Variable Channels
 

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T00:45:00+02:00",
+  "generatedAt": "2026-06-14T00:56:40+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only Gameplay systems atlas route prune: Gameplay-Systems-Atlas.md now has a top route table and current branch scope for docs checkout ca40f202, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2. It routes towns, economy, commander, upgrades, construction, factories, AI/HC, supports and victory to owner pages; corrects commander DR-15 to branch-split evidence; replaces stale HQ score/idempotency line refs with owner-page routing; and records AIBuyUnit as latent across checked refs. No gameplay source changed.",
+      "currentWork": "Published docs-only Victory/endgame branch-scope route: Victory-And-Endgame-Atlas.md now has a top route table and current branch scope for docs checkout 2f2132f8, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2. It confirms default victory winner/guard/no-break defects remain open across checked Chernarus and maintained Vanilla roots; clarifies Server/PVFunctions/LogGameEnd.sqf is present only on docs/Miksuu/perf and absent on stable/release; and aligns Server-Init-Bind-Cleanup.md, Feature-Status-Register.md, Pending-Owner-Decisions.md, SQF-Code-Atlas.md and Dead-Code-And-Stale-Code-Register.md to the branch split. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "victory-endgame-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Victory-And-Endgame-Atlas.md now behaves as the match-end gateway: it adds a top route table and current branch scope for docs checkout 2f2132f8, stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f and release a96fdda2; confirms the default victory detection defect remains open across checked maintained roots at server_victory_threeway.sqf:23-41; clarifies stale Server/PVFunctions/LogGameEnd.sqf is present only on docs/Miksuu/perf and absent on stable/release; and aligns init-bind/status/dead-code routing. No gameplay source changed."
+    },
     {
       "lane": "gameplay-systems-atlas-route-prune",
       "owner": "Codex",

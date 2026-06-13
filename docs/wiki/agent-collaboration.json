@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T00:45:00+02:00",
+  "generatedAt": "2026-06-14T00:56:40+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,44 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "victory-endgame-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Victory-And-Endgame-Atlas.md",
+        "Server-Init-Bind-Cleanup.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "SQF-Code-Atlas.md",
+        "Dead-Code-And-Stale-Code-Register.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_victory_threeway.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_LogGameEnd.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/LogGameEnd.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Refreshed Victory-And-Endgame-Atlas.md as the match-end gateway with a top route table and current branch scope.",
+        "Confirmed default victory winner/guard/no-break defects remain open across docs checkout 2f2132f8, stable origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2 in Chernarus and maintained Vanilla roots.",
+        "Clarified stale Server/PVFunctions/LogGameEnd.sqf presence is branch-split: docs/Miksuu/perf keep it, stable/release do not.",
+        "Aligned Server-Init-Bind-Cleanup.md, Feature-Status-Register.md, Pending-Owner-Decisions.md, SQF-Code-Atlas.md and Dead-Code-And-Stale-Code-Register.md to current branch evidence."
+      ],
+      "handoff": "Closed as docs-published. Future victory work should patch winner/loser semantics, full-condition gameOver guard and single-result exit on the exact target branch, preserve stable/release removal of the stale PVFunctions logger, and use Server-Init-Bind-Cleanup.md before making duplicate-bind claims.",
+      "updated": "2026-06-14T00:56:40+02:00"
+    },
     {
       "lane": "gameplay-systems-atlas-route-prune",
       "owner": "Codex",
