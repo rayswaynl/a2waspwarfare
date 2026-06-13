@@ -32,11 +32,13 @@ flowchart TD
 
 | Root / branch | `Common_EquipVehicle.sqf` | `Common_EquipBackpack.sqf` | Practical meaning |
 | --- | --- | --- | --- |
-| Current docs/source Chernarus | Inclusive weapon, magazine and backpack loops at `:27`, `:33`, `:39`. | Inclusive weapon and magazine loops at `:35`, `:41`. | Patch-ready; source is still unpatched. |
-| Maintained Vanilla Takistan | Same three inclusive vehicle loops. | Same two inclusive backpack loops. | Propagate deliberately after Chernarus source fix. |
-| Stable `origin/master` | Same in both maintained roots. | Same in both maintained roots. | No stable-branch rescue exists. |
-| Miksuu upstream `miksuu/master` | Same in both maintained roots. | Same in both maintained roots. | No upstream rescue exists. |
-| `origin/release/2026-06-feature-bundle` | Same in both maintained roots. | Same in both maintained roots. | Release bundle still carries the five loop-bound edits. |
+| Current docs/source Chernarus `8b71e2a1` | Inclusive weapon, magazine and backpack loops at `:27`, `:33`, `:39`. | Inclusive weapon and magazine loops at `:35`, `:41`. | Patch-ready on the docs checkout; source is still unpatched here. |
+| Maintained Vanilla Takistan `8b71e2a1` | Same three inclusive vehicle loops. | Same two inclusive backpack loops. | Propagate deliberately after Chernarus source fix. |
+| Stable `origin/master` `cf2a6d6a` | Fixed to `(count(_items) - 1)` in both maintained roots at `:27`, `:33`, `:39`. | Fixed to `(count(_items) - 1)` in both maintained roots at `:35`, `:41`. | Stable branch already carries the local loop-bound fix; preserve it when merging. |
+| Miksuu upstream `miksuu/master` `b8389e74` | Same inclusive loops in both maintained roots. | Same inclusive loops in both maintained roots. | No upstream rescue exists. |
+| `origin/perf/quick-wins` `0076040f` | Chernarus fixes all three loops to `count(_items)-1`; maintained Vanilla still carries inclusive loops. | Chernarus fixes both loops to `count(_items)-1`; maintained Vanilla still carries inclusive loops. | Perf branch is Chernarus-only for this fix; Vanilla propagation remains open there. |
+| Release `origin/release/2026-06-feature-bundle` `a96fdda2` | Fixed to `(count(_items) - 1)` in both maintained roots at `:27`, `:33`, `:39`. | Fixed to `(count(_items) - 1)` in both maintained roots at `:35`, `:41`. | Release already carries the local loop-bound fix in both maintained roots. |
+| EASA QoL `origin/feat/buymenu-easa-qol` `a66d4691` | Same inclusive loops in both maintained roots. | Same inclusive loops in both maintained roots. | QoL branch does not touch cargo helpers. |
 
 ## Bug Shape
 
@@ -109,7 +111,7 @@ Arma smoke:
 
 ## Generated And Modded Missions
 
-`Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` currently carries the same inclusive loops in `Common_EquipVehicle.sqf` and `Common_EquipBackpack.sqf`.
+On docs checkout `8b71e2a1`, `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan` carries the same inclusive loops in `Common_EquipVehicle.sqf` and `Common_EquipBackpack.sqf`. Stable `cf2a6d6a` and release `a96fdda2` already fix both maintained roots; perf `0076040f` fixes Chernarus only.
 
 Per project rules:
 
@@ -122,7 +124,7 @@ Per project rules:
 - This is a small, patch-ready reliability bug.
 - It should be safe to patch independently from the server-authority/economy redesign because it only fixes loop bounds in cargo-application helpers.
 - Keep this page paired with [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Client UI systems atlas](Client-UI-Systems-Atlas) and [Feature status](Feature-Status-Register).
-- Branch check 2026-06-05 found no rescue branch: current source/Vanilla, stable `origin/master`, Miksuu upstream and `origin/release/2026-06-feature-bundle` all still carry the same five inclusive loops.
+- Branch check 2026-06-14 is branch-split: docs checkout `8b71e2a1`, Miksuu `b8389e74` and EASA QoL `a66d4691` still carry the five inclusive loops in both maintained roots; stable `cf2a6d6a` and release `a96fdda2` fix both maintained roots; perf `0076040f` fixes Chernarus only.
 
 ## Continue Reading
 

@@ -39,22 +39,22 @@ flowchart TD
 
 | Root / branch | Save filter | Profile import guard | Practical meaning |
 | --- | --- | --- | --- |
-| Current docs/source Chernarus | `Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` still reference undefined `_u_upgrade`. | `Init_ProfileGear.sqf:17` accepts `count _x >= 6`, then `:25` reads `_x select 6`. | Patch-ready; source is still unpatched. |
-| Maintained Vanilla Takistan | Same save-filter `_u_upgrade` references. | Same six-field guard before index-6 read. | Propagate deliberately after Chernarus source fix. |
-| Stable `origin/master` | Same in both maintained roots. | Same in both maintained roots. | No stable-branch rescue exists. |
-| Miksuu upstream `miksuu/master` | Same in both maintained roots. | Same in both maintained roots. | No upstream rescue exists. |
-| `origin/release/2026-06-feature-bundle` | Same in both maintained roots. | Same in both maintained roots. | Release bundle still carries the paired profile-template debt. |
+| Current docs/source Chernarus `8b71e2a1` | `Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` still reference undefined `_u_upgrade`. | `Init_ProfileGear.sqf:17` accepts `count _x >= 6`, then `:25` reads `_x select 6`. | Patch-ready; source is still unpatched. |
+| Maintained Vanilla Takistan `8b71e2a1` | Same save-filter `_u_upgrade` references. | Same six-field guard before index-6 read. | Propagate deliberately after Chernarus source fix. |
+| Stable `origin/master` `cf2a6d6a` and release `a96fdda2` | Same in both maintained roots. | Same in both maintained roots. | Stable/release do not rescue the profile-template debt, even though they differ on nearby service/cargo behavior. |
+| Miksuu `b8389e74`, perf `0076040f` and EASA QoL `a66d4691` | Same in both maintained roots. | Same in both maintained roots. | No upstream/perf/QoL rescue exists; QoL only changes Chernarus EASA menu orientation. |
 
 ### Creation Gate Branch Matrix
 
-Refreshed 2026-06-06 for current source `HEAD`/stable `origin/master` `2cdf5fb8`, upstream `miksuu/master` `f532f706`, `origin/perf/quick-wins` `0076040f` and release `origin/release/2026-06-feature-bundle` `7195b331`.
+Refreshed 2026-06-14 for docs checkout `8b71e2a1`, stable `origin/master` `cf2a6d6a`, upstream `miksuu/master` `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `origin/release/2026-06-feature-bundle` `a96fdda2` and `origin/feat/buymenu-easa-qol` `a66d4691`.
 
 | Scope | Add-template gate | Fill/save contrast | Practical meaning |
 | --- | --- | --- | --- |
 | Current source Chernarus + maintained Vanilla | `Client_UI_Gear_AddTemplate.sqf:15,37,83,110` computes `_u_upgrade`, then `:136` accepts a new template when `_u_upgrade <= WFBE_UP_BARRACKS` **or** `_u_upgrade <= WFBE_UP_GEAR`. | `Client_UI_Gear_FillTemplates.sqf:17` displays templates only when stored upgrade `<= WFBE_UP_GEAR`; `Client_UI_Gear_SaveTemplateProfile.sqf:33,52,75` still tries to filter with undefined `_u_upgrade`. | Owner-decision consistency debt: choose whether templates are unlocked by either Barracks/Gear lane or Gear-only display should be changed. |
 | Stable `origin/master` and upstream `miksuu/master` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | No stable/upstream rescue found. |
 | `origin/perf/quick-wins` `0076040f` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | Perf branch does not touch gear-template semantics. |
-| Release `origin/release/2026-06-feature-bundle` `7195b331` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | Release branch does not resolve the creation/display/save contract. |
+| Release `origin/release/2026-06-feature-bundle` `a96fdda2` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | Release branch does not resolve the creation/display/save contract. |
+| EASA QoL `origin/feat/buymenu-easa-qol` `a66d4691` | Same OR gate in both maintained roots. | Same Gear-only fill and undefined save-filter shape in both maintained roots. | The branch changes EASA menu orientation in Chernarus only; it does not change template semantics. |
 
 ## Bug Shape
 
@@ -154,7 +154,7 @@ Generated mission:
 - The import-bound issue is a paired profile persistence bug, not proof that live gear purchase authority is hardened or broken in a new way.
 - It is not the same as full gear purchase authority. Do not claim public-server gear hardening after this patch.
 - Keep this page paired with [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Client UI systems atlas](Client-UI-Systems-Atlas) and [Feature status](Feature-Status-Register).
-- Branch checks 2026-06-05 and 2026-06-06 found no rescue branch: current source/Vanilla, stable `origin/master`, Miksuu upstream, `perf/quick-wins` and `origin/release/2026-06-feature-bundle` all keep the undefined `_u_upgrade` save filter plus six-field import guard, and they also keep the Barracks-or-Gear AddTemplate creation gate while FillTemplates displays against Gear only. Treat save/import repair as paired patch work, and treat creation/display semantics as a separate owner decision before changing code.
+- Branch check 2026-06-14 found no rescue branch for profile/template semantics: docs checkout `8b71e2a1`, stable `cf2a6d6a`, Miksuu `b8389e74`, perf `0076040f`, release `a96fdda2` and EASA QoL `a66d4691` all keep the undefined `_u_upgrade` save filter plus six-field import guard in checked maintained roots. They also keep the Barracks-or-Gear AddTemplate creation gate while FillTemplates displays against Gear only. Treat save/import repair as paired patch work, and treat creation/display semantics as a separate owner decision before changing code.
 
 ## Continue Reading
 

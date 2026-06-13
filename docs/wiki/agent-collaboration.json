@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T00:56:40+02:00",
+  "generatedAt": "2026-06-14T01:07:20+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,49 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "gear-easa-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Gear-Loadout-And-EASA-Atlas.md",
+        "Gear-Template-Profile-Filter.md",
+        "Vehicle-Cargo-Equip-Loop-Bounds.md",
+        "Service-Menu-Affordability-Guards.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_ProfileGear.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UI_Gear_AddTemplate.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UI_Gear_FillTemplates.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_EquipVehicle.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_EquipBackpack.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Service.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_EASA.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "origin/feat/buymenu-easa-qol"
+      ],
+      "outputs": [
+        "Refreshed Gear-Loadout-And-EASA-Atlas.md as the gear/service gateway with current branch scope.",
+        "Confirmed gear profile/template save/import and creation/display debt remains open across docs checkout 8b71e2a1, stable origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f, release a96fdda2 and EASA QoL a66d4691 in checked maintained roots.",
+        "Corrected Vehicle-Cargo-Equip-Loop-Bounds.md to branch-split evidence: docs/Miksuu/EASA QoL old-shape in both roots, stable/release fixed in both roots, perf Chernarus-only fixed.",
+        "Corrected Service-Menu-Affordability-Guards.md so stable/release partial rearm/refuel guards in both roots are not overstated as repair/heal, EASA exact-funds or server-authority fixes.",
+        "Aligned Feature-Status-Register.md and Source-Fix-Propagation-Queue.md gear/service rows to the same owner-page evidence."
+      ],
+      "handoff": "Closed as docs-published. Future gear/service work should use the refreshed owner pages, preserve or port stable/release cargo loop fixes where target branches still carry inclusive loops, patch profile save/import as a paired change, and treat stable/release service rearm/refuel guards as local partial QoL rather than authority hardening.",
+      "updated": "2026-06-14T01:07:20+02:00"
+    },
     {
       "lane": "victory-endgame-branch-scope-route",
       "owner": "Codex",
