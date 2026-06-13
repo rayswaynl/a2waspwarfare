@@ -784,3 +784,11 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Branch-checked AI supply-truck startup, Patrols v2 file presence and server FPS publisher shape across docs `92c5cf05`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and release `a96fdda2` in maintained Chernarus and Vanilla roots.
 - Confirmed stable `cf2a6d6a` log-disables legacy AI supply-truck logistics and starts Patrols v2; release `a96fdda2` matches the supply-truck and FPS single-publisher cleanup but does not carry Patrols v2 files; Miksuu/perf retain the raw supply-truck spawn and two unguarded FPS publishers in checked roots.
 - Refreshed [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) and [Server runtime and operations](Server-Runtime-And-Operations) to route branch-sensitive startup/FPS/Patrols claims through the atlas instead of treating old docs-checkout anchors as current-master evidence. No gameplay source changed.
+
+## 2026-06-14T01:40:37+02:00 - Codex - Client UI atlas source-scope route
+
+- Claimed `client-ui-atlas-source-scope-route` as a docs-only Client UI atlas cleanup pass, with no gameplay/UI source edits.
+- Rechecked docs checkout `a71b42fe`: `Rsc`, `GUI_Menu.sqf`, vote/help menu controllers and `Init_Client.sqf` paths used by the Client UI atlas are unchanged from the earlier `f7bc72a8` anchor snapshot, so existing docs-checkout line refs remain valid.
+- Branch-checked `RscClickableText.soundPush[]`, `MenuAction` `17/18/19`, help lifecycle variables and vote-loop line refs across docs `a71b42fe`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and release `a96fdda2` in maintained Chernarus and Vanilla roots.
+- Confirmed `MenuAction = 19` is branch-sensitive: docs/Miksuu/perf expose `CA_FPSHUD_Button` and toggle the FPS HUD, while stable/release expose `CA_GPS_Button` and enable GPS; every checked root still keeps handler-only `MenuAction == 17/18` GPS zoom routes.
+- Refreshed [Client UI systems atlas](Client-UI-Systems-Atlas) source-scope note, main-menu router row, vote/help/main-menu matrix and clickable-text matrix. No gameplay source changed.

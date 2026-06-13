@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T01:29:26+02:00",
+  "generatedAt": "2026-06-14T01:40:37+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only server runtime atlas source-scope route: Server-Gameplay-Runtime-Atlas.md and Server-Runtime-And-Operations.md now name current docs checkout 92c5cf05, preserve the earlier 6afcc58e source-anchor snapshot as unchanged for checked server-runtime paths, and distinguish stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf/quick-wins 0076040f for AI supply-truck startup, Patrols v2 and server FPS publisher scope. No gameplay source changed.",
+      "currentWork": "Published docs-only Client UI atlas source-scope route: Client-UI-Systems-Atlas.md now names current docs checkout a71b42fe, preserves earlier f7bc72a8 line refs as unchanged for checked UI paths, fixes MenuAction 19 branch wording so docs/Miksuu/perf are FPS HUD while stable cf2a6d6a and release a96fdda2 are GPS enablement, and refreshes the clickable-text matrix. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "client-ui-atlas-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Client-UI-Systems-Atlas.md now refreshes current UI source scope: docs checkout a71b42fe is named, relevant Rsc/GUI/Init_Client paths are documented as unchanged from the earlier f7bc72a8 anchor snapshot, MenuAction 19 is split correctly between docs/Miksuu/perf FPS HUD behavior and stable/release GPS enablement, and the clickable-text soundPush matrix now preserves current docs/stable/release/Miksuu/perf branch evidence without implying a source patch. No gameplay source changed."
+    },
     {
       "lane": "server-runtime-atlas-source-scope-route",
       "owner": "Codex",

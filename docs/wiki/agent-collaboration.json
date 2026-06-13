@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T01:29:26+02:00",
+  "generatedAt": "2026-06-14T01:40:37+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,45 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "client-ui-atlas-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Client-UI-Systems-Atlas.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_VoteMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Commander_VoteMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Help.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_Menu.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_VoteMenu.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_Commander_VoteMenu.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_Menu_Help.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Updated Client-UI-Systems-Atlas.md to name docs checkout a71b42fe and preserve f7bc72a8 as the earlier unchanged source-anchor snapshot for checked UI paths.",
+        "Corrected MenuAction 19 branch wording: docs checkout, Miksuu and perf keep CA_FPSHUD_Button / FPS HUD behavior, while stable origin/master cf2a6d6a and release a96fdda2 expose CA_GPS_Button / GPS enablement.",
+        "Confirmed all checked roots still keep handler-only MenuAction 17/18 GPS zoom routes with no MenuAction 17/18 emitters found in maintained roots.",
+        "Refreshed the clickable-text soundPush matrix: all checked maintained roots keep malformed RscClickableText.soundPush[] at Rsc/Ressources.hpp:556; docs/Miksuu/perf have 17 inheritors and stable/release have 14."
+      ],
+      "handoff": "Closed as docs-published. Future Client UI work should start from Client-UI-Systems-Atlas.md source scope, route resource/IDD fixes to UI-Resource-Parity-Cleanup.md and UI-IDD-Collision-Repair.md, route vote semantics to Commander-Vote-And-Reassignment-Playbook.md, and keep GPS/FPS MenuAction 19 behavior branch-scoped.",
+      "updated": "2026-06-14T01:40:37+02:00"
+    },
     {
       "lane": "server-runtime-atlas-source-scope-route",
       "owner": "Codex",
