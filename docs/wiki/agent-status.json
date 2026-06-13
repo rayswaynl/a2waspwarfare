@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-13T22:41:09+02:00",
+  "generatedAt": "2026-06-13T22:54:23+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only Economy atlas branch-scope route: Economy-Towns-And-Supply.md now has a top route table, current branch scope for docs checkout 6d05cb5a, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2, refreshed resource-income anchors, branch-split supply reward / side-supply routing, and an aligned AI-Commander-Autonomy-Audit.md debit matrix. No gameplay source changed.",
+      "currentWork": "Published docs-only Construction atlas branch-scope route: Construction-And-CoIn-Systems-Atlas.md now has a top route table, current branch scope for docs checkout 1aa178f8, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2, split docs-checkout commander-team ARTY/null-guard evidence from stable/release marker-based ARTY discovery, and refreshed construction rows in Feature-Status-Register.md plus Source-Fix-Propagation-Queue.md. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "construction-atlas-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Construction-And-CoIn-Systems-Atlas.md now behaves as a branch-scoped construction gateway: it adds a top route table, names current branch scope for docs checkout 1aa178f8, stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f and release a96fdda2, separates docs-checkout commander-team ARTY gunner handoff plus StationaryDefense null guard from stable/release marker-based ARTY discovery, and confirms auto-wall, SmallSite/MediumSite and salvage patch-ready debt remains present across checked refs. Feature-Status-Register.md and Source-Fix-Propagation-Queue.md construction rows now route to the refreshed owner evidence. No gameplay source changed."
+    },
     {
       "lane": "economy-atlas-branch-scope-route",
       "owner": "Codex",
