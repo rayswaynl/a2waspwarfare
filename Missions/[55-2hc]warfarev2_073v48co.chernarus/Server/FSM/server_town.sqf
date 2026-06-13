@@ -42,7 +42,19 @@ while {!WFBE_GameOver} do {
 
 				_sideID = _location getVariable "sideID";
 				_side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
-				_objects = (_location nearEntities[["Man","Car","Motorcycle","Tank","Air","Ship"], 	_town_capture_range]) unitsBelowHeight 10;
+				//--- PERF (NEXT): reuse server_town_ai.sqf's fresh detection scan (one-scan-many-readers)
+				//--- by distance-filtering its cached 600m result down to the capture range. Falls back to
+				//--- a direct nearEntities if the cache is stale/absent (e.g. a town that loop doesn't scan),
+				//--- so capture detection is never missed. Behaviour-identical to the original scan.
+				_nearCacheT = _location getVariable ["wfbe_town_near_units_t", -1];
+				if (time - _nearCacheT < 10) then {
+					//--- A2 OA: 'select {code}' filter form is A3-only; filter the cached set with a forEach.
+					_nearFiltered = [];
+					{ if ((_x distance _location) < _town_capture_range) then {_nearFiltered = _nearFiltered + [_x]} } forEach (_location getVariable ["wfbe_town_near_units", []]);
+					_objects = _nearFiltered unitsBelowHeight 10;
+				} else {
+					_objects = (_location nearEntities[["Man","Car","Motorcycle","Tank","Air","Ship"], _town_capture_range]) unitsBelowHeight 10;
+				};
 
 				_west = west countSide _objects;
 				_east = east countSide _objects;

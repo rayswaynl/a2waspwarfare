@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now"];
+Private["_town","_range","_range_detect","_range_detect_active","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_detected","_ownerEnemyFilter"];
 
 for "_j" from 0 to ((count towns) - 1) step 1 do
 {
@@ -76,34 +76,29 @@ while {!WFBE_GameOver} do {
 				_dynRange = if (_town getVariable "wfbe_active" || _town getVariable "wfbe_active_air") then {_range_detect_active} else {_range_detect};
 				_detected = (_town nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"],_dynRange]) unitsBelowHeight 20;
 
-				//--- Defender classification: town/static defender AI must not wake towns (its own
-				//--- OR a neighbouring enemy town it wandered near) - only players and bought AI count.
+				//--- PERF (NEXT): cache the detection result + timestamp on the town so server_town.sqf
+				//--- can read it (one-scan-many-readers) instead of issuing its own nearEntities. Both
+				//--- loops run on the server; local setVariable is correct and cheap. No behaviour change.
+				_town setVariable ["wfbe_town_near_units", _detected, false];
+				_town setVariable ["wfbe_town_near_units_t", time, false];
+
+				//--- Defender classification + (for owned towns) hostile-side filter, in a SINGLE pass.
+				//--- Town/static defender AI must not wake towns; for owned (non-resistance) towns only
+				//--- genuinely hostile sides count. Resistance/neutral towns: any non-defender counts.
 				_scanStart = diag_tickTime;
 				_detectedFiltered = [];
 				_defendersIgnored = 0;
+				_ownerEnemyFilter = (_sideID != WFBE_C_GUER_ID && _sideID != WFBE_C_UNKNOWN_ID);
+				_hostileSides = if (_ownerEnemyFilter) then {[west, east, resistance] - [_side]} else {[]};
 				{
 					if (_x getVariable ["WFBE_IsTownDefenderAI", false]) then {
 						_defendersIgnored = _defendersIgnored + 1;
 					} else {
-						_detectedFiltered = _detectedFiltered + [_x];
+						if (!_ownerEnemyFilter || {(side _x) in _hostileSides}) then {
+							_detectedFiltered = _detectedFiltered + [_x];
+						};
 					};
 				} forEach _detected;
-
-				//--- FINAL spec: for owned (non-resistance) towns, friendly passers-by must NOT trigger
-				//--- activation — only units whose side is genuinely hostile to the owner count.
-				//--- Resistance/neutral towns keep current behaviour (any non-friendly wakes them).
-				if (_sideID != WFBE_C_GUER_ID && _sideID != WFBE_C_UNKNOWN_ID) then {
-					//--- Build the set of sides that are enemies of the owning side.
-					//--- Mirrors Common_GetAreaEnemiesCount.sqf: enemies = all sides minus owner minus ignored.
-					_hostileSides = [west, east, resistance] - [_side];
-					_detectedEnemyOnly = [];
-					{
-						if ((side _x) in _hostileSides) then {
-							_detectedEnemyOnly = _detectedEnemyOnly + [_x];
-						};
-					} forEach _detectedFiltered;
-					_detectedFiltered = _detectedEnemyOnly;
-				};
 				_currentEnemies = [_detectedFiltered, _side] Call WFBE_CO_FNC_GetAreaEnemiesCount;
 				_enemies = _currentEnemies;
 				if (!isNil "PerformanceAudit_Record") then {
@@ -296,7 +291,7 @@ while {!WFBE_GameOver} do {
 
 		};
 
-		sleep 0.05;
+		sleep 0.1; //--- PERF (NEXT): inter-town yield 0.05->0.1 (~20% fewer scans/sec; town responsiveness unchanged at seconds scale).
 	};
 
 
