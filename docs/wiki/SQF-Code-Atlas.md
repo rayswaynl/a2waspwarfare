@@ -35,9 +35,9 @@ This page is the source map for compiled SQF entrypoints and runtime handoffs. U
 
 ## Compile Registry Summary
 
-Snapshot refreshed 2026-06-13 from the source mission in this docs checkout, `docs/developer-wiki-index` at `04a60e43`: `Missions/[55-2hc]warfarev2_073v48co.chernarus`, all `.sqf` files, `Select-String -SimpleMatch 'preprocessFile'`. This deliberately counts `preprocessFile` as a substring of `preprocessFileLineNumbers`, so plain `preprocessFile` is `total - preprocessFileLineNumbers`. See [Deep-review findings](Deep-Review-Findings) DR-5 for why these counts must be regenerated before relying on them.
+Snapshot refreshed 2026-06-13 from the source mission in this docs checkout, `docs/developer-wiki-index` at `04a60e43`: `Missions/[55-2hc]warfarev2_073v48co.chernarus`, all `.sqf` files, `Select-String -SimpleMatch 'preprocessFile'`. Rechecked 2026-06-14 on docs checkout `b13308ff`: `git diff --quiet 04a60e43..HEAD -- ":(literal)Missions/[55-2hc]warfarev2_073v48co.chernarus"` shows the Chernarus mission source tree is unchanged, and rerunning the count command returns the same numbers below. This deliberately counts `preprocessFile` as a substring of `preprocessFileLineNumbers`, so plain `preprocessFile` is `total - preprocessFileLineNumbers`. See [Deep-review findings](Deep-Review-Findings) DR-5 for why these counts must be regenerated before relying on them.
 
-This snapshot is branch-local. `origin/master` is currently `cf2a6d6a` and has mission-source drift from this docs checkout, so rerun the command on each target branch before using these counts as branch evidence.
+This snapshot is branch-local. Stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, perf `0076040f` and release `a96fdda2` have branch/root-specific server-init differences, so rerun the command on each target branch before using these counts as branch evidence.
 
 The source mission in this checkout contains 738 `preprocessFile` references:
 
@@ -54,7 +54,7 @@ $root = 'Missions/[55-2hc]warfarev2_073v48co.chernarus'
 $rootFull = (Resolve-Path -LiteralPath $root).Path
 $records = Get-ChildItem -LiteralPath $root -Recurse -Filter *.sqf | ForEach-Object {
   Select-String -LiteralPath $_.FullName -SimpleMatch 'preprocessFile' | ForEach-Object {
-    $rel = $_.Path.Substring($rootFull.Length).TrimStart([char]'\',[char]'/')
+    $rel = $_.Path.Substring($rootFull.Length) -replace '^[\\/]+',''
     [pscustomobject]@{ Path = $rel; Text = $_.Line.Trim() }
   }
 }
@@ -115,7 +115,7 @@ Owner caveats:
 - `Common/Init/Init_Common.sqf` is shared but not owner-pure; the `isServer` branch around `:301-307` means some server-only setup lives in the common init file.
 - `Common/Init/Init_Common.sqf:370-371` sets common completion flags that later server/client waits assume.
 - `Headless/Init/Init_HC.sqf:12-15` announces HC after a fixed sleep, not an explicit `serverInitFull` wait.
-- `Server/Init/Init_Server.sqf:64-65` and `:88-91` show duplicate/legacy compile assignments; use [Server init bind cleanup](Server-Init-Bind-Cleanup) and keep compile cleanup separate from behavior patches unless smoke covers the touched function.
+- `Server/Init/Init_Server.sqf:64,69,83,89,91,93` in this docs checkout show duplicate live binds for `WFBE_CO_FNC_LogGameEnd`, `WFBE_SE_FNC_PlayerObjectsList` and `WFBE_SE_FNC_AwardScorePlayer`. Stable `origin/master` `cf2a6d6a` and release `a96fdda2` keep one live bind per function in both maintained roots; Miksuu `b8389e74` keeps the old duplicate shape and perf `0076040f` fixes Chernarus only. Use [Server init bind cleanup](Server-Init-Bind-Cleanup) and keep compile cleanup separate from behavior patches unless smoke covers the touched function.
 
 ### `initJIPCompatible.sqf`
 
@@ -164,8 +164,8 @@ Important categories:
 
 Risk notes:
 
-- `UpdateSupplyTruck` is commented while `Server/AI/AI_UpdateSupplyTruck.sqf` still exists and references a missing `Server/FSM/supplytruck.fsm`; treat autonomous AI supply logistics as broken/deferred.
-- `WFBE_CO_FNC_monitorServerFPS` is commented as a compile target but server FPS is still run directly elsewhere.
+- In this docs checkout, `Server/Init/Init_Server.sqf:36` comments the `UpdateSupplyTruck` compile but `:383` still raw-spawns `UpdateSupplyTruck`; `Server/AI/AI_UpdateSupplyTruck.sqf` also references missing `Server/FSM/supplytruck.fsm`. Stable/release log-disable the path instead, so route branch claims through [AI commander autonomy](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix).
+- In this docs checkout, `WFBE_CO_FNC_monitorServerFPS` compile lines are commented (`Init_Server.sqf:65,90`) but `serverFpsGUI.sqf` and `monitorServerFPS.sqf` still exec at `Init_Server.sqf:578,595`. Stable/release keep `serverFpsGUI.sqf` only and annotate/remove the redundant monitor; route runtime claims through [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas#branch-scope-for-source-anchors).
 - `WFBE_SE_FNC_MASH_MARKER` appears once active and once commented in server init, but DR-34 resolves the status: the MASH map-marker feature is dead/abandoned. `Client/Init/Init_Client.sqf:132` comments out the receiver compile, `WFBE_CL_MASH_MARKER_CREATED` has no emitter, and the live server PVEH in `Server/Module/MASH/MASHMarker.sqf` is orphaned. MASH tents remain a separate deployable officer feature.
 
 ### `Client/Init/Init_Client.sqf`
@@ -255,7 +255,7 @@ High-signal disabled/deferred compile lines:
 
 | Source | Target | Evidence |
 | --- | --- | --- |
-| `Server/Init/Init_Server.sqf` | `Server/AI/AI_UpdateSupplyTruck.sqf` | `UpdateSupplyTruck` compile line is block-commented. |
+| `Server/Init/Init_Server.sqf` | `Server/AI/AI_UpdateSupplyTruck.sqf` | `UpdateSupplyTruck` compile line is block-commented; docs/Miksuu/perf still need the branch matrix before claiming the runtime path is safe. |
 | `Server/AI/AI_UpdateSupplyTruck.sqf` | `Server/FSM/supplytruck.fsm` | The target FSM is missing; only client FSM files exist. |
 | `Client/Init/Init_Client.sqf` | `Client/Functions/Client_TaskSystem.sqf` | `TaskSystem` compile line is commented. |
 | `Client/Init/Init_Client.sqf` | `Client/Module/MASH/receiverMASHmarker.sqf` | Receiver compile line is commented. |
@@ -263,7 +263,7 @@ High-signal disabled/deferred compile lines:
 | `Client/Init/Init_Client.sqf` | `Client/Functions/Client_AddUnitToTrack.sqf` | Old unit-tracking compile line is commented; target file is absent. |
 | `Common/Init/Init_Common.sqf` | `Common/Functions/Common_HandleATReloadVehicle.sqf` | Compile line is commented; target file still exists, so this is dormant revive/archive work rather than a missing-file error. |
 | `Common/Init/Init_Common.sqf` | `Common/Functions/Common_HandleBombs.sqf` | Compile line is commented; target file is absent while newer bomb/missile handlers remain. |
-| `Server/Init/Init_Server.sqf` | `Server/Module/serverFPS/monitorServerFPS.sqf` | Compile line is commented twice; server FPS is still executed directly elsewhere. |
+| `Server/Init/Init_Server.sqf` | `Server/Module/serverFPS/monitorServerFPS.sqf` | Compile line is commented twice; docs/Miksuu/perf still exec the monitor later, while stable/release keep `serverFpsGUI.sqf` only. |
 
 ## FSM Inventory
 

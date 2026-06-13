@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T01:07:20+02:00",
+  "generatedAt": "2026-06-14T01:21:28+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,36 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "sqf-atlas-source-snapshot-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "SQF-Code-Atlas.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Init/Init_Server.sqf",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Refreshed SQF-Code-Atlas.md snapshot wording to name docs checkout b13308ff and the unchanged 04a60e43 Chernarus mission source tree.",
+        "Reconfirmed preprocess counts: 738 total references, 460 line-numbered, 278 plain and 22 commented; target-area counts remain Common 492, Client 142, Server 92, root/bootstrap 7, Headless 4 and WASP 1.",
+        "Fixed the atlas regenerate command path trim and routed server-init duplicate binds, AI supply-truck startup and server FPS monitor caveats to owner pages instead of repeating branch matrices.",
+        "Confirmed branch split for Init_Server.sqf duplicate/runtime lines across docs b13308ff, stable cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2 in maintained Chernarus and Vanilla roots."
+      ],
+      "handoff": "Closed as docs-published. Future SQF atlas work should rerun counts per target branch before using them as branch evidence and keep behavior/status detail on Server-Init-Bind-Cleanup.md, AI-Commander-Autonomy-Audit.md and Server-Gameplay-Runtime-Atlas.md.",
+      "updated": "2026-06-14T01:21:28+02:00"
+    },
     {
       "lane": "gear-easa-branch-scope-route",
       "owner": "Codex",

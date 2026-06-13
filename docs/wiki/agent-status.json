@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T01:07:20+02:00",
+  "generatedAt": "2026-06-14T01:21:28+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only Gear/EASA branch-scope route: Gear-Loadout-And-EASA-Atlas.md now has current branch scope for docs checkout 8b71e2a1, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f, release a96fdda2 and feat/buymenu-easa-qol a66d4691. It confirms profile/template save/import and creation/display debt remains open across checked roots; corrects Vehicle-Cargo-Equip-Loop-Bounds.md so stable/release fixed both maintained roots while perf is Chernarus-only; and aligns Service-Menu-Affordability-Guards.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md so partial stable/release service guards are not overstated as full authority hardening. No gameplay source changed.",
+      "currentWork": "Published docs-only SQF atlas source snapshot route: SQF-Code-Atlas.md now names the current docs checkout b13308ff recheck against the unchanged 04a60e43 Chernarus mission source tree, preserves the validated 738-reference preprocess snapshot, fixes the regenerate command path trim, and routes duplicate init binds, AI supply-truck startup and server FPS monitor branch claims to their canonical owner pages. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "sqf-atlas-source-snapshot-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "SQF-Code-Atlas.md now refreshes the compile/source-map gateway without duplicating server runtime evidence: docs checkout b13308ff was rechecked against 04a60e43 with the Chernarus mission source tree unchanged, the 738-reference preprocess snapshot still holds, the regenerate command uses a verified path trim, and branch-sensitive duplicate-bind, UpdateSupplyTruck and server-FPS monitor caveats route to Server-Init-Bind-Cleanup.md, AI-Commander-Autonomy-Audit.md and Server-Gameplay-Runtime-Atlas.md. No gameplay source changed."
+    },
     {
       "lane": "gear-easa-branch-scope-route",
       "owner": "Codex",
