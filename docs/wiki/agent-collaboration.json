@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T00:44:00+02:00",
+  "generatedAt": "2026-06-14T00:45:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,38 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "gameplay-systems-atlas-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Gameplay-Systems-Atlas.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AssignNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnHQKilled.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_BuyUnit.sqf",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Refreshed Gameplay-Systems-Atlas.md as the broad gameplay gateway with a top route table and current branch scope.",
+        "Routed town, economy, commander, upgrades, construction, factory, AI/HC, support/module and victory detail to canonical owner pages.",
+        "Corrected commander DR-15 wording to branch-split evidence: docs checkout ca40f202 still has broken helper unpacking, while stable/Miksuu/perf/release use _this select 0/1.",
+        "Replaced stale Server_OnHQKilled.sqf score/idempotency line refs with Commander/HQ owner-page routing, and kept AIBuyUnit latent after static search across checked refs found no active caller beyond compile/worker self references."
+      ],
+      "handoff": "Closed as docs-published. Future broad gameplay prompts should start from Gameplay-Systems-Atlas.md, then follow the owner routes for branch matrices and smoke gates. Do not treat helper unpacking, HQ score/idempotency or AIBuyUnit status as universal without checking the named owner page/ref.",
+      "updated": "2026-06-14T00:45:00+02:00"
+    },
     {
       "lane": "modules-atlas-reaktiv-branch-scope-route",
       "owner": "Codex",

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T00:44:00+02:00",
+  "generatedAt": "2026-06-14T00:45:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only Modules atlas Reaktiv branch-scope route: Modules-Atlas.md now has a top route table and compact owner routes for high-risk/integration modules; the Reaktiv matrix is refreshed for docs checkout 20a19676, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2. Docs/Miksuu/perf still carry unreachable maintained-root Common/Module/Reaktiv files with no init call; stable/release have no maintained-root Reaktiv hits; all checked refs still carry stale modded Napf/Eden/Lingor copies. Dead-Code-And-Stale-Code-Register.md now aligns. No gameplay source changed.",
+      "currentWork": "Published docs-only Gameplay systems atlas route prune: Gameplay-Systems-Atlas.md now has a top route table and current branch scope for docs checkout ca40f202, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f and release a96fdda2. It routes towns, economy, commander, upgrades, construction, factories, AI/HC, supports and victory to owner pages; corrects commander DR-15 to branch-split evidence; replaces stale HQ score/idempotency line refs with owner-page routing; and records AIBuyUnit as latent across checked refs. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "gameplay-systems-atlas-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Gameplay-Systems-Atlas.md now behaves as the broad gameplay gateway: it adds a top route table and current branch scope for docs checkout ca40f202, stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f and release a96fdda2; routes town, economy, commander, upgrades, construction, factory, AI/HC, support/module and victory detail to owner pages; corrects DR-15 to branch-split helper evidence; replaces stale Server_OnHQKilled.sqf line refs with Commander/HQ owner routing; and keeps AIBuyUnit latent unless a branch proves or revives it. No gameplay source changed."
+    },
     {
       "lane": "modules-atlas-reaktiv-branch-scope-route",
       "owner": "Codex",
