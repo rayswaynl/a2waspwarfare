@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T23:54:31+02:00",
+  "generatedAt": "2026-06-14T00:07:14+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,44 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "commander-vote-reassign-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Commander-Vote-And-Reassignment-Playbook.md",
+        "Commander-Reassignment-Call-Shape.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_VoteForCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_VoteMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Commander_VoteMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AssignNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Command.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "origin/feat/ai-commander"
+      ],
+      "outputs": [
+        "Refreshed Commander-Vote-And-Reassignment-Playbook.md as a commander correctness gateway with a top route table.",
+        "Added current branch scope for docs checkout e2c9f6ed, stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f, release a96fdda2 and feat/ai-commander c20ce153.",
+        "Confirmed vote AI/no-commander semantics remain unpatched everywhere checked.",
+        "Refreshed Commander-Reassignment-Call-Shape.md so DR-15 helper unpacking is branch-split: docs checkout remains broken, stable/Miksuu/perf/release/AI-commander fix helper shape but not duplicate senders or UI identity.",
+        "Aligned Feature-Status-Register.md and Source-Fix-Propagation-Queue.md commander rows, including Objective Ping current stable/release targeted-send evidence."
+      ],
+      "handoff": "Closed as docs-published. Future commander work should use Commander-Vote-And-Reassignment-Playbook.md for vote/no-commander policy and smoke, Commander-Reassignment-Call-Shape.md for DR-15 helper branch truth, Server-Authority-Migration-Map.md for requester validation and Client-UI-Systems-Atlas.md for vote UI loop polish. Do not claim commander voting or authority fixed from helper unpacking alone.",
+      "updated": "2026-06-14T00:07:14+02:00"
+    },
     {
       "lane": "ai-runtime-hc-loop-branch-scope-route",
       "owner": "Codex",

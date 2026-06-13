@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-13T23:54:31+02:00",
+  "generatedAt": "2026-06-14T00:07:14+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only AI runtime/HC branch-scope route: AI-Runtime-HC-Loop-Map.md now has a top route table and current branch scope for docs checkout b9e80da0, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f, release a96fdda2 and feat/ai-commander c20ce153; AI supply-truck detail routes to AI-Commander-Autonomy-Audit.md; Town-AI-Vehicle-Despawn-Safety.md has a current branch matrix; and Feature-Status-Register.md plus Source-Fix-Propagation-Queue.md now mark older 89ae9dad persistent-defense helper evidence as historical, not current branch truth. No gameplay source changed.",
+      "currentWork": "Published docs-only commander vote/reassignment branch-scope route: Commander-Vote-And-Reassignment-Playbook.md now has a top route table and current branch scope for docs checkout e2c9f6ed, origin/master cf2a6d6a, Miksuu b8389e74, perf 0076040f, release a96fdda2 and feat/ai-commander c20ce153; vote AI/no-commander semantics remain unpatched everywhere checked; Commander-Reassignment-Call-Shape.md owns the DR-15 helper branch matrix; and Feature-Status-Register.md plus Source-Fix-Propagation-Queue.md now align commander reassignment and Objective Ping current-head wording. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "commander-vote-reassign-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Commander-Vote-And-Reassignment-Playbook.md now behaves as a commander correctness gateway: it adds a top route table, names current branch scope for docs checkout e2c9f6ed, stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f, release a96fdda2 and feat/ai-commander c20ce153, confirms vote AI/no-commander semantics remain unpatched everywhere checked, routes DR-15 helper branch truth to Commander-Reassignment-Call-Shape.md, and aligns Feature-Status-Register.md plus Source-Fix-Propagation-Queue.md, including Objective Ping stable/release targeted-send evidence. No gameplay source changed."
+    },
     {
       "lane": "ai-runtime-hc-loop-branch-scope-route",
       "owner": "Codex",

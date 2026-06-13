@@ -44,12 +44,16 @@ _commander = _this select 1;
 
 ## Current Branch Matrix
 
+Branch route `commander-vote-reassign-branch-scope-route` rechecked maintained Chernarus and Vanilla roots on 2026-06-14 after stable `origin/master` sat at `cf2a6d6a`, Miksuu at `b8389e74` and release at `a96fdda2`.
+
 | Root / branch | Helper call shape | Remaining commander reassignment risks | Practical meaning |
 | --- | --- | --- | --- |
-| Current docs/source Chernarus | Still broken: `Server_AssignNewCommander.sqf:3-5` uses `_side = _this` and `_commander = _this select 1`. | Vote menu resolves by visible leader name (`GUI_Commander_VoteMenu.sqf:33-46`); `RequestNewCommander.sqf:14` and helper `:9` both send `new-commander-assigned`. | Patch-ready and source-unpatched. |
-| Maintained Vanilla Takistan | Same broken helper shape and UI/name selector as Chernarus. | Same duplicate notification-owner risk. | Must be propagated deliberately; a Chernarus-only fix is not enough. |
-| Stable `origin/master` / Miksuu upstream | Helper unpacking is fixed in both maintained roots: `_side = _this select 0`, `_commander = _this select 1` (`Server_AssignNewCommander.sqf:4-5`). | UI still selects by leader-name text, and both `RequestNewCommander.sqf:14` plus helper `:10` still send `new-commander-assigned`. | Upstream fixes the DR-15 call-shape bug, but not the duplicate-message or UI identity cleanup. |
-| `origin/release/2026-06-feature-bundle` | Same fixed helper unpacking as stable/upstream in Chernarus and Vanilla. | UI name selector and duplicate notification owner remain. | Treat release as partial commander reassignment cleanup, not a complete reassignment/authority fix. |
+| Docs checkout `e2c9f6ed` Chernarus and maintained Vanilla | Still broken: `Server_AssignNewCommander.sqf:3-5` uses `_side = _this` and `_commander = _this select 1`. | Vote menu resolves by visible leader name (`GUI_Commander_VoteMenu.sqf:33-46`); `RequestNewCommander.sqf:14` and helper `:9` both send `new-commander-assigned`. | Patch-ready and source-unpatched on the docs branch. |
+| Stable `origin/master` `cf2a6d6a` Chernarus and maintained Vanilla | Helper unpacking is fixed: `_side = _this select 0`, `_commander = _this select 1` (`Server_AssignNewCommander.sqf:4-5`). | UI still selects by leader-name text, and both `RequestNewCommander.sqf:14` plus helper `:10` still send `new-commander-assigned`. | Stable fixes the DR-15 call-shape bug, but not duplicate-message, UI identity or requester-authority cleanup. |
+| Miksuu upstream `b8389e74` Chernarus and maintained Vanilla | Same fixed helper unpacking as stable at `Server_AssignNewCommander.sqf:4-5`. | Same visible-name selector and duplicate sender shape. | Upstream is a helper-fix source, not a complete reassignment fix. |
+| `origin/perf/quick-wins` `0076040f` Chernarus and maintained Vanilla | Same fixed helper unpacking as stable at `Server_AssignNewCommander.sqf:4-5`. | Same visible-name selector and duplicate sender shape. | Perf branch does not close reassignment UI/notification/authority risks. |
+| Release `origin/release/2026-06-feature-bundle` `a96fdda2` Chernarus and maintained Vanilla | Same fixed helper unpacking as stable at `Server_AssignNewCommander.sqf:4-5`. | Same visible-name selector and duplicate sender shape. | Treat release as partial commander reassignment cleanup, not a complete reassignment/authority fix. |
+| `origin/feat/ai-commander` `c20ce153` Chernarus and maintained Vanilla | Same fixed helper unpacking as stable at `Server_AssignNewCommander.sqf:4-5`. | Same visible-name selector and duplicate sender shape; AI commander supervisor behavior is separate. | Do not route reassignment closure through AI commander revival without the UI/notification smoke here. |
 
 This means future code work can either port the fixed helper shape from stable/release or implement it directly, but it still needs one notification owner and a row-value/team-identity selector before the reassignment path is clean.
 

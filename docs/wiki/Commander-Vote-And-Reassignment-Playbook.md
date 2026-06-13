@@ -2,11 +2,34 @@
 
 Source-backed implementation playbook for commander election, no-commander vote semantics, manual reassignment and the nearby commander-authority boundary.
 
-Status: docs only; Chernarus source and maintained Vanilla are still unpatched for the issues described here.
+Status: docs only; vote outcome semantics are unpatched in every checked maintained root, while the DR-15 reassignment helper is branch-split.
 
 Scope: Arma 2 Operation Arrowhead 1.64 mission behavior. Gameplay patches should start in `Missions/[55-2hc]warfarev2_073v48co.chernarus`, then propagate maintained Vanilla through LoadoutManager.
 
-Use this page with [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas), [Commander reassignment call shape](Commander-Reassignment-Call-Shape), [Server authority map](Server-Authority-Migration-Map), [Hardening roadmap](Hardening-Implementation-Roadmap), [Feature status](Feature-Status-Register) and [Testing workflow](Testing-Debugging-And-Release-Workflow).
+Use this page with [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas), [Commander reassignment call shape](Commander-Reassignment-Call-Shape), [Server authority map](Server-Authority-Migration-Map), [Hardening roadmap](Hardening-Implementation-Roadmap), [Feature status](Feature-Status-Register), [Client UI systems](Client-UI-Systems-Atlas) and [Testing workflow](Testing-Debugging-And-Release-Workflow).
+
+## How To Use This Page
+
+| Need | Go here |
+| --- | --- |
+| Decide commander vote / no-commander policy | Use [Current Branch Scope](#current-branch-scope), then [Current Vote Behavior](#current-vote-behavior) and [Patch Order](#patch-order). |
+| Patch manual reassignment helper shape | Use [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix); this page keeps only the adjacent smoke and ordering context. |
+| Separate requester/server authority from vote semantics | Use [Server authority map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) for `RequestCommanderVote` / `RequestNewCommander` validation. |
+| Debug HQ/MHQ lifecycle after commander changes | Use [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas). |
+| Clean vote UI refresh loops, row colors or menu cadence | Use [Client UI systems](Client-UI-Systems-Atlas#vote-help-and-main-menu-branch-matrix). |
+| Review AI commander stop/start implications | Use [AI commander autonomy audit](AI-Commander-Autonomy-Audit). |
+
+## Current Branch Scope
+
+Checked 2026-06-14 on docs checkout `e2c9f6ed`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and `origin/feat/ai-commander` `c20ce153`.
+
+| Surface | Current branch truth | Route |
+| --- | --- | --- |
+| Commander vote AI/no-commander outcome | Every checked Chernarus and maintained Vanilla root still counts `wfbe_vote == -1` into `_aiVotes` and then uses the tautological `_highest >= _aiVotes` OR `_highest <= _aiVotes` player-candidate condition (`Server_VoteForCommander.sqf:18,27,43`). The client preview still treats row 0 or no strict majority as AI/no commander (`GUI_VoteMenu.sqf:88`). | This page owns the policy decision and smoke matrix. |
+| Manual reassignment helper shape | Docs checkout `e2c9f6ed` still has `_side = _this` in `Server_AssignNewCommander.sqf:3` in both maintained roots, while `RequestNewCommander.sqf:13-14` spawns the helper and also sends `new-commander-assigned`. Stable, Miksuu, perf, release and `feat/ai-commander` fix helper unpacking at `Server_AssignNewCommander.sqf:4-5` in both roots, but keep duplicate senders at helper `:10` plus caller `RequestNewCommander.sqf:14`. | [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix) |
+| Reassignment UI identity | Every checked root still stores team indexes with `lnbSetValue` (`GUI_Commander_VoteMenu.sqf:13,63`) but resolves the selected commander by visible leader-name text at `:33,37`. | Keep this smoke tied to DR-15; broader UI loop cleanup routes to [Client UI systems](Client-UI-Systems-Atlas#vote-help-and-main-menu-branch-matrix). |
+| Requester authority | `RequestCommanderVote` and `RequestNewCommander` remain payload-side/requester-light flows; this pass did not patch sender authentication or authority validation. | [Server authority map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) |
+| Objective Ping / old town tasks | Docs checkout, Miksuu and perf still keep the commander-menu `SetTask` sends commented (`GUI_Menu_Command.sqf:335,337,343`) while registering `SetTask`; stable and release send targeted Objective Ping tasks at `GUI_Menu_Command.sqf:336,344` in both maintained roots. The old town `TaskSystem` remains commented in all checked roots. | [Client UI systems](Client-UI-Systems-Atlas#objective-ping-versus-old-town-tasks) |
 
 ## What It Covers
 
@@ -14,8 +37,8 @@ Use this page with [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas), [Comm
 | --- | --- | --- |
 | Commander vote resolution | DR-47: server counts AI/no-commander votes but then selects any non-tied player candidate. | Confirmed; owner decision needed before code. |
 | Vote UI preview | Client preview can show AI/no commander for a distribution the server resolves to a player. | Confirmed mismatch. |
-| Manual reassignment helper | DR-15: helper receives `[_side, _assigned_commander]` but treats the whole payload as `_side`. | Confirmed; dedicated page owns exact patch shape. |
-| Reassignment UI identity | UI stores team ids in rows but resolves selected commander by visible leader name text. | Confirmed UI correctness debt. |
+| Manual reassignment helper | DR-15: docs checkout helper receives `[_side, _assigned_commander]` but treats the whole payload as `_side`; stable/Miksuu/perf/release/AI-commander fix only that unpacking. | Branch-split; dedicated page owns exact patch shape. |
+| Reassignment UI identity | UI stores team ids in rows but resolves selected commander by visible leader name text. | Confirmed UI correctness debt in every checked root. |
 | Requester authority | Vote/reassign PVFs use payload side/name/candidate. | Separate hardening pass; do not mix with vote semantics. |
 
 Not covered here: AI commander autonomy, HQ killed scoring, MHQ repair authority and construction authority. Route those through the owning pages linked above.
@@ -35,8 +58,8 @@ All source refs below are from the Chernarus source mission unless the path star
 | Commander assign UI | `Client/GUI/GUI_Commander_VoteMenu.sqf:8-14,33-46` stores row team indexes but resolves the target by visible leader-name text before sending `RequestNewCommander`. | Duplicate or changed names can point the reassignment at the wrong team. |
 | Vote restart PVF | `Server/PVFunctions/RequestCommanderVote.sqf:3-22` trusts payload side/name, resets votes, seeds the current commander vote and spawns `VoteForCommander`. | Useful recovery path, but requester identity hardening is separate from vote resolution. |
 | Manual reassign PVF | `Server/PVFunctions/RequestNewCommander.sqf:3-14` reads side/candidate, writes `wfbe_commander`, spawns `[_side, _assigned_commander]` into the helper and sends `new-commander-assigned`. | The caller already mutates commander state before the helper runs. |
-| Assign helper | Current docs/source `Server/Functions/Server_AssignNewCommander.sqf:3-9` sets `_side = _this`, `_commander = _this select 1`, then sends another `new-commander-assigned`. Stable/upstream/release already use `_this select 0` / `_this select 1` but keep the second sender. | DR-15 is source-unpatched on this docs branch, partially fixed upstream/release. After fixing/porting it, duplicate notification ownership must still be decided. |
-| Vanilla parity | Current maintained Vanilla carries the same vote and reassignment defects as current source; stable/upstream/release Vanilla have the helper unpacking fix but still keep name-text selection and duplicate notification sender shape. | Use [Commander reassignment call shape](Commander-Reassignment-Call-Shape) for branch status before claiming this lane fixed. |
+| Assign helper | Docs checkout `Server/Functions/Server_AssignNewCommander.sqf:3-9` sets `_side = _this`, `_commander = _this select 1`, then sends another `new-commander-assigned`. Stable/Miksuu/perf/release/AI-commander use `_this select 0` / `_this select 1` at `:4-5` but keep the helper sender at `:10`. | DR-15 is source-unpatched on this docs branch, partially fixed elsewhere. After fixing/porting it, duplicate notification ownership must still be decided. |
+| Vanilla parity | Maintained Vanilla matches the named Chernarus branch shapes: vote semantics are unpatched everywhere checked; the reassignment helper bug is present only on the docs checkout among this pass's checked refs; UI name-text selection and duplicate notification sender shape remain everywhere. | Use [Commander reassignment call shape](Commander-Reassignment-Call-Shape) for branch status before claiming this lane fixed. |
 
 ## Current Vote Behavior
 
@@ -64,7 +87,7 @@ Manual reassignment is a separate flow from the vote result, but the fixes are a
 3. The helper reads `_side = _this`, so side-logic routing receives an array instead of a side.
 4. Both caller and helper contain `new-commander-assigned` sends, but the helper send is partly blocked today by the bad side argument.
 
-Patch or port the DR-15 helper call shape with [Commander reassignment call shape](Commander-Reassignment-Call-Shape). Stable/upstream/release already fixed the helper unpacking, but still need one notification owner or clients can receive duplicate commander messages.
+Patch or port the DR-15 helper call shape with [Commander reassignment call shape](Commander-Reassignment-Call-Shape). Stable, Miksuu, perf, release and `feat/ai-commander` already fix helper unpacking in both maintained roots, but still need one notification owner or clients can receive duplicate commander messages.
 
 Patch the UI identity edge in the same implementation branch if possible. `GUI_Commander_VoteMenu.sqf` should use the row value/team index already stored in the listbox instead of comparing visible leader names.
 
@@ -100,6 +123,7 @@ Patch the UI identity edge in the same implementation branch if possible. `GUI_C
 - Treat DR-47 vote semantics, DR-15 reassignment call shape and commander requester-authority hardening as related but separate claims.
 - Do not claim "commander voting fixed" if only the helper call shape is patched.
 - Do not claim "commander authority fixed" if only the vote comparison is patched.
+- Do not use stable/release DR-15 helper unpacking as evidence that vote semantics, duplicate notification ownership or UI identity are fixed.
 - Keep all source refs relative to Chernarus first and update the Vanilla parity note after LoadoutManager propagation.
 - Use Arma 2 OA-safe SQF only; do not import Arma 3 event/remoteExec assumptions.
 
