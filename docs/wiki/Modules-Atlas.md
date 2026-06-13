@@ -1,16 +1,30 @@
 # Modules Atlas
 
-> Claude-owned, source-verified (2026-06-02). Behavioral map of the `Client/Module/*`, `Server/Module/*` and `Common/Module/*` subsystems — most are config-gated QoL/combat features (gate = a `WFBE_C_MODULE_WFBE_<X>` constant; see [Variable and naming conventions](Variable-And-Naming-Conventions)). The high-stakes module (Nuke/ICBM) and the integration modules (AntiStack, supplyMission, MASH) have dedicated findings; this page documents the **previously-undocumented** ones. Paths relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Arma 2 OA 1.64.
+> Source-refreshed 2026-06-14 on docs checkout `20a19676`. Behavioral map of the `Client/Module/*`, `Server/Module/*` and `Common/Module/*` subsystems. Most modules are config-gated QoL/combat features (gate = a `WFBE_C_MODULE_WFBE_<X>` constant; see [Variable and naming conventions](Variable-And-Naming-Conventions)). Paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/` unless a branch/root note says otherwise. Arma 2 OA 1.64.
 
-## Already covered elsewhere (cross-links)
-- **Nuke / ICBM** — [Deep-review findings](Deep-Review-Findings) DR-27 (CRITICAL: forged `RequestSpecial` → server-applied map-wide kill). `Client/Module/Nuke/`.
-- **EASA** (aircraft loadout) — DR-28 (client-authoritative). `Client/Module/EASA/`.
-- **AntiStack** (external DB) — DR-7..DR-10. `Server/Module/AntiStack/`, `Client/Module/AntiStack/`.
-- **supplyMission** — DR-39 (dead twin + pull-based JIP). `Server/Module/supplyMission/`.
-- **MASH markers** — DR-34 (dead both ends). `Client/Module/MASH/`, `Server/Module/MASH/`.
-- **UAV** — DR-27 round (the `_button == 007` branch is `comment 'DISABLED'`, `uav_interface.sqf:226` / `uav_interface_oa.sqf:100`). `Client/Module/UAV/`.
-- **serverFPS** — DR-19 (hosted busy-loop). `Server/Module/serverFPS/`.
-- **AFKkick** — `kickAFK` PV is the one BattlEye-filtered channel (DR-30). Current client source uses `Client/Module/AFKkick/`; the server handler folder is `Server/Module/afkKick/`.
+## How To Use This Atlas
+
+| Need | Start here | Why |
+| --- | --- | --- |
+| Find a module's boot or attach edge | This page, then [SQF code atlas](SQF-Code-Atlas) | This page names the live init/unit-creation edge before you edit a module file. |
+| Review tactical/authority modules | [Support specials and tactical modules](Support-Specials-And-Tactical-Modules-Atlas), [ICBM authority](ICBM-Authority-Playbook), [Server authority migration map](Server-Authority-Migration-Map) | ICBM, support specials and request handlers have deeper branch matrices and server-trust notes there. |
+| Review loadout/service/UI modules | [Gear, loadout and EASA](Gear-Loadout-And-EASA-Atlas), [Client UI systems](Client-UI-Systems-Atlas) | EASA/service affordability, UI loops and resource risks are owned by narrower UI/loadout pages. |
+| Review supply, MASH or respawn modules | [Supply mission architecture](Supply-Mission-Architecture), [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas) | Supply and mobile-respawn behavior spans client/server modules and PV state. |
+| Review runtime/performance channels | [Server runtime and operations](Server-Runtime-And-Operations), [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Public variable channel index](Public-Variable-Channel-Index) | FPS publishing, AFK enforcement and PV channels need runtime/BE context outside module folders. |
+| Decide archive vs revive | [Dead/stale code register](Dead-Code-And-Stale-Code-Register) | Dormant modules such as Reaktiv should not be revived or removed from a folder diff alone. |
+
+## Covered By Owner Pages
+
+| Module | Owner route | Source anchor |
+| --- | --- | --- |
+| Nuke / ICBM | [ICBM authority](ICBM-Authority-Playbook), [Support specials](Support-Specials-And-Tactical-Modules-Atlas) | Common init compiles `Client\Module\Nuke\ICBM_Init.sqf` when `WFBE_C_MODULE_WFBE_ICBM > 0` (`Init_Common.sqf:319`). |
+| EASA aircraft loadout | [Gear, loadout and EASA](Gear-Loadout-And-EASA-Atlas), [Service menu affordability guards](Service-Menu-Affordability-Guards) | Client init compiles `Client\Module\EASA\EASA_Init.sqf` when enabled (`Init_Client.sqf:588`). |
+| AntiStack external DB | [Player join/disconnect and AntiStack lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle), [AntiStack database extension audit](AntiStack-Database-Extension-Audit) | Server init compiles AntiStack helpers at `Init_Server.sqf:72-80,85-87` and starts optional loops at `:599-608`. |
+| supplyMission | [Supply mission architecture](Supply-Mission-Architecture), [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) | Server init compiles supplyMission helpers at `Init_Server.sqf:66-69,71,81,91`. |
+| MASH markers | [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas#mash-split-live-respawn-dead-marker-relay) | Client receiver is commented at `Init_Client.sqf:132`; server marker helper is compiled/comment-split at `Init_Server.sqf:70,92`. |
+| UAV terminal/module | [Support specials](Support-Specials-And-Tactical-Modules-Atlas), [Client UI systems](Client-UI-Systems-Atlas) | Current UI keeps the `_button == 007` branch disabled (`uav_interface.sqf:226`, `uav_interface_oa.sqf:100`). |
+| serverFPS | [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Server runtime](Server-Runtime-And-Operations) | Server init has old commented compile lines at `Init_Server.sqf:65,90` and still starts the publisher at `:595`. |
+| AFKkick | [Public variable channel index](Public-Variable-Channel-Index), [Feature status](Feature-Status-Register#afk-enforcement-policy) | Client init compiles/runs `Client\Module\AFKkick` at `Init_Client.sqf:256-264`; server handler compile is `Init_Server.sqf:63` with an older commented duplicate at `:88`. |
 
 ## Combat / vehicle modules
 
@@ -21,7 +35,17 @@ Compiles `WFBE_CO_MOD_IRS_CreateSmoke/DeploySmoke/HandleMissile/OnIncomingMissil
 `CM_Init.sqf:1-3` compiles `CM_Countermeasures`, `CM_Flares`, `CM_Spoofing`. **Gate for the CM module:** `WFBE_C_MODULE_WFBE_FLARES > 0 && WF_A2_Vanilla` (`Init_Client.sqf:589`). The separate built-aircraft CM-removal block is the non-vanilla/OA path: `Client_BuildUnit.sqf:275-283` runs under `if !(WF_A2_Vanilla)` and removes countermeasures when the module is disabled or the side lacks `WFBE_UP_FLARESCM`. Do not describe the removal block as vanilla-only.
 
 ### Reaktiv — reactive (ERA) armor (`Common/Module/Reaktiv/`)
-Current source status: **dead / unreachable**. `Common/Module/Reaktiv/Reaktiv_Init.sqf:5` compiles `WFBE_CO_MOD_Reaktiv_OnDamageReceived` (`Reaktiv_OnHandleDamage.sqf`), but no current init or runtime file calls `Reaktiv_Init.sqf`. `Init_Common.sqf:319-323` initializes ICBM, IRS and CIPHER, with no Reaktiv compile path. If revived, it would apply a `HandleDamage`-based per-hit-selection damage model (the init's comment block enumerates hull/turret/track/engine selections for an Abrams under `R_M136_AT`) and alter how AT hits map to vehicle hitpoints.
+Current docs/source status: **dead / unreachable**. `Common/Module/Reaktiv/Reaktiv_Init.sqf:5` compiles `WFBE_CO_MOD_Reaktiv_OnDamageReceived` (`Reaktiv_OnHandleDamage.sqf`), but no current init or runtime file calls `Reaktiv_Init.sqf`. Current Chernarus and maintained Vanilla `Init_Common.sqf:319-323` initialize ICBM, IRS and CIPHER, with no Reaktiv compile path. If revived, it would apply a `HandleDamage`-based per-hit-selection damage model (the init's comment block enumerates hull/turret/track/engine selections for an Abrams under `R_M136_AT`) and alter how AT hits map to vehicle hitpoints.
+
+Branch check refreshed 2026-06-14:
+
+| Ref | Maintained-root Reaktiv files | Init caller | Modded copies |
+| --- | --- | --- | --- |
+| docs checkout `20a19676` | Present in source Chernarus and maintained Vanilla (`Reaktiv_Init.sqf:5`, `Reaktiv_OnHandleDamage.sqf:7`) | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
+| stable `origin/master` `cf2a6d6a` | No maintained-root `Common/Module/Reaktiv` hits | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:320-324` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
+| Miksuu `b8389e74` | Present in source Chernarus and maintained Vanilla | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
+| `perf/quick-wins` `0076040f` | Present in source Chernarus and maintained Vanilla | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
+| release `a96fdda2` | No maintained-root `Common/Module/Reaktiv` hits | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
 
 ### Engines — "stealth" engine-off (`Client/Module/Engines/`)
 `Engine.sqf` toggles a stealth mode: saves current fuel into the vehicle's `Fuel` variable and `setFuel 0` (engine cannot run), swapping the addAction to `STEALTH OFF` → `Startengine.sqf` which restores fuel. Added to built tanks/wheeled-APCs (`Client_BuildUnit.sqf:336-337`). Client addAction-driven, local.
@@ -50,7 +74,7 @@ Utility library plus one boot-time script. `CIPHER_Init.sqf` defines compiled he
 - Module **gates** are config constants (`WFBE_C_MODULE_WFBE_*`) read at boot; toggling them is the supported on/off switch.
 - Combat modules attach their EHs at **unit creation** in `Client/Functions/Client_BuildUnit.sqf` (IRS/CM/Engines and inline rearmor handlers), so they are client-local on the buyer's machine — consistent with the factory locality model (DR-33). Do not count Reaktiv in that live set unless `Reaktiv_Init.sqf` is deliberately wired back in.
 - Before editing a module, name its runtime edge and smoke that edge: boot init (`Init_Common.sqf:319-323`, `Init_Client.sqf:127-135`, `:587-589`), respawn reapply (`Init_Client.sqf:570-571` and respawn skill reapply paths), unit creation attach (`Client_BuildUnit.sqf:275-283`, `:336-356`), PV/PVF event, or server loop. A module file diff alone is not enough proof that the live behavior changed.
-- The only module with an authority/forgery defect is **Nuke/ICBM** (DR-27); the rest are cosmetic/QoL or AI behavior with no client→server trust surface beyond the shared PVF dispatcher.
+- The only module here with a map-wide forged-payload defect is **Nuke/ICBM** (DR-27). EASA/service, supply, MASH and PV/PVF trust surfaces are routed to their owner pages above; do not flatten those into this compact module map.
 
 ## Continue Reading
 

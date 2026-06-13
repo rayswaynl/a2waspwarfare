@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T00:26:00+02:00",
+  "generatedAt": "2026-06-14T00:44:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,45 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "modules-atlas-reaktiv-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Modules-Atlas.md",
+        "Dead-Code-And-Stale-Code-Register.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Module/Reaktiv/Reaktiv_Init.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Module/Reaktiv/Reaktiv_OnHandleDamage.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_Common.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Module/Reaktiv",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.Napf/Common/Module/Reaktiv",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.eden/Common/Module/Reaktiv",
+        "Modded_Missions/[55-2hc]warfarev2_073v48co.lingor/Common/Module/Reaktiv",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Refreshed Modules-Atlas.md as the module gateway with a top route table and compact owner-page routes for ICBM/EASA/AntiStack/supply/MASH/UAV/serverFPS/AFK.",
+        "Added current Reaktiv branch scope for docs checkout 20a19676, stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f and release a96fdda2.",
+        "Confirmed docs/Miksuu/perf still carry unreachable maintained-root Common/Module/Reaktiv files with no init call, stable/release have no maintained-root Reaktiv hits, and all checked refs still carry stale modded Napf/Eden/Lingor copies.",
+        "Aligned Dead-Code-And-Stale-Code-Register.md and superseded stale Reaktiv knowledge rows."
+      ],
+      "handoff": "Closed as docs-published. Future module/dead-code work should use Modules-Atlas.md for module routing and the Reaktiv branch matrix; revive Reaktiv only with a deliberate init path plus HandleDamage locality smoke, or archive/remove remaining maintained-root copies while handling stale modded copies under modded mission policy.",
+      "updated": "2026-06-14T00:44:00+02:00"
+    },
     {
       "lane": "marker-cleanup-restoration-branch-scope-route",
       "owner": "Codex",
