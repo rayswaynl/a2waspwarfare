@@ -15,18 +15,18 @@ Use this with [Networking and public variables](Networking-And-Public-Variables)
 | Current code | Still uses dispatch-time `Call Compile` on sender-chosen handler names. |
 | Recommended fix | Registered allowlist plus `missionNamespace getVariable` lookup; keep `Spawn`. |
 | What this fixes | Arbitrary handler-string compilation and avoidable per-message recompile in generic PVF dispatch. |
-| What it does not fix | Payload forgery inside legitimate handlers, direct publicVariable channels outside `WFBE_PVF_*`, or missing BattlEye defense-in-depth. |
+| What it does not fix | Payload forgery inside legitimate handlers, missing authenticated sender context (DR-55), direct publicVariable channels outside `WFBE_PVF_*`, or missing BattlEye defense-in-depth. |
 
 ## Current Branch Matrix
 
-Branch route `pvf-dispatcher-lookup-branch-route` rechecked the generic PVF dispatcher across maintained roots and active candidate branches on 2026-06-05:
+Branch route `pvf-dispatcher-lookup-branch-route` rechecked the generic PVF dispatcher across maintained roots and active candidate branches on 2026-06-05, with current stable/release/upstream refs refreshed on 2026-06-06:
 
 | Scope checked | Server dispatcher | Client dispatcher | PVF init / registry | Practical meaning |
 | --- | --- | --- | --- | --- |
 | Current docs/source Chernarus and maintained Vanilla Takistan | Both roots still read `_script` from payload index `0` and run `_parameters Spawn (Call Compile _script)` at `Server/Functions/Server_HandlePVF.sqf:14`. | Both roots still destination-filter, then run `_parameters Spawn (Call Compile _script)` at `Client/Functions/Client_HandlePVF.sqf:22`. | Both roots precompile `CLTFNC*` / `SRVFNC*` handlers in `Common/Init/Init_PublicVariables.sqf:45,50`, but do not export or enforce an allowlist. | P0 dispatcher lookup hardening remains source-unpatched in both maintained roots. |
-| Stable `origin/master` `2cdf5fb8` and Miksuu upstream `f532f706` | Same `Spawn (Call Compile _script)` line at `Server_HandlePVF.sqf:14` in both maintained roots. | Same client dispatcher compile at `Client_HandlePVF.sqf:22` in both maintained roots. | Same precompile-and-PVEH registry shape; no `PVF_ALLOWED` / namespace lookup guard found. | No stable or upstream rescue exists. |
+| Stable `origin/master` / local `master` `89ae9dad` and Miksuu upstream `89ae9dad` | Same `Spawn (Call Compile _script)` line at `Server_HandlePVF.sqf:14` in both maintained roots. | Same client dispatcher compile at `Client_HandlePVF.sqf:22` in both maintained roots. | Same precompile-and-PVEH registry shape; no `PVF_ALLOWED` / namespace lookup guard found. | No stable or upstream rescue exists. |
 | `origin/perf/quick-wins` `0076040f` | Same server dispatcher compile at `:14` in Chernarus and maintained Vanilla. | Same client dispatcher compile at `:22` in Chernarus and maintained Vanilla. | Same registry shape; perf fixes do not touch PVF dispatch lookup. | Performance branch does not cover DR-1/DR-38 despite this being a small perf/security patch. |
-| `origin/release/2026-06-feature-bundle` `7195b331` | Same server dispatcher compile at `:14` in release Chernarus and release maintained Vanilla. | Release adds headless-client destination filtering, shifting the final compile to `Client_HandlePVF.sqf:32`, but still runs `Spawn (Call Compile _script)` in both release roots. | Same precompiled `CLTFNC*` / `SRVFNC*` registry; no allowlist or `missionNamespace getVariable` dispatch guard. | Release head is not fixed; its HC client filter is adjacent behavior, not a dispatcher hardening substitute. |
+| `origin/release/2026-06-feature-bundle` `7ff18c49` | Same server dispatcher compile at `:14` in release Chernarus and release maintained Vanilla. | Release adds headless-client destination filtering, shifting the final compile to `Client_HandlePVF.sqf:32`, but still runs `Spawn (Call Compile _script)` in both release roots. | Same precompiled `CLTFNC*` / `SRVFNC*` registry; no allowlist or `missionNamespace getVariable` dispatch guard. | Release head is not fixed; its HC client filter is adjacent behavior, not a dispatcher hardening substitute. |
 
 Bohemia's Community Wiki lists `missionNamespace` as introduced with Arma 2 1.00 and shows `missionNamespace getVariable` as the supported namespace lookup shape, so the recommended lookup is Arma 2 OA-compatible rather than an Arma 3 import.
 
@@ -172,10 +172,17 @@ This patch is the PVF foundation, not the whole server-authority migration.
 | Sender-chosen arbitrary handler string | Yes | Forged payload trying to compile arbitrary SQF text instead of `SRVFNCRequestJoin`. |
 | Avoidable per-message compile | Yes | `Server_HandlePVF.sqf:14`, `Client_HandlePVF.sqf:22`. |
 | Legitimate handler with forged payload | No | `RequestSpecial` `ICBM` branch, `RequestStructure`, `RequestUpgrade`, `RequestChangeScore`. |
+| Missing authenticated sender context | No | DR-55: `Init_PublicVariables.sqf:51-53` forwards only the public-variable value into `WFBE_SE_FNC_HandlePVF`, and `Server_HandlePVF.sqf:9-14` forwards only handler parameters. |
 | Direct publicVariable channel outside PVF | No | `ATTACK_WAVE_INIT`, side-supply temp PVs, supply mission PVs, MASH marker relay, HQ state channels. |
 | BattlEye defense-in-depth | No | Repo `BattlEyeFilter/publicvariable.txt` still only ships the `kickAFK` feature rule. |
 
 After this patch, a forged command name should be rejected. A forged payload sent to a real registered handler still reaches that handler and must be validated there.
+
+## Sender Authentication Boundary
+
+Do not treat handler-name allowlisting as full PVF hardening. DR-55 found that the server PVEH registration calls `(_this select 1) Spawn WFBE_SE_FNC_HandlePVF`, so the dispatcher receives the value tuple without the publisher identity. The server dispatcher then selects `_script` and `_parameters` and spawns the handler, which leaves legitimate handlers unable to distinguish a real requester from a forged client payload unless each handler re-derives authority from trusted server state.
+
+The DR-55 lane belongs in [Server authority migration map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) and `agent-hardening-backlog.jsonl#pvf-handler-sender-authentication`: carry authenticated requester context to the server handler layer, then validate side, commander/team role, funds, target objects and ownership per handler.
 
 ## Direct PublicVariable Boundary
 

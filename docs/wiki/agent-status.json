@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-13T17:06:00+02:00",
+  "generatedAt": "2026-06-13T18:21:00+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only attack-wave authority branch matrix: current source Chernarus, maintained Vanilla, stable origin/master, Miksuu upstream, perf/quick-wins, release, AI commander branch and historical Miksuu AttackWave all keep direct ATTACK_WAVE_INIT supply/side trust plus trusted ATTACK_WAVE_DETAILS.",
+      "currentWork": "Published docs-only Patrols v2 current-master route: current origin/master cf2a6d6a Chernarus and maintained Vanilla retire the old server_town_ai random-town patrol launch and route patrols through the side-upgrade driver, runner, HC delegation and friendly marker surfaces.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway pages short and route new facts to owner pages."
     },
     "Codex-2": {
@@ -57,10 +57,16 @@
   },
   "laneSummary": [
     {
-      "lane": "documentation-finisher-loop",
+      "lane": "patrols-v2-current-master-route",
       "owner": "Codex",
-      "status": "active-ongoing",
-      "output": "Keep wiki/status pages current from source evidence; route open docs work through the dashboard, pruning ledger, Feature Status, Pending Owner Decisions and machine status files; compact the dashboard, maintain machine-readable entrypoints, refresh scan artifacts when docs/source changes affect them and publish scoped validation batches."
+      "status": "published-validated",
+      "output": "Corrected current-master patrol status after origin/master advanced to cf2a6d6a. Current Chernarus and maintained Vanilla retire the old server_town_ai random-town patrol launch, add server_side_patrols.sqf plus Common_RunSidePatrol.sqf, use && at server_patrols.sqf:26, and maintain friendly patrol markers through WFBE_ACTIVE_PATROLS. Towns-Camps-And-Capture-Atlas.md, AI-Runtime-HC-Loop-Map.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md now route old DR-57/AI1 wording as historical 89ae9dad branch evidence and current Patrols v2 as source-present / smoke-pending. No gameplay source changed."
+    },
+    {
+      "lane": "pvf-sender-authentication-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Folded DR-55 into the canonical networking/authority route. Current origin/master cf2a6d6a evidence: Init_PublicVariables.sqf:51-53 forwards only the public-variable value into WFBE_SE_FNC_HandlePVF, and Server_HandlePVF.sqf:9-14 forwards only handler parameters. Networking-And-Public-Variables.md, Public-Variable-Channel-Index.md, Server-Authority-Migration-Map.md and PVF-Dispatch-Implementation-Playbook.md now separate DR-1/DR-38 handler-name allowlisting from DR-55 authenticated requester/context validation. No gameplay source changed."
     },
     {
       "lane": "attack-wave-authority-branch-route",
@@ -69,10 +75,370 @@
       "output": "Attack Wave Authority Playbook now owns the DR-41 branch/root matrix: current source/Vanilla, stable origin/master cf2a6d6a, upstream/master b8389e74, perf/quick-wins 0076040f, release a96fdda2, feat/ai-commander c20ce153 and upstream/AttackWave 994150da all keep direct ATTACK_WAVE_INIT supply/side trust plus trusted ATTACK_WAVE_DETAILS. No gameplay source changed."
     },
     {
+      "lane": "legacy-compiled-aliases-no-static-callers",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Function-And-Module-Index.md now owns a legacy compiled alias table for old globals with zero active static callers after excluding compile lines, comments and the helper file itself: AITownResitance, EquipLoadout, GetGroupFromConfig, GetSafePlace, GetUnitsBelowHeight, UseStationaryDefense, ReplaceArray, FireArtillery, GetSideUpgrades and client HandlePVF. Dead-Code-And-Stale-Code-Register.md routes one stale-alias row there and preserves dynamic/runtime uncertainty. No gameplay source changed."
+    },
+    {
+      "lane": "client-modal-loop-cadence-index",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Client-UI-Systems-Atlas.md now owns a compact client modal loop cadence map. Current Chernarus and maintained Vanilla both use sleep .01 in GUI_BuyGearMenu.sqf:503, GUI_TransferMenu.sqf:94, GUI_RespawnMenu.sqf:113 and GUI_UpgradeMenu.sqf:282, with no local PerformanceAudit_Record writer in those controllers. Performance-Opportunity-Sweep.md routes the .01 row as measurement-first P3 work. No gameplay source changed."
+    },
+    {
+      "lane": "ui-resource-wf-icon-missing-block",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "UI-Resource-Parity-Cleanup.md now owns the exact stale RscMenu_Upgrade missing icon block: current Chernarus and maintained Vanilla Rsc/Dialogs.hpp:2644,2655,2666,2677,2688,2699,2710,2721,2732,2743,2754,2765,2776,2787,2798,2809,2820,2831 reference 18 missing Client/Images/wf_*.paa files, and rg --files found none repo-wide. Rsc/Ressources.hpp:300,302,304 button skins resolve. No gameplay source changed."
+    },
+    {
+      "lane": "indicator-surface-matrix-index",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Client-UI-Systems-Atlas.md now owns a compact indicator surface matrix for RHUD/action titles, capture/endgame/CoIn titles, map/tactical markers, support/special markers, menu/list icons/resources and status/debug counters. Representative current Chernarus anchors were checked: Titles.hpp:164-171,532-540,723; Client_UpdateRHUD.sqf:89-92,199-201,367-369; updatetownmarkers.sqf:20-21,129-134; Common_MarkerUpdate.sqf:49-50,67-88,218-241; Support_Paratroopers.sqf:117; HandleParatrooperMarkerCreation.sqf:30-45; Dialogs.hpp:1171,1566,1586,2123,2644,3469; monitorServerFPS.sqf:1-5. No gameplay source changed."
+    },
+    {
+      "lane": "commander-task-objective-ping-branch-split",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Client UI, commander/HQ, Feature Status and dead-code pages now separate current-source dormant command task UI and old town TaskSystem residue from release 7ff18c49 Objective Ping. Current source/stable/perf still leave SetTask sends commented; release re-enables targeted sends in both maintained roots. No gameplay source changed."
+    },
+    {
+      "lane": "performance-audit-writer-index",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Function-And-Module-Index now owns the mission-side PerformanceAudit writer map: Common_PerformanceAudit.sqf local enablement/buffers/logging/flush loop, Client/Server runner startup and representative client/server record writers. PerformanceAuditAnalyzer remains the offline parser/tool owner. No gameplay source changed."
+    },
+    {
+      "lane": "ai-commander-upgrade-debit-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed AI commander upgrade debit/cost lookup rows from stale origin/master 2cdf5fb8 current-facing machine evidence to current stable 89ae9dad evidence. Current stable/Miksuu/perf still keep raw AI_ORDER cost lookup plus swapped funds/supply debit in both maintained roots; release 7ff18c49 fixes debit order in both roots; feat/ai-commander c20ce153 fixes debit plus cost-level lookup only in Chernarus. No gameplay source changed."
+    },
+    {
+      "lane": "service-easa-affordability-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed service/EASA affordability branch-scope wording to current stable 89ae9dad and release 7ff18c49 evidence, correcting release scope so rearm/refuel guards are partial in both maintained release roots while repair/heal and exact-funds EASA remain open. No gameplay source changed."
+    },
+    {
+      "lane": "reaktiv-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed Reaktiv dead-code/module rows from stale stable 2cdf5fb8 current-facing wording to current stable 89ae9dad evidence while preserving release maintained-root removal and stale modded-copy scope. No gameplay source changed."
+    },
+    {
+      "lane": "loadoutmanager-root-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed LoadoutManager root-discovery machine/status rows from stale origin/master 2cdf5fb8 current-source wording to current stable 89ae9dad evidence while preserving the release marker-root discovery split. No gameplay source changed."
+    },
+    {
+      "lane": "camp-count-current-head-machine-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed camp-count helper fallback machine/status rows from stale stable 2cdf5fb8 current-facing wording to current stable 89ae9dad evidence while preserving release/perf branch scope. No gameplay source changed."
+    },
+    {
+      "lane": "ai-supply-truck-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed AI supply-truck safe-disable docs and machine rows from mixed historical 2cdf5fb8 line refs to current stable 89ae9dad line refs while preserving the release safe-disable and feat/ai-commander partial-guard branch split. No gameplay source changed."
+    },
+    {
+      "lane": "resistance-patrol-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed resistance patrol active-latch docs and machine rows from older HEAD@2cdf5fb8 launch-line wording to current stable 89ae9dad line refs while preserving the branch split: current stable unpatched, perf Chernarus-only fixed, release fixed in both maintained roots. No gameplay source changed."
+    },
+    {
+      "lane": "town-ai-despawn-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed stale human-facing Town AI vehicle despawn Feature Status wording from historical stable 2cdf5fb8 to current stable 89ae9dad, while preserving the new persistent-defense cleanup helper as an additional current cleanup surface needing the same occupancy guard. No gameplay source changed."
+    },
+    {
+      "lane": "fast-travel-fee-stable-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed current-facing Tactical fast-travel fee rows after origin/master/local master advanced to 89ae9dad and a targeted source diff showed no checked GUI_Menu_Tactical.sqf or Init_CommonConstants.sqf file changes from historical 2cdf5fb8. Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows now route fee-mode TODOs, hidden unaffordable destinations, marker-only fee text and local travel debit through current stable 89ae9dad, Miksuu 89ae9dad, perf 0076040f and release 7ff18c49 without stale 2cdf5fb8 current-state wording. No gameplay source changed."
+    },
+    {
+      "lane": "clickabletext-soundpush-stable-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed current-facing RscClickableText soundPush rows after origin/master/local master advanced to 89ae9dad and a targeted source diff showed no checked Rsc/Ressources.hpp or Rsc/Dialogs.hpp file changes from historical 2cdf5fb8. Client-UI-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, Dead-Code-And-Stale-Code-Register.md and machine rows now route the malformed base-control value through current stable 89ae9dad, Miksuu 89ae9dad, perf 0076040f, release 7ff18c49 and UI theme branches without stale 2cdf5fb8 current-state wording. No gameplay source changed."
+    },
+    {
+      "lane": "vehicle-cargo-loop-stable-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed current-facing vehicle/backpack cargo loop rows after origin/master/local master advanced to 89ae9dad and a targeted source diff showed no checked Common_EquipVehicle, Common_EquipBackpack or Client_GetVehicleContent file changes from historical 2cdf5fb8. Vehicle-Cargo-Equip-Loop-Bounds.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows now route the five inclusive cargo-application loops through current stable 89ae9dad, Miksuu 89ae9dad, perf 0076040f and release 7ff18c49 without stale 2cdf5fb8 current-state wording. No gameplay source changed."
+    },
+    {
+      "lane": "gear-template-stable-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed current-facing gear profile/template rows after origin/master/local master advanced to 89ae9dad and a targeted source diff showed no checked AddTemplate, FillTemplates, SaveTemplateProfile or Init_ProfileGear file changes from historical 2cdf5fb8. Gear-Template-Profile-Filter.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows now route undefined _u_upgrade, the six-field import guard and Barracks-or-Gear creation versus Gear-only display through current stable 89ae9dad, Miksuu 89ae9dad, perf 0076040f and release 7ff18c49 without stale 2cdf5fb8 current-state wording. No gameplay source changed."
+    },
+    {
+      "lane": "requestspecial-upgrade-sync-stable-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed current-facing RequestSpecial upgrade-sync rows after origin/master/local master advanced to 89ae9dad and a targeted source diff showed no checked handler/caller/process-upgrade file changes from historical 2cdf5fb8. Support-Specials-And-Tactical-Modules-Atlas.md, Upgrades-And-Research-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows now route the mixed _args/_this parser through current stable 89ae9dad, Miksuu 89ae9dad, perf 0076040f and release 7ff18c49 without stale 2cdf5fb8 current-state wording. No gameplay source changed."
+    },
+    {
+      "lane": "salvage-payout-stable-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed current-facing salvage payout/cleanup rows after origin/master/local master advanced to 89ae9dad and a targeted source diff showed no checked salvage file changes from historical 2cdf5fb8. Construction-And-CoIn-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows now route lowercase ChangePlayerfunds, the salvage-truck OR loop and client-local deletion/reward through current stable 89ae9dad, Miksuu 89ae9dad, perf 0076040f, release 7ff18c49 and historical salvage branches without stale 2cdf5fb8 current-state wording. No gameplay source changed."
+    },
+    {
+      "lane": "auto-wall-toggle-stable-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed current-facing auto-wall global-toggle rows after origin/master/local master advanced to 89ae9dad. Construction-And-CoIn-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows now route the global isAutoWallConstructingEnabled scope decision through current stable 89ae9dad, Miksuu 89ae9dad, perf 0076040f and release 7ff18c49 without stale 2cdf5fb8 current-state wording. The only checked 2cdf5fb8..89ae9dad diff is unrelated Init_Common.sqf town-defense helper compile wiring. No gameplay source changed."
+    },
+    {
+      "lane": "empty-supply-truck-stable-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed current-facing empty supply-truck cleanup rows after origin/master/local master advanced to 89ae9dad and a targeted source diff showed no checked empty-vehicle collector/handler file changes from historical 2cdf5fb8. Marker-Cleanup-Restoration-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows now route the 24-hour supply-truck timeout through current stable 89ae9dad, Miksuu 89ae9dad, perf 0076040f and release 7ff18c49 without stale 2cdf5fb8 current-state wording. No gameplay source changed."
+    },
+    {
+      "lane": "wasp-marker-wait-stable-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed current-facing WASP marker wait rows after origin/master/local master advanced to 89ae9dad and a targeted source diff showed no checked WASP helper/client-init file changes from historical 2cdf5fb8. WASP-Marker-Wait-Cleanup.md, Source-Fix-Propagation-Queue.md and machine rows now route the display-54 input-lock busy wait through current stable 89ae9dad, Miksuu 89ae9dad, perf 0076040f and release 7ff18c49 without stale 2cdf5fb8 current-state wording. No gameplay source changed."
+    },
+    {
+      "lane": "factory-purchase-stable-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed current-facing factory buy/refund rows after origin/master/local master advanced to 89ae9dad and a targeted source diff showed no checked buy-menu/list/build-unit file changes from historical 2cdf5fb8. Factory-And-Purchase-Systems-Atlas.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows now route buy-menu price/key cleanup and destroyed-factory refund policy through current stable 89ae9dad, Miksuu 89ae9dad, perf 0076040f and release 7ff18c49 without stale 2cdf5fb8 current-state wording. No gameplay source changed."
+    },
+    {
+      "lane": "network-p0-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed current-facing P0 network rows after origin/master/local master advanced to 89ae9dad and a targeted source diff showed no checked PVF dispatcher or SEND_MESSAGE file changes from historical 2cdf5fb8. PVF-Dispatch-Implementation-Playbook.md, Public-Variable-Channel-Index.md, Networking-And-Public-Variables.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows now route PVF dispatcher lookup hardening and direct SEND_MESSAGE compile through current stable 89ae9dad, Miksuu 89ae9dad, perf 0076040f and release 7ff18c49 without stale 2cdf5fb8 current-state wording. No gameplay source changed."
+    },
+    {
+      "lane": "economy-current-head-branch-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed current-facing economy rows after origin/master/local master advanced to 89ae9dad and a targeted source diff showed no checked side-supply or resource-income file changes from historical 2cdf5fb8. Economy-Authority-First-Cut.md, Economy-Towns-And-Supply.md, Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and machine rows now route side-supply clamp/reason and resource-income debt through current stable 89ae9dad, Miksuu 89ae9dad, perf 0076040f and release 7ff18c49 without stale 2cdf5fb8 current-state wording. No gameplay source changed."
+    },
+    {
+      "lane": "supply-scan-matrix-dedupe-current-head",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed current-facing supply scan rows after origin/master/local master advanced to 89ae9dad. Supply-Mission-Architecture.md remains the canonical branch/root matrix; Supply-Mission-Scan-Narrowing.md, Supply-Mission-Authority-Cleanup-Playbook.md, Source-Fix-Propagation-Queue.md, Feature-Status-Register.md and machine rows now route current stable 89ae9dad, Miksuu 89ae9dad, perf 0076040f, docs/source f3e157f2 and release 7ff18c49 without stale 2cdf5fb8 current-state wording. No gameplay source changed."
+    },
+    {
+      "lane": "release-arty-marker-ownership-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Source-checked current release 7ff18c49 after commander/construction scout evidence showed an alternate commander ARTY path. Release Chernarus and maintained Vanilla still lack the docs/source commander-team gunner handoff, but they set WFBE_CommanderArtillery, WFBE_CommanderArtillerySide and WFBE_CommanderArtilleryIndex on non-repair-truck artillery defenses at Construction_StationaryDefense.sqf:133-135 and let the commander team discover same-side marked artillery inside HQ/base-area radius through Common_GetTeamArtillery.sqf:46-78. Current origin/master/local master 89ae9dad still lacks both source shapes. No gameplay source changed."
+    },
+    {
+      "lane": "origin-master-town-defense-merge-correction",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Fresh fetch advanced origin/master from 2cdf5fb8 to 89ae9dad, matching miksuu/master; local source HEAD now also reports 89ae9dad. The town-defense persistence/diagnostics overhaul is current stable-master source evidence in Chernarus and maintained Vanilla. DR-45 remains open because server_town_ai.sqf and Server_CleanupExpiredTownDefenseAssets.sqf still use player-leader-style deletion guards without full crew/cargo/turret player-occupancy checks. No gameplay source changed."
+    },
+    {
+      "lane": "miksuu-town-defense-overhaul-refresh",
+      "owner": "Codex",
+      "status": "published-validated-superseded",
+      "output": "Refreshed Miksuu upstream head from 69e1958a to 89ae9dad for town-defense context. Superseded by origin-master-town-defense-merge-correction after origin/master and local master also advanced to 89ae9dad; persistence/diagnostics is now current stable source evidence, still DR-45/smoke gated. No gameplay source changed."
+    },
+    {
+      "lane": "docs-source-supply-scan-branch-scope",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Validated and published supply scan branch-scope correction: origin/docs/developer-wiki-index f3e157f2 carries typed Base_WarfareBUAVterminal command-center scans at supplyMissionStarted.sqf:28 in Chernarus and maintained Vanilla; current local HEAD / origin/master / Miksuu 89ae9dad and perf/quick-wins 0076040f still broad-enumerate and post-filter; release 7ff18c49 carries the heli-aware typed scan in both maintained release roots. No gameplay source changed."
+    },
+    {
+      "lane": "release-context-current-head-correction",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Corrected compact release-head context: current release 7ff18c49 carries paratrooper marker registration at Init_PublicVariables.sqf:34, single Skill_Init at Init_Client.sqf:564 plus WFBE_SK_FNC_Apply at :587, and hosted FPS guard at serverFpsGUI.sqf:4 in both maintained release roots; stable origin/master still lacks those propagated fixes, and the later release-arty-marker-ownership-route supersedes the older handoff-only commander ARTY caveat. No gameplay source changed."
+    },
+    {
+      "lane": "supply-scan-current-source-scope-correction",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Corrected supply command-center scan scope: current source/Vanilla, stable origin/master 2cdf5fb8, Miksuu 89ae9dad and perf/quick-wins 0076040f still enumerate nearestObjects [] at supplyMissionStarted.sqf:28 and post-filter Base_WarfareBUAVterminal at :25; release 7ff18c49 carries the heli-aware typed scan at :52,58 in both maintained release roots. No gameplay source changed."
+    },
+    {
+      "lane": "reaktiv-branch-status-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed Reaktiv ERA armor branch status: current source/Vanilla, stable origin/master 2cdf5fb8, Miksuu 89ae9dad and perf/quick-wins 0076040f still carry unreachable Common/Module/Reaktiv in both maintained roots; release 7ff18c49 removes Reaktiv from maintained roots while stale modded Napf/Eden/Lingor copies remain. No gameplay source changed."
+    },
+    {
+      "lane": "loadoutmanager-root-discovery-branch-scope",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Corrected LoadoutManager root discovery to branch-scoped truth: current source/stable origin/master 2cdf5fb8, Miksuu 89ae9dad and perf/quick-wins 0076040f require an ancestor named a2waspwarfare; release 7ff18c49 also accepts a root containing Missions/[55-2hc]warfarev2_073v48co.chernarus, Tools/LoadoutManager and AGENTS.md. A2WASP_SKIP_ZIP remains the propagation-only packaging skip. No gameplay source changed."
+    },
+    {
+      "lane": "gear-profile-filter-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed gear profile save/import evidence to current heads: current source/Vanilla, stable origin/master 2cdf5fb8, Miksuu 89ae9dad, perf/quick-wins 0076040f and release 7ff18c49 all keep undefined _u_upgrade in Client_UI_Gear_SaveTemplateProfile.sqf and the six-field Init_ProfileGear.sqf guard before reading index 6. No gameplay source changed."
+    },
+    {
+      "lane": "vehicle-cargo-loop-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Refreshed vehicle/backpack cargo loop-bound evidence to current heads and corrected perf scope: current source/Vanilla, stable origin/master 2cdf5fb8, Miksuu 89ae9dad and release 7ff18c49 still keep all five inclusive cargo loops; perf/quick-wins 0076040f fixes Chernarus only while maintained Vanilla still needs propagation. No gameplay source changed."
+    },
+    {
+      "lane": "auto-wall-toggle-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Auto-wall global-toggle evidence now names current stable origin/master/local master 89ae9dad, Miksuu 89ae9dad, perf 0076040f and release 7ff18c49: all keep one global isAutoWallConstructingEnabled value consumed by SmallSite/MediumSite construction. The checked 2cdf5fb8..89ae9dad diff only adds unrelated Init_Common.sqf town-defense helper compile wiring; release only adds an AARadar exclusion to the consumer condition. No gameplay source changed."
+    },
+    {
+      "lane": "marker-creation-channel-index-sharpening",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Public Variable Channel Index now documents MARKER_CREATION as a mixed caller-to-clients side-scoped marker relay. Current source/Vanilla, stable origin/master 2cdf5fb8, Miksuu 89ae9dad, perf 0076040f and release 7ff18c49 keep the same Common_CreateMarker broadcast plus client receiver wiring. Future hardening needs sender/side/schema validation and delete/JIP/replay smoke. No gameplay source changed."
+    },
+    {
+      "lane": "network-hardening-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Network hardening roadmap and networking overview now name current branch heads for both P0 compile surfaces: current source/Vanilla, stable origin/master 2cdf5fb8, Miksuu 89ae9dad, perf 0076040f and release 7ff18c49 still keep PVF dispatcher Spawn (Call Compile _script), while SEND_MESSAGE still compiles message text in receiver/helper paths. Release only adds adjacent HC client filtering and shifts Client_HandlePVF compile to :32. No gameplay source changed."
+    },
+    {
+      "lane": "camp-count-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Camp-count helper fallback evidence now names current branch heads: current source/Vanilla, stable origin/master 2cdf5fb8, Miksuu upstream 89ae9dad, perf/quick-wins 0076040f and release 7ff18c49 all still return 1 for zero-camp towns in Common_GetTotalCamps.sqf and Common_GetTotalCampsOnSide.sqf, feeding capture mode 2, threeway respawn and depot-buy gates. Release only shifts Buy Units caller lines to :117-118. No gameplay source changed."
+    },
+    {
+      "lane": "indicator-exploration-backlog-sharpening",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Client UI systems now has an exact-anchor indicator exploration matrix for HUD/title, map/tactical marker, support marker, menu/list affordance, status/debug and image/resource indicator families. Client UI, HUD and menus links directly to the route. No gameplay source changed."
+    },
+    {
+      "lane": "factory-purchase-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Factory purchase evidence now names current Miksuu upstream 89ae9dad and release 7ff18c49 for buy-menu price/key alignment plus destroyed-factory refund scope. Current source/Vanilla, stable, Miksuu and perf still keep selected-detail price drift, no level-0 UNIT_COST_MODIFIER reset, mixed driver-default profile keys and no dead/null factory refund. Release fixes selected-detail parity in both maintained roots and mirrors both driver keys in several write paths, but modifier reset, one-key normalization and dead/null factory refund remain open. No gameplay source changed."
+    },
+    {
+      "lane": "status-provenance-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Feature Status now names current Miksuu 89ae9dad in the broad upstream note and camp flag row; Construction and CoIn salvage matrix plus matching machine rows now use current source/Vanilla labels, Miksuu 89ae9dad and release 7ff18c49 while preserving the same patch-ready salvage conclusions. No gameplay source changed."
+    },
+    {
+      "lane": "empty-supply-truck-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Marker cleanup/restoration, Feature Status, Source Fix queue and matching machine rows now name current stable origin/master/local master 89ae9dad, current Miksuu upstream 89ae9dad and release 7ff18c49 for the hard-coded 24-hour empty supply-truck cleanup timeout. Current source/Vanilla, stable/Miksuu/perf and release all still drain emptyVehicles into WFBE_SE_FNC_HandleEmptyVehicle and set supply-truck _delay = 86400. No gameplay source changed."
+    },
+    {
+      "lane": "client-ui-branch-evidence-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Client UI systems and matching feature/backlog machine rows now name current Miksuu upstream 89ae9dad and release 7ff18c49 for vote/help/main-menu, tactical fast-travel fee and clickable-text evidence. Current source/Vanilla, stable, Miksuu, perf and release still keep the vote/help issues, fast-travel fee UX debt and malformed RscClickableText.soundPush[]; release adds MenuAction 19 GPS show/hide but leaves old 17/18 zoom handlers without emitters. No gameplay source changed."
+    },
+    {
+      "lane": "documentation-finisher-loop",
+      "owner": "Codex",
+      "status": "active-ongoing",
+      "output": "Keep wiki/status pages current from source evidence; route open docs work through the dashboard, pruning ledger, Feature Status, Pending Owner Decisions and machine status files; compact the dashboard, maintain machine-readable entrypoints, refresh scan artifacts when docs/source changes affect them and publish scoped validation batches."
+    },
+    {
+      "lane": "gear-template-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Gear template profile filter, Feature Status and Source Fix Queue now name current Miksuu upstream 89ae9dad and release 7ff18c49 for creation/display/save gate scope. Current source/Vanilla, stable, Miksuu, perf and release all keep AddTemplate accepting Barracks-or-Gear, FillTemplates displaying Gear-only and SaveTemplateProfile referencing undefined _u_upgrade. No gameplay source changed."
+    },
+    {
+      "lane": "requestspecial-upgrade-sync-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Support specials, Upgrades and research, Feature status and Source fix queue now name current Miksuu upstream 89ae9dad and release 7ff18c49 for RequestSpecial upgrade-sync tuple parsing. Current source/Vanilla, stable, Miksuu, perf and release all keep the mixed _args/_this parser; release shifts both maintained-root callers to GUI_UpgradeMenu.sqf:254. No gameplay source changed."
+    },
+    {
+      "lane": "wasp-marker-wait-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "WASP Marker Wait Cleanup now names current stable origin/master/local master 89ae9dad, current Miksuu upstream 89ae9dad and release 7ff18c49. Current source/Vanilla, stable/Miksuu/perf/quick-wins 0076040f and release all still keep the display-54 input-lock busy wait at global_marking_monitor.sqf:57,64,73; current/stable/Miksuu/perf launch at Init_Client.sqf:279 and release launches at :283. No gameplay source changed."
+    },
+    {
+      "lane": "release-leaf-current-head-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Supply scan, paratrooper marker, client skill init and Pending Owner Decisions leaf pages now name current release 7ff18c49 where they describe current-head static evidence. The 7195b331..7ff18c49 delta does not touch those release files, so prior propagated-fix shapes carry forward; Arma smoke remains pending and no gameplay source changed."
+    },
+    {
+      "lane": "resource-income-branch-evidence-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Economy/Towns/Supply and matching machine rows now name current Miksuu upstream 89ae9dad and release 7ff18c49 for resource-income payout/display drift. Current source/Vanilla, stable, Miksuu, perf/quick-wins and release still gate side-supply growth, player paychecks and AI commander funds together and keep the income-system 4 server/client multiplier drift. No gameplay source changed."
+    },
+    {
+      "lane": "side-supply-branch-evidence-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Economy Authority First Cut and matching machine rows now name current Miksuu upstream 89ae9dad and release 7ff18c49 for side-supply clamp/temp-channel validation plus the adjacent reason-string helper. Current source/Vanilla, stable, Miksuu and release remain unpatched; perf/quick-wins is still Chernarus-only arithmetic-floor evidence and not a DR-44 authority fix. No gameplay source changed."
+    },
+    {
+      "lane": "p0-network-branch-evidence-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "PVF dispatch and SEND_MESSAGE pages/machine rows now name current Miksuu upstream 89ae9dad and release 7ff18c49. Both maintained roots still keep generic PVF Spawn (Call Compile _script), and direct SEND_MESSAGE still compiles message text in receiver/helper paths. No gameplay source changed."
+    },
+    {
+      "lane": "release-head-machine-row-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Agent-readable release-head rows now use current origin/release/2026-06-feature-bundle 7ff18c49 for the checked propagated/static shapes: paratrooper marker registration, single Skill_Init/Apply, hosted FPS guard/removal and supply command-center scan narrowing still hold in both maintained release roots. No gameplay source changed."
+    },
+    {
+      "lane": "ai-commander-upgrade-debit-branch-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "AI Commander Autonomy Audit now owns the branch matrix for AI commander upgrade debit/cost lookup. Current source/Vanilla, stable origin/master, Miksuu upstream and perf/quick-wins keep raw AI_ORDER cost lookup plus swapped AI funds/side-supply debit; release 7ff18c49 fixes debit order in both maintained roots; feat/ai-commander fixes debit plus cost-level lookup only in Chernarus. No gameplay source changed."
+    },
+    {
+      "lane": "town-camp-release-parity-refresh",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Towns/camps/capture now reflects current release 7ff18c49 parity: release Chernarus and maintained release Vanilla both use str _newSide for independent camp-capture flags and && for resistance patrol loop exit, while current source/Vanilla, stable and Miksuu 89ae9dad remain source-unpatched. Repair-side camp flag refresh remains open everywhere checked. No gameplay source changed."
+    },
+    {
+      "lane": "server-ai-order-helper-index",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Function and module index now owns a compact source-backed table for the compiled Server/AI/Orders helper family. AIMoveTo/AIPatrol/AIWPAdd/AIWPRemove have proven support/resistance static callers, AITownPatrol is compiled but has no static Chernarus caller outside the compile line and helper file, and commander map-order execution remains unproven. Server runtime routes cleanup/restoration workers to the existing owner atlas. No gameplay source changed."
+    },
+    {
+      "lane": "town-ai-vehicle-despawn-branch-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Town AI vehicle despawn safety now owns the branch-checked route for DR-45: current source/Vanilla and stable origin/master 2cdf5fb8, Miksuu upstream 89ae9dad, perf/quick-wins 0076040f and release 7ff18c49 all still delete tracked inactive town-AI vehicles without a player crew check. No gameplay source changed."
+    },
+    {
+      "lane": "release-7ff18c49-pr8-delta-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "PR Cleanup Lab, Current Source Snapshot, Feature Status, Headless Delegation, Marker Cleanup/Restoration, Testing Workflow and Source Fix Propagation now use origin/release/2026-06-feature-bundle 7ff18c49 as the current PR8/release head. The 7195b331..7ff18c49 diff is delegated-AI locality plus cleaner/restorer startup hardening in both maintained release roots; prior propagated-fix conclusions carry forward, DR-42 static-defense update-back/failover remains open and Arma HC/cleaner smoke is still required. No gameplay source changed."
+    },
+    {
       "lane": "supply-scan-release-status-refresh",
       "owner": "Codex-helper",
       "status": "published-validated",
-      "output": "Supply mission architecture now owns the corrected release 7195b331 matrix: docs/source and current release have maintained-root static parity for the command-center scan; stable/upstream/perf remain broad; release also removes/comments the dead supplyMissionActive twin in both maintained roots. No gameplay source changed."
+      "output": "Supply mission architecture now owns the corrected release matrix: docs/source and current release 7ff18c49 have maintained-root static parity for the command-center scan; stable/upstream/perf remain broad; release also removes/comments the dead supplyMissionActive twin in both maintained roots. No gameplay source changed."
     },
     {
       "lane": "pvf-dispatcher-lookup-branch-route",
@@ -90,7 +456,7 @@
       "lane": "factory-destroyed-purchase-refund-branch-route",
       "owner": "Codex-helper",
       "status": "published-validated",
-      "output": "Factory and purchase systems now owns the branch-checked route for destroyed-factory purchase refund behavior; current source/Vanilla, stable, upstream and perf still have no dead/null factory refund, while release 7195b331 only adds adjacent _currentCost plumbing and an empty/crewless-branch refund. No gameplay source changed."
+      "output": "Factory and purchase systems now owns the branch-checked route for destroyed-factory purchase refund behavior; current source/Vanilla, stable, upstream and perf still have no dead/null factory refund, while release 7ff18c49 keeps adjacent _currentCost plumbing and an empty/crewless-branch refund from the 7195b331 intermediate. No gameplay source changed."
     },
     {
       "lane": "gear-template-creation-gate-branch-route",
@@ -102,19 +468,19 @@
       "lane": "ai-supply-truck-branch-route",
       "owner": "Codex-helper",
       "status": "published-validated",
-      "output": "AI commander autonomy now owns the branch-checked route for the config-gated AI supply-truck trap: current source/Vanilla, stable, upstream and perf still have commented UpdateSupplyTruck compile plus raw gated spawn and missing supplytruck.fsm; release 7195b331 logs/disables in both maintained roots; feat/ai-commander guards only Chernarus. No gameplay source changed."
+      "output": "AI commander autonomy now owns the branch-checked route for the config-gated AI supply-truck trap: current source/Vanilla, stable, upstream and perf still have commented UpdateSupplyTruck compile plus raw gated spawn and missing supplytruck.fsm; release 7ff18c49 keeps the 7195b331 log/disable shape in both maintained roots; feat/ai-commander guards only Chernarus. No gameplay source changed."
     },
     {
       "lane": "release-7195b331-status-refresh",
       "owner": "Codex-helper",
       "status": "published-validated",
-      "output": "Current source snapshot, PR cleanup lab, Feature Status, Source Fix Propagation Queue and machine records now reflect release 7195b331: paratrooper registration, single Skill_Init, hosted FPS guard/removal, narrowed supply scan, camp-capture flag fix and resistance patrol && are present in both release maintained roots; 7195b331 also replaces the old FPS-only menu slot with a GPS toggle, while commander-built ARTY ownership remains absent from release/stable. No gameplay source changed."
+      "output": "Historical release-7195b331 refresh is now superseded for current-head routing by release 7ff18c49: the paratrooper registration, single Skill_Init, hosted FPS guard/removal, narrowed supply scan, camp-capture flag fix and resistance patrol && conclusions still carry forward; 7195b331 remains the GPS-toggle intermediate, while 7ff18c49 adds delegated-AI locality and cleaner/restorer startup hardening. The later release-arty-marker-ownership-route corrects commander ARTY as marker-based in release rather than absent. No gameplay source changed."
     },
     {
       "lane": "resistance-patrol-latch-branch-route",
       "owner": "Codex-helper",
       "status": "published-validated",
-      "output": "Towns/camps/capture owns the branch-checked resistance patrol latch route; current source/Vanilla, stable and Miksuu upstream still carry the || loop, while perf/quick-wins and release Chernarus use &&. No gameplay source changed."
+      "output": "Towns/camps/capture owns the branch-checked resistance patrol latch route; current source/Vanilla, stable and Miksuu upstream 89ae9dad still carry the || loop, perf/quick-wins fixes Chernarus only, and current release 7ff18c49 uses && in both maintained release roots. No gameplay source changed."
     },
     {
       "lane": "visible-parameter-runtime-consumer-branch-route",
@@ -132,7 +498,7 @@
       "lane": "salvage-payout-cleanup-branch-route",
       "owner": "Codex-helper",
       "status": "published-validated",
-      "output": "Construction and CoIn now owns the branch-checked route for salvage payout casing, local delete/reward authority and updatesalvage loop shape; Feature Status, Source Fix Propagation Queue and machine records point future code owners to casing-first repair plus smoke. No gameplay source changed."
+      "output": "Construction and CoIn now owns the branch-checked route for salvage payout casing, local delete/reward authority and updatesalvage loop shape; current stable origin/master/local master 89ae9dad, Miksuu 89ae9dad, perf 0076040f, release 7ff18c49 and historical salvage branches all keep the same defect shape. Feature Status, Source Fix Propagation Queue and machine records point future code owners to casing-first repair plus smoke. No gameplay source changed."
     },
     {
       "lane": "feature-status-auto-wall-duplicate-prune",
@@ -163,12 +529,6 @@
       "owner": "Codex-helper",
       "status": "published-validated",
       "output": "Economy authority now owns the branch-checked route for the side-supply reason-string off-by-one; current source/Vanilla, stable, upstream, perf and release all keep the same helper guard that drops three-argument caller reasons. No gameplay source changed."
-    },
-    {
-      "lane": "empty-supply-truck-cleanup-branch-route",
-      "owner": "Codex-helper",
-      "status": "published-validated",
-      "output": "Marker cleanup/restoration now owns the branch-checked route for the hard-coded 24-hour empty supply-truck timeout; Feature Status, Source Fix Propagation Queue and machine records point future code owners to keep-and-label versus shorter/parameterized cleanup plus supply/logistics smoke. No gameplay source changed."
     },
     {
       "lane": "vote-help-ui-edge-branch-route",
