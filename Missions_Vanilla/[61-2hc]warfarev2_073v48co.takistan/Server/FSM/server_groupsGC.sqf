@@ -219,6 +219,17 @@ while {!WFBE_GameOver} do {
 			[_auditLines, _auditLine] call WFBE_CO_FNC_ArrayPush;
 		} forEach [west, east, resistance];
 
+		//--- Delegation split: prove the HC offload is alive. One extra allUnits pass (~300 units, trivial).
+		_delegTotal = count allUnits;
+		_delegLocal = {local _x} count allUnits;
+		_delegRemote = _delegTotal - _delegLocal;
+		_delegPct = 0;
+		if (_delegTotal > 0) then {_delegPct = round ((_delegRemote / _delegTotal) * 100)};
+		diag_log ("DELEGSTAT|v1|total=" + str _delegTotal + "|srvLocal=" + str _delegLocal + "|remote=" + str _delegRemote + "|remotePct=" + str _delegPct + "|t=" + str (round (time / 60)));
+		if ((missionNamespace getVariable ["WFBE_C_AI_DELEGATION", 0]) == 2 && time > 1200 && _delegRemote == 0) then {
+			["WARNING", "server_groupsGC.sqf: DELEGATION-DEAD - delegation=2 but 0 HC-owned units at minute " + str (round (time / 60))] Call WFBE_CO_FNC_AICOMLog;
+		};
+
 		// Compute sweep cost; emit all three per-side lines with auditMs appended.
 		_auditMs = round ((diag_tickTime - _auditT0) * 1000);
 		{

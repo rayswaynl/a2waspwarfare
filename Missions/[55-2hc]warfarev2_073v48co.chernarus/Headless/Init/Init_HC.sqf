@@ -15,3 +15,6 @@ sleep 20;
 
 //--- Notify the server that our headless client is here.
 ["RequestSpecial", ["connected-hc", player]] Call WFBE_CO_FNC_SendToServer;
+
+//--- HC load telemetry: HCSTAT lines on the server RPT (fps + local unit/group counts).
+[] ExecVM "Headless\HC_StatLoop.sqf";
