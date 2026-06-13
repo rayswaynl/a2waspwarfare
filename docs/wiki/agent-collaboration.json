@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-13T18:21:00+02:00",
+  "generatedAt": "2026-06-13T18:38:05+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,39 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "p0-network-current-master-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "PVF-Dispatch-Implementation-Playbook.md",
+        "Public-Variable-Channel-Index.md",
+        "Networking-And-Public-Variables.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-feature-status.jsonl",
+        "agent-hardening-backlog.jsonl",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendMessage.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan"
+      ],
+      "outputs": [
+        "Published docs-only branch-head refresh for P0 PVF dispatcher lookup and SEND_MESSAGE direct compile status; no gameplay source changed.",
+        "Current origin/master cf2a6d6a and release a96fdda2 keep server PVF compile at Server_HandlePVF.sqf:14 and client compile at Client_HandlePVF.sqf:32 after the HC filter; Miksuu b8389e74 and perf 0076040f keep client compile at :22.",
+        "All checked refs/roots keep direct SEND_MESSAGE registration at updateclient.sqf:12, receiver compile at Client_onEventHandler_SEND_MESSAGE.sqf:27 and helper compile/broadcast at Common_SendMessage.sqf:26,38."
+      ],
+      "handoff": "Closed as docs-published. Future code owner should keep PVF dispatcher handler-name lookup hardening, DR-55 sender authentication and DR-46 SEND_MESSAGE direct compile removal as separate patch/smoke lanes.",
+      "updated": "2026-06-13T18:38:05+02:00"
+    },
     {
       "lane": "patrols-v2-current-master-route",
       "owner": "Codex",
