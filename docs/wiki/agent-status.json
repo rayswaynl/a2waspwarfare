@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T02:35:57+02:00",
+  "generatedAt": "2026-06-14T02:46:13+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only networking/public-variable source-scope route: Networking-And-Public-Variables.md now names docs checkout 59deb306, routes network inventory/dispatcher/server-authority detail to owner pages, separates docs/Miksuu/perf/feat-ai commented SetTask sends from stable/release Objective Ping sends, and corrects Objective Ping release wording to current a96fdda2. No gameplay source changed.",
+      "currentWork": "Published docs-only support-specials source-scope route: Support-Specials-And-Tactical-Modules-Atlas.md now names docs checkout ff8dd884, adds a current source snapshot for Tactical UI/PVF transport/server special dispatch/artillery/UAV-nuke-Zeta/RU para-ammo anchors, reduces repeated dispatch prose, and refreshes upgrade-sync branch evidence against current stable/release/upstream/perf/upgrade-queue refs. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "support-specials-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Support-Specials-And-Tactical-Modules-Atlas.md now behaves as the support/tactical gateway for docs checkout ff8dd884: it adds a source snapshot for Tactical UI, PVF transport, server special dispatch, artillery, UAV/nuke/Zeta and RU para-ammo anchors; routes deep authority to Server-Authority-Migration-Map.md, ICBM-Authority-Playbook.md, Service-Menu-Affordability-Guards.md and Supply-Mission-Authority-Cleanup-Playbook.md; and refreshes the upgrade-sync matrix/status rows against stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f, release a96fdda2 and feat/upgrade-queue-stacking b061c905. No gameplay source changed."
+    },
     {
       "lane": "networking-public-variable-source-scope-route",
       "owner": "Codex",

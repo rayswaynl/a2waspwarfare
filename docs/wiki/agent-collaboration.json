@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T02:35:57+02:00",
+  "generatedAt": "2026-06-14T02:46:13+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,53 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "support-specials-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Support-Specials-And-Tactical-Modules-Atlas.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendToServer.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTeamArtillery.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_RequestFireMission.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_FireArtillery.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetArtilleryAmmoOptions.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_LoadArtilleryAmmo.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/UAV/uav.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_UAV.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Nuke/nukeincoming.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Nuke/damage.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/ZetaCargo/Zeta_Hook.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/ZetaCargo/Zeta_Unhook.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Root/Root_RU.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "origin/feat/upgrade-queue-stacking"
+      ],
+      "outputs": [
+        "Updated Support-Specials-And-Tactical-Modules-Atlas.md to name docs checkout ff8dd884 and add a current support/tactical source snapshot.",
+        "Collapsed repeated RequestSpecial dispatch and artillery-path prose into the source snapshot plus owner-page routes.",
+        "Refreshed upgrade-sync branch evidence in the support atlas, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md for stable cf2a6d6a, Miksuu b8389e74, perf 0076040f, release a96fdda2 and feat/upgrade-queue-stacking b061c905.",
+        "Left gameplay source untouched; RequestSpecial authority, ICBM, service actions and supply authority remain routed to owner pages."
+      ],
+      "handoff": "Closed as docs-published. Future support work should keep this atlas as the gateway, avoid duplicating the full RequestSpecial dispatch map outside the source snapshot, and use the owner pages for server authority, ICBM, service/economy and supply implementation status.",
+      "updated": "2026-06-14T02:46:13+02:00"
+    },
     {
       "lane": "networking-public-variable-source-scope-route",
       "owner": "Codex",

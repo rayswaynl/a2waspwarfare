@@ -18,11 +18,25 @@ This page is the support/tactical gateway. Use it to identify which runtime fami
 
 ## Current Branch Scope
 
-This atlas carries support orientation and selected source anchors. Deep hardening status belongs on owner pages: [Server authority migration map](Server-Authority-Migration-Map) for `RequestSpecial`, [ICBM authority](ICBM-Authority-Playbook) for nuke, [Service menu affordability guards](Service-Menu-Affordability-Guards) for service actions, and [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) for supply. The `upgrade-sync` matrix below was refreshed against docs checkout `e785f1e9`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and `origin/feat/upgrade-queue-stacking` `b061c905`; all checked roots still keep the mixed `_args` / `_this` parser in `Server_HandleSpecial.sqf:67-73`.
+Checked 2026-06-14 against docs checkout `ff8dd884`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and `origin/feat/upgrade-queue-stacking` `b061c905`.
+
+This atlas carries support orientation and selected source anchors. Deep hardening status belongs on owner pages: [Server authority migration map](Server-Authority-Migration-Map) for `RequestSpecial`, [ICBM authority](ICBM-Authority-Playbook) for nuke, [Service menu affordability guards](Service-Menu-Affordability-Guards) for service actions, and [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) for supply. The `upgrade-sync` matrix below is current for the checked refs; all checked maintained roots still keep the mixed `_args` / `_this` parser in `Server_HandleSpecial.sqf:67-73`.
+
+## Source Snapshot
+
+Current docs checkout anchors for the maintained Chernarus root:
+
+| Surface | Source anchors |
+| --- | --- |
+| Tactical UI | `Client/GUI/GUI_Menu_Tactical.sqf:58-61` defines support labels, fees and cooldowns; `:252-283` gates buttons; `:293-347` routes button actions; `:371-373`, `:463-527` send support/nuke requests; `:531-605` owns artillery status, fire requests and ammo loading. |
+| PVF transport | `Common/Functions/Common_SendToServer.sqf:12-18` wraps client requests as `SRVFNC*`; `Server/Functions/Server_HandlePVF.sqf:9-14` compiles/dispatches the handler; `Server/PVFunctions/RequestSpecial.sqf:1` forwards into `HandleSpecial`. |
+| Server special router | `Server/Functions/Server_HandleSpecial.sqf:13-31` handles `group-query`; `:43-64` handles paratroops/ammo/vehicle/UAV; `:67-73` handles `upgrade-sync`; `:97-111` handles ICBM; `:133-170` covers `track-playerobject` and `repair-camp`. |
+| Artillery path | `Common_GetTeamArtillery.sqf:10-32` discovers group-owned guns; `Client_RequestFireMission.sqf:8-13,50-72` starts local fire and cooldown; `Common_FireArtillery.sqf:9-23,37-72` validates gun/range/fire mechanics; `Common_GetArtilleryAmmoOptions.sqf:41-72` and `Common_LoadArtilleryAmmo.sqf:18-53` own ammo options/loading. |
+| Adjacent support modules | `Client/Module/UAV/uav.sqf:27-52` creates/debits/tracks UAVs and `Server/Support/Support_UAV.sqf:6-20` monitors cleanup; `Client/Module/Nuke/nukeincoming.sqf:7-23` sends the ICBM request and `Client/Module/Nuke/damage.sqf:13-34` applies nuke damage; `Client/Module/ZetaCargo/Zeta_Hook.sqf:34` and `Zeta_Unhook.sqf:1-20` show the detach-argument gap; `Common/Config/Core_Root/Root_RU.sqf:36` still comments out `WFBE_%1PARAAMMO` on the starting-vehicles line. |
 
 ## Tactical Menu Entry Points
 
-The main support UI is `Client/GUI/GUI_Menu_Tactical.sqf`.
+The main support UI is `Client/GUI/GUI_Menu_Tactical.sqf`. Use [Source Snapshot](#source-snapshot) for current line anchors, then follow the owner pages in [How To Use This Page](#how-to-use-this-page) before changing authority, economy or smoke status.
 
 Key source refs:
 
@@ -34,18 +48,11 @@ Key source refs:
 - `:463-505` performs the ICBM local launch flow.
 - `:532-605` requests artillery/fire mission behavior.
 
-Server dispatch starts at `Server/PVFunctions/RequestSpecial.sqf:1`, which forwards directly into `Server/Functions/Server_HandleSpecial.sqf`. The server dispatch file handles paratroops/ammo/vehicle/UAV around `:43-64`, ICBM around `:97-111`, and repair-camp behavior around `:147-170`.
-
 RequestSpecial scout 2026-06-04: the active tag set in source Chernarus is `update-teamleader`, `group-query`, `Paratroops`, `ParaVehi`, `ParaAmmo`, `RespawnST`, `uav`, `upgrade-sync`, `update-clientfps`, `update-town-delegation`, `ICBM`, `process-killed-hq`, `connected-hc` and `repair-camp`. `track-playerobject` has a server switch case around `Server_HandleSpecial.sqf:133-145`, but no active Chernarus `RequestSpecial` caller was found; treat it as an undriven bookkeeping branch unless a later dynamic caller proves otherwise.
 
 Depth scout follow-up 2026-06-04 added one high-value authority caution: `group-query` is not just a harmless request relay. `Server_HandleSpecial.sqf:13-31` trusts payload `_group`, `_player` and `_side`; if the target leader is AI and the group lacks `wfbe_uid`, it calls `Common_ChangeUnitGroup.sqf:3-11` to move the payload player into that group. Patch this in the server-authority lane by deriving requester/player/side server-side before any group move.
 
-Mini-scout follow-up 2026-06-04 tightened the authority map:
-
-- Tactical menu gating is client-side first: `Client/GUI/GUI_Menu_Tactical.sqf:252-283,293-347,463-527` checks funds, upgrades, commander status, UAV state and local cooldowns before requests are sent.
-- Artillery is not a `RequestSpecial` asset-spawn path. `Client_RequestFireMission.sqf:50-72`, `Common_HandleArtillery.sqf:7-85` and `Common_FireArtillery.sqf:7-72` own local cooldown/fire-control/range behavior, with ammo options loaded through `Common_GetArtilleryAmmoOptions.sqf:41-72` and `Common_LoadArtilleryAmmo.sqf:18-53`.
-- UAV is client-spawned and client-paid in `Client/Module/UAV/uav.sqf:15-52`; `Server/Support/Support_UAV.sqf:6-20` mainly monitors and cleans it up.
-- `Server_HandleSpecial.sqf:67-73` has a fragile `upgrade-sync` branch: it reads `_side` from `_args select 1`, then `_upgrade_id` / `_upgrade_level` from `_this select 2/3`. Any caller-shape change can break that branch differently from the other `RequestSpecial` tags.
+Mini-scout follow-up 2026-06-04 tightened the authority map: tactical menu gates are client-side first, artillery is a local/group-gun path rather than a `RequestSpecial` asset-spawn path, UAV creation/cost are client-led, and `upgrade-sync` still mixes `_args` and `_this` in the server router. Keep those as routing cautions here; implementation status belongs on the owner pages linked above.
 
 ### Upgrade-Sync Branch Matrix
 
@@ -53,8 +60,8 @@ Mini-scout follow-up 2026-06-04 tightened the authority map:
 
 | Root / branch | Evidence | Status |
 | --- | --- | --- |
-| Docs checkout Chernarus `e785f1e9` | `Server_HandleSpecial.sqf:3,67-73` assigns `_args = _this`, reads `_side` from `_args select 1`, then `_upgrade_id` / `_upgrade_level` from `_this select 2/3`; `GUI_UpgradeMenu.sqf:171` sends `["upgrade-sync", WFBE_Client_SideJoined, _this select 0, _this select 1]`; `Server_ProcessUpgrade.sqf:26,29,35` owns the sync variable. | Mixed-source reads remain; current behavior is equivalent but fragile. |
-| Docs checkout maintained Vanilla `e785f1e9` | Same maintained-root shape in `Server_HandleSpecial.sqf:3,67-73`, `GUI_UpgradeMenu.sqf:171` and `Server_ProcessUpgrade.sqf:26,29,35`. | Needs the same cleanup if source is patched. |
+| Docs checkout Chernarus `ff8dd884` | `Server_HandleSpecial.sqf:3,67-73` assigns `_args = _this`, reads `_side` from `_args select 1`, then `_upgrade_id` / `_upgrade_level` from `_this select 2/3`; `GUI_UpgradeMenu.sqf:171` sends `["upgrade-sync", WFBE_Client_SideJoined, _this select 0, _this select 1]`; `Server_ProcessUpgrade.sqf:26,29,35` owns the sync variable. | Mixed-source reads remain; current behavior is equivalent but fragile. |
+| Docs checkout maintained Vanilla `ff8dd884` | Same maintained-root shape in `Server_HandleSpecial.sqf:3,67-73`, `GUI_UpgradeMenu.sqf:171` and `Server_ProcessUpgrade.sqf:26,29,35`. | Needs the same cleanup if source is patched. |
 | Stable `origin/master` `cf2a6d6a` | Same mixed `_args` / `_this` branch in both maintained roots; Chernarus and maintained Vanilla callers shifted to `GUI_UpgradeMenu.sqf:268` after the upgrade-menu countdown/status work. `Server_ProcessUpgrade.sqf:26,29,35` still owns the sync variable. | No stable-master rescue; only caller line drift from the docs checkout. |
 | Miksuu upstream `b8389e74` | Same mixed branch in both maintained roots; caller line `GUI_UpgradeMenu.sqf:241`; `Server_ProcessUpgrade.sqf:26,29,35` still owns the sync variable. | No upstream rescue. |
 | `origin/perf/quick-wins` `0076040f` | Same mixed branch in both maintained roots; caller line `GUI_UpgradeMenu.sqf:241`; `Server_ProcessUpgrade.sqf:26,29,35` still owns the sync variable. | Perf branch does not touch this router path. |
@@ -74,9 +81,9 @@ No live `RequestSupport` symbol was found in source Chernarus during the 2026-06
 
 Transport split from the 2026-06-04 supports scout:
 
-- Registered support requests use the generic PVF envelope: `Common/Functions/Common_SendToServer.sqf:12-18` prepends the function tag, `Server/Functions/Server_HandlePVF.sqf:9-14` dispatches it, and `Server/PVFunctions/RequestSpecial.sqf:1` delegates into `Server_HandleSpecial.sqf`.
+- Registered support requests use the generic PVF envelope summarized in [Source Snapshot](#source-snapshot).
 - Client-bound support feedback uses the sibling path: `Common/Functions/Common_SendToClient.sqf:9-18` and `Client/Functions/Client_HandlePVF.sqf:19-22`.
-- Artillery is not the same server-accepted support path. `Client/GUI/GUI_Menu_Tactical.sqf:531-547` gates fire missions locally, `Common_GetTeamArtillery.sqf:10-30` discovers usable guns from the caller's group units, `Client/Functions/Client_RequestFireMission.sqf:13-31,51-54` starts local fire/cooldown behavior, and `Common/Functions/Common_FireArtillery.sqf:9-23,53-72` validates gun/range/firing mechanics. The 2026-06-04 source patch makes manned artillery-class base-area defenses use the current commander team when one exists (`Construction_StationaryDefense.sqf:91-94`), so commander-built HQ/base ARTY can become visible to this group-based fire-mission path. Smoke that ownership separately from ARTY setup in Arma 2 OA.
+- Artillery is not the same server-accepted support path. The 2026-06-04 source patch makes manned artillery-class base-area defenses use the current commander team when one exists (`Construction_StationaryDefense.sqf:91-94`), so commander-built HQ/base ARTY can become visible to the group-based fire-mission path. Smoke that ownership separately from ARTY setup in Arma 2 OA.
 - Service actions are another local support family. `Client/GUI/GUI_Menu_Service.sqf:196-234` debits/spawns rearm/refuel/repair/heal support locally; [Service menu affordability guards](Service-Menu-Affordability-Guards) owns the small local correctness patch, while full authority remains an economy-ledger redesign.
 
 Adjacent server runtime surfaces: grouped base areas are enabled only when `WFBE_C_BASE_AREA > 0` (`Server/Init/Init_Server.sqf:565`). Side logic seeds `wfbe_basearea` at `Init_Server.sqf:380`; `Server/FSM/basearea.sqf:46-80` then polls every 20 seconds, prunes invalid/remote base-area logics, and schedules delayed orphan-defense cleanup through `_onAreaRemoved` (`basearea.sqf:12-43`). `Server/FSM/groupsMonitor.sqf:1-14` is a dormant debug monitor that logs `allGroups` counts every 30 seconds; its only source start point found in this pass is commented at `Init_Server.sqf:567`.
@@ -102,7 +109,7 @@ Adjacent server runtime surfaces: grouped base areas are enabled only when `WFBE
 
 ## Server Dispatch And PV Paths
 
-`RequestSpecial.sqf` is intentionally tiny and forwards payloads. That makes `Server_HandleSpecial.sqf` the important hardening boundary. Today, several high-impact support effects rely on the client UI having already enforced role, upgrade, fee and cooldown.
+`RequestSpecial.sqf` is intentionally tiny and forwards payloads; see [Source Snapshot](#source-snapshot) for the current transport/router anchors. That makes `Server_HandleSpecial.sqf` the important hardening boundary. Today, several high-impact support effects rely on the client UI having already enforced role, upgrade, fee and cooldown.
 
 Use [Server authority migration map](Server-Authority-Migration-Map) before adding public support features. Use [ICBM authority](ICBM-Authority-Playbook) for the nuke path specifically, because it has public-server blast radius.
 
@@ -163,9 +170,8 @@ The main risks are locality and player-facing false positives: bomb distance and
 
 ## Wave N Dispatch Notes
 
-Wave N rechecked the support router and found two source-level traps worth keeping on this owner page:
+Wave N rechecked leaf support assets and found two source-level traps worth keeping on this owner page:
 
-- `Server/PVFunctions/RequestSpecial.sqf:1` remains only a trampoline into `HandleSpecial`, so the actual authority boundary is `Server/Functions/Server_HandleSpecial.sqf`. That dispatch accepts paratroop/ammo/vehicle tags around `:43-52`, UAV around `:63-64`, ICBM around `:97-111`, `track-playerobject` around `:133-146` and `repair-camp` around `:147-170`.
 - RU para-ammo config is effectively commented out in `Common/Config/Core_Root/Root_RU.sqf:36`: the `WFBE_%1PARAAMMO` assignment appears after `//--- Starting Vehicles` on the same physical line. `Server/Support/Support_ParaAmmo.sqf:59-60` exits unless `WFBE_%1PARAAMMO` is an array, so RU ammo paradrop support needs a config-line repair before it can be treated as feature-complete.
 - `Client/PVFunctions/NukeIncoming.sqf:7` plays `airRaid`, while [Assets/config/localization/parameters atlas](Assets-Config-Localization-And-Parameters-Atlas) confirms no `class airRaid` in `Sounds/description.ext`. If `NukeIncoming` is revived, add or replace that sound reference.
 
