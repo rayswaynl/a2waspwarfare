@@ -29,45 +29,16 @@ This page summarizes architecture and trust boundaries. The channel index owns f
 
 ## Central PVF Registration
 
-This is a compact docs-checkout orientation copy of the PVF lists. Use [Public variable channel index](Public-Variable-Channel-Index#current-branch-registry-matrix) for the source-anchored, branch-maintained inventory, including stable/release `RequestEnqueue` / `RequestDequeue` and paratrooper-registration splits.
+This gateway no longer keeps a copied command inventory. Use the canonical registry matrix in [Public variable channel index](Public-Variable-Channel-Index#current-branch-registry-matrix) before citing command counts, branch splits, `RequestEnqueue` / `RequestDequeue`, or paratrooper-registration status.
 
-`Common/Init/Init_PublicVariables.sqf` creates two command lists:
+| Question | Canonical owner |
+| --- | --- |
+| Which `WFBE_PVF_*` commands exist on a branch/root? | [Public variable channel index](Public-Variable-Channel-Index#current-branch-registry-matrix) |
+| How should dispatch-time `Call Compile` be patched? | [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix) |
+| Which registered server handlers still trust payloads after dispatcher hardening? | [Server authority migration map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) |
+| What do client-bound handlers do after destination filtering? | [Registered Client PVF Runtime Matrix](#registered-client-pvf-runtime-matrix) below |
 
-Server PVF commands:
-
-- `RequestVehicleLock`
-- `RequestOnUnitKilled`
-- `RequestChangeScore`
-- `RequestCommanderVote`
-- `RequestNewCommander`
-- `RequestStructure`
-- `RequestDefense`
-- `RequestJoin`
-- `RequestMHQRepair`
-- `RequestSpecial`
-- `RequestTeamUpdate`
-- `RequestUpgrade`
-- `RequestAutoWallConstructinChange`
-
-Client PVF commands:
-
-- `AllCampsCaptured`
-- `AwardBounty`
-- `AwardBountyPlayer`
-- `CampCaptured`
-- `ChangeScore`
-- `HandleSpecial`
-- `LocalizeMessage`
-- `SetTask`
-- `SetVehicleLock`
-- `TownCaptured`
-- `SetMHQLock`
-- `Available`
-- `RequestBaseArea`
-- `HandleParatrooperMarkerCreation`
-- `NukeIncoming`
-
-Each command is compiled into either `SRVFNC...` or `CLTFNC...`, and `WFBE_PVF_<Command>` receives an event handler that passes payloads to `Server_HandlePVF` or `Client_HandlePVF`.
+Code-reading shorthand: `Common/Init/Init_PublicVariables.sqf` compiles registered command files into `SRVFNC...` / `CLTFNC...` globals, registers one `WFBE_PVF_<Command>` event handler per command, and hands payloads to `Server_HandlePVF` or `Client_HandlePVF`.
 
 ## Network Helper Layer
 
@@ -103,40 +74,15 @@ Replay/JIP rule of thumb: late players receive retained object/global state and 
 
 ## PVF Dispatch Internals
 
-Claude independently deep-read the dispatch path and confirmed these runtime details. Paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
+Claude independently deep-read the dispatch path. Keep this gateway focused on reader orientation; detailed branch matrices and patch shapes live on the owner pages.
 
-### One PV Variable Per Command
-
-`Common/Init/Init_PublicVariables.sqf:43-51` creates one public-variable name per command, such as `WFBE_PVF_RequestJoin` and `WFBE_PVF_TownCaptured`, each with its own `addPublicVariableEventHandler`. This is not one numeric multiplexed protocol channel. Client handlers register under `if (!isServer || local player)`; server handlers register under `if (isServer)`.
-
-### Client-Side Index-0 Routing
-
-`Client/Functions/Client_HandlePVF.sqf` uses payload element 0 as the destination filter:
-
-| Element 0 | Client behavior |
-| --- | --- |
-| `nil` | Run on all clients. |
-| `SIDE` | Run only if `sideJoined == destination`. |
-| `STRING` | Run only if `getPlayerUID player == destination`. |
-
-The actual function name comes from element 1 (`CLTFNC<Command>`) and is executed with `_parameters Spawn (Call Compile _script)`. `Server/Functions/Server_HandlePVF.sqf` is simpler: it resolves `SRVFNC<Command>` and spawns it with no destination filtering. Current server PVEH wiring also passes only the public-variable value into `WFBE_SE_FNC_HandlePVF` (`Init_PublicVariables.sqf:51` in this docs checkout; stable/release line drift is `:53`), so server handlers do not receive an authenticated sender context unless a future dispatcher/request wrapper adds one.
-
-### Wrapper To Engine Primitive Map
-
-| Wrapper | Direction | Engine primitive | Destination handling |
-| --- | --- | --- | --- |
-| `Common_SendToServer` / optimized variant | client -> server | `publicVariable` or `publicVariableServer` | Server PVF receives command payload. |
-| `Common_SendToClients` | server -> clients | `publicVariable` | Payload element 0 is `nil`, side, or UID. |
-| `Common_SendToClient` | server -> one client | `publicVariableClient` to `owner _player` | Player object is rewritten to UID for the client filter. |
-
-### Second-Level Multiplexers
-
-Some registered commands are broad routers:
-
-- `Client/PVFunctions/HandleSpecial.sqf` switches over tags such as `join-answer`, `attack-wave`, `commander-vote` and `endgame`.
-- `Client/PVFunctions/LocalizeMessage.sqf` switches over message keys such as `Teamkill`, `FundsTransfer` and `AttackModeActivated`.
-
-When tracing one feature, grep the string tag as well as the PVF command name.
+| Dispatch fact | Practical meaning | Owner |
+| --- | --- | --- |
+| One public variable exists per registered command, e.g. `WFBE_PVF_RequestJoin`. | Do not treat PVF as one numeric multiplexed channel. | [Public variable channel index](Public-Variable-Channel-Index#1-registered-pvf-commands) |
+| Client-bound payload element `0` is a destination filter: `nil`, side, or UID string. | Runtime/JIP review has to distinguish broadcast, side-targeted and UID-targeted messages. | [Registered Client PVF Runtime Matrix](#registered-client-pvf-runtime-matrix) |
+| Server-bound payload element `0` names `SRVFNC<Command>`; client-bound element `1` names `CLTFNC<Command>`. | Dispatch lookup is still the DR-1/DR-38 `Call Compile` surface. | [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook) |
+| `Common_SendToServer`, `Common_SendToClients` and `Common_SendToClient` map wrapper calls to `publicVariable`, `publicVariableServer` or `publicVariableClient`. | Transport direction is not authority. | [Network Helper Layer](#network-helper-layer), [Server authority migration map](Server-Authority-Migration-Map) |
+| `HandleSpecial` and `LocalizeMessage` are second-level routers. | Grep the string tag as well as the PVF command name. | [Client Router Tag Triage](#client-router-tag-triage) |
 
 ### Registered Client PVF Runtime Matrix
 
@@ -188,44 +134,21 @@ Registration source: `Common/Init/Init_PublicVariables.sqf:26-40` registers 15 c
 
 ### Security: the `Call Compile` trust boundary
 
-`Server_HandlePVF.sqf` / `Client_HandlePVF.sqf` run `Call Compile` on the function-name string taken from the **value a remote machine broadcast** (`select 0` / `select 1`), with no check that it names a registered command. Validate the command string against the known `SRVFNC*`/`CLTFNC*` set before compiling, and add a real BattlEye PV filter as defense in depth. Full dispatcher analysis: [Deep-review findings](Deep-Review-Findings) DR-1.
+`Server_HandlePVF.sqf` and `Client_HandlePVF.sqf` still dispatch registered PVF payloads through `Spawn (Call Compile _script)` on the handler name carried in the public-variable value. This page keeps the architectural warning; the exact branch/root matrix and patch recipe live in [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix).
 
-Branch check refreshed 2026-06-13: current `origin/master` / local `master` `cf2a6d6a`, Miksuu upstream `b8389e74`, `origin/perf/quick-wins` `0076040f` and release `a96fdda2` all still use `Spawn (Call Compile _script)` in both generic dispatchers. Current master and release shift the client line to `Client_HandlePVF.sqf:32` because they add headless-client filtering first; Miksuu and perf keep the client line at `:22`. All checked refs keep server dispatch at `Server_HandlePVF.sqf:14` and none add allowlisted namespace lookup. The exact matrix and patch shape live in [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix).
-
-DR-55 adds the missing sender-authentication layer for the same surface. The current server registration shape is `addPublicVariableEventHandler {(_this select 1) Spawn WFBE_SE_FNC_HandlePVF}` and `Server_HandlePVF.sqf:9-14` only unpacks the handler name plus parameters, so effect handlers such as vehicle lock, score change, commander/team update, `RequestSpecial`, attack-wave detail and supply completion cannot distinguish the real publisher from a forged client unless they re-derive authority from other trusted state. Track that implementation lane through [Server authority migration map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) and `agent-hardening-backlog.jsonl#pvf-handler-sender-authentication`; do not mark networking hardened from the DR-1 lookup patch alone.
-
-DR-46 adds a second independent network-data compile surface outside the PVF dispatcher: the direct `SEND_MESSAGE` channel compiles payload text on receiving clients when the payload's multi-language flag is true, and the common send helper repeats the same compile branch locally before publishing. A PVF dispatcher fix does not close it. The 2026-06-13 branch/root matrix in [Public variable channel index](Public-Variable-Channel-Index#send_message-direct-compile-branch-matrix) confirms current `origin/master` / local `master` `cf2a6d6a`, Miksuu upstream `b8389e74`, perf `0076040f` and release `a96fdda2` all remain source-unpatched: receiver compile stays at `Client_onEventHandler_SEND_MESSAGE.sqf:27`, and helper compile/broadcast stays at `Common_SendMessage.sqf:26,38` in both maintained roots. Fix DR-46 by sending structured stringtable keys plus arguments and resolving them locally without `call compile`. Shipped BattlEye evidence and production-owner caveats: [External integrations](External-Integrations).
+Rechecked 2026-06-14 for this gateway-prune pass: the checked network source files are unchanged from docs checkout `4277a2ad` through `aa1a4b76`, so the branch-scope statement above still applies. `Call Compile` lookup hardening is not the whole authority migration: [Server authority migration map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) owns DR-55 requester/payload validation, and [Public variable channel index](Public-Variable-Channel-Index#send_message-direct-compile-branch-matrix) owns DR-46 `SEND_MESSAGE` direct compile.
 
 ### Residual Authority Risks After Dispatch Hardening
 
-Replacing `Call Compile` with mission-namespace lookup closes arbitrary code execution from forged PVF function-name strings, but it does not make registered commands authoritative, authenticate the requester or touch direct-PV RCEs such as DR-46 `SEND_MESSAGE`. The full post-dispatch queue is now in [Server authority migration map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix). The table below keeps only the highest-risk examples:
-
-| Handler | Trust issue | Evidence |
-| --- | --- | --- |
-| `RequestChangeScore` | Client payload can overwrite score and broadcast the result. | `Server/PVFunctions/RequestChangeScore.sqf:3-13` |
-| `RequestStructure` / `RequestDefense` | Server side mostly checks class existence, then trusts side, position, direction and manning. | `Server/PVFunctions/RequestStructure.sqf:3-21`, `RequestDefense.sqf:2-10` |
-| `RequestUpgrade` | Directly spawns upgrade processing; handler itself does not show commander/funds validation. | `Server/PVFunctions/RequestUpgrade.sqf:5`, `Server/Functions/Server_ProcessUpgrade.sqf:40-43` |
-| `RequestVehicleLock` | Locks the payload vehicle without visible owner/side/range check. | `Server/PVFunctions/RequestVehicleLock.sqf:3-8` |
-| `RequestTeamUpdate` | Accepts array or side and mutates group behavior/combat/formation/speed. | `Server/PVFunctions/RequestTeamUpdate.sqf:3-26` |
-| `RequestAutoWallConstructinChange` | Writes one global auto-wall setting from a client request; later SmallSite/MediumSite construction consumes it. | `Server/PVFunctions/RequestAutoWallConstructinChange.sqf:3-7`, `Server/Construction/Construction_SmallSite.sqf:110-112`, `Construction_MediumSite.sqf:125-128` |
-| `RequestSpecial` | Broad router for paratroops, support, ICBM, camp repair, teamleader update and HC registration. Claude DR-27 found the `"ICBM"` branch can be forged to server-spawn `NukeDammage` at a client-chosen position with no upgrade/commander/funds validation. | `Client/Module/Nuke/nukeincoming.sqf:23`, `Server/PVFunctions/RequestSpecial.sqf:1`, `Server/Functions/Server_HandleSpecial.sqf:97-112` |
-| `RequestSpecial` `update-clientfps` / delegation tags | Trusts client-supplied UID/FPS and town/vehicle arrays for delegation-adjacent state. | `Server/Functions/Server_HandleSpecial.sqf:75-95`, `Server/Functions/Server_FNC_Delegation.sqf:153-158` |
+Replacing dispatch-time `Call Compile` with allowlisted namespace lookup would close forged handler-name execution, but it would not authenticate the requester or validate payload fields for legitimate handlers. Keep the post-dispatch work queue on [Server authority migration map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix); it owns `RequestChangeScore`, construction/defense, upgrades, vehicle lock, team update, auto-wall and `RequestSpecial` triage with exact source evidence.
 
 ### Highest-Priority Registered Command: ICBM / Nuke
 
-DR-27 makes `RequestSpecial` the highest-priority registered-command hardening target discovered so far. The Tactical menu does client-side ICBM gating and the client sends `["RequestSpecial", ["ICBM", side, baseObj, cruiseObj, team]]`; the server's `HandleSpecial` `"ICBM"` case trusts the payload and spawns nuke damage from it. A forged PV therefore becomes a server-applied map-wide kill. Fixes belong server-side in the `"ICBM"` branch, paired with BattlEye restrictions around `RequestSpecial`.
+DR-27 makes `RequestSpecial` `"ICBM"` the highest-priority registered-command hardening target discovered so far. Keep implementation detail in [ICBM authority](ICBM-Authority-Playbook) and broader `RequestSpecial` tag triage in [Server authority migration map](Server-Authority-Migration-Map#requestspecial-tag-triage).
 
 ### Direct Channel Authority: Attack Waves
 
-McClintock's 2026-06-02 PV scout found one direct-channel authority issue outside the generic PVF dispatcher, and Claude DR-41 source-verified it as high risk:
-
-- `Client/FSM/updateclient.sqf:240` gates the action with a client-side `GetSideSupply >= 25000` condition.
-- `Common/Functions/Common_AttackWaveActivate.sqf:3-8` sends `ATTACK_WAVE_INIT = [_supply, _side]` via `publicVariableServer`.
-- `Server/Functions/Server_AttackWave.sqf:5-15` takes both values directly from the payload and computes `ATTACK_WAVE_PRICE_MODIFIER`.
-- `WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT = 50000` at `Common/Init/Init_CommonConstants.sqf:166`, so a forged `_supply >= 70000` can drive the side-wide unit price modifier to zero; larger values can make it negative.
-- The repo's `BattlEyeFilter/publicvariable.txt` does not cover `ATTACK_WAVE_INIT`.
-
-A PVF lookup hardening patch does not touch this path. The forgery class has two surfaces: registered PVF commands and direct `publicVariableServer` channels. The attack-wave fix should treat `ATTACK_WAVE_INIT` as a request, re-derive real side supply and permissions server-side, deduct any intended cost server-side, clamp the resulting modifier and ignore client-supplied economic fields. Wave R also confirmed that `ATTACK_WAVE_DETAILS` itself must be protected: it is a server self-loop packet from `Server_AttackWave.sqf:27`, not the client-visible broadcast, but its direct handler trusts `_side`, `_priceModifier` and `_attackLength`, mutates active-side state, drains side supply and then emits downstream `HandleSpecial`/`LocalizeMessage` effects. Implementation detail is captured in [Attack-wave authority playbook](Attack-Wave-Authority-Playbook).
+Attack waves are a direct publicVariable authority lane, not a registered PVF dispatch lane. Use [Attack-wave authority playbook](Attack-Wave-Authority-Playbook) for the source chain, branch/root matrix, all-supply spend model and safe patch shape for `ATTACK_WAVE_INIT` plus `ATTACK_WAVE_DETAILS`.
 
 ## Continue Reading
 

@@ -1,6 +1,6 @@
 # Public Variable Channel Index
 
-> Claude-owned, source-cited (2026-06-02). The single canonical inventory of **every** `publicVariable` channel in the mission: the registered PVF commands (routed through the dispatcher) **and** the direct channels (their own `addPublicVariableEventHandler`s). This is the design surface for any BattlEye `publicvariable.txt` filter and for the server-authority redesign. Supersedes the two ad-hoc tables in [Networking](Networking-And-Public-Variables) and the duplicate in [SQF atlas](SQF-Code-Atlas) (those should point here — see [Wiki quality audit](Wiki-Quality-Audit) DUP-11). Paths relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Arma 2 OA 1.64.
+> Claude-owned, source-cited (2026-06-02). The single canonical inventory of **every** `publicVariable` channel in the mission: the registered PVF commands (routed through the dispatcher) **and** the direct channels (their own `addPublicVariableEventHandler`s). This is the design surface for any BattlEye `publicvariable.txt` filter and for the server-authority redesign. Supersedes the old ad-hoc inventory tables in [Networking](Networking-And-Public-Variables) and the duplicate in [SQF atlas](SQF-Code-Atlas); those pages now route here for command/channel inventory. Paths relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Arma 2 OA 1.64.
 
 ## Trust legend
 
