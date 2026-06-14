@@ -102,7 +102,7 @@ Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) for the source
 | Decision | Finding | Note |
 | --- | --- | --- |
 | Post-join `wfbe_*` `waitUntil` chain has no timeouts | DR-37 | a never-set synced var hangs the JIP client; add defensive timeouts |
-| Server-FPS hosted/listen busy-loop | DR-19 | docs/source Chernarus + Vanilla now early-exit on `!isDedicated` (`serverFpsGUI.sqf:1`, `monitorServerFPS.sqf:1`); stable `origin/master` still has the old inner-`isDedicated` sleep; current release head `7195b331` has one guarded `serverFpsGUI.sqf` publisher and no redundant `monitorServerFPS.sqf` file in both maintained release roots. Arma smoke remains. |
+| Server-FPS hosted/listen busy-loop | DR-19 | Docs checkout `db7667c9` Chernarus + Vanilla early-exit on `!isDedicated` in both FPS publishers (`serverFpsGUI.sqf:1`, `monitorServerFPS.sqf:1`). Stable `origin/master` `cf2a6d6a` and release `a96fdda2` instead use one guarded `serverFpsGUI.sqf:4` publisher and have no maintained-root `monitorServerFPS.sqf`; Miksuu `b8389e74` and perf `0076040f` still keep the old two-loop shape. Arma smoke remains. |
 | WASP `global_marking_monitor.sqf:62` sleepless display-wait | DR-40 | use the throttled `waitUntil {sleep …; cond}` idiom |
 
 ## Agent Handoff Contract

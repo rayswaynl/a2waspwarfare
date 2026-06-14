@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T04:06:51+02:00",
+  "generatedAt": "2026-06-14T04:16:08+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,45 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "hosted-fps-current-branch-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Hosted-Server-FPS-Loop-Sleep.md",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "agent-release-readiness.json",
+        "agent-context.json",
+        "agent-feature-status.jsonl",
+        "agent-hardening-backlog.jsonl",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/GUI/serverFpsGUI.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/serverFPS/monitorServerFPS.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Init/Init_Server.sqf",
+        "origin/master",
+        "origin/release/2026-06-feature-bundle",
+        "miksuu/master",
+        "origin/perf/quick-wins"
+      ],
+      "outputs": [
+        "Updated Hosted-Server-FPS-Loop-Sleep.md to name docs checkout db7667c9, stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf 0076040f.",
+        "Separated docs/source's two guarded publishers from stable/release's single guarded publisher plus monitor removal and Miksuu/perf's old two-loop shape.",
+        "Aligned Feature-Status-Register.md, Pending-Owner-Decisions.md, agent-release-readiness.json, agent-context.json, agent-feature-status.jsonl and agent-hardening-backlog.jsonl.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future hosted-FPS work should decide whether target branches should keep docs/source's two guarded publishers or adopt stable/release's single-publisher cleanup before source consolidation, then run dedicated and hosted Arma smoke.",
+      "updated": "2026-06-14T04:16:08+02:00"
+    },
     {
       "lane": "upgrades-research-current-source-route",
       "owner": "Codex",

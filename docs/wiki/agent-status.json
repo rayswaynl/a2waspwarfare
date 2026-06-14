@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T04:06:51+02:00",
+  "generatedAt": "2026-06-14T04:16:08+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only upgrades/research current-source route: Upgrades-And-Research-Atlas.md and AI-Commander-Autonomy-Audit.md now name docs checkout d4cfef80 for upgrade source scope while preserving the e785f1e9 line-anchor provenance; Feature-Status-Register.md and Source-Fix-Propagation-Queue.md align AI debit and stale upgrade-dialog rows. No gameplay source changed.",
+      "currentLane": "hosted-fps-current-branch-route",
+      "currentWork": "Published docs-only hosted-FPS current-branch route: Hosted-Server-FPS-Loop-Sleep.md now names docs checkout db7667c9, stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf 0076040f; Feature-Status-Register.md, Pending-Owner-Decisions.md, release readiness and machine rows align to the two-guarded-publishers versus single-publisher branch split. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "hosted-fps-current-branch-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Hosted-Server-FPS-Loop-Sleep.md now carries a current branch matrix for docs checkout db7667c9, stable origin/master cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf/quick-wins 0076040f. Docs/source keeps two dedicated-only guarded publishers at serverFpsGUI.sqf:1 and monitorServerFPS.sqf:1, stable/release keep one guarded serverFpsGUI publisher with the old monitor removed, and Miksuu/perf still keep the old two-loop shape. Feature-Status-Register.md, Pending-Owner-Decisions.md, agent-release-readiness.json, agent-context.json, agent-feature-status.jsonl and agent-hardening-backlog.jsonl now align. No gameplay source changed."
+    },
     {
       "lane": "upgrades-research-current-source-route",
       "owner": "Codex",
