@@ -17,7 +17,15 @@ This page is the architecture gateway for network transport and trust boundaries
 
 ## Current Branch Scope
 
-The network branch matrices cited below use stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and release `a96fdda2`. Current stable source anchors for the generic path are `Common/Init/Init_PublicVariables.sqf:48,53`, `Server/Functions/Server_HandlePVF.sqf:14` and `Client/Functions/Client_HandlePVF.sqf:32`; direct `SEND_MESSAGE` anchors are `Client/FSM/updateclient.sqf:12`, `Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf:27` and `Common/Functions/Common_SendMessage.sqf:26,38`. This page summarizes architecture and trust boundaries; the channel index owns full inventory, the PVF playbook owns dispatcher branch status, and the server-authority map owns per-handler hardening status.
+Unless a row names another ref, source anchors below are from docs checkout `docs/developer-wiki-index` `59deb306`. Rechecked 2026-06-14 in source Chernarus and maintained Vanilla: the docs-checkout network shape has registered PVF lists and PVEHs at `Common/Init/Init_PublicVariables.sqf:9-21,26-40,46,51`, generic dispatch-time compile at `Server/Functions/Server_HandlePVF.sqf:14` and `Client/Functions/Client_HandlePVF.sqf:22`, direct `SEND_MESSAGE` registration at `Client/FSM/updateclient.sqf:12`, receiver compile at `Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf:27` and helper compile/broadcast at `Common/Functions/Common_SendMessage.sqf:26,37-38`.
+
+| Ref | Network source shape | Practical route |
+| --- | --- | --- |
+| Docs checkout `59deb306` | Chernarus and maintained Vanilla share the older client dispatcher line shape (`Client_HandlePVF.sqf:22`) and still leave commander `SetTask` sends commented at `GUI_Menu_Command.sqf:335,337,343` while registering the client `SetTask` handler. | Use this page for architecture, then use [Public variable channel index](Public-Variable-Channel-Index) for inventory and [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix) before making patch-status claims. |
+| Stable `origin/master` `cf2a6d6a` and release `a96fdda2` | Both maintained roots keep `Spawn (Call Compile _script)` in the server dispatcher at `Server_HandlePVF.sqf:14` and in the HC-filtered client dispatcher at `Client_HandlePVF.sqf:32`; both roots still keep direct `SEND_MESSAGE` compile at receiver/helper lines `:27` and `:26`. Both refs send targeted Objective Ping tasks at `GUI_Menu_Command.sqf:336,344`. | Treat dispatcher hardening and direct-channel hardening as still open; treat Objective Ping as branch-present but smoke-pending on stable/release. |
+| Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and `origin/feat/ai-commander` `c20ce153` | Checked roots still use dispatch-time `Call Compile`, keep the direct `SEND_MESSAGE` compile route and leave commander `SetTask` sends commented. Perf has minor registry line drift but no network hardening rescue. | Recheck exact branch/root lines before merge wording; do not import stable/release Objective Ping status into these refs. |
+
+This page summarizes architecture and trust boundaries. The channel index owns full inventory, the PVF playbook owns dispatcher branch status, and the server-authority map owns per-handler hardening status.
 
 ## Central PVF Registration
 
@@ -111,7 +119,7 @@ Claude independently deep-read the dispatch path and confirmed these runtime det
 | `SIDE` | Run only if `sideJoined == destination`. |
 | `STRING` | Run only if `getPlayerUID player == destination`. |
 
-The actual function name comes from element 1 (`CLTFNC<Command>`) and is executed with `_parameters Spawn (Call Compile _script)`. `Server/Functions/Server_HandlePVF.sqf` is simpler: it resolves `SRVFNC<Command>` and spawns it with no destination filtering. Current server PVEH wiring also passes only the public-variable value into `WFBE_SE_FNC_HandlePVF` (`Init_PublicVariables.sqf:51-53`), so server handlers do not receive an authenticated sender context unless a future dispatcher/request wrapper adds one.
+The actual function name comes from element 1 (`CLTFNC<Command>`) and is executed with `_parameters Spawn (Call Compile _script)`. `Server/Functions/Server_HandlePVF.sqf` is simpler: it resolves `SRVFNC<Command>` and spawns it with no destination filtering. Current server PVEH wiring also passes only the public-variable value into `WFBE_SE_FNC_HandlePVF` (`Init_PublicVariables.sqf:51` in this docs checkout; stable/release line drift is `:53`), so server handlers do not receive an authenticated sender context unless a future dispatcher/request wrapper adds one.
 
 ### Wrapper To Engine Primitive Map
 
@@ -134,7 +142,7 @@ When tracing one feature, grep the string tag as well as the PVF command name.
 
 This is the server-to-client counterpart to the [registered server handler matrix](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix). It answers "what happens on the receiving client?" after `Client_HandlePVF` destination filtering.
 
-Registration source: `Common/Init/Init_PublicVariables.sqf:25-40` registers 15 client-bound commands, while `:45-46` compiles each `CLTFNC*` handler and adds client PVEHs.
+Registration source: `Common/Init/Init_PublicVariables.sqf:26-40` registers 15 client-bound commands, while `:45-46` compiles each `CLTFNC*` handler and adds client PVEHs.
 
 | Handler | Runtime effect | JIP / authority note |
 | --- | --- | --- |
@@ -144,7 +152,7 @@ Registration source: `Common/Init/Init_PublicVariables.sqf:25-40` registers 15 c
 | `ChangeScore` | Replaces local score for the payload unit (`ChangeScore.sqf:7-8`). | Mirror/update of server score decision; do not use as authority source. |
 | `HandleSpecial` | Router for actions, commander vote, HC delegation, endgame, HQ status, ICBM display, join answer, UAV reveal, upgrade/building notices, HQ killed EH, auto-wall and attack-wave state (`HandleSpecial.sqf:9-37`). | Mixed router. For JIP, durable state must be re-sent or polled; event-only tags are not replayed automatically. |
 | `LocalizeMessage` | Router for chat/title text and several local money effects such as `Teamkill`, `SecondaryAward` and `HeadHunterReceiveBounty` (`LocalizeMessage.sqf:49,53,67,116-118`). | Treat money-changing messages as gameplay effects, not harmless text. |
-| `SetTask` | Creates/replaces `comTask`, sets destination and spawns a local completion timer (`SetTask.sqf:1-31`). | Current source/stable command menu sends are commented, while release `7ff18c49` re-enables targeted sends as Objective Ping in both maintained roots. Smoke target/audience, JIP and task-spam behavior before promotion. |
+| `SetTask` | Creates/replaces `comTask`, sets destination and spawns a local completion timer (`SetTask.sqf:1-31`). | Docs checkout, Miksuu, perf and `feat/ai-commander` register `SetTask` but leave commander-menu sends commented at `GUI_Menu_Command.sqf:335,337,343`; stable `origin/master` `cf2a6d6a` and release `a96fdda2` send targeted Objective Ping tasks at `GUI_Menu_Command.sqf:336,344` in both maintained roots. Old town `Client_TaskSystem.sqf` remains commented everywhere checked. Smoke target/audience, JIP and task-spam behavior before promotion. |
 | `SetVehicleLock` / `SetMHQLock` | Applies local vehicle lock or adds MHQ lock/unlock actions (`SetVehicleLock.sqf:1`; `SetMHQLock.sqf:1-3`). | Reflects server lock state; local action setup depends on deploy status. |
 | `TownCaptured` | Recolors town marker, shows capture message, awards local funds and sends `RequestChangeScore` for eligible players/commanders (`TownCaptured.sqf:23-80`). | Not just visual. Town reward authority belongs with server-side capture reward migration. |
 | `Available` | Shows a hint with available items (`Available.sqf:1`). | UI notification only. |

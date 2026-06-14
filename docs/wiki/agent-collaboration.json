@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T02:24:12+02:00",
+  "generatedAt": "2026-06-14T02:35:57+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,42 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "networking-public-variable-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Networking-And-Public-Variables.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateclient.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendMessage.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Command.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/PVFunctions/SetTask.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "origin/feat/ai-commander"
+      ],
+      "outputs": [
+        "Updated Networking-And-Public-Variables.md to name docs checkout 59deb306 and current docs-checkout network source anchors.",
+        "Kept complete channel inventory, dispatcher branch status and per-handler authority routed to Public-Variable-Channel-Index.md, PVF-Dispatch-Implementation-Playbook.md and Server-Authority-Migration-Map.md instead of duplicating those matrices.",
+        "Corrected SetTask / Objective Ping wording: docs checkout, Miksuu, perf and feat-ai keep commented commander-menu sends; stable origin/master cf2a6d6a and release a96fdda2 send targeted Objective Ping tasks in both maintained roots.",
+        "Left dispatcher hardening, DR-55 sender authentication and direct SEND_MESSAGE hardening clearly open and routed to owner pages."
+      ],
+      "handoff": "Closed as docs-published. Future network work should keep Networking-And-Public-Variables.md as the architecture gateway, keep full channel inventory on Public-Variable-Channel-Index.md, keep dispatcher patch shape on PVF-Dispatch-Implementation-Playbook.md, and avoid citing historical release 7ff18c49 when current release a96fdda2 is the checked ref.",
+      "updated": "2026-06-14T02:35:57+02:00"
+    },
     {
       "lane": "ai-headless-performance-gateway-route",
       "owner": "Codex",
