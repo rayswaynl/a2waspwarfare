@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T09:26:53+02:00",
+  "generatedAt": "2026-06-14T09:36:34+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,41 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "marker-cleanup-atlas-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Marker-Cleanup-Restoration-Systems-Atlas.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/emptyvehiclescollector.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleEmptyVehicle.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_collector_garbage.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/cleaners",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/restorers",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updatetownmarkers.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateteamsmarkers.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Common_MarkerUpdate.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_CreateMarker.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/FSM/emptyvehiclescollector.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_HandleEmptyVehicle.sqf"
+      ],
+      "outputs": [
+        "Refreshed Marker-Cleanup-Restoration-Systems-Atlas.md so current docs head 7eea6b6c is the visible marker/cleanup source-continuity checkpoint.",
+        "Confirmed targeted diffs from 634a907b to HEAD over checked marker/cleanup source paths returned no changed files.",
+        "Routed repeated empty supply-truck 24-hour timeout proof to the atlas Empty Supply Truck Branch Matrix while aligning Feature-Status-Register.md and Source-Fix-Propagation-Queue.md."
+      ],
+      "handoff": "Closed as docs-published. Future marker/cleanup edits should keep Marker-Cleanup-Restoration-Systems-Atlas.md as the canonical cleanup/marker route, keep exact empty supply-truck branch proof in the matrix, and decide keep-and-label versus shorter/parameterized timeout before any gameplay source patch.",
+      "updated": "2026-06-14T09:36:34+02:00"
+    },
     {
       "lane": "gear-loadout-easa-atlas-source-scope-route-prune",
       "owner": "Codex",

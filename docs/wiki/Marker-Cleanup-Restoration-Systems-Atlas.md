@@ -17,7 +17,7 @@ Use this page as the marker/cleanup gateway, not as the canonical owner for ever
 
 ## Current Branch Scope
 
-The empty supply-truck matrix below was refreshed against docs checkout `634a907b`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and release `a96fdda2`. All checked Chernarus and maintained Vanilla roots still drain `WF_Logic` `emptyVehicles` into `WFBE_SE_FNC_HandleEmptyVehicle` (`emptyvehiclescollector.sqf:9,15-19,30`) and then override supply-truck classes to `_delay = 86400` in `Server_HandleEmptyVehicle.sqf:21-23`. No checked branch turns abandoned supply trucks into ordinary `WFBE_C_UNITS_EMPTY_TIMEOUT` cleanup.
+The empty supply-truck matrix below is current to docs head `7eea6b6c`: targeted diffs from the earlier marker/cleanup checkpoint `634a907b` through `HEAD` over checked Chernarus and maintained Vanilla marker, cleaner, restorer and empty-vehicle paths returned no source changes. Stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and release `a96fdda2` still resolve; use the matrix for exact 24-hour supply-truck timeout proof instead of repeating branch detail in status rows.
 
 ## Runtime Ownership Model
 
@@ -124,8 +124,8 @@ Use this matrix before diagnosing abandoned supply trucks as a broken cleanup lo
 
 | Root / branch | Evidence | Outcome |
 | --- | --- | --- |
-| Docs checkout Chernarus `634a907b` | `Server/FSM/emptyvehiclescollector.sqf:9-19,30`; `Server/Functions/Server_HandleEmptyVehicle.sqf:21-23,27,33` | Queue drains through `emptyQueu`, spawns `WFBE_SE_FNC_HandleEmptyVehicle`, then supply trucks set `_delay = 86400` and are only deleted after the handler sees enough empty time. |
-| Docs checkout maintained Vanilla Takistan `634a907b` | Same `emptyvehiclescollector.sqf:9-19,30`; same `Server_HandleEmptyVehicle.sqf:21-23,27,33` | Same 24-hour supply-truck behavior in the maintained generated/copy target. |
+| Docs checkout Chernarus `7eea6b6c` source-unchanged from `634a907b` | `Server/FSM/emptyvehiclescollector.sqf:9-19,30`; `Server/Functions/Server_HandleEmptyVehicle.sqf:21-23,27,33` | Queue drains through `emptyQueu`, spawns `WFBE_SE_FNC_HandleEmptyVehicle`, then supply trucks set `_delay = 86400` and are only deleted after the handler sees enough empty time. |
+| Docs checkout maintained Vanilla Takistan `7eea6b6c` source-unchanged from `634a907b` | Same `emptyvehiclescollector.sqf:9-19,30`; same `Server_HandleEmptyVehicle.sqf:21-23,27,33` | Same 24-hour supply-truck behavior in the maintained generated/copy target. |
 | Stable `origin/master@cf2a6d6a` | Same Chernarus and Vanilla handler/collector shape. | No stable-branch rescue; the hard-coded 24-hour delay remains. |
 | Miksuu upstream `b8389e74` | Same Chernarus and Vanilla handler/collector shape. | No upstream rescue; this behavior is inherited, not a docs-branch-only change. |
 | `origin/perf/quick-wins@0076040f` | Same Chernarus and Vanilla handler/collector shape. | The perf branch does not change supply-truck empty cleanup. |
@@ -137,7 +137,7 @@ Future code-owner decision: either keep this as intentional logistics persistenc
 
 | Finding | Evidence | Patch shape |
 | --- | --- | --- |
-| Empty supply trucks bypass normal timeout | `Server_HandleEmptyVehicle.sqf:21-23` hard-codes `_delay = 86400` for supply truck classes across current source/Vanilla, stable, upstream, perf and release. | Decide intentional logistics persistence versus shorter/parameterized cleanup; if changing, patch source Chernarus plus maintained Vanilla and smoke ordinary empty vehicles, double-timeout medical/repair vehicles and supply mission/logistics flows. |
+| Empty supply trucks bypass normal timeout | [Empty Supply Truck Branch Matrix](#empty-supply-truck-branch-matrix) owns the current docs/stable/release/Miksuu/perf proof; current docs head `7eea6b6c` is source-unchanged from `634a907b` for the checked collector/handler paths. | Decide intentional logistics persistence versus shorter/parameterized cleanup; if changing, patch source Chernarus plus maintained Vanilla and smoke ordinary empty vehicles, double-timeout medical/repair vehicles and supply mission/logistics flows. |
 | Mine cleaner pair removal likely wrong | Minefields push `[mine, time]` pairs; `mines_cleaner.sqf:17` uses `mines = mines - _x`. | Remove the tracked pair with `mines = mines - [_x]` or rewrite to filter live pairs. Smoke mine cleanup and verify no stale pairs persist. |
 | Garbage flags are inconsistent | `server_collector_garbage.sqf:17` skips `wfbe_trashable`; `RequestOnUnitKilled.sqf:51-54` sets `wfbe_trashed`. | Align the flag contract: collector should also skip `wfbe_trashed`, or kill paths should set the collector's skip flag before spawning trash. |
 | Local marker delete helper deletes globally | `Client_Delete_Marker.sqf:5` documents local marker creation; `:24` comments `deleteMarkerLocal`; `:25` uses `deleteMarker`. | Restore local deletion for side-local markers or rename/split helper behavior. Smoke side-specific marker removal. |

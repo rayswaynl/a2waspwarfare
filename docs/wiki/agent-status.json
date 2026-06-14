@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T09:26:53+02:00",
+  "generatedAt": "2026-06-14T09:36:34+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,9 +20,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "gear-loadout-easa-atlas-source-scope-route-prune",
-      "currentWork": "Published docs-only Gear/loadout/EASA atlas source-scope route prune: Gear-Loadout-And-EASA-Atlas.md now names docs head 3fdf1898 as the visible gear/EASA source-continuity checkpoint, targeted source diffs confirmed no checked Chernarus, maintained Vanilla or LoadoutManager gear/EASA source-path drift from 8b71e2a1 through 3fdf1898, and repeated profile-template, cargo-loop, service/EASA and UI IDD branch proof now routes to canonical owner pages. No gameplay source changed.",
-      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gear/EASA, construction/CoIn, lifecycle, respawn, modules, function/module, gameplay, victory/endgame, commander/HQ, town/camp, support/UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
+      "currentLane": "marker-cleanup-atlas-source-scope-route-prune",
+      "currentWork": "Published docs-only Marker cleanup/restoration atlas source-scope route prune: Marker-Cleanup-Restoration-Systems-Atlas.md now names docs head 7eea6b6c as the visible marker/cleanup source-continuity checkpoint, targeted source diffs confirmed no checked marker/cleanup source-path drift from 634a907b through 7eea6b6c, and repeated empty supply-truck branch proof now routes to the atlas matrix. No gameplay source changed.",
+      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep marker/cleanup, gear/EASA, construction/CoIn, lifecycle, respawn, modules, function/module, gameplay, victory/endgame, commander/HQ, town/camp, support/UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "marker-cleanup-atlas-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Marker-Cleanup-Restoration-Systems-Atlas.md now names docs head 7eea6b6c as the current marker/cleanup source-continuity checkpoint. Checked Chernarus and maintained Vanilla marker, cleaner, restorer and empty-vehicle source paths are unchanged from 634a907b through 7eea6b6c; stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf 0076040f refs still resolve. Repeated empty supply-truck 24-hour timeout proof now routes to the atlas Empty Supply Truck Branch Matrix; Feature-Status-Register.md and Source-Fix-Propagation-Queue.md are aligned. No gameplay source changed."
+    },
     {
       "lane": "gear-loadout-easa-atlas-source-scope-route-prune",
       "owner": "Codex",
