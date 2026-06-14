@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T09:13:06+02:00",
+  "generatedAt": "2026-06-14T09:26:53+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,54 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "gear-loadout-easa-atlas-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Gear-Loadout-And-EASA-Atlas.md",
+        "Feature-Status-Register.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_BuyGearMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_EASA.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Service.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UI_Gear_AddTemplate.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UI_Gear_FillTemplates.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_ProfileGear.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_EquipVehicle.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_EquipBackpack.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RearmVehicle.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/EASA",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_BuyGearMenu.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_Menu_EASA.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_Menu_Service.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Functions/Client_UI_Gear_AddTemplate.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Functions/Client_UI_Gear_FillTemplates.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Functions/Client_UI_Gear_SaveTemplateProfile.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_ProfileGear.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Functions/Common_EquipVehicle.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Functions/Common_EquipBackpack.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Functions/Common_RearmVehicle.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Module/EASA",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc/Dialogs.hpp",
+        "Tools/LoadoutManager"
+      ],
+      "outputs": [
+        "Refreshed Gear-Loadout-And-EASA-Atlas.md so current docs head 3fdf1898 is the visible gear/EASA source-continuity checkpoint.",
+        "Confirmed targeted diffs from 8b71e2a1 to HEAD over checked Chernarus, maintained Vanilla and LoadoutManager gear/EASA source paths returned no changed files.",
+        "Routed repeated profile-template, import-guard, cargo-loop, service/EASA and UI IDD branch proof to Gear-Template-Profile-Filter.md, Vehicle-Cargo-Equip-Loop-Bounds.md, Service-Menu-Affordability-Guards.md, UI-IDD-Collision-Repair.md and BuyMenu-EASA-QoL-Branch-Audit.md while aligning Feature-Status-Register.md."
+      ],
+      "handoff": "Closed as docs-published. Future gear/EASA edits should keep Gear-Loadout-And-EASA-Atlas.md as the runtime/source-route owner, keep exact branch matrices in Current Branch Scope or dedicated owner pages, and avoid expanding Feature Status into duplicate branch proof.",
+      "updated": "2026-06-14T09:26:53+02:00"
+    },
     {
       "lane": "construction-coin-atlas-source-scope-route-prune",
       "owner": "Codex",

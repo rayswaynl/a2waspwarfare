@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T09:13:06+02:00",
+  "generatedAt": "2026-06-14T09:26:53+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,9 +20,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "construction-coin-atlas-source-scope-route-prune",
-      "currentWork": "Published docs-only Construction/CoIn atlas source-scope route prune: Construction-And-CoIn-Systems-Atlas.md now names docs head 7d248610 as the visible construction/CoIn source-continuity checkpoint, targeted source diffs confirmed no checked Chernarus or maintained Vanilla construction/CoIn, base-area, structure-config, commander ARTY or salvage source-path drift from 4bd37b98 and 1aa178f8 through 7d248610, and repeated branch proof now routes to the atlas Current Branch Scope and dedicated cleanup pages. No gameplay source changed.",
-      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep construction/CoIn, lifecycle, Respawn lifecycle, Modules Atlas, Function/Module Index, Gameplay Systems, victory/endgame, commander/HQ, town/camp, support/UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
+      "currentLane": "gear-loadout-easa-atlas-source-scope-route-prune",
+      "currentWork": "Published docs-only Gear/loadout/EASA atlas source-scope route prune: Gear-Loadout-And-EASA-Atlas.md now names docs head 3fdf1898 as the visible gear/EASA source-continuity checkpoint, targeted source diffs confirmed no checked Chernarus, maintained Vanilla or LoadoutManager gear/EASA source-path drift from 8b71e2a1 through 3fdf1898, and repeated profile-template, cargo-loop, service/EASA and UI IDD branch proof now routes to canonical owner pages. No gameplay source changed.",
+      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gear/EASA, construction/CoIn, lifecycle, respawn, modules, function/module, gameplay, victory/endgame, commander/HQ, town/camp, support/UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "gear-loadout-easa-atlas-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Gear-Loadout-And-EASA-Atlas.md now names docs head 3fdf1898 as the current gear/EASA source-continuity checkpoint. Checked Chernarus, maintained Vanilla and Tools/LoadoutManager gear/EASA source paths are unchanged from 8b71e2a1 through 3fdf1898; stable cf2a6d6a, release a96fdda2, Miksuu b8389e74, perf 0076040f and BuyMenu/EASA QoL a66d4691 refs still resolve. Repeated profile-template, import-guard, cargo-loop, service/EASA and UI IDD branch proof now routes to the atlas Current Branch Scope, Gear-Template-Profile-Filter.md, Vehicle-Cargo-Equip-Loop-Bounds.md, Service-Menu-Affordability-Guards.md, UI-IDD-Collision-Repair.md and BuyMenu-EASA-QoL-Branch-Audit.md; Feature-Status-Register.md is aligned. No gameplay source changed."
+    },
     {
       "lane": "construction-coin-atlas-source-scope-route-prune",
       "owner": "Codex",
