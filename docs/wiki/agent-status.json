@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T08:47:31+02:00",
+  "generatedAt": "2026-06-14T08:53:55+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,9 +20,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "modules-atlas-current-scope-route-prune",
-      "currentWork": "Published docs-only Modules atlas current-scope route prune: Modules-Atlas.md now names docs head 86244c24 as the visible module source-continuity checkpoint, targeted source diffs confirmed no checked Chernarus common/client/server init, unit-creation, module folder or paratrooper support source-path drift from 20a19676 through 86244c24, and the local Reaktiv dormant-module table now names the current docs head while exact branch matrices route to owner pages. No gameplay source changed.",
-      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep Modules Atlas, Function/Module Index, Gameplay Systems, victory/endgame, commander/HQ, town/camp, support/UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
+      "currentLane": "respawn-lifecycle-atlas-source-scope-route-prune",
+      "currentWork": "Published docs-only Respawn lifecycle atlas source-scope route prune: Respawn-And-Death-Lifecycle-Atlas.md now names docs head a640e722 as the visible respawn/MASH source-continuity checkpoint, targeted source diffs confirmed no checked Chernarus or maintained Vanilla respawn, MASH, skill, camp/threeway or AI-respawn source-path drift from 1f0b9018 through a640e722, duplicate MASH risk-row source detail now routes to the atlas MASH split matrix, and Feature-Status-Register.md is aligned. No gameplay source changed.",
+      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep Respawn lifecycle, Modules Atlas, Function/Module Index, Gameplay Systems, victory/endgame, commander/HQ, town/camp, support/UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "respawn-lifecycle-atlas-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Respawn-And-Death-Lifecycle-Atlas.md now names docs head a640e722 as the current respawn/MASH source-continuity checkpoint. Checked Chernarus and maintained Vanilla respawn, MASH, skill, camp/threeway and AI-respawn source paths are unchanged from 1f0b9018 through a640e722; stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf 0076040f refs still resolve. The MASH branch row now names current docs head, duplicate MASH risk-row source detail routes to the atlas MASH split matrix, and Feature-Status-Register.md is aligned. No gameplay source changed."
+    },
     {
       "lane": "modules-atlas-current-scope-route-prune",
       "owner": "Codex",

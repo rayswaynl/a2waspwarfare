@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T08:47:31+02:00",
+  "generatedAt": "2026-06-14T08:53:55+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,47 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "respawn-lifecycle-atlas-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Respawn-And-Death-Lifecycle-Atlas.md",
+        "Feature-Status-Register.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Header.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_OnKilled.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_PreRespawnHandler.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_RespawnMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_GetRespawnAvailable.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_OnRespawnHandler.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UI_Respawn_Selector.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/MASH",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/MASH",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetRespawnThreeway.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetRespawnCamps.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTotalCamps.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTotalCampsOnSide.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI"
+      ],
+      "outputs": [
+        "Refreshed Respawn-And-Death-Lifecycle-Atlas.md so docs head a640e722 is the visible source-continuity checkpoint for checked respawn/MASH paths.",
+        "Updated the MASH branch row to current docs head and routed duplicate MASH risk-row source detail back to the atlas MASH split matrix.",
+        "Aligned Feature-Status-Register.md and kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future respawn lifecycle edits should keep Respawn-And-Death-Lifecycle-Atlas.md as the canonical map for player death, custom respawn, MASH/local-marker split, AI respawn and adjacent respawn risks; route status summaries to the MASH split matrix instead of repeating branch proof.",
+      "updated": "2026-06-14T08:53:55+02:00"
+    },
     {
       "lane": "modules-atlas-current-scope-route-prune",
       "owner": "Codex",

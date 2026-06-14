@@ -1070,3 +1070,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Rechecked current docs head `86244c24`: targeted `git diff --name-only 20a19676..HEAD` checks returned no changes for checked Chernarus common/client/server init, unit-creation, module folders and paratrooper support source paths.
 - Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `perf/quick-wins` `0076040f`.
 - Refreshed [Modules atlas](Modules-Atlas) so `86244c24` is the visible module source-continuity checkpoint. Updated the Reaktiv dormant-module table to current docs head and kept exact branch matrices routed to owner pages except for that compact local module table. No gameplay source changed.
+
+## 2026-06-14T08:53:55+02:00 - Codex - Respawn lifecycle atlas source-scope route prune
+
+- Claimed `respawn-lifecycle-atlas-source-scope-route-prune` as a docs-only Respawn and death lifecycle atlas cleanup pass, with no gameplay source edits.
+- Rechecked current docs head `a640e722`: targeted `git diff --name-only 1f0b9018..HEAD` checks returned no changes for checked Chernarus and maintained Vanilla respawn, MASH, skill, camp/threeway and AI-respawn source paths.
+- Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `perf/quick-wins` `0076040f`.
+- Refreshed [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas) so `a640e722` is the visible respawn/MASH source-continuity checkpoint. Updated the MASH branch row to current docs head, replaced duplicate MASH risk-row source detail with links back to the atlas MASH split matrix, and aligned [Feature status](Feature-Status-Register). No gameplay source changed.

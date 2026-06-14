@@ -2,7 +2,9 @@
 
 This page maps player death, custom respawn selection, gear restoration, MASH/mobile/camp spawn options and AI respawn. It also separates live respawn behavior from the dead MASH marker relay.
 
-Source root: `Missions/[55-2hc]warfarev2_073v48co.chernarus`.
+## Source Scope
+
+Source-refreshed 2026-06-14 on docs head `a640e722`; targeted diffs from `1f0b9018` through `HEAD` over checked Chernarus and maintained Vanilla respawn, MASH, skill, camp/threeway and AI-respawn paths return no source changes. Paths below are relative to source root `Missions/[55-2hc]warfarev2_073v48co.chernarus` unless a maintained-root or branch note says otherwise. Stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` still resolve; use the MASH matrix below for branch-sensitive deploy/marker claims.
 
 ## Why This Matters
 
@@ -111,11 +113,11 @@ Dead/broken marker edge:
 - Server PVEH listens for `WFBE_CL_MASH_MARKER_CREATED` in `Server/Module/MASH/MASHMarker.sqf:1-13`.
 - Client receiver for `WFBE_SE_MASH_MARKER_SENT` exists in `Client/Module/MASH/receiverMASHmarker.sqf:1-29`, but its compile line is commented in `Client/Init/Init_Client.sqf:132`.
 - No live deploy path was found broadcasting `WFBE_CL_MASH_MARKER_CREATED`.
-- Branch recheck on 2026-06-14 found the orphaned marker shape in docs checkout `1f0b9018`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` maintained roots. Stable `origin/master` `cf2a6d6a` and release `a96fdda2` have no maintained-root `Client/Module/MASH` or `Server/Module/MASH` tree entries and no MASH init hooks in `Client/Init/Init_Client.sqf` or `Server/Init/Init_Server.sqf`; both keep a `Skill_Apply.sqf:43` comment that the deploy ability was removed plus config/classname residues such as `Core_CIV.sqf:131` and `Structures_CO_*` MASH defense entries.
+- Branch recheck on 2026-06-14 found the orphaned marker shape in docs head `a640e722` (source-unchanged from `1f0b9018`), Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` maintained roots. Stable `origin/master` `cf2a6d6a` and release `a96fdda2` have no maintained-root `Client/Module/MASH` or `Server/Module/MASH` tree entries and no MASH init hooks in `Client/Init/Init_Client.sqf` or `Server/Init/Init_Server.sqf`; both keep a `Skill_Apply.sqf:43` comment that the deploy ability was removed plus config/classname residues such as `Core_CIV.sqf:131` and `Structures_CO_*` MASH defense entries.
 
 | Scope | Local MASH respawn | Shared marker relay | Development meaning |
 | --- | --- | --- | --- |
-| Docs checkout `1f0b9018` Chernarus | Source-supported: deploy stores local `wfbe_mash`; respawn availability reads it. | Orphaned: active server receiver, commented client receiver compile, no maintained deploy sender. | Decide personal/squad/team semantics before changing code. |
+| Docs head `a640e722` (source-unchanged from `1f0b9018`) Chernarus | Source-supported: deploy stores local `wfbe_mash`; respawn availability reads it. | Orphaned: active server receiver, commented client receiver compile, no maintained deploy sender. | Decide personal/squad/team semantics before changing code. |
 | Maintained Vanilla Takistan | Same source-supported local path. | Same orphaned relay. | Any revive/remove patch must propagate to Vanilla. |
 | Miksuu `b8389e74` | Same source-supported local path. | Same orphaned relay. | Upstream does not prove team-shared MASH behavior. |
 | `origin/perf/quick-wins` `0076040f` | Same source-supported local path in Chernarus and maintained Vanilla. | Same orphaned relay. | Perf branch does not close MASH marker sharing. |
@@ -161,8 +163,8 @@ Known adjacent hazard: HQ death has its own redundant client EH/JIP path and ide
 | Status | Item | Evidence | Next action |
 | --- | --- | --- | --- |
 | Patch-ready | Respawn penalty mode `5` can skip custom gear on base/HQ respawn when player lacks funds, even though `_charge` is false. | `Client_OnRespawnHandler.sqf:54-70` | Patch `_skip` to respect `_charge`, or document owner-confirmed intended semantics. Smoke custom gear at base and mobile under sufficient/insufficient funds. |
-| Owner decision | MASH is local to the deployer in audited source; team-wide MASH respawn is not proven. | `Skill_Officer.sqf:26`; `Client_GetRespawnAvailable.sqf:47-58` | Decide whether MASH should be personal, squad/team-shared, or marker-only. If shared, design server-owned registry/JIP replay. |
-| Broken/dead edge | MASH marker synchronization is orphaned on docs/Miksuu/perf-shaped maintained roots; stable/release have no maintained-root MASH module/init relay path after removing the deploy ability. | Docs checkout `Init_Client.sqf:132`; `MASHMarker.sqf:1-13`; `receiverMASHmarker.sqf:1-29`; stable/release `Skill_Apply.sqf:43` removal comment. | Revive with server-held marker records and JIP resend, or finish removal/cleanup deliberately on the target branch. |
+| Owner decision | MASH is local to the deployer in audited source; team-wide MASH respawn is not proven. | [MASH split](Respawn-And-Death-Lifecycle-Atlas#mash-split-live-respawn-dead-marker-relay) owns the deploy/read anchors and branch matrix. | Decide whether MASH should be personal, squad/team-shared, or marker-only. If shared, design server-owned registry/JIP replay. |
+| Broken/dead edge | MASH marker synchronization is orphaned on docs/Miksuu/perf-shaped maintained roots; stable/release have no maintained-root MASH module/init relay path after removing the deploy ability. | [MASH split](Respawn-And-Death-Lifecycle-Atlas#mash-split-live-respawn-dead-marker-relay) owns the receiver/server-listener anchors and stable/release removal note. | Revive with server-held marker records and JIP resend, or finish removal/cleanup deliberately on the target branch. |
 | Smoke pending | Source-only skill idempotency patch depends on respawn reapply still working. | `Client_PreRespawnHandler.sqf:5`; [Client skill init idempotency](Client-Skill-Init-Idempotency) | Smoke Soldier/non-Soldier cap and post-respawn skill actions after LoadoutManager propagation. |
 | Review target | Respawn UI loop sleeps `0.01` and selector sleeps `0.03`. | `GUI_RespawnMenu.sqf:113`; `Client_UI_Respawn_Selector.sqf:19-35` | Keep as bounded death-screen-only UI work; if optimizing, preserve marker responsiveness and cleanup. |
 | Cleanup target | AI respawn loadout tier uses a literal gear-upgrade index and assumes a non-empty loadout array. | `AI_AdvancedRespawn.sqf:68`; `AI_SquadRespawn.sqf:56`; `Init_CommonConstants.sqf:50` | Replace literal `13` with `WFBE_UP_GEAR`, clamp/bounds-check tier selection and smoke Vanilla plus non-Vanilla AI leader respawn. |
