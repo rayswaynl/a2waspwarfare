@@ -4,7 +4,7 @@ This page owns mission parameter flow, localization hazards and generated includ
 
 ## Source Of Truth
 
-`description.ext:52` includes `Rsc\Parameters.hpp`; the `class Params` order is the authoritative `paramsArray` index order. `description.ext:39` and `initJIPCompatible.sqf:4` both include `version.sqf`. This workspace currently has ignored generated Chernarus and Vanilla Takistan `version.sqf` files on disk, but Git does not track them; LoadoutManager still generates/updates version outputs for terrain copies and several modded/stub roots remain incomplete without them.
+`description.ext:52` includes `Rsc\Parameters.hpp`; the `class Params` order is the authoritative `paramsArray` index order. `description.ext:39` and `initJIPCompatible.sqf:4` both include `version.sqf`. Recheck on 2026-06-14 at docs checkout `85679dba`: source Chernarus and maintained Vanilla Takistan have no present or tracked generated `version.sqf` files, while `.gitignore:1,23` still ignores those paths. LoadoutManager owns generation/update of version outputs for terrain copies, and several modded/stub roots remain incomplete without generated inputs.
 
 Source refs:
 
@@ -14,7 +14,7 @@ Source refs:
 - `Common/Init/Init_CommonConstants.sqf:65-67` documents the nil-default pattern that avoids overriding MP parameters.
 - `Client/GUI/GUI_Display_Parameters.sqf:3-12` displays parameter names/statuses from the same `Params` tree.
 
-Full lobby/start parameter index: [Mission start parameters index](Mission-Start-Parameters-Index). Current maintained Chernarus and Vanilla Takistan have identical `Rsc/Parameters.hpp` files, with 89 active lobby-visible parameters plus one commented-out upgrade-clearance class that is not host-selectable.
+Full lobby/start parameter index: [Mission start parameters index](Mission-Start-Parameters-Index). Current maintained Chernarus and Vanilla Takistan have identical `Rsc/Parameters.hpp` files in docs checkout `85679dba`, with 89 active lobby-visible parameters plus one commented-out upgrade-clearance class that is not host-selectable.
 
 ## Parameter Cache Flow
 
@@ -67,7 +67,7 @@ The scout pass found no live missing `$STR_...` keys for `Rsc/Parameters.hpp` re
 
 ## Version And Include Generation
 
-`version.sqf` is included by both `description.ext` and `initJIPCompatible.sqf`. Current local generated copies exist at `Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf:1` and `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf:1`, but `.gitignore:1,23` ignores both paths and `git --literal-pathspecs ls-files -- .../version.sqf` returns no tracked rows. `Tools/LoadoutManager/FileManagement/FileManager.cs:92-100` treats it specially, and terrain generation writes version output from the C# terrain flow.
+`version.sqf` is included by both `description.ext` and `initJIPCompatible.sqf`. In the current 2026-06-14 docs checkout, `Test-Path` is false for `Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf` and `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf`; `git --literal-pathspecs ls-files -- .../version.sqf` returns no tracked rows. `.gitignore:1,23` ignores both generated paths. `Tools/LoadoutManager/FileManagement/FileManager.cs:92-100` treats `version.sqf` specially during copy/delete, and `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:99-102,346-367` writes the generated version output from the C# terrain flow.
 
 The concrete contract lives in [Mission config/version include graph](Mission-Config-Version-Include-Graph): `description.ext:39` includes `version.sqf`, `Rsc/Header.hpp:5,9,21` uses `WF_RESPAWNDELAY`, `WF_MISSIONNAME` and `WF_MAXPLAYERS`, and `initJIPCompatible.sqf:4,31,111-113` includes/logs those values and converts `IS_CHERNARUS_MAP_DEPENDENT` into runtime `IS_chernarus_map_dependent`. The same graph also records that `IS_NAVAL_MAP` changes purchasable boat content through `IS_naval_map`.
 
@@ -109,7 +109,7 @@ This means current Codex checkouts such as `work\a` can run LoadoutManager after
 - Do not reorder `class Params` without auditing every `paramsArray` index.
 - Do not trust a parameter by label alone. Check the class name imported by `Init_Parameters.sqf`, any constants fallback and any later forced assignment before calling it active.
 - Do not hand-edit generated Vanilla mission drift as a substitute for LoadoutManager propagation.
-- Treat `version.sqf` as required generated/terrain metadata. Local Chernarus/Vanilla copies may exist as ignored generated files; clean checkouts, generated targets and modded targets still need explicit verification.
+- Treat `version.sqf` as required generated/terrain metadata. Prepared local checkouts may have ignored copies, but clean checkouts, generated targets and modded targets still need explicit verification before pack/test/release claims.
 - Keep Arma 2 OA config syntax in mind; do not import Arma 3 `description.ext` assumptions.
 
 ## Continue Reading

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T03:00:14+02:00",
+  "generatedAt": "2026-06-14T03:12:25+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only commander/HQ source-scope route: Commander-HQ-Lifecycle-Atlas.md now names docs checkout f82a9127, adds use-route and current branch-scope tables, corrects DR-15 helper wording to branch-split status, refreshes HQ score double-award line drift, and aligns Feature-Status-Register.md plus Source-Fix-Propagation-Queue.md for HQ score, reassignment and Objective Ping evidence. No gameplay source changed.",
+      "currentWork": "Published docs-only assets/config/parameters source-scope route: Assets-Config-Localization-And-Parameters-Atlas.md now names docs checkout 85679dba, adds use-route and current branch-scope tables, routes duplicated parameter caveats to Mission-Parameters-Localization-And-Generated-Build-Inputs.md plus Mission-Start-Parameters-Index.md, and corrects generated version.sqf clean-checkout wording in Mission-Config-Version-Include-Graph.md, Feature-Status-Register.md, Tools-And-Build-Workflow.md, Codebase-Coverage-Ledger.md, Hardening-Implementation-Roadmap.md and Pending-Owner-Decisions.md. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "assets-config-parameters-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Assets-Config-Localization-And-Parameters-Atlas.md now behaves as the config/media gateway for docs checkout 85679dba: it adds use-route and current branch-scope tables, keeps full parameter source order on Mission-Start-Parameters-Index.md and runtime caveats on Mission-Parameters-Localization-And-Generated-Build-Inputs.md, and corrects generated version.sqf wording across Mission-Config-Version-Include-Graph.md, Feature-Status-Register.md, Tools-And-Build-Workflow.md, Codebase-Coverage-Ledger.md, Hardening-Implementation-Roadmap.md and Pending-Owner-Decisions.md. Rechecked source Chernarus media/config counts, Chernarus/Vanilla parameter parity, generated version.sqf absence/tracking, and branch refs stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f and release a96fdda2. No gameplay source changed."
+    },
     {
       "lane": "commander-hq-source-scope-route",
       "owner": "Codex",

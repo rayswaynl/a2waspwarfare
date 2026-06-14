@@ -2,11 +2,30 @@
 
 This page maps the mission-facing configuration and media layer: `description.ext`, `Rsc/*.hpp`, mission parameters, stringtable localization, sounds, music, textures and UI images. Check it before adding a mission parameter, sound, title resource, dialog image or localized string.
 
+## How To Use This Page
+
+| Need | Start here | Then read |
+| --- | --- | --- |
+| Add or rename a lobby parameter | [Parameter contract](#parameter-contract) | [Mission start parameters index](Mission-Start-Parameters-Index) for the full source-order table, then [Mission parameters/localization/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs) for runtime caveats. |
+| Verify generated `version.sqf` or map flags | [Entry graph](#entry-graph) | [Mission config/version include graph](Mission-Config-Version-Include-Graph) and [Tools/build workflow](Tools-And-Build-Workflow). |
+| Add config/content rows | [Config data-model checklist](#config-data-model-checklist) | [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas), [Factory and purchase systems](Factory-And-Purchase-Systems-Atlas), [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas) or [Upgrades and research](Upgrades-And-Research-Atlas), depending on the content family. |
+| Add or prune media | [Asset and media findings](#asset-and-media-findings) | [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [UI resource parity cleanup](UI-Resource-Parity-Cleanup) before deleting files or references. |
+
+## Current Branch Scope
+
+Source anchors below were rechecked on docs checkout `85679dba` on 2026-06-14 in the source Chernarus mission unless another root/ref is named. Maintained Vanilla Takistan `Rsc/Parameters.hpp` has the same SHA-256 hash as source Chernarus in this checkout; both roots expose 89 active lobby-visible parameters plus one commented upgrade-clearance class.
+
+| Scope | Recheck result |
+| --- | --- |
+| Generated `version.sqf` | Current working tree has no present or tracked Chernarus/Vanilla `version.sqf`; `.gitignore:1,23` still ignores those generated paths. `HEAD` `85679dba`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `perf/quick-wins` `0076040f` and release `a96fdda2` also do not track those generated files. |
+| Parameter branch debts | Docs `85679dba`, stable `cf2a6d6a`, Miksuu `b8389e74`, perf `0076040f` and release `a96fdda2` all keep the `WFBE_C_MODULE_WFBE_IRS` lobby name versus `WFBE_C_MODULE_WFBE_IRSMOKE` runtime consumers, and all keep the bomb-distance live path beside the commented bomb-altitude enforcement block. |
+| Asset counts | Source Chernarus currently has 20 local texture `.paa`, 45 client image `.paa`, 26 sound `.ogg` and 2 music `.ogg` files. `Sounds/description.ext` defines 26 non-wrapper `CfgSounds` classes; `Rsc/Dialogs.hpp` has 18 top-level dialog classes and `Rsc/Titles.hpp` has 99 title class rows. |
+
 ## Entry Graph
 
 | Layer | Source | Runtime role |
 | --- | --- | --- |
-| Mission root config | `Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext:39-67` | Includes `version.sqf`, sound/music configs and all `Rsc` UI/resource config files. |
+| Mission root config | `Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext:39-67` | Includes generated `version.sqf`, sound/music configs and all `Rsc` UI/resource config files. `version.sqf` is required at pack/run time but absent from the clean tracked checkout. |
 | Loading screen | `description.ext:64`, `Rsc/Titles.hpp:36` | Uses `loadScreen.jpg`; the file exists in the source mission. |
 | Disabled legacy include | `description.ext:37` | `scripts\unitCaching\description.ext` is commented and the `scripts/unitCaching` folder is absent. |
 | Mission parameters | `Rsc/Parameters.hpp:3`, `Common/Init/Init_Parameters.sqf:5-9` | `class Params` entries are read in order and exported into `missionNamespace` under the class name. Multiplayer uses `paramsArray`; SP uses each class `default`. |
@@ -14,26 +33,23 @@ This page maps the mission-facing configuration and media layer: `description.ex
 | Stringtable | `stringtable.xml` | Real `STR_WF_*` localization package used by parameters, dialogs and messages. |
 | Sound registry | `Sounds/description.ext:2-159` | Defines 26 `CfgSounds` classes and 26 tracked `.ogg` files in `Sounds/`. |
 | Music registry | `Music/description.ext:1-19` | Defines `wf_outro` and `cherna_intro`, backed by two tracked `.ogg` files. |
-| UI resources | `Rsc/Ressources.hpp`, `Rsc/Dialogs.hpp`, `Rsc/Titles.hpp` | Shared controls, dialog classes and title resources. Current source has 18 top-level dialog classes and 99 title classes. |
-| Local media folders | `Textures/`, `Client/Images/`, `Sounds/`, `Music/` | Current source has 20 local texture `.paa`, 45 client image `.paa`, 26 sound `.ogg` and 2 music `.ogg` files. |
+| UI resources | `Rsc/Ressources.hpp`, `Rsc/Dialogs.hpp`, `Rsc/Titles.hpp` | Shared controls, dialog classes and title resources. Docs checkout source has 18 top-level dialog classes and 99 title classes. |
+| Local media folders | `Textures/`, `Client/Images/`, `Sounds/`, `Music/` | Docs checkout source has 20 local texture `.paa`, 45 client image `.paa`, 26 sound `.ogg` and 2 music `.ogg` files. |
 | Asset/reference scanner | `docs/analysis/dead-code-asset-reference-scan.ps1` | Repeatable scanner for mission path references, missing bootstrap files, local assets, include targets and OA addon paths. Latest scan: 5860 path records across 9 mission roots, 21 missing bootstrap files all under `Modded_Missions`. |
 
 ## Parameter Contract
 
 `Init_Parameters.sqf` is intentionally generic: it iterates `missionConfigFile >> "Params"` and sets each config class name as a mission variable. The parameter class name is the public API. Renaming a class is a gameplay compatibility change, not just UI cleanup.
 
-| Parameter | Source | Current shape | Notes |
-| --- | --- | --- | --- |
-| `WFBE_C_AI_DELEGATION` | `Rsc/Parameters.hpp:50-54` | `0/1/2`, default `2` | Hosted server path can force HC mode off in `initJIPCompatible.sqf:168-169`. Runtime consumers include client FPS delegation, town AI, static defense and disconnect cleanup. |
-| `WFBE_C_AI_TEAMS_ENABLED` | `Rsc/Parameters.hpp:74-78` | `0/1`, default `0` | AI teams are disabled by default in current mission parameters even though constants fallback defaults to enabled in `Init_CommonConstants.sqf:94`. |
-| `WFBE_C_STRUCTURES_CONSTRUCTION_MODE` | `Rsc/Parameters.hpp:122-126` | only value `0` | UI still has sold/instant affordances for mode `1` in `GUI_Menu_Economy.sqf:149`, but the parameter only exposes timed construction. |
-| `WFBE_C_ENVIRONMENT_WEATHER_VOLUMETRIC` | `Rsc/Parameters.hpp:210-214`, `Common/Init/Init_CommonConstants.sqf:212`, `Client/Init/Init_Client.sqf:218` | only value `0`; forced `0` twice | Comment says clouds are globally disabled for FPS/stutter. Treat the lobby entry as a locked/off switch until both constants and client init stop forcing the variable to `0`. |
-| `WFBE_C_MODULE_BIS_PMC` | `Rsc/Parameters.hpp:222-227` | hidden behind `#ifndef VANILLA` | Loadout/unit roots use it for PMC content gates, for example `Common/Config/Core_Root/Root_TKGUE.sqf:99`. |
-| `WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION` | `Rsc/Parameters.hpp:290-294` | distance list | Its `title` is the same string as bomb altitude (`$STR_WF_PARAMETER_BombAltitude`), but it drives distance restriction in `Common/Functions/Common_HandleShootBombs.sqf:21`. |
-| `WFBE_C_GAMEPLAY_BOMBS_ALTITUDE` | `Rsc/Parameters.hpp:284-288` | altitude list, default 2000 | Config-present, but current `Common_HandleShootBombs.sqf:32-44` comments out the altitude enforcement block. Do not document this as active gameplay behavior until the handler is revived and smoke-tested. |
-| `WFBE_C_MODULE_WFBE_IRS` / `WFBE_C_MODULE_WFBE_IRSMOKE` | `Rsc/Parameters.hpp:393-397`; `Init_CommonConstants.sqf:238`; `Init_Common.sqf:320`; `Upgrades_CO_US.sqf:24-25` | parameter name and runtime name differ | The lobby parameter is `WFBE_C_MODULE_WFBE_IRS`, but the runtime init and upgrade gates read `WFBE_C_MODULE_WFBE_IRSMOKE`. Unless another generation step aliases these names, the lobby toggle does not control the live IR-smoke module gate. |
-| `WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE` | `Rsc/Parameters.hpp:351-356`, `Init_CommonConstants.sqf:225`, `Server/Init/Init_Server.sqf:333-349`, `initJIPCompatible.sqf:148,152` | hidden/commented parameter, live variable | The lobby class is commented out, but server upgrade initialization still consumes the variable and boot/headless fallback can set it to `7`. Treat it as an internal boot/runtime switch, not an operator-visible lobby setting. |
-| `WFBE_C_MODULE_BIS_HC` | `Rsc/Parameters.hpp:381-385`; `initJIPCompatible.sqf:151-170`; `Server/Init/Init_Server.sqf:109`; `Server/FSM/server_town_ai.sqf:17` | visible parameter, no current consumer found | Runtime headless-client delegation uses `WFBE_C_AI_DELEGATION`; no static consumer for `WFBE_C_MODULE_BIS_HC` was found in the Chernarus source pass. Do not confuse this with headless-client enablement. |
+This page keeps only the cross-layer contract. The full source-order index and per-parameter debt are canonical on [Mission start parameters index](Mission-Start-Parameters-Index) and [Mission parameters/localization/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs).
+
+| Surface | Current source anchor | Owner / rule |
+| --- | --- | --- |
+| Generic import | `Common/Init/Init_Parameters.sqf:5-9` | `class Params` names become `missionNamespace` variables directly. Do not rename or reorder parameters without auditing `paramsArray` order and every runtime reader. |
+| Full visible list | `Rsc/Parameters.hpp:5-555` | Use [Mission start parameters index](Mission-Start-Parameters-Index) for the 89 active lobby-visible rows and the one commented `WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE` row. |
+| Locked or forced switches | `Rsc/Parameters.hpp:210-214`, `Init_CommonConstants.sqf:212`, `Client/Init/Init_Client.sqf:218`; `Rsc/Parameters.hpp:351-356`, `Init_CommonConstants.sqf:225`, `initJIPCompatible.sqf:148,152` | Volumetric weather and upgrade-clearance are not ordinary host-selectable behavior. Keep detailed wording on the parameter-flow page. |
+| Name drift | `Rsc/Parameters.hpp:393-397`, `Init_CommonConstants.sqf:238`, `Init_Common.sqf:320`, `Upgrades_CO_US.sqf:24-25` | Lobby `WFBE_C_MODULE_WFBE_IRS` and runtime `WFBE_C_MODULE_WFBE_IRSMOKE` remain split in every checked ref named above. Patch or document the alias deliberately; do not assume the generic importer normalizes names. |
+| Ordnance caveat | `Rsc/Parameters.hpp:284-294`, `Common/Functions/Common_HandleShootBombs.sqf:21,32-44` | Distance restriction is live; altitude enforcement is commented. Keep UI/title and behavior decisions on [Mission parameters/localization/build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs). |
 
 ## Config Data-Model Checklist
 
@@ -79,7 +95,7 @@ Minimum smoke scenario for content changes: boot hosted or dedicated with the ed
 | Missing `airRaid` sound class | `Client/PVFunctions/NukeIncoming.sqf:7` plays `airRaid`, but `Sounds/description.ext` has no `class airRaid`. | Nuke incoming may fail to play its intended warning sound even though ICBM/radiation sounds are registered. Banach also found this PVF path is likely stale, so fix should follow the support/nuke owner decision. |
 | Unused registered message sounds | `Sounds/description.ext:24-39`, `:96-105`; no source play/use found for `ARTY_message_to_friendly_*` or `ICBM_message_to_*`. | Likely abandoned voice/message audio or unused support/ICBM notification variants. Keep files until support-agent findings confirm removal is safe. |
 | Missing local tactical menu icons | `Rsc/Dialogs.hpp:2634-2821` references `Client\Images\wf_*.paa`; none of those local files exist. | Tactical/support menu buttons may show blank/missing icons unless these paths were intended to be generated/restored. |
-| Map-conditional vehicle texture leads | `Common/Functions/Common_AddVehicleTexture.sqf:8-223` contains both `IS_chernarus_map_dependent` and `!IS_chernarus_map_dependent` branches. Source Chernarus defines `IS_CHERNARUS_MAP_DEPENDENT` in `version.sqf:3`; Vanilla Takistan comments it out at `version.sqf:3`; `initJIPCompatible.sqf:111-113` turns that define into the runtime boolean. | Do not treat every static missing `Textures/*.paa` hit as broken. Many are opposite-terrain branches. Verify the target terrain profile and smoke the guarded branch before adding, deleting or copying texture files. |
+| Map-conditional vehicle texture leads | `Common/Functions/Common_AddVehicleTexture.sqf:8-223` contains both `IS_chernarus_map_dependent` and `!IS_chernarus_map_dependent` branches. `initJIPCompatible.sqf:111-113` turns generated `IS_CHERNARUS_MAP_DEPENDENT` into the runtime boolean; `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:346-367` writes the generated `version.sqf` macro set. | Do not treat every static missing `Textures/*.paa` hit as broken. Many are opposite-terrain branches. Verify the target terrain profile and generated `version.sqf` first, then smoke the guarded branch before adding, deleting or copying texture files. |
 | `loadScreen.jpg` is live and present | `description.ext:64`, `Rsc/Titles.hpp:36`; `loadScreen.jpg` exists. | Do not remove the file as "unused"; it is used by both config and title resources. |
 | Commented unit caching include is stale | `description.ext:37`; no `scripts/unitCaching` folder. | Treat as abandoned scaffold, not an available optimization switch. |
 
@@ -110,4 +126,4 @@ Minimum smoke scenario for content changes: boot hosted or dedicated with the ed
 
 Previous: [Mission parameters, localization and generated build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs) | Next: [Client UI systems atlas](Client-UI-Systems-Atlas)
 
-Main map: [Home](Home) | Related: [Tools/build workflow](Tools-And-Build-Workflow), [Tooling release-readiness audit](Tooling-Release-Readiness-Audit), [Feature status register](Feature-Status-Register)
+Main map: [Home](Home) | Related: [Mission config/version include graph](Mission-Config-Version-Include-Graph), [Tools/build workflow](Tools-And-Build-Workflow), [Tooling release-readiness audit](Tooling-Release-Readiness-Audit), [Feature status register](Feature-Status-Register)

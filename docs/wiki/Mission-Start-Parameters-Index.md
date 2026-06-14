@@ -2,7 +2,7 @@
 
 This page indexes the multiplayer lobby/start parameters for the maintained Wasp Warfare mission roots. Source of truth is `Rsc/Parameters.hpp` under `class Params`; Arma uses this class order to populate `paramsArray`, and `Common/Init/Init_Parameters.sqf` writes the selected values into `missionNamespace` using the parameter class names.
 
-Current source check on 2026-06-06: Chernarus `Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp` and maintained Vanilla Takistan `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc/Parameters.hpp` are identical. The table below has 89 active lobby-visible parameters.
+Current source check on 2026-06-14 at docs checkout `85679dba`: Chernarus `Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp` and maintained Vanilla Takistan `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc/Parameters.hpp` have identical SHA-256 hashes. The table below has 89 active lobby-visible parameters, with one additional upgrade-clearance class commented out in source.
 
 Related context: [Mission parameters, localization and generated build inputs](Mission-Parameters-Localization-And-Generated-Build-Inputs), [Feature status register](Feature-Status-Register), [Player AI caps and role balance](Player-AI-Caps-And-Role-Balance).
 

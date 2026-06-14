@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T03:00:14+02:00",
+  "generatedAt": "2026-06-14T03:12:25+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,50 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "assets-config-parameters-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Assets-Config-Localization-And-Parameters-Atlas.md",
+        "Mission-Parameters-Localization-And-Generated-Build-Inputs.md",
+        "Mission-Start-Parameters-Index.md",
+        "Mission-Config-Version-Include-Graph.md",
+        "Feature-Status-Register.md",
+        "Tools-And-Build-Workflow.md",
+        "Codebase-Coverage-Ledger.md",
+        "Hardening-Implementation-Roadmap.md",
+        "Pending-Owner-Decisions.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Parameters.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_HandleShootBombs.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Titles.hpp",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc/Parameters.hpp",
+        "Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs",
+        "Tools/LoadoutManager/FileManagement/FileManager.cs",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Updated Assets-Config-Localization-And-Parameters-Atlas.md to name docs checkout 85679dba and act as the config/media gateway.",
+        "Added use-route and current branch-scope tables for parameters, generated version.sqf, config/content edits and asset/media cleanup.",
+        "Reduced duplicated parameter caveats by routing full source-order and runtime debt to Mission-Start-Parameters-Index.md and Mission-Parameters-Localization-And-Generated-Build-Inputs.md.",
+        "Corrected generated version.sqf wording on Mission-Config-Version-Include-Graph.md, Mission-Parameters-Localization-And-Generated-Build-Inputs.md, Feature-Status-Register.md and current planning/status route pages."
+      ],
+      "handoff": "Closed as docs-published. Future config/media work should keep the atlas as the gateway, keep full parameter source-order data on Mission-Start-Parameters-Index.md, keep generated version.sqf release gates on Mission-Config-Version-Include-Graph.md and Tools-And-Build-Workflow.md, and recheck generated-file presence before pack/test wording.",
+      "updated": "2026-06-14T03:12:25+02:00"
+    },
     {
       "lane": "commander-hq-source-scope-route",
       "owner": "Codex",

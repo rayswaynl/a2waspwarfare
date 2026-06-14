@@ -4,6 +4,8 @@ This page owns the small but important `version.sqf` contract that sits between 
 
 All source paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/` unless another root is named.
 
+Current recheck on 2026-06-14 at docs checkout `85679dba`: source Chernarus and maintained Vanilla Takistan have no present or tracked generated `version.sqf` in the working tree. `HEAD` `85679dba`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `perf/quick-wins` `0076040f` and release `a96fdda2` also do not track Chernarus or Vanilla `version.sqf`; LoadoutManager remains the generation path.
+
 ## Include Chain
 
 ```mermaid
@@ -24,14 +26,14 @@ flowchart TD
 | `initJIPCompatible.sqf` | `initJIPCompatible.sqf:4,31,111-113` | Includes `version.sqf`, logs `WF_MAXPLAYERS`, and converts `IS_CHERNARUS_MAP_DEPENDENT` into runtime `IS_chernarus_map_dependent`. |
 | Vanilla/CO UI gate | `description.ext:61-63`, `Rsc/Header.hpp:12-14` | Uses the `VANILLA` preprocessor macro for OA/CO-dependent config. This is separate from the `Missions_Vanilla` folder name. |
 
-## Current Generated Examples
+## Generated Contract Shape
 
 | Mission root | Generated contract observed |
 | --- | --- |
-| Source Chernarus | Local generated `version.sqf` carries `WF_MAXPLAYERS = 55`, a Chernarus mission name, `IS_CHERNARUS_MAP_DEPENDENT` and `IS_NAVAL_MAP`. |
-| Maintained Vanilla Takistan | Local generated `version.sqf` carries `WF_MAXPLAYERS = 61` and a Takistan mission name; the sampled output does not define the Chernarus/naval flags. |
+| Source Chernarus | Expected generated `version.sqf` carries `WF_MAXPLAYERS = 55`, a Chernarus mission name, `IS_CHERNARUS_MAP_DEPENDENT` and `IS_NAVAL_MAP`. Verify the generated file in the target root before pack/smoke claims. |
+| Maintained Vanilla Takistan | Expected generated `version.sqf` carries `WF_MAXPLAYERS = 61` and a Takistan mission name; the sampled/generated Takistan shape comments out the Chernarus/naval flags. Verify the generated file in the target root before pack/smoke claims. |
 
-These generated files are ignored by git, so do not assume a clean checkout has them. LoadoutManager owns normal generation.
+These generated files are ignored by git, so do not assume a clean checkout has them. `Tools/LoadoutManager/Data/Terrains/BaseTerrain.cs:99-102,346-367` writes `version.sqf`; `Tools/LoadoutManager/FileManagement/FileManager.cs:92-100` treats it as a generated/special terrain file during copy/delete.
 
 Release gate: if any claimed mission root lacks a generated `version.sqf`, that root is blocked for pack, smoke and release wording. Verify the file exists and that its `WF_MAXPLAYERS`, `WF_MISSIONNAME`, `WF_RESPAWNDELAY`, map flags and debug/log flags match the terrain profile before treating later SQF validation as meaningful. The machine checklist is `agent-release-readiness.json` `versionSqfGeneratedInput`.
 

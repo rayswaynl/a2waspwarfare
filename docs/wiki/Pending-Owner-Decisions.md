@@ -95,7 +95,7 @@ Use [Abandoned feature revival](Abandoned-Feature-Revival-Review) for the source
 | Dead WASP actions (OnArmor, GearYouUnit) | DR-35 | commented in `WASP/actions/AddActions.sqf:4` |
 | `supplyMissionActive.sqf` dead twin | DR-39 | compiled but never called |
 | `Init_Server.sqf` duplicate binds: 3 live + commented remnants | DR-43b | Canonical matrix: [Server init bind cleanup](Server-Init-Bind-Cleanup). Docs checkout `2f2132f8` and Miksuu `b8389e74` keep live duplicates for `LogGameEnd`, `PlayerObjectsList` and `AwardScorePlayer` in both maintained roots; stable `origin/master` `cf2a6d6a` and release `a96fdda2` are de-duplicated in both maintained roots; perf `0076040f` is Chernarus-only for this cleanup. De-duplicate where still present, coordinate `LogGameEnd` with DR-13/DR-36 and do not re-enable commented AFK/FPS/MASH remnants. |
-| `version.sqf` referenced by `description.ext:39` and `initJIPCompatible.sqf:4`; generated target roots need verification | DR-43a | Local ignored generated files exist for Chernarus and Vanilla Takistan in this workspace, but Git does not track them. LoadoutManager still owns generated terrain metadata and modded/stub roots remain incomplete. Keep pre-pack/pre-test checks for every supported target mission root and clean checkout. |
+| `version.sqf` referenced by `description.ext:39` and `initJIPCompatible.sqf:4`; generated target roots need verification | DR-43a | Rechecked 2026-06-14: current docs checkout has no present or tracked Chernarus/Vanilla generated `version.sqf`; LoadoutManager still owns generated terrain metadata and modded/stub roots remain incomplete. Keep pre-pack/pre-test checks for every supported target mission root and clean checkout. |
 
 ## 4. Robustness / defense-in-depth (optional)
 
