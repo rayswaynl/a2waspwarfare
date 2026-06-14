@@ -944,3 +944,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Branch-checked Economy UI parity: docs/Miksuu/perf still write `23004`/`23005`/`23006` from `GUI_Menu_Economy.sqf:7-8` in both maintained roots while the current `RscMenu_Economy` controls declare `23002`, `23003` and `23008`; stable/release use dashboard `23020` at `GUI_Menu_Economy.sqf:25` and declare it in both maintained roots.
 - Branch-checked Tactical fast-travel fee UX: all checked refs keep the same `GUI_Menu_Tactical.sqf:146-147,185-217,403-406` policy TODO, hidden unaffordable town destinations, marker-only price text and local debit shape; constants line-drift between docs/Miksuu/perf, stable and release only.
 - Refreshed [Feature status](Feature-Status-Register), [Source fix propagation queue](Source-Fix-Propagation-Queue), `agent-feature-status.jsonl` and coordination records so older `89ae9dad` / `7ff18c49` wording no longer overrides current branch evidence. No gameplay source changed.
+
+## 2026-06-14T05:56:37+02:00 - Codex - Architecture/SQF anchor continuity route
+
+- Claimed `architecture-sqf-anchor-continuity-route` as a docs-only gateway/source-anchor continuity pass, with no gameplay source edits.
+- Verified docs checkout `4277a2ad` after fetch. Targeted `git diff --name-only` checks from `1bef8801`, `8701aacc`, `92c5cf05` and `59deb306` to `HEAD` returned no changes for the checked architecture, SQF, server-runtime and network source paths.
+- Regenerated the SQF compile-count command over source Chernarus and confirmed the atlas counts still hold: `738` total `preprocessFile` matches, `460` `preprocessFileLineNumbers`, `278` plain `preprocessFile` and `22` commented matches.
+- Refreshed [Architecture overview](Architecture-Overview), [SQF code atlas](SQF-Code-Atlas), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas), [Server runtime and operations](Server-Runtime-And-Operations) and [Networking/public variables](Networking-And-Public-Variables) so current readers see `4277a2ad` as the docs-checkout source-continuity checkpoint while older hashes remain preserved as line-anchor provenance. No gameplay source changed.

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T05:47:40+02:00",
+  "generatedAt": "2026-06-14T05:56:37+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -23,39 +23,37 @@
   },
   "activeClaims": [
     {
-      "lane": "client-ui-economy-fast-travel-status-route",
+      "lane": "architecture-sqf-anchor-continuity-route",
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "sourceScope": [
-        "Feature-Status-Register.md",
-        "Source-Fix-Propagation-Queue.md",
-        "agent-feature-status.jsonl",
+        "Architecture-Overview.md",
+        "SQF-Code-Atlas.md",
+        "Server-Gameplay-Runtime-Atlas.md",
+        "Server-Runtime-And-Operations.md",
+        "Networking-And-Public-Variables.md",
         "Progress-Dashboard.md",
         "Agent-Worklog.md",
         "Wiki-Pruning-And-Relevance-Ledger.md",
         "agent-status.json",
         "agent-collaboration.json",
+        "agent-knowledge.jsonl",
         "agent-events.jsonl",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Economy.sqf",
-        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_Menu_Economy.sqf",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp",
-        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc/Dialogs.hpp",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf",
-        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_Menu_Tactical.sqf",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
-        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Tools/LoadoutManager",
         "origin/master",
         "origin/release/2026-06-feature-bundle",
         "miksuu/master",
         "origin/perf/quick-wins"
       ],
       "outputs": [
-        "Updated Feature-Status-Register.md so Economy stale disabled-state IDC writes are branch-split correctly: docs d2a3f995, Miksuu b8389e74 and perf 0076040f remain stale; stable cf2a6d6a and release a96fdda2 repair both maintained roots around dashboard 23020.",
-        "Updated Source-Fix-Propagation-Queue.md and agent-feature-status.jsonl so Tactical fast-travel fee UX names current refs and routes implementation policy to the Client UI atlas matrix instead of old 89ae9dad / 7ff18c49 wording.",
+        "Updated architecture/SQF/server/network gateway pages so docs checkout 4277a2ad is the visible current source-continuity checkpoint.",
+        "Verified targeted source diffs from earlier anchor snapshots to HEAD return no checked path changes, and regenerated the SQF preprocess count as 738 total / 460 line-numbered / 278 plain / 22 commented.",
         "Kept gameplay source untouched."
       ],
-      "handoff": "Closed as docs-published. Future UI/economy owner should preserve stable/release Economy 23020 repair when merging to old-shaped roots, and treat fast-travel fee as an owner-decision UX lane requiring hide-vs-disabled/prompt policy plus funds/range smoke.",
-      "updated": "2026-06-14T05:47:40+02:00"
+      "handoff": "Closed as docs-published. Future gateway edits should keep these pages route-first, preserve older hashes as line-anchor provenance, and put detailed branch matrices on owner pages instead of expanding the overview surfaces.",
+      "updated": "2026-06-14T05:56:37+02:00"
     },
     {
       "lane": "sqf-network-branch-caveat-route",
