@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T02:46:13+02:00",
+  "generatedAt": "2026-06-14T03:00:14+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,46 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "commander-hq-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Commander-HQ-Lifecycle-Atlas.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_VoteForCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_VoteMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Commander_VoteMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AssignNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnHQKilled.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Command.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/PVFunctions/SetTask.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "origin/feat/ai-commander"
+      ],
+      "outputs": [
+        "Updated Commander-HQ-Lifecycle-Atlas.md to name docs checkout f82a9127 and act as the commander/HQ gateway.",
+        "Added use-route and current branch-scope tables for vote/reassignment, HQ deploy, HQ score, MHQ repair, Objective Ping and base-area authority routes.",
+        "Refreshed HQ score double-award line drift across docs f82a9127, stable cf2a6d6a, Miksuu b8389e74, perf 0076040f, release a96fdda2 and feat-ai c20ce153.",
+        "Aligned Feature-Status-Register.md and Source-Fix-Propagation-Queue.md for HQ score, DR-15 helper branch split, Objective Ping and old TaskSystem residue."
+      ],
+      "handoff": "Closed as docs-published. Future commander/HQ work should keep the atlas as the gateway, keep detailed vote/reassignment call-shape policy on Commander-Vote-And-Reassignment-Playbook.md and Commander-Reassignment-Call-Shape.md, and recheck branch line refs before citing stable/release/Miksuu/perf/feat-ai.",
+      "updated": "2026-06-14T03:00:14+02:00"
+    },
     {
       "lane": "support-specials-source-scope-route",
       "owner": "Codex",

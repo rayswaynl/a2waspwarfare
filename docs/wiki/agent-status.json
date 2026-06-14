@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T02:46:13+02:00",
+  "generatedAt": "2026-06-14T03:00:14+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only support-specials source-scope route: Support-Specials-And-Tactical-Modules-Atlas.md now names docs checkout ff8dd884, adds a current source snapshot for Tactical UI/PVF transport/server special dispatch/artillery/UAV-nuke-Zeta/RU para-ammo anchors, reduces repeated dispatch prose, and refreshes upgrade-sync branch evidence against current stable/release/upstream/perf/upgrade-queue refs. No gameplay source changed.",
+      "currentWork": "Published docs-only commander/HQ source-scope route: Commander-HQ-Lifecycle-Atlas.md now names docs checkout f82a9127, adds use-route and current branch-scope tables, corrects DR-15 helper wording to branch-split status, refreshes HQ score double-award line drift, and aligns Feature-Status-Register.md plus Source-Fix-Propagation-Queue.md for HQ score, reassignment and Objective Ping evidence. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "commander-hq-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Commander-HQ-Lifecycle-Atlas.md now behaves as the commander/HQ gateway for docs checkout f82a9127: it adds use-route and current branch-scope tables, routes vote/reassignment/HQ deploy/score/MHQ repair/task questions to canonical owner pages, corrects DR-15 helper branch-split wording, refreshes HQ score double-award line drift, and aligns Feature-Status-Register.md plus Source-Fix-Propagation-Queue.md for HQ score, reassignment, Objective Ping and old TaskSystem residue across stable origin/master cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f, release a96fdda2 and feat/ai-commander c20ce153. No gameplay source changed."
+    },
     {
       "lane": "support-specials-source-scope-route",
       "owner": "Codex",
