@@ -18,9 +18,11 @@ This page is the support/tactical gateway. Use it to identify which runtime fami
 
 ## Current Branch Scope
 
-Checked 2026-06-14 against docs checkout `ff8dd884`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and `origin/feat/upgrade-queue-stacking` `b061c905`.
+Checked 2026-06-14 against docs checkout `6c919abf`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2`, `origin/feat/upgrade-queue-stacking` `b061c905`, `origin/feat/drone-saturation-strike` `8ca4be90` and `origin/feat/recon-uav` `563418ea`.
 
-This atlas carries support orientation and selected source anchors. Deep hardening status belongs on owner pages: [Server authority migration map](Server-Authority-Migration-Map) for `RequestSpecial`, [ICBM authority](ICBM-Authority-Playbook) for nuke, [Service menu affordability guards](Service-Menu-Affordability-Guards) for service actions, and [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) for supply. The `upgrade-sync` matrix below is current for the checked refs; all checked maintained roots still keep the mixed `_args` / `_this` parser in `Server_HandleSpecial.sqf:67-73`.
+Targeted diffs from `ff8dd884` to `HEAD` over checked Chernarus and maintained Vanilla Tactical UI, `RequestSpecial`, artillery, UAV/Nuke/Zeta/MASH, AAR/ordnance, para-ammo and Rsc parameter paths returned no source changes. `ff8dd884` remains line-anchor provenance; `6c919abf` is the visible docs-head source-continuity checkpoint.
+
+This atlas carries support orientation and selected source anchors. Deep hardening status belongs on owner pages: [Server authority migration map](Server-Authority-Migration-Map) for `RequestSpecial`, [ICBM authority](ICBM-Authority-Playbook) for nuke, [Service menu affordability guards](Service-Menu-Affordability-Guards) for service actions, [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) for supply, [Feature status](Feature-Status-Register#partial--deferred--needs-review) for branch-only drone/recon support, and [Testing workflow](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) for branch-only smoke.
 
 ## Source Snapshot
 
@@ -48,11 +50,15 @@ Key source refs:
 - `:463-505` performs the ICBM local launch flow.
 - `:532-605` requests artillery/fire mission behavior.
 
-RequestSpecial scout 2026-06-04: the active tag set in source Chernarus is `update-teamleader`, `group-query`, `Paratroops`, `ParaVehi`, `ParaAmmo`, `RespawnST`, `uav`, `upgrade-sync`, `update-clientfps`, `update-town-delegation`, `ICBM`, `process-killed-hq`, `connected-hc` and `repair-camp`. `track-playerobject` has a server switch case around `Server_HandleSpecial.sqf:133-145`, but no active Chernarus `RequestSpecial` caller was found; treat it as an undriven bookkeeping branch unless a later dynamic caller proves otherwise.
+`RequestSpecial` scout route: source Chernarus still has active sends or server cases for `update-teamleader`, `group-query`, `Paratroops`, `ParaVehi`, `ParaAmmo`, `RespawnST`, `uav`, `upgrade-sync`, `update-clientfps`, `update-town-delegation`, `ICBM`, `process-killed-hq`, `connected-hc` and `repair-camp`. `track-playerobject` has a server case around `Server_HandleSpecial.sqf:133-145`, but no active Chernarus caller was found in the checked static search. Use [Server authority migration map](Server-Authority-Migration-Map#requestspecial-tag-triage) for the tag-by-tag trust-boundary matrix instead of repeating it here.
 
-Depth scout follow-up 2026-06-04 added one high-value authority caution: `group-query` is not just a harmless request relay. `Server_HandleSpecial.sqf:13-31` trusts payload `_group`, `_player` and `_side`; if the target leader is AI and the group lacks `wfbe_uid`, it calls `Common_ChangeUnitGroup.sqf:3-11` to move the payload player into that group. Patch this in the server-authority lane by deriving requester/player/side server-side before any group move.
+Local navigation cautions:
 
-Mini-scout follow-up 2026-06-04 tightened the authority map: tactical menu gates are client-side first, artillery is a local/group-gun path rather than a `RequestSpecial` asset-spawn path, UAV creation/cost are client-led, and `upgrade-sync` still mixes `_args` and `_this` in the server router. Keep those as routing cautions here; implementation status belongs on the owner pages linked above.
+- Tactical menu gates are client-side first; do not treat them as server authority.
+- Artillery is a local/group-gun path, not a `RequestSpecial` asset-spawn path.
+- UAV creation/cost remain client-led, while old UAV cleanup is server-observed.
+- Fast travel and service actions are local support families and should stay separate from `RequestSpecial` hardening.
+- `upgrade-sync` remains tuple-parser cleanup debt; the compact branch matrix below keeps the stable inbound anchor used by Feature Status and Source Fix Queue.
 
 ### Upgrade-Sync Branch Matrix
 
@@ -60,31 +66,25 @@ Mini-scout follow-up 2026-06-04 tightened the authority map: tactical menu gates
 
 | Root / branch | Evidence | Status |
 | --- | --- | --- |
-| Docs checkout Chernarus `ff8dd884` | `Server_HandleSpecial.sqf:3,67-73` assigns `_args = _this`, reads `_side` from `_args select 1`, then `_upgrade_id` / `_upgrade_level` from `_this select 2/3`; `GUI_UpgradeMenu.sqf:171` sends `["upgrade-sync", WFBE_Client_SideJoined, _this select 0, _this select 1]`; `Server_ProcessUpgrade.sqf:26,29,35` owns the sync variable. | Mixed-source reads remain; current behavior is equivalent but fragile. |
-| Docs checkout maintained Vanilla `ff8dd884` | Same maintained-root shape in `Server_HandleSpecial.sqf:3,67-73`, `GUI_UpgradeMenu.sqf:171` and `Server_ProcessUpgrade.sqf:26,29,35`. | Needs the same cleanup if source is patched. |
-| Stable `origin/master` `cf2a6d6a` | Same mixed `_args` / `_this` branch in both maintained roots; Chernarus and maintained Vanilla callers shifted to `GUI_UpgradeMenu.sqf:268` after the upgrade-menu countdown/status work. `Server_ProcessUpgrade.sqf:26,29,35` still owns the sync variable. | No stable-master rescue; only caller line drift from the docs checkout. |
-| Miksuu upstream `b8389e74` | Same mixed branch in both maintained roots; caller line `GUI_UpgradeMenu.sqf:241`; `Server_ProcessUpgrade.sqf:26,29,35` still owns the sync variable. | No upstream rescue. |
-| `origin/perf/quick-wins` `0076040f` | Same mixed branch in both maintained roots; caller line `GUI_UpgradeMenu.sqf:241`; `Server_ProcessUpgrade.sqf:26,29,35` still owns the sync variable. | Perf branch does not touch this router path. |
-| Release `origin/release/2026-06-feature-bundle` `a96fdda2` | Same mixed branch in both maintained roots; release Chernarus and maintained Vanilla callers both sit at `GUI_UpgradeMenu.sqf:254`; `Server_ProcessUpgrade.sqf:26,29,35` still owns the sync variable. | No release rescue; only release-root line drift. |
-| `origin/feat/upgrade-queue-stacking` `b061c905` | Same mixed branch in both maintained roots; Chernarus and maintained Vanilla callers sit at `GUI_UpgradeMenu.sqf:268`; `RequestUpgrade.sqf:5` still forwards directly into `WFBE_SE_FNC_ProcessUpgrade`. | Queue UI work does not normalize the `upgrade-sync` tuple or close upgrade request authority. |
+| Docs checkout `6c919abf` / line-anchor checkpoint `ff8dd884` | Targeted diffs show no checked handler/caller/process-upgrade source-path drift. Chernarus and maintained Vanilla still have `Server_HandleSpecial.sqf:3,67-73` assigning `_args = _this`, reading `_side` from `_args select 1`, then `_upgrade_id` / `_upgrade_level` from `_this select 2/3`; `GUI_UpgradeMenu.sqf:171` sends `["upgrade-sync", WFBE_Client_SideJoined, _this select 0, _this select 1]`; `Server_ProcessUpgrade.sqf:26,29,35` owns the sync variable. | Mixed-source reads remain; current behavior is equivalent but fragile. |
+| Stable `origin/master` `cf2a6d6a`, release `a96fdda2` and upgrade-queue `b061c905` | All checked maintained roots keep the same mixed parser. Stable and upgrade-queue callers sit at `GUI_UpgradeMenu.sqf:268`; release callers sit at `:254`; `Server_ProcessUpgrade.sqf:26,29,35` still owns the sync variable. | No stable/release/queue rescue; only caller line drift from the docs checkout. |
+| Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` | Both checked maintained roots keep the same mixed parser, caller line `GUI_UpgradeMenu.sqf:241`, and `Server_ProcessUpgrade.sqf:26,29,35` sync-variable ownership. | No upstream/perf rescue. |
 
 Patch order: normalize the branch to read side/id/level from `_args` only, add a short tuple comment or helper-local guard if editing the router, keep RequestUpgrade authority migration separate, propagate maintained Vanilla, then smoke normal commander upgrade completion, non-server client timer sync, malformed/short payload rejection and AI commander upgrade progress.
 
-Support-authority scout 2026-06-04 sharpened the non-ICBM payload-trust cases:
+## Authority And Owner Routes
 
-- Paratrooper support passes payload `_playerTeam` into `Support_Paratroopers.sqf`; the dropped infantry are created into that team and the marker callback targets `leader _playerTeam`. A forged or stale team payload is therefore not just a notification issue.
-- `RespawnST` is called from `GUI_Menu_Economy.sqf:91-96` with `sideJoined`, while `Server_HandleSpecial.sqf:55-60` trusts the payload side and damages every current `wfbe_ai_supplytrucks` entry for that side. Treat wrong-side forged respawn requests as part of the non-ICBM support authority lane.
-- Camp repair action scripts send `["repair-camp", _camp, WFBE_Client_SideID]`; `Server_HandleSpecial.sqf:147-168` trusts the camp object and repair-side payload when changing camp `sideID` and broadcasting `CampCaptured`.
-- Old UAV cleanup is server-observed but client-created/client-paid: `Client/Module/UAV/uav.sqf:27-52` owns spawn/debit, and `Support_UAV.sqf:6-20` mainly tracks/cleans the payload object.
+| Surface | Local signal | Canonical owner |
+| --- | --- | --- |
+| Non-ICBM `RequestSpecial` effects | `Paratroops`, `ParaVehi`, `ParaAmmo`, `uav`, `RespawnST`, `repair-camp` and `group-query` trust payload side/team/object data after client-side UI gates. No live `RequestSupport` symbol was found in source Chernarus; support/special effects route through `RequestSpecial`. | [Server authority migration map](Server-Authority-Migration-Map#requestspecial-tag-triage), [Feature status](Feature-Status-Register#networking--public-variable-hardening-lane-source-backed) |
+| ICBM/nuke | Tactical UI and `NukeIncoming` send `RequestSpecial ["ICBM", ...]`; server damage uses client-supplied payload objects. | [ICBM authority](ICBM-Authority-Playbook) |
+| Fast travel and Tactical UI fees | Fee-mode destination hiding and debits are local Tactical menu behavior, not `RequestSpecial` server authority. | [Client UI systems](Client-UI-Systems-Atlas#tactical-fast-travel-fee-branch-matrix) |
+| Service/EASA support actions | Repair/refuel/rearm/heal and EASA affordability are local/client-authoritative economy paths. | [Service menu affordability guards](Service-Menu-Affordability-Guards), [Gear/loadout/EASA atlas](Gear-Loadout-And-EASA-Atlas) |
+| Supply truck respawn and old AI logistics | Economy menu still sends `RespawnST`; current stable/release safe-disable old AI supply-truck logistics while older roots need the raw-spawn caveat. | [AI commander autonomy audit](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix), [Supply mission architecture](Supply-Mission-Architecture) |
+| Commander-built ARTY visibility | Fire missions are local/group-gun flow; commander-built ARTY visibility depends on the target branch's construction/artillery ownership shape. | [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas), [Source fix propagation queue](Source-Fix-Propagation-Queue#current-propagated-fix-queue) |
+| Branch-only drone/recon support | Drone saturation and recon UAV are separate branch-review support features with no maintained Vanilla propagation claim here. | [Feature status](Feature-Status-Register#partial--deferred--needs-review), [Testing workflow](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) |
 
-No live `RequestSupport` symbol was found in source Chernarus during the 2026-06-04 trigger-chain scout; support and special effects route through `RequestSpecial`.
-
-Transport split from the 2026-06-04 supports scout:
-
-- Registered support requests use the generic PVF envelope summarized in [Source Snapshot](#source-snapshot).
-- Client-bound support feedback uses the sibling path: `Common/Functions/Common_SendToClient.sqf:9-18` and `Client/Functions/Client_HandlePVF.sqf:19-22`.
-- Artillery is not the same server-accepted support path. The 2026-06-04 source patch makes manned artillery-class base-area defenses use the current commander team when one exists (`Construction_StationaryDefense.sqf:91-94`), so commander-built HQ/base ARTY can become visible to the group-based fire-mission path. Smoke that ownership separately from ARTY setup in Arma 2 OA.
-- Service actions are another local support family. `Client/GUI/GUI_Menu_Service.sqf:196-234` debits/spawns rearm/refuel/repair/heal support locally; [Service menu affordability guards](Service-Menu-Affordability-Guards) owns the small local correctness patch, while full authority remains an economy-ledger redesign.
+Client-bound support feedback uses the sibling PVF path (`Common/Functions/Common_SendToClient.sqf:9-18`, `Client/Functions/Client_HandlePVF.sqf:19-22`); route transport hardening through [Networking and public variables](Networking-And-Public-Variables) and [Public variable channel index](Public-Variable-Channel-Index).
 
 Adjacent server runtime surfaces: grouped base areas are enabled only when `WFBE_C_BASE_AREA > 0` (`Server/Init/Init_Server.sqf:565`). Side logic seeds `wfbe_basearea` at `Init_Server.sqf:380`; `Server/FSM/basearea.sqf:46-80` then polls every 20 seconds, prunes invalid/remote base-area logics, and schedules delayed orphan-defense cleanup through `_onAreaRemoved` (`basearea.sqf:12-43`). `Server/FSM/groupsMonitor.sqf:1-14` is a dormant debug monitor that logs `allGroups` counts every 30 seconds; its only source start point found in this pass is commented at `Init_Server.sqf:567`.
 
@@ -115,9 +115,9 @@ Use [Server authority migration map](Server-Authority-Migration-Map) before addi
 
 ## Economy Cooldown And Upgrade Gates
 
-The tactical UI keeps support fees and intervals locally. The scout observed support fee examples `[0,75000,9500,3500,8500,0,12500,0,0]` and intervals `[0,1000,800,600,900,0,0,0,0]`; paid fast travel uses the separate distance-based `WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM` path. Button enabling checks funds/upgrades/cooldowns client-side; future patches should re-check the same facts on the server before spawning assets or applying map-wide effects.
+The tactical UI keeps support fees and intervals locally. Button enabling checks funds/upgrades/cooldowns client-side; future public-server patches should re-check the same facts on the server before spawning assets or applying map-wide effects.
 
-Do not treat those UI checks as security boundaries. For paradrops, UAV and ICBM, the server router currently assumes the client already did role, upgrade, fee and cooldown filtering. For artillery and services, much of the effect/debit path is client-local. Public-server hardening should therefore separate:
+Do not treat those UI checks as security boundaries. Public-server hardening should separate:
 
 - `RequestSpecial` server validation for server-spawned assets and map-wide effects.
 - local correctness guards for service/EASA/artillery UI paths.

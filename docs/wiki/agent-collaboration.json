@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T07:35:31+02:00",
+  "generatedAt": "2026-06-14T07:43:19+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,52 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "support-specials-authority-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Support-Specials-And-Tactical-Modules-Atlas.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendToServer.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTeamArtillery.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_RequestFireMission.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_FireArtillery.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/UAV",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Nuke",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/ZetaCargo",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/MASH",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Root/Root_RU.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_HandleShootBombs.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_HandleIncomingMissile.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_HandleShootMissiles.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Server-Authority-Migration-Map.md",
+        "ICBM-Authority-Playbook.md",
+        "Service-Menu-Affordability-Guards.md",
+        "AI-Commander-Autonomy-Audit.md",
+        "Client-UI-Systems-Atlas.md",
+        "Testing-Debugging-And-Release-Workflow.md"
+      ],
+      "outputs": [
+        "Refreshed Support-Specials-And-Tactical-Modules-Atlas.md so docs head 6c919abf is the visible source-continuity checkpoint for checked support/tactical paths.",
+        "Compressed the upgrade-sync matrix and pruned repeated RequestSpecial authority plus transport scout prose by routing to canonical authority, ICBM, service, AI commander, Client UI, feature-status and testing pages.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future support atlas edits should keep Support-Specials-And-Tactical-Modules-Atlas.md as the support/tactical gateway, preserve selected local source anchors and the compact upgrade-sync anchor, route broad RequestSpecial trust-boundary detail to Server-Authority-Migration-Map.md, route ICBM specifics to ICBM-Authority-Playbook.md, route service/economy paths to Service-Menu-Affordability-Guards.md and Economy-Authority-First-Cut.md, and route branch-only drone/recon support to Feature-Status-Register.md plus Testing-Debugging-And-Release-Workflow.md.",
+      "updated": "2026-06-14T07:43:19+02:00"
+    },
     {
       "lane": "economy-supply-atlas-route-prune",
       "owner": "Codex",
