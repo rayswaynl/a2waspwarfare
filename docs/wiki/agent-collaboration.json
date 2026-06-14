@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T07:43:19+02:00",
+  "generatedAt": "2026-06-14T07:55:58+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,44 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "towns-camps-atlas-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Towns-Camps-And-Capture-Atlas.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Town.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTotalCamps.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTotalCampsOnSide.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_camp.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_ai.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_patrols.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_GetRespawnAvailable.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "AI-Runtime-HC-Loop-Map.md",
+        "Town-AI-Vehicle-Despawn-Safety.md",
+        "Respawn-And-Death-Lifecycle-Atlas.md"
+      ],
+      "outputs": [
+        "Refreshed Towns-Camps-And-Capture-Atlas.md so docs head 5243f91d is the visible source-continuity checkpoint for checked town/camp paths.",
+        "Pruned repeated camp-flag and zero-camp helper branch prose by routing to the atlas Current Branch Scope, Feature Status and Source Fix Propagation Queue.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future towns/camps atlas edits should keep Towns-Camps-And-Capture-Atlas.md as the canonical branch matrix for camp flags, helper fallback and Patrols v2. Preserve local source anchors, route code-owner status to Feature-Status-Register.md and Source-Fix-Propagation-Queue.md, and route town-AI vehicle safety, respawn semantics and Patrols v2 runtime checks to their focused owner pages.",
+      "updated": "2026-06-14T07:55:58+02:00"
+    },
     {
       "lane": "support-specials-authority-route-prune",
       "owner": "Codex",
