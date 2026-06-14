@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T05:00:37+02:00",
+  "generatedAt": "2026-06-14T05:11:17+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,40 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "client-skill-init-current-branch-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Client-Skill-Init-Idempotency.md",
+        "Feature-Status-Register.md",
+        "agent-feature-status.jsonl",
+        "agent-context.json",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Init.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_PreRespawnHandler.sqf",
+        "origin/master",
+        "origin/release/2026-06-feature-bundle",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/feat/ai-commander"
+      ],
+      "outputs": [
+        "Updated Client-Skill-Init-Idempotency.md with current branch scope for docs checkout 719455a2, stable cf2a6d6a, release a96fdda2, Miksuu b8389e74, perf 0076040f and feat-ai c20ce153.",
+        "Aligned Feature-Status-Register.md and agent-feature-status.jsonl so stable and release are no longer documented as duplicating Skill_Init.",
+        "Updated agent-context.json current-state guidance so older June 5 notes do not override current source evidence.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future client-init work should smoke Soldier/non-Soldier AI caps, respawn WFBE_SK_FNC_Apply reapply and dedicated/JIP client init on the exact target branch; port the single-init shape first when targeting Miksuu, perf or feat-ai.",
+      "updated": "2026-06-14T05:11:17+02:00"
+    },
     {
       "lane": "sqf-pvf-registry-route",
       "owner": "Codex",
