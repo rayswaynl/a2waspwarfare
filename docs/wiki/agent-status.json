@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T10:01:35+02:00",
+  "generatedAt": "2026-06-14T10:12:46+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,9 +20,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "architecture-overview-current-source-scope-route-prune",
-      "currentWork": "Published docs-only Architecture overview source-scope route prune: Architecture-Overview.md now names docs head 2de2de92 as the visible top-level architecture source-continuity checkpoint, targeted source diffs confirmed no checked runtime/bootstrap/tooling source-path drift from adb9dbc8 or 4277a2ad through 2de2de92, and branch behavior remains routed to subsystem owner pages. No gameplay source changed.",
-      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep architecture, SQF, networking/PV, marker/cleanup, gear/EASA, construction/CoIn, lifecycle, respawn, modules, function/module, gameplay, victory/endgame, commander/HQ, town/camp, support and UI gateway pages short and route deep branch matrices to owner pages."
+      "currentLane": "server-runtime-operations-current-source-scope-route-prune",
+      "currentWork": "Published docs-only Server runtime and operations source-scope route prune: Server-Runtime-And-Operations.md now names docs head f74b3822 as the visible server-runtime source-continuity checkpoint, targeted source diffs confirmed no checked server runtime source-path drift from a6785f51 or 4277a2ad through f74b3822, and branch behavior remains routed to Server-Gameplay-Runtime-Atlas.md. No gameplay source changed.",
+      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep architecture, SQF, networking/PV, server runtime, marker/cleanup, gear/EASA, construction/CoIn, lifecycle, respawn, modules, function/module, gameplay, victory/endgame, commander/HQ, town/camp, support and UI gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "server-runtime-operations-current-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Server-Runtime-And-Operations.md now names docs head f74b3822 as the current server-runtime source-continuity checkpoint. Checked Chernarus and maintained Vanilla Init_Server.sqf, server FSM/module paths, Server_SideMessage.sqf, Server_OnHQKilled.sqf and server-FPS publisher paths are unchanged from a6785f51 and 4277a2ad through f74b3822; stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf 0076040f refs still resolve. The gateway remains compact while AI supply-truck startup, Patrols v2 and FPS publisher branch behavior route to Server-Gameplay-Runtime-Atlas.md. No gameplay source changed."
+    },
     {
       "lane": "architecture-overview-current-source-scope-route-prune",
       "owner": "Codex",

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T10:01:35+02:00",
+  "generatedAt": "2026-06-14T10:12:46+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,43 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "server-runtime-operations-current-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Server-Runtime-And-Operations.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_SideMessage.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnHQKilled.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/serverFpsGUI.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Init/Init_Server.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/FSM",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_SideMessage.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_OnHQKilled.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/serverFPS/serverFpsGUI.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/serverFPS/monitorServerFPS.sqf"
+      ],
+      "outputs": [
+        "Refreshed Server-Runtime-And-Operations.md so current docs head f74b3822 is the visible server-runtime source-continuity checkpoint.",
+        "Confirmed targeted diffs from a6785f51 and 4277a2ad to HEAD over checked Chernarus and maintained Vanilla server runtime paths returned no changed files.",
+        "Verified branch refs still resolve to stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf 0076040f.",
+        "Kept Server-Runtime-And-Operations.md as a compact gateway while detailed branch behavior remains routed to Server-Gameplay-Runtime-Atlas.md."
+      ],
+      "handoff": "Closed as docs-published. Future Server runtime and operations edits should keep the page as a short gateway, update the current docs-head checkpoint when docs-only batches move, and keep line-sensitive or branch-sensitive runtime proof on Server-Gameplay-Runtime-Atlas.md and owner pages.",
+      "updated": "2026-06-14T10:12:46+02:00"
+    },
     {
       "lane": "architecture-overview-current-source-scope-route-prune",
       "owner": "Codex",
