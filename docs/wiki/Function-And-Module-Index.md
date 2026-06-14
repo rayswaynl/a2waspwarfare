@@ -2,7 +2,7 @@
 
 This page names the major function groups and what they are for. It is intentionally behavior-oriented so a developer or AI assistant can find the right file family quickly.
 
-Unless a row names another ref, line refs below are from docs checkout `docs/developer-wiki-index` `1f0b9018` and the Chernarus source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Treat this page as a source-family route map, not the canonical patch-status matrix.
+Unless a row names another ref, line refs below are from the Chernarus source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Source refreshed on 2026-06-14 against docs head `6ecac3ae`; targeted diffs from `1f0b9018` through `HEAD` over the checked function-index source families returned no source changes, so older line anchors are preserved. Branch refs still resolve to stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f`. Treat this page as a source-family route map, not the canonical patch-status matrix.
 
 ## How To Use This Page
 
@@ -47,7 +47,7 @@ Unless a row names another ref, line refs below are from docs checkout `docs/dev
 - `Server_AI_Com_Upgrade`: live AI commander upgrade worker; selects from `Format ["WFBE_C_UPGRADES_%1_AI_ORDER", _side]` (`Server/Functions/Server_AI_Com_Upgrade.sqf:12`), checks AI commander funds/supply and debits, but no obvious live scheduler has been found.
 - `Server_DelegateAI*`: delegation to headless/client workers.
 - `Server_FNC_Delegation`: selects delegation targets for town/player AI. No `setGroupOwner` rebalancing path has been found.
-- `Server_AssignNewCommander`: commander assignment notification/AI-commander stop helper. Docs checkout `1f0b9018` still has the DR-15 helper unpacking bug (`Server_AssignNewCommander.sqf:3-4`), while stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` fix that helper shape but keep duplicate notification/UI identity risks; use [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix).
+- `Server_AssignNewCommander`: commander assignment notification/AI-commander stop helper. Current docs-head anchors remain `Server_AssignNewCommander.sqf:3-4`; exact DR-15 branch status, duplicate notification and UI identity risks live on [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix) and [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook#current-branch-scope).
 - `Server_HandleBuilding*`, `Server_Building*`, `Server_OnHQKilled`, `Server_MHQRepair`: structure lifecycle and HQ damage/repair.
 - `Server_ChangeSideSupply`, `Server_PV_RequestSupplyValue`: side supply network bridge.
 - `Server_LogGameEnd`, `Server_CallExtensions/GlobalGameStats`: operational reporting.
@@ -93,12 +93,12 @@ Presence in the tree does not always mean enabled in the current mission mode. P
 | --- | --- | --- |
 | `Common/Module/Arty` | Live. | Used through common artillery handlers and support flows. |
 | `Common/Module/IRS` | Live. | Initialized through common init at `Init_Common.sqf:320`; vehicle/module availability still depends on constants and vehicle config. |
-| `Common/Module/Reaktiv` | Branch-sensitive dead/unreachable module. | Docs checkout, Miksuu and perf keep maintained-root files (`Reaktiv_Init.sqf:5`) with no init caller; stable and release have no maintained-root `Common/Module/Reaktiv` hits. Use [Modules atlas](Modules-Atlas#reaktiv--reactive-era-armor-commonmodulereaktiv) for the current branch matrix. |
+| `Common/Module/Reaktiv` | Branch-sensitive dead/unreachable module. | Folder presence is not runtime proof. Use [Modules atlas](Modules-Atlas#reaktiv--reactive-era-armor-commonmodulereaktiv) for the current branch matrix and revive/remove decision route. |
 | `Client/Module/Nuke` | Live and config-gated. | `RequestSpecial` / ICBM authority is the critical DR-27 risk. |
 | `Client/Module/EASA`, `Client/Module/CM` | Live but config-gated. | Countermeasures are also gated by vanilla/OA mode. |
 | `Server/Module/AntiStack` | Compiled but optional. | Runtime loops are dormant when `WFBE_C_ANTISTACK_ENABLED == 0`; external DB dependency is still live-server sensitive when enabled. |
-| `Server/Module/MASH` | Branch-sensitive: docs/Miksuu/perf keep local MASH respawn plus orphaned marker relay; stable/release remove the MASH deploy/init/module path while retaining some config class residues. | Do not infer MASH behavior from the module folder alone. Use [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas#mash-split-live-respawn-dead-marker-relay) for branch scope. |
-| `Server/Support/Support_Paratroopers.sqf` | Drop flow live; marker registration is branch-scoped and smoke-pending. | Docs checkout, stable and release register `HandleParatrooperMarkerCreation` in both maintained roots; Miksuu omits it; perf fixes Chernarus only. Use [Source fix propagation queue](Source-Fix-Propagation-Queue#current-branch-scope-2026-06-14) and [Paratrooper marker revival](Paratrooper-Marker-Revival). |
+| `Server/Module/MASH` | Branch-sensitive mobile-respawn module family. | Do not infer MASH behavior from the module folder alone. Use [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas#mash-split-live-respawn-dead-marker-relay) for local respawn, orphaned marker relay and stable/release removal scope. |
+| `Server/Support/Support_Paratroopers.sqf` | Drop flow live; marker registration is branch-scoped and smoke-pending. | Use [Source fix propagation queue](Source-Fix-Propagation-Queue#current-branch-scope-2026-06-14) and [Paratrooper marker revival](Paratrooper-Marker-Revival) for exact registration branches and smoke gates. |
 
 ## High-Risk Edit Areas
 

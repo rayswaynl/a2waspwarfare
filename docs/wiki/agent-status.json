@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T08:33:00+02:00",
+  "generatedAt": "2026-06-14T08:40:44+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,9 +20,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "gameplay-systems-atlas-route-prune",
-      "currentWork": "Published docs-only Gameplay systems atlas route prune: Gameplay-Systems-Atlas.md now names docs head 2d88dd5a as the visible gameplay-system source-continuity checkpoint, targeted source diffs confirmed no checked Chernarus town, town-AI/patrol, economy, commander, construction, factory or victory source-path drift from ca40f202 through 2d88dd5a, and repeated DR-15, Patrols v2, latent AIBuyUnit and victory/endgame proof routes to canonical owner pages. No gameplay source changed.",
-      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep Gameplay Systems, victory/endgame, commander/HQ, town/camp, support/UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
+      "currentLane": "function-module-index-route-prune",
+      "currentWork": "Published docs-only Function and Module index route prune: Function-And-Module-Index.md now names docs head 6ecac3ae as the visible source-family checkpoint, targeted source diffs confirmed no checked Chernarus common/client/server init, commander helper, AI upgrade, MASH, Reaktiv or paratrooper support source-path drift from 1f0b9018 through 6ecac3ae, and repeated commander DR-15, Reaktiv, MASH and paratrooper proof routes to canonical owner pages. No gameplay source changed.",
+      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep Function/Module Index, Gameplay Systems, victory/endgame, commander/HQ, town/camp, support/UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "function-module-index-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Function-And-Module-Index.md now names docs head 6ecac3ae as the current source-family checkpoint. Checked Chernarus common/client/server init, commander helper, AI upgrade, MASH, Reaktiv and paratrooper support source paths are unchanged from 1f0b9018 through 6ecac3ae; stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf 0076040f refs still resolve. Repeated commander DR-15, Reaktiv, MASH and paratrooper branch proof now routes to Commander-Reassignment-Call-Shape.md, Commander-Vote-And-Reassignment-Playbook.md, Modules-Atlas.md, Respawn-And-Death-Lifecycle-Atlas.md, Source-Fix-Propagation-Queue.md and Paratrooper-Marker-Revival.md instead of being repeated in the source-family index. No gameplay source changed."
+    },
     {
       "lane": "gameplay-systems-atlas-route-prune",
       "owner": "Codex",

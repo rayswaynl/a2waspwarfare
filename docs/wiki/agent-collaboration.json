@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T08:33:00+02:00",
+  "generatedAt": "2026-06-14T08:40:44+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,38 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "function-module-index-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Function-And-Module-Index.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AI_Com_Upgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AssignNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Module/Reaktiv",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/MASH",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/MASH",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_Paratroopers.sqf"
+      ],
+      "outputs": [
+        "Refreshed Function-And-Module-Index.md so docs head 6ecac3ae is the visible source-family checkpoint for checked function/module index paths.",
+        "Pruned repeated commander DR-15, Reaktiv, MASH and paratrooper branch proof by routing to canonical owner pages.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future function/module index edits should keep Function-And-Module-Index.md as a route-first source-family locator, preserve local high-level family/source anchors, and route exact branch matrices to Commander-Reassignment-Call-Shape.md, Commander-Vote-And-Reassignment-Playbook.md, Modules-Atlas.md, Respawn-And-Death-Lifecycle-Atlas.md, Source-Fix-Propagation-Queue.md and Paratrooper-Marker-Revival.md.",
+      "updated": "2026-06-14T08:40:44+02:00"
+    },
     {
       "lane": "gameplay-systems-atlas-route-prune",
       "owner": "Codex",
