@@ -4,7 +4,7 @@ For upstream development patterns and negative knowledge from Miksuu PRs, revert
 
 The repository is an Arma 2 OA Warfare/CTI mission derived from Benny's Warfare and actively modernized for the Miksuu/WASP server. The core runtime is SQF in a mission folder, surrounded by C# helper tools, a Discord status bot, and a Windows extension bridge.
 
-Unless a row names another ref, source anchors below are valid for docs checkout `docs/developer-wiki-index` `4277a2ad`. Rechecked 2026-06-14: the overview's cited runtime and tooling paths are unchanged from the earlier `1bef8801` / `1aa178f8` source-anchor snapshots, so the docs-checkout line refs remain valid. Treat stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` as branch-scope refs; follow the owner pages before citing line refs from those branches.
+Unless a row names another ref, source anchors below are valid for docs head `docs/developer-wiki-index` `adb9dbc8`. Rechecked 2026-06-14: targeted source diffs from `4277a2ad` to `HEAD` over the overview's cited runtime and tooling paths return no changes, preserving the earlier `1bef8801` / `1aa178f8` source-anchor snapshots. Treat stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` as branch-scope refs; follow the owner pages before citing line refs from those branches.
 
 ## How To Use This Page
 
@@ -26,9 +26,9 @@ Use this table before turning an architecture overview anchor into a branch clai
 
 | Ref | Architecture source scope | Practical route |
 | --- | --- | --- |
-| Docs checkout `4277a2ad` | Runtime/tooling anchors listed here are unchanged from the earlier `1bef8801` / `1aa178f8` overview passes for `description.ext`, `initJIPCompatible.sqf`, `Init_Common.sqf`, `Init_Server.sqf`, `Init_Client.sqf`, `Init_HC.sqf`, `FileManager.cs`, `SqfFileGenerator.cs` and `ZipManager.cs`. | Use this page for orientation, then open the linked owner page for system behavior, branch matrices and smoke gates. |
-| Stable `origin/master` `cf2a6d6a` and release `a96fdda2` | Same high-level source/generated-target architecture, but branch behavior and line refs differ for propagated fixes, server FPS shape, supply scan shape, commander ARTY and some UI/runtime surfaces. LoadoutManager root discovery accepts a repo-shaped root through mission path + `Tools/LoadoutManager` + `AGENTS.md`. | Start from [Current source status snapshot](Current-Source-Status-Snapshot), [Source fix propagation queue](Source-Fix-Propagation-Queue) and the subsystem owner page before citing stable/release line refs. |
-| Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` | Source shape is close enough for architecture orientation, but branch drift remains important. Their LoadoutManager root discovery still requires an ancestor folder named `a2waspwarfare`. | Recheck exact source paths before making upstream/perf claims; use [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) for historical context. |
+| Docs head `adb9dbc8` | Runtime/tooling anchors listed here are unchanged from `4277a2ad` and the earlier `1bef8801` / `1aa178f8` overview passes for `description.ext`, `initJIPCompatible.sqf`, `Init_Common.sqf`, `Init_Server.sqf`, `Init_Client.sqf`, `Init_HC.sqf`, `FileManager.cs`, `SqfFileGenerator.cs` and `ZipManager.cs`. | Use this page for orientation, then open the linked owner page for system behavior, branch matrices and smoke gates. |
+| Stable `origin/master` `cf2a6d6a` and release `a96fdda2` | Same high-level source/generated-target architecture, but branch behavior and line refs differ for propagated fixes, server FPS shape, supply scan shape, commander ARTY, UI/runtime surfaces and tooling root discovery. | Start from [Current source status snapshot](Current-Source-Status-Snapshot), [Source fix propagation queue](Source-Fix-Propagation-Queue) and the subsystem owner page before citing stable/release line refs. |
+| Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` | Source shape is close enough for architecture orientation, but branch drift remains important, including tooling root-discovery differences. | Recheck exact source paths before making upstream/perf claims; use [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) for historical context. |
 
 ## Runtime Owner Map
 
@@ -46,12 +46,13 @@ Partition caveat: `Common/Init/Init_Common.sqf` is not purely client-safe shared
 
 `Missions/[55-2hc]warfarev2_073v48co.chernarus` is the source mission for gameplay edits. Maintained Vanilla/Takistan is generated or copied from that source family; modded folders are not a safe propagation target unless a tooling owner explicitly claims them.
 
-| Target / tool | Current source-backed rule |
-| --- | --- |
-| Source mission | Edit Chernarus first for gameplay/source changes. `description.ext:39-58` includes generated `version.sqf`, sounds/music and the resource/dialog/title/parameter headers. |
-| LoadoutManager root | Root discovery is branch-sensitive; keep the branch matrix in [Tools and build workflow](Tools-And-Build-Workflow). Docs checkout `4277a2ad` keeps the `1bef8801` FileManager shape: it accepts an ancestor named `a2waspwarfare` at `FileManager.cs:153-155` / `:166-168` or a repo-like root with `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj` at `:176-188`. Stable/release use a different repo-shape check at `:165,170-176`; Miksuu/perf still require the ancestor-name shape at `:145,150-152`. |
-| Maintained generated targets | `SqfFileGenerator.cs:128-129` writes Chernarus and Takistan terrain outputs; `:131-132` keeps modded terrain writing commented. |
-| Packaging | `ZipManager.cs:16` packages `Missions` and `Missions_Vanilla`; `Modded_Missions` is commented out. `ZipManager.cs:96` supports `A2WASP_SKIP_ZIP` for propagation-only runs. |
+| Target / tool | Current source-backed rule | Owner route |
+| --- | --- | --- |
+| Source mission | Edit Chernarus first for gameplay/source changes. `description.ext:39-58` includes generated `version.sqf`, sounds/music and the resource/dialog/title/parameter headers. | [Source inventory](Source-Inventory), [Tools and build workflow](Tools-And-Build-Workflow) |
+| Generated `version.sqf` contract | `description.ext:39` includes `version.sqf`; clean checkouts need LoadoutManager-generated target files before pack/test claims. | [Mission config/version include graph](Mission-Config-Version-Include-Graph), [Tools and build workflow](Tools-And-Build-Workflow#operator-checklist) |
+| LoadoutManager root | Branch-sensitive; this overview keeps only the docs-head anchor. Current docs head still accepts either an ancestor named `a2waspwarfare` or a repo-like root with `Missions`, `Missions_Vanilla` and `Tools/LoadoutManager/LoadoutManager.csproj` (`FileManager.cs:153,158,166,176,184-188`). Stable/release/Miksuu/perf branch splits belong on the tooling owner pages. | [Tools and build workflow](Tools-And-Build-Workflow), [Source fix propagation queue](Source-Fix-Propagation-Queue#current-branch-scope-2026-06-14) |
+| Maintained generated targets | `SqfFileGenerator.cs:128-129` writes Chernarus and Takistan terrain outputs; `:131-132` keeps modded terrain writing commented. | [Tools and build workflow](Tools-And-Build-Workflow#generated-mission-status-table) |
+| Packaging | `ZipManager.cs:16` packages `Missions` and `Missions_Vanilla`; `Modded_Missions` is commented out. `ZipManager.cs:96-100` supports `A2WASP_SKIP_ZIP` for propagation-only runs. | [Tools and build workflow](Tools-And-Build-Workflow#packaging-and-deployment-notes) |
 
 ## Bootstrap Shape
 

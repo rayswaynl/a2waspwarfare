@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T06:39:21+02:00",
+  "generatedAt": "2026-06-14T06:47:40+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,40 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "architecture-overview-tooling-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Architecture-Overview.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
+        "Tools/LoadoutManager/FileManagement/FileManager.cs",
+        "Tools/LoadoutManager/SqfFileGenerators/SqfFileGenerator.cs",
+        "Tools/LoadoutManager/ZipManager.cs",
+        "Tools-And-Build-Workflow.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Mission-Config-Version-Include-Graph.md"
+      ],
+      "outputs": [
+        "Refreshed Architecture-Overview.md so docs head adb9dbc8 is the visible source-continuity checkpoint for checked runtime/tooling paths.",
+        "Pruned repeated LoadoutManager root-discovery, generated-target, generated version.sqf and packaging detail by routing to canonical tooling owner pages.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future architecture-overview edits should keep the page as a gateway: local source anchors only, branch/tooling matrices on Tools-And-Build-Workflow.md or Source-Fix-Propagation-Queue.md, generated version.sqf proof on Mission-Config-Version-Include-Graph.md, and subsystem behavior on the relevant atlas/playbook.",
+      "updated": "2026-06-14T06:47:40+02:00"
+    },
     {
       "lane": "server-runtime-gateway-route-prune",
       "owner": "Codex",

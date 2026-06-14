@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T06:39:21+02:00",
+  "generatedAt": "2026-06-14T06:47:40+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "server-runtime-gateway-route-prune",
-      "currentWork": "Published docs-only server runtime gateway route prune: Server-Gameplay-Runtime-Atlas.md and Server-Runtime-And-Operations.md now name docs head a6785f51 as the visible source-continuity checkpoint for checked server runtime paths, and the runtime-risk table routes repeated FPS, AI supply-truck, Patrols v2 and dormant-hook branch detail to owner pages instead of restating exact branch proof twice. Targeted source diffs confirmed no checked server runtime source-path drift from 4277a2ad through a6785f51. No gameplay source changed.",
+      "currentLane": "architecture-overview-tooling-route-prune",
+      "currentWork": "Published docs-only Architecture overview tooling route prune: Architecture-Overview.md now names docs head adb9dbc8 as the visible source-continuity checkpoint for checked runtime/tooling anchors, and generated version, LoadoutManager root, generated-target and packaging details route to Tools-And-Build-Workflow.md, Source-Fix-Propagation-Queue.md and Mission-Config-Version-Include-Graph.md instead of repeating tooling branch matrices in the architecture gateway. Targeted source diffs confirmed no checked overview runtime/tooling source-path drift from 4277a2ad through adb9dbc8. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "architecture-overview-tooling-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Architecture-Overview.md now names docs head adb9dbc8 as the current architecture source-continuity checkpoint. Checked description.ext, initJIPCompatible.sqf, Common/Server/Client/Headless init, FileManager.cs, SqfFileGenerator.cs and ZipManager.cs paths are unchanged from 4277a2ad through adb9dbc8. LoadoutManager root-discovery, generated-target, generated version.sqf and packaging details now route to Tools-And-Build-Workflow.md, Source-Fix-Propagation-Queue.md and Mission-Config-Version-Include-Graph.md instead of being repeated as a branch/tooling matrix in the overview. No gameplay source changed."
+    },
     {
       "lane": "server-runtime-gateway-route-prune",
       "owner": "Codex",

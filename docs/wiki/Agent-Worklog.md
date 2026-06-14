@@ -979,3 +979,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Rechecked current docs head `a6785f51`: targeted `git diff --name-only 4277a2ad..HEAD` checks returned no changes for checked server runtime paths: `Init_Server.sqf`, `Server/FSM`, `Server/Module`, `Server_SideMessage.sqf`, `Server_OnHQKilled.sqf` and `serverFpsGUI.sqf`.
 - Refreshed [Server runtime and operations](Server-Runtime-And-Operations) and [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) so `a6785f51` is the visible server-runtime source-continuity checkpoint while older hashes remain line-anchor provenance.
 - Pruned repeated runtime-risk branch detail: hosted FPS, AI supply-truck startup, Patrols v2 and dormant server hooks now route to the branch-scope table plus owner pages instead of repeating exact branch proof in both places. No gameplay source changed.
+
+## 2026-06-14T06:47:40+02:00 - Codex - Architecture overview tooling route prune
+
+- Claimed `architecture-overview-tooling-route-prune` as a docs-only Architecture overview cleanup pass, with no gameplay source edits.
+- Rechecked current docs head `adb9dbc8`: targeted `git diff --name-only 4277a2ad..HEAD` checks returned no changes for overview runtime/tooling paths: `description.ext`, `initJIPCompatible.sqf`, Common/Server/Client/Headless init, `FileManager.cs`, `SqfFileGenerator.cs` and `ZipManager.cs`.
+- Refreshed [Architecture overview](Architecture-Overview) so `adb9dbc8` is the visible source-continuity checkpoint while older overview hashes remain line-anchor provenance.
+- Pruned repeated LoadoutManager root-discovery, generated-target and packaging detail by routing branch matrices and operational rules to [Tools and build workflow](Tools-And-Build-Workflow), [Source fix propagation queue](Source-Fix-Propagation-Queue) and [Mission config/version include graph](Mission-Config-Version-Include-Graph). No gameplay source changed.
