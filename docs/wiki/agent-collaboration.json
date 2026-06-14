@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T04:16:08+02:00",
+  "generatedAt": "2026-06-14T04:32:40+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,45 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "economy-authority-current-branch-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Economy-Authority-First-Cut.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "agent-feature-status.jsonl",
+        "agent-hardening-backlog.jsonl",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "agent-knowledge.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/AttackWave.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/updateresources.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_GetIncome.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "origin/release/2026-06-feature-bundle",
+        "miksuu/master",
+        "origin/perf/quick-wins"
+      ],
+      "outputs": [
+        "Updated Economy-Authority-First-Cut.md to name docs checkout f52ccee8, stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf 0076040f.",
+        "Confirmed docs/stable/release/Miksuu still keep the side-supply overspend-as-credit floor, direct temp-channel payload trust and reason-string off-by-one in both maintained roots.",
+        "Scoped perf/quick-wins as a Chernarus-only arithmetic floor candidate, not a Vanilla, validation or reason-string fix.",
+        "Aligned Feature-Status-Register.md, Source-Fix-Propagation-Queue.md, agent-feature-status.jsonl and agent-hardening-backlog.jsonl.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future economy code work should patch Chernarus plus maintained Vanilla side-supply arithmetic first, add direct temp-channel validation, parse _reason at count _this > 2, and treat resource-income payout/display drift as balance-sensitive owner work.",
+      "updated": "2026-06-14T04:32:40+02:00"
+    },
     {
       "lane": "hosted-fps-current-branch-route",
       "owner": "Codex",
