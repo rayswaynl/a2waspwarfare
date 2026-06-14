@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T08:53:55+02:00",
+  "generatedAt": "2026-06-14T09:01:18+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,43 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "lifecycle-entrypoints-wait-chain-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Mission-Entrypoints-And-Lifecycle.md",
+        "Lifecycle-Wait-Chain.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/mission.sqm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Town.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_TownMode.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Towns.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Parameters.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Version.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Unit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Functions/HC_IsHeadlessClient.sqf"
+      ],
+      "outputs": [
+        "Refreshed Mission-Entrypoints-And-Lifecycle.md and Lifecycle-Wait-Chain.md so docs head 05664f17 is the visible source-continuity checkpoint for checked lifecycle paths.",
+        "Routed duplicated wait-chain branch-scope wording back to the entrypoints Source Scope.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future lifecycle edits should keep Mission-Entrypoints-And-Lifecycle.md as the source-scope, include-graph and role-dispatch owner, keep Lifecycle-Wait-Chain.md as the wait/flag/JIP-owner page, and route branch-specific source claims through the entrypoints Source Scope before citing line refs.",
+      "updated": "2026-06-14T09:01:18+02:00"
+    },
     {
       "lane": "respawn-lifecycle-atlas-source-scope-route-prune",
       "owner": "Codex",

@@ -4,7 +4,7 @@
 
 ## Source Scope
 
-Unless a row names another ref, line refs on this page are from docs checkout `docs/developer-wiki-index` `9da5f1d0` and the Chernarus source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Rechecked 2026-06-14: `description.ext`, `initJIPCompatible.sqf`, `mission.sqm`, `Common/Init/Init_Town*.sqf`, `Common/Init/Init_Common.sqf`, `Server/Init/Init_Server.sqf`, `Client/Init/Init_Client.sqf` and `Headless/Init/Init_HC.sqf` support the entrypoint claims below.
+Unless a row names another ref, line refs on this page are from docs head `05664f17` and the Chernarus source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Rechecked 2026-06-14: targeted diffs from `9da5f1d0` through `HEAD` over `description.ext`, `initJIPCompatible.sqf`, `mission.sqm`, `Common/Init/Init_Town*.sqf`, `Common/Init/Init_Common.sqf`, `Common/Init/Init_Parameters.sqf`, `Common/Init/Init_Version.sqf`, `Common/Init/Init_Unit.sqf`, `Server/Init/Init_Server.sqf`, `Client/Init/Init_Client.sqf`, `Headless/Init/Init_HC.sqf` and `Headless/Functions/HC_IsHeadlessClient.sqf` returned no source changes.
 
 Branch spot-check 2026-06-14: stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` keep the same front-door topology from `initJIPCompatible.sqf` (Common/Towns, then Server, Client and Headless branches), but line refs drift. For branch behavior claims, route through [Current source status snapshot](Current-Source-Status-Snapshot) and the narrower owner pages before citing branch-specific lines.
 

@@ -1077,3 +1077,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Rechecked current docs head `a640e722`: targeted `git diff --name-only 1f0b9018..HEAD` checks returned no changes for checked Chernarus and maintained Vanilla respawn, MASH, skill, camp/threeway and AI-respawn source paths.
 - Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `perf/quick-wins` `0076040f`.
 - Refreshed [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas) so `a640e722` is the visible respawn/MASH source-continuity checkpoint. Updated the MASH branch row to current docs head, replaced duplicate MASH risk-row source detail with links back to the atlas MASH split matrix, and aligned [Feature status](Feature-Status-Register). No gameplay source changed.
+
+## 2026-06-14T09:01:18+02:00 - Codex - Lifecycle entrypoints / wait-chain source-scope route prune
+
+- Claimed `lifecycle-entrypoints-wait-chain-source-scope-route-prune` as a docs-only lifecycle architecture cleanup pass, with no gameplay source edits.
+- Rechecked current docs head `05664f17`: targeted `git diff --name-only 9da5f1d0..HEAD` checks returned no changes for checked Chernarus bootstrap, mission-object town init, common/server/client/headless init and HC role-helper source paths.
+- Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `perf/quick-wins` `0076040f`.
+- Refreshed [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle) and [Lifecycle wait-chain](Lifecycle-Wait-Chain) so `05664f17` is the visible lifecycle source-continuity checkpoint. Routed duplicated branch-scope wording from the wait-chain page back to the entrypoints Source Scope. No gameplay source changed.

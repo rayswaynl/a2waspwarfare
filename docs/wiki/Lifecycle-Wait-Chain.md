@@ -2,7 +2,7 @@
 
 > Claude deep-dive page (source-cited). This is the canonical page for precise boot ordering, the machine-role truth table, JIP waits and the global-flag dependency graph that enforces init order. Use [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle) for the include graph, role dispatch and per-role init responsibility map.
 
-All paths below are relative to the source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Unless another ref is named, line refs are from docs checkout `docs/developer-wiki-index` `9da5f1d0` after the 2026-06-14 lifecycle source-scope recheck. Stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` keep the same boot topology but have line-number drift; use [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle#source-scope) before turning these Chernarus source refs into branch-specific claims.
+All paths below are relative to the source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Unless another ref is named, line refs are from docs head `05664f17`, source-unchanged from `9da5f1d0` for the checked lifecycle paths. [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle#source-scope) owns the current checkpoint, checked path list and branch refs; use that source-scope note before turning these Chernarus line refs into branch-specific claims.
 
 ## Why this matters
 
