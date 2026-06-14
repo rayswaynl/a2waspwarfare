@@ -2,7 +2,7 @@
 
 > Claude deep-dive page (source-cited). This is the canonical page for precise boot ordering, the machine-role truth table, JIP waits and the global-flag dependency graph that enforces init order. Use [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle) for the include graph, role dispatch and per-role init responsibility map.
 
-All paths below are relative to the source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
+All paths below are relative to the source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Unless another ref is named, line refs are from docs checkout `docs/developer-wiki-index` `9da5f1d0` after the 2026-06-14 lifecycle source-scope recheck. Stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` keep the same boot topology but have line-number drift; use [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle#source-scope) before turning these Chernarus source refs into branch-specific claims.
 
 ## Why this matters
 
@@ -48,7 +48,7 @@ Each row: a flag, where it is **set**, and the `waitUntil` barriers it **unblock
 
 | Flag | Set at | Unblocks (consumer `waitUntil`) |
 | --- | --- | --- |
-| `VERSION_SET` | `Common/Init/Init_Version.sqf` | `initJIPCompatible.sqf:49` |
+| `VERSION_SET` | `Common/Init/Init_Version.sqf:9,17` | `initJIPCompatible.sqf:49` |
 | `WFBE_Parameters_Ready` | `initJIPCompatible.sqf:212` | `Common/Init/Init_TownMode.sqf:3`, `Init_Town.sqf:18` |
 | `townModeSet` | `Common/Init/Init_TownMode.sqf:21`, started by `mission.sqm:3265` | `Init_Towns.sqf:3`, `Init_Town.sqf:18` |
 | `BIS_fnc_init` (engine) | engine | `Common/Init/Init_Common.sqf:205-206` |
@@ -57,7 +57,7 @@ Each row: a flag, where it is **set**, and the `waitUntil` barriers it **unblock
 | `townInit` | `Common/Init/Init_Towns.sqf:13` | `Init_Server.sqf:127`, client FSM launches, `Init_Client.sqf:596` |
 | `serverInitComplete` | `Init_Server.sqf:117` | town model creation in `Init_Town.sqf:92` |
 | `serverInitFull` | `Init_Server.sqf:507` | signals all per-side setup done (HC `sleep 20` is a crude proxy) |
-| `clientInitComplete` | `Init_Client.sqf:957` | `Init_Unit.sqf:33`; then `CLIENT_INIT_READY` is `publicVariableServer`'d (`Init_Client.sqf:961-963`) |
+| `clientInitComplete` | `Init_Client.sqf:956` | `Init_Unit.sqf:33`; then `CLIENT_INIT_READY` is set and `publicVariableServer`'d (`Init_Client.sqf:960-962`) |
 
 ### Ordered boot timeline (server)
 
@@ -65,7 +65,7 @@ Each row: a flag, where it is **set**, and the `waitUntil` barriers it **unblock
 
 ### Ordered boot timeline (client)
 
-Block on `WFBE_PRESENTSIDES` + `wfbe_teams` → `Init_Client` compiles functions → block on `commonInitComplete` → set up HUD/modules/JIP handshake → block on `townInit` → launch map/marker/action FSMs → remove blackout (`Init_Client.sqf:775`) → `clientInitComplete` → broadcast `CLIENT_INIT_READY`.
+Block on `WFBE_PRESENTSIDES` + `wfbe_teams` → `Init_Client` compiles functions → block on `commonInitComplete` → set up HUD/modules/JIP handshake → block on `townInit` → launch map/marker/action FSMs → remove blackout (`Init_Client.sqf:773-774`) → `clientInitComplete` → broadcast `CLIENT_INIT_READY`.
 
 ### Headless client
 

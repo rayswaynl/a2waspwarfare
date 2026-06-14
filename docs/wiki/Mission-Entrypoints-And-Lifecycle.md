@@ -2,6 +2,12 @@
 
 > For the machine-role truth table, per-role boot timelines, and global flag -> `waitUntil` dependency graph, read [Lifecycle wait-chain reference](Lifecycle-Wait-Chain) before reordering any init call.
 
+## Source Scope
+
+Unless a row names another ref, line refs on this page are from docs checkout `docs/developer-wiki-index` `9da5f1d0` and the Chernarus source mission root `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Rechecked 2026-06-14: `description.ext`, `initJIPCompatible.sqf`, `mission.sqm`, `Common/Init/Init_Town*.sqf`, `Common/Init/Init_Common.sqf`, `Server/Init/Init_Server.sqf`, `Client/Init/Init_Client.sqf` and `Headless/Init/Init_HC.sqf` support the entrypoint claims below.
+
+Branch spot-check 2026-06-14: stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` keep the same front-door topology from `initJIPCompatible.sqf` (Common/Towns, then Server, Client and Headless branches), but line refs drift. For branch behavior claims, route through [Current source status snapshot](Current-Source-Status-Snapshot) and the narrower owner pages before citing branch-specific lines.
+
 ## `description.ext`
 
 The mission metadata and UI resource graph is assembled from:
@@ -19,9 +25,9 @@ The mission metadata and UI resource graph is assembled from:
 
 It also sets `loadScreen`, disables spoken sentences, disables channels 3 and 6, and leaves `disabledAI=0`.
 
-`version.sqf` is included here and again by `initJIPCompatible.sqf`. In this workspace, Chernarus and Vanilla Takistan currently have ignored generated `version.sqf` files on disk, but `git --literal-pathspecs ls-files -- .../version.sqf` returns no tracked rows because `.gitignore:1,23` still ignores those paths. Treat it as required generated terrain metadata, not as optional decoration or durable checked-in source.
+`version.sqf` is included here and again by `initJIPCompatible.sqf`. The 2026-06-14 checkout has no tracked `version.sqf` rows and no generated `version.sqf` files present in the checked Chernarus or Vanilla Takistan roots; `.gitignore:1,23` still ignores those paths when generated. Treat it as required generated terrain metadata, not as optional decoration or durable checked-in source.
 
-Source verification: `description.ext:39` includes `version.sqf`; `:41-58` include sound, music and Rsc bundles; `:64-67` set `loadScreen`, `disableChannels[]` and `disabledAI`. The 2026-06-04 target-root recheck found local ignored generated files at `Missions/[55-2hc]warfarev2_073v48co.chernarus/version.sqf:1` and `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf:1`, while all modded/stub roots lack `version.sqf`. The clean-checkout/release warning therefore still stands: run/generate/check target roots before boot, pack or test claims.
+Source verification: `description.ext:39` includes `version.sqf`; `:41-58` include sound, music and Rsc bundles; `:64-67` set `loadScreen`, `disableChannels[]` and `disabledAI`. The clean-checkout/release warning still stands: run/generate/check target roots before boot, pack or test claims.
 
 Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-43a tracks the `version.sqf` source/build ownership gap.
 
@@ -29,22 +35,13 @@ Confirmed finding cross-link: [Deep-review findings](Deep-Review-Findings) DR-43
 
 This is the first major runtime script. It creates early logging, determines server/client/headless roles, runs version detection, initializes common constants and parameters, applies environment time, then dispatches common/server/client/headless init scripts.
 
-Source anchors: role detection at `initJIPCompatible.sqf:52-56`, version wait at `:49`, parameter readiness at `:212`, server branch at `:218-220`, client branch at `:224-233` and headless branch at `:237-238`.
+Source anchors: role detection at `initJIPCompatible.sqf:52-56`, version wait at `:49`, parameter readiness at `:212`, Common/Towns startup at `:214-215`, server branch at `:218-220`, client branch at `:224-233` and headless branch at `:237-238`.
 
 ### Boot Ordering Handoff
 
 This page only summarizes entrypoints. The canonical boot timeline, role truth table and flag dependency graph live in [Lifecycle wait-chain](Lifecycle-Wait-Chain).
 
-Key flags to look up there before reordering init code:
-
-| Flag | Why it matters |
-| --- | --- |
-| `VERSION_SET` | Unblocks version-dependent initialization. |
-| `WFBE_Parameters_Ready` | Unblocks town mode and town object setup. |
-| `commonInitComplete` | Unblocks server/client/town consumers of common functions and config. |
-| `townInit` / `townInitServer` | Separate common town setup from server-side town distribution/camp follow-up. |
-| `serverInitComplete` / `serverInitFull` | Distinguish early server readiness from full per-side setup. |
-| `clientInitComplete` | Signals that client-local initialization finished. |
+Do not duplicate the flag matrix here. For producer/consumer lines, use [Lifecycle wait-chain](Lifecycle-Wait-Chain) for `VERSION_SET`, `WFBE_Parameters_Ready`, `townModeSet`, `commonInitComplete`, `townInit`, `serverInitComplete`, `serverInitFull` and `clientInitComplete`. Keep this page focused on which file starts which role-owned layer.
 
 `Common/Init/Init_Parameters.sqf:5-10` copies each `description.ext` `Params` class name into `missionNamespace`, so parameter names are live runtime globals. `initJIPCompatible.sqf:142-162` can then override several of those values for air-war/debug modes before later init code consumes them. The most easily misread gates are `WFBE_DAYNIGHT_ENABLED`, `WFBE_C_AI_DELEGATION`, economy/supply mode constants, `WFBE_C_BASE_START_TOWN`, module toggles such as EASA/ICBM/IRS/CM, and map-icon blinking.
 
@@ -114,7 +111,7 @@ Global gameplay hotkeys are wired here through `findDisplay 46` `KeyDown` handle
 
 ### JIP Stall Risks
 
-Client init has several `waitUntil` gates on replicated state with no local timeout/retry path. The highest-risk waits are `townInit`, `wfbe_structures`, `wfbe_commander`, `wfbe_radio_hq`, `wfbe_startpos`, `wfbe_hq_deployed` and `wfbe_votetime` around `Client/Init/Init_Client.sqf:359-371`, `:467-471` and `:786-789`. Keep the detailed dependency table in [Lifecycle wait-chain](Lifecycle-Wait-Chain), but mention this risk in entrypoint work because broken replication can look like a client boot freeze rather than a later gameplay bug.
+Client init has several `waitUntil` gates on replicated state with no local timeout/retry path. The highest-risk waits are `townInit`, `wfbe_structures`, `wfbe_commander`, `wfbe_radio_hq`, `wfbe_startpos`, `wfbe_hq_deployed` and `wfbe_votetime` around `Client/Init/Init_Client.sqf:360-371`, `:467-490` and `:787-789`. Keep the detailed dependency table in [Lifecycle wait-chain](Lifecycle-Wait-Chain), but mention this risk in entrypoint work because broken replication can look like a client boot freeze rather than a later gameplay bug.
 
 ## Headless Init
 

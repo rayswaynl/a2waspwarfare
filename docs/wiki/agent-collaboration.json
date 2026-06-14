@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T01:52:54+02:00",
+  "generatedAt": "2026-06-14T02:02:42+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,44 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "mission-lifecycle-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Mission-Entrypoints-And-Lifecycle.md",
+        "Lifecycle-Wait-Chain.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/mission.sqm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Town.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_TownMode.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Towns.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Version.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Updated Mission-Entrypoints-And-Lifecycle.md to name docs checkout 9da5f1d0 and route branch-specific line refs through Current-Source-Status-Snapshot.md plus owner pages.",
+        "Corrected version.sqf wording: the 2026-06-14 checkout has no tracked or present generated version.sqf in checked Chernarus/Vanilla roots, while .gitignore still ignores those generated paths.",
+        "Removed the duplicate boot-flag mini-table from Mission-Entrypoints-And-Lifecycle.md and routed producer/consumer detail to Lifecycle-Wait-Chain.md.",
+        "Updated Lifecycle-Wait-Chain.md source scope and current-checkout line refs for VERSION_SET, clientInitComplete, CLIENT_INIT_READY and blackout removal."
+      ],
+      "handoff": "Closed as docs-published. Future lifecycle work should keep Mission-Entrypoints-And-Lifecycle.md as the entrypoint/include/role map and Lifecycle-Wait-Chain.md as the canonical producer-consumer wait matrix; recheck line refs per branch before citing stable, release, Miksuu or perf.",
+      "updated": "2026-06-14T02:02:42+02:00"
+    },
     {
       "lane": "architecture-overview-source-scope-route",
       "owner": "Codex",
