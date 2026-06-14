@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T07:26:55+02:00",
+  "generatedAt": "2026-06-14T07:35:31+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,43 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "economy-supply-atlas-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Economy-Towns-And-Supply.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/updateresources.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_GetIncome.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ChangeSideSupply.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AI_Com_Upgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestOnUnitKilled.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/stringtable.xml",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Economy-Authority-First-Cut.md",
+        "Supply-Mission-Architecture.md",
+        "AI-Commander-Autonomy-Audit.md",
+        "Upgrades-And-Research-Atlas.md"
+      ],
+      "outputs": [
+        "Refreshed Economy-Towns-And-Supply.md so docs head 8cb43e4e is the visible source-continuity checkpoint for checked economy/supply paths.",
+        "Pruned repeated AI debit, side-supply, supply-mission truck/heli and AI logistics branch proof by routing to economy authority, supply mission, AI commander and upgrades owner pages.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future economy atlas edits should keep Economy-Towns-And-Supply.md as the economy/supply interpretation gateway, preserve resource-income and reward-formula anchors locally, route exact side-supply branch matrices to Economy-Authority-First-Cut.md, route supply mission branch matrices to Supply-Mission-Architecture.md, and route AI upgrade/logistics status to AI-Commander-Autonomy-Audit.md plus Upgrades-And-Research-Atlas.md.",
+      "updated": "2026-06-14T07:35:31+02:00"
+    },
     {
       "lane": "upgrades-atlas-route-prune",
       "owner": "Codex",
