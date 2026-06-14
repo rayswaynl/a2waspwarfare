@@ -6,7 +6,7 @@ Combined UI cleanup route: [UI resource parity cleanup](UI-Resource-Parity-Clean
 
 All source paths are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
 
-Branch check 2026-06-05 after fresh fetch: current source, `origin/master` and latest `miksuu/master` keep both collision groups in Chernarus and maintained Vanilla. `origin/release/2026-06-feature-bundle` changes Chernarus `RscMenu_EASA` to `idd = 24000`, leaving Chernarus Economy at `23000`, but release Vanilla still keeps both EASA and Economy on `23000`. The `RscOverlay` / `OptionsAvailable` title collision on `10200` is still present in both release roots. Current mission source has no hard-coded `findDisplay 23000` or `findDisplay 10200` caller in `Missions` / `Missions_Vanilla`, so this remains a maintenance/debug/future-control risk rather than a proven live lookup bug.
+Branch check 2026-06-14 after fresh fetch: docs checkout `2fef1e3d`, Miksuu `b8389e74` and perf `0076040f` still keep `RscMenu_EASA` and `RscMenu_Economy` both on `idd = 23000` in Chernarus and maintained Vanilla. Stable `origin/master` `cf2a6d6a` and release `a96fdda2` move EASA to `idd = 24000` and keep Economy on `23000` in both maintained roots. The `RscOverlay` / `OptionsAvailable` title collision on `10200` remains present in every checked ref and root. No checked maintained root has a hard-coded `findDisplay 23000` or `findDisplay 10200` caller, so duplicate IDD cleanup remains maintenance/debug/future-control risk rather than a proven live lookup bug.
 
 ## What To Read
 
@@ -38,7 +38,7 @@ Two dialog classes share `idd = 23000`:
 | `RscMenu_EASA` | `Rsc/Dialogs.hpp:3209-3211` | `Client/GUI/GUI_Menu_EASA.sqf` |
 | `RscMenu_Economy` | `Rsc/Dialogs.hpp:3287-3289` | `Client/GUI/GUI_Menu_Economy.sqf` |
 
-Release-branch caveat: `origin/release/2026-06-feature-bundle` already moves Chernarus EASA to `idd = 24000` (`Dialogs.hpp:2860-2863`), but maintained Vanilla on that branch still has EASA/Economy both on `23000` (`Dialogs.hpp:3294-3296`, `:3372-3374`). Treat the Chernarus release shape as a useful comparison point, not as proof the cleanup is complete.
+Stable/release caveat: current stable `cf2a6d6a` moves EASA to `idd = 24000` and keeps Economy on `23000` in both maintained roots (`Dialogs.hpp:2887-2889`, `:2965-2967`). Release `a96fdda2` carries the same distinct dialog IDD shape in both maintained roots (`Dialogs.hpp:2862-2864`, `:2940-2942`). Docs checkout, Miksuu and perf still need the EASA/Economy parity cleanup if they remain target branches.
 
 Two title resources share `idd = 10200`:
 
@@ -57,11 +57,11 @@ This matrix is separate from the duplicate-IDD matrix above. It tracks the store
 
 | Root / branch | OptionsAvailable / RHUD / action icons | EndOfGameStats | Practical meaning |
 | --- | --- | --- | --- |
-| Current docs/source Chernarus | `Rsc/Titles.hpp:170-171` calls `GUI_SetCurrentCutDisplay.sqf` / `GUI_ClearCurrentCutDisplay.sqf`; `Client_UpdateRHUD.sqf:89-92` and `updateavailableactions.fsm:225-230` read/write `currentCutDisplay`. | `Rsc/Titles.hpp:539-540` calls the same helpers; `GUI_EndOfGameStats.sqf:34-44,86-93` writes stat controls through `currentCutDisplay`. | Patch-ready. The lifecycle-handle collision remains in current source. |
-| Maintained Vanilla Takistan | Same helper/key shape in `Rsc/Titles.hpp:170-171,539-540`, `Client_UpdateRHUD.sqf:89-92`, `updateavailableactions.fsm:225-230` and `GUI_EndOfGameStats.sqf:34-44,86-93`. | Same. | Propagate deliberately after the source fix. |
-| Stable `origin/master` | Same in both maintained roots. | Same in both maintained roots. | No stable rescue. |
-| Latest `miksuu/master` after 2026-06-05 fetch | Same in both maintained roots. | Same in both maintained roots. | No upstream rescue. |
-| `origin/release/2026-06-feature-bundle` | Same in both maintained roots; release Chernarus line numbers shift slightly (`Client_UpdateRHUD.sqf:90-93`, `Titles.hpp:583-584` for endgame). | Same in both maintained roots. | Release still carries the handle collision even where Chernarus EASA's dialog ID was changed. |
+| Docs checkout `2fef1e3d` Chernarus | `Rsc/Titles.hpp:170-171` calls `GUI_SetCurrentCutDisplay.sqf` / `GUI_ClearCurrentCutDisplay.sqf`; `Client_UpdateRHUD.sqf:89-92` and `updateavailableactions.fsm:225-230` read/write `currentCutDisplay`. | `Rsc/Titles.hpp:539-540` calls the same helpers; `GUI_EndOfGameStats.sqf:34-44,86-93` writes stat controls through `currentCutDisplay`. | Patch-ready. The lifecycle-handle collision remains in current docs/source. |
+| Maintained Vanilla Takistan at docs checkout `2fef1e3d` | Same helper/key shape in `Rsc/Titles.hpp:170-171,539-540`, `Client_UpdateRHUD.sqf:89-92`, `updateavailableactions.fsm:225-230` and `GUI_EndOfGameStats.sqf:34-44,86-93`. | Same. | Propagate deliberately after any source fix. |
+| Stable `origin/master` `cf2a6d6a` | Same in both maintained roots; title line refs drift to `Rsc/Titles.hpp:174-175,587-588` and the RHUD loop to `Client_UpdateRHUD.sqf:89-92,251-258`. | Same in both maintained roots. | Stable fixes the EASA dialog IDD but does not fix title-handle ownership. |
+| Miksuu `b8389e74` and perf `0076040f` | Same as docs/source in both maintained roots. | Same as docs/source. | No upstream/perf rescue for either title IDD or title handle ownership. |
+| Release `origin/release/2026-06-feature-bundle` `a96fdda2` | Same in both maintained roots; line refs match stable for checked title/RHUD anchors. | Same in both maintained roots. | Release fixes the EASA dialog IDD but still carries duplicate title IDD and the handle collision. |
 
 Repair this with a display-variable split before or alongside any title-display work: for example `currentActionHudDisplay` for `OptionsAvailable` and `currentEndgameStatsDisplay` for `EndOfGameStats`, or a helper that takes the key name explicitly. Keep this separate from the `idd` uniqueness pass so smoke failures can be traced cleanly.
 
