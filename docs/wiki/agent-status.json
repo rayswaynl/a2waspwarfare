@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T02:13:01+02:00",
+  "generatedAt": "2026-06-14T02:24:12+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only function/module index source-scope route: Function-And-Module-Index.md now names current docs checkout 1f0b9018, routes branch-sensitive module status to owner pages, corrects commander/paratrooper wording, and aligns MASH/paratrooper status rows. No gameplay source changed.",
+      "currentWork": "Published docs-only AI/headless performance gateway route: AI-Headless-And-Performance.md now names docs checkout ee383941, routes AI/HC/performance topics to owner pages, corrects feat/ai-commander head to c20ce153, and AI-Runtime-HC-Loop-Map.md no longer describes release a96fdda2 as carrying Patrols v2. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "ai-headless-performance-gateway-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "AI-Headless-And-Performance.md now behaves as the broad AI/HC/performance gateway: it names docs checkout ee383941, records the checked AI/headless source paths as unchanged from b9e80da0, routes runtime loops, HC failover, AI commander, town-AI safety, Patrols v2, performance audit/FPS and old-BE comparison work to owner pages, and corrects feat/ai-commander to current head c20ce153. AI-Runtime-HC-Loop-Map.md now corrects Patrols v2 branch scope: stable origin/master cf2a6d6a carries Patrols v2 in both maintained roots, while docs checkout, release a96fdda2, Miksuu b8389e74, perf/quick-wins 0076040f and feat/ai-commander c20ce153 do not carry the Patrols v2 files in checked maintained roots. No gameplay source changed."
+    },
     {
       "lane": "function-module-index-source-scope-route",
       "owner": "Codex",

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T02:13:01+02:00",
+  "generatedAt": "2026-06-14T02:24:12+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,42 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "ai-headless-performance-gateway-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "AI-Headless-And-Performance.md",
+        "AI-Runtime-HC-Loop-Map.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Parameters.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_ai.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateavailableactions.fsm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateclient.sqf",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "origin/feat/ai-commander"
+      ],
+      "outputs": [
+        "Updated AI-Headless-And-Performance.md to name docs checkout ee383941 and route AI/HC/performance topics to canonical owner pages.",
+        "Corrected feat/ai-commander wording to current head c20ce153 while preserving 4dba060e as historical branch evidence.",
+        "Corrected Patrols v2 branch scope in AI-Runtime-HC-Loop-Map.md: stable origin/master cf2a6d6a carries Patrols v2 in both maintained roots, while docs checkout, release, Miksuu, perf and feat-ai checked roots do not.",
+        "Kept server-FPS and performance proof routed to Server-Gameplay-Runtime-Atlas.md, Performance-Opportunity-Sweep.md and Testing-Debugging-And-Release-Workflow.md."
+      ],
+      "handoff": "Closed as docs-published. Future AI/headless/performance work should keep this broad page as a gateway, keep loop/branch matrices on AI-Runtime-HC-Loop-Map.md and AI-Commander-Autonomy-Audit.md, and avoid citing release a96fdda2 as Patrols v2 evidence.",
+      "updated": "2026-06-14T02:24:12+02:00"
+    },
     {
       "lane": "function-module-index-source-scope-route",
       "owner": "Codex",
