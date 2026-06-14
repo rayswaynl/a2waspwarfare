@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T07:08:45+02:00",
+  "generatedAt": "2026-06-14T07:18:06+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,44 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "factory-purchase-atlas-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Factory-And-Purchase-Systems-Atlas.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_UIFillListBuyUnits.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateavailableactions.fsm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_CreateUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_CreateVehicle.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_BuyUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Factory-Queue-Counter-Token-Cleanup.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Refreshed Factory-And-Purchase-Systems-Atlas.md so docs head 3b911594 is the visible source-continuity checkpoint for checked factory/purchase paths.",
+        "Pruned repeated buy-menu price/key, destroyed-factory refund and queue-risk branch proof by routing to the atlas matrices and Factory-Queue-Counter-Token-Cleanup.md.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future factory atlas edits should keep Factory-And-Purchase-Systems-Atlas.md as the purchase/config/queue gateway, preserve exact buy-menu and refund branch matrices there, route DR-33 counter/token patch detail to Factory-Queue-Counter-Token-Cleanup.md, and avoid turning the risk table into a second branch-status register.",
+      "updated": "2026-06-14T07:18:06+02:00"
+    },
     {
       "lane": "ai-headless-gateway-fps-route-prune",
       "owner": "Codex",

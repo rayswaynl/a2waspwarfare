@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T07:08:45+02:00",
+  "generatedAt": "2026-06-14T07:18:06+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "ai-headless-gateway-fps-route-prune",
-      "currentWork": "Published docs-only AI/headless gateway FPS route prune: AI-Headless-And-Performance.md and AI-Runtime-HC-Loop-Map.md now name docs head ca028bff as the visible AI/HC source-continuity checkpoint, and server-FPS publisher branch detail routes to Server-Gameplay-Runtime-Atlas.md, Hosted-Server-FPS-Loop-Sleep.md, Performance-Opportunity-Sweep.md, Testing-Debugging-And-Release-Workflow.md and Source-Fix-Propagation-Queue.md instead of being repeated in the broad AI gateway. Targeted source diffs confirmed no checked Chernarus or maintained Vanilla AI/HC/performance source-path drift from b9e80da0 / ee383941 through ca028bff. No gameplay source changed.",
+      "currentLane": "factory-purchase-atlas-route-prune",
+      "currentWork": "Published docs-only Factory purchase atlas route prune: Factory-And-Purchase-Systems-Atlas.md now names docs head 3b911594 as the visible factory/purchase source-continuity checkpoint, and repeated buy-menu price/key, destroyed-factory refund and queue-risk branch proof routes to the atlas matrices plus Factory-Queue-Counter-Token-Cleanup.md instead of being restated in surrounding prose and the risk table. Targeted source diffs confirmed no checked Chernarus or maintained Vanilla factory/purchase source-path drift from 8d611092 through 3b911594. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "factory-purchase-atlas-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Factory-And-Purchase-Systems-Atlas.md now names docs head 3b911594 as the current factory/purchase source-continuity checkpoint. Checked Chernarus and maintained Vanilla factory/purchase source paths are unchanged from 8d611092 through 3b911594; stable cf2a6d6a, release a96fdda2, Miksuu b8389e74, perf 0076040f and BuyMenu/EASA QoL a66d4691 refs still resolve. Repeated buy-menu price/key, destroyed-factory refund and queue-risk proof now routes to the atlas matrices and Factory-Queue-Counter-Token-Cleanup.md instead of being repeated in section prose/risk rows. No gameplay source changed."
+    },
     {
       "lane": "ai-headless-gateway-fps-route-prune",
       "owner": "Codex",

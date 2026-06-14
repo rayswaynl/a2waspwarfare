@@ -1000,3 +1000,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Rechecked current docs head `ca028bff`: targeted `git diff --name-only ee383941..HEAD` checks returned no changes for checked AI/HC/performance paths, and broader `git diff --name-only b9e80da0..HEAD` checks returned no mission-source changes under checked Chernarus or maintained Vanilla roots.
 - Refreshed [AI, headless and performance](AI-Headless-And-Performance) and [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) so `ca028bff` is the visible AI/HC source-continuity checkpoint while older AI hashes remain line-anchor provenance.
 - Pruned repeated server-FPS publisher detail from the AI gateway: publisher branch shape, hosted/listen no-spin proof and smoke wording now route to [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas#branch-scope-for-source-anchors), [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Performance opportunity sweep](Performance-Opportunity-Sweep), [Testing workflow](Testing-Debugging-And-Release-Workflow) and [Source fix propagation queue](Source-Fix-Propagation-Queue#validation-matrix). No gameplay source changed.
+
+## 2026-06-14T07:18:06+02:00 - Codex - Factory purchase atlas route prune
+
+- Claimed `factory-purchase-atlas-route-prune` as a docs-only Factory and purchase atlas cleanup pass, with no gameplay source edits.
+- Rechecked current docs head `3b911594`: targeted `git diff --name-only 8d611092..HEAD` checks returned no changes for checked Chernarus and maintained Vanilla factory/purchase source paths.
+- Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74`, `perf/quick-wins` `0076040f` and `feat/buymenu-easa-qol` `a66d4691`.
+- Refreshed [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) so `3b911594` is the visible source-continuity checkpoint and pruned repeated buy-menu price/key, destroyed-factory refund and queue-risk prose by routing to the existing atlas matrices plus [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup). No gameplay source changed.
