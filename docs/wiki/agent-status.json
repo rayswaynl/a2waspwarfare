@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T03:56:15+02:00",
+  "generatedAt": "2026-06-14T04:06:51+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only construction/CoIn atlas current-source route: Construction-And-CoIn-Systems-Atlas.md now names docs checkout 4bd37b98, stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf/quick-wins 0076040f; repeated auto-wall, StationaryDefense, SmallSite/MediumSite and salvage branch prose is routed through canonical construction/queue pages. No gameplay source changed.",
+      "currentWork": "Published docs-only upgrades/research current-source route: Upgrades-And-Research-Atlas.md and AI-Commander-Autonomy-Audit.md now name docs checkout d4cfef80 for upgrade source scope while preserving the e785f1e9 line-anchor provenance; Feature-Status-Register.md and Source-Fix-Propagation-Queue.md align AI debit and stale upgrade-dialog rows. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "upgrades-research-current-source-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Upgrades-And-Research-Atlas.md and AI-Commander-Autonomy-Audit.md now name docs checkout d4cfef80 for current upgrade source scope, while documenting the cited upgrade files are unchanged from the earlier e785f1e9 line-anchor snapshot. The branch split remains: docs/Miksuu/perf keep swapped AI upgrade debit and stale RscMenu_Upgrade, stable/release/upgrade-queue fix debit order and remove the stale dialog, and feat/ai-commander fixes cost-index lookup only in Chernarus. Feature-Status-Register.md and Source-Fix-Propagation-Queue.md now align. No gameplay source changed."
+    },
     {
       "lane": "construction-coin-atlas-current-source-route",
       "owner": "Codex",

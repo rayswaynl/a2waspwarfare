@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T03:56:15+02:00",
+  "generatedAt": "2026-06-14T04:06:51+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,44 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "upgrades-research-current-source-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Upgrades-And-Research-Atlas.md",
+        "AI-Commander-Autonomy-Audit.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_UpgradeMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestUpgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ProcessUpgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AI_Com_Upgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle",
+        "origin/feat/ai-commander",
+        "origin/feat/upgrade-queue-stacking"
+      ],
+      "outputs": [
+        "Updated Upgrades-And-Research-Atlas.md and AI-Commander-Autonomy-Audit.md to name docs checkout d4cfef80 and preserve e785f1e9 as line-anchor provenance.",
+        "Confirmed docs/Miksuu/perf still keep swapped AI upgrade debit and stale RscMenu_Upgrade, while stable/release/upgrade-queue fix debit order and remove the stale dialog.",
+        "Aligned Feature-Status-Register.md and Source-Fix-Propagation-Queue.md for the refreshed upgrade source scope.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future upgrade work should keep Upgrades-And-Research-Atlas.md as the player/server upgrade gateway, AI-Commander-Autonomy-Audit.md as the AI debit owner, and Support-Specials-And-Tactical-Modules-Atlas.md as the upgrade-sync tuple owner.",
+      "updated": "2026-06-14T04:06:51+02:00"
+    },
     {
       "lane": "construction-coin-atlas-current-source-route",
       "owner": "Codex",
