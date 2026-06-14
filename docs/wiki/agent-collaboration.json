@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T04:32:40+02:00",
+  "generatedAt": "2026-06-14T04:44:00+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,43 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "pr8-release-current-branch-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "PR-Cleanup-And-Integration-Lab.md",
+        "Testing-Debugging-And-Release-Workflow.md",
+        "Feature-Status-Register.md",
+        "agent-release-readiness.json",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_DelegateTownAI.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_DelegateAIStaticDefence.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_CreateUnit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_CreateUnitForStaticDefence.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_StationaryDefense.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTeamArtillery.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "origin/release/2026-06-feature-bundle",
+        "miksuu/master",
+        "origin/perf/quick-wins"
+      ],
+      "outputs": [
+        "Updated PR-Cleanup-And-Integration-Lab.md so a96fdda2 is the current release/PR8 head and 7195b331 / 7ff18c49 are historical checkpoints.",
+        "Updated Testing-Debugging-And-Release-Workflow.md and Feature-Status-Register.md with current HC delegation and commander-built ARTY smoke gates.",
+        "Updated agent-release-readiness.json so stable cf2a6d6a and release a96fdda2 are recorded as carrying marker-based commander-built ARTY discovery in both maintained roots.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future release testing should smoke commander-built artillery discovery, HC town/static delegation, static-defense update-back/failover expectations and long-session cleaner/restorer behavior on the exact release branch under test.",
+      "updated": "2026-06-14T04:44:00+02:00"
+    },
     {
       "lane": "economy-authority-current-branch-route",
       "owner": "Codex",
