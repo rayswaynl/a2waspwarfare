@@ -98,7 +98,7 @@ Presence in the tree does not always mean enabled in the current mission mode. P
 | `Client/Module/EASA`, `Client/Module/CM` | Live but config-gated. | Countermeasures are also gated by vanilla/OA mode. |
 | `Server/Module/AntiStack` | Compiled but optional. | Runtime loops are dormant when `WFBE_C_ANTISTACK_ENABLED == 0`; external DB dependency is still live-server sensitive when enabled. |
 | `Server/Module/MASH` | Branch-sensitive: docs/Miksuu/perf keep local MASH respawn plus orphaned marker relay; stable/release remove the MASH deploy/init/module path while retaining some config class residues. | Do not infer MASH behavior from the module folder alone. Use [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas#mash-split-live-respawn-dead-marker-relay) for branch scope. |
-| `Server/Support/Support_Paratroopers.sqf` | Drop flow live; marker registration is branch-scoped and smoke-pending. | Docs checkout, stable and release register `HandleParatrooperMarkerCreation` in both maintained roots; Miksuu omits it; perf fixes Chernarus only. Use [Source fix propagation queue](Source-Fix-Propagation-Queue#current-branch-scope-2026-06-13) and [Paratrooper marker revival](Paratrooper-Marker-Revival). |
+| `Server/Support/Support_Paratroopers.sqf` | Drop flow live; marker registration is branch-scoped and smoke-pending. | Docs checkout, stable and release register `HandleParatrooperMarkerCreation` in both maintained roots; Miksuu omits it; perf fixes Chernarus only. Use [Source fix propagation queue](Source-Fix-Propagation-Queue#current-branch-scope-2026-06-14) and [Paratrooper marker revival](Paratrooper-Marker-Revival). |
 
 ## High-Risk Edit Areas
 

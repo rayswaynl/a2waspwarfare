@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T03:39:38+02:00",
+  "generatedAt": "2026-06-14T03:56:15+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only current source status snapshot route: Current-Source-Status-Snapshot.md now names docs checkout 76674ae4, stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf/quick-wins 0076040f; older 2026-06-03/05 matrices are marked historical; Source-Fix-Propagation-Queue.md no longer overstates stable/release as carrying the supply player-list index fix. No gameplay source changed.",
+      "currentWork": "Published docs-only construction/CoIn atlas current-source route: Construction-And-CoIn-Systems-Atlas.md now names docs checkout 4bd37b98, stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf/quick-wins 0076040f; repeated auto-wall, StationaryDefense, SmallSite/MediumSite and salvage branch prose is routed through canonical construction/queue pages. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "construction-coin-atlas-current-source-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Construction-And-CoIn-Systems-Atlas.md now names docs checkout 4bd37b98 and refreshes construction/CoIn branch scope across stable origin/master cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf/quick-wins 0076040f. It reduces repeated auto-wall, StationaryDefense, SmallSite/MediumSite and salvage branch prose, refreshes Construction-Logic-List-Cleanup.md with the same refs, and aligns Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and Function-And-Module-Index.md to the 2026-06-14 source-fix anchor. No gameplay source changed."
+    },
     {
       "lane": "current-source-status-snapshot-route",
       "owner": "Codex",

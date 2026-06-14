@@ -35,11 +35,11 @@ Wave P also checked generated/parallel mission copies: source Chernarus, maintai
 
 | Root / branch | SmallSite cleanup | MediumSite cleanup | Practical meaning |
 | --- | --- | --- | --- |
-| Current docs/source Chernarus | `Construction_SmallSite.sqf:98-99` says remove, then appends `_nearLogic` again. | `Construction_MediumSite.sqf:113-114` removes `_nearLogic`. | Patch-ready; source is still unpatched. |
-| Maintained Vanilla Takistan | Same SmallSite add/add shape. | Same MediumSite add/remove shape. | Propagate deliberately after Chernarus source fix. |
-| Stable `origin/master` | Same in both maintained roots. | Same in both maintained roots. | No stable-branch rescue exists. |
-| Miksuu upstream `miksuu/master` | Same in both maintained roots. | Same in both maintained roots. | No upstream rescue exists. |
-| `origin/release/2026-06-feature-bundle` | Same in both maintained roots. | Same in both maintained roots. | Release bundle still carries the one-line SmallSite cleanup debt. |
+| Docs checkout `4bd37b98` Chernarus | `Construction_SmallSite.sqf:98-99` says remove, then appends `_nearLogic` again. | `Construction_MediumSite.sqf:113-114` removes `_nearLogic`. | Patch-ready; source is still unpatched. |
+| Maintained Vanilla Takistan at `4bd37b98` | Same SmallSite add/add shape. | Same MediumSite add/remove shape. | Propagate deliberately after Chernarus source fix. |
+| Stable `origin/master` `cf2a6d6a` | Same in both maintained roots. | Same in both maintained roots. | No stable-branch rescue exists. |
+| Miksuu upstream `b8389e74` and `origin/perf/quick-wins` `0076040f` | Same in both maintained roots. | Same in both maintained roots. | No upstream/perf rescue exists. |
+| `origin/release/2026-06-feature-bundle` `a96fdda2` | Same in both maintained roots. | Same in both maintained roots. | Release bundle still carries the one-line SmallSite cleanup debt. |
 
 ## Why It Matters
 
@@ -112,7 +112,7 @@ Keep probes out of the final source patch unless the owner wants permanent debug
 - MediumSite behavior is unchanged.
 - No source claims are made about visible player impact until Arma 2 OA smoke records it.
 - Docs stay routed through this page, [Construction/CoIn atlas](Construction-And-CoIn-Systems-Atlas), [Feature status](Feature-Status-Register) and [Source fix propagation queue](Source-Fix-Propagation-Queue).
-- Branch check 2026-06-05 found no rescue branch: current source/Vanilla, stable `origin/master`, Miksuu upstream and `origin/release/2026-06-feature-bundle` all keep SmallSite add/add while MediumSite removes.
+- Branch check 2026-06-14 found no rescue branch: docs checkout `4bd37b98`, stable `origin/master` `cf2a6d6a`, Miksuu upstream `b8389e74`, `origin/perf/quick-wins` `0076040f` and `origin/release/2026-06-feature-bundle` `a96fdda2` all keep SmallSite add/add while MediumSite removes in checked maintained roots.
 
 ## Continue Reading
 

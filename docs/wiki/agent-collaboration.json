@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T03:39:38+02:00",
+  "generatedAt": "2026-06-14T03:56:15+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,45 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "construction-coin-atlas-current-source-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Construction-And-CoIn-Systems-Atlas.md",
+        "Construction-Logic-List-Cleanup.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Function-And-Module-Index.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_StationaryDefense.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTeamArtillery.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/CoIn/coin_interface.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestAutoWallConstructinChange.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_SmallSite.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_MediumSite.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/Skill/Skill_Salvage.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updatesalvage.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Updated Construction-And-CoIn-Systems-Atlas.md to name docs checkout 4bd37b98 and current branch refs.",
+        "Reduced repeated branch prose by routing auto-wall, StationaryDefense, SmallSite/MediumSite and salvage detail through canonical construction/queue pages.",
+        "Updated Construction-Logic-List-Cleanup.md and aligned Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and Function-And-Module-Index.md to the 2026-06-14 source-fix anchor.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future construction work should keep Construction-And-CoIn-Systems-Atlas.md as the gateway, use Construction-Logic-List-Cleanup.md for SmallSite/MediumSite patch shape, and recheck exact branch refs before citing stable/release/Miksuu/perf construction behavior.",
+      "updated": "2026-06-14T03:56:15+02:00"
+    },
     {
       "lane": "current-source-status-snapshot-route",
       "owner": "Codex",
