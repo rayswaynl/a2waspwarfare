@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T08:09:25+02:00",
+  "generatedAt": "2026-06-14T08:22:52+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,38 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "victory-endgame-atlas-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Victory-And-Endgame-Atlas.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Dead-Code-And-Stale-Code-Register.md",
+        "Server-Init-Bind-Cleanup.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_victory_threeway.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_LogGameEnd.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/LogGameEnd.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf"
+      ],
+      "outputs": [
+        "Refreshed Victory-And-Endgame-Atlas.md so docs head a0a86da2 is the visible source-continuity checkpoint for checked victory/endgame paths.",
+        "Pruned stale LogGameEnd and server-init duplicate-bind branch proof by routing to Dead-Code-And-Stale-Code-Register.md and Server-Init-Bind-Cleanup.md.",
+        "Added a compact victory/endgame patch-ready row to Source-Fix-Propagation-Queue.md.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future victory/endgame atlas edits should preserve winner/loser semantics and smoke checklist locally, route stale PVF logger status to Dead-Code-And-Stale-Code-Register.md, route duplicate init binds to Server-Init-Bind-Cleanup.md, and keep Source-Fix-Propagation-Queue.md as the compact code-owner row.",
+      "updated": "2026-06-14T08:22:52+02:00"
+    },
     {
       "lane": "commander-hq-atlas-route-prune",
       "owner": "Codex",

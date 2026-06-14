@@ -1042,3 +1042,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Rechecked current docs head `8c3942d2`: targeted `git diff --name-only f82a9127..HEAD` and `e2c9f6ed..HEAD` checks returned no changes for checked Chernarus and maintained Vanilla commander vote, reassignment, HQ score, disconnect, Objective Ping/task and base-area/HQ authority source paths.
 - Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74`, `perf/quick-wins` `0076040f` and `feat/ai-commander` `c20ce153`.
 - Refreshed [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) so `8c3942d2` is the visible source-continuity checkpoint. Pruned repeated manual-reassignment proof into [Commander reassignment call shape](Commander-Reassignment-Call-Shape) and [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook), added missing commander-disconnect and HQ build/base-area source anchors, and aligned [Feature status](Feature-Status-Register) plus [Source fix propagation queue](Source-Fix-Propagation-Queue). No gameplay source changed.
+
+## 2026-06-14T08:22:52+02:00 - Codex - Victory/endgame atlas route prune
+
+- Claimed `victory-endgame-atlas-route-prune` as a docs-only Victory/endgame cleanup pass, with no gameplay source edits.
+- Rechecked current docs head `a0a86da2`: targeted `git diff --name-only 2f2132f8..HEAD` checks returned no changes for checked Chernarus victory constants, victory loop, live/stale loggers and server-init bind source paths.
+- Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `perf/quick-wins` `0076040f`.
+- Refreshed [Victory/endgame atlas](Victory-And-Endgame-Atlas) so `a0a86da2` is the visible source-continuity checkpoint. Pruned stale `LogGameEnd` and server-init duplicate-bind branch proof into [Dead/stale code register](Dead-Code-And-Stale-Code-Register) plus [Server init bind cleanup](Server-Init-Bind-Cleanup), and added a compact patch-ready row to [Source fix propagation queue](Source-Fix-Propagation-Queue). No gameplay source changed.

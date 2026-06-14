@@ -2,7 +2,7 @@
 
 > Canonical developer map for match end detection, winner/loser semantics, client outro flow, win-stat persistence and the patch-ready victory correctness risks. This page turns [Deep-review findings](Deep-Review-Findings) DR-11, DR-12, DR-13 and DR-36 into a practical source-backed implementation guide.
 
-Source anchors below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/` in the docs checkout unless a section names another ref.
+Source anchors below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/` in the docs checkout unless a section names another ref. Current source-continuity checkpoint: docs head `a0a86da2`; targeted diffs from the earlier victory checkpoint `2f2132f8` to `HEAD` over the checked Chernarus endgame/init/logger paths returned no source changes.
 
 ## How To Use This Atlas
 
@@ -17,14 +17,14 @@ Source anchors below are relative to `Missions/[55-2hc]warfarev2_073v48co.cherna
 
 ## Current Branch Scope
 
-Source refreshed: 2026-06-14. Checked refs: docs checkout `2f2132f8`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and release `origin/release/2026-06-feature-bundle` `a96fdda2`.
+Source refreshed: 2026-06-14. Checked refs: docs checkout `a0a86da2` (source-unchanged from `2f2132f8` for the paths below), stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and release `origin/release/2026-06-feature-bundle` `a96fdda2`.
 
 | Scope | Current evidence | Development meaning |
 | --- | --- | --- |
 | Default victory condition | All checked Chernarus and maintained Vanilla roots keep the same `_victory == 0` detection shape: `server_victory_threeway.sqf:3` reads `WFBE_C_VICTORY_THREEWAY`, `:23` mixes elimination/all-towns precedence, `:24` broadcasts `HandleSpecial ["endgame", sideID]`, `:31` writes `WF_Winner`, `:33` sets `WFBE_GameOver`, `:41` calls `WFBE_CO_FNC_LogGameEnd`, and `:56/:88` call `failMission "END1"`. | Winner/loser inversion, full-condition guard and no-break/double-fire remain patch-ready across every checked maintained root. |
 | Victory constants | Docs/Miksuu/perf keep `WFBE_C_VICTORY_THREEWAY` at `Common/Init/Init_CommonConstants.sqf:401-402`; stable uses `:421-422`; release uses `:417-418`. | Cite the target branch when discussing line refs. Non-zero victory mode still needs an owner decision or implementation. |
-| Stale `Server/PVFunctions/LogGameEnd.sqf` copy | Present in docs checkout, Miksuu and perf maintained roots; absent in stable `origin/master` and release maintained roots. | Do not restore or wire this copy where it has already been removed; where present, retire/delete it as DR-13 cleanup. |
-| Server init duplicate binds | Docs checkout and Miksuu keep old live duplicate binds in Chernarus and Vanilla (`Init_Server.sqf:64,89`, `:69,91`, `:83,93`). Stable and release keep one live bind per function in both maintained roots. Perf fixes Chernarus but leaves Vanilla old-shape. | Treat duplicate-bind cleanup as branch-split. Use [Server init bind cleanup](Server-Init-Bind-Cleanup) before claiming a branch still has or already fixed DR-43b. |
+| Stale `Server/PVFunctions/LogGameEnd.sqf` copy | Present in docs checkout, Miksuu and perf maintained roots; absent in stable `origin/master` and release maintained roots. | Do not restore or wire this copy where it has already been removed; keep exact branch/removal proof in [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [Server init bind cleanup](Server-Init-Bind-Cleanup). |
+| Server init duplicate binds | Docs checkout and Miksuu keep old live duplicate binds in Chernarus and Vanilla (`Init_Server.sqf:64,89`, `:69,91`, `:83,93`). Stable and release keep one live bind per function in both maintained roots. Perf fixes Chernarus but leaves Vanilla old-shape. | Treat duplicate-bind cleanup as branch-split. Use [Server init bind cleanup](Server-Init-Bind-Cleanup) for the authoritative DR-43b matrix. |
 
 ## Why This Matters
 
@@ -57,7 +57,7 @@ The important split:
 
 `initJIPCompatible.sqf` initializes both `gameOver` and `WFBE_GameOver` to `false` (`initJIPCompatible.sqf:84-85`). Many client and server loops use one or the other as their stop condition.
 
-In the docs checkout, `Init_Server.sqf` compiles the live logger twice, both times to the same file (`Init_Server.sqf:64,89`). This is harmless today because the second bind overwrites the same code, but it is a maintenance trap and is tracked separately as the DR-43 duplicate-bind cleanup. Branch status is split: docs/Miksuu keep the duplicate in both maintained roots, stable/release have one live bind per function in both maintained roots, and perf fixes Chernarus only. Keep exact propagation notes on [Server init bind cleanup](Server-Init-Bind-Cleanup).
+In the docs checkout, `Init_Server.sqf` compiles the live logger twice, both times to the same file (`Init_Server.sqf:64,89`). This is harmless today because the second bind overwrites the same code, but it is a maintenance trap and is tracked separately as the DR-43 duplicate-bind cleanup. Keep exact branch propagation notes on [Server init bind cleanup](Server-Init-Bind-Cleanup).
 
 After town initialization, the server starts the victory loop:
 
@@ -181,7 +181,7 @@ AntiStack nuance from Wave S: `mainLoop.sqf` and `flushLoop.sqf` stop on `WFBE_G
 
 ## Stale Duplicate Logger
 
-`Server/PVFunctions/LogGameEnd.sqf` is present in the docs checkout, Miksuu and perf maintained roots, but is absent in stable `origin/master` and release maintained roots. Where present, it is not registered by `Common/Init/Init_PublicVariables.sqf`. `SQF-Code-Atlas` already notes the live compile uses `Server/Functions/Server_LogGameEnd.sqf`.
+`Server/PVFunctions/LogGameEnd.sqf` is present in the docs checkout, Miksuu and perf maintained roots, but is absent in stable `origin/master` and release maintained roots. Where present, it is not registered by `Common/Init/Init_PublicVariables.sqf`. `SQF-Code-Atlas` already notes the live compile uses `Server/Functions/Server_LogGameEnd.sqf`; the exact branch-removal matrix lives in [Dead/stale code register](Dead-Code-And-Stale-Code-Register) and [Server init bind cleanup](Server-Init-Bind-Cleanup).
 
 The duplicate is dangerous archaeology:
 
@@ -199,8 +199,8 @@ Do not wire this PVF copy. Delete or mark it retired where present, and preserve
 | P1 correctness | `!WFBE_GameOver` only guards the all-towns clause. HQ/factory elimination can fire again after gameOver within the same side loop. | `server_victory_threeway.sqf:23`, DR-36. | Parenthesize the full condition or compute booleans, then guard the combined result with `!WFBE_GameOver`. |
 | P1 correctness | Side loop has no break after a winner is recorded. Same-tick eliminations can double-broadcast and double-log. | `server_victory_threeway.sqf:12-43`, DR-36. | Exit the side loop and/or outer loop once `gameOver` is set. |
 | Owner decision | Non-zero `WFBE_C_VICTORY_THREEWAY` skips the only detection block. | `CommonConstants.sqf:401`, `server_victory_threeway.sqf:3,11`, DR-12. | Implement non-default mode or keep it undocumented/disabled with a clear guardrail. |
-| Cleanup | Stale `Server/PVFunctions/LogGameEnd.sqf` is buggy if ever wired. It is present in docs/Miksuu/perf and absent in stable/release maintained roots. | `PVFunctions/LogGameEnd.sqf:9-43`, DR-13, [Current branch scope](#current-branch-scope). | Delete/retire the duplicate where present; preserve branches where it is already gone. |
-| Cleanup | `WFBE_CO_FNC_LogGameEnd` is compiled twice in server init only on some refs/roots. | Docs checkout `Init_Server.sqf:64,89`, DR-43, [Server init bind cleanup](Server-Init-Bind-Cleanup). | De-duplicate live binds where still present; do not reintroduce duplicates into stable/release or perf Chernarus. |
+| Cleanup | Stale `Server/PVFunctions/LogGameEnd.sqf` is buggy if ever wired. | `PVFunctions/LogGameEnd.sqf:9-43`, DR-13, [Dead/stale code register](Dead-Code-And-Stale-Code-Register). | Delete/retire the duplicate where present; preserve stable/release branches where it is already gone. |
+| Cleanup | `WFBE_CO_FNC_LogGameEnd` is compiled twice in server init only on some refs/roots. | Docs checkout `Init_Server.sqf:64,89`, DR-43, [Server init bind cleanup](Server-Init-Bind-Cleanup). | De-duplicate live binds where still present; do not reintroduce duplicates into branches that already carry one live bind. |
 | Semantics risk | Client endgame script expects loser side, while server variable name `WF_Winner` implies winner. | `Client_EndGame.sqf:3-13`, `server_victory_threeway.sqf:24,31-41`. | Pick explicit payload naming and keep server broadcast, client stats/camera and logger aligned. |
 
 ## Safer Patch Shape
@@ -240,4 +240,4 @@ Do not combine this with PVF dispatcher hardening or AntiStack DB wrapper harden
 
 Previous: [Towns, camps and capture atlas](Towns-Camps-And-Capture-Atlas) | Next: [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas)
 
-Main map: [Home](Home) | Evidence log: [Deep-review findings](Deep-Review-Findings) | Patch order: [Hardening roadmap](Hardening-Implementation-Roadmap)
+Main map: [Home](Home) | Evidence log: [Deep-review findings](Deep-Review-Findings) | Patch order: [Hardening roadmap](Hardening-Implementation-Roadmap) | Code-owner queue: [Source fix propagation queue](Source-Fix-Propagation-Queue)
