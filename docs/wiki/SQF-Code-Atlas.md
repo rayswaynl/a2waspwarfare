@@ -35,7 +35,7 @@ This page is the source map for compiled SQF entrypoints and runtime handoffs. U
 
 ## Compile Registry Summary
 
-Snapshot refreshed 2026-06-13 from the source mission in this docs checkout, `docs/developer-wiki-index` at `04a60e43`: `Missions/[55-2hc]warfarev2_073v48co.chernarus`, all `.sqf` files, `Select-String -SimpleMatch 'preprocessFile'`. Rechecked 2026-06-14 on docs checkout `b13308ff`: `git diff --quiet 04a60e43..HEAD -- ":(literal)Missions/[55-2hc]warfarev2_073v48co.chernarus"` shows the Chernarus mission source tree is unchanged, and rerunning the count command returns the same numbers below. This deliberately counts `preprocessFile` as a substring of `preprocessFileLineNumbers`, so plain `preprocessFile` is `total - preprocessFileLineNumbers`. See [Deep-review findings](Deep-Review-Findings) DR-5 for why these counts must be regenerated before relying on them.
+Snapshot refreshed 2026-06-13 from the source mission in this docs checkout, `docs/developer-wiki-index` at `04a60e43`: `Missions/[55-2hc]warfarev2_073v48co.chernarus`, all `.sqf` files, `Select-String -SimpleMatch 'preprocessFile'`. Rechecked 2026-06-14 on docs checkout `40c97e74`: `git diff --quiet 04a60e43..HEAD -- ":(literal)Missions/[55-2hc]warfarev2_073v48co.chernarus"` shows the Chernarus mission source tree is unchanged, and rerunning the count command returns the same numbers below. This deliberately counts `preprocessFile` as a substring of `preprocessFileLineNumbers`, so plain `preprocessFile` is `total - preprocessFileLineNumbers`. See [Deep-review findings](Deep-Review-Findings) DR-5 for why these counts must be regenerated before relying on them.
 
 This snapshot is branch-local. Stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, perf `0076040f` and release `a96fdda2` have branch/root-specific server-init differences, so rerun the command on each target branch before using these counts as branch evidence.
 
@@ -191,44 +191,9 @@ Headless init compiles the same delegation helpers used by clients plus `WFBE_CL
 
 ## PVF Contract
 
-`Common/Init/Init_PublicVariables.sqf` builds two command lists and registers `WFBE_PVF_<Command>` event handlers.
+`Common/Init/Init_PublicVariables.sqf` builds the registered PVF command lists and registers `WFBE_PVF_<Command>` event handlers. This atlas keeps only the ownership shape; [Public variable channel index](Public-Variable-Channel-Index#1-registered-pvf-commands) owns the command inventory, branch splits and authority notes.
 
-Server-bound PVF commands:
-
-| Command | Target file |
-| --- | --- |
-| `RequestVehicleLock` | `Server/PVFunctions/RequestVehicleLock.sqf` |
-| `RequestOnUnitKilled` | `Server/PVFunctions/RequestOnUnitKilled.sqf` |
-| `RequestChangeScore` | `Server/PVFunctions/RequestChangeScore.sqf` |
-| `RequestCommanderVote` | `Server/PVFunctions/RequestCommanderVote.sqf` |
-| `RequestNewCommander` | `Server/PVFunctions/RequestNewCommander.sqf` |
-| `RequestStructure` | `Server/PVFunctions/RequestStructure.sqf` |
-| `RequestDefense` | `Server/PVFunctions/RequestDefense.sqf` |
-| `RequestJoin` | `Server/PVFunctions/RequestJoin.sqf` |
-| `RequestMHQRepair` | `Server/PVFunctions/RequestMHQRepair.sqf` |
-| `RequestSpecial` | `Server/PVFunctions/RequestSpecial.sqf` |
-| `RequestTeamUpdate` | `Server/PVFunctions/RequestTeamUpdate.sqf` |
-| `RequestUpgrade` | `Server/PVFunctions/RequestUpgrade.sqf` |
-| `RequestAutoWallConstructinChange` | `Server/PVFunctions/RequestAutoWallConstructinChange.sqf` |
-
-Client-bound PVF commands:
-
-| Command | Target file |
-| --- | --- |
-| `AllCampsCaptured` | `Client/PVFunctions/AllCampsCaptured.sqf` |
-| `AwardBounty` | `Client/PVFunctions/AwardBounty.sqf` |
-| `AwardBountyPlayer` | `Client/PVFunctions/AwardBountyPlayer.sqf` |
-| `CampCaptured` | `Client/PVFunctions/CampCaptured.sqf` |
-| `ChangeScore` | `Client/PVFunctions/ChangeScore.sqf` |
-| `HandleSpecial` | `Client/PVFunctions/HandleSpecial.sqf` |
-| `LocalizeMessage` | `Client/PVFunctions/LocalizeMessage.sqf` |
-| `SetTask` | `Client/PVFunctions/SetTask.sqf` |
-| `SetVehicleLock` | `Client/PVFunctions/SetVehicleLock.sqf` |
-| `TownCaptured` | `Client/PVFunctions/TownCaptured.sqf` |
-| `SetMHQLock` | `Client/PVFunctions/SetMHQLock.sqf` |
-| `Available` | `Client/PVFunctions/Available.sqf` |
-| `RequestBaseArea` | `Client/PVFunctions/RequestBaseArea.sqf` |
-| `NukeIncoming` | `Client/PVFunctions/NukeIncoming.sqf` |
+Docs checkout `40c97e74` keeps the same registry in source Chernarus and maintained Vanilla: 13 server-bound commands at `Common/Init/Init_PublicVariables.sqf:9-21`, `_serverCommandPV` assignment at `:23`, 15 client-bound commands at `:25-40` including `HandleParatrooperMarkerCreation` at `:39`, `_clientCommandPV` assignment at `:42`, and PVEH dispatch wiring at `:44-52`. Stable `origin/master` `cf2a6d6a` and release `a96fdda2` add branch-local `RequestEnqueue` / `RequestDequeue` server PVFs at `:22-23` in both maintained roots; Miksuu `b8389e74`, perf `0076040f` and `feat/ai-commander` `c20ce153` have their own paratrooper-registration split. Use the channel index before citing a command count on any branch.
 
 PVF dispatch mechanics:
 
@@ -238,9 +203,8 @@ PVF dispatch mechanics:
 - Client filtering in `Client_HandlePVF.sqf` supports side destinations and player UID destinations.
 - Both client and server dispatch call `Call Compile _script`, so malformed function names or unsanitized command names would be high-risk.
 
-PV function files outside the standard PVF command lists:
+PV-adjacent files outside the standard registered PVF command lists:
 
-- `Client/PVFunctions/HandleParatrooperMarkerCreation.sqf` exists in current source/Vanilla and `HandleParatrooperMarkerCreation` is now registered in `_clientCommandPV` before `NukeIncoming`. The remaining work is Arma smoke and modded-mission drift; see [Paratrooper marker revival](Paratrooper-Marker-Revival).
 - `Server/PVFunctions/AttackWave.sqf` and `Server/Functions/Server_AttackWave.sqf` are compiled directly in server init rather than through the standard PVF command list (`Init_Server.sqf:94-95`). `WFBE_CO_FNC_LogGameEnd` is wired live to `Server/Functions/Server_LogGameEnd.sqf`; docs checkout/Miksuu duplicate that bind in both maintained roots, stable/release de-duplicate it in both maintained roots, and perf de-duplicates Chernarus while leaving maintained Vanilla old-shape. Use [Server init bind cleanup](Server-Init-Bind-Cleanup) for branch status. The `Server/PVFunctions/LogGameEnd.sqf` twin exists as the DR-13 cleanup target only on docs/Miksuu/perf roots and is absent from stable/release maintained roots; it is not the live compile target.
 
 ## Direct Public Variable Channels

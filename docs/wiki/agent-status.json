@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T04:44:00+02:00",
+  "generatedAt": "2026-06-14T05:00:37+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "pr8-release-current-branch-route",
-      "currentWork": "Published docs-only PR8/release current-branch route: PR-Cleanup-And-Integration-Lab.md now treats release a96fdda2 as current, Testing-Debugging-And-Release-Workflow.md and Feature-Status-Register.md align HC delegation and commander-built ARTY smoke gates, and agent-release-readiness.json no longer says stable/release lack commander ARTY. No gameplay source changed.",
+      "currentLane": "sqf-pvf-registry-route",
+      "currentWork": "Published docs-only SQF/PVF registry route: SQF-Code-Atlas.md now routes registered-command inventory to Public-Variable-Channel-Index.md, the channel index carries branch-aware PVF counts for docs/stable/release/Miksuu/perf/feat-ai, and Networking-And-Public-Variables.md points at that matrix. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "sqf-pvf-registry-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "SQF-Code-Atlas.md now removes copied registered-PVF command tables and routes inventory to Public-Variable-Channel-Index.md. Public-Variable-Channel-Index.md now carries the branch-aware registry matrix: docs checkout 40c97e74 has 13 server / 15 client PVFs in Chernarus and maintained Vanilla; stable cf2a6d6a and release a96fdda2 add RequestEnqueue / RequestDequeue in both maintained roots; Miksuu b8389e74 and feat-ai c20ce153 omit paratrooper registration; perf 0076040f registers paratrooper only in Chernarus. Networking-And-Public-Variables.md, Progress-Dashboard.md and the pruning ledger now align. No gameplay source changed."
+    },
     {
       "lane": "pr8-release-current-branch-route",
       "owner": "Codex",

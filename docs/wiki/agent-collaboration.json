@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T04:44:00+02:00",
+  "generatedAt": "2026-06-14T05:00:37+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,37 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "sqf-pvf-registry-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "SQF-Code-Atlas.md",
+        "Public-Variable-Channel-Index.md",
+        "Networking-And-Public-Variables.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_PublicVariables.sqf",
+        "origin/master",
+        "origin/release/2026-06-feature-bundle",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/feat/ai-commander"
+      ],
+      "outputs": [
+        "Removed duplicated registered-PVF command tables from SQF-Code-Atlas.md and routed command inventory to Public-Variable-Channel-Index.md.",
+        "Added the current branch registry matrix for docs checkout 40c97e74, stable cf2a6d6a, release a96fdda2, Miksuu b8389e74, perf 0076040f and feat-ai c20ce153.",
+        "Aligned Networking-And-Public-Variables.md with the branch-aware registry owner.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future PVF work should edit Public-Variable-Channel-Index.md for command inventory, PVF-Dispatch-Implementation-Playbook.md for dispatcher lookup hardening, and Server-Authority-Migration-Map.md for per-handler sender/authority validation.",
+      "updated": "2026-06-14T05:00:37+02:00"
+    },
     {
       "lane": "pr8-release-current-branch-route",
       "owner": "Codex",

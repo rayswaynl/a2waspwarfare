@@ -10,11 +10,20 @@
 
 ## 1. Registered PVF commands
 
-Registration: `Common/Init/Init_PublicVariables.sqf` — server-bound list `:9-24`, client-bound list `:26-44`, dispatch wiring `:46-53`. Each name `X` -> channel `WFBE_PVF_X` -> pre-compiled `SRVFNC X` / `CLTFNC X` (built in the two registration loops) but dispatched via `Call Compile` (`Server_HandlePVF.sqf:14` / `Client_HandlePVF.sqf:32` on current `cf2a6d6a`). Branch matrix: [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix).
+Registration: `Common/Init/Init_PublicVariables.sqf` builds one server-bound list and one client-bound list, then registers `WFBE_PVF_<Name>` event handlers for each entry. Each name `X` -> channel `WFBE_PVF_X` -> pre-compiled `SRVFNC X` / `CLTFNC X` (built in the two registration loops) but dispatched via `Call Compile` (`Server_HandlePVF.sqf:14`; `Client_HandlePVF.sqf:22` in docs checkout, `:32` on stable/release after HC filtering). Dispatcher hardening branch matrix: [PVF dispatch implementation](PVF-Dispatch-Implementation-Playbook#current-branch-matrix).
+
+### Current branch registry matrix
+
+| Scope checked 2026-06-14 | Registered server PVFs | Registered client PVFs | Practical meaning |
+| --- | --- | --- | --- |
+| Docs checkout `40c97e74` Chernarus + maintained Vanilla | 13 commands at `Init_PublicVariables.sqf:9-21`, `_serverCommandPV` at `:23`. | 15 commands at `:25-40`, `HandleParatrooperMarkerCreation` at `:39`, `_clientCommandPV` at `:42`, dispatch wiring at `:44-52`. | This is the docs/source registry shape. Keep the SQF atlas as an orientation page and use this index for command inventory. |
+| Stable `origin/master` `cf2a6d6a` and release `a96fdda2`, both maintained roots | 15 commands: the docs/source 13 plus `RequestEnqueue` and `RequestDequeue` at `:22-23`, `_serverCommandPV` at `:25`. | 15 commands; `HandleParatrooperMarkerCreation` at `:34`, `_clientCommandPV` at `:44`, dispatch wiring at `:46-54`. | Queue PVFs are stable/release branch-present, not docs-checkout source-present. Smoke them with upgrade-queue/PR8 release testing. |
+| Miksuu `b8389e74` and `origin/feat/ai-commander` `c20ce153`, both maintained roots | 13 commands through `RequestAutoWallConstructinChange` at `:21`, `_serverCommandPV` at `:23`. | 14 commands; `_clientCommandPV` at `:41`; no `HandleParatrooperMarkerCreation` registration found in checked maintained roots. | Do not import docs/stable paratrooper or queue PVF status into these refs. |
+| `origin/perf/quick-wins` `0076040f` | 13 server commands in both maintained roots. | Chernarus adds `HandleParatrooperMarkerCreation` at `:40`; maintained Vanilla keeps the 14-command old shape with `_clientCommandPV` at `:41`. | Perf is Chernarus-only for paratrooper registration and lacks the stable/release queue PVFs. |
 
 Sender-authentication caveat: the server registration callback currently forwards only the value tuple, not the publisher identity, into `WFBE_SE_FNC_HandlePVF` (`Init_PublicVariables.sqf:51-53`), and `Server_HandlePVF.sqf:9-14` only passes the handler parameters onward. Use [Server authority migration map](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix) and `agent-hardening-backlog.jsonl#pvf-handler-sender-authentication` for DR-55 fixes that must authenticate the requester and re-derive side/role/funds per handler.
 
-### 1a. Server-bound (client → server) — 13
+### 1a. Server-bound (client -> server) - 13 in docs/Miksuu/perf/AI-commander, 15 in stable/release
 
 For implementation work after PVF dispatch allowlisting, use the [registered server PVF handler authority matrix](Server-Authority-Migration-Map#registered-server-pvf-handler-authority-matrix). This index owns channel inventory; the authority map owns per-handler validation shape.
 
@@ -33,10 +42,11 @@ For implementation work after PVF dispatch allowlisting, use the [registered ser
 | `RequestTeamUpdate` | team/group property update; mutates behavior/combat/formation/speed from payload-selected team/side |
 | `RequestUpgrade` | side upgrade purchase — **DR-23** (client-authoritative) |
 | `RequestAutoWallConstructinChange` | auto-wall construction toggle; writes one global setting consumed by later SmallSite/MediumSite construction |
+| `RequestEnqueue` / `RequestDequeue` | stable `cf2a6d6a` and release `a96fdda2` upgrade-queue PVFs in both maintained roots; absent from docs checkout `40c97e74`, Miksuu `b8389e74`, perf `0076040f` and `feat/ai-commander` `c20ce153` checks. Source anchors include `GUI_UpgradeMenu.sqf:303,319` on stable and `:285,290` on release plus queue handlers under `Server/PVFunctions/`. Use [PR8 and drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match) for the forged/JIP queue smoke route. |
 
 Scout refinement 2026-06-04, sharpened by DR-55: the thinner registered handlers above are still live hardening surfaces after a future PVF dispatcher fix. In particular, `RequestChangeScore`, `RequestVehicleLock`, `RequestTeamUpdate`, `RequestAutoWallConstructinChange`, `RequestStructure`, `RequestDefense` and `RequestUpgrade` need authenticated requester/side/object/funds validation at the handler/effect layer, not only dispatcher allowlisting.
 
-### 1b. Client-bound (server → client) — 15
+### 1b. Client-bound (server -> client) - 15 where paratrooper markers are registered, 14 on older branch roots
 
 For runtime/JIP behavior after these messages arrive, use the [registered client PVF runtime matrix](Networking-And-Public-Variables#registered-client-pvf-runtime-matrix). This page owns channel inventory; Networking owns client-side effect and replay notes.
 
@@ -53,7 +63,7 @@ For runtime/JIP behavior after these messages arrive, use the [registered client
 | `TownCaptured` | town capture event |
 | `Available` | availability push |
 | `RequestBaseArea` | base-area (client-bound despite the name); moves an object, stamps `avail`/`side` and appends to `wfbe_basearea` with no local validation in the client callback; multiplayer-sensitive HQ deploy edge in [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) |
-| `HandleParatrooperMarkerCreation` | paratrooper-drop unit marker creation; source and maintained Vanilla are propagated, Arma smoke pending in [Paratrooper marker revival](Paratrooper-Marker-Revival) |
+| `HandleParatrooperMarkerCreation` | paratrooper-drop unit marker creation; docs checkout `40c97e74`, stable `cf2a6d6a` and release `a96fdda2` register it in both maintained roots, perf `0076040f` registers Chernarus only, and Miksuu `b8389e74` / `feat/ai-commander` `c20ce153` omit it in checked maintained roots. Arma smoke pending in [Paratrooper marker revival](Paratrooper-Marker-Revival). |
 | `NukeIncoming` | nuke-incoming broadcast name in the PVF list; current launch flow evidence still routes through `NukeIncoming` script, `RequestSpecial ["ICBM", ...]` and `HandleSpecial "icbm-display"` rather than the stale `ICBM_launched` direct channel |
 
 Commander-tag note: `HandleSpecial` also carries commander/HQ message tags such as `commander-vote-start`, `new-commander-assigned`, `hq-setstatus` and `set-hq-killed-eh` through the client-side special router. Use [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook) for the vote/reassignment semantics and [Commander/HQ lifecycle](Commander-HQ-Lifecycle-Atlas) for the broader HQ-status chain before changing those tags.
