@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T10:12:46+02:00",
+  "generatedAt": "2026-06-14T10:22:12+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,9 +20,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "server-runtime-operations-current-source-scope-route-prune",
-      "currentWork": "Published docs-only Server runtime and operations source-scope route prune: Server-Runtime-And-Operations.md now names docs head f74b3822 as the visible server-runtime source-continuity checkpoint, targeted source diffs confirmed no checked server runtime source-path drift from a6785f51 or 4277a2ad through f74b3822, and branch behavior remains routed to Server-Gameplay-Runtime-Atlas.md. No gameplay source changed.",
-      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep architecture, SQF, networking/PV, server runtime, marker/cleanup, gear/EASA, construction/CoIn, lifecycle, respawn, modules, function/module, gameplay, victory/endgame, commander/HQ, town/camp, support and UI gateway pages short and route deep branch matrices to owner pages."
+      "currentLane": "client-ui-atlas-current-source-scope-route-prune",
+      "currentWork": "Published docs-only Client UI atlas current source-scope route prune: Client-UI-Systems-Atlas.md now names docs head 68bd4dc5 as the visible UI/Rsc source-continuity checkpoint, targeted source diffs confirmed no checked UI/Rsc source-path drift from a03a1fb5 or b5219d47 through 68bd4dc5, and detailed UI branch behavior remains routed to owner pages. No gameplay source changed.",
+      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep architecture, SQF, networking/PV, server runtime, client UI, marker/cleanup, gear/EASA, construction/CoIn, lifecycle, respawn, modules, function/module, gameplay, victory/endgame, commander/HQ, town/camp, support and UI gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "client-ui-atlas-current-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Client-UI-Systems-Atlas.md now names docs head 68bd4dc5 as the current UI/Rsc source-continuity checkpoint. Checked Chernarus and maintained Vanilla description.ext, Rsc, Client/GUI, Init_Client.sqf, Client_UpdateRHUD.sqf, client action/marker FSMs and core UI helper paths are unchanged from a03a1fb5 and b5219d47 through 68bd4dc5; stable cf2a6d6a, release a96fdda2, Miksuu b8389e74, perf 0076040f, wf-menu ops 0767c0b5 and BuyMenu/EASA QoL a66d4691 refs still resolve. The atlas remains route-first while resource parity, title-handle, vote/help/router, clickable-text and branch-only UI behavior route to owner pages. No gameplay source changed."
+    },
     {
       "lane": "server-runtime-operations-current-source-scope-route-prune",
       "owner": "Codex",

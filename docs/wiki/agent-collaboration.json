@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T10:12:46+02:00",
+  "generatedAt": "2026-06-14T10:22:12+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,47 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "client-ui-atlas-current-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Client-UI-Systems-Atlas.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Client_UpdateRHUD.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateavailableactions.fsm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateactions.fsm",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updatetownmarkers.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateteamsmarkers.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/description.ext",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Client_UpdateRHUD.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/FSM/updateavailableactions.fsm",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/FSM/updateactions.fsm",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/FSM/updatetownmarkers.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/FSM/updateteamsmarkers.sqf"
+      ],
+      "outputs": [
+        "Refreshed Client-UI-Systems-Atlas.md so current docs head 68bd4dc5 is the visible UI/Rsc source-continuity checkpoint.",
+        "Confirmed targeted diffs from a03a1fb5 and b5219d47 to HEAD over checked Chernarus and maintained Vanilla UI/Rsc source paths returned no changed files.",
+        "Verified branch refs still resolve to stable cf2a6d6a, release a96fdda2, Miksuu b8389e74, perf 0076040f, wf-menu ops 0767c0b5 and BuyMenu/EASA QoL a66d4691.",
+        "Kept Client-UI-Systems-Atlas.md as a route-first atlas while detailed branch behavior remains routed to UI owner pages."
+      ],
+      "handoff": "Closed as docs-published. Future Client UI atlas edits should keep broad UI orientation and current source-scope local, update the current docs-head checkpoint when docs-only batches move, and keep detailed UI branch matrices on resource, title, vote/help/router, clickable-text and branch-only owner pages.",
+      "updated": "2026-06-14T10:22:12+02:00"
+    },
     {
       "lane": "server-runtime-operations-current-source-scope-route-prune",
       "owner": "Codex",
