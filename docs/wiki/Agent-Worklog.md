@@ -1063,3 +1063,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Rechecked current docs head `6ecac3ae`: targeted `git diff --name-only 1f0b9018..HEAD` checks returned no changes for checked Chernarus common/client/server init, commander helper, AI upgrade, MASH, Reaktiv and paratrooper support source paths.
 - Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `perf/quick-wins` `0076040f`.
 - Refreshed [Function and module index](Function-And-Module-Index) so `6ecac3ae` is the visible source-family checkpoint. Pruned repeated commander DR-15, Reaktiv, MASH and paratrooper branch prose into [Commander reassignment call shape](Commander-Reassignment-Call-Shape), [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook), [Modules atlas](Modules-Atlas), [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas), [Source fix propagation queue](Source-Fix-Propagation-Queue) and [Paratrooper marker revival](Paratrooper-Marker-Revival). No gameplay source changed.
+
+## 2026-06-14T08:47:31+02:00 - Codex - Modules atlas current-scope route prune
+
+- Claimed `modules-atlas-current-scope-route-prune` as a docs-only Modules atlas cleanup pass, with no gameplay source edits.
+- Rechecked current docs head `86244c24`: targeted `git diff --name-only 20a19676..HEAD` checks returned no changes for checked Chernarus common/client/server init, unit-creation, module folders and paratrooper support source paths.
+- Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `perf/quick-wins` `0076040f`.
+- Refreshed [Modules atlas](Modules-Atlas) so `86244c24` is the visible module source-continuity checkpoint. Updated the Reaktiv dormant-module table to current docs head and kept exact branch matrices routed to owner pages except for that compact local module table. No gameplay source changed.

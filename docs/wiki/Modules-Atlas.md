@@ -1,6 +1,6 @@
 # Modules Atlas
 
-> Source-refreshed 2026-06-14 on docs checkout `20a19676`. Behavioral map of the `Client/Module/*`, `Server/Module/*` and `Common/Module/*` subsystems. Most modules are config-gated QoL/combat features (gate = a `WFBE_C_MODULE_WFBE_<X>` constant; see [Variable and naming conventions](Variable-And-Naming-Conventions)). Paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/` unless a branch/root note says otherwise. Arma 2 OA 1.64.
+> Source-refreshed 2026-06-14 on docs head `86244c24`; targeted diffs from `20a19676` through `HEAD` over checked module init, unit-creation and module-folder paths return no source changes. Behavioral map of the `Client/Module/*`, `Server/Module/*` and `Common/Module/*` subsystems. Most modules are config-gated QoL/combat features (gate = a `WFBE_C_MODULE_WFBE_<X>` constant; see [Variable and naming conventions](Variable-And-Naming-Conventions)). Exact branch matrices stay on owner pages except the compact Reaktiv dormant-module table below. Paths below are relative to `Missions/[55-2hc]warfarev2_073v48co.chernarus/` unless a branch/root note says otherwise. Arma 2 OA 1.64.
 
 ## How To Use This Atlas
 
@@ -41,7 +41,7 @@ Branch check refreshed 2026-06-14:
 
 | Ref | Maintained-root Reaktiv files | Init caller | Modded copies |
 | --- | --- | --- | --- |
-| docs checkout `20a19676` | Present in source Chernarus and maintained Vanilla (`Reaktiv_Init.sqf:5`, `Reaktiv_OnHandleDamage.sqf:7`) | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
+| docs head `86244c24` (source-unchanged from `20a19676`) | Present in source Chernarus and maintained Vanilla (`Reaktiv_Init.sqf:5`, `Reaktiv_OnHandleDamage.sqf:7`) | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
 | stable `origin/master` `cf2a6d6a` | No maintained-root `Common/Module/Reaktiv` hits | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:320-324` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
 | Miksuu `b8389e74` | Present in source Chernarus and maintained Vanilla | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
 | `perf/quick-wins` `0076040f` | Present in source Chernarus and maintained Vanilla | No Reaktiv call; only ICBM/IRS/CIPHER at `Init_Common.sqf:319-323` | Napf, Eden and Lingor still carry `Common/Module/Reaktiv`. |
