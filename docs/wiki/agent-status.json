@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T09:43:52+02:00",
+  "generatedAt": "2026-06-14T09:53:29+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,9 +20,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "networking-pv-gateway-source-scope-route-prune",
-      "currentWork": "Published docs-only Networking/public-variable gateway source-scope route prune: Networking-And-Public-Variables.md now names docs head 1e16527b as the visible network/PVF source-continuity checkpoint, targeted source diffs confirmed no checked network/PVF/direct-channel source-path drift from 4277a2ad through 1e16527b, and repeated dispatch-time Call Compile proof now routes to canonical owner pages. No gameplay source changed.",
-      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep networking/PV, marker/cleanup, gear/EASA, construction/CoIn, lifecycle, respawn, modules, function/module, gameplay, victory/endgame, commander/HQ, town/camp, support/UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
+      "currentLane": "sqf-atlas-current-source-scope-route-prune",
+      "currentWork": "Published docs-only SQF code atlas source-scope route prune: SQF-Code-Atlas.md now names docs head 94b09c73 as the visible compile/source-continuity checkpoint, the compile count command still returns 738/460/278/22, targeted source diffs confirmed no checked SQF/PVF/init source-path drift from 34212d6a or 4277a2ad through 94b09c73, and repeated PVF no-drift proof now routes to canonical owner pages. No gameplay source changed.",
+      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep SQF, architecture, networking/PV, marker/cleanup, gear/EASA, construction/CoIn, lifecycle, respawn, modules, function/module, gameplay, victory/endgame, commander/HQ, town/camp, support and UI gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "sqf-atlas-current-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "SQF-Code-Atlas.md now names docs head 94b09c73 as the current compile/source-continuity checkpoint while preserving 04a60e43 as compile-count provenance. The count command still returns 738 total preprocessFile references, 460 preprocessFileLineNumbers, 278 plain preprocessFile and 22 commented references. Checked Chernarus and maintained Vanilla SQF/PVF/init source paths are unchanged from 34212d6a and 4277a2ad through 94b09c73; stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf 0076040f refs still resolve. Repeated PVF no-drift proof now routes to the compile summary, Public-Variable-Channel-Index.md, Networking-And-Public-Variables.md and PVF-Dispatch-Implementation-Playbook.md, with explicit Server_HandlePVF.sqf:14 / Client_HandlePVF.sqf:22 anchors added locally. No gameplay source changed."
+    },
     {
       "lane": "networking-pv-gateway-source-scope-route-prune",
       "owner": "Codex",

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T09:43:52+02:00",
+  "generatedAt": "2026-06-14T09:53:29+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,51 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "sqf-atlas-current-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "SQF-Code-Atlas.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/AI_UpdateSupplyTruck.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/serverFpsGUI.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_PublicVariables.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_HandlePVF.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Functions/Client_HandlePVF.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Init/Init_Server.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_Common.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Headless/Init/Init_HC.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/initJIPCompatible.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/AI/AI_UpdateSupplyTruck.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/serverFPS/serverFpsGUI.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/serverFPS/monitorServerFPS.sqf"
+      ],
+      "outputs": [
+        "Refreshed SQF-Code-Atlas.md so current docs head 94b09c73 is the visible compile/source-continuity checkpoint.",
+        "Confirmed compile-count command still returns 738 total preprocessFile references, 460 preprocessFileLineNumbers, 278 plain preprocessFile and 22 commented references.",
+        "Confirmed targeted diffs from 34212d6a and 4277a2ad to HEAD over checked SQF/PVF/init source paths returned no changed files.",
+        "Routed repeated PVF no-drift proof to the compile summary and canonical networking/channel/dispatcher owner pages while adding explicit dispatcher line anchors."
+      ],
+      "handoff": "Closed as docs-published. Future SQF atlas edits should keep SQF-Code-Atlas.md focused on compile/source ownership, keep compile-count provenance separate from branch-status claims, and route PVF/channel, runtime-risk and disabled/deferred compile branch matrices to canonical owner pages.",
+      "updated": "2026-06-14T09:53:29+02:00"
+    },
     {
       "lane": "networking-pv-gateway-source-scope-route-prune",
       "owner": "Codex",
