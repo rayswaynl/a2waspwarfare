@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T03:12:25+02:00",
+  "generatedAt": "2026-06-14T03:30:14+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only assets/config/parameters source-scope route: Assets-Config-Localization-And-Parameters-Atlas.md now names docs checkout 85679dba, adds use-route and current branch-scope tables, routes duplicated parameter caveats to Mission-Parameters-Localization-And-Generated-Build-Inputs.md plus Mission-Start-Parameters-Index.md, and corrects generated version.sqf clean-checkout wording in Mission-Config-Version-Include-Graph.md, Feature-Status-Register.md, Tools-And-Build-Workflow.md, Codebase-Coverage-Ledger.md, Hardening-Implementation-Roadmap.md and Pending-Owner-Decisions.md. No gameplay source changed.",
+      "currentWork": "Published docs-only supply mission architecture branch-scope route: Supply-Mission-Architecture.md now names docs checkout 8a6695b8, separates docs/source truck-only typed scan from stable/release heli-aware supply/cash-run shape, refreshes cooldown and dead-twin branch status across stable cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f and release a96fdda2, and aligns Economy-Towns-And-Supply.md plus Feature-Status-Register.md. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "supply-mission-architecture-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Supply-Mission-Architecture.md now behaves as the supply mission owner page for docs checkout 8a6695b8: it replaces stale PR-vs-master wording with a current branch matrix, splits docs/source truck-only typed command-center scan from stable origin/master cf2a6d6a and release a96fdda2 heli-aware supply/cash-run behavior, records Miksuu b8389e74 and perf/quick-wins 0076040f as broad-scan truck-only, and refreshes cooldown/dead-twin state. Economy-Towns-And-Supply.md and Feature-Status-Register.md now align to that branch scope. No gameplay source changed."
+    },
     {
       "lane": "assets-config-parameters-source-scope-route",
       "owner": "Codex",

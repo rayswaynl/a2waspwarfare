@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T03:12:25+02:00",
+  "generatedAt": "2026-06-14T03:30:14+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,48 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "supply-mission-architecture-branch-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Supply-Mission-Architecture.md",
+        "Economy-Towns-And-Supply.md",
+        "Feature-Status-Register.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionStart.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionCompleted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/supplyMission/supplyMissionCompletedMessage.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Town.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Module/supplyMission/supplyMissionStart.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/supplyMission/supplyMissionCompleted.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Module/supplyMission/supplyMissionCompletedMessage.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Module/supplyMission/isSupplyMissionActiveInTown.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_Town.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Init/Init_Server.sqf",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Updated Supply-Mission-Architecture.md to name docs checkout 8a6695b8 and act as the supply owner page.",
+        "Replaced stale PR-vs-master wording with a current branch matrix and a truck-only versus stable/release supply-heli shape.",
+        "Aligned Economy-Towns-And-Supply.md docs-checkout refs and Feature-Status-Register.md supply cooldown, scan and dead-twin rows.",
+        "Kept gameplay source untouched; supply authority, duplicate-start, cargo validation and Arma truck/heli smoke remain open."
+      ],
+      "handoff": "Closed as docs-published. Future supply work should keep Supply-Mission-Architecture.md as the owner page, target the exact branch before citing scan/cooldown/heli behavior, and keep authority implementation on Supply-Mission-Authority-Cleanup-Playbook.md.",
+      "updated": "2026-06-14T03:30:14+02:00"
+    },
     {
       "lane": "assets-config-parameters-source-scope-route",
       "owner": "Codex",

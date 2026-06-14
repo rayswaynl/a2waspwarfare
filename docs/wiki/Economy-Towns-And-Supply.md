@@ -15,11 +15,11 @@ Town object initialization, capture/SV state, camp capture, marker visibility an
 
 ## Current Branch Scope
 
-Checked 2026-06-13 against the docs checkout `6d05cb5a`, stable `origin/master` `cf2a6d6a`, Miksuu upstream `b8389e74`, `origin/perf/quick-wins` `0076040f` and release `origin/release/2026-06-feature-bundle` `a96fdda2` in the maintained Chernarus and Vanilla mission roots unless noted.
+Checked 2026-06-14 against docs checkout `8a6695b8` (maintained mission roots unchanged from `6d05cb5a`), stable `origin/master` `cf2a6d6a`, Miksuu upstream `b8389e74`, `origin/perf/quick-wins` `0076040f` and release `origin/release/2026-06-feature-bundle` `a96fdda2` in the maintained Chernarus and Vanilla mission roots unless noted.
 
 | Ref | Economy/supply status |
 | --- | --- |
-| Docs checkout `6d05cb5a` | Resource-income guard/display drift remains; supply missions are truck-only; AI commander upgrade debit is still swapped; side-supply arithmetic/reason validation remains open. |
+| Docs checkout `8a6695b8` | Resource-income guard/display drift remains; supply missions are truck-only; AI commander upgrade debit is still swapped; side-supply arithmetic/reason validation remains open. |
 | Stable `origin/master` `cf2a6d6a` | Resource-income guard/display drift remains; supply missions include heli/cash-run state; AI commander upgrade debit order is fixed; side-supply arithmetic/reason validation remains open. |
 | Miksuu upstream `b8389e74` | Same resource-income drift as the docs checkout; truck-only supply mission flow; swapped AI commander upgrade debit; no upstream rescue for side-supply clamp/reason behavior. |
 | `origin/perf/quick-wins` `0076040f` | Same resource-income drift; truck-only supply mission flow; swapped AI commander upgrade debit; Chernarus floors side-supply negatives to zero, but Vanilla keeps the old floor and authority remains open. |
@@ -43,7 +43,7 @@ Branch split:
 
 | Scope | Flow detail |
 | --- | --- |
-| Docs checkout `6d05cb5a`, Miksuu `b8389e74`, perf `0076040f` | Truck-only flow. Cargo is computed in `supplyMissionStart.sqf:32` and stored as `SupplyAmount` at `:34`; server completion reads the vehicle var at `supplyMissionCompleted.sqf:9`, mutates side supply at `:26`, and client reward/score handling runs in `supplyMissionCompletedMessage.sqf:13-14,22`. |
+| Docs checkout `8a6695b8`, Miksuu `b8389e74`, perf `0076040f` | Truck-only flow. Cargo is computed in `supplyMissionStart.sqf:32` and stored as `SupplyAmount` at `:34`; server completion reads the vehicle var at `supplyMissionCompleted.sqf:9`, mutates side supply at `:26`, and client reward/score handling runs in `supplyMissionCompletedMessage.sqf:13-14,22`. |
 | Stable `origin/master` `cf2a6d6a`, release `a96fdda2` | Heli/cash-run flow exists. Cargo still comes from `supplyMissionStart.sqf:61`, with `SupplyByHeli` and `SupplyAmount` stamped at `:80-81`; server completion sends the expanded message at `supplyMissionCompleted.sqf:31`, can award commander cash-run funds at `:37`, or side supply at `:40`; client reward and score run through `supplyMissionCompletedMessage.sqf:16-17,30-32`. |
 
 Routing note: [Supply mission architecture](Supply-Mission-Architecture) owns the cooldown/JIP flow, [Deep-review findings](Deep-Review-Findings) DR-18 owns the `lastSupplyMissionRun` / `LastSupplyMissionRun` casing defect, and [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) owns the patch shape.
@@ -60,7 +60,7 @@ Income system `4` has a display/runtime mismatch in every checked branch: server
 
 | Scope | Source anchors | Development meaning |
 | --- | --- | --- |
-| Docs checkout `6d05cb5a` | Maintained Chernarus and Vanilla both guard the whole payout block at `Server/FSM/updateresources.sqf:31`, apply income-system `4` multiplier at `:42-43`, change side supply at `:49`, pay groups at `:63`, credit AI commander funds at `:67`, and omit the display multiplier in `Client/Functions/Client_GetIncome.sqf:24-28`. | Patch-ready economy correctness debt. Treat as balance-sensitive, not a harmless UI refactor. |
+| Docs checkout `8a6695b8` | Maintained Chernarus and Vanilla both guard the whole payout block at `Server/FSM/updateresources.sqf:31`, apply income-system `4` multiplier at `:42-43`, change side supply at `:49`, pay groups at `:63`, credit AI commander funds at `:67`, and omit the display multiplier in `Client/Functions/Client_GetIncome.sqf:24-28`. | Patch-ready economy correctness debt. Treat as balance-sensitive, not a harmless UI refactor. |
 | Stable `origin/master` `cf2a6d6a` and release `a96fdda2` | Same maintained-root guard/display shape and same line anchors for the checked files. | Stable/release have supply-heli and AI-debit fixes, but not this income/display correction. |
 | Miksuu upstream `b8389e74` and perf `0076040f` | Same maintained-root guard/display shape and same line anchors for the checked files. | No upstream/perf rescue candidate for this income route. |
 
@@ -76,7 +76,7 @@ The runtime reward path is not the old "4 x actual value" player-help rule.
 
 | Scope | Runtime reward |
 | --- | --- |
-| Docs checkout `6d05cb5a`, Miksuu `b8389e74`, perf `0076040f` | Loaded cargo is `floor((town supplyValue) * WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER * supplyUpgradeModifier)` in `supplyMissionStart.sqf:32`; the multiplier is `20` at `Init_CommonConstants.sqf:167`. Completion sends the same `_supplyAmount` to the player message path, where `supplyMissionCompletedMessage.sqf:13-14` grants raw cash and `:22` requests score. |
+| Docs checkout `8a6695b8`, Miksuu `b8389e74`, perf `0076040f` | Loaded cargo is `floor((town supplyValue) * WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER * supplyUpgradeModifier)` in `supplyMissionStart.sqf:32`; the multiplier is `20` at `Init_CommonConstants.sqf:167`. Completion sends the same `_supplyAmount` to the player message path, where `supplyMissionCompletedMessage.sqf:13-14` grants raw cash and `:22` requests score. |
 | Stable `origin/master` `cf2a6d6a`, release `a96fdda2` | Cargo formula remains at `supplyMissionStart.sqf:61`. Player cash reward starts as `_supplyAmount`, then applies `WFBE_C_SUPPLY_HELI_REWARD_MULT` for heli delivery in `supplyMissionCompletedMessage.sqf:16-17`; score uses `_supplyAmount` at `:30-32`. The heli reward constant is `Init_CommonConstants.sqf:173` on stable and `:169` on release. |
 
 The stale copy is in maintained `stringtable.xml:188-193`: `STR_Supplies_2` still tells players they receive "4 x the actual value as cash". The matching `WFBE_C_PLAYERS_SUPPLY_TRUCKS_DELIVERY_FUNDS_COEF = 4` remains defined (`Init_CommonConstants.sqf:268` in the docs checkout, `:285` on stable, `:281` on release), but this source pass found no maintained supply-completion consumer. Treat the stringtable text as player-facing docs debt, not runtime authority.
@@ -109,7 +109,7 @@ Do not use this page as the canonical AI logistics status page. [AI commander au
 
 ## Supply Helicopter Branch Work
 
-Stable `origin/master` `cf2a6d6a` and release `a96fdda2` carry the supply-heli/cash-run source shape; docs checkout `6d05cb5a`, Miksuu `b8389e74` and perf `0076040f` do not. The branch with heli support adds class constants, upgrade gates, `SupplyByHeli`, air bonuses, commander-team cash runs and interdiction-related constants, but it does not change the fundamental client-started/server-completed trust model. See [Current work: supply helicopters PR #1](Current-Work-Supply-Helicopters-PR1) for the original feature route and [Supply mission architecture](Supply-Mission-Architecture#current-branch-matrix) for branch matrix ownership.
+Stable `origin/master` `cf2a6d6a` and release `a96fdda2` carry the supply-heli/cash-run source shape; docs checkout `8a6695b8`, Miksuu `b8389e74` and perf `0076040f` do not. The branch with heli support adds class constants, upgrade gates, `SupplyByHeli`, air bonuses, commander-team cash runs and interdiction-related constants, but it does not change the fundamental client-started/server-completed trust model. See [Current work: supply helicopters PR #1](Current-Work-Supply-Helicopters-PR1) for the original feature route and [Supply mission architecture](Supply-Mission-Architecture#current-branch-matrix) for branch matrix ownership.
 
 Implementation handoff: [Economy authority first cut](Economy-Authority-First-Cut) turns this economy-authority class into the smallest source-backed patch order.
 

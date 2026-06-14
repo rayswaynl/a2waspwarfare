@@ -2,11 +2,11 @@
 
 Page ownership: this page owns the supply-mission flow, cooldown/JIP pattern and state-owner map. [Deep-review findings](Deep-Review-Findings) DR-18 owns the exact cooldown casing defect evidence; [Supply mission authority cleanup](Supply-Mission-Authority-Cleanup-Playbook) owns the implementation-ready patch shape.
 
-Supply missions are one of the most cross-cutting systems in the mission. They touch client actions, skill roles, town cooldown state, server tracking loops, side supply, commander/team funds in PR #1, player rewards, public variables and buy-menu affordances.
+Supply missions are one of the most cross-cutting systems in the mission. They touch client actions, skill roles, town cooldown state, server tracking loops, side supply, commander/team funds on supply-heli/cash-run branches, player rewards, public variables and buy-menu affordances.
 
 Authority summary: the live path is still client-authored at start and partly client-rewarded at completion. Client-side checks are affordance gates; the server tracks return-to-base and writes side supply, but today it accepts client-stamped `SupplyFromTown` / `SupplyAmount` state and the client completion message path handles personal cash/score reward presentation. The completion message channel is therefore gameplay-relevant, not cosmetic: `supplyMissionCompleted.sqf:24-34` broadcasts amount/player data, and `supplyMissionCompletedMessage.sqf:11-23` locally grants player funds and sends a score-change request when the payload player matches the local player.
 
-Current-source scope: the checked-in Chernarus source is still truck-only. A 2026-06-04 supply scout found no `SupplyByHeli` hits under `Missions/[55-2hc]warfarev2_073v48co.chernarus`; `SupplyByHeli` belongs to PR #1 / `origin/feat/supply-helicopter` branch evidence until that branch is merged.
+Current-source scope: rechecked 2026-06-14 against docs checkout `8a6695b8`, stable `origin/master` `cf2a6d6a`, Miksuu upstream `b8389e74`, `origin/perf/quick-wins` `0076040f` and release `origin/release/2026-06-feature-bundle` `a96fdda2`. The docs checkout's maintained mission roots are unchanged from the older `6d05cb5a` source anchors and remain truck-only with no `SupplyByHeli` hits. Stable and release now carry the former supply-heli/cash-run shape in both maintained roots; Miksuu and perf remain truck-only.
 
 ## Current Branch Matrix
 
@@ -14,13 +14,13 @@ Use this table before asking "is supply fixed?" The answer depends on branch, ma
 
 | Scope | Command-center scan | Cooldown key | Dead twin `supplyMissionActive.sqf` | Heli/cash-run state | Development meaning |
 | --- | --- | --- | --- | --- | --- |
-| docs/source Chernarus | Truck-only scan is narrowed to `nearestObjects [..., ["Base_WarfareBUAVterminal"], 80]` in `supplyMissionStarted.sqf:25-28`; 8 m nearby-player scan remains broad by design. | Still split: `Init_Town.sqf:35` seeds lowercase `lastSupplyMissionRun`, while server reads/writes `LastSupplyMissionRun`. | Still compiled as `WFBE_SE_FNC_SupplyMissionActive` in `Init_Server.sqf:81`; live path is `supplyMissionStarted.sqf`. | No `SupplyByHeli` in current source. | Truck scan sub-step is docs/source patched; authority, cooldown casing, dead-twin retirement, player-object rescan and smoke remain open. |
-| maintained Vanilla Takistan | Same narrowed truck-only scan at `supplyMissionStarted.sqf:25-28`. | Same lowercase/uppercase split. | Same compiled dead twin. | No `SupplyByHeli`. | Propagated for scan narrowing and player-list indexing only; not release-complete without Arma smoke. |
-| `origin/master` / `miksuu/master` | Broad 80 m command-center scan remains: `nearestObjects [..., [], 80]` at `supplyMissionStarted.sqf:28` in Chernarus and Vanilla. | Same lowercase/uppercase split. | Compiled dead twin remains. | No `SupplyByHeli`. | Stable/upstream baseline still needs scan narrowing and cleanup; do not cite docs/source patches as stable behavior. |
-| `origin/release/2026-06-feature-bundle` `7195b331` Chernarus | Heli-aware narrowed scan at `supplyMissionStarted.sqf:52,58`: terminal class filter, truck 80 m, heli 400 m plus 2D gate. | Fixed: `Init_Town.sqf:35` seeds `LastSupplyMissionRun`. | Removed/commented in `Init_Server.sqf:82`; `supplyMissionActive.sqf` / `checkCCProximity.sqf` are deleted by release cleanup. | Reads and clears `SupplyByHeli` (`supplyMissionCompleted.sqf:24,40-42`). | Release Chernarus has the most advanced cleanup shape, but still needs server-owned mission state, duplicate-start guard, cargo validation, friendly-CC checks and smoke. |
-| `origin/release/2026-06-feature-bundle` `7195b331` Vanilla | Same heli-aware narrowed scan at `supplyMissionStarted.sqf:52,58`: terminal class filter, truck 80 m, heli 400 m plus 2D gate. | Same `LastSupplyMissionRun` seed/read/write shape as release Chernarus. | Same removed/commented dead twin cleanup as release Chernarus. | Same `SupplyByHeli` read/clear path as release Chernarus. | Current release head now has maintained-root parity for the static supply scan/cooldown/dead-twin cleanup shape, but Arma truck/heli delivery smoke and broader authority cleanup remain pending. |
+| Docs/source Chernarus `8a6695b8` | Truck-only scan is narrowed to `nearestObjects [..., ["Base_WarfareBUAVterminal"], 80]` in `supplyMissionStarted.sqf:25-28`; 8 m nearby-player scan remains broad by design at `:44`. | Still split: `Init_Town.sqf:35` seeds lowercase `lastSupplyMissionRun`, while `isSupplyMissionActiveInTown.sqf:8` reads `LastSupplyMissionRun`. | Still compiled as `WFBE_SE_FNC_SupplyMissionActive` in `Init_Server.sqf:81`; live path is `supplyMissionStarted.sqf`. | No `SupplyByHeli` in current docs/source. | Truck scan sub-step is docs/source patched; authority, cooldown casing, dead-twin retirement, player-object rescan and smoke remain open. |
+| Maintained Vanilla Takistan `8a6695b8` | Same narrowed truck-only scan at `supplyMissionStarted.sqf:25-28` and same broad nearby-player scan at `:44`. | Same lowercase/uppercase split. | Same compiled dead twin. | No `SupplyByHeli`. | Propagated for scan narrowing and player-list indexing only; not release-complete without Arma smoke. |
+| Stable `origin/master` `cf2a6d6a` | Heli-aware narrowed scan in both maintained roots: terminal post-filter at `supplyMissionStarted.sqf:53`, typed truck/heli scan at `:59`, broad nearby-player scan at `:81`. | Fixed: `Init_Town.sqf:35` seeds `LastSupplyMissionRun`; `isSupplyMissionActiveInTown.sqf:8` reads with default `0`. | Removed/commented in `Init_Server.sqf:81`; `supplyMissionActive.sqf` and `checkCCProximity.sqf` are absent from both maintained roots. | `SupplyByHeli` is set at `supplyMissionStart.sqf:80`, read at `supplyMissionCompleted.sqf:26`, and cleared at `:44`; cash-run state is included in the completion message at `:31`. | Stable carries the advanced branch shape in both maintained roots, but server-owned mission state, duplicate-start guard, cargo validation, friendly-CC checks and Arma truck/heli smoke remain pending. |
+| Release `origin/release/2026-06-feature-bundle` `a96fdda2` | Same heli-aware narrowed scan as stable in both maintained roots: `supplyMissionStarted.sqf:53,59,81`. | Same `LastSupplyMissionRun` seed/read/write shape as stable. | Same removed/commented dead twin cleanup as stable. | Same `SupplyByHeli` set/read/clear and cash-run message path as stable. | Release has maintained-root parity for the static supply scan/cooldown/dead-twin cleanup shape, but runtime smoke and broader authority cleanup remain pending. |
+| Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` | Broad 80 m command-center scan remains: `nearestObjects [..., [], 80]` at `supplyMissionStarted.sqf:28` in Chernarus and Vanilla. | Same lowercase/uppercase split as docs/source. | Compiled dead twin remains at `Init_Server.sqf:81`. | No `SupplyByHeli`. | Upstream/perf have not rescued the scan, cooldown or dead-twin cleanup; re-audit before porting any stable/release behavior back. |
 
-## Master Branch Flow
+## Docs Checkout Truck-Only Flow
 
 1. SpecOps receives the supply action in `Client/Module/Skill/Skill_Apply.sqf` when role/module conditions are met.
 2. The action runs `Client/Module/supplyMission/supplyMissionStart.sqf`.
@@ -48,7 +48,7 @@ Use this table before asking "is supply fixed?" The answer depends on branch, ma
 
 ## Fragility Points
 
-- `supplyMissionStart.sqf` on master uses duplicated hardcoded supply-truck classname arrays.
+- `supplyMissionStart.sqf` in the docs checkout uses duplicated hardcoded supply-truck classname arrays.
 - Start is client-authored: the server start handler should revalidate sender ownership, vehicle class, source town, cooldown and duplicate-start state before accepting future hardened starts.
 - The client asks for cooldown and immediately reads local town state; timing/race behavior depends on the server response arriving quickly enough.
 - Cooldown variable casing is a confirmed DR-18 defect: town init seeds `lastSupplyMissionRun`, while server supply code reads/writes `LastSupplyMissionRun`.
@@ -62,43 +62,34 @@ Claude DR-39 split the Perf/JIP status cleanly. The table below is current-docs/
 
 | Item | Status | Development note |
 | --- | --- | --- |
-| `supplyMissionActive.sqf` | Dead twin in current docs/source and stable/upstream; release `7195b331` comments the dead compile at `Init_Server.sqf:82` and removes `supplyMissionActive.sqf` / `checkCCProximity.sqf` in both maintained release roots. It is compiled as `WFBE_SE_FNC_SupplyMissionActive` wherever it remains, but the live path is `supplyMissionStarted.sqf`, which self-registers the `WFBE_Client_PV_SupplyMissionStarted` handler. | Remove the dead compile/function or keep it explicitly marked as retired; do not patch it as the live implementation. |
+| `supplyMissionActive.sqf` | Dead twin in docs/source, Miksuu and perf; stable `cf2a6d6a` and release `a96fdda2` comment the removed compile at `Init_Server.sqf:81` and remove `supplyMissionActive.sqf` / `checkCCProximity.sqf` in both maintained roots. It is compiled as `WFBE_SE_FNC_SupplyMissionActive` wherever it remains, but the live path is `supplyMissionStarted.sqf`, which self-registers the `WFBE_Client_PV_SupplyMissionStarted` handler. | Remove the dead compile/function or keep it explicitly marked as retired; do not patch it as the live implementation. |
 | Command-center detection loop | Source and maintained Vanilla Takistan are patched in the live handler. The live loop still sleeps 3 seconds, but now uses `nearestObjects [pos, ["Base_WarfareBUAVterminal"], 80]` for command-center detection. | Smoke delivery at command centers and no-completion near unrelated objects; authority cleanup remains separate. |
 | Cooldown JIP behavior | Pull-based and useful, but casing/race-sensitive. Clients ask `WFBE_Client_PV_IsSupplyMissionActiveInTown`; server computes from `LastSupplyMissionRun`; clients store the answer locally. | Keep the server accept/reject decision authoritative. The response is broadcast to all clients today, not targeted to the requester, and the starter reads a local cache immediately after requesting it. |
 | Player-object list and object match | Partial source and maintained Vanilla Takistan patch. `playerObjectsList.sqf` now tracks the loop index correctly, but the server does not prune rows on disconnect. In the live completion loop, `_playerObject` is not reset before each proximity/driver scan (`supplyMissionStarted.sqf:3-6,39-53,61-65`), so stale matched player state is an additional smoke target. | Add disconnect cleanup, reset/rescan object matching per loop, and smoke same-UID reconnect plus supply completion lookup. |
 
-## PR #1 Changes
+## Supply-Heli Branch Shape
 
-PR #1 improves the Chernarus source supply system by centralizing supply vehicle types, adding `SupplyByHeli`, changing labels to `LOAD SUPPLIES`, adding air rewards/cash runs/interdiction, and highlighting supply helicopters in buy menus. The supply-heli feature path is additive: it extends the same client-started, server-completed object-var flow rather than replacing the trust model.
+The old PR #1 notes are now historical branch-review context. Current stable `origin/master` `cf2a6d6a` and release `a96fdda2` carry the supply-heli/cash-run implementation in both maintained roots, including guarded `wfbe_supply_killed_eh_set` setup at `supplyMissionStarted.sqf:13-14`, `SupplyByHeli` state at `supplyMissionStart.sqf:80` / `supplyMissionCompleted.sqf:26,44`, heli reward constant `WFBE_C_SUPPLY_HELI_REWARD_MULT` (`Init_CommonConstants.sqf:173` stable, `:169` release), and cash-run completion state at `supplyMissionCompleted.sqf:29-33`. The trust model is still the same client-started, server-completed object-var flow.
 
-Current `origin/feat/supply-helicopter` has already addressed the older handler-stacking review risk with a `wfbe_supply_killed_eh_set` guard before adding the interdiction `Killed` handler. Keep that guarded shape and smoke repeated load/deliver/destroy cycles before merge.
-
-Propagation caveat: the current PR branch has the supply-heli runtime symbols in `Missions/[55-2hc]warfarev2_073v48co.chernarus` only. A branch grep found no `SupplyByHeli`, `WFBE_C_SUPPLY_HELI_TYPES`, `WFBE_C_SUPPLY_HELI_ENABLED` or `wfbe_supply_killed_eh_set` symbols under maintained Vanilla Takistan, so Vanilla propagation remains a merge/release gate.
-
-Merge-scope caveat: current local `origin/feat/supply-helicopter` head is `262dc431` and is broader than this feature path. The branch diff against `origin/master` changes 82 files with 462 insertions and 2056 deletions, including service-menu, Valhalla/low-gear, static-defense/HC, performance-audit and UI/resource changes. Review or isolate those separately before treating the branch as a supply-only merge.
-
-## Master vs PR #1 Authority Matrix
-
-| Area | `master` | PR #1 / `feat/supply-helicopter` |
+| Area | Docs/Miksuu/perf truck-only shape | Stable/release supply-heli shape |
 | --- | --- | --- |
 | Vehicle type | Truck-only hardcoded class checks. | Centralized `WFBE_C_SUPPLY_TRUCK_TYPES`, `WFBE_C_SUPPLY_HELI_TYPES` and `WFBE_C_SUPPLY_VEHICLE_TYPES`. |
 | Start authority | Client chooses eligible vehicle, stamps `SupplyFromTown` / `SupplyAmount`, then notifies server. | Same trust model, plus `SupplyByHeli` and heli class/upgrade gates. |
 | Completion authority | Server loop verifies command-center proximity, then trusts the vehicle object vars. | Same server-completion pattern; reward path branches for truck, heli and cash run. |
-| Reward | Side supply on completion; player message/score path follows completion broadcast. | Heli rewards add the air bonus; heli deliveries at Aircraft Factory upgrade 4 become cash runs that pay commander team funds when a commander exists. Current PR code does not fall back to side supply when no commander team exists. |
-| State cleanup | Completion clears `SupplyAmount` and `SupplyFromTown`. | Current head `262dc431` also writes/reads `SupplyByHeli`, but `supplyMissionCompleted.sqf:40-41` clears only amount/source. Decide whether to clear `SupplyByHeli` or document retained state as harmless because amount is zeroed. |
-| Cooldown | Town object cooldown uses `LastSupplyMissionRun`, with source casing mismatch against seeded `lastSupplyMissionRun`. | Same cooldown foundation; PR does not redesign cooldown ownership. |
+| Reward | Side supply on completion; player message/score path follows completion broadcast. | Heli rewards add the air bonus; heli deliveries at Aircraft Factory upgrade 4 become cash runs that pay commander team funds when a commander exists. |
+| State cleanup | Completion clears `SupplyAmount` and `SupplyFromTown`. | Completion clears `SupplyAmount`, `SupplyFromTown` and `SupplyByHeli` (`supplyMissionCompleted.sqf:42-44` on stable/release). |
+| Cooldown | Town object cooldown uses `LastSupplyMissionRun`, with source casing mismatch against seeded `lastSupplyMissionRun`. | Same ownership pattern, but stable/release seed `LastSupplyMissionRun` and read it with default `0`. |
 | AI logistics | Broken/deferred `UpdateSupplyTruck` / missing `supplytruck.fsm`. | Still deferred; PR covers player-run vehicles, not autonomous AI-flown supply helicopters. |
-| Known PR risk | Not applicable. | Current branch guards the interdiction `Killed` handler; repeated load/deliver/destroy behavior still needs Arma smoke before merge. |
-| Generated target | Truck flow exists in maintained Vanilla. | Supply-heli runtime is not propagated to maintained Vanilla on the current PR branch; run LoadoutManager or explicitly hand-review generated target drift before release. |
+| Runtime risk | Truck flow still needs server-owned cargo/reward hardening and smoke. | Repeated load/deliver/destroy, truck/heli command-center delivery, no-completion near unrelated objects, cash-run semantics and JIP cooldown behavior still need Arma smoke on the target branch. |
 
 ## Future Design Direction
 
 - Keep supply-capable vehicle classes in one constant source of truth.
-- Add an explicit loaded/unloaded state variable to prevent duplicate tracking loops; keep or deliberately extend the PR's `Killed` handler guard.
+- Add an explicit loaded/unloaded state variable to prevent duplicate tracking loops; keep or deliberately extend the guarded `Killed` handler shape on supply-heli branches.
 - Split client affordance, server validation and reward calculation into documented helper functions.
 - Keep the pull-based cooldown request/response pattern for JIP-visible state, but target responses where possible.
 - Add terminal timeouts/fallback behavior to `Common_GetSideSupply` request waits so lost or blocked `SUPPLY_VALUE_REQUESTED` responses cannot hang every caller on that client.
-- Command-center scan narrowing is patched in source and maintained Vanilla Takistan; keep Arma smoke evidence on [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) and [Testing workflow](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack).
+- Command-center scan narrowing is branch-split: docs/source uses the truck-only typed terminal scan, stable/release use the heli-aware typed scan, and Miksuu/perf still use the broad scan. Keep Arma smoke evidence on [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing) and [Testing workflow](Testing-Debugging-And-Release-Workflow#propagated-fix-smoke-pack).
 - Redesign autonomous AI logistics separately from the broken `UpdateSupplyTruck` runtime path (`Init_Server.sqf:36,383`; filename/log label `AI_UpdateSupplyTruck.sqf`) and missing `supplytruck.fsm`.
 
 ## Continue Reading
