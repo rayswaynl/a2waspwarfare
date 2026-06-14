@@ -2,7 +2,7 @@
 
 > Canonical source-backed map for commander selection, commander-client affordances, HQ/MHQ deployment, HQ destruction, wreck tracking and MHQ repair. This page bridges [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas), [AI commander autonomy audit](AI-Commander-Autonomy-Audit), [Commander reassignment call shape](Commander-Reassignment-Call-Shape), [Server authority migration map](Server-Authority-Migration-Map) and [Public variable channel index](Public-Variable-Channel-Index).
 
-Unless a branch/ref is named, source paths below are relative to the docs checkout `f82a9127` Chernarus mission root, `Missions/[55-2hc]warfarev2_073v48co.chernarus/`.
+Unless a branch/ref is named, source paths below are relative to current docs head `8c3942d2` Chernarus mission root, `Missions/[55-2hc]warfarev2_073v48co.chernarus/`. Targeted commander/HQ source paths are unchanged from earlier line-anchor checkpoints `f82a9127` and `e2c9f6ed` through `8c3942d2`; older hashes remain branch-matrix provenance where named.
 
 ## How To Use This Page
 
@@ -17,14 +17,14 @@ Unless a branch/ref is named, source paths below are relative to the docs checko
 
 ## Current Branch Scope
 
-Checked 2026-06-14 against docs checkout `f82a9127`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and `origin/feat/ai-commander` `c20ce153`.
+Checked 2026-06-14 against current docs head `8c3942d2` (targeted commander/HQ source paths unchanged from `f82a9127` and `e2c9f6ed`), stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and `origin/feat/ai-commander` `c20ce153`.
 
 | Surface | Current branch truth | Route |
 | --- | --- | --- |
 | Commander vote semantics | All checked maintained roots keep the `_highest >= _aiVotes` OR `_highest <= _aiVotes` winner condition, so a non-tied player candidate wins even when AI/no-commander votes are equal or higher (`Server_VoteForCommander.sqf:24-29,43`; `GUI_VoteMenu.sqf:88`). | [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook#current-branch-scope) |
-| Manual reassignment helper | Docs checkout `f82a9127` still uses `_side = _this` in `Server_AssignNewCommander.sqf:3`; stable/Miksuu/perf/release/feat-ai unpack side + commander at `:4-5` in checked maintained roots, but duplicate `new-commander-assigned` senders remain. | [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix) |
-| HQ score/bounty | Docs checkout, stable, Miksuu, perf, release and feat-ai all keep the generic HQ building score plus second HQ bounty shape. Line drift is tracked below. | [HQ kill score and bounty branch matrix](#hq-kill-score-and-bounty-branch-matrix) |
-| Objective Ping / commander tasks | Docs checkout, Miksuu, perf and feat-ai leave maintained-root `SetTask` sends commented at `GUI_Menu_Command.sqf:335,337,343`; stable and release send targeted Objective Ping tasks at `:336,344`. Old town `TaskSystem` remains commented everywhere checked. | [Client UI systems atlas](Client-UI-Systems-Atlas), [Networking and public variables](Networking-And-Public-Variables) |
+| Manual reassignment helper | Current docs head `8c3942d2` is source-unchanged from `e2c9f6ed`/`f82a9127` for this flow and still uses `_side = _this` in `Server_AssignNewCommander.sqf:3`; stable/Miksuu/perf/release/feat-ai unpack side + commander at `:4-5` in checked maintained roots, but duplicate `new-commander-assigned` senders remain. | [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix) |
+| HQ score/bounty | Current docs head `8c3942d2`, stable, Miksuu, perf, release and feat-ai all keep the generic HQ building score plus second HQ bounty shape. Line drift is tracked below. | [HQ kill score and bounty branch matrix](#hq-kill-score-and-bounty-branch-matrix) |
+| Objective Ping / commander tasks | Current docs head `8c3942d2`, Miksuu, perf and feat-ai leave maintained-root `SetTask` sends commented at `GUI_Menu_Command.sqf:335,337,343`; stable and release send targeted Objective Ping tasks at `:336,344`. Old town `TaskSystem` remains commented everywhere checked. | [Client UI systems atlas](Client-UI-Systems-Atlas), [Networking and public variables](Networking-And-Public-Variables) |
 | HQ repair and base-area authority | `RequestMHQRepair` still sends only side, and base-area accounting still depends on client-bound `RequestBaseArea`; treat both as authority-sensitive before expanding HQ recovery or deploy limits. | [Server authority migration map](Server-Authority-Migration-Map), [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas) |
 
 ## Why This Matters
@@ -46,6 +46,7 @@ The useful mental model:
 | Commander vote worker | `Server/Functions/Server_VoteForCommander.sqf:9-57` |
 | Vote restart request | `Client/GUI/GUI_Menu.sqf:75,91`, `Server/PVFunctions/RequestCommanderVote.sqf:3-22`, `Common/Init/Init_PublicVariables.sqf:12` |
 | Manual reassignment path | `Client/GUI/GUI_Commander_VoteMenu.sqf:46`, `Server/PVFunctions/RequestNewCommander.sqf:3-16`, `Server/Functions/Server_AssignNewCommander.sqf:3-14` |
+| Commander disconnect fallback | `Server/Functions/Server_OnPlayerDisconnected.sqf:136-146` |
 | Commander getters/votes | `Common/Functions/Common_GetCommanderTeam.sqf:7-12`, `Common/Functions/Common_SetCommanderVotes.sqf:3-10` |
 | HQ getters | `Common/Functions/Common_GetSideHQ.sqf:7-12`, `Common/Functions/Common_GetSideHQDeployStatus.sqf:7-12` |
 | Client commander/HQ watchers | `Client/Init/Init_Client.sqf:382-388,489-503`, `Client/FSM/updateclient.sqf:184-244` |
@@ -53,6 +54,7 @@ The useful mental model:
 | HQ killed worker | `Server/Functions/Server_OnHQKilled.sqf:25-44,46-82,84-118` |
 | MHQ repair worker | `Client/Action/Action_RepairMHQ.sqf:5-42`, `Server/Functions/Server_MHQRepair.sqf:7-79` |
 | Commander economy controls | `Client/GUI/GUI_Menu_Economy.sqf:24-27,74-79,104-150`, `Server/FSM/updateresources.sqf:36-43` |
+| HQ build/base-area authority | `Client/Module/CoIn/coin_interface.sqf:13-26,494,718`, `Server/PVFunctions/RequestStructure.sqf:3-21`, `Client/PVFunctions/RequestBaseArea.sqf:1-4`, `Server/FSM/basearea.sqf:46-78` |
 | WASP cash HQ recovery | `WASP/actions/Action_RepairMHQDepot.sqf:7-29` |
 | PV/PVF registration | `Common/Init/Init_PublicVariables.sqf:13,17,33,38` |
 | HQ wreck marker loop | `Client/FSM/updateclient.sqf:41-100` |
@@ -100,21 +102,16 @@ The vote UI refresh loops also have an inclusive-bound edge. `WFBE_Client_Teams_
 
 ## Manual Reassignment Flow
 
-Status: branch-split. In docs checkout `f82a9127`, the intended flow exists but manual reassignment is still broken by the helper payload-shape bug below. Stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and `origin/feat/ai-commander` `c20ce153` fix helper unpacking in checked maintained roots, but duplicate reassignment notifications and requester-authority smoke remain open.
+This atlas only anchors the HQ lifecycle boundary. The patch matrix and generated-mission propagation notes live on [Commander reassignment call shape](Commander-Reassignment-Call-Shape), while vote-policy ordering and smoke live on [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook). Current docs head `8c3942d2` has no targeted reassignment-source drift from `e2c9f6ed` or `f82a9127`.
 
-The commander vote menu sends:
+| Step | Local source anchor | Route |
+| --- | --- | --- |
+| Commander UI sends the request | `GUI_Commander_VoteMenu.sqf:33-46` stores row team ids but resolves the selected commander by visible leader-name text before sending `["RequestNewCommander", [side group player, _voted_commander]]`. | [Commander reassignment call shape](Commander-Reassignment-Call-Shape#evidence) |
+| Server PVF mutates commander state | `RequestNewCommander.sqf:3-16` reads side/candidate, accepts only after `wfbe_votetime <= 0`, sets `wfbe_commander`, spawns `AssignNewCommander` and sends `new-commander-assigned`. | [Commander vote/reassignment](Commander-Vote-And-Reassignment-Playbook#manual-reassignment-boundary) |
+| Helper remains branch-split | Docs head still uses `_side = _this` while also reading `_this select 1` (`Server_AssignNewCommander.sqf:3-5`); stable/Miksuu/perf/release/feat-ai unpack `_this select 0` / `_this select 1` but leave duplicate notification sender shape. | [Current branch matrix](Commander-Reassignment-Call-Shape#current-branch-matrix) |
+| Client displays the outcome | `Client_FNC_Special.sqf:6-34` shows commander vote/reassignment messages and locally mirrors `wfbe_commander = objNull` for null reassignment. | [Client UI systems](Client-UI-Systems-Atlas#vote-help-and-main-menu-branch-matrix) |
 
-```sqf
-["RequestNewCommander", [side group player, _voted_commander]] Call WFBE_CO_FNC_SendToServer;
-```
-
-`RequestNewCommander` is registered as a server PVF (`Init_PublicVariables.sqf:13`). The server handler reads the side and target commander correctly, only accepts reassignment when `wfbe_votetime <= 0`, sets `wfbe_commander`, spawns `AssignNewCommander` and sends a `new-commander-assigned` special message (`RequestNewCommander.sqf:3-16`).
-
-The docs-checkout helper still has the call-shape bug: `Server_AssignNewCommander.sqf` uses `_side = _this` while also reading `_commander = _this select 1` (`Server_AssignNewCommander.sqf:3-5`), while `RequestNewCommander.sqf:13` calls it with `[_side, _assigned_commander]`. That means helper-side side-logic lookups and notification routing receive an array instead of a `SIDE`. The source-side precondition is simple: the helper must unpack the payload as side + commander before any side-logic lookup, and all callers must pass that same shape. Use [Commander reassignment call shape](Commander-Reassignment-Call-Shape) for the patch plan and generated-mission propagation notes.
-
-Branch recheck 2026-06-14 clarified the notification risk: docs checkout still has `new-commander-assigned` sends in both `RequestNewCommander.sqf:14` and `Server_AssignNewCommander.sqf:9`; fixed-helper refs make the helper sender reachable at `Server_AssignNewCommander.sqf:10` while keeping the request-handler send. Choose exactly one notification owner before smoke testing reassignment.
-
-Client-side special handlers show commander vote/reassignment messages and, for null reassignment, locally mirror `wfbe_commander = objNull` on the player's side logic (`Client_FNC_Special.sqf:6-34`).
+Keep vote semantics, helper unpacking, notification ownership, UI row identity and requester authority as separate claims. Stable/release helper unpacking alone is not evidence that manual reassignment, duplicate-message behavior or commander authority is fixed.
 
 ## Commander Economy Controls
 
@@ -183,11 +180,11 @@ The same worker awards score/bounty messages (`:46-82`) and publishes allied-onl
 
 ### HQ Kill Score And Bounty Branch Matrix
 
-DR-50 is branch-unrescued across the checked maintained roots. Docs checkout `f82a9127` sets `_points = 30000 / 100 * WFBE_C_BUILDINGS_SCORE_COEF` at `Server_OnHQKilled.sqf:23`, awards it unconditionally at `:49`, then awards `_score = 900` again for non-teamkills at `:78-81`. The coefficient is `3` at `Init_CommonConstants.sqf:356`, so a clean enemy HQ kill pays `900 + 900 = 1800`; a friendly/teamkill HQ kill still gets the unconditional `900`.
+DR-50 is branch-unrescued across the checked maintained roots. Current docs head `8c3942d2` is source-unchanged from `f82a9127` for `Server_OnHQKilled.sqf` and `Init_CommonConstants.sqf`: it sets `_points = 30000 / 100 * WFBE_C_BUILDINGS_SCORE_COEF` at `Server_OnHQKilled.sqf:23`, awards it unconditionally at `:49`, then awards `_score = 900` again for non-teamkills at `:78-81`. The coefficient is `3` at `Init_CommonConstants.sqf:356`, so a clean enemy HQ kill pays `900 + 900 = 1800`; a friendly/teamkill HQ kill still gets the unconditional `900`.
 
 | Ref / root | Evidence | Status |
 | --- | --- | --- |
-| Docs checkout Chernarus + maintained Vanilla `f82a9127` | `Server_OnHQKilled.sqf:23,49,78,81`; `Init_CommonConstants.sqf:356` | Double-award present in both roots. |
+| Docs head `8c3942d2` Chernarus + maintained Vanilla, source-unchanged from `f82a9127` | `Server_OnHQKilled.sqf:23,49,78,81`; `Init_CommonConstants.sqf:356` | Double-award present in both roots. |
 | Stable `origin/master` `cf2a6d6a` | `Server_OnHQKilled.sqf:23,54,83,86`; `Init_CommonConstants.sqf:376` | Double-award present in both roots. |
 | Miksuu upstream `b8389e74` | Same two-award shape at `Server_OnHQKilled.sqf:23,49,78,81`; coefficient at `Init_CommonConstants.sqf:356` | Double-award present in both roots. |
 | `origin/perf/quick-wins` `0076040f` | Same two-award shape at `Server_OnHQKilled.sqf:23,49,78,81`; coefficient at `Init_CommonConstants.sqf:356` | Not fixed by perf branch. |
@@ -230,7 +227,7 @@ This is not just "another repair UI." It mutates economy/town state and HQ posit
 | Status | Risk | Evidence | Next owner action |
 | --- | --- | --- | --- |
 | Patch-ready correctness | Commander vote selection effectively ignores AI/no-commander vote count when there is a non-tied player candidate. | `Server_VoteForCommander.sqf:24-29,43`; `GUI_VoteMenu.sqf:87-89` | Decide intended tie/AI/no-commander semantics, patch the server condition, then smoke player-majority, no-commander-majority, equal-vote and tie cases. |
-| Branch-split correctness | Docs checkout manual commander reassignment helper passes an array as `_side`; stable/Miksuu/perf/release/feat-ai fix helper unpacking but keep duplicate notification senders. | `RequestNewCommander.sqf:13-14`; docs `Server_AssignNewCommander.sqf:3-5,9`; fixed-helper refs `Server_AssignNewCommander.sqf:4-5,10` | Patch/port via [Commander reassignment call shape](Commander-Reassignment-Call-Shape), choose one notification owner, then smoke one client notification. |
+| Branch-split correctness | Current docs head manual commander reassignment helper still passes an array as `_side`; stable/Miksuu/perf/release/feat-ai fix helper unpacking but keep duplicate notification senders. | `RequestNewCommander.sqf:13-14`; docs `Server_AssignNewCommander.sqf:3-5,9`; fixed-helper refs `Server_AssignNewCommander.sqf:4-5,10` | Patch/port via [Commander reassignment call shape](Commander-Reassignment-Call-Shape), choose one notification owner, then smoke one client notification. |
 | Authority-light | Normal MHQ repair is client-debited and sends only side to server. | `Action_RepairMHQ.sqf:24-35`; `RequestMHQRepair.sqf:1`; `Server_MHQRepair.sqf:7-79` | Server should validate requester, side, dead HQ, repair vehicle range, repair count and funds before creating the MHQ. |
 | Race risk | MHQ repair uses local client locks, but the server worker does not reject duplicate in-flight repair requests before setting `wfbe_hq_repairing`. | `Action_RepairMHQ.sqf:8-9`; `WASP/actions/Action_RepairMHQDepot.sqf:10-11`; `Server_MHQRepair.sqf:23-57` | Add a server mutex check/set around the first side-logic read and smoke two rapid repair requests against one wreck. |
 | Partial fallback | Commander disconnect clears `wfbe_commander` and warns the side, but does not prove automatic reassignment. | `Server_OnPlayerDisconnected.sqf:136-146`; `Server_VoteForCommander.sqf:48-57` | Decide whether disconnect should leave no commander, restart a vote, or restore AI commander behavior; smoke human commander disconnect and reconnect. |
@@ -244,7 +241,7 @@ This is not just "another repair UI." It mutates economy/town state and HQ posit
 | Side coverage gap | HQ alive/dead marker broadcasts cover west/east, not resistance. | `Server_OnHQKilled.sqf:97`; `Server_MHQRepair.sqf:60`; `updateclient.sqf:42-100` | Keep resistance HQ/economy disabled or design a full three-side marker state machine before enabling resistance HQ recovery. |
 | Multiplayer-sensitive | Base-area accounting is updated via client-bound `RequestBaseArea`, while deploy/build limits are first enforced through local client state. | `coin_interface.sqf:13-26`; `Construction_HQSite.sqf:54-59`; `RequestBaseArea.sqf:1-4`; `basearea.sqf:46-78` | Audit before changing defense availability, base area limits or server authority around CoIn; server should be able to reject stale or forged area/build requests. |
 | Partial/latent | AI commander variable state exists, but full autonomous commander ownership is not proven. | `wfbe_commander = objNull`; `Server_VoteForCommander.sqf:48-57`; [AI commander autonomy audit](AI-Commander-Autonomy-Audit) | Keep AI commander revival separate from commander/HQ correctness patches. |
-| Partial UI/order feature | Docs checkout, Miksuu, perf and feat-ai Commander Set Task UI build task data and play HQ speech, but maintained-root `SetTask` sends are commented while `Client/PVFunctions/SetTask.sqf` still creates `CommanderOrder` if invoked. Stable `cf2a6d6a` and release `a96fdda2` re-enable targeted/client-bound sends as "Objective Ping" in both maintained roots, but old town `TaskSystem` remains disabled. | Docs `GUI_Menu_Command.sqf:315-344`; docs `Client/PVFunctions/SetTask.sqf:8-14`; docs `Common/Init/Init_PublicVariables.sqf:33`; stable/release `GUI_Menu_Command.sqf:336,344` and `Common/Init/Init_PublicVariables.sqf:36`; docs `Init_Client.sqf:75,744` | Hide the current-source affordance or deliberately port the stable/release Objective Ping shape with server/JIP/task-spam smoke; do not confuse it with revival of the old town TaskSystem. |
+| Partial UI/order feature | Current docs head, Miksuu, perf and feat-ai Commander Set Task UI build task data and play HQ speech, but maintained-root `SetTask` sends are commented while `Client/PVFunctions/SetTask.sqf` still creates `CommanderOrder` if invoked. Stable `cf2a6d6a` and release `a96fdda2` re-enable targeted/client-bound sends as "Objective Ping" in both maintained roots, but old town `TaskSystem` remains disabled. | Docs `GUI_Menu_Command.sqf:315-344`; docs `Client/PVFunctions/SetTask.sqf:8-14`; docs `Common/Init/Init_PublicVariables.sqf:33`; stable/release `GUI_Menu_Command.sqf:336,344` and `Common/Init/Init_PublicVariables.sqf:36`; docs `Init_Client.sqf:75,744` | Hide the current-source affordance or deliberately port the stable/release Objective Ping shape with server/JIP/task-spam smoke; do not confuse it with revival of the old town TaskSystem. |
 | HQ-specific construction authority | CoIn sends HQ/structure requests from the client; the server `RequestStructure` handler accepts side/class/position/direction and executes construction, while `Construction_HQSite` toggles deployed/mobile HQ state. | `coin_interface.sqf:494,718`; `RequestStructure.sqf:3-21`; `Construction_HQSite.sqf:17-23,80` | When hardening construction, include HQ-specific commander/range/role checks instead of treating HQ deploy/pack as only a generic building purchase. |
 
 ## Development Rules

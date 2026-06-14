@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T07:55:58+02:00",
+  "generatedAt": "2026-06-14T08:09:25+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,9 +20,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "towns-camps-atlas-route-prune",
-      "currentWork": "Published docs-only Towns/camps atlas route prune: Towns-Camps-And-Capture-Atlas.md now names docs head 5243f91d as the visible town/camp source-continuity checkpoint, and repeated camp-flag plus zero-camp helper branch prose routes to the atlas Current Branch Scope, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md instead of being restated in section and risk prose. Targeted source diffs confirmed no checked Chernarus or maintained Vanilla town/camp/patrol/respawn/buy source-path drift from 3eefcb00 through 5243f91d. No gameplay source changed.",
-      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep town/camp, support/UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
+      "currentLane": "commander-hq-atlas-route-prune",
+      "currentWork": "Published docs-only Commander/HQ atlas route prune: Commander-HQ-Lifecycle-Atlas.md now names docs head 8c3942d2 as the visible commander/HQ source-continuity checkpoint, and repeated manual-reassignment proof routes to Commander-Reassignment-Call-Shape.md and Commander-Vote-And-Reassignment-Playbook.md instead of being restated in HQ lifecycle prose. Targeted source diffs confirmed no checked Chernarus or maintained Vanilla commander vote/reassignment/HQ score/disconnect/task/base-area source-path drift from f82a9127 or e2c9f6ed through 8c3942d2. No gameplay source changed.",
+      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep commander/HQ, town/camp, support/UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "commander-hq-atlas-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Commander-HQ-Lifecycle-Atlas.md now names docs head 8c3942d2 as the current commander/HQ source-continuity checkpoint. Checked Chernarus and maintained Vanilla commander vote, reassignment, HQ score, disconnect, Objective Ping/task and base-area/HQ authority source paths are unchanged from f82a9127 and e2c9f6ed through 8c3942d2; stable cf2a6d6a, release a96fdda2, Miksuu b8389e74, perf 0076040f and AI commander c20ce153 refs still resolve. Repeated manual-reassignment branch proof now routes to Commander-Reassignment-Call-Shape.md and Commander-Vote-And-Reassignment-Playbook.md instead of being repeated in HQ lifecycle prose; missing commander-disconnect and HQ build/base-area source anchors were added. No gameplay source changed."
+    },
     {
       "lane": "towns-camps-atlas-route-prune",
       "owner": "Codex",

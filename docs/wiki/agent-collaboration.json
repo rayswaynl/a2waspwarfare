@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T07:55:58+02:00",
+  "generatedAt": "2026-06-14T08:09:25+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,49 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "commander-hq-atlas-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Commander-HQ-Lifecycle-Atlas.md",
+        "Commander-Vote-And-Reassignment-Playbook.md",
+        "Commander-Reassignment-Call-Shape.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_VoteForCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AssignNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Commander_VoteMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_VoteMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnHQKilled.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnPlayerDisconnected.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Command.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/PVFunctions/SetTask.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/CoIn/coin_interface.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestStructure.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/PVFunctions/RequestBaseArea.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/basearea.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan"
+      ],
+      "outputs": [
+        "Refreshed Commander-HQ-Lifecycle-Atlas.md so docs head 8c3942d2 is the visible source-continuity checkpoint for checked commander/HQ paths.",
+        "Pruned repeated manual-reassignment branch proof by routing to Commander-Reassignment-Call-Shape.md and Commander-Vote-And-Reassignment-Playbook.md.",
+        "Added missing commander-disconnect and HQ build/base-area source anchors.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future commander/HQ atlas edits should keep Commander-HQ-Lifecycle-Atlas.md as the lifecycle gateway, preserve HQ score and HQ lifecycle source anchors locally, route exact commander vote/reassignment patch matrices to Commander-Vote-And-Reassignment-Playbook.md and Commander-Reassignment-Call-Shape.md, and route code-owner status to Feature-Status-Register.md plus Source-Fix-Propagation-Queue.md.",
+      "updated": "2026-06-14T08:09:25+02:00"
+    },
     {
       "lane": "towns-camps-atlas-route-prune",
       "owner": "Codex",
