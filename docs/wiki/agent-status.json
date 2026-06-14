@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T05:33:02+02:00",
+  "generatedAt": "2026-06-14T05:47:40+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "client-ui-title-resource-current-branch-route",
-      "currentWork": "Published docs-only client UI title/resource branch refresh: Client-UI-Systems-Atlas.md now routes resource parity and title-handle details to canonical pages; UI-Resource-Parity-Cleanup.md now states docs/Miksuu/perf keep stale upgrade/Economy/EASA dialog resources while stable cf2a6d6a and release a96fdda2 repair them in both maintained roots; UI-IDD-Collision-Repair.md now records title 10200 and currentCutDisplay risks remain open everywhere checked. No gameplay source changed.",
+      "currentLane": "client-ui-economy-fast-travel-status-route",
+      "currentWork": "Published docs-only client UI/economy status refresh: Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and agent-feature-status.jsonl now state that docs d2a3f995, Miksuu b8389e74 and perf 0076040f still carry Economy stale 23004/23005/23006 writes while stable cf2a6d6a and release a96fdda2 repair Economy around 23020 in both maintained roots; Tactical fast-travel fee UX remains unchanged across checked refs and routes to the Client UI atlas owner matrix. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -57,10 +57,10 @@
   },
   "laneSummary": [
     {
-      "lane": "client-ui-title-resource-current-branch-route",
+      "lane": "client-ui-economy-fast-travel-status-route",
       "owner": "Codex",
       "status": "published-validated",
-      "output": "Client-UI-Systems-Atlas.md, UI-Resource-Parity-Cleanup.md and UI-IDD-Collision-Repair.md now carry current branch truth for docs checkout 2fef1e3d, stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf 0076040f. Docs/Miksuu/perf keep stale RscMenu_Upgrade, Economy stale writes and EASA/Economy duplicate 23000 in both maintained roots; stable/release fix those resource paths in both roots. Title 10200 duplication and OptionsAvailable/EndOfGameStats currentCutDisplay sharing remain open everywhere checked. Feature/status and machine rows now align. No gameplay source changed."
+      "output": "Feature-Status-Register.md, Source-Fix-Propagation-Queue.md and agent-feature-status.jsonl now carry current branch truth for Economy stale IDC writes and Tactical fast-travel fee UX. Docs checkout d2a3f995, Miksuu b8389e74 and perf 0076040f still write Economy 23004/23005/23006 in both maintained roots; stable cf2a6d6a and release a96fdda2 repair Economy around dashboard 23020 in both roots. Fast-travel fee UX remains the same across docs/stable/release/Miksuu/perf and routes to Client-UI-Systems-Atlas.md. No gameplay source changed."
     },
     {
       "lane": "sqf-network-branch-caveat-route",

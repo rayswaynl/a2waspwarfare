@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T05:33:02+02:00",
+  "generatedAt": "2026-06-14T05:47:40+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -23,47 +23,39 @@
   },
   "activeClaims": [
     {
-      "lane": "client-ui-title-resource-current-branch-route",
+      "lane": "client-ui-economy-fast-travel-status-route",
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "sourceScope": [
-        "Client-UI-Systems-Atlas.md",
-        "UI-Resource-Parity-Cleanup.md",
-        "UI-IDD-Collision-Repair.md",
         "Feature-Status-Register.md",
-        "Gear-Loadout-And-EASA-Atlas.md",
-        "Dead-Code-And-Stale-Code-Register.md",
         "Source-Fix-Propagation-Queue.md",
         "agent-feature-status.jsonl",
-        "agent-hardening-backlog.jsonl",
-        "agent-knowledge.jsonl",
         "Progress-Dashboard.md",
         "Agent-Worklog.md",
         "Wiki-Pruning-And-Relevance-Ledger.md",
         "agent-status.json",
         "agent-collaboration.json",
         "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Economy.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_Menu_Economy.sqf",
         "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp",
         "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc/Dialogs.hpp",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Titles.hpp",
-        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc/Titles.hpp",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Economy.sqf",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Client_UpdateRHUD.sqf",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateavailableactions.fsm",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_EndOfGameStats.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Tactical.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_Menu_Tactical.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_CommonConstants.sqf",
         "origin/master",
         "origin/release/2026-06-feature-bundle",
         "miksuu/master",
         "origin/perf/quick-wins"
       ],
       "outputs": [
-        "Updated Client-UI-Systems-Atlas.md so it routes resource parity and title ownership to canonical pages without repeating stale branch prose.",
-        "Updated UI-Resource-Parity-Cleanup.md so stable cf2a6d6a and release a96fdda2 are documented as fixing stale upgrade, Economy and EASA dialog IDD parity in both maintained roots, while docs/Miksuu/perf remain old-shaped.",
-        "Updated UI-IDD-Collision-Repair.md, Feature Status, Source Fix Queue and machine rows so title 10200 duplication and currentCutDisplay sharing remain open everywhere checked.",
+        "Updated Feature-Status-Register.md so Economy stale disabled-state IDC writes are branch-split correctly: docs d2a3f995, Miksuu b8389e74 and perf 0076040f remain stale; stable cf2a6d6a and release a96fdda2 repair both maintained roots around dashboard 23020.",
+        "Updated Source-Fix-Propagation-Queue.md and agent-feature-status.jsonl so Tactical fast-travel fee UX names current refs and routes implementation policy to the Client UI atlas matrix instead of old 89ae9dad / 7ff18c49 wording.",
         "Kept gameplay source untouched."
       ],
-      "handoff": "Closed as docs-published. Future UI owner should preserve or port stable/release resource parity where target branches still carry old UI resources, then patch or waive title IDD/currentCutDisplay ownership separately with RHUD/action/endgame smoke.",
-      "updated": "2026-06-14T05:33:02+02:00"
+      "handoff": "Closed as docs-published. Future UI/economy owner should preserve stable/release Economy 23020 repair when merging to old-shaped roots, and treat fast-travel fee as an owner-decision UX lane requiring hide-vs-disabled/prompt policy plus funds/range smoke.",
+      "updated": "2026-06-14T05:47:40+02:00"
     },
     {
       "lane": "sqf-network-branch-caveat-route",
