@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T06:20:20+02:00",
+  "generatedAt": "2026-06-14T06:29:17+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,40 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "sqf-atlas-compile-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "SQF-Code-Atlas.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/AI_UpdateSupplyTruck.sqf",
+        "Public-Variable-Channel-Index.md",
+        "Attack-Wave-Authority-Playbook.md",
+        "Server-Init-Bind-Cleanup.md",
+        "AI-Commander-Autonomy-Audit.md",
+        "Hosted-Server-FPS-Loop-Sleep.md",
+        "Abandoned-Feature-Revival-Review.md",
+        "Dead-Code-And-Stale-Code-Register.md"
+      ],
+      "outputs": [
+        "Pruned SQF-Code-Atlas.md so PVF branch registry counts, direct attack-wave proof, duplicate LogGameEnd bind status, AI supply-truck status, FPS publisher status and dead/dormant helper decisions route to canonical owner pages.",
+        "Verified targeted source diffs from 4277a2ad to HEAD return no checked PVF/server/client/common-init or AI supply-truck source-path changes; source line anchors remain valid at docs head 34212d6a.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future SQF atlas edits should keep the page focused on compile ownership and local source anchors; put branch matrices on Public-Variable-Channel-Index.md, Server-Init-Bind-Cleanup.md, AI-Commander-Autonomy-Audit.md, Hosted-Server-FPS-Loop-Sleep.md, Abandoned-Feature-Revival-Review.md and Dead-Code-And-Stale-Code-Register.md.",
+      "updated": "2026-06-14T06:29:17+02:00"
+    },
     {
       "lane": "networking-pv-gateway-prune-route",
       "owner": "Codex",

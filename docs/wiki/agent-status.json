@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T06:20:20+02:00",
+  "generatedAt": "2026-06-14T06:29:17+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "networking-pv-gateway-prune-route",
-      "currentWork": "Published docs-only Networking/PV gateway prune: Networking-And-Public-Variables.md now routes copied PVF command inventory, dispatcher patch detail, residual registered-handler authority proof and attack-wave proof to Public-Variable-Channel-Index.md, PVF-Dispatch-Implementation-Playbook.md, Server-Authority-Migration-Map.md and Attack-Wave-Authority-Playbook.md while preserving the registered client PVF runtime matrix. Targeted source diffs confirmed no checked network source-path drift from 4277a2ad through aa1a4b76. No gameplay source changed.",
+      "currentLane": "sqf-atlas-compile-route-prune",
+      "currentWork": "Published docs-only SQF atlas compile route prune: SQF-Code-Atlas.md now keeps local compile/PVF/deferred-signal anchors while routing branch registry counts to Public-Variable-Channel-Index.md, direct attack-wave proof to Attack-Wave-Authority-Playbook.md, duplicate LogGameEnd bind status to Server-Init-Bind-Cleanup.md, AI supply-truck status to AI-Commander-Autonomy-Audit.md, FPS publisher status to Hosted-Server-FPS-Loop-Sleep.md and dead/dormant helper decisions to Abandoned-Feature-Revival-Review.md plus Dead-Code-And-Stale-Code-Register.md. Targeted source diffs confirmed no checked PVF/server/client/common-init or AI supply-truck source-path drift from 4277a2ad through 34212d6a. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "sqf-atlas-compile-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "SQF-Code-Atlas.md is pruned back into a route-first compile map: PVF branch registry counts route to Public-Variable-Channel-Index.md, direct attack-wave proof to Attack-Wave-Authority-Playbook.md, duplicate LogGameEnd bind status to Server-Init-Bind-Cleanup.md, AI supply-truck status to AI-Commander-Autonomy-Audit.md, FPS publisher status to Hosted-Server-FPS-Loop-Sleep.md, and dead/dormant helper decisions to Abandoned-Feature-Revival-Review.md plus Dead-Code-And-Stale-Code-Register.md. Checked PVF/server/client/common-init and AI supply-truck source paths are unchanged from 4277a2ad through 34212d6a. No gameplay source changed."
+    },
     {
       "lane": "networking-pv-gateway-prune-route",
       "owner": "Codex",

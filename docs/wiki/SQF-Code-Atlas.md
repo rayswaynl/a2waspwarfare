@@ -35,7 +35,7 @@ This page is the source map for compiled SQF entrypoints and runtime handoffs. U
 
 ## Compile Registry Summary
 
-Snapshot refreshed 2026-06-13 from the source mission in this docs checkout, `docs/developer-wiki-index` at `04a60e43`: `Missions/[55-2hc]warfarev2_073v48co.chernarus`, all `.sqf` files, `Select-String -SimpleMatch 'preprocessFile'`. Rechecked 2026-06-14 on docs checkout `4277a2ad`: `git diff --name-only 04a60e43..HEAD -- "Missions/[55-2hc]warfarev2_073v48co.chernarus"` returns no source changes, and rerunning the count command still returns the same numbers below (`738` total, `460` `preprocessFileLineNumbers`, `278` plain `preprocessFile`, `22` commented). This deliberately counts `preprocessFile` as a substring of `preprocessFileLineNumbers`, so plain `preprocessFile` is `total - preprocessFileLineNumbers`. See [Deep-review findings](Deep-Review-Findings) DR-5 for why these counts must be regenerated before relying on them.
+Snapshot refreshed 2026-06-13 from the source mission in this docs checkout, `docs/developer-wiki-index` at `04a60e43`: `Missions/[55-2hc]warfarev2_073v48co.chernarus`, all `.sqf` files, `Select-String -SimpleMatch 'preprocessFile'`. Rechecked 2026-06-14 on docs head `34212d6a`: targeted `git diff --name-only 4277a2ad..HEAD` checks over the PVF, server-init, client-init, common-init and AI supply-truck paths returned no source changes, and the prior count command still returns the same numbers below (`738` total, `460` `preprocessFileLineNumbers`, `278` plain `preprocessFile`, `22` commented). This deliberately counts `preprocessFile` as a substring of `preprocessFileLineNumbers`, so plain `preprocessFile` is `total - preprocessFileLineNumbers`. See [Deep-review findings](Deep-Review-Findings) DR-5 for why these counts must be regenerated before relying on them.
 
 This snapshot is branch-local. Stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, perf `0076040f` and release `a96fdda2` have branch/root-specific server-init differences, so rerun the command on each target branch before using these counts as branch evidence.
 
@@ -193,7 +193,7 @@ Headless init compiles the same delegation helpers used by clients plus `WFBE_CL
 
 `Common/Init/Init_PublicVariables.sqf` builds the registered PVF command lists and registers `WFBE_PVF_<Command>` event handlers. This atlas keeps only the ownership shape; [Public variable channel index](Public-Variable-Channel-Index#1-registered-pvf-commands) owns the command inventory, branch splits and authority notes.
 
-Docs checkout `8701aacc` keeps the same registry that was counted at `40c97e74` in source Chernarus and maintained Vanilla: 13 server-bound commands at `Common/Init/Init_PublicVariables.sqf:9-21`, `_serverCommandPV` assignment at `:23`, 15 client-bound commands at `:25-40` including `HandleParatrooperMarkerCreation` at `:39`, `_clientCommandPV` assignment at `:42`, and PVEH dispatch wiring at `:44-52`. Stable `origin/master` `cf2a6d6a` and release `a96fdda2` add branch-local `RequestEnqueue` / `RequestDequeue` server PVFs at `:22-23` in both maintained roots; Miksuu `b8389e74`, perf `0076040f` and `feat/ai-commander` `c20ce153` have their own paratrooper-registration split. Use the channel index before citing a command count on any branch.
+Current docs head `34212d6a` has no checked PVF source-path drift from the recent atlas anchor. For local orientation, the source registry anchors remain `Common/Init/Init_PublicVariables.sqf:23` for `_serverCommandPV`, `:39` for `HandleParatrooperMarkerCreation`, `:42` for `_clientCommandPV` and `:46-52` for the PVEH registration loops. Branch command counts, queue PVFs and paratrooper-registration splits live in the [current branch registry matrix](Public-Variable-Channel-Index#current-branch-registry-matrix); do not restate them here.
 
 PVF dispatch mechanics:
 
@@ -205,7 +205,8 @@ PVF dispatch mechanics:
 
 PV-adjacent files outside the standard registered PVF command lists:
 
-- `Server/PVFunctions/AttackWave.sqf` and `Server/Functions/Server_AttackWave.sqf` are compiled directly in server init rather than through the standard PVF command list (`Init_Server.sqf:94-95`). `WFBE_CO_FNC_LogGameEnd` is wired live to `Server/Functions/Server_LogGameEnd.sqf`; docs checkout/Miksuu duplicate that bind in both maintained roots, stable/release de-duplicate it in both maintained roots, and perf de-duplicates Chernarus while leaving maintained Vanilla old-shape. Use [Server init bind cleanup](Server-Init-Bind-Cleanup) for branch status. The `Server/PVFunctions/LogGameEnd.sqf` twin exists as the DR-13 cleanup target only on docs/Miksuu/perf roots and is absent from stable/release maintained roots; it is not the live compile target.
+- `Server/PVFunctions/AttackWave.sqf` and `Server/Functions/Server_AttackWave.sqf` are compiled directly in server init rather than through the standard PVF command list (`Init_Server.sqf:94-95`). Direct-channel authority proof lives in [Attack-wave authority](Attack-Wave-Authority-Playbook) and the channel inventory lives in [Public variable channel index](Public-Variable-Channel-Index#2-direct-publicvariable-channels-own-event-handlers).
+- `WFBE_CO_FNC_LogGameEnd` is wired live to `Server/Functions/Server_LogGameEnd.sqf` from duplicate docs-checkout binds at `Init_Server.sqf:64,89`; the stale `Server/PVFunctions/LogGameEnd.sqf` twin exists but is not the live compile target. Branch status and cleanup rules live in [Server init bind cleanup](Server-Init-Bind-Cleanup).
 
 ## Direct Public Variable Channels
 
@@ -215,19 +216,18 @@ For code-reading orientation, the important shape is: direct channels have their
 
 ## Disabled Or Deferred Compile Signals
 
-High-signal disabled/deferred compile lines:
+This table is a triage map only. Owner pages hold branch matrices, implementation decisions and smoke gates.
 
-| Source | Target | Evidence |
-| --- | --- | --- |
-| `Server/Init/Init_Server.sqf` | `Server/AI/AI_UpdateSupplyTruck.sqf` | `UpdateSupplyTruck` compile line is block-commented. Docs checkout `8701aacc`, Miksuu `b8389e74` and perf `0076040f` still spawn the missing-FSM worker in both maintained roots, while stable `cf2a6d6a` and release `a96fdda2` log-disable the path; `feat/ai-commander` `c20ce153` guards Chernarus only. Branch matrix: [AI commander autonomy audit](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix). |
-| `Server/AI/AI_UpdateSupplyTruck.sqf` | `Server/FSM/supplytruck.fsm` | The target FSM is missing; only client FSM files exist. |
-| `Client/Init/Init_Client.sqf` | `Client/Functions/Client_TaskSystem.sqf` | `TaskSystem` compile line is commented. |
-| `Client/Init/Init_Client.sqf` | `Client/Module/MASH/receiverMASHmarker.sqf` | Receiver compile line is commented. |
-| `Client/Init/Init_Client.sqf` | `Client/Functions/Client_BlinkMapIcons.sqf` | Old full-map icon blinking compile and exec lines are commented; target file is absent; guarded per-unit blinking remains. |
-| `Client/Init/Init_Client.sqf` | `Client/Functions/Client_AddUnitToTrack.sqf` | Old unit-tracking compile line is commented; target file is absent. |
-| `Common/Init/Init_Common.sqf` | `Common/Functions/Common_HandleATReloadVehicle.sqf` | Compile line is commented; target file still exists, so this is dormant revive/archive work rather than a missing-file error. |
-| `Common/Init/Init_Common.sqf` | `Common/Functions/Common_HandleBombs.sqf` | Compile line is commented; target file is absent while newer bomb/missile handlers remain. |
-| `Server/Init/Init_Server.sqf` | `Server/Module/serverFPS/monitorServerFPS.sqf` | Compile line is commented twice; docs/Miksuu/perf still exec the monitor later, while stable/release keep `serverFpsGUI.sqf` only. |
+| Source anchor | Target | Current signal | Owner route |
+| --- | --- | --- | --- |
+| `Server/Init/Init_Server.sqf:36,383`; `Server/AI/AI_UpdateSupplyTruck.sqf:17` | `Server/AI/AI_UpdateSupplyTruck.sqf`; `Server/FSM/supplytruck.fsm` | Compile is commented, docs checkout still raw-spawns the worker when the config gate opens, and the worker calls a missing FSM. | [AI commander autonomy audit](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix) |
+| `Client/Init/Init_Client.sqf:75,744` | `Client/Functions/Client_TaskSystem.sqf` | Compile and old town-task spawn are commented; target file still exists. | [Abandoned feature revival](Abandoned-Feature-Revival-Review), [Client UI systems atlas](Client-UI-Systems-Atlas#known-ui-risks-and-partial-work) |
+| `Client/Init/Init_Client.sqf:132` | `Client/Module/MASH/receiverMASHmarker.sqf` | Receiver compile is commented while the receiver file exists; shared MASH marker relay remains orphaned on docs-shaped roots. | [Respawn and death lifecycle](Respawn-And-Death-Lifecycle-Atlas#mash-split-live-respawn-dead-marker-relay) |
+| `Client/Init/Init_Client.sqf:138,782` | `Client/Functions/Client_BlinkMapIcons.sqf` | Old full-map icon blinking compile/exec comments point at a missing plural helper; guarded singular blinking remains separate. | [Dead/stale code register](Dead-Code-And-Stale-Code-Register#current-findings), [Marker cleanup/restoration](Marker-Cleanup-Restoration-Systems-Atlas) |
+| `Client/Init/Init_Client.sqf:140` | `Client/Functions/Client_AddUnitToTrack.sqf` | Old unit-tracking compile comment points at a missing helper. | [Dead/stale code register](Dead-Code-And-Stale-Code-Register#current-findings) |
+| `Common/Init/Init_Common.sqf:10` | `Common/Functions/Common_HandleATReloadVehicle.sqf` | Compile is commented and the helper file still exists, so this is archive/revive work rather than a missing-file error. | [Abandoned feature revival](Abandoned-Feature-Revival-Review#decision-matrix), [Dead/stale code register](Dead-Code-And-Stale-Code-Register#sqf-reachability-findings) |
+| `Common/Init/Init_Common.sqf:11` | `Common/Functions/Common_HandleBombs.sqf` | Compile is commented and the target helper is absent; newer bomb/missile handlers are separate live ordnance guardrails. | [Abandoned feature revival](Abandoned-Feature-Revival-Review#decision-matrix), [Dead/stale code register](Dead-Code-And-Stale-Code-Register#current-findings) |
+| `Server/Init/Init_Server.sqf:65,90,595` | `Server/Module/serverFPS/monitorServerFPS.sqf` | Compile lines are commented but docs checkout still execs the second FPS publisher; stable/release use a single-publisher shape. | [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep), [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas#branch-scope-for-source-anchors) |
 
 ## FSM Inventory
 
