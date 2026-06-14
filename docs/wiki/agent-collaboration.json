@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T07:18:06+02:00",
+  "generatedAt": "2026-06-14T07:26:55+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,40 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "upgrades-atlas-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Upgrades-And-Research-Atlas.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_UpgradeMenu.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/RequestUpgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_ProcessUpgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AI_Com_Upgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandleSpecial.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Config/Core_Upgrades",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc/Dialogs.hpp",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "AI-Commander-Autonomy-Audit.md",
+        "Support-Specials-And-Tactical-Modules-Atlas.md",
+        "UI-Resource-Parity-Cleanup.md"
+      ],
+      "outputs": [
+        "Refreshed Upgrades-And-Research-Atlas.md so docs head 1b07716d is the visible source-continuity checkpoint for checked upgrade/research paths.",
+        "Pruned repeated AI debit, upgrade-sync and stale old upgrade-dialog branch proof by routing to AI commander, support-specials and UI resource owner pages.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future upgrades atlas edits should keep Upgrades-And-Research-Atlas.md as the purchase/timer/config/consumer gateway, preserve player-upgrade authority anchors locally, route exact AI debit branch matrices to AI-Commander-Autonomy-Audit.md, route upgrade-sync tuple proof to Support-Specials-And-Tactical-Modules-Atlas.md, and route stale RscMenu_Upgrade cleanup to UI-Resource-Parity-Cleanup.md.",
+      "updated": "2026-06-14T07:26:55+02:00"
+    },
     {
       "lane": "factory-purchase-atlas-route-prune",
       "owner": "Codex",

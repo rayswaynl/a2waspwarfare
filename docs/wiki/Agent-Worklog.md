@@ -1007,3 +1007,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Rechecked current docs head `3b911594`: targeted `git diff --name-only 8d611092..HEAD` checks returned no changes for checked Chernarus and maintained Vanilla factory/purchase source paths.
 - Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74`, `perf/quick-wins` `0076040f` and `feat/buymenu-easa-qol` `a66d4691`.
 - Refreshed [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) so `3b911594` is the visible source-continuity checkpoint and pruned repeated buy-menu price/key, destroyed-factory refund and queue-risk prose by routing to the existing atlas matrices plus [Factory queue cleanup](Factory-Queue-Counter-Token-Cleanup). No gameplay source changed.
+
+## 2026-06-14T07:26:55+02:00 - Codex - Upgrades atlas route prune
+
+- Claimed `upgrades-atlas-route-prune` as a docs-only Upgrades and research atlas cleanup pass, with no gameplay source edits.
+- Rechecked current docs head `1b07716d`: targeted `git diff --name-only d4cfef80..HEAD` checks returned no changes for checked Chernarus and maintained Vanilla upgrade UI, `RequestUpgrade`, server upgrade worker, AI upgrade worker, `Server_HandleSpecial`, upgrade constants/config and `Rsc/Dialogs.hpp` paths.
+- Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74`, `perf/quick-wins` `0076040f`, `feat/ai-commander` `c20ce153` and `feat/upgrade-queue-stacking` `b061c905`.
+- Refreshed [Upgrades and research atlas](Upgrades-And-Research-Atlas) so `1b07716d` is the visible source-continuity checkpoint and pruned repeated AI debit, `upgrade-sync` and stale old upgrade-dialog branch proof by routing to [AI commander autonomy](AI-Commander-Autonomy-Audit#ai-upgrade-debit-branch-matrix), [Support specials](Support-Specials-And-Tactical-Modules-Atlas#upgrade-sync-branch-matrix) and [UI resource parity cleanup](UI-Resource-Parity-Cleanup). No gameplay source changed.

@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T07:18:06+02:00",
+  "generatedAt": "2026-06-14T07:26:55+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "factory-purchase-atlas-route-prune",
-      "currentWork": "Published docs-only Factory purchase atlas route prune: Factory-And-Purchase-Systems-Atlas.md now names docs head 3b911594 as the visible factory/purchase source-continuity checkpoint, and repeated buy-menu price/key, destroyed-factory refund and queue-risk branch proof routes to the atlas matrices plus Factory-Queue-Counter-Token-Cleanup.md instead of being restated in surrounding prose and the risk table. Targeted source diffs confirmed no checked Chernarus or maintained Vanilla factory/purchase source-path drift from 8d611092 through 3b911594. No gameplay source changed.",
+      "currentLane": "upgrades-atlas-route-prune",
+      "currentWork": "Published docs-only Upgrades atlas route prune: Upgrades-And-Research-Atlas.md now names docs head 1b07716d as the visible upgrade/research source-continuity checkpoint, and repeated AI debit, upgrade-sync and stale old upgrade-dialog branch proof routes to AI-Commander-Autonomy-Audit.md, Support-Specials-And-Tactical-Modules-Atlas.md and UI-Resource-Parity-Cleanup.md instead of being restated in atlas prose and risk rows. Targeted source diffs confirmed no checked Chernarus or maintained Vanilla upgrade UI/server/config/Rsc source-path drift from d4cfef80 through 1b07716d. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "upgrades-atlas-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Upgrades-And-Research-Atlas.md now names docs head 1b07716d as the current upgrade/research source-continuity checkpoint. Checked Chernarus and maintained Vanilla upgrade UI, RequestUpgrade, server upgrade worker, AI upgrade worker, Server_HandleSpecial, upgrade constants/config and Rsc/Dialogs.hpp paths are unchanged from d4cfef80 through 1b07716d; stable cf2a6d6a, release a96fdda2, Miksuu b8389e74, perf 0076040f, AI commander c20ce153 and upgrade queue b061c905 refs still resolve. Repeated AI debit, upgrade-sync and stale dialog proof now routes to AI-Commander-Autonomy-Audit.md, Support-Specials-And-Tactical-Modules-Atlas.md and UI-Resource-Parity-Cleanup.md instead of being repeated in atlas prose/risk rows. No gameplay source changed."
+    },
     {
       "lane": "factory-purchase-atlas-route-prune",
       "owner": "Codex",
