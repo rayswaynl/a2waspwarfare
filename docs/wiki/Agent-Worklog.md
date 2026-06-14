@@ -1084,3 +1084,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Rechecked current docs head `05664f17`: targeted `git diff --name-only 9da5f1d0..HEAD` checks returned no changes for checked Chernarus bootstrap, mission-object town init, common/server/client/headless init and HC role-helper source paths.
 - Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `perf/quick-wins` `0076040f`.
 - Refreshed [Mission entrypoints and lifecycle](Mission-Entrypoints-And-Lifecycle) and [Lifecycle wait-chain](Lifecycle-Wait-Chain) so `05664f17` is the visible lifecycle source-continuity checkpoint. Routed duplicated branch-scope wording from the wait-chain page back to the entrypoints Source Scope. No gameplay source changed.
+
+## 2026-06-14T09:13:06+02:00 - Codex - Construction/CoIn atlas source-scope route prune
+
+- Claimed `construction-coin-atlas-source-scope-route-prune` as a docs-only Construction and CoIn atlas cleanup pass, with no gameplay source edits.
+- Rechecked current docs head `7d248610`: targeted `git diff --name-only 4bd37b98..HEAD` and `1aa178f8..HEAD` checks returned no changes for checked Chernarus and maintained Vanilla construction/CoIn, base-area, structure-config, commander-built ARTY and salvage source paths.
+- Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `perf/quick-wins` `0076040f`.
+- Refreshed [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas) so `7d248610` is the visible construction/CoIn source-continuity checkpoint. Routed repeated auto-wall, SmallSite, StationaryDefense and salvage branch proof back to the atlas Current Branch Scope, [Construction logic list cleanup](Construction-Logic-List-Cleanup), [Source fix propagation queue](Source-Fix-Propagation-Queue) and the local salvage matrix, and aligned [Feature status](Feature-Status-Register). No gameplay source changed.
