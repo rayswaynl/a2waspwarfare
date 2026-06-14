@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T03:30:14+02:00",
+  "generatedAt": "2026-06-14T03:39:38+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,42 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "current-source-status-snapshot-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Current-Source-Status-Snapshot.md",
+        "Source-Fix-Propagation-Queue.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/serverFPS/monitorServerFPS.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/supplyMissionStarted.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/supplyMission/playerObjectsList.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Construction/Construction_StationaryDefense.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_GetTeamArtillery.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Updated Current-Source-Status-Snapshot.md with a 2026-06-14 current-ref matrix for docs checkout 76674ae4, stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf 0076040f.",
+        "Marked older 2026-06-03/05 matrices historical so they are not read as current stable/release truth.",
+        "Corrected Source-Fix-Propagation-Queue.md so stable/release are not overstated as carrying the supply player-list index fix; docs/source has _i before the loop at playerObjectsList.sqf:17, while stable/release/Miksuu/perf still reset it inside the loop at :18.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future status refreshes should update Current-Source-Status-Snapshot.md first when old matrices conflict with current branch refs, and should keep Source-Fix-Propagation-Queue.md branch caveats aligned.",
+      "updated": "2026-06-14T03:39:38+02:00"
+    },
     {
       "lane": "supply-mission-architecture-branch-scope-route",
       "owner": "Codex",

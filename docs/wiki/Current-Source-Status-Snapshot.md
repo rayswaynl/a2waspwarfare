@@ -33,11 +33,23 @@ If any item is missing, use `patch-ready`, `branch-local`, `propagated-smoke-pen
 | DroneStrike branch | Whether the latest drone tuning branch is the target, whether paid-support authority moved server-side, and whether generated scope/smoke exists. | [PR8 and drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match) |
 | ReconUAV branch | Whether ReconUAV replaces the old UAV module, whether it is rebased onto latest DroneStrike tuning, and whether recall/reveal/JIP cleanup is smoked. | [PR8 and drone upstream lesson match](PR8-And-Drone-Upstream-Lesson-Match) |
 
-## 2026-06-13 Refetch Delta
+## 2026-06-14 Current Ref Snapshot
 
-`git fetch --all --prune` was rerun on 2026-06-13 and local `master` was fast-forwarded to `origin/master` `cf2a6d6a`. This pass did not re-prove every historical matrix row below. The scoped correction is Patrols v2: current Chernarus and maintained Vanilla now retire the old `server_town_ai` random-town patrol launch (`server_town_ai.sqf:44,220`), add `Server/FSM/server_side_patrols.sqf`, run patrols through `Common_RunSidePatrol.sqf`, maintain `WFBE_ACTIVE_PATROLS` through `Server_HandleSpecial.sqf:215-242`, and use `&&` at `server_patrols.sqf:26` in both roots. Treat older `89ae9dad` DR-57 / AI1 "patrols dead on master" wording as historical branch evidence; current master is source-present and Arma-smoke-pending. Canonical route: [Towns/camps/capture](Towns-Camps-And-Capture-Atlas#patrols-v2-side-upgrade-path) and [Source fix propagation queue](Source-Fix-Propagation-Queue).
+Checked after `git fetch --all --prune`: docs checkout `docs/developer-wiki-index` `76674ae4`, stable `origin/master` `cf2a6d6a`, release `origin/release/2026-06-feature-bundle` `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f`. Use this as a routing snapshot only; owner pages and source refs still win for detailed rationale, patch shape and smoke status.
 
-## 2026-06-05 Refetch Delta
+| Lane | Current source evidence | Route / caveat |
+| --- | --- | --- |
+| Patrols v2 | Current stable Chernarus and maintained Vanilla retire the old `server_town_ai` random-town patrol launch (`server_town_ai.sqf:44,220`), add `Server/FSM/server_side_patrols.sqf`, run patrols through `Common_RunSidePatrol.sqf`, maintain `WFBE_ACTIVE_PATROLS` through `Server_HandleSpecial.sqf:215-242`, and use `&&` at `server_patrols.sqf:26` in both roots. | Treat older `89ae9dad` DR-57 / AI1 "patrols dead on master" wording as historical branch evidence. Canonical route: [Towns/camps/capture](Towns-Camps-And-Capture-Atlas#patrols-v2-side-upgrade-path) and [Source fix propagation queue](Source-Fix-Propagation-Queue). |
+| Paratrooper marker PV | Docs/source registers `HandleParatrooperMarkerCreation` at `Init_PublicVariables.sqf:39` in both maintained roots; stable and release register it at `:34`; Miksuu omits it; perf carries it in Chernarus only at `:40`. | Branch-present in docs/stable/release checked roots, but marker smoke remains required. Use [Paratrooper marker revival](Paratrooper-Marker-Revival). |
+| Client `Skill_Init` | Docs/source runs one init/apply at `Init_Client.sqf:547,571`; stable runs `:564,587`; release runs `:563,586`; Miksuu and perf still run duplicate init calls (`:560,:584` or `:561,:585`) before apply. | Do not reuse older matrix wording that says stable still duplicates. Use [Client skill init idempotency](Client-Skill-Init-Idempotency). |
+| Hosted server FPS | Docs/source guards both publishers (`serverFpsGUI.sqf:1`, `monitorServerFPS.sqf:1`). Stable and release guard only `serverFpsGUI.sqf:4` and no longer carry the old monitor path. Miksuu/perf still start both FPS scripts with unguarded `while {true}` at line `1` and sleep only inside `isDedicated`. | Stable/release and docs/source now have different source shapes. Smoke the target branch's publisher shape through [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep). |
+| Supply command-center scan | Docs/source uses the truck-only typed terminal scan at `supplyMissionStarted.sqf:25,28,44`; stable/release use the heli-aware typed terminal scan at `:53,59,81`; Miksuu/perf still use broad `nearestObjects [..., [], 80]` at `:28` plus a post-filter. | Keep truck, heli and nearby-player scan claims on the supply owner pages: [Supply mission architecture](Supply-Mission-Architecture) and [Supply mission scan narrowing](Supply-Mission-Scan-Narrowing). |
+| Supply player-list index | Docs/source moves `_i = 0` before the `WFBE_SE_PLAYERLIST` loop at `playerObjectsList.sqf:17`; stable, release, Miksuu and perf still reset `_i` inside the loop at `:18`. | Do not treat stable/release as carrying this fix until source changes. Route through [Source fix propagation queue](Source-Fix-Propagation-Queue) and [player join/disconnect lifecycle](Player-Join-Disconnect-And-AntiStack-Lifecycle). |
+| Commander-built ARTY ownership | Docs/source uses the commander-team gunner handoff at `Construction_StationaryDefense.sqf:91-93`. Stable/release use marker-based discovery: `WFBE_CommanderArtillery*` at `Construction_StationaryDefense.sqf:133-135` plus same-side marked-vehicle scanning in `Common_GetTeamArtillery.sqf:46-78` (`WFBE_CommanderArtillerySide` read at `:56`). Miksuu/perf keep the old `DefenseTeam` path only. | Stable/release are no longer "missing" commander ARTY evidence, but their implementation is not the docs/source handoff. Use [Construction and CoIn systems](Construction-And-CoIn-Systems-Atlas). |
+
+## Historical 2026-06-05 Refetch Delta
+
+The section below is kept as branch history. It is superseded for current-head routing by the 2026-06-14 snapshot above.
 
 `git fetch --all --prune` was rerun on 2026-06-05. This did **not** re-prove every matrix row below; it only refreshes the branch-head routing state so agents do not treat old commit IDs as current.
 
@@ -49,7 +61,9 @@ If any item is missing, use `patch-ready`, `branch-local`, `propagated-smoke-pen
 | `miksuu/master` | `8bcc42b1` | `89ae9dad` | Upstream advanced through `69e1958a` (`Marty_town_defense_fix`) and `89ae9dad` (`Marty_town_defense_overhaul`). As of the 2026-06-06 remote-master refetch, `origin/master` points at the same commit, so this is no longer upstream-only evidence. Treat it as remote stable source evidence with smoke/DR-45 gates, not as runtime-proven release readiness. |
 | Other named feature refs in the 2026-06-04 matrix | As listed below | unchanged in this refetch | Keep existing branch-review gates until a later source audit proves a new delta. |
 
-## 2026-06-03 Branch Matrix
+## Historical 2026-06-03 Branch Matrix
+
+The rows below preserve the older branch evidence that caused several status corrections. Do not read them as current stable/release truth when they conflict with the 2026-06-14 snapshot above.
 
 Checked refs: docs/source `HEAD` `4163faba`, stable `origin/master` `2cdf5fb8`, and `origin/release/2026-06-feature-bundle` `a9219d88`.
 
@@ -92,11 +106,11 @@ The docs mirror branch row records the source-check basis for this matrix, not a
 
 ## Current Interpretation
 
-- `origin/master` is the stable baseline unless a page explicitly names another branch.
-- Branch-local or release-branch code changes are not shipped on `origin/master` until source evidence proves that branch was merged.
-- "Propagated" means source Chernarus and maintained Vanilla Takistan both carry the change; it does not mean Arma 2 OA runtime smoke passed.
+- `origin/master` `cf2a6d6a` is the stable baseline unless a page explicitly names another branch.
+- Branch-local or release-branch code changes are not shipped on `origin/master` until source evidence proves the branch or equivalent source shape landed there.
+- "Propagated" means the named source Chernarus and maintained Vanilla Takistan roots both carry the change on the named ref; it does not mean Arma 2 OA runtime smoke passed.
 - Branch-feature smoke packs are planned gates, not proof of in-game behavior.
-- Old worklog/event/knowledge lines are append-only history. Newer source-checked pages and explicit supersession records beat old timestamps.
+- Old worklog/event/knowledge lines and older matrices are append-only history. The 2026-06-14 snapshot, owner pages and explicit supersession records beat old timestamps.
 
 ## Continue Reading
 

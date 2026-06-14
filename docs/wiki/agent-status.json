@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T03:30:14+02:00",
+  "generatedAt": "2026-06-14T03:39:38+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -21,7 +21,7 @@
     "Codex": {
       "status": "active",
       "currentLane": "documentation-finisher-loop",
-      "currentWork": "Published docs-only supply mission architecture branch-scope route: Supply-Mission-Architecture.md now names docs checkout 8a6695b8, separates docs/source truck-only typed scan from stable/release heli-aware supply/cash-run shape, refreshes cooldown and dead-twin branch status across stable cf2a6d6a, Miksuu b8389e74, perf/quick-wins 0076040f and release a96fdda2, and aligns Economy-Towns-And-Supply.md plus Feature-Status-Register.md. No gameplay source changed.",
+      "currentWork": "Published docs-only current source status snapshot route: Current-Source-Status-Snapshot.md now names docs checkout 76674ae4, stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf/quick-wins 0076040f; older 2026-06-03/05 matrices are marked historical; Source-Fix-Propagation-Queue.md no longer overstates stable/release as carrying the supply player-list index fix. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "current-source-status-snapshot-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Current-Source-Status-Snapshot.md now carries a 2026-06-14 current-ref matrix for docs checkout 76674ae4, stable origin/master cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf/quick-wins 0076040f. It routes Patrols v2, paratrooper PVs, Skill_Init, hosted FPS, supply scans/player-list indexing and commander-built ARTY to owner pages, marks older 2026-06-03/05 matrices historical, and Source-Fix-Propagation-Queue.md now records the supply player-list index fix as docs/source-only in the checked refs. No gameplay source changed."
+    },
     {
       "lane": "supply-mission-architecture-branch-scope-route",
       "owner": "Codex",
