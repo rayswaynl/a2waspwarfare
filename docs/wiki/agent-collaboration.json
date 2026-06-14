@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T06:29:17+02:00",
+  "generatedAt": "2026-06-14T06:39:21+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,40 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "server-runtime-gateway-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Server-Gameplay-Runtime-Atlas.md",
+        "Server-Runtime-And-Operations.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_SideMessage.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnHQKilled.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/GUI/serverFpsGUI.sqf",
+        "Hosted-Server-FPS-Loop-Sleep.md",
+        "AI-Commander-Autonomy-Audit.md",
+        "Towns-Camps-And-Capture-Atlas.md",
+        "SQF-Code-Atlas.md",
+        "Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Refreshed Server-Gameplay-Runtime-Atlas.md and Server-Runtime-And-Operations.md so docs head a6785f51 is the visible source-continuity checkpoint for checked server runtime paths.",
+        "Pruned duplicated runtime-risk branch detail for FPS publishers, AI supply-truck startup, Patrols v2 and dormant server hooks by routing to canonical owner pages.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future server-runtime gateway edits should keep detailed branch matrices on Server-Gameplay-Runtime-Atlas.md, Hosted-Server-FPS-Loop-Sleep.md, AI-Commander-Autonomy-Audit.md, Towns-Camps-And-Capture-Atlas.md, SQF-Code-Atlas.md and Source-Fix-Propagation-Queue.md; keep Server-Runtime-And-Operations.md as the operations/runtime router.",
+      "updated": "2026-06-14T06:39:21+02:00"
+    },
     {
       "lane": "sqf-atlas-compile-route-prune",
       "owner": "Codex",

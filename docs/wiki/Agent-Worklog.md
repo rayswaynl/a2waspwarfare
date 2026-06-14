@@ -972,3 +972,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Rechecked current docs head `34212d6a`: targeted `git diff --name-only 4277a2ad..HEAD` checks returned no changes for the checked PVF registration, server-init, client-init, common-init and AI supply-truck source paths.
 - Source-checked the disabled/deferred compile anchors: `UpdateSupplyTruck` compile/spawn at `Init_Server.sqf:36,383` plus missing `supplytruck.fsm`; old client TaskSystem, MASH marker receiver, plural blink/add-track comments; dormant common AT/bomb hooks; and the commented-but-execed second FPS publisher at `Init_Server.sqf:65,90,595`.
 - Pruned [SQF code atlas](SQF-Code-Atlas) so PVF branch counts route to [Public variable channel index](Public-Variable-Channel-Index#current-branch-registry-matrix), direct attack-wave proof routes to [Attack-wave authority](Attack-Wave-Authority-Playbook), `LogGameEnd` duplicate-bind status routes to [Server init bind cleanup](Server-Init-Bind-Cleanup), and disabled/deferred compile signals route to their owner pages instead of restating branch matrices. No gameplay source changed.
+
+## 2026-06-14T06:39:21+02:00 - Codex - Server runtime gateway route prune
+
+- Claimed `server-runtime-gateway-route-prune` as a docs-only server runtime gateway/atlas cleanup pass, with no gameplay source edits.
+- Rechecked current docs head `a6785f51`: targeted `git diff --name-only 4277a2ad..HEAD` checks returned no changes for checked server runtime paths: `Init_Server.sqf`, `Server/FSM`, `Server/Module`, `Server_SideMessage.sqf`, `Server_OnHQKilled.sqf` and `serverFpsGUI.sqf`.
+- Refreshed [Server runtime and operations](Server-Runtime-And-Operations) and [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas) so `a6785f51` is the visible server-runtime source-continuity checkpoint while older hashes remain line-anchor provenance.
+- Pruned repeated runtime-risk branch detail: hosted FPS, AI supply-truck startup, Patrols v2 and dormant server hooks now route to the branch-scope table plus owner pages instead of repeating exact branch proof in both places. No gameplay source changed.

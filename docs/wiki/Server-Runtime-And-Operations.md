@@ -4,7 +4,7 @@ This is a gateway for prompts and readers that ask for "server runtime" or "serv
 
 Do not put long source proof here. Runtime and operations are intentionally split so gameplay loops, deployment contracts and release evidence do not overwrite each other.
 
-Branch scope matters for server startup. Current docs checkout `docs/developer-wiki-index` `4277a2ad` keeps the server-runtime source anchors from the earlier `92c5cf05` / `6afcc58e` snapshots; the checked paths are unchanged. Stable `origin/master` `cf2a6d6a` differs for AI supply-truck startup, Patrols v2 and FPS publisher cleanup; release `a96fdda2` matches the supply-truck/FPS cleanup but not Patrols v2. Use [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas#branch-scope-for-source-anchors) before citing source line anchors as current-master evidence.
+Branch scope matters for server startup. Current docs head `docs/developer-wiki-index` `a6785f51` keeps the server-runtime source anchors from `4277a2ad` and the earlier `92c5cf05` / `6afcc58e` snapshots; targeted source diffs over `Init_Server.sqf`, server FSM/module paths, `Server_SideMessage.sqf`, `Server_OnHQKilled.sqf` and `serverFpsGUI.sqf` return no checked source changes. Stable `origin/master` `cf2a6d6a` differs for AI supply-truck startup, Patrols v2 and FPS publisher cleanup; release `a96fdda2` matches the supply-truck/FPS cleanup but not Patrols v2. Use [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas#branch-scope-for-source-anchors) before citing source line anchors as current-master evidence.
 
 ## Which Page Owns What
 
