@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T09:36:34+02:00",
+  "generatedAt": "2026-06-14T09:43:52+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,40 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "networking-pv-gateway-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Networking-And-Public-Variables.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_HandlePVF.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_SendMessage.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_onEventHandler_SEND_MESSAGE.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateclient.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_Command.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/PVFunctions/AttackWave.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AttackWave.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Init/Init_PublicVariables.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_HandlePVF.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Functions/Client_HandlePVF.sqf"
+      ],
+      "outputs": [
+        "Refreshed Networking-And-Public-Variables.md so current docs head 1e16527b is the visible network/PVF source-continuity checkpoint.",
+        "Confirmed targeted diffs from 4277a2ad to HEAD over checked network/PVF/direct-channel source paths returned no changed files.",
+        "Routed repeated dispatch-time Call Compile proof and old recheck wording to Current Branch Scope plus the canonical PVF/channel/authority owner pages."
+      ],
+      "handoff": "Closed as docs-published. Future networking gateway edits should keep channel inventory on Public-Variable-Channel-Index.md, dispatcher patch shape on PVF-Dispatch-Implementation-Playbook.md, registered-handler authority on Server-Authority-Migration-Map.md and direct-channel proof on owner pages; keep Networking-And-Public-Variables.md focused on transport architecture and client-bound runtime effects.",
+      "updated": "2026-06-14T09:43:52+02:00"
+    },
     {
       "lane": "marker-cleanup-atlas-source-scope-route-prune",
       "owner": "Codex",
