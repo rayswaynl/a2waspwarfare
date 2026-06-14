@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T05:11:17+02:00",
+  "generatedAt": "2026-06-14T05:23:03+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,36 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "sqf-network-branch-caveat-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "SQF-Code-Atlas.md",
+        "Networking-And-Public-Variables.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Tools/LoadoutManager",
+        "origin/master",
+        "origin/release/2026-06-feature-bundle",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/feat/ai-commander"
+      ],
+      "outputs": [
+        "Updated SQF-Code-Atlas.md to name docs checkout 8701aacc source continuity and route UpdateSupplyTruck branch status to AI-Commander-Autonomy-Audit.md.",
+        "Updated Networking-And-Public-Variables.md so supply-heli/cash-run is stable/release-present, while docs checkout, Miksuu and perf remain truck-only.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future SQF/network gateway edits should keep full branch matrices on owner pages: AI-Commander-Autonomy-Audit.md for AI supply trucks and Supply-Mission-Architecture.md / Economy-Towns-And-Supply.md for supply-heli mechanics.",
+      "updated": "2026-06-14T05:23:03+02:00"
+    },
     {
       "lane": "client-skill-init-current-branch-route",
       "owner": "Codex",

@@ -35,7 +35,7 @@ This page is the source map for compiled SQF entrypoints and runtime handoffs. U
 
 ## Compile Registry Summary
 
-Snapshot refreshed 2026-06-13 from the source mission in this docs checkout, `docs/developer-wiki-index` at `04a60e43`: `Missions/[55-2hc]warfarev2_073v48co.chernarus`, all `.sqf` files, `Select-String -SimpleMatch 'preprocessFile'`. Rechecked 2026-06-14 on docs checkout `40c97e74`: `git diff --quiet 04a60e43..HEAD -- ":(literal)Missions/[55-2hc]warfarev2_073v48co.chernarus"` shows the Chernarus mission source tree is unchanged, and rerunning the count command returns the same numbers below. This deliberately counts `preprocessFile` as a substring of `preprocessFileLineNumbers`, so plain `preprocessFile` is `total - preprocessFileLineNumbers`. See [Deep-review findings](Deep-Review-Findings) DR-5 for why these counts must be regenerated before relying on them.
+Snapshot refreshed 2026-06-13 from the source mission in this docs checkout, `docs/developer-wiki-index` at `04a60e43`: `Missions/[55-2hc]warfarev2_073v48co.chernarus`, all `.sqf` files, `Select-String -SimpleMatch 'preprocessFile'`. Rechecked 2026-06-14 on docs checkout `8701aacc`: `git diff --name-only 04a60e43..HEAD -- "Missions/[55-2hc]warfarev2_073v48co.chernarus"` returns no source changes, and rerunning the count command returns the same numbers below. This deliberately counts `preprocessFile` as a substring of `preprocessFileLineNumbers`, so plain `preprocessFile` is `total - preprocessFileLineNumbers`. See [Deep-review findings](Deep-Review-Findings) DR-5 for why these counts must be regenerated before relying on them.
 
 This snapshot is branch-local. Stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, perf `0076040f` and release `a96fdda2` have branch/root-specific server-init differences, so rerun the command on each target branch before using these counts as branch evidence.
 
@@ -193,7 +193,7 @@ Headless init compiles the same delegation helpers used by clients plus `WFBE_CL
 
 `Common/Init/Init_PublicVariables.sqf` builds the registered PVF command lists and registers `WFBE_PVF_<Command>` event handlers. This atlas keeps only the ownership shape; [Public variable channel index](Public-Variable-Channel-Index#1-registered-pvf-commands) owns the command inventory, branch splits and authority notes.
 
-Docs checkout `40c97e74` keeps the same registry in source Chernarus and maintained Vanilla: 13 server-bound commands at `Common/Init/Init_PublicVariables.sqf:9-21`, `_serverCommandPV` assignment at `:23`, 15 client-bound commands at `:25-40` including `HandleParatrooperMarkerCreation` at `:39`, `_clientCommandPV` assignment at `:42`, and PVEH dispatch wiring at `:44-52`. Stable `origin/master` `cf2a6d6a` and release `a96fdda2` add branch-local `RequestEnqueue` / `RequestDequeue` server PVFs at `:22-23` in both maintained roots; Miksuu `b8389e74`, perf `0076040f` and `feat/ai-commander` `c20ce153` have their own paratrooper-registration split. Use the channel index before citing a command count on any branch.
+Docs checkout `8701aacc` keeps the same registry that was counted at `40c97e74` in source Chernarus and maintained Vanilla: 13 server-bound commands at `Common/Init/Init_PublicVariables.sqf:9-21`, `_serverCommandPV` assignment at `:23`, 15 client-bound commands at `:25-40` including `HandleParatrooperMarkerCreation` at `:39`, `_clientCommandPV` assignment at `:42`, and PVEH dispatch wiring at `:44-52`. Stable `origin/master` `cf2a6d6a` and release `a96fdda2` add branch-local `RequestEnqueue` / `RequestDequeue` server PVFs at `:22-23` in both maintained roots; Miksuu `b8389e74`, perf `0076040f` and `feat/ai-commander` `c20ce153` have their own paratrooper-registration split. Use the channel index before citing a command count on any branch.
 
 PVF dispatch mechanics:
 
@@ -219,7 +219,7 @@ High-signal disabled/deferred compile lines:
 
 | Source | Target | Evidence |
 | --- | --- | --- |
-| `Server/Init/Init_Server.sqf` | `Server/AI/AI_UpdateSupplyTruck.sqf` | `UpdateSupplyTruck` compile line is block-commented; docs/Miksuu/perf still need the branch matrix before claiming the runtime path is safe. |
+| `Server/Init/Init_Server.sqf` | `Server/AI/AI_UpdateSupplyTruck.sqf` | `UpdateSupplyTruck` compile line is block-commented. Docs checkout `8701aacc`, Miksuu `b8389e74` and perf `0076040f` still spawn the missing-FSM worker in both maintained roots, while stable `cf2a6d6a` and release `a96fdda2` log-disable the path; `feat/ai-commander` `c20ce153` guards Chernarus only. Branch matrix: [AI commander autonomy audit](AI-Commander-Autonomy-Audit#ai-supply-truck-branch-matrix). |
 | `Server/AI/AI_UpdateSupplyTruck.sqf` | `Server/FSM/supplytruck.fsm` | The target FSM is missing; only client FSM files exist. |
 | `Client/Init/Init_Client.sqf` | `Client/Functions/Client_TaskSystem.sqf` | `TaskSystem` compile line is commented. |
 | `Client/Init/Init_Client.sqf` | `Client/Module/MASH/receiverMASHmarker.sqf` | Receiver compile line is commented. |

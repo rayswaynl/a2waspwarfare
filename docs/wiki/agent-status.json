@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T05:11:17+02:00",
+  "generatedAt": "2026-06-14T05:23:03+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "client-skill-init-current-branch-route",
-      "currentWork": "Published docs-only client skill init branch refresh: Client-Skill-Init-Idempotency.md and Feature-Status-Register.md now record docs checkout 719455a2, stable cf2a6d6a and release a96fdda2 as carrying single Skill_Init plus later WFBE_SK_FNC_Apply in both maintained roots, while Miksuu b8389e74, perf 0076040f and feat-ai c20ce153 still duplicate Skill_Init. No gameplay source changed.",
+      "currentLane": "sqf-network-branch-caveat-route",
+      "currentWork": "Published docs-only SQF/network gateway branch-caveat refresh: SQF-Code-Atlas.md now names current docs checkout 8701aacc source continuity and routes UpdateSupplyTruck to the AI commander matrix; Networking-And-Public-Variables.md now states supply-heli/cash-run source is stable/release-present while docs/Miksuu/perf remain truck-only. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep gateway/atlas pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "sqf-network-branch-caveat-route",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "SQF-Code-Atlas.md and Networking-And-Public-Variables.md now correct two stale gateway caveats. Docs checkout 8701aacc has no maintained mission-root or LoadoutManager source changes since prior atlas anchors; UpdateSupplyTruck branch status routes to the AI commander autonomy matrix; and supply-heli/cash-run is documented as stable cf2a6d6a/release a96fdda2 source-present but docs/Miksuu/perf truck-only. No gameplay source changed."
+    },
     {
       "lane": "client-skill-init-current-branch-route",
       "owner": "Codex",
