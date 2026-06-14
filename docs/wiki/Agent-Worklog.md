@@ -986,3 +986,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Rechecked current docs head `adb9dbc8`: targeted `git diff --name-only 4277a2ad..HEAD` checks returned no changes for overview runtime/tooling paths: `description.ext`, `initJIPCompatible.sqf`, Common/Server/Client/Headless init, `FileManager.cs`, `SqfFileGenerator.cs` and `ZipManager.cs`.
 - Refreshed [Architecture overview](Architecture-Overview) so `adb9dbc8` is the visible source-continuity checkpoint while older overview hashes remain line-anchor provenance.
 - Pruned repeated LoadoutManager root-discovery, generated-target and packaging detail by routing branch matrices and operational rules to [Tools and build workflow](Tools-And-Build-Workflow), [Source fix propagation queue](Source-Fix-Propagation-Queue) and [Mission config/version include graph](Mission-Config-Version-Include-Graph). No gameplay source changed.
+
+## 2026-06-14T06:58:31+02:00 - Codex - Client UI atlas branch route prune
+
+- Claimed `client-ui-atlas-branch-route-prune` as a docs-only Client UI atlas cleanup pass, with no gameplay source edits.
+- Rechecked current docs head `a03a1fb5`: targeted `git diff --name-only b5219d47..HEAD` checks returned no changes for checked Chernarus and maintained Vanilla UI/Rsc paths: `Rsc`, `Client/GUI`, `Init_Client.sqf`, `Client_UpdateRHUD.sqf` and `updateavailableactions.fsm`.
+- Refreshed [Client UI systems atlas](Client-UI-Systems-Atlas) so `a03a1fb5` is the visible UI source-continuity checkpoint while older UI hashes remain line-anchor provenance.
+- Pruned Branch-Only UI Theme Work: `origin/feat/wf-menu-ops-console` and `origin/feat/buymenu-easa-qol` now route to [Feature status](Feature-Status-Register#partial--deferred--needs-review), [Pending owner decisions](Pending-Owner-Decisions#branch-only-feature-promotion-decisions), [Testing workflow](Testing-Debugging-And-Release-Workflow#branch-only-feature-smoke-pack) and [BuyMenu/EASA QoL branch audit](BuyMenu-EASA-QoL-Branch-Audit) instead of restating branch details locally. No gameplay source changed.

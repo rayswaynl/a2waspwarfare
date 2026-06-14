@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T06:47:40+02:00",
+  "generatedAt": "2026-06-14T06:58:31+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,42 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "client-ui-atlas-branch-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Client-UI-Systems-Atlas.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Client_UpdateRHUD.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateavailableactions.fsm",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Init/Init_Client.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Client_UpdateRHUD.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/FSM/updateavailableactions.fsm",
+        "Feature-Status-Register.md",
+        "Pending-Owner-Decisions.md",
+        "Testing-Debugging-And-Release-Workflow.md",
+        "BuyMenu-EASA-QoL-Branch-Audit.md"
+      ],
+      "outputs": [
+        "Refreshed Client-UI-Systems-Atlas.md so docs head a03a1fb5 is the visible source-continuity checkpoint for checked Chernarus and maintained Vanilla UI/Rsc paths.",
+        "Pruned repeated wf-menu-ops-console and buymenu-easa-qol branch-only detail by routing to canonical owner/status/testing pages.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future Client UI atlas edits should keep the atlas as a route-first UI map: local source anchors and compact source-continuity notes only, with branch promotion detail on Feature-Status-Register.md, Pending-Owner-Decisions.md, Testing-Debugging-And-Release-Workflow.md and focused branch audits.",
+      "updated": "2026-06-14T06:58:31+02:00"
+    },
     {
       "lane": "architecture-overview-tooling-route-prune",
       "owner": "Codex",

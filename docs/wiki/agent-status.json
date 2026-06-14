@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T06:47:40+02:00",
+  "generatedAt": "2026-06-14T06:58:31+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "architecture-overview-tooling-route-prune",
-      "currentWork": "Published docs-only Architecture overview tooling route prune: Architecture-Overview.md now names docs head adb9dbc8 as the visible source-continuity checkpoint for checked runtime/tooling anchors, and generated version, LoadoutManager root, generated-target and packaging details route to Tools-And-Build-Workflow.md, Source-Fix-Propagation-Queue.md and Mission-Config-Version-Include-Graph.md instead of repeating tooling branch matrices in the architecture gateway. Targeted source diffs confirmed no checked overview runtime/tooling source-path drift from 4277a2ad through adb9dbc8. No gameplay source changed.",
+      "currentLane": "client-ui-atlas-branch-route-prune",
+      "currentWork": "Published docs-only Client UI atlas branch route prune: Client-UI-Systems-Atlas.md now names docs head a03a1fb5 as the visible UI source-continuity checkpoint for checked UI/Rsc anchors, and Branch-Only UI Theme Work routes wf-menu-ops-console plus buymenu-easa-qol detail to Feature-Status-Register.md, Pending-Owner-Decisions.md, Testing-Debugging-And-Release-Workflow.md and BuyMenu-EASA-QoL-Branch-Audit.md instead of repeating branch-promotion detail in the atlas. Targeted source diffs confirmed no checked Chernarus or maintained Vanilla UI/Rsc source-path drift from b5219d47 through a03a1fb5. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "client-ui-atlas-branch-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Client-UI-Systems-Atlas.md now names docs head a03a1fb5 as the current UI source-continuity checkpoint. Checked Chernarus and maintained Vanilla Rsc, Client/GUI, Init_Client.sqf, Client_UpdateRHUD.sqf and updateavailableactions.fsm paths are unchanged from b5219d47 through a03a1fb5. Branch-only wf-menu-ops-console and buymenu-easa-qol detail now routes to Feature-Status-Register.md, Pending-Owner-Decisions.md, Testing-Debugging-And-Release-Workflow.md and BuyMenu-EASA-QoL-Branch-Audit.md instead of being repeated in the atlas. No gameplay source changed."
+    },
     {
       "lane": "architecture-overview-tooling-route-prune",
       "owner": "Codex",
