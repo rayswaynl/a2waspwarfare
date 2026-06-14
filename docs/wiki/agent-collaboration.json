@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T06:58:31+02:00",
+  "generatedAt": "2026-06-14T07:08:45+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,36 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "ai-headless-gateway-fps-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "AI-Headless-And-Performance.md",
+        "AI-Runtime-HC-Loop-Map.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "Server-Gameplay-Runtime-Atlas.md",
+        "Hosted-Server-FPS-Loop-Sleep.md",
+        "Performance-Opportunity-Sweep.md",
+        "Testing-Debugging-And-Release-Workflow.md",
+        "Source-Fix-Propagation-Queue.md"
+      ],
+      "outputs": [
+        "Refreshed AI-Headless-And-Performance.md and AI-Runtime-HC-Loop-Map.md so docs head ca028bff is the visible source-continuity checkpoint for checked AI/HC/performance paths.",
+        "Pruned repeated server-FPS publisher branch detail from the broad AI gateway by routing to canonical runtime/FPS/performance/testing owner pages.",
+        "Kept gameplay source untouched."
+      ],
+      "handoff": "Closed as docs-published. Future AI/headless gateway edits should keep AI-Headless-And-Performance.md as the broad router, keep loop tables on AI-Runtime-HC-Loop-Map.md, keep exact server-FPS publisher branch matrices on Server-Gameplay-Runtime-Atlas.md and Hosted-Server-FPS-Loop-Sleep.md, and preserve AI commander / Patrols v2 / town-AI vehicle safety detail on their owner pages.",
+      "updated": "2026-06-14T07:08:45+02:00"
+    },
     {
       "lane": "client-ui-atlas-branch-route-prune",
       "owner": "Codex",

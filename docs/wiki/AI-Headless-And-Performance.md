@@ -4,7 +4,7 @@ This page is the broad gateway for AI, headless-client behavior, player-AI recov
 
 For the old BennyBoy WarfareBE vs current Wasp FPS archaeology pass, see [Old WarfareBE performance comparison](Old-WarfareBE-Performance-Comparison). It is useful when discussing whether older mission code was lighter, because it compares old per-town FSM activation and FPS-gated client delegation against current global town loops and HC mode.
 
-Unless a row names another ref, source anchors below are from docs checkout `docs/developer-wiki-index` `ee383941`. Rechecked 2026-06-14: the AI/headless source paths used here are unchanged from the earlier `b9e80da0` AI runtime pass, so the docs-checkout line refs remain valid. Treat stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and `origin/feat/ai-commander` `c20ce153` as branch-scope refs before citing their line numbers.
+Unless a row names another ref, source anchors below are from docs head `docs/developer-wiki-index` `ca028bff`. Rechecked 2026-06-14: targeted mission-root diffs from the earlier `b9e80da0` AI runtime pass and the later `ee383941` gateway snapshot to `HEAD` return no checked Chernarus or maintained Vanilla source changes, so the line refs remain valid. Treat stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and `origin/feat/ai-commander` `c20ce153` as branch-scope refs before citing their line numbers.
 
 ## How To Use This Page
 
@@ -24,7 +24,7 @@ Use this table before turning this broad atlas into a branch claim. Detailed mat
 
 | Ref | AI / HC / performance scope | Practical route |
 | --- | --- | --- |
-| Docs checkout `ee383941` | Checked AI/HC source paths are unchanged from `b9e80da0`. This docs source still lacks Patrols v2 files and still has the old AI supply-truck raw-spawn shape when truck supply plus AI commander logistics are enabled. | Use this page for orientation, then open [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) or [AI commander autonomy audit](AI-Commander-Autonomy-Audit) before making patch-status claims. |
+| Docs head `ca028bff` | Checked Chernarus and maintained Vanilla mission source paths are unchanged from `ee383941` and the older `b9e80da0` AI runtime snapshot. This docs source still lacks Patrols v2 files and still has the old AI supply-truck raw-spawn shape when truck supply plus AI commander logistics are enabled. | Use this page for orientation, then open [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map) or [AI commander autonomy audit](AI-Commander-Autonomy-Audit) before making patch-status claims. |
 | Stable `origin/master` `cf2a6d6a` | Safe-disables legacy AI supply-truck logistics, carries Patrols v2 in both maintained roots and keeps `serverFpsGUI.sqf` as the single server-FPS publisher. | Current-master AI runtime claims should start from [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map#current-branch-scope), [Towns/camps/capture](Towns-Camps-And-Capture-Atlas#patrols-v2-side-upgrade-path) and [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas#branch-scope-for-source-anchors). |
 | Release `a96fdda2` | Matches stable's AI supply-truck safe-disable and single server-FPS publisher, but does not carry Patrols v2 files in checked maintained roots; it only carries the older patrol loop-exit fix. | Do not cite release as Patrols v2 evidence. Use [Towns/camps/capture](Towns-Camps-And-Capture-Atlas#historical-town-patrol-mechanic-pre-patrols-v2) for the release patrol scope. |
 | Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` | Both lack Patrols v2 in checked maintained roots and keep raw-spawning the old missing-FSM AI supply-truck worker; perf line refs differ between Chernarus and maintained Vanilla. | Recheck exact branch files before merging AI/runtime changes; route old-branch patrol and supply-truck claims through owner matrices. |
@@ -122,11 +122,13 @@ Instrumented areas include:
 
 ## Server FPS
 
-`Server/GUI/serverFpsGUI.sqf` and `Server/Module/serverFPS/monitorServerFPS.sqf` publish server FPS data used by HUD/status surfaces in this docs checkout. Earlier compile lines for `WFBE_CO_FNC_monitorServerFPS` are commented at `Server/Init/Init_Server.sqf:65,90`, but `Init_Server.sqf` later executes the GUI and module directly at `Server/Init/Init_Server.sqf:578,595`.
+This gateway only records where server-FPS evidence lives. Detailed publisher shape, branch drift and hosted/listen busy-loop status belong to [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas#branch-scope-for-source-anchors) and [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep).
 
-Source anchors: `Server/GUI/serverFpsGUI.sqf:1-10` exits immediately when `!isDedicated`, then publishes `SERVER_FPS_GUI` every 8 seconds on dedicated servers; `Server/Module/serverFPS/monitorServerFPS.sqf:1-6` now uses the same early-exit shape for `WFBE_VAR_SERVER_FPS`. RHUD reads `SERVER_FPS_GUI`; a current-source search did not find an obvious `WFBE_VAR_SERVER_FPS` consumer, so consolidation is plausible but still needs generated-mission/branch smoke. The hosted/listen-server busy-loop caveat is DR-19 and is patched in source Chernarus plus maintained Vanilla; Arma smoke remains pending.
-
-Branch note: stable `origin/master` and release keep only the `serverFpsGUI.sqf` publisher in checked maintained roots, while docs/Miksuu/perf keep the two-publisher shape. Keep detailed FPS branch status in [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas#branch-scope-for-source-anchors) and performance proof in [Performance opportunity sweep](Performance-Opportunity-Sweep).
+| Question | Owner route |
+| --- | --- |
+| Which target branch has one publisher, two guarded publishers or two old unguarded publishers? | [Server gameplay runtime atlas](Server-Gameplay-Runtime-Atlas#branch-scope-for-source-anchors), [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep#current-branch-scope) |
+| Which FPS value feeds RHUD/status surfaces and which publisher lacks an obvious current source consumer? | [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep#handoff), [Performance opportunity sweep](Performance-Opportunity-Sweep) |
+| What smoke proves dedicated publishing and hosted/listen no-spin behavior? | [Testing workflow](Testing-Debugging-And-Release-Workflow), [Source fix propagation queue](Source-Fix-Propagation-Queue#validation-matrix) |
 
 ## Performance Caveats
 

@@ -16,7 +16,7 @@ This page is a focused runtime map for server loops, town AI, headless-client de
 
 ## Current Branch Scope
 
-Checked 2026-06-13 on docs checkout `b9e80da0`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and `origin/feat/ai-commander` `c20ce153`. Rechecked Patrols v2 file presence on 2026-06-14 from docs checkout `ee383941`: the checked AI/HC source paths remain unchanged from `b9e80da0`, stable `origin/master` still carries Patrols v2 in both maintained roots, and docs checkout/release/Miksuu/perf/feat-ai do not carry the Patrols v2 files in checked maintained roots.
+Checked 2026-06-13 on docs checkout `b9e80da0`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f`, release `a96fdda2` and `origin/feat/ai-commander` `c20ce153`. Rechecked Patrols v2 file presence on 2026-06-14 from docs checkout `ee383941`; rechecked source continuity again from docs head `ca028bff`. The checked Chernarus and maintained Vanilla mission source paths remain unchanged from `b9e80da0`, stable `origin/master` still carries Patrols v2 in both maintained roots, and docs checkout/release/Miksuu/perf/feat-ai do not carry the Patrols v2 files in checked maintained roots.
 
 | Surface | Current branch truth | Route |
 | --- | --- | --- |
@@ -103,8 +103,8 @@ When debugging "AI ignores orders", first identify which layer is failing: comma
 
 | Target | Smoke gates |
 | --- | --- |
-| Dedicated server | Verify `commonInitComplete`, `townInit`, `serverInitFull`, town loop, town AI loop, camp loop, cleanup loops, performance audit and both FPS publishers. |
-| Hosted/listen | Verify server/client branches both run, both FPS publishers exit cleanly on `!isDedicated`, and client waits/JIP queries finish without relying on server-FPS publication. |
+| Dedicated server | Verify `commonInitComplete`, `townInit`, `serverInitFull`, town loop, town AI loop, camp loop, cleanup loops, performance audit and the target branch's FPS publisher shape. Use [Hosted server FPS loop sleep](Hosted-Server-FPS-Loop-Sleep) for one-publisher vs two-publisher expectations. |
+| Hosted/listen | Verify server/client branches both run, the target branch's FPS publishers exit cleanly or are absent as expected, and client waits/JIP queries finish without relying on server-FPS publication. |
 | JIP | Join after server init and town activation; verify side logic, town/camp states, marker updates, day/night sync and no duplicated local loops. |
 | HC | Run dedicated plus HC with delegation mode 2; verify HC registration, town AI delegation, `update-town-delegation`, HC disconnect removal and fallback behavior. |
 | Negative AI supply | In a private raw-spawn branch only, enable the old AI supply-truck path and confirm the missing-FSM failure; use that as a release gate before any revival. Stable/release should instead show the warning-disable path. |
