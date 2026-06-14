@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T05:56:37+02:00",
+  "generatedAt": "2026-06-14T06:05:45+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,8 +20,8 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "architecture-sqf-anchor-continuity-route",
-      "currentWork": "Published docs-only architecture/SQF source-anchor continuity refresh: Architecture-Overview.md, SQF-Code-Atlas.md, Server-Gameplay-Runtime-Atlas.md, Server-Runtime-And-Operations.md and Networking-And-Public-Variables.md now name docs checkout 4277a2ad as the current source-continuity checkpoint while preserving older anchor hashes as provenance. Targeted source diffs and SQF compile-count regeneration confirmed no checked source-path drift. No gameplay source changed.",
+      "currentLane": "client-ui-atlas-continuity-route",
+      "currentWork": "Published docs-only Client UI atlas source-continuity refresh: Client-UI-Systems-Atlas.md, UI-Resource-Parity-Cleanup.md, UI-IDD-Collision-Repair.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md now name docs checkout b5219d47 as the current UI/Rsc source-continuity checkpoint while preserving older UI hashes as provenance. Targeted source diffs confirmed no checked UI/Rsc source-path drift. No gameplay source changed.",
       "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep UI/SQF/architecture gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
@@ -57,10 +57,10 @@
   },
   "laneSummary": [
     {
-      "lane": "architecture-sqf-anchor-continuity-route",
+      "lane": "client-ui-atlas-continuity-route",
       "owner": "Codex",
       "status": "published-validated",
-      "output": "Architecture-Overview.md, SQF-Code-Atlas.md, Server-Gameplay-Runtime-Atlas.md, Server-Runtime-And-Operations.md and Networking-And-Public-Variables.md now name docs checkout 4277a2ad as the current source-continuity checkpoint. Targeted diffs from 1bef8801, 8701aacc, 92c5cf05 and 59deb306 to HEAD found no changes in checked architecture, SQF, server-runtime or network source paths, and the SQF compile-count regeneration still returns 738 total preprocessFile matches. No gameplay source changed."
+      "output": "Client-UI-Systems-Atlas.md, UI-Resource-Parity-Cleanup.md, UI-IDD-Collision-Repair.md, Feature-Status-Register.md and Source-Fix-Propagation-Queue.md now name docs checkout b5219d47 as the current UI/Rsc source-continuity checkpoint. Targeted diffs from a71b42fe, 2fef1e3d and f7bc72a8 to HEAD found no changes in checked Rsc, Client/GUI, client init, RHUD or updateavailableactions source paths; no maintained-root findDisplay 23000/10200 callers were found. No gameplay source changed."
     },
     {
       "lane": "sqf-network-branch-caveat-route",

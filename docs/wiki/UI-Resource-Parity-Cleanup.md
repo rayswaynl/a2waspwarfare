@@ -11,9 +11,11 @@ Canonical owner pages:
 - Risk register: [Feature status register](Feature-Status-Register)
 - Stale-code evidence: [Dead code and stale code register](Dead-Code-And-Stale-Code-Register)
 
+Current docs/source note: as of docs checkout `docs/developer-wiki-index` `b5219d47`, the checked Chernarus and maintained Vanilla `Rsc` / UI-controller paths below are unchanged from the earlier `2fef1e3d` resource-parity snapshot. The line refs in this page keep that older snapshot as provenance while the current docs head is the visible branch checkpoint.
+
 ## Current Parity Matrix
 
-| Item | Current docs/source Chernarus | Maintained Vanilla Takistan | Stable `origin/master` `cf2a6d6a` | Miksuu `b8389e74` / perf `0076040f` | Release `a96fdda2` | Development meaning |
+| Item | Docs checkout `b5219d47` Chernarus | Maintained Vanilla Takistan | Stable `origin/master` `cf2a6d6a` | Miksuu `b8389e74` / perf `0076040f` | Release `a96fdda2` | Development meaning |
 | --- | --- | --- | --- | --- | --- | --- |
 | Stale `RscMenu_Upgrade` | Present at `Rsc/Dialogs.hpp:2425`; `onLoad` points to missing `Client/GUI/GUI_Menu_Upgrade.sqf` at `:2428`; old `wf_*.paa` icons are referenced at `:2634-2821`. | Same stale class and missing controller. | Removed in both maintained roots; no `RscMenu_Upgrade` / `GUI_Menu_Upgrade.sqf` hits in checked `Rsc/Dialogs.hpp`. | Same stale class in Chernarus and Vanilla (`Dialogs.hpp:2435`, `:2438`). | Removed in both maintained roots. | Treat the old class as stale. Preserve or port the stable/release deletion, or add an explicit compatibility alias, then smoke live `WFBE_UpgradeMenu`. |
 | Economy stale control writes | `GUI_Menu_Economy.sqf:7-8` writes `23004`, `23005`, `23006`, but `RscMenu_Economy` declares `23002`, `23003`, `23008`-`23016` (`Dialogs.hpp:3327-3408`). | Same stale writes and declared-control shape. | Rewritten away from the stale writes in both maintained roots; uses display controls `23002` and `23020` (`GUI_Menu_Economy.sqf:4,25`). | Same stale writes in both maintained roots (`GUI_Menu_Economy.sqf:7-8`). | Same stable shape in both maintained roots (`GUI_Menu_Economy.sqf:4,25`). | Port/compare the stable/release shape or remove/update stale writes consistently across target roots. Smoke Economy disabled state, income controls, sell mode and supply-truck respawn. |
@@ -25,7 +27,7 @@ Canonical owner pages:
 - Live upgrade path: `WFBE_UpgradeMenu` loads `Client/GUI/GUI_UpgradeMenu.sqf` (`Rsc/Dialogs.hpp:4-7`), and the main menu opens it with `createDialog "WFBE_UpgradeMenu"` (`Client/GUI/GUI_Menu.sqf:165`).
 - Old upgrade path: no `Client/GUI/GUI_Menu_Upgrade.sqf` exists in current Chernarus or maintained Vanilla, and no `Client/Images/wf_*.paa` files exist under current Chernarus `Client/Images`.
 - Economy declared controls: current `RscMenu_Economy` declares `23002`, `23003`, `23008`, `23009`, `23010`, `23011`, `23012`, `23013`, `23014`, `23015`, `23016`, not `23004`-`23006`.
-- Display lookup caveat: the 2026-06-14 maintained-root search found no `findDisplay 23000` or `findDisplay 10200` caller in docs checkout `2fef1e3d`, stable `cf2a6d6a`, Miksuu `b8389e74`, perf `0076040f` or release `a96fdda2`, so duplicate IDD cleanup is maintenance/future-proofing rather than a proven live lookup bug.
+- Display lookup caveat: the 2026-06-14 maintained-root search found no `findDisplay 23000` or `findDisplay 10200` caller in docs checkout `b5219d47` (unchanged from `2fef1e3d` for these paths), stable `cf2a6d6a`, Miksuu `b8389e74`, perf `0076040f` or release `a96fdda2`, so duplicate IDD cleanup is maintenance/future-proofing rather than a proven live lookup bug.
 
 ## Recommended Patch Order
 

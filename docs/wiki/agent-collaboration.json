@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T05:56:37+02:00",
+  "generatedAt": "2026-06-14T06:05:45+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -23,15 +23,15 @@
   },
   "activeClaims": [
     {
-      "lane": "architecture-sqf-anchor-continuity-route",
+      "lane": "client-ui-atlas-continuity-route",
       "owner": "Codex",
       "status": "published-validated-docs-only",
       "sourceScope": [
-        "Architecture-Overview.md",
-        "SQF-Code-Atlas.md",
-        "Server-Gameplay-Runtime-Atlas.md",
-        "Server-Runtime-And-Operations.md",
-        "Networking-And-Public-Variables.md",
+        "Client-UI-Systems-Atlas.md",
+        "UI-Resource-Parity-Cleanup.md",
+        "UI-IDD-Collision-Repair.md",
+        "Feature-Status-Register.md",
+        "Source-Fix-Propagation-Queue.md",
         "Progress-Dashboard.md",
         "Agent-Worklog.md",
         "Wiki-Pruning-And-Relevance-Ledger.md",
@@ -39,21 +39,27 @@
         "agent-collaboration.json",
         "agent-knowledge.jsonl",
         "agent-events.jsonl",
-        "Missions/[55-2hc]warfarev2_073v48co.chernarus",
-        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
-        "Tools/LoadoutManager",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Rsc",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Client_UpdateRHUD.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/FSM/updateavailableactions.fsm",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Rsc",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Client_UpdateRHUD.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/FSM/updateavailableactions.fsm",
         "origin/master",
         "origin/release/2026-06-feature-bundle",
         "miksuu/master",
         "origin/perf/quick-wins"
       ],
       "outputs": [
-        "Updated architecture/SQF/server/network gateway pages so docs checkout 4277a2ad is the visible current source-continuity checkpoint.",
-        "Verified targeted source diffs from earlier anchor snapshots to HEAD return no checked path changes, and regenerated the SQF preprocess count as 738 total / 460 line-numbered / 278 plain / 22 commented.",
+        "Updated Client UI atlas and linked UI resource/status rows so docs checkout b5219d47 is the visible current source-continuity checkpoint.",
+        "Verified targeted source diffs from a71b42fe, 2fef1e3d and f7bc72a8 to HEAD return no checked UI/Rsc path changes; rechecked no maintained-root findDisplay 23000/10200 callers.",
         "Kept gameplay source untouched."
       ],
-      "handoff": "Closed as docs-published. Future gateway edits should keep these pages route-first, preserve older hashes as line-anchor provenance, and put detailed branch matrices on owner pages instead of expanding the overview surfaces.",
-      "updated": "2026-06-14T05:56:37+02:00"
+      "handoff": "Closed as docs-published. Future Client UI edits should keep the atlas route-first, preserve older hashes as line-anchor provenance, and put detailed resource, IDD, vote/help/router and clickable-text matrices on owner sections/pages instead of expanding status rows.",
+      "updated": "2026-06-14T06:05:45+02:00"
     },
     {
       "lane": "sqf-network-branch-caveat-route",
