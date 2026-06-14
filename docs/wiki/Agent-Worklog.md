@@ -1049,3 +1049,10 @@ Main map: [Home](Home) | Fast path: [Quickstart](Quickstart-For-Humans-And-Agent
 - Rechecked current docs head `a0a86da2`: targeted `git diff --name-only 2f2132f8..HEAD` checks returned no changes for checked Chernarus victory constants, victory loop, live/stale loggers and server-init bind source paths.
 - Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `perf/quick-wins` `0076040f`.
 - Refreshed [Victory/endgame atlas](Victory-And-Endgame-Atlas) so `a0a86da2` is the visible source-continuity checkpoint. Pruned stale `LogGameEnd` and server-init duplicate-bind branch proof into [Dead/stale code register](Dead-Code-And-Stale-Code-Register) plus [Server init bind cleanup](Server-Init-Bind-Cleanup), and added a compact patch-ready row to [Source fix propagation queue](Source-Fix-Propagation-Queue). No gameplay source changed.
+
+## 2026-06-14T08:33:00+02:00 - Codex - Gameplay systems atlas route prune
+
+- Claimed `gameplay-systems-atlas-route-prune` as a docs-only Gameplay Systems atlas cleanup pass, with no gameplay source edits.
+- Rechecked current docs head `2d88dd5a`: targeted `git diff --name-only ca40f202..HEAD` checks returned no changes for checked Chernarus town, town-AI/patrol, economy, commander, construction, factory and victory source paths.
+- Verified branch refs still resolve to stable `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `perf/quick-wins` `0076040f`.
+- Refreshed [Gameplay systems atlas](Gameplay-Systems-Atlas) so `2d88dd5a` is the visible source-continuity checkpoint. Pruned repeated DR-15 helper-unpacking, Patrols v2, latent `AIBuyUnit` and victory/endgame source prose into [Commander reassignment call shape](Commander-Reassignment-Call-Shape), [Towns/camps/capture](Towns-Camps-And-Capture-Atlas), [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map), [Factory/purchase systems](Factory-And-Purchase-Systems-Atlas) and [Victory/endgame atlas](Victory-And-Endgame-Atlas). No gameplay source changed.

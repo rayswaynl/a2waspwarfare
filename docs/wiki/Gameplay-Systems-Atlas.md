@@ -19,7 +19,7 @@ This page maps the main gameplay systems that make Warfare feel like Warfare: to
 
 ## Current Branch Scope
 
-Source refreshed on 2026-06-14 against docs checkout `ca40f202`, stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and `origin/release/2026-06-feature-bundle` `a96fdda2`. Source anchors below use `Missions/[55-2hc]warfarev2_073v48co.chernarus` from the docs checkout unless a row names another ref. Exact branch matrices stay on the owner pages above.
+Source refreshed on 2026-06-14 against docs head `2d88dd5a`; targeted diffs from `ca40f202` through `HEAD` over the checked Chernarus gameplay paths named on this page return no source changes. Branch refs still resolve to stable `origin/master` `cf2a6d6a`, Miksuu `b8389e74`, `origin/perf/quick-wins` `0076040f` and `origin/release/2026-06-feature-bundle` `a96fdda2`. Source anchors below use `Missions/[55-2hc]warfarev2_073v48co.chernarus` from the docs checkout unless a row names another ref. Exact branch matrices stay on the owner pages above; this gateway keeps only routing guards.
 
 ## System Flow
 
@@ -87,7 +87,7 @@ Supported starting modes:
 | `2` | Nearby towns: each side gets a limited number of nearby towns. |
 | `3` | Random 25/25/50 style setup: west/east/resistance distribution, using boundaries when available. |
 
-Stable `origin/master` `cf2a6d6a` uses Patrols v2 instead of the old selected-town `wfbe_patrol_enabled` flow. `Server/Init/Init_Towns.sqf:159-160` explicitly retires fixed random-town patrol flagging, `Server/Init/Init_Server.sqf:533` starts `Server/FSM/server_side_patrols.sqf`, and `Common/Functions/Common_RunSidePatrol.sqf` owns the patrol group lifecycle. The older `server_town_ai.sqf` launch evidence is historical for `89ae9dad`-era branches.
+Stable `origin/master` `cf2a6d6a` uses Patrols v2 instead of the old selected-town `wfbe_patrol_enabled` flow. Local anchors remain `Server/Init/Init_Towns.sqf:159-160`, `Server/Init/Init_Server.sqf:533` and `Common/Functions/Common_RunSidePatrol.sqf`; exact branch status and smoke routing live on [Towns, camps and capture](Towns-Camps-And-Capture-Atlas#patrols-v2-side-upgrade-path) and [AI runtime/HC loop map](AI-Runtime-HC-Loop-Map).
 
 ## Town Capture And Supply Value
 
@@ -169,7 +169,7 @@ Owner pages:
 
 Runtime shape: `Server/Init/Init_Server.sqf:531` starts `Server/FSM/updateresources.sqf` only when there are at least two present sides. The loop reads economy parameters, gets town supply, can route side-supply changes through `ChangeSideSupply`, pays teams, optionally pays AI commander funds and sleeps through `GetSleepFPS`.
 
-Docs-checkout tuning constants worth checking before balance work. Line refs are from `ca40f202`; branch line drift and balance interpretation belong on the economy owner pages before code work.
+Docs-checkout tuning constants worth checking before balance work. Line refs are preserved from `ca40f202`; current docs head `2d88dd5a` is source-unchanged for the checked gameplay paths, while branch line drift and balance interpretation belong on the economy owner pages before code work.
 
 | Constant | Current value / source | Development meaning |
 | --- | --- | --- |
@@ -208,7 +208,7 @@ Runtime shape: clients request votes or reassignment through PVF wrappers, serve
 
 Risk notes:
 
-- DR-15 is branch-split, not a universal current-master defect: docs checkout `ca40f202` still has `_side = _this` and `_commander = _this select 1`, while stable `origin/master`, Miksuu, perf and release use `_this select 0/1`. Use [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix) for the canonical matrix; helper unpacking alone does not fix duplicate notifications or UI identity behavior.
+- DR-15 helper-unpacking branch detail is canonical on [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix). Keep this gateway to policy/routing: helper unpacking alone does not fix duplicate notifications or UI identity behavior.
 - `Server_VoteForCommander.sqf` has the DR-47 server/UI no-commander mismatch above in both source Chernarus and maintained Vanilla Takistan; patch server semantics and UI preview together.
 - Commander identity lives on side logic and is public; client UI and resource distribution both depend on it.
 
@@ -242,7 +242,7 @@ Risk notes:
 
 Gateway page: use [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) for config chains, range globals, buy-menu filtering, queue model, common creation helpers, DR-14 authority notes and DR-33 queue hazards.
 
-Runtime shape: player purchases run through `GUI_Menu_BuyUnits.sqf` and `Client_BuildUnit.sqf`; they are local buy/build threads with factory range globals, UI filters, local funds/group/queue checks, build waits, spawn placement and vehicle/crew initialization. `Init_Server.sqf:10` compiles `AIBuyUnit = Server_BuyUnit.sqf`, but static search across docs checkout, stable, Miksuu, perf and release found no active caller outside the compile and worker itself. Treat `AIBuyUnit` as latent unless a branch proves or intentionally revives it. Attack-wave production is a separate direct-PV side path, not normal factory production.
+Runtime shape: player purchases run through `GUI_Menu_BuyUnits.sqf` and `Client_BuildUnit.sqf`; they are local buy/build threads with factory range globals, UI filters, local funds/group/queue checks, build waits, spawn placement and vehicle/crew initialization. `Init_Server.sqf:10` compiles `AIBuyUnit = Server_BuyUnit.sqf`; the owner matrix treats it as latent unless a branch proves or intentionally revives a caller. Use [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) before dual-path vehicle changes. Attack-wave production is a separate direct-PV side path, not normal factory production.
 
 Risk notes:
 
@@ -256,7 +256,7 @@ Risk notes:
 
 Owner page: [Victory and endgame atlas](Victory-And-Endgame-Atlas).
 
-Victory detection is owned by `Server/FSM/server_victory_threeway.sqf`, not by the town capture or economy loops above. Keep it separate when changing gameplay flow. Docs checkout anchors: `Server/Init/Init_Server.sqf:528` starts `Server/FSM/server_victory_threeway.sqf` when threeway victory is configured.
+Victory detection is owned by `Server/FSM/server_victory_threeway.sqf`, not by the town capture or economy loops above. Keep it separate when changing gameplay flow. Current docs-head anchors are unchanged from `ca40f202`: `Server/Init/Init_Server.sqf:528` starts `Server/FSM/server_victory_threeway.sqf` when threeway victory is configured.
 
 Confirmed finding cross-links: [Deep-review findings](Deep-Review-Findings) DR-11 covers winner inversion / persisted win-tally correctness, DR-12 covers threeway no-detection, DR-13 covers duplicate game-end logging and DR-36 explains the guard/precedence mechanism plus the clean perf/JIP review.
 
@@ -277,9 +277,9 @@ These were previously open questions on this page; they now have source-backed h
 
 | Topic | Current answer |
 | --- | --- |
-| Commander assignment call shape | DR-15 is branch-split: docs checkout `ca40f202` still has broken helper unpacking, while stable/Miksuu/perf/release use `_this select 0/1`. Use [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix) before changing or declaring this path fixed. |
+| Commander assignment call shape | Canonical branch proof and patch order live in [Commander reassignment call shape](Commander-Reassignment-Call-Shape#current-branch-matrix). Do not treat helper unpacking alone as complete commander reassignment closure. |
 | `wfbe_structures_logic` consumer | Construction workers add/remove construction-site logic objects (`Server/Construction/Construction_SmallSite.sqf:70,99`; `Construction_MediumSite.sqf:70,114`). `Server_HandleBuildingRepair.sqf` can consume/remove those logic entries if called, but no active source caller was found; WASP base repair is a separate live flow. Use [Construction and CoIn systems atlas](Construction-And-CoIn-Systems-Atlas) for the owning map. |
-| Client/server unit-build drift | The first source-backed map lives in [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas); DR-33 tracks queue hazards. Current stable source treats `Server/Functions/Server_BuyUnit.sqf` as a latent worker because `AIBuyUnit` has no static caller beyond `Init_Server.sqf:10`; only treat vehicle changes as dual-path work if that worker is revived, proven dynamic, or merged from an AI commander production branch. |
+| Client/server unit-build drift | [Factory and purchase systems atlas](Factory-And-Purchase-Systems-Atlas) owns the source-backed map; DR-33 tracks queue hazards. Treat `Server/Functions/Server_BuyUnit.sqf` as latent unless `AIBuyUnit` is revived, proven dynamic, or merged from an AI commander production branch. |
 | Supply-income stagnation | This helper is live when side-supply income is routed through `ChangeSideSupply`: `Server/FSM/updateresources.sqf:49` passes `_includeStagnation = true`, `Common/Functions/Common_ChangeSideSupply.sqf:15-17` calls `WFBE_CO_FNC_StagnateSupplyIncomeNoPlayers`, and `Common/Functions/Common_StagnateSupplyIncomeNoPlayers.sqf:38-68` updates/publicizes no-player counters and clamps the income amount. |
 | Base-structure markers vs range globals | `Client/Init/Init_BaseStructure.sqf` creates local base/command-center markers and command-center range ellipses; it does not own buy-menu range booleans. Range globals are initialized in `Client/Init/Init_Client.sqf:311-320`, updated by `Client/FSM/updateavailableactions.fsm:157-203`, and consumed by `Client/GUI/GUI_Menu.sqf:4-26` and `Client/GUI/GUI_Menu_BuyUnits.sqf:50,80,165-170`. |
 
