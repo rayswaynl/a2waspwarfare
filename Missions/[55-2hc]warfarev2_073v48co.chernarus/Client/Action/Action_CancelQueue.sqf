@@ -12,7 +12,7 @@
 	    values). It is kept as a safeguard against future config edge cases.
 */
 
-private ["_building","_factory","_queu","_queuCosts","_queuCpts","_queuLabels","_uid","_idx","_paidCost","_cpt","_basePrice","_refund","_maxRefund","_newArr","_i"];
+private ["_building","_factory","_queu","_queuCosts","_queuCpts","_queuLabels","_uid","_idx","_paidCost","_cpt","_basePrice","_refund","_maxRefund","_newArr","_i","_uidPrefix"];
 
 _building = _this select 1;               // object the action is attached to (the factory building)
 _factory  = (_this select 3) select 0;   // params[0] = factory type string (e.g. "Barracks")
@@ -23,10 +23,27 @@ _queuCosts = _building getVariable ["queu_costs",  []];
 _queuCpts  = _building getVariable ["queu_cpts",   []];
 _queuLabels = _building getVariable ["queu_labels", []];
 
+//--- A2-fix (2026-06-14): "token starts with UID" test. `string find string` is ARMA-3-only and
+//--- throws "find: Type String, expected Array" on A2 OA (it fired every time a player cancelled a
+//--- queue item). Compare leading bytes via toArray - same idiom as GUI_Menu_BuyUnits.sqf.
+_uidPrefix = {
+	private ["_tokA","_uidA","_ul","_ok","_j"];
+	_tokA = toArray (_this select 0);
+	_uidA = toArray (_this select 1);
+	_ul = count _uidA;
+	_ok = (_ul > 0) && (_ul <= count _tokA);
+	if (_ok) then {
+		for "_j" from 0 to (_ul - 1) do {
+			if ((_tokA select _j) != (_uidA select _j)) exitWith {_ok = false};
+		};
+	};
+	_ok
+};
+
 //--- Find the LAST entry belonging to this player (most recently queued = safest to cancel).
 _idx = -1;
 {
-	if (_x find _uid == 0) then {_idx = _forEachIndex};
+	if ([_x, _uid] call _uidPrefix) then {_idx = _forEachIndex};
 } forEach _queu;
 
 if (_idx == -1) exitWith {

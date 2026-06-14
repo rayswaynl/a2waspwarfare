@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG","_ord","_spear","_spearT","_perTown","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog"];
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -34,6 +34,31 @@ if (count _uncaptured == 0) exitWith {};
 
 _useArc = (missionNamespace getVariable "WFBE_C_AI_COMMANDER_USE_ARC_APPROACH") > 0;
 _assigned = [];
+
+//--- V0.8 TRUE CONCENTRATION (claude-gaming 2026-06-14): the per-town cap below must see
+//--- teams ALREADY en route on a sticky order, not just teams (re)assigned THIS tick - else
+//--- the cap never fills and "concentration" silently degraded to one team per town. Pre-seed
+//--- _assigned with the live target of every team currently marching at an enemy town, so the
+//--- cap reflects real massed force and rolls freed teams to the NEXT town once one is captured.
+{
+	_team = _x;
+	if (!isNull _team) then {
+		if (({alive _x} count (units _team)) > 0) then {
+			private ["_curOrd","_curTgt"];
+			_curOrd = _team getVariable ["wfbe_aicom_townorder", []];
+			if (count _curOrd >= 1) then {
+				_curTgt = _curOrd select 0;
+				if (typeName _curTgt == "OBJECT" && {!isNull _curTgt}) then {
+					//--- Only count it as committed mass if the town is still contestable
+					//--- (not ours yet); a captured town frees the team to roll forward.
+					if ((_curTgt getVariable "sideID") != _sideID) then {
+						_assigned set [count _assigned, _curTgt];
+					};
+				};
+			};
+		};
+	};
+} forEach _teams;
 
 //--- V0.7: bootstrap-bias pre-computation (once per tick, used inside the team loop).
 _ownedCount = 0;
@@ -116,12 +141,29 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 								//--- once without re-issuing waypoints; the stuck check takes over from here.
 								_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos (leader _team)]];
 							} else {
-								if (time - (_ord select 1) > 600) then {
-									if ((leader _team) distance (_ord select 2) < 200 && {(leader _team) distance _goto > 300}) then {
-										_needs = true; //--- parked 10+ min far from the target: re-issue
+								if (time - (_ord select 1) > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_SECS", 210])) then {
+									private ["_ldr","_movedThr","_farThr"];
+									_ldr = leader _team;
+									_movedThr = missionNamespace getVariable ["WFBE_C_AICOM_STUCK_MOVED", 200];
+									_farThr   = missionNamespace getVariable ["WFBE_C_AICOM_STUCK_FAR", 300];
+									//--- In-contact teams are legitimately stationary (firefight/bounding); never
+									//--- treat as stuck - refresh the breadcrumb so they keep fighting.
+									if ((behaviour _ldr != "COMBAT") && {_ldr distance (_ord select 2) < _movedThr} && {_ldr distance _goto > _farThr}) then {
+										_needs = true; //--- parked far from target, not in contact: re-issue (unstick)
+										//--- REAL UNSTUCK (task #14/#16): the old remedy just re-emitted the same
+										//--- un-followable order. Bump a per-team STRIKE counter so the HC executor
+										//--- escalates Tier1 (reverse+reposition) -> Tier2 (road re-path) -> Tier3
+										//--- (teleport-nudge to nearest clear road node, no player nearby). The strike
+										//--- rides on the order broadcast below; the executor reads wfbe_aicom_unstuck.
+										private ["_strk"];
+										_strk = (_team getVariable ["wfbe_aicom_stuckstrikes", 0]) + 1;
+										_team setVariable ["wfbe_aicom_stuckstrikes", _strk];
+										diag_log (Format ["STUCKSTAT|v1|%1|%2|stuck|leader=%3|distStart=%4|distTgt=%5|reissue|strike=%6", _sideText, round (time / 60), typeOf _ldr, round (_ldr distance (_ord select 2)), round (_ldr distance _goto), _strk]);
 									} else {
-										//--- progressing (or arrived): refresh the breadcrumb
-										_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos (leader _team)]];
+										//--- progressing, arrived, or in contact: refresh the breadcrumb and
+										//--- reset the unstuck strike ladder (the team moved, so it is not stuck).
+										_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]];
+										_team setVariable ["wfbe_aicom_stuckstrikes", 0];
 									};
 								};
 							};
@@ -152,15 +194,38 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_logik setVariable ["wfbe_aicom_bootstrap_lt", time];
 					};
 				} else {
-					//--- V0.5: concentrate on the strategy worker's spearhead targets first
-					//--- (SPEARHEAD_PER_TOWN teams per town this pass), then spill over to
-					//--- the classic nearest-uncaptured pick.
+					//--- V0.8: MASS force on the strategy worker's spearhead targets first, in
+					//--- published priority order (top = primary). Each town's quota now scales
+					//--- with its GARRISON SIZE (wfbe_town_type tier) so a HugeTown draws more
+					//--- teams than a TinyTown - one squad can't crack a garrisoned city, so we
+					//--- pile on until the cap, then the freed/extra teams spill to the next town.
+					//--- The cap is checked against _assigned, which now includes EN-ROUTE teams
+					//--- (pre-seeded above), so concentration is enforced across ticks, not just
+					//--- this pass. Then spill over to the classic nearest-uncaptured pick.
 					_spear = _logik getVariable ["wfbe_aicom_targets", []];
-					_perTown = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_SPEARHEAD_PER_TOWN", 3];
+					_concBase = missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATION", 3];
 					{
 						_spearT = _x;
 						if (isNull _target && {!isNull _spearT}) then {
 							if ((_spearT getVariable "sideID") != _sideID) then {
+								//--- Per-target quota = base concentration scaled by garrison tier
+								//--- (wfbe_town_type maps to defender group count in
+								//--- Server_GetTownGroupsDefender.sqf: Tiny 3, Small 5, Medium 6,
+								//--- Large 7, Huge 8 groups). Bigger garrison -> more teams massed.
+								//--- One block per case (no fall-through) to match the codebase style.
+								_perTown = _concBase;
+								switch (_spearT getVariable ["wfbe_town_type", ""]) do {
+									case "TinyTown1":   {_perTown = (_concBase - 1) max 1};
+									case "SmallTown1":  {_perTown = _concBase};
+									case "SmallTown2":  {_perTown = _concBase};
+									case "MediumTown1": {_perTown = _concBase + 1};
+									case "MediumTown2": {_perTown = _concBase + 1};
+									case "LargeTown1":  {_perTown = _concBase + 2};
+									case "LargeTown2":  {_perTown = _concBase + 2};
+									case "HugeTown1":   {_perTown = _concBase + 2};
+									case "HugeTown2":   {_perTown = _concBase + 2};
+									default {_perTown = _concBase};
+								};
 								if (({_x == _spearT} count _assigned) < _perTown) then {_target = _spearT};
 							};
 						};
@@ -178,7 +243,57 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						if (_team getVariable ["wfbe_aicom_hc", false]) then {
 							//--- V0.3: HC-resident team - the HC driver issues the local waypoints;
 							//--- server-side waypoint commands on remote groups are unreliable.
-							_team setVariable ["wfbe_aicom_order", [((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1, "towns-target", getPos _target], true];
+							//--- ROAD-MARCH (task #14/#16): the executor turns a bare wfbe_aicom_order
+							//--- into a cross-country MOVE that A2 PFM stalls. Compute a ROAD-NODE chain
+							//--- here (server-side, against this HC team's leader pos) and broadcast it in
+							//--- wfbe_aicom_route so the executor lays road waypoints + forceFollowRoad on
+							//--- the long base->front leg, then COMBAT/WEDGE near the objective. The order
+							//--- contract stays 3-element [seq,mode,pos]; the route + unstuck tier ride
+							//--- alongside as parallel public vars the executor reads on each seq bump.
+							private ["_hcLdr","_hcOrigin","_hcDest","_hcRoute","_hcStrk","_rmHops","_rmI","_rmFrac","_rmGuess","_rmRds","_rmNode"];
+							_hcLdr    = leader _team;
+							_hcOrigin = getPos _hcLdr;
+							_hcDest   = getPos _target;
+							_hcStrk   = _team getVariable ["wfbe_aicom_stuckstrikes", 0];
+							//--- Build up to N road-snapped waypoints evenly between origin and dest.
+							//--- Each guess is the straight-line fraction point; we snap it to the nearest
+							//--- real road node (nearRoads) so the convoy follows lanes A2 PFM can drive.
+							//--- If no road is near a guess, we skip that hop (the executor still falls back
+							//--- to a direct MOVE for that segment). Only build a route on the long leg.
+							_hcRoute = [];
+							if ((_hcOrigin distance _hcDest) > 700) then {
+								_rmHops = 8;  //--- A2-fix 2026-06-14: denser road-node chain (was 4) so convoys hug roads instead of cutting cross-country
+									//--- A2-fix 2026-06-14 (owner: teams move INDIVIDUALLY to same town = better speed): base-egress road node so teams escape a boxed/corner base, + per-team lateral lane so concentrated teams don't funnel one road
+									_egRds = _hcOrigin nearRoads 300;
+									if (count _egRds > 0) then {
+										_egNode = [_hcOrigin, _egRds] Call WFBE_CO_FNC_GetClosestEntity;
+										if (!isNull _egNode) then {_hcRoute = _hcRoute + [getPos _egNode]};
+									};
+									_laneDX = (_hcDest select 0) - (_hcOrigin select 0);
+									_laneDY = (_hcDest select 1) - (_hcOrigin select 1);
+									_laneLEN = sqrt ((_laneDX * _laneDX) + (_laneDY * _laneDY));
+									_lanePX = 0; _lanePY = 0;
+									if (_laneLEN > 1) then {_lanePX = - _laneDY / _laneLEN; _lanePY = _laneDX / _laneLEN};
+									_laneJit = _team getVariable "wfbe_aicom_lanejit";
+									if (isNil "_laneJit") then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]};
+									_laneOff = _laneJit * 120;
+								for "_rmI" from 1 to _rmHops do {
+									_rmFrac  = _rmI / (_rmHops + 1);
+									_rmGuess = [(_hcOrigin select 0) + ((_hcDest select 0) - (_hcOrigin select 0)) * _rmFrac,
+									            (_hcOrigin select 1) + ((_hcDest select 1) - (_hcOrigin select 1)) * _rmFrac, 0];
+									_rmTaper = sin (_rmFrac * 180);  //--- ~0 at route ends, max at mid: teams diverge into their own lane mid-route, converge at the town
+										_rmGuess set [0, (_rmGuess select 0) + (_lanePX * _laneOff * _rmTaper)];
+										_rmGuess set [1, (_rmGuess select 1) + (_lanePY * _laneOff * _rmTaper)];
+										_rmRds = _rmGuess nearRoads 120;  //--- A2-fix 2026-06-14: tighter snap (was 220) so nodes lie on the line, not far disconnected roads
+									if (count _rmRds > 0) then {
+										_rmNode = [_rmGuess, _rmRds] Call WFBE_CO_FNC_GetClosestEntity;
+										if (!isNull _rmNode) then {_hcRoute = _hcRoute + [getPos _rmNode]};
+									};
+								};
+							};
+							_team setVariable ["wfbe_aicom_route", _hcRoute, true];
+							_team setVariable ["wfbe_aicom_unstuck", _hcStrk, true];
+							_team setVariable ["wfbe_aicom_order", [((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1, "towns-target", _hcDest], true];
 						} else {
 							if (_useArc) then {
 								[_team, _target] Call WFBE_SE_FNC_AI_SetTownAttackPath;

@@ -8,6 +8,8 @@
 	  - Init_Keybind.sqf User11 keybind
 */
 
+disableSerialization; //--- BUG-FIX 2026-06-14: suppress "_display does not support serialization" (dialog control held in a local).
+
 Private ["_display","_pool","_visiblePool","_i","_cls","_lbl","_isGhillie",
          "_selectedIdx","_selectedCls","_selectedLbl","_portrait",
          "_regEntry","_factionText","_WFBE_MenuAction"];

@@ -279,7 +279,65 @@ while {!gameOver} do {
 			if (isNil "_tickUni") then { _tickUni = 0 };
 		};
 		diag_log ("AICOMSTAT|v1|TICK|" + (str _side) + "|" + str _elMin + "|" + str _towns + "|" + str _supply + "|" + str _funds + "|" + str _fTeams + "|" + str _eTeams + "|" + _upgCsv + "|units=" + str _tickUni);
-		_ltStat = time;
+		_ltStat = time; //--- advance the throttle BEFORE CMDRSTAT so a CMDRSTAT failure could never spam/stall the AICOMSTAT tick
+
+		//--- CMDRSTAT (claude-gaming 2026-06-13): commander-team SERVER-LOCAL vs HC-DELEGATED split +
+		//--- 2-man-remnant fragmentation, for the group-reduction A/B ledger. SRVPERF 'groups' is
+		//--- count allGroups - it INCLUDES HC-delegated proxies, so it overcounts server load. THIS
+		//--- isolates srvTeams (founded teams whose LEADER is server-local) vs hcTeams (offloaded) and
+		//--- flags remnants (alive but < 30% of template). Pure diag_log = gameplay-transparent.
+		//--- Mirrors the proven group-getVariable[name,default] form on line 255; local() is checked on
+		//--- the LEADER (an Object) never on the group (A2 OA 1.64 trap); team-type index bounds-guarded.
+		private ["_srvTeams","_hcTeams","_foundedN","_aliveSum","_remnants","_cmdrTpl","_isHc","_isFounded","_aliveN","_tt","_tplSize","_upt","_ldr"];
+		_srvTeams = 0; _hcTeams = 0; _foundedN = 0; _aliveSum = 0; _remnants = 0;
+		_cmdrTpl = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", str _side], []];
+		{
+			if (!isNull _x) then {
+				_isHc = _x getVariable ["wfbe_aicom_hc", false];
+				_isFounded = _x getVariable ["wfbe_aicom_founded", false];
+				if (_isHc) then {_hcTeams = _hcTeams + 1};
+				_ldr = leader _x;
+				if (_isFounded && {!_isHc} && {!isNull _ldr} && {local _ldr}) then {_srvTeams = _srvTeams + 1};
+				if (_isHc || _isFounded) then {
+					_foundedN = _foundedN + 1;
+					_aliveN = {alive _x} count (units _x);
+					_aliveSum = _aliveSum + _aliveN;
+					_tt = _x getVariable ["wfbe_teamtype", -1];
+					if (_tt >= 0 && {_tt < (count _cmdrTpl)}) then {
+						_tplSize = count (_cmdrTpl select _tt);
+						if (_aliveN > 0 && {_tplSize > 0} && {_aliveN < (ceil (0.30 * _tplSize))}) then {_remnants = _remnants + 1};
+					};
+				};
+			};
+		} forEach (_logik getVariable ["wfbe_teams", []]);
+		_upt = 0;
+		if (_foundedN > 0) then {_upt = (round ((_aliveSum / _foundedN) * 10)) / 10};
+		diag_log ("CMDRSTAT|v1|" + (str _side) + "|" + str _elMin + "|srvTeams=" + str _srvTeams + "|hcTeams=" + str _hcTeams + "|foundedTeams=" + str _foundedN + "|unitsPerTeam=" + str _upt + "|remnants=" + str _remnants);
+	};
+
+	//--- SRVPERF (claude-gaming 2026-06-13): server-global perf line for the legacy-vs-next A/B
+	//--- ledger. Global 300s throttle so it logs once regardless of which side's worker fires.
+	if (time - (missionNamespace getVariable ["wfbe_srvperf_t", -999]) >= 300) then {
+		missionNamespace setVariable ["wfbe_srvperf_t", time];
+		private ["_pActive"];
+		_pActive = 0;
+		{ if (_x getVariable ["wfbe_active", false]) then {_pActive = _pActive + 1} } forEach towns;
+		diag_log ("SRVPERF|v1|" + str (round (time / 60)) + "|fps=" + str (round (diag_fps)) + "|units=" + str (count allUnits) + "|groups=" + str (count allGroups) + "|veh=" + str (count vehicles) + "|dead=" + str (count allDead) + "|activeTowns=" + str _pActive);
+
+		//--- GRPBUDGET (claude-gaming 2026-06-13): per-side group count vs Arma 2 OA's 144/side HARD CAP - the
+		//--- "group budget" alarm. Near the cap the AI commander cannot found teams (economy stalls on unspent
+		//--- funds) and spawns can SILENTLY FAIL. Server-global, shares the SRVPERF 300s throttle. A WARN line
+		//--- trips at the pre-cap threshold so the watchdog/dashboard can flag it before it bites.
+		private ["_gbW","_gbE","_gbG","_gbMax","_gbWarn"];
+		_gbW = {side _x == west} count allGroups;
+		_gbE = {side _x == east} count allGroups;
+		_gbG = {side _x == resistance} count allGroups;
+		_gbMax = _gbW max _gbE max _gbG;
+		diag_log ("GRPBUDGET|v1|" + str (round (time / 60)) + "|west=" + str _gbW + "|east=" + str _gbE + "|guer=" + str _gbG + "|cap=144");
+		_gbWarn = missionNamespace getVariable ["WFBE_C_GROUP_BUDGET_WARN", 125];
+		if (_gbMax >= _gbWarn) then {
+			diag_log ("GRPBUDGET|v1|WARN|" + str (round (time / 60)) + "|near-cap max=" + str _gbMax + "/144 warn=" + str _gbWarn + " (west=" + str _gbW + " east=" + str _gbE + " guer=" + str _gbG + ")");
+		};
 	};
 
 	sleep (missionNamespace getVariable "WFBE_C_AI_COMMANDER_TICK");
@@ -293,4 +351,17 @@ if (!isNil "WF_Logic") then {_winner = WF_Logic getVariable ["WF_Winner", sideUn
 ["INFORMATION", Format ["AI_Commander.sqf: [%1] ROUND OVER after %2 min: winner [%3], my doctrine %4, towns held %5, funds left %6.", str _side, round (time / 60), _winner, _logik getVariable ["wfbe_aicom_doctrine", "?"], _held, (_side) Call GetAICommanderFunds]] Call WFBE_CO_FNC_AICOMLog;
 //--- V0.6 task 48: AICOMSTAT END - always emitted ungated regardless of LOG setting.
 diag_log ("AICOMSTAT|v1|END|" + (str _side) + "|" + str (round (time / 60)) + "|" + (str _winner) + "|" + (_logik getVariable ["wfbe_aicom_doctrine", "?"]) + "|" + str _held + "|" + str ((_side) Call GetAICommanderFunds));
+
+//--- ROUNDSTAT (claude-gaming 2026-06-13): one server-global round-summary line for the A/B
+//--- ledger, tagged with the active arm. Guarded (wfbe_roundstat_done) so only the first side's
+//--- worker emits it. avg-fps + peak-units are derived externally from the SRVPERF time series.
+if (!(missionNamespace getVariable ["wfbe_roundstat_done", false])) then {
+	missionNamespace setVariable ["wfbe_roundstat_done", true];
+	private ["_rArm", "_rGating", "_rWest", "_rEast"];
+	_rArm = missionNamespace getVariable ["WFBE_C_AB_ARM", "?"];
+	_rGating = missionNamespace getVariable ["WFBE_C_SIM_GATING", 0];
+	_rWest = 0; _rEast = 0;
+	{ if ((_x getVariable "sideID") == WFBE_C_WEST_ID) then {_rWest = _rWest + 1}; if ((_x getVariable "sideID") == WFBE_C_EAST_ID) then {_rEast = _rEast + 1} } forEach towns;
+	diag_log ("ROUNDSTAT|v1|" + str (round (time / 60)) + "|arm=" + _rArm + "|simGating=" + str _rGating + "|winner=" + (str _winner) + "|townsW=" + str _rWest + "|townsE=" + str _rEast + "|units=" + str (count allUnits) + "|dead=" + str (count allDead));
+};
 

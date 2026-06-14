@@ -13,7 +13,11 @@
 	  W1  War Chest         (20) Common    — AI funds +25% FUNDS_START.
 	  W2  Supply Drop       (20) Common    — side supply +1500, capped.
 	  W3  Bonus Patrol      (15) Common    — free patrol at current tier, cap bypass.
-	  W6  Fortification Grant(8) Uncommon  — +2 base defenses beyond the 4-cap via AI_Commander_Base placer.
+	  W6  Air Cavalry       ( 8) Uncommon  — free ELITE air-assault squad founded as a one-off commander
+	                                          team (air template) aimed at the spearhead front town; the existing
+	                                          team lifecycle + Common_RunCommanderTeam air-insertion delivers it.
+	                                          (REPLACED 2026-06-14: was "Fortification Grant" +2 base defenses,
+	                                          removed - perf-negative, leaked a GC-exempt DefenseTeam group.)
 	  W7  Veteran Company   ( 8) Uncommon  — next founded team uses premium template + skill boost.
 	  W10 Lucky Salvage     ( 8) Uncommon  — one sweep converting wrecks to AI funds (cap ~15000).
 	  W11 Field Hospital    ( 8) Uncommon  — heal all wounded AI infantry + one-shot free re-founding flag.
@@ -21,6 +25,7 @@
 	  W4  Airborne Assault  ( 4) Rare      — free max-level paradrop (PARACHUTELEVEL3) on spearhead town.
 	  W8  Motor Pool Delivery(3) Rare      — free crewed top-tier vehicle, registers as AI team.
 	  W9  Uprising          ( 3) Rare      — GUER attack force at enemy-held town nearest the front; cap 1 active.
+	  W19 Heliborne QRF     ( 5) Rare      — air-inserts a QRF squad to the friendly town most under threat.
 
 	Human-side payout mapping:
 	  W1 -> wfbe_funds on the commander's team (instead of AI wallet).
@@ -139,9 +144,11 @@ while {!gameOver} do {
 				         "_tier","_pool","_w3Eligible",
 				         "_w4Eligible","_w4Units","_w4Model","_w4Cargo",
 				         "_w6Eligible","_defMax","_defCount","_defClass","_defData","_defPrice","_defFunds",
+				         "_w6AirTemplate","_w6AirTier","_w6Tmpls","_w6TmplUps","_w6Cand","_w6Lead","_w6CandTier","_w6Idx","_w6UpArr",
+				         "_w6Price","_w6PriceCN","_w6PriceUD","_w6Funds","_w6Target","_w6Targets","_w6BestTown","_w6BestScore","_w6T4","_w6DNear","_w6D","_w6Score","_w6SpawnPos","_w6Live","_w6Hcs","_w6HcUnit","_w6Order",
 				         "_w7Eligible",
 				         "_w8Eligible","_w8BestClass","_w8BestPrice","_w8UD","_soldierClass",
-				         "_w9Eligible","_guerTemplates","_guerUnits",
+				         "_w9Eligible","_guerTemplates","_guerUnits","_candTown",
 				         "_w10Eligible","_w12Eligible","_w12Key","_w12Exp",
 				         "_wW1","_wW2","_wW3","_wW4","_wW6","_wW7","_wW8","_wW9","_wW10","_wW11","_wW12",
 				         "_weights","_cumSum","_roll","_entropy","_i","_chosen","_draw",
@@ -165,6 +172,13 @@ while {!gameOver} do {
 				         "_existingTeams","_sideIDLocal","_crew1","_crew2",
 				         "_healed","_humanCmd","_skipAI","_w11Eligible",
 				         "_dAng","_spawnPos","_dp","_placed","_dPos",
+	         "_w13Eligible","_w13AirList","_w13AttackClasses","_w13TargetTown","_w13MaxCluster","_w13BestDist","_w13Class","_w13Ang","_w13SpawnPos","_w13Heli","_w13Pilot","_w13TargetPos","_w13Grp","_w13PilotClass","_clustTown","_nearEnemies",
+	         "_w14Eligible","_w14AAClass","_w14Target","_w14Pos","_w14Placed","_w14Ang","_w14DPos","_w14AA","_w14i","_w14Grp","_w14Gunner","_w14PilotClass",
+	         "_w15Eligible","_w15Exp",
+	         "_w16Eligible","_maxLevels","_raisableTiers","_chosenUpID","_newUpgrades","_tierName",
+	         "_w17Eligible","_w17TruckClass","_w17Truck","_w17Grp","_w17Driver","_w17Gunner","_w17Target","_w17TargetPos","_w17MarkerName","_w17SpawnPos","_w17Ang",
+	         "_w18Eligible","_w18OfficerClass","_w18ParaL3","_w18Pos","_w18Grp","_w18HVT","_w18MarkerID","_w18Target","_w18Near","_w1Eligible",
+		         "_w19Eligible","_w19TownObj","_w19Town","_w19BestThreat","_w19Threat","_w19TownPos","_w19SpawnPos","_w19NearD","_w19D","_w19HcUnit","_w19Price","_w19PriceCN","_w19PriceUD","_wW19",
 				         "_wNameMap","_wName"];
 
 				_side     = _this select 0;
@@ -220,27 +234,44 @@ while {!gameOver} do {
 					};
 				};
 
-				//--- W6: fortification grant — Barracks alive, can afford one defense.
-				_w6Eligible   = false;
-				_defMax       = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_DEFENSES_MAX", 4];
-				_defCount     = _logik getVariable ["wfbe_aicom_defenses", 0];
-				_structures   = (_side) Call WFBE_CO_FNC_GetSideStructures;
-				_defClass = if (_defCount % 2 == 0) then {
-					missionNamespace getVariable [Format ["WFBE_%1DEFENSES_MG", _sideText], ""]
-				} else {
-					missionNamespace getVariable [Format ["WFBE_%1DEFENSES_AAPOD", _sideText], ""]
-				};
-				//--- BUG-FIX: typeName check BEFORE string comparison; _defClass may be an ARRAY
-				//--- (defense list entry [classname, cost, ...]) in this mission's config.
-				if (!isNil "_defClass") then {
-					if (typeName _defClass == "ARRAY") then {if (count _defClass > 0) then {_defClass = _defClass select 0} else {_defClass = ""}};
-					if (typeName _defClass == "STRING" && {_defClass != ""}) then {
-						_defData  = missionNamespace getVariable _defClass;
-						_defPrice = if (!isNil "_defData") then {_defData select QUERYUNITPRICE} else {0};
-						_defFunds = (_side) Call GetAICommanderFunds;
-						_w6Eligible = false;
-						{ if ((_x getVariable ["wfbe_structure_type", ""]) == "Barracks" && {alive _x}) exitWith {_w6Eligible = (_defFunds >= _defPrice)} } forEach _structures;
-					};
+				//--- W6: AIR CAVALRY (REPLACES Fortification Grant 2026-06-14, claude-gaming).
+				//--- Eligible when: HQ alive (spawn anchor + founding path), there is a FRONT/target
+				//--- town to aim at (spearhead targets or any enemy/neutral town), AND the side has at
+				//--- least one AIR-ASSAULT team template - i.e. a registered WFBE_<side>AITEAMTEMPLATES
+				//--- entry whose FIRST class is a troop-capable Air transport (transportSoldier>0). That
+				//--- transport is what makes Common_RunCommanderTeam's air-insertion fire, so we resolve
+				//--- the actual ELITE air template HERE (highest air-upgrade [3] template) and stash it for
+				//--- the apply block. No funds gate (one free squad); normal team GC (no GC-exempt leak).
+				_w6Eligible    = false;
+				_w6AirTemplate = [];          //--- resolved elite air-assault template (class array)
+				_w6AirTier     = -1;          //--- its air-upgrade requirement (higher = more elite)
+				if (!isNull _hq && {alive _hq} && {(count _owned > 0) || {count _cands > 0}}) then {
+					_w6Tmpls   = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", _sideText], []];
+					_w6TmplUps = missionNamespace getVariable [Format ["WFBE_%1AITEAMUPGRADES", _sideText], []];
+					{
+						_w6Cand = _x;
+						if (count _w6Cand > 0) then {
+							_w6Lead = _w6Cand select 0;
+							//--- First class must be a troop-capable AIR transport (drives air-insertion).
+							if (isClass (configFile >> "CfgVehicles" >> _w6Lead)
+							    && {_w6Lead isKindOf "Air"}
+							    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0}) then {
+								//--- "Elite" = pick the template with the highest AIR-tier requirement
+								//--- (its WFBE_<side>AITEAMUPGRADES[3] slot); ties keep the first found.
+								_w6CandTier = 0;
+								_w6Idx = _w6Tmpls find _w6Cand;
+								if (_w6Idx >= 0 && {_w6Idx < count _w6TmplUps}) then {
+									_w6UpArr = _w6TmplUps select _w6Idx;
+									if (count _w6UpArr > WFBE_UP_AIR) then {_w6CandTier = _w6UpArr select WFBE_UP_AIR};
+								};
+								if (_w6CandTier > _w6AirTier) then {
+									_w6AirTier     = _w6CandTier;
+									_w6AirTemplate = _w6Cand;
+								};
+							};
+						};
+					} forEach _w6Tmpls;
+					if (count _w6AirTemplate > 0) then {_w6Eligible = true};
 				};
 
 				//--- W7: veteran company — flag check (one per draw; humans re-draw).
@@ -306,23 +337,99 @@ while {!gameOver} do {
 				//--- W11: field hospital — wounded AI infantry present.
 				_w11Eligible = ({alive _x && {!isPlayer _x} && {_x isKindOf "Man"} && {damage _x > 0.05} && {side _x == _side}} count allUnits) > 0;
 
+				//--- W1: WAR CHEST gate (claude-gaming 2026-06-13): skip the +funds wildcard when an AI commander is
+				//--- already RICH (> 2x funds-start) - it is sitting on a war chest it cannot even spend (group cap),
+				//--- so the draw is pure waste; zeroing W1 hands those draws to more useful cards. Humans always eligible
+				//--- (their draw credits the commander team's wfbe_funds, which IS useful).
+				_w1Eligible = _humanCmd || {((_side) Call GetAICommanderFunds) < (2 * (missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side], 100000]))};
+
+				//--- W13: gunship strike - air tier unlocked + attack-capable class + 3+ enemy cluster near an enemy town.
+				_w13Eligible = false;
+				if (!isNil "_upgrades" && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0} && {count _cands > 0}) then {
+					_w13AirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
+					_w13AttackClasses = [];
+					{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Mi24_D","Mi24_V","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su34"]) then {_w13AttackClasses = _w13AttackClasses + [_x]} } forEach _w13AirList;
+					if (count _w13AttackClasses > 0) then {
+						{ _clustTown = _x; _nearEnemies = {alive _x && {(side _x) == _enemySide} && {(_x distance _clustTown) < 300}} count allUnits; if (_nearEnemies >= 3) exitWith {_w13Eligible = true} } forEach _cands;
+					};
+				};
+
+				//--- W14: iron dome - owned town to cover + valid AA-pod class for the side.
+				_w14Eligible = false;
+				if (count _owned > 0 && {!isNull _hq} && {alive _hq}) then {
+					_w14AAClass = missionNamespace getVariable [Format ["WFBE_%1DEFENSES_AAPOD", _sideText], ""];
+					if (!isNil "_w14AAClass") then {
+						if (typeName _w14AAClass == "ARRAY") then {if (count _w14AAClass > 0) then {_w14AAClass = _w14AAClass select 0} else {_w14AAClass = ""}};
+						if (typeName _w14AAClass == "STRING" && {_w14AAClass != ""}) then {_w14Eligible = true};
+					};
+				};
+
+				//--- W15: black market - always eligible (AI funds discount; human side discounts its team buys too).
+				_w15Eligible = true;
+
+				//--- W16: lend-lease - at least one of Light/Heavy/Air tier below its configured max level.
+				_w16Eligible = false;
+				_maxLevels = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_LEVELS", _sideText], []];
+				if (!isNil "_upgrades" && {count _upgrades > WFBE_UP_AIR} && {count _maxLevels > WFBE_UP_AIR}) then {
+					if ((_upgrades select WFBE_UP_LIGHT) < (_maxLevels select WFBE_UP_LIGHT)) then {_w16Eligible = true};
+					if ((_upgrades select WFBE_UP_HEAVY) < (_maxLevels select WFBE_UP_HEAVY)) then {_w16Eligible = true};
+					if ((_upgrades select WFBE_UP_AIR)   < (_maxLevels select WFBE_UP_AIR))   then {_w16Eligible = true};
+				};
+
+				//--- W17: supply convoy - owned town + alive HQ + valid faction supply-truck class.
+				_w17Eligible = false;
+				_w17TruckClass = if (_side == west) then {"WarfareSupplyTruck_USMC"} else {"WarfareSupplyTruck_RU"};
+				if (count _owned > 0 && {!isNull _hq} && {alive _hq} && {isClass (configFile >> "CfgVehicles" >> _w17TruckClass)}) then {_w17Eligible = true};
+
+				//--- W18: bounty hvt - enemy town held + resolvable officer/L3 class for the enemy side.
+				_w18Eligible = false;
+				if (count _cands > 0) then {
+					_w18OfficerClass = missionNamespace getVariable [Format ["WFBE_%1_HVT_CLASS", str _enemySide], ""];
+					if (_w18OfficerClass == "") then {
+						_w18ParaL3 = missionNamespace getVariable [Format ["WFBE_%1PARACHUTELEVEL3", str _enemySide], []];
+						if (count _w18ParaL3 > 0) then {_w18OfficerClass = _w18ParaL3 select 0};
+					};
+					if (_w18OfficerClass != "") then {_w18Eligible = true};
+				};
+
 				//--- W12: spoils of war — not already active.
 				_w12Key  = Format ["wfbe_aicom_spoils_%1", _sideText];
 				_w12Exp  = missionNamespace getVariable _w12Key;
 				_w12Eligible = (isNil "_w12Exp") || {_w12Exp <= time};
 
+				//--- W19: HELIBORNE QRF - air-insert a QRF squad to the friendly town MOST under threat.
+				//--- Eligible when: the side OWNS at least one town with enemy units within ~600m (under
+				//--- threat) AND the side can field a transport heli. The transport requirement REUSES W6's
+				//--- resolved air-assault template (_w6Eligible / _w6AirTemplate - its first class is a
+				//--- troop-capable Air transport, the SAME thing that drives Common_RunCommanderTeam's
+				//--- air-insertion); if W6 resolved no air template for the side, W19 is ineligible too.
+				_w19Eligible = false;
+				if (_w6Eligible && {count _w6AirTemplate > 0} && {count _owned > 0}) then {
+					{
+						_w19TownObj = _x;
+						if (({alive _x && {(side _x) == _enemySide} && {(_x distance _w19TownObj) < 600}} count allUnits) > 0) exitWith {_w19Eligible = true};
+					} forEach _owned;
+				};
+
 				//--- -----------------------------------------------------------------------
 				//--- BASE WEIGHTS + ESCALATION
 				//--- -----------------------------------------------------------------------
-				_wW1  = 20; _wW2  = 20; _wW3  = 15;
-				_wW6  =  8; _wW7  =  8; _wW10 =  8; _wW11 =  8; _wW12 =  6;
-				_wW4  =  4; _wW8  =  3; _wW9  =  3;
+				_wW1  = 17; _wW2  = 17; _wW3  = 13;  //--- rebalance 2026-06-14: trim Commons a touch so rarer cards surface a bit more
+				_wW6  =  8; _wW7  =  8; _wW10 =  8; _wW11 =  8; _wW12 =  6;  //--- W6 = AIR CAVALRY (Uncommon, weight 8 - unchanged rarity tier).
+				_wW4  =  6; _wW8  =  5; _wW9  =  5;  //--- rebalance 2026-06-14: Rare tier up a bit (was 4/3/3) - rarer drops a little more often
+				_wW13 =  6; _wW18 =  5;  //--- rebalance 2026-06-14: W13 (Rare) up 4->6
+				_wW19 =  5;  //--- W19 = HELIBORNE QRF (Rare, weight 5).
+				_wW14 =  7; _wW15 =  6; _wW16 =  6; _wW17 =  7;
 
 				if (_losing) then {
 					_wW4  = round(_wW4  * _eMult);
+					_wW6  = round(_wW6  * _eMult);  //--- Air Cavalry is now a COMBAT reinforcement: a losing side draws it more (mirrors W4/W8/W9 escalation).
 					_wW7  = round(_wW7  * _eMult);
 					_wW8  = round(_wW8  * _eMult);
 					_wW9  = round(_wW9  * _eMult);
+					_wW13 = round(_wW13 * _eMult);
+					_wW18 = round(_wW18 * _eMult);
+					_wW19 = round(_wW19 * _eMult);  //--- losing side draws the QRF reinforcement more (mirrors W4/W8/W9).
 				};
 
 				//--- Zero ineligible cards.
@@ -335,10 +442,19 @@ while {!gameOver} do {
 				if (!_w10Eligible) then {_wW10 = 0};
 				if (!_w11Eligible) then {_wW11 = 0};
 				if (!_w12Eligible) then {_wW12 = 0};
+				if (!_w1Eligible)  then {_wW1  = 0};
+				if (!_w13Eligible) then {_wW13 = 0};
+				if (!_w14Eligible) then {_wW14 = 0};
+				if (!_w15Eligible) then {_wW15 = 0};
+				if (!_w16Eligible) then {_wW16 = 0};
+				if (!_w17Eligible) then {_wW17 = 0};
+				if (!_w18Eligible) then {_wW18 = 0};
+				if (!_w19Eligible) then {_wW19 = 0};
 
 				//--- Weight table: [cardID, weight]. Card IDs match W-numbers.
 				_weights = [[1,_wW1],[2,_wW2],[3,_wW3],[4,_wW4],[6,_wW6],[7,_wW7],
-				            [8,_wW8],[9,_wW9],[10,_wW10],[11,_wW11],[12,_wW12]];
+				            [8,_wW8],[9,_wW9],[10,_wW10],[11,_wW11],[12,_wW12],
+				            [13,_wW13],[14,_wW14],[15,_wW15],[16,_wW16],[17,_wW17],[18,_wW18],[19,_wW19]];
 
 				_cumSum = 0;
 				{ _cumSum = _cumSum + (_x select 1) } forEach _weights;
@@ -424,15 +540,14 @@ while {!gameOver} do {
 						_active   = _logik getVariable ["wfbe_side_patrols", 0];
 						_logik setVariable ["wfbe_side_patrols", _active + 1];
 						_logik setVariable ["wfbe_side_patrol_last", time];
-						_hcs  = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
-						_live = [];
-						{ if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_live = _live + [_x]} } forEach _hcs;
-						if (count _live > 0) then {
-							[leader(_live select floor(random count _live)), "HandleSpecial", ["delegate-sidepatrol", _sideID, _template, _home]] Call WFBE_CO_FNC_SendToClient;
+						//--- Least-loaded live HC (objNull if none). Reuse the declared _w6HcUnit slot.
+						_w6HcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
+						if (!isNull _w6HcUnit) then {
+							[_w6HcUnit, "HandleSpecial", ["delegate-sidepatrol", _sideID, _template, _home]] Call WFBE_CO_FNC_SendToClient;
 						} else {
 							[_sideID, _template, _home] Spawn WFBE_CO_FNC_RunSidePatrol;
 						};
-						_detail = Format ["tier=%1 template=%2 from=%3 active_after=%4 hc=%5 humanCmd=%6", _tier, _template, _home getVariable ["name","?"], _active + 1, count _live > 0, _humanCmd];
+						_detail = Format ["tier=%1 template=%2 from=%3 active_after=%4 hc=%5 humanCmd=%6", _tier, _template, _home getVariable ["name","?"], _active + 1, !isNull _w6HcUnit, _humanCmd];
 					};
 
 					//--- W4: AIRBORNE ASSAULT — free max-level (LEVEL3) paradrop on spearhead town.
@@ -479,42 +594,91 @@ while {!gameOver} do {
 						};
 					};
 
-					//--- W6: FORTIFICATION GRANT — +2 base defenses beyond the normal 4-cap.
-					//--- Directly calls ConstructDefense twice via the Base placer pattern.
+					//--- W6: AIR CAVALRY — found ONE free ELITE air-assault commander team aimed at the
+					//--- spearhead FRONT town. CRUCIAL REUSE: we found it through the EXACT SAME path the
+					//--- AI commander uses for its own teams (AI_Commander_Teams.sqf) - delegate
+					//--- 'delegate-aicom-team' [sideID, template, spawnPos, skill] to a live HC ->
+					//--- WFBE_CO_FNC_RunCommanderTeam (server-local fallback if no HC). Because the resolved
+					//--- template's first class is a troop-capable Air transport, that file's air-insertion
+					//--- fires automatically (load foot infantry -> fly -> para/heli-land at the objective).
+					//--- The team registers in wfbe_teams via 'aicom-team-created' and the brain's AssignTowns
+					//--- then issues it a spearhead town order (MOVE + SAD) - so it is NEVER a frozen AI, and
+					//--- it rides the NORMAL team GC (no GC-exempt DefenseTeam leak the old W6 had). FREE squad:
+					//--- no funds are deducted (price is only logged for telemetry).
 					case 6: {
-						_hqPos  = getPos _hq;
-						_placed = 0;
-						_defFunds = (_side) Call GetAICommanderFunds;
-						for "_dp" from 1 to 2 do {
-							_defClass = if ((_defCount + _placed) % 2 == 0) then {
-								missionNamespace getVariable [Format ["WFBE_%1DEFENSES_MG", _sideText], ""]
-							} else {
-								missionNamespace getVariable [Format ["WFBE_%1DEFENSES_AAPOD", _sideText], ""]
-							};
-							//--- BUG-FIX mirror: same typeName-first guard as eligibility block.
-							if (!isNil "_defClass") then {
-								if (typeName _defClass == "ARRAY") then {if (count _defClass > 0) then {_defClass = _defClass select 0} else {_defClass = ""}};
-								if (typeName _defClass == "STRING" && {_defClass != ""}) then {
-									_defData  = missionNamespace getVariable _defClass;
-									_defPrice = if (!isNil "_defData") then {_defData select QUERYUNITPRICE} else {0};
-									if (_defFunds >= _defPrice) then {
-										//--- Ring placement around HQ (same helper pattern as AI_Commander_Base).
-										_dAng  = random 360;
-										_dPos  = [(_hqPos select 0) + (28 + random 14) * sin _dAng, (_hqPos select 1) + (28 + random 14) * cos _dAng, 0];
-										[_defClass, _side, _dPos, random 360, true, true] Call ConstructDefense;
-										[_side, -_defPrice] Call ChangeAICommanderFunds;
-										_defFunds = _defFunds - _defPrice;
-										_logik setVariable ["wfbe_aicom_defenses", _defCount + _placed + 1];
-										_placed = _placed + 1;
+						//--- (Re)resolve the elite air-assault template (set in eligibility; re-derive defensively).
+						if (count _w6AirTemplate == 0) then {
+							_w6Tmpls   = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", _sideText], []];
+							_w6TmplUps = missionNamespace getVariable [Format ["WFBE_%1AITEAMUPGRADES", _sideText], []];
+							_w6AirTier = -1;
+							{
+								_w6Cand = _x;
+								if (count _w6Cand > 0) then {
+									_w6Lead = _w6Cand select 0;
+									if (isClass (configFile >> "CfgVehicles" >> _w6Lead)
+									    && {_w6Lead isKindOf "Air"}
+									    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0}) then {
+										_w6CandTier = 0;
+										_w6Idx = _w6Tmpls find _w6Cand;
+										if (_w6Idx >= 0 && {_w6Idx < count _w6TmplUps}) then {
+											_w6UpArr = _w6TmplUps select _w6Idx;
+											if (count _w6UpArr > WFBE_UP_AIR) then {_w6CandTier = _w6UpArr select WFBE_UP_AIR};
+										};
+										if (_w6CandTier > _w6AirTier) then {_w6AirTier = _w6CandTier; _w6AirTemplate = _w6Cand};
 									};
 								};
-							};
+							} forEach _w6Tmpls;
 						};
-						if (_placed > 0) then {
-							_detail = Format ["placed=%1 defenses_now=%2", _placed, _defCount + _placed];
-						} else {
+
+						if (count _w6AirTemplate == 0) then {
 							_result = "ineligible";
-							_detail = "W6 no funds for defense";
+							_detail = "W6 AirCav no air-assault template for side";
+						} else {
+							//--- FRONT TOWN: reuse the SAME spearhead/front selection the commander computes
+							//--- (mirrors W4): top wfbe_aicom_targets entry, else best-scored enemy town.
+							_w6BestTown  = objNull;
+							_w6BestScore = -1e9;
+							_w6Targets   = _logik getVariable "wfbe_aicom_targets";
+							if (!isNil "_w6Targets" && {count _w6Targets > 0}) then {
+								_w6BestTown = _w6Targets select 0;
+							} else {
+								{
+									_w6T4   = _x;
+									_w6DNear = 1e9;
+									{ if ((_x getVariable ["sideID","?"]) == _sideID) then {_w6D = _w6T4 distance _x; if (_w6D < _w6DNear) then {_w6DNear = _w6D}} } forEach towns;
+									if (_w6DNear > 1e8) then {_w6DNear = _w6T4 distance _hq};
+									_w6Score = (_w6T4 getVariable ["supplyValue", 0]) - (_w6DNear / 150);
+									if (_w6Score > _w6BestScore) then {_w6BestScore = _w6Score; _w6BestTown = _w6T4};
+								} forEach _cands;
+							};
+
+							//--- Telemetry-only template price (mirrors the canonical lookup; squad is FREE).
+							_w6Price = 0;
+							{
+								_w6PriceCN = _x;
+								_w6PriceUD = missionNamespace getVariable _w6PriceCN;
+								if (!isNil "_w6PriceUD") then {_w6Price = _w6Price + (_w6PriceUD select QUERYUNITPRICE)};
+							} forEach _w6AirTemplate;
+
+							//--- Spawn anchor: HQ (rear, safe) - identical to W8 Motor Pool. The squad
+							//--- air-inserts from here and the brain orders it forward to the front.
+							_hqPos     = getPos _hq;
+							_w6SpawnPos = _hqPos;
+
+							//--- FOUND ONE TEAM via the commander's own founding path (HC delegate -> fallback).
+							//--- Least-loaded live HC (objNull if none) - a whole air platoon is a BIG atomic
+							//--- lump, so least-loaded picking keeps it off an already-heavy HC.
+							_w6HcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
+							if (!isNull _w6HcUnit) then {
+								//--- skill arg 0 (no veteran boost); 4th delegate slot matches AI_Commander_Teams.
+								[_w6HcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _w6AirTemplate, _w6SpawnPos, 0]] Call WFBE_CO_FNC_SendToClient;
+							} else {
+								//--- No live HC: run the SAME function server-local (it self-detects isServer
+								//--- for team-created/ended routing). Exactly the commander's no-HC fallback.
+								[_sideID, _w6AirTemplate, _w6SpawnPos] Spawn WFBE_CO_FNC_RunCommanderTeam;
+							};
+
+							_detail = Format ["air_template=%1 lead=%2 tier=%3 target=%4 price=%5 free hc=%6", _w6AirTemplate, _w6AirTemplate select 0, _w6AirTier, if (!isNull _w6BestTown) then {_w6BestTown getVariable ["name","?"]} else {"(brain-picks)"}, _w6Price, !isNull _w6HcUnit];
 						};
 					};
 
@@ -585,9 +749,10 @@ while {!gameOver} do {
 						_nearD      = 1e9;
 						{
 							_dd = 1e9;
-							{ _dd = _dd min (_x distance _this) } forEach _owned;
-							if (count _owned == 0) then {_dd = _this distance _hq};
-							if (_dd < _nearD) then {_nearD = _dd; _targetTown = _x};
+							_candTown = _x; //--- BUG-FIX 2026-06-14: capture outer candidate (inner forEach _owned shadows _x).
+							{ _dd = _dd min (_candTown distance _x) } forEach _owned; //--- was '_x distance _this' - _this is the SIDE -> "Type Side" error -> _targetTown never set -> false "no enemy town found".
+							if (count _owned == 0) then {_dd = _candTown distance _hq};
+							if (_dd < _nearD) then {_nearD = _dd; _targetTown = _candTown};
 						} forEach _cands;
 
 						if (!isNull _targetTown) then {
@@ -672,7 +837,313 @@ while {!gameOver} do {
 						_detail = Format ["healed=%1 free_refound_flag=set", _healed];
 					};
 
-					//--- W12: SPOILS OF WAR — 10-min double kill-bounty flag.
+					//--- W13: GUNSHIP STRIKE - one attack aircraft, single pass on the largest enemy cluster, self-despawn 90s.
+						case 13: {
+							_w13AirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
+							_w13AttackClasses = [];
+							{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Mi24_D","Mi24_V","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su34"]) then {_w13AttackClasses = _w13AttackClasses + [_x]} } forEach _w13AirList;
+							_w13TargetTown = objNull; _w13MaxCluster = 0; _w13BestDist = 1e9;
+							{ _clustTown = _x; _nearEnemies = {alive _x && {(side _x) == _enemySide} && {(_x distance _clustTown) < 300}} count allUnits;
+							  if (_nearEnemies > _w13MaxCluster || {_nearEnemies == _w13MaxCluster && {(_clustTown distance _hq) < _w13BestDist}}) then {_w13MaxCluster = _nearEnemies; _w13TargetTown = _clustTown; _w13BestDist = _clustTown distance _hq} } forEach _cands;
+							if (count _w13AttackClasses > 0 && {!isNull _w13TargetTown} && {_w13MaxCluster >= 3}) then {
+								_hqPos = getPos _hq;
+								_w13Ang = random 360;
+								_w13SpawnPos = [(_hqPos select 0) + 4000 * sin _w13Ang, (_hqPos select 1) + 4000 * cos _w13Ang, 1500];
+								_w13Class = _w13AttackClasses select floor(random count _w13AttackClasses);
+								_w13Heli = [_w13Class, _w13SpawnPos, _side, random 360, true, true] Call Common_CreateVehicle;
+								if (!isNull _w13Heli) then {
+									_w13Grp = [_side, "aicom-gunship"] Call WFBE_CO_FNC_CreateGroup;
+									_w13PilotClass = missionNamespace getVariable [Format ["WFBE_%1PILOT", _sideText], ""];
+									if (!isNull _w13Grp && {_w13PilotClass != ""}) then {
+										_w13Pilot = [_w13PilotClass, _w13Grp, _w13SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+										if (!isNull _w13Pilot) then {
+											_w13Pilot moveInDriver _w13Heli;
+											_w13TargetPos = getPos _w13TargetTown;
+											_w13Heli flyInHeight 200;
+											_w13Grp setBehaviour "COMBAT"; _w13Grp setCombatMode "RED";
+											[_w13Grp, _w13TargetPos, 200] Call AIPatrol;
+											[_w13Heli, _w13Grp] spawn {
+												private ["_heli","_grp"];
+												_heli = _this select 0; _grp = _this select 1;
+												sleep 90;
+												{deleteVehicle _x} forEach (crew _heli);
+												if (!isNull _heli) then {deleteVehicle _heli};
+												if (!isNull _grp) then {deleteGroup _grp};
+											};
+											_detail = Format ["class=%1 target=%2 cluster=%3", _w13Class, _w13TargetTown getVariable ["name","?"], _w13MaxCluster];
+										} else {
+											deleteVehicle _w13Heli; deleteGroup _w13Grp;
+											_result = "partial"; _detail = Format ["W13 no pilot for %1", _w13Class];
+										};
+									} else {
+										deleteVehicle _w13Heli;
+										_result = "partial"; _detail = "W13 no group/pilot class";
+									};
+								} else {
+									_result = "ineligible"; _detail = Format ["W13 createVehicle null for %1", _w13Class];
+								};
+							} else {
+								_result = "ineligible"; _detail = Format ["W13 no class/target (cluster=%1)", _w13MaxCluster];
+							};
+						};
+
+						//--- W14: IRON DOME - up to 2 temporary CREWED AA at the most-threatened owned town. createVehicle DIRECT
+						//--- (NOT ConstructDefense, which would leak a persistent GC-exempt DefenseTeam group); full despawn at 300s.
+						case 14: {
+							_w14Target = objNull;
+							{ if ((_x getVariable ["wfbe_active", false]) || {_x getVariable ["wfbe_active_air", false]}) then {_w14Target = _x} } forEach _owned;
+							if (isNull _w14Target && {count _owned > 0}) then {_w14Target = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity};
+							if (isNull _w14Target) then {_w14Target = _hq};
+							_w14AAClass = missionNamespace getVariable [Format ["WFBE_%1DEFENSES_AAPOD", _sideText], ""];
+							if (typeName _w14AAClass == "ARRAY") then {if (count _w14AAClass > 0) then {_w14AAClass = _w14AAClass select 0} else {_w14AAClass = ""}};
+							_w14PilotClass = missionNamespace getVariable [Format ["WFBE_%1SOLDIER", _sideText], ""];
+							if (!isNull _w14Target && {alive _w14Target} && {typeName _w14AAClass == "STRING"} && {_w14AAClass != ""} && {_w14PilotClass != ""}) then {
+								_w14Pos = getPos _w14Target; _w14Placed = 0;
+								for "_w14i" from 1 to 2 do {
+									_w14Ang = random 360;
+									_w14DPos = [(_w14Pos select 0) + (35 + random 15) * sin _w14Ang, (_w14Pos select 1) + (35 + random 15) * cos _w14Ang, 0];
+									_w14AA = createVehicle [_w14AAClass, _w14DPos, [], 0, "NONE"];
+									if (!isNull _w14AA) then {
+										_w14AA setDir _w14Ang; _w14AA setPos _w14DPos; _w14AA setVariable ["wfbe_side", _side, true];
+										_w14Grp = [_side, "aicom-irondome"] Call WFBE_CO_FNC_CreateGroup;
+										if (!isNull _w14Grp) then {
+											_w14Gunner = [_w14PilotClass, _w14Grp, _w14DPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+											if (!isNull _w14Gunner) then {_w14Gunner moveInGunner _w14AA};
+											_w14Placed = _w14Placed + 1;
+											[_w14AA, _w14Grp] spawn {
+												private ["_aa","_g"];
+												_aa = _this select 0; _g = _this select 1;
+												sleep 300;
+												{deleteVehicle _x} forEach (crew _aa);
+												if (!isNull _aa) then {deleteVehicle _aa};
+												if (!isNull _g) then {deleteGroup _g};
+											};
+										} else {
+											deleteVehicle _w14AA;
+										};
+									};
+								};
+								if (_w14Placed > 0) then {_detail = Format ["placed=%1 around=%2 timer=300s", _w14Placed, _w14Target getVariable ["name","?"]]} else {_result = "ineligible"; _detail = "W14 placed none"};
+							} else {_result = "ineligible"; _detail = "W14 no target / AA class / crew class"};
+						};
+
+						//--- W15: BLACK MARKET - 10-min 50% production discount flag (consumed in AI_Commander_Produce.sqf).
+						case 15: {
+							_w15Exp = time + 600;
+							missionNamespace setVariable [Format ["wfbe_aicom_discount_%1", _sideText], _w15Exp];
+							_detail = Format ["discount=50%% expiry=t+600 humanCmd=%1", _humanCmd];
+						};
+
+						//--- W16: LEND-LEASE - raise one random tier (Light/Heavy/Air) below its max by +1; mirrors Server_ProcessUpgrade broadcast.
+						case 16: {
+							_maxLevels = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_LEVELS", _sideText], []];
+							_raisableTiers = [];
+							if (count _upgrades > WFBE_UP_AIR && {count _maxLevels > WFBE_UP_AIR}) then {
+								if ((_upgrades select WFBE_UP_LIGHT) < (_maxLevels select WFBE_UP_LIGHT)) then {_raisableTiers = _raisableTiers + [WFBE_UP_LIGHT]};
+								if ((_upgrades select WFBE_UP_HEAVY) < (_maxLevels select WFBE_UP_HEAVY)) then {_raisableTiers = _raisableTiers + [WFBE_UP_HEAVY]};
+								if ((_upgrades select WFBE_UP_AIR)   < (_maxLevels select WFBE_UP_AIR))   then {_raisableTiers = _raisableTiers + [WFBE_UP_AIR]};
+							};
+							if (count _raisableTiers > 0) then {
+								_chosenUpID = _raisableTiers select floor(random count _raisableTiers);
+								_newUpgrades = +_upgrades;
+								_newUpgrades set [_chosenUpID, (_upgrades select _chosenUpID) + 1];
+								_logik setVariable ["wfbe_upgrades", _newUpgrades, true];
+								[_side, "NewIntelAvailable"] Spawn SideMessage;
+								[_side, "HandleSpecial", ["upgrade-complete", _chosenUpID, (_newUpgrades select _chosenUpID), false]] Call WFBE_CO_FNC_SendToClients;
+								_tierName = switch (_chosenUpID) do {case WFBE_UP_LIGHT: {"Light"}; case WFBE_UP_HEAVY: {"Heavy"}; case WFBE_UP_AIR: {"Air"}; default {"?"}};
+								_detail = Format ["tier=%1 new_level=%2 losing=%3", _tierName, _newUpgrades select _chosenUpID, _losing];
+							} else {_result = "ineligible"; _detail = "W16 no raisable tier"};
+						};
+
+						//--- W17: SUPPLY CONVOY - crewed truck HQ->nearest owned town; payout on arrival; self-clean on arrival/timeout(600s)/death.
+						case 17: {
+							_w17TruckClass = if (_side == west) then {"WarfareSupplyTruck_USMC"} else {"WarfareSupplyTruck_RU"};
+							_hqPos = getPos _hq; _w17Ang = random 360;
+							_w17SpawnPos = [(_hqPos select 0) + (40 + random 20) * sin _w17Ang, (_hqPos select 1) + (40 + random 20) * cos _w17Ang, 0];
+							_w17Truck = [_w17TruckClass, _w17SpawnPos, _side, random 360, false, true] Call Common_CreateVehicle;
+							if (!isNull _w17Truck) then {
+								_soldierClass = missionNamespace getVariable [Format ["WFBE_%1SOLDIER", _sideText], ""];
+								_w17Grp = [_side, "aicom-convoy"] Call WFBE_CO_FNC_CreateGroup;
+								if (!isNull _w17Grp && {_soldierClass != ""} && {count _owned > 0}) then {
+									_w17Driver = [_soldierClass, _w17Grp, _w17SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+									_w17Gunner = [_soldierClass, _w17Grp, _w17SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+									if (!isNull _w17Driver) then {_w17Driver moveInDriver _w17Truck};
+									if (!isNull _w17Gunner) then {_w17Gunner moveInGunner _w17Truck};
+									_w17Target = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity;
+									_w17TargetPos = getPos _w17Target;
+									_w17MarkerName = Format ["aicom_convoy_%1_%2", _sideText, round time];
+									createMarker [_w17MarkerName, _w17SpawnPos];
+									_w17MarkerName setMarkerType "mil_destroy";
+									_w17MarkerName setMarkerColor (if (_side == west) then {"ColorBlue"} else {"ColorRed"});
+									_w17MarkerName setMarkerText Format ["Supply Convoy (%1)", _sideText];
+									[_w17Grp, _w17TargetPos, 100] Call AIPatrol;
+									_w17Grp setBehaviour "AWARE"; _w17Grp setCombatMode "YELLOW";
+									[_w17Truck, _w17Grp, _w17Target, _side, _w17MarkerName, _humanCmd] spawn {
+										private ["_truck","_grp","_tgt","_tSide","_mk","_human","_el","_arr","_dead","_sup","_grant","_cmd","_cf"];
+										_truck = _this select 0; _grp = _this select 1; _tgt = _this select 2; _tSide = _this select 3; _mk = _this select 4; _human = _this select 5;
+										_el = 0; _arr = false; _dead = false;
+										waitUntil { sleep 2; _el = _el + 2;
+											if (!alive _truck) then {_dead = true};
+											if (alive _truck && {(_truck distance _tgt) < 80}) then {_arr = true};
+											if (_el >= 600) then {_arr = true};
+											(_arr || _dead || gameOver) };
+										if (_arr && {!_dead} && {alive _truck}) then {
+											_sup = (_tSide) Call WFBE_CO_FNC_GetSideSupply; if (isNil "_sup") then {_sup = 0};
+											_grant = 1200 min ((missionNamespace getVariable ["WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT", 99999]) - _sup);
+											if (_grant > 0) then {[_tSide, _grant, "AI Commander Wildcard: supply convoy delivery.", false] Call ChangeSideSupply};
+											if (_human) then {
+												_cmd = (_tSide) Call WFBE_CO_FNC_GetCommanderTeam;
+												if (!isNull _cmd) then {_cf = _cmd getVariable "wfbe_funds"; if (isNil "_cf") then {_cf = 0}; _cmd setVariable ["wfbe_funds", _cf + 5000, true]};
+											} else {[_tSide, 5000] Call ChangeAICommanderFunds};
+											diag_log ("AICOMSTAT|v2|EVENT|" + str _tSide + "|" + str (round (time / 60)) + "|CONVOY_DELIVERED|supply=" + str _grant);
+										};
+										deleteMarker _mk;
+										{deleteVehicle _x} forEach (crew _truck);
+										if (!isNull _truck) then {deleteVehicle _truck};
+										if (!isNull _grp) then {deleteGroup _grp};
+									};
+									_detail = Format ["target=%1 truck=%2 humanCmd=%3", _w17Target getVariable ["name","?"], _w17TruckClass, _humanCmd];
+								} else {
+									if (!isNull _w17Grp) then {{deleteVehicle _x} forEach (units _w17Grp); deleteGroup _w17Grp};
+									deleteVehicle _w17Truck;
+									_result = "partial"; _detail = "W17 no group/soldier/owned town";
+								};
+							} else {_result = "ineligible"; _detail = Format ["W17 createVehicle null for %1", _w17TruckClass]};
+						};
+
+						//--- W18: BOUNTY HVT - one enemy officer at the spearhead enemy town with a GLOBAL marker. Bounty is paid ONCE
+						//--- by CreateUnit's built-in Killed handler (RequestOnUnitKilled: player->AwardBounty, AI->ChangeTeamFunds);
+						//--- the watcher ONLY cleans up marker+group on death / 30-min timeout (no manual award - would double-pay).
+						case 18: {
+							_w18Target = objNull; _w18Near = 1e9;
+							{ _clustTown = _x; _dd = 1e9; { _dd = _dd min (_clustTown distance _x) } forEach _owned; if (count _owned == 0) then {_dd = _clustTown distance _hq}; if (_dd < _w18Near) then {_w18Near = _dd; _w18Target = _clustTown} } forEach _cands;
+							_w18OfficerClass = missionNamespace getVariable [Format ["WFBE_%1_HVT_CLASS", str _enemySide], ""];
+							if (_w18OfficerClass == "") then { _w18ParaL3 = missionNamespace getVariable [Format ["WFBE_%1PARACHUTELEVEL3", str _enemySide], []]; if (count _w18ParaL3 > 0) then {_w18OfficerClass = _w18ParaL3 select 0} };
+							if (!isNull _w18Target && {_w18OfficerClass != ""}) then {
+								_w18Pos = getPos _w18Target;
+								_w18Grp = [_enemySide, "aicom-hvt"] Call WFBE_CO_FNC_CreateGroup;
+								if (!isNull _w18Grp) then {
+									_w18HVT = [_w18OfficerClass, _w18Grp, _w18Pos, _enemyID] Call WFBE_CO_FNC_CreateUnit;
+									if (!isNull _w18HVT) then {
+										[_w18Grp, _w18Pos, 120] Call AIPatrol;
+										_w18Grp setBehaviour "AWARE"; _w18Grp setCombatMode "RED";
+										_w18MarkerID = Format ["hvt_%1_%2", _sideText, round time];
+										createMarker [_w18MarkerID, _w18Pos];
+										_w18MarkerID setMarkerType "mil_dot";
+										_w18MarkerID setMarkerColor (if (_enemySide == west) then {"ColorBlue"} else {"ColorRed"});
+										_w18MarkerID setMarkerText Format ["HVT (%1)", str _enemySide];
+										[_w18HVT, _w18MarkerID, _w18Grp] spawn {
+											private ["_hvt","_mk","_grp","_el"];
+											_hvt = _this select 0; _mk = _this select 1; _grp = _this select 2; _el = 0;
+											waitUntil { sleep 5; _el = _el + 5; (!alive _hvt) || _el >= 1800 || gameOver };
+											deleteMarker _mk;
+											{deleteVehicle _x} forEach (units _grp);
+											if (!isNull _grp) then {deleteGroup _grp};
+										};
+										_detail = Format ["town=%1 class=%2 humanCmd=%3", _w18Target getVariable ["name","?"], _w18OfficerClass, _humanCmd];
+									} else {deleteGroup _w18Grp; _result = "ineligible"; _detail = "W18 createUnit null"};
+								} else {_result = "failed"; _detail = "W18 grp null at cap"};
+							} else {_result = "ineligible"; _detail = "W18 no enemy town / officer class"};
+						};
+
+						//--- W19: HELIBORNE QRF - air-insert a QRF infantry squad to the FRIENDLY town MOST under threat.
+						//--- FOUNDED + DELIVERED via the EXACT W6 Air Cavalry path (no new delivery invented): we ship the
+						//--- SAME resolved air-assault template (_w6AirTemplate - first class is a troop-capable Air transport)
+						//--- to a least-loaded HC as 'delegate-aicom-team' -> WFBE_CO_FNC_RunCommanderTeam (server-local fallback
+						//--- if no HC). The ONLY difference from W6: the spawnPos we pass is the THREATENED FRIENDLY TOWN (not HQ),
+						//--- so Common_RunCommanderTeam spawns + air-inserts the squad AT that town (its air-insertion LZ is the
+						//--- spawnPos) - a true QRF reinforcement landing on the contested friendly town. FREE squad (price logged
+						//--- only); rides the NORMAL team GC + brain orders (never a frozen AI).
+						case 19: {
+							//--- Re-resolve the elite air-assault template defensively (set in eligibility; mirror W6).
+							if (count _w6AirTemplate == 0) then {
+								_w6Tmpls   = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", _sideText], []];
+								_w6TmplUps = missionNamespace getVariable [Format ["WFBE_%1AITEAMUPGRADES", _sideText], []];
+								_w6AirTier = -1;
+								{
+									_w6Cand = _x;
+									if (count _w6Cand > 0) then {
+										_w6Lead = _w6Cand select 0;
+										if (isClass (configFile >> "CfgVehicles" >> _w6Lead)
+										    && {_w6Lead isKindOf "Air"}
+										    && {(getNumber (configFile >> "CfgVehicles" >> _w6Lead >> "transportSoldier")) > 0}) then {
+											_w6CandTier = 0;
+											_w6Idx = _w6Tmpls find _w6Cand;
+											if (_w6Idx >= 0 && {_w6Idx < count _w6TmplUps}) then {
+												_w6UpArr = _w6TmplUps select _w6Idx;
+												if (count _w6UpArr > WFBE_UP_AIR) then {_w6CandTier = _w6UpArr select WFBE_UP_AIR};
+											};
+											if (_w6CandTier > _w6AirTier) then {_w6AirTier = _w6CandTier; _w6AirTemplate = _w6Cand};
+										};
+									};
+								} forEach _w6Tmpls;
+							};
+						
+							if (count _owned == 0) then {
+								_result = "ineligible";
+								_detail = "W19 QRF side owns no town";
+							} else {
+								if (count _w6AirTemplate == 0) then {
+									_result = "ineligible";
+									_detail = "W19 QRF no air-assault transport template for side";
+								} else {
+									//--- MOST-THREATENED FRIENDLY town: among OWNED towns, the one with the most enemy
+									//--- units within ~600m. FALLBACK if none strictly under threat: the friendly town
+									//--- nearest the front (nearest any enemy town; if no enemy town, nearest the HQ-rear).
+									_w19Town       = objNull;
+									_w19BestThreat = 0;
+									{
+										_w19TownObj = _x;
+										_w19Threat  = {alive _x && {(side _x) == _enemySide} && {(_x distance _w19TownObj) < 600}} count allUnits;
+										if (_w19Threat > _w19BestThreat) then {_w19BestThreat = _w19Threat; _w19Town = _w19TownObj};
+									} forEach _owned;
+									//--- Fallback: friendly town nearest the front (nearest enemy town, else nearest HQ).
+									if (isNull _w19Town) then {
+										_w19NearD = 1e9;
+										{
+											_w19TownObj = _x;
+											_w19D = 1e9;
+											{ _w19D = _w19D min (_w19TownObj distance _x) } forEach _cands;
+											if (count _cands == 0) then {_w19D = _w19TownObj distance _hq};
+											if (_w19D < _w19NearD) then {_w19NearD = _w19D; _w19Town = _w19TownObj};
+										} forEach _owned;
+									};
+						
+									if (isNull _w19Town) then {
+										_result = "ineligible";
+										_detail = "W19 QRF no friendly town resolved";
+									} else {
+										//--- Spawn anchor = the threatened FRIENDLY town: the air-insertion LZ is the spawnPos,
+										//--- so the QRF squad lands ON that town (the only divergence from W6, which anchors at HQ).
+										_w19TownPos  = getPos _w19Town;
+										_w19SpawnPos = _w19TownPos;
+						
+										//--- Telemetry-only template price (squad is FREE; mirrors W6's canonical lookup).
+										_w19Price = 0;
+										{
+											_w19PriceCN = _x;
+											_w19PriceUD = missionNamespace getVariable _w19PriceCN;
+											if (!isNil "_w19PriceUD") then {_w19Price = _w19Price + (_w19PriceUD select QUERYUNITPRICE)};
+										} forEach _w6AirTemplate;
+						
+										//--- FOUND ONE TEAM via the commander's own founding path (HC delegate -> server-local
+										//--- fallback) - IDENTICAL to W6 Air Cavalry. Least-loaded HC keeps the big air lump off
+										//--- an already-heavy HC. 4th delegate slot = skill 0 (no veteran boost), matching W6.
+										_w19HcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
+										if (!isNull _w19HcUnit) then {
+											[_w19HcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _w6AirTemplate, _w19SpawnPos, 0]] Call WFBE_CO_FNC_SendToClient;
+										} else {
+											//--- No live HC: run the SAME function server-local (self-detects isServer for routing).
+											[_sideID, _w6AirTemplate, _w19SpawnPos] Spawn WFBE_CO_FNC_RunCommanderTeam;
+										};
+						
+										_detail = Format ["air_template=%1 lead=%2 tier=%3 town=%4 threat=%5 price=%6 free hc=%7 humanCmd=%8", _w6AirTemplate, _w6AirTemplate select 0, _w6AirTier, _w19Town getVariable ["name","?"], _w19BestThreat, _w19Price, !isNull _w19HcUnit, _humanCmd];
+									};
+								};
+							};
+						};
+
+						//--- W12: SPOILS OF WAR — 10-min double kill-bounty flag.
 					//--- Flag lives on missionNamespace (survives spawn death).
 					//--- Not stackable: checked above; re-draw if already active.
 					//--- Human side: same flag, affects the normal bounty path.
@@ -695,9 +1166,12 @@ while {!gameOver} do {
 				} else {
 					_wNameMap = [
 						[1,"War Chest"],[2,"Supply Drop"],[3,"Bonus Patrol"],
-						[4,"Airborne Assault"],[6,"Fortification Grant"],[7,"Veteran Company"],
+						[4,"Airborne Assault"],[6,"Air Cavalry"],[7,"Veteran Company"],
 						[8,"Motor Pool Delivery"],[9,"Uprising"],[10,"Lucky Salvage"],
-						[11,"Field Hospital"],[12,"Spoils of War"]
+						[11,"Field Hospital"],[12,"Spoils of War"],
+						[13,"Gunship Strike"],[14,"Iron Dome"],[15,"Black Market"],
+						[16,"Lend-Lease"],[17,"Supply Convoy"],[18,"Bounty HVT"],
+						[19,"Heliborne QRF"]
 					];
 					_wName = Format ["W%1", _draw];
 					{if ((_x select 0) == _draw) exitWith {_wName = _x select 1}} forEach _wNameMap;

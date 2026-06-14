@@ -1,5 +1,5 @@
 // Marty: Performance Audit locals and marker update cache.
-private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites"];
+private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites"];
 
 _sideText = sideJoinedText;
 _label = "";
@@ -9,6 +9,8 @@ _lastLeaders = [];
 _lastTexts = [];
 _lastAlphas = [];
 _lastColors = [];
+_lastPositions = [];
+_lastDirs = [];
 _nextAIUpdate = 0;
 _afkMarkerDiagnosticNextLog = 0;
 
@@ -39,6 +41,9 @@ _wfMenuDisplays = [11000,12000,13000,14000,17000,20000,21000,22000,23000,503000,
 	_lastTexts set [_count - 1, ""];
 	_lastAlphas set [_count - 1, -1];
 	_lastColors set [_count - 1, _markerColor];
+	//--- PERF4 - per-team pos/dir cache so the follow loop below skips no-op marker writes.
+	_lastPositions set [_count - 1, [-99999,-99999,0]];
+	_lastDirs set [_count - 1, -999];
 
 	_count = _count + 1;
 } forEach clientTeams;
@@ -182,9 +187,29 @@ while {!gameOver} do {
 
 					if (_updateThisLeader) then {
 						_leaderVehicle = vehicle _leader;
-						_marker setMarkerPosLocal getPos _leader;
-						_marker setMarkerDirLocal getDir _leaderVehicle;
-						_perfMarkerOps = _perfMarkerOps + 2;
+						//--- PERF4 - only re-write pos/dir when the leader actually moved/turned. A held
+						//--- (stationary) player or AI team-lead arrow otherwise paid two setMarker* writes
+						//--- every refresh for zero visible change. Same gate the AAR/unit paths use.
+						_pos = getPos _leader;
+						_lastPos = _lastPositions select _markerIndex;
+						if ((_pos distance _lastPos) > 3) then {
+							_marker setMarkerPosLocal _pos;
+							_lastPositions set [_markerIndex, _pos];
+							_perfMarkerOps = _perfMarkerOps + 1;
+						} else {
+							_perfSkippedWrites = _perfSkippedWrites + 1;
+						};
+						_dir = getDir _leaderVehicle;
+						_lastDir = _lastDirs select _markerIndex;
+						_dirDiff = abs (_dir - _lastDir);
+						if (_dirDiff > 180) then {_dirDiff = 360 - _dirDiff};
+						if (_dirDiff > 5) then {
+							_marker setMarkerDirLocal _dir;
+							_lastDirs set [_markerIndex, _dir];
+							_perfMarkerOps = _perfMarkerOps + 1;
+						} else {
+							_perfSkippedWrites = _perfSkippedWrites + 1;
+						};
 
 						if ((_lastTexts select _markerIndex) != _label) then {
 							_marker setMarkerTextLocal _label;

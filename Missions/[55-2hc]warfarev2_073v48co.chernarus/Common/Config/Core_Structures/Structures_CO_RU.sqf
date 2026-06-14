@@ -12,8 +12,8 @@ _HEAVY = if (IS_chernarus_map_dependent) then {"RU_WarfareBHeavyFactory"} else {
 _AIR = if (IS_chernarus_map_dependent) then {"RU_WarfareBAircraftFactory"} else {"TK_WarfareBAircraftFactory_EP1"};
 _SP = if (IS_chernarus_map_dependent) then {"RU_WarfareBVehicleServicePoint"} else {"TK_WarfareBVehicleServicePoint_EP1"};
 _AAR = if (IS_chernarus_map_dependent) then {"RU_WarfareBAntiAirRadar"} else {"TK_WarfareBAntiAirRadar_EP1"};
-_ARTRAD = if (IS_chernarus_map_dependent) then {"RU_WarfareBArtilleryRadar"} else {"TK_WarfareBArtilleryRadar_EP1"};
-_RES = if (IS_chernarus_map_dependent) then {"Land_Mil_Barracks_i"} else {"Land_Mil_Barracks_i_EP1"}; //--- EP1 intact model inferred safe: mission already uses Land_Mil_Barracks_i_ruins_EP1 (WFBE_C_STRUCTURES_RUINS)
+_ARTRAD = "Land_Antenna"; //--- reskinned: was RU_/TK_WarfareBArtilleryRadar (hangar-scale); Land_Antenna is the proven small CBR core (~3x3m mast, reads as radar). Menu name hardcoded at line 124 since this model's displayName != "Artillery Radar".
+_RES = if (IS_chernarus_map_dependent) then {"Land_fortified_nest_small"} else {"Land_fortified_nest_small_EP1"}; //--- reskinned: was Land_Mil_Barracks_i(_EP1) (barracks block); small fortified nest (~8x8m) reads as a depot/reserve, proven buildable defense, small sibling of WFBE_C_DEPOT Land_fortified_nest_big_EP1.
 
 /* Mash used after being deployed */
 missionNamespace setVariable [Format["WFBE_%1FARP", _side], 'CampEast_EP1'];
@@ -109,7 +109,7 @@ if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) 
 
 if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	_v = _v		+ ["Bank"];
-	_n = _n		+ ["Land_Mil_hangar_EP1"];
+	_n = _n		+ ["Land_fortified_nest_big_EP1"];	//--- was Land_Mil_hangar_EP1 (giant ~36x18 aircraft hangar). Swapped to the EP1 fortified-nest compound (~16x16): PROVEN-loadable = it is WFBE_C_DEPOT (Core_Models\CombinedOps.sqf:10 / Arrowhead.sqf:10) and a live cursorTarget (WASP\actions\AddActions.sqf:15); EP1 installed; smaller + reads as fortified vault, distinct from Reserve (Land_Mil_Barracks_i).
 	_d = _d		+ ["Bank Rossii"];
 	_c = _c		+ [9500];
 	_t = _t		+ [if (WF_Debug) then {1} else {300}];
@@ -121,7 +121,7 @@ if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_ARTILLERYRADAR", 0]) > 0) then {
 	_v = _v		+ ["ArtilleryRadar"];
 	_n = _n		+ [_ARTRAD];
-	_d = _d		+ [getText (configFile >> "CfgVehicles" >> (_n select (count _n - 1)) >> "displayName")];
+	_d = _d		+ ["Artillery Radar"];	//--- hardcoded: _ARTRAD reskinned to Land_Antenna (displayName "Antenna"); keep menu label as "Artillery Radar".
 	_c = _c		+ [2400];
 	_t = _t		+ [if (WF_Debug) then {1} else {60}];
 	_s = _s		+ ["MediumSite"];
@@ -146,7 +146,7 @@ for [{_count = count _v - 1},{_count >= 0},{_count = _count - 1}] do {
 
 {
 	missionNamespace setVariable [Format ["%1%2",_side, _x select 0], _x select 1];
-} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR","Land_Antenna"],["BANK","Land_Mil_hangar_EP1"],["ARTRAD",_ARTRAD],["RES",_RES]]; //--- Land_telek1 rejected: likely absent
+} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR","Land_Antenna"],["BANK","Land_fortified_nest_big_EP1"],["ARTRAD",_ARTRAD],["RES",_RES]]; //--- BANK anchor model matches the Bank structure model above (was Land_Mil_hangar_EP1). Land_telek1 rejected: likely absent
 
 missionNamespace setVariable [Format["WFBE_%1MHQNAME", _side], _MHQ];
 missionNamespace setVariable [Format["WFBE_%1STRUCTURES", _side], _v];

@@ -116,6 +116,7 @@ _total_infantry_p = round(_groups_max * (_percentage_inf / 100));
 _total_vehicles_p = round(_groups_max - _total_infantry_p);
 
 _final = [];
+_finalKind = []; //--- claude-gaming: parallel inf(0)/veh(1) tag per _final element, for the spawn-time consolidation pass below
 _inf_iterator = 0;
 _veh_iterator = 0;
 while {_groups_max > 0} do {
@@ -123,6 +124,7 @@ while {_groups_max > 0} do {
 		_total_infantry_p = _total_infantry_p - 1;
 		if (_inf_iterator > _total_infantry-1) then {_inf_iterator = 0};
 		[_final, _unit_infantry select _inf_iterator] Call WFBE_CO_FNC_ArrayPush;
+		[_finalKind, 0] Call WFBE_CO_FNC_ArrayPush; //--- claude-gaming: tag infantry
 		_groups_max = _groups_max - 1;
 		_inf_iterator = _inf_iterator + 1;
 	};
@@ -131,15 +133,56 @@ while {_groups_max > 0} do {
 		_total_vehicles_p = _total_vehicles_p - 1;
 		if (_veh_iterator > _total_vehicles-1) then {_veh_iterator = 0};
 		[_final, _unit_vehicles select _veh_iterator] Call WFBE_CO_FNC_ArrayPush;
+		[_finalKind, 1] Call WFBE_CO_FNC_ArrayPush; //--- claude-gaming: tag vehicle
 		_groups_max = _groups_max - 1;
 		_veh_iterator = _veh_iterator + 1;
 	};
 };
 
 _contents = [];
+_contentsKind = [];
+_fi = 0;
 {
 	_get = missionNamespace getVariable Format ["WFBE_%1_GROUPS_%2", _side, _x];
-	if !(isNil '_get') then {[_contents, _get select floor(random count _get)] Call WFBE_CO_FNC_ArrayPush};
+	if !(isNil '_get') then {
+		[_contents, _get select floor(random count _get)] Call WFBE_CO_FNC_ArrayPush;
+		[_contentsKind, _finalKind select _fi] Call WFBE_CO_FNC_ArrayPush;
+	};
+	_fi = _fi + 1;
 } forEach _final;
+
+//--- GROUP-COUNT REDUCTION (claude-gaming 2026-06-13): spawn-time infantry consolidation (resistance/defender garrison).
+//--- Each _contents element is a flat classname roster; CreateTeam (Common_CreateTeam.sqf:23/85)
+//--- instantiates EVERY classname in one passed list into the ONE group. Fusing infantry rosters
+//--- into fewer flat arrays => SAME units/classes in FEWER server group-brains (the ~2.1 units/group
+//--- fragmentation drives the FPS cliff), IDENTICAL defenders a player sees & fights. Vehicle rosters
+//--- (kind 1) are NEVER merged (preserves the CreateTeam addVehicle/crew path). Cap merged groups at 10
+//--- classnames. WFBE_C_TOWNS_MERGE_TARGET <= 0 disables (instant rollback).
+//--- GUER GROUP-CONDENSE (task #12): defender-specific target (9) > WEST/EAST (5). Fallback to global if unset/<=0.
+_mergeTarget = missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_TARGET_DEFENDER", 0];
+if (_mergeTarget <= 0) then {_mergeTarget = missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_TARGET", 5]};
+private "_mergeCap"; _mergeCap = missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_CAP_DEFENDER", 10]; //--- GUER condense A/B: defender-specific merged-group size cap (12); falls back to the historical 10.
+if (_mergeTarget > 0 && {count _contents > 1}) then {
+	_infRosters = [];
+	_vehRosters = [];
+	_ci = 0;
+	{
+		if ((_contentsKind select _ci) == 0) then {[_infRosters, _x] Call WFBE_CO_FNC_ArrayPush} else {[_vehRosters, _x] Call WFBE_CO_FNC_ArrayPush};
+		_ci = _ci + 1;
+	} forEach _contents;
+
+	_merged = [];
+	_acc = [];
+	{
+		_roster = _x;
+		if (((count _acc) + (count _roster)) > _mergeCap && {count _acc > 0}) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush; _acc = []};
+		_acc = _acc + _roster;
+		if (count _acc >= _mergeTarget) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush; _acc = []};
+	} forEach _infRosters;
+	if (count _acc > 0) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush};
+	{[_merged, _x] Call WFBE_CO_FNC_ArrayPush} forEach _vehRosters; //--- vehicles unchanged, appended
+
+	_contents = _merged;
+};
 
 _contents

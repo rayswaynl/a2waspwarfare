@@ -45,9 +45,14 @@ for "_i" from 0 to (count _template - 1) do {
     _worldDir = _dir - _relDir;
 
     _prop = createVehicle [_cls, _worldPos, [], 0, "NONE"];
-    _prop setDir _worldDir;
-    _prop setPos _worldPos;
-    _props = _props + [_prop];
+    if (isNull _prop) then {
+        //--- Class failed to load on this CO server. Log it and keep going so the rest of the composition still spawns.
+        ["WARNING", Format ["Server_SpawnStructureDressing: class [%1] failed createVehicle in template [%2]", _cls, _tplName]] Call WFBE_CO_FNC_LogContent;
+    } else {
+        _prop setDir _worldDir;
+        _prop setPos _worldPos;
+        _props = _props + [_prop];
+    };
 };
 
 _core setVariable ["wfbe_dressing", _props];

@@ -262,7 +262,7 @@
 		title = "$STR_WF_PARAMETER_VehicleDelay";
 		values[] = {60,120,180,240,300,600,900,1200,1800,2400,3000,3600};
 		texts[] = {"1 Minute","2 Minutes","3 Minutes","4 Minutes","5 Minutes","10 Minutes","15 Minutes","20 Minutes","30 Minutes","40 Minutes","50 Minutes","1 Hour"};
-		default = 600;
+		default = 300; //--- claude-gaming 2026-06-13: 10min->5min. Despawn abandoned empty AI vehicles faster to trim the ~161-vehicle count (network/sim load); supply/medevac trucks stay exempt at 2x. Reversible.
 	};
 	class WFBE_C_GAMEPLAY_FAST_TRAVEL {
 		title = "$STR_WF_PARAMETER_FastTravel";

@@ -324,6 +324,7 @@ class WFBE_VotingMenu {
 			y = 0.104 + 0.07;
 			w = 0.489;
 			h = 0.38;
+			rowHeight = 0.03;
 			colorSelectBackground[] = WFBE_Menu_ListBox_Select_Color;
 		};
 		//--- Live tally / status line.
@@ -3465,6 +3466,7 @@ class WFBE_SkinSelectorMenu {
 			y = 0.08 + 0.07;
 			w = 0.22;
 			h = 0.65;
+			rowHeight = 0.03;
 			colorSelectBackground[] = WFBE_Menu_ListBox_Select_Color;
 			onLBSelChanged = "";
 		};

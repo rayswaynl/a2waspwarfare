@@ -8,9 +8,10 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every"];
 
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
+_auditN = 0; // D2 (claude-gaming 2026-06-14): counts elapsed 5-min audit windows; the expensive classification+dump fires only every WFBE_C_GROUPAUDIT_EVERY-th window. Husk-reap GC below is untouched and runs every 60s cycle.
 
 while {!WFBE_GameOver} do {
 	sleep 60;
@@ -134,6 +135,16 @@ while {!WFBE_GameOver} do {
 	if (isNil "_lastAudit") then { _lastAudit = -9999 };
 	if ((_now - _lastAudit) >= _auditInterval) then {
 		missionNamespace setVariable ["wfbe_groupaudit_last", _now];
+		// --- D2 server-FPS throttle (claude-gaming 2026-06-14) ---
+		// The 5-min WINDOW bookkeeping above (last-audit timestamp + window counter) keeps
+		// advancing every window, but the EXPENSIVE classification + per-faction dump below
+		// (auditMs ~2100ms on 276 groups) only runs every WFBE_C_GROUPAUDIT_EVERY-th window.
+		// The husk-reap GC, zombie-reap and cap-warning all ran earlier in this 60s cycle,
+		// OUTSIDE this branch, so they are completely unaffected by this throttle.
+		_auditN = _auditN + 1;
+		_every = missionNamespace getVariable ["WFBE_C_GROUPAUDIT_EVERY", 5];
+		if (_every < 1) then { _every = 1 };
+		if ((_auditN mod _every) == 0) then {
 		_auditT0 = diag_tickTime;
 
 		// Single allUnits pass: count units per side for audit line + TICK sharing.
@@ -150,10 +161,20 @@ while {!WFBE_GameOver} do {
 
 		// Build per-(side, src) counts in a flat key=value array: [side, src, count, ...]
 		// Using a simple parallel-arrays approach to avoid any A3-only constructs.
+		_emptyW = 0; _emptyE = 0; _emptyG = 0; _persEmptyW = 0; _persEmptyE = 0; _persEmptyG = 0; //--- EMPTYGRP tracking (Ray)
 		_srcCounts = []; // flat: [side0, src0, cnt0, side1, src1, cnt1, ...]
 
 		{
 			_auditSide = side _x;
+			if ((count units _x) == 0) then {
+				private "_pe"; _pe = _x getVariable ["wfbe_persistent", false];
+				switch (_auditSide) do {
+					case west:       { _emptyW = _emptyW + 1; if (_pe) then {_persEmptyW = _persEmptyW + 1} };
+					case east:       { _emptyE = _emptyE + 1; if (_pe) then {_persEmptyE = _persEmptyE + 1} };
+					case resistance: { _emptyG = _emptyG + 1; if (_pe) then {_persEmptyG = _persEmptyG + 1} };
+					default {};
+				};
+			};
 			_src = _x getVariable "wfbe_group_src";
 			if (isNil "_src") then { _src = "untagged" };
 
@@ -220,6 +241,7 @@ while {!WFBE_GameOver} do {
 		} forEach [west, east, resistance];
 
 		//--- Delegation split: prove the HC offload is alive. One extra allUnits pass (~300 units, trivial).
+		diag_log (Format ["EMPTYGRP|v1|west=%1|east=%2|guer=%3|persW=%4|persE=%5|persG=%6|t=%7", _emptyW, _emptyE, _emptyG, _persEmptyW, _persEmptyE, _persEmptyG, round (time / 60)]); //--- EMPTYGRP tracking (Ray)
 		_delegTotal = count allUnits;
 		_delegLocal = {local _x} count allUnits;
 		_delegRemote = _delegTotal - _delegLocal;
@@ -271,6 +293,7 @@ while {!WFBE_GameOver} do {
 		{
 			["INFORMATION", _x + " auditMs=" + str _auditMs] Call WFBE_CO_FNC_AICOMLog;
 		} forEach _auditLines;
+		}; // --- end D2 modulo gate (WFBE_C_GROUPAUDIT_EVERY) ---
 	};
 };
 

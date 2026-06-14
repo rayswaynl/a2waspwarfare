@@ -64,8 +64,10 @@ _dir = getDir _oldUnit;
 //--- Capture identity.
 _unitName    = name    _oldUnit;
 _unitRank    = rank    _oldUnit;
-_unitFace    = face    _oldUnit;
-_unitSpeaker = speaker _oldUnit;
+//--- BUG-FIX 2026-06-14: 'face' & 'speaker' are Arma-3-only getters - in A2 OA they fail to parse here
+//--- ("Missing ;" at line 67), so the whole identity block + skin apply never compiled (~9.7k errors/session,
+//--- a real client-FPS sink). A2 OA cannot READ a unit's face/voice; skip them - the swapped unit keeps a
+//--- default face/voice (name + rank are still copied below).
 
 //--- Capture gear before the old unit is altered.
 _gear = _oldUnit call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_CopyGear.sqf");
@@ -80,7 +82,7 @@ _wasLeader = (leader _oldGrp == _oldUnit);
 _swapGrp = createGroup (side _oldUnit);
 
 diag_log format ["[WFBE (SKIN)] B2 createUnit: class='%1' swapGrp=%2 pos=%3 swapGrpLocal=%4",
-	_chosenClass, _swapGrp, _pos, local _swapGrp];
+	_chosenClass, _swapGrp, _pos, local _oldUnit];
 
 //--- WFBE_CO_FNC_CreateUnit: [class, group, pos, sideID, global, placement]
 //--- Pass _global=false: skips setVehicleInit/Init_Unit broadcast — this is a
@@ -106,11 +108,11 @@ diag_log format ["[WFBE (SKIN)] B3 newUnit created: %1 class=%2 local=%3",
 _newUnit setPosATL _pos;
 _newUnit setDir    _dir;
 
-//--- Copy identity.
-_newUnit setName    _unitName;
+//--- Copy identity. A2-fix (2026-06-14): setName is Arma-3-only on units (Location-only in A2 OA) and
+//--- threw on every skin apply - REMOVED. The player's NAME follows the player object across selectPlayer,
+//--- so no setName is needed. Rank is still copied (setRank is A2-valid for units).
 _newUnit setRank    _unitRank;
-_newUnit setFace    _unitFace;
-_newUnit setSpeaker _unitSpeaker;
+//--- (face/speaker/name NOT script-applied - A2 OA has no per-unit identity setters; name follows the player)
 
 //--- Apply gear to new unit.
 //--- ApplyGear calls removeAllWeapons first so NVGoggles / custom loadout from

@@ -116,6 +116,11 @@ if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	missionNamespace setVariable ["WFBE_BANK_EAST", objNull];
 };
 
+//--- Least-loaded HC picker (single source of truth for delegation balance). Compiled
+//--- unconditionally - the commander/patrol/wildcard delegation sites are not gated by the
+//--- version check below, so this must exist whenever any HC delegation can run.
+WFBE_CO_FNC_PickLeastLoadedHC = Compile preprocessFileLineNumbers "Server\Functions\Server_PickLeastLoadedHC.sqf";
+
 //--- Define Headless Client functions (server ones).
 if (ARMA_VERSION >= 162 && ARMA_RELEASENUMBER >= 101334 || ARMA_VERSION > 162) then {
 	WFBE_CO_FNC_DelegateAITownHeadless = Compile preprocessFileLineNumbers "Server\Functions\Server_DelegateAITownHeadless.sqf";
@@ -208,7 +213,7 @@ if ((missionNamespace getVariable "WFBE_C_BASE_START_TOWN") > 0) then {
 
 WF_Logic setVariable ["wfbe_spawnpos", _locationLogics];
 
-Private ["_i", "_maxAttempts", "_minDist", "_rPosE", "_rPosW", "_setEast", "_setGuer", "_setWest", "_startE", "_startG", "_startW"];
+Private ["_i", "_maxAttempts", "_minDist", "_rPosE", "_rPosW", "_setEast", "_setGuer", "_setWest", "_startE", "_startG", "_startW", "_egressOK"];
 _i = 0;
 _maxAttempts = 2000;
 _minDist = startingDistance;
@@ -223,6 +228,43 @@ _setGuer = if (_present_res) then {true} else {false};
 _total = count _locationLogics;
 
 _use_random = false;
+
+//--- Egress-quality gate (A2-fix 2026-06-14, EAST-EGRESS): a random start (MODE=2) can box a side
+//--- into a map corner with a single egress road, leaving its AI-commander HC route empty and the
+//--- teams stalled near base. Before accepting a random candidate, require it to have a usable road
+//--- network nearby and to sit clear of the map edges. _this = start location object -> bool.
+//--- roadsConnectedTo is OA-only: guarded with the SAME WF_A2_Vanilla idiom as AI_Commander_Base.sqf:99
+//--- and degrades to "accept if any road is near" on Vanilla A2 (never throws).
+_egressOK = {
+	private ["_loc","_pos","_minRoads","_margin","_ws","_roads","_usable","_ok","_road","_conn"];
+	_loc = _this;
+	if (isNull _loc) exitWith {false};
+	_pos = getPos _loc;
+	_minRoads = missionNamespace getVariable ["WFBE_C_BASE_MIN_EGRESS_ROADS", 3];
+	_margin   = missionNamespace getVariable ["WFBE_C_BASE_EDGE_MARGIN", 400];
+
+	//--- Reject candidates hugging any map edge (corner-box guard).
+	_ws = 15360;  //--- A2-fix 2026-06-14: worldSize is A3-only (undefined in A2 OA -> spammed "Undefined variable worldsize"); Chernarus map size = 15360
+	if ((_pos select 0) < _margin || (_pos select 0) > (_ws - _margin)) exitWith {false};
+	if ((_pos select 1) < _margin || (_pos select 1) > (_ws - _margin)) exitWith {false};
+
+	_roads = _pos nearRoads 250;
+	_ok = false;
+	if (!isNil {missionNamespace getVariable "WF_A2_Vanilla"} && {!WF_A2_Vanilla}) then {
+		//--- OA: count USABLE segments (roadsConnectedTo>=2). Need >= _minRoads to call it an egress.
+		_usable = 0;
+		{
+			_road = _x;
+			_conn = _road call {private "_c"; _c = []; if (!isNil {roadsConnectedTo _this}) then {_c = roadsConnectedTo _this}; _c};
+			if (count _conn >= 2) then {_usable = _usable + 1};
+		} forEach _roads;
+		if (_usable >= _minRoads) then {_ok = true};
+	} else {
+		//--- Vanilla A2 (no roadsConnectedTo): degrade to "accept if any road is near".
+		if (count _roads > 0) then {_ok = true};
+	};
+	_ok
+};
 
 _spawn_north = objNull;
 _spawn_south = objNull;
@@ -275,13 +317,15 @@ if (_use_random) then {
 		//--- Determine west starting location if necessary.
 		if (_setWest) then {
 			_rPosW = _locationLogics select floor(random _total);
-			if (_rPosW distance _startE > _minDist && _rPosW distance _startG > _minDist) then {_startW = _rPosW; _setWest = false};
+			//--- Egress-quality gate (EAST-EGRESS fix): require distance spacing AND a usable egress road
+			//--- network clear of the map edges. Symmetric with east. Fallback below still guarantees placement.
+			if (_rPosW distance _startE > _minDist && _rPosW distance _startG > _minDist && {_rPosW call _egressOK}) then {_startW = _rPosW; _setWest = false};
 		};
 
 		// --- Determine west starting location if necessary.
 		if (_setEast) then {
 			_rPosE = _locationLogics select floor(random _total);
-			if (_rPosE distance _startW > _minDist && _rPosE distance _startG > _minDist) then {_startE = _rPosE; _setEast = false};
+			if (_rPosE distance _startW > _minDist && _rPosE distance _startG > _minDist && {_rPosE call _egressOK}) then {_startE = _rPosE; _setEast = false};
 		};
 
 		_i = _i + 1;
@@ -536,6 +580,21 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 
 serverInitFull = true;
 
+//--- DEADSPAWN PHYSICAL PROTECTION (claude-gaming 2026-06-14): ring each per-side
+//--- TempRespawnMarker with tall H-barriers so an enemy-side AI-slot bot cannot shoot
+//--- a HUMAN parked on an adjacent side's holding marker during join (Smarty deadspawn
+//--- kill). One-shot, server-only, purely additive; players are teleported out by
+//--- Task-35 so the sealed ring never traps them, and the allowDamage-false transit
+//--- protection in Init_Client.sqf is left intact as the first layer.
+[] execVM "Server\Init\Init_DeadspawnWall.sqf";
+
+//--- AIRFIELD ON-LAND PROBE (claude-gaming 2026-06-14): DIAGNOSTIC ONLY.
+//--- One-shot server-only grid scan that logs surfaceIsWater + nearRoads for a
+//--- 5x5 grid of candidate camp positions around each airfield's
+//--- LocationLogicAirport (Balota id=7, NWAF id=8). Reads AIRFIELD_PROBE|... in
+//--- the RPT to pick a verified on-land, off-road apron. Changes NO coordinates.
+[] execVM "Server\Init\Init_AirfieldProbe.sqf";
+
 // run one global server town script to process supply updates in each town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
 
@@ -615,6 +674,36 @@ if ((missionNamespace getVariable "WFBE_C_MODULE_BIS_ALICE") > 0) then {
 
 //--- Waiting until that the game is launched.
 waitUntil {time > 0};
+
+//--- In-game restart announcer (work-order item 15): server-only countdown that warns every
+//--- player once per minute over the final WFBE_C_RESTART_WARN_MIN minutes before the scheduled
+//--- restart. Self-gates again internally, but we also gate the spawn here to avoid the thread.
+if ((missionNamespace getVariable ["WFBE_C_RESTART_ENABLED", 1]) == 1) then {
+	[] execVM "Server\FSM\server_restart_announcer.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Restart announcer FSM is initialized."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Dashboard-link announcer (claude-gaming 2026-06-14): every WFBE_C_DASHBOARD_ANNOUNCE_INTERVAL
+//--- seconds, broadcast the public live-stats URL to general chat so players know where to find updates.
+if ((missionNamespace getVariable ["WFBE_C_DASHBOARD_ANNOUNCE_ENABLED", 1]) == 1) then {
+	[] execVM "Server\FSM\server_dashboard_announcer.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Dashboard-link announcer FSM is initialized."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Top-Players leaderboard emitter (claude-gaming 2026-06-14): every WFBE_C_PLAYERSTAT_INTERVAL
+//--- seconds, emit one PLAYERSTAT row per connected human player (name/uid/side/score). This is the
+//--- only telemetry carrying the display name, so it powers the public Top-Players leaderboard tab.
+if ((missionNamespace getVariable ["WFBE_C_PLAYERSTAT_ENABLED", 1]) == 1) then {
+	[] execVM "Server\FSM\server_playerstat_loop.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Player-stat leaderboard emitter FSM is initialized."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- FPS PROFILING (claude-gaming 2026-06-13): enable the PerformanceAudit framework SERVER-SIDE ONLY so we
+//--- MEASURE where server frametime goes (uncached per-town capture scans suspected). Marty kept the GLOBAL
+//--- param off due to CLIENT-side AFK/commander regressions, so we force it here on the server only - clients
+//--- keep the param default (0) and never run the client audit. Server-local set, never broadcast.
+WFBE_C_PERFORMANCE_AUDIT_ENABLED = 1;
+PerformanceAuditEnabled = true;
 
 // Marty: Start the local server Performance Audit writer; metrics stay local and are written to the server RPT.
 [] Spawn {

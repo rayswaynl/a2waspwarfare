@@ -11,12 +11,16 @@
 
 scriptName "Server\FSM\server_side_patrols.sqf";
 
-private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcs","_live","_delay","_max"];
+private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcUnit","_delay","_max","_maxSide"];
 
 waitUntil {townInitServer};
 sleep 30;
 
 if (isNil "WFBE_ACTIVE_PATROLS") then {WFBE_ACTIVE_PATROLS = []; publicVariable "WFBE_ACTIVE_PATROLS"};
+//--- Commander-team arrow-marker feed (task #3), broadcast like WFBE_ACTIVE_PATROLS. Maintained by
+//--- the aicom-team-created / -ended / -heading cases in Server_HandleSpecial.sqf; init once here so
+//--- JIP clients see a defined empty array. Entries: [leader, sideID, dir, team].
+if (isNil "WFBE_ACTIVE_AICOM_TEAMS") then {WFBE_ACTIVE_AICOM_TEAMS = []; publicVariable "WFBE_ACTIVE_AICOM_TEAMS"};
 
 _delay = missionNamespace getVariable "WFBE_C_PATROLS_DELAY_SPAWN";
 _max = missionNamespace getVariable "WFBE_C_SIDE_PATROLS_MAX";
@@ -25,6 +29,8 @@ while {!WFBE_GameOver} do {
 	{
 		_side = _x;
 		_sideID = (_side) Call WFBE_CO_FNC_GetSideID;
+		//--- GUER GROUP-CONDENSE (task #12): defender/resistance gets a lower concurrent patrol cap.
+		_maxSide = if (_side == WFBE_DEFENDER) then {missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_DEFENDER", _max]} else {_max};
 		_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _logik) then {
 			_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
@@ -32,7 +38,7 @@ while {!WFBE_GameOver} do {
 			if (_lvl > 0) then {
 				_active = _logik getVariable ["wfbe_side_patrols", 0];
 				_last = _logik getVariable ["wfbe_side_patrol_last", -(_delay)];
-				if (_active < _max && {time - _last > _delay}) then {
+				if (_active < _maxSide && {time - _last > _delay}) then {
 					_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
 					_owned = [];
 					{if ((_x getVariable "sideID") == _sideID) then {_owned = _owned + [_x]}} forEach towns;
@@ -51,20 +57,18 @@ while {!WFBE_GameOver} do {
 							//--- public marker list, the ended event re-arms the cooldown.
 							_logik setVariable ["wfbe_side_patrols", _active + 1];
 							_logik setVariable ["wfbe_side_patrol_last", time];
-							//--- Run on a live HC when available (server FPS ~ 0), else locally.
-							_hcs = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
-							_live = [];
-							{if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_live = _live + [_x]}} forEach _hcs;
-							if (count _live > 0) then {
-								[leader(_live select floor(random count _live)), "HandleSpecial", ['delegate-sidepatrol', _sideID, _template, _home]] Call WFBE_CO_FNC_SendToClient;
+							//--- Run on the LEAST-LOADED live HC when available (server FPS ~ 0), else locally.
+							_hcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
+							if (!isNull _hcUnit) then {
+								[_hcUnit, "HandleSpecial", ['delegate-sidepatrol', _sideID, _template, _home]] Call WFBE_CO_FNC_SendToClient;
 							} else {
 								[_sideID, _template, _home] Spawn WFBE_CO_FNC_RunSidePatrol;
 							};
 							_logik setVariable ["wfbe_patrol_waitlog", false];
-							["INFORMATION", Format["server_side_patrols.sqf: [%1] %2 patrol dispatched from [%3] (active %4/%5, HC:%6).", _side, _tier, _home getVariable "name", _active + 1, _max, count _live > 0]] Call WFBE_CO_FNC_AICOMLog;
+							["INFORMATION", Format["server_side_patrols.sqf: [%1] %2 patrol dispatched from [%3] (active %4/%5, HC:%6).", _side, _tier, _home getVariable "name", _active + 1, _max, !isNull _hcUnit]] Call WFBE_CO_FNC_AICOMLog;
 							if (!isNil "PerformanceAudit_Record") then {
 								if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
-									["side_patrol_spawn", 0, Format["side:%1;tier:%2;active:%3;hc:%4", _side, _tier, _active + 1, count _live > 0], "SERVER"] Call PerformanceAudit_Record;
+									["side_patrol_spawn", 0, Format["side:%1;tier:%2;active:%3;hc:%4", _side, _tier, _active + 1, !isNull _hcUnit], "SERVER"] Call PerformanceAudit_Record;
 								};
 							};
 						};

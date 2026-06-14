@@ -200,7 +200,14 @@ if (count _live > 0) then {
 	_logik setVariable ["wfbe_aicom_pending", _pending + 1];
 	//--- V0.6.4: name the receiving HC in the log - the random pick spreads load across
 	//--- all live HCs, and the server RPT should show the split without reading HC RPTs.
-	_hcUnit = leader (_live select (floor (random (count _live))));
+	//--- Commander teams are the BIG atomic lumps (a whole platoon lands on ONE HC), so
+	//--- picking the least-loaded HC matters most here. Least-loaded self-corrects: once an
+	//--- HC is heavy it stops being chosen until the other catches up.
+	_hcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
+	//--- Funds were already deducted and pending incremented above, and _live is non-empty in
+	//--- this synchronous branch, so the picker cannot return objNull here. Fall back to the
+	//--- first live HC rather than aborting (which would leak the deducted funds / pending slot).
+	if (isNull _hcUnit) then {_hcUnit = leader (_live select 0)};
 	//--- W7 skill boost: pass expected skill level in the delegate message if flag was active.
 	_w7SkillSend = _logik getVariable "wfbe_aicom_veteran_skill";
 	if (isNil "_w7SkillSend") then {_w7SkillSend = 0};

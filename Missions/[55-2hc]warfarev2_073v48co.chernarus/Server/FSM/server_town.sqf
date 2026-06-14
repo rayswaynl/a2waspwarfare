@@ -44,11 +44,13 @@ while {!WFBE_GameOver} do {
 				_side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
 				//--- PERF dedupe REVERTED (caused capture-detection wedges twice); back to the proven
 				//--- direct scan. The server_town_ai cache-write remains but is simply unread now.
+				_perfT0PA = diag_tickTime; //--- FPS PROFILING (claude-gaming): bracket the uncached per-town capture scan (suspected #1 server frametime sink)
 				_objects = (_location nearEntities[["Man","Car","Motorcycle","Tank","Air","Ship"], _town_capture_range]) unitsBelowHeight 10;
 
 				_west = west countSide _objects;
 				_east = east countSide _objects;
 				_resistance = resistance countSide _objects;
+				["town_capture_scan", diag_tickTime - _perfT0PA] call PerformanceAudit_Record; //--- FPS PROFILING (claude-gaming): self-gated, server-side, ~0.01ms overhead
 
 				_activeEnemies = switch (_sideID) do {
 					case WFBE_C_WEST_ID: {_east + _resistance};

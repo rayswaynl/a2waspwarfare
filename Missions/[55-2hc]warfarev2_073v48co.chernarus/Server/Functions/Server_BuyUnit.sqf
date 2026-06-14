@@ -30,7 +30,8 @@ _direction = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDIRECTIONS",
 _factoryType = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES",_sideText]) select _index;
 _waitTime = (missionNamespace getVariable _unitType) select QUERYUNITTIME;
 _position = [getPos _building,_distance,getDir _building + _direction] Call GetPositionFrom;
-_longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",_factoryType];
+_longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",toUpper _factoryType];  //--- queue-fix 2026-06-14: keys stored UPPERCASE (Init_Common.sqf:356) but _factoryType is mixed-case -> _longest was nil -> the stuck-head purge (_ret>_longest) NEVER fired. toUpper re-arms it.
+if (isNil "_longest" || {_longest <= 0}) then {_longest = 60};  //--- safety floor so the deadline is always a real number
 
 _ret = 0;
 _queu2 = [0];
@@ -63,7 +64,7 @@ while {_id select 0 != _queu select 0} do {
 			};
 		};
 	};
-	if (count _queu != count _queu2) then {
+	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) != (_queu2 select 0)}) then {  //--- queue-fix 2026-06-14: reset the stuck-head timer ONLY when the head actually advances, not when a sibling / another team's unit churns the shared factory queue (that reset was defeating the purge under batch ordering).
 		_ret = 0;
 		_queu2 = _building getVariable "queu";
 	};
@@ -85,6 +86,15 @@ if (!(alive _building)||(isPlayer (leader _team))) exitWith {
 if (_unitType isKindOf "Man") then {
 	_soldier = [_unitType,_team,_position,_sideID] Call WFBE_CO_FNC_CreateUnit;
 	[_sideText,'UnitsCreated',1] Call UpdateStatistics;
+	//--- AI FACTORY RALLY (task #25): the AI commander stamps wfbe_aicom_factory_rally (a forward,
+	//--- road-snapped egress point) on factories it builds. Without a destination a fresh AI unit just
+	//--- stands on the factory apron (the "troops standing still in base" bug). Walk it out to the
+	//--- rally. Player factories never set the var, so the count-guard makes this AI-only.
+	private "_aiRally";
+	_aiRally = _building getVariable "wfbe_aicom_factory_rally";
+	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull _soldier}) then {
+		_soldier commandMove _aiRally;
+	};
 } else {
 	_factoryPosition = getPos _building;
 	_dir = -((((_position select 1) - (_factoryPosition select 1)) atan2 ((_position select 0) - (_factoryPosition select 0))) - 90);
@@ -208,6 +218,14 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 	};
 
 _vehicle allowCrewInImmobile true;
+	//--- AI FACTORY RALLY (task #25): drive the fresh hull off the apron toward the commander's
+	//--- forward rally (set on the factory by AI_Commander_Base). commandMove the driver so the
+	//--- vehicle takes the lane out instead of idling in base. AI-only via the count-guard.
+	private "_aiRally";
+	_aiRally = _building getVariable "wfbe_aicom_factory_rally";
+	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull (driver _vehicle)}) then {
+		(driver _vehicle) commandMove _aiRally;
+	};
 	[_sideText,'UnitsCreated',_built] Call UpdateStatistics;
 };
 

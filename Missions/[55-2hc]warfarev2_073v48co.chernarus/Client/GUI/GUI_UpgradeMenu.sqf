@@ -97,8 +97,8 @@ WFBE_MenuAction = -1;
 					// Using (level - 1) max 0 avoids the 0:00 flash caused by reading the already-
 					// incremented post-completion level during the publicVariable/HandleSpecial race.
 					_runningTime = 0;
+					_upgrades = (WFBE_Client_SideJoined) call WFBE_CO_FNC_GetSideUpgrades; //--- A2-fix (2026-06-14): assign BEFORE the guard reads count _upgrades (was use-before-definition at the guard).
 					if (_runningId >= 0 && {_runningId < count _times} && {_runningId < count _upgrades}) then {
-						_upgrades = (WFBE_Client_SideJoined) call WFBE_CO_FNC_GetSideUpgrades;
 						_runningLevel = ((_upgrades select _runningId) - 1) max 0;
 						if (_runningLevel < count (_times select _runningId)) then {
 							_runningTime = (_times select _runningId) select _runningLevel;
@@ -322,7 +322,6 @@ while {alive player && dialog} do {
 		};
 			};
 		};
-	};
 
 	if (_queue_remove) then {
 		_queue_remove = false;

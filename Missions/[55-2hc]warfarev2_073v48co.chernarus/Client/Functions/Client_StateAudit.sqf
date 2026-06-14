@@ -22,7 +22,7 @@ while {!WFBE_GameOver} do {
 	_budgetServiced = missionNamespace getVariable ["WFBE_CL_MarkerBudgetLastServiced", -1];
 
 	_line = Format ["STATE-AUDIT: time:%1;fps:%2;activeSQFScripts:%3;allMapMarkers:%4;markerScripts:%5;aarMarkerScripts:%6;allGroups:%7;allDead:%8;mapOpen:%9;markerRegSize:%10;budgetServiced:%11",
-		round time, diag_fps, _activeScripts, count allMapMarkers, _markerScripts, _aarScripts, count allGroups, count allDead, _mapOpen, _markerRegSize, _budgetServiced];
+		round time, diag_fps, _activeScripts, -1 /* allMapMarkers: Arma-3-only, N/A in A2 OA */, _markerScripts, _aarScripts, count allGroups, count allDead, _mapOpen, _markerRegSize, _budgetServiced];
 	diag_log _line;
 
 	if !(isNil "PerformanceAudit_Record") then {

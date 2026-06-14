@@ -94,6 +94,10 @@ while {true} do {
 					WFBE_CL_UnitMarkerRegistry set [_forEachIndex, 0];
 				} else {
 					createMarkerLocal [_markerName, getPos _tracked];
+					// PERF4 - rebuild re-creates the marker at the live position, so resync the
+					// position-delta cache (slot 18) to match what was just drawn; otherwise a stale
+					// lastPos could suppress the next legitimate move-write for a unit sitting near it.
+					_entry set [18, getPos _tracked];
 					if ((_entry select 16) == 1) then {
 						_markerName setMarkerTypeLocal (_entry select 7);
 						_markerName setMarkerColorLocal (_entry select 8);
@@ -217,8 +221,23 @@ while {true} do {
 				_entry set [15, _now + _sleepRate];
 
 				// Marty: Keep position refresh independent from type/size bookkeeping so marker caching cannot freeze units.
+				// PERF4 position-delta gate - only re-write the marker position when the unit actually moved
+				// more than a small threshold, mirroring the AAR path's 25m gate (line ~457). The large pool of
+				// idle garrison/defensive friendly infantry and parked vehicles otherwise pay a setMarkerPosLocal
+				// every service for zero visible change; this kills that redundant write volume without removing,
+				// hiding, or delaying any marker (a unit that moves is still snapped on its very next due tick).
+				// lastPos lives in entry slot 18 (appended here on first service; nil-safe init below).
 				_currentPos = getPos _tracked;
-				_markerName setMarkerPosLocal _currentPos;
+				_lastPos = _entry select 18;
+				if (isNil "_lastPos") then {
+					_markerName setMarkerPosLocal _currentPos;
+					_entry set [18, _currentPos];
+				} else {
+					if ((_currentPos distance _lastPos) > 3) then {
+						_markerName setMarkerPosLocal _currentPos;
+						_entry set [18, _currentPos];
+					};
+				};
 
 				if (_entry select 11) exitWith { // --- HQ: position only, 0.2s cadence.
 					if !(isNil "PerformanceAudit_Record") then {

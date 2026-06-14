@@ -144,12 +144,25 @@ if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0
 	["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] Bank registered. Marker [%2] created.", str _side, _markerName]] Call WFBE_CO_FNC_LogContent;
 };
 
-if(isAutoWallConstructingEnabled && !(_rlType in ["AARadar","Bank"]))then{
+//--- Reserve / ArtilleryRadar: spawn faction composition dressing (task 13 — WDDM starred presets).
+//--- Mirrors the Bank branch above. Templates WFBE_NEURODEF_RESERVE_WEST/EAST and
+//--- WFBE_NEURODEF_ARTILLERYRADAR_WEST/EAST live in Server\Init\Init_Defenses.sqf.
+//--- These two are now EXCLUDED from the auto-walls block below so walls don't double up
+//--- with the dressing rings (the dressing IS the walls + furniture, like Bank/CBR).
+//--- Purely cosmetic, one-time spawn; cleanup via the function's Killed EH on _site.
+if (_rlType in ["Reserve","ArtilleryRadar"]) then {
+	private ["_dressTpl"];
+	_dressTpl = Format ["WFBE_NEURODEF_%1_%2", toUpper _rlType, if (_side == west) then {"WEST"} else {"EAST"}];
+	[_site, _dressTpl, _direction] Call WFBE_SE_FNC_SpawnStructureDressing;
+	["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] %2 composition dressing spawned via [%3].", str _side, _rlType, _dressTpl]] Call WFBE_CO_FNC_LogContent;
+};
+
+if(isAutoWallConstructingEnabled && !(_rlType in ["AARadar","Bank","Reserve","ArtilleryRadar"]))then{
 	_defenses = [_site, missionNamespace getVariable format ["WFBE_NEURODEF_%1_WALLS", _rlType]] call CreateDefenseTemplate;
 	_site setVariable ["WFBE_Walls", _defenses];
 } else {
 	_site setVariable ["WFBE_Walls", []];
-	if (_rlType in ["AARadar","Bank"]) then {
+	if (_rlType in ["AARadar","Bank","Reserve","ArtilleryRadar"]) then {
 		["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] %2 auto walls skipped.", str _side, _rlType]] Call WFBE_CO_FNC_LogContent;
 	};
 };
