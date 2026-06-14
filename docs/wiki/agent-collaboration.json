@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T02:02:42+02:00",
+  "generatedAt": "2026-06-14T02:13:01+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,45 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "function-module-index-source-scope-route",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Function-And-Module-Index.md",
+        "Respawn-And-Death-Lifecycle-Atlas.md",
+        "Feature-Status-Register.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AssignNewCommander.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_AI_Com_Upgrade.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Module/Reaktiv",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Module/MASH",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Module/MASH",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Support/Support_Paratroopers.sqf",
+        "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan",
+        "origin/master",
+        "miksuu/master",
+        "origin/perf/quick-wins",
+        "origin/release/2026-06-feature-bundle"
+      ],
+      "outputs": [
+        "Updated Function-And-Module-Index.md to name docs checkout 1f0b9018 and act as a route map for compile/module/network/commander/support questions.",
+        "Corrected Server_AssignNewCommander wording to branch-split helper evidence: docs checkout remains source-unpatched, stable/release/Miksuu/perf fix helper unpacking but keep duplicate notification/UI identity risks.",
+        "Corrected paratrooper marker wording: docs/stable/release register both maintained roots, Miksuu omits, perf fixes Chernarus only, and Arma marker smoke remains pending.",
+        "Aligned MASH wording: docs/Miksuu/perf keep local MASH plus orphaned marker relay, while stable/release remove the maintained-root deploy/module/init path and retain config/classname residues."
+      ],
+      "handoff": "Closed as docs-published. Future Function-And-Module-Index.md work should keep it as a source-family gateway and route branch matrices to owner pages instead of reintroducing local module-status mini-matrices.",
+      "updated": "2026-06-14T02:13:01+02:00"
+    },
     {
       "lane": "mission-lifecycle-source-scope-route",
       "owner": "Codex",
