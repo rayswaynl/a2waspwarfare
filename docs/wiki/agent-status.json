@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-status-v1",
-  "generatedAt": "2026-06-14T09:53:29+02:00",
+  "generatedAt": "2026-06-14T10:01:35+02:00",
   "purpose": "Compact progress snapshot for humans, Codex, Claude and future agents. Historic batches live in Agent-Worklog.md, Subagent-Discovery-Swarm.md and agent-events.jsonl.",
   "dashboard": "Progress-Dashboard.md",
   "sourceOfTruth": {
@@ -20,9 +20,9 @@
   "agents": {
     "Codex": {
       "status": "active",
-      "currentLane": "sqf-atlas-current-source-scope-route-prune",
-      "currentWork": "Published docs-only SQF code atlas source-scope route prune: SQF-Code-Atlas.md now names docs head 94b09c73 as the visible compile/source-continuity checkpoint, the compile count command still returns 738/460/278/22, targeted source diffs confirmed no checked SQF/PVF/init source-path drift from 34212d6a or 4277a2ad through 94b09c73, and repeated PVF no-drift proof now routes to canonical owner pages. No gameplay source changed.",
-      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep SQF, architecture, networking/PV, marker/cleanup, gear/EASA, construction/CoIn, lifecycle, respawn, modules, function/module, gameplay, victory/endgame, commander/HQ, town/camp, support and UI gateway pages short and route deep branch matrices to owner pages."
+      "currentLane": "architecture-overview-current-source-scope-route-prune",
+      "currentWork": "Published docs-only Architecture overview source-scope route prune: Architecture-Overview.md now names docs head 2de2de92 as the visible top-level architecture source-continuity checkpoint, targeted source diffs confirmed no checked runtime/bootstrap/tooling source-path drift from adb9dbc8 or 4277a2ad through 2de2de92, and branch behavior remains routed to subsystem owner pages. No gameplay source changed.",
+      "nextExpectedOutput": "Continue scoped docs/backlog upkeep from the dashboard, pruning ledger, Feature Status, Pending Owner Decisions, machine status files, owner requests or newly returned helper reports; keep architecture, SQF, networking/PV, marker/cleanup, gear/EASA, construction/CoIn, lifecycle, respawn, modules, function/module, gameplay, victory/endgame, commander/HQ, town/camp, support and UI gateway pages short and route deep branch matrices to owner pages."
     },
     "Codex-2": {
       "status": "ready",
@@ -56,6 +56,12 @@
     }
   },
   "laneSummary": [
+    {
+      "lane": "architecture-overview-current-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated",
+      "output": "Architecture-Overview.md now names docs head 2de2de92 as the current top-level architecture source-continuity checkpoint. Checked runtime, bootstrap and tooling source paths are unchanged from adb9dbc8 and 4277a2ad through 2de2de92; stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf 0076040f refs still resolve. The overview keeps current orientation anchors local while branch behavior, line drift and smoke gates route to subsystem owner pages. No gameplay source changed."
+    },
     {
       "lane": "sqf-atlas-current-source-scope-route-prune",
       "owner": "Codex",

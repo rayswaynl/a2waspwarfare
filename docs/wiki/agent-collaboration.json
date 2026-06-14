@@ -1,6 +1,6 @@
 {
   "schema": "a2waspwarfare-agent-collaboration-v1",
-  "generatedAt": "2026-06-14T09:53:29+02:00",
+  "generatedAt": "2026-06-14T10:01:35+02:00",
   "purpose": "Shared coordination state for Codex, Claude and future agents working on the a2waspwarfare developer wiki.",
   "sourceOfTruth": {
     "progressDashboard": "Progress-Dashboard.md",
@@ -22,6 +22,44 @@
     "operatingMode": "Claude-Loop-Goal.md"
   },
   "activeClaims": [
+    {
+      "lane": "architecture-overview-current-source-scope-route-prune",
+      "owner": "Codex",
+      "status": "published-validated-docs-only",
+      "sourceScope": [
+        "Architecture-Overview.md",
+        "Progress-Dashboard.md",
+        "Agent-Worklog.md",
+        "Wiki-Pruning-And-Relevance-Ledger.md",
+        "agent-status.json",
+        "agent-collaboration.json",
+        "agent-knowledge.jsonl",
+        "agent-events.jsonl",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/description.ext",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/initJIPCompatible.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Common.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Parameters.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Version.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_Unit.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_PublicVariables.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Init/Init_Client.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Init/Init_HC.sqf",
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Headless/Functions/HC_IsHeadlessClient.sqf",
+        "Tools/LoadoutManager/FileManagement/FileManager.cs",
+        "Tools/LoadoutManager/SqfFileGenerator.cs",
+        "Tools/LoadoutManager/ZipManager.cs"
+      ],
+      "outputs": [
+        "Refreshed Architecture-Overview.md so current docs head 2de2de92 is the visible top-level architecture source-continuity checkpoint.",
+        "Confirmed targeted diffs from adb9dbc8 and 4277a2ad to HEAD over cited runtime/bootstrap/tooling source paths returned no changed files.",
+        "Verified branch refs still resolve to stable cf2a6d6a, release a96fdda2, Miksuu b8389e74 and perf 0076040f.",
+        "Kept Architecture-Overview.md as a route-first gateway by sending branch behavior, line drift and smoke gates to linked subsystem owner pages."
+      ],
+      "handoff": "Closed as docs-published. Future Architecture overview edits should keep the page as a top owner-route gateway, keep branch-sensitive matrices and smoke gates on subsystem owner pages, and avoid duplicating subsystem source matrices locally.",
+      "updated": "2026-06-14T10:01:35+02:00"
+    },
     {
       "lane": "sqf-atlas-current-source-scope-route-prune",
       "owner": "Codex",

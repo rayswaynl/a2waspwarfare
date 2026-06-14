@@ -4,7 +4,7 @@ For upstream development patterns and negative knowledge from Miksuu PRs, revert
 
 The repository is an Arma 2 OA Warfare/CTI mission derived from Benny's Warfare and actively modernized for the Miksuu/WASP server. The core runtime is SQF in a mission folder, surrounded by C# helper tools, a Discord status bot, and a Windows extension bridge.
 
-Unless a row names another ref, source anchors below are valid for docs head `docs/developer-wiki-index` `adb9dbc8`. Rechecked 2026-06-14: targeted source diffs from `4277a2ad` to `HEAD` over the overview's cited runtime and tooling paths return no changes, preserving the earlier `1bef8801` / `1aa178f8` source-anchor snapshots. Treat stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` as branch-scope refs; follow the owner pages before citing line refs from those branches.
+Unless a row names another ref, source anchors below are valid for docs head `docs/developer-wiki-index` `2de2de92`. Rechecked 2026-06-14: targeted source diffs from `adb9dbc8` and `4277a2ad` to `HEAD` over the overview's cited runtime, bootstrap and tooling paths return no changes, preserving the earlier `1bef8801` / `1aa178f8` source-anchor snapshots. Treat stable `origin/master` `cf2a6d6a`, release `a96fdda2`, Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` as branch-scope refs; follow the owner pages before citing line refs from those branches.
 
 ## How To Use This Page
 
@@ -26,7 +26,7 @@ Use this table before turning an architecture overview anchor into a branch clai
 
 | Ref | Architecture source scope | Practical route |
 | --- | --- | --- |
-| Docs head `adb9dbc8` | Runtime/tooling anchors listed here are unchanged from `4277a2ad` and the earlier `1bef8801` / `1aa178f8` overview passes for `description.ext`, `initJIPCompatible.sqf`, `Init_Common.sqf`, `Init_Server.sqf`, `Init_Client.sqf`, `Init_HC.sqf`, `FileManager.cs`, `SqfFileGenerator.cs` and `ZipManager.cs`. | Use this page for orientation, then open the linked owner page for system behavior, branch matrices and smoke gates. |
+| Docs head `2de2de92` | Runtime, bootstrap and tooling anchors listed here are unchanged from `adb9dbc8`, `4277a2ad` and the earlier `1bef8801` / `1aa178f8` overview passes for `description.ext`, `initJIPCompatible.sqf`, common/client/server/headless init paths, `HC_IsHeadlessClient.sqf`, `FileManager.cs`, `SqfFileGenerator.cs` and `ZipManager.cs`. | Use this page for orientation, then open the linked owner page for system behavior, branch matrices and smoke gates. |
 | Stable `origin/master` `cf2a6d6a` and release `a96fdda2` | Same high-level source/generated-target architecture, but branch behavior and line refs differ for propagated fixes, server FPS shape, supply scan shape, commander ARTY, UI/runtime surfaces and tooling root discovery. | Start from [Current source status snapshot](Current-Source-Status-Snapshot), [Source fix propagation queue](Source-Fix-Propagation-Queue) and the subsystem owner page before citing stable/release line refs. |
 | Miksuu `b8389e74` and `origin/perf/quick-wins` `0076040f` | Source shape is close enough for architecture orientation, but branch drift remains important, including tooling root-discovery differences. | Recheck exact source paths before making upstream/perf claims; use [Developer history and upstream lessons](Developer-History-And-Upstream-Lessons) for historical context. |
 
