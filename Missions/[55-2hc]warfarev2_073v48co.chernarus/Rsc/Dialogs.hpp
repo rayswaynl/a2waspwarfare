@@ -1411,6 +1411,18 @@ class WF_Menu {
 			action = "MenuAction = 22";
 			tooltip = "Earplugs In/Out (lowers game volume)";
 		};
+		// FPS: adaptive view-distance / target-FPS picker (sits between GPS and SKIN).
+		class CA_FPS_Button : RscButton_Main {
+			idc = 11023;
+			x = 0.503;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = "FPS";
+			sizeEx = 0.026;
+			action = "MenuAction = 23";
+			tooltip = "Auto view-distance / target FPS";
+		};
 	};
 };
 
@@ -3537,6 +3549,139 @@ class WFBE_SkinSelectorMenu {
 			sizeEx = 0.026;
 			text = $STR_WF_SkinSelector_Skip;
 			action = "WFBE_MenuAction = 2";
+		};
+	};
+};
+
+//--- Adaptive View-Distance / Target-FPS picker (idd 28000). Opened from the WF-menu "FPS" button.
+//--- Labels (idc 28001 toggle, 28006 status) are set live by WASP\actions\FPSPicker\FPSPicker_Open.sqf.
+class WFBE_FPSPickerMenu {
+	movingEnable = 1;
+	idd = 28000;
+
+	class controlsBackground {
+		class CA_Background : RscText {
+			x = 0.32;
+			y = 0.30;
+			w = 0.36;
+			h = 0.40;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class CA_Background_Header : CA_Background {
+			h = 0.06;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class CA_Background_Footer : CA_Background {
+			y = 0.30 + 0.36;
+			h = 0.04;
+			colorBackground[] = WFBE_Background_Color_Sub;
+		};
+		class CA_Border : RscText {
+			x = 0.32;
+			y = 0.30 + 0.06;
+			w = 0.36;
+			h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+	};
+
+	class controls {
+		//--- Header title.
+		class CA_Title : RscButton_Main {
+			idc = 28008;
+			x = 0.325;
+			y = 0.30 + 0.012;
+			w = 0.30;
+			h = 0.038;
+			text = "VIEW DISTANCE / FPS";
+			sizeEx = 0.028;
+			colorBackground[] = {0, 0, 0, 0};
+			colorBackgroundFocus[] = {0, 0, 0, 0};
+			colorBackgroundActive[] = {0, 0, 0, 0};
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+			default = false;
+		};
+		//--- Close (X).
+		class CA_Quit_Button : RscButton_Main {
+			x = 0.32 + 0.315;
+			y = 0.30 + 0.0075;
+			w = 0.045;
+			h = 0.045;
+			text = "X";
+			shadow = 2;
+			sizeEx = 0.03;
+			onButtonClick = "WFBE_MenuAction = 9;";
+		};
+		//--- Auto-VD on/off toggle (text set at runtime, idc 28001).
+		class CA_Toggle : RscButton_Main {
+			idc = 28001;
+			x = 0.345;
+			y = 0.30 + 0.085;
+			w = 0.31;
+			h = 0.05;
+			sizeEx = 0.028;
+			text = "Auto-VD: OFF";
+			action = "WFBE_MenuAction = 1";
+		};
+		//--- Explanatory line.
+		class CA_Status : RscText {
+			idc = 28002;
+			x = 0.345;
+			y = 0.30 + 0.145;
+			w = 0.31;
+			h = 0.03;
+			sizeEx = 0.020;
+			text = "Adapts view distance to hold your target FPS.";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Target-FPS preset buttons.
+		class CA_FPS45 : RscButton_Main {
+			idc = 28003;
+			x = 0.345;
+			y = 0.30 + 0.20;
+			w = 0.095;
+			h = 0.05;
+			sizeEx = 0.026;
+			text = "45 FPS";
+			action = "WFBE_MenuAction = 2";
+		};
+		class CA_FPS50 : CA_FPS45 {
+			idc = 28004;
+			x = 0.4525;
+			text = "50 FPS";
+			action = "WFBE_MenuAction = 3";
+		};
+		class CA_FPS60 : CA_FPS45 {
+			idc = 28005;
+			x = 0.56;
+			text = "60 FPS";
+			action = "WFBE_MenuAction = 4";
+		};
+		//--- Current state (set at runtime, idc 28006).
+		class CA_Current : RscText {
+			idc = 28006;
+			x = 0.345;
+			y = 0.30 + 0.265;
+			w = 0.31;
+			h = 0.035;
+			sizeEx = 0.022;
+			text = "";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		//--- Done / close.
+		class CA_Done : RscButton_Main {
+			idc = 28007;
+			x = 0.345;
+			y = 0.30 + 0.325;
+			w = 0.31;
+			h = 0.04;
+			sizeEx = 0.026;
+			text = "Close";
+			action = "WFBE_MenuAction = 9";
 		};
 	};
 };
