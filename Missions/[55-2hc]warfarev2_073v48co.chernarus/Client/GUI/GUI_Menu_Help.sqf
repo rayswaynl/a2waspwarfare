@@ -4,7 +4,7 @@ _action = _this select 0;
 
 switch (_action) do {
 	case "onLoad": {
-		{((findDisplay 508000) displayCtrl 160001) lbAdd _x} forEach ["Introduction", "Respawn", "Towns", "Base Structures and Functions", "Experital Changes", "About the Mission","Server Rules"];
+		{((findDisplay 508000) displayCtrl 160001) lbAdd _x} forEach ["Introduction", "Respawn", "Towns", "Base Structures and Functions", "Experimental Changes", "About the Mission","Server Rules"];
 		((findDisplay 508000) displayCtrl 160001) lbSetCurSel 0;
 	};
 	case "onHelpLBSelChanged": {
@@ -149,10 +149,25 @@ Useful fast commands from the Construction Menu:<br />
 - Sell Fortification, Static Defence -> custom action 17<br />
 <br />
 ",
-//--------------------Experital Changes
-"<t size='1.4' color='#2394ef' underline='true'>Experital Changes</t><br />
+//--------------------Experimental Changes
+"<t size='1.4' color='#2394ef' underline='true'>Experimental Changes</t><br />
 <br />
-This is the <t color='#F5D363'>WASP Experital</t> build — an experimental test version featuring new structures, mechanics and balance changes.<br />
+This is the <t color='#F5D363'>WASP Experimental</t> build — an experimental test version featuring new structures, mechanics and balance changes.<br />
+<br />
+<t size='1.2' color='#ffec1c'>AI Commander</t><br />
+Any side can be run by an AI Commander - it manages the economy, builds the base, researches upgrades, and leads its combat teams assaulting towns. If no human takes the Commander slot within 5 minutes of the round start (re-armed when a player commander leaves), the AI takes over building. You can claim Commander any time; even then the AI keeps its own HQ teams fighting and never leaves them idle, while you run the economy and issue orders - any team you order directly stays yours.<br />
+<br />
+<t size='1.2' color='#ffec1c'>Three Factions</t><br />
+GUER resistance is a living third faction, not just neutral garrisons. Its mechanized patrols grow MORE dangerous the more towns it loses - technicals while it holds the map, escalating to BRDM-2 armour + AT/AA and a second patrol once squeezed below 20 towns.<br />
+<br />
+<t size='1.2' color='#ffec1c'>Clean Captures</t><br />
+Capturing a town from GUER no longer grants you its static weapon emplacements - you take the ground clean and bring or build your own defences (GUER rebuilds its statics on recapture).<br />
+<br />
+<t size='1.2' color='#ffec1c'>Wildcards</t><br />
+Random battlefield events fire through the round - veteran companies, uprisings, heliborne QRF and more.<br />
+<br />
+<t size='1.2' color='#ffec1c'>Performance Telemetry</t><br />
+This build samples each client's FPS and reports it to the server for the day/night perf study (diagnostic only).<br />
 <br />
 <t size='1.2' color='#ffec1c'>Starting Economy</t><br />
 Both sides start with <t color='#F5D363'>$11,600 cash</t> and <t color='#F5D363'>7,400 supply</t>.<br />
