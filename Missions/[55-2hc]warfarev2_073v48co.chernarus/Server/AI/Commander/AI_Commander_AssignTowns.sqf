@@ -304,7 +304,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						} else {
 							//--- GUARDRAIL: nothing in reach (isolated front / island target) - fall back to
 							//--- the absolute nearest so the team always has a valid order and never idles.
-							_target = [leader _team, _avail] Call WFBE_CO_FNC_GetClosestEntity;
+							_target = [leader _team, _uncaptured] Call WFBE_CO_FNC_GetClosestEntity; //--- B36.1 (Ray 2026-06-15): FULL uncaptured list, NOT the _assigned-reduced _avail. A team that just captured its town has dismounted + abandoned its trucks, so it scans on-foot (3500m reach); on a sparse map no town is in reach, this guardrail fires, and the old _avail (minus teammates' targets) sent it to a FARTHER town -> it milled at the just-capped centre. Nearest-of-all advances it to the adjacent town (concentration is fine for an isolated foot team).
 						};
 					};
 				};

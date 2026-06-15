@@ -298,6 +298,31 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 while {!WFBE_GameOver && _alive} do {
 	_alive = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
+	//--- B36.1 (Ray 2026-06-15): PC-scale retirement. The server flags a REAR team (wfbe_aicom_disband)
+	//--- when the human player count rises - fewer HQ squads = server relief. Units are HC-LOCAL here, so
+	//--- the delete must happen on the HC. GUARDRAIL (hard): re-check on THIS machine that no player is
+	//--- within the safe radius and the team is not in combat before deleting - never a player-visible
+	//--- vanish. If a player has come close since the server flagged it, STAND DOWN (clear the flag, keep
+	//--- fighting) and let the next server cycle re-evaluate. A2 getVariable: 1-arg + isNil (see _order below).
+	if (_alive && {!isNull _team}) then {
+		private ["_dis"];
+		_dis = _team getVariable "wfbe_aicom_disband";
+		if (!isNil "_dis" && {_dis}) then {
+			private ["_dLdr","_dSafe","_dNear","_dCombat"];
+			_dLdr  = leader _team;
+			_dSafe = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
+			_dNear = if (isNull _dLdr) then {0} else {{isPlayer _x && {alive _x} && {(_x distance _dLdr) < _dSafe}} count allUnits};
+			_dCombat = if (isNull _dLdr) then {false} else {behaviour _dLdr == "COMBAT"};
+			if (_dNear == 0 && {!_dCombat}) then {
+				{ if (local _x) then {deleteVehicle _x} } forEach (units _team);
+				_alive = false;
+				diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TEAM_RETIRE_HC|deleted-local-units");
+			} else {
+				_team setVariable ["wfbe_aicom_disband", false, true];
+			};
+		};
+	};
+
 	if (_alive) then {
 		//--- A2: groups do not support the [name, default] getVariable form; plain get + isNil.
 		_order = _team getVariable "wfbe_aicom_order";

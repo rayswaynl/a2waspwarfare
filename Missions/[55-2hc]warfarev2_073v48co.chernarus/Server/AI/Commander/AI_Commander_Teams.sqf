@@ -63,6 +63,28 @@ _extra            = floor (_funds / _fundsPerExtraTeam);
 if (_extra > _maxExtra) then {_extra = _maxExtra};
 _target           = _base + _extra;
 
+//--- B36.1 (Ray 2026-06-15): PLAYER-COUNT SCALING override. Team count is the dominant server-FPS
+//--- lever, so scale the target inversely with the HUMAN player count: more players = more server
+//--- pressure = FEWER HQ squads; low pop is efficient + boring, so flood it with many more AI teams.
+//--- This OVERRIDES the funds-based _base/_target above with a player-count curve (tunable via
+//--- WFBE_C_AICOM_TEAMS_PC_*), keeping a small funds-extra that is throttled as pop rises so a rich
+//--- AI can't bloat back past the curve when the server is busiest (income->quality is handled by
+//--- the separate income scaler). Human count mirrors MonitorPlayerCount.sqf (isPlayer minus live HCs).
+private ["_pcN","_hcN","_pcExtraCap"];
+_pcN = {isPlayer _x} count allUnits;
+_hcN = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
+_pcN = (_pcN - _hcN) max 0;
+_base = switch (true) do {
+	case (_pcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  6]};
+	case (_pcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  4]};
+	case (_pcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 3]};
+	default          {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 2]};
+};
+_pcExtraCap = switch (true) do { case (_pcN >= 10): {0}; case (_pcN >= 6): {1}; default {_maxExtra} };
+if (_extra > _pcExtraCap) then {_extra = _pcExtraCap};
+_target = _base + _extra;
+_logik setVariable ["wfbe_aicom_pc", _pcN];
+
 //--- Log only when the effective target changes (avoid RPT spam).
 _lastDynTarget = _logik getVariable ["wfbe_aicom_dyntarget", _base];
 if (_target > _base && {_target != _lastDynTarget}) then {
@@ -86,6 +108,35 @@ if (_pending > 0) then {
 	diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH|pending=" + str _pending + "|founded=" + str _foundedTeams + "|target=" + str _target + "|pendingAgeSec=" + str (round (time - _pendSince)));
 } else {
 	_logik setVariable ["wfbe_aicom_pending_since", -1];
+};
+
+//--- B36.1 on-join CLEANUP (Ray 2026-06-15): when players join, the curve lowers _target; if the
+//--- side now holds MORE founded teams than target, retire the excess for immediate server relief.
+//--- GUARDRAIL (hard): only retire REAR teams - far from ALL players AND not in combat - so a player
+//--- never watches an AI vanish. The HC owns the units, so we only FLAG the team (wfbe_aicom_disband);
+//--- its own loop re-checks proximity and deletes locally (server-side deleteVehicle on HC-local units
+//--- ghosts the group sync). Staggered: at most one retirement flagged per cycle (smallest rear team).
+if (_foundedTeams > _target) then {
+	private ["_safeDist","_pick","_pickN","_ldr","_nearP","_inCombat"];
+	_safeDist = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
+	_pick = grpNull; _pickN = 1e9;
+	{
+		if (!isNull _x && {_x getVariable ["wfbe_aicom_hc", false]} && {!(_x getVariable ["wfbe_aicom_disband", false])}) then {
+			_ldr = leader _x;
+			if (!isNull _ldr && {alive _ldr}) then {
+				_nearP = {isPlayer _x && {alive _x} && {(_x distance _ldr) < _safeDist}} count allUnits;
+				_inCombat = (behaviour _ldr == "COMBAT") || ({alive _x && {side _x != _side} && {(_x distance _ldr) < _safeDist}} count allUnits > 0);
+				if (_nearP == 0 && {!_inCombat} && {(count units _x) < _pickN}) then {
+					_pickN = count units _x; _pick = _x;
+				};
+			};
+		};
+	} forEach _teams;
+	if (!isNull _pick) then {
+		_pick setVariable ["wfbe_aicom_disband", true, true];
+		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] PC-cleanup flagged rear team %2 to retire (founded %3 > target %4, pc %5); HC self-deletes.", _sideText, _pick, _foundedTeams, _target, _pcN]] Call WFBE_CO_FNC_AICOMLog;
+		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_RETIRED|reason=pc-scale|founded=" + str _foundedTeams + "|target=" + str _target + "|pc=" + str _pcN);
+	};
 };
 
 if ((_foundedTeams + _pending) >= _target) exitWith {};

@@ -75,6 +75,13 @@ WFBE_HC_FNC_ReseatCivilian = {
 //--- thus can never knock the HC off civilian (setPos moves the body only, it does not change side/group).
 WFBE_HC_FNC_ParkDeadspawn = {
 	if (side group player != civilian) exitWith {}; //--- guard: only park a civilian-seated HC.
+	//--- B36.1 (Ray 2026-06-15): PROTECT the HC body. Init_Client.sqf's `player allowDamage false` (:18) is
+	//--- SKIPPED for HCs (initJIPCompatible gates client init on !isHeadLessClient), so the HC avatar was the
+	//--- LONE unprotected body in the deadspawn ring and was killed by friendly fire. allowDamage false +
+	//--- setCaptive true = unkillable + non-hostile. Sticky + idempotent (safe to re-run on every re-park);
+	//--- touches ONLY `player`, never the delegated AI groups the HC hosts (they keep their own damage state).
+	player allowDamage false;
+	player setCaptive true;
 	private "_dsPos"; _dsPos = getMarkerPos "GuerTempRespawnMarker";
 	if (!((_dsPos select 0) == 0 && (_dsPos select 1) == 0)) then {
 		player setPos ([_dsPos, 1, 8] Call Compile preprocessFile "Common\Functions\Common_GetRandomPosition.sqf");

@@ -26,6 +26,14 @@ _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 _path = missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_AI_ORDER", _side];
 _upgrades = _logik getVariable "wfbe_upgrades";
 
+//--- B36.1 (Ray 2026-06-15): the AI commander only researches PATROLS after it owns a town.
+//--- A 0-town AI sinking early research into Patrols (roaming hunter-killers) instead of
+//--- tech/economy is wasteful - gate Patrols out of the program until the side holds >=1 town.
+private ["_myID","_ownTowns","_patrolsId"];
+_myID = (_side) Call WFBE_CO_FNC_GetSideID;
+_ownTowns = {!isNull _x && {(_x getVariable "sideID") == _myID}} count towns;
+_patrolsId = if (isNil "WFBE_UP_PATROLS") then {-1} else {WFBE_UP_PATROLS};
+
 //--- Supply reserve floor: do not start upgrades that would starve base building.
 _supplyReserve = missionNamespace getVariable ["WFBE_C_AICOM_SUPPLY_RESERVE", 500];
 
@@ -60,7 +68,7 @@ _fundsRate = missionNamespace getVariable ["WFBE_C_AICOM_UPGRADE_FUNDS_RATE", 0]
 	_level = _x select 1;
 
 	//--- Only consider unmet upgrades.
-	if (_upgrades select _upgrade < _level) then {
+	if (_upgrades select _upgrade < _level && {!(_upgrade == _patrolsId && _ownTowns < 1)}) then {
 		//--- V0.5.1: price by CURRENT level (researching level N+1 costs COSTS select N).
 		//--- The old "select target level" was off by one: every research charged the
 		//--- NEXT level's price (Heavy 1 demanded 4400 instead of 1200 - the round-3 stall).

@@ -38,7 +38,7 @@ while {!WFBE_GameOver} do {
 			if (_lvl > 0) then {
 				_active = _logik getVariable ["wfbe_side_patrols", 0];
 				_last = _logik getVariable ["wfbe_side_patrol_last", -(_delay)];
-				if (_active < _maxSide && {time - _last > _delay}) then {
+				if (_active < (_maxSide min _lvl) && {time - _last > _delay}) then {  //--- B36.1 (Ray 2026-06-15): EFFECTIVE patrol cap is level-aware = min(side cap, patrol level). patrol-1 => 1, patrol-2+ => 2 (side cap is 2 for W/E, 2/1 for GUER). HQ teams scale via the curve; patrols stay low.
 					_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
 					_owned = [];
 					{if ((_x getVariable "sideID") == _sideID) then {_owned = _owned + [_x]}} forEach towns;
@@ -69,7 +69,7 @@ while {!WFBE_GameOver} do {
 								[_sideID, _template, _home] Spawn WFBE_CO_FNC_RunSidePatrol;
 							};
 							_logik setVariable ["wfbe_patrol_waitlog", false];
-							["INFORMATION", Format["server_side_patrols.sqf: [%1] %2 patrol dispatched from [%3] (active %4/%5, HC:%6).", _side, _tier, _home getVariable "name", _active + 1, _max, !isNull _hcUnit]] Call WFBE_CO_FNC_AICOMLog;
+							["INFORMATION", Format["server_side_patrols.sqf: [%1] %2 patrol dispatched from [%3] (active %4/%5, HC:%6).", _side, _tier, _home getVariable "name", _active + 1, (_maxSide min _lvl), !isNull _hcUnit]] Call WFBE_CO_FNC_AICOMLog;
 							if (!isNil "PerformanceAudit_Record") then {
 								if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
 									["side_patrol_spawn", 0, Format["side:%1;tier:%2;active:%3;hc:%4", _side, _tier, _active + 1, !isNull _hcUnit], "SERVER"] Call PerformanceAudit_Record;

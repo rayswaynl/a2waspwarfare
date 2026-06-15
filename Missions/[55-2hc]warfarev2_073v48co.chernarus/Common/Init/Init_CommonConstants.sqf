@@ -60,7 +60,7 @@ WFBE_UP_CBRADAR = 22;
 WFBE_UP_PATROLS = 23;
 
 //--- Side patrols (Patrols upgrade): max concurrent patrol teams per side.
-if (isNil "WFBE_C_SIDE_PATROLS_MAX") then {WFBE_C_SIDE_PATROLS_MAX = 3};
+if (isNil "WFBE_C_SIDE_PATROLS_MAX") then {WFBE_C_SIDE_PATROLS_MAX = 2};  //--- B36.1 (Ray 2026-06-15): WEST/EAST patrol cap 3->2. Patrols stay LOW even as the HQ-team curve scales up; the EFFECTIVE cap is level-aware (min(this, patrol level)) in server_side_patrols.sqf, so patrol-1 => 1, patrol-2+ => 2 per side, never more.
 
 /*
 	### Working with the missionNamespace ###
@@ -124,6 +124,19 @@ with missionNamespace do {
 	WFBE_C_AI_COMMANDER_BUILD_GRACE = 300;
 	WFBE_C_AI_COMMANDER_TEAMS_MAX_EXTRA = 1;   //--- B36 (Ray 2026-06-15): TARGET(2)+MAX_EXTRA(1) = 3 teams/side cap, HALVED from B35's 6, to relieve HC saturation (HCs hit 20 fps at ~192 units). Teams stay big via AI_MAX 12. Rollback: 2.
 	WFBE_C_AI_COMMANDER_DEFENSES_MAX = 4;      //--- V0.2: manned base statics the AI places around its HQ.
+	//--- B36.1 (Ray 2026-06-15): DYNAMIC TEAM SCALING by live HUMAN player count (HCs excluded). The team
+	//--- count is the dominant server-FPS lever, so the AI commander's founding target scales INVERSELY
+	//--- with population: more players = more server pressure = FEWER HQ squads; low pop is efficient +
+	//--- boring, so flood it with many more AI teams. Buckets 0-2 / 3-5 / 6-9 / 10+. The 10+ value matches
+	//--- the old static target (2) = no high-pop regression. Consumed by AI_Commander_Teams.sqf.
+	WFBE_C_AICOM_TEAMS_PC_LOW  = 8;            //--- 0-2 players: heavy flood (Ray B36.1 tweak, was 6).
+	WFBE_C_AICOM_TEAMS_PC_MID  = 5;            //--- 3-5 players (Ray B36.1 tweak, was 4).
+	WFBE_C_AICOM_TEAMS_PC_HIGH = 3;
+	WFBE_C_AICOM_TEAMS_PC_FULL = 2;            //--- rollback the whole curve: set all four to 2.
+	WFBE_C_AICOM_DISBAND_SAFE_DIST = 600;      //--- B36.1 on-join cleanup: retire a rear AI team only when NO player is within this many metres of its leader AND it is not in combat (guardrail). The HC re-checks on its own machine before deleting local units.
+	WFBE_C_AICOM_INCOME_PC_BONUS = 0.06;       //--- B36.1 income: +6% AI-commander CASH income per human player UNDER the REF pop (INVERTED - highest at LOW pop to fund the team-curve flood; 0 disables -> flat INCOME_MULT).
+	WFBE_C_AICOM_INCOME_PC_REF = 10;           //--- B36.1: player count at/above which the inverted income boost is ZERO (base income). Below it, AI-commander cash income rises +BONUS per player under REF. Mirrors the team curve's high-pop end (10+ = 2 teams).
+	WFBE_C_AICOM_INCOME_MULT_MAX = 3.0;        //--- hard ceiling on the scaled commander income multiplier (packed-server runaway guard).
 	if (isNil "WFBE_C_AICOM_AIR_MIN_TOWNS") then {WFBE_C_AICOM_AIR_MIN_TOWNS = 4}; //--- Aircraft are deferred until the AI holds this many towns (it flies poorly; air is a late, established-only asset). 0 = no gate.
 	//--- P1 combined-arms ratio (claude-gaming 2026-06-15): target CLASS mix for newly-typed AI teams,
 	//--- [infantry, light, heavy, air]. The type picker buckets the eligible templates by class and
@@ -146,8 +159,8 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AI_COMMANDER_LEVEL") then {WFBE_C_AI_COMMANDER_LEVEL = 1};
 	switch (WFBE_C_AI_COMMANDER_LEVEL) do {
 		case 0:  {WFBE_C_AI_COMMANDER_FUNDS_MULT = 1.0; WFBE_C_AI_COMMANDER_INCOME_MULT = 1.0; WFBE_C_AI_COMMANDER_INCOME_STIPEND = 0};
-		case 2:  {WFBE_C_AI_COMMANDER_FUNDS_MULT = 2.0; WFBE_C_AI_COMMANDER_INCOME_MULT = 2.0; WFBE_C_AI_COMMANDER_INCOME_STIPEND = 60};
-		default  {WFBE_C_AI_COMMANDER_FUNDS_MULT = 1.5; WFBE_C_AI_COMMANDER_INCOME_MULT = 1.5; WFBE_C_AI_COMMANDER_INCOME_STIPEND = 25};
+		case 2:  {WFBE_C_AI_COMMANDER_FUNDS_MULT = 2.0; WFBE_C_AI_COMMANDER_INCOME_MULT = 2.0; WFBE_C_AI_COMMANDER_INCOME_STIPEND = 3000};
+		default  {WFBE_C_AI_COMMANDER_FUNDS_MULT = 1.5; WFBE_C_AI_COMMANDER_INCOME_MULT = 1.5; WFBE_C_AI_COMMANDER_INCOME_STIPEND = 2000}  //--- B36.1 (Ray): base commander UBI = $2000/min CASH (60s income tick so per-tick == per-min; Hard tier 3000, Easy 0). Unconditional per-tick AI-commander funds drip; keeps it fielding armies on a near-empty server.;
 	};
 	WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL = 60;   //--- V0.5: war-strategy worker cadence (spearheads/relief/strike/arty).
 	//--- V0.6: Wildcard events - one free random event per AI-commanded side per interval.
