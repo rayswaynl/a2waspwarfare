@@ -87,12 +87,12 @@ while {!WFBE_GameOver} do {
 	diag_log ("GCSTAT|v1|reaped=" + str _gcReaped + "|emptyFound=" + str _gcEmptyFound + "|west=" + str _cntWest + "|east=" + str _cntEast + "|guer=" + str _cntGuer + "|t=" + str (round (time / 60)));
 
 	// --- GUER soft-cap monitor (claude-gaming 2026-06-15) ---
-	// GUER's real ceiling is the SOFT cap WFBE_C_GUER_GROUPS_MAX (=60, recently 90->60), NOT the 144
+	// GUER's real ceiling is the SOFT cap WFBE_C_GUER_GROUPS_MAX (=80, raised 60->80), NOT the 144
 	// engine cap. At the soft cap, server_town_ai.sqf:62 DEFERS new resistance garrisons, so town
 	// defense silently degrades long before the 130/144 engine warning below would ever fire for GUER.
 	// GUERCAP feeds the dashboard's GUER gauge (60s cadence); the debounced WARNING is emitted with the
 	// other cap warnings further down. Recompute the cap each pass so a live param change is honoured.
-	_guerMax = missionNamespace getVariable ["WFBE_C_GUER_GROUPS_MAX", 60];
+	_guerMax = missionNamespace getVariable ["WFBE_C_GUER_GROUPS_MAX", 80];
 	if (_guerMax < 1) then { _guerMax = 1 };
 	_guerPct = round ((_cntGuer / _guerMax) * 100);
 	_guerSoftThreshold = round (_guerMax * 0.9);
