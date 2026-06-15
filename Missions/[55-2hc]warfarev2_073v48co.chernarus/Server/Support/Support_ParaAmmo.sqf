@@ -82,7 +82,10 @@ while {true} do {
 			deleteVehicle _ammo;
 			_ammo = _type createVehicle _pos;
 			
-			Call Compile Format ["_ammo addEventHandler ['Killed',{[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled}]",_sideID];
+			//--- _sideID is NOT in scope inside this nested spawn (spawn does not inherit caller locals);
+		//--- recompute from _side (which IS passed in) so the crate's Killed EH bakes the correct
+		//--- side id, not nil. (The vehicle EH at the top of the file is at outer scope and was fine.)
+		Call Compile Format ["_ammo addEventHandler ['Killed',{[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled}]",_side Call GetSideID];
 			
 			sleep 5;
 			

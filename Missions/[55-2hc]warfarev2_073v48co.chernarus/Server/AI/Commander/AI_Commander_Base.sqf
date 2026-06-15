@@ -262,6 +262,7 @@ if (_cbrIdx >= 0) then {
 	};
 };
 //--- ECON/ARTY GATE (owner 2026-06-14): AI commander defers Bank + ArtilleryRadar until it holds MORE than N towns. AI-commander build logic ONLY — human players are unaffected.
+private ["_econGateTowns","_econMyID","_econOpen"];  //--- declared private (not in the line-13 header) so they can't leak into / collide with the caller's scope
 _econGateTowns = missionNamespace getVariable ["WFBE_C_AICOM_ECON_GATE_TOWNS", 6];
 _econMyID = (_side) Call WFBE_CO_FNC_GetSideID;
 _econOpen = ({(_x getVariable "sideID") == _econMyID} count towns) > _econGateTowns;

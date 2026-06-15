@@ -121,7 +121,11 @@ while {!WFBE_GameOver && _alive} do {
 				if (_sweepDone != _target) then {
 					_team setVariable ["wfbe_patrol_sweep_town", _target, false];
 
-					_townCamps  = _target getVariable ["camps", []];
+					//--- Strip null/dead camps up front: the per-camp `if (isNull _campObj) exitWith {}`
+					//--- below aborts the ENTIRE for-loop (not just the iteration), so a single null
+					//--- camp would skip every remaining camp's sweep. Filtering here makes that abort
+					//--- unreachable and lets every live camp get swept.
+					_townCamps  = (_target getVariable ["camps", []]) - [objNull];
 					_sweepStart = time;
 					_campRange  = missionNamespace getVariable ["WFBE_C_CAMPS_RANGE", 30];
 

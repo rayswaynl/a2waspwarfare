@@ -115,7 +115,7 @@ while {alive player && dialog} do {
 				};
 			};
 			if (_canUseEASA) then {
-				if (_funds > (_row select 0)) then {
+				if (_funds >= (_row select 0)) then {
 					[vehicle player, _index, true] Call EASA_Equip;
 					-(_row select 0) Call ChangePlayerFunds;
 					if (_repairPointEASA) then {
