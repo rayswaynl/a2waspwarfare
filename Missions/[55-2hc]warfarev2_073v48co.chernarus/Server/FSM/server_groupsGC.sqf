@@ -8,7 +8,7 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc"];
 
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 _auditN = 0; // D2 (claude-gaming 2026-06-14): counts elapsed 5-min audit windows; the expensive classification+dump fires only every WFBE_C_GROUPAUDIT_EVERY-th window. Husk-reap GC below is untouched and runs every 60s cycle.
@@ -43,8 +43,10 @@ while {!WFBE_GameOver} do {
 	if (_zombieTimeout > 0) then {
 		{
 			_grp = _x;
-			// A2 OA: the [name, default] form of getVariable is not supported on groups
-			// (objects/namespaces only) - it yields nil and the comparison below throws.
+			// Single-arg getVariable + isNil guard (works on groups in A2 OA). NOTE: the two-arg
+			// [name, default] form ALSO works on groups in this build (see the husk-reap at the top
+			// of this file and the persEmpty audit below, both live in production); this single-arg
+			// style is kept only for the explicit -1 sentinel the orphan-age math below relies on.
 			_orphanedAt = _grp getVariable "wfbe_orphaned_at";
 			if (isNil "_orphanedAt") then {_orphanedAt = -1};
 			if (_orphanedAt >= 0 && {(time - _orphanedAt) >= _zombieTimeout}) then {
@@ -76,10 +78,17 @@ while {!WFBE_GameOver} do {
 	_cntWest = 0;
 	_cntEast = 0;
 	_cntGuer = 0;
+	// untagged = groups with no wfbe_group_src (created outside the WFBE_CO_FNC_CreateGroup wrapper).
+	// Counted here on the cheap 60s pass so the dashboard gets a responsive untagged gauge (the full
+	// per-source breakdown only ships on the ~25-min GROUPAUDIT line). On a build where editor slots
+	// are tagged, a rising untagged count is a wrapper-bypass leak signal; UNTAGLEAK below isolates the
+	// NON-empty subset.
+	_untW = 0; _untE = 0; _untG = 0;
 	{
-		if (side _x == west)       then {_cntWest = _cntWest + 1};
-		if (side _x == east)       then {_cntEast = _cntEast + 1};
-		if (side _x == resistance) then {_cntGuer = _cntGuer + 1};
+		_gsrc = _x getVariable "wfbe_group_src";
+		if (side _x == west)       then {_cntWest = _cntWest + 1; if (isNil "_gsrc") then {_untW = _untW + 1}};
+		if (side _x == east)       then {_cntEast = _cntEast + 1; if (isNil "_gsrc") then {_untE = _untE + 1}};
+		if (side _x == resistance) then {_cntGuer = _cntGuer + 1; if (isNil "_gsrc") then {_untG = _untG + 1}};
 	} forEach allGroups;
 
 	//--- B7 efficiency (review 2026-06-15): publish per-side group counts so server_town_ai.sqf and
@@ -95,7 +104,7 @@ while {!WFBE_GameOver} do {
 	// cadence. groups reaped THIS pass (non-persistent empties), empties found (incl. persistent),
 	// and current per-side group counts incl. GUER. Single cheap diag_log; all values already in
 	// hand (counters from the sweep above, per-side counts from the cap-warning pass). t = round min.
-	diag_log ("GCSTAT|v1|reaped=" + str _gcReaped + "|emptyFound=" + str _gcEmptyFound + "|west=" + str _cntWest + "|east=" + str _cntEast + "|guer=" + str _cntGuer + "|t=" + str (round (time / 60)));
+	diag_log ("GCSTAT|v1|reaped=" + str _gcReaped + "|emptyFound=" + str _gcEmptyFound + "|west=" + str _cntWest + "|east=" + str _cntEast + "|guer=" + str _cntGuer + "|untW=" + str _untW + "|untE=" + str _untE + "|untG=" + str _untG + "|t=" + str (round (time / 60)));
 
 	// --- GUER soft-cap monitor (claude-gaming 2026-06-15) ---
 	// GUER's real ceiling is the SOFT cap WFBE_C_GUER_GROUPS_MAX (=80, raised 60->80), NOT the 144
