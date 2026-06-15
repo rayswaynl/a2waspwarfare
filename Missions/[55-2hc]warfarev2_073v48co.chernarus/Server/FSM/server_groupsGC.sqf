@@ -24,7 +24,11 @@ while {!WFBE_GameOver} do {
 		_grp = _x;
 		if (!isNull _grp && {(count (units _grp)) == 0}) then {
 			_gcEmptyFound = _gcEmptyFound + 1;
-			if (!(_grp getVariable ["wfbe_persistent", false])) then {
+			// A2 OA: the [name,default] getVariable form is unreliable on GROUP objects (yields nil, not the
+			// default) - same trap fixed in the zombie-reaper at line ~46. Use single-arg + isNil guard.
+			private "_isPers"; _isPers = _grp getVariable "wfbe_persistent";
+			if (isNil "_isPers") then {_isPers = false};
+			if (!_isPers) then {
 				deleteGroup _grp;
 				_gcReaped = _gcReaped + 1;
 			};
@@ -180,7 +184,7 @@ while {!WFBE_GameOver} do {
 		{
 			_auditSide = side _x;
 			if ((count units _x) == 0) then {
-				private "_pe"; _pe = _x getVariable ["wfbe_persistent", false];
+				private "_pe"; _pe = _x getVariable "wfbe_persistent"; if (isNil "_pe") then {_pe = false}; //--- A2 group getVariable has no default form
 				switch (_auditSide) do {
 					case west:       { _emptyW = _emptyW + 1; if (_pe) then {_persEmptyW = _persEmptyW + 1} };
 					case east:       { _emptyE = _emptyE + 1; if (_pe) then {_persEmptyE = _persEmptyE + 1} };

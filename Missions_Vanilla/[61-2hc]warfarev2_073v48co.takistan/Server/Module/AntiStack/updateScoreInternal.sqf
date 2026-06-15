@@ -23,7 +23,7 @@ while { true } do {
 			_perfPlayers = _perfPlayers + 1;
 			missionNamespace setVariable [format ["WFBE_CO_CURRENT_SCORE_PLAYER_%1", getPlayerUID _x], score _x];
 		};
-	} forEach allUnits;
+	} forEach playableUnits; //--- PERF: player slots not 300+ AI (isPlayer guard keeps behaviour identical; see mainLoop.sqf)
 
 	// Marty: Performance Audit record for AntiStack score sampling.
 	if !(isNil "PerformanceAudit_Record") then {
