@@ -289,7 +289,7 @@ _presents = [];
 } forEach [[west,"WFBE_L_BLU"],[east,"WFBE_L_OPF"],[resistance,"WFBE_L_GUE"]];
 
 WFBE_PRESENTSIDES = _presents;
-WFBE_ISTHREEWAY = false;
+WFBE_ISTHREEWAY = ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0); //--- GUER Insurgents gate: three-way mode is live only when the playable GUER faction is enabled (else exactly as before)
 
 //--- Todo, dynamic (if logic is present or not).
 WFBE_DEFENDER = resistance;
