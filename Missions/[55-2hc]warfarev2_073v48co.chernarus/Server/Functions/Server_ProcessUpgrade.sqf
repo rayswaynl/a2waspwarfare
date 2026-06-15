@@ -19,6 +19,12 @@ _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
 // Marty: Publish only the active upgrade ID from the server; the menu computes its own display countdown without touching the upgrade flow.
 _logic setVariable ["wfbe_upgrading", true, true];
 _logic setVariable ["wfbe_upgrading_id", _upgrade_id, true];
+// Marty: Publish an AUTHORITATIVE end time replicated to ALL clients for EVERY caller
+// (player, queue-auto-start AND AI commander). Player upgrades already get an exact local
+// end time from the upgrade-started message; queue/AI upgrades never sent that message, so
+// without this the menu/RHUD had nothing to count down from (0:00 freeze / wrong-level guess).
+// The server timer below runs for _upgrade_time, so this matches the real completion moment.
+_logic setVariable ["wfbe_upgrading_end_time", time + _upgrade_time, true];
 
 if (_upgrade_isplayer) then {
 	[_side, "HandleSpecial", ['upgrade-started', _upgrade_id, _upgrade_level + 1]] Call WFBE_CO_FNC_SendToClients;
@@ -44,6 +50,9 @@ _logic setVariable ["wfbe_upgrades", _upgrades, true];
 _logic setVariable ["wfbe_upgrading", false, true];
 // Marty: Clear the active upgrade ID once the running upgrade has completed.
 _logic setVariable ["wfbe_upgrading_id", -1, true];
+// Marty: Clear the replicated authoritative end time too, so a stale value cannot drive a
+// phantom countdown on clients between upgrades.
+_logic setVariable ["wfbe_upgrading_end_time", -1, true];
 
 // Marty: Existing artillery, such as pre-upgrade M119 static guns, does not pass through buy/build equipment init again.
 // Scan every vehicle known by the server because artillery pieces may be deployed far away from the base.

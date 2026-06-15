@@ -173,6 +173,7 @@ with missionNamespace do {
 	//--- never touches shared/human supply. Default 0 = DISABLED (no-op; preserves legacy<->next A/B
 	//--- parity). Suggested enable value ~2 (per the #6 investigation). Restart-safe nil-guard.
 	if (isNil "WFBE_C_AICOM_UPGRADE_FUNDS_RATE") then {WFBE_C_AICOM_UPGRADE_FUNDS_RATE = 2}; //--- ENABLED 2026-06-15: cash-rich/supply-starved AI converts funds->Light/Heavy/Air tech so OPFOR stops buying infantry-only. Set 0 to disable.
+	if (isNil "WFBE_C_AICOM_SUPPLY_RESERVE") then {WFBE_C_AICOM_SUPPLY_RESERVE = 8000}; //--- raised 2026-06-15 from 500: keep an 8k SUPPLY buffer for UNIT PRODUCTION so the AI can't drain its bootstrap supply on upgrades and stop building (it routes upgrades to FUNDS below this via FUNDS_RATE). Pairs with camp-first town supply income to cure the "AI stopped producing" supply-exhaustion.
 	WFBE_C_AI_COMMANDER_RELIEF_MAX = 2;           //--- V0.5: max simultaneous town-relief diversions.
 	WFBE_C_AI_COMMANDER_REINFORCE_RANGE = 1200;   //--- V0.5: Produce only refills teams this close to base (wiped teams reform at base).
 	WFBE_C_AICOM_FWD_REINFORCE_RANGE = 500;       //--- FORWARD-REINFORCE (claude-gaming 2026-06-13): deep teams beyond REINFORCE_RANGE may still refill if their leader hugs an owned town within this radius (fixes the deep-spearhead bleed-out / EAST snowball). Refill spawns at the factory nearest the team, so a captured forward town resupplies its own front instead of a lone unit trekking from the rear base.

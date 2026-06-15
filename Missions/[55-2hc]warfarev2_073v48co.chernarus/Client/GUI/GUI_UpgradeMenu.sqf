@@ -52,7 +52,7 @@ WFBE_MenuAction = -1;
 // Ownership: this spawn writes 504006 ONLY while an upgrade is running (running branch below).
 // The idle branch no longer blanks 504006 — that would erase the footer's "Queued:" list.
 [_upgrade_labels, _upgrade_times] spawn {
-	Private ["_html","_labels","_lastRemaining","_remaining","_remainingMinutes","_remainingSeconds","_remainingSecondsText","_runningEndTime","_runningId","_runningLabel","_runningLevel","_runningState","_runningTime","_storedEndTime","_storedId","_times","_upgrades"];
+	Private ["_html","_labels","_lastRemaining","_remaining","_remainingMinutes","_remainingSeconds","_remainingSecondsText","_runningEndTime","_runningId","_runningLabel","_runningLevel","_runningState","_runningTime","_serverEndTime","_storedEndTime","_storedId","_times","_upgrades"];
 
 	disableSerialization;
 
@@ -78,13 +78,22 @@ WFBE_MenuAction = -1;
 		};
 
 		if (_runningState) then {
+			// Marty: PREFER the server-replicated authoritative end time. Server_ProcessUpgrade.sqf
+			// publishes wfbe_upgrading_end_time for EVERY upgrade source (player, queue AND AI), so this is
+			// the one value that is correct for queue/AI upgrades too (no local upgrade-started message ever
+			// reached this client for those). Use it only when it is still in the future; otherwise fall
+			// through to the existing local race-guard / recompute so the recent rework is not regressed.
+			_serverEndTime = WFBE_Client_Logic getVariable "wfbe_upgrading_end_time";
+			if (isNil "_serverEndTime") then {_serverEndTime = -1};
+			if (_serverEndTime > time) then {_runningEndTime = _serverEndTime};
+
 			_storedId = WFBE_Client_Logic getVariable "wfbe_upgrading_countdown_id";
 			if (isNil "_storedId") then {_storedId = -1};
 			_storedEndTime = WFBE_Client_Logic getVariable "wfbe_upgrading_countdown_end_time";
 			if (isNil "_storedEndTime") then {_storedEndTime = -1};
-			if (_storedId == _runningId && _storedEndTime > time) then {_runningEndTime = _storedEndTime};
+			if (_serverEndTime <= time && _storedId == _runningId && _storedEndTime > time) then {_runningEndTime = _storedEndTime};
 
-			if (_storedId != _runningId || _runningEndTime < time) then {
+			if (_serverEndTime <= time && (_storedId != _runningId || _runningEndTime < time)) then {
 				// Marty: Race guard — re-read the persisted end time first; it may have been
 				// written by the Purchase branch (which knows the exact start time). Only
 				// recompute from level if the persisted end time is still stale or absent.
