@@ -25,9 +25,9 @@ if (isNil "_activeTownsBudgetMax") then { _activeTownsBudgetMax = 6 };
 _budgetDeferLast = -9999; //--- Debounce timestamp for the "deferred" log line (1 per 5 min).
 
 //--- GUER GROUP CAP: hard ceiling on total resistance groups (bounds runaway growth toward the ~144/side engine limit).
-//--- Tunable WFBE_C_GUER_GROUPS_MAX; default 90. Recounted once per sweep (cheap) and used to defer resistance garrisons.
+//--- Tunable WFBE_C_GUER_GROUPS_MAX; default 80. Recounted once per sweep (cheap) and used to defer resistance garrisons.
 _guerGroupsMax = missionNamespace getVariable "WFBE_C_GUER_GROUPS_MAX";
-if (isNil "_guerGroupsMax") then { _guerGroupsMax = 90 };
+if (isNil "_guerGroupsMax") then { _guerGroupsMax = 80 }; //--- keep in sync with WFBE_C_GUER_GROUPS_MAX (80)
 _guerDeferLast = -9999; //--- Debounce timestamp for the GUER-cap "deferred" log line (1 per 5 min).
 _guerGroupCount = 0;    //--- Live resistance group count; refreshed once per sweep below.
 

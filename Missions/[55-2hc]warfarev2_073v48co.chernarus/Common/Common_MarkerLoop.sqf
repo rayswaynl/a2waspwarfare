@@ -129,7 +129,7 @@ while {true} do {
 				};
 			};
 		} forEach WFBE_CL_AARMarkerRegistry;
-		diag_log Format ["STATE-AUDIT: marker rebuild done in %1s; entries:%2;aarEntries:%3;allMapMarkers:%4", diag_tickTime - _perfStart, count WFBE_CL_UnitMarkerRegistry, count WFBE_CL_AARMarkerRegistry, count allMapMarkers];
+		diag_log Format ["STATE-AUDIT: marker rebuild done in %1s; entries:%2;aarEntries:%3;allMapMarkers:%4", diag_tickTime - _perfStart, count WFBE_CL_UnitMarkerRegistry, count WFBE_CL_AARMarkerRegistry, -1 /* allMapMarkers: Arma-3-only, N/A in A2 OA */];
 	};
 	_tombstones = 0;
 	_activeEntries = 0;
