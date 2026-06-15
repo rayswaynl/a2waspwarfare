@@ -29,7 +29,7 @@
 */
 
 Private ["_chosenClass","_oldUnit","_oldGrp","_swapGrp","_pos","_dir",
-         "_unitName","_unitRank","_unitFace","_unitSpeaker",
+         "_unitName","_unitRank",
          "_gear","_newUnit","_wasLeader","_uid"];
 
 _chosenClass = _this select 0;
