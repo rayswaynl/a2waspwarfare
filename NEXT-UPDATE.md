@@ -8,6 +8,20 @@ _(Maintained for the Wednesday merge with Marty. Tick the checklist as items dep
 
 ## Mission (SQF)
 
+### Client-FPS pass + WF-menu "FPS" button (branch `feat/client-fps`, PR #40 — base = `fix/aicom-review-batch-2026-06-15`)
+- **NEW WF-menu "FPS" button** → adaptive view-distance / target-FPS picker. **RESERVED IDS — other agents must
+  NOT reuse:** `idc 11023` (CA_FPS_Button, footer between GPS+SKIN), dialog `idd 28000` (WFBE_FPSPickerMenu),
+  `MenuAction 23`. Files: `Rsc/Dialogs.hpp` (button + picker dialog), `Client/GUI/GUI_Menu.sqf` (MenuAction 23
+  handler), NEW `WASP/actions/FPSPicker/FPSPicker_Open.sqf`. Toggles the adaptive auto-VD + picks target FPS
+  45/50/60, both persisted per-profile (`WFBE_TOOGLE_AUTO_DISTANCE_VIEW`, `WFBE_TARGET_FPS`); auto-VD default OFF.
+  ⚠️ dialog GEOMETRY not yet in-engine-tested.
+- **Marker map-gating** — `updatetownmarkers.sqf` now gated on `(visibleMap||shownGPS)` (SpecOps audio cue kept);
+  `Common_MarkerLoop.sqf` 0.2s→1Hz while the map is closed.
+- **server_collector_garbage** — snapshot `allDead` once/tick (was double-enumerated each 5s tick).
+- **terrain grid** — `Init_Client.sqf` no longer force-clobbers a saved profile to TG=50; profile-less players get min(MAX_CLUTTER,25).
+- ⚠️ **Cross-agent merge note:** this branch AND the GUER Insurgents faction branch (`feat/guer-insurgents-faction`)
+  both touch the WF menu + mission. Keep the reserved ids above clear; both stack on the deploy/experital line.
+
 ### Group-cap telemetry & tagging
 - **Client FPS telemetry** — `Client/Functions/Client_FpsReport.sqf` (player-only sampler) +
   server `FPSREPORT|v1|` receiver in `Init_Server.sqf` + lobby params `WFBE_C_CLIENT_FPS_REPORT`
