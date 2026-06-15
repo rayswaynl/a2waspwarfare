@@ -88,7 +88,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LINKS", _side], [
 	[[WFBE_UP_GEAR,2],[WFBE_UP_GEAR,3],[WFBE_UP_GEAR,5]], //--- Barracks
 	[[],[],[],[]], //--- Light
-	[[],[],[]], //--- Heavy
+	[[],[],[],[]], //--- Heavy
 	[[],[],[],[],[]], //--- Air
 	[
 		[[WFBE_UP_BARRACKS,1],[WFBE_UP_AIR,1],[WFBE_UP_GEAR,1]],

@@ -25,7 +25,7 @@ _miniSleep = 0.10;
 		uiSleep _miniSleep;
 	};
 
-} forEach allUnits;
+} forEach playableUnits; //--- PERF: player slots not 300+ AI (isPlayer guard keeps behaviour identical; see mainLoop.sqf)
 
 // ["INFORMATION", Format["GetTeamScoreMonitor.sqf: Team [%1] total skill is: [%2].", _side, _teamSkill]] Call WFBE_CO_FNC_LogContent;
 
