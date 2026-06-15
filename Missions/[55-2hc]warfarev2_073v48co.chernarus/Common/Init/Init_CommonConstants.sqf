@@ -72,6 +72,9 @@ if (isNil "WFBE_C_SIDE_PATROLS_MAX") then {WFBE_C_SIDE_PATROLS_MAX = 2};  //--- 
 */
 with missionNamespace do {
 
+//--- GUER "Insurgents" playable faction master gate (0=off, 1=on). Default OFF = byte-for-byte today's behaviour.
+	if (isNil "WFBE_C_GUER_PLAYERSIDE") then {WFBE_C_GUER_PLAYERSIDE = 0};
+
 //--- Day/night cycles.
 	// Marty: Defaults used when mission parameters do not provide the accelerated day/night settings.
 	if (isNil "WFBE_DAYNIGHT_ENABLED") then {WFBE_DAYNIGHT_ENABLED = 1}; //--- Enable the hybrid accelerated day/night cycle.
