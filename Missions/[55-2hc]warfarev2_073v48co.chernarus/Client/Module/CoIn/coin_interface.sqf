@@ -716,7 +716,9 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 								WFBE_Client_Logic setVariable ["wfbe_structures_live", _current, true];
 							};
 
-							["RequestStructure", [sideJoined,_class,_pos,_dir]] Call WFBE_CO_FNC_SendToServer;
+							//--- PROPOSED REFUND FIX (needs in-engine test): pass the placing player so the server can
+							//--- refund THIS client (per currency mode) when a Bank/CBR build is rejected server-side.
+							["RequestStructure", [sideJoined,_class,_pos,_dir,player]] Call WFBE_CO_FNC_SendToServer;
 						};
 
 						if (_class in _defenses) then {

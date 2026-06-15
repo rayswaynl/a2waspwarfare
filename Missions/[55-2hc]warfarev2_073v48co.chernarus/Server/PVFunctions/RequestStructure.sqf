@@ -1,9 +1,14 @@
-Private ['_dir','_index','_pos','_script','_side','_structure','_structureType','_structures','_structuresNames','_rlType'];
+Private ['_dir','_index','_pos','_script','_side','_structure','_structureType','_structures','_structuresNames','_rlType','_reqPlayer'];
 
 _side = _this select 0;
 _structureType = _this select 1;
 _pos = _this select 2;
 _dir = _this select 3;
+//--- PROPOSED REFUND FIX (needs in-engine test): the placing player (objNull for AI / legacy clients).
+//--- When a build is rejected below, refund THIS player via a targeted message (client refunds per
+//--- currency mode — the client charged optimistically at placement). objNull => fall back to the
+//--- old side-wide notify with no refund (AI builds don't charge a player).
+_reqPlayer = if (count _this > 4) then {_this select 4} else {objNull};
 
 _structures = missionNamespace getVariable Format ['WFBE_%1STRUCTURES',str _side];
 _structuresNames = missionNamespace getVariable Format ['WFBE_%1STRUCTURENAMES',str _side];
@@ -25,7 +30,7 @@ if (_rlType == "CBRadar") then {
 		{if (alive _x && typeOf _x == _aarClass) exitWith {_aarAlive = true}} forEach _structs;
 	};
 	if (!_aarAlive) exitWith {
-		[_side, "LocalizeMessage", ["CBRadarNeedsAAR"]] Call WFBE_CO_FNC_SendToClients;
+		if (!isNull _reqPlayer) then { [_reqPlayer, "LocalizeMessage", ["CBRadarNeedsAAR", _structureType]] Call WFBE_CO_FNC_SendToClient } else { [_side, "LocalizeMessage", ["CBRadarNeedsAAR"]] Call WFBE_CO_FNC_SendToClients };
 		["WARNING", Format ["RequestStructure.sqf: [%1] CBRadar build rejected — no alive AAR.", str _side]] Call WFBE_CO_FNC_LogContent;
 	};
 };
@@ -36,7 +41,7 @@ if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0
 	_bankKey = if (_side == west) then {"WFBE_BANK_WEST"} else {"WFBE_BANK_EAST"};
 	_existingBank = missionNamespace getVariable [_bankKey, objNull];
 	if (!(isNull _existingBank) && alive _existingBank) exitWith {
-		[_side, "LocalizeMessage", ["BankAlreadyBuilt"]] Call WFBE_CO_FNC_SendToClients;
+		if (!isNull _reqPlayer) then { [_reqPlayer, "LocalizeMessage", ["BankAlreadyBuilt", _structureType]] Call WFBE_CO_FNC_SendToClient } else { [_side, "LocalizeMessage", ["BankAlreadyBuilt"]] Call WFBE_CO_FNC_SendToClients };
 		["WARNING", Format ["RequestStructure.sqf: [%1] Bank build rejected — bank already alive.", str _side]] Call WFBE_CO_FNC_LogContent;
 	};
 	_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -48,7 +53,7 @@ if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0
 	_tooClose = false;
 	{if (_pos distance _x < _protRange) exitWith {_tooClose = true}} forEach _checkCenters;
 	if (_tooClose) exitWith {
-		[_side, "LocalizeMessage", ["BankTooCloseToBase"]] Call WFBE_CO_FNC_SendToClients;
+		if (!isNull _reqPlayer) then { [_reqPlayer, "LocalizeMessage", ["BankTooCloseToBase", _structureType]] Call WFBE_CO_FNC_SendToClient } else { [_side, "LocalizeMessage", ["BankTooCloseToBase"]] Call WFBE_CO_FNC_SendToClients };
 		["WARNING", Format ["RequestStructure.sqf: [%1] Bank build rejected — placement too close to base (< %2 m).", str _side, _protRange]] Call WFBE_CO_FNC_LogContent;
 	};
 };

@@ -184,6 +184,29 @@ switch (_localize) do {
     };
 };
 
+//--- PROPOSED REFUND FIX (needs in-engine test): Bank/CBR builds are charged optimistically on the
+//--- client at placement (coin_interface.sqf), but the server's reject paths (no-AAR / already-built /
+//--- too-close) previously never refunded — the player just lost the cost. When the reject message
+//--- carries the structure classname, refund the exact price this client charged, per currency mode
+//--- (mirrors coin_interface.sqf:672-676 and GUI_Menu_Economy.sqf:155).
+if (_localize in ["CBRadarNeedsAAR","BankAlreadyBuilt","BankTooCloseToBase"] && {count _this > 1}) then {
+	private ["_rsClass","_rsIdx","_rsPrice"];
+	_rsClass = _this select 1;
+	_rsIdx = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", sideJoinedText]) find _rsClass;
+	if (_rsIdx >= 0) then {
+		_rsPrice = (missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS", sideJoinedText]) select _rsIdx;
+		if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
+			[sideJoined, _rsPrice, "Structure build rejected - refund.", false] Call ChangeSideSupply;
+		} else {
+			_rsPrice Call ChangePlayerFunds;
+		};
+	} else {
+		//--- Defensive: refund must not fail silently (that's a silent money loss). Log if the
+		//--- classname round-trip ever breaks so it's diagnosable rather than invisible.
+		diag_log Format ["LocalizeMessage: structure-reject refund FAILED - '%1' not in WFBE_%2STRUCTURENAMES; player NOT refunded.", _rsClass, sideJoinedText];
+	};
+};
+
 if (_commandChat) then {
 	_txt Call CommandChatMessage;
 } else {
