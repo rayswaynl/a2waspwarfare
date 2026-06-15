@@ -441,6 +441,8 @@ while {!WFBE_GameOver} do {
 				_sp = _spClass createVehicle _spPos;
 				_sp setPos _spPos;
 				_sp setVariable ["WFBE_RepairTruckServicePoint", true, true];
+				_sp setVariable ["wfbe_side", _newSide]; //--- A1 fix: airfield repair-point was missing wfbe_side ->
+				//--- Server_BuildingDamaged/BuildingKilled read nil side and threw on hit. Mirror Construction_SmallSite:107.
 
 				//--- Register in side logic structures list so clients can see it.
 				_logik = (_newSide) Call WFBE_CO_FNC_GetSideLogic;
