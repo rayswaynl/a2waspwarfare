@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch"];
+private ["_side","_sideText","_logik","_cap","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered"];
 
 _side = _this;
 _sideText = str _side;
@@ -103,12 +103,13 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 		if (_cur < _want) then {
 			//--- V0.6.7: order up to batch cap units per team this cycle (deficit-capped; RANK-2 raises it for weak teams).
 			_batchOrdered = 0;
+			_ordered = []; //--- E7: per-class pending-order tally (reset per team)
 			while {_cur < _want && _batchOrdered < _effBatch} do {
 				//--- First template classname the team is still short on.
 				_toBuild = "";
 				{
 					_d = _x;
-					_have = {typeOf _x == _d} count (units _team);
+					_have = ({typeOf _x == _d} count (units _team)) + ({_x == _d} count _ordered); //--- E7: real members + this-batch pending (async) orders
 					if (_have < ({_x == _d} count _template)) exitWith {_toBuild = _d};
 				} forEach _template;
 
@@ -163,6 +164,7 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 				_q = (_team getVariable ["wfbe_queue", []]) + [_id];
 				_team setVariable ["wfbe_queue", _q];
 				[_id, _facObj, _toBuild, _side, _team, _isVeh] Spawn AIBuyUnit;
+				_ordered = _ordered + [_toBuild]; //--- E7: record in-flight order so the selector counts it
 				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] ordering [%3] at %4 factory (cost %5, batch %6/%7 rich=%8).", _sideText, _team, _toBuild, _typeName, _price, _batchOrdered + 1, _batchCap, _richFlag]] Call WFBE_CO_FNC_AICOMLog;
 
 				_batchOrdered = _batchOrdered + 1;
