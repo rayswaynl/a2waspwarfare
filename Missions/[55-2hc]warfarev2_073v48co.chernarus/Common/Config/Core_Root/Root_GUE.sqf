@@ -124,6 +124,11 @@ if (local player) then {
 	if (WF_A2_CombinedOps) then {
 		(_side) Call Compile preprocessFileLineNumbers "Common\Config\Loadout\Loadout_TKGUE.sqf";
 	};
+
+	//--- GUER "Insurgents" player overlay (buy-menu pool + per-role gear). Only when the playable faction is on.
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
+		Call Compile preprocessFileLineNumbers "Common\Config\Core_Root\Root_GUE_PlayerOverlay.sqf";
+	};
 };
 
 //--- Default Loadout [weapons, magazines, eligible muzzles, {backpack}, {backpack content}].

@@ -16,6 +16,13 @@ WFBE_SK_V_SpecsOps = ['FR_TL','RUS_Soldier_TL','US_Soldier_TL_EP1','US_Delta_For
 WFBE_SK_V_Spotters = ['US_Soldier_Sniper_EP1','TK_Soldier_Sniper_EP1','Ins_Soldier_Sniper','CDF_Soldier_Sniper','USMC_SoldierS_Sniper','RU_Soldier_Sniper']; // description="Sniper (Spot marks on map, Lockpick, Camps restore)";
 WFBE_SK_V_Medics = ['FR_Corpsman','US_Soldier_Medic_EP1','TK_Soldier_Medic_EP1','RUS_Soldier_Medic','GER_Soldier_Medic_EP1','BAF_Soldier_Medic_DDPM','RU_Soldier_Medic','US_Delta_Force_Medic_EP1','USMC_Soldier_Medic']; // description="Medic (Fast heal, Camps restore)";
 
+//--- GUER "Insurgents" playable classes — registered only when the faction gate is on.
+if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
+	WFBE_SK_V_Engineers = WFBE_SK_V_Engineers + ["GUE_Soldier_Sab"];
+	WFBE_SK_V_Spotters  = WFBE_SK_V_Spotters  + ["GUE_Soldier_Sniper"];
+	WFBE_SK_V_Medics    = WFBE_SK_V_Medics    + ["GUE_Soldier_Medic"];
+};
+
 //--- Binoculars.
 missionNamespace setVariable ["WFBE_BINOCULARS", ["Laserdesignator", "Binocular", "Binocular_Vector"]];
 

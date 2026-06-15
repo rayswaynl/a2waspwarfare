@@ -575,19 +575,52 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 	};
 } forEach [[_present_east, east, _startE],[_present_west, west, _startW]];
 
+//--- GUER "Insurgents" player faction team-registration + economy (gated on WFBE_C_GUER_PLAYERSIDE).
+//--- The 4 RESISTANCE player slots are synced to LocationLogicOwnerGuer (WFBE_L_GUE); register each as a
+//--- zero-fund harass team (stipend, not commander economy), then start the GUER economy loop.
+if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNil "WFBE_L_GUE"}) then {
+	private ["_guerLogic","_guerTeams","_group"];
+	_guerLogic = missionNamespace getVariable "WFBE_L_GUE";
+	if (!(isNull _guerLogic)) then {
+		_guerTeams = [];
+		{
+			if (!(isNull _x) && {_x isKindOf "Man"}) then {
+				_group = group _x;
+				[_guerTeams, _group] Call WFBE_CO_FNC_ArrayPush;
+				_group setVariable ["wfbe_funds", 0, true];
+				_group setVariable ["wfbe_side", "GUER"];
+				_group setVariable ["wfbe_persistent", true];
+				_group setVariable ["wfbe_queue", []];
+				_group setVariable ["wfbe_vote", -1, true];
+				[_group, false] Call SetTeamAutonomous;
+				[_group, ""] Call SetTeamRespawn;
+				[_group, -1] Call SetTeamType;
+				[_group, "towns"] Call SetTeamMoveMode;
+				[_group, [0,0,0]] Call SetTeamMovePos;
+				["INITIALIZATION", Format ["Init_Server.sqf: GUER player team [%1] initialized.", _group]] Call WFBE_CO_FNC_LogContent;
+			};
+		} forEach (synchronizedObjects _guerLogic);
+		_guerLogic setVariable ["wfbe_teams", _guerTeams, true];
+		_guerLogic setVariable ["wfbe_teams_count", count _guerTeams];
+		[] execVM "Server\Server_GuerStipend.sqf";
+	} else {
+		["WARNING", "Init_Server.sqf: WFBE_L_GUE is null - GUER player teams not initialized (LocationLogicOwnerGuer missing in mission.sqm?)."] Call WFBE_CO_FNC_LogContent;
+	};
+};
+
 //--- EDITOR-SLOT TAGGING (2026-06-15): the 27 WEST + 27 EAST editor-placed player-slot groups in
 //--- mission.sqm are born by the engine at load with no createGroup, so WFBE_CO_FNC_CreateGroup never
 //--- tags them and they show as "untagged" in the server_groupsGC per-source audit - indistinguishable
 //--- from genuinely leaked groups. One-shot sweep tagging every still-untagged WEST/EAST group as
 //--- "editor-player-slot" (broadcast). They already carry wfbe_persistent=true (set above) so the GC
 //--- never reaps them; this is audit-only. The isNil guard skips any runtime group the wrapper already
-//--- tagged. GUER has 0 editor slots so resistance is intentionally excluded.
+//--- tagged. GUER's 4 player-slot editor groups are now included so they tag as editor-player-slot too.
 if (isNil "WFBE_EDITOR_GROUPS_TAGGED") then {
 	missionNamespace setVariable ["WFBE_EDITOR_GROUPS_TAGGED", true];
 	{
 		Private ["_src"];
 		_src = _x getVariable "wfbe_group_src";
-		if (isNil "_src" && {(side _x == west) || (side _x == east)}) then {
+		if (isNil "_src" && {(side _x == west) || (side _x == east) || (side _x == resistance)}) then {
 			_x setVariable ["wfbe_group_src", "editor-player-slot", true];
 		};
 	} forEach allGroups;
