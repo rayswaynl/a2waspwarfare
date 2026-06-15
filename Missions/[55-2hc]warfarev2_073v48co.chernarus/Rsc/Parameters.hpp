@@ -566,4 +566,21 @@
 		default = 0;
 	};
 
+	// 2026-06-15 (Net_2 request): per-client FPS telemetry for the staged-deploy day/night perf study.
+	// When ON, each player client periodically reports its avg/min FPS to the server, which logs each
+	// sample tagged with the day/night cycle mode + in-game time so day-vs-night and cycle ON-vs-OFF
+	// can be compared from the RPT. Off by default; flip it in the admin lobby for the data-gathering run.
+	class WFBE_C_CLIENT_FPS_REPORT {
+		title = "Client FPS telemetry";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
+	class WFBE_C_CLIENT_FPS_REPORT_INTERVAL {
+		title = "Client FPS telemetry interval";
+		values[] = {15,30,60,120,300};
+		texts[] = {"15 Seconds","30 Seconds","60 Seconds","2 Minutes","5 Minutes"};
+		default = 60;
+	};
+
 };

@@ -1016,4 +1016,8 @@ CLIENT_INIT_READY = player;
 
 publicVariableServer "CLIENT_INIT_READY";
 
+//--- Client FPS telemetry (staged-deploy day/night perf study, 2026-06-15). Self-gates on the
+//--- WFBE_C_CLIENT_FPS_REPORT lobby param; players only. Reports avg/min FPS to the server.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_FpsReport.sqf";
+
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

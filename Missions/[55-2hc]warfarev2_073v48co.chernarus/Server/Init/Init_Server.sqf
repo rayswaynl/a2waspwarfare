@@ -630,6 +630,32 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 [] ExecVM "Server\FSM\server_groupsGC.sqf";
 ["INITIALIZATION", "Init_Server.sqf: Group GC is defined."] Call WFBE_CO_FNC_LogContent;
 
+//--- Client FPS telemetry receiver (staged-deploy day/night perf study, 2026-06-15, Net_2 request).
+//--- Each PLAYER client publishes [uid, name, avgFps, minFps] every WFBE_C_CLIENT_FPS_REPORT_INTERVAL s
+//--- when the WFBE_C_CLIENT_FPS_REPORT lobby param is ON. We stamp it server-side with what the client
+//--- can't cheaply know - live player count, day/night MODE + current in-game time/sun - so the RPT can
+//--- be bucketed day-vs-night and day/night-cycle ON-vs-OFF. Raw diag_log so it lands regardless of
+//--- LOG_CONTENT_STATE; the lobby param is the single on/off gate. Name is logged LAST so a '|' in a
+//--- player name can't corrupt the earlier pipe-delimited fields.
+if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
+	"WFBE_FPS_REPORT" addPublicVariableEventHandler {
+		private ["_d", "_players"];
+		_d = _this select 1;
+		_players = { isPlayer _x } count playableUnits;
+		diag_log ("FPSREPORT|v1|uid=" + str (_d select 0)
+			+ "|fps=" + str (_d select 2)
+			+ "|fpsMin=" + str (_d select 3)
+			+ "|players=" + str _players
+			+ "|dnMode=" + str (missionNamespace getVariable ["WFBE_DAYNIGHT_ENABLED", 1])
+			+ "|daytime=" + str (round (daytime * 100) / 100)
+			+ "|sun=" + str (round (sunOrMoon * 100) / 100)
+			+ "|srvFps=" + str (round diag_fps)
+			+ "|t=" + str (round (time / 60))
+			+ "|name=" + (_d select 1));
+	};
+	["INITIALIZATION", "Init_Server.sqf: Client FPS telemetry receiver armed (WFBE_C_CLIENT_FPS_REPORT=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 /////////////////////////////////////////////////////////////////////////////////// map cleaners
 
 // weaponholder cleaner
