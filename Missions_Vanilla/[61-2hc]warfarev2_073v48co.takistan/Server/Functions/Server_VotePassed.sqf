@@ -37,6 +37,12 @@ Private ["_voteType","_side","_d","_overcast","_rain",
 _voteType = _this select 0;
 _side     = _this select 1;
 
+//--- G9: fire-once guard. RequestVote (early pass) and Server_VoteWatcher (window end) both Spawn this,
+//--- and Spawn defers execution, so a 2nd passing-YES or the watcher could double-fire the round-ending
+//--- action. The first instance clears WFBE_VOTE_STATE synchronously below (before its sleep), so any
+//--- later instance sees empty state and bails. State-based (no separate latch that could leak on throw).
+if (isNil "WFBE_VOTE_STATE" || {count WFBE_VOTE_STATE == 0}) exitWith {};
+
 //--- Clear vote state immediately (prevents watcher from double-firing).
 WFBE_VOTE_STATE  = [];
 WFBE_VOTE_VOTERS = [];
