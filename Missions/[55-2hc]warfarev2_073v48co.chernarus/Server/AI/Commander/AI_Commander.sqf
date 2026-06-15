@@ -162,7 +162,7 @@ while {!gameOver} do {
 			_fTeams = 0;
 			{
 				if (!isNull _x) then {
-					if ((_x getVariable ["wfbe_aicom_hc", false]) || {_x getVariable ["wfbe_aicom_founded", false]}) then {
+					if (([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) || {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {
 						_fTeams = _fTeams + 1;
 					};
 				};
@@ -252,7 +252,7 @@ while {!gameOver} do {
 		_fTeams = 0; _eTeams = 0;
 		{
 			if (!isNull _x) then {
-				if ((_x getVariable ["wfbe_aicom_hc", false]) || {_x getVariable ["wfbe_aicom_founded", false]}) then {
+				if (([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) || {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {
 					_fTeams = _fTeams + 1;
 				} else {
 					if ((count units _x) > 0 && {!isPlayer (leader _x)} && {alive (leader _x)}) then {_eTeams = _eTeams + 1};
@@ -313,8 +313,8 @@ while {!gameOver} do {
 		_cmdrTpl = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", str _side], []];
 		{
 			if (!isNull _x) then {
-				_isHc = _x getVariable ["wfbe_aicom_hc", false];
-				_isFounded = _x getVariable ["wfbe_aicom_founded", false];
+				_isHc = [_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool;
+				_isFounded = [_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool;
 				if (_isHc) then {_hcTeams = _hcTeams + 1};
 				_ldr = leader _x;
 				if (_isFounded && {!_isHc} && {!isNull _ldr} && {local _ldr}) then {_srvTeams = _srvTeams + 1};

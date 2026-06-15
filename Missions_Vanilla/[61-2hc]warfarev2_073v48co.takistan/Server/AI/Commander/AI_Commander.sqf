@@ -162,7 +162,7 @@ while {!gameOver} do {
 			_fTeams = 0;
 			{
 				if (!isNull _x) then {
-					if ((_x getVariable ["wfbe_aicom_hc", false]) || {_x getVariable ["wfbe_aicom_founded", false]}) then {
+					if (([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) || {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {
 						_fTeams = _fTeams + 1;
 					};
 				};
@@ -252,7 +252,7 @@ while {!gameOver} do {
 		_fTeams = 0; _eTeams = 0;
 		{
 			if (!isNull _x) then {
-				if ((_x getVariable ["wfbe_aicom_hc", false]) || {_x getVariable ["wfbe_aicom_founded", false]}) then {
+				if (([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) || {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {
 					_fTeams = _fTeams + 1;
 				} else {
 					if ((count units _x) > 0 && {!isPlayer (leader _x)} && {alive (leader _x)}) then {_eTeams = _eTeams + 1};
