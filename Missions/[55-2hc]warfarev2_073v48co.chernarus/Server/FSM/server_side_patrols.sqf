@@ -30,7 +30,7 @@ while {!WFBE_GameOver} do {
 		_side = _x;
 		_sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 		//--- GUER GROUP-CONDENSE (task #12): defender/resistance gets a lower concurrent patrol cap.
-		_maxSide = if (_side == WFBE_DEFENDER) then {missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_DEFENDER", _max]} else {_max};
+		_maxSide = if (_side == WFBE_DEFENDER) then {if (({(_x getVariable "sideID") == _sideID} count towns) < 20) then {2} else {missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_DEFENDER", 1]}} else {_max};
 		_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _logik) then {
 			_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
@@ -50,6 +50,10 @@ while {!WFBE_GameOver} do {
 					if (!isNull _hq && count _owned > 0) then {
 						_home = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity;
 						_tier = switch (_lvl) do {case 1: {"LIGHT"}; case 2: {"MEDIUM"}; default {"HEAVY"}};
+						//--- B36 (Ray 2026-06-15): GUER patrols = a MECHANIZED insurgent COMEBACK force. Always mounted
+						//--- (min MEDIUM = SPG-9 technical); the FEWER towns GUER holds the BETTER the patrol - at <=2 towns
+						//--- they field HEAVY (BRDM-2 armor + AT/AA). Owned-town-count scaled, gated to the defender side.
+						if (_side == WFBE_DEFENDER) then {_tier = if (count _owned < 20) then {"HEAVY"} else {"MEDIUM"}};
 						_pool = missionNamespace getVariable Format["WFBE_%1_PATROL_%2", _side, _tier];
 						if (!isNil "_pool" && {count _pool > 0}) then {
 							_template = _pool select floor(random count _pool);

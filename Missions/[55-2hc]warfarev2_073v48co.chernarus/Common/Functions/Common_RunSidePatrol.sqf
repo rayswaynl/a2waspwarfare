@@ -60,6 +60,23 @@ if (isNull _team || {count _units == 0}) exitWith {
 _team allowFleeing 0;
 _team setVariable ["WFBE_SidePatrol", true, false];
 
+//--- B36 (Ray 2026-06-15): fewer GUER patrols, but the ones that DO move are MORE DANGEROUS.
+//--- Max the combat skill of GUER (resistance) patrol units - sharper aim, spots farther, never
+//--- flees - so a lone GUER patrol is a real threat. Gated to the resistance side so WEST/EAST
+//--- patrols are unchanged. Tunable via WFBE_C_SIDE_PATROL_GUER_SKILL (default 0.92).
+if (_side == resistance) then {
+	private ["_pskill","_gt"]; _gt = {!isNull _x && {(_x getVariable ["sideID",-1]) == 2}} count towns; _pskill = ((missionNamespace getVariable ["WFBE_C_SIDE_PATROL_GUER_SKILL", 0.85]) + (0.03 * (6 - (_gt min 6)))) min 1;
+	{
+		if (!isNull _x && {alive _x}) then {
+			_x setSkill _pskill;
+			_x setSkill ["aimingAccuracy", ((0.78 + (0.03 * (6 - (_gt min 6)))) min 0.95)];
+			_x setSkill ["spotDistance", 1];
+			_x setSkill ["spotTime", 1];
+			_x setSkill ["courage", 1];
+		};
+	} forEach _units;
+};
+
 _ldr = leader _team;
 if (isServer) then {
 	["sidepatrol-started", _sideID, _ldr] Call HandleSpecial;

@@ -574,7 +574,7 @@
 		title = "Client FPS telemetry";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1;
 	};
 	class WFBE_C_CLIENT_FPS_REPORT_INTERVAL {
 		title = "Client FPS telemetry interval";
