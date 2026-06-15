@@ -292,6 +292,16 @@ while {!WFBE_GameOver} do {
 					};
 				};
 			} else {
+				//--- B36 (Ray 2026-06-15): capturing a GUER town as WEST/EAST grants NO inherited statics -
+				//--- delete the GUER-era emplacements so the captor cannot turtle behind them. GUER keeps its
+				//--- statics (recapture re-spawns them via ManageTownDefenses; the WEST/EAST path never calls it).
+				if (_sideID == WFBE_C_GUER_ID) then {
+					{
+						private "_def"; _def = _x getVariable "wfbe_defense";
+						if (!isNil "_def" && {!isNull _def}) then {deleteVehicle _def};
+						_x setVariable ["wfbe_defense", nil];
+					} forEach (_location getVariable ["wfbe_town_defenses", []]);
+				};
 				//--- Owned (west/east) town: lazy garrison per FINAL spec.
 				//--- Step 2: T+60s spawn exactly 1 owner-side infantry squad as mop-up detail.
 				//--- Step 3: Squad auto-despawns when no GUER/resistance detected for 2 consecutive 30s scans.

@@ -121,7 +121,11 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	//--- Drive only if AI-controllable (no human, or human delegated this team) AND the executor doesn't own it.
 	if (_aliveCount > 0) then {
 		if (!isPlayer (leader _team)) then {
-			if (!_humanCmd) then {_canDrive = true};
+			//--- B36 (Ray 2026-06-15) #3b: the AI drives its OWN (non-player-led) HQ teams even while a
+			//--- human is commander, so they never sit idle and keep capturing towns. A team the human has
+			//--- explicitly ordered (move/patrol/defense) is preserved by the !_explicitMode gate below,
+			//--- so this only auto-tasks the teams the human is not actively commanding.
+			_canDrive = true;
 			if (_autonomous) then {_canDrive = true};
 		};
 	};

@@ -120,6 +120,8 @@ with missionNamespace do {
 	WFBE_C_AI_COMMANDER_BASE_INTERVAL = 60;    //--- V0.2: base worker cadence (HQ deploy -> doctrine build order -> defenses).
 	WFBE_C_AI_COMMANDER_TEAMS_INTERVAL = 90;   //--- V0.2: team-founding cadence.
 	WFBE_C_AI_COMMANDER_TEAMS_TARGET = 2;      //--- B36 (Ray 2026-06-15): HALVED 4->2 to cut HC saturation + group count. With MAX_EXTRA 1 the founding cap is 3 teams/side (was 6); teams stay big via AI_MAX 12. Rollback: 4.
+	//--- B36 (Ray 2026-06-15): seconds with NO human commander (from start, re-armed when a human leaves) before the AI builds/spends.
+	WFBE_C_AI_COMMANDER_BUILD_GRACE = 300;
 	WFBE_C_AI_COMMANDER_TEAMS_MAX_EXTRA = 1;   //--- B36 (Ray 2026-06-15): TARGET(2)+MAX_EXTRA(1) = 3 teams/side cap, HALVED from B35's 6, to relieve HC saturation (HCs hit 20 fps at ~192 units). Teams stay big via AI_MAX 12. Rollback: 2.
 	WFBE_C_AI_COMMANDER_DEFENSES_MAX = 4;      //--- V0.2: manned base statics the AI places around its HQ.
 	if (isNil "WFBE_C_AICOM_AIR_MIN_TOWNS") then {WFBE_C_AICOM_AIR_MIN_TOWNS = 4}; //--- Aircraft are deferred until the AI holds this many towns (it flies poorly; air is a late, established-only asset). 0 = no gate.

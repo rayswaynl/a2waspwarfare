@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni"];
+private ["_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendMaxTime","_dual","_tickUniKey","_tickUni","_noHumanSince","_canBuild"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -75,6 +75,7 @@ _cbrResearchAppended = false; //--- Tracks whether CBR research was reactively a
 //--- V0.7 bootstrap stipend state.
 _prevStipendActive = false;
 _ltStipend = -1e9;
+_noHumanSince = -1;
 
 ["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1.", str _side]] Call WFBE_CO_FNC_AICOMLog;
 
@@ -110,6 +111,16 @@ while {!gameOver} do {
 		};
 		_prevHuman = _humanCmd;
 
+		//--- B36 (Ray 2026-06-15) #3a: build-grace tracker. _noHumanSince = when the side last became
+		//--- human-commander-less (-1 while a human commands). The AI builds only after the grace window
+		//--- with no human commander - from match start, re-armed each time a human commander leaves.
+		if (_humanCmd) then {
+			_noHumanSince = -1;
+		} else {
+			if (_noHumanSince < 0) then {_noHumanSince = time};
+		};
+		_canBuild = (_noHumanSince >= 0) && {(time - _noHumanSince) >= (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_BUILD_GRACE", 300])};
+
 		//--- Lifecycle log + running flag (full command only; income routes to aicom_funds only with no human).
 		_state = if (_humanCmd) then {"assist"} else {"full"};
 		if (_state != _prevState) then {
@@ -127,8 +138,10 @@ while {!gameOver} do {
 			(_side) Call WFBE_SE_FNC_AI_Com_AssignTowns; _ltTown = time;
 		};
 
-		//--- Economy: full command only (rule A - AI never spends under a human commander).
-		if (!_humanCmd) then {
+		//--- Economy/build: full command AND only after the build-grace window (#3a, Ray 2026-06-15).
+		//--- rule A still holds (no AI spend under a human); the AI also waits the build-grace with no
+		//--- human commander (from start, re-armed when a human leaves) before it starts building.
+		if (_canBuild) then {
 			//--- V0.5: war strategy (spearheads, town relief, HQ strike, artillery).
 			if (time - _ltStrat > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60])) then {
 				(_side) Call WFBE_SE_FNC_AI_Com_Strategy; _ltStrat = time;
