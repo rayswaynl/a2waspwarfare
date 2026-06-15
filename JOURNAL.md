@@ -44,14 +44,39 @@ Source: OCD deploy-planning thread (Marty / Zwanon / Net_2). Scope = 4 items + a
 - Takistan (`Missions_Vanilla/[61-2hc]...takistan`) is well behind Chernarus on this branch — needs a full
   `SERVER_DEBUG` regen before any release cut, independent of the FPS work.
 
-### Workstream B (Miksuu site — SEPARATE design gate)
-- Target = `miksuus-warfare/web` (Next.js 14 App Router, Tailwind, Drizzle+Postgres, PM2 on Game PC :3010).
-- There's ALREADY an RPT→site telemetry pattern: server emits `PLAYERSTAT|`/`GRPEMPTY|`/`group audit [SIDE] N/144`/
-  `DELEGSTAT|`/`ORBATSTAT|`/`TOWNSTAT|` → (RPT-tail producer) → `POST /api/stats` → Postgres → `/leaderboard`.
-  Faction/group view extends this: new `group_snapshots` table + ingest of the group-audit lines + a
-  `/leaderboard/factions` view (no chart lib yet — add one).
-- "the NEXT page" = NOT the Mini-PC dashboard (wrong guess); it's a page on the Miksuu site. Explore's best
-  guess `/known-bugs` — **CONFIRM with Steff before deleting.** Then visuals/perf pass on remaining pages.
+### Workstream B (Hetzner live-stats dashboard) — CORRECTED TARGET + ACCESS
+- **NOT the Miksuu Next.js site, NOT dashboard-v4.** It's the bespoke live-stats SPA at
+  **http://78.46.107.142:8080/** ("Miksuu's Warfare — Live Server Stats"), served from the **Hetzner box**.
+- **Access**: box = Windows, SSH/RDP as `Administrator` (Posh-SSH password auth from Main PC; key auth NOT
+  set up). Scratch = `C:\WASP`. (pw in [[miksuu-hetzner-test-server]] memory.)
+- **Source (box-only, NOT in any repo)** — pulled to `C:\Users\Steff\miksuu-dashboard-work\`:
+  - `Serve-PublicStats.ps1` — HttpListener :8080 (http.sys → PID 4 System); serves whitelist from `C:\WASP\web`:
+    index.html, stats.json, next-stats.json, next-changelog.json. Scheduled task `WaspStatsWeb` (ONSTART, SYSTEM).
+  - `Update-PublicStats.ps1` (85 KB) — RPT parser + `stats.json` generator (parses AICOMSTAT/ORBATSTAT/DELEGSTAT/
+    `group audit`/WASPSTAT). `-MissionLabel WASP|NEXT`.
+  - `C:\WASP\web\index.html` (80 KB) — the front-end (tabs + JS), fed by `stats.json` (135 KB aggregate).
+- **"the NEXT page" = the `NEXT / V2` tab** (dev diagnostic for the V2 branch; currently DOWN/NaN).
+  index.html anchors: nav btn L185, panel `#tab-nextv2` L364-448, JS L1061-1229, `renderTab` L1254,
+  fetches `/next-stats.json` + `/next-changelog.json`.
+- **Plan (FULL, approved)**:
+  1. Remove NEXT/V2 tab (nav+panel+JS+polling); drop `renderTab` nextv2 branch.
+  2. Add "Force & Group Health" to Overview (after Order of Battle L255): per-side W/E/G group **n/144**
+     cap gauge (amber≥130 red≥144) + empty/leaked groups (`GRPEMPTY`) + delegation% — the group-limitation
+     analysis made public. Data already partly present (`c.groups.west/east/guer`, L843); add a
+     `groupHealth` object to `Update-PublicStats.ps1` from `group audit [SIDE] N/144` + `GRPEMPTY|` parsing.
+  3. Visuals/perf: favicon 404 fix; faction-gauge styling; audit Benchmarks/Balance/Top Players tabs.
+  4. Later: surface client `FPSREPORT` (Workstream A) as a day-vs-night panel once it deploys.
+- **Deploy**: zero game impact (web task only); back up index.html + Update-PublicStats.ps1 on box (.bak),
+  push, restart `WaspStatsWeb`, verify live via browser. Respect [[hetzner-deploy-consent-policy]].
+- **DEPLOYED & LIVE 2026-06-15** on the box (`C:\WASP\web\index.html` + `C:\WASP\Update-PublicStats.ps1`,
+  `.bak-claude-*`/`.bak-v2pre-*` kept). NEXT/V2 tab removed; "Force & Group Health" live with real data
+  (W/E/G n/144 gauges + GC footer reaped/emptyFound from `GCSTAT|v1|` 60s). Generator parse-checked +
+  unit-tested; front-end validated headless (0 console errors). NOTE the ~2-min publish-delay buffer:
+  a freshly-deployed field reads null for ~2-3 min before the buffer catches up (not a bug). Source +
+  access documented in [[miksuu-live-stats-dashboard]] memory. Local working copy: `miksuu-dashboard-work/`.
+- **STILL OPEN (part of "full plan")**: visuals/perf pass on the Benchmarks / Balance / Top Players tabs
+  (only Overview + favicon done so far); and surfacing the Workstream-A client `FPSREPORT` as a
+  day-vs-night panel once that mission build deploys to the live server.
 
 ---
 

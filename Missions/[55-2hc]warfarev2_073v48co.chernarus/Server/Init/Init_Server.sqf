@@ -639,13 +639,17 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 //--- player name can't corrupt the earlier pipe-delimited fields.
 if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 	"WFBE_FPS_REPORT" addPublicVariableEventHandler {
-		private ["_d", "_players"];
+		private ["_d", "_players", "_hc"];
 		_d = _this select 1;
 		_players = { isPlayer _x } count playableUnits;
+		//--- hc= the live headless-client count (registry filtered to non-null, alive-leader HCs), so the
+		//--- planned 0-HC / 1-HC / 2-HC comparison days bucket cleanly even when an RPT spans several launches.
+		_hc = { !isNull _x && {!isNull leader _x} && {alive leader _x} } count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 		diag_log ("FPSREPORT|v1|uid=" + str (_d select 0)
 			+ "|fps=" + str (_d select 2)
 			+ "|fpsMin=" + str (_d select 3)
 			+ "|players=" + str _players
+			+ "|hc=" + str _hc
 			+ "|dnMode=" + str (missionNamespace getVariable ["WFBE_DAYNIGHT_ENABLED", 1])
 			+ "|daytime=" + str (round (daytime * 100) / 100)
 			+ "|sun=" + str (round (sunOrMoon * 100) / 100)
