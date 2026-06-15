@@ -83,9 +83,10 @@ while {alive player && dialog} do {
 
 				//--- AI Commander donation path.
 				if (_aicom_row >= 0 && {_ui_lnb_currow == _aicom_row}) then {
-					//--- Debit client wallet optimistically (matches existing player-to-player pattern);
-					//--- server will debit the team and credit the AI wallet authoritatively.
-					-(_funds_transfering) Call WFBE_CL_FNC_ChangeClientFunds;
+					//--- E2 fix: server is authoritative. RequestAIComDonate debits the team (wfbe_funds) AND credits
+					//--- the AI wallet. The client-side optimistic debit was REMOVED: that helper resolves to
+					//--- ChangeTeamFunds on the SAME group (clientTeam), so client + server were two relative
+					//--- -amount writes that compounded to -2x (donor over-charged, money destroyed).
 					["RequestAIComDonate", [player, clientTeam, _funds_transfering]] Call WFBE_CO_FNC_SendToServer;
 					_funds = Call WFBE_CL_FNC_GetClientFunds;
 					_last_update = -1;
