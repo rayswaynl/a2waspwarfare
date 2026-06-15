@@ -266,6 +266,11 @@ if (_myActionID >= 0) then {
 	_building setVariable [_myActionKey, -1];
 };
 
+//--- E1: was this slot CANCELLED during its build? Action_CancelQueue removed _unique from the queue,
+//--- already decremented unitQueu + WFBE_C_QUEUE_<factory>, and refunded the price. Bail WITHOUT spawning
+//--- (else the player keeps BOTH the refund AND the unit) and WITHOUT re-touching the counters (the cancel
+//--- already balanced them). _qIdx (queue index just after sleep) == -1 means no longer queued => cancelled.
+if (_qIdx < 0) exitWith {};
 _group = group player;
 _spawnedUnits = [];
 if (!alive _building || isNull _building) exitWith {
