@@ -21,7 +21,7 @@
 */
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) == 0) exitWith {};
 
-Private ["_unit","_fpos","_firingSide","_opposingSideKey","_cbrs","_i","_cbr","_r","_upgs","_lvl","_lastPing","_d","_t","_h","_tStr","_markerPos","_pkt","_aliveCbrs","_opposingLogik","_fireMissCount"];
+Private ["_unit","_fpos","_firingSide","_opposingSideKey","_cbrs","_i","_cbr","_r","_upgs","_lvl","_lastPing","_d","_t","_h","_tStr","_markerPos","_pkt","_aliveCbrs","_opposingLogik","_fireMissCount","_missWindow","_lastMiss"];
 
 _unit  = _this select 0;
 _fpos  = _this select 1;
@@ -35,8 +35,17 @@ if ((time - _lastPing) < 10) exitWith {};
 //--- The OPPOSING side is the one whose AI threat flag we want to arm (they are under fire).
 _opposingLogik = (if (_firingSide == west) then {east} else {west}) Call WFBE_CO_FNC_GetSideLogic;
 if (!isNil "_opposingLogik") then {
-	_fireMissCount = _opposingLogik getVariable ["wfbe_aicom_enemy_arty_fire_count", 0] + 1;
-	_opposingLogik setVariable ["wfbe_aicom_enemy_arty_fire_count", _fireMissCount];
+	//--- E6: count distinct fire MISSIONS, not shells/guns. The per-unit wfbe_cbr_lastping limit above only
+	//--- triggers when an enemy CBR actually detected (line ~73) and is per-gun, so a multi-gun salvo / any
+	//--- fire with no CBR in range bumped this once per shell and armed after ONE mission. Gate to once/side/window.
+	_missWindow    = missionNamespace getVariable ["WFBE_C_CBR_FIRE_MISSION_WINDOW", 30];
+	_lastMiss      = _opposingLogik getVariable ["wfbe_aicom_enemy_arty_lastmiss", -99];
+	_fireMissCount = _opposingLogik getVariable ["wfbe_aicom_enemy_arty_fire_count", 0];
+	if ((time - _lastMiss) >= _missWindow) then {
+		_opposingLogik setVariable ["wfbe_aicom_enemy_arty_lastmiss", time];
+		_fireMissCount = _fireMissCount + 1;
+		_opposingLogik setVariable ["wfbe_aicom_enemy_arty_fire_count", _fireMissCount];
+	};
 	//--- Arm threat flag when >= 3 fire missions observed (condition b).
 	if (_fireMissCount >= 3 && {!(_opposingLogik getVariable ["wfbe_aicom_arty_threat", false])}) then {
 		_opposingLogik setVariable ["wfbe_aicom_arty_threat", true];
