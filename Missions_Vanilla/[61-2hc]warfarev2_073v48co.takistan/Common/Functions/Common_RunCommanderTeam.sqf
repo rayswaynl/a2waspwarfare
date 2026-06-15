@@ -15,7 +15,7 @@
 
 Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team","_retVal","_units","_vehicles","_ldr","_alive","_order","_seq","_lastSeq","_mode","_dest","_arrived",
          "_captureDone","_townObj","_townCamps","_campObj","_campRange",
-         "_liveUnits","_dismounted","_veh","_u","_settleTimeout","_hasCargo"];
+         "_liveUnits","_dismounted","_veh","_u","_settleTimeout","_hasCargo","_skillSend"];
 
 _sideID = _this select 0;
 _template = _this select 1;
@@ -41,6 +41,17 @@ if (isNull _team || {((count _units) + (count _vehicles)) == 0}) exitWith {
 };
 
 _team allowFleeing 0;
+
+//--- W7 "Veteran Company" skill boost: optional 4th delegate arg (0/absent = default skill). Only the
+//--- AICOM-Teams HC dispatch (delegate-aicom-team) sends it (0.85 when the veteran flag was set, else 0);
+//--- the W6/W19 server-local 3-arg calls omit it, so guard on count. AI-only; _units are local on the
+//--- founding HC/server. typeName guard (not A3 isEqualType) keeps this A2 OA safe. [needs live verification]
+if (count _this > 3) then {
+	_skillSend = _this select 3;
+	if (typeName _skillSend == "SCALAR" && {_skillSend > 0}) then {
+		{_x setSkill _skillSend} forEach _units;
+	};
+};
 _team setVariable ["wfbe_aicom_hc", true, true];   //--- brain: do not Produce/waypoint this one directly.
 _team setVariable ["wfbe_queue", [], false];
 
