@@ -143,12 +143,47 @@ if (_wasLeader) then {(group _newUnit) selectLeader _newUnit};
 //--- swapGrp is now empty (new unit moved to _oldGrp above); clean it up.
 if (count units _swapGrp == 0) then {deleteGroup _swapGrp};
 
-//--- Delete old unit.
-diag_log format ["[WFBE (SKIN)] B5 deleteVehicle old unit %1", _oldUnit];
-deleteVehicle _oldUnit;
+//--- DUPLICATE-SOLDIER FIX 2026-06-15:
+//--- In A2/OA, selectPlayer does NOT destroy the previous body — _oldUnit becomes a
+//--- LIVING AI unit standing where the player was. The previous code deleteVehicle'd
+//--- it in the SAME frame as selectPlayer, before the engine finished detaching the
+//--- player from _oldUnit; that delete is unreliable mid-transition, so the old body
+//--- survived as the duplicate soldier next to the player. Fix:
+//---   1) Immediately neutralise the old body so it can never be seen/acted-on during
+//---      the settle window: hideObject (invisible), enableSimulation false (can't
+//---      shoot/move and won't ragdoll or fire a Killed EH chain), disableAI (belt),
+//---      and sink it far below ground so it is gone visually the instant we swap.
+//---   2) Pause to let selectPlayer fully complete BEFORE deleting (settle moved to the
+//---      correct side of the delete).
+//---   3) deleteVehicle, then re-check and re-delete if the engine deferred the first
+//---      delete — guarantees a single active body remains.
+if (!isNull _oldUnit) then {
+	_oldUnit hideObject true;
+	_oldUnit enableSimulation false;
+	{_oldUnit disableAI _x} forEach ["MOVE","ANIM","FSM","TARGET","AUTOTARGET"];
+	_oldUnit setPosATL [(_pos select 0), (_pos select 1), -500]; //--- sink out of sight as a belt-and-braces measure
+};
 
-//--- Brief pause to let the engine settle before re-adding EHs.
+//--- Brief pause to let the engine settle the player transition BEFORE deleting.
 sleep 0.5;
+
+//--- Delete old unit (now safely detached from the player).
+diag_log format ["[WFBE (SKIN)] B5 deleteVehicle old unit %1 (alive=%2)", _oldUnit, alive _oldUnit];
+if (!isNull _oldUnit) then {deleteVehicle _oldUnit};
+
+//--- Safety net: if the engine deferred the delete (A2/OA mid-transition quirk), the
+//--- body can survive the first deleteVehicle. Re-check next frame and force-delete.
+if (!isNull _oldUnit) then {
+	[_oldUnit] spawn {
+		Private ["_o"];
+		_o = _this select 0;
+		sleep 0.5;
+		if (!isNull _o && {_o != player}) then {
+			diag_log format ["[WFBE (SKIN)] B5b residual old body survived first delete — force deleteVehicle %1", _o];
+			deleteVehicle _o;
+		};
+	};
+};
 
 //--- Re-add Killed EH (mirrors Init_Client.sqf:771).
 WFBE_PLAYERKEH = player addEventHandler ["Killed", {[_this select 0, _this select 1] Spawn WFBE_CL_FNC_OnKilled; [_this select 0, _this select 1, sideID] Spawn WFBE_CO_FNC_OnUnitKilled}];

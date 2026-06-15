@@ -333,6 +333,27 @@ while {!gameOver} do {
 		_upt = 0;
 		if (_foundedN > 0) then {_upt = (round ((_aliveSum / _foundedN) * 10)) / 10};
 		diag_log ("CMDRSTAT|v1|" + (str _side) + "|" + str _elMin + "|srvTeams=" + str _srvTeams + "|hcTeams=" + str _hcTeams + "|foundedTeams=" + str _foundedN + "|unitsPerTeam=" + str _upt + "|remnants=" + str _remnants);
+
+		//--- COMBATSTAT (claude-gaming 2026-06-15): periodic per-side combat-attrition delta from the
+		//--- FREE cumulative counters WF_Logic already maintains (Common_UpdateStatistics writes
+		//--- <STR_SIDE>Casualties / <STR_SIDE>VehiclesLost on every death via RequestOnUnitKilled:162,
+		//--- and <STR_SIDE>UnitsCreated on every spawn path). Only the per-EVENT WASPSTAT|KILL line
+		//--- existed (gated, one row/kill) - there was NO periodic per-side attrition summary, so the
+		//--- A/B ledger could not see exchange/bleed rate without replaying every KILL row. We read the
+		//--- free counters with the SAME str-side key the writers use, cache a prev on the side logic
+		//--- (exactly the ECONOMY prevFunds/prevSupply pattern), and emit cumulative + net-this-window.
+		//--- Pure read of existing counters = ZERO new scan; one diag_log per side on the 300s _ltStat cadence.
+		private ["_csCas","_csVeh","_csMade","_pCasK","_pVehK","_pMadeK","_pCas","_pVeh","_pMade","_dCas","_dVeh","_dMade"];
+		_csCas  = WF_Logic getVariable [Format ["%1Casualties",    str _side], 0];
+		_csVeh  = WF_Logic getVariable [Format ["%1VehiclesLost",  str _side], 0];
+		_csMade = WF_Logic getVariable [Format ["%1UnitsCreated",  str _side], 0];
+		_pCasK = "wfbe_combat_prevcas"; _pVehK = "wfbe_combat_prevveh"; _pMadeK = "wfbe_combat_prevmade";
+		_pCas = _logik getVariable [_pCasK, -1]; _pVeh = _logik getVariable [_pVehK, -1]; _pMade = _logik getVariable [_pMadeK, -1];
+		if (_pCas >= 0) then {
+			_dCas = _csCas - _pCas; _dVeh = _csVeh - _pVeh; _dMade = _csMade - _pMade;
+			diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|COMBATSTAT|cas=" + str _csCas + "|vehLost=" + str _csVeh + "|made=" + str _csMade + "|netCas=" + str _dCas + "|netVehLost=" + str _dVeh + "|netMade=" + str _dMade);
+		};
+		_logik setVariable [_pCasK, _csCas]; _logik setVariable [_pVehK, _csVeh]; _logik setVariable [_pMadeK, _csMade];
 	};
 
 	//--- SRVPERF (claude-gaming 2026-06-13): server-global perf line for the legacy-vs-next A/B
@@ -357,6 +378,34 @@ while {!gameOver} do {
 		_gbWarn = missionNamespace getVariable ["WFBE_C_GROUP_BUDGET_WARN", 125];
 		if (_gbMax >= _gbWarn) then {
 			diag_log ("GRPBUDGET|v1|WARN|" + str (round (time / 60)) + "|near-cap max=" + str _gbMax + "/144 warn=" + str _gbWarn + " (west=" + str _gbW + " east=" + str _gbE + " guer=" + str _gbG + ")");
+		};
+
+		//--- HCDELEG (claude-gaming 2026-06-15): SERVER-AUTHORITATIVE per-HC owned-unit load + imbalance
+		//--- ratio (task #34). CMDRSTAT only has the AGGREGATE hcTeams count; HCSTAT|v1 is HC-SELF-REPORTED
+		//--- (if an HC freezes, its report silently stops and you cannot tell an overloaded HC from a dead
+		//--- one). The SERVER already knows the truth: routing is by `owner (leader hcGroup)`, so we bucket
+		//--- allUnits by owner ONCE - the SAME single-pass tally Server_PickLeastLoadedHC:45-56 runs on every
+		//--- delegation - and emit per-HC counts + max/min imbalance. Independent of HC health. Fires once
+		//--- per 300s on the server-global SRVPERF/GRPBUDGET wfbe_srvperf_t throttle (one tally per window,
+		//--- not per side, not per delegation): O(units) - the cheapest scan in the picker, fired 300x less often.
+		private ["_hcReg","_hcLive","_hcOwners","_hcCounts","_ho","_hidx","_hMax","_hMin","_hCsv","_hRatio","_hc"];
+		_hcReg = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
+		_hcLive = [];
+		{ if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_hcLive = _hcLive + [_x]} } forEach _hcReg;
+		if (count _hcLive > 0) then {
+			_hcOwners = []; _hcCounts = [];
+			{ _hcOwners set [_forEachIndex, owner (leader _x)]; _hcCounts set [_forEachIndex, 0] } forEach _hcLive;
+			{ _ho = owner _x; _hidx = _hcOwners find _ho; if (_hidx >= 0) then {_hcCounts set [_hidx, (_hcCounts select _hidx) + 1]} } forEach allUnits;
+			_hMax = 0; _hMin = 1e9; _hCsv = "";
+			{
+				_hc = _hcCounts select _forEachIndex;
+				if (_hc > _hMax) then {_hMax = _hc};
+				if (_hc < _hMin) then {_hMin = _hc};
+				_hCsv = _hCsv + str (_hcOwners select _forEachIndex) + ":" + str _hc;
+				if (_forEachIndex < ((count _hcLive) - 1)) then {_hCsv = _hCsv + ","};
+			} forEach _hcLive;
+			_hRatio = if (_hMin > 0) then {(round ((_hMax / _hMin) * 10)) / 10} else {-1};
+			diag_log ("HCDELEG|v1|" + str (round (time / 60)) + "|liveHC=" + str (count _hcLive) + "|perHC=" + _hCsv + "|max=" + str _hMax + "|min=" + str _hMin + "|imbalance=" + str _hRatio);
 		};
 	};
 

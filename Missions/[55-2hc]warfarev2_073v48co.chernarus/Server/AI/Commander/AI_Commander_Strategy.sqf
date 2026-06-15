@@ -227,6 +227,24 @@ if (_strikeOn) then {
 };
 _logik setVariable ["wfbe_aicom_strike_on", _strikeOn];
 
+//--- POSTURE + FRONT telemetry (claude-gaming 2026-06-15): the commander's strategic STANCE and
+//--- the war-state numbers that drive it. All metrics (_myTowns/_enemyTowns/_myStr/_enStr/_strikeOn/
+//--- _attacked/_anyFront/_targets) are already computed this tick, so these are pure string builds -
+//--- ZERO extra scan. POSTURE derives a 3-state stance from the already-computed ratios so the WHY
+//--- (pressing vs consolidating vs defending) is explicit; FRONT reconstructs the front line (held /
+//--- contested counts + the primary target's name and whether it borders our territory). Both ride
+//--- the existing AI_Commander_Strategy worker (per side / ~60s; gated in AI_Commander.sqf:133-134).
+private ["_posture","_primT"];
+_posture = if (_strikeOn) then {"HQ_STRIKE"} else {
+	if (_myTowns < _enemyTowns || {_myStr < _enStr}) then {"DEFEND"} else {
+		if (_myTowns >= (_enemyTowns * 1.2) && {_myStr >= _enStr}) then {"PRESS"} else {"HOLD"}
+	}
+};
+diag_log ("AICOMSTAT|v1|POSTURE|" + _sideText + "|" + str (round (time / 60)) + "|" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|strikeOn=" + str _strikeOn);
+_primT = if (count _targets > 0) then {_targets select 0} else {objNull};
+diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|held=" + str _myTowns + "|enemyHeld=" + str _enemyTowns + "|contested=" + str (count _attacked) + "|primary=" + (if (isNull _primT) then {"none"} else {_primT getVariable ["name","?"]}) + "|onFront=" + str _anyFront);
+// END POSTURE + FRONT
+
 //--- 4) ARTILLERY: soften the spearhead town or the enemy HQ - never near friendlies.
 //--- V0.6.3: OFF by default (owner call) - opt back in via WFBE_C_AI_COMMANDER_ARTILLERY = 1.
 if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) && {(missionNamespace getVariable "WFBE_C_ARTILLERY") > 0}) then {

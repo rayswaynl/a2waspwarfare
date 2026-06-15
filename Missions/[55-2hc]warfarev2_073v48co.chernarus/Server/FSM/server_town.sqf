@@ -239,6 +239,15 @@ while {!WFBE_GameOver} do {
 			};
 			// END WASPSTAT CAPTURE (Task 10)
 
+			//--- AICOMSTAT TOWN_FLIP (claude-gaming 2026-06-15): the war-narrative capture line on the
+			//--- AICOMSTAT war ledger - "at minute M, <newSide> took <town> from <oldSide>". Distinct from
+			//--- WASPSTAT|CAPTURE above (that is gated on WFBE_C_STATLOG, lives on the player-stats seq
+			//--- stream, and carries raw numeric sideIDs) and from FIRST_TOWN (once per side per round).
+			//--- Ungated, readable side names + minute, on the same proven if(_captured) flip cadence.
+			//--- Fires exactly once per real town/camp ownership flip - no loop, no PFH, no new scan.
+			diag_log ("AICOMSTAT|v2|EVENT|" + (str _newSide) + "|" + str (round (time / 60)) + "|TOWN_FLIP|town=" + (_location getVariable ["name","unknown"]) + "|from=" + (str _side) + "|to=" + (str _newSide) + "|fromID=" + str _sideID + "|toID=" + str _newSID);
+			// END AICOMSTAT TOWN_FLIP
+
 			//--- FM-5: clear the old garrison's active flags on capture so the new owner re-garrisons immediately (prevents an up-to-WFBE_C_TOWNS_UNITS_INACTIVE undefended window on rapid recapture).
 			//--- Also clear episode latch so the new owner's activation episode is not blocked.
 			_location setVariable ["wfbe_active", false];
