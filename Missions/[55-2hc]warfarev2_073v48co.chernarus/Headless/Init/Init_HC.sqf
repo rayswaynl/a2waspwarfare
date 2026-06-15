@@ -123,3 +123,17 @@ private "_reseatResult"; _reseatResult = if (side group player == civilian) then
 
 //--- HC load telemetry: HCSTAT lines on the server RPT (fps + local unit/group counts).
 [] ExecVM "Headless\HC_StatLoop.sqf";
+
+//--- claude-gaming (2026-06-15): HC-LOCAL empty-group reaper. The HC owns ~12-16 delegated
+//--- commander-team/town groups that are local to it. Their self-reap in
+//--- Common_RunCommanderTeam.sqf:789 (deleteGroup _team on GetLiveUnits==0) NO-OPs whenever
+//--- dead-but-not-yet-engine-collected corpses still sit in `units _team`, leaving an empty
+//--- HC-local husk that NOTHING else reaps (server_groupsGC.sqf deleteGroup no-ops on
+//--- non-server-local groups; the player-client reaper used to be hasInterface-gated OFF here).
+//--- That is a direct leak toward the 144/side group cap. Client_GroupsGC.sqf's start gate is
+//--- now broadened to also run on a headless client; its body is HC-safe (skips `group player`
+//--- = the HC civ infra group, plus persistent/town-tracked/debounce guards). Launched AFTER the
+//--- reseat-to-civilian above so `group player` already resolves to the civilian group it must
+//--- protect. Reaps client-LOCAL empty, non-persistent, non-player, non-town-tracked groups once
+//--- per 60s and logs a CLIENT_EMPTY_GROUP_CLEANUP wire line tagged HC-<netId> for visibility.
+[] ExecVM "Client\Functions\Client_GroupsGC.sqf";

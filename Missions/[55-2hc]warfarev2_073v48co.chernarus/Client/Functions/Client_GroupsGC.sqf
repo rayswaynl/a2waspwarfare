@@ -6,15 +6,33 @@
 // server/HC GC (server_groupsGC.sqf) silently no-ops on these. Each player client reaps its
 // OWN local empty groups here. Complements (does not duplicate) the server sweep and the
 // event-driven delegated-town cleanup (Client_CleanupDelegatedTownAI.sqf).
-if (!hasInterface) exitWith {};                 // player clients only (server + HC both have hasInterface==false and their own paths)
+//
+// claude-gaming (2026-06-15): this ALSO runs on HEADLESS CLIENTS. An HC owns ~12-16 delegated
+// commander-team / town groups that are LOCAL to it. Their lifecycle self-reap
+// (Common_RunCommanderTeam.sqf:789 deleteGroup _team) fires when GetLiveUnits==0, but that
+// deleteGroup NO-OPs if dead-but-not-yet-engine-collected corpses still sit in `units _team`
+// (deleteGroup needs the group truly EMPTY). The corpse husk is then HC-local and empty, and
+// nothing on the HC ever retries it: the server GC (server_groupsGC.sqf) deleteGroup no-ops on
+// non-server-local groups, and this reaper used to be hasInterface-gated OFF on an HC
+// (hasInterface==false on a headless client). Result = HC empty-group LEAK toward the 144/side
+// cap. So the gate is broadened: run on a player client (hasInterface) OR on a headless client
+// (isMultiplayer && !isServer && !hasInterface). The body is HC-safe as-is: `player` is the HC's
+// own civilian unit, `group player` is its civilian infra group (always skipped below), the
+// debounce + persistent + WFBE_CL_TownAI_Groups-tracked guards protect live/delegated teams, and
+// _cliId already mirrors HC_StatLoop's HC-<netId>. The DEDICATED SERVER (isServer, no interface)
+// is still excluded - it has its own server_groupsGC.sqf.
+WFBE_GC_IsHC = isMultiplayer && {!isServer} && {!hasInterface};
+if (!hasInterface && {!WFBE_GC_IsHC}) exitWith {}; // run on player clients + HCs; skip the dedicated server (server has server_groupsGC.sqf)
 waitUntil {commonInitComplete};
 
 Private ["_cliId","_dbN","_scanned","_emptyLocal","_reaped","_confirmedGone","_skipPers","_skipTracked","_cands","_grp","_ldr","_p","_since","_reg","_tracked"];
 
-_cliId = format ["CL-%1", netId player];        // stable per-client id (mirrors HC_StatLoop.sqf HC-<netId>)
+// On an HC, mirror HC_StatLoop.sqf's "HC-<netId>" so its reaped lines line up with HCSTAT.
+// On a player client, keep the original "CL-<netId>" tag. Either way it is a stable per-process id.
+_cliId = format ["%1-%2", (if (WFBE_GC_IsHC) then {"HC"} else {"CL"}), netId player];
 _dbN   = missionNamespace getVariable ["WFBE_C_CLIENT_GROUPGC_DEBOUNCE", 10]; // stable-empty seconds (>= 2x the 5s town deadline)
 
-["INFORMATION", "Client_GroupsGC.sqf: client empty-group reaper started (" + _cliId + ")"] Call WFBE_CO_FNC_LogContent;
+["INFORMATION", Format ["Client_GroupsGC.sqf: %1 empty-group reaper started (%2)", (if (WFBE_GC_IsHC) then {"headless-client"} else {"client"}), _cliId]] Call WFBE_CO_FNC_LogContent;
 
 while {!WFBE_GameOver} do {
     sleep 60;
