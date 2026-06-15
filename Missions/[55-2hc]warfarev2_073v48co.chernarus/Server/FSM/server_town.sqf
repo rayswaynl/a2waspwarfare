@@ -534,7 +534,7 @@ while {!WFBE_GameOver} do {
 						_radar = _radarClass createVehicle _radarPos;
 						_radar setPos _radarPos;
 						//--- Radius override: 2000 m. Server_CounterBattery.sqf reads "wfbe_cbr_radius" getVariable.
-						_radar setVariable ["wfbe_cbr_radius", 2000];
+						_radar setVariable ["wfbe_cbr_radius", 2000, true]; //--- AF2: broadcast so clients read the fixed 2000 (Init_BaseStructure uses it for BOTH the circle radius AND the "_fixed" flag; un-broadcast -> client drew the 750/1500 upgrade tier and live-resized it)
 						//--- Indestructible: HandleDamage returning 0 prevents any damage being applied.
 						_radar addEventHandler ["HandleDamage", {0}];
 
