@@ -1,6 +1,55 @@
 # JOURNAL — a2waspwarfare-experital
 
-## 2026-06-15 — Staged-deployment items (Discord deploy thread) [WORKING STATE]
+## 2026-06-15 — Group-budget hygiene: 3 code extras (slot cut CANCELLED) [WORKING STATE]
+
+**Decision (Steff, 2026-06-15): SKIP the 27→21 editor player-slot cut.** Reason: the deep research
+concluded the cut buys **zero FPS** (empty persistent slot-groups cost nothing on the hot path) and
+only frees headroom on WEST/EAST — which sit at ~42-45/144 even at full pop and are nowhere near the
+cap. The real budget pressure is GUER's dynamic groups, which the slot cut does not touch. The
+mission.sqm surgery (delete + renumber 100+ items across Chernarus AND Takistan) is high-risk for no
+gain. **mission.sqm left UNTOUCHED** (Chernarus Groups.items stays 129; HEAD `80e38a423`).
+
+Proceeding with the 3 genuinely-useful code extras (Chernarus source; Takistan inherits via the
+`SERVER_DEBUG` regen at deploy time — do NOT hand-edit Takistan):
+
+1. **[~] Cap aicom extra teams at 2** — `Common/Init/Init_CommonConstants.sqf` add
+   `WFBE_C_AI_COMMANDER_TEAMS_MAX_EXTRA = 2;` after line 122. Confirmed `AI_Commander_Teams.sqf:60`
+   reads this var with an inline fallback of 4; the constant did not exist in Init_CommonConstants.
+   Caps late-game dynamic AI teams at base+2 (=6) instead of base+4 (=8) → saves up to 2 groups/side.
+2. **[~] GUER group monitor** — `Server/FSM/server_groupsGC.sqf`. GUER's real ceiling is the SOFT cap
+   `WFBE_C_GUER_GROUPS_MAX` (=60, recently 90→60), NOT 144 — at the soft cap `server_town_ai.sqf:62`
+   DEFERS garrisons (town defense degrades). Add (a) a `GUERCAP|v1|count|max|pct` telemetry line at
+   the 60s GCSTAT cadence for the dashboard gauge, and (b) a debounced (5-min) WARNING when
+   `_cntGuer >= 90% of WFBE_C_GUER_GROUPS_MAX`. Distinct from the existing 130/144 engine-cap warning.
+3. **[~] Untagged-leak diagnostic** — `server_groupsGC.sqf` audit loop. Now that editor slots are
+   tagged `editor-player-slot` and all wrapper spawns are tagged, a NON-empty `untagged` group =
+   a raw createGroup that bypassed the wrapper = real leak. Fold into the existing forEach allGroups
+   audit loop (no extra pass): count non-empty untagged groups per side where side != sideEmpty,
+   emit `UNTAGLEAK|v1|west|east|guer|samples` + debounced WARNING (warmup >600s).
+
+**Also (Steff 2026-06-15): GUER soft cap raised 60 → 80** (`WFBE_C_GUER_GROUPS_MAX`) — more garrison
+headroom above the ~73 peak, still well under 144; the new monitor watches it.
+
+**STATUS: all 4 changes implemented + verified.** The three `[~]` above are DONE plus the GUER-cap bump.
+- **Lint-A2Compat: PASS** (0 FAIL; the 4 REVIEWs are pre-existing find-quote in `AI_Commander_Base.sqf`).
+- **Adversarial review (3 lenses: A2-runtime / logic+false-positive / integration): PASS** — 0 runtime
+  blockers, 0 logic blockers. Two non-blocking fixes applied: (a) `server_groupsGC.sqf:304` dropped a
+  redundant `str` (samples already strings — was double-quoting); (b) `SkinSelector_Apply.sqf:83` tag
+  now broadcasts (`,true`) so the server audit can actually see `skin-swap`. The lone "blocker" was the
+  known Takistan regen step (`dotnet run` syncs the stale Takistan copies), already in the deploy checklist.
+- Touched files: `Init_CommonConstants.sqf` (2 lines), `server_groupsGC.sqf`, `SkinSelector_Apply.sqf`.
+
+Remaining: commit to `deploy/2026-06-12-aicom-experital` (**hold push for Steff's consent**).
+
+### Discovered issues (off-scope) — Workstream B (dashboard, box-side)
+- **EMPTYGRP telemetry is silently dead in the dashboard.** `server_groupsGC.sqf` emits `EMPTYGRP|v1|`
+  but `C:\WASP\Update-PublicStats.ps1` parses for `GRPEMPTY|v1|` (prefix mismatch). Pre-existing, not
+  from this diff. One-line regex fix on the box. Same pass could teach the parser the new `GUERCAP|v1|`
+  (GUER soft-cap gauge) and `UNTAGLEAK|v1|` (leak counter) lines — the "deeper per-faction info" Steff asked for.
+
+---
+
+## 2026-06-15 — Staged-deployment items (Discord deploy thread)
 
 Source: OCD deploy-planning thread (Marty / Zwanon / Net_2). Scope = 4 items + a Miksuu-site dashboard view.
 

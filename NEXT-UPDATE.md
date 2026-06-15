@@ -19,6 +19,28 @@ _(Maintained for the Wednesday merge with Marty. Tick the checklist as items dep
   Moves ~54 groups out of the `untagged` audit bucket so `untagged` becomes a real **leak signal**.
   Audit-only — no group lifecycle / GC change. _(commit `7a028c62b`)_
 
+### Group-budget tuning & monitors (2026-06-15)
+- **aicom extra-team cap** — `Common/Init/Init_CommonConstants.sqf` adds
+  `WFBE_C_AI_COMMANDER_TEAMS_MAX_EXTRA = 2`. Caps the funds-scaled dynamic AI teams at base+2 (=6)
+  instead of the previous inline fallback of 4 (=8). Saves up to 2 groups/side in rich-fund late-game
+  with **no** change to the 4-team base combat capability (read site `AI_Commander_Teams.sqf:60`).
+- **GUER soft cap raised 60 → 80** — `WFBE_C_GUER_GROUPS_MAX`. 60 was choking garrisons above the
+  observed ~73 peak; 80 restores headroom, still well under the 144 engine cap. The new monitor below
+  watches it.
+- **GUER soft-cap monitor** — `server_groupsGC.sqf`. `GUERCAP|v1|count|max|pct` line every 60s (for the
+  dashboard GUER gauge) + a debounced (5-min) WARNING at ≥90% of `WFBE_C_GUER_GROUPS_MAX` (=72/80) —
+  the point where `server_town_ai.sqf` starts DEFERRING town garrisons. Distinct from the 130/144
+  engine-cap warning (which GUER never reaches because the soft cap stops it far lower).
+- **Untagged-leak diagnostic** — `server_groupsGC.sqf`. Now that editor slots + all wrapper spawns are
+  tagged, a **non-empty** `untagged` combat-side group = a raw `createGroup` that bypassed the wrapper.
+  Emits `UNTAGLEAK|v1|west|east|guer|samples` (folded into the 5-min audit loop, no extra pass) + a
+  debounced WARNING (warmup >600s). SkinSelector swap-group tag now broadcast (`,true`) so the
+  server-side audit can see it.
+- **Player-slot cut (27→21): CONSIDERED & CANCELLED.** Deep research showed it buys **zero FPS** (empty
+  persistent slot-groups are free on the hot path) and only frees headroom on WEST/EAST, which never
+  approach the cap. `mission.sqm` left untouched (slots stay 27/side).
+- _Verified: Lint-A2Compat PASS (0 FAIL); 3-lens adversarial review PASS (0 runtime / 0 logic blockers)._
+
 ### Verified — no change needed
 - **Gunner condensation** confirmed intact (`4b98a9356` build8 + `c65b1c8ea` b15, both in HEAD):
   one `defense-gunners` group per town per side. GUER's ~18 = garrisoned-town count, not a leak.

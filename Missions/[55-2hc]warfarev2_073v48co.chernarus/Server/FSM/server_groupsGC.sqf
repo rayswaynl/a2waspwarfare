@@ -8,7 +8,7 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak"];
 
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 _auditN = 0; // D2 (claude-gaming 2026-06-14): counts elapsed 5-min audit windows; the expensive classification+dump fires only every WFBE_C_GROUPAUDIT_EVERY-th window. Husk-reap GC below is untouched and runs every 60s cycle.
@@ -86,6 +86,18 @@ while {!WFBE_GameOver} do {
 	// hand (counters from the sweep above, per-side counts from the cap-warning pass). t = round min.
 	diag_log ("GCSTAT|v1|reaped=" + str _gcReaped + "|emptyFound=" + str _gcEmptyFound + "|west=" + str _cntWest + "|east=" + str _cntEast + "|guer=" + str _cntGuer + "|t=" + str (round (time / 60)));
 
+	// --- GUER soft-cap monitor (claude-gaming 2026-06-15) ---
+	// GUER's real ceiling is the SOFT cap WFBE_C_GUER_GROUPS_MAX (=60, recently 90->60), NOT the 144
+	// engine cap. At the soft cap, server_town_ai.sqf:62 DEFERS new resistance garrisons, so town
+	// defense silently degrades long before the 130/144 engine warning below would ever fire for GUER.
+	// GUERCAP feeds the dashboard's GUER gauge (60s cadence); the debounced WARNING is emitted with the
+	// other cap warnings further down. Recompute the cap each pass so a live param change is honoured.
+	_guerMax = missionNamespace getVariable ["WFBE_C_GUER_GROUPS_MAX", 60];
+	if (_guerMax < 1) then { _guerMax = 1 };
+	_guerPct = round ((_cntGuer / _guerMax) * 100);
+	_guerSoftThreshold = round (_guerMax * 0.9);
+	diag_log ("GUERCAP|v1|count=" + str _cntGuer + "|max=" + str _guerMax + "|pct=" + str _guerPct + "|t=" + str (round (time / 60)));
+
 	// Helper macro (inlined as code blocks) - warn if count >= threshold and debounce
 	// key has either never been set or expired.  Uses missionNamespace so the variable
 	// survives for the lifetime of the session.
@@ -140,6 +152,16 @@ while {!WFBE_GameOver} do {
 			["WARNING", Format ["server_groupsGC.sqf: [%1] side at %2/144 groups - AT CAP; createGroup will return grpNull and AI spawns will silently fail.", str resistance, _cntGuer]] Call WFBE_CO_FNC_AICOMLog;
 		};
 	};
+	// RESISTANCE - SOFT cap (>= 90% of WFBE_C_GUER_GROUPS_MAX). The operationally meaningful GUER
+	// threshold: at the soft cap, server_town_ai.sqf stops spawning new garrisons and town defense
+	// degrades. Fires well before the 130 engine-approach warning (the soft cap is 60 by default).
+	if (_cntGuer >= _guerSoftThreshold) then {
+		_lastGuerSoft = missionNamespace getVariable ["wfbe_groupcap_warn_guersoft", -9999];
+		if ((_now - _lastGuerSoft) >= _warnInterval) then {
+			missionNamespace setVariable ["wfbe_groupcap_warn_guersoft", _now];
+			["WARNING", Format ["server_groupsGC.sqf: [%1] at %2/%3 groups (%4%5) - approaching the GUER soft cap; server_town_ai.sqf will DEFER new town garrisons at %3, degrading resistance town defense.", str resistance, _cntGuer, _guerMax, _guerPct, "%"]] Call WFBE_CO_FNC_AICOMLog;
+		};
+	};
 
 	// --- Per-side source attribution telemetry (LEVER 1) ---
 	// Debounced to once every 5 minutes; always logs (not only near cap).
@@ -175,11 +197,13 @@ while {!WFBE_GameOver} do {
 		// Build per-(side, src) counts in a flat key=value array: [side, src, count, ...]
 		// Using a simple parallel-arrays approach to avoid any A3-only constructs.
 		_emptyW = 0; _emptyE = 0; _emptyG = 0; _persEmptyW = 0; _persEmptyE = 0; _persEmptyG = 0; //--- EMPTYGRP tracking (Ray)
+		_leakW = 0; _leakE = 0; _leakG = 0; _leakSamples = []; //--- UNTAGLEAK tracking: non-empty untagged (wrapper-bypassed) groups
 		_srcCounts = []; // flat: [side0, src0, cnt0, side1, src1, cnt1, ...]
 
 		{
 			_auditSide = side _x;
-			if ((count units _x) == 0) then {
+			_uc = count units _x;
+			if (_uc == 0) then {
 				private "_pe"; _pe = _x getVariable ["wfbe_persistent", false];
 				switch (_auditSide) do {
 					case west:       { _emptyW = _emptyW + 1; if (_pe) then {_persEmptyW = _persEmptyW + 1} };
@@ -189,7 +213,23 @@ while {!WFBE_GameOver} do {
 				};
 			};
 			_src = _x getVariable "wfbe_group_src";
-			if (isNil "_src") then { _src = "untagged" };
+			if (isNil "_src") then {
+				_src = "untagged";
+				//--- UNTAGLEAK: a NON-empty untagged group is a real leak candidate. Editor player-slots are
+				//--- tagged 'editor-player-slot' and every Common_CreateGroup spawn is tagged, so an untagged
+				//--- group WITH live units on a combat side is a raw createGroup that escaped the wrapper.
+				if (_uc > 0 && {(_auditSide == west) || (_auditSide == east) || (_auditSide == resistance)}) then {
+					switch (_auditSide) do {
+						case west:       { _leakW = _leakW + 1 };
+						case east:       { _leakE = _leakE + 1 };
+						case resistance: { _leakG = _leakG + 1 };
+						default {};
+					};
+					if (count _leakSamples < 6) then {
+						[_leakSamples, Format ["%1:%2u", _x, _uc]] call WFBE_CO_FNC_ArrayPush;
+					};
+				};
+			};
 
 			// Find existing entry
 			_srcIdx = -1;
@@ -255,6 +295,22 @@ while {!WFBE_GameOver} do {
 
 		//--- Delegation split: prove the HC offload is alive. One extra allUnits pass (~300 units, trivial).
 		diag_log (Format ["EMPTYGRP|v1|west=%1|east=%2|guer=%3|persW=%4|persE=%5|persG=%6|t=%7", _emptyW, _emptyE, _emptyG, _persEmptyW, _persEmptyE, _persEmptyG, round (time / 60)]); //--- EMPTYGRP tracking (Ray)
+
+		//--- UNTAGLEAK (claude-gaming 2026-06-15): non-empty untagged groups on a combat side = a group
+		//--- that bypassed the CreateGroup wrapper. With editor slots + all dynamic spawns now tagged,
+		//--- this count should sit at 0; a sustained non-zero is a real dynamic-group leak. Samples list
+		//--- up to 6 "group:Nu" ids. WARNING (debounced 5 min, warmup 600s) when any are seen.
+		_leakStr = "";
+		{ if (_leakStr != "") then { _leakStr = _leakStr + "," }; _leakStr = _leakStr + _x } forEach _leakSamples;
+		if (_leakStr == "") then { _leakStr = "none" };
+		diag_log (Format ["UNTAGLEAK|v1|west=%1|east=%2|guer=%3|samples=%4|t=%5", _leakW, _leakE, _leakG, _leakStr, round (time / 60)]);
+		if ((_leakW + _leakE + _leakG) > 0 && {time > 600}) then {
+			_lastUntagLeak = missionNamespace getVariable ["wfbe_untagleak_warn_last", -9999];
+			if ((_now - _lastUntagLeak) >= _warnInterval) then {
+				missionNamespace setVariable ["wfbe_untagleak_warn_last", _now];
+				["WARNING", Format ["server_groupsGC.sqf: UNTAGGED-LEAK - %1 non-empty untagged group(s) bypassed the CreateGroup wrapper (W%2/E%3/G%4): %5", (_leakW + _leakE + _leakG), _leakW, _leakE, _leakG, _leakStr]] Call WFBE_CO_FNC_AICOMLog;
+			};
+		};
 		_delegTotal = count allUnits;
 		_delegLocal = {local _x} count allUnits;
 		_delegRemote = _delegTotal - _delegLocal;
