@@ -165,7 +165,7 @@ while {!gameOver} do {
 				         "_existingTeams","_sideIDLocal","_crew1","_crew2",
 				         "_healed","_humanCmd","_skipAI","_w11Eligible",
 				         "_dAng","_spawnPos","_dp","_placed","_dPos",
-				         "_wNameMap","_wName"];
+				         "_wNameMap","_wName","_candTown"];
 
 				_side     = _this select 0;
 				_humanCmd = _this select 1;
@@ -585,9 +585,10 @@ while {!gameOver} do {
 						_nearD      = 1e9;
 						{
 							_dd = 1e9;
-							{ _dd = _dd min (_x distance _this) } forEach _owned;
-							if (count _owned == 0) then {_dd = _this distance _hq};
-							if (_dd < _nearD) then {_nearD = _dd; _targetTown = _x};
+							_candTown = _x; //--- review fix: capture outer town (parity w/ Chernarus); _this is [_side,_humanCmd]
+							{ _dd = _dd min (_candTown distance _x) } forEach _owned;
+							if (count _owned == 0) then {_dd = _candTown distance _hq};
+							if (_dd < _nearD) then {_nearD = _dd; _targetTown = _candTown};
 						} forEach _cands;
 
 						if (!isNull _targetTown) then {
