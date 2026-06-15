@@ -42,7 +42,8 @@ missionNamespace setVariable ["WFBE_GUER_DefaultGear_Medic", [
 			_lastTier = _tier;
 			_pool = [
 				"GUE_Soldier_Sab","GUE_Soldier_Sniper","GUE_Soldier_Medic",
-				"Offroad_DSHKM_Gue","Pickup_PK_GUE","Offroad_SPG9_Gue"
+				"Offroad_DSHKM_Gue","Pickup_PK_GUE","Offroad_SPG9_Gue",
+				"Ka137_MG_PMC"   //--- armed recon heli, pilot-fired; EASA AG/AA loadouts at a service point (see 8AM note)
 			];
 			if (_tier >= 1) then {_pool = _pool + ["BRDM2_Gue"]};
 			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1"]};
