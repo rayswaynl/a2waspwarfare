@@ -204,6 +204,11 @@ if (ARMA_VERSION >= 162 && ARMA_RELEASENUMBER > 97105 || ARMA_VERSION > 162) the
 
 // Marty : auto distance view feature deactivated at client start.
 missionNamespace setVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false];
+//--- FPS picker (2026): default OFF, but restore the player's saved on/off choice if one was persisted.
+if (typeName (profileNamespace getVariable ["WFBE_TOOGLE_AUTO_DISTANCE_VIEW", false]) == "BOOL") then {
+	missionNamespace setVariable ["TOOGLE_AUTO_DISTANCE_VIEW", profileNamespace getVariable ["WFBE_TOOGLE_AUTO_DISTANCE_VIEW", false]];
+	if (missionNamespace getVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false]) then {missionNamespace setVariable ["SAVED_VIEW_DISTANCE", viewDistance]};
+};
 missionNamespace setVariable ["AUTO_SEND_SPAWNED_UNITS_TO_WAYPOINT", false];
 missionNamespace setVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_POSITION", []];
 missionNamespace setVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_GROUP", grpNull];
