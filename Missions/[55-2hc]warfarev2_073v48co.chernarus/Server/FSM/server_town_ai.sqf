@@ -59,7 +59,7 @@ while {!WFBE_GameOver} do {
 	//--- server_groupsGC.sqf computes a GUER group count only as a local (_cntGuer) and never
 	//--- publishes a group count to missionNamespace, so use the allGroups fallback here,
 	//--- hoisted out of the per-town loop so it stays cheap.
-	_guerGroupCount = {side _x == resistance} count allGroups;
+	_guerGroupCount = missionNamespace getVariable ["wfbe_grpcnt_guer", -1]; if (_guerGroupCount < 0) then { _guerGroupCount = {side _x == resistance} count allGroups; }; //--- B7: read groupsGC per-side count cache; live-scan fallback until the first GC sweep warms it
 
 	for "_i" from 0 to ((count towns) - 1) step 1 do
 	{

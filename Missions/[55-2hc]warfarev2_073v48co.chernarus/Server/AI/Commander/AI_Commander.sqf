@@ -370,9 +370,9 @@ while {!gameOver} do {
 		//--- funds) and spawns can SILENTLY FAIL. Server-global, shares the SRVPERF 300s throttle. A WARN line
 		//--- trips at the pre-cap threshold so the watchdog/dashboard can flag it before it bites.
 		private ["_gbW","_gbE","_gbG","_gbMax","_gbWarn"];
-		_gbW = {side _x == west} count allGroups;
-		_gbE = {side _x == east} count allGroups;
-		_gbG = {side _x == resistance} count allGroups;
+		_gbW = missionNamespace getVariable ["wfbe_grpcnt_west", -1]; if (_gbW < 0) then { _gbW = {side _x == west} count allGroups; }; //--- B7: groupsGC cache + fallback
+		_gbE = missionNamespace getVariable ["wfbe_grpcnt_east", -1]; if (_gbE < 0) then { _gbE = {side _x == east} count allGroups; };
+		_gbG = missionNamespace getVariable ["wfbe_grpcnt_guer", -1]; if (_gbG < 0) then { _gbG = {side _x == resistance} count allGroups; };
 		_gbMax = _gbW max _gbE max _gbG;
 		diag_log ("GRPBUDGET|v1|" + str (round (time / 60)) + "|west=" + str _gbW + "|east=" + str _gbE + "|guer=" + str _gbG + "|cap=144");
 		_gbWarn = missionNamespace getVariable ["WFBE_C_GROUP_BUDGET_WARN", 125];

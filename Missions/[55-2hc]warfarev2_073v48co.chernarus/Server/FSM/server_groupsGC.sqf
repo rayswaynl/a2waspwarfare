@@ -78,6 +78,13 @@ while {!WFBE_GameOver} do {
 		if (side _x == resistance) then {_cntGuer = _cntGuer + 1};
 	} forEach allGroups;
 
+	//--- B7 efficiency (review 2026-06-15): publish per-side group counts so server_town_ai.sqf and
+	//--- AI_Commander.sqf can read this cache instead of each re-scanning allGroups every sweep/tick.
+	missionNamespace setVariable ["wfbe_grpcnt_west", _cntWest];
+	missionNamespace setVariable ["wfbe_grpcnt_east", _cntEast];
+	missionNamespace setVariable ["wfbe_grpcnt_guer", _cntGuer];
+	missionNamespace setVariable ["wfbe_grpcnt_t", time];
+
 	_now = time;
 
 	// --- GCSTAT (claude-gaming 2026-06-15): consolidated per-pass GC summary on the 60s sweep
