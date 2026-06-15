@@ -77,6 +77,18 @@ if (_killer_side != _killed_side) then {
 	};
 };
 
+//--- GUER "Insurgents" towns-denied (harass board): a GUER player killing an enemy within a GUER-held
+//--- town's range "denies" that town. Per-player object accumulator (broadcast), emitted by the playerstat loop.
+if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_killer_side == resistance} && {_killer_isplayer} && {_killer_side != _killed_side}) then {
+	private ["_kpos","_denied"];
+	_kpos = getPosATL _killed;
+	_denied = false;
+	{
+		if (((_x getVariable ["sideID", -1]) == WFBE_C_GUER_ID) && {(_kpos distance _x) < ((_x getVariable ["range", 300]) max 300)}) then {_denied = true};
+	} forEach towns;
+	if (_denied) then {_killer setVariable ["wfbe_guer_td", (_killer getVariable ["wfbe_guer_td", 0]) + 1, true]};
+};
+
 // Player-stats: record resolved enemy kills after delayed vehicle attribution. No-op unless stats are enabled.
 if (!(isNil "WFBE_C_STATS_ENABLED")) then {
 	if (WFBE_C_STATS_ENABLED && (_killer_side != _killed_side)) then {

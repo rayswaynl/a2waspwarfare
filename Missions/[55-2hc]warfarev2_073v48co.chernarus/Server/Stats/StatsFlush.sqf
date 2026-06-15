@@ -22,7 +22,7 @@ while {true} do {
 			_uid = getPlayerUID _x;
 			if (_uid != "") then {
 				[_uid, WFBE_STAT_PLAYTIME, WFBE_C_STATS_FLUSH_INTERVAL] call WFBE_SE_FNC_RecordStat;
-				_sideNum = switch (side _x) do { case west: {1}; case east: {2}; default {0} };
+				_sideNum = switch (side _x) do { case west: {1}; case east: {2}; case resistance: {3}; default {0} };
 				[_uid, _sideNum] call WFBE_SE_FNC_RecordStatSide;
 			};
 		};

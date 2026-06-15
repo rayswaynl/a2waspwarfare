@@ -61,11 +61,11 @@ while {true} do {
 				_clean = [];
 				{ if (_x != 124) then { _clean set [count _clean, _x] }; } forEach _chars;
 				_name  = toString _clean;
-				_side  = switch (side _p) do { case west: {1}; case east: {2}; default {0} };
+				_side  = switch (side _p) do { case west: {1}; case east: {2}; case resistance: {3}; default {0} };
 				_score = score _p;
 
 				WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
-				_line = "PLAYERSTAT|v1|" + (str WFBE_WASPSTAT_SEQ) + "|" + _name + "|" + _uid + "|" + (str _side) + "|" + (str _score) + "|0|0|t=" + (str _min);
+				_line = "PLAYERSTAT|v1|" + (str WFBE_WASPSTAT_SEQ) + "|" + _name + "|" + _uid + "|" + (str _side) + "|" + (str _score) + "|0|0|t=" + (str _min) + "|td=" + (str (_p getVariable ["wfbe_guer_td", 0]));
 				diag_log _line;
 			};
 		};
