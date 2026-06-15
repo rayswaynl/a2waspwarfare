@@ -18,7 +18,8 @@
 
 private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_facMap","_unitList","_hcUnit","_base","_extra","_maxExtra","_fundsPerExtraTeam","_lastDynTarget",
               "_w7Flag","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best","_w7SkillSend",
-              "_w11FreeFlag"];
+              "_w11FreeFlag",
+              "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -124,20 +125,53 @@ if (count _live > 0) then {
 	};
 	if (count _eligible == 0) exitWith {};
 
+	//--- P1 combined-arms picker (claude-gaming 2026-06-15). Mirror of AI_Commander_AssignTypes.sqf:
+	//--- the old doctrine-only weighting (70% one vehicle track, 30% UNIFORM over all eligible) averaged
+	//--- ~70% infantry because infantry templates unlock first and stay eligible all match while vehicle
+	//--- templates unlock late. Here _eligible is ALREADY gated on factory + real-unit-data tier, so any
+	//--- bucketed pick is buildable. Bucket eligible by class (air>0->air / heavy>0->heavy / light>0->
+	//--- light / else infantry), roll a target class from WFBE_C_AICOM_TYPE_MIX (with a light doctrine
+	//--- nudge), degrade to a lower buildable class when the rolled one is empty, and never starve infantry.
+	_buckets = [[],[],[],[]]; //--- [infantry, light, heavy, air]
+	{
+		_eu = _tmplUpgrades select _x;
+		_bClass = 0; //--- infantry
+		if ((_eu select WFBE_UP_AIR) > 0) then {_bClass = 3} else {
+			if ((_eu select WFBE_UP_HEAVY) > 0) then {_bClass = 2} else {
+				if ((_eu select WFBE_UP_LIGHT) > 0) then {_bClass = 1};
+			};
+		};
+		(_buckets select _bClass) set [count (_buckets select _bClass), _x];
+	} forEach _eligible;
+
+	_mix = WFBE_C_AICOM_TYPE_MIX;
+	if (isNil "_mix" || {count _mix < 4}) then {_mix = [0.65, 0.20, 0.12, 0.03]};
+	_dWeights = [_mix select 0, _mix select 1, _mix select 2, _mix select 3];
 	_doc = _logik getVariable ["wfbe_aicom_doctrine", ""];
-	_pref = [];
 	if (_doc != "") then {
 		_track = if (_doc == "HF") then {2} else {1};
-		{
-			_u = _tmplUpgrades select _x;
-			if ((_u select _track) >= 1) then {_pref = _pref + [_x]};
-		} forEach _eligible;
+		_dWeights set [_track, (_dWeights select _track) * 1.5];
 	};
-	_pick = if (count _pref > 0 && {(random 1) < 0.7}) then {
-		_pref select (floor (random (count _pref)))
-	} else {
-		_eligible select (floor (random (count _eligible)))
+	for "_bi" from 0 to 3 do {
+		if (count (_buckets select _bi) == 0) then {_dWeights set [_bi, 0]};
 	};
+
+	_wSum = (_dWeights select 0) + (_dWeights select 1) + (_dWeights select 2) + (_dWeights select 3);
+	_chosen = -1;
+	if (_wSum > 0) then {
+		_roll = random _wSum;
+		_acc = 0;
+		for "_bi" from 0 to 3 do {
+			_acc = _acc + (_dWeights select _bi);
+			if (_chosen < 0 && {_roll < _acc}) then {_chosen = _bi};
+		};
+		if (_chosen < 0) then {_chosen = 0};
+	};
+	if (_chosen < 0 || {count (_buckets select _chosen) == 0}) then {
+		_clsOrder = [2,1,3,0];
+		{ if (count (_buckets select _x) > 0) exitWith {_chosen = _x} } forEach _clsOrder;
+	};
+	_pick = (_buckets select _chosen) select (floor (random (count (_buckets select _chosen))));
 
 	//--- W7 Veteran Company: one-shot flag on logik -> use highest-upgrade eligible template.
 	private ["_w7Flag","_w7Skill","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best"];

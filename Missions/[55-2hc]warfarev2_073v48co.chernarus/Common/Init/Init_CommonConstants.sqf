@@ -122,6 +122,15 @@ with missionNamespace do {
 	WFBE_C_AI_COMMANDER_TEAMS_TARGET = 4;      //--- V0.2: AI-led combat teams the commander maintains per side.
 	WFBE_C_AI_COMMANDER_DEFENSES_MAX = 4;      //--- V0.2: manned base statics the AI places around its HQ.
 	if (isNil "WFBE_C_AICOM_AIR_MIN_TOWNS") then {WFBE_C_AICOM_AIR_MIN_TOWNS = 4}; //--- Aircraft are deferred until the AI holds this many towns (it flies poorly; air is a late, established-only asset). 0 = no gate.
+	//--- P1 combined-arms ratio (claude-gaming 2026-06-15): target CLASS mix for newly-typed AI teams,
+	//--- [infantry, light, heavy, air]. The type picker buckets the eligible templates by class and
+	//--- rolls a class against these weights; if the rolled class has NO buildable (factory+tech-unlocked)
+	//--- template it falls back to a lower vehicle class and finally to infantry, so it never forces an
+	//--- un-buildable type. Infantry stays the largest single share (foot are required to capture camps),
+	//--- but armour/mech rise to a meaningful ~25-35% once the heavy/light factory + tier exist. Weights
+	//--- need not sum to 1 (they are normalised at pick time). Was effectively ~70% infantry from the old
+	//--- doctrine-only weighting; this defaults to ~65/20/12/3 of the achievable mix.
+	if (isNil "WFBE_C_AICOM_TYPE_MIX") then {WFBE_C_AICOM_TYPE_MIX = [0.65, 0.20, 0.12, 0.03]};
 	//--- A/B EXPERIMENT (legacy-vs-next): arm label + sim-gating switch. LEGACY arm = control (gating off).
 	if (isNil "WFBE_C_AB_ARM") then {WFBE_C_AB_ARM = "NEXT-T1c"};
 	//--- Steff 2026-06-13: the AI must NOT be able to use artillery. Forced off (not a default)
@@ -244,6 +253,16 @@ with missionNamespace do {
 	//--- passes before being declared stranded; this is the dispatch->arrival budget, not the stuck-reissue.
 	if (isNil 'WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS') then {WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS = 250};
 	if (isNil 'WFBE_C_AICOM_ASSAULT_TIMEOUT')       then {WFBE_C_AICOM_ASSAULT_TIMEOUT       = 420};
+	//--- P0 STRANDED FIX (task #48, claude-gaming 2026-06-15): foot/under-equipped ongoing teams were
+	//--- dispatched at far spearhead towns 6-12km away (256 DISPATCH vs 13 ARRIVED, 63% >6km) - they
+	//--- march cross-country and die. REACH_FOOT = max metres a non-mounted team is sent on the ONGOING
+	//--- front: a spearhead farther than this from THIS team's leader is skipped in favour of the nearest
+	//--- reachable uncaptured town (builds a contiguous front). Mounted teams (with a drivable vehicle in
+	//--- the group) get REACH_MOUNTED so trucks/APCs can still cover the long leg. GUARDRAIL: never a ban -
+	//--- if NOTHING is in reach (isolated), the team still gets its nearest target so it never idles.
+	//--- BOOTSTRAP is exempt (0 towns owned -> the opening dogpile rush is unchanged).
+	if (isNil 'WFBE_C_AICOM_ASSAULT_REACH_FOOT')    then {WFBE_C_AICOM_ASSAULT_REACH_FOOT    = 3500};  //--- m: foot teams won't be sent at spearheads farther than this; pick nearest reachable town instead.
+	if (isNil 'WFBE_C_AICOM_ASSAULT_REACH_MOUNTED') then {WFBE_C_AICOM_ASSAULT_REACH_MOUNTED = 9000};  //--- m: teams with a drivable vehicle may take the long leg to a far spearhead.
 	//--- Careful-gear governor (owner refinement): the HC commander executor downshifts a
 	//--- transit convoy from NORMAL to LIMITED only while the lead hull's surfaceNormal.z is
 	//--- below this (steep slope) OR a stuck-strike is active; back to NORMAL once flat/moving.

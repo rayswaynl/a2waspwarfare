@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog"];
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -238,12 +238,28 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					//--- The cap is checked against _assigned, which now includes EN-ROUTE teams
 					//--- (pre-seeded above), so concentration is enforced across ticks, not just
 					//--- this pass. Then spill over to the classic nearest-uncaptured pick.
+					//--- P0 DISTANCE-AWARE / TRANSPORT-AWARE ONGOING SELECTION (task #48, claude-gaming
+					//--- 2026-06-15): the live match showed 256 DISPATCH vs 13 ARRIVED, 63% of dispatches
+					//--- aimed at spearheads >6km away (7457m/10893m/12349m) - foot teams marched cross-
+					//--- country and died. We now gate spearhead picks by THIS team's REACH: a non-mounted
+					//--- team won't be sent at a spearhead farther than REACH_FOOT (3.5km), it takes the
+					//--- nearest reachable uncaptured town instead (contiguous front); a MOUNTED team (any
+					//--- alive unit in a drivable land vehicle) gets REACH_MOUNTED (9km) so trucks/APCs still
+					//--- take the long leg. GUARDRAIL: if NOTHING is in reach the team still gets its nearest
+					//--- target (never idles). Bootstrap is exempt above (opening rush unchanged). Cheap: one
+					//--- leader pos, one units-scan for mount, distances on the existing town lists.
+					_ldrPos = getPos (leader _team);
+					_mounted = false;
+					{ if (!_mounted && {alive _x} && {(vehicle _x) != _x} && {(vehicle _x) isKindOf "LandVehicle"} && {canMove (vehicle _x)}) then {_mounted = true} } forEach (units _team);
+					_reachFoot    = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_FOOT", 3500];
+					_reachMounted = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_MOUNTED", 9000];
+					_teamReach = if (_mounted) then {_reachMounted} else {_reachFoot};
 					_spear = _logik getVariable ["wfbe_aicom_targets", []];
 					_concBase = missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATION", 3];
 					{
 						_spearT = _x;
 						if (isNull _target && {!isNull _spearT}) then {
-							if ((_spearT getVariable "sideID") != _sideID) then {
+							if (((_spearT getVariable "sideID") != _sideID) && {(_ldrPos distance _spearT) <= _teamReach}) then {
 								//--- Per-target quota = base concentration scaled by garrison tier
 								//--- (wfbe_town_type maps to defender group count in
 								//--- Server_GetTownGroupsDefender.sqf: Tiny 3, Small 5, Medium 6,
@@ -266,10 +282,26 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							};
 						};
 					} forEach _spear;
+					//--- P0 NEAREST-REACHABLE OVERRIDE: no in-reach spearhead won the quota above (every
+					//--- spearhead is full or out of reach). Build a CONTIGUOUS FRONT: pick the nearest
+					//--- un-captured town WITHIN this team's reach, preferring towns not already saturated
+					//--- (_avail = uncaptured minus en-route mass) so freed teams spread to the next town.
 					if (isNull _target) then {
 						_avail = _uncaptured - _assigned;
 						if (count _avail == 0) then {_avail = _uncaptured};
-						_target = [leader _team, _avail] Call WFBE_CO_FNC_GetClosestEntity;
+						//--- Nearest town in reach (foot 3.5km / mounted 9km from THIS leader).
+						_nearReach = objNull; _nearReachD = 1e9;
+						{
+							_tgtDist = _ldrPos distance _x;
+							if (_tgtDist <= _teamReach && {_tgtDist < _nearReachD}) then {_nearReachD = _tgtDist; _nearReach = _x};
+						} forEach _avail;
+						if (!isNull _nearReach) then {
+							_target = _nearReach;
+						} else {
+							//--- GUARDRAIL: nothing in reach (isolated front / island target) - fall back to
+							//--- the absolute nearest so the team always has a valid order and never idles.
+							_target = [leader _team, _avail] Call WFBE_CO_FNC_GetClosestEntity;
+						};
 					};
 				};
 				if (!isNil "_target") then {
@@ -338,13 +370,26 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							};
 						};
 						_assigned set [count _assigned, _target];
-						_team setVariable ["wfbe_aicom_townorder", [_target, time, getPos (leader _team)]];
+						//--- P0 LATCH-CHURN FIX (task #48, claude-gaming 2026-06-15): a stuck re-issue used to
+						//--- rewrite the breadcrumb time AND re-open the latch with a fresh start-time, RESETTING
+						//--- the 420s strand clock every stuck pass - so a team grinding at the SAME far town never
+						//--- hit STRANDED (only 4 logged despite ~80 lost teams), it just churned and died silent.
+						//--- Fix: if the dispatch is ALREADY OPEN and we are re-issuing the SAME target, PRESERVE
+						//--- the original dispatch start-time (_dt0) so the strand watcher fires on schedule and the
+						//--- failure is logged + the team deliberately re-tasked. A NEW target (front rolled, target
+						//--- captured) legitimately resets the clock. The unstuck strike ladder still rides along.
+						private ["_priorOrd","_priorOpen","_dispT0","_sameTgt"];
+						_priorOrd  = _team getVariable ["wfbe_aicom_townorder", []];
+						_priorOpen = _team getVariable ["wfbe_aicom_dispatch_open", false];
+						_sameTgt   = (count _priorOrd >= 1) && {(typeName (_priorOrd select 0)) == "OBJECT"} && {(_priorOrd select 0) == _target};
+						_dispT0    = if (_priorOpen && _sameTgt && {count _priorOrd >= 2}) then {_priorOrd select 1} else {time};
+						_team setVariable ["wfbe_aicom_townorder", [_target, _dispT0, getPos (leader _team)]];
 						//--- ASSAULT TELEMETRY (task #48, #2): book a watcher latch on every (re)dispatch and
 						//--- log the DISPATCH event. The OUTCOME watcher (Hook B, top of the per-team loop)
 						//--- resolves exactly one ARRIVED or STRANDED per dispatch. Logging only - no behaviour
 						//--- change. Town center = getPos _target; name via the broadcast "name" var.
 						_team setVariable ["wfbe_aicom_dispatch_open", true];
-						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_DISPATCH|team=" + (str _team) + "|town=" + (_target getVariable ["name","town"]) + "|dist=" + str (round ((leader _team) distance _target)));
+						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_DISPATCH|team=" + (str _team) + "|town=" + (_target getVariable ["name","town"]) + "|dist=" + str (round ((leader _team) distance _target)) + "|reissue=" + str (_priorOpen && _sameTgt));
 						["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] heading to attack town [%3].", _sideText, _team, _target getVariable ["name", "town"]]] Call WFBE_CO_FNC_AICOMLog;
 					};
 				};

@@ -9,7 +9,7 @@
 	Produce worker no-ops gracefully when the needed factory does not exist yet.
 */
 
-private ["_side","_logik","_sideText","_teams","_templates","_tmplUpgrades","_upgrades","_team","_eligible","_i","_u","_ok","_k","_pick","_unassigned","_doc","_track","_pref"];
+private ["_side","_logik","_sideText","_teams","_templates","_tmplUpgrades","_upgrades","_team","_eligible","_i","_u","_ok","_k","_pick","_unassigned","_doc","_track","_pref","_buckets","_eu","_bClass","_mix","_doctrineNudge","_dWeights","_wSum","_roll","_acc","_chosen","_order","_bi"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -49,22 +49,64 @@ _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 			};
 
 			if (count _eligible > 0) then {
-				//--- V0.2 doctrine: 70% of picks favor templates of the primary factory path
-				//--- (LF doctrine -> light-requiring templates, HF -> heavy-requiring).
+				//--- P1 combined-arms picker (claude-gaming 2026-06-15). The old logic favoured the
+				//--- doctrine's single vehicle track 70% of the time but fell back to a UNIFORM draw over
+				//--- all eligible templates the other 30%; because infantry templates unlock first and are
+				//--- ALWAYS eligible while vehicle templates unlock late, the run-long average landed ~70%
+				//--- infantry. New approach: bucket the eligible templates by CLASS (infantry/light/heavy/
+				//--- air using the same air>0->air / heavy>0->heavy / light>0->light / else infantry rule
+				//--- as the telemetry), then roll a target class from WFBE_C_AICOM_TYPE_MIX. Buckets are
+				//--- built from _eligible, so every pick is already factory+tech-buildable. If the rolled
+				//--- class is empty we degrade to the next buildable class (down to infantry, always present),
+				//--- so non-infantry only appears when the side can actually field it - and infantry is never
+				//--- starved (foot are needed to capture camps).
+				_buckets = [[],[],[],[]]; //--- [infantry, light, heavy, air]
+				{
+					_eu = _tmplUpgrades select _x;
+					_bClass = 0; //--- infantry
+					if ((_eu select WFBE_UP_AIR) > 0) then {_bClass = 3} else {
+						if ((_eu select WFBE_UP_HEAVY) > 0) then {_bClass = 2} else {
+							if ((_eu select WFBE_UP_LIGHT) > 0) then {_bClass = 1};
+						};
+					};
+					(_buckets select _bClass) set [count (_buckets select _bClass), _x];
+				} forEach _eligible;
+
+				//--- Base class weights from the tunable (copied so we can apply a small doctrine nudge).
+				_mix = WFBE_C_AICOM_TYPE_MIX;
+				if (isNil "_mix" || {count _mix < 4}) then {_mix = [0.65, 0.20, 0.12, 0.03]};
+				_dWeights = [_mix select 0, _mix select 1, _mix select 2, _mix select 3];
+				//--- Keep a light doctrine flavour: nudge the side's primary vehicle track up ~50% so HF
+				//--- armies skew armour and LF armies skew mech/light, WITHOUT collapsing back to one track.
 				_doc = _logik getVariable ["wfbe_aicom_doctrine", ""];
-				_pref = [];
 				if (_doc != "") then {
 					_track = if (_doc == "HF") then {2} else {1};
-					{
-						_u = _tmplUpgrades select _x;
-						if ((_u select _track) >= 1) then {_pref = _pref + [_x]};
-					} forEach _eligible;
+					_dWeights set [_track, (_dWeights select _track) * 1.5];
 				};
-				if (count _pref > 0 && {(random 1) < 0.7}) then {
-					_pick = _pref select (floor (random (count _pref)));
-				} else {
-					_pick = _eligible select (floor (random (count _eligible)));
+				//--- Zero out classes with no buildable template so the roll only lands on achievable types.
+				for "_bi" from 0 to 3 do {
+					if (count (_buckets select _bi) == 0) then {_dWeights set [_bi, 0]};
 				};
+
+				_wSum = (_dWeights select 0) + (_dWeights select 1) + (_dWeights select 2) + (_dWeights select 3);
+				_chosen = -1;
+				if (_wSum > 0) then {
+					_roll = random _wSum;
+					_acc = 0;
+					for "_bi" from 0 to 3 do {
+						_acc = _acc + (_dWeights select _bi);
+						if (_chosen < 0 && {_roll < _acc}) then {_chosen = _bi};
+					};
+					if (_chosen < 0) then {_chosen = 0};
+				};
+				//--- Safety: if the weighted roll produced nothing buildable, walk classes by preference
+				//--- (heavy > light > air > infantry) and take the first non-empty bucket; infantry always
+				//--- has entries (the [0,0,0,0] rifle squad), so a pick is guaranteed.
+				if (_chosen < 0 || {count (_buckets select _chosen) == 0}) then {
+					_order = [2,1,3,0];
+					{ if (count (_buckets select _x) > 0) exitWith {_chosen = _x} } forEach _order;
+				};
+				_pick = (_buckets select _chosen) select (floor (random (count (_buckets select _chosen))));
 				_team setVariable ["wfbe_teamtype", _pick, true];
 				["INFORMATION", Format ["AI_Commander_AssignTypes.sqf: [%1] assigned template %2 to AI team [%3] (doctrine %4).", _sideText, _pick, _team, _doc]] Call WFBE_CO_FNC_AICOMLog;
 				//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): a server-local team's
