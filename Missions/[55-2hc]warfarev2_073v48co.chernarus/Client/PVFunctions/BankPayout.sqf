@@ -13,6 +13,7 @@ if (isNil "WFBE_Client_SideID") exitWith {};
 
 _amount = _this select 0;
 
+if (!alive player) exitWith {}; //--- M-3: the pool is divided by ALIVE players only (Server_BankIncome.sqf:39); a dead-at-tick player applying the share makes total payout exceed the 6000 pool
 _amount Call WFBE_CL_FNC_ChangeClientFunds;
 
 Format [Localize "BankDividend", _amount] Call GroupChatMessage;
