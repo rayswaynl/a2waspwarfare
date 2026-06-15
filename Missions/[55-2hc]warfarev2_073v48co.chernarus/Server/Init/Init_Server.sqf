@@ -576,6 +576,24 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 	};
 } forEach [[_present_east, east, _startE],[_present_west, west, _startW]];
 
+//--- EDITOR-SLOT TAGGING (2026-06-15): the 27 WEST + 27 EAST editor-placed player-slot groups in
+//--- mission.sqm are born by the engine at load with no createGroup, so WFBE_CO_FNC_CreateGroup never
+//--- tags them and they show as "untagged" in the server_groupsGC per-source audit - indistinguishable
+//--- from genuinely leaked groups. One-shot sweep tagging every still-untagged WEST/EAST group as
+//--- "editor-player-slot" (broadcast). They already carry wfbe_persistent=true (set above) so the GC
+//--- never reaps them; this is audit-only. The isNil guard skips any runtime group the wrapper already
+//--- tagged. GUER has 0 editor slots so resistance is intentionally excluded.
+if (isNil "WFBE_EDITOR_GROUPS_TAGGED") then {
+	missionNamespace setVariable ["WFBE_EDITOR_GROUPS_TAGGED", true];
+	{
+		Private ["_src"];
+		_src = _x getVariable "wfbe_group_src";
+		if (isNil "_src" && {(side _x == west) || (side _x == east)}) then {
+			_x setVariable ["wfbe_group_src", "editor-player-slot", true];
+		};
+	} forEach allGroups;
+};
+
 [] Call Compile preprocessFile "Server\Config\Config_GUE.sqf";
 
 serverInitFull = true;
