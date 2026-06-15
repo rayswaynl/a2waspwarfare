@@ -324,8 +324,11 @@ buildingMarker = 0;
 CCMarker = 0;
 CBRCircleMarker = 0;
 gearCost = 0;
-currentTG = 50;
-if (currentTG == 50) then {setTerrainGrid currentTG};
+//--- 2026 client-FPS: REMOVED `currentTG = 50; setTerrainGrid 50;`. It unconditionally clobbered the
+//--- player's saved terrain-grid profile (loaded earlier by Init_ProfileVariables) AND made the fallback
+//--- below dead code (isNil 'currentTG' was always false). Now: returning players keep their saved grid;
+//--- profile-less players fall through to the lower min(WFBE_C_ENVIRONMENT_MAX_CLUTTER, 25) default (~line 347),
+//--- a real client-FPS gain (half the grass/clutter density of the old forced 50).
 lastBuilt = [];
 unitQueu = 0;
 fireMissionTime = -1000;
