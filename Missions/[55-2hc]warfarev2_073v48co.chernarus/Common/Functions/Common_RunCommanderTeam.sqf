@@ -570,19 +570,59 @@ while {!WFBE_GameOver && _alive} do {
 							_nearCamp   = [leader _team, _unheldCamps] Call WFBE_CO_FNC_GetClosestEntity;
 							if (isNull _nearCamp) exitWith {};
 							_campTgtPos = getPos _nearCamp;
-							//--- Live SAD/MOVE order onto the camp (COMBAT/RED), foot units + leader in.
-							[_team, true, [[_campTgtPos, 'SAD', _campRange max 30, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+							//--- CAPTURE MECHANIC (server_town_camp.sqf L26): the camp scan is
+							//--- nearEntities["Man", WFBE_C_CAMPS_RANGE(10m)] - it counts ONLY on-foot
+							//--- "Man" entities within 10m. Crew sitting in a hull do NOT register, and
+							//--- a 30m-radius SAD lets the group "complete" the order out on the 30m
+							//--- ring and rove there (the observed "drive circles, never cap"). So:
+							//---  (a) lay a TIGHT MOVE waypoint on the camp CENTRE with a small radius
+							//---      INSIDE the 10m capture range (mirrors the depot-centre hold, sized
+							//---      to the camp scan) - NOT a 30m SAD ring,
+							//---  (b) defensively dismount any _footInf still in cargo and walk them in,
+							//---  (c) settle until the leader is inside _campRange, then PLANT the foot
+							//---      units (doStop + setUnitPos "UP") so they hold IN the 10m zone and
+							//---      the presence scan ticks, instead of orbiting.
+							_campHoldR = (_campRange - 2) max 6; //--- ~8m: comfortably inside the 10m "Man" scan
+							[_team, true, [[_campTgtPos, 'MOVE', _campHoldR, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+							//--- Defensive dismount: any foot soldier still in cargo walks in on foot
+							//--- (crew never count for the camp "Man" scan, so foot presence is required).
+							{
+								if (alive _x && {vehicle _x != _x}) then {
+									_veh = vehicle _x;
+									if !(_x == driver _veh || _x == gunner _veh) then {unassignVehicle _x; [_x] orderGetIn false};
+								};
+							} forEach _footInf;
 							{if (alive _x) then {_x doMove _campTgtPos}} forEach _footInf;
 							if (!isNull leader _team && {alive leader _team}) then {(leader _team) doMove _campTgtPos};
 							//--- Reveal the camp's live enemy so the squad prosecutes them (sweep pattern).
 							{
 								if (alive _x && {side _x != _side} && {side _x != civilian}) then {_team reveal _x}; //--- A2: 2-operand reveal only (array form is A3-only).
 							} forEach (_campTgtPos nearEntities [["Man"], 60]);
-							sleep 10;
+							//--- Settle: up to ~20s or leader inside the 10m camp range (mirrors the
+							//--- per-camp sweep settle at L543). Re-press stragglers toward the centre.
+							_campSettleEnd = time + 20;
+							while {time < _campSettleEnd && {!(!isNull leader _team && {alive leader _team} && {(leader _team) distance _nearCamp < _campRange})} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+								{if (alive _x && {(_x distance _nearCamp) > _campHoldR}) then {_x doMove _campTgtPos}} forEach _footInf;
+								sleep 3;
+							};
+							//--- ANTI-ORBIT HOLD: any foot unit now inside the zone STOPS and stands so
+							//--- it stays put within 10m (presence-based capture) instead of roving. Units
+							//--- still outside keep a live move order in - never frozen far out (guardrail).
+							{
+								if (alive _x) then {
+									if ((_x distance _nearCamp) < _campRange) then {_x setUnitPos "UP"; doStop _x}
+									else {_x doMove _campTgtPos};
+								};
+							} forEach _footInf;
+							//--- Dwell so the 10m camp scan ticks the supplyValue down to a flip.
+							sleep 8;
 							//--- Re-evaluate: drop any camp that is now ours (or went null).
 							_unheldCamps = [];
 							{ if (!isNull _x && {(_x getVariable ["sideID",-1]) != _sideID}) then {_unheldCamps = _unheldCamps + [_x]} } forEach _townCamps;
 						};
+						//--- Release the plant so the depot-centre hold below can march these units on
+						//--- (setUnitPos "UP" pins stance; "AUTO" hands movement back to the AI).
+						{if (alive _x) then {_x setUnitPos "AUTO"}} forEach _footInf;
 						if (count _unheldCamps > 0) then {
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] camp-first window expired with %3 camp(s) un-held at [%4] - proceeding to center.", _side, _team, count _unheldCamps, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}]] Call WFBE_CO_FNC_AICOMLog;
 						};
