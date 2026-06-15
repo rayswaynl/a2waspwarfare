@@ -90,7 +90,7 @@ _wasLeader = (leader _oldGrp == _oldUnit);
 //--- createUnit into a non-local group fails silently (A2 OA group-locality trap).
 //--- A dedicated swap group is deleted after joinGroup restores squad membership.
 _swapGrp = createGroup (side _oldUnit);
-_swapGrp setVariable ["wfbe_group_src", "skin-swap"]; //--- audit clarity: transient client-local swap group, deleted < 0.5s later; a mid-swap GROUPAUDIT now shows "skin-swap" not "untagged".
+_swapGrp setVariable ["wfbe_group_src", "skin-swap", true]; //--- audit clarity: transient client-local swap group, deleted < 0.5s later. BROADCAST (3rd arg true) so the SERVER-side GROUPAUDIT/UNTAGLEAK actually sees the tag - a client-local setVariable would be invisible to the server's allGroups audit and the group would read as "untagged".
 
 diag_log format ["[WFBE (SKIN)] B2 createUnit: class='%1' swapGrp=%2 pos=%3 swapGrpLocal=%4",
 	_chosenClass, _swapGrp, _pos, local _oldUnit];
