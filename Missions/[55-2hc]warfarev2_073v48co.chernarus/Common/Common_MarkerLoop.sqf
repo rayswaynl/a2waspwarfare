@@ -33,7 +33,7 @@ _mapWasClosed = false;
 
 while {true} do {
 
-	sleep 0.2;
+	_mapVisible = visibleMap; sleep (if (_mapVisible) then {0.2} else {1.0}); //--- client-FPS: run this registry loop at 1Hz while the map is closed (the dead-unit + nextDue scan otherwise ran at 5Hz with nothing visible); the map-open dirty pass below re-services every marker instantly on reopen
 	_perfTick = diag_tickTime;
 	_now = time;
 	_mapVisible = visibleMap;
