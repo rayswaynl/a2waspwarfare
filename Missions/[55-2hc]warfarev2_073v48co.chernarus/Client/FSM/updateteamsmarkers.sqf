@@ -1,5 +1,5 @@
 // Marty: Performance Audit locals and marker update cache.
-private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites"];
+private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_vel","_spd","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites"];
 
 _sideText = sideJoinedText;
 _label = "";
@@ -199,7 +199,19 @@ while {!gameOver} do {
 						} else {
 							_perfSkippedWrites = _perfSkippedWrites + 1;
 						};
-						_dir = getDir _leaderVehicle;
+						//--- Marty/Claude: the orange arrow should point the way the player is MOVING, not
+						//--- where the unit FACES. getDir (vehicle/man heading) and movement heading diverge
+						//--- when strafing on foot, walking backwards, or sliding in a vehicle, so the arrow
+						//--- pointed wrong. Derive the heading from velocity while moving; fall back to
+						//--- getDir when ~stationary so the arrow doesn't jitter at rest. A2-OA-1.64-safe.
+						_vel = velocity _leaderVehicle;
+						_spd = sqrt (((_vel select 0) * (_vel select 0)) + ((_vel select 1) * (_vel select 1)));
+						if (_spd > 1.2) then {
+							_dir = (_vel select 0) atan2 (_vel select 1);
+							if (_dir < 0) then {_dir = _dir + 360};
+						} else {
+							_dir = getDir _leaderVehicle;
+						};
 						_lastDir = _lastDirs select _markerIndex;
 						_dirDiff = abs (_dir - _lastDir);
 						if (_dirDiff > 180) then {_dirDiff = 360 - _dirDiff};

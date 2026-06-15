@@ -17,6 +17,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_captureDone","_townObj","_townCamps","_campObj","_campRange",
          "_liveUnits","_dismounted","_veh","_u","_settleTimeout","_hasCargo",
          "_townCenter","_capRange","_footInf","_holdEnd","_resNear","_enemyNear","_townFlipped",
+         "_unheldCamps","_campFirstEnd","_nearCamp","_campTgtPos",
          "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow"];
@@ -45,6 +46,11 @@ if (isNull _team || {((count _units) + (count _vehicles)) == 0}) exitWith {
 };
 
 _team allowFleeing 0;
+//--- STANCE (task #1): set an aggressive posture ONCE at founding so the team is "advance and
+//--- engage" before any order. AWARE+RED+FULL = fast, will-engage transit (not banzai - AWARE
+//--- still uses cover/returns fire sanely). Covers infantry-only + pure-armour teams whose props
+//--- would otherwise stay engine-default. The on-objective SAD waypoints still flip to COMBAT/WEDGE.
+_team setCombatMode "RED"; _team setBehaviour "AWARE"; _team setSpeedMode "FULL";
 _team setVariable ["wfbe_aicom_hc", true, true];   //--- brain: do not Produce/waypoint this one directly.
 _team setVariable ["wfbe_queue", [], false];
 
@@ -361,9 +367,9 @@ while {!WFBE_GameOver && _alive} do {
 					//--- road-bias comes from the road-SNAPPED MOVE nodes below + COLUMN formation (the same
 					//--- A2 idiom Server_AI_SetTownAttackPath uses).
 					_team setBehaviour "AWARE";
-					_team setCombatMode "YELLOW";
+					_team setCombatMode "RED";        //--- STANCE (task #1): advance-and-engage on the march (was YELLOW).
 					_team setFormation "COLUMN";
-					_team setSpeedMode "NORMAL";
+					_team setSpeedMode "FULL";         //--- STANCE (task #1): full road-march speed (was NORMAL).
 
 					//--- Pull the road-node chain the server snapped for this seq (may be empty).
 					//--- A2: groups do not support the [name, default] getVariable form; plain get + isNil.
@@ -374,9 +380,9 @@ while {!WFBE_GameOver && _alive} do {
 					//--- final MOVE on the destination so the arrival branch (leader<200m) trips.
 					_rmWPs = [];
 					{
-						_rmWPs = _rmWPs + [[_x, 'MOVE', 40, 30, [], [], ["AWARE","YELLOW","","NORMAL"]]];  //--- A2-fix 2026-06-14: inherit-formation (was COLUMN-locked) + wider completion 30 so columns open through chokepoints instead of bunching
+						_rmWPs = _rmWPs + [[_x, 'MOVE', 40, 30, [], [], ["AWARE","RED","","FULL"]]];  //--- STANCE (task #1): RED/FULL advance-and-engage (was YELLOW/NORMAL). A2-fix 2026-06-14: inherit-formation (was COLUMN-locked) + wider completion 30 so columns open through chokepoints instead of bunching
 					} forEach _rmRoute;
-					_rmWPs = _rmWPs + [[_dest, 'MOVE', 50, 30, [], [], ["AWARE","YELLOW","COLUMN","NORMAL"]]];
+					_rmWPs = _rmWPs + [[_dest, 'MOVE', 50, 30, [], [], ["AWARE","RED","COLUMN","FULL"]]];  //--- STANCE (task #1): RED/FULL final-approach (was YELLOW/NORMAL).
 					[_team, true, _rmWPs] Spawn WFBE_CO_FNC_WaypointsAdd;
 					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] order #%3 %4 ROAD-MARCH (%5 road nodes).", _side, _team, _seq, _mode, count _rmRoute]] Call WFBE_CO_FNC_AICOMLog;
 				} else {
@@ -416,7 +422,7 @@ while {!WFBE_GameOver && _alive} do {
 						_team setVariable ["wfbe_aicom_gearslow", true];
 					};
 					if (!_govWantSlow && {_govIsSlow}) then {
-						_team setSpeedMode "NORMAL";           //--- back to the fast default.
+						_team setSpeedMode "FULL";             //--- STANCE (task #1): back to the fast default (was NORMAL).
 						_team setVariable ["wfbe_aicom_gearslow", false];
 					};
 				};
@@ -546,6 +552,41 @@ while {!WFBE_GameOver && _alive} do {
 							};
 						} forEach _townCamps;
 
+						//--- ===== CAMP-FIRST GATE (BUG A): BOTH CAMPS BEFORE THE CENTER =====
+						//--- Owner decision: KEEP Classic capture mode (WFBE_C_TOWNS_CAPTURE_MODE=0
+						//--- unchanged) and make the AI take both camps FIRST *behaviourally*. We do
+						//--- NOT enter the depot/town-center hold below until every camp this town owns
+						//--- is held by our side (sideID == _sideID). Direct the foot infantry to the
+						//--- NEAREST un-held camp, lay a live SAD/MOVE order there at WFBE_C_CAMPS_RANGE,
+						//--- reveal its garrison (same pattern as the sweep above), and re-evaluate each
+						//--- pass. TIME-BOX with the existing _holdEnd-style idiom so a dead/uncapturable
+						//--- bunker (server_town_camp.sqf:24 gates on alive _base) can NEVER trap the team:
+						//--- after a bounded window we fall through to the center hold anyway. Units always
+						//--- hold a live SAD/move order here - never frozen/idle (MEMORY guardrail).
+						_unheldCamps = [];
+						{ if (!isNull _x && {(_x getVariable ["sideID",-1]) != _sideID}) then {_unheldCamps = _unheldCamps + [_x]} } forEach _townCamps;
+						_campFirstEnd = time + 150; //--- same order of magnitude as the center-hold timeout (150s)
+						while {count _unheldCamps > 0 && {time < _campFirstEnd} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+							_nearCamp   = [leader _team, _unheldCamps] Call WFBE_CO_FNC_GetClosestEntity;
+							if (isNull _nearCamp) exitWith {};
+							_campTgtPos = getPos _nearCamp;
+							//--- Live SAD/MOVE order onto the camp (COMBAT/RED), foot units + leader in.
+							[_team, true, [[_campTgtPos, 'SAD', _campRange max 30, 30, [], [], ["COMBAT","RED","WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+							{if (alive _x) then {_x doMove _campTgtPos}} forEach _footInf;
+							if (!isNull leader _team && {alive leader _team}) then {(leader _team) doMove _campTgtPos};
+							//--- Reveal the camp's live enemy so the squad prosecutes them (sweep pattern).
+							{
+								if (alive _x && {side _x != _side} && {side _x != civilian}) then {_team reveal _x}; //--- A2: 2-operand reveal only (array form is A3-only).
+							} forEach (_campTgtPos nearEntities [["Man"], 60]);
+							sleep 10;
+							//--- Re-evaluate: drop any camp that is now ours (or went null).
+							_unheldCamps = [];
+							{ if (!isNull _x && {(_x getVariable ["sideID",-1]) != _sideID}) then {_unheldCamps = _unheldCamps + [_x]} } forEach _townCamps;
+						};
+						if (count _unheldCamps > 0) then {
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] camp-first window expired with %3 camp(s) un-held at [%4] - proceeding to center.", _side, _team, count _unheldCamps, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}]] Call WFBE_CO_FNC_AICOMLog;
+						};
+
 						//--- ===== PRIMARY: DEPOT-CENTER HOLD + CLEAR (the actual town flip) =====
 						//--- Push every on-foot soldier ONTO the depot center and FIGHT there. This is
 						//--- the only thing that satisfies server_town.sqf mode-0: a WEST unit within
@@ -585,6 +626,19 @@ while {!WFBE_GameOver && _alive} do {
 						if (_townFlipped) then {
 							_captureDone = true;
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] CAPTURED [%3] - holding center.", _side, _team, _townObj getVariable ["name","?"]]] Call WFBE_CO_FNC_AICOMLog;
+							//--- ON-CAPTURE RE-TASK (BUG B): drop the captured-town order so AssignTowns
+							//--- retargets THIS team next tick instead of letting it idle ~2 min at the
+							//--- center. AssignTowns L168-169 retargets when isNull _goto (=> _needs=true),
+							//--- and L164 only enters that gate for mode "towns"/"". So null the goto,
+							//--- clear the order bookkeeping, and force the team back into the towns gate.
+							//--- Also clear stale strike/relief state so Strategy.sqf doesn't re-grab it.
+							//--- Locality matches existing writes: teamgoto/teammode broadcast true (like
+							//--- SetTeamMovePos/SetTeamMoveMode); townorder stays 2-arg (like all its writers).
+							_team setVariable ["wfbe_teamgoto", objNull, true];        //--- drop captured-town goto -> AssignTowns retargets next tick (isNull _goto => _needs=true)
+							_team setVariable ["wfbe_aicom_townorder", [], false];     //--- 2-arg (NOT broadcast) to match existing townorder writes
+							_team setVariable ["wfbe_teammode", "towns", true];        //--- ensure strike/relief teams re-enter the towns retarget gate
+							_team setVariable ["wfbe_aicom_strike", false, true];      //--- clear stale strike state so Strategy.sqf doesn't re-grab
+							_team setVariable ["wfbe_aicom_relief", objNull, true];
 						} else {
 							//--- Not flipped: keep the SAD-at-center order live (units stay fighting,
 							//--- never idle) and retry on the next loop tick. No remount, no dead end.

@@ -74,6 +74,42 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	_aliveCount = 0;
 	if (!isNull _team) then {_aliveCount = {alive _x} count (units _team)};
 	if (_aliveCount > 0) then {
+	//--- ASSAULT TELEMETRY (task #48, #2): OUTCOME watcher. Rides this existing forEach _teams
+	//--- (fired every WFBE_C_AI_COMMANDER_TOWN_INTERVAL=120s). For each team with an OPEN dispatch
+	//--- (Hook A latch), resolve exactly one ARRIVED (leader within arrive-radius of the town) or
+	//--- STRANDED (timeout exceeded, still far). Latched by wfbe_aicom_dispatch_open so it fires
+	//--- once per dispatch; a re-dispatch in Hook A re-opens the latch. Logging only, no behaviour.
+	if (_team getVariable ["wfbe_aicom_dispatch_open", false]) then {
+		private ["_dord","_dtgt","_dt0","_dldr","_ddist","_arrR","_toSecs","_elapsed"];
+		_dord = _team getVariable ["wfbe_aicom_townorder", []];
+		if (count _dord >= 2) then {
+			_dtgt = _dord select 0;
+			_dt0  = _dord select 1;
+			if (typeName _dtgt == "OBJECT" && {!isNull _dtgt}) then {
+				_dldr   = leader _team;
+				_ddist  = _dldr distance _dtgt;
+				_arrR   = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250];
+				_toSecs = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_TIMEOUT", 420];
+				_elapsed = round (time - _dt0);
+				if (_ddist <= _arrR) then {
+					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_ARRIVED|team=" + (str _team) + "|town=" + (_dtgt getVariable ["name","town"]) + "|dist=" + str (round _ddist) + "|elapsed=" + str _elapsed);
+					_team setVariable ["wfbe_aicom_dispatch_open", false];
+				} else {
+					if ((time - _dt0) > _toSecs) then {
+						private ["_moved","_stuck"];
+						_moved = -1;
+						if (count _dord >= 3) then {_moved = _dldr distance (_dord select 2)};
+						_stuck = (behaviour _dldr != "COMBAT") && {_moved >= 0} && {_moved < (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_MOVED", 200])};
+						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_STRANDED|team=" + (str _team) + "|town=" + (_dtgt getVariable ["name","town"]) + "|dist=" + str (round _ddist) + "|elapsed=" + str _elapsed + "|moved=" + str (round _moved) + "|stuck=" + str _stuck);
+						_team setVariable ["wfbe_aicom_dispatch_open", false];
+					};
+				};
+			} else {
+				//--- Target captured/null (e.g. Strategy cleared the order): close the latch silently.
+				_team setVariable ["wfbe_aicom_dispatch_open", false];
+			};
+		};
+	};
 	_autonomous = _team getVariable ["wfbe_autonomous", false];
 	_modeNow = toLower (_team getVariable ["wfbe_teammode", "towns"]);
 	_canDrive = false;
@@ -303,6 +339,12 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						};
 						_assigned set [count _assigned, _target];
 						_team setVariable ["wfbe_aicom_townorder", [_target, time, getPos (leader _team)]];
+						//--- ASSAULT TELEMETRY (task #48, #2): book a watcher latch on every (re)dispatch and
+						//--- log the DISPATCH event. The OUTCOME watcher (Hook B, top of the per-team loop)
+						//--- resolves exactly one ARRIVED or STRANDED per dispatch. Logging only - no behaviour
+						//--- change. Town center = getPos _target; name via the broadcast "name" var.
+						_team setVariable ["wfbe_aicom_dispatch_open", true];
+						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_DISPATCH|team=" + (str _team) + "|town=" + (_target getVariable ["name","town"]) + "|dist=" + str (round ((leader _team) distance _target)));
 						["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] heading to attack town [%3].", _sideText, _team, _target getVariable ["name", "town"]]] Call WFBE_CO_FNC_AICOMLog;
 					};
 				};

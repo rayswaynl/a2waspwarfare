@@ -78,6 +78,22 @@ while {!gameOver} do {
 
 		};
 
+		//--- TOWN-STALL FIX (funds-famine): AI-commander FUNDS must keep flowing even when the
+		//--- side's SUPPLY is at/over the cap. The supply-cap gate above correctly stops SUPPLY
+		//--- accumulation past the limit, but it ALSO suppressed the AI commander's funds income
+		//--- and stipend - so when the AI banked supply past the cap (it hoards supply), its funds
+		//--- drained to $0, it could no longer buy units, and the war stalled (towns stopped
+		//--- changing hands all night; AI stuck ~8 towns). Funds are a SEPARATE currency from
+		//--- supply, so top them up here whenever the cap suppressed them. Never synthesises supply.
+		if (_supply >= _supply_max_limit && {isNull(_x Call WFBE_CO_FNC_GetCommanderTeam)} && {_commander_enabled}) then {
+			_income = if (_is != 3) then {_supply} else {round(_supply * _incomeCoef)};
+			if (_is == 2) then {_income = round(_income / 2)};
+			if (_income > 0) then {
+				[_x, round(_income * (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_MULT", 1.5]))] Call ChangeAICommanderFunds;
+			};
+			[_x, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25]] Call ChangeAICommanderFunds;
+		};
+
 	} forEach WFBE_PRESENTSIDES;
 
 	_awaits = (_ii) Call GetSleepFPS;

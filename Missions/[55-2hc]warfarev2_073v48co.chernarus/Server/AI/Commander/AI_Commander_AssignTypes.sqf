@@ -67,6 +67,20 @@ _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 				};
 				_team setVariable ["wfbe_teamtype", _pick, true];
 				["INFORMATION", Format ["AI_Commander_AssignTypes.sqf: [%1] assigned template %2 to AI team [%3] (doctrine %4).", _sideText, _pick, _team, _doc]] Call WFBE_CO_FNC_AICOMLog;
+				//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): a server-local team's
+				//--- class is decided HERE (the HC path is logged in AI_Commander_Teams.sqf). Classify
+				//--- the assigned template by its min-upgrade reqs ([barracks,light,heavy,air] =
+				//--- _tmplUpgrades select _pick): air>0 -> air, else heavy>0 -> heavy, else light>0 ->
+				//--- light, else infantry. Single diag_log riding the existing per-team assignment.
+				private ["_clsU","_cls"];
+				_clsU = _tmplUpgrades select _pick;
+				_cls = "infantry";
+				if ((_clsU select WFBE_UP_AIR) > 0) then {_cls = "air"} else {
+					if ((_clsU select WFBE_UP_HEAVY) > 0) then {_cls = "heavy"} else {
+						if ((_clsU select WFBE_UP_LIGHT) > 0) then {_cls = "light"};
+					};
+				};
+				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_TYPED|via=server-local|template=" + str _pick + "|class=" + _cls);
 			};
 		};
 	};

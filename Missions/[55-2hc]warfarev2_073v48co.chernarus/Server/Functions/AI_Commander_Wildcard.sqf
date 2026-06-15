@@ -23,14 +23,16 @@
 	  W11 Field Hospital    ( 8) Uncommon  — heal all wounded AI infantry + one-shot free re-founding flag.
 	  W12 Spoils of War     ( 6) Uncommon  — 10-min double kill-bounty flag; not stackable.
 	  W4  Airborne Assault  ( 4) Rare      — free max-level paradrop (PARACHUTELEVEL3) on spearhead town.
-	  W8  Motor Pool Delivery(3) Rare      — free crewed top-tier vehicle, registers as AI team.
+	  W20 Captured Cache    ( 6) Uncommon  — raises one random SUPPORT-line upgrade tier (Paratroopers/Supply/Gear) +1;
+	                                          mirrors W16 Lend-Lease but for the support tiers W16 does NOT touch.
+	  (W8 Motor Pool Delivery RETIRED 2026-06-15: leaked a wfbe_persistent vehicle that never despawned.)
 	  W9  Uprising          ( 3) Rare      — GUER attack force at enemy-held town nearest the front; cap 1 active.
 	  W19 Heliborne QRF     ( 5) Rare      — air-inserts a QRF squad to the friendly town most under threat.
 
 	Human-side payout mapping:
 	  W1 -> wfbe_funds on the commander's team (instead of AI wallet).
 	  W7 -> re-draw (N/A for humans).
-	  W3/W4/W8 -> assets join human side under server/HC AI control.
+	  W3/W4 -> assets join human side under server/HC AI control.
 	  W12 -> doubles normal bounty path (flag consumed by RequestOnUnitKilled).
 	  W9 -> CAN fire against human-commanded sides (pressure, not stat theft).
 	  Draw announced via LocalizeMessage so players see the card.
@@ -39,7 +41,7 @@
 	second independent random call (random 1) mixed into the roll after the jitter,
 	ensuring side workers diverge even on the same frame.
 
-	ESCALATION: losing side (>=5 fewer towns than enemy) doubles W4/W7/W8/W9 weights.
+	ESCALATION: losing side (>=5 fewer towns than enemy) doubles W4/W7/W9 weights.
 
 	ELIGIBILITY re-draw: up to 3 attempts; fallback W1.
 
@@ -147,17 +149,17 @@ while {!gameOver} do {
 				         "_w6AirTemplate","_w6AirTier","_w6Tmpls","_w6TmplUps","_w6Cand","_w6Lead","_w6CandTier","_w6Idx","_w6UpArr",
 				         "_w6Price","_w6PriceCN","_w6PriceUD","_w6Funds","_w6Target","_w6Targets","_w6BestTown","_w6BestScore","_w6T4","_w6DNear","_w6D","_w6Score","_w6SpawnPos","_w6Live","_w6Hcs","_w6HcUnit","_w6Order",
 				         "_w7Eligible",
-				         "_w8Eligible","_w8BestClass","_w8BestPrice","_w8UD","_soldierClass",
+				         "_soldierClass",
 				         "_w9Eligible","_guerTemplates","_guerUnits","_candTown",
 				         "_w10Eligible","_w12Eligible","_w12Key","_w12Exp",
-				         "_wW1","_wW2","_wW3","_wW4","_wW6","_wW7","_wW8","_wW9","_wW10","_wW11","_wW12",
+				         "_wW1","_wW2","_wW3","_wW4","_wW6","_wW7","_wW9","_wW10","_wW11","_wW12",
 				         "_weights","_cumSum","_roll","_entropy","_i","_chosen","_draw",
 				         "_eligible","_result","_detail",
 				         "_fundsStart","_bonus","_curFunds",
 				         "_supply","_maxSupply","_supplyGrant",
 				         "_template","_home","_active","_hcs","_live",
 				         "_cands","_bestScore","_bestTown","_score","_dNear","_d","_t4Town",
-				         "_w4LvlText","_destination",
+				         "_w4LvlText","_destination","_w4PrevParaLevel",
 				         "_facDefs","_facEntry","_facListName","_facList",
 				         "_unitClass","_unitUD","_unitPrice","_unitUpReq",
 				         "_structures","_facObj","_facClass","_facIdx","_facNames","_v","_crew","_grp",
@@ -170,7 +172,7 @@ while {!gameOver} do {
 				         "_cmdTeam","_liveHC",
 				         "_cumSum2","_reDraw","_drawn","_needRedraw","_tmpActiveUpr","_targets",
 				         "_existingTeams","_sideIDLocal","_crew1","_crew2",
-				         "_healed","_humanCmd","_skipAI","_w11Eligible",
+				         "_healed","_humanCmd","_skipAI","_w11Eligible","_w3Max",
 				         "_dAng","_spawnPos","_dp","_placed","_dPos",
 	         "_w13Eligible","_w13AirList","_w13AttackClasses","_w13TargetTown","_w13MaxCluster","_w13BestDist","_w13Class","_w13Ang","_w13SpawnPos","_w13Heli","_w13Pilot","_w13TargetPos","_w13Grp","_w13PilotClass","_clustTown","_nearEnemies",
 	         "_w14Eligible","_w14AAClass","_w14Target","_w14Pos","_w14Placed","_w14Ang","_w14DPos","_w14AA","_w14i","_w14Grp","_w14Gunner","_w14PilotClass",
@@ -178,7 +180,8 @@ while {!gameOver} do {
 	         "_w16Eligible","_maxLevels","_raisableTiers","_chosenUpID","_newUpgrades","_tierName",
 	         "_w17Eligible","_w17TruckClass","_w17Truck","_w17Grp","_w17Driver","_w17Gunner","_w17Target","_w17TargetPos","_w17MarkerName","_w17SpawnPos","_w17Ang",
 	         "_w18Eligible","_w18OfficerClass","_w18ParaL3","_w18Pos","_w18Grp","_w18HVT","_w18MarkerID","_w18Target","_w18Near","_w1Eligible",
-		         "_w19Eligible","_w19TownObj","_w19Town","_w19BestThreat","_w19Threat","_w19TownPos","_w19SpawnPos","_w19NearD","_w19D","_w19HcUnit","_w19Price","_w19PriceCN","_w19PriceUD","_wW19",
+		         "_w19Eligible","_w19TownObj","_w19Town","_w19BestThreat","_w19Threat","_w19TownPos","_w19SpawnPos","_w19NearD","_w19D","_w19HcUnit","_w19Price","_w19PriceCN","_w19PriceUD","_wW19","_wW20",
+		         "_w20Eligible","_w20SupIDs","_w20Raisable","_w20ChosenID","_w20NewUpgrades","_w20TierName","_w20MaxLevels","_w20SupID",
 				         "_wNameMap","_wName"];
 
 				_side     = _this select 0;
@@ -277,46 +280,9 @@ while {!gameOver} do {
 				//--- W7: veteran company — flag check (one per draw; humans re-draw).
 				_w7Eligible = (!_humanCmd);
 
-				//--- W8: motor pool — HQ alive, at least one factory built, best-price vehicle findable.
-				_w8Eligible   = false;
-				_w8BestClass  = "";
-				_w8BestPrice  = -1;
-				if (!isNull _hq && {alive _hq}) then {
-					_facDefs = [["LIGHTUNITS",WFBE_UP_LIGHT],["HEAVYUNITS",WFBE_UP_HEAVY],["AIRCRAFTUNITS",WFBE_UP_AIR]];
-					{
-						_facEntry    = _x;
-						_facListName = Format ["WFBE_%1%2", _sideText, _facEntry select 0];
-						_facList     = missionNamespace getVariable [_facListName, []];
-						{
-							_unitClass = _x;
-							_unitUD    = missionNamespace getVariable _unitClass;
-							if (!isNil "_unitUD") then {
-								_unitPrice = _unitUD select QUERYUNITPRICE;
-								_unitUpReq = _unitUD select QUERYUNITUPGRADE;
-								if (!isNil "_upgrades" && {count _upgrades > (_facEntry select 1)}) then {
-									if (_unitUpReq <= (_upgrades select (_facEntry select 1)) && {_unitPrice > _w8BestPrice}) then {
-										//--- Confirm factory exists alive.
-										_facIdx   = (missionNamespace getVariable [Format ["WFBE_%1STRUCTURES",  _sideText], []]) find (_facEntry select 0);
-										_facClass = "";
-										if (_facIdx >= 0) then {
-											_facNames = missionNamespace getVariable [Format ["WFBE_%1STRUCTURENAMES", _sideText], []];
-											if (_facIdx < count _facNames) then {_facClass = _facNames select _facIdx};
-										};
-										if (_facClass != "") then {
-											_facObj = objNull;
-											{ if (typeOf _x == _facClass && {alive _x}) exitWith {_facObj = _x} } forEach _structures;
-											if (!isNull _facObj) then {
-												_w8BestClass = _unitClass;
-												_w8BestPrice = _unitPrice;
-												_w8Eligible  = true;
-											};
-										};
-									};
-								};
-							};
-						} forEach _facList;
-					} forEach _facDefs;
-				};
+								//--- W8 (Motor Pool Delivery) RETIRED 2026-06-15 (claude-gaming): card removed - it spawned a
+				//--- wfbe_persistent=true vehicle that NEVER despawned + ran a heavy factory/buy-list scan EVERY draw.
+				//--- Its weight, eligibility scan, zeroing, case handler and name-map entry are all gone.
 
 				//--- W9: uprising — enemy-held town nearest front, GUER templates available, cap 1 active uprising per side.
 				//--- Reuses _cands (enemy towns) already built above.
@@ -376,6 +342,28 @@ while {!gameOver} do {
 					if ((_upgrades select WFBE_UP_AIR)   < (_maxLevels select WFBE_UP_AIR))   then {_w16Eligible = true};
 				};
 
+				//--- W20: CAPTURED CACHE - mirror of W16 Lend-Lease but for the SUPPORT line W16 does NOT touch.
+				//--- Candidate support upgrade ids (Init_CommonConstants.sqf): Paratroopers / SupplyRate / Gear.
+				//--- W16 raises only Light/Heavy/Air, so these three are disjoint from it. Artillery-tied ids are
+				//--- EXCLUDED entirely while WFBE_C_AI_COMMANDER_ARTILLERY=0 (the AI is configured never to use arty),
+				//--- so a cache draw never sinks into a dead arty tier. Eligible when >=1 candidate tier is below max.
+				_w20Eligible  = false;
+				_w20MaxLevels = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_LEVELS", _sideText], []];
+				//--- Build the support-id set. Paratroopers/SupplyRate/Gear are NON-arty and AI-usable.
+				_w20SupIDs = [WFBE_UP_PARATROOPERS, WFBE_UP_SUPPLYRATE, WFBE_UP_GEAR];
+				//--- (No arty ids are added here; if arty is ever re-enabled this is the place to append them,
+				//---  gated on (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0.)
+				_w20Raisable = [];
+				if (!isNil "_upgrades") then {
+					{
+						_w20SupID = _x;
+						if (count _upgrades > _w20SupID && {count _w20MaxLevels > _w20SupID}) then {
+							if ((_upgrades select _w20SupID) < (_w20MaxLevels select _w20SupID)) then {_w20Raisable = _w20Raisable + [_w20SupID]};
+						};
+					} forEach _w20SupIDs;
+				};
+				if (count _w20Raisable > 0) then {_w20Eligible = true};
+
 				//--- W17: supply convoy - owned town + alive HQ + valid faction supply-truck class.
 				_w17Eligible = false;
 				_w17TruckClass = if (_side == west) then {"WarfareSupplyTruck_USMC"} else {"WarfareSupplyTruck_RU"};
@@ -416,7 +404,8 @@ while {!gameOver} do {
 				//--- -----------------------------------------------------------------------
 				_wW1  = 17; _wW2  = 17; _wW3  = 13;  //--- rebalance 2026-06-14: trim Commons a touch so rarer cards surface a bit more
 				_wW6  =  8; _wW7  =  8; _wW10 =  8; _wW11 =  8; _wW12 =  6;  //--- W6 = AIR CAVALRY (Uncommon, weight 8 - unchanged rarity tier).
-				_wW4  =  6; _wW8  =  5; _wW9  =  5;  //--- rebalance 2026-06-14: Rare tier up a bit (was 4/3/3) - rarer drops a little more often
+				_wW4  =  6; _wW9  =  5;  //--- rebalance 2026-06-14: Rare tier up a bit (was 4/3) - rarer drops a little more often (W8 RETIRED 2026-06-15)
+				_wW20 =  6;  //--- W20 = CAPTURED CACHE (Uncommon, weight 6 - mirrors W16 Lend-Lease; raises a random SUPPORT-line tier).
 				_wW13 =  6; _wW18 =  5;  //--- rebalance 2026-06-14: W13 (Rare) up 4->6
 				_wW19 =  5;  //--- W19 = HELIBORNE QRF (Rare, weight 5).
 				_wW14 =  7; _wW15 =  6; _wW16 =  6; _wW17 =  7;
@@ -425,7 +414,6 @@ while {!gameOver} do {
 					_wW4  = round(_wW4  * _eMult);
 					_wW6  = round(_wW6  * _eMult);  //--- Air Cavalry is now a COMBAT reinforcement: a losing side draws it more (mirrors W4/W8/W9 escalation).
 					_wW7  = round(_wW7  * _eMult);
-					_wW8  = round(_wW8  * _eMult);
 					_wW9  = round(_wW9  * _eMult);
 					_wW13 = round(_wW13 * _eMult);
 					_wW18 = round(_wW18 * _eMult);
@@ -437,7 +425,6 @@ while {!gameOver} do {
 				if (!_w4Eligible)  then {_wW4  = 0};
 				if (!_w6Eligible)  then {_wW6  = 0};
 				if (!_w7Eligible)  then {_wW7  = 0};
-				if (!_w8Eligible)  then {_wW8  = 0};
 				if (!_w9Eligible)  then {_wW9  = 0};
 				if (!_w10Eligible) then {_wW10 = 0};
 				if (!_w11Eligible) then {_wW11 = 0};
@@ -450,11 +437,16 @@ while {!gameOver} do {
 				if (!_w17Eligible) then {_wW17 = 0};
 				if (!_w18Eligible) then {_wW18 = 0};
 				if (!_w19Eligible) then {_wW19 = 0};
+				if (!_w20Eligible) then {_wW20 = 0};
 
 				//--- Weight table: [cardID, weight]. Card IDs match W-numbers.
+				//--- W8 (Motor Pool Delivery) RETIRED 2026-06-15: it spawned a wfbe_persistent=true vehicle that NEVER
+				//--- despawned (worst perf/leak card) + a heavy eligibility scan. Slot 8 is GONE, not reused. W20
+				//--- (Captured Cache) is a NEW id appended below - it does NOT reuse the freed 8.
 				_weights = [[1,_wW1],[2,_wW2],[3,_wW3],[4,_wW4],[6,_wW6],[7,_wW7],
-				            [8,_wW8],[9,_wW9],[10,_wW10],[11,_wW11],[12,_wW12],
-				            [13,_wW13],[14,_wW14],[15,_wW15],[16,_wW16],[17,_wW17],[18,_wW18],[19,_wW19]];
+				            [9,_wW9],[10,_wW10],[11,_wW11],[12,_wW12],
+				            [13,_wW13],[14,_wW14],[15,_wW15],[16,_wW16],[17,_wW17],[18,_wW18],[19,_wW19],
+				            [20,_wW20]];
 
 				_cumSum = 0;
 				{ _cumSum = _cumSum + (_x select 1) } forEach _weights;
@@ -534,20 +526,32 @@ while {!gameOver} do {
 
 					//--- W3: BONUS PATROL — free patrol at current tier, cap bypass.
 					case 3: {
-						_template = _pool select floor(random count _pool);
-						_home     = _hq;
-						if (count _owned > 0) then {_home = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity};
-						_active   = _logik getVariable ["wfbe_side_patrols", 0];
-						_logik setVariable ["wfbe_side_patrols", _active + 1];
-						_logik setVariable ["wfbe_side_patrol_last", time];
-						//--- Least-loaded live HC (objNull if none). Reuse the declared _w6HcUnit slot.
-						_w6HcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
-						if (!isNull _w6HcUnit) then {
-							[_w6HcUnit, "HandleSpecial", ["delegate-sidepatrol", _sideID, _template, _home]] Call WFBE_CO_FNC_SendToClient;
+						//--- FIX 2026-06-15 (claude-gaming): RESPECT the concurrent patrol cap instead of bypassing it.
+						//--- Reuse the EXACT cap the normal driver uses (server_side_patrols.sqf): WFBE_C_SIDE_PATROLS_MAX,
+						//--- with WFBE_C_SIDE_PATROLS_MAX_DEFENDER for the resistance/defender side.
+						_active = _logik getVariable ["wfbe_side_patrols", 0];
+						_w3Max  = missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX", 3];
+						if (_side == WFBE_DEFENDER) then {_w3Max = missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_DEFENDER", _w3Max]};
+						if (_active >= _w3Max) then {
+							//--- At/over cap: do NOT spawn, do NOT bump the counter - clean skip (still logs, deck moves on).
+							_result = "skipped: patrol cap";
+							_detail = Format ["patrol cap reached active=%1 max=%2 tier=%3", _active, _w3Max, _tier];
 						} else {
-							[_sideID, _template, _home] Spawn WFBE_CO_FNC_RunSidePatrol;
+							_template = _pool select floor(random count _pool);
+							_home     = _hq;
+							if (count _owned > 0) then {_home = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity};
+							//--- Under cap: book the slot synchronously (mirrors the normal driver), then dispatch.
+							_logik setVariable ["wfbe_side_patrols", _active + 1];
+							_logik setVariable ["wfbe_side_patrol_last", time];
+							//--- Least-loaded live HC (objNull if none). Reuse the declared _w6HcUnit slot.
+							_w6HcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
+							if (!isNull _w6HcUnit) then {
+								[_w6HcUnit, "HandleSpecial", ["delegate-sidepatrol", _sideID, _template, _home]] Call WFBE_CO_FNC_SendToClient;
+							} else {
+								[_sideID, _template, _home] Spawn WFBE_CO_FNC_RunSidePatrol;
+							};
+							_detail = Format ["tier=%1 template=%2 from=%3 active_after=%4 max=%5 hc=%6 humanCmd=%7", _tier, _template, _home getVariable ["name","?"], _active + 1, _w3Max, !isNull _w6HcUnit, _humanCmd];
 						};
-						_detail = Format ["tier=%1 template=%2 from=%3 active_after=%4 hc=%5 humanCmd=%6", _tier, _template, _home getVariable ["name","?"], _active + 1, !isNull _w6HcUnit, _humanCmd];
 					};
 
 					//--- W4: AIRBORNE ASSAULT — free max-level (LEVEL3) paradrop on spearhead town.
@@ -577,13 +581,24 @@ while {!gameOver} do {
 							_w4Units = missionNamespace getVariable [Format ["WFBE_%1PARACHUTELEVEL3", _sideText], []];
 							_w4Model = missionNamespace getVariable [Format ["WFBE_%1PARACARGO", _sideText], ""];
 							if (count _w4Units > 0 && {_w4Model != ""}) then {
-								//--- Invoke Support_Paratroopers with playerTeam = commander group (AI gets the squad).
+								//--- FIX 2026-06-15 (claude-gaming): force a LEVEL-3 drop for this wildcard WITHOUT leaking the
+								//--- setting into later NORMAL paradrops. Snapshot the side's current WFBE_<side>PARACHUTELEVEL,
+								//--- set 3 for the drop, then RESTORE the captured value via a short spawn (style mirrors the
+								//--- cleanup spawns used by W9/W13/W14/W18). 10s is ample for Support_Paratroopers to read it.
+								_w4PrevParaLevel = missionNamespace getVariable [Format ["WFBE_%1PARACHUTELEVEL", _sideText], 0];
+								missionNamespace setVariable [Format ["WFBE_%1PARACHUTELEVEL", _sideText], 3];
+								//--- Override the level variable so Paratroopers reads level 3.
 								_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
 								if (isNull _cmdTeam) then {_cmdTeam = [_side, "aicom-wildcard"] Call WFBE_CO_FNC_CreateGroup};
 								[nil, _side, _destination, _cmdTeam] Spawn (Compile preprocessFile "Server\Support\Support_Paratroopers.sqf");
-								//--- Override the level variable so Paratroopers reads level 3.
-								missionNamespace setVariable [Format ["WFBE_%1PARACHUTELEVEL", _sideText], 3];
-								_detail = Format ["target=%1 level=3 model=%2 humanCmd=%3", _bestTown getVariable ["name","?"], _w4Model, _humanCmd];
+								//--- RESTORE the prior paradrop level after the drop is dispatched (no level-3 leak).
+								[_w4PrevParaLevel, _sideText] spawn {
+									private ["_prev","_st"];
+									_prev = _this select 0; _st = _this select 1;
+									sleep 10;
+									missionNamespace setVariable [Format ["WFBE_%1PARACHUTELEVEL", _st], _prev];
+								};
+								_detail = Format ["target=%1 level=3 model=%2 prevLevel=%3 humanCmd=%4", _bestTown getVariable ["name","?"], _w4Model, _w4PrevParaLevel, _humanCmd];
 							} else {
 								_result = "ineligible";
 								_detail = "W4 no PARACHUTELEVEL3 units defined";
@@ -660,7 +675,7 @@ while {!gameOver} do {
 								if (!isNil "_w6PriceUD") then {_w6Price = _w6Price + (_w6PriceUD select QUERYUNITPRICE)};
 							} forEach _w6AirTemplate;
 
-							//--- Spawn anchor: HQ (rear, safe) - identical to W8 Motor Pool. The squad
+							//--- Spawn anchor: HQ (rear, safe). The squad
 							//--- air-inserts from here and the brain orders it forward to the front.
 							_hqPos     = getPos _hq;
 							_w6SpawnPos = _hqPos;
@@ -692,54 +707,8 @@ while {!gameOver} do {
 						_detail = Format ["flag set; next team will be premium template with skill=0.85 losing=%1", _losing];
 					};
 
-					//--- W8: MOTOR POOL DELIVERY — spawn best-price crewed vehicle from buy lists,
-					//--- register as an AI commander team.
-					case 8: {
-						if (_w8BestClass != "") then {
-							_w8UD   = missionNamespace getVariable _w8BestClass;
-							_hqPos  = getPos _hq;
-							_dAng   = random 360;
-							_spawnPos = [(_hqPos select 0) + (50 + random 30) * sin _dAng, (_hqPos select 1) + (50 + random 30) * cos _dAng, 0];
-							_v = [_w8BestClass, _spawnPos, _side, random 360, true, true] Call Common_CreateVehicle;
-							if (!isNull _v) then {
-								//--- Crew the vehicle: commander/gunner from SOLDIER classname.
-								_soldierClass = missionNamespace getVariable [Format ["WFBE_%1SOLDIER", _sideText], ""];
-								_grp = [_side, "aicom"] Call WFBE_CO_FNC_CreateGroup;
-								if (!isNull _grp && {_soldierClass != ""}) then {
-									_sideIDLocal = (_side) Call WFBE_CO_FNC_GetSideID;
-									_crew1 = [_soldierClass, _grp, _spawnPos, _sideIDLocal] Call WFBE_CO_FNC_CreateUnit;
-									_crew2 = [_soldierClass, _grp, _spawnPos, _sideIDLocal] Call WFBE_CO_FNC_CreateUnit;
-									if (!isNull _crew1) then {_crew1 moveInDriver _v};
-									if (!isNull _crew2) then {_crew2 moveInGunner _v};
-									//--- Register as AI team so AssignTowns picks it up.
-									_grp setVariable ["wfbe_aicom_founded", true, true];
-									_grp setVariable ["wfbe_funds", 0, true];
-									_grp setVariable ["wfbe_side", _side];
-									_grp setVariable ["wfbe_persistent", true];
-									_grp setVariable ["wfbe_queue", []];
-									_grp setVariable ["wfbe_vote", -1, true];
-									[_grp, false] Call SetTeamAutonomous;
-									[_grp, ""] Call SetTeamRespawn;
-									[_grp, -1] Call SetTeamType;
-									[_grp, "towns"] Call SetTeamMoveMode;
-									[_grp, [0,0,0]] Call SetTeamMovePos;
-									_existingTeams = _logik getVariable "wfbe_teams";
-									if (isNil "_existingTeams") then {_existingTeams = []};
-									_logik setVariable ["wfbe_teams", _existingTeams + [_grp], true];
-									_detail = Format ["class=%1 price=%2 humanCmd=%3 grp=%4", _w8BestClass, _w8BestPrice, _humanCmd, _grp];
-								} else {
-									_detail = Format ["class=%1 but no group or soldier class", _w8BestClass];
-									_result = "partial";
-								};
-							} else {
-								_result = "ineligible";
-								_detail = Format ["W8 createVehicle returned null for %1", _w8BestClass];
-							};
-						} else {
-							_result = "ineligible";
-							_detail = "W8 no eligible vehicle found";
-						};
-					};
+					//--- W8 (MOTOR POOL DELIVERY) RETIRED 2026-06-15: case handler removed. Draw 8 can no longer be
+					//--- selected (absent from the weights table), so no switch case is needed and none is defined here.
 
 					//--- W9: UPRISING — spawn a GUER attack force at enemy-held town nearest the front.
 					//--- Cap: 1 active uprising per side (wfbe_aicom_uprising_active flag on logik).
@@ -768,6 +737,11 @@ while {!gameOver} do {
 
 							{
 								_guerUnit = _guerGrp createUnit [_x, [(_guerPos select 0) + (random 20) - 10, (_guerPos select 1) + (random 20) - 10, 0], [], 0, "FORM"];
+								//--- GUER GROUP CAP: tag uprising units as town-defenders (PUBLIC, mirrors
+								//--- Common_CreateTownUnits.sqf) so they do NOT wake towns via the activation
+								//--- scan - otherwise an untagged uprising force keeps GUER towns permanently
+								//--- active, blocking despawn and ratcheting the resistance group count up.
+								if (!isNull _guerUnit) then {_guerUnit setVariable ["WFBE_IsTownDefenderAI", true, true]};
 							} forEach _guerTmpl;
 
 							[_guerGrp, _guerPos, 200] Call AIPatrol;
@@ -1143,6 +1117,36 @@ while {!gameOver} do {
 							};
 						};
 
+						//--- W20: CAPTURED CACHE - raise ONE random SUPPORT-line tier (Paratroopers/Supply/Gear) +1, bounded
+						//--- by its configured max. SAME write + broadcast path as W16 Lend-Lease (wfbe_upgrades + NewIntel +
+						//--- upgrade-complete), just over the support ids W16 never touches. Ineligible (all maxed / empty set)
+						//--- -> clean "ineligible" result; the deck already redraws/falls back to W1 on a zeroed weight, and the
+						//--- eligibility gate above zeroes _wW20 when nothing is raisable, so this case only runs when it can act.
+						case 20: {
+							//--- Re-derive the raisable support set defensively (mirrors W16 re-checking maxLevels here).
+							_w20MaxLevels = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_LEVELS", _sideText], []];
+							_w20SupIDs    = [WFBE_UP_PARATROOPERS, WFBE_UP_SUPPLYRATE, WFBE_UP_GEAR];
+							_w20Raisable  = [];
+							if (!isNil "_upgrades") then {
+								{
+									_w20SupID = _x;
+									if (count _upgrades > _w20SupID && {count _w20MaxLevels > _w20SupID}) then {
+										if ((_upgrades select _w20SupID) < (_w20MaxLevels select _w20SupID)) then {_w20Raisable = _w20Raisable + [_w20SupID]};
+									};
+								} forEach _w20SupIDs;
+							};
+							if (count _w20Raisable > 0) then {
+								_w20ChosenID   = _w20Raisable select floor(random count _w20Raisable);
+								_w20NewUpgrades = +_upgrades;
+								_w20NewUpgrades set [_w20ChosenID, (_upgrades select _w20ChosenID) + 1];
+								_logik setVariable ["wfbe_upgrades", _w20NewUpgrades, true];
+								[_side, "NewIntelAvailable"] Spawn SideMessage;
+								[_side, "HandleSpecial", ["upgrade-complete", _w20ChosenID, (_w20NewUpgrades select _w20ChosenID), false]] Call WFBE_CO_FNC_SendToClients;
+								_w20TierName = switch (_w20ChosenID) do {case WFBE_UP_PARATROOPERS: {"Paratroopers"}; case WFBE_UP_SUPPLYRATE: {"Supply Rate"}; case WFBE_UP_GEAR: {"Gear"}; default {"?"}};
+								_detail = Format ["support_tier=%1 new_level=%2 losing=%3", _w20TierName, _w20NewUpgrades select _w20ChosenID, _losing];
+							} else {_result = "ineligible"; _detail = "W20 no raisable support tier"};
+						};
+
 						//--- W12: SPOILS OF WAR — 10-min double kill-bounty flag.
 					//--- Flag lives on missionNamespace (survives spawn death).
 					//--- Not stackable: checked above; re-draw if already active.
@@ -1167,11 +1171,11 @@ while {!gameOver} do {
 					_wNameMap = [
 						[1,"War Chest"],[2,"Supply Drop"],[3,"Bonus Patrol"],
 						[4,"Airborne Assault"],[6,"Air Cavalry"],[7,"Veteran Company"],
-						[8,"Motor Pool Delivery"],[9,"Uprising"],[10,"Lucky Salvage"],
+						[9,"Uprising"],[10,"Lucky Salvage"],
 						[11,"Field Hospital"],[12,"Spoils of War"],
 						[13,"Gunship Strike"],[14,"Iron Dome"],[15,"Black Market"],
 						[16,"Lend-Lease"],[17,"Supply Convoy"],[18,"Bounty HVT"],
-						[19,"Heliborne QRF"]
+						[19,"Heliborne QRF"],[20,"Captured Cache"]
 					];
 					_wName = Format ["W%1", _draw];
 					{if ((_x select 0) == _draw) exitWith {_wName = _x select 1}} forEach _wNameMap;

@@ -421,7 +421,11 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 					};
 				};
 				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] building %2 at %3 (cost %4 supply, doctrine %5, branch-out %6).", _sideText, _x, _pos, _cost, _doctrine, _coreDone]] Call WFBE_CO_FNC_AICOMLog;
-				diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRUCTURE_BUILT|" + _x);
+				//--- STRUCTURE cost/currency telemetry (claude-gaming 2026-06-15): Steff saw "the AI
+				//--- comms upgraded buildings and such" - surface the base-building SPEND. Structures
+				//--- are paid from supply when the dual-currency economy is on (_dual); otherwise the
+				//--- supply deduction is skipped (free). Rides the existing per-structure build event.
+				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRUCTURE_BUILT|struct=" + _x + "|cost=" + str _cost + "|paidBy=" + (if (_dual) then {"supply"} else {"free"}) + "|branchOut=" + str _coreDone);
 			};
 		};
 	};

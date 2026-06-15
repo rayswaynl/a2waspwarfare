@@ -385,6 +385,23 @@ switch (_args select 0) do {
 		[_cSide, "BankPayout", [_cShare]] Call WFBE_CO_FNC_SendToClients;
 		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] convoy payout $%2 x %3 players at [%4].", str _cSide, _cShare, _cCount, if (!isNull _cTown) then {_cTown getVariable ["name","?"]} else {"?"}]] Call WFBE_CO_FNC_LogContent;
 	};
+	//--- HC SEATING TELEMETRY (task #34): pure RPT logging, no gameplay effect. Mirrors the HCSIDE|v1|connect
+	//--- line below so "did an HC land on WEST this boot, and did the script reseat fix it" is directly
+	//--- observable on the server RPT instead of inferred. _args select 1 is a 2/3-element sub-array packed
+	//--- by Init_HC.sqf (same shape as update-town-delegation / aicom-team-heading pack their payloads).
+	case "hc-preseat": {
+		Private ["_pName","_engineSide"];
+		_pName = (_args select 1) select 0;
+		_engineSide = (_args select 1) select 1;
+		diag_log (Format ["HCSIDE|v1|preseat|name=%1|engineSide=%2", _pName, _engineSide]);
+	};
+	case "hc-reseat-result": {
+		Private ["_rName","_rResult","_rSideNow"];
+		_rName = (_args select 1) select 0;
+		_rResult = (_args select 1) select 1;
+		_rSideNow = (_args select 1) select 2;
+		diag_log (Format ["HCSIDE|v1|reseat|name=%1|result=%2|sideNow=%3", _rName, _rResult, _rSideNow]);
+	};
 	case "connected-hc": {
 		Private ["_hc","_id","_uid","_hcOld","_hcList","_hcValid"];
 		_hc = _args select 1;

@@ -98,7 +98,11 @@ with missionNamespace do {
 	//--- Protects eval/night sessions from accidental human takeover. Default 0 = normal play.
 	if (isNil "WFBE_C_AI_COMMANDER_LOCK") then {WFBE_C_AI_COMMANDER_LOCK = 1};
 	//--- ACTIVE-TOWN BUDGET: max concurrently active towns. FPS lever; 12 for the legacy-vs-next A/B (Steff 2026-06-13).
-	if (isNil "WFBE_C_TOWNS_ACTIVE_MAX") then {WFBE_C_TOWNS_ACTIVE_MAX = 12};
+	if (isNil "WFBE_C_TOWNS_ACTIVE_MAX") then {WFBE_C_TOWNS_ACTIVE_MAX = 12}; //--- 12 (Steff 2026-06-15): testing the camp-first capture cure at FULL load - the cure lets towns get captured -> deactivate -> garrisons despawn, so 12 stays sustainable. GUER cap (60) backstops the worst case.
+	//--- GUER GROUP CAP: hard ceiling on total resistance groups. Bounds runaway GUER growth toward the engine's ~144-groups/side
+	//--- limit over long stalled AI-vs-AI runs (garrisons + W9 uprising + side-patrols, none of which had a global cap).
+	//--- 90 is far above any single-front GUER force, well under the 144 ceiling; raise to 999 for an instant rollback.
+	if (isNil "WFBE_C_GUER_GROUPS_MAX") then {WFBE_C_GUER_GROUPS_MAX = 60}; //--- perf cap 2026-06-15: was 90; GUER hit 73 and climbing as uncaptured towns stayed active. Tighter bound until camp-order fix.
 	if (isNil "WFBE_C_AI_MAX") then {WFBE_C_AI_MAX = 10}; //--- Max AI allowed on each AI groups.
 	if (isNil "WFBE_C_AI_DELEGATION") then {WFBE_C_AI_DELEGATION = 0}; //--- Enable AI delegation (0: Disabled, 1: creation of ai on the client, 2: Headless Client).
 	if (isNil "WFBE_C_AI_TEAMS_ENABLED") then {WFBE_C_AI_TEAMS_ENABLED = 1}; //--- Enable or disable the AI Teams.
@@ -161,6 +165,14 @@ with missionNamespace do {
 	if (isNil "WFBE_C_AICOM_BOOTSTRAP_FUNDS") then {WFBE_C_AICOM_BOOTSTRAP_FUNDS = 100};     //--- Funds per minute (scaled to tick spacing).
 	if (isNil "WFBE_C_AICOM_BOOTSTRAP_SUPPLY") then {WFBE_C_AICOM_BOOTSTRAP_SUPPLY = 50};    //--- Supply per minute (scaled to tick spacing).
 	if (isNil "WFBE_C_AICOM_BOOTSTRAP_MAXTIME") then {WFBE_C_AICOM_BOOTSTRAP_MAXTIME = 3600};//--- Hard cutoff (s): stipend stops even if no town yet.
+	//--- TASK #6 (production): funds->supply UPGRADE FALLBACK. In dual-currency every upgrade costs
+	//--- ONLY supply, and supply comes only from owned towns - so a funds-rich 0-town AI can never
+	//--- research Light/Heavy/Air and stays infantry-only despite its factory tier. When this rate is
+	//--- > 0, Server_AI_Com_Upgrade lets the AI pay the supply price as a FUNDS surcharge (supply price
+	//--- * rate) out of its war chest when supply is dry, unlocking vehicle tech. AI-commander-only;
+	//--- never touches shared/human supply. Default 0 = DISABLED (no-op; preserves legacy<->next A/B
+	//--- parity). Suggested enable value ~2 (per the #6 investigation). Restart-safe nil-guard.
+	if (isNil "WFBE_C_AICOM_UPGRADE_FUNDS_RATE") then {WFBE_C_AICOM_UPGRADE_FUNDS_RATE = 2}; //--- ENABLED 2026-06-15: cash-rich/supply-starved AI converts funds->Light/Heavy/Air tech so OPFOR stops buying infantry-only. Set 0 to disable.
 	WFBE_C_AI_COMMANDER_RELIEF_MAX = 2;           //--- V0.5: max simultaneous town-relief diversions.
 	WFBE_C_AI_COMMANDER_REINFORCE_RANGE = 1200;   //--- V0.5: Produce only refills teams this close to base (wiped teams reform at base).
 	WFBE_C_AICOM_FWD_REINFORCE_RANGE = 500;       //--- FORWARD-REINFORCE (claude-gaming 2026-06-13): deep teams beyond REINFORCE_RANGE may still refill if their leader hugs an owned town within this radius (fixes the deep-spearhead bleed-out / EAST snowball). Refill spawns at the factory nearest the team, so a captured forward town resupplies its own front instead of a lone unit trekking from the rear base.
@@ -225,6 +237,12 @@ with missionNamespace do {
 	if (isNil 'WFBE_C_AICOM_STUCK_SECS')  then {WFBE_C_AICOM_STUCK_SECS  = 210};
 	if (isNil 'WFBE_C_AICOM_STUCK_MOVED') then {WFBE_C_AICOM_STUCK_MOVED = 200};
 	if (isNil 'WFBE_C_AICOM_STUCK_FAR')   then {WFBE_C_AICOM_STUCK_FAR   = 300};
+	//--- ASSAULT TELEMETRY (task #48, #2): dispatch->arrival watcher thresholds (AssignTowns Hook B).
+	//--- ARRIVE_RADIUS 250m ~= town SAD radius (AIMoveTo uses 200) + leader margin to count "at the town".
+	//--- TIMEOUT 420s = ~2x the 120s worker interval beyond STUCK_SECS(210) so a team gets ~3 watcher
+	//--- passes before being declared stranded; this is the dispatch->arrival budget, not the stuck-reissue.
+	if (isNil 'WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS') then {WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS = 250};
+	if (isNil 'WFBE_C_AICOM_ASSAULT_TIMEOUT')       then {WFBE_C_AICOM_ASSAULT_TIMEOUT       = 420};
 	//--- Careful-gear governor (owner refinement): the HC commander executor downshifts a
 	//--- transit convoy from NORMAL to LIMITED only while the lead hull's surfaceNormal.z is
 	//--- below this (steep slope) OR a stuck-strike is active; back to NORMAL once flat/moving.

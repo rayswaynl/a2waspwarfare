@@ -8,7 +8,7 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound"];
 
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 _auditN = 0; // D2 (claude-gaming 2026-06-14): counts elapsed 5-min audit windows; the expensive classification+dump fires only every WFBE_C_GROUPAUDIT_EVERY-th window. Husk-reap GC below is untouched and runs every 60s cycle.
@@ -17,10 +17,17 @@ while {!WFBE_GameOver} do {
 	sleep 60;
 
 	// --- Empty-group GC sweep ---
+	// GCSTAT counters (claude-gaming 2026-06-15): _gcEmptyFound = all zero-unit groups seen this
+	// pass (incl. persistent, which are NOT reaped); _gcReaped = non-persistent empties deleted.
+	_gcReaped = 0; _gcEmptyFound = 0;
 	{
 		_grp = _x;
-		if (!isNull _grp && {!(_grp getVariable ["wfbe_persistent", false])} && {(count (units _grp)) == 0}) then {
-			deleteGroup _grp;
+		if (!isNull _grp && {(count (units _grp)) == 0}) then {
+			_gcEmptyFound = _gcEmptyFound + 1;
+			if (!(_grp getVariable ["wfbe_persistent", false])) then {
+				deleteGroup _grp;
+				_gcReaped = _gcReaped + 1;
+			};
 		};
 	} forEach allGroups;
 
@@ -72,6 +79,12 @@ while {!WFBE_GameOver} do {
 	} forEach allGroups;
 
 	_now = time;
+
+	// --- GCSTAT (claude-gaming 2026-06-15): consolidated per-pass GC summary on the 60s sweep
+	// cadence. groups reaped THIS pass (non-persistent empties), empties found (incl. persistent),
+	// and current per-side group counts incl. GUER. Single cheap diag_log; all values already in
+	// hand (counters from the sweep above, per-side counts from the cap-warning pass). t = round min.
+	diag_log ("GCSTAT|v1|reaped=" + str _gcReaped + "|emptyFound=" + str _gcEmptyFound + "|west=" + str _cntWest + "|east=" + str _cntEast + "|guer=" + str _cntGuer + "|t=" + str (round (time / 60)));
 
 	// Helper macro (inlined as code blocks) - warn if count >= threshold and debounce
 	// key has either never been set or expired.  Uses missionNamespace so the variable

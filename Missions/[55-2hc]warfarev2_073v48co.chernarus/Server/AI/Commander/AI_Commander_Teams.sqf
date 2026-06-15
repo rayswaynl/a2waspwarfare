@@ -214,7 +214,19 @@ if (count _live > 0) then {
 	_logik setVariable ["wfbe_aicom_veteran_skill", 0]; // consume
 	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, getPos _facObj, _w7SkillSend]] Call WFBE_CO_FNC_SendToClient;
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
-	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|HC-template" + str _pick);
+	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
+	//--- template by its min-upgrade requirements ([barracks,light,heavy,air] = _tmplUpgrades
+	//--- select _pick) so the infantry-vs-vehicle mix is visible. air>0 -> air, else heavy>0 ->
+	//--- heavy, else light>0 -> light, else infantry. Rides the existing TEAM_FOUNDED event.
+	private ["_clsU","_cls"];
+	_clsU = _tmplUpgrades select _pick;
+	_cls = "infantry";
+	if ((_clsU select WFBE_UP_AIR) > 0) then {_cls = "air"} else {
+		if ((_clsU select WFBE_UP_HEAVY) > 0) then {_cls = "heavy"} else {
+			if ((_clsU select WFBE_UP_LIGHT) > 0) then {_cls = "light"};
+		};
+	};
+	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|via=HC|template=" + str _pick + "|class=" + _cls + "|cost=" + str _price);
 } else {
 	//--- Fallback (no HC): found a server-local empty team; AssignTypes + Produce feed it.
 	_g = [_side, "aicom"] Call WFBE_CO_FNC_CreateGroup;

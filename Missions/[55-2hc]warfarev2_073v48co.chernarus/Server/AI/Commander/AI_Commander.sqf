@@ -279,6 +279,26 @@ while {!gameOver} do {
 			if (isNil "_tickUni") then { _tickUni = 0 };
 		};
 		diag_log ("AICOMSTAT|v1|TICK|" + (str _side) + "|" + str _elMin + "|" + str _towns + "|" + str _supply + "|" + str _funds + "|" + str _fTeams + "|" + str _eTeams + "|" + _upgCsv + "|units=" + str _tickUni);
+
+		//--- ECONOMY breakdown (claude-gaming 2026-06-15): the TICK above is a point-in-time snapshot
+		//--- of supply/funds, but Steff needs the funds-rich / supply-starved FLOW visible. Compute the
+		//--- net change in each pool since the previous tick (income minus spend over the ~5-min window)
+		//--- from a cheap cached prev value on the side logic. A POSITIVE net = accrued faster than spent;
+		//--- a NEGATIVE net = spent down. Read alongside towns: 0-town sides show supply flat at 0 while
+		//--- funds keep climbing = the famine state. Single diag_log on the existing 300s _ltStat cadence.
+		private ["_prevFundsKey","_prevSupplyKey","_prevFunds","_prevSupply","_dFunds","_dSupply"];
+		_prevFundsKey  = "wfbe_aicom_econ_prevfunds";
+		_prevSupplyKey = "wfbe_aicom_econ_prevsupply";
+		_prevFunds  = _logik getVariable [_prevFundsKey, -1];
+		_prevSupply = _logik getVariable [_prevSupplyKey, -1];
+		if (_prevFunds >= 0) then {
+			_dFunds  = _funds - _prevFunds;
+			_dSupply = _supply - _prevSupply;
+			diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|ECONOMY|funds=" + str _funds + "|supply=" + str _supply + "|netFunds=" + str _dFunds + "|netSupply=" + str _dSupply + "|towns=" + str _towns);
+		};
+		_logik setVariable [_prevFundsKey,  _funds];
+		_logik setVariable [_prevSupplyKey, _supply];
+
 		_ltStat = time; //--- advance the throttle BEFORE CMDRSTAT so a CMDRSTAT failure could never spam/stall the AICOMSTAT tick
 
 		//--- CMDRSTAT (claude-gaming 2026-06-13): commander-team SERVER-LOCAL vs HC-DELEGATED split +

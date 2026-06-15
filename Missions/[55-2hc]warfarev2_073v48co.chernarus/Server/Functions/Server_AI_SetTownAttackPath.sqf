@@ -36,7 +36,7 @@ if (_wp_origin distance _wp_dest > _distance_node) then {
 	_max_hops = (missionNamespace getVariable "WFBE_C_AI_TOWN_ATTACK_HOPS_WP")-2;
 	
 	//--- First WP
-	_wp_sel = [[([_nodes_a select 0, 20, 100] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 40, 20, [], [], ["AWARE","","COLUMN","NORMAL"]]];
+	_wp_sel = [[([_nodes_a select 0, 20, 100] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 40, 20, [], [], ["AWARE","RED","COLUMN","FULL"]]];  //--- STANCE (task #1): RED/FULL advance-and-engage (was ""/NORMAL).
 	
 	if (random 100 < 30) exitWith {[_team, false, _wp_sel] Call WFBE_CO_FNC_WaypointsAdd;};
 	
@@ -55,7 +55,7 @@ if (_wp_origin distance _wp_dest > _distance_node) then {
 	
 	for '_i' from 0 to 1 do {_nodes_a set [_i, false]};
 	_nodes_a = _nodes_a - [false];
-	[_wp_sel, [([_select, 20, 100] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 40, 20, [], [], ["AWARE","","WEDGE","NORMAL"]]] Call WFBE_CO_FNC_ArrayPush;
+	[_wp_sel, [([_select, 20, 100] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 40, 20, [], [], ["AWARE","RED","WEDGE","FULL"]]] Call WFBE_CO_FNC_ArrayPush;  //--- STANCE (task #1): RED/FULL advance-and-engage (was ""/NORMAL).
 
 	//--- Random Path
 	for '_i' from 0 to _nodes-1 do {
@@ -66,7 +66,7 @@ if (_wp_origin distance _wp_dest > _distance_node) then {
 		_select = _nodes_a select 0;
 		_a_safe = [_select, _side, _town_assigned] Call WFBE_SE_FNC_AI_SetTownAttackPath_PosIsSafe;
 		if !(_a_safe) exitWith {};
-		if (_a_safe) then {[_wp_sel, [([_select, 20, 100] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 60, 30, [], [], []]] Call WFBE_CO_FNC_ArrayPush};
+		if (_a_safe) then {[_wp_sel, [([_select, 20, 100] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 60, 30, [], [], ["AWARE","RED","","FULL"]]] Call WFBE_CO_FNC_ArrayPush};  //--- STANCE (task #1): RED/FULL advance-and-engage (was empty props -> engine default).
 	};
 	[_team, false, _wp_sel] Call WFBE_CO_FNC_WaypointsAdd;
 };
@@ -91,8 +91,8 @@ if (random 100 > 50) then {
 };
 
 //--- Depot SAD.
-[_wp_sel, [([_wp_dest, 10, 150] Call WFBE_CO_FNC_GetRandomPosition), 'SAD', 35, 25, [], [], ["AWARE","","FILE","NORMAL"]]] Call WFBE_CO_FNC_ArrayPush;
-[_wp_sel, [([_wp_dest, 5, 25] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 35, 25, [], [], ["AWARE","","FILE","NORMAL"]]] Call WFBE_CO_FNC_ArrayPush;
+[_wp_sel, [([_wp_dest, 10, 150] Call WFBE_CO_FNC_GetRandomPosition), 'SAD', 35, 25, [], [], ["COMBAT","RED","FILE","NORMAL"]]] Call WFBE_CO_FNC_ArrayPush;  //--- STANCE (task #1): COMBAT/RED depot entry actually clears defenders (was AWARE/"").
+[_wp_sel, [([_wp_dest, 5, 25] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 35, 25, [], [], ["COMBAT","RED","FILE","NORMAL"]]] Call WFBE_CO_FNC_ArrayPush;  //--- STANCE (task #1): COMBAT/RED depot entry actually clears defenders (was AWARE/"").
 // [_wp_sel, [([_wp_dest, 10, 35] Call WFBE_CO_FNC_GetRandomPosition), 'SAD', 35, 25, [], [30,45,60], ["COMBAT","","FILE","LIMITED"]]] Call WFBE_CO_FNC_ArrayPush;
 
 [_team, false, _wp_sel] Call WFBE_CO_FNC_WaypointsAdd;
