@@ -117,8 +117,10 @@ while {!WFBE_GameOver && _alive} do {
 
 				//--- Task 40: camp sweep on arrival at the current target town.
 				//--- Guard with a group variable so we only sweep once per visit.
-				_sweepDone = _team getVariable ["wfbe_patrol_sweep_town", objNull];
-				if (_sweepDone != _target) then {
+				//--- A2 OA: 2-arg group getVariable returns nil (NOT the default) when UNSET, so on the FIRST
+				//--- sweep `nil != _target` threw ("Type Nothing"). 1-arg + isNil guard (G1 twin; batch-1/#36 missed it).
+				_sweepDone = _team getVariable "wfbe_patrol_sweep_town";
+				if (isNil "_sweepDone" || {_sweepDone != _target}) then {
 					_team setVariable ["wfbe_patrol_sweep_town", _target, false];
 
 					_townCamps  = _target getVariable ["camps", []];
