@@ -94,7 +94,7 @@ if ((_structure getVariable ["wfbe_structure_type", ""]) == "Bank" && (missionNa
 		//--- (shift the reward from the commander pool to the player who pulls it off).
 		_bankBounty = 25000;
 		[(side group _killer), 10000, "Bank destruction", false] Call ChangeSideSupply;
-		[_killer_uid, "BankPayout", [_bankBounty]] Call WFBE_CO_FNC_SendToClients;
+		[getPlayerUID _killer, "BankPayout", [_bankBounty]] Call WFBE_CO_FNC_SendToClients; //--- E5: route the $25k payout by the REAL UID, not the display-masked _killer_uid ("xxxxxxx" when WFBE_C_GAMEPLAY_UID_SHOW==0 -> no client matched -> $0 paid)
 		//--- Global broadcast: everyone hears the bank fell.
 		private ["_sideName"];
 		_sideName = if (_side == west) then {"Federal Reserve"} else {"Bank Rossii"};
