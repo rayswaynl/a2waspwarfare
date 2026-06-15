@@ -1,4 +1,4 @@
-Private ["_destination","_formations","_mission","_radius","_team","_update"];
+Private ["_destination","_formations","_mission","_radius","_team","_update","_aicomHc","_aicomFnd"];
 _team = _this select 0;
 _destination = _this select 1;
 _mission = _this select 2;
@@ -16,7 +16,13 @@ if (side _team == west || side _team == east) then {
 //--- STANCE (task #1): UpdateTeam re-stamps AWARE/NORMAL/YELLOW + a RANDOM formation, which would
 //--- overwrite the aggressive RED/FULL/COLUMN set above. AI-commander-founded teams keep their
 //--- posture by skipping the shared UpdateTeam; all other (town/patrol) teams are unaffected.
-if (_team getVariable ["wfbe_aicom_hc", false] || {_team getVariable ["wfbe_aicom_founded", false]}) then {_update = false};
+//--- A2 OA G1 fix: the 2-arg group getVariable returns nil (NOT the default) when the var is UNSET.
+//--- For non-AICOM groups (paradrop / para-ammo / para-vehicle / town / patrol) wfbe_aicom_hc/founded
+//--- are unset, so `[name,false]` returned nil and `nil || {nil}` threw "Type Nothing" — aborting
+//--- AI_MoveTo before AIWPAdd, so those moves got no waypoint. Read 1-arg + isNil (treat unset as false).
+_aicomHc  = _team getVariable "wfbe_aicom_hc";
+_aicomFnd = _team getVariable "wfbe_aicom_founded";
+if ((!isNil "_aicomHc" && {_aicomHc}) || {!isNil "_aicomFnd" && {_aicomFnd}}) then {_update = false};
 
 //--- Override.
 if (_update) then {_team Call UpdateTeam};
