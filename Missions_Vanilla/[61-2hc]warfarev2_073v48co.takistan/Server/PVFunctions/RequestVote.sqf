@@ -26,7 +26,7 @@ scriptName "Server\PVFunctions\RequestVote.sqf";
 Private ["_side","_playerName","_voteType","_eligible","_needed",
          "_voters","_yesCount","_state","_cooldowns","_cooldownSec",
          "_onCooldown","_window","_endTime","_vSide","_alreadyVoted",
-         "_rejected","_h","_activeType","_voteSide","_cmdTeam","_lockWait"];
+         "_rejected","_h","_activeType","_voteSide","_cmdTeam"];
 
 _side       = _this select 0;
 _playerName = _this select 1;
@@ -98,8 +98,7 @@ if (count _state >= 5) then {
 	//--- BRANCH B: no active vote — try to start one.
 	//--- Spin-lock mutex to prevent two concurrent Spawns both seeing empty state.
 	//--- -----------------------------------------------------------------------
-	_lockWait = time;
-	while {!(isNil "WFBE_VOTE_LOCK") && {WFBE_VOTE_LOCK} && {time - _lockWait < 2}} do {sleep 0.01}; //--- G9: stale-lock timeout (a holder that threw before releasing must not wedge all votes)
+	while {!(isNil "WFBE_VOTE_LOCK") && {WFBE_VOTE_LOCK}} do {sleep 0.01};
 	WFBE_VOTE_LOCK = true;
 
 	//--- Re-check state and cooldowns inside lock (freshest read after acquiring mutex).
