@@ -156,12 +156,6 @@ switch (_localize) do {
         _txt = Format [Localize "WddmCompositionCapReached", _this select 1, _this select 2];
     };
 
-    //--- Marty: Voting page notifications.
-    case "VoteStarted":   {_txt = Format [Localize "STR_WF_VOTE_Started",  _this select 1, _this select 2]};
-    case "VotePassed":    {_txt = Format [Localize "STR_WF_VOTE_Passed",   _this select 1]};
-    case "VoteFailed":    {_txt = Format [Localize "STR_WF_VOTE_Failed",   _this select 1]};
-    case "VoteNotNight":  {_txt = Localize "STR_WF_VOTE_NotNight"};
-
     //--- AI Commander donation broadcast: teammates see generosity; donor's own confirm is a hint (HandleSpecial "aicom-donate-confirm").
     case "AIComDonation": {_txt = Format [Localize "STR_WF_CHAT_AIComDonation", _this select 1, _this select 2]; _commandChat = true;};
 

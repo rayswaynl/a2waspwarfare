@@ -23,7 +23,6 @@ _l = _l + ["RequestEnqueue"];
 _l = _l + ["RequestDequeue"];
 _l = _l + ["CounterBatteryFired"];
 _l = _l + ["RequestSiteClearance"];
-_l = _l + ["RequestVote"];
 _l = _l + ["RequestAIComDonate"];
 _l = _l + ["HCStat"];
 
