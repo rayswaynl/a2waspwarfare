@@ -60,7 +60,7 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4]
 	_type = _team getVariable ["wfbe_teamtype", -1];
 	_canProduce = false;
 	//--- V0.3: HC-resident commander teams are produced whole on the HC - never here.
-	if (!isPlayer (leader _team) && {!(_team getVariable ["wfbe_aicom_hc", false])}) then {
+	if (!isPlayer (leader _team) && {!([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 		if (_type >= 0) then {
 			if (_type < count _templates) then {
 				if (count (_team getVariable ["wfbe_queue", []]) == 0) then {_canProduce = true};

@@ -18,7 +18,7 @@ if (isNil "_teams") exitWith {};
 	_aliveCount = {alive _x} count (units _team);
 	if (!isPlayer (leader _team)) then {
 		if (_aliveCount > 0) then {
-			_mode  = _team getVariable ["wfbe_teammode", "towns"];
+			_mode  = [_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool;
 			_modeL = toLower _mode;
 			if (_modeL == "move" || _modeL == "patrol" || _modeL == "defense") then {
 				_goto = _team getVariable ["wfbe_teamgoto", [0,0,0]];

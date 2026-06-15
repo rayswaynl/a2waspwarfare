@@ -121,7 +121,7 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 {
 	_team = _x;
 	if (!isNull _team) then {
-		_relTown = _team getVariable ["wfbe_aicom_relief", objNull];
+		_relTown = [_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
 		if (!isNull _relTown) then {
 			_quiet = !(_relTown getVariable ["wfbe_active", false]);
 			if (_quiet || {(_relTown getVariable "sideID") != _sideID}) then {
@@ -143,15 +143,15 @@ _relieved = 0;
 	if (_relieved < (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_RELIEF_MAX", 2])) then {
 		//--- Already has a reliever?
 		_free = grpNull;
-		{ if (!isNull _x && {(_x getVariable ["wfbe_aicom_relief", objNull]) == _town}) exitWith {_free = _x} } forEach _teams;
+		{ if (!isNull _x && {([_x, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) == _town}) exitWith {_free = _x} } forEach _teams;
 		if (isNull _free) then {
 			//--- Nearest eligible team: AI-led, alive, plain towns-mode (not garrison/strike/relief/HC).
 			_freeD = 1e9;
 			{
 				_team = _x;
 				if (!isNull _team && {!isPlayer (leader _team)} && {({alive _x} count (units _team)) > 0}) then {
-					if ((toLower (_team getVariable ["wfbe_teammode", "towns"])) == "towns") then {
-						if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {!(_team getVariable ["wfbe_aicom_strike", false])} && {!(_team getVariable ["wfbe_aicom_hc", false])}) then {
+					if ((toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool)) == "towns") then {
+						if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 							_d = (leader _team) distance _town;
 							if (_d < _freeD) then {_freeD = _d; _free = _team};
 						};
@@ -190,13 +190,13 @@ if (_strikeOn) then {
 	};
 	//--- Keep up to 3 strongest field teams on the strike (refill as strikers die).
 	_strikeCount = 0;
-	{ if (!isNull _x && {_x getVariable ["wfbe_aicom_strike", false]} && {({alive _x} count (units _x)) > 0}) then {_strikeCount = _strikeCount + 1} } forEach _teams;
+	{ if (!isNull _x && {[_x, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool} && {({alive _x} count (units _x)) > 0}) then {_strikeCount = _strikeCount + 1} } forEach _teams;
 	while {_strikeCount < 3} do {
 		_best = grpNull; _bestN = 1; //--- need at least 2 men to be worth sending
 		{
 			_team = _x;
-			if (!isNull _team && {!isPlayer (leader _team)} && {!(_team getVariable ["wfbe_aicom_strike", false])}) then {
-				if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
+			if (!isNull _team && {!isPlayer (leader _team)} && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+				if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 					_alive = {alive _x} count (units _team);
 					if (_alive > _bestN) then {_bestN = _alive; _best = _team};
 				};
@@ -206,8 +206,8 @@ if (_strikeOn) then {
 		_best setVariable ["wfbe_aicom_strike", true];
 		[_best, "move"] Call SetTeamMoveMode;
 		[_best, getPos _enemyHQ] Call SetTeamMovePos;
-		if (_best getVariable ["wfbe_aicom_hc", false]) then {
-			_best setVariable ["wfbe_aicom_order", [((_best getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1, "towns-target", getPos _enemyHQ], true];
+		if ([_best, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+			_best setVariable ["wfbe_aicom_order", [(([_best, "wfbe_aicom_order", [-1]] Call WFBE_CO_FNC_GroupGetBool) select 0) + 1, "towns-target", getPos _enemyHQ], true];
 		};
 		_strikeCount = _strikeCount + 1;
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] (%3 men) joins the HQ strike.", _sideText, _best, _bestN]] Call WFBE_CO_FNC_AICOMLog;
@@ -217,7 +217,7 @@ if (_strikeOn) then {
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] WAR STATE: edge lost (towns %2v%3, strength %4v%5) - strike recalled.", _sideText, _myTowns, _enemyTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
 		{
 			_team = _x;
-			if (!isNull _team && {_team getVariable ["wfbe_aicom_strike", false]}) then {
+			if (!isNull _team && {[_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool}) then {
 				_team setVariable ["wfbe_aicom_strike", false];
 				[_team, "towns"] Call SetTeamMoveMode;
 				_team setVariable ["wfbe_aicom_townorder", []];

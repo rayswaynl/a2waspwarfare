@@ -50,7 +50,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	if (!isNull _team) then {_aliveCount = {alive _x} count (units _team)};
 	if (_aliveCount > 0) then {
 	_autonomous = _team getVariable ["wfbe_autonomous", false];
-	_modeNow = toLower (_team getVariable ["wfbe_teammode", "towns"]);
+	_modeNow = toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
 	_canDrive = false;
 	_explicitMode = false;
 	if (_modeNow == "move") then {_explicitMode = true};
@@ -82,8 +82,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					[_team, "defense"] Call SetTeamMoveMode;
 					[_team, getPos _hqG] Call SetTeamMovePos;
 					//--- V0.3: HC-resident teams get their orders via the public order variable.
-					if (_team getVariable ["wfbe_aicom_hc", false]) then {
-						_team setVariable ["wfbe_aicom_order", [((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1, "defense", getPos _hqG], true];
+					if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+						_team setVariable ["wfbe_aicom_order", [(([_team, "wfbe_aicom_order", [-1]] Call WFBE_CO_FNC_GroupGetBool) select 0) + 1, "defense", getPos _hqG], true];
 					};
 					_logik setVariable ["wfbe_aicom_garrison", _team];
 					_explicitMode = true; //--- now an explicit order; the executor drives it home
@@ -92,7 +92,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 			};
 		};
 		if (!_explicitMode) then {
-			_mode = _team getVariable ["wfbe_teammode", ""];
+			_mode = [_team, "wfbe_teammode", ""] Call WFBE_CO_FNC_GroupGetBool;
 			_goto = _team getVariable ["wfbe_teamgoto", objNull];
 
 			//--- V0.4.2 churn fix: orders are STICKY. Retarget only when the team has no
@@ -110,7 +110,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						if ((_goto getVariable "sideID") == _sideID) then {
 							_needs = true;
 						} else {
-							_ord = _team getVariable ["wfbe_aicom_townorder", []];
+							_ord = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetBool;
 							if (count _ord < 3 || {(_ord select 0) != _goto}) then {
 								//--- No bookkeeping yet (legacy order) or goto changed under us: book it
 								//--- once without re-issuing waypoints; the stuck check takes over from here.
@@ -175,10 +175,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					if (!isNull _target) then {
 						[_team, "towns"] Call SetTeamMoveMode;
 						[_team, _target] Call SetTeamMovePos;
-						if (_team getVariable ["wfbe_aicom_hc", false]) then {
+						if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 							//--- V0.3: HC-resident team - the HC driver issues the local waypoints;
 							//--- server-side waypoint commands on remote groups are unreliable.
-							_team setVariable ["wfbe_aicom_order", [((_team getVariable ["wfbe_aicom_order", [-1]]) select 0) + 1, "towns-target", getPos _target], true];
+							_team setVariable ["wfbe_aicom_order", [(([_team, "wfbe_aicom_order", [-1]] Call WFBE_CO_FNC_GroupGetBool) select 0) + 1, "towns-target", getPos _target], true];
 						} else {
 							if (_useArc) then {
 								[_team, _target] Call WFBE_SE_FNC_AI_SetTownAttackPath;
