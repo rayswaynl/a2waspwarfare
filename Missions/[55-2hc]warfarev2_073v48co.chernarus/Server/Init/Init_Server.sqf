@@ -434,7 +434,7 @@ emptyQueu = [];
 		_logik setVariable ["wfbe_aicom_running", false];
 		//--- V0.4.1: synthetic MONEY is fine (PvE pacing) - synthetic SUPPLY is not.
 		//--- Funds seed = commander start funds x FUNDS_MULT; supply spending stays 100% real.
-		_logik setVariable ["wfbe_aicom_funds", round((missionNamespace getVariable Format ['WFBE_C_ECONOMY_FUNDS_START_%1', _side]) * (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_FUNDS_MULT", 1.5]))];
+		_logik setVariable ["wfbe_aicom_funds", (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_START_FUNDS", 200000])]; //--- B36 hotfix (Ray): flat 200k AI-commander start cash (was FUNDS_START x FUNDS_MULT)
 		_logik setVariable ["wfbe_upgrades", _upgrades, true];
 		_logik setVariable ["wfbe_upgrading", false, true];
 		// Marty: Track the running upgrade ID so clients can display the upgrade name in the menu.

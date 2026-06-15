@@ -66,6 +66,13 @@ if ((!isNull _killer) && (isPlayer _killer)) then
 
        // Change the score of the leader of the group upon killing a factory
        ['SRVFNCREQUESTCHANGESCORE',[leader _killerGroup, score leader _killerGroup + _score]] Spawn WFBE_SE_FNC_HandlePVF;
+
+       //--- B36 hotfix (Ray 2026-06-15): BUILDINGKILL telemetry for the dashboard "Base Building Kills" board.
+       if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
+           if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
+           WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
+           diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|BUILDINGKILL|" + (getPlayerUID _killer) + "|" + (str (side _killer)) + "|" + (str _side) + "|" + (typeOf _structure) + "|" + _type);
+       };
     };
 };
 
