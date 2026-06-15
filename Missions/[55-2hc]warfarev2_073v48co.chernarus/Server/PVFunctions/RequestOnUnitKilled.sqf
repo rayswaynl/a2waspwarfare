@@ -162,6 +162,13 @@ if (_killed_side in WFBE_PRESENTSIDES) then { //--- Update the statistics if nee
 	if (_killed_isman) then {[str _killed_side,'Casualties',1] Call UpdateStatistics} else {[str _killed_side,'VehiclesLost',1] Call UpdateStatistics};
 };
 
+//--- B35 (claude-gaming 2026-06-15): kill-exchange attribution. Credit the KILLER side when it downs an
+//--- enemy (man or vehicle), so COMBATSTAT can report a per-side exchange ratio (killed/cas). Free counter,
+//--- same UpdateStatistics path as the casualties write above; guarded so neutral/friendly-fire isn't counted.
+if (_killer_iswfteam && {_killer_side in WFBE_PRESENTSIDES} && {_killer_side != _killed_side}) then {
+	[str _killer_side,'KilledEnemy',1] Call UpdateStatistics;
+};
+
 _get = missionNamespace getVariable _killed_type; //--- Get the killed informations.
 
 if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed type is defined in the core files and that the killer is a WF team.

@@ -73,6 +73,21 @@ if (_target == _base && {_lastDynTarget > _base}) then {
 	_logik setVariable ["wfbe_aicom_dyntarget", _base];
 };
 
+//--- B35 HC-dispatch probe (claude-gaming 2026-06-15): Ray deferred the full timeout-replan fix; this
+//--- cheap probe detects whether wfbe_aicom_pending STICKS. The counter is incremented on each HC
+//--- dispatch and only decremented when the HC acks (wfbe_aicom_hc set). If an HC hiccups mid-dispatch
+//--- the slot never frees, pinning founding below target. Log pending + how long it has been
+//--- continuously >0; a large, growing pendingAgeSec across cycles = the stick the deferred fix targets.
+//--- Silent while pending==0, so a healthy server produces no HCDISPATCH lines.
+if (_pending > 0) then {
+	private ["_pendSince"];
+	_pendSince = _logik getVariable ["wfbe_aicom_pending_since", -1];
+	if (_pendSince < 0) then {_pendSince = time; _logik setVariable ["wfbe_aicom_pending_since", _pendSince]};
+	diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH|pending=" + str _pending + "|founded=" + str _foundedTeams + "|target=" + str _target + "|pendingAgeSec=" + str (round (time - _pendSince)));
+} else {
+	_logik setVariable ["wfbe_aicom_pending_since", -1];
+};
+
 if ((_foundedTeams + _pending) >= _target) exitWith {};
 
 //--- V0.6 task 47: group-cap safety ceiling - skip founding if the side already has

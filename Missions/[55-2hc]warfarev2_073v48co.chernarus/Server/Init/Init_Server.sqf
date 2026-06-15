@@ -448,6 +448,7 @@ emptyQueu = [];
 		WF_Logic setVariable [Format["%1Casualties",_side],0,true];
 		WF_Logic setVariable [Format["%1VehiclesCreated",_side],0,true];
 		WF_Logic setVariable [Format["%1VehiclesLost",_side],0,true];
+		WF_Logic setVariable [Format["%1KilledEnemy",_side],0,true]; //--- B35 (claude-gaming 2026-06-15): kill-exchange counter (enemies downed by this side); feeds COMBATSTAT.
 
 		//--- Parameters specific.
 		if ((missionNamespace getVariable "WFBE_C_BASE_AREA") > 0) then {_logik setVariable ["wfbe_basearea", [], true]};

@@ -103,14 +103,14 @@ with missionNamespace do {
 	//--- limit over long stalled AI-vs-AI runs (garrisons + W9 uprising + side-patrols, none of which had a global cap).
 	//--- 90 is far above any single-front GUER force, well under the 144 ceiling; raise to 999 for an instant rollback.
 	if (isNil "WFBE_C_GUER_GROUPS_MAX") then {WFBE_C_GUER_GROUPS_MAX = 60}; //--- perf cap 2026-06-15: was 90; GUER hit 73 and climbing as uncaptured towns stayed active. Tighter bound until camp-order fix.
-	if (isNil "WFBE_C_AI_MAX") then {WFBE_C_AI_MAX = 10}; //--- Max AI allowed on each AI groups.
+	if (isNil "WFBE_C_AI_MAX") then {WFBE_C_AI_MAX = 12}; //--- Max AI allowed on each AI groups.
 	if (isNil "WFBE_C_AI_DELEGATION") then {WFBE_C_AI_DELEGATION = 0}; //--- Enable AI delegation (0: Disabled, 1: creation of ai on the client, 2: Headless Client).
 	if (isNil "WFBE_C_AI_TEAMS_ENABLED") then {WFBE_C_AI_TEAMS_ENABLED = 1}; //--- Enable or disable the AI Teams.
 	if (isNil "WFBE_C_AI_TEAMS_JIP_PRESERVE") then {WFBE_C_AI_TEAMS_JIP_PRESERVE = 1}; //--- Keep the AI Teams units on JIP.
 	WFBE_C_AI_COMMANDER_MOVE_INTERVALS = 3600;
 	WFBE_C_AI_COMMANDER_SUPPLY_TRUCKS_MAX = 5;
 	//--- AI Commander revival (feat/ai-commander).
-	WFBE_C_AI_COMMANDER_TOTAL_AI_MAX = 60;     //--- Per-side AI ceiling for AI-commander unit production (FPS safety cap).
+	WFBE_C_AI_COMMANDER_TOTAL_AI_MAX = 72;     //--- Per-side AI ceiling for AI-commander unit production (FPS safety cap).
 	WFBE_C_AI_COMMANDER_USE_ARC_APPROACH = 1;  //--- 1: SetTownAttackPath arc approach; 0: simple AIMoveTo fallback.
 	WFBE_C_AI_COMMANDER_UPGRADE_INTERVAL = 120;
 	WFBE_C_AI_COMMANDER_TOWN_INTERVAL = 120;
@@ -120,6 +120,7 @@ with missionNamespace do {
 	WFBE_C_AI_COMMANDER_BASE_INTERVAL = 60;    //--- V0.2: base worker cadence (HQ deploy -> doctrine build order -> defenses).
 	WFBE_C_AI_COMMANDER_TEAMS_INTERVAL = 90;   //--- V0.2: team-founding cadence.
 	WFBE_C_AI_COMMANDER_TEAMS_TARGET = 4;      //--- V0.2: AI-led combat teams the commander maintains per side.
+	WFBE_C_AI_COMMANDER_TEAMS_MAX_EXTRA = 2;   //--- B35 (claude-gaming 2026-06-15): founding ceiling = TARGET+MAX_EXTRA -> 4+2=6 teams/side (was 4+4=8). ~25% fewer commander groups for server-FPS; same firepower via AI_MAX 12 / TOTAL_AI_MAX 72. Rollback: 4.
 	WFBE_C_AI_COMMANDER_DEFENSES_MAX = 4;      //--- V0.2: manned base statics the AI places around its HQ.
 	if (isNil "WFBE_C_AICOM_AIR_MIN_TOWNS") then {WFBE_C_AICOM_AIR_MIN_TOWNS = 4}; //--- Aircraft are deferred until the AI holds this many towns (it flies poorly; air is a late, established-only asset). 0 = no gate.
 	//--- P1 combined-arms ratio (claude-gaming 2026-06-15): target CLASS mix for newly-typed AI teams,

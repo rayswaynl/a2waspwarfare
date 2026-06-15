@@ -299,6 +299,27 @@ while {!gameOver} do {
 		_logik setVariable [_prevFundsKey,  _funds];
 		_logik setVariable [_prevSupplyKey, _supply];
 
+		//--- ECONFLOW (claude-gaming 2026-06-15, B35): player-team economy split. Sums wfbe_funds across
+		//--- player-led teams and reports the net change since last window, so the dashboard can show the
+		//--- human-vs-AI wallet split. O(teams) (~4-8), 300s cadence. A2 trap: wfbe_funds plain-get + isNil
+		//--- (getVariable [key,default] on a group is unreliable in 1.64). Silent in pure AI-vs-AI (no spam).
+		private ["_ptFunds","_tf","_prevPtKey","_prevPtFunds","_dPtFunds"];
+		_ptFunds = 0;
+		{
+			if (!isNull _x && {!isNull leader _x} && {isPlayer (leader _x)}) then {
+				_tf = _x getVariable "wfbe_funds";
+				if (isNil "_tf") then {_tf = 0};
+				_ptFunds = _ptFunds + _tf;
+			};
+		} forEach (_logik getVariable ["wfbe_teams", []]);
+		_prevPtKey = "wfbe_econ_prevptfunds";
+		_prevPtFunds = _logik getVariable [_prevPtKey, -1];
+		if (_prevPtFunds >= 0 && {_ptFunds > 0 || _prevPtFunds > 0}) then {
+			_dPtFunds = _ptFunds - _prevPtFunds;
+			diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|ECONFLOW|playerFunds=" + str _ptFunds + "|netPlayerFunds=" + str _dPtFunds + "|aicomFunds=" + str _funds + "|supply=" + str _supply);
+		};
+		_logik setVariable [_prevPtKey, _ptFunds];
+
 		_ltStat = time; //--- advance the throttle BEFORE CMDRSTAT so a CMDRSTAT failure could never spam/stall the AICOMSTAT tick
 
 		//--- CMDRSTAT (claude-gaming 2026-06-13): commander-team SERVER-LOCAL vs HC-DELEGATED split +
@@ -343,17 +364,18 @@ while {!gameOver} do {
 		//--- free counters with the SAME str-side key the writers use, cache a prev on the side logic
 		//--- (exactly the ECONOMY prevFunds/prevSupply pattern), and emit cumulative + net-this-window.
 		//--- Pure read of existing counters = ZERO new scan; one diag_log per side on the 300s _ltStat cadence.
-		private ["_csCas","_csVeh","_csMade","_pCasK","_pVehK","_pMadeK","_pCas","_pVeh","_pMade","_dCas","_dVeh","_dMade"];
+		private ["_csCas","_csVeh","_csMade","_csKilled","_pCasK","_pVehK","_pMadeK","_pKilledK","_pCas","_pVeh","_pMade","_pKilled","_dCas","_dVeh","_dMade","_dKilled"];
 		_csCas  = WF_Logic getVariable [Format ["%1Casualties",    str _side], 0];
 		_csVeh  = WF_Logic getVariable [Format ["%1VehiclesLost",  str _side], 0];
 		_csMade = WF_Logic getVariable [Format ["%1UnitsCreated",  str _side], 0];
-		_pCasK = "wfbe_combat_prevcas"; _pVehK = "wfbe_combat_prevveh"; _pMadeK = "wfbe_combat_prevmade";
-		_pCas = _logik getVariable [_pCasK, -1]; _pVeh = _logik getVariable [_pVehK, -1]; _pMade = _logik getVariable [_pMadeK, -1];
+		_csKilled = WF_Logic getVariable [Format ["%1KilledEnemy",  str _side], 0]; //--- B35: enemies downed by this side (exchange ratio = killed/cas)
+		_pCasK = "wfbe_combat_prevcas"; _pVehK = "wfbe_combat_prevveh"; _pMadeK = "wfbe_combat_prevmade"; _pKilledK = "wfbe_combat_prevkilled";
+		_pCas = _logik getVariable [_pCasK, -1]; _pVeh = _logik getVariable [_pVehK, -1]; _pMade = _logik getVariable [_pMadeK, -1]; _pKilled = _logik getVariable [_pKilledK, -1];
 		if (_pCas >= 0) then {
-			_dCas = _csCas - _pCas; _dVeh = _csVeh - _pVeh; _dMade = _csMade - _pMade;
-			diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|COMBATSTAT|cas=" + str _csCas + "|vehLost=" + str _csVeh + "|made=" + str _csMade + "|netCas=" + str _dCas + "|netVehLost=" + str _dVeh + "|netMade=" + str _dMade);
+			_dCas = _csCas - _pCas; _dVeh = _csVeh - _pVeh; _dMade = _csMade - _pMade; _dKilled = _csKilled - _pKilled;
+			diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|COMBATSTAT|cas=" + str _csCas + "|vehLost=" + str _csVeh + "|made=" + str _csMade + "|killed=" + str _csKilled + "|netCas=" + str _dCas + "|netVehLost=" + str _dVeh + "|netMade=" + str _dMade + "|netKilled=" + str _dKilled);
 		};
-		_logik setVariable [_pCasK, _csCas]; _logik setVariable [_pVehK, _csVeh]; _logik setVariable [_pMadeK, _csMade];
+		_logik setVariable [_pCasK, _csCas]; _logik setVariable [_pVehK, _csVeh]; _logik setVariable [_pMadeK, _csMade]; _logik setVariable [_pKilledK, _csKilled];
 	};
 
 	//--- SRVPERF (claude-gaming 2026-06-13): server-global perf line for the legacy-vs-next A/B
