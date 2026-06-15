@@ -1,10 +1,10 @@
 // Marty: Performance Audit locals.
-private["_whq","_ehq","_perfStart","_perfDead","_perfSpawned"];
+private["_whq","_ehq","_perfStart","_perfDead","_perfSpawned","_dead"];
 
 while {!WFBE_GameOver} do {
 	// Marty: Performance Audit timing for the dead object garbage collector.
 	_perfStart = diag_tickTime;
-	_perfDead = count allDead;
+	_dead = allDead; _perfDead = count _dead; //--- hotloop: snapshot allDead ONCE per 5s tick (was enumerated twice — count here + forEach below); A2-safe (no inline private)
 	_perfSpawned = 0;
 
 	_whq = (west) Call WFBE_CO_FNC_GetSideHQ;
@@ -20,7 +20,7 @@ while {!WFBE_GameOver} do {
 			_x spawn TrashObject;
 			gc_collector = gc_collector + [_x];
 		};
-	} forEach allDead;
+	} forEach _dead;
 
 	// Marty: Performance Audit record for the dead object garbage collector.
 	if !(isNil "PerformanceAudit_Record") then {
