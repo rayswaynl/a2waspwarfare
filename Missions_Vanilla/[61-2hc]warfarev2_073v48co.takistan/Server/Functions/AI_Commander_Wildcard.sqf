@@ -9,25 +9,33 @@
 	  AI-commanded side: normal draw, AI wallet.
 	  Human-commanded side: draw fires too (PvE spice); human-side payout mapping applies.
 
-	DECK (weights, total=103):
-	  W1  War Chest         (20) Common    — AI funds +25% FUNDS_START.
-	  W2  Supply Drop       (20) Common    — side supply +1500, capped.
-	  W3  Bonus Patrol      (15) Common    — free patrol at current tier, cap bypass.
+	DECK (weights, total=118):
+	  W1  War Chest         (17) Common    — AI funds +25% FUNDS_START.
+	  W2  Supply Drop       (17) Common    — side supply +1500, capped.
 	  W6  Air Cavalry       ( 8) Uncommon  — free ELITE air-assault squad founded as a one-off commander
 	                                          team (air template) aimed at the spearhead front town; the existing
 	                                          team lifecycle + Common_RunCommanderTeam air-insertion delivers it.
 	                                          (REPLACED 2026-06-14: was "Fortification Grant" +2 base defenses,
 	                                          removed - perf-negative, leaked a GC-exempt DefenseTeam group.)
 	  W7  Veteran Company   ( 8) Uncommon  — next founded team uses premium template + skill boost.
-	  W10 Lucky Salvage     ( 8) Uncommon  — one sweep converting wrecks to AI funds (cap ~15000).
 	  W11 Field Hospital    ( 8) Uncommon  — heal all wounded AI infantry + one-shot free re-founding flag.
 	  W12 Spoils of War     ( 6) Uncommon  — 10-min double kill-bounty flag; not stackable.
-	  W4  Airborne Assault  ( 4) Rare      — free max-level paradrop (PARACHUTELEVEL3) on spearhead town.
+	  W4  Airborne Assault  ( 6) Rare      — free max-level paradrop (PARACHUTELEVEL3) on spearhead town.
 	  W20 Captured Cache    ( 6) Uncommon  — raises one random SUPPORT-line upgrade tier (Paratroopers/Supply/Gear) +1;
 	                                          mirrors W16 Lend-Lease but for the support tiers W16 does NOT touch.
-	  (W8 Motor Pool Delivery RETIRED 2026-06-15: leaked a wfbe_persistent vehicle that never despawned.)
-	  W9  Uprising          ( 3) Rare      — GUER attack force at enemy-held town nearest the front; cap 1 active.
+	  W13 Gunship Strike    ( 6) Rare      — one attack aircraft, single pass on largest enemy cluster, self-despawn.
+	  W14 Iron Dome         ( 7) Uncommon  — up to 2 temporary crewed AA at the most-threatened owned town.
+	  W15 Black Market      ( 6) Uncommon  — 10-min 50% production discount flag.
+	  W16 Lend-Lease        ( 6) Uncommon  — raise one random Light/Heavy/Air tier +1.
+	  W17 Supply Convoy     ( 7) Uncommon  — crewed supply truck HQ->nearest owned town; payout on arrival.
+	  W18 Bounty HVT        ( 5) Rare      — one enemy officer at the spearhead enemy town with a global bounty marker.
 	  W19 Heliborne QRF     ( 5) Rare      — air-inserts a QRF squad to the friendly town most under threat.
+
+	REMOVED (Ray 2026-06-16) — three cards pulled from the deck (weights forced to 0, apply blocks left inert):
+	  W3  Bonus Patrol      — REMOVED: obsolete now the patrol cap was lowered.
+	  W9  Uprising          — REMOVED: too invasive.
+	  W10 Lucky Salvage     — REMOVED: its salvage function moves to the new cleaner-tied Salvage Lottery.
+	  (W8 Motor Pool Delivery RETIRED 2026-06-15: leaked a wfbe_persistent vehicle that never despawned.)
 
 	Human-side payout mapping:
 	  W1 -> wfbe_funds on the commander's team (instead of AI wallet).
@@ -402,9 +410,9 @@ while {!gameOver} do {
 				//--- -----------------------------------------------------------------------
 				//--- BASE WEIGHTS + ESCALATION
 				//--- -----------------------------------------------------------------------
-				_wW1  = 17; _wW2  = 17; _wW3  = 13;  //--- rebalance 2026-06-14: trim Commons a touch so rarer cards surface a bit more
-				_wW6  =  8; _wW7  =  8; _wW10 =  8; _wW11 =  8; _wW12 =  6;  //--- W6 = AIR CAVALRY (Uncommon, weight 8 - unchanged rarity tier).
-				_wW4  =  6; _wW9  =  5;  //--- rebalance 2026-06-14: Rare tier up a bit (was 4/3) - rarer drops a little more often (W8 RETIRED 2026-06-15)
+				_wW1  = 17; _wW2  = 17; _wW3  =  0;  //--- W3 (Bonus Patrol) REMOVED 2026-06-16 (Ray): obsolete - patrol cap was lowered. Weight forced 0 -> card can NEVER be drawn; apply block left inert.
+				_wW6  =  8; _wW7  =  8; _wW10 =  0; _wW11 =  8; _wW12 =  6;  //--- W6 = AIR CAVALRY (Uncommon, weight 8). W10 (Lucky Salvage) REMOVED 2026-06-16 (Ray): salvage function moves to the new cleaner-tied Salvage Lottery. Weight forced 0 -> never drawn; apply block left inert.
+				_wW4  =  6; _wW9  =  0;  //--- W4 Rare weight 6. W9 (Uprising) REMOVED 2026-06-16 (Ray): too invasive. Weight forced 0 -> card can NEVER be drawn; apply block left inert (W8 RETIRED 2026-06-15).
 				_wW20 =  6;  //--- W20 = CAPTURED CACHE (Uncommon, weight 6 - mirrors W16 Lend-Lease; raises a random SUPPORT-line tier).
 				_wW13 =  6; _wW18 =  5;  //--- rebalance 2026-06-14: W13 (Rare) up 4->6
 				_wW19 =  5;  //--- W19 = HELIBORNE QRF (Rare, weight 5).
@@ -414,7 +422,7 @@ while {!gameOver} do {
 					_wW4  = round(_wW4  * _eMult);
 					_wW6  = round(_wW6  * _eMult);  //--- Air Cavalry is now a COMBAT reinforcement: a losing side draws it more (mirrors W4/W8/W9 escalation).
 					_wW7  = round(_wW7  * _eMult);
-					_wW9  = round(_wW9  * _eMult);
+					//--- _wW9 escalation REMOVED 2026-06-16 (Ray): W9 (Uprising) is pulled from the deck (base weight 0). No-op kept inert.
 					_wW13 = round(_wW13 * _eMult);
 					_wW18 = round(_wW18 * _eMult);
 					_wW19 = round(_wW19 * _eMult);  //--- losing side draws the QRF reinforcement more (mirrors W4/W8/W9).
@@ -524,6 +532,9 @@ while {!gameOver} do {
 						};
 					};
 
+					//--- W3 REMOVED 2026-06-16 (Ray): Bonus Patrol pulled from the deck - obsolete now the patrol cap was
+					//--- lowered. Base weight _wW3 is forced 0, so draw==3 is UNREACHABLE and this apply block never runs.
+					//--- Block left in place (inert) to avoid disturbing the surrounding switch structure.
 					//--- W3: BONUS PATROL — free patrol at current tier, cap bypass.
 					case 3: {
 						//--- FIX 2026-06-15 (claude-gaming): RESPECT the concurrent patrol cap instead of bypassing it.
@@ -710,6 +721,9 @@ while {!gameOver} do {
 					//--- W8 (MOTOR POOL DELIVERY) RETIRED 2026-06-15: case handler removed. Draw 8 can no longer be
 					//--- selected (absent from the weights table), so no switch case is needed and none is defined here.
 
+					//--- W9 REMOVED 2026-06-16 (Ray): Uprising pulled from the deck - too invasive. Base weight _wW9 is
+					//--- forced 0 (and its escalation no-op'd), so draw==9 is UNREACHABLE and this apply block never runs.
+					//--- Block left in place (inert) to avoid disturbing the surrounding switch structure.
 					//--- W9: UPRISING — spawn a GUER attack force at enemy-held town nearest the front.
 					//--- Cap: 1 active uprising per side (wfbe_aicom_uprising_active flag on logik).
 					case 9: {
@@ -767,6 +781,9 @@ while {!gameOver} do {
 						};
 					};
 
+					//--- W10 REMOVED 2026-06-16 (Ray): Lucky Salvage pulled from the deck - its salvage function moves to
+					//--- the new cleaner-tied Salvage Lottery. Base weight _wW10 is forced 0, so draw==10 is UNREACHABLE
+					//--- and this apply block never runs. Block left in place (inert) to avoid disturbing the switch structure.
 					//--- W10: LUCKY SALVAGE — sweep battlefield wrecks, convert to AI funds.
 					//--- Cap: ~15000 per sweep. Despawn swept wrecks.
 					case 10: {
