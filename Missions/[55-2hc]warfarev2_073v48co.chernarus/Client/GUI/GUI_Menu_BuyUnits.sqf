@@ -59,6 +59,7 @@ for [{_i = 0},{(_i < 6) && !_break},{_i = _i + 1}] do {
 	};
 };
 
+if (sideJoined == resistance && _type == 'nil') then { _type = 'Depot'; _val = 4; _currentIDC = 12020 }; //--- GUER: base-less, force Depot pool (WFBE_GUERDEPOTUNITS)
 if (_type == 'nil') exitWith {closeDialog 0};
 
 //--- Destroy local variables.
@@ -85,7 +86,7 @@ _IDCS = _IDCS - [_currentIDC];
 
 	while {alive player && dialog} do {
 	//--- Nothing in range? exit!.
-	if (!barracksInRange && !lightInRange && !heavyInRange && !aircraftInRange && !hangarInRange && !depotInRange) exitWith {closeDialog 0};
+	if (sideJoined != resistance && !barracksInRange && !lightInRange && !heavyInRange && !aircraftInRange && !hangarInRange && !depotInRange) exitWith {closeDialog 0};
 	if (side group player != sideJoined || !dialog) exitWith {closeDialog 0};
 	
 	//--- Purchase.
@@ -115,7 +116,7 @@ _IDCS = _IDCS - [_currentIDC];
 
 			if (_funds < _currentCost) then {_skip = true;hint parseText(Format[localize 'STR_WF_INFO_Funds_Missing',_currentCost - _funds,_currentUnitLabelForFundsMissing])};
 			//--- Make sure that we own all camps before being able to purchase infantry.
-			if (_type == "Depot" && _isInfantry) then {
+			if (_type == "Depot" && _isInfantry && sideJoined != resistance) then {
 				_totalCamps = _closest Call GetTotalCamps;
 				_campsSide = [_closest,sideJoined] Call GetTotalCampsOnSide;
 				if (_totalCamps != _campsSide) then {_skip = true; hint parseText(localize 'STR_WF_INFO_Camps_Purchase')};
