@@ -295,6 +295,60 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 };
 //--- ===================================================================
 
+//--- ===================================================================
+//--- GROUND MOUNT-UP (Feature A: mechanized/motorized mounted infantry). Fires ONCE
+//--- before the order loop, and ONLY when the team has NO air transport (isNull _airVeh)
+//--- so air-insert teams are untouched. Fills the CARGO seats of the team's own ground
+//--- IFV/truck/light vehicles with the on-foot template infantry, so a mech/motor team
+//--- RIDES to the objective instead of spawning next to an empty hull and walking. The
+//--- existing capture force-dismount (~L545-568) puts them back on foot at the town, and
+//--- the B37 mid-march re-mount (~L369) keeps stragglers aboard. Idiom mirrors the proven
+//--- side-patrol remount (Common_RunSidePatrol.sqf:202-203) and the air-lift load above
+//--- (L163-171): assignAsCargo + orderGetIn true.
+//--- NO-FROZEN-AI GUARD (hard): assignAsCargo + orderGetIn are NON-BLOCKING and there is
+//--- NO waitUntil/sleep here - the seat fill is a single-frame bounded loop. Any rider
+//--- that fails to board simply keeps its existing march order and walks; overflow infantry
+//--- (more bodies than seats) stay on foot and road-march exactly as today. No sim/distance
+//--- gating, no static AI touched. Riders are consumed by a monotonic index so no rider is
+//--- double-assigned (bounced) across multiple ground vehicles.
+if (isNull _airVeh) then {
+	private ["_ridePool","_riders","_rIdx","_nRiders","_seatLeft","_rider","_assigned"];
+	//--- Drivable ground hulls with at least one free cargo seat (no Air, must be mobile).
+	_ridePool = [];
+	{
+		if (!isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x}
+			&& {(_x emptyPositions "cargo") > 0}) then {_ridePool = _ridePool + [_x]};
+	} forEach _grndVehs;
+	if (count _ridePool > 0) then {
+		//--- On-foot, non-crew infantry only (crew already man their hulls; air-lift idiom L155-158).
+		_riders = [];
+		{
+			if (alive _x && {vehicle _x == _x}) then {_riders = _riders + [_x]};
+		} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
+		_nRiders  = count _riders;
+		_rIdx     = 0;
+		_assigned = 0;
+		{
+			_veh = _x;
+			_seatLeft = _veh emptyPositions "cargo";
+			//--- Single-frame seat fill: pull riders by index so none is assigned twice across hulls.
+			while {_seatLeft > 0 && {_rIdx < _nRiders}} do {
+				_rider = _riders select _rIdx;
+				_rIdx  = _rIdx + 1;
+				if (alive _rider && {vehicle _rider == _rider}) then {
+					_rider assignAsCargo _veh;
+					[_rider] orderGetIn true;
+					_seatLeft = _seatLeft - 1;
+					_assigned = _assigned + 1;
+				};
+			};
+		} forEach _ridePool;
+		//--- Overflow infantry (beyond seat capacity) stay on foot and road-march as today - never idle.
+		["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] GROUND MOUNT-UP (%3 ride vehicles, %4 infantry mounted of %5 on foot).", _side, _team, count _ridePool, _assigned, _nRiders]] Call WFBE_CO_FNC_AICOMLog;
+	};
+};
+//--- ===================================================================
+
 while {!WFBE_GameOver && _alive} do {
 	_alive = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
