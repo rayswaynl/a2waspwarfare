@@ -576,7 +576,7 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 } forEach [[_present_east, east, _startE],[_present_west, west, _startW]];
 
 //--- GUER "Insurgents" player faction team-registration + economy (gated on WFBE_C_GUER_PLAYERSIDE).
-//--- The 4 RESISTANCE player slots are synced to LocationLogicOwnerGuer (WFBE_L_GUE); register each as a
+//--- The 4 RESISTANCE player slots are synced to LocationLogicOwnerResistance (WFBE_L_GUE); register each as a
 //--- zero-fund harass team (stipend, not commander economy), then start the GUER economy loop.
 if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNil "WFBE_L_GUE"}) then {
 	private ["_guerLogic","_guerTeams","_group"];
@@ -604,7 +604,7 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 		_guerLogic setVariable ["wfbe_teams_count", count _guerTeams];
 		[] execVM "Server\Server_GuerStipend.sqf";
 	} else {
-		["WARNING", "Init_Server.sqf: WFBE_L_GUE is null - GUER player teams not initialized (LocationLogicOwnerGuer missing in mission.sqm?)."] Call WFBE_CO_FNC_LogContent;
+		["WARNING", "Init_Server.sqf: WFBE_L_GUE is null - GUER player teams not initialized (LocationLogicOwnerResistance missing in mission.sqm?)."] Call WFBE_CO_FNC_LogContent;
 	};
 };
 

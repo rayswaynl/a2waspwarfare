@@ -4925,7 +4925,7 @@ class Mission
 					position[]={15462.453,273.34991,15264.496};
 					id=311;
 					side="LOGIC";
-					vehicle="LocationLogicOwnerGuer";
+					vehicle="LocationLogicOwnerResistance";
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_GUE";
