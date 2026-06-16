@@ -22,7 +22,7 @@ class Mission
 	randomSeed=10034581;
 	class Intel
 	{
-		briefingName="[AI-ONLY] WASP AI Commander Test";
+		briefingName="Warfare V48 Chernarus [GUER]";
 		briefingDescription="AI-vs-AI commander eval build (V0.6.x): both sides run the scripted commander brain. Spectate or observe - rounds are scored from telemetry.";
 		resistanceWest=0;
 		startWeather=0;
