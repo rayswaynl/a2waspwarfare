@@ -4935,7 +4935,7 @@ class Mission
 		};
 		class Item130
 		{
-			side="RESISTANCE";
+			side="GUER";
 			class Vehicles
 			{
 				items=1;
@@ -4943,7 +4943,7 @@ class Mission
 				{
 					position[]={15460.453,273.34991,15264.496};
 					id=312;
-					side="RESISTANCE";
+					side="GUER";
 					vehicle="GUE_Soldier_Sab";
 					player="PLAY CDG";
 					leader=1;
@@ -4957,7 +4957,7 @@ class Mission
 		};
 		class Item131
 		{
-			side="RESISTANCE";
+			side="GUER";
 			class Vehicles
 			{
 				items=1;
@@ -4965,7 +4965,7 @@ class Mission
 				{
 					position[]={15464.453,273.34991,15264.496};
 					id=313;
-					side="RESISTANCE";
+					side="GUER";
 					vehicle="GUE_Soldier_Sab";
 					player="PLAY CDG";
 					leader=1;
@@ -4979,7 +4979,7 @@ class Mission
 		};
 		class Item132
 		{
-			side="RESISTANCE";
+			side="GUER";
 			class Vehicles
 			{
 				items=1;
@@ -4987,7 +4987,7 @@ class Mission
 				{
 					position[]={15460.453,273.34991,15268.496};
 					id=314;
-					side="RESISTANCE";
+					side="GUER";
 					vehicle="GUE_Soldier_Sniper";
 					player="PLAY CDG";
 					leader=1;
@@ -5001,7 +5001,7 @@ class Mission
 		};
 		class Item133
 		{
-			side="RESISTANCE";
+			side="GUER";
 			class Vehicles
 			{
 				items=1;
@@ -5009,7 +5009,7 @@ class Mission
 				{
 					position[]={15464.453,273.34991,15268.496};
 					id=315;
-					side="RESISTANCE";
+					side="GUER";
 					vehicle="GUE_Soldier_Medic";
 					player="PLAY CDG";
 					leader=1;
