@@ -522,7 +522,12 @@ if (!isNil {WFBE_Client_Logic getVariable "wfbe_startpos"}) then {
 };
 ["INITIALIZATION", "Init_Client.sqf: Retrieving the client spawn location."] Call WFBE_CO_FNC_LogContent;
 _base = objNull;
-if (sideJoined == resistance) then { _base = if (count towns > 0) then { getPos (towns select (floor (random (count towns)))) } else { getMarkerPos "GuerTempRespawnMarker" } } else {
+if (sideJoined == resistance) then {
+	private ["_fr"]; _fr = [];
+	{ if (((_x getVariable ["sideID",-1]) != WFBE_C_WEST_ID) && {(_x getVariable ["sideID",-1]) != WFBE_C_EAST_ID}) then {_fr = _fr + [_x]} } forEach towns;
+	if (count _fr == 0) then {_fr = towns};
+	_base = if (count _fr > 0) then { getPos (_fr select (floor (random (count _fr)))) } else { getMarkerPos "GuerTempRespawnMarker" };
+} else {
 if (time < 30) then {
 	waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_startpos"}};
 	_base = WFBE_Client_Logic getVariable "wfbe_startpos";
