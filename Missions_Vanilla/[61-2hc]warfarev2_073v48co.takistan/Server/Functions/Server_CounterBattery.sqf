@@ -21,7 +21,7 @@
 */
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) == 0) exitWith {};
 
-Private ["_unit","_fpos","_firingSide","_opposingSideKey","_cbrs","_i","_cbr","_r","_upgs","_lvl","_lastPing","_d","_t","_h","_tStr","_markerPos","_pkt","_aliveCbrs","_opposingLogik","_fireMissCount","_missWindow","_lastMiss"];
+Private ["_unit","_fpos","_firingSide","_opposingSideKey","_cbrs","_i","_cbr","_r","_upgs","_lvl","_lastPing","_d","_t","_h","_tStr","_markerPos","_pkt","_aliveCbrs","_opposingLogik","_fireMissCount","_missWindow","_lastMiss","_detectingSide"];
 
 _unit  = _this select 0;
 _fpos  = _this select 1;
@@ -56,6 +56,7 @@ if (!isNil "_opposingLogik") then {
 
 //--- Determine the detecting side's CBR registry.
 _opposingSideKey = if (_firingSide == west) then {"WFBE_CBR_EAST"} else {"WFBE_CBR_WEST"};
+_detectingSide   = if (_firingSide == west) then {east} else {west}; //--- AF3 fix: CBR owner side = the side whose registry we scan; a Land_Antenna static is engine-side CIVILIAN, so side _cbr mis-addressed the contact marker (clients dropped it) and looked up the wrong side upgrade radius.
 _cbrs = missionNamespace getVariable [_opposingSideKey, []];
 if (count _cbrs == 0) exitWith {};
 
@@ -69,7 +70,7 @@ if (count _cbrs == 0) exitWith {};
         _r = _cbr getVariable ["wfbe_cbr_radius", -1];
         if (_r < 0) then {
             //--- Use upgrade level to pick radius.
-            _upgs = ((side _cbr) Call WFBE_CO_FNC_GetSideLogic) getVariable ["wfbe_upgrades", []];
+            _upgs = (_detectingSide Call WFBE_CO_FNC_GetSideLogic) getVariable ["wfbe_upgrades", []];
             _lvl = 0;
             if (count _upgs > WFBE_UP_CBRADAR) then {_lvl = _upgs select WFBE_UP_CBRADAR};
             _lvl = _lvl min 2;
@@ -89,10 +90,10 @@ if (count _cbrs == 0) exitWith {};
 
             //--- Notify the detecting side via client PVF (side-targeted).
             _markerPos = [_fpos select 0, _fpos select 1, 0];
-            _pkt = [side _cbr, "CounterBatteryContact", [_markerPos, _tStr]];
+            _pkt = [_detectingSide, "CounterBatteryContact", [_markerPos, _tStr]];
             _pkt Call WFBE_CO_FNC_SendToClients;
 
-            ["INFORMATION", Format ["Server_CounterBattery.sqf: [%1] CBR detected [%2] at dist %3 m (radius %4 m). Time %5.", str (side _cbr), _unit, round _d, _r, _tStr]] Call WFBE_CO_FNC_LogContent;
+            ["INFORMATION", Format ["Server_CounterBattery.sqf: [%1] CBR detected [%2] at dist %3 m (radius %4 m). Time %5.", str _detectingSide, _unit, round _d, _r, _tStr]] Call WFBE_CO_FNC_LogContent;
         };
     };
 } forEach _cbrs;
