@@ -608,6 +608,17 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 	};
 };
 
+//--- GUER gate OFF: delete the synced GUER player-slot units so nobody can join a non-functional insurgent
+//--- (no economy / no team-reg). Done server-side here where WFBE_C_GUER_PLAYERSIDE is reliably readable
+//--- (unlike .sqm init fields), so it can never wrongly fire while the gate is ON.
+if (!((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNil "WFBE_L_GUE"}) then {
+	private ["_guerLogicOff"];
+	_guerLogicOff = missionNamespace getVariable "WFBE_L_GUE";
+	if (!(isNull _guerLogicOff)) then {
+		{ if (!(isNull _x)) then { deleteVehicle _x }; } forEach (synchronizedObjects _guerLogicOff);
+	};
+};
+
 //--- EDITOR-SLOT TAGGING (2026-06-15): the 27 WEST + 27 EAST editor-placed player-slot groups in
 //--- mission.sqm are born by the engine at load with no createGroup, so WFBE_CO_FNC_CreateGroup never
 //--- tags them and they show as "untagged" in the server_groupsGC per-source audit - indistinguishable
