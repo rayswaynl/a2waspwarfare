@@ -305,7 +305,7 @@ _IDCS = _IDCS - [_currentIDC];
 		_listUnits = missionNamespace getVariable Format ['WFBE_%1%2UNITS',sideJoinedText,_type];
 
 		[_comboFaction,_type] Call UIChangeComboBuyUnits;
-		[_listUnits,_type,_listBox,_val] Call UIFillListBuyUnits;
+		[_listUnits,_type,_listBox, (if (sideJoined == resistance) then {999} else {_val})] Call UIFillListBuyUnits; //--- GUER: bypass upgrade-gate (funds + time-tier, no upgrades)
 		
 		//--- Update tabs icons.
 		_IDCS = [12005,12006,12007,12008,12020,12021];

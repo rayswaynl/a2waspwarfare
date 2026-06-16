@@ -41,13 +41,13 @@ missionNamespace setVariable ["WFBE_GUER_DefaultGearMedic", [
 		if (_tier != _lastTier) then {
 			_lastTier = _tier;
 			_pool = [
-				"GUE_Soldier_Sab","GUE_Soldier_Sniper","GUE_Soldier_Medic",
-				"Offroad_DSHKM_Gue","Pickup_PK_GUE","Offroad_SPG9_Gue",
+				"GUE_Soldier_Sab","GUE_Soldier_Medic","GUE_Soldier_MG","GUE_Soldier_AT","GUE_Soldier_AA","GUE_Soldier_Sniper",
+				"Offroad_DSHKM_Gue","V3S_Gue",
 				"Ka137_MG_PMC"   //--- armed recon heli, pilot-fired; EASA AG/AA loadouts at a service point (see 8AM note)
 			];
-			if (_tier >= 1) then {_pool = _pool + ["BRDM2_Gue"]};
-			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1"]};
-			if (_tier >= 3) then {_pool = _pool + ["T72_Gue"]};
+			if (_tier >= 1) then {_pool = _pool + ["BRDM2_Gue","T34_TK_GUE_EP1"]};
+			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1","BTR40_TK_GUE_EP1"]};
+			if (_tier >= 3) then {_pool = _pool + ["T72_Gue","BMP2_Gue"]};
 			missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _pool];
 		};
 		sleep 10;
