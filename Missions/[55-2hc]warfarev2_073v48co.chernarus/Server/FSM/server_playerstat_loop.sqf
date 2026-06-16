@@ -9,10 +9,11 @@
    this loop adds NO new server state and stays engine-cheap.
 
    Wire format (shares WFBE_WASPSTAT_SEQ with the other v1 emitters so records stay ordered):
-     PLAYERSTAT|v1|<seq>|<name>|<uid>|<side>|<score>|<kills>|<deaths>|t=<roundMinutes>
+     PLAYERSTAT|v1|<seq>|<name>|<uid>|<side>|<score>|<kills>|<deaths>|t=<roundMinutes>[|td=<townsDenied>]
    - name : `name _x`, with any "|" stripped to protect the delimiter.
    - uid  : `getPlayerUID _x`; rows with "" UID are skipped (HCs/AI return "").
-   - side : 1=WEST, 2=EAST, 0=other (same numeric encoding as StatsFlush.sqf).
+   - side : 1=WEST, 2=EAST, 3=GUER, 0=other (same numeric encoding as StatsFlush.sqf).
+   - td   : towns-denied (GUER harass stat); 11th field present ONLY when WFBE_C_GUER_PLAYERSIDE>0.
    - score: `score _x` (engine score).
    - first emit is after one full interval (no t=0 boot spam).
 
@@ -65,7 +66,10 @@ while {true} do {
 				_score = score _p;
 
 				WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
-				_line = "PLAYERSTAT|v1|" + (str WFBE_WASPSTAT_SEQ) + "|" + _name + "|" + _uid + "|" + (str _side) + "|" + (str _score) + "|0|0|t=" + (str _min) + "|td=" + (str (_p getVariable ["wfbe_guer_td", 0]));
+				_line = "PLAYERSTAT|v1|" + (str WFBE_WASPSTAT_SEQ) + "|" + _name + "|" + _uid + "|" + (str _side) + "|" + (str _score) + "|0|0|t=" + (str _min);
+				//--- GUER-only 11th field: appended only when the Insurgents faction is enabled, so
+				//--- vanilla/GUER-OFF deployments keep the documented 10-field format unchanged.
+				if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then { _line = _line + "|td=" + (str (_p getVariable ["wfbe_guer_td", 0])) };
 				diag_log _line;
 			};
 		};

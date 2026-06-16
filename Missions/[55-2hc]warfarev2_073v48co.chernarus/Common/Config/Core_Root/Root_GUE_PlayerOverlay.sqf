@@ -15,17 +15,17 @@ if !(local player) exitWith {};
 if !(side group player == resistance) exitWith {};
 
 //--- Per-role default respawn gear: [weapons[], magazines[], [primary, sidearm]].
-missionNamespace setVariable ["WFBE_GUER_DefaultGear_Engineer", [
+missionNamespace setVariable ["WFBE_GUER_DefaultGearEngineer", [
 	["AKS_74_kobra","Makarov","ItemCompass","ItemMap","ItemRadio","ItemWatch"],
 	["30Rnd_545x39_AK","30Rnd_545x39_AK","30Rnd_545x39_AK","30Rnd_545x39_AK","HandGrenade_East","HandGrenade_East","SmokeShellRed","8Rnd_9x18_Makarov","8Rnd_9x18_Makarov"],
 	["AKS_74_kobra","Makarov"]
 ]];
-missionNamespace setVariable ["WFBE_GUER_DefaultGear_Sniper", [
+missionNamespace setVariable ["WFBE_GUER_DefaultGearSpot", [
 	["SVD","Makarov","Binocular","NVGoggles","ItemCompass","ItemMap","ItemRadio","ItemWatch"],
 	["10Rnd_762x54_SVD","10Rnd_762x54_SVD","10Rnd_762x54_SVD","10Rnd_762x54_SVD","10Rnd_762x54_SVD","HandGrenade_East","SmokeShellRed","8Rnd_9x18_Makarov","8Rnd_9x18_Makarov"],
 	["SVD","Makarov"]
 ]];
-missionNamespace setVariable ["WFBE_GUER_DefaultGear_Medic", [
+missionNamespace setVariable ["WFBE_GUER_DefaultGearMedic", [
 	["AKS_74_kobra","Makarov","ItemCompass","ItemMap","ItemRadio","ItemWatch"],
 	["30Rnd_545x39_AK","30Rnd_545x39_AK","30Rnd_545x39_AK","30Rnd_545x39_AK","HandGrenade_East","SmokeShellRed","8Rnd_9x18_Makarov","8Rnd_9x18_Makarov"],
 	["AKS_74_kobra","Makarov"]

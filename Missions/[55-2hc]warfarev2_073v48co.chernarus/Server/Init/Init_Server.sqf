@@ -588,7 +588,7 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 				_group = group _x;
 				[_guerTeams, _group] Call WFBE_CO_FNC_ArrayPush;
 				_group setVariable ["wfbe_funds", 0, true];
-				_group setVariable ["wfbe_side", "GUER"];
+				_group setVariable ["wfbe_side", resistance, true];
 				_group setVariable ["wfbe_persistent", true];
 				_group setVariable ["wfbe_queue", []];
 				_group setVariable ["wfbe_vote", -1, true];

@@ -3588,7 +3588,7 @@ class Mission
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [; deleteVehicle this""task"",""medic""];";
+					init="removeAllWeapons this; this setVariable [""task"",""medic""]; deleteVehicle this";
 					description="Medic (Fast heal, Camps restore)";
 					synchronizations[]={255};
 				};
@@ -3952,7 +3952,7 @@ class Mission
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [; deleteVehicle this""task"",""medic""];";
+					init="removeAllWeapons this; this setVariable [""task"",""medic""]; deleteVehicle this";
 					description="Medic (Fast heal, Camps restore)";
 					synchronizations[]={255};
 				};
@@ -4038,7 +4038,7 @@ class Mission
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [; deleteVehicle this""task"",""medic""];";
+					init="removeAllWeapons this; this setVariable [""task"",""medic""]; deleteVehicle this";
 					description="Medic (Fast heal, Camps restore)";
 					synchronizations[]={256};
 				};
@@ -4059,7 +4059,7 @@ class Mission
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [; deleteVehicle this""task"",""medic""];";
+					init="removeAllWeapons this; this setVariable [""task"",""medic""]; deleteVehicle this";
 					description="Medic (Fast heal, Camps restore)";
 					synchronizations[]={256};
 				};
@@ -4424,7 +4424,7 @@ class Mission
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [; deleteVehicle this""task"",""medic""];";
+					init="removeAllWeapons this; this setVariable [""task"",""medic""]; deleteVehicle this";
 					description="Medic (Fast heal, Camps restore)";
 					synchronizations[]={255};
 				};
@@ -4445,7 +4445,7 @@ class Mission
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
-					init="removeAllWeapons this; this setVariable [; deleteVehicle this""task"",""medic""];";
+					init="removeAllWeapons this; this setVariable [""task"",""medic""]; deleteVehicle this";
 					description="Medic (Fast heal, Camps restore)";
 					synchronizations[]={256};
 				};
