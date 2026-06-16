@@ -9,7 +9,7 @@
 	  AI-commanded side: normal draw, AI wallet.
 	  Human-commanded side: draw fires too (PvE spice); human-side payout mapping applies.
 
-	DECK (weights, total=118):
+	DECK (weights, total=123):
 	  W1  War Chest         (17) Common    — AI funds +25% FUNDS_START.
 	  W2  Supply Drop       (17) Common    — side supply +1500, capped.
 	  W6  Air Cavalry       ( 8) Uncommon  — free ELITE air-assault squad founded as a one-off commander
@@ -30,6 +30,7 @@
 	  W17 Supply Convoy     ( 7) Uncommon  — crewed supply truck HQ->nearest owned town; payout on arrival.
 	  W18 Bounty HVT        ( 5) Rare      — one enemy officer at the spearhead enemy town with a global bounty marker.
 	  W19 Heliborne QRF     ( 5) Rare      — air-inserts a QRF squad to the friendly town most under threat.
+	  W21 GUER VBIED        ( 5) Rare      - the AI commander funds a resistance driver-detonated suicide car bomb at the enemy town nearest the front; kill-bounty to whoever destroys it.
 
 	REMOVED (Ray 2026-06-16) — three cards pulled from the deck (weights forced to 0, apply blocks left inert):
 	  W3  Bonus Patrol      — REMOVED: obsolete now the patrol cap was lowered.
@@ -190,7 +191,8 @@ while {!gameOver} do {
 	         "_w18Eligible","_w18OfficerClass","_w18ParaL3","_w18Pos","_w18Grp","_w18HVT","_w18MarkerID","_w18Target","_w18Near","_w1Eligible",
 		         "_w19Eligible","_w19TownObj","_w19Town","_w19BestThreat","_w19Threat","_w19TownPos","_w19SpawnPos","_w19NearD","_w19D","_w19HcUnit","_w19Price","_w19PriceCN","_w19PriceUD","_wW19","_wW20",
 		         "_w20Eligible","_w20SupIDs","_w20Raisable","_w20ChosenID","_w20NewUpgrades","_w20TierName","_w20MaxLevels","_w20SupID",
-				         "_wNameMap","_wName"];
+				         "_w21Eligible","_wW21","_w21VbiedClass","_w21Grp","_w21Truck","_w21Drv","_w21Target","_w21TargetPos","_w21SpawnPos","_w21Ang",
+		         "_wNameMap","_wName"];
 
 				_side     = _this select 0;
 				_humanCmd = _this select 1;
@@ -410,6 +412,17 @@ while {!gameOver} do {
 				//--- -----------------------------------------------------------------------
 				//--- BASE WEIGHTS + ESCALATION
 				//--- -----------------------------------------------------------------------
+				//--- W21: GUER DRIVER-DETONATED VBIED (Feature B, Ray 2026-06-16). The drawing AI commander funds a
+				//--- side-resistance suicide car bomb against the enemy town nearest our front. Eligible when an enemy
+				//--- town exists, the GUER soldier class resolves (WFBE_GUERRESSOLDIER, set Config_GUE.sqf:87), and the
+				//--- VBIED chassis is a LOADED CfgVehicles class (isClass guard - never spawn an empty/invalid car, and it
+				//--- keeps the card dark on any map lacking the chassis). NOT WFBE_GUERSOLDIER (never set -> would spawn empty).
+				_w21Eligible   = false;
+				_w21VbiedClass = "hilux1_civil_2_covered";   //--- GUER depot pickup, confirmed loaded both maps (Units_CO_GUE.sqf)
+				if (count _cands > 0
+				    && {(missionNamespace getVariable ["WFBE_GUERRESSOLDIER", ""]) != ""}
+				    && {isClass (configFile >> "CfgVehicles" >> _w21VbiedClass)}) then {_w21Eligible = true};
+
 				_wW1  = 17; _wW2  = 17; _wW3  =  0;  //--- W3 (Bonus Patrol) REMOVED 2026-06-16 (Ray): obsolete - patrol cap was lowered. Weight forced 0 -> card can NEVER be drawn; apply block left inert.
 				_wW6  =  8; _wW7  =  8; _wW10 =  0; _wW11 =  8; _wW12 =  6;  //--- W6 = AIR CAVALRY (Uncommon, weight 8). W10 (Lucky Salvage) REMOVED 2026-06-16 (Ray): salvage function moves to the new cleaner-tied Salvage Lottery. Weight forced 0 -> never drawn; apply block left inert.
 				_wW4  =  6; _wW9  =  0;  //--- W4 Rare weight 6. W9 (Uprising) REMOVED 2026-06-16 (Ray): too invasive. Weight forced 0 -> card can NEVER be drawn; apply block left inert (W8 RETIRED 2026-06-15).
@@ -417,6 +430,7 @@ while {!gameOver} do {
 				_wW13 =  6; _wW18 =  5;  //--- rebalance 2026-06-14: W13 (Rare) up 4->6
 				_wW19 =  5;  //--- W19 = HELIBORNE QRF (Rare, weight 5).
 				_wW14 =  7; _wW15 =  6; _wW16 =  6; _wW17 =  7;
+				_wW21 =  5;  //--- W21 = GUER VBIED (Feature B, Rare, weight 5).
 
 				if (_losing) then {
 					_wW4  = round(_wW4  * _eMult);
@@ -446,6 +460,7 @@ while {!gameOver} do {
 				if (!_w18Eligible) then {_wW18 = 0};
 				if (!_w19Eligible) then {_wW19 = 0};
 				if (!_w20Eligible) then {_wW20 = 0};
+				if (!_w21Eligible) then {_wW21 = 0};
 
 				//--- Weight table: [cardID, weight]. Card IDs match W-numbers.
 				//--- W8 (Motor Pool Delivery) RETIRED 2026-06-15: it spawned a wfbe_persistent=true vehicle that NEVER
@@ -454,7 +469,7 @@ while {!gameOver} do {
 				_weights = [[1,_wW1],[2,_wW2],[3,_wW3],[4,_wW4],[6,_wW6],[7,_wW7],
 				            [9,_wW9],[10,_wW10],[11,_wW11],[12,_wW12],
 				            [13,_wW13],[14,_wW14],[15,_wW15],[16,_wW16],[17,_wW17],[18,_wW18],[19,_wW19],
-				            [20,_wW20]];
+				            [20,_wW20],[21,_wW21]];
 
 				_cumSum = 0;
 				{ _cumSum = _cumSum + (_x select 1) } forEach _weights;
@@ -1164,6 +1179,86 @@ while {!gameOver} do {
 							} else {_result = "ineligible"; _detail = "W20 no raisable support tier"};
 						};
 
+						//--- W21: GUER DRIVER-DETONATED VBIED (Feature B, Ray 2026-06-16). The drawing AI commander funds a side-resistance
+						//--- suicide car bomb aimed at the enemy-held town nearest our front. Spawn mirrors W17 Supply Convoy
+						//--- (CreateVehicle+CreateGroup+CreateUnit+moveInDriver+self-clean watcher); drive/behaviour mirror the live
+						//--- suicide-driver idiom in Support_Paratroopers.sqf:58-61 (CARELESS + BLUE + disableAI AUTOTARGET/TARGET +
+						//--- doMove). KILL-BOUNTY is AUTOMATIC: CreateVehicle bounty=true attaches the killed-EH -> RequestOnUnitKilled
+						//--- pays the player who DESTROYS it (last-hit window re-credits a shooter within 60s if the self-destruct
+						//--- lands the final blow). MANDATORY GUER invariant: WFBE_IsTownDefenderAI=true on the driver (W9:758) or
+						//--- GUER wakes WEST/EAST towns + blocks despawn. Detonation = stacked Sh_122_HE (122mm HE, confirmed loaded
+						//--- both maps in the artillery configs); NOT Sh_125_HE/Bo_GBU12 (not loaded here - the allMines trap).
+						case 21: {
+							_w21VbiedClass = "hilux1_civil_2_covered";
+							//--- TARGET: enemy town nearest our front (same nearest-front idiom W9/W18 use over _cands/_owned).
+							_w21Target = objNull; _nearD = 1e9;
+							{
+								_candTown = _x; _dd = 1e9;
+								{ _dd = _dd min (_candTown distance _x) } forEach _owned;
+								if (count _owned == 0) then {_dd = _candTown distance _hq};
+								if (_dd < _nearD) then {_nearD = _dd; _w21Target = _candTown};
+							} forEach _cands;
+							_soldierClass = missionNamespace getVariable ["WFBE_GUERRESSOLDIER", ""];
+							if (!isNull _w21Target && {_soldierClass != ""} && {!isNull _hq}) then {
+								_w21TargetPos = getPos _w21Target;
+								//--- SPAWN ANCHOR ~700m outside the enemy town on a random bearing (SVBIED drives in from the edge).
+								_w21Ang      = random 360;
+								_w21SpawnPos = [(_w21TargetPos select 0) + 700 * sin _w21Ang, (_w21TargetPos select 1) + 700 * cos _w21Ang, 0];
+								//--- bounty=true (6th arg) -> killed-EH -> player who destroys it gets paid (RequestOnUnitKilled).
+								_w21Truck = [_w21VbiedClass, _w21SpawnPos, resistance, random 360, false, true] Call WFBE_CO_FNC_CreateVehicle;
+								if (!isNull _w21Truck) then {
+									_w21Grp = [resistance, "aicom-vbied"] Call WFBE_CO_FNC_CreateGroup;
+									if (!isNull _w21Grp) then {
+										_w21Drv = [_soldierClass, _w21Grp, _w21SpawnPos, (resistance Call WFBE_CO_FNC_GetSideID)] Call WFBE_CO_FNC_CreateUnit;
+										if (!isNull _w21Drv) then {
+											_w21Drv moveInDriver _w21Truck;
+											//--- MANDATORY GUER invariant (W9:758): tag town-defender or GUER wakes towns + blocks despawn.
+											_w21Drv setVariable ["WFBE_IsTownDefenderAI", true, true];
+											_w21Grp setBehaviour "CARELESS";     //--- ignore threats, just drive (Support_Paratroopers.sqf:59)
+											_w21Grp setCombatMode "BLUE";        //--- hold fire
+											{_w21Drv disableAI _x} forEach ["AUTOTARGET","TARGET"];   //--- Support_Paratroopers.sqf:61
+											_w21Drv doMove _w21TargetPos;        //--- doMove - Support_Paratroopers.sqf:58
+											//--- WATCHER: detonate on arrival (<25m) OR death OR 600s timeout, then clean up husk+group.
+											[_w21Truck, _w21TargetPos, _w21Grp] spawn {
+												private ["_veh","_tgt","_grp","_el","_boom","_p"];
+												_veh = _this select 0; _tgt = _this select 1; _grp = _this select 2;
+												_el = 0; _boom = false;
+												waitUntil { sleep 1; _el = _el + 1;
+													if (isNull _veh || {!alive _veh}) then {_boom = true};
+													if (!isNull _veh && {alive _veh} && {(_veh distance _tgt) < 25}) then {_boom = true};
+													if (_el >= 600) then {_boom = true};
+													(_boom || gameOver) };
+												//--- Detonate ONLY if it reached the town alive. A player who destroyed it en route already
+												//--- earned the kill-bounty via the killed-EH; no secondary blast in that case.
+												if (!isNull _veh && {alive _veh}) then {
+													_p = getPosATL _veh;
+													_veh setDamage 1;                 //--- pop the truck; killed-EH still fires for kill-credit
+													"Sh_122_HE" createVehicle _p;     //--- stacked 122mm HE = large lethal crater (SADARM idiom)
+													"Sh_122_HE" createVehicle _p;
+													"Sh_122_HE" createVehicle _p;
+												};
+												sleep 3;
+												{deleteVehicle _x} forEach (crew _veh);
+												if (!isNull _veh) then {deleteVehicle _veh};
+												if (!isNull _grp) then {deleteGroup _grp};
+											};
+											_detail = Format ["target=%1 chassis=%2 spawnD=%3 driver=%4", _w21Target getVariable ["name","?"], _w21VbiedClass, round (_w21SpawnPos distance _w21TargetPos), _soldierClass];
+										} else {
+											deleteVehicle _w21Truck; deleteGroup _w21Grp;
+											_result = "partial"; _detail = "W21 createUnit null (driver)";
+										};
+									} else {
+										deleteVehicle _w21Truck;
+										_result = "partial"; _detail = "W21 group null at cap";
+									};
+								} else {
+									_result = "ineligible"; _detail = Format ["W21 createVehicle null for %1", _w21VbiedClass];
+								};
+							} else {
+								_result = "ineligible"; _detail = "W21 no enemy town / GUER soldier class";
+							};
+						};
+
 						//--- W12: SPOILS OF WAR — 10-min double kill-bounty flag.
 					//--- Flag lives on missionNamespace (survives spawn death).
 					//--- Not stackable: checked above; re-draw if already active.
@@ -1192,7 +1287,7 @@ while {!gameOver} do {
 						[11,"Field Hospital"],[12,"Spoils of War"],
 						[13,"Gunship Strike"],[14,"Iron Dome"],[15,"Black Market"],
 						[16,"Lend-Lease"],[17,"Supply Convoy"],[18,"Bounty HVT"],
-						[19,"Heliborne QRF"],[20,"Captured Cache"]
+						[19,"Heliborne QRF"],[20,"Captured Cache"],[21,"Insurgent Car Bomb"]
 					];
 					_wName = Format ["W%1", _draw];
 					{if ((_x select 0) == _draw) exitWith {_wName = _x select 1}} forEach _wNameMap;
