@@ -18,6 +18,7 @@ while {alive player && dialog} do {
 	_enable = false;
 	if ((barracksInRange || lightInRange || heavyInRange || aircraftInRange || hangarInRange || depotInRange) && (player == leader WFBE_Client_Team)) then {_enable = true};
 	ctrlEnable [11001,_enable];
+		if (sideJoined == resistance) then { ctrlEnable [11001, true] }; //--- GUER: base-less, buy always available (funds-only)
 	ctrlEnable [11002,gearInRange];
 
 		if (sideJoined == resistance) then {
