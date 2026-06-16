@@ -29,6 +29,11 @@ if(_vehicle isKindOf "Tank" || _vehicle isKindOf "APC")then{ [_vehicle] Call Com
 //if(_vehicle isKindOf "Air")then{ [_vehicle] Call Compile preprocessFile "Common\Functions\Common_ModifyAirVehicle.sqf";};
 //["DEBUG (Common_CreateVehicle2)", Format ["After calling"]] Call WFBE_CO_FNC_LogContent;
 
+//--- Miksuu team markings (experital): stamp the resolved side id + apply per-side recognition
+//--- markings BEFORE the texture pass so Common_AddVehicleTexture.sqf can read wfbe_side_id for
+//--- its side-gated skins. Both APPEND to wfbe_pending_texture (gate: WFBE_C_VEHICLE_MARKINGS).
+[_vehicle, _side] Call Compile preprocessFile "Common\Functions\Common_AddVehicleMarking.sqf";
+
 [_vehicle] Call Compile preprocessFile "Common\Functions\Common_AddVehicleTexture.sqf";
 
 if (_special != "FLY") then {

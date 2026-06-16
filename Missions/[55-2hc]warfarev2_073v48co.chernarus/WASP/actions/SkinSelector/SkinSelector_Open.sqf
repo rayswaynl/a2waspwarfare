@@ -19,7 +19,9 @@ if (!(alive player)) exitWith {};
 if (!(vehicle player == player)) exitWith {hint "Skin selection is only available on foot."};
 if (dialog) exitWith {};
 
-//--- Build visible pool: all non-ghillie skins + ghillie only if Spotter role.
+//--- Build visible pool: all non-ghillie skins + ghillie only for the SNIPER.
+//--- NB: the sniper role's type string is "Spotter" (legacy misnomer) — WFBE_SK_V_Spotters in
+//--- Skill_Init.sqf holds the *_Sniper classes only; there is no separate "Sniper" type.
 _pool = call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Data.sqf");
 
 _visiblePool = [];

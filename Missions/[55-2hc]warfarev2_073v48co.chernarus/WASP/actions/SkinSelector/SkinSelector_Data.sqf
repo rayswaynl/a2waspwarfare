@@ -3,7 +3,7 @@
 	Returns the skin pool for the calling player's side.
 	Output: array of [classname, displayLabel, isGhillie]
 	  - displayLabel: "" means "resolve from registry / config at runtime"
-	  - isGhillie: true means entry is only shown to Sniper/Spotter role
+	  - isGhillie: true means entry is only shown to the sniper (role type "Spotter" — see Skill_Init.sqf)
 	Each entry is filtered: if the class does not exist in CfgVehicles the entry is dropped.
 */
 
@@ -26,6 +26,15 @@ if (_side == WEST) then {
 		["BAF_Soldier_MTP",       "", false],
 		["BAF_Soldier_SL_MTP",    "", false],
 		["CZ_Soldier_DES_EP1",    "", false],
+		//--- 2026-06-16 pool expansion (OA US Army + French DLC); isClass guard drops any absent on this map.
+		["US_Soldier_MG_EP1",     "", false],
+		["US_Soldier_TL_EP1",     "", false],
+		["FR_Corpsman",           "", false],
+		["FR_GL",                 "", false],
+		//--- Miksuu addon skins (@MiksuuSkins). The isClass guard below drops these until the signed addon is loaded.
+		["mks_w_multicam",        "", false],
+		["mks_w_ranger",          "", false],
+		["mks_w_coyote",          "", false],
 		["USMC_SoldierS_Sniper",  "", true],
 		["USMC_SoldierS_SniperH", "", true]
 	];
@@ -45,6 +54,13 @@ if (_side == EAST) then {
 		["Ins_Soldier_1",         "", false],
 		["Ins_Soldier_2",         "", false],
 		["MVD_Soldier_TL",        "", false],
+		//--- 2026-06-16 pool expansion (Takistani Army, for the Takistan-inherited build); isClass guard drops any absent on this map.
+		//--- NOTE: TK_Soldier_TL_EP1 does not exist in OA / the faction configs (TKA uses SL naming) — using the registered TK_Soldier_SL_EP1.
+		["TK_Soldier_EP1",        "", false],
+		["TK_Soldier_SL_EP1",     "", false],
+		//--- Miksuu addon skins (@MiksuuSkins). The isClass guard below drops these until the signed addon is loaded.
+		["mks_e_gorka",           "", false],
+		["mks_e_spetsnaz",        "", false],
 		["RU_Soldier_Sniper",     "", true],
 		["RU_Soldier_SniperH",    "", true]
 	];
